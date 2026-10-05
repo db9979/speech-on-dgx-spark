@@ -513,6 +513,15 @@ def start_update():
     return {"started": True}
 
 
+@app.delete("/api/update", dependencies=[Depends(auth)])
+def stop_update():
+    code, out = run(["sudo", "-n", "/usr/bin/systemctl", "stop", "speech-spark-update"], timeout=60)
+    if code != 0:
+        raise HTTPException(500, out or "could not stop the update")
+    _remote_cache["data"] = None
+    return {"stopped": True}
+
+
 if __name__ == "__main__":
     pcfg = load_config("panel")
     uvicorn.run(app, host=pcfg["host"], port=pcfg["port"])

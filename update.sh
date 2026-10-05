@@ -17,7 +17,10 @@ CHECK=0
 [ -d "$SRC/.git" ] || { echo "$SRC is not a git clone; run install.sh from a git checkout first" >&2; exit 1; }
 
 cd "$SRC"
-old=$(git rev-parse HEAD)
+# Compare with what is installed, not with the clone: an aborted update can leave the
+# clone ahead of the installed version.
+old=$(jq -r '.commit // empty' "$(dirname "$SRC")/VERSION.json" 2>/dev/null || true)
+git cat-file -e "${old:-x}^{commit}" 2>/dev/null || old=$(git rev-parse HEAD)
 echo "Installed: $(git log -1 --format='%h %cs %s' "$old")"
 echo "Fetching $(git remote get-url origin) ($BRANCH) ..."
 git fetch --quiet origin "$BRANCH"

@@ -176,7 +176,7 @@ svg.spark{width:100%;height:60px;display:block}.chk{display:flex;gap:6px;align-i
     <div class="card"><h2 style="margin-top:0">Update</h2>
       <div id="updstate" class="mut">–</div>
       <div id="updcommits" style="margin-top:8px"></div>
-      <div class="row" style="margin-top:12px"><button class="b" id="updcheck">Jetzt prüfen</button><button class="b p" id="updgo" disabled>Update installieren</button><span id="updmsg"></span></div>
+      <div class="row" style="margin-top:12px"><button class="b" id="updcheck">Jetzt prüfen</button><button class="b p" id="updgo" disabled>Update installieren</button><button class="b" id="updstop" style="display:none">Update abbrechen</button><span id="updmsg"></span></div>
       <div class="mut" style="font-size:12px;margin-top:8px">Holt den neuesten Stand von GitHub und installiert ihn. Einstellungen, Modelle und Stimmen bleiben. Schlägt die Installation fehl, laufen die Dienste mit der alten Version weiter. Während des Updates starten die Dienste kurz neu.</div>
     </div>
   </div>
@@ -329,9 +329,9 @@ async function loadSys(check=false){let u;try{u=await (await api('/api/update'+(
   const i=u.installed||{},r=u.remote||{};
   $('sysver').innerHTML=kvp([['Installiert',i.short?`${i.short} · ${new Date(i.date).toLocaleString()}`:'–'],['Änderung',i.subject||'–'],['Engines',i.engine||'–'],['Quelle',i.remote||'–'],['Zuletzt geprüft',r.checked?new Date(r.checked*1000).toLocaleTimeString():'–']]);
   updBadge(r);loadBench();
-  if(u.running){$('updstate').innerHTML='<span class="pill warn">Update läuft</span> Die Seite lädt neu, wenn das Panel neu startet.';$('updgo').disabled=true;
+  if(u.running){$('updstate').innerHTML='<span class="pill warn">Update läuft</span> Die Seite lädt neu, wenn das Panel neu startet.';$('updgo').disabled=true;$('updstop').style.display='inline-block';
     if(!updPoll)updPoll=setInterval(()=>loadSys(),3000)}
-  else{if(updPoll){clearInterval(updPoll);updPoll=null}
+  else{if(updPoll){clearInterval(updPoll);updPoll=null}$('updstop').style.display='none';
     $('updstate').innerHTML=r.error?`<span class="err">${esc(r.error)}</span>`:r.behind===0?'<span class="pill ok">aktuell</span>':
       `<span class="pill warn">Update verfügbar</span> ${r.behind>0?r.behind+' Änderung(en)':''}`+(u.last_result&&u.last_result!=='success'&&u.last_finished?` <span class="err">Letztes Update fehlgeschlagen (${esc(u.last_result)}), siehe Protokoll.</span>`:'');
     $('updgo').disabled=!(r.behind&&r.behind!==0)}
@@ -348,6 +348,9 @@ async function loadBench(){let b;try{b=await (await api('/api/bench')).json()}ca
   if(b.running&&!benchPoll)benchPoll=setInterval(loadBench,2000);
   if(!b.running&&benchPoll){clearInterval(benchPoll);benchPoll=null}}
 $('benchgo').onclick=async()=>{try{await api('/api/bench',{method:'POST'});loadBench()}catch(e){$('benchmsg').innerHTML=`<span class="err">${esc(e.message)}</span>`}};
+$('updstop').onclick=async()=>{if(!confirm('Update abbrechen? Was schon installiert ist, bleibt. Ein späteres Update holt den Rest nach.'))return;
+  try{await api('/api/update',{method:'DELETE'});$('updmsg').textContent='abgebrochen';loadSys()}
+  catch(e){$('updmsg').innerHTML=`<span class="err">${esc(e.message)}</span>`}};
 $('updgo').onclick=async()=>{if(!confirm('Update jetzt installieren? Die Dienste starten dabei kurz neu.'))return;
   try{await api('/api/update',{method:'POST'});$('updmsg').textContent='gestartet';
     // the panel restarts during the update; reload once it answers again

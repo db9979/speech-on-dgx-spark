@@ -277,7 +277,7 @@ PASSWORD=$(sed -n 's/^PANEL_PASSWORD=//p' "$ETC/panel.env")
       printf '/usr/bin/systemctl %s speech-spark-%s' "$a" "$u"; first=0
     done
   done
-  printf ', /usr/bin/systemctl start --no-block speech-spark-update\n'
+  printf ', /usr/bin/systemctl start --no-block speech-spark-update, /usr/bin/systemctl stop speech-spark-update\n'
 } >/etc/sudoers.d/speech-spark
 chmod 440 /etc/sudoers.d/speech-spark
 visudo -cf /etc/sudoers.d/speech-spark >/dev/null || die "sudoers file invalid"
@@ -478,9 +478,11 @@ wait_ready() {  # $1 = name, $2 = port, $3 = minutes
   echo "   $1 not ready after $3 min (status: ${st:-no answer}); see the panel or: journalctl -u 'speech-spark-*'"; return 1
 }
 ok_asr=0; ok_tts=0
-if [ "$WITH_ASR" = 1 ]; then wait_ready asr "$ASR_PORT" 30 && ok_asr=1; fi
+# an update does not wait as long: the services keep starting on their own afterwards
+wait_min=30; [ "$FROM_UPDATE" = 1 ] && wait_min=10
+if [ "$WITH_ASR" = 1 ]; then wait_ready asr "$ASR_PORT" "$wait_min" && ok_asr=1; fi
 # first engine start pulls the model and compiles kernels
-if [ "$WITH_TTS" = 1 ]; then wait_ready tts "$TTS_PORT" 30 && ok_tts=1; fi
+if [ "$WITH_TTS" = 1 ]; then wait_ready tts "$TTS_PORT" "$wait_min" && ok_tts=1; fi
 
 KEY=$(cfg .api.key)
 auth=(); [ -n "$KEY" ] && auth=(-H "Authorization: Bearer $KEY")
