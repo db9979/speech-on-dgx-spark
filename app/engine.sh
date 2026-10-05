@@ -75,7 +75,10 @@ if [ "$guard" = true ] && awk -v a="$avail_gib" -v n="$need_gib" -v r="$reserve"
   exit 1
 fi
 
-state loading "starting $MODEL, needs ~$need_gib GiB (first start downloads the model)"
+cached="${HF_HOME:-$HOME/.cache/huggingface}/hub/models--${MODEL//\//--}"
+if [ -d "$cached/snapshots" ]; then what="loading $MODEL and warming up"
+else what="downloading and loading $MODEL"; fi
+state loading "$what, reserves ~$need_gib GiB"
 
 if [ "$ROLE" = asr ]; then
   # Plain vLLM: OpenAI /v1/audio/transcriptions incl. streaming, batches parallel requests.
