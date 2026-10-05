@@ -1,0 +1,35 @@
+{
+  "asr": {
+    "enabled": true,
+    "host": "0.0.0.0",
+    "port": 31001,
+    "model": "Qwen/Qwen3-ASR-1.7B",
+    "dtype": "bfloat16",
+    "max_batch_size": 8,
+    "max_new_tokens": 512,
+    "default_language": "auto",
+    "timestamps": false,
+    "aligner_model": "Qwen/Qwen3-ForcedAligner-0.6B"
+  },
+  "tts": {
+    "enabled": true,
+    "host": "0.0.0.0",
+    "port": 31002,
+    "model": "Qwen/Qwen3-TTS-12Hz-1.7B-CustomVoice",
+    "dtype": "bfloat16",
+    "default_voice": "Ryan",
+    "default_language": "auto",
+    "default_instruct": ""
+  },
+  "api": {
+    "key": ""
+  },
+  "panel": {
+    "host": "0.0.0.0",
+    "port": 31080
+  },
+  "memory": {
+    "reserve_gib": 10,
+    "guard": true
+  }
+}

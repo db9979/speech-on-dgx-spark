@@ -1,0 +1,268 @@
+<!doctype html>
+<html lang="de">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Speech Spark</title>
+<style>
+:root{--bg:#f6f7f9;--card:#fff;--fg:#1b1f24;--mut:#667085;--line:#e4e7ec;--acc:#2f6fed;--ok:#12a150;--warn:#d98a00;--bad:#d92d20}
+@media (prefers-color-scheme:dark){:root{--bg:#0f1115;--card:#171a21;--fg:#e6e8eb;--mut:#98a2b3;--line:#262b35;--acc:#6b9bff}}
+*{box-sizing:border-box}body{margin:0;background:var(--bg);color:var(--fg);font:14px/1.45 system-ui,-apple-system,Segoe UI,sans-serif}
+header{display:flex;align-items:center;gap:12px;padding:14px 20px;border-bottom:1px solid var(--line);background:var(--card);position:sticky;top:0;z-index:2}
+header h1{font-size:16px;margin:0}nav{display:flex;gap:4px;margin-left:auto;flex-wrap:wrap}
+nav button{background:none;border:0;color:var(--mut);padding:6px 10px;border-radius:6px;cursor:pointer;font:inherit}
+nav button.on{background:var(--bg);color:var(--fg);font-weight:600}
+main{max-width:1200px;margin:0 auto;padding:20px 16px}section{display:none}section.on{display:block}
+.grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(170px,1fr));gap:12px;margin-bottom:16px}
+.card{background:var(--card);border:1px solid var(--line);border-radius:10px;padding:14px}
+.k{color:var(--mut);font-size:12px}.v{font-size:22px;font-weight:600;margin-top:2px;font-variant-numeric:tabular-nums}
+h2{font-size:14px;margin:20px 0 10px}table{width:100%;border-collapse:collapse}td,th{text-align:left;padding:8px;border-top:1px solid var(--line);vertical-align:top}
+th{color:var(--mut);font-weight:500;font-size:12px;border-top:0}
+.pill{display:inline-block;padding:1px 8px;border-radius:99px;font-size:12px;font-weight:600;background:var(--line)}
+.pill.ok{background:color-mix(in srgb,var(--ok) 18%,transparent);color:var(--ok)}
+.pill.warn{background:color-mix(in srgb,var(--warn) 18%,transparent);color:var(--warn)}
+.pill.bad{background:color-mix(in srgb,var(--bad) 18%,transparent);color:var(--bad)}
+button.b{background:var(--card);border:1px solid var(--line);color:var(--fg);padding:5px 10px;border-radius:6px;cursor:pointer;font:inherit}
+button.b.p{background:var(--acc);border-color:var(--acc);color:#fff}button.b:disabled{opacity:.5}
+label{display:block;font-size:12px;color:var(--mut);margin:10px 0 4px}
+input,select,textarea{width:100%;padding:7px 9px;border:1px solid var(--line);border-radius:6px;background:var(--bg);color:var(--fg);font:inherit}
+.two{display:grid;grid-template-columns:repeat(auto-fit,minmax(320px,1fr));gap:16px}
+.row{display:flex;gap:8px;align-items:center;flex-wrap:wrap}.err{color:var(--bad);white-space:pre-wrap}.mut{color:var(--mut)}
+code{font:12px ui-monospace,Menlo,monospace;word-break:break-all}pre{background:var(--bg);border:1px solid var(--line);border-radius:8px;padding:10px;max-height:60vh;overflow:auto;font-size:12px;white-space:pre-wrap}
+svg.spark{width:100%;height:60px;display:block}.chk{display:flex;gap:6px;align-items:center}.chk input{width:auto}
+.card{overflow-x:auto}
+@media (max-width:640px){#hdr{display:none}header{flex-wrap:wrap}nav{margin-left:0}}
+.note{padding:10px 12px;border-radius:8px;background:color-mix(in srgb,var(--warn) 12%,transparent);margin-bottom:12px}
+</style>
+</head>
+<body>
+<header><h1>Speech auf DGX Spark</h1><span id="hdr" class="mut"></span>
+<nav><button data-s="mon" class="on">Monitoring</button><button data-s="cfg">Konfiguration</button><button data-s="test">Testen</button><button data-s="voices">Stimmen</button><button data-s="int">Einbinden</button><button data-s="logs">Logs</button></nav></header>
+<main>
+
+<section id="mon" class="on">
+  <div id="memnote"></div>
+  <div class="grid">
+    <div class="card"><div class="k">GPU-Auslastung</div><div class="v" id="m-gpu">–</div><svg class="spark" id="c-gpu"></svg></div>
+    <div class="card"><div class="k">Unified Memory frei</div><div class="v" id="m-mem">–</div><svg class="spark" id="c-mem"></svg></div>
+    <div class="card"><div class="k">GPU-Temperatur / Leistung</div><div class="v" id="m-temp">–</div><svg class="spark" id="c-temp"></svg></div>
+    <div class="card"><div class="k">CPU</div><div class="v" id="m-cpu">–</div><svg class="spark" id="c-cpu"></svg></div>
+  </div>
+  <div class="card"><h2 style="margin-top:0">Speech-Dienste</h2>
+    <table><thead><tr><th>Dienst</th><th>systemd</th><th>Modell</th><th>Anfragen</th><th>Ø Latenz</th><th>RTF</th><th>Speicher (Torch)</th><th></th></tr></thead><tbody id="svc"></tbody></table>
+  </div>
+  <div class="card" style="margin-top:16px"><h2 style="margin-top:0">dgx-spark-qwen38 auf dieser Box</h2>
+    <table><thead><tr><th>Unit</th><th>Status</th><th>Speicheranteil</th></tr></thead><tbody id="q38"></tbody></table>
+    <div class="mut" id="q38none" style="display:none">Keine qwen38-Units gefunden.</div>
+  </div>
+  <div class="card" style="margin-top:16px"><h2 style="margin-top:0">GPU-Prozesse</h2>
+    <table><thead><tr><th>PID</th><th>Prozess</th><th>Speicher</th></tr></thead><tbody id="gp"></tbody></table></div>
+</section>
+
+<section id="cfg">
+  <div class="two">
+    <div class="card"><h2 style="margin-top:0">Spracherkennung (ASR)</h2>
+      <label class="chk"><input type="checkbox" id="asr.enabled"> aktiviert</label>
+      <label>Modell</label><select id="asr.model"><option>Qwen/Qwen3-ASR-1.7B</option><option>Qwen/Qwen3-ASR-0.6B</option></select>
+      <label>Port</label><input id="asr.port" type="number">
+      <label>Standardsprache</label><select id="asr.default_language" class="langs"></select>
+      <label>Max. Batchgröße</label><input id="asr.max_batch_size" type="number">
+      <label>Max. neue Tokens</label><input id="asr.max_new_tokens" type="number">
+      <label class="chk"><input type="checkbox" id="asr.timestamps"> Zeitstempel (lädt zusätzlich den Forced Aligner, ~2 GiB)</label>
+      <label>Datentyp</label><select id="asr.dtype"><option>bfloat16</option><option>float16</option><option>float32</option></select>
+    </div>
+    <div class="card"><h2 style="margin-top:0">Sprachausgabe (TTS)</h2>
+      <label class="chk"><input type="checkbox" id="tts.enabled"> aktiviert</label>
+      <label>Modell</label><select id="tts.model">
+        <option>Qwen/Qwen3-TTS-12Hz-1.7B-CustomVoice</option><option>Qwen/Qwen3-TTS-12Hz-0.6B-CustomVoice</option>
+        <option>Qwen/Qwen3-TTS-12Hz-1.7B-VoiceDesign</option><option>Qwen/Qwen3-TTS-12Hz-1.7B-Base</option><option>Qwen/Qwen3-TTS-12Hz-0.6B-Base</option></select>
+      <div class="mut" style="font-size:12px;margin-top:4px">CustomVoice: feste Sprecher. VoiceDesign: Stimme per Beschreibung. Base: Stimmen klonen (Reiter „Stimmen“).</div>
+      <label>Port</label><input id="tts.port" type="number">
+      <label>Standardstimme</label><input id="tts.default_voice">
+      <label>Standardsprache</label><select id="tts.default_language" class="langs"></select>
+      <label>Standard-Anweisung (Stil, bei VoiceDesign die Stimmbeschreibung)</label><input id="tts.default_instruct">
+      <label>Datentyp</label><select id="tts.dtype"><option>bfloat16</option><option>float16</option><option>float32</option></select>
+    </div>
+    <div class="card"><h2 style="margin-top:0">Speicherschutz</h2>
+      <label class="chk"><input type="checkbox" id="memory.guard"> Modell nicht laden, wenn danach weniger als die Reserve frei bliebe</label>
+      <label>Reserve in GiB (DGX OS earlyoom greift bei ~8 GiB)</label><input id="memory.reserve_gib" type="number">
+      <h2>API-Schlüssel</h2>
+      <label>Leer = APIs ohne Schlüssel erreichbar. Gesetzt = Apps müssen „Authorization: Bearer &lt;Schlüssel&gt;“ senden.</label>
+      <div class="row"><input id="api.key" style="flex:1" autocomplete="off"><button class="b" id="genkey" type="button">Erzeugen</button></div>
+      <h2>Panel</h2>
+      <label>Port (Änderung wirkt nach Neustart des Panels)</label><input id="panel.port" type="number">
+    </div>
+  </div>
+  <div class="row" style="margin-top:16px"><button class="b p" id="save">Speichern und Dienste neu starten</button><span id="savemsg"></span></div>
+</section>
+
+<section id="test">
+  <div class="two">
+    <div class="card"><h2 style="margin-top:0">Spracherkennung testen</h2>
+      <label>Audiodatei (wav, mp3, flac, …)</label><input type="file" id="asrfile" accept="audio/*">
+      <label>Sprache</label><select id="asrlang" class="langs"></select>
+      <div class="row" style="margin-top:12px"><button class="b p" id="asrgo">Transkribieren</button><span id="asrmsg" class="mut"></span></div>
+      <pre id="asrout" style="display:none"></pre>
+    </div>
+    <div class="card"><h2 style="margin-top:0">Sprachausgabe testen</h2>
+      <label>Text</label><textarea id="ttstext" rows="4">Hallo, hier spricht der DGX Spark.</textarea>
+      <label>Stimme</label><select id="ttsvoice"></select>
+      <label>Sprache</label><select id="ttslang" class="langs"></select>
+      <label>Anweisung (optional)</label><input id="ttsinstr" placeholder="z. B. Sehr fröhlich.">
+      <div class="row" style="margin-top:12px"><button class="b p" id="ttsgo">Sprechen</button><span id="ttsmsg" class="mut"></span></div>
+      <audio id="ttsaudio" controls style="width:100%;margin-top:12px;display:none"></audio>
+    </div>
+  </div>
+</section>
+
+<section id="voices">
+  <div class="two">
+    <div class="card"><h2 style="margin-top:0">Stimme zum Klonen hinzufügen</h2>
+      <div class="mut">Nur mit einem <b>Base</b>-Modell wirksam. 5–15 Sekunden saubere Sprache; der Text sollte genau dem Gesprochenen entsprechen (leer lassen geht, klont dann schlechter).</div>
+      <label>Name</label><input id="vname" placeholder="z. B. dominik">
+      <label>Referenz-Audio</label><input type="file" id="vfile" accept="audio/wav">
+      <label>Transkript der Referenz</label><textarea id="vtext" rows="3"></textarea>
+      <div class="row" style="margin-top:12px"><button class="b p" id="vadd">Hinzufügen</button><span id="vmsg"></span></div>
+    </div>
+    <div class="card"><h2 style="margin-top:0">Vorhandene Stimmen</h2><table><tbody id="vlist"></tbody></table></div>
+  </div>
+</section>
+
+
+<section id="int">
+  <div class="card" style="margin-bottom:16px"><h2 style="margin-top:0">Endpunkte</h2>
+    <div class="mut">Beide Dienste sprechen die OpenAI-Audio-API. Jede App, die dort eine eigene „Base URL“ erlaubt, kann sie nutzen.</div>
+    <table style="margin-top:8px"><tbody id="int-ep"></tbody></table>
+  </div>
+  <div class="two">
+    <div class="card"><h2 style="margin-top:0">Open WebUI</h2>
+      <div class="mut">Admin-Panel → Einstellungen → Audio</div>
+      <h2>Spracherkennung (STT)</h2><table><tbody id="int-owui-stt"></tbody></table>
+      <h2>Sprachausgabe (TTS)</h2><table><tbody id="int-owui-tts"></tbody></table>
+      <div class="mut" style="margin-top:8px">Läuft Open WebUI in Docker auf derselben Spark, statt der IP <code>http://host.docker.internal</code> nehmen (Container mit <code>--add-host=host.docker.internal:host-gateway</code> starten) oder die LAN-IP der Spark.</div>
+    </div>
+    <div class="card"><h2 style="margin-top:0">Andere Apps</h2>
+      <div class="mut">Überall dort, wo „OpenAI-kompatibel“ für Speech-to-Text oder Text-to-Speech auswählbar ist (z. B. LibreChat, AnythingLLM, SillyTavern, Home Assistant mit OpenAI-TTS/STT-Integration, n8n): Base URL und Schlüssel wie links eintragen. Modellname ist beliebig. Unbekannte OpenAI-Stimmen wie „alloy“ werden auf die Standardstimme umgeleitet.</div>
+      <h2>Stimmen</h2><div id="int-voices" class="mut">–</div>
+      <h2>Formate</h2><div class="mut">TTS: mp3 (Standard), wav, flac, opus, pcm. STT: json, verbose_json, text. Sprache als Name („German“) oder ISO-Code („de“).</div>
+    </div>
+  </div>
+  <div class="card" style="margin-top:16px"><h2 style="margin-top:0">curl</h2><pre id="int-curl"></pre></div>
+  <div class="card" style="margin-top:16px"><h2 style="margin-top:0">Python (openai-Paket)</h2><pre id="int-py"></pre></div>
+</section>
+<section id="logs">
+  <div class="row"><select id="logsvc" style="width:auto"><option value="asr">ASR</option><option value="tts">TTS</option><option value="panel">Panel</option></select>
+    <button class="b" id="logload">Aktualisieren</button></div>
+  <pre id="logout" style="margin-top:12px">…</pre>
+</section>
+</main>
+<script>
+const $=id=>document.getElementById(id);
+const api=async(p,o={})=>{const r=await fetch(p,o);if(!r.ok){let t=await r.text();try{t=JSON.parse(t).detail||t}catch{}throw new Error(t)}return r};
+document.querySelectorAll('nav button').forEach(b=>b.onclick=()=>{document.querySelectorAll('nav button,section').forEach(x=>x.classList.remove('on'));b.classList.add('on');$(b.dataset.s).classList.add('on');
+  if(b.dataset.s==='cfg')loadCfg();if(b.dataset.s==='test')loadVoices();if(b.dataset.s==='voices')loadClone();if(b.dataset.s==='logs')loadLogs();if(b.dataset.s==='int')loadInt();});
+const esc=s=>String(s??'').replace(/[&<>"]/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'}[c]));
+const pill=(s)=>{const c={active:'ok',ready:'ok',loading:'warn',activating:'warn',blocked:'bad',error:'bad',failed:'bad'}[s]||'';return `<span class="pill ${c}">${esc(s)}</span>`};
+const fmt=(v,u='',d=0)=>v==null?'–':(+v).toFixed(d)+u;
+
+function spark(svg,vals,max){const w=300,h=60;svg.setAttribute('viewBox',`0 0 ${w} ${h}`);svg.setAttribute('preserveAspectRatio','none');
+  const v=vals.filter(x=>x!=null);if(v.length<2){svg.innerHTML='';return}
+  const m=max??(Math.max(...v)*1.1||1);const pts=vals.map((x,i)=>x==null?null:[i*w/(vals.length-1),h-2-(x/m)*(h-4)]).filter(Boolean);
+  const d='M'+pts.map(p=>p[0].toFixed(1)+' '+p[1].toFixed(1)).join(' L');
+  svg.innerHTML=`<path d="${d} L${w} ${h} L0 ${h}Z" fill="var(--acc)" opacity=".12"/><path d="${d}" fill="none" stroke="var(--acc)" stroke-width="1.5" vector-effect="non-scaling-stroke"/>`;}
+
+async function act(n,a,btn){btn.disabled=true;try{await api(`/api/service/${n}/${a}`,{method:'POST'})}catch(e){alert(e.message)}btn.disabled=false;refresh()}
+window.act=act;
+
+async function refresh(){
+  let s;try{s=await (await api('/api/status')).json()}catch(e){$('hdr').textContent='Panel nicht erreichbar';return}
+  const g=s.gpu||{},sy=s.system,H=s.history;
+  $('hdr').textContent=(g.name||'keine GPU')+' · '+new Date(s.time*1000).toLocaleTimeString();
+  $('m-gpu').textContent=fmt(g.util,' %');$('m-mem').textContent=fmt(sy.mem_avail_gib,' GiB',1)+' / '+sy.mem_total_gib;
+  $('m-temp').textContent=fmt(g.temp,' °C')+' · '+fmt(g.power,' W');$('m-cpu').textContent=fmt(sy.cpu,' %');
+  spark($('c-gpu'),H.map(x=>x.gpu),100);spark($('c-mem'),H.map(x=>x.avail),sy.mem_total_gib);spark($('c-temp'),H.map(x=>x.temp),100);spark($('c-cpu'),H.map(x=>x.cpu),100);
+  $('memnote').innerHTML=sy.mem_avail_gib<12?`<div class="note">Nur noch ${fmt(sy.mem_avail_gib,' GiB',1)} frei. Unter ~8 GiB beendet DGX OS (earlyoom) Prozesse. Kleinere Modelle wählen oder einen Dienst stoppen.</div>`:'';
+  $('svc').innerHTML=Object.entries(s.services).map(([n,v])=>{const h=v.health||{};
+    const st=h.status?pill(h.status):'';const err=h.error?`<div class="err">${esc(h.error)}</div>`:(h.last_error?`<div class="err mut">letzter Fehler: ${esc(h.last_error.error)}</div>`:'');
+    return `<tr><td><b>${n.toUpperCase()}</b><div class="mut">:${v.port}</div></td><td>${pill(v.state)} ${st}${v.enabled?'':' <span class="pill">deaktiviert</span>'}</td>
+    <td>${esc(h.model||'')}<div class="mut">geschätzt ~${v.estimate_gib} GiB${h.load_seconds?` · geladen in ${h.load_seconds}s`:''}</div>${err}</td>
+    <td>${h.requests??'–'}${h.failures?` <span class="err">(${h.failures} Fehler)</span>`:''}${h.busy?' <span class="pill warn">arbeitet</span>':''}</td>
+    <td>${fmt(h.avg_latency_s,' s',2)}</td><td>${fmt(h.avg_rtf,'',2)}</td><td>${fmt(h.torch_cuda_reserved_gb,' GB',1)}</td>
+    <td class="row"><button class="b" onclick="act('${n}','restart',this)">Neustart</button>${v.state==='active'?`<button class="b" onclick="act('${n}','stop',this)">Stopp</button>`:`<button class="b" onclick="act('${n}','start',this)">Start</button>`}</td></tr>`}).join('');
+  $('q38none').style.display=s.qwen38.length?'none':'block';
+  $('q38').innerHTML=s.qwen38.map(q=>`<tr><td>${esc(q.unit)}</td><td>${pill(q.state)}</td><td>${q.mem_fraction!=null?(q.mem_fraction*100).toFixed(0)+' % des Pools':'–'}</td></tr>`).join('');
+  $('gp').innerHTML=(g.processes||[]).map(p=>`<tr><td>${esc(p.pid)}</td><td>${esc(p.name)}</td><td>${p.mem_mib!=null?fmt(p.mem_mib/1024,' GiB',1):'–'}</td></tr>`).join('')||'<tr><td class="mut" colspan=3>–</td></tr>';
+}
+
+let CFG=null;
+async function loadLangs(){const l=await (await api('/api/languages')).json();document.querySelectorAll('select.langs').forEach(s=>s.innerHTML=l.map(x=>`<option>${x}</option>`).join(''))}
+async function loadCfg(){CFG=await (await api('/api/config')).json();
+  for(const[sec,o]of Object.entries(CFG))for(const[k,v]of Object.entries(o)){const el=$(sec+'.'+k);if(!el)continue;
+    if(el.type==='checkbox')el.checked=v;else{if(el.tagName==='SELECT'&&![...el.options].some(o=>o.value==v))el.add(new Option(v));el.value=v}}}
+$('save').onclick=async()=>{const n=JSON.parse(JSON.stringify(CFG));
+  for(const[sec,o]of Object.entries(n))for(const k of Object.keys(o)){const el=$(sec+'.'+k);if(!el)continue;
+    o[k]=el.type==='checkbox'?el.checked:el.type==='number'?Number(el.value):el.value}
+  $('savemsg').textContent='Speichere…';
+  try{const r=await (await api('/api/config',{method:'PUT',headers:{'Content-Type':'application/json'},body:JSON.stringify(n)})).json();
+    $('savemsg').textContent='Gespeichert.'+(r.restarted.length?' Neu gestartet: '+r.restarted.join(', ').toUpperCase()+' (Modell lädt neu).':'')+(r.panel_restart_needed?' Panel-Port ändert sich nach: sudo systemctl restart speech-spark-panel':'');CFG=n}
+  catch(e){$('savemsg').innerHTML=`<span class="err">${esc(e.message)}</span>`}};
+
+$('asrgo').onclick=async()=>{const f=$('asrfile').files[0];if(!f)return;const fd=new FormData();fd.append('file',f);fd.append('language',$('asrlang').value);
+  $('asrmsg').textContent='läuft…';$('asrout').style.display='none';
+  try{const r=await (await api('/api/test/asr',{method:'POST',body:fd})).json();$('asrmsg').textContent=`${r.processing_s}s für ${fmt(r.duration,' s',1)} Audio`;
+    $('asrout').textContent=`[${r.language}] ${r.text}`;$('asrout').style.display='block'}catch(e){$('asrmsg').innerHTML=`<span class="err">${esc(e.message)}</span>`}};
+async function loadVoices(){const v=await (await api('/api/tts/voices')).json();
+  $('ttsvoice').innerHTML=v.voices.length?v.voices.map(x=>`<option>${esc(x)}</option>`).join(''):'<option value="">(Standard)</option>';
+  $('ttsvoice').disabled=v.model_kind==='voice_design'}
+$('ttsgo').onclick=async()=>{$('ttsmsg').textContent='läuft…';
+  try{const r=await api('/api/test/tts',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({input:$('ttstext').value,voice:$('ttsvoice').value||null,language:$('ttslang').value,instruct:$('ttsinstr').value||null})});
+    const b=await r.blob();$('ttsaudio').src=URL.createObjectURL(b);$('ttsaudio').style.display='block';$('ttsaudio').play();$('ttsmsg').textContent=`${r.headers.get('x-processing-seconds')||'?'} s`}
+  catch(e){$('ttsmsg').innerHTML=`<span class="err">${esc(e.message)}</span>`}};
+
+async function loadClone(){const l=await (await api('/api/clone-voices')).json();
+  $('vlist').innerHTML=l.map(n=>`<tr><td>${esc(n)}</td><td style="text-align:right"><button class="b" onclick="delVoice('${esc(n)}')">Löschen</button></td></tr>`).join('')||'<tr><td class="mut">Noch keine.</td></tr>'}
+window.delVoice=async n=>{if(!confirm(`Stimme ${n} löschen?`))return;await api('/api/clone-voices/'+encodeURIComponent(n),{method:'DELETE'});loadClone()};
+$('vadd').onclick=async()=>{const f=$('vfile').files[0];if(!f||!$('vname').value)return;const fd=new FormData();fd.append('name',$('vname').value);fd.append('text',$('vtext').value);fd.append('file',f);
+  try{await api('/api/clone-voices',{method:'POST',body:fd});$('vmsg').textContent='Hinzugefügt.';loadClone()}catch(e){$('vmsg').innerHTML=`<span class="err">${esc(e.message)}</span>`}};
+
+async function loadLogs(){$('logout').textContent=await (await api('/api/logs/'+$('logsvc').value+'?lines=300')).text()||'(leer)'}
+$('logload').onclick=loadLogs;$('logsvc').onchange=loadLogs;
+
+
+// navigator.clipboard needs https or localhost; the panel is usually plain http on the LAN
+window.copyText=(t,btn)=>{const done=()=>{btn.textContent='kopiert';setTimeout(()=>btn.textContent='kopieren',1200)};
+  if(navigator.clipboard&&window.isSecureContext){navigator.clipboard.writeText(t).then(done);return}
+  const ta=document.createElement('textarea');ta.value=t;document.body.appendChild(ta);ta.select();document.execCommand('copy');ta.remove();done()};
+function kv(rows){return rows.map(([k,v])=>`<tr><td class="mut" style="width:40%">${k}</td><td><code>${esc(v)}</code> <button class="b" style="padding:1px 6px;font-size:12px" onclick="copyText(this.previousElementSibling.textContent,this)">kopieren</button></td></tr>`).join('')}
+async function loadInt(){const c=await (await api('/api/config')).json();const v=await (await api('/api/tts/voices')).json();
+  const host=location.hostname,asr=`http://${host}:${c.asr.port}/v1`,tts=`http://${host}:${c.tts.port}/v1`,key=c.api.key||'beliebig, z. B. sk-local';
+  const voice=c.tts.default_voice||(v.voices[0]||'Ryan');
+  $('int-ep').innerHTML=kv([['Spracherkennung (STT)',asr+'/audio/transcriptions'],['Sprachausgabe (TTS)',tts+'/audio/speech'],['API-Schlüssel',c.api.key||'(keiner gesetzt)']]);
+  $('int-owui-stt').innerHTML=kv([['Speech-to-Text Engine','OpenAI'],['API Base URL',asr],['API Key',key],['STT Model',c.asr.model]]);
+  $('int-owui-tts').innerHTML=kv([['Text-to-Speech Engine','OpenAI'],['API Base URL',tts],['API Key',key],['TTS Model',c.tts.model],['TTS Voice',voice]]);
+  $('int-voices').textContent=v.model_kind==='voice_design'?'VoiceDesign-Modell: die Stimme wird über die Standard-Anweisung beschrieben.':(v.voices.join(', ')||'(Dienst lädt noch)');
+  const auth=c.api.key?` \\\n  -H "Authorization: Bearer ${c.api.key}"`:'';
+  $('int-curl').textContent=`# Text -> Sprache (mp3)
+curl ${tts}/audio/speech${auth} \\
+  -H "Content-Type: application/json" \\
+  -d '{"model":"qwen3-tts","input":"Hallo aus der Spark.","voice":"${voice}","language":"German"}' -o hallo.mp3
+
+# Sprache -> Text
+curl ${asr}/audio/transcriptions${auth} \\
+  -F file=@hallo.mp3 -F language=de`;
+  $('int-py').textContent=`from openai import OpenAI
+
+tts = OpenAI(base_url="${tts}", api_key="${c.api.key||'sk-local'}")
+stt = OpenAI(base_url="${asr}", api_key="${c.api.key||'sk-local'}")
+
+with tts.audio.speech.with_streaming_response.create(
+        model="qwen3-tts", voice="${voice}", input="Hallo aus der Spark.") as r:
+    r.stream_to_file("hallo.mp3")
+
+with open("hallo.mp3", "rb") as f:
+    print(stt.audio.transcriptions.create(model="qwen3-asr", file=f, language="de").text)`;}
+$('genkey').onclick=()=>{const a=new Uint8Array(18);crypto.getRandomValues(a);$('api.key').value='sk-'+[...a].map(x=>x.toString(16).padStart(2,'0')).join('')};
+loadLangs();refresh();setInterval(refresh,3000);
+</script>
+</body>
+</html>
