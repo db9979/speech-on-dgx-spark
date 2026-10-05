@@ -1,14 +1,17 @@
 #!/usr/bin/env bash
 # Speech on DGX Spark: installs Qwen3-ASR + Qwen3-TTS as systemd services with a web
-# panel for config and monitoring. Designed to run next to dgx-spark-qwen38.
+# panel for config, monitoring and updates. Designed to run next to dgx-spark-qwen38.
 #
-#   sudo ./install.sh                  # install or update
+#   sudo ./install.sh                  # install, or update an existing install
 #   sudo ./install.sh --small          # 0.6B models (least unified memory)
 #   sudo ./install.sh --no-tts         # only ASR (or --no-asr)
+#   sudo ./install.sh --tts-backend transformers   # TTS without streaming (default: vllm-omni, streams)
 #   sudo ./install.sh --password XYZ   # panel password (otherwise generated)
 #   sudo ./install.sh --no-download    # models download on first start instead
 #   sudo ./install.sh --no-smoke       # skip the TTS -> ASR round trip at the end
 #   sudo ./install.sh --uninstall      # remove services (keeps models); add --purge for everything
+#
+# Later updates: the "Update" button in the panel, or  sudo /opt/speech-spark/src/update.sh
 set -euo pipefail
 
 PREFIX=/opt/speech-spark
@@ -16,27 +19,36 @@ ETC=/etc/speech-spark
 VAR=/var/lib/speech-spark
 SVC_USER=speech
 TORCH_INDEX=https://download.pytorch.org/whl/cu130
+# TTS engine (streaming). vllm-omni needs the vLLM release with the same major/minor.
+# Both ship aarch64 wheels on PyPI built for CUDA 13; installed natively, no Docker.
+VLLM_VERSION=0.30.0
+VLLM_OMNI_VERSION=0.30.0
+DEFAULT_REMOTE=https://github.com/db9979/speech-on-dgx-spark
 SRC="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
 
-SMALL=0; WITH_ASR=1; WITH_TTS=1; PASSWORD=""; DOWNLOAD=1; SMOKE=1
+SMALL=0; WITH_ASR=1; WITH_TTS=1; PASSWORD=""; DOWNLOAD=1; SMOKE=1; FROM_UPDATE=0; TTS_BACKEND=""
 while [ $# -gt 0 ]; do
   case "$1" in
     --small) SMALL=1 ;;
     --no-asr) WITH_ASR=0 ;;
     --no-tts) WITH_TTS=0 ;;
+    --tts-backend) TTS_BACKEND="$2"; shift ;;
     --password) PASSWORD="$2"; shift ;;
     --no-download) DOWNLOAD=0 ;;
     --no-smoke) SMOKE=0 ;;
-    --uninstall) shift; exec "$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)/uninstall.sh" "$@" ;;
-    -h|--help) sed -n '2,12p' "$0"; exit 0 ;;
+    --update) FROM_UPDATE=1 ;;  # set by update.sh
+    --uninstall) shift; exec "$SRC/uninstall.sh" "$@" ;;
+    -h|--help) sed -n '2,15p' "$0"; exit 0 ;;
     *) echo "unknown option: $1" >&2; exit 2 ;;
   esac
   shift
 done
+case "$TTS_BACKEND" in ""|vllm-omni|transformers) ;; *) echo "--tts-backend must be vllm-omni or transformers" >&2; exit 2 ;; esac
 
 say()  { printf '\n\033[1;34m==>\033[0m %s\n' "$*"; }
 warn() { printf '\033[1;33mWARN:\033[0m %s\n' "$*"; }
 die()  { printf '\033[1;31mERROR:\033[0m %s\n' "$*" >&2; exit 1; }
+jqi()  { local tmp; tmp=$(mktemp); jq "$@" "$ETC/config.json" >"$tmp" && mv "$tmp" "$ETC/config.json"; }
 
 [ "$(id -u)" = 0 ] || die "run with sudo"
 [ "$(uname -m)" = aarch64 ] || warn "this is $(uname -m), not aarch64; the script targets the DGX Spark"
@@ -56,10 +68,32 @@ say "Service user and directories"
 id "$SVC_USER" >/dev/null 2>&1 || useradd --system --home-dir "$VAR" --shell /usr/sbin/nologin "$SVC_USER"
 for g in video render systemd-journal; do getent group "$g" >/dev/null && usermod -aG "$g" "$SVC_USER"; done
 install -d -o root -g root -m 755 "$PREFIX"
-install -d -o "$SVC_USER" -g "$SVC_USER" -m 750 "$ETC" "$VAR" "$VAR/hf" "$VAR/voices"
-rm -rf "$PREFIX/app"
-cp -r "$SRC/app" "$PREFIX/app"
-chmod -R a+rX "$PREFIX/app"
+install -d -o "$SVC_USER" -g "$SVC_USER" -m 750 "$ETC" "$VAR" "$VAR/hf" "$VAR/voices" "$VAR/state"
+chmod 755 "$VAR"
+
+# ---------------------------------------------------------------- own git clone for updates
+# The panel's update button works on $PREFIX/src, independent of where you cloned this repo.
+# It is owned by root: the panel can trigger an update but cannot change what gets installed.
+if [ "$SRC" != "$PREFIX/src" ]; then
+  say "Git clone for updates in $PREFIX/src"
+  remote=$DEFAULT_REMOTE; commit=""
+  if git -C "$SRC" rev-parse HEAD >/dev/null 2>&1; then
+    remote=$(git -C "$SRC" remote get-url origin 2>/dev/null || echo "$DEFAULT_REMOTE")
+    commit=$(git -C "$SRC" rev-parse HEAD)
+  fi
+  if [ ! -d "$PREFIX/src/.git" ]; then
+    git clone --quiet --branch main "$remote" "$PREFIX/src" || die "could not clone $remote"
+  fi
+  git -C "$PREFIX/src" remote set-url origin "$remote"
+  git -C "$PREFIX/src" fetch --quiet origin main
+  if [ -n "$commit" ] && git -C "$PREFIX/src" cat-file -e "$commit^{commit}" 2>/dev/null; then
+    git -C "$PREFIX/src" reset --hard --quiet "$commit"
+  else
+    [ -n "$commit" ] && warn "your checkout is at a commit that is not on GitHub; updates will follow origin/main"
+    git -C "$PREFIX/src" reset --hard --quiet origin/main
+  fi
+fi
+INSTALL_FROM="$SRC"   # the files installed now are the ones next to this script
 
 # ---------------------------------------------------------------- config
 # Lanes from dgx-spark-qwen38 that claim most of the unified pool (0.76 / 0.85).
@@ -69,44 +103,46 @@ if systemctl cat qwen38-sglang.service 2>/dev/null | grep -q -- '--mem-fraction-
 
 if [ ! -f "$ETC/config.json" ]; then
   say "Writing $ETC/config.json"
-  cp "$PREFIX/app/config.default.json" "$ETC/config.json"
+  cp "$INSTALL_FROM/app/config.default.json" "$ETC/config.json"
   if [ "$SMALL" = 1 ] || [ -n "$big_lane" ]; then
     [ -n "$big_lane" ] && [ "$SMALL" = 0 ] && warn "found $big_lane: choosing the 0.6B models so speech fits next to it"
-    tmp=$(mktemp)
-    jq '.asr.model="Qwen/Qwen3-ASR-0.6B" | .tts.model="Qwen/Qwen3-TTS-12Hz-0.6B-CustomVoice"' "$ETC/config.json" >"$tmp"
-    mv "$tmp" "$ETC/config.json"
+    jqi '.asr.model="Qwen/Qwen3-ASR-0.6B" | .tts.model="Qwen/Qwen3-TTS-12Hz-0.6B-CustomVoice"'
   fi
-  tmp=$(mktemp)
-  jq --argjson a "$WITH_ASR" --argjson t "$WITH_TTS" '.asr.enabled=($a==1) | .tts.enabled=($t==1)' "$ETC/config.json" >"$tmp"
-  mv "$tmp" "$ETC/config.json"
+  jqi --argjson a "$WITH_ASR" --argjson t "$WITH_TTS" '.asr.enabled=($a==1) | .tts.enabled=($t==1)'
+  # Generate an API key; apps send it as "Authorization: Bearer <key>".
+  jqi --arg k "sk-$(head -c 24 /dev/urandom | od -An -tx1 | tr -d ' \n')" '.api.key=$k'
 else
-  say "Keeping existing $ETC/config.json (adding settings introduced by this version)"
+  say "Keeping $ETC/config.json (adding settings introduced by this version)"
   tmp=$(mktemp)
-  jq -s '.[0] * .[1]' "$PREFIX/app/config.default.json" "$ETC/config.json" >"$tmp" && mv "$tmp" "$ETC/config.json"
-  if [ "$SMALL" = 1 ]; then
-    tmp=$(mktemp)
-    jq '.asr.model="Qwen/Qwen3-ASR-0.6B" | .tts.model="Qwen/Qwen3-TTS-12Hz-0.6B-CustomVoice"' "$ETC/config.json" >"$tmp"
-    mv "$tmp" "$ETC/config.json"
-  fi
+  jq -s '.[0] * .[1]' "$INSTALL_FROM/app/config.default.json" "$ETC/config.json" >"$tmp" && mv "$tmp" "$ETC/config.json"
+  [ "$SMALL" = 1 ] && jqi '.asr.model="Qwen/Qwen3-ASR-0.6B" | .tts.model="Qwen/Qwen3-TTS-12Hz-0.6B-CustomVoice"'
 fi
+[ -n "$TTS_BACKEND" ] && jqi --arg b "$TTS_BACKEND" '.tts.backend=$b'
 chown "$SVC_USER:$SVC_USER" "$ETC/config.json"; chmod 640 "$ETC/config.json"
 
 cfg() { jq -r "$1" "$ETC/config.json"; }
 ASR_PORT=$(cfg .asr.port); TTS_PORT=$(cfg .tts.port); PANEL_PORT=$(cfg .panel.port)
+BACKEND=$(cfg .tts.backend)
+[ "$(cfg .tts.enabled)" = true ] || WITH_TTS=0
+[ "$(cfg .asr.enabled)" = true ] || WITH_ASR=0
 
 # ---------------------------------------------------------------- ports
-say "Checking ports $ASR_PORT, $TTS_PORT, $PANEL_PORT (dgx-spark-qwen38 uses 30000-30099)"
-for p in "$ASR_PORT" "$TTS_PORT" "$PANEL_PORT"; do
+say "Checking ports (dgx-spark-qwen38 uses 30000-30099)"
+ports="$ASR_PORT $TTS_PORT $PANEL_PORT"
+[ "$BACKEND" = vllm-omni ] && ports="$ports $(cfg .tts.engine_port) $(cfg .tts.voicedesign_port)"
+for p in $ports; do
   owner=$(ss -ltnpH "sport = :$p" 2>/dev/null | head -1)
   [ -n "$owner" ] || continue
   pid=$(grep -oE 'pid=[0-9]+' <<<"$owner" | head -1 | cut -d= -f2)
-  # our own services from a previous install are fine; anything else is a conflict
-  if [ -z "$pid" ] || [ "$(ps -o user= -p "$pid" | tr -d ' ')" != "$SVC_USER" ]; then
+  user=""
+  if [ -n "$pid" ]; then user=$(ps -o user= -p "$pid" | tr -d ' '); fi
+  # our own services (including the engines) from a previous install are fine
+  if [ "$user" != "$SVC_USER" ]; then
     die "port $p is already in use: $owner. Change it in $ETC/config.json and re-run."
   fi
 done
 
-# ---------------------------------------------------------------- venvs
+# ---------------------------------------------------------------- python envs
 make_venv() {  # $1 = name, rest = pip packages
   local v="$PREFIX/venv-$1"; shift
   [ -x "$v/bin/python" ] || "$PY" -m venv "$v"
@@ -128,19 +164,78 @@ EOF
 }
 
 if [ "$WITH_ASR" = 1 ]; then
-  say "Python env for Qwen3-ASR (several GB of wheels, takes a while)"
+  say "Python env for Qwen3-ASR (several GB of wheels, takes a while the first time)"
   make_venv asr --torch qwen-asr fastapi "uvicorn[standard]" python-multipart
   check_cuda asr
 fi
-if [ "$WITH_TTS" = 1 ]; then
-  say "Python env for Qwen3-TTS"
+if [ "$WITH_TTS" = 1 ] && [ "$BACKEND" = transformers ]; then
+  say "Python env for Qwen3-TTS (transformers backend)"
   make_venv tts --torch qwen-tts fastapi "uvicorn[standard]" python-multipart
   check_cuda tts
 fi
-say "Python env for the panel"
+say "Python env for the panel and the TTS front end"
 make_venv panel fastapi "uvicorn[standard]" python-multipart httpx psutil
 
-# ---------------------------------------------------------------- password
+# ---------------------------------------------------------------- TTS engine (vllm-omni, native)
+if [ "$WITH_TTS" = 1 ] && [ "$BACKEND" = vllm-omni ]; then
+  say "Python env for the TTS engine: vllm $VLLM_VERSION + vllm-omni $VLLM_OMNI_VERSION (large, takes a while the first time)"
+  v="$PREFIX/venv-engine"
+  [ -x "$v/bin/python" ] || "$PY" -m venv "$v"
+  "$v/bin/pip" install -q -U pip uv
+  # uv resolves this large dependency set much faster than pip; torch comes from PyPI,
+  # whose aarch64 wheels for this vLLM release are CUDA 13 builds.
+  "$v/bin/uv" pip install -q --python "$v/bin/python" "vllm==$VLLM_VERSION" "vllm-omni==$VLLM_OMNI_VERSION"
+  check_cuda engine
+  "$v/bin/vllm" --help >/dev/null 2>&1 || die "vllm in venv-engine does not start; see the output above"
+fi
+
+# ---------------------------------------------------------------- models (ASR / transformers TTS)
+if [ "$DOWNLOAD" = 1 ]; then
+  dl() {
+    sudo -u "$SVC_USER" HF_HOME="$VAR/hf" "$PREFIX/venv-$1/bin/python" -c \
+      "import sys; from huggingface_hub import snapshot_download; snapshot_download(sys.argv[1])" "$2"
+  }
+  if [ "$WITH_ASR" = 1 ]; then
+    say "Downloading ASR model"
+    dl asr "$(cfg .asr.model)"
+    [ "$(cfg .asr.timestamps)" = true ] && dl asr "$(cfg .asr.aligner_model)"
+  fi
+  if [ "$WITH_TTS" = 1 ] && [ "$BACKEND" = transformers ]; then
+    say "Downloading TTS model"
+    dl tts "$(cfg .tts.model)"
+  fi
+  if [ "$WITH_TTS" = 1 ] && [ "$BACKEND" = vllm-omni ]; then
+    say "Downloading TTS model for the engine"
+    dl engine "$(cfg .tts.model)"
+    [ "$(cfg .tts.voicedesign_enabled)" = true ] && dl engine "$(cfg .tts.voicedesign_model)"
+  fi
+fi
+
+# ================================================================ switch to the new version
+# Everything above can fail without touching the running services. From here on the
+# new code goes live.
+say "Installing application files"
+rm -rf "$PREFIX/app.new"
+cp -r "$INSTALL_FROM/app" "$PREFIX/app.new"
+chmod -R a+rX "$PREFIX/app.new"
+chmod 755 "$PREFIX/app.new/engine.sh"
+rm -rf "$PREFIX/app.old"
+[ -d "$PREFIX/app" ] && mv "$PREFIX/app" "$PREFIX/app.old"
+mv "$PREFIX/app.new" "$PREFIX/app"
+rm -rf "$PREFIX/app.old"
+
+# version shown in the panel
+if git -C "$PREFIX/src" rev-parse HEAD >/dev/null 2>&1; then
+  g() { git -C "$PREFIX/src" log -1 --format="$1"; }
+  jq -n --arg c "$(g %H)" --arg s "$(g %h)" --arg d "$(g %cI)" --arg m "$(g %s)" \
+    --arg r "$(git -C "$PREFIX/src" remote get-url origin)" --arg e "vllm-omni $VLLM_OMNI_VERSION (vllm $VLLM_VERSION)" \
+    '{commit: $c, short: $s, date: $d, subject: $m, remote: $r, branch: "main", engine: $e}' >"$PREFIX/VERSION.json"
+else
+  echo '{"commit": null, "subject": "installed without git"}' >"$PREFIX/VERSION.json"
+fi
+chmod 644 "$PREFIX/VERSION.json"
+
+# ---------------------------------------------------------------- password, sudoers
 if [ ! -f "$ETC/panel.env" ] || [ -n "$PASSWORD" ]; then
   [ -n "$PASSWORD" ] || PASSWORD=$(head -c 18 /dev/urandom | base64 | tr -dc 'A-Za-z0-9' | head -c 16)
   printf 'PANEL_PASSWORD=%s\n' "$PASSWORD" >"$ETC/panel.env"
@@ -148,20 +243,32 @@ fi
 chown "$SVC_USER:$SVC_USER" "$ETC/panel.env"; chmod 600 "$ETC/panel.env"
 PASSWORD=$(sed -n 's/^PANEL_PASSWORD=//p' "$ETC/panel.env")
 
-# The panel may start/stop/restart exactly these two units, nothing else.
-cat >/etc/sudoers.d/speech-spark <<EOF
-$SVC_USER ALL=(root) NOPASSWD: /usr/bin/systemctl start speech-spark-asr, /usr/bin/systemctl stop speech-spark-asr, /usr/bin/systemctl restart speech-spark-asr, /usr/bin/systemctl start speech-spark-tts, /usr/bin/systemctl stop speech-spark-tts, /usr/bin/systemctl restart speech-spark-tts
-EOF
+# The panel may start/stop/restart exactly these units and start the update, nothing else.
+{
+  printf '%s ALL=(root) NOPASSWD: ' "$SVC_USER"
+  first=1
+  for u in asr tts tts-engine tts-design; do
+    for a in start stop restart; do
+      [ $first = 1 ] || printf ', '
+      printf '/usr/bin/systemctl %s speech-spark-%s' "$a" "$u"; first=0
+    done
+  done
+  printf ', /usr/bin/systemctl start --no-block speech-spark-update\n'
+} >/etc/sudoers.d/speech-spark
 chmod 440 /etc/sudoers.d/speech-spark
 visudo -cf /etc/sudoers.d/speech-spark >/dev/null || die "sudoers file invalid"
 
 # ---------------------------------------------------------------- systemd
 say "systemd units"
 QWEN38_AFTER="qwen38-sglang.service qwen38-flash.service qwen38-image.service qwen38-video.service qwen38-llamacpp.service"
-unit() {  # $1 = asr|tts
-  cat >"/etc/systemd/system/speech-spark-$1.service" <<EOF
+common_env="Environment=SPEECH_SPARK_CONFIG=$ETC/config.json
+Environment=SPEECH_SPARK_VOICES=$VAR/voices
+Environment=SPEECH_SPARK_STATE=$VAR/state
+Environment=PYTHONUNBUFFERED=1"
+
+cat >/etc/systemd/system/speech-spark-asr.service <<EOF
 [Unit]
-Description=Speech on DGX Spark: Qwen3-${1^^}
+Description=Speech on DGX Spark: Qwen3-ASR
 # Start after the qwen38 lanes so their static memory fraction is claimed first.
 After=network-online.target $QWEN38_AFTER
 Wants=network-online.target
@@ -170,12 +277,10 @@ Wants=network-online.target
 User=$SVC_USER
 Group=$SVC_USER
 WorkingDirectory=$PREFIX/app
-Environment=SPEECH_SPARK_CONFIG=$ETC/config.json
-Environment=SPEECH_SPARK_VOICES=$VAR/voices
+$common_env
 Environment=HF_HOME=$VAR/hf
 Environment=PYTORCH_CUDA_ALLOC_CONF=expandable_segments:True
-Environment=PYTHONUNBUFFERED=1
-ExecStart=$PREFIX/venv-$1/bin/python $PREFIX/app/$1_server.py
+ExecStart=$PREFIX/venv-asr/bin/python $PREFIX/app/asr_server.py
 Restart=on-failure
 RestartSec=10
 # If unified memory runs out, the kernel / earlyoom should pick speech before an LLM lane or sshd.
@@ -185,8 +290,70 @@ Nice=5
 [Install]
 WantedBy=multi-user.target
 EOF
+
+if [ "$BACKEND" = vllm-omni ]; then
+  tts_exec="$PREFIX/venv-panel/bin/python $PREFIX/app/tts_proxy.py"
+  tts_deps="Wants=speech-spark-tts-engine.service"
+else
+  tts_exec="$PREFIX/venv-tts/bin/python $PREFIX/app/tts_server.py"
+  tts_deps=""
+fi
+cat >/etc/systemd/system/speech-spark-tts.service <<EOF
+[Unit]
+Description=Speech on DGX Spark: Qwen3-TTS ($BACKEND)
+After=network-online.target $QWEN38_AFTER
+Wants=network-online.target
+$tts_deps
+
+[Service]
+User=$SVC_USER
+Group=$SVC_USER
+WorkingDirectory=$PREFIX/app
+$common_env
+Environment=HF_HOME=$VAR/hf
+Environment=PYTORCH_CUDA_ALLOC_CONF=expandable_segments:True
+ExecStart=$tts_exec
+Restart=on-failure
+RestartSec=10
+OOMScoreAdjust=900
+Nice=5
+
+[Install]
+WantedBy=multi-user.target
+EOF
+
+engine_unit() {  # $1 = unit suffix, $2 = engine.sh role
+  cat >"/etc/systemd/system/speech-spark-$1.service" <<EOF
+[Unit]
+Description=Speech on DGX Spark: vllm-omni TTS engine ($2)
+After=network-online.target $QWEN38_AFTER
+Wants=network-online.target
+
+[Service]
+User=$SVC_USER
+Group=$SVC_USER
+WorkingDirectory=$VAR
+$common_env
+Environment=SPEECH_SPARK_ENGINE_VENV=$PREFIX/venv-engine
+Environment=HF_HOME=$VAR/hf
+Environment=HOME=$VAR
+ExecStart=$PREFIX/app/engine.sh $2
+Restart=on-failure
+RestartSec=30
+# first start downloads the model and compiles kernels
+TimeoutStartSec=infinity
+TimeoutStopSec=30
+KillMode=control-group
+OOMScoreAdjust=900
+Nice=5
+
+[Install]
+WantedBy=multi-user.target
+EOF
 }
-unit asr; unit tts
+engine_unit tts-engine main
+engine_unit tts-design design
+
 cat >/etc/systemd/system/speech-spark-panel.service <<EOF
 [Unit]
 Description=Speech on DGX Spark: web panel
@@ -196,9 +363,8 @@ After=network-online.target
 User=$SVC_USER
 Group=$SVC_USER
 WorkingDirectory=$PREFIX/app/panel
-Environment=SPEECH_SPARK_CONFIG=$ETC/config.json
-Environment=SPEECH_SPARK_VOICES=$VAR/voices
-Environment=PYTHONUNBUFFERED=1
+$common_env
+Environment=SPEECH_SPARK_PREFIX=$PREFIX
 EnvironmentFile=$ETC/panel.env
 ExecStart=$PREFIX/venv-panel/bin/python $PREFIX/app/panel/panel.py
 Restart=always
@@ -207,57 +373,89 @@ RestartSec=5
 [Install]
 WantedBy=multi-user.target
 EOF
-systemctl daemon-reload
 
-# ---------------------------------------------------------------- models
-if [ "$DOWNLOAD" = 1 ]; then
-  say "Downloading models into $VAR/hf"
-  dl() {
-    sudo -u "$SVC_USER" HF_HOME="$VAR/hf" "$PREFIX/venv-$1/bin/python" -c \
-      "import sys; from huggingface_hub import snapshot_download; snapshot_download(sys.argv[1])" "$2"
-  }
-  if [ "$WITH_ASR" = 1 ]; then
-    dl asr "$(cfg .asr.model)"
-    [ "$(cfg .asr.timestamps)" = true ] && dl asr "$(cfg .asr.aligner_model)"
-  fi
-  [ "$WITH_TTS" = 1 ] && dl tts "$(cfg .tts.model)"
-fi
+# Runs update.sh from the root-owned clone; started by the panel's update button.
+cat >/etc/systemd/system/speech-spark-update.service <<EOF
+[Unit]
+Description=Speech on DGX Spark: update from GitHub
+After=network-online.target
+Wants=network-online.target
+
+[Service]
+Type=oneshot
+ExecStart=$PREFIX/src/update.sh
+TimeoutStartSec=2h
+EOF
+systemctl daemon-reload
 
 # ---------------------------------------------------------------- start
 say "Starting services"
-systemctl enable --now speech-spark-panel.service
+systemctl enable speech-spark-panel.service >/dev/null 2>&1
 systemctl restart speech-spark-panel.service
-for s in asr tts; do
-  if [ "$(cfg .$s.enabled)" = true ] && [ -x "$PREFIX/venv-$s/bin/python" ]; then
-    systemctl enable speech-spark-$s.service; systemctl restart speech-spark-$s.service
-  else
-    systemctl disable --now speech-spark-$s.service 2>/dev/null || true
-  fi
-done
 
-wait_ready() {  # $1 = name, $2 = port
+if [ "$WITH_ASR" = 1 ]; then
+  systemctl enable speech-spark-asr.service >/dev/null 2>&1; systemctl restart speech-spark-asr.service
+else
+  systemctl disable --now speech-spark-asr.service 2>/dev/null || true
+fi
+
+if [ "$WITH_TTS" = 1 ] && [ "$BACKEND" = vllm-omni ]; then
+  systemctl enable speech-spark-tts-engine.service >/dev/null 2>&1
+  # an update only restarts the engine when its settings changed: a restart costs a model load
+  engine_sig="$VLLM_OMNI_VERSION $(jq -c '.tts | {model, engine_mem_talker, engine_mem_code2wav, engine_max_seqs, engine_port}' "$ETC/config.json")"
+  if [ "$FROM_UPDATE" = 0 ] || [ "$(cat "$VAR/state/engine.sig" 2>/dev/null)" != "$engine_sig" ] \
+     || ! systemctl is-active -q speech-spark-tts-engine.service; then
+    systemctl restart speech-spark-tts-engine.service
+  fi
+  echo "$engine_sig" >"$VAR/state/engine.sig"; chown "$SVC_USER:" "$VAR/state/engine.sig"
+  if [ "$(cfg .tts.voicedesign_enabled)" = true ]; then
+    systemctl enable speech-spark-tts-design.service >/dev/null 2>&1; systemctl restart speech-spark-tts-design.service
+  else
+    systemctl disable --now speech-spark-tts-design.service 2>/dev/null || true
+  fi
+else
+  systemctl disable --now speech-spark-tts-engine.service speech-spark-tts-design.service 2>/dev/null || true
+fi
+if [ "$WITH_TTS" = 1 ]; then
+  systemctl enable speech-spark-tts.service >/dev/null 2>&1; systemctl restart speech-spark-tts.service
+else
+  systemctl disable --now speech-spark-tts.service 2>/dev/null || true
+fi
+
+wait_ready() {  # $1 = name, $2 = port, $3 = minutes
   local st=""
-  for _ in $(seq 1 120); do
+  for _ in $(seq 1 $(( $3 * 12 ))); do
     st=$(curl -fs "http://127.0.0.1:$2/health" | jq -r .status 2>/dev/null || true)
     case "$st" in ready) echo "   $1 ready"; return 0 ;; error|blocked)
       echo "   $1 $st: $(curl -fs "http://127.0.0.1:$2/health" | jq -r .error)"; return 1 ;; esac
     sleep 5
   done
-  echo "   $1 not ready after 10 min (status: ${st:-no answer}); see: journalctl -u speech-spark-$1"; return 1
+  echo "   $1 not ready after $3 min (status: ${st:-no answer}); see the panel or: journalctl -u 'speech-spark-*'"; return 1
 }
 ok_asr=0; ok_tts=0
-[ "$(cfg .asr.enabled)" = true ] && [ "$WITH_ASR" = 1 ] && wait_ready asr "$ASR_PORT" && ok_asr=1
-[ "$(cfg .tts.enabled)" = true ] && [ "$WITH_TTS" = 1 ] && wait_ready tts "$TTS_PORT" && ok_tts=1
+if [ "$WITH_ASR" = 1 ]; then wait_ready asr "$ASR_PORT" 10 && ok_asr=1; fi
+# first engine start pulls the model and compiles kernels
+if [ "$WITH_TTS" = 1 ]; then wait_ready tts "$TTS_PORT" 30 && ok_tts=1; fi
 
+KEY=$(cfg .api.key)
+auth=(); [ -n "$KEY" ] && auth=(-H "Authorization: Bearer $KEY")
 if [ "$SMOKE" = 1 ] && [ "$ok_tts" = 1 ]; then
   say "Smoke test: TTS -> ASR round trip"
   out=$(mktemp --suffix=.wav)
-  curl -fs "http://127.0.0.1:$TTS_PORT/v1/audio/speech" -H 'Content-Type: application/json' \
-    -d '{"input":"Hello from the DGX Spark. Speech is up and running.","language":"English"}' -o "$out" \
-    && echo "   TTS wrote $(stat -c %s "$out") bytes" || warn "TTS request failed"
+  if curl -fs "${auth[@]}" "http://127.0.0.1:$TTS_PORT/v1/audio/speech" -H 'Content-Type: application/json' \
+       -d '{"input":"Hello from the DGX Spark. Speech is up and running.","language":"English","response_format":"wav"}' -o "$out"; then
+    echo "   TTS wrote $(stat -c %s "$out") bytes"
+  else
+    warn "TTS request failed"
+  fi
+  if [ "$BACKEND" = vllm-omni ]; then
+    first=$(curl -fsN "${auth[@]}" "http://127.0.0.1:$TTS_PORT/v1/audio/speech" -H 'Content-Type: application/json' \
+      -d '{"input":"Streaming test.","stream":true,"response_format":"pcm"}' -o /dev/null -w '%{time_starttransfer}' || true)
+    [ -n "$first" ] && echo "   streaming: first audio after ${first}s"
+  fi
   if [ "$ok_asr" = 1 ] && [ -s "$out" ]; then
-    curl -fs "http://127.0.0.1:$ASR_PORT/v1/audio/transcriptions" -F "file=@$out" | jq -r '"   ASR heard: \(.text)"' \
-      || warn "ASR request failed"
+    curl -fs "${auth[@]}" "http://127.0.0.1:$ASR_PORT/v1/audio/transcriptions" -F "file=@$out" \
+      | jq -r '"   ASR heard: \(.text)"' || warn "ASR request failed"
   fi
   rm -f "$out"
 fi
@@ -268,7 +466,9 @@ cat <<EOF
 ------------------------------------------------------------------
  Panel:     http://$IP:$PANEL_PORT   (user: anything, password: $PASSWORD)
  ASR API:   http://$IP:$ASR_PORT/v1/audio/transcriptions
- TTS API:   http://$IP:$TTS_PORT/v1/audio/speech
+ TTS API:   http://$IP:$TTS_PORT/v1/audio/speech   (backend: $BACKEND)
+ API key:   ${KEY:-none}
  Config:    $ETC/config.json     Logs: journalctl -u 'speech-spark-*'
+ Update:    panel tab "System", or: sudo $PREFIX/src/update.sh
 ------------------------------------------------------------------
 EOF

@@ -15,11 +15,19 @@
     "enabled": true,
     "host": "0.0.0.0",
     "port": 31002,
-    "model": "Qwen/Qwen3-TTS-12Hz-1.7B-CustomVoice",
+    "model": "Qwen/Qwen3-TTS-12Hz-0.6B-CustomVoice",
     "dtype": "bfloat16",
-    "default_voice": "Ryan",
+    "default_voice": "ryan",
     "default_language": "auto",
-    "default_instruct": ""
+    "default_instruct": "",
+    "backend": "vllm-omni",
+    "engine_port": 31012,
+    "engine_mem_talker": 0.05,
+    "engine_mem_code2wav": 0.05,
+    "engine_max_seqs": 4,
+    "voicedesign_enabled": false,
+    "voicedesign_model": "Qwen/Qwen3-TTS-12Hz-1.7B-VoiceDesign",
+    "voicedesign_port": 31013
   },
   "api": {
     "key": ""

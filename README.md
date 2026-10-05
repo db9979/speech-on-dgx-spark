@@ -8,11 +8,27 @@ cd speech-on-dgx-spark
 sudo ./install.sh
 ```
 
-Am Ende gibt das Skript die Adresse des Panels und das Passwort aus. Danach macht es einen Rundlauf-Test: TTS spricht einen Satz, ASR transkribiert ihn wieder.
+Am Ende gibt das Skript die Adresse des Panels, das Passwort und den API-Schlüssel aus. Danach macht es einen Rundlauf-Test: TTS spricht einen Satz (auch gestreamt, mit Zeit bis zum ersten Ton), ASR transkribiert ihn wieder. Alles läuft nativ als systemd-Dienste, ohne Docker.
+
+## Aktualisieren
+
+Im Panel unter **System**: Dort steht die installierte Version, und es wird angezeigt, wenn auf GitHub eine neuere liegt (mit der Liste der Änderungen). **Update installieren** holt den neuen Stand und installiert ihn. Einstellungen, Modelle und Stimmen bleiben, das Protokoll läuft live mit. Schlägt die Installation fehl, laufen die Dienste mit der alten Version weiter.
+
+Auf der Konsole geht dasselbe mit:
+
+```bash
+sudo /opt/speech-spark/src/update.sh           # aktualisieren
+sudo /opt/speech-spark/src/update.sh --check   # nur anzeigen, was neu ist
+```
+
+Der Installer legt dafür eine eigene Git-Kopie unter `/opt/speech-spark/src` an. Wo du das Repo ursprünglich geklont hast, spielt danach keine Rolle mehr.
+
+**Einmalig für Installationen vor dem Update-Button:** im geklonten Repo `git pull` und `sudo ./install.sh`. Danach geht es per Button.
 
 | Option | Wirkung |
 |---|---|
 | `--small` | 0.6B-Modelle statt 1.7B (weniger Speicher) |
+| `--tts-backend transformers` | TTS ohne Streaming über `qwen-tts` statt vllm-omni (Standard: `vllm-omni`) |
 | `--no-asr` / `--no-tts` | nur einen der beiden Dienste installieren |
 | `--password XYZ` | Panel-Passwort setzen (sonst wird eins erzeugt) |
 | `--no-download` | Modelle erst beim ersten Start laden |
@@ -36,7 +52,10 @@ dgx-spark-qwen38 wird dabei nicht angefasst.
 | Teil | Wo | Port |
 |---|---|---|
 | ASR-Dienst `speech-spark-asr` | `/opt/speech-spark/venv-asr` | 31001 |
-| TTS-Dienst `speech-spark-tts` | `/opt/speech-spark/venv-tts` | 31002 |
+| TTS-Dienst `speech-spark-tts` (nimmt Anfragen an, reicht sie an die Engine durch) | `/opt/speech-spark/venv-panel` | 31002 |
+| TTS-Engine `speech-spark-tts-engine` (vllm-omni) | `/opt/speech-spark/venv-engine` | 31012, nur lokal |
+| optional VoiceDesign-Engine `speech-spark-tts-design` | `/opt/speech-spark/venv-engine` | 31013, nur lokal |
+| Update `speech-spark-update` (läuft nur auf Knopfdruck) | `/opt/speech-spark/src` | |
 | Panel `speech-spark-panel` | `/opt/speech-spark/venv-panel` | 31080 |
 | Konfiguration | `/etc/speech-spark/config.json`, Passwort in `panel.env` | |
 | Modelle, geklonte Stimmen | `/var/lib/speech-spark/hf`, `/var/lib/speech-spark/voices` | |
@@ -61,10 +80,35 @@ curl http://SPARK:31001/v1/audio/transcriptions -F file=@aufnahme.wav -F languag
 
 # Sprachausgabe
 curl http://SPARK:31002/v1/audio/speech -H 'Content-Type: application/json' \
-  -d '{"input":"Hallo Welt","voice":"Ryan","language":"German"}' -o hallo.wav
+  -d '{"input":"Hallo Welt","voice":"ryan","language":"German"}' -o hallo.mp3
 ```
 
 `GET /health` liefert bei beiden Diensten Status und Zähler, `GET /v1/voices` (TTS) die verfügbaren Stimmen, `GET /v1/models` das geladene Modell.
+
+### Gestreamte Sprachausgabe
+
+Mit `"stream": true` (und `"response_format": "pcm"`, das ist dann der Standard) kommt die Antwort als Server-Sent Events, sobald die ersten Laute erzeugt sind:
+
+```
+event: speech.audio.delta
+data: {"type": "speech.audio.delta", "audio": "<base64>", "response_format": "pcm"}
+...
+event: speech.audio.done
+data: {"type": "speech.audio.done", "usage": {...}}
+```
+
+`audio` ist PCM, 16 bit, mono, 24 kHz. Bei einem Fehler kommt `speech.audio.error`. Das ist das Format von vllm-omni, der Dienst reicht es unverändert durch.
+
+```bash
+curl -N http://SPARK:31002/v1/audio/speech -H "Authorization: Bearer $KEY" -H 'Content-Type: application/json' \
+  -d '{"input":"Hallo Welt","voice":"ryan","language":"German","stream":true,"response_format":"pcm"}'
+```
+
+**VoiceDesign** (Stimme per Beschreibung): `"task_type": "VoiceDesign"` und `"instructions": "tiefe, ruhige Männerstimme"`. Dafür braucht es ein eigenes Modell. Im Panel unter Konfiguration → TTS „VoiceDesign zusätzlich bereitstellen“ einschalten. Das startet eine zweite Engine mit nochmal demselben Speicherbedarf.
+
+Im Panel unter **Testen** spielt „gestreamt“ den Ton schon während der Erzeugung ab und zeigt die Zeit bis zum ersten Ton.
+
+### Allgemein
 
 Die Dienste verhalten sich wie die OpenAI-Audio-API: TTS liefert standardmäßig mp3 (auch wav, flac, opus, pcm), STT versteht `response_format=text`, und die Sprache darf ein ISO-Code wie `de` sein. OpenAI-Stimmnamen wie `alloy` landen bei der Standardstimme. Ist im Panel ein API-Schlüssel gesetzt, müssen Apps `Authorization: Bearer <Schlüssel>` senden.
 
@@ -78,7 +122,7 @@ Admin-Panel → Einstellungen → Audio:
 | API Base URL | `http://SPARK:31001/v1` | `http://SPARK:31002/v1` |
 | API Key | Schlüssel aus dem Panel oder beliebig | dito |
 | Modell | beliebig | beliebig |
-| Stimme | | z. B. `Ryan` |
+| Stimme | | z. B. `ryan` |
 
 Läuft Open WebUI in Docker auf derselben Spark, statt `SPARK` entweder die LAN-IP oder `host.docker.internal` nehmen (Container mit `--add-host=host.docker.internal:host-gateway`). Das Panel zeigt diese Werte im Reiter „Einbinden“ zum Kopieren an.
 
@@ -98,7 +142,9 @@ Läuft Open WebUI in Docker auf derselben Spark, statt `SPARK` entweder die LAN-
 - **PyTorch aus dem cu130-Index**: Das aarch64-torch auf PyPI hat kein CUDA. Ein einfaches `pip install qwen-tts` würde also auf der CPU laufen. torch und torchaudio müssen außerdem aus demselben Index kommen, sonst lädt `libtorchaudio.so` nicht.
 - **Kein flash-attn**: Es gibt kein ARM-Wheel, und für sm_121 lässt es sich laut Berichten nicht bauen. Beide Modelle laufen stattdessen mit PyTorch-SDPA.
 - **Getrennte venvs**: qwen-asr verlangt `transformers==4.57.6`, qwen-tts `transformers==4.57.3`.
-- **Kein vLLM**: `qwen-asr[vllm]` erzwingt vllm 0.14 mit torch 2.9.1 und zieht auf ARM wieder das CPU-torch. Für die Modellgrößen hier reicht das transformers-Backend.
+- **ASR ohne vLLM**: `qwen-asr[vllm]` erzwingt vllm 0.14 mit torch 2.9.1 und zieht auf ARM wieder das CPU-torch. Für die Modellgröße reicht das transformers-Backend.
+- **TTS mit vllm-omni**: `qwen-tts` kann nicht stückweise ausgeben. Das Qwen-Team verweist für Streaming auf vllm-omni. vllm 0.30.0 und vllm-omni 0.30.0 haben ARM-Pakete auf PyPI (CUDA 13) und werden nativ in einer eigenen Umgebung installiert, ohne Docker.
+- **Engine-Speicher**: vLLM reserviert beim Start einen festen Anteil des *gesamten* Speicherpools, pro Stufe (Talker und Code2Wav) getrennt. Die Voreinstellung 0,05 + 0,05 (≈ 13 GiB inkl. Overhead) ist ein Startwert und noch nicht auf der Spark gemessen. Ist sie zu klein, bricht die Engine beim Start mit einem Hinweis im Log ab. Dann im Panel den Anteil erhöhen.
 
 ## Fehlersuche
 
@@ -108,6 +154,8 @@ Läuft Open WebUI in Docker auf derselben Spark, statt `SPARK` entweder die LAN-
 | Panel zeigt `blocked` | Zu wenig Speicher neben der laufenden qwen38-Lane. Auf 0.6B umstellen, die Reserve senken (auf eigenes Risiko) oder die große Lane stoppen. |
 | Panel zeigt `error` | Fehlertext im Panel und unter Logs ansehen. |
 | `no kernel image is available` | Ein Paket wurde ohne Blackwell-Kernel gebaut. Prüfen mit `/opt/speech-spark/venv-asr/bin/python -c "import torch; print(torch.cuda.get_arch_list())"`. |
+| TTS-Engine startet nicht | Panel → Logs → TTS-Engine. Bei „not enough KV cache“ o. Ä. die Speicheranteile der Engine im Panel erhöhen. Der erste Start lädt das Modell und dauert länger. |
+| Update schlägt fehl | Panel → System → Update-Protokoll. Die alte Version läuft weiter. |
 | Port belegt | Port in `/etc/speech-spark/config.json` ändern und das Skript erneut ausführen. |
 
 Die Speicherschätzungen pro Modell (`MODEL_GIB` in `app/common.py`) sind grobe Annahmen und noch nicht auf einer Spark gemessen. Nach dem ersten Lauf sollten sie mit den Werten aus dem Panel korrigiert werden.

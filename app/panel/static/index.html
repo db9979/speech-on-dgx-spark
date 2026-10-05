@@ -37,7 +37,7 @@ svg.spark{width:100%;height:60px;display:block}.chk{display:flex;gap:6px;align-i
 </head>
 <body>
 <header><h1>Speech auf DGX Spark</h1><span id="hdr" class="mut"></span>
-<nav><button data-s="mon" class="on">Monitoring</button><button data-s="cfg">Konfiguration</button><button data-s="test">Testen</button><button data-s="voices">Stimmen</button><button data-s="int">Einbinden</button><button data-s="logs">Logs</button></nav></header>
+<nav><button data-s="mon" class="on">Monitoring</button><button data-s="cfg">Konfiguration</button><button data-s="test">Testen</button><button data-s="voices">Stimmen</button><button data-s="int">Einbinden</button><button data-s="logs">Logs</button><button data-s="sys">System <span id="updbadge" class="pill warn" style="display:none">Update</span></button></nav></header>
 <main>
 
 <section id="mon" class="on">
@@ -49,7 +49,7 @@ svg.spark{width:100%;height:60px;display:block}.chk{display:flex;gap:6px;align-i
     <div class="card"><div class="k">CPU</div><div class="v" id="m-cpu">–</div><svg class="spark" id="c-cpu"></svg></div>
   </div>
   <div class="card"><h2 style="margin-top:0">Speech-Dienste</h2>
-    <table><thead><tr><th>Dienst</th><th>systemd</th><th>Modell</th><th>Anfragen</th><th>Ø Latenz</th><th>RTF</th><th>Speicher (Torch)</th><th></th></tr></thead><tbody id="svc"></tbody></table>
+    <table><thead><tr><th>Dienst</th><th>systemd</th><th>Modell</th><th>Anfragen</th><th>Ø Latenz</th><th>Ø erster Ton</th><th>RTF</th><th>Speicher (Torch)</th><th></th></tr></thead><tbody id="svc"></tbody></table>
   </div>
   <div class="card" style="margin-top:16px"><h2 style="margin-top:0">dgx-spark-qwen38 auf dieser Box</h2>
     <table><thead><tr><th>Unit</th><th>Status</th><th>Speicheranteil</th></tr></thead><tbody id="q38"></tbody></table>
@@ -78,10 +78,19 @@ svg.spark{width:100%;height:60px;display:block}.chk{display:flex;gap:6px;align-i
         <option>Qwen/Qwen3-TTS-12Hz-1.7B-VoiceDesign</option><option>Qwen/Qwen3-TTS-12Hz-1.7B-Base</option><option>Qwen/Qwen3-TTS-12Hz-0.6B-Base</option></select>
       <div class="mut" style="font-size:12px;margin-top:4px">CustomVoice: feste Sprecher. VoiceDesign: Stimme per Beschreibung. Base: Stimmen klonen (Reiter „Stimmen“).</div>
       <label>Port</label><input id="tts.port" type="number">
+      <div class="mut" style="font-size:12px;margin-top:6px">Backend: <b id="ttsbackend">–</b> <span id="ttsbackendnote"></span></div>
+      <div id="enginecfg">
+        <h2>Engine (vllm-omni, gestreamt)</h2>
+        <label>Speicheranteil Talker (Anteil am ganzen 128-GB-Pool, z. B. 0.05 ≈ 6 GiB)</label><input id="tts.engine_mem_talker" type="number" step="0.01">
+        <label>Speicheranteil Code2Wav</label><input id="tts.engine_mem_code2wav" type="number" step="0.01">
+        <label>Max. gleichzeitige Anfragen</label><input id="tts.engine_max_seqs" type="number">
+        <label class="chk"><input type="checkbox" id="tts.voicedesign_enabled"> VoiceDesign zusätzlich bereitstellen (zweite Engine, gleicher Speicherbedarf noch einmal)</label>
+        <label>VoiceDesign-Modell</label><select id="tts.voicedesign_model"><option>Qwen/Qwen3-TTS-12Hz-1.7B-VoiceDesign</option></select>
+      </div>
       <label>Standardstimme</label><input id="tts.default_voice">
       <label>Standardsprache</label><select id="tts.default_language" class="langs"></select>
       <label>Standard-Anweisung (Stil, bei VoiceDesign die Stimmbeschreibung)</label><input id="tts.default_instruct">
-      <label>Datentyp</label><select id="tts.dtype"><option>bfloat16</option><option>float16</option><option>float32</option></select>
+      <div id="ttsdtype"><label>Datentyp</label><select id="tts.dtype"><option>bfloat16</option><option>float16</option><option>float32</option></select></div>
     </div>
     <div class="card"><h2 style="margin-top:0">Speicherschutz</h2>
       <label class="chk"><input type="checkbox" id="memory.guard"> Modell nicht laden, wenn danach weniger als die Reserve frei bliebe</label>
@@ -108,7 +117,9 @@ svg.spark{width:100%;height:60px;display:block}.chk{display:flex;gap:6px;align-i
       <label>Text</label><textarea id="ttstext" rows="4">Hallo, hier spricht der DGX Spark.</textarea>
       <label>Stimme</label><select id="ttsvoice"></select>
       <label>Sprache</label><select id="ttslang" class="langs"></select>
-      <label>Anweisung (optional)</label><input id="ttsinstr" placeholder="z. B. Sehr fröhlich.">
+      <label>Anweisung (optional; bei VoiceDesign die Stimmbeschreibung)</label><input id="ttsinstr" placeholder="z. B. Sehr fröhlich.">
+      <label>Modus</label><select id="ttstask"><option value="">Standard (konfiguriertes Modell)</option><option value="VoiceDesign">VoiceDesign</option></select>
+      <label class="chk"><input type="checkbox" id="ttsstream" checked> gestreamt (Ton spielt, während er erzeugt wird)</label>
       <div class="row" style="margin-top:12px"><button class="b p" id="ttsgo">Sprechen</button><span id="ttsmsg" class="mut"></span></div>
       <audio id="ttsaudio" controls style="width:100%;margin-top:12px;display:none"></audio>
     </div>
@@ -144,14 +155,27 @@ svg.spark{width:100%;height:60px;display:block}.chk{display:flex;gap:6px;align-i
     <div class="card"><h2 style="margin-top:0">Andere Apps</h2>
       <div class="mut">Überall dort, wo „OpenAI-kompatibel“ für Speech-to-Text oder Text-to-Speech auswählbar ist (z. B. LibreChat, AnythingLLM, SillyTavern, Home Assistant mit OpenAI-TTS/STT-Integration, n8n): Base URL und Schlüssel wie links eintragen. Modellname ist beliebig. Unbekannte OpenAI-Stimmen wie „alloy“ werden auf die Standardstimme umgeleitet.</div>
       <h2>Stimmen</h2><div id="int-voices" class="mut">–</div>
-      <h2>Formate</h2><div class="mut">TTS: mp3 (Standard), wav, flac, opus, pcm. STT: json, verbose_json, text. Sprache als Name („German“) oder ISO-Code („de“).</div>
+      <h2>Formate</h2><div class="mut">TTS: mp3 (Standard), wav, flac, opus, pcm. Gestreamt mit <code>"stream": true, "response_format": "pcm"</code>: Server-Sent Events <code>speech.audio.delta</code> mit base64-PCM (16 bit, mono, 24 kHz), am Ende <code>speech.audio.done</code>. VoiceDesign mit <code>"task_type": "VoiceDesign"</code> und <code>"instructions"</code>, falls eingeschaltet. STT: json, verbose_json, text. Sprache als Name („German“) oder ISO-Code („de“).</div>
     </div>
   </div>
   <div class="card" style="margin-top:16px"><h2 style="margin-top:0">curl</h2><pre id="int-curl"></pre></div>
   <div class="card" style="margin-top:16px"><h2 style="margin-top:0">Python (openai-Paket)</h2><pre id="int-py"></pre></div>
 </section>
+
+<section id="sys">
+  <div class="two">
+    <div class="card"><h2 style="margin-top:0">Version</h2><table><tbody id="sysver"></tbody></table></div>
+    <div class="card"><h2 style="margin-top:0">Update</h2>
+      <div id="updstate" class="mut">–</div>
+      <div id="updcommits" style="margin-top:8px"></div>
+      <div class="row" style="margin-top:12px"><button class="b" id="updcheck">Jetzt prüfen</button><button class="b p" id="updgo" disabled>Update installieren</button><span id="updmsg"></span></div>
+      <div class="mut" style="font-size:12px;margin-top:8px">Holt den neuesten Stand von GitHub und installiert ihn. Einstellungen, Modelle und Stimmen bleiben. Schlägt die Installation fehl, laufen die Dienste mit der alten Version weiter. Während des Updates starten die Dienste kurz neu.</div>
+    </div>
+  </div>
+  <div class="card" style="margin-top:16px"><h2 style="margin-top:0">Update-Protokoll</h2><pre id="updlog">–</pre></div>
+</section>
 <section id="logs">
-  <div class="row"><select id="logsvc" style="width:auto"><option value="asr">ASR</option><option value="tts">TTS</option><option value="panel">Panel</option></select>
+  <div class="row"><select id="logsvc" style="width:auto"><option value="asr">ASR</option><option value="tts">TTS</option><option value="tts-engine">TTS-Engine</option><option value="tts-design">VoiceDesign-Engine</option><option value="update">Update</option><option value="panel">Panel</option></select>
     <button class="b" id="logload">Aktualisieren</button></div>
   <pre id="logout" style="margin-top:12px">…</pre>
 </section>
@@ -160,7 +184,7 @@ svg.spark{width:100%;height:60px;display:block}.chk{display:flex;gap:6px;align-i
 const $=id=>document.getElementById(id);
 const api=async(p,o={})=>{const r=await fetch(p,o);if(!r.ok){let t=await r.text();try{t=JSON.parse(t).detail||t}catch{}throw new Error(t)}return r};
 document.querySelectorAll('nav button').forEach(b=>b.onclick=()=>{document.querySelectorAll('nav button,section').forEach(x=>x.classList.remove('on'));b.classList.add('on');$(b.dataset.s).classList.add('on');
-  if(b.dataset.s==='cfg')loadCfg();if(b.dataset.s==='test')loadVoices();if(b.dataset.s==='voices')loadClone();if(b.dataset.s==='logs')loadLogs();if(b.dataset.s==='int')loadInt();});
+  if(b.dataset.s==='cfg')loadCfg();if(b.dataset.s==='test')loadVoices();if(b.dataset.s==='voices')loadClone();if(b.dataset.s==='logs')loadLogs();if(b.dataset.s==='int')loadInt();if(b.dataset.s==='sys')loadSys();});
 const esc=s=>String(s??'').replace(/[&<>"]/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'}[c]));
 const pill=(s)=>{const c={active:'ok',ready:'ok',loading:'warn',activating:'warn',blocked:'bad',error:'bad',failed:'bad'}[s]||'';return `<span class="pill ${c}">${esc(s)}</span>`};
 const fmt=(v,u='',d=0)=>v==null?'–':(+v).toFixed(d)+u;
@@ -171,6 +195,7 @@ function spark(svg,vals,max){const w=300,h=60;svg.setAttribute('viewBox',`0 0 ${
   const d='M'+pts.map(p=>p[0].toFixed(1)+' '+p[1].toFixed(1)).join(' L');
   svg.innerHTML=`<path d="${d} L${w} ${h} L0 ${h}Z" fill="var(--acc)" opacity=".12"/><path d="${d}" fill="none" stroke="var(--acc)" stroke-width="1.5" vector-effect="non-scaling-stroke"/>`;}
 
+const btns=(n,st)=>`<button class="b" onclick="act('${n}','restart',this)">Neustart</button>`+(st==='active'||st==='activating'?`<button class="b" onclick="act('${n}','stop',this)">Stopp</button>`:`<button class="b" onclick="act('${n}','start',this)">Start</button>`);
 async function act(n,a,btn){btn.disabled=true;try{await api(`/api/service/${n}/${a}`,{method:'POST'})}catch(e){alert(e.message)}btn.disabled=false;refresh()}
 window.act=act;
 
@@ -187,8 +212,9 @@ async function refresh(){
     return `<tr><td><b>${n.toUpperCase()}</b><div class="mut">:${v.port}</div></td><td>${pill(v.state)} ${st}${v.enabled?'':' <span class="pill">deaktiviert</span>'}</td>
     <td>${esc(h.model||'')}<div class="mut">geschätzt ~${v.estimate_gib} GiB${h.load_seconds?` · geladen in ${h.load_seconds}s`:''}</div>${err}</td>
     <td>${h.requests??'–'}${h.failures?` <span class="err">(${h.failures} Fehler)</span>`:''}${h.busy?' <span class="pill warn">arbeitet</span>':''}</td>
-    <td>${fmt(h.avg_latency_s,' s',2)}</td><td>${fmt(h.avg_rtf,'',2)}</td><td>${fmt(h.torch_cuda_reserved_gb,' GB',1)}</td>
-    <td class="row"><button class="b" onclick="act('${n}','restart',this)">Neustart</button>${v.state==='active'?`<button class="b" onclick="act('${n}','stop',this)">Stopp</button>`:`<button class="b" onclick="act('${n}','start',this)">Start</button>`}</td></tr>`}).join('');
+    <td>${fmt(h.avg_latency_s,' s',2)}</td><td>${fmt(h.avg_ttfa_s,' s',2)}${h.streams?`<div class="mut">${h.streams} Streams</div>`:''}</td><td>${fmt(h.avg_rtf,'',2)}</td><td>${fmt(h.torch_cuda_reserved_gb,' GB',1)}</td>
+    <td class="row">${btns(n,v.state)}</td></tr>`+(v.engines||[]).map(e=>`<tr><td class="mut" style="padding-left:20px">↳ ${e.name==='tts-design'?'VoiceDesign-Engine':'Engine'}<div>127.0.0.1:${e.port}</div></td><td>${pill(e.state)}</td>
+    <td>${esc(e.model)}<div class="mut">vllm-omni · reserviert ~${e.estimate_gib} GiB</div></td><td colspan=5></td><td class="row">${btns(e.name,e.state)}</td></tr>`).join('')}).join('');
   $('q38none').style.display=s.qwen38.length?'none':'block';
   $('q38').innerHTML=s.qwen38.map(q=>`<tr><td>${esc(q.unit)}</td><td>${pill(q.state)}</td><td>${q.mem_fraction!=null?(q.mem_fraction*100).toFixed(0)+' % des Pools':'–'}</td></tr>`).join('');
   $('gp').innerHTML=(g.processes||[]).map(p=>`<tr><td>${esc(p.pid)}</td><td>${esc(p.name)}</td><td>${p.mem_mib!=null?fmt(p.mem_mib/1024,' GiB',1):'–'}</td></tr>`).join('')||'<tr><td class="mut" colspan=3>–</td></tr>';
@@ -197,6 +223,9 @@ async function refresh(){
 let CFG=null;
 async function loadLangs(){const l=await (await api('/api/languages')).json();document.querySelectorAll('select.langs').forEach(s=>s.innerHTML=l.map(x=>`<option>${x}</option>`).join(''))}
 async function loadCfg(){CFG=await (await api('/api/config')).json();
+  const vo=CFG.tts.backend==='vllm-omni';$('ttsbackend').textContent=CFG.tts.backend;
+  $('ttsbackendnote').textContent=vo?'(gestreamte Ausgabe)':'(ohne Streaming; umstellen mit sudo ./install.sh --tts-backend vllm-omni)';
+  $('enginecfg').style.display=vo?'block':'none';$('ttsdtype').style.display=vo?'none':'block';
   for(const[sec,o]of Object.entries(CFG))for(const[k,v]of Object.entries(o)){const el=$(sec+'.'+k);if(!el)continue;
     if(el.type==='checkbox')el.checked=v;else{if(el.tagName==='SELECT'&&![...el.options].some(o=>o.value==v))el.add(new Option(v));el.value=v}}}
 $('save').onclick=async()=>{const n=JSON.parse(JSON.stringify(CFG));
@@ -204,7 +233,7 @@ $('save').onclick=async()=>{const n=JSON.parse(JSON.stringify(CFG));
     o[k]=el.type==='checkbox'?el.checked:el.type==='number'?Number(el.value):el.value}
   $('savemsg').textContent='Speichere…';
   try{const r=await (await api('/api/config',{method:'PUT',headers:{'Content-Type':'application/json'},body:JSON.stringify(n)})).json();
-    $('savemsg').textContent='Gespeichert.'+(r.restarted.length?' Neu gestartet: '+r.restarted.join(', ').toUpperCase()+' (Modell lädt neu).':'')+(r.panel_restart_needed?' Panel-Port ändert sich nach: sudo systemctl restart speech-spark-panel':'');CFG=n}
+    $('savemsg').innerHTML='Gespeichert.'+(r.restarted.length?' Neu gestartet: '+r.restarted.join(', ').toUpperCase()+' (Modell lädt neu).':'')+(r.stopped&&r.stopped.length?' Gestoppt: '+r.stopped.join(', ').toUpperCase()+'.':'')+(r.errors&&r.errors.length?`<div class="err">${esc(r.errors.join('\n'))}</div>`:'')+(r.panel_restart_needed?' Panel-Port ändert sich nach: sudo systemctl restart speech-spark-panel':'');CFG=n}
   catch(e){$('savemsg').innerHTML=`<span class="err">${esc(e.message)}</span>`}};
 
 $('asrgo').onclick=async()=>{const f=$('asrfile').files[0];if(!f)return;const fd=new FormData();fd.append('file',f);fd.append('language',$('asrlang').value);
@@ -214,10 +243,27 @@ $('asrgo').onclick=async()=>{const f=$('asrfile').files[0];if(!f)return;const fd
 async function loadVoices(){const v=await (await api('/api/tts/voices')).json();
   $('ttsvoice').innerHTML=v.voices.length?v.voices.map(x=>`<option>${esc(x)}</option>`).join(''):'<option value="">(Standard)</option>';
   $('ttsvoice').disabled=v.model_kind==='voice_design'}
-$('ttsgo').onclick=async()=>{$('ttsmsg').textContent='läuft…';
-  try{const r=await api('/api/test/tts',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({input:$('ttstext').value,voice:$('ttsvoice').value||null,language:$('ttslang').value,instruct:$('ttsinstr').value||null})});
-    const b=await r.blob();$('ttsaudio').src=URL.createObjectURL(b);$('ttsaudio').style.display='block';$('ttsaudio').play();$('ttsmsg').textContent=`${r.headers.get('x-processing-seconds')||'?'} s`}
-  catch(e){$('ttsmsg').innerHTML=`<span class="err">${esc(e.message)}</span>`}};
+$('ttsgo').onclick=async()=>{const body={input:$('ttstext').value,voice:$('ttsvoice').value||null,language:$('ttslang').value,instruct:$('ttsinstr').value||null};
+  if($('ttstask').value)body.task_type=$('ttstask').value;
+  $('ttsmsg').textContent='läuft…';$('ttsgo').disabled=true;
+  try{if($('ttsstream').checked)await ttsStream(body);else{
+    const r=await api('/api/test/tts',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify(body)});
+    const b=await r.blob();$('ttsaudio').src=URL.createObjectURL(b);$('ttsaudio').style.display='block';$('ttsaudio').play();$('ttsmsg').textContent=`fertig nach ${r.headers.get('x-processing-seconds')||'?'} s`}}
+  catch(e){$('ttsmsg').innerHTML=`<span class="err">${esc(e.message)}</span>`}
+  $('ttsgo').disabled=false};
+// Plays the SSE stream (base64 PCM 16 bit mono 24 kHz) as it arrives, like a streaming client would.
+async function ttsStream(body){const t0=performance.now();const r=await api('/api/test/tts-stream',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify(body)});
+  const ctx=new (window.AudioContext||window.webkitAudioContext)();let at=ctx.currentTime+0.05,first=null,bytes=0,buf='';
+  const rd=r.body.getReader(),dec=new TextDecoder();$('ttsaudio').style.display='none';
+  const play=b64=>{const bin=atob(b64),n=bin.length>>1;if(!n)return;const f=new Float32Array(n);
+    for(let i=0;i<n;i++){let v=bin.charCodeAt(2*i)|(bin.charCodeAt(2*i+1)<<8);if(v>=32768)v-=65536;f[i]=v/32768}
+    const ab=ctx.createBuffer(1,n,24000);ab.copyToChannel(f,0);const src=ctx.createBufferSource();src.buffer=ab;src.connect(ctx.destination);
+    at=Math.max(at,ctx.currentTime);src.start(at);at+=ab.duration;bytes+=n*2};
+  for(;;){const{value,done}=await rd.read();if(done)break;buf+=dec.decode(value,{stream:true});let i;
+    while((i=buf.indexOf('\n\n'))>=0){const ev=buf.slice(0,i);buf=buf.slice(i+2);const line=ev.split('\n').find(l=>l.startsWith('data:'));if(!line)continue;
+      const d=JSON.parse(line.slice(5));if(d.type==='speech.audio.delta'){if(first===null){first=(performance.now()-t0)/1000;$('ttsmsg').textContent=`erster Ton nach ${first.toFixed(2)} s …`}play(d.audio)}
+      else if(d.type==='speech.audio.error')throw new Error(d.error&&d.error.message||'Fehler im Stream')}}
+  $('ttsmsg').textContent=`erster Ton nach ${first!=null?first.toFixed(2):'?'} s · ${(bytes/48000).toFixed(1)} s Audio in ${((performance.now()-t0)/1000).toFixed(2)} s`}
 
 async function loadClone(){const l=await (await api('/api/clone-voices')).json();
   $('vlist').innerHTML=l.map(n=>`<tr><td>${esc(n)}</td><td style="text-align:right"><button class="b" onclick="delVoice('${esc(n)}')">Löschen</button></td></tr>`).join('')||'<tr><td class="mut">Noch keine.</td></tr>'}
@@ -236,7 +282,7 @@ window.copyText=(t,btn)=>{const done=()=>{btn.textContent='kopiert';setTimeout((
 function kv(rows){return rows.map(([k,v])=>`<tr><td class="mut" style="width:40%">${k}</td><td><code>${esc(v)}</code> <button class="b" style="padding:1px 6px;font-size:12px" onclick="copyText(this.previousElementSibling.textContent,this)">kopieren</button></td></tr>`).join('')}
 async function loadInt(){const c=await (await api('/api/config')).json();const v=await (await api('/api/tts/voices')).json();
   const host=location.hostname,asr=`http://${host}:${c.asr.port}/v1`,tts=`http://${host}:${c.tts.port}/v1`,key=c.api.key||'beliebig, z. B. sk-local';
-  const voice=c.tts.default_voice||(v.voices[0]||'Ryan');
+  const voice=c.tts.default_voice||(v.voices[0]||'ryan');
   $('int-ep').innerHTML=kv([['Spracherkennung (STT)',asr+'/audio/transcriptions'],['Sprachausgabe (TTS)',tts+'/audio/speech'],['API-Schlüssel',c.api.key||'(keiner gesetzt)']]);
   $('int-owui-stt').innerHTML=kv([['Speech-to-Text Engine','OpenAI'],['API Base URL',asr],['API Key',key],['STT Model',c.asr.model]]);
   $('int-owui-tts').innerHTML=kv([['Text-to-Speech Engine','OpenAI'],['API Base URL',tts],['API Key',key],['TTS Model',c.tts.model],['TTS Voice',voice]]);
@@ -262,6 +308,30 @@ with tts.audio.speech.with_streaming_response.create(
 with open("hallo.mp3", "rb") as f:
     print(stt.audio.transcriptions.create(model="qwen3-asr", file=f, language="de").text)`;}
 $('genkey').onclick=()=>{const a=new Uint8Array(18);crypto.getRandomValues(a);$('api.key').value='sk-'+[...a].map(x=>x.toString(16).padStart(2,'0')).join('')};
+
+let updPoll=null;
+async function loadSys(check=false){let u;try{u=await (await api('/api/update'+(check?'?check=true':''))).json()}catch(e){$('updstate').innerHTML=`<span class="err">${esc(e.message)}</span>`;return}
+  const i=u.installed||{},r=u.remote||{};
+  $('sysver').innerHTML=kvp([['Installiert',i.short?`${i.short} · ${new Date(i.date).toLocaleString()}`:'–'],['Änderung',i.subject||'–'],['TTS-Engine',i.engine||'–'],['Quelle',i.remote||'–'],['Zuletzt geprüft',r.checked?new Date(r.checked*1000).toLocaleTimeString():'–']]);
+  updBadge(r);
+  if(u.running){$('updstate').innerHTML='<span class="pill warn">Update läuft</span> Die Seite lädt neu, wenn das Panel neu startet.';$('updgo').disabled=true;
+    if(!updPoll)updPoll=setInterval(()=>loadSys(),3000)}
+  else{if(updPoll){clearInterval(updPoll);updPoll=null}
+    $('updstate').innerHTML=r.error?`<span class="err">${esc(r.error)}</span>`:r.behind===0?'<span class="pill ok">aktuell</span>':
+      `<span class="pill warn">Update verfügbar</span> ${r.behind>0?r.behind+' Änderung(en)':''}`+(u.last_result&&u.last_result!=='success'&&u.last_finished?` <span class="err">Letztes Update fehlgeschlagen (${esc(u.last_result)}), siehe Protokoll.</span>`:'');
+    $('updgo').disabled=!(r.behind&&r.behind!==0)}
+  $('updcommits').innerHTML=(r.commits||[]).length?'<table>'+r.commits.slice().reverse().map(c=>`<tr><td class="mut" style="width:70px"><code>${esc(c.sha)}</code></td><td>${esc(c.title)}</td></tr>`).join('')+'</table>':'';
+  $('updlog').textContent=await (await api('/api/logs/update?lines=200')).text()||'(noch kein Update gelaufen)';$('updlog').scrollTop=1e9}
+const kvp=rows=>rows.map(([k,v])=>`<tr><td class="mut" style="width:35%">${k}</td><td>${esc(v)}</td></tr>`).join('');
+function updBadge(r){$('updbadge').style.display=r&&r.behind&&r.behind!==0?'inline-block':'none'}
+$('updcheck').onclick=()=>loadSys(true);
+$('updgo').onclick=async()=>{if(!confirm('Update jetzt installieren? Die Dienste starten dabei kurz neu.'))return;
+  try{await api('/api/update',{method:'POST'});$('updmsg').textContent='gestartet';
+    // the panel restarts during the update; reload once it answers again
+    const wait=setInterval(async()=>{try{const u=await (await fetch('/api/update')).json();if(!u.running){clearInterval(wait);location.reload()}}catch{}},4000);loadSys()}
+  catch(e){$('updmsg').innerHTML=`<span class="err">${esc(e.message)}</span>`}};
+api('/api/update').then(r=>r.json()).then(u=>updBadge(u.remote)).catch(()=>{});
+setInterval(()=>api('/api/update').then(r=>r.json()).then(u=>updBadge(u.remote)).catch(()=>{}),600000);
 loadLangs();refresh();setInterval(refresh,3000);
 </script>
 </body>

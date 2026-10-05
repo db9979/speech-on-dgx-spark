@@ -14,7 +14,7 @@ import httpx
 import psutil
 import uvicorn
 from fastapi import Depends, FastAPI, File, Form, HTTPException, Request, UploadFile
-from fastapi.responses import FileResponse, Response
+from fastapi.responses import FileResponse, Response, StreamingResponse
 from fastapi.security import HTTPBasic, HTTPBasicCredentials
 
 sys.path.insert(0, os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
@@ -24,6 +24,14 @@ VOICES_DIR = os.environ.get("SPEECH_SPARK_VOICES", "/var/lib/speech-spark/voices
 PASSWORD = os.environ.get("PANEL_PASSWORD", "")
 STATIC = os.path.join(os.path.dirname(os.path.abspath(__file__)), "static")
 SERVICES = {"asr": "speech-spark-asr", "tts": "speech-spark-tts"}
+# units the panel may start/stop/restart (matches /etc/sudoers.d/speech-spark)
+UNITS = dict(SERVICES, **{"tts-engine": "speech-spark-tts-engine", "tts-design": "speech-spark-tts-design"})
+LOG_UNITS = dict(UNITS, panel="speech-spark-panel", update="speech-spark-update")
+PREFIX = os.environ.get("SPEECH_SPARK_PREFIX", "/opt/speech-spark")
+# tts keys that only the vllm-omni engine reads; changing them restarts the engine
+ENGINE_KEYS = ("model", "engine_port", "engine_mem_talker", "engine_mem_code2wav", "engine_max_seqs")
+DESIGN_KEYS = ("voicedesign_enabled", "voicedesign_model", "voicedesign_port",
+               "engine_mem_talker", "engine_mem_code2wav", "engine_max_seqs")
 # Units installed by github.com/hasso5703/dgx-spark-qwen38; only one lane runs at a time.
 QWEN38_UNITS = ["qwen38-sglang", "qwen38-sglang-1m", "qwen38-flash", "qwen38-image",
                 "qwen38-video", "qwen38-llamacpp", "qwen38-keepalive", "qwen38-dashboard"]
@@ -147,6 +155,18 @@ async def status():
         services[name] = {"unit": unit, "state": unit_state(unit), "enabled": cfg[name]["enabled"],
                           "port": cfg[name]["port"], "estimate_gib": estimate_gib(cfg[name]["model"]),
                           "health": await service_health(name, cfg)}
+    t = cfg["tts"]
+    if t.get("backend") == "vllm-omni":
+        per_engine = round((t["engine_mem_talker"] + t["engine_mem_code2wav"]) * psutil.virtual_memory().total / 2**30 + 1.5, 1)
+        services["tts"]["backend"] = "vllm-omni"
+        services["tts"]["estimate_gib"] = per_engine * (2 if t.get("voicedesign_enabled") else 1)
+        services["tts"]["engines"] = [
+            {"name": "tts-engine", "unit": UNITS["tts-engine"], "state": unit_state(UNITS["tts-engine"]),
+             "model": t["model"], "port": t["engine_port"], "estimate_gib": per_engine}]
+        if t.get("voicedesign_enabled") or unit_state(UNITS["tts-design"]) != "inactive":
+            services["tts"]["engines"].append(
+                {"name": "tts-design", "unit": UNITS["tts-design"], "state": unit_state(UNITS["tts-design"]),
+                 "model": t["voicedesign_model"], "port": t["voicedesign_port"], "estimate_gib": per_engine})
     qwen38 = [{"unit": u, "state": unit_state(u), "mem_fraction": lane_fraction(u)}
               for u in QWEN38_UNITS if unit_exists(u)]
     return {"time": time.time(), "system": system_stats(), "gpu": gpu_stats(),
@@ -182,13 +202,25 @@ def validate(new):
                 raise HTTPException(400, f"unknown key {sec}.{k}")
     if not re.fullmatch(r"[A-Za-z0-9_\-]*", new["api"]["key"]):
         raise HTTPException(400, "API key: letters, digits, _ and - only")
-    ports = [new["asr"]["port"], new["tts"]["port"], new["panel"]["port"]]
+    t = new["tts"]
+    if t.get("backend") != old["tts"].get("backend"):
+        raise HTTPException(400, "the TTS backend is chosen at install time: sudo ./install.sh --tts-backend ...")
+    for k in ("engine_mem_talker", "engine_mem_code2wav"):
+        if not isinstance(t[k], (int, float)) or not 0.01 <= t[k] <= 0.5:
+            raise HTTPException(400, f"{k} must be a share of the memory pool between 0.01 and 0.5")
+    if not isinstance(t["engine_max_seqs"], int) or not 1 <= t["engine_max_seqs"] <= 64:
+        raise HTTPException(400, "engine_max_seqs must be 1..64")
+    if not re.fullmatch(r"[\w.\-]+/[\w.\-]+", str(t["voicedesign_model"])):
+        raise HTTPException(400, "invalid VoiceDesign model id")
+    ports = [new["asr"]["port"], t["port"], new["panel"]["port"]]
+    if t.get("backend") == "vllm-omni":
+        ports += [t["engine_port"], t["voicedesign_port"]]
     for p in ports:
         if not isinstance(p, int) or not 1024 <= p <= 65535:
             raise HTTPException(400, f"invalid port {p}")
         if 30000 <= p <= 30099:
             raise HTTPException(400, f"port {p} is in the 30000-30099 range used by dgx-spark-qwen38")
-    if len(set(ports)) != 3:
+    if len(set(ports)) != len(ports):
         raise HTTPException(400, "ports must differ")
     for sec in ("asr", "tts"):
         if not re.fullmatch(r"[\w.\-/]+", str(new[sec]["model"])):
@@ -207,19 +239,39 @@ async def put_config(request: Request):
         json.dump(new, f, indent=2)
     os.replace(tmp, CONFIG_PATH)
     # the API key is read per request, so changing it needs no restart
-    restart = [n for n in SERVICES if new[n] != old[n] or new["memory"] != old.get("memory")]
+    mem_changed = new["memory"] != old.get("memory")
+    actions = {}  # unit name -> start | stop | restart
     for n in SERVICES:
-        if n in restart:
-            action = "restart" if new[n]["enabled"] else "stop"
-            run(["sudo", "-n", "/usr/bin/systemctl", action, SERVICES[n]])
-    return {"saved": True, "restarted": restart, "panel_restart_needed": new["panel"] != old["panel"]}
+        if new[n] != old[n] or mem_changed:
+            actions[n] = "restart" if new[n]["enabled"] else "stop"
+    t, ot = new["tts"], old["tts"]
+    if t.get("backend") == "vllm-omni":
+        changed = lambda keys: any(t.get(k) != ot.get(k) for k in keys)  # noqa: E731
+        if not t["enabled"]:
+            actions["tts-engine"] = actions["tts-design"] = "stop"
+        else:
+            if changed(ENGINE_KEYS) or mem_changed or not ot["enabled"]:
+                actions["tts-engine"] = "restart"
+            if not t["voicedesign_enabled"]:
+                if ot.get("voicedesign_enabled"):
+                    actions["tts-design"] = "stop"
+            elif changed(DESIGN_KEYS) or mem_changed or not ot["enabled"]:
+                actions["tts-design"] = "restart"
+    errors = []
+    for n, action in actions.items():
+        code, out = run(["sudo", "-n", "/usr/bin/systemctl", action, UNITS[n]], timeout=60)
+        if code != 0:
+            errors.append(f"{UNITS[n]}: {out}")
+    return {"saved": True, "restarted": [n for n, a in actions.items() if a == "restart"],
+            "stopped": [n for n, a in actions.items() if a == "stop"], "errors": errors,
+            "panel_restart_needed": new["panel"] != old["panel"]}
 
 
 @app.post("/api/service/{name}/{action}", dependencies=[Depends(auth)])
 def service_action(name: str, action: str):
-    if name not in SERVICES or action not in ("start", "stop", "restart"):
+    if name not in UNITS or action not in ("start", "stop", "restart"):
         raise HTTPException(400, "bad service or action")
-    code, out = run(["sudo", "-n", "/usr/bin/systemctl", action, SERVICES[name]], timeout=30)
+    code, out = run(["sudo", "-n", "/usr/bin/systemctl", action, UNITS[name]], timeout=60)
     if code != 0:
         raise HTTPException(500, out or f"systemctl {action} failed")
     return {"ok": True}
@@ -227,10 +279,9 @@ def service_action(name: str, action: str):
 
 @app.get("/api/logs/{name}", dependencies=[Depends(auth)])
 def logs(name: str, lines: int = 200):
-    units = dict(SERVICES, panel="speech-spark-panel")
-    if name not in units:
+    if name not in LOG_UNITS:
         raise HTTPException(400, "bad service")
-    code, out = run(["journalctl", "-u", units[name], "-n", str(min(lines, 2000)),
+    code, out = run(["journalctl", "-u", LOG_UNITS[name], "-n", str(min(lines, 2000)),
                      "--no-pager", "-o", "short-iso"])
     return Response(out, media_type="text/plain")
 
@@ -259,6 +310,29 @@ async def test_tts(request: Request):
                          headers=api_headers())
     return Response(r.content, status_code=r.status_code, media_type=r.headers.get("content-type"),
                     headers={k: v for k, v in r.headers.items() if k.lower() == "x-processing-seconds"})
+
+
+@app.post("/api/test/tts-stream", dependencies=[Depends(auth)])
+async def test_tts_stream(request: Request):
+    """Passes the SSE stream through so the test page hears audio as it is generated."""
+    cfg = load_config()
+    body = await request.json()
+    body.update(stream=True, response_format="pcm")
+    c = httpx.AsyncClient(timeout=600)
+    up = await c.send(c.build_request("POST", f"http://127.0.0.1:{cfg['tts']['port']}/v1/audio/speech",
+                                      json=body, headers=api_headers()), stream=True)
+    if up.status_code != 200:
+        content = await up.aread()
+        await up.aclose(); await c.aclose()
+        return Response(content, status_code=up.status_code, media_type="application/json")
+
+    async def relay():
+        try:
+            async for chunk in up.aiter_raw():
+                yield chunk
+        finally:
+            await up.aclose(); await c.aclose()
+    return StreamingResponse(relay(), media_type="text/event-stream", headers={"Cache-Control": "no-cache"})
 
 
 @app.get("/api/tts/voices", dependencies=[Depends(auth)])
@@ -302,6 +376,78 @@ def delete_clone_voice(name: str):
         if os.path.exists(p):
             os.remove(p)
     return {"ok": True}
+
+
+# ---------------------------------------------------------------- updates
+_remote_cache = {"time": 0, "data": None}
+
+
+def installed_version():
+    try:
+        with open(os.path.join(PREFIX, "VERSION.json")) as f:
+            return json.load(f)
+    except Exception:
+        return {"commit": None, "subject": "unknown"}
+
+
+def github_repo(remote):
+    m = re.match(r"(?:https://github\.com/|git@github\.com:)([\w.\-]+/[\w.\-]+?)(?:\.git)?/?$", remote or "")
+    return m.group(1) if m else None
+
+
+async def remote_state(force=False):
+    """Newest commit on the remote branch and the commits since the installed one."""
+    if not force and _remote_cache["data"] and time.time() - _remote_cache["time"] < 600:
+        return _remote_cache["data"]
+    ver = installed_version()
+    remote, branch = ver.get("remote"), ver.get("branch", "main")
+    data = {"checked": time.time(), "latest": None, "behind": None, "commits": [], "error": None}
+    if not remote:
+        data["error"] = "installed without git: run install.sh from a git clone once"
+        return data
+    code, out = run(["git", "ls-remote", remote, f"refs/heads/{branch}"], timeout=20)
+    if code != 0 or not out:
+        data["error"] = f"could not reach {remote}: {out[-200:]}"
+        return data
+    data["latest"] = out.split()[0]
+    if data["latest"] == ver.get("commit"):
+        data["behind"] = 0
+    else:
+        repo = github_repo(remote)
+        if repo and ver.get("commit"):
+            try:
+                async with httpx.AsyncClient(timeout=10) as c:
+                    r = await c.get(f"https://api.github.com/repos/{repo}/compare/{ver['commit']}...{data['latest']}",
+                                    headers={"Accept": "application/vnd.github+json"})
+                if r.status_code == 200:
+                    j = r.json()
+                    data["behind"] = j.get("ahead_by")
+                    data["commits"] = [{"sha": x["sha"][:7], "title": x["commit"]["message"].split("\n")[0],
+                                        "date": x["commit"]["committer"]["date"]} for x in j.get("commits", [])][-30:]
+            except Exception:
+                pass
+        if data["behind"] is None:
+            data["behind"] = -1  # newer version exists, details unknown
+    _remote_cache.update(time=time.time(), data=data)
+    return data
+
+
+@app.get("/api/update", dependencies=[Depends(auth)])
+async def update_status(check: bool = False):
+    code, out = run(["systemctl", "show", "speech-spark-update", "-p", "ActiveState,Result,ExecMainExitTimestamp"])
+    props = dict(line.split("=", 1) for line in out.splitlines() if "=" in line)
+    return {"installed": installed_version(), "remote": await remote_state(force=check),
+            "running": props.get("ActiveState") in ("activating", "active"),
+            "last_result": props.get("Result"), "last_finished": props.get("ExecMainExitTimestamp") or None}
+
+
+@app.post("/api/update", dependencies=[Depends(auth)])
+def start_update():
+    code, out = run(["sudo", "-n", "/usr/bin/systemctl", "start", "--no-block", "speech-spark-update"], timeout=20)
+    if code != 0:
+        raise HTTPException(500, out or "could not start the update")
+    _remote_cache["data"] = None
+    return {"started": True}
 
 
 if __name__ == "__main__":
