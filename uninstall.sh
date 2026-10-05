@@ -30,13 +30,13 @@ if [ "$YES" = 0 ]; then
   case "$ans" in y|Y|j|J|yes|ja) ;; *) echo "Aborted."; exit 1 ;; esac
 fi
 
-for s in asr tts tts-engine tts-design panel update; do
+for s in asr asr-engine tts tts-engine tts-design panel update; do
   systemctl disable --now "speech-spark-$s.service" 2>/dev/null || true
   rm -f "/etc/systemd/system/speech-spark-$s.service"
 done
 systemctl daemon-reload
 systemctl reset-failed 'speech-spark-*' 2>/dev/null || true
-rm -f /etc/sudoers.d/speech-spark
+rm -f /etc/sudoers.d/speech-spark /usr/local/bin/speech-spark-bench
 rm -rf /opt/speech-spark   # code, Python envs and the update clone
 
 if [ "$PURGE" = 1 ]; then

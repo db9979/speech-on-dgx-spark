@@ -25,9 +25,12 @@ PASSWORD = os.environ.get("PANEL_PASSWORD", "")
 STATIC = os.path.join(os.path.dirname(os.path.abspath(__file__)), "static")
 SERVICES = {"asr": "speech-spark-asr", "tts": "speech-spark-tts"}
 # units the panel may start/stop/restart (matches /etc/sudoers.d/speech-spark)
-UNITS = dict(SERVICES, **{"tts-engine": "speech-spark-tts-engine", "tts-design": "speech-spark-tts-design"})
+UNITS = dict(SERVICES, **{"asr-engine": "speech-spark-asr-engine", "tts-engine": "speech-spark-tts-engine",
+                          "tts-design": "speech-spark-tts-design"})
 LOG_UNITS = dict(UNITS, panel="speech-spark-panel", update="speech-spark-update")
 PREFIX = os.environ.get("SPEECH_SPARK_PREFIX", "/opt/speech-spark")
+# asr keys the vLLM engine reads; changing them restarts it
+ASR_ENGINE_KEYS = ("model", "engine_port", "engine_mem", "engine_max_seqs")
 # tts keys that only the vllm-omni engine reads; changing them restarts the engine
 ENGINE_KEYS = ("model", "engine_port", "engine_mem_talker", "engine_mem_code2wav", "engine_max_seqs")
 DESIGN_KEYS = ("voicedesign_enabled", "voicedesign_model", "voicedesign_port",
@@ -155,17 +158,26 @@ async def status():
         services[name] = {"unit": unit, "state": unit_state(unit), "enabled": cfg[name]["enabled"],
                           "port": cfg[name]["port"], "estimate_gib": estimate_gib(cfg[name]["model"]),
                           "health": await service_health(name, cfg)}
+    total_gib = psutil.virtual_memory().total / 2**30
+    a = cfg["asr"]
+    if a.get("backend") == "vllm":
+        gib = round(a["engine_mem"] * total_gib + 1.5, 1)
+        services["asr"]["backend"] = "vllm"
+        services["asr"]["estimate_gib"] = gib
+        services["asr"]["engines"] = [
+            {"name": "asr-engine", "kind": "vLLM", "unit": UNITS["asr-engine"], "state": unit_state(UNITS["asr-engine"]),
+             "model": a["model"], "port": a["engine_port"], "estimate_gib": gib}]
     t = cfg["tts"]
     if t.get("backend") == "vllm-omni":
-        per_engine = round((t["engine_mem_talker"] + t["engine_mem_code2wav"]) * psutil.virtual_memory().total / 2**30 + 1.5, 1)
+        per_engine = round((t["engine_mem_talker"] + t["engine_mem_code2wav"]) * total_gib + 1.5, 1)
         services["tts"]["backend"] = "vllm-omni"
         services["tts"]["estimate_gib"] = per_engine * (2 if t.get("voicedesign_enabled") else 1)
         services["tts"]["engines"] = [
-            {"name": "tts-engine", "unit": UNITS["tts-engine"], "state": unit_state(UNITS["tts-engine"]),
+            {"name": "tts-engine", "kind": "vllm-omni", "unit": UNITS["tts-engine"], "state": unit_state(UNITS["tts-engine"]),
              "model": t["model"], "port": t["engine_port"], "estimate_gib": per_engine}]
         if t.get("voicedesign_enabled") or unit_state(UNITS["tts-design"]) != "inactive":
             services["tts"]["engines"].append(
-                {"name": "tts-design", "unit": UNITS["tts-design"], "state": unit_state(UNITS["tts-design"]),
+                {"name": "tts-design", "kind": "vllm-omni", "unit": UNITS["tts-design"], "state": unit_state(UNITS["tts-design"]),
                  "model": t["voicedesign_model"], "port": t["voicedesign_port"], "estimate_gib": per_engine})
     qwen38 = [{"unit": u, "state": unit_state(u), "mem_fraction": lane_fraction(u)}
               for u in QWEN38_UNITS if unit_exists(u)]
@@ -202,6 +214,13 @@ def validate(new):
                 raise HTTPException(400, f"unknown key {sec}.{k}")
     if not re.fullmatch(r"[A-Za-z0-9_\-]*", new["api"]["key"]):
         raise HTTPException(400, "API key: letters, digits, _ and - only")
+    a = new["asr"]
+    if a.get("backend") != old["asr"].get("backend"):
+        raise HTTPException(400, "the ASR backend is chosen at install time: sudo ./install.sh --asr-backend ...")
+    if not isinstance(a["engine_mem"], (int, float)) or not 0.01 <= a["engine_mem"] <= 0.5:
+        raise HTTPException(400, "asr engine_mem must be a share of the memory pool between 0.01 and 0.5")
+    if not isinstance(a["engine_max_seqs"], int) or not 1 <= a["engine_max_seqs"] <= 256:
+        raise HTTPException(400, "asr engine_max_seqs must be 1..256")
     t = new["tts"]
     if t.get("backend") != old["tts"].get("backend"):
         raise HTTPException(400, "the TTS backend is chosen at install time: sudo ./install.sh --tts-backend ...")
@@ -213,6 +232,8 @@ def validate(new):
     if not re.fullmatch(r"[\w.\-]+/[\w.\-]+", str(t["voicedesign_model"])):
         raise HTTPException(400, "invalid VoiceDesign model id")
     ports = [new["asr"]["port"], t["port"], new["panel"]["port"]]
+    if a.get("backend") == "vllm":
+        ports.append(a["engine_port"])
     if t.get("backend") == "vllm-omni":
         ports += [t["engine_port"], t["voicedesign_port"]]
     for p in ports:
@@ -244,6 +265,12 @@ async def put_config(request: Request):
     for n in SERVICES:
         if new[n] != old[n] or mem_changed:
             actions[n] = "restart" if new[n]["enabled"] else "stop"
+    a, oa = new["asr"], old["asr"]
+    if a.get("backend") == "vllm":
+        if not a["enabled"]:
+            actions["asr-engine"] = "stop"
+        elif any(a.get(k) != oa.get(k) for k in ASR_ENGINE_KEYS) or mem_changed or not oa["enabled"]:
+            actions["asr-engine"] = "restart"
     t, ot = new["tts"], old["tts"]
     if t.get("backend") == "vllm-omni":
         changed = lambda keys: any(t.get(k) != ot.get(k) for k in keys)  # noqa: E731
@@ -297,7 +324,8 @@ async def test_asr(file: UploadFile = File(...), language: str = Form("auto")):
     data = await file.read()
     async with httpx.AsyncClient(timeout=600) as c:
         r = await c.post(f"http://127.0.0.1:{cfg['asr']['port']}/v1/audio/transcriptions",
-                         files={"file": (file.filename or "audio.wav", data)}, data={"language": language},
+                         files={"file": (file.filename or "audio.wav", data)},
+                         data={"language": language, "response_format": "verbose_json"},
                          headers=api_headers())
     return Response(r.content, status_code=r.status_code, media_type="application/json")
 
@@ -376,6 +404,41 @@ def delete_clone_voice(name: str):
         if os.path.exists(p):
             os.remove(p)
     return {"ok": True}
+
+
+# ---------------------------------------------------------------- measuring
+bench_state = {"running": False, "log": []}
+
+
+@app.get("/api/bench", dependencies=[Depends(auth)])
+def bench_status():
+    import bench
+    out = {"running": bench_state["running"], "log": bench_state["log"][-40:], "result": None, "report": None}
+    try:
+        with open(bench.RESULT) as f:
+            out["result"] = json.load(f)
+        out["report"] = bench.report(out["result"])
+    except Exception:
+        pass
+    return out
+
+
+@app.post("/api/bench", dependencies=[Depends(auth)])
+async def bench_start():
+    import bench
+    if bench_state["running"]:
+        raise HTTPException(409, "a measurement is already running")
+    bench_state.update(running=True, log=["starting"])
+
+    async def go():
+        try:
+            await bench.Bench(log=bench_state["log"].append).run()
+        except Exception as e:
+            bench_state["log"].append(f"failed: {type(e).__name__}: {e}")
+        finally:
+            bench_state["running"] = False
+    asyncio.create_task(go())
+    return {"started": True}
 
 
 # ---------------------------------------------------------------- updates

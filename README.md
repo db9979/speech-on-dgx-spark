@@ -29,6 +29,7 @@ Der Installer legt dafür eine eigene Git-Kopie unter `/opt/speech-spark/src` an
 |---|---|
 | `--small` | 0.6B-Modelle statt 1.7B (weniger Speicher) |
 | `--tts-backend transformers` | TTS ohne Streaming über `qwen-tts` statt vllm-omni (Standard: `vllm-omni`) |
+| `--asr-backend transformers` | ASR über `qwen-asr` statt vLLM, eine Anfrage nach der anderen (Standard: `vllm`) |
 | `--no-asr` / `--no-tts` | nur einen der beiden Dienste installieren |
 | `--password XYZ` | Panel-Passwort setzen (sonst wird eins erzeugt) |
 | `--no-download` | Modelle erst beim ersten Start laden |
@@ -51,16 +52,18 @@ dgx-spark-qwen38 wird dabei nicht angefasst.
 
 | Teil | Wo | Port |
 |---|---|---|
-| ASR-Dienst `speech-spark-asr` | `/opt/speech-spark/venv-asr` | 31001 |
+| ASR-Dienst `speech-spark-asr` (nimmt Anfragen an, reicht sie an die Engine durch) | `/opt/speech-spark/venv-panel` | 31001 |
+| ASR-Engine `speech-spark-asr-engine` (vLLM) | `/opt/speech-spark/venv-engine` | 31011, nur lokal |
 | TTS-Dienst `speech-spark-tts` (nimmt Anfragen an, reicht sie an die Engine durch) | `/opt/speech-spark/venv-panel` | 31002 |
 | TTS-Engine `speech-spark-tts-engine` (vllm-omni) | `/opt/speech-spark/venv-engine` | 31012, nur lokal |
 | optional VoiceDesign-Engine `speech-spark-tts-design` | `/opt/speech-spark/venv-engine` | 31013, nur lokal |
 | Update `speech-spark-update` (läuft nur auf Knopfdruck) | `/opt/speech-spark/src` | |
 | Panel `speech-spark-panel` | `/opt/speech-spark/venv-panel` | 31080 |
+| Messskript `speech-spark-bench` | `/usr/local/bin` | |
 | Konfiguration | `/etc/speech-spark/config.json`, Passwort in `panel.env` | |
 | Modelle, geklonte Stimmen | `/var/lib/speech-spark/hf`, `/var/lib/speech-spark/voices` | |
 
-Alle Dienste laufen als Systembenutzer `speech`. Per sudoers darf das Panel genau diese beiden Dienste starten, stoppen und neu starten, sonst nichts.
+Alle Dienste laufen als Systembenutzer `speech`. Per sudoers darf das Panel die Speech-Dienste und Engines starten, stoppen und neu starten und das Update anstoßen, sonst nichts.
 
 ## Die Oberfläche
 
@@ -75,8 +78,8 @@ Alle Dienste laufen als Systembenutzer `speech`. Per sudoers darf das Panel gena
 
 ```bash
 # Transkription
-curl http://SPARK:31001/v1/audio/transcriptions -F file=@aufnahme.wav -F language=German
-# -> {"text": "...", "language": "German", "duration": 4.2, "processing_s": 0.6}
+curl http://SPARK:31001/v1/audio/transcriptions -F file=@aufnahme.webm -F language=de
+# -> {"text": "...", "usage": {"type": "duration", "seconds": 4}, "processing_s": 0.6}
 
 # Sprachausgabe
 curl http://SPARK:31002/v1/audio/speech -H 'Content-Type: application/json' \
@@ -84,6 +87,8 @@ curl http://SPARK:31002/v1/audio/speech -H 'Content-Type: application/json' \
 ```
 
 `GET /health` liefert bei beiden Diensten Status und Zähler, `GET /v1/voices` (TTS) die verfügbaren Stimmen, `GET /v1/models` das geladene Modell.
+
+Die Spracherkennung nimmt alles, was ffmpeg lesen kann (wav, mp3, webm, mp4, ogg …), und lange Aufnahmen. `language` als Code (`de`) oder Name (`German`), ohne Angabe erkennt das Modell die Sprache selbst. `response_format`: `json`, `text` oder `verbose_json` (mit `language` und `duration`, ohne Zeitstempel). Mit `-F stream=true` kommt der Text stückweise als Server-Sent Events im OpenAI-Format (`transcription.chunk`, am Ende `[DONE]`).
 
 ### Gestreamte Sprachausgabe
 
@@ -126,6 +131,18 @@ Admin-Panel → Einstellungen → Audio:
 
 Läuft Open WebUI in Docker auf derselben Spark, statt `SPARK` entweder die LAN-IP oder `host.docker.internal` nehmen (Container mit `--add-host=host.docker.internal:host-gateway`). Das Panel zeigt diese Werte im Reiter „Einbinden“ zum Kopieren an.
 
+## Leistung messen
+
+Im Panel unter **System → Leistung messen** oder auf der Konsole:
+
+```bash
+sudo speech-spark-bench                 # Zeit bis zum ersten Ton, Tempo einzeln und parallel, Speicher je Dienst
+sudo speech-spark-bench --parallel 8    # mehr gleichzeitige Anfragen
+sudo speech-spark-bench --audio a.wav   # Spracherkennung mit eigener Aufnahme
+```
+
+Die Messung geht über die öffentlichen Ports, misst also das, was Apps sehen. Das letzte Ergebnis steht in `/var/lib/speech-spark/state/bench-latest.json`. Die Speicheranteile der Engines (Konfiguration) sind Startwerte: nach der Messung passend einstellen.
+
 ## Neben dgx-spark-qwen38
 
 - **Ports**: qwen38 nutzt 30000 bis 30099 (Engine 30000, Proxy 30001, Bild 30020, Video 30022, Cockpit 30090/30091). Speech nutzt 31001, 31002 und 31080. Das Panel lehnt Ports im Bereich von qwen38 ab, und das Installationsskript bricht ab, wenn ein Port schon belegt ist.
@@ -142,7 +159,7 @@ Läuft Open WebUI in Docker auf derselben Spark, statt `SPARK` entweder die LAN-
 - **PyTorch aus dem cu130-Index**: Das aarch64-torch auf PyPI hat kein CUDA. Ein einfaches `pip install qwen-tts` würde also auf der CPU laufen. torch und torchaudio müssen außerdem aus demselben Index kommen, sonst lädt `libtorchaudio.so` nicht.
 - **Kein flash-attn**: Es gibt kein ARM-Wheel, und für sm_121 lässt es sich laut Berichten nicht bauen. Beide Modelle laufen stattdessen mit PyTorch-SDPA.
 - **Getrennte venvs**: qwen-asr verlangt `transformers==4.57.6`, qwen-tts `transformers==4.57.3`.
-- **ASR ohne vLLM**: `qwen-asr[vllm]` erzwingt vllm 0.14 mit torch 2.9.1 und zieht auf ARM wieder das CPU-torch. Für die Modellgröße reicht das transformers-Backend.
+- **ASR mit vLLM**: vLLM 0.30 kann Qwen3-ASR selbst, mit `/v1/audio/transcriptions`, Streaming und mehreren Anfragen gleichzeitig. Es läuft in derselben Umgebung wie die TTS-Engine. `qwen-asr[vllm]` wird nicht gebraucht (es würde vllm 0.14 erzwingen).
 - **TTS mit vllm-omni**: `qwen-tts` kann nicht stückweise ausgeben. Das Qwen-Team verweist für Streaming auf vllm-omni. vllm 0.30.0 und vllm-omni 0.30.0 haben ARM-Pakete auf PyPI (CUDA 13) und werden nativ in einer eigenen Umgebung installiert, ohne Docker.
 - **Engine-Speicher**: vLLM reserviert beim Start einen festen Anteil des *gesamten* Speicherpools, pro Stufe (Talker und Code2Wav) getrennt. Die Voreinstellung 0,05 + 0,05 (≈ 13 GiB inkl. Overhead) ist ein Startwert und noch nicht auf der Spark gemessen. Ist sie zu klein, bricht die Engine beim Start mit einem Hinweis im Log ab. Dann im Panel den Anteil erhöhen.
 

@@ -66,10 +66,18 @@ svg.spark{width:100%;height:60px;display:block}.chk{display:flex;gap:6px;align-i
       <label>Modell</label><select id="asr.model"><option>Qwen/Qwen3-ASR-1.7B</option><option>Qwen/Qwen3-ASR-0.6B</option></select>
       <label>Port</label><input id="asr.port" type="number">
       <label>Standardsprache</label><select id="asr.default_language" class="langs"></select>
-      <label>Max. Batchgröße</label><input id="asr.max_batch_size" type="number">
-      <label>Max. neue Tokens</label><input id="asr.max_new_tokens" type="number">
-      <label class="chk"><input type="checkbox" id="asr.timestamps"> Zeitstempel (lädt zusätzlich den Forced Aligner, ~2 GiB)</label>
-      <label>Datentyp</label><select id="asr.dtype"><option>bfloat16</option><option>float16</option><option>float32</option></select>
+      <div class="mut" style="font-size:12px;margin-top:6px">Backend: <b id="asrbackend">–</b> <span id="asrbackendnote"></span></div>
+      <div id="asrengine">
+        <h2>Engine (vLLM, parallel und gestreamt)</h2>
+        <label>Speicheranteil (Anteil am ganzen 128-GB-Pool, z. B. 0.08 ≈ 9 GiB)</label><input id="asr.engine_mem" type="number" step="0.01">
+        <label>Max. gleichzeitige Anfragen</label><input id="asr.engine_max_seqs" type="number">
+      </div>
+      <div id="asrtf">
+        <label>Max. Batchgröße</label><input id="asr.max_batch_size" type="number">
+        <label>Max. neue Tokens</label><input id="asr.max_new_tokens" type="number">
+        <label class="chk"><input type="checkbox" id="asr.timestamps"> Zeitstempel (lädt zusätzlich den Forced Aligner, ~2 GiB)</label>
+        <label>Datentyp</label><select id="asr.dtype"><option>bfloat16</option><option>float16</option><option>float32</option></select>
+      </div>
     </div>
     <div class="card"><h2 style="margin-top:0">Sprachausgabe (TTS)</h2>
       <label class="chk"><input type="checkbox" id="tts.enabled"> aktiviert</label>
@@ -172,10 +180,14 @@ svg.spark{width:100%;height:60px;display:block}.chk{display:flex;gap:6px;align-i
       <div class="mut" style="font-size:12px;margin-top:8px">Holt den neuesten Stand von GitHub und installiert ihn. Einstellungen, Modelle und Stimmen bleiben. Schlägt die Installation fehl, laufen die Dienste mit der alten Version weiter. Während des Updates starten die Dienste kurz neu.</div>
     </div>
   </div>
+  <div class="card" style="margin-top:16px"><h2 style="margin-top:0">Leistung messen</h2>
+    <div class="mut" style="font-size:12px">Misst Zeit bis zum ersten Ton, Geschwindigkeit bei einer und bei mehreren gleichzeitigen Anfragen und den Speicher der Dienste. Dauert ein bis zwei Minuten und belastet die GPU in der Zeit. Auf der Konsole: <code>sudo speech-spark-bench</code></div>
+    <div class="row" style="margin-top:12px"><button class="b p" id="benchgo">Messung starten</button><span id="benchmsg" class="mut"></span></div>
+    <pre id="benchout" style="margin-top:12px">–</pre></div>
   <div class="card" style="margin-top:16px"><h2 style="margin-top:0">Update-Protokoll</h2><pre id="updlog">–</pre></div>
 </section>
 <section id="logs">
-  <div class="row"><select id="logsvc" style="width:auto"><option value="asr">ASR</option><option value="tts">TTS</option><option value="tts-engine">TTS-Engine</option><option value="tts-design">VoiceDesign-Engine</option><option value="update">Update</option><option value="panel">Panel</option></select>
+  <div class="row"><select id="logsvc" style="width:auto"><option value="asr">ASR</option><option value="tts">TTS</option><option value="asr-engine">ASR-Engine</option><option value="tts-engine">TTS-Engine</option><option value="tts-design">VoiceDesign-Engine</option><option value="update">Update</option><option value="panel">Panel</option></select>
     <button class="b" id="logload">Aktualisieren</button></div>
   <pre id="logout" style="margin-top:12px">…</pre>
 </section>
@@ -212,9 +224,9 @@ async function refresh(){
     return `<tr><td><b>${n.toUpperCase()}</b><div class="mut">:${v.port}</div></td><td>${pill(v.state)} ${st}${v.enabled?'':' <span class="pill">deaktiviert</span>'}</td>
     <td>${esc(h.model||'')}<div class="mut">geschätzt ~${v.estimate_gib} GiB${h.load_seconds?` · geladen in ${h.load_seconds}s`:''}</div>${err}</td>
     <td>${h.requests??'–'}${h.failures?` <span class="err">(${h.failures} Fehler)</span>`:''}${h.busy?' <span class="pill warn">arbeitet</span>':''}</td>
-    <td>${fmt(h.avg_latency_s,' s',2)}</td><td>${fmt(h.avg_ttfa_s,' s',2)}${h.streams?`<div class="mut">${h.streams} Streams</div>`:''}</td><td>${fmt(h.avg_rtf,'',2)}</td><td>${fmt(h.torch_cuda_reserved_gb,' GB',1)}</td>
+    <td>${fmt(h.avg_latency_s,' s',2)}</td><td>${fmt(h.avg_ttfa_s??h.avg_ttft_s,' s',2)}${h.streams?`<div class="mut">${h.streams} Streams</div>`:''}</td><td>${fmt(h.avg_rtf,'',2)}</td><td>${fmt(h.torch_cuda_reserved_gb,' GB',1)}</td>
     <td class="row">${btns(n,v.state)}</td></tr>`+(v.engines||[]).map(e=>`<tr><td class="mut" style="padding-left:20px">↳ ${e.name==='tts-design'?'VoiceDesign-Engine':'Engine'}<div>127.0.0.1:${e.port}</div></td><td>${pill(e.state)}</td>
-    <td>${esc(e.model)}<div class="mut">vllm-omni · reserviert ~${e.estimate_gib} GiB</div></td><td colspan=5></td><td class="row">${btns(e.name,e.state)}</td></tr>`).join('')}).join('');
+    <td>${esc(e.model)}<div class="mut">${e.kind} · reserviert ~${e.estimate_gib} GiB</div></td><td colspan=5></td><td class="row">${btns(e.name,e.state)}</td></tr>`).join('')}).join('');
   $('q38none').style.display=s.qwen38.length?'none':'block';
   $('q38').innerHTML=s.qwen38.map(q=>`<tr><td>${esc(q.unit)}</td><td>${pill(q.state)}</td><td>${q.mem_fraction!=null?(q.mem_fraction*100).toFixed(0)+' % des Pools':'–'}</td></tr>`).join('');
   $('gp').innerHTML=(g.processes||[]).map(p=>`<tr><td>${esc(p.pid)}</td><td>${esc(p.name)}</td><td>${p.mem_mib!=null?fmt(p.mem_mib/1024,' GiB',1):'–'}</td></tr>`).join('')||'<tr><td class="mut" colspan=3>–</td></tr>';
@@ -226,6 +238,9 @@ async function loadCfg(){CFG=await (await api('/api/config')).json();
   const vo=CFG.tts.backend==='vllm-omni';$('ttsbackend').textContent=CFG.tts.backend;
   $('ttsbackendnote').textContent=vo?'(gestreamte Ausgabe)':'(ohne Streaming; umstellen mit sudo ./install.sh --tts-backend vllm-omni)';
   $('enginecfg').style.display=vo?'block':'none';$('ttsdtype').style.display=vo?'none':'block';
+  const av=CFG.asr.backend==='vllm';$('asrbackend').textContent=CFG.asr.backend;
+  $('asrbackendnote').textContent=av?'(viele Anfragen gleichzeitig, gestreamter Text)':'(eine Anfrage nach der anderen; umstellen mit sudo ./install.sh --asr-backend vllm)';
+  $('asrengine').style.display=av?'block':'none';$('asrtf').style.display=av?'none':'block';
   for(const[sec,o]of Object.entries(CFG))for(const[k,v]of Object.entries(o)){const el=$(sec+'.'+k);if(!el)continue;
     if(el.type==='checkbox')el.checked=v;else{if(el.tagName==='SELECT'&&![...el.options].some(o=>o.value==v))el.add(new Option(v));el.value=v}}}
 $('save').onclick=async()=>{const n=JSON.parse(JSON.stringify(CFG));
@@ -239,7 +254,7 @@ $('save').onclick=async()=>{const n=JSON.parse(JSON.stringify(CFG));
 $('asrgo').onclick=async()=>{const f=$('asrfile').files[0];if(!f)return;const fd=new FormData();fd.append('file',f);fd.append('language',$('asrlang').value);
   $('asrmsg').textContent='läuft…';$('asrout').style.display='none';
   try{const r=await (await api('/api/test/asr',{method:'POST',body:fd})).json();$('asrmsg').textContent=`${r.processing_s}s für ${fmt(r.duration,' s',1)} Audio`;
-    $('asrout').textContent=`[${r.language}] ${r.text}`;$('asrout').style.display='block'}catch(e){$('asrmsg').innerHTML=`<span class="err">${esc(e.message)}</span>`}};
+    $('asrout').textContent=`[${r.language||'auto'}] ${r.text}`;$('asrout').style.display='block'}catch(e){$('asrmsg').innerHTML=`<span class="err">${esc(e.message)}</span>`}};
 async function loadVoices(){const v=await (await api('/api/tts/voices')).json();
   $('ttsvoice').innerHTML=v.voices.length?v.voices.map(x=>`<option>${esc(x)}</option>`).join(''):'<option value="">(Standard)</option>';
   $('ttsvoice').disabled=v.model_kind==='voice_design'}
@@ -312,8 +327,8 @@ $('genkey').onclick=()=>{const a=new Uint8Array(18);crypto.getRandomValues(a);$(
 let updPoll=null;
 async function loadSys(check=false){let u;try{u=await (await api('/api/update'+(check?'?check=true':''))).json()}catch(e){$('updstate').innerHTML=`<span class="err">${esc(e.message)}</span>`;return}
   const i=u.installed||{},r=u.remote||{};
-  $('sysver').innerHTML=kvp([['Installiert',i.short?`${i.short} · ${new Date(i.date).toLocaleString()}`:'–'],['Änderung',i.subject||'–'],['TTS-Engine',i.engine||'–'],['Quelle',i.remote||'–'],['Zuletzt geprüft',r.checked?new Date(r.checked*1000).toLocaleTimeString():'–']]);
-  updBadge(r);
+  $('sysver').innerHTML=kvp([['Installiert',i.short?`${i.short} · ${new Date(i.date).toLocaleString()}`:'–'],['Änderung',i.subject||'–'],['Engines',i.engine||'–'],['Quelle',i.remote||'–'],['Zuletzt geprüft',r.checked?new Date(r.checked*1000).toLocaleTimeString():'–']]);
+  updBadge(r);loadBench();
   if(u.running){$('updstate').innerHTML='<span class="pill warn">Update läuft</span> Die Seite lädt neu, wenn das Panel neu startet.';$('updgo').disabled=true;
     if(!updPoll)updPoll=setInterval(()=>loadSys(),3000)}
   else{if(updPoll){clearInterval(updPoll);updPoll=null}
@@ -325,6 +340,14 @@ async function loadSys(check=false){let u;try{u=await (await api('/api/update'+(
 const kvp=rows=>rows.map(([k,v])=>`<tr><td class="mut" style="width:35%">${k}</td><td>${esc(v)}</td></tr>`).join('');
 function updBadge(r){$('updbadge').style.display=r&&r.behind&&r.behind!==0?'inline-block':'none'}
 $('updcheck').onclick=()=>loadSys(true);
+let benchPoll=null;
+async function loadBench(){let b;try{b=await (await api('/api/bench')).json()}catch(e){$('benchmsg').innerHTML=`<span class="err">${esc(e.message)}</span>`;return}
+  $('benchgo').disabled=b.running;
+  $('benchmsg').textContent=b.running?'läuft…':b.result?'letzte Messung: '+new Date(b.result.time*1000).toLocaleString():'';
+  $('benchout').textContent=b.running?b.log.join('\n'):(b.report||'(noch nicht gemessen)');
+  if(b.running&&!benchPoll)benchPoll=setInterval(loadBench,2000);
+  if(!b.running&&benchPoll){clearInterval(benchPoll);benchPoll=null}}
+$('benchgo').onclick=async()=>{try{await api('/api/bench',{method:'POST'});loadBench()}catch(e){$('benchmsg').innerHTML=`<span class="err">${esc(e.message)}</span>`}};
 $('updgo').onclick=async()=>{if(!confirm('Update jetzt installieren? Die Dienste starten dabei kurz neu.'))return;
   try{await api('/api/update',{method:'POST'});$('updmsg').textContent='gestartet';
     // the panel restarts during the update; reload once it answers again

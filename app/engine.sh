@@ -1,15 +1,17 @@
 #!/usr/bin/env bash
-# Starts one vllm-omni TTS engine natively (no Docker), as the speech user:
-#   speech-spark-tts-engine.service  -> engine.sh main    (CustomVoice / Base model)
-#   speech-spark-tts-design.service  -> engine.sh design  (VoiceDesign model)
-# Listens on 127.0.0.1 only; speech-spark-tts on the public port sits in front of it.
+# Starts one vLLM engine natively (no Docker), as the speech user:
+#   speech-spark-tts-engine.service  -> engine.sh main    (vllm-omni, CustomVoice / Base model)
+#   speech-spark-tts-design.service  -> engine.sh design  (vllm-omni, VoiceDesign model)
+#   speech-spark-asr-engine.service  -> engine.sh asr     (plain vLLM, Qwen3-ASR)
+# Listens on 127.0.0.1 only; speech-spark-tts / speech-spark-asr on the public ports sit in front.
 set -euo pipefail
 
-ROLE="${1:?usage: engine.sh main|design}"
+ROLE="${1:?usage: engine.sh main|design|asr}"
 CONFIG="${SPEECH_SPARK_CONFIG:-/etc/speech-spark/config.json}"
 STATE_DIR="${SPEECH_SPARK_STATE:-/var/lib/speech-spark/state}"
 VENV="${SPEECH_SPARK_ENGINE_VENV:-/opt/speech-spark/venv-engine}"
 STATE="$STATE_DIR/speech-spark-tts-$ROLE.json"
+[ "$ROLE" = asr ] && STATE="$STATE_DIR/speech-spark-asr-engine.json"
 mkdir -p "$STATE_DIR"
 
 state() {  # $1 = status, $2 = message
@@ -17,12 +19,16 @@ state() {  # $1 = status, $2 = message
 }
 fail() { state error "$1"; echo "ERROR: $1" >&2; exit 1; }
 
-c() { jq -r ".tts.$1" "$CONFIG"; }
-SEQS=$(c engine_max_seqs)
-MEM0=$(c engine_mem_talker)
-MEM1=$(c engine_mem_code2wav)
-if [ "$ROLE" = design ]; then MODEL=$(c voicedesign_model); PORT=$(c voicedesign_port)
-else MODEL=$(c model); PORT=$(c engine_port); fi
+if [ "$ROLE" = asr ]; then
+  c() { jq -r ".asr.$1" "$CONFIG"; }
+  SEQS=$(c engine_max_seqs); MEM0=$(c engine_mem); MEM1=0.0
+  MODEL=$(c model); PORT=$(c engine_port)
+else
+  c() { jq -r ".tts.$1" "$CONFIG"; }
+  SEQS=$(c engine_max_seqs); MEM0=$(c engine_mem_talker); MEM1=$(c engine_mem_code2wav)
+  if [ "$ROLE" = design ]; then MODEL=$(c voicedesign_model); PORT=$(c voicedesign_port)
+  else MODEL=$(c model); PORT=$(c engine_port); fi
+fi
 
 [[ "$MODEL" =~ ^[A-Za-z0-9._-]+/[A-Za-z0-9._-]+$ ]] || fail "invalid model id '$MODEL'"
 [[ "$PORT" =~ ^[0-9]{4,5}$ ]] || fail "invalid port '$PORT'"
@@ -30,7 +36,7 @@ else MODEL=$(c model); PORT=$(c engine_port); fi
 for m in "$MEM0" "$MEM1"; do
   [[ "$m" =~ ^0?\.[0-9]+$ ]] || fail "engine memory shares must be fractions like 0.05, got '$m'"
 done
-[ -x "$VENV/bin/vllm" ] || fail "vllm-omni is not installed in $VENV; run install.sh"
+[ -x "$VENV/bin/vllm" ] || fail "vLLM is not installed in $VENV; run install.sh"
 
 # Memory guard: vLLM claims its share of the whole unified pool up front.
 total_kib=$(awk '/^MemTotal:/ {print $2}' /proc/meminfo)
@@ -47,6 +53,19 @@ if [ "$guard" = true ] && awk -v a="$avail_gib" -v n="$need_gib" -v r="$reserve"
 fi
 
 state loading "starting $MODEL, needs ~$need_gib GiB (first start downloads the model)"
+
+if [ "$ROLE" = asr ]; then
+  # Plain vLLM: OpenAI /v1/audio/transcriptions incl. streaming, batches parallel requests.
+  # Audio is cut into model-sized clips, so a short max length keeps the KV cache small.
+  export VLLM_MAX_AUDIO_CLIP_FILESIZE_MB=200
+  exec "$VENV/bin/vllm" serve "$MODEL" \
+    --host 127.0.0.1 --port "$PORT" \
+    --served-model-name "$MODEL" \
+    --gpu-memory-utilization "$MEM0" \
+    --max-num-seqs "$SEQS" \
+    --max-model-len 8192
+fi
+
 overrides=$(jq -cn --argjson m0 "$MEM0" --argjson m1 "$MEM1" --argjson s "$SEQS" \
   '{"0": {gpu_memory_utilization: $m0, max_num_seqs: $s}, "1": {gpu_memory_utilization: $m1, max_num_seqs: $s}}')
 

@@ -6,6 +6,7 @@
 #   sudo ./install.sh --small          # 0.6B models (least unified memory)
 #   sudo ./install.sh --no-tts         # only ASR (or --no-asr)
 #   sudo ./install.sh --tts-backend transformers   # TTS without streaming (default: vllm-omni, streams)
+#   sudo ./install.sh --asr-backend transformers   # ASR without vLLM (default: vllm, batches and streams)
 #   sudo ./install.sh --password XYZ   # panel password (otherwise generated)
 #   sudo ./install.sh --no-download    # models download on first start instead
 #   sudo ./install.sh --no-smoke       # skip the TTS -> ASR round trip at the end
@@ -19,31 +20,34 @@ ETC=/etc/speech-spark
 VAR=/var/lib/speech-spark
 SVC_USER=speech
 TORCH_INDEX=https://download.pytorch.org/whl/cu130
-# TTS engine (streaming). vllm-omni needs the vLLM release with the same major/minor.
+# Engines: vLLM serves Qwen3-ASR natively; vllm-omni (TTS, streaming) needs the vLLM
+# release with the same major/minor.
 # Both ship aarch64 wheels on PyPI built for CUDA 13; installed natively, no Docker.
 VLLM_VERSION=0.30.0
 VLLM_OMNI_VERSION=0.30.0
 DEFAULT_REMOTE=https://github.com/db9979/speech-on-dgx-spark
 SRC="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
 
-SMALL=0; WITH_ASR=1; WITH_TTS=1; PASSWORD=""; DOWNLOAD=1; SMOKE=1; FROM_UPDATE=0; TTS_BACKEND=""
+SMALL=0; WITH_ASR=1; WITH_TTS=1; PASSWORD=""; DOWNLOAD=1; SMOKE=1; FROM_UPDATE=0; TTS_BACKEND=""; ASR_BACKEND=""
 while [ $# -gt 0 ]; do
   case "$1" in
     --small) SMALL=1 ;;
     --no-asr) WITH_ASR=0 ;;
     --no-tts) WITH_TTS=0 ;;
     --tts-backend) TTS_BACKEND="$2"; shift ;;
+    --asr-backend) ASR_BACKEND="$2"; shift ;;
     --password) PASSWORD="$2"; shift ;;
     --no-download) DOWNLOAD=0 ;;
     --no-smoke) SMOKE=0 ;;
     --update) FROM_UPDATE=1 ;;  # set by update.sh
     --uninstall) shift; exec "$SRC/uninstall.sh" "$@" ;;
-    -h|--help) sed -n '2,15p' "$0"; exit 0 ;;
+    -h|--help) sed -n '2,16p' "$0"; exit 0 ;;
     *) echo "unknown option: $1" >&2; exit 2 ;;
   esac
   shift
 done
 case "$TTS_BACKEND" in ""|vllm-omni|transformers) ;; *) echo "--tts-backend must be vllm-omni or transformers" >&2; exit 2 ;; esac
+case "$ASR_BACKEND" in ""|vllm|transformers) ;; *) echo "--asr-backend must be vllm or transformers" >&2; exit 2 ;; esac
 
 say()  { printf '\n\033[1;34m==>\033[0m %s\n' "$*"; }
 warn() { printf '\033[1;33mWARN:\033[0m %s\n' "$*"; }
@@ -118,11 +122,12 @@ else
   [ "$SMALL" = 1 ] && jqi '.asr.model="Qwen/Qwen3-ASR-0.6B" | .tts.model="Qwen/Qwen3-TTS-12Hz-0.6B-CustomVoice"'
 fi
 [ -n "$TTS_BACKEND" ] && jqi --arg b "$TTS_BACKEND" '.tts.backend=$b'
+[ -n "$ASR_BACKEND" ] && jqi --arg b "$ASR_BACKEND" '.asr.backend=$b'
 chown "$SVC_USER:$SVC_USER" "$ETC/config.json"; chmod 640 "$ETC/config.json"
 
 cfg() { jq -r "$1" "$ETC/config.json"; }
 ASR_PORT=$(cfg .asr.port); TTS_PORT=$(cfg .tts.port); PANEL_PORT=$(cfg .panel.port)
-BACKEND=$(cfg .tts.backend)
+BACKEND=$(cfg .tts.backend); ASR_BACKEND=$(cfg .asr.backend)
 [ "$(cfg .tts.enabled)" = true ] || WITH_TTS=0
 [ "$(cfg .asr.enabled)" = true ] || WITH_ASR=0
 
@@ -130,6 +135,7 @@ BACKEND=$(cfg .tts.backend)
 say "Checking ports (dgx-spark-qwen38 uses 30000-30099)"
 ports="$ASR_PORT $TTS_PORT $PANEL_PORT"
 [ "$BACKEND" = vllm-omni ] && ports="$ports $(cfg .tts.engine_port) $(cfg .tts.voicedesign_port)"
+[ "$ASR_BACKEND" = vllm ] && ports="$ports $(cfg .asr.engine_port)"
 for p in $ports; do
   owner=$(ss -ltnpH "sport = :$p" 2>/dev/null | head -1)
   [ -n "$owner" ] || continue
@@ -163,8 +169,12 @@ print(f"   torch {torch.__version__}, CUDA {torch.version.cuda}, {torch.cuda.get
 EOF
 }
 
-if [ "$WITH_ASR" = 1 ]; then
-  say "Python env for Qwen3-ASR (several GB of wheels, takes a while the first time)"
+USE_ENGINE=0
+{ [ "$WITH_TTS" = 1 ] && [ "$BACKEND" = vllm-omni ]; } && USE_ENGINE=1
+{ [ "$WITH_ASR" = 1 ] && [ "$ASR_BACKEND" = vllm ]; } && USE_ENGINE=1
+
+if [ "$WITH_ASR" = 1 ] && [ "$ASR_BACKEND" = transformers ]; then
+  say "Python env for Qwen3-ASR (transformers backend, several GB of wheels)"
   make_venv asr --torch qwen-asr fastapi "uvicorn[standard]" python-multipart
   check_cuda asr
 fi
@@ -173,18 +183,19 @@ if [ "$WITH_TTS" = 1 ] && [ "$BACKEND" = transformers ]; then
   make_venv tts --torch qwen-tts fastapi "uvicorn[standard]" python-multipart
   check_cuda tts
 fi
-say "Python env for the panel and the TTS front end"
+say "Python env for the panel and the ASR / TTS front ends"
 make_venv panel fastapi "uvicorn[standard]" python-multipart httpx psutil
 
-# ---------------------------------------------------------------- TTS engine (vllm-omni, native)
-if [ "$WITH_TTS" = 1 ] && [ "$BACKEND" = vllm-omni ]; then
-  say "Python env for the TTS engine: vllm $VLLM_VERSION + vllm-omni $VLLM_OMNI_VERSION (large, takes a while the first time)"
+# ---------------------------------------------------------------- engines (vLLM + vllm-omni, native)
+if [ "$USE_ENGINE" = 1 ]; then
+  say "Python env for the engines: vllm $VLLM_VERSION + vllm-omni $VLLM_OMNI_VERSION (large, takes a while the first time)"
   v="$PREFIX/venv-engine"
   [ -x "$v/bin/python" ] || "$PY" -m venv "$v"
   "$v/bin/pip" install -q -U pip uv
   # uv resolves this large dependency set much faster than pip; torch comes from PyPI,
   # whose aarch64 wheels for this vLLM release are CUDA 13 builds.
-  "$v/bin/uv" pip install -q --python "$v/bin/python" "vllm==$VLLM_VERSION" "vllm-omni==$VLLM_OMNI_VERSION"
+  # vllm[audio] brings the decoders for webm / mp4 / ogg uploads.
+  "$v/bin/uv" pip install -q --python "$v/bin/python" "vllm[audio]==$VLLM_VERSION" "vllm-omni==$VLLM_OMNI_VERSION"
   check_cuda engine
   "$v/bin/vllm" --help >/dev/null 2>&1 || die "vllm in venv-engine does not start; see the output above"
 fi
@@ -195,10 +206,14 @@ if [ "$DOWNLOAD" = 1 ]; then
     sudo -u "$SVC_USER" HF_HOME="$VAR/hf" "$PREFIX/venv-$1/bin/python" -c \
       "import sys; from huggingface_hub import snapshot_download; snapshot_download(sys.argv[1])" "$2"
   }
-  if [ "$WITH_ASR" = 1 ]; then
+  if [ "$WITH_ASR" = 1 ] && [ "$ASR_BACKEND" = transformers ]; then
     say "Downloading ASR model"
     dl asr "$(cfg .asr.model)"
     [ "$(cfg .asr.timestamps)" = true ] && dl asr "$(cfg .asr.aligner_model)"
+  fi
+  if [ "$WITH_ASR" = 1 ] && [ "$ASR_BACKEND" = vllm ]; then
+    say "Downloading ASR model for the engine"
+    dl engine "$(cfg .asr.model)"
   fi
   if [ "$WITH_TTS" = 1 ] && [ "$BACKEND" = transformers ]; then
     say "Downloading TTS model"
@@ -228,12 +243,19 @@ rm -rf "$PREFIX/app.old"
 if git -C "$PREFIX/src" rev-parse HEAD >/dev/null 2>&1; then
   g() { git -C "$PREFIX/src" log -1 --format="$1"; }
   jq -n --arg c "$(g %H)" --arg s "$(g %h)" --arg d "$(g %cI)" --arg m "$(g %s)" \
-    --arg r "$(git -C "$PREFIX/src" remote get-url origin)" --arg e "vllm-omni $VLLM_OMNI_VERSION (vllm $VLLM_VERSION)" \
+    --arg r "$(git -C "$PREFIX/src" remote get-url origin)" --arg e "vllm $VLLM_VERSION, vllm-omni $VLLM_OMNI_VERSION" \
     '{commit: $c, short: $s, date: $d, subject: $m, remote: $r, branch: "main", engine: $e}' >"$PREFIX/VERSION.json"
 else
   echo '{"commit": null, "subject": "installed without git"}' >"$PREFIX/VERSION.json"
 fi
 chmod 644 "$PREFIX/VERSION.json"
+
+# measuring script: sudo speech-spark-bench
+cat >/usr/local/bin/speech-spark-bench <<EOF
+#!/bin/sh
+exec $PREFIX/venv-panel/bin/python $PREFIX/app/bench.py "\$@"
+EOF
+chmod 755 /usr/local/bin/speech-spark-bench
 
 # ---------------------------------------------------------------- password, sudoers
 if [ ! -f "$ETC/panel.env" ] || [ -n "$PASSWORD" ]; then
@@ -247,7 +269,7 @@ PASSWORD=$(sed -n 's/^PANEL_PASSWORD=//p' "$ETC/panel.env")
 {
   printf '%s ALL=(root) NOPASSWD: ' "$SVC_USER"
   first=1
-  for u in asr tts tts-engine tts-design; do
+  for u in asr asr-engine tts tts-engine tts-design; do
     for a in start stop restart; do
       [ $first = 1 ] || printf ', '
       printf '/usr/bin/systemctl %s speech-spark-%s' "$a" "$u"; first=0
@@ -266,12 +288,20 @@ Environment=SPEECH_SPARK_VOICES=$VAR/voices
 Environment=SPEECH_SPARK_STATE=$VAR/state
 Environment=PYTHONUNBUFFERED=1"
 
+if [ "$ASR_BACKEND" = vllm ]; then
+  asr_exec="$PREFIX/venv-panel/bin/python $PREFIX/app/asr_proxy.py"
+  asr_deps="Wants=speech-spark-asr-engine.service"
+else
+  asr_exec="$PREFIX/venv-asr/bin/python $PREFIX/app/asr_server.py"
+  asr_deps=""
+fi
 cat >/etc/systemd/system/speech-spark-asr.service <<EOF
 [Unit]
-Description=Speech on DGX Spark: Qwen3-ASR
+Description=Speech on DGX Spark: Qwen3-ASR ($ASR_BACKEND)
 # Start after the qwen38 lanes so their static memory fraction is claimed first.
 After=network-online.target $QWEN38_AFTER
 Wants=network-online.target
+$asr_deps
 
 [Service]
 User=$SVC_USER
@@ -280,7 +310,7 @@ WorkingDirectory=$PREFIX/app
 $common_env
 Environment=HF_HOME=$VAR/hf
 Environment=PYTORCH_CUDA_ALLOC_CONF=expandable_segments:True
-ExecStart=$PREFIX/venv-asr/bin/python $PREFIX/app/asr_server.py
+ExecStart=$asr_exec
 Restart=on-failure
 RestartSec=10
 # If unified memory runs out, the kernel / earlyoom should pick speech before an LLM lane or sshd.
@@ -325,7 +355,7 @@ EOF
 engine_unit() {  # $1 = unit suffix, $2 = engine.sh role
   cat >"/etc/systemd/system/speech-spark-$1.service" <<EOF
 [Unit]
-Description=Speech on DGX Spark: vllm-omni TTS engine ($2)
+Description=Speech on DGX Spark: vLLM engine ($2)
 After=network-online.target $QWEN38_AFTER
 Wants=network-online.target
 
@@ -353,6 +383,7 @@ EOF
 }
 engine_unit tts-engine main
 engine_unit tts-design design
+engine_unit asr-engine asr
 
 cat >/etc/systemd/system/speech-spark-panel.service <<EOF
 [Unit]
@@ -393,6 +424,22 @@ say "Starting services"
 systemctl enable speech-spark-panel.service >/dev/null 2>&1
 systemctl restart speech-spark-panel.service
 
+# an update only restarts an engine when its settings changed: a restart costs a model load
+restart_engine() {  # $1 = unit suffix, $2 = settings signature
+  local sigfile="$VAR/state/$1.sig"
+  systemctl enable "speech-spark-$1.service" >/dev/null 2>&1
+  if [ "$FROM_UPDATE" = 0 ] || [ "$(cat "$sigfile" 2>/dev/null)" != "$2" ] \
+     || ! systemctl is-active -q "speech-spark-$1.service"; then
+    systemctl restart "speech-spark-$1.service"
+  fi
+  echo "$2" >"$sigfile"; chown "$SVC_USER:" "$sigfile"
+}
+
+if [ "$WITH_ASR" = 1 ] && [ "$ASR_BACKEND" = vllm ]; then
+  restart_engine asr-engine "$VLLM_VERSION $(jq -c '.asr | {model, engine_mem, engine_max_seqs, engine_port}' "$ETC/config.json")"
+else
+  systemctl disable --now speech-spark-asr-engine.service 2>/dev/null || true
+fi
 if [ "$WITH_ASR" = 1 ]; then
   systemctl enable speech-spark-asr.service >/dev/null 2>&1; systemctl restart speech-spark-asr.service
 else
@@ -400,14 +447,7 @@ else
 fi
 
 if [ "$WITH_TTS" = 1 ] && [ "$BACKEND" = vllm-omni ]; then
-  systemctl enable speech-spark-tts-engine.service >/dev/null 2>&1
-  # an update only restarts the engine when its settings changed: a restart costs a model load
-  engine_sig="$VLLM_OMNI_VERSION $(jq -c '.tts | {model, engine_mem_talker, engine_mem_code2wav, engine_max_seqs, engine_port}' "$ETC/config.json")"
-  if [ "$FROM_UPDATE" = 0 ] || [ "$(cat "$VAR/state/engine.sig" 2>/dev/null)" != "$engine_sig" ] \
-     || ! systemctl is-active -q speech-spark-tts-engine.service; then
-    systemctl restart speech-spark-tts-engine.service
-  fi
-  echo "$engine_sig" >"$VAR/state/engine.sig"; chown "$SVC_USER:" "$VAR/state/engine.sig"
+  restart_engine tts-engine "$VLLM_OMNI_VERSION $(jq -c '.tts | {model, engine_mem_talker, engine_mem_code2wav, engine_max_seqs, engine_port}' "$ETC/config.json")"
   if [ "$(cfg .tts.voicedesign_enabled)" = true ]; then
     systemctl enable speech-spark-tts-design.service >/dev/null 2>&1; systemctl restart speech-spark-tts-design.service
   else
@@ -433,7 +473,7 @@ wait_ready() {  # $1 = name, $2 = port, $3 = minutes
   echo "   $1 not ready after $3 min (status: ${st:-no answer}); see the panel or: journalctl -u 'speech-spark-*'"; return 1
 }
 ok_asr=0; ok_tts=0
-if [ "$WITH_ASR" = 1 ]; then wait_ready asr "$ASR_PORT" 10 && ok_asr=1; fi
+if [ "$WITH_ASR" = 1 ]; then wait_ready asr "$ASR_PORT" 30 && ok_asr=1; fi
 # first engine start pulls the model and compiles kernels
 if [ "$WITH_TTS" = 1 ]; then wait_ready tts "$TTS_PORT" 30 && ok_tts=1; fi
 
@@ -465,10 +505,11 @@ cat <<EOF
 
 ------------------------------------------------------------------
  Panel:     http://$IP:$PANEL_PORT   (user: anything, password: $PASSWORD)
- ASR API:   http://$IP:$ASR_PORT/v1/audio/transcriptions
+ ASR API:   http://$IP:$ASR_PORT/v1/audio/transcriptions   (backend: $ASR_BACKEND)
  TTS API:   http://$IP:$TTS_PORT/v1/audio/speech   (backend: $BACKEND)
  API key:   ${KEY:-none}
  Config:    $ETC/config.json     Logs: journalctl -u 'speech-spark-*'
  Update:    panel tab "System", or: sudo $PREFIX/src/update.sh
+ Measure:   panel tab "System", or: sudo speech-spark-bench
 ------------------------------------------------------------------
 EOF

@@ -9,7 +9,7 @@ from fastapi import Depends, FastAPI, File, Form, HTTPException, UploadFile
 from fastapi.middleware.cors import CORSMiddleware
 from fastapi.responses import PlainTextResponse
 
-from common import ServiceState, api_key_dependency, check_memory, estimate_gib, load_config, torch_dtype
+from common import ASR_ISO as ISO, ServiceState, api_key_dependency, check_memory, estimate_gib, load_config, torch_dtype
 
 cfg = load_config("asr")
 state = ServiceState("asr", cfg)
@@ -35,13 +35,6 @@ def load_model(cfg):
         kwargs["forced_aligner_kwargs"] = dict(dtype=dtype, device_map="cuda:0", attn_implementation="sdpa")
     return Qwen3ASRModel.from_pretrained(cfg["model"], **kwargs)
 
-
-ISO = {"zh": "Chinese", "en": "English", "yue": "Cantonese", "ar": "Arabic", "de": "German",
-       "fr": "French", "es": "Spanish", "pt": "Portuguese", "id": "Indonesian", "it": "Italian",
-       "ko": "Korean", "ru": "Russian", "th": "Thai", "vi": "Vietnamese", "ja": "Japanese",
-       "tr": "Turkish", "hi": "Hindi", "ms": "Malay", "nl": "Dutch", "sv": "Swedish", "da": "Danish",
-       "fi": "Finnish", "pl": "Polish", "cs": "Czech", "fil": "Filipino", "fa": "Persian",
-       "el": "Greek", "ro": "Romanian", "hu": "Hungarian", "mk": "Macedonian"}
 
 
 @app.on_event("startup")

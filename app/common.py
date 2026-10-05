@@ -23,6 +23,15 @@ MODEL_GIB = {
 }
 
 
+# Qwen3-ASR languages by ISO 639-1 code (OpenAI clients send codes, qwen-asr wants names).
+ASR_ISO = {"zh": "Chinese", "en": "English", "yue": "Cantonese", "ar": "Arabic", "de": "German",
+           "fr": "French", "es": "Spanish", "pt": "Portuguese", "id": "Indonesian", "it": "Italian",
+           "ko": "Korean", "ru": "Russian", "th": "Thai", "vi": "Vietnamese", "ja": "Japanese",
+           "tr": "Turkish", "hi": "Hindi", "ms": "Malay", "nl": "Dutch", "sv": "Swedish", "da": "Danish",
+           "fi": "Finnish", "pl": "Polish", "cs": "Czech", "fil": "Filipino", "fa": "Persian",
+           "el": "Greek", "ro": "Romanian", "hu": "Hungarian", "mk": "Macedonian"}
+
+
 def estimate_gib(model_id):
     name = model_id.rstrip("/").split("/")[-1]
     for prefix, gib in MODEL_GIB.items():
