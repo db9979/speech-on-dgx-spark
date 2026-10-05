@@ -123,6 +123,8 @@ else
 fi
 [ -n "$TTS_BACKEND" ] && jqi --arg b "$TTS_BACKEND" '.tts.backend=$b'
 [ -n "$ASR_BACKEND" ] && jqi --arg b "$ASR_BACKEND" '.asr.backend=$b'
+# 0.08 was the first, too generous start value for the ASR engine (15a62d8)
+[ "$(jq -r .asr.engine_mem "$ETC/config.json")" = 0.08 ] && jqi '.asr.engine_mem=0.05'
 chown "$SVC_USER:$SVC_USER" "$ETC/config.json"; chmod 640 "$ETC/config.json"
 
 cfg() { jq -r "$1" "$ETC/config.json"; }
@@ -436,6 +438,9 @@ restart_engine() {  # $1 = unit suffix, $2 = settings signature
 }
 
 if [ "$WITH_ASR" = 1 ] && [ "$ASR_BACKEND" = vllm ]; then
+  # the old transformers ASR keeps its model in memory until it stops; free it before the
+  # engine's memory guard looks at what is available
+  systemctl stop speech-spark-asr.service 2>/dev/null || true
   restart_engine asr-engine "$VLLM_VERSION $(jq -c '.asr | {model, engine_mem, engine_max_seqs, engine_port}' "$ETC/config.json")"
 else
   systemctl disable --now speech-spark-asr-engine.service 2>/dev/null || true

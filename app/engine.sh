@@ -63,7 +63,7 @@ if [ "$ROLE" = asr ]; then
     --served-model-name "$MODEL" \
     --gpu-memory-utilization "$MEM0" \
     --max-num-seqs "$SEQS" \
-    --max-model-len 8192
+    --max-model-len 4096
 fi
 
 overrides=$(jq -cn --argjson m0 "$MEM0" --argjson m1 "$MEM1" --argjson s "$SEQS" \
