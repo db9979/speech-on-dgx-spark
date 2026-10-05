@@ -54,7 +54,8 @@ esac
 for o in "${others[@]}"; do
   read -r ounit oport <<<"$o"
   for _ in $(seq 1 240); do
-    systemctl is-active -q "$ounit" || break
+    # also wait through the other engine's restart pause, so its next start does not overlap ours
+    case "$(systemctl is-active "$ounit" 2>/dev/null)" in active|activating) ;; *) break ;; esac
     curl -fs -o /dev/null "http://127.0.0.1:$oport/health" && break
     state loading "waiting for $ounit to finish starting"
     sleep 5
@@ -89,7 +90,8 @@ if [ "$ROLE" = asr ]; then
     --served-model-name "$MODEL" \
     --gpu-memory-utilization "$MEM0" \
     --max-num-seqs "$SEQS" \
-    --max-model-len 4096
+    --max-model-len 4096 \
+    --max-num-batched-tokens 4096
 fi
 
 [[ "$MAXLEN" =~ ^[0-9]{3,6}$ ]] || fail "invalid engine_max_model_len '$MAXLEN'"

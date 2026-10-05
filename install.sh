@@ -130,8 +130,9 @@ if [ "$(jq -c '[.tts.engine_mem_talker, .tts.engine_mem_code2wav]' "$ETC/config.
   jqi '.tts.engine_mem_talker=0.03 | .tts.engine_mem_code2wav=0.015 | .tts.engine_max_seqs=2'
 fi
 # the 0.6B ASR model needs about half the engine share of the 1.7B one
-if jq -e '.asr.model | test("0.6B")' "$ETC/config.json" >/dev/null && [ "$(jq -r .asr.engine_mem "$ETC/config.json")" = 0.045 ]; then
-  jqi '.asr.engine_mem=0.025'
+# (0.025 was too small: "No available memory for the cache blocks" on the Spark)
+if jq -e '.asr.model | test("0.6B")' "$ETC/config.json" >/dev/null; then
+  case "$(jq -r .asr.engine_mem "$ETC/config.json")" in 0.045|0.025) jqi '.asr.engine_mem=0.035' ;; esac
 fi
 chown "$SVC_USER:$SVC_USER" "$ETC/config.json"; chmod 640 "$ETC/config.json"
 
