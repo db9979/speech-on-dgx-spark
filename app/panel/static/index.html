@@ -69,7 +69,7 @@ svg.spark{width:100%;height:60px;display:block}.chk{display:flex;gap:6px;align-i
       <div class="mut" style="font-size:12px;margin-top:6px">Backend: <b id="asrbackend">–</b> <span id="asrbackendnote"></span></div>
       <div id="asrengine">
         <h2>Engine (vLLM, parallel und gestreamt)</h2>
-        <label>Speicheranteil (Anteil am ganzen 128-GB-Pool, z. B. 0.05 ≈ 6 GiB)</label><input id="asr.engine_mem" type="number" step="0.01">
+        <label>Speicheranteil (Anteil am ganzen 128-GB-Pool, 1.7B: 0.045 ≈ 5,4 GiB, 0.6B: 0.025 ≈ 3 GiB)</label><input id="asr.engine_mem" type="number" step="0.01">
         <label>Max. gleichzeitige Anfragen</label><input id="asr.engine_max_seqs" type="number">
       </div>
       <div id="asrtf">
@@ -89,9 +89,10 @@ svg.spark{width:100%;height:60px;display:block}.chk{display:flex;gap:6px;align-i
       <div class="mut" style="font-size:12px;margin-top:6px">Backend: <b id="ttsbackend">–</b> <span id="ttsbackendnote"></span></div>
       <div id="enginecfg">
         <h2>Engine (vllm-omni, gestreamt)</h2>
-        <label>Speicheranteil Talker (Anteil am ganzen 128-GB-Pool, z. B. 0.05 ≈ 6 GiB)</label><input id="tts.engine_mem_talker" type="number" step="0.01">
+        <label>Speicheranteil Talker (Anteil am ganzen 128-GB-Pool, z. B. 0.03 ≈ 3,6 GiB)</label><input id="tts.engine_mem_talker" type="number" step="0.01">
         <label>Speicheranteil Code2Wav</label><input id="tts.engine_mem_code2wav" type="number" step="0.01">
         <label>Max. gleichzeitige Anfragen</label><input id="tts.engine_max_seqs" type="number">
+        <label>Max. Länge pro Anfrage in Schritten (4096 ≈ 5 Min. Audio; kleiner = weniger Speicher)</label><input id="tts.engine_max_model_len" type="number">
         <label class="chk"><input type="checkbox" id="tts.voicedesign_enabled"> VoiceDesign zusätzlich bereitstellen (zweite Engine, gleicher Speicherbedarf noch einmal)</label>
         <label>VoiceDesign-Modell</label><select id="tts.voicedesign_model"><option>Qwen/Qwen3-TTS-12Hz-1.7B-VoiceDesign</option></select>
       </div>

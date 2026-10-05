@@ -26,6 +26,7 @@ if [ "$ROLE" = asr ]; then
 else
   c() { jq -r ".tts.$1" "$CONFIG"; }
   SEQS=$(c engine_max_seqs); MEM0=$(c engine_mem_talker); MEM1=$(c engine_mem_code2wav)
+  MAXLEN=$(jq -r '.tts.engine_max_model_len // 4096' "$CONFIG")
   if [ "$ROLE" = design ]; then MODEL=$(c voicedesign_model); PORT=$(c voicedesign_port)
   else MODEL=$(c model); PORT=$(c engine_port); fi
 fi
@@ -88,8 +89,10 @@ if [ "$ROLE" = asr ]; then
     --max-model-len 4096
 fi
 
-overrides=$(jq -cn --argjson m0 "$MEM0" --argjson m1 "$MEM1" --argjson s "$SEQS" \
-  '{"0": {gpu_memory_utilization: $m0, max_num_seqs: $s}, "1": {gpu_memory_utilization: $m1, max_num_seqs: $s}}')
+[[ "$MAXLEN" =~ ^[0-9]{3,6}$ ]] || fail "invalid engine_max_model_len '$MAXLEN'"
+# A short talker context keeps its KV cache small; 4096 talker steps are minutes of audio.
+overrides=$(jq -cn --argjson m0 "$MEM0" --argjson m1 "$MEM1" --argjson s "$SEQS" --argjson l "$MAXLEN" \
+  '{"0": {gpu_memory_utilization: $m0, max_num_seqs: $s, max_model_len: $l}, "1": {gpu_memory_utilization: $m1, max_num_seqs: $s}}')
 
 exec "$VENV/bin/vllm" serve "$MODEL" --omni \
   --host 127.0.0.1 --port "$PORT" \

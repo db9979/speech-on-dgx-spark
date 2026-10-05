@@ -124,8 +124,15 @@ else
 fi
 [ -n "$TTS_BACKEND" ] && jqi --arg b "$TTS_BACKEND" '.tts.backend=$b'
 [ -n "$ASR_BACKEND" ] && jqi --arg b "$ASR_BACKEND" '.asr.backend=$b'
-# 0.08 was the first, too generous start value for the ASR engine (15a62d8)
-[ "$(jq -r .asr.engine_mem "$ETC/config.json")" = 0.08 ] && jqi '.asr.engine_mem=0.05'
+# Earlier start values were too generous next to a qwen38 lane; move untouched ones down.
+case "$(jq -r .asr.engine_mem "$ETC/config.json")" in 0.08|0.05) jqi '.asr.engine_mem=0.045 | .asr.engine_max_seqs=4' ;; esac
+if [ "$(jq -c '[.tts.engine_mem_talker, .tts.engine_mem_code2wav]' "$ETC/config.json")" = "[0.05,0.05]" ]; then
+  jqi '.tts.engine_mem_talker=0.03 | .tts.engine_mem_code2wav=0.015 | .tts.engine_max_seqs=2'
+fi
+# the 0.6B ASR model needs about half the engine share of the 1.7B one
+if jq -e '.asr.model | test("0.6B")' "$ETC/config.json" >/dev/null && [ "$(jq -r .asr.engine_mem "$ETC/config.json")" = 0.045 ]; then
+  jqi '.asr.engine_mem=0.025'
+fi
 chown "$SVC_USER:$SVC_USER" "$ETC/config.json"; chmod 640 "$ETC/config.json"
 
 cfg() { jq -r "$1" "$ETC/config.json"; }
@@ -453,7 +460,7 @@ else
 fi
 
 if [ "$WITH_TTS" = 1 ] && [ "$BACKEND" = vllm-omni ]; then
-  restart_engine tts-engine "$VLLM_OMNI_VERSION $(jq -c '.tts | {model, engine_mem_talker, engine_mem_code2wav, engine_max_seqs, engine_port}' "$ETC/config.json")"
+  restart_engine tts-engine "$VLLM_OMNI_VERSION $(jq -c '.tts | {model, engine_mem_talker, engine_mem_code2wav, engine_max_seqs, engine_max_model_len, engine_port}' "$ETC/config.json")"
   if [ "$(cfg .tts.voicedesign_enabled)" = true ]; then
     systemctl enable speech-spark-tts-design.service >/dev/null 2>&1; systemctl restart speech-spark-tts-design.service
   else

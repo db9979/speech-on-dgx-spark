@@ -32,9 +32,10 @@ PREFIX = os.environ.get("SPEECH_SPARK_PREFIX", "/opt/speech-spark")
 # asr keys the vLLM engine reads; changing them restarts it
 ASR_ENGINE_KEYS = ("model", "engine_port", "engine_mem", "engine_max_seqs")
 # tts keys that only the vllm-omni engine reads; changing them restarts the engine
-ENGINE_KEYS = ("model", "engine_port", "engine_mem_talker", "engine_mem_code2wav", "engine_max_seqs")
+ENGINE_KEYS = ("model", "engine_port", "engine_mem_talker", "engine_mem_code2wav", "engine_max_seqs",
+               "engine_max_model_len")
 DESIGN_KEYS = ("voicedesign_enabled", "voicedesign_model", "voicedesign_port",
-               "engine_mem_talker", "engine_mem_code2wav", "engine_max_seqs")
+               "engine_mem_talker", "engine_mem_code2wav", "engine_max_seqs", "engine_max_model_len")
 # Units installed by github.com/hasso5703/dgx-spark-qwen38; only one lane runs at a time.
 QWEN38_UNITS = ["qwen38-sglang", "qwen38-sglang-1m", "qwen38-flash", "qwen38-image",
                 "qwen38-video", "qwen38-llamacpp", "qwen38-keepalive", "qwen38-dashboard"]
@@ -219,6 +220,8 @@ def validate(new):
         raise HTTPException(400, "the ASR backend is chosen at install time: sudo ./install.sh --asr-backend ...")
     if not isinstance(a["engine_mem"], (int, float)) or not 0.01 <= a["engine_mem"] <= 0.5:
         raise HTTPException(400, "asr engine_mem must be a share of the memory pool between 0.01 and 0.5")
+    if a.get("backend") == "vllm" and "1.7B" in a["model"] and a["engine_mem"] < 0.04:
+        raise HTTPException(400, "Qwen3-ASR-1.7B needs an engine share of at least 0.04 (0.6B: 0.025)")
     if not isinstance(a["engine_max_seqs"], int) or not 1 <= a["engine_max_seqs"] <= 256:
         raise HTTPException(400, "asr engine_max_seqs must be 1..256")
     t = new["tts"]
@@ -227,6 +230,8 @@ def validate(new):
     for k in ("engine_mem_talker", "engine_mem_code2wav"):
         if not isinstance(t[k], (int, float)) or not 0.01 <= t[k] <= 0.5:
             raise HTTPException(400, f"{k} must be a share of the memory pool between 0.01 and 0.5")
+    if not isinstance(t["engine_max_model_len"], int) or not 512 <= t["engine_max_model_len"] <= 65536:
+        raise HTTPException(400, "engine_max_model_len must be 512..65536")
     if not isinstance(t["engine_max_seqs"], int) or not 1 <= t["engine_max_seqs"] <= 64:
         raise HTTPException(400, "engine_max_seqs must be 1..64")
     if not re.fullmatch(r"[\w.\-]+/[\w.\-]+", str(t["voicedesign_model"])):
