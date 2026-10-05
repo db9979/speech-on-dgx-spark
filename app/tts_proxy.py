@@ -1,6 +1,6 @@
 """Qwen3-TTS front end for the vllm-omni engine (backend "vllm-omni").
 
-The engine (Docker, 127.0.0.1 only) does the work, including streaming:
+The engine (native vllm-omni venv, 127.0.0.1 only) does the work, including streaming:
 `stream: true` returns OpenAI `speech.audio.*` Server-Sent Events with base64 PCM
 16 bit mono 24 kHz chunks. This service sits on the public TTS port and adds the API
 key, defaults (voice, language, format), routing of VoiceDesign requests to the second
@@ -76,7 +76,7 @@ async def engine_status(role):
     if st.get("status") in ("blocked", "error") and active != "active":
         return st["status"], st.get("error")
     if active in ("active", "activating"):
-        return "loading", "engine starting (first start downloads the image and model)"
+        return "loading", "engine starting (first start downloads the model)"
     return "stopped", f"{unit} is {active}"
 
 
