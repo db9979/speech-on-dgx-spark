@@ -19,7 +19,7 @@ from fastapi import Depends, FastAPI, HTTPException, Request
 from fastapi.middleware.cors import CORSMiddleware
 from fastapi.responses import Response, StreamingResponse
 
-from common import api_key_dependency, load_config
+from common import api_key_dependency, engine_crash_reason, load_config
 
 STATE_DIR = os.environ.get("SPEECH_SPARK_STATE", "/var/lib/speech-spark/state")
 LANGUAGES = ["auto", "Chinese", "English", "Japanese", "Korean", "German", "French",
@@ -85,7 +85,8 @@ async def engine_status(role):
     if st.get("status") in ("blocked", "error") and active != "active":
         return st["status"], st.get("error")
     if active == "activating" and sub_state(unit) == "auto-restart":
-        return "error", f"engine exited and restarts every 30 s; see panel Logs -> {log}"
+        reason = engine_crash_reason(unit)
+        return "error", f"engine exited and restarts every 30 s: {reason or 'see panel Logs -> TTS-Engine'}"
     if active in ("active", "activating"):
         return "loading", (st.get("status") == "loading" and st.get("error")) or "engine starting (first start downloads the model)"
     return "stopped", f"{unit} is {active}"

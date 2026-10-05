@@ -139,6 +139,23 @@ class ServiceState:
         return out
 
 
+
+def engine_crash_reason(unit):
+    """Last real exception an engine logged before it exited (vLLM prints the cause in the
+    EngineCore process; the final 'Engine core initialization failed' line only points back)."""
+    import re
+    import subprocess
+    try:
+        out = subprocess.run(["journalctl", "-u", unit, "-n", "1500", "--no-pager", "-o", "cat"],
+                             capture_output=True, text=True, timeout=10).stdout
+    except Exception:
+        return None
+    hits = [m.group(1).strip() for m in re.finditer(r"((?:\w+\.)*\w*(?:Error|Exception): .+)", out)
+            if "Engine core initialization failed" not in m.group(1)
+            and "Orchestrator initialization failed" not in m.group(1)]
+    return hits[-1][:300] if hits else None
+
+
 def api_key_dependency():
     """FastAPI dependency: if config api.key is set, require 'Authorization: Bearer <key>'.
     Read per request, so a key changed in the panel applies without a model reload."""
