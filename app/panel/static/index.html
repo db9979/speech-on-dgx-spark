@@ -183,13 +183,13 @@ svg.spark{width:100%;height:60px;display:block}.chk{display:flex;gap:6px;align-i
   </div>
   <div class="card" style="margin-top:16px"><h2 style="margin-top:0">Leistung messen</h2>
     <div class="mut" style="font-size:12px">Misst Zeit bis zum ersten Ton, Geschwindigkeit bei einer und bei mehreren gleichzeitigen Anfragen und den Speicher der Dienste. Dauert ein bis zwei Minuten und belastet die GPU in der Zeit. Auf der Konsole: <code>sudo speech-spark-bench</code></div>
-    <div class="row" style="margin-top:12px"><button class="b p" id="benchgo">Messung starten</button><button class="b" onclick="copyText('benchout',this)">Kopieren</button><span id="benchmsg" class="mut"></span></div>
+    <div class="row" style="margin-top:12px"><button class="b p" id="benchgo">Messung starten</button><button class="b" onclick="copyEl('benchout',this)">Kopieren</button><span id="benchmsg" class="mut"></span></div>
     <pre id="benchout" style="margin-top:12px">–</pre></div>
-  <div class="card" style="margin-top:16px"><div class="row" style="justify-content:space-between"><h2 style="margin:0">Update-Protokoll</h2><button class="b" onclick="copyText('updlog',this)">Kopieren</button></div><pre id="updlog" style="margin-top:12px">–</pre></div>
+  <div class="card" style="margin-top:16px"><div class="row" style="justify-content:space-between"><h2 style="margin:0">Update-Protokoll</h2><button class="b" onclick="copyEl('updlog',this)">Kopieren</button></div><pre id="updlog" style="margin-top:12px">–</pre></div>
 </section>
 <section id="logs">
   <div class="row"><select id="logsvc" style="width:auto"><option value="asr">ASR</option><option value="tts">TTS</option><option value="asr-engine">ASR-Engine</option><option value="tts-engine">TTS-Engine</option><option value="tts-design">VoiceDesign-Engine</option><option value="update">Update</option><option value="panel">Panel</option></select>
-    <button class="b" id="logload">Aktualisieren</button><button class="b" onclick="copyText('logout',this)">Kopieren</button></div>
+    <button class="b" id="logload">Aktualisieren</button><button class="b" onclick="copyEl('logout',this)">Kopieren</button></div>
   <pre id="logout" style="margin-top:12px">…</pre>
 </section>
 </main>
@@ -201,12 +201,16 @@ document.querySelectorAll('nav button').forEach(b=>b.onclick=()=>{document.query
 const esc=s=>String(s??'').replace(/[&<>"]/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'}[c]));
 const pill=(s)=>{const c={active:'ok',ready:'ok',loading:'warn',activating:'warn',blocked:'bad',error:'bad',failed:'bad'}[s]||'';return `<span class="pill ${c}">${esc(s)}</span>`};
 // The panel runs on plain http in the LAN, where navigator.clipboard is not available.
-function copyText(id,btn){const el=$(id),t=el.textContent;const done=ok=>{const o=btn.textContent;btn.textContent=ok?'Kopiert':'Markiert, jetzt Strg+C';setTimeout(()=>btn.textContent=o,2500)};
-  // select the text itself; if copying is refused the user can still press Ctrl+C
-  const sel=window.getSelection(),r=document.createRange();r.selectNodeContents(el);sel.removeAllRanges();sel.addRange(r);
-  if(navigator.clipboard&&window.isSecureContext){navigator.clipboard.writeText(t).then(()=>done(true),()=>done(false));return}
-  let ok=false;try{ok=document.execCommand('copy')}catch{}done(ok)}
-window.copyText=copyText;
+// navigator.clipboard needs https or localhost; the panel is usually plain http on the LAN,
+// so there the copy event gets the text directly (copying a selection is unreliable)
+function copyString(t,btn){const label=btn.textContent;const done=ok=>{btn.textContent=ok?'kopiert':'Markiert, jetzt Strg+C';setTimeout(()=>btn.textContent=label,2000)};
+  if(navigator.clipboard&&window.isSecureContext){navigator.clipboard.writeText(t).then(()=>done(true),()=>done(false));return true}
+  const onCopy=e=>{e.clipboardData.setData('text/plain',t);e.preventDefault()};
+  document.addEventListener('copy',onCopy);let ok=false;try{ok=document.execCommand('copy')}catch{}document.removeEventListener('copy',onCopy);
+  done(ok);return ok}
+function copyEl(id,btn){const el=$(id);if(!copyString(el.innerText||el.textContent,btn)){
+  const sel=window.getSelection(),r=document.createRange();r.selectNodeContents(el);sel.removeAllRanges();sel.addRange(r)}}
+window.copyString=copyString;window.copyEl=copyEl;
 const fmt=(v,u='',d=0)=>v==null?'–':(+v).toFixed(d)+u;
 
 function spark(svg,vals,max){const w=300,h=60;svg.setAttribute('viewBox',`0 0 ${w} ${h}`);svg.setAttribute('preserveAspectRatio','none');
@@ -298,11 +302,7 @@ async function loadLogs(){$('logout').textContent=await (await api('/api/logs/'+
 $('logload').onclick=loadLogs;$('logsvc').onchange=loadLogs;
 
 
-// navigator.clipboard needs https or localhost; the panel is usually plain http on the LAN
-window.copyText=(t,btn)=>{const done=()=>{btn.textContent='kopiert';setTimeout(()=>btn.textContent='kopieren',1200)};
-  if(navigator.clipboard&&window.isSecureContext){navigator.clipboard.writeText(t).then(done);return}
-  const ta=document.createElement('textarea');ta.value=t;document.body.appendChild(ta);ta.select();document.execCommand('copy');ta.remove();done()};
-function kv(rows){return rows.map(([k,v])=>`<tr><td class="mut" style="width:40%">${k}</td><td><code>${esc(v)}</code> <button class="b" style="padding:1px 6px;font-size:12px" onclick="copyText(this.previousElementSibling.textContent,this)">kopieren</button></td></tr>`).join('')}
+function kv(rows){return rows.map(([k,v])=>`<tr><td class="mut" style="width:40%">${k}</td><td><code>${esc(v)}</code> <button class="b" style="padding:1px 6px;font-size:12px" onclick="copyString(this.previousElementSibling.textContent,this)">kopieren</button></td></tr>`).join('')}
 async function loadInt(){const c=await (await api('/api/config')).json();const v=await (await api('/api/tts/voices')).json();
   const host=location.hostname,asr=`http://${host}:${c.asr.port}/v1`,tts=`http://${host}:${c.tts.port}/v1`,key=c.api.key||'beliebig, z. B. sk-local';
   const voice=c.tts.default_voice||(v.voices[0]||'ryan');
