@@ -74,7 +74,7 @@ async def engine_status():
     if active == "activating" and sub_state(UNIT) == "auto-restart":
         return "error", f"engine exited and restarts every 30 s; see panel Logs -> {log}"
     if active in ("active", "activating"):
-        return "loading", "engine starting (first start downloads the model and compiles kernels)"
+        return "loading", (st.get("status") == "loading" and st.get("error")) or "engine starting (first start downloads the model and compiles kernels)"
     return "stopped", f"{UNIT} is {active}"
 
 

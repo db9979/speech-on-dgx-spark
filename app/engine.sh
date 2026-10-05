@@ -38,6 +38,26 @@ for m in "$MEM0" "$MEM1"; do
 done
 [ -x "$VENV/bin/vllm" ] || fail "vLLM is not installed in $VENV; run install.sh"
 
+# One engine at a time: vLLM sizes its KV cache from device-wide memory use while it starts,
+# so an engine loading at the same moment eats into this one's budget (seen on GB10:
+# "Available KV cache memory: 0.0 GiB"). Order: asr, main, design; each waits for the ones
+# before it that are running but not ready yet, at most 20 minutes.
+others=()
+case "$ROLE" in
+  main) others=("speech-spark-asr-engine $(jq -r .asr.engine_port "$CONFIG")") ;;
+  design) others=("speech-spark-asr-engine $(jq -r .asr.engine_port "$CONFIG")"
+                  "speech-spark-tts-engine $(jq -r .tts.engine_port "$CONFIG")") ;;
+esac
+for o in "${others[@]}"; do
+  read -r ounit oport <<<"$o"
+  for _ in $(seq 1 240); do
+    systemctl is-active -q "$ounit" || break
+    curl -fs -o /dev/null "http://127.0.0.1:$oport/health" && break
+    state loading "waiting for $ounit to finish starting"
+    sleep 5
+  done
+done
+
 # Memory guard: vLLM claims its share of the whole unified pool up front.
 total_kib=$(awk '/^MemTotal:/ {print $2}' /proc/meminfo)
 avail_kib=$(awk '/^MemAvailable:/ {print $2}' /proc/meminfo)
