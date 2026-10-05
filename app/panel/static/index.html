@@ -200,10 +200,11 @@ document.querySelectorAll('nav button').forEach(b=>b.onclick=()=>{document.query
 const esc=s=>String(s??'').replace(/[&<>"]/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'}[c]));
 const pill=(s)=>{const c={active:'ok',ready:'ok',loading:'warn',activating:'warn',blocked:'bad',error:'bad',failed:'bad'}[s]||'';return `<span class="pill ${c}">${esc(s)}</span>`};
 // The panel runs on plain http in the LAN, where navigator.clipboard is not available.
-function copyText(id,btn){const t=$(id).textContent;const done=ok=>{const o=btn.textContent;btn.textContent=ok?'Kopiert':'Kopieren fehlgeschlagen';setTimeout(()=>btn.textContent=o,1500)};
+function copyText(id,btn){const el=$(id),t=el.textContent;const done=ok=>{const o=btn.textContent;btn.textContent=ok?'Kopiert':'Markiert, jetzt Strg+C';setTimeout(()=>btn.textContent=o,2500)};
+  // select the text itself; if copying is refused the user can still press Ctrl+C
+  const sel=window.getSelection(),r=document.createRange();r.selectNodeContents(el);sel.removeAllRanges();sel.addRange(r);
   if(navigator.clipboard&&window.isSecureContext){navigator.clipboard.writeText(t).then(()=>done(true),()=>done(false));return}
-  const a=document.createElement('textarea');a.value=t;a.style.position='fixed';a.style.opacity='0';document.body.appendChild(a);a.select();
-  let ok=false;try{ok=document.execCommand('copy')}catch{}a.remove();done(ok)}
+  let ok=false;try{ok=document.execCommand('copy')}catch{}done(ok)}
 window.copyText=copyText;
 const fmt=(v,u='',d=0)=>v==null?'–':(+v).toFixed(d)+u;
 
