@@ -232,6 +232,12 @@ def validate(new):
             raise HTTPException(400, f"{k} must be a share of the memory pool between 0.01 and 0.5")
     if not isinstance(t["engine_max_model_len"], int) or not 512 <= t["engine_max_model_len"] <= 65536:
         raise HTTPException(400, "engine_max_model_len must be 512..65536")
+    if not isinstance(t.get("temperature"), (int, float)) or not 0.05 <= t["temperature"] <= 2:
+        raise HTTPException(400, "temperature must be 0.05..2")
+    if not isinstance(t.get("top_p"), (int, float)) or not 0.05 <= t["top_p"] <= 1:
+        raise HTTPException(400, "top_p must be 0.05..1")
+    if not isinstance(t.get("seed"), int) or t["seed"] < -1:
+        raise HTTPException(400, "seed must be a whole number, -1 = random")
     if not isinstance(t["engine_max_seqs"], int) or not 1 <= t["engine_max_seqs"] <= 64:
         raise HTTPException(400, "engine_max_seqs must be 1..64")
     if not re.fullmatch(r"[\w.\-]+/[\w.\-]+", str(t["voicedesign_model"])):

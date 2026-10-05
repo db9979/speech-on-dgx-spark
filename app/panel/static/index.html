@@ -100,6 +100,9 @@ svg.spark{width:100%;height:60px;display:block}.chk{display:flex;gap:6px;align-i
       <label>Standardsprache</label><select id="tts.default_language" class="langs"></select>
       <label>Standard-Anweisung: wie gesprochen wird (gilt, wenn die Anfrage keine eigene mitbringt)</label><input id="tts.default_instruct" placeholder="z. B. Ruhig und freundlich, eher langsam, wie eine Hörbuchsprecherin.">
       <div class="mut instrhint"></div>
+      <label>Temperatur (kleiner = ruhiger und gleichmäßiger, größer = lebendiger; Qwen-Standard 0.9)</label><input id="tts.temperature" type="number" step="0.05" min="0.05" max="2">
+      <label>top_p (kleiner = weniger Ausreißer; Qwen-Standard 1.0)</label><input id="tts.top_p" type="number" step="0.05" min="0.05" max="1">
+      <label>Seed (feste Zahl = gleiche Stimmführung über alle Sätze; -1 = zufällig)</label><input id="tts.seed" type="number" step="1" min="-1">
       <div id="ttsdtype"><label>Datentyp</label><select id="tts.dtype"><option>bfloat16</option><option>float16</option><option>float32</option></select></div>
     </div>
     <div class="card"><h2 style="margin-top:0">Speicherschutz</h2>
@@ -166,7 +169,7 @@ svg.spark{width:100%;height:60px;display:block}.chk{display:flex;gap:6px;align-i
     <div class="card"><h2 style="margin-top:0">Andere Apps</h2>
       <div class="mut">Überall dort, wo „OpenAI-kompatibel“ für Speech-to-Text oder Text-to-Speech auswählbar ist (z. B. LibreChat, AnythingLLM, SillyTavern, Home Assistant mit OpenAI-TTS/STT-Integration, n8n): Base URL und Schlüssel wie links eintragen. Modellname ist beliebig. Unbekannte OpenAI-Stimmen wie „alloy“ werden auf die Standardstimme umgeleitet.</div>
       <h2>Stimmen</h2><div id="int-voices" class="mut">–</div>
-      <h2>Formate</h2><div class="mut">TTS: mp3 (Standard), wav, flac, opus, pcm. Gestreamt mit <code>"stream": true, "response_format": "pcm"</code>: Server-Sent Events <code>speech.audio.delta</code> mit base64-PCM (16 bit, mono, 24 kHz), am Ende <code>speech.audio.done</code>. Sprechstil pro Anfrage mit <code>"instructions": "ruhig, freundlich, eher langsam"</code> (ohne Angabe gilt die Standard-Anweisung aus der Konfiguration; nur 1.7B-Modelle werten das aus). VoiceDesign mit <code>"task_type": "VoiceDesign"</code> und <code>"instructions"</code>, falls eingeschaltet. STT: json, verbose_json, text. Sprache als Name („German“) oder ISO-Code („de“).</div>
+      <h2>Formate</h2><div class="mut">TTS: mp3 (Standard), wav, flac, opus, pcm. Gestreamt mit <code>"stream": true, "response_format": "pcm"</code>: Server-Sent Events <code>speech.audio.delta</code> mit base64-PCM (16 bit, mono, 24 kHz), am Ende <code>speech.audio.done</code>. Pro Anfrage überschreibbar: <code>"temperature"</code>, <code>"top_p"</code>, <code>"top_k"</code>, <code>"seed"</code>. Sprechstil pro Anfrage mit <code>"instructions": "ruhig, freundlich, eher langsam"</code> (ohne Angabe gilt die Standard-Anweisung aus der Konfiguration; nur 1.7B-Modelle werten das aus). VoiceDesign mit <code>"task_type": "VoiceDesign"</code> und <code>"instructions"</code>, falls eingeschaltet. STT: json, verbose_json, text. Sprache als Name („German“) oder ISO-Code („de“).</div>
     </div>
   </div>
   <div class="card" style="margin-top:16px"><h2 style="margin-top:0">curl</h2><pre id="int-curl"></pre></div>
@@ -312,7 +315,7 @@ async function loadInt(){const c=await (await api('/api/config')).json();const v
   const voice=c.tts.default_voice||(v.voices[0]||'ryan');
   $('int-ep').innerHTML=kv([['Spracherkennung (STT)',asr+'/audio/transcriptions'],['Sprachausgabe (TTS)',tts+'/audio/speech'],['API-Schlüssel',c.api.key||'(keiner gesetzt)']]);
   $('int-owui-stt').innerHTML=kv([['Speech-to-Text Engine','OpenAI'],['API Base URL',asr],['API Key',key],['STT Model',c.asr.model]]);
-  $('int-owui-tts').innerHTML=kv([['Text-to-Speech Engine','OpenAI'],['API Base URL',tts],['API Key',key],['TTS Model',c.tts.model],['TTS Voice',voice]]);
+  $('int-owui-tts').innerHTML=kv([['Text-to-Speech Engine','OpenAI'],['API Base URL',tts],['API Key',key],['TTS Model',c.tts.model],['TTS Voice',voice],['Zusätzliche TTS-Parameter (JSON, optional)',JSON.stringify({temperature:c.tts.temperature,top_p:c.tts.top_p,seed:c.tts.seed})],['Antwort aufteilen','Absätze (Paragraphs)']]);
   $('int-voices').textContent=v.model_kind==='voice_design'?'VoiceDesign-Modell: die Stimme wird über die Standard-Anweisung beschrieben.':(v.voices.join(', ')||'(Dienst lädt noch)');
   const auth=c.api.key?` \\\n  -H "Authorization: Bearer ${c.api.key}"`:'';
   $('int-curl').textContent=`# Text -> Sprache (mp3)

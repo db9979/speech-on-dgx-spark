@@ -184,6 +184,20 @@ async def speech(request: Request):
         body["instructions"] = body.pop("instruct")
     if not body.get("instructions") and cfg.get("default_instruct"):
         body["instructions"] = cfg["default_instruct"]
+    # Sampling: Qwen's defaults (temperature 0.9, top_p 1.0) vary tempo and tone a lot between
+    # sentences. Server defaults from the config apply unless the request sets its own, either in
+    # vLLM-Omni's "extra_params" or top-level (easier to put into a client's extra-parameters box).
+    extra = body.get("extra_params") if isinstance(body.get("extra_params"), dict) else {}
+    for k in ("temperature", "top_p", "top_k"):
+        if k in body:
+            extra.setdefault(k, body.pop(k))
+        if k not in extra and cfg.get(k) is not None:
+            extra[k] = cfg[k]
+    if extra:
+        body["extra_params"] = extra
+    # A fixed seed keeps the voice consistent when a client sends a reply sentence by sentence.
+    if body.get("seed") is None and isinstance(cfg.get("seed"), int) and cfg["seed"] >= 0:
+        body["seed"] = cfg["seed"]
     if role == "main" and model_kind(model) != "voice_design":
         known = {v.lower(): v for v in await engine_voices(role)}
         voice = str(body.get("voice") or cfg.get("default_voice") or "")
