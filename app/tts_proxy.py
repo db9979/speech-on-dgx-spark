@@ -8,6 +8,7 @@ engine, and the counters the panel shows. Request and stream pass through unchan
 """
 import base64
 import json
+import re
 import os
 import subprocess
 import time
@@ -108,6 +109,29 @@ async def engine_voices(role):
     return voices
 
 
+# Chat replies carry emojis, markdown and "haha"; the model reads those as cues and laughs,
+# speeds up or switches tone. Remove them before synthesis (config tts.clean_text).
+EMOJI = re.compile("[\U0001F000-\U0001FAFF\U00002600-\U000027BF\U0000FE0F\U0000200D\U00002B00-\U00002BFF]+")
+LAUGH = re.compile(r"(?i)(?<!\w)(?:(?:ha|he|hi|hö){2,}h?|lol|lmao|rofl|xd|:-?[)(dp]|;-?\))(?!\w)[!.]*")
+ACTION = re.compile(r"(?i)[*(\[](?:lacht|lach|kichert|grinst|schmunzelt|zwinkert|seufzt|laughs?|giggles?|grins?|winks?|smiles?)[^*)\]]{0,30}[*)\]]")
+
+
+def clean_text(text):
+    t = ACTION.sub(" ", str(text))
+    t = EMOJI.sub(" ", t)
+    t = LAUGH.sub(" ", t)
+    t = re.sub(r"```.*?```", " ", t, flags=re.S)       # code blocks are not speakable
+    t = re.sub(r"!?\[([^\]]*)\]\([^)]*\)", r"\1", t)    # [text](url) -> text
+    t = re.sub(r"https?://\S+", " ", t)
+    t = re.sub(r"^\s{0,3}(?:#{1,6}|[-*+>]|\d+\.)\s+", "", t, flags=re.M)  # headings, bullets, quotes
+    t = re.sub(r"[*_`~#|]+", "", t)
+    t = re.sub(r"([!?.])\1+", r"\1", t)                # "!!!" -> "!"
+    t = re.sub(r"[ \t]+", " ", t)
+    t = re.sub(r"\s+([,;:.!?])", r"\1", t)             # "witzig ," -> "witzig,"
+    t = re.sub(r"(^|\n)[\s,;:.!?]+", r"\1", t)          # leftovers at line starts
+    return re.sub(r"\s*\n\s*", "\n", t).strip()
+
+
 @app.get("/health")
 async def health():
     status, error = await engine_status("main")
@@ -174,6 +198,10 @@ async def speech(request: Request):
     if status != "ready":
         raise HTTPException(503, f"TTS engine {status}: {error or ''}".strip())
 
+    if cfg.get("clean_text", True):
+        body["input"] = clean_text(body["input"])
+        if not body["input"]:
+            raise HTTPException(400, "nothing left to speak after removing emojis and markup")
     stream = bool(body.get("stream")) or body.get("stream_format") in ("sse", "audio")
     body["model"] = model  # vLLM checks this field; clients send anything (tts-1, qwen3-tts, ...)
     body.setdefault("response_format", "pcm" if stream else "mp3")
