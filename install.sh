@@ -64,7 +64,8 @@ nvidia-smi --query-gpu=name --format=csv,noheader | head -1 | grep -qi gb10 \
 say "System packages"
 export DEBIAN_FRONTEND=noninteractive
 apt-get update -q
-apt-get install -y -q python3 python3-venv python3-dev git ffmpeg sox libsox-fmt-all libsndfile1 curl jq iproute2
+# ninja-build + build-essential: vLLM / FlashInfer compile kernels at first start (JIT)
+apt-get install -y -q python3 python3-venv python3-dev build-essential ninja-build git ffmpeg sox libsox-fmt-all libsndfile1 curl jq iproute2
 PY=$(command -v python3)
 
 # ---------------------------------------------------------------- user and dirs

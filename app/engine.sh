@@ -36,6 +36,8 @@ fi
 for m in "$MEM0" "$MEM1"; do
   [[ "$m" =~ ^0?\.[0-9]+$ ]] || fail "engine memory shares must be fractions like 0.05, got '$m'"
 done
+# JIT kernel builds call ninja / nvcc by name; systemd gives a minimal PATH
+export PATH="$VENV/bin:/usr/local/cuda/bin:$PATH"
 [ -x "$VENV/bin/vllm" ] || fail "vLLM is not installed in $VENV; run install.sh"
 
 # One engine at a time: vLLM sizes its KV cache from device-wide memory use while it starts,
