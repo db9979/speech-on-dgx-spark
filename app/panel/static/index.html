@@ -98,7 +98,8 @@ svg.spark{width:100%;height:60px;display:block}.chk{display:flex;gap:6px;align-i
       </div>
       <label>Standardstimme</label><input id="tts.default_voice">
       <label>Standardsprache</label><select id="tts.default_language" class="langs"></select>
-      <label>Standard-Anweisung (Stil, bei VoiceDesign die Stimmbeschreibung)</label><input id="tts.default_instruct">
+      <label>Standard-Anweisung: wie gesprochen wird (gilt, wenn die Anfrage keine eigene mitbringt)</label><input id="tts.default_instruct" placeholder="z. B. Ruhig und freundlich, eher langsam, wie eine Hörbuchsprecherin.">
+      <div class="mut instrhint"></div>
       <div id="ttsdtype"><label>Datentyp</label><select id="tts.dtype"><option>bfloat16</option><option>float16</option><option>float32</option></select></div>
     </div>
     <div class="card"><h2 style="margin-top:0">Speicherschutz</h2>
@@ -126,7 +127,8 @@ svg.spark{width:100%;height:60px;display:block}.chk{display:flex;gap:6px;align-i
       <label>Text</label><textarea id="ttstext" rows="4">Hallo, hier spricht der DGX Spark.</textarea>
       <label>Stimme</label><select id="ttsvoice"></select>
       <label>Sprache</label><select id="ttslang" class="langs"></select>
-      <label>Anweisung (optional; bei VoiceDesign die Stimmbeschreibung)</label><input id="ttsinstr" placeholder="z. B. Sehr fröhlich.">
+      <label>Anweisung (optional; bei VoiceDesign die Stimmbeschreibung)</label><input id="ttsinstr" placeholder="z. B. Begeistert und etwas schneller.">
+      <div class="mut instrhint"></div>
       <label>Modus</label><select id="ttstask"><option value="">Standard (konfiguriertes Modell)</option><option value="VoiceDesign">VoiceDesign</option></select>
       <label class="chk"><input type="checkbox" id="ttsstream" checked> gestreamt (Ton spielt, während er erzeugt wird)</label>
       <div class="row" style="margin-top:12px"><button class="b p" id="ttsgo">Sprechen</button><span id="ttsmsg" class="mut"></span></div>
@@ -164,7 +166,7 @@ svg.spark{width:100%;height:60px;display:block}.chk{display:flex;gap:6px;align-i
     <div class="card"><h2 style="margin-top:0">Andere Apps</h2>
       <div class="mut">Überall dort, wo „OpenAI-kompatibel“ für Speech-to-Text oder Text-to-Speech auswählbar ist (z. B. LibreChat, AnythingLLM, SillyTavern, Home Assistant mit OpenAI-TTS/STT-Integration, n8n): Base URL und Schlüssel wie links eintragen. Modellname ist beliebig. Unbekannte OpenAI-Stimmen wie „alloy“ werden auf die Standardstimme umgeleitet.</div>
       <h2>Stimmen</h2><div id="int-voices" class="mut">–</div>
-      <h2>Formate</h2><div class="mut">TTS: mp3 (Standard), wav, flac, opus, pcm. Gestreamt mit <code>"stream": true, "response_format": "pcm"</code>: Server-Sent Events <code>speech.audio.delta</code> mit base64-PCM (16 bit, mono, 24 kHz), am Ende <code>speech.audio.done</code>. VoiceDesign mit <code>"task_type": "VoiceDesign"</code> und <code>"instructions"</code>, falls eingeschaltet. STT: json, verbose_json, text. Sprache als Name („German“) oder ISO-Code („de“).</div>
+      <h2>Formate</h2><div class="mut">TTS: mp3 (Standard), wav, flac, opus, pcm. Gestreamt mit <code>"stream": true, "response_format": "pcm"</code>: Server-Sent Events <code>speech.audio.delta</code> mit base64-PCM (16 bit, mono, 24 kHz), am Ende <code>speech.audio.done</code>. Sprechstil pro Anfrage mit <code>"instructions": "ruhig, freundlich, eher langsam"</code> (ohne Angabe gilt die Standard-Anweisung aus der Konfiguration; nur 1.7B-Modelle werten das aus). VoiceDesign mit <code>"task_type": "VoiceDesign"</code> und <code>"instructions"</code>, falls eingeschaltet. STT: json, verbose_json, text. Sprache als Name („German“) oder ISO-Code („de“).</div>
     </div>
   </div>
   <div class="card" style="margin-top:16px"><h2 style="margin-top:0">curl</h2><pre id="int-curl"></pre></div>
@@ -197,7 +199,7 @@ svg.spark{width:100%;height:60px;display:block}.chk{display:flex;gap:6px;align-i
 const $=id=>document.getElementById(id);
 const api=async(p,o={})=>{const r=await fetch(p,o);if(!r.ok){let t=await r.text();try{t=JSON.parse(t).detail||t}catch{}throw new Error(t)}return r};
 document.querySelectorAll('nav button').forEach(b=>b.onclick=()=>{document.querySelectorAll('nav button,section').forEach(x=>x.classList.remove('on'));b.classList.add('on');$(b.dataset.s).classList.add('on');
-  if(b.dataset.s==='cfg')loadCfg();if(b.dataset.s==='test')loadVoices();if(b.dataset.s==='voices')loadClone();if(b.dataset.s==='logs')loadLogs();if(b.dataset.s==='int')loadInt();if(b.dataset.s==='sys')loadSys();});
+  if(b.dataset.s==='cfg')loadCfg();if(b.dataset.s==='test'){loadVoices();instrHint()}if(b.dataset.s==='voices')loadClone();if(b.dataset.s==='logs')loadLogs();if(b.dataset.s==='int')loadInt();if(b.dataset.s==='sys')loadSys();});
 const esc=s=>String(s??'').replace(/[&<>"]/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'}[c]));
 const pill=(s)=>{const c={active:'ok',ready:'ok',loading:'warn',activating:'warn',blocked:'bad',error:'bad',failed:'bad'}[s]||'';return `<span class="pill ${c}">${esc(s)}</span>`};
 // The panel runs on plain http in the LAN, where navigator.clipboard is not available.
@@ -246,6 +248,8 @@ async function refresh(){
 
 let CFG=null;
 async function loadLangs(){const l=await (await api('/api/languages')).json();document.querySelectorAll('select.langs').forEach(s=>s.innerHTML=l.map(x=>`<option>${x}</option>`).join(''))}
+async function instrHint(sel){if(!CFG)try{CFG=await (await api('/api/config')).json()}catch{return}const m=(sel?$('tts.model').value:CFG.tts.model)||'';const small=/0\.6B/i.test(m);
+  document.querySelectorAll('.instrhint').forEach(e=>e.innerHTML=small?'<b>Hinweis:</b> '+m.split('/').pop()+' wertet Anweisungen nicht aus (laut Qwen nur die 1.7B-Modelle). Für Stilsteuerung Qwen3-TTS-12Hz-1.7B-CustomVoice wählen; braucht etwa 2 bis 3 GiB mehr Speicher.':'Beschreibung in normaler Sprache, z. B. Tonfall, Tempo, Emotion, Rolle. Deutsch oder Englisch.')}
 async function loadCfg(){CFG=await (await api('/api/config')).json();
   const vo=CFG.tts.backend==='vllm-omni';$('ttsbackend').textContent=CFG.tts.backend;
   $('ttsbackendnote').textContent=vo?'(gestreamte Ausgabe)':'(ohne Streaming; umstellen mit sudo ./install.sh --tts-backend vllm-omni)';
@@ -254,7 +258,7 @@ async function loadCfg(){CFG=await (await api('/api/config')).json();
   $('asrbackendnote').textContent=av?'(viele Anfragen gleichzeitig, gestreamter Text)':'(eine Anfrage nach der anderen; umstellen mit sudo ./install.sh --asr-backend vllm)';
   $('asrengine').style.display=av?'block':'none';$('asrtf').style.display=av?'none':'block';
   for(const[sec,o]of Object.entries(CFG))for(const[k,v]of Object.entries(o)){const el=$(sec+'.'+k);if(!el)continue;
-    if(el.type==='checkbox')el.checked=v;else{if(el.tagName==='SELECT'&&![...el.options].some(o=>o.value==v))el.add(new Option(v));el.value=v}}}
+    if(el.type==='checkbox')el.checked=v;else{if(el.tagName==='SELECT'&&![...el.options].some(o=>o.value==v))el.add(new Option(v));el.value=v}};instrHint()}
 $('save').onclick=async()=>{const n=JSON.parse(JSON.stringify(CFG));
   for(const[sec,o]of Object.entries(n))for(const k of Object.keys(o)){const el=$(sec+'.'+k);if(!el)continue;
     o[k]=el.type==='checkbox'?el.checked:el.type==='number'?Number(el.value):el.value}
@@ -299,7 +303,7 @@ $('vadd').onclick=async()=>{const f=$('vfile').files[0];if(!f||!$('vname').value
   try{await api('/api/clone-voices',{method:'POST',body:fd});$('vmsg').textContent='Hinzugefügt.';loadClone()}catch(e){$('vmsg').innerHTML=`<span class="err">${esc(e.message)}</span>`}};
 
 async function loadLogs(){$('logout').textContent=await (await api('/api/logs/'+$('logsvc').value+'?lines=300')).text()||'(leer)'}
-$('logload').onclick=loadLogs;$('logsvc').onchange=loadLogs;
+$('tts.model').addEventListener('change',()=>instrHint(true));$('logload').onclick=loadLogs;$('logsvc').onchange=loadLogs;
 
 
 function kv(rows){return rows.map(([k,v])=>`<tr><td class="mut" style="width:40%">${k}</td><td><code>${esc(v)}</code> <button class="b" style="padding:1px 6px;font-size:12px" onclick="copyString(this.previousElementSibling.textContent,this)">kopieren</button></td></tr>`).join('')}
