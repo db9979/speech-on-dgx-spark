@@ -1,5 +1,6 @@
 """Qwen3-ASR as a small HTTP service (OpenAI-style /v1/audio/transcriptions)."""
 import os
+import subprocess
 import tempfile
 import time
 
@@ -58,6 +59,28 @@ def languages():
     return {"languages": ["auto"] + list(SUPPORTED_LANGUAGES)}
 
 
+def as_wav(path):
+    """Browser and phone recordings arrive as webm / mp4 / m4a / ogg, which libsndfile
+    cannot read ("Format not recognised"). Anything soundfile can open is used as is;
+    everything else is converted with ffmpeg (installed by install.sh) to 16 kHz mono
+    WAV first. Returns (path to read, seconds of audio, path to delete or None)."""
+    try:
+        info = sf.info(path)
+        return path, info.frames / info.samplerate, None
+    except Exception:
+        pass
+    wav = path + ".wav"
+    run = subprocess.run(["ffmpeg", "-nostdin", "-loglevel", "error", "-y", "-i", path,
+                          "-ac", "1", "-ar", "16000", "-f", "wav", wav],
+                         capture_output=True, text=True, timeout=120)
+    if run.returncode != 0:
+        if os.path.exists(wav):
+            os.unlink(wav)
+        raise HTTPException(415, f"unsupported audio: {run.stderr.strip()[-200:] or 'ffmpeg failed'}")
+    info = sf.info(wav)
+    return wav, info.frames / info.samplerate, wav
+
+
 @app.post("/v1/audio/transcriptions", dependencies=auth)
 async def transcriptions(
     file: UploadFile = File(...),
@@ -81,22 +104,24 @@ async def transcriptions(
     with tempfile.NamedTemporaryFile(suffix=suffix, delete=False) as tmp:
         tmp.write(await file.read())
         path = tmp.name
+    converted = None
     try:
-        try:
-            info = sf.info(path)
-            audio_s = info.frames / info.samplerate
-        except Exception:
-            audio_s = None
+        read, audio_s, converted = as_wav(path)
         t0 = time.time()
         with state.lock:
-            r = state.model.transcribe(audio=path, language=lang, return_time_stamps=timestamps)[0]
+            r = state.model.transcribe(audio=read, language=lang, return_time_stamps=timestamps)[0]
         dt = time.time() - t0
         state.record(dt, audio_s)
+    except HTTPException as e:
+        state.record(0, error=e.detail)
+        raise
     except Exception as e:
         state.record(0, error=f"{type(e).__name__}: {e}")
         raise HTTPException(500, f"{type(e).__name__}: {e}")
     finally:
         os.unlink(path)
+        if converted:
+            os.unlink(converted)
 
     if response_format == "text":
         return PlainTextResponse(r.text)
