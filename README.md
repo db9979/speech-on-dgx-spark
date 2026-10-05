@@ -1,6 +1,8 @@
-# Speech auf DGX Spark
+# Speech on DGX Spark
 
-Ein Skript installiert **Qwen3-ASR** (Spracherkennung) und **Qwen3-TTS** (Sprachausgabe) als systemd-Dienste auf einer NVIDIA DGX Spark (GB10). Dazu kommt eine Weboberfläche für Konfiguration und Monitoring. Das Setup läuft neben [dgx-spark-qwen38](https://github.com/hasso5703/dgx-spark-qwen38).
+**English** | [Deutsch](README.de.md)
+
+One script installs **Qwen3-ASR** (speech recognition) and **Qwen3-TTS** (text to speech) as systemd services on an NVIDIA DGX Spark (GB10), together with a web panel for configuration and monitoring. It runs alongside [dgx-spark-qwen38](https://github.com/hasso5703/dgx-spark-qwen38).
 
 ```bash
 git clone https://github.com/db9979/speech-on-dgx-spark
@@ -8,91 +10,92 @@ cd speech-on-dgx-spark
 sudo ./install.sh
 ```
 
-Am Ende gibt das Skript die Adresse des Panels, das Passwort und den API-Schlüssel aus. Danach macht es einen Rundlauf-Test: TTS spricht einen Satz (auch gestreamt, mit Zeit bis zum ersten Ton), ASR transkribiert ihn wieder. Alles läuft nativ als systemd-Dienste, ohne Docker.
+At the end the script prints the panel address, the panel password and the API key. It then runs a round trip: TTS speaks a sentence (also streamed, with time to first audio) and ASR transcribes it back. Everything runs natively as systemd services, without Docker.
 
-## Aktualisieren
+The panel and the code comments are partly in German.
 
-Im Panel unter **System**: Dort steht die installierte Version, und es wird angezeigt, wenn auf GitHub eine neuere liegt (mit der Liste der Änderungen). **Update installieren** holt den neuen Stand und installiert ihn. Einstellungen, Modelle und Stimmen bleiben, das Protokoll läuft live mit. Schlägt die Installation fehl, laufen die Dienste mit der alten Version weiter.
+## Updating
 
-Auf der Konsole geht dasselbe mit:
+In the panel under **System** you see the installed version and, when GitHub has a newer one, the list of changes. **Update installieren** (install update) fetches and installs it. Settings, models and voices are kept, and the log streams live. **Update abbrechen** cancels a running update. If the installation fails, the services keep running the old version.
+
+On the console:
 
 ```bash
-sudo /opt/speech-spark/src/update.sh           # aktualisieren
-sudo /opt/speech-spark/src/update.sh --check   # nur anzeigen, was neu ist
+sudo /opt/speech-spark/src/update.sh           # update
+sudo /opt/speech-spark/src/update.sh --check   # only show what is new
 ```
 
-Der Installer legt dafür eine eigene Git-Kopie unter `/opt/speech-spark/src` an. Wo du das Repo ursprünglich geklont hast, spielt danach keine Rolle mehr.
+The installer keeps its own git checkout in `/opt/speech-spark/src`, so it no longer matters where you cloned the repo originally.
 
-**Einmalig für Installationen vor dem Update-Button:** im geklonten Repo `git pull` und `sudo ./install.sh`. Danach geht es per Button.
-
-| Option | Wirkung |
+| Option | Effect |
 |---|---|
-| `--small` | 0.6B-Modelle statt 1.7B (weniger Speicher) |
-| `--tts-backend transformers` | TTS ohne Streaming über `qwen-tts` statt vllm-omni (Standard: `vllm-omni`) |
-| `--asr-backend transformers` | ASR über `qwen-asr` statt vLLM, eine Anfrage nach der anderen (Standard: `vllm`) |
-| `--no-asr` / `--no-tts` | nur einen der beiden Dienste installieren |
-| `--password XYZ` | Panel-Passwort setzen (sonst wird eins erzeugt) |
-| `--no-download` | Modelle erst beim ersten Start laden |
-| `--no-smoke` | Rundlauf-Test am Ende überspringen |
-| `--uninstall` | wie `./uninstall.sh` (siehe unten) |
+| `--small` | 0.6B models instead of 1.7B (less memory) |
+| `--tts-backend transformers` | TTS via `qwen-tts` without streaming instead of vllm-omni (default: `vllm-omni`) |
+| `--asr-backend transformers` | ASR via `qwen-asr`, one request at a time, instead of vLLM (default: `vllm`) |
+| `--no-asr` / `--no-tts` | install only one of the two services |
+| `--password XYZ` | set the panel password (otherwise one is generated) |
+| `--no-download` | download models on first start instead |
+| `--no-smoke` | skip the round-trip test at the end |
+| `--uninstall` | same as `./uninstall.sh` (see below) |
 
-Ein erneuter Aufruf aktualisiert Code und Python-Umgebungen. Die bestehende Konfiguration bleibt erhalten, neue Einstellungen werden ergänzt.
+Running the script again updates code and Python environments. The existing configuration is kept and new settings are added.
 
-## Deinstallieren
+## Uninstalling
 
 ```bash
-sudo ./uninstall.sh            # Dienste, Code, venvs und sudoers-Regel entfernen; Konfig, Modelle und Stimmen bleiben
-sudo ./uninstall.sh --purge    # zusätzlich Konfig, Modelle, Stimmen und den Benutzer speech löschen
-sudo ./uninstall.sh --yes      # ohne Rückfrage
+sudo ./uninstall.sh            # remove services, code, venvs and the sudoers rule; config, models and voices stay
+sudo ./uninstall.sh --purge    # also delete config, models, voices and the user speech
+sudo ./uninstall.sh --yes      # no confirmation prompt
 ```
 
-dgx-spark-qwen38 wird dabei nicht angefasst.
+dgx-spark-qwen38 is not touched.
 
-## Was installiert wird
+## What gets installed
 
-| Teil | Wo | Port |
+| Part | Where | Port |
 |---|---|---|
-| ASR-Dienst `speech-spark-asr` (nimmt Anfragen an, reicht sie an die Engine durch) | `/opt/speech-spark/venv-panel` | 31001 |
-| ASR-Engine `speech-spark-asr-engine` (vLLM) | `/opt/speech-spark/venv-engine` | 31011, nur lokal |
-| TTS-Dienst `speech-spark-tts` (nimmt Anfragen an, reicht sie an die Engine durch) | `/opt/speech-spark/venv-panel` | 31002 |
-| TTS-Engine `speech-spark-tts-engine` (vllm-omni) | `/opt/speech-spark/venv-engine` | 31012, nur lokal |
-| optional VoiceDesign-Engine `speech-spark-tts-design` | `/opt/speech-spark/venv-engine` | 31013, nur lokal |
-| Update `speech-spark-update` (läuft nur auf Knopfdruck) | `/opt/speech-spark/src` | |
+| ASR service `speech-spark-asr` (accepts requests, passes them to the engine) | `/opt/speech-spark/venv-panel` | 31001 |
+| ASR engine `speech-spark-asr-engine` (vLLM) | `/opt/speech-spark/venv-engine` | 31011, local only |
+| TTS service `speech-spark-tts` (accepts requests, passes them to the engine) | `/opt/speech-spark/venv-panel` | 31002 |
+| TTS engine `speech-spark-tts-engine` (vllm-omni) | `/opt/speech-spark/venv-engine` | 31012, local only |
+| optional VoiceDesign engine `speech-spark-tts-design` | `/opt/speech-spark/venv-engine` | 31013, local only |
+| Update `speech-spark-update` (runs only on demand) | `/opt/speech-spark/src` | |
 | Panel `speech-spark-panel` | `/opt/speech-spark/venv-panel` | 31080 |
-| Messskript `speech-spark-bench` | `/usr/local/bin` | |
-| Konfiguration | `/etc/speech-spark/config.json`, Passwort in `panel.env` | |
-| Modelle, geklonte Stimmen | `/var/lib/speech-spark/hf`, `/var/lib/speech-spark/voices` | |
+| Benchmark `speech-spark-bench` | `/usr/local/bin` | |
+| Configuration | `/etc/speech-spark/config.json`, password in `panel.env` | |
+| Models, cloned voices | `/var/lib/speech-spark/hf`, `/var/lib/speech-spark/voices` | |
 
-Alle Dienste laufen als Systembenutzer `speech`. Per sudoers darf das Panel die Speech-Dienste und Engines starten, stoppen und neu starten und das Update anstoßen, sonst nichts.
+All services run as the system user `speech`. A sudoers rule lets the panel start, stop and restart the speech services and engines and trigger the update, nothing else.
 
-## Die Oberfläche
+## The panel
 
-- **Monitoring**: GPU-Auslastung, freier Unified Memory, Temperatur und Leistung, CPU, jeweils mit Verlauf. Für jeden Dienst gibt es Status, Anfragen, Latenz und Echtzeitfaktor (RTF) sowie Start, Stopp und Neustart. Außerdem siehst du, welche dgx-spark-qwen38-Lane gerade läuft und welchen Anteil des Speichers sie belegt.
-- **Konfiguration**: Modell, Port, Standardsprache, Stimme, Zeitstempel und Speicherreserve. Beim Speichern werden die betroffenen Dienste neu gestartet.
-- **Testen**: eine Audiodatei hochladen und transkribieren lassen oder Text eingeben und anhören.
-- **Stimmen**: Referenzaufnahmen zum Klonen verwalten (nur mit einem `Base`-TTS-Modell).
-- **Einbinden**: fertige Werte zum Kopieren für Open WebUI und andere OpenAI-kompatible Apps, dazu Beispiele für curl und Python.
-- **Logs**: journald-Ausgabe der Dienste.
+- **Monitoring**: GPU load, free unified memory, temperature and power, CPU, each with history. Per service: status, requests, latency and real-time factor (RTF), plus start, stop and restart. It also shows which dgx-spark-qwen38 lane is running and how much memory it holds.
+- **Konfiguration** (configuration): model, port, default language, voice, speaking style, sampling, engine memory shares and memory reserve. Saving restarts the affected services.
+- **Testen** (test): upload an audio file to transcribe, or type text and listen.
+- **Stimmen** (voices): manage reference recordings for voice cloning (only with a `Base` TTS model).
+- **Einbinden** (integrate): values to copy for Open WebUI and other OpenAI-compatible apps, plus curl and Python examples.
+- **Logs**: journald output of the services and engines, with a copy button.
+- **System**: version, update, benchmark.
 
-## APIs (OpenAI-ähnlich)
+## APIs (OpenAI-style)
 
 ```bash
-# Transkription
-curl http://SPARK:31001/v1/audio/transcriptions -F file=@aufnahme.webm -F language=de
+# Transcription
+curl http://SPARK:31001/v1/audio/transcriptions -F file=@recording.webm -F language=de
 # -> {"text": "...", "usage": {"type": "duration", "seconds": 4}, "processing_s": 0.6}
 
-# Sprachausgabe
+# Speech
 curl http://SPARK:31002/v1/audio/speech -H 'Content-Type: application/json' \
-  -d '{"input":"Hallo Welt","voice":"ryan","language":"German"}' -o hallo.mp3
+  -d '{"input":"Hello world","voice":"ryan","language":"English"}' -o hello.mp3
 ```
 
-`GET /health` liefert bei beiden Diensten Status und Zähler, `GET /v1/voices` (TTS) die verfügbaren Stimmen, `GET /v1/models` das geladene Modell.
+Both services answer `GET /health` with status and counters. `GET /v1/voices` (TTS) lists the voices and `GET /v1/models` the loaded model.
 
-Die Spracherkennung nimmt alles, was ffmpeg lesen kann (wav, mp3, webm, mp4, ogg …), und lange Aufnahmen. `language` als Code (`de`) oder Name (`German`), ohne Angabe erkennt das Modell die Sprache selbst. `response_format`: `json`, `text` oder `verbose_json` (mit `language` und `duration`, ohne Zeitstempel). Mit `-F stream=true` kommt der Text stückweise als Server-Sent Events im OpenAI-Format (`transcription.chunk`, am Ende `[DONE]`).
+Speech recognition accepts anything ffmpeg can read (wav, mp3, webm, mp4, ogg …) and long recordings. `language` is a code (`de`) or a name (`German`); without it the model detects the language. `response_format` is `json`, `text` or `verbose_json` (with `language` and `duration`, without timestamps). With `-F stream=true` the text arrives in pieces as Server-Sent Events in OpenAI format (`transcription.chunk`, then `[DONE]`).
 
-### Gestreamte Sprachausgabe
+### Streaming speech
 
-Mit `"stream": true` (und `"response_format": "pcm"`, das ist dann der Standard) kommt die Antwort als Server-Sent Events, sobald die ersten Laute erzeugt sind:
+With `"stream": true` (and `"response_format": "pcm"`, the default then) the answer arrives as Server-Sent Events as soon as the first sounds are generated:
 
 ```
 event: speech.audio.delta
@@ -102,83 +105,87 @@ event: speech.audio.done
 data: {"type": "speech.audio.done", "usage": {...}}
 ```
 
-`audio` ist PCM, 16 bit, mono, 24 kHz. Bei einem Fehler kommt `speech.audio.error`. Das ist das Format von vllm-omni, der Dienst reicht es unverändert durch.
+`audio` is PCM, 16 bit, mono, 24 kHz. Errors arrive as `speech.audio.error`. This is vllm-omni's format, passed through unchanged.
 
 ```bash
 curl -N http://SPARK:31002/v1/audio/speech -H "Authorization: Bearer $KEY" -H 'Content-Type: application/json' \
-  -d '{"input":"Hallo Welt","voice":"ryan","language":"German","stream":true,"response_format":"pcm"}'
+  -d '{"input":"Hello world","voice":"ryan","language":"English","stream":true,"response_format":"pcm"}'
 ```
 
-**Gleichmäßigere Aussprache:** Qwen würfelt mit `temperature` 0.9 und `top_p` 1.0, dadurch schwanken Tempo und Betonung von Satz zu Satz. Der Server setzt deshalb `temperature` 0.7, `top_p` 0.9 und `seed` 42 (Konfiguration → TTS). Pro Anfrage überschreibbar mit denselben Feldern. In Open WebUI „Antwort aufteilen“ auf **Absätze** stellen: Jeder Teil wird einzeln erzeugt, längere Teile klingen zusammenhängender. Standardsprache fest auf „German“ stellen statt „auto“.
+**Steadier delivery:** Qwen samples with `temperature` 0.9 and `top_p` 1.0 by default, so tempo and emphasis vary from sentence to sentence. The server therefore applies `temperature` 0.7, `top_p` 0.9 and `seed` 42 (Konfiguration → TTS). Requests can override them with the same fields, top-level or inside `extra_params`. In Open WebUI, set response splitting to **paragraphs**: each part is generated separately, and longer parts sound more coherent. Set the default language to a fixed language instead of `auto`.
 
-**Lachen und Stimmungswechsel:** Das Modell liest Emojis, „haha“, `*lacht*` und Markdown als Hinweise und lacht dann oder wechselt den Ton. Der Server entfernt das vor dem Sprechen (Konfiguration → TTS → „Text bereinigen“, Standard an).
+**Laughing and mood swings:** the model reads emojis, "haha", `*laughs*` and markdown as cues and laughs or changes tone. The server removes them before synthesis (Konfiguration → TTS → clean text, on by default).
 
-**Sprechstil** (wie die Stimme spricht): `"instructions": "ruhig und freundlich, eher langsam"` in der Anfrage. Ohne Angabe gilt die Standard-Anweisung aus Konfiguration → TTS. Beispiele: „Begeistert, etwas schneller“, „Sachlich wie eine Nachrichtensprecherin“, „Leise und beruhigend“. Nur die 1.7B-Modelle (CustomVoice, VoiceDesign) werten Anweisungen aus; die 0.6B-Modelle ignorieren sie (laut Qwen-Modellkarte).
+**Speaking style:** `"instructions": "calm and friendly, rather slow"` in the request. Without it, the default instruction from Konfiguration → TTS applies. Only the 1.7B models (CustomVoice, VoiceDesign) follow instructions; the 0.6B models ignore them (per the Qwen model card).
 
-**VoiceDesign** (Stimme per Beschreibung): `"task_type": "VoiceDesign"` und `"instructions": "tiefe, ruhige Männerstimme"`. Dafür braucht es ein eigenes Modell. Im Panel unter Konfiguration → TTS „VoiceDesign zusätzlich bereitstellen“ einschalten. Das startet eine zweite Engine mit nochmal demselben Speicherbedarf.
+**VoiceDesign** (voice from a description): `"task_type": "VoiceDesign"` and `"instructions": "deep, calm male voice"`. This needs its own model: enable "VoiceDesign zusätzlich bereitstellen" in Konfiguration → TTS. It starts a second engine with the same memory footprint again.
 
-Im Panel unter **Testen** spielt „gestreamt“ den Ton schon während der Erzeugung ab und zeigt die Zeit bis zum ersten Ton.
+In the panel under **Testen**, "gestreamt" (streamed) plays audio while it is generated and shows the time to first audio.
 
-### Allgemein
+### General
 
-Die Dienste verhalten sich wie die OpenAI-Audio-API: TTS liefert standardmäßig mp3 (auch wav, flac, opus, pcm), STT versteht `response_format=text`, und die Sprache darf ein ISO-Code wie `de` sein. OpenAI-Stimmnamen wie `alloy` landen bei der Standardstimme. Ist im Panel ein API-Schlüssel gesetzt, müssen Apps `Authorization: Bearer <Schlüssel>` senden.
+The services behave like the OpenAI audio API: TTS returns mp3 by default (also wav, flac, opus, pcm), STT understands `response_format=text`, and the language may be an ISO code like `de`. OpenAI voice names like `alloy` fall back to the default voice. If an API key is set in the panel, apps must send `Authorization: Bearer <key>`.
 
 ### Open WebUI
 
-Admin-Panel → Einstellungen → Audio:
+Admin Panel → Settings → Audio:
 
-| Feld | STT | TTS |
+| Field | STT | TTS |
 |---|---|---|
 | Engine | OpenAI | OpenAI |
 | API Base URL | `http://SPARK:31001/v1` | `http://SPARK:31002/v1` |
-| API Key | Schlüssel aus dem Panel oder beliebig | dito |
-| Modell | beliebig | beliebig |
-| Stimme | | z. B. `ryan` |
+| API Key | key from the panel, or anything | same |
+| Model | anything | anything |
+| Voice | | e.g. `ryan` |
 
-Läuft Open WebUI in Docker auf derselben Spark, statt `SPARK` entweder die LAN-IP oder `host.docker.internal` nehmen (Container mit `--add-host=host.docker.internal:host-gateway`). Das Panel zeigt diese Werte im Reiter „Einbinden“ zum Kopieren an.
+If Open WebUI runs in Docker on the same Spark, use the LAN IP or `host.docker.internal` instead of `SPARK` (container started with `--add-host=host.docker.internal:host-gateway`). The panel shows these values ready to copy in the **Einbinden** tab.
 
-## Leistung messen
+## Measuring performance
 
-Im Panel unter **System → Leistung messen** oder auf der Konsole:
+In the panel under **System → Leistung messen**, or on the console:
 
 ```bash
-sudo speech-spark-bench                 # Zeit bis zum ersten Ton, Tempo einzeln und parallel, Speicher je Dienst
-sudo speech-spark-bench --parallel 8    # mehr gleichzeitige Anfragen
-sudo speech-spark-bench --audio a.wav   # Spracherkennung mit eigener Aufnahme
+sudo speech-spark-bench                 # time to first audio, speed single and parallel, memory per service
+sudo speech-spark-bench --parallel 8    # more concurrent requests
+sudo speech-spark-bench --audio a.wav   # speech recognition with your own recording
 ```
 
-Die Messung geht über die öffentlichen Ports, misst also das, was Apps sehen. Das letzte Ergebnis steht in `/var/lib/speech-spark/state/bench-latest.json`. Die Speicheranteile der Engines (Konfiguration) sind Startwerte: nach der Messung passend einstellen.
+The benchmark goes through the public ports, so it measures what apps see. The last result is stored in `/var/lib/speech-spark/state/bench-latest.json`.
 
-## Neben dgx-spark-qwen38
+## Next to dgx-spark-qwen38
 
-- **Ports**: qwen38 nutzt 30000 bis 30099 (Engine 30000, Proxy 30001, Bild 30020, Video 30022, Cockpit 30090/30091). Speech nutzt 31001, 31002 und 31080. Das Panel lehnt Ports im Bereich von qwen38 ab, und das Installationsskript bricht ab, wenn ein Port schon belegt ist.
-- **Speicher**: Die GB10 hat einen gemeinsamen Pool von 128 GB für CPU und GPU. Die qwen38-Lanes reservieren davon einen festen Anteil: 50 % bei `stock`/`fp8`, 76 % im 1M-Modus und 85 % bei `flash`. Laut qwen38-Doku bleiben bei `flash` im Leerlauf nur ~16,6 GiB frei, und unter ~8 GiB beendet earlyoom von DGX OS Prozesse. Deshalb gilt:
-  - Erkennt das Skript eine flash- oder 1M-Lane, wählt es automatisch die 0.6B-Modelle.
-  - Bevor ein Dienst sein Modell lädt, prüft er, ob danach noch die Reserve frei bleibt (Standard 10 GiB). Wenn nicht, lädt er nicht und zeigt im Panel `blocked` mit Begründung.
-  - Wird der Speicher trotzdem knapp, beendet das System zuerst die Speech-Dienste (`OOMScoreAdjust=900`), nicht die LLM-Lane und nicht sshd.
-  - Speech startet nach den qwen38-Lanes, damit diese ihren festen Anteil zuerst belegen.
-- **Lane-Wechsel**: Wechselst du im Cockpit auf `flash`, bleiben die schon geladenen Speech-Modelle im Speicher. Mit 1.7B-Modellen kann das zu knapp werden. Dann vorher ASR und TTS im Panel stoppen oder auf 0.6B umstellen.
-- **GPU-Zeit**: ASR und TTS teilen sich die GPU mit dem LLM. Während einer Transkription oder Sprachausgabe wird das LLM etwas langsamer.
+- **Ports**: qwen38 uses 30000 to 30099 (engine 30000, proxy 30001, image 30020, video 30022, cockpit 30090/30091). Speech uses 31001, 31002 and 31080. The panel rejects ports in qwen38's range, and the installer stops if a port is taken.
+- **Memory**: the GB10 has one 128 GB pool shared by CPU and GPU. The qwen38 lanes reserve a fixed share of it (on our box the `stock` lane held about 88 GiB). Below ~8 GiB free, DGX OS's earlyoom kills processes. Therefore:
+  - If the installer detects a flash or 1M lane, it picks the 0.6B models.
+  - Before an engine loads its model it checks that the reserve stays free afterwards. If not, it does not load and the panel shows `blocked` with the reason.
+  - If memory still runs short, the system kills the speech services first (`OOMScoreAdjust=900`), not the LLM lane and not sshd.
+  - Engines start one after another, because vLLM measures free memory at start-up and parallel starts take each other's share.
+- **Lane switch**: if you switch to a bigger lane in the cockpit, already loaded speech models stay in memory. Stop ASR and TTS in the panel first or switch them to 0.6B.
+- **GPU time**: ASR and TTS share the GPU with the LLM. During a transcription or speech request the LLM gets a little slower.
 
-## Warum die Installation so aussieht
+## Why the installation looks like this
 
-- **PyTorch aus dem cu130-Index**: Das aarch64-torch auf PyPI hat kein CUDA. Ein einfaches `pip install qwen-tts` würde also auf der CPU laufen. torch und torchaudio müssen außerdem aus demselben Index kommen, sonst lädt `libtorchaudio.so` nicht.
-- **Kein flash-attn**: Es gibt kein ARM-Wheel, und für sm_121 lässt es sich laut Berichten nicht bauen. Beide Modelle laufen stattdessen mit PyTorch-SDPA.
-- **Getrennte venvs**: qwen-asr verlangt `transformers==4.57.6`, qwen-tts `transformers==4.57.3`.
-- **ASR mit vLLM**: vLLM 0.30 kann Qwen3-ASR selbst, mit `/v1/audio/transcriptions`, Streaming und mehreren Anfragen gleichzeitig. Es läuft in derselben Umgebung wie die TTS-Engine. `qwen-asr[vllm]` wird nicht gebraucht (es würde vllm 0.14 erzwingen).
-- **TTS mit vllm-omni**: `qwen-tts` kann nicht stückweise ausgeben. Das Qwen-Team verweist für Streaming auf vllm-omni. vllm 0.30.0 und vllm-omni 0.30.0 haben ARM-Pakete auf PyPI (CUDA 13) und werden nativ in einer eigenen Umgebung installiert, ohne Docker.
-- **Engine-Speicher**: vLLM reserviert beim Start einen festen Anteil des *gesamten* Speicherpools, pro Stufe (Talker und Code2Wav) getrennt. Die Voreinstellung 0,05 + 0,05 (≈ 13 GiB inkl. Overhead) ist ein Startwert und noch nicht auf der Spark gemessen. Ist sie zu klein, bricht die Engine beim Start mit einem Hinweis im Log ab. Dann im Panel den Anteil erhöhen.
+- **PyTorch from the cu130 index**: the aarch64 torch on PyPI has no CUDA, so a plain `pip install qwen-tts` would run on the CPU. torch and torchaudio must come from the same index, otherwise `libtorchaudio.so` does not load.
+- **No flash-attn**: there is no ARM wheel, and it reportedly does not build for sm_121. Both models use PyTorch SDPA instead.
+- **Separate venvs** for the transformers backends: qwen-asr needs `transformers==4.57.6`, qwen-tts `transformers==4.57.3`.
+- **ASR with vLLM**: vLLM 0.30 supports Qwen3-ASR natively, with `/v1/audio/transcriptions`, streaming and concurrent requests. It shares the environment with the TTS engine. `qwen-asr[vllm]` is not needed (it would force vllm 0.14).
+- **TTS with vllm-omni**: `qwen-tts` cannot stream. The Qwen team points to vllm-omni for streaming. vllm 0.30.0 and vllm-omni 0.30.0 have ARM wheels on PyPI (CUDA 13) and are installed natively, without Docker.
+- **Engine memory**: vLLM reserves a fixed share of the *whole* memory pool at start-up, for TTS per stage (talker and code2wav). The defaults (ASR 0.045; TTS 0.04 + 0.025) are kept small so speech fits next to the qwen38 `stock` lane. If a share is too small, the engine stops at start-up with "No available memory for the cache blocks"; raise the share in the panel.
 
-## Fehlersuche
+## Troubleshooting
 
-| Symptom | Lösung |
+| Symptom | Fix |
 |---|---|
-| Installer: „torch in venv-… has no CUDA“ | `sudo ./install.sh` erneut ausführen. Hilft das nicht, `/opt/speech-spark/venv-*` löschen und neu installieren. |
-| Panel zeigt `blocked` | Zu wenig Speicher neben der laufenden qwen38-Lane. Auf 0.6B umstellen, die Reserve senken (auf eigenes Risiko) oder die große Lane stoppen. |
-| Panel zeigt `error` | Fehlertext im Panel und unter Logs ansehen. |
-| `no kernel image is available` | Ein Paket wurde ohne Blackwell-Kernel gebaut. Prüfen mit `/opt/speech-spark/venv-asr/bin/python -c "import torch; print(torch.cuda.get_arch_list())"`. |
-| TTS-Engine startet nicht | Panel → Logs → TTS-Engine. Bei „not enough KV cache“ o. Ä. die Speicheranteile der Engine im Panel erhöhen. Der erste Start lädt das Modell und dauert länger. |
-| Update schlägt fehl | Panel → System → Update-Protokoll. Die alte Version läuft weiter. |
-| Port belegt | Port in `/etc/speech-spark/config.json` ändern und das Skript erneut ausführen. |
+| Installer: "torch in venv-… has no CUDA" | Run `sudo ./install.sh` again. If that does not help, delete `/opt/speech-spark/venv-*` and reinstall. |
+| Panel shows `blocked` | Not enough memory next to the running qwen38 lane. Switch to 0.6B, lower the reserve (at your own risk) or stop the big lane. |
+| Panel shows `error` | Read the message in the panel and under Logs. |
+| `no kernel image is available` | A package was built without Blackwell kernels. Check with `/opt/speech-spark/venv-engine/bin/python -c "import torch; print(torch.cuda.get_arch_list())"`. |
+| Engine does not start | Panel → Logs → engine. With "No available memory for the cache blocks", raise the engine's memory share in the panel. The first start downloads the model and takes longer. |
+| Update fails | Panel → System → update log. The old version keeps running. |
+| Port taken | Change the port in `/etc/speech-spark/config.json` and run the installer again. |
 
-Die Speicherschätzungen pro Modell (`MODEL_GIB` in `app/common.py`) sind grobe Annahmen und noch nicht auf einer Spark gemessen. Nach dem ersten Lauf sollten sie mit den Werten aus dem Panel korrigiert werden.
+The per-model memory estimates (`MODEL_GIB` in `app/common.py`) are rough assumptions; correct them with the values the panel shows.
+
+## License
+
+MIT, see [LICENSE](LICENSE). The models (Qwen3-ASR, Qwen3-TTS) and packages (vLLM, vllm-omni, PyTorch) are downloaded during installation and come under their own licenses. This project is not affiliated with NVIDIA or the Qwen team.
