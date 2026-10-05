@@ -76,6 +76,8 @@ Alle Dienste laufen als Systembenutzer `speech`. Per sudoers darf das Panel die 
 - **Einbinden**: fertige Werte zum Kopieren für Open WebUI und andere OpenAI-kompatible Apps, dazu Beispiele für curl und Python.
 - **Logs**: journald-Ausgabe der Dienste.
 
+Das Panel gibt es auf Deutsch und Englisch; der Knopf oben rechts schaltet um (Standard: Sprache des Browsers).
+
 ## APIs (OpenAI-ähnlich)
 
 ```bash

@@ -37,6 +37,7 @@ svg.spark{width:100%;height:60px;display:block}.chk{display:flex;gap:6px;align-i
 </head>
 <body>
 <header><h1>Speech auf DGX Spark</h1><span id="hdr" class="mut"></span>
+<button class="b" id="langbtn" type="button" style="order:3">English</button>
 <nav><button data-s="mon" class="on">Monitoring</button><button data-s="cfg">Konfiguration</button><button data-s="test">Testen</button><button data-s="voices">Stimmen</button><button data-s="int">Einbinden</button><button data-s="logs">Logs</button><button data-s="sys">System <span id="updbadge" class="pill warn" style="display:none">Update</span></button></nav></header>
 <main>
 
@@ -99,7 +100,7 @@ svg.spark{width:100%;height:60px;display:block}.chk{display:flex;gap:6px;align-i
       <label>Standardstimme</label><input id="tts.default_voice">
       <label>Standardsprache</label><select id="tts.default_language" class="langs"></select>
       <label>Standard-Anweisung: wie gesprochen wird (gilt, wenn die Anfrage keine eigene mitbringt)</label><input id="tts.default_instruct" placeholder="z. B. Ruhig und freundlich, eher langsam, wie eine Hörbuchsprecherin.">
-      <div class="mut instrhint"></div>
+      <div class="mut instrhint" style="font-size:12px;margin-top:4px"></div>
       <label>Temperatur (kleiner = ruhiger und gleichmäßiger, größer = lebendiger; Qwen-Standard 0.9)</label><input id="tts.temperature" type="number" step="0.05" min="0.05" max="2">
       <label>top_p (kleiner = weniger Ausreißer; Qwen-Standard 1.0)</label><input id="tts.top_p" type="number" step="0.05" min="0.05" max="1">
       <label>Seed (feste Zahl = gleiche Stimmführung über alle Sätze; -1 = zufällig)</label><input id="tts.seed" type="number" step="1" min="-1">
@@ -132,7 +133,7 @@ svg.spark{width:100%;height:60px;display:block}.chk{display:flex;gap:6px;align-i
       <label>Stimme</label><select id="ttsvoice"></select>
       <label>Sprache</label><select id="ttslang" class="langs"></select>
       <label>Anweisung (optional; bei VoiceDesign die Stimmbeschreibung)</label><input id="ttsinstr" placeholder="z. B. Begeistert und etwas schneller.">
-      <div class="mut instrhint"></div>
+      <div class="mut instrhint" style="font-size:12px;margin-top:4px"></div>
       <label>Modus</label><select id="ttstask"><option value="">Standard (konfiguriertes Modell)</option><option value="VoiceDesign">VoiceDesign</option></select>
       <label class="chk"><input type="checkbox" id="ttsstream" checked> gestreamt (Ton spielt, während er erzeugt wird)</label>
       <div class="row" style="margin-top:12px"><button class="b p" id="ttsgo">Sprechen</button><span id="ttsmsg" class="mut"></span></div>
@@ -201,6 +202,17 @@ svg.spark{width:100%;height:60px;display:block}.chk{display:flex;gap:6px;align-i
 </main>
 <script>
 const $=id=>document.getElementById(id);
+// Language: German is written in the markup; English comes from this table. Choice is kept per browser.
+let L='de';try{L=localStorage.getItem('lang')||(/^de/i.test(navigator.language)?'de':'en')}catch{L=/^de/i.test(navigator.language)?'de':'en'}
+const t=(de,en)=>L==='en'?en:de;
+const EN={"Speech auf DGX Spark": "Speech on DGX Spark", "Konfiguration": "Configuration", "Testen": "Test", "Stimmen": "Voices", "Einbinden": "Integrate", "GPU-Auslastung": "GPU load", "Unified Memory frei": "Unified memory free", "GPU-Temperatur / Leistung": "GPU temperature / power", "Speech-Dienste": "Speech services", "Dienst": "Service", "Modell": "Model", "Anfragen": "Requests", "Ø Latenz": "Avg latency", "Ø erster Ton": "Avg first audio", "Speicher (Torch)": "Memory (Torch)", "dgx-spark-qwen38 auf dieser Box": "dgx-spark-qwen38 on this box", "Speicheranteil": "Memory share", "Keine qwen38-Units gefunden.": "No qwen38 units found.", "GPU-Prozesse": "GPU processes", "Prozess": "Process", "Speicher": "Memory", "Spracherkennung (ASR)": "Speech recognition (ASR)", "aktiviert": "enabled", "Standardsprache": "Default language", "Engine (vLLM, parallel und gestreamt)": "Engine (vLLM, concurrent and streamed)", "Speicheranteil (Anteil am ganzen 128-GB-Pool, 1.7B: 0.045 ≈ 5,4 GiB, 0.6B: 0.035 ≈ 4,2 GiB)": "Memory share (of the whole 128 GB pool; 1.7B: 0.045 ≈ 5.4 GiB, 0.6B: 0.035 ≈ 4.2 GiB)", "Max. gleichzeitige Anfragen": "Max. concurrent requests", "Max. Batchgröße": "Max. batch size", "Max. neue Tokens": "Max. new tokens", "Zeitstempel (lädt zusätzlich den Forced Aligner, ~2 GiB)": "Timestamps (also loads the forced aligner, ~2 GiB)", "Datentyp": "Data type", "Sprachausgabe (TTS)": "Speech output (TTS)", "CustomVoice: feste Sprecher. VoiceDesign: Stimme per Beschreibung. Base: Stimmen klonen (Reiter „Stimmen“).": "CustomVoice: built-in speakers. VoiceDesign: voice from a description. Base: voice cloning (tab \"Voices\").", "Engine (vllm-omni, gestreamt)": "Engine (vllm-omni, streamed)", "Speicheranteil Talker (Anteil am ganzen 128-GB-Pool, z. B. 0.04 ≈ 4,8 GiB)": "Memory share talker (of the whole 128 GB pool, e.g. 0.04 ≈ 4.8 GiB)", "Speicheranteil Code2Wav": "Memory share code2wav", "Max. Länge pro Anfrage in Schritten (4096 ≈ 5 Min. Audio; kleiner = weniger Speicher)": "Max. length per request in steps (4096 ≈ 5 min of audio; smaller = less memory)", "VoiceDesign zusätzlich bereitstellen (zweite Engine, gleicher Speicherbedarf noch einmal)": "Also serve VoiceDesign (second engine, needs the same memory again)", "VoiceDesign-Modell": "VoiceDesign model", "Standardstimme": "Default voice", "Standard-Anweisung: wie gesprochen wird (gilt, wenn die Anfrage keine eigene mitbringt)": "Default instruction: how to speak (used when a request brings none)", "z. B. Ruhig und freundlich, eher langsam, wie eine Hörbuchsprecherin.": "e.g. Calm and friendly, rather slow, like an audiobook narrator.", "Temperatur (kleiner = ruhiger und gleichmäßiger, größer = lebendiger; Qwen-Standard 0.9)": "Temperature (lower = calmer and steadier, higher = livelier; Qwen default 0.9)", "top_p (kleiner = weniger Ausreißer; Qwen-Standard 1.0)": "top_p (lower = fewer outliers; Qwen default 1.0)", "Seed (feste Zahl = gleiche Stimmführung über alle Sätze; -1 = zufällig)": "Seed (fixed number = same delivery across sentences; -1 = random)", "Text vor dem Sprechen bereinigen (Emojis, Markdown, „haha“, *lacht* entfernen)": "Clean text before speaking (remove emojis, markdown, \"haha\", *laughs*)", "Speicherschutz": "Memory guard", "Modell nicht laden, wenn danach weniger als die Reserve frei bliebe": "Do not load a model if less than the reserve would stay free", "Reserve in GiB (DGX OS earlyoom greift bei ~8 GiB)": "Reserve in GiB (DGX OS earlyoom kicks in at ~8 GiB)", "API-Schlüssel": "API key", "Leer = APIs ohne Schlüssel erreichbar. Gesetzt = Apps müssen „Authorization: Bearer <Schlüssel>“ senden.": "Empty = APIs open without a key. Set = apps must send \"Authorization: Bearer <key>\".", "Erzeugen": "Generate", "Port (Änderung wirkt nach Neustart des Panels)": "Port (takes effect after restarting the panel)", "Speichern und Dienste neu starten": "Save and restart services", "Spracherkennung testen": "Test speech recognition", "Audiodatei (wav, mp3, flac, …)": "Audio file (wav, mp3, flac, …)", "Sprache": "Language", "Transkribieren": "Transcribe", "Sprachausgabe testen": "Test speech output", "Stimme": "Voice", "Anweisung (optional; bei VoiceDesign die Stimmbeschreibung)": "Instruction (optional; with VoiceDesign the voice description)", "z. B. Begeistert und etwas schneller.": "e.g. Excited and a bit faster.", "Modus": "Mode", "Standard (konfiguriertes Modell)": "Default (configured model)", "gestreamt (Ton spielt, während er erzeugt wird)": "streamed (audio plays while it is generated)", "Sprechen": "Speak", "Stimme zum Klonen hinzufügen": "Add a voice to clone", "Nur mit einem": "Only works with a", "-Modell wirksam. 5–15 Sekunden saubere Sprache; der Text sollte genau dem Gesprochenen entsprechen (leer lassen geht, klont dann schlechter).": " model. 5–15 seconds of clean speech; the text should match what is said exactly (empty works, but clones worse).", "z. B. dominik": "e.g. dominik", "Referenz-Audio": "Reference audio", "Transkript der Referenz": "Transcript of the reference", "Hinzufügen": "Add", "Vorhandene Stimmen": "Existing voices", "Endpunkte": "Endpoints", "Beide Dienste sprechen die OpenAI-Audio-API. Jede App, die dort eine eigene „Base URL“ erlaubt, kann sie nutzen.": "Both services speak the OpenAI audio API. Any app that lets you set your own \"Base URL\" there can use them.", "Admin-Panel → Einstellungen → Audio": "Admin Panel → Settings → Audio", "Spracherkennung (STT)": "Speech recognition (STT)", "Läuft Open WebUI in Docker auf derselben Spark, statt der IP": "If Open WebUI runs in Docker on the same Spark, use", "nehmen (Container mit": "instead of the IP (start the container with", "starten) oder die LAN-IP der Spark.": ") or the Spark's LAN IP.", "Andere Apps": "Other apps", "Überall dort, wo „OpenAI-kompatibel“ für Speech-to-Text oder Text-to-Speech auswählbar ist (z. B. LibreChat, AnythingLLM, SillyTavern, Home Assistant mit OpenAI-TTS/STT-Integration, n8n): Base URL und Schlüssel wie links eintragen. Modellname ist beliebig. Unbekannte OpenAI-Stimmen wie „alloy“ werden auf die Standardstimme umgeleitet.": "Wherever \"OpenAI-compatible\" can be chosen for speech-to-text or text-to-speech (e.g. LibreChat, AnythingLLM, SillyTavern, Home Assistant with the OpenAI TTS/STT integration, n8n): enter the base URL and key as on the left. The model name can be anything. Unknown OpenAI voices like \"alloy\" fall back to the default voice.", "Formate": "Formats", "TTS: mp3 (Standard), wav, flac, opus, pcm. Gestreamt mit": "TTS: mp3 (default), wav, flac, opus, pcm. Streamed with", "mit base64-PCM (16 bit, mono, 24 kHz), am Ende": "with base64 PCM (16 bit, mono, 24 kHz), finally", ". Pro Anfrage überschreibbar:": ". Per request you can override", ". Sprechstil pro Anfrage mit": ". Speaking style per request with", "(ohne Angabe gilt die Standard-Anweisung aus der Konfiguration; nur 1.7B-Modelle werten das aus). VoiceDesign mit": "(without it the default instruction from the configuration applies; only 1.7B models follow it). VoiceDesign with", "und": "and", ", falls eingeschaltet. STT: json, verbose_json, text. Sprache als Name („German“) oder ISO-Code („de“).": ", if enabled. STT: json, verbose_json, text. Language as a name (\"German\") or ISO code (\"de\").", "Python (openai-Paket)": "Python (openai package)", "Jetzt prüfen": "Check now", "Update installieren": "Install update", "Update abbrechen": "Cancel update", "Holt den neuesten Stand von GitHub und installiert ihn. Einstellungen, Modelle und Stimmen bleiben. Schlägt die Installation fehl, laufen die Dienste mit der alten Version weiter. Während des Updates starten die Dienste kurz neu.": "Fetches the latest version from GitHub and installs it. Settings, models and voices are kept. If the installation fails, the services keep running the old version. The services restart briefly during the update.", "Leistung messen": "Measure performance", "Misst Zeit bis zum ersten Ton, Geschwindigkeit bei einer und bei mehreren gleichzeitigen Anfragen und den Speicher der Dienste. Dauert ein bis zwei Minuten und belastet die GPU in der Zeit. Auf der Konsole:": "Measures time to first audio, speed with one and with several concurrent requests, and the memory of the services. Takes one to two minutes and loads the GPU meanwhile. On the console:", "Messung starten": "Start measurement", "Kopieren": "Copy", "Update-Protokoll": "Update log", "Aktualisieren": "Refresh", "Hallo, hier spricht der DGX Spark.": "Hello, this is the DGX Spark speaking."};
+function translatePage(){document.documentElement.lang=L;$('langbtn').textContent=L==='en'?'Deutsch':'English';if(L!=='en')return;
+  const w=document.createTreeWalker(document.body,NodeFilter.SHOW_TEXT,{acceptNode:n=>n.parentElement.closest('pre,code,script,style,option:not([value])')?NodeFilter.FILTER_REJECT:NodeFilter.FILTER_ACCEPT});
+  for(let n;(n=w.nextNode());){const k=n.nodeValue.trim();if(EN[k]!==undefined)n.nodeValue=n.nodeValue.replace(k,EN[k])}
+  document.querySelectorAll('[placeholder]').forEach(e=>{if(EN[e.placeholder])e.placeholder=EN[e.placeholder]});
+  const tx=$('ttstext');if(EN[tx.value])tx.value=EN[tx.value];}
+$('langbtn').onclick=()=>{try{localStorage.setItem('lang',L==='en'?'de':'en')}catch{}location.reload()};
+translatePage();
 const api=async(p,o={})=>{const r=await fetch(p,o);if(!r.ok){let t=await r.text();try{t=JSON.parse(t).detail||t}catch{}throw new Error(t)}return r};
 document.querySelectorAll('nav button').forEach(b=>b.onclick=()=>{document.querySelectorAll('nav button,section').forEach(x=>x.classList.remove('on'));b.classList.add('on');$(b.dataset.s).classList.add('on');
   if(b.dataset.s==='cfg')loadCfg();if(b.dataset.s==='test'){loadVoices();instrHint()}if(b.dataset.s==='voices')loadClone();if(b.dataset.s==='logs')loadLogs();if(b.dataset.s==='int')loadInt();if(b.dataset.s==='sys')loadSys();});
@@ -209,7 +221,7 @@ const pill=(s)=>{const c={active:'ok',ready:'ok',loading:'warn',activating:'warn
 // The panel runs on plain http in the LAN, where navigator.clipboard is not available.
 // navigator.clipboard needs https or localhost; the panel is usually plain http on the LAN,
 // so there the copy event gets the text directly (copying a selection is unreliable)
-function copyString(t,btn){const label=btn.textContent;const done=ok=>{btn.textContent=ok?'kopiert':'Markiert, jetzt Strg+C';setTimeout(()=>btn.textContent=label,2000)};
+function copyString(t,btn){const label=btn.textContent;const done=ok=>{btn.textContent=ok?t('kopiert','copied'):t('Markiert, jetzt Strg+C','Selected, now press Ctrl+C');setTimeout(()=>btn.textContent=label,2000)};
   if(navigator.clipboard&&window.isSecureContext){navigator.clipboard.writeText(t).then(()=>done(true),()=>done(false));return true}
   const onCopy=e=>{e.clipboardData.setData('text/plain',t);e.preventDefault()};
   document.addEventListener('copy',onCopy);let ok=false;try{ok=document.execCommand('copy')}catch{}document.removeEventListener('copy',onCopy);
@@ -225,65 +237,65 @@ function spark(svg,vals,max){const w=300,h=60;svg.setAttribute('viewBox',`0 0 ${
   const d='M'+pts.map(p=>p[0].toFixed(1)+' '+p[1].toFixed(1)).join(' L');
   svg.innerHTML=`<path d="${d} L${w} ${h} L0 ${h}Z" fill="var(--acc)" opacity=".12"/><path d="${d}" fill="none" stroke="var(--acc)" stroke-width="1.5" vector-effect="non-scaling-stroke"/>`;}
 
-const btns=(n,st)=>`<button class="b" onclick="act('${n}','restart',this)">Neustart</button>`+(st==='active'||st==='activating'?`<button class="b" onclick="act('${n}','stop',this)">Stopp</button>`:`<button class="b" onclick="act('${n}','start',this)">Start</button>`);
+const btns=(n,st)=>`<button class="b" onclick="act('${n}','restart',this)">${t('Neustart','Restart')}</button>`+(st==='active'||st==='activating'?`<button class="b" onclick="act('${n}','stop',this)">${t('Stopp','Stop')}</button>`:`<button class="b" onclick="act('${n}','start',this)">Start</button>`);
 async function act(n,a,btn){btn.disabled=true;try{await api(`/api/service/${n}/${a}`,{method:'POST'})}catch(e){alert(e.message)}btn.disabled=false;refresh()}
 window.act=act;
 
 async function refresh(){
-  let s;try{s=await (await api('/api/status')).json()}catch(e){$('hdr').textContent='Panel nicht erreichbar';return}
+  let s;try{s=await (await api('/api/status')).json()}catch(e){$('hdr').textContent=t('Panel nicht erreichbar','Panel not reachable');return}
   const g=s.gpu||{},sy=s.system,H=s.history;
-  $('hdr').textContent=(g.name||'keine GPU')+' · '+new Date(s.time*1000).toLocaleTimeString();
+  $('hdr').textContent=(g.name||t('keine GPU','no GPU'))+' · '+new Date(s.time*1000).toLocaleTimeString();
   $('m-gpu').textContent=fmt(g.util,' %');$('m-mem').textContent=fmt(sy.mem_avail_gib,' GiB',1)+' / '+sy.mem_total_gib;
   $('m-temp').textContent=fmt(g.temp,' °C')+' · '+fmt(g.power,' W');$('m-cpu').textContent=fmt(sy.cpu,' %');
   spark($('c-gpu'),H.map(x=>x.gpu),100);spark($('c-mem'),H.map(x=>x.avail),sy.mem_total_gib);spark($('c-temp'),H.map(x=>x.temp),100);spark($('c-cpu'),H.map(x=>x.cpu),100);
-  $('memnote').innerHTML=sy.mem_avail_gib<12?`<div class="note">Nur noch ${fmt(sy.mem_avail_gib,' GiB',1)} frei. Unter ~8 GiB beendet DGX OS (earlyoom) Prozesse. Kleinere Modelle wählen oder einen Dienst stoppen.</div>`:'';
+  $('memnote').innerHTML=sy.mem_avail_gib<12?`<div class="note">${t(`Nur noch ${fmt(sy.mem_avail_gib,' GiB',1)} frei. Unter ~8 GiB beendet DGX OS (earlyoom) Prozesse. Kleinere Modelle wählen oder einen Dienst stoppen.`,`Only ${fmt(sy.mem_avail_gib,' GiB',1)} free. Below ~8 GiB DGX OS (earlyoom) kills processes. Choose smaller models or stop a service.`)}</div>`:'';
   $('svc').innerHTML=Object.entries(s.services).map(([n,v])=>{const h=v.health||{};
-    const st=h.status?pill(h.status):'';const err=h.error?`<div class="err">${esc(h.error)}</div>`:(h.last_error?`<div class="err mut">letzter Fehler: ${esc(h.last_error.error)}</div>`:'');
-    return `<tr><td><b>${n.toUpperCase()}</b><div class="mut">:${v.port}</div></td><td>${pill(v.state)} ${st}${v.enabled?'':' <span class="pill">deaktiviert</span>'}</td>
-    <td>${esc(h.model||'')}<div class="mut">geschätzt ~${v.estimate_gib} GiB${h.load_seconds?` · geladen in ${h.load_seconds}s`:''}</div>${err}</td>
-    <td>${h.requests??'–'}${h.failures?` <span class="err">(${h.failures} Fehler)</span>`:''}${h.busy?' <span class="pill warn">arbeitet</span>':''}</td>
+    const st=h.status?pill(h.status):'';const err=h.error?`<div class="err">${esc(h.error)}</div>`:(h.last_error?`<div class="err mut">${t('letzter Fehler','last error')}: ${esc(h.last_error.error)}</div>`:'');
+    return `<tr><td><b>${n.toUpperCase()}</b><div class="mut">:${v.port}</div></td><td>${pill(v.state)} ${st}${v.enabled?'':` <span class="pill">${t('deaktiviert','disabled')}</span>`}</td>
+    <td>${esc(h.model||'')}<div class="mut">${t('geschätzt','estimated')} ~${v.estimate_gib} GiB${h.load_seconds?` · ${t('geladen in','loaded in')} ${h.load_seconds}s`:''}</div>${err}</td>
+    <td>${h.requests??'–'}${h.failures?` <span class="err">(${h.failures} ${t('Fehler','errors')})</span>`:''}${h.busy?` <span class="pill warn">${t('arbeitet','busy')}</span>`:''}</td>
     <td>${fmt(h.avg_latency_s,' s',2)}</td><td>${fmt(h.avg_ttfa_s??h.avg_ttft_s,' s',2)}${h.streams?`<div class="mut">${h.streams} Streams</div>`:''}</td><td>${fmt(h.avg_rtf,'',2)}</td><td>${fmt(h.torch_cuda_reserved_gb,' GB',1)}</td>
     <td class="row">${btns(n,v.state)}</td></tr>`+(v.engines||[]).map(e=>`<tr><td class="mut" style="padding-left:20px">↳ ${e.name==='tts-design'?'VoiceDesign-Engine':'Engine'}<div>127.0.0.1:${e.port}</div></td><td>${pill(e.state)}</td>
-    <td>${esc(e.model)}<div class="mut">${e.kind} · reserviert ~${e.estimate_gib} GiB</div></td><td colspan=5></td><td class="row">${btns(e.name,e.state)}</td></tr>`).join('')}).join('');
+    <td>${esc(e.model)}<div class="mut">${e.kind} · ${t('reserviert','reserves')} ~${e.estimate_gib} GiB</div></td><td colspan=5></td><td class="row">${btns(e.name,e.state)}</td></tr>`).join('')}).join('');
   $('q38none').style.display=s.qwen38.length?'none':'block';
-  $('q38').innerHTML=s.qwen38.map(q=>`<tr><td>${esc(q.unit)}</td><td>${pill(q.state)}</td><td>${q.mem_fraction!=null?(q.mem_fraction*100).toFixed(0)+' % des Pools':'–'}</td></tr>`).join('');
+  $('q38').innerHTML=s.qwen38.map(q=>`<tr><td>${esc(q.unit)}</td><td>${pill(q.state)}</td><td>${q.mem_fraction!=null?(q.mem_fraction*100).toFixed(0)+t(' % des Pools',' % of the pool'):'–'}</td></tr>`).join('');
   $('gp').innerHTML=(g.processes||[]).map(p=>`<tr><td>${esc(p.pid)}</td><td>${esc(p.name)}</td><td>${p.mem_mib!=null?fmt(p.mem_mib/1024,' GiB',1):'–'}</td></tr>`).join('')||'<tr><td class="mut" colspan=3>–</td></tr>';
 }
 
 let CFG=null;
 async function loadLangs(){const l=await (await api('/api/languages')).json();document.querySelectorAll('select.langs').forEach(s=>s.innerHTML=l.map(x=>`<option>${x}</option>`).join(''))}
 async function instrHint(sel){if(!CFG)try{CFG=await (await api('/api/config')).json()}catch{return}const m=(sel?$('tts.model').value:CFG.tts.model)||'';const small=/0\.6B/i.test(m);
-  document.querySelectorAll('.instrhint').forEach(e=>e.innerHTML=small?'<b>Hinweis:</b> '+m.split('/').pop()+' wertet Anweisungen nicht aus (laut Qwen nur die 1.7B-Modelle). Für Stilsteuerung Qwen3-TTS-12Hz-1.7B-CustomVoice wählen; braucht etwa 2 bis 3 GiB mehr Speicher.':'Beschreibung in normaler Sprache, z. B. Tonfall, Tempo, Emotion, Rolle. Deutsch oder Englisch.')}
+  document.querySelectorAll('.instrhint').forEach(e=>e.innerHTML=small?t('<b>Hinweis:</b> '+m.split('/').pop()+' wertet Anweisungen nicht aus (laut Qwen nur die 1.7B-Modelle). Für Stilsteuerung Qwen3-TTS-12Hz-1.7B-CustomVoice wählen; braucht etwa 2 bis 3 GiB mehr Speicher.','<b>Note:</b> '+m.split('/').pop()+' ignores instructions (per Qwen only the 1.7B models follow them). For style control choose Qwen3-TTS-12Hz-1.7B-CustomVoice; it needs about 2 to 3 GiB more memory.'):t('Beschreibung in normaler Sprache, z. B. Tonfall, Tempo, Emotion, Rolle. Deutsch oder Englisch.','Plain-language description, e.g. tone, pace, emotion, role. German or English.'))}
 async function loadCfg(){CFG=await (await api('/api/config')).json();
   const vo=CFG.tts.backend==='vllm-omni';$('ttsbackend').textContent=CFG.tts.backend;
-  $('ttsbackendnote').textContent=vo?'(gestreamte Ausgabe)':'(ohne Streaming; umstellen mit sudo ./install.sh --tts-backend vllm-omni)';
+  $('ttsbackendnote').textContent=vo?t('(gestreamte Ausgabe)','(streamed output)'):t('(ohne Streaming; umstellen mit sudo ./install.sh --tts-backend vllm-omni)','(no streaming; switch with sudo ./install.sh --tts-backend vllm-omni)');
   $('enginecfg').style.display=vo?'block':'none';$('ttsdtype').style.display=vo?'none':'block';
   const av=CFG.asr.backend==='vllm';$('asrbackend').textContent=CFG.asr.backend;
-  $('asrbackendnote').textContent=av?'(viele Anfragen gleichzeitig, gestreamter Text)':'(eine Anfrage nach der anderen; umstellen mit sudo ./install.sh --asr-backend vllm)';
+  $('asrbackendnote').textContent=av?t('(viele Anfragen gleichzeitig, gestreamter Text)','(many concurrent requests, streamed text)'):t('(eine Anfrage nach der anderen; umstellen mit sudo ./install.sh --asr-backend vllm)','(one request at a time; switch with sudo ./install.sh --asr-backend vllm)');
   $('asrengine').style.display=av?'block':'none';$('asrtf').style.display=av?'none':'block';
   for(const[sec,o]of Object.entries(CFG))for(const[k,v]of Object.entries(o)){const el=$(sec+'.'+k);if(!el)continue;
     if(el.type==='checkbox')el.checked=v;else{if(el.tagName==='SELECT'&&![...el.options].some(o=>o.value==v))el.add(new Option(v));el.value=v}};instrHint()}
 $('save').onclick=async()=>{const n=JSON.parse(JSON.stringify(CFG));
   for(const[sec,o]of Object.entries(n))for(const k of Object.keys(o)){const el=$(sec+'.'+k);if(!el)continue;
     o[k]=el.type==='checkbox'?el.checked:el.type==='number'?Number(el.value):el.value}
-  $('savemsg').textContent='Speichere…';
+  $('savemsg').textContent=t('Speichere…','Saving…');
   try{const r=await (await api('/api/config',{method:'PUT',headers:{'Content-Type':'application/json'},body:JSON.stringify(n)})).json();
-    $('savemsg').innerHTML='Gespeichert.'+(r.restarted.length?' Neu gestartet: '+r.restarted.join(', ').toUpperCase()+' (Modell lädt neu).':'')+(r.stopped&&r.stopped.length?' Gestoppt: '+r.stopped.join(', ').toUpperCase()+'.':'')+(r.errors&&r.errors.length?`<div class="err">${esc(r.errors.join('\n'))}</div>`:'')+(r.panel_restart_needed?' Panel-Port ändert sich nach: sudo systemctl restart speech-spark-panel':'');CFG=n}
+    $('savemsg').innerHTML=t('Gespeichert.','Saved.')+(r.restarted.length?t(' Neu gestartet: ',' Restarted: ')+r.restarted.join(', ').toUpperCase()+t(' (Modell lädt neu).',' (model reloads).'):'')+(r.stopped&&r.stopped.length?t(' Gestoppt: ',' Stopped: ')+r.stopped.join(', ').toUpperCase()+'.':'')+(r.errors&&r.errors.length?`<div class="err">${esc(r.errors.join('\n'))}</div>`:'')+(r.panel_restart_needed?t(' Panel-Port ändert sich nach: ',' Panel port changes after: ')+'sudo systemctl restart speech-spark-panel':'');CFG=n}
   catch(e){$('savemsg').innerHTML=`<span class="err">${esc(e.message)}</span>`}};
 
 $('asrgo').onclick=async()=>{const f=$('asrfile').files[0];if(!f)return;const fd=new FormData();fd.append('file',f);fd.append('language',$('asrlang').value);
-  $('asrmsg').textContent='läuft…';$('asrout').style.display='none';
-  try{const r=await (await api('/api/test/asr',{method:'POST',body:fd})).json();$('asrmsg').textContent=`${r.processing_s}s für ${fmt(r.duration,' s',1)} Audio`;
+  $('asrmsg').textContent=t('läuft…','running…');$('asrout').style.display='none';
+  try{const r=await (await api('/api/test/asr',{method:'POST',body:fd})).json();$('asrmsg').textContent=`${r.processing_s}s ${t('für','for')} ${fmt(r.duration,' s',1)} Audio`;
     $('asrout').textContent=`[${r.language||'auto'}] ${r.text}`;$('asrout').style.display='block'}catch(e){$('asrmsg').innerHTML=`<span class="err">${esc(e.message)}</span>`}};
 async function loadVoices(){const v=await (await api('/api/tts/voices')).json();
-  $('ttsvoice').innerHTML=v.voices.length?v.voices.map(x=>`<option>${esc(x)}</option>`).join(''):'<option value="">(Standard)</option>';
+  $('ttsvoice').innerHTML=v.voices.length?v.voices.map(x=>`<option>${esc(x)}</option>`).join(''):`<option value="">${t('(Standard)','(default)')}</option>`;
   $('ttsvoice').disabled=v.model_kind==='voice_design'}
 $('ttsgo').onclick=async()=>{const body={input:$('ttstext').value,voice:$('ttsvoice').value||null,language:$('ttslang').value,instruct:$('ttsinstr').value||null};
   if($('ttstask').value)body.task_type=$('ttstask').value;
-  $('ttsmsg').textContent='läuft…';$('ttsgo').disabled=true;
+  $('ttsmsg').textContent=t('läuft…','running…');$('ttsgo').disabled=true;
   try{if($('ttsstream').checked)await ttsStream(body);else{
     const r=await api('/api/test/tts',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify(body)});
-    const b=await r.blob();$('ttsaudio').src=URL.createObjectURL(b);$('ttsaudio').style.display='block';$('ttsaudio').play();$('ttsmsg').textContent=`fertig nach ${r.headers.get('x-processing-seconds')||'?'} s`}}
+    const b=await r.blob();$('ttsaudio').src=URL.createObjectURL(b);$('ttsaudio').style.display='block';$('ttsaudio').play();$('ttsmsg').textContent=`${t('fertig nach','done after')} ${r.headers.get('x-processing-seconds')||'?'} s`}}
   catch(e){$('ttsmsg').innerHTML=`<span class="err">${esc(e.message)}</span>`}
   $('ttsgo').disabled=false};
 // Plays the SSE stream (base64 PCM 16 bit mono 24 kHz) as it arrives, like a streaming client would.
@@ -296,79 +308,80 @@ async function ttsStream(body){const t0=performance.now();const r=await api('/ap
     at=Math.max(at,ctx.currentTime);src.start(at);at+=ab.duration;bytes+=n*2};
   for(;;){const{value,done}=await rd.read();if(done)break;buf+=dec.decode(value,{stream:true});let i;
     while((i=buf.indexOf('\n\n'))>=0){const ev=buf.slice(0,i);buf=buf.slice(i+2);const line=ev.split('\n').find(l=>l.startsWith('data:'));if(!line)continue;
-      const d=JSON.parse(line.slice(5));if(d.type==='speech.audio.delta'){if(first===null){first=(performance.now()-t0)/1000;$('ttsmsg').textContent=`erster Ton nach ${first.toFixed(2)} s …`}play(d.audio)}
-      else if(d.type==='speech.audio.error')throw new Error(d.error&&d.error.message||'Fehler im Stream')}}
-  $('ttsmsg').textContent=`erster Ton nach ${first!=null?first.toFixed(2):'?'} s · ${(bytes/48000).toFixed(1)} s Audio in ${((performance.now()-t0)/1000).toFixed(2)} s`}
+      const d=JSON.parse(line.slice(5));if(d.type==='speech.audio.delta'){if(first===null){first=(performance.now()-t0)/1000;$('ttsmsg').textContent=`${t('erster Ton nach','first audio after')} ${first.toFixed(2)} s …`}play(d.audio)}
+      else if(d.type==='speech.audio.error')throw new Error(d.error&&d.error.message||t('Fehler im Stream','error in stream'))}}
+  $('ttsmsg').textContent=`${t('erster Ton nach','first audio after')} ${first!=null?first.toFixed(2):'?'} s · ${(bytes/48000).toFixed(1)} s ${t('Audio in','audio in')} ${((performance.now()-t0)/1000).toFixed(2)} s`}
 
 async function loadClone(){const l=await (await api('/api/clone-voices')).json();
-  $('vlist').innerHTML=l.map(n=>`<tr><td>${esc(n)}</td><td style="text-align:right"><button class="b" onclick="delVoice('${esc(n)}')">Löschen</button></td></tr>`).join('')||'<tr><td class="mut">Noch keine.</td></tr>'}
-window.delVoice=async n=>{if(!confirm(`Stimme ${n} löschen?`))return;await api('/api/clone-voices/'+encodeURIComponent(n),{method:'DELETE'});loadClone()};
+  $('vlist').innerHTML=l.map(n=>`<tr><td>${esc(n)}</td><td style="text-align:right"><button class="b" onclick="delVoice('${esc(n)}')">${t('Löschen','Delete')}</button></td></tr>`).join('')||`<tr><td class="mut">${t('Noch keine.','None yet.')}</td></tr>`}
+window.delVoice=async n=>{if(!confirm(t(`Stimme ${n} löschen?`,`Delete voice ${n}?`)))return;await api('/api/clone-voices/'+encodeURIComponent(n),{method:'DELETE'});loadClone()};
 $('vadd').onclick=async()=>{const f=$('vfile').files[0];if(!f||!$('vname').value)return;const fd=new FormData();fd.append('name',$('vname').value);fd.append('text',$('vtext').value);fd.append('file',f);
-  try{await api('/api/clone-voices',{method:'POST',body:fd});$('vmsg').textContent='Hinzugefügt.';loadClone()}catch(e){$('vmsg').innerHTML=`<span class="err">${esc(e.message)}</span>`}};
+  try{await api('/api/clone-voices',{method:'POST',body:fd});$('vmsg').textContent=t('Hinzugefügt.','Added.');loadClone()}catch(e){$('vmsg').innerHTML=`<span class="err">${esc(e.message)}</span>`}};
 
-async function loadLogs(){$('logout').textContent=await (await api('/api/logs/'+$('logsvc').value+'?lines=300')).text()||'(leer)'}
+async function loadLogs(){$('logout').textContent=await (await api('/api/logs/'+$('logsvc').value+'?lines=300')).text()||t('(leer)','(empty)')}
 $('tts.model').addEventListener('change',()=>instrHint(true));$('logload').onclick=loadLogs;$('logsvc').onchange=loadLogs;
 
 
-function kv(rows){return rows.map(([k,v])=>`<tr><td class="mut" style="width:40%">${k}</td><td><code>${esc(v)}</code> <button class="b" style="padding:1px 6px;font-size:12px" onclick="copyString(this.previousElementSibling.textContent,this)">kopieren</button></td></tr>`).join('')}
+function kv(rows){return rows.map(([k,v])=>`<tr><td class="mut" style="width:40%">${k}</td><td><code>${esc(v)}</code> <button class="b" style="padding:1px 6px;font-size:12px" onclick="copyString(this.previousElementSibling.textContent,this)">${t('kopieren','copy')}</button></td></tr>`).join('')}
 async function loadInt(){const c=await (await api('/api/config')).json();const v=await (await api('/api/tts/voices')).json();
-  const host=location.hostname,asr=`http://${host}:${c.asr.port}/v1`,tts=`http://${host}:${c.tts.port}/v1`,key=c.api.key||'beliebig, z. B. sk-local';
+  const host=location.hostname,asr=`http://${host}:${c.asr.port}/v1`,tts=`http://${host}:${c.tts.port}/v1`,key=c.api.key||t('beliebig, z. B. sk-local','anything, e.g. sk-local');
   const voice=c.tts.default_voice||(v.voices[0]||'ryan');
-  $('int-ep').innerHTML=kv([['Spracherkennung (STT)',asr+'/audio/transcriptions'],['Sprachausgabe (TTS)',tts+'/audio/speech'],['API-Schlüssel',c.api.key||'(keiner gesetzt)']]);
+  $('int-ep').innerHTML=kv([[t('Spracherkennung (STT)','Speech recognition (STT)'),asr+'/audio/transcriptions'],[t('Sprachausgabe (TTS)','Speech output (TTS)'),tts+'/audio/speech'],[t('API-Schlüssel','API key'),c.api.key||t('(keiner gesetzt)','(none set)')]]);
   $('int-owui-stt').innerHTML=kv([['Speech-to-Text Engine','OpenAI'],['API Base URL',asr],['API Key',key],['STT Model',c.asr.model]]);
-  $('int-owui-tts').innerHTML=kv([['Text-to-Speech Engine','OpenAI'],['API Base URL',tts],['API Key',key],['TTS Model',c.tts.model],['TTS Voice',voice],['Zusätzliche TTS-Parameter (JSON, optional)',JSON.stringify({temperature:c.tts.temperature,top_p:c.tts.top_p,seed:c.tts.seed})],['Antwort aufteilen','Absätze (Paragraphs)']]);
-  $('int-voices').textContent=v.model_kind==='voice_design'?'VoiceDesign-Modell: die Stimme wird über die Standard-Anweisung beschrieben.':(v.voices.join(', ')||'(Dienst lädt noch)');
+  $('int-owui-tts').innerHTML=kv([['Text-to-Speech Engine','OpenAI'],['API Base URL',tts],['API Key',key],['TTS Model',c.tts.model],['TTS Voice',voice],[t('Zusätzliche TTS-Parameter (JSON, optional)','Additional TTS parameters (JSON, optional)'),JSON.stringify({temperature:c.tts.temperature,top_p:c.tts.top_p,seed:c.tts.seed})],[t('Antwort aufteilen','Response splitting'),t('Absätze (Paragraphs)','Paragraphs')]]);
+  $('int-voices').textContent=v.model_kind==='voice_design'?t('VoiceDesign-Modell: die Stimme wird über die Standard-Anweisung beschrieben.','VoiceDesign model: the voice is described by the default instruction.'):(v.voices.join(', ')||t('(Dienst lädt noch)','(service still loading)'));
   const auth=c.api.key?` \\\n  -H "Authorization: Bearer ${c.api.key}"`:'';
-  $('int-curl').textContent=`# Text -> Sprache (mp3)
+  const hello=t('Hallo aus der Spark.','Hello from the Spark.'),lng=t('German','English'),code=t('de','en'),fn=t('hallo','hello');
+  $('int-curl').textContent=`# ${t('Text -> Sprache','Text -> speech')} (mp3)
 curl ${tts}/audio/speech${auth} \\
   -H "Content-Type: application/json" \\
-  -d '{"model":"qwen3-tts","input":"Hallo aus der Spark.","voice":"${voice}","language":"German"}' -o hallo.mp3
+  -d '{"model":"qwen3-tts","input":"${hello}","voice":"${voice}","language":"${lng}"}' -o ${fn}.mp3
 
-# Sprache -> Text
+# ${t('Sprache -> Text','Speech -> text')}
 curl ${asr}/audio/transcriptions${auth} \\
-  -F file=@hallo.mp3 -F language=de`;
+  -F file=@${fn}.mp3 -F language=${code}`;
   $('int-py').textContent=`from openai import OpenAI
 
 tts = OpenAI(base_url="${tts}", api_key="${c.api.key||'sk-local'}")
 stt = OpenAI(base_url="${asr}", api_key="${c.api.key||'sk-local'}")
 
 with tts.audio.speech.with_streaming_response.create(
-        model="qwen3-tts", voice="${voice}", input="Hallo aus der Spark.") as r:
-    r.stream_to_file("hallo.mp3")
+        model="qwen3-tts", voice="${voice}", input="${hello}") as r:
+    r.stream_to_file("${fn}.mp3")
 
-with open("hallo.mp3", "rb") as f:
-    print(stt.audio.transcriptions.create(model="qwen3-asr", file=f, language="de").text)`;}
+with open("${fn}.mp3", "rb") as f:
+    print(stt.audio.transcriptions.create(model="qwen3-asr", file=f, language="${code}").text)`;}
 $('genkey').onclick=()=>{const a=new Uint8Array(18);crypto.getRandomValues(a);$('api.key').value='sk-'+[...a].map(x=>x.toString(16).padStart(2,'0')).join('')};
 
 let updPoll=null;
 async function loadSys(check=false){let u;try{u=await (await api('/api/update'+(check?'?check=true':''))).json()}catch(e){$('updstate').innerHTML=`<span class="err">${esc(e.message)}</span>`;return}
   const i=u.installed||{},r=u.remote||{};
-  $('sysver').innerHTML=kvp([['Installiert',i.short?`${i.short} · ${new Date(i.date).toLocaleString()}`:'–'],['Änderung',i.subject||'–'],['Engines',i.engine||'–'],['Quelle',i.remote||'–'],['Zuletzt geprüft',r.checked?new Date(r.checked*1000).toLocaleTimeString():'–']]);
+  $('sysver').innerHTML=kvp([[t('Installiert','Installed'),i.short?`${i.short} · ${new Date(i.date).toLocaleString()}`:'–'],[t('Änderung','Change'),i.subject||'–'],['Engines',i.engine||'–'],[t('Quelle','Source'),i.remote||'–'],[t('Zuletzt geprüft','Last checked'),r.checked?new Date(r.checked*1000).toLocaleTimeString():'–']]);
   updBadge(r);loadBench();
-  if(u.running){$('updstate').innerHTML='<span class="pill warn">Update läuft</span> Die Seite lädt neu, wenn das Panel neu startet.';$('updgo').disabled=true;$('updstop').style.display='inline-block';
+  if(u.running){$('updstate').innerHTML=t('<span class="pill warn">Update läuft</span> Die Seite lädt neu, wenn das Panel neu startet.','<span class="pill warn">Update running</span> The page reloads when the panel restarts.');$('updgo').disabled=true;$('updstop').style.display='inline-block';
     if(!updPoll)updPoll=setInterval(()=>loadSys(),3000)}
   else{if(updPoll){clearInterval(updPoll);updPoll=null}$('updstop').style.display='none';
-    $('updstate').innerHTML=r.error?`<span class="err">${esc(r.error)}</span>`:r.behind===0?'<span class="pill ok">aktuell</span>':
-      `<span class="pill warn">Update verfügbar</span> ${r.behind>0?r.behind+' Änderung(en)':''}`+(u.last_result&&u.last_result!=='success'&&u.last_finished?` <span class="err">Letztes Update fehlgeschlagen (${esc(u.last_result)}), siehe Protokoll.</span>`:'');
+    $('updstate').innerHTML=r.error?`<span class="err">${esc(r.error)}</span>`:r.behind===0?`<span class="pill ok">${t('aktuell','up to date')}</span>`:
+      `<span class="pill warn">${t('Update verfügbar','Update available')}</span> ${r.behind>0?r.behind+t(' Änderung(en)',' change(s)'):''}`+(u.last_result&&u.last_result!=='success'&&u.last_finished?` <span class="err">${t('Letztes Update fehlgeschlagen','Last update failed')} (${esc(u.last_result)}), ${t('siehe Protokoll','see log')}.</span>`:'');
     $('updgo').disabled=!(r.behind&&r.behind!==0)}
   $('updcommits').innerHTML=(r.commits||[]).length?'<table>'+r.commits.slice().reverse().map(c=>`<tr><td class="mut" style="width:70px"><code>${esc(c.sha)}</code></td><td>${esc(c.title)}</td></tr>`).join('')+'</table>':'';
-  $('updlog').textContent=await (await api('/api/logs/update?lines=200')).text()||'(noch kein Update gelaufen)';$('updlog').scrollTop=1e9}
+  $('updlog').textContent=await (await api('/api/logs/update?lines=200')).text()||t('(noch kein Update gelaufen)','(no update has run yet)');$('updlog').scrollTop=1e9}
 const kvp=rows=>rows.map(([k,v])=>`<tr><td class="mut" style="width:35%">${k}</td><td>${esc(v)}</td></tr>`).join('');
 function updBadge(r){$('updbadge').style.display=r&&r.behind&&r.behind!==0?'inline-block':'none'}
 $('updcheck').onclick=()=>loadSys(true);
 let benchPoll=null;
 async function loadBench(){let b;try{b=await (await api('/api/bench')).json()}catch(e){$('benchmsg').innerHTML=`<span class="err">${esc(e.message)}</span>`;return}
   $('benchgo').disabled=b.running;
-  $('benchmsg').textContent=b.running?'läuft…':b.result?'letzte Messung: '+new Date(b.result.time*1000).toLocaleString():'';
-  $('benchout').textContent=b.running?b.log.join('\n'):(b.report||'(noch nicht gemessen)');
+  $('benchmsg').textContent=b.running?t('läuft…','running…'):b.result?t('letzte Messung: ','last measurement: ')+new Date(b.result.time*1000).toLocaleString():'';
+  $('benchout').textContent=b.running?b.log.join('\n'):(b.report||t('(noch nicht gemessen)','(not measured yet)'));
   if(b.running&&!benchPoll)benchPoll=setInterval(loadBench,2000);
   if(!b.running&&benchPoll){clearInterval(benchPoll);benchPoll=null}}
 $('benchgo').onclick=async()=>{try{await api('/api/bench',{method:'POST'});loadBench()}catch(e){$('benchmsg').innerHTML=`<span class="err">${esc(e.message)}</span>`}};
-$('updstop').onclick=async()=>{if(!confirm('Update abbrechen? Was schon installiert ist, bleibt. Ein späteres Update holt den Rest nach.'))return;
-  try{await api('/api/update',{method:'DELETE'});$('updmsg').textContent='abgebrochen';loadSys()}
+$('updstop').onclick=async()=>{if(!confirm(t('Update abbrechen? Was schon installiert ist, bleibt. Ein späteres Update holt den Rest nach.','Cancel the update? What is already installed stays. A later update installs the rest.')))return;
+  try{await api('/api/update',{method:'DELETE'});$('updmsg').textContent=t('abgebrochen','cancelled');loadSys()}
   catch(e){$('updmsg').innerHTML=`<span class="err">${esc(e.message)}</span>`}};
-$('updgo').onclick=async()=>{if(!confirm('Update jetzt installieren? Die Dienste starten dabei kurz neu.'))return;
-  try{await api('/api/update',{method:'POST'});$('updmsg').textContent='gestartet';
+$('updgo').onclick=async()=>{if(!confirm(t('Update jetzt installieren? Die Dienste starten dabei kurz neu.','Install the update now? The services restart briefly.')))return;
+  try{await api('/api/update',{method:'POST'});$('updmsg').textContent=t('gestartet','started');
     // the panel restarts during the update; reload once it answers again
     const wait=setInterval(async()=>{try{const u=await (await fetch('/api/update')).json();if(!u.running){clearInterval(wait);location.reload()}}catch{}},4000);loadSys()}
   catch(e){$('updmsg').innerHTML=`<span class="err">${esc(e.message)}</span>`}};

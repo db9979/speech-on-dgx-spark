@@ -12,7 +12,7 @@ sudo ./install.sh
 
 At the end the script prints the panel address, the panel password and the API key. It then runs a round trip: TTS speaks a sentence (also streamed, with time to first audio) and ASR transcribes it back. Everything runs natively as systemd services, without Docker.
 
-The panel and the code comments are partly in German.
+The panel switches between English and German (button at the top right).
 
 ## Updating
 
@@ -75,6 +75,8 @@ All services run as the system user `speech`. A sudoers rule lets the panel star
 - **Stimmen** (voices): manage reference recordings for voice cloning (only with a `Base` TTS model).
 - **Einbinden** (integrate): values to copy for Open WebUI and other OpenAI-compatible apps, plus curl and Python examples.
 - **Logs**: journald output of the services and engines, with a copy button.
+
+The panel is available in English and German; the button at the top right switches (default: browser language).
 - **System**: version, update, benchmark.
 
 ## APIs (OpenAI-style)
