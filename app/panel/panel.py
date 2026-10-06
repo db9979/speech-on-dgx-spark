@@ -284,6 +284,8 @@ def validate(new):
 async def put_config(request: Request):
     new = await request.json()
     old = validate(new)
+    if new.get("chat", {}).get("llm_key") != old.get("chat", {}).get("llm_key"):
+        new["chat"].pop("llm_key_from", None)  # typed by hand: updates keep it as is
     tmp = CONFIG_PATH + ".tmp"
     with open(tmp, "w") as f:
         json.dump(new, f, indent=2)
@@ -496,7 +498,12 @@ async def chat(request: Request):
             if buf.strip():
                 await sentences.put(buf.strip())
         except Exception as e:
-            await out.put({"type": "error", "message": f"LLM: {type(e).__name__}: {e}"})
+            status = getattr(getattr(e, "response", None), "status_code", None)
+            if status in (401, 403) or re.match(r"LLM HTTP 40[13]\b", str(e)):
+                await out.put({"type": "error", "code": "llm_auth",
+                               "message": "LLM: API key rejected (401). Set the qwen38 key under Konfiguration -> Sprach-Chat."})
+            else:
+                await out.put({"type": "error", "message": f"LLM: {type(e).__name__}: {e}"})
         finally:
             await sentences.put(None)
 

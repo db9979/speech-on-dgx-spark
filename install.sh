@@ -136,11 +136,18 @@ if jq -e '.asr.model | test("0.6B")' "$ETC/config.json" >/dev/null; then
   case "$(jq -r .asr.engine_mem "$ETC/config.json")" in 0.045|0.025) jqi '.asr.engine_mem=0.035' ;; esac
 fi
 # The voice chat in the panel talks to the qwen38 LLM: take its API key from the user who
-# installed qwen38 (they run this script with sudo), unless one is set already.
-if [ -z "$(jq -r '.chat.llm_key // ""' "$ETC/config.json")" ] && [ -n "${SUDO_USER:-}" ]; then
-  qkey="$(getent passwd "$SUDO_USER" | cut -d: -f6)/.config/qwen38/api-key"
-  if [ -s "$qkey" ]; then
-    jqi --arg k "$(tr -d ' \n' <"$qkey")" '.chat.llm_key=$k'
+# installed qwen38. Panel updates run without SUDO_USER, so also look in the other homes.
+# A key imported earlier is refreshed when the file changes; a hand-entered key is kept.
+qkey=""
+for h in "$( [ -n "${SUDO_USER:-}" ] && getent passwd "$SUDO_USER" | cut -d: -f6)" /home/* /root; do
+  [ -n "$h" ] && [ -s "$h/.config/qwen38/api-key" ] && { qkey="$h/.config/qwen38/api-key"; break; }
+done
+if [ -n "$qkey" ]; then
+  cur="$(jq -r '.chat.llm_key // ""' "$ETC/config.json")"
+  from="$(jq -r '.chat.llm_key_from // ""' "$ETC/config.json")"
+  new="$(tr -d ' \n\r' <"$qkey")"
+  if [ -z "$cur" ] || { [ -n "$from" ] && [ "$cur" != "$new" ]; }; then
+    jqi --arg k "$new" --arg f "$qkey" '.chat.llm_key=$k | .chat.llm_key_from=$f'
     say "Voice chat: using the qwen38 API key from $qkey"
   fi
 fi
