@@ -363,8 +363,8 @@ def validate(new):
         raise HTTPException(400, "the ASR backend is chosen at install time: sudo ./install.sh --asr-backend ...")
     if not isinstance(a["engine_mem"], (int, float)) or not 0.01 <= a["engine_mem"] <= 0.5:
         raise HTTPException(400, "asr engine_mem must be a share of the memory pool between 0.01 and 0.5")
-    if a.get("backend") == "vllm" and "1.7B" in a["model"] and a["engine_mem"] < 0.04:
-        raise HTTPException(400, "Qwen3-ASR-1.7B needs an engine share of at least 0.04 (0.6B: 0.035)")
+    if a.get("backend") == "vllm" and "1.7B" in a["model"] and a["engine_mem"] < 0.055:
+        raise HTTPException(400, "Qwen3-ASR-1.7B needs an engine share of at least 0.055 (0.6B: 0.035)")
     if not isinstance(a["engine_max_seqs"], int) or not 1 <= a["engine_max_seqs"] <= 256:
         raise HTTPException(400, "asr engine_max_seqs must be 1..256")
     t = new["tts"]

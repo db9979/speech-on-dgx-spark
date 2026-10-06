@@ -141,7 +141,12 @@ fi
 # the 0.6B ASR model needs about half the engine share of the 1.7B one
 # (0.025 was too small: "No available memory for the cache blocks" on the Spark)
 if jq -e '.asr.model | test("0.6B")' "$ETC/config.json" >/dev/null; then
-  case "$(jq -r .asr.engine_mem "$ETC/config.json")" in 0.045|0.025) jqi '.asr.engine_mem=0.035' ;; esac
+  case "$(jq -r .asr.engine_mem "$ETC/config.json")" in 0.06|0.045|0.025) jqi '.asr.engine_mem=0.035' ;; esac
+fi
+# ...and the 1.7B one needs more than the 0.045 first guessed: its ~4 GiB of weights plus vLLM's
+# working memory left nothing for the cache ("No available memory for the cache blocks").
+if jq -e '.asr.model | test("1.7B")' "$ETC/config.json" >/dev/null && [ "$(jq -r .asr.engine_mem "$ETC/config.json")" = 0.045 ]; then
+  jqi '.asr.engine_mem=0.06'
 fi
 # The voice chat in the panel talks to the qwen38 LLM: take its API key from the user who
 # installed qwen38. Panel updates run without SUDO_USER, so also look in the other homes.

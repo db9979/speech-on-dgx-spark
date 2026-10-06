@@ -195,7 +195,7 @@ Die Messung geht über die öffentlichen Ports, misst also das, was Apps sehen. 
 - **Getrennte venvs**: qwen-asr verlangt `transformers==4.57.6`, qwen-tts `transformers==4.57.3`.
 - **ASR mit vLLM**: vLLM 0.30 kann Qwen3-ASR selbst, mit `/v1/audio/transcriptions`, Streaming und mehreren Anfragen gleichzeitig. Es läuft in derselben Umgebung wie die TTS-Engine. `qwen-asr[vllm]` wird nicht gebraucht (es würde vllm 0.14 erzwingen).
 - **TTS mit vllm-omni**: `qwen-tts` kann nicht stückweise ausgeben. Das Qwen-Team verweist für Streaming auf vllm-omni. vllm 0.30.0 und vllm-omni 0.30.0 haben ARM-Pakete auf PyPI (CUDA 13) und werden nativ in einer eigenen Umgebung installiert, ohne Docker.
-- **Engine-Speicher**: vLLM reserviert beim Start einen festen Anteil des *gesamten* Speicherpools, bei TTS pro Stufe (Talker und Code2Wav) getrennt. Die Voreinstellungen (ASR 0,045; TTS 0,04 + 0,025) sind knapp gewählt, damit Speech neben der qwen38-`stock`-Lane Platz findet. Ist ein Anteil zu klein, bricht die Engine beim Start mit „No available memory for the cache blocks“ ab. Dann im Panel den Anteil erhöhen.
+- **Engine-Speicher**: vLLM reserviert beim Start einen festen Anteil des *gesamten* Speicherpools, bei TTS pro Stufe (Talker und Code2Wav) getrennt. Die Voreinstellungen (ASR 1.7B 0,06, 0.6B 0,035; TTS 0,04 + 0,025) sind knapp gewählt, damit Speech neben der qwen38-`stock`-Lane Platz findet. Ist ein Anteil zu klein, bricht die Engine beim Start mit „No available memory for the cache blocks“ ab. Dann im Panel den Anteil erhöhen.
 
 ## Fehlersuche
 
