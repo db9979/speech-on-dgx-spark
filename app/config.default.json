@@ -28,6 +28,7 @@
     "top_p": 0.9,
     "seed": 42,
     "clean_text": true,
+    "numbers": "words",
     "backend": "vllm-omni",
     "engine_port": 31012,
     "engine_mem_talker": 0.04,

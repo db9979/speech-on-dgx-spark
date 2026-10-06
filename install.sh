@@ -192,11 +192,11 @@ if [ "$WITH_ASR" = 1 ] && [ "$ASR_BACKEND" = transformers ]; then
 fi
 if [ "$WITH_TTS" = 1 ] && [ "$BACKEND" = transformers ]; then
   say "Python env for Qwen3-TTS (transformers backend)"
-  make_venv tts --torch qwen-tts fastapi "uvicorn[standard]" python-multipart
+  make_venv tts --torch qwen-tts fastapi "uvicorn[standard]" python-multipart num2words
   check_cuda tts
 fi
 say "Python env for the panel and the ASR / TTS front ends"
-make_venv panel fastapi "uvicorn[standard]" python-multipart httpx psutil
+make_venv panel fastapi "uvicorn[standard]" python-multipart httpx psutil num2words
 
 # ---------------------------------------------------------------- engines (vLLM + vllm-omni, native)
 if [ "$USE_ENGINE" = 1 ]; then

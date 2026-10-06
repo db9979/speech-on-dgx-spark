@@ -17,6 +17,7 @@ from fastapi.responses import Response
 from pydantic import BaseModel
 
 from common import ServiceState, api_key_dependency, check_memory, estimate_gib, load_config, torch_dtype
+from textnorm import clean_text, speak_numbers
 
 VOICES_DIR = os.environ.get("SPEECH_SPARK_VOICES", "/var/lib/speech-spark/voices")
 
@@ -123,6 +124,16 @@ def speech(req: SpeechRequest):
         raise HTTPException(400, f"response_format must be one of {list(FORMATS)}")
     lang = req.language or cfg.get("default_language") or "auto"
     instruct = req.instruct if req.instruct is not None else cfg.get("default_instruct", "")
+    text = req.input
+    if cfg.get("clean_text", True):
+        text = clean_text(text)
+    if cfg.get("numbers", "words") != "off":
+        try:
+            text = speak_numbers(text, lang, cfg.get("numbers", "words"))
+        except Exception as e:  # never fail a request over number formatting
+            print(f"speak_numbers failed: {type(e).__name__}: {e}", flush=True)
+    if not text.strip():
+        raise HTTPException(400, "nothing left to speak after removing emojis and markup")
     voice = req.voice or cfg.get("default_voice")
     kind = model_kind()
     # OpenAI clients send their own voice names (alloy, nova, ...): fall back to the default.
@@ -135,13 +146,13 @@ def speech(req: SpeechRequest):
         with state.lock:
             if kind == "custom_voice":
                 wavs, sr = state.model.generate_custom_voice(
-                    text=req.input, speaker=voice, language=lang, instruct=instruct or None)
+                    text=text, speaker=voice, language=lang, instruct=instruct or None)
             elif kind == "voice_design":
                 wavs, sr = state.model.generate_voice_design(
-                    text=req.input, instruct=instruct, language=lang)
+                    text=text, instruct=instruct, language=lang)
             elif kind == "base":
                 wavs, sr = state.model.generate_voice_clone(
-                    text=req.input, language=lang, voice_clone_prompt=clone_prompt(voice))
+                    text=text, language=lang, voice_clone_prompt=clone_prompt(voice))
             else:
                 raise HTTPException(500, f"unsupported model kind {kind}")
         dt = time.time() - t0

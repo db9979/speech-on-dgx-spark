@@ -8,7 +8,6 @@ engine, and the counters the panel shows. Request and stream pass through unchan
 """
 import base64
 import json
-import re
 import os
 import subprocess
 import time
@@ -21,6 +20,7 @@ from fastapi.middleware.cors import CORSMiddleware
 from fastapi.responses import Response, StreamingResponse
 
 from common import api_key_dependency, engine_crash_reason, load_config
+from textnorm import clean_text, speak_numbers
 
 STATE_DIR = os.environ.get("SPEECH_SPARK_STATE", "/var/lib/speech-spark/state")
 LANGUAGES = ["auto", "Chinese", "English", "Japanese", "Korean", "German", "French",
@@ -109,29 +109,6 @@ async def engine_voices(role):
     return voices
 
 
-# Chat replies carry emojis, markdown and "haha"; the model reads those as cues and laughs,
-# speeds up or switches tone. Remove them before synthesis (config tts.clean_text).
-EMOJI = re.compile("[\U0001F000-\U0001FAFF\U00002600-\U000027BF\U0000FE0F\U0000200D\U00002B00-\U00002BFF]+")
-LAUGH = re.compile(r"(?i)(?<!\w)(?:(?:ha|he|hi|hö){2,}h?|lol|lmao|rofl|xd|:-?[)(dp]|;-?\))(?!\w)[!.]*")
-ACTION = re.compile(r"(?i)[*(\[](?:lacht|lach|kichert|grinst|schmunzelt|zwinkert|seufzt|laughs?|giggles?|grins?|winks?|smiles?)[^*)\]]{0,30}[*)\]]")
-
-
-def clean_text(text):
-    t = ACTION.sub(" ", str(text))
-    t = EMOJI.sub(" ", t)
-    t = LAUGH.sub(" ", t)
-    t = re.sub(r"```.*?```", " ", t, flags=re.S)       # code blocks are not speakable
-    t = re.sub(r"!?\[([^\]]*)\]\([^)]*\)", r"\1", t)    # [text](url) -> text
-    t = re.sub(r"https?://\S+", " ", t)
-    t = re.sub(r"^\s{0,3}(?:#{1,6}|[-*+>]|\d+\.)\s+", "", t, flags=re.M)  # headings, bullets, quotes
-    t = re.sub(r"[*_`~#|]+", "", t)
-    t = re.sub(r"([!?.])\1+", r"\1", t)                # "!!!" -> "!"
-    t = re.sub(r"[ \t]+", " ", t)
-    t = re.sub(r"\s+([,;:.!?])", r"\1", t)             # "witzig ," -> "witzig,"
-    t = re.sub(r"(^|\n)[\s,;:.!?]+", r"\1", t)          # leftovers at line starts
-    return re.sub(r"\s*\n\s*", "\n", t).strip()
-
-
 @app.get("/health")
 async def health():
     status, error = await engine_status("main")
@@ -208,6 +185,11 @@ async def speech(request: Request):
     if not body.get("language") or str(body["language"]).lower() == "auto":
         lang = cfg.get("default_language") or "auto"
         body["language"] = "Auto" if lang.lower() == "auto" else lang
+    if cfg.get("numbers", "words") != "off":
+        try:
+            body["input"] = speak_numbers(body["input"], body["language"], cfg.get("numbers", "words"))
+        except Exception as e:  # never fail a request over number formatting
+            print(f"speak_numbers failed: {type(e).__name__}: {e}", flush=True)
     if "instruct" in body and "instructions" not in body:  # older field name of this API
         body["instructions"] = body.pop("instruct")
     if not body.get("instructions") and cfg.get("default_instruct"):
