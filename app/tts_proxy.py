@@ -216,6 +216,10 @@ async def speech(request: Request):
         if not body["input"]:
             raise HTTPException(400, "nothing left to speak after removing emojis and markup")
     stream = bool(body.get("stream")) or body.get("stream_format") in ("sse", "audio")
+    # vllm-omni makes the first audio chunk bigger when several requests run at once (2.4 s to
+    # the first audio with 4 parallel requests on the Spark); a fixed small first chunk keeps it short.
+    if stream and cfg.get("initial_chunk_frames"):
+        body.setdefault("initial_codec_chunk_frames", int(cfg["initial_chunk_frames"]))
     body["model"] = model  # vLLM checks this field; clients send anything (tts-1, qwen3-tts, ...)
     body.setdefault("response_format", "pcm" if stream else "mp3")
     if not body.get("language") or str(body["language"]).lower() == "auto":

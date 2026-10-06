@@ -236,6 +236,8 @@ def validate(new):
         raise HTTPException(400, "temperature must be 0.05..2")
     if not isinstance(t.get("top_p"), (int, float)) or not 0.05 <= t["top_p"] <= 1:
         raise HTTPException(400, "top_p must be 0.05..1")
+    if not isinstance(t.get("initial_chunk_frames"), int) or not 0 <= t["initial_chunk_frames"] <= 25:
+        raise HTTPException(400, "initial_chunk_frames must be 0..25 (0 = let vllm-omni decide)")
     if t.get("numbers") not in ("off", "words", "blocks", "digits"):
         raise HTTPException(400, "numbers must be off, words, blocks or digits")
     if not isinstance(t.get("seed"), int) or t["seed"] < -1:
