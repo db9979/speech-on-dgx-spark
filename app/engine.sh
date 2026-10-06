@@ -87,6 +87,7 @@ if [ "$ROLE" = asr ]; then
   export VLLM_MAX_AUDIO_CLIP_FILESIZE_MB=200
   exec "$VENV/bin/vllm" serve "$MODEL" \
     --host 127.0.0.1 --port "$PORT" \
+    --disable-uvicorn-access-log \
     --served-model-name "$MODEL" \
     --gpu-memory-utilization "$MEM0" \
     --max-num-seqs "$SEQS" \
@@ -101,6 +102,7 @@ overrides=$(jq -cn --argjson m0 "$MEM0" --argjson m1 "$MEM1" --argjson s "$SEQS"
 
 exec "$VENV/bin/vllm" serve "$MODEL" --omni \
   --host 127.0.0.1 --port "$PORT" \
+  --disable-uvicorn-access-log \
   --trust-remote-code \
   --served-model-name "$MODEL" \
   --stage-overrides "$overrides"

@@ -59,5 +59,9 @@
     "system_prompt": "Du bist ein freundlicher Sprachassistent. Deine Antworten werden vorgelesen: antworte kurz und natürlich in ganzen Sätzen, ohne Listen, Tabellen, Markdown, Code oder Emojis. Antworte in der Sprache, in der du angesprochen wirst.",
     "thinking": false,
     "max_tokens": 600
+  },
+  "logs": {
+    "max_mb": 500,
+    "keep_days": 14
   }
 }

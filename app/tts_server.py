@@ -16,7 +16,7 @@ from fastapi.middleware.cors import CORSMiddleware
 from fastapi.responses import Response
 from pydantic import BaseModel
 
-from common import ServiceState, api_key_dependency, check_memory, estimate_gib, load_config, torch_dtype
+from common import ServiceState, api_key_dependency, check_memory, estimate_gib, load_config, torch_dtype, quiet_access_log
 from textnorm import clean_text, speak_numbers
 
 VOICES_DIR = os.environ.get("SPEECH_SPARK_VOICES", "/var/lib/speech-spark/voices")
@@ -183,4 +183,5 @@ def speech(req: SpeechRequest):
 
 
 if __name__ == "__main__":
+    quiet_access_log()
     uvicorn.run(app, host=cfg["host"], port=cfg["port"])

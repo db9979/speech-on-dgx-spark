@@ -16,6 +16,10 @@ Am Ende gibt das Skript die Adresse des Panels, das Passwort und den API-Schlüs
 
 Der Reiter **Gespräch** braucht das Mikrofon, und Browser erlauben das nur über https. Das Panel läuft deshalb zusätzlich auf `https://SPARK:31443` mit einem selbst erstellten Zertifikat; der Browser warnt beim ersten Aufruf einmal. Die LLM-Verbindung steht unter Konfiguration → Sprach-Chat (Standard: qwen38 auf `http://127.0.0.1:30001/v1`). Den API-Schlüssel von qwen38 übernimmt der Installer aus `~/.config/qwen38/api-key` des Benutzers, der `sudo ./install.sh` aufruft. Das Nachdenken des Modells ist für den Chat aus, damit die Antwort sofort beginnt.
 
+## Logs
+
+Alle Speech-Dienste schreiben in ein eigenes Journal (`journalctl --namespace=speech-spark -u 'speech-spark-*'`), das auf 500 MB und 14 Tage begrenzt ist; ältere Einträge löscht journald automatisch. Einstellbar unter Konfiguration → Logs, wirksam nach dem nächsten Update. Die ständigen Statusabfragen des Panels landen gar nicht erst im Log.
+
 ## Aktualisieren
 
 Im Panel unter **System**: Dort steht die installierte Version, und es wird angezeigt, wenn auf GitHub eine neuere liegt (mit der Liste der Änderungen). **Update installieren** holt den neuen Stand und installiert ihn. Einstellungen, Modelle und Stimmen bleiben, das Protokoll läuft live mit. Schlägt die Installation fehl, laufen die Dienste mit der alten Version weiter.

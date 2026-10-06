@@ -10,7 +10,7 @@ from fastapi import Depends, FastAPI, File, Form, HTTPException, UploadFile
 from fastapi.middleware.cors import CORSMiddleware
 from fastapi.responses import PlainTextResponse
 
-from common import ASR_ISO as ISO, ServiceState, api_key_dependency, check_memory, estimate_gib, load_config, torch_dtype
+from common import ASR_ISO as ISO, ServiceState, api_key_dependency, check_memory, estimate_gib, load_config, torch_dtype, quiet_access_log
 
 cfg = load_config("asr")
 state = ServiceState("asr", cfg)
@@ -141,4 +141,5 @@ async def transcriptions(
 
 
 if __name__ == "__main__":
+    quiet_access_log()
     uvicorn.run(app, host=cfg["host"], port=cfg["port"])

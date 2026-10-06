@@ -140,15 +140,44 @@ class ServiceState:
 
 
 
+# All speech-spark units log into their own journal namespace, capped by install.sh
+# (/etc/systemd/journald@speech-spark.conf), so speech logs cannot fill the disk.
+JOURNAL_NAMESPACE = "speech-spark"
+
+
+def journal(unit, lines, fmt="cat"):
+    """Last lines a unit logged: its own namespace first, then the system journal (installs
+    from before the namespace)."""
+    import subprocess
+    base = ["journalctl", "-u", unit, "-n", str(lines), "--no-pager", "-o", fmt]
+    out = ""
+    for cmd in (base[:1] + [f"--namespace={JOURNAL_NAMESPACE}"] + base[1:], base):
+        try:
+            out = subprocess.run(cmd, capture_output=True, text=True, timeout=10).stdout
+        except Exception:
+            continue
+        if out.strip() and "-- No entries --" not in out:
+            return out
+    return out
+
+
+def quiet_access_log(paths=("/health", "/api/status", "/api/update", "/api/bench", "/api/logs/")):
+    """Drop the access-log lines of successful status polls (the panel asks every few seconds)."""
+    import logging
+
+    class Polls(logging.Filter):
+        def filter(self, record):
+            msg = record.getMessage()
+            return not ('" 200' in msg and any(f'"GET {p}' in msg for p in paths))
+    logging.getLogger("uvicorn.access").addFilter(Polls())
+
+
 def engine_crash_reason(unit):
     """Last real exception an engine logged before it exited (vLLM prints the cause in the
     EngineCore process; the final 'Engine core initialization failed' line only points back)."""
     import re
-    import subprocess
-    try:
-        out = subprocess.run(["journalctl", "-u", unit, "-n", "1500", "--no-pager", "-o", "cat"],
-                             capture_output=True, text=True, timeout=10).stdout
-    except Exception:
+    out = journal(unit, 1500)
+    if not out:
         return None
     hits = [m.group(1).strip() for m in re.finditer(r"((?:\w+\.)*\w*(?:Error|Exception): .+)", out)
             if "Engine core initialization failed" not in m.group(1)

@@ -341,6 +341,7 @@ Wants=network-online.target
 $asr_deps
 
 [Service]
+LogNamespace=speech-spark
 User=$SVC_USER
 Group=$SVC_USER
 WorkingDirectory=$PREFIX/app
@@ -373,6 +374,7 @@ Wants=network-online.target
 $tts_deps
 
 [Service]
+LogNamespace=speech-spark
 User=$SVC_USER
 Group=$SVC_USER
 WorkingDirectory=$PREFIX/app
@@ -397,6 +399,7 @@ After=network-online.target $QWEN38_AFTER
 Wants=network-online.target
 
 [Service]
+LogNamespace=speech-spark
 User=$SVC_USER
 Group=$SVC_USER
 WorkingDirectory=$VAR
@@ -428,6 +431,7 @@ Description=Speech on DGX Spark: web panel
 After=network-online.target
 
 [Service]
+LogNamespace=speech-spark
 User=$SVC_USER
 Group=$SVC_USER
 WorkingDirectory=$PREFIX/app/panel
@@ -450,10 +454,24 @@ After=network-online.target
 Wants=network-online.target
 
 [Service]
+LogNamespace=speech-spark
 Type=oneshot
 ExecStart=$PREFIX/src/update.sh
 TimeoutStartSec=2h
 EOF
+# ---------------------------------------------------------------- logs
+# The speech units log into their own journal namespace with a size and age cap, so a chatty
+# engine can never fill the disk (and does not push other logs out of the system journal).
+LOG_MB=$(cfg '.logs.max_mb // 500'); LOG_DAYS=$(cfg '.logs.keep_days // 14')
+cat >/etc/systemd/journald@speech-spark.conf <<EOF
+# written by speech-on-dgx-spark install.sh (config: logs.max_mb, logs.keep_days)
+[Journal]
+Storage=persistent
+SystemMaxUse=${LOG_MB}M
+SystemMaxFileSize=$(( LOG_MB / 10 > 1 ? LOG_MB / 10 : 1 ))M
+MaxRetentionSec=${LOG_DAYS}day
+EOF
+systemctl restart systemd-journald@speech-spark.service 2>/dev/null || true
 systemctl daemon-reload
 
 # ---------------------------------------------------------------- start
@@ -464,6 +482,7 @@ systemctl restart speech-spark-panel.service
 # an update only restarts an engine when its settings changed: a restart costs a model load
 restart_engine() {  # $1 = unit suffix, $2 = settings signature
   local sigfile="$VAR/state/$1.sig"
+  set -- "$1" "$2 units-r2"  # bump when the unit files change in a way a running engine must pick up
   systemctl enable "speech-spark-$1.service" >/dev/null 2>&1
   if [ "$FROM_UPDATE" = 0 ] || [ "$(cat "$sigfile" 2>/dev/null)" != "$2" ] \
      || ! systemctl is-active -q "speech-spark-$1.service"; then
@@ -510,7 +529,7 @@ wait_ready() {  # $1 = name, $2 = port, $3 = minutes
       echo "   $1 $st: $(curl -fs "http://127.0.0.1:$2/health" | jq -r .error)"; return 1 ;; esac
     sleep 5
   done
-  echo "   $1 not ready after $3 min (status: ${st:-no answer}); see the panel or: journalctl -u 'speech-spark-*'"; return 1
+  echo "   $1 not ready after $3 min (status: ${st:-no answer}); see the panel or: journalctl --namespace=speech-spark -u 'speech-spark-*'"; return 1
 }
 ok_asr=0; ok_tts=0
 # an update does not wait as long: the services keep starting on their own afterwards
@@ -551,7 +570,7 @@ cat <<EOF
  ASR API:   http://$IP:$ASR_PORT/v1/audio/transcriptions   (backend: $ASR_BACKEND)
  TTS API:   http://$IP:$TTS_PORT/v1/audio/speech   (backend: $BACKEND)
  API key:   ${KEY:-none}
- Config:    $ETC/config.json     Logs: journalctl -u 'speech-spark-*'
+ Config:    $ETC/config.json     Logs: journalctl --namespace=speech-spark -u 'speech-spark-*'
  Update:    panel tab "System", or: sudo $PREFIX/src/update.sh
  Measure:   panel tab "System", or: sudo speech-spark-bench
 ------------------------------------------------------------------

@@ -20,7 +20,7 @@ from fastapi import Depends, FastAPI, HTTPException, Request
 from fastapi.middleware.cors import CORSMiddleware
 from fastapi.responses import Response, StreamingResponse
 
-from common import api_key_dependency, engine_crash_reason, load_config
+from common import api_key_dependency, engine_crash_reason, load_config, quiet_access_log
 from textnorm import clean_text, speak_numbers
 
 STATE_DIR = os.environ.get("SPEECH_SPARK_STATE", "/var/lib/speech-spark/state")
@@ -328,4 +328,5 @@ async def speech(request: Request):
 
 
 if __name__ == "__main__":
+    quiet_access_log()
     uvicorn.run(app, host=cfg["host"], port=cfg["port"])

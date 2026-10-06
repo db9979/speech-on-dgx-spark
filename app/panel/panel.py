@@ -18,7 +18,7 @@ from fastapi.responses import FileResponse, Response, StreamingResponse
 from fastapi.security import HTTPBasic, HTTPBasicCredentials
 
 sys.path.insert(0, os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
-from common import CONFIG_PATH, estimate_gib, load_config, mem_available_gib  # noqa: E402
+from common import CONFIG_PATH, estimate_gib, journal, load_config, mem_available_gib, quiet_access_log  # noqa: E402
 
 VOICES_DIR = os.environ.get("SPEECH_SPARK_VOICES", "/var/lib/speech-spark/voices")
 PASSWORD = os.environ.get("PANEL_PASSWORD", "")
@@ -262,6 +262,11 @@ def validate(new):
             raise HTTPException(400, f"port {p} is in the 30000-30099 range used by dgx-spark-qwen38")
     if len(set(ports)) != len(ports):
         raise HTTPException(400, "ports must differ")
+    lg = new["logs"]
+    if not isinstance(lg["max_mb"], int) or not 50 <= lg["max_mb"] <= 20000:
+        raise HTTPException(400, "logs max_mb must be 50..20000")
+    if not isinstance(lg["keep_days"], int) or not 1 <= lg["keep_days"] <= 365:
+        raise HTTPException(400, "logs keep_days must be 1..365")
     ch = new["chat"]
     if not re.fullmatch(r"https?://[^\s]+", str(ch["llm_url"])):
         raise HTTPException(400, "chat llm_url must start with http:// or https://")
@@ -332,9 +337,7 @@ def service_action(name: str, action: str):
 def logs(name: str, lines: int = 200):
     if name not in LOG_UNITS:
         raise HTTPException(400, "bad service")
-    code, out = run(["journalctl", "-u", LOG_UNITS[name], "-n", str(min(lines, 2000)),
-                     "--no-pager", "-o", "short-iso"])
-    return Response(out, media_type="text/plain")
+    return Response(journal(LOG_UNITS[name], min(lines, 2000), "short-iso"), media_type="text/plain")
 
 
 @app.get("/api/languages", dependencies=[Depends(auth)])
@@ -712,6 +715,7 @@ class Server(uvicorn.Server):
 
 async def serve():
     import signal
+    quiet_access_log()
     pcfg = load_config("panel")
     servers = [Server(uvicorn.Config(app, host=pcfg["host"], port=pcfg["port"]))]
     cert, key = os.path.join(TLS_DIR, "cert.pem"), os.path.join(TLS_DIR, "key.pem")

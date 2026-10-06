@@ -36,11 +36,12 @@ for s in asr asr-engine tts tts-engine tts-design panel update; do
 done
 systemctl daemon-reload
 systemctl reset-failed 'speech-spark-*' 2>/dev/null || true
-rm -f /etc/sudoers.d/speech-spark /usr/local/bin/speech-spark-bench
+rm -f /etc/sudoers.d/speech-spark /usr/local/bin/speech-spark-bench /etc/systemd/journald@speech-spark.conf
+systemctl stop systemd-journald@speech-spark.service systemd-journald@speech-spark.socket 2>/dev/null || true
 rm -rf /opt/speech-spark   # code, Python envs and the update clone
 
 if [ "$PURGE" = 1 ]; then
-  rm -rf /etc/speech-spark /var/lib/speech-spark
+  rm -rf /etc/speech-spark /var/lib/speech-spark /var/log/journal/*.speech-spark
   userdel speech 2>/dev/null || true
   echo "Removed everything, including downloaded models and cloned voices."
 else
