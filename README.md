@@ -22,6 +22,8 @@ The **Gespräch** tab needs the microphone, and browsers only allow it over http
 
 **As an app on your phone:** open `https://SPARK:31443` in the phone's browser, accept the certificate warning, then use "Add to Home screen" in the browser menu (iPhone: Safari → Share → "Add to Home Screen"). The assistant then starts full screen with its own icon. With the self-signed certificate Android creates a shortcut instead of an installed app; it works the same, it just does not show up in the app list.
 
+**Better recognition:** a fixed default language (Configuration → ASR, e.g. German) instead of "auto" helps most with short sentences. The "Context" field takes names and terms that are often misheard; the model then prefers them. The 1.7B model is noticeably more accurate than 0.6B and needs about 2–3 GiB more memory.
+
 **Barge-in:** while the assistant speaks, the microphone keeps listening. Talking for about a quarter of a second interrupts the answer, and what you said becomes the next question. This relies on the browser's echo cancellation; if the assistant interrupts itself on loud speakers, use headphones or untick "barge in" below the chat.
 
 **Your own voice:** under Voices you can record a reference straight from the microphone (read the suggested text, about 10 seconds); the panel fills in the transcript with the speech recognition. Cloning needs a Base model (Configuration → TTS → model `…-Base`), then set the new voice as the default voice. A German reference gives much steadier German than the built-in speakers, which are not native German speakers.

@@ -177,6 +177,8 @@ async def transcriptions(request: Request):
     data += [("model", cfg["model"]), ("response_format", "json")]  # text / verbose_json are built here
     if lang:
         data.append(("language", lang))
+    if not opts.get("prompt") and cfg.get("context"):
+        data.append(("prompt", cfg["context"]))  # names and terms the model should expect
     files = {"file": (upload.filename or "audio", await upload.read(), upload.content_type)}
     # httpx takes form fields as a dict of lists
     form_data = {}

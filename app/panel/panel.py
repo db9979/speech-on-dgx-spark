@@ -357,6 +357,8 @@ def validate(new):
     if not re.fullmatch(r"[A-Za-z0-9_\-]*", new["api"]["key"]):
         raise HTTPException(400, "API key: letters, digits, _ and - only")
     a = new["asr"]
+    if not isinstance(a.get("context", ""), str) or len(a.get("context", "")) > 2000:
+        raise HTTPException(400, "ASR context: text up to 2000 characters")
     if a.get("backend") != old["asr"].get("backend"):
         raise HTTPException(400, "the ASR backend is chosen at install time: sudo ./install.sh --asr-backend ...")
     if not isinstance(a["engine_mem"], (int, float)) or not 0.01 <= a["engine_mem"] <= 0.5:

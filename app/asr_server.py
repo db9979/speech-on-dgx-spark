@@ -118,7 +118,8 @@ async def transcriptions(
         read, audio_s, converted = as_wav(path)
         t0 = time.time()
         with state.lock:
-            r = state.model.transcribe(audio=read, language=lang, return_time_stamps=timestamps)[0]
+            r = state.model.transcribe(audio=read, context=prompt or cfg.get("context") or "",
+                                       language=lang, return_time_stamps=timestamps)[0]
         dt = time.time() - t0
         state.record(dt, audio_s)
     except HTTPException as e:

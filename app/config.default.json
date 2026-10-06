@@ -12,6 +12,7 @@
     "max_batch_size": 8,
     "max_new_tokens": 512,
     "default_language": "auto",
+    "context": "",
     "timestamps": false,
     "aligner_model": "Qwen/Qwen3-ForcedAligner-0.6B"
   },
