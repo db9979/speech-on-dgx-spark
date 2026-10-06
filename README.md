@@ -14,6 +14,10 @@ At the end the script prints the panel address, the panel password and the API k
 
 The panel switches between English and German (button at the top right).
 
+## Voice chat
+
+The **Gespräch** tab needs the microphone, and browsers only allow it over https. The panel therefore also listens on `https://SPARK:31443` with a self-signed certificate; the browser warns once. The LLM connection is under Configuration → voice chat (default: qwen38 at `http://127.0.0.1:30001/v1`). The installer takes the qwen38 API key from `~/.config/qwen38/api-key` of the user who runs `sudo ./install.sh`. Thinking is off for the chat so the answer starts right away.
+
 ## Updating
 
 In the panel under **System** you see the installed version and, when GitHub has a newer one, the list of changes. **Update installieren** (install update) fetches and installs it. Settings, models and voices are kept, and the log streams live. **Update abbrechen** cancels a running update. If the installation fails, the services keep running the old version.
@@ -74,6 +78,7 @@ All services run as the system user `speech`. A sudoers rule lets the panel star
 - **Testen** (test): upload an audio file to transcribe, or type text and listen.
 - **Stimmen** (voices): manage reference recordings for voice cloning (only with a `Base` TTS model).
 - **Einbinden** (integrate): values to copy for Open WebUI and other OpenAI-compatible apps, plus curl and Python examples.
+- **Gespräch** (talk): voice chat with the dgx-spark-qwen38 LLM. Speak (or type); the answer comes back as text and streamed speech, sentence by sentence while the LLM is still writing. Hands-free mode listens again after each answer; the space bar or "Speak" interrupts. Below the chat you see how long recognition, the first LLM word and the first audio took.
 - **Logs**: journald output of the services and engines, with a copy button.
 
 The panel is available in English and German; the button at the top right switches (default: browser language).

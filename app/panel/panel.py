@@ -249,6 +249,10 @@ def validate(new):
         ports.append(a["engine_port"])
     if t.get("backend") == "vllm-omni":
         ports += [t["engine_port"], t["voicedesign_port"]]
+    if not isinstance(new["panel"].get("https_port"), int):
+        raise HTTPException(400, "https_port must be a number, 0 = off")
+    if new["panel"]["https_port"]:
+        ports.append(new["panel"]["https_port"])
     for p in ports:
         if not isinstance(p, int) or not 1024 <= p <= 65535:
             raise HTTPException(400, f"invalid port {p}")
@@ -256,6 +260,11 @@ def validate(new):
             raise HTTPException(400, f"port {p} is in the 30000-30099 range used by dgx-spark-qwen38")
     if len(set(ports)) != len(ports):
         raise HTTPException(400, "ports must differ")
+    ch = new["chat"]
+    if not re.fullmatch(r"https?://[^\s]+", str(ch["llm_url"])):
+        raise HTTPException(400, "chat llm_url must start with http:// or https://")
+    if not isinstance(ch["max_tokens"], int) or not 16 <= ch["max_tokens"] <= 32768:
+        raise HTTPException(400, "chat max_tokens must be 16..32768")
     for sec in ("asr", "tts"):
         if not re.fullmatch(r"[\w.\-/]+", str(new[sec]["model"])):
             raise HTTPException(400, f"invalid model id {new[sec]['model']}")
@@ -374,6 +383,160 @@ async def test_tts_stream(request: Request):
         finally:
             await up.aclose(); await c.aclose()
     return StreamingResponse(relay(), media_type="text/event-stream", headers={"Cache-Control": "no-cache"})
+
+
+# ---------------------------------------------------------------- voice chat
+# The browser records a question, /api/test/asr turns it into text, and /api/chat streams the
+# answer: LLM tokens are cut into sentences as they arrive, each sentence goes to the streaming
+# TTS while the LLM keeps writing, and text and audio come back as one Server-Sent Events stream.
+ABBREV = {"z", "b", "d", "h", "u", "a", "bzw", "ca", "dr", "nr", "usw", "vgl", "etc", "evtl", "ggf", "inkl",
+          "max", "min", "mio", "mrd", "str", "tel", "e.g", "i.e", "vs", "mr", "mrs", "st", "prof", "jr", "sr"}
+BOUNDARY = re.compile(r"[.!?…]+[\"“”»')\]]*\s+|\n+")
+
+
+def split_sentences(buf, first):
+    """Cut finished sentences off the front of buf. Returns (sentences, rest). A long first
+    sentence is also cut at a comma, so the first audio does not wait for the whole sentence."""
+    out, start = [], 0
+    for m in BOUNDARY.finditer(buf):
+        head = buf[start:m.start()]
+        word = re.findall(r"[\w.]+$", head)
+        last = word[0].lower().rstrip(".") if word else ""
+        if m.group(0)[0] == "." and (last in ABBREV or len(last) == 1 or last[-1:].isdigit()):
+            continue  # "z. B.", "5. Oktober", "3.5" are no sentence ends
+        piece = buf[start:m.end()].strip()
+        if piece:
+            out.append(piece)
+        start = m.end()
+    rest = buf[start:]
+    if first and not out and len(rest) > 120 and ", " in rest[40:]:
+        cut = rest.rindex(", ") + 1
+        out, rest = [rest[:cut].strip()], rest[cut:]
+    return out, rest
+
+
+_llm_models = {}
+
+
+async def llm_model(c, ccfg, headers):
+    if ccfg.get("llm_model"):
+        return ccfg["llm_model"]
+    url = ccfg["llm_url"].rstrip("/")
+    if url not in _llm_models:
+        r = await c.get(url + "/models", headers=headers, timeout=10)
+        r.raise_for_status()
+        _llm_models[url] = r.json()["data"][0]["id"]
+    return _llm_models[url]
+
+
+@app.post("/api/chat", dependencies=[Depends(auth)])
+async def chat(request: Request):
+    body = await request.json()
+    cfg = load_config()
+    ccfg = dict(json.load(open(DEFAULTS))["chat"], **cfg.get("chat", {}))
+    messages = [m for m in body.get("messages", []) if m.get("role") in ("user", "assistant") and m.get("content")]
+    if not messages:
+        raise HTTPException(400, "messages are required")
+    if ccfg.get("system_prompt"):
+        messages = [{"role": "system", "content": ccfg["system_prompt"]}] + messages
+    lheaders = {"Authorization": f"Bearer {ccfg['llm_key']}"} if ccfg.get("llm_key") else {}
+    tts_url = f"http://127.0.0.1:{cfg['tts']['port']}/v1/audio/speech"
+    tts_body = {k: body[k] for k in ("voice", "language", "instructions") if body.get(k)}
+    c = httpx.AsyncClient(timeout=httpx.Timeout(600, connect=5))
+    out = asyncio.Queue()
+    sentences = asyncio.Queue()
+    t0 = time.time()
+
+    async def llm():
+        try:
+            model = await llm_model(c, ccfg, lheaders)
+            payload = {"model": model, "messages": messages, "stream": True,
+                       "max_tokens": int(ccfg.get("max_tokens") or 600)}
+            if not ccfg.get("thinking"):
+                payload["chat_template_kwargs"] = {"enable_thinking": False}
+            buf, first, think, n = "", True, False, 0
+            async with c.stream("POST", ccfg["llm_url"].rstrip("/") + "/chat/completions",
+                                json=payload, headers=lheaders) as r:
+                if r.status_code != 200:
+                    raise RuntimeError(f"LLM HTTP {r.status_code}: {(await r.aread()).decode(errors='replace')[:300]}")
+                async for line in r.aiter_lines():
+                    if not line.startswith("data:"):
+                        continue  # SSE comments and keep-alives
+                    data = line[5:].strip()
+                    if data == "[DONE]":
+                        break
+                    try:
+                        delta = json.loads(data)["choices"][0].get("delta") or {}
+                    except (ValueError, KeyError, IndexError):
+                        continue
+                    text = delta.get("content") or ""
+                    if not text:
+                        continue
+                    # models that think inline: drop <think>...</think> from what is spoken
+                    if "<think>" in text:
+                        think, text = True, text.split("<think>")[0]
+                    if think:
+                        if "</think>" not in text:
+                            continue
+                        think, text = False, text.split("</think>", 1)[1]
+                    if n == 0:
+                        await out.put({"type": "timing", "llm_first_token": round(time.time() - t0, 3)})
+                    n += 1
+                    await out.put({"type": "text", "delta": text})
+                    buf += text
+                    done, buf = split_sentences(buf, first)
+                    for x in done:
+                        first = False
+                        await sentences.put(x)
+            if buf.strip():
+                await sentences.put(buf.strip())
+        except Exception as e:
+            await out.put({"type": "error", "message": f"LLM: {type(e).__name__}: {e}"})
+        finally:
+            await sentences.put(None)
+
+    async def tts():
+        first = True
+        try:
+            while (text := await sentences.get()) is not None:
+                req = dict(tts_body, input=text, stream=True, response_format="pcm")
+                async with c.stream("POST", tts_url, json=req, headers=api_headers()) as r:
+                    if r.status_code != 200:
+                        await out.put({"type": "error", "message": f"TTS HTTP {r.status_code}: "
+                                       f"{(await r.aread()).decode(errors='replace')[:300]}"})
+                        continue
+                    async for line in r.aiter_lines():
+                        if not line.startswith("data:"):
+                            continue
+                        try:
+                            ev = json.loads(line[5:])
+                        except ValueError:
+                            continue
+                        if ev.get("type") == "speech.audio.delta" and ev.get("audio"):
+                            if first:
+                                first = False
+                                await out.put({"type": "timing", "first_audio": round(time.time() - t0, 3)})
+                            await out.put({"type": "audio", "audio": ev["audio"]})
+                        elif ev.get("type") == "speech.audio.error":
+                            await out.put({"type": "error", "message": f"TTS: {ev.get('error')}"})
+        except Exception as e:
+            await out.put({"type": "error", "message": f"TTS: {type(e).__name__}: {e}"})
+        finally:
+            await out.put(None)
+
+    tasks = [asyncio.create_task(llm()), asyncio.create_task(tts())]
+
+    async def events():
+        try:
+            while (ev := await out.get()) is not None:
+                yield f"data: {json.dumps(ev)}\n\n"
+            yield f"data: {json.dumps({'type': 'done', 'total': round(time.time() - t0, 3)})}\n\n"
+        finally:  # also runs when the browser aborts (barge-in): stop LLM and TTS
+            for t in tasks:
+                t.cancel()
+            await c.aclose()
+    return StreamingResponse(events(), media_type="text/event-stream",
+                             headers={"Cache-Control": "no-cache", "X-Accel-Buffering": "no"})
 
 
 @app.get("/api/tts/voices", dependencies=[Depends(auth)])
@@ -535,6 +698,30 @@ def stop_update():
     return {"stopped": True}
 
 
-if __name__ == "__main__":
+TLS_DIR = os.environ.get("SPEECH_SPARK_TLS", "/etc/speech-spark/tls")
+
+
+class Server(uvicorn.Server):
+    """Two servers (http and https) share one process; signals are handled once for both."""
+    def capture_signals(self):
+        import contextlib
+        return contextlib.nullcontext()
+
+
+async def serve():
+    import signal
     pcfg = load_config("panel")
-    uvicorn.run(app, host=pcfg["host"], port=pcfg["port"])
+    servers = [Server(uvicorn.Config(app, host=pcfg["host"], port=pcfg["port"]))]
+    cert, key = os.path.join(TLS_DIR, "cert.pem"), os.path.join(TLS_DIR, "key.pem")
+    # Browsers only allow the microphone on https (or localhost); the voice chat needs it.
+    if pcfg.get("https_port") and os.path.exists(cert) and os.path.exists(key):
+        servers.append(Server(uvicorn.Config(app, host=pcfg["host"], port=pcfg["https_port"],
+                                             ssl_certfile=cert, ssl_keyfile=key)))
+    loop = asyncio.get_running_loop()
+    for sig in (signal.SIGINT, signal.SIGTERM):
+        loop.add_signal_handler(sig, lambda: [setattr(x, "should_exit", True) for x in servers])
+    await asyncio.gather(*(x.serve() for x in servers))
+
+
+if __name__ == "__main__":
+    asyncio.run(serve())

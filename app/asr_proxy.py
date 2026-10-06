@@ -6,6 +6,7 @@ requests and streams text with `stream=true` (OpenAI `transcription.chunk` SSE e
 This service sits on the public ASR port and adds the API key, the default language,
 language names besides ISO codes, `verbose_json`, and the counters the panel shows.
 """
+import asyncio
 import json
 import os
 import subprocess
@@ -90,6 +91,40 @@ def iso_language(lang):
     if lang.lower() == "auto":
         return None
     return NAME_TO_ISO.get(lang.lower(), lang.lower())
+
+
+def silence_wav(seconds=1.0, rate=16000):
+    """A short, almost silent 16 kHz mono WAV for the warm-up request."""
+    import struct
+    n = int(seconds * rate)
+    pcm = b"".join(struct.pack("<h", (i * 7919) % 64 - 32) for i in range(n))  # faint noise, not pure zeros
+    return (b"RIFF" + struct.pack("<I", 36 + len(pcm)) + b"WAVEfmt " + struct.pack("<IHHIIHH", 16, 1, 1, rate, rate * 2, 2, 16)
+            + b"data" + struct.pack("<I", len(pcm)) + pcm)
+
+
+async def warm_up():
+    """One short request right after the engine comes up, so the first real request does not
+    pay for the remaining compilation and cache warm-up."""
+    try:
+        t0 = time.time()
+        r = await client.post(engine_url("/v1/audio/transcriptions"), data={"model": cfg["model"]},
+                              files={"file": ("warmup.wav", silence_wav(), "audio/wav")})
+        print(f"warm-up: HTTP {r.status_code} in {time.time() - t0:.1f} s", flush=True)
+    except httpx.HTTPError as e:
+        print(f"warm-up failed: {e}", flush=True)
+
+
+@app.on_event("startup")
+async def watch_engine():
+    async def loop():
+        ready = False
+        while True:
+            now = (await engine_status())[0] == "ready"
+            if now and not ready:
+                await warm_up()
+            ready = now
+            await asyncio.sleep(5)
+    asyncio.create_task(loop())
 
 
 @app.get("/health")

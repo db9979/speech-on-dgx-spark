@@ -65,7 +65,7 @@ say "System packages"
 export DEBIAN_FRONTEND=noninteractive
 apt-get update -q
 # ninja-build + build-essential: vLLM / FlashInfer compile kernels at first start (JIT)
-apt-get install -y -q python3 python3-venv python3-dev build-essential ninja-build git ffmpeg sox libsox-fmt-all libsndfile1 curl jq iproute2
+apt-get install -y -q python3 python3-venv python3-dev build-essential ninja-build git openssl ffmpeg sox libsox-fmt-all libsndfile1 curl jq iproute2
 PY=$(command -v python3)
 
 # ---------------------------------------------------------------- user and dirs
@@ -135,9 +135,33 @@ esac
 if jq -e '.asr.model | test("0.6B")' "$ETC/config.json" >/dev/null; then
   case "$(jq -r .asr.engine_mem "$ETC/config.json")" in 0.045|0.025) jqi '.asr.engine_mem=0.035' ;; esac
 fi
+# The voice chat in the panel talks to the qwen38 LLM: take its API key from the user who
+# installed qwen38 (they run this script with sudo), unless one is set already.
+if [ -z "$(jq -r '.chat.llm_key // ""' "$ETC/config.json")" ] && [ -n "${SUDO_USER:-}" ]; then
+  qkey="$(getent passwd "$SUDO_USER" | cut -d: -f6)/.config/qwen38/api-key"
+  if [ -s "$qkey" ]; then
+    jqi --arg k "$(tr -d ' \n' <"$qkey")" '.chat.llm_key=$k'
+    say "Voice chat: using the qwen38 API key from $qkey"
+  fi
+fi
 chown "$SVC_USER:$SVC_USER" "$ETC/config.json"; chmod 640 "$ETC/config.json"
 
 cfg() { jq -r "$1" "$ETC/config.json"; }
+
+# Browsers only allow the microphone on https (or localhost), so the panel also listens on an
+# https port with a self-signed certificate for the voice chat.
+TLS="$ETC/tls"
+if [ "$(cfg '.panel.https_port // 0')" != 0 ] && [ ! -s "$TLS/cert.pem" ]; then
+  say "Creating a self-signed certificate for the panel's https port (needed for the microphone)"
+  mkdir -p "$TLS"
+  san="DNS:localhost,DNS:$(hostname),DNS:$(hostname).local,IP:127.0.0.1"
+  for ip in $(hostname -I 2>/dev/null); do case "$ip" in *:*) ;; *) san="$san,IP:$ip" ;; esac; done
+  openssl req -x509 -newkey rsa:2048 -nodes -days 3650 -subj "/CN=$(hostname) speech-spark" \
+    -addext "subjectAltName=$san" -keyout "$TLS/key.pem" -out "$TLS/cert.pem" >/dev/null 2>&1 \
+    || warn "could not create the certificate; the voice chat then only works on http://localhost"
+fi
+if [ -d "$TLS" ]; then chown -R "$SVC_USER:$SVC_USER" "$TLS"; chmod 700 "$TLS"; chmod 600 "$TLS"/key.pem 2>/dev/null || true; fi
+HTTPS_PORT=$(cfg '.panel.https_port // 0')
 ASR_PORT=$(cfg .asr.port); TTS_PORT=$(cfg .tts.port); PANEL_PORT=$(cfg .panel.port)
 BACKEND=$(cfg .tts.backend); ASR_BACKEND=$(cfg .asr.backend)
 [ "$(cfg .tts.enabled)" = true ] || WITH_TTS=0
@@ -146,6 +170,7 @@ BACKEND=$(cfg .tts.backend); ASR_BACKEND=$(cfg .asr.backend)
 # ---------------------------------------------------------------- ports
 say "Checking ports (dgx-spark-qwen38 uses 30000-30099)"
 ports="$ASR_PORT $TTS_PORT $PANEL_PORT"
+[ "$HTTPS_PORT" != 0 ] && ports="$ports $HTTPS_PORT"
 [ "$BACKEND" = vllm-omni ] && ports="$ports $(cfg .tts.engine_port) $(cfg .tts.voicedesign_port)"
 [ "$ASR_BACKEND" = vllm ] && ports="$ports $(cfg .asr.engine_port)"
 for p in $ports; do
@@ -522,6 +547,7 @@ cat <<EOF
 
 ------------------------------------------------------------------
  Panel:     http://$IP:$PANEL_PORT   (user: anything, password: $PASSWORD)
+ Voice chat: https://$IP:$HTTPS_PORT  (panel tab "Gespräch"; accept the self-signed certificate once)
  ASR API:   http://$IP:$ASR_PORT/v1/audio/transcriptions   (backend: $ASR_BACKEND)
  TTS API:   http://$IP:$TTS_PORT/v1/audio/speech   (backend: $BACKEND)
  API key:   ${KEY:-none}

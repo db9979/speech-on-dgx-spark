@@ -44,10 +44,19 @@
   },
   "panel": {
     "host": "0.0.0.0",
-    "port": 31080
+    "port": 31080,
+    "https_port": 31443
   },
   "memory": {
     "reserve_gib": 10,
     "guard": true
+  },
+  "chat": {
+    "llm_url": "http://127.0.0.1:30001/v1",
+    "llm_key": "",
+    "llm_model": "",
+    "system_prompt": "Du bist ein freundlicher Sprachassistent. Deine Antworten werden vorgelesen: antworte kurz und natürlich in ganzen Sätzen, ohne Listen, Tabellen, Markdown, Code oder Emojis. Antworte in der Sprache, in der du angesprochen wirst.",
+    "thinking": false,
+    "max_tokens": 600
   }
 }

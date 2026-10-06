@@ -134,7 +134,7 @@ def speak_numbers(text, language, mode="words"):
             return m.group(0) if out is None else f" {out} "
         t = re.sub(pattern, repl, t, flags=flags)
 
-    dative_before = r"(?:\b(?:am|vom|zum|beim|im|ab|bis|seit|dem|den)\s+)"
+    dative_before = r"(?:\b(?i:am|vom|zum|beim|im|ab|bis|seit|dem|den)\s+)"
 
     # Phone numbers: +49 171 1234567, 0171/1234567, (030) 123 456-78 -> blocks with pauses
     def phone(m):
@@ -175,7 +175,7 @@ def speak_numbers(text, language, mode="words"):
             return f"{pre}{sp.ordinal(m.group(2), bool(pre))} {name}" + (f" {sp.year(y)}" if y else "")
         sub(r"(" + dative_before + r")?\b(\d{1,2})\.\s*(" + MONTH_DE + r")(?:\s+(\d{4}))?", dmonth)
         # "der 3. Platz", "am 2. Tag": ordinals after an article or preposition
-        sub(r"(\b(?:der|die|das|den|dem|des|am|im|zum|zur|vom|beim)\s+)(\d{1,3})\.(?=\s+[A-ZÄÖÜ])",
+        sub(r"(\b(?i:der|die|das|den|dem|des|am|im|zum|zur|vom|beim)\s+)(\d{1,3})\.(?=\s+[A-ZÄÖÜ])",
             lambda m: m.group(1) + sp.ordinal(m.group(2), m.group(1).strip().lower() in
                                                ("den", "dem", "des", "am", "im", "zum", "zur", "vom", "beim")))
     else:

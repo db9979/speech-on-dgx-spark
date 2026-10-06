@@ -12,6 +12,10 @@ sudo ./install.sh
 
 Am Ende gibt das Skript die Adresse des Panels, das Passwort und den API-Schlüssel aus. Danach macht es einen Rundlauf-Test: TTS spricht einen Satz (auch gestreamt, mit Zeit bis zum ersten Ton), ASR transkribiert ihn wieder. Alles läuft nativ als systemd-Dienste, ohne Docker.
 
+## Sprach-Chat
+
+Der Reiter **Gespräch** braucht das Mikrofon, und Browser erlauben das nur über https. Das Panel läuft deshalb zusätzlich auf `https://SPARK:31443` mit einem selbst erstellten Zertifikat; der Browser warnt beim ersten Aufruf einmal. Die LLM-Verbindung steht unter Konfiguration → Sprach-Chat (Standard: qwen38 auf `http://127.0.0.1:30001/v1`). Den API-Schlüssel von qwen38 übernimmt der Installer aus `~/.config/qwen38/api-key` des Benutzers, der `sudo ./install.sh` aufruft. Das Nachdenken des Modells ist für den Chat aus, damit die Antwort sofort beginnt.
+
 ## Aktualisieren
 
 Im Panel unter **System**: Dort steht die installierte Version, und es wird angezeigt, wenn auf GitHub eine neuere liegt (mit der Liste der Änderungen). **Update installieren** holt den neuen Stand und installiert ihn. Einstellungen, Modelle und Stimmen bleiben, das Protokoll läuft live mit. Schlägt die Installation fehl, laufen die Dienste mit der alten Version weiter.
@@ -74,6 +78,7 @@ Alle Dienste laufen als Systembenutzer `speech`. Per sudoers darf das Panel die 
 - **Testen**: eine Audiodatei hochladen und transkribieren lassen oder Text eingeben und anhören.
 - **Stimmen**: Referenzaufnahmen zum Klonen verwalten (nur mit einem `Base`-TTS-Modell).
 - **Einbinden**: fertige Werte zum Kopieren für Open WebUI und andere OpenAI-kompatible Apps, dazu Beispiele für curl und Python.
+- **Gespräch**: Sprach-Chat mit dem LLM von dgx-spark-qwen38. Sprechen (oder tippen), die Antwort kommt als Text und gestreamte Sprache, Satz für Satz, während das LLM noch schreibt. Freihändig hört das Panel nach jeder Antwort wieder zu; Leertaste oder „Sprechen“ unterbricht. Unter dem Gespräch steht, wie lange Spracherkennung, erstes LLM-Wort und erster Ton gedauert haben.
 - **Logs**: journald-Ausgabe der Dienste.
 
 Das Panel gibt es auf Deutsch und Englisch; der Knopf oben rechts schaltet um (Standard: Sprache des Browsers).

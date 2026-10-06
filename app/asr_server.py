@@ -34,7 +34,16 @@ def load_model(cfg):
     if cfg.get("timestamps"):
         kwargs["forced_aligner"] = cfg["aligner_model"]
         kwargs["forced_aligner_kwargs"] = dict(dtype=dtype, device_map="cuda:0", attn_implementation="sdpa")
-    return Qwen3ASRModel.from_pretrained(cfg["model"], **kwargs)
+    model = Qwen3ASRModel.from_pretrained(cfg["model"], **kwargs)
+    # warm-up: the first transcription after loading is much slower than the rest
+    try:
+        import numpy as np
+        with tempfile.NamedTemporaryFile(suffix=".wav") as tmp:
+            sf.write(tmp.name, (np.random.default_rng(0).standard_normal(16000) * 0.001).astype("float32"), 16000)
+            model.transcribe(audio=tmp.name, language=None)
+    except Exception as e:
+        print(f"warm-up failed: {type(e).__name__}: {e}", flush=True)
+    return model
 
 
 

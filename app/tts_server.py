@@ -36,12 +36,24 @@ _clone_prompts = {}  # voice name -> (mtime, prompt)
 def load_model(cfg):
     check_memory(estimate_gib(cfg["model"]))
     from qwen_tts import Qwen3TTSModel
-    return Qwen3TTSModel.from_pretrained(
+    model = Qwen3TTSModel.from_pretrained(
         cfg["model"],
         device_map="cuda:0",
         dtype=torch_dtype(cfg["dtype"]),
         attn_implementation="sdpa",  # flash-attn does not build for GB10 (sm_121)
     )
+    # warm-up: the first generation after loading is much slower than the rest
+    try:
+        kind = getattr(model.model, "tts_model_type", None)
+        if kind == "custom_voice":
+            speakers = model.get_supported_speakers() or []
+            speaker = cfg.get("default_voice") if cfg.get("default_voice") in speakers else speakers[0]
+            model.generate_custom_voice(text="Hallo.", speaker=speaker, language="Auto")
+        elif kind == "voice_design":
+            model.generate_voice_design(text="Hallo.", instruct="ruhige Stimme", language="Auto")
+    except Exception as e:
+        print(f"warm-up failed: {type(e).__name__}: {e}", flush=True)
+    return model
 
 
 def model_kind():

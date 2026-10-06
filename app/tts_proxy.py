@@ -6,6 +6,7 @@ The engine (native vllm-omni venv, 127.0.0.1 only) does the work, including stre
 key, defaults (voice, language, format), routing of VoiceDesign requests to the second
 engine, and the counters the panel shows. Request and stream pass through unchanged.
 """
+import asyncio
 import base64
 import json
 import os
@@ -107,6 +108,41 @@ async def engine_voices(role):
     if voices:
         _voice_cache[role] = (time.time(), voices)
     return voices
+
+
+async def warm_up(role):
+    """One short request right after an engine comes up, so the first real request does not
+    pay for the remaining compilation and cache warm-up."""
+    model, port = engines()[role]
+    kind = model_kind(model)
+    if kind == "base":
+        return  # voice cloning needs a reference voice; nothing generic to say
+    body = {"input": "Hallo, ich bin bereit.", "model": model, "response_format": "pcm", "language": "Auto"}
+    if kind == "voice_design":
+        body.update(task_type="VoiceDesign", instructions="ruhige Stimme")
+    else:
+        voices = await engine_voices(role)
+        body["voice"] = cfg.get("default_voice") if cfg.get("default_voice") in voices else (voices or [None])[0]
+    try:
+        t0 = time.time()
+        r = await client.post(f"http://127.0.0.1:{port}/v1/audio/speech", json=body)
+        print(f"warm-up {role}: HTTP {r.status_code} in {time.time() - t0:.1f} s", flush=True)
+    except httpx.HTTPError as e:
+        print(f"warm-up {role} failed: {e}", flush=True)
+
+
+@app.on_event("startup")
+async def watch_engines():
+    async def loop():
+        ready = {}
+        while True:
+            for role in engines():
+                now = (await engine_status(role))[0] == "ready"
+                if now and not ready.get(role):
+                    await warm_up(role)
+                ready[role] = now
+            await asyncio.sleep(5)
+    asyncio.create_task(loop())
 
 
 @app.get("/health")
