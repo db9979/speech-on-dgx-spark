@@ -42,7 +42,6 @@ def calm_text(t):
     t = re.sub(r"(?:!+\?|\?!+)", "?", t)            # "?!" -> "?"
     t = t.replace("!", ".").replace("\u2026", ".")     # "!" and "…" -> "."
     t = re.sub(r"\.(?:\s*\.)+", ".", t)
-    t = re.sub(r"(^|[.?] )([a-zäöü])", lambda m: m.group(1) + m.group(2).upper(), t)
     return t
 
 
@@ -80,6 +79,18 @@ def number_language(language, text):
         return None
     de, en = len(GERMAN_HINT.findall(text)), len(ENGLISH_HINT.findall(text))
     return "de" if de >= en else "en"
+
+
+def guess_language(text):
+    """'German', 'English' or None when the text does not clearly show one of them.
+    With language "Auto" the model guesses per request, so one English word ("Feedback")
+    can switch accent and tone in the middle of an answer."""
+    de, en = len(GERMAN_HINT.findall(text)), len(ENGLISH_HINT.findall(text))
+    if de >= 2 and de > 2 * en:
+        return "German"
+    if en >= 2 and en > 2 * de:
+        return "English"
+    return None
 
 
 class Speaker:

@@ -21,7 +21,7 @@ from fastapi.middleware.cors import CORSMiddleware
 from fastapi.responses import Response, StreamingResponse
 
 from common import api_key_dependency, engine_crash_reason, load_config, quiet_access_log
-from textnorm import clean_text, speak_numbers
+from textnorm import clean_text, guess_language, speak_numbers
 
 STATE_DIR = os.environ.get("SPEECH_SPARK_STATE", "/var/lib/speech-spark/state")
 LANGUAGES = ["auto", "Chinese", "English", "Japanese", "Korean", "German", "French",
@@ -225,6 +225,8 @@ async def speech(request: Request):
     if not body.get("language") or str(body["language"]).lower() == "auto":
         lang = cfg.get("default_language") or "auto"
         body["language"] = "Auto" if lang.lower() == "auto" else lang
+        if body["language"] == "Auto":
+            body["language"] = guess_language(body["input"]) or "Auto"
     if cfg.get("numbers", "words") != "off":
         try:
             body["input"] = speak_numbers(body["input"], body["language"], cfg.get("numbers", "words"))

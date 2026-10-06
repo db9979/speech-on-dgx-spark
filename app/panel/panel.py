@@ -18,6 +18,7 @@ from fastapi.responses import FileResponse, Response, StreamingResponse
 from fastapi.security import HTTPBasic, HTTPBasicCredentials
 
 sys.path.insert(0, os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
+from textnorm import guess_language  # noqa: E402
 from common import CONFIG_PATH, estimate_gib, journal, load_config, mem_available_gib, quiet_access_log  # noqa: E402
 
 VOICES_DIR = os.environ.get("SPEECH_SPARK_VOICES", "/var/lib/speech-spark/voices")
@@ -508,9 +509,32 @@ async def chat(request: Request):
             await sentences.put(None)
 
     async def tts():
-        first = True
+        first, played_until = True, 0.0
         try:
-            while (text := await sentences.get()) is not None:
+            done = False
+            while not done:
+                text = await sentences.get()
+                if text is None:
+                    break
+                # Every TTS request starts its own intonation, so sentence-by-sentence speech
+                # wanders in tone. Only the first sentence goes alone (fast first audio); after
+                # that, everything the LLM has written meanwhile is spoken as one piece.
+                # Waiting for more text is fine while the listener still has buffered audio.
+                while not first and len(text) < 300:
+                    slack = played_until - time.time() - 1.0
+                    try:
+                        nxt = (sentences.get_nowait() if not sentences.empty() or slack <= 0
+                               else await asyncio.wait_for(sentences.get(), slack))
+                    except (asyncio.QueueEmpty, asyncio.TimeoutError):
+                        break
+                    if nxt is None:
+                        done = True
+                        break
+                    text += "\n" + nxt  # keeps list markers at line starts for clean_text
+                if "language" not in tts_body:  # one language for the whole answer
+                    lang = guess_language(" ".join([messages[-1]["content"], text]))
+                    if lang:
+                        tts_body["language"] = lang
                 req = dict(tts_body, input=text, stream=True, response_format="pcm")
                 async with c.stream("POST", tts_url, json=req, headers=api_headers()) as r:
                     if r.status_code != 200:
@@ -527,7 +551,10 @@ async def chat(request: Request):
                         if ev.get("type") == "speech.audio.delta" and ev.get("audio"):
                             if first:
                                 first = False
+                                played_until = time.time()
                                 await out.put({"type": "timing", "first_audio": round(time.time() - t0, 3)})
+                            # 16-bit mono PCM at 24 kHz: 48000 bytes per second of audio
+                            played_until = max(played_until, time.time()) + len(ev["audio"]) * 3 / 4 / 48000
                             await out.put({"type": "audio", "audio": ev["audio"]})
                         elif ev.get("type") == "speech.audio.error":
                             await out.put({"type": "error", "message": f"TTS: {ev.get('error')}"})
