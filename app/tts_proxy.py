@@ -24,6 +24,7 @@ from common import api_key_dependency, engine_crash_reason, load_config, quiet_a
 from textnorm import clean_text, guess_language, speak_numbers
 
 STATE_DIR = os.environ.get("SPEECH_SPARK_STATE", "/var/lib/speech-spark/state")
+VOICES_DIR = os.environ.get("SPEECH_SPARK_VOICES", "/var/lib/speech-spark/voices")  # panel tab "Stimmen"
 LANGUAGES = ["auto", "Chinese", "English", "Japanese", "Korean", "German", "French",
              "Russian", "Portuguese", "Spanish", "Italian"]
 PCM_BYTES_PER_S = 24000 * 2  # Qwen3-TTS: 24 kHz, 16 bit, mono
@@ -94,7 +95,54 @@ async def engine_status(role):
     return "stopped", f"{unit} is {active}"
 
 
+def clone_voices():
+    try:
+        return sorted(f[:-4] for f in os.listdir(VOICES_DIR) if f.endswith(".wav"))
+    except OSError:
+        return []
+
+
+_ref_cache = {}  # voice -> (mtime, data URL, transcript)
+
+
+def clone_reference(name):
+    """The recorded reference of a cloned voice as vllm-omni's Base task wants it."""
+    wav = os.path.join(VOICES_DIR, name + ".wav")
+    mtime = os.path.getmtime(wav)
+    cached = _ref_cache.get(name)
+    if cached and cached[0] == mtime:
+        return cached[1], cached[2]
+    with open(wav, "rb") as f:
+        url = "data:audio/wav;base64," + base64.b64encode(f.read()).decode()
+    txt = os.path.join(VOICES_DIR, name + ".txt")
+    text = open(txt).read().strip() if os.path.exists(txt) else ""
+    _ref_cache[name] = (mtime, url, text)
+    return url, text
+
+
+def apply_clone(body):
+    """Base checkpoints only clone: turn the voice name into the stored reference recording."""
+    if body.get("ref_audio") or body.get("speaker_embedding"):
+        body["task_type"] = "Base"
+        return
+    known = {v.lower(): v for v in clone_voices()}
+    if not known:
+        raise HTTPException(400, "the Base model needs a cloned voice: record one in the panel (tab Stimmen/Voices)")
+    voice = str(body.get("voice") or "")
+    name = known.get(voice.lower()) or known.get(str(cfg.get("default_voice", "")).lower()) or next(iter(known.values()))
+    ref, text = clone_reference(name)
+    body.update(task_type="Base", ref_audio=ref)
+    if text:
+        body["ref_text"] = text
+    else:
+        body["x_vector_only_mode"] = True  # without a transcript only the voice timbre is used
+    body.pop("voice", None)
+    body.pop("instructions", None)  # Base checkpoints do not follow instructions
+
+
 async def engine_voices(role):
+    if model_kind(engines()[role][0]) == "base":
+        return clone_voices()
     cached = _voice_cache.get(role)
     if cached and time.time() - cached[0] < 60:
         return cached[1]
@@ -115,10 +163,12 @@ async def warm_up(role):
     pay for the remaining compilation and cache warm-up."""
     model, port = engines()[role]
     kind = model_kind(model)
-    if kind == "base":
-        return  # voice cloning needs a reference voice; nothing generic to say
     body = {"input": "Hallo, ich bin bereit.", "model": model, "response_format": "pcm", "language": "Auto"}
-    if kind == "voice_design":
+    if kind == "base":
+        if not clone_voices():
+            return  # nothing to clone yet
+        apply_clone(body)
+    elif kind == "voice_design":
         body.update(task_type="VoiceDesign", instructions="ruhige Stimme")
     else:
         voices = await engine_voices(role)
@@ -250,7 +300,9 @@ async def speech(request: Request):
     # A fixed seed keeps the voice consistent when a client sends a reply sentence by sentence.
     if body.get("seed") is None and isinstance(cfg.get("seed"), int) and cfg["seed"] >= 0:
         body["seed"] = cfg["seed"]
-    if role == "main" and model_kind(model) != "voice_design":
+    if role == "main" and model_kind(model) == "base":
+        apply_clone(body)
+    elif role == "main" and model_kind(model) != "voice_design":
         known = {v.lower(): v for v in await engine_voices(role)}
         voice = str(body.get("voice") or cfg.get("default_voice") or "")
         # unknown names (e.g. OpenAI's "alloy") fall back to the configured default voice
