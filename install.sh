@@ -132,6 +132,11 @@ case "$(jq -c '[.tts.engine_mem_talker, .tts.engine_mem_code2wav]' "$ETC/config.
 esac
 # A 2-frame first chunk (0.16 s of audio) ran out before the next 25-frame chunk was ready.
 [ "$(jq -r .tts.initial_chunk_frames "$ETC/config.json")" = 2 ] && jqi '.tts.initial_chunk_frames=8'
+# The first voice-chat prompt gave pompous, overexcited answers; replace it if untouched.
+OLD_PROMPT='Du bist ein freundlicher Sprachassistent. Deine Antworten werden vorgelesen: antworte kurz und natürlich in ganzen Sätzen, ohne Listen, Tabellen, Markdown, Code oder Emojis. Antworte in der Sprache, in der du angesprochen wirst.'
+if [ "$(jq -r .chat.system_prompt "$ETC/config.json")" = "$OLD_PROMPT" ]; then
+  jqi --slurpfile d "$INSTALL_FROM/app/config.default.json" '.chat.system_prompt=$d[0].chat.system_prompt'
+fi
 # the 0.6B ASR model needs about half the engine share of the 1.7B one
 # (0.025 was too small: "No available memory for the cache blocks" on the Spark)
 if jq -e '.asr.model | test("0.6B")' "$ETC/config.json" >/dev/null; then

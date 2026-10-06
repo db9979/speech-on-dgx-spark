@@ -127,6 +127,8 @@ curl -N http://SPARK:31002/v1/audio/speech -H "Authorization: Bearer $KEY" -H 'C
 
 **Laughing and mood swings:** the model reads emojis, "haha", `*laughs*` and markdown as cues and laughs or changes tone. The server removes them before synthesis (Konfiguration → TTS → clean text, on by default).
 
+**Overacting:** exclamation marks and interjections ("Oh", "Wow") make the voice act out excitement. With "speak calmly" (on by default) the server turns "!" into "." and drops such interjections at the start of a sentence. The default voice-chat prompt also asks the LLM for plain, calm everyday language.
+
 **Numbers:** the server writes numbers out before synthesis, because the model guesses otherwise. Dates, times, money, percent and decimals become words ("on 2026-10-06 at 9:30, $49.90" → "on October sixth, twenty twenty-six at nine thirty, forty-nine dollars ninety"), phone numbers become pairs. Konfiguration → TTS → reading numbers: as words (default), in pairs, digit by digit or unchanged. Works for German and English.
 
 **Speaking style:** `"instructions": "calm and friendly, rather slow"` in the request. Without it, the default instruction from Konfiguration → TTS applies. Only the 1.7B models (CustomVoice, VoiceDesign) follow instructions; the 0.6B models ignore them (per the Qwen model card).

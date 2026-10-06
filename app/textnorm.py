@@ -33,7 +33,20 @@ MONTHS_EN = ["January", "February", "March", "April", "May", "June", "July", "Au
 MONTH_DE = r"(?:Jan(?:uar)?|Feb(?:ruar)?|März|Mär|Apr(?:il)?|Mai|Juni?|Juli?|Aug(?:ust)?|Sep(?:t(?:ember)?)?|Okt(?:ober)?|Nov(?:ember)?|Dez(?:ember)?)\.?"
 
 
-def clean_text(text):
+# Exclamations and interjections make the model act out emotion; calm mode flattens them.
+INTERJECTION = re.compile(r"(?im)(^|(?<=[.!?:]) )(?:oh je|ohje|oje|na ja|oh+|ah+|aha|ach|hach|wow|hm+|uff|juhu|yay|hurra|whoa|ooh|yeah|tja)\b[,!.…]*\s+(?=\w)")
+
+
+def calm_text(t):
+    t = INTERJECTION.sub(r"\1", t)
+    t = re.sub(r"(?:!+\?|\?!+)", "?", t)            # "?!" -> "?"
+    t = t.replace("!", ".").replace("\u2026", ".")     # "!" and "…" -> "."
+    t = re.sub(r"\.(?:\s*\.)+", ".", t)
+    t = re.sub(r"(^|[.?] )([a-zäöü])", lambda m: m.group(1) + m.group(2).upper(), t)
+    return t
+
+
+def clean_text(text, calm=False):
     t = ACTION.sub(" ", str(text))
     t = EMOJI.sub(" ", t)
     t = LAUGH.sub(" ", t)
@@ -47,6 +60,8 @@ def clean_text(text):
     t = re.sub(r"[ \t]+", " ", t)
     t = re.sub(r"\s+([,;:.!?])", r"\1", t)             # "witzig ," -> "witzig,"
     t = re.sub(r"(^|\n)[\s,;:.!?]+", r"\1", t)          # leftovers at line starts
+    if calm:
+        t = calm_text(t)
     return re.sub(r"\s*\n\s*", "\n", t).strip()
 
 

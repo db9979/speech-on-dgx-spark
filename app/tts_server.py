@@ -138,7 +138,7 @@ def speech(req: SpeechRequest):
     instruct = req.instruct if req.instruct is not None else cfg.get("default_instruct", "")
     text = req.input
     if cfg.get("clean_text", True):
-        text = clean_text(text)
+        text = clean_text(text, calm=cfg.get("calm", True))
     if cfg.get("numbers", "words") != "off":
         try:
             text = speak_numbers(text, lang, cfg.get("numbers", "words"))

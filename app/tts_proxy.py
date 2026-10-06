@@ -212,7 +212,7 @@ async def speech(request: Request):
         raise HTTPException(503, f"TTS engine {status}: {error or ''}".strip())
 
     if cfg.get("clean_text", True):
-        body["input"] = clean_text(body["input"])
+        body["input"] = clean_text(body["input"], calm=cfg.get("calm", True))
         if not body["input"]:
             raise HTTPException(400, "nothing left to speak after removing emojis and markup")
     stream = bool(body.get("stream")) or body.get("stream_format") in ("sse", "audio")
