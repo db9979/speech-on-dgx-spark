@@ -130,6 +130,8 @@ case "$(jq -r .asr.engine_mem "$ETC/config.json")" in 0.08|0.05) jqi '.asr.engin
 case "$(jq -c '[.tts.engine_mem_talker, .tts.engine_mem_code2wav]' "$ETC/config.json")" in
   "[0.05,0.05]"|"[0.03,0.015]") jqi '.tts.engine_mem_talker=0.04 | .tts.engine_mem_code2wav=0.025 | .tts.engine_max_seqs=2' ;;
 esac
+# A 2-frame first chunk (0.16 s of audio) ran out before the next 25-frame chunk was ready.
+[ "$(jq -r .tts.initial_chunk_frames "$ETC/config.json")" = 2 ] && jqi '.tts.initial_chunk_frames=8'
 # the 0.6B ASR model needs about half the engine share of the 1.7B one
 # (0.025 was too small: "No available memory for the cache blocks" on the Spark)
 if jq -e '.asr.model | test("0.6B")' "$ETC/config.json" >/dev/null; then
