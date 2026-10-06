@@ -599,8 +599,16 @@ async def add_clone_voice(name: str = Form(...), text: str = Form(""), file: Upl
     if not re.fullmatch(r"[A-Za-z0-9_\-]{1,40}", name):
         raise HTTPException(400, "name: letters, digits, _ and - only")
     os.makedirs(VOICES_DIR, exist_ok=True)
+    data = await file.read()
+    if not data.startswith(b"RIFF"):  # mp3, m4a, webm, ...: the engine expects WAV
+        p = await asyncio.create_subprocess_exec(
+            "ffmpeg", "-nostdin", "-loglevel", "error", "-i", "pipe:0", "-ac", "1", "-ar", "24000", "-f", "wav", "pipe:1",
+            stdin=asyncio.subprocess.PIPE, stdout=asyncio.subprocess.PIPE, stderr=asyncio.subprocess.PIPE)
+        data, err = await p.communicate(data)
+        if p.returncode or not data:
+            raise HTTPException(400, f"could not read the audio file: {err.decode(errors='replace')[:200]}")
     with open(os.path.join(VOICES_DIR, name + ".wav"), "wb") as f:
-        f.write(await file.read())
+        f.write(data)
     txt = os.path.join(VOICES_DIR, name + ".txt")
     if text.strip():
         with open(txt, "w") as f:
@@ -608,6 +616,14 @@ async def add_clone_voice(name: str = Form(...), text: str = Form(""), file: Upl
     elif os.path.exists(txt):
         os.remove(txt)
     return {"ok": True}
+
+
+@app.get("/api/clone-voices/{name}.wav", dependencies=[Depends(auth)])
+def clone_voice_audio(name: str):
+    path = os.path.join(VOICES_DIR, name + ".wav")
+    if not re.fullmatch(r"[A-Za-z0-9_\-]{1,40}", name) or not os.path.exists(path):
+        raise HTTPException(404, "no such voice")
+    return FileResponse(path, media_type="audio/wav")
 
 
 @app.delete("/api/clone-voices/{name}", dependencies=[Depends(auth)])
