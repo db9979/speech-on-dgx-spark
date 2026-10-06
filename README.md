@@ -18,6 +18,8 @@ The panel switches between English and German (button at the top right).
 
 The **Gespräch** tab needs the microphone, and browsers only allow it over https. The panel therefore also listens on `https://SPARK:31443` with a self-signed certificate; the browser warns once. The LLM connection is under Configuration → voice chat (default: qwen38 at `http://127.0.0.1:30001/v1`). The installer takes the qwen38 API key from `~/.config/qwen38/api-key` of the user who runs `sudo ./install.sh`. Thinking is off for the chat so the answer starts right away. An animated assistant face shows whether it is listening, thinking or speaking; its mouth follows the voice. The same face sits in the bottom right corner of every tab, so you can talk from anywhere in the panel.
 
+**Start page and password:** the panel opens with the assistant, without a password, for everyone on the network. Monitoring, settings, voices and logs need the panel password (button "Settings", the login is kept for 30 days). Configuration → voice chat → "Assistant without password" turns this off; the password can be changed under Configuration → Panel. Scripts can still use HTTP Basic.
+
 **Your own voice:** under Voices you can record a reference straight from the microphone (read the suggested text, about 10 seconds); the panel fills in the transcript with the speech recognition. Cloning needs a Base model (Configuration → TTS → model `…-Base`), then set the new voice as the default voice. A German reference gives much steadier German than the built-in speakers, which are not native German speakers.
 
 ## Logs
@@ -72,7 +74,7 @@ dgx-spark-qwen38 is not touched.
 | Update `speech-spark-update` (runs only on demand) | `/opt/speech-spark/src` | |
 | Panel `speech-spark-panel` | `/opt/speech-spark/venv-panel` | 31080 |
 | Benchmark `speech-spark-bench` | `/usr/local/bin` | |
-| Configuration | `/etc/speech-spark/config.json`, password in `panel.env` | |
+| Configuration | `/etc/speech-spark/config.json`, password in `panel.env` (a password changed in the panel is stored as a hash in `/var/lib/speech-spark/state/panel-password` and wins) | |
 | Models, cloned voices | `/var/lib/speech-spark/hf`, `/var/lib/speech-spark/voices` | |
 
 All services run as the system user `speech`. A sudoers rule lets the panel start, stop and restart the speech services and engines and trigger the update, nothing else.

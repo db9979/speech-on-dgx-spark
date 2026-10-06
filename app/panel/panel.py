@@ -3,6 +3,8 @@ import asyncio
 import json
 import os
 import re
+import hashlib
+import hmac
 import secrets
 import shutil
 import subprocess
@@ -44,16 +46,67 @@ LANGS = ["auto", "Chinese", "English", "German", "French", "Spanish", "Italian",
          "Russian", "Japanese", "Korean", "Dutch", "Polish", "Turkish", "Arabic"]
 
 app = FastAPI(title="Speech on DGX Spark")
-security = HTTPBasic()
+security = HTTPBasic(auto_error=False)
 history = deque(maxlen=400)  # one sample every 3 s, ~20 min
 
 
-def auth(creds: HTTPBasicCredentials = Depends(security)):
-    if not PASSWORD:
+# Login: the voice assistant is open to everyone in the LAN (config chat.public), everything
+# else needs the panel password. The browser logs in once and keeps a cookie; scripts can still
+# send HTTP Basic. The password from the installer can be replaced in the panel; the new one is
+# stored as a PBKDF2 hash in the state directory (the panel cannot write /etc).
+PASSWORD_FILE = os.path.join(os.environ.get("SPEECH_SPARK_STATE", "/var/lib/speech-spark/state"), "panel-password")
+COOKIE = "speech_spark_admin"
+
+
+def _stored_hash():
+    try:
+        with open(PASSWORD_FILE) as f:
+            salt, digest = f.read().split()
+        return bytes.fromhex(salt), digest
+    except (OSError, ValueError):
+        return None
+
+
+def _hash(password, salt):
+    return hashlib.pbkdf2_hmac("sha256", password.encode(), salt, 200_000).hex()
+
+
+def password_set():
+    return bool(_stored_hash() or PASSWORD)
+
+
+def check_password(password):
+    stored = _stored_hash()
+    if stored:
+        return secrets.compare_digest(_hash(password, stored[0]), stored[1])
+    return bool(PASSWORD) and secrets.compare_digest(password.encode(), PASSWORD.encode())
+
+
+def _session_token():
+    """Derived from the current password: changing the password logs every browser out."""
+    stored = _stored_hash()
+    key = (stored[1] if stored else PASSWORD).encode()
+    return hmac.new(key, b"speech-spark-admin-session", hashlib.sha256).hexdigest()
+
+
+def is_admin(request: Request, creds: HTTPBasicCredentials | None):
+    if not password_set():
+        return True
+    if creds and check_password(creds.password):
+        return True
+    return secrets.compare_digest(request.cookies.get(COOKIE, ""), _session_token())
+
+
+def auth(request: Request, creds: HTTPBasicCredentials | None = Depends(security)):
+    if not is_admin(request, creds):
+        raise HTTPException(401, "login required")
+
+
+def assistant(request: Request, creds: HTTPBasicCredentials | None = Depends(security)):
+    """Voice chat endpoints: open when chat.public is on, otherwise like auth()."""
+    if load_config().get("chat", {}).get("public", True):
         return
-    ok = secrets.compare_digest(creds.password.encode(), PASSWORD.encode())
-    if not ok:
-        raise HTTPException(401, "wrong password", headers={"WWW-Authenticate": "Basic"})
+    auth(request, creds)
 
 
 def run(cmd, timeout=10):
@@ -147,9 +200,57 @@ async def sampler():
     asyncio.create_task(loop())
 
 
-@app.get("/", dependencies=[Depends(auth)])
+@app.get("/")
 def index():
-    return FileResponse(os.path.join(STATIC, "index.html"))
+    return FileResponse(os.path.join(STATIC, "index.html"), headers={"Cache-Control": "no-cache"})
+
+
+@app.get("/api/whoami")
+def whoami(request: Request, creds: HTTPBasicCredentials | None = Depends(security)):
+    cfg = load_config()
+    return {"admin": is_admin(request, creds), "public": cfg.get("chat", {}).get("public", True),
+            # what the assistant needs without the full configuration (which holds keys)
+            "assistant": {"default_voice": cfg["tts"].get("default_voice"),
+                          "asr_language": cfg["asr"].get("default_language"),
+                          "https_port": cfg["panel"].get("https_port")}}
+
+
+@app.post("/api/login")
+async def login(request: Request):
+    body = await request.json()
+    if not check_password(str(body.get("password", ""))):
+        await asyncio.sleep(1)  # slows down guessing
+        raise HTTPException(401, "wrong password")
+    r = Response('{"ok": true}', media_type="application/json")
+    r.set_cookie(COOKIE, _session_token(), max_age=30 * 86400, httponly=True, samesite="strict")
+    return r
+
+
+@app.post("/api/logout")
+def logout():
+    r = Response('{"ok": true}', media_type="application/json")
+    r.delete_cookie(COOKIE)
+    return r
+
+
+@app.post("/api/password", dependencies=[Depends(auth)])
+async def change_password(request: Request):
+    body = await request.json()
+    new = str(body.get("new", ""))
+    if len(new) < 6:
+        raise HTTPException(400, "the new password needs at least 6 characters")
+    if password_set() and not check_password(str(body.get("old", ""))):
+        await asyncio.sleep(1)
+        raise HTTPException(401, "current password is wrong")
+    salt = secrets.token_bytes(16)
+    os.makedirs(os.path.dirname(PASSWORD_FILE), exist_ok=True)
+    tmp = PASSWORD_FILE + ".tmp"
+    with open(os.open(tmp, os.O_WRONLY | os.O_CREAT | os.O_TRUNC, 0o600), "w") as f:
+        f.write(f"{salt.hex()} {_hash(new, salt)}\n")
+    os.replace(tmp, PASSWORD_FILE)
+    r = Response('{"ok": true}', media_type="application/json")
+    r.set_cookie(COOKIE, _session_token(), max_age=30 * 86400, httponly=True, samesite="strict")
+    return r
 
 
 @app.get("/api/status", dependencies=[Depends(auth)])
@@ -348,7 +449,7 @@ def languages():
     return LANGS
 
 
-@app.post("/api/test/asr", dependencies=[Depends(auth)])
+@app.post("/api/test/asr", dependencies=[Depends(assistant)])
 async def test_asr(file: UploadFile = File(...), language: str = Form("auto")):
     cfg = load_config()
     data = await file.read()
@@ -437,7 +538,7 @@ async def llm_model(c, ccfg, headers):
     return _llm_models[url]
 
 
-@app.post("/api/chat", dependencies=[Depends(auth)])
+@app.post("/api/chat", dependencies=[Depends(assistant)])
 async def chat(request: Request):
     body = await request.json()
     cfg = load_config()

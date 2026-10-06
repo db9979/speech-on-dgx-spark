@@ -16,6 +16,8 @@ Am Ende gibt das Skript die Adresse des Panels, das Passwort und den API-Schlüs
 
 Der Reiter **Gespräch** braucht das Mikrofon, und Browser erlauben das nur über https. Das Panel läuft deshalb zusätzlich auf `https://SPARK:31443` mit einem selbst erstellten Zertifikat; der Browser warnt beim ersten Aufruf einmal. Die LLM-Verbindung steht unter Konfiguration → Sprach-Chat (Standard: qwen38 auf `http://127.0.0.1:30001/v1`). Den API-Schlüssel von qwen38 übernimmt der Installer aus `~/.config/qwen38/api-key` des Benutzers, der `sudo ./install.sh` aufruft. Das Nachdenken des Modells ist für den Chat aus, damit die Antwort sofort beginnt. Ein animiertes Assistenten-Gesicht zeigt, ob es zuhört, nachdenkt oder spricht; der Mund folgt der Stimme. Dasselbe Gesicht sitzt auf jedem Reiter unten rechts, so lässt sich von überall im Panel sprechen.
 
+**Startseite und Passwort:** Das Panel öffnet mit dem Assistenten, ohne Passwort, für alle im Netz. Monitoring, Einstellungen, Stimmen und Logs brauchen das Panel-Passwort (Knopf „Einstellungen“, die Anmeldung hält 30 Tage). Unter Konfiguration → Sprach-Chat lässt sich „Assistent ohne Passwort“ abschalten; das Passwort ändert sich unter Konfiguration → Panel. Skripte können weiter HTTP Basic nutzen.
+
 **Eigene Stimme:** Unter „Stimmen“ lässt sich eine Referenz direkt mit dem Mikrofon aufnehmen (den vorgeschlagenen Text vorlesen, etwa 10 Sekunden); das Transkript füllt die Spracherkennung aus. Klonen braucht ein Base-Modell (Konfiguration → TTS → Modell `…-Base`), danach die neue Stimme als Standardstimme eintragen. Eine deutsche Referenz klingt im Deutschen deutlich gleichmäßiger als die festen Sprecher, die keine deutschen Muttersprachler sind.
 
 ## Logs
@@ -72,7 +74,7 @@ dgx-spark-qwen38 wird dabei nicht angefasst.
 | Update `speech-spark-update` (läuft nur auf Knopfdruck) | `/opt/speech-spark/src` | |
 | Panel `speech-spark-panel` | `/opt/speech-spark/venv-panel` | 31080 |
 | Messskript `speech-spark-bench` | `/usr/local/bin` | |
-| Konfiguration | `/etc/speech-spark/config.json`, Passwort in `panel.env` | |
+| Konfiguration | `/etc/speech-spark/config.json`, Passwort in `panel.env` (ein im Panel geändertes Passwort liegt als Hash in `/var/lib/speech-spark/state/panel-password` und hat Vorrang) | |
 | Modelle, geklonte Stimmen | `/var/lib/speech-spark/hf`, `/var/lib/speech-spark/voices` | |
 
 Alle Dienste laufen als Systembenutzer `speech`. Per sudoers darf das Panel die Speech-Dienste und Engines starten, stoppen und neu starten und das Update anstoßen, sonst nichts.

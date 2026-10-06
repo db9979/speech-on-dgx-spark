@@ -579,7 +579,7 @@ IP=$(hostname -I | awk '{print $1}')
 cat <<EOF
 
 ------------------------------------------------------------------
- Panel:     http://$IP:$PANEL_PORT   (user: anything, password: $PASSWORD)
+ Panel:     http://$IP:$PANEL_PORT   (opens with the assistant; settings need the password: $PASSWORD)
  Voice chat: https://$IP:$HTTPS_PORT  (panel tab "Gespräch"; accept the self-signed certificate once)
  ASR API:   http://$IP:$ASR_PORT/v1/audio/transcriptions   (backend: $ASR_BACKEND)
  TTS API:   http://$IP:$TTS_PORT/v1/audio/speech   (backend: $BACKEND)
