@@ -56,6 +56,9 @@ history = deque(maxlen=400)  # one sample every 3 s, ~20 min
 # stored as a PBKDF2 hash in the state directory (the panel cannot write /etc).
 PASSWORD_FILE = os.path.join(os.environ.get("SPEECH_SPARK_STATE", "/var/lib/speech-spark/state"), "panel-password")
 COOKIE = "speech_spark_admin"
+# Browsers keep sending HTTP Basic credentials from the old login dialog; after "log out" this
+# cookie makes the panel ignore them in that browser until the next password login.
+NO_BASIC = "speech_spark_no_basic"
 
 
 def _stored_hash():
@@ -92,7 +95,7 @@ def _session_token():
 def is_admin(request: Request, creds: HTTPBasicCredentials | None):
     if not password_set():
         return True
-    if creds and check_password(creds.password):
+    if creds and not request.cookies.get(NO_BASIC) and check_password(creds.password):
         return True
     return secrets.compare_digest(request.cookies.get(COOKIE, ""), _session_token())
 
@@ -223,6 +226,7 @@ async def login(request: Request):
         raise HTTPException(401, "wrong password")
     r = Response('{"ok": true}', media_type="application/json")
     r.set_cookie(COOKIE, _session_token(), max_age=30 * 86400, httponly=True, samesite="strict")
+    r.delete_cookie(NO_BASIC)
     return r
 
 
@@ -230,6 +234,7 @@ async def login(request: Request):
 def logout():
     r = Response('{"ok": true}', media_type="application/json")
     r.delete_cookie(COOKIE)
+    r.set_cookie(NO_BASIC, "1", max_age=365 * 86400, httponly=True, samesite="strict")
     return r
 
 
