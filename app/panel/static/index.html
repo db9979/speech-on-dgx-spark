@@ -700,6 +700,7 @@ async function ask(text,asrS){chatLog('user',text);chat.msgs.push({role:'user',c
         const ev=JSON.parse(line.slice(5));
         if(ev.type==='text'){full+=ev.delta;el.classList.remove('typing');el.textContent=full;$('fabtext').textContent=full;$('chatlog').scrollTop=1e9}
         else if(ev.type==='audio'){playPcm(ev.audio);chatSay(t('Spricht …','Speaking …'));startBarge()}
+        else if(ev.type==='truncated'){full=full.slice(0,full.length-ev.drop).trimEnd();el.textContent=full+' … '+t('(Längenlimit erreicht: Konfiguration → Sprach-Chat → Max. Tokens)','(length limit reached: Configuration → Voice chat → Max. tokens)')}
         else if(ev.type==='timing'){if(ev.llm_first_token!=null)llmS=ev.llm_first_token;if(ev.first_audio!=null)audioS=ev.first_audio}
         else if(ev.type==='error'){err=ev.code==='llm_auth'?t('Das LLM lehnt den API-Key ab (401). Trage den qwen38-Key unter Konfiguration → Sprach-Chat ein (steht auf dem Spark in ~/.config/qwen38/api-key) oder führe das Update aus, das ihn automatisch übernimmt.','The LLM rejected the API key (401). Enter the qwen38 key under Configuration → Voice chat (on the Spark it is in ~/.config/qwen38/api-key) or run the update, which imports it automatically.'):ev.message}}}}
   catch(e){if(e.name!=='AbortError')err=e.message}

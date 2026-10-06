@@ -599,10 +599,10 @@ async def chat(request: Request):
         try:
             model = await llm_model(c, ccfg, lheaders)
             payload = {"model": model, "messages": messages, "stream": True,
-                       "max_tokens": int(ccfg.get("max_tokens") or 600)}
+                       "max_tokens": int(ccfg.get("max_tokens") or 4096)}
             if not ccfg.get("thinking"):
                 payload["chat_template_kwargs"] = {"enable_thinking": False}
-            buf, first, think, n = "", True, False, 0
+            buf, first, think, n, finish = "", True, False, 0, None
             async with c.stream("POST", ccfg["llm_url"].rstrip("/") + "/chat/completions",
                                 json=payload, headers=lheaders) as r:
                 if r.status_code != 200:
@@ -614,9 +614,11 @@ async def chat(request: Request):
                     if data == "[DONE]":
                         break
                     try:
-                        delta = json.loads(data)["choices"][0].get("delta") or {}
+                        choice = json.loads(data)["choices"][0]
+                        delta = choice.get("delta") or {}
                     except (ValueError, KeyError, IndexError):
                         continue
+                    finish = choice.get("finish_reason") or finish
                     text = delta.get("content") or ""
                     if not text:
                         continue
@@ -636,6 +638,13 @@ async def chat(request: Request):
                     for x in done:
                         first = False
                         await sentences.put(x)
+            if finish == "length":
+                # The answer hit max_tokens mid-sentence: speak up to the last sentence end and
+                # tell the browser how much of the shown text to drop.
+                ends = [m.end() for m in BOUNDARY.finditer(buf + " ")]
+                keep = buf[:min(ends[-1], len(buf))] if ends else ""
+                await out.put({"type": "truncated", "drop": len(buf) - len(keep)})
+                buf = keep
             if buf.strip():
                 await sentences.put(buf.strip())
         except Exception as e:
