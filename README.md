@@ -20,6 +20,10 @@ The **Gespräch** tab needs the microphone, and browsers only allow it over http
 
 **Start page and password:** the panel opens with the assistant, without a password, for everyone on the network. Monitoring, settings, voices and logs need the panel password (button "Settings", the login is kept for 30 days). Configuration → voice chat → "Assistant without password" turns this off; the password can be changed under Configuration → Panel. Scripts can still use HTTP Basic.
 
+**As an app on your phone:** open `https://SPARK:31443` in the phone's browser, accept the certificate warning, then use "Add to Home screen" in the browser menu (iPhone: Safari → Share → "Add to Home Screen"). The assistant then starts full screen with its own icon. With the self-signed certificate Android creates a shortcut instead of an installed app; it works the same, it just does not show up in the app list.
+
+**Barge-in:** while the assistant speaks, the microphone keeps listening. Talking for about a quarter of a second interrupts the answer, and what you said becomes the next question. This relies on the browser's echo cancellation; if the assistant interrupts itself on loud speakers, use headphones or untick "barge in" below the chat.
+
 **Your own voice:** under Voices you can record a reference straight from the microphone (read the suggested text, about 10 seconds); the panel fills in the transcript with the speech recognition. Cloning needs a Base model (Configuration → TTS → model `…-Base`), then set the new voice as the default voice. A German reference gives much steadier German than the built-in speakers, which are not native German speakers.
 
 ## Logs

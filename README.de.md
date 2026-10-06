@@ -18,6 +18,10 @@ Der Reiter **Gespräch** braucht das Mikrofon, und Browser erlauben das nur übe
 
 **Startseite und Passwort:** Das Panel öffnet mit dem Assistenten, ohne Passwort, für alle im Netz. Monitoring, Einstellungen, Stimmen und Logs brauchen das Panel-Passwort (Knopf „Einstellungen“, die Anmeldung hält 30 Tage). Unter Konfiguration → Sprach-Chat lässt sich „Assistent ohne Passwort“ abschalten; das Passwort ändert sich unter Konfiguration → Panel. Skripte können weiter HTTP Basic nutzen.
 
+**Als App aufs Handy:** `https://SPARK:31443` im Handy-Browser öffnen, Zertifikatswarnung bestätigen, dann im Browser-Menü „Zum Startbildschirm hinzufügen“ (iPhone: Safari → Teilen → „Zum Home-Bildschirm“). Der Assistent startet dann mit eigenem Icon im Vollbild. Mit dem selbst erstellten Zertifikat legt Android eine Verknüpfung statt einer installierten App an; das funktioniert genauso, nur ohne Eintrag in der App-Liste.
+
+**Ins Wort fallen:** Während der Assistent spricht, hört das Mikrofon weiter zu. Wer etwa eine Viertelsekunde lang redet, unterbricht die Antwort, und das Gesagte wird gleich die nächste Frage. Das hängt an der Echounterdrückung des Browsers; unterbricht sich der Assistent mit lautem Lautsprecher selbst, hilft ein Kopfhörer oder der Haken „Ins Wort fallen“ unter dem Gespräch.
+
 **Eigene Stimme:** Unter „Stimmen“ lässt sich eine Referenz direkt mit dem Mikrofon aufnehmen (den vorgeschlagenen Text vorlesen, etwa 10 Sekunden); das Transkript füllt die Spracherkennung aus. Klonen braucht ein Base-Modell (Konfiguration → TTS → Modell `…-Base`), danach die neue Stimme als Standardstimme eintragen. Eine deutsche Referenz klingt im Deutschen deutlich gleichmäßiger als die festen Sprecher, die keine deutschen Muttersprachler sind.
 
 ## Logs

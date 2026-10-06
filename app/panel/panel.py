@@ -208,6 +208,40 @@ def index():
     return FileResponse(os.path.join(STATIC, "index.html"), headers={"Cache-Control": "no-cache"})
 
 
+# App files (installable assistant). Public like the start page: they hold no data.
+PUBLIC_FILES = {"icon.svg": "image/svg+xml", "icon-192.png": "image/png", "icon-512.png": "image/png",
+                "apple-touch-icon.png": "image/png", "favicon-32.png": "image/png",
+                "manifest.webmanifest": "application/manifest+json"}
+
+
+@app.get("/static/{name}")
+def static_file(name: str):
+    if name not in PUBLIC_FILES:
+        raise HTTPException(404, "not found")
+    return FileResponse(os.path.join(STATIC, name), media_type=PUBLIC_FILES[name],
+                        headers={"Cache-Control": "max-age=86400"})
+
+
+@app.get("/manifest.webmanifest")
+def manifest():
+    return static_file("manifest.webmanifest")
+
+
+@app.get("/apple-touch-icon.png")
+def apple_icon():
+    return static_file("apple-touch-icon.png")
+
+
+@app.get("/favicon.ico")
+def favicon():
+    return static_file("favicon-32.png")
+
+
+@app.get("/sw.js")
+def service_worker():  # served from / so it may control the whole panel
+    return FileResponse(os.path.join(STATIC, "sw.js"), media_type="text/javascript", headers={"Cache-Control": "no-cache"})
+
+
 @app.get("/api/whoami")
 def whoami(request: Request, creds: HTTPBasicCredentials | None = Depends(security)):
     cfg = load_config()
