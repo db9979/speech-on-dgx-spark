@@ -242,10 +242,18 @@ def service_worker():  # served from / so it may control the whole panel
     return FileResponse(os.path.join(STATIC, "sw.js"), media_type="text/javascript", headers={"Cache-Control": "no-cache"})
 
 
+def app_version():
+    try:
+        with open(os.path.join(os.path.dirname(os.path.abspath(__file__)), "..", "VERSION")) as f:
+            return f.read().strip()
+    except OSError:
+        return ""
+
+
 @app.get("/api/whoami")
 def whoami(request: Request, creds: HTTPBasicCredentials | None = Depends(security)):
     cfg = load_config()
-    return {"admin": is_admin(request, creds), "public": cfg.get("chat", {}).get("public", True),
+    return {"admin": is_admin(request, creds), "version": app_version(), "public": cfg.get("chat", {}).get("public", True),
             # what the assistant needs without the full configuration (which holds keys)
             "assistant": {"default_voice": cfg["tts"].get("default_voice"),
                           "asr_language": cfg["asr"].get("default_language"),
