@@ -82,6 +82,7 @@ for g in video render systemd-journal; do getent group "$g" >/dev/null && usermo
 install -d -o root -g root -m 755 "$PREFIX"
 install -d -o "$SVC_USER" -g "$SVC_USER" -m 750 "$ETC" "$VAR" "$VAR/hf" "$VAR/voices" "$VAR/state"
 install -d -o "$SVC_USER" -g "$SVC_USER" -m 700 "$VAR/users"   # profiles and their memory
+install -d -o "$SVC_USER" -g "$SVC_USER" -m 700 "$VAR/backups" # daily backups made by the panel
 chmod 755 "$VAR"
 
 # ---------------------------------------------------------------- own git clone for updates
@@ -314,7 +315,8 @@ if git -C "$PREFIX/src" rev-parse HEAD >/dev/null 2>&1; then
   g() { git -C "$PREFIX/src" log -1 --format="$1"; }
   jq -n --arg c "$(g %H)" --arg s "$(g %h)" --arg d "$(g %cI)" --arg m "$(g %s)" \
     --arg r "$(git -C "$PREFIX/src" remote get-url origin)" --arg e "vllm $VLLM_VERSION, vllm-omni $VLLM_OMNI_VERSION" \
-    '{commit: $c, short: $s, date: $d, subject: $m, remote: $r, branch: "main", engine: $e}' >"$PREFIX/VERSION.json"
+    --arg v "$(head -1 "$PREFIX/app/VERSION" 2>/dev/null)" \
+    '{commit: $c, short: $s, date: $d, subject: $m, remote: $r, branch: "main", engine: $e, version: $v}' >"$PREFIX/VERSION.json"
 else
   echo '{"commit": null, "subject": "installed without git"}' >"$PREFIX/VERSION.json"
 fi

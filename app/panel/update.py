@@ -13,6 +13,8 @@ from fastapi.responses import Response
 sys.path.insert(0, os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
 from common import journal  # noqa: E402
 from core import PREFIX, auth, run  # noqa: E402
+import backup  # noqa: E402
+import guard  # noqa: E402
 
 router = APIRouter()
 
@@ -27,6 +29,16 @@ def installed_version():
             return json.load(f)
     except Exception:
         return {"commit": None, "subject": "unknown"}
+
+
+def previous_version():
+    """The version that ran before the last update (update.sh keeps it), or None."""
+    try:
+        with open(os.path.join(PREFIX, "VERSION.prev.json")) as f:
+            d = json.load(f)
+        return d if re.fullmatch(r"[0-9a-f]{40}", str(d.get("commit"))) else None
+    except Exception:
+        return None
 
 
 def github_repo(remote):
@@ -144,13 +156,42 @@ def update_progress_api(log: bool = True):
 async def update_status(check: bool = False):
     code, out = run(["systemctl", "show", "speech-spark-update", "-p", "ActiveState,Result,ExecMainExitTimestamp"])
     props = dict(line.split("=", 1) for line in out.splitlines() if "=" in line)
-    return {"installed": installed_version(), "remote": await remote_state(force=check),
+    return {"installed": installed_version(), "previous": previous_version(), "remote": await remote_state(force=check),
             "running": props.get("ActiveState") in ("activating", "active"),
             "last_result": props.get("Result"), "last_finished": props.get("ExecMainExitTimestamp") or None}
 
 
+def _backup_first(why):
+    try:
+        backup.create(why)
+    except Exception as e:  # a failed backup does not block the update, but it is noted
+        guard.log("backup_failed", detail=f"{type(e).__name__}: {e}"[:200])
+
+
 @router.post("/api/update", dependencies=[Depends(auth)])
 def start_update():
+    _backup_first("before-update")
+    return _start()
+
+
+@router.post("/api/update/rollback", dependencies=[Depends(auth)])
+def rollback():
+    """Installs the version that ran before the last update again."""
+    prev = previous_version()
+    if not prev:
+        raise HTTPException(404, "no previous version known (it is kept from the next update on)")
+    _backup_first("before-rollback")
+    with open(os.path.join(os.path.dirname(UPDATE_PROGRESS), "update-target"), "w") as f:
+        f.write(prev["commit"])
+    guard.log("rollback", detail=f"back to {prev.get('version') or prev.get('short')}")
+    try:
+        return _start()
+    except HTTPException:
+        os.remove(os.path.join(os.path.dirname(UPDATE_PROGRESS), "update-target"))
+        raise
+
+
+def _start():
     code, out = run(["sudo", "-n", "/usr/bin/systemctl", "start", "--no-block", "speech-spark-update"], timeout=20)
     if code != 0:
         raise HTTPException(500, out or "could not start the update")

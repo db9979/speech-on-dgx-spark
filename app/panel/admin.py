@@ -16,6 +16,7 @@ from fastapi.responses import FileResponse, Response, StreamingResponse
 
 sys.path.insert(0, os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
 import guard  # noqa: E402
+import health  # noqa: E402
 import speakers  # noqa: E402
 import profiles  # noqa: E402
 from common import CONFIG_PATH, estimate_gib, journal, load_config  # noqa: E402
@@ -170,7 +171,8 @@ async def status():
     qwen38 = [{"unit": u, "state": unit_state(u), "mem_fraction": lane_fraction(u)}
               for u in QWEN38_UNITS if unit_exists(u)]
     return {"time": time.time(), "system": system_stats(), "gpu": gpu_stats(),
-            "services": services, "qwen38": qwen38, "history": list(history)}
+            "services": services, "qwen38": qwen38, "history": list(history),
+            "alerts": health.alerts(), "watchdog": health.events[-10:]}
 
 
 @router.get("/api/config", dependencies=[Depends(auth)])
@@ -253,6 +255,11 @@ def validate(new):
             raise HTTPException(400, f"port {p} is in the 30000-30099 range used by dgx-spark-qwen38")
     if len(set(ports)) != len(ports):
         raise HTTPException(400, "ports must differ")
+    w = new["watch"]
+    if not isinstance(w.get("watchdog"), bool):
+        raise HTTPException(400, "watch watchdog must be true or false")
+    if not isinstance(w.get("warn_gib"), (int, float)) or not 2 <= w["warn_gib"] <= 64:
+        raise HTTPException(400, "watch warn_gib must be 2..64")
     lg = new["logs"]
     if not isinstance(lg["max_mb"], int) or not 50 <= lg["max_mb"] <= 20000:
         raise HTTPException(400, "logs max_mb must be 50..20000")

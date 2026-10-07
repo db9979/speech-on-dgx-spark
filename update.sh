@@ -3,6 +3,11 @@
 #
 #   sudo /opt/speech-spark/src/update.sh           # what the panel's update button runs
 #   sudo /opt/speech-spark/src/update.sh --check   # only show what would change
+#   sudo /opt/speech-spark/src/update.sh --to <commit>   # install that version (e.g. go back one)
+#
+# The panel's "back to the previous version" button writes the commit into
+# /var/lib/speech-spark/state/update-target and starts this script; only commits that are part
+# of the official branch are accepted.
 #
 # Works on the installer's own clone in /opt/speech-spark/src. Your settings in
 # /etc/speech-spark stay. If the new version fails to install, the running services are
@@ -12,7 +17,14 @@ set -euo pipefail
 SRC=${SPEECH_SPARK_SRC:-/opt/speech-spark/src}
 BRANCH=main
 CHECK=0
+TARGET=""
 [ "${1:-}" = --check ] && CHECK=1
+[ "${1:-}" = --to ] && TARGET=${2:-}
+STATE=${SPEECH_SPARK_STATE:-/var/lib/speech-spark/state}
+if [ -z "$TARGET" ] && [ -s "$STATE/update-target" ]; then
+  TARGET=$(head -c 64 "$STATE/update-target" | tr -dc '0-9a-f')
+  rm -f "$STATE/update-target"
+fi
 [ "$(id -u)" = 0 ] || { echo "run with sudo" >&2; exit 1; }
 [ -d "$SRC/.git" ] || { echo "$SRC is not a git clone; run install.sh from a git checkout first" >&2; exit 1; }
 
@@ -25,6 +37,15 @@ echo "Installed: $(git log -1 --format='%h %cs %s' "$old")"
 echo "Fetching $(git remote get-url origin) ($BRANCH) ..."
 git fetch --quiet origin "$BRANCH"
 new=$(git rev-parse "origin/$BRANCH")
+if [ -n "$TARGET" ]; then
+  # only versions that are part of the official branch
+  if ! git cat-file -e "$TARGET^{commit}" 2>/dev/null || ! git merge-base --is-ancestor "$TARGET" "origin/$BRANCH"; then
+    echo "Version $TARGET is not part of $BRANCH; nothing changed." >&2
+    exit 1
+  fi
+  new=$(git rev-parse "$TARGET")
+  echo "Going to the chosen version instead of the newest."
+fi
 
 if [ "$old" = "$new" ]; then
   echo "Already up to date."
@@ -32,7 +53,12 @@ if [ "$old" = "$new" ]; then
 fi
 echo "Available: $(git log -1 --format='%h %cs %s' "$new")"
 echo "Changes:"
-git log --format='  %h %s' "$old..$new"
+if git merge-base --is-ancestor "$new" "$old"; then
+  echo "  (back to an older version; these changes are undone:)"
+  git log --format='  %h %s' "$new..$old"
+else
+  git log --format='  %h %s' "$old..$new"
+fi
 [ "$CHECK" = 1 ] && exit 0
 
 # Progress for the panel (step, text, done + ok at the end); the panel locks itself
@@ -54,16 +80,20 @@ trap 'finish false "Update abgebrochen"' TERM INT
 
 echo
 echo "Updating ..."
+# the version running now becomes "the previous version" the panel can go back to
+[ -f "$(dirname "$SRC")/VERSION.json" ] && cp "$(dirname "$SRC")/VERSION.json" "$(dirname "$SRC")/VERSION.prev.json.new"
 git reset --hard --quiet "$new"
 if ./install.sh --no-smoke --update; then
   echo
   echo "Update finished: $(git log -1 --format='%h %s')"
+  [ -f "$(dirname "$SRC")/VERSION.prev.json.new" ] && mv "$(dirname "$SRC")/VERSION.prev.json.new" "$(dirname "$SRC")/VERSION.prev.json"
   finish true "Fertig"
 else
   rc=$?
   echo
   echo "UPDATE FAILED (exit $rc). The services keep running the previous version."
   git reset --hard --quiet "$old"
+  rm -f "$(dirname "$SRC")/VERSION.prev.json.new"
   finish false "Update fehlgeschlagen (Fehler $rc); die bisherige Version läuft weiter"
   exit "$rc"
 fi

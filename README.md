@@ -2,7 +2,7 @@
 
 **English** | [Deutsch](README.de.md)
 
-Version V01.0.38 · Idea: Dominik Bornhäußer
+Version V01.0.40 · Idea: Dominik Bornhäußer
 
 One script installs **Qwen3-ASR** (speech recognition) and **Qwen3-TTS** (text to speech) as systemd services on an NVIDIA DGX Spark (GB10), together with a web panel for configuration and monitoring. It runs alongside [dgx-spark-qwen38](https://github.com/hasso5703/dgx-spark-qwen38).
 
@@ -106,6 +106,14 @@ Every install and update runs the panel's self-test (`app/tests`) against fake L
 - **Secrets encrypted**: calendar passwords and Home Assistant tokens are stored encrypted in the profile folders; the key is kept apart in `/var/lib/speech-spark/state/secret.key`.
 - **Devices**: *Users → Profiles and devices* and *Me → Security* show when and from where each device key was last used; one click blocks it.
 - **Change log**: *Overview → Logs → Change log* lists logins, wrong attempts, lockouts and every change with time, address and who (`/var/lib/speech-spark/state/audit.log`).
+
+## Stability
+
+- **Backups**: every day, before every update and before going back to the previous version the panel backs up profiles (memory, conversations, documents, calendars, smart home, speaker ID), cloned voices, settings and the panel password to `/var/lib/speech-spark/backups` (the newest seven are kept). *Overview → System and update → Backup* downloads, restores or deletes each one and restores a downloaded file. The current state is backed up before a restore.
+- **Back to the previous version**: after an update the update card shows "Back to the previous version", which installs the version that ran before (only versions of the official branch). By hand: `sudo /opt/speech-spark/src/update.sh --to <commit>`.
+- **Watchdog** (*Settings → System*, on by default): restarts ASR, TTS or an engine that does not answer for 5 minutes, works for 5 minutes without finishing a request, or loads for 45 minutes; at most three times an hour. Every restart is shown on top of the admin pages and in the change log.
+- **Live check**: after every update (and on request) the language model answers once, speech output says a sentence and speech recognition has to understand it again. A failure is shown on top of the admin pages.
+- **Memory warning**: when free memory drops below *Settings → System → Warn below* (default 10 GiB), every admin page shows a warning on top; DGX OS kills processes at about 8 GiB.
 
 ## Uninstalling
 

@@ -322,5 +322,67 @@ class Security(unittest.TestCase):
         self.assertEqual(p.get("/api/audit").status_code, 401)
 
 
+class Stability(unittest.TestCase):
+    def test_backup_and_restore(self):
+        import io
+        import tarfile
+        p = profile("Bruno")
+        p.post("/api/chat", json={"messages": [{"role": "user", "content": 'TOOL memory_save {"fact": "Bruno mag Kuchen."}'}]})
+        facts = lambda: [f["text"] for f in p.get("/api/profile/memory").json()["facts"]]  # noqa: E731
+        self.assertIn("Bruno mag Kuchen.", facts())
+        b = ADMIN.post("/api/backups").json()
+        self.assertEqual(TestClient(panel.app).post("/api/backups").status_code, 401)
+        p.delete("/api/profile/memory")
+        self.assertEqual(facts(), [])
+        r = ADMIN.post(f"/api/backups/{b['name']}/restore")
+        self.assertEqual(r.status_code, 200, r.text)
+        self.assertIn("users", r.json()["restored"])
+        self.assertIn("Bruno mag Kuchen.", facts())
+        names = [x["name"] for x in ADMIN.get("/api/backups").json()["backups"]]
+        self.assertTrue(any("before-restore" in n for n in names))
+        self.assertEqual(ADMIN.get(f"/api/backups/{b['name']}").status_code, 200)
+        self.assertEqual(ADMIN.get("/api/backups/..%2Fconfig.json").status_code, 404)
+        # a file with anything outside the known places is refused
+        buf = io.BytesIO()
+        with tarfile.open(fileobj=buf, mode="w:gz") as tar:
+            for name in ("backup.json", "../../etc/evil"):
+                info = tarfile.TarInfo(name)
+                info.size = 2
+                tar.addfile(info, io.BytesIO(b"{}"))
+        r = ADMIN.post("/api/backups-upload", files={"file": ("x.tar.gz", buf.getvalue())})
+        self.assertEqual(r.status_code, 400)
+
+    def test_watchdog_judges(self):
+        import health
+        u = "unit-x"
+        health._seen.clear()
+        self.assertIsNone(health.judge(u, None, 1000, 60))            # just started: grace time
+        self.assertIsNone(health.judge(u, None, 1000, 600))
+        self.assertIn("antwortet", health.judge(u, None, 1000 + health.HUNG_AFTER, 600))
+        health._seen.clear()
+        busy = {"status": "ready", "busy": True, "requests": 7}
+        self.assertIsNone(health.judge(u, busy, 2000, 600, front=False))
+        self.assertIsNone(health.judge(u, busy, 2100, 600, front=False))
+        self.assertIn("arbeitet", health.judge(u, busy, 2100 + health.HUNG_AFTER, 600, front=False))
+        health._seen.clear()
+        health.judge(u, busy, 3000, 600, front=False)
+        self.assertIsNone(health.judge(u, dict(busy, requests=8), 3000 + health.HUNG_AFTER, 600, front=False))
+
+    def test_memory_warning(self):
+        import health
+        health.memory_state.update(low=False)
+        health.check_memory(20.0)
+        self.assertFalse(health.alerts() and health.alerts()[0]["kind"] == "memory")
+        health.check_memory(7.5)
+        self.assertEqual(health.alerts()[0]["kind"], "memory")
+        self.assertIn("alerts", ADMIN.get("/api/status").json())
+        health.check_memory(20.0)
+        self.assertFalse(health.memory_state["low"])
+
+    def test_rollback_needs_known_version(self):
+        self.assertEqual(ADMIN.post("/api/update/rollback").status_code, 404)
+        self.assertEqual(TestClient(panel.app).post("/api/update/rollback").status_code, 401)
+
+
 if __name__ == "__main__":
     unittest.main()

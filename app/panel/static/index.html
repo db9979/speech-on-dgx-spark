@@ -34,6 +34,7 @@
 <nav><button data-s="chat">Assistent</button><button data-s="mon" class="on">Übersicht <span id="updbadge" class="pill warn" style="display:none">Update</span></button><button data-s="cfg">Einstellungen</button><button data-s="prof">Nutzer</button><button data-s="int">Einbinden</button></nav></header>
 <main>
 <div class="ptabs subnav" id="subnav" hidden></div>
+<div id="alerts"></div>
 
 <section id="mon" class="on">
   <div id="memnote"></div>
@@ -179,6 +180,9 @@
       <h2>Speicherschutz</h2>
       <label class="chk"><input type="checkbox" id="memory.guard"> Speicherschutz an</label><div class="fh">Ein Modell wird nicht geladen, wenn danach weniger als die Reserve frei bliebe.</div>
       <label>Reserve in GiB</label><input id="memory.reserve_gib" type="number"><div class="fh">DGX OS beendet Prozesse ab etwa 8 GiB freiem Speicher.</div>
+      <label>Warnen unter GiB frei</label><input id="watch.warn_gib" type="number"><div class="fh">Darunter zeigt das Panel oben auf jeder Seite eine Warnung und schreibt es ins Änderungsprotokoll.</div>
+      <h2>Wächter</h2>
+      <label class="chk"><input type="checkbox" id="watch.watchdog"> Hängende Dienste automatisch neu starten</label><div class="fh">Startet ASR, TTS oder eine Engine neu, wenn sie 5 Minuten nicht antwortet, 5 Minuten arbeitet, ohne eine Anfrage fertigzustellen, oder 45 Minuten lädt. Höchstens dreimal pro Stunde, jeder Neustart steht im Änderungsprotokoll.</div>
       <h2>Logs</h2>
       <label>Höchstens so viel Platz, in MB</label><input id="logs.max_mb" type="number"><div class="fh">Ältere Einträge werden automatisch gelöscht.</div>
       <label>Aufbewahren, in Tagen</label><input id="logs.keep_days" type="number">
@@ -333,8 +337,20 @@
       <div id="updstate" class="mut">–</div>
       <div id="updcommits" style="margin-top:8px"></div>
       <div class="row" style="margin-top:12px"><button class="b" id="updcheck">Jetzt prüfen</button><button class="b p" id="updgo" disabled>Update installieren</button><button class="b" id="updstop" style="display:none">Update abbrechen</button><span id="updmsg"></span></div>
+      <div class="row" id="updprevrow" style="margin-top:8px;display:none"><button class="b" id="updprev">Zurück zur vorigen Version</button><span class="mut" id="updprevtxt" style="font-size:12px"></span></div>
       <div class="mut" style="font-size:12px;margin-top:8px">Holt den neuesten Stand von GitHub und installiert ihn. Einstellungen, Modelle und Stimmen bleiben. Schlägt die Installation fehl, laufen die Dienste mit der alten Version weiter. Während des Updates starten die Dienste kurz neu.</div>
     </div>
+  </div>
+  <div class="two">
+    <div class="card"><h2>Funktionsprüfung</h2>
+      <div class="intro sm">Probiert die echten Dienste einmal aus: das Sprachmodell antwortet, die Sprachausgabe spricht einen Satz, die Spracherkennung versteht ihn wieder. Läuft nach jedem Update von selbst.</div>
+      <table style="margin-top:8px"><tbody id="livesteps"></tbody></table>
+      <div class="row" style="margin-top:10px"><button class="b" id="livego">Jetzt prüfen</button><span id="livemsg" class="mut"></span></div></div>
+    <div class="card"><h2>Sicherung</h2>
+      <div class="intro sm">Profile (Gedächtnis, Gespräche, Dokumente, Kalender, Smart Home), geklonte Stimmen, Einstellungen und Panel-Passwort. Jeden Tag und vor jedem Update automatisch, die letzten sieben bleiben.</div>
+      <table style="margin-top:8px"><tbody id="baklist"></tbody></table>
+      <div class="row" style="margin-top:10px"><button class="b" id="bakgo">Jetzt sichern</button><button class="b" id="bakup" type="button">Aus Datei wiederherstellen …</button><input type="file" id="bakfile" accept=".gz,.tgz,application/gzip" style="display:none"><span id="bakmsg"></span></div>
+      <div class="fh">Kalender-Passwörter und Home-Assistant-Tokens lassen sich nur auf diesem Spark wiederherstellen; auf einem anderen müssen sie neu eingegeben werden.</div></div>
   </div>
   <div class="card"><h2>Leistung messen</h2>
     <div class="intro sm">Misst Zeit bis zum ersten Ton, Geschwindigkeit bei einer und bei mehreren gleichzeitigen Anfragen und den Speicher der Dienste. Dauert ein bis zwei Minuten und belastet die GPU in der Zeit. Auf der Konsole: <code>sudo speech-spark-bench</code></div>

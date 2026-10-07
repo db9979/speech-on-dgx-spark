@@ -10,7 +10,8 @@ async function refresh(){
   $('m-gpu').textContent=fmt(g.util,' %');$('m-mem').textContent=fmt(sy.mem_avail_gib,' GiB',1)+' / '+sy.mem_total_gib;
   $('m-temp').textContent=fmt(g.temp,' °C')+' · '+fmt(g.power,' W');$('m-cpu').textContent=fmt(sy.cpu,' %');
   spark($('c-gpu'),H.map(x=>x.gpu),100);spark($('c-mem'),H.map(x=>x.avail),sy.mem_total_gib);spark($('c-temp'),H.map(x=>x.temp),100);spark($('c-cpu'),H.map(x=>x.cpu),100);
-  $('memnote').innerHTML=sy.mem_avail_gib<12?`<div class="note">${t(`Nur noch ${fmt(sy.mem_avail_gib,' GiB',1)} frei. Unter ~8 GiB beendet DGX OS (earlyoom) Prozesse. Kleinere Modelle wählen oder einen Dienst stoppen.`,`Only ${fmt(sy.mem_avail_gib,' GiB',1)} free. Below ~8 GiB DGX OS (earlyoom) kills processes. Choose smaller models or stop a service.`)}</div>`:'';
+  showAlerts(s.alerts);
+  $('memnote').innerHTML=sy.mem_avail_gib<12&&!(s.alerts||[]).some(x=>x.kind==='memory')?`<div class="note">${t(`Nur noch ${fmt(sy.mem_avail_gib,' GiB',1)} frei. Unter ~8 GiB beendet DGX OS (earlyoom) Prozesse. Kleinere Modelle wählen oder einen Dienst stoppen.`,`Only ${fmt(sy.mem_avail_gib,' GiB',1)} free. Below ~8 GiB DGX OS (earlyoom) kills processes. Choose smaller models or stop a service.`)}</div>`:'';
   $('svc').innerHTML=Object.entries(s.services).map(([n,v])=>{const h=v.health||{};
     const st=h.status?pill(h.status):'';const err=h.error?`<div class="err">${esc(h.error)}</div>`:(h.last_error?`<div class="err mut">${t('letzter Fehler','last error')}: ${esc(h.last_error.error)}</div>`:'');
     return `<tr><td><b>${n.toUpperCase()}</b><div class="mut">:${v.port}</div></td><td>${pill(v.state)} ${st}${v.enabled?'':` <span class="pill">${t('deaktiviert','disabled')}</span>`}</td>
@@ -198,7 +199,9 @@ let updPoll=null;
 async function loadSys(check=false){let u;try{u=await (await api('/api/update'+(check?'?check=true':''))).json()}catch(e){$('updstate').innerHTML=`<span class="err">${esc(e.message)}</span>`;return}
   const i=u.installed||{},r=u.remote||{};
   $('sysver').innerHTML=kvp([[t('Installiert','Installed'),i.short?`${i.short} · ${new Date(i.date).toLocaleString()}`:'–'],[t('Änderung','Change'),i.subject||'–'],['Engines',i.engine||'–'],[t('Quelle','Source'),i.remote||'–'],[t('Zuletzt geprüft','Last checked'),r.checked?new Date(r.checked*1000).toLocaleTimeString():'–']]);
-  updBadge(r);loadBench();
+  updBadge(r);loadBench();loadLive();loadBak();
+  const pv=u.previous;$('updprevrow').style.display=pv&&!u.running?'flex':'none';
+  if(pv)$('updprevtxt').textContent=(pv.version||pv.short||'')+(pv.subject?' · '+pv.subject:'');
   if(u.running){$('updstate').innerHTML=t('<span class="pill warn">Update läuft</span> Die Seite lädt neu, wenn das Panel neu startet.','<span class="pill warn">Update running</span> The page reloads when the panel restarts.');$('updgo').disabled=true;$('updstop').style.display='inline-block';
     if(!updPoll)updPoll=setInterval(()=>loadSys(),3000)}
   else{if(updPoll){clearInterval(updPoll);updPoll=null}$('updstop').style.display='none';
@@ -254,3 +257,28 @@ $('updgo').onclick=async()=>{if(!confirm(t('Update jetzt installieren? Die Diens
   try{ul.clicked=Date.now();await api('/api/update',{method:'POST'});ulShow()}
   catch(e){$('updmsg').innerHTML=`<span class="err">${esc(e.message)}</span>`}};
 setInterval(()=>{if(ADMIN)api('/api/update').then(r=>r.json()).then(u=>updBadge(u.remote)).catch(()=>{})},600000);
+// ---------------------------------------------------------------- previous version, live check, backups
+$('updprev').onclick=async()=>{if(!confirm(t('Die vorige Version wieder installieren? Vorher wird automatisch gesichert. Gilt die vorige Version vor V01.0.37, müssen Kalender-Passwörter und Home-Assistant-Tokens danach neu eingegeben werden.','Install the previous version again? A backup is made first. If the previous version is older than V01.0.37, calendar passwords and Home Assistant tokens have to be entered again afterwards.')))return;
+  try{ul.clicked=Date.now();await api('/api/update/rollback',{method:'POST'});ulShow()}catch(e){$('updmsg').innerHTML=`<span class="err">${esc(e.message)}</span>`}};
+const LIVE={llm:t('Sprachmodell','Language model'),tts:t('Sprachausgabe','Speech output'),asr:t('Spracherkennung','Speech recognition')};
+function liveRender(r){if(!r||!r.steps){$('livesteps').innerHTML=`<tr><td class="mut">${t('Noch nicht geprüft.','Not checked yet.')}</td></tr>`;$('livemsg').textContent='';return}
+  $('livesteps').innerHTML=r.steps.map(s=>`<tr><td style="width:34%">${s.ok===true?'✅':s.ok===false?'❌':'➖'} ${esc(LIVE[s.name]||s.name)}</td><td><span class="mut">${s.seconds} s</span> ${esc(s.detail||'')}</td></tr>`).join('');
+  $('livemsg').textContent=new Date(r.t*1000).toLocaleString()+' · '+(r.version||'')+(r.reason==='after update'?t(' · nach dem Update',' · after the update'):'')}
+async function loadLive(){try{liveRender(await (await api('/api/livecheck')).json())}catch{}}
+$('livego').onclick=async()=>{$('livego').disabled=true;$('livemsg').textContent=t('prüft … (bis zu einer Minute)','checking … (up to a minute)');
+  try{liveRender(await (await api('/api/livecheck',{method:'POST'})).json())}catch(e){$('livemsg').innerHTML=`<span class="err">${esc(e.message)}</span>`}$('livego').disabled=false;refresh()};
+const WHY={daily:t('täglich','daily'),manual:t('von Hand','manual'),'before-update':t('vor Update','before update'),'before-rollback':t('vor Rückkehr','before rollback'),'before-restore':t('vor Wiederherstellung','before restore')};
+const mb=n=>n<1048576?Math.max(1,Math.round(n/1024))+' KB':(n/1048576).toFixed(1)+' MB';
+function bakRender(l){$('baklist').innerHTML=l.map(b=>`<tr><td>${new Date(b.created*1000).toLocaleString()}<div class="mut">${esc(WHY[b.why]||b.why)} · ${mb(b.size)}</div></td><td style="text-align:right;white-space:nowrap"><a class="b" href="/api/backups/${encodeURIComponent(b.name)}" download>${t('Laden','Download')}</a> <button class="b" onclick="bakRestore('${esc(b.name)}')">${t('Wiederherstellen','Restore')}</button> <button class="b" onclick="bakDel('${esc(b.name)}')">${t('Löschen','Delete')}</button></td></tr>`).join('')||`<tr><td class="mut">${t('Noch keine Sicherung.','No backup yet.')}</td></tr>`}
+async function loadBak(){try{bakRender((await (await api('/api/backups')).json()).backups)}catch(e){$('bakmsg').innerHTML=`<span class="err">${esc(e.message)}</span>`}}
+const bakAsk=()=>confirm(t('Wiederherstellen? Profile, Stimmen und Einstellungen werden durch die Sicherung ersetzt (der jetzige Stand wird vorher gesichert). Geänderte Einstellungen der Dienste wirken nach deren Neustart.','Restore? Profiles, voices and settings are replaced by the backup (the current state is backed up first). Changed service settings take effect after their restart.'));
+const bakDone=r=>{$('bakmsg').textContent=t('Wiederhergestellt: ','Restored: ')+r.restored.join(', ');loadBak()};
+window.bakRestore=async n=>{if(!bakAsk())return;$('bakmsg').textContent=t('stelle wieder her …','restoring …');
+  try{bakDone(await (await api('/api/backups/'+encodeURIComponent(n)+'/restore',{method:'POST'})).json())}catch(e){$('bakmsg').innerHTML=`<span class="err">${esc(e.message)}</span>`}};
+window.bakDel=async n=>{if(!confirm(t('Diese Sicherung löschen?','Delete this backup?')))return;bakRender((await (await api('/api/backups/'+encodeURIComponent(n),{method:'DELETE'})).json()).backups)};
+$('bakgo').onclick=async()=>{$('bakmsg').textContent=t('sichere …','backing up …');try{const b=await (await api('/api/backups',{method:'POST'})).json();$('bakmsg').textContent=t('Gesichert: ','Saved: ')+mb(b.size);loadBak()}catch(e){$('bakmsg').innerHTML=`<span class="err">${esc(e.message)}</span>`}};
+$('bakup').onclick=()=>$('bakfile').click();
+$('bakfile').onchange=async()=>{const f=$('bakfile').files[0];$('bakfile').value='';if(!f||!bakAsk())return;$('bakmsg').textContent=t('stelle wieder her …','restoring …');
+  const fd=new FormData();fd.append('file',f,f.name);try{bakDone(await (await api('/api/backups-upload',{method:'POST',body:fd})).json())}catch(e){$('bakmsg').innerHTML=`<span class="err">${esc(e.message)}</span>`}};
+// alerts on top of every admin page: memory, watchdog, failed live check
+function showAlerts(a){$('alerts').innerHTML=(a||[]).map(x=>`<div class="note ${x.level==='bad'?'bad':''}">${esc(x.text)}</div>`).join('')}

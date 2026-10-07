@@ -28,9 +28,12 @@ import profiles  # noqa: E402
 import admin  # noqa: E402
 import chat  # noqa: E402
 import update  # noqa: E402
+import system  # noqa: E402
+import backup  # noqa: E402
+import health  # noqa: E402
 
 app = FastAPI(title="Speech on DGX Spark")
-for _module in (account, admin, chat, update):
+for _module in (account, admin, chat, update, system):
     app.include_router(_module.router)
 app.middleware("http")(update_lock)
 
@@ -76,6 +79,7 @@ async def sampler():
                 g = gpu_stats() or {}
                 s = system_stats()
                 h = {n: await service_health(n, cfg) for n in SERVICES}
+                health.check_memory(s["mem_avail_gib"], cfg)
                 history.append({"t": time.time(), "gpu": g.get("util"), "cpu": s["cpu"],
                                 "avail": s["mem_avail_gib"], "temp": g.get("temp"), "power": g.get("power"),
                                 "asr_req": (h["asr"] or {}).get("requests"),
@@ -84,6 +88,37 @@ async def sampler():
                 print("sampler:", e, flush=True)
             await asyncio.sleep(3)
     asyncio.create_task(loop())
+
+
+@app.on_event("startup")
+async def stability():
+    """Watchdog, daily backup and the live check after an update."""
+    async def watchdog():
+        while True:
+            await asyncio.sleep(health.WATCH_EVERY)
+            try:
+                await health.watch_once(update.update_running)
+            except Exception as e:
+                print("watchdog:", type(e).__name__, e, flush=True)
+
+    async def backups():
+        while True:
+            try:
+                if backup.due():
+                    item = await asyncio.to_thread(backup.create, "daily")
+                    print("backup:", item["name"], flush=True)
+            except Exception as e:
+                guard.log("backup_failed", detail=f"{type(e).__name__}: {e}"[:200])
+            await asyncio.sleep(3600)
+
+    async def after_update():
+        if health.after_update_due(update.update_progress()):
+            await health.ready(load_config())
+            res = await health.livecheck("after update")
+            print("live check after update:", "ok" if res and res["ok"] else res, flush=True)
+    asyncio.create_task(watchdog())
+    asyncio.create_task(backups())
+    asyncio.create_task(after_update())
 
 
 @app.on_event("startup")

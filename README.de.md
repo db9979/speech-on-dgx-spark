@@ -2,7 +2,7 @@
 
 [English](README.md) | **Deutsch**
 
-Version V01.0.38 · Idee: Dominik Bornhäußer
+Version V01.0.40 · Idee: Dominik Bornhäußer
 
 Ein Skript installiert **Qwen3-ASR** (Spracherkennung) und **Qwen3-TTS** (Sprachausgabe) als systemd-Dienste auf einer NVIDIA DGX Spark (GB10). Dazu kommt eine Weboberfläche für Konfiguration und Monitoring. Das Setup läuft neben [dgx-spark-qwen38](https://github.com/hasso5703/dgx-spark-qwen38).
 
@@ -106,6 +106,14 @@ Jede Installation und jedes Update führt den Selbsttest des Panels aus (`app/te
 - **Geheimnisse verschlüsselt**: Kalender-Passwörter und Home-Assistant-Tokens liegen verschlüsselt in den Profilordnern; der Schlüssel liegt getrennt in `/var/lib/speech-spark/state/secret.key`.
 - **Geräte**: *Nutzer → Profile und Geräte* und *Ich → Sicherheit* zeigen, wann und von wo jeder Geräteschlüssel zuletzt benutzt wurde; ein Klick sperrt ihn.
 - **Änderungsprotokoll**: *Übersicht → Logs → Änderungsprotokoll* zeigt Anmeldungen, falsche Versuche, Sperren und jede Änderung mit Zeit, Adresse und wer es war (`/var/lib/speech-spark/state/audit.log`).
+
+## Stabilität
+
+- **Sicherung**: Jeden Tag, vor jedem Update und vor jeder Rückkehr zur vorigen Version sichert das Panel Profile (Gedächtnis, Gespräche, Dokumente, Kalender, Smart Home, Stimmerkennung), geklonte Stimmen, Einstellungen und Panel-Passwort nach `/var/lib/speech-spark/backups` (die letzten sieben bleiben). Unter *Übersicht → System und Update → Sicherung* lässt sich jede Sicherung laden, wiederherstellen oder löschen, und eine heruntergeladene Datei wiederherstellen. Vor dem Wiederherstellen wird der jetzige Stand gesichert.
+- **Zurück zur vorigen Version**: Nach einem Update zeigt die Update-Karte „Zurück zur vorigen Version“. Das installiert die Version wieder, die vorher lief (nur Versionen aus dem offiziellen Zweig). Von Hand: `sudo /opt/speech-spark/src/update.sh --to <commit>`.
+- **Wächter** (*Einstellungen → System*, standardmäßig an): Startet ASR, TTS oder eine Engine neu, wenn sie 5 Minuten nicht antwortet, 5 Minuten arbeitet, ohne eine Anfrage fertigzustellen, oder 45 Minuten lädt; höchstens dreimal pro Stunde. Jeder Neustart steht oben auf den Admin-Seiten und im Änderungsprotokoll.
+- **Funktionsprüfung**: Nach jedem Update (und auf Knopfdruck) antwortet das Sprachmodell einmal, die Sprachausgabe spricht einen Satz und die Spracherkennung muss ihn wieder verstehen. Ein Fehler steht oben auf den Admin-Seiten.
+- **Speicherwarnung**: Fällt der freie Speicher unter *Einstellungen → System → Warnen unter* (Standard 10 GiB), zeigt das Panel oben auf jeder Admin-Seite eine Warnung; DGX OS beendet ab etwa 8 GiB Prozesse.
 
 ## Deinstallieren
 
