@@ -1,4 +1,4 @@
-"""Backups of everything the panel keeps: profiles (memory, conversations, documents, calendars,
+"""Backups of everything the panel keeps: profiles (memory, conversations, documents, calendars, mail,
 Home Assistant, voices of speaker ID), cloned voices, settings and the panel password.
 
     BACKUP_DIR/speech-spark-<YYYYmmdd-HHMMSS>[-<why>].tar.gz
@@ -6,7 +6,7 @@ Home Assistant, voices of speaker ID), cloned voices, settings and the panel pas
 One automatic backup a day (and one before every update), the newest KEEP are kept. A backup holds
 users/, voices/, config.json and state/panel-password. The key for the encrypted secrets
 (state/secret.key) is not in it: restored on this Spark everything works, restored on another one
-calendar passwords and Home Assistant tokens have to be entered again.
+calendar and mail passwords and Home Assistant tokens have to be entered again.
 
 Restore first makes a backup of the current state ("before-restore"), then replaces users/ and
 voices/ and writes config.json; the speech services pick up restored settings at their next start.

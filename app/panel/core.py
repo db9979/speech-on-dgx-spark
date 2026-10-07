@@ -175,6 +175,12 @@ def ha_on():
         raise HTTPException(403, "Home Assistant is turned off")
 
 
+# E-mail: each profile connects its own mailboxes, read only; the password is never sent back.
+def mail_on():
+    if not load_config().get("chat", {}).get("mail", False):
+        raise HTTPException(403, "reading e-mail is turned off")
+
+
 def speaker_on():
     if not load_config().get("chat", {}).get("speaker_id", False):
         raise HTTPException(403, "speaker identification is turned off")

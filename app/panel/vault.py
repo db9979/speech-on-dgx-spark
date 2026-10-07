@@ -1,4 +1,4 @@
-"""Secrets at rest: calendar passwords and Home Assistant tokens are stored encrypted, so a copy of
+"""Secrets at rest: calendar and mail passwords and Home Assistant tokens are stored encrypted, so a copy of
 the profile folders (a backup, a look into the files) does not reveal them.
 
 The key lives in STATE/secret.key (only the panel's user can read it), apart from the profile

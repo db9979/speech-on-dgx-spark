@@ -1,5 +1,5 @@
 """What a browser or device can do for itself: login, whoami and the profile's own data
-(memory, conversations, documents, reminders, calendar, Home Assistant, voice, settings)."""
+(memory, conversations, documents, reminders, calendar, e-mail, Home Assistant, voice, settings)."""
 import asyncio
 import json
 import os
@@ -16,6 +16,7 @@ import guard  # noqa: E402
 import push  # noqa: E402
 import speakers  # noqa: E402
 import calendars  # noqa: E402
+import mail  # noqa: E402
 import profiles  # noqa: E402
 import homeassistant  # noqa: E402
 from common import load_config  # noqa: E402
@@ -31,6 +32,7 @@ from core import (  # noqa: E402
     check_password,
     ha_on,
     is_admin,
+    mail_on,
     own_profile,
     security,
     speaker_on)
@@ -49,6 +51,7 @@ def whoami(request: Request, creds: HTTPBasicCredentials | None = Depends(securi
             "speaker_id": cfg.get("chat", {}).get("speaker_id", False),
             "calendar": cfg.get("chat", {}).get("calendar", True),
             "homeassistant": cfg.get("chat", {}).get("homeassistant", False),
+            "mail": cfg.get("chat", {}).get("mail", False),
             # what the assistant needs without the full configuration (which holds keys)
             "assistant": {"default_voice": cfg["tts"].get("default_voice"),
                           "asr_language": cfg["asr"].get("default_language"),
@@ -249,6 +252,35 @@ async def profile_calendar_test(request: Request, prof=Depends(own_profile)):
         return await calendars.test(prof["id"], user_zone(body.get("tz")))
     except ValueError as e:
         raise HTTPException(400, str(e))
+
+
+@router.get("/api/profile/mail", dependencies=[Depends(assistant)])
+def profile_mail(prof=Depends(own_profile)):
+    return mail.public(prof["id"])
+
+
+@router.post("/api/profile/mail", dependencies=[Depends(assistant), Depends(mail_on)])
+async def profile_mail_add(request: Request, prof=Depends(own_profile)):
+    """Adds a mailbox only after its inbox could be opened once."""
+    body = await request.json()
+    try:
+        item = mail.entry(body if isinstance(body, dict) else {})
+        found = await asyncio.wait_for(asyncio.to_thread(mail.check, item), 40)
+        return dict(mail.add(prof["id"], item), check=found)
+    except ValueError as e:
+        raise HTTPException(400, str(e))
+    except Exception as e:
+        raise HTTPException(400, f"mail server not reachable: {type(e).__name__}")
+
+
+@router.delete("/api/profile/mail/{aid}", dependencies=[Depends(assistant)])
+def profile_mail_remove(aid: str, prof=Depends(own_profile)):
+    return mail.remove(prof["id"], aid)
+
+
+@router.post("/api/profile/mail/test", dependencies=[Depends(assistant), Depends(mail_on)])
+async def profile_mail_test(prof=Depends(own_profile)):
+    return await asyncio.to_thread(mail.test, prof["id"])
 
 
 @router.get("/api/profile/homeassistant", dependencies=[Depends(assistant)])

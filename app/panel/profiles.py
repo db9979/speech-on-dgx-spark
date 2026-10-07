@@ -341,7 +341,9 @@ def save_convo(uid, c):
     cid = str(c.get("id", ""))
     if not re.fullmatch(r"[\w\-]{1,40}", cid) or not isinstance(c.get("msgs"), list):
         return None
-    msgs = [{"role": m["role"], "content": str(m["content"])[:MAX_MSG_LEN]} for m in c["msgs"][-MAX_MSGS:]
+    # "mail": an answer made from e-mails (kept out of what the background learner reads)
+    msgs = [dict({"role": m["role"], "content": str(m["content"])[:MAX_MSG_LEN]}, **({"mail": True} if m.get("mail") else {}))
+            for m in c["msgs"][-MAX_MSGS:]
             if isinstance(m, dict) and m.get("role") in ("user", "assistant") and m.get("content")]
     item = {"id": cid, "title": str(c.get("title", ""))[:80], "msgs": msgs,
             "updated": int(c["updated"]) if isinstance(c.get("updated"), (int, float)) else int(time.time() * 1000)}

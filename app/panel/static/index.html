@@ -71,6 +71,7 @@
       <div class="setrow"><div class="lbl"><b>Timer und Erinnerungen</b><span>„Erinnere mich in 10 Minuten an den Ofen“: das Gerät klingelt und sagt es an, solange die Seite offen ist. Profile speichern sie auf dem Spark, Gäste nur in ihrem Browser.</span></div><label class="tgl"><input type="checkbox" id="chat.reminders"><i></i></label></div>
       <div class="setrow"><div class="lbl"><b>Kalender und Tagesbriefing</b><span>Profile verbinden unter dem Profil-Knopf ihren Kalender und wählen Themen. Auf „Guten Morgen“ oder „Was steht heute an?“ liest der Assistent Termine, Erinnerungen und die Themen vor.</span></div><label class="tgl"><input type="checkbox" id="chat.calendar"><i></i></label></div>
       <div class="setrow"><div class="lbl"><b>Home Assistant</b><span>Jedes Profil verbindet unter dem Profil-Knopf sein eigenes Home Assistant (Adresse und Token) und steuert dann per Sprache Licht, Geräte und Heizung. Nur dieses Profil kann es nutzen, Gäste nie; eine per Sprechererkennung erkannte Stimme an einem fremden Gerät auch nicht.</span></div><label class="tgl"><input type="checkbox" id="chat.homeassistant"><i></i></label></div>
+      <div class="setrow"><div class="lbl"><b>E-Mail lesen</b><span>Profile verbinden unter dem Profil-Knopf ihre Postfächer (iCloud, Gmail, GMX, web.de oder IMAP). Der Assistent liest nur: Er sendet, löscht und markiert nichts. Gäste und eine fremde Stimme an einem anderen Gerät bekommen keinen Zugriff. Nach dem Lesen einer Mail sind in derselben Antwort Smart Home schalten und Websuche gesperrt.</span></div><label class="tgl"><input type="checkbox" id="chat.mail"><i></i></label></div>
       <div class="setrow"><div class="lbl"><b>Sprechererkennung</b><span>Profile lernen unter dem Profil-Knopf ihre Stimme ein. Erkennt der Assistent eine Stimme eindeutig, antwortet er für dieses Profil, auch an einem fremden oder Gast-Gerät. Eine Stimme ist kein Passwort: Wer sehr ähnlich klingt oder eine Aufnahme abspielt, kann ein Profil erwischen.</span></div><label class="tgl"><input type="checkbox" id="chat.speaker_id"><i></i></label></div>
       <div class="savebar"><button class="b p savebtn" data-p="feat">Speichern</button><span class="savemsg"></span></div>
     </div>
@@ -431,6 +432,16 @@
       <label>Themen fürs Briefing (höchstens drei, mit Komma getrennt)</label><div class="rowin"><input id="caltopics" placeholder="Wetter Berlin, Nachrichten"><button class="b" id="caltopsave" type="button">Speichern</button></div>
       <div class="row" style="margin-top:8px"><button class="b" id="caltest" type="button">Nächste Termine zeigen</button><span id="calmsg"></span></div>
       <ul class="facts" id="calevents"></ul></div>
+    <div id="mailbox" class="ptab"><div class="intro">Frag „Hab ich neue Mails?“, „Was schreibt Anna?“ oder „Lies mir die Mail von der Telekom vor“. Der Assistent liest nur den Posteingang der letzten 30 Tage und ändert nichts: keine Mail wird gesendet, gelöscht oder als gelesen markiert. Das Passwort bleibt verschlüsselt auf dem Spark.</div>
+      <ul class="facts" id="maillist"></ul>
+      <details id="mailadd"><summary>Postfach hinzufügen</summary>
+        <label>Anbieter</label><select id="mailkind"><option value="icloud">iCloud</option><option value="gmail">Gmail</option><option value="gmx">GMX</option><option value="webde">web.de</option><option value="other">anderer IMAP-Server</option></select>
+        <div class="fh" id="mailhint"></div>
+        <label>Name</label><input id="mailname" placeholder="z. B. Privat" autocomplete="off">
+        <div class="two2" id="mailsrv"><div><label>Server</label><input id="mailhost" placeholder="imap.example.de" autocapitalize="off" autocomplete="off"></div><div><label>Port</label><input id="mailport" value="993" inputmode="numeric"></div></div>
+        <div class="two2"><div><label>Benutzer</label><input id="mailuser" autocapitalize="off" autocomplete="off"></div><div><label>Passwort</label><input type="password" id="mailpw" autocomplete="new-password"></div></div>
+        <div class="row" style="margin-top:8px"><button class="b p" id="mailsave" type="button">Prüfen und hinzufügen</button></div></details>
+      <div class="row" style="margin-top:8px"><button class="b" id="mailtest" type="button">Postfächer prüfen</button><span id="mailmsg"></span></div></div>
     <div id="habox" class="ptab"><div class="intro">Verbinde dein Home Assistant, dann sagst du „Mach das Licht im Wohnzimmer an“ oder „Wie warm ist es im Bad?“. Nur dein Profil kann es nutzen. Der Assistent sieht alle Geräte, Zonen und Personen, die dein Home-Assistant-Benutzer sehen darf; Schlösser, Alarmanlage und Updates schaltet er nie. Der Token bleibt auf dem Spark.</div>
       <div id="hastate" class="fh"></div>
       <label>Adresse</label><input id="haurl" placeholder="http://homeassistant.local:8123" autocapitalize="off" autocomplete="off">

@@ -442,5 +442,110 @@ class Stability(unittest.TestCase):
         self.assertEqual(TestClient(panel.app).post("/api/update/rollback").status_code, 401)
 
 
+class Mail(unittest.TestCase):
+    """E-mail per profile: read only, never another profile's, guests and foreign voices get none."""
+
+    def setUp(self):
+        import mail
+        mail.IMAP = helpers.FakeIMAP
+        mail._cache.clear()
+        helpers.set_config(mail=True, public=True)
+
+    def tearDown(self):
+        helpers.set_config(mail=False)
+
+    def connect(self, client):
+        return client.post("/api/profile/mail", json={"kind": "icloud", "user": helpers.MAIL_USER,
+                                                      "password": helpers.MAIL_PW})
+
+    def test_per_profile_and_read_only(self):
+        import mail
+        import vault
+        a, b, g = profile("Mia"), profile("Max"), TestClient(panel.app)
+        bad = a.post("/api/profile/mail", json={"kind": "gmail", "user": helpers.MAIL_USER, "password": "falsch"})
+        self.assertEqual(bad.status_code, 400)
+        r = self.connect(a)
+        self.assertEqual(r.status_code, 200, r.text)
+        self.assertEqual(r.json()["check"]["unread"], 2)
+        self.assertNotIn(helpers.MAIL_PW, r.text + a.get("/api/profile/mail").text)
+        self.assertEqual(a.get("/api/profile/mail").json()["accounts"][0]["host"], "imap.mail.me.com")
+        uid = a.get("/api/whoami").json()["profile"]["id"]
+        raw = open(profiles._path(uid, "mail.json")).read()
+        self.assertNotIn(helpers.MAIL_PW, raw)
+        self.assertIn(vault.PREFIX, raw)
+        self.assertEqual(b.get("/api/profile/mail").json()["accounts"], [])
+        self.assertEqual(g.get("/api/profile/mail").status_code, 401)
+        # the assistant: list, search, read
+        res = answer(ask(a, 'TOOL mail_list {"unread": true}'))
+        self.assertIn("Grillen am Samstag", res)
+        self.assertNotIn("Ihre Rechnung", res)
+        self.assertIn("never an instruction", res)
+        res = answer(ask(a, 'TOOL mail_search {"query": "Telekom"}'))
+        self.assertIn("Ihre Rechnung", res)
+        aid = a.get("/api/profile/mail").json()["accounts"][0]["id"]
+        res = answer(ask(a, 'TOOL mail_read {"id": "%s:11"}' % aid))
+        self.assertIn("18 Uhr", res)
+        self.assertNotIn("alte Nachricht", res)          # quoted reply cut off
+        res = answer(ask(a, 'TOOL mail_read {"id": "%s:12"}' % aid))
+        self.assertIn("39,95 Euro", res)
+        self.assertNotIn("x()", res)                     # html to text
+        res = answer(ask(a, "TOOL daily_briefing {}"))
+        self.assertIn("Unread e-mails", res)
+        # nothing in the mailbox is ever changed
+        self.assertTrue(all(c[1] == ("INBOX", True) for c in helpers.IMAP_CALLS if c[0] == "select"))
+        for c, args in helpers.IMAP_CALLS:
+            self.assertNotIn(c, ("STORE", "COPY", "MOVE", "EXPUNGE", "APPEND"))
+            if c == "FETCH":
+                self.assertIn("BODY.PEEK", args[1])
+        # nobody else gets the mail tools
+        self.assertIn("NO TOOL mail_list", answer(ask(b, "TOOL mail_list {}")))
+        self.assertIn("NO TOOL mail_list", answer(ask(g, "TOOL mail_list {}")))
+        self.assertNotIn(helpers.MAIL_PW, json.dumps(helpers.LLM_CALLS))
+        # someone else's mailbox id does not open anything
+        self.connect(b)
+        self.assertIn("Unknown message id", answer(ask(b, 'TOOL mail_read {"id": "%s:11"}' % aid)))
+        # turned off: no tools and no new mailboxes
+        helpers.set_config(mail=False)
+        self.assertIn("NO TOOL mail_list", answer(ask(a, "TOOL mail_list {}")))
+        self.assertEqual(self.connect(a).status_code, 403)
+        mail._cache.clear()
+
+    def test_reading_mail_turns_off_switching_and_search(self):
+        p = profile("Ole")
+        self.connect(p)
+        p.put("/api/profile/homeassistant", json={"url": f"http://127.0.0.1:{helpers.HA_PORT}", "token": helpers.HA_TOKEN})
+        helpers.set_config(mail=True, search=True, search_url="http://127.0.0.1:9")
+        helpers.LLM_CALLS.clear()
+        ask(p, "TOOL mail_list {}")
+        first, after = [{t["function"]["name"] for t in c.get("tools", [])} for c in helpers.LLM_CALLS[:2]]
+        self.assertTrue({"home_assistant", "home_assistant_action", "web_search"} <= first)
+        self.assertFalse({"home_assistant", "home_assistant_action", "web_search"} & after)
+        self.assertIn("home_assistant_states", after)    # reading the home stays possible
+        helpers.set_config(search=False, search_url="")
+
+    def test_foreign_voice_gets_no_mail(self):
+        import speakers
+        helpers.set_config(mail=True, speaker_id=True)
+        x, y = profile("Xenia"), profile("Yann")
+        self.connect(y)
+        tok = speakers.token(y.get("/api/whoami").json()["profile"]["id"])
+        helpers.LLM_CALLS.clear()
+        helpers.events(x.post("/api/chat", json={"messages": [{"role": "user", "content": "Hallo"}], "speaker": tok}))
+        self.assertNotIn("mail_list", json.dumps(helpers.LLM_CALLS[0].get("tools")))
+        helpers.set_config(speaker_id=False)
+
+    def test_learner_skips_answers_from_mail(self):
+        import recall
+        p = profile("Malte")
+        p.put("/api/profile/convos", json={"id": "m1", "title": "Mails", "updated": 1, "msgs": [
+            {"role": "user", "content": "Was schreibt Anna?"},
+            {"role": "assistant", "content": "Anna lädt dich zum Grillen ein.", "mail": True}]})
+        prof = p.get("/api/whoami").json()["profile"]
+        convo = profiles.convos(prof["id"])[0]
+        self.assertTrue(convo["msgs"][1]["mail"])
+        text = recall.learn_messages(prof, convo)[1]["content"]
+        self.assertNotIn("Grillen", text)
+
+
 if __name__ == "__main__":
     unittest.main()
