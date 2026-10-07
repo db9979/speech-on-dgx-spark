@@ -509,14 +509,16 @@ def languages():
 
 
 @app.post("/api/test/asr", dependencies=[Depends(assistant)])
-async def test_asr(file: UploadFile = File(...), language: str = Form("auto")):
+async def test_asr(file: UploadFile = File(...), language: str = Form("auto"), wake: str = Form("")):
     cfg = load_config()
     data = await file.read()
+    form = {"language": language, "response_format": "verbose_json"}
+    if wake:  # wake-word check: tell the model to expect the phrase, besides the usual context
+        form["prompt"] = f"{wake[:40]}. {cfg['asr'].get('context') or ''}".strip()
     async with httpx.AsyncClient(timeout=600) as c:
         r = await c.post(f"http://127.0.0.1:{cfg['asr']['port']}/v1/audio/transcriptions",
                          files={"file": (file.filename or "audio.wav", data)},
-                         data={"language": language, "response_format": "verbose_json"},
-                         headers=api_headers())
+                         data=form, headers=api_headers())
     return Response(r.content, status_code=r.status_code, media_type="application/json")
 
 
