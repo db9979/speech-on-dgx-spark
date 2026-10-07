@@ -18,6 +18,7 @@ it. The panel checks that itself (the model never decides), and the code word is
 "[Codewort]" before anything reaches the model or the stored conversations. Only a salted hash of
 it is kept (and that sealed by vault.py), so it cannot be read back; reading states needs no code.
 """
+import asyncio
 import functools
 import hashlib
 import json
@@ -214,16 +215,93 @@ async def check(item):
 
 async def command(item, text, language="de"):
     """Hands one spoken command to Home Assistant's Assist; when Assist does not know the device, finds
-    it among all states and switches it directly (see fallback). Returns (ok, answer, targets)."""
-    ok, speech, targets, unknown = await _assist(item, text, language)
-    if not unknown:
-        return ok, speech, targets
-    done, more = await fallback(item, text)
-    if done:
-        return True, more, []
-    return False, speech + " " + (more or (
-        "(Assist did not find this device or did not understand the sentence; it only knows devices exposed "
-        "to Assist. Look the device up with home_assistant_states and switch it with home_assistant_action.)")), []
+    it among all states and switches it directly (see fallback). Whatever Assist reports, the states of
+    the devices it names are read back afterwards, and only that counts. Returns (ok, answer, targets)."""
+    ok, speech, targets, unknown, ids = await _assist(item, text, language)
+    if unknown:
+        done, more = await fallback(item, text)
+        if more:
+            return done, more, []
+        return False, speech + " (Assist did not find this device or did not understand the sentence; it only " \
+            "knows devices exposed to Assist. Look the device up with home_assistant_states and switch it with " \
+            "home_assistant_action.)", []
+    if not ok:
+        return False, "Home Assistant reports: " + speech + " Nothing was switched.", targets
+    service = _intent(text)
+    if not ids and targets:  # older Home Assistant: only names; find their ids by exact name
+        async with _client(item) as c:
+            r = await c.get(item["url"] + "/api/states")
+            all_states = r.json() if r.status_code == 200 and isinstance(r.json(), list) else []
+        ids = [x["entity_id"] for x in all_states if isinstance(x, dict)
+               and (x.get("attributes") or {}).get("friendly_name") in targets][:10]
+    if not ids:
+        _log("assist: success without entity ids, cannot verify", repr(text[:80]))
+        return False, ("Assist answered '" + speech + "' but named no device, so the result could not be checked. "
+                       "Look the device up with home_assistant_states and use home_assistant_action."), targets
+    async with _client(item) as c:
+        checked = await _verify(c, item, ids, service, {})
+    return _report(checked, service, "Assist")[0], _report(checked, service, "Assist")[1], targets
+
+
+def _intent(text):
+    words = _norm(text).split()
+    return next((svc for svc, verbs in _VERBS if any(w in verbs.split() for w in words)), None)
+
+
+def _log(*parts):
+    print("homeassistant:", *parts, flush=True)
+
+
+# expected states after a service, by service; None: no fixed state to expect
+_EXPECT = {"turn_off": {"off", "standby", "closed", "idle", "not_home"},
+           "close_cover": {"closed", "closing"}, "open_cover": {"open", "opening"}}
+
+
+def _expected(service, before, now):
+    if now in ("unavailable", "unknown") and service != "turn_on":
+        return None  # some devices drop off when switched off: say what it shows, claim nothing
+    if service in ("turn_off", "close_cover", "open_cover"):
+        return now in _EXPECT[service]
+    if service == "turn_on":
+        return now not in ("off", "standby", "unavailable", "unknown")
+    if service == "toggle":
+        return (now != before) if before is not None else None
+    return None
+
+
+_VERIFY_WAIT = 0.7  # seconds between read-backs; six tries cover devices that take a few seconds
+
+
+async def _verify(c, item, eids, service, before, tries=6):
+    """Reads the states back until they show the service's effect (or the tries are used up).
+    Returns [(entity id, name, state, True/False/None)]."""
+    result = []
+    for i in range(tries):
+        result = []
+        for eid in eids:
+            r = await c.get(f"{item['url']}/api/states/{eid}")
+            st = r.json() if r.status_code == 200 else {}
+            now = st.get("state", "unknown")
+            name = (st.get("attributes") or {}).get("friendly_name") or eid
+            result.append((eid, name, now, _expected(service, before.get(eid), now)))
+        if all(x[3] is not False for x in result) or i == tries - 1:
+            break
+        await asyncio.sleep(_VERIFY_WAIT)
+    _log("verify", service, [(x[0], x[2], x[3]) for x in result])
+    return result
+
+
+def _report(checked, service, via):
+    """Only what Home Assistant's states show, word for word."""
+    good = [x for x in checked if x[3]]
+    bad = [x for x in checked if x[3] is False]
+    open_ = [x for x in checked if x[3] is None]
+    lines = ["Checked in Home Assistant afterwards (report only this, do not add anything):"]
+    lines += [f"- {n} ({e}) is now '{s}' — done." for e, n, s, _ in good]
+    lines += [f"- {n} ({e}) is still '{s}' — NOT done." for e, n, s, _ in bad]
+    lines += [f"- {n} ({e}) is now '{s}' ({service or 'command'} sent via {via}; no fixed state to compare)."
+              for e, n, s, _ in open_]
+    return bool(checked) and not bad, "\n".join(lines)
 
 
 async def _assist(item, text, language):
@@ -233,7 +311,10 @@ async def _assist(item, text, language):
     async with _client(item) as c:
         r = await c.post(item["url"] + "/api/conversation/process", json=body)
     if r.status_code == 401:
-        return False, "Home Assistant rejected the token.", [], False
+        _log("assist: token rejected (401)")
+        return False, "Home Assistant rejected the token.", [], False, []
+    if r.status_code != 200:
+        _log("assist: HTTP", r.status_code, r.text[:200])
     r.raise_for_status()
     res = (r.json() or {}).get("response") or {}
     speech = ((res.get("speech") or {}).get("plain") or {}).get("speech", "")
@@ -245,7 +326,9 @@ async def _assist(item, text, language):
         speech += " Failed: " + ", ".join(failed)
     # Assist knows only exposed entities and its own sentence patterns
     unknown = res.get("response_type") == "error" and data.get("code") in ("no_valid_targets", "no_intent_match")
-    return ok, speech.strip() or ("Done." if ok else "Home Assistant could not do that."), targets[:10], unknown
+    ids = [x["id"] for x in (data.get("success") or []) if x.get("type") == "entity" and "." in str(x.get("id", ""))]
+    _log("assist:", repr(str(text)[:80]), "->", res.get("response_type"), data.get("code") or "", ids or targets[:5])
+    return ok, speech.strip() or ("Done." if ok else "Home Assistant could not do that."), targets[:10], unknown, ids[:10]
 
 
 # ---- reading states: every entity the token's user can see, not only those exposed to Assist ----
@@ -476,19 +559,22 @@ async def action(item, entity_id, service, data=None):
     async with _client(item) as c:
         r = await c.get(f"{item['url']}/api/states/{eid}")
         if r.status_code == 401:
+            _log("action: token rejected (401)")
             return False, "Home Assistant rejected the token."
         if r.status_code == 404:
+            _log("action: no entity", eid)
             return False, f"There is no entity {eid}; look it up with home_assistant_states."
         r.raise_for_status()
+        before = (r.json() or {}).get("state")
         name = ((r.json() or {}).get("attributes") or {}).get("friendly_name") or eid
         r = await c.post(f"{item['url']}/api/services/{domain}/{service}", json=dict(extra, entity_id=eid))
+        _log("action:", f"{domain}.{service}", eid, extra or "", "-> HTTP", r.status_code,
+             "" if r.status_code == 200 else r.text[:200])
         if r.status_code in (400, 404):
-            return False, f"Home Assistant does not accept {domain}.{service} for {name} (HTTP {r.status_code})."
+            return False, f"Home Assistant does not accept {domain}.{service} for {name} (HTTP {r.status_code}). Nothing was switched."
         if r.status_code in (401, 403):
-            return False, "The Home Assistant user of this token may not do that."
+            return False, "The Home Assistant user of this token may not do that. Nothing was switched."
         r.raise_for_status()
-        new = next((x for x in (r.json() if isinstance(r.json(), list) else []) if x.get("entity_id") == eid), None)
-        if not new:
-            r = await c.get(f"{item['url']}/api/states/{eid}")
-            new = r.json() if r.status_code == 200 else None
-    return True, f"Done: {domain}.{service} for {name}." + (f" Now: {_line(new, {}, '')}" if new else "")
+        checked = await _verify(c, item, [eid], service, {eid: before})
+    ok, text = _report(checked, service, "service call")
+    return ok, text + f"\n(before: '{before}')"

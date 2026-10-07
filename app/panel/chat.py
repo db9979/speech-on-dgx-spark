@@ -182,8 +182,10 @@ HA_ACTION_TOOL = {"type": "function", "function": {
                                                   "{\"temperature\": 21}, {\"position\": 30}"}},
         "required": ["entity_id", "service"]}}}
 HA_HINT = ("Mit home_assistant steuerst du das Smart Home des Nutzers (Licht, Geräte, Heizung, Rollläden). Gib jeden "
-           "Befehl einzeln weiter und sag danach kurz, was passiert ist; behaupte nichts, was Home Assistant nicht "
-           "bestätigt hat. Für Fragen nach Werten, Zuständen, Zonen und wo jemand ist nimm home_assistant_states: "
+           "Befehl einzeln weiter. Geschaltet ist nur, was ein Werkzeug ausgeführt hat: Nach jedem Befehl liest "
+           "das Panel den Zustand in Home Assistant zurück, und du sagst genau das und nichts darüber hinaus. Steht "
+           "dort NOT done, ist es nicht passiert; sag das so. Behaupte nie, dass etwas an oder aus ist, ohne dass "
+           "du in diesem Gespräch gerade ein Werkzeug dafür aufgerufen hast. Für Fragen nach Werten, Zuständen, Zonen und wo jemand ist nimm home_assistant_states: "
            "es sieht alle Geräte, auch die, die der Sprachassistent von Home Assistant nicht kennt. Findet "
            "home_assistant ein Gerät nicht, such es mit home_assistant_states und schalte es mit "
            "home_assistant_action über seine genaue ID. "

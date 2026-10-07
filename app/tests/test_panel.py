@@ -162,6 +162,18 @@ class HomeAssistant(unittest.TestCase):
         self.assertIn("media_player.sz_tv", res)
         self.assertEqual(len(helpers.HA_CALLS), n + 1)  # only the Assist attempt
 
+    def test_state_read_back(self):
+        a = profile("Vera")
+        a.put("/api/profile/homeassistant", json={"url": f"http://127.0.0.1:{helpers.HA_PORT}", "token": helpers.HA_TOKEN})
+        import homeassistant
+        homeassistant._VERIFY_WAIT = 0.05
+        # Home Assistant accepts the call but the device stays on: reported as not done, never as done
+        evs = ask(a, 'TOOL home_assistant_action {"entity_id": "switch.kaputt", "service": "turn_off"}')
+        self.assertFalse(any(e["type"] == "home_done" and e["ok"] for e in evs))
+        res = answer(evs)
+        self.assertIn("still 'on'", res)
+        self.assertIn("NOT done", res)
+
     def test_words_before_tool_call(self):
         a = profile("Paula")
         a.put("/api/profile/homeassistant", json={"url": f"http://127.0.0.1:{helpers.HA_PORT}", "token": helpers.HA_TOKEN})

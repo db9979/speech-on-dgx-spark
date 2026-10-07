@@ -124,6 +124,7 @@ HA_STATES = [
      "persons": ["person.anna"]}},
     {"entity_id": "zone.buero", "state": "0", "attributes": {"friendly_name": "Büro", "radius": 150, "persons": []}},
     {"entity_id": "switch.keller", "state": "off", "attributes": {"friendly_name": "Kellerpumpe"}},
+    {"entity_id": "switch.kaputt", "state": "on", "attributes": {"friendly_name": "Alte Steckdose"}},
     {"entity_id": "lock.haustuer", "state": "locked", "attributes": {"friendly_name": "Haustür"}},
     {"entity_id": "media_player.samsung", "state": "on", "attributes": {"friendly_name": "Samsung", "device_class": "tv"}},
     {"entity_id": "media_player.sz_tv", "state": "on", "attributes": {"friendly_name": "TV", "device_class": "tv"}},
@@ -164,7 +165,8 @@ def fake_ha():
         b = await request.json()
         HA_CALLS.append(dict(b, service=f"{domain}.{service}"))
         for x in HA_STATES:
-            if x["entity_id"] == b.get("entity_id") and service in ("turn_on", "turn_off"):
+            if x["entity_id"] == b.get("entity_id") and service in ("turn_on", "turn_off") \
+                    and x["entity_id"] != "switch.kaputt":  # accepts the call, never switches
                 x["state"] = service[5:]
                 return [x]
         return []
@@ -184,7 +186,8 @@ def fake_ha():
             return {"response": {"response_type": "error", "speech": {"plain": {"speech": "Kein Gerät gefunden"}},
                                  "data": {"code": "no_valid_targets"}}}
         return {"response": {"response_type": "action_done", "speech": {"plain": {"speech": "Erledigt"}},
-                             "data": {"success": [{"name": "Licht Küche"}], "failed": []}}}
+                             "data": {"success": [{"name": "Licht Küche", "type": "entity", "id": "light.kueche"}],
+                                      "failed": []}}}
     return app
 
 
