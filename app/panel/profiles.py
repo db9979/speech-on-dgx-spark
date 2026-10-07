@@ -170,6 +170,11 @@ def login(name, pin):
     return None
 
 
+def by_id(uid):
+    u = next((u for u in _load()["users"] if u["id"] == uid), None)
+    return {"id": u["id"], "name": u["name"]} if u else None
+
+
 def current(request):
     """{"id", "name"} of the profile behind this request (device key first, then cookie), or None."""
     d = _load()

@@ -26,6 +26,7 @@ from fastapi.security import HTTPBasic, HTTPBasicCredentials
 sys.path.insert(0, os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
 from textnorm import guess_language  # noqa: E402
 import documents  # noqa: E402
+import speakers  # noqa: E402
 import profiles  # noqa: E402
 from common import CONFIG_PATH, estimate_gib, journal, load_config, mem_available_gib, quiet_access_log  # noqa: E402
 
@@ -262,6 +263,7 @@ def whoami(request: Request, creds: HTTPBasicCredentials | None = Depends(securi
     return {"admin": is_admin(request, creds), "version": app_version(), "public": cfg.get("chat", {}).get("public", True),
             "profile": profiles.current(request), "documents": cfg.get("chat", {}).get("documents", True),
             "reminders": cfg.get("chat", {}).get("reminders", True),
+            "speaker_id": cfg.get("chat", {}).get("speaker_id", False),
             # what the assistant needs without the full configuration (which holds keys)
             "assistant": {"default_voice": cfg["tts"].get("default_voice"),
                           "asr_language": cfg["asr"].get("default_language"),
@@ -381,6 +383,34 @@ def profile_reminders(prof=Depends(own_profile)):
 @app.delete("/api/profile/reminders/{rid}", dependencies=[Depends(assistant)])
 def profile_reminder_done(rid: str, prof=Depends(own_profile)):
     return {"removed": profiles.remove_reminders(prof["id"], {rid})}
+
+
+def speaker_on():
+    if not load_config().get("chat", {}).get("speaker_id", False):
+        raise HTTPException(403, "speaker identification is turned off")
+
+
+@app.get("/api/profile/voice", dependencies=[Depends(assistant)])
+def profile_voice(prof=Depends(own_profile)):
+    return {"samples": len(speakers.samples(prof["id"])), "enabled": load_config()["chat"].get("speaker_id", False)}
+
+
+@app.post("/api/profile/voice", dependencies=[Depends(assistant), Depends(speaker_on)])
+async def profile_voice_add(file: UploadFile = File(...), prof=Depends(own_profile)):
+    data = await file.read()
+    if len(data) > 10 * 1024 * 1024:
+        raise HTTPException(400, "recording is too large")
+    try:
+        n = await asyncio.to_thread(speakers.enroll, prof["id"], data)
+    except ValueError as e:
+        raise HTTPException(400, str(e))
+    return {"samples": n}
+
+
+@app.delete("/api/profile/voice", dependencies=[Depends(assistant)])
+def profile_voice_delete(prof=Depends(own_profile)):
+    speakers.forget(prof["id"])
+    return {"samples": 0}
 
 
 @app.post("/api/assistant/say", dependencies=[Depends(assistant)])
@@ -582,6 +612,8 @@ def validate(new):
         raise HTTPException(400, "SearXNG address must start with http:// or https://")
     if not isinstance(ch.get("defaults"), dict) or profiles.clean_settings(ch["defaults"]) != ch["defaults"]:
         raise HTTPException(400, "chat defaults: invalid value")
+    if ch.get("speaker_strictness") not in speakers.STRICTNESS:
+        raise HTTPException(400, "speaker_strictness: low, normal or high")
     if not (isinstance(ch.get("search_results"), int) and 1 <= ch["search_results"] <= 10
             and isinstance(ch.get("search_pages"), int) and 0 <= ch["search_pages"] <= 5):
         raise HTTPException(400, "search: 1..10 results, 0..5 pages to read")
@@ -726,11 +758,26 @@ async def test_asr(file: UploadFile = File(...), language: str = Form("auto"), w
     form = {"language": language, "response_format": "verbose_json"}
     if wake:  # wake-word check: tell the model to expect the phrase, besides the usual context
         form["prompt"] = f"{wake[:40]}. {cfg['asr'].get('context') or ''}".strip()
+    # speaker identification runs on the CPU while the GPU transcribes
+    spk = None
+    if cfg.get("chat", {}).get("speaker_id", False) and not wake:
+        th = speakers.STRICTNESS.get(cfg["chat"].get("speaker_strictness"), 0.75)
+        spk = asyncio.create_task(asyncio.to_thread(speakers.identify, data, th))
     async with httpx.AsyncClient(timeout=600) as c:
         r = await c.post(f"http://127.0.0.1:{cfg['asr']['port']}/v1/audio/transcriptions",
                          files={"file": (file.filename or "audio.wav", data)},
                          data=form, headers=api_headers())
-    return Response(r.content, status_code=r.status_code, media_type="application/json")
+    if spk is None or r.status_code != 200:
+        return Response(r.content, status_code=r.status_code, media_type="application/json")
+    out = r.json()
+    try:
+        uid, score = await spk
+    except Exception:  # unreadable audio etc.: just no speaker
+        uid, score = None, 0.0
+    who = uid and profiles.by_id(uid)
+    if who:
+        out["speaker"] = {"name": who["name"], "token": speakers.token(uid), "score": round(score, 3)}
+    return out
 
 
 @app.post("/api/test/tts", dependencies=[Depends(auth)])
@@ -1074,10 +1121,17 @@ async def chat(request: Request):
     if search:
         system = (system + "\n\n" + SEARCH_HINT).strip()
     who = profiles.current(request)
+    # A voice recognized by the speech recognition (signed token, see speakers.py) picks that
+    # profile for this turn; its own settings apply then, not the ones this browser sends.
+    heard = speakers.check(body.get("speaker")) if ccfg.get("speaker_id", False) and body.get("speaker") else None
+    heard = heard and profiles.by_id(heard)
+    own_browser = not heard or (who and who["id"] == heard["id"])
+    if heard:
+        who = heard
     # conversation settings: what the request sends, else the profile's, else the admin's defaults
     # (speakers with a device key send nothing and get their profile's voice, speed and length)
     pset = dict(profiles.defaults(ccfg.get("defaults")), **(profiles.settings(who["id"]) if who else {}))
-    for k in ("voice", "speed", "length") if who else ("speed", "length"):  # guests: the admin's voice
+    for k in (("voice", "speed", "length") if who else ("speed", "length")) if own_browser else ():
         if k in body and profiles.SETTINGS[k][1](body[k]):
             pset[k] = body[k]
     length = {"short": "Antworte besonders knapp, meist in ein bis zwei Sätzen.",
@@ -1111,6 +1165,8 @@ async def chat(request: Request):
         tts_body["speed"] = pset["speed"]
     c = httpx.AsyncClient(timeout=httpx.Timeout(600, connect=5))
     out = asyncio.Queue()
+    if heard:
+        out.put_nowait({"type": "speaker", "name": heard["name"]})
     sentences = asyncio.Queue()
     t0 = time.time()
 
@@ -1198,7 +1254,7 @@ async def chat(request: Request):
                     return "Invalid time: give minutes from now or a future 'YYYY-MM-DDTHH:MM'."
                 item = profiles.add_reminder(who["id"], text, due) if who else \
                     {"id": secrets.token_hex(4), "text": text[:200], "due": due}
-                await out.put({"type": "reminder", "action": "set", "item": item})
+                await out.put({"type": "reminder", "action": "set", "item": item, "foreign": not own_browser})
                 return f"Set: '{item['text']}' at {fmt(item)}."
             if name == "reminder_list":
                 return "\n".join(f"{fmt(x)}: {x['text']}" for x in pending) or "No pending reminders."
@@ -1208,7 +1264,7 @@ async def chat(request: Request):
                 if who and ids:
                     profiles.remove_reminders(who["id"], ids)
                 if ids:
-                    await out.put({"type": "reminder", "action": "cancel", "ids": sorted(ids)})
+                    await out.put({"type": "reminder", "action": "cancel", "ids": sorted(ids), "foreign": not own_browser})
                 return f"Cancelled {len(ids)}."
         if name == "memory_save" and prof:
             fact = profiles.remember(prof["id"], args.get("fact", ""))
