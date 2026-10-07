@@ -2,7 +2,7 @@
 
 [English](README.md) | **Deutsch**
 
-Version V01.0.8 · Idee: Dominik Bornhäußer
+Version V01.0.9 · Idee: Dominik Bornhäußer
 
 Ein Skript installiert **Qwen3-ASR** (Spracherkennung) und **Qwen3-TTS** (Sprachausgabe) als systemd-Dienste auf einer NVIDIA DGX Spark (GB10). Dazu kommt eine Weboberfläche für Konfiguration und Monitoring. Das Setup läuft neben [dgx-spark-qwen38](https://github.com/hasso5703/dgx-spark-qwen38).
 
@@ -19,6 +19,8 @@ Am Ende gibt das Skript die Adresse des Panels, das Passwort und den API-Schlüs
 Der Reiter **Gespräch** braucht das Mikrofon, und Browser erlauben das nur über https. Das Panel läuft deshalb zusätzlich auf `https://SPARK:31443` mit einem selbst erstellten Zertifikat; der Browser warnt beim ersten Aufruf einmal. Die LLM-Verbindung steht unter Konfiguration → Assistent (Standard: qwen38 auf `http://127.0.0.1:30001/v1`). Den API-Schlüssel von qwen38 übernimmt der Installer aus `~/.config/qwen38/api-key` des Benutzers, der `sudo ./install.sh` aufruft. Das Nachdenken des Modells ist für den Chat aus, damit die Antwort sofort beginnt. Ein animiertes Assistenten-Gesicht zeigt, ob es zuhört, nachdenkt oder spricht; der Mund folgt der Stimme. Dasselbe Gesicht sitzt auf jedem Reiter unten rechts, so lässt sich von überall im Panel sprechen.
 
 **Startseite und Passwort:** Das Panel öffnet mit dem Assistenten, ohne Passwort, für alle im Netz. Monitoring, Einstellungen, Stimmen und Logs brauchen das Panel-Passwort (Knopf „Einstellungen“, die Anmeldung hält 30 Tage). Unter Konfiguration → Gespräch lässt sich „Assistent ohne Passwort“ abschalten; das Passwort ändert sich unter Konfiguration → Sicherheit. Skripte können weiter HTTP Basic nutzen.
+
+**Auf dem Handy:** Unter 760 Pixel Breite sieht der Assistent aus wie ein Messenger und passt genau auf den Bildschirm: oben eine schmale Leiste mit kleinem Gesicht, Status, Profil und Menü, in der Mitte der Verlauf, unten Textfeld und runder Mikrofonknopf (während der Antwort ein Stopp-Knopf). Ohne Gespräch zeigt die Mitte das große Gesicht. Das Menü (☰) enthält neues Gespräch, frühere Gespräche, Gesprächs-Einstellungen, Sprache, Hell/Dunkel und für Admins alle Reiter.
 
 **Als App aufs Handy:** `https://SPARK:31443` im Handy-Browser öffnen, Zertifikatswarnung bestätigen, dann im Browser-Menü „Zum Startbildschirm hinzufügen“ (iPhone: Safari → Teilen → „Zum Home-Bildschirm“). Der Assistent startet dann mit eigenem Icon im Vollbild. Mit dem selbst erstellten Zertifikat legt Android eine Verknüpfung statt einer installierten App an; das funktioniert genauso, nur ohne Eintrag in der App-Liste.
 
