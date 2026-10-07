@@ -398,19 +398,30 @@ def profile_calendar(prof=Depends(own_profile)):
     return calendars.public(prof["id"])
 
 
-@app.put("/api/profile/calendar", dependencies=[Depends(assistant), Depends(calendar_on)])
-async def profile_calendar_save(request: Request, prof=Depends(own_profile)):
+@app.post("/api/profile/calendar", dependencies=[Depends(assistant), Depends(calendar_on)])
+async def profile_calendar_add(request: Request, prof=Depends(own_profile)):
+    """Adds a calendar only after it could be read once."""
     body = await request.json()
+    body = body if isinstance(body, dict) else {}
     try:
-        return calendars.save(prof["id"], body if isinstance(body, dict) else {})
+        item = calendars.entry(body)
+        found = await calendars.check(item, user_zone(body.get("tz")))
+        return dict(calendars.add(prof["id"], item), check=found)
     except ValueError as e:
         raise HTTPException(400, str(e))
+    except httpx.HTTPError as e:
+        raise HTTPException(400, f"calendar not reachable: {type(e).__name__}")
 
 
-@app.delete("/api/profile/calendar", dependencies=[Depends(assistant)])
-def profile_calendar_delete(prof=Depends(own_profile)):
-    calendars.forget(prof["id"])
-    return {"ok": True}
+@app.delete("/api/profile/calendar/{cid}", dependencies=[Depends(assistant)])
+def profile_calendar_remove(cid: str, prof=Depends(own_profile)):
+    return calendars.remove(prof["id"], cid)
+
+
+@app.put("/api/profile/calendar/topics", dependencies=[Depends(assistant), Depends(calendar_on)])
+async def profile_calendar_topics(request: Request, prof=Depends(own_profile)):
+    body = await request.json()
+    return calendars.set_topics(prof["id"], body.get("topics") if isinstance(body, dict) else [])
 
 
 @app.post("/api/profile/calendar/test", dependencies=[Depends(assistant), Depends(calendar_on)])
@@ -418,8 +429,8 @@ async def profile_calendar_test(request: Request, prof=Depends(own_profile)):
     body = await request.json()
     try:
         return await calendars.test(prof["id"], user_zone(body.get("tz")))
-    except (ValueError, httpx.HTTPError) as e:
-        raise HTTPException(400, f"{e}" if isinstance(e, ValueError) else f"calendar not reachable: {type(e).__name__}")
+    except ValueError as e:
+        raise HTTPException(400, str(e))
 
 
 def speaker_on():
@@ -1208,12 +1219,12 @@ async def chat(request: Request):
                  if isinstance(x, dict) and isinstance(x.get("id"), str)
                  and isinstance(x.get("due"), (int, float))][:50] if not who else []
     briefing = bool(ccfg.get("calendar", True))
-    cal = calendars.get(who["id"]) if who and briefing else {}
+    cal = calendars.get(who["id"]) if who and briefing else {"calendars": [], "topics": []}
     if briefing:
-        system = (system + "\n\n" + BRIEFING_HINT + (" " + CALENDAR_HINT if cal.get("url") else "")).strip()
+        system = (system + "\n\n" + BRIEFING_HINT + (" " + CALENDAR_HINT if cal["calendars"] else "")).strip()
     tools = ([SEARCH_TOOL] if search else []) + (MEMORY_TOOLS if prof else []) + ([DOC_TOOL] if docs else []) \
         + (REMINDER_TOOLS if timers else []) + ([BRIEFING_TOOL] if briefing else []) \
-        + ([CALENDAR_TOOL] if cal.get("url") else [])
+        + ([CALENDAR_TOOL] if cal["calendars"] else [])
     if system:
         messages = [{"role": "system", "content": system}] + messages
     lheaders = {"Authorization": f"Bearer {ccfg['llm_key']}"} if ccfg.get("llm_key") else {}
@@ -1326,7 +1337,7 @@ async def chat(request: Request):
                 if ids:
                     await out.put({"type": "reminder", "action": "cancel", "ids": sorted(ids), "foreign": not own_browser})
                 return f"Cancelled {len(ids)}."
-        if name == "calendar_events" and cal.get("url"):
+        if name == "calendar_events" and cal["calendars"]:
             zone = user_zone(body.get("tz"))
             try:
                 day = datetime.date.fromisoformat(str(args.get("date") or "")[:10])
@@ -1339,10 +1350,11 @@ async def chat(request: Request):
             await out.put({"type": "calendar"})
             start = datetime.datetime.combine(day, datetime.time(), zone)
             try:
-                evs = await calendars.events(who["id"], start, start + datetime.timedelta(days=days), zone)
+                evs, errors = await calendars.events(who["id"], start, start + datetime.timedelta(days=days), zone)
             except (ValueError, httpx.HTTPError) as e:
                 return f"Calendar not reachable: {e}"
-            return "\n".join(calendars.line(x) for x in evs) or "No appointments in this period."
+            return ("\n".join(calendars.line(x) for x in evs) or "No appointments in this period.") \
+                + "".join(f"\nCalendar '{n}' could not be read: {e}" for n, e in errors)
         if name == "daily_briefing" and briefing:
             return await briefing_text(st)
         if name == "memory_save" and prof:
@@ -1363,9 +1375,9 @@ async def chat(request: Request):
         now = datetime.datetime.now(zone)
         today = now.replace(hour=0, minute=0, second=0, microsecond=0)
         await out.put({"type": "briefing"})
-        topics = cal.get("topics", []) if search else []
+        topics = cal["topics"] if search else []
         jobs = [calendars.events(who["id"], today, today + datetime.timedelta(days=2), zone)
-                if cal.get("url") else asyncio.sleep(0)]
+                if cal["calendars"] else asyncio.sleep(0)]
         quick = dict(ccfg, search_pages=0, search_results=3)
         jobs += [web_search(c, quick, q) for q in topics]
         if topics:
@@ -1375,11 +1387,13 @@ async def chat(request: Request):
                 await sentences.put("Einen Moment, ich stelle alles zusammen.")
         res = await asyncio.gather(*jobs, return_exceptions=True)
         parts = [now_line(body.get("tz")).split(" Nutze")[0]]
-        if not cal.get("url"):
+        if not cal["calendars"]:
             parts.append("Calendar: none connected" + ("" if who else " (guests have none)") + ".")
         elif isinstance(res[0], Exception):
             parts.append(f"Calendar not reachable: {res[0]}")
         else:
+            res[0], errors = res[0]
+            parts += [f"Calendar '{n}' could not be read: {e}" for n, e in errors]
             tomorrow = today + datetime.timedelta(days=1)
             for label, a, b in (("Today", today, tomorrow), ("Tomorrow", tomorrow, tomorrow + datetime.timedelta(days=1))):
                 evs = [x for x in res[0] if x["start"] < b and (x["end"] > a or x["start"] >= a)]

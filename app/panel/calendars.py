@@ -1,8 +1,8 @@
 """Calendar and daily briefing per profile (read only; guests have neither).
 
-    USERS_DIR/<user id>/calendar.json  {"url", "user", "password", "topics": [...], "updated"}
+    USERS_DIR/<user id>/calendar.json  {"calendars": [{id, name, url, user, password}], "topics": [...]}
 
-The address is either a CalDAV server (Nextcloud, Radicale, iCloud with an app password, ...:
+A profile can connect several calendars (up to 8). Each address is either a CalDAV server (Nextcloud, Radicale, iCloud with an app password, ...:
 the server address, the user's principal or one calendar) or an iCal subscription link (.ics,
 webcal://, Google's "secret address in iCal format"). The password never leaves the Spark again:
 the panel only learns whether one is stored. Topics are a few search phrases for the briefing.
@@ -24,6 +24,7 @@ import recurring_ical_events
 import profiles
 
 MAX_TOPICS = 3
+MAX_CALENDARS = 8
 CACHE_SECONDS = 300
 _cache = {}
 _lock = threading.Lock()
@@ -37,36 +38,70 @@ def _file(uid):
 
 
 def get(uid):
+    """{"calendars": [{id, name, url, user, password}], "topics": [...]} (older files had one url)."""
     try:
         with open(_file(uid)) as f:
             d = json.load(f)
-        return d if isinstance(d, dict) else {}
+        d = d if isinstance(d, dict) else {}
     except (OSError, ValueError):
-        return {}
+        d = {}
+    cals = d.get("calendars") if isinstance(d.get("calendars"), list) else []
+    if not cals and d.get("url"):
+        cals = [{"id": "c1", "name": "Kalender", "url": d["url"], "user": d.get("user", ""),
+                 "password": d.get("password", "")}]
+    return {"calendars": [x for x in cals if isinstance(x, dict) and x.get("url")],
+            "topics": d.get("topics", []) if isinstance(d.get("topics"), list) else []}
 
 
 def public(uid):
-    """What the panel may see: everything but the password."""
+    """What the panel may see: everything but the passwords."""
     d = get(uid)
-    return {"url": d.get("url", ""), "user": d.get("user", ""), "has_password": bool(d.get("password")),
-            "topics": d.get("topics", [])}
+    return {"calendars": [{"id": x["id"], "name": x.get("name", ""), "url": x["url"], "user": x.get("user", ""),
+                           "has_password": bool(x.get("password"))} for x in d["calendars"]],
+            "topics": d["topics"]}
 
 
-def save(uid, body):
-    old = get(uid)
-    url = str(body.get("url", "")).strip()
-    if url and not re.fullmatch(r"(https?|webcals?)://[^\s]{3,500}", url, re.I):
-        raise ValueError("the calendar address must start with https://, http:// or webcal://")
-    user = str(body.get("user", "")).strip()[:200]
-    pw = body.get("password")
-    if not isinstance(pw, str) or not pw:          # empty = keep the stored one
-        pw = old.get("password", "") if url and url == old.get("url") and user == old.get("user") else ""
-    topics = body.get("topics", old.get("topics", []))
-    topics = [str(x).strip()[:80] for x in (topics if isinstance(topics, list) else []) if str(x).strip()][:MAX_TOPICS]
+def _store(uid, d):
     with _lock:
-        profiles._write(_file(uid), {"url": url, "user": user, "password": pw[:500], "topics": topics,
-                                     "updated": int(time.time())})
+        profiles._write(_file(uid), {"calendars": d["calendars"], "topics": d["topics"], "updated": int(time.time())})
         _drop(uid)
+
+
+def entry(body):
+    """A checked calendar entry from the panel's form."""
+    url = str(body.get("url", "")).strip()
+    if not re.fullmatch(r"(https?|webcals?)://[^\s]{3,500}", url, re.I):
+        raise ValueError("the calendar address must start with https://, http:// or webcal://")
+    name = str(body.get("name", "")).strip()[:60]
+    if not name:
+        m = re.match(r"\w+://([^/:]+)", url)
+        name = m.group(1) if m else "Kalender"
+    pw = body.get("password")
+    return {"id": "c" + os.urandom(4).hex(), "name": name, "url": url, "user": str(body.get("user", "")).strip()[:200],
+            "password": pw[:500] if isinstance(pw, str) else ""}
+
+
+def add(uid, item):
+    d = get(uid)
+    if len(d["calendars"]) >= MAX_CALENDARS:
+        raise ValueError(f"at most {MAX_CALENDARS} calendars")
+    d["calendars"].append(item)
+    _store(uid, d)
+    return public(uid)
+
+
+def remove(uid, cid):
+    d = get(uid)
+    d["calendars"] = [x for x in d["calendars"] if x["id"] != cid]
+    _store(uid, d)
+    return public(uid)
+
+
+def set_topics(uid, topics):
+    d = get(uid)
+    d["topics"] = [str(x).strip()[:80] for x in (topics if isinstance(topics, list) else [])
+                   if str(x).strip()][:MAX_TOPICS]
+    _store(uid, d)
     return public(uid)
 
 
@@ -183,7 +218,7 @@ async def _fetch(d, start, end):
         return texts, len(cals)
 
 
-def _expand(texts, start, end, zone):
+def _expand(texts, start, end, zone, name=""):
     out = []
     for text in texts:
         try:
@@ -209,38 +244,68 @@ def _expand(texts, start, end, zone):
                     if isinstance(e, datetime.datetime) else s
             out.append({"start": s, "end": e, "allday": allday,
                         "title": str(ev.get("SUMMARY", "") or "(ohne Titel)").strip()[:200],
-                        "location": str(ev.get("LOCATION", "") or "").strip()[:200]})
+                        "location": str(ev.get("LOCATION", "") or "").strip()[:200], "calendar": name})
     uniq = {(x["start"], x["title"]): x for x in out}
     return sorted(uniq.values(), key=lambda x: (x["start"], not x["allday"]))
 
 
-async def events(uid, start, end, zone):
-    """Events of the profile's calendar from start to end (aware datetimes), sorted."""
-    d = get(uid)
-    if not d.get("url"):
-        return None
-    key = (uid, start.isoformat(), end.isoformat())
+async def _one(uid, cal, start, end, zone):
+    key = (uid, cal["id"], start.isoformat(), end.isoformat())
     hit = _cache.get(key)
     if hit and time.time() - hit[0] < CACHE_SECONDS:
         texts = hit[1]
     else:
-        texts, _ = await _fetch(d, start.astimezone(datetime.timezone.utc), end.astimezone(datetime.timezone.utc))
+        texts, _ = await _fetch(cal, start.astimezone(datetime.timezone.utc), end.astimezone(datetime.timezone.utc))
         _cache[key] = (time.time(), texts)
-    return _expand(texts, start, end, zone)
+    return _expand(texts, start, end, zone, cal.get("name", ""))
 
 
-async def test(uid, zone):
-    """For the panel: number of calendars and the next few events."""
-    d = get(uid)
-    if not d.get("url"):
-        raise ValueError("no calendar address saved")
+async def events(uid, start, end, zone):
+    """(events of all the profile's calendars from start to end, sorted; [(name, error)] of the
+    calendars that could not be read). None when no calendar is connected."""
+    cals = get(uid)["calendars"]
+    if not cals:
+        return None
+    res = await asyncio.gather(*(_one(uid, c, start, end, zone) for c in cals), return_exceptions=True)
+    evs, errors = [], []
+    for c, r in zip(cals, res):
+        if isinstance(r, Exception):
+            errors.append((c.get("name", ""), str(r) if isinstance(r, ValueError) else f"not reachable ({type(r).__name__})"))
+        else:
+            evs += r
+    many = len(cals) > 1
+    uniq = {}
+    for x in evs:   # the same appointment in two calendars (e.g. shared ones) is read out once
+        k = (x["start"], x["title"].lower())
+        if k in uniq:
+            if x["calendar"] and x["calendar"] not in uniq[k]["calendar"].split(", "):
+                uniq[k]["calendar"] += ", " + x["calendar"]
+        else:
+            uniq[k] = dict(x, many=many)
+    return sorted(uniq.values(), key=lambda x: (x["start"], not x["allday"])), errors
+
+
+async def check(item, zone):
+    """Reads one calendar entry before it is saved: number of calendars found, the next events."""
     now = datetime.datetime.now(zone)
     start = now.replace(hour=0, minute=0, second=0, microsecond=0)
     end = start + datetime.timedelta(days=14)
-    texts, n = await _fetch(d, start.astimezone(datetime.timezone.utc), end.astimezone(datetime.timezone.utc))
-    _drop(uid)
+    texts, n = await _fetch(item, start.astimezone(datetime.timezone.utc), end.astimezone(datetime.timezone.utc))
     evs = [x for x in _expand(texts, start, end, zone) if x["end"] >= now or x["allday"]]
-    return {"calendars": n, "events": [line(x) for x in evs[:5]]}
+    return {"found": n, "events": [line(x) for x in evs[:5]]}
+
+
+async def test(uid, zone):
+    """For the panel: the next few events of all calendars and which ones failed."""
+    _drop(uid)
+    now = datetime.datetime.now(zone)
+    start = now.replace(hour=0, minute=0, second=0, microsecond=0)
+    r = await events(uid, start, start + datetime.timedelta(days=14), zone)
+    if r is None:
+        raise ValueError("no calendar connected")
+    evs, errors = r
+    evs = [x for x in evs if x["end"] >= now or x["allday"]]
+    return {"events": [line(x) for x in evs[:6]], "errors": [f"{n}: {e}" for n, e in errors]}
 
 
 def line(x):
@@ -251,4 +316,5 @@ def line(x):
         when = f"{day} ganztägig" + (f" ({days} Tage)" if days > 1 else "")
     else:
         when = f"{day} {s:%H:%M}" + (f"–{x['end']:%H:%M}" if x["end"] > s else "")
-    return f"{when}: {x['title']}" + (f" (Ort: {x['location']})" if x["location"] else "")
+    return f"{when}: {x['title']}" + (f" (Ort: {x['location']})" if x["location"] else "") \
+        + (f" [{x['calendar']}]" if x.get("many") and x.get("calendar") else "")
