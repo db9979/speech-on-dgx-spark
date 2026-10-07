@@ -33,6 +33,11 @@ client = httpx.AsyncClient(timeout=httpx.Timeout(900, connect=5))
 started = time.time()
 stats = {"requests": 0, "failures": 0, "streams": 0, "last_error": None, "active": 0}
 recent = deque(maxlen=50)  # (seconds, audio_seconds or None, time to first text or None)
+# asr.recognizer = "parakeet": no engine, the CPU model in this process does the work
+local = None
+if cfg.get("recognizer") == "parakeet":
+    import parakeet
+    local = parakeet.Recognizer()
 
 
 def engine_url(path):
@@ -58,6 +63,8 @@ def sub_state(unit):
 
 async def engine_status():
     """ready | loading | blocked | error | stopped, plus a message."""
+    if local:
+        return local.status, local.error
     try:
         r = await client.get(engine_url("/health"), timeout=2)
         if r.status_code == 200:
@@ -116,6 +123,9 @@ async def warm_up():
 
 @app.on_event("startup")
 async def watch_engine():
+    if local:
+        local.load_in_background()
+        return
     async def loop():
         ready = False
         while True:
@@ -135,7 +145,8 @@ async def health():
     ttft = [r[2] for r in recent if r[2] is not None]
     return {
         "service": "asr", "backend": "vllm", "status": status, "error": error,
-        "model": cfg["model"], "uptime_s": round(time.time() - started), "load_seconds": None,
+        "model": parakeet.NAME if local else cfg["model"], "recognizer": "parakeet" if local else "qwen",
+        "uptime_s": round(time.time() - started), "load_seconds": local.load_seconds if local else None,
         "requests": stats["requests"], "failures": stats["failures"], "streams": stats["streams"],
         "busy": stats["active"] > 0, "last_error": stats["last_error"],
         "avg_latency_s": round(sum(lat) / len(lat), 3) if lat else None,
@@ -147,7 +158,7 @@ async def health():
 
 @app.get("/v1/models", dependencies=auth)
 def models():
-    return {"object": "list", "data": [{"id": cfg["model"], "object": "model", "owned_by": "local"}]}
+    return {"object": "list", "data": [{"id": parakeet.NAME if local else cfg["model"], "object": "model", "owned_by": "local"}]}
 
 
 @app.get("/v1/languages")
@@ -187,6 +198,8 @@ async def transcriptions(request: Request):
 
     stats["requests"] += 1
     t0 = time.time()
+    if local:
+        return await local_transcription(upload, want, stream, lang, t0)
     if not stream:
         stats["active"] += 1
         try:
@@ -245,6 +258,40 @@ async def transcriptions(request: Request):
 
     return StreamingResponse(relay(), status_code=200, media_type=upstream.headers.get("content-type"),
                              headers={"Cache-Control": "no-cache", "X-Accel-Buffering": "no"})
+
+
+async def local_transcription(upload, want, stream, lang, t0):
+    import tempfile
+    suffix = os.path.splitext(upload.filename or "")[1] or ".wav"
+    with tempfile.NamedTemporaryFile(suffix=suffix, delete=False) as tmp:
+        tmp.write(await upload.read())
+        path = tmp.name
+    stats["active"] += 1
+    try:
+        text, audio_s = await asyncio.to_thread(local.transcribe_file, path)
+    except ValueError as e:
+        fail(str(e))
+        raise HTTPException(415, str(e))
+    except Exception as e:
+        fail(f"{type(e).__name__}: {e}")
+        raise HTTPException(500, f"{type(e).__name__}: {e}")
+    finally:
+        stats["active"] -= 1
+        os.unlink(path)
+    dt = time.time() - t0
+    recent.append((dt, audio_s or None, dt if stream else None))
+    headers = {"X-Processing-Seconds": f"{dt:.3f}"}
+    if stream:
+        stats["streams"] += 1
+        return Response(parakeet.sse(text, audio_s), media_type="text/event-stream",
+                        headers=dict(headers, **{"Cache-Control": "no-cache"}))
+    if want == "text":
+        return PlainTextResponse(text, headers=headers)
+    if want == "verbose_json":
+        return JSONResponse({"task": "transcribe", "language": lang or "de", "duration": audio_s,
+                             "text": text, "segments": [], "processing_s": round(dt, 3)}, headers=headers)
+    return JSONResponse({"text": text, "usage": {"type": "duration", "seconds": round(audio_s, 2)},
+                         "processing_s": round(dt, 3)}, headers=headers)
 
 
 if __name__ == "__main__":

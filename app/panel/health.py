@@ -140,7 +140,7 @@ async def watch_once(update_running=lambda: False):
         if not cfg[name].get("enabled", True):
             continue
         health = await service_health(name, cfg)
-        engine = cfg[name].get("backend") in ("vllm", "vllm-omni")
+        engine = cfg[name].get("backend") in ("vllm", "vllm-omni") and cfg[name].get("recognizer") != "parakeet"
         front_up = await asyncio.to_thread(_active_seconds, UNITS[name])
         # the front end: restarted when it does not answer (or, without an engine, when it hangs)
         reason = judge(UNITS[name], health, now, front_up, work=not engine)

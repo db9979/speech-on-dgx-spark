@@ -246,7 +246,7 @@ USE_ENGINE=0
 
 if [ "$WITH_ASR" = 1 ] && [ "$ASR_BACKEND" = transformers ]; then
   say "Python env for Qwen3-ASR (transformers backend, several GB of wheels)"
-  make_venv asr --torch qwen-asr fastapi "uvicorn[standard]" python-multipart
+  make_venv asr --torch qwen-asr fastapi "uvicorn[standard]" python-multipart sherpa-onnx
   check_cuda asr
 fi
 if [ "$WITH_TTS" = 1 ] && [ "$BACKEND" = transformers ]; then
@@ -255,7 +255,8 @@ if [ "$WITH_TTS" = 1 ] && [ "$BACKEND" = transformers ]; then
   check_cuda tts
 fi
 say "Python env for the panel and the ASR / TTS front ends"
-make_venv panel fastapi "uvicorn[standard]" python-multipart httpx psutil num2words numpy pypdf icalendar recurring-ical-events cryptography
+# sherpa-onnx + huggingface_hub: the Parakeet recognizer (CPU) that asr_proxy.py runs when chosen
+make_venv panel fastapi "uvicorn[standard]" python-multipart httpx psutil num2words numpy pypdf icalendar recurring-ical-events cryptography sherpa-onnx huggingface_hub
 
 # ---------------------------------------------------------------- engines (vLLM + vllm-omni, native)
 if [ "$USE_ENGINE" = 1 ]; then
@@ -281,6 +282,13 @@ if [ "$DOWNLOAD" = 1 ]; then
     say "Downloading ASR model"
     dl asr "$(cfg .asr.model)"
     [ "$(cfg .asr.timestamps)" = true ] && dl asr "$(cfg .asr.aligner_model)"
+  fi
+  if [ "$WITH_ASR" = 1 ] && [ "$(cfg '.asr.recognizer // "qwen"')" = parakeet ]; then
+    say "Downloading the Parakeet recognizer (~640 MB)"
+    asr_venv=panel; [ "$ASR_BACKEND" = transformers ] && asr_venv=asr
+    { cat "$INSTALL_FROM/app/parakeet.py"; echo 'download()'; } \
+      | sudo -u "$SVC_USER" HF_HOME="$VAR/hf" "$PREFIX/venv-$asr_venv/bin/python" - \
+      || warn "Parakeet download failed; the ASR service retries when it starts"
   fi
   if [ "$WITH_ASR" = 1 ] && [ "$ASR_BACKEND" = vllm ]; then
     say "Downloading ASR model for the engine"

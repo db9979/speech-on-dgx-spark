@@ -884,6 +884,32 @@ class Mail(unittest.TestCase):
         self.assertNotIn("Grillen", text)
 
 
+class AsrRecognizer(unittest.TestCase):
+    """Switching to Parakeet stops the Qwen3-ASR engine; switching back starts it again."""
+
+    def test_switch(self):
+        import admin
+        calls = []
+        orig = admin.run
+        admin.run = lambda cmd, **kw: (calls.append(cmd), (0, ""))[1]
+        try:
+            cfg = ADMIN.get("/api/config").json()
+            cfg["asr"]["backend"] = "vllm"
+            bad = json.loads(json.dumps(cfg))
+            bad["asr"]["recognizer"] = "whisper"
+            self.assertEqual(ADMIN.put("/api/config", json=bad).status_code, 400)
+            cfg["asr"]["recognizer"] = "parakeet"
+            r = ADMIN.put("/api/config", json=cfg)
+            self.assertEqual(r.status_code, 200, r.text)
+            self.assertIn("asr-engine", r.json()["stopped"])
+            self.assertIn("asr", r.json()["restarted"])
+            cfg["asr"]["recognizer"] = "qwen"
+            r = ADMIN.put("/api/config", json=cfg)
+            self.assertIn("asr-engine", r.json()["restarted"])
+        finally:
+            admin.run = orig
+
+
 if __name__ == "__main__":
     unittest.main()
 

@@ -145,7 +145,8 @@
     </div>
     <div class="card pane" id="pane-asr"><h2 class="pt">Spracherkennung</h2>
       <label class="chk"><input type="checkbox" id="asr.enabled"> aktiviert</label>
-      <label>Modell</label><select id="asr.model"><option>Qwen/Qwen3-ASR-1.7B</option><option>Qwen/Qwen3-ASR-0.6B</option></select><div class="fh">1.7B erkennt genauer, braucht aber mehr Speicher.</div>
+      <label>Erkennung</label><select id="asr.recognizer"><option value="qwen">Qwen3-ASR (Grafikkarte)</option><option value="parakeet">Parakeet Deutsch (Prozessor)</option></select><div class="fh">Parakeet (primeline, deutsch nachtrainiert) läuft auf dem Prozessor, braucht etwa 1 GiB statt mehrerer GiB und ist sehr schnell, kennt aber keinen Kontext und versteht vor allem Deutsch. Beim Umschalten startet die Spracherkennung neu; beim ersten Mal lädt Parakeet etwa 640 MB herunter.</div>
+      <div id="asrqwen"><label>Modell</label><select id="asr.model"><option>Qwen/Qwen3-ASR-1.7B</option><option>Qwen/Qwen3-ASR-0.6B</option></select><div class="fh">1.7B erkennt genauer, braucht aber mehr Speicher.</div></div>
       <label>Standardsprache</label><select id="asr.default_language" class="langs"></select><div class="fh">Eine feste Sprache erkennt kurze Sätze besser als „auto“.</div>
       <label>Kontext</label><textarea id="asr.context" rows="2"></textarea><div class="fh">Namen, Fachbegriffe oder ein Satz zum Thema, die die Erkennung erwarten soll (z. B. DGX Spark, Qwen, Open WebUI).</div>
       <details class="adv"><summary>Erweitert</summary>

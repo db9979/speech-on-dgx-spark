@@ -20,6 +20,12 @@ state() {  # $1 = status, $2 = message
 fail() { state error "$1"; echo "ERROR: $1" >&2; exit 1; }
 
 if [ "$ROLE" = asr ]; then
+  # with the Parakeet recognizer (CPU, inside the ASR front end) this engine is not needed
+  if [ "$(jq -r '.asr.recognizer // "qwen"' "$CONFIG")" = parakeet ]; then
+    state off "not needed: speech recognition uses Parakeet"
+    echo "asr.recognizer is parakeet, the Qwen3-ASR engine stays off"
+    exit 0
+  fi
   c() { jq -r ".asr.$1" "$CONFIG"; }
   SEQS=$(c engine_max_seqs); MEM0=$(c engine_mem); MEM1=0.0
   MODEL=$(c model); PORT=$(c engine_port)

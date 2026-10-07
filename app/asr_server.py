@@ -47,14 +47,31 @@ def load_model(cfg):
 
 
 
+def load_parakeet(cfg):
+    """asr.recognizer = "parakeet": the CPU model instead of Qwen3-ASR (see parakeet.py)."""
+    import parakeet
+    rec = parakeet.Recognizer()
+    rec.load()
+    if rec.status != "ready":
+        raise RuntimeError(rec.error)
+    return rec
+
+
+PARAKEET = cfg.get("recognizer") == "parakeet"
+
+
 @app.on_event("startup")
 def startup():
-    state.load_in_background(load_model)
+    state.load_in_background(load_parakeet if PARAKEET else load_model)
 
 
 @app.get("/health")
 def health():
-    return state.health({"timestamps": bool(cfg.get("timestamps"))})
+    out = state.health({"timestamps": bool(cfg.get("timestamps")) and not PARAKEET})
+    if PARAKEET:
+        import parakeet
+        out.update(model=parakeet.NAME, recognizer="parakeet")
+    return out
 
 
 @app.get("/v1/models", dependencies=auth)
@@ -102,6 +119,8 @@ async def transcriptions(
 ):
     if state.status != "ready":
         raise HTTPException(503, f"model {state.status}: {state.error or 'still loading'}")
+    if PARAKEET:
+        return await parakeet_transcription(file, response_format)
     if timestamps and not cfg.get("timestamps"):
         raise HTTPException(400, "timestamps are disabled in the config")
     lang = language or cfg.get("default_language") or "auto"
@@ -139,6 +158,30 @@ async def transcriptions(
     if timestamps and r.time_stamps is not None:
         out["words"] = [{"word": i.text, "start": i.start_time, "end": i.end_time} for i in r.time_stamps.items]
     return out
+
+
+async def parakeet_transcription(file, response_format):
+    import asyncio
+    suffix = os.path.splitext(file.filename or "")[1] or ".wav"
+    with tempfile.NamedTemporaryFile(suffix=suffix, delete=False) as tmp:
+        tmp.write(await file.read())
+        path = tmp.name
+    try:
+        t0 = time.time()
+        text, audio_s = await asyncio.to_thread(state.model.transcribe_file, path)
+        dt = time.time() - t0
+        state.record(dt, audio_s)
+    except ValueError as e:
+        state.record(0, error=str(e))
+        raise HTTPException(415, str(e))
+    except Exception as e:
+        state.record(0, error=f"{type(e).__name__}: {e}")
+        raise HTTPException(500, f"{type(e).__name__}: {e}")
+    finally:
+        os.unlink(path)
+    if response_format == "text":
+        return PlainTextResponse(text)
+    return {"text": text, "language": "German", "duration": audio_s, "processing_s": round(dt, 3)}
 
 
 if __name__ == "__main__":

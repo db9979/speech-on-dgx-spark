@@ -149,7 +149,9 @@ async def status():
                           "health": await service_health(name, cfg)}
     total_gib = psutil.virtual_memory().total / 2**30
     a = cfg["asr"]
-    if a.get("backend") == "vllm":
+    if a.get("recognizer") == "parakeet":
+        services["asr"]["estimate_gib"] = 1.5  # CPU model, no engine
+    elif a.get("backend") == "vllm":
         gib = round(a["engine_mem"] * total_gib + 1.5, 1)
         services["asr"]["backend"] = "vllm"
         services["asr"]["estimate_gib"] = gib
@@ -209,6 +211,8 @@ def validate(new):
     a = new["asr"]
     if not isinstance(a.get("context", ""), str) or len(a.get("context", "")) > 2000:
         raise HTTPException(400, "ASR context: text up to 2000 characters")
+    if a.get("recognizer", "qwen") not in ("qwen", "parakeet"):
+        raise HTTPException(400, "recognizer must be qwen or parakeet")
     if a.get("backend") != old["asr"].get("backend"):
         raise HTTPException(400, "the ASR backend is chosen at install time: sudo ./install.sh --asr-backend ...")
     if not isinstance(a["engine_mem"], (int, float)) or not 0.01 <= a["engine_mem"] <= 0.5:
@@ -298,8 +302,12 @@ async def put_config(request: Request):
             actions[n] = "restart" if new[n]["enabled"] else "stop"
     a, oa = new["asr"], old["asr"]
     if a.get("backend") == "vllm":
-        if not a["enabled"]:
-            actions["asr-engine"] = "stop"
+        if not a["enabled"] or (a.get("recognizer") == "parakeet" and oa.get("recognizer") != "parakeet"):
+            actions["asr-engine"] = "stop"  # Parakeet runs inside the ASR service, the engine frees its memory
+        elif a.get("recognizer") == "parakeet":
+            pass
+        elif oa.get("recognizer") == "parakeet":
+            actions["asr-engine"] = "restart"
         elif any(a.get(k) != oa.get(k) for k in ASR_ENGINE_KEYS) or mem_changed or not oa["enabled"]:
             actions["asr-engine"] = "restart"
     t, ot = new["tts"], old["tts"]
