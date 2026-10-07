@@ -322,6 +322,34 @@ class Security(unittest.TestCase):
         self.assertEqual(p.get("/api/audit").status_code, 401)
 
 
+class Errors(unittest.TestCase):
+    def _set(self, sec, **kw):
+        with open(helpers.os.environ["SPEECH_SPARK_CONFIG"]) as f:
+            c = json.load(f)
+        old = dict(c[sec])
+        c[sec].update(kw)
+        with open(helpers.os.environ["SPEECH_SPARK_CONFIG"], "w") as f:
+            json.dump(c, f)
+        return old
+
+    def test_tts_down_still_gives_the_text(self):
+        old = self._set("tts", port=helpers._port())
+        try:
+            evs = ask(TestClient(panel.app), "Hallo")
+        finally:
+            self._set("tts", **old)
+        self.assertEqual(answer(evs), "Hallo.")
+        self.assertEqual([e["code"] for e in evs if e["type"] == "error"], ["tts_down"])
+
+    def test_llm_down_is_named(self):
+        old = self._set("chat", llm_url=f"http://127.0.0.1:{helpers._port()}/v1", llm_model="x")
+        try:
+            evs = ask(TestClient(panel.app), "Hallo")
+        finally:
+            self._set("chat", **old)
+        self.assertEqual([e["code"] for e in evs if e["type"] == "error"], ["llm_down"])
+
+
 class Stability(unittest.TestCase):
     def test_backup_and_restore(self):
         import io

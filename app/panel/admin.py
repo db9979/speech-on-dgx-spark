@@ -357,10 +357,15 @@ async def test_asr(file: UploadFile = File(...), language: str = Form("auto"), w
     if cfg.get("chat", {}).get("speaker_id", False) and not wake:
         th = speakers.STRICTNESS.get(cfg["chat"].get("speaker_strictness"), 0.75)
         spk = asyncio.create_task(asyncio.to_thread(speakers.identify, data, th))
-    async with httpx.AsyncClient(timeout=600) as c:
-        r = await c.post(f"http://127.0.0.1:{cfg['asr']['port']}/v1/audio/transcriptions",
-                         files={"file": (file.filename or "audio.wav", data)},
-                         data=form, headers=api_headers())
+    try:
+        async with httpx.AsyncClient(timeout=600) as c:
+            r = await c.post(f"http://127.0.0.1:{cfg['asr']['port']}/v1/audio/transcriptions",
+                             files={"file": (file.filename or "audio.wav", data)},
+                             data=form, headers=api_headers())
+    except (httpx.ConnectError, httpx.ConnectTimeout):
+        if spk:
+            spk.cancel()
+        raise HTTPException(503, "asr_down: the speech recognition service does not answer")
     if spk is None or r.status_code != 200:
         return Response(r.content, status_code=r.status_code, media_type="application/json")
     out = r.json()

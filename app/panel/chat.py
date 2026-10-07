@@ -422,6 +422,19 @@ def now_line(tz=None):
 _last_chat = [0.0]
 
 
+def llm_error_code(e, status=None):
+    """A short reason the page turns into a plain sentence (see chat.js errText)."""
+    if status in (401, 403):
+        return "llm_auth"
+    if isinstance(e, (httpx.ConnectError, httpx.ConnectTimeout)) or status in (502, 503, 504):
+        return "llm_down"
+    if isinstance(e, httpx.TimeoutException):
+        return "llm_slow"
+    if status == 404:
+        return "llm_model"
+    return "llm_error"
+
+
 @router.post("/api/chat", dependencies=[Depends(assistant)])
 async def chat(request: Request):
     _last_chat[0] = time.time()
@@ -558,11 +571,10 @@ async def chat(request: Request):
                 await sentences.put(buf.strip())
         except Exception as e:
             status = getattr(getattr(e, "response", None), "status_code", None)
-            if status in (401, 403) or re.match(r"LLM HTTP 40[13]\b", str(e)):
-                await out.put({"type": "error", "code": "llm_auth",
-                               "message": "LLM: API key rejected (401). Set the qwen38 key under Konfiguration -> Assistent."})
-            else:
-                await out.put({"type": "error", "message": f"LLM: {type(e).__name__}: {e}"})
+            m = re.match(r"LLM HTTP (\d+)", str(e))
+            status = status or (int(m.group(1)) if m else None)
+            await out.put({"type": "error", "code": llm_error_code(e, status),
+                           "message": f"LLM: {type(e).__name__}: {e}"[:400]})
         finally:
             await sentences.put(None)
 
@@ -793,12 +805,15 @@ async def chat(request: Request):
 
     async def tts():
         first, played_until, ttfa = True, 0.0, 0.5
+        mute = False  # speech output failed: the rest of the answer comes as text only
+        done = False
         try:
-            done = False
             while not done:
                 text = await sentences.get()
                 if text is None:
                     break
+                if mute:
+                    continue
                 # Every TTS request starts its own intonation, so sentence-by-sentence speech
                 # wanders in tone. Only the first sentence goes alone (fast first audio); after
                 # that, everything the LLM has written meanwhile is spoken as one piece.
@@ -828,8 +843,11 @@ async def chat(request: Request):
                 sent, got = time.time(), False
                 async with c.stream("POST", tts_url, json=req, headers=api_headers()) as r:
                     if r.status_code != 200:
-                        await out.put({"type": "error", "message": f"TTS HTTP {r.status_code}: "
-                                       f"{(await r.aread()).decode(errors='replace')[:300]}"})
+                        detail = (await r.aread()).decode(errors='replace')[:300]
+                        await out.put({"type": "error", "code": "tts_loading" if r.status_code == 503 and "loading" in detail
+                                       else "tts_down" if r.status_code in (502, 503) else "tts_error",
+                                       "message": f"TTS HTTP {r.status_code}: {detail}"})
+                        mute = True
                         continue
                     async for line in r.aiter_lines():
                         if not line.startswith("data:"):
@@ -851,7 +869,10 @@ async def chat(request: Request):
                         elif ev.get("type") == "speech.audio.error":
                             await out.put({"type": "error", "message": f"TTS: {ev.get('error')}"})
         except Exception as e:
-            await out.put({"type": "error", "message": f"TTS: {type(e).__name__}: {e}"})
+            code = "tts_down" if isinstance(e, (httpx.ConnectError, httpx.ConnectTimeout)) else "tts_error"
+            await out.put({"type": "error", "code": code, "message": f"TTS: {type(e).__name__}: {e}"[:400]})
+            while not done and await sentences.get() is not None:  # the text still comes to the end
+                pass
         finally:
             await out.put(None)
 

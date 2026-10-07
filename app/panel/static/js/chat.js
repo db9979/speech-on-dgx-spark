@@ -112,7 +112,7 @@ async function transcribe2(blob,tEnd,rec){chatSay(t('Erkenne Sprache …','Trans
   const last=chat.live.last;chat.live.last=null;let r=null;
   if(last&&last.rec===rec&&chat.lastVoice!=null&&last.at>chat.lastVoice+150)r=await last.p;
   clearLive();
-  if(!r)try{r=await asrText(blob)}catch(e){chatSay(t('Spracherkennung: ','Speech recognition: ')+e.message);return}
+  if(!r)try{r=await asrText(blob)}catch(e){chatSay(errText(e instanceof TypeError?'net':/asr_down|unreachable/.test(e.message)?'asr_down':/loading/.test(e.message)?'asr_loading':'asr_error',e.message));return}
   if(!r.text){chatSay(t('Nichts verstanden.','Did not catch that.'));return}
   chat.asrBusy=false;ask(r.text,(performance.now()-tEnd)/1000,r.speaker)}
 // Live transcript: the recording so far is transcribed about every second and shown as a pale
@@ -144,9 +144,24 @@ function turnCheck(x,at,rec){if(chat.rec!==rec||(chat.lastVoice||0)>at)return;  
 function showLive(x){if(!chat.liveEl){chat.liveEl=chatLog('user',x);chat.liveEl.classList.add('live')}else chat.liveEl.textContent=x;$('chatlog').scrollTop=1e9}
 function clearLive(){if(chat.liveEl){chat.liveEl.parentNode.remove();chat.liveEl=null}}
 
+// Errors in plain words; the admin also sees the technical detail.
+const ERRS={llm_auth:t('Das Sprachmodell lehnt den Schlüssel ab. Unter Einstellungen → Assistent den qwen38-Schlüssel eintragen (auf dem Spark in ~/.config/qwen38/api-key) oder das Update ausführen, das ihn übernimmt.','The language model rejects the key. Enter the qwen38 key under Settings → Assistant (on the Spark in ~/.config/qwen38/api-key) or run the update, which imports it.'),
+  llm_down:t('Das Sprachmodell läuft gerade nicht oder startet noch. Bitte gleich noch einmal versuchen.','The language model is not running or still starting. Please try again in a moment.'),
+  llm_slow:t('Das Sprachmodell antwortet gerade nicht rechtzeitig, es ist wohl stark beschäftigt.','The language model does not answer in time; it is probably very busy.'),
+  llm_model:t('Das eingestellte Sprachmodell gibt es nicht. Einstellungen → Assistent prüfen.','The configured language model does not exist. Check Settings → Assistant.'),
+  llm_error:t('Das Sprachmodell hat einen Fehler gemeldet.','The language model reported an error.'),
+  tts_down:t('Die Sprachausgabe läuft gerade nicht, deshalb nur als Text.','Speech output is not running, so text only.'),
+  tts_loading:t('Die Sprachausgabe lädt noch, deshalb nur als Text.','Speech output is still loading, so text only.'),
+  tts_error:t('Die Sprachausgabe hatte einen Fehler, deshalb nur als Text.','Speech output had an error, so text only.'),
+  asr_down:t('Die Spracherkennung läuft gerade nicht. Du kannst die Frage auch tippen.','Speech recognition is not running. You can also type the question.'),
+  asr_loading:t('Die Spracherkennung lädt noch. Bitte gleich noch einmal oder tippen.','Speech recognition is still loading. Try again in a moment or type.'),
+  asr_error:t('Die Spracherkennung hatte einen Fehler.','Speech recognition had an error.'),
+  net:t('Keine Verbindung zum Spark. Ist das Netz weg?','No connection to the Spark. Is the network down?')};
+function errText(code,msg){const plain=ERRS[code];if(!plain)return msg||t('Unbekannter Fehler.','Unknown error.');
+  return plain+(typeof ADMIN!=='undefined'&&ADMIN&&msg&&code!=='net'?' ('+String(msg).slice(0,160)+')':'')}
 async function ask(text,asrS,spk){
   if(S.daily&&chat.cid&&!chat.picked){const c=convos.load().find(x=>x.id===chat.cid);if(c&&c.updated<today0())openConvo(null)}   // past midnight
-const ub=chatLog('user',text);const um={role:'user',content:text};chat.msgs.push(um);deletable(ub,um);let foreign=false;
+const ub=chatLog('user',text);const um={role:'user',content:text};chat.msgs.push(um);deletable(ub,um);let foreign=false,ttsErr=false;
   const el=chatLog('assistant','');$('fabtext').textContent='';let full='',llmS=null,audioS=null,err='';const searches=[],sources=[],mems=[],docs=[];
   const ctrl=new AbortController();chat.ctrl=ctrl;chat.firstPlay=null;chat.gaps=[];chat.blocks=[];chat.t0b=null;setTalk();chatSay(t('Antwort kommt …','Answer coming …'));
   try{const r=await api('/api/chat',{method:'POST',headers:{'Content-Type':'application/json'},signal:ctrl.signal,
@@ -174,8 +189,8 @@ const ub=chatLog('user',text);const um={role:'user',content:text};chat.msgs.push
         else if(ev.type==='memory'){mems.push((ev.action==='saved'?t('Gemerkt: ','Remembered: '):t('Vergessen: ','Forgotten: '))+ev.text)}
         else if(ev.type==='search_error'){chatSay(t('Websuche fehlgeschlagen: ','Web search failed: ')+ev.message)}
         else if(ev.type==='timing'){if(ev.llm_first_token!=null)llmS=ev.llm_first_token;if(ev.first_audio!=null)audioS=ev.first_audio}
-        else if(ev.type==='error'){err=ev.code==='llm_auth'?t('Das LLM lehnt den API-Key ab (401). Trage den qwen38-Key unter Konfiguration → Assistent ein (steht auf dem Spark in ~/.config/qwen38/api-key) oder führe das Update aus, das ihn automatisch übernimmt.','The LLM rejected the API key (401). Enter the qwen38 key under Configuration → Assistant (on the Spark it is in ~/.config/qwen38/api-key) or run the update, which imports it automatically.'):ev.message}}}}
-  catch(e){if(e.name!=='AbortError')err=e.message}
+        else if(ev.type==='error'){if(!err)err=errText(ev.code,ev.message);if(/^tts/.test(ev.code||''))ttsErr=true}}}}
+  catch(e){if(e.name!=='AbortError')err=errText(e instanceof TypeError?'net':'',e.message)}
   const aborted=ctrl.signal.aborted;if(chat.ctrl===ctrl)chat.ctrl=null;
   // another person's voice: the exchange is theirs, so it stays out of this browser's history and context
   if(foreign){const i=chat.msgs.indexOf(um);if(i>=0)chat.msgs.splice(i,1)}
@@ -191,7 +206,8 @@ const ub=chatLog('user',text);const um={role:'user',content:text};chat.msgs.push
     (asrS!=null&&audioS!=null?chip(t('hörbar nach','audible after'),asrS+audioS,true):'')+
     (chat.gaps.length?`<span class="chip" title="${t('Die Sprachausgabe kam nicht schnell genug nach','Speech output fell behind')}">${t('Aussetzer bei','stalls at')} <b>${chat.gaps.map(x=>x.toFixed(1)+' s').join(', ')}</b></span>`+
       `<div class="blocks">${t('Tonblöcke (Länge@Ankunft, ! = Aussetzer)','Audio blocks (length@arrival, ! = stall)')}: ${esc(chat.blocks.join(' '))}</div>`:'');
-  if(err){chat.errAt=performance.now();chatSay(err);setTalk();return}
+  if(err){const d=document.createElement('div');d.className='err';d.textContent=err;el.appendChild(d);$('chatlog').scrollTop=1e9}
+  if(err&&!(ttsErr&&full.trim())){chat.errAt=performance.now();chatSay(err);setTalk();return}
   if(aborted){setTalk();return}
   while(playing()&&!chat.ctrl&&!chat.rec)await new Promise(res=>setTimeout(res,100));   // wait until it has finished speaking
   setTalk();if(chat.ctrl||chat.rec)return;
