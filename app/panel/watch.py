@@ -163,7 +163,7 @@ async def run(job: Job, response):
                 kind = ev.get("type")
                 if kind == "text":
                     job.text += ev.get("delta", "")
-                elif kind == "truncated":
+                elif kind in ("truncated", "retract"):
                     job.text = job.text[:max(0, len(job.text) - int(ev.get("drop") or 0))]
                 elif kind == "audio" and job.speak:
                     job.audio += await asyncio.to_thread(job.enc.feed, base64.b64decode(ev["audio"]))

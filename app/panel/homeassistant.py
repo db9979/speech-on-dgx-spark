@@ -89,8 +89,20 @@ def save(uid, item):
 _WORD = re.compile(r"[0-9A-Za-zÄÖÜäöüß]+")
 
 
+def _tok(word):
+    """One word as compared: lower case, umlauts spelled out, numbers as German words, so "Apollo 13"
+    and "Apollo dreizehn" are the same code word whichever way speech recognition writes it."""
+    if any(ch.isdigit() for ch in word):
+        try:
+            from textnorm import speak_numbers
+            word = speak_numbers(word, "de")
+        except ImportError:
+            pass
+    return _norm(word).replace(" ", "")
+
+
 def _words(text):
-    return [_norm(m.group(0)).replace(" ", "") for m in _WORD.finditer(str(text))]
+    return [_tok(m.group(0)) for m in _WORD.finditer(str(text))]
 
 
 @functools.lru_cache(maxsize=4096)
@@ -128,7 +140,7 @@ def _spans(code, text):
     """Character spans of the code word in a text: windows of about its word count, compared without
     spaces, so speech recognition may split or join its words."""
     toks = list(_WORD.finditer(str(text)))
-    norm = [_norm(m.group(0)).replace(" ", "") for m in toks]
+    norm = [_tok(m.group(0)) for m in toks]
     n = int(code.get("words") or 1)
     found = []
     for k in sorted({max(1, n - 1), n, n + 1}):
@@ -201,14 +213,27 @@ async def check(item):
 
 
 async def command(item, text, language="de"):
-    """Hands one spoken command to Home Assistant's Assist; returns (ok, answer, targets)."""
+    """Hands one spoken command to Home Assistant's Assist; when Assist does not know the device, finds
+    it among all states and switches it directly (see fallback). Returns (ok, answer, targets)."""
+    ok, speech, targets, unknown = await _assist(item, text, language)
+    if not unknown:
+        return ok, speech, targets
+    done, more = await fallback(item, text)
+    if done:
+        return True, more, []
+    return False, speech + " " + (more or (
+        "(Assist did not find this device or did not understand the sentence; it only knows devices exposed "
+        "to Assist. Look the device up with home_assistant_states and switch it with home_assistant_action.)")), []
+
+
+async def _assist(item, text, language):
     body = {"text": str(text)[:500], "language": language}
     if item.get("agent"):
         body["agent_id"] = item["agent"]
     async with _client(item) as c:
         r = await c.post(item["url"] + "/api/conversation/process", json=body)
     if r.status_code == 401:
-        return False, "Home Assistant rejected the token.", []
+        return False, "Home Assistant rejected the token.", [], False
     r.raise_for_status()
     res = (r.json() or {}).get("response") or {}
     speech = ((res.get("speech") or {}).get("plain") or {}).get("speech", "")
@@ -218,13 +243,9 @@ async def command(item, text, language="de"):
     ok = res.get("response_type") != "error" and not failed
     if failed:
         speech += " Failed: " + ", ".join(failed)
-    if res.get("response_type") == "error" and (res.get("data") or {}).get("code") in (
-            "no_valid_targets", "no_intent_match"):
-        # Assist knows only exposed entities and its own sentence patterns
-        speech += (" (Assist did not find this device or did not understand the sentence; it only knows "
-                   "devices exposed to Assist. Look the device up with home_assistant_states and retry "
-                   "with its exact name.)")
-    return ok, speech.strip() or ("Done." if ok else "Home Assistant could not do that."), targets[:10]
+    # Assist knows only exposed entities and its own sentence patterns
+    unknown = res.get("response_type") == "error" and data.get("code") in ("no_valid_targets", "no_intent_match")
+    return ok, speech.strip() or ("Done." if ok else "Home Assistant could not do that."), targets[:10], unknown
 
 
 # ---- reading states: every entity the token's user can see, not only those exposed to Assist ----
@@ -249,7 +270,8 @@ _CLASS = {
     "garage_door": "garage tor", "opening": "offen geöffnet", "motion": "bewegung motion", "occupancy": "anwesenheit belegt",
     "presence": "anwesenheit", "moisture": "wasser leck feucht", "smoke": "rauch rauchmelder", "co2": "co2 luftqualität",
     "carbon_dioxide": "co2 luftqualität", "pm25": "feinstaub", "illuminance": "helligkeit lux", "pressure": "luftdruck",
-    "gas": "gas", "voltage": "spannung", "current": "strom", "plug": "steckdose", "connectivity": "verbunden online",
+    "gas": "gas", "tv": "fernseher fernsehen tv glotze", "speaker": "lautsprecher box musik speaker",
+    "receiver": "receiver verstaerker anlage", "voltage": "spannung", "current": "strom", "plug": "steckdose", "connectivity": "verbunden online",
 }
 _STOP = set("der die das den dem des ein eine einen im in ist sind wie was wo welche welcher welches gibt es mir "
             "bitte und oder von vom zum zur auf an aus mit hat haben gerade aktuell jetzt alle alles zeige zeig "
@@ -312,6 +334,35 @@ def _line(s, names, area):
     return f"{name} ({eid}{', ' + area if area else ''}): {val}" + (f" [{', '.join(extra)}]" if extra else "")
 
 
+def _hay(s, names, room):
+    eid = s["entity_id"]
+    dom = eid.split(".")[0]
+    a = s.get("attributes") or {}
+    dc = a.get("device_class") or ""
+    kind = _KIND.get(dom, "")
+    if dom == "media_player" and dc:  # a TV is no speaker: the class decides, not the kind
+        kind = "media"
+    return _norm(" ".join([names[eid], _norm(eid), _norm(room), dom.replace("_", " "), kind, _CLASS.get(dc, ""), dc]))
+
+
+def _score(all_states, areas, names, words, domain="", want_area=""):
+    """[(words hit, words hit in name or room, state)], best first."""
+    scored = []
+    for s in all_states:
+        eid = s["entity_id"]
+        if domain and eid.split(".")[0] != domain:
+            continue
+        room = areas.get(eid, "")
+        if want_area and want_area not in _norm(room) and want_area not in _norm(names[eid]):
+            continue
+        hay = _hay(s, names, room)
+        hits = sum(1 for w in words if w in hay) if words else 1
+        if hits:
+            near = sum(1 for w in words if w in _norm(names[eid]) or w in _norm(room))
+            scored.append((hits, near, s))
+    return sorted(scored, key=lambda x: (-x[0], -x[1], names[x[2]["entity_id"]]))
+
+
 async def states(item, text="", domain="", area="", limit=60):
     """Searches every state the token's user may read; returns (count, text for the model).
     Without words, domain or area it gives an overview: areas, zones, people, counts per kind."""
@@ -343,29 +394,11 @@ async def states(item, text="", domain="", area="", limit=60):
         for d in ("zone", "person"):
             out += [_line(s, names, areas.get(s["entity_id"], "")) for s in all_states if s["entity_id"].startswith(d + ".")]
         return len(all_states), "\n".join(out)
-    scored = []
-    for s in all_states:
-        eid = s["entity_id"]
-        dom = eid.split(".")[0]
-        if domain and dom != domain:
-            continue
-        a = s.get("attributes") or {}
-        room = areas.get(eid, "")
-        if want_area and want_area not in _norm(room) and want_area not in _norm(names[eid]):
-            continue
-        hay = _norm(" ".join([names[eid], _norm(eid), _norm(room), dom.replace("_", " "), _KIND.get(dom, ""),
-                        _CLASS.get(a.get("device_class", ""), ""), a.get("device_class", "")]))
-        hits = sum(1 for w in words if w in hay) if words else 1
-        if hits:
-            # hits in the name or room rank before hits in the kind words
-            near = sum(1 for w in words if w in _norm(names[eid]) or w in _norm(room))
-            scored.append((hits, near, s))
+    scored = _score(all_states, areas, names, words, domain, want_area)
     if not scored:
         return 0, ("No entity matches. Try other words, a kind (domain) like sensor, light, zone, person, or "
                    "call without words for an overview.")
-    best = max(x[0] for x in scored)  # entities matching the most words; all words when any does
-    keep = [x[2] for x in sorted((x for x in scored if x[0] == best),
-                                 key=lambda x: (-x[1], names[x[2]["entity_id"]]))]
+    keep = [x[2] for x in scored if x[0] == scored[0][0]]  # the most words; all words when any does
     lines = [_line(s, names, areas.get(s["entity_id"], "")) for s in keep[:limit]]
     if len(keep) > limit:
         lines.append(f"... and {len(keep) - limit} more; narrow the search.")
@@ -375,6 +408,51 @@ async def states(item, text="", domain="", area="", limit=60):
 # ---- direct actions: devices Assist does not know; never locks, alarm systems or updates ----
 
 BLOCKED = {"lock", "alarm_control_panel", "update"}
+
+
+# what a spoken command wants, by its words (German and English)
+_VERBS = [("turn_off", "aus ausschalten ausmachen abschalten off stop stopp"),
+          ("turn_on", "an ein einschalten anmachen anschalten on"),
+          ("open_cover", "oeffne oeffnen auf hoch rauf open"), ("close_cover", "schliesse schliessen zu runter close"),
+          ("toggle", "umschalten toggle")]
+_SWITCHABLE = {"light", "switch", "fan", "cover", "media_player", "climate", "input_boolean", "humidifier",
+               "vacuum", "water_heater", "remote", "siren"}
+_FILLER = set("schalte schalt mach mache machen stell stelle bitte mal den die das dem im in am beim vom ganz "
+              "the please turn switch set".split())
+
+
+async def fallback(item, text):
+    """When Assist does not know a device: finds it among all states and switches it when the words
+    name one device and a plain on/off/open/close; otherwise lists the candidates. (done, text)."""
+    words = [w for w in _norm(text).split() if len(w) > 1]
+    service = next((svc for svc, verbs in _VERBS if any(w in verbs.split() for w in words)), None)
+    words = [w for w in words if w not in _FILLER and w not in _STOP and not any(w in v.split() for _, v in _VERBS)]
+    if not words:
+        return False, ""
+    async with _client(item) as c:
+        r = await c.get(item["url"] + "/api/states")
+        r.raise_for_status()
+        all_states = [s for s in r.json() or [] if isinstance(s, dict) and s.get("entity_id")
+                      and s["entity_id"].split(".")[0] in _SWITCHABLE]
+        areas = await _areas(c, item)
+    names = {s["entity_id"]: (s.get("attributes") or {}).get("friendly_name") or s["entity_id"] for s in all_states}
+    scored = _score(all_states, areas, names, words)
+    full = [x for x in scored if x[0] == len(words)]  # every word of the command fits
+    if service and len(full) == 1 or (service and len(full) > 1 and full[0][1] > full[1][1]):
+        s = full[0][2]
+        dom = s["entity_id"].split(".")[0]
+        svc = service if dom == "cover" or service not in ("open_cover", "close_cover") else None
+        if dom == "cover" and service in ("turn_on", "turn_off"):
+            svc = "open_cover" if service == "turn_on" else "close_cover"
+        if svc:
+            ok, res = await action(item, s["entity_id"], svc)
+            return ok, res
+    cands = [_line(x[2], names, areas.get(x[2]["entity_id"], "")) for x in (full or scored)[:8]]
+    if not cands:
+        return False, ""
+    return False, ("Candidates (switch the right one with home_assistant_action, or ask the user which one; "
+                   + ("rooms unknown: the token is no administrator" if not areas else "rooms known") + "):\n"
+                   + "\n".join(cands))
 
 
 async def action(item, entity_id, service, data=None):

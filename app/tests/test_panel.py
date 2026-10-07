@@ -147,6 +147,34 @@ class HomeAssistant(unittest.TestCase):
         self.assertIn("NO TOOL home_assistant_action",
                       answer(ask(b, 'TOOL home_assistant_action {"entity_id": "switch.keller", "service": "turn_on"}')))
 
+    def test_unknown_to_assist(self):
+        a = profile("Theo")
+        url = f"http://127.0.0.1:{helpers.HA_PORT}"
+        a.put("/api/profile/homeassistant", json={"url": url, "token": helpers.HA_TOKEN})
+        # Assist does not know the TV: found by kind and room among all states and switched directly,
+        # not the speaker in the same room nor the TV in another room
+        evs = ask(a, 'TOOL home_assistant {"command": "Schalte den Fernseher im Wohnzimmer aus"}')
+        self.assertTrue(any(e["type"] == "home_done" and e["ok"] for e in evs), evs)
+        self.assertEqual(helpers.HA_CALLS[-1], {"entity_id": "media_player.samsung", "service": "media_player.turn_off"})
+        # unclear which device: nothing switched, the candidates go back to the model
+        n = len(helpers.HA_CALLS)
+        res = answer(ask(a, 'TOOL home_assistant {"command": "Schalte den Fernseher aus"}'))
+        self.assertIn("media_player.sz_tv", res)
+        self.assertEqual(len(helpers.HA_CALLS), n + 1)  # only the Assist attempt
+
+    def test_words_before_tool_call(self):
+        a = profile("Paula")
+        a.put("/api/profile/homeassistant", json={"url": f"http://127.0.0.1:{helpers.HA_PORT}", "token": helpers.HA_TOKEN})
+        evs = ask(a, 'PRE TOOL home_assistant_states {"query": "Kellerpumpe"}')
+        shown = ""
+        for e in evs:
+            shown = shown + e.get("delta", "") if e["type"] == "text" else \
+                shown[:len(shown) - e["drop"]] if e["type"] == "retract" else shown
+        self.assertTrue(shown.startswith("Ergebnis:"), shown)
+        res = answer(ask(a, "XML Licht an"))
+        self.assertNotIn("<", res)
+        self.assertIn("Hallo.", res)  # one more round answers instead of stopping mid-way
+
     def test_code_word(self):
         a = profile("Carla")
         url = f"http://127.0.0.1:{helpers.HA_PORT}"
@@ -183,6 +211,9 @@ class HomeAssistant(unittest.TestCase):
                                                    {"role": "user", "content": cmd + "}"}]})
         self.assertIn("code word", answer(helpers.events(r)))
         self.assertEqual(len(helpers.HA_CALLS), n)
+        # numbers count as words: "Apollo 13" is "Apollo dreizehn"
+        a.put("/api/profile/homeassistant/code", json={"code": "Apollo dreizehn"})
+        self.assertNotIn("code word", answer(ask(a, cmd + ', "x": "Apollo 13"}')))
         self.assertFalse(a.put("/api/profile/homeassistant/code", json={"code": ""}).json()["has_code"])
 
 

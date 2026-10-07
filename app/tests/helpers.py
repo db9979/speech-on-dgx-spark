@@ -72,6 +72,15 @@ def fake_llm():
         async def gen():
             names = [t["function"]["name"] for t in b.get("tools") or []]
             c = last.get("content") or ""
+            if last["role"] == "user" and c.startswith("XML "):  # a tool call the server did not parse
+                for piece in ("Gleich. ", "<tool_call>\n<function=x>", "</function></tool_call>"):
+                    yield _sse({"choices": [{"delta": {"content": piece}, "finish_reason": None}]})
+                yield _sse({"choices": [{"delta": {}, "finish_reason": "stop"}]})
+                yield "data: [DONE]\n\n"
+                return
+            if last["role"] == "user" and c.startswith("PRE "):  # words before the tool call
+                yield _sse({"choices": [{"delta": {"content": "Der Fernseher im"}, "finish_reason": None}]})
+                c = c[4:]
             if last["role"] == "user" and c.startswith("TOOL "):
                 name, _, args = c[5:].partition(" ")
                 if name in names:
@@ -116,6 +125,10 @@ HA_STATES = [
     {"entity_id": "zone.buero", "state": "0", "attributes": {"friendly_name": "Büro", "radius": 150, "persons": []}},
     {"entity_id": "switch.keller", "state": "off", "attributes": {"friendly_name": "Kellerpumpe"}},
     {"entity_id": "lock.haustuer", "state": "locked", "attributes": {"friendly_name": "Haustür"}},
+    {"entity_id": "media_player.samsung", "state": "on", "attributes": {"friendly_name": "Samsung", "device_class": "tv"}},
+    {"entity_id": "media_player.sz_tv", "state": "on", "attributes": {"friendly_name": "TV", "device_class": "tv"}},
+    {"entity_id": "media_player.wz_box", "state": "playing", "attributes": {"friendly_name": "Wohnzimmer Box",
+     "device_class": "speaker"}},
     {"entity_id": "person.anna", "state": "home", "attributes": {"friendly_name": "Anna"}},
 ]
 
@@ -159,13 +172,17 @@ def fake_ha():
     @app.post("/api/template")
     async def template(request: Request):
         auth(request)
-        return PlainTextResponse("sensor.wz_temp|Wohnzimmer\nlight.kueche|Küche\n")
+        return PlainTextResponse("sensor.wz_temp|Wohnzimmer\nlight.kueche|Küche\nmedia_player.samsung|Wohnzimmer\n"
+                                 "media_player.wz_box|Wohnzimmer\nmedia_player.sz_tv|Schlafzimmer\n")
 
     @app.post("/api/conversation/process")
     async def proc(request: Request):
         auth(request)
         b = await request.json()
         HA_CALLS.append(b)
+        if "Fernseher" in b["text"] or "Gerät" in b["text"]:  # not exposed to Assist
+            return {"response": {"response_type": "error", "speech": {"plain": {"speech": "Kein Gerät gefunden"}},
+                                 "data": {"code": "no_valid_targets"}}}
         return {"response": {"response_type": "action_done", "speech": {"plain": {"speech": "Erledigt"}},
                              "data": {"success": [{"name": "Licht Küche"}], "failed": []}}}
     return app

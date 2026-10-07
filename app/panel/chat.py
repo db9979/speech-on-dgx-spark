@@ -576,15 +576,20 @@ async def chat(request: Request):
             st = {"buf": "", "first": True, "think": False, "n": 0, "mail": False}
             msgs, finish = list(messages), None
             searches = 0
-            for rnd in range(4):  # a few tool rounds (at most two searches), then the answer
+            for rnd in range(5):  # a few tool rounds (at most two searches), then the answer
                 payload = dict(base, messages=msgs)
                 offer = [t for t in tools if (t is not SEARCH_TOOL or searches < 2)
-                         and not (st["mail"] and t in after_mail)] if rnd < 3 else []
+                         and not (st["mail"] and t in after_mail)] if rnd < 4 else []
                 if offer:
                     payload["tools"] = offer
                 finish, calls = await llm_round(payload, st)
                 if not calls or finish == "length":
                     break
+                if st["buf"].strip():
+                    # words written before the tool call without a sentence end ("Der Fernseher im"):
+                    # take them back, the next round says it properly
+                    await out.put({"type": "retract", "drop": len(st["buf"])})
+                st["buf"] = ""
                 msgs.append({"role": "assistant", "content": None, "tool_calls": [
                     {"id": x["id"], "type": "function", "function": {"name": x["name"], "arguments": x["arguments"]}}
                     for x in calls]})
@@ -597,6 +602,11 @@ async def chat(request: Request):
                     msgs.append({"role": "tool", "tool_call_id": x["id"], "content": await run_tool(x["name"], args, st)})
                     if x["name"] == "web_search":
                         searches += 1
+            if (calls or st["xml"]) and finish != "length":
+                # out of tool rounds while the model still wanted one: one last answer without tools
+                msgs.append({"role": "user", "content": "(Keine weiteren Werkzeuge mehr möglich. Sag jetzt kurz, "
+                                                        "was erledigt ist und was nicht.)"})
+                finish, _ = await llm_round(dict(base, messages=msgs), st)
             buf = st["buf"]
             if finish == "length":
                 # The answer hit max_tokens mid-sentence: speak up to the last sentence end and
@@ -832,6 +842,7 @@ async def chat(request: Request):
         """Streams one LLM call: text goes to the browser and, sentence by sentence, to TTS.
         Returns (finish_reason, tool calls)."""
         finish, calls = None, {}
+        st["xml"] = False
         async with c.stream("POST", ccfg["llm_url"].rstrip("/") + "/chat/completions",
                             json=payload, headers=lheaders) as r:
             if r.status_code != 200:
@@ -855,6 +866,13 @@ async def chat(request: Request):
                     x["name"] = fn.get("name") or x["name"]
                     x["arguments"] += fn.get("arguments") or ""
                 text = delta.get("content") or ""
+                if not text or st.get("xml"):
+                    continue
+                # a tool call written as text (no tools offered, or the server did not parse it):
+                # never shown or spoken
+                for tag in ("<tool_call>", "<function="):
+                    if tag in text:
+                        st["xml"], text = True, text.split(tag)[0]
                 if not text:
                     continue
                 # models that think inline: drop <think>...</think> from what is spoken

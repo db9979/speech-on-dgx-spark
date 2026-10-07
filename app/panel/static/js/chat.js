@@ -173,6 +173,7 @@ const ub=chatLog('user',text);const um={role:'user',content:text};chat.msgs.push
         if(ev.type==='text'){full+=ev.delta;el.classList.remove('typing');el.textContent=full;$('fabtext').textContent=full;$('chatlog').scrollTop=1e9}
         else if(ev.type==='tts_request'){chat.blocks.push('| '+ev.chars+t(' Zeichen:',' chars:'))}
         else if(ev.type==='audio'){playPcm(ev.audio);chatSay(t('Spricht …','Speaking …'));startBarge()}
+        else if(ev.type==='retract'){full=full.slice(0,full.length-ev.drop);el.textContent=full}
         else if(ev.type==='truncated'){full=full.slice(0,full.length-ev.drop).trimEnd();el.textContent=full+' … '+t('(Längenlimit erreicht: Konfiguration → Assistent → Max. Tokens)','(length limit reached: Configuration → Assistant → Max. tokens)')}
         else if(ev.type==='search'){chatSay(t('Suche im Netz: ','Searching the web: ')+ev.query);searches.push(ev.query)}
         else if(ev.type==='sources'){sources.push(...ev.items)}
