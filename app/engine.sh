@@ -100,9 +100,27 @@ fi
 overrides=$(jq -cn --argjson m0 "$MEM0" --argjson m1 "$MEM1" --argjson s "$SEQS" --argjson l "$MAXLEN" \
   '{"0": {gpu_memory_utilization: $m0, max_num_seqs: $s, max_model_len: $l}, "1": {gpu_memory_utilization: $m1, max_num_seqs: $s}}')
 
+# Stream in growing blocks: after the first block (tts.initial_chunk_frames) each block is only a
+# little longer than the audio already queued, so playback does not run dry while the talker is
+# slower, e.g. while the LLM shares the GPU. vllm-omni's default jumps from the first block
+# straight to 25 frames (2 s of audio), which stalled playback after the first block on GB10.
+deploy=()
+ic=$(jq -r '.tts.initial_chunk_frames // 8' "$CONFIG")
+if [[ "$ic" =~ ^[0-9]+$ ]] && [ "$ic" -gt 0 ]; then
+  base=$("$VENV/bin/python" -c 'import os, vllm_omni; print(os.path.join(os.path.dirname(vllm_omni.__file__), "deploy", "qwen3_tts.yaml"))' 2>/dev/null || true)
+  if [ -f "$base" ]; then
+    # e.g. 8 -> [8, 8, 11, 15, 20, 25]: each block a third longer than the one before
+    ramp=$(jq -nc --argjson ic "$ic" '[$ic, $ic] | until(last >= 25; . + [[25, (last * 4 / 3 | ceil)] | min])')
+    deploy_file="$STATE_DIR/tts-deploy-$ROLE.yaml"
+    printf 'base_config: %s\nconnectors:\n  connector_of_shared_memory:\n    extra:\n      codec_chunk_ramp: %s\n' \
+      "$base" "$ramp" >"$deploy_file"
+    deploy=(--deploy-config "$deploy_file")
+  fi
+fi
+
 exec "$VENV/bin/vllm" serve "$MODEL" --omni \
   --host 127.0.0.1 --port "$PORT" \
   --disable-uvicorn-access-log \
   --trust-remote-code \
   --served-model-name "$MODEL" \
-  --stage-overrides "$overrides"
+  --stage-overrides "$overrides" "${deploy[@]}"

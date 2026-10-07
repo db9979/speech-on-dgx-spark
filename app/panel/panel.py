@@ -42,9 +42,9 @@ PREFIX = os.environ.get("SPEECH_SPARK_PREFIX", "/opt/speech-spark")
 ASR_ENGINE_KEYS = ("model", "engine_port", "engine_mem", "engine_max_seqs")
 # tts keys that only the vllm-omni engine reads; changing them restarts the engine
 ENGINE_KEYS = ("model", "engine_port", "engine_mem_talker", "engine_mem_code2wav", "engine_max_seqs",
-               "engine_max_model_len")
+               "engine_max_model_len", "initial_chunk_frames")
 DESIGN_KEYS = ("voicedesign_enabled", "voicedesign_model", "voicedesign_port",
-               "engine_mem_talker", "engine_mem_code2wav", "engine_max_seqs", "engine_max_model_len")
+               "engine_mem_talker", "engine_mem_code2wav", "engine_max_seqs", "engine_max_model_len", "initial_chunk_frames")
 # Units installed by github.com/hasso5703/dgx-spark-qwen38; only one lane runs at a time.
 QWEN38_UNITS = ["qwen38-sglang", "qwen38-sglang-1m", "qwen38-flash", "qwen38-image",
                 "qwen38-video", "qwen38-llamacpp", "qwen38-keepalive", "qwen38-dashboard"]
