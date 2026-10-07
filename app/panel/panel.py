@@ -330,6 +330,27 @@ def profile_forget_all(prof=Depends(own_profile)):
     return {"removed": profiles.forget(prof["id"])}
 
 
+@app.get("/api/profile/settings", dependencies=[Depends(assistant)])
+def profile_settings(request: Request):
+    """Conversation settings: the admin's defaults, overlaid with the profile's own (if logged in)."""
+    prof = profiles.current(request)
+    base = profiles.defaults(load_config().get("chat", {}).get("defaults"))
+    return {"settings": dict(base, **(profiles.settings(prof["id"]) if prof else {})), "defaults": base,
+            "profile": prof}
+
+
+@app.put("/api/profile/settings", dependencies=[Depends(assistant)])
+async def profile_save_settings(request: Request, prof=Depends(own_profile)):
+    return {"settings": profiles.save_settings(prof["id"], await request.json())}
+
+
+@app.get("/api/assistant/voices", dependencies=[Depends(assistant)])
+async def assistant_voices():
+    """Voice names to choose from in the conversation settings (nothing else of the TTS config)."""
+    v = await tts_voices()
+    return {"voices": [x for x in v.get("voices", []) if isinstance(x, str)]}
+
+
 @app.get("/api/admin/profiles", dependencies=[Depends(auth)])
 def admin_profiles():
     return profiles.admin_list()
@@ -476,6 +497,8 @@ def validate(new):
     ch = new["chat"]
     if ch.get("search_url") and not re.fullmatch(r"https?://\S+", ch["search_url"]):
         raise HTTPException(400, "SearXNG address must start with http:// or https://")
+    if not isinstance(ch.get("defaults"), dict) or profiles.clean_settings(ch["defaults"]) != ch["defaults"]:
+        raise HTTPException(400, "chat defaults: invalid value")
     if not (isinstance(ch.get("search_results"), int) and 1 <= ch["search_results"] <= 10
             and isinstance(ch.get("search_pages"), int) and 0 <= ch["search_pages"] <= 5):
         raise HTTPException(400, "search: 1..10 results, 0..5 pages to read")
@@ -906,7 +929,18 @@ async def chat(request: Request):
     search = bool(ccfg.get("search") and ccfg.get("search_url"))
     if search:
         system = (system + "\n\n" + SEARCH_HINT).strip()
-    prof = profiles.current(request) if ccfg.get("memory", True) else None
+    who = profiles.current(request)
+    # conversation settings: what the request sends, else the profile's, else the admin's defaults
+    # (speakers with a device key send nothing and get their profile's voice, speed and length)
+    pset = dict(profiles.defaults(ccfg.get("defaults")), **(profiles.settings(who["id"]) if who else {}))
+    for k in ("voice", "speed", "length"):
+        if k in body and profiles.SETTINGS[k][1](body[k]):
+            pset[k] = body[k]
+    length = {"short": "Antworte besonders knapp, meist in ein bis zwei Sätzen.",
+              "long": "Du darfst ausführlicher antworten, wenn die Frage es hergibt."}.get(pset["length"])
+    if length:
+        system = (system + "\n\n" + length).strip()
+    prof = who if ccfg.get("memory", True) else None
     if prof:  # guests get no memory at all
         system = (system + "\n\n" + memory_hint(prof)).strip()
     tools = ([SEARCH_TOOL] if search else []) + (MEMORY_TOOLS if prof else [])
@@ -914,7 +948,11 @@ async def chat(request: Request):
         messages = [{"role": "system", "content": system}] + messages
     lheaders = {"Authorization": f"Bearer {ccfg['llm_key']}"} if ccfg.get("llm_key") else {}
     tts_url = f"http://127.0.0.1:{cfg['tts']['port']}/v1/audio/speech"
-    tts_body = {k: body[k] for k in ("voice", "language", "instructions") if body.get(k)}
+    tts_body = {k: body[k] for k in ("language", "instructions") if body.get(k)}
+    if pset["voice"]:
+        tts_body["voice"] = pset["voice"]
+    if pset["speed"] != 1.0:
+        tts_body["speed"] = pset["speed"]
     c = httpx.AsyncClient(timeout=httpx.Timeout(600, connect=5))
     out = asyncio.Queue()
     sentences = asyncio.Queue()

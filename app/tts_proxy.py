@@ -313,6 +313,20 @@ async def speech(request: Request):
     else:
         body.pop("voice", None)
 
+    # vllm-omni refuses `speed` on streamed requests; the proxy stretches streamed PCM itself
+    stretch = None
+    if stream:
+        try:
+            speed = float(body.pop("speed", 1.0) or 1.0)
+        except (TypeError, ValueError):
+            speed = 1.0
+        if abs(speed - 1.0) > 0.01 and body["response_format"] == "pcm":
+            try:
+                from tempo import Stretcher
+                stretch = Stretcher(min(2.0, max(0.5, speed)))
+            except ImportError:  # numpy missing (older install): normal tempo
+                print("speed ignored: numpy is not installed", flush=True)
+
     url = f"http://127.0.0.1:{port}/v1/audio/speech"
     stats["requests"] += 1
     t0 = time.time()
@@ -353,11 +367,48 @@ async def speech(request: Request):
 
     sse = "event-stream" in upstream.headers.get("content-type", "")
 
+    def sse_audio(pcm):
+        return ("event: speech.audio.delta\ndata: " + json.dumps({"type": "speech.audio.delta",
+                                       "audio": base64.b64encode(pcm).decode(), "response_format": "pcm"}) + "\n\n").encode()
+
+    async def stretched():
+        """The upstream stream with every audio piece run through the tempo stretcher."""
+        buf = b""
+        async for chunk in upstream.aiter_raw():
+            if not sse:
+                yield stretch.feed(chunk)
+                continue
+            buf += chunk
+            while b"\n\n" in buf:
+                event, buf = buf.split(b"\n\n", 1)
+                data = next((ln[5:] for ln in event.split(b"\n") if ln.startswith(b"data:")), b"")
+                try:
+                    ev = json.loads(data) if data.strip() and data.strip() != b"[DONE]" else {}
+                except ValueError:
+                    ev = {}
+                if ev.get("type") == "speech.audio.delta" and ev.get("audio"):
+                    pcm = stretch.feed(base64.b64decode(ev["audio"]))
+                    if pcm:
+                        yield sse_audio(pcm)
+                    continue
+                if ev.get("type") in ("speech.audio.done", "speech.audio.error") or data.strip() == b"[DONE]":
+                    tail = stretch.flush()
+                    if tail:
+                        yield sse_audio(tail)
+                yield event + b"\n\n"
+        tail = stretch.flush()
+        if tail:
+            yield sse_audio(tail) if sse else tail
+        if buf:
+            yield buf
+
     async def relay():
         stats["active"] += 1
         first, pcm_bytes, buf = None, 0, b""
         try:
-            async for chunk in upstream.aiter_raw():
+            async for chunk in (stretched() if stretch else upstream.aiter_raw()):
+                if not chunk:
+                    continue
                 if first is None:
                     first = time.time() - t0
                 if sse:  # count audio for the RTF figure without touching what goes out

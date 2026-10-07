@@ -6,6 +6,7 @@ a request comes only from its login cookie or its device key, never from anythin
     USERS_DIR/profiles.json   {"users": [...], "devices": [...]}
     USERS_DIR/secret          signs the login cookies
     USERS_DIR/<user id>/memory.json   [{"id", "text", "created"}]
+    USERS_DIR/<user id>/settings.json {conversation settings, see SETTINGS}
 """
 import hashlib
 import hmac
@@ -185,6 +186,47 @@ def current(request):
             return None
     u = next((u for u in d["users"] if u["id"] == uid), None)
     return {"id": u["id"], "name": u["name"]} if u else None
+
+
+# ---------------------------------------------------------------- conversation settings
+# key: (default, check). The admin's defaults (config chat.defaults) apply where a profile has
+# set nothing; guests keep theirs in the browser.
+SETTINGS = {
+    "hands": (False, lambda v: isinstance(v, bool)),
+    "auto": (True, lambda v: isinstance(v, bool)),
+    "live": (True, lambda v: isinstance(v, bool)),
+    "barge": (True, lambda v: isinstance(v, bool)),
+    "barge_level": ("mid", lambda v: v in ("low", "mid", "high")),
+    "voice": ("", lambda v: isinstance(v, str) and len(v) <= 64 and re.fullmatch(r"[\w .\-]*", v)),
+    "speed": (1.0, lambda v: isinstance(v, (int, float)) and not isinstance(v, bool) and 0.7 <= v <= 1.4),
+    "length": ("normal", lambda v: v in ("short", "normal", "long")),
+    "timing": (True, lambda v: isinstance(v, bool)),
+}
+
+
+def clean_settings(d):
+    """Only known keys with valid values."""
+    d = d if isinstance(d, dict) else {}
+    return {k: d[k] for k, (_, ok) in SETTINGS.items() if k in d and ok(d[k])}
+
+
+def defaults(admin=None):
+    return dict({k: v for k, (v, _) in SETTINGS.items()}, **clean_settings(admin))
+
+
+def settings(uid):
+    try:
+        with open(_path(uid, "settings.json")) as f:
+            return clean_settings(json.load(f))
+    except (OSError, ValueError):
+        return {}
+
+
+def save_settings(uid, d):
+    with _lock:
+        merged = dict(settings(uid), **clean_settings(d))
+        _write(_path(uid, "settings.json"), merged)
+    return merged
 
 
 # ---------------------------------------------------------------- memory
