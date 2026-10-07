@@ -22,6 +22,13 @@ STEPS = [7, 8, 9, 10, 11, 12, 13, 14, 16, 17, 19, 21, 23, 25, 28, 31, 34, 37, 41
          9493, 10442, 11487, 12635, 13899, 15289, 16818, 18500, 20350, 22385, 24623, 27086, 29794, 32767]
 INDEX = [-1, -1, -1, -1, 2, 4, 6, 8]
 
+# loudness for the watch speaker (8 kHz samples)
+BLOCK = 80             # 10 ms
+TARGET = 30000.0       # peak level the compressor aims for
+MAX_GAIN = 8.0         # at most +18 dB, so pauses stay quiet
+RELEASE = 0.96         # per block, about 250 ms
+LIMIT = 32000.0        # soft limit at full scale
+
 # 3.4 kHz low-pass for 24 kHz input (windowed sinc), so decimating by 3 does not alias
 _N = np.arange(-24, 25)
 _FIR = np.sinc(2 * 3400 / 24000 * _N) * np.hamming(len(_N))
@@ -31,12 +38,15 @@ _FIR /= _FIR.sum()
 class Encoder:
     """24 kHz 16-bit PCM in, 8 kHz IMA ADPCM out, in pieces of any length."""
 
-    def __init__(self, gain=1.0):
+    def __init__(self, loud=True):
         self.tail = np.zeros(len(_FIR) - 1)
         self.phase = 0          # samples to skip before the next kept one
         self.pred, self.idx = 0, 0
         self.half = None        # low nibble waiting for its high nibble
-        self.gain = gain
+        self.loud = loud
+        self.env = 0.0          # loudness follower for the compressor
+        self.g = 1.0            # gain at the end of the last block
+        self.block = np.zeros(0)
         self.rest = b""         # odd byte left over from the last piece
 
     def feed(self, pcm: bytes) -> bytes:
@@ -51,10 +61,34 @@ class Encoder:
         self.tail = buf[-(len(_FIR) - 1):]
         y = y[self.phase::3]
         self.phase = (self.phase - len(x)) % 3
-        return self._adpcm(np.clip(y * self.gain, -32768, 32767).astype(np.int32).tolist())
+        if self.loud:
+            y = self._louder(y)
+        return self._adpcm(np.clip(y, -32768, 32767).astype(np.int32).tolist())
+
+    def _louder(self, y):
+        """Compressor and limiter: the watch speaker is small and quiet, so quiet syllables are
+        lifted up to MAX_GAIN and peaks are pressed softly below full scale."""
+        y = np.concatenate([self.block, y])
+        n = len(y) // BLOCK * BLOCK
+        self.block = y[n:]
+        out = np.empty(n)
+        for i in range(0, n, BLOCK):
+            b = y[i:i + BLOCK]
+            peak = float(np.abs(b).max())
+            # fast attack, slow release, so loudness changes do not pump between syllables
+            self.env = peak if peak > self.env else self.env * RELEASE + peak * (1 - RELEASE)
+            g = min(MAX_GAIN, TARGET / max(self.env, 1.0))
+            out[i:i + BLOCK] = b * np.linspace(self.g, g, BLOCK, endpoint=False)
+            self.g = g
+        return LIMIT * np.tanh(out / LIMIT)
 
     def flush(self) -> bytes:
-        return bytes([self.half]) if self.half is not None else b""
+        out = b""
+        if len(self.block):  # the last few ms the compressor held back
+            y = LIMIT * np.tanh(self.block * self.g / LIMIT)
+            self.block = np.zeros(0)
+            out = self._adpcm(np.clip(y, -32768, 32767).astype(np.int32).tolist())
+        return out + (bytes([self.half]) if self.half is not None else b"")
 
     def _adpcm(self, samples):
         out = bytearray()
@@ -93,7 +127,7 @@ class Job:
         self.text, self.audio = "", bytearray()
         self.done, self.error = False, None
         self.speak = speak
-        self.enc = Encoder(gain=1.5)  # the watch speaker is quiet; TTS output peaks well below full scale
+        self.enc = Encoder()
         self.changed = asyncio.Event()
         self.task = None
         self.t = time.time()
