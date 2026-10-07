@@ -167,11 +167,25 @@ HA_STATES_TOOL = {"type": "function", "function": {
         "domain": {"type": "string", "description": "optional kind: sensor, binary_sensor, light, switch, climate, "
                                                     "cover, zone, person, device_tracker, media_player, weather ..."},
         "area": {"type": "string", "description": "optional room or area name"}}}}}
+HA_ACTION_TOOL = {"type": "function", "function": {
+    "name": "home_assistant_action",
+    "description": "Switch or set one device directly by its entity id, also devices home_assistant (Assist) "
+                   "does not know. Use it when home_assistant did not find the device. Find the id first with "
+                   "home_assistant_states. Not for locks, alarm systems or updates.",
+    "parameters": {"type": "object", "properties": {
+        "entity_id": {"type": "string", "description": "exact id, e.g. light.kueche"},
+        "service": {"type": "string", "description": "turn_on, turn_off, toggle, open_cover, close_cover, "
+                                                     "set_cover_position, set_temperature, set_hvac_mode, "
+                                                     "volume_set, media_pause, press, select_option, set_value ..."},
+        "data": {"type": "object", "description": "optional values, e.g. {\"brightness_pct\": 50}, "
+                                                  "{\"temperature\": 21}, {\"position\": 30}"}},
+        "required": ["entity_id", "service"]}}}
 HA_HINT = ("Mit home_assistant steuerst du das Smart Home des Nutzers (Licht, Geräte, Heizung, Rollläden). Gib jeden "
            "Befehl einzeln weiter und sag danach kurz, was passiert ist; behaupte nichts, was Home Assistant nicht "
            "bestätigt hat. Für Fragen nach Werten, Zuständen, Zonen und wo jemand ist nimm home_assistant_states: "
            "es sieht alle Geräte, auch die, die der Sprachassistent von Home Assistant nicht kennt. Findet "
-           "home_assistant ein Gerät nicht, such es mit home_assistant_states und versuch es mit dem genauen Namen. "
+           "home_assistant ein Gerät nicht, such es mit home_assistant_states und schalte es mit "
+           "home_assistant_action über seine genaue ID. "
            "Erfinde keine Werte; findest du nichts, such mit anderen Wörtern oder hol dir die Übersicht.")
 
 
@@ -461,7 +475,7 @@ async def chat(request: Request):
     if briefing:
         system = (system + "\n\n" + BRIEFING_HINT + (" " + CALENDAR_HINT if cal["calendars"] else "")).strip()
     tools = ([SEARCH_TOOL] if search else []) + (MEMORY_TOOLS if prof else []) + ([HISTORY_TOOL] if past else []) \
-        + ([DOC_TOOL] if docs else []) + ([HA_TOOL, HA_STATES_TOOL] if ha else []) \
+        + ([DOC_TOOL] if docs else []) + ([HA_TOOL, HA_STATES_TOOL, HA_ACTION_TOOL] if ha else []) \
         + (REMINDER_TOOLS if timers else []) + ([BRIEFING_TOOL] if briefing else []) \
         + ([CALENDAR_TOOL] if cal["calendars"] else [])
     if system:
@@ -572,6 +586,16 @@ async def chat(request: Request):
                 return f"Home Assistant not reachable: {type(e).__name__}"
             await out.put({"type": "home_done", "ok": n > 0, "text": f"{n} Treffer"})
             return result
+        if name == "home_assistant_action" and ha:
+            eid, service = str(args.get("entity_id", "")), str(args.get("service", ""))
+            await out.put({"type": "home", "command": f"{eid} {service}".strip()})
+            try:
+                ok, result = await homeassistant.action(ha, eid, service, args.get("data"))
+            except (httpx.HTTPError, ValueError) as e:
+                await out.put({"type": "home_done", "ok": False, "text": str(e)[:200] or type(e).__name__})
+                return f"Home Assistant not reachable: {type(e).__name__}"
+            await out.put({"type": "home_done", "ok": ok, "text": result[:200]})
+            return ("Home Assistant: " if ok else "Home Assistant failed: ") + result
         if name == "history_search" and past:
             query = str(args.get("query", "")).strip()
             try:

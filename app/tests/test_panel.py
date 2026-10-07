@@ -136,6 +136,16 @@ class HomeAssistant(unittest.TestCase):
         self.assertIn("Wohnzimmer", res)
         self.assertIn("Anna", answer(ask(a, 'TOOL home_assistant_states {"domain": "zone"}')))
         self.assertIn("NO TOOL home_assistant_states", answer(ask(b, 'TOOL home_assistant_states {}')))
+        # direct actions for devices Assist does not know, never for locks
+        res = answer(ask(a, 'TOOL home_assistant_action {"entity_id": "switch.keller", "service": "turn_on"}'))
+        self.assertIn("Kellerpumpe", res)
+        self.assertEqual(helpers.HA_CALLS[-1], {"entity_id": "switch.keller", "service": "switch.turn_on"})
+        n = len(helpers.HA_CALLS)
+        res = answer(ask(a, 'TOOL home_assistant_action {"entity_id": "lock.haustuer", "service": "unlock"}'))
+        self.assertIn("failed", res)
+        self.assertEqual(len(helpers.HA_CALLS), n)
+        self.assertIn("NO TOOL home_assistant_action",
+                      answer(ask(b, 'TOOL home_assistant_action {"entity_id": "switch.keller", "service": "turn_on"}')))
 
 
 class Settings(unittest.TestCase):

@@ -5,7 +5,9 @@ access token); only that profile's requests can use it, guests never.
 
 Commands go to Home Assistant's own Assist (POST /api/conversation/process), so Home Assistant
 decides what is allowed: only the entities exposed to Assist (Settings → Voice assistants →
-Expose) can be switched, and the token's user rights apply. Questions about states read
+Expose) can be switched there, and the token's user rights apply. Devices Assist does not know are
+switched by calling their service directly (POST /api/services/<domain>/<service>), only for the
+entity's own domain and never for locks, alarm systems or updates. Questions about states read
 GET /api/states instead, which sees every entity, zone and person the token's user can see, so
 nothing has to be exposed for asking; rooms come from the area registry (POST /api/template, admin
 tokens only; without it entities are still found by name). The token never leaves the Spark
@@ -265,3 +267,47 @@ async def states(item, text="", domain="", area="", limit=60):
     if len(keep) > limit:
         lines.append(f"... and {len(keep) - limit} more; narrow the search.")
     return len(keep), "\n".join(lines)
+
+
+# ---- direct actions: devices Assist does not know; never locks, alarm systems or updates ----
+
+BLOCKED = {"lock", "alarm_control_panel", "update"}
+
+
+async def action(item, entity_id, service, data=None):
+    """Calls one service of the entity's own domain; returns (ok, text for the model)."""
+    eid = str(entity_id or "").strip().lower()
+    service = str(service or "").strip().lower()
+    if not re.fullmatch(r"[a-z0-9_]{1,64}\.[a-z0-9_]{1,200}", eid):
+        return False, "Give the exact entity id, e.g. light.kueche (look it up with home_assistant_states)."
+    if not re.fullmatch(r"[a-z0-9_]{1,64}", service):
+        return False, "Give the service, e.g. turn_on, turn_off, toggle, set_temperature, set_cover_position."
+    domain = eid.split(".")[0]
+    if domain in BLOCKED:
+        return False, ("Locks, alarm systems and updates are not switched from here; the user can do it in "
+                       "Home Assistant itself.")
+    extra = {}
+    for k, v in (data if isinstance(data, dict) else {}).items():
+        k = str(k)
+        if re.fullmatch(r"[a-z0-9_]{1,64}", k) and k not in ("entity_id", "device_id", "area_id", "target") \
+                and isinstance(v, (str, int, float, bool)) and len(str(v)) <= 200:
+            extra[k] = v
+    async with _client(item) as c:
+        r = await c.get(f"{item['url']}/api/states/{eid}")
+        if r.status_code == 401:
+            return False, "Home Assistant rejected the token."
+        if r.status_code == 404:
+            return False, f"There is no entity {eid}; look it up with home_assistant_states."
+        r.raise_for_status()
+        name = ((r.json() or {}).get("attributes") or {}).get("friendly_name") or eid
+        r = await c.post(f"{item['url']}/api/services/{domain}/{service}", json=dict(extra, entity_id=eid))
+        if r.status_code in (400, 404):
+            return False, f"Home Assistant does not accept {domain}.{service} for {name} (HTTP {r.status_code})."
+        if r.status_code in (401, 403):
+            return False, "The Home Assistant user of this token may not do that."
+        r.raise_for_status()
+        new = next((x for x in (r.json() if isinstance(r.json(), list) else []) if x.get("entity_id") == eid), None)
+        if not new:
+            r = await c.get(f"{item['url']}/api/states/{eid}")
+            new = r.json() if r.status_code == 200 else None
+    return True, f"Done: {domain}.{service} for {name}." + (f" Now: {_line(new, {}, '')}" if new else "")

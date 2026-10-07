@@ -114,6 +114,8 @@ HA_STATES = [
     {"entity_id": "zone.home", "state": "1", "attributes": {"friendly_name": "Zuhause", "radius": 100,
      "persons": ["person.anna"]}},
     {"entity_id": "zone.buero", "state": "0", "attributes": {"friendly_name": "Büro", "radius": 150, "persons": []}},
+    {"entity_id": "switch.keller", "state": "off", "attributes": {"friendly_name": "Kellerpumpe"}},
+    {"entity_id": "lock.haustuer", "state": "locked", "attributes": {"friendly_name": "Haustür"}},
     {"entity_id": "person.anna", "state": "home", "attributes": {"friendly_name": "Anna"}},
 ]
 
@@ -134,6 +136,25 @@ def fake_ha():
     def states(request: Request):
         auth(request)
         return HA_STATES
+
+    @app.get("/api/states/{eid}")
+    def one(eid: str, request: Request):
+        auth(request)
+        for x in HA_STATES:
+            if x["entity_id"] == eid:
+                return x
+        raise HTTPException(404)
+
+    @app.post("/api/services/{domain}/{service}")
+    async def service(domain: str, service: str, request: Request):
+        auth(request)
+        b = await request.json()
+        HA_CALLS.append(dict(b, service=f"{domain}.{service}"))
+        for x in HA_STATES:
+            if x["entity_id"] == b.get("entity_id") and service in ("turn_on", "turn_off"):
+                x["state"] = service[5:]
+                return [x]
+        return []
 
     @app.post("/api/template")
     async def template(request: Request):
