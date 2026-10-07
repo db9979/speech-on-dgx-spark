@@ -30,6 +30,7 @@ import speakers  # noqa: E402
 import calendars  # noqa: E402
 import profiles  # noqa: E402
 import recall  # noqa: E402
+import homeassistant  # noqa: E402
 import watch  # noqa: E402
 from common import CONFIG_PATH, estimate_gib, journal, load_config, mem_available_gib, quiet_access_log  # noqa: E402
 
@@ -325,6 +326,7 @@ def whoami(request: Request, creds: HTTPBasicCredentials | None = Depends(securi
             "reminders": cfg.get("chat", {}).get("reminders", True),
             "speaker_id": cfg.get("chat", {}).get("speaker_id", False),
             "calendar": cfg.get("chat", {}).get("calendar", True),
+            "homeassistant": cfg.get("chat", {}).get("homeassistant", False),
             # what the assistant needs without the full configuration (which holds keys)
             "assistant": {"default_voice": cfg["tts"].get("default_voice"),
                           "asr_language": cfg["asr"].get("default_language"),
@@ -490,6 +492,50 @@ async def profile_calendar_test(request: Request, prof=Depends(own_profile)):
         return await calendars.test(prof["id"], user_zone(body.get("tz")))
     except ValueError as e:
         raise HTTPException(400, str(e))
+
+
+# Home Assistant: each profile connects its own; the token is never sent back.
+def ha_on():
+    if not load_config().get("chat", {}).get("homeassistant", False):
+        raise HTTPException(403, "Home Assistant is turned off")
+
+
+@app.get("/api/profile/homeassistant", dependencies=[Depends(assistant)])
+def profile_ha(prof=Depends(own_profile)):
+    return homeassistant.public(prof["id"])
+
+
+@app.put("/api/profile/homeassistant", dependencies=[Depends(assistant), Depends(ha_on)])
+async def profile_ha_save(request: Request, prof=Depends(own_profile)):
+    """Stores the connection only after Home Assistant accepted the token."""
+    body = await request.json()
+    try:
+        item = homeassistant.entry(body if isinstance(body, dict) else {}, homeassistant.get(prof["id"]))
+        await homeassistant.check(item)
+    except ValueError as e:
+        raise HTTPException(400, str(e))
+    return homeassistant.save(prof["id"], item)
+
+
+@app.delete("/api/profile/homeassistant", dependencies=[Depends(assistant)])
+def profile_ha_remove(prof=Depends(own_profile)):
+    return homeassistant.remove(prof["id"])
+
+
+@app.post("/api/profile/homeassistant/test", dependencies=[Depends(assistant), Depends(ha_on)])
+async def profile_ha_test(request: Request, prof=Depends(own_profile)):
+    item = homeassistant.get(prof["id"])
+    if not item:
+        raise HTTPException(400, "no Home Assistant connected")
+    body = await request.json()
+    text = str((body or {}).get("text", "")).strip()
+    try:
+        if not text:
+            return await homeassistant.check(item)
+        ok, answer, targets = await homeassistant.command(item, text)
+        return {"ok": ok, "answer": answer, "targets": targets}
+    except (ValueError, httpx.HTTPError) as e:
+        raise HTTPException(400, str(e) or type(e).__name__)
 
 
 def speaker_on():
@@ -1004,6 +1050,18 @@ HISTORY_HINT = ("Mit history_search findest du, wor체ber ihr in fr체heren Gespr�
                 "wenn der Nutzer sich auf etwas Fr체heres bezieht, und erfinde nichts, was dort nicht steht.")
 
 
+HA_TOOL = {"type": "function", "function": {
+    "name": "home_assistant",
+    "description": "Control or ask the user's smart home through Home Assistant: switch lights and devices, "
+                   "set temperatures, open covers, ask for states ('how warm is it in the living room?'). "
+                   "Give one short command in the user's language, naming device and room as the user did.",
+    "parameters": {"type": "object", "properties": {"command": {"type": "string",
+                   "description": "e.g. 'Schalte das Licht im Wohnzimmer an'"}}, "required": ["command"]}}}
+HA_HINT = ("Mit home_assistant steuerst du das Smart Home des Nutzers (Licht, Ger채te, Heizung, Rolll채den) und "
+           "fragst Zust채nde ab. Gib jeden Befehl einzeln weiter und sag danach kurz, was passiert ist; behaupte "
+           "nichts, was Home Assistant nicht best채tigt hat.")
+
+
 DOC_TOOL = {"type": "function", "function": {
     "name": "document_search",
     "description": "Search the user's own uploaded documents. Use it when a question may be answered by "
@@ -1289,6 +1347,11 @@ async def chat(request: Request):
     past = bool(prof and ccfg.get("history", True))
     if past:
         system = (system + "\n\n" + HISTORY_HINT).strip()
+    # Home Assistant only for the profile's own login or device key: a voice recognized at someone
+    # else's device does not switch that profile's home
+    ha = homeassistant.get(who["id"]) if who and own_browser and ccfg.get("homeassistant", False) else None
+    if ha:
+        system = (system + "\n\n" + HA_HINT).strip()
     docs = documents.list_docs(who["id"]) if who and ccfg.get("documents", True) else []
     if docs:
         system = (system + "\n\n" + docs_hint(who, docs)).strip()
@@ -1305,7 +1368,7 @@ async def chat(request: Request):
     if briefing:
         system = (system + "\n\n" + BRIEFING_HINT + (" " + CALENDAR_HINT if cal["calendars"] else "")).strip()
     tools = ([SEARCH_TOOL] if search else []) + (MEMORY_TOOLS if prof else []) + ([HISTORY_TOOL] if past else []) \
-        + ([DOC_TOOL] if docs else []) \
+        + ([DOC_TOOL] if docs else []) + ([HA_TOOL] if ha else []) \
         + (REMINDER_TOOLS if timers else []) + ([BRIEFING_TOOL] if briefing else []) \
         + ([CALENDAR_TOOL] if cal["calendars"] else [])
     if system:
@@ -1390,6 +1453,20 @@ async def chat(request: Request):
             except Exception as e:
                 await out.put({"type": "search_error", "message": str(e)})
                 return f"Search failed: {e}"
+        if name == "home_assistant" and ha:
+            text = str(args.get("command", "")).strip()
+            if not text:
+                return "No command given."
+            await out.put({"type": "home", "command": text})
+            try:
+                ok, answer, targets = await homeassistant.command(
+                    ha, text, "en" if guess_language(text) == "English" else "de")
+            except httpx.HTTPError as e:
+                await out.put({"type": "home_done", "ok": False, "text": str(e)[:200]})
+                return f"Home Assistant not reachable: {type(e).__name__}"
+            await out.put({"type": "home_done", "ok": ok, "text": answer, "targets": targets})
+            return ("Home Assistant: " if ok else "Home Assistant failed: ") + answer \
+                + (f" (devices: {', '.join(targets)})" if targets else "")
         if name == "history_search" and past:
             query = str(args.get("query", "")).strip()
             try:

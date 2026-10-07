@@ -70,6 +70,7 @@
     "search_pages": 2,
     "memory": true,
     "history": true,
+    "homeassistant": false,
     "documents": true,
     "reminders": true,
     "calendar": true,
