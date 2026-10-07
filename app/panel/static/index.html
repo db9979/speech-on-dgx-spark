@@ -870,7 +870,7 @@ setInterval(()=>{if(ADMIN)api('/api/update').then(r=>r.json()).then(u=>updBadge(
 // ---------------------------------------------------------------- voice chat
 // Record -> /api/test/asr -> /api/chat (LLM text and streamed TTS audio as one SSE stream) -> play.
 // Conversation settings (see renderSet). Profiles keep them on the Spark, guests in this browser.
-let S={hands:false,auto:true,turn:true,live:true,barge:true,barge_level:'mid',voice:'',speed:1,length:'normal',timing:true},SDEF={...S};
+let S={hands:false,auto:true,turn:true,daily:true,live:true,barge:true,barge_level:'mid',voice:'',speed:1,length:'normal',timing:true},SDEF={...S};
 const BARGE={low:[0.05,6,0.8],mid:[0.03,4,0.5],high:[0.02,3,0.35]};   // min level, x noise floor, x own output
 const chat={live:{busy:false,want:false,last:null},msgs:[],rec:null,stream:null,ctrl:null,ctx:null,sources:[],playEnd:0,vad:null,cancelRec:false,busy:false};
 const chatSay=x=>{$('chatstate').textContent=x;$('fabstate').textContent=x};
@@ -1012,7 +1012,9 @@ function turnCheck(x,at,rec){if(chat.rec!==rec||(chat.lastVoice||0)>at)return;  
 function showLive(x){if(!chat.liveEl){chat.liveEl=chatLog('user',x);chat.liveEl.classList.add('live')}else chat.liveEl.textContent=x;$('chatlog').scrollTop=1e9}
 function clearLive(){if(chat.liveEl){chat.liveEl.parentNode.remove();chat.liveEl=null}}
 
-async function ask(text,asrS,spk){const ub=chatLog('user',text);chat.msgs.push({role:'user',content:text});deletable(ub,chat.msgs.at(-1));
+async function ask(text,asrS,spk){
+  if(S.daily&&chat.cid&&!chat.picked){const c=convos.load().find(x=>x.id===chat.cid);if(c&&c.updated<today0())openConvo(null)}   // past midnight
+const ub=chatLog('user',text);chat.msgs.push({role:'user',content:text});deletable(ub,chat.msgs.at(-1));
   const el=chatLog('assistant','');$('fabtext').textContent='';let full='',llmS=null,audioS=null,err='';const searches=[],sources=[],mems=[],docs=[];
   const ctrl=new AbortController();chat.ctrl=ctrl;chat.firstPlay=null;chat.gaps=[];chat.blocks=[];chat.t0b=null;setTalk();chatSay(t('Antwort kommt …','Answer coming …'));
   try{const r=await api('/api/chat',{method:'POST',headers:{'Content-Type':'application/json'},signal:ctrl.signal,
@@ -1148,7 +1150,7 @@ function fillConvos(){const l=convos.load(),d=x=>new Date(x).toLocaleString(L===
   $('convosel').innerHTML=(chat.cid?'':`<option value="">${t('Neues Gespräch','New conversation')}</option>`)+
     l.map(c=>`<option value="${c.id}"${c.id===chat.cid?' selected':''}>${d(c.updated)} · ${esc(c.title||'…')}</option>`).join('');
   $('convodel').disabled=!chat.cid}
-function openConvo(id){const c=id&&convos.load().find(x=>x.id===id);chat.cid=c?c.id:null;chat.msgs=c?c.msgs.slice():[];
+function openConvo(id,picked){const c=id&&convos.load().find(x=>x.id===id);chat.cid=c?c.id:null;chat.picked=!!(c&&picked);chat.msgs=c?c.msgs.slice():[];
   $('chatlog').innerHTML='';$('chattiming').textContent='';chat.msgs.forEach(m=>deletable(chatLog(m.role,m.content),m));fillConvos()}
 // Speaks a text with this profile's voice (reminders, "read again"); Stop and barge-in end it.
 async function sayText(text){stopAnswer();const ctrl=new AbortController();chat.ctrl=ctrl;chat.firstPlay=null;chat.gaps=[];chat.blocks=null;setTalk();chatSay(t('Spricht …','Speaking …'));
@@ -1178,10 +1180,13 @@ function deleteMsg(d){if(chat.ctrl||chat.rec)return;   // not while an answer is
   chat.msgs=chat.msgs.filter(m=>!gone.has(m));
   for(const x of [...$('chatlog').children])if(x===d||gone.has(x._m))x.remove();
   if(chat.msgs.length)saveConvo();else if(chat.cid){convos.del(chat.cid);openConvo(null)}}
-$('convosel').onchange=()=>{stopListening(true);stopAnswer();openConvo($('convosel').value||null);setTalk();chatSay(t('Bereit.','Ready.'))};
+$('convosel').onchange=()=>{stopListening(true);stopAnswer();openConvo($('convosel').value||null,true);setTalk();chatSay(t('Bereit.','Ready.'))};
 $('convodel').onclick=()=>{if(!chat.cid||!confirm(t('Dieses Gespräch löschen?','Delete this conversation?')))return;
   convos.del(chat.cid);stopListening(true);stopAnswer();openConvo(null)};
-openConvo((convos.load()[0]||{}).id||null);
+// A new day starts a new conversation (setting "daily"); older ones stay in the history.
+const today0=()=>new Date().setHours(0,0,0,0);
+const latestConvo=()=>{const c=convos.load()[0];return c&&(!S.daily||c.updated>=today0())?c.id:null};
+openConvo(latestConvo());
 // ---------------------------------------------------------------- timers and reminders
 // The assistant sets them with a tool; profiles keep them on the Spark (every device of the profile
 // rings while its page is open), guests in this browser. A due reminder chimes, shows a bubble and
@@ -1266,7 +1271,7 @@ layout();
 // ---------------------------------------------------------------- profile of this browser
 function setProfile(p){const changed=(p&&p.id)!==(PROFILE&&PROFILE.id);PROFILE=p||null;
   $('profname').textContent=PROFILE?PROFILE.name:t('Gast','Guest');
-  if(changed){stopListening(true);stopAnswer();convos.cache=[];openConvo(null);convos.sync().then(()=>{if(!chat.msgs.length)openConvo((convos.load()[0]||{}).id||null)})}
+  if(changed){stopListening(true);stopAnswer();convos.cache=[];openConvo(null);convos.sync().then(()=>{if(!chat.msgs.length)openConvo(latestConvo())})}
   loadSettings();rem.load()}
 window.closeProf=()=>{$('profmodal').style.display='none';endEnroll()};
 async function showFacts(){const r=await api('/api/profile/memory');const d=await r.json();
@@ -1368,7 +1373,8 @@ const SETF=[
   {g:t('Antwort','Answer'),k:'voice',type:'voice',l:t('Stimme','Voice'),h:t('Leer = Standardstimme des Servers.','Empty = the server\'s default voice.')},
   {k:'speed',type:'range',l:t('Sprechtempo','Speaking rate'),h:t('Schneller oder langsamer, ohne die Stimmlage zu ändern.','Faster or slower without changing the pitch.'),min:0.7,max:1.4,step:0.05},
   {k:'length',type:'sel',l:t('Antwortlänge','Answer length'),h:t('Wie ausführlich der Assistent antwortet.','How detailed the assistant answers.'),o:[['short',t('kurz','short')],['normal',t('normal','normal')],['long',t('ausführlich','detailed')]]},
-  {g:t('Anzeige','Display'),k:'timing',type:'bool',l:t('Zeiten anzeigen','Show timings'),h:t('Wie lange Erkennung, Modell und erster Ton gebraucht haben.','How long recognition, model and first audio took.')}];
+  {g:t('Anzeige','Display'),k:'daily',type:'bool',l:t('Jeden Tag neues Gespräch','New conversation every day'),h:t('Am nächsten Tag beginnt automatisch ein neues Gespräch; die alten bleiben im Verlauf.','The next day a new conversation starts by itself; older ones stay in the history.')},
+  {k:'timing',type:'bool',l:t('Zeiten anzeigen','Show timings'),h:t('Wie lange Erkennung, Modell und erster Ton gebraucht haben.','How long recognition, model and first audio took.')}];
 {let g;SETF.forEach(f=>{g=f.g||g;f.grp=g})}
 let VOICES=null;
 async function voiceList(admin){if(!PROFILE&&!admin)return [];if(VOICES)return VOICES;try{const r=await fetch(admin?'/api/tts/voices':'/api/assistant/voices');VOICES=r.ok?((await r.json()).voices||[]).filter(x=>typeof x==='string'):[]}catch{VOICES=[]}return VOICES}
@@ -1396,7 +1402,7 @@ function applySet(){$('chathands').checked=!!S.hands;$('chattiming').style.displ
 async function loadSettings(){let d=null;try{d=await (await fetch('/api/profile/settings')).json()}catch{}
   SDEF={...SDEF,...(d&&d.defaults||{})};S={...SDEF,...(d&&d.settings||{})};
   if(!PROFILE){try{S={...S,...JSON.parse(localStorage.getItem('chatset')||'{}')}}catch{}}
-  applySet()}
+  applySet();if(!S.daily&&!chat.cid&&!chat.msgs.length)openConvo((convos.load()[0]||{}).id||null)}
 let setTimer=null;
 function saveSet(k,val){S[k]=val;applySet();
   if(!PROFILE){try{const o=JSON.parse(localStorage.getItem('chatset')||'{}');o[k]=val;localStorage.setItem('chatset',JSON.stringify(o))}catch{}return}

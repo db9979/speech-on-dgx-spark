@@ -2,7 +2,7 @@
 
 **English** | [Deutsch](README.de.md)
 
-Version V01.0.22 · Idea: Dominik Bornhäußer
+Version V01.0.23 · Idea: Dominik Bornhäußer
 
 One script installs **Qwen3-ASR** (speech recognition) and **Qwen3-TTS** (text to speech) as systemd services on an NVIDIA DGX Spark (GB10), together with a web panel for configuration and monitoring. It runs alongside [dgx-spark-qwen38](https://github.com/hasso5703/dgx-spark-qwen38).
 
@@ -45,6 +45,8 @@ The **Gespräch** tab needs the microphone, and browsers only allow it over http
 **Daily briefing and calendar:** say "good morning" or "what's on today?" and the assistant reads out today's and tomorrow's appointments, today's reminders and a few lines on your own topics (e.g. "weather Berlin", via your SearXNG). "What do I have on Friday?" works too. Each profile connects one or more calendars (up to 8) under the profile button, tab Calendar; an appointment found in two calendars is read out once. Each one is a CalDAV address with user and app password (iCloud: https://caldav.icloud.com with the Apple ID and an app-specific password from appleid.apple.com; Nextcloud: …/remote.php/dav; Radicale …), or a subscription link with webcal://, webcals:// or https:// (Google: "secret address in iCal format", a public iCloud calendar). Read only; the password stays on the Spark and is never shown again. Guests get no calendar. Can be turned off under Configuration → Talk.
 
 **Natural turn-taking** (on by default, conversation settings): during a short pause the recording is transcribed already. A finished sentence ends the turn at once and its transcript becomes the question, so the answer starts noticeably sooner; after "and …", "because …", "um" or a comma the assistant waits up to 2 s for you to go on.
+
+**New conversation every day** (on by default, conversation settings → Display): the first question of a new day starts a new conversation; earlier ones stay in the history and can be picked and continued.
 
 **Phone view:** on phones the page opens with just the face (tap = talk) and two buttons: Settings (conversation settings plus "Hey Spark") and History (the messenger view with typing; the arrow top left goes back to the face).
 
