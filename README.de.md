@@ -2,7 +2,7 @@
 
 [English](README.md) | **Deutsch**
 
-Version V01.0.14 · Idee: Dominik Bornhäußer
+Version V01.0.15 · Idee: Dominik Bornhäußer
 
 Ein Skript installiert **Qwen3-ASR** (Spracherkennung) und **Qwen3-TTS** (Sprachausgabe) als systemd-Dienste auf einer NVIDIA DGX Spark (GB10). Dazu kommt eine Weboberfläche für Konfiguration und Monitoring. Das Setup läuft neben [dgx-spark-qwen38](https://github.com/hasso5703/dgx-spark-qwen38).
 
@@ -35,6 +35,8 @@ Der Reiter **Gespräch** braucht das Mikrofon, und Browser erlauben das nur übe
 **Gesprächs-Einstellungen:** Unter dem Gesicht stehen nur „Hey Spark“ und „Freihändig“; der Knopf „Einstellungen“ daneben öffnet den Rest: Zuhören (bei Stille beenden, Live-Transkript, Ins-Wort-Fallen und wie empfindlich), Antwort (Stimme, nur mit Profil; Sprechtempo, Antwortlänge) und Anzeige. Gäste hören immer die Standardstimme. Angemeldet liegen die Einstellungen im Profil auf dem Spark und gelten auf jedem Gerät, auch für Lautsprecher mit Geräteschlüssel; als Gast nur im Browser. „Hey Spark“ stellt jedes Gerät selbst ein, weil es Mikrofon und Bildschirm wach hält. Die Vorgaben für Gäste und neue Profile stehen unter Konfiguration → Gespräch. Das Sprechtempo ändert die Stimmlage nicht; es wirkt auch für andere Apps, die `speed` an die TTS-API senden (vllm-omni-Backend).
 
 **Eigene Dokumente:** Angemeldete Profile laden unter dem Profil-Knopf eigene Dateien hoch (PDF mit Textebene, Word, Text, Markdown, HTML, CSV; je bis 20 MB). Fragt man danach, sucht der Assistent darin und nennt das Dokument unter der Antwort. Die Suche läuft über Stichwörter auf dem Spark, ohne zusätzliches Modell. Gäste können nichts hochladen, und kein Profil sieht die Dokumente eines anderen. Abschaltbar unter Konfiguration → Wissen.
+
+**Nachrichten im Verlauf:** Fährt man über eine Nachricht (am Handy: antippen), erscheinen ein Papierkorb und bei Antworten ein Lautsprecher. Der Papierkorb löscht die Nachricht, bei einer Frage samt Antwort. Der Lautsprecher liest die Antwort noch einmal vor.
 
 **Timer und Erinnerungen:** „Erinnere mich in 10 Minuten an den Ofen“ oder „Erinnere mich morgen um 8 an den Termin“. Offene Erinnerungen stehen als kleine Chips unter den Schaltern (✕ löscht), „Welche Timer laufen?“ und „Lösch den Ofen-Timer“ gehen auch per Sprache. Wenn es soweit ist, klingelt die Seite, zeigt die Erinnerung im Verlauf und sagt sie an; liegt der Tab im Hintergrund, kommt zusätzlich eine Browser-Benachrichtigung. Das klappt, solange die Seite offen ist. Profile speichern ihre Erinnerungen auf dem Spark (jedes offene Gerät des Profils klingelt), Gäste nur im eigenen Browser. Abschaltbar unter Konfiguration → Gespräch.
 

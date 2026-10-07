@@ -417,7 +417,7 @@ def profile_voice_delete(prof=Depends(own_profile)):
 async def assistant_say(request: Request):
     """Speaks a short text (a due reminder) as streamed PCM events, like the chat's audio."""
     body = await request.json()
-    text = str(body.get("text", "")).strip()[:300]
+    text = str(body.get("text", "")).strip()[:6000]   # a reminder, or an answer read out again
     if not text:
         raise HTTPException(400, "text is required")
     cfg = load_config()
@@ -641,7 +641,7 @@ def validate(new):
     if not isinstance(t.get("top_p"), (int, float)) or not 0.05 <= t["top_p"] <= 1:
         raise HTTPException(400, "top_p must be 0.05..1")
     if not isinstance(t.get("initial_chunk_frames"), int) or not 0 <= t["initial_chunk_frames"] <= 25:
-        raise HTTPException(400, "initial_chunk_frames must be 0..25 (0 = let vllm-omni decide)")
+        raise HTTPException(400, "Speech output start (first audio block): a whole number of frames from 0 to 25")
     if t.get("numbers") not in ("off", "words", "blocks", "digits"):
         raise HTTPException(400, "numbers must be off, words, blocks or digits")
     if not isinstance(t.get("seed"), int) or t["seed"] < -1:
@@ -1358,6 +1358,7 @@ async def chat(request: Request):
                     if lang:
                         tts_body["language"] = lang
                 req = dict(tts_body, input=text, stream=True, response_format="pcm")
+                await out.put({"type": "tts_request", "chars": len(text)})  # for the stall details in the chat
                 sent, got = time.time(), False
                 async with c.stream("POST", tts_url, json=req, headers=api_headers()) as r:
                     if r.status_code != 200:
