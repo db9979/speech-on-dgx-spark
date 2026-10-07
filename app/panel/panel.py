@@ -29,6 +29,7 @@ import documents  # noqa: E402
 import speakers  # noqa: E402
 import calendars  # noqa: E402
 import profiles  # noqa: E402
+import recall  # noqa: E402
 import watch  # noqa: E402
 from common import CONFIG_PATH, estimate_gib, journal, load_config, mem_available_gib, quiet_access_log  # noqa: E402
 
@@ -209,6 +210,54 @@ async def sampler():
             except Exception as e:
                 print("sampler:", e, flush=True)
             await asyncio.sleep(3)
+    asyncio.create_task(loop())
+
+
+LEARN_EVERY = 300
+
+
+async def learn_once():
+    """Reads quiet conversations of profiles that allow it and keeps a few lasting facts (marked
+    "auto"). Runs only while nobody is chatting, so it never slows down an answer."""
+    cfg = load_config()
+    ccfg = dict(json.load(open(DEFAULTS))["chat"], **cfg.get("chat", {}))
+    if not (ccfg.get("memory", True) and ccfg.get("history", True) and ccfg.get("llm_url")):
+        return 0
+    adm = profiles.defaults(ccfg.get("defaults"))
+    headers = {"Authorization": f"Bearer {ccfg['llm_key']}"} if ccfg.get("llm_key") else {}
+    saved = 0
+    async with httpx.AsyncClient(timeout=httpx.Timeout(120, connect=5)) as c:
+        for uid in profiles.user_ids():
+            if not dict(adm, **profiles.settings(uid)).get("learn", True):
+                continue
+            prof = profiles.by_id(uid)
+            for convo in recall.pending(uid, time.time() * 1000)[:5]:  # the rest next time
+                if time.time() - _last_chat[0] < 60:
+                    return saved  # someone is talking: try again later
+                payload = {"model": await llm_model(c, ccfg, headers), "temperature": 0.2, "max_tokens": 400,
+                           "messages": recall.learn_messages(prof, convo),
+                           "chat_template_kwargs": {"enable_thinking": False}}
+                r = await c.post(ccfg["llm_url"].rstrip("/") + "/chat/completions", json=payload, headers=headers)
+                r.raise_for_status()
+                known = {x["text"].lower() for x in profiles.memory(uid)}
+                for fact in recall.parse_facts(r.json()["choices"][0]["message"].get("content") or ""):
+                    if fact.lower() not in known:
+                        saved += bool(profiles.remember(uid, fact, auto=True))
+                recall.mark(uid, convo)
+    return saved
+
+
+@app.on_event("startup")
+async def learner():
+    async def loop():
+        while True:
+            await asyncio.sleep(LEARN_EVERY)
+            try:
+                n = await learn_once()
+                if n:
+                    print(f"learned {n} fact(s) from conversations", flush=True)
+            except Exception as e:
+                print("learning:", type(e).__name__, e, flush=True)
     asyncio.create_task(loop())
 
 
@@ -943,6 +992,18 @@ MEMORY_TOOLS = [
         "parameters": {"type": "object", "properties": {"text": {"type": "string"}}, "required": ["text"]}}}]
 
 
+HISTORY_TOOL = {"type": "function", "function": {
+    "name": "history_search",
+    "description": "Search the user's earlier conversations with you (not the current one). Use it when the "
+                   "user refers to something talked about before ('last time', 'what did you say about ...', "
+                   "'what did we talk about yesterday'). Without a query it lists the recent conversations.",
+    "parameters": {"type": "object", "properties": {
+        "query": {"type": "string", "description": "keywords; empty for an overview"},
+        "days": {"type": "integer", "description": "only conversations of the last N days"}}}}}
+HISTORY_HINT = ("Mit history_search findest du, worüber ihr in früheren Gesprächen gesprochen habt. Nutze es, "
+                "wenn der Nutzer sich auf etwas Früheres bezieht, und erfinde nichts, was dort nicht steht.")
+
+
 DOC_TOOL = {"type": "function", "function": {
     "name": "document_search",
     "description": "Search the user's own uploaded documents. Use it when a question may be answered by "
@@ -1184,8 +1245,12 @@ def now_line(tz=None):
             f"{now.year}, {now:%H:%M} Uhr (Zeitzone {tz}). Nutze das nur, wenn es zur Frage passt.")
 
 
+_last_chat = [0.0]
+
+
 @app.post("/api/chat", dependencies=[Depends(assistant)])
 async def chat(request: Request):
+    _last_chat[0] = time.time()
     body = await request.json()
     cfg = load_config()
     ccfg = dict(json.load(open(DEFAULTS))["chat"], **cfg.get("chat", {}))
@@ -1221,6 +1286,9 @@ async def chat(request: Request):
     prof = who if ccfg.get("memory", True) else None
     if prof:  # guests get no memory at all
         system = (system + "\n\n" + memory_hint(prof)).strip()
+    past = bool(prof and ccfg.get("history", True))
+    if past:
+        system = (system + "\n\n" + HISTORY_HINT).strip()
     docs = documents.list_docs(who["id"]) if who and ccfg.get("documents", True) else []
     if docs:
         system = (system + "\n\n" + docs_hint(who, docs)).strip()
@@ -1236,7 +1304,8 @@ async def chat(request: Request):
     cal = calendars.get(who["id"]) if who and briefing else {"calendars": [], "topics": []}
     if briefing:
         system = (system + "\n\n" + BRIEFING_HINT + (" " + CALENDAR_HINT if cal["calendars"] else "")).strip()
-    tools = ([SEARCH_TOOL] if search else []) + (MEMORY_TOOLS if prof else []) + ([DOC_TOOL] if docs else []) \
+    tools = ([SEARCH_TOOL] if search else []) + (MEMORY_TOOLS if prof else []) + ([HISTORY_TOOL] if past else []) \
+        + ([DOC_TOOL] if docs else []) \
         + (REMINDER_TOOLS if timers else []) + ([BRIEFING_TOOL] if briefing else []) \
         + ([CALENDAR_TOOL] if cal["calendars"] else [])
     if system:
@@ -1321,6 +1390,15 @@ async def chat(request: Request):
             except Exception as e:
                 await out.put({"type": "search_error", "message": str(e)})
                 return f"Search failed: {e}"
+        if name == "history_search" and past:
+            query = str(args.get("query", "")).strip()
+            try:
+                days = min(3650, max(1, int(args["days"]))) if args.get("days") not in (None, "") else None
+            except (TypeError, ValueError):
+                days = None
+            await out.put({"type": "historysearch", "query": query})
+            skip = body.get("convo") if own_browser and isinstance(body.get("convo"), str) else None
+            return await asyncio.to_thread(recall.search, prof["id"], query, days, skip)
         if name == "document_search" and docs:
             query = str(args.get("query", "")).strip()
             await out.put({"type": "docsearch", "query": query})

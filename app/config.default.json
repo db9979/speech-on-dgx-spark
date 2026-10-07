@@ -69,12 +69,13 @@
     "search_results": 5,
     "search_pages": 2,
     "memory": true,
+    "history": true,
     "documents": true,
     "reminders": true,
     "calendar": true,
     "speaker_id": false,
     "speaker_strictness": "normal",
-    "defaults": {"hands": false, "auto": true, "turn": true, "daily": true, "live": true, "barge": true, "barge_level": "mid", "voice": "", "speed": 1.0, "length": "normal", "timing": true},
+    "defaults": {"hands": false, "auto": true, "turn": true, "daily": true, "live": true, "barge": true, "barge_level": "mid", "voice": "", "speed": 1.0, "length": "normal", "timing": true, "learn": true},
     "max_tokens": 4096
   },
   "logs": {

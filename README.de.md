@@ -2,7 +2,7 @@
 
 [English](README.md) | **Deutsch**
 
-Version V01.0.26 · Idee: Dominik Bornhäußer
+Version V01.0.27 · Idee: Dominik Bornhäußer
 
 Ein Skript installiert **Qwen3-ASR** (Spracherkennung) und **Qwen3-TTS** (Sprachausgabe) als systemd-Dienste auf einer NVIDIA DGX Spark (GB10). Dazu kommt eine Weboberfläche für Konfiguration und Monitoring. Das Setup läuft neben [dgx-spark-qwen38](https://github.com/hasso5703/dgx-spark-qwen38).
 
@@ -51,6 +51,8 @@ Der Reiter **Gespräch** braucht das Mikrofon, und Browser erlauben das nur übe
 **Sprechererkennung** (standardmäßig aus, Konfiguration → Gespräch): Jedes Profil liest unter dem Profil-Knopf drei kurze Sätze vor. Erkennt der Assistent danach eine Stimme eindeutig, antwortet er für dieses Profil, mit dessen Gedächtnis, Dokumenten, Erinnerungen und Stimme, auch an einem Gast-Gerät. Im Verlauf steht dann „🎙 Name“ unter der Frage. Bei unklarer Stimme bleibt alles, wie es ist. Die Erkennung läuft auf dem Prozessor des Spark (Resemblyzer-Modell, Apache 2.0) und braucht keinen GPU-Speicher. Die Strenge ist einstellbar. Eine Stimme ist kein Passwort: Wer sehr ähnlich klingt oder eine Aufnahme abspielt, kann ein Profil erwischen.
 
 **Profile und Gedächtnis:** Unter „Profile“ legt der Admin Profile mit Name und PIN an. Im Gespräch meldet man sich über den Knopf „Gast“ oben im Verlauf mit Name und PIN an. Angemeldet merkt sich der Assistent Dinge dauerhaft, wenn man es ihm sagt („Merk dir, dass ich vegetarisch esse“) oder wenn sie später nützlich sind, und vergisst sie auf Zuruf; unter dem Profil-Knopf steht, was er weiß, zum Löschen. Gedächtnis und Gespräche gehören fest zum Profil und liegen auf dem Spark, so erscheint derselbe Verlauf auf jedem Gerät, auf dem man angemeldet ist: Welches Profil fragt, entscheidet nur die Anmeldung (Cookie) oder der Geräteschlüssel, nie das Modell, und Gäste bekommen kein Gedächtnis. Lautsprecher und eigene Programme bekommen unter „Profile → Geräte“ einen Geräteschlüssel, der fest zu einem Profil gehört, und senden ihn als Header `X-Speech-Device` an `/api/chat`. Eine neue PIN meldet alle Browser des Profils ab; ein gelöschtes Profil nimmt sein Gedächtnis und seine Geräte mit. Die Daten liegen auf dem Spark unter `/var/lib/speech-spark/users`, je Profil ein eigener Ordner.
+
+**Frühere Gespräche** (Konfiguration → Gespräch → „Frühere Gespräche“, standardmäßig an; nur Profile): Der Assistent schlägt nach, worüber ihr früher gesprochen habt („Was hast du mir letzte Woche zum Grill gesagt?“, „Worüber haben wir gestern geredet?“), und sucht dabei nur in den gespeicherten Gesprächen des eigenen Profils. Gespräche, die zehn Minuten ruhen, liest er außerdem einmal im Hintergrund nach, wenn gerade niemand spricht, und übernimmt höchstens drei dauerhafte Fakten pro Gespräch ins Gedächtnis des Profils; unter dem Profil-Knopf stehen sie mit „automatisch“ markiert und lassen sich löschen. Jedes Profil kann dieses Lernen in den Gesprächseinstellungen abschalten („Aus Gesprächen lernen“).
 
 **Aussprache:** Unter Konfiguration → Sprachausgabe → Aussprache steht eine Regel pro Zeile, etwa `DGX = De Ge Ix`. Sie gilt für ganze Wörter und für jede Sprachausgabe, auch aus Open WebUI.
 

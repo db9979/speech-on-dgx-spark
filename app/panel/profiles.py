@@ -79,6 +79,10 @@ def valid_pin(pin):
 
 
 # ---------------------------------------------------------------- profiles
+def user_ids():
+    return [u["id"] for u in _load()["users"]]
+
+
 def admin_list():
     d = _load()
     users = [{"id": u["id"], "name": u["name"], "created": u.get("created"), "facts": len(memory(u["id"]))}
@@ -208,6 +212,7 @@ SETTINGS = {
     "speed": (1.0, lambda v: isinstance(v, (int, float)) and not isinstance(v, bool) and 0.7 <= v <= 1.4),
     "length": ("normal", lambda v: v in ("short", "normal", "long")),
     "timing": (True, lambda v: isinstance(v, bool)),
+    "learn": (True, lambda v: isinstance(v, bool)),
 }
 
 
@@ -305,13 +310,16 @@ def memory(uid):
         return []
 
 
-def remember(uid, text):
+def remember(uid, text, auto=False):
     text = re.sub(r"\s+", " ", str(text)).strip()[:MAX_FACT_LEN]
     if not text:
         return None
     with _lock:
         facts = [x for x in memory(uid) if x["text"].lower() != text.lower()]
-        facts.append({"id": secrets.token_hex(4), "text": text, "created": int(time.time())})
+        item = {"id": secrets.token_hex(4), "text": text, "created": int(time.time())}
+        if auto:  # learned from a conversation, not asked for
+            item["auto"] = True
+        facts.append(item)
         _write(_path(uid, "memory.json"), facts[-MAX_FACTS:])
     return text
 
