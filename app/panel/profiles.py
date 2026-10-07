@@ -296,6 +296,9 @@ SETTINGS = {
     "length": ("normal", lambda v: v in ("short", "normal", "long")),
     "timing": (True, lambda v: isinstance(v, bool)),
     "learn": (True, lambda v: isinstance(v, bool)),
+    # daily briefing as a push notification at this local time ("" = off), in the device's time zone
+    "briefing_at": ("", lambda v: isinstance(v, str) and re.fullmatch(r"(?:[01]\d|2[0-3]):[0-5]\d|", v)),
+    "tz": ("", lambda v: isinstance(v, str) and re.fullmatch(r"(?:[A-Za-z_]+(?:/[A-Za-z0-9_+\-]+){0,2})?", v)),
 }
 
 

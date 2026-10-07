@@ -124,6 +124,11 @@ async def stability():
                 await push.due_reminders()
             except Exception as e:
                 print("push reminders:", type(e).__name__, e, flush=True)
+            if int(time.time()) % 60 < 15:  # once a minute
+                try:
+                    await chat.due_briefings()
+                except Exception as e:
+                    print("briefing:", type(e).__name__, e, flush=True)
     asyncio.create_task(reminders())
     asyncio.create_task(watchdog())
     asyncio.create_task(backups())

@@ -208,10 +208,13 @@ $('seclogoutall').onclick=async()=>{if(!confirm(t('Dein Profil in allen anderen 
 const pushOk=()=>'serviceWorker' in navigator&&'PushManager' in window&&window.isSecureContext;
 async function pushSub(){try{const r=await navigator.serviceWorker.getRegistration();return r&&await r.pushManager.getSubscription()}catch{return null}}
 async function showPush(){const box=$('pushbox');box.style.display=PROFILE&&REM_ON?'':'none';if(!PROFILE||!REM_ON)return;
+  $('briefat').value=S.briefing_at||'';
   if(!pushOk()){$('pushstate').textContent=/iPhone|iPad/.test(navigator.userAgent)&&!navigator.standalone?t('Auf dem iPhone: die Seite über „Teilen → Zum Home-Bildschirm“ als App anlegen und dort einschalten.','On an iPhone: add the page to the home screen ("Share → Add to Home Screen") and switch it on there.'):t('Geht nur über https mit gültigem Zertifikat (z. B. hinter deinem Proxy). Hier klingeln Erinnerungen, solange die Seite offen ist.','Needs https with a valid certificate (e.g. behind your proxy). Here reminders ring while the page is open.');
     $('pushgo').style.display=$('pushoff').style.display='none';return}
   const s=await pushSub();$('pushgo').style.display=s?'none':'';$('pushoff').style.display=s?'':'none';
   $('pushstate').textContent=s?t('An: Erinnerungen kommen als Mitteilung, auch wenn die Seite zu ist.','On: reminders arrive as notifications, also when the page is closed.'):t('Aus: Erinnerungen klingeln nur, solange die Seite offen ist.','Off: reminders ring only while the page is open.')}
+$('briefat').onchange=()=>{saveSet('tz',TZ());saveSet('briefing_at',$('briefat').value||'')};
+$('briefoff').onclick=()=>{$('briefat').value='';saveSet('briefing_at','')};
 $('pushgo').onclick=async()=>{try{if(await Notification.requestPermission()!=='granted'){$('pushstate').textContent=t('Mitteilungen sind für diese Seite nicht erlaubt (Browser- oder Systemeinstellungen).','Notifications are not allowed for this page (browser or system settings).');return}
     const reg=await navigator.serviceWorker.register('/sw.js');await navigator.serviceWorker.ready;
     const {key}=await (await api('/api/profile/push')).json();

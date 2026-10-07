@@ -602,6 +602,39 @@ class Quick(unittest.TestCase):
         self.assertEqual(evs[kinds.index("tts_request")]["chars"], len("Ich schaue in unseren früheren Gesprächen nach."))
 
 
+class Briefing(unittest.TestCase):
+    def test_once_a_day_after_the_time_only_with_push(self):
+        import asyncio
+        import datetime
+        import push
+        a = profile("Uwe")
+        uid = a.get("/api/whoami").json()["profile"]["id"]
+        self.assertEqual(a.put("/api/profile/settings", json={"briefing_at": "07:30", "tz": "Europe/Berlin"}).json()
+                         ["settings"]["briefing_at"], "07:30")
+        self.assertEqual(a.put("/api/profile/settings", json={"briefing_at": "25:00"}).json()["settings"]["briefing_at"],
+                         "07:30")
+        sent = []
+
+        async def fake_send(u, title, body, tag=""):
+            sent.append((u, title, body))
+            return 1
+        old_send, old_subs = push.send, push.subs
+        push.send, push.subs = fake_send, lambda u: [{"endpoint": "x"}] if u == uid else []
+        try:
+            zone = chat.user_zone("Europe/Berlin")
+            run = lambda h, m: asyncio.run(chat.due_briefings(datetime.datetime(2026, 10, 8, h, m, tzinfo=zone)))
+            run(7, 0)
+            self.assertEqual(sent, [])            # too early
+            run(7, 31)
+            self.assertEqual([x[0] for x in sent], [uid])
+            run(7, 45)
+            self.assertEqual(len(sent), 1)        # once a day
+            convos = a.get("/api/profile/convos").json()
+            self.assertTrue(any(c["id"] == "brief-20261008" for c in (convos if isinstance(convos, list) else convos.get("convos", []))))
+        finally:
+            push.send, push.subs = old_send, old_subs
+
+
 class Mail(unittest.TestCase):
     """E-mail per profile: read only, never another profile's, guests and foreign voices get none."""
 
