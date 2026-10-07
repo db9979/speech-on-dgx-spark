@@ -575,8 +575,10 @@ async def chat(request: Request):
     if ha and messages[-1]["role"] == "user":
         latest = messages[-1]["content"]
         pend = _HA_PENDING.pop(who["id"], None)
-        if homeassistant.is_command(latest):
+        if homeassistant.is_command(latest) and await homeassistant.mentions_device(ha, latest):
             ha_direct = homeassistant.clean_command(latest)
+        elif homeassistant._intent(latest):  # sounds like switching but is not taken as a command: say why
+            print("homeassistant: not taken as a command:", repr(homeassistant.clean_command(latest)[:100]), flush=True)
         elif ha_code_ok and pend and time.time() - pend[0] < 120:
             ha_direct = pend[1]
         if ha_direct and ha_code and not ha_code_ok:

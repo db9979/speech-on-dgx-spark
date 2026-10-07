@@ -184,13 +184,15 @@ class HomeAssistant(unittest.TestCase):
         self.assertEqual(helpers.HA_CALLS[-1], {"entity_id": "media_player.the_frame", "service": "media_player.turn_on"})
         n = len(helpers.HA_CALLS)
         ask(a, "Ist das Licht an?")  # a question switches nothing
+        ask(a, "Ich habe das Licht an gelassen")  # nor a statement
+        ask(a, "Auf Wiedersehen")  # no device named
         self.assertEqual(len(helpers.HA_CALLS), n)
         # with a code word the command waits and runs when the next message brings the word
         a.put("/api/profile/homeassistant/code", json={"code": "Apollo dreizehn"})
-        ask(a, "Schalte die Kellerpumpe ein")
+        ask(a, "Kannst du bitte die Kellerpumpe einschalten?")
         self.assertEqual(len(helpers.HA_CALLS), n)
         ask(a, "Apollo 13")
-        self.assertEqual(helpers.HA_CALLS[-1]["text"], "Schalte die Kellerpumpe ein")
+        self.assertEqual(helpers.HA_CALLS[-1]["text"], "Kannst du bitte die Kellerpumpe einschalten?")
         n = len(helpers.HA_CALLS)
         ask(a, "Apollo 13")  # the waiting command ran once, not again
         self.assertEqual(len(helpers.HA_CALLS), n)
@@ -235,7 +237,7 @@ class HomeAssistant(unittest.TestCase):
         cmd = 'TOOL home_assistant_action {"entity_id": "switch.keller", "service": "turn_off"'
         n = len(helpers.HA_CALLS)
         self.assertIn("code word", answer(ask(a, cmd + '}')))
-        self.assertIn("code word", answer(ask(a, 'TOOL home_assistant {"command": "Licht aus"}')))
+        self.assertIn("code word", answer(ask(a, 'TOOL home_assistant {"command": "Licht dimmen"}')))
         self.assertEqual(len(helpers.HA_CALLS), n)
         # reading needs no code word
         self.assertIn("Kellerpumpe", answer(ask(a, 'TOOL home_assistant_states {"query": "Kellerpumpe"}')))

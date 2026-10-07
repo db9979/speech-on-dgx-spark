@@ -279,6 +279,7 @@ _IMPERATIVE = set("schalte schalt mach mache stell stelle dreh drehe oeffne oeff
                   "turn switch open close".split())
 _ASKING = set("ist sind wie was welche welcher welches wo wann hast hat laeuft brennt warum is are what which "
               "where how".split())
+_SUBJECT = set("ich wir du er sie es man das der die mein meine i we it the my".split())
 _MODAL = set("kannst koenntest wuerdest bitte can could would please".split())
 
 
@@ -291,19 +292,23 @@ def clean_command(text):
 
 
 def is_command(text):
-    """A plain switching command, by its words: "Schalte den Fernseher aus", "Kannst du das Licht
-    einschalten", "Licht im Bad aus". Questions ("Ist das Licht an?") and statements are not."""
+    """A switching command, by its words: "Schalte den Fernseher aus", "Kannst du bitte das Licht
+    einschalten?", "Fernseher aus bitte", "Hey Spark, mach das Licht im Bad an". Questions about a state
+    ("Ist das Licht an?", "Wie warm ist es?") and statements ("Ich habe das Licht an gelassen") are not."""
     t = clean_command(text)
-    words = _norm(t).split()
-    if not words or t.endswith("?") or words[0] in _ASKING or not _intent(t):
+    words = [w for w in re.findall(r"\w+", _norm(t)) if w not in ("hey", "hallo", "spark", "ok", "okay")]
+    if not words or not _intent(t):
         return False
-    if any(w in _IMPERATIVE for w in words[:4]) or words[0] in _MODAL:
+    if words[0] in _MODAL or any(w in _IMPERATIVE for w in words[:4]):
         return True
-    return len(words) <= 6 and words[-1] in ("an", "aus", "ein", "auf", "zu", "on", "off")
+    if t.endswith("?") or words[0] in _ASKING or words[0] in _SUBJECT:
+        return False
+    # short commands: "Fernseher aus", "Licht an im Wohnzimmer", "Bitte den Fernseher ausschalten"
+    return len(words) <= 8
 
 
 def _intent(text):
-    words = _norm(text).split()
+    words = re.findall(r"\w+", _norm(text))
     return next((svc for svc, verbs in _VERBS if any(w in verbs.split() for w in words)), None)
 
 
@@ -597,6 +602,20 @@ def _pick(all_states, areas, names, words):
 
 def _name(s):
     return (s.get("attributes") or {}).get("friendly_name") or s["entity_id"]
+
+
+async def mentions_device(item, text):
+    """Whether a word of the text names a switchable device (by name, room or kind), so that
+    "Auf Wiedersehen" is no command."""
+    words = [w for w in re.findall(r"\w+", _norm(clean_command(text))) if len(w) > 1 and w not in _FILLER
+             and w not in _STOP and not any(w in v.split() for _, v in _VERBS)]
+    if not words:
+        return False
+    try:
+        all_states, areas, names = await _switchable(item)
+    except (httpx.HTTPError, ValueError):
+        return True  # Home Assistant will say itself what it cannot do
+    return any(w in _hay(x, names, areas.get(x["entity_id"], "")) for x in all_states for w in words)
 
 
 async def fallback(item, text):
