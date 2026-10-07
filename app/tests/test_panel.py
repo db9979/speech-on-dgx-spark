@@ -242,6 +242,18 @@ class HomeAssistant(unittest.TestCase):
             if x["entity_id"].startswith("light."):
                 x["state"] = "on"
 
+    def test_questions_read_by_the_panel(self):
+        a = profile("Pia")
+        a.put("/api/profile/homeassistant", json={"url": f"http://127.0.0.1:{helpers.HA_PORT}", "token": helpers.HA_TOKEN})
+        # the fake model calls no tool: the values come from the panel's own read
+        res = answer(ask(a, "Wie ist die Pool Temperatur?"))
+        self.assertIn("25.8 °C", res)
+        self.assertNotIn("Whirlpool", res)
+        res = answer(ask(a, "und vom Whirlpool?"))
+        self.assertIn("current_temperature=37.5", res)
+        self.assertNotIn("25.8", res)
+        self.assertNotIn("Read from Home Assistant", answer(ask(a, "Wie alt ist Goethe?")))
+
     def test_state_read_back(self):
         a = profile("Vera")
         a.put("/api/profile/homeassistant", json={"url": f"http://127.0.0.1:{helpers.HA_PORT}", "token": helpers.HA_TOKEN})

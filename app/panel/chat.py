@@ -762,6 +762,15 @@ async def chat(request: Request):
             ha_wait = False
     else:
         ha_wait = False
+    # A question that names a device or room is answered from states the panel reads itself, so the
+    # value never comes from the model's memory of earlier turns or from a guess.
+    ha_read = None
+    if ha and not ha_direct and not ha_wait and messages[-1]["role"] == "user" \
+            and not homeassistant._intent(messages[-1]["content"]):
+        try:
+            ha_read = await homeassistant.lookup(ha, messages[-1]["content"])
+        except (httpx.HTTPError, ValueError) as e:
+            print("homeassistant: lookup failed:", type(e).__name__, flush=True)
     docs = documents.list_docs(who["id"]) if who and ccfg.get("documents", True) else []
     if docs:
         system = (system + "\n\n" + docs_hint(who, docs)).strip()
@@ -868,6 +877,12 @@ async def chat(request: Request):
                           "function": {"name": "home_assistant", "arguments": json.dumps({"command": ha_direct})}}]},
                          {"role": "tool", "tool_call_id": "ha0", "content": ("Home Assistant: " if ok else
                           "Home Assistant failed: ") + answer + " Say only this result, in one or two short sentences."}]
+            if ha_read:
+                await out.put({"type": "home", "command": "? " + messages[-1]["content"][:80]})
+                msgs += [{"role": "assistant", "content": None, "tool_calls": [{"id": "ha1", "type": "function",
+                          "function": {"name": "home_assistant_states",
+                                       "arguments": json.dumps({"query": messages[-1]["content"][:200]})}}]},
+                         {"role": "tool", "tool_call_id": "ha1", "content": ha_read}]
             for rnd in range(5):  # a few tool rounds (at most two searches), then the answer
                 payload = dict(base, messages=msgs)
                 offer = [t for t in tools if (t is not SEARCH_TOOL or searches < 2)

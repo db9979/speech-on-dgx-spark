@@ -475,6 +475,9 @@ def _line(s, names, area):
             extra.append(f"radius={round(a['radius'])} m")
     elif dom in ("person", "device_tracker"):
         val = "zone " + str(s.get("state"))
+    if dom not in ("climate", "weather"):  # water heaters, pools, spas: their own temperatures
+        extra += [f"{k}={a[k]}" for k in ("current_temperature", "temperature", "target_temp_high")
+                  if a.get(k) is not None and not isinstance(a[k], (dict, list))]
     if a.get("device_class") and dom in ("binary_sensor", "cover"):
         extra.append(f"type={a['device_class']}")
     name = a.get("friendly_name") or eid
@@ -580,6 +583,7 @@ async def states(item, text="", domain="", area="", limit=60):
                    "call without words for an overview.")
     keep = [x[2] for x in scored if x[0] == scored[0][0]]  # the most words; all words when any does
     lines = [_line(s, names, areas.get(s["entity_id"], "")) for s in keep[:limit]]
+    _log("states:", repr(str(text)[:60]), domain or "", area or "", "->", len(keep), [x["entity_id"] for x in keep[:5]])
     if len(keep) > limit:
         lines.append(f"... and {len(keep) - limit} more; narrow the search.")
     return len(keep), "\n".join(lines)
@@ -895,3 +899,50 @@ async def todo(item, list_name="", act="show", text=""):
     word = {"add": "added to", "done": "ticked off on", "remove": "removed from"}[act]
     return ok, (f"Checked afterwards: '{thing}' {word} {names[eid]}." if ok
                 else f"Checked afterwards: '{thing}' was NOT {word} {names[eid]}.")
+
+
+async def lookup(item, text, limit=12):
+    """For a question that names a device or room Home Assistant has ("Wie ist die Pool-Temperatur?",
+    "und vom Whirlpool?"): the states of the entities whose name or room carries those words, read by
+    the panel itself so the answer never depends on the model calling a tool. None when no word names
+    anything in Home Assistant."""
+    t = str(text).strip()
+    first = (re.findall(r"\w+", _norm(t)) or [""])[0]
+    if not (t.endswith("?") or first in _ASKING or first in ("und", "and", "zeig", "sag", "nenn")):
+        return None  # only questions and follow-ups ("und vom Whirlpool")
+    words = [w for w in re.findall(r"\w+", _norm(clean_command(text))) if len(w) > 2 and w not in _STOP
+             and w not in _FILLER and w not in _ASKING and w not in ("und", "vom", "von", "der", "dem", "and")]
+    if not words:
+        return None
+    async with _client(item) as c:
+        r = await c.get(item["url"] + "/api/states")
+        r.raise_for_status()
+        all_states = [x for x in r.json() or [] if isinstance(x, dict) and x.get("entity_id")]
+        areas = await _areas(c, item)
+    names = {x["entity_id"]: _name(x) for x in all_states}
+    labels = [_norm(names[x["entity_id"]] + " " + x["entity_id"].split(".", 1)[1] + " "
+                    + areas.get(x["entity_id"], "")) for x in all_states]
+    words = _correct(words, labels)
+    def names_it(w, h):  # whole words; inside compounds ("Pooltemperatur") only for longer words
+        return any(f in h.split() for f in _forms(w)) or (len(w) >= 5 and _hit(w, h))
+    specific = [w for w in words if any(names_it(w, h) for h in labels)]
+    if not specific:
+        return None
+    cands = [x for x, h in zip(all_states, labels) if all(names_it(w, h) for w in specific)]
+    if not cands:  # no entity carries all of them: the one with the most
+        best = max(sum(names_it(w, h) for w in specific) for h in labels)
+        cands = [x for x, h in zip(all_states, labels) if sum(names_it(w, h) for w in specific) == best]
+    whole = [x for x, h in zip(all_states, labels) if x in cands
+             and all(any(f in h.split() for f in _forms(w)) for w in specific)]
+    cands = whole or cands  # "Pool" is the pool, not also the whirlpool
+    generic = [w for w in words if w not in specific]
+    if generic:  # "Temperatur": narrow down when that leaves something
+        hays = {x["entity_id"]: _hay(x, names, areas.get(x["entity_id"], "")) + " " + _norm(_line(x, names, ""))
+                for x in cands}
+        narrow = [x for x in cands if any(_hit(w, hays[x["entity_id"]]) for w in generic)]
+        cands = narrow or cands
+    _log("lookup:", repr(str(text)[:60]), "words", specific, generic, "->", [x["entity_id"] for x in cands[:8]])
+    lines = [_line(x, names, areas.get(x["entity_id"], "")) for x in cands[:limit]]
+    more = f"\n... and {len(cands) - limit} more" if len(cands) > limit else ""
+    return ("Read from Home Assistant just now (answer only from these values; if the asked value is not "
+            "among them, say that it is not there):\n" + "\n".join(lines) + more)
