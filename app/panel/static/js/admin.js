@@ -211,7 +211,14 @@ async function loadSys(check=false){let u;try{u=await (await api('/api/update'+(
   $('updcommits').innerHTML=(r.commits||[]).length?'<table>'+r.commits.slice().reverse().map(c=>`<tr><td class="mut" style="width:70px"><code>${esc(c.sha)}</code></td><td>${esc(c.title)}</td></tr>`).join('')+'</table>':'';
   $('updlog').textContent=await (await api('/api/logs/update?lines=200')).text()||t('(noch kein Update gelaufen)','(no update has run yet)');$('updlog').scrollTop=1e9}
 const kvp=rows=>rows.map(([k,v])=>`<tr><td class="mut" style="width:35%">${k}</td><td>${esc(v)}</td></tr>`).join('');
-function updBadge(r){window.UPD=r;const on=r&&r.behind&&r.behind!==0;$('updbadge').style.display=on?'inline-block':'none';
+// Update notice on top of every page, also the assistant, for the logged-in admin only; "✕" hides
+// it until a newer version appears.
+function updBanner(r){const on=ADMIN&&r&&r.behind&&r.behind!==0&&r.latest;let hid='';try{hid=localStorage.getItem('updhide')||''}catch{}
+  $('updbanner').style.display=on&&hid!==r.latest?'flex':'none';if(!on)return;
+  $('updbtext').textContent=t('Update verfügbar','Update available')+(r.version?': '+r.version:'')+(r.behind>0?t(` (${r.behind} Änderung${r.behind>1?'en':''})`,` (${r.behind} change${r.behind>1?'s':''})`):'');
+  $('updbx').onclick=()=>{try{localStorage.setItem('updhide',r.latest)}catch{}$('updbanner').style.display='none'}}
+$('updbgo').onclick=()=>{$('updbanner').style.display='none';goSec('sys')};
+function updBadge(r){window.UPD=r;updBanner(r);const on=r&&r.behind&&r.behind!==0;$('updbadge').style.display=on?'inline-block':'none';
   document.querySelectorAll('.subbadge').forEach(x=>x.style.display=on?'inline-block':'none')}
 $('updcheck').onclick=()=>loadSys(true);
 let benchPoll=null;

@@ -77,6 +77,14 @@ async def remote_state(force=False):
                                         "date": x["commit"]["committer"]["date"]} for x in j.get("commits", [])][-30:]
             except Exception:
                 pass
+        if repo:  # the version number of the newest state, for the notice on the page
+            try:
+                async with httpx.AsyncClient(timeout=10) as c:
+                    r = await c.get(f"https://raw.githubusercontent.com/{repo}/{data['latest']}/app/VERSION")
+                if r.status_code == 200 and re.fullmatch(r"V[\d.]{1,20}", r.text.strip()):
+                    data["version"] = r.text.strip()
+            except Exception:
+                pass
         if data["behind"] is None:
             data["behind"] = -1  # newer version exists, details unknown
     _remote_cache.update(time=time.time(), data=data)
