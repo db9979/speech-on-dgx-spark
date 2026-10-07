@@ -127,6 +127,10 @@ HA_STATES = [
     {"entity_id": "switch.kaputt", "state": "on", "attributes": {"friendly_name": "Alte Steckdose"}},
     {"entity_id": "lock.haustuer", "state": "locked", "attributes": {"friendly_name": "Haustür"}},
     {"entity_id": "media_player.samsung", "state": "on", "attributes": {"friendly_name": "Samsung", "device_class": "tv"}},
+    {"entity_id": "media_player.the_frame", "state": "on", "attributes": {"friendly_name": "Samsung The Frame",
+     "device_class": "tv"}},
+    {"entity_id": "remote.the_frame", "state": "on", "attributes": {"friendly_name": "Samsung The Frame"}},
+    {"entity_id": "switch.the_frame_art_mode", "state": "on", "attributes": {"friendly_name": "Samsung The Frame Art Mode"}},
     {"entity_id": "media_player.sz_tv", "state": "on", "attributes": {"friendly_name": "TV", "device_class": "tv"}},
     {"entity_id": "media_player.wz_box", "state": "playing", "attributes": {"friendly_name": "Wohnzimmer Box",
      "device_class": "speaker"}},
@@ -182,7 +186,7 @@ def fake_ha():
         auth(request)
         b = await request.json()
         HA_CALLS.append(b)
-        if "Fernseher" in b["text"] or "TV" in b["text"] or "Gerät" in b["text"]:  # not exposed to Assist
+        if any(w in b["text"] for w in ("Fernseher", "TV", "Gerät", "Frame")):  # not exposed to Assist
             return {"response": {"response_type": "error", "speech": {"plain": {"speech": "Kein Gerät gefunden"}},
                                  "data": {"code": "no_valid_targets"}}}
         return {"response": {"response_type": "action_done", "speech": {"plain": {"speech": "Erledigt"}},

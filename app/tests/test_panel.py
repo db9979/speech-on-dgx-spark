@@ -171,6 +171,12 @@ class HomeAssistant(unittest.TestCase):
         res = answer(ask(a, "Schalte den T V im Wohnzimmer aus"))
         self.assertEqual(helpers.HA_CALLS[-1], {"entity_id": "media_player.samsung", "service": "media_player.turn_off"})
         self.assertIn("done", res)
+        # several entities of one device (media_player, remote, art mode switch): the media player
+        ask(a, "Schalte Samsung The Frame aus")
+        self.assertEqual(helpers.HA_CALLS[-1], {"entity_id": "media_player.the_frame", "service": "media_player.turn_off"})
+        # the model may name the device instead of its id
+        res = answer(ask(a, 'TOOL home_assistant_action {"entity_id": "Samsung The Frame", "service": "media_player.turn_on"}'))
+        self.assertEqual(helpers.HA_CALLS[-1], {"entity_id": "media_player.the_frame", "service": "media_player.turn_on"})
         n = len(helpers.HA_CALLS)
         ask(a, "Ist das Licht an?")  # a question switches nothing
         self.assertEqual(len(helpers.HA_CALLS), n)

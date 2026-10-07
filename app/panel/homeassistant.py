@@ -563,14 +563,12 @@ _FILLER = set("schalte schalt mach mache machen stell stelle bitte mal den die d
               "the please turn switch set".split())
 
 
-async def fallback(item, text):
-    """When Assist does not know a device: finds it among all states and switches it when the words
-    name one device and a plain on/off/open/close; otherwise lists the candidates. (done, text)."""
-    words = [w for w in _norm(text).split() if len(w) > 1]
-    service = next((svc for svc, verbs in _VERBS if any(w in verbs.split() for w in words)), None)
-    words = [w for w in words if w not in _FILLER and w not in _STOP and not any(w in v.split() for _, v in _VERBS)]
-    if not words:
-        return False, ""
+# one device often has several entities (a TV: media_player, remote, switch); the main one is switched
+_PRIMARY = {"media_player": 0, "light": 0, "climate": 0, "cover": 0, "fan": 0, "vacuum": 0, "humidifier": 0,
+            "water_heater": 0, "switch": 1, "input_boolean": 1, "siren": 1, "remote": 2}
+
+
+async def _switchable(item):
     async with _client(item) as c:
         r = await c.get(item["url"] + "/api/states")
         r.raise_for_status()
@@ -578,21 +576,55 @@ async def fallback(item, text):
                       and s["entity_id"].split(".")[0] in _SWITCHABLE]
         areas = await _areas(c, item)
     names = {s["entity_id"]: (s.get("attributes") or {}).get("friendly_name") or s["entity_id"] for s in all_states}
+    return all_states, areas, names
+
+
+def _pick(all_states, areas, names, words):
+    """(the one device all words fit or None, the candidates). Words that fit no device at all (a room
+    when Home Assistant does not tell rooms) are left out; among entities of one device the main one wins."""
+    useful = [w for w in words if any(w in _hay(x, names, areas.get(x["entity_id"], "")) for x in all_states)]
+    if not useful:
+        return None, []
+    full = [x for x in _score(all_states, areas, names, useful) if x[0] == len(useful)]
+    if not full:
+        return None, []
+    best = max(x[1] for x in full)
+    top = [x for x in full if x[1] == best]
+    prio = min(_PRIMARY.get(x[2]["entity_id"].split(".")[0], 1) for x in top)
+    top = [x for x in top if _PRIMARY.get(x[2]["entity_id"].split(".")[0], 1) == prio]
+    return (top[0][2] if len(top) == 1 else None), full
+
+
+def _name(s):
+    return (s.get("attributes") or {}).get("friendly_name") or s["entity_id"]
+
+
+async def fallback(item, text):
+    """When Assist does not know a device: finds it among all states and switches it when the words
+    name one device and a plain on/off/open/close; otherwise lists the candidates. (done, text)."""
+    words = [w for w in _norm(text).split() if len(w) > 1]
+    service = next((svc for svc, verbs in _VERBS if any(w in verbs.split() for w in words)), None)
+    words = [w for w in words if w not in _FILLER and w not in _STOP and not any(w in v.split() for _, v in _VERBS)]
+    if not words:
+        _log("fallback: no device words in", repr(text[:80]))
+        return False, ""
+    all_states, areas, names = await _switchable(item)
     scored = _score(all_states, areas, names, words)
-    full = [x for x in scored if x[0] == len(words)]  # every word of the command fits
-    if service and len(full) == 1 or (service and len(full) > 1 and full[0][1] > full[1][1]):
-        s = full[0][2]
-        dom = s["entity_id"].split(".")[0]
+    chosen, full = _pick(all_states, areas, names, words)
+    _log("fallback:", repr(text[:80]), "words", words, "service", service, "areas", len(set(areas.values())),
+         "candidates", [x[2]["entity_id"] for x in (full or scored)[:8]], "chosen", chosen and chosen["entity_id"])
+    if service and chosen:
+        dom = chosen["entity_id"].split(".")[0]
         svc = service if dom == "cover" or service not in ("open_cover", "close_cover") else None
         if dom == "cover" and service in ("turn_on", "turn_off"):
             svc = "open_cover" if service == "turn_on" else "close_cover"
         if svc:
-            ok, res = await action(item, s["entity_id"], svc)
-            return ok, res
+            return await action(item, chosen["entity_id"], svc)
     cands = [_line(x[2], names, areas.get(x[2]["entity_id"], "")) for x in (full or scored)[:8]]
     if not cands:
         return False, ""
-    return False, ("Candidates (switch the right one with home_assistant_action, or ask the user which one; "
+    return False, ("Nothing switched yet. Candidates (switch the right one with home_assistant_action and its "
+                   "exact entity id, or ask the user which one; "
                    + ("rooms unknown: the token is no administrator" if not areas else "rooms known") + "):\n"
                    + "\n".join(cands))
 
@@ -600,13 +632,23 @@ async def fallback(item, text):
 async def action(item, entity_id, service, data=None):
     """Calls one service of the entity's own domain; returns (ok, text for the model)."""
     eid = str(entity_id or "").strip().lower()
-    service = str(service or "").strip().lower()
+    service = str(service or "").strip().lower().split(".")[-1]  # "media_player.turn_off" is fine too
     if not re.fullmatch(r"[a-z0-9_]{1,64}\.[a-z0-9_]{1,200}", eid):
-        return False, "Give the exact entity id, e.g. light.kueche (look it up with home_assistant_states)."
+        # a name instead of the id ("Samsung The Frame"): take the device whose name it is
+        all_states, areas, names = await _switchable(item)
+        words = [w for w in _norm(entity_id).split() if len(w) > 1 and w not in _STOP]
+        chosen, _ = _pick(all_states, areas, names, words) if words else (None, [])
+        _log("action: name", repr(str(entity_id)[:80]), "->", chosen and chosen["entity_id"])
+        if not chosen:
+            return False, ("Nothing switched: give the exact entity id, e.g. light.kueche (look it up with "
+                           "home_assistant_states).")
+        eid = chosen["entity_id"]
     if not re.fullmatch(r"[a-z0-9_]{1,64}", service):
-        return False, "Give the service, e.g. turn_on, turn_off, toggle, set_temperature, set_cover_position."
+        _log("action: bad service", repr(service[:80]))
+        return False, "Nothing switched. Give the service, e.g. turn_on, turn_off, toggle, set_temperature, set_cover_position."
     domain = eid.split(".")[0]
     if domain in BLOCKED:
+        _log("action: blocked domain", eid)
         return False, ("Locks, alarm systems and updates are not switched from here; the user can do it in "
                        "Home Assistant itself.")
     extra = {}
