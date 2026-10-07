@@ -551,6 +551,12 @@ async def chat(request: Request):
     # Home Assistant only for the profile's own login or device key: a voice recognized at someone
     # else's device does not switch that profile's home
     ha = homeassistant.get(who["id"]) if who and own_browser and ccfg.get("homeassistant", False) else None
+    if ccfg.get("homeassistant", False):  # why the smart home tools are (not) offered, for the journal
+        print("homeassistant: turn for", who["name"] if who else "guest", "- tools",
+              "offered" if ha else "NOT offered: " + (
+                  "no profile signed in" if not who else "voice of another profile" if not own_browser
+                  else "token unreadable (stored with another key), connect again" if homeassistant._raw(who["id"])
+                  else "this profile has not connected Home Assistant"), flush=True)
     if ha:
         system = (system + "\n\n" + HA_HINT).strip()
     # code word for changes: only the user's own latest message counts, checked here, never by the
@@ -624,6 +630,9 @@ async def chat(request: Request):
                     payload["tools"] = offer
                 try:
                     finish, calls = await llm_round(payload, st)
+                    if ha:
+                        print("homeassistant: round", rnd, "model called", [x["name"] for x in calls] or "no tool",
+                              flush=True)
                 except ContextFull:
                     # still too long for the model (big documents or results): half the history, once more
                     if rnd or st["n"] or len(msgs) < 3:
@@ -707,6 +716,7 @@ async def chat(request: Request):
             if not text:
                 return "No command given."
             if ha_code and not ha_code_ok:
+                print("homeassistant: code word not in the latest message, nothing sent", flush=True)
                 await out.put({"type": "home_done", "ok": False, "text": "Codewort fehlt"})
                 return CODE_MISSING
             await out.put({"type": "home", "command": text})
@@ -734,6 +744,7 @@ async def chat(request: Request):
         if name == "home_assistant_action" and ha:
             eid, service = str(args.get("entity_id", "")), str(args.get("service", ""))
             if ha_code and not ha_code_ok:
+                print("homeassistant: code word not in the latest message, nothing sent", flush=True)
                 await out.put({"type": "home_done", "ok": False, "text": "Codewort fehlt"})
                 return CODE_MISSING
             await out.put({"type": "home", "command": f"{eid} {service}".strip()})
