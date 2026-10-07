@@ -56,11 +56,16 @@ async def remote_state(force=False):
     if not remote:
         data["error"] = "installed without git: run install.sh from a git clone once"
         return data
-    code, out = run(["git", "ls-remote", remote, f"refs/heads/{branch}"], timeout=20)
-    if code != 0 or not out:
-        data["error"] = f"could not reach {remote}: {out[-200:]}"
+    # the service account has no usable home: no git config, no credential prompt, a safe HOME
+    env = dict(os.environ, GIT_TERMINAL_PROMPT="0", HOME=os.environ.get("SPEECH_SPARK_STATE", "/tmp"),
+               GIT_CONFIG_NOSYSTEM="1")
+    code, out = run(["git", "ls-remote", remote, f"refs/heads/{branch}"], timeout=30, env=env)
+    sha = re.search(r"^([0-9a-f]{40})\s+refs/heads/", out or "", re.M)
+    if code != 0 or not sha:
+        print(f"update check: git ls-remote {remote} -> {code}: {out[-300:]}", flush=True)
+        data["error"] = f"could not reach {remote}: {out[-200:] or 'no answer'}"
         return data
-    data["latest"] = out.split()[0]
+    data["latest"] = sha.group(1)
     if data["latest"] == ver.get("commit"):
         data["behind"] = 0
     else:

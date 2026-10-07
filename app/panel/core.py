@@ -130,9 +130,9 @@ def assistant(request: Request, creds: HTTPBasicCredentials | None = Depends(sec
     auth(request, creds)
 
 
-def run(cmd, timeout=10):
+def run(cmd, timeout=10, env=None):
     try:
-        p = subprocess.run(cmd, capture_output=True, text=True, timeout=timeout)
+        p = subprocess.run(cmd, capture_output=True, text=True, timeout=timeout, env=env)
         return p.returncode, (p.stdout + p.stderr).strip()
     except Exception as e:
         return 1, str(e)
