@@ -7,6 +7,7 @@ a request comes only from its login cookie or its device key, never from anythin
     USERS_DIR/secret          signs the login cookies
     USERS_DIR/<user id>/memory.json   [{"id", "text", "created"}]
     USERS_DIR/<user id>/settings.json {conversation settings, see SETTINGS}
+    USERS_DIR/<user id>/convos.json   [{"id", "title", "updated", "msgs": [{"role", "content"}]}]
 """
 import hashlib
 import hmac
@@ -227,6 +228,38 @@ def save_settings(uid, d):
         merged = dict(settings(uid), **clean_settings(d))
         _write(_path(uid, "settings.json"), merged)
     return merged
+
+
+# ---------------------------------------------------------------- conversations
+MAX_CONVOS, MAX_MSGS, MAX_MSG_LEN = 50, 60, 20000
+
+
+def convos(uid):
+    try:
+        with open(_path(uid, "convos.json")) as f:
+            return json.load(f)
+    except (OSError, ValueError):
+        return []
+
+
+def save_convo(uid, c):
+    """Adds or replaces one conversation (newest first); returns it, or None if invalid."""
+    cid = str(c.get("id", ""))
+    if not re.fullmatch(r"[\w\-]{1,40}", cid) or not isinstance(c.get("msgs"), list):
+        return None
+    msgs = [{"role": m["role"], "content": str(m["content"])[:MAX_MSG_LEN]} for m in c["msgs"][-MAX_MSGS:]
+            if isinstance(m, dict) and m.get("role") in ("user", "assistant") and m.get("content")]
+    item = {"id": cid, "title": str(c.get("title", ""))[:80], "msgs": msgs,
+            "updated": int(c["updated"]) if isinstance(c.get("updated"), (int, float)) else int(time.time() * 1000)}
+    with _lock:
+        rest = [x for x in convos(uid) if x["id"] != cid]
+        _write(_path(uid, "convos.json"), sorted([item] + rest, key=lambda x: -x["updated"])[:MAX_CONVOS])
+    return item
+
+
+def delete_convo(uid, cid):
+    with _lock:
+        _write(_path(uid, "convos.json"), [x for x in convos(uid) if x["id"] != cid])
 
 
 # ---------------------------------------------------------------- memory

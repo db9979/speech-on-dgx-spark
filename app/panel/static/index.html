@@ -906,12 +906,25 @@ $('chatnew').onclick=()=>{stopListening(true);stopAnswer();openConvo(null);setTa
 // Conversations are kept in this browser (localStorage), at most 30, newest first.
 // Conversations stay in this browser, kept apart per profile (guests: "convos").
 let PROFILE=null;
-const convoKey=()=>PROFILE?'convos:'+PROFILE.id:'convos';
-const convos={load(){try{return JSON.parse(localStorage.getItem(convoKey())||'[]')}catch{return []}},
-  store(l){try{localStorage.setItem(convoKey(),JSON.stringify(l.slice(0,30)))}catch{}}};
-function saveConvo(){if(!chat.msgs.length)return;const l=convos.load().filter(c=>c.id!==chat.cid);
+// Logged in, conversations live in the profile on the Spark (same list on every device); this
+// page keeps a copy in convos.cache. Guests keep theirs in this browser only.
+const convos={cache:[],
+  load(){if(PROFILE)return this.cache;try{return JSON.parse(localStorage.getItem('convos')||'[]')}catch{return []}},
+  local(l){try{localStorage.setItem('convos',JSON.stringify(l.slice(0,30)))}catch{}},
+  put(c){if(PROFILE){this.cache=[c,...this.cache.filter(x=>x.id!==c.id)];
+      api('/api/profile/convos',{method:'PUT',headers:{'Content-Type':'application/json'},body:JSON.stringify(c)}).catch(()=>{})}
+    else this.local([c,...this.load().filter(x=>x.id!==c.id)])},
+  del(id){if(PROFILE){this.cache=this.cache.filter(x=>x.id!==id);api('/api/profile/convos/'+encodeURIComponent(id),{method:'DELETE'}).catch(()=>{})}
+    else this.local(this.load().filter(x=>x.id!==id))},
+  async sync(){if(!PROFILE){this.cache=[];return}
+    // conversations this browser kept for the profile before they moved to the Spark
+    let old=[];try{old=JSON.parse(localStorage.getItem('convos:'+PROFILE.id)||'[]')}catch{}
+    for(const c of old)await api('/api/profile/convos',{method:'PUT',headers:{'Content-Type':'application/json'},body:JSON.stringify(c)}).catch(()=>{});
+    try{localStorage.removeItem('convos:'+PROFILE.id)}catch{}
+    try{this.cache=await (await api('/api/profile/convos')).json()}catch{this.cache=[]}}};
+function saveConvo(){if(!chat.msgs.length)return;
   if(!chat.cid)chat.cid=Date.now().toString(36);const first=chat.msgs.find(m=>m.role==='user');
-  l.unshift({id:chat.cid,title:(first?first.content:'').slice(0,60),updated:Date.now(),msgs:chat.msgs.slice(-40)});convos.store(l);fillConvos()}
+  convos.put({id:chat.cid,title:(first?first.content:'').slice(0,60),updated:Date.now(),msgs:chat.msgs.slice(-60)});fillConvos()}
 function fillConvos(){const l=convos.load(),d=x=>new Date(x).toLocaleString(L==='en'?'en-GB':'de-DE',{day:'2-digit',month:'2-digit',hour:'2-digit',minute:'2-digit'});
   $('convosel').innerHTML=(chat.cid?'':`<option value="">${t('Neues Gespräch','New conversation')}</option>`)+
     l.map(c=>`<option value="${c.id}"${c.id===chat.cid?' selected':''}>${d(c.updated)} · ${esc(c.title||'…')}</option>`).join('');
@@ -920,12 +933,12 @@ function openConvo(id){const c=id&&convos.load().find(x=>x.id===id);chat.cid=c?c
   $('chatlog').innerHTML='';$('chattiming').textContent='';chat.msgs.forEach(m=>chatLog(m.role,m.content));fillConvos()}
 $('convosel').onchange=()=>{stopListening(true);stopAnswer();openConvo($('convosel').value||null);setTalk();chatSay(t('Bereit.','Ready.'))};
 $('convodel').onclick=()=>{if(!chat.cid||!confirm(t('Dieses Gespräch löschen?','Delete this conversation?')))return;
-  convos.store(convos.load().filter(c=>c.id!==chat.cid));stopListening(true);stopAnswer();openConvo(null)};
+  convos.del(chat.cid);stopListening(true);stopAnswer();openConvo(null)};
 openConvo((convos.load()[0]||{}).id||null);
 // ---------------------------------------------------------------- profile of this browser
 function setProfile(p){const changed=(p&&p.id)!==(PROFILE&&PROFILE.id);PROFILE=p||null;
   $('profname').textContent=PROFILE?PROFILE.name:t('Gast','Guest');
-  if(changed){stopListening(true);stopAnswer();openConvo((convos.load()[0]||{}).id||null)}
+  if(changed){stopListening(true);stopAnswer();convos.cache=[];openConvo(null);convos.sync().then(()=>{if(!chat.msgs.length)openConvo((convos.load()[0]||{}).id||null)})}
   loadSettings()}
 window.closeProf=()=>{$('profmodal').style.display='none'};
 async function showFacts(){const r=await api('/api/profile/memory');const d=await r.json();

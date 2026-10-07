@@ -330,6 +330,25 @@ def profile_forget_all(prof=Depends(own_profile)):
     return {"removed": profiles.forget(prof["id"])}
 
 
+@app.get("/api/profile/convos", dependencies=[Depends(assistant)])
+def profile_convos(prof=Depends(own_profile)):
+    return profiles.convos(prof["id"])
+
+
+@app.put("/api/profile/convos", dependencies=[Depends(assistant)])
+async def profile_save_convo(request: Request, prof=Depends(own_profile)):
+    item = profiles.save_convo(prof["id"], await request.json())
+    if not item:
+        raise HTTPException(400, "invalid conversation")
+    return {"ok": True}
+
+
+@app.delete("/api/profile/convos/{cid}", dependencies=[Depends(assistant)])
+def profile_delete_convo(cid: str, prof=Depends(own_profile)):
+    profiles.delete_convo(prof["id"], cid)
+    return {"ok": True}
+
+
 @app.get("/api/profile/settings", dependencies=[Depends(assistant)])
 def profile_settings(request: Request):
     """Conversation settings: the admin's defaults, overlaid with the profile's own (if logged in)."""
