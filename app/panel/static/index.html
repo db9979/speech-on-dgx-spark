@@ -216,6 +216,7 @@
       <div id="remlist" class="rems" hidden></div>
     </div>
     <div class="card convo"><div class="convohead"><h2>Verlauf</h2><button class="b profchip" id="profbtn" type="button" title="Profil"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round"><circle cx="12" cy="8" r="4"/><path d="M4 21a8 8 0 0 1 16 0"/></svg><span id="profname">Gast</span></button><select id="convosel" title="Frühere Gespräche"></select>
+      <button class="ib" id="convofind" title="In früheren Gesprächen suchen"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round"><circle cx="11" cy="11" r="6.5"/><path d="M16 16l4.5 4.5"/></svg></button>
       <button class="ib" id="convodel" title="Dieses Gespräch löschen"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round"><path d="M4 7h16M9 7V4h6v3M6 7l1 13h10l1-13"/></svg></button></div>
       <div id="chatlog"></div>
       <div class="composer"><input id="chattext" placeholder="oder hier tippen und Enter drücken"><button class="send" id="chatsend" title="Senden"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"><path d="M12 19V5M5 12l7-7 7 7"/></svg></button></div>
@@ -382,6 +383,12 @@
   <div class="mrow2"><button class="mi" id="milang" type="button"></button><button class="mi" id="mitheme" type="button">Hell / Dunkel</button></div>
   <button class="mi" id="milogin" type="button">Admin-Anmeldung</button>
   <button class="mi" id="milogout" type="button">Abmelden</button>
+</div></div>
+<div id="findmodal" class="modal" style="display:none"><div class="card modalcard findcard">
+  <h2>Frühere Gespräche durchsuchen</h2>
+  <div class="rowin"><input id="findq" placeholder="z. B. Rosen schneiden" autocomplete="off"><button class="b" type="button" onclick="$('findmodal').style.display='none'">Schließen</button></div>
+  <div class="fh" id="findinfo"></div>
+  <ul class="facts finds" id="findlist"></ul>
 </div></div>
 <div id="profmodal" class="modal" style="display:none"><div class="card modalcard mecard">
   <div class="mehead"><h2 id="profhead">Gast</h2><div class="mut" id="setscope"></div></div>

@@ -7,7 +7,7 @@ const MOBILE=matchMedia('(max-width:760px)');
 const mtog=document.createElement('div');mtog.className='mtoggles';
 const MOVES=[[()=>$('chatstate'),()=>$('mslot').nextElementSibling,'after'],[()=>$('profbtn'),()=>$('mmenu'),'before'],
   [()=>$('chatwake').closest('label'),()=>$('msetwake'),'in'],[()=>document.querySelector('.opts.toggles'),()=>mtog,'in'],[()=>$('chattiming'),()=>mtog,'in'],[()=>$('remlist'),()=>mtog,'in'],
-  [()=>$('talk'),()=>document.querySelector('.composer'),'in'],[()=>$('convosel'),()=>$('mconvo'),'row'],[()=>$('convodel'),()=>$('mconvo'),'row']];
+  [()=>$('talk'),()=>document.querySelector('.composer'),'in'],[()=>$('convosel'),()=>$('mconvo'),'row'],[()=>$('convofind'),()=>$('mconvo'),'row'],[()=>$('convodel'),()=>$('mconvo'),'row']];
 const homes=new Map();
 // Phones open on the face alone (view "face"); "Verlauf" switches to the messenger view ("log").
 let MVIEW='face';try{MVIEW=localStorage.getItem('mview')==='log'?'log':'face'}catch{}

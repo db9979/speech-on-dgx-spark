@@ -341,3 +341,25 @@ $('convodel').onclick=()=>{if(!chat.cid||!confirm(t('Dieses Gespräch löschen?'
 const today0=()=>new Date().setHours(0,0,0,0);
 const latestConvo=()=>{const c=convos.load()[0];return c&&(!S.daily||c.updated>=today0())?c.id:null};
 openConvo(latestConvo());
+// ---------------------------------------------------------------- searching earlier conversations
+// In this browser: a profile's conversations are already here (convos.cache), a guest's in localStorage.
+const fold=x=>String(x).toLowerCase().normalize('NFD').replace(/[\u0300-\u036f]/g,'').replace(/ß/g,'ss');
+function findHits(q){const words=fold(q).split(/[^\p{L}\p{N}]+/u).filter(w=>w.length>1);if(!words.length)return [];
+  const hits=[];for(const c of convos.load())c.msgs.forEach((m,i)=>{const f=fold(m.content);
+    if(words.every(w=>f.includes(w)))hits.push({c,i,m,score:words.reduce((n,w)=>n+f.split(w).length-1,0)})});
+  return hits.sort((a,b)=>b.c.updated-a.c.updated||b.score-a.score).slice(0,40)}
+function snippet(text,q){const words=fold(q).split(/[^\p{L}\p{N}]+/u).filter(w=>w.length>1),f=fold(text);
+  const at=Math.max(0,Math.min(...words.map(w=>f.indexOf(w)).filter(i=>i>=0))-50);
+  let out=esc((at?'… ':'')+text.slice(at,at+180)+(text.length>at+180?' …':''));
+  const pat=w=>w.replace(/[.*+?^${}()|[\]\\]/g,'\\$&').replace(/ss/g,'(?:ss|ß)').replace(/[aou]/g,c=>'['+c+{a:'äáà',o:'öóò',u:'üúù'}[c]+']').replace(/e/g,'[eéè]');
+  for(const w of words)out=out.replace(new RegExp('('+pat(w)+')','gi'),'<mark>$1</mark>');return out}
+function findRun(){const q=$('findq').value.trim(),hits=findHits(q);
+  $('findinfo').textContent=!q?(PROFILE?t('Sucht in allen Gesprächen deines Profils.','Searches all conversations of your profile.'):t('Sucht in den Gesprächen dieses Browsers.','Searches the conversations in this browser.')):hits.length?hits.length+(hits.length===40?'+':'')+t(' Treffer',' hits'):t('Nichts gefunden.','Nothing found.');
+  const d=x=>new Date(x).toLocaleString(L==='en'?'en-GB':'de-DE',{day:'2-digit',month:'2-digit',year:'2-digit',hour:'2-digit',minute:'2-digit'});
+  $('findlist').innerHTML=hits.map((h,k)=>`<li data-k="${k}"><span><small class="mut">${d(h.c.updated)} · ${esc((h.c.title||'').slice(0,50))} · ${h.m.role==='user'?t('du','you'):t('Assistent','assistant')}</small><br>${snippet(h.m.content,q)}</span></li>`).join('');
+  $('findlist').querySelectorAll('li').forEach(li=>li.onclick=()=>{const h=hits[+li.dataset.k];$('findmodal').style.display='none';
+    stopListening(true);stopAnswer();openConvo(h.c.id,true);if(typeof setView==='function'&&MOBILE.matches)setView('log');
+    const el=[...$('chatlog').querySelectorAll('.msg')][h.i];if(el){el.scrollIntoView({block:'center'});el.classList.add('found');setTimeout(()=>el.classList.remove('found'),2500)}})}
+let findT=null;$('findq').oninput=()=>{clearTimeout(findT);findT=setTimeout(findRun,150)};
+$('findq').onkeydown=e=>{if(e.key==='Escape')$('findmodal').style.display='none'};
+$('convofind').onclick=async()=>{if(typeof closeSheet==='function')closeSheet();if(PROFILE)try{await convos.sync()}catch{}$('findmodal').style.display='grid';findRun();setTimeout(()=>$('findq').focus(),50)};
