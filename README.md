@@ -2,7 +2,7 @@
 
 **English** | [Deutsch](README.de.md)
 
-Version V01.0.28 · Idea: Dominik Bornhäußer
+Version V01.0.29 · Idea: Dominik Bornhäußer
 
 One script installs **Qwen3-ASR** (speech recognition) and **Qwen3-TTS** (text to speech) as systemd services on an NVIDIA DGX Spark (GB10), together with a web panel for configuration and monitoring. It runs alongside [dgx-spark-qwen38](https://github.com/hasso5703/dgx-spark-qwen38).
 
@@ -20,7 +20,7 @@ The panel switches between English and German (button at the top right).
 
 The **Gespräch** tab needs the microphone, and browsers only allow it over https. The panel therefore also listens on `https://SPARK:31443` with a self-signed certificate; the browser warns once. The LLM connection is under Configuration → Assistant (default: qwen38 at `http://127.0.0.1:30001/v1`). The installer takes the qwen38 API key from `~/.config/qwen38/api-key` of the user who runs `sudo ./install.sh`. Thinking is off for the chat so the answer starts right away. An animated assistant face shows whether it is listening, thinking or speaking; its mouth follows the voice. The same face sits in the bottom right corner of every tab, so you can talk from anywhere in the panel.
 
-**Start page and password:** the panel opens with the assistant, without a password, for everyone on the network. Monitoring, settings, voices and logs need the panel password (button "Settings", the login is kept for 30 days). Configuration → Conversation → "Assistant without password" turns this off; the password can be changed under Configuration → Security. Scripts can still use HTTP Basic.
+**Start page and password:** the panel opens with the assistant, without a password, for everyone on the network. Monitoring, settings, voices and logs need the panel password (button "Settings", the login is kept for 30 days). Configuration → Conversation → "Assistant without password" turns this off: then guests are locked out, but profiles still sign in on the start page with name and PIN (devices with a key keep working), and the admin signs in with "Admin"; the password can be changed under Configuration → Security. Scripts can still use HTTP Basic.
 
 **On the phone:** below 760 px the assistant looks like a messenger and fits the screen exactly: a slim top bar with a small face, state, profile and menu, the history in the middle, and at the bottom a text field and round mic button (a stop button during the answer). Without a conversation the middle shows the big face. The menu (☰) holds new conversation, earlier conversations, conversation settings, language, light/dark and, for admins, every tab.
 

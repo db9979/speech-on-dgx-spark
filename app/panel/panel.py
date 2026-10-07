@@ -117,8 +117,9 @@ def auth(request: Request, creds: HTTPBasicCredentials | None = Depends(security
 
 
 def assistant(request: Request, creds: HTTPBasicCredentials | None = Depends(security)):
-    """Voice chat endpoints: open when chat.public is on, otherwise like auth()."""
-    if load_config().get("chat", {}).get("public", True):
+    """Voice chat endpoints: open when chat.public is on; otherwise for logged-in profiles (cookie or
+    device key) and the admin, so guests are locked out but profiles can still sign in."""
+    if load_config().get("chat", {}).get("public", True) or profiles.current(request):
         return
     auth(request, creds)
 
@@ -356,7 +357,7 @@ def logout():
 # ---------------------------------------------------------------- profiles
 # Who is talking to the assistant. A browser logs in to a profile with its PIN (cookie), a speaker
 # sends its device key. Everything stored for a profile is only reachable through that login.
-@app.post("/api/profile/login", dependencies=[Depends(assistant)])
+@app.post("/api/profile/login")  # open: without chat.public it is the way in
 async def profile_login(request: Request):
     body = await request.json()
     value = profiles.login(str(body.get("name", "")), str(body.get("pin", "")))
