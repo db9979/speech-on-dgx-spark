@@ -253,6 +253,17 @@ class HomeAssistant(unittest.TestCase):
         self.assertIn("current_temperature=37.5", res)
         self.assertNotIn("25.8", res)
         self.assertNotIn("Read from Home Assistant", answer(ask(a, "Wie alt ist Goethe?")))
+        # one word "Pooltemperatur": the pool's values, not the whirlpool's
+        res = answer(ask(a, "Wie ist die aktuelle Pooltemperatur?"))
+        self.assertIn("25.8 °C", res)
+        self.assertIn("26.1", res)
+        self.assertNotIn("37.5", res)
+        # a thing Home Assistant does not have: said so, no other device's value instead
+        for q in ("Wie ist die Temperatur vom Gartenteich?", "Wie ist die Gartenteichtemperatur?"):
+            res = answer(ask(a, q))
+            self.assertIn("no entity", res)
+            self.assertNotIn("25.8", res)
+            self.assertNotIn("26.1", res)
 
     def test_state_read_back(self):
         a = profile("Vera")

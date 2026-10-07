@@ -128,6 +128,8 @@ HA_STATES = [
      "unit_of_measurement": "°C", "device_class": "temperature"}},
     {"entity_id": "climate.whirlpool", "state": "heat", "attributes": {"friendly_name": "Whirlpool",
      "current_temperature": 37.5, "temperature": 38}},
+    {"entity_id": "climate.pool_thermostat_1", "state": "heat", "attributes": {"friendly_name": "Pool Thermostat 1",
+     "current_temperature": 26.1, "temperature": 27}},
     {"entity_id": "light.flur", "state": "on", "attributes": {"friendly_name": "Flurlampe"}},
     {"entity_id": "todo.einkauf", "state": "1", "attributes": {"friendly_name": "Einkaufsliste"}},
     {"entity_id": "switch.keller", "state": "off", "attributes": {"friendly_name": "Kellerpumpe"}},

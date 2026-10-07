@@ -424,6 +424,14 @@ _STOP = set("der die das den dem des ein eine einen im in ist sind wie was wo we
             "bitte und oder von vom zum zur auf an aus mit hat haben gerade aktuell jetzt alle alles zeige zeig "
             "sag sage the is are what which where how all any show".split())
 _areas_cache = {}  # url -> (time, {entity_id: area})
+# words that say what is asked ("Temperatur", "aktuelle"), never which device: a question about the
+# "Whirlpool" must not be answered with another device just because both have a temperature
+_GENERIC_ONLY = set("aktuelle aktueller aktuellen aktuelles derzeitige momentane heutige jetzige wert werte "
+                    "stand status zustand messwert grad current state value".split())
+_GENERIC = _GENERIC_ONLY | set(
+    "temperatur temperaturen temperature wassertemperatur grad warm kalt heiss luftfeuchte feuchtigkeit "
+    "luftfeuchtigkeit humidity batterie akku ladung battery leistung verbrauch strom watt power energie kwh "
+    "energy helligkeit lux luftdruck spannung co2 luftqualitaet feinstaub".split())
 
 
 def _norm(t):
@@ -520,8 +528,8 @@ def _correct(words, hays):
             continue
         if vocab is None:
             vocab = sorted({t for h in hays for t in h.split() if len(t) >= 4})
-        near = difflib.get_close_matches(w, vocab, n=1, cutoff=0.8)
-        out.append(near[0] if near else w)
+        near = [n for n in difflib.get_close_matches(w, vocab, n=3, cutoff=0.8) if abs(len(n) - len(w)) <= 2]
+        out.append(near[0] if near else w)  # never a compound to its part ("Pooltemperatur" -> "temperatur")
     return out
 
 
@@ -910,7 +918,9 @@ async def lookup(item, text, limit=12):
     first = (re.findall(r"\w+", _norm(t)) or [""])[0]
     if not (t.endswith("?") or first in _ASKING or first in ("und", "and", "zeig", "sag", "nenn")):
         return None  # only questions and follow-ups ("und vom Whirlpool")
-    words = [w for w in re.findall(r"\w+", _norm(clean_command(text))) if len(w) > 2 and w not in _STOP
+    raw = re.findall(r"\w+", clean_command(text))
+    nouns = {_norm(w) for i, w in enumerate(raw) if i and w[:1].isupper()}  # capitalised: names a thing
+    words = [w for w in (_norm(x) for x in raw) if len(w) > 2 and w not in _STOP
              and w not in _FILLER and w not in _ASKING and w not in ("und", "vom", "von", "der", "dem", "and")]
     if not words:
         return None
@@ -922,10 +932,31 @@ async def lookup(item, text, limit=12):
     names = {x["entity_id"]: _name(x) for x in all_states}
     labels = [_norm(names[x["entity_id"]] + " " + x["entity_id"].split(".", 1)[1] + " "
                     + areas.get(x["entity_id"], "")) for x in all_states]
-    words = _correct(words, labels)
     def names_it(w, h):  # whole words; inside compounds ("Pooltemperatur") only for longer words
         return any(f in h.split() for f in _forms(w)) or (len(w) >= 5 and _hit(w, h))
-    specific = [w for w in words if any(names_it(w, h) for h in labels)]
+    def known(w):
+        return w in _GENERIC or any(names_it(w, h) for h in labels)
+    split = []  # "Pooltemperatur" -> "pool" + "temperatur" when both parts are known
+    for w in words:
+        parts = next(([w[:i], w[i:]] for i in range(3, len(w) - 2) if not known(w)
+                      and (known(w[:i]) or w[i:] in _GENERIC) and known(w[i:])), [w])
+        split += parts
+        if len(parts) > 1 and w in nouns:
+            nouns |= set(parts)
+    words = _correct(split, labels)
+    generic = [w for w in words if w in _GENERIC]  # "Temperatur", "aktuelle": what is asked, not which device
+    specific = [w for w in words if w not in _GENERIC and any(names_it(w, h) for h in labels)]
+    missing = [w for w in words if w not in _GENERIC and w not in specific and w in nouns]
+    low = [_norm(w) for w in raw]
+    about_home = any(w in _GENERIC and w not in _GENERIC_ONLY for w in words) or (
+        low[:1] == ["und"] and low[1:2] and low[1] in ("vom", "von", "im", "beim", "in", "der", "die", "das", "dem"))
+    if missing and about_home:  # "Temperatur vom Gartenteich", "und vom Whirlpool?"  # a thing Home Assistant has no entity for: never answer with another device's values
+        near = [x["entity_id"] for x, h in zip(all_states, labels)
+                if any(w[i:i + 4] in h for w in missing for i in range(len(w) - 3))]
+        _log("lookup:", repr(str(text)[:60]), "nothing named", missing, "- similar:", near[:10])
+        return ("Read from Home Assistant just now: no entity, device or room in Home Assistant is called "
+                + ", ".join(repr(w) for w in missing) + ". Say exactly that it was not found in Home Assistant; "
+                "give no value of any other device instead.")
     if not specific:
         return None
     cands = [x for x, h in zip(all_states, labels) if all(names_it(w, h) for w in specific)]
@@ -935,11 +966,11 @@ async def lookup(item, text, limit=12):
     whole = [x for x, h in zip(all_states, labels) if x in cands
              and all(any(f in h.split() for f in _forms(w)) for w in specific)]
     cands = whole or cands  # "Pool" is the pool, not also the whirlpool
-    generic = [w for w in words if w not in specific]
     if generic:  # "Temperatur": narrow down when that leaves something
         hays = {x["entity_id"]: _hay(x, names, areas.get(x["entity_id"], "")) + " " + _norm(_line(x, names, ""))
                 for x in cands}
-        narrow = [x for x in cands if any(_hit(w, hays[x["entity_id"]]) for w in generic)]
+        narrow = [x for x in cands if any(_hit(w, hays[x["entity_id"]]) for w in generic
+                                          if w not in _GENERIC_ONLY)]
         cands = narrow or cands
     _log("lookup:", repr(str(text)[:60]), "words", specific, generic, "->", [x["entity_id"] for x in cands[:8]])
     lines = [_line(x, names, areas.get(x["entity_id"], "")) for x in cands[:limit]]
