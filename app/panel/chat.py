@@ -490,6 +490,19 @@ class ContextFull(RuntimeError):
     """The LLM refused the request as longer than its context."""
 
 
+# A first sentence to hear while a slower tool runs (web search and the briefing say their own).
+FILLERS = {"calendar_events": ("Ich schaue in deinen Kalender.", "Let me check your calendar."),
+           "mail_list": ("Ich schaue in deine E-Mails.", "Let me check your e-mail."),
+           "mail_search": ("Ich schaue in deine E-Mails.", "Let me check your e-mail."),
+           "mail_read": ("Ich lese die Mail.", "Let me read that e-mail."),
+           "history_search": ("Ich schaue in unseren früheren Gesprächen nach.", "Let me look at our earlier conversations."),
+           "document_search": ("Ich schaue in deinen Dokumenten nach.", "Let me check your documents.")}
+# Thanks, greetings and goodbyes need no tool round
+SMALLTALK = re.compile(r"(?i)\s*(danke\w*( schön| sehr)?|vielen dank|hallo|hi|hey|servus|moin|guten (abend|tag)|"
+                       r"tschüss|ciao|bis (später|dann|morgen)|gute nacht|ok(ay)?|alles klar|super|prima|passt|"
+                       r"thanks?( you)?|hello|bye|good night)[\s,.!?]*(spark)?[\s,.!?]*")
+
+
 # Applies to every tool: answers come from what the tools return, never from guesses.
 TOOL_RULES = ("Regeln für deine Werkzeuge: Wenn die Antwort von Daten abhängt, die ein Werkzeug liefert "
               "(Termine, Erinnerungen, E-Mails, Gemerktes, frühere Gespräche, Smart Home, aktuelle Fakten), "
@@ -653,6 +666,7 @@ async def chat(request: Request):
         need.append("calendar_events")
     if mailbox and re.search(r"(?i)\b(e-?mails?|mails?|posteingang|inbox)\b", ask_text):
         need.append("mail")
+    small = bool(SMALLTALK.fullmatch(ask_text))
     if tools:
         system = (system + "\n\n" + TOOL_RULES).strip()
     if system:
@@ -699,7 +713,7 @@ async def chat(request: Request):
             for rnd in range(5):  # a few tool rounds (at most two searches), then the answer
                 payload = dict(base, messages=msgs)
                 offer = [t for t in tools if (t is not SEARCH_TOOL or searches < 2)
-                         and not (st["mail"] and t in after_mail)] if rnd < 4 else []
+                         and not (st["mail"] and t in after_mail)] if rnd < 4 and not small else []
                 if offer:
                     payload["tools"] = offer
                     if rnd == 0 and need:
@@ -743,6 +757,12 @@ async def chat(request: Request):
                 msgs.append({"role": "assistant", "content": None, "tool_calls": [
                     {"id": x["id"], "type": "function", "function": {"name": x["name"], "arguments": x["arguments"]}}
                     for x in calls]})
+                filler = next((FILLERS[x["name"]] for x in calls if x["name"] in FILLERS), None)
+                if filler and st["first"] and not trace["said"].strip():
+                    # something to hear at once while the tool runs
+                    st["first"] = False
+                    en = guess_language(messages[-1]["content"]) == "English"
+                    await sentences.put(filler[1] if en else filler[0])
                 for x in calls:
                     try:
                         args = json.loads(x["arguments"] or "{}")

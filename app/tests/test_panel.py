@@ -589,6 +589,19 @@ class ToolLog(unittest.TestCase):
         self.assertEqual(a.get("/api/profile/toollog").json()["items"], [])
 
 
+class Quick(unittest.TestCase):
+    def test_smalltalk_without_tools_and_filler_for_slow_tools(self):
+        a = profile("Eli")
+        helpers.LLM_CALLS.clear()
+        answer(ask(a, "Danke!"))
+        self.assertNotIn("tools", helpers.LLM_CALLS[-1])
+        evs = ask(a, "TOOL history_search {}")
+        kinds = [e["type"] for e in evs]
+        # the filler is spoken (audio only) before the answer text arrives
+        self.assertLess(kinds.index("tts_request"), kinds.index("text"))
+        self.assertEqual(evs[kinds.index("tts_request")]["chars"], len("Ich schaue in unseren früheren Gesprächen nach."))
+
+
 class Mail(unittest.TestCase):
     """E-mail per profile: read only, never another profile's, guests and foreign voices get none."""
 
