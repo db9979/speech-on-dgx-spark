@@ -2,7 +2,7 @@
 
 **English** | [Deutsch](README.de.md)
 
-Version V01.0.23 · Idea: Dominik Bornhäußer
+Version V01.0.24 · Idea: Dominik Bornhäußer
 
 One script installs **Qwen3-ASR** (speech recognition) and **Qwen3-TTS** (text to speech) as systemd services on an NVIDIA DGX Spark (GB10), together with a web panel for configuration and monitoring. It runs alongside [dgx-spark-qwen38](https://github.com/hasso5703/dgx-spark-qwen38).
 
@@ -203,8 +203,8 @@ The watch app "Spark" (`app/pebble/speech-spark.pbw`, source in `pebble/`) bring
 
 1. In the panel under **Profile**, add a device "Pebble" to your profile and copy its key.
 2. On the paired phone, download `http://SPARK:31080/pebble/speech-spark.pbw` and open it with the Pebble app.
-3. In the Pebble app, open the settings of "Spark": Spark address (`http://SPARK:31080`) and device key.
-4. On the watch: SELECT asks (dictation through the phone), SELECT again stops the speech, long SELECT starts a new conversation.
+3. In the Pebble app, open the settings of "Spark": Spark address (`http://SPARK:31080`) and device key. Settings and "Start App" stay grey while the Pebble app does not see the watch as connected (tab Devices).
+4. On the watch: SELECT asks (dictation through the phone), SELECT again stops the speech, long SELECT starts a new conversation. A small face at the top shows whether Spark listens, thinks or speaks; its mouth follows the speech.
 
 The phone must reach the Spark, at home over Wi-Fi, on the road through a VPN such as Tailscale. The app uses HTTP because the Pebble app does not trust the self-signed certificate. On the Spark, `POST /api/watch/ask` and `GET /api/watch/poll` serve it: the answer is made like in the voice chat (kept short), the audio goes to the watch as 8 kHz IMA ADPCM.
 

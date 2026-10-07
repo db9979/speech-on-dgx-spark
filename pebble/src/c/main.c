@@ -2,17 +2,20 @@
 // fetches the answer from the DGX Spark and sends text plus 8 kHz IMA ADPCM audio,
 // which plays on the watch speaker.
 #include <pebble.h>
+#include "face.h"
 
 #define ANSWER_MAX 3000
 #define RING_SIZE 16384        // ADPCM bytes: 4 s of speech
 #define PREBUFFER 3000         // start playing after 0.75 s of audio (or at the end)
 #define CREDIT_STEP 2048       // tell the phone about freed space in steps of this
 #define DECODE_BYTES 128       // ADPCM bytes decoded per speaker write (256 samples)
+#define MOUTH_DELAY 12          // audio ticks (40 ms) between decoding and hearing
 #define PERSIST_SPEAK 1
 #define PERSIST_VOLUME 2
 #define PERSIST_AUTOLISTEN 3
 
 static Window *s_window;
+static Layer *s_face_layer;
 static TextLayer *s_status_layer;
 static ScrollLayer *s_scroll_layer;
 static TextLayer *s_text_layer;
@@ -37,6 +40,8 @@ static int s_pred, s_index;
 static int16_t s_pcm[DECODE_BYTES * 2];
 static uint32_t s_pcm_len, s_pcm_off;   // bytes of s_pcm not yet accepted by the speaker
 static AppTimer *s_timer;
+static uint8_t s_levels[MOUTH_DELAY];  // loudness per tick, played out ~0.5 s later
+static uint8_t s_level_pos, s_tick_level;
 
 static const int16_t STEPS[89] = {
   7, 8, 9, 10, 11, 12, 13, 14, 16, 17, 19, 21, 23, 25, 28, 31, 34, 37, 41, 45, 50, 55, 60, 66,
@@ -92,6 +97,18 @@ static void audio_reset(void) {
   s_freed = 0;
   s_pred = s_index = 0;
   s_pcm_len = s_pcm_off = 0;
+  memset(s_levels, 0, sizeof(s_levels));
+  s_tick_level = 0;
+  face_set_level(0);
+}
+
+// The mouth follows what is heard, not what is decoded: the speaker queue holds about
+// half a second, so the level of each tick is shown MOUTH_DELAY ticks later.
+static void mouth_tick(void) {
+  face_set_level(s_levels[s_level_pos]);
+  s_levels[s_level_pos] = s_tick_level;
+  s_level_pos = (s_level_pos + 1) % MOUTH_DELAY;
+  s_tick_level = 0;
 }
 
 static void decode_block(void) {
@@ -116,12 +133,24 @@ static void decode_block(void) {
       s_pcm[i * 2 + h] = pred;
     }
   }
+  int peak = 0;
+  for (uint32_t i = 0; i < n * 2; i++) {
+    int v = s_pcm[i] < 0 ? -s_pcm[i] : s_pcm[i];
+    if (v > peak) peak = v;
+  }
+  peak >>= 6;
+  if (peak > 255) peak = 255;
+  if (peak > s_tick_level) s_tick_level = peak;
   s_pred = pred;
   s_index = index;
   s_fill -= n;
   s_freed += n;
   s_pcm_len = n * 4;
   s_pcm_off = 0;
+}
+
+static void drained(void *ctx) {
+  if (!s_playing && !s_busy) face_set_mode(FaceIdle);
 }
 
 static void audio_tick(void *ctx) {
@@ -133,6 +162,7 @@ static void audio_tick(void *ctx) {
         set_status("Lautsprecher belegt");
         return;
       }
+      face_set_mode(FaceSpeak);
     } else if (s_audio_end) {
       return;
     }
@@ -148,6 +178,7 @@ static void audio_tick(void *ctx) {
       s_pcm_off += done;
       if (done < want) break;    // the speaker queue is full: continue on the next tick
     }
+    mouth_tick();
     if (s_freed >= CREDIT_STEP) {
       send_int(MESSAGE_KEY_CREDIT, s_freed);
       s_freed = 0;
@@ -156,6 +187,7 @@ static void audio_tick(void *ctx) {
       speaker_stream_close();    // the queued rest drains and plays out
       s_playing = false;
       if (!s_busy) set_status("SELECT: neue Frage");
+      app_timer_register(MOUTH_DELAY * 40, drained, NULL);
       return;
     }
   }
@@ -194,16 +226,21 @@ static void ask(const char *text) {
   app_message_outbox_send();
   s_busy = true;
   set_status("Denke nach …");
+  face_set_mode(FaceThink);
 }
 
 static void dictation_done(DictationSession *session, DictationSessionStatus status,
                            char *transcription, void *ctx) {
   if (status == DictationSessionStatusSuccess && transcription && transcription[0]) {
     ask(transcription);
-  } else if (status == DictationSessionStatusFailureNoSpeechDetected) {
+    return;
+  }
+  face_set_mode(FaceIdle);
+  if (status == DictationSessionStatusFailureNoSpeechDetected) {
     set_status("Nichts gehört");
   } else if (status == DictationSessionStatusFailureConnectivityError) {
     set_status("Diktat: keine Verbindung");
+    face_set_mode(FaceSad);
   } else if (status == DictationSessionStatusFailureDisabled) {
     set_status("Diktat ist aus");
   } else {
@@ -219,8 +256,10 @@ static void listen(void) {
   audio_reset();
   if (!s_dictation) {
     set_status("Kein Mikrofon");
+    face_set_mode(FaceSad);
     return;
   }
+  face_set_mode(FaceListen);
   dictation_session_start(s_dictation);
 }
 
@@ -232,6 +271,7 @@ static void select_click(ClickRecognizerRef recognizer, void *context) {
       s_busy = false;
     }
     set_status("SELECT: neue Frage");
+    face_set_mode(FaceIdle);
     return;
   }
   listen();
@@ -247,6 +287,7 @@ static void select_long(ClickRecognizerRef recognizer, void *context) {
   update_text();
   vibes_short_pulse();
   set_status("Neues Gespräch");
+  face_set_mode(FaceIdle);
 }
 
 static void click_config(void *context) {
@@ -289,6 +330,7 @@ static void inbox_received(DictionaryIterator *it, void *context) {
   if ((t = dict_find(it, MESSAGE_KEY_ERROR))) {
     s_busy = false;
     set_status("Fehler");
+    face_set_mode(FaceSad);
     size_t have = strlen(s_answer);
     snprintf(s_answer + have, sizeof(s_answer) - have, "%s%s", have ? "\n\n" : "", t->value->cstring);
     update_text();
@@ -298,6 +340,7 @@ static void inbox_received(DictionaryIterator *it, void *context) {
     s_busy = false;
     if (!s_playing && !s_fill) {
       set_status("SELECT: neue Frage");
+      face_set_mode(FaceIdle);
       if (!s_speak || !s_ring) vibes_short_pulse();
     } else {
       set_status("Spreche … SELECT: Stopp");
@@ -314,13 +357,17 @@ static void inbox_dropped(AppMessageResult reason, void *context) {
 static void window_load(Window *window) {
   Layer *root = window_get_root_layer(window);
   GRect b = layer_get_bounds(root);
-  int top = PBL_IF_ROUND_ELSE(30, 0);
-  int status_h = 26;
+  // face on top, a status line under it, the conversation text below (scrolls with UP/DOWN)
+  int face_h = b.size.h * 2 / 5;
+  s_face_layer = face_create(GRect(0, PBL_IF_ROUND_ELSE(8, 2), b.size.w, face_h));
+  layer_add_child(root, s_face_layer);
+  int top = face_h + PBL_IF_ROUND_ELSE(10, 4);
+  int status_h = 22;
   s_status_layer = text_layer_create(GRect(0, top, b.size.w, status_h));
   text_layer_set_font(s_status_layer, fonts_get_system_font(FONT_KEY_GOTHIC_18_BOLD));
   text_layer_set_text_alignment(s_status_layer, GTextAlignmentCenter);
-  text_layer_set_background_color(s_status_layer, PBL_IF_COLOR_ELSE(GColorCobaltBlue, GColorBlack));
-  text_layer_set_text_color(s_status_layer, GColorWhite);
+  text_layer_set_background_color(s_status_layer, GColorClear);
+  text_layer_set_text_color(s_status_layer, PBL_IF_COLOR_ELSE(GColorCobaltBlue, GColorBlack));
   layer_add_child(root, text_layer_get_layer(s_status_layer));
 
   GRect sb = GRect(0, top + status_h, b.size.w, b.size.h - top - status_h);
@@ -341,6 +388,7 @@ static void window_unload(Window *window) {
   text_layer_destroy(s_text_layer);
   scroll_layer_destroy(s_scroll_layer);
   text_layer_destroy(s_status_layer);
+  face_destroy();
 }
 
 static void start_listening(void *ctx) {
