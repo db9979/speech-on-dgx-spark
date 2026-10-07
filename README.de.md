@@ -2,7 +2,7 @@
 
 [English](README.md) | **Deutsch**
 
-Version V01.0.1 · Idee: Dominik Bornhäußer
+Version V01.0.2 · Idee: Dominik Bornhäußer
 
 Ein Skript installiert **Qwen3-ASR** (Spracherkennung) und **Qwen3-TTS** (Sprachausgabe) als systemd-Dienste auf einer NVIDIA DGX Spark (GB10). Dazu kommt eine Weboberfläche für Konfiguration und Monitoring. Das Setup läuft neben [dgx-spark-qwen38](https://github.com/hasso5703/dgx-spark-qwen38).
 
@@ -29,6 +29,8 @@ Der Reiter **Gespräch** braucht das Mikrofon, und Browser erlauben das nur übe
 **Websuche:** Unter Konfiguration → Sprach-Chat → Websuche die Adresse deiner SearXNG-Instanz eintragen und „Websuche erlauben“ anhaken. Ist in der `settings.yml` von SearXNG unter `search: formats:` auch `json` erlaubt, nutzt das Panel die JSON-Schnittstelle, sonst liest es die normale Ergebnisseite; „Verbindung testen“ zeigt, ob es klappt. Das LLM sucht dann selbst, wenn eine Frage aktuelle Informationen braucht (dafür braucht der LLM-Server Tool-Calling, qwen38 hat es an). Der Assistent sagt kurz „Ich schaue kurz nach“, liest die besten Seiten und zeigt die Quellen unter der Antwort.
 
 **Aktivierungswort „Hey Spark“:** Mit dem Haken unter dem Gespräch lauscht der Assistent dauerhaft. Sagst du „Hey Spark“, hört er zu; „Hey Spark, wie wird das Wetter?“ in einem Zug geht direkt als Frage durch. Der Browser erkennt Sprachpausen, das Wort selbst prüft die Spracherkennung auf dem Spark, es geht nichts ins Internet. Der Bildschirm bleibt dabei an; auf dem Handy die App im Vordergrund lassen.
+
+**Profile und Gedächtnis:** Unter „Profile“ legt der Admin Profile mit Name und PIN an. Im Gespräch meldet man sich über den Knopf „Gast“ oben im Verlauf an. Angemeldet merkt sich der Assistent Dinge dauerhaft, wenn man es ihm sagt („Merk dir, dass ich vegetarisch esse“) oder wenn sie später nützlich sind, und vergisst sie auf Zuruf; unter dem Profil-Knopf steht, was er weiß, zum Löschen. Gedächtnis und gespeicherte Gespräche gehören fest zum Profil: Welches Profil fragt, entscheidet nur die Anmeldung (Cookie) oder der Geräteschlüssel, nie das Modell, und Gäste bekommen kein Gedächtnis. Lautsprecher und eigene Programme bekommen unter „Profile → Geräte“ einen Geräteschlüssel, der fest zu einem Profil gehört, und senden ihn als Header `X-Speech-Device` an `/api/chat`. Eine neue PIN meldet alle Browser des Profils ab; ein gelöschtes Profil nimmt sein Gedächtnis und seine Geräte mit. Die Daten liegen auf dem Spark unter `/var/lib/speech-spark/users`, je Profil ein eigener Ordner.
 
 **Aussprache:** Unter Konfiguration → TTS → Aussprache steht eine Regel pro Zeile, etwa `DGX = De Ge Ix`. Sie gilt für ganze Wörter und für jede Sprachausgabe, auch aus Open WebUI.
 

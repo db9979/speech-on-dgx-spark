@@ -25,6 +25,7 @@ from fastapi.security import HTTPBasic, HTTPBasicCredentials
 
 sys.path.insert(0, os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
 from textnorm import guess_language  # noqa: E402
+import profiles  # noqa: E402
 from common import CONFIG_PATH, estimate_gib, journal, load_config, mem_available_gib, quiet_access_log  # noqa: E402
 
 VOICES_DIR = os.environ.get("SPEECH_SPARK_VOICES", "/var/lib/speech-spark/voices")
@@ -258,6 +259,7 @@ def app_version():
 def whoami(request: Request, creds: HTTPBasicCredentials | None = Depends(security)):
     cfg = load_config()
     return {"admin": is_admin(request, creds), "version": app_version(), "public": cfg.get("chat", {}).get("public", True),
+            "profile": profiles.current(request),
             # what the assistant needs without the full configuration (which holds keys)
             "assistant": {"default_voice": cfg["tts"].get("default_voice"),
                           "asr_language": cfg["asr"].get("default_language"),
@@ -282,6 +284,114 @@ def logout():
     r.delete_cookie(COOKIE)
     r.set_cookie(NO_BASIC, "1", max_age=365 * 86400, httponly=True, samesite="strict")
     return r
+
+
+# ---------------------------------------------------------------- profiles
+# Who is talking to the assistant. A browser logs in to a profile with its PIN (cookie), a speaker
+# sends its device key. Everything stored for a profile is only reachable through that login.
+@app.get("/api/profiles", dependencies=[Depends(assistant)])
+def profile_list():
+    return profiles.public_list()
+
+
+@app.post("/api/profile/login", dependencies=[Depends(assistant)])
+async def profile_login(request: Request):
+    body = await request.json()
+    value = profiles.login(str(body.get("id", "")), str(body.get("pin", "")))
+    if not value:
+        await asyncio.sleep(1)  # slows down guessing
+        raise HTTPException(401, "wrong PIN")
+    r = Response('{"ok": true}', media_type="application/json")
+    r.set_cookie(profiles.COOKIE, value, max_age=365 * 86400, httponly=True, samesite="lax")
+    return r
+
+
+@app.post("/api/profile/logout")
+def profile_logout():
+    r = Response('{"ok": true}', media_type="application/json")
+    r.delete_cookie(profiles.COOKIE)
+    return r
+
+
+def own_profile(request: Request):
+    prof = profiles.current(request)
+    if not prof:
+        raise HTTPException(401, "no profile")
+    return prof
+
+
+@app.get("/api/profile/memory", dependencies=[Depends(assistant)])
+def profile_memory(prof=Depends(own_profile)):
+    return {"profile": prof, "facts": profiles.memory(prof["id"])}
+
+
+@app.delete("/api/profile/memory/{fact_id}", dependencies=[Depends(assistant)])
+def profile_forget(fact_id: str, prof=Depends(own_profile)):
+    return {"removed": profiles.forget(prof["id"], fact_id=fact_id)}
+
+
+@app.delete("/api/profile/memory", dependencies=[Depends(assistant)])
+def profile_forget_all(prof=Depends(own_profile)):
+    return {"removed": profiles.forget(prof["id"])}
+
+
+@app.get("/api/admin/profiles", dependencies=[Depends(auth)])
+def admin_profiles():
+    return profiles.admin_list()
+
+
+@app.post("/api/admin/profiles", dependencies=[Depends(auth)])
+async def admin_add_profile(request: Request):
+    body = await request.json()
+    name, pin = body.get("name", ""), body.get("pin", "")
+    if not profiles.valid_name(name):
+        raise HTTPException(400, "name: 1 to 40 characters")
+    if not profiles.valid_pin(pin):
+        raise HTTPException(400, "PIN: 4 to 64 characters without spaces")
+    try:
+        return {"id": profiles.add_user(name, pin)}
+    except ValueError as e:
+        raise HTTPException(409, str(e))
+
+
+@app.put("/api/admin/profiles/{uid}", dependencies=[Depends(auth)])
+async def admin_set_pin(uid: str, request: Request):
+    pin = (await request.json()).get("pin", "")
+    if not profiles.valid_pin(pin):
+        raise HTTPException(400, "PIN: 4 to 64 characters without spaces")
+    if not profiles.set_pin(uid, pin):
+        raise HTTPException(404, "no such profile")
+    return {"ok": True}
+
+
+@app.delete("/api/admin/profiles/{uid}", dependencies=[Depends(auth)])
+def admin_delete_profile(uid: str):
+    profiles.delete_user(uid)
+    return {"ok": True}
+
+
+@app.post("/api/admin/devices", dependencies=[Depends(auth)])
+async def admin_add_device(request: Request):
+    body = await request.json()
+    if not profiles.valid_name(body.get("name", "")):
+        raise HTTPException(400, "name: 1 to 40 characters")
+    try:
+        return {"token": profiles.add_device(body["name"], str(body.get("user", "")))}
+    except ValueError as e:
+        raise HTTPException(400, str(e))
+
+
+@app.put("/api/admin/devices/{did}", dependencies=[Depends(auth)])
+async def admin_set_device(did: str, request: Request):
+    if not profiles.set_device_user(did, str((await request.json()).get("user", ""))):
+        raise HTTPException(404, "no such device or profile")
+    return {"ok": True}
+
+
+@app.delete("/api/admin/devices/{did}", dependencies=[Depends(auth)])
+def admin_delete_device(did: str):
+    profiles.delete_device(did)
+    return {"ok": True}
 
 
 @app.post("/api/password", dependencies=[Depends(auth)])
@@ -612,6 +722,31 @@ SEARCH_HINT = ("Du kannst mit dem Werkzeug web_search im Internet suchen. Nutze 
                "kurz zusammen und lies keine Adressen oder Links vor.")
 
 
+# Memory per profile. The tools only ever act on the profile of the request (cookie or device
+# key); the model cannot name another profile.
+MEMORY_TOOLS = [
+    {"type": "function", "function": {
+        "name": "memory_save",
+        "description": "Remember a fact about the user for later conversations (name, preferences, people, "
+                       "plans). Use it when the user asks you to remember something or tells you something "
+                       "clearly worth keeping. One short fact per call, in the third person.",
+        "parameters": {"type": "object", "properties": {"fact": {"type": "string"}}, "required": ["fact"]}}},
+    {"type": "function", "function": {
+        "name": "memory_forget",
+        "description": "Forget remembered facts that contain the given words, when the user asks you to.",
+        "parameters": {"type": "object", "properties": {"text": {"type": "string"}}, "required": ["text"]}}}]
+
+
+def memory_hint(prof):
+    facts = profiles.memory(prof["id"])
+    hint = (f"Du sprichst mit {prof['name']}. Mit memory_save merkst du dir dauerhaft, was {prof['name']} dir "
+            "zum Merken sagt oder was für spätere Gespräche nützlich ist, mit memory_forget vergisst du es "
+            "auf Wunsch. Sag kurz, dass du es dir gemerkt hast.")
+    if facts:
+        hint += f"\nWas du über {prof['name']} weißt:\n" + "\n".join("- " + x["text"] for x in facts)
+    return hint
+
+
 class _PageText(html.parser.HTMLParser):
     """Visible text of a web page, without scripts, styles and page furniture."""
     SKIP = {"script", "style", "noscript", "svg", "nav", "header", "footer", "aside", "form", "template"}
@@ -776,6 +911,10 @@ async def chat(request: Request):
     search = bool(ccfg.get("search") and ccfg.get("search_url"))
     if search:
         system = (system + "\n\n" + SEARCH_HINT).strip()
+    prof = profiles.current(request) if ccfg.get("memory", True) else None
+    if prof:  # guests get no memory at all
+        system = (system + "\n\n" + memory_hint(prof)).strip()
+    tools = ([SEARCH_TOOL] if search else []) + (MEMORY_TOOLS if prof else [])
     if system:
         messages = [{"role": "system", "content": system}] + messages
     lheaders = {"Authorization": f"Bearer {ccfg['llm_key']}"} if ccfg.get("llm_key") else {}
@@ -794,10 +933,12 @@ async def chat(request: Request):
                 base["chat_template_kwargs"] = {"enable_thinking": False}
             st = {"buf": "", "first": True, "think": False, "n": 0}
             msgs, finish = list(messages), None
-            for rnd in range(3):  # at most two searches, then the answer
+            searches = 0
+            for rnd in range(4):  # a few tool rounds (at most two searches), then the answer
                 payload = dict(base, messages=msgs)
-                if search and rnd < 2:
-                    payload["tools"] = [SEARCH_TOOL]
+                offer = [t for t in tools if t is not SEARCH_TOOL or searches < 2] if rnd < 3 else []
+                if offer:
+                    payload["tools"] = offer
                 finish, calls = await llm_round(payload, st)
                 if not calls or finish == "length":
                     break
@@ -806,23 +947,13 @@ async def chat(request: Request):
                     for x in calls]})
                 for x in calls:
                     try:
-                        query = str(json.loads(x["arguments"] or "{}").get("query", "")).strip()
+                        args = json.loads(x["arguments"] or "{}")
+                        args = args if isinstance(args, dict) else {}
                     except ValueError:
-                        query = ""
-                    result = "No query given."
-                    if x["name"] == "web_search" and query:
-                        await out.put({"type": "search", "query": query})
-                        if rnd == 0 and st["first"]:  # something to hear while the search runs
-                            st["first"] = False
-                            en = guess_language(messages[-1]["content"]) == "English"
-                            await sentences.put("Let me look that up." if en else "Ich schaue kurz nach.")
-                        try:
-                            result, sources = await web_search(c, ccfg, query)
-                            await out.put({"type": "sources", "items": sources})
-                        except Exception as e:
-                            result = f"Search failed: {e}"
-                            await out.put({"type": "search_error", "message": str(e)})
-                    msgs.append({"role": "tool", "tool_call_id": x["id"], "content": result})
+                        args = {}
+                    msgs.append({"role": "tool", "tool_call_id": x["id"], "content": await run_tool(x["name"], args, st)})
+                    if x["name"] == "web_search":
+                        searches += 1
             buf = st["buf"]
             if finish == "length":
                 # The answer hit max_tokens mid-sentence: speak up to the last sentence end and
@@ -842,6 +973,36 @@ async def chat(request: Request):
                 await out.put({"type": "error", "message": f"LLM: {type(e).__name__}: {e}"})
         finally:
             await sentences.put(None)
+
+    async def run_tool(name, args, st):
+        if name == "web_search" and search:
+            query = str(args.get("query", "")).strip()
+            if not query:
+                return "No query given."
+            await out.put({"type": "search", "query": query})
+            if st["first"]:  # something to hear while the search runs
+                st["first"] = False
+                en = guess_language(messages[-1]["content"]) == "English"
+                await sentences.put("Let me look that up." if en else "Ich schaue kurz nach.")
+            try:
+                result, sources = await web_search(c, ccfg, query)
+                await out.put({"type": "sources", "items": sources})
+                return result
+            except Exception as e:
+                await out.put({"type": "search_error", "message": str(e)})
+                return f"Search failed: {e}"
+        if name == "memory_save" and prof:
+            fact = profiles.remember(prof["id"], args.get("fact", ""))
+            if fact:
+                await out.put({"type": "memory", "action": "saved", "text": fact})
+            return "Saved." if fact else "Nothing to save."
+        if name == "memory_forget" and prof:
+            text = str(args.get("text", "")).strip()
+            n = profiles.forget(prof["id"], text=text) if len(text) >= 2 else 0  # never "forget everything"
+            if n:
+                await out.put({"type": "memory", "action": "forgotten", "text": text})
+            return f"Forgot {n} fact(s)."
+        return f"Unknown tool {name}."
 
     async def llm_round(payload, st):
         """Streams one LLM call: text goes to the browser and, sentence by sentence, to TTS.

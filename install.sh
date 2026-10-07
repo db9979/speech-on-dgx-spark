@@ -74,6 +74,7 @@ id "$SVC_USER" >/dev/null 2>&1 || useradd --system --home-dir "$VAR" --shell /us
 for g in video render systemd-journal; do getent group "$g" >/dev/null && usermod -aG "$g" "$SVC_USER"; done
 install -d -o root -g root -m 755 "$PREFIX"
 install -d -o "$SVC_USER" -g "$SVC_USER" -m 750 "$ETC" "$VAR" "$VAR/hf" "$VAR/voices" "$VAR/state"
+install -d -o "$SVC_USER" -g "$SVC_USER" -m 700 "$VAR/users"   # profiles and their memory
 chmod 755 "$VAR"
 
 # ---------------------------------------------------------------- own git clone for updates
@@ -343,6 +344,7 @@ QWEN38_AFTER="qwen38-sglang.service qwen38-flash.service qwen38-image.service qw
 common_env="Environment=SPEECH_SPARK_CONFIG=$ETC/config.json
 Environment=SPEECH_SPARK_VOICES=$VAR/voices
 Environment=SPEECH_SPARK_STATE=$VAR/state
+Environment=SPEECH_SPARK_USERS=$VAR/users
 Environment=PYTHONUNBUFFERED=1"
 
 if [ "$ASR_BACKEND" = vllm ]; then
