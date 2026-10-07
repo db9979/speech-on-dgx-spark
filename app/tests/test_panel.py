@@ -553,6 +553,21 @@ class Mail(unittest.TestCase):
         self.assertEqual(self.connect(a).status_code, 403)
         mail._cache.clear()
 
+    def test_no_made_up_mail(self):
+        a, g = profile("Pia"), TestClient(panel.app)
+        helpers.LLM_CALLS.clear()
+        answer(ask(g, "Habe ich neue Mails?"))
+        sysmsg = helpers.LLM_CALLS[-1]["messages"][0]["content"]
+        self.assertIn("keinen Zugriff auf", sysmsg)
+        self.assertIn("E-Mails", sysmsg)
+        self.assertNotIn("tool_choice", helpers.LLM_CALLS[-1])
+        self.connect(a)
+        answer(ask(a, "Habe ich neue Mails?"))
+        self.assertEqual(helpers.LLM_CALLS[-1]["tool_choice"], "required")
+        self.assertNotIn("E-Mails (nicht", helpers.LLM_CALLS[-1]["messages"][0]["content"])
+        answer(ask(a, "Wie spät ist es?"))
+        self.assertNotIn("tool_choice", helpers.LLM_CALLS[-1])
+
     def test_reading_mail_turns_off_switching_and_search(self):
         p = profile("Ole")
         self.connect(p)

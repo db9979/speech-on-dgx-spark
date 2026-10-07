@@ -594,6 +594,19 @@ async def chat(request: Request):
         + ([CALENDAR_TOOL] if cal["calendars"] else []) + (MAIL_TOOLS if mailbox else [])
     # once mail was read in this answer, nothing in it may switch the home or send words to the web
     after_mail = (SEARCH_TOOL, HA_TOOL, HA_ACTION_TOOL)
+    # what this request cannot reach: said plainly, so the model does not make up appointments or mails
+    missing = ([] if cal["calendars"] else ["Kalender"]) + ([] if mailbox else ["E-Mails"])
+    if missing:
+        system = (system + "\n\n" + "Du hast in diesem Gespräch keinen Zugriff auf: " + ", ".join(missing)
+                  + " (nicht eingerichtet oder nicht mit einem Profil angemeldet). Fragt der Nutzer danach, sag "
+                    "genau das und nenne nie Termine oder E-Mails, die du nicht aus einem Werkzeug hast.").strip()
+    # a question about appointments or mail must go through the tool, not the model's imagination
+    need = []
+    ask_text = messages[-1]["content"] if messages[-1]["role"] == "user" else ""
+    if cal["calendars"] and re.search(r"(?i)\b(termin\w*|kalender\w*|verabred\w*|appointment\w*|calendar)\b", ask_text):
+        need.append("calendar_events")
+    if mailbox and re.search(r"(?i)\b(e-?mails?|mails?|posteingang|inbox)\b", ask_text):
+        need.append("mail")
     if tools:
         system = (system + "\n\n" + TOOL_RULES).strip()
     if system:
@@ -628,8 +641,20 @@ async def chat(request: Request):
                          and not (st["mail"] and t in after_mail)] if rnd < 4 else []
                 if offer:
                     payload["tools"] = offer
+                    if rnd == 0 and need:
+                        payload["tool_choice"] = "required"
                 try:
-                    finish, calls = await llm_round(payload, st)
+                    try:
+                        finish, calls = await llm_round(payload, st)
+                    except RuntimeError as e:
+                        if "tool_choice" not in payload or isinstance(e, ContextFull) or st["n"]:
+                            raise
+                        print("chat: tool_choice refused, without it:", str(e)[:200], flush=True)
+                        payload.pop("tool_choice")
+                        finish, calls = await llm_round(payload, st)
+                    print(f"chat: {'profile' if who else 'no profile'}, round {rnd}, offered",
+                          [t["function"]["name"] for t in offer], "called", [x["name"] for x in calls] or "nothing",
+                          flush=True)
                     if ha:
                         print("homeassistant: round", rnd, "model called", [x["name"] for x in calls] or "no tool",
                               flush=True)
