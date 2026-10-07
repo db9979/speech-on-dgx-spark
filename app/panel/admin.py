@@ -270,6 +270,8 @@ def validate(new):
         raise HTTPException(400, "chat llm_url must start with http:// or https://")
     if not isinstance(ch["max_tokens"], int) or not 16 <= ch["max_tokens"] <= 32768:
         raise HTTPException(400, "chat max_tokens must be 16..32768")
+    if not isinstance(ch.get("temperature", 0.3), (int, float)) or not 0 <= ch.get("temperature", 0.3) <= 1.5:
+        raise HTTPException(400, "chat temperature must be 0..1.5")
     for sec in ("asr", "tts"):
         if not re.fullmatch(r"[\w.\-/]+", str(new[sec]["model"])):
             raise HTTPException(400, f"invalid model id {new[sec]['model']}")

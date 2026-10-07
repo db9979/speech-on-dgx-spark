@@ -418,7 +418,7 @@ async def web_search(c, ccfg, query):
     results = [x for x in raw if str(x.get("url", "")).startswith(("http://", "https://"))]
     results = results[:int(ccfg.get("search_results") or 5)]
     if not results:
-        return "No results.", []
+        return "No results found. Tell the user that nothing was found; do not guess.", []
     pages = int(ccfg.get("search_pages") or 0)
     texts = await asyncio.gather(*(page_text(c, x["url"]) for x in results[:pages]))
     lines = [f"Search results for: {query}"]
@@ -467,6 +467,17 @@ def llm_error_code(e, status=None):
 
 class ContextFull(RuntimeError):
     """The LLM refused the request as longer than its context."""
+
+
+# Applies to every tool: answers come from what the tools return, never from guesses.
+TOOL_RULES = ("Regeln für deine Werkzeuge: Wenn die Antwort von Daten abhängt, die ein Werkzeug liefert "
+              "(Termine, Erinnerungen, E-Mails, Gemerktes, frühere Gespräche, Smart Home, aktuelle Fakten), "
+              "rufe das Werkzeug auf und antworte nie aus dem Gedächtnis oder aus Vermutung. Gib nur wieder, "
+              "was wörtlich im Ergebnis steht: keine erfundenen Uhrzeiten, Namen, Zahlen, Orte oder Gründe, "
+              "keine Schlüsse, die das Ergebnis nicht hergibt. Ist das Ergebnis leer, ein Fehler oder passt es "
+              "nicht zur Frage, sag das offen, zum Beispiel „Dazu habe ich nichts gefunden“. Sag nie, dass du "
+              "etwas erledigt, gestellt oder gespeichert hast, wenn kein Werkzeug-Ergebnis das bestätigt. "
+              "Ist die Frage unklar, frag kurz nach, statt zu raten.")
 
 
 HISTORY_CHARS = 24000  # about 8000 tokens of earlier conversation; documents and tools come on top
@@ -577,6 +588,8 @@ async def chat(request: Request):
         + ([CALENDAR_TOOL] if cal["calendars"] else []) + (MAIL_TOOLS if mailbox else [])
     # once mail was read in this answer, nothing in it may switch the home or send words to the web
     after_mail = (SEARCH_TOOL, HA_TOOL, HA_ACTION_TOOL)
+    if tools:
+        system = (system + "\n\n" + TOOL_RULES).strip()
     if system:
         messages = [{"role": "system", "content": system}] + messages
     lheaders = {"Authorization": f"Bearer {ccfg['llm_key']}"} if ccfg.get("llm_key") else {}
@@ -596,7 +609,8 @@ async def chat(request: Request):
     async def llm():
         try:
             model = await llm_model(c, ccfg, lheaders)
-            base = {"model": model, "stream": True, "max_tokens": int(ccfg.get("max_tokens") or 4096)}
+            base = {"model": model, "stream": True, "max_tokens": int(ccfg.get("max_tokens") or 4096),
+                    "temperature": float(ccfg.get("temperature", 0.3))}
             if not ccfg.get("thinking"):
                 base["chat_template_kwargs"] = {"enable_thinking": False}
             st = {"buf": "", "first": True, "think": False, "n": 0, "mail": False}
@@ -745,7 +759,7 @@ async def chat(request: Request):
             hits = await asyncio.to_thread(documents.search, who["id"], query)
             if hits:
                 await out.put({"type": "docsources", "items": sorted({h["name"] for h in hits})})
-            return "\n\n".join(f"[{h['name']}]\n{h['text']}" for h in hits) or "No matching passages."
+            return "\n\n".join(f"[{h['name']}]\n{h['text']}" for h in hits) or "No matching passages in the documents. Say so; do not guess."
         if name.startswith("reminder_") and timers:
             pending = profiles.reminders(who["id"]) if who else guest_rem
             zone = user_zone(body.get("tz"))
@@ -760,7 +774,7 @@ async def chat(request: Request):
                 await out.put({"type": "reminder", "action": "set", "item": item, "foreign": not own_browser})
                 return f"Set: '{item['text']}' at {fmt(item)}."
             if name == "reminder_list":
-                return "\n".join(f"{fmt(x)}: {x['text']}" for x in pending) or "No pending reminders."
+                return "\n".join(f"{fmt(x)}: {x['text']}" for x in pending) or "No pending reminders. Say so."
             if name == "reminder_cancel":
                 t = str(args.get("text", "")).strip().lower()
                 ids = {x["id"] for x in pending if t in ("alle", "all") or (t and t in x["text"].lower())}
@@ -785,7 +799,7 @@ async def chat(request: Request):
                 evs, errors = await calendars.events(who["id"], start, start + datetime.timedelta(days=days), zone)
             except (ValueError, httpx.HTTPError) as e:
                 return f"Calendar not reachable: {e}"
-            return ("\n".join(calendars.line(x) for x in evs) or "No appointments in this period.") \
+            return ("\n".join(calendars.line(x) for x in evs) or "No appointments in this period. Say so; do not guess any.") \
                 + "".join(f"\nCalendar '{n}' could not be read: {e}" for n, e in errors)
         if name == "daily_briefing" and briefing:
             return await briefing_text(st)

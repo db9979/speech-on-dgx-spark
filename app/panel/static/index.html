@@ -81,6 +81,7 @@
       <label>LLM-Modell</label><input id="chat.llm_model"><div class="fh">Leer = das erste, das der Server meldet.</div>
       <label>Systemanweisung</label><textarea id="chat.system_prompt" rows="5"></textarea>
       <label>Max. Tokens pro Antwort</label><input id="chat.max_tokens" type="number">
+      <label>Temperatur</label><input id="chat.temperature" type="number" step="0.05" min="0" max="1.5"><div class="fh">Kleiner = hält sich enger an Werkzeug-Ergebnisse und erfindet weniger; 0.3 empfohlen, Qwen-Standard 0.7.</div>
       <label class="chk"><input type="checkbox" id="chat.datetime"> Datum und Uhrzeit mitgeben</label><div class="fh">Das Modell kennt sie sonst nicht.</div>
       <label class="chk"><input type="checkbox" id="chat.thinking"> Vorher nachdenken</label><div class="fh">Genauer, aber die Antwort beginnt deutlich später.</div>
       <div class="savebar"><button class="b p savebtn" data-p="ai">Speichern</button><span class="savemsg"></span></div>
