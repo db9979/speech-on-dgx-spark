@@ -2,10 +2,12 @@
 
     USERS_DIR/<user id>/calendar.json  {"calendars": [{id, name, url, user, password}], "topics": [...]}
 
-A profile can connect several calendars (up to 8). Each address is either a CalDAV server (Nextcloud, Radicale, iCloud with an app password, ...:
-the server address, the user's principal or one calendar) or an iCal subscription link (.ics,
-webcal://, Google's "secret address in iCal format"). The password never leaves the Spark again:
-the panel only learns whether one is stored. Topics are a few search phrases for the briefing.
+A profile can connect several calendars (up to 8). Each address is either a CalDAV server
+(Nextcloud, Radicale, iCloud ...: the server address, the user's principal or one calendar) or an
+iCal subscription link (.ics, webcal:// or webcals://, Google's "secret address in iCal format",
+a shared iCloud calendar). iCloud's CalDAV is https://caldav.icloud.com with the Apple ID and an
+app-specific password. The password never leaves the Spark again: the panel only learns whether
+one is stored. Topics are a few search phrases for the briefing.
 """
 import asyncio
 import datetime
@@ -71,7 +73,7 @@ def entry(body):
     """A checked calendar entry from the panel's form."""
     url = str(body.get("url", "")).strip()
     if not re.fullmatch(r"(https?|webcals?)://[^\s]{3,500}", url, re.I):
-        raise ValueError("the calendar address must start with https://, http:// or webcal://")
+        raise ValueError("the calendar address must start with https://, http://, webcal:// or webcals://")
     name = str(body.get("name", "")).strip()[:60]
     if not name:
         m = re.match(r"\w+://([^/:]+)", url)
@@ -153,6 +155,8 @@ async def _calendars(c, url):
                 continue
             seen.add(u)
             root = await _propfind(c, u, q, 1)
+            if root is None:   # some servers (iCloud) refuse Depth 1 on the root or the principal
+                root = await _propfind(c, u, q, 0)
             if root is None and u == url:
                 root = await _propfind(c, urljoin(u, "/.well-known/caldav"), q, 0)
             if root is None:
@@ -194,11 +198,21 @@ async def _report(c, cal, start, end):
 
 async def _fetch(d, start, end):
     """iCal texts of all events overlapping [start, end) (UTC datetimes); number of calendars."""
-    url = re.sub(r"^webcal", "http", d["url"], flags=re.I)
+    url = d["url"]
     auth = (d["user"], d.get("password", "")) if d.get("user") else None
     async with httpx.AsyncClient(timeout=httpx.Timeout(20, connect=8), auth=auth, follow_redirects=True,
                                  headers={"User-Agent": "speech-on-dgx-spark"}) as c:
-        r = await c.get(url)
+        if re.match(r"webcals?://", url, re.I):
+            # webcal:// is a subscription link; iCloud, Google and most others serve it over https only
+            rest = re.sub(r"^webcals?://", "", url, flags=re.I)
+            try:
+                url = "https://" + rest
+                r = await c.get(url)
+            except (httpx.ConnectError, httpx.ConnectTimeout):
+                url = "http://" + rest
+                r = await c.get(url)
+        else:
+            r = await c.get(url)
         if r.status_code == 401:
             raise ValueError("the calendar server rejects the user name or password (401)")
         if r.status_code == 200 and r.content[:4096].lstrip(b"\xef\xbb\xbf \r\n\t").startswith(b"BEGIN:VCALENDAR"):
