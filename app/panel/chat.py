@@ -813,7 +813,10 @@ async def chat(request: Request):
             await out.put({"type": "home_done", "ok": n > 0, "text": f"{n} Treffer"})
             return result
         if name == "home_assistant_action" and ha:
-            eid, service = str(args.get("entity_id", "")), str(args.get("service", ""))
+            # small models name the fields freely: "command", "action", "entity" ...
+            eid = str(args.get("entity_id") or args.get("entity") or args.get("device") or args.get("name") or "")
+            service = str(args.get("service") or args.get("command") or args.get("action")
+                          or args.get("service_name") or "")
             if ha_code and not ha_code_ok:
                 print("homeassistant: code word not in the latest message, nothing sent; code word:",
                       homeassistant.code_state(ha), flush=True)

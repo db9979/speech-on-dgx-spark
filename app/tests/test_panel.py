@@ -177,6 +177,11 @@ class HomeAssistant(unittest.TestCase):
         # the model may name the device instead of its id
         res = answer(ask(a, 'TOOL home_assistant_action {"entity_id": "Samsung The Frame", "service": "media_player.turn_on"}'))
         self.assertEqual(helpers.HA_CALLS[-1], {"entity_id": "media_player.the_frame", "service": "media_player.turn_on"})
+        # field names as the model on tars wrote them
+        ask(a, 'TOOL home_assistant_action {"command": "turn_off", "entity_id": "media_player.the_frame"}')
+        self.assertEqual(helpers.HA_CALLS[-1], {"entity_id": "media_player.the_frame", "service": "media_player.turn_off"})
+        ask(a, 'TOOL home_assistant_action {"action": "einschalten", "entity": "Samsung The Frame"}')
+        self.assertEqual(helpers.HA_CALLS[-1], {"entity_id": "media_player.the_frame", "service": "media_player.turn_on"})
         n = len(helpers.HA_CALLS)
         ask(a, "Ist das Licht an?")  # a question switches nothing
         self.assertEqual(len(helpers.HA_CALLS), n)

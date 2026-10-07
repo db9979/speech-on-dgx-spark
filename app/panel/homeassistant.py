@@ -633,6 +633,8 @@ async def action(item, entity_id, service, data=None):
     """Calls one service of the entity's own domain; returns (ok, text for the model)."""
     eid = str(entity_id or "").strip().lower()
     service = str(service or "").strip().lower().split(".")[-1]  # "media_player.turn_off" is fine too
+    if ("_" not in service or not re.fullmatch(r"[a-z0-9_]{1,64}", service)) and _intent(service):
+        service = _intent(service)  # words instead of a service: "ausschalten", "turn off", "off"
     if not re.fullmatch(r"[a-z0-9_]{1,64}\.[a-z0-9_]{1,200}", eid):
         # a name instead of the id ("Samsung The Frame"): take the device whose name it is
         all_states, areas, names = await _switchable(item)
