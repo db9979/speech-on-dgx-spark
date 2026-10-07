@@ -585,10 +585,16 @@ async def chat(request: Request):
                 finish, calls = await llm_round(payload, st)
                 if not calls or finish == "length":
                     break
-                if st["buf"].strip():
+                rest = st["buf"].strip()
+                if re.search(r"[.!?…][\"“”»')\]]*$", rest):
+                    # a finished sentence right before the tool call (often the last one of the
+                    # answer, before a memory note): it stays and is spoken
+                    st["first"] = False
+                    await sentences.put(rest)
+                elif rest:
                     # words written before the tool call without a sentence end ("Der Fernseher im"):
-                    # take them back, the next round says it properly
-                    await out.put({"type": "retract", "drop": len(st["buf"])})
+                    # take them back, the next round says it properly (length in UTF-16 as in the browser)
+                    await out.put({"type": "retract", "drop": len(st["buf"].encode("utf-16-le")) // 2})
                 st["buf"] = ""
                 msgs.append({"role": "assistant", "content": None, "tool_calls": [
                     {"id": x["id"], "type": "function", "function": {"name": x["name"], "arguments": x["arguments"]}}
