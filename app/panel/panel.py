@@ -672,9 +672,14 @@ async def web_search(c, ccfg, query):
 
 
 @app.get("/api/search-test", dependencies=[Depends(auth)])
-async def search_test(q: str = "DGX Spark"):
+async def search_test(q: str = "DGX Spark", url: str = ""):
+    """Tests the address in the form (url), so it works before saving; else the saved one."""
     cfg = load_config()
     ccfg = dict(json.load(open(DEFAULTS))["chat"], **cfg.get("chat", {}))
+    if url:
+        if not re.fullmatch(r"https?://\S+", url):
+            raise HTTPException(400, "SearXNG address must start with http:// or https://")
+        ccfg["search_url"] = url
     if not ccfg.get("search_url"):
         raise HTTPException(400, "no SearXNG address configured")
     async with httpx.AsyncClient() as c:

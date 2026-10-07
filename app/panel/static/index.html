@@ -781,8 +781,8 @@ async function ask(text,asrS){chatLog('user',text);chat.msgs.push({role:'user',c
 
 $('talk').onclick=()=>{audioCtx();if(chat.rec)stopListening(false);else startListening()};
 $('chatstop').onclick=()=>{stopListening(true);stopAnswer();setTalk();chatSay(t('Gestoppt.','Stopped.'))};
-$('searchtest').onclick=async()=>{$('searchmsg').textContent=t('Teste … (vorher speichern, falls die Adresse neu ist)','Testing … (save first if the address is new)');
-  try{const r=await (await api('/api/search-test')).json();$('searchmsg').textContent=`${r.results} ${t('Treffer in','results in')} ${r.seconds} s: ${r.first.map(x=>x.title).join(' · ').slice(0,120)}`}
+$('searchtest').onclick=async()=>{$('searchmsg').textContent=t('Teste …','Testing …');
+  try{const r=await (await api('/api/search-test?url='+encodeURIComponent($('chat.search_url').value.trim()))).json();$('searchmsg').textContent=`${r.results} ${t('Treffer in','results in')} ${r.seconds} s: ${r.first.map(x=>x.title).join(' · ').slice(0,120)}`}
   catch(e){$('searchmsg').innerHTML=`<span class="err">${esc(e.message)}</span>`}};
 $('chatnew').onclick=()=>{stopListening(true);stopAnswer();openConvo(null);setTalk();chatSay(t('Bereit.','Ready.'))};
 // Conversations are kept in this browser (localStorage), at most 30, newest first.
