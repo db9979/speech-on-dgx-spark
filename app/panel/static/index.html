@@ -669,7 +669,7 @@ $('ttsgo').onclick=async()=>{const body={input:$('ttstext').value,voice:$('ttsvo
   $('ttsgo').disabled=false};
 // Plays the SSE stream (base64 PCM 16 bit mono 24 kHz) as it arrives, like a streaming client would.
 async function ttsStream(body){const t0=performance.now();const r=await api('/api/test/tts-stream',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify(body)});
-  const ctx=new (window.AudioContext||window.webkitAudioContext)();let at=ctx.currentTime+0.05,first=null,bytes=0,buf='';
+  const AC=window.AudioContext||window.webkitAudioContext;let ctx;try{ctx=new AC({sampleRate:24000})}catch{ctx=new AC()}let at=ctx.currentTime+0.05,first=null,bytes=0,buf='';
   const rd=r.body.getReader(),dec=new TextDecoder();$('ttsaudio').style.display='none';
   const play=b64=>{const bin=atob(b64),n=bin.length>>1;if(!n)return;const f=new Float32Array(n);
     for(let i=0;i<n;i++){let v=bin.charCodeAt(2*i)|(bin.charCodeAt(2*i+1)<<8);if(v>=32768)v-=65536;f[i]=v/32768}
@@ -814,15 +814,25 @@ const chatSay=x=>{$('chatstate').textContent=x;$('fabstate').textContent=x};
 function chatLog(role,text){const d=document.createElement('div');d.className='msg '+(role==='user'?'user':'bot');
   d.innerHTML=role==='user'?'<div class="bubble"></div>':'<div class="av"><i></i></div><div class="bubble"></div>';
   const b=d.lastChild;if(text)b.textContent=text;else b.classList.add('typing');$('chatlog').appendChild(d);$('chatlog').scrollTop=1e9;return b}
-function audioCtx(){if(!chat.ctx){chat.ctx=new (window.AudioContext||window.webkitAudioContext)();
-    chat.out=chat.ctx.createAnalyser();chat.out.fftSize=512;chat.out.connect(chat.ctx.destination)}   /* the face's mouth follows this level */if(chat.ctx.state==='suspended')chat.ctx.resume();return chat.ctx}
-function playPcm(b64){const ctx=audioCtx(),bin=atob(b64),n=bin.length>>1;if(!n)return;const f=new Float32Array(n);
+function audioCtx(){if(!chat.ctx)chat.ctx=new (window.AudioContext||window.webkitAudioContext)();
+  if(chat.ctx.state==='suspended')chat.ctx.resume();playCtx();return chat.ctx}
+// Speech plays in its own context running at the TTS rate (24 kHz). In a 44.1/48 kHz context every
+// streamed piece would be resampled on its own, and the seams between the pieces click.
+function playCtx(){const AC=window.AudioContext||window.webkitAudioContext;
+  if(!chat.pctx){try{chat.pctx=new AC({sampleRate:24000,latencyHint:'interactive'})}catch{chat.pctx=new AC()}
+    chat.out=chat.pctx.createAnalyser();chat.out.fftSize=512;chat.out.connect(chat.pctx.destination)}   /* the face's mouth follows this level */
+  if(chat.pctx.state==='suspended')chat.pctx.resume();return chat.pctx}
+function playPcm(b64){const ctx=playCtx(),bin=atob(b64),n=bin.length>>1;if(!n)return;const f=new Float32Array(n);
   for(let i=0;i<n;i++){let v=bin.charCodeAt(2*i)|(bin.charCodeAt(2*i+1)<<8);if(v>=32768)v-=65536;f[i]=v/32768}
+  // after a gap (first piece, or the stream fell behind) start a little ahead and fade in, so the
+  // next pieces join seamlessly and the restart does not click
+  const gap=chat.playEnd<=ctx.currentTime,at=gap?ctx.currentTime+0.08:chat.playEnd;
+  if(gap)for(let i=0,m=Math.min(n,96);i<m;i++)f[i]*=i/m;
   const ab=ctx.createBuffer(1,n,24000);ab.copyToChannel(f,0);const src=ctx.createBufferSource();src.buffer=ab;src.connect(chat.out);
-  const at=Math.max(chat.playEnd,ctx.currentTime+0.03);src.start(at);chat.playEnd=at+ab.duration;chat.sources.push(src);
+  src.start(at);chat.playEnd=at+ab.duration;chat.sources.push(src);
   src.onended=()=>{chat.sources=chat.sources.filter(x=>x!==src)}}
 function stopAnswer(){stopBarge();if(chat.ctrl){chat.ctrl.abort();chat.ctrl=null}chat.sources.forEach(x=>{try{x.stop()}catch{}});chat.sources=[];chat.playEnd=0;$('chatstop').disabled=!chat.rec}
-const playing=()=>chat.ctx&&chat.playEnd>chat.ctx.currentTime;
+const playing=()=>chat.pctx&&chat.playEnd>chat.pctx.currentTime;
 function setTalk(){$('talklbl').textContent=chat.rec?t('Fertig','Done'):t('Sprechen','Speak');$('talk').classList.toggle('rec',!!chat.rec);$('talk').classList.toggle('ans',!chat.rec&&!!(chat.ctrl||playing()));$('chatstop').disabled=!(chat.rec||chat.ctrl||playing())}
 function showSecure(){const port=CFG&&CFG.panel&&CFG.panel.https_port;const u=`https://${location.hostname}:${port}/`;
   $('chatsecure').style.display='block';$('chathttps').href=u;$('chathttps').textContent=port?u:t('https (im Panel unter Konfiguration einschalten)','https (enable it under Configuration)')}
