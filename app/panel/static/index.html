@@ -807,7 +807,7 @@ async function ask(text,asrS){chatLog('user',text);chat.msgs.push({role:'user',c
   const el=chatLog('assistant','');$('fabtext').textContent='';let full='',llmS=null,audioS=null,err='';const searches=[],sources=[],mems=[];
   const ctrl=new AbortController();chat.ctrl=ctrl;setTalk();chatSay(t('Antwort kommt …','Answer coming …'));
   try{const r=await api('/api/chat',{method:'POST',headers:{'Content-Type':'application/json'},signal:ctrl.signal,
-      body:JSON.stringify({messages:chat.msgs.slice(-20),tz:(()=>{try{return Intl.DateTimeFormat().resolvedOptions().timeZone}catch{return ''}})(),voice:S.voice||undefined,speed:S.speed,length:S.length})});
+      body:JSON.stringify({messages:chat.msgs.slice(-20),tz:(()=>{try{return Intl.DateTimeFormat().resolvedOptions().timeZone}catch{return ''}})(),voice:PROFILE&&S.voice||undefined,speed:S.speed,length:S.length})});
     const rd=r.body.getReader(),dec=new TextDecoder();let buf='';
     for(;;){const{value,done}=await rd.read();if(done)break;buf+=dec.decode(value,{stream:true});let i;
       while((i=buf.indexOf('\n\n'))>=0){const line=buf.slice(0,i).split('\n').find(l=>l.startsWith('data:'));buf=buf.slice(i+2);if(!line)continue;
@@ -955,17 +955,20 @@ const SETF=[
   {k:'speed',type:'range',l:t('Sprechtempo','Speaking rate'),h:t('Schneller oder langsamer, ohne die Stimmlage zu ändern.','Faster or slower without changing the pitch.'),min:0.7,max:1.4,step:0.05},
   {k:'length',type:'sel',l:t('Antwortlänge','Answer length'),h:t('Wie ausführlich der Assistent antwortet.','How detailed the assistant answers.'),o:[['short',t('kurz','short')],['normal',t('normal','normal')],['long',t('ausführlich','detailed')]]},
   {g:t('Anzeige','Display'),k:'timing',type:'bool',l:t('Zeiten anzeigen','Show timings'),h:t('Wie lange Erkennung, Modell und erster Ton gebraucht haben.','How long recognition, model and first audio took.')}];
+{let g;SETF.forEach(f=>{g=f.g||g;f.grp=g})}
 let VOICES=null;
-async function voiceList(){if(VOICES)return VOICES;try{VOICES=(await (await fetch('/api/assistant/voices')).json()).voices||[]}catch{VOICES=[]}return VOICES}
+async function voiceList(admin){if(!PROFILE&&!admin)return [];if(VOICES)return VOICES;try{const r=await fetch(admin?'/api/tts/voices':'/api/assistant/voices');VOICES=r.ok?((await r.json()).voices||[]).filter(x=>typeof x==='string'):[]}catch{VOICES=[]}return VOICES}
 // Builds the settings rows into el; onchange(key, value) after each change. Returns a getter.
-async function renderSet(el,vals,onchange){const voices=await voiceList();const v={...vals};
-  el.innerHTML=SETF.map(f=>{let ctl;const id='set_'+el.id+'_'+f.k;
+async function renderSet(el,vals,onchange){const admin=!onchange,voices=await voiceList(admin);const v={...vals};
+  const fields=SETF.filter(f=>f.k!=='voice'||admin||PROFILE);   // guests always hear the default voice
+  let prev;el.innerHTML=fields.map(f=>{let ctl;const id='set_'+el.id+'_'+f.k;
     if(f.type==='bool')ctl=`<label class="tgl"><input type="checkbox" id="${id}"${v[f.k]?' checked':''}><i></i></label>`;
     else if(f.type==='sel')ctl=`<select id="${id}">${f.o.map(([a,b])=>`<option value="${a}"${v[f.k]===a?' selected':''}>${esc(b)}</option>`).join('')}</select>`;
     else if(f.type==='voice')ctl=`<select id="${id}"><option value="">${t('Standard','Default')}</option>${[...new Set([...voices,...(v.voice?[v.voice]:[])])].map(x=>`<option${x===v.voice?' selected':''}>${esc(x)}</option>`).join('')}</select>`;
     else ctl=`<input type="range" id="${id}" min="${f.min}" max="${f.max}" step="${f.step}" value="${v[f.k]}"><output id="${id}_o">${Number(v[f.k]).toFixed(2)}×</output>`;
-    return (f.g?`<div class="setgrp"><h3>${esc(f.g)}</h3></div>`:'')+`<div class="setrow"><div class="lbl"><b>${esc(f.l)}</b><span>${esc(f.h)}</span></div>${ctl}</div>`}).join('');
-  SETF.forEach(f=>{const e=$('set_'+el.id+'_'+f.k);e.oninput=e.onchange=ev=>{
+    const head=f.grp!==prev;prev=f.grp;
+    return (head?`<div class="setgrp"><h3>${esc(f.grp)}</h3></div>`:'')+`<div class="setrow"><div class="lbl"><b>${esc(f.l)}</b><span>${esc(f.h)}</span></div>${ctl}</div>`}).join('');
+  fields.forEach(f=>{const e=$('set_'+el.id+'_'+f.k);e.oninput=e.onchange=ev=>{
     const val=f.type==='bool'?e.checked:f.type==='range'?Number(e.value):e.value;
     if(f.type==='range')$(e.id+'_o').textContent=val.toFixed(2)+'×';
     if(v[f.k]===val||(f.type==='range'&&ev.type==='input'))return;v[f.k]=val;onchange&&onchange(f.k,val)}});

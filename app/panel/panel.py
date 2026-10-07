@@ -345,8 +345,8 @@ async def profile_save_settings(request: Request, prof=Depends(own_profile)):
 
 
 @app.get("/api/assistant/voices", dependencies=[Depends(assistant)])
-async def assistant_voices():
-    """Voice names to choose from in the conversation settings (nothing else of the TTS config)."""
+async def assistant_voices(prof=Depends(own_profile)):
+    """Voice names to choose from in the conversation settings (profiles only; guests get the default)."""
     v = await tts_voices()
     return {"voices": [x for x in v.get("voices", []) if isinstance(x, str)]}
 
@@ -933,7 +933,7 @@ async def chat(request: Request):
     # conversation settings: what the request sends, else the profile's, else the admin's defaults
     # (speakers with a device key send nothing and get their profile's voice, speed and length)
     pset = dict(profiles.defaults(ccfg.get("defaults")), **(profiles.settings(who["id"]) if who else {}))
-    for k in ("voice", "speed", "length"):
+    for k in ("voice", "speed", "length") if who else ("speed", "length"):  # guests: the admin's voice
         if k in body and profiles.SETTINGS[k][1](body[k]):
             pset[k] = body[k]
     length = {"short": "Antworte besonders knapp, meist in ein bis zwei Sätzen.",
