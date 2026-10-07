@@ -38,7 +38,7 @@
     "engine_mem_code2wav": 0.025,
     "engine_max_seqs": 2,
     "engine_max_model_len": 4096,
-    "initial_chunk_frames": 8,
+    "initial_chunk_frames": 10,
     "voicedesign_enabled": false,
     "voicedesign_model": "Qwen/Qwen3-TTS-12Hz-1.7B-VoiceDesign",
     "voicedesign_port": 31013
