@@ -71,9 +71,10 @@
     "memory": true,
     "documents": true,
     "reminders": true,
+    "calendar": true,
     "speaker_id": false,
     "speaker_strictness": "normal",
-    "defaults": {"hands": false, "auto": true, "live": true, "barge": true, "barge_level": "mid", "voice": "", "speed": 1.0, "length": "normal", "timing": true},
+    "defaults": {"hands": false, "auto": true, "turn": true, "live": true, "barge": true, "barge_level": "mid", "voice": "", "speed": 1.0, "length": "normal", "timing": true},
     "max_tokens": 4096
   },
   "logs": {

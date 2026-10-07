@@ -2,7 +2,7 @@
 
 **English** | [Deutsch](README.de.md)
 
-Version V01.0.17 · Idea: Dominik Bornhäußer
+Version V01.0.18 · Idea: Dominik Bornhäußer
 
 One script installs **Qwen3-ASR** (speech recognition) and **Qwen3-TTS** (text to speech) as systemd services on an NVIDIA DGX Spark (GB10), together with a web panel for configuration and monitoring. It runs alongside [dgx-spark-qwen38](https://github.com/hasso5703/dgx-spark-qwen38).
 
@@ -41,6 +41,12 @@ The **Gespräch** tab needs the microphone, and browsers only allow it over http
 **Messages in the conversation:** hovering over a message (on a phone: tapping it) shows a bin and, on answers, a speaker. The bin deletes the message, a question together with its answer. The speaker reads the answer out again.
 
 **Timers and reminders:** "remind me about the oven in 10 minutes" or "remind me tomorrow at 8 about the appointment". Pending reminders show as small chips below the toggles (✕ cancels); "which timers are running?" and "cancel the oven timer" work by voice too. When one is due, the page chimes, shows it in the conversation and speaks it; if the tab is in the background, a browser notification appears as well. This works while the page is open. Profiles keep their reminders on the Spark (every open device of the profile rings), guests only in their own browser. Can be turned off under Configuration → Talk.
+
+**Daily briefing and calendar:** say "good morning" or "what's on today?" and the assistant reads out today's and tomorrow's appointments, today's reminders and a few lines on your own topics (e.g. "weather Berlin", via your SearXNG). "What do I have on Friday?" works too. Each profile connects its calendar under the profile button: a CalDAV address (Nextcloud, iCloud, Radicale …) with user and app password, or an iCal subscription link (Google: "secret address in iCal format"). Read only; the password stays on the Spark and is never shown again. Guests get no calendar. Can be turned off under Configuration → Talk.
+
+**Natural turn-taking** (on by default, conversation settings): during a short pause the recording is transcribed already. A finished sentence ends the turn at once and its transcript becomes the question, so the answer starts noticeably sooner; after "and …", "because …", "um" or a comma the assistant waits up to 2 s for you to go on.
+
+**Phone view:** on phones the page opens with just the face (tap = talk) and two buttons: Settings (conversation settings plus "Hey Spark") and History (the messenger view with typing; the arrow top left goes back to the face).
 
 **Speaker identification** (off by default, Configuration → Talk): each profile reads three short sentences under the profile button. When the assistant then clearly recognizes a voice, it answers for that profile, with its memory, documents, reminders and voice, even on a guest device. The conversation shows "🎙 name" below the question. When the voice is unclear, nothing changes. Recognition runs on the Spark's CPU (Resemblyzer model, Apache 2.0) and needs no GPU memory. Strictness is adjustable. A voice is not a password: someone who sounds very similar or plays a recording can get into a profile.
 

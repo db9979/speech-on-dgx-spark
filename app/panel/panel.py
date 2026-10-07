@@ -27,6 +27,7 @@ sys.path.insert(0, os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
 from textnorm import guess_language  # noqa: E402
 import documents  # noqa: E402
 import speakers  # noqa: E402
+import calendars  # noqa: E402
 import profiles  # noqa: E402
 from common import CONFIG_PATH, estimate_gib, journal, load_config, mem_available_gib, quiet_access_log  # noqa: E402
 
@@ -264,6 +265,7 @@ def whoami(request: Request, creds: HTTPBasicCredentials | None = Depends(securi
             "profile": profiles.current(request), "documents": cfg.get("chat", {}).get("documents", True),
             "reminders": cfg.get("chat", {}).get("reminders", True),
             "speaker_id": cfg.get("chat", {}).get("speaker_id", False),
+            "calendar": cfg.get("chat", {}).get("calendar", True),
             # what the assistant needs without the full configuration (which holds keys)
             "assistant": {"default_voice": cfg["tts"].get("default_voice"),
                           "asr_language": cfg["asr"].get("default_language"),
@@ -383,6 +385,41 @@ def profile_reminders(prof=Depends(own_profile)):
 @app.delete("/api/profile/reminders/{rid}", dependencies=[Depends(assistant)])
 def profile_reminder_done(rid: str, prof=Depends(own_profile)):
     return {"removed": profiles.remove_reminders(prof["id"], {rid})}
+
+
+# Calendar and briefing topics: profiles only; the stored password is never sent back.
+def calendar_on():
+    if not load_config().get("chat", {}).get("calendar", True):
+        raise HTTPException(403, "calendar and daily briefing are turned off")
+
+
+@app.get("/api/profile/calendar", dependencies=[Depends(assistant)])
+def profile_calendar(prof=Depends(own_profile)):
+    return calendars.public(prof["id"])
+
+
+@app.put("/api/profile/calendar", dependencies=[Depends(assistant), Depends(calendar_on)])
+async def profile_calendar_save(request: Request, prof=Depends(own_profile)):
+    body = await request.json()
+    try:
+        return calendars.save(prof["id"], body if isinstance(body, dict) else {})
+    except ValueError as e:
+        raise HTTPException(400, str(e))
+
+
+@app.delete("/api/profile/calendar", dependencies=[Depends(assistant)])
+def profile_calendar_delete(prof=Depends(own_profile)):
+    calendars.forget(prof["id"])
+    return {"ok": True}
+
+
+@app.post("/api/profile/calendar/test", dependencies=[Depends(assistant), Depends(calendar_on)])
+async def profile_calendar_test(request: Request, prof=Depends(own_profile)):
+    body = await request.json()
+    try:
+        return await calendars.test(prof["id"], user_zone(body.get("tz")))
+    except (ValueError, httpx.HTTPError) as e:
+        raise HTTPException(400, f"{e}" if isinstance(e, ValueError) else f"calendar not reachable: {type(e).__name__}")
 
 
 def speaker_on():
@@ -913,6 +950,24 @@ REMINDER_HINT = ("Mit reminder_set stellst du Timer und Erinnerungen, mit remind
                  "siehst und löschst du sie. Bestätige kurz, wann es klingelt.")
 
 
+CALENDAR_TOOL = {"type": "function", "function": {
+    "name": "calendar_events",
+    "description": "Read the user's calendar: the appointments from a local date for a number of days.",
+    "parameters": {"type": "object", "properties": {
+        "date": {"type": "string", "description": "first day, 'YYYY-MM-DD' (default today)"},
+        "days": {"type": "integer", "description": "number of days, 1-31 (default 1)"}}}}}
+BRIEFING_TOOL = {"type": "function", "function": {
+    "name": "daily_briefing",
+    "description": "Everything for a daily briefing: today's and tomorrow's appointments, today's reminders "
+                   "and the latest on the user's chosen topics (news, weather ...).",
+    "parameters": {"type": "object", "properties": {}}}}
+BRIEFING_HINT = ("Wenn der Nutzer um ein Tagesbriefing bittet, wissen will, was heute ansteht, oder dich am "
+                 "Morgen mit „Guten Morgen“ begrüßt, rufe daily_briefing auf. Fasse es gesprochen und natürlich "
+                 "zusammen: kurzer Gruß, die heutigen Termine in zeitlicher Reihenfolge mit Uhrzeit, dann die "
+                 "Erinnerungen, dann zu jedem Thema ein bis zwei Sätze. Keine Aufzählungszeichen, keine Links.")
+CALENDAR_HINT = "Für Fragen zu Terminen an bestimmten Tagen nutze calendar_events."
+
+
 def user_zone(tz):
     if isinstance(tz, str) and re.fullmatch(r"[A-Za-z_]+(/[A-Za-z0-9_+\-]+){0,2}", tz):
         try:
@@ -1152,8 +1207,13 @@ async def chat(request: Request):
                  for x in (body.get("reminders") if isinstance(body.get("reminders"), list) else [])
                  if isinstance(x, dict) and isinstance(x.get("id"), str)
                  and isinstance(x.get("due"), (int, float))][:50] if not who else []
+    briefing = bool(ccfg.get("calendar", True))
+    cal = calendars.get(who["id"]) if who and briefing else {}
+    if briefing:
+        system = (system + "\n\n" + BRIEFING_HINT + (" " + CALENDAR_HINT if cal.get("url") else "")).strip()
     tools = ([SEARCH_TOOL] if search else []) + (MEMORY_TOOLS if prof else []) + ([DOC_TOOL] if docs else []) \
-        + (REMINDER_TOOLS if timers else [])
+        + (REMINDER_TOOLS if timers else []) + ([BRIEFING_TOOL] if briefing else []) \
+        + ([CALENDAR_TOOL] if cal.get("url") else [])
     if system:
         messages = [{"role": "system", "content": system}] + messages
     lheaders = {"Authorization": f"Bearer {ccfg['llm_key']}"} if ccfg.get("llm_key") else {}
@@ -1266,6 +1326,25 @@ async def chat(request: Request):
                 if ids:
                     await out.put({"type": "reminder", "action": "cancel", "ids": sorted(ids), "foreign": not own_browser})
                 return f"Cancelled {len(ids)}."
+        if name == "calendar_events" and cal.get("url"):
+            zone = user_zone(body.get("tz"))
+            try:
+                day = datetime.date.fromisoformat(str(args.get("date") or "")[:10])
+            except ValueError:
+                day = datetime.datetime.now(zone).date()
+            try:
+                days = min(31, max(1, int(args.get("days") or 1)))
+            except (TypeError, ValueError):
+                days = 1
+            await out.put({"type": "calendar"})
+            start = datetime.datetime.combine(day, datetime.time(), zone)
+            try:
+                evs = await calendars.events(who["id"], start, start + datetime.timedelta(days=days), zone)
+            except (ValueError, httpx.HTTPError) as e:
+                return f"Calendar not reachable: {e}"
+            return "\n".join(calendars.line(x) for x in evs) or "No appointments in this period."
+        if name == "daily_briefing" and briefing:
+            return await briefing_text(st)
         if name == "memory_save" and prof:
             fact = profiles.remember(prof["id"], args.get("fact", ""))
             if fact:
@@ -1278,6 +1357,50 @@ async def chat(request: Request):
                 await out.put({"type": "memory", "action": "forgotten", "text": text})
             return f"Forgot {n} fact(s)."
         return f"Unknown tool {name}."
+
+    async def briefing_text(st):
+        zone = user_zone(body.get("tz"))
+        now = datetime.datetime.now(zone)
+        today = now.replace(hour=0, minute=0, second=0, microsecond=0)
+        await out.put({"type": "briefing"})
+        topics = cal.get("topics", []) if search else []
+        jobs = [calendars.events(who["id"], today, today + datetime.timedelta(days=2), zone)
+                if cal.get("url") else asyncio.sleep(0)]
+        quick = dict(ccfg, search_pages=0, search_results=3)
+        jobs += [web_search(c, quick, q) for q in topics]
+        if topics:
+            await out.put({"type": "search", "query": " · ".join(topics)})
+            if st["first"]:  # something to hear while the searches run
+                st["first"] = False
+                await sentences.put("Einen Moment, ich stelle alles zusammen.")
+        res = await asyncio.gather(*jobs, return_exceptions=True)
+        parts = [now_line(body.get("tz")).split(" Nutze")[0]]
+        if not cal.get("url"):
+            parts.append("Calendar: none connected" + ("" if who else " (guests have none)") + ".")
+        elif isinstance(res[0], Exception):
+            parts.append(f"Calendar not reachable: {res[0]}")
+        else:
+            tomorrow = today + datetime.timedelta(days=1)
+            for label, a, b in (("Today", today, tomorrow), ("Tomorrow", tomorrow, tomorrow + datetime.timedelta(days=1))):
+                evs = [x for x in res[0] if x["start"] < b and (x["end"] > a or x["start"] >= a)]
+                parts.append(f"{label}'s appointments:\n" + ("\n".join(
+                    calendars.line(x) + (" (already over)" if not x["allday"] and x["end"] <= now else "")
+                    for x in evs) or "none"))
+        if timers:
+            end = (today + datetime.timedelta(days=1)).timestamp() * 1000
+            pend = [x for x in (profiles.reminders(who["id"]) if who else guest_rem) if x["due"] < end]
+            parts.append("Reminders today:\n" + ("\n".join(
+                f"{datetime.datetime.fromtimestamp(x['due'] / 1000, zone):%H:%M} {x['text']}" for x in pend) or "none"))
+        srcs = []
+        for q, r in zip(topics, res[1:]):
+            if isinstance(r, Exception):
+                parts.append(f"Topic '{q}': search failed")
+            else:
+                parts.append(f"Topic '{q}':\n{r[0][:2500]}")
+                srcs += r[1][:2]
+        if srcs:
+            await out.put({"type": "sources", "items": srcs})
+        return "\n\n".join(parts)
 
     async def llm_round(payload, st):
         """Streams one LLM call: text goes to the browser and, sentence by sentence, to TTS.

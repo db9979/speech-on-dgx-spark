@@ -199,6 +199,7 @@ def current(request):
 SETTINGS = {
     "hands": (False, lambda v: isinstance(v, bool)),
     "auto": (True, lambda v: isinstance(v, bool)),
+    "turn": (True, lambda v: isinstance(v, bool)),
     "live": (True, lambda v: isinstance(v, bool)),
     "barge": (True, lambda v: isinstance(v, bool)),
     "barge_level": ("mid", lambda v: v in ("low", "mid", "high")),
