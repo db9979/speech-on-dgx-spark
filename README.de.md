@@ -2,7 +2,7 @@
 
 [English](README.md) | **Deutsch**
 
-Version V01.0.25 · Idee: Dominik Bornhäußer
+Version V01.0.26 · Idee: Dominik Bornhäußer
 
 Ein Skript installiert **Qwen3-ASR** (Spracherkennung) und **Qwen3-TTS** (Sprachausgabe) als systemd-Dienste auf einer NVIDIA DGX Spark (GB10). Dazu kommt eine Weboberfläche für Konfiguration und Monitoring. Das Setup läuft neben [dgx-spark-qwen38](https://github.com/hasso5703/dgx-spark-qwen38).
 
@@ -64,7 +64,7 @@ Alle Speech-Dienste schreiben in ein eigenes Journal (`journalctl --namespace=sp
 
 ## Aktualisieren
 
-Im Panel unter **System**: Dort steht die installierte Version, und es wird angezeigt, wenn auf GitHub eine neuere liegt (mit der Liste der Änderungen). **Update installieren** holt den neuen Stand und installiert ihn. Einstellungen, Modelle und Stimmen bleiben, das Protokoll läuft live mit. Schlägt die Installation fehl, laufen die Dienste mit der alten Version weiter.
+Im Panel unter **System**: Dort steht die installierte Version, und es wird angezeigt, wenn auf GitHub eine neuere liegt (mit der Liste der Änderungen). **Update installieren** holt den neuen Stand und installiert ihn. Einstellungen, Modelle und Stimmen bleiben, das Protokoll läuft live mit. Schlägt die Installation fehl, laufen die Dienste mit der alten Version weiter. Während das Update läuft, sperrt ein Fortschrittsfenster das Panel (auch andere Tabs und Handys: der Server nimmt keine Änderungen an, der Assistent antwortet weiter); über den Neustart des Panels verbindet sich die Seite neu und lädt am Ende von selbst. Ist es nach 20 Minuten nicht fertig, gibt es „Neu laden“ und „Update abbrechen“.
 
 Auf der Konsole geht dasselbe mit:
 

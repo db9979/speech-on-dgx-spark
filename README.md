@@ -2,7 +2,7 @@
 
 **English** | [Deutsch](README.de.md)
 
-Version V01.0.25 · Idea: Dominik Bornhäußer
+Version V01.0.26 · Idea: Dominik Bornhäußer
 
 One script installs **Qwen3-ASR** (speech recognition) and **Qwen3-TTS** (text to speech) as systemd services on an NVIDIA DGX Spark (GB10), together with a web panel for configuration and monitoring. It runs alongside [dgx-spark-qwen38](https://github.com/hasso5703/dgx-spark-qwen38).
 
@@ -66,7 +66,7 @@ All speech services log into their own journal (`journalctl --namespace=speech-s
 
 ## Updating
 
-In the panel under **System** you see the installed version and, when GitHub has a newer one, the list of changes. **Update installieren** (install update) fetches and installs it. Settings, models and voices are kept, and the log streams live. **Update abbrechen** cancels a running update. If the installation fails, the services keep running the old version.
+In the panel under **System** you see the installed version and, when GitHub has a newer one, the list of changes. **Update installieren** (install update) fetches and installs it. Settings, models and voices are kept, and the log streams live. **Update abbrechen** cancels a running update. If the installation fails, the services keep running the old version. While the update runs, a progress window locks the panel (other tabs and phones too: the server refuses changes, the assistant keeps answering); the page reconnects across the panel restart and reloads when done. After 20 minutes without finishing it offers Reload and Cancel.
 
 On the console:
 

@@ -49,7 +49,14 @@ done
 case "$TTS_BACKEND" in ""|vllm-omni|transformers) ;; *) echo "--tts-backend must be vllm-omni or transformers" >&2; exit 2 ;; esac
 case "$ASR_BACKEND" in ""|vllm|transformers) ;; *) echo "--asr-backend must be vllm or transformers" >&2; exit 2 ;; esac
 
-say()  { printf '\n\033[1;34m==>\033[0m %s\n' "$*"; }
+say()  { printf '\n\033[1;34m==>\033[0m %s\n' "$*"; progress "$*"; }
+# During an update the panel shows a progress bar; each step also goes into this file.
+progress() {
+  [ -n "${SPEECH_SPARK_PROGRESS:-}" ] || return 0
+  local n; n=$(jq -r '.step // 0' "$SPEECH_SPARK_PROGRESS" 2>/dev/null || echo 0)
+  jq -c --arg t "$1" --argjson n "$((n + 1))" --argjson now "$(date +%s)" '.step=$n | .text=$t | .updated=$now' \
+    "$SPEECH_SPARK_PROGRESS" >"$SPEECH_SPARK_PROGRESS.tmp" 2>/dev/null && mv "$SPEECH_SPARK_PROGRESS.tmp" "$SPEECH_SPARK_PROGRESS" || true
+}
 warn() { printf '\033[1;33mWARN:\033[0m %s\n' "$*"; }
 die()  { printf '\033[1;31mERROR:\033[0m %s\n' "$*" >&2; exit 1; }
 jqi()  { local tmp; tmp=$(mktemp); jq "$@" "$ETC/config.json" >"$tmp" && mv "$tmp" "$ETC/config.json"; }

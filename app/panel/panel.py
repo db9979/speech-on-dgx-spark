@@ -1834,6 +1834,75 @@ async def remote_state(force=False):
     return data
 
 
+# ---------------------------------------------------------------- update lock
+# update.sh writes its progress to this file; while it runs the panel refuses changes (all
+# mutating requests except the ones the assistant needs) and the page shows a locked progress bar.
+UPDATE_PROGRESS = os.path.join(os.environ.get("SPEECH_SPARK_STATE", "/var/lib/speech-spark/state"),
+                               "update-progress.json")
+UPDATE_TIMEOUT = 20 * 60
+# install.sh sections -> (share of the bar, German label)
+UPDATE_STEPS = [("Neue Version", 5, "Neue Version geladen"), ("System packages", 10, "Systempakete"),
+                ("Service user", 14, "Dienstkonto und Ordner"), ("Git clone", 16, "Git-Kopie"),
+                ("config.json", 20, "Einstellungen übernehmen"), ("qwen38 API key", 22, "Schlüssel für das Sprachmodell"),
+                ("certificate", 24, "Zertifikat"), ("Checking ports", 26, "Ports prüfen"),
+                ("Python env for Qwen3", 32, "Python-Umgebung Spracherkennung/-ausgabe"),
+                ("Python env for the panel", 38, "Python-Umgebung Panel"),
+                ("Python env for the engines", 48, "Python-Umgebung Engines (vLLM)"),
+                ("Downloading", 62, "Modelle prüfen"), ("Installing application files", 74, "Programmdateien installieren"),
+                ("systemd units", 80, "Dienste einrichten"), ("Starting services", 86, "Dienste neu starten und laden"),
+                ("Smoke test", 95, "Kurztest"), ("Fertig", 100, "Fertig")]
+_upd_cache = {"t": 0.0, "running": False}
+
+
+def update_running():
+    """True while the update unit runs (asked at most every 3 s)."""
+    if time.time() - _upd_cache["t"] > 3:
+        code, out = run(["systemctl", "show", "speech-spark-update", "-p", "ActiveState"])
+        _upd_cache.update(t=time.time(), running=bool(re.search(r"^ActiveState=(activating|active)$", out, re.M)))
+    return _upd_cache["running"]
+
+
+def update_progress():
+    try:
+        with open(UPDATE_PROGRESS) as f:
+            p = json.load(f)
+    except (OSError, ValueError):
+        return None
+    text = str(p.get("text", ""))
+    pct, label = 3, text
+    for key, share, name in UPDATE_STEPS:
+        if key.lower() in text.lower():
+            pct, label = share, name
+    if p.get("done"):
+        pct = 100 if p.get("ok") else pct
+        label = text
+    return {"percent": pct, "text": label, "step": p.get("step"), "started": p.get("started"),
+            "updated": p.get("updated"), "done": bool(p.get("done")), "ok": p.get("ok"),
+            "version": p.get("version"), "now": int(time.time()), "timeout": UPDATE_TIMEOUT}
+
+
+UNLOCKED = ("/api/chat", "/api/test/asr", "/api/assistant/", "/api/watch/", "/api/login", "/api/logout",
+            "/api/profile/login", "/api/profile/logout", "/api/update")
+
+
+@app.middleware("http")
+async def update_lock(request: Request, call_next):
+    if request.method in ("POST", "PUT", "PATCH", "DELETE") and request.url.path.startswith("/api/") \
+            and not request.url.path.startswith(UNLOCKED) and await asyncio.to_thread(update_running):
+        return Response('{"detail": "update running: changes are locked until it has finished"}',
+                        status_code=423, media_type="application/json")
+    return await call_next(request)
+
+
+@app.get("/api/update/progress", dependencies=[Depends(auth)])
+def update_progress_api(log: bool = True):
+    p = update_progress() or {}
+    p["running"] = update_running()
+    if log:
+        p["log"] = [x for x in journal("speech-spark-update", 8).splitlines() if x.strip()][-8:]
+    return p
+
+
 @app.get("/api/update", dependencies=[Depends(auth)])
 async def update_status(check: bool = False):
     code, out = run(["systemctl", "show", "speech-spark-update", "-p", "ActiveState,Result,ExecMainExitTimestamp"])
