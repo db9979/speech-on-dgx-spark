@@ -351,6 +351,14 @@ chmod 440 /etc/sudoers.d/speech-spark
 visudo -cf /etc/sudoers.d/speech-spark >/dev/null || die "sudoers file invalid"
 
 # ---------------------------------------------------------------- systemd
+say "Self-test of the panel (fake LLM and TTS, nothing real is touched)"
+if (cd "$PREFIX/app" && timeout 300 "$PREFIX/venv-panel/bin/python" -W ignore -m unittest discover -s tests -t . > /tmp/speech-spark-selftest.log 2>&1); then
+  echo "   $(grep -E '^Ran ' /tmp/speech-spark-selftest.log) - all passed"
+else
+  warn "self-test failed (details: /tmp/speech-spark-selftest.log); the services are installed anyway"
+  tail -n 25 /tmp/speech-spark-selftest.log
+fi
+
 say "systemd units"
 QWEN38_AFTER="qwen38-sglang.service qwen38-flash.service qwen38-image.service qwen38-video.service qwen38-llamacpp.service"
 common_env="Environment=SPEECH_SPARK_CONFIG=$ETC/config.json
@@ -600,12 +608,12 @@ cat <<EOF
 
 ------------------------------------------------------------------
  Panel:     http://$IP:$PANEL_PORT   (opens with the assistant; settings need the password: $PASSWORD)
- Voice chat: https://$IP:$HTTPS_PORT  (panel tab "Gespräch"; accept the self-signed certificate once)
+ Voice chat: https://$IP:$HTTPS_PORT  (panel page "Assistent"; accept the self-signed certificate once)
  ASR API:   http://$IP:$ASR_PORT/v1/audio/transcriptions   (backend: $ASR_BACKEND)
  TTS API:   http://$IP:$TTS_PORT/v1/audio/speech   (backend: $BACKEND)
  API key:   ${KEY:-none}
  Config:    $ETC/config.json     Logs: journalctl --namespace=speech-spark -u 'speech-spark-*'
- Update:    panel tab "System", or: sudo $PREFIX/src/update.sh
- Measure:   panel tab "System", or: sudo speech-spark-bench
+ Update:    panel: Übersicht -> System und Update, or: sudo $PREFIX/src/update.sh
+ Measure:   panel: Übersicht -> System und Update, or: sudo speech-spark-bench
 ------------------------------------------------------------------
 EOF

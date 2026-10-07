@@ -2,7 +2,7 @@
 
 [English](README.md) | **Deutsch**
 
-Version V01.0.30 · Idee: Dominik Bornhäußer
+Version V01.0.31 · Idee: Dominik Bornhäußer
 
 Ein Skript installiert **Qwen3-ASR** (Spracherkennung) und **Qwen3-TTS** (Sprachausgabe) als systemd-Dienste auf einer NVIDIA DGX Spark (GB10). Dazu kommt eine Weboberfläche für Konfiguration und Monitoring. Das Setup läuft neben [dgx-spark-qwen38](https://github.com/hasso5703/dgx-spark-qwen38).
 
@@ -93,6 +93,10 @@ Der Installer legt dafür eine eigene Git-Kopie unter `/opt/speech-spark/src` an
 | `--uninstall` | wie `./uninstall.sh` (siehe unten) |
 
 Ein erneuter Aufruf aktualisiert Code und Python-Umgebungen. Die bestehende Konfiguration bleibt erhalten, neue Einstellungen werden ergänzt.
+
+## Selbsttest
+
+Jede Installation und jedes Update führt den Selbsttest des Panels aus (`app/tests`), gegen nachgebaute LLM-, TTS- und Home-Assistant-Server in einem Wegwerf-Ordner: Anmeldung und Zugang, dass Profile nie Gedächtnis, Dokumente, Gespräche oder Home Assistant eines anderen sehen, die Werkzeuge im Gespräch, das Lernen aus Gesprächen, Kalender und Textbereinigung. Das Ergebnis steht im Update-Protokoll; ein Fehler wird gemeldet, hält das Update aber nicht auf. Von Hand: `cd /opt/speech-spark/app && sudo /opt/speech-spark/venv-panel/bin/python -m unittest discover -s tests -t .`
 
 ## Deinstallieren
 

@@ -426,7 +426,7 @@ def profile_docs(prof=Depends(own_profile)):
 @app.post("/api/profile/docs", dependencies=[Depends(assistant)])
 async def profile_add_doc(file: UploadFile = File(...), prof=Depends(own_profile)):
     if not load_config().get("chat", {}).get("documents", True):
-        raise HTTPException(403, "documents are turned off (Konfiguration -> Wissen)")
+        raise HTTPException(403, "documents are turned off (Einstellungen -> Funktionen)")
     data = await file.read(documents.MAX_FILE + 1)
     try:
         return await asyncio.to_thread(documents.add, prof["id"], file.filename, data)
@@ -2004,7 +2004,8 @@ UPDATE_STEPS = [("Neue Version", 5, "Neue Version geladen"), ("System packages",
                 ("Python env for Qwen3", 32, "Python-Umgebung Spracherkennung/-ausgabe"),
                 ("Python env for the panel", 38, "Python-Umgebung Panel"),
                 ("Python env for the engines", 48, "Python-Umgebung Engines (vLLM)"),
-                ("Downloading", 62, "Modelle prüfen"), ("Installing application files", 74, "Programmdateien installieren"),
+                ("Downloading", 62, "Modelle prüfen"), ("Installing application files", 72, "Programmdateien installieren"),
+                ("Self-test", 76, "Selbsttest"),
                 ("systemd units", 80, "Dienste einrichten"), ("Starting services", 86, "Dienste neu starten und laden"),
                 ("Smoke test", 95, "Kurztest"), ("Fertig", 100, "Fertig")]
 _upd_cache = {"t": 0.0, "running": False}
