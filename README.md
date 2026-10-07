@@ -2,7 +2,7 @@
 
 **English** | [Deutsch](README.de.md)
 
-Version V01.0.66 · Idea: Dominik Bornhäußer
+Version V01.0.67 · Idea: Dominik Bornhäußer
 
 One script installs **Qwen3-ASR** (speech recognition) and **Qwen3-TTS** (text to speech) as systemd services on an NVIDIA DGX Spark (GB10), together with a web panel for configuration and monitoring. It runs alongside [dgx-spark-qwen38](https://github.com/hasso5703/dgx-spark-qwen38).
 
@@ -228,6 +228,13 @@ Admin Panel → Settings → Audio:
 | Voice | | e.g. `ryan` |
 
 If Open WebUI runs in Docker on the same Spark, use the LAN IP or `host.docker.internal` instead of `SPARK` (container started with `--add-host=host.docker.internal:host-gateway`). The panel shows these values ready to copy in the **Einbinden** tab.
+
+### "Hey Siri, ask Spark"
+
+An iPhone shortcut sends the dictated question to `POST /api/siri/ask` (header `X-Speech-Device` with a
+device key of your profile, body `{"text": "..."}`) and lets Siri speak the `answer` field. Works without
+the page open, also on Apple Watch, AirPods and CarPlay; follow-ups within 10 minutes keep the context,
+and each day's questions are kept as a conversation of the profile. Step by step under Einbinden → Guides.
 
 ### Pebble watch
 

@@ -171,6 +171,8 @@ async function loadInt(){const c=await (await api('/api/config')).json();const v
   const panelUrl=`http://${host}:${(c.panel&&c.panel.port)||31080}`;
   $('int-pebble').innerHTML=kv([[t('Spark-Adresse in der Uhr-App','Spark address in the watch app'),panelUrl],[t('App-Datei','App file'),panelUrl+'/pebble/speech-spark.pbw']]);
   $('int-pbw').href=panelUrl+'/pebble/speech-spark.pbw';
+  const siriBase=location.protocol==='https:'?location.origin:panelUrl;
+  $('int-siri').innerHTML=kv([['URL',siriBase+'/api/siri/ask'],[t('Methode','Method'),'POST'],['Header','X-Speech-Device: sd_…'],[t('Haupttext (JSON)','Request body (JSON)'),'{"text": "…"}'],[t('Antwort','Answer'),'{"answer": "…"}']]);
   $('int-voices').textContent=v.model_kind==='voice_design'?t('VoiceDesign-Modell: die Stimme wird über die Standard-Anweisung beschrieben.','VoiceDesign model: the voice is described by the default instruction.'):(v.voices.join(', ')||t('(Dienst lädt noch)','(service still loading)'));
   const auth=c.api.key?` \\\n  -H "Authorization: Bearer ${c.api.key}"`:'';
   const hello=t('Hallo aus der Spark.','Hello from the Spark.'),lng=t('German','English'),code=t('de','en'),fn=t('hallo','hello');

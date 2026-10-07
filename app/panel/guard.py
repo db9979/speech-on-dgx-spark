@@ -148,7 +148,7 @@ def foreign_page():
 # ---------------------------------------------------------------- change log
 _audit_lock = threading.Lock()
 # changing requests that are normal use, not a change worth logging
-QUIET = ("/api/chat", "/api/assistant/say", "/api/watch/", "/api/profile/convos", "/api/test/",
+QUIET = ("/api/chat", "/api/siri/", "/api/assistant/say", "/api/watch/", "/api/profile/convos", "/api/test/",
          "/api/profile/calendar/test", "/api/profile/mail/test", "/api/profile/homeassistant/test", "/api/login", "/api/logout",
          "/api/profile/login", "/api/profile/logout", "/api/profile/reminders")
 

@@ -248,6 +248,8 @@ REMINDER_TOOLS = [
         "parameters": {"type": "object", "properties": {"text": {"type": "string"}}, "required": ["text"]}}}]
 WATCH_HINT = ("Die Frage kommt von einer Smartwatch mit kleinem Display und kleinem Lautsprecher. Antworte "
               "kurz, meist in ein bis drei Sätzen, ohne Listen, Tabellen oder Links.")
+SIRI_HINT = ("Die Frage kommt über Siri vom iPhone, der Apple Watch, aus dem Auto oder über AirPods; Siri "
+             "liest deine Antwort vor. Antworte kurz, meist in ein bis drei Sätzen, ohne Listen oder Links.")
 REMINDER_HINT = ("Mit reminder_set stellst du Timer und Erinnerungen, mit reminder_list und reminder_cancel "
                  "siehst und löschst du sie. Bestätige kurz, wann es klingelt.")
 
@@ -709,6 +711,8 @@ async def chat(request: Request):
         system = (system + "\n\n" + length).strip()
     if body.get("client") == "watch":
         system = (system + "\n\n" + WATCH_HINT).strip()
+    if body.get("client") == "siri":
+        system = (system + "\n\n" + SIRI_HINT).strip()
     prof = who if ccfg.get("memory", True) else None
     if prof:  # guests get no memory at all
         system = (system + "\n\n" + memory_hint(prof)).strip()
@@ -1276,7 +1280,7 @@ async def chat(request: Request):
 
     async def tts():
         first, played_until, ttfa = True, 0.0, 0.5
-        mute = False  # speech output failed: the rest of the answer comes as text only
+        mute = body.get("speak") is False  # text only (Siri) or speech output failed: no TTS
         done = False
         try:
             while not done:
@@ -1384,6 +1388,65 @@ async def watch_ask(request: Request):
     job.task = asyncio.create_task(watch.run(job, response))
     watch.JOBS[job.id] = job
     return {"id": job.id, "format": "ima-adpcm-8k"}
+
+
+# "Hey Siri, frag Spark": an iPhone shortcut posts the dictated question with the profile's device
+# key and lets Siri read the text answer. Follow-up questions within 10 minutes keep the context;
+# each day's questions are kept as one conversation of the profile ("Siri").
+_SIRI = {}
+SIRI_FOLLOW_UP = 600
+
+
+@router.post("/api/siri/ask")
+async def siri_ask(request: Request):
+    prof = profiles.current(request)
+    if not prof:
+        raise HTTPException(401, "device key (X-Speech-Device) or profile login required")
+    try:
+        body = await request.json()
+    except ValueError:
+        body = {}
+    body = body if isinstance(body, dict) else {}
+    text = str(body.get("text", "")).strip()[:2000]
+    if not text:
+        return {"answer": "Ich habe keine Frage gehört."}
+    last = _SIRI.get(prof["id"])
+    history = last[1][-8:] if last and time.time() - last[0] < SIRI_FOLLOW_UP else []
+    inner = {"messages": history + [{"role": "user", "content": text}], "client": "siri", "speak": False}
+    if isinstance(body.get("tz"), str):
+        inner["tz"] = body["tz"]
+    data = json.dumps(inner).encode()
+
+    async def receive():
+        return {"type": "http.request", "body": data, "more_body": False}
+    response = await chat(Request(request.scope, receive))
+    answer, error = "", ""
+    async for chunk in response.body_iterator:
+        for line in (chunk.decode() if isinstance(chunk, bytes) else chunk).split("\n"):
+            if not line.startswith("data:"):
+                continue
+            try:
+                ev = json.loads(line[5:])
+            except ValueError:
+                continue
+            if ev.get("type") == "text":
+                answer += ev.get("delta", "")
+            elif ev.get("type") in ("truncated", "retract"):
+                answer = answer[:max(0, len(answer) - int(ev.get("drop") or 0))]
+            elif ev.get("type") == "error" and not error and ev.get("code", "").startswith("llm"):
+                error = "Der Spark konnte gerade nicht antworten."
+    answer = answer.strip() or error or "Dazu habe ich keine Antwort."
+    msgs = history + [{"role": "user", "content": text}, {"role": "assistant", "content": answer}]
+    _SIRI[prof["id"]] = (time.time(), msgs)
+    day = datetime.datetime.now().strftime("%Y%m%d")
+    try:
+        old = next((c for c in profiles.convos(prof["id"]) if c.get("id") == "siri-" + day), None)
+        keep = (old["msgs"] if old else []) + msgs[-2:]
+        profiles.save_convo(prof["id"], {"id": "siri-" + day, "title": "Siri " + datetime.datetime.now().strftime("%d.%m."),
+                                         "updated": int(time.time() * 1000), "msgs": keep})
+    except Exception as e:
+        print("siri convo:", type(e).__name__, e, flush=True)
+    return {"answer": answer}
 
 
 def _watch_job(job_id):

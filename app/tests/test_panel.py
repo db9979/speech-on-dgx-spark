@@ -667,6 +667,25 @@ class CalendarAdd(unittest.TestCase):
         self.assertTrue(any(c["name"] == "calendar_add (bestätigt)" for x in log for c in x["calls"]))
 
 
+class Siri(unittest.TestCase):
+    def test_device_key_text_answer_follow_up(self):
+        a = profile("Rob")
+        uid = a.get("/api/whoami").json()["profile"]["id"]
+        key = profiles.add_device("iPhone Siri", uid)
+        g = TestClient(panel.app)
+        self.assertEqual(g.post("/api/siri/ask", json={"text": "Hallo"}).status_code, 401)
+        helpers.LLM_CALLS.clear()
+        r = g.post("/api/siri/ask", json={"text": "Wie geht es dir?"}, headers={"X-Speech-Device": key})
+        self.assertEqual(r.status_code, 200, r.text)
+        self.assertEqual(r.json()["answer"], "Hallo.")
+        self.assertIn("Siri", helpers.LLM_CALLS[-1]["messages"][0]["content"])
+        r = g.post("/api/siri/ask", json={"text": "Und sonst?"}, headers={"X-Speech-Device": key})
+        self.assertEqual([m["content"] for m in helpers.LLM_CALLS[-1]["messages"][1:]],
+                         ["Wie geht es dir?", "Hallo.", "Und sonst?"])
+        c = [x for x in profiles.convos(uid) if x["id"].startswith("siri-")][0]
+        self.assertEqual(len(c["msgs"]), 4)
+
+
 class Mail(unittest.TestCase):
     """E-mail per profile: read only, never another profile's, guests and foreign voices get none."""
 

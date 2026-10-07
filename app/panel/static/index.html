@@ -330,6 +330,20 @@
     <table style="margin-top:8px"><tbody id="int-pebble"></tbody></table>
     <div class="mut" style="margin-top:8px">Das Handy muss die Spark erreichen: zu Hause im WLAN, unterwegs über ein VPN wie Tailscale. Die Uhr-App nutzt normales HTTP, weil die Pebble-App dem selbstsignierten Zertifikat nicht vertraut.</div>
   </div>
+  <div class="card"><h2>„Hey Siri, frag Spark“</h2>
+    <div class="mut">Ein iPhone-Kurzbefehl schickt deine Frage an den Spark, Siri liest die Antwort vor. Geht ohne geöffnete Seite, auch auf der Apple Watch, mit AirPods und im Auto (CarPlay). Nachfragen innerhalb von 10 Minuten kennen den Zusammenhang; die Fragen eines Tages stehen im Verlauf deines Profils.</div>
+    <ol class="mut" style="margin:8px 0 0 18px;padding:0;line-height:1.6">
+      <li>Unter <b>Nutzer → Profile und Geräte</b> beim eigenen Profil ein Gerät „iPhone Siri“ anlegen und den Schlüssel kopieren.</li>
+      <li>In der App <b>Kurzbefehle</b> einen neuen Kurzbefehl mit dem Namen <b>Frag Spark</b> anlegen.</li>
+      <li>Aktion <b>Text diktieren</b> (Sprache Deutsch, Diktieren beenden: nach Pause).</li>
+      <li>Aktion <b>Inhalte von URL abrufen</b>: URL siehe unten, Methode <b>POST</b>, Header <code>X-Speech-Device</code> = dein Schlüssel, Haupttext <b>JSON</b> mit dem Feld <code>text</code> = <i>Diktierter Text</i>.</li>
+      <li>Aktion <b>Wörterbuchwert abrufen</b>: Schlüssel <code>answer</code>.</li>
+      <li>Aktion <b>Text sprechen</b> mit dem Wörterbuchwert.</li>
+      <li>Fertig: „Hey Siri, Frag Spark“, dann die Frage sagen.</li>
+    </ol>
+    <table style="margin-top:8px"><tbody id="int-siri"></tbody></table>
+    <div class="mut" style="margin-top:8px">Unterwegs muss das iPhone den Spark erreichen, zum Beispiel über deinen Reverse-Proxy mit https oder ein VPN. Trag dann die Adresse des Proxys statt der Adresse im Heimnetz ein.</div>
+  </div>
   <div class="card"><h2>curl</h2><pre id="int-curl"></pre></div>
   <div class="card"><h2>Python (openai-Paket)</h2><pre id="int-py"></pre></div>
 </section>
