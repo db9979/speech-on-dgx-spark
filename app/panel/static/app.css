@@ -238,3 +238,4 @@ a.b{text-decoration:none;color:inherit;display:inline-flex;align-items:center}
 .findcard{width:min(640px,94vw);max-height:86vh;display:flex;flex-direction:column}.finds{overflow:auto;margin-top:6px}
 .finds li{cursor:pointer}.finds li:hover{background:color-mix(in srgb,var(--acc) 7%,transparent)}.finds mark{background:color-mix(in srgb,var(--acc) 25%,transparent);color:inherit;border-radius:3px}
 .msg.found .bubble{outline:2px solid var(--acc);outline-offset:2px;transition:outline .3s}
+.wizcard{width:min(560px,94vw);min-height:min(520px,90vh);max-height:92vh;display:flex;flex-direction:column}.wizbody{flex:1;overflow:auto;padding:4px 2px}

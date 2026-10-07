@@ -2,7 +2,7 @@
 
 [English](README.md) | **Deutsch**
 
-Version V01.0.43 · Idee: Dominik Bornhäußer
+Version V01.0.44 · Idee: Dominik Bornhäußer
 
 Ein Skript installiert **Qwen3-ASR** (Spracherkennung) und **Qwen3-TTS** (Sprachausgabe) als systemd-Dienste auf einer NVIDIA DGX Spark (GB10). Dazu kommt eine Weboberfläche für Konfiguration und Monitoring. Das Setup läuft neben [dgx-spark-qwen38](https://github.com/hasso5703/dgx-spark-qwen38).
 
@@ -147,6 +147,8 @@ dgx-spark-qwen38 wird dabei nicht angefasst.
 Alle Dienste laufen als Systembenutzer `speech`. Per sudoers darf das Panel die Speech-Dienste und Engines starten, stoppen und neu starten und das Update anstoßen, sonst nichts.
 
 ## Die Oberfläche
+
+Beim ersten Admin-Login führt ein **Einrichtungsassistent** durch Passwort, Sprachmodell (mit Verbindungstest), Stimme (zum Anhören), Profile, Zugang und Funktionen und endet mit der Funktionsprüfung. Erneut starten: *Übersicht → System und Update → Einrichtung erneut starten*.
 
 Das Menü hat fünf Punkte; Übersicht, Nutzer und Einbinden haben oben eine kleine Leiste mit Unterseiten.
 

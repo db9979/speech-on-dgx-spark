@@ -19,4 +19,4 @@ $('pwset').onclick=async()=>{try{await api('/api/password',{method:'POST',header
     if(!PUBLIC&&!who.profile){GATE=true;$('profgate').style.display='';$('profadmin').style.display='';openMe('loginbox');return}}
   else $('logoutbtn').style.display='inline-block';
   document.querySelector('nav button[data-s=chat]').click();       // the assistant is the start page
-  if(ADMIN){ulCheck();loadLangs();refresh();setInterval(refresh,3000);api('/api/update').then(r=>r.json()).then(u=>updBadge(u.remote)).catch(()=>{})}})();
+  if(ADMIN){ulCheck();wizCheck();loadLangs();refresh();setInterval(refresh,3000);api('/api/update').then(r=>r.json()).then(u=>updBadge(u.remote)).catch(()=>{})}})();

@@ -2,7 +2,7 @@
 
 **English** | [Deutsch](README.de.md)
 
-Version V01.0.43 · Idea: Dominik Bornhäußer
+Version V01.0.44 · Idea: Dominik Bornhäußer
 
 One script installs **Qwen3-ASR** (speech recognition) and **Qwen3-TTS** (text to speech) as systemd services on an NVIDIA DGX Spark (GB10), together with a web panel for configuration and monitoring. It runs alongside [dgx-spark-qwen38](https://github.com/hasso5703/dgx-spark-qwen38).
 
@@ -147,6 +147,8 @@ dgx-spark-qwen38 is not touched.
 All services run as the system user `speech`. A sudoers rule lets the panel start, stop and restart the speech services and engines and trigger the update, nothing else.
 
 ## The panel
+
+On the first admin login a **setup wizard** walks through password, language model (with a connection test), voice (to listen to), profiles, access and features, and ends with the live check. Start it again: *Overview → System and update → Run setup again*.
 
 The menu has five entries; Overview, Users and Integrate have a small bar with sub-pages at the top.
 

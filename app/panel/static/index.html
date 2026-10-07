@@ -343,7 +343,7 @@
     </div>
   </div>
   <div class="two">
-    <div class="card"><h2>Funktionsprüfung</h2>
+    <div class="card"><div class="row" style="justify-content:space-between"><h2 style="margin:0">Funktionsprüfung</h2><button class="b" type="button" onclick="openWizard()">Einrichtung erneut starten</button></div>
       <div class="intro sm">Probiert die echten Dienste einmal aus: das Sprachmodell antwortet, die Sprachausgabe spricht einen Satz, die Spracherkennung versteht ihn wieder. Läuft nach jedem Update von selbst.</div>
       <table style="margin-top:8px"><tbody id="livesteps"></tbody></table>
       <div class="row" style="margin-top:10px"><button class="b" id="livego">Jetzt prüfen</button><span id="livemsg" class="mut"></span></div></div>
@@ -383,6 +383,11 @@
   <div class="mrow2"><button class="mi" id="milang" type="button"></button><button class="mi" id="mitheme" type="button">Hell / Dunkel</button></div>
   <button class="mi" id="milogin" type="button">Admin-Anmeldung</button>
   <button class="mi" id="milogout" type="button">Abmelden</button>
+</div></div>
+<div id="wizmodal" class="modal" style="display:none"><div class="card modalcard wizcard">
+  <div class="row" style="justify-content:space-between"><span class="mut" id="wizstep"></span><button class="ib" id="wizclose" type="button" title="Schließen">✕</button></div>
+  <div id="wizbody" class="wizbody"></div>
+  <div class="row mefoot"><button class="b" id="wizback" type="button">Zurück</button><span id="wizmsg" class="mut" style="flex:1"></span><button class="b" id="wizskip" type="button">Überspringen</button><button class="b p" id="wiznext" type="button">Weiter</button></div>
 </div></div>
 <div id="findmodal" class="modal" style="display:none"><div class="card modalcard findcard">
   <h2>Frühere Gespräche durchsuchen</h2>
@@ -459,6 +464,7 @@
 <script src="/static/js/me.js"></script>
 <script src="/static/js/users.js"></script>
 <script src="/static/js/face.js"></script>
+<script src="/static/js/wizard.js"></script>
 <script src="/static/js/start.js"></script>
 </body>
 </html>
