@@ -6,6 +6,7 @@ import os
 import re
 import hashlib
 import hmac
+import html.parser
 import io
 import secrets
 import shutil
@@ -367,6 +368,12 @@ def validate(new):
                 raise HTTPException(400, f"unknown key {sec}.{k}")
     if not re.fullmatch(r"[A-Za-z0-9_\-]*", new["api"]["key"]):
         raise HTTPException(400, "API key: letters, digits, _ and - only")
+    ch = new["chat"]
+    if ch.get("search_url") and not re.fullmatch(r"https?://\S+", ch["search_url"]):
+        raise HTTPException(400, "SearXNG address must start with http:// or https://")
+    if not (isinstance(ch.get("search_results"), int) and 1 <= ch["search_results"] <= 10
+            and isinstance(ch.get("search_pages"), int) and 0 <= ch["search_pages"] <= 5):
+        raise HTTPException(400, "search: 1..10 results, 0..5 pages to read")
     a = new["asr"]
     if not isinstance(a.get("context", ""), str) or len(a.get("context", "")) > 2000:
         raise HTTPException(400, "ASR context: text up to 2000 characters")
@@ -590,6 +597,95 @@ async def llm_model(c, ccfg, headers):
     return _llm_models[url]
 
 
+# Web search through the user's own SearXNG instance, offered to the LLM as a tool. SearXNG must
+# allow the JSON format (settings.yml: search.formats: [html, json]).
+SEARCH_TOOL = {"type": "function", "function": {
+    "name": "web_search",
+    "description": "Search the web for current or unknown information (news, prices, weather, events, "
+                   "facts after your training). Returns result snippets and the text of the top pages.",
+    "parameters": {"type": "object", "properties": {"query": {"type": "string", "description": "search query"}},
+                   "required": ["query"]}}}
+SEARCH_HINT = ("Du kannst mit dem Werkzeug web_search im Internet suchen. Nutze es, wenn die Frage aktuelle "
+               "oder dir unbekannte Informationen braucht, sonst nicht. Fasse das Gefundene in eigenen Worten "
+               "kurz zusammen und lies keine Adressen oder Links vor.")
+
+
+class _PageText(html.parser.HTMLParser):
+    """Visible text of a web page, without scripts, styles and page furniture."""
+    SKIP = {"script", "style", "noscript", "svg", "nav", "header", "footer", "aside", "form", "template"}
+
+    def __init__(self):
+        super().__init__()
+        self.depth, self.parts = 0, []
+
+    def handle_starttag(self, tag, attrs):
+        if tag in self.SKIP:
+            self.depth += 1
+
+    def handle_endtag(self, tag):
+        if tag in self.SKIP and self.depth:
+            self.depth -= 1
+
+    def handle_data(self, data):
+        if not self.depth and data.strip():
+            self.parts.append(data.strip())
+
+
+async def page_text(c, url, limit=3000):
+    try:
+        async with c.stream("GET", url, timeout=6, follow_redirects=True,
+                            headers={"User-Agent": "Mozilla/5.0 (speech-on-dgx-spark)"}) as r:
+            if r.status_code != 200 or "html" not in r.headers.get("content-type", ""):
+                return ""
+            raw = b""
+            async for chunk in r.aiter_bytes():
+                raw += chunk
+                if len(raw) > 1_500_000:
+                    break
+        p = _PageText()
+        p.feed(raw.decode(r.encoding or "utf-8", errors="replace"))
+        return re.sub(r"\s+", " ", " ".join(p.parts))[:limit]
+    except Exception:
+        return ""
+
+
+async def web_search(c, ccfg, query):
+    """Returns (text for the LLM, [{title, url}])."""
+    url = ccfg["search_url"].rstrip("/")
+    url = url if url.endswith("/search") else url + "/search"
+    r = await c.get(url, params={"q": query, "format": "json"}, timeout=10, follow_redirects=True)
+    if r.status_code == 403:
+        raise RuntimeError("SearXNG refuses JSON (add json to search.formats in its settings.yml)")
+    r.raise_for_status()
+    results = [x for x in r.json().get("results", []) if str(x.get("url", "")).startswith(("http://", "https://"))]
+    results = results[:int(ccfg.get("search_results") or 5)]
+    if not results:
+        return "No results.", []
+    pages = int(ccfg.get("search_pages") or 0)
+    texts = await asyncio.gather(*(page_text(c, x["url"]) for x in results[:pages]))
+    lines = [f"Search results for: {query}"]
+    for i, x in enumerate(results):
+        lines.append(f"[{i + 1}] {x.get('title', '')} ({x['url']})\n{(x.get('content') or '').strip()}")
+        if i < len(texts) and texts[i]:
+            lines.append(f"Page text: {texts[i]}")
+    return "\n\n".join(lines)[:12000], [{"title": x.get("title") or x["url"], "url": x["url"]} for x in results]
+
+
+@app.get("/api/search-test", dependencies=[Depends(auth)])
+async def search_test(q: str = "DGX Spark"):
+    cfg = load_config()
+    ccfg = dict(json.load(open(DEFAULTS))["chat"], **cfg.get("chat", {}))
+    if not ccfg.get("search_url"):
+        raise HTTPException(400, "no SearXNG address configured")
+    async with httpx.AsyncClient() as c:
+        t = time.time()
+        try:
+            text, sources = await web_search(c, dict(ccfg, search_pages=0), q)
+        except Exception as e:
+            raise HTTPException(502, f"SearXNG: {e}")
+    return {"results": len(sources), "first": sources[:3], "seconds": round(time.time() - t, 2)}
+
+
 WEEKDAYS = ["Montag", "Dienstag", "Mittwoch", "Donnerstag", "Freitag", "Samstag", "Sonntag"]
 MONTHS = ["Januar", "Februar", "März", "April", "Mai", "Juni", "Juli", "August", "September",
           "Oktober", "November", "Dezember"]
@@ -621,6 +717,9 @@ async def chat(request: Request):
     system = ccfg.get("system_prompt") or ""
     if ccfg.get("datetime", True):
         system = (system + "\n\n" + now_line(body.get("tz"))).strip()
+    search = bool(ccfg.get("search") and ccfg.get("search_url"))
+    if search:
+        system = (system + "\n\n" + SEARCH_HINT).strip()
     if system:
         messages = [{"role": "system", "content": system}] + messages
     lheaders = {"Authorization": f"Bearer {ccfg['llm_key']}"} if ccfg.get("llm_key") else {}
@@ -634,46 +733,41 @@ async def chat(request: Request):
     async def llm():
         try:
             model = await llm_model(c, ccfg, lheaders)
-            payload = {"model": model, "messages": messages, "stream": True,
-                       "max_tokens": int(ccfg.get("max_tokens") or 4096)}
+            base = {"model": model, "stream": True, "max_tokens": int(ccfg.get("max_tokens") or 4096)}
             if not ccfg.get("thinking"):
-                payload["chat_template_kwargs"] = {"enable_thinking": False}
-            buf, first, think, n, finish = "", True, False, 0, None
-            async with c.stream("POST", ccfg["llm_url"].rstrip("/") + "/chat/completions",
-                                json=payload, headers=lheaders) as r:
-                if r.status_code != 200:
-                    raise RuntimeError(f"LLM HTTP {r.status_code}: {(await r.aread()).decode(errors='replace')[:300]}")
-                async for line in r.aiter_lines():
-                    if not line.startswith("data:"):
-                        continue  # SSE comments and keep-alives
-                    data = line[5:].strip()
-                    if data == "[DONE]":
-                        break
+                base["chat_template_kwargs"] = {"enable_thinking": False}
+            st = {"buf": "", "first": True, "think": False, "n": 0}
+            msgs, finish = list(messages), None
+            for rnd in range(3):  # at most two searches, then the answer
+                payload = dict(base, messages=msgs)
+                if search and rnd < 2:
+                    payload["tools"] = [SEARCH_TOOL]
+                finish, calls = await llm_round(payload, st)
+                if not calls or finish == "length":
+                    break
+                msgs.append({"role": "assistant", "content": None, "tool_calls": [
+                    {"id": x["id"], "type": "function", "function": {"name": x["name"], "arguments": x["arguments"]}}
+                    for x in calls]})
+                for x in calls:
                     try:
-                        choice = json.loads(data)["choices"][0]
-                        delta = choice.get("delta") or {}
-                    except (ValueError, KeyError, IndexError):
-                        continue
-                    finish = choice.get("finish_reason") or finish
-                    text = delta.get("content") or ""
-                    if not text:
-                        continue
-                    # models that think inline: drop <think>...</think> from what is spoken
-                    if "<think>" in text:
-                        think, text = True, text.split("<think>")[0]
-                    if think:
-                        if "</think>" not in text:
-                            continue
-                        think, text = False, text.split("</think>", 1)[1]
-                    if n == 0:
-                        await out.put({"type": "timing", "llm_first_token": round(time.time() - t0, 3)})
-                    n += 1
-                    await out.put({"type": "text", "delta": text})
-                    buf += text
-                    done, buf = split_sentences(buf, first)
-                    for x in done:
-                        first = False
-                        await sentences.put(x)
+                        query = str(json.loads(x["arguments"] or "{}").get("query", "")).strip()
+                    except ValueError:
+                        query = ""
+                    result = "No query given."
+                    if x["name"] == "web_search" and query:
+                        await out.put({"type": "search", "query": query})
+                        if rnd == 0 and st["first"]:  # something to hear while the search runs
+                            st["first"] = False
+                            en = guess_language(messages[-1]["content"]) == "English"
+                            await sentences.put("Let me look that up." if en else "Ich schaue kurz nach.")
+                        try:
+                            result, sources = await web_search(c, ccfg, query)
+                            await out.put({"type": "sources", "items": sources})
+                        except Exception as e:
+                            result = f"Search failed: {e}"
+                            await out.put({"type": "search_error", "message": str(e)})
+                    msgs.append({"role": "tool", "tool_call_id": x["id"], "content": result})
+            buf = st["buf"]
             if finish == "length":
                 # The answer hit max_tokens mid-sentence: speak up to the last sentence end and
                 # tell the browser how much of the shown text to drop.
@@ -692,6 +786,54 @@ async def chat(request: Request):
                 await out.put({"type": "error", "message": f"LLM: {type(e).__name__}: {e}"})
         finally:
             await sentences.put(None)
+
+    async def llm_round(payload, st):
+        """Streams one LLM call: text goes to the browser and, sentence by sentence, to TTS.
+        Returns (finish_reason, tool calls)."""
+        finish, calls = None, {}
+        async with c.stream("POST", ccfg["llm_url"].rstrip("/") + "/chat/completions",
+                            json=payload, headers=lheaders) as r:
+            if r.status_code != 200:
+                raise RuntimeError(f"LLM HTTP {r.status_code}: {(await r.aread()).decode(errors='replace')[:300]}")
+            async for line in r.aiter_lines():
+                if not line.startswith("data:"):
+                    continue  # SSE comments and keep-alives
+                data = line[5:].strip()
+                if data == "[DONE]":
+                    break
+                try:
+                    choice = json.loads(data)["choices"][0]
+                    delta = choice.get("delta") or {}
+                except (ValueError, KeyError, IndexError):
+                    continue
+                finish = choice.get("finish_reason") or finish
+                for tc in delta.get("tool_calls") or []:  # arrives in pieces, keyed by index
+                    x = calls.setdefault(tc.get("index", 0), {"id": "", "name": "", "arguments": ""})
+                    x["id"] = tc.get("id") or x["id"]
+                    fn = tc.get("function") or {}
+                    x["name"] = fn.get("name") or x["name"]
+                    x["arguments"] += fn.get("arguments") or ""
+                text = delta.get("content") or ""
+                if not text:
+                    continue
+                # models that think inline: drop <think>...</think> from what is spoken
+                if "<think>" in text:
+                    st["think"], text = True, text.split("<think>")[0]
+                if st["think"]:
+                    if "</think>" not in text:
+                        continue
+                    st["think"], text = False, text.split("</think>", 1)[1]
+                if st["n"] == 0:
+                    await out.put({"type": "timing", "llm_first_token": round(time.time() - t0, 3)})
+                st["n"] += 1
+                await out.put({"type": "text", "delta": text})
+                st["buf"] += text
+                done, st["buf"] = split_sentences(st["buf"], st["first"])
+                for x in done:
+                    st["first"] = False
+                    await sentences.put(x)
+        out_calls = [dict(v, id=v["id"] or f"call_{i}") for i, v in sorted(calls.items()) if v["name"]]
+        return finish, out_calls
 
     async def tts():
         first, played_until = True, 0.0

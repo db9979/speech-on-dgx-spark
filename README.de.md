@@ -26,6 +26,8 @@ Der Reiter **Gespräch** braucht das Mikrofon, und Browser erlauben das nur übe
 
 **Gespräch-Komfort:** Der Assistent kennt Datum und Uhrzeit (Zeitzone des Browsers; abschaltbar unter Konfiguration → Sprach-Chat). Gespräche bleiben im Browser gespeichert und lassen sich oben im Verlauf wieder öffnen oder löschen. Mit „Live-Transkript“ erscheint der Text schon beim Sprechen; in der Sprechpause liegt die Erkennung meist schon fertig vor, dann entfällt dieser Schritt am Ende.
 
+**Websuche:** Unter Konfiguration → Sprach-Chat → Websuche die Adresse deiner SearXNG-Instanz eintragen und „Websuche erlauben“ anhaken. In der `settings.yml` von SearXNG muss unter `search: formats:` auch `json` stehen; „Verbindung testen“ zeigt, ob es klappt. Das LLM sucht dann selbst, wenn eine Frage aktuelle Informationen braucht (dafür braucht der LLM-Server Tool-Calling, qwen38 hat es an). Der Assistent sagt kurz „Ich schaue kurz nach“, liest die besten Seiten und zeigt die Quellen unter der Antwort.
+
 **Aussprache:** Unter Konfiguration → TTS → Aussprache steht eine Regel pro Zeile, etwa `DGX = De Ge Ix`. Sie gilt für ganze Wörter und für jede Sprachausgabe, auch aus Open WebUI.
 
 **Ins Wort fallen:** Während der Assistent spricht, hört das Mikrofon weiter zu. Wer etwa eine Viertelsekunde lang redet, unterbricht die Antwort, und das Gesagte wird gleich die nächste Frage. Das hängt an der Echounterdrückung des Browsers; unterbricht sich der Assistent mit lautem Lautsprecher selbst, hilft ein Kopfhörer oder der Haken „Ins Wort fallen“ unter dem Gespräch.
