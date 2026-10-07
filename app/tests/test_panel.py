@@ -11,6 +11,7 @@ from tests import helpers
 helpers.start()
 import panel  # noqa: E402
 import profiles  # noqa: E402
+import chat  # noqa: E402
 from fastapi.testclient import TestClient  # noqa: E402
 
 ADMIN = TestClient(panel.app)
@@ -131,12 +132,12 @@ class Learning(unittest.TestCase):
         a.put("/api/profile/convos", json={"id": "q1", "title": "Tee", "updated": old, "msgs": [
             {"role": "user", "content": "Ich trinke gern Tee."}, {"role": "assistant", "content": "Schön."}]})
         uid = next(u["id"] for u in profiles.admin_list()["users"] if u["name"] == "Lena")
-        panel._last_chat[0] = 0
+        chat._last_chat[0] = 0
         import asyncio
-        asyncio.run(panel.learn_once())
+        asyncio.run(chat.learn_once())
         facts = profiles.memory(uid)
         self.assertTrue(any(f["text"] == "Test mag Tee." and f.get("auto") for f in facts))
-        self.assertEqual(asyncio.run(panel.learn_once()), 0)  # read once only
+        self.assertEqual(asyncio.run(chat.learn_once()), 0)  # read once only
 
 
 if __name__ == "__main__":
