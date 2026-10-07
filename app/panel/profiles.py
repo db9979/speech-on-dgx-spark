@@ -299,6 +299,21 @@ SETTINGS = {
     # daily briefing as a push notification at this local time ("" = off), in the device's time zone
     "briefing_at": ("", lambda v: isinstance(v, str) and re.fullmatch(r"(?:[01]\d|2[0-3]):[0-5]\d|", v)),
     "tz": ("", lambda v: isinstance(v, str) and re.fullmatch(r"(?:[A-Za-z_]+(?:/[A-Za-z0-9_+\-]+){0,2})?", v)),
+    # speaking up by itself (see proactive.py): off until the person switches it on, each kind on its own
+    "pro_on": (False, lambda v: isinstance(v, bool)),
+    "pro_quiet": ("22:00-07:00", lambda v: isinstance(v, str) and re.fullmatch(r"(?:(?:[01]\d|2[0-3]):[0-5]\d-(?:[01]\d|2[0-3]):[0-5]\d)?", v)),
+    "pro_max": (6, lambda v: isinstance(v, int) and not isinstance(v, bool) and 1 <= v <= 30),
+    "pro_events": (True, lambda v: isinstance(v, bool)),
+    "pro_lead": (20, lambda v: v in (5, 10, 15, 20, 30, 45, 60)),
+    "pro_ha": (True, lambda v: isinstance(v, bool)),
+    "pro_greet": (True, lambda v: isinstance(v, bool)),
+    "pro_follow": (True, lambda v: isinstance(v, bool)),
+    "pro_mail": (True, lambda v: isinstance(v, bool)),
+    "pro_mail_from": ("", lambda v: isinstance(v, str) and len(v) <= 300 and "\n" not in v),
+    "pro_weather": (True, lambda v: isinstance(v, bool)),
+    "pro_place": ("", lambda v: isinstance(v, str) and len(v) <= 60 and re.fullmatch(r"[^<>\"\\\n]*", v)),
+    "pro_weather_at": ("18:00", lambda v: isinstance(v, str) and re.fullmatch(r"(?:[01]\d|2[0-3]):[0-5]\d", v)),
+    "pro_learn": (True, lambda v: isinstance(v, bool)),
 }
 
 

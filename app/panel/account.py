@@ -53,6 +53,7 @@ def whoami(request: Request, creds: HTTPBasicCredentials | None = Depends(securi
             "calendar": cfg.get("chat", {}).get("calendar", True),
             "homeassistant": cfg.get("chat", {}).get("homeassistant", False),
             "mail": cfg.get("chat", {}).get("mail", False),
+            "proactive": cfg.get("chat", {}).get("proactive", False),
             # what the assistant needs without the full configuration (which holds keys)
             "assistant": {"default_voice": cfg["tts"].get("default_voice"),
                           "asr_language": cfg["asr"].get("default_language"),

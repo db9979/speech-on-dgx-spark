@@ -23,6 +23,7 @@ import profiles  # noqa: E402
 import recall  # noqa: E402
 import homeassistant  # noqa: E402
 import mail  # noqa: E402
+import proactive  # noqa: E402
 import watch  # noqa: E402
 from common import load_config  # noqa: E402
 from core import DEFAULTS, api_headers, assistant  # noqa: E402
@@ -808,6 +809,13 @@ async def chat(request: Request):
             else:
                 system = (system + "\n\nKalender: Der vorgeschlagene Termin " + calendars.describe(prop)
                           + " wurde NICHT eingetragen, weil der Nutzer nicht zugestimmt hat.").strip()
+    # an answer to something the assistant said by itself (yes to its offer, "nicht jetzt", ...):
+    # the panel does what it means and the model only says the checked result (see proactive.py)
+    if who and own_browser and messages[-1]["role"] == "user":
+        pro = proactive.reply(who["id"], messages[-1]["content"])
+        if pro:
+            cal_note.append(pro["call"])
+            system = (system + "\n\n" + pro["system"]).strip()
     if briefing:
         system = (system + "\n\n" + BRIEFING_HINT + (" " + CALENDAR_HINT if cal["calendars"] else "")
                   + (" Nenne im Briefing nach den Erinnerungen kurz die ungelesenen Mails (Absender und Thema)."

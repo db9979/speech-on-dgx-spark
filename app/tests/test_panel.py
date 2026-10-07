@@ -886,3 +886,185 @@ class Mail(unittest.TestCase):
 
 if __name__ == "__main__":
     unittest.main()
+
+
+class Proactive(unittest.TestCase):
+    """Speaking up by itself: off until admin and profile switch it on, only from real data, every
+    kind on its own switch, limits, quiet hours, and answers to a note handled by the panel."""
+
+    def setUp(self):
+        helpers.set_config(proactive=True, public=True)
+
+    def tearDown(self):
+        helpers.set_config(proactive=False)
+
+    def on(self, name, **more):
+        a = profile(name)
+        uid = a.get("/api/whoami").json()["profile"]["id"]
+        s = dict({"pro_on": True, "pro_quiet": "", "tz": "Europe/Berlin"}, **more)
+        self.assertEqual(a.put("/api/profile/settings", json=s).status_code, 200)
+        return a, uid
+
+    def say(self, uid, kind="greet", text="Hallo.", **kw):
+        import asyncio
+        import proactive
+        return asyncio.run(proactive.deliver(uid, kind, text, **kw))
+
+    def test_off_until_switched_on_and_per_kind(self):
+        import proactive
+        a = profile("Pina")
+        uid = a.get("/api/whoami").json()["profile"]["id"]
+        self.assertIsNone(self.say(uid))                       # the profile has not switched it on
+        a.put("/api/profile/settings", json={"pro_on": True, "pro_quiet": "", "pro_greet": False})
+        self.assertIsNone(self.say(uid))                       # this kind is off
+        self.assertTrue(self.say(uid, "events", "In 20 Minuten: Zahnarzt."))
+        helpers.set_config(proactive=False)
+        self.assertIsNone(self.say(uid, "events", "x"))        # the admin turned it off
+        self.assertEqual(a.get("/api/proactive").status_code, 403)
+        helpers.set_config(proactive=True)
+        items = a.get("/api/proactive").json()["items"]
+        self.assertEqual([x["text"] for x in items], ["In 20 Minuten: Zahnarzt."])
+        self.assertEqual(profile("Pavel").get("/api/proactive").json()["items"], [])   # only one's own
+        self.assertEqual(TestClient(panel.app).get("/api/proactive").status_code, 401)  # guests never
+        log = a.get("/api/profile/toollog").json()["items"]
+        self.assertTrue(log[0]["q"].startswith("(von selbst"))
+        self.assertTrue(proactive.quiet({"pro_quiet": "22:00-07:00"}, chat.datetime.datetime(2026, 1, 1, 23, 30)))
+        self.assertTrue(proactive.quiet({"pro_quiet": "22:00-07:00"}, chat.datetime.datetime(2026, 1, 1, 6, 59)))
+        self.assertFalse(proactive.quiet({"pro_quiet": "22:00-07:00"}, chat.datetime.datetime(2026, 1, 1, 7, 0)))
+        self.assertFalse(proactive.quiet({"pro_quiet": ""}, chat.datetime.datetime(2026, 1, 1, 3, 0)))
+
+    def test_limits_and_feedback(self):
+        import proactive
+        a, uid = self.on("Olaf", pro_max=2)
+        self.assertTrue(self.say(uid, "events", "eins"))
+        self.assertTrue(self.say(uid, "events", "zwei"))
+        self.assertIsNone(self.say(uid, "events", "drei"))     # daily limit
+        a.put("/api/profile/settings", json={"pro_max": 30})
+        self.assertEqual(proactive.cap(proactive.state(uid), proactive.prefs(uid), "follow"), 1)
+        st = a.post("/api/proactive/feedback", json={"kind": "follow", "vote": "less"}).json()
+        self.assertEqual(next(k for k in st["kinds"] if k["kind"] == "follow")["cap"], 0)
+        self.assertIsNone(self.say(uid, "follow", "Hat das geklappt?"))   # turned off by feedback
+        a.post("/api/proactive/feedback", json={"vote": "reset"})
+        self.assertTrue(self.say(uid, "follow", "Hat das geklappt?"))
+        # "nicht jetzt" after a note: the panel pauses, the model only confirms it
+        ask(a, "Nicht jetzt bitte.")
+        self.assertIn("zwei Stunden", helpers.LLM_CALLS[-1]["messages"][0]["content"])
+        self.assertIsNone(self.say(uid, "events", "vier"))
+        self.assertTrue(a.get("/api/proactive/status").json()["paused_until"])
+        a.post("/api/proactive/feedback", json={"vote": "resume"})
+        self.assertTrue(self.say(uid, "ha", "Whirlpool hat jetzt 38 °C."))
+        ask(a, "Das interessiert mich nicht.")
+        st = a.get("/api/proactive/status").json()
+        self.assertEqual(next(k for k in st["kinds"] if k["kind"] == "ha")["cap"], 5)
+
+    def test_appointment_ahead_and_yes_sets_the_reminder(self):
+        import asyncio
+        import calendars
+        import proactive
+        a, uid = self.on("Evi", pro_lead=20)
+        zone = chat.user_zone("Europe/Berlin")
+        now = chat.datetime.datetime(2026, 10, 8, 9, 40, tzinfo=zone)
+        ev = {"start": now + chat.datetime.timedelta(minutes=20), "end": now + chat.datetime.timedelta(minutes=50),
+              "allday": False, "title": "Zahnarzt", "location": "", "calendar": "Privat"}
+        old_get, old_events = calendars.get, calendars.events
+
+        async def fake_events(u, start, end, z):
+            return ([ev] if u == uid and start <= ev["start"] <= end else []), []
+        calendars.get = lambda u: {"calendars": [{"id": "c"}] if u == uid else [], "topics": []}
+        calendars.events = fake_events
+        try:
+            asyncio.run(proactive.due_once(now))
+            asyncio.run(proactive.due_once(now + chat.datetime.timedelta(minutes=1)))    # once only
+        finally:
+            calendars.get, calendars.events = old_get, old_events
+        items = a.get("/api/proactive").json()["items"]
+        self.assertEqual([x["text"] for x in items], ["In 20 Minuten: Zahnarzt. Soll ich dich um 09:55 Uhr noch einmal erinnern?"])
+        self.assertEqual(profiles.reminders(uid), [])
+        ask(a, "Ja, gerne.")
+        self.assertEqual([x["text"] for x in profiles.reminders(uid)], ["Zahnarzt"])
+        self.assertIn("Erinnerung gesetzt", helpers.LLM_CALLS[-1]["messages"][0]["content"])
+        ask(a, "Ja.")
+        self.assertEqual(len(profiles.reminders(uid)), 1)     # the offer counts once
+
+    def test_home_assistant_rule_fires_once_after_it_was_false(self):
+        import asyncio
+        import proactive
+        a, uid = self.on("Bent")
+        a.put("/api/profile/homeassistant", json={"url": f"http://127.0.0.1:{helpers.HA_PORT}", "token": helpers.HA_TOKEN})
+        bad = a.post("/api/proactive/rules", json={"conds": [{"entity": "Garage Zeppelin", "op": "above", "value": "3"}]})
+        self.assertEqual(bad.status_code, 400)
+        r = a.post("/api/proactive/rules", json={"conds": [{"entity": "Whirlpool", "op": "above", "value": "37,9"}]})
+        self.assertEqual(r.status_code, 200, r.text)
+        self.assertEqual(r.json()["rules"][0]["conds"][0]["entity"], "climate.whirlpool")
+        pool = next(s for s in helpers.HA_STATES if s["entity_id"] == "climate.whirlpool")
+        old = pool["attributes"]["current_temperature"]
+        run = lambda: asyncio.run(proactive.due_once())  # noqa: E731
+        try:
+            pool["attributes"]["current_temperature"] = 38.2
+            run()                                      # true from the start: not yet
+            pool["attributes"]["current_temperature"] = 37.0
+            run()
+            pool["attributes"]["current_temperature"] = 38.0
+            run()
+            run()                                      # still true: once only
+        finally:
+            pool["attributes"]["current_temperature"] = old
+        texts = [x["text"] for x in a.get("/api/proactive").json()["items"]]
+        self.assertEqual(texts, ["Whirlpool hat jetzt 38 °C."])
+        rid = a.get("/api/proactive/status").json()["rules"][0]["id"]
+        self.assertEqual(a.delete(f"/api/proactive/rules/{rid}").json()["rules"], [])
+
+    def test_greeting_mail_follow_up_and_weather_only_from_real_data(self):
+        import asyncio
+        import mail
+        import proactive
+        a, uid = self.on("Lio", pro_mail_from="chef@firma.de")
+        # greeting: nothing to say, nothing said; with a reminder today, one sentence
+        self.assertIsNone(a.post("/api/proactive/greet").json()["item"])
+        proactive._mut(uid, lambda st: st.update(greet_t=0))
+        now = chat.datetime.datetime.now(chat.user_zone("Europe/Berlin"))
+        if now.hour < 23:
+            due = (now + chat.datetime.timedelta(minutes=30)).replace(second=0, microsecond=0)
+            if due.date() == now.date():
+                profiles.add_reminder(uid, "Blumen gießen", due.timestamp() * 1000)
+                item = a.post("/api/proactive/greet").json()["item"]
+                self.assertEqual(item["text"], f"Hallo Lio. Heute um {due:%H:%M} Uhr erinnere ich dich an Blumen gießen.")
+                self.assertIsNone(a.post("/api/proactive/greet").json()["item"])     # not again soon
+        # mail: only from listed senders, only new ones, sender and subject only
+        helpers.set_config(mail=True)
+        old_get, old_find = mail.get, mail.find
+        t0 = chat.datetime.datetime.now(chat.datetime.timezone.utc)
+        heads = [("m1", 1, {"from": "Chef <chef@firma.de>", "subject": "Termin morgen", "date": t0, "unread": True}),
+                 ("m1", 2, {"from": "Werbung <shop@x.de>", "subject": "Rabatt", "date": t0, "unread": True})]
+        mail.get = lambda u: {"accounts": [{"id": "m1"}] if u == uid else []}
+        mail.find = lambda u, q, days, unread, limit: (heads, [], False)
+        try:
+            asyncio.run(proactive.check_mail(uid, proactive.prefs(uid)))     # first look: only remembers the time
+            proactive._mut(uid, lambda st: st.update(mail_checked=0, mail_since=time.time() - 60))
+            asyncio.run(proactive.check_mail(uid, proactive.prefs(uid)))
+            proactive._mut(uid, lambda st: st.update(mail_checked=0))
+            asyncio.run(proactive.check_mail(uid, proactive.prefs(uid)))     # the same mail once
+        finally:
+            mail.get, mail.find = old_get, old_find
+            helpers.set_config(mail=False)
+        said = [x for x in a.get("/api/proactive").json()["items"] if x["kind"] == "mail"]
+        self.assertEqual([x["text"] for x in said], ["Neue Mail von Chef: Termin morgen."])
+        self.assertTrue(said[0].get("mail"))
+        # follow-up and weather: the model's answer counts only with a quote from the real text
+        lines = ["Ich muss morgen unbedingt das Angebot an Müller schicken.", "Wie wird das Wetter?"]
+        good = json.dumps({"quote": "das Angebot an Müller schicken", "question": "Hast du das Angebot an Müller geschickt?"})
+        made_up = json.dumps({"quote": "den Keller aufräumen", "question": "Hast du den Keller aufgeräumt?"})
+        self.assertEqual(proactive.parse_follow("<think>x</think>" + good, lines)["question"],
+                         "Hast du das Angebot an Müller geschickt?")
+        self.assertIsNone(proactive.parse_follow(made_up, lines))
+        self.assertIsNone(proactive.parse_follow("{}", lines))
+        src = "Köln morgen: Regenschauer am Nachmittag, 14 Grad."
+        self.assertEqual(proactive.parse_weather(json.dumps({"rain": True, "evidence": "Regenschauer am Nachmittag"}), src), ["rain"])
+        self.assertEqual(proactive.parse_weather(json.dumps({"rain": True, "frost": True, "evidence": "Frost in der Nacht"}), src), [])
+
+    def test_settings_are_checked(self):
+        a = profile("Rico")
+        s = a.put("/api/profile/settings", json={"pro_quiet": "25:00-07:00", "pro_max": 0, "pro_lead": 7,
+                                                 "pro_place": "<b>", "pro_on": "ja"}).json()["settings"]
+        self.assertFalse(any(k in s for k in ("pro_quiet", "pro_max", "pro_lead", "pro_place", "pro_on")))
+        self.assertFalse(a.get("/api/profile/settings").json()["settings"]["pro_on"])    # off by default

@@ -72,6 +72,7 @@
       <div class="setrow"><div class="lbl"><b>Kalender und Tagesbriefing</b><span>Profile verbinden unter dem Profil-Knopf ihren Kalender und wählen Themen. Auf „Guten Morgen“ oder „Was steht heute an?“ liest der Assistent Termine, Erinnerungen und die Themen vor.</span></div><label class="tgl"><input type="checkbox" id="chat.calendar"><i></i></label></div>
       <div class="setrow"><div class="lbl"><b>Home Assistant</b><span>Jedes Profil verbindet unter dem Profil-Knopf sein eigenes Home Assistant (Adresse und Token) und steuert dann per Sprache Licht, Geräte und Heizung. Nur dieses Profil kann es nutzen, Gäste nie; eine per Sprechererkennung erkannte Stimme an einem fremden Gerät auch nicht.</span></div><label class="tgl"><input type="checkbox" id="chat.homeassistant"><i></i></label></div>
       <div class="setrow"><div class="lbl"><b>E-Mail lesen</b><span>Profile verbinden unter dem Profil-Knopf ihre Postfächer (iCloud, Gmail, GMX, web.de oder IMAP). Der Assistent liest nur: Er sendet, löscht und markiert nichts. Gäste und eine fremde Stimme an einem anderen Gerät bekommen keinen Zugriff. Nach dem Lesen einer Mail sind in derselben Antwort Smart Home schalten und Websuche gesperrt.</span></div><label class="tgl"><input type="checkbox" id="chat.mail"><i></i></label></div>
+      <div class="setrow"><div class="lbl"><b>Von selbst melden</b><span>Profile können unter dem Profil-Knopf → „Von selbst“ einschalten, dass sich der Assistent meldet, wenn wirklich etwas ist: kurz vor Terminen, bei eigenen Smart-Home-Regeln, wichtigen Mails, Wetter für morgen, mit einer Nachfrage zu gestern oder einer kurzen Begrüßung. Jedes Profil entscheidet selbst, was davon, mit Ruhezeit und Tageslimit; ohne dass es jemand einschaltet, passiert nichts. Gäste nie.</span></div><label class="tgl"><input type="checkbox" id="chat.proactive"><i></i></label></div>
       <div class="setrow"><div class="lbl"><b>Sprechererkennung</b><span>Profile lernen unter dem Profil-Knopf ihre Stimme ein. Erkennt der Assistent eine Stimme eindeutig, antwortet er für dieses Profil, auch an einem fremden oder Gast-Gerät. Eine Stimme ist kein Passwort: Wer sehr ähnlich klingt oder eine Aufnahme abspielt, kann ein Profil erwischen.</span></div><label class="tgl"><input type="checkbox" id="chat.speaker_id"><i></i></label></div>
       <div class="savebar"><button class="b p savebtn" data-p="feat">Speichern</button><span class="savemsg"></span></div>
     </div>
@@ -482,6 +483,7 @@
     <div id="logbox" class="ptab"><div class="intro">Was der Assistent bei deinen Fragen nachgeschlagen hat: welche Werkzeuge, mit welchen Angaben, was zurückkam und was er geantwortet hat. Steht bei einer Antwort „kein Werkzeug“, kam sie nur aus dem Modell. Einträge verschwinden nach <span id="logdays">7</span> Tagen.</div>
       <ul class="facts small" id="loglist"></ul>
       <div class="row" style="margin-top:8px"><button class="b" id="logreload" type="button">Neu laden</button><button class="b" id="logclear" type="button">Protokoll leeren</button></div></div>
+    <div id="probox" class="ptab"></div>
     <div id="secbox" class="ptab"><div class="intro">Wo dein Profil angemeldet ist. Ein Gerät, das du nicht mehr nutzt oder verloren hast, kannst du hier sperren.</div>
       <label>Geräte mit Schlüssel</label><ul class="facts" id="secdev"></ul>
       <label>Letzte Anmeldungen</label><ul class="facts small" id="secev"></ul>
@@ -501,6 +503,7 @@
 <script src="/static/js/reminders.js"></script>
 <script src="/static/js/phone.js"></script>
 <script src="/static/js/me.js"></script>
+<script src="/static/js/proactive.js"></script>
 <script src="/static/js/users.js"></script>
 <script src="/static/js/face.js"></script>
 <script src="/static/js/wizard.js"></script>
