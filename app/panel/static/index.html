@@ -233,13 +233,14 @@ details.adv{margin-top:18px;border-top:1px solid var(--line);padding-top:10px}de
 .profchip{display:inline-flex;align-items:center;gap:6px;padding:6px 10px;font-size:13px;white-space:nowrap}.profchip svg{width:14px;height:14px}
 .ptabs{display:flex;gap:4px;margin:4px 0 12px;padding:3px;background:var(--line);border-radius:12px;flex-wrap:wrap}.ptabs button{flex:1;border:0;background:none;color:var(--fg);font:inherit;font-size:13px;padding:7px 8px;border-radius:9px;cursor:pointer;white-space:nowrap}.ptabs button.on{background:var(--card);box-shadow:var(--shadow);font-weight:600}
 .ptab:not(.on){display:none!important}.mebody .ptab{min-height:160px}
-.mecard{width:min(760px,100%);max-height:92vh;overflow:auto}.mehead{margin-bottom:12px}.mehead h2{margin:0 0 2px}.mehead .mut{font-size:13px}
-.mewrap{display:grid;grid-template-columns:150px 1fr;gap:18px;align-items:start}
+.mecard{width:min(760px,100%);height:min(640px,92vh);display:flex;flex-direction:column;overflow:hidden}.mehead{margin-bottom:12px}.mehead h2{margin:0 0 2px}.mehead .mut{font-size:13px}
+.mewrap{display:grid;grid-template-columns:150px 1fr;gap:18px;align-items:stretch;flex:1;min-height:0}
+.mebody{overflow-y:auto;min-height:0;padding-right:4px;scrollbar-gutter:stable}
 .menav{display:flex;flex-direction:column;gap:2px;position:sticky;top:0}
 .menav button{border:0;background:none;color:var(--fg);text-align:left;padding:8px 12px;border-radius:10px;cursor:pointer;font:inherit;font-size:14px}
 .menav button:hover{background:var(--line)}.menav button.on{background:var(--line);font-weight:600}
 .mefoot{margin-top:16px;justify-content:flex-end;border-top:1px solid var(--line);padding-top:12px}.mefoot #proflogout{margin-right:auto}
-@media (max-width:640px){.mewrap{grid-template-columns:1fr;gap:10px}.menav{flex-direction:row;flex-wrap:wrap;position:static;padding:3px;background:var(--line);border-radius:12px}
+@media (max-width:640px){.mecard{height:92vh}.mewrap{grid-template-columns:1fr;grid-template-rows:auto 1fr;gap:10px}.menav{flex-direction:row;flex-wrap:wrap;position:static;padding:3px;background:var(--line);border-radius:12px}
   .menav button{flex:1 0 auto;text-align:center;padding:7px 10px;font-size:13px}.menav button.on{background:var(--card);box-shadow:var(--shadow)}}
 #caladd{margin-top:10px;border:1px solid var(--line);border-radius:12px;padding:8px 12px}#caladd summary{cursor:pointer;font-weight:600;font-size:14px}
 .two2{display:grid;grid-template-columns:1fr 1fr;gap:8px}.rowin{display:flex;gap:8px}.rowin input{flex:1;min-width:0}
@@ -1376,7 +1377,8 @@ function meTabs(){const items=[['setbox',t('Gespräch','Conversation'),!GATE],['
     ['factbox',t('Gedächtnis','Memory'),!!PROFILE],['docbox',t('Dokumente','Documents'),PROFILE&&DOCS_ON],['calbox',t('Kalender','Calendar'),PROFILE&&CAL_ON],
     ['habox',t('Smart Home','Smart home'),PROFILE&&HA_ON],['voicebox',t('Stimme','Voice'),PROFILE&&SPK_ON]].filter(x=>x[2]);
   $('ptabs').innerHTML=items.map(([id,l])=>`<button type="button" data-t="${id}">${esc(l)}</button>`).join('');
-  $('ptabs').querySelectorAll('button').forEach(b=>b.onclick=()=>ptab(b.dataset.t));return items.map(x=>x[0])}
+  $('ptabs').querySelectorAll('button').forEach(b=>b.onclick=()=>{meLast=b.dataset.t;ptab(b.dataset.t)});return items.map(x=>x[0])}
+let meLast='setbox';
 const TZ=()=>{try{return Intl.DateTimeFormat().resolvedOptions().timeZone}catch{return ''}};
 const CALKIND={icloud:{name:'iCloud',url:'https://caldav.icloud.com',user:1,h:t('Benutzer: deine Apple-ID. Passwort: ein app-spezifisches Passwort von appleid.apple.com.','User: your Apple ID. Password: an app-specific password from appleid.apple.com.')},
   nextcloud:{name:'Nextcloud',url:'',ph:'https://cloud.example.de/remote.php/dav',user:1,h:t('Adresse mit /remote.php/dav, am besten mit App-Passwort.','Address with /remote.php/dav, best with an app password.')},
@@ -1462,7 +1464,7 @@ async function openMe(tab){$('profmsg').textContent='';$('profmodal').style.disp
   if(PROFILE){try{await showFacts();await showDocs();await showVoice();await showCal();await showHa()}catch{setProfile(null);openMe('loginbox')}return}
   $('profpin').value='';if(tab==='loginbox')setTimeout(()=>$($('profuser').value?'profpin':'profuser').focus(),50)}
 window.openMe=openMe;
-$('profbtn').onclick=()=>openMe(PROFILE?'factbox':'loginbox');
+$('profbtn').onclick=()=>openMe(meLast);   // same window and page as the settings button
 $('profuser').onkeydown=e=>{if(e.key==='Enter')$('profpin').focus()};
 $('profpin').onkeydown=e=>{if(e.key==='Enter')$('proflogin').click()};
 $('proflogin').onclick=async()=>{try{await api('/api/profile/login',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({name:$('profuser').value,pin:$('profpin').value})});
@@ -1519,7 +1521,7 @@ function saveSet(k,val){S[k]=val;applySet();
   if(!PROFILE){try{const o=JSON.parse(localStorage.getItem('chatset')||'{}');o[k]=val;localStorage.setItem('chatset',JSON.stringify(o))}catch{}return}
   clearTimeout(setTimer);setTimer=setTimeout(()=>api('/api/profile/settings',{method:'PUT',headers:{'Content-Type':'application/json'},body:JSON.stringify(S)}).catch(()=>{}),300)}
 $('chathands').onchange=()=>saveSet('hands',$('chathands').checked);
-const openSet=()=>openMe('setbox');
+const openSet=()=>openMe(meLast);
 $('chatset').onclick=openSet;
 $('setreset').onclick=async()=>{for(const k of Object.keys(SDEF))S[k]=SDEF[k];
   if(PROFILE)await api('/api/profile/settings',{method:'PUT',headers:{'Content-Type':'application/json'},body:JSON.stringify(SDEF)}).catch(()=>{});
