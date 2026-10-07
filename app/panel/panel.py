@@ -1272,7 +1272,7 @@ async def chat(request: Request):
         return finish, out_calls
 
     async def tts():
-        first, played_until = True, 0.0
+        first, played_until, ttfa = True, 0.0, 0.5
         try:
             done = False
             while not done:
@@ -1282,9 +1282,12 @@ async def chat(request: Request):
                 # Every TTS request starts its own intonation, so sentence-by-sentence speech
                 # wanders in tone. Only the first sentence goes alone (fast first audio); after
                 # that, everything the LLM has written meanwhile is spoken as one piece.
-                # Waiting for more text is fine while the listener still has buffered audio.
+                # Waiting for more text is fine while the listener still has buffered audio; the
+                # next request starts while enough is left to cover its time to first audio and
+                # its second audio block (slower while the LLM shares the GPU), so nothing stalls.
+                margin = max(1.8, 2.5 * ttfa + 0.8)
                 while not first and len(text) < 300:
-                    slack = played_until - time.time() - 1.0
+                    slack = played_until - time.time() - margin
                     try:
                         nxt = (sentences.get_nowait() if not sentences.empty() or slack <= 0
                                else await asyncio.wait_for(sentences.get(), slack))
@@ -1299,6 +1302,7 @@ async def chat(request: Request):
                     if lang:
                         tts_body["language"] = lang
                 req = dict(tts_body, input=text, stream=True, response_format="pcm")
+                sent, got = time.time(), False
                 async with c.stream("POST", tts_url, json=req, headers=api_headers()) as r:
                     if r.status_code != 200:
                         await out.put({"type": "error", "message": f"TTS HTTP {r.status_code}: "
@@ -1312,6 +1316,8 @@ async def chat(request: Request):
                         except ValueError:
                             continue
                         if ev.get("type") == "speech.audio.delta" and ev.get("audio"):
+                            if not got:
+                                got, ttfa = True, time.time() - sent
                             if first:
                                 first = False
                                 played_until = time.time()
