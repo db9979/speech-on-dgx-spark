@@ -150,13 +150,29 @@ HISTORY_HINT = ("Mit history_search findest du, worüber ihr in früheren Gespr�
 HA_TOOL = {"type": "function", "function": {
     "name": "home_assistant",
     "description": "Control or ask the user's smart home through Home Assistant: switch lights and devices, "
-                   "set temperatures, open covers, ask for states ('how warm is it in the living room?'). "
+                   "set temperatures, open covers. For reading values, zones or where someone is use "
+                   "home_assistant_states. "
                    "Give one short command in the user's language, naming device and room as the user did.",
     "parameters": {"type": "object", "properties": {"command": {"type": "string",
                    "description": "e.g. 'Schalte das Licht im Wohnzimmer an'"}}, "required": ["command"]}}}
-HA_HINT = ("Mit home_assistant steuerst du das Smart Home des Nutzers (Licht, Geräte, Heizung, Rollläden) und "
-           "fragst Zustände ab. Gib jeden Befehl einzeln weiter und sag danach kurz, was passiert ist; behaupte "
-           "nichts, was Home Assistant nicht bestätigt hat.")
+HA_STATES_TOOL = {"type": "function", "function": {
+    "name": "home_assistant_states",
+    "description": "Read the user's smart home: every sensor value, device state, zone and person location "
+                   "Home Assistant has, also devices not exposed to its voice assistant. Search with a few "
+                   "words (device, room, kind: 'Temperatur Wohnzimmer', 'Fenster offen', 'Akku', 'Zone'); "
+                   "without anything you get an overview of rooms, zones and people. An exact entity id "
+                   "(e.g. 'sensor.wohnzimmer_temperatur') returns all its attributes.",
+    "parameters": {"type": "object", "properties": {
+        "query": {"type": "string", "description": "words to search for, or one entity id; empty for an overview"},
+        "domain": {"type": "string", "description": "optional kind: sensor, binary_sensor, light, switch, climate, "
+                                                    "cover, zone, person, device_tracker, media_player, weather ..."},
+        "area": {"type": "string", "description": "optional room or area name"}}}}}
+HA_HINT = ("Mit home_assistant steuerst du das Smart Home des Nutzers (Licht, Geräte, Heizung, Rollläden). Gib jeden "
+           "Befehl einzeln weiter und sag danach kurz, was passiert ist; behaupte nichts, was Home Assistant nicht "
+           "bestätigt hat. Für Fragen nach Werten, Zuständen, Zonen und wo jemand ist nimm home_assistant_states: "
+           "es sieht alle Geräte, auch die, die der Sprachassistent von Home Assistant nicht kennt. Findet "
+           "home_assistant ein Gerät nicht, such es mit home_assistant_states und versuch es mit dem genauen Namen. "
+           "Erfinde keine Werte; findest du nichts, such mit anderen Wörtern oder hol dir die Übersicht.")
 
 
 DOC_TOOL = {"type": "function", "function": {
@@ -445,7 +461,7 @@ async def chat(request: Request):
     if briefing:
         system = (system + "\n\n" + BRIEFING_HINT + (" " + CALENDAR_HINT if cal["calendars"] else "")).strip()
     tools = ([SEARCH_TOOL] if search else []) + (MEMORY_TOOLS if prof else []) + ([HISTORY_TOOL] if past else []) \
-        + ([DOC_TOOL] if docs else []) + ([HA_TOOL] if ha else []) \
+        + ([DOC_TOOL] if docs else []) + ([HA_TOOL, HA_STATES_TOOL] if ha else []) \
         + (REMINDER_TOOLS if timers else []) + ([BRIEFING_TOOL] if briefing else []) \
         + ([CALENDAR_TOOL] if cal["calendars"] else [])
     if system:
@@ -544,6 +560,18 @@ async def chat(request: Request):
             await out.put({"type": "home_done", "ok": ok, "text": answer, "targets": targets})
             return ("Home Assistant: " if ok else "Home Assistant failed: ") + answer \
                 + (f" (devices: {', '.join(targets)})" if targets else "")
+        if name == "home_assistant_states" and ha:
+            query = str(args.get("query", "") or "").strip()
+            label = " ".join(x for x in (query, str(args.get("area", "") or ""), str(args.get("domain", "") or "")) if x)
+            await out.put({"type": "home", "command": "? " + (label or "Übersicht")})
+            try:
+                n, result = await homeassistant.states(ha, query, str(args.get("domain", "") or ""),
+                                                       str(args.get("area", "") or ""))
+            except (httpx.HTTPError, ValueError) as e:
+                await out.put({"type": "home_done", "ok": False, "text": str(e)[:200] or type(e).__name__})
+                return f"Home Assistant not reachable: {type(e).__name__}"
+            await out.put({"type": "home_done", "ok": n > 0, "text": f"{n} Treffer"})
+            return result
         if name == "history_search" and past:
             query = str(args.get("query", "")).strip()
             try:

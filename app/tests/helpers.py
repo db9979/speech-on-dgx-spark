@@ -42,7 +42,7 @@ for p in (APP, os.path.join(APP, "panel")):
 
 import uvicorn  # noqa: E402
 from fastapi import FastAPI, HTTPException, Request  # noqa: E402
-from fastapi.responses import StreamingResponse  # noqa: E402
+from fastapi.responses import PlainTextResponse, StreamingResponse  # noqa: E402
 
 LLM_CALLS = []   # every request body the fake LLM got
 HA_CALLS = []
@@ -105,6 +105,19 @@ def fake_tts():
     return app
 
 
+HA_STATES = [
+    {"entity_id": "sensor.wz_temp", "state": "21.5", "attributes": {"friendly_name": "Temperatur",
+     "unit_of_measurement": "°C", "device_class": "temperature"}},
+    {"entity_id": "light.kueche", "state": "on", "attributes": {"friendly_name": "Licht Küche", "brightness": 255}},
+    {"entity_id": "binary_sensor.bad_fenster", "state": "on", "attributes": {"friendly_name": "Bad Fenster",
+     "device_class": "window"}},
+    {"entity_id": "zone.home", "state": "1", "attributes": {"friendly_name": "Zuhause", "radius": 100,
+     "persons": ["person.anna"]}},
+    {"entity_id": "zone.buero", "state": "0", "attributes": {"friendly_name": "Büro", "radius": 150, "persons": []}},
+    {"entity_id": "person.anna", "state": "home", "attributes": {"friendly_name": "Anna"}},
+]
+
+
 def fake_ha():
     app = FastAPI()
 
@@ -116,6 +129,16 @@ def fake_ha():
     def root(request: Request):
         auth(request)
         return {"message": "API running."}
+
+    @app.get("/api/states")
+    def states(request: Request):
+        auth(request)
+        return HA_STATES
+
+    @app.post("/api/template")
+    async def template(request: Request):
+        auth(request)
+        return PlainTextResponse("sensor.wz_temp|Wohnzimmer\nlight.kueche|Küche\n")
 
     @app.post("/api/conversation/process")
     async def proc(request: Request):

@@ -125,6 +125,17 @@ class HomeAssistant(unittest.TestCase):
         self.assertTrue(any(e["type"] == "home_done" and e["ok"] for e in evs))
         self.assertEqual(helpers.HA_CALLS[-1]["text"], "Licht in der Küche an")
         self.assertIn("NO TOOL home_assistant", answer(ask(b, 'TOOL home_assistant {"command": "Licht an"}')))
+        # states: every entity, zones and people, found by room, kind or name, not only what Assist knows
+        self.assertIn("21.5 °C", answer(ask(a, 'TOOL home_assistant_states {"query": "Wie warm ist es im Wohnzimmer"}')))
+        res = answer(ask(a, 'TOOL home_assistant_states {"query": "Fenster offen"}'))
+        self.assertIn("Bad Fenster", res)
+        self.assertNotIn("Licht", res)
+        res = answer(ask(a, 'TOOL home_assistant_states {}'))
+        self.assertIn("Büro", res)
+        self.assertIn("Zuhause", res)
+        self.assertIn("Wohnzimmer", res)
+        self.assertIn("Anna", answer(ask(a, 'TOOL home_assistant_states {"domain": "zone"}')))
+        self.assertIn("NO TOOL home_assistant_states", answer(ask(b, 'TOOL home_assistant_states {}')))
 
 
 class Settings(unittest.TestCase):
