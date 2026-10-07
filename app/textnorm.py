@@ -61,7 +61,10 @@ def clean_text(text, calm=False):
     t = re.sub(r"(^|\n)[\s,;:.!?]+", r"\1", t)          # leftovers at line starts
     if calm:
         t = calm_text(t)
-    return re.sub(r"\s*\n\s*", "\n", t).strip()
+    t = re.sub(r"\s*\n\s*", "\n", t).strip()
+    # A line without a closing mark (list items, headings, the last words of an answer) is spoken
+    # with rising pitch, as if more were to come; a full stop lets the voice settle.
+    return re.sub(r"(?m)([\w%)\]\"“”»'])$", r"\1.", t)
 
 
 def parse_pronunciations(text):

@@ -1489,7 +1489,9 @@ async def chat(request: Request):
                     if nxt is None:
                         done = True
                         break
-                    text += "\n" + nxt  # keeps list markers at line starts for clean_text
+                    # a new line only before list items (clean_text strips their markers); plain
+                    # sentences stay one paragraph, so the voice does not reset at each line
+                    text += ("\n" if re.match(r"\s*(?:[-*+•]|\d+\.)\s", nxt) else " ") + nxt
                 if "language" not in tts_body:  # one language for the whole answer
                     lang = guess_language(" ".join([messages[-1]["content"], text]))
                     if lang:
