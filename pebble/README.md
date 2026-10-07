@@ -5,6 +5,8 @@ Source of `app/pebble/speech-spark.pbw`, which the panel serves at `/pebble/spee
 - `src/c/main.c`: watch side. SELECT starts dictation, the text goes to the phone; the answer
   arrives as text (`ANSWER`) and 8 kHz IMA ADPCM (`AUDIO`), decoded into the speaker stream.
   The phone only sends as much audio as the watch buffer has room for (`CREDIT`).
+- `src/c/face.c`: the face above the answer (idle, listen, think, speak, sad; the mouth follows
+  the audio level). A new design replaces only this file and keeps the calls in `face.h`.
 - `src/pkjs/index.js`: phone side. `POST /api/watch/ask`, then `GET /api/watch/poll` until done,
   with the device key in `X-Speech-Device`.
 - `src/pkjs/config.js`: settings page (Spark address, device key, speech, volume, auto-listen).
