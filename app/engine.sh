@@ -107,14 +107,20 @@ overrides=$(jq -cn --argjson m0 "$MEM0" --argjson m1 "$MEM1" --argjson s "$SEQS"
 deploy=()
 ic=$(jq -r '.tts.initial_chunk_frames // 8' "$CONFIG")
 if [[ "$ic" =~ ^[0-9]+$ ]] && [ "$ic" -gt 0 ]; then
-  base=$("$VENV/bin/python" -c 'import os, vllm_omni; print(os.path.join(os.path.dirname(vllm_omni.__file__), "deploy", "qwen3_tts.yaml"))' 2>/dev/null || true)
+  # find_spec locates the package without importing it (importing prints INFO lines to stdout)
+  base=$("$VENV/bin/python" -c 'import importlib.util as u, os; print(os.path.join(u.find_spec("vllm_omni").submodule_search_locations[0], "deploy", "qwen3_tts.yaml"))' 2>/dev/null | tail -n1 || true)
   if [ -f "$base" ]; then
-    # e.g. 8 -> [8, 8, 11, 15, 20, 25]: each block a third longer than the one before
-    ramp=$(jq -nc --argjson ic "$ic" '[$ic, $ic] | until(last >= 25; . + [[25, (last * 4 / 3 | ceil)] | min])')
+    # e.g. 8 -> [8, 8, 9, 10, 12, 14, 16, 18, 21, 24, 25]: each block ~15 % longer than the one
+    # before. Measured on GB10 while qwen38 generates: the talker makes only ~1.2x real time, so
+    # steeper steps (x4/3) still ran the buffer dry once.
+    ramp=$(jq -nc --argjson ic "$ic" '[$ic, $ic] | until(last >= 25; . + [[25, ([last + 1, (last * 1.15 | round)] | max)] | min])')
+    echo "streaming blocks (codec_chunk_ramp): $ramp"
     deploy_file="$STATE_DIR/tts-deploy-$ROLE.yaml"
     printf 'base_config: %s\nconnectors:\n  connector_of_shared_memory:\n    extra:\n      codec_chunk_ramp: %s\n' \
       "$base" "$ramp" >"$deploy_file"
     deploy=(--deploy-config "$deploy_file")
+  else
+    echo "WARNING: vllm-omni deploy config not found ('$base'); streaming uses the engine's default blocks" >&2
   fi
 fi
 
