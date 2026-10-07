@@ -76,11 +76,6 @@ def valid_pin(pin):
 
 
 # ---------------------------------------------------------------- profiles
-def public_list():
-    """Names to choose from at the login; nothing else about a profile is public."""
-    return [{"id": u["id"], "name": u["name"]} for u in _load()["users"]]
-
-
 def admin_list():
     d = _load()
     users = [{"id": u["id"], "name": u["name"], "created": u.get("created"), "facts": len(memory(u["id"]))}
@@ -163,11 +158,14 @@ def _cookie_value(u):
     return f"{u['id']}.{sig}"
 
 
-def login(uid, pin):
-    """Returns the cookie value, or None for a wrong PIN."""
-    for u in _load()["users"]:
-        if u["id"] == uid and _pin_ok(pin, u["pin"]):
-            return _cookie_value(u)
+def login(name, pin):
+    """Returns the cookie value, or None for an unknown name or a wrong PIN (indistinguishable)."""
+    name = str(name).strip().lower()
+    u = next((u for u in _load()["users"] if u["name"].lower() == name), None)
+    if u and _pin_ok(pin, u["pin"]):
+        return _cookie_value(u)
+    if not u:
+        _pin_hash(pin)  # same work as a wrong PIN, so timing does not reveal which names exist
     return None
 
 

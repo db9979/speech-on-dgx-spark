@@ -419,7 +419,7 @@ body.inchat #fab{display:none}
 </form></div>
 <div id="profmodal" class="modal" style="display:none"><div class="card modalcard">
   <div id="profin"><h2 style="margin-top:0">Profil wählen</h2><div class="mut" style="font-size:13px">Angemeldet merkt sich der Assistent Dinge nur für dich, und deine Gespräche bleiben in deinem Profil.</div>
-    <label>Name</label><select id="profsel"></select>
+    <label>Name</label><input id="profuser" autocomplete="username" autocapitalize="off">
     <label>PIN</label><input type="password" id="profpin" autocomplete="current-password">
     <div class="row" style="margin-top:14px"><button class="b p" id="proflogin">Anmelden</button><button class="b" type="button" onclick="closeProf()">Abbrechen</button><span id="profmsg" class="err"></span></div></div>
   <div id="profout"><h2 style="margin-top:0" id="profhead"></h2><div class="mut" style="font-size:13px">Das weiß der Assistent über dich. Sag ihm „Merk dir …“ oder „Vergiss …“, oder lösche hier.</div>
@@ -913,14 +913,12 @@ window.forgetFact=async id=>{await api('/api/profile/memory/'+encodeURIComponent
 $('profbtn').onclick=async()=>{$('profmsg').textContent='';$('profmodal').style.display='grid';
   $('profin').style.display=PROFILE?'none':'block';$('profout').style.display=PROFILE?'block':'none';
   if(PROFILE){try{await showFacts()}catch{setProfile(null);$('profbtn').onclick()}return}
-  try{const l=await (await api('/api/profiles')).json();
-    $('profsel').innerHTML=l.map(u=>`<option value="${esc(u.id)}">${esc(u.name)}</option>`).join('');
-    if(!l.length)$('profmsg').textContent=t('Noch keine Profile. Der Admin legt sie unter „Profile“ an.','No profiles yet. The admin creates them under "Profiles".');
-    $('profpin').value='';setTimeout(()=>$('profpin').focus(),50)}catch(e){$('profmsg').textContent=e.message}};
+  $('profpin').value='';setTimeout(()=>$($('profuser').value?'profpin':'profuser').focus(),50)};
+$('profuser').onkeydown=e=>{if(e.key==='Enter')$('profpin').focus()};
 $('profpin').onkeydown=e=>{if(e.key==='Enter')$('proflogin').click()};
-$('proflogin').onclick=async()=>{try{await api('/api/profile/login',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({id:$('profsel').value,pin:$('profpin').value})});
+$('proflogin').onclick=async()=>{try{await api('/api/profile/login',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({name:$('profuser').value,pin:$('profpin').value})});
     const who=await (await fetch('/api/whoami')).json();setProfile(who.profile);closeProf()}
-  catch{$('profmsg').textContent=t('Falsche PIN.','Wrong PIN.')}};
+  catch{$('profmsg').textContent=t('Name oder PIN falsch.','Wrong name or PIN.')}};
 $('proflogout').onclick=async()=>{await fetch('/api/profile/logout',{method:'POST'});setProfile(null);closeProf()};
 $('factclear').onclick=async()=>{if(!confirm(t('Alles vergessen, was sich der Assistent über dich gemerkt hat?','Forget everything the assistant remembered about you?')))return;
   await api('/api/profile/memory',{method:'DELETE'});showFacts()};

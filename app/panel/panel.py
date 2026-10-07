@@ -289,18 +289,13 @@ def logout():
 # ---------------------------------------------------------------- profiles
 # Who is talking to the assistant. A browser logs in to a profile with its PIN (cookie), a speaker
 # sends its device key. Everything stored for a profile is only reachable through that login.
-@app.get("/api/profiles", dependencies=[Depends(assistant)])
-def profile_list():
-    return profiles.public_list()
-
-
 @app.post("/api/profile/login", dependencies=[Depends(assistant)])
 async def profile_login(request: Request):
     body = await request.json()
-    value = profiles.login(str(body.get("id", "")), str(body.get("pin", "")))
+    value = profiles.login(str(body.get("name", "")), str(body.get("pin", "")))
     if not value:
         await asyncio.sleep(1)  # slows down guessing
-        raise HTTPException(401, "wrong PIN")
+        raise HTTPException(401, "wrong name or PIN")
     r = Response('{"ok": true}', media_type="application/json")
     r.set_cookie(profiles.COOKIE, value, max_age=365 * 86400, httponly=True, samesite="lax")
     return r
