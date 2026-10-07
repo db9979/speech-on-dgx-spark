@@ -5,6 +5,7 @@ a request comes only from its login cookie or its device key, never from anythin
 
     USERS_DIR/profiles.json   {"users": [...], "devices": [...]}
     USERS_DIR/secret          signs the login cookies
+    USERS_DIR/seen.json       when and from where each device key was last used
     USERS_DIR/<user id>/memory.json   [{"id", "text", "created"}]
     USERS_DIR/<user id>/settings.json {conversation settings, see SETTINGS}
     USERS_DIR/<user id>/convos.json   [{"id", "title", "updated", "msgs": [{"role", "content"}]}]
@@ -87,7 +88,9 @@ def admin_list():
     d = _load()
     users = [{"id": u["id"], "name": u["name"], "created": u.get("created"), "facts": len(memory(u["id"]))}
              for u in d["users"]]
-    devices = [{k: v[k] for k in ("id", "name", "user", "created") if k in v} for v in d["devices"]]
+    last = seen()
+    devices = [dict({k: v[k] for k in ("id", "name", "user", "created") if k in v}, last=last.get(v["id"]))
+               for v in d["devices"]]
     return {"users": users, "devices": devices}
 
 
@@ -158,9 +161,20 @@ def delete_device(did):
 
 
 # ---------------------------------------------------------------- who is asking
-def _cookie_value(u):
-    sig = hmac.new(_secret(), (u["id"] + u["pin"]).encode(), hashlib.sha256).hexdigest()
-    return f"{u['id']}.{sig}"
+# A browser login is "<user id>.<issued>.<signature>". It ends after SESSION_DAYS without use (the
+# panel renews it while it is used), when the PIN changes, or with "log out everywhere" (epoch).
+SESSION_DAYS = 90
+RENEW_AFTER = 86400
+
+
+def _sign(u, issued):
+    msg = f"{u['id']}|{u['pin']}|{u.get('epoch', 0)}|{issued}"
+    return hmac.new(_secret(), msg.encode(), hashlib.sha256).hexdigest()
+
+
+def _cookie_value(u, issued=None):
+    issued = int(issued or time.time())
+    return f"{u['id']}.{issued}.{_sign(u, issued)}"
 
 
 def login(name, pin):
@@ -179,6 +193,67 @@ def by_id(uid):
     return {"id": u["id"], "name": u["name"]} if u else None
 
 
+def _cookie_user(d, raw):
+    """(user, issued) of a valid browser login, else (None, 0)."""
+    parts = raw.split(".")
+    if len(parts) != 3 or not parts[1].isdigit():
+        return None, 0
+    uid, issued, sig = parts[0], int(parts[1]), parts[2]
+    u = next((u for u in d["users"] if u["id"] == uid), None)
+    if not u or time.time() - issued > SESSION_DAYS * 86400 or not secrets.compare_digest(sig, _sign(u, issued)):
+        return None, 0
+    return u, issued
+
+
+def renewed_cookie(request):
+    """A fresh cookie value when this request's login is valid and older than a day, else None."""
+    d = _load()
+    u, issued = _cookie_user(d, request.cookies.get(COOKIE, ""))
+    if u and time.time() - issued > RENEW_AFTER and not request.headers.get(DEVICE_HEADER):
+        return _cookie_value(u)
+    return None
+
+
+def end_sessions(uid):
+    """Logs this profile out in every browser (device keys stay)."""
+    with _lock:
+        d = _load()
+        for u in d["users"]:
+            if u["id"] == uid:
+                u["epoch"] = int(u.get("epoch", 0)) + 1
+                _write(_path("profiles.json"), d)
+                return True
+        return False
+
+
+# last use of each device key: kept in memory, written at most every SEEN_EVERY seconds
+SEEN_EVERY = 600
+_seen, _seen_written = {}, [0.0]
+
+
+def _note_device(did, request):
+    now = time.time()
+    ip = request.client.host if getattr(request, "client", None) else ""
+    _seen[did] = {"t": int(now), "ip": ip}
+    if now - _seen_written[0] > SEEN_EVERY:
+        _seen_written[0] = now
+        try:
+            with _lock:
+                _write(_path("seen.json"), dict(seen(), **_seen))
+        except OSError:
+            pass
+
+
+def seen():
+    """{device id: {"t", "ip"}}: when and from where each device key was last used."""
+    try:
+        with open(_path("seen.json")) as f:
+            d = json.load(f)
+    except (OSError, ValueError):
+        d = {}
+    return dict(d if isinstance(d, dict) else {}, **_seen)
+
+
 def current(request):
     """{"id", "name"} of the profile behind this request (device key first, then cookie), or None."""
     d = _load()
@@ -186,15 +261,23 @@ def current(request):
     if token:
         h = hashlib.sha256(token.encode()).hexdigest()
         dev = next((x for x in d["devices"] if secrets.compare_digest(x["token"], h)), None)
-        uid = dev and dev["user"]
-    else:
-        raw = request.cookies.get(COOKIE, "")
-        uid = raw.split(".", 1)[0]
-        u = next((u for u in d["users"] if u["id"] == uid), None)
-        if not u or not secrets.compare_digest(raw, _cookie_value(u)):
+        if not dev:
             return None
+        _note_device(dev["id"], request)
+        uid = dev["user"]
+    else:
+        u, _ = _cookie_user(d, request.cookies.get(COOKIE, ""))
+        if not u:
+            return None
+        uid = u["id"]
     u = next((u for u in d["users"] if u["id"] == uid), None)
     return {"id": u["id"], "name": u["name"]} if u else None
+
+
+def own_devices(uid):
+    last = seen()
+    return [{"id": x["id"], "name": x["name"], "created": x.get("created"), "last": last.get(x["id"])}
+            for x in _load()["devices"] if x.get("user") == uid]
 
 
 # ---------------------------------------------------------------- conversation settings

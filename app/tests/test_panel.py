@@ -173,5 +173,89 @@ class Learning(unittest.TestCase):
         self.assertEqual(asyncio.run(chat.learn_once()), 0)  # read once only
 
 
+class Security(unittest.TestCase):
+    def setUp(self):
+        import guard
+        guard.reset()
+
+    tearDown = setUp
+
+    def test_lockout_after_wrong_pins(self):
+        profile("Lotte", "5678")
+        g = TestClient(panel.app)
+        codes = [g.post("/api/profile/login", json={"name": "Lotte", "pin": "0000"}).status_code for _ in range(6)]
+        self.assertEqual(codes[:5], [401] * 5)
+        self.assertEqual(codes[5], 429)  # even the right PIN waits now
+        self.assertEqual(g.post("/api/profile/login", json={"name": "Lotte", "pin": "5678"}).status_code, 429)
+        self.assertEqual(g.post("/api/login", json={"password": "secret-admin"}).status_code, 429)
+
+    def test_foreign_page_cannot_change_anything(self):
+        p = profile("Fritz")
+        evil = {"origin": "http://other.example:8080"}
+        self.assertEqual(p.delete("/api/profile/memory", headers=evil).status_code, 403)
+        self.assertEqual(ADMIN.put("/api/config", json={}, headers=evil).status_code, 403)
+        self.assertEqual(p.delete("/api/profile/memory", headers={"origin": "http://testserver"}).status_code, 200)
+        self.assertEqual(p.delete("/api/profile/memory", headers={"sec-fetch-site": "same-site"}).status_code, 403)
+        # scripts without cookies (device key, HTTP Basic) are not affected
+        self.assertEqual(TestClient(panel.app).post("/api/chat", headers=evil, json={
+            "messages": [{"role": "user", "content": "Hallo"}]}).status_code, 200)
+
+    def test_behind_reverse_proxy(self):
+        """Like a proxy in the LAN: other Host, X-Forwarded-*; the page itself still works."""
+        p = profile("Paul")
+        proxied = {"origin": "https://speech.example.org", "host": "tars:31080", "sec-fetch-site": "same-origin"}
+        self.assertEqual(p.delete("/api/profile/memory", headers=proxied).status_code, 200)
+        g = TestClient(panel.app, client=("192.168.1.5", 50000))
+        for i in range(5):  # another internet address behind the same proxy is not locked out
+            g.post("/api/login", json={"password": "x"}, headers={"x-forwarded-for": "203.0.113.9"})
+        self.assertEqual(g.post("/api/login", json={"password": "x"}, headers={"x-forwarded-for": "203.0.113.9"}).status_code, 429)
+        r = g.post("/api/login", json={"password": "secret-admin"},
+                   headers={"x-forwarded-for": "198.51.100.7", "x-forwarded-proto": "https"})
+        self.assertEqual(r.status_code, 200)
+        self.assertIn("secure", r.headers["set-cookie"].lower())
+
+    def test_logins_expire_and_log_out_everywhere(self):
+        a = profile("Ella")
+        b = TestClient(panel.app)
+        b.post("/api/profile/login", json={"name": "Ella", "pin": "1234"})
+        self.assertEqual(a.post("/api/profile/logout-all").status_code, 200)
+        self.assertIsNone(b.get("/api/whoami").json()["profile"])
+        self.assertEqual(a.get("/api/whoami").json()["profile"]["name"], "Ella")
+        u = next(x for x in profiles._load()["users"] if x["name"] == "Ella")
+        old = TestClient(panel.app)
+        old.cookies.set(profiles.COOKIE, profiles._cookie_value(u, time.time() - 91 * 86400))
+        self.assertIsNone(old.get("/api/whoami").json()["profile"])
+
+    def test_secrets_encrypted_on_disk(self):
+        import homeassistant
+        import vault
+        p = profile("Sina")
+        r = p.put("/api/profile/homeassistant", json={"url": f"http://127.0.0.1:{helpers.HA_PORT}",
+                                                     "token": helpers.HA_TOKEN})
+        self.assertEqual(r.status_code, 200, r.text)
+        uid = p.get("/api/whoami").json()["profile"]["id"]
+        raw = open(profiles._path(uid, "homeassistant.json")).read()
+        self.assertNotIn(helpers.HA_TOKEN, raw)
+        self.assertIn(vault.PREFIX, raw)
+        self.assertEqual(homeassistant.get(uid)["token"], helpers.HA_TOKEN)
+        self.assertNotIn(helpers.HA_TOKEN, p.get("/api/profile/homeassistant").text)
+
+    def test_change_log_and_devices(self):
+        p = profile("Theo")
+        uid = p.get("/api/whoami").json()["profile"]["id"]
+        token = ADMIN.post("/api/admin/devices", json={"name": "Küche", "user": uid}).json()["token"]
+        TestClient(panel.app).get("/api/whoami", headers={profiles.DEVICE_HEADER: token})
+        dev = p.get("/api/profile/security").json()["devices"]
+        self.assertEqual(dev[0]["name"], "Küche")
+        self.assertTrue(dev[0]["last"])
+        other = profile("Uwe")
+        self.assertEqual(other.delete(f"/api/profile/devices/{dev[0]['id']}").status_code, 404)
+        self.assertEqual(p.delete(f"/api/profile/devices/{dev[0]['id']}").json()["devices"], [])
+        log = ADMIN.get("/api/audit").json()["events"]
+        self.assertTrue(any(e.get("path") == "/api/admin/devices" and e.get("who") == "admin" for e in log))
+        self.assertTrue(any(e["event"] == "profile_login" and e.get("name") == "Theo" for e in log))
+        self.assertEqual(p.get("/api/audit").status_code, 401)
+
+
 if __name__ == "__main__":
     unittest.main()

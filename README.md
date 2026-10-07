@@ -2,7 +2,7 @@
 
 **English** | [Deutsch](README.de.md)
 
-Version V01.0.34 · Idea: Dominik Bornhäußer
+Version V01.0.37 · Idea: Dominik Bornhäußer
 
 One script installs **Qwen3-ASR** (speech recognition) and **Qwen3-TTS** (text to speech) as systemd services on an NVIDIA DGX Spark (GB10), together with a web panel for configuration and monitoring. It runs alongside [dgx-spark-qwen38](https://github.com/hasso5703/dgx-spark-qwen38).
 
@@ -97,6 +97,15 @@ Running the script again updates code and Python environments. The existing conf
 ## Self-test
 
 Every install and update runs the panel's self-test (`app/tests`) against fake LLM, TTS and Home Assistant servers in a throw-away directory: login and access, that profiles never see each other's memory, documents, conversations or Home Assistant, the chat tools, learning from conversations, calendar and text cleaning. The result is in the update log; a failure is reported but does not stop the update. By hand: `cd /opt/speech-spark/app && sudo /opt/speech-spark/venv-panel/bin/python -m unittest discover -s tests -t .`
+
+## Security
+
+- **Lockout after wrong attempts**: after 5 wrong passwords or PINs from one address (or 10 for one profile name, from anywhere) the panel waits 1 minute, twice as long with every further lockout, at most an hour. Behind a reverse proxy in the LAN (e.g. Synology) the real address from `X-Forwarded-For` counts, so one guesser cannot lock everybody out.
+- **Logins expire**: the admin login after 7 days without use, a profile login after 90 days; while in use they renew themselves. *Me → Security → Log out everywhere* ends the profile's login in all other browsers. On https (also behind the proxy) the cookies are `Secure`.
+- **No changes from foreign pages**: changing requests with a login cookie must come from the panel's own page (`Sec-Fetch-Site`/`Origin`). Scripts with a device key or HTTP Basic are not affected.
+- **Secrets encrypted**: calendar passwords and Home Assistant tokens are stored encrypted in the profile folders; the key is kept apart in `/var/lib/speech-spark/state/secret.key`.
+- **Devices**: *Users → Profiles and devices* and *Me → Security* show when and from where each device key was last used; one click blocks it.
+- **Change log**: *Overview → Logs → Change log* lists logins, wrong attempts, lockouts and every change with time, address and who (`/var/lib/speech-spark/state/audit.log`).
 
 ## Uninstalling
 

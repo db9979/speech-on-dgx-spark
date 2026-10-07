@@ -11,16 +11,20 @@ import time
 
 import psutil
 import uvicorn
-from fastapi import FastAPI, HTTPException
+from fastapi import FastAPI, HTTPException, Request
 from fastapi.responses import FileResponse
 
 sys.path.insert(0, os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
 from common import load_config, quiet_access_log  # noqa: E402
-from core import SERVICES, STATIC  # noqa: E402
+from core import ADMIN_IDLE, COOKIE, SERVICES, STATIC, admin_cookie_ok, renewed_admin_cookie  # noqa: E402
 from monitor import gpu_stats, history, service_health, system_stats  # noqa: E402
 from chat import LEARN_EVERY, learn_once  # noqa: E402
 from update import update_lock  # noqa: E402
 import account  # noqa: E402
+import calendars  # noqa: E402
+import guard  # noqa: E402
+import homeassistant  # noqa: E402
+import profiles  # noqa: E402
 import admin  # noqa: E402
 import chat  # noqa: E402
 import update  # noqa: E402
@@ -29,6 +33,37 @@ app = FastAPI(title="Speech on DGX Spark")
 for _module in (account, admin, chat, update):
     app.include_router(_module.router)
 app.middleware("http")(update_lock)
+
+
+@app.middleware("http")
+async def sessions(request: Request, call_next):
+    """Refuses changes from foreign pages, writes the change log and renews logins in use."""
+    if not guard.same_origin(request, (COOKIE, profiles.COOKIE)):
+        guard.log("foreign_page_refused", ip=guard.client_ip(request), path=request.url.path,
+                  origin=request.headers.get("origin", ""))
+        return guard.foreign_page()
+    response = await call_next(request)
+    path = request.url.path
+    if guard.logged(path, request.method):
+        prof = profiles.current(request)
+        basic = request.headers.get("authorization", "").startswith("Basic ") and response.status_code < 400
+        who = "admin" if admin_cookie_ok(request) or basic else (prof or {}).get("name", "guest")
+        guard.log("change", ip=guard.client_ip(request), who=who, uid=(prof or {}).get("id"),
+                  method=request.method, path=path, status=response.status_code)
+    if path.startswith("/api/") and response.status_code < 400:
+        admin_value, user_value = renewed_admin_cookie(request), profiles.renewed_cookie(request)
+        if admin_value:
+            response.set_cookie(COOKIE, admin_value, max_age=ADMIN_IDLE, httponly=True, samesite="strict")
+        if user_value:
+            response.set_cookie(profiles.COOKIE, user_value, max_age=profiles.SESSION_DAYS * 86400,
+                                httponly=True, samesite="lax")
+    if guard.https(request):  # on https (also behind a proxy) logins never travel over plain http
+        raw = response.headers.getlist("set-cookie") if hasattr(response.headers, "getlist") else []
+        if raw and any("secure" not in c.lower() for c in raw):
+            del response.headers["set-cookie"]
+            for c in raw:
+                response.headers.append("set-cookie", c if "secure" in c.lower() else c + "; Secure")
+    return response
 
 
 @app.on_event("startup")
@@ -49,6 +84,17 @@ async def sampler():
                 print("sampler:", e, flush=True)
             await asyncio.sleep(3)
     asyncio.create_task(loop())
+
+
+@app.on_event("startup")
+def seal_secrets():
+    """Calendar passwords and Home Assistant tokens from older versions get encrypted once."""
+    for uid in profiles.user_ids():
+        try:
+            calendars.seal_stored(uid)
+            homeassistant.seal_stored(uid)
+        except Exception as e:
+            print("sealing secrets:", type(e).__name__, e, flush=True)
 
 
 @app.on_event("startup")

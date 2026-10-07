@@ -21,6 +21,7 @@ import time
 import httpx
 
 import profiles
+import vault
 
 _lock = threading.Lock()
 
@@ -29,13 +30,21 @@ def _file(uid):
     return profiles._path(uid, "homeassistant.json")
 
 
-def get(uid):
+def _raw(uid):
     try:
         with open(_file(uid)) as f:
             d = json.load(f)
         return d if isinstance(d, dict) and d.get("url") and d.get("token") else None
     except (OSError, ValueError):
         return None
+
+
+def get(uid):
+    """The connection with the plain token (stored encrypted, see vault.py)."""
+    d = _raw(uid)
+    if d:
+        d["token"] = vault.open_(d["token"])
+    return d if d and d["token"] else None
 
 
 def public(uid):
@@ -60,8 +69,16 @@ def entry(body, old=None):
 
 def save(uid, item):
     with _lock:
-        profiles._write(_file(uid), dict(item, updated=int(time.time())))
+        profiles._write(_file(uid), dict(item, token=vault.seal(item["token"]), updated=int(time.time())))
     return public(uid)
+
+
+def seal_stored(uid):
+    """Encrypts a token that an older version stored in plain text."""
+    d = _raw(uid)
+    if d and not str(d["token"]).startswith(vault.PREFIX) and vault.available():
+        with _lock:
+            profiles._write(_file(uid), dict(d, token=vault.seal(d["token"])))
 
 
 def remove(uid):

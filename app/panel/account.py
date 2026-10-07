@@ -12,12 +12,14 @@ from fastapi.security import HTTPBasicCredentials
 
 sys.path.insert(0, os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
 import documents  # noqa: E402
+import guard  # noqa: E402
 import speakers  # noqa: E402
 import calendars  # noqa: E402
 import profiles  # noqa: E402
 import homeassistant  # noqa: E402
 from common import load_config  # noqa: E402
 from core import (  # noqa: E402
+    ADMIN_IDLE,
     COOKIE,
     NO_BASIC,
     _session_token,
@@ -55,11 +57,15 @@ def whoami(request: Request, creds: HTTPBasicCredentials | None = Depends(securi
 @router.post("/api/login")
 async def login(request: Request):
     body = await request.json()
+    guard.check(request)
     if not check_password(str(body.get("password", ""))):
+        guard.failed(request, what="admin_login")
         await asyncio.sleep(1)  # slows down guessing
         raise HTTPException(401, "wrong password")
+    guard.succeeded(request)
+    guard.log("admin_login", ip=guard.client_ip(request))
     r = Response('{"ok": true}', media_type="application/json")
-    r.set_cookie(COOKIE, _session_token(), max_age=30 * 86400, httponly=True, samesite="strict")
+    r.set_cookie(COOKIE, _session_token(), max_age=ADMIN_IDLE, httponly=True, samesite="strict")
     r.delete_cookie(NO_BASIC)
     return r
 
@@ -78,12 +84,17 @@ def logout():
 @router.post("/api/profile/login")  # open: without chat.public it is the way in
 async def profile_login(request: Request):
     body = await request.json()
-    value = profiles.login(str(body.get("name", "")), str(body.get("pin", "")))
+    name = str(body.get("name", ""))[:60]
+    guard.check(request, name)
+    value = profiles.login(name, str(body.get("pin", "")))
     if not value:
+        guard.failed(request, name, what="profile_login")
         await asyncio.sleep(1)  # slows down guessing
         raise HTTPException(401, "wrong name or PIN")
+    guard.succeeded(request, name)
+    guard.log("profile_login", ip=guard.client_ip(request), name=name.strip(), uid=value.split(".", 1)[0])
     r = Response('{"ok": true}', media_type="application/json")
-    r.set_cookie(profiles.COOKIE, value, max_age=365 * 86400, httponly=True, samesite="lax")
+    r.set_cookie(profiles.COOKIE, value, max_age=profiles.SESSION_DAYS * 86400, httponly=True, samesite="lax")
     return r
 
 
@@ -92,6 +103,40 @@ def profile_logout():
     r = Response('{"ok": true}', media_type="application/json")
     r.delete_cookie(profiles.COOKIE)
     return r
+
+
+# The profile's own logins: its device keys (with last use), recent logins, log out everywhere.
+LOGIN_EVENTS = ("profile_login", "profile_login_failed", "profile_logout_all", "profile_device_removed")
+
+
+@router.get("/api/profile/security", dependencies=[Depends(assistant)])
+def profile_security(prof=Depends(own_profile)):
+    mine = lambda x: x.get("uid") == prof["id"] or (x.get("event") == "profile_login_failed"
+                                                    and str(x.get("name", "")).strip().lower() == prof["name"].lower())
+    events = [x for x in guard.read(3000) if x.get("event") in LOGIN_EVENTS and mine(x)][:8]
+    return {"devices": profiles.own_devices(prof["id"]), "events": events}
+
+
+@router.post("/api/profile/logout-all", dependencies=[Depends(assistant)])
+def profile_logout_all(request: Request, prof=Depends(own_profile)):
+    """Ends the login in every browser; this one gets a fresh login and stays signed in."""
+    profiles.end_sessions(prof["id"])
+    guard.log("profile_logout_all", ip=guard.client_ip(request), name=prof["name"], uid=prof["id"])
+    u = next(u for u in profiles._load()["users"] if u["id"] == prof["id"])
+    r = Response('{"ok": true}', media_type="application/json")
+    if not request.headers.get(profiles.DEVICE_HEADER):
+        r.set_cookie(profiles.COOKIE, profiles._cookie_value(u), max_age=profiles.SESSION_DAYS * 86400,
+                     httponly=True, samesite="lax")
+    return r
+
+
+@router.delete("/api/profile/devices/{did}", dependencies=[Depends(assistant)])
+def profile_remove_device(did: str, request: Request, prof=Depends(own_profile)):
+    if not any(x["id"] == did for x in profiles.own_devices(prof["id"])):
+        raise HTTPException(404, "no such device")
+    profiles.delete_device(did)
+    guard.log("profile_device_removed", ip=guard.client_ip(request), name=prof["name"], uid=prof["id"], device=did)
+    return {"devices": profiles.own_devices(prof["id"])}
 
 
 @router.get("/api/profile/memory", dependencies=[Depends(assistant)])

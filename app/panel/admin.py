@@ -15,11 +15,13 @@ from fastapi import APIRouter, Depends, File, Form, HTTPException, Request, Uplo
 from fastapi.responses import FileResponse, Response, StreamingResponse
 
 sys.path.insert(0, os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
+import guard  # noqa: E402
 import speakers  # noqa: E402
 import profiles  # noqa: E402
 from common import CONFIG_PATH, estimate_gib, journal, load_config  # noqa: E402
 from core import (  # noqa: E402
     ASR_ENGINE_KEYS,
+    ADMIN_IDLE,
     COOKIE,
     DEFAULTS,
     DESIGN_KEYS,
@@ -45,6 +47,13 @@ from monitor import gpu_stats, history, lane_fraction, service_health, system_st
 from chat import web_search  # noqa: E402
 
 router = APIRouter()
+
+
+@router.get("/api/audit", dependencies=[Depends(auth)])
+def audit(limit: int = 300):
+    """The change log: logins, failed logins, lockouts and every change, newest first."""
+    names = {u: (profiles.by_id(u) or {}).get("name") for u in profiles.user_ids()}
+    return {"events": guard.read(max(1, min(limit, 2000))), "names": names}
 
 
 @router.get("/api/admin/profiles", dependencies=[Depends(auth)])
@@ -112,7 +121,9 @@ async def change_password(request: Request):
     new = str(body.get("new", ""))
     if len(new) < 6:
         raise HTTPException(400, "the new password needs at least 6 characters")
+    guard.check(request)
     if password_set() and not check_password(str(body.get("old", ""))):
+        guard.failed(request, what="admin_password")
         await asyncio.sleep(1)
         raise HTTPException(401, "current password is wrong")
     salt = secrets.token_bytes(16)
@@ -122,7 +133,8 @@ async def change_password(request: Request):
         f.write(f"{salt.hex()} {_hash(new, salt)}\n")
     os.replace(tmp, PASSWORD_FILE)
     r = Response('{"ok": true}', media_type="application/json")
-    r.set_cookie(COOKIE, _session_token(), max_age=30 * 86400, httponly=True, samesite="strict")
+    r.set_cookie(COOKIE, _session_token(), max_age=ADMIN_IDLE, httponly=True, samesite="strict")
+    guard.log("admin_password_changed", ip=guard.client_ip(request))
     return r
 
 

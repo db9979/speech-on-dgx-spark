@@ -2,7 +2,7 @@
 
 [English](README.md) | **Deutsch**
 
-Version V01.0.34 · Idee: Dominik Bornhäußer
+Version V01.0.37 · Idee: Dominik Bornhäußer
 
 Ein Skript installiert **Qwen3-ASR** (Spracherkennung) und **Qwen3-TTS** (Sprachausgabe) als systemd-Dienste auf einer NVIDIA DGX Spark (GB10). Dazu kommt eine Weboberfläche für Konfiguration und Monitoring. Das Setup läuft neben [dgx-spark-qwen38](https://github.com/hasso5703/dgx-spark-qwen38).
 
@@ -97,6 +97,15 @@ Ein erneuter Aufruf aktualisiert Code und Python-Umgebungen. Die bestehende Konf
 ## Selbsttest
 
 Jede Installation und jedes Update führt den Selbsttest des Panels aus (`app/tests`), gegen nachgebaute LLM-, TTS- und Home-Assistant-Server in einem Wegwerf-Ordner: Anmeldung und Zugang, dass Profile nie Gedächtnis, Dokumente, Gespräche oder Home Assistant eines anderen sehen, die Werkzeuge im Gespräch, das Lernen aus Gesprächen, Kalender und Textbereinigung. Das Ergebnis steht im Update-Protokoll; ein Fehler wird gemeldet, hält das Update aber nicht auf. Von Hand: `cd /opt/speech-spark/app && sudo /opt/speech-spark/venv-panel/bin/python -m unittest discover -s tests -t .`
+
+## Sicherheit
+
+- **Sperre bei falschen Versuchen**: Nach 5 falschen Passwörtern oder PINs von einer Adresse (oder 10 für einen Profilnamen, egal von wo) wartet das Panel erst 1 Minute, bei jeder weiteren Sperre doppelt so lange, höchstens eine Stunde. Hinter einem Reverse-Proxy im LAN (z. B. Synology) zählt die echte Adresse aus `X-Forwarded-For`, damit ein Ratender nicht alle aussperrt.
+- **Anmeldungen laufen ab**: Die Admin-Anmeldung nach 7 Tagen ohne Nutzung, eine Profil-Anmeldung nach 90 Tagen; solange sie benutzt wird, verlängert sie sich. Unter *Ich → Sicherheit* meldet „Überall abmelden“ das Profil in allen anderen Browsern ab. Auf https (auch hinter dem Proxy) sind die Cookies `Secure`.
+- **Keine Änderungen von fremden Seiten**: Ändernde Anfragen mit Login-Cookie müssen von der Panel-Seite selbst kommen (`Sec-Fetch-Site`/`Origin`). Skripte mit Geräteschlüssel oder HTTP Basic betrifft das nicht.
+- **Geheimnisse verschlüsselt**: Kalender-Passwörter und Home-Assistant-Tokens liegen verschlüsselt in den Profilordnern; der Schlüssel liegt getrennt in `/var/lib/speech-spark/state/secret.key`.
+- **Geräte**: *Nutzer → Profile und Geräte* und *Ich → Sicherheit* zeigen, wann und von wo jeder Geräteschlüssel zuletzt benutzt wurde; ein Klick sperrt ihn.
+- **Änderungsprotokoll**: *Übersicht → Logs → Änderungsprotokoll* zeigt Anmeldungen, falsche Versuche, Sperren und jede Änderung mit Zeit, Adresse und wer es war (`/var/lib/speech-spark/state/audit.log`).
 
 ## Deinstallieren
 

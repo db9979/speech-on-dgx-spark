@@ -17,7 +17,7 @@ function ptab(id){document.querySelectorAll('#ptabs button').forEach(b=>b.classL
   document.querySelectorAll('#profmodal .ptab').forEach(x=>x.classList.toggle('on',x.id===id))}
 function meTabs(){const items=[['setbox',t('Gespräch','Conversation'),!GATE],['loginbox',t('Anmelden','Sign in'),!PROFILE],
     ['factbox',t('Gedächtnis','Memory'),!!PROFILE],['docbox',t('Dokumente','Documents'),PROFILE&&DOCS_ON],['calbox',t('Kalender','Calendar'),PROFILE&&CAL_ON],
-    ['habox',t('Smart Home','Smart home'),PROFILE&&HA_ON],['voicebox',t('Stimme','Voice'),PROFILE&&SPK_ON]].filter(x=>x[2]);
+    ['habox',t('Smart Home','Smart home'),PROFILE&&HA_ON],['voicebox',t('Stimme','Voice'),PROFILE&&SPK_ON],['secbox',t('Sicherheit','Security'),!!PROFILE]].filter(x=>x[2]);
   $('ptabs').innerHTML=items.map(([id,l])=>`<button type="button" data-t="${id}">${esc(l)}</button>`).join('');
   $('ptabs').querySelectorAll('button').forEach(b=>b.onclick=()=>{meLast=b.dataset.t;ptab(b.dataset.t)});return items.map(x=>x[0])}
 let meLast='setbox';
@@ -103,7 +103,7 @@ async function openMe(tab){$('profmsg').textContent='';$('profmodal').style.disp
   $('setscope').textContent=GATE?'':PROFILE?t('Einstellungen gelten auf jedem Gerät dieses Profils; „Hey Spark“ stellt jedes Gerät selbst ein.','Settings apply on every device of this profile; "Hey Spark" is set per device.'):t('Als Gast gelten die Einstellungen nur in diesem Browser. Mit einem Profil merkt sich der Assistent Dinge nur für dich.','As a guest the settings apply only in this browser. With a profile the assistant remembers things just for you.');
   $('proflogout').style.display=PROFILE?'':'none';$('profclose').style.display=GATE?'none':'';
   if(!GATE)renderSet($('setform'),S,saveSet);
-  if(PROFILE){try{await showFacts();await showDocs();await showVoice();await showCal();await showHa()}catch{setProfile(null);openMe('loginbox')}return}
+  if(PROFILE){try{await showFacts();await showDocs();await showVoice();await showCal();await showHa();await showSecurity()}catch{setProfile(null);openMe('loginbox')}return}
   $('profpin').value='';if(tab==='loginbox')setTimeout(()=>$($('profuser').value?'profpin':'profuser').focus(),50)}
 window.openMe=openMe;
 $('profbtn').onclick=()=>openMe(meLast);   // same window and page as the settings button
@@ -112,7 +112,7 @@ $('profpin').onkeydown=e=>{if(e.key==='Enter')$('proflogin').click()};
 $('proflogin').onclick=async()=>{try{await api('/api/profile/login',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({name:$('profuser').value,pin:$('profpin').value})});
     if(GATE){location.reload();return}
     const who=await (await fetch('/api/whoami')).json();setProfile(who.profile);closeProf()}
-  catch{$('profmsg').textContent=t('Name oder PIN falsch.','Wrong name or PIN.')}};
+  catch(e){$('profmsg').textContent=/too many/.test(e.message)?t('Zu viele falsche Versuche. Bitte später noch einmal (','Too many wrong attempts. Please try again later (')+(e.message.match(/in (.+)$/)||['',''])[1]+').':t('Name oder PIN falsch.','Wrong name or PIN.')}};
 $('proflogout').onclick=async()=>{await fetch('/api/profile/logout',{method:'POST'});if(!PUBLIC&&!ADMIN){location.reload();return}setProfile(null);closeProf()};
 $('factclear').onclick=async()=>{if(!confirm(t('Alles vergessen, was sich der Assistent über dich gemerkt hat?','Forget everything the assistant remembered about you?')))return;
   await api('/api/profile/memory',{method:'DELETE'});showFacts()};
@@ -169,3 +169,13 @@ $('setreset').onclick=async()=>{for(const k of Object.keys(SDEF))S[k]=SDEF[k];
   if(PROFILE)await api('/api/profile/settings',{method:'PUT',headers:{'Content-Type':'application/json'},body:JSON.stringify(SDEF)}).catch(()=>{});
   else try{localStorage.removeItem('chatset')}catch{}
   applySet();renderSet($('setform'),S,saveSet)};
+// ---------------------------------------------------------------- security: devices and logins
+const when=s=>s?new Date(s*1000).toLocaleString([], {dateStyle:'short',timeStyle:'short'}):t('noch nie','never');
+async function showSecurity(){const d=await (await api('/api/profile/security')).json();secRender(d.devices);
+  const ev={profile_login:t('Anmeldung','Sign-in'),profile_login_failed:t('Falsche PIN','Wrong PIN'),profile_logout_all:t('Überall abgemeldet','Logged out everywhere'),profile_device_removed:t('Gerät gesperrt','Device blocked')};
+  $('secev').innerHTML=d.events.map(e=>`<li><span>${esc(ev[e.event]||e.event)} <small class="mut">${when(e.t)} · ${esc(e.ip||'')}</small></span></li>`).join('')||`<li class="mut">–</li>`}
+function secRender(devs){$('secdev').innerHTML=devs.map(x=>`<li><span>${esc(x.name)}<br><small class="mut">${t('zuletzt','last used')}: ${x.last?when(x.last.t)+' · '+esc(x.last.ip||''):t('noch nie','never')}</small></span><button class="b" onclick="secDrop('${esc(x.id)}','${esc(x.name)}')">${t('Sperren','Block')}</button></li>`).join('')||`<li class="mut">${t('Keine Geräte mit Schlüssel.','No devices with a key.')}</li>`}
+window.secDrop=async(id,n)=>{if(!confirm(t('Gerät „','Block device "')+n+t('“ sperren? Sein Schlüssel gilt dann nicht mehr.','"? Its key stops working.')))return;
+  secRender((await (await api('/api/profile/devices/'+encodeURIComponent(id),{method:'DELETE'})).json()).devices)};
+$('seclogoutall').onclick=async()=>{if(!confirm(t('Dein Profil in allen anderen Browsern abmelden?','Log your profile out in all other browsers?')))return;
+  try{await api('/api/profile/logout-all',{method:'POST'});$('secmsg').textContent=t('Erledigt.','Done.');showSecurity()}catch(e){$('secmsg').textContent=e.message}};

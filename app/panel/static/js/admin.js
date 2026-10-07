@@ -142,7 +142,17 @@ $('vfile').onchange=()=>{vr.blob=null;$('vplay').style.display='none'};
 $('vadd').onclick=async()=>{const f=vr.blob||$('vfile').files[0];if(!f||!$('vname').value){$('vmsg').textContent=t('Name und Aufnahme (oder Datei) fehlen.','Name and recording (or file) are missing.');return}const fd=new FormData();fd.append('name',$('vname').value);fd.append('text',$('vtext').value);fd.append('file',f,vr.blob?'ref.wav':f.name);
   try{await api('/api/clone-voices',{method:'POST',body:fd});$('vmsg').textContent=t('Hinzugefügt.','Added.');loadClone()}catch(e){$('vmsg').innerHTML=`<span class="err">${esc(e.message)}</span>`}};
 
-async function loadLogs(){const el=$('logout'),txt=await (await api('/api/logs/'+$('logsvc').value+'?lines=300')).text()||t('(leer)','(empty)');
+const AUDIT={admin_login:t('Admin angemeldet','admin signed in'),admin_login_failed:t('Admin-Passwort falsch','wrong admin password'),
+  admin_basic_failed:t('Admin-Passwort (Skript) falsch','wrong admin password (script)'),admin_password_failed:t('altes Passwort falsch','wrong current password'),
+  admin_password_changed:t('Admin-Passwort geändert','admin password changed'),profile_login:t('Profil angemeldet','profile signed in'),
+  profile_login_failed:t('PIN falsch','wrong PIN'),profile_logout_all:t('überall abgemeldet','logged out everywhere'),
+  profile_device_removed:t('Gerät gesperrt','device blocked'),foreign_page_refused:t('fremde Seite abgewiesen','foreign page refused'),
+  backup:t('Sicherung','backup'),restore:t('Wiederherstellung','restore'),watchdog:t('Wächter','watchdog')};
+async function auditText(){const d=await (await api('/api/audit?limit=500')).json();
+  return d.events.slice().reverse().map(e=>{const who=e.who||(e.uid&&d.names[e.uid])||e.name||'';
+    const what=e.event==='change'?`${e.method} ${e.path} → ${e.status}`:(AUDIT[e.event]||e.event)+(e.locked?t(` – gesperrt für ${e.locked} s`,` – locked for ${e.locked} s`):'')+(e.detail?' – '+e.detail:'');
+    return `${new Date(e.t*1000).toLocaleString()}  ${(e.ip||'').padEnd(15)}  ${who?who+': ':''}${what}`}).join('\n')}
+async function loadLogs(){const el=$('logout'),txt=($('logsvc').value==='audit'?await auditText():await (await api('/api/logs/'+$('logsvc').value+'?lines=300')).text())||t('(leer)','(empty)');
   if(el.textContent!==txt)el.textContent=txt;if($('logfollow').checked)el.scrollTop=1e9}
 try{$('logfollow').checked=localStorage.getItem('logfollow')!=='0'}catch{}
 $('logfollow').onchange=()=>{try{localStorage.setItem('logfollow',$('logfollow').checked?'1':'0')}catch{}if($('logfollow').checked)loadLogs()};

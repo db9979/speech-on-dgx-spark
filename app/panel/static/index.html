@@ -343,7 +343,7 @@
   <div class="card"><div class="row" style="justify-content:space-between"><h2 style="margin:0">Update-Protokoll</h2><button class="b" onclick="copyEl('updlog',this)">Kopieren</button></div><pre id="updlog" style="margin-top:12px">–</pre></div>
 </section>
 <section id="logs">
-  <div class="row"><select id="logsvc" style="width:auto"><option value="asr">ASR</option><option value="tts">TTS</option><option value="asr-engine">ASR-Engine</option><option value="tts-engine">TTS-Engine</option><option value="tts-design">VoiceDesign-Engine</option><option value="update">Update</option><option value="panel">Panel</option></select>
+  <div class="row"><select id="logsvc" style="width:auto"><option value="asr">ASR</option><option value="tts">TTS</option><option value="asr-engine">ASR-Engine</option><option value="tts-engine">TTS-Engine</option><option value="tts-design">VoiceDesign-Engine</option><option value="update">Update</option><option value="panel">Panel</option><option value="audit">Änderungsprotokoll</option></select>
     <button class="b" id="logload">Aktualisieren</button><button class="b" onclick="copyEl('logout',this)">Kopieren</button>
     <label class="chk" style="margin:0"><input type="checkbox" id="logfollow" checked> Autoscroll (ans Ende springen, alle 3 s neu laden)</label></div>
   <pre id="logout" style="margin-top:12px">…</pre>
@@ -410,6 +410,11 @@
       <div class="row" style="margin-top:8px"><button class="b p" id="hasave" type="button">Prüfen und speichern</button><button class="b" id="hadel" type="button">Trennen</button></div>
       <label>Ausprobieren</label><div class="rowin"><input id="hatry" placeholder="Wie warm ist es im Wohnzimmer?"><button class="b" id="hatrygo" type="button">Senden</button></div>
       <div id="hamsg" class="fh"></div></div>
+    <div id="secbox" class="ptab"><div class="intro">Wo dein Profil angemeldet ist. Ein Gerät, das du nicht mehr nutzt oder verloren hast, kannst du hier sperren.</div>
+      <label>Geräte mit Schlüssel</label><ul class="facts" id="secdev"></ul>
+      <label>Letzte Anmeldungen</label><ul class="facts small" id="secev"></ul>
+      <div class="row" style="margin-top:8px"><button class="b" id="seclogoutall" type="button">Überall abmelden</button><span id="secmsg" class="fh"></span></div>
+      <div class="fh">Meldet dein Profil in allen anderen Browsern ab; dieser bleibt angemeldet. Geräte mit Schlüssel (Lautsprecher, Uhr) sperrst du oben einzeln. Eine Anmeldung endet außerdem nach 90 Tagen ohne Nutzung.</div></div>
 </div>
   </div>
   <div class="row mefoot"><button class="b" id="proflogout" type="button">Abmelden</button><button class="b p" id="profclose" type="button" onclick="closeProf()">Schließen</button></div>

@@ -24,6 +24,7 @@ import icalendar
 import recurring_ical_events
 
 import profiles
+import vault
 
 MAX_TOPICS = 3
 MAX_CALENDARS = 8
@@ -51,7 +52,8 @@ def get(uid):
     if not cals and d.get("url"):
         cals = [{"id": "c1", "name": "Kalender", "url": d["url"], "user": d.get("user", ""),
                  "password": d.get("password", "")}]
-    return {"calendars": [x for x in cals if isinstance(x, dict) and x.get("url")],
+    cals = [dict(x, password=vault.open_(x.get("password", ""))) for x in cals if isinstance(x, dict) and x.get("url")]
+    return {"calendars": cals,
             "topics": d.get("topics", []) if isinstance(d.get("topics"), list) else []}
 
 
@@ -65,7 +67,8 @@ def public(uid):
 
 def _store(uid, d):
     with _lock:
-        profiles._write(_file(uid), {"calendars": d["calendars"], "topics": d["topics"], "updated": int(time.time())})
+        cals = [dict(x, password=vault.seal(x.get("password", ""))) for x in d["calendars"]]
+        profiles._write(_file(uid), {"calendars": cals, "topics": d["topics"], "updated": int(time.time())})
         _drop(uid)
 
 
@@ -105,6 +108,19 @@ def set_topics(uid, topics):
                    if str(x).strip()][:MAX_TOPICS]
     _store(uid, d)
     return public(uid)
+
+
+def seal_stored(uid):
+    """Encrypts passwords that an older version stored in plain text."""
+    try:
+        with open(_file(uid)) as f:
+            raw = json.load(f)
+    except (OSError, ValueError):
+        return
+    plain = [x for x in raw.get("calendars") or [] if isinstance(x, dict) and x.get("password")
+             and not str(x["password"]).startswith(vault.PREFIX)]
+    if (plain or raw.get("password")) and vault.available():
+        _store(uid, get(uid))
 
 
 def forget(uid):

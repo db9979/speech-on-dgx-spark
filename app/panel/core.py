@@ -6,11 +6,13 @@ import hmac
 import secrets
 import subprocess
 import sys
+import time
 
 from fastapi import Depends, HTTPException, Request
 from fastapi.security import HTTPBasic, HTTPBasicCredentials
 
 sys.path.insert(0, os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
+import guard  # noqa: E402
 import profiles  # noqa: E402
 from common import load_config  # noqa: E402
 
@@ -74,19 +76,45 @@ def check_password(password):
     return bool(PASSWORD) and secrets.compare_digest(password.encode(), PASSWORD.encode())
 
 
-def _session_token():
-    """Derived from the current password: changing the password logs every browser out."""
+# The admin login "<issued>.<signature>" is signed with the current password (changing it logs
+# every browser out) and ends after ADMIN_IDLE seconds without use; the panel renews it while used.
+ADMIN_IDLE = 7 * 86400
+ADMIN_RENEW = 3600
+
+
+def _session_token(issued=None):
     stored = _stored_hash()
     key = (stored[1] if stored else PASSWORD).encode()
-    return hmac.new(key, b"speech-spark-admin-session", hashlib.sha256).hexdigest()
+    issued = int(issued or time.time())
+    return f"{issued}." + hmac.new(key, f"speech-spark-admin-session:{issued}".encode(), hashlib.sha256).hexdigest()
+
+
+def _admin_cookie_age(request: Request):
+    """Seconds since the admin cookie was issued, or None when it is missing, wrong or expired."""
+    raw = request.cookies.get(COOKIE, "")
+    issued = raw.split(".", 1)[0]
+    if not issued.isdigit() or time.time() - int(issued) > ADMIN_IDLE:
+        return None
+    return time.time() - int(issued) if secrets.compare_digest(raw, _session_token(issued)) else None
 
 
 def is_admin(request: Request, creds: HTTPBasicCredentials | None):
     if not password_set():
         return True
-    if creds and not request.cookies.get(NO_BASIC) and check_password(creds.password):
-        return True
-    return secrets.compare_digest(request.cookies.get(COOKIE, ""), _session_token())
+    if creds and not request.cookies.get(NO_BASIC) and not guard.wait_left(request, guard.BASIC):
+        if check_password(creds.password):
+            return True
+        guard.failed(request, guard.BASIC, what="admin_basic")
+    return _admin_cookie_age(request) is not None
+
+
+def admin_cookie_ok(request: Request):
+    return not password_set() or _admin_cookie_age(request) is not None
+
+
+def renewed_admin_cookie(request: Request):
+    age = _admin_cookie_age(request)
+    return _session_token() if age is not None and age > ADMIN_RENEW else None
 
 
 def auth(request: Request, creds: HTTPBasicCredentials | None = Depends(security)):

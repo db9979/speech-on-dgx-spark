@@ -6,7 +6,7 @@ window.showLogin=()=>{if($('login').style.display==='none'){$('login').style.dis
 $('loginbtn').onclick=showLogin;$('logincancel').onclick=()=>{$('login').style.display='none';if(GATE)openMe('loginbox')};
 $('loginform').onsubmit=async e=>{e.preventDefault();
   try{await api('/api/login',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({password:$('loginpw').value})});location.reload()}
-  catch(err){$('loginmsg').textContent=t('Falsches Passwort.','Wrong password.')}};
+  catch(err){$('loginmsg').textContent=/too many/.test(err.message)?t('Zu viele falsche Versuche, bitte später noch einmal.','Too many wrong attempts, please try again later.'):t('Falsches Passwort.','Wrong password.')}};
 $('logoutbtn').onclick=async()=>{await fetch('/api/logout',{method:'POST'});location.reload()};
 $('pwset').onclick=async()=>{try{await api('/api/password',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({old:$('pwold').value,new:$('pwnew').value})});
   $('pwold').value=$('pwnew').value='';$('pwmsg').textContent=t('Passwort geändert.','Password changed.')}catch(e){$('pwmsg').innerHTML=`<span class="err">${esc(e.message)}</span>`}};
