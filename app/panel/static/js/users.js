@@ -1,0 +1,25 @@
+// Admin: profiles and devices.
+// ---------------------------------------------------------------- profiles and devices (admin)
+async function loadProf(){let d;try{d=await (await api('/api/admin/profiles')).json()}catch(e){$('pmsg').innerHTML=`<span class="err">${esc(e.message)}</span>`;return}
+  const name=id=>(d.users.find(u=>u.id===id)||{}).name||'?';
+  $('proflist').innerHTML=d.users.map(u=>`<tr><td>${esc(u.name)}<div class="intro sm">${u.facts} ${t('gemerkte Fakten','remembered facts')}</div></td><td style="text-align:right;white-space:nowrap"><button class="b" onclick="newPin('${esc(u.id)}','${esc(u.name)}')">${t('PIN ändern','Change PIN')}</button> <button class="b" onclick="delProf('${esc(u.id)}','${esc(u.name)}')">${t('Löschen','Delete')}</button></td></tr>`).join('')||`<tr><td class="mut">${t('Noch keine.','None yet.')}</td></tr>`;
+  const opts=sel=>d.users.map(u=>`<option value="${esc(u.id)}"${u.id===sel?' selected':''}>${esc(u.name)}</option>`).join('');
+  $('duser').innerHTML=opts();$('dadd').disabled=!d.users.length;
+  $('devlist').innerHTML=d.devices.map(x=>`<tr><td>${esc(x.name)}</td><td><select onchange="devUser('${esc(x.id)}',this.value)">${opts(x.user)}</select></td><td style="text-align:right"><button class="b" onclick="delDev('${esc(x.id)}','${esc(x.name)}')">${t('Löschen','Delete')}</button></td></tr>`).join('')||`<tr><td class="mut">${t('Noch keine.','None yet.')}</td></tr>`}
+const jpost=(m,b)=>({method:m,headers:{'Content-Type':'application/json'},body:JSON.stringify(b)});
+$('padd').onclick=async()=>{try{await api('/api/admin/profiles',jpost('POST',{name:$('pname').value,pin:$('ppin').value}));
+    $('pmsg').textContent=t('Angelegt: ','Created: ')+$('pname').value;$('pname').value=$('ppin').value='';loadProf()}catch(e){$('pmsg').innerHTML=`<span class="err">${esc(e.message)}</span>`}};
+window.newPin=async(id,n)=>{const pin=prompt(t('Neue PIN für ','New PIN for ')+n+t(' (meldet alle Browser dieses Profils ab):',' (logs out all browsers of this profile):'));if(!pin)return;
+  try{await api('/api/admin/profiles/'+id,jpost('PUT',{pin}));$('pmsg').textContent=t('PIN geändert.','PIN changed.')}catch(e){$('pmsg').innerHTML=`<span class="err">${esc(e.message)}</span>`}};
+window.delProf=async(id,n)=>{if(!confirm(t('Profil „','Delete profile "')+n+t('“ mit seinem ganzen Gedächtnis und seinen Geräten löschen?','" with all its memory and devices?')))return;
+  await api('/api/admin/profiles/'+id,{method:'DELETE'});loadProf()};
+$('dadd').onclick=async()=>{try{const r=await (await api('/api/admin/devices',jpost('POST',{name:$('dname').value,user:$('duser').value}))).json();
+    $('dmsg').innerHTML=`${t('Geräteschlüssel (wird nur jetzt angezeigt):','Device key (shown only now):')}<div class="token">${esc(r.token)}</div>`;$('dname').value='';loadProf()}
+  catch(e){$('dmsg').innerHTML=`<span class="err">${esc(e.message)}</span>`}};
+window.devUser=async(id,u)=>{await api('/api/admin/devices/'+id,jpost('PUT',{user:u}));loadProf()};
+window.delDev=async(id,n)=>{if(!confirm(t('Gerät „','Delete device "')+n+t('“ löschen? Sein Schlüssel gilt dann nicht mehr.','"? Its key stops working.')))return;
+  await api('/api/admin/devices/'+id,{method:'DELETE'});$('dmsg').textContent='';loadProf()};
+const sendTyped=()=>{const x=$('chattext').value.trim();if(!x)return;$('chattext').value='';audioCtx();stopListening(true);stopAnswer();ask(x,null)};
+$('chatsend').onclick=sendTyped;$('chattext').onkeydown=e=>{if(e.key==='Enter')sendTyped()};
+document.addEventListener('keydown',e=>{if(e.code!=='Space'||!$('chat').classList.contains('on')||/INPUT|TEXTAREA|SELECT|BUTTON/.test(document.activeElement.tagName))return;
+  e.preventDefault();$('talk').click()});

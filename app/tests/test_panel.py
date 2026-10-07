@@ -67,6 +67,18 @@ class Access(unittest.TestCase):
         self.assertEqual(TestClient(panel.app).post("/api/profile/login", json={"name": "Wanda", "pin": "0000"}).status_code, 401)
 
 
+class Page(unittest.TestCase):
+    def test_page_and_its_files_load(self):
+        import re
+        g = TestClient(panel.app)
+        html = g.get("/").text
+        files = re.findall(r'(?:src|href)="(/static/[^"]+)"', html)
+        self.assertTrue(any(f.endswith(".js") for f in files))
+        for f in files:
+            self.assertEqual(g.get(f).status_code, 200, f)
+        self.assertEqual(g.get("/static/js/../index.html").status_code, 404)
+
+
 class Isolation(unittest.TestCase):
     """What one profile stores is never visible to another profile or a guest."""
 

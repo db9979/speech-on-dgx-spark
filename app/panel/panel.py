@@ -5,6 +5,7 @@ core (paths, logins), monitor (samples), account (login and the profile's own da
 chat (assistant, tools, learning, watch), admin (settings, services, voices), update."""
 import asyncio
 import os
+import re
 import sys
 import time
 
@@ -77,10 +78,20 @@ PUBLIC_FILES = {"icon.svg": "image/svg+xml", "icon-192.png": "image/png", "icon-
 
 @app.get("/static/{name}")
 def static_file(name: str):
+    if name == "app.css":  # the page's style and scripts: revalidated, so an update shows at once
+        return FileResponse(os.path.join(STATIC, name), media_type="text/css", headers={"Cache-Control": "no-cache"})
     if name not in PUBLIC_FILES:
         raise HTTPException(404, "not found")
     return FileResponse(os.path.join(STATIC, name), media_type=PUBLIC_FILES[name],
                         headers={"Cache-Control": "max-age=86400"})
+
+
+@app.get("/static/js/{name}")
+def script_file(name: str):
+    if not re.fullmatch(r"[a-z0-9\-]+\.js", name) or not os.path.isfile(os.path.join(STATIC, "js", name)):
+        raise HTTPException(404, "not found")
+    return FileResponse(os.path.join(STATIC, "js", name), media_type="text/javascript",
+                        headers={"Cache-Control": "no-cache"})
 
 
 @app.get("/manifest.webmanifest")
