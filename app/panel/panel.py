@@ -261,6 +261,7 @@ def whoami(request: Request, creds: HTTPBasicCredentials | None = Depends(securi
     cfg = load_config()
     return {"admin": is_admin(request, creds), "version": app_version(), "public": cfg.get("chat", {}).get("public", True),
             "profile": profiles.current(request), "documents": cfg.get("chat", {}).get("documents", True),
+            "reminders": cfg.get("chat", {}).get("reminders", True),
             # what the assistant needs without the full configuration (which holds keys)
             "assistant": {"default_voice": cfg["tts"].get("default_voice"),
                           "asr_language": cfg["asr"].get("default_language"),
@@ -370,6 +371,46 @@ async def profile_add_doc(file: UploadFile = File(...), prof=Depends(own_profile
 @app.delete("/api/profile/docs/{doc_id}", dependencies=[Depends(assistant)])
 def profile_delete_doc(doc_id: str, prof=Depends(own_profile)):
     return {"removed": documents.delete(prof["id"], doc_id)}
+
+
+@app.get("/api/profile/reminders", dependencies=[Depends(assistant)])
+def profile_reminders(prof=Depends(own_profile)):
+    return profiles.reminders(prof["id"])
+
+
+@app.delete("/api/profile/reminders/{rid}", dependencies=[Depends(assistant)])
+def profile_reminder_done(rid: str, prof=Depends(own_profile)):
+    return {"removed": profiles.remove_reminders(prof["id"], {rid})}
+
+
+@app.post("/api/assistant/say", dependencies=[Depends(assistant)])
+async def assistant_say(request: Request):
+    """Speaks a short text (a due reminder) as streamed PCM events, like the chat's audio."""
+    body = await request.json()
+    text = str(body.get("text", "")).strip()[:300]
+    if not text:
+        raise HTTPException(400, "text is required")
+    cfg = load_config()
+    who = profiles.current(request)
+    pset = dict(profiles.defaults(cfg.get("chat", {}).get("defaults")), **(profiles.settings(who["id"]) if who else {}))
+    req = {"input": text, "stream": True, "response_format": "pcm"}
+    if who and pset.get("voice"):
+        req["voice"] = pset["voice"]
+    if pset.get("speed", 1.0) != 1.0:
+        req["speed"] = pset["speed"]
+
+    async def gen():
+        async with httpx.AsyncClient(timeout=httpx.Timeout(120, connect=5)) as c:
+            async with c.stream("POST", f"http://127.0.0.1:{cfg['tts']['port']}/v1/audio/speech",
+                                json=req, headers=api_headers()) as r:
+                async for line in r.aiter_lines():
+                    if line.startswith("data:") and "speech.audio.delta" in line:
+                        try:
+                            yield f"data: {json.dumps({'type': 'audio', 'audio': json.loads(line[5:])['audio']})}\n\n"
+                        except (ValueError, KeyError):
+                            continue
+        yield f"data: {json.dumps({'type': 'done'})}\n\n"
+    return StreamingResponse(gen(), media_type="text/event-stream", headers={"Cache-Control": "no-cache"})
 
 
 @app.get("/api/profile/settings", dependencies=[Depends(assistant)])
@@ -805,6 +846,53 @@ DOC_TOOL = {"type": "function", "function": {
                    "required": ["query"]}}}
 
 
+REMINDER_TOOLS = [
+    {"type": "function", "function": {
+        "name": "reminder_set",
+        "description": "Set a timer or reminder. Give either minutes from now (timers, 'in 10 minutes') or a "
+                       "local date and time 'YYYY-MM-DDTHH:MM' (reminders at a clock time). The device rings "
+                       "and speaks the text when it is due.",
+        "parameters": {"type": "object", "properties": {
+            "text": {"type": "string", "description": "what to remind of, short, e.g. 'Ofen ausschalten'"},
+            "minutes": {"type": "number"}, "at": {"type": "string"}}, "required": ["text"]}}},
+    {"type": "function", "function": {
+        "name": "reminder_list", "description": "List the pending timers and reminders.",
+        "parameters": {"type": "object", "properties": {}}}},
+    {"type": "function", "function": {
+        "name": "reminder_cancel", "description": "Cancel timers or reminders whose text contains the words "
+                                                  "(or all, with text 'alle').",
+        "parameters": {"type": "object", "properties": {"text": {"type": "string"}}, "required": ["text"]}}}]
+REMINDER_HINT = ("Mit reminder_set stellst du Timer und Erinnerungen, mit reminder_list und reminder_cancel "
+                 "siehst und löschst du sie. Bestätige kurz, wann es klingelt.")
+
+
+def user_zone(tz):
+    if isinstance(tz, str) and re.fullmatch(r"[A-Za-z_]+(/[A-Za-z0-9_+\-]+){0,2}", tz):
+        try:
+            from zoneinfo import ZoneInfo
+            return ZoneInfo(tz)
+        except Exception:
+            pass
+    return datetime.datetime.now().astimezone().tzinfo
+
+
+def reminder_due(args, tz):
+    """Epoch milliseconds when a reminder is due, or None."""
+    try:
+        if args.get("minutes") not in (None, ""):
+            m = float(args["minutes"])
+            return int((time.time() + m * 60) * 1000) if 0 < m <= 60 * 24 * 366 else None
+        if args.get("at"):
+            at = datetime.datetime.fromisoformat(str(args["at"]).strip().replace("Z", ""))
+            if at.tzinfo is None:
+                at = at.replace(tzinfo=user_zone(tz))
+            due = int(at.timestamp() * 1000)
+            return due if due > time.time() * 1000 else None
+    except (ValueError, TypeError, OverflowError):
+        return None
+    return None
+
+
 def docs_hint(prof, docs):
     names = ", ".join(d["name"] for d in docs[:30]) + (" …" if len(docs) > 30 else "")
     return (f"{prof['name']} hat eigene Dokumente hochgeladen: {names}. Wenn eine Frage dazu passen könnte, "
@@ -1002,7 +1090,16 @@ async def chat(request: Request):
     docs = documents.list_docs(who["id"]) if who and ccfg.get("documents", True) else []
     if docs:
         system = (system + "\n\n" + docs_hint(who, docs)).strip()
-    tools = ([SEARCH_TOOL] if search else []) + (MEMORY_TOOLS if prof else []) + ([DOC_TOOL] if docs else [])
+    timers = bool(ccfg.get("reminders", True))
+    if timers:
+        system = (system + "\n\n" + REMINDER_HINT).strip()
+    # guests keep their reminders in the browser, which sends them along; profiles keep them on the Spark
+    guest_rem = [{"id": x["id"][:16], "text": str(x.get("text", ""))[:200], "due": x["due"]}
+                 for x in (body.get("reminders") if isinstance(body.get("reminders"), list) else [])
+                 if isinstance(x, dict) and isinstance(x.get("id"), str)
+                 and isinstance(x.get("due"), (int, float))][:50] if not who else []
+    tools = ([SEARCH_TOOL] if search else []) + (MEMORY_TOOLS if prof else []) + ([DOC_TOOL] if docs else []) \
+        + (REMINDER_TOOLS if timers else [])
     if system:
         messages = [{"role": "system", "content": system}] + messages
     lheaders = {"Authorization": f"Bearer {ccfg['llm_key']}"} if ccfg.get("llm_key") else {}
@@ -1090,6 +1187,29 @@ async def chat(request: Request):
             if hits:
                 await out.put({"type": "docsources", "items": sorted({h["name"] for h in hits})})
             return "\n\n".join(f"[{h['name']}]\n{h['text']}" for h in hits) or "No matching passages."
+        if name.startswith("reminder_") and timers:
+            pending = profiles.reminders(who["id"]) if who else guest_rem
+            zone = user_zone(body.get("tz"))
+            fmt = lambda x: datetime.datetime.fromtimestamp(x["due"] / 1000, zone).strftime("%d.%m. %H:%M")  # noqa: E731
+            if name == "reminder_set":
+                text = str(args.get("text", "")).strip() or "Timer"
+                due = reminder_due(args, body.get("tz"))
+                if not due:
+                    return "Invalid time: give minutes from now or a future 'YYYY-MM-DDTHH:MM'."
+                item = profiles.add_reminder(who["id"], text, due) if who else \
+                    {"id": secrets.token_hex(4), "text": text[:200], "due": due}
+                await out.put({"type": "reminder", "action": "set", "item": item})
+                return f"Set: '{item['text']}' at {fmt(item)}."
+            if name == "reminder_list":
+                return "\n".join(f"{fmt(x)}: {x['text']}" for x in pending) or "No pending reminders."
+            if name == "reminder_cancel":
+                t = str(args.get("text", "")).strip().lower()
+                ids = {x["id"] for x in pending if t in ("alle", "all") or (t and t in x["text"].lower())}
+                if who and ids:
+                    profiles.remove_reminders(who["id"], ids)
+                if ids:
+                    await out.put({"type": "reminder", "action": "cancel", "ids": sorted(ids)})
+                return f"Cancelled {len(ids)}."
         if name == "memory_save" and prof:
             fact = profiles.remember(prof["id"], args.get("fact", ""))
             if fact:

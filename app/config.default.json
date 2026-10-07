@@ -70,6 +70,7 @@
     "search_pages": 2,
     "memory": true,
     "documents": true,
+    "reminders": true,
     "defaults": {"hands": false, "auto": true, "live": true, "barge": true, "barge_level": "mid", "voice": "", "speed": 1.0, "length": "normal", "timing": true},
     "max_tokens": 4096
   },

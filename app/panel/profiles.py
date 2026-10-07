@@ -261,6 +261,34 @@ def delete_convo(uid, cid):
         _write(_path(uid, "convos.json"), [x for x in convos(uid) if x["id"] != cid])
 
 
+# ---------------------------------------------------------------- reminders
+MAX_REMINDERS = 50
+
+
+def reminders(uid):
+    try:
+        with open(_path(uid, "reminders.json")) as f:
+            return json.load(f)
+    except (OSError, ValueError):
+        return []
+
+
+def add_reminder(uid, text, due):
+    item = {"id": secrets.token_hex(4), "text": re.sub(r"\s+", " ", str(text)).strip()[:200], "due": int(due)}
+    with _lock:
+        items = sorted(reminders(uid) + [item], key=lambda x: x["due"])[-MAX_REMINDERS:]
+        _write(_path(uid, "reminders.json"), items)
+    return item
+
+
+def remove_reminders(uid, ids):
+    with _lock:
+        items = reminders(uid)
+        keep = [x for x in items if x["id"] not in ids]
+        _write(_path(uid, "reminders.json"), keep)
+    return len(items) - len(keep)
+
+
 # ---------------------------------------------------------------- memory
 def memory(uid):
     try:
