@@ -273,7 +273,19 @@ const LIVE={llm:t('Sprachmodell','Language model'),tts:t('Sprachausgabe','Speech
 function liveRender(r){if(!r||!r.steps){$('livesteps').innerHTML=`<tr><td class="mut">${t('Noch nicht geprüft.','Not checked yet.')}</td></tr>`;$('livemsg').textContent='';return}
   $('livesteps').innerHTML=r.steps.map(s=>`<tr><td style="width:34%">${s.ok===true?'✅':s.ok===false?'❌':'➖'} ${esc(LIVE[s.name]||s.name)}</td><td><span class="mut">${s.seconds} s</span> ${esc(s.detail||'')}</td></tr>`).join('');
   $('livemsg').textContent=new Date(r.t*1000).toLocaleString()+' · '+(r.version||'')+(r.reason==='after update'?t(' · nach dem Update',' · after the update'):'')}
-async function loadLive(){try{liveRender(await (await api('/api/livecheck')).json())}catch{}}
+async function loadLive(){try{liveRender(await (await api('/api/livecheck')).json())}catch{}loadQuality()}
+// quality test of the language model (sandbox questions, see quality.py)
+let qTimer=null;
+function qRender(d){const r=d&&d.last;clearTimeout(qTimer);
+  if(d&&d.running){$('qmsg').textContent=t('läuft … (ein bis drei Minuten)','running … (one to three minutes)');$('qgo').disabled=true;qTimer=setTimeout(loadQuality,5000)}
+  else{$('qgo').disabled=false;$('qmsg').textContent=r?new Date(r.t*1000).toLocaleString()+' · '+(r.version||'')+(r.reason==='after update'?t(' · nach dem Update',' · after the update'):''):''}
+  if(!r){$('qsum').innerHTML=`<span class="mut">${t('Noch nicht geprüft.','Not tested yet.')}</span>`;$('qlist').innerHTML='';return}
+  if(r.error){$('qsum').innerHTML=`<span class="err">${esc(r.error)}</span>`;$('qlist').innerHTML='';return}
+  const bad=r.cases.filter(x=>!x.ok);
+  $('qsum').innerHTML=`<span class="pill ${bad.length?'warn':'ok'}">${r.passed} / ${r.total}</span> <span class="mut">${esc(r.model||'')} · ${t('Temperatur','temperature')} ${r.temperature} · ${r.seconds} s</span>`;
+  $('qlist').innerHTML=(bad.length?bad:r.cases).map(x=>`<tr><td style="width:36%">${x.ok?'✅':'❌'} ${esc(x.q)}<div class="mut">${esc(x.tools.join(', ')||t('kein Werkzeug','no tool'))}</div></td><td>${x.ok?'':`<b>${esc(x.why.join('; '))}</b><br>`}<span class="mut">${esc(x.answer||'–')}</span></td></tr>`).join('')}
+async function loadQuality(){try{qRender(await (await api('/api/quality')).json())}catch{}}
+$('qgo').onclick=async()=>{try{qRender(await (await api('/api/quality',{method:'POST'})).json())}catch(e){$('qmsg').innerHTML=`<span class="err">${esc(e.message)}</span>`}};
 $('livego').onclick=async()=>{$('livego').disabled=true;$('livemsg').textContent=t('prüft … (bis zu einer Minute)','checking … (up to a minute)');
   try{liveRender(await (await api('/api/livecheck',{method:'POST'})).json())}catch(e){$('livemsg').innerHTML=`<span class="err">${esc(e.message)}</span>`}$('livego').disabled=false;refresh()};
 const WHY={daily:t('täglich','daily'),manual:t('von Hand','manual'),'before-update':t('vor Update','before update'),'before-rollback':t('vor Rückkehr','before rollback'),'before-restore':t('vor Wiederherstellung','before restore')};

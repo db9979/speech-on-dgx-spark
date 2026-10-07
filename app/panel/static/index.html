@@ -359,6 +359,11 @@
       <div class="mut" style="font-size:12px;margin-top:8px">Holt den neuesten Stand von GitHub und installiert ihn. Einstellungen, Modelle und Stimmen bleiben. Schlägt die Installation fehl, laufen die Dienste mit der alten Version weiter. Während des Updates starten die Dienste kurz neu.</div>
     </div>
   </div>
+  <div class="card"><h2>Qualitätstest</h2>
+    <div class="intro sm">Stellt dem echten Sprachmodell 20 feste Fragen mit vorbereiteten Werkzeug-Ergebnissen (Termine, Mails, Erinnerungen, Suche, Gedächtnis, „weiß ich nicht“-Fälle) und prüft, ob es das richtige Werkzeug nimmt und nur sagt, was im Ergebnis steht. Echte Daten werden dabei weder gelesen noch geändert. Läuft nach jedem Update von selbst, dauert ein bis drei Minuten.</div>
+    <div id="qsum" style="margin-top:8px"></div>
+    <table style="margin-top:6px"><tbody id="qlist"></tbody></table>
+    <div class="row" style="margin-top:10px"><button class="b" id="qgo">Jetzt prüfen</button><span id="qmsg" class="mut"></span></div></div>
   <div class="two">
     <div class="card"><div class="row" style="justify-content:space-between"><h2 style="margin:0">Funktionsprüfung</h2><button class="b" type="button" onclick="openWizard()">Einrichtung erneut starten</button></div>
       <div class="intro sm">Probiert die echten Dienste einmal aus: das Sprachmodell antwortet, die Sprachausgabe spricht einen Satz, die Spracherkennung versteht ihn wieder. Läuft nach jedem Update von selbst.</div>

@@ -3,6 +3,7 @@
 Run:  python -m unittest discover -s app/tests -t app     (from the repository root)
 """
 import json
+import os
 import time
 import unittest
 
@@ -684,6 +685,24 @@ class Siri(unittest.TestCase):
                          ["Wie geht es dir?", "Hallo.", "Und sonst?"])
         c = [x for x in profiles.convos(uid) if x["id"].startswith("siri-")][0]
         self.assertEqual(len(c["msgs"]), 4)
+
+
+class Quality(unittest.TestCase):
+    def test_runs_in_sandbox_and_reports(self):
+        import asyncio
+        import quality
+        users_before = sorted(os.listdir(os.environ["SPEECH_SPARK_USERS"]))
+        res = asyncio.run(quality.run("test"))
+        self.assertEqual(res["total"], 20)
+        byid = {x["id"]: x for x in res["cases"]}
+        self.assertTrue(byid["witz"]["ok"], byid["witz"])
+        self.assertFalse(byid["kalender-leer"]["ok"])              # the fake model calls no tool
+        self.assertIn("calendar_events nicht aufgerufen", byid["kalender-leer"]["why"][0])
+        self.assertEqual(sorted(os.listdir(os.environ["SPEECH_SPARK_USERS"])), users_before)
+        c = TestClient(panel.app)
+        c.post("/api/login", json={"password": "secret-admin"})
+        self.assertEqual(c.get("/api/quality").json()["last"]["total"], 20)
+        self.assertEqual(TestClient(panel.app).get("/api/quality").status_code, 401)
 
 
 class Mail(unittest.TestCase):

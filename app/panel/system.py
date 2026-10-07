@@ -14,6 +14,7 @@ import backup  # noqa: E402
 import guard  # noqa: E402
 import health  # noqa: E402
 import profiles  # noqa: E402
+import quality  # noqa: E402
 from common import load_config  # noqa: E402
 from core import auth  # noqa: E402
 
@@ -95,6 +96,19 @@ def livecheck_result():
 @router.post("/api/livecheck", dependencies=[Depends(auth)])
 async def livecheck_now():
     return await health.livecheck("manual")
+
+
+@router.get("/api/quality", dependencies=[Depends(auth)])
+def quality_result():
+    return {"running": quality.running(), "last": quality.last()}
+
+
+@router.post("/api/quality", dependencies=[Depends(auth)])
+async def quality_now():
+    if not quality.running():
+        asyncio.create_task(quality.run("manual"))
+        await asyncio.sleep(0.1)
+    return {"running": True, "last": quality.last()}
 
 
 # ---------------------------------------------------------------- first-start wizard

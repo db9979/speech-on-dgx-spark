@@ -27,6 +27,7 @@ import homeassistant  # noqa: E402
 import profiles  # noqa: E402
 import admin  # noqa: E402
 import chat  # noqa: E402
+import quality  # noqa: E402
 import update  # noqa: E402
 import system  # noqa: E402
 import backup  # noqa: E402
@@ -117,6 +118,8 @@ async def stability():
             await health.ready(load_config())
             res = await health.livecheck("after update")
             print("live check after update:", "ok" if res and res["ok"] else res, flush=True)
+            if res and res["ok"]:
+                await quality.run("after update")
     async def reminders():
         while True:
             await asyncio.sleep(15)
