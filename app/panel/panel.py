@@ -1020,7 +1020,7 @@ async def chat(request: Request):
             status = getattr(getattr(e, "response", None), "status_code", None)
             if status in (401, 403) or re.match(r"LLM HTTP 40[13]\b", str(e)):
                 await out.put({"type": "error", "code": "llm_auth",
-                               "message": "LLM: API key rejected (401). Set the qwen38 key under Konfiguration -> Sprach-Chat."})
+                               "message": "LLM: API key rejected (401). Set the qwen38 key under Konfiguration -> Assistent."})
             else:
                 await out.put({"type": "error", "message": f"LLM: {type(e).__name__}: {e}"})
         finally:

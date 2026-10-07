@@ -2,7 +2,7 @@
 
 **English** | [Deutsch](README.de.md)
 
-Version V01.0.6 · Idea: Dominik Bornhäußer
+Version V01.0.7 · Idea: Dominik Bornhäußer
 
 One script installs **Qwen3-ASR** (speech recognition) and **Qwen3-TTS** (text to speech) as systemd services on an NVIDIA DGX Spark (GB10), together with a web panel for configuration and monitoring. It runs alongside [dgx-spark-qwen38](https://github.com/hasso5703/dgx-spark-qwen38).
 
@@ -18,33 +18,33 @@ The panel switches between English and German (button at the top right).
 
 ## Voice chat
 
-The **Gespräch** tab needs the microphone, and browsers only allow it over https. The panel therefore also listens on `https://SPARK:31443` with a self-signed certificate; the browser warns once. The LLM connection is under Configuration → voice chat (default: qwen38 at `http://127.0.0.1:30001/v1`). The installer takes the qwen38 API key from `~/.config/qwen38/api-key` of the user who runs `sudo ./install.sh`. Thinking is off for the chat so the answer starts right away. An animated assistant face shows whether it is listening, thinking or speaking; its mouth follows the voice. The same face sits in the bottom right corner of every tab, so you can talk from anywhere in the panel.
+The **Gespräch** tab needs the microphone, and browsers only allow it over https. The panel therefore also listens on `https://SPARK:31443` with a self-signed certificate; the browser warns once. The LLM connection is under Configuration → Assistant (default: qwen38 at `http://127.0.0.1:30001/v1`). The installer takes the qwen38 API key from `~/.config/qwen38/api-key` of the user who runs `sudo ./install.sh`. Thinking is off for the chat so the answer starts right away. An animated assistant face shows whether it is listening, thinking or speaking; its mouth follows the voice. The same face sits in the bottom right corner of every tab, so you can talk from anywhere in the panel.
 
-**Start page and password:** the panel opens with the assistant, without a password, for everyone on the network. Monitoring, settings, voices and logs need the panel password (button "Settings", the login is kept for 30 days). Configuration → voice chat → "Assistant without password" turns this off; the password can be changed under Configuration → Panel. Scripts can still use HTTP Basic.
+**Start page and password:** the panel opens with the assistant, without a password, for everyone on the network. Monitoring, settings, voices and logs need the panel password (button "Settings", the login is kept for 30 days). Configuration → Conversation → "Assistant without password" turns this off; the password can be changed under Configuration → Security. Scripts can still use HTTP Basic.
 
 **As an app on your phone:** open `https://SPARK:31443` in the phone's browser, accept the certificate warning, then use "Add to Home screen" in the browser menu (iPhone: Safari → Share → "Add to Home Screen"). The assistant then starts full screen with its own icon. With the self-signed certificate Android creates a shortcut instead of an installed app; it works the same, it just does not show up in the app list.
 
-**Better recognition:** a fixed default language (Configuration → ASR, e.g. German) instead of "auto" helps most with short sentences. The "Context" field takes names and terms that are often misheard; the model then prefers them. The 1.7B model is noticeably more accurate than 0.6B and needs about 2–3 GiB more memory.
+**Better recognition:** a fixed default language (Configuration → Speech recognition, e.g. German) instead of "auto" helps most with short sentences. The "Context" field takes names and terms that are often misheard; the model then prefers them. The 1.7B model is noticeably more accurate than 0.6B and needs about 2–3 GiB more memory.
 
-**Conversation comfort:** the assistant knows the date and time (the browser's time zone; can be turned off under Configuration → voice chat). Conversations are kept in the browser and can be reopened or deleted at the top of the conversation. With "live transcript" the text appears while you speak; in the pause the recognition is usually already done, so that step is skipped at the end.
+**Conversation comfort:** the assistant knows the date and time (the browser's time zone; can be turned off under Configuration → Assistant). Conversations are kept in the browser and can be reopened or deleted at the top of the conversation. With "live transcript" the text appears while you speak; in the pause the recognition is usually already done, so that step is skipped at the end.
 
 **Web search:** under Configuration → voice chat → web search, enter the address of your SearXNG instance and tick "allow web search". If SearXNG's `settings.yml` allows `json` under `search: formats:`, the panel uses the JSON API, otherwise it reads the normal results page; "Test connection" shows whether it works. The LLM then searches by itself when a question needs current information (the LLM server needs tool calling; qwen38 has it on). The assistant says it is looking it up, reads the top pages and shows the sources under the answer.
 
 **Wake word "Hey Spark":** with the checkbox below the chat the assistant keeps listening. Say "Hey Spark" and it listens; "Hey Spark, what's the weather?" in one go is taken as the question. The browser detects speech bursts, the speech recognition on the Spark checks for the phrase, nothing goes to the internet. The screen stays on; on a phone keep the app in the foreground.
 
-**Conversation settings:** below the face are only "Hey Spark" and "Hands-free"; the "Settings" button next to them opens the rest: listening (stop on silence, live transcript, barge-in and its sensitivity), answer (voice, profiles only; speaking rate, answer length) and display. Guests always hear the default voice. Logged in, the settings live in the profile on the Spark and apply on every device, including speakers with a device key; as a guest only in the browser. "Hey Spark" is set per device because it keeps the microphone and screen awake. Defaults for guests and new profiles are under Configuration → Voice chat. The speaking rate keeps the pitch; it also works for other apps that send `speed` to the TTS API (vllm-omni backend).
+**Conversation settings:** below the face are only "Hey Spark" and "Hands-free"; the "Settings" button next to them opens the rest: listening (stop on silence, live transcript, barge-in and its sensitivity), answer (voice, profiles only; speaking rate, answer length) and display. Guests always hear the default voice. Logged in, the settings live in the profile on the Spark and apply on every device, including speakers with a device key; as a guest only in the browser. "Hey Spark" is set per device because it keeps the microphone and screen awake. Defaults for guests and new profiles are under Configuration → Conversation. The speaking rate keeps the pitch; it also works for other apps that send `speed` to the TTS API (vllm-omni backend).
 
 **Profiles and memory:** under "Profiles" the admin creates profiles with a name and PIN. In the chat you log in with the "Guest" button at the top of the conversation by typing name and PIN. Logged in, the assistant remembers things for good when you tell it to ("remember that I'm vegetarian") or when they will be useful later, and forgets them on request; the profile button lists what it knows, for deleting. Memory and conversations belong to the profile and live on the Spark, so the same history shows on every device you are logged in on: which profile is asking is decided only by the login (cookie) or the device key, never by the model, and guests get no memory. Speakers and your own programs get a device key under "Profiles → Devices" that belongs to one profile, and send it as the header `X-Speech-Device` to `/api/chat`. A new PIN logs out every browser of that profile; deleting a profile removes its memory and devices. The data lives on the Spark under `/var/lib/speech-spark/users`, one folder per profile.
 
-**Pronunciation:** Configuration → TTS → Pronunciation takes one rule per line, e.g. `DGX = De Ge Ix`. It applies to whole words and to all speech output, Open WebUI included.
+**Pronunciation:** Configuration → Speech output → Pronunciation takes one rule per line, e.g. `DGX = De Ge Ix`. It applies to whole words and to all speech output, Open WebUI included.
 
 **Barge-in:** while the assistant speaks, the microphone keeps listening. Talking for about a quarter of a second interrupts the answer, and what you said becomes the next question. This relies on the browser's echo cancellation; if the assistant interrupts itself on loud speakers, use headphones or untick "barge in" below the chat.
 
-**Your own voice:** under Voices you can record a reference straight from the microphone (read the suggested text, about 10 seconds); the panel fills in the transcript with the speech recognition. Cloning needs a Base model (Configuration → TTS → model `…-Base`), then set the new voice as the default voice. A German reference gives much steadier German than the built-in speakers, which are not native German speakers. Under Voices, one or all of your own voices can be exported as a ZIP (reference audio and transcript) and imported again on this or another Spark; on a name clash the import renames, replaces or skips.
+**Your own voice:** under Voices you can record a reference straight from the microphone (read the suggested text, about 10 seconds); the panel fills in the transcript with the speech recognition. Cloning needs a Base model (Configuration → Speech output → model `…-Base`), then set the new voice as the default voice. A German reference gives much steadier German than the built-in speakers, which are not native German speakers. Under Voices, one or all of your own voices can be exported as a ZIP (reference audio and transcript) and imported again on this or another Spark; on a name clash the import renames, replaces or skips.
 
 ## Logs
 
-All speech services log into their own journal (`journalctl --namespace=speech-spark -u 'speech-spark-*'`), capped at 500 MB and 14 days; journald deletes older entries automatically. Adjustable under Configuration → Logs, effective after the next update. The panel's constant status polls are not logged at all.
+All speech services log into their own journal (`journalctl --namespace=speech-spark -u 'speech-spark-*'`), capped at 500 MB and 14 days; journald deletes older entries automatically. Adjustable under Configuration → System, effective after the next update. The panel's constant status polls are not logged at all.
 
 ## Updating
 
@@ -102,7 +102,7 @@ All services run as the system user `speech`. A sudoers rule lets the panel star
 ## The panel
 
 - **Monitoring**: GPU load, free unified memory, temperature and power, CPU, each with history. Per service: status, requests, latency and real-time factor (RTF), plus start, stop and restart. It also shows which dgx-spark-qwen38 lane is running and how much memory it holds.
-- **Konfiguration** (configuration): model, port, default language, voice, speaking style, sampling, engine memory shares and memory reserve. Saving restarts the affected services.
+- **Konfiguration** (configuration): sub-tabs Assistant (LLM), Conversation (defaults, memory), Knowledge (web search), Speech output, Speech recognition, Security (password, API key, ports) and System (memory guard, logs). Technical settings sit under "Advanced". Each sub-tab saves on its own; only services whose settings changed are restarted. A dot on a sub-tab marks unsaved changes.
 - **Testen** (test): upload an audio file to transcribe, or type text and listen.
 - **Stimmen** (voices): manage reference recordings for voice cloning (only with a `Base` TTS model).
 - **Einbinden** (integrate): values to copy for Open WebUI and other OpenAI-compatible apps, plus curl and Python examples.
@@ -147,17 +147,17 @@ curl -N http://SPARK:31002/v1/audio/speech -H "Authorization: Bearer $KEY" -H 'C
   -d '{"input":"Hello world","voice":"ryan","language":"English","stream":true,"response_format":"pcm"}'
 ```
 
-**Steadier delivery:** Qwen samples with `temperature` 0.9 and `top_p` 1.0 by default, so tempo and emphasis vary from sentence to sentence. The server therefore applies `temperature` 0.7, `top_p` 0.9 and `seed` 42 (Konfiguration → TTS). Requests can override them with the same fields, top-level or inside `extra_params`. In Open WebUI, set response splitting to **paragraphs**: each part is generated separately, and longer parts sound more coherent. Set the default language to a fixed language instead of `auto`.
+**Steadier delivery:** Qwen samples with `temperature` 0.9 and `top_p` 1.0 by default, so tempo and emphasis vary from sentence to sentence. The server therefore applies `temperature` 0.7, `top_p` 0.9 and `seed` 42 (Configuration → Speech output). Requests can override them with the same fields, top-level or inside `extra_params`. In Open WebUI, set response splitting to **paragraphs**: each part is generated separately, and longer parts sound more coherent. Set the default language to a fixed language instead of `auto`.
 
-**Laughing and mood swings:** the model reads emojis, "haha", `*laughs*` and markdown as cues and laughs or changes tone. The server removes them before synthesis (Konfiguration → TTS → clean text, on by default).
+**Laughing and mood swings:** the model reads emojis, "haha", `*laughs*` and markdown as cues and laughs or changes tone. The server removes them before synthesis (Configuration → Speech output → clean text, on by default).
 
 **Overacting:** exclamation marks and interjections ("Oh", "Wow") make the voice act out excitement. With "speak calmly" (on by default) the server turns "!" into "." and drops such interjections at the start of a sentence. The default voice-chat prompt also asks the LLM for plain, calm everyday language.
 
-**Numbers:** the server writes numbers out before synthesis, because the model guesses otherwise. Dates, times, money, percent and decimals become words ("on 2026-10-06 at 9:30, $49.90" → "on October sixth, twenty twenty-six at nine thirty, forty-nine dollars ninety"), phone numbers become pairs. Konfiguration → TTS → reading numbers: as words (default), in pairs, digit by digit or unchanged. Works for German and English.
+**Numbers:** the server writes numbers out before synthesis, because the model guesses otherwise. Dates, times, money, percent and decimals become words ("on 2026-10-06 at 9:30, $49.90" → "on October sixth, twenty twenty-six at nine thirty, forty-nine dollars ninety"), phone numbers become pairs. Configuration → Speech output → reading numbers: as words (default), in pairs, digit by digit or unchanged. Works for German and English.
 
-**Speaking style:** `"instructions": "calm and friendly, rather slow"` in the request. Without it, the default instruction from Konfiguration → TTS applies. Only the 1.7B models (CustomVoice, VoiceDesign) follow instructions; the 0.6B models ignore them (per the Qwen model card).
+**Speaking style:** `"instructions": "calm and friendly, rather slow"` in the request. Without it, the default instruction from Configuration → Speech output applies. Only the 1.7B models (CustomVoice, VoiceDesign) follow instructions; the 0.6B models ignore them (per the Qwen model card).
 
-**VoiceDesign** (voice from a description): `"task_type": "VoiceDesign"` and `"instructions": "deep, calm male voice"`. This needs its own model: enable "VoiceDesign zusätzlich bereitstellen" in Konfiguration → TTS. It starts a second engine with the same memory footprint again.
+**VoiceDesign** (voice from a description): `"task_type": "VoiceDesign"` and `"instructions": "deep, calm male voice"`. This needs its own model: enable "VoiceDesign zusätzlich bereitstellen" in Configuration → Speech output. It starts a second engine with the same memory footprint again.
 
 In the panel under **Testen**, "gestreamt" (streamed) plays audio while it is generated and shows the time to first audio.
 

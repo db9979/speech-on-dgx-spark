@@ -255,7 +255,7 @@ async def speech(request: Request):
     role = "main"
     if str(body.get("task_type", "")).lower() == "voicedesign" and model_kind(cfg["model"]) != "voice_design":
         if "design" not in engines():
-            raise HTTPException(400, "VoiceDesign is not enabled on this server (panel: Konfiguration -> TTS)")
+            raise HTTPException(400, "VoiceDesign is not enabled on this server (panel: Konfiguration -> Sprachausgabe)")
         role = "design"
     model, port = engines()[role]
     status, error = await engine_status(role)
