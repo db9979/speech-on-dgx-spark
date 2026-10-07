@@ -29,6 +29,7 @@ import documents  # noqa: E402
 import speakers  # noqa: E402
 import calendars  # noqa: E402
 import profiles  # noqa: E402
+import watch  # noqa: E402
 from common import CONFIG_PATH, estimate_gib, journal, load_config, mem_available_gib, quiet_access_log  # noqa: E402
 
 VOICES_DIR = os.environ.get("SPEECH_SPARK_VOICES", "/var/lib/speech-spark/voices")
@@ -243,6 +244,15 @@ def apple_icon():
 @app.get("/favicon.ico")
 def favicon():
     return static_file("favicon-32.png")
+
+
+@app.get("/pebble/speech-spark.pbw")
+def pebble_app():
+    """The Pebble watch app, to open on the phone with the Pebble app (public: it holds no data)."""
+    path = os.path.join(os.path.dirname(os.path.dirname(os.path.abspath(__file__))), "pebble", "speech-spark.pbw")
+    if not os.path.exists(path):
+        raise HTTPException(404, "not built")
+    return FileResponse(path, media_type="application/octet-stream", filename="speech-spark.pbw")
 
 
 @app.get("/sw.js")
@@ -957,6 +967,8 @@ REMINDER_TOOLS = [
         "name": "reminder_cancel", "description": "Cancel timers or reminders whose text contains the words "
                                                   "(or all, with text 'alle').",
         "parameters": {"type": "object", "properties": {"text": {"type": "string"}}, "required": ["text"]}}}]
+WATCH_HINT = ("Die Frage kommt von einer Smartwatch mit kleinem Display und kleinem Lautsprecher. Antworte "
+              "kurz, meist in ein bis drei Sätzen, ohne Listen, Tabellen oder Links.")
 REMINDER_HINT = ("Mit reminder_set stellst du Timer und Erinnerungen, mit reminder_list und reminder_cancel "
                  "siehst und löschst du sie. Bestätige kurz, wann es klingelt.")
 
@@ -1204,6 +1216,8 @@ async def chat(request: Request):
               "long": "Du darfst ausführlicher antworten, wenn die Frage es hergibt."}.get(pset["length"])
     if length:
         system = (system + "\n\n" + length).strip()
+    if body.get("client") == "watch":
+        system = (system + "\n\n" + WATCH_HINT).strip()
     prof = who if ccfg.get("memory", True) else None
     if prof:  # guests get no memory at all
         system = (system + "\n\n" + memory_hint(prof)).strip()
@@ -1541,6 +1555,50 @@ async def chat(request: Request):
             await c.aclose()
     return StreamingResponse(events(), media_type="text/event-stream",
                              headers={"Cache-Control": "no-cache", "X-Accel-Buffering": "no"})
+
+
+@app.post("/api/watch/ask", dependencies=[Depends(assistant)])
+async def watch_ask(request: Request):
+    """Starts an answer for the Pebble app (device key in X-Speech-Device); fetch it with /api/watch/poll."""
+    body = await request.json()
+    text = str(body.get("text", "")).strip()[:2000]
+    if not text:
+        raise HTTPException(400, "text is required")
+    history = [{"role": m["role"], "content": str(m["content"])[:4000]} for m in body.get("history", [])[-10:]
+               if isinstance(m, dict) and m.get("role") in ("user", "assistant") and m.get("content")]
+    inner = {"messages": history + [{"role": "user", "content": text}], "client": "watch"}
+    if isinstance(body.get("tz"), str):
+        inner["tz"] = body["tz"]
+    data = json.dumps(inner).encode()
+
+    async def receive():
+        return {"type": "http.request", "body": data, "more_body": False}
+    watch.cleanup()
+    job = watch.Job(speak=bool(body.get("speak", True)))
+    response = await chat(Request(request.scope, receive))
+    job.task = asyncio.create_task(watch.run(job, response))
+    watch.JOBS[job.id] = job
+    return {"id": job.id, "format": "ima-adpcm-8k"}
+
+
+def _watch_job(job_id):
+    job = watch.JOBS.get(job_id)
+    if not job:
+        raise HTTPException(404, "unknown or expired answer")
+    return job
+
+
+@app.get("/api/watch/poll", dependencies=[Depends(assistant)])
+async def watch_poll(id: str, t: int = 0, a: int = 0):
+    return await watch.poll(_watch_job(id), max(0, t), max(0, a))
+
+
+@app.delete("/api/watch/{job_id}", dependencies=[Depends(assistant)])
+async def watch_cancel(job_id: str):
+    job = watch.JOBS.pop(job_id, None)
+    if job and job.task:
+        job.task.cancel()
+    return {"ok": True}
 
 
 @app.get("/api/tts/voices", dependencies=[Depends(auth)])

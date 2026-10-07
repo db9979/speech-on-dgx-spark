@@ -1,0 +1,45 @@
+{
+  "name": "speech-spark",
+  "author": "Speech on DGX Spark",
+  "version": "1.0.0",
+  "keywords": [
+    "pebble-app"
+  ],
+  "private": true,
+  "dependencies": {},
+  "pebble": {
+    "displayName": "Spark",
+    "uuid": "a01db8cd-5cf4-4614-b0cf-7a00b31abfcd",
+    "sdkVersion": "3",
+    "enableMultiJS": true,
+    "targetPlatforms": [
+      "emery",
+      "flint",
+      "gabbro"
+    ],
+    "capabilities": [
+      "configurable"
+    ],
+    "watchapp": {
+      "watchface": false
+    },
+    "messageKeys": [
+      "QUESTION",
+      "RESET",
+      "CANCEL",
+      "CREDIT",
+      "STATUS",
+      "ANSWER",
+      "AUDIO",
+      "AUDIO_END",
+      "DONE",
+      "ERROR",
+      "SPEAK",
+      "VOLUME",
+      "AUTOLISTEN"
+    ],
+    "resources": {
+      "media": []
+    }
+  }
+}

@@ -516,6 +516,17 @@ details.adv{margin-top:18px;border-top:1px solid var(--line);padding-top:10px}de
       <h2>Formate</h2><div class="mut">TTS: mp3 (Standard), wav, flac, opus, pcm. Gestreamt mit <code>"stream": true, "response_format": "pcm"</code>: Server-Sent Events <code>speech.audio.delta</code> mit base64-PCM (16 bit, mono, 24 kHz), am Ende <code>speech.audio.done</code>. Pro Anfrage überschreibbar: <code>"temperature"</code>, <code>"top_p"</code>, <code>"top_k"</code>, <code>"seed"</code>. Sprechstil pro Anfrage mit <code>"instructions": "ruhig, freundlich, eher langsam"</code> (ohne Angabe gilt die Standard-Anweisung aus der Konfiguration; nur 1.7B-Modelle werten das aus). VoiceDesign mit <code>"task_type": "VoiceDesign"</code> und <code>"instructions"</code>, falls eingeschaltet. STT: json, verbose_json, text. Sprache als Name („German“) oder ISO-Code („de“).</div>
     </div>
   </div>
+  <div class="card" style="margin-top:16px"><h2 style="margin-top:0">Pebble-Uhr</h2>
+    <div class="mut">App „Spark“ für Pebble Time 2 und Core 2 Duo (Antwort als Text und über den Lautsprecher der Uhr) sowie Pebble Round 2 (nur Text). Frage per Knopfdruck, die Pebble-Diktierfunktion macht Text daraus, die Antwort kommt von hier.</div>
+    <ol class="mut" style="margin:8px 0 0 18px;padding:0;line-height:1.6">
+      <li>Unter <b>Profile</b> beim eigenen Profil ein Gerät „Pebble“ anlegen und den Schlüssel kopieren.</li>
+      <li>Auf dem Handy, das mit der Uhr gekoppelt ist, die App-Datei laden und mit der Pebble-App öffnen: <a id="int-pbw" href="/pebble/speech-spark.pbw">speech-spark.pbw</a></li>
+      <li>In der Pebble-App bei „Spark“ die Einstellungen öffnen, Spark-Adresse und Geräteschlüssel eintragen.</li>
+      <li>Auf der Uhr: SELECT fragt, nochmal SELECT stoppt die Sprache, lang SELECT beginnt ein neues Gespräch.</li>
+    </ol>
+    <table style="margin-top:8px"><tbody id="int-pebble"></tbody></table>
+    <div class="mut" style="margin-top:8px">Das Handy muss die Spark erreichen: zu Hause im WLAN, unterwegs über ein VPN wie Tailscale. Die Uhr-App nutzt normales HTTP, weil die Pebble-App dem selbstsignierten Zertifikat nicht vertraut.</div>
+  </div>
   <div class="card" style="margin-top:16px"><h2 style="margin-top:0">curl</h2><pre id="int-curl"></pre></div>
   <div class="card" style="margin-top:16px"><h2 style="margin-top:0">Python (openai-Paket)</h2><pre id="int-py"></pre></div>
 </section>
@@ -795,6 +806,9 @@ async function loadInt(){const c=await (await api('/api/config')).json();const v
   $('int-ep').innerHTML=kv([[t('Spracherkennung (STT)','Speech recognition (STT)'),asr+'/audio/transcriptions'],[t('Sprachausgabe (TTS)','Speech output (TTS)'),tts+'/audio/speech'],[t('API-Schlüssel','API key'),c.api.key||t('(keiner gesetzt)','(none set)')]]);
   $('int-owui-stt').innerHTML=kv([['Speech-to-Text Engine','OpenAI'],['API Base URL',asr],['API Key',key],['STT Model',c.asr.model]]);
   $('int-owui-tts').innerHTML=kv([['Text-to-Speech Engine','OpenAI'],['API Base URL',tts],['API Key',key],['TTS Model',c.tts.model],['TTS Voice',voice],[t('Zusätzliche TTS-Parameter (JSON, optional)','Additional TTS parameters (JSON, optional)'),JSON.stringify({temperature:c.tts.temperature,top_p:c.tts.top_p,seed:c.tts.seed})],[t('Antwort aufteilen','Response splitting'),t('Absätze (Paragraphs)','Paragraphs')]]);
+  const panelUrl=`http://${host}:${(c.panel&&c.panel.port)||31080}`;
+  $('int-pebble').innerHTML=kv([[t('Spark-Adresse in der Uhr-App','Spark address in the watch app'),panelUrl],[t('App-Datei','App file'),panelUrl+'/pebble/speech-spark.pbw']]);
+  $('int-pbw').href=panelUrl+'/pebble/speech-spark.pbw';
   $('int-voices').textContent=v.model_kind==='voice_design'?t('VoiceDesign-Modell: die Stimme wird über die Standard-Anweisung beschrieben.','VoiceDesign model: the voice is described by the default instruction.'):(v.voices.join(', ')||t('(Dienst lädt noch)','(service still loading)'));
   const auth=c.api.key?` \\\n  -H "Authorization: Bearer ${c.api.key}"`:'';
   const hello=t('Hallo aus der Spark.','Hello from the Spark.'),lng=t('German','English'),code=t('de','en'),fn=t('hallo','hello');
