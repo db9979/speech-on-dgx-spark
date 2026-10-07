@@ -275,6 +275,33 @@ async def command(item, text, language="de"):
     return _report(checked, service, "Assist")[0], _report(checked, service, "Assist")[1], targets
 
 
+_IMPERATIVE = set("schalte schalt mach mache stell stelle dreh drehe oeffne oeffnen schliess schliesse fahr fahre "
+                  "turn switch open close".split())
+_ASKING = set("ist sind wie was welche welcher welches wo wann hast hat laeuft brennt warum is are what which "
+              "where how".split())
+_MODAL = set("kannst koenntest wuerdest bitte can could would please".split())
+
+
+def clean_command(text):
+    """The command without the code word and its lead-in ("Codewort ist ...")."""
+    t = str(text).replace("[Codewort]", " ")
+    t = re.sub(r"\b[Tt]\.?\s?[Vv]\b\.?", "TV", t)  # speech recognition: "T V", "T.V."
+    t = re.sub(r"(?i)\b(und\s+)?(das\s+)?code\s*-?\s*wort(\s+(ist|lautet))?\b[:,]?", " ", t)
+    return re.sub(r"\s+", " ", t).strip(" ,.;:-")
+
+
+def is_command(text):
+    """A plain switching command, by its words: "Schalte den Fernseher aus", "Kannst du das Licht
+    einschalten", "Licht im Bad aus". Questions ("Ist das Licht an?") and statements are not."""
+    t = clean_command(text)
+    words = _norm(t).split()
+    if not words or t.endswith("?") or words[0] in _ASKING or not _intent(t):
+        return False
+    if any(w in _IMPERATIVE for w in words[:4]) or words[0] in _MODAL:
+        return True
+    return len(words) <= 6 and words[-1] in ("an", "aus", "ein", "auf", "zu", "on", "off")
+
+
 def _intent(text):
     words = _norm(text).split()
     return next((svc for svc, verbs in _VERBS if any(w in verbs.split() for w in words)), None)

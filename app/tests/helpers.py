@@ -182,7 +182,7 @@ def fake_ha():
         auth(request)
         b = await request.json()
         HA_CALLS.append(b)
-        if "Fernseher" in b["text"] or "Gerät" in b["text"]:  # not exposed to Assist
+        if "Fernseher" in b["text"] or "TV" in b["text"] or "Gerät" in b["text"]:  # not exposed to Assist
             return {"response": {"response_type": "error", "speech": {"plain": {"speech": "Kein Gerät gefunden"}},
                                  "data": {"code": "no_valid_targets"}}}
         return {"response": {"response_type": "action_done", "speech": {"plain": {"speech": "Erledigt"}},

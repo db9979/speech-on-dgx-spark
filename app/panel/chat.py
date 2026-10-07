@@ -192,6 +192,7 @@ HA_HINT = ("Mit home_assistant steuerst du das Smart Home des Nutzers (Licht, Ge
            "Erfinde keine Werte; findest du nichts, such mit anderen Wörtern oder hol dir die Übersicht.")
 
 
+_HA_PENDING = {}  # profile id -> (time, command) waiting for the code word
 HA_CODE_HINT = ("Änderungen im Smart Home (home_assistant, home_assistant_action) brauchen das Codewort des Nutzers "
                 "in derselben Nachricht; du siehst es nur als [Codewort]. Fehlt es, frag kurz danach, ohne ein "
                 "Codewort zu nennen oder zu raten, und führ die Änderung erst aus, wenn die Antwort es enthält. "
@@ -567,6 +568,28 @@ async def chat(request: Request):
         system = (system + "\n\n" + HA_CODE_HINT).strip()
         messages = [dict(m, content=homeassistant.redact(ha, m["content"])) if m["role"] == "user" else m
                     for m in messages]
+    # A plain switching command is carried out by the panel itself, not left to the model: the model
+    # only puts the checked result into words. Without the code word the command waits (two minutes)
+    # and runs as soon as the next message brings it.
+    ha_direct = None
+    if ha and messages[-1]["role"] == "user":
+        latest = messages[-1]["content"]
+        pend = _HA_PENDING.pop(who["id"], None)
+        if homeassistant.is_command(latest):
+            ha_direct = homeassistant.clean_command(latest)
+        elif ha_code_ok and pend and time.time() - pend[0] < 120:
+            ha_direct = pend[1]
+        if ha_direct and ha_code and not ha_code_ok:
+            _HA_PENDING[who["id"]] = (time.time(), ha_direct)
+            print("homeassistant: command waits for the code word", flush=True)
+            system = (system + "\n\n" + "Der Nutzer will etwas im Smart Home schalten, aber das Codewort fehlt. "
+                      "Frag in einem kurzen Satz nach dem Codewort; sag nicht, dass etwas geschaltet wurde.").strip()
+            ha_direct = None
+            ha_wait = True
+        else:
+            ha_wait = False
+    else:
+        ha_wait = False
     docs = documents.list_docs(who["id"]) if who and ccfg.get("documents", True) else []
     if docs:
         system = (system + "\n\n" + docs_hint(who, docs)).strip()
@@ -589,7 +612,7 @@ async def chat(request: Request):
                   + (" Nenne im Briefing nach den Erinnerungen kurz die ungelesenen Mails (Absender und Thema)."
                      if mailbox else "")).strip()
     tools = ([SEARCH_TOOL] if search else []) + (MEMORY_TOOLS if prof else []) + ([HISTORY_TOOL] if past else []) \
-        + ([DOC_TOOL] if docs else []) + ([HA_TOOL, HA_STATES_TOOL, HA_ACTION_TOOL] if ha else []) \
+        + ([DOC_TOOL] if docs else []) + (([HA_STATES_TOOL] if ha_direct or ha_wait else [HA_TOOL, HA_STATES_TOOL, HA_ACTION_TOOL]) if ha else []) \
         + (REMINDER_TOOLS if timers else []) + ([BRIEFING_TOOL] if briefing else []) \
         + ([CALENDAR_TOOL] if cal["calendars"] else []) + (MAIL_TOOLS if mailbox else [])
     # once mail was read in this answer, nothing in it may switch the home or send words to the web
@@ -637,6 +660,19 @@ async def chat(request: Request):
             st = {"buf": "", "first": True, "think": False, "n": 0, "mail": False}
             msgs, finish = list(messages), None
             searches = 0
+            if ha_direct:
+                await out.put({"type": "home", "command": ha_direct})
+                try:
+                    ok, answer, targets = await homeassistant.command(
+                        ha, ha_direct, "en" if guess_language(ha_direct) == "English" else "de")
+                except httpx.HTTPError as e:
+                    ok, answer, targets = False, f"Home Assistant not reachable: {type(e).__name__}", []
+                print("homeassistant: panel ran", repr(ha_direct[:80]), "->", "ok" if ok else "not ok", flush=True)
+                await out.put({"type": "home_done", "ok": ok, "text": answer[:300], "targets": targets})
+                msgs += [{"role": "assistant", "content": None, "tool_calls": [{"id": "ha0", "type": "function",
+                          "function": {"name": "home_assistant", "arguments": json.dumps({"command": ha_direct})}}]},
+                         {"role": "tool", "tool_call_id": "ha0", "content": ("Home Assistant: " if ok else
+                          "Home Assistant failed: ") + answer + " Say only this result, in one or two short sentences."}]
             for rnd in range(5):  # a few tool rounds (at most two searches), then the answer
                 payload = dict(base, messages=msgs)
                 offer = [t for t in tools if (t is not SEARCH_TOOL or searches < 2)

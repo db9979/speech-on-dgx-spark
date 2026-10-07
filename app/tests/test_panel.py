@@ -162,6 +162,29 @@ class HomeAssistant(unittest.TestCase):
         self.assertIn("media_player.sz_tv", res)
         self.assertEqual(len(helpers.HA_CALLS), n + 1)  # only the Assist attempt
 
+    def test_panel_runs_plain_commands(self):
+        a = profile("Rita")
+        a.put("/api/profile/homeassistant", json={"url": f"http://127.0.0.1:{helpers.HA_PORT}", "token": helpers.HA_TOKEN})
+        import homeassistant
+        homeassistant._VERIFY_WAIT = 0.05
+        # no tool call by the model needed: the panel switches and the model only gets the checked result
+        res = answer(ask(a, "Schalte den T V im Wohnzimmer aus"))
+        self.assertEqual(helpers.HA_CALLS[-1], {"entity_id": "media_player.samsung", "service": "media_player.turn_off"})
+        self.assertIn("done", res)
+        n = len(helpers.HA_CALLS)
+        ask(a, "Ist das Licht an?")  # a question switches nothing
+        self.assertEqual(len(helpers.HA_CALLS), n)
+        # with a code word the command waits and runs when the next message brings the word
+        a.put("/api/profile/homeassistant/code", json={"code": "Apollo dreizehn"})
+        ask(a, "Schalte die Kellerpumpe ein")
+        self.assertEqual(len(helpers.HA_CALLS), n)
+        ask(a, "Apollo 13")
+        self.assertEqual(helpers.HA_CALLS[-1]["text"], "Schalte die Kellerpumpe ein")
+        n = len(helpers.HA_CALLS)
+        ask(a, "Apollo 13")  # the waiting command ran once, not again
+        self.assertEqual(len(helpers.HA_CALLS), n)
+        a.put("/api/profile/homeassistant/code", json={"code": ""})
+
     def test_state_read_back(self):
         a = profile("Vera")
         a.put("/api/profile/homeassistant", json={"url": f"http://127.0.0.1:{helpers.HA_PORT}", "token": helpers.HA_TOKEN})
@@ -183,7 +206,7 @@ class HomeAssistant(unittest.TestCase):
             shown = shown + e.get("delta", "") if e["type"] == "text" else \
                 shown[:len(shown) - e["drop"]] if e["type"] == "retract" else shown
         self.assertTrue(shown.startswith("Ergebnis:"), shown)
-        res = answer(ask(a, "XML Licht an"))
+        res = answer(ask(a, "XML Erzähl was"))
         self.assertNotIn("<", res)
         self.assertIn("Hallo.", res)  # one more round answers instead of stopping mid-way
 
