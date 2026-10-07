@@ -25,6 +25,7 @@ from fastapi.security import HTTPBasic, HTTPBasicCredentials
 
 sys.path.insert(0, os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
 from textnorm import guess_language  # noqa: E402
+import documents  # noqa: E402
 import profiles  # noqa: E402
 from common import CONFIG_PATH, estimate_gib, journal, load_config, mem_available_gib, quiet_access_log  # noqa: E402
 
@@ -259,7 +260,7 @@ def app_version():
 def whoami(request: Request, creds: HTTPBasicCredentials | None = Depends(security)):
     cfg = load_config()
     return {"admin": is_admin(request, creds), "version": app_version(), "public": cfg.get("chat", {}).get("public", True),
-            "profile": profiles.current(request),
+            "profile": profiles.current(request), "documents": cfg.get("chat", {}).get("documents", True),
             # what the assistant needs without the full configuration (which holds keys)
             "assistant": {"default_voice": cfg["tts"].get("default_voice"),
                           "asr_language": cfg["asr"].get("default_language"),
@@ -347,6 +348,28 @@ async def profile_save_convo(request: Request, prof=Depends(own_profile)):
 def profile_delete_convo(cid: str, prof=Depends(own_profile)):
     profiles.delete_convo(prof["id"], cid)
     return {"ok": True}
+
+
+# Documents: profiles only. Guests can neither upload nor search anything.
+@app.get("/api/profile/docs", dependencies=[Depends(assistant)])
+def profile_docs(prof=Depends(own_profile)):
+    return documents.list_docs(prof["id"])
+
+
+@app.post("/api/profile/docs", dependencies=[Depends(assistant)])
+async def profile_add_doc(file: UploadFile = File(...), prof=Depends(own_profile)):
+    if not load_config().get("chat", {}).get("documents", True):
+        raise HTTPException(403, "documents are turned off (Konfiguration -> Wissen)")
+    data = await file.read(documents.MAX_FILE + 1)
+    try:
+        return await asyncio.to_thread(documents.add, prof["id"], file.filename, data)
+    except ValueError as e:
+        raise HTTPException(400, str(e))
+
+
+@app.delete("/api/profile/docs/{doc_id}", dependencies=[Depends(assistant)])
+def profile_delete_doc(doc_id: str, prof=Depends(own_profile)):
+    return {"removed": documents.delete(prof["id"], doc_id)}
 
 
 @app.get("/api/profile/settings", dependencies=[Depends(assistant)])
@@ -774,6 +797,20 @@ MEMORY_TOOLS = [
         "parameters": {"type": "object", "properties": {"text": {"type": "string"}}, "required": ["text"]}}}]
 
 
+DOC_TOOL = {"type": "function", "function": {
+    "name": "document_search",
+    "description": "Search the user's own uploaded documents. Use it when a question may be answered by "
+                   "them. Returns the best-matching passages with the document name.",
+    "parameters": {"type": "object", "properties": {"query": {"type": "string", "description": "keywords"}},
+                   "required": ["query"]}}}
+
+
+def docs_hint(prof, docs):
+    names = ", ".join(d["name"] for d in docs[:30]) + (" …" if len(docs) > 30 else "")
+    return (f"{prof['name']} hat eigene Dokumente hochgeladen: {names}. Wenn eine Frage dazu passen könnte, "
+            "suche mit document_search darin und antworte aus den Treffern; nenne das Dokument kurz.")
+
+
 def memory_hint(prof):
     facts = profiles.memory(prof["id"])
     hint = (f"Du sprichst mit {prof['name']}. Mit memory_save merkst du dir dauerhaft, was {prof['name']} dir "
@@ -962,7 +999,10 @@ async def chat(request: Request):
     prof = who if ccfg.get("memory", True) else None
     if prof:  # guests get no memory at all
         system = (system + "\n\n" + memory_hint(prof)).strip()
-    tools = ([SEARCH_TOOL] if search else []) + (MEMORY_TOOLS if prof else [])
+    docs = documents.list_docs(who["id"]) if who and ccfg.get("documents", True) else []
+    if docs:
+        system = (system + "\n\n" + docs_hint(who, docs)).strip()
+    tools = ([SEARCH_TOOL] if search else []) + (MEMORY_TOOLS if prof else []) + ([DOC_TOOL] if docs else [])
     if system:
         messages = [{"role": "system", "content": system}] + messages
     lheaders = {"Authorization": f"Bearer {ccfg['llm_key']}"} if ccfg.get("llm_key") else {}
@@ -1043,6 +1083,13 @@ async def chat(request: Request):
             except Exception as e:
                 await out.put({"type": "search_error", "message": str(e)})
                 return f"Search failed: {e}"
+        if name == "document_search" and docs:
+            query = str(args.get("query", "")).strip()
+            await out.put({"type": "docsearch", "query": query})
+            hits = await asyncio.to_thread(documents.search, who["id"], query)
+            if hits:
+                await out.put({"type": "docsources", "items": sorted({h["name"] for h in hits})})
+            return "\n\n".join(f"[{h['name']}]\n{h['text']}" for h in hits) or "No matching passages."
         if name == "memory_save" and prof:
             fact = profiles.remember(prof["id"], args.get("fact", ""))
             if fact:

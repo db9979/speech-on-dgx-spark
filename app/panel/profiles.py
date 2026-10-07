@@ -15,6 +15,7 @@ import json
 import os
 import re
 import secrets
+import shutil
 import threading
 import time
 
@@ -116,9 +117,7 @@ def delete_user(uid):
         _write(_path("profiles.json"), d)
         folder = _path(uid)
         if re.fullmatch(r"u_[0-9a-f]{12}", uid) and os.path.isdir(folder):
-            for f in os.listdir(folder):
-                os.remove(os.path.join(folder, f))
-            os.rmdir(folder)
+            shutil.rmtree(folder)
 
 
 # ---------------------------------------------------------------- devices (speakers, scripts)

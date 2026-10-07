@@ -2,7 +2,7 @@
 
 **English** | [Deutsch](README.de.md)
 
-Version V01.0.7 · Idea: Dominik Bornhäußer
+Version V01.0.8 · Idea: Dominik Bornhäußer
 
 One script installs **Qwen3-ASR** (speech recognition) and **Qwen3-TTS** (text to speech) as systemd services on an NVIDIA DGX Spark (GB10), together with a web panel for configuration and monitoring. It runs alongside [dgx-spark-qwen38](https://github.com/hasso5703/dgx-spark-qwen38).
 
@@ -33,6 +33,8 @@ The **Gespräch** tab needs the microphone, and browsers only allow it over http
 **Wake word "Hey Spark":** with the checkbox below the chat the assistant keeps listening. Say "Hey Spark" and it listens; "Hey Spark, what's the weather?" in one go is taken as the question. The browser detects speech bursts, the speech recognition on the Spark checks for the phrase, nothing goes to the internet. The screen stays on; on a phone keep the app in the foreground.
 
 **Conversation settings:** below the face are only "Hey Spark" and "Hands-free"; the "Settings" button next to them opens the rest: listening (stop on silence, live transcript, barge-in and its sensitivity), answer (voice, profiles only; speaking rate, answer length) and display. Guests always hear the default voice. Logged in, the settings live in the profile on the Spark and apply on every device, including speakers with a device key; as a guest only in the browser. "Hey Spark" is set per device because it keeps the microphone and screen awake. Defaults for guests and new profiles are under Configuration → Conversation. The speaking rate keeps the pitch; it also works for other apps that send `speed` to the TTS API (vllm-omni backend).
+
+**Own documents:** logged-in profiles upload their own files under the profile button (PDF with a text layer, Word, text, Markdown, HTML, CSV; up to 20 MB each). When asked about them, the assistant searches them and names the document below the answer. The search is keyword-based on the Spark, no extra model. Guests cannot upload anything, and no profile sees another's documents. Can be turned off under Configuration → Knowledge.
 
 **Profiles and memory:** under "Profiles" the admin creates profiles with a name and PIN. In the chat you log in with the "Guest" button at the top of the conversation by typing name and PIN. Logged in, the assistant remembers things for good when you tell it to ("remember that I'm vegetarian") or when they will be useful later, and forgets them on request; the profile button lists what it knows, for deleting. Memory and conversations belong to the profile and live on the Spark, so the same history shows on every device you are logged in on: which profile is asking is decided only by the login (cookie) or the device key, never by the model, and guests get no memory. Speakers and your own programs get a device key under "Profiles → Devices" that belongs to one profile, and send it as the header `X-Speech-Device` to `/api/chat`. A new PIN logs out every browser of that profile; deleting a profile removes its memory and devices. The data lives on the Spark under `/var/lib/speech-spark/users`, one folder per profile.
 
