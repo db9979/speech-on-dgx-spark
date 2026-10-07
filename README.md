@@ -2,7 +2,7 @@
 
 **English** | [Deutsch](README.de.md)
 
-Version V01.0.42 · Idea: Dominik Bornhäußer
+Version V01.0.43 · Idea: Dominik Bornhäußer
 
 One script installs **Qwen3-ASR** (speech recognition) and **Qwen3-TTS** (text to speech) as systemd services on an NVIDIA DGX Spark (GB10), together with a web panel for configuration and monitoring. It runs alongside [dgx-spark-qwen38](https://github.com/hasso5703/dgx-spark-qwen38).
 
@@ -41,6 +41,8 @@ The **Gespräch** tab needs the microphone, and browsers only allow it over http
 **Messages in the conversation:** hovering over a message (on a phone: tapping it) shows a bin and, on answers, a speaker. The bin deletes the message, a question together with its answer. The speaker reads the answer out again.
 
 **Timers and reminders:** "remind me about the oven in 10 minutes" or "remind me tomorrow at 8 about the appointment". Pending reminders show as small chips below the toggles (✕ cancels); "which timers are running?" and "cancel the oven timer" work by voice too. When one is due, the page chimes, shows it in the conversation and speaks it; if the tab is in the background, a browser notification appears as well. This works while the page is open. Profiles keep their reminders on the Spark (every open device of the profile rings), guests only in their own browser. Can be turned off under Settings → Talk.
+
+**Reminders as notifications** (profiles only): in the "Ich" window under "Conversation", "Reminders on this device → Switch on" turns on push notifications. A reminder then arrives also when the page is closed, and only on the devices of that profile. This needs https with a valid certificate (e.g. behind a reverse proxy); on an iPhone first add the page to the home screen ("Share → Add to Home Screen"). The Spark only sends to the browsers' push services (Apple, Google, Mozilla, Microsoft), encrypted.
 
 **Daily briefing and calendar:** say "good morning" or "what's on today?" and the assistant reads out today's and tomorrow's appointments, today's reminders and a few lines on your own topics (e.g. "weather Berlin", via your SearXNG). "What do I have on Friday?" works too. Each profile connects one or more calendars (up to 8) in the "Ich" window, tab Calendar; an appointment found in two calendars is read out once. Each one is a CalDAV address with user and app password (iCloud: https://caldav.icloud.com with the Apple ID and an app-specific password from appleid.apple.com; Nextcloud: …/remote.php/dav; Radicale …), or a subscription link with webcal://, webcals:// or https:// (Google: "secret address in iCal format", a public iCloud calendar). Read only; the password stays on the Spark and is never shown again. Guests get no calendar. Can be turned off under Settings → Talk.
 

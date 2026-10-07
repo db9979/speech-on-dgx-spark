@@ -54,3 +54,45 @@ class Calendar(unittest.TestCase):
 
 if __name__ == "__main__":
     unittest.main()
+
+
+class WebPush(unittest.TestCase):
+    def test_encryption_round_trip_and_vapid(self):
+        """Decrypts like a browser would (RFC 8291) and checks the VAPID signature."""
+        import json
+        import os
+        import struct
+        import push
+        from cryptography.hazmat.primitives import hashes, serialization
+        from cryptography.hazmat.primitives.asymmetric import ec
+        from cryptography.hazmat.primitives.asymmetric.utils import encode_dss_signature
+        from cryptography.hazmat.primitives.ciphers.aead import AESGCM
+        ua = ec.generate_private_key(ec.SECP256R1())
+        ua_pub = ua.public_key().public_bytes(serialization.Encoding.X962, serialization.PublicFormat.UncompressedPoint)
+        auth = os.urandom(16)
+        sub = push.valid({"endpoint": "https://fcm.googleapis.com/fcm/send/abc",
+                          "keys": {"p256dh": push.b64(ua_pub), "auth": push.b64(auth)}})
+        body = push.encrypt(sub, b'{"title": "x"}')
+        salt, (rs, idlen) = body[:16], struct.unpack("!IB", body[16:21])
+        as_pub = body[21:21 + idlen]
+        shared = ua.exchange(ec.ECDH(), ec.EllipticCurvePublicKey.from_encoded_point(ec.SECP256R1(), as_pub))
+        ikm = push._hkdf(auth, shared, b"WebPush: info\x00" + ua_pub + as_pub, 32)
+        cek = push._hkdf(salt, ikm, b"Content-Encoding: aes128gcm\x00", 16)
+        nonce = push._hkdf(salt, ikm, b"Content-Encoding: nonce\x00", 12)
+        plain = AESGCM(cek).decrypt(nonce, body[21 + idlen:], None)
+        self.assertEqual(plain, b'{"title": "x"}\x02')
+        token = push.vapid(sub["endpoint"]).split("t=")[1].split(",")[0]
+        head, claims, sig = token.split(".")
+        self.assertEqual(json.loads(push.unb64(claims))["aud"], "https://fcm.googleapis.com")
+        raw = push.unb64(sig)
+        der = encode_dss_signature(int.from_bytes(raw[:32], "big"), int.from_bytes(raw[32:], "big"))
+        pub = ec.EllipticCurvePublicKey.from_encoded_point(ec.SECP256R1(), push.unb64(push.public_key()))
+        pub.verify(der, f"{head}.{claims}".encode(), ec.ECDSA(hashes.SHA256()))  # raises if wrong
+
+    def test_only_push_services(self):
+        import push
+        good = {"p256dh": push.b64(b"\x04" + b"1" * 64), "auth": push.b64(b"a" * 16)}
+        for url in ("https://127.0.0.1/x", "http://fcm.googleapis.com/x", "https://evil.example/fcm.googleapis.com"):
+            with self.assertRaises(ValueError):
+                push.valid({"endpoint": url, "keys": good})
+        push.valid({"endpoint": "https://web.push.apple.com/abc", "keys": good})

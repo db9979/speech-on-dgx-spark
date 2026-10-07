@@ -31,6 +31,7 @@ import update  # noqa: E402
 import system  # noqa: E402
 import backup  # noqa: E402
 import health  # noqa: E402
+import push  # noqa: E402
 
 app = FastAPI(title="Speech on DGX Spark")
 for _module in (account, admin, chat, update, system):
@@ -116,6 +117,14 @@ async def stability():
             await health.ready(load_config())
             res = await health.livecheck("after update")
             print("live check after update:", "ok" if res and res["ok"] else res, flush=True)
+    async def reminders():
+        while True:
+            await asyncio.sleep(15)
+            try:
+                await push.due_reminders()
+            except Exception as e:
+                print("push reminders:", type(e).__name__, e, flush=True)
+    asyncio.create_task(reminders())
     asyncio.create_task(watchdog())
     asyncio.create_task(backups())
     asyncio.create_task(after_update())

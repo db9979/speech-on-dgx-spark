@@ -350,6 +350,36 @@ class Errors(unittest.TestCase):
         self.assertEqual([e["code"] for e in evs if e["type"] == "error"], ["llm_down"])
 
 
+class Push(unittest.TestCase):
+    def test_due_reminders_go_to_own_devices_only(self):
+        import asyncio
+        import push
+        a, b = profile("Hanna"), profile("Ida")
+        a_id = a.get("/api/whoami").json()["profile"]["id"]
+        b_id = b.get("/api/whoami").json()["profile"]["id"]
+        sub = {"endpoint": "https://fcm.googleapis.com/fcm/send/x",
+               "keys": {"p256dh": push.b64(b"\x04" + b"1" * 64), "auth": push.b64(b"a" * 16)}}
+        self.assertEqual(a.post("/api/profile/push", json={"subscription": dict(sub, endpoint="https://evil.example/x")}).status_code, 400)
+        push.add(a_id, sub)
+        self.assertEqual(len(a.get("/api/profile/push").json()["devices"]), 1)
+        self.assertEqual(b.get("/api/profile/push").json()["devices"], [])
+        profiles.add_reminder(a_id, "Tee", time.time() * 1000 - 1000)
+        profiles.add_reminder(b_id, "Kaffee", time.time() * 1000 - 1000)
+        got = []
+
+        async def fake(uid, title, body, tag=""):
+            got.append((uid, title))
+            return 1
+        real, push.send = push.send, fake
+        try:
+            asyncio.run(push.due_reminders())
+        finally:
+            push.send = real
+        self.assertEqual(got, [(a_id, "⏰ Tee")])
+        self.assertEqual(profiles.reminders(a_id), [])
+        self.assertEqual(len(profiles.reminders(b_id)), 1)  # no push device: the page rings it
+
+
 class Stability(unittest.TestCase):
     def test_backup_and_restore(self):
         import io

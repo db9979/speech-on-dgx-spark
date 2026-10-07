@@ -13,6 +13,7 @@ from fastapi.security import HTTPBasicCredentials
 sys.path.insert(0, os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
 import documents  # noqa: E402
 import guard  # noqa: E402
+import push  # noqa: E402
 import speakers  # noqa: E402
 import calendars  # noqa: E402
 import profiles  # noqa: E402
@@ -373,3 +374,31 @@ async def assistant_voices(prof=Depends(own_profile)):
     """Voice names to choose from in the conversation settings (profiles only; guests get the default)."""
     v = await tts_voices()
     return {"voices": [x for x in v.get("voices", []) if isinstance(x, str)]}
+
+
+# Push notifications for reminders, per device of the profile (see push.py).
+def _push_on():
+    if not load_config().get("chat", {}).get("reminders", True) or not push.available():
+        raise HTTPException(403, "reminders are turned off")
+
+
+@router.get("/api/profile/push", dependencies=[Depends(assistant), Depends(_push_on)])
+def profile_push(prof=Depends(own_profile)):
+    return {"key": push.public_key(), "devices": [{"name": x.get("name", ""), "created": x.get("created"),
+                                                    "endpoint": x["endpoint"]} for x in push.subs(prof["id"])]}
+
+
+@router.post("/api/profile/push", dependencies=[Depends(assistant), Depends(_push_on)])
+async def profile_push_add(request: Request, prof=Depends(own_profile)):
+    body = await request.json()
+    try:
+        push.add(prof["id"], body.get("subscription"), body.get("name", ""))
+    except ValueError as e:
+        raise HTTPException(400, str(e))
+    n = await push.send(prof["id"], "Spark", "Erinnerungen kommen jetzt auch auf dieses Gerät.", tag="hello")
+    return {"ok": True, "sent": n}
+
+
+@router.delete("/api/profile/push", dependencies=[Depends(assistant)])
+async def profile_push_remove(request: Request, prof=Depends(own_profile)):
+    return {"removed": push.remove(prof["id"], str((await request.json()).get("endpoint", "")))}

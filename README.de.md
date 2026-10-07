@@ -2,7 +2,7 @@
 
 [English](README.md) | **Deutsch**
 
-Version V01.0.42 · Idee: Dominik Bornhäußer
+Version V01.0.43 · Idee: Dominik Bornhäußer
 
 Ein Skript installiert **Qwen3-ASR** (Spracherkennung) und **Qwen3-TTS** (Sprachausgabe) als systemd-Dienste auf einer NVIDIA DGX Spark (GB10). Dazu kommt eine Weboberfläche für Konfiguration und Monitoring. Das Setup läuft neben [dgx-spark-qwen38](https://github.com/hasso5703/dgx-spark-qwen38).
 
@@ -39,6 +39,8 @@ Der **Assistent** braucht das Mikrofon, und Browser erlauben das nur über https
 **Nachrichten im Verlauf:** Fährt man über eine Nachricht (am Handy: antippen), erscheinen ein Papierkorb und bei Antworten ein Lautsprecher. Der Papierkorb löscht die Nachricht, bei einer Frage samt Antwort. Der Lautsprecher liest die Antwort noch einmal vor.
 
 **Timer und Erinnerungen:** „Erinnere mich in 10 Minuten an den Ofen“ oder „Erinnere mich morgen um 8 an den Termin“. Offene Erinnerungen stehen als kleine Chips unter den Schaltern (✕ löscht), „Welche Timer laufen?“ und „Lösch den Ofen-Timer“ gehen auch per Sprache. Wenn es soweit ist, klingelt die Seite, zeigt die Erinnerung im Verlauf und sagt sie an; liegt der Tab im Hintergrund, kommt zusätzlich eine Browser-Benachrichtigung. Das klappt, solange die Seite offen ist. Profile speichern ihre Erinnerungen auf dem Spark (jedes offene Gerät des Profils klingelt), Gäste nur im eigenen Browser. Abschaltbar unter Einstellungen → Gespräch.
+
+**Erinnerungen als Mitteilung** (nur Profile): Im Fenster „Ich“ unter „Gespräch“ schaltet „Erinnerungen auf diesem Gerät → Einschalten“ Push-Mitteilungen ein. Dann kommt eine Erinnerung auch, wenn die Seite zu ist, und nur auf die Geräte dieses Profils. Das braucht https mit gültigem Zertifikat (z. B. hinter einem Reverse-Proxy); auf dem iPhone die Seite zuerst über „Teilen → Zum Home-Bildschirm“ als App anlegen. Der Spark schickt dabei nur an die Push-Dienste der Browser (Apple, Google, Mozilla, Microsoft), verschlüsselt.
 
 **Tagesbriefing und Kalender:** „Guten Morgen“ oder „Was steht heute an?“, und der Assistent liest die Termine von heute und morgen, die heutigen Erinnerungen und ein paar Sätze zu deinen Themen vor (z. B. „Wetter Berlin“, über deine SearXNG). „Was habe ich am Freitag?“ geht auch. Jedes Profil verbindet im Fenster „Ich“, Reiter Kalender, einen oder mehrere Kalender (bis zu 8); ein Termin, der in zwei Kalendern steht, wird einmal vorgelesen. Jeder ist eine CalDAV-Adresse mit Benutzer und App-Passwort (iCloud: https://caldav.icloud.com mit Apple-ID und app-spezifischem Passwort von appleid.apple.com; Nextcloud: …/remote.php/dav; Radicale …) oder ein Abo-Link mit webcal://, webcals:// oder https:// (Google: „Privatadresse im iCal-Format“, ein öffentlicher iCloud-Kalender). Nur lesend; das Passwort bleibt auf dem Spark und wird nie wieder angezeigt. Gäste haben keinen Kalender. Abschaltbar unter Einstellungen → Gespräch.
 
