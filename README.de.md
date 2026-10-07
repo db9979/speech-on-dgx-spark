@@ -2,7 +2,7 @@
 
 [English](README.md) | **Deutsch**
 
-Version V01.0.37 · Idee: Dominik Bornhäußer
+Version V01.0.38 · Idee: Dominik Bornhäußer
 
 Ein Skript installiert **Qwen3-ASR** (Spracherkennung) und **Qwen3-TTS** (Sprachausgabe) als systemd-Dienste auf einer NVIDIA DGX Spark (GB10). Dazu kommt eine Weboberfläche für Konfiguration und Monitoring. Das Setup läuft neben [dgx-spark-qwen38](https://github.com/hasso5703/dgx-spark-qwen38).
 
@@ -48,7 +48,7 @@ Der **Assistent** braucht das Mikrofon, und Browser erlauben das nur über https
 
 **Handy-Ansicht:** Auf dem Handy öffnet die Seite nur mit dem Gesicht (antippen = sprechen) und zwei Knöpfen: Einstellungen (Gesprächs-Einstellungen und „Hey Spark“) und Verlauf (die Messenger-Ansicht mit Tippen; der Pfeil oben links führt zurück zum Gesicht).
 
-**Sprechererkennung** (standardmäßig aus, Einstellungen → Funktionen): Jedes Profil liest im Fenster „Ich“ drei kurze Sätze vor. Erkennt der Assistent danach eine Stimme eindeutig, antwortet er für dieses Profil, mit dessen Gedächtnis, Dokumenten, Erinnerungen und Stimme, auch an einem Gast-Gerät. Im Verlauf steht dann „🎙 Name“ unter der Frage. Bei unklarer Stimme bleibt alles, wie es ist. Die Erkennung läuft auf dem Prozessor des Spark (Resemblyzer-Modell, Apache 2.0) und braucht keinen GPU-Speicher. Die Strenge ist einstellbar. Eine Stimme ist kein Passwort: Wer sehr ähnlich klingt oder eine Aufnahme abspielt, kann ein Profil erwischen.
+**Sprechererkennung** (standardmäßig aus, Einstellungen → Funktionen): Jedes Profil liest im Fenster „Ich“ drei kurze Sätze vor. Erkennt der Assistent danach eine Stimme eindeutig, antwortet er für dieses Profil, mit dessen Gedächtnis, Dokumenten, Erinnerungen und Stimme, auch an einem Gast-Gerät. Im Verlauf steht dann „🎙 Name“ unter der Frage. Spricht an einem Gerät jemand anderes als der Angemeldete, bekommt der Assistent nur diese eine Frage (nicht das Gespräch des Geräts), und der Wortwechsel landet nicht im Verlauf oder Gedächtnis des Angemeldeten. Bei unklarer Stimme bleibt alles, wie es ist. Die Erkennung läuft auf dem Prozessor des Spark (Resemblyzer-Modell, Apache 2.0) und braucht keinen GPU-Speicher. Die Strenge ist einstellbar. Eine Stimme ist kein Passwort: Wer sehr ähnlich klingt oder eine Aufnahme abspielt, kann ein Profil erwischen.
 
 **Profile und Gedächtnis:** Unter Nutzer → Profile und Geräte legt der Admin Profile mit Name und PIN an. Im Gespräch meldet man sich über den Knopf „Gast“ oben im Verlauf mit Name und PIN an. Angemeldet merkt sich der Assistent Dinge dauerhaft, wenn man es ihm sagt („Merk dir, dass ich vegetarisch esse“) oder wenn sie später nützlich sind, und vergisst sie auf Zuruf; im Fenster „Ich“ steht, was er weiß, zum Löschen. Gedächtnis und Gespräche gehören fest zum Profil und liegen auf dem Spark, so erscheint derselbe Verlauf auf jedem Gerät, auf dem man angemeldet ist: Welches Profil fragt, entscheidet nur die Anmeldung (Cookie) oder der Geräteschlüssel, nie das Modell, und Gäste bekommen kein Gedächtnis. Lautsprecher und eigene Programme bekommen unter Nutzer → Profile und Geräte einen Geräteschlüssel, der fest zu einem Profil gehört, und senden ihn als Header `X-Speech-Device` an `/api/chat`. Eine neue PIN meldet alle Browser des Profils ab; ein gelöschtes Profil nimmt sein Gedächtnis und seine Geräte mit. Die Daten liegen auf dem Spark unter `/var/lib/speech-spark/users`, je Profil ein eigener Ordner.
 

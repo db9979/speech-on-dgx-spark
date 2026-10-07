@@ -173,6 +173,33 @@ class Learning(unittest.TestCase):
         self.assertEqual(asyncio.run(chat.learn_once()), 0)  # read once only
 
 
+class SpeakerId(unittest.TestCase):
+    def tearDown(self):
+        helpers.set_config(speaker_id=False)
+
+    def test_other_voice_gets_no_history_and_token_works_once(self):
+        import speakers
+        helpers.set_config(speaker_id=True, public=True)
+        x, y = profile("Xaver"), profile("Yvonne")
+        y_id = y.get("/api/whoami").json()["profile"]["id"]
+        tok = speakers.token(y_id)
+        history = [{"role": "user", "content": "Mein Passwort ist geheim"}, {"role": "assistant", "content": "Ok."},
+                   {"role": "user", "content": "Hallo"}]
+        helpers.LLM_CALLS.clear()
+        evs = helpers.events(x.post("/api/chat", json={"messages": history, "speaker": tok}))
+        spk = [e for e in evs if e["type"] == "speaker"]
+        self.assertEqual(spk[0]["name"], "Yvonne")
+        self.assertTrue(spk[0]["foreign"])
+        sent = json.dumps(helpers.LLM_CALLS[0]["messages"])
+        self.assertNotIn("Passwort ist geheim", sent)       # Xaver's conversation stays with Xaver
+        self.assertNotIn("home_assistant", json.dumps(helpers.LLM_CALLS[0].get("tools")))
+        evs = helpers.events(x.post("/api/chat", json={"messages": history, "speaker": tok}))
+        self.assertFalse([e for e in evs if e["type"] == "speaker"])  # a token picks a profile once only
+        # the own voice at the own browser keeps the conversation
+        evs = helpers.events(y.post("/api/chat", json={"messages": history, "speaker": speakers.token(y_id)}))
+        self.assertFalse([e for e in evs if e["type"] == "speaker"][0]["foreign"])
+
+
 class Security(unittest.TestCase):
     def setUp(self):
         import guard

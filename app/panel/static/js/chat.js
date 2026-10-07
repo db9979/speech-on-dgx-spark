@@ -56,7 +56,7 @@ function startVad(o={}){const ctx=audioCtx(),src=ctx.createMediaStreamSource(cha
   chat.vad={iv,src}}
 function stopVad(){chat.micLevel=0;if(chat.vad){clearInterval(chat.vad.iv);try{chat.vad.src.disconnect()}catch{}chat.vad=null}}
 
-async function startListening(o={}){stopBarge();stopAnswer();chat.spk=null;chat.turnWait=null;
+async function startListening(o={}){stopBarge();stopAnswer();chat.turnWait=null;
   if(!window.isSecureContext||!navigator.mediaDevices){showSecure();chatSay(t('Mikrofon braucht https, siehe Hinweis oben.','The microphone needs https, see the note above.'));return}
   try{if(!chat.stream)chat.stream=await navigator.mediaDevices.getUserMedia({audio:{echoCancellation:true,noiseSuppression:true,autoGainControl:true}})}
   catch(e){chatSay(t('Kein Zugriff aufs Mikrofon: ','No microphone access: ')+e.message);return}
@@ -105,16 +105,16 @@ async function asrText(blob){
   try{file=await toWav(blob);name='frage.wav'}catch{}            // fall back to the original recording
   const fd=new FormData();fd.append('file',file,name);fd.append('language',(CFG&&CFG.asr.default_language)||'auto');
   const d=await (await api('/api/test/asr',{method:'POST',body:fd})).json();
-  if(d.speaker)chat.spk=d.speaker;   // recognized voice: a signed token the chat request sends back
-  return (d.text||'').trim()}
+  // recognized voice: a signed one-time token the chat request sends back, kept with its own text
+  return {text:(d.text||'').trim(),speaker:d.speaker||null}}
 async function transcribe2(blob,tEnd,rec){chatSay(t('Erkenne Sprache …','Transcribing …'));
   // a live snapshot taken after the last voiced moment already holds the whole question
-  const last=chat.live.last;chat.live.last=null;let text=null;
-  if(last&&last.rec===rec&&chat.lastVoice!=null&&last.at>chat.lastVoice+150)text=await last.p;
+  const last=chat.live.last;chat.live.last=null;let r=null;
+  if(last&&last.rec===rec&&chat.lastVoice!=null&&last.at>chat.lastVoice+150)r=await last.p;
   clearLive();
-  if(text==null)try{text=await asrText(blob)}catch(e){chatSay(t('Spracherkennung: ','Speech recognition: ')+e.message);return}
-  if(!text){chatSay(t('Nichts verstanden.','Did not catch that.'));return}
-  chat.asrBusy=false;const spk=chat.spk;chat.spk=null;ask(text,(performance.now()-tEnd)/1000,spk)}
+  if(!r)try{r=await asrText(blob)}catch(e){chatSay(t('Spracherkennung: ','Speech recognition: ')+e.message);return}
+  if(!r.text){chatSay(t('Nichts verstanden.','Did not catch that.'));return}
+  chat.asrBusy=false;ask(r.text,(performance.now()-tEnd)/1000,r.speaker)}
 // Live transcript: the recording so far is transcribed about every second and shown as a pale
 // bubble. requestData() flushes the recorder first so the snapshot holds the last moments too.
 function liveSnap(pause){const rec=chat.rec,parts=chat.parts;if(!rec||rec.state!=='recording')return;
@@ -122,7 +122,7 @@ function liveSnap(pause){const rec=chat.rec,parts=chat.parts;if(!rec||rec.state!
   chat.live.busy=true;chat.live.want=false;pause=pause||chat.live.pause;chat.live.pause=false;let started=false;
   const go=()=>{if(started)return;started=true;const at=performance.now(),n=parts.length;
     const p=asrText(new Blob(parts.slice(0,n),{type:rec.mimeType||'audio/webm'}))
-      .then(x=>{if(chat.rec===rec&&x){if(S.live)showLive(x);if(pause&&S.turn)turnCheck(x,at,rec)}return x}).catch(()=>null)
+      .then(r=>{const x=r.text;if(chat.rec===rec&&x){if(S.live)showLive(x);if(pause&&S.turn)turnCheck(x,at,rec)}return r}).catch(()=>null)
       .finally(()=>{chat.live.busy=false;if(chat.live.want&&chat.rec===rec)liveSnap()});
     chat.live.last={at,p,rec}};
   rec.addEventListener('dataavailable',go,{once:true});try{rec.requestData()}catch{go()}setTimeout(go,400)}
@@ -146,7 +146,7 @@ function clearLive(){if(chat.liveEl){chat.liveEl.parentNode.remove();chat.liveEl
 
 async function ask(text,asrS,spk){
   if(S.daily&&chat.cid&&!chat.picked){const c=convos.load().find(x=>x.id===chat.cid);if(c&&c.updated<today0())openConvo(null)}   // past midnight
-const ub=chatLog('user',text);chat.msgs.push({role:'user',content:text});deletable(ub,chat.msgs.at(-1));
+const ub=chatLog('user',text);const um={role:'user',content:text};chat.msgs.push(um);deletable(ub,um);let foreign=false;
   const el=chatLog('assistant','');$('fabtext').textContent='';let full='',llmS=null,audioS=null,err='';const searches=[],sources=[],mems=[],docs=[];
   const ctrl=new AbortController();chat.ctrl=ctrl;chat.firstPlay=null;chat.gaps=[];chat.blocks=[];chat.t0b=null;setTalk();chatSay(t('Antwort kommt …','Answer coming …'));
   try{const r=await api('/api/chat',{method:'POST',headers:{'Content-Type':'application/json'},signal:ctrl.signal,
@@ -168,7 +168,8 @@ const ub=chatLog('user',text);chat.msgs.push({role:'user',content:text});deletab
         else if(ev.type==='historysearch'){chatSay(t('Schaue in früheren Gesprächen nach …','Looking through earlier conversations …'))}
         else if(ev.type==='docsearch'){chatSay(t('Suche in deinen Dokumenten: ','Searching your documents: ')+ev.query)}
         else if(ev.type==='docsources'){for(const n of ev.items)if(!docs.includes(n))docs.push(n)}
-        else if(ev.type==='speaker'){const w=document.createElement('div');w.className='who';w.textContent='🎙 '+ev.name;ub.parentNode.appendChild(w)}
+        else if(ev.type==='speaker'){const w=document.createElement('div');w.className='who';foreign=!!ev.foreign;
+          w.textContent='🎙 '+ev.name+(foreign?t(' · nicht in diesem Verlauf gespeichert',' · not kept in this history'):'');ub.parentNode.appendChild(w)}
         else if(ev.type==='reminder'){rem.event(ev);mems.push(ev.action==='set'?t('Erinnerung: ','Reminder: ')+rem.when(ev.item.due)+' '+ev.item.text:t('Erinnerung gelöscht','Reminder cancelled'))}
         else if(ev.type==='memory'){mems.push((ev.action==='saved'?t('Gemerkt: ','Remembered: '):t('Vergessen: ','Forgotten: '))+ev.text)}
         else if(ev.type==='search_error'){chatSay(t('Websuche fehlgeschlagen: ','Web search failed: ')+ev.message)}
@@ -176,7 +177,9 @@ const ub=chatLog('user',text);chat.msgs.push({role:'user',content:text});deletab
         else if(ev.type==='error'){err=ev.code==='llm_auth'?t('Das LLM lehnt den API-Key ab (401). Trage den qwen38-Key unter Konfiguration → Assistent ein (steht auf dem Spark in ~/.config/qwen38/api-key) oder führe das Update aus, das ihn automatisch übernimmt.','The LLM rejected the API key (401). Enter the qwen38 key under Configuration → Assistant (on the Spark it is in ~/.config/qwen38/api-key) or run the update, which imports it automatically.'):ev.message}}}}
   catch(e){if(e.name!=='AbortError')err=e.message}
   const aborted=ctrl.signal.aborted;if(chat.ctrl===ctrl)chat.ctrl=null;
-  if(full.trim()){chat.msgs.push({role:'assistant',content:full.trim()});deletable(el,chat.msgs.at(-1))}else chat.msgs.pop();saveConvo();
+  // another person's voice: the exchange is theirs, so it stays out of this browser's history and context
+  if(foreign){const i=chat.msgs.indexOf(um);if(i>=0)chat.msgs.splice(i,1)}
+  else if(full.trim()){chat.msgs.push({role:'assistant',content:full.trim()});deletable(el,chat.msgs.at(-1))}else chat.msgs.pop();saveConvo();
   el.classList.remove('typing');if(!full.trim())el.textContent=aborted?t('(abgebrochen)','(cancelled)'):'–';
   if(sources.length){const d=document.createElement('div');d.className='src';
     d.innerHTML=`<span>${t('Gesucht','Searched')}: ${esc(searches.join(' · '))}</span>`+sources.slice(0,5).map((s,i)=>`<a href="${esc(s.url)}" target="_blank" rel="noopener noreferrer">${i+1}. ${esc(s.title.slice(0,70))}</a>`).join('');el.appendChild(d)}

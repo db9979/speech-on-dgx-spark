@@ -14,6 +14,7 @@ audio on the CPU).
 """
 import hashlib
 import hmac
+import secrets
 import io
 import json
 import os
@@ -229,7 +230,8 @@ def identify(data, threshold=0.75, margin=0.05):
 # ---------------------------------------------------------------- recognized speaker for one chat turn
 # The speech recognition answers with a short-lived signed token; the chat request sends it back.
 # So the profile still comes from the server, never from what the browser claims.
-TOKEN_SECONDS = 300
+TOKEN_SECONDS = 60
+_used = {}  # signature -> expiry: a token picks the profile for one answer only
 STRICTNESS = {"low": 0.70, "normal": 0.75, "high": 0.82}
 
 
@@ -238,15 +240,19 @@ def _sig(msg):
 
 
 def token(uid):
-    msg = f"{uid}.{int(time.time()) + TOKEN_SECONDS}"
+    msg = f"{uid}.{int(time.time()) + TOKEN_SECONDS}.{secrets.token_hex(6)}"
     return f"{msg}.{_sig(msg)}"
 
 
 def check(tok):
-    """The user id a token was issued for, if it is genuine and fresh; else None."""
+    """The user id a token was issued for, if it is genuine, fresh and not used before; else None."""
     try:
-        uid, exp, sig = str(tok).rsplit(".", 2)
-        if hmac.compare_digest(sig, _sig(f"{uid}.{exp}")) and int(exp) >= time.time():
+        uid, exp, nonce, sig = str(tok).rsplit(".", 3)
+        now = time.time()
+        if hmac.compare_digest(sig, _sig(f"{uid}.{exp}.{nonce}")) and int(exp) >= now and sig not in _used:
+            for k in [k for k, v in _used.items() if v < now]:
+                _used.pop(k, None)
+            _used[sig] = int(exp)
             return uid
     except ValueError:
         pass

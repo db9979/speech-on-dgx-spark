@@ -2,7 +2,7 @@
 
 **English** | [Deutsch](README.de.md)
 
-Version V01.0.37 · Idea: Dominik Bornhäußer
+Version V01.0.38 · Idea: Dominik Bornhäußer
 
 One script installs **Qwen3-ASR** (speech recognition) and **Qwen3-TTS** (text to speech) as systemd services on an NVIDIA DGX Spark (GB10), together with a web panel for configuration and monitoring. It runs alongside [dgx-spark-qwen38](https://github.com/hasso5703/dgx-spark-qwen38).
 
@@ -50,7 +50,7 @@ The **Gespräch** tab needs the microphone, and browsers only allow it over http
 
 **Phone view:** on phones the page opens with just the face (tap = talk) and two buttons: Settings (conversation settings plus "Hey Spark") and History (the messenger view with typing; the arrow top left goes back to the face).
 
-**Speaker identification** (off by default, Settings → Talk): each profile reads three short sentences in the "Ich" window. When the assistant then clearly recognizes a voice, it answers for that profile, with its memory, documents, reminders and voice, even on a guest device. The conversation shows "🎙 name" below the question. When the voice is unclear, nothing changes. Recognition runs on the Spark's CPU (Resemblyzer model, Apache 2.0) and needs no GPU memory. Strictness is adjustable. A voice is not a password: someone who sounds very similar or plays a recording can get into a profile.
+**Speaker identification** (off by default, Settings → Talk): each profile reads three short sentences in the "Ich" window. When the assistant then clearly recognizes a voice, it answers for that profile, with its memory, documents, reminders and voice, even on a guest device. The conversation shows "🎙 name" below the question. When someone other than the logged-in profile speaks at a device, the assistant gets only that one question (not the device's conversation), and the exchange stays out of the logged-in profile's history and memory. When the voice is unclear, nothing changes. Recognition runs on the Spark's CPU (Resemblyzer model, Apache 2.0) and needs no GPU memory. Strictness is adjustable. A voice is not a password: someone who sounds very similar or plays a recording can get into a profile.
 
 **Profiles and memory:** under Users → Profiles and devices the admin creates profiles with a name and PIN. In the chat you log in with the "Guest" button at the top of the conversation by typing name and PIN. Logged in, the assistant remembers things for good when you tell it to ("remember that I'm vegetarian") or when they will be useful later, and forgets them on request; the profile button lists what it knows, for deleting. Memory and conversations belong to the profile and live on the Spark, so the same history shows on every device you are logged in on: which profile is asking is decided only by the login (cookie) or the device key, never by the model, and guests get no memory. Speakers and your own programs get a device key under Users → Profiles and devices that belongs to one profile, and send it as the header `X-Speech-Device` to `/api/chat`. A new PIN logs out every browser of that profile; deleting a profile removes its memory and devices. The data lives on the Spark under `/var/lib/speech-spark/users`, one folder per profile.
 

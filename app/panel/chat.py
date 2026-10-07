@@ -436,6 +436,12 @@ async def chat(request: Request):
     own_browser = not heard or (who and who["id"] == heard["id"])
     if heard:
         who = heard
+    if not own_browser:
+        # someone else's voice at this browser: the browser's conversation is not theirs, so it is
+        # not sent along (and the browser keeps this turn out of its own history, see "foreign")
+        messages = [m for m in messages[-1:] if m["role"] == "user"]
+        if not messages:
+            raise HTTPException(400, "a question is required")
     # conversation settings: what the request sends, else the profile's, else the admin's defaults
     # (speakers with a device key send nothing and get their profile's voice, speed and length)
     pset = dict(profiles.defaults(ccfg.get("defaults")), **(profiles.settings(who["id"]) if who else {}))
@@ -490,7 +496,7 @@ async def chat(request: Request):
     c = httpx.AsyncClient(timeout=httpx.Timeout(600, connect=5))
     out = asyncio.Queue()
     if heard:
-        out.put_nowait({"type": "speaker", "name": heard["name"]})
+        out.put_nowait({"type": "speaker", "name": heard["name"], "foreign": not own_browser})
     sentences = asyncio.Queue()
     t0 = time.time()
 
