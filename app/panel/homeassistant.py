@@ -12,8 +12,16 @@ GET /api/states instead, which sees every entity, zone and person the token's us
 nothing has to be exposed for asking; rooms come from the area registry (POST /api/template, admin
 tokens only; without it entities are still found by name). The token never leaves the Spark
 again: the panel only learns whether one is stored.
+
+A profile can set a code word: then nothing is switched until the user's own latest message holds
+it. The panel checks that itself (the model never decides), and the code word is replaced by
+"[Codewort]" before anything reaches the model or the stored conversations. Only a salted hash of
+it is kept (and that sealed by vault.py), so it cannot be read back; reading states needs no code.
 """
+import functools
+import hashlib
 import json
+import os
 import re
 import threading
 import time
@@ -50,7 +58,8 @@ def get(uid):
 def public(uid):
     d = get(uid)
     return {"url": d["url"], "verify": d.get("verify", True), "agent": d.get("agent", ""),
-            "has_token": True} if d else {"url": "", "verify": True, "agent": "", "has_token": False}
+            "has_token": True, "has_code": bool(d.get("code"))} if d \
+        else {"url": "", "verify": True, "agent": "", "has_token": False, "has_code": False}
 
 
 def entry(body, old=None):
@@ -69,8 +78,85 @@ def entry(body, old=None):
 
 def save(uid, item):
     with _lock:
-        profiles._write(_file(uid), dict(item, token=vault.seal(item["token"]), updated=int(time.time())))
+        old = _raw(uid) or {}
+        keep = {"code": old["code"]} if old.get("code") else {}  # a new connection keeps the code word
+        profiles._write(_file(uid), dict(item, token=vault.seal(item["token"]), updated=int(time.time()), **keep))
     return public(uid)
+
+
+# ---- code word for changes ----
+
+_WORD = re.compile(r"[0-9A-Za-zÄÖÜäöüß]+")
+
+
+def _words(text):
+    return [_norm(m.group(0)).replace(" ", "") for m in _WORD.finditer(str(text))]
+
+
+@functools.lru_cache(maxsize=4096)
+def _hash(salt, joined):
+    return hashlib.pbkdf2_hmac("sha256", joined.encode(), bytes.fromhex(salt), 3000).hex()
+
+
+def set_code(uid, code):
+    """Sets the code word (an empty one removes it); raises ValueError when it is too weak."""
+    words = _words(code)
+    joined = "".join(words)
+    if joined and (len(joined) < 4 or len(words) > 6):
+        raise ValueError("the code word needs at least 4 letters and at most 6 words")
+    with _lock:
+        d = _raw(uid)
+        if not d:
+            raise ValueError("connect Home Assistant first")
+        d.pop("code", None)
+        if joined:
+            salt = os.urandom(16).hex()
+            d["code"] = vault.seal(json.dumps({"salt": salt, "hash": _hash(salt, joined), "words": len(words)}))
+        profiles._write(_file(uid), d)
+    return public(uid)
+
+
+def _code(item):
+    try:
+        c = json.loads(vault.open_(item.get("code") or "") or "null")
+        return c if isinstance(c, dict) and c.get("salt") and c.get("hash") else None
+    except ValueError:
+        return {"salt": "00", "hash": "unreadable", "words": 1}  # sealed with another key: never matches
+
+
+def _spans(code, text):
+    """Character spans of the code word in a text: windows of about its word count, compared without
+    spaces, so speech recognition may split or join its words."""
+    toks = list(_WORD.finditer(str(text)))
+    norm = [_norm(m.group(0)).replace(" ", "") for m in toks]
+    n = int(code.get("words") or 1)
+    found = []
+    for k in sorted({max(1, n - 1), n, n + 1}):
+        for i in range(len(toks) - k + 1):
+            if _hash(code["salt"], "".join(norm[i:i + k])) == code["hash"]:
+                found.append((toks[i].start(), toks[i + k - 1].end()))
+    return found
+
+
+def needs_code(item):
+    return bool(item and _code(item))
+
+
+def code_given(item, text):
+    c = _code(item)
+    return bool(c and _spans(c, text))
+
+
+def redact(item, text):
+    """The text with the code word replaced by [Codewort]."""
+    c = _code(item) if item else None
+    if not c or not isinstance(text, str):
+        return text
+    end = len(text) + 1
+    for a, b in sorted(_spans(c, text), reverse=True):
+        if b <= end:  # windows of different length can overlap; the first one wins
+            text, end = text[:a] + "[Codewort]" + text[b:], a
+    return text
 
 
 def seal_stored(uid):

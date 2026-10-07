@@ -147,6 +147,44 @@ class HomeAssistant(unittest.TestCase):
         self.assertIn("NO TOOL home_assistant_action",
                       answer(ask(b, 'TOOL home_assistant_action {"entity_id": "switch.keller", "service": "turn_on"}')))
 
+    def test_code_word(self):
+        a = profile("Carla")
+        url = f"http://127.0.0.1:{helpers.HA_PORT}"
+        self.assertEqual(a.put("/api/profile/homeassistant", json={"url": url, "token": helpers.HA_TOKEN}).status_code, 200)
+        self.assertEqual(a.put("/api/profile/homeassistant/code", json={"code": "abc"}).status_code, 400)
+        r = a.put("/api/profile/homeassistant/code", json={"code": "Sonnen Blume"})
+        self.assertTrue(r.json()["has_code"])
+        self.assertNotIn("Sonnen", r.text + a.get("/api/profile/homeassistant").text)
+        # a new connection keeps the code word
+        a.put("/api/profile/homeassistant", json={"url": url, "token": ""})
+        self.assertTrue(a.get("/api/profile/homeassistant").json()["has_code"])
+        cmd = 'TOOL home_assistant_action {"entity_id": "switch.keller", "service": "turn_off"'
+        n = len(helpers.HA_CALLS)
+        self.assertIn("code word", answer(ask(a, cmd + '}')))
+        self.assertIn("code word", answer(ask(a, 'TOOL home_assistant {"command": "Licht aus"}')))
+        self.assertEqual(len(helpers.HA_CALLS), n)
+        # reading needs no code word
+        self.assertIn("Kellerpumpe", answer(ask(a, 'TOOL home_assistant_states {"query": "Kellerpumpe"}')))
+        # spoken in the same message (speech recognition may join the words): done, and the model never sees it
+        helpers.LLM_CALLS.clear()
+        res = answer(ask(a, cmd + ', "x": "sonnenblume!"}'))
+        self.assertIn("Kellerpumpe", res)
+        self.assertEqual(helpers.HA_CALLS[-1]["service"], "switch.turn_off")
+        self.assertNotIn("sonnenblume", json.dumps(helpers.LLM_CALLS).lower())
+        self.assertIn("[Codewort]", json.dumps(helpers.LLM_CALLS))
+        # nor the stored conversation
+        a.put("/api/profile/convos", json={"id": "c1", "title": "x", "msgs": [
+            {"role": "user", "content": "Licht aus, Codewort Sonnen Blume"}]})
+        self.assertNotIn("Sonnen", json.dumps(a.get("/api/profile/convos").json()))
+        # an older message with the code word does not authorize a new change
+        n = len(helpers.HA_CALLS)
+        r = a.post("/api/chat", json={"messages": [{"role": "user", "content": "Sonnenblume"},
+                                                   {"role": "assistant", "content": "Ok."},
+                                                   {"role": "user", "content": cmd + "}"}]})
+        self.assertIn("code word", answer(helpers.events(r)))
+        self.assertEqual(len(helpers.HA_CALLS), n)
+        self.assertFalse(a.put("/api/profile/homeassistant/code", json={"code": ""}).json()["has_code"])
+
 
 class Settings(unittest.TestCase):
     def test_profile_settings_validated(self):

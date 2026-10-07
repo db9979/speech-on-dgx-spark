@@ -399,7 +399,7 @@
       <label>Themen fürs Briefing (höchstens drei, mit Komma getrennt)</label><div class="rowin"><input id="caltopics" placeholder="Wetter Berlin, Nachrichten"><button class="b" id="caltopsave" type="button">Speichern</button></div>
       <div class="row" style="margin-top:8px"><button class="b" id="caltest" type="button">Nächste Termine zeigen</button><span id="calmsg"></span></div>
       <ul class="facts" id="calevents"></ul></div>
-    <div id="habox" class="ptab"><div class="intro">Verbinde dein Home Assistant, dann sagst du „Mach das Licht im Wohnzimmer an“ oder „Wie warm ist es im Bad?“. Nur dein Profil kann es nutzen. Schalten lässt sich nur, was in Home Assistant für Assist freigegeben ist (Einstellungen → Sprachassistenten → Freigeben). Der Token bleibt auf dem Spark.</div>
+    <div id="habox" class="ptab"><div class="intro">Verbinde dein Home Assistant, dann sagst du „Mach das Licht im Wohnzimmer an“ oder „Wie warm ist es im Bad?“. Nur dein Profil kann es nutzen. Der Assistent sieht alle Geräte, Zonen und Personen, die dein Home-Assistant-Benutzer sehen darf; Schlösser, Alarmanlage und Updates schaltet er nie. Der Token bleibt auf dem Spark.</div>
       <div id="hastate" class="fh"></div>
       <label>Adresse</label><input id="haurl" placeholder="http://homeassistant.local:8123" autocapitalize="off" autocomplete="off">
       <label>Langlebiger Zugriffstoken</label><input type="password" id="hatoken" autocomplete="new-password">
@@ -408,6 +408,8 @@
         <label class="chk"><input type="checkbox" id="hanoverify"> Zertifikat nicht prüfen (selbst signiertes HTTPS)</label>
         <label>Assist-Agent (leer = Standard)</label><input id="haagent" placeholder="conversation.home_assistant" autocapitalize="off" autocomplete="off"></details>
       <div class="row" style="margin-top:8px"><button class="b p" id="hasave" type="button">Prüfen und speichern</button><button class="b" id="hadel" type="button">Trennen</button></div>
+      <div id="hacodebox"><label>Codewort für Änderungen</label><div class="rowin"><input type="password" id="hacode" autocomplete="new-password"><button class="b" id="hacodesave" type="button">Speichern</button></div>
+      <div class="fh">Ist eines gesetzt, schaltet der Assistent erst, wenn du es in derselben Nachricht sagst, z. B. „Licht aus, Codewort Sonnenblume“. Abfragen gehen ohne. Nimm ein Wort, das die Spracherkennung sicher versteht. Leer speichern entfernt es.</div></div>
       <label>Ausprobieren</label><div class="rowin"><input id="hatry" placeholder="Wie warm ist es im Wohnzimmer?"><button class="b" id="hatrygo" type="button">Senden</button></div>
       <div id="hamsg" class="fh"></div></div>
     <div id="secbox" class="ptab"><div class="intro">Wo dein Profil angemeldet ist. Ein Gerät, das du nicht mehr nutzt oder verloren hast, kannst du hier sperren.</div>

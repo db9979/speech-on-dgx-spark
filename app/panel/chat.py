@@ -189,6 +189,15 @@ HA_HINT = ("Mit home_assistant steuerst du das Smart Home des Nutzers (Licht, Ge
            "Erfinde keine Werte; findest du nichts, such mit anderen Wörtern oder hol dir die Übersicht.")
 
 
+HA_CODE_HINT = ("Änderungen im Smart Home (home_assistant, home_assistant_action) brauchen das Codewort des Nutzers "
+                "in derselben Nachricht; du siehst es nur als [Codewort]. Fehlt es, frag kurz danach, ohne ein "
+                "Codewort zu nennen oder zu raten, und führ die Änderung erst aus, wenn die Antwort es enthält. "
+                "Abfragen mit home_assistant_states brauchen kein Codewort.")
+CODE_MISSING = ("Not done: changes in this smart home need the user's code word in their latest message. Ask "
+                "for it in one short sentence (never say or guess it) and call the tool again once their answer "
+                "contains it.")
+
+
 DOC_TOOL = {"type": "function", "function": {
     "name": "document_search",
     "description": "Search the user's own uploaded documents. Use it when a question may be answered by "
@@ -465,6 +474,14 @@ async def chat(request: Request):
     ha = homeassistant.get(who["id"]) if who and own_browser and ccfg.get("homeassistant", False) else None
     if ha:
         system = (system + "\n\n" + HA_HINT).strip()
+    # code word for changes: only the user's own latest message counts, checked here, never by the
+    # model; the model and everything after it see "[Codewort]" instead of the word
+    ha_code = bool(ha and homeassistant.needs_code(ha))
+    ha_code_ok = ha_code and messages[-1]["role"] == "user" and homeassistant.code_given(ha, messages[-1]["content"])
+    if ha_code:
+        system = (system + "\n\n" + HA_CODE_HINT).strip()
+        messages = [dict(m, content=homeassistant.redact(ha, m["content"])) if m["role"] == "user" else m
+                    for m in messages]
     docs = documents.list_docs(who["id"]) if who and ccfg.get("documents", True) else []
     if docs:
         system = (system + "\n\n" + docs_hint(who, docs)).strip()
@@ -570,6 +587,9 @@ async def chat(request: Request):
             text = str(args.get("command", "")).strip()
             if not text:
                 return "No command given."
+            if ha_code and not ha_code_ok:
+                await out.put({"type": "home_done", "ok": False, "text": "Codewort fehlt"})
+                return CODE_MISSING
             await out.put({"type": "home", "command": text})
             try:
                 ok, answer, targets = await homeassistant.command(
@@ -594,6 +614,9 @@ async def chat(request: Request):
             return result
         if name == "home_assistant_action" and ha:
             eid, service = str(args.get("entity_id", "")), str(args.get("service", ""))
+            if ha_code and not ha_code_ok:
+                await out.put({"type": "home_done", "ok": False, "text": "Codewort fehlt"})
+                return CODE_MISSING
             await out.put({"type": "home", "command": f"{eid} {service}".strip()})
             try:
                 ok, result = await homeassistant.action(ha, eid, service, args.get("data"))

@@ -161,7 +161,12 @@ def profile_convos(prof=Depends(own_profile)):
 
 @router.put("/api/profile/convos", dependencies=[Depends(assistant)])
 async def profile_save_convo(request: Request, prof=Depends(own_profile)):
-    item = profiles.save_convo(prof["id"], await request.json())
+    body = await request.json()
+    ha = homeassistant.get(prof["id"])
+    if ha and homeassistant.needs_code(ha) and isinstance(body, dict) and isinstance(body.get("msgs"), list):
+        body["msgs"] = [dict(m, content=homeassistant.redact(ha, m.get("content")))
+                        if isinstance(m, dict) and m.get("role") == "user" else m for m in body["msgs"]]
+    item = profiles.save_convo(prof["id"], body)
     if not item:
         raise HTTPException(400, "invalid conversation")
     return {"ok": True}
@@ -265,6 +270,19 @@ async def profile_ha_save(request: Request, prof=Depends(own_profile)):
 @router.delete("/api/profile/homeassistant", dependencies=[Depends(assistant)])
 def profile_ha_remove(prof=Depends(own_profile)):
     return homeassistant.remove(prof["id"])
+
+
+@router.put("/api/profile/homeassistant/code", dependencies=[Depends(assistant), Depends(ha_on)])
+async def profile_ha_code(request: Request, prof=Depends(own_profile)):
+    """Sets the code word for changes; an empty one removes it. It is never sent back."""
+    body = await request.json()
+    try:
+        res = homeassistant.set_code(prof["id"], str((body or {}).get("code", ""))[:200])
+        guard.log("ha_code_set" if res["has_code"] else "ha_code_removed", ip=guard.client_ip(request),
+                  name=prof["name"], uid=prof["id"])
+        return res
+    except ValueError as e:
+        raise HTTPException(400, str(e))
 
 
 @router.post("/api/profile/homeassistant/test", dependencies=[Depends(assistant), Depends(ha_on)])
