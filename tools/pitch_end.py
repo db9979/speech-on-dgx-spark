@@ -2,16 +2,29 @@
 """Measures the pitch at sentence ends of the TTS (read-only, only calls the local proxy on 31002).
 For every voice: one sentence non-streamed (wav) and streamed (pcm SSE), saves the audio and prints
 the F0 of the middle and of the last voiced 300 ms. A positive 'end-mid' means the voice goes up.
-    ~/speech-debug$ python3 pitch_end.py [voice ...]"""
-import base64, io, json, sys, urllib.request, wave
+    ~/speech-debug$ python3 pitch_end.py [voice ...]
+Without the API key of the proxy, measure straight at the engine (same audio, no text cleaning):
+    ~/speech-debug$ TTS_URL=http://127.0.0.1:31012 python3 pitch_end.py
+TTS_KEY=... sends a key to the proxy."""
+import base64, io, json, os, sys, urllib.request, wave
 import numpy as np
 
-URL = "http://127.0.0.1:31002/v1/audio/speech"
+BASE = os.environ.get("TTS_URL", "http://127.0.0.1:31002").rstrip("/")
+URL = BASE + "/v1/audio/speech"
+HEAD = {"Content-Type": "application/json"}
+if os.environ.get("TTS_KEY"):
+    HEAD["Authorization"] = "Bearer " + os.environ["TTS_KEY"]
 TEXT = "Morgen wird es in Berlin sonnig und warm. Am Abend kommen ein paar Wolken."
 SR = 24000
 
+def get(path):
+    return json.load(urllib.request.urlopen(urllib.request.Request(BASE + path, headers=HEAD), timeout=30))
+
+MODEL = get("/v1/models")["data"][0]["id"]
+
 def post(body):
-    req = urllib.request.Request(URL, json.dumps(body).encode(), {"Content-Type": "application/json"})
+    body = dict(body, model=MODEL, language="German")
+    req = urllib.request.Request(URL, json.dumps(body).encode(), HEAD)
     return urllib.request.urlopen(req, timeout=120)
 
 def nonstream(voice):
@@ -59,7 +72,8 @@ def report(name, x):
 
 voices = sys.argv[1:]
 if not voices:
-    voices = json.load(urllib.request.urlopen("http://127.0.0.1:31002/v1/audio/voices")).get("voices", [])[:6]
+    voices = get("/v1/audio/voices").get("voices", [])[:6]
+print("model", MODEL, "at", BASE)
 for v in voices:
     v = v if isinstance(v, str) else v.get("name")
     for kind, fn in (("wav", nonstream), ("stream", stream)):
