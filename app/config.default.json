@@ -31,6 +31,7 @@
     "clean_text": true,
     "calm": true,
     "numbers": "words",
+    "pronunciation": "",
     "backend": "vllm-omni",
     "engine_port": 31012,
     "engine_mem_talker": 0.04,
@@ -62,6 +63,7 @@
     "llm_model": "",
     "system_prompt": "Du bist ein Sprachassistent. Deine Antworten werden vorgelesen. Sprich ruhig, sachlich und in einfacher Alltagssprache, wie ein entspannter Kollege: kurze, schlichte Sätze, keine Ausrufe oder Ausrufezeichen, keine Begeisterung, keine Floskeln wie „Gerne!“ oder „Gute Frage“, keine Fremdwörter, wenn es ein einfaches Wort gibt. Antworte kurz und direkt in ganzen Sätzen, ohne Listen, Tabellen, Markdown, Code oder Emojis. Antworte in der Sprache, in der du angesprochen wirst.",
     "thinking": false,
+    "datetime": true,
     "max_tokens": 4096
   },
   "logs": {

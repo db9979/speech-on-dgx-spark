@@ -24,6 +24,10 @@ Der Reiter **Gespräch** braucht das Mikrofon, und Browser erlauben das nur übe
 
 **Bessere Spracherkennung:** Die feste Standardsprache (Konfiguration → ASR, etwa Deutsch) statt „auto“ hilft bei kurzen Sätzen am meisten. Im Feld „Kontext“ stehen Namen und Fachbegriffe, die oft falsch erkannt werden; das Modell bevorzugt sie dann. Das 1.7B-Modell erkennt spürbar genauer als 0.6B und braucht etwa 2–3 GiB mehr Speicher.
 
+**Gespräch-Komfort:** Der Assistent kennt Datum und Uhrzeit (Zeitzone des Browsers; abschaltbar unter Konfiguration → Sprach-Chat). Gespräche bleiben im Browser gespeichert und lassen sich oben im Verlauf wieder öffnen oder löschen. Mit „Live-Transkript“ erscheint der Text schon beim Sprechen; in der Sprechpause liegt die Erkennung meist schon fertig vor, dann entfällt dieser Schritt am Ende.
+
+**Aussprache:** Unter Konfiguration → TTS → Aussprache steht eine Regel pro Zeile, etwa `DGX = De Ge Ix`. Sie gilt für ganze Wörter und für jede Sprachausgabe, auch aus Open WebUI.
+
 **Ins Wort fallen:** Während der Assistent spricht, hört das Mikrofon weiter zu. Wer etwa eine Viertelsekunde lang redet, unterbricht die Antwort, und das Gesagte wird gleich die nächste Frage. Das hängt an der Echounterdrückung des Browsers; unterbricht sich der Assistent mit lautem Lautsprecher selbst, hilft ein Kopfhörer oder der Haken „Ins Wort fallen“ unter dem Gespräch.
 
 **Eigene Stimme:** Unter „Stimmen“ lässt sich eine Referenz direkt mit dem Mikrofon aufnehmen (den vorgeschlagenen Text vorlesen, etwa 10 Sekunden); das Transkript füllt die Spracherkennung aus. Klonen braucht ein Base-Modell (Konfiguration → TTS → Modell `…-Base`), danach die neue Stimme als Standardstimme eintragen. Eine deutsche Referenz klingt im Deutschen deutlich gleichmäßiger als die festen Sprecher, die keine deutschen Muttersprachler sind. Unter „Stimmen“ lassen sich einzelne oder alle eigenen Stimmen als ZIP exportieren (Referenz-Audio und Transkript) und auf diesem oder einem anderen Spark wieder importieren; bei gleichem Namen wird umbenannt, ersetzt oder übersprungen.

@@ -64,6 +64,23 @@ def clean_text(text, calm=False):
     return re.sub(r"\s*\n\s*", "\n", t).strip()
 
 
+def parse_pronunciations(text):
+    """Lines like "DGX = De Ge Ix" (also "->" or "→") -> [(pattern, replacement)], longest first."""
+    rules = []
+    for line in str(text or "").splitlines():
+        m = re.match(r"\s*(.+?)\s*(?:=|->|→)\s*(.*?)\s*$", line)
+        if m and m.group(1) and not line.lstrip().startswith("#"):
+            rules.append((m.group(1), m.group(2)))
+    rules.sort(key=lambda r: -len(r[0]))
+    return [(re.compile(r"(?<!\w)" + re.escape(a) + r"(?!\w)", re.I), b) for a, b in rules]
+
+
+def apply_pronunciations(text, rules):
+    for pat, rep in rules:
+        text = pat.sub(lambda _: rep, text)
+    return text
+
+
 GERMAN_HINT = re.compile(r"(?i)\b(der|die|das|und|ist|nicht|ich|wir|sie|mit|für|auf|ein|eine|auch|uhr)\b|[äöüß]")
 ENGLISH_HINT = re.compile(r"(?i)\b(the|and|is|not|you|we|with|for|on|a|an|also|this|that)\b")
 

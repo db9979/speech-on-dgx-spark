@@ -21,7 +21,7 @@ from fastapi.middleware.cors import CORSMiddleware
 from fastapi.responses import Response, StreamingResponse
 
 from common import api_key_dependency, engine_crash_reason, load_config, quiet_access_log
-from textnorm import clean_text, guess_language, speak_numbers
+from textnorm import apply_pronunciations, clean_text, guess_language, parse_pronunciations, speak_numbers
 
 STATE_DIR = os.environ.get("SPEECH_SPARK_STATE", "/var/lib/speech-spark/state")
 VOICES_DIR = os.environ.get("SPEECH_SPARK_VOICES", "/var/lib/speech-spark/voices")  # panel tab "Stimmen"
@@ -30,6 +30,7 @@ LANGUAGES = ["auto", "Chinese", "English", "Japanese", "Korean", "German", "Fren
 PCM_BYTES_PER_S = 24000 * 2  # Qwen3-TTS: 24 kHz, 16 bit, mono
 
 cfg = load_config("tts")
+PRONUNCIATION = parse_pronunciations(cfg.get("pronunciation", ""))  # the proxy restarts on config changes
 app = FastAPI(title="Qwen3-TTS via vllm-omni (DGX Spark)")
 app.add_middleware(CORSMiddleware, allow_origins=["*"], allow_methods=["*"], allow_headers=["*"])
 auth = [Depends(api_key_dependency())]
@@ -277,6 +278,8 @@ async def speech(request: Request):
         body["language"] = "Auto" if lang.lower() == "auto" else lang
         if body["language"] == "Auto":
             body["language"] = guess_language(body["input"]) or "Auto"
+    if cfg.get("pronunciation"):  # user's list, before numbers so "GB10 = Ge Be zehn" wins
+        body["input"] = apply_pronunciations(body["input"], PRONUNCIATION)
     if cfg.get("numbers", "words") != "off":
         try:
             body["input"] = speak_numbers(body["input"], body["language"], cfg.get("numbers", "words"))

@@ -1,5 +1,6 @@
 """Speech on DGX Spark: web panel for config and monitoring."""
 import asyncio
+import datetime
 import json
 import os
 import re
@@ -589,6 +590,26 @@ async def llm_model(c, ccfg, headers):
     return _llm_models[url]
 
 
+WEEKDAYS = ["Montag", "Dienstag", "Mittwoch", "Donnerstag", "Freitag", "Samstag", "Sonntag"]
+MONTHS = ["Januar", "Februar", "März", "April", "Mai", "Juni", "Juli", "August", "September",
+          "Oktober", "November", "Dezember"]
+
+
+def now_line(tz=None):
+    """The LLM does not know the date; the browser's time zone is used, else the Spark's."""
+    now = None
+    if isinstance(tz, str) and re.fullmatch(r"[A-Za-z_]+(/[A-Za-z0-9_+\-]+){0,2}", tz):
+        try:
+            from zoneinfo import ZoneInfo
+            now = datetime.datetime.now(ZoneInfo(tz))
+        except Exception:
+            now = None
+    if now is None:
+        now, tz = datetime.datetime.now().astimezone(), time.strftime("%Z")
+    return (f"Aktuelles Datum und Uhrzeit: {WEEKDAYS[now.weekday()]}, {now.day}. {MONTHS[now.month - 1]} "
+            f"{now.year}, {now:%H:%M} Uhr (Zeitzone {tz}). Nutze das nur, wenn es zur Frage passt.")
+
+
 @app.post("/api/chat", dependencies=[Depends(assistant)])
 async def chat(request: Request):
     body = await request.json()
@@ -597,8 +618,11 @@ async def chat(request: Request):
     messages = [m for m in body.get("messages", []) if m.get("role") in ("user", "assistant") and m.get("content")]
     if not messages:
         raise HTTPException(400, "messages are required")
-    if ccfg.get("system_prompt"):
-        messages = [{"role": "system", "content": ccfg["system_prompt"]}] + messages
+    system = ccfg.get("system_prompt") or ""
+    if ccfg.get("datetime", True):
+        system = (system + "\n\n" + now_line(body.get("tz"))).strip()
+    if system:
+        messages = [{"role": "system", "content": system}] + messages
     lheaders = {"Authorization": f"Bearer {ccfg['llm_key']}"} if ccfg.get("llm_key") else {}
     tts_url = f"http://127.0.0.1:{cfg['tts']['port']}/v1/audio/speech"
     tts_body = {k: body[k] for k in ("voice", "language", "instructions") if body.get(k)}

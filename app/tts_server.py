@@ -17,11 +17,12 @@ from fastapi.responses import Response
 from pydantic import BaseModel
 
 from common import ServiceState, api_key_dependency, check_memory, estimate_gib, load_config, torch_dtype, quiet_access_log
-from textnorm import clean_text, speak_numbers
+from textnorm import apply_pronunciations, clean_text, parse_pronunciations, speak_numbers
 
 VOICES_DIR = os.environ.get("SPEECH_SPARK_VOICES", "/var/lib/speech-spark/voices")
 
 cfg = load_config("tts")
+PRONUNCIATION = parse_pronunciations(cfg.get("pronunciation", ""))
 state = ServiceState("tts", cfg)
 app = FastAPI(title="Qwen3-TTS (DGX Spark)")
 app.add_middleware(CORSMiddleware, allow_origins=["*"], allow_methods=["*"], allow_headers=["*"])
@@ -139,6 +140,8 @@ def speech(req: SpeechRequest):
     text = req.input
     if cfg.get("clean_text", True):
         text = clean_text(text, calm=cfg.get("calm", True))
+    if PRONUNCIATION:
+        text = apply_pronunciations(text, PRONUNCIATION)
     if cfg.get("numbers", "words") != "off":
         try:
             text = speak_numbers(text, lang, cfg.get("numbers", "words"))
