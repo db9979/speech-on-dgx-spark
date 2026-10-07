@@ -28,7 +28,7 @@ The **Gespräch** tab needs the microphone, and browsers only allow it over http
 
 **Conversation comfort:** the assistant knows the date and time (the browser's time zone; can be turned off under Configuration → voice chat). Conversations are kept in the browser and can be reopened or deleted at the top of the conversation. With "live transcript" the text appears while you speak; in the pause the recognition is usually already done, so that step is skipped at the end.
 
-**Web search:** under Configuration → voice chat → web search, enter the address of your SearXNG instance and tick "allow web search". SearXNG's `settings.yml` must list `json` under `search: formats:`; "Test connection" shows whether it works. The LLM then searches by itself when a question needs current information (the LLM server needs tool calling; qwen38 has it on). The assistant says it is looking it up, reads the top pages and shows the sources under the answer.
+**Web search:** under Configuration → voice chat → web search, enter the address of your SearXNG instance and tick "allow web search". If SearXNG's `settings.yml` allows `json` under `search: formats:`, the panel uses the JSON API, otherwise it reads the normal results page; "Test connection" shows whether it works. The LLM then searches by itself when a question needs current information (the LLM server needs tool calling; qwen38 has it on). The assistant says it is looking it up, reads the top pages and shows the sources under the answer.
 
 **Pronunciation:** Configuration → TTS → Pronunciation takes one rule per line, e.g. `DGX = De Ge Ix`. It applies to whole words and to all speech output, Open WebUI included.
 

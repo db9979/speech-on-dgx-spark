@@ -649,15 +649,64 @@ async def page_text(c, url, limit=3000):
         return ""
 
 
+class _SearxResults(html.parser.HTMLParser):
+    """Results from SearXNG's normal HTML page, for instances that do not allow the JSON format:
+    <article class="result ..."> with <h3><a href=URL>title</a></h3> and <p class="content">."""
+
+    def __init__(self):
+        super().__init__()
+        self.results, self.cur, self.field = [], None, None
+
+    def handle_starttag(self, tag, attrs):
+        a = dict(attrs)
+        cls = (a.get("class") or "").split()
+        if tag == "article" and "result" in cls:
+            self.cur = {"title": "", "url": "", "content": ""}
+            self.results.append(self.cur)
+        elif self.cur is not None:
+            if tag == "a" and self.field is None and not self.cur["url"] and self._in_h3:
+                self.cur["url"], self.field = a.get("href", ""), "title"
+            elif tag == "p" and "content" in cls:
+                self.field = "content"
+        if tag == "h3":
+            self._in_h3 = True
+
+    _in_h3 = False
+
+    def handle_endtag(self, tag):
+        if tag == "h3":
+            self._in_h3 = False
+        if (tag == "a" and self.field == "title") or (tag == "p" and self.field == "content"):
+            self.field = None
+        if tag == "article":
+            self.cur, self.field = None, None
+
+    def handle_data(self, data):
+        if self.cur is not None and self.field:
+            self.cur[self.field] += data
+
+
 async def web_search(c, ccfg, query):
     """Returns (text for the LLM, [{title, url}])."""
     url = ccfg["search_url"].rstrip("/")
     url = url if url.endswith("/search") else url + "/search"
     r = await c.get(url, params={"q": query, "format": "json"}, timeout=10, follow_redirects=True)
-    if r.status_code == 403:
-        raise RuntimeError("SearXNG refuses JSON (add json to search.formats in its settings.yml)")
-    r.raise_for_status()
-    results = [x for x in r.json().get("results", []) if str(x.get("url", "")).startswith(("http://", "https://"))]
+    if r.status_code == 403:  # JSON not enabled on this instance: read the normal results page
+        r = await c.get(url, params={"q": query}, timeout=10, follow_redirects=True, headers={
+            "User-Agent": "Mozilla/5.0 (X11; Linux aarch64) speech-on-dgx-spark",
+            "Accept": "text/html", "Accept-Language": "de-DE,de;q=0.9,en;q=0.8"})
+        if r.status_code == 429:
+            raise RuntimeError("SearXNG rate limiter blocks the Spark (429): allow its IP in limiter.toml (pass_ip)")
+        r.raise_for_status()
+        p = _SearxResults()
+        p.feed(r.text)
+        raw = [{k: v.strip() for k, v in x.items()} for x in p.results]
+    else:
+        if r.status_code == 429:
+            raise RuntimeError("SearXNG rate limiter blocks the Spark (429): allow its IP in limiter.toml (pass_ip)")
+        r.raise_for_status()
+        raw = r.json().get("results", [])
+    results = [x for x in raw if str(x.get("url", "")).startswith(("http://", "https://"))]
     results = results[:int(ccfg.get("search_results") or 5)]
     if not results:
         return "No results.", []
