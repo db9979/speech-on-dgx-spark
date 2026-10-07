@@ -1,4 +1,5 @@
-"""Calendar and daily briefing per profile (read only; guests have neither).
+"""Calendar and daily briefing per profile (guests have neither). New appointments only after the person
+confirms a proposal (see "new appointments" below).
 
     USERS_DIR/<user id>/calendar.json  {"calendars": [{id, name, url, user, password}], "topics": [...]}
 
@@ -348,3 +349,105 @@ def line(x):
         when = f"{day} {s:%H:%M}" + (f"–{x['end']:%H:%M}" if x["end"] > s else "")
     return f"{when}: {x['title']}" + (f" (Ort: {x['location']})" if x["location"] else "") \
         + (f" [{x['calendar']}]" if x.get("many") and x.get("calendar") else "")
+
+
+# ---------------------------------------------------------------- new appointments
+# The assistant proposes an appointment (pending, per profile); only when the person says yes in
+# the next message does the panel itself write it to the first CalDAV calendar (iCal links are
+# read only). The model never writes on its own.
+PENDING_SECONDS = 15 * 60
+YES = re.compile(r"(?i)^\W*(ja|jo|jap|jep|jawohl|genau|passt|richtig|stimmt|ok(ay)?|mach( das| es)?|trag (es |ihn |das )?ein|"
+                 r"bitte|gerne?|klar|yes|sure|do it)\b")
+NO = re.compile(r"(?i)\b(nein|nö|nee|nicht|stopp|abbrechen|lass( es)?|doch nicht|no|cancel)\b")
+
+
+def _pending_file(uid):
+    return profiles._path(uid, "calendar-pending.json")
+
+
+def propose(uid, item):
+    profiles._write(_pending_file(uid), dict(item, t=int(time.time())))
+
+
+def pending(uid):
+    try:
+        with open(_pending_file(uid)) as f:
+            d = json.load(f)
+        return d if isinstance(d, dict) and time.time() - d.get("t", 0) < PENDING_SECONDS else None
+    except (OSError, ValueError):
+        return None
+
+
+def drop_pending(uid):
+    try:
+        os.remove(_pending_file(uid))
+    except OSError:
+        pass
+
+
+def describe(item):
+    s = datetime.datetime.fromisoformat(item["start"])
+    e = datetime.datetime.fromisoformat(item["end"])
+    if item.get("allday"):
+        when = f"{WEEKDAYS[s.weekday()]} {s:%d.%m.%Y} ganztägig"
+    else:
+        when = f"{WEEKDAYS[s.weekday()]} {s:%d.%m.%Y} {s:%H:%M}–{e:%H:%M}"
+    return f"„{item['title']}“ am {when}" + (f", Ort: {item['location']}" if item.get("location") else "") \
+        + (f", Erinnerung {item['alarm']} Minuten vorher" if item.get("alarm") else "")
+
+
+def ical(item, uid_text):
+    cal = icalendar.Calendar()
+    cal.add("prodid", "-//speech-on-dgx-spark//DE")
+    cal.add("version", "2.0")
+    ev = icalendar.Event()
+    ev.add("uid", uid_text)
+    ev.add("dtstamp", datetime.datetime.now(datetime.timezone.utc))
+    ev.add("summary", item["title"])
+    s, e = datetime.datetime.fromisoformat(item["start"]), datetime.datetime.fromisoformat(item["end"])
+    if item.get("allday"):
+        ev.add("dtstart", s.date())
+        ev.add("dtend", e.date())
+    else:
+        ev.add("dtstart", s.astimezone(datetime.timezone.utc))
+        ev.add("dtend", e.astimezone(datetime.timezone.utc))
+    if item.get("location"):
+        ev.add("location", item["location"])
+    if item.get("alarm"):
+        al = icalendar.Alarm()
+        al.add("action", "DISPLAY")
+        al.add("description", item["title"])
+        al.add("trigger", datetime.timedelta(minutes=-int(item["alarm"])))
+        ev.add_component(al)
+    cal.add_component(ev)
+    return cal.to_ical()
+
+
+async def add_event(uid, item):
+    """Writes the appointment to the first writable CalDAV calendar (the one named in item
+    "calendar" when it exists). Returns the calendar's name; ValueError when none can take it."""
+    wanted = str(item.get("calendar") or "").strip().lower()
+    last_error = "no CalDAV calendar connected (iCal links are read only)"
+    for d in get(uid)["calendars"]:
+        if re.match(r"webcals?://", d["url"], re.I) or re.search(r"\.ics(\?|$)", d["url"], re.I):
+            continue
+        auth = (d["user"], d.get("password", "")) if d.get("user") else None
+        async with httpx.AsyncClient(timeout=httpx.Timeout(20, connect=8), auth=auth, follow_redirects=True,
+                                     headers={"User-Agent": "speech-on-dgx-spark"}) as c:
+            try:
+                cals = await _calendars(c, d["url"])
+            except Exception as e:
+                last_error = str(e)
+                continue
+            if not cals:
+                continue
+            pick = next((x for x in cals if wanted and wanted in (x[1] or "").lower()), None) or cals[0]
+            uid_text = f"{os.urandom(8).hex()}@speech-spark"
+            url = pick[0].rstrip("/") + f"/{uid_text.split('@')[0]}.ics"
+            r = await c.put(url, content=ical(item, uid_text),
+                            headers={"Content-Type": "text/calendar; charset=utf-8", "If-None-Match": "*"})
+            if r.status_code in (200, 201, 204):
+                _drop(uid)
+                return pick[1] or d.get("name", "Kalender")
+            last_error = f"the calendar server answered {r.status_code}"
+    raise ValueError(last_error)

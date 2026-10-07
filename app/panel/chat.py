@@ -268,6 +268,47 @@ BRIEFING_HINT = ("Wenn der Nutzer um ein Tagesbriefing bittet, wissen will, was 
                  "zusammen: kurzer Gruß, die heutigen Termine in zeitlicher Reihenfolge mit Uhrzeit, dann die "
                  "Erinnerungen, dann zu jedem Thema ein bis zwei Sätze. Keine Aufzählungszeichen, keine Links.")
 CALENDAR_HINT = "Für Fragen zu Terminen an bestimmten Tagen nutze calendar_events."
+CALENDAR_ADD_TOOL = {"type": "function", "function": {
+    "name": "calendar_add",
+    "description": "Propose a new appointment in the user's calendar. It is NOT saved by this call: the panel "
+                   "saves it only after the user says yes in the next message.",
+    "parameters": {"type": "object", "properties": {
+        "title": {"type": "string"},
+        "start": {"type": "string", "description": "local start 'YYYY-MM-DDTHH:MM', or 'YYYY-MM-DD' for all day"},
+        "minutes": {"type": "integer", "description": "duration in minutes (default 60; all day: ignored)"},
+        "days": {"type": "integer", "description": "all-day appointments: number of days (default 1)"},
+        "location": {"type": "string"},
+        "alarm_minutes": {"type": "integer", "description": "a reminder this many minutes before (optional)"},
+        "calendar": {"type": "string", "description": "name of the calendar, only if the user named one"}},
+        "required": ["title", "start"]}}}
+CALENDAR_ADD_HINT = ("Neue Termine trägst du mit calendar_add ein. Das Werkzeug speichert noch nichts: Lies dem "
+                     "Nutzer den Vorschlag aus dem Ergebnis vor und frag, ob du ihn eintragen sollst. Eingetragen "
+                     "wird erst, wenn er in der nächsten Nachricht zustimmt. Frag vorher nach, wenn Tag oder Uhrzeit "
+                     "fehlen, statt sie zu raten.")
+
+
+def appointment(args, tz):
+    """A checked appointment from calendar_add's arguments (ISO local times), or ValueError."""
+    zone = user_zone(tz)
+    title = str(args.get("title") or "").strip()[:200]
+    raw = str(args.get("start") or "").strip().replace("Z", "")
+    if not title or not raw:
+        raise ValueError("title and start are required")
+    allday = re.fullmatch(r"\d{4}-\d{2}-\d{2}", raw) is not None
+    start = datetime.datetime.fromisoformat(raw[:16])
+    start = start.replace(tzinfo=zone) if start.tzinfo is None else start.astimezone(zone)
+    if allday:
+        days = min(31, max(1, int(args.get("days") or 1)))
+        end = start + datetime.timedelta(days=days)
+    else:
+        end = start + datetime.timedelta(minutes=min(24 * 60, max(5, int(args.get("minutes") or 60))))
+    if end < datetime.datetime.now(zone) - datetime.timedelta(hours=1):
+        raise ValueError("this time is in the past")
+    alarm = args.get("alarm_minutes")
+    alarm = min(7 * 24 * 60, max(0, int(alarm))) if alarm not in (None, "") else 0
+    return {"title": title, "start": start.isoformat(), "end": end.isoformat(), "allday": allday,
+            "location": str(args.get("location") or "").strip()[:200], "alarm": alarm,
+            "calendar": str(args.get("calendar") or "").strip()[:60]}
 
 
 MAIL_TOOLS = [
@@ -733,7 +774,27 @@ async def chat(request: Request):
     if mailbox:
         system = (system + "\n\n" + MAIL_HINT).strip()
     briefing = bool(ccfg.get("calendar", True))
+    cal_note = []
     cal = calendars.get(who["id"]) if who and briefing else {"calendars": [], "topics": []}
+    # new appointments: only the profile's own login or device key, and only after a yes (see calendars.py)
+    cal_write = bool(cal["calendars"] and own_browser)
+    if cal_write:
+        system = (system + "\n\n" + CALENDAR_ADD_HINT).strip()
+        prop = calendars.pending(who["id"])
+        if prop:
+            latest = messages[-1]["content"] if messages[-1]["role"] == "user" else ""
+            calendars.drop_pending(who["id"])
+            if calendars.YES.search(latest) and not calendars.NO.search(latest):
+                try:
+                    where = await calendars.add_event(who["id"], prop)
+                    note = f"Saved in calendar '{where}' (confirmed by the calendar server): {calendars.describe(prop)}"
+                except Exception as e:
+                    note = f"NOT saved, the calendar refused it: {e}. Proposal was {calendars.describe(prop)}"
+                cal_note[:] = [{"name": "calendar_add (bestätigt)", "args": calendars.describe(prop), "result": note}]
+                system = (system + "\n\nKalender: " + note + " Sag dem Nutzer genau das in einem Satz.").strip()
+            else:
+                system = (system + "\n\nKalender: Der vorgeschlagene Termin " + calendars.describe(prop)
+                          + " wurde NICHT eingetragen, weil der Nutzer nicht zugestimmt hat.").strip()
     if briefing:
         system = (system + "\n\n" + BRIEFING_HINT + (" " + CALENDAR_HINT if cal["calendars"] else "")
                   + (" Nenne im Briefing nach den Erinnerungen kurz die ungelesenen Mails (Absender und Thema)."
@@ -742,7 +803,8 @@ async def chat(request: Request):
         + ([DOC_TOOL] if docs else []) + (([HA_STATES_TOOL, HA_HISTORY_TOOL] if ha_direct or ha_wait
              else [HA_TOOL, HA_STATES_TOOL, HA_ACTION_TOOL, HA_HISTORY_TOOL, HA_TODO_TOOL]) if ha else []) \
         + (REMINDER_TOOLS if timers else []) + ([BRIEFING_TOOL] if briefing else []) \
-        + ([CALENDAR_TOOL] if cal["calendars"] else []) + (MAIL_TOOLS if mailbox else [])
+        + ([CALENDAR_TOOL] if cal["calendars"] else []) + ([CALENDAR_ADD_TOOL] if cal_write else []) \
+        + (MAIL_TOOLS if mailbox else [])
     # once mail was read in this answer, nothing in it may switch the home or send words to the web
     after_mail = (SEARCH_TOOL, HA_TOOL, HA_ACTION_TOOL, HA_TODO_TOOL)
     # what this request cannot reach: said plainly, so the model does not make up appointments or mails
@@ -777,7 +839,7 @@ async def chat(request: Request):
     sentences = asyncio.Queue()
     t0 = time.time()
 
-    trace = {"calls": [], "said": ""}  # for the profile's tool log
+    trace = {"calls": list(cal_note), "said": ""}  # for the profile's tool log
 
     async def llm():
         try:
@@ -1051,6 +1113,15 @@ async def chat(request: Request):
                 return f"Calendar not reachable: {e}"
             return ("\n".join(calendars.line(x) for x in evs) or "No appointments in this period. Say so; do not guess any.") \
                 + "".join(f"\nCalendar '{n}' could not be read: {e}" for n, e in errors)
+        if name == "calendar_add" and cal_write:
+            try:
+                item = appointment(args, body.get("tz"))
+            except (ValueError, TypeError, OverflowError) as e:
+                return f"Not proposed: {e}. Ask the user for the missing or correct details."
+            calendars.propose(who["id"], item)
+            await out.put({"type": "calendar"})
+            return ("NOT saved yet. Read this proposal to the user and ask whether to enter it: "
+                    + calendars.describe(item) + ". It is saved only if the user says yes in the next message.")
         if name == "daily_briefing" and briefing:
             return await briefing_text(st)
         if name == "memory_save" and prof:

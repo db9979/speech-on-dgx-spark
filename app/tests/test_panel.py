@@ -635,6 +635,38 @@ class Briefing(unittest.TestCase):
             push.send, push.subs = old_send, old_subs
 
 
+class CalendarAdd(unittest.TestCase):
+    def test_only_after_yes(self):
+        a, b = profile("Ida"), profile("Tom")
+        uid = a.get("/api/whoami").json()["profile"]["id"]
+        import calendars
+        calendars.add(uid, calendars.entry({"name": "Privat", "url": f"http://127.0.0.1:{helpers.CAL_PORT}/dav/",
+                                            "user": "ida", "password": "pw"}))
+        helpers.CAL_EVENTS.clear()
+        res = answer(ask(a, 'TOOL calendar_add {"title": "Zahnarzt", "start": "2030-03-05T10:00", "minutes": 30, '
+                            '"alarm_minutes": 60}', tz="Europe/Berlin"))
+        self.assertIn("NOT saved yet", res)
+        self.assertIn("Zahnarzt", res)
+        self.assertEqual(helpers.CAL_EVENTS, {})
+        self.assertIn("NO TOOL calendar_add", answer(ask(b, 'TOOL calendar_add {"title": "x", "start": "2030-01-01"}')))
+        answer(ask(a, "Nein, doch nicht", tz="Europe/Berlin"))       # no: dropped, nothing written
+        self.assertEqual(helpers.CAL_EVENTS, {})
+        self.assertIn("NICHT eingetragen", helpers.LLM_CALLS[-1]["messages"][0]["content"])
+        answer(ask(a, 'TOOL calendar_add {"title": "Zahnarzt", "start": "2030-03-05T10:00", "minutes": 30}', tz="Europe/Berlin"))
+        answer(ask(a, "Ja, trag es ein", tz="Europe/Berlin"))
+        self.assertEqual(len(helpers.CAL_EVENTS), 1)
+        ics = next(iter(helpers.CAL_EVENTS.values()))
+        self.assertIn("SUMMARY:Zahnarzt", ics)
+        self.assertIn("DTSTART:20300305T090000Z", ics)
+        self.assertIn("Saved in calendar 'Privat'", helpers.LLM_CALLS[-1]["messages"][0]["content"])
+        res = answer(ask(a, 'TOOL calendar_events {"date": "2030-03-05"}', tz="Europe/Berlin"))
+        self.assertIn("10:00", res)
+        answer(ask(a, "Ja"))                                          # no proposal left: nothing more
+        self.assertEqual(len(helpers.CAL_EVENTS), 1)
+        log = a.get("/api/profile/toollog").json()["items"]
+        self.assertTrue(any(c["name"] == "calendar_add (bestätigt)" for x in log for c in x["calls"]))
+
+
 class Mail(unittest.TestCase):
     """E-mail per profile: read only, never another profile's, guests and foreign voices get none."""
 

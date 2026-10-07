@@ -23,7 +23,7 @@ def _port():
         return s.getsockname()[1]
 
 
-LLM_PORT, TTS_PORT, HA_PORT = _port(), _port(), _port()
+LLM_PORT, TTS_PORT, HA_PORT, CAL_PORT = _port(), _port(), _port(), _port()
 HA_TOKEN = "t" * 40
 
 cfg = json.load(open(os.path.join(APP, "config.default.json")))
@@ -294,6 +294,35 @@ class FakeIMAP:
         return "NO", [b""]
 
 
+CAL_EVENTS = {}   # path -> iCal text the fake CalDAV server holds
+
+
+def fake_caldav():
+    """One CalDAV calendar "Privat" at /dav/privat/ that answers PROPFIND, REPORT and PUT."""
+    from fastapi.responses import Response
+    app = FastAPI()
+    cal = ('<d:response><d:href>/dav/privat/</d:href><d:propstat><d:prop><d:resourcetype><d:collection/>'
+           '<c:calendar/></d:resourcetype><d:displayname>Privat</d:displayname></d:prop></d:propstat></d:response>')
+
+    @app.api_route("/dav/{rest:path}", methods=["PROPFIND", "REPORT", "PUT", "GET"])
+    async def dav(rest: str, req: Request):
+        body = (await req.body()).decode()
+        ms = '<?xml version="1.0"?><d:multistatus xmlns:d="DAV:" xmlns:c="urn:ietf:params:xml:ns:caldav">'
+        if req.method == "PUT":
+            if req.headers.get("if-none-match") != "*" or "BEGIN:VEVENT" not in body:
+                return Response(status_code=412)
+            CAL_EVENTS["/dav/" + rest] = body
+            return Response(status_code=201)
+        if req.method == "PROPFIND":
+            return Response(ms + cal + "</d:multistatus>", status_code=207, media_type="application/xml")
+        if req.method == "REPORT":
+            items = "".join(f"<d:response><d:href>{k}</d:href><d:propstat><d:prop><c:calendar-data>{v}"
+                            "</c:calendar-data></d:prop></d:propstat></d:response>" for k, v in CAL_EVENTS.items())
+            return Response(ms + items + "</d:multistatus>", status_code=207, media_type="application/xml")
+        return Response("nope", status_code=404)
+    return app
+
+
 def _serve(app, port):
     server = uvicorn.Server(uvicorn.Config(app, host="127.0.0.1", port=port, log_level="error"))
     server.install_signal_handlers = lambda: None
@@ -314,6 +343,7 @@ def start():
         _serve(fake_llm(), LLM_PORT)
         _serve(fake_tts(), TTS_PORT)
         _serve(fake_ha(), HA_PORT)
+        _serve(fake_caldav(), CAL_PORT)
         _started = True
 
 
