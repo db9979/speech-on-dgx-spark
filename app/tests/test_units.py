@@ -96,3 +96,14 @@ class WebPush(unittest.TestCase):
             with self.assertRaises(ValueError):
                 push.valid({"endpoint": url, "keys": good})
         push.valid({"endpoint": "https://web.push.apple.com/abc", "keys": good})
+
+
+class History(unittest.TestCase):
+    def test_trim_keeps_newest_and_starts_with_user(self):
+        import chat
+        msgs = [{"role": "user" if i % 2 == 0 else "assistant", "content": str(i) * 1000} for i in range(40)]
+        out = chat.trim_history(msgs, 5500)
+        self.assertEqual(out[-1], msgs[-1])
+        self.assertEqual(out[0]["role"], "user")
+        self.assertLessEqual(sum(len(m["content"]) for m in out), 5500)
+        self.assertEqual([m["role"] for m in chat.trim_history([{"role": "user", "content": "x" * 99999}], 10)], ["user"])

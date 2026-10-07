@@ -463,6 +463,29 @@ def llm_error_code(e, status=None):
     return "llm_error"
 
 
+class ContextFull(RuntimeError):
+    """The LLM refused the request as longer than its context."""
+
+
+HISTORY_CHARS = 24000  # about 8000 tokens of earlier conversation; documents and tools come on top
+
+
+def trim_history(messages, budget=HISTORY_CHARS):
+    """The newest messages that fit the budget (the last one always). A long conversation would
+    otherwise fill the model's context until answers break off or fail."""
+    keep, used = [], 0
+    for m in reversed(messages):
+        n = len(str(m["content"]))
+        if keep and used + n > budget:
+            break
+        keep.append(m)
+        used += n
+    keep.reverse()
+    while len(keep) > 1 and keep[0]["role"] != "user":  # start with a question of the user
+        keep.pop(0)
+    return keep
+
+
 @router.post("/api/chat", dependencies=[Depends(assistant)])
 async def chat(request: Request):
     _last_chat[0] = time.time()
@@ -473,6 +496,7 @@ async def chat(request: Request):
                 if isinstance(m, dict) and m.get("role") in ("user", "assistant") and m.get("content")]
     if not messages:
         raise HTTPException(400, "messages are required")
+    messages = trim_history(messages)
     system = ccfg.get("system_prompt") or ""
     if ccfg.get("datetime", True):
         system = (system + "\n\n" + now_line(body.get("tz"))).strip()
@@ -582,7 +606,16 @@ async def chat(request: Request):
                          and not (st["mail"] and t in after_mail)] if rnd < 4 else []
                 if offer:
                     payload["tools"] = offer
-                finish, calls = await llm_round(payload, st)
+                try:
+                    finish, calls = await llm_round(payload, st)
+                except ContextFull:
+                    # still too long for the model (big documents or results): half the history, once more
+                    if rnd or st["n"] or len(msgs) < 3:
+                        raise
+                    head = [m for m in msgs if m["role"] == "system"]
+                    rest = trim_history([m for m in msgs if m["role"] in ("user", "assistant")], HISTORY_CHARS // 4)
+                    msgs = head + rest
+                    finish, calls = await llm_round(dict(payload, messages=msgs), st)
                 if not calls or finish == "length":
                     break
                 rest = st["buf"].strip()
@@ -852,7 +885,10 @@ async def chat(request: Request):
         async with c.stream("POST", ccfg["llm_url"].rstrip("/") + "/chat/completions",
                             json=payload, headers=lheaders) as r:
             if r.status_code != 200:
-                raise RuntimeError(f"LLM HTTP {r.status_code}: {(await r.aread()).decode(errors='replace')[:300]}")
+                detail = (await r.aread()).decode(errors='replace')[:300]
+                if r.status_code == 400 and re.search(r"context|too long|longer than|maximum.*length", detail, re.I):
+                    raise ContextFull(f"LLM HTTP 400: {detail}")
+                raise RuntimeError(f"LLM HTTP {r.status_code}: {detail}")
             async for line in r.aiter_lines():
                 if not line.startswith("data:"):
                     continue  # SSE comments and keep-alives
