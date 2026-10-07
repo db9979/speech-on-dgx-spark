@@ -17,7 +17,7 @@ function ptab(id){document.querySelectorAll('#ptabs button').forEach(b=>b.classL
   document.querySelectorAll('#profmodal .ptab').forEach(x=>x.classList.toggle('on',x.id===id))}
 function meTabs(){const items=[['setbox',t('Gespräch','Conversation'),!GATE],['loginbox',t('Anmelden','Sign in'),!PROFILE],
     ['factbox',t('Gedächtnis','Memory'),!!PROFILE],['docbox',t('Dokumente','Documents'),PROFILE&&DOCS_ON],['calbox',t('Kalender','Calendar'),PROFILE&&CAL_ON],['mailbox',t('E-Mail','E-mail'),PROFILE&&MAIL_ON],
-    ['habox',t('Smart Home','Smart home'),PROFILE&&HA_ON],['voicebox',t('Stimme','Voice'),PROFILE&&SPK_ON],['secbox',t('Sicherheit','Security'),!!PROFILE]].filter(x=>x[2]);
+    ['habox',t('Smart Home','Smart home'),PROFILE&&HA_ON],['voicebox',t('Stimme','Voice'),PROFILE&&SPK_ON],['logbox',t('Protokoll','Log'),!!PROFILE],['secbox',t('Sicherheit','Security'),!!PROFILE]].filter(x=>x[2]);
   $('ptabs').innerHTML=items.map(([id,l])=>`<button type="button" data-t="${id}">${esc(l)}</button>`).join('');
   $('ptabs').querySelectorAll('button').forEach(b=>b.onclick=()=>{meLast=b.dataset.t;ptab(b.dataset.t)});return items.map(x=>x[0])}
 let meLast='setbox';
@@ -127,7 +127,7 @@ async function openMe(tab){$('profmsg').textContent='';$('profmodal').style.disp
   $('setscope').textContent=GATE?'':PROFILE?t('Einstellungen gelten auf jedem Gerät dieses Profils; „Hey Spark“ stellt jedes Gerät selbst ein.','Settings apply on every device of this profile; "Hey Spark" is set per device.'):t('Als Gast gelten die Einstellungen nur in diesem Browser. Mit einem Profil merkt sich der Assistent Dinge nur für dich.','As a guest the settings apply only in this browser. With a profile the assistant remembers things just for you.');
   $('proflogout').style.display=PROFILE?'':'none';$('profclose').style.display=GATE?'none':'';
   if(!GATE)renderSet($('setform'),S,saveSet);
-  if(PROFILE){try{await showFacts();await showDocs();await showVoice();await showCal();await showMail();await showHa();await showSecurity();await showPush().catch(()=>{})}catch{setProfile(null);openMe('loginbox')}return}
+  if(PROFILE){try{await showFacts();await showDocs();await showVoice();await showCal();await showMail();await showHa();await showSecurity();await showToolLog();await showPush().catch(()=>{})}catch{setProfile(null);openMe('loginbox')}return}
   $('profpin').value='';if(tab==='loginbox')setTimeout(()=>$($('profuser').value?'profpin':'profuser').focus(),50)}
 window.openMe=openMe;
 $('profbtn').onclick=()=>openMe(meLast);   // same window and page as the settings button
@@ -220,3 +220,11 @@ $('pushgo').onclick=async()=>{try{if(await Notification.requestPermission()!=='g
     await api('/api/profile/push',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({subscription:sub.toJSON(),name:navigator.userAgent.slice(0,60)})});showPush()}
   catch(e){$('pushstate').textContent=t('Hat nicht geklappt: ','Did not work: ')+e.message}};
 $('pushoff').onclick=async()=>{const s=await pushSub();if(s){try{await api('/api/profile/push',{method:'DELETE',headers:{'Content-Type':'application/json'},body:JSON.stringify({endpoint:s.endpoint})})}catch{}await s.unsubscribe().catch(()=>{})}showPush()};
+// ---------------------------------------------------------------- tool log (own turns, a few days)
+async function showToolLog(){const d=await (await api('/api/profile/toollog')).json();$('logdays').textContent=d.days;
+  $('loglist').innerHTML=d.items.map(x=>`<li style="display:block"><small class="mut">${esc(new Date(x.t).toLocaleString())}</small><br><b>${esc(x.q)}</b>`+
+    (x.calls.length?x.calls.map(c=>`<details><summary>🔧 ${esc(c.name)} <small class="mut">${esc(c.args)}</small></summary><pre style="white-space:pre-wrap;margin:4px 0">${esc(c.result)}</pre></details>`).join('')
+      :`<div class="mut">${t('kein Werkzeug','no tool')}</div>`)+
+    `<div>→ ${esc(x.answer||'–')}</div></li>`).join('')||`<li class="mut">${t('Noch keine Einträge.','No entries yet.')}</li>`}
+$('logreload').onclick=()=>showToolLog();
+$('logclear').onclick=async()=>{if(!confirm(t('Protokoll leeren?','Clear the log?')))return;await api('/api/profile/toollog',{method:'DELETE'});showToolLog()};

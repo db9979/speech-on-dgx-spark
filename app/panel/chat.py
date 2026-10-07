@@ -625,6 +625,8 @@ async def chat(request: Request):
     sentences = asyncio.Queue()
     t0 = time.time()
 
+    trace = {"calls": [], "said": ""}  # for the profile's tool log
+
     async def llm():
         try:
             model = await llm_model(c, ccfg, lheaders)
@@ -688,7 +690,9 @@ async def chat(request: Request):
                         args = args if isinstance(args, dict) else {}
                     except ValueError:
                         args = {}
-                    msgs.append({"role": "tool", "tool_call_id": x["id"], "content": await run_tool(x["name"], args, st)})
+                    result = await run_tool(x["name"], args, st)
+                    trace["calls"].append({"name": x["name"], "args": json.dumps(args, ensure_ascii=False), "result": result})
+                    msgs.append({"role": "tool", "tool_call_id": x["id"], "content": result})
                     if x["name"] == "web_search":
                         searches += 1
             if (calls or st["xml"]) and finish != "length":
@@ -713,6 +717,11 @@ async def chat(request: Request):
             await out.put({"type": "error", "code": llm_error_code(e, status),
                            "message": f"LLM: {type(e).__name__}: {e}"[:400]})
         finally:
+            if who:  # the person can look this up in "Ich" → Protokoll (a few days only)
+                try:
+                    profiles.tool_log_add(who["id"], messages[-1]["content"], trace["calls"], trace["said"])
+                except Exception as e:
+                    print("tool log:", type(e).__name__, e, flush=True)
             await sentences.put(None)
 
     async def run_tool(name, args, st):
@@ -735,7 +744,7 @@ async def chat(request: Request):
                 return result
             except Exception as e:
                 await out.put({"type": "search_error", "message": str(e)})
-                return f"Search failed: {e}"
+                return f"Search failed: {e}. Tell the user the search did not work; do not answer from guesses."
         if name == "home_assistant" and ha:
             text = str(args.get("command", "")).strip()
             if not text:
@@ -982,6 +991,7 @@ async def chat(request: Request):
                     await out.put({"type": "timing", "llm_first_token": round(time.time() - t0, 3)})
                 st["n"] += 1
                 await out.put({"type": "text", "delta": text})
+                trace["said"] += text
                 st["buf"] += text
                 done, st["buf"] = split_sentences(st["buf"], st["first"])
                 for x in done:

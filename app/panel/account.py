@@ -121,6 +121,17 @@ def profile_security(prof=Depends(own_profile)):
     return {"devices": profiles.own_devices(prof["id"]), "events": events}
 
 
+@router.get("/api/profile/toollog", dependencies=[Depends(assistant)])
+def profile_toollog(prof=Depends(own_profile)):
+    return {"days": profiles.TOOL_LOG_DAYS, "items": profiles.tool_log(prof["id"])[::-1]}
+
+
+@router.delete("/api/profile/toollog", dependencies=[Depends(assistant)])
+def profile_toollog_clear(prof=Depends(own_profile)):
+    profiles.tool_log_clear(prof["id"])
+    return {"ok": True}
+
+
 @router.post("/api/profile/logout-all", dependencies=[Depends(assistant)])
 def profile_logout_all(request: Request, prof=Depends(own_profile)):
     """Ends the login in every browser; this one gets a fresh login and stays signed in."""

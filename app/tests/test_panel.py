@@ -489,6 +489,27 @@ class Stability(unittest.TestCase):
         self.assertEqual(TestClient(panel.app).post("/api/update/rollback").status_code, 401)
 
 
+class ToolLog(unittest.TestCase):
+    def test_own_log_only_and_short_lived(self):
+        a, b, g = profile("Lou"), profile("Kim"), TestClient(panel.app)
+        answer(ask(a, "TOOL reminder_list {}"))
+        answer(ask(a, "Wie geht es dir?"))
+        items = a.get("/api/profile/toollog").json()["items"]
+        self.assertEqual(items[1]["calls"][0]["name"], "reminder_list")
+        self.assertIn("No pending reminders", items[1]["calls"][0]["result"])
+        self.assertEqual(items[0]["calls"], [])
+        self.assertTrue(items[0]["answer"])
+        self.assertEqual(b.get("/api/profile/toollog").json()["items"], [])
+        self.assertEqual(g.get("/api/profile/toollog").status_code, 401)
+        uid = a.get("/api/whoami").json()["profile"]["id"]
+        old = profiles.tool_log(uid)
+        old[0]["t"] -= 8 * 86400 * 1000
+        profiles._write(profiles._path(uid, "toollog.json"), old)
+        self.assertEqual(len(a.get("/api/profile/toollog").json()["items"]), 1)
+        a.delete("/api/profile/toollog")
+        self.assertEqual(a.get("/api/profile/toollog").json()["items"], [])
+
+
 class Mail(unittest.TestCase):
     """E-mail per profile: read only, never another profile's, guests and foreign voices get none."""
 

@@ -422,3 +422,33 @@ def forget(uid, fact_id=None, text=None):
             keep = []
         _write(_path(uid, "memory.json"), keep)
         return len(facts) - len(keep)
+
+
+# ---------------------------------------------------------------- tool log
+# What the assistant looked up per turn (question, tools with arguments and a short result, the
+# answer), so the person can see where an answer came from. Only the profile's own turns, short
+# texts, and only for a few days.
+TOOL_LOG_DAYS, TOOL_LOG_MAX = 7, 200
+
+
+def tool_log(uid):
+    try:
+        with open(_path(uid, "toollog.json")) as f:
+            items = json.load(f)
+    except (OSError, ValueError):
+        return []
+    cut = (time.time() - TOOL_LOG_DAYS * 86400) * 1000
+    return [x for x in items if isinstance(x, dict) and x.get("t", 0) >= cut] if isinstance(items, list) else []
+
+
+def tool_log_add(uid, question, calls, answer):
+    item = {"t": int(time.time() * 1000), "q": str(question)[:300], "answer": str(answer).strip()[:600],
+            "calls": [{"name": str(c["name"])[:60], "args": str(c["args"])[:300], "result": str(c["result"])[:600]}
+                      for c in calls[:12]]}
+    with _lock:
+        _write(_path(uid, "toollog.json"), (tool_log(uid) + [item])[-TOOL_LOG_MAX:])
+
+
+def tool_log_clear(uid):
+    with _lock:
+        _write(_path(uid, "toollog.json"), [])
