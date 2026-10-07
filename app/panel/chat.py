@@ -741,7 +741,8 @@ async def chat(request: Request):
             if not text:
                 return "No command given."
             if ha_code and not ha_code_ok:
-                print("homeassistant: code word not in the latest message, nothing sent", flush=True)
+                print("homeassistant: code word not in the latest message, nothing sent; code word:",
+                      homeassistant.code_state(ha), flush=True)
                 await out.put({"type": "home_done", "ok": False, "text": "Codewort fehlt"})
                 return CODE_MISSING
             await out.put({"type": "home", "command": text})
@@ -769,7 +770,8 @@ async def chat(request: Request):
         if name == "home_assistant_action" and ha:
             eid, service = str(args.get("entity_id", "")), str(args.get("service", ""))
             if ha_code and not ha_code_ok:
-                print("homeassistant: code word not in the latest message, nothing sent", flush=True)
+                print("homeassistant: code word not in the latest message, nothing sent; code word:",
+                      homeassistant.code_state(ha), flush=True)
                 await out.put({"type": "home_done", "ok": False, "text": "Codewort fehlt"})
                 return CODE_MISSING
             await out.put({"type": "home", "command": f"{eid} {service}".strip()})

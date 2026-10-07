@@ -226,6 +226,10 @@ class HomeAssistant(unittest.TestCase):
         # numbers count as words: "Apollo 13" is "Apollo dreizehn"
         a.put("/api/profile/homeassistant/code", json={"code": "Apollo dreizehn"})
         self.assertNotIn("code word", answer(ask(a, cmd + ', "x": "Apollo 13"}')))
+        # speech recognition spellings: joined digits, a letter misheard; a different word does not pass
+        self.assertNotIn("code word", answer(ask(a, cmd + ', "x": "Apollo13"}')))
+        self.assertNotIn("code word", answer(ask(a, cmd + ', "x": "Apolo dreizehen"}')))
+        self.assertIn("code word", answer(ask(a, cmd + ', "x": "Apollo vierzehn zwölf"}')))
         self.assertFalse(a.put("/api/profile/homeassistant/code", json={"code": ""}).json()["has_code"])
 
 

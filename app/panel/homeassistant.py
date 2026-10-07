@@ -59,7 +59,8 @@ def get(uid):
 def public(uid):
     d = get(uid)
     return {"url": d["url"], "verify": d.get("verify", True), "agent": d.get("agent", ""),
-            "has_token": True, "has_code": bool(d.get("code"))} if d \
+            "has_token": True, "has_code": bool(d.get("code")),
+            "code_old": bool(d.get("code")) and code_state(d).startswith(("old", "unreadable"))} if d \
         else {"url": "", "verify": True, "agent": "", "has_token": False, "has_code": False}
 
 
@@ -87,13 +88,13 @@ def save(uid, item):
 
 # ---- code word for changes ----
 
-_WORD = re.compile(r"[0-9A-Za-zÄÖÜäöüß]+")
+_WORD = re.compile(r"[A-Za-zÄÖÜäöüß]+|[0-9]+")  # "Apollo13" is two words, like "Apollo 13"
 
 
 def _tok(word):
     """One word as compared: lower case, umlauts spelled out, numbers as German words, so "Apollo 13"
     and "Apollo dreizehn" are the same code word whichever way speech recognition writes it."""
-    if any(ch.isdigit() for ch in word):
+    if word.isdigit():
         try:
             from textnorm import speak_numbers
             word = speak_numbers(word, "de")
@@ -112,7 +113,9 @@ def _hash(salt, joined):
 
 
 def set_code(uid, code):
-    """Sets the code word (an empty one removes it); raises ValueError when it is too weak."""
+    """Sets the code word (an empty one removes it); raises ValueError when it is too weak. It is
+    stored encrypted (vault.py), never sent back, and compared with some tolerance for how speech
+    recognition spells it."""
     words = _words(code)
     joined = "".join(words)
     if joined and (len(joined) < 4 or len(words) > 6):
@@ -123,8 +126,7 @@ def set_code(uid, code):
             raise ValueError("connect Home Assistant first")
         d.pop("code", None)
         if joined:
-            salt = os.urandom(16).hex()
-            d["code"] = vault.seal(json.dumps({"salt": salt, "hash": _hash(salt, joined), "words": len(words)}))
+            d["code"] = vault.seal(json.dumps({"v": 2, "code": joined, "words": len(words)}))
         profiles._write(_file(uid), d)
     return public(uid)
 
@@ -132,9 +134,32 @@ def set_code(uid, code):
 def _code(item):
     try:
         c = json.loads(vault.open_(item.get("code") or "") or "null")
-        return c if isinstance(c, dict) and c.get("salt") and c.get("hash") else None
+        return c if isinstance(c, dict) and (c.get("code") or c.get("hash")) else None
     except ValueError:
-        return {"salt": "00", "hash": "unreadable", "words": 1}  # sealed with another key: never matches
+        return {"code": "\0unreadable", "words": 1}  # sealed with another key: never matches
+
+
+def _dist(a, b, limit):
+    """Edit distance of a and b, or limit + 1 once it is above limit."""
+    if abs(len(a) - len(b)) > limit:
+        return limit + 1
+    prev = list(range(len(b) + 1))
+    for i, ca in enumerate(a, 1):
+        cur = [i]
+        for j, cb in enumerate(b, 1):
+            cur.append(min(prev[j] + 1, cur[j - 1] + 1, prev[j - 1] + (ca != cb)))
+        if min(cur) > limit:
+            return limit + 1
+        prev = cur
+    return prev[-1]
+
+
+def _fits(code, joined):
+    if code.get("code"):  # tolerate a letter or two misheard: Apolo, Appollo, dreizehen
+        want = code["code"]
+        return _dist(joined, want, 0 if len(want) < 6 else 1 if len(want) < 10 else 2) <= (
+            0 if len(want) < 6 else 1 if len(want) < 10 else 2)
+    return _hash(code["salt"], joined) == code["hash"]  # older versions kept only a hash: exact
 
 
 def _spans(code, text):
@@ -146,9 +171,16 @@ def _spans(code, text):
     found = []
     for k in sorted({max(1, n - 1), n, n + 1}):
         for i in range(len(toks) - k + 1):
-            if _hash(code["salt"], "".join(norm[i:i + k])) == code["hash"]:
+            if _fits(code, "".join(norm[i:i + k])):
                 found.append((toks[i].start(), toks[i + k - 1].end()))
     return found
+
+
+def code_state(item):
+    """For the journal, never the word itself."""
+    c = _code(item) if item else None
+    return "none" if not c else "unreadable" if c.get("code") == "\0unreadable" else \
+        "old hash (save it again)" if c.get("hash") else f"set, {c.get('words')} word(s)"
 
 
 def needs_code(item):
