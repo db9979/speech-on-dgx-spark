@@ -2,7 +2,7 @@
 
 [English](README.md) | **Deutsch**
 
-Version V01.0.68 · Idee: Dominik Bornhäußer
+Version V01.0.69 · Idee: Dominik Bornhäußer
 
 Ein Skript installiert **Qwen3-ASR** (Spracherkennung) und **Qwen3-TTS** (Sprachausgabe) als systemd-Dienste auf einer NVIDIA DGX Spark (GB10). Dazu kommt eine Weboberfläche für Konfiguration und Monitoring. Das Setup läuft neben [dgx-spark-qwen38](https://github.com/hasso5703/dgx-spark-qwen38).
 
@@ -60,7 +60,7 @@ Der **Assistent** braucht das Mikrofon, und Browser erlauben das nur über https
 
 **Gespräche durchsuchen**: Die Lupe neben der Gesprächsauswahl (am Handy im Menü) sucht in allen früheren Gesprächen, mit Profil in denen des Profils, als Gast in denen des Browsers. Ein Klick öffnet das Gespräch an der Stelle.
 
-**Frühere Gespräche** (Einstellungen → Funktionen → „Frühere Gespräche“, standardmäßig an; nur Profile): Der Assistent schlägt nach, worüber ihr früher gesprochen habt („Was hast du mir letzte Woche zum Grill gesagt?“, „Worüber haben wir gestern geredet?“), und sucht dabei nur in den gespeicherten Gesprächen des eigenen Profils. Gespräche, die zehn Minuten ruhen, liest er außerdem einmal im Hintergrund nach, wenn gerade niemand spricht, und übernimmt höchstens drei dauerhafte Fakten pro Gespräch ins Gedächtnis des Profils; im Fenster „Ich“ stehen sie mit „automatisch“ markiert und lassen sich löschen. Jedes Profil kann dieses Lernen in den Gesprächseinstellungen abschalten („Aus Gesprächen lernen“).
+**Frühere Gespräche** (Einstellungen → Funktionen → „Frühere Gespräche“, standardmäßig an; nur Profile): Der Assistent schlägt nach, worüber ihr früher gesprochen habt („Was hast du mir letzte Woche zum Grill gesagt?“, „Worüber haben wir gestern geredet?“), und sucht dabei nur in den gespeicherten Gesprächen des eigenen Profils. Gespräche, die zehn Minuten ruhen, liest er außerdem einmal im Hintergrund nach, wenn gerade niemand spricht, und übernimmt höchstens drei dauerhafte Fakten pro Gespräch ins Gedächtnis des Profils; im Fenster „Ich“ stehen sie mit „automatisch“ markiert und lassen sich löschen. Jedes Profil kann dieses Lernen in den Gesprächseinstellungen abschalten („Aus Gesprächen lernen“). Einmal pro Woche (oder per „Aufräumen vorschlagen“) schlägt der Assistent vor, doppelte Einträge zusammenzufassen und überholte zu entfernen; erst wenn man den Vorschlag unter Ich → Gedächtnis übernimmt, ändert sich etwas. Mit eingeschalteten Mitteilungen kommt dazu ein Hinweis.
 
 **Aussprache:** Unter Einstellungen → Sprachausgabe → Aussprache steht eine Regel pro Zeile, etwa `DGX = De Ge Ix`. Sie gilt für ganze Wörter und für jede Sprachausgabe, auch aus Open WebUI.
 

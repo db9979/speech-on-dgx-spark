@@ -27,6 +27,7 @@ import homeassistant  # noqa: E402
 import profiles  # noqa: E402
 import admin  # noqa: E402
 import chat  # noqa: E402
+import memtidy  # noqa: E402
 import quality  # noqa: E402
 import update  # noqa: E402
 import system  # noqa: E402
@@ -160,6 +161,13 @@ async def learner():
                     print(f"learned {n} fact(s) from conversations", flush=True)
             except Exception as e:
                 print("learning:", type(e).__name__, e, flush=True)
+            try:
+                if time.time() - chat._last_chat[0] > 60:   # never while someone is talking
+                    uid = await memtidy.due_once()
+                    if uid:
+                        print("memory tidy: checked a profile", flush=True)
+            except Exception as e:
+                print("memory tidy:", type(e).__name__, e, flush=True)
     asyncio.create_task(loop())
 
 

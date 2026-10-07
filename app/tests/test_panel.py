@@ -705,6 +705,42 @@ class Quality(unittest.TestCase):
         self.assertEqual(TestClient(panel.app).get("/api/quality").status_code, 401)
 
 
+class MemoryTidy(unittest.TestCase):
+    def test_proposal_only_after_confirm_and_only_own(self):
+        import memtidy
+        import profiles
+        a, b = profile("Lea"), profile("Max")
+        uid = a.get("/api/whoami").json()["profile"]["id"]
+        for t in ["Lea trinkt Kaffee schwarz", "Lea mag Kaffee ohne Milch", "Lea hat am 3.5. Zahnarzt", "Lea wohnt in Köln"]:
+            profiles.remember(uid, t)
+        facts = profiles.memory(uid)
+        ids = [x["id"] for x in facts]
+        answer = json.dumps({"merge": [{"ids": [ids[0], ids[1], "nope"], "text": "Lea trinkt Kaffee schwarz, ohne Milch"},
+                                       {"ids": [ids[1], ids[3]], "text": "doppelt benutzt"}],
+                             "drop": [{"id": ids[2], "why": "vergangener Termin"}, {"id": ids[0]}, {"id": "xx"}]})
+        prop = memtidy.parse("<think>x</think> " + answer, facts)
+        self.assertEqual(prop["merge"], [{"ids": ids[:2], "text": "Lea trinkt Kaffee schwarz, ohne Milch"}])
+        self.assertEqual([d["id"] for d in prop["drop"]], [ids[2]])
+        prop["created"] = 1
+        profiles._write(profiles._path(uid, "memory-tidy.json"), prop)
+        self.assertEqual(len(profiles.memory(uid)), 4)                      # nothing changed yet
+        self.assertEqual(len(a.get("/api/profile/memory").json()["tidy"]["merge"]), 1)
+        self.assertIsNone(b.get("/api/profile/memory").json()["tidy"])     # the other profile sees nothing
+        self.assertEqual(b.post("/api/profile/memory/tidy", json={"do": "accept"}).json()["removed"], 0)
+        self.assertEqual(len(profiles.memory(uid)), 4)
+        r = a.post("/api/profile/memory/tidy", json={"do": "accept"}).json()
+        self.assertEqual(r["removed"], 2)
+        self.assertEqual(sorted(x["text"] for x in r["facts"]), ["Lea trinkt Kaffee schwarz, ohne Milch", "Lea wohnt in Köln"])
+        self.assertIsNone(a.get("/api/profile/memory").json()["tidy"])
+        # a proposal whose facts were deleted meanwhile is dropped, not applied
+        f = profiles.memory(uid)
+        profiles._write(profiles._path(uid, "memory-tidy.json"), {"merge": [], "drop": [{"id": f[0]["id"], "why": ""}]})
+        profiles.forget(uid, fact_id=f[0]["id"])
+        self.assertIsNone(memtidy.pending(uid))
+        self.assertEqual(TestClient(panel.app).post("/api/profile/memory/tidy", json={"do": "check"}).status_code // 100, 4)
+        self.assertIn("tidy", a.post("/api/profile/memory/tidy", json={"do": "check"}).json())   # fake model: nothing
+
+
 class Mail(unittest.TestCase):
     """E-mail per profile: read only, never another profile's, guests and foreign voices get none."""
 

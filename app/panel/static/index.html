@@ -434,8 +434,10 @@
     <label>PIN</label><input type="password" id="profpin" autocomplete="current-password">
     <div class="row" style="margin-top:14px"><button class="b p" id="proflogin">Anmelden</button><button class="b" type="button" id="profadmin" style="display:none" onclick="$('profmodal').style.display='none';showLogin()">Admin</button><span id="profmsg" class="err"></span></div></div>
     <div id="factbox" class="ptab"><div class="intro">Das weiß der Assistent über dich. Sag ihm „Merk dir …“ oder „Vergiss …“, oder lösche hier.</div>
+    <div id="tidybox" class="tidy" style="display:none"></div>
     <ul class="facts" id="factlist"></ul>
-    <div class="row" style="margin-top:8px"><button class="b" id="factclear">Alles vergessen</button></div></div>
+    <div class="row" style="margin-top:8px"><button class="b" id="facttidy">Aufräumen vorschlagen</button><button class="b" id="factclear">Alles vergessen</button><span id="factmsg"></span></div>
+    <div class="mut" style="margin-top:6px"><small>Einmal pro Woche schlägt der Assistent vor, doppelte oder überholte Einträge zusammenzufassen. Es ändert sich erst etwas, wenn du hier bestätigst.</small></div></div>
     <div id="docbox" class="ptab"><div class="intro">PDF, Word, Text, Markdown, HTML oder CSV, je bis 20 MB. Der Assistent sucht darin, wenn eine Frage dazu passt. Nur du kannst sie nutzen.</div>
       <ul class="facts" id="doclist"></ul>
       <div class="row" style="margin-top:8px"><button class="b" id="docadd" type="button">Dokument hinzufügen …</button><input type="file" id="docfile" multiple accept=".pdf,.txt,.md,.docx,.html,.htm,.csv" style="display:none"><span id="docmsg"></span></div></div>

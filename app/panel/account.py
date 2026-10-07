@@ -17,6 +17,7 @@ import push  # noqa: E402
 import speakers  # noqa: E402
 import calendars  # noqa: E402
 import mail  # noqa: E402
+import memtidy  # noqa: E402
 import profiles  # noqa: E402
 import homeassistant  # noqa: E402
 from common import load_config  # noqa: E402
@@ -156,7 +157,28 @@ def profile_remove_device(did: str, request: Request, prof=Depends(own_profile))
 
 @router.get("/api/profile/memory", dependencies=[Depends(assistant)])
 def profile_memory(prof=Depends(own_profile)):
-    return {"profile": prof, "facts": profiles.memory(prof["id"])}
+    return {"profile": prof, "facts": profiles.memory(prof["id"]), "tidy": memtidy.pending(prof["id"])}
+
+
+@router.post("/api/profile/memory/tidy", dependencies=[Depends(assistant)])
+async def profile_tidy(request: Request, prof=Depends(own_profile)):
+    """{"do": "check"} asks for a proposal now, "accept" carries it out, "reject" drops it."""
+    do = (await request.json()).get("do")
+    if do == "check":
+        if not profiles.memory(prof["id"]):
+            return {"tidy": None}
+        try:
+            return {"tidy": await memtidy.propose(prof["id"])}
+        except Exception as e:
+            raise HTTPException(502, f"language model not reachable: {type(e).__name__}")
+    if do == "accept":
+        n = memtidy.apply(prof["id"])
+        guard.log("profile_memory_tidied", ip=guard.client_ip(request), name=prof["name"], uid=prof["id"], removed=n)
+        return {"removed": n, "facts": profiles.memory(prof["id"])}
+    if do == "reject":
+        memtidy.drop(prof["id"])
+        return {"tidy": None}
+    raise HTTPException(400, "do must be check, accept or reject")
 
 
 @router.delete("/api/profile/memory/{fact_id}", dependencies=[Depends(assistant)])

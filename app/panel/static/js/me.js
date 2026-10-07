@@ -6,7 +6,7 @@ function setProfile(p){const changed=(p&&p.id)!==(PROFILE&&PROFILE.id);PROFILE=p
   loadSettings();rem.load()}
 window.closeProf=()=>{$('profmodal').style.display='none';endEnroll()};
 async function showFacts(){const r=await api('/api/profile/memory');const d=await r.json();
-  $('profhead').textContent=d.profile.name;
+  $('profhead').textContent=d.profile.name;showTidy(d.tidy);
   $('factlist').innerHTML=d.facts.slice().reverse().map(f=>`<li><span>${esc(f.text)}${f.auto?` <em class="auto">${t('automatisch','automatic')}</em>`:''}</span><button class="b" onclick="forgetFact('${esc(f.id)}')">${t('Löschen','Delete')}</button></li>`).join('')||`<li class="mut">${t('Noch nichts gemerkt.','Nothing remembered yet.')}</li>`}
 async function showDocs(){if(!DOCS_ON){$('docbox').style.display='none';return}$('docbox').style.display='';
   const l=await (await api('/api/profile/docs')).json();
@@ -120,6 +120,19 @@ $('docfile').onchange=async()=>{const files=[...$('docfile').files];$('docfile')
       $('docmsg').textContent=t('Hinzugefügt: ','Added: ')+r.name}
     catch(e){$('docmsg').innerHTML=`<span class="err">${esc(f.name)}: ${esc(e.message)}</span>`;}}
   showDocs()};
+function showTidy(p){const b=$('tidybox');if(!p||!(p.merge.length+p.drop.length)){b.style.display='none';b.innerHTML='';return}
+  b.style.display='';
+  b.innerHTML=`<b>${t('Vorschlag zum Aufräumen','Cleanup proposal')}</b><ul>`+
+    p.merge.map(m=>`<li>${t('Zusammenfassen','Merge')}: ${m.old.map(x=>'„'+esc(x)+'“').join(' + ')}<br>→ „${esc(m.text)}“</li>`).join('')+
+    p.drop.map(x=>`<li>${t('Entfernen','Remove')}: „${esc(x.old)}“${x.why?` <small class="mut">(${esc(x.why)})</small>`:''}</li>`).join('')+
+    `</ul><div class="row"><button class="b p" onclick="tidyDo('accept')">${t('Übernehmen','Apply')}</button><button class="b" onclick="tidyDo('reject')">${t('Verwerfen','Discard')}</button></div>`}
+window.tidyDo=async what=>{$('factmsg').textContent=what==='check'?t('Der Assistent sieht sich dein Gedächtnis an …','The assistant is looking at your memory …'):'';
+  try{const r=await (await api('/api/profile/memory/tidy',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({do:what})})).json();
+    if(what==='check')$('factmsg').textContent=r.tidy?'':t('Nichts aufzuräumen.','Nothing to tidy up.');
+    if(what==='accept')$('factmsg').textContent=t('Aufgeräumt.','Tidied up.');
+    await showFacts()}
+  catch(e){$('factmsg').innerHTML=`<span class="err">${esc(e.message)}</span>`}};
+$('facttidy').onclick=()=>tidyDo('check');
 window.forgetFact=async id=>{await api('/api/profile/memory/'+encodeURIComponent(id),{method:'DELETE'});showFacts()};
 async function openMe(tab){$('profmsg').textContent='';$('profmodal').style.display='grid';
   const tabs=meTabs();ptab(tabs.includes(tab)?tab:tabs[0]);

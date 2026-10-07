@@ -2,7 +2,7 @@
 
 **English** | [Deutsch](README.de.md)
 
-Version V01.0.68 · Idea: Dominik Bornhäußer
+Version V01.0.69 · Idea: Dominik Bornhäußer
 
 One script installs **Qwen3-ASR** (speech recognition) and **Qwen3-TTS** (text to speech) as systemd services on an NVIDIA DGX Spark (GB10), together with a web panel for configuration and monitoring. It runs alongside [dgx-spark-qwen38](https://github.com/hasso5703/dgx-spark-qwen38).
 
@@ -62,7 +62,7 @@ The **Gespräch** tab needs the microphone, and browsers only allow it over http
 
 **Searching conversations**: the magnifier next to the conversation list (on phones in the menu) searches all earlier conversations, a profile's with a profile, the browser's as a guest. A click opens the conversation at that spot.
 
-**Earlier conversations** (Einstellungen → Funktionen → "Frühere Gespräche", on by default; profiles only): the assistant can look up what you talked about before ("what did you tell me about the grill last week?", "what did we talk about yesterday?"), searching only your own profile's saved conversations. Conversations that have been quiet for ten minutes are also read once in the background, while nobody is talking, and up to three lasting facts per conversation go into the profile's memory, marked "automatic" in the "Ich" window, where they can be deleted. Each profile can switch this learning off in the conversation settings ("Learn from conversations").
+**Earlier conversations** (Einstellungen → Funktionen → "Frühere Gespräche", on by default; profiles only): the assistant can look up what you talked about before ("what did you tell me about the grill last week?", "what did we talk about yesterday?"), searching only your own profile's saved conversations. Conversations that have been quiet for ten minutes are also read once in the background, while nobody is talking, and up to three lasting facts per conversation go into the profile's memory, marked "automatic" in the "Ich" window, where they can be deleted. Each profile can switch this learning off in the conversation settings ("Learn from conversations"). Once a week (or with "Propose cleanup") the assistant proposes merging duplicate entries and removing outdated ones; nothing changes until you accept the proposal under Ich → Memory. With notifications on, a note is sent.
 
 **Pronunciation:** Settings → Speech output → Pronunciation takes one rule per line, e.g. `DGX = De Ge Ix`. It applies to whole words and to all speech output, Open WebUI included.
 
