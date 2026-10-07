@@ -399,7 +399,7 @@ async def _assist(item, text, language):
 
 # words people use for a kind of entity, so "Fenster", "Akku" or "Zone" find it without its name
 _KIND = {
-    "light": "licht lampe leuchte light lamp", "switch": "schalter steckdose switch plug",
+    "light": "licht lampe leuchte beleuchtung light lamp", "switch": "schalter steckdose switch plug",
     "climate": "heizung thermostat klima climate heating", "cover": "rollladen rolladen jalousie rollo markise cover blind shutter",
     "lock": "schloss tür tuer lock", "media_player": "fernseher tv musik lautsprecher media speaker",
     "person": "person wo ist anwesend zuhause zu hause who where", "device_tracker": "tracker handy telefon wo ist phone where",
@@ -492,9 +492,39 @@ def _hay(s, names, room):
     return _norm(" ".join([names[eid], _norm(eid), _norm(room), dom.replace("_", " "), kind, _CLASS.get(dc, ""), dc]))
 
 
+def _forms(w):
+    """A word and its stem without a plural ending: Lichter -> licht, Lampen -> lampe, Rollos -> rollo."""
+    out = [w]
+    for end in ("ern", "er", "en", "n", "s", "e"):
+        if len(w) - len(end) >= 4 and w.endswith(end):
+            out.append(w[:-len(end)])
+    return out
+
+
+def _hit(w, hay):
+    return any(f in hay for f in _forms(w))
+
+
+def _correct(words, hays):
+    """Words that fit nothing are replaced by the closest word Home Assistant has, when it is close
+    (one or two letters off, as speech recognition gets names wrong: "Samsong", "Kelerpumpe")."""
+    import difflib
+    vocab = None
+    out = []
+    for w in words:
+        if len(w) < 4 or any(_hit(w, h) for h in hays):
+            out.append(w)
+            continue
+        if vocab is None:
+            vocab = sorted({t for h in hays for t in h.split() if len(t) >= 4})
+        near = difflib.get_close_matches(w, vocab, n=1, cutoff=0.8)
+        out.append(near[0] if near else w)
+    return out
+
+
 def _score(all_states, areas, names, words, domain="", want_area=""):
     """[(words hit, words hit in name or room, state)], best first."""
-    scored = []
+    pool = []
     for s in all_states:
         eid = s["entity_id"]
         if domain and eid.split(".")[0] != domain:
@@ -502,10 +532,13 @@ def _score(all_states, areas, names, words, domain="", want_area=""):
         room = areas.get(eid, "")
         if want_area and want_area not in _norm(room) and want_area not in _norm(names[eid]):
             continue
-        hay = _hay(s, names, room)
-        hits = sum(1 for w in words if w in hay) if words else 1
+        pool.append((s, room, _hay(s, names, room)))
+    words = _correct(words, [h for _, _, h in pool]) if words else words
+    scored = []
+    for s, room, hay in pool:
+        hits = sum(1 for w in words if _hit(w, hay)) if words else 1
         if hits:
-            near = sum(1 for w in words if w in _norm(names[eid]) or w in _norm(room))
+            near = sum(1 for w in words if _hit(w, _norm(names[s["entity_id"]])) or _hit(w, _norm(room)))
             scored.append((hits, near, s))
     return sorted(scored, key=lambda x: (-x[0], -x[1], names[x[2]["entity_id"]]))
 
@@ -587,7 +620,8 @@ async def _switchable(item):
 def _pick(all_states, areas, names, words):
     """(the one device all words fit or None, the candidates). Words that fit no device at all (a room
     when Home Assistant does not tell rooms) are left out; among entities of one device the main one wins."""
-    useful = [w for w in words if any(w in _hay(x, names, areas.get(x["entity_id"], "")) for x in all_states)]
+    hays = [_hay(x, names, areas.get(x["entity_id"], "")) for x in all_states]
+    useful = [w for w in _correct(words, hays) if any(_hit(w, h) for h in hays)]
     if not useful:
         return None, []
     full = [x for x in _score(all_states, areas, names, useful) if x[0] == len(useful)]
@@ -615,19 +649,25 @@ async def mentions_device(item, text):
         all_states, areas, names = await _switchable(item)
     except (httpx.HTTPError, ValueError):
         return True  # Home Assistant will say itself what it cannot do
-    return any(w in _hay(x, names, areas.get(x["entity_id"], "")) for x in all_states for w in words)
+    hays = [_hay(x, names, areas.get(x["entity_id"], "")) for x in all_states]
+    return any(_hit(w, h) for w in _correct(words, hays) for h in hays)
 
 
 async def fallback(item, text):
     """When Assist does not know a device: finds it among all states and switches it when the words
     name one device and a plain on/off/open/close; otherwise lists the candidates. (done, text)."""
-    words = [w for w in _norm(text).split() if len(w) > 1]
+    words = [w for w in re.findall(r"\w+", _norm(clean_command(text))) if len(w) > 1]
     service = next((svc for svc, verbs in _VERBS if any(w in verbs.split() for w in words)), None)
+    every = any(w in ("alle", "alles", "saemtliche", "all") for w in words)
     words = [w for w in words if w not in _FILLER and w not in _STOP and not any(w in v.split() for _, v in _VERBS)]
     if not words:
         _log("fallback: no device words in", repr(text[:80]))
         return False, ""
     all_states, areas, names = await _switchable(item)
+    if every and service:  # "Alle Lichter im Wohnzimmer aus"
+        done, res = await _bulk(item, all_states, areas, names, words, service)
+        # "all" never falls back to one device that only some of the words fit
+        return done, res or "Nothing switched: not every word of the command fits a device in Home Assistant."
     scored = _score(all_states, areas, names, words)
     chosen, full = _pick(all_states, areas, names, words)
     _log("fallback:", repr(text[:80]), "words", words, "service", service, "areas", len(set(areas.values())),
@@ -646,6 +686,35 @@ async def fallback(item, text):
                    "exact entity id, or ask the user which one; "
                    + ("rooms unknown: the token is no administrator" if not areas else "rooms known") + "):\n"
                    + "\n".join(cands))
+
+
+async def _bulk(item, all_states, areas, names, words, service):
+    """Switches every device of one kind that all words fit (at most 20), each checked afterwards.
+    Only when every word fits some device: a room Home Assistant does not know never widens it to the
+    whole home."""
+    hays = [_hay(x, names, areas.get(x["entity_id"], "")) for x in all_states]
+    fixed = _correct(words, hays)
+    if not all(any(_hit(w, h) for h in hays) for w in fixed):
+        _log("bulk: not every word fits a device, nothing switched", fixed)
+        return False, ""
+    full = [x[2] for x in _score(all_states, areas, names, fixed) if x[0] == len(fixed)]
+    if not full:
+        return False, ""
+    prio = min(_PRIMARY.get(x["entity_id"].split(".")[0], 1) for x in full)
+    doms = [x["entity_id"].split(".")[0] for x in full if _PRIMARY.get(x["entity_id"].split(".")[0], 1) == prio]
+    dom = max(set(doms), key=doms.count)
+    targets = [x["entity_id"] for x in full if x["entity_id"].split(".")[0] == dom][:20]
+    svc = service
+    if dom == "cover" and service in ("turn_on", "turn_off"):
+        svc = "open_cover" if service == "turn_on" else "close_cover"
+    elif dom != "cover" and service in ("open_cover", "close_cover"):
+        return False, ""
+    _log("bulk:", dom, svc, targets)
+    results = await asyncio.gather(*(action(item, eid, svc) for eid in targets))
+    lines = [r[1].split("\n", 1)[1] if "\n" in r[1] else r[1] for r in results]
+    head = "Checked in Home Assistant afterwards (report only this, do not add anything):"
+    return all(r[0] for r in results), head + "\n" + "\n".join(
+        x.split("\n(before")[0] for x in lines)
 
 
 async def action(item, entity_id, service, data=None):
@@ -700,3 +769,129 @@ async def action(item, entity_id, service, data=None):
         checked = await _verify(c, item, [eid], service, {eid: before})
     ok, text = _report(checked, service, "service call")
     return ok, text + f"\n(before: '{before}')"
+
+
+# ---- history: what a device did, read from Home Assistant's recorder ----
+
+async def history(item, text, hours=24, zone=None):
+    """The last hours of up to three entities the words fit: numbers as low/high/average/now, other
+    states as their last changes with time. Returns (count, text for the model)."""
+    import datetime
+    hours = min(24 * 30, max(1, int(hours or 24)))
+    async with _client(item) as c:
+        r = await c.get(item["url"] + "/api/states")
+        if r.status_code == 401:
+            return 0, "Home Assistant rejected the token."
+        r.raise_for_status()
+        all_states = [x for x in r.json() or [] if isinstance(x, dict) and x.get("entity_id")]
+        areas = await _areas(c, item)
+        names = {x["entity_id"]: _name(x) for x in all_states}
+        eid = str(text).strip().lower()
+        if eid in names:
+            picked = [eid]
+        else:
+            words = [w for w in re.findall(r"\w+", _norm(text)) if len(w) > 1 and w not in _STOP and w not in _FILLER]
+            scored = _score(all_states, areas, names, words) if words else []
+            picked = [x[2]["entity_id"] for x in scored if x[0] == scored[0][0]][:3] if scored else []
+        if not picked:
+            return 0, "No entity matches; try other words or look it up with home_assistant_states."
+        start = (datetime.datetime.now(datetime.timezone.utc) - datetime.timedelta(hours=hours)).isoformat()
+        r = await c.get(f"{item['url']}/api/history/period/{start}",
+                        params={"filter_entity_id": ",".join(picked), "minimal_response": "",
+                                "significant_changes_only": ""})
+        r.raise_for_status()
+        series = r.json() if isinstance(r.json(), list) else []
+    _log("history:", picked, hours, "h,", [len(x) for x in series], "points")
+    tz = zone or datetime.datetime.now().astimezone().tzinfo
+
+    def when(t):
+        try:
+            d = datetime.datetime.fromisoformat(str(t).replace("Z", "+00:00")).astimezone(tz)
+            return d.strftime("%d.%m. %H:%M")
+        except ValueError:
+            return str(t)
+    out = [f"History of the last {hours} h (from Home Assistant's recorder; report only this):"]
+    for rows in series:
+        if not rows:
+            continue
+        eid = rows[0].get("entity_id") or ""
+        unit = ((rows[0].get("attributes") or {}).get("unit_of_measurement")) or ""
+        name = names.get(eid, eid)
+        nums = []
+        for x in rows:
+            try:
+                nums.append((float(x["state"]), x.get("last_changed")))
+            except (KeyError, TypeError, ValueError):
+                pass
+        if nums and len(nums) >= len(rows) / 2:
+            lo, hi = min(nums), max(nums)
+            avg = sum(v for v, _ in nums) / len(nums)
+            out.append(f"- {name} ({eid}): lowest {lo[0]:g} {unit} ({when(lo[1])}), highest {hi[0]:g} {unit} "
+                       f"({when(hi[1])}), average {avg:.1f} {unit}, latest {nums[-1][0]:g} {unit}")
+        else:
+            changes = [f"{when(x.get('last_changed'))} {x.get('state')}" for x in rows[-10:]]
+            out.append(f"- {name} ({eid}): {len(rows)} states; latest changes: " + "; ".join(changes))
+    return len(series), "\n".join(out) if len(out) > 1 else "Home Assistant has no history for this time."
+
+
+# ---- to-do lists (shopping list and others): read, add, tick off ----
+
+async def todo(item, list_name="", act="show", text=""):
+    """Returns (ok, text for the model). Changes are read back: an item counts as added or done only
+    when the list shows it so afterwards."""
+    act = str(act or "show").strip().lower()
+    act = {"list": "show", "read": "show", "get": "show", "add_item": "add", "complete": "done",
+           "check": "done", "remove_item": "remove", "delete": "remove"}.get(act, act)
+    async with _client(item) as c:
+        r = await c.get(item["url"] + "/api/states")
+        r.raise_for_status()
+        lists = [x for x in r.json() or [] if isinstance(x, dict) and str(x.get("entity_id", "")).startswith("todo.")]
+        if not lists:
+            return False, "Home Assistant has no to-do lists the token's user can see."
+        names = {x["entity_id"]: _name(x) for x in lists}
+        want = _norm(list_name)
+        pick = [x for x in lists if want and (want in _norm(names[x["entity_id"]]) or want in x["entity_id"])] \
+            or ([x for x in lists if "einkauf" in _norm(names[x["entity_id"]]) or "shopping" in x["entity_id"]]
+                if not want or "einkauf" in want or "shopping" in want else [])
+        if not pick:
+            return False, "Lists in Home Assistant: " + ", ".join(f"{names[x['entity_id']]} ({x['entity_id']})" for x in lists)
+        eid = pick[0]["entity_id"]
+
+        async def items():
+            r = await c.post(f"{item['url']}/api/services/todo/get_items?return_response",
+                             json={"entity_id": eid})
+            if r.status_code != 200:
+                _log("todo: get_items HTTP", r.status_code, r.text[:200])
+                return None
+            resp = (r.json() or {}).get("service_response") or {}
+            return [(x.get("summary", ""), x.get("status", "")) for x in (resp.get(eid) or {}).get("items") or []]
+        before = await items()
+        if before is None:
+            return False, "Home Assistant did not return the list (it needs version 2024.1 or newer)."
+        thing = str(text or "").strip()[:200]
+        if act == "show":
+            open_ = [s for s, st in before if st != "completed"]
+            return True, f"{names[eid]}: " + (", ".join(open_) if open_ else "empty") + "."
+        if not thing:
+            return False, "Say which item."
+        if act in ("done", "remove"):  # the item as the list writes it
+            match = next((s for s, _ in before if _norm(s) == _norm(thing)), None) or next(
+                (s for s, _ in before if _norm(thing) in _norm(s)), None)
+            if not match:
+                return False, f"'{thing}' is not on {names[eid]}. Nothing changed."
+            thing = match
+        svc, body = {"add": ("add_item", {"item": thing}), "done": ("update_item", {"item": thing, "status": "completed"}),
+                     "remove": ("remove_item", {"item": [thing]})}.get(act, (None, None))
+        if not svc:
+            return False, "Unknown action; use show, add, done or remove."
+        r = await c.post(f"{item['url']}/api/services/todo/{svc}", json=dict(body, entity_id=eid))
+        _log("todo:", svc, eid, "-> HTTP", r.status_code)
+        if r.status_code != 200:
+            return False, f"Home Assistant refused it (HTTP {r.status_code}). Nothing changed."
+        after = await items() or []
+    state = {_norm(s): st for s, st in after}
+    ok = {"add": _norm(thing) in state, "done": state.get(_norm(thing)) == "completed",
+          "remove": _norm(thing) not in state}[act]
+    word = {"add": "added to", "done": "ticked off on", "remove": "removed from"}[act]
+    return ok, (f"Checked afterwards: '{thing}' {word} {names[eid]}." if ok
+                else f"Checked afterwards: '{thing}' was NOT {word} {names[eid]}.")

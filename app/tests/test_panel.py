@@ -198,6 +198,49 @@ class HomeAssistant(unittest.TestCase):
         self.assertEqual(len(helpers.HA_CALLS), n)
         a.put("/api/profile/homeassistant/code", json={"code": ""})
 
+    def test_from_ha_mcp(self):
+        a = profile("Moritz")
+        a.put("/api/profile/homeassistant", json={"url": f"http://127.0.0.1:{helpers.HA_PORT}", "token": helpers.HA_TOKEN})
+        import homeassistant
+        homeassistant._VERIFY_WAIT = 0.05
+        # history: numbers as lowest/highest, other states as changes
+        res = answer(ask(a, 'TOOL home_assistant_history {"query": "Temperatur Wohnzimmer", "hours": 24}'))
+        self.assertIn("lowest 19.5 °C", res)
+        self.assertIn("highest 23 °C", res)
+        # a misheard name still finds the device
+        ask(a, "Schalte die Kelerpumpe aus")
+        self.assertEqual(helpers.HA_CALLS[-1], {"entity_id": "switch.keller", "service": "switch.turn_off"})
+        # all lights at once, each checked
+        for x in helpers.HA_STATES:
+            if x["entity_id"].startswith("light."):
+                x["state"] = "on"
+        res = answer(ask(a, "Schalte alle Lichter aus"))
+        self.assertIn("Flurlampe", res)
+        self.assertIn("Licht Küche", res)
+        self.assertTrue(all(x["state"] == "off" for x in helpers.HA_STATES if x["entity_id"].startswith("light.")))
+        # a room nobody knows never widens "all" to the whole home
+        for x in helpers.HA_STATES:
+            if x["entity_id"].startswith("light."):
+                x["state"] = "on"
+        ask(a, "Schalte alle Lichter im Dachboden aus")
+        self.assertTrue(all(x["state"] == "on" for x in helpers.HA_STATES if x["entity_id"].startswith("light.")))
+        # shopping list: show, add, tick off, each read back
+        self.assertIn("Brot", answer(ask(a, 'TOOL home_assistant_todo {"action": "show"}')))
+        res = answer(ask(a, 'TOOL home_assistant_todo {"action": "add", "item": "Milch"}'))
+        self.assertIn("'Milch' added to Einkaufsliste", res)
+        res = answer(ask(a, 'TOOL home_assistant_todo {"action": "done", "item": "brot"}'))
+        self.assertIn("'Brot' ticked off", res)
+        self.assertEqual(helpers.TODO, {"Brot": "completed", "Milch": "needs_action"})
+        # with a code word, changing a list needs it too; reading does not
+        a.put("/api/profile/homeassistant/code", json={"code": "Apollo dreizehn"})
+        self.assertIn("code word", answer(ask(a, 'TOOL home_assistant_todo {"action": "add", "item": "Eier"}')))
+        self.assertNotIn("Eier", helpers.TODO)
+        self.assertIn("Milch", answer(ask(a, 'TOOL home_assistant_todo {"action": "show"}')))
+        a.put("/api/profile/homeassistant/code", json={"code": ""})
+        for x in helpers.HA_STATES:
+            if x["entity_id"].startswith("light."):
+                x["state"] = "on"
+
     def test_state_read_back(self):
         a = profile("Vera")
         a.put("/api/profile/homeassistant", json={"url": f"http://127.0.0.1:{helpers.HA_PORT}", "token": helpers.HA_TOKEN})

@@ -181,6 +181,24 @@ HA_ACTION_TOOL = {"type": "function", "function": {
         "data": {"type": "object", "description": "optional values, e.g. {\"brightness_pct\": 50}, "
                                                   "{\"temperature\": 21}, {\"position\": 30}"}},
         "required": ["entity_id", "service"]}}}
+HA_HISTORY_TOOL = {"type": "function", "function": {
+    "name": "home_assistant_history",
+    "description": "What a device or sensor did in the past hours or days, from Home Assistant's recorder: "
+                   "'Wie warm war es gestern im Bad?', 'Wann ging die Haustür zuletzt auf?', 'Wie lange lief "
+                   "der Fernseher?'. Numbers come as lowest/highest/average, other states as their last changes.",
+    "parameters": {"type": "object", "properties": {
+        "query": {"type": "string", "description": "device, room or kind in words, or one exact entity id"},
+        "hours": {"type": "integer", "description": "how far back, default 24, at most 720"}},
+        "required": ["query"]}}}
+HA_TODO_TOOL = {"type": "function", "function": {
+    "name": "home_assistant_todo",
+    "description": "The user's to-do lists in Home Assistant, e.g. the shopping list: show what is on it, "
+                   "add an item, tick one off or remove it.",
+    "parameters": {"type": "object", "properties": {
+        "list": {"type": "string", "description": "list name; empty for the shopping list"},
+        "action": {"type": "string", "enum": ["show", "add", "done", "remove"]},
+        "item": {"type": "string", "description": "the item for add, done or remove"}},
+        "required": ["action"]}}}
 HA_HINT = ("Mit home_assistant steuerst du das Smart Home des Nutzers (Licht, Geräte, Heizung, Rollläden). Gib jeden "
            "Befehl einzeln weiter. Geschaltet ist nur, was ein Werkzeug ausgeführt hat: Nach jedem Befehl liest "
            "das Panel den Zustand in Home Assistant zurück, und du sagst genau das und nichts darüber hinaus. Steht "
@@ -189,7 +207,9 @@ HA_HINT = ("Mit home_assistant steuerst du das Smart Home des Nutzers (Licht, Ge
            "es sieht alle Geräte, auch die, die der Sprachassistent von Home Assistant nicht kennt. Findet "
            "home_assistant ein Gerät nicht, such es mit home_assistant_states und schalte es mit "
            "home_assistant_action über seine genaue ID. "
-           "Erfinde keine Werte; findest du nichts, such mit anderen Wörtern oder hol dir die Übersicht.")
+           "Erfinde keine Werte; findest du nichts, such mit anderen Wörtern oder hol dir die Übersicht. Für "
+           "Vergangenes (gestern, zuletzt, wie lange) nimm home_assistant_history, für Listen wie die "
+           "Einkaufsliste home_assistant_todo.")
 
 
 _HA_PENDING = {}  # profile id -> (time, command) waiting for the code word
@@ -614,11 +634,12 @@ async def chat(request: Request):
                   + (" Nenne im Briefing nach den Erinnerungen kurz die ungelesenen Mails (Absender und Thema)."
                      if mailbox else "")).strip()
     tools = ([SEARCH_TOOL] if search else []) + (MEMORY_TOOLS if prof else []) + ([HISTORY_TOOL] if past else []) \
-        + ([DOC_TOOL] if docs else []) + (([HA_STATES_TOOL] if ha_direct or ha_wait else [HA_TOOL, HA_STATES_TOOL, HA_ACTION_TOOL]) if ha else []) \
+        + ([DOC_TOOL] if docs else []) + (([HA_STATES_TOOL, HA_HISTORY_TOOL] if ha_direct or ha_wait
+             else [HA_TOOL, HA_STATES_TOOL, HA_ACTION_TOOL, HA_HISTORY_TOOL, HA_TODO_TOOL]) if ha else []) \
         + (REMINDER_TOOLS if timers else []) + ([BRIEFING_TOOL] if briefing else []) \
         + ([CALENDAR_TOOL] if cal["calendars"] else []) + (MAIL_TOOLS if mailbox else [])
     # once mail was read in this answer, nothing in it may switch the home or send words to the web
-    after_mail = (SEARCH_TOOL, HA_TOOL, HA_ACTION_TOOL)
+    after_mail = (SEARCH_TOOL, HA_TOOL, HA_ACTION_TOOL, HA_TODO_TOOL)
     # what this request cannot reach: said plainly, so the model does not make up appointments or mails
     missing = ([] if cal["calendars"] else ["Kalender"]) + ([] if mailbox else ["E-Mails"])
     if missing:
@@ -814,6 +835,35 @@ async def chat(request: Request):
                 return f"Home Assistant not reachable: {type(e).__name__}"
             await out.put({"type": "home_done", "ok": n > 0, "text": f"{n} Treffer"})
             return result
+        if name == "home_assistant_history" and ha:
+            query = str(args.get("query") or args.get("entity_id") or args.get("entity") or "").strip()
+            try:
+                hours = int(args.get("hours") or 24)
+            except (TypeError, ValueError):
+                hours = 24
+            await out.put({"type": "home", "command": f"? {query} ({hours} h)"})
+            try:
+                n, result = await homeassistant.history(ha, query, hours, user_zone(body.get("tz")))
+            except (httpx.HTTPError, ValueError) as e:
+                await out.put({"type": "home_done", "ok": False, "text": str(e)[:200] or type(e).__name__})
+                return f"Home Assistant not reachable: {type(e).__name__}"
+            await out.put({"type": "home_done", "ok": n > 0, "text": f"{n} Verläufe"})
+            return result
+        if name == "home_assistant_todo" and ha:
+            act = str(args.get("action") or "show").strip().lower()
+            if act not in ("show", "list", "read", "get") and ha_code and not ha_code_ok:
+                print("homeassistant: code word not in the latest message, list unchanged; code word:",
+                      homeassistant.code_state(ha), flush=True)
+                await out.put({"type": "home_done", "ok": False, "text": "Codewort fehlt"})
+                return CODE_MISSING
+            await out.put({"type": "home", "command": f"{args.get('list') or 'Liste'}: {act} {args.get('item') or ''}".strip()})
+            try:
+                ok, result = await homeassistant.todo(ha, str(args.get("list") or ""), act, str(args.get("item") or ""))
+            except (httpx.HTTPError, ValueError) as e:
+                await out.put({"type": "home_done", "ok": False, "text": str(e)[:200] or type(e).__name__})
+                return f"Home Assistant not reachable: {type(e).__name__}"
+            await out.put({"type": "home_done", "ok": ok, "text": result[:200]})
+            return ("Home Assistant: " if ok else "Home Assistant failed: ") + result
         if name == "home_assistant_action" and ha:
             # small models name the fields freely: "command", "action", "entity" ...
             eid = str(args.get("entity_id") or args.get("entity") or args.get("device") or args.get("name") or "")

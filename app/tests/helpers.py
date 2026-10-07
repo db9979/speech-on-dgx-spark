@@ -114,6 +114,7 @@ def fake_tts():
     return app
 
 
+TODO = {"Brot": "needs_action"}
 HA_STATES = [
     {"entity_id": "sensor.wz_temp", "state": "21.5", "attributes": {"friendly_name": "Temperatur",
      "unit_of_measurement": "°C", "device_class": "temperature"}},
@@ -123,6 +124,8 @@ HA_STATES = [
     {"entity_id": "zone.home", "state": "1", "attributes": {"friendly_name": "Zuhause", "radius": 100,
      "persons": ["person.anna"]}},
     {"entity_id": "zone.buero", "state": "0", "attributes": {"friendly_name": "Büro", "radius": 150, "persons": []}},
+    {"entity_id": "light.flur", "state": "on", "attributes": {"friendly_name": "Flurlampe"}},
+    {"entity_id": "todo.einkauf", "state": "1", "attributes": {"friendly_name": "Einkaufsliste"}},
     {"entity_id": "switch.keller", "state": "off", "attributes": {"friendly_name": "Kellerpumpe"}},
     {"entity_id": "switch.kaputt", "state": "on", "attributes": {"friendly_name": "Alte Steckdose"}},
     {"entity_id": "lock.haustuer", "state": "locked", "attributes": {"friendly_name": "Haustür"}},
@@ -163,6 +166,38 @@ def fake_ha():
                 return x
         raise HTTPException(404)
 
+    @app.get("/api/history/period/{start}")
+    def history(start: str, request: Request, filter_entity_id: str = ""):
+        auth(request)
+        out = []
+        for eid in filter_entity_id.split(","):
+            if eid == "sensor.wz_temp":
+                out.append([{"entity_id": eid, "state": "19.5", "last_changed": "2026-10-06T05:00:00+00:00",
+                             "attributes": {"unit_of_measurement": "°C"}},
+                            {"state": "23.0", "last_changed": "2026-10-06T14:00:00+00:00"},
+                            {"state": "21.5", "last_changed": "2026-10-06T20:00:00+00:00"}])
+            elif eid:
+                out.append([{"entity_id": eid, "state": "off", "last_changed": "2026-10-06T08:00:00+00:00",
+                             "attributes": {}}, {"state": "on", "last_changed": "2026-10-06T09:30:00+00:00"}])
+        return out
+
+    @app.post("/api/services/todo/{service}")
+    async def todo(service: str, request: Request):
+        auth(request)
+        b = await request.json()
+        HA_CALLS.append(dict(b, service="todo." + service))
+        if service == "get_items":
+            return {"changed_states": [], "service_response": {b["entity_id"]: {"items": [
+                {"summary": k, "status": v, "uid": k} for k, v in TODO.items()]}}}
+        if service == "add_item":
+            TODO[b["item"]] = "needs_action"
+        elif service == "update_item":
+            TODO[b["item"]] = b.get("status", "needs_action")
+        elif service == "remove_item":
+            for x in b["item"]:
+                TODO.pop(x, None)
+        return []
+
     @app.post("/api/services/{domain}/{service}")
     async def service(domain: str, service: str, request: Request):
         auth(request)
@@ -178,7 +213,7 @@ def fake_ha():
     @app.post("/api/template")
     async def template(request: Request):
         auth(request)
-        return PlainTextResponse("sensor.wz_temp|Wohnzimmer\nlight.kueche|Küche\nmedia_player.samsung|Wohnzimmer\n"
+        return PlainTextResponse("sensor.wz_temp|Wohnzimmer\nlight.kueche|Küche\nlight.flur|Flur\nmedia_player.samsung|Wohnzimmer\n"
                                  "media_player.wz_box|Wohnzimmer\nmedia_player.sz_tv|Schlafzimmer\n")
 
     @app.post("/api/conversation/process")
@@ -186,7 +221,7 @@ def fake_ha():
         auth(request)
         b = await request.json()
         HA_CALLS.append(b)
-        if any(w in b["text"] for w in ("Fernseher", "TV", "Gerät", "Frame")):  # not exposed to Assist
+        if any(w in b["text"] for w in ("Fernseher", "TV", "Gerät", "Frame", "alle", "Kelerpumpe")):  # not exposed to Assist
             return {"response": {"response_type": "error", "speech": {"plain": {"speech": "Kein Gerät gefunden"}},
                                  "data": {"code": "no_valid_targets"}}}
         return {"response": {"response_type": "action_done", "speech": {"plain": {"speech": "Erledigt"}},
