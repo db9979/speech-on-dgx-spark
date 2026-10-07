@@ -1094,3 +1094,121 @@ class Proactive(unittest.TestCase):
                                                  "pro_place": "<b>", "pro_on": "ja"}).json()["settings"]
         self.assertFalse(any(k in s for k in ("pro_quiet", "pro_max", "pro_lead", "pro_place", "pro_on")))
         self.assertFalse(a.get("/api/profile/settings").json()["settings"]["pro_on"])    # off by default
+
+
+class Room(unittest.TestCase):
+    """Room mode: fixed cues, answers only in a pause, changes only after a yes, nothing kept on disk."""
+
+    def setUp(self):
+        helpers.set_config(room=True, public=True)
+
+    def tearDown(self):
+        helpers.set_config(room=False)
+
+    def test_cues(self):
+        import room
+        self.assertTrue(room.open_question("Wann wurde eigentlich der Eiffelturm gebaut?"))
+        self.assertTrue(room.open_question("Weiß jemand, wie hoch die Zugspitze ist"))
+        self.assertFalse(room.open_question("Wie geht es dir heute?"))          # to a person
+        self.assertFalse(room.open_question("Was?"))
+        self.assertFalse(room.open_question("Wir gehen heute einkaufen."))
+        self.assertTrue(room.appointment_cue("Am Freitag um 10 müssen wir zum Zahnarzt."))
+        self.assertFalse(room.appointment_cue("Guten Morgen zusammen."))
+        self.assertEqual(room.room_cue("Ist das kalt hier drin."), "cold")
+        self.assertIsNone(room.room_cue("Ich trinke kalten Kaffee."))
+        self.assertEqual(room.room_cue("Es ist so dunkel hier."), "dark")
+        self.assertEqual(room.shopping_items("Wir brauchen noch Milch und Eier."), ["Milch", "Eier"])
+        self.assertEqual(room.shopping_items("Die Butter ist alle."), ["Butter"])
+        self.assertEqual(room.shopping_items("Wir brauchen mehr Zeit."), [])
+        self.assertEqual(room.shopping_items("Wir brauchen schnell eine Lösung für das Problem dort drüben."), [])
+
+    def test_question_in_a_pause_and_off_switches(self):
+        import proactive
+        import room
+        a = profile("Rafa")
+        uid = a.get("/api/whoami").json()["profile"]["id"]
+        old = proactive._llm
+
+        async def fake(system, user, max_tokens=300):
+            return "Der Eiffelturm wurde 1889 fertig." if "Frage:" in user else "NICHTS"
+        proactive._llm = fake
+        try:
+            r = a.post("/api/room/heard", json={"room": "abc123", "text": "Wann wurde eigentlich der Eiffelturm gebaut?"}).json()
+            self.assertTrue(r["wait"])
+            self.assertEqual(a.post("/api/room/pause", json={"room": "abc123", "quiet": 3}).json()["say"],
+                             "Der Eiffelturm wurde 1889 fertig.")
+            self.assertEqual(a.post("/api/room/pause", json={"room": "abc123", "quiet": 3}).json(), {})   # once
+            # the kind switched off on this device: nothing
+            r = a.post("/api/room/heard", json={"room": "abc124", "text": "Wann wurde eigentlich der Kölner Dom gebaut?",
+                                                "kinds": {"q": False}}).json()
+            self.assertFalse(r["wait"])
+            # comments only on the highest level, after a longer quiet, and "NICHTS" stays unsaid
+            for x in ("Wir waren gestern am See.", "Das Wasser war kalt.", "Morgen soll es regnen."):
+                a.post("/api/room/heard", json={"room": "abc125", "text": x, "level": "all", "kinds": {"ha": False}})
+            self.assertEqual(a.post("/api/room/pause", json={"room": "abc125", "quiet": 3, "level": "all"}).json(), {"again": 6})
+            self.assertEqual(a.post("/api/room/pause", json={"room": "abc125", "quiet": 7, "level": "all"}).json(), {})
+        finally:
+            proactive._llm = old
+        self.assertEqual(TestClient(panel.app).post("/api/room/heard", json={"room": "abc123", "text": "x"}).status_code, 401)
+        helpers.set_config(room=False)
+        self.assertEqual(a.post("/api/room/heard", json={"room": "abc123", "text": "x"}).status_code, 403)
+        self.assertFalse(any("room" in f for f in os.listdir(profiles._path(uid))))     # nothing heard on disk
+        log = a.get("/api/profile/toollog").json()["items"]
+        self.assertNotIn("Eiffelturm gebaut", json.dumps(log, ensure_ascii=False))     # what was said in the room is not kept
+        self.assertTrue(room.ROOMS)
+
+    def test_room_climate_and_shopping_only_after_yes(self):
+        a = profile("Raul")
+        a.put("/api/profile/homeassistant", json={"url": f"http://127.0.0.1:{helpers.HA_PORT}", "token": helpers.HA_TOKEN})
+        b = {"room": "hh1234", "area": "Wohnzimmer"}
+        self.assertTrue(a.post("/api/room/heard", json=dict(b, text="Ist das kalt hier.")).json()["wait"])
+        self.assertEqual(a.post("/api/room/pause", json=dict(b, quiet=3)).json()["say"], "Hier im Raum sind es gerade 21,5 Grad.")
+        import room
+        for r in room.ROOMS.values():
+            r["said"] = 0
+        n = len(helpers.HA_CALLS)
+        a.post("/api/room/heard", json=dict(b, text="Wir brauchen noch Milch und Eier."))
+        self.assertEqual(a.post("/api/room/pause", json=dict(b, quiet=3)).json()["say"],
+                         "Soll ich Milch und Eier auf die Einkaufsliste setzen?")
+        self.assertEqual(len(helpers.HA_CALLS), n)                      # nothing changed yet
+        self.assertEqual(a.post("/api/room/heard", json=dict(b, text="Ja, mach das.")).json()["say"],
+                         "Steht auf der Einkaufsliste: Milch, Eier.")
+        self.assertIn("Milch", helpers.TODO)
+        self.assertEqual(a.post("/api/room/heard", json=dict(b, text="Ja.")).json().get("say"), None)   # once
+
+    def test_appointment_proposed_and_entered_only_after_yes(self):
+        import calendars
+        import proactive
+        a = profile("Rena")
+        uid = a.get("/api/whoami").json()["profile"]["id"]
+        day = (chat.datetime.date.today() + chat.datetime.timedelta(days=3)).isoformat()
+        said = "Am Freitag um 10 müssen wir zum Zahnarzt."
+        answers = [json.dumps({"title": "Zahnarzt", "start": day + "T10:00", "quote": "um 10 müssen wir zum Zahnarzt"}),
+                   json.dumps({"title": "Kino", "start": day + "T20:00", "quote": "Kino am Abend"})]   # not said
+        added = []
+        old = (proactive._llm, calendars.get, calendars.add_event)
+
+        async def fake(system, user, max_tokens=300):
+            return answers.pop(0)
+
+        async def fake_add(u, item):
+            added.append((u, item["title"]))
+            return "Privat"
+        proactive._llm, calendars.add_event = fake, fake_add
+        calendars.get = lambda u: {"calendars": [{"id": "c", "url": "https://x"}] if u == uid else [], "topics": []}
+        try:
+            a.post("/api/room/heard", json={"room": "cal123", "text": said, "tz": "Europe/Berlin"})
+            r = a.post("/api/room/pause", json={"room": "cal123", "quiet": 3, "tz": "Europe/Berlin"}).json()
+            self.assertTrue(r["say"].startswith("Soll ich „Zahnarzt“ am"), r)
+            self.assertEqual(added, [])
+            self.assertEqual(a.post("/api/room/heard", json={"room": "cal123", "text": "Ja."}).json()["say"],
+                             "Eingetragen im Kalender Privat.")
+            self.assertEqual(added, [(uid, "Zahnarzt")])
+            # a made-up appointment (its quote was never said) is not proposed
+            import room
+            for x in room.ROOMS.values():
+                x["said"] = 0
+            a.post("/api/room/heard", json={"room": "cal123", "text": "Am Samstag treffen wir uns."})
+            self.assertEqual(a.post("/api/room/pause", json={"room": "cal123", "quiet": 3}).json(), {})
+        finally:
+            proactive._llm, calendars.get, calendars.add_event = old

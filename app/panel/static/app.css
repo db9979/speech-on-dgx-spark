@@ -244,3 +244,4 @@ a.b{text-decoration:none;color:inherit;display:inline-flex;align-items:center}
 .updbanner span{flex:1;font-weight:600}
 @media(max-width:760px){.updbanner{font-size:13px;padding:6px 12px}.updbanner .b{padding:6px 12px}}
 .prorow{display:flex;gap:6px;margin-top:8px;flex-wrap:wrap}.prorow .ib{padding:4px 10px;font-size:12px}
+.wakeind.room i{background:#f59e0b}

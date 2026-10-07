@@ -35,9 +35,10 @@ import backup  # noqa: E402
 import health  # noqa: E402
 import push  # noqa: E402
 import proactive  # noqa: E402
+import room  # noqa: E402
 
 app = FastAPI(title="Speech on DGX Spark")
-for _module in (account, admin, chat, update, system, proactive):
+for _module in (account, admin, chat, update, system, proactive, room):
     app.include_router(_module.router)
 app.middleware("http")(update_lock)
 
