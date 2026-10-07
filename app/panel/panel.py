@@ -5,11 +5,13 @@ import os
 import re
 import hashlib
 import hmac
+import io
 import secrets
 import shutil
 import subprocess
 import sys
 import time
+import zipfile
 from collections import deque
 
 import httpx
@@ -794,6 +796,91 @@ def delete_clone_voice(name: str):
         if os.path.exists(p):
             os.remove(p)
     return {"ok": True}
+
+
+# A voice archive is a ZIP with <name>.wav, an optional <name>.txt (transcript of the reference)
+# and voices.json describing the contents, so voices can move between Sparks or be backed up.
+VOICE_NAME = re.compile(r"[A-Za-z0-9_\-]{1,40}")
+
+
+@app.get("/api/clone-voices-export", dependencies=[Depends(auth)])
+def export_clone_voices(names: str = ""):
+    have = clone_voices()
+    want = [n for n in names.split(",") if n] or have
+    missing = [n for n in want if n not in have]
+    if missing or not want:
+        raise HTTPException(404, f"no such voice: {', '.join(missing)}" if missing else "no voices to export")
+    buf, meta = io.BytesIO(), []
+    with zipfile.ZipFile(buf, "w", zipfile.ZIP_DEFLATED) as z:
+        for n in want:
+            z.write(os.path.join(VOICES_DIR, n + ".wav"), n + ".wav")
+            entry = {"name": n, "audio": n + ".wav"}
+            txt = os.path.join(VOICES_DIR, n + ".txt")
+            if os.path.exists(txt):
+                z.write(txt, n + ".txt")
+                with open(txt) as f:
+                    entry["transcript"] = f.read()
+            meta.append(entry)
+        z.writestr("voices.json", json.dumps({"format": "speech-spark-voices", "version": 1,
+                                              "exported": time.strftime("%Y-%m-%dT%H:%M:%S%z"),
+                                              "voices": meta}, ensure_ascii=False, indent=2))
+    fname = f"stimme-{want[0]}.zip" if len(want) == 1 else f"stimmen-{time.strftime('%Y-%m-%d')}.zip"
+    return Response(buf.getvalue(), media_type="application/zip",
+                    headers={"Content-Disposition": f'attachment; filename="{fname}"'})
+
+
+@app.post("/api/clone-voices-import", dependencies=[Depends(auth)])
+async def import_clone_voices(file: UploadFile = File(...), conflict: str = Form("rename")):
+    """conflict: rename (keep both, the new one gets -2, -3, ...), overwrite or skip."""
+    if conflict not in ("rename", "overwrite", "skip"):
+        raise HTTPException(400, "conflict must be rename, overwrite or skip")
+    try:
+        z = zipfile.ZipFile(io.BytesIO(await file.read()))
+    except zipfile.BadZipFile:
+        raise HTTPException(400, "not a ZIP file (export voices in the panel to get one)")
+    # only flat <name>.wav / <name>.txt entries count; sizes are checked before anything is unpacked
+    files = {}
+    for info in z.infolist():
+        base = info.filename.rsplit("/", 1)[-1]
+        stem, _, ext = base.rpartition(".")
+        if ext.lower() in ("wav", "txt") and VOICE_NAME.fullmatch(stem):
+            limit = 50 << 20 if ext.lower() == "wav" else 64 << 10
+            if info.file_size > limit:
+                raise HTTPException(400, f"{base} is too large")
+            files.setdefault(stem, {})[ext.lower()] = info
+    if not files or len(files) > 200:
+        raise HTTPException(400, "the ZIP holds no voices (expected <name>.wav files)" if not files else "too many voices")
+    os.makedirs(VOICES_DIR, exist_ok=True)
+    have, done = set(clone_voices()), []
+    for name, parts in sorted(files.items()):
+        if "wav" not in parts:
+            continue
+        audio = z.read(parts["wav"])
+        if not audio.startswith(b"RIFF"):
+            done.append({"name": name, "result": "skipped", "reason": "not a WAV file"})
+            continue
+        target = name
+        if name in have:
+            if conflict == "skip":
+                done.append({"name": name, "result": "skipped", "reason": "exists"})
+                continue
+            if conflict == "rename":
+                i = 2
+                while f"{name[:36]}-{i}" in have:
+                    i += 1
+                target = f"{name[:36]}-{i}"
+        with open(os.path.join(VOICES_DIR, target + ".wav"), "wb") as f:
+            f.write(audio)
+        txt = os.path.join(VOICES_DIR, target + ".txt")
+        text = z.read(parts["txt"]).decode("utf-8", errors="replace").strip() if "txt" in parts else ""
+        if text:
+            with open(txt, "w") as f:
+                f.write(text)
+        elif os.path.exists(txt):
+            os.remove(txt)
+        have.add(target)
+        done.append({"name": name, "result": "imported", "as": target})
+    return {"voices": done}
 
 
 # ---------------------------------------------------------------- measuring
