@@ -84,6 +84,18 @@ def base():
     return (load_config().get("chat", {}).get("telegram_api") or API).rstrip("/") + "/bot" + token()
 
 
+def safe(e, n=160):
+    """An error for the log without the bot token (httpx puts the full URL, /bot<token>/..., into its messages)."""
+    text = str(e)
+    try:
+        tok = token()
+    except Exception:
+        tok = ""
+    if tok:
+        text = text.replace(tok, "***")
+    return re.sub(r"bot\d+:[A-Za-z0-9_-]+", "bot***", text)[:n]
+
+
 async def call(c, method, **params):
     """One Bot API call; ValueError with Telegram's description when it refuses."""
     r = await c.post(f"{base()}/{method}", json=params)
@@ -316,7 +328,7 @@ async def handle(c, upd):
         try:
             text = await transcribe(r.content)
         except Exception as e:
-            print("telegram: voice", type(e).__name__, str(e)[:120], flush=True)
+            print("telegram: voice", type(e).__name__, safe(e, 120), flush=True)
             await call(c, "sendMessage", chat_id=cid, text="Ich konnte die Sprachnachricht nicht verstehen.")
             return
         if not text:
@@ -331,7 +343,7 @@ async def handle(c, upd):
         try:
             await send_voice(c, cid, await speak(uid, answer))
         except Exception as e:
-            print("telegram: voice answer", type(e).__name__, str(e)[:120], flush=True)
+            print("telegram: voice answer", type(e).__name__, safe(e, 120), flush=True)
 
 
 async def poll_once(c, wait=25):
@@ -343,7 +355,7 @@ async def poll_once(c, wait=25):
         try:
             await handle(c, u)
         except Exception as e:
-            print("telegram: message", type(e).__name__, str(e)[:160], flush=True)
+            print("telegram: message", type(e).__name__, safe(e, 160), flush=True)
     return len(ups or [])
 
 
@@ -357,7 +369,7 @@ async def loop():
                 while admin_on() and token():
                     await poll_once(c)
         except Exception as e:
-            print("telegram:", type(e).__name__, str(e)[:160], flush=True)
+            print("telegram:", type(e).__name__, safe(e, 160), flush=True)
             await asyncio.sleep(15)
 
 
@@ -370,7 +382,7 @@ async def notify(uid, text, private=True):
             await call(c, "sendMessage", chat_id=link(uid)["chat"], text=text[:4000])
         return 1
     except (httpx.HTTPError, ValueError) as e:
-        print("telegram: notify", type(e).__name__, str(e)[:120], flush=True)
+        print("telegram: notify", type(e).__name__, safe(e, 120), flush=True)
         return 0
 
 
@@ -403,7 +415,7 @@ async def admin_set(request: Request):
             me = await call(c, "getMe")
     except (httpx.HTTPError, ValueError) as e:
         _save_state(token=old)
-        raise HTTPException(400, f"Telegram lehnt den Token ab: {e}")
+        raise HTTPException(400, f"Telegram lehnt den Token ab: {safe(e, 200)}")
     _save_state(bot=str(me.get("username") or ""), offset=0)
     return admin_get()
 

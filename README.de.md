@@ -31,6 +31,7 @@ Alle Optionen ohne Rückfragen (`--mode api --asr 1.7b --tts 0.6b --yes` …) st
 
 <!-- New version: add one line at the top here and in CHANGELOG.md, drop the oldest line here (keep 10). Details go to docs/de and docs/en, not into this README. -->
 
+- **V01.0.105** Sicherheit: der iPhone-Kurzbefehl holt Listeneinträge per POST, Telegram-Fehler im Log ohne Bot-Token
 - **V01.0.104** Lautsprecher ohne Display, Sicherheits-Checkliste für die Lautsprecher umgesetzt
 - **V01.0.103** Einstellungen → Funktionen: die Einstellungen eines Dienstes stehen direkt unter seinem Schalter
 - **V01.0.102** Bus und Bahn: Abfahrten, Verbindungen und Verspätungshinweis für die Pendelstrecke
@@ -40,8 +41,6 @@ Alle Optionen ohne Rückfragen (`--mode api --asr 1.7b --tts 0.6b --yes` …) st
 - **V01.0.98** Telegram abgesichert: Verbinden nur aus der eigenen Anmeldung, weitergeleitete Nachrichten sind kein Auftrag
 - **V01.0.97** Pakete: Amazon-Betreffzeilen werden erkannt
 - **V01.0.96** Telegram-Bot, Aufgaben und Einkaufsliste, Wetter-Ort mit Postleitzahl
-- **V01.0.95** Raum-Modus verbessert (Stopp, Timer, Erinnerung, Rückfragen)
-- **V01.0.94** Ich-Fenster am PC: Seitenleiste scrollt
 
 Alle Versionen: [CHANGELOG.md](CHANGELOG.md)
 

@@ -4,7 +4,7 @@ Off until the admin allows it (chat.tasks) and the profile switches it on (tasks
 "einkauf" (Einkaufsliste) and "aufgaben" (Aufgaben). Each list lives in one of two places:
 
     Spark       the panel keeps the list itself. An iPhone shortcut fetches new entries with the
-                profile's device key (GET /api/tasks/inbox) and puts them into Apple's Reminders,
+                profile's device key (POST /api/tasks/inbox) and puts them into Apple's Reminders,
                 because Apple's Reminders cannot be reached over CalDAV any more (way A).
     CalDAV      a task list (VTODO collection) of one of the profile's calendar accounts:
                 Nextcloud, mailbox.org, Radicale ... (way B).
@@ -479,7 +479,19 @@ async def done_items(lst: str, request: Request, prof=Depends(_on)):
 
 @router.get("/api/tasks/inbox")
 def tasks_inbox(request: Request, list: str = "einkauf", take: bool = False, format: str = "text"):
-    """Way A, for the iPhone shortcut with the device key: new entries, one per line."""
+    """Way A, read only: the new entries, one per line. Handing them over changes the list, so that is POST."""
+    if take:
+        raise HTTPException(405, "take=true needs POST /api/tasks/inbox")
+    return _inbox(request, list, False, format)
+
+
+@router.post("/api/tasks/inbox")
+def tasks_inbox_take(request: Request, list: str = "einkauf", format: str = "text"):
+    """Way A, for the iPhone shortcut with the device key: the new entries, marked as handed over."""
+    return _inbox(request, list, True, format)
+
+
+def _inbox(request, list, take, format):
     prof = profiles.current(request)
     if not prof:
         raise HTTPException(401, "no profile")

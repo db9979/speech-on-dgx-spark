@@ -163,6 +163,15 @@ class Telegram(unittest.TestCase):
         self.assertEqual(a.get("/api/profile/telegram").json()["linked"]["name"], "@anna_tg")
         return a
 
+    def test_errors_in_the_log_never_carry_the_token(self):
+        import httpx
+        import telegram
+        e = httpx.ConnectError(f"https://api.telegram.org/bot{TOKEN}/getUpdates failed")
+        self.assertNotIn(TOKEN, telegram.safe(e))
+        self.assertIn("***", telegram.safe(e))
+        # also a token that is not (or no longer) the stored one
+        self.assertNotIn("98765:abc", telegram.safe(ValueError("GET /bot98765:abcDEF_-x/getMe")))
+
     def test_link_talk_and_strangers(self):
         import telegram
         self.assertNotIn(TOKEN, ADMIN.get("/api/admin/telegram").text)
@@ -294,8 +303,12 @@ class Tasks(unittest.TestCase):
         self.assertEqual(dev.get("/api/tasks/inbox").status_code, 401)
         h = {"X-Speech-Device": key}
         self.assertEqual(dev.get("/api/tasks/inbox?list=einkauf", headers=h).text, "Brot")
-        self.assertEqual(dev.get("/api/tasks/inbox?list=einkauf&take=true", headers=h).text, "Brot")
-        self.assertEqual(dev.get("/api/tasks/inbox?list=einkauf&take=true", headers=h).text, "")
+        # a GET never changes the list (links, previews and caches may fetch it); handing over is POST
+        self.assertEqual(dev.get("/api/tasks/inbox?list=einkauf&take=true", headers=h).status_code, 405)
+        self.assertEqual(dev.get("/api/tasks/inbox?list=einkauf", headers=h).text, "Brot")
+        self.assertEqual(dev.post("/api/tasks/inbox?list=einkauf", headers=h).text, "Brot")
+        self.assertEqual(dev.post("/api/tasks/inbox?list=einkauf", headers=h).text, "")
+        self.assertEqual(dev.post("/api/tasks/inbox?list=einkauf").status_code, 401)
         self.assertIn("1 weitere Einträge hat das iPhone", ask(a, 'TOOL tasks_show {"list": "einkauf"}'))
 
     def test_caldav_list_and_outside_text(self):
