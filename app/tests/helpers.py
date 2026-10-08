@@ -81,16 +81,22 @@ def fake_llm():
             if last["role"] == "user" and c.startswith("PRE "):  # words before the tool call
                 yield _sse({"choices": [{"delta": {"content": "Der Fernseher im"}, "finish_reason": None}]})
                 c = c[4:]
-            if last["role"] == "user" and c.startswith("TOOL "):
+            role = last["role"]
+            if role == "tool" and "THEN TOOL " in c:  # outside text asking for another tool
+                c = "TOOL " + c.split("THEN TOOL ", 1)[1].split("\n")[0]
+                role = "user"
+            if role == "user" and c.startswith("TOOL "):
                 name, _, args = c[5:].partition(" ")
-                if name in names:
+                force = name.startswith("!")  # a model that calls a tool it was not offered
+                name = name.lstrip("!")
+                if name in names or force:
                     yield _sse({"choices": [{"delta": {"tool_calls": [{"index": 0, "id": "c1", "type": "function",
                                 "function": {"name": name, "arguments": args or "{}"}}]}, "finish_reason": None}]})
                     yield _sse({"choices": [{"delta": {}, "finish_reason": "tool_calls"}]})
                     yield "data: [DONE]\n\n"
                     return
                 c = "NO TOOL " + name
-            text = ("Ergebnis: " + c[:800]) if last["role"] == "tool" else ("Hallo." if not c.startswith("NO TOOL") else c)
+            text = ("Ergebnis: " + c[:800]) if role == "tool" else ("Hallo." if not c.startswith("NO TOOL") else c)
             for i in range(0, len(text), 10):
                 yield _sse({"choices": [{"delta": {"content": text[i:i + 10]}, "finish_reason": None}]})
             yield _sse({"choices": [{"delta": {}, "finish_reason": "stop"}]})

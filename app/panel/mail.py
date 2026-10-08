@@ -354,7 +354,14 @@ def listing(uid, query="", days=7, unread=False, limit=8, zone=None):
     what = ("unread " if unread else "") + "messages" + (f" matching '{query}'" if query else "") + f" in the last {days} days"
     out = (f"{len(lines)} {what} (newest first):\n" + "\n".join(lines)) if lines else f"No {what}."
     out += "".join(f"\nMailbox '{n}' could not be read: {e}" for n, e in errors)
-    return UNTRUSTED + "\n<<<\n" + out + "\n>>>"
+    return _wrap(out)
+
+
+def _wrap(text):
+    """Mail text inside the untrusted block; markers in the mail itself are broken up, so a message
+    cannot end the block early and put words outside it."""
+    text = re.sub(r"<{3,}|>{3,}", lambda m: " ".join(m.group(0)), text)
+    return UNTRUSTED + "\n<<<\n" + text + "\n>>>"
 
 
 def read(uid, ref):
@@ -370,8 +377,8 @@ def read(uid, ref):
     text, files = plain(msg)
     head = (f"From: {_addr(msg.get('From', ''))}\nTo: {_hdr(msg.get('To', ''))[:200]}\n"
             f"Date: {_date(msg.get('Date')):%d.%m.%Y %H:%M}\nSubject: {_hdr(msg.get('Subject', ''))}")
-    return (UNTRUSTED + "\n<<<\n" + head + ("\nAttachments: " + ", ".join(files[:10]) if files else "")
-            + "\n\n" + (text or "(no text)") + "\n>>>")
+    return _wrap(head + ("\nAttachments: " + ", ".join(files[:10]) if files else "")
+                 + "\n\n" + (text or "(no text)"))
 
 
 def briefing(uid):
@@ -380,7 +387,7 @@ def briefing(uid):
     lines = [f"from {h['from'].split(' <')[0]}: {h['subject'] or '(no subject)'}" for _, _, h in found]
     out = ("Unread e-mails (last 2 days, up to 8):\n" + "\n".join(lines)) if lines else "Unread e-mails: none."
     out += "".join(f"\nMailbox '{n}' could not be read: {e}" for n, e in errors)
-    return UNTRUSTED + "\n<<<\n" + out + "\n>>>"
+    return _wrap(out)
 
 
 def check(item):
