@@ -552,6 +552,90 @@ class Speakers(unittest.TestCase):
         finally:
             room.night = old[2]
 
+    @unittest.skipUnless(_has_opus(), "libopus missing")
+    def test_teach_voice_through_the_speaker(self):
+        import speakers
+        helpers.set_config(speaker_id=True)
+        a = profile("Esp Vera")
+        a.put("/api/profile/settings", json={"esp_on": True})
+        s = a.post("/api/profile/esp32/setup", json={"name": "Flur", "variant": "bread-compact-wifi",
+                                                     "base": "https://speech.example.de"}).json()
+        did, uid = s["device"], a.get("/api/whoami").json()["profile"]["id"]
+        board = np.zeros(256, np.float32)
+        board[0] = 1.0
+        old = speakers.embed, esp32.tts_stream
+
+        async def tts(uid, text):
+            yield b"\0" * 4800
+        speakers.embed, esp32.tts_stream = (lambda x, **kw: board), tts
+        try:
+            # never with the speaker's own key: a voiceprint decides whose "Ja" counts
+            self.assertEqual(TestClient(panel.app).post(f"/api/profile/esp32/{did}/voice", headers={"X-Speech-Device": s["token"]},
+                                                        json={}).status_code, 403)
+            self.assertFalse(speakers.device_known(did))
+            self.assertFalse(a.post(f"/api/profile/esp32/{did}/voice", json={}).json()["now"])   # asleep: at its next wake word
+            self.assertTrue(a.get("/api/profile/esp32").json()["devices"][0]["voice_waits"])
+            t = np.arange(16000 * 1.5) / 16000
+            voice = (np.sin(2 * np.pi * 220 * t) * 8000).astype("<i2").tobytes()
+            quiet = np.zeros(16000 * 2, dtype="<i2").tobytes()
+            with TestClient(panel.app).websocket_connect("/api/esp32/ws", headers={
+                    "Authorization": "Bearer " + s["token"], "Protocol-Version": "1", "Client-Id": s["uuid"]}) as ws:
+                ws.send_text(json.dumps({"type": "hello", "version": 1, "transport": "websocket"}))
+                json.loads(ws.receive_text())
+                ws.send_text(json.dumps({"type": "listen", "state": "start", "mode": "auto"}))
+                texts = []
+
+                def until_stop():
+                    while True:
+                        m = ws.receive()
+                        if m.get("bytes") is not None:
+                            continue
+                        e = json.loads(m["text"])
+                        if e["type"] == "tts" and e.get("state") == "sentence_start":
+                            texts.append(e["text"])
+                        if e["type"] == "tts" and e.get("state") == "stop":
+                            return
+                until_stop()
+                self.assertIn("drei Sätze", texts[-1])
+                for _ in range(3):
+                    for fr in opus16k_frames(quiet[:9600] + voice + quiet):
+                        ws.send_bytes(fr)
+                until_stop()
+                self.assertIn("erkenne deine Stimme", texts[-1])
+            self.assertEqual(len(speakers.device_samples(uid)[did]), 3)
+            self.assertTrue(speakers.device_known(did) and speakers.has_voice(uid))
+            self.assertEqual(a.get("/api/profile/esp32").json()["devices"][0]["voice_here"], 3)
+            # its own voiceprint next to the browser one: a recording through the board matches the profile
+            browser = np.zeros(256, np.float32)
+            browser[1] = 1.0
+            __import__("profiles")._write(speakers._file(uid), dict(speakers._read(uid), samples=[browser.tolist()]))
+            self.assertEqual(len(speakers.voiceprints()[uid]), 2)
+            dec = speakers.decode
+            speakers.decode = lambda data: np.zeros(16000, np.float32)
+            try:
+                who, best = speakers.identify(b"x", 0.75)
+            finally:
+                speakers.decode = dec
+            self.assertEqual((who, round(best, 3)), (uid, 1.0))
+        finally:
+            speakers.embed, esp32.tts_stream = old
+            speakers.forget(uid)
+            helpers.set_config(speaker_id=False)
+
+    def test_known_voices_only_once_taught_here(self):
+        import speakers
+        sess = esp32.Session(None, "", {"user": "nobody", "id": "dev-x", "name": "x"}, "")
+        sess.room = {"rid": "espdevx"}
+        old = esp32.room_cfg, speakers.device_known
+        esp32.room_cfg = lambda c: {"level": "hints", "area": "", "detect": False, "voices": "known", "probe": False, "mins": 30}
+        try:
+            speakers.device_known = lambda did: False
+            self.assertEqual(sess._room_body()["voices"], "all")     # nobody taught a voice here: listens to all
+            speakers.device_known = lambda did: True
+            self.assertEqual(sess._room_body()["voices"], "known")
+        finally:
+            esp32.room_cfg, speakers.device_known = old
+
     def test_off_means_off(self):
         helpers.set_config(esp32=False)
         try:

@@ -162,6 +162,16 @@ def diag(did, text):
         _diag.setdefault(did, collections.deque(maxlen=DIAG_MAX)).append((int(time.time()), str(text)[:200]))
 
 
+def _take_voice(did):
+    """"Stimme hier anlernen" was pressed while the speaker slept: it starts at its next wake word (within
+    an hour, a voice is something to be there for)."""
+    cid, c = by_device(did)
+    if not c or not c.get("voice_next") or time.time() - c["voice_next"] > 3600:
+        return False
+    _update(lambda d: d["clients"].get(cid, {}).pop("voice_next", None))
+    return True
+
+
 def _take_test(did):
     """"Test" was pressed while the speaker slept: the test runs at its next wake word (within a day)."""
     cid, c = by_device(did)
@@ -568,6 +578,8 @@ class Session:
         self.room = None         # room mode: {"rid", "until", "wait", "need", "last", "asking", "queue", "task"}
         self.mic = None          # this question's sound: [frames, seconds, peak, sum of squares, samples]
         self.testing = False     # "Test": the next sentence only checks the microphone
+        self.enrolling = None    # "Stimme hier anlernen": {"n": recordings taken, "tries": pieces heard}
+        self.enroll_q = None
 
     def note(self, text):
         diag(self.dev["id"], text)
@@ -626,6 +638,35 @@ class Session:
         self.testing = True
         self.listen(mode)
 
+    VOICE_PIECES = 3
+
+    async def run_enroll(self, mode="auto"):
+        """"Stimme hier anlernen": the profile's voice through this speaker's microphone, three sentences."""
+        self.note("Stimme anlernen: gestartet")
+        await self.say("Stimme anlernen. Bitte sprich jetzt drei Sätze nacheinander, zum Beispiel lies etwas vor. "
+                       "Ich sage Bescheid, wenn es reicht.", tone=True)
+        self.enrolling = {"n": 0, "tries": 0}
+        self.listen(mode)
+
+    async def enroll_piece(self, pcm):
+        import speakers
+        e = self.enrolling
+        if e is None:
+            return
+        e["tries"] += 1
+        try:
+            n = await asyncio.to_thread(speakers.enroll_device, self.dev["user"], self.dev["id"], wav16k(pcm))
+            e["n"] += 1
+        except ValueError:
+            n = None
+        self.note(f"Stimme anlernen: Satz {e['tries']} " + ("aufgenommen" if n else "zu kurz"))
+        if e["n"] >= self.VOICE_PIECES or e["tries"] >= self.VOICE_PIECES + 3:
+            self.enrolling = None
+            print(f"esp32: voice taught at {self.dev['name']} ({e['n']} recordings)", flush=True)
+            self.ear = None
+            self.answer = asyncio.create_task(self.say("Danke. Ich erkenne deine Stimme jetzt auch an diesem Lautsprecher." if e["n"] else
+                           "Das war zu kurz. Bitte noch einmal und jeweils ein paar Sekunden am Stück sprechen."))
+
     async def on_text(self, m):
         kind = m.get("type")
         if kind == "hello":
@@ -647,9 +688,15 @@ class Session:
                 if self.room is None and _take_test(self.dev["id"]):
                     self.answer = asyncio.create_task(self.run_test(self.mode))
                     return
+                if self.room is None and self.enrolling is None and _take_voice(self.dev["id"]):
+                    self.answer = asyncio.create_task(self.run_enroll(self.mode))
+                    return
                 if self.room_next:
                     self.room_next = False
                     self.start_answer(None)
+            elif st == "stop" and self.ear and self.enrolling is not None:
+                ear, self.ear = self.ear, None   # the button let go: this recording is one of the sentences
+                self.enroll_q = asyncio.ensure_future(self._after(self.enroll_q, self.enroll_piece(bytes(ear.pcm))))
             elif st == "stop" and self.ear:
                 ear, self.ear = self.ear, None
                 self.mic_report(ear.heard)
@@ -692,6 +739,17 @@ class Session:
                 self.ear.pcm += pcm
             return
         r = self.ear.feed(pcm)
+        if r == "done" and self.enrolling is not None:
+            seg, self.ear = bytes(self.ear.pcm), self.new_ear()   # keeps listening for the next sentence
+            self.enroll_q = asyncio.ensure_future(self._after(self.enroll_q, self.enroll_piece(seg)))
+            return
+        if r == "nothing" and self.enrolling is not None:
+            e, self.enrolling, self.ear = self.enrolling, None, None
+            self.note("Stimme anlernen: nichts mehr gehört")
+            self.answer = asyncio.create_task(self.say(
+                "Danke. Ich erkenne deine Stimme jetzt auch an diesem Lautsprecher." if e["n"] else
+                "Ich habe nichts gehört. Bitte noch einmal versuchen."))
+            return
         if r == "done":
             ear, self.ear = self.ear, None
             self.mic_report(True)
@@ -762,9 +820,18 @@ class Session:
             print("room: speaker sentence failed:", type(e).__name__, str(e)[:120], flush=True)
 
     def _room_body(self, **kw):
+        import speakers
         c = room_cfg(clients().get(self.client) or by_device(self.dev["id"])[1])
+        voices = c["voices"]
+        # known voices only once someone taught a voice through this very speaker: a voice taught in the
+        # browser alone is rarely recognized through a small board microphone, so it would hear nobody
+        if voices != "all" and not speakers.device_known(self.dev["id"]):
+            if not self.room.get("told"):
+                self.room["told"] = True
+                print(f"room: speaker {self.dev['name']} listens to everybody (no voice taught through it yet)", flush=True)
+            voices = "all"
         return dict({"room": self.room["rid"], "level": c["level"], "area": c["area"], "detect": c["detect"],
-                     "voices": c["voices"], "probe": c["probe"],
+                     "voices": voices, "probe": c["probe"],
                      "tz": profiles.settings(self.dev["user"]).get("tz", "")}, **kw)
 
     async def room_start(self):
@@ -1037,7 +1104,7 @@ from fastapi import APIRouter, Depends, HTTPException, Request, WebSocket, WebSo
 from fastapi.responses import FileResponse, JSONResponse  # noqa: E402
 
 from account import browser_profile  # noqa: E402
-from core import admin_code, assistant, auth, confirm_code, own_profile  # noqa: E402
+from core import admin_code, assistant, auth, confirm_code, own_profile, secret_profile, speaker_on  # noqa: E402
 
 router = APIRouter()
 
@@ -1271,7 +1338,14 @@ def _room_info(did, c):
     s = _live.get(did)
     r = s.room if s else None
     return {"room": bool(r) or bool(c.get("room_next")), "room_until": int(r["until"] * 1000) if r else None,
-            "room_waits": bool(c.get("room_next")) and not r, **{"room_" + k: v for k, v in room_cfg(c).items()}}
+            "room_waits": bool(c.get("room_next")) and not r, **{"room_" + k: v for k, v in room_cfg(c).items()},
+            "voice_here": len(_speakers().device_samples(c.get("uid") or _devices()[did]["user"]).get(did, [])),
+            "voice_waits": bool(c.get("voice_next")) and time.time() - c["voice_next"] < 3600}
+
+
+def _speakers():
+    import speakers
+    return speakers
 
 
 def _fw_public():
@@ -1288,7 +1362,8 @@ def profile_get(request: Request, prof=Depends(own_profile)):
     base = _base(request)
     return {"enabled": admin_on(), "on": profile_on(prof["id"]), "firmware": _fw_public(), "base": base,
             "fixed_base": bool(load_config().get("chat", {}).get("esp32_url")), "devices": _list(prof["id"]),
-            "room": bool(load_config().get("chat", {}).get("room", False))}
+            "room": bool(load_config().get("chat", {}).get("room", False)),
+            "speaker_id": bool(load_config().get("chat", {}).get("speaker_id", False))}
 
 
 def _check_base(base):
@@ -1643,6 +1718,25 @@ async def profile_test(did: str, request: Request, prof=Depends(_on)):
     _update(lambda d: d["clients"][cid].update(test_next=int(time.time())))
     diag(did, "Test vorgemerkt: beim nächsten Weckwort oder Knopfdruck")
     return {"now": False, **_diag_view(did, clients()[cid], request)}
+
+
+@router.post("/api/profile/esp32/{did}/voice", dependencies=[Depends(assistant), Depends(speaker_on)])
+async def profile_voice_here(did: str, request: Request, prof=Depends(secret_profile)):
+    """"Stimme hier anlernen": the profile's voice through this speaker's own microphone (its voiceprint
+    then also fits this board), at once when connected, else at its next wake word. Only from the
+    profile's own browser login (with its second step), never with a device key: a voice print decides
+    whose "Ja" counts."""
+    cid = _mine(did, prof)
+    if not profile_on(prof["id"]) or not admin_on():
+        raise HTTPException(403, "speakers are turned off")
+    await _body(request)
+    s = _live.get(did)
+    if s and s.room is None and s.enrolling is None and not (s.answer and not s.answer.done()):
+        s.answer = asyncio.create_task(s.run_enroll())
+        return {"now": True}
+    _update(lambda d: d["clients"][cid].update(voice_next=int(time.time())))
+    diag(did, "Stimme anlernen vorgemerkt: beim nächsten Weckwort oder Knopfdruck")
+    return {"now": False}
 
 
 @router.delete("/api/profile/esp32/{did}", dependencies=[Depends(assistant)])

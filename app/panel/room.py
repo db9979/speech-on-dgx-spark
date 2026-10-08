@@ -881,7 +881,7 @@ def owner_voice(uid):
     if not load_config().get("chat", {}).get("speaker_id", False):
         return False
     import speakers
-    return bool(speakers.samples(uid))
+    return speakers.has_voice(uid)
 
 
 def needs_voice(uid, rid):

@@ -2,7 +2,12 @@
 
 Each profile can record a few sentences; their voice embeddings are kept in the profile's folder:
 
-    USERS_DIR/<user id>/voice.json   {"samples": [[256 floats], ...], "updated": epoch}
+    USERS_DIR/<user id>/voice.json   {"samples": [[256 floats], ...], "updated": epoch,
+                                      "devices": {speaker device id: [[256 floats], ...]}}
+
+"samples" are taught in the browser; "devices" are taught through one of the profile's own speakers
+(ESP32, esp32.py), because a small board microphone sounds quite different from a phone or a PC. Each
+is its own voiceprint, and a recording counts for the profile when it matches any of them.
 
 A spoken question is compared with every enrolled profile. Only a clear match (similarity above
 the threshold and clearly ahead of the runner-up) picks a profile; anything else stays as it was.
@@ -179,12 +184,32 @@ def _file(uid):
     return profiles._path(uid, "voice.json")
 
 
-def samples(uid):
+def _read(uid):
     try:
         with open(_file(uid)) as f:
-            return json.load(f).get("samples", [])
+            d = json.load(f)
+        return d if isinstance(d, dict) else {}
     except (OSError, ValueError):
-        return []
+        return {}
+
+
+def samples(uid):
+    return _read(uid).get("samples", [])
+
+
+def device_samples(uid):
+    """{speaker device id: [embeddings]} taught through the profile's own speakers."""
+    d = _read(uid).get("devices")
+    return d if isinstance(d, dict) else {}
+
+
+def has_voice(uid):
+    return bool(samples(uid)) or any(device_samples(uid).values())
+
+
+def device_known(did):
+    """Some profile taught its voice through this speaker."""
+    return any(device_samples(u["id"]).get(did) for u in profiles._load()["users"])
 
 
 def enroll(uid, data):
@@ -193,9 +218,24 @@ def enroll(uid, data):
     if e is None:
         raise ValueError("too little speech; please speak for a few seconds")
     with _lock:
-        s = (samples(uid) + [[round(float(v), 5) for v in e]])[-MAX_SAMPLES:]
-        profiles._write(_file(uid), {"samples": s, "updated": int(time.time())})
+        d = _read(uid)
+        s = (d.get("samples", []) + [[round(float(v), 5) for v in e]])[-MAX_SAMPLES:]
+        profiles._write(_file(uid), dict(d, samples=s, updated=int(time.time())))
     return len(s)
+
+
+def enroll_device(uid, did, data):
+    """Adds one recording made through the speaker did to its own voiceprint; returns how many it has."""
+    e = embed(decode(data))
+    if e is None:
+        raise ValueError("too little speech")
+    with _lock:
+        d = _read(uid)
+        devs = d.get("devices") if isinstance(d.get("devices"), dict) else {}
+        devs = {k: v for k, v in devs.items() if k in {x["id"] for x in profiles._load()["devices"]}}  # removed speakers go
+        devs[did] = (devs.get(did, []) + [[round(float(v), 5) for v in e]])[-MAX_SAMPLES:]
+        profiles._write(_file(uid), dict(d, devices=devs, updated=int(time.time())))
+    return len(devs[did])
 
 
 def forget(uid):
@@ -207,25 +247,30 @@ def forget(uid):
 
 
 def voiceprints():
-    """{user id: mean embedding} of every enrolled profile."""
+    """{user id: [mean embedding of the browser recordings, one per speaker it was taught through]}."""
     out = {}
     for u in profiles._load()["users"]:
-        s = samples(u["id"])
-        if s:
-            m = np.mean(np.array(s, np.float32), axis=0)
-            out[u["id"]] = m / np.linalg.norm(m)
+        groups = [samples(u["id"])] + [v for v in device_samples(u["id"]).values() if isinstance(v, list)]
+        prints = []
+        for s in groups:
+            if s:
+                m = np.mean(np.array(s, np.float32), axis=0)
+                prints.append(m / np.linalg.norm(m))
+        if prints:
+            out[u["id"]] = prints
     return out
 
 
 def identify(data, threshold=0.75, margin=0.05):
-    """(user id, similarity) of the profile that clearly spoke this audio, else (None, best)."""
+    """(user id, similarity) of the profile that clearly spoke this audio, else (None, best). A profile
+    scores with its best-fitting voiceprint (browser or one of its speakers)."""
     prints = voiceprints()
     if not prints:
         return None, 0.0
     e = embed(decode(data))
     if e is None:
         return None, 0.0
-    scores = sorted(((float(v @ e), uid) for uid, v in prints.items()), reverse=True)
+    scores = sorted(((max(float(v @ e) for v in vs), uid) for uid, vs in prints.items()), reverse=True)
     best, uid = scores[0]
     second = scores[1][0] if len(scores) > 1 else -1.0
     if best >= threshold and best - second >= margin:
