@@ -5,6 +5,7 @@ import ctypes
 import hashlib
 import json
 import os
+import time
 import unittest
 
 import numpy as np
@@ -559,6 +560,34 @@ class Speakers(unittest.TestCase):
         for bad in ("http://github.com/a/b/releases/download/x/a.bin", "https://evil.example/a/b/releases/download/x/a.bin",
                     "https://github.com.evil.de/a/b/releases/download/x/a.bin", "http://127.0.0.1:80/x"):
             self.assertFalse(esp32._allowed_download(bad), bad)
+
+    def test_sound_is_buffered(self):
+        """The board gets ~0.6 s before it starts, never more than ~1 s ahead, and a refill after a stall."""
+        sent = []
+
+        async def send(fr):
+            sent.append(time.monotonic())
+
+        async def run():
+            pace = esp32.Pacer(send)
+            pace.FRAME, pace.LEAD, pace.PRIME, pace.REFILL = 0.01, 0.05, 0.04, 0.03
+            await pace.push([b"a"] * 2)          # 20 ms ready: still waiting
+            self.assertEqual(len(sent), 0)
+            await pace.push([b"a"] * 3)          # 50 ms ready: starts
+            self.assertEqual(len(sent), 5)
+            await asyncio.sleep(0.08)            # TTS falls behind, the board runs dry
+            await pace.push([b"a"])
+            self.assertEqual((len(sent), pace.stalls), (5, 1))
+            await pace.push([b"a"] * 30)         # refilled: goes on, but paced
+            t = time.monotonic()
+            await pace.finish()
+            self.assertEqual(len(sent), 36)
+            self.assertGreater(sent[-1] - sent[6], 0.15)
+            self.assertGreaterEqual(time.monotonic() - t, 0.05)
+            last = esp32.Pacer(send)
+            await last.push([b"b"], final=True)  # a short last bit goes out at once
+            self.assertEqual(len(sent), 37)
+        asyncio.run(run())
 
     def test_end_of_question(self):
         ear = esp32.Ear()

@@ -31,6 +31,7 @@ Alle Optionen ohne Rückfragen (`--mode api --asr 1.7b --tts 0.6b --yes` …) st
 
 <!-- New version: add one line at the top here and in CHANGELOG.md, drop the oldest line here (keep 10). Details go to docs/de and docs/en, not into this README. -->
 
+- **V01.0.137** Lautsprecher: Ton stockt nicht mehr, der Spark puffert vor (0,6 s vor dem Start, bis 0,9 s Vorlauf, nach einem Hänger erst wieder 0,3 s sammeln); Hänger stehen unter „Prüfen“ und im Log
 - **V01.0.136** Lautsprecher: „Prüfen“ zeigt live, was der Lautsprecher gerade tut (alle 2 Sekunden), auch im Raum-Modus (nur dass ein Satz gehört wurde und ob er spricht, nie den Text)
 - **V01.0.135** Lautsprecher: Lautstärke und Mikrofon-Empfindlichkeit pro Lautsprecher unter Ich → Lautsprecher einstellbar (wirkt sofort, wenn er verbunden ist, sonst bei der nächsten Verbindung)
 - **V01.0.134** Lautsprecher: leise Mikrofone (Boards mit Audio-Chip wie das Waveshare-Board) zählen jetzt als Sprache, leise Aufnahmen werden vor der Spracherkennung angehoben, und der Mikrofonpegel steht im Log
@@ -40,7 +41,6 @@ Alle Optionen ohne Rückfragen (`--mode api --asr 1.7b --tts 0.6b --yes` …) st
 - **V01.0.130** Websuche fehlt nie mehr still: nach einer Antwort aus Mails sucht eine klare Suchfrage wieder, „such im Internet“ oder „google mal“ führt immer über die Suche, sonst sagt der Assistent, warum er gerade nicht sucht
 - **V01.0.129** iPhone/Safari: Freihändig bleibt an, wenn iOS das Mikrofon beendet (gesperrter Bildschirm, Anruf, Siri): neues Mikrofon statt totem, öffnet sich wieder, sobald die Seite offen ist, und sagt, warum es aus war
 - **V01.0.128** Raum-Modus auch auf den ESP32-Lautsprechern (alle Board-Varianten): „Raummodus an/aus“ per Sprache oder Schalter „Raum“ unter Ich → Lautsprecher, Dauer und Raum pro Lautsprecher, schweigt in den Ruhezeiten
-- **V01.0.127** Suche in den Einstellungen und im Ich-Fenster (öffnet die Seite und markiert die Stelle); Browser-Test für alle Seiten am Rechner und am Handy, läuft auf GitHub bei jedem Push
 
 Alle Versionen: [CHANGELOG.md](CHANGELOG.md)
 

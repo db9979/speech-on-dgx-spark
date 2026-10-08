@@ -496,6 +496,42 @@ def room_cfg(c):
 
 
 # ---------------------------------------------------------------- one connection of a speaker
+class Pacer:
+    """Sends 60 ms frames to the board a little ahead of real time.
+
+    The board holds at most 1.2 s of sound. We start only once ~0.6 s is ready, keep up to
+    0.9 s in flight, and when the TTS fell behind and the board ran dry we wait for ~0.3 s
+    again instead of trickling single frames (that is what sounds choppy)."""
+    FRAME, LEAD, PRIME, REFILL = 0.06, 0.9, 0.6, 0.3
+
+    def __init__(self, send):
+        self.send, self.pending, self.sent, self.end, self.stalls, self.dry = send, [], 0, 0.0, 0, False
+
+    async def push(self, frames, final=False):
+        self.pending.extend(frames)
+        while self.pending:
+            now = time.monotonic()
+            if self.end <= now and not final:
+                need = self.PRIME if not self.sent else self.REFILL
+                if len(self.pending) * self.FRAME < need:
+                    if self.sent and not self.dry:
+                        self.stalls += 1
+                    self.dry = True
+                    return
+            ahead = self.end - now
+            if ahead > self.LEAD:
+                await asyncio.sleep(ahead - self.LEAD)
+                now = time.monotonic()
+            await self.send(self.pending.pop(0))
+            self.sent += 1
+            self.dry = False
+            self.end = max(self.end, now) + self.FRAME
+
+    async def finish(self):
+        await self.push([], final=True)
+        await asyncio.sleep(max(0.0, self.end - time.monotonic()))   # until the board has played it
+
+
 class Session:
     def __init__(self, ws, token, dev, client):
         self.ws, self.token, self.dev, self.client = ws, token, dev, client
@@ -834,14 +870,10 @@ class Session:
         frames += await asyncio.to_thread(enc.feed, pcm, True)
         await self.send({"type": "tts", "state": "start"})
         await self.send({"type": "tts", "state": "sentence_start", "text": text})
-        t0 = time.monotonic()
         try:
-            for i, fr in enumerate(frames):
-                ahead = i * 0.06 - (time.monotonic() - t0)
-                if ahead > 0.36:
-                    await asyncio.sleep(ahead - 0.36)
-                await self.send_audio(fr)
-            await asyncio.sleep(max(0.0, len(frames) * 0.06 - (time.monotonic() - t0)))
+            pace = Pacer(self.send_audio)
+            await pace.push(frames, final=True)
+            await pace.finish()
             self.note(f"Gesprochen: {len(frames) * 0.06:.1f} s Ton gesendet")
         finally:
             try:
@@ -872,20 +904,8 @@ class Session:
         response = await chat.chat(Request(scope, receive))
         enc = Encoder()
         answer, said, from_mail = "", 0, False
-        t0, sent = None, 0
+        pace = Pacer(self.send_audio)
         await self.send({"type": "tts", "state": "start"})
-
-        async def out(frames):
-            nonlocal t0, sent
-            for fr in frames:
-                if t0 is None:
-                    t0 = time.monotonic()
-                # a little ahead of real time, so the board's buffer never runs dry or overflows
-                ahead = sent * 0.06 - (time.monotonic() - t0)
-                if ahead > 0.36:
-                    await asyncio.sleep(ahead - 0.36)
-                await self.send_audio(fr)
-                sent += 1
         try:
             async for chunk in response.body_iterator:
                 for line in (chunk.decode() if isinstance(chunk, bytes) else chunk).split("\n"):
@@ -910,17 +930,20 @@ class Session:
                         from_mail = True
                     elif k == "audio":
                         import base64
-                        await out(await asyncio.to_thread(enc.feed, base64.b64decode(ev["audio"])))
+                        await pace.push(await asyncio.to_thread(enc.feed, base64.b64decode(ev["audio"])))
             if answer[said:].strip():
                 await self.send({"type": "tts", "state": "sentence_start", "text": answer[said:].strip()})
-            await out(enc.feed(b"", flush=True))
-            if t0 is not None:   # until the board has played it
-                await asyncio.sleep(max(0.0, sent * 0.06 - (time.monotonic() - t0)))
+            await pace.push(enc.feed(b"", flush=True), final=True)
+            await pace.finish()
         finally:
             if hasattr(response.body_iterator, "aclose"):
                 await response.body_iterator.aclose()   # stops LLM and TTS when cancelled
         await self.send({"type": "tts", "state": "stop"})
+        sent = pace.sent
         self.note(f"Antwort gesendet: {sent * 0.06:.1f} s Ton" if sent else "Antwort ohne Ton (Sprachausgabe lieferte nichts)")
+        if pace.stalls:
+            print(f"esp32: sound stalled {pace.stalls}x at {self.dev.get('name', '?')} (speech output slower than playback)", flush=True)
+            self.note(f"Ton stockte {pace.stalls}-mal: die Sprachausgabe kam nicht schnell genug nach")
         answer = answer.strip()
         if answer:
             remember(self.dev, history, text, answer, from_mail)
