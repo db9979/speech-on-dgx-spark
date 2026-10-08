@@ -306,7 +306,8 @@ async function loadSys(check=false){let u;try{u=await (await api('/api/update'+(
     if(!updPoll)updPoll=setInterval(()=>loadSys(),3000)}
   else{if(updPoll){clearInterval(updPoll);updPoll=null}$('updstop').style.display='none';
     $('updstate').innerHTML=r.error?`<span class="err">${esc(r.error)}</span>`:r.behind===0?`<span class="pill ok">${t('aktuell','up to date')}</span>`:
-      `<span class="pill warn">${t('Update verfügbar','Update available')}</span> ${r.behind>0?r.behind+t(' Änderung(en)',' change(s)'):''}`+(u.last_result&&u.last_result!=='success'&&u.last_finished?` <span class="err">${t('Letztes Update fehlgeschlagen','Last update failed')} (${esc(u.last_result)}), ${t('siehe Protokoll','see log')}.</span>`:'');
+      `<span class="pill warn">${t('Update verfügbar','Update available')}</span> ${r.behind>0?r.behind+t(' Änderung(en)',' change(s)'):''}`+(u.last_result&&u.last_result!=='success'&&u.last_finished?` <span class="err">${t('Letztes Update fehlgeschlagen','Last update failed')} (${esc(u.last_result)}), ${t('siehe Protokoll','see log')}.</span>`:'')
+      +(r.head&&r.latest&&r.head!==r.latest?` <span class="mut">${r.head_state==='red'?t('Neuere Änderungen sind auf GitHub durch die Tests gefallen und werden nicht angeboten.','Newer changes failed the tests on GitHub and are not offered.'):t('Neuere Änderungen werden auf GitHub noch geprüft und erst danach angeboten.','Newer changes are still being tested on GitHub and are offered once they pass.')}</span>`:'');
     $('updgo').disabled=!(r.behind&&r.behind!==0)}
   $('updcommits').innerHTML=(r.commits||[]).length?'<table>'+r.commits.slice().reverse().map(c=>`<tr><td class="mut" style="width:70px"><code>${esc(c.sha)}</code></td><td>${esc(c.title)}</td></tr>`).join('')+'</table>':'';
   $('updlog').textContent=await (await api('/api/logs/update?lines=200')).text()||t('(noch kein Update gelaufen)','(no update has run yet)');$('updlog').scrollTop=1e9}

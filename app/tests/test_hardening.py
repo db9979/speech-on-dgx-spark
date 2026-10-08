@@ -8,6 +8,7 @@ import json
 import os
 import re
 import struct
+import subprocess
 import time
 import unittest
 import zipfile
@@ -214,6 +215,35 @@ class Stage1(unittest.TestCase):
         self.assertIn("DPkg::Lock::Timeout", sh)
         bare = [line for line in sh.splitlines() if re.match(r"\s*apt-get\s+(update|install)", line)]
         self.assertEqual(bare, [], "apt-get without apt_wait")
+
+    def test_update_takes_only_green_versions(self):
+        # V01.0.157: main can be red for a while; root installs only commits whose GitHub run passed
+        sh = repo_file("update.sh")
+        self.assertIn("actions/workflows/tests.yml/runs", sh)
+        self.assertIn("--newest", sh)
+        func = re.search(r"^green_commit\(\) \{.*?^\}", sh, re.S | re.M).group(0)
+        runs = {"workflow_runs": [
+            {"head_branch": "main", "conclusion": None, "head_sha": "a" * 40},
+            {"head_branch": "other", "conclusion": "success", "head_sha": "b" * 40},
+            {"head_branch": "main", "conclusion": "failure", "head_sha": "c" * 40},
+            {"head_branch": "main", "conclusion": "success", "head_sha": "d" * 40}]}
+        for data, want in ((json.dumps(runs), "d" * 40), ("not json", ""), ('{"workflow_runs": []}', "")):
+            out = subprocess.run(["bash", "-c", "BRANCH=main\n" + func + "\ngreen_commit"], input=data,
+                                 capture_output=True, text=True, timeout=20)
+            self.assertEqual(out.stdout.strip(), want)
+
+    def test_panel_offers_only_green_versions(self):
+        import update
+        runs = [{"head_branch": "main", "conclusion": None, "head_sha": "a" * 40},
+                {"head_branch": "main", "conclusion": "failure", "head_sha": "c" * 40},
+                {"head_branch": "main", "conclusion": "success", "head_sha": "d" * 40}]
+        self.assertEqual(update.pick_green(runs, "main", "a" * 40), ("d" * 40, "running"))
+        self.assertEqual(update.pick_green(runs[1:], "main", "c" * 40), ("d" * 40, "red"))
+        self.assertEqual(update.pick_green(runs[2:], "main", "d" * 40), ("d" * 40, "green"))
+        self.assertEqual(update.pick_green(runs[:2], "main", "a" * 40), (None, "running"))
+        self.assertEqual(update.pick_green([{"head_branch": "main", "conclusion": "success", "head_sha": "x; rm"}],
+                                           "main", "a" * 40), (None, "unknown"))
+        self.assertEqual(update.pick_green("nonsense", "main", "a" * 40), (None, "unknown"))
 
     def test_units_have_memory_limits(self):
         sh = repo_file("install.sh")

@@ -46,6 +46,35 @@ def github_repo(remote):
     return m.group(1) if m else None
 
 
+def pick_green(runs, branch, head):
+    """From the Actions API's runs of "Tests": the newest commit of the branch whose run passed, and
+    what is known about the newest commit (head): "green", "running", "red" or "unknown"."""
+    green, state = None, "unknown"
+    for r in runs if isinstance(runs, list) else []:
+        if not isinstance(r, dict) or r.get("head_branch") != branch:
+            continue
+        sha = str(r.get("head_sha") or "")
+        if not re.fullmatch(r"[0-9a-f]{40}", sha):
+            continue
+        if sha == head and state == "unknown":
+            state = {"success": "green", None: "running"}.get(r.get("conclusion"), "red")
+        if green is None and r.get("conclusion") == "success":
+            green = sha
+    if head and green == head:
+        state = "green"
+    return green, state
+
+
+async def green_runs(repo, branch):
+    """The newest runs of the "Tests" workflow (update.sh asks the same before it installs anything)."""
+    async with httpx.AsyncClient(timeout=10) as c:
+        r = await c.get(f"https://api.github.com/repos/{repo}/actions/workflows/tests.yml/runs",
+                        params={"branch": branch, "event": "push", "per_page": 30},
+                        headers={"Accept": "application/vnd.github+json"})
+    r.raise_for_status()
+    return r.json().get("workflow_runs")
+
+
 async def remote_state(force=False):
     """Newest commit on the remote branch and the commits since the installed one."""
     if not force and _remote_cache["data"] and time.time() - _remote_cache["time"] < 600:
@@ -65,11 +94,24 @@ async def remote_state(force=False):
         print(f"update check: git ls-remote {remote} -> {code}: {out[-300:]}", flush=True)
         data["error"] = f"could not reach {remote}: {out[-200:] or 'no answer'}"
         return data
-    data["latest"] = sha.group(1)
+    data["latest"] = data["head"] = sha.group(1)
+    # Only versions that passed GitHub's tests are offered (update.sh checks the same as root): the
+    # newest commit of main can be red for a while when several changes land at once.
+    repo = github_repo(remote)
+    if repo:
+        try:
+            green, data["head_state"] = pick_green(await green_runs(repo, branch), branch, data["head"])
+        except (httpx.HTTPError, ValueError) as e:
+            print(f"update check: GitHub test results not readable: {type(e).__name__}", flush=True)
+            green = None
+        if not green:
+            data["error"] = "GitHub-Testergebnisse nicht abrufbar; ohne sie wird nichts installiert"
+            data["latest"] = None
+            return data
+        data["latest"] = green
     if data["latest"] == ver.get("commit"):
         data["behind"] = 0
     else:
-        repo = github_repo(remote)
         if repo and ver.get("commit"):
             try:
                 async with httpx.AsyncClient(timeout=10) as c:

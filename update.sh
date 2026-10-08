@@ -4,6 +4,10 @@
 #   sudo /opt/speech-spark/src/update.sh           # what the panel's update button runs
 #   sudo /opt/speech-spark/src/update.sh --check   # only show what would change
 #   sudo /opt/speech-spark/src/update.sh --to <commit>   # install that version (e.g. go back one)
+#   sudo /opt/speech-spark/src/update.sh --newest  # the newest version even before GitHub's tests passed
+#
+# Without --to/--newest only versions whose GitHub test run ("Tests") passed are installed: main can
+# carry a red commit for a while when several changes land at once.
 #
 # The panel's "back to the previous version" button writes the commit into
 # /var/lib/speech-spark/state/update-target and starts this script; only commits that are part
@@ -21,7 +25,9 @@ BRANCH=main
 SECURITY_FLOOR=7373d1a3bb8df864631ec1f722b839b86e445cdb
 CHECK=0
 TARGET=""
+NEWEST=0
 [ "${1:-}" = --check ] && CHECK=1
+[ "${1:-}" = --newest ] && NEWEST=1
 [ "${1:-}" = --to ] && TARGET=${2:-}
 STATE=${SPEECH_SPARK_STATE:-/var/lib/speech-spark/state}
 FROM_PANEL=0
@@ -42,6 +48,31 @@ echo "Installed: $(git log -1 --format='%h %cs %s' "$old")"
 echo "Fetching $(git remote get-url origin) ($BRANCH) ..."
 git fetch --quiet origin "$BRANCH"
 new=$(git rev-parse "origin/$BRANCH")
+
+# newest commit of $BRANCH whose "Tests" run passed (JSON of the Actions API on stdin)
+green_commit() {
+  jq -r --arg b "$BRANCH" '[.workflow_runs[]? | select(.head_branch == $b and .conclusion == "success")
+    | .head_sha][0] // empty' 2>/dev/null | tr -dc '0-9a-f' | head -c 40
+}
+if [ -z "$TARGET" ] && [ "$NEWEST" = 0 ]; then
+  url=$(git remote get-url origin)
+  if [[ "$url" =~ ^(https://github\.com/|git@github\.com:)([A-Za-z0-9_.-]+/[A-Za-z0-9_.-]+)/?$ ]]; then
+    repo=${BASH_REMATCH[2]%.git}
+    green=$(curl -fsS --max-time 20 -H "Accept: application/vnd.github+json" \
+      "https://api.github.com/repos/$repo/actions/workflows/tests.yml/runs?branch=$BRANCH&event=push&per_page=30" \
+      | green_commit || true)
+    if [ "${#green}" != 40 ] || ! git cat-file -e "$green^{commit}" 2>/dev/null \
+        || ! git merge-base --is-ancestor "$green" "$new"; then
+      echo "No version with passed GitHub tests found (GitHub not reachable?); nothing changed." >&2
+      echo "To take the newest version anyway: sudo $0 --newest" >&2
+      exit 1
+    fi
+    if [ "$green" != "$new" ]; then
+      echo "The newest version $(git rev-parse --short "$new") has not passed GitHub's tests (yet); taking the newest one that did."
+      new=$green
+    fi
+  fi  # a clone from elsewhere has no GitHub test results to ask
+fi
 if [ -n "$TARGET" ]; then
   # only versions that are part of the official branch
   if ! git cat-file -e "$TARGET^{commit}" 2>/dev/null || ! git merge-base --is-ancestor "$TARGET" "origin/$BRANCH"; then
@@ -60,6 +91,10 @@ if [ -n "$TARGET" ]; then
     fi
   fi
   echo "Going to the chosen version instead of the newest."
+elif [ "$old" != "$new" ] && git merge-base --is-ancestor "$new" "$old"; then
+  # installed is newer than the newest tested version (e.g. installed with --newest): nothing to do
+  echo "Already up to date (no newer version has passed GitHub's tests)."
+  exit 0
 elif ! git merge-base --is-ancestor "$old" "$new"; then
   # the branch never loses commits; a rewritten history is not taken without being asked for
   echo "The history of $BRANCH was rewritten on GitHub (the installed version is no longer part of it); nothing changed." >&2

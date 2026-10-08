@@ -5,11 +5,10 @@ name: Tests
 # services from tests/helpers.py; nothing here talks to a real Spark.
 on:
   workflow_dispatch:
+  # every push, not only app/**: update.sh installs only commits whose run here passed, so a change
+  # to install.sh or update.sh needs its own green run too
   push:
     branches: [main]
-    paths:
-      - app/**
-      - .github/workflows/tests.yml
 
 permissions:
   contents: read
