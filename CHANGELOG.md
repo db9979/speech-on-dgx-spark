@@ -2,6 +2,7 @@
 
 Every version in one line, newest first (taken from the commit messages, so some lines are German, some English). Older entries have no version number.
 
+- **V01.0.147** · 2026-10-08 · Design „Klar“, Schritt 3: Ich öffnet am Rechner als Seite neben der Menüleiste statt als Fenster; ein anderer Menüpunkt schließt es
 - **V01.0.146** · 2026-10-08 · Design „Klar“, Schritt 2: Zustand beginnt mit einem Satz („Alles läuft.“ oder was nicht läuft) und „Braucht dich“ (Update, ungespeicherte Einstellungen, Dienst aus/Fehler) mit Knopf dorthin; Punkt im Menü grün/gelb/rot; qwen38 und GPU-Prozesse zugeklappt
 - **V01.0.145** · 2026-10-08 · Design „Klar“, Schritt 1: Menü am Rechner als Leiste links (Assistent, Ich, dann „Spark verwalten“ mit Zustand, Einstellungen, Profile und Geräte, Einbinden), am Handy als Leiste unten; „Übersicht“ heißt jetzt „Zustand“, Zahl ungespeicherter Einstellungsseiten im Menü
 - **V01.0.144** · 2026-10-08 · Rückfrage ohne Weckwort (aus, Admin + Profil): nach der Antwort auf eine gesprochene Frage hört der Assistent noch 4–10 Sekunden zu, „Und morgen?“ braucht kein „Hey Spark“

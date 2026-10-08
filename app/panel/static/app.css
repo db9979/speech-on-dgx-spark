@@ -414,3 +414,9 @@ body.guest .navme{display:none}
 .zrow>span:nth-child(2){flex:1;min-width:0}
 details.zmore{margin-top:14px}details.zmore>summary{cursor:pointer;font-weight:650;font-size:15px}details.zmore[open]>summary{margin-bottom:10px}
 @media (max-width:760px){.zrow{flex-wrap:wrap}.zrow .b{margin-left:auto}}
+/* Ich as a page beside the sidebar (design „Klar“, V01.0.147): no veil, same list → page as the settings */
+@media (min-width:761px){
+  body.adm #profmodal{left:232px;background:var(--bg);backdrop-filter:none;-webkit-backdrop-filter:none;padding:24px 18px;place-items:start center;z-index:6}
+  body.adm #profmodal .mecard{width:min(1100px,100%);height:calc(100vh - 48px);animation:none}
+  body.adm #profmodal .mewrap{grid-template-columns:240px 1fr}
+}

@@ -134,6 +134,24 @@ class Browser(unittest.TestCase):
                 await br.close()
         self.run_async(go())
 
+    def test_me_is_a_page_beside_the_menu(self):
+        """V01.0.147: on a computer "Ich" in the sidebar opens Ich as a page right of the menu (no veil over
+        it); another menu entry closes it again."""
+        async def go():
+            async with async_playwright() as p:
+                br, pg, errors = await self.page(p, 1280, 900)
+                await pg.evaluate("$('navme').click()")
+                await pg.wait_for_timeout(600)
+                self.assertEqual(await pg.evaluate("$('profmodal').style.display"), "grid")
+                self.assertGreaterEqual(await pg.evaluate("$('profmodal').getBoundingClientRect().left"), 200)
+                self.assertTrue(await pg.evaluate("$('overbox').classList.contains('on')"))
+                await pg.evaluate("document.querySelector('nav button[data-s=mon]').click()")
+                self.assertEqual(await pg.evaluate("$('profmodal').style.display"), "none")
+                self.assertTrue(await pg.evaluate("$('mon').classList.contains('on')||$('sys').classList.contains('on')||$('test').classList.contains('on')||$('logs').classList.contains('on')"))
+                self.assertEqual(errors, [])
+                await br.close()
+        self.run_async(go())
+
     def test_settings_search_opens_the_setting(self):
         async def go():
             async with async_playwright() as p:
