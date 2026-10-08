@@ -1499,6 +1499,9 @@ class GuestsChangeNothing(unittest.TestCase):
         ask(g, "Hallo, wie geht es?", length="short", speed=1.3)
         self.assertNotIn("besonders knapp", helpers.LLM_CALLS[-1]["messages"][0]["content"])
         self.assertEqual(g.put("/api/profile/settings", json={"length": "short"}).status_code, 401)
+        wav = b"RIFF" + b"\0" * 40
+        r = g.post("/api/test/asr", files={"file": ("w.wav", wav, "audio/wav")}, data={"wake": "Hey Spark"})
+        self.assertEqual(r.status_code, 403)                              # no "Hey Spark" for guests
         helpers.set_config(room=True, proactive=True)
         try:
             self.assertEqual(g.post("/api/room/heard", json={"room": "guest1", "text": "Wir brauchen Milch."}).status_code, 401)

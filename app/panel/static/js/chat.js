@@ -274,7 +274,7 @@ document.addEventListener('visibilitychange',()=>{if(!document.hidden)keepAwake(
 setInterval(()=>{$('wakeind').classList.toggle('paused',!wakeIdle())},300);
 try{$('chatwake').checked=localStorage.getItem('wake')==='1'}catch{}
 $('chatwake').onchange=()=>{try{localStorage.setItem('wake',$('chatwake').checked?'1':'0')}catch{}if($('chatwake').checked)startWake();else if(!(window.room&&room.on))stopWake()};
-if($('chatwake').checked)startWake();
+// started once it is known who uses this page (see guestLock)
 $('talk').onclick=()=>{audioCtx();if(MOBILE.matches&&$('talk').classList.contains('ans')){$('chatstop').click();return}if(chat.rec)stopListening(false);else startListening()};
 $('chatstop').onclick=()=>{stopListening(true);stopAnswer();setTalk();chatSay(t('Gestoppt.','Stopped.'))};
 $('searchtest').onclick=async()=>{$('searchmsg').textContent=t('Teste …','Testing …');

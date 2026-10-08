@@ -6,7 +6,8 @@ function setProfile(p){const changed=(p&&p.id)!==(PROFILE&&PROFILE.id);PROFILE=p
   loadSettings();rem.load();if(window.room)room.show();guestLock()}
 // Guests change no settings and cannot use room mode: they get the admin's defaults (the admin's own browser may).
 const isGuest=()=>!PROFILE&&!ADMIN;
-function guestLock(){const g=isGuest();['chathands','chatwake'].forEach(id=>{const l=$(id).closest('label');if(l)l.style.display=g?'none':''})}
+function guestLock(){const g=isGuest();['chathands','chatwake'].forEach(id=>{const l=$(id).closest('label');if(l)l.style.display=g?'none':''});
+  if(g)stopWake();else if($('chatwake').checked&&!wake.on)startWake()}   // "Hey Spark" only for profiles (and the admin)
 window.closeProf=()=>{$('profmodal').style.display='none';endEnroll()};
 async function showFacts(){const r=await api('/api/profile/memory');const d=await r.json();
   $('profhead').textContent=d.profile.name;showTidy(d.tidy);

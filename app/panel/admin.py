@@ -37,6 +37,7 @@ from core import (  # noqa: E402
     VOICES_DIR,
     _hash,
     _session_token,
+    admin_cookie_ok,
     admin_code,
     api_headers,
     assistant,
@@ -402,6 +403,8 @@ async def test_asr(request: Request, file: UploadFile = File(...), language: str
     # could open someone's data, and a token only works where it was issued
     me = profiles.current(request)
     form = {"language": language, "response_format": "verbose_json"}
+    if wake and not me and not admin_cookie_ok(request):
+        raise HTTPException(403, "the wake word is for profiles only")
     if wake:  # wake-word check: tell the model to expect the phrase, besides the usual context
         form["prompt"] = f"{wake[:40]}. {cfg['asr'].get('context') or ''}".strip()
     # speaker identification runs on the CPU while the GPU transcribes
