@@ -1095,7 +1095,9 @@ class Proactive(unittest.TestCase):
         import proactive
         a, uid = self.on("Evi", pro_lead=20)
         zone = chat.user_zone("Europe/Berlin")
-        now = chat.datetime.datetime(2026, 10, 8, 9, 40, tzinfo=zone)
+        # a day ahead at 09:40: notes expire at the appointment by the real clock, so a fixed date fails later
+        day = chat.datetime.datetime.now(zone).date() + chat.datetime.timedelta(days=1)
+        now = chat.datetime.datetime(day.year, day.month, day.day, 9, 40, tzinfo=zone)
         ev = {"start": now + chat.datetime.timedelta(minutes=20), "end": now + chat.datetime.timedelta(minutes=50),
               "allday": False, "title": "Zahnarzt", "location": "", "calendar": "Privat"}
         old_get, old_events = calendars.get, calendars.events
