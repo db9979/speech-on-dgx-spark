@@ -58,7 +58,7 @@ function cfgDeps(){const on=id=>{const e=$(id);return !e||e.checked};
   document.querySelectorAll('#pane-cfg [data-show],[data-show]').forEach(x=>x.style.display=on(x.dataset.show)?'':'none');
   const kb=document.querySelector('#cfgnav button[data-p="know"]');kb.style.display=on('chat.search')?'':'none';
   if(!on('chat.search')&&$('pane-know').classList.contains('on'))cfgPane('feat')}
-['chat.search','chat.speaker_id'].forEach(id=>$(id).addEventListener('change',cfgDeps));
+['chat.search','chat.speaker_id','chat.mail'].forEach(id=>$(id).addEventListener('change',cfgDeps));
 const markDirty=(pane,on)=>{const b=document.querySelector(`#cfgnav button[data-p="${pane.id.slice(5)}"]`);if(b)b.classList.toggle('dirty',on)};
 document.querySelectorAll('.pane').forEach(pane=>{const f=e=>{if(/^pw/.test(e.target.id))return;markDirty(pane,true)};pane.addEventListener('input',f);pane.addEventListener('change',f)});
 document.querySelectorAll('.savebtn').forEach(btn=>btn.onclick=async()=>{const pane=$('pane-'+btn.dataset.p),msg=btn.nextElementSibling;

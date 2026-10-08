@@ -215,6 +215,38 @@ class Tidy(unittest.TestCase):
         finally:
             FMB.capabilities = FMB.after_login = ("IMAP4REV1", "MOVE")
 
+    def test_main_folder_renamed_on_the_server(self):
+        p, aid = self.setup_profile("Konstanze")
+        FMB.put("INBOX", helpers.box_mail("Shop <news@shop.example>", "Herbst-Sale", headers=PROMO))
+        p.post("/api/profile/tidy/run", json={"aid": aid})
+        self.assertEqual(p.get("/api/profile/tidy").json()["root"], "Spark")
+        for bad in ("INBOX", "Papierkorb", "Sent Messages"):
+            self.assertEqual(p.put("/api/profile/tidy", json={"root": bad}).status_code, 400, bad)
+        self.assertEqual(p.put("/api/profile/tidy", json={"root": "", "folders": {"werbung": "Spam"}}).status_code, 400)
+        r = p.put("/api/profile/tidy", json={"root": "Ablage"}).json()
+        self.assertEqual(r["root"], "Ablage")
+        self.assertTrue(r["renamed"][0]["ok"], r)
+        self.assertNotIn("Spark/Werbung", FMB.boxes)
+        self.assertEqual(self.inbox_subjects("Ablage/Werbung"), ["Herbst-Sale"])   # the mail moved along
+        self.assertEqual(r["log"][0]["folder"], "Ablage/Werbung")
+        FMB.put("INBOX", helpers.box_mail("Shop <news@shop.example>", "Winter-Sale", headers=PROMO))
+        p.post("/api/profile/tidy/run", json={"aid": aid})
+        self.assertEqual(self.inbox_subjects("Ablage/Werbung"), ["Herbst-Sale", "Winter-Sale"])
+        # a single folder renamed; without a main folder the folders sit at the top
+        p.put("/api/profile/tidy", json={"folders": {"werbung": "Reklame"}})
+        self.assertEqual(self.inbox_subjects("Ablage/Reklame"), ["Herbst-Sale", "Winter-Sale"])
+        p.put("/api/profile/tidy", json={"root": ""})
+        self.assertEqual(self.inbox_subjects("Reklame"), ["Herbst-Sale", "Winter-Sale"])
+        # never onto an existing folder: the old one stays, and undo still finds the mail
+        FMB.boxes["Post/Reklame"] = []
+        r = p.put("/api/profile/tidy", json={"root": "Post"}).json()
+        self.assertFalse(r["renamed"][0]["ok"])
+        self.assertEqual(self.inbox_subjects("Reklame"), ["Herbst-Sale", "Winter-Sale"])
+        r = p.post("/api/profile/tidy/undo", json={"ids": [x["id"] for x in r["log"]]}).json()
+        self.assertEqual(r["report"]["back"], 2)
+        self.assertIn("Winter-Sale", self.inbox_subjects())
+        self.assertFalse([c for c in FMB.calls if c[0] == "RENAME" and "INBOX" in c[1]])
+
     def test_without_move_copy_then_remove(self):
         try:
             FMB.capabilities = FMB.after_login = ("IMAP4REV1", "UIDPLUS")     # like iCloud

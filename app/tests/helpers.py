@@ -375,6 +375,17 @@ class FakeMailbox:
         self.boxes.setdefault(self._name(name), [])
         return "OK", [b""]
 
+    def rename(self, old, new):     # like IMAP: the folders below move along
+        o, n = self._name(old), self._name(new)
+        self.calls.append(("RENAME", (o, n)))
+        if o not in self.boxes or n in self.boxes or o.upper() == "INBOX":
+            return "NO", [b"cannot rename"]
+        for k in [k for k in self.boxes if k == o or k.startswith(o + "/")]:
+            self.boxes[n + k[len(o):]] = self.boxes.pop(k)
+            if k in self.uidnext:
+                self.uidnext[n + k[len(o):]] = self.uidnext.pop(k)
+        return "OK", [b""]
+
     def subscribe(self, name):
         return "OK", [b""]
 

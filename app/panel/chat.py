@@ -365,9 +365,9 @@ DRAFT_TOOL = {"type": "function", "function": {
         "subject": {"type": "string"},
         "text": {"type": "string", "description": "the whole text of the mail, with greeting and closing"}},
         "required": ["text"]}}}
-TIDY_HINT = ("Das Postfach wird aufgeräumt (Werbung, Newsletter und Ähnliches werden in Ordner unter „Spark/“ "
-             "verschoben, nie gelöscht). Fragen dazu beantwortest du mit mail_tidy_overview. Änderungen schlägst du "
-             "mit mail_tidy_propose vor: Lies den Vorschlag aus dem Ergebnis wörtlich vor und frag, ob du ihn "
+TIDY_HINT = ("Das Postfach wird aufgeräumt (Werbung, Newsletter und Ähnliches werden in eigene Ordner "
+             "verschoben, nie gelöscht; ihre Namen stehen in mail_tidy_overview). Fragen dazu beantwortest du "
+             "mit mail_tidy_overview. Änderungen schlägst du mit mail_tidy_propose vor: Lies den Vorschlag aus dem Ergebnis wörtlich vor und frag, ob du ihn "
              "ausführen sollst; ausgeführt wird erst nach dem Ja in der nächsten Nachricht. Stell offene Fragen "
              "einzeln: Absender, Anzahl, deine Vermutung, und frag, in welchen Ordner oder ob in den Posteingang.")
 DRAFT_HINT = ("Antworten auf Mails legst du mit mail_draft als Entwurf ab. Schreib den Text nur aus dem, was der "

@@ -1,5 +1,6 @@
-"""Tidying the inbox per profile: obvious advertising, newsletters and the like are moved into folders
-under "Spark/", nothing is ever deleted. Plus reply drafts in the drafts folder (never sent).
+"""Tidying the inbox per profile: obvious advertising, newsletters and the like are moved into
+folders under a main folder ("Spark/" unless the profile names another); nothing is ever deleted.
+Plus reply drafts in the drafts folder (never sent).
 
 Everything is off until the admin allows it (chat.mail_tidy) and the profile picks a mode for a
 mailbox. Who decides, in this order; the first sure stage wins:
@@ -15,8 +16,10 @@ mailbox. Who decides, in this order; the first sure stage wins:
 Modes per mailbox: off, preview (only proposals), safe (moves stages 2 and 3), auto (also the
 model when it is sure). Brakes: at most MAX_MOVES per run; a run that would move more than half of
 the new mail (10 or more) stops and asks. Every move is logged with its Message-ID for LOG_DAYS
-and can be undone. Writing to the mailbox knows exactly three things: create a Spark folder, move
-a message between the inbox and a Spark folder, put a draft into the drafts folder.
+and can be undone. Writing to the mailbox knows exactly four things: create a tidying folder, move
+a message between the inbox and a tidying folder (MOVE, or COPY and then UID EXPUNGE of exactly
+the confirmed originals where MOVE is missing), rename the tidying folders when the profile renames
+them, put a draft into the drafts folder. The inbox and special folders are never renamed or created.
 
     USERS_DIR/<user id>/mail-tidy.json      settings, rules, questions, proposals, log
     USERS_DIR/<user id>/mail-pending.json   a change proposed by voice, done only after a yes
@@ -98,6 +101,7 @@ def state(uid):
         d = {}
     d.setdefault("accounts", {})
     d.setdefault("every", 15)
+    d["root"] = clean_name(d["root"]) if isinstance(d.get("root"), str) else PREFIX
     d["actions"] = dict(DEFAULT_ACTIONS, **{k: v for k, v in (d.get("actions") or {}).items()
                                             if k in CATS and v in ("move", "ask", "keep")})
     own = {k: v for k, v in (d.get("folders") or {}).items() if k in CATS and isinstance(v, str) and v}
@@ -133,13 +137,33 @@ def acct_state(d, aid):
     return a
 
 
-def folder_of(d, cat):
-    return PREFIX + "/" + d["folders"].get(cat, CATS.get(cat, cat))
+def folder_of(d, cat, root=None, folders=None):
+    root = d["root"] if root is None else root
+    name = (folders or d["folders"]).get(cat, CATS.get(cat, cat))
+    return f"{root}/{name}" if root else name
+
+
+def our_folders(d):
+    """The folders this module may move into (now), and back out of (now or earlier, see the log)."""
+    now = {folder_of(d, c) for c in CATS}
+    return now, now | {x["folder"] for x in d["log"] if x.get("folder")}
 
 
 def clean_name(v):
     v = re.sub(r"[\x00-\x1f\"\\%*/]", "", str(v or "")).strip()[:40]
     return v
+
+
+# names a tidying folder may never have: the inbox and the usual special folders
+RESERVED = {"inbox", "sent", "sent messages", "sent items", "sent mail", "gesendet", "gesendete objekte",
+            "gesendete elemente", "drafts", "entwürfe", "trash", "papierkorb", "deleted messages",
+            "deleted items", "gelöschte objekte", "gelöschte elemente", "junk", "spam", "junk-e-mail",
+            "archive", "archiv", "all mail", "alle nachrichten", "[gmail]", "notes", "notizen", "outbox",
+            "postausgang"}
+
+
+def reserved(name):
+    return name.strip().lower() in RESERVED
 
 
 def public(uid):
@@ -153,7 +177,7 @@ def public(uid):
                     "since": a.get("since", 0), "last_run": a.get("last_run", 0), "error": a.get("error", ""),
                     "stopped": a.get("stopped", ""), "sent": len(d["sent"].get(x["id"], []))})
     names = {x["id"]: x.get("name", "") for x in accts}
-    return {"admin": admin_on(), "accounts": out, "every": d["every"], "actions": d["actions"],
+    return {"admin": admin_on(), "accounts": out, "every": d["every"], "actions": d["actions"], "root": d["root"],
             "folders": d["folders"], "cats": CATS, "rules": d["rules"], "protected": d["protected"],
             "questions": [dict(q, account=names.get(q["aid"], "")) for q in d["questions"]],
             "preview": [dict(p, account=names.get(p["aid"], "")) for p in d["preview"]][-200:],
@@ -162,8 +186,9 @@ def public(uid):
 
 
 def set_settings(uid, body):
-    """Mode and drafts per mailbox, interval, actions and folder names, protected list."""
+    """Mode and drafts per mailbox, interval, actions, protected list; main folder and folder names."""
     accts = {x["id"] for x in mail.get(uid)["accounts"]}
+    _new_names(state(uid), body.get("root"), body.get("folders"))      # wrong names change nothing
 
     def fn(d):
         for aid, v in (body.get("accounts") or {}).items():
@@ -183,13 +208,65 @@ def set_settings(uid, body):
         for k, v in (body.get("actions") or {}).items():
             if k in CATS and v in ("move", "ask", "keep"):
                 d["actions"][k] = v
-        for k, v in (body.get("folders") or {}).items():
-            if k in CATS and clean_name(v):
-                d["folders"][k] = clean_name(v)
         if isinstance(body.get("protected"), list):
             d["protected"] = sorted({m for m in (norm_match(x) for x in body["protected"]) if m})[:200]
     _mut(uid, fn)
-    return public(uid)
+    report = rename(uid, body.get("root"), body.get("folders"))
+    return dict(public(uid), renamed=report) if report else public(uid)
+
+
+def _new_names(d, root, folders):
+    """Checked new main folder and folder names; ValueError with a plain reason."""
+    new_root = d["root"] if root is None else clean_name(root)
+    if root is not None and str(root).strip() and not new_root:
+        raise ValueError("main folder: please use letters or digits")
+    new_folders = dict(d["folders"])
+    for k, v in (folders or {}).items():
+        if k in CATS and clean_name(v):
+            new_folders[k] = clean_name(v)
+    if new_root and reserved(new_root):
+        raise ValueError(f"'{new_root}' is a folder of the mail program and cannot be the main folder")
+    if not new_root:
+        bad = [v for v in new_folders.values() if reserved(v)]
+        if bad:
+            raise ValueError(f"'{bad[0]}' is a folder of the mail program; without a main folder pick another name")
+    if len({v.lower() for v in new_folders.values()}) < len(new_folders):
+        raise ValueError("two kinds of mail cannot share one folder name")
+    return new_root, new_folders
+
+
+def rename(uid, root=None, folders=None):
+    """New main folder or folder names. Existing folders are renamed on each mailbox's server (IMAP RENAME),
+    so the mail in them moves along; the log follows. A mailbox where that fails keeps its old folders
+    (moving back out of them still works) and says so. Returns [{account, ok, error}] or []."""
+    d = state(uid)
+    new_root, new_folders = _new_names(d, root, folders)
+    if new_root == d["root"] and new_folders == d["folders"]:
+        return []
+    pairs = {c: (folder_of(d, c), folder_of(d, c, new_root, new_folders)) for c in CATS}
+    pairs = {c: p for c, p in pairs.items() if p[0] != p[1]}
+    report, renamed = [], {}
+    for acct in mail.get(uid)["accounts"]:
+        try:
+            with Box(acct, d) as b:
+                renamed[acct["id"]] = b.rename_tree(d["root"], new_root, pairs)
+            report.append({"account": acct.get("name", ""), "ok": True, "error": ""})
+        except (ValueError, OSError, imaplib.IMAP4.error) as e:
+            msg = str(e) if isinstance(e, ValueError) else type(e).__name__
+            report.append({"account": acct.get("name", ""), "ok": False, "error": msg[:200]})
+
+    def fn(dd):
+        dd["root"], dd["folders"] = new_root, new_folders
+        for x in dd["log"] + dd["preview"]:
+            done = renamed.get(x.get("aid"), {})
+            if x.get("folder") in done:
+                x["folder"] = done[x["folder"]]
+        for x in dd["preview"]:
+            if x.get("cat") in CATS:
+                x["folder"] = folder_of(dd, x["cat"])
+    _mut(uid, fn)
+    print(f"mail tidy: folders renamed: {sum(r['ok'] for r in report)} of {len(report)} mailbox(es)", flush=True)
+    return report
 
 
 def norm_match(v):
@@ -387,8 +464,10 @@ LIST_LINE = re.compile(r'^\((?P<flags>[^)]*)\) (?P<d>"(?:[^"\\]|\\.)*"|NIL) (?P<
 class Box:
     """One connection to a mailbox that may change exactly what this module allows."""
 
-    def __init__(self, acct):
+    def __init__(self, acct, d=None):
+        """d: the profile's tidying state; without it nothing can be moved, created or renamed."""
         self.acct = acct
+        self.targets, self.ours = our_folders(d) if d else (set(), set())
         self.c = None
         self.selected = None
         self.writable = False
@@ -496,14 +575,22 @@ class Box:
         except Exception:
             return ""
 
+    def is_special(self, name):
+        x = self.boxes.get(name)
+        return name.upper() == "INBOX" or reserved(name.split(self.delim)[-1]) or bool(x and re.search(
+            r"\\(sent|drafts|trash|junk|all|archive|flagged|important|noselect)", x["flags"]))
+
     def ensure(self, path):
-        """Creates a folder under Spark/ when it is missing."""
-        if not path.startswith(PREFIX + "/"):
-            raise ValueError("only folders under Spark/ are created")
+        """Creates one of the tidying folders (and its main folder) when it is missing."""
+        if path not in self.targets:
+            raise ValueError("only the tidying folders are created")
         name = self.name(path)
         if name in self.boxes:
+            if self.is_special(name):
+                raise ValueError(f"'{path}' is a folder of the mail program")
             return name
-        for p in (self.name(PREFIX), name):
+        parent = [self.name(path.rsplit("/", 1)[0])] if "/" in path else []
+        for p in parent + [name]:
             if p not in self.boxes:
                 typ, data = self.c.create(_q(_utf7(p)))
                 if typ != "OK" and p == name:
@@ -515,11 +602,56 @@ class Box:
                 self.boxes[p] = {"raw": _utf7(p), "flags": ""}
         return name
 
+    def rename_tree(self, old_root, new_root, pairs):
+        """Renames our folders: the main folder as a whole when both names have one, else each folder.
+        Never touches the inbox or a special folder, never renames onto an existing folder.
+        Returns {old path: new path} of what moved."""
+        def check(old, new):
+            if self.name(new) in self.boxes:
+                raise ValueError(f"a folder '{new}' exists already; pick another name")
+            if self.is_special(self.name(old)) or self.is_special(self.name(new)):
+                raise ValueError("folders of the mail program are never renamed")
+
+        def do(old, new):
+            typ, data = self.c.rename(_q(self.boxes[self.name(old)]["raw"]), _q(_utf7(self.name(new))))
+            if typ != "OK":
+                raise ValueError(f"the mail server refused to rename '{old}' ({typ})")
+            try:
+                self.c.subscribe(_q(_utf7(self.name(new))))
+            except Exception:
+                pass
+        done = {}
+        if old_root and new_root and old_root != new_root and self.name(old_root) in self.boxes:
+            check(old_root, new_root)
+            do(old_root, new_root)
+            pre, npre = self.name(old_root) + self.delim, self.name(new_root) + self.delim
+            for n in [n for n in self.boxes if n == self.name(old_root) or n.startswith(pre)]:
+                x = self.boxes.pop(n)
+                nn = self.name(new_root) if n == self.name(old_root) else npre + n[len(pre):]
+                self.boxes[nn] = dict(x, raw=_utf7(nn))
+            done = {o: new_root + o[len(old_root):] for o, _ in pairs.values() if o.startswith(old_root + "/")}
+        todo = [(o, n) for o, n in pairs.values() if o not in done and self.name(o) in self.boxes]
+        for o, n in todo:
+            check(o, n)
+        for o, n in todo:
+            if "/" in n and self.name(n.rsplit("/", 1)[0]) not in self.boxes:
+                p = self.name(n.rsplit("/", 1)[0])
+                self.c.create(_q(_utf7(p)))
+                self.boxes[p] = {"raw": _utf7(p), "flags": ""}
+            if self.name(o) in self.boxes and o not in done:
+                do(o, n)
+                self.boxes[self.name(n)] = dict(self.boxes.pop(self.name(o)), raw=_utf7(self.name(n)))
+                done[o] = n
+        return done
+
     def move(self, uids, target):
-        """Moves messages: from the inbox into a Spark folder, or from a Spark folder back to the inbox."""
-        spark = self.name(PREFIX) + self.delim
+        """Moves messages: from the inbox into a tidying folder, or from one (now or earlier) back to the inbox."""
         src, dst = self.selected or "", target
-        ok = (src.upper() == "INBOX" and dst.startswith(spark)) or (src.startswith(spark) and dst.upper() == "INBOX")
+        mine = {self.name(p) for p in self.ours}
+        into = {self.name(p) for p in self.targets}
+        ok = (src.upper() == "INBOX" and dst in into) or (src in mine and dst.upper() == "INBOX")
+        if ok and (self.is_special(src if src.upper() != "INBOX" else dst)):
+            ok = False
         if not ok or not self.writable:
             raise ValueError("this move is not allowed")
         if not self.can_move():
@@ -677,7 +809,7 @@ def _run(uid, aid, acct, d, a, mode, idle):
     report = {"new": 0, "moved": 0, "preview": 0, "asked": 0, "kept": 0, "stopped": ""}
     run = secrets.token_hex(4)
     log, preview, questions_add, kept, todo_left = [], [], [], [], []
-    with Box(acct) as b:
+    with Box(acct, d) as b:
         sent = None     # people the person writes to are never sorted away; read before deciding
         if time.time() - a.get("sent_t", 0) > SENT_EVERY:
             try:
@@ -827,7 +959,7 @@ def _move_uids(uid, aid, uids_by_cat, why, run=None):
     d = state(uid)
     run = run or secrets.token_hex(4)
     log = []
-    with Box(acct) as b:
+    with Box(acct, d) as b:
         b.select("INBOX", write=True)
         for cat, uids in uids_by_cat.items():
             if not uids or cat not in CATS:
@@ -906,7 +1038,7 @@ def undo(uid, ids=None, run=None, protect=False):
         acct = _account(uid, aid)
         if not acct:
             continue
-        with Box(acct) as b:
+        with Box(acct, d) as b:
             for path in {x["folder"] for x in items if x["aid"] == aid}:
                 name = b.name(path)
                 if name not in b.boxes:
@@ -979,7 +1111,7 @@ def _backlog_public(p):
 
 def describe_backlog(p, d=None):
     d = d or {"folders": CATS}
-    by = ", ".join(f"{n} nach {PREFIX}/{d['folders'].get(c, CATS[c])}" for c, n in p["by"].items()) or "nichts"
+    by = ", ".join(f"{n} nach {folder_of(d, c)}" for c, n in p["by"].items()) or "nichts"
     top = ", ".join(f"{s} ({n})" for s, n in p["top"][:4])
     return (f"Im Posteingang der letzten {p['days']} Tage ({p['total']} Mails) würde ich {p['moves']} verschieben: "
             f"{by}." + (f" Am meisten von {top}." if top else ""))
@@ -1163,7 +1295,7 @@ def describe(plan, d=None):
             return (f"Mails von {who} künftig immer im Posteingang lassen"
                     + (f" und {len(plan['back'])} verschobene zurückholen" if plan["back"] else ""))
         n = sum(len(v) for v in plan["moves"].values())
-        return (f"Mails von {who} künftig nach {PREFIX}/{d['folders'].get(plan['cat'], CATS[plan['cat']])}"
+        return (f"Mails von {who} künftig nach {folder_of(d, plan['cat'])}"
                 + (f" und jetzt {n} aus dem Posteingang dorthin verschieben" if n else ""))
     if plan["kind"] == "undo":
         return f"Das letzte Aufräumen rückgängig machen ({plan['count']} Mails zurück in den Posteingang)"
@@ -1342,7 +1474,7 @@ def api_get(prof=Depends(own_profile)):
 
 @router.put("/api/profile/tidy", dependencies=[Depends(assistant), Depends(_on)])
 async def api_set(request: Request, prof=Depends(own_profile)):
-    return set_settings(prof["id"], await _body(request))
+    return await _do(set_settings, prof["id"], await _body(request))
 
 
 @router.post("/api/profile/tidy/run", dependencies=[Depends(assistant), Depends(_on)])
