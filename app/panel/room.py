@@ -16,7 +16,7 @@ disk, dropped when room mode ends) and looks for a few clear cues, by fixed rule
 
 A question that points back ("Wann ist der gestorben?") is first turned into a full question from the
 last sentences; it is used only when every word of it was really said. When the profile has taught
-its voice (Ich → Stimme) and speaker ID is on, only that voice can say "Ja" to a proposal. Every
+its voice (Ich → Sprechererkennung) and speaker ID is on, only that voice can say "Ja" to a proposal. Every
 decision writes one "room:" line to the log, saying why it spoke or stayed silent, never what was
 heard.
 

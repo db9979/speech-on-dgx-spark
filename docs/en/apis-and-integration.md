@@ -80,7 +80,7 @@ and each day's questions are kept as a conversation of the profile. Step by step
 
 The watch app "Spark" (`app/pebble/speech-spark.pbw`, source in `pebble/`) brings the voice chat to Pebble Time 2 and Core 2 Duo, with the answer as text and through the watch speaker. On Pebble Round 2 the answer is text only. It needs a watch firmware with the speaker API (from about v4.9.170).
 
-1. In the panel under **Users → Profiles and devices**, add a device "Pebble" to your profile and copy its key.
+1. In the panel under **Profiles**, add a device "Pebble" to your profile and copy its key.
 2. On the paired phone, download `http://SPARK:31080/pebble/speech-spark.pbw` and open it with the Pebble app.
 3. In the Pebble app, open the settings of "Spark": Spark address (`http://SPARK:31080`) and device key. Settings and "Start App" stay grey while the Pebble app does not see the watch as connected (tab Devices).
 4. On the watch: SELECT asks (dictation through the phone), SELECT again stops the speech, long SELECT starts a new conversation. A small face at the top shows whether Spark listens, thinks or speaks; its mouth follows the speech. The watch setting Settings → Sounds & Haptics → Volume caps how loud the app can get.

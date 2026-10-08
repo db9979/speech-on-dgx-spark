@@ -26,7 +26,7 @@ function ptab(id,page=true){document.querySelectorAll('#ptabs button').forEach(b
   $('profmodal').classList.toggle('sub',page);if(page)document.querySelector('#profmodal .mebody').scrollTop=0}
 $('meback').onclick=()=>ptab(meLast,false);
 function meTabs(){const items=[['setbox',t('Gespräch','Conversation'),!GATE&&!isGuest()],['loginbox',t('Anmelden','Sign in'),!PROFILE],
-    ['factbox',t('Gedächtnis','Memory'),!!PROFILE],['voicebox',t('Stimme','Voice'),PROFILE&&SPK_ON],['roombox',t('Raum-Modus','Room mode'),PROFILE&&ROOM_ON],['probox',t('Von selbst','Proactive'),PROFILE&&PRO_ON],
+    ['factbox',t('Gedächtnis','Memory'),!!PROFILE],['voicebox',t('Sprechererkennung','Speaker identification'),PROFILE&&SPK_ON],['roombox',t('Raum-Modus','Room mode'),PROFILE&&ROOM_ON],['probox',t('Von selbst','Proactive'),PROFILE&&PRO_ON],
     ['taskbox',t('Aufgaben','Tasks'),PROFILE&&TASK_ON],['calbox',t('Kalender','Calendar'),PROFILE&&CAL_ON],['wxbox',t('Wetter','Weather'),PROFILE&&WX_ON],['conbox',t('Kontakte','Contacts'),PROFILE&&CON_ON],['trbox',t('Bus und Bahn','Bus and train'),PROFILE&&TR_ON],
     ['mailbox',t('E-Mail','E-mail'),PROFILE&&MAIL_ON],['parbox',t('Pakete','Parcels'),PROFILE&&PAR_ON],['docbox',t('Dokumente','Documents'),PROFILE&&DOCS_ON],
     ['habox',t('Smart Home','Smart home'),PROFILE&&HA_ON],['tgbox',t('Telegram','Telegram'),PROFILE&&TG_ON],['espbox',t('Lautsprecher','Speakers'),PROFILE&&ESP_ON],['secbox',t('Sicherheit','Security'),!!PROFILE],['logbox',t('Protokoll','Log'),!!PROFILE]].filter(x=>x[2]);

@@ -67,3 +67,29 @@ class Guides(unittest.TestCase):
 
 if __name__ == "__main__":
     unittest.main()
+
+
+class MenuPlaces(unittest.TestCase):
+    """Cloned voices are a settings page (Einstellungen → Stimmen); the main menu entry is "Profile"."""
+
+    def test_voices_under_settings(self):
+        html = read("index.html")
+        self.assertNotIn('<section id="voices"', html)
+        cfg = html[html.index('<section id="cfg">'):html.index('</section>', html.index('<section id="cfg">'))]
+        self.assertIn('data-p="voices"', cfg)
+        self.assertIn('id="pane-voices"', cfg)
+        self.assertIn('id="vlist"', cfg)
+        self.assertIn('<button data-s="prof">Profile</button>', html)
+        self.assertNotIn("'voices'", read("js", "base.js"))
+
+    def test_voice_list_has_no_inline_handlers(self):
+        js = read("js", "admin.js")
+        clone = js[js.index("async function loadClone"):js.index("$('vlist').onclick")]
+        self.assertNotIn("onclick=", clone)
+        self.assertIn("data-vprobe=", clone)
+
+    def test_old_menu_paths_are_gone(self):
+        for f in ("index.html", "js/guides.js", "js/extras.js", "js/wizard.js", "js/i18n.js", "js/me.js"):
+            text = read(*f.split("/"))
+            for old in ("Nutzer →", "Users →", "Reiter „Stimmen“", "Profil-Knopf → Stimme →"):
+                self.assertNotIn(old, text, f)

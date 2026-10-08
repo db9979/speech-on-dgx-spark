@@ -50,7 +50,7 @@ $('asr.recognizer').addEventListener('change',asrRec);
 const cfgPane=p=>{document.querySelectorAll('#cfgnav button').forEach(b=>b.classList.toggle('on',b.dataset.p===p));
   document.querySelectorAll('.pane').forEach(x=>x.classList.toggle('on',x.id==='pane-'+p));try{localStorage.setItem('cfgpane',p)}catch{}};
 // phones: the settings open as a list of pages; a tapped page fills the screen with "back" on top
-document.querySelectorAll('#cfgnav button').forEach(b=>b.onclick=()=>{cfgPane(b.dataset.p);document.querySelector('.cfgwrap').classList.add('sub');window.scrollTo(0,0)});
+document.querySelectorAll('#cfgnav button').forEach(b=>b.onclick=()=>{cfgPane(b.dataset.p);if(b.dataset.p==='voices')loadClone();document.querySelector('.cfgwrap').classList.add('sub');window.scrollTo(0,0)});
 $('cfgback').onclick=()=>{document.querySelector('.cfgwrap').classList.remove('sub');window.scrollTo(0,0)};
 try{const p=localStorage.getItem('cfgpane');if(p&&$('pane-'+p))cfgPane(p)}catch{}
 // Details of a feature show only while it is on (Websuche pane, speaker strictness).
@@ -73,7 +73,7 @@ async function wySuggest(auto){const inp=$('chat.wyoming_allow'),msg=$('wymsg');
 $('wysuggest').onclick=()=>wySuggest(false);
 $('chat.wyoming').addEventListener('change',e=>{if(e.target.checked&&!$('chat.wyoming_allow').value.trim())wySuggest(true)});
 const markDirty=(pane,on)=>{const b=document.querySelector(`#cfgnav button[data-p="${pane.id.slice(5)}"]`);if(b)b.classList.toggle('dirty',on)};
-document.querySelectorAll('.pane').forEach(pane=>{const f=e=>{if(/^pw/.test(e.target.id))return;markDirty(pane,true)};pane.addEventListener('input',f);pane.addEventListener('change',f)});
+document.querySelectorAll('.pane').forEach(pane=>{if(!pane.querySelector('.savebtn'))return;const f=e=>{if(/^pw/.test(e.target.id))return;markDirty(pane,true)};pane.addEventListener('input',f);pane.addEventListener('change',f)});
 document.querySelectorAll('.savebtn').forEach(btn=>btn.onclick=async()=>{const pane=$('pane-'+btn.dataset.p),msg=btn.nextElementSibling;
   const n=JSON.parse(JSON.stringify(CFG));if(getDefaults&&pane.contains($('chatdefaults')))n.chat.defaults=getDefaults();
   for(const[sec,o]of Object.entries(n))for(const k of Object.keys(o)){const el=$(sec+'.'+k);if(!el||!pane.contains(el))continue;
@@ -126,7 +126,11 @@ async function ttsStream(body){const t0=performance.now();const r=await api('/ap
   $('ttsmsg').textContent=`${t('erster Ton nach','first audio after')} ${first!=null?first.toFixed(2):'?'} s · ${(bytes/48000).toFixed(1)} s ${t('Audio in','audio in')} ${((performance.now()-t0)/1000).toFixed(2)} s`}
 
 async function loadClone(){const l=await (await api('/api/clone-voices')).json();
-  $('vlist').innerHTML=l.map(n=>`<tr><td>${esc(n)}</td><td style="text-align:right;white-space:nowrap"><button class="b" onclick="playRef('${escq(n)}')">${t('Referenz anhören','Play reference')}</button> <button class="b" onclick="location.href='/api/clone-voices-export?names='+encodeURIComponent('${escq(n)}')">${t('Exportieren','Export')}</button> <button class="b" onclick="delVoice('${escq(n)}')">${t('Löschen','Delete')}</button></td></tr>`).join('')||`<tr><td class="mut">${t('Noch keine.','None yet.')}</td></tr>`}
+  $('vlist').innerHTML=l.map(n=>`<tr><td>${esc(n)}</td><td style="text-align:right;white-space:nowrap"><button class="b" type="button" data-vprobe="${esc(n)}">${t('Probe sprechen','Speak a sample')}</button> <button class="b" type="button" data-vref="${esc(n)}">${t('Referenz anhören','Play reference')}</button> <button class="b" type="button" data-vexp="${esc(n)}">${t('Exportieren','Export')}</button> <button class="b" type="button" data-vdel="${esc(n)}">${t('Löschen','Delete')}</button></td></tr>`).join('')||`<tr><td class="mut">${t('Noch keine.','None yet.')}</td></tr>`}
+// names travel in data attributes, never inside inline JavaScript
+$('vlist').onclick=e=>{const b=e.target.closest('button');if(!b)return;const d=b.dataset;
+  if(d.vprobe!=null)probeVoice(d.vprobe,b);else if(d.vref!=null)playRef(d.vref);
+  else if(d.vexp!=null)location.href='/api/clone-voices-export?names='+encodeURIComponent(d.vexp);else if(d.vdel!=null)delVoice(d.vdel)};
 $('vexpall').onclick=()=>{location.href='/api/clone-voices-export'};
 $('vimpbtn').onclick=()=>$('vimpfile').click();
 $('vimpfile').onchange=async()=>{const f=$('vimpfile').files[0];if(!f)return;$('vimpfile').value='';
@@ -136,8 +140,16 @@ $('vimpfile').onchange=async()=>{const f=$('vimpfile').files[0];if(!f)return;$('
     $('vimpmsg').textContent=t('Importiert: ','Imported: ')+(ok.map(v=>v.as===v.name?v.name:`${v.name} → ${v.as}`).join(', ')||'–')+
       (sk.length?' · '+t('übersprungen: ','skipped: ')+sk.map(v=>v.name).join(', '):'');loadClone()}
   catch(e){$('vimpmsg').innerHTML=`<span class="err">${esc(e.message)}</span>`}};
-window.playRef=n=>{const a=new Audio('/api/clone-voices/'+encodeURIComponent(n)+'.wav');a.play()};
-window.delVoice=async n=>{if(!confirm(t(`Stimme ${n} löschen?`,`Delete voice ${n}?`)))return;await api('/api/clone-voices/'+encodeURIComponent(n),{method:'DELETE'});loadClone()};
+function playRef(n){const a=new Audio('/api/clone-voices/'+encodeURIComponent(n)+'.wav');a.play()}
+async function delVoice(n){if(!confirm(t(`Stimme ${n} löschen?`,`Delete voice ${n}?`)))return;await api('/api/clone-voices/'+encodeURIComponent(n),{method:'DELETE'});loadClone()}
+// One short sentence with exactly this voice, through the same admin test route as Einbinden → Testen.
+// Cloned voices only sound like themselves with a Base model; otherwise the engine's answer says why.
+const PROBE={de:'Hallo, so klinge ich als Stimme des Spark.',en:'Hello, this is how I sound as the voice of the Spark.'};
+async function probeVoice(n,btn){const lang=$('vreadlang').value==='en'?'en':'de',msg=$('vprobemsg');btn.disabled=true;msg.textContent=t('Spreche …','Speaking …');
+  try{const r=await api('/api/test/tts',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({input:PROBE[lang],voice:n,language:lang==='en'?'English':'German',instruct:null})});
+    const a=new Audio(URL.createObjectURL(await r.blob()));a.play();msg.textContent=''}
+  catch(e){msg.textContent=t('Probe ging nicht: ','Sample failed: ')+e.message+((CFG&&CFG.tts&&!/Base/.test(CFG.tts.model||''))?t(' (geklonte Stimmen brauchen ein Base-Modell unter Sprachausgabe)',' (cloned voices need a Base model under Speech output)'):'')}
+  btn.disabled=false}
 // Record the reference with the microphone: 24 kHz mono WAV, transcript filled in by the ASR.
 const vr={rec:null,stream:null,blob:null,iv:null};
 // The reading text sets the language the cloned voice speaks best, independent of the panel language.

@@ -11,7 +11,7 @@ Device keys (speakers, Siri, Pebble, phone) are not asked for a code: they are m
 confirms that with a code.
 
 Admin locked out (phone and recovery codes lost): sudo rm /var/lib/speech-spark/state/mfa-admin.json
-A profile locked out: the admin resets it under Nutzer → Profile.
+A profile locked out: the admin resets it under Profile.
 """
 import base64
 import hashlib

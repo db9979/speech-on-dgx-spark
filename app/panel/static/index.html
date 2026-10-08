@@ -32,7 +32,7 @@
 <button class="b" id="loginbtn" type="button" style="order:4;display:none;align-items:center;gap:6px"><svg viewBox="0 0 24 24" width="14" height="14" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round"><rect x="5" y="11" width="14" height="10" rx="2"/><path d="M8 11V7a4 4 0 0 1 8 0v4"/></svg><span>Einstellungen</span></button>
 <button class="b" id="logoutbtn" type="button" style="order:4;display:none">Abmelden</button>
 <button class="ib" id="mmenu" type="button" title="Menü" aria-label="Menü"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round"><path d="M4 7h16M4 12h16M4 17h16"/></svg></button>
-<nav><button data-s="chat">Assistent</button><button data-s="mon" class="on">Übersicht <span id="updbadge" class="pill warn" style="display:none">Update</span></button><button data-s="cfg">Einstellungen</button><button data-s="prof">Nutzer</button><button data-s="int">Einbinden</button></nav></header>
+<nav><button data-s="chat">Assistent</button><button data-s="mon" class="on">Übersicht <span id="updbadge" class="pill warn" style="display:none">Update</span></button><button data-s="cfg">Einstellungen</button><button data-s="prof">Profile</button><button data-s="int">Einbinden</button></nav></header>
 <main>
 <div class="ptabs subnav" id="subnav" hidden></div>
 <div id="alerts"></div>
@@ -60,7 +60,7 @@
   <div class="cfgwrap">
     <div class="cfgnav" id="cfgnav">
       <button data-p="feat" class="on">Funktionen</button><button data-p="ai">Assistent</button><button data-p="talk">Gespräch</button><button data-p="know">Websuche</button>
-      <button data-p="tts">Sprachausgabe</button><button data-p="asr">Spracherkennung</button><button data-p="sec">Sicherheit</button><button data-p="sysc">System</button>
+      <button data-p="tts">Sprachausgabe</button><button data-p="voices">Stimmen</button><button data-p="asr">Spracherkennung</button><button data-p="sec">Sicherheit</button><button data-p="sysc">System</button>
     </div>
     <div>
     <button class="b cfgback" id="cfgback" type="button"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"><path d="M15 5l-7 7 7 7"/></svg><span>Alle Einstellungen</span></button>
@@ -99,7 +99,7 @@
       <div class="setrow"><div class="lbl"><b>Zweiter Anmeldeschritt für Profile</b><span>Profile können unter dem Profil-Knopf → Sicherheit für sich einschalten, dass die Anmeldung mit Name und PIN zusätzlich einen Code aus einer Authenticator-App verlangt. Jedes Profil entscheidet selbst. Geräte mit Schlüssel (Lautsprecher, Siri, Uhr, Handy) brauchen keinen Code. Ausschalten hier verhindert nur neue Einrichtungen; wer ihn schon an hat, behält ihn.</span></div><label class="tgl"><input type="checkbox" id="chat.mfa"><i></i></label></div>
       <div class="setrow"><div class="lbl"><b>Aus Korrekturen lernen</b><span>Korrigiert ein Profil den Assistenten, schlägt er einen kurzen Satz zum Merken vor und speichert ihn erst nach einem „Ja“. Jedes Profil schaltet es unter Ich → Gespräch selbst ein. Nie für Gäste.</span></div><label class="tgl"><input type="checkbox" id="chat.learn_fixes"><i></i></label></div>
       <div class="setrow"><div class="lbl"><b>Eigener Gesprächsstil</b><span>Jedes Profil kann unter Ich → Gespräch in eigenen Worten sagen, wie der Assistent mit ihm reden soll (Anrede, Ton, Form). Das ändert nur den Ton, nie die festen Regeln. Nie für Gäste.</span></div><label class="tgl"><input type="checkbox" id="chat.own_style"><i></i></label></div>
-      <div class="setrow"><div class="lbl"><b>Sprechererkennung</b><span>Profile lernen unter dem Profil-Knopf ihre Stimme ein. Erkennt der Assistent eine Stimme eindeutig, antwortet er für dieses Profil, auch an einem fremden oder Gast-Gerät. Eine Stimme ist kein Passwort: Wer sehr ähnlich klingt oder eine Aufnahme abspielt, kann ein Profil erwischen.</span></div><label class="tgl"><input type="checkbox" id="chat.speaker_id"><i></i></label></div>
+      <div class="setrow"><div class="lbl"><b>Sprechererkennung</b><span>Profile lernen unter dem Profil-Knopf → Sprechererkennung ihre Stimme ein. Erkennt der Assistent eine Stimme eindeutig, antwortet er für dieses Profil, auch an einem fremden oder Gast-Gerät. Eine Stimme ist kein Passwort: Wer sehr ähnlich klingt oder eine Aufnahme abspielt, kann ein Profil erwischen.</span></div><label class="tgl"><input type="checkbox" id="chat.speaker_id"><i></i></label></div>
       <div class="savebar"><button class="b p savebtn" data-p="feat">Speichern</button><span class="savemsg"></span></div>
     </div>
     <div class="card pane" id="pane-ai"><h2 class="pt">Assistent</h2>
@@ -146,7 +146,7 @@
       <label>Modell</label><select id="tts.model">
         <option>Qwen/Qwen3-TTS-12Hz-1.7B-CustomVoice</option><option>Qwen/Qwen3-TTS-12Hz-0.6B-CustomVoice</option>
         <option>Qwen/Qwen3-TTS-12Hz-1.7B-VoiceDesign</option><option>Qwen/Qwen3-TTS-12Hz-1.7B-Base</option><option>Qwen/Qwen3-TTS-12Hz-0.6B-Base</option></select>
-      <div class="fh">CustomVoice: feste Sprecher. VoiceDesign: Stimme per Beschreibung. Base: Stimmen klonen (Reiter „Stimmen“).</div>
+      <div class="fh">CustomVoice: feste Sprecher. VoiceDesign: Stimme per Beschreibung. Base: Stimmen klonen (Einstellungen → Stimmen).</div>
       <label>Standardstimme</label><input id="tts.default_voice">
       <label>Standardsprache</label><select id="tts.default_language" class="langs"></select>
       <label>Sprechstil</label><input id="tts.default_instruct" placeholder="z. B. Ruhig und freundlich, eher langsam, wie eine Hörbuchsprecherin.">
@@ -183,6 +183,37 @@
         <div id="ttsdtype"><label>Datentyp</label><select id="tts.dtype"><option>bfloat16</option><option>float16</option><option>float32</option></select></div>
       </details>
       <div class="savebar"><button class="b p savebtn" data-p="tts">Speichern</button><span class="savemsg"></span></div>
+    </div>
+    <div class="pane" id="pane-voices"><h2 class="pt">Stimmen</h2><div class="fh" style="margin-top:0;margin-bottom:12px">Eigene Stimmen für die Sprachausgabe: aufnehmen, anhören, sichern. Welche Stimme der Assistent nutzt, steht unter Sprachausgabe → Standardstimme; jedes Profil kann sich unter Ich → Gespräch eine andere wählen. Wer spricht, erkennt dagegen die Sprechererkennung.</div>
+  <div class="two">
+    <div class="card"><h2>Stimme zum Klonen hinzufügen</h2>
+      <div class="mut">Nur mit einem <b>Base</b>-Modell wirksam. 5–15 Sekunden saubere Sprache; der Text sollte genau dem Gesprochenen entsprechen (leer lassen geht, klont dann schlechter).</div>
+      <label>Name</label><input id="vname" placeholder="z. B. dominik">
+      <label>Mit dem Mikrofon aufnehmen</label>
+      <div id="vsecure" class="note" style="display:none">Das Mikrofon geht nur über https: <a class="vhttps" href="#"></a></div>
+      <div class="recbox">
+        <div class="intro sm">Lies diesen Text ruhig und deutlich vor, so wie die Stimme später klingen soll (etwa 10 Sekunden):</div>
+        <div class="row" style="margin-top:6px"><span class="intro sm">Sprache der Stimme:</span>
+          <select id="vreadlang" style="width:auto"><option value="de">Deutsch</option><option value="en">English</option></select></div>
+        <div class="readme" id="vread"></div>
+        <div class="row" style="margin-top:10px">
+          <button class="b p" id="vrec" type="button">Aufnahme starten</button>
+          <span class="meter"><i id="vlevel"></i></span><span id="vtime" class="mut" style="font-variant-numeric:tabular-nums">0,0 s</span>
+        </div>
+        <audio id="vplay" controls style="display:none;width:100%;margin-top:10px"></audio>
+      </div>
+      <label>… oder eine Audiodatei hochladen (wav, mp3, m4a, …)</label><input type="file" id="vfile" accept="audio/*">
+      <label>Transkript der Referenz</label><textarea id="vtext" rows="3"></textarea>
+      <div class="row" style="margin-top:12px"><button class="b p" id="vadd">Hinzufügen</button><span id="vmsg"></span></div>
+    </div>
+    <div class="card"><h2>Vorhandene Stimmen</h2><table><tbody id="vlist"></tbody></table><div id="vprobemsg" class="mut" style="margin-top:6px"></div>
+      <h2>Exportieren und importieren</h2>
+      <div class="intro sm">Eine ZIP-Datei mit Referenz-Audio und Transkript, etwa zum Sichern oder für einen anderen Spark.</div>
+      <div class="row" style="margin-top:10px"><button class="b" id="vexpall">Alle exportieren</button>
+        <button class="b" id="vimpbtn">ZIP importieren …</button><input type="file" id="vimpfile" accept=".zip,application/zip" style="display:none">
+        <select id="vimpconflict" style="width:auto"><option value="rename">gleicher Name: beide behalten</option><option value="overwrite">gleicher Name: ersetzen</option><option value="skip">gleicher Name: überspringen</option></select></div>
+      <div id="vimpmsg" style="margin-top:8px"></div></div>
+  </div>
     </div>
     <div class="card pane" id="pane-asr"><h2 class="pt">Spracherkennung</h2>
       <label class="chk"><input type="checkbox" id="asr.enabled"> aktiviert</label>
@@ -302,37 +333,7 @@
   </div>
 </section>
 
-<section id="voices">
-  <div class="two">
-    <div class="card"><h2>Stimme zum Klonen hinzufügen</h2>
-      <div class="mut">Nur mit einem <b>Base</b>-Modell wirksam. 5–15 Sekunden saubere Sprache; der Text sollte genau dem Gesprochenen entsprechen (leer lassen geht, klont dann schlechter).</div>
-      <label>Name</label><input id="vname" placeholder="z. B. dominik">
-      <label>Mit dem Mikrofon aufnehmen</label>
-      <div id="vsecure" class="note" style="display:none">Das Mikrofon geht nur über https: <a class="vhttps" href="#"></a></div>
-      <div class="recbox">
-        <div class="intro sm">Lies diesen Text ruhig und deutlich vor, so wie die Stimme später klingen soll (etwa 10 Sekunden):</div>
-        <div class="row" style="margin-top:6px"><span class="intro sm">Sprache der Stimme:</span>
-          <select id="vreadlang" style="width:auto"><option value="de">Deutsch</option><option value="en">English</option></select></div>
-        <div class="readme" id="vread"></div>
-        <div class="row" style="margin-top:10px">
-          <button class="b p" id="vrec" type="button">Aufnahme starten</button>
-          <span class="meter"><i id="vlevel"></i></span><span id="vtime" class="mut" style="font-variant-numeric:tabular-nums">0,0 s</span>
-        </div>
-        <audio id="vplay" controls style="display:none;width:100%;margin-top:10px"></audio>
-      </div>
-      <label>… oder eine Audiodatei hochladen (wav, mp3, m4a, …)</label><input type="file" id="vfile" accept="audio/*">
-      <label>Transkript der Referenz</label><textarea id="vtext" rows="3"></textarea>
-      <div class="row" style="margin-top:12px"><button class="b p" id="vadd">Hinzufügen</button><span id="vmsg"></span></div>
-    </div>
-    <div class="card"><h2>Vorhandene Stimmen</h2><table><tbody id="vlist"></tbody></table>
-      <h2>Exportieren und importieren</h2>
-      <div class="intro sm">Eine ZIP-Datei mit Referenz-Audio und Transkript, etwa zum Sichern oder für einen anderen Spark.</div>
-      <div class="row" style="margin-top:10px"><button class="b" id="vexpall">Alle exportieren</button>
-        <button class="b" id="vimpbtn">ZIP importieren …</button><input type="file" id="vimpfile" accept=".zip,application/zip" style="display:none">
-        <select id="vimpconflict" style="width:auto"><option value="rename">gleicher Name: beide behalten</option><option value="overwrite">gleicher Name: ersetzen</option><option value="skip">gleicher Name: überspringen</option></select></div>
-      <div id="vimpmsg" style="margin-top:8px"></div></div>
-  </div>
-</section>
+
 
 
 <section id="prof">
@@ -379,7 +380,7 @@
   <div class="card"><h2>Pebble-Uhr</h2>
     <div class="mut">App „Spark“ für Pebble Time 2 und Core 2 Duo (Antwort als Text und über den Lautsprecher der Uhr) sowie Pebble Round 2 (nur Text). Frage per Knopfdruck, die Pebble-Diktierfunktion macht Text daraus, die Antwort kommt von hier.</div>
     <ol class="mut" style="margin:8px 0 0 18px;padding:0;line-height:1.6">
-      <li>Unter <b>Nutzer → Profile und Geräte</b> beim eigenen Profil ein Gerät „Pebble“ anlegen und den Schlüssel kopieren.</li>
+      <li>Unter <b>Profile</b> beim eigenen Profil ein Gerät „Pebble“ anlegen und den Schlüssel kopieren.</li>
       <li>Auf dem Handy, das mit der Uhr gekoppelt ist, die App-Datei laden und mit der Pebble-App öffnen: <a id="int-pbw" href="/pebble/speech-spark.pbw">speech-spark.pbw</a></li>
       <li>In der Pebble-App bei „Spark“ die Einstellungen öffnen, Spark-Adresse und Geräteschlüssel eintragen.</li>
       <li>Auf der Uhr: SELECT fragt, nochmal SELECT stoppt die Sprache, lang SELECT beginnt ein neues Gespräch.</li>
@@ -390,7 +391,7 @@
   <div class="card"><h2>„Hey Siri, frag Spark“</h2>
     <div class="mut">Ein iPhone-Kurzbefehl schickt deine Frage an den Spark, Siri liest die Antwort vor. Geht ohne geöffnete Seite, auch auf der Apple Watch, mit AirPods und im Auto (CarPlay). Nachfragen innerhalb von 10 Minuten kennen den Zusammenhang; die Fragen eines Tages stehen im Verlauf deines Profils.</div>
     <ol class="mut" style="margin:8px 0 0 18px;padding:0;line-height:1.6">
-      <li>Unter <b>Nutzer → Profile und Geräte</b> beim eigenen Profil ein Gerät „iPhone Siri“ anlegen und den Schlüssel kopieren.</li>
+      <li>Unter <b>Profile</b> beim eigenen Profil ein Gerät „iPhone Siri“ anlegen und den Schlüssel kopieren.</li>
       <li>In der App <b>Kurzbefehle</b> einen neuen Kurzbefehl mit dem Namen <b>Frag Spark</b> anlegen.</li>
       <li>Aktion <b>Text diktieren</b> (Sprache Deutsch, Diktieren beenden: nach Pause).</li>
       <li>Aktion <b>Inhalte von URL abrufen</b>: URL siehe unten, Methode <b>POST</b>, Header <code>X-Speech-Device</code> = dein Schlüssel, Haupttext <b>JSON</b> mit dem Feld <code>text</code> = <i>Diktierter Text</i>.</li>
