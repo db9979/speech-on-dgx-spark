@@ -31,6 +31,7 @@ All options for running without questions (`--mode api --asr 1.7b --tts 0.6b --y
 
 <!-- New version: add one line at the top here and in CHANGELOG.md, drop the oldest line here (keep 10). Details go to docs/de and docs/en, not into this README. -->
 
+- **V01.0.132** Speakers without a display: crash right after joining the Wi-Fi fixed (the firmware tried to load font and emoji onto a screen that is not there), new firmware 2.5.1.3
 - **V01.0.131** Checking a speaker: under Me → Speakers "Check" shows switches, address, recent events and microphone level, "Check network" tests address, certificate and WebSocket, "Test" plays a tone and a sentence and checks the microphone, and the board's own log can be read over USB in the browser
 - **V01.0.130** Web search is never silently missing: right after an answer from mail a clear search question searches again, "such im Internet" or "google mal" always goes through the search, otherwise the assistant says why it does not search
 - **V01.0.129** iPhone/Safari: hands-free survives iOS ending the microphone (lock screen, call, Siri): a fresh microphone instead of a dead one, it reopens when the page is visible again and says why it stopped
@@ -40,7 +41,6 @@ All options for running without questions (`--mode api --asr 1.7b --tts 0.6b --y
 - **V01.0.125** New menus: settings in three blocks, all checks under Overview → Checks, Integrate = guides + apps and interfaces, the Me window in the groups of the Features page with an overview and its own Notifications page
 - **V01.0.124** No more clicks in longer answers: speech fades out briefly when it ends or stalls instead of stopping hard, Stop fades out, "still speaking" includes the speaker delay, the assistant's own echo at a sentence end no longer counts as an interruption
 - **V01.0.123** Tidier settings: every setting right below its switch (web search, weather, speaker identification; the web search page is gone), short feature rows with marks, pages named Language model, Defaults, Operation, "Me" everywhere, warning about unsaved changes
-- **V01.0.122** Cloned voices moved to Settings → Voices (with "Speak a sample"); the menu entry "Users" is now "Profiles"; Me → Voice is now "Speaker identification"
 
 All versions: [CHANGELOG.md](CHANGELOG.md)
 

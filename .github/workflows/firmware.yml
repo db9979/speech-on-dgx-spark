@@ -73,6 +73,12 @@ jobs:
           new, n = re.subn(r"InitializeDisplayI2c\(\);\s*InitializeSsd1306Display\(\);", "display_ = new NoDisplay();", s)
           assert n == 1, "display init not found"
           open(p, "w").write(new)
+          # no screen means LVGL never starts: the assets (font, emoji, skin) must not be applied, else the
+          # board crashes right after loading the wake word models (seen on a real board, fw 2.5.1.2)
+          a = "xz/main/assets.cc"; s = open(a).read()
+          old = "    Assets::LoadSrmodelsFromIndex(assets, root.get());\n"
+          assert s.count(old) == 1, "assets apply not found"
+          open(a, "w").write(s.replace(old, old + "    if (!lv_is_initialized()) {\n        return true;\n    }\n"))
           PY
           fi
           grep -q "PROJECT_VER \"$VERSION\"" xz/CMakeLists.txt
