@@ -144,7 +144,7 @@ def update_progress():
             "version": p.get("version"), "now": int(time.time()), "timeout": UPDATE_TIMEOUT}
 
 
-UNLOCKED = ("/api/chat", "/api/test/asr", "/api/assistant/", "/api/watch/", "/api/login", "/api/logout",
+UNLOCKED = ("/api/chat", "/api/test/asr", "/api/assistant/", "/api/watch/", "/api/esp32/", "/api/login", "/api/logout",
             "/api/profile/login", "/api/profile/logout", "/api/update")
 
 

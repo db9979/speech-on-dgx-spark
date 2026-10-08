@@ -335,6 +335,7 @@ SETTINGS = {
     "tg_private": (False, lambda v: isinstance(v, bool)),
     "tg_ha": (False, lambda v: isinstance(v, bool)),
     "tg_push": (False, lambda v: isinstance(v, bool)),
+    "esp_on": (False, lambda v: isinstance(v, bool)),   # own ESP32 speakers (esp32.py)
 }
 
 

@@ -121,4 +121,4 @@ async function tgAdmin(){if(!$('tgadmin'))return;let d={};try{d=await (await api
   $('tgdel').style.display=d.has_token?'':'none';
   $('tgsave').onclick=async()=>{$('tgstate').textContent=t('Frage Telegram …','Asking Telegram …');try{await api('/api/admin/telegram',xjson('PUT',{token:$('tgtoken').value.trim()}));$('tgtoken').value='';tgAdmin()}catch(e){$('tgstate').textContent=e.message}};
   $('tgdel').onclick=async()=>{if(!confirm(t('Token löschen? Der Bot antwortet dann nicht mehr.','Delete the token? The bot stops answering.')))return;try{await api('/api/admin/telegram',{method:'DELETE'});tgAdmin()}catch(e){$('tgstate').textContent=e.message}}}
-async function showExtras(){for(const f of [showWx,showCon,showPar,showTasks,showTg])await f().catch(()=>{})}
+async function showExtras(){for(const f of [showWx,showCon,showPar,showTasks,showTg].concat(typeof showEsp==='function'?[showEsp]:[]))await f().catch(()=>{})}

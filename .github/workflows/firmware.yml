@@ -1,0 +1,103 @@
+name: Speaker firmware
+
+# Builds the firmware for own ESP32-S3 speakers (XiaoZhi, German, talks only to the own Spark) and
+# publishes it as release fw-<version>. The Spark fetches the newest fw-… release, checks every file
+# against manifest.json and serves it to the browser setup and to the speakers' updates.
+on:
+  workflow_dispatch:
+  push:
+    branches: [main]
+    paths:
+      - firmware/**
+      - .github/workflows/firmware.yml
+
+permissions:
+  contents: read
+
+concurrency:
+  group: speaker-firmware
+  cancel-in-progress: false
+
+jobs:
+  plan:
+    runs-on: ubuntu-latest
+    outputs:
+      variants: ${{ steps.p.outputs.variants }}
+      version: ${{ steps.p.outputs.version }}
+    steps:
+      - uses: actions/checkout@v4
+      - id: p
+        run: |
+          set -e
+          commit=$(jq -r .commit firmware/xiaozhi.json)
+          ver=$(curl -fsSL "https://raw.githubusercontent.com/78/xiaozhi-esp32/$commit/CMakeLists.txt" | sed -n 's/^set(PROJECT_VER "\([0-9.]*\)").*/\1/p')
+          test -n "$ver"
+          echo "version=$ver.$(jq -r .build firmware/xiaozhi.json)" >> "$GITHUB_OUTPUT"
+          echo "variants=$(jq -c .variants firmware/xiaozhi.json)" >> "$GITHUB_OUTPUT"
+
+  build:
+    needs: plan
+    runs-on: ubuntu-latest
+    container:
+      image: espressif/idf:v6.1
+    strategy:
+      fail-fast: true
+      matrix:
+        include: ${{ fromJson(needs.plan.outputs.variants) }}
+    steps:
+      - uses: actions/checkout@v4
+      - name: Build ${{ matrix.name }}
+        shell: bash
+        env:
+          VERSION: ${{ needs.plan.outputs.version }}
+        run: |
+          set -e
+          source "$IDF_PATH/export.sh"
+          cfg=firmware/xiaozhi.json
+          commit=$(python3 -c "import json;print(json.load(open('$cfg'))['commit'])")
+          repo=$(python3 -c "import json;print(json.load(open('$cfg'))['repo'])")
+          lang=$(python3 -c "import json;print(json.load(open('$cfg'))['language'])")
+          wake=$(python3 -c "import json;print(json.load(open('$cfg'))['wake_word'])")
+          git clone -q "$repo" xz && git -C xz checkout -q "$commit"
+          # own server only: no cloud address built in (the browser setup writes the Spark's address),
+          # and our own version number so the Spark can offer updates
+          sed -i 's#default "https://api.tenclass.net/xiaozhi/ota/"#default "https://spark.invalid/api/esp32/ota/"#' xz/main/Kconfig.projbuild
+          grep -q 'spark.invalid' xz/main/Kconfig.projbuild
+          sed -i "s/^set(PROJECT_VER \"[0-9.]*\")/set(PROJECT_VER \"$VERSION\")/" xz/CMakeLists.txt
+          grep -q "PROJECT_VER \"$VERSION\"" xz/CMakeLists.txt
+          cd xz
+          python scripts/build.py "${{ matrix.board }}" --name "${{ matrix.name }}" --language "$lang" --wake-word "$wake"
+          cd ..
+          python3 firmware/package.py variant xz "${{ matrix.name }}" "${{ matrix.label }}" "out/${{ matrix.name }}"
+      - uses: actions/upload-artifact@v4
+        with:
+          name: fw-${{ matrix.name }}
+          path: out/${{ matrix.name }}
+          if-no-files-found: error
+
+  release:
+    needs: [plan, build]
+    runs-on: ubuntu-latest
+    permissions:
+      contents: write
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/download-artifact@v4
+        with:
+          path: built
+      - name: Publish fw-${{ needs.plan.outputs.version }}
+        env:
+          GH_TOKEN: ${{ github.token }}
+          VERSION: ${{ needs.plan.outputs.version }}
+        run: |
+          set -e
+          commit=$(jq -r .commit firmware/xiaozhi.json)
+          wake=$(jq -r .wake_word_label firmware/xiaozhi.json)
+          python3 firmware/package.py manifest built "$VERSION" "$commit" "$wake" release
+          ls -la release
+          if gh release view "fw-$VERSION" >/dev/null 2>&1; then
+            gh release upload "fw-$VERSION" release/* --clobber
+          else
+            gh release create "fw-$VERSION" release/* --title "Lautsprecher-Firmware $VERSION" \
+              --notes "XiaoZhi $commit, Deutsch, Weckwort $wake, nur für den eigenen Spark. Wird vom Spark selbst geholt (Einstellungen → Funktionen → Eigene Lautsprecher)." --latest=false
+          fi

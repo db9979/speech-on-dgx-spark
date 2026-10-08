@@ -229,6 +229,10 @@ def validate(new):
     for k in ("weather_url", "geocode_url", "telegram_api"):
         if ch.get(k) and not re.fullmatch(r"https?://\S+", ch[k]):
             raise HTTPException(400, f"{k}: the address must start with http:// or https://")
+    if ch.get("esp32_url") and not re.fullmatch(r"https?://[A-Za-z0-9.\-]+(?::\d{1,5})?/?", ch["esp32_url"]):
+        raise HTTPException(400, "esp32_url: http(s)://name or http(s)://name:port, without a path")
+    if not re.fullmatch(r"[\w.\-]+/[\w.\-]+", ch.get("esp32_repo") or "x/x"):
+        raise HTTPException(400, "esp32_repo: owner/name")
     if not isinstance(ch.get("defaults"), dict) or profiles.clean_settings(ch["defaults"]) != ch["defaults"]:
         raise HTTPException(400, "chat defaults: invalid value")
     if ch.get("speaker_strictness") not in speakers.STRICTNESS:

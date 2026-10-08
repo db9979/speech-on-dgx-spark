@@ -94,7 +94,7 @@ say "System packages"
 export DEBIAN_FRONTEND=noninteractive
 apt-get update -q
 # ninja-build + build-essential: vLLM / FlashInfer compile kernels at first start (JIT)
-apt-get install -y -q python3 python3-venv python3-dev build-essential ninja-build git openssl ffmpeg sox libsox-fmt-all libsndfile1 curl jq iproute2
+apt-get install -y -q python3 python3-venv python3-dev build-essential ninja-build git openssl ffmpeg libopus0 sox libsox-fmt-all libsndfile1 curl jq iproute2
 PY=$(command -v python3)
 
 # ---------------------------------------------------------------- user and dirs

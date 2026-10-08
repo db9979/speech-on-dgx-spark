@@ -43,9 +43,10 @@ import parcels  # noqa: E402
 import extras  # noqa: E402
 import telegram  # noqa: E402
 import tasks  # noqa: E402
+import esp32  # noqa: E402
 
 app = FastAPI(title="Speech on DGX Spark")
-for _module in (account, admin, chat, update, system, proactive, room, tidy, weather, contacts, parcels, telegram, tasks):
+for _module in (account, admin, chat, update, system, proactive, room, tidy, weather, contacts, parcels, telegram, tasks, esp32):
     app.include_router(_module.router)
 app.middleware("http")(update_lock)
 
@@ -162,6 +163,7 @@ async def stability():
             await asyncio.sleep(5)
     asyncio.create_task(reminders())
     asyncio.create_task(telegram.loop())
+    asyncio.create_task(esp32.fetch_loop())
     asyncio.create_task(every_minute())
     asyncio.create_task(watchdog())
     asyncio.create_task(backups())

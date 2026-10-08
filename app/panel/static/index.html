@@ -84,6 +84,11 @@
       <div data-show="chat.telegram" style="margin-left:18px" id="tgadmin"><div class="fh">Bot-Token von @BotFather (Anleitung über den Knopf „Anleitung“).</div>
         <div class="rowin"><input id="tgtoken" type="password" autocomplete="off" placeholder="123456789:AA…"><button class="b" type="button" id="tgsave">Prüfen und speichern</button></div>
         <div class="fh" id="tgstate"></div><div class="row" style="margin-top:6px"><button class="b" type="button" id="tgdel">Token löschen</button></div></div>
+      <div class="setrow"><div class="lbl"><b>Eigene Lautsprecher (ESP32)</b><span>Kleine ESP32-S3-Boards mit Mikrofon und Lautsprecher als Sprachassistent im Raum, mit freier XiaoZhi-Firmware, die nur mit diesem Spark spricht. Profile richten sie unter dem Profil-Knopf → Lautsprecher ein: per USB aus Chrome oder Edge oder mit einem Code. Jedes Profil schaltet es für sich ein. Die Firmware holt der Spark aus dem eigenen GitHub-Repo und prüft jede Datei.</span></div><label class="tgl"><input type="checkbox" id="chat.esp32"><i></i></label></div>
+      <div data-show="chat.esp32" style="margin-left:18px" id="espadmin">
+        <label>Adresse des Spark für die Lautsprecher (leer = die Adresse, unter der das Panel geöffnet wird)</label><input id="chat.esp32_url" placeholder="https://speech.example.de" autocapitalize="off" autocomplete="off">
+        <div class="fh">Am besten die Adresse deines Reverse Proxys mit echtem Zertifikat (er muss WebSockets durchlassen). Ein selbst signiertes Zertifikat (Port 31443) nimmt das Board nicht an; im Heimnetz geht auch http://&lt;Spark-IP&gt;:31080.</div>
+        <div class="fh" id="espstate"></div><div class="row" style="margin-top:6px"><button class="b" type="button" id="espfetch">Firmware jetzt holen</button></div></div>
       <div class="setrow"><div class="lbl"><b>Zweiter Anmeldeschritt für Profile</b><span>Profile können unter dem Profil-Knopf → Sicherheit für sich einschalten, dass die Anmeldung mit Name und PIN zusätzlich einen Code aus einer Authenticator-App verlangt. Jedes Profil entscheidet selbst. Geräte mit Schlüssel (Lautsprecher, Siri, Uhr, Handy) brauchen keinen Code. Ausschalten hier verhindert nur neue Einrichtungen; wer ihn schon an hat, behält ihn.</span></div><label class="tgl"><input type="checkbox" id="chat.mfa"><i></i></label></div>
       <div class="setrow"><div class="lbl"><b>Sprechererkennung</b><span>Profile lernen unter dem Profil-Knopf ihre Stimme ein. Erkennt der Assistent eine Stimme eindeutig, antwortet er für dieses Profil, auch an einem fremden oder Gast-Gerät. Eine Stimme ist kein Passwort: Wer sehr ähnlich klingt oder eine Aufnahme abspielt, kann ein Profil erwischen.</span></div><label class="tgl"><input type="checkbox" id="chat.speaker_id"><i></i></label></div>
       <div class="savebar"><button class="b p savebtn" data-p="feat">Speichern</button><span class="savemsg"></span></div>
@@ -516,6 +521,7 @@
     <div id="probox" class="ptab"></div>
     <div id="taskbox" class="ptab"></div>
     <div id="tgbox" class="ptab"></div>
+    <div id="espbox" class="ptab"></div>
     <div id="wxbox" class="ptab"></div>
     <div id="conbox" class="ptab"></div>
     <div id="parbox" class="ptab"></div>
@@ -545,6 +551,7 @@
 <script src="/static/js/proactive.js"></script>
 <script src="/static/js/room.js"></script>
 <script src="/static/js/extras.js"></script>
+<script src="/static/js/esp.js"></script>
 <script src="/static/js/guides.js"></script>
 <script src="/static/js/users.js"></script>
 <script src="/static/js/face.js"></script>

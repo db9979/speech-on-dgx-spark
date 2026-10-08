@@ -254,6 +254,8 @@ WATCH_HINT = ("Die Frage kommt von einer Smartwatch mit kleinem Display und klei
 TELEGRAM_HINT = ("Diese Unterhaltung läuft über Telegram: Antworte kurz in einfachem Text, ohne Markdown. "
                  "Hast du keinen Zugriff auf etwas, sag, dass der Nutzer das im Panel unter Profil → Telegram "
                  "erlauben kann.")
+SPEAKER_HINT = ("Die Frage kommt über einen kleinen Lautsprecher im Raum, der deine Antwort vorliest. Antworte "
+                "kurz, meist in ein bis drei Sätzen, ohne Listen, Tabellen, Links oder Emojis.")
 SIRI_HINT = ("Die Frage kommt über Siri vom iPhone, der Apple Watch, aus dem Auto oder über AirPods; Siri "
              "liest deine Antwort vor. Antworte kurz, meist in ein bis drei Sätzen, ohne Listen oder Links.")
 REMINDER_HINT = ("Mit reminder_set stellst du Timer und Erinnerungen, mit reminder_list und reminder_cancel "
@@ -804,6 +806,8 @@ async def chat(request: Request):
         system = (system + "\n\n" + WATCH_HINT).strip()
     if body.get("client") == "siri":
         system = (system + "\n\n" + SIRI_HINT).strip()
+    if body.get("client") == "speaker":
+        system = (system + "\n\n" + SPEAKER_HINT).strip()
     prof = who if ccfg.get("memory", True) else None
     if prof:  # guests get no memory at all
         system = (system + "\n\n" + memory_hint(prof)).strip()
