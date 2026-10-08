@@ -21,7 +21,7 @@ At the end it prints the address, password and API key, then TTS speaks a senten
 
 | Task | Command |
 |---|---|
-| Update | button in the panel under *Overview → System and update*, or `sudo speech-spark update` |
+| Update | button in the panel under *Status → System and update*, or `sudo speech-spark update` |
 | Show addresses and keys | `sudo speech-spark info` |
 | Uninstall | `sudo ./uninstall.sh` (config, models and voices stay; `--purge` removes everything) |
 
@@ -31,6 +31,7 @@ All options for running without questions (`--mode api --asr 1.7b --tts 0.6b --y
 
 <!-- New version: add one line at the top here and in CHANGELOG.md, drop the oldest line here (keep 10). Details go to docs/de and docs/en, not into this README. -->
 
+- **V01.0.145** Design "Klar", step 1: menu as a sidebar on computers (Assistent, Ich, then "Spark verwalten" with Zustand, Einstellungen, Profile und Geräte, Einbinden) and a bottom bar on phones; "Übersicht" is now "Zustand" (status), count of unsaved settings pages in the menu
 - **V01.0.144** Follow-up without wake word (off, admin + profile): after answering a spoken question the assistant keeps listening for 4–10 seconds, "And tomorrow?" needs no "Hey Spark"
 - **V01.0.143** Hands-free listens again even when the browser has paused playback (iOS, no speaker): "still speaking" only counts when something is actually playing; GitHub test green again
 - **V01.0.142** Speakers: "Stimme hier anlernen" (three sentences, own voiceprint for the board microphone); "only known voices" applies at a speaker only once a voice was taught there
@@ -40,7 +41,6 @@ All options for running without questions (`--mode api --asr 1.7b --tts 0.6b --y
 - **V01.0.138** Speakers: no more gaps in long answers, new firmware 2.5.1.5 waits when its sound buffer is full instead of dropping sound; the Spark keeps 0.7 s lead
 - **V01.0.137** Speakers: sound no longer stutters, the Spark buffers ahead (0.6 s before start, up to 0.9 s lead, after a stall it collects 0.3 s again); stalls show under "Check" and in the log
 - **V01.0.136** Speakers: "Check" shows live what the speaker is doing (every 2 seconds), also in room mode (only that a sentence was heard and whether it speaks, never the text)
-- **V01.0.135** Speakers: volume and microphone sensitivity per speaker under Me → Speakers (applies at once when connected, otherwise at the next connection)
 
 All versions: [CHANGELOG.md](CHANGELOG.md)
 

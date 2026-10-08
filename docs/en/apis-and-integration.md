@@ -49,7 +49,7 @@ curl -N http://SPARK:31002/v1/audio/speech -H "Authorization: Bearer $KEY" -H 'C
 
 **VoiceDesign** (voice from a description): `"task_type": "VoiceDesign"` and `"instructions": "deep, calm male voice"`. This needs its own model: enable "VoiceDesign zusätzlich bereitstellen" in Settings → Speech output. It starts a second engine with the same memory footprint again.
 
-In the panel under **Übersicht → Prüfen** (Overview → Checks), "gestreamt" (streamed) plays audio while it is generated and shows the time to first audio.
+In the panel under **Zustand → Prüfen** (Status → Checks), "gestreamt" (streamed) plays audio while it is generated and shows the time to first audio.
 
 ### General
 

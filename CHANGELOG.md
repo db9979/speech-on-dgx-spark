@@ -2,6 +2,7 @@
 
 Every version in one line, newest first (taken from the commit messages, so some lines are German, some English). Older entries have no version number.
 
+- **V01.0.145** · 2026-10-08 · Design „Klar“, Schritt 1: Menü am Rechner als Leiste links (Assistent, Ich, dann „Spark verwalten“ mit Zustand, Einstellungen, Profile und Geräte, Einbinden), am Handy als Leiste unten; „Übersicht“ heißt jetzt „Zustand“, Zahl ungespeicherter Einstellungsseiten im Menü
 - **V01.0.144** · 2026-10-08 · Rückfrage ohne Weckwort (aus, Admin + Profil): nach der Antwort auf eine gesprochene Frage hört der Assistent noch 4–10 Sekunden zu, „Und morgen?“ braucht kein „Hey Spark“
 - **V01.0.143** · 2026-10-08 · Freihändig hört auch dann wieder zu, wenn der Browser die Wiedergabe angehalten hat (iOS, kein Lautsprecher): „spricht noch“ gilt nur, wenn wirklich etwas abgespielt wird; GitHub-Test wieder grün
 - **V01.0.142** · 2026-10-08 · Lautsprecher: „Stimme hier anlernen“ (drei Sätze, eigener Stimmabdruck fürs Board-Mikrofon); „nur bekannte Stimmen“ greift am Lautsprecher erst, wenn dort eine Stimme angelernt ist

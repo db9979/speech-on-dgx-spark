@@ -181,7 +181,8 @@ async function openMe(tab){$('profmsg').textContent='';$('profmodal').style.disp
   if(PROFILE){try{await showFacts();await showDocs();await showVoice();await showCal();await showMail();await showMailTidy().catch(()=>{});await showHa();await showSecurity();await showToolLog();await showPro().catch(()=>{});await showExtras();showRoom();await showPush().catch(()=>{});showOver()}catch{setProfile(null);openMe('loginbox')}return}
   $('profpin').value='';if(tab==='loginbox')setTimeout(()=>$($('profuser').value?'profpin':'profuser').focus(),50)}
 window.openMe=openMe;
-$('profbtn').onclick=()=>openMe(PHONE.matches?'list':meLast);   // phones: the list of pages; else the last page (first time: Überblick)
+$('profbtn').onclick=()=>openMe(PHONE.matches?'list':meLast);
+$('navme').onclick=()=>openMe(meLast);   // phones: the list of pages; else the last page (first time: Überblick)
 $('profuser').onkeydown=e=>{if(e.key==='Enter')$('profpin').focus()};
 $('profpin').onkeydown=e=>{if(e.key==='Enter')$('proflogin').click()};
 $('profcode').onkeydown=e=>{if(e.key==='Enter')$('proflogin').click()};

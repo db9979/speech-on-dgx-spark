@@ -1,5 +1,5 @@
 // First-start wizard for the admin: password, language model, voice, profiles, access and
-// features, then a live check. Opens once after the first admin login; Übersicht → Prüfen can
+// features, then a live check. Opens once after the first admin login; Zustand → Prüfen can
 // start it again. Every step saves on "Weiter"; "Überspringen" leaves the step as it is.
 const wiz={step:0,cfg:null,steps:['hello','pw','llm','voice','prof','feat','done']};
 const jreq=(m,b)=>({method:m,headers:{'Content-Type':'application/json'},body:JSON.stringify(b)});

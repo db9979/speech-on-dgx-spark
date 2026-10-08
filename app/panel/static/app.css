@@ -355,3 +355,52 @@ div.guide.inline{border:0;border-bottom:1px solid var(--line);border-radius:0;ma
 .sres button::before,.sres button::after{display:none!important}.sres button:hover,.sres button:focus{background:var(--line)}.sres button span{font-size:12px;color:var(--mut)}.sres .mut{padding:8px 10px;font-size:13px}
 .sflash{animation:sflash 2.2s ease}@keyframes sflash{0%,40%{background:color-mix(in srgb,var(--acc) 18%,transparent);box-shadow:0 0 0 4px color-mix(in srgb,var(--acc) 18%,transparent)}100%{background:transparent;box-shadow:none}}
 @media (max-width:760px){.cfgnav .sbox{margin:0;padding:10px;border-bottom:1px solid var(--line)}.cfgnav .sbox input{font-size:16px}.menav .sbox input{font-size:16px}}
+/* ---- design „Klar“ (V01.0.145): sidebar on computers, bar at the bottom on phones (admin only) ---- */
+.hfoot{display:contents}.navgrp,.ni,#mbar,.hdot,.ncnt[hidden]{display:none}
+.ncnt{font-size:11px;font-weight:700;line-height:18px;min-width:18px;padding:0 6px;border-radius:9px;background:color-mix(in srgb,var(--warn) 18%,transparent);color:var(--warn);margin-left:auto;text-align:center}
+.hdot{width:8px;height:8px;border-radius:50%;background:var(--line);margin-left:auto;flex:none}
+.hdot.ok{background:var(--ok)}.hdot.warn{background:var(--warn)}.hdot.bad{background:var(--bad)}
+body.guest .navme{display:none}
+@media (min-width:761px){
+  body.adm{padding-left:232px}
+  body.adm header{position:fixed;left:0;top:0;bottom:0;width:232px;flex-direction:column;align-items:stretch;gap:4px;padding:16px 12px;
+    border-bottom:0;border-right:1px solid var(--line);overflow-y:auto;background:color-mix(in srgb,var(--card) 70%,var(--bg))}
+  body.adm header h1{padding:2px 8px 0;white-space:normal;line-height:1.25}
+  body.adm #hdr{padding:0 8px 10px 48px;font-size:12px;margin:0}
+  body.adm nav{flex-direction:column;flex-wrap:nowrap;margin:6px 0 0;padding:0;background:none;border-radius:0;gap:1px}
+  body.adm nav button{display:flex;align-items:center;gap:10px;text-align:left;padding:8px 10px;border-radius:10px;color:var(--fg);font-weight:500}
+  body.adm nav button:hover{background:color-mix(in srgb,var(--line) 60%,transparent)}
+  body.adm nav button.on{background:color-mix(in srgb,var(--acc) 12%,transparent);color:var(--acc);font-weight:600;box-shadow:none}
+  body.adm:has(#profmodal[style*="grid"]) nav button.on{background:none;color:var(--fg);font-weight:500}
+  body.adm:has(#profmodal[style*="grid"]) #navme{background:color-mix(in srgb,var(--acc) 12%,transparent);color:var(--acc);font-weight:600}
+  body.adm .ni{display:inline-grid;width:18px;height:18px;flex:none}.ni svg{width:100%;height:100%}
+  body.adm .navgrp{display:block;font-size:11px;font-weight:600;letter-spacing:.06em;text-transform:uppercase;color:var(--mut);padding:16px 10px 6px}
+  body.adm .hdot{display:block}
+  body.adm nav #updbadge{margin-left:4px}
+  body.adm .hfoot{display:flex;flex-wrap:wrap;gap:6px;margin-top:auto;padding-top:12px;border-top:1px solid var(--line)}
+  body.adm .hfoot .b{order:0!important}
+  body.adm #logoutbtn{flex:1}
+  body.adm main{max-width:1240px}
+}
+@media (max-width:760px){
+  body.adm #mbar{display:flex;position:fixed;left:0;right:0;bottom:0;z-index:15;background:color-mix(in srgb,var(--card) 92%,transparent);
+    backdrop-filter:saturate(1.4) blur(14px);-webkit-backdrop-filter:saturate(1.4) blur(14px);border-top:1px solid var(--line);padding:6px 4px calc(6px + env(safe-area-inset-bottom))}
+  #mbar button{flex:1;display:flex;flex-direction:column;align-items:center;gap:2px;background:none;border:0;color:var(--mut);font:inherit;font-size:11px;font-weight:600;padding:4px 0;position:relative;min-height:46px}
+  #mbar .ni{display:block;width:23px;height:23px}
+  #mbar .hdot{display:block;position:absolute;top:4px;left:calc(50% + 9px);margin:0}
+  #mbar button.on{color:var(--acc)}
+  body:has(#profmodal[style*="grid"]) #mbar button.on{color:var(--mut)}body:has(#profmodal[style*="grid"]) #mbar button[data-m=me]{color:var(--acc)}
+  body.kbd #mbar{display:none!important}
+  body.adm main{padding-bottom:calc(150px + env(safe-area-inset-bottom))}
+  body.adm:not(.kbd) #fab{bottom:calc(76px + env(safe-area-inset-bottom))}
+  /* the conversation: the bar is the last row of the full-height column, under the text field */
+  body.inchat.adm #mbar{position:static;flex:none}
+  body.inchat.adm main{padding-bottom:0}
+  body.inchat.adm .composer{padding-bottom:8px}
+  /* the Ich window stays above the bar */
+  body.adm #profmodal{bottom:calc(59px + env(safe-area-inset-bottom))}
+}
+@media (min-width:761px){body.adm .cfgnav{top:24px}}
+@media (min-width:761px){body.adm header nav{order:5}body.adm .hfoot{order:6}body.adm #hdr{padding-left:48px}}
+@media (max-width:760px){body.adm #mmenu{display:none}body.adm #profbtn{margin-left:auto}}
+@media (max-width:760px){body.adm #profmodal .mecard{height:100%}}

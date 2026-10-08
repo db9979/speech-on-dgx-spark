@@ -24,7 +24,7 @@ Alle Dienste laufen als Systembenutzer `speech`. Per sudoers darf das Panel die 
 
 ## Leistung messen
 
-Im Panel unter **Übersicht → Prüfen → Leistung messen** oder auf der Konsole:
+Im Panel unter **Zustand → Prüfen → Leistung messen** oder auf der Konsole:
 
 ```bash
 sudo speech-spark-bench                 # Zeit bis zum ersten Ton, Tempo einzeln und parallel, Speicher je Dienst
@@ -68,7 +68,7 @@ Die Messung geht über die öffentlichen Ports, misst also das, was Apps sehen. 
 | Panel zeigt `error` | Fehlertext im Panel und unter Logs ansehen. |
 | `no kernel image is available` | Ein Paket wurde ohne Blackwell-Kernel gebaut. Prüfen mit `/opt/speech-spark/venv-asr/bin/python -c "import torch; print(torch.cuda.get_arch_list())"`. |
 | TTS-Engine startet nicht | Panel → Logs → TTS-Engine. Bei „not enough KV cache“ o. Ä. die Speicheranteile der Engine im Panel erhöhen. Der erste Start lädt das Modell und dauert länger. |
-| Update schlägt fehl | Panel → Übersicht → System und Update → Update-Protokoll. Die alte Version läuft weiter oder wird wieder eingespielt; das Protokoll sagt, was passiert ist. |
+| Update schlägt fehl | Panel → Zustand → System und Update → Update-Protokoll. Die alte Version läuft weiter oder wird wieder eingespielt; das Protokoll sagt, was passiert ist. |
 | Port belegt | Port in `/etc/speech-spark/config.json` ändern und das Skript erneut ausführen. |
 
 Die Speicherschätzungen pro Modell (`MODEL_GIB` in `app/common.py`) sind grobe Annahmen und noch nicht auf einer Spark gemessen. Nach dem ersten Lauf sollten sie mit den Werten aus dem Panel korrigiert werden.

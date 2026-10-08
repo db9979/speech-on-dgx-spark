@@ -95,6 +95,17 @@ class Browser(unittest.TestCase):
                         self.assertLessEqual(over, 1, f"{name}/cfg-{p_id}: {over}px zu breit")
                         if name == "handy":
                             await pg.evaluate("$('cfgback').click()")
+                    # design „Klar“: computers get the menu as a sidebar on the left, phones a bar at the bottom
+                    if name == "pc":
+                        box = await pg.evaluate("(()=>{const r=document.querySelector('header').getBoundingClientRect();return [r.left,r.width,r.height]})()")
+                        self.assertEqual(box[0], 0)
+                        self.assertLess(box[1], 300)
+                        self.assertGreater(box[2], 600)
+                        self.assertFalse(await pg.evaluate("getComputedStyle($('mbar')).display!=='none'"))
+                    else:
+                        self.assertTrue(await pg.evaluate("getComputedStyle($('mbar')).display!=='none'"))
+                        await pg.evaluate("document.querySelector('#mbar button[data-m=mon]').click()")
+                        self.assertTrue(await pg.evaluate("document.querySelector('nav button[data-s=mon]').classList.contains('on')"))
                     self.assertEqual(errors, [], name)
                     await br.close()
         self.run_async(go())

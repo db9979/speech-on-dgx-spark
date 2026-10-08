@@ -20,7 +20,7 @@ $('pwset').onclick=async()=>{try{await api('/api/password',{method:'POST',header
     PUBLIC=who.public!==false;
     // without "Assistent ohne Passwort" guests are locked out, but profiles still sign in with name and PIN
     if(!PUBLIC&&!who.profile){GATE=true;$('profgate').style.display='';$('profadmin').style.display='';openMe('loginbox');return}}
-  else $('logoutbtn').style.display='inline-block';
+  else{$('logoutbtn').style.display='inline-block';document.body.classList.add('adm');hdrH()}
   document.querySelector('nav button[data-s=chat]').click();       // the assistant is the start page
   try{const s=sessionStorage.getItem('versec');sessionStorage.removeItem('versec');if(s&&s!=='chat'&&$(s))goSec(s)}catch{}   // back where the new version was loaded
   if(ADMIN){ulCheck();wizCheck();loadLangs();refresh();setInterval(refresh,3000);api('/api/update').then(r=>r.json()).then(u=>updBadge(u.remote)).catch(()=>{})}})();

@@ -72,7 +72,8 @@ async function wySuggest(auto){const inp=$('chat.wyoming_allow'),msg=$('wymsg');
 $('wysuggest').onclick=()=>wySuggest(false);
 $('chat.wyoming').addEventListener('change',e=>{if(e.target.checked&&!$('chat.wyoming_allow').value.trim())wySuggest(true)});
 const markDirty=(pane,on)=>{const b=document.querySelector(`#cfgnav button[data-p="${pane.id.slice(5)}"]`);if(b)b.classList.toggle('dirty',on);
-  pane.classList.toggle('dirty',on);const bar=pane.querySelector('.savebar');if(bar)bar.classList.toggle('dirty',on)};
+  pane.classList.toggle('dirty',on);const bar=pane.querySelector('.savebar');if(bar)bar.classList.toggle('dirty',on);
+  const n=document.querySelectorAll('.pane.dirty').length,c=$('dirtycnt');c.hidden=!n;c.textContent=n};
 // unsaved changes: the save bar says so and offers "Verwerfen"; leaving the page or the settings asks first
 const dirtyPanes=()=>[...document.querySelectorAll('.pane.dirty')];
 const leaveOk=()=>!dirtyPanes().length||confirm(t('Es gibt ungespeicherte Änderungen. Trotzdem verlassen? Sie gehen dann verloren.','There are unsaved changes. Leave anyway? They will be lost.'));
@@ -154,7 +155,7 @@ $('vimpfile').onchange=async()=>{const f=$('vimpfile').files[0];if(!f)return;$('
   catch(e){$('vimpmsg').innerHTML=`<span class="err">${esc(e.message)}</span>`}};
 function playRef(n){const a=new Audio('/api/clone-voices/'+encodeURIComponent(n)+'.wav');a.play()}
 async function delVoice(n){if(!confirm(t(`Stimme ${n} löschen?`,`Delete voice ${n}?`)))return;await api('/api/clone-voices/'+encodeURIComponent(n),{method:'DELETE'});loadClone()}
-// One short sentence with exactly this voice, through the same admin test route as Übersicht → Prüfen.
+// One short sentence with exactly this voice, through the same admin test route as Zustand → Prüfen.
 // Cloned voices only sound like themselves with a Base model; otherwise the engine's answer says why.
 const PROBE={de:'Hallo, so klinge ich als Stimme des Spark.',en:'Hello, this is how I sound as the voice of the Spark.'};
 async function probeVoice(n,btn){const lang=$('vreadlang').value==='en'?'en':'de',msg=$('vprobemsg');btn.disabled=true;msg.textContent=t('Spreche …','Speaking …');

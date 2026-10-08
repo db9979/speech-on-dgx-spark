@@ -1,4 +1,4 @@
-"""Diagnose filters for Übersicht → Logs: the journal lines threads usually ask for ("room:", "esp32:",
+"""Diagnose filters for Zustand → Logs: the journal lines threads usually ask for ("room:", "esp32:",
 "chat: web search", ...), so nobody has to type journalctl | grep on the console.
 
 Admin only. The filters are a fixed list and the matching runs in Python: nothing the browser sends

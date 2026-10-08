@@ -79,7 +79,7 @@ class MenuPlaces(unittest.TestCase):
         self.assertIn('data-p="voices"', cfg)
         self.assertIn('id="pane-voices"', cfg)
         self.assertIn('id="vlist"', cfg)
-        self.assertIn('<button data-s="prof">Profile</button>', html)
+        self.assertIn('<i class="ni" data-ni="prof"></i>Profile und Geräte</button>', html)
         self.assertNotIn("'voices'", read("js", "base.js"))
 
     def test_voice_list_has_no_inline_handlers(self):
@@ -143,6 +143,25 @@ class SettingsOrder(unittest.TestCase):
 def json_str(s):
     import json
     return json.dumps(s, ensure_ascii=False)
+
+
+class DesignKlar(unittest.TestCase):
+    """V01.0.145 design „Klar“: the main menu is Assistent and Ich for oneself, then "Spark verwalten" with
+    Zustand, Einstellungen, Profile und Geräte, Einbinden; phones get a bar with the same first entries;
+    no help text sends anyone to the old name "Übersicht"."""
+
+    def test_menu_order(self):
+        html = read("index.html")
+        nav = html[html.index("<nav>"):html.index("</nav>")]
+        self.assertEqual(re.findall(r'data-s="(\w+)"', nav), ["chat", "mon", "cfg", "prof", "int"])
+        self.assertLess(nav.index('id="navme"'), nav.index("Spark verwalten"))
+        self.assertLess(nav.index("Spark verwalten"), nav.index('data-s="mon"'))
+        self.assertEqual(re.findall(r'data-m="(\w+)"', html), ["chat", "me", "mon", "more"])
+
+    def test_no_old_page_name(self):
+        for f in ("guides.js", "admin.js", "wizard.js"):
+            self.assertNotIn("Übersicht →", read("js", f), f)
+        self.assertNotIn("Overview →", read("js", "guides.js"))
 
 
 class MenuStructure(unittest.TestCase):

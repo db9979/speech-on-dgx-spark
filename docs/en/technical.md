@@ -24,7 +24,7 @@ All services run as the system user `speech`. A sudoers rule lets the panel star
 
 ## Measuring performance
 
-In the panel under **Overview → Checks → Leistung messen**, or on the console:
+In the panel under **Status → Checks → Leistung messen**, or on the console:
 
 ```bash
 sudo speech-spark-bench                 # time to first audio, speed single and parallel, memory per service
@@ -68,7 +68,7 @@ The benchmark goes through the public ports, so it measures what apps see. The l
 | Panel shows `error` | Read the message in the panel and under Logs. |
 | `no kernel image is available` | A package was built without Blackwell kernels. Check with `/opt/speech-spark/venv-engine/bin/python -c "import torch; print(torch.cuda.get_arch_list())"`. |
 | Engine does not start | Panel → Logs → engine. With "No available memory for the cache blocks", raise the engine's memory share in the panel. The first start downloads the model and takes longer. |
-| Update fails | Panel → Overview → System and update → update log. The old version keeps running or is installed again; the log says which. |
+| Update fails | Panel → Status → System and update → update log. The old version keeps running or is installed again; the log says which. |
 | Port taken | Change the port in `/etc/speech-spark/config.json` and run the installer again. |
 
 The per-model memory estimates (`MODEL_GIB` in `app/common.py`) are rough assumptions; correct them with the values the panel shows.

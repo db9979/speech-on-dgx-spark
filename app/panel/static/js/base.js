@@ -37,6 +37,15 @@ const api=async(p,o={},code)=>{const r=await fetch(p,code?Object.assign({},o,{he
     const c=prompt((wrong?t('Code falsch. ','Wrong code. '):'')+t('Bitte den aktuellen Code aus deiner Authenticator-App eingeben (oder einen Wiederherstellungscode):','Please enter the current code from your authenticator app (or a recovery code):'));
     if(c&&c.trim())return api(p,o,c.trim());throw new Error(t('Abgebrochen: ohne Code keine Änderung.','Cancelled: no change without a code.'))}
   if(r.status===401&&!/^\/api\/(login|password|profile)/.test(p)&&window.showLogin)showLogin();if(!r.ok){let t=await r.text();try{t=JSON.parse(t).detail||t}catch{}throw new Error(t)}return r};
+// Main menu (design „Klar“, V01.0.145): on a computer a sidebar with Assistent and Ich for oneself, then
+// "Spark verwalten" with Zustand, Einstellungen, Profile und Geräte, Einbinden; on phones a bar at the bottom.
+const NI={chat:'<path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"/>',me:'<circle cx="12" cy="8" r="4"/><path d="M4 21c0-4 4-6 8-6s8 2 8 6"/>',
+  mon:'<path d="M3 12h4l3 7 4-14 3 7h4"/>',cfg:'<path d="M4 6h9M17 6h3M4 12h3M11 12h9M4 18h11M19 18h1"/><circle cx="15" cy="6" r="2"/><circle cx="9" cy="12" r="2"/><circle cx="17" cy="18" r="2"/>',
+  prof:'<circle cx="9" cy="8" r="3.5"/><path d="M2 20c0-3.5 3-5.5 7-5.5s7 2 7 5.5M16 4.5a3.5 3.5 0 0 1 0 7M18 14.8c2.4.6 4 2.4 4 5.2"/>',int:'<path d="M9 2v5M15 2v5M6 7h12v4a6 6 0 0 1-12 0zM12 17v5"/>',
+  more:'<circle cx="5" cy="12" r="1.6"/><circle cx="12" cy="12" r="1.6"/><circle cx="19" cy="12" r="1.6"/>'};
+document.querySelectorAll('i.ni').forEach(e=>e.innerHTML='<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round">'+(NI[e.dataset.ni]||'')+'</svg>');
+// the phone bar marks the page that is open (Ich while its window is open, else the section's menu entry)
+function mbarMark(g){document.querySelectorAll('#mbar button').forEach(x=>x.classList.toggle('on',x.dataset.m===({chat:'chat',mon:'mon',me:'me'}[g]||'more')))}
 // Main menu: five entries; Übersicht and Einbinden hold several pages behind a sub-tab bar. The cloned voices
 // are a settings page (Einstellungen → Stimmen), not under Profile.
 const GROUPS={chat:[['chat','']],mon:[['mon',t('Monitoring','Monitoring')],['sys',t('System und Update','System and update')],['test',t('Prüfen','Checks')],['logs',t('Logs','Logs')]],
@@ -48,8 +57,8 @@ function showSec(s){document.querySelectorAll('section').forEach(x=>x.classList.
 function subnav(g,s){const items=GROUPS[g],bar=$('subnav');bar.hidden=items.length<2;
   bar.innerHTML=items.length<2?'':items.map(([id,l])=>`<button type="button" data-sub="${id}"${id===s?' class="on"':''}>${esc(l)}${id==='sys'?' <span class="pill warn subbadge" style="display:none">Update</span>':''}</button>`).join('');
   bar.querySelectorAll('button').forEach(b=>b.onclick=()=>{lastSec[g]=b.dataset.sub;subnav(g,b.dataset.sub);showSec(b.dataset.sub)});updBadge(window.UPD)}
-document.querySelectorAll('nav button').forEach(b=>b.onclick=()=>{const g=b.dataset.s,s=lastSec[g]||g;
-  document.querySelectorAll('nav button').forEach(x=>x.classList.toggle('on',x===b));subnav(g,s);showSec(s)});
+document.querySelectorAll('nav button[data-s]').forEach(b=>b.onclick=()=>{const g=b.dataset.s,s=lastSec[g]||g;
+  document.querySelectorAll('nav button').forEach(x=>x.classList.toggle('on',x===b));subnav(g,s);showSec(s);mbarMark(g)});
 window.goSec=s=>{const g=Object.keys(GROUPS).find(k=>GROUPS[k].some(x=>x[0]===s));lastSec[g]=s;document.querySelector(`nav button[data-s=${g}]`).click()};
 const esc=s=>String(s??'').replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
 // for a value inside onclick="f('…')": a JavaScript string first, then HTML (a name with ' or \ stays text)

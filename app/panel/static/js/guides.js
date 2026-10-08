@@ -64,7 +64,7 @@ const GUIDES=[
  setup:[['Admin: Funktionen → Aus Korrekturen lernen an.','Admin: Features → Learning from corrections on.'],['Profil: Ich → Gespräch → „Aus Korrekturen lernen“ an.','Profile: Me → Conversation → "Learn from corrections" on.']],
  say:[['„Nein, das stimmt nicht, mein Bruder heißt Tim.“ Dann auf die Frage mit „Ja“ antworten.','"No, that is wrong, my brother is called Tim." Then answer the question with "yes".']],
  out:NOTHING_OUT,
- off:[['Schalter aus. Gemerkte Sätze löschst du unter Ich → Gedächtnis, Testfälle der Admin unter Übersicht → Prüfen → Qualitätstest.','Switch off. Delete remembered sentences under Me → Memory; the admin deletes test cases under Overview → Checks → Quality test.']],
+ off:[['Schalter aus. Gemerkte Sätze löschst du unter Ich → Gedächtnis, Testfälle der Admin unter Zustand → Prüfen → Qualitätstest.','Switch off. Delete remembered sentences under Me → Memory; the admin deletes test cases under Status → Checks → Quality test.']],
  fix:[['Nichts zum Merken: Weltwissen (Ergebnisse, Preise), Codewörter, PINs, Sicherheitsregeln und das Schalten von Geräten lernt er nie. Aus Mails oder Webseiten lernt er auch nicht.','Nothing to remember: it never learns world knowledge (scores, prices), code words, PINs, security rules or switching devices. It does not learn from mail or web pages either.']]},
 {id:'toolthink',grp:'talk',sw:'chat.tool_thinking',ng:1,mep:'setbox',t:['Bei der Werkzeugwahl nachdenken','Thinking while choosing tools'],
  what:[['Das Modell denkt kurz nach, bevor es ein Werkzeug wählt (Kalender, Mail, Websuche …). Das macht die Wahl zuverlässiger; danach antwortet es ohne Nachdenken.','The model thinks briefly before it picks a tool (calendar, mail, web search …). That makes the choice more reliable; afterwards it answers without thinking.']],
@@ -261,7 +261,7 @@ const GUIDES=[
  say:[['Je nach App.','Depends on the app.']],
  out:NOTHING_OUT,
  off:[['API-Schlüssel ändern sperrt alle Apps mit dem alten Schlüssel aus.','Changing the API key locks out all apps using the old key.']],
- fix:[['Unter Übersicht → Prüfen beide Dienste direkt ausprobieren.','Try both services directly under Overview → Checks.']]},
+ fix:[['Unter Zustand → Prüfen beide Dienste direkt ausprobieren.','Try both services directly under Status → Checks.']]},
 // ------------------------------------------------------------------ Sicherheit und Zugang
 {id:'mfa',grp:'sec',sw:'chat.mfa',me:'secbox',t:['Zweiter Anmeldeschritt','Second sign-in step'],
  what:[['Zur Anmeldung mit Name und PIN kommt ein Code aus einer Authenticator-App. Geräte mit Schlüssel brauchen keinen Code.','Signing in with name and PIN also needs a code from an authenticator app. Devices with a key need no code.']],
