@@ -204,7 +204,8 @@ class Tidy(unittest.TestCase):
             r = p.post("/api/profile/tidy/run", json={"aid": aid}).json()
             self.assertEqual(r["report"]["moved"], 1)
             self.assertEqual(self.inbox_subjects("Spark/Werbung"), ["Sommer-Sale"])   # folders made on demand
-            FMB.after_login = ("IMAP4REV1", "UIDPLUS")  # no MOVE at all: nothing changes, only the preview
+            self.assertFalse([c for c in FMB.calls if c[0] in ("STORE", "EXPUNGE", "COPY")])
+            FMB.after_login = ("IMAP4REV1",)            # neither MOVE nor UIDPLUS: nothing changes, only the preview
             FMB.put("INBOX", helpers.box_mail("Shop <news@shop.example>", "Winter-Sale", headers=PROMO))
             r = p.post("/api/profile/tidy/run", json={"aid": aid}).json()
             self.assertEqual(r["report"]["moved"], 0)
@@ -213,6 +214,41 @@ class Tidy(unittest.TestCase):
             self.assertFalse([c for c in FMB.calls if c[0] in ("STORE", "EXPUNGE", "COPY")])
         finally:
             FMB.capabilities = FMB.after_login = ("IMAP4REV1", "MOVE")
+
+    def test_without_move_copy_then_remove(self):
+        try:
+            FMB.capabilities = FMB.after_login = ("IMAP4REV1", "UIDPLUS")     # like iCloud
+            p, aid = self.setup_profile("Henrike")
+            other = FMB.put("INBOX", helpers.box_mail("Oma <oma@example.org>", "Fotos"), flags=["\\Deleted"])
+            for copyuid in (True, False):               # with and without the COPYUID answer
+                FMB.copyuid = copyuid
+                FMB.put("INBOX", helpers.box_mail("Shop <news@shop.example>", f"Sale {copyuid}", headers=PROMO))
+                n = FMB.total()
+                r = p.post("/api/profile/tidy/run", json={"aid": aid}).json()
+                self.assertEqual(r["report"]["moved"], 1, r)
+                self.assertIn(f"Sale {copyuid}", self.inbox_subjects("Spark/Werbung"))
+                self.assertNotIn(f"Sale {copyuid}", self.inbox_subjects())
+                self.assertEqual(FMB.total(), n)        # one copy in, exactly one original out
+            # a message someone else marked deleted is never removed by the Spark
+            self.assertIn(other, [m["uid"] for m in FMB.boxes["INBOX"]])
+            for c, args in FMB.calls:
+                if c in ("STORE", "EXPUNGE"):
+                    self.assertNotIn(str(other), args[0].split(","))
+            # undo works the same way back
+            d = p.get("/api/profile/tidy").json()
+            r = p.post("/api/profile/tidy/undo", json={"ids": [x["id"] for x in d["log"]]}).json()
+            self.assertEqual(r["report"]["back"], 2)
+            self.assertEqual(self.inbox_subjects("Spark/Werbung"), [])
+            # a copy that cannot be confirmed keeps its original
+            FMB.copyuid = False
+            FMB.put("INBOX", helpers.box_mail("Shop <news@shop.example>", "Ohne ID", headers=PROMO)
+                    .replace(b"Message-ID:", b"X-Old-ID:"))
+            r = p.post("/api/profile/tidy/run", json={"aid": aid}).json()
+            self.assertEqual(r["report"]["moved"], 0)
+            self.assertIn("Ohne ID", self.inbox_subjects())
+        finally:
+            FMB.capabilities = FMB.after_login = ("IMAP4REV1", "MOVE")
+            FMB.copyuid = True
 
 
 if __name__ == "__main__":

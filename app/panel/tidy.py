@@ -439,7 +439,8 @@ class Box:
         self.close()
 
     def can_move(self):
-        return "MOVE" in self.caps
+        """MOVE, or else COPY plus removing exactly the confirmed originals (UIDPLUS: UID EXPUNGE)."""
+        return "MOVE" in self.caps or "UIDPLUS" in self.caps
 
     def name(self, path):
         """Our "Spark/Werbung" in the server's own separator."""
@@ -522,18 +523,54 @@ class Box:
         if not ok or not self.writable:
             raise ValueError("this move is not allowed")
         if not self.can_move():
-            raise ValueError("the mail server cannot move messages (no IMAP MOVE)")
-        if not uids:
-            return 0
+            raise ValueError("the mail server cannot move messages (neither IMAP MOVE nor UIDPLUS)")
         raw = self.boxes.get(dst, {}).get("raw") or _utf7(dst)
-        n = 0
+        done = []
         for i in range(0, len(uids), 100):
             part = uids[i:i + 100]
-            typ, data = self.c.uid("MOVE", ",".join(map(str, part)), _q(raw))
-            if typ != "OK":
-                raise ValueError(f"the mail server refused the move ({typ})")
-            n += len(part)
-        return n
+            if "MOVE" in self.caps:
+                typ, data = self.c.uid("MOVE", ",".join(map(str, part)), _q(raw))
+                if typ != "OK":
+                    raise ValueError(f"the mail server refused the move ({typ})")
+                done += part
+            else:
+                done += self._copy_then_remove(part, raw, dst)
+        return done
+
+    def _copy_then_remove(self, part, raw, dst):
+        """For servers without MOVE (iCloud): copy, make sure each copy arrived, and only then remove
+        exactly those originals with UID EXPUNGE. An unconfirmed copy leaves its original in place."""
+        src = self.selected
+        mids = {u: str(m.get("Message-ID") or "").strip() for u, m in self.headers(part, "MESSAGE-ID").items()}
+        self.c.response("COPYUID")      # forget an earlier answer
+        typ, data = self.c.uid("COPY", ",".join(map(str, part)), _q(raw))
+        if typ != "OK":
+            raise ValueError(f"the mail server refused to copy ({typ})")
+        copied = _uid_set(self.c.response("COPYUID"))
+        if copied is None:              # no COPYUID: look for each copy by its Message-ID
+            copied = set()
+            self.select(dst)
+            for u, mid in mids.items():
+                if mid and self.search("HEADER", "Message-ID", _q(mid)):
+                    copied.add(u)
+            self.select(src, write=True)
+        done = [u for u in part if u in copied]
+        if len(done) < len(part):
+            print(f"mail tidy: {len(part) - len(done)} copy(ies) not confirmed, originals stay", flush=True)
+        if not done:
+            return []
+        s = ",".join(map(str, done))
+        # a refusal from here on keeps the originals and is not retried (no new copy on every run)
+        typ, data = self.c.uid("STORE", s, "+FLAGS.SILENT", "(\\Deleted)")
+        if typ != "OK":
+            print(f"mail tidy: server refused to mark the originals ({typ}), they stay", flush=True)
+            return []
+        typ, data = self.c.uid("EXPUNGE", s)
+        if typ != "OK":
+            self.c.uid("STORE", s, "-FLAGS.SILENT", "(\\Deleted)")
+            print(f"mail tidy: server refused UID EXPUNGE ({typ}), originals stay", flush=True)
+            return []
+        return done
 
     def append_draft(self, raw_msg):
         folder = self.special("\\drafts", ["Drafts", "Entwürfe", "[Gmail]/Drafts", "[Gmail]/Entwürfe",
@@ -549,6 +586,24 @@ class Box:
 
 SENT_NAMES = ["Sent Messages", "Sent", "Gesendet", "Gesendete Objekte", "Gesendete Elemente", "[Gmail]/Sent Mail",
               "[Gmail]/Gesendet", "INBOX.Sent", "INBOX/Sent"]
+
+
+def _uid_set(resp):
+    """Source UIDs of a COPYUID answer ("validity 4:6,9 101:104"), or None without one."""
+    data = [x for x in ((resp[1] if isinstance(resp, tuple) else None) or []) if x]
+    if not data:
+        return None
+    parts = (data[-1].decode() if isinstance(data[-1], bytes) else str(data[-1])).split()
+    if len(parts) < 3:
+        return None
+    out = set()
+    for r in parts[1].split(","):
+        lo, _, hi = r.partition(":")
+        if not lo.isdigit() or (hi and not hi.isdigit()):
+            return None
+        a, b = sorted((int(lo), int(hi or lo)))
+        out.update(range(a, min(b, a + 10000) + 1))
+    return out
 
 
 def _since(days):
@@ -647,6 +702,7 @@ def _run(uid, aid, acct, d, a, mode, idle):
         heads = b.headers(new) if new else {}
         report["new"] = len(new)
         moved_mids = {x["mid"]: x for x in d["log"] if x["aid"] == aid and not x.get("undone") and x["mid"]}
+        undone_mids = {x["mid"] for x in d["log"] if x["aid"] == aid and x.get("undone") and x["mid"]}
         decided = []        # (uid, h, cat, why, stage, act)
         waiting = [x for x in d["todo"] if x["aid"] == aid]
         for u in new:
@@ -654,6 +710,8 @@ def _run(uid, aid, acct, d, a, mode, idle):
             if msg is None:
                 continue
             h = head(msg)
+            if h["mid"] and h["mid"] in undone_mids:
+                continue        # brought back with "Zurück": stays in the inbox
             if h["mid"] and h["mid"] in moved_mids:
                 # moved by the Spark and now back in the inbox: the person moved it back
                 x = moved_mids[h["mid"]]
@@ -720,7 +778,7 @@ def _run(uid, aid, acct, d, a, mode, idle):
                 preview += [(u, h, cat, why) for u, h, why in moves[cat][keep_n:]]
                 moves[cat] = moves[cat][:keep_n]
         if moves and not b.can_move():
-            a_err = "Der Mailserver kann keine Mails verschieben (IMAP MOVE fehlt)."
+            a_err = "Der Mailserver kann keine Mails verschieben (weder IMAP MOVE noch UIDPLUS)."
             for cat, items in moves.items():
                 preview += [(u, h, cat, why) for u, h, why in items]
             moves = {}
@@ -729,8 +787,8 @@ def _run(uid, aid, acct, d, a, mode, idle):
         for cat, items in moves.items():
             path = folder_of(d, cat)
             target = b.ensure(path)
-            b.move([u for u, _, _ in items], target)
-            log += [_log_item(run, aid, h, cat, path, why) for u, h, why in items]
+            moved = set(b.move([u for u, _, _ in items], target))
+            log += [_log_item(run, aid, h, cat, path, why) for u, h, why in items if u in moved]
         report["moved"] = len(log)
         newlast = max(new) if new else last
 
@@ -781,8 +839,8 @@ def _move_uids(uid, aid, uids_by_cat, why, run=None):
             heads = b.headers(uids)
             path = folder_of(d, cat)
             target = b.ensure(path)
-            b.move(uids, target)
-            log += [_log_item(run, aid, head(heads[u]), cat, path, why) for u in uids if u in heads]
+            moved = set(b.move(uids, target))
+            log += [_log_item(run, aid, head(heads[u]), cat, path, why) for u in uids if u in heads and u in moved]
     _mut(uid, lambda dd: dd["log"].extend(log))
     return len(log)
 
@@ -857,8 +915,7 @@ def undo(uid, ids=None, run=None, protect=False):
                 b.select(name, write=True)
                 for x in [y for y in items if y["aid"] == aid and y["folder"] == path]:
                     found = b.search("HEADER", "Message-ID", _q(x["mid"]))
-                    if found:
-                        b.move(found[-1:], b.special("\\inbox", ["INBOX"]) or "INBOX")
+                    if found and b.move(found[-1:], b.special("\\inbox", ["INBOX"]) or "INBOX"):
                         back.append(x["id"])
                     else:
                         gone.append(x["id"])

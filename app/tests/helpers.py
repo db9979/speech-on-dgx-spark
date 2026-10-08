@@ -323,6 +323,7 @@ class FakeMailbox:
     boxes, calls, uidnext = {}, [], {}
     capabilities = ("IMAP4REV1", "MOVE")
     after_login = ("IMAP4REV1", "MOVE")
+    copyuid = True
 
     @classmethod
     def reset(cls, inbox=(), sent=()):
@@ -386,6 +387,9 @@ class FakeMailbox:
         return "OK", [str(len(self.boxes[n])).encode()]
 
     def response(self, code):
+        if code == "COPYUID":
+            r, self.copyuid_answer = getattr(self, "copyuid_answer", None), None
+            return code, [r]
         return code, [b"1"]
 
     def append(self, name, flags, date, raw):
@@ -447,6 +451,33 @@ class FakeMailbox:
             for m in [m for m in box if m["uid"] in want]:
                 box.remove(m)
                 self.put(dst, m["raw"])
+            return "OK", [b""]
+        if cmd == "COPY":       # no removal; answers COPYUID unless copyuid is off
+            want = {int(x) for x in args[0].split(",")}
+            dst = self._name(args[1])
+            if dst not in self.boxes:
+                return "NO", [b"no such folder"]
+            src = [m for m in box if m["uid"] in want]
+            new = [self.put(dst, m["raw"]) for m in src]
+            if self.copyuid and src:
+                self.copyuid_answer = (f"1 {','.join(str(m['uid']) for m in src)} "
+                                       f"{','.join(map(str, new))}").encode()
+            return "OK", [b""]
+        if cmd == "STORE":
+            if self.ro:
+                return "NO", [b"read only"]
+            want = {int(x) for x in args[0].split(",")}
+            for m in box:
+                if m["uid"] in want:
+                    if args[1].startswith("+") and "\\Deleted" not in m["flags"]:
+                        m["flags"].append("\\Deleted")
+                    elif args[1].startswith("-") and "\\Deleted" in m["flags"]:
+                        m["flags"].remove("\\Deleted")
+            return "OK", [b""]
+        if cmd == "EXPUNGE":    # UID EXPUNGE: only the named messages that carry \Deleted
+            want = {int(x) for x in args[0].split(",")}
+            for m in [m for m in box if m["uid"] in want and "\\Deleted" in m["flags"]]:
+                box.remove(m)
             return "OK", [b""]
         return "NO", [b"not supported here"]
 
