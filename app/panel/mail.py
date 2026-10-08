@@ -348,6 +348,7 @@ def listing(uid, query="", days=7, unread=False, limit=8, zone=None):
     names = {a["id"]: a.get("name", "") for a in get(uid)["accounts"]}
     lines = []
     for aid, u, h in found:
+        h = dict(h, **{"from": known(uid, h["from"])})
         when = h["date"].astimezone(zone) if zone else h["date"]
         lines.append(f"[{aid}:{u}] {when:%d.%m. %H:%M} from {h['from']}: {h['subject'] or '(no subject)'}"
                      + (" (unread)" if h["unread"] else "") + (f" [{names.get(aid, '')}]" if many else ""))
@@ -355,6 +356,18 @@ def listing(uid, query="", days=7, unread=False, limit=8, zone=None):
     out = (f"{len(lines)} {what} (newest first):\n" + "\n".join(lines)) if lines else f"No {what}."
     out += "".join(f"\nMailbox '{n}' could not be read: {e}" for n, e in errors)
     return _wrap(out)
+
+
+def known(uid, sender):
+    """'anna@x.de' → 'Anna Alt <anna@x.de>' when the address is in the profile's contacts (contacts.py)."""
+    if "<" in sender:
+        return sender
+    try:
+        import contacts
+        name = contacts.name_for(uid, sender)
+    except Exception:
+        name = ""
+    return f"{name} <{sender}>" if name else sender
 
 
 def _wrap(text):
@@ -384,7 +397,7 @@ def read(uid, ref):
 def briefing(uid):
     """One part of the daily briefing: the unread messages of the last two days."""
     found, errors, _ = find(uid, "", 2, True, 8)
-    lines = [f"from {h['from'].split(' <')[0]}: {h['subject'] or '(no subject)'}" for _, _, h in found]
+    lines = [f"from {known(uid, h['from']).split(' <')[0]}: {h['subject'] or '(no subject)'}" for _, _, h in found]
     out = ("Unread e-mails (last 2 days, up to 8):\n" + "\n".join(lines)) if lines else "Unread e-mails: none."
     out += "".join(f"\nMailbox '{n}' could not be read: {e}" for n, e in errors)
     return _wrap(out)

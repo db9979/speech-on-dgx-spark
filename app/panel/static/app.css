@@ -336,3 +336,4 @@ div.guide.inline{border:0;border-bottom:1px solid var(--line);border-radius:0;ma
 .mgrp{font-size:11px;text-transform:uppercase;letter-spacing:.06em;color:var(--mut);padding:12px 12px 3px}
 @media (max-width:760px){.mgrp{padding:20px 4px 6px}.gbody{font-size:14px}}
 @media (max-width:760px){.menav{flex-wrap:nowrap}}
+#conadd{margin-top:10px;border:1px solid var(--line);border-radius:12px;padding:8px 12px}#conadd summary{cursor:pointer;font-weight:600;font-size:14px}

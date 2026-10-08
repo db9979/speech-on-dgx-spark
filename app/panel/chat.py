@@ -24,6 +24,7 @@ import recall  # noqa: E402
 import homeassistant  # noqa: E402
 import mail  # noqa: E402
 import tidy  # noqa: E402
+import extras  # noqa: E402
 import proactive  # noqa: E402
 import watch  # noqa: E402
 from common import load_config  # noqa: E402
@@ -662,6 +663,7 @@ async def morning_briefing(uid, tz=""):
                     parts.append(f"Topic '{q}':\n{(await web_search(c, quick, q))[0][:2000]}")
                 except Exception:
                     pass
+        parts += [x for _, x in await extras.briefing(uid, zone)]
         if ccfg.get("mail", False) and mail.get(uid)["accounts"]:   # last: nothing after it acts on its text
             try:
                 parts.append(await asyncio.to_thread(mail.briefing, uid))
@@ -954,6 +956,11 @@ async def chat(request: Request):
            if timers else []) + ([BRIEFING_TOOL] if briefing else []) \
         + ([CALENDAR_TOOL] if cal["calendars"] else []) + ([CALENDAR_ADD_TOOL] if cal_write else []) \
         + (MAIL_TOOLS if mailbox else []) + (TIDY_TOOLS if tidy_on else []) + ([DRAFT_TOOL] if drafts_on else [])
+    # weather, contacts, parcels ... (extras.py): each offers its tools only when the profile switched it on
+    ex = extras.offer({"who": who, "own": own_browser, "tz": body.get("tz")})
+    tools += ex["tools"]
+    if ex["hints"]:
+        system = (system + "\n\n" + " ".join(ex["hints"])).strip()
     # once mail or other outside text was read in this answer, nothing in it may change the home or
     # the memory, and after mail no words go to the web (see LOCKED_OUTSIDE / LOCKED_MAIL)
     def locked(st):
@@ -971,6 +978,10 @@ async def chat(request: Request):
         need.append("calendar_events")
     if mailbox and re.search(r"(?i)\b(e-?mails?|mails?|posteingang|inbox)\b", ask_text):
         need.append("mail")
+    if "weather" in ex["run"] and re.search(r"(?i)\b(wetter\w*|regnet|regen|schnee\w*|weather|rain\w*)\b", ask_text):
+        need.append("weather")
+    if "parcels" in ex["run"] and re.search(r"(?i)\b(paket\w*|päckchen|lieferung\w*|sendung\w*|parcels?|packages?|deliver\w*)\b", ask_text):
+        need.append("parcels")
     small = bool(SMALLTALK.fullmatch(ask_text))
     if tools:
         system = (system + "\n\n" + TOOL_RULES).strip()
@@ -1070,7 +1081,8 @@ async def chat(request: Request):
                 msgs.append({"role": "assistant", "content": None, "tool_calls": [
                     {"id": x["id"], "type": "function", "function": {"name": x["name"], "arguments": x["arguments"]}}
                     for x in calls]})
-                filler = next((FILLERS[x["name"]] for x in calls if x["name"] in FILLERS), None)
+                filler = next((FILLERS.get(x["name"]) or ex["filler"][x["name"]] for x in calls
+                               if x["name"] in FILLERS or x["name"] in ex["filler"]), None)
                 if filler and st["first"] and not trace["said"].strip():
                     # something to hear at once while the tool runs
                     st["first"] = False
@@ -1125,6 +1137,12 @@ async def chat(request: Request):
             return MAIL_BLOCKED if st["mail"] else OUTSIDE_BLOCKED
         if name in READS_OUTSIDE:
             st["outside"] = True
+        if name in ex["run"]:
+            if name in ex["mail"]:
+                st["mail"] = True
+            elif name in ex["outside"]:
+                st["outside"] = True
+            return await ex["run"][name].tool(name, args, {"who": who, "own": own_browser, "tz": body.get("tz")})
         if name.startswith("mail_tidy_") and tidy_on:
             return await tidy_tool(name, args, st)
         if name == "mail_draft" and drafts_on:
@@ -1418,6 +1436,11 @@ async def chat(request: Request):
             pend = [x for x in (profiles.reminders(who["id"]) if who else guest_rem) if x["due"] < end]
             parts.append("Reminders today:\n" + ("\n".join(
                 f"{datetime.datetime.fromtimestamp(x['due'] / 1000, zone):%H:%M} {x['text']}" for x in pend) or "none"))
+        if who:   # weather, birthdays, parcels (parcels come from mail: then the answer counts as mail)
+            for kind, part in await extras.briefing(who["id"], zone):
+                parts.append(part)
+                if kind == "parcels":
+                    st["mail"] = True
         if mailbox:
             r = res.pop()
             parts.append(r if isinstance(r, str) else f"E-mail not readable: {r}")

@@ -318,6 +318,13 @@ SETTINGS = {
     "pro_place": ("", lambda v: isinstance(v, str) and len(v) <= 60 and re.fullmatch(r"[^<>\"\\\n]*", v)),
     "pro_weather_at": ("18:00", lambda v: isinstance(v, str) and re.fullmatch(r"(?:[01]\d|2[0-3]):[0-5]\d", v)),
     "pro_learn": (True, lambda v: isinstance(v, bool)),
+    # weather, contacts, parcels (see weather.py, contacts.py, parcels.py): each profile switches them on itself
+    "wx_on": (False, lambda v: isinstance(v, bool)),
+    "con_on": (False, lambda v: isinstance(v, bool)),
+    "con_bday": (True, lambda v: isinstance(v, bool)),
+    "par_on": (False, lambda v: isinstance(v, bool)),
+    "pro_bday": (True, lambda v: isinstance(v, bool)),
+    "pro_parcel": (True, lambda v: isinstance(v, bool)),
 }
 
 

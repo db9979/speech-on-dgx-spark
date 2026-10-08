@@ -226,6 +226,9 @@ def validate(new):
     ch = new["chat"]
     if ch.get("search_url") and not re.fullmatch(r"https?://\S+", ch["search_url"]):
         raise HTTPException(400, "SearXNG address must start with http:// or https://")
+    for k in ("weather_url", "geocode_url"):
+        if ch.get(k) and not re.fullmatch(r"https?://\S+", ch[k]):
+            raise HTTPException(400, "Open-Meteo addresses must start with http:// or https://")
     if not isinstance(ch.get("defaults"), dict) or profiles.clean_settings(ch["defaults"]) != ch["defaults"]:
         raise HTTPException(400, "chat defaults: invalid value")
     if ch.get("speaker_strictness") not in speakers.STRICTNESS:

@@ -37,9 +37,13 @@ import push  # noqa: E402
 import proactive  # noqa: E402
 import room  # noqa: E402
 import tidy  # noqa: E402
+import weather  # noqa: E402
+import contacts  # noqa: E402
+import parcels  # noqa: E402
+import extras  # noqa: E402
 
 app = FastAPI(title="Speech on DGX Spark")
-for _module in (account, admin, chat, update, system, proactive, room, tidy):
+for _module in (account, admin, chat, update, system, proactive, room, tidy, weather, contacts, parcels):
     app.include_router(_module.router)
 app.middleware("http")(update_lock)
 
@@ -149,6 +153,10 @@ async def stability():
                     await proactive.due_once()
                 except Exception as e:
                     print("proactive:", type(e).__name__, e, flush=True)
+                try:
+                    await extras.due_once()
+                except Exception as e:
+                    print("extras:", type(e).__name__, e, flush=True)
             await asyncio.sleep(5)
     asyncio.create_task(reminders())
     asyncio.create_task(every_minute())

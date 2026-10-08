@@ -36,7 +36,8 @@ router = APIRouter()
 KINDS = {"events": ("Termin-Vorlauf", 10, "pro_events"), "ha": ("Smart Home", 10, "pro_ha"),
          "greet": ("Begrüßung", 3, "pro_greet"), "follow": ("Nachfrage", 1, "pro_follow"),
          "mail": ("Wichtige Mail", 10, "pro_mail"), "weather": ("Wetter", 1, "pro_weather"),
-         "tidy": ("Postfach aufräumen", 2, "pro_tidy")}
+         "tidy": ("Postfach aufräumen", 2, "pro_tidy"), "bday": ("Geburtstag", 1, "pro_bday"),
+         "parcel": ("Paket kommt heute", 3, "pro_parcel")}
 PAGE_ACTIVE = 75            # seconds since the page last asked: it is open, no push needed
 QUEUE_KEEP = 2 * 3600
 OFFER_SECONDS = 15 * 60     # an answer to a note counts this long after it
@@ -625,16 +626,25 @@ def parse_weather(text, source):
 
 
 async def check_weather(uid, p, now):
+    import weather
     cc = ccfg()
     place = str(p.get("pro_place") or "").strip()
     at = re.fullmatch(r"(\d\d):(\d\d)", p.get("pro_weather_at") or "")
     day = now.strftime("%Y-%m-%d")
-    if not place or not at or not cc.get("search") or not cc.get("search_url") or state(uid).get("weather_day") == day:
+    direct = weather.usable(uid)   # the profile's own weather service: numbers, no search, no model
+    if not at or state(uid).get("weather_day") == day or \
+            (not direct and (not place or not cc.get("search") or not cc.get("search_url"))):
         return
     start = now.replace(hour=int(at[1]), minute=int(at[2]), second=0, microsecond=0)
     if not start <= now < start + datetime.timedelta(hours=2) or blocked(uid, "weather", p, now):
         return
     _mut(uid, lambda st: st.update(weather_day=day))
+    if direct:
+        text, kinds = await weather.notable_tomorrow(uid)
+        if text:
+            await deliver(uid, "weather", text + " " + " ".join(WEATHER_SAY[k][1] for k in kinds[:2]),
+                          why="Wettervorhersage (Open-Meteo)", data=text)
+        return
     from chat import web_search
     async with httpx.AsyncClient(timeout=httpx.Timeout(30, connect=5)) as c:
         source = (await web_search(c, dict(cc, search_pages=0, search_results=4), f"Wetter morgen {place}"))[0][:6000]
@@ -643,6 +653,36 @@ async def check_weather(uid, p, now):
         text = (f"Morgen in {place} laut Vorhersage: " + ", ".join(WEATHER_SAY[k][0] for k in kinds) + ". "
                 + " ".join(WEATHER_SAY[k][1] for k in kinds[:2]))
         await deliver(uid, "weather", text, why=f"Wettervorhersage {place}", data=source[:600])
+
+
+# ---------------------------------------------------------------- birthdays and parcels (contacts.py, parcels.py)
+async def check_bday(uid, p, now):
+    import contacts
+    day = now.strftime("%Y-%m-%d")
+    if not contacts.usable(uid) or state(uid).get("bday_day") == day or not 8 <= now.hour < 11 \
+            or blocked(uid, "bday", p, now):
+        return
+    _mut(uid, lambda st: st.update(bday_day=day))
+    names = [f"{n} (wird {a})" if a else n for _, n, a in contacts.birthdays(uid, now.date(), 1)]
+    if names:
+        await deliver(uid, "bday", "Heute hat Geburtstag: " + ", ".join(names) + ".", why="Geburtstag aus deinen Kontakten",
+                      data=", ".join(names)[:300])
+
+
+async def check_parcel(uid, p, now):
+    import parcels
+    st = state(uid)
+    if not parcels.usable(uid) or not 7 <= now.hour < 20 or time.time() - st.get("parcel_checked", 0) < 1800:
+        return
+    _mut(uid, lambda s: s.update(parcel_checked=time.time()))
+    day = now.strftime("%Y-%m-%d")
+    seen = set(st.get("parcel_seen", []))
+    for line in await asyncio.to_thread(parcels.today_lines, uid, now.date()):
+        key = day + " " + line
+        if key in seen or blocked(uid, "parcel", p, now):
+            continue
+        _mut(uid, lambda s, key=key: s.update(parcel_seen=(s.get("parcel_seen", []) + [key])[-50:]))
+        await deliver(uid, "parcel", line, why="Versandmail in deinem Postfach", data=line[:300], mail=True)
 
 
 # ---------------------------------------------------------------- the minute loop
@@ -659,7 +699,9 @@ async def due_once(now=None):
                          ("ha", lambda: check_ha(uid, p) if p.get("pro_ha") else None),
                          ("mail", lambda: check_mail(uid, p) if p.get("pro_mail") else None),
                          ("follow", lambda: check_follow(uid, p, local) if p.get("pro_follow") else None),
-                         ("weather", lambda: check_weather(uid, p, local) if p.get("pro_weather") else None)):
+                         ("weather", lambda: check_weather(uid, p, local) if p.get("pro_weather") else None),
+                         ("bday", lambda: check_bday(uid, p, local) if p.get("pro_bday") else None),
+                         ("parcel", lambda: check_parcel(uid, p, local) if p.get("pro_parcel") else None)):
             try:
                 job = fn()
                 if job:
@@ -676,6 +718,9 @@ def _on():
 
 def status(uid):
     import calendars
+    import contacts
+    import parcels
+    import weather
     import homeassistant
     import mail
     p, st = prefs(uid), state(uid)
@@ -691,7 +736,8 @@ def status(uid):
                     "ha": bool(cc.get("homeassistant", False) and homeassistant.get(uid)),
                     "mail": bool(cc.get("mail", False) and mail.get(uid)["accounts"]),
                     "search": bool(cc.get("search") and cc.get("search_url")),
-                    "history": bool(cc.get("history", True)), "reminders": bool(cc.get("reminders", True))}}
+                    "history": bool(cc.get("history", True)), "reminders": bool(cc.get("reminders", True)),
+                    "weather": weather.usable(uid), "contacts": contacts.usable(uid), "parcels": parcels.usable(uid)}}
 
 
 @router.get("/api/proactive", dependencies=[Depends(assistant), Depends(_on)])
