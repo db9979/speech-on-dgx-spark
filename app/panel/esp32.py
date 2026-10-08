@@ -499,10 +499,10 @@ def room_cfg(c):
 class Pacer:
     """Sends 60 ms frames to the board a little ahead of real time.
 
-    The board holds at most 1.2 s of sound. We start only once ~0.6 s is ready, keep up to
-    0.9 s in flight, and when the TTS fell behind and the board ran dry we wait for ~0.3 s
+    The board holds at most 1.2 s of sound (older firmware drops what does not fit, from
+    2.5.1.5 on it waits). We start only once ~0.6 s is ready, keep up to 0.7 s in flight, and when the TTS fell behind and the board ran dry we wait for ~0.3 s
     again instead of trickling single frames (that is what sounds choppy)."""
-    FRAME, LEAD, PRIME, REFILL = 0.06, 0.9, 0.6, 0.3
+    FRAME, LEAD, PRIME, REFILL = 0.06, 0.7, 0.6, 0.3
 
     def __init__(self, send):
         self.send, self.pending, self.sent, self.end, self.stalls, self.dry = send, [], 0, 0.0, 0, False

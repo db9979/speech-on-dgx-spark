@@ -31,6 +31,7 @@ All options for running without questions (`--mode api --asr 1.7b --tts 0.6b --y
 
 <!-- New version: add one line at the top here and in CHANGELOG.md, drop the oldest line here (keep 10). Details go to docs/de and docs/en, not into this README. -->
 
+- **V01.0.138** Speakers: no more gaps in long answers, new firmware 2.5.1.5 waits when its sound buffer is full instead of dropping sound; the Spark keeps 0.7 s lead
 - **V01.0.137** Speakers: sound no longer stutters, the Spark buffers ahead (0.6 s before start, up to 0.9 s lead, after a stall it collects 0.3 s again); stalls show under "Check" and in the log
 - **V01.0.136** Speakers: "Check" shows live what the speaker is doing (every 2 seconds), also in room mode (only that a sentence was heard and whether it speaks, never the text)
 - **V01.0.135** Speakers: volume and microphone sensitivity per speaker under Me → Speakers (applies at once when connected, otherwise at the next connection)
@@ -40,7 +41,6 @@ All options for running without questions (`--mode api --asr 1.7b --tts 0.6b --y
 - **V01.0.131** Checking a speaker: under Me → Speakers "Check" shows switches, address, recent events and microphone level, "Check network" tests address, certificate and WebSocket, "Test" plays a tone and a sentence and checks the microphone, and the board's own log can be read over USB in the browser
 - **V01.0.130** Web search is never silently missing: right after an answer from mail a clear search question searches again, "such im Internet" or "google mal" always goes through the search, otherwise the assistant says why it does not search
 - **V01.0.129** iPhone/Safari: hands-free survives iOS ending the microphone (lock screen, call, Siri): a fresh microphone instead of a dead one, it reopens when the page is visible again and says why it stopped
-- **V01.0.128** Room mode on the ESP32 speakers too (all board variants): "Raummodus an/aus" by voice or the "Room" switch under Me → Speakers, duration and room per speaker, silent in quiet hours
 
 All versions: [CHANGELOG.md](CHANGELOG.md)
 

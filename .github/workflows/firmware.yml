@@ -81,6 +81,11 @@ jobs:
           open(a, "w").write(s.replace(old, old + "    if (!lv_is_initialized()) {\n        return true;\n    }\n"))
           PY
           fi
+          # sound from the Spark: wait while the board's 1.2 s play queue is full instead of dropping the
+          # packet (dropped packets were the gaps in long answers once Wi-Fi delays piled up); the wait
+          # holds TCP, so the Spark simply sends slower
+          sed -i 's/audio_service_.PushPacketToDecodeQueue(std::move(packet));/audio_service_.PushPacketToDecodeQueue(std::move(packet), true);/' xz/main/application.cc
+          grep -q 'PushPacketToDecodeQueue(std::move(packet), true);' xz/main/application.cc
           grep -q "PROJECT_VER \"$VERSION\"" xz/CMakeLists.txt
           cd xz
           python scripts/build.py "${{ matrix.board }}" --name "${{ matrix.name }}" --language "$lang" --wake-word "$wake"
