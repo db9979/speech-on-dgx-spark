@@ -291,6 +291,11 @@ CALENDAR_ADD_TOOL = {"type": "function", "function": {
         "alarm_minutes": {"type": "integer", "description": "a reminder this many minutes before (optional)"},
         "calendar": {"type": "string", "description": "name of the calendar, only if the user named one"}},
         "required": ["title", "start"]}}}
+# questions that must go through a calendar or mail tool (tool_choice "required" in the first round);
+# "Trag Zahnarzt am Dienstag ein" names no appointment word, so "eintragen" counts as well
+NEED_CALENDAR = re.compile(r"(?i)\b(termin\w*|kalender\w*|verabred\w*|appointment\w*|calendar)\b"
+                           r"|\btr[aä]g\w*\b.{1,80}\bein\b|\beintrag\w*")
+NEED_MAIL = re.compile(r"(?i)\b(e-?mails?|mails?|posteingang|inbox)\b")
 CALENDAR_ADD_HINT = ("Neue Termine trägst du mit calendar_add ein. Das Werkzeug speichert noch nichts: Lies dem "
                      "Nutzer den Vorschlag aus dem Ergebnis vor und frag, ob du ihn eintragen sollst. Eingetragen "
                      "wird erst, wenn er in der nächsten Nachricht zustimmt. Frag vorher nach, wenn Tag oder Uhrzeit "
@@ -1040,9 +1045,9 @@ async def chat(request: Request):
     # a question about appointments or mail must go through the tool, not the model's imagination
     need = []
     ask_text = messages[-1]["content"] if messages[-1]["role"] == "user" else ""
-    if cal["calendars"] and re.search(r"(?i)\b(termin\w*|kalender\w*|verabred\w*|appointment\w*|calendar)\b", ask_text):
+    if cal["calendars"] and NEED_CALENDAR.search(ask_text):
         need.append("calendar_events")
-    if mailbox and re.search(r"(?i)\b(e-?mails?|mails?|posteingang|inbox)\b", ask_text):
+    if mailbox and NEED_MAIL.search(ask_text):
         need.append("mail")
     if "weather" in ex["run"] and re.search(r"(?i)\b(wetter\w*|regnet|regen|schnee\w*|weather|rain\w*)\b", ask_text):
         need.append("weather")

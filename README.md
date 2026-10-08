@@ -31,6 +31,7 @@ All options for running without questions (`--mode api --asr 1.7b --tts 0.6b --y
 
 <!-- New version: add one line at the top here and in CHANGELOG.md, drop the oldest line here (keep 10). Details go to docs/de and docs/en, not into this README. -->
 
+- **V01.0.110** Adding an appointment without the word “Termin” (e.g. “Trag Zahnarzt am Dienstag ein”) now always goes through the calendar proposal; quality test accepts “3 zu 1” as the score
 - **V01.0.109** Security stage 2: outside text also locks the next message and reaches the model only as data, only a plain yes confirms, at most 4 tools per step, Home Assistant only device domains, foreign voice without personal data
 - **V01.0.108** Update self-test fixed (two new tests looked for install.sh/update.sh in the test copy)
 - **V01.0.107** Security stage 1: rollback only to the real previous version, Qwen models only, sensitive settings and backup download need a code, device keys change no connections, size limits before reading, calendar/WAV/Word bombs defused
@@ -40,7 +41,6 @@ All options for running without questions (`--mode api --asr 1.7b --tts 0.6b --y
 - **V01.0.103** Settings → Features: a service's settings sit right below its switch
 - **V01.0.102** Bus and train: departures, connections and a delay note for the commute
 - **V01.0.101** README cleaned up, details in `docs/`, all versions in [CHANGELOG.md](CHANGELOG.md)
-- **V01.0.100** Home Assistant Assist over Wyoming: the Spark's speech recognition and voice for HA (port 31003)
 
 All versions: [CHANGELOG.md](CHANGELOG.md)
 

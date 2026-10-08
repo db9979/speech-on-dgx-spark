@@ -837,6 +837,25 @@ class Quality(unittest.TestCase):
         self.assertEqual(TestClient(panel.app).get("/api/quality").status_code, 401)
 
 
+    def test_checks_match_real_turn(self):
+        import chat
+        import quality
+        cases = {c["id"]: c for c in quality._cases()}
+        bayern = cases["suche-treffer"]
+        for ok in ["Bayern hat 3 zu 1 gewonnen.", "Bayern gewann 3:1.", "Drei zu eins für Bayern."]:
+            self.assertEqual(quality._check(bayern, ok, ["web_search"]), [], ok)
+        for bad in ["Bayern hat gewonnen.", "Bayern hat 2:0 gewonnen.", "Es stand 13 zu 10."]:
+            self.assertTrue(quality._check(bayern, bad, ["web_search"]), bad)
+        # "eintragen" without the word Termin still has to go through calendar_add, in chat and in the test
+        self.assertTrue(chat.NEED_CALENDAR.search("Trag Zahnarzt am Dienstag um 10 Uhr ein."))
+        self.assertFalse(chat.NEED_CALENDAR.search("Erzähl mir einen ganz kurzen Witz."))
+        self.assertTrue(quality._need(cases["termin-vorschlag"]))
+        self.assertTrue(quality._need(cases["mails-neu"]))
+        self.assertFalse(quality._need(cases["witz"]))
+        self.assertFalse(quality._need(cases["kalender-ohne-zugriff"]))
+        self.assertTrue(quality._check(cases["termin-vorschlag"], "Am 13. Oktober um 10 Uhr, oder?", []))
+
+
 class MemoryTidy(unittest.TestCase):
     def test_proposal_only_after_confirm_and_only_own(self):
         import memtidy

@@ -85,7 +85,7 @@ def _cases():
         {"id": "suche-treffer", "q": "Wie hat Bayern gestern gespielt?", "tools": [chat.SEARCH_TOOL], "hints": [chat.SEARCH_HINT],
          "results": {"web_search": "[1] Bayern gewinnt 3:1 gegen Bremen (https://example.org/1)\nDer FC Bayern hat am Dienstag "
                                    "gegen Werder Bremen mit 3:1 gewonnen."},
-         "tool": "web_search", "must": r"3\s*:\s*1|drei zu eins", "never": r"2:0|4:1|unentschieden"},
+         "tool": "web_search", "must": r"\b(3|drei)\s*(:|zu)\s*(1|eins)\b", "never": r"2:0|4:1|unentschieden"},
         {"id": "verlauf-leer", "q": "Worüber haben wir vorgestern gesprochen?", "tools": [chat.HISTORY_TOOL],
          "hints": [chat.HISTORY_HINT], "results": {"history_search": "No earlier conversations in the last 3 days."},
          "tool": "history_search", "must": NO_DATA, "never": r""},
@@ -121,6 +121,8 @@ async def _run_case(c, ccfg, headers, model, case):
             payload["chat_template_kwargs"] = {"enable_thinking": False}
         if case["tools"] and rnd < 2:
             payload["tools"] = case["tools"]
+            if rnd == 0 and _need(case):
+                payload["tool_choice"] = "required"
         r = await c.post(ccfg["llm_url"].rstrip("/") + "/chat/completions", json=payload, headers=headers)
         r.raise_for_status()
         m = r.json()["choices"][0]["message"]
@@ -135,6 +137,14 @@ async def _run_case(c, ccfg, headers, model, case):
             msgs.append({"role": "tool", "tool_call_id": x.get("id", ""),
                          "content": case["results"].get(name, "Unknown tool " + name)})
     return answer, called, round(time.time() - t0, 1)
+
+
+def _need(case):
+    """Like a real turn (chat.py): appointment and mail questions must go through a tool."""
+    import chat
+    names = {t["function"]["name"] for t in case["tools"]}
+    return bool(("calendar_events" in names and chat.NEED_CALENDAR.search(case["q"]))
+                or ("mail_list" in names and chat.NEED_MAIL.search(case["q"])))
 
 
 def _zone():
