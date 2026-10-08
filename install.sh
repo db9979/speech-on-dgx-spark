@@ -54,11 +54,15 @@ say()  { printf '\n\033[1;34m==>\033[0m %s\n' "$*"; progress "$*"; }
 progress() {
   [ -n "${SPEECH_SPARK_PROGRESS:-}" ] || return 0
   local n; n=$(jq -r '.step // 0' "$SPEECH_SPARK_PROGRESS" 2>/dev/null || echo 0)
+  rm -f -- "$SPEECH_SPARK_PROGRESS.tmp"
   jq -c --arg t "$1" --argjson n "$((n + 1))" --argjson now "$(date +%s)" '.step=$n | .text=$t | .updated=$now' \
     "$SPEECH_SPARK_PROGRESS" >"$SPEECH_SPARK_PROGRESS.tmp" 2>/dev/null && mv "$SPEECH_SPARK_PROGRESS.tmp" "$SPEECH_SPARK_PROGRESS" || true
 }
 warn() { printf '\033[1;33mWARN:\033[0m %s\n' "$*"; }
 die()  { printf '\033[1;31mERROR:\033[0m %s\n' "$*" >&2; exit 1; }
+# $ETC and $VAR/state belong to the service user, so root never writes or chowns there through a
+# link it may have planted: such links (and anything that is not a plain file) are removed first.
+no_links() { local f; for f in "$@"; do if [ -L "$f" ] || { [ -e "$f" ] && [ ! -f "$f" ]; }; then rm -rf -- "$f"; fi; done; }
 jqi()  { local tmp; tmp=$(mktemp); jq "$@" "$ETC/config.json" >"$tmp" && mv "$tmp" "$ETC/config.json"; }
 
 [ "$(id -u)" = 0 ] || die "run with sudo"
@@ -115,6 +119,7 @@ big_lane=""
 if systemctl cat qwen38-flash.service >/dev/null 2>&1; then big_lane="qwen38-flash (85 %)"; fi
 if systemctl cat qwen38-sglang.service 2>/dev/null | grep -q -- '--mem-fraction-static 0.7'; then big_lane="qwen38-sglang 1M mode (76 %)"; fi
 
+no_links "$ETC/config.json"
 if [ ! -f "$ETC/config.json" ]; then
   say "Writing $ETC/config.json"
   cp "$INSTALL_FROM/app/config.default.json" "$ETC/config.json"
@@ -178,9 +183,13 @@ if [ -n "$qkey" ]; then
     say "Voice chat: using the qwen38 API key from $qkey"
   fi
 fi
-chown "$SVC_USER:$SVC_USER" "$ETC/config.json"; chmod 640 "$ETC/config.json"
+no_links "$ETC/config.json"
+chown -h "$SVC_USER:$SVC_USER" "$ETC/config.json"; chmod 640 "$ETC/config.json"
 
 cfg() { jq -r "$1" "$ETC/config.json"; }
+# Numbers from the config only ever as plain digits: the file belongs to the service user, and bash
+# would run a command hidden in a value used in $(( )). Anything else falls back to the default.
+cfg_int() { local v; v=$(cfg "$1"); if [[ "$v" =~ ^[0-9]{1,6}$ ]]; then echo "$v"; else echo "$2"; fi; }
 
 # Browsers only allow the microphone on https (or localhost), so the panel also listens on an
 # https port with a self-signed certificate for the voice chat.
@@ -194,9 +203,10 @@ if [ "$(cfg '.panel.https_port // 0')" != 0 ] && [ ! -s "$TLS/cert.pem" ]; then
     -addext "subjectAltName=$san" -keyout "$TLS/key.pem" -out "$TLS/cert.pem" >/dev/null 2>&1 \
     || warn "could not create the certificate; the voice chat then only works on http://localhost"
 fi
+[ -L "$TLS" ] && rm -f -- "$TLS"
 if [ -d "$TLS" ]; then chown -R "$SVC_USER:$SVC_USER" "$TLS"; chmod 700 "$TLS"; chmod 600 "$TLS"/key.pem 2>/dev/null || true; fi
-HTTPS_PORT=$(cfg '.panel.https_port // 0')
-ASR_PORT=$(cfg .asr.port); TTS_PORT=$(cfg .tts.port); PANEL_PORT=$(cfg .panel.port)
+HTTPS_PORT=$(cfg_int '.panel.https_port // 0' 0)
+ASR_PORT=$(cfg_int .asr.port 31001); TTS_PORT=$(cfg_int .tts.port 31002); PANEL_PORT=$(cfg_int .panel.port 31080)
 BACKEND=$(cfg .tts.backend); ASR_BACKEND=$(cfg .asr.backend)
 [ "$(cfg .tts.enabled)" = true ] || WITH_TTS=0
 [ "$(cfg .asr.enabled)" = true ] || WITH_ASR=0
@@ -205,8 +215,8 @@ BACKEND=$(cfg .tts.backend); ASR_BACKEND=$(cfg .asr.backend)
 say "Checking ports (dgx-spark-qwen38 uses 30000-30099)"
 ports="$ASR_PORT $TTS_PORT $PANEL_PORT"
 [ "$HTTPS_PORT" != 0 ] && ports="$ports $HTTPS_PORT"
-[ "$BACKEND" = vllm-omni ] && ports="$ports $(cfg .tts.engine_port) $(cfg .tts.voicedesign_port)"
-[ "$ASR_BACKEND" = vllm ] && ports="$ports $(cfg .asr.engine_port)"
+[ "$BACKEND" = vllm-omni ] && ports="$ports $(cfg_int .tts.engine_port 31012) $(cfg_int .tts.voicedesign_port 31013)"
+[ "$ASR_BACKEND" = vllm ] && ports="$ports $(cfg_int .asr.engine_port 31011)"
 for p in $ports; do
   owner=$(ss -ltnpH "sport = :$p" 2>/dev/null | head -1)
   [ -n "$owner" ] || continue
@@ -340,9 +350,11 @@ chmod 755 /usr/local/bin/speech-spark-bench
 # ---------------------------------------------------------------- password, sudoers
 if [ ! -f "$ETC/panel.env" ] || [ -n "$PASSWORD" ]; then
   [ -n "$PASSWORD" ] || PASSWORD=$(head -c 18 /dev/urandom | base64 | tr -dc 'A-Za-z0-9' | head -c 16)
+  no_links "$ETC/panel.env"
   printf 'PANEL_PASSWORD=%s\n' "$PASSWORD" >"$ETC/panel.env"
 fi
-chown "$SVC_USER:$SVC_USER" "$ETC/panel.env"; chmod 600 "$ETC/panel.env"
+no_links "$ETC/panel.env"
+chown -h "$SVC_USER:$SVC_USER" "$ETC/panel.env"; chmod 600 "$ETC/panel.env"
 PASSWORD=$(sed -n 's/^PANEL_PASSWORD=//p' "$ETC/panel.env")
 
 # The panel may start/stop/restart exactly these units and start the update, nothing else.
@@ -514,7 +526,7 @@ EOF
 # ---------------------------------------------------------------- logs
 # The speech units log into their own journal namespace with a size and age cap, so a chatty
 # engine can never fill the disk (and does not push other logs out of the system journal).
-LOG_MB=$(cfg '.logs.max_mb // 500'); LOG_DAYS=$(cfg '.logs.keep_days // 14')
+LOG_MB=$(cfg_int '.logs.max_mb // 500' 500); LOG_DAYS=$(cfg_int '.logs.keep_days // 14' 14)
 cat >/etc/systemd/journald@speech-spark.conf <<EOF
 # written by speech-on-dgx-spark install.sh (config: logs.max_mb, logs.keep_days)
 [Journal]
@@ -540,7 +552,8 @@ restart_engine() {  # $1 = unit suffix, $2 = settings signature
      || ! systemctl is-active -q "speech-spark-$1.service"; then
     systemctl restart "speech-spark-$1.service"
   fi
-  echo "$2" >"$sigfile"; chown "$SVC_USER:" "$sigfile"
+  no_links "$sigfile"; rm -f -- "$sigfile"
+  echo "$2" >"$sigfile"; chown -h "$SVC_USER:" "$sigfile"
 }
 
 if [ "$WITH_ASR" = 1 ] && [ "$ASR_BACKEND" = vllm ]; then

@@ -559,6 +559,20 @@ class Stability(unittest.TestCase):
                 tar.addfile(info, io.BytesIO(b"{}"))
         r = ADMIN.post("/api/backups-upload", files={"file": ("x.tar.gz", buf.getvalue())})
         self.assertEqual(r.status_code, 400)
+        # settings in a backup get the same checks as the settings page (no command in a number)
+        import common
+        cfg = json.load(open(common.CONFIG_PATH))
+        cfg.setdefault("logs", {})["max_mb"] = "a[$(id)]"
+        buf = io.BytesIO()
+        with tarfile.open(fileobj=buf, mode="w:gz") as tar:
+            for name, data in (("backup.json", b"{}"), ("config.json", json.dumps(cfg).encode())):
+                info = tarfile.TarInfo(name)
+                info.size = len(data)
+                tar.addfile(info, io.BytesIO(data))
+        r = ADMIN.post("/api/backups-upload", files={"file": ("x.tar.gz", buf.getvalue())})
+        self.assertEqual(r.status_code, 400, r.text)
+        self.assertIn("max_mb", r.text)
+        self.assertNotEqual(json.load(open(common.CONFIG_PATH))["logs"].get("max_mb"), "a[$(id)]")
 
     def test_watchdog_judges(self):
         import health

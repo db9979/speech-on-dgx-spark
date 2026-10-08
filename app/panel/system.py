@@ -16,7 +16,7 @@ import health  # noqa: E402
 import profiles  # noqa: E402
 import quality  # noqa: E402
 from common import load_config  # noqa: E402
-from core import auth  # noqa: E402
+from core import DEFAULTS, auth  # noqa: E402
 
 router = APIRouter()
 
@@ -76,10 +76,32 @@ async def backup_upload(file: UploadFile = File(...)):
     return await _restore(tmp, file.filename or "upload")
 
 
+def _check_config(new):
+    """Settings from a backup get the same checks as the settings page: keys of this version only
+    (newer keys from the defaults), the installed backends kept, every value validated."""
+    import admin
+    with open(DEFAULTS) as fh:
+        defaults = json.load(fh)
+    cur = load_config()
+    out = {}
+    for sec, vals in defaults.items():
+        got = new.get(sec) if isinstance(new.get(sec), dict) else {}
+        out[sec] = dict(vals, **{k: v for k, v in got.items() if k in vals})
+    for sec in ("asr", "tts"):
+        out[sec]["backend"] = cur.get(sec, {}).get("backend", out[sec]["backend"])
+    if isinstance(out["chat"].get("defaults"), dict):
+        out["chat"]["defaults"] = profiles.clean_settings(out["chat"]["defaults"])
+    try:
+        admin.validate(out)
+    except HTTPException as e:
+        raise ValueError(f"settings in the backup: {e.detail}")
+    return out
+
+
 async def _restore(f, name):
     try:
         with f:
-            done = await asyncio.to_thread(backup.restore, f)
+            done = await asyncio.to_thread(backup.restore, f, _check_config)
     except (ValueError, OSError, EOFError) as e:
         raise HTTPException(400, f"restore failed: {e}")
     except Exception as e:  # broken archive
