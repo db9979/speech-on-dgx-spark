@@ -428,6 +428,9 @@ def wrap_outside(text):
 # after e-mail (which anyone can send) also no web search (it could carry the mail's content away)
 # and no new appointments
 LOCKED_MAIL = LOCKED_OUTSIDE | {"web_search", "calendar_add"}
+# tools that only read what the person set themselves (every tool is in one of these sets, or is a
+# mail_ tool, which marks the answer as mail; tests/test_scanner.py checks that a new one is sorted in)
+INSIDE = {"reminder_list"}
 TODO_READ = ("show", "list", "read", "get")
 
 

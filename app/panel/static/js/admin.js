@@ -1,5 +1,5 @@
 // Admin pages: monitoring, settings, tests, voices, logs, guides, system and the update lock.
-const btns=(n,st)=>`<button class="b" onclick="act('${n}','restart',this)">${t('Neustart','Restart')}</button>`+(st==='active'||st==='activating'?`<button class="b" onclick="act('${n}','stop',this)">${t('Stopp','Stop')}</button>`:`<button class="b" onclick="act('${n}','start',this)">Start</button>`);
+const btns=(n,st)=>`<button class="b" onclick="act('${escq(n)}','restart',this)">${t('Neustart','Restart')}</button>`+(st==='active'||st==='activating'?`<button class="b" onclick="act('${escq(n)}','stop',this)">${t('Stopp','Stop')}</button>`:`<button class="b" onclick="act('${escq(n)}','start',this)">Start</button>`);
 async function act(n,a,btn){btn.disabled=true;try{await api(`/api/service/${n}/${a}`,{method:'POST'})}catch(e){alert(e.message)}btn.disabled=false;refresh()}
 window.act=act;
 

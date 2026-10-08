@@ -292,6 +292,9 @@ HINT = ("Für Wetterfragen rufe weather auf und lies die Sätze aus dem Ergebnis
         "oder etwas dazuzuerfinden.")
 
 
+# numbers from the weather service, no text other people wrote (see chat.INSIDE)
+INSIDE = {"weather"}
+
 def offer(ctx):
     who = ctx.get("who")
     if not who or not usable(who["id"]):

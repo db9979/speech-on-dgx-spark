@@ -133,7 +133,7 @@ async def transcriptions(
 
     suffix = os.path.splitext(file.filename or "")[1] or ".wav"
     with tempfile.NamedTemporaryFile(suffix=suffix, delete=False) as tmp:
-        tmp.write(await file.read())
+        tmp.write(await read_limited(file))
         path = tmp.name
     converted = None
     try:
@@ -163,11 +163,21 @@ async def transcriptions(
     return out
 
 
+MAX_UPLOAD = 200 * 1024**2  # as the size limit in front of the service
+
+
+async def read_limited(file):
+    data = await file.read(MAX_UPLOAD + 1)
+    if len(data) > MAX_UPLOAD:
+        raise HTTPException(413, "audio file larger than 200 MB")
+    return data
+
+
 async def parakeet_transcription(file, response_format):
     import asyncio
     suffix = os.path.splitext(file.filename or "")[1] or ".wav"
     with tempfile.NamedTemporaryFile(suffix=suffix, delete=False) as tmp:
-        tmp.write(await file.read())
+        tmp.write(await read_limited(file))
         path = tmp.name
     try:
         t0 = time.time()

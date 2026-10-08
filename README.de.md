@@ -31,6 +31,7 @@ Alle Optionen ohne Rückfragen (`--mode api --asr 1.7b --tts 0.6b --yes` …) st
 
 <!-- New version: add one line at the top here and in CHANGELOG.md, drop the oldest line here (keep 10). Details go to docs/de and docs/en, not into this README. -->
 
+- **V01.0.115** Sicherheit Stufe 6: Selbsttest-Scanner lehnt neuen Code mit shell=True/eval, Routen ohne Anmeldung, Uploads ohne Grenze, unmaskierte onclick-Werte und uneingeordnete Assistenten-Werkzeuge ab
 - **V01.0.114** Sicherheit Stufe 5: Admin-Abmelden beendet alle Kopien, Admin überall abmelden, Codewort-Nachricht in Telegram gelöscht, Aufräumen nur bei exaktem Absender, gefälschte Paketmails ignoriert, Fehler und Dienst-Details nicht für Gäste
 - **V01.0.113** Sicherheit Stufe 4: Installation und Update schreiben nie mehr als root durch Verknüpfungen, keine Passwörter im Update-Log, qwen38-Schlüssel nur aus echter Datei, umgeschriebene Geschichte wird abgelehnt, optional nur signierte Versionen
 - **V01.0.112** Fragen nach Erinnerungen, Spielergebnissen und Nachrichten gehen jetzt immer über das Werkzeug statt aus dem Gedächtnis des Modells
@@ -40,7 +41,6 @@ Alle Optionen ohne Rückfragen (`--mode api --asr 1.7b --tts 0.6b --yes` …) st
 - **V01.0.108** Selbsttest beim Update repariert (zwei neue Tests suchten install.sh/update.sh in der Testkopie)
 - **V01.0.107** Sicherheit Stufe 1: Rücksprung nur auf echte Vorversion, nur Qwen-Modelle, heikle Einstellungen und Sicherungs-Download mit Code, Geräteschlüssel ändern keine Verbindungen, Größengrenzen vor dem Lesen, Kalender-/WAV-/Word-Bomben entschärft, MemoryMax
 - **V01.0.106** Wyoming: Adressfeld erscheint sofort, die Home-Assistant-Adresse wird vorgeschlagen
-- **V01.0.105** Sicherheit: der iPhone-Kurzbefehl holt Listeneinträge per POST, Telegram-Fehler im Log ohne Bot-Token
 
 Alle Versionen: [CHANGELOG.md](CHANGELOG.md)
 

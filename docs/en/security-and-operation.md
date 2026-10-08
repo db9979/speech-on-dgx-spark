@@ -46,7 +46,7 @@
 
 ## Self-test
 
-Every install and update runs the panel's self-test (`app/tests`) against fake LLM, TTS and Home Assistant servers in a throw-away directory: login and access, that profiles never see each other's memory, documents, conversations, mailboxes or Home Assistant, the chat tools, learning from conversations, calendar and text cleaning. It runs before the new version goes live. In an update a failure stops the update and the old version keeps running; on a first install it is only reported. The result is in the update log. By hand: `cd /opt/speech-spark/app && sudo /opt/speech-spark/venv-panel/bin/python -m unittest discover -s tests -t .`
+Every install and update runs the panel's self-test (`app/tests`) against fake LLM, TTS and Home Assistant servers in a throw-away directory: login and access, that profiles never see each other's memory, documents, conversations, mailboxes or Home Assistant, the chat tools, learning from conversations, calendar and text cleaning. It runs before the new version goes live. In an update a failure stops the update and the old version keeps running; on a first install it is only reported. The result is in the update log. It includes the security checks (`test_hardening.py`, one test per guard) and a scanner (`test_scanner.py`) that refuses new code using `shell=True`, `eval` or the like, a route without a login, an upload read without a size limit, values in `onclick` not escaped for JavaScript, or an assistant tool not sorted as "reads outside text / changes something / own data only". By hand: `cd /opt/speech-spark/app && sudo /opt/speech-spark/venv-panel/bin/python -m unittest discover -s tests -t .`
 
 ## Logs
 

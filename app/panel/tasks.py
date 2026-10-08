@@ -399,7 +399,7 @@ async def briefing(uid, zone=None):
 from fastapi import APIRouter, Depends, HTTPException, Request  # noqa: E402
 from fastapi.responses import PlainTextResponse  # noqa: E402
 
-from core import own_profile  # noqa: E402
+from core import browser_profile, own_profile  # noqa: E402
 
 router = APIRouter()
 
@@ -433,7 +433,9 @@ async def get_collections(prof=Depends(_on)):
 
 
 @router.put("/api/profile/tasks/target")
-async def set_target(request: Request, prof=Depends(_on)):
+async def set_target(request: Request, prof=Depends(browser_profile)):   # a setting: not with a device key
+    if not admin_on():
+        raise HTTPException(403, "tasks are turned off")
     body = await request.json()
     lst = body.get("list")
     if lst not in LISTS:

@@ -590,7 +590,9 @@ async def add_clone_voice(name: str = Form(...), text: str = Form(""), file: Upl
     if not re.fullmatch(r"[A-Za-z0-9_\-]{1,40}", name):
         raise HTTPException(400, "name: letters, digits, _ and - only")
     os.makedirs(VOICES_DIR, exist_ok=True)
-    data = await file.read()
+    data = await file.read(60 * 1024**2 + 1)   # the size limit in front of the panel says the same
+    if len(data) > 60 * 1024**2:
+        raise HTTPException(413, "the recording is larger than 60 MB")
     if not data.startswith(b"RIFF"):  # mp3, m4a, webm, ...: the engine expects WAV
         p = await asyncio.create_subprocess_exec(
             "ffmpeg", "-nostdin", "-loglevel", "error", "-i", "pipe:0", "-t", "120", "-ac", "1", "-ar", "24000",
@@ -666,7 +668,10 @@ async def import_clone_voices(file: UploadFile = File(...), conflict: str = Form
     if conflict not in ("rename", "overwrite", "skip"):
         raise HTTPException(400, "conflict must be rename, overwrite or skip")
     try:
-        z = zipfile.ZipFile(io.BytesIO(await file.read()))
+        raw = await file.read(200 * 1024**2 + 1)
+        if len(raw) > 200 * 1024**2:
+            raise HTTPException(413, "the file is larger than 200 MB")
+        z = zipfile.ZipFile(io.BytesIO(raw))
     except zipfile.BadZipFile:
         raise HTTPException(400, "not a ZIP file (export voices in the panel to get one)")
     # only flat <name>.wav / <name>.txt entries count; sizes are checked before anything is unpacked
