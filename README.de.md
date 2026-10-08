@@ -31,6 +31,7 @@ Alle Optionen ohne Rückfragen (`--mode api --asr 1.7b --tts 0.6b --yes` …) st
 
 <!-- New version: add one line at the top here and in CHANGELOG.md, drop the oldest line here (keep 10). Details go to docs/de and docs/en, not into this README. -->
 
+- **V01.0.129** iPhone/Safari: Freihändig bleibt an, wenn iOS das Mikrofon beendet (gesperrter Bildschirm, Anruf, Siri): neues Mikrofon statt totem, öffnet sich wieder, sobald die Seite offen ist, und sagt, warum es aus war
 - **V01.0.128** Raum-Modus auch auf den ESP32-Lautsprechern (alle Board-Varianten): „Raummodus an/aus“ per Sprache oder Schalter „Raum“ unter Ich → Lautsprecher, Dauer und Raum pro Lautsprecher, schweigt in den Ruhezeiten
 - **V01.0.127** Suche in den Einstellungen und im Ich-Fenster (öffnet die Seite und markiert die Stelle); Browser-Test für alle Seiten am Rechner und am Handy, läuft auf GitHub bei jedem Push
 - **V01.0.126** Raum-Modus: in den Ruhezeiten nur als Text, endet nach 2 Minuten im Hintergrund oder bei gesperrtem Handy, „Raummodus aus“ per Sprache
@@ -40,7 +41,6 @@ Alle Optionen ohne Rückfragen (`--mode api --asr 1.7b --tts 0.6b --yes` …) st
 - **V01.0.122** Geklonte Stimmen jetzt unter Einstellungen → Stimmen (mit „Probe sprechen“); Menüpunkt „Nutzer“ heißt jetzt „Profile“; Ich → Stimme heißt jetzt „Sprechererkennung“
 - **V01.0.121** Einstellungen fürs Sprachmodell: Verlaufslänge, Websuchen, Zeitlimit, top_p/presence_penalty, eigene Stichwörter für die Werkzeugpflicht, Prompt-Vorschau mit Standard-Knopf, eigener Gesprächsstil pro Profil (aus); Regeln bleiben fest
 - **V01.0.120** Nach einem Update lädt der Browser die neue Version von selbst (Dateien mit Versions-Kennung, offene Seite lädt neu, wenn kein Gespräch läuft); kein Strg+F5 mehr
-- **V01.0.119** Qualitätstest: neu kaputte Fragen erscheinen eine Woche lang als Hinweis oben auf jeder Admin-Seite
 
 Alle Versionen: [CHANGELOG.md](CHANGELOG.md)
 

@@ -11,7 +11,7 @@ const verWatch={seen:Date.now(),edit:0,back:0,newer:''};
 document.addEventListener('pointerdown',()=>verWatch.seen=Date.now(),true);
 document.addEventListener('keydown',()=>verWatch.seen=Date.now(),true);
 document.addEventListener('input',e=>{if(e.target.type!=='checkbox'&&e.target.id!=='findq')verWatch.edit=Date.now()},true);
-function sparkBusy(){try{return !!(chat.rec||chat.ctrl||chat.asrBusy||chat.busy||playing()||wake.on||room.on)}catch{return true}}
+function sparkBusy(){try{return !!(chat.rec||chat.resumeMic||chat.ctrl||chat.asrBusy||chat.busy||playing()||wake.on||room.on)}catch{return true}}
 function verReload(){try{const s=document.querySelector('section.on');if(s)sessionStorage.setItem('versec',s.id)}catch{}location.reload()}
 function verTry(){const now=Date.now(),calm=!sparkBusy()&&now-verWatch.edit>600e3;
   if(calm&&(document.visibilityState==='hidden'||now-verWatch.back<5000||now-verWatch.seen>120e3))return verReload();

@@ -10,14 +10,14 @@ function chatLog(role,text){const d=document.createElement('div');d.className='m
   d.innerHTML=role==='user'?'<div class="bubble"></div>':'<div class="av"><i></i></div><div class="bubble"></div>';
   const b=d.lastChild;if(text)b.textContent=text;else b.classList.add('typing');$('chatlog').appendChild(d);$('chatlog').scrollTop=1e9;return b}
 function audioCtx(){if(!chat.ctx)chat.ctx=new (window.AudioContext||window.webkitAudioContext)();
-  if(chat.ctx.state==='suspended')chat.ctx.resume();playCtx();return chat.ctx}
+  if(chat.ctx.state!=='running')chat.ctx.resume().catch(()=>{});playCtx();return chat.ctx}
 // Speech plays in its own context running at the TTS rate (24 kHz). In a 44.1/48 kHz context every
 // streamed piece would be resampled on its own, and the seams between the pieces click.
 function playCtx(){const AC=window.AudioContext||window.webkitAudioContext;
   if(!chat.pctx){try{chat.pctx=new AC({sampleRate:24000,latencyHint:'interactive'})}catch{chat.pctx=new AC()}
     chat.out=chat.pctx.createAnalyser();chat.out.fftSize=512;chat.out.connect(chat.pctx.destination);   /* the face's mouth follows this level */
     chat.gain=chat.pctx.createGain();chat.gain.connect(chat.out)}   // Stop fades out through this instead of cutting off
-  if(chat.pctx.state==='suspended')chat.pctx.resume();return chat.pctx}
+  if(chat.pctx.state!=='running')chat.pctx.resume().catch(()=>{});return chat.pctx}
 const TAIL=120;   // 5 ms at 24 kHz
 function pcmNode(ctx,f,at){const ab=ctx.createBuffer(1,f.length,24000);ab.copyToChannel(f,0);const src=ctx.createBufferSource();src.buffer=ab;src.connect(chat.gain);
   src.start(at);chat.sources.push(src);src.onended=()=>{chat.sources=chat.sources.filter(x=>x!==src)};return src}
@@ -57,12 +57,40 @@ async function chatTab(){if(!CFG)try{CFG=await (await api('/api/config')).json()
   if(!window.isSecureContext)showSecure();setTalk()}
 $('chatlog').dataset.empty=t('Sag etwas oder tippe unten eine Frage.','Say something or type a question below.');
 
+// iOS Safari ends the microphone track when the page goes to the background, the screen locks, a
+// call or Siri takes the audio, or another app records. A stream without a live track only records
+// silence, so it is dropped and asked for again; a hands-free conversation the system cut off opens
+// the microphone again as soon as the page is visible, and says so instead of going quiet.
+const micLive=()=>!!chat.stream&&chat.stream.getAudioTracks().some(x=>x.readyState==='live');
+const micMuted=()=>!!chat.stream&&chat.stream.getAudioTracks().some(x=>x.muted);
+async function getMic(){if(micLive())return chat.stream;
+  if(chat.stream){chat.stream.getTracks().forEach(x=>{try{x.stop()}catch{}});chat.stream=null}
+  const s=await navigator.mediaDevices.getUserMedia({audio:{echoCancellation:true,noiseSuppression:true,autoGainControl:true}});
+  s.getAudioTracks().forEach(x=>{x.onended=()=>micLost(s)});chat.stream=s;return s}
+function micLost(s){if(chat.stream!==s)return;chat.stream=null;stopBarge();
+  const was=!!chat.rec||wake.on||chat.micPaused;if(chat.rec){chat.stopWhy='lost';stopListening(true)}
+  if(wake.on)stopWake();
+  if(was||S.hands){chat.resumeMic=!!S.hands;chatSay(t('Das System hat das Mikrofon beendet (Bildschirm gesperrt, Anruf oder andere App). ','The system ended the microphone (screen locked, a call or another app). ')+
+    (S.hands||$('chatwake').checked?t('Es geht wieder an, sobald die Seite offen ist.','It comes back once the page is open again.'):t('Tippe „Sprechen“.','Tap "Speak".')))}}
+function micBack(){if(document.hidden)return;
+  [chat.ctx,chat.pctx].forEach(c=>{if(c&&c.state!=='running'&&c.state!=='closed')c.resume().catch(()=>{})});
+  let guest=true;try{guest=isGuest()}catch{}
+  if(($('chatwake').checked||(window.room&&room.on))&&!wake.on&&!guest)startWake();
+  if(chat.resumeMic&&S.hands&&!chat.rec&&!chat.ctrl&&!playing()&&!chat.asrBusy){chat.resumeMic=false;startListening()}}
+document.addEventListener('visibilitychange',()=>{if(document.hidden){if(chat.rec&&S.hands)chat.resumeMic=true}else setTimeout(micBack,300)});
+addEventListener('pageshow',()=>setTimeout(micBack,300));
+
 // Simple voice activity detection: stop after ~0.8 s of silence once speech was heard.
 function startVad(o={}){const ctx=audioCtx(),src=ctx.createMediaStreamSource(chat.stream),an=ctx.createAnalyser();
   an.fftSize=1024;src.connect(an);const buf=new Float32Array(an.fftSize);let floor=o.floor||0.01,heard=o.speaking?300:0,quiet=0,last=performance.now(),paused=false,lastSnap=last;
-  const t0=o.floor?last-300:last;   // after a barge-in the room noise is already known and the user is talking
+  let t0=o.floor?last-300:last,held=0;   // after a barge-in the room noise is already known and the user is talking
   const iv=setInterval(()=>{an.getFloatTimeDomainData(buf);let e=0;for(const v of buf)e+=v*v;const rms=Math.sqrt(e/buf.length);
     const now=performance.now(),dt=now-last;last=now;
+    if(ctx.state!=='running'||micMuted()){t0+=dt;held+=dt;chat.micPaused=true;if(ctx.state!=='running')ctx.resume().catch(()=>{});
+      if(held>1000&&held-dt<=1000)chatSay(t('Das System hält das Mikrofon gerade an …','The system is holding the microphone …'));
+      if(held>30000){chat.stopWhy='lost';chat.resumeMic=!!S.hands;stopListening(true);
+        chatSay(t('Das System gibt das Mikrofon nicht frei. Tippe „Sprechen“.','The system does not release the microphone. Tap "Speak".'))}return}
+    if(held){held=0;chat.micPaused=false;chatSay(t('Ich höre zu …','Listening …'))}
     if(now-t0<300){floor=Math.max(floor*0.8,rms);chat.floor=floor;return}   // learn the room noise first
     chat.micLevel=Math.min(1,Math.max(0,rms-floor)*12);if(!S.auto)return;
     if(rms>Math.max(0.015,floor*2.5)){heard+=dt;quiet=0;chat.lastVoice=now}else quiet+=dt;
@@ -70,27 +98,28 @@ function startVad(o={}){const ctx=audioCtx(),src=ctx.createMediaStreamSource(cha
       if(quiet>=250){if(!paused){paused=true;liveSnap(true)}}
       else{paused=false;chat.turnWait=null;if(S.live&&now-lastSnap>1200){lastSnap=now;liveSnap()}}}
     if(heard>200&&quiet>(chat.turnWait||800))stopListening(false);
-    else if(!heard&&now-t0>8000)stopListening(true);                 // nobody spoke
+    else if(!heard&&now-t0>8000){chat.stopWhy='quiet';stopListening(true)}                 // nobody spoke
     else if(now-t0>60000)stopListening(false)},50);
   chat.vad={iv,src}}
-function stopVad(){chat.micLevel=0;if(chat.vad){clearInterval(chat.vad.iv);try{chat.vad.src.disconnect()}catch{}chat.vad=null}}
+function stopVad(){chat.micLevel=0;chat.micPaused=false;if(chat.vad){clearInterval(chat.vad.iv);try{chat.vad.src.disconnect()}catch{}chat.vad=null}}
 
-async function startListening(o={}){stopBarge();stopAnswer();chat.turnWait=null;
+async function startListening(o={}){stopBarge();stopAnswer();chat.turnWait=null;chat.stopWhy=null;chat.resumeMic=false;
   if(!window.isSecureContext||!navigator.mediaDevices){showSecure();chatSay(t('Mikrofon braucht https, siehe Hinweis oben.','The microphone needs https, see the note above.'));return}
-  try{if(!chat.stream)chat.stream=await navigator.mediaDevices.getUserMedia({audio:{echoCancellation:true,noiseSuppression:true,autoGainControl:true}})}
+  try{await getMic()}
   catch(e){chatSay(t('Kein Zugriff aufs Mikrofon: ','No microphone access: ')+e.message);return}
   const mime=['audio/webm;codecs=opus','audio/webm','audio/mp4','audio/ogg'].find(m=>window.MediaRecorder&&MediaRecorder.isTypeSupported(m))||'';
   const rec=o.rec||new MediaRecorder(chat.stream,mime?{mimeType:mime}:{}),parts=o.parts||[];
   rec.ondataavailable=e=>{if(e.data.size)parts.push(e.data)};chat.parts=parts;chat.live.last=null;chat.lastVoice=o.speaking?performance.now():null;
   rec.onstop=()=>{stopVad();chat.rec=null;setTalk();const cancel=chat.cancelRec;chat.cancelRec=false;
-    if(cancel){clearLive();chatSay(t('Bereit.','Ready.'));return}
+    const why=chat.stopWhy;chat.stopWhy=null;
+    if(cancel){clearLive();if(why!=='lost')chatSay(why==='quiet'&&S.hands?t('Nichts gehört, Mikrofon aus. Tippe „Sprechen“ oder sag „Hey Spark“.','Heard nothing, microphone off. Tap "Speak" or say "Hey Spark".'):t('Bereit.','Ready.'));return}
     transcribe(new Blob(parts,{type:rec.mimeType||'audio/webm'}),performance.now(),rec)};
   if(rec.state==='inactive')rec.start();chat.rec=rec;setTalk();chatSay(o.speaking?t('Unterbrochen, ich höre zu …','Interrupted, listening …'):t('Ich höre zu …','Listening …'));startVad(o)}
 // Barge-in: while the answer plays, the microphone keeps listening (the browser's echo
 // cancellation removes most of the assistant's own voice). A recorder starts at the first sign of
 // speech so the beginning is not lost; if the speech holds for 250 ms the answer stops and that
 // recording becomes the next question, otherwise it is thrown away.
-function startBarge(){if(chat.barge||!chat.stream||!S.barge||(window.room&&room.speaking))return;   // room mode listens for "Stopp" itself
+function startBarge(){if(chat.barge||!micLive()||!S.barge||(window.room&&room.speaking))return;   // room mode listens for "Stopp" itself
   const ctx=audioCtx(),src=ctx.createMediaStreamSource(chat.stream),an=ctx.createAnalyser();an.fftSize=1024;src.connect(an);
   const buf=new Float32Array(an.fftSize),ob=new Float32Array(chat.out.fftSize),floor=Math.max(chat.floor||0.01,0.005);
   const mime=['audio/webm;codecs=opus','audio/webm','audio/mp4','audio/ogg'].find(m=>window.MediaRecorder&&MediaRecorder.isTypeSupported(m))||'';
@@ -274,7 +303,7 @@ async function checkWake(chunks,rate){wake.busy=true;try{
   catch{}finally{wake.busy=false}}
 async function startWake(){if(wake.on)return;
   if(!window.isSecureContext||!navigator.mediaDevices){showSecure();$('chatwake').checked=false;return}
-  try{if(!chat.stream)chat.stream=await navigator.mediaDevices.getUserMedia({audio:{echoCancellation:true,noiseSuppression:true,autoGainControl:true}})}
+  try{await getMic()}
   catch(e){chatSay(t('Kein Zugriff aufs Mikrofon: ','No microphone access: ')+e.message);$('chatwake').checked=false;return}
   const ctx=audioCtx();wake.on=true;wake.src=ctx.createMediaStreamSource(chat.stream);wake.node=ctx.createScriptProcessor(4096,1,1);
   wake.src.connect(wake.node);wake.node.connect(ctx.destination);

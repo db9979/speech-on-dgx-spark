@@ -51,10 +51,13 @@ class Browser(unittest.TestCase):
     def run_async(self, coro):
         return asyncio.run(coro)
 
-    async def page(self, p, width, height):
+    async def page(self, p, width, height, mic=False):
         exe = chromium()
-        br = await p.chromium.launch(**({"executable_path": exe} if exe else {}))
-        ctx = await br.new_context(viewport={"width": width, "height": height}, locale="de-DE")
+        args = ["--use-fake-ui-for-media-stream", "--use-fake-device-for-media-stream",
+                "--autoplay-policy=no-user-gesture-required"] if mic else []
+        br = await p.chromium.launch(args=args, **({"executable_path": exe} if exe else {}))
+        ctx = await br.new_context(viewport={"width": width, "height": height}, locale="de-DE",
+                                   permissions=["microphone"] if mic else [])
         pg = await ctx.new_page()
         errors = []
         pg.on("pageerror", lambda e: errors.append(str(e)))
@@ -125,6 +128,39 @@ class Browser(unittest.TestCase):
                 await pg.wait_for_timeout(300)
                 self.assertTrue(await pg.evaluate("$('setbox').classList.contains('on')"))
                 self.assertTrue(await pg.evaluate("!!document.querySelector('#setbox .sflash')"))
+                self.assertEqual(errors, [])
+                await br.close()
+        self.run_async(go())
+
+    def test_hands_free_microphone_comes_back(self):
+        """iOS ends the microphone track (lock screen, call, Siri): a dead stream is asked for again,
+        the page says why it stopped, and hands-free listening opens the microphone again."""
+        async def go():
+            async with async_playwright() as p:
+                br, pg, errors = await self.page(p, 390, 844, mic=True)
+                await pg.evaluate("goSec('chat');S.hands=true;S.live=false;S.turn=false")
+                await pg.evaluate("startListening()")
+                await pg.wait_for_function("!!chat.rec&&micLive()", timeout=5000)
+                first = await pg.evaluate("chat.stream.id")
+                # the system takes the microphone away
+                await pg.evaluate("chat.stream.getAudioTracks().forEach(x=>{x.stop();x.dispatchEvent(new Event('ended'))})")
+                await pg.wait_for_function("!chat.rec", timeout=5000)
+                self.assertIn("System hat das Mikrofon beendet", await pg.inner_text("#chatstate"))
+                self.assertTrue(await pg.evaluate("chat.resumeMic&&!chat.stream"))
+                # the page is visible again: hands-free listens again on a new stream
+                await pg.evaluate("micBack()")
+                await pg.wait_for_function("!!chat.rec&&micLive()", timeout=5000)
+                self.assertNotEqual(first, await pg.evaluate("chat.stream.id"))
+                self.assertFalse(await pg.evaluate("chat.resumeMic"))
+                # a stream whose track ended without telling us is not reused
+                await pg.evaluate("stopListening(true)")
+                await pg.wait_for_function("!chat.rec", timeout=5000)
+                second = await pg.evaluate("chat.stream.id")
+                await pg.evaluate("chat.stream.getAudioTracks().forEach(x=>{x.onended=null;x.stop()})")
+                await pg.evaluate("startListening()")
+                await pg.wait_for_function("!!chat.rec&&micLive()", timeout=5000)
+                self.assertNotEqual(second, await pg.evaluate("chat.stream.id"))
+                await pg.evaluate("stopListening(true)")
                 self.assertEqual(errors, [])
                 await br.close()
         self.run_async(go())
