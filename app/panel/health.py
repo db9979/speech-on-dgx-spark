@@ -153,6 +153,14 @@ async def watch_once(update_running=lambda: False):
             reason = judge(unit, health, now, await asyncio.to_thread(_active_seconds, unit), front=False)
             if reason:
                 done.append(await asyncio.to_thread(_restart, name.upper() + "-Engine", unit, reason, now))
+    # the VoiceDesign engine has no front end of its own: restarted when it is switched on but has
+    # failed (systemd gave up on it)
+    t = cfg.get("tts", {})
+    if t.get("enabled", True) and t.get("backend") == "vllm-omni" and t.get("voicedesign_enabled"):
+        unit = UNITS["tts-design"]
+        code, out = await asyncio.to_thread(run, ["systemctl", "is-active", unit])
+        if out.strip() == "failed":
+            done.append(await asyncio.to_thread(_restart, "TTS-VoiceDesign", unit, "ausgefallen", now))
     return done
 
 

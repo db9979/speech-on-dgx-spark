@@ -10,8 +10,9 @@
 # of the official branch are accepted.
 #
 # Works on the installer's own clone in /opt/speech-spark/src. Your settings in
-# /etc/speech-spark stay. If the new version fails to install, the running services are
-# left untouched and the clone goes back to the old version.
+# /etc/speech-spark stay. If the new version fails before it goes live (downloads, packages,
+# self-test), the running services are left untouched and the clone goes back to the old version.
+# If it fails after that, the previous version is installed again.
 set -euo pipefail
 
 SRC=${SPEECH_SPARK_SRC:-/opt/speech-spark/src}
@@ -86,7 +87,10 @@ echo "Updating ..."
 # the version running now becomes "the previous version" the panel can go back to
 [ -f "$(dirname "$SRC")/VERSION.json" ] && cp "$(dirname "$SRC")/VERSION.json" "$(dirname "$SRC")/VERSION.prev.json.new"
 git reset --hard --quiet "$new"
+SWITCHED="$(dirname "$SRC")/.switched"
+rm -f "$SWITCHED"
 if ./install.sh --no-smoke --update; then
+  rm -f "$SWITCHED"
   echo
   echo "Update finished: $(git log -1 --format='%h %s')"
   [ -f "$(dirname "$SRC")/VERSION.prev.json.new" ] && mv "$(dirname "$SRC")/VERSION.prev.json.new" "$(dirname "$SRC")/VERSION.prev.json"
@@ -94,9 +98,24 @@ if ./install.sh --no-smoke --update; then
 else
   rc=$?
   echo
-  echo "UPDATE FAILED (exit $rc). The services keep running the previous version."
   git reset --hard --quiet "$old"
   rm -f "$(dirname "$SRC")/VERSION.prev.json.new"
-  finish false "Update fehlgeschlagen (Fehler $rc); die bisherige Version läuft weiter"
+  if [ -f "$SWITCHED" ]; then
+    # the new code was already live: put the previous version back the same way
+    rm -f "$SWITCHED"
+    echo "UPDATE FAILED (exit $rc) after the new version went live. Installing the previous version again ..."
+    # (an older install.sh does not know newer options; the environment variable it just ignores)
+    if SPEECH_SPARK_NO_SELFTEST=1 ./install.sh --no-smoke --update; then
+      rm -f "$SWITCHED"
+      finish false "Update fehlgeschlagen (Fehler $rc); die bisherige Version wurde wieder eingespielt"
+    else
+      rm -f "$SWITCHED"
+      echo "Putting the previous version back failed too; see the output above." >&2
+      finish false "Update fehlgeschlagen (Fehler $rc), Zurückspielen auch; bitte Protokoll ansehen"
+    fi
+  else
+    echo "UPDATE FAILED (exit $rc). The services keep running the previous version."
+    finish false "Update fehlgeschlagen (Fehler $rc); die bisherige Version läuft weiter"
+  fi
   exit "$rc"
 fi

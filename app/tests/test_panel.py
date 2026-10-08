@@ -778,6 +778,17 @@ class CalendarAdd(unittest.TestCase):
         self.assertEqual(len(helpers.CAL_EVENTS), 1)
         log = a.get("/api/profile/toollog").json()["items"]
         self.assertTrue(any(c["name"] == "calendar_add (bestätigt)" for x in log for c in x["calls"]))
+        # a correction is not a yes; a yes from another conversation or device is not for this proposal
+        for reply in ("Okay, aber am Freitag", "Bitte um 11 statt 10"):
+            answer(ask(a, 'TOOL calendar_add {"title": "Friseur", "start": "2030-04-01T10:00"}', tz="Europe/Berlin"))
+            answer(ask(a, reply, tz="Europe/Berlin"))
+            self.assertEqual(len(helpers.CAL_EVENTS), 1, reply)
+        a.post("/api/chat", json={"messages": [{"role": "user", "content": 'TOOL calendar_add {"title": "Friseur", '
+                                                '"start": "2030-04-01T10:00"}'}], "convo": "c-handy"})
+        a.post("/api/chat", json={"messages": [{"role": "user", "content": "Ja"}], "convo": "c-uhr"})
+        self.assertEqual(len(helpers.CAL_EVENTS), 1)
+        a.post("/api/chat", json={"messages": [{"role": "user", "content": "Ja"}], "convo": "c-handy"})
+        self.assertEqual(len(helpers.CAL_EVENTS), 2)
 
 
 class Siri(unittest.TestCase):
@@ -1101,7 +1112,12 @@ class Proactive(unittest.TestCase):
         items = a.get("/api/proactive").json()["items"]
         self.assertEqual([x["text"] for x in items], ["In 20 Minuten: Zahnarzt. Soll ich dich um 09:55 Uhr noch einmal erinnern?"])
         self.assertEqual(profiles.reminders(uid), [])
-        ask(a, "Ja, gerne.")
+        # a yes to some other question of the assistant is not meant for the note
+        a.post("/api/chat", json={"messages": [{"role": "assistant", "content": "Soll ich das Rezept vorlesen?"},
+                                               {"role": "user", "content": "Ja, gerne."}]})
+        self.assertEqual(profiles.reminders(uid), [])
+        a.post("/api/chat", json={"messages": [{"role": "assistant", "content": items[0]["text"]},
+                                               {"role": "user", "content": "Ja, gerne."}]})
         self.assertEqual([x["text"] for x in profiles.reminders(uid)], ["Zahnarzt"])
         self.assertIn("Erinnerung gesetzt", helpers.LLM_CALLS[-1]["messages"][0]["content"])
         ask(a, "Ja.")

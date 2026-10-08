@@ -177,7 +177,7 @@ async def heard(uid, rid, text, body):
     r["since_comment"] += 1
     offer = r["offer"]
     if offer and time.time() - offer["t"] < OFFER_SECONDS and len(text) <= 80:
-        if calendars.YES.search(text) and not calendars.NO.search(text):
+        if calendars.confirms(text):
             return {"say": await _carry_out(uid, r, offer, text), "kind": offer["kind"]}
         if calendars.NO.search(text):
             r["offer"] = None

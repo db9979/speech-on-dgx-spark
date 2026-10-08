@@ -230,16 +230,20 @@ for p in $ports; do
 done
 
 # ---------------------------------------------------------------- python envs
+# Packages that are already there are left as they are (no -U): an update only adds what the new
+# version needs, so the running services keep the libraries they were started with, and a new
+# release somewhere on PyPI cannot break a working install. A version the code needs is written
+# here as "name>=x.y"; pip then upgrades just that package.
 make_venv() {  # $1 = name, rest = pip packages
   local v="$PREFIX/venv-$1"; shift
   [ -x "$v/bin/python" ] || "$PY" -m venv "$v"
-  "$v/bin/pip" install -q -U pip wheel setuptools
+  "$v/bin/pip" install -q pip wheel setuptools
   if [ "$1" = "--torch" ]; then
     shift
     # PyPI's aarch64 torch has no CUDA; the cu130 build supports Blackwell (GB10).
     "$v/bin/pip" install -q torch torchaudio --index-url "$TORCH_INDEX"
   fi
-  PIP_EXTRA_INDEX_URL="$TORCH_INDEX" "$v/bin/pip" install -q -U "$@"
+  PIP_EXTRA_INDEX_URL="$TORCH_INDEX" "$v/bin/pip" install -q "$@"
 }
 
 check_cuda() {
@@ -315,9 +319,31 @@ if [ "$DOWNLOAD" = 1 ]; then
   fi
 fi
 
+# ---------------------------------------------------------------- self-test (before anything goes live)
+# The new code against a fake LLM, TTS and Home Assistant in a throw-away folder. In an update a
+# failure stops here, while the running version is untouched.
+if [ "${SPEECH_SPARK_NO_SELFTEST:-0}" = 1 ]; then
+  say "Self-test skipped (putting the previous version back)"
+else
+say "Self-test of the panel (fake LLM and TTS, nothing real is touched)"
+SELFTEST_LOG="$PREFIX/selftest.log"
+work=$(mktemp -d); cp -r "$INSTALL_FROM/app" "$work/app"
+if (cd "$work/app" && timeout 600 "$PREFIX/venv-panel/bin/python" -W ignore -m unittest discover -s tests -t . >"$SELFTEST_LOG" 2>&1); then
+  echo "   $(grep -E '^Ran ' "$SELFTEST_LOG") - all passed"
+else
+  tail -n 25 "$SELFTEST_LOG"
+  rm -rf "$work"
+  [ "$FROM_UPDATE" = 1 ] && die "self-test failed (details: $SELFTEST_LOG); the running version stays"
+  warn "self-test failed (details: $SELFTEST_LOG); the services are installed anyway"
+fi
+rm -rf "$work"
+fi
+
 # ================================================================ switch to the new version
 # Everything above can fail without touching the running services. From here on the
-# new code goes live.
+# new code goes live; update.sh sees the mark and puts the previous version back if a later
+# step fails.
+[ "$FROM_UPDATE" = 1 ] && touch "$PREFIX/.switched"
 say "Installing application files"
 rm -rf "$PREFIX/app.new"
 cp -r "$INSTALL_FROM/app" "$PREFIX/app.new"
@@ -348,6 +374,8 @@ EOF
 chmod 755 /usr/local/bin/speech-spark-bench
 
 # ---------------------------------------------------------------- password, sudoers
+# a password given here replaces one changed in the panel (whose hash would win otherwise)
+[ -n "$PASSWORD" ] && rm -f -- "$VAR/state/panel-password"
 if [ ! -f "$ETC/panel.env" ] || [ -n "$PASSWORD" ]; then
   [ -n "$PASSWORD" ] || PASSWORD=$(head -c 18 /dev/urandom | base64 | tr -dc 'A-Za-z0-9' | head -c 16)
   no_links "$ETC/panel.env"
@@ -356,6 +384,8 @@ fi
 no_links "$ETC/panel.env"
 chown -h "$SVC_USER:$SVC_USER" "$ETC/panel.env"; chmod 600 "$ETC/panel.env"
 PASSWORD=$(sed -n 's/^PANEL_PASSWORD=//p' "$ETC/panel.env")
+# changed in the panel since: only its hash is stored, the file above is outdated
+[ -s "$VAR/state/panel-password" ] && PASSWORD="(changed in the panel; reset with sudo ./install.sh --password NEW)"
 
 # The panel may start/stop/restart exactly these units and start the update, nothing else.
 {
@@ -373,14 +403,6 @@ chmod 440 /etc/sudoers.d/speech-spark
 visudo -cf /etc/sudoers.d/speech-spark >/dev/null || die "sudoers file invalid"
 
 # ---------------------------------------------------------------- systemd
-say "Self-test of the panel (fake LLM and TTS, nothing real is touched)"
-if (cd "$PREFIX/app" && timeout 300 "$PREFIX/venv-panel/bin/python" -W ignore -m unittest discover -s tests -t . > /tmp/speech-spark-selftest.log 2>&1); then
-  echo "   $(grep -E '^Ran ' /tmp/speech-spark-selftest.log) - all passed"
-else
-  warn "self-test failed (details: /tmp/speech-spark-selftest.log); the services are installed anyway"
-  tail -n 25 /tmp/speech-spark-selftest.log
-fi
-
 say "systemd units"
 QWEN38_AFTER="qwen38-sglang.service qwen38-flash.service qwen38-image.service qwen38-video.service qwen38-llamacpp.service"
 common_env="Environment=SPEECH_SPARK_CONFIG=$ETC/config.json

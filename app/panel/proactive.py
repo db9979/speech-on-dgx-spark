@@ -152,7 +152,7 @@ async def deliver(uid, kind, text, why="", data="", offer=None, until=None, forc
         _today(st, local.strftime("%Y-%m-%d"))
         st["count"] = st.get("count", 0) + (0 if force else 1)
         st.setdefault("per", {})[kind] = st["per"].get(kind, 0) + (0 if force else 1)
-        st["last"] = {"t": now, "kind": kind, "offer": offer}
+        st["last"] = {"t": now, "kind": kind, "offer": offer, "text": text}
         st["queue"] = [x for x in st.get("queue", []) if x.get("until", 0) > now][-19:] + [item]
     _mut(uid, put)
     if item.get("pushed"):
@@ -201,20 +201,25 @@ def feedback(uid, kind, vote):
     return status(uid)
 
 
-def reply(uid, text):
+def reply(uid, text, prev=None):
     """The panel's part when the person answers a note: a yes to an offered reminder sets it, "nicht
     jetzt" pauses, "interessiert mich nicht" lowers that kind. Returns {"system", "call"} for the
-    chat (the model then says the checked result), or None."""
+    chat (the model then says the checked result), or None.
+
+    prev: the assistant's message right before this answer, if any. The answer only counts for the
+    note when that message is the note (a "ja" to some other question is not meant for it)."""
     if not enabled() or not text:
         return None
     last = state(uid).get("last") or {}
     if time.time() - last.get("t", 0) > OFFER_SECONDS or len(text) > SHORT:
         return None
+    if prev is not None and last.get("text") and _norm(last["text"])[:60] not in _norm(prev):
+        return None
     import calendars
     kind = last.get("kind", "")
     offer = last.get("offer")
     p = prefs(uid)
-    if offer and calendars.YES.search(text) and not calendars.NO.search(text):
+    if offer and calendars.confirms(text):
         item = profiles.add_reminder(uid, offer["text"], offer["due"])
         _mut(uid, lambda st: st.get("last", {}).update(offer=None))
         when = datetime.datetime.fromtimestamp(item["due"] / 1000, _zone(p))

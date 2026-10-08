@@ -714,11 +714,16 @@ async def chat(request: Request):
     _last_chat[0] = time.time()
     body = await request.json()
     cfg = load_config()
-    ccfg = dict(json.load(open(DEFAULTS))["chat"], **cfg.get("chat", {}))
+    with open(DEFAULTS) as f:
+        ccfg = dict(json.load(f)["chat"], **cfg.get("chat", {}))
     messages = [{"role": m["role"], "content": m["content"]} for m in body.get("messages", [])
                 if isinstance(m, dict) and m.get("role") in ("user", "assistant") and m.get("content")]
     if not messages:
         raise HTTPException(400, "messages are required")
+    # what the assistant said right before this message (a note it made by itself may open the
+    # conversation, which the trimming below drops)
+    said_before = next((str(m["content"]) for m in reversed(messages[:-1]) if m["role"] == "assistant"), None) \
+        if messages[-1]["role"] == "user" else None
     messages = trim_history(messages)
     system = ccfg.get("system_prompt") or ""
     if ccfg.get("datetime", True):
@@ -841,13 +846,17 @@ async def chat(request: Request):
     cal = calendars.get(who["id"]) if who and briefing else {"calendars": [], "topics": []}
     # new appointments: only the profile's own login or device key, and only after a yes (see calendars.py)
     cal_write = bool(cal["calendars"] and own_browser)
+    prop = None
+    src = f"{body.get('client') or 'web'}:{body.get('convo') if isinstance(body.get('convo'), str) else ''}"
     if cal_write:
         system = (system + "\n\n" + CALENDAR_ADD_HINT).strip()
         prop = calendars.pending(who["id"])
+        if prop and prop.get("src", src) != src:
+            prop = None  # proposed on another device or in another conversation: the yes is not for it
         if prop:
             latest = messages[-1]["content"] if messages[-1]["role"] == "user" else ""
             calendars.drop_pending(who["id"])
-            if calendars.YES.search(latest) and not calendars.NO.search(latest):
+            if calendars.confirms(latest):
                 try:
                     where = await calendars.add_event(who["id"], prop)
                     note = f"Saved in calendar '{where}' (confirmed by the calendar server): {calendars.describe(prop)}"
@@ -860,8 +869,8 @@ async def chat(request: Request):
                           + " wurde NICHT eingetragen, weil der Nutzer nicht zugestimmt hat.").strip()
     # an answer to something the assistant said by itself (yes to its offer, "nicht jetzt", ...):
     # the panel does what it means and the model only says the checked result (see proactive.py)
-    if who and own_browser and messages[-1]["role"] == "user":
-        pro = proactive.reply(who["id"], messages[-1]["content"])
+    if who and own_browser and messages[-1]["role"] == "user" and not prop:  # one yes confirms one thing
+        pro = proactive.reply(who["id"], messages[-1]["content"], said_before)
         if pro:
             cal_note.append(pro["call"])
             system = (system + "\n\n" + pro["system"]).strip()
@@ -931,7 +940,7 @@ async def chat(request: Request):
                 try:
                     ok, answer, targets = await homeassistant.command(
                         ha, ha_direct, "en" if guess_language(ha_direct) == "English" else "de")
-                except httpx.HTTPError as e:
+                except (httpx.HTTPError, ValueError) as e:  # also a proxy page instead of JSON
                     ok, answer, targets = False, f"Home Assistant not reachable: {type(e).__name__}", []
                 print("homeassistant: panel ran", repr(ha_direct[:80]), "->", "ok" if ok else "not ok", flush=True)
                 await out.put({"type": "home_done", "ok": ok, "text": answer[:300], "targets": targets})
@@ -1080,7 +1089,7 @@ async def chat(request: Request):
             try:
                 ok, answer, targets = await homeassistant.command(
                     ha, text, "en" if guess_language(text) == "English" else "de")
-            except httpx.HTTPError as e:
+            except (httpx.HTTPError, ValueError) as e:
                 await out.put({"type": "home_done", "ok": False, "text": str(e)[:200]})
                 return f"Home Assistant not reachable: {type(e).__name__}"
             await out.put({"type": "home_done", "ok": ok, "text": answer, "targets": targets})
@@ -1207,7 +1216,7 @@ async def chat(request: Request):
                 item = appointment(args, body.get("tz"))
             except (ValueError, TypeError, OverflowError) as e:
                 return f"Not proposed: {e}. Ask the user for the missing or correct details."
-            calendars.propose(who["id"], item)
+            calendars.propose(who["id"], item, src)
             await out.put({"type": "calendar"})
             return ("NOT saved yet. Read this proposal to the user and ask whether to enter it: "
                     + calendars.describe(item) + ". It is saved only if the user says yes in the next message.")
@@ -1531,11 +1540,13 @@ async def siri_ask(request: Request):
     msgs = history + [{"role": "user", "content": text},
                       dict({"role": "assistant", "content": answer}, **({"mail": True} if from_mail else {}))]
     _SIRI[prof["id"]] = (time.time(), msgs)
-    day = datetime.datetime.now().strftime("%Y%m%d")
+    # the day as the person sees it (the shortcut may send its time zone, else the profile's)
+    local = datetime.datetime.now(user_zone(body.get("tz") or profiles.settings(prof["id"]).get("tz", "")))
+    day = local.strftime("%Y%m%d")
     try:
         old = next((c for c in profiles.convos(prof["id"]) if c.get("id") == "siri-" + day), None)
         keep = (old["msgs"] if old else []) + msgs[-2:]
-        profiles.save_convo(prof["id"], {"id": "siri-" + day, "title": "Siri " + datetime.datetime.now().strftime("%d.%m."),
+        profiles.save_convo(prof["id"], {"id": "siri-" + day, "title": "Siri " + local.strftime("%d.%m."),
                                          "updated": int(time.time() * 1000), "msgs": keep})
     except Exception as e:
         print("siri convo:", type(e).__name__, e, flush=True)

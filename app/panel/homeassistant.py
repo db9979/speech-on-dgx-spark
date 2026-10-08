@@ -100,7 +100,28 @@ def _tok(word):
             word = speak_numbers(word, "de")
         except ImportError:
             pass
+        if word.isdigit():  # without num2words: the small built-in German numbers
+            word = _de_number(int(word)) if len(word) <= 6 else word
     return _norm(word).replace(" ", "")
+
+
+_ONES = "null eins zwei drei vier fünf sechs sieben acht neun zehn elf zwölf dreizehn vierzehn fünfzehn " \
+        "sechzehn siebzehn achtzehn neunzehn".split()
+_TENS = "_ _ zwanzig dreißig vierzig fünfzig sechzig siebzig achtzig neunzig".split()
+
+
+def _de_number(n):
+    """German words for 0..999999 as num2words writes them (so a code word compares the same)."""
+    if n < 20:
+        return _ONES[n]
+    if n < 100:
+        one = "ein" if n % 10 == 1 else _ONES[n % 10]
+        return (one + "und" if n % 10 else "") + _TENS[n // 10]
+    if n < 1000:
+        head = "ein" if n // 100 == 1 else _ONES[n // 100]
+        return head + "hundert" + (_de_number(n % 100) if n % 100 else "")
+    head = "ein" if n // 1000 == 1 else _de_number(n // 1000)
+    return head + "tausend" + (_de_number(n % 1000) if n % 1000 else "")
 
 
 def _words(text):
@@ -423,7 +444,7 @@ _CLASS = {
 _STOP = set("der die das den dem des ein eine einen im in ist sind wie was wo welche welcher welches gibt es mir "
             "bitte und oder von vom zum zur auf an aus mit hat haben gerade aktuell jetzt alle alles zeige zeig "
             "sag sage the is are what which where how all any show".split())
-_areas_cache = {}  # url -> (time, {entity_id: area})
+_areas_cache = {}  # (url, hash of the token) -> (time, {entity_id: area}): each login sees what it may
 # words that say what is asked ("Temperatur", "aktuelle"), never which device: a question about the
 # "Whirlpool" must not be answered with another device just because both have a temperature
 _GENERIC_ONLY = set("aktuelle aktueller aktuellen aktuelles derzeitige momentane heutige jetzige wert werte "
@@ -442,7 +463,8 @@ def _norm(t):
 
 
 async def _areas(c, item):
-    hit = _areas_cache.get(item["url"])
+    key = (item["url"], hashlib.sha256(str(item.get("token", "")).encode()).hexdigest()[:16])
+    hit = _areas_cache.get(key)
     if hit and time.time() - hit[0] < 300:
         return hit[1]
     tpl = "{% for a in areas() %}{% for e in area_entities(a) %}{{ e }}|{{ area_name(a) }}\n{% endfor %}{% endfor %}"
@@ -454,9 +476,9 @@ async def _areas(c, item):
                 e, _, a = line.strip().partition("|")
                 if e and a:
                     found.setdefault(e, a)
+            _areas_cache[key] = (time.time(), found)  # a failed read is tried again next time
     except httpx.HTTPError:
         pass
-    _areas_cache[item["url"]] = (time.time(), found)
     return found
 
 

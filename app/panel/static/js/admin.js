@@ -257,7 +257,7 @@ async function ulPoll(){let p;try{const r=await fetch('/api/update/progress');if
       if(!fresh){$('updlock').style.display='none';loadSys&&loadSys()}else location.reload()}return}
   $('ulfill').style.width=(fresh?p.percent:3)+'%';$('ultext').textContent=fresh?p.text:t('Starte …','Starting …');
   if(p.started){const s=Math.max(0,p.now-p.started);$('ultime').textContent=Math.floor(s/60)+':'+String(s%60).padStart(2,'0');
-    if(s>p.timeout)ulFail(t('Update dauert zu lange','Update is taking too long'),t('Nach 20 Minuten nicht fertig. Neu laden zeigt den aktuellen Stand; du kannst das Update auch abbrechen.','Not finished after 20 minutes. Reload shows the current state; you can also cancel the update.'),p.log,true)}}
+    if(s>p.timeout)ulFail(t('Update dauert zu lange','Update is taking too long'),t(`Nach ${Math.round(p.timeout/60)} Minuten nicht fertig. Neu laden zeigt den aktuellen Stand; du kannst das Update auch abbrechen.`,`Not finished after ${Math.round(p.timeout/60)} minutes. Reload shows the current state; you can also cancel the update.`),p.log,true)}}
 $('ulreload').onclick=()=>location.reload();
 $('ulclose').onclick=()=>{$('updlock').style.display='none';ulStop();if(ADMIN)loadSys()};
 $('ulcancel').onclick=async()=>{try{await api('/api/update',{method:'DELETE'})}catch{}location.reload()};

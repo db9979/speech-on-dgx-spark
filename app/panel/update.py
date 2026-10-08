@@ -101,7 +101,7 @@ async def remote_state(force=False):
 # mutating requests except the ones the assistant needs) and the page shows a locked progress bar.
 UPDATE_PROGRESS = os.path.join(os.environ.get("SPEECH_SPARK_STATE", "/var/lib/speech-spark/state"),
                                "update-progress.json")
-UPDATE_TIMEOUT = 20 * 60
+UPDATE_TIMEOUT = 45 * 60  # then the page offers to wait or cancel (the unit itself may run 2 h)
 # install.sh sections -> (share of the bar, German label)
 UPDATE_STEPS = [("Neue Version", 5, "Neue Version geladen"), ("System packages", 10, "Systempakete"),
                 ("Service user", 14, "Dienstkonto und Ordner"), ("Git clone", 16, "Git-Kopie"),

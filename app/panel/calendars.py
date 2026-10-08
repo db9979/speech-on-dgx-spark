@@ -366,15 +366,24 @@ def line(x):
 PENDING_SECONDS = 15 * 60
 YES = re.compile(r"(?i)^\W*(ja|jo|jap|jep|jawohl|genau|passt|richtig|stimmt|ok(ay)?|mach( das| es)?|trag (es |ihn |das )?ein|"
                  r"bitte|gerne?|klar|yes|sure|do it)\b")
-NO = re.compile(r"(?i)\b(nein|nö|nee|nicht|stopp|abbrechen|lass( es)?|doch nicht|no|cancel)\b")
+# "nein", and also a correction ("ok, aber am Freitag", "bitte um 11 statt 10"): then the proposal
+# as it stands is not what the person wants
+NO = re.compile(r"(?i)\b(nein|nö|nee|nicht|stopp|abbrechen|lass( es)?|doch nicht|no|cancel|aber|statt|stattdessen|"
+                r"sondern|lieber|anders|ändern?|änder|verschieb\w*|but|instead|rather|change)\b")
+
+
+def confirms(text):
+    """A plain yes to a proposal: starts like a yes, no correction in it, and short."""
+    return bool(YES.search(text or "")) and not NO.search(text) and len(str(text).split()) <= 12
 
 
 def _pending_file(uid):
     return profiles._path(uid, "calendar-pending.json")
 
 
-def propose(uid, item):
-    profiles._write(_pending_file(uid), dict(item, t=int(time.time())))
+def propose(uid, item, src=""):
+    """src: where it was proposed (client and conversation); only a yes from there confirms it."""
+    profiles._write(_pending_file(uid), dict(item, t=int(time.time()), src=str(src)[:120]))
 
 
 def pending(uid):
