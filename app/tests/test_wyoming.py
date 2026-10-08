@@ -106,6 +106,34 @@ class Wyoming(unittest.TestCase):
             c["chat"].update(bad)
             self.assertEqual(admin.put("/api/config", json=c).status_code, 400, bad)
 
+    def test_suggests_the_home_assistant_address(self):
+        from unittest import mock
+        import homeassistant
+        import profiles
+        urls = {"a": "http://192.168.1.20:8123", "b": "https://ha.example.org", "c": "http://8.8.8.8:8123",
+                "d": "http://192.168.1.20:8123/"}
+        wyoming._knocked.clear()
+        with mock.patch.object(profiles, "user_ids", lambda: list(urls)), \
+                mock.patch.object(homeassistant, "_raw", lambda uid: {"url": urls[uid], "token": "t"}):
+            with mock.patch.object(wyoming.socket, "getaddrinfo",
+                                   lambda h, *a, **k: [(0, 0, 0, "", (h, 0))] if h[0].isdigit() else []):
+                d = wyoming.suggest()
+            self.assertEqual(d, {"ha": [{"ip": "192.168.1.20", "host": "192.168.1.20"}], "knocked": []})
+            # a refused knock while switched on is offered too, once
+            run([("describe", {}, b"")], allow="10.0.0.1")
+            run([("describe", {}, b"")], allow="10.0.0.1")
+            self.assertEqual(wyoming._knocked, wyoming.collections.deque(["127.0.0.1"], maxlen=5))
+            admin = TestClient(panel.app)
+            self.assertEqual(admin.get("/api/admin/wyoming/suggest").status_code, 401)
+            admin.post("/api/login", json={"password": "secret-admin"})
+            # a name in the home network is resolved; the admin sees which name it came from
+            with mock.patch.object(wyoming.socket, "getaddrinfo", lambda h, *a, **k: [(0, 0, 0, "", (
+                    "192.168.1.30" if h == "ha.example.org" else h, 0))]):
+                d = admin.get("/api/admin/wyoming/suggest").json()
+            self.assertEqual(d["ha"], [{"ip": "192.168.1.20", "host": "192.168.1.20"},
+                                       {"ip": "192.168.1.30", "host": "ha.example.org"}])
+            self.assertEqual(d["knocked"], ["127.0.0.1"])
+
 
 if __name__ == "__main__":
     unittest.main()

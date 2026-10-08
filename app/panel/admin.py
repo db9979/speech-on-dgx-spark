@@ -61,6 +61,12 @@ def audit(limit: int = 300):
     return {"events": guard.read(max(1, min(limit, 2000))), "names": names}
 
 
+@router.get("/api/admin/wyoming/suggest", dependencies=[Depends(auth)])
+async def wyoming_suggest():
+    """Addresses to allow for Wyoming: from the Home Assistant URLs of the profiles and from refused knocks."""
+    return await asyncio.to_thread(wyoming.suggest)
+
+
 @router.get("/api/admin/profiles", dependencies=[Depends(auth)])
 def admin_profiles():
     d = profiles.admin_list()
@@ -313,9 +319,9 @@ def validate(new):
     try:
         nets = wyoming.allowed(ch.get("wyoming_allow", ""))
     except ValueError as e:
-        raise HTTPException(400, f"Wyoming addresses: {e}")
+        raise HTTPException(400, f"Wyoming: „{e}“ ist keine Adresse. Erlaubt sind Adressen wie 192.168.1.20 oder Netze wie 192.168.1.0/24.")
     if ch.get("wyoming") and not nets:
-        raise HTTPException(400, "Wyoming needs at least one allowed address (e.g. the Home Assistant address)")
+        raise HTTPException(400, "Wyoming braucht mindestens eine erlaubte Adresse: die deines Home Assistant, z. B. 192.168.1.20.")
     if ch.get("wyoming_port", 31003) in (new.get("asr", {}).get("port"), new.get("tts", {}).get("port"),
                                          new.get("panel", {}).get("port"), new.get("panel", {}).get("https_port")):
         raise HTTPException(400, "Wyoming port is already used by another service")

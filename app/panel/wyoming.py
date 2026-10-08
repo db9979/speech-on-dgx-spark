@@ -11,19 +11,24 @@ The protocol (github.com/rhasspy/wyoming): each event is one JSON line {"type", 
 "payload_length"?}, then data_length bytes of JSON data, then payload_length bytes (audio).
 """
 import asyncio
+import collections
 import io
 import ipaddress
 import json
+import socket
 import struct
 import wave
 
 import httpx
+
+from urllib.parse import urlsplit
 
 from common import load_config
 
 MAX_AUDIO = 16000 * 2 * 120      # two minutes of 16 kHz mono 16 bit
 CHUNK = 2048                     # bytes of audio per chunk sent to HA
 _server = {"srv": None, "key": None}
+_knocked = collections.deque(maxlen=5)   # addresses refused lately, shown to the admin as a hint
 
 
 def settings():
@@ -53,6 +58,33 @@ def permitted(ip, nets):
     if getattr(a, "ipv4_mapped", None):
         a = a.ipv4_mapped
     return any(a in n for n in nets)
+
+
+def suggest():
+    """Addresses for the admin's list: the hosts of the Home Assistant URLs set up in profiles, resolved
+    (only addresses in the home network; behind a reverse proxy the public name points at the proxy, not
+    at HA), and the addresses that knocked lately and were refused. Runs in a thread (DNS)."""
+    import homeassistant
+    import profiles
+    hosts, out = [], []
+    for uid in profiles.user_ids():
+        item = homeassistant._raw(uid)
+        host = urlsplit(item["url"]).hostname if item else None
+        if host and host not in hosts:
+            hosts.append(host)
+    for host in hosts[:10]:
+        try:
+            ips = {a[4][0] for a in socket.getaddrinfo(host, None, type=socket.SOCK_STREAM)}
+        except (OSError, UnicodeError):
+            continue
+        for ip in sorted(ips):
+            try:
+                a = ipaddress.ip_address(ip.split("%")[0])
+            except ValueError:
+                continue
+            if a.is_private and not a.is_loopback and not a.is_link_local and ip not in [x["ip"] for x in out]:
+                out.append({"ip": ip, "host": host})
+    return {"ha": out, "knocked": list(_knocked)}
 
 
 # ---------------------------------------------------------------- the protocol
@@ -160,6 +192,9 @@ async def handle(reader, writer):
     s = settings()
     if not s["on"] or not permitted(peer, s["allow"]):
         print("wyoming: refused", peer, flush=True)
+        shown = str(peer).removeprefix("::ffff:")
+        if s["on"] and shown not in _knocked:
+            _knocked.append(shown)
         writer.close()
         return
     audio, fmt, language = bytearray(), (16000, 2, 1), ""

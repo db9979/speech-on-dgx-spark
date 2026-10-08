@@ -59,12 +59,28 @@ function cfgDeps(){const on=id=>{const e=$(id);return !e||e.checked};
   const kb=document.querySelector('#cfgnav button[data-p="know"]');kb.style.display=on('chat.search')?'':'none';
   if(!on('chat.search')&&$('pane-know').classList.contains('on'))cfgPane('feat')}
 ['chat.search','chat.speaker_id','chat.mail'].forEach(id=>$(id).addEventListener('change',cfgDeps));
+// every switch with details shows them at once when switched on (not only after saving)
+[...new Set([...document.querySelectorAll('[data-show]')].map(x=>x.dataset.show))].forEach(id=>{const e=$(id);if(e&&!['chat.search','chat.speaker_id','chat.mail'].includes(id))e.addEventListener('change',cfgDeps)});
+// Wyoming answers only listed addresses: suggest the Home Assistant address when switched on
+async function wySuggest(auto){const inp=$('chat.wyoming_allow'),msg=$('wymsg');
+  try{const d=await (await api('/api/admin/wyoming/suggest')).json();
+    const have=inp.value.split(/[\s,;]+/).filter(Boolean),add=d.ha.map(x=>x.ip).filter(ip=>!have.includes(ip));
+    if(add.length){inp.value=have.concat(add).join(', ');inp.dispatchEvent(new Event('input',{bubbles:true}));
+      msg.textContent=t('Eingetragen: ','Filled in: ')+d.ha.map(x=>x.ip+' ('+x.host+')').join(', ')+t('. Prüfen, dann Speichern.','. Check it, then save.')}
+    else if(!auto)msg.textContent=d.ha.length?t('Die Adresse steht schon drin.','The address is already there.'):t('Keine Home-Assistant-Adresse im Heimnetz gefunden (in keinem Profil eingerichtet, oder nur über einen Reverse-Proxy erreichbar). Trag die Adresse deines Home Assistant von Hand ein, z. B. 192.168.1.20.','No Home Assistant address in the home network found (not set up in any profile, or only reachable through a reverse proxy). Enter your Home Assistant address by hand, e.g. 192.168.1.20.');
+    if(d.knocked.length)msg.textContent+=' '+t('Zuletzt abgewiesen: ','Refused lately: ')+d.knocked.join(', ')+t(' (wenn das dein Home Assistant ist, diese Adresse eintragen).',' (if that is your Home Assistant, enter this address).')}
+  catch(e){if(!auto)msg.textContent=e.message}}
+$('wysuggest').onclick=()=>wySuggest(false);
+$('chat.wyoming').addEventListener('change',e=>{if(e.target.checked&&!$('chat.wyoming_allow').value.trim())wySuggest(true)});
 const markDirty=(pane,on)=>{const b=document.querySelector(`#cfgnav button[data-p="${pane.id.slice(5)}"]`);if(b)b.classList.toggle('dirty',on)};
 document.querySelectorAll('.pane').forEach(pane=>{const f=e=>{if(/^pw/.test(e.target.id))return;markDirty(pane,true)};pane.addEventListener('input',f);pane.addEventListener('change',f)});
 document.querySelectorAll('.savebtn').forEach(btn=>btn.onclick=async()=>{const pane=$('pane-'+btn.dataset.p),msg=btn.nextElementSibling;
   const n=JSON.parse(JSON.stringify(CFG));if(getDefaults&&pane.contains($('chatdefaults')))n.chat.defaults=getDefaults();
   for(const[sec,o]of Object.entries(n))for(const k of Object.keys(o)){const el=$(sec+'.'+k);if(!el||!pane.contains(el))continue;
     o[k]=el.type==='checkbox'?el.checked:el.dataset.list?el.value.split(/[\s,;]+/).filter(Boolean):el.type==='number'||el.dataset.num?Number(el.value):el.value}
+  if(pane.contains($('chat.wyoming'))&&$('chat.wyoming').checked&&!$('chat.wyoming_allow').value.trim()){
+    const m=t('Wyoming braucht die Adresse deines Home Assistant, z. B. 192.168.1.20 (oder „Adresse von Home Assistant übernehmen“).','Wyoming needs your Home Assistant address, e.g. 192.168.1.20 (or "Take the Home Assistant address").');
+    $('wymsg').innerHTML=`<span class="err">${esc(m)}</span>`;msg.innerHTML=`<span class="err">${esc(m)}</span>`;$('chat.wyoming_allow').focus();return}
   msg.textContent=t('Speichere…','Saving…');
   try{const r=await (await api('/api/config',{method:'PUT',headers:{'Content-Type':'application/json'},body:JSON.stringify(n)})).json();
     msg.innerHTML=t('Gespeichert.','Saved.')+(r.restarted.length?t(' Neu gestartet: ',' Restarted: ')+r.restarted.join(', ').toUpperCase()+t(' (Modell lädt neu).',' (model reloads).'):'')+(r.stopped&&r.stopped.length?t(' Gestoppt: ',' Stopped: ')+r.stopped.join(', ').toUpperCase()+'.':'')+(r.errors&&r.errors.length?`<div class="err">${esc(r.errors.join('\n'))}</div>`:'')+(r.panel_restart_needed?t(' Panel-Port ändert sich nach: ',' Panel port changes after: ')+'sudo systemctl restart speech-spark-panel':'');CFG=n;markDirty(pane,false)}
