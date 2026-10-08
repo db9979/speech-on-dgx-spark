@@ -26,6 +26,7 @@ from core import (  # noqa: E402
     ADMIN_IDLE,
     admin_cookie_ok,
     COOKIE,
+    FACES,
     NO_BASIC,
     _session_token,
     admin_family,
@@ -74,6 +75,7 @@ def whoami(request: Request, creds: HTTPBasicCredentials | None = Depends(securi
             "transit": cfg.get("chat", {}).get("transit", False),
             "esp32": cfg.get("chat", {}).get("esp32", False),
             "iphone": cfg.get("chat", {}).get("iphone", False),
+            "face": cfg.get("chat", {}).get("face") if cfg.get("chat", {}).get("face") in FACES else "robot",
             # what the assistant needs without the full configuration (which holds keys)
             "assistant": {"default_voice": cfg["tts"].get("default_voice"),
                           "asr_language": cfg["asr"].get("default_language"),

@@ -121,7 +121,8 @@
     "top_p": 0,
     "presence_penalty": 0,
     "tool_words": "",
-    "own_style": false
+    "own_style": false,
+    "face": "robot"
   },
   "logs": {
     "max_mb": 500,

@@ -27,6 +27,7 @@ from core import (  # noqa: E402
     ADMIN_IDLE,
     COOKIE,
     DEFAULTS,
+    FACES,
     DESIGN_KEYS,
     ENGINE_KEYS,
     LANGS,
@@ -384,6 +385,8 @@ def validate(new):
         chat.parse_tool_words(ch.get("tool_words", ""))
     except ValueError as e:
         raise HTTPException(400, f"Eigene Stichwörter: {e}")
+    if ch.get("face", "robot") not in FACES:
+        raise HTTPException(400, "face: " + " or ".join(FACES))
     for k in ("answer_check", "tool_thinking", "learn_fixes", "own_style", "follow_up"):
         if not isinstance(ch.get(k, False), bool):
             raise HTTPException(400, f"chat {k} must be true or false")

@@ -280,4 +280,7 @@ def api_headers():
     return {"Authorization": f"Bearer {key}"} if key else {}
 
 
+# the assistant's faces (static/js/face.js); the admin picks one for everybody (chat.face)
+FACES = ("robot", "comic")
+
 DEFAULTS = os.path.join(os.path.dirname(os.path.dirname(os.path.abspath(__file__))), "config.default.json")
