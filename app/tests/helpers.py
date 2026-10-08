@@ -356,6 +356,9 @@ def start():
         _serve(fake_tts(), TTS_PORT)
         _serve(fake_ha(), HA_PORT)
         _serve(fake_caldav(), CAL_PORT)
+        # the self-test runs inside the update unit: never ask systemd, or every change gets 423
+        import update
+        update.update_running = lambda: update._upd_cache["running"]
         _started = True
 
 
