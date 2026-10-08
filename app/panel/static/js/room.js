@@ -6,7 +6,7 @@ window.room={on:false,id:'',until:0,queue:Promise.resolve(),lastSpeech:0,wait:fa
     return {mins:30,level:'hints',text:false,area:'',kinds:{q:true,cal:true,ha:true,shop:true},...o}},
   save(o){try{localStorage.setItem('room',JSON.stringify({...this.cfg(),...o}))}catch{}},
   idle(){return !chat.rec&&!chat.ctrl&&!playing()&&!chat.asrBusy},
-  show(){$('roomtgl').hidden=!(ROOM_ON&&PROFILE);if(this.on&&!(ROOM_ON&&PROFILE))this.stop()},
+  show(){$('roomtgl').style.display=ROOM_ON&&PROFILE?'':'none';if(this.on&&!(ROOM_ON&&PROFILE))this.stop()},
   async start(){if(!ROOM_ON||!PROFILE)return;
     this.on=true;this.id=[...crypto.getRandomValues(new Uint8Array(8))].map(b=>b.toString(16).padStart(2,'0')).join('');
     this.until=Date.now()+this.cfg().mins*60e3;this.wait=false;this.lastSpeech=Date.now();

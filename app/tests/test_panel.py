@@ -1491,3 +1491,20 @@ class SecondStep(unittest.TestCase):
 def core_cookie():
     import core
     return core.COOKIE
+
+
+class GuestsChangeNothing(unittest.TestCase):
+    def test_guest_settings_are_ignored_and_locked(self):
+        g = TestClient(panel.app)
+        ask(g, "Hallo, wie geht es?", length="short", speed=1.3)
+        self.assertNotIn("besonders knapp", helpers.LLM_CALLS[-1]["messages"][0]["content"])
+        self.assertEqual(g.put("/api/profile/settings", json={"length": "short"}).status_code, 401)
+        helpers.set_config(room=True, proactive=True)
+        try:
+            self.assertEqual(g.post("/api/room/heard", json={"room": "guest1", "text": "Wir brauchen Milch."}).status_code, 401)
+            self.assertEqual(g.get("/api/proactive/status").status_code, 401)
+        finally:
+            helpers.set_config(room=False, proactive=False)
+        a = profile("Gerd")
+        ask(a, "Hallo, wie geht es?", length="short")
+        self.assertIn("besonders knapp", helpers.LLM_CALLS[-1]["messages"][0]["content"])

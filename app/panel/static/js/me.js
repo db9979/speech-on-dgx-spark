@@ -3,7 +3,10 @@
 function setProfile(p){const changed=(p&&p.id)!==(PROFILE&&PROFILE.id);PROFILE=p||null;
   $('profname').textContent=PROFILE?PROFILE.name:t('Gast','Guest');
   if(changed){stopListening(true);stopAnswer();convos.cache=[];openConvo(null);convos.sync().then(()=>{if(!chat.msgs.length)openConvo(latestConvo())})}
-  loadSettings();rem.load();if(window.room)room.show()}
+  loadSettings();rem.load();if(window.room)room.show();guestLock()}
+// Guests change no settings and cannot use room mode: they get the admin's defaults (the admin's own browser may).
+const isGuest=()=>!PROFILE&&!ADMIN;
+function guestLock(){const g=isGuest();['chathands','chatwake'].forEach(id=>{const l=$(id).closest('label');if(l)l.style.display=g?'none':''})}
 window.closeProf=()=>{$('profmodal').style.display='none';endEnroll()};
 async function showFacts(){const r=await api('/api/profile/memory');const d=await r.json();
   $('profhead').textContent=d.profile.name;showTidy(d.tidy);
@@ -15,7 +18,7 @@ let DOCS_ON=true,SPK_ON=false,CAL_ON=true,HA_ON=false,MAIL_ON=false;
 // The "Ich" window: conversation settings for everyone, plus the profile's own pages once logged in.
 function ptab(id){document.querySelectorAll('#ptabs button').forEach(b=>b.classList.toggle('on',b.dataset.t===id));
   document.querySelectorAll('#profmodal .ptab').forEach(x=>x.classList.toggle('on',x.id===id))}
-function meTabs(){const items=[['setbox',t('Gespräch','Conversation'),!GATE],['loginbox',t('Anmelden','Sign in'),!PROFILE],
+function meTabs(){const items=[['setbox',t('Gespräch','Conversation'),!GATE&&!isGuest()],['loginbox',t('Anmelden','Sign in'),!PROFILE],
     ['factbox',t('Gedächtnis','Memory'),!!PROFILE],['docbox',t('Dokumente','Documents'),PROFILE&&DOCS_ON],['calbox',t('Kalender','Calendar'),PROFILE&&CAL_ON],['mailbox',t('E-Mail','E-mail'),PROFILE&&MAIL_ON],
     ['habox',t('Smart Home','Smart home'),PROFILE&&HA_ON],['voicebox',t('Stimme','Voice'),PROFILE&&SPK_ON],['probox',t('Von selbst','Proactive'),PROFILE&&PRO_ON],['roombox',t('Raum-Modus','Room mode'),PROFILE&&ROOM_ON],['logbox',t('Protokoll','Log'),!!PROFILE],['secbox',t('Sicherheit','Security'),!!PROFILE]].filter(x=>x[2]);
   $('ptabs').innerHTML=items.map(([id,l])=>`<button type="button" data-t="${id}">${esc(l)}</button>`).join('');
@@ -137,9 +140,9 @@ window.forgetFact=async id=>{await api('/api/profile/memory/'+encodeURIComponent
 async function openMe(tab){$('profmsg').textContent='';$('profmodal').style.display='grid';
   const tabs=meTabs();ptab(tabs.includes(tab)?tab:tabs[0]);
   $('profhead').textContent=PROFILE?PROFILE.name:GATE?t('Anmelden','Sign in'):t('Gast','Guest');
-  $('setscope').textContent=GATE?'':PROFILE?t('Einstellungen gelten auf jedem Gerät dieses Profils; „Hey Spark“ stellt jedes Gerät selbst ein.','Settings apply on every device of this profile; "Hey Spark" is set per device.'):t('Als Gast gelten die Einstellungen nur in diesem Browser. Mit einem Profil merkt sich der Assistent Dinge nur für dich.','As a guest the settings apply only in this browser. With a profile the assistant remembers things just for you.');
+  $('setscope').textContent=GATE?'':PROFILE?t('Einstellungen gelten auf jedem Gerät dieses Profils; „Hey Spark“ stellt jedes Gerät selbst ein.','Settings apply on every device of this profile; "Hey Spark" is set per device.'):isGuest()?t('Als Gast gelten die Vorgaben des Admins. Mit einem Profil kannst du Einstellungen ändern, und der Assistent merkt sich Dinge nur für dich.','As a guest the admin\'s defaults apply. With a profile you can change settings, and the assistant remembers things just for you.'):t('Als Gast gelten die Einstellungen nur in diesem Browser. Mit einem Profil merkt sich der Assistent Dinge nur für dich.','As a guest the settings apply only in this browser. With a profile the assistant remembers things just for you.');
   $('proflogout').style.display=PROFILE?'':'none';$('profclose').style.display=GATE?'none':'';
-  if(!GATE)renderSet($('setform'),S,saveSet);
+  if(!GATE&&!isGuest())renderSet($('setform'),S,saveSet);
   if(PROFILE){try{await showFacts();await showDocs();await showVoice();await showCal();await showMail();await showHa();await showSecurity();await showToolLog();await showPro().catch(()=>{});showRoom();await showPush().catch(()=>{})}catch{setProfile(null);openMe('loginbox')}return}
   $('profpin').value='';if(tab==='loginbox')setTimeout(()=>$($('profuser').value?'profpin':'profuser').focus(),50)}
 window.openMe=openMe;
@@ -196,10 +199,10 @@ async function renderSet(el,vals,onchange){const admin=!onchange,voices=await vo
 function applySet(){$('chathands').checked=!!S.hands;$('chattiming').style.display=S.timing?'':'none'}
 async function loadSettings(){let d=null;try{d=await (await fetch('/api/profile/settings')).json()}catch{}
   SDEF={...SDEF,...(d&&d.defaults||{})};S={...SDEF,...(d&&d.settings||{})};
-  if(!PROFILE){try{S={...S,...JSON.parse(localStorage.getItem('chatset')||'{}')}}catch{}}
+  if(!PROFILE&&!isGuest()){try{S={...S,...JSON.parse(localStorage.getItem('chatset')||'{}')}}catch{}}
   applySet();if(!S.daily&&!chat.cid&&!chat.msgs.length)openConvo((convos.load()[0]||{}).id||null)}
 let setTimer=null;
-function saveSet(k,val){S[k]=val;applySet();
+function saveSet(k,val){if(isGuest())return;S[k]=val;applySet();
   if(!PROFILE){try{const o=JSON.parse(localStorage.getItem('chatset')||'{}');o[k]=val;localStorage.setItem('chatset',JSON.stringify(o))}catch{}return}
   clearTimeout(setTimer);setTimer=setTimeout(()=>api('/api/profile/settings',{method:'PUT',headers:{'Content-Type':'application/json'},body:JSON.stringify(S)}).catch(()=>{}),300)}
 $('chathands').onchange=()=>saveSet('hands',$('chathands').checked);

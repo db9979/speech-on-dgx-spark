@@ -26,7 +26,7 @@ import mail  # noqa: E402
 import proactive  # noqa: E402
 import watch  # noqa: E402
 from common import load_config  # noqa: E402
-from core import DEFAULTS, api_headers, assistant  # noqa: E402
+from core import DEFAULTS, admin_cookie_ok, api_headers, assistant  # noqa: E402
 
 router = APIRouter()
 
@@ -750,7 +750,9 @@ async def chat(request: Request):
     # conversation settings: what the request sends, else the profile's, else the admin's defaults
     # (speakers with a device key send nothing and get their profile's voice, speed and length)
     pset = dict(profiles.defaults(ccfg.get("defaults")), **(profiles.settings(who["id"]) if who else {}))
-    for k in (("voice", "speed", "length") if who else ("speed", "length")) if own_browser else ():
+    # guests change nothing: they get the admin's defaults (the admin's own browser may try speed and length)
+    for k in (("voice", "speed", "length") if who else ("speed", "length") if admin_cookie_ok(request) else ()) \
+            if own_browser else ():
         if k in body and profiles.SETTINGS[k][1](body[k]):
             pset[k] = body[k]
     length = {"short": "Antworte besonders knapp, meist in ein bis zwei Sätzen.",
