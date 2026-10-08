@@ -31,6 +31,7 @@ All options for running without questions (`--mode api --asr 1.7b --tts 0.6b --y
 
 <!-- New version: add one line at the top here and in CHANGELOG.md, drop the oldest line here (keep 10). Details go to docs/de and docs/en, not into this README. -->
 
+- **V01.0.136** Speakers: "Check" shows live what the speaker is doing (every 2 seconds), also in room mode (only that a sentence was heard and whether it speaks, never the text)
 - **V01.0.135** Speakers: volume and microphone sensitivity per speaker under Me → Speakers (applies at once when connected, otherwise at the next connection)
 - **V01.0.134** Speakers: quiet microphones (boards with an audio chip such as the Waveshare board) now count as speech, quiet recordings are raised before speech recognition, and the microphone level is in the log
 - **V01.0.133** Speakers: firmware for the Waveshare ESP32-S3-AUDIO-Board (ES8311 audio chip, two microphones), and updates follow the board type last written over USB
@@ -40,7 +41,6 @@ All options for running without questions (`--mode api --asr 1.7b --tts 0.6b --y
 - **V01.0.129** iPhone/Safari: hands-free survives iOS ending the microphone (lock screen, call, Siri): a fresh microphone instead of a dead one, it reopens when the page is visible again and says why it stopped
 - **V01.0.128** Room mode on the ESP32 speakers too (all board variants): "Raummodus an/aus" by voice or the "Room" switch under Me → Speakers, duration and room per speaker, silent in quiet hours
 - **V01.0.127** Search in the settings and in the Me window (opens the page and marks the spot); browser test for every page on a computer and a phone, runs on GitHub on every push
-- **V01.0.126** Room mode: text only in quiet hours, ends after 2 minutes in the background or with the phone locked, "Raummodus aus" by voice
 
 All versions: [CHANGELOG.md](CHANGELOG.md)
 

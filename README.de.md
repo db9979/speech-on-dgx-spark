@@ -31,6 +31,7 @@ Alle Optionen ohne Rückfragen (`--mode api --asr 1.7b --tts 0.6b --yes` …) st
 
 <!-- New version: add one line at the top here and in CHANGELOG.md, drop the oldest line here (keep 10). Details go to docs/de and docs/en, not into this README. -->
 
+- **V01.0.136** Lautsprecher: „Prüfen“ zeigt live, was der Lautsprecher gerade tut (alle 2 Sekunden), auch im Raum-Modus (nur dass ein Satz gehört wurde und ob er spricht, nie den Text)
 - **V01.0.135** Lautsprecher: Lautstärke und Mikrofon-Empfindlichkeit pro Lautsprecher unter Ich → Lautsprecher einstellbar (wirkt sofort, wenn er verbunden ist, sonst bei der nächsten Verbindung)
 - **V01.0.134** Lautsprecher: leise Mikrofone (Boards mit Audio-Chip wie das Waveshare-Board) zählen jetzt als Sprache, leise Aufnahmen werden vor der Spracherkennung angehoben, und der Mikrofonpegel steht im Log
 - **V01.0.133** Lautsprecher: Firmware für das Waveshare ESP32-S3-AUDIO-Board (Audio-Chip ES8311, zwei Mikrofone), und Updates folgen der Board-Art, die per USB zuletzt geschrieben wurde
@@ -40,7 +41,6 @@ Alle Optionen ohne Rückfragen (`--mode api --asr 1.7b --tts 0.6b --yes` …) st
 - **V01.0.129** iPhone/Safari: Freihändig bleibt an, wenn iOS das Mikrofon beendet (gesperrter Bildschirm, Anruf, Siri): neues Mikrofon statt totem, öffnet sich wieder, sobald die Seite offen ist, und sagt, warum es aus war
 - **V01.0.128** Raum-Modus auch auf den ESP32-Lautsprechern (alle Board-Varianten): „Raummodus an/aus“ per Sprache oder Schalter „Raum“ unter Ich → Lautsprecher, Dauer und Raum pro Lautsprecher, schweigt in den Ruhezeiten
 - **V01.0.127** Suche in den Einstellungen und im Ich-Fenster (öffnet die Seite und markiert die Stelle); Browser-Test für alle Seiten am Rechner und am Handy, läuft auf GitHub bei jedem Push
-- **V01.0.126** Raum-Modus: in den Ruhezeiten nur als Text, endet nach 2 Minuten im Hintergrund oder bei gesperrtem Handy, „Raummodus aus“ per Sprache
 
 Alle Versionen: [CHANGELOG.md](CHANGELOG.md)
 

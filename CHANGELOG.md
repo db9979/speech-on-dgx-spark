@@ -2,6 +2,7 @@
 
 Every version in one line, newest first (taken from the commit messages, so some lines are German, some English). Older entries have no version number.
 
+- **V01.0.136** · 2026-10-08 · Lautsprecher: „Prüfen“ zeigt live, was der Lautsprecher gerade tut (alle 2 Sekunden), auch im Raum-Modus (nur dass ein Satz gehört wurde und ob er spricht, nie den Text)
 - **V01.0.135** · 2026-10-08 · Lautsprecher: Lautstärke und Mikrofon-Empfindlichkeit pro Lautsprecher unter Ich → Lautsprecher einstellbar (wirkt sofort, wenn er verbunden ist, sonst bei der nächsten Verbindung)
 - **V01.0.134** · 2026-10-08 · Lautsprecher: leise Mikrofone (Boards mit Audio-Chip wie das Waveshare-Board) zählen jetzt als Sprache, leise Aufnahmen werden vor der Spracherkennung angehoben, und der Mikrofonpegel steht im Log
 - **V01.0.133** · 2026-10-08 · Lautsprecher: Firmware für das Waveshare ESP32-S3-AUDIO-Board (Audio-Chip ES8311, zwei Mikrofone), und Updates folgen der Board-Art, die per USB zuletzt geschrieben wurde

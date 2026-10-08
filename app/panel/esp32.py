@@ -764,6 +764,7 @@ class Session:
                 r["wait"], r["asking"] = False, True
                 try:
                     d = await room.pause(uid, r["rid"], self._room_body(quiet=time.time() - r["last"]))
+                    self.note("Raum-Modus: Pause, " + ("spricht" if d.get("say") else "bleibt still"))
                     if d.get("again"):
                         r["need"], r["wait"] = d["again"], True
                     if d.get("say"):
@@ -798,6 +799,8 @@ class Session:
         if not text or self.room is None:
             return
         d = await room.heard(uid, rid, text, self._room_body())
+        # what was heard in the room never goes into the diagnosis, only that something was
+        self.note("Raum-Modus: Satz gehört" + (", wartet auf Pause" if d.get("wait") else ", nichts zu tun"))
         if self.room is None:
             return
         if d.get("end"):

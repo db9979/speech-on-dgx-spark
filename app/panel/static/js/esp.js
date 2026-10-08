@@ -167,15 +167,22 @@ function espDiagShow(id,d,results){const box=$('espdiag');if(!box)return;
       <button class="b" type="button" id="espdser">${t('Protokoll vom Board lesen (USB)','Read the board\'s log (USB)')}</button>
       <button class="b" type="button" id="espdre">${t('Aktualisieren','Refresh')}</button></div>
     <div class="fh">${d.test?t('Test ist vorgemerkt: Sag „Jarvis“ oder drück den Knopf. Er spielt einen Ton und einen Satz, dann sagst du etwas und er sagt, was er verstanden hat.','Test is queued: say "Jarvis" or press the button. It plays a tone and a sentence, then you say something and it tells you what it understood.'):t('„Netz prüfen“ fragt die Adresse vom Spark aus ab, wie es das Board tut. „Test“ spielt beim nächsten Weckwort Ton und Satz und prüft danach das Mikrofon.','"Check network" asks the address from the Spark, as the board does. "Test" plays a tone and a sentence at the next wake word and then checks the microphone.')}</div>
-    <div style="margin-top:8px"><b>${t('Was der Lautsprecher zuletzt gemacht hat','What the speaker did lately')}</b></div>
+    <div style="margin-top:8px"><b>${t('Was der Lautsprecher zuletzt gemacht hat','What the speaker did lately')}</b> <small class="mut">${t('(live)','(live)')}</small></div>
     <ul class="facts small">${d.events.map(e=>`<li><small class="mut" style="white-space:nowrap">${espWhen(e.t)}</small><span>${esc(e.text)}</span></li>`).join('')||`<li class="mut">${t('Seit dem letzten Neustart des Spark nichts. Das Board hat sich nicht gemeldet.','Nothing since the Spark last restarted. The board has not checked in.')}</li>`}</ul></div>`;
-  $('espdclose').onclick=()=>{box.innerHTML=''};
+  $('espdclose').onclick=()=>{box.innerHTML='';clearInterval(ESP_LIVE)};
   $('espdre').onclick=()=>espDiag(id);
   $('espdnet').onclick=async()=>{$('espdnet').disabled=true;$('espdnet').textContent=t('Prüfe …','Checking …');
     try{const r=await (await api('/api/profile/esp32/'+id+'/check',xjson('POST'))).json();espDiagShow(id,r,r.results)}catch(e){espDiagShow(id,d,[{ok:false,text:e.message}])}};
   $('espdtest').onclick=async()=>{try{const r=await (await api('/api/profile/esp32/'+id+'/test',xjson('POST'))).json();espDiagShow(id,r,[{ok:null,text:r.now?t('Der Lautsprecher spielt jetzt den Test.','The speaker plays the test now.'):t('Vorgemerkt: beim nächsten „Jarvis“ oder Knopfdruck.','Queued: at the next "Jarvis" or button press.')}])}catch(e){espDiagShow(id,d,[{ok:false,text:e.message}])}};
   $('espdser').onclick=()=>{const b=$('espserbox');if(b){b.open=true;b.scrollIntoView({block:'nearest'})}espSerial().catch(e=>espSerShow(null,[[false,e.message]]))}}
-async function espDiag(id){try{espDiagShow(id,await (await api('/api/profile/esp32/'+id+'/diag')).json())}catch(e){espLog(e.message,true)}}
+async function espDiag(id){try{espDiagShow(id,await (await api('/api/profile/esp32/'+id+'/diag')).json());espLive(id)}catch(e){espLog(e.message,true)}}
+// "live": while the check is open and the page visible, the list follows what the speaker does (every 2 s)
+let ESP_LIVE=null;
+function espLive(id){clearInterval(ESP_LIVE);ESP_LIVE=setInterval(async()=>{const box=$('espdiag');
+  if(!box||!box.firstElementChild){clearInterval(ESP_LIVE);return}
+  if(document.hidden||box.contains(document.activeElement)&&document.activeElement.tagName!=='BUTTON')return;
+  try{const d=await (await api('/api/profile/esp32/'+id+'/diag')).json();const ul=box.querySelectorAll('ul.facts')[1];
+    if(ul)ul.innerHTML=d.events.map(e=>`<li><small class="mut" style="white-space:nowrap">${espWhen(e.t)}</small><span>${esc(e.text)}</span></li>`).join('')||`<li class="mut">–</li>`}catch{}},2000)}
 // ---------------------------------------------------------------- the board's own log over USB
 // What XiaoZhi prints at start (see its main/application.cc, ota.cc, esp-wifi-connect), in plain words.
 const ESP_SIGNS=[
