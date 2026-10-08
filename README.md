@@ -31,6 +31,7 @@ All options for running without questions (`--mode api --asr 1.7b --tts 0.6b --y
 
 <!-- New version: add one line at the top here and in CHANGELOG.md, drop the oldest line here (keep 10). Details go to docs/de and docs/en, not into this README. -->
 
+- **V01.0.143** Hands-free listens again even when the browser has paused playback (iOS, no speaker): "still speaking" only counts when something is actually playing; GitHub test green again
 - **V01.0.142** Speakers: "Stimme hier anlernen" (three sentences, own voiceprint for the board microphone); "only known voices" applies at a speaker only once a voice was taught there
 - **V01.0.141** Web log with diagnostic filters: Overview → Logs → "Diagnostic filters" shows chat:, web search, Home Assistant, room mode, speakers, update/self-test and errors with time range and line count, ready to copy into a thread (instead of journalctl | grep on the console)
 - **V01.0.140** Room mode quicker and finds more questions: speaker cuts talk into short pieces, speaks after 1.5 s of quiet, streams the voice; the answer is looked up while people still talk; questions also without a question mark and after "Weißt du, …"; "Also comments" chattier
@@ -40,7 +41,6 @@ All options for running without questions (`--mode api --asr 1.7b --tts 0.6b --y
 - **V01.0.136** Speakers: "Check" shows live what the speaker is doing (every 2 seconds), also in room mode (only that a sentence was heard and whether it speaks, never the text)
 - **V01.0.135** Speakers: volume and microphone sensitivity per speaker under Me → Speakers (applies at once when connected, otherwise at the next connection)
 - **V01.0.134** Speakers: quiet microphones (boards with an audio chip such as the Waveshare board) now count as speech, quiet recordings are raised before speech recognition, and the microphone level is in the log
-- **V01.0.133** Speakers: firmware for the Waveshare ESP32-S3-AUDIO-Board (ES8311 audio chip, two microphones), and updates follow the board type last written over USB
 
 All versions: [CHANGELOG.md](CHANGELOG.md)
 

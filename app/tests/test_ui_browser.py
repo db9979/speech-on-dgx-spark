@@ -28,6 +28,11 @@ def browser_ok():
     return bool(chromium()) or bool(glob.glob(os.path.expanduser("~/.cache/ms-playwright/chromium-*")))
 
 
+# what the hands-free test shows when the microphone did not come back
+STATE = ("JSON.stringify({hidden:document.hidden,rec:!!chat.rec,live:micLive(),resume:chat.resumeMic,hands:S.hands,"
+         "ctrl:!!chat.ctrl,playing:playing(),asr:!!chat.asrBusy,pctx:chat.pctx&&[chat.pctx.state,chat.pctx.currentTime],"
+         "ctx:chat.ctx&&[chat.ctx.state,chat.ctx.currentTime],say:$('chatstate').textContent})")
+
 SECTIONS = ("chat", "mon", "sys", "test", "logs", "cfg", "prof", "int", "apps")
 VIEWS = (("pc", 1280, 900), ("handy", 390, 844))
 
@@ -149,7 +154,10 @@ class Browser(unittest.TestCase):
                 self.assertTrue(await pg.evaluate("chat.resumeMic&&!chat.stream"))
                 # the page is visible again: hands-free listens again on a new stream
                 await pg.evaluate("micBack()")
-                await pg.wait_for_function("!!chat.rec&&micLive()", timeout=5000)
+                try:
+                    await pg.wait_for_function("!!chat.rec&&micLive()", timeout=5000)
+                except Exception:
+                    self.fail(await pg.evaluate(STATE))
                 self.assertNotEqual(first, await pg.evaluate("chat.stream.id"))
                 self.assertFalse(await pg.evaluate("chat.resumeMic"))
                 # a stream whose track ended without telling us is not reused

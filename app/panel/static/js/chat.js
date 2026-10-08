@@ -49,7 +49,9 @@ function stopAnswer(){stopBarge();if(chat.ctrl){chat.ctrl.abort();chat.ctrl=null
 // Still speaking until the last sample has left the speaker: currentTime is where the browser
 // computes audio, the device plays it later (output latency, much more over Bluetooth). Without
 // this, hands-free listening and "Bereit" started while the last syllable was still playing.
-const playing=()=>{const c=chat.pctx;return !!c&&chat.playEnd+(c.outputLatency||0)+(c.baseLatency||0)+0.08>c.currentTime};
+// Nothing scheduled (playEnd 0) is never "speaking": a context that is stalled near 0 s (iOS interrupted it,
+// or no audio output) would otherwise count as speaking forever and hands-free would never listen again.
+const playing=()=>{const c=chat.pctx;return !!c&&chat.playEnd>0&&chat.playEnd+(c.outputLatency||0)+(c.baseLatency||0)+0.08>c.currentTime};
 function setTalk(){$('talklbl').textContent=chat.rec?t('Fertig','Done'):t('Sprechen','Speak');$('talk').classList.toggle('rec',!!chat.rec);$('talk').classList.toggle('ans',!chat.rec&&!!(chat.ctrl||playing()));$('chatstop').disabled=!(chat.rec||chat.ctrl||playing())}
 function showSecure(){const port=CFG&&CFG.panel&&CFG.panel.https_port;const u=`https://${location.hostname}:${port}/`;
   $('chatsecure').style.display='block';$('chathttps').href=u;$('chathttps').textContent=port?u:t('https (im Panel unter Konfiguration einschalten)','https (enable it under Configuration)')}
