@@ -329,7 +329,9 @@ SETTINGS = {
     "par_on": (False, lambda v: isinstance(v, bool)),
     "pro_bday": (True, lambda v: isinstance(v, bool)),
     "pro_parcel": (True, lambda v: isinstance(v, bool)),
-    "tasks_on": (False, lambda v: isinstance(v, bool)),   # shopping and to-do list (tasks.py)
+    "tasks_on": (False, lambda v: isinstance(v, bool)),
+    "transit_on": (False, lambda v: isinstance(v, bool)),   # Bus und Bahn (transit.py)
+    "pro_transit": (True, lambda v: isinstance(v, bool)),   # shopping and to-do list (tasks.py)
     # Telegram (see telegram.py): what this profile allows over Telegram, all off until it says so
     "tg_voice": (False, lambda v: isinstance(v, bool)),
     "tg_private": (False, lambda v: isinstance(v, bool)),

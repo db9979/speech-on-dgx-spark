@@ -90,6 +90,8 @@
     "parcels": false,
     "telegram": false,
     "tasks": false,
+    "transit": false,
+    "transit_url": "",
     "wyoming": false,
     "wyoming_port": 31003,
     "wyoming_allow": "",

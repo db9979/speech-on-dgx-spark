@@ -11,9 +11,10 @@ is False over Telegram unless the profile allowed it.
 import contacts
 import parcels
 import tasks
+import transit
 import weather
 
-SERVICES = [weather, contacts, parcels, tasks]
+SERVICES = [weather, contacts, parcels, tasks, transit]
 
 
 def offer(ctx):

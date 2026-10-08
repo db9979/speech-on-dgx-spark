@@ -31,6 +31,7 @@ All options for running without questions (`--mode api --asr 1.7b --tts 0.6b --y
 
 <!-- New version: add one line at the top here and in CHANGELOG.md, drop the oldest line here (keep 10). Details go to docs/de and docs/en, not into this README. -->
 
+- **V01.0.102** Bus and train: departures, connections and a delay note for the commute
 - **V01.0.101** README cleaned up, details in `docs/`, all versions in [CHANGELOG.md](CHANGELOG.md)
 - **V01.0.100** Home Assistant Assist over Wyoming: the Spark's speech recognition and voice for HA (port 31003)
 - **V01.0.99** Own speakers (ESP32-S3): firmware, setup over USB from the browser, updates through the Spark
@@ -40,7 +41,6 @@ All options for running without questions (`--mode api --asr 1.7b --tts 0.6b --y
 - **V01.0.95** Room mode improved (stop, timers, reminders, follow-up questions)
 - **V01.0.94** "Ich" window on the PC: sidebar scrolls
 - **V01.0.93** Weather (Open-Meteo), contacts (CardDAV), parcels from mail
-- **V01.0.92** A guide for every service in the panel, services in groups
 
 All versions: [CHANGELOG.md](CHANGELOG.md)
 

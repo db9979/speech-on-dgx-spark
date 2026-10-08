@@ -1005,6 +1005,8 @@ async def chat(request: Request):
         need.append("weather")
     if "parcels" in ex["run"] and re.search(r"(?i)\b(paket\w*|päckchen|lieferung\w*|sendung\w*|parcels?|packages?|deliver\w*)\b", ask_text):
         need.append("parcels")
+    if "transit" in ex["run"] and re.search(r"(?i)\b(bus|busse|bahn|s-?bahn|zug|züge|tram|straßenbahn|abfahrt\w*|verbindung\w*|fahrplan|train|departures?)\b", ask_text):
+        need.append("transit")
     if "tasks_show" in ex["run"] and re.search(r"(?i)(einkaufsliste|einkaufszettel|aufgabenliste|to-?do|\b(auf|von) (die|der|meine[rn]?) liste\b|shopping list)", ask_text):
         need.append("tasks")
     small = bool(SMALLTALK.fullmatch(ask_text))

@@ -122,3 +122,31 @@ async function tgAdmin(){if(!$('tgadmin'))return;let d={};try{d=await (await api
   $('tgsave').onclick=async()=>{$('tgstate').textContent=t('Frage Telegram …','Asking Telegram …');try{await api('/api/admin/telegram',xjson('PUT',{token:$('tgtoken').value.trim()}));$('tgtoken').value='';tgAdmin()}catch(e){$('tgstate').textContent=e.message}};
   $('tgdel').onclick=async()=>{if(!confirm(t('Token löschen? Der Bot antwortet dann nicht mehr.','Delete the token? The bot stops answering.')))return;try{await api('/api/admin/telegram',{method:'DELETE'});tgAdmin()}catch(e){$('tgstate').textContent=e.message}}}
 async function showExtras(){for(const f of [showWx,showCon,showPar,showTasks,showTg].concat(typeof showEsp==='function'?[showEsp]:[]))await f().catch(()=>{})}
+// ---------------------------------------------------------------- Bus und Bahn (transit.py)
+let TR_ON=false;
+const TRDAYS=['Mo','Di','Mi','Do','Fr','Sa','So'];
+async function showTr(){const box=$('trbox');if(!PROFILE||!TR_ON){box.innerHTML='';return}
+  let d={};try{d=await (await api('/api/profile/transit')).json()}catch{}
+  const h=d.home,c=d.commute;
+  box.innerHTML=`<div class="intro">${t('Frag „Wann fährt der nächste Bus?“ oder „Wie komme ich nach Karlsruhe?“. Die Zeiten kommen aus dem Fahrplandienst und werden als feste Sätze vorgelesen, (+3) heißt drei Minuten Verspätung.','Ask "When does the next bus leave?" or "How do I get to Karlsruhe?". Times come from the timetable service and are read as fixed sentences, (+3) means three minutes late.')}</div>
+    ${xsw('transit_on',t('Bus und Bahn für mich nutzen','Use bus and train for me'),t('Braucht deine Haltestelle.','Needs your stop.'))}
+    <label>${t('Deine Haltestelle','Your stop')}</label><div class="rowin"><input id="trq" value="${esc(h?h.name:'')}" placeholder="${t('z. B. Karlsbad Bahnhof','e.g. Ulm Hbf')}" autocomplete="off"><button class="b" type="button" id="trfind">${t('Suchen','Search')}</button></div>
+    <div id="trhits"></div>
+    <h3 style="margin:14px 0 4px">${t('Pendelstrecke (für Verspätungshinweise)','Commute (for delay notes)')}</h3>
+    <div class="fh" style="margin-top:0">${c?t('Nach ','To ')+esc(c.to.name)+t(' um ',' at ')+esc(c.at)+' · '+c.days.map(i=>TRDAYS[i]).join(', '):t('Keine eingestellt.','None set.')}</div>
+    <div class="rowin"><input id="trto" placeholder="${t('Ziel, z. B. Karlsruhe Hbf','Destination')}" autocomplete="off"><input id="trat" type="time" value="${esc(c?c.at:'07:30')}" style="max-width:120px"><button class="b" type="button" id="trtofind">${t('Suchen','Search')}</button></div>
+    <div class="row" style="flex-wrap:wrap;gap:6px;margin-top:6px">${TRDAYS.map((n,i)=>`<label class="chk"><input type="checkbox" data-trd="${i}"${(c?c.days:[0,1,2,3,4]).includes(i)?' checked':''}> ${n}</label>`).join('')}</div>
+    <div id="trtohits"></div>
+    ${c?`<div class="row" style="margin-top:6px"><button class="b" type="button" id="trnocom">${t('Pendelstrecke löschen','Remove commute')}</button></div>`:''}
+    <div class="row" style="margin-top:10px"><button class="b" type="button" id="trtest"${h?'':' disabled'}>${t('Abfahrten zeigen','Show departures')}</button></div>
+    <div class="fh" id="trmsg"></div>`;
+  xbind(box);
+  const hits=(id,list,pick)=>{$(id).innerHTML=list.length?`<div class="row" style="flex-wrap:wrap;gap:6px;margin-top:6px">${list.map((x,i)=>`<button class="b" type="button" data-i="${i}">${esc(x.name)}</button>`).join('')}</div>`:`<div class="fh">${t('Nichts gefunden.','Nothing found.')}</div>`;
+    $(id).querySelectorAll('[data-i]').forEach(b=>b.onclick=()=>pick(list[+b.dataset.i]))};
+  const search=async q=>(await (await api('/api/profile/transit/find',xjson('POST',{q}))).json()).stops;
+  const put=async body=>{try{await api('/api/profile/transit',xjson('PUT',body));await showTr();xmsg('trmsg',t('Gespeichert.','Saved.'))}catch(e){xmsg('trmsg',e.message,true)}};
+  $('trfind').onclick=async()=>{try{hits('trhits',await search($('trq').value),x=>put({home:x}))}catch(e){xmsg('trmsg',e.message,true)}};
+  $('trtofind').onclick=async()=>{try{const days=[...box.querySelectorAll('[data-trd]')].filter(x=>x.checked).map(x=>+x.dataset.trd);
+    hits('trtohits',await search($('trto').value),x=>put({commute:{to:x,at:$('trat').value,days}}))}catch(e){xmsg('trmsg',e.message,true)}};
+  if($('trnocom'))$('trnocom').onclick=()=>put({commute:null});
+  $('trtest').onclick=async()=>{xmsg('trmsg','…');try{xmsg('trmsg',(await (await api('/api/profile/transit/test',xjson('POST'))).json()).text)}catch(e){xmsg('trmsg',e.message,true)}}}

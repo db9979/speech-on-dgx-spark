@@ -227,7 +227,7 @@ def validate(new):
     ch = new["chat"]
     if ch.get("search_url") and not re.fullmatch(r"https?://\S+", ch["search_url"]):
         raise HTTPException(400, "SearXNG address must start with http:// or https://")
-    for k in ("weather_url", "geocode_url", "telegram_api"):
+    for k in ("weather_url", "geocode_url", "telegram_api", "transit_url"):
         if ch.get(k) and not re.fullmatch(r"https?://\S+", ch[k]):
             raise HTTPException(400, f"{k}: the address must start with http:// or https://")
     if ch.get("esp32_url") and not re.fullmatch(r"https?://[A-Za-z0-9.\-]+(?::\d{1,5})?/?", ch["esp32_url"]):

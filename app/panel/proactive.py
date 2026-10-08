@@ -39,7 +39,7 @@ KINDS = {"events": ("Termin-Vorlauf", 10, "pro_events"), "ha": ("Smart Home", 10
          "greet": ("Begrüßung", 3, "pro_greet"), "follow": ("Nachfrage", 1, "pro_follow"),
          "mail": ("Wichtige Mail", 10, "pro_mail"), "weather": ("Wetter", 1, "pro_weather"),
          "tidy": ("Postfach aufräumen", 2, "pro_tidy"), "bday": ("Geburtstag", 1, "pro_bday"),
-         "parcel": ("Paket kommt heute", 3, "pro_parcel")}
+         "parcel": ("Paket kommt heute", 3, "pro_parcel"), "transit": ("Bus und Bahn", 1, "pro_transit")}
 PAGE_ACTIVE = 75            # seconds since the page last asked: it is open, no push needed
 QUEUE_KEEP = 2 * 3600
 OFFER_SECONDS = 15 * 60     # an answer to a note counts this long after it
@@ -688,6 +688,26 @@ async def check_parcel(uid, p, now):
         await deliver(uid, "parcel", line, why="Versandmail in deinem Postfach", data=line[:300], mail=True)
 
 
+async def check_transit(uid, p, now):
+    """The commute train late or cancelled: checked every 5 minutes from 45 to 5 minutes before, once a day."""
+    import transit
+    st = state(uid)
+    c = transit.get(uid).get("commute")
+    day = now.strftime("%Y-%m-%d")
+    if not c or not transit.usable(uid) or now.weekday() not in c.get("days", []) or st.get("transit_day") == day \
+            or time.time() - st.get("transit_checked", 0) < 300:
+        return
+    hh, mm = map(int, c["at"].split(":"))
+    at = now.replace(hour=hh, minute=mm, second=0, microsecond=0)
+    if not at - datetime.timedelta(minutes=45) <= now <= at - datetime.timedelta(minutes=5) or blocked(uid, "transit", p, now):
+        return
+    _mut(uid, lambda s: s.update(transit_checked=time.time()))
+    note = await transit.commute_note(uid, now)
+    if note:
+        _mut(uid, lambda s: s.update(transit_day=day))
+        await deliver(uid, "transit", note[0], why="Fahrplan für deine Pendelstrecke", data=note[1][:300])
+
+
 # ---------------------------------------------------------------- the minute loop
 async def due_once(now=None):
     """Called once a minute: every check for every profile that switched it on."""
@@ -704,7 +724,8 @@ async def due_once(now=None):
                          ("follow", lambda: check_follow(uid, p, local) if p.get("pro_follow") else None),
                          ("weather", lambda: check_weather(uid, p, local) if p.get("pro_weather") else None),
                          ("bday", lambda: check_bday(uid, p, local) if p.get("pro_bday") else None),
-                         ("parcel", lambda: check_parcel(uid, p, local) if p.get("pro_parcel") else None)):
+                         ("parcel", lambda: check_parcel(uid, p, local) if p.get("pro_parcel") else None),
+                         ("transit", lambda: check_transit(uid, p, local) if p.get("pro_transit") else None)):
             try:
                 job = fn()
                 if job:
@@ -723,6 +744,7 @@ def status(uid):
     import calendars
     import contacts
     import parcels
+    import transit
     import weather
     import homeassistant
     import mail
@@ -740,7 +762,8 @@ def status(uid):
                     "mail": bool(cc.get("mail", False) and mail.get(uid)["accounts"]),
                     "search": bool(cc.get("search") and cc.get("search_url")),
                     "history": bool(cc.get("history", True)), "reminders": bool(cc.get("reminders", True)),
-                    "weather": weather.usable(uid), "contacts": contacts.usable(uid), "parcels": parcels.usable(uid)}}
+                    "weather": weather.usable(uid), "contacts": contacts.usable(uid), "parcels": parcels.usable(uid),
+                    "transit": bool(transit.usable(uid) and transit.get(uid).get("commute"))}}
 
 
 @router.get("/api/proactive", dependencies=[Depends(assistant), Depends(_on)])
