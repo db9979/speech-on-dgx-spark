@@ -26,11 +26,12 @@ CARRIERS = [("DHL", ("dhl.de", "dhl.com", "deutschepost.de", "dhl-news.de")),
 WEEKDAYS = ["Montag", "Dienstag", "Mittwoch", "Donnerstag", "Freitag", "Samstag", "Sonntag"]
 MONTHS = {m: i + 1 for i, m in enumerate(["januar", "februar", "märz", "april", "mai", "juni", "juli", "august",
                                            "september", "oktober", "november", "dezember"])}
-DELIVERED = re.compile(r"(?i)wurde (erfolgreich )?zugestellt|ist zugestellt|zugestellt am|erfolgreich zugestellt|"
+DELIVERED = re.compile(r"(?i)^\s*(zugestellt|geliefert|delivered)\s*:|wurde (erfolgreich )?zugestellt|ist zugestellt|zugestellt am|erfolgreich zugestellt|"
                        r"wurde geliefert|ist angekommen|abgegeben (bei|an)|\bdelivered\b")
 PICKUP = re.compile(r"(?i)abholbereit|zur abholung|abholen|packstation|filiale|paketshop|paket-?shop|ready for pick")
 TODAY = re.compile(r"(?i)heute (zugestellt|geliefert|zustell|bei dir|bei ihnen)|kommt heute|zustellung heute|"
-                   r"wird heute|lieferung heute|arriv\w* today|out for delivery|in zustellung")
+                   r"wird heute|lieferung heute|heute zugestellt|arriv\w* today|out for delivery|in zustellung|zustellung läuft|"
+                   r"(ist|sind|befindet sich) in der zustellung")
 TOMORROW = re.compile(r"(?i)kommt morgen|morgen (zugestellt|geliefert|bei dir|bei ihnen)|zustellung morgen|"
                       r"arriv\w* tomorrow")
 SHIPPED = re.compile(r"(?i)versandt|verschickt|unterwegs|auf dem weg|übergeben|verlässt|in transit|shipped|"
@@ -42,6 +43,9 @@ DATE_WORD = re.compile(r"(?i)(voraussichtlich|zustellung|lieferung|ankunft|kommt
 TRACK = re.compile(r"(?i)(?:sendungsnummer|sendungs-nr\.?|paketnummer|tracking(?:nummer| number)?|trackingnummer)"
                    r"\W{0,3}([A-Z0-9]{8,30})|\b(1Z[0-9A-Z]{16})\b")
 SHOP = re.compile(r"\bvon ([A-ZÄÖÜ0-9][\w&.\-]{1,24}(?: [A-ZÄÖÜ][\w&.\-]{1,20})?)(?= kommt| ist| wurde| wird|\s*$|[,!.:])")
+# Amazon sends many mails; only these subjects are about a parcel
+AMAZON = re.compile(r"(?i)versand|verschickt|unterwegs|zugestellt|zustellung|geliefert|lieferung|paket|abhol|"
+                    r"kommt|ankunft|shipped|delivered|delivery|arriving|out for")
 ITEM = re.compile(r"[„\"“']([^“”\"']{3,60})[“”\"']")
 
 
@@ -79,29 +83,38 @@ def _when(text, sent):
     return None
 
 
+def _status(s, sent):
+    if DELIVERED.search(s):
+        return "delivered", _when(s, sent) or sent
+    if PICKUP.search(s):
+        return "pickup", None
+    if TODAY.search(s):
+        return "today", sent
+    if TOMORROW.search(s):
+        return "date", sent + datetime.timedelta(days=1)
+    if _when(s, sent):
+        return "date", _when(s, sent)
+    if SHIPPED.search(s):
+        return "shipped", None
+    return "", None
+
+
 def classify(sender, subject, text, sent):
     """{carrier, shop, item, status, day, sent, track} of one shipping mail, or None."""
     who = carrier(sender)
     if not who:
         return None
     s = f"{subject}\n{text}"
-    if who == "Amazon" and not re.search(r"(?i)versand|verschickt|unterwegs|zugestellt|geliefert|lieferung|paket|shipped|delivered", subject):
-        return None   # order confirmations, offers ...
-    status, day = "", None
-    if DELIVERED.search(s):
-        status = "delivered"
-        day = _when(s, sent) or sent
-    elif PICKUP.search(s):
-        status = "pickup"
-    elif TODAY.search(s):
-        status, day = "today", sent
-    elif TOMORROW.search(s):
-        status, day = "date", sent + datetime.timedelta(days=1)
-    elif _when(s, sent):
+    if who == "Amazon" and not AMAZON.search(subject):
+        return None   # order confirmations ("Bestellt: ..."), offers ...
+    # the subject says the newest state ("In Zustellung: ..."); the body often lists all steps or the
+    # pick-up options, so it only counts when the subject says nothing
+    status, day = _status(subject, sent)
+    if status == "shipped" and _when(s, sent):        # "Paket unterwegs" + "Zustellung am 11.03." in the body
         status, day = "date", _when(s, sent)
-    elif SHIPPED.search(s):
-        status = "shipped"
-    else:
+    elif not status:
+        status, day = _status(s, sent)
+    if not status:
         return None
     t = TRACK.search(s)
     shop = SHOP.search(subject)

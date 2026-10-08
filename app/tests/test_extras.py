@@ -248,6 +248,16 @@ class Parcels(unittest.TestCase):
         x = c("Amazon.de <versandbestaetigung@amazon.de>", "Versandt: „USB-Kabel 2 m“", "Ihr Paket ist unterwegs.", self.SENT)
         self.assertEqual((x["carrier"], x["item"], x["status"]), ("Amazon", "USB-Kabel 2 m", "shipped"))
         self.assertIsNone(c("Shop <info@shop.de>", "Ihr Paket kommt heute", "", self.SENT))
+        # Amazon's German subjects; the body lists every step and the pick-up options, the subject wins
+        body = "Bestellt Versandt In Zustellung Zugestellt\nSie können Ihr Paket auch an einer Packstation abholen."
+        amz = "Amazon.de <shipment-tracking@amazon.de>"
+        x = c(amz, "In Zustellung: „diymore ESP32-S3 AI...“", body, self.SENT)
+        self.assertEqual((x["carrier"], x["item"], x["status"], x["day"]), ("Amazon", "diymore ESP32-S3 AI...", "today", "2026-03-09"))
+        self.assertEqual(parcels.sentence(x, self.SENT), "Amazon-Lieferung („diymore ESP32-S3 AI...“): kommt heute.")
+        self.assertEqual(c(amz, "Zugestellt: „diymore ESP32-S3 AI...“", body, self.SENT)["status"], "delivered")
+        self.assertEqual(c("Amazon.de <versandbestaetigung@amazon.de>", "Versandt: „diymore ESP32-S3 AI...“", body, self.SENT)["status"], "shipped")
+        self.assertEqual(c(amz, "Ihr Paket wird heute zugestellt", "", self.SENT)["status"], "today")
+        self.assertIsNone(c("Amazon.de <bestellbestaetigung@amazon.de>", "Bestellt: „diymore ESP32-S3 AI...“", body, self.SENT))
         say = parcels.sentence
         self.assertEqual(say(c("DHL <a@dhl.de>", "Ihr Paket von Zalando kommt heute", "", self.SENT), self.SENT),
                          "DHL-Paket von Zalando: kommt heute.")
