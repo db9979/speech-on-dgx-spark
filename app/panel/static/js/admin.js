@@ -244,7 +244,7 @@ function ulShow(){$('updlock').style.display='grid';$('updlock').className='moda
   $('ulhead').textContent=t('Update läuft','Update running');if(!ul.iv){ul.iv=setInterval(ulPoll,2000);ulPoll()}}
 function ulStop(){clearInterval(ul.iv);ul.iv=null}
 function ulFail(head,text,log,cancel){ulStop();$('updlock').className='modal updlock fail';$('ulhead').textContent=head;$('ultext').textContent=text;
-  $('ulnote').textContent=t('Die Dienste laufen mit der bisherigen Version weiter, solange nichts anderes dasteht.','The services keep running the previous version unless stated otherwise.');
+  $('ulnote').textContent=t('Schlägt ein Schritt vor dem Umschalten fehl, läuft die bisherige Version weiter; danach wird sie wieder eingespielt. Die Zeile oben sagt, was passiert ist.','If a step before the switch fails, the previous version keeps running; after it, the previous version is installed again. The line above says what happened.');
   if(log&&log.length){$('ullog').textContent=log.join('\n');$('ullog').style.display='block'}
   $('ulbtns').style.display='flex';$('ulcancel').style.display=cancel?'':'none'}
 async function ulPoll(){let p;try{const r=await fetch('/api/update/progress');if(!r.ok)throw 0;p=await r.json();ul.miss=0}

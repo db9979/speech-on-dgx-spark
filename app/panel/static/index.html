@@ -94,7 +94,7 @@
       <div id="chatdefaults"></div>
       <div class="savebar"><button class="b p savebtn" data-p="talk">Speichern</button><span class="savemsg"></span></div>
     </div>
-    <div class="card pane" id="pane-know"><h2 class="pt">Websuche</h2><div class="fh" style="margin-top:0">Über deine eigene SearXNG-Instanz; sie muss das JSON-Format erlauben (settings.yml: search.formats: [html, json]).</div>
+    <div class="card pane" id="pane-know"><h2 class="pt">Websuche</h2><div class="fh" style="margin-top:0">Über deine eigene SearXNG-Instanz. Am besten erlaubt sie das JSON-Format (settings.yml: search.formats: [html, json]); sonst liest das Panel die normale Ergebnisseite.</div>
       <label>Adresse deiner SearXNG-Instanz</label><input id="chat.search_url" placeholder="http://192.168.1.20:8080">
       <label>Treffer pro Suche</label><input id="chat.search_results" type="number" min="1" max="10"><div class="fh">1 bis 10.</div>
       <label>Seiten ganz lesen</label><input id="chat.search_pages" type="number" min="0" max="5"><div class="fh">0 bis 5; mehr ist genauer, aber langsamer.</div>
@@ -361,7 +361,7 @@
       <div id="updcommits" style="margin-top:8px"></div>
       <div class="row" style="margin-top:12px"><button class="b" id="updcheck">Jetzt prüfen</button><button class="b p" id="updgo" disabled>Update installieren</button><button class="b" id="updstop" style="display:none">Update abbrechen</button><span id="updmsg"></span></div>
       <div class="row" id="updprevrow" style="margin-top:8px;display:none"><button class="b" id="updprev">Zurück zur vorigen Version</button><span class="mut" id="updprevtxt" style="font-size:12px"></span></div>
-      <div class="mut" style="font-size:12px;margin-top:8px">Holt den neuesten Stand von GitHub und installiert ihn. Einstellungen, Modelle und Stimmen bleiben. Schlägt die Installation fehl, laufen die Dienste mit der alten Version weiter. Während des Updates starten die Dienste kurz neu.</div>
+      <div class="mut" style="font-size:12px;margin-top:8px">Holt den neuesten Stand von GitHub und installiert ihn. Einstellungen, Modelle und Stimmen bleiben. Vor dem Umschalten prüft ein Selbsttest die neue Version; schlägt er oder ein Schritt davor fehl, läuft die bisherige Version unverändert weiter. Geht nach dem Umschalten etwas schief, wird die bisherige Version wieder eingespielt. Während des Updates starten die Dienste kurz neu.</div>
     </div>
   </div>
   <div class="card"><h2>Qualitätstest</h2>
@@ -375,10 +375,10 @@
       <table style="margin-top:8px"><tbody id="livesteps"></tbody></table>
       <div class="row" style="margin-top:10px"><button class="b" id="livego">Jetzt prüfen</button><span id="livemsg" class="mut"></span></div></div>
     <div class="card"><h2>Sicherung</h2>
-      <div class="intro sm">Profile (Gedächtnis, Gespräche, Dokumente, Kalender, Smart Home), geklonte Stimmen, Einstellungen und Panel-Passwort. Jeden Tag und vor jedem Update automatisch, die letzten sieben bleiben.</div>
+      <div class="intro sm">Profile (Gedächtnis, Gespräche, Dokumente, Kalender, E-Mail-Konten, Smart Home, Stimmerkennung), geklonte Stimmen, Einstellungen und Panel-Passwort. Jeden Tag automatisch, die letzten sieben bleiben; dazu vor jedem Update, jeder Rückkehr zur vorigen Version und jedem Wiederherstellen, davon bleiben die letzten fünf.</div>
       <table style="margin-top:8px"><tbody id="baklist"></tbody></table>
       <div class="row" style="margin-top:10px"><button class="b" id="bakgo">Jetzt sichern</button><button class="b" id="bakup" type="button">Aus Datei wiederherstellen …</button><input type="file" id="bakfile" accept=".gz,.tgz,application/gzip" style="display:none"><span id="bakmsg"></span></div>
-      <div class="fh">Kalender-Passwörter und Home-Assistant-Tokens lassen sich nur auf diesem Spark wiederherstellen; auf einem anderen müssen sie neu eingegeben werden.</div></div>
+      <div class="fh">Kalender- und Mail-Passwörter und Home-Assistant-Tokens lassen sich nur auf diesem Spark wiederherstellen; auf einem anderen müssen sie neu eingegeben werden. Beim Wiederherstellen werden die Einstellungen wie auf der Einstellungsseite geprüft, und es wird alles getauscht oder nichts.</div></div>
   </div>
   <div class="card"><h2>Leistung messen</h2>
     <div class="intro sm">Misst Zeit bis zum ersten Ton, Geschwindigkeit bei einer und bei mehreren gleichzeitigen Anfragen und den Speicher der Dienste. Dauert ein bis zwei Minuten und belastet die GPU in der Zeit. Auf der Konsole: <code>sudo speech-spark-bench</code></div>

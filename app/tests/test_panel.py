@@ -1323,3 +1323,45 @@ class Room(unittest.TestCase):
             self.assertEqual(a.post("/api/room/pause", json={"room": "cal123", "quiet": 3}).json(), {})
         finally:
             proactive._llm, calendars.get, calendars.add_event = old
+
+
+class Gaps(unittest.TestCase):
+    """Parts that had no test of their own before."""
+
+    def test_update_locks_changes_but_not_the_assistant(self):
+        import update
+        p = profile("Udo")
+        update._upd_cache.update(t=time.time() + 3600, running=True)
+        try:
+            self.assertEqual(p.delete("/api/profile/memory").status_code, 423)
+            self.assertEqual(ADMIN.post("/api/backups").status_code, 423)
+            self.assertEqual(p.post("/api/chat", json={"messages": [{"role": "user", "content": "Hallo"}]}).status_code, 200)
+        finally:
+            update._upd_cache.update(t=0, running=False)
+        self.assertEqual(p.delete("/api/profile/memory").status_code, 200)
+
+    def test_update_progress_shares(self):
+        import update
+        with open(update.UPDATE_PROGRESS, "w") as f:
+            json.dump({"step": 3, "text": "Self-test of the panel", "started": 1, "updated": 2, "done": False}, f)
+        try:
+            p = update.update_progress()
+            self.assertEqual(p["text"], "Selbsttest")
+            self.assertGreater(p["percent"], 50)
+        finally:
+            os.remove(update.UPDATE_PROGRESS)
+
+    def test_documents_text_and_limits(self):
+        p = profile("Doris")
+        self.assertEqual(p.post("/api/profile/docs", files={"file": ("a.exe", b"MZ\0\0")}).status_code, 400)
+        r = p.post("/api/profile/docs", files={"file": ("notiz.md", "Die Gießkanne steht im Schuppen. ".encode() * 4)})
+        self.assertEqual(r.status_code, 200, r.text)
+        self.assertIn("Schuppen", answer(ask(p, 'TOOL document_search {"query": "Gießkanne"}')))
+
+    def test_watch_needs_a_device_key(self):
+        g = TestClient(panel.app)
+        helpers.set_config(public=False)
+        try:
+            self.assertIn(g.post("/api/watch/ask", json={"text": "Hallo"}).status_code, (401, 403, 422))
+        finally:
+            helpers.set_config(public=True)
