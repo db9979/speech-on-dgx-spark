@@ -399,7 +399,8 @@ async def read_audio(file):
 
 
 @router.post("/api/test/asr", dependencies=[Depends(assistant)])
-async def test_asr(request: Request, file: UploadFile = File(...), language: str = Form("auto"), wake: str = Form("")):
+async def test_asr(request: Request, file: UploadFile = File(...), language: str = Form("auto"), wake: str = Form(""),
+                   room: str = Form("")):
     cfg = load_config()
     data = await read_audio(file)
     # voices are only told apart for a signed-in profile or device: a guest page gets no token that
@@ -412,9 +413,16 @@ async def test_asr(request: Request, file: UploadFile = File(...), language: str
         form["prompt"] = f"{wake[:40]}. {cfg['asr'].get('context') or ''}".strip()
     # speaker identification runs on the CPU while the GPU transcribes
     spk = None
+    th = speakers.STRICTNESS.get(cfg.get("chat", {}).get("speaker_strictness"), 0.75)
     if cfg.get("chat", {}).get("speaker_id", False) and not wake and me:
-        th = speakers.STRICTNESS.get(cfg["chat"].get("speaker_strictness"), 0.75)
         spk = asyncio.create_task(asyncio.to_thread(speakers.identify, data, th))
+    # room mode: while a proposal waits for a yes, whose voice this is (only the profile may say yes)
+    import room as room_mode
+    rv = None
+    if room and me:
+        room_mode.set_voice(me["id"], room, None)
+        if room_mode.wants_voice(me["id"], room):
+            rv = asyncio.create_task(asyncio.to_thread(speakers.identify, data, th))
     try:
         async with httpx.AsyncClient(timeout=600) as c:
             r = await c.post(f"http://127.0.0.1:{cfg['asr']['port']}/v1/audio/transcriptions",
@@ -424,6 +432,11 @@ async def test_asr(request: Request, file: UploadFile = File(...), language: str
         if spk:
             spk.cancel()
         raise HTTPException(503, "asr_down: the speech recognition service does not answer")
+    if rv is not None:
+        try:
+            room_mode.set_voice(me["id"], room, (await rv)[0] or "")
+        except Exception:
+            room_mode.set_voice(me["id"], room, "")
     if spk is None or r.status_code != 200:
         return Response(r.content, status_code=r.status_code, media_type="application/json")
     out = r.json()

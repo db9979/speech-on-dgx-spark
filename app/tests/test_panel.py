@@ -1327,6 +1327,149 @@ class Room(unittest.TestCase):
             proactive._llm, calendars.get, calendars.add_event = old
 
 
+    def test_more_cues(self):
+        import datetime
+        import room
+        self.assertEqual(room.timer_cue("Die Pizza braucht noch 12 Minuten."), {"minutes": 12, "what": "Pizza"})
+        self.assertEqual(room.timer_cue("Der Kuchen muss eine halbe Stunde in den Ofen.")["minutes"], 30)
+        self.assertIsNone(room.timer_cue("Das hat 20 Minuten gedauert."))
+        self.assertIsNone(room.timer_cue("Wir kommen in zehn Minuten."))
+        self.assertEqual(room.forget_cue("Ich darf nicht vergessen, Oma anzurufen."), "Oma anrufen")
+        self.assertEqual(room.forget_cue("Wir dürfen nicht vergessen, morgen um 9 Uhr den Müll rauszustellen."),
+                         "den Müll rausstellen")
+        self.assertIsNone(room.forget_cue("Das vergesse ich nie."))
+        now = datetime.datetime(2026, 1, 5, 15, 0)
+        self.assertEqual(room.remind_at("um 6 Uhr", now), now.replace(hour=18))
+        self.assertEqual(room.remind_at("morgen", now), datetime.datetime(2026, 1, 6, 8, 0))
+        self.assertEqual(room.remind_at("irgendwann", now), now.replace(hour=16))
+        self.assertEqual(room.conversion("Wie viel sind 180 Grad in Fahrenheit?"), "180 Grad Celsius sind 356 Grad Fahrenheit.")
+        self.assertEqual(room.conversion("Wie viele Zentimeter sind 5 Zoll?"), "5 Zoll sind etwa 12,7 Zentimeter.")
+        self.assertIsNone(room.conversion("200 Gramm in Tassen"))         # weight is not volume
+        self.assertTrue(room.needs_context("Wann ist der gestorben?"))
+        self.assertFalse(room.needs_context("Wann wurde eigentlich der Eiffelturm gebaut?"))
+        before = ["Wir haben gestern Casablanca geschaut.", "Humphrey Bogart war toll."]
+        self.assertEqual(room.full_question("Wann ist der gestorben?", before, "Wann ist Humphrey Bogart gestorben?"),
+                         "Wann ist Humphrey Bogart gestorben?")
+        self.assertIsNone(room.full_question("Wann ist der gestorben?", before, "Wann ist Cary Grant gestorben?"))
+
+    def test_timer_reminder_and_conversion(self):
+        import room
+        a = profile("Rolf")
+        uid = a.get("/api/whoami").json()["profile"]["id"]
+        b = {"room": "tim123"}
+        a.post("/api/room/heard", json=dict(b, text="Wie viel sind 180 Grad in Fahrenheit?"))
+        self.assertEqual(a.post("/api/room/pause", json=dict(b, quiet=3)).json()["say"],
+                         "180 Grad Celsius sind 356 Grad Fahrenheit.")
+        for r in room.ROOMS.values():
+            r["said"] = 0
+        a.post("/api/room/heard", json=dict(b, text="Die Pizza braucht noch 12 Minuten."))
+        self.assertEqual(a.post("/api/room/pause", json=dict(b, quiet=3)).json()["say"],
+                         "Soll ich einen Timer über 12 Minuten stellen?")
+        self.assertEqual(profiles.reminders(uid), [])                  # nothing set yet
+        r = a.post("/api/room/heard", json=dict(b, text="Ja, bitte.")).json()
+        self.assertEqual(r["say"], "Der Timer läuft.")
+        self.assertEqual(r["reminder"]["text"], "Pizza ist fertig")
+        self.assertAlmostEqual(r["reminder"]["due"] / 1000, time.time() + 720, delta=5)
+        self.assertEqual([x["text"] for x in profiles.reminders(uid)], ["Pizza ist fertig"])
+        for r in room.ROOMS.values():
+            r["said"] = 0
+        a.post("/api/room/heard", json=dict(b, text="Ich darf nicht vergessen, Oma anzurufen.", tz="Europe/Berlin"))
+        say = a.post("/api/room/pause", json=dict(b, quiet=3, tz="Europe/Berlin")).json()["say"]
+        self.assertTrue(say.startswith("Soll ich dich um ") and say.endswith("erinnern: Oma anrufen?"), say)
+        self.assertEqual(a.post("/api/room/heard", json=dict(b, text="Nein.")).json()["say"], "Gut, dann nicht.")
+        self.assertEqual(len(profiles.reminders(uid)), 1)
+
+    def test_question_completed_from_what_was_said(self):
+        import proactive
+        a = profile("Rike")
+        asked = []
+
+        async def fake(system, user, max_tokens=300):
+            asked.append(user)
+            if system == __import__("room").CONTEXT_SYSTEM:
+                return "Wann ist Humphrey Bogart gestorben?"
+            return "Humphrey Bogart starb 1957." if "Humphrey Bogart gestorben" in user else "NICHTS"
+        old, proactive._llm = proactive._llm, fake
+        try:
+            b = {"room": "ctx123"}
+            for x in ("Wir haben gestern Casablanca geschaut.", "Humphrey Bogart war toll.", "Wann ist der gestorben?"):
+                a.post("/api/room/heard", json=dict(b, text=x))
+            self.assertEqual(a.post("/api/room/pause", json=dict(b, quiet=3)).json()["say"], "Humphrey Bogart starb 1957.")
+        finally:
+            proactive._llm = old
+
+    def test_only_the_owners_voice_says_yes(self):
+        import room
+        import speakers
+        a = profile("Ronja")
+        uid = a.get("/api/whoami").json()["profile"]["id"]
+        other = profile("Rudi").get("/api/whoami").json()["profile"]["id"]
+        a.put("/api/profile/homeassistant", json={"url": f"http://127.0.0.1:{helpers.HA_PORT}", "token": helpers.HA_TOKEN})
+        helpers.set_config(speaker_id=True)
+        old = speakers.samples
+        speakers.samples = lambda u: [[0.0]] if u == uid else []
+        try:
+            b = {"room": "own123"}
+            a.post("/api/room/heard", json=dict(b, text="Wir brauchen noch Zucker."))
+            a.post("/api/room/pause", json=dict(b, quiet=3))
+            self.assertTrue(room.wants_voice(uid, "own123"))
+            n = len(helpers.TODO)
+            room.set_voice(uid, "own123", other)                       # somebody else's yes
+            self.assertEqual(a.post("/api/room/heard", json=dict(b, text="Ja.")).json()["say"], "Das muss Ronja selbst bestätigen.")
+            room.set_voice(uid, "own123", "")                          # voice not recognized
+            self.assertTrue(a.post("/api/room/heard", json=dict(b, text="Ja.")).json()["say"].startswith("Ich habe deine Stimme"))
+            self.assertEqual(len(helpers.TODO), n)
+            room.set_voice(uid, "own123", uid)
+            self.assertEqual(a.post("/api/room/heard", json=dict(b, text="Ja, mach das.")).json()["say"],
+                             "Steht auf der Einkaufsliste: Zucker.")
+        finally:
+            speakers.samples = old
+            helpers.set_config(speaker_id=False)
+
+
+    def test_stop_quiet_second_look_and_summary(self):
+        import proactive
+        import room
+        a = profile("Rosa")
+        b = {"room": "stp123"}
+        a.post("/api/room/heard", json=dict(b, text="Wie viel sind 10 Meilen in Kilometer?"))
+        self.assertEqual(a.post("/api/room/pause", json=dict(b, quiet=3)).json()["say"], "10 Meilen sind etwa 16,1 Kilometer.")
+        # while (or just after) it speaks: "Stopp" ends it, "Nicht jetzt" keeps it quiet
+        self.assertTrue(a.post("/api/room/heard", json=dict(b, text="Stopp!")).json()["stop"])
+        self.assertTrue(a.post("/api/room/heard", json=dict(b, text="Nicht jetzt.")).json()["stop"])
+        for r in room.ROOMS.values():
+            r["said"] = 0
+        self.assertFalse(a.post("/api/room/heard", json=dict(b, text="Wie viel sind 5 Zoll in Zentimeter?")).json()["wait"])
+        self.assertEqual(a.post("/api/room/pause", json=dict(b, quiet=3)).json(), {})
+        # the model's second look counts only with a quote that was said
+        answers = [json.dumps({"kind": "question", "quote": "wie hoch ist das Ding in Paris"}),     # not said
+                   json.dumps({"kind": "shopping", "quote": "die Brötchen sind alle weg", "items": ["Brötchen", "Wein"]})]
+
+        async def fake(system, user, max_tokens=300):
+            return answers.pop(0) if system == room.DETECT_SYSTEM else "NICHTS"
+        old, proactive._llm = proactive._llm, fake
+        a.put("/api/profile/homeassistant", json={"url": f"http://127.0.0.1:{helpers.HA_PORT}", "token": helpers.HA_TOKEN})
+        try:
+            d = dict(b, room="det123", detect=True)
+            for x in ("Wir waren in Paris.", "Der Turm dort war beeindruckend."):
+                r = a.post("/api/room/heard", json=dict(d, text=x)).json()
+            self.assertTrue(r["wait"])
+            self.assertEqual(a.post("/api/room/pause", json=dict(d, quiet=3)).json(), {})
+            for x in room.ROOMS.values():
+                x["detect"] = 0
+            for x in ("Oh, die Brötchen sind alle weg, glaube ich.", "Schade."):
+                a.post("/api/room/heard", json=dict(d, text=x))
+            self.assertEqual(a.post("/api/room/pause", json=dict(d, quiet=3)).json()["say"],
+                             "Soll ich Brötchen auf die Einkaufsliste setzen?")         # "Wein" was never said
+        finally:
+            proactive._llm = old
+        # when room mode ends: what it said, not what it heard
+        out = a.post("/api/room/stop", json={"room": "stp123"}).json()["summary"]
+        self.assertEqual([x["text"] for x in out], ["10 Meilen sind etwa 16,1 Kilometer."])
+        self.assertNotIn("Meilen in Kilometer?", json.dumps(out, ensure_ascii=False))
+        self.assertEqual(a.post("/api/room/stop", json={"room": "stp123"}).json()["summary"], [])
+
+
 class Gaps(unittest.TestCase):
     """Parts that had no test of their own before."""
 

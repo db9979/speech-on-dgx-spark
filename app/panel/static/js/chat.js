@@ -71,7 +71,7 @@ async function startListening(o={}){stopBarge();stopAnswer();chat.turnWait=null;
 // cancellation removes most of the assistant's own voice). A recorder starts at the first sign of
 // speech so the beginning is not lost; if the speech holds for 250 ms the answer stops and that
 // recording becomes the next question, otherwise it is thrown away.
-function startBarge(){if(chat.barge||!chat.stream||!S.barge)return;
+function startBarge(){if(chat.barge||!chat.stream||!S.barge||(window.room&&room.speaking))return;   // room mode listens for "Stopp" itself
   const ctx=audioCtx(),src=ctx.createMediaStreamSource(chat.stream),an=ctx.createAnalyser();an.fftSize=1024;src.connect(an);
   const buf=new Float32Array(an.fftSize),ob=new Float32Array(chat.out.fftSize),floor=Math.max(chat.floor||0.01,0.005);
   const mime=['audio/webm;codecs=opus','audio/webm','audio/mp4','audio/ogg'].find(m=>window.MediaRecorder&&MediaRecorder.isTypeSupported(m))||'';
@@ -244,7 +244,7 @@ function chime(){try{const ctx=audioCtx(),o=ctx.createOscillator(),g=ctx.createG
   g.gain.setValueAtTime(0.0001,ctx.currentTime);g.gain.exponentialRampToValueAtTime(0.2,ctx.currentTime+0.02);g.gain.exponentialRampToValueAtTime(0.0001,ctx.currentTime+0.18);
   o.start();o.stop(ctx.currentTime+0.2)}catch{}}
 async function checkWake(chunks,rate){wake.busy=true;try{
-  const fd=new FormData();fd.append('file',pcmWav(chunks,rate),'wake.wav');fd.append('language',(CFG&&CFG.asr.default_language)||'auto');fd.append('wake','Hey Spark');
+  const fd=new FormData();fd.append('file',pcmWav(chunks,rate),'wake.wav');fd.append('language',(CFG&&CFG.asr.default_language)||'auto');fd.append('wake','Hey Spark');if(window.room&&room.on)fd.append('room',room.id);
   const text=((await (await api('/api/test/asr',{method:'POST',body:fd})).json()).text||'').trim();
   const m=text&&matchWake(text);if(!m){if(window.room&&room.on&&text)room.heard(text);return}if(!wake.on)return;
   if(m.rest.split(/\s+/).filter(Boolean).length>=2){wake.busy=false;ask(m.rest,null)}
@@ -259,13 +259,15 @@ async function startWake(){if(wake.on)return;
   wake.node.onaudioprocess=e=>{const x=new Float32Array(e.inputBuffer.getChannelData(0)),dt=x.length/ctx.sampleRate;
     let s=0;for(const v of x)s+=v*v;const rms=Math.sqrt(s/x.length);
     const inRoom=window.room&&room.on;if(inRoom&&rms>Math.max(0.02,wake.floor*3))room.lastSpeech=Date.now();
-    if(!(inRoom?room.idle():wakeIdle())){wake.seg=null;wake.ring=[];wake.voiced=0;return}
-    const thr=Math.max(0.02,wake.floor*3);
+    // in room mode it also listens while it speaks itself, for a short "Stopp" or "Nicht jetzt"
+    const over=inRoom&&room.speaking&&!chat.rec;
+    if(!(inRoom?room.idle()||over:wakeIdle())){wake.seg=null;wake.ring=[];wake.voiced=0;return}
+    const thr=over?Math.max(0.06,wake.floor*6):Math.max(0.02,wake.floor*3);
     if(!wake.seg){wake.ring.push(x);if(wake.ring.length>4)wake.ring.shift();     // ~0.35 s before the speech
       if(rms>thr){wake.voiced+=dt;if(wake.voiced>=0.08){wake.seg=wake.ring.slice();wake.quiet=0;wake.len=0}}
       else{wake.voiced=0;wake.floor=wake.floor*0.95+rms*0.05}}
     else{wake.seg.push(x);wake.len+=dt;wake.quiet=rms>thr?0:wake.quiet+dt;
-      if(wake.quiet>0.7||wake.len>(inRoom?12:5)){const seg=wake.seg;wake.seg=null;wake.voiced=0;if(wake.len>0.4)(inRoom?room.enqueue(seg,ctx.sampleRate):checkWake(seg,ctx.sampleRate))}}};
+      if(wake.quiet>0.7||wake.len>(over?3:inRoom?12:5)){const seg=wake.seg,len=wake.len;wake.seg=null;wake.voiced=0;if(len>0.4&&!(over&&len>=3))(inRoom?room.enqueue(seg,ctx.sampleRate):checkWake(seg,ctx.sampleRate))}}};
   if(ctx.state==='suspended'){chatSay(t('Einmal tippen, dann lauscht der Assistent.','Tap once, then the assistant listens.'));document.addEventListener('pointerdown',()=>ctx.resume(),{once:true})}
   keepAwake();$('wakeind').hidden=false}
 function stopWake(){wake.on=false;if(wake.node){wake.node.onaudioprocess=null;try{wake.src.disconnect();wake.node.disconnect()}catch{}}wake.node=wake.src=wake.seg=null;
