@@ -326,3 +326,157 @@ class Stage2(unittest.TestCase):
         self.assertEqual(w.count(">>>"), 1)
         self.assertIn("reminder_set", chat.LOCKED_OUTSIDE)
         self.assertIn("mail_draft", chat.LOCKED_OUTSIDE)
+
+
+def _set_panel(**kw):
+    with open(os.environ["SPEECH_SPARK_CONFIG"]) as f:
+        c = json.load(f)
+    old = {k: c["panel"].get(k) for k in kw}
+    c["panel"].update(kw)
+    with open(os.environ["SPEECH_SPARK_CONFIG"], "w") as f:
+        json.dump(c, f)
+    return old
+
+
+class _Echo:
+    """A tiny web server on 127.0.0.1: /auth says whether a login header came, /bomb is packed zeros."""
+
+    def __enter__(self):
+        import gzip
+        import http.server
+        import threading
+        bomb = gzip.compress(b"\0" * (30 * 1024 * 1024))
+
+        class H(http.server.BaseHTTPRequestHandler):
+            def do_GET(self):
+                body = (b"yes" if self.headers.get("Authorization") else b"no") if self.path == "/auth" else bomb
+                self.send_response(200)
+                if self.path != "/auth":
+                    self.send_header("Content-Encoding", "gzip")
+                self.send_header("Content-Length", str(len(body)))
+                self.end_headers()
+                self.wfile.write(body)
+
+            def log_message(self, *a):
+                pass
+        self.srv = http.server.ThreadingHTTPServer(("127.0.0.1", 0), H)
+        threading.Thread(target=self.srv.serve_forever, daemon=True).start()
+        self.port = self.srv.server_address[1]
+        return self
+
+    def __exit__(self, *a):
+        self.srv.shutdown()
+
+
+class Stage3(unittest.TestCase):
+    """Network and load (stage 3 of the plan)."""
+
+    def setUp(self):
+        import guard
+        guard.reset()
+
+    tearDown = setUp
+
+    def test_addresses_by_level(self):
+        import netguard as n
+        old = _set_panel(allow_lan=False)
+        try:
+            self.assertIsNotNone(n.allowed("192.168.1.20", 443, n.USER))
+            self.assertIsNone(n.allowed("192.168.1.20", 8123, n.HOME))
+            self.assertIsNotNone(n.allowed("10.0.0.1", 443, n.PUBLIC))
+            self.assertIsNone(n.allowed("8.8.8.8", 443, n.PUBLIC))
+            for ip, port in (("169.254.169.254", 80), ("127.0.0.1", 31001), ("::ffff:127.0.0.1", 30000), ("0.0.0.0", 80)):
+                self.assertIsNotNone(n.allowed(ip, port, n.HOME), ip)
+            with self.assertRaises(n.Blocked):
+                n.resolve("127.0.0.1", 993, n.USER)
+            _set_panel(allow_lan=True)
+            self.assertIsNone(n.allowed("192.168.1.20", 443, n.USER))
+        finally:
+            _set_panel(**old)
+
+    def test_login_data_only_to_its_site(self):
+        import asyncio
+        import netguard as n
+        self.assertTrue(n.same_site("p63-caldav.icloud.com", "caldav.icloud.com"))
+        self.assertFalse(n.same_site("evil.com", "caldav.icloud.com"))
+        self.assertFalse(n.same_site("a.co.uk", "b.co.uk"))
+        with _Echo() as e:
+            async def get(origin, url):
+                async with n.client(n.USER, origin=origin, auth=("u", "p")) as c:
+                    return (await c.get(url)).text
+            self.assertEqual(asyncio.run(get(f"http://127.0.0.1:{e.port}/", f"http://127.0.0.1:{e.port}/auth")), "yes")
+            self.assertEqual(asyncio.run(get(f"http://localhost:{e.port}/", f"http://127.0.0.1:{e.port}/auth")), "no")
+            self.assertEqual(asyncio.run(get(f"https://127.0.0.1:{e.port}/", f"http://127.0.0.1:{e.port}/auth")), "no")
+
+    def test_packed_answer_is_cut(self):
+        import asyncio
+        import netguard as n
+        with _Echo() as e:
+            async def get():
+                async with n.client(n.USER, max_bytes=5 * 1024 * 1024) as c:
+                    return await c.get(f"http://127.0.0.1:{e.port}/bomb")
+            with self.assertRaises(n.TooLarge):
+                asyncio.run(get())
+
+    def test_speech_text_is_fast_and_capped(self):
+        import textnorm
+        t = time.time()
+        textnorm.clean_text("a" + "\n" * 40000 + " ," * 20000 + "b")
+        self.assertLess(time.time() - t, 1.0)
+        self.assertLessEqual(textnorm.MAX_INPUT, 20000)
+
+    def test_reference_audio_only_inline(self):
+        import tts_proxy
+        from fastapi import HTTPException
+        for bad in ("http://192.168.1.1/x.wav", "file:///etc/shadow", "data:audio/wav;base64," + "A" * (16 * 1024 * 1024)):
+            with self.assertRaises(HTTPException):
+                tts_proxy.check_reference({"ref_audio": bad})
+        tts_proxy.check_reference({"ref_audio": "data:audio/wav;base64,UklGRg=="})
+
+    def test_cors_only_with_key(self):
+        from starlette.applications import Starlette
+        from starlette.responses import PlainTextResponse
+        from starlette.routing import Route
+        import common
+        app = Starlette(routes=[Route("/v1/x", lambda r: PlainTextResponse("ok"))])
+        app.add_middleware(common.KeyedCORS)
+        c = TestClient(app)
+        pre = {"origin": "http://evil.example", "access-control-request-method": "POST"}
+        self.assertIn("access-control-allow-origin", c.options("/v1/x", headers=pre).headers)  # tests set a key
+        with open(os.environ["SPEECH_SPARK_CONFIG"]) as f:
+            cfg = json.load(f)
+        key = cfg["api"]["key"]
+        cfg["api"]["key"] = ""
+        with open(os.environ["SPEECH_SPARK_CONFIG"], "w") as f:
+            json.dump(cfg, f)
+        try:
+            self.assertNotIn("access-control-allow-origin", c.options("/v1/x", headers=pre).headers)
+            # and the panel refuses an empty key while the services listen in the network
+            new = ADMIN.get("/api/config").json()
+            new["api"]["key"] = ""
+            self.assertEqual(ADMIN.put("/api/config", json=new).status_code, 400)
+        finally:
+            cfg["api"]["key"] = key
+            with open(os.environ["SPEECH_SPARK_CONFIG"], "w") as f:
+                json.dump(cfg, f)
+
+    def test_load_limits(self):
+        import guard
+        from fastapi import HTTPException
+        old = dict(guard.RATE)
+        guard.RATE["chat"] = (3, 6)
+        try:
+            g = TestClient(panel.app, client=("198.51.100.77", 1))
+            helpers.set_config(public=True)
+            codes = [g.post("/api/chat", json={"messages": [{"role": "user", "content": "Hallo"}]}).status_code
+                     for _ in range(4)]
+            self.assertEqual(codes, [200, 200, 200, 429])
+        finally:
+            guard.RATE.update(old)
+            helpers.set_config(public=False)
+        slots = [guard.Slot("asr") for _ in range(guard.BUSY["asr"])]
+        with self.assertRaises(HTTPException):
+            guard.Slot("asr")
+        for s in slots:
+            s.release()
+        guard.Slot("asr").release()

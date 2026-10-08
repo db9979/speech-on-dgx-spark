@@ -13,6 +13,7 @@ import time
 import numpy as np
 
 JOB_TTL = 600          # seconds a finished answer stays fetchable
+MAX_RUNNING = 8        # answers being made at once (each one runs the LLM and TTS)
 MAX_AUDIO = 6000       # ADPCM bytes per poll (1.5 s of speech)
 
 STEPS = [7, 8, 9, 10, 11, 12, 13, 14, 16, 17, 19, 21, 23, 25, 28, 31, 34, 37, 41, 45, 50, 55, 60, 66,

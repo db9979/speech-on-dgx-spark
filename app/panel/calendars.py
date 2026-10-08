@@ -24,6 +24,7 @@ import httpx
 import icalendar
 import recurring_ical_events
 
+import netguard
 import profiles
 import vault
 
@@ -218,15 +219,19 @@ async def _fetch(d, start, end):
     """iCal texts of all events overlapping [start, end) (UTC datetimes); number of calendars."""
     url = d["url"]
     auth = (d["user"], d.get("password", "")) if d.get("user") else None
-    async with httpx.AsyncClient(timeout=httpx.Timeout(20, connect=8), auth=auth, follow_redirects=True,
-                                 headers={"User-Agent": "speech-on-dgx-spark"}) as c:
+    web = re.sub(r"^webcals?://", "https://", url, flags=re.I)
+    async with netguard.client(netguard.USER, origin=web, timeout=httpx.Timeout(20, connect=8), auth=auth,
+                               follow_redirects=True, headers={"User-Agent": "speech-on-dgx-spark"}) as c:
         if re.match(r"webcals?://", url, re.I):
             # webcal:// is a subscription link; iCloud, Google and most others serve it over https only
+            # (plain http only for a link without login data: a password never goes unencrypted)
             rest = re.sub(r"^webcals?://", "", url, flags=re.I)
             try:
                 url = "https://" + rest
                 r = await c.get(url)
             except (httpx.ConnectError, httpx.ConnectTimeout):
+                if auth:
+                    raise
                 url = "http://" + rest
                 r = await c.get(url)
         else:
@@ -482,8 +487,8 @@ async def add_event(uid, item):
         if re.match(r"webcals?://", d["url"], re.I) or re.search(r"\.ics(\?|$)", d["url"], re.I):
             continue
         auth = (d["user"], d.get("password", "")) if d.get("user") else None
-        async with httpx.AsyncClient(timeout=httpx.Timeout(20, connect=8), auth=auth, follow_redirects=True,
-                                     headers={"User-Agent": "speech-on-dgx-spark"}) as c:
+        async with netguard.client(netguard.USER, origin=d["url"], timeout=httpx.Timeout(20, connect=8), auth=auth,
+                                   follow_redirects=True, headers={"User-Agent": "speech-on-dgx-spark"}) as c:
             try:
                 cals = await _calendars(c, d["url"])
             except Exception as e:

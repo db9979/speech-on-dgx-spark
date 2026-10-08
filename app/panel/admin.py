@@ -234,6 +234,9 @@ def validate(new):
                 raise HTTPException(400, f"unknown key {sec}.{k}")
     if not re.fullmatch(r"[A-Za-z0-9_\-]*", new["api"]["key"]):
         raise HTTPException(400, "API key: letters, digits, _ and - only")
+    if not new["api"]["key"] and not all(new[s].get("host") in ("127.0.0.1", "::1", "localhost") for s in ("asr", "tts")):
+        raise HTTPException(400, "API key: required while speech recognition or output listen in the network "
+                                 "(host not 127.0.0.1); press Erzeugen")
     ch = new["chat"]
     if ch.get("search_url") and not re.fullmatch(r"https?://\S+", ch["search_url"]):
         raise HTTPException(400, "SearXNG address must start with http:// or https://")
@@ -291,6 +294,8 @@ def validate(new):
         ports.append(a["engine_port"])
     if t.get("backend") == "vllm-omni":
         ports += [t["engine_port"], t["voicedesign_port"]]
+    if not isinstance(new["panel"].get("allow_lan", False), bool):
+        raise HTTPException(400, "allow_lan must be true or false")
     tp = new["panel"].get("trusted_proxies", [])
     if not isinstance(tp, list) or len(tp) > 10 or not all(isinstance(x, str) and _is_ip(x) for x in tp):
         raise HTTPException(400, "trusted_proxies: a list of up to 10 IP addresses")
@@ -347,7 +352,7 @@ def validate(new):
 
 SENSITIVE = [("api", "key"), ("chat", "llm_url"), ("chat", "llm_key"), ("chat", "telegram_api"),
              ("chat", "search_url"), ("chat", "public"), ("chat", "esp32_url"), ("chat", "esp32_repo"),
-             ("chat", "mfa"), ("panel", "trusted_proxies"), ("asr", "model"), ("asr", "aligner_model"),
+             ("chat", "mfa"), ("panel", "trusted_proxies"), ("panel", "allow_lan"), ("asr", "model"), ("asr", "aligner_model"),
              ("tts", "model"), ("tts", "voicedesign_model")]
 
 
@@ -443,6 +448,19 @@ async def read_audio(file):
 @router.post("/api/test/asr", dependencies=[Depends(assistant)])
 async def test_asr(request: Request, file: UploadFile = File(...), language: str = Form("auto"), wake: str = Form(""),
                    room: str = Form("")):
+    """Load limits (per caller per minute, guests only a few at once), then the transcription."""
+    me = profiles.current(request)
+    admin = not me and admin_cookie_ok(request)
+    guard.limit(request, "asr", me and me["id"], admin)
+    slot = None if me or admin else guard.Slot("asr")
+    try:
+        return await _test_asr(request, file, language, wake, room)
+    finally:
+        if slot:
+            slot.release()
+
+
+async def _test_asr(request, file, language, wake, room):
     cfg = load_config()
     data = await read_audio(file)
     # voices are only told apart for a signed-in profile or device: a guest page gets no token that
@@ -575,7 +593,8 @@ async def add_clone_voice(name: str = Form(...), text: str = Form(""), file: Upl
     data = await file.read()
     if not data.startswith(b"RIFF"):  # mp3, m4a, webm, ...: the engine expects WAV
         p = await asyncio.create_subprocess_exec(
-            "ffmpeg", "-nostdin", "-loglevel", "error", "-i", "pipe:0", "-ac", "1", "-ar", "24000", "-f", "wav", "pipe:1",
+            "ffmpeg", "-nostdin", "-loglevel", "error", "-i", "pipe:0", "-t", "120", "-ac", "1", "-ar", "24000",
+            "-f", "wav", "pipe:1",
             stdin=asyncio.subprocess.PIPE, stdout=asyncio.subprocess.PIPE, stderr=asyncio.subprocess.PIPE)
         data, err = await p.communicate(data)
         if p.returncode or not data:

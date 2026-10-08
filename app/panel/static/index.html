@@ -209,7 +209,9 @@
       <h2>Ports</h2>
       <label>Panel-Port</label><input id="panel.port" type="number"><div class="fh">Wirkt nach einem Neustart des Panels.</div>
       <label>HTTPS-Port</label><input id="panel.https_port" type="number"><div class="fh">Das Mikrofon braucht https; 0 = aus.</div>
-      <label>Adressen des Reverse-Proxys</label><input id="panel.trusted_proxies" data-list="1" placeholder="192.168.1.10" autocomplete="off"><div class="fh">Nur von diesen Adressen wird die weitergereichte Absender-Adresse (X-Forwarded-For) geglaubt, z. B. 192.168.1.10. Leer = von jedem Gerät im Heimnetz. Eintragen, wenn das Panel hinter einem Proxy hängt: dann kann kein anderes Gerät im Netz die Sperre nach falschen Passwörtern umgehen.</div>
+      <label>Adressen des Reverse-Proxys</label><input id="panel.trusted_proxies" data-list="1" placeholder="192.168.1.10" autocomplete="off"><div class="fh">Nur von diesen Adressen wird die weitergereichte Absender-Adresse (X-Forwarded-For) geglaubt, z. B. 192.168.1.10. Leer = nur ein Proxy auf dem Spark selbst. Eintragen, wenn das Panel hinter einem Proxy im Heimnetz hängt: sonst teilen sich alle, die über den Proxy kommen, eine Adresse für die Sperre nach falschen Passwörtern.</div>
+      <h2>Heimnetz</h2>
+      <label class="chk"><input type="checkbox" id="panel.allow_lan"> Heimnetz-Adressen für Kalender, Kontakte und Mail erlauben</label><div class="fh">Aus: Kalender, Adressbücher, Aufgaben und Postfächer der Profile dürfen nur auf Adressen im Internet liegen (z. B. iCloud, GMX). An: auch Server im Heimnetz (z. B. ein NAS). Home Assistant darf immer im Heimnetz liegen. Die Dienste des Sparks selbst und Adressen wie 169.254.x sind nie erreichbar.</div>
       <div class="savebar"><button class="b p savebtn" data-p="sec">Speichern</button><span class="savemsg"></span></div>
     </div>
     <div class="card pane" id="pane-sysc"><h2 class="pt">System</h2>

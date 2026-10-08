@@ -13,6 +13,7 @@ helpers.start()
 import panel  # noqa: E402
 import profiles  # noqa: E402
 import chat  # noqa: E402
+import guard  # noqa: E402
 from fastapi.testclient import TestClient  # noqa: E402
 
 ADMIN = TestClient(panel.app)
@@ -496,6 +497,12 @@ class Security(unittest.TestCase):
         proxied = {"origin": "https://speech.example.org", "host": "tars:31080", "sec-fetch-site": "same-origin"}
         self.assertEqual(p.delete("/api/profile/memory", headers=proxied).status_code, 200)
         g = TestClient(panel.app, client=("192.168.1.5", 50000))
+        with open(os.environ["SPEECH_SPARK_CONFIG"]) as f:
+            c = json.load(f)
+        c["panel"]["trusted_proxies"] = ["192.168.1.5"]
+        with open(os.environ["SPEECH_SPARK_CONFIG"], "w") as f:
+            json.dump(c, f)
+        self.addCleanup(self._no_proxies)
         for i in range(5):  # another internet address behind the same proxy is not locked out
             g.post("/api/login", json={"password": "x"}, headers={"x-forwarded-for": "203.0.113.9"})
         self.assertEqual(g.post("/api/login", json={"password": "x"}, headers={"x-forwarded-for": "203.0.113.9"}).status_code, 429)
@@ -503,6 +510,51 @@ class Security(unittest.TestCase):
                    headers={"x-forwarded-for": "198.51.100.7", "x-forwarded-proto": "https"})
         self.assertEqual(r.status_code, 200)
         self.assertIn("secure", r.headers["set-cookie"].lower())
+
+    def _no_proxies(self):
+        with open(os.environ["SPEECH_SPARK_CONFIG"]) as f:
+            c = json.load(f)
+        c["panel"]["trusted_proxies"] = []
+        with open(os.environ["SPEECH_SPARK_CONFIG"], "w") as f:
+            json.dump(c, f)
+
+    def test_forwarded_for_only_from_listed_proxy(self):
+        """Without trusted_proxies, a LAN device cannot dodge the lockout by inventing addresses."""
+        g = TestClient(panel.app, client=("192.168.1.66", 50000))
+        for i in range(5):
+            g.post("/api/login", json={"password": "x"}, headers={"x-forwarded-for": f"203.0.113.{i}"})
+        self.assertEqual(g.post("/api/login", json={"password": "x"},
+                                headers={"x-forwarded-for": "203.0.113.200"}).status_code, 429)
+
+    def test_known_browser_not_locked_out(self):
+        """Strangers guessing a profile's PIN from many addresses do not lock out its own browser."""
+        profile("Hxlena")
+        own = TestClient(panel.app, client=("198.51.100.20", 1))
+        self.assertEqual(own.post("/api/profile/login", json={"name": "Hxlena", "pin": "1234"}).status_code, 200)
+        self.assertTrue(own.cookies.get(guard.KNOWN_COOKIE))
+        for i in range(10):
+            TestClient(panel.app, client=(f"203.0.113.{i}", 1)).post(
+                "/api/profile/login", json={"name": "Hxlena", "pin": "0000"})
+        self.assertEqual(TestClient(panel.app, client=("203.0.113.99", 1)).post(
+            "/api/profile/login", json={"name": "Hxlena", "pin": "1234"}).status_code, 429)
+        # the owner's browser, now from the phone network (a new address), still gets in
+        phone = TestClient(panel.app, client=("100.64.0.7", 1))
+        phone.cookies.set(guard.KNOWN_COOKIE, own.cookies.get(guard.KNOWN_COOKIE))
+        self.assertEqual(phone.post("/api/profile/login", json={"name": "Hxlena", "pin": "1234"}).status_code, 200)
+
+    def test_lockout_memory_is_capped(self):
+        import types
+        old = guard.MAX_KEYS
+        guard.MAX_KEYS = 50
+        try:
+            for i in range(120):
+                req = types.SimpleNamespace(client=types.SimpleNamespace(host=f"10.9.{i // 250}.{i % 250}"), headers={})
+                guard.failed(req, f"made-up-{i}")
+            self.assertLessEqual(len(guard._fails), 50)
+            self.assertLessEqual(len(guard._day), 50)
+        finally:
+            guard.MAX_KEYS = old
+            guard.reset()
 
     def test_logins_expire_and_log_out_everywhere(self):
         a = profile("Ella")

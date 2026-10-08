@@ -29,6 +29,8 @@ HA_TOKEN = "t" * 40
 cfg = json.load(open(os.path.join(APP, "config.default.json")))
 cfg["chat"].update(llm_url=f"http://127.0.0.1:{LLM_PORT}/v1", llm_key="", homeassistant=True, search=False)
 cfg["tts"]["port"] = TTS_PORT
+cfg["panel"]["allow_lan"] = True  # the fake calendar, mail and contact servers run on 127.0.0.1
+cfg["api"]["key"] = "sk-test"  # required while the services listen in the network
 with open(os.path.join(TMP, "config.json"), "w") as f:
     json.dump(cfg, f)
 for d in ("state", "users", "voices", "tls"):

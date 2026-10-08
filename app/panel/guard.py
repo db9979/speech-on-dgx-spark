@@ -5,11 +5,14 @@ Lockout: after MAX_FAILS wrong attempts from one address within WINDOW seconds (
 for one profile name or the admin password, from anywhere), logins from there are refused for a
 while; every new lockout doubles the wait, up to LOCK_MAX. On top, a name gets at most DAY_FAILS
 wrong attempts in 24 hours. The locks of a name do not apply to addresses that logged in to it
-before (KNOWN), so a stranger guessing cannot lock the owner out at home. A correct login clears the
-counter. Kept in STATE/guard.json, so a restart of the panel does not reset the count.
+before (KNOWN), nor for browsers that logged in to it before (cookie speech_known, only its hash is
+kept; such a browser also passes the lock of its address), so a stranger guessing cannot lock
+the owner out at home or on the phone. A correct login clears the counter. Kept in STATE/guard.json, so a restart of the panel does not reset the count; the
+kept entries are pruned and capped (MAX_KEYS), so made-up names and changing addresses cannot grow it.
 
-Reverse proxy: X-Forwarded-For is taken from panel.trusted_proxies (addresses of the proxy) or, when
-that list is empty, from any peer in the LAN.
+Reverse proxy: X-Forwarded-For is only taken from the addresses in panel.trusted_proxies, or from a
+proxy on this host (loopback) while that list is empty. Any other device could otherwise claim to be
+any address and get around the lockout.
 
 Foreign pages: a page from another site (also another port on the same host, e.g. another web app
 on the Spark) must not use the browser's login cookies to change anything here. Changing requests
@@ -31,6 +34,8 @@ from fastapi.responses import JSONResponse
 MAX_FAILS, MAX_NAME_FAILS, WINDOW = 5, 10, 15 * 60
 LOCK_FIRST, LOCK_MAX = 60, 3600
 DAY_FAILS, KNOWN = 30, 20
+MAX_KEYS = 2000
+KNOWN_COOKIE = "speech_known"
 _fails, _locks, _day, _known = {}, {}, {}, {}
 BASIC = "\0basic"
 ADMIN = "\0admin"
@@ -44,6 +49,20 @@ SAVED = os.path.join(STATE, "guard.json")
 
 def _k(key):
     return "|".join(key)
+
+
+def _prune(now):
+    """Forget what no longer counts, and cap what is kept (called with _lock held)."""
+    for k in [k for k, q in _fails.items() if not q or now - q[-1] > WINDOW]:
+        _fails.pop(k, None)
+    for k in [k for k, v in _locks.items() if v[0] < now - LOCK_MAX * 4]:
+        _locks.pop(k, None)
+    for k in [k for k, q in _day.items() if not q or now - q[-1] > 86400]:
+        _day.pop(k, None)
+    for d, age in ((_fails, lambda q: q[-1]), (_locks, lambda v: v[0]), (_day, lambda q: q[-1])):
+        if len(d) > MAX_KEYS:
+            for k in sorted(d, key=lambda k: age(d[k]))[:len(d) - MAX_KEYS]:
+                d.pop(k, None)
 
 
 def _save():
@@ -92,10 +111,30 @@ def client_ip(request):
     proxy's address and one bad guesser would lock everybody out."""
     peer = (request.client.host if request.client else "") or "?"
     fwd = request.headers.get("x-forwarded-for", "")
-    proxies = _proxies()
-    if fwd and (peer in proxies if proxies else from_lan(request)):
+    if fwd and forward_trusted(request):
         return fwd.split(",")[-1].strip()[:64] or peer
     return peer
+
+
+_hinted = set()
+
+
+def forward_trusted(request):
+    """X-Forwarded-For counts only from a listed proxy (or from this host while none is listed)."""
+    peer = (request.client.host if request.client else "") or "?"
+    proxies = _proxies()
+    if proxies:
+        return peer in proxies
+    try:
+        if ipaddress.ip_address(peer).is_loopback:
+            return True
+    except ValueError:
+        return False
+    if peer not in _hinted and len(_hinted) < 20:
+        _hinted.add(peer)
+        print(f"guard: X-Forwarded-For from {peer} ignored; enter the reverse proxy under "
+              "Einstellungen -> Sicherheit (panel.trusted_proxies)", flush=True)
+    return False
 
 
 def from_lan(request):
@@ -122,18 +161,29 @@ def _keys(request, name=None):
     return keys
 
 
-def _applies(k, ip):
-    """A name's lock does not hold for addresses that logged in to that name before."""
-    return k[0] != "name" or ip not in _known.get(k, ())
+def _browser(request):
+    raw = request.cookies.get(KNOWN_COOKIE, "")
+    if not raw or len(raw) > 100:
+        return None
+    import hashlib
+    return "b:" + hashlib.sha256(raw.encode()).hexdigest()
+
+
+def _applies(k, ip, browser=None):
+    """A name's lock does not hold for addresses or browsers that logged in to that name before."""
+    if browser and k[0] == "ip" and any(browser in v for v in _known.values()):
+        return False  # a browser that logged in here before (e.g. all users behind one proxy address)
+    known = _known.get(k, ())
+    return k[0] != "name" or (ip not in known and (not browser or browser not in known))
 
 
 def wait_left(request, name=None):
     """Seconds until a login from here (or for this name) is allowed again, 0 if it is now."""
     now = time.time()
-    ip = client_ip(request)
+    ip, browser = client_ip(request), _browser(request)
     with _lock:
         return max([int(_locks.get(k, (0, 0))[0] - now) + 1 for k in _keys(request, name)
-                    if _locks.get(k, (0, 0))[0] > now and _applies(k, ip)] or [0])
+                    if _locks.get(k, (0, 0))[0] > now and _applies(k, ip, browser)] or [0])
 
 
 def check(request, name=None):
@@ -167,17 +217,31 @@ def failed(request, name=None, what="login"):
                     if until > _locks.get(k, (0, 0))[0]:
                         _locks[k] = (until, _locks.get(k, (0, 0))[1])
                         locked = max(locked, int(until - now))
+        _prune(now)
         _save()
     log(what + "_failed", ip=client_ip(request), name="" if name in (BASIC, ADMIN) else name, locked=locked or None)
 
 
-def succeeded(request, name=None):
+def succeeded(request, name=None, response=None):
+    """A correct login. With response, the browser gets the cookie that lets it past this name's
+    lock next time (strangers' guesses then cannot lock it out, also from a new address)."""
     ip = client_ip(request)
+    browser = _browser(request)
+    if response is not None and name and name != BASIC:
+        import hashlib
+        import secrets
+        raw = request.cookies.get(KNOWN_COOKIE, "")
+        if not browser:
+            raw = secrets.token_urlsafe(24)
+            browser = "b:" + hashlib.sha256(raw.encode()).hexdigest()
+        response.set_cookie(KNOWN_COOKIE, raw, max_age=365 * 86400, httponly=True, samesite="strict")
     with _lock:
         for k in _keys(request, name):
             if k[0] == "name":
                 known = _known.setdefault(k, set())
                 known.add(ip)
+                if response is not None and browser:
+                    known.add(browser)
                 while len(known) > KNOWN:
                     known.pop()
                 continue  # strangers' failed guesses for this name keep counting
@@ -313,3 +377,56 @@ def read(limit=300, user=None):
 
 def logged(path, method):
     return method in CHANGING and path.startswith("/api/") and not path.startswith(QUIET)
+
+
+# ---------------------------------------------------------------- load limits
+# Chat, speech recognition and watch answers cost GPU time. Per caller (profile, else address) only
+# so many requests per minute, and only so many at once for callers without a profile (guests, when
+# the assistant is open without login), so one page or script cannot take the Spark for itself.
+_rate, _busy = {}, {}
+_rate_lock = threading.Lock()
+RATE = {"chat": (30, 120), "asr": (60, 240)}  # per minute: (guest, profile or admin)
+BUSY = {"chat": 4, "asr": 3}  # at once, guests together
+
+
+def caller(request, uid=None):
+    return ("u", uid) if uid else ("ip", client_ip(request))
+
+
+def limit(request, what, uid=None, admin=False):
+    """Raises 429 when this caller asked too often in the last minute."""
+    now = time.time()
+    key = (what,) + caller(request, uid or ("admin" if admin else None))
+    most = RATE[what][1 if uid or admin else 0]
+    with _rate_lock:
+        q = _rate.get(key)
+        if q is None:
+            if len(_rate) > MAX_KEYS:
+                for k in [k for k, v in _rate.items() if not v or now - v[-1] > 60]:
+                    _rate.pop(k, None)
+            q = _rate[key] = deque(maxlen=most)
+        if len(q) >= most and now - q[0] < 60:
+            raise HTTPException(429, "too many requests, please wait a moment", headers={"Retry-After": "30"})
+        q.append(now)
+
+
+class Slot:
+    """One of the few places guests share (BUSY); free it with release() (safe to call twice). A place
+    nobody released (a stream that never started) counts as free again after SLOT_MAX seconds."""
+    SLOT_MAX = 600
+
+    def __init__(self, what):
+        self.what, self.id = what, object()
+        now = time.time()
+        with _rate_lock:
+            held = _busy.setdefault(what, {})
+            for k in [k for k, t in held.items() if now - t > self.SLOT_MAX]:
+                held.pop(k, None)
+            if len(held) >= BUSY[what]:
+                raise HTTPException(429, "the assistant is busy, please try again in a moment",
+                                    headers={"Retry-After": "10"})
+            held[self.id] = now
+
+    def release(self):
+        with _rate_lock:
+            _busy.get(self.what, {}).pop(self.id, None)

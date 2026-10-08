@@ -45,8 +45,13 @@ def calm_text(t):
     return t
 
 
+MAX_INPUT = 20000  # characters per request; longer texts are refused by the speech services
+
+
 def clean_text(text, calm=False):
-    t = ACTION.sub(" ", str(text))
+    # runs of white space first: thousands of empty lines would make the patterns below slow
+    t = re.sub(r"\s{2,}", lambda m: "\n" if "\n" in m.group() else " ", str(text))
+    t = ACTION.sub(" ", t)
     t = EMOJI.sub(" ", t)
     t = LAUGH.sub(" ", t)
     t = re.sub(r"```.*?```", " ", t, flags=re.S)       # code blocks are not speakable

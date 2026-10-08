@@ -29,6 +29,7 @@ import time
 
 import httpx
 
+import netguard
 import profiles
 import vault
 
@@ -246,8 +247,8 @@ def remove(uid):
 
 
 def _client(item):
-    return httpx.AsyncClient(timeout=httpx.Timeout(15, connect=5), verify=item.get("verify", True),
-                             headers={"Authorization": f"Bearer {item['token']}"})
+    return netguard.client(netguard.HOME, origin=item.get("url"), verify=item.get("verify", True),
+                           timeout=httpx.Timeout(15, connect=5), headers={"Authorization": f"Bearer {item['token']}"})
 
 
 async def check(item):

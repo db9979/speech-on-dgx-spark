@@ -21,6 +21,7 @@ from urllib.parse import urljoin
 
 import httpx
 
+import netguard
 import profiles
 import vault
 from common import load_config
@@ -250,8 +251,8 @@ async def _cards(c, book):
 
 async def fetch_account(acct):
     auth = (acct["user"], acct.get("password", "")) if acct.get("user") else None
-    async with httpx.AsyncClient(timeout=httpx.Timeout(30, connect=8), auth=auth, follow_redirects=True,
-                                 headers={"User-Agent": "speech-on-dgx-spark"}) as c:
+    async with netguard.client(netguard.USER, origin=acct["url"], timeout=httpx.Timeout(30, connect=8), auth=auth,
+                               follow_redirects=True, headers={"User-Agent": "speech-on-dgx-spark"}) as c:
         books = await _books(c, acct["url"])
         if not books:
             raise ValueError("kein Adressbuch unter dieser Adresse gefunden")

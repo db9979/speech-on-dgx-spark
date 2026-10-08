@@ -12,12 +12,11 @@ import time
 import soundfile as sf
 import uvicorn
 from fastapi import Depends, FastAPI, HTTPException
-from fastapi.middleware.cors import CORSMiddleware
 from fastapi.responses import Response
 from pydantic import BaseModel
 
-from common import BodyLimit, ServiceState, api_key_dependency, api_key_ok, check_memory, estimate_gib, load_config, quiet_access_log, torch_dtype
-from textnorm import apply_pronunciations, clean_text, parse_pronunciations, speak_numbers
+from common import BodyLimit, KeyedCORS, ServiceState, api_key_dependency, api_key_ok, check_memory, estimate_gib, load_config, quiet_access_log, torch_dtype
+from textnorm import MAX_INPUT, apply_pronunciations, clean_text, parse_pronunciations, speak_numbers
 
 VOICES_DIR = os.environ.get("SPEECH_SPARK_VOICES", "/var/lib/speech-spark/voices")
 
@@ -25,7 +24,7 @@ cfg = load_config("tts")
 PRONUNCIATION = parse_pronunciations(cfg.get("pronunciation", ""))
 state = ServiceState("tts", cfg)
 app = FastAPI(title="Qwen3-TTS (DGX Spark)")
-app.add_middleware(CORSMiddleware, allow_origins=["*"], allow_methods=["*"], allow_headers=["*"])
+app.add_middleware(KeyedCORS)
 # bodies are refused before they are read when too large or without the API key
 app.add_middleware(BodyLimit, default=1024**2, gate=api_key_ok, gated=("/v1/",))
 auth = [Depends(api_key_dependency())]
@@ -140,6 +139,8 @@ def speech(req: SpeechRequest):
     lang = req.language or cfg.get("default_language") or "auto"
     instruct = req.instruct if req.instruct is not None else cfg.get("default_instruct", "")
     text = req.input
+    if len(text) > MAX_INPUT:
+        raise HTTPException(400, f"input: at most {MAX_INPUT} characters per request")
     if cfg.get("clean_text", True):
         text = clean_text(text, calm=cfg.get("calm", True))
     if PRONUNCIATION:

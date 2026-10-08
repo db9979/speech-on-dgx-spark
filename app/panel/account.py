@@ -106,9 +106,9 @@ async def login(request: Request):
     ask = await second_step(request, body, mfa.ADMIN, guard.ADMIN, "admin_code")
     if ask:
         return ask
-    guard.succeeded(request, guard.ADMIN)
-    guard.log("admin_login", ip=guard.client_ip(request))
     r = Response('{"ok": true}', media_type="application/json")
+    guard.succeeded(request, guard.ADMIN, r)
+    guard.log("admin_login", ip=guard.client_ip(request))
     r.set_cookie(COOKIE, _session_token(), max_age=ADMIN_IDLE, httponly=True, samesite="strict")
     r.delete_cookie(NO_BASIC)
     _trust(r, body, mfa.ADMIN)
@@ -141,9 +141,9 @@ async def profile_login(request: Request):
     ask = await second_step(request, body, uid, name, "profile_code")
     if ask:
         return ask
-    guard.succeeded(request, name)
-    guard.log("profile_login", ip=guard.client_ip(request), name=name.strip(), uid=value.split(".", 1)[0])
     r = Response('{"ok": true}', media_type="application/json")
+    guard.succeeded(request, name, r)
+    guard.log("profile_login", ip=guard.client_ip(request), name=name.strip(), uid=value.split(".", 1)[0])
     r.set_cookie(profiles.COOKIE, value, max_age=profiles.SESSION_DAYS * 86400, httponly=True, samesite="lax")
     _trust(r, body, uid)
     return r

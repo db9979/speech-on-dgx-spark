@@ -198,6 +198,22 @@ def api_key_dependency():
     return dep
 
 
+class KeyedCORS:
+    """ASGI middleware: other web pages may call the speech APIs from a browser (CORS) only while an
+    API key is set. Without a key any page someone opens in the home network could otherwise use
+    the services in the background; with one, the page also needs the key."""
+
+    def __init__(self, app):
+        from starlette.middleware.cors import CORSMiddleware
+        self.app = app
+        self.cors = CORSMiddleware(app, allow_origins=["*"], allow_methods=["*"], allow_headers=["*"])
+
+    async def __call__(self, scope, receive, send):
+        if scope["type"] == "http" and load_config().get("api", {}).get("key"):
+            return await self.cors(scope, receive, send)
+        return await self.app(scope, receive, send)
+
+
 class _TooLarge(Exception):
     pass
 

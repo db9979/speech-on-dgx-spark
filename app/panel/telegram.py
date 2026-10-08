@@ -217,7 +217,8 @@ def _ffmpeg(args, data):
         src, dst = os.path.join(d, "in"), os.path.join(d, "out")
         with open(src, "wb") as f:
             f.write(data)
-        p = subprocess.run(["ffmpeg", "-loglevel", "error", "-y", "-i", src] + args + [dst],
+        # -t: a tiny compressed file must not unpack to hours of audio (voice messages are short)
+        p = subprocess.run(["ffmpeg", "-nostdin", "-loglevel", "error", "-y", "-i", src, "-t", "600"] + args + [dst],
                            capture_output=True, timeout=60)
         if p.returncode != 0:
             raise ValueError("ffmpeg: " + p.stderr.decode(errors="replace")[-200:])

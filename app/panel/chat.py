@@ -25,6 +25,8 @@ import homeassistant  # noqa: E402
 import mail  # noqa: E402
 import tidy  # noqa: E402
 import extras  # noqa: E402
+import guard  # noqa: E402
+import netguard  # noqa: E402
 import proactive  # noqa: E402
 import watch  # noqa: E402
 from common import load_config  # noqa: E402
@@ -503,15 +505,16 @@ async def public_url(url):
 
 
 async def page_text(c, url, limit=3000):
-    """Readable text of a result page: public addresses only (each redirect checked again), at most
-    1.5 MB and 8 seconds in all."""
+    """Readable text of a result page: public addresses only (each redirect checked again, and the
+    connection goes to the checked address, see netguard), at most 1.5 MB and 8 seconds in all."""
     async def fetch():
         target = url
         for _ in range(4):
             if not await public_url(target):
                 return ""
-            async with c.stream("GET", target, timeout=6, follow_redirects=False,
-                                headers={"User-Agent": "Mozilla/5.0 (speech-on-dgx-spark)"}) as r:
+            async with netguard.client(netguard.PUBLIC, max_bytes=3_000_000) as pc, \
+                    pc.stream("GET", target, timeout=6, follow_redirects=False,
+                              headers={"User-Agent": "Mozilla/5.0 (speech-on-dgx-spark)"}) as r:
                 if r.is_redirect and r.headers.get("location"):
                     target = str(r.url.join(r.headers["location"]))
                     continue
@@ -781,6 +784,31 @@ def trim_history(messages, budget=HISTORY_CHARS):
 
 @router.post("/api/chat", dependencies=[Depends(assistant)])
 async def chat(request: Request):
+    """Load limits first (guard.limit, guard.Slot), then the answer as a stream of events."""
+    me = profiles.current(request)
+    admin = not me and admin_cookie_ok(request)
+    guard.limit(request, "chat", me and me["id"], admin)
+    slot = None if me or admin else guard.Slot("chat")
+    try:
+        response = await _chat(request)
+    except BaseException:
+        if slot:
+            slot.release()
+        raise
+    if slot:
+        inner = response.body_iterator
+
+        async def held():
+            try:
+                async for chunk in inner:
+                    yield chunk
+            finally:
+                slot.release()
+        response.body_iterator = held()
+    return response
+
+
+async def _chat(request: Request):
     _last_chat[0] = time.time()
     body = await request.json()
     cfg = load_config()
@@ -1740,6 +1768,8 @@ async def watch_ask(request: Request):
     async def receive():
         return {"type": "http.request", "body": data, "more_body": False}
     watch.cleanup()
+    if sum(1 for j in watch.JOBS.values() if not j.done) >= watch.MAX_RUNNING:
+        raise HTTPException(429, "too many answers at once, please wait a moment")
     job = watch.Job(speak=bool(body.get("speak", True)))
     response = await chat(Request(request.scope, receive))
     job.task = asyncio.create_task(watch.run(job, response))

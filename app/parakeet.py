@@ -87,8 +87,12 @@ class Recognizer:
         return s.result.text.strip()
 
 
+MAX_AUDIO_S = 2 * 3600  # a small compressed file can unpack to hours of samples in RAM
+
+
 def read_audio(path):
-    run = subprocess.run(["ffmpeg", "-nostdin", "-loglevel", "error", "-i", path, "-ac", "1", "-ar", str(RATE),
+    run = subprocess.run(["ffmpeg", "-nostdin", "-loglevel", "error", "-i", path, "-t", str(MAX_AUDIO_S),
+                          "-ac", "1", "-ar", str(RATE),
                           "-f", "s16le", "-"], capture_output=True, timeout=300)
     if run.returncode != 0:
         raise ValueError(f"unsupported audio: {run.stderr.decode(errors='replace').strip()[-200:] or 'ffmpeg failed'}")

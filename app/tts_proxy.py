@@ -17,11 +17,10 @@ from collections import deque
 import httpx
 import uvicorn
 from fastapi import Depends, FastAPI, HTTPException, Request
-from fastapi.middleware.cors import CORSMiddleware
 from fastapi.responses import Response, StreamingResponse
 
-from common import BodyLimit, api_key_dependency, api_key_ok, engine_crash_reason, load_config, quiet_access_log
-from textnorm import apply_pronunciations, clean_text, guess_language, parse_pronunciations, speak_numbers
+from common import BodyLimit, KeyedCORS, api_key_dependency, api_key_ok, engine_crash_reason, load_config, quiet_access_log
+from textnorm import MAX_INPUT, apply_pronunciations, clean_text, guess_language, parse_pronunciations, speak_numbers
 
 STATE_DIR = os.environ.get("SPEECH_SPARK_STATE", "/var/lib/speech-spark/state")
 VOICES_DIR = os.environ.get("SPEECH_SPARK_VOICES", "/var/lib/speech-spark/voices")  # panel tab "Stimmen"
@@ -32,7 +31,7 @@ PCM_BYTES_PER_S = 24000 * 2  # Qwen3-TTS: 24 kHz, 16 bit, mono
 cfg = load_config("tts")
 PRONUNCIATION = parse_pronunciations(cfg.get("pronunciation", ""))  # the proxy restarts on config changes
 app = FastAPI(title="Qwen3-TTS via vllm-omni (DGX Spark)")
-app.add_middleware(CORSMiddleware, allow_origins=["*"], allow_methods=["*"], allow_headers=["*"])
+app.add_middleware(KeyedCORS)
 # bodies are refused before they are read when too large or without the API key
 app.add_middleware(BodyLimit, default=20 * 1024**2, gate=api_key_ok, gated=("/v1/",))
 auth = [Depends(api_key_dependency())]
@@ -121,6 +120,21 @@ def clone_reference(name):
     text = open(txt).read().strip() if os.path.exists(txt) else ""
     _ref_cache[name] = (mtime, url, text)
     return url, text
+
+
+MAX_REF = 15 * 1024 * 1024  # characters of a data: URL (about 11 MB of audio)
+
+
+def check_reference(body):
+    """A reference recording only as data: URL. vllm-omni would fetch an http(s) or file address
+    itself, from inside the Spark (home network, local files)."""
+    ref = body.get("ref_audio")
+    if ref is not None and (not isinstance(ref, str) or not ref.startswith("data:audio/") or len(ref) > MAX_REF):
+        raise HTTPException(400, "ref_audio: only a data:audio/... URL of at most 15 MB")
+    emb = body.get("speaker_embedding")
+    if emb is not None and (not isinstance(emb, list) or len(emb) > 8192
+                            or not all(isinstance(x, (int, float)) for x in emb)):
+        raise HTTPException(400, "speaker_embedding: a list of at most 8192 numbers")
 
 
 def apply_clone(body):
@@ -253,6 +267,9 @@ async def speech(request: Request):
         raise HTTPException(400, "body must be JSON")
     if not isinstance(body, dict) or not str(body.get("input", "")).strip():
         raise HTTPException(400, "field 'input' is required")
+    if len(str(body["input"])) > MAX_INPUT:
+        raise HTTPException(400, f"input: at most {MAX_INPUT} characters per request")
+    check_reference(body)
 
     role = "main"
     if str(body.get("task_type", "")).lower() == "voicedesign" and model_kind(cfg["model"]) != "voice_design":
@@ -265,7 +282,7 @@ async def speech(request: Request):
         raise HTTPException(503, f"TTS engine {status}: {error or ''}".strip())
 
     if cfg.get("clean_text", True):
-        body["input"] = clean_text(body["input"], calm=cfg.get("calm", True))
+        body["input"] = await asyncio.to_thread(clean_text, body["input"], calm=cfg.get("calm", True))
         if not body["input"]:
             raise HTTPException(400, "nothing left to speak after removing emojis and markup")
     stream = bool(body.get("stream")) or body.get("stream_format") in ("sse", "audio")
