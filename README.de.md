@@ -31,6 +31,7 @@ Alle Optionen ohne Rückfragen (`--mode api --asr 1.7b --tts 0.6b --yes` …) st
 
 <!-- New version: add one line at the top here and in CHANGELOG.md, drop the oldest line here (keep 10). Details go to docs/de and docs/en, not into this README. -->
 
+- **V01.0.127** Suche in den Einstellungen und im Ich-Fenster (öffnet die Seite und markiert die Stelle); Browser-Test für alle Seiten am Rechner und am Handy, läuft auf GitHub bei jedem Push
 - **V01.0.126** Raum-Modus: in den Ruhezeiten nur als Text, endet nach 2 Minuten im Hintergrund oder bei gesperrtem Handy, „Raummodus aus“ per Sprache
 - **V01.0.125** Neue Menüs: Einstellungen in drei Blöcken, alles Prüfen unter Übersicht → Prüfen, Einbinden = Anleitungen + Apps und Schnittstellen, Ich-Fenster in den Gruppen der Funktionen-Seite mit Überblick und eigener Seite Mitteilungen
 - **V01.0.124** Kein Knacken mehr bei längeren Antworten: Sprache endet und stockt mit kurzem Ausblenden statt hart, Stopp blendet aus, „spricht noch“ zählt die Lautsprecher-Verzögerung mit, das eigene Echo am Satzende gilt nicht mehr als Unterbrechung
@@ -40,7 +41,6 @@ Alle Optionen ohne Rückfragen (`--mode api --asr 1.7b --tts 0.6b --yes` …) st
 - **V01.0.120** Nach einem Update lädt der Browser die neue Version von selbst (Dateien mit Versions-Kennung, offene Seite lädt neu, wenn kein Gespräch läuft); kein Strg+F5 mehr
 - **V01.0.119** Qualitätstest: neu kaputte Fragen erscheinen eine Woche lang als Hinweis oben auf jeder Admin-Seite
 - **V01.0.118** Aus Korrekturen lernen (aus, Admin + Profil): nach „Nein, …“ fragt der Assistent „Soll ich mir merken …?“ und speichert erst nach „Ja“; korrigierte Fragen können als Testfall in den Qualitätstest
-- **V01.0.117** Werkzeugpflicht per Tabelle, Antwort-Prüfung hält erfundene Uhrzeiten, Daten, Spielstände und Beträge zurück, Temperatur 0.1 bei der Werkzeugwahl, Qualitätstest mit Umformulierungen, Wiederholung und Verlauf, optional Nachdenken bei der Werkzeugwahl
 
 Alle Versionen: [CHANGELOG.md](CHANGELOG.md)
 

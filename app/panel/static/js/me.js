@@ -37,7 +37,7 @@ function meTabs(){const items=[['overbox',t('Überblick','Overview'),!!PROFILE&&
     const head=g&&g!==grp?`<div class="mgrp">${esc(t(gg[1],gg[2]))}</div>`:'';if(g)grp=g;
     return head+`<button type="button" data-t="${id}">${esc(l)}<small class="mst" data-st="${id}"></small></button>`}).join('');
   $('ptabs').querySelectorAll('button').forEach(b=>b.onclick=()=>{meLast=b.dataset.t;ptab(b.dataset.t)});ME_ITEMS=items;
-  $('profmodal').classList.toggle('one',items.length<2);return items.map(x=>x[0])}
+  $('profmodal').classList.toggle('one',items.length<2);if(typeof meSearchMount==='function')meSearchMount();return items.map(x=>x[0])}
 let meLast='overbox',ME_ITEMS=[];
 // "Überblick": one line per page with its state, read from the pages just loaded (no extra requests)
 function meState(){const n=id=>[...document.querySelectorAll('#'+id+'>li')].filter(x=>!x.classList.contains('mut')).length;

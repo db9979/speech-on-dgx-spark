@@ -349,3 +349,9 @@ div.guide.inline{border:0;border-bottom:1px solid var(--line);border-radius:0;ma
 .overlist{display:flex;flex-direction:column;margin-top:8px}.overlist .mgrp{padding:14px 0 4px}
 .overrow{display:flex;justify-content:space-between;align-items:center;gap:12px;border:0;border-bottom:1px solid var(--line);background:none;color:var(--fg);font:inherit;font-size:14px;text-align:left;padding:10px 2px;cursor:pointer}
 .overrow:hover{background:var(--line)}.overrow span{color:var(--mut);font-size:13px;text-align:right}
+.sbox{position:relative;margin-bottom:8px}.sbox input{width:100%;font-size:14px;padding:8px 12px;border-radius:10px}
+.sres{position:absolute;left:0;right:0;top:calc(100% + 4px);z-index:30;background:var(--card);border:1px solid var(--line);border-radius:12px;box-shadow:var(--shadow);padding:4px;max-height:60vh;overflow-y:auto}
+.sres button{display:flex;flex-direction:column;align-items:flex-start;width:100%;border:0;background:none;color:var(--fg);font:inherit;font-size:14px;text-align:left;padding:8px 10px;border-radius:8px;cursor:pointer;min-height:0}
+.sres button::before,.sres button::after{display:none!important}.sres button:hover,.sres button:focus{background:var(--line)}.sres button span{font-size:12px;color:var(--mut)}.sres .mut{padding:8px 10px;font-size:13px}
+.sflash{animation:sflash 2.2s ease}@keyframes sflash{0%,40%{background:color-mix(in srgb,var(--acc) 18%,transparent);box-shadow:0 0 0 4px color-mix(in srgb,var(--acc) 18%,transparent)}100%{background:transparent;box-shadow:none}}
+@media (max-width:760px){.cfgnav .sbox{margin:0;padding:10px;border-bottom:1px solid var(--line)}.cfgnav .sbox input{font-size:16px}.menav .sbox input{font-size:16px}}
