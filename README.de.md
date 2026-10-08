@@ -14,6 +14,35 @@ sudo ./install.sh
 
 Am Ende gibt das Skript die Adresse des Panels, das Passwort und den API-Schlüssel aus. Danach macht es einen Rundlauf-Test: TTS spricht einen Satz (auch gestreamt, mit Zeit bis zum ersten Ton), ASR transkribiert ihn wieder. Alles läuft nativ als systemd-Dienste, ohne Docker.
 
+## Nur die Modelle bereitstellen (ohne Webportal)
+
+Die erste Installation fragt im Terminal, was installiert werden soll:
+
+1. **Komplett:** Modelle, APIs und das Webportal mit dem Assistenten (wie bisher).
+2. **Nur die Modelle mit ihren APIs:** für andere Dienste (Open WebUI, eigene Apps, Home Assistant …), ohne Webportal, Passwort und Zertifikat.
+
+Danach fragt sie, welche Modelle es sein sollen (Spracherkennung Qwen3-ASR 1.7B, 0.6B, Parakeet oder keine; Sprachausgabe Qwen3-TTS 0.6B, 1.7B oder keine; VoiceDesign ja oder nein, jeweils mit grob geschätztem Speicherbedarf) und ob die APIs im Netz erreichbar sein sollen oder nur auf der Spark selbst (`127.0.0.1`, z. B. hinter einem eigenen Reverse-Proxy). Ein API-Schlüssel wird immer erzeugt und ist Pflicht. Spätere Aufrufe und Updates fragen nicht noch einmal. Ohne Fragen geht es mit Optionen:
+
+```bash
+sudo ./install.sh --mode api --asr 1.7b --tts 0.6b --yes   # nur Modelle, im Netz erreichbar
+sudo ./install.sh --mode api --asr parakeet --tts none --local --yes
+```
+
+Am Ende stehen Adressen, Schlüssel und fertige `curl`-Beispiele auf dem Bildschirm und in `/etc/speech-spark/connection.txt` (nur für root lesbar). Ohne Portal übernimmt der Befehl `speech-spark` dessen Aufgaben:
+
+| Befehl | Wirkung |
+|---|---|
+| `sudo speech-spark status` | Dienste, Modelle, freier Speicher, letztes Update |
+| `sudo speech-spark info` | Adressen, API-Schlüssel, Beispiele, Werte für Open WebUI |
+| `sudo speech-spark key new` | neuer API-Schlüssel (der alte gilt sofort nicht mehr) |
+| `sudo speech-spark models` | Modelle neu wählen, gleiche Fragen wie bei der Installation |
+| `sudo speech-spark update` | Update wie der Knopf im Portal (`--check` zeigt nur, was neu ist) |
+| `sudo speech-spark logs tts -n 100` | letzte Log-Zeilen (asr, tts, asr-engine, tts-engine, tts-design, watch, update, all) |
+| `sudo speech-spark panel enable` | Webportal nachrüsten; Modelle und API-Schlüssel bleiben |
+| `sudo speech-spark panel disable` | Webportal entfernen; Profile und Daten bleiben auf der Platte |
+
+Den Wächter für hängende Dienste, der sonst im Portal läuft, übernimmt ohne Portal der Dienst `speech-spark-watch` mit denselben Regeln. Nach einem Update spricht die Sprachausgabe einen Satz, und die Spracherkennung muss ihn verstehen; klappt das nicht, spielt das Update die vorige Version wieder ein. Die Selbsttests laufen in beiden Arten vor jedem Update. Das Chat-Modell (qwen38) gehört nicht zu diesem Repo und bleibt davon unberührt. Läuft Open WebUI in Docker auf derselben Spark, müssen die APIs im Netz erreichbar sein (`127.0.0.1` im Container ist der Container selbst).
+
 ## Sprach-Chat
 
 Der **Assistent** braucht das Mikrofon, und Browser erlauben das nur über https. Das Panel läuft deshalb zusätzlich auf `https://SPARK:31443` mit einem selbst erstellten Zertifikat; der Browser warnt beim ersten Aufruf einmal. Die LLM-Verbindung steht unter Einstellungen → Assistent (Standard: qwen38 auf `http://127.0.0.1:30001/v1`). Den API-Schlüssel von qwen38 übernimmt der Installer aus `~/.config/qwen38/api-key` des Benutzers, der `sudo ./install.sh` aufruft. Das Nachdenken des Modells ist für den Chat aus, damit die Antwort sofort beginnt. Ein animiertes Assistenten-Gesicht zeigt, ob es zuhört, nachdenkt oder spricht; der Mund folgt der Stimme. Dasselbe Gesicht sitzt auf jedem Reiter unten rechts, so lässt sich von überall im Panel sprechen.
@@ -85,7 +114,7 @@ Im Panel unter **System**: Dort steht die installierte Version, und es wird ange
 Auf der Konsole geht dasselbe mit:
 
 ```bash
-sudo /opt/speech-spark/src/update.sh           # aktualisieren
+sudo speech-spark update                       # aktualisieren (oder: sudo /opt/speech-spark/src/update.sh)
 sudo /opt/speech-spark/src/update.sh --check   # nur anzeigen, was neu ist
 ```
 
@@ -95,6 +124,10 @@ Der Installer legt dafür eine eigene Git-Kopie unter `/opt/speech-spark/src` an
 
 | Option | Wirkung |
 |---|---|
+| `--mode full` / `--mode api` | komplett mit Webportal / nur die Modelle mit ihren APIs (siehe oben) |
+| `--asr 1.7b\|0.6b\|parakeet\|none`, `--tts 0.6b\|1.7b\|none`, `--voicedesign` | Modelle ohne Rückfrage wählen |
+| `--local` / `--network` | APIs nur auf `127.0.0.1` / im ganzen Netz (Standard) |
+| `--yes` | nichts fragen; was nicht angegeben ist, bleibt wie es ist (neu: komplett) |
 | `--small` | 0.6B-Modelle statt 1.7B (weniger Speicher) |
 | `--tts-backend transformers` | TTS ohne Streaming über `qwen-tts` statt vllm-omni (Standard: `vllm-omni`) |
 | `--asr-backend transformers` | ASR über `qwen-asr` statt vLLM, eine Anfrage nach der anderen (Standard: `vllm`) |
@@ -155,9 +188,11 @@ dgx-spark-qwen38 wird dabei nicht angefasst.
 | TTS-Engine `speech-spark-tts-engine` (vllm-omni) | `/opt/speech-spark/venv-engine` | 31012, nur lokal |
 | optional VoiceDesign-Engine `speech-spark-tts-design` | `/opt/speech-spark/venv-engine` | 31013, nur lokal |
 | Update `speech-spark-update` (läuft nur auf Knopfdruck) | `/opt/speech-spark/src` | |
-| Panel `speech-spark-panel` | `/opt/speech-spark/venv-panel` | 31080, https 31443 |
+| Panel `speech-spark-panel` (nur komplett) | `/opt/speech-spark/venv-panel` | 31080, https 31443 |
+| Wächter `speech-spark-watch` (nur ohne Portal) | `/opt/speech-spark/venv-panel` | |
+| Befehl `speech-spark` | `/usr/local/bin` | |
 | Messskript `speech-spark-bench` | `/usr/local/bin` | |
-| Konfiguration | `/etc/speech-spark/config.json`, Passwort in `panel.env` (ein im Panel geändertes Passwort liegt als Hash in `/var/lib/speech-spark/state/panel-password` und hat Vorrang) | |
+| Konfiguration | `/etc/speech-spark/config.json`, Installationsart in `mode`, Verbindungsdaten in `connection.txt`, Passwort in `panel.env` (ein im Panel geändertes Passwort liegt als Hash in `/var/lib/speech-spark/state/panel-password` und hat Vorrang) | |
 | Modelle, geklonte Stimmen | `/var/lib/speech-spark/hf`, `/var/lib/speech-spark/voices` | |
 
 Alle Dienste laufen als Systembenutzer `speech`. Per sudoers darf das Panel die Speech-Dienste und Engines starten, stoppen und neu starten und das Update anstoßen, sonst nichts.

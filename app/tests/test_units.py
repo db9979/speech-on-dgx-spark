@@ -133,3 +133,47 @@ class AsrFrontEnd(unittest.TestCase):
             self.assertIn("hallo welt", r.text)
         finally:
             asr_proxy.local = old
+
+
+class WithoutPanel(unittest.TestCase):
+    """Install mode "api": the command line speech-spark and the watchdog of its own."""
+
+    def info(self, mode, **hosts):
+        import json
+        import os
+        import subprocess
+        import tempfile
+        with tempfile.TemporaryDirectory() as etc:
+            with open(os.path.join(helpers.APP, "config.default.json")) as f:
+                cfg = json.load(f)
+            cfg["api"]["key"] = "sk-test123"
+            for name, host in hosts.items():
+                cfg[name]["host"] = host
+            with open(os.path.join(etc, "config.json"), "w") as f:
+                json.dump(cfg, f)
+            with open(os.path.join(etc, "mode"), "w") as f:
+                f.write(mode + "\n")
+            env = dict(os.environ, SPEECH_SPARK_ETC=etc, SPEECH_SPARK_PREFIX=helpers.TMP)
+            p = subprocess.run(["bash", os.path.join(helpers.APP, "speech-spark.sh"), "info"], env=env,
+                               capture_output=True, text=True, timeout=30)
+            self.assertEqual(p.returncode, 0, p.stderr)
+            return p.stdout
+
+    def test_info_names_endpoints_and_key(self):
+        out = self.info("api")
+        self.assertIn("only the models with their APIs", out)
+        self.assertIn(":31001/v1/audio/transcriptions", out)
+        self.assertIn(":31002/v1/audio/speech", out)
+        self.assertIn("Authorization: Bearer sk-test123", out)
+        self.assertIn("from the network", out)
+
+    def test_info_local_only(self):
+        out = self.info("full", asr="127.0.0.1", tts="127.0.0.1")
+        self.assertIn("http://127.0.0.1:31001/v1", out)
+        self.assertIn("only on this machine", out)
+        self.assertIn("with the web panel", out)
+
+    def test_watchdog_uses_the_panel_rules(self):
+        import api_watchdog
+        self.assertTrue(callable(api_watchdog.health.watch_once))
+        self.assertTrue(callable(api_watchdog.update.update_running))

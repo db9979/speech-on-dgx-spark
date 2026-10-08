@@ -2,7 +2,11 @@
 # Speech on DGX Spark: installs Qwen3-ASR + Qwen3-TTS as systemd services with a web
 # panel for config, monitoring and updates. Designed to run next to dgx-spark-qwen38.
 #
-#   sudo ./install.sh                  # install, or update an existing install
+#   sudo ./install.sh                  # install (the first run asks what to install), or update
+#   sudo ./install.sh --mode api       # only the models with their APIs, no web panel (or --mode full)
+#   sudo ./install.sh --asr 1.7b|0.6b|parakeet|none --tts 0.6b|1.7b|none [--voicedesign]
+#   sudo ./install.sh --local          # APIs only on 127.0.0.1 (default --network: reachable in the LAN)
+#   sudo ./install.sh --yes            # ask nothing; what is not given stays as before (new: complete)
 #   sudo ./install.sh --small          # 0.6B models (least unified memory)
 #   sudo ./install.sh --no-tts         # only ASR (or --no-asr)
 #   sudo ./install.sh --tts-backend transformers   # TTS without streaming (default: vllm-omni, streams)
@@ -12,7 +16,8 @@
 #   sudo ./install.sh --no-smoke       # skip the TTS -> ASR round trip at the end
 #   sudo ./install.sh --uninstall      # remove services (keeps models); add --purge for everything
 #
-# Later updates: the "Update" button in the panel, or  sudo /opt/speech-spark/src/update.sh
+# Later updates: the "Update" button in the panel, or  sudo speech-spark update
+# Without the panel: sudo speech-spark  (status, info, key, models, update, logs, panel enable)
 set -euo pipefail
 
 PREFIX=/opt/speech-spark
@@ -29,6 +34,7 @@ DEFAULT_REMOTE=https://github.com/db9979/speech-on-dgx-spark
 SRC="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
 
 SMALL=0; WITH_ASR=1; WITH_TTS=1; PASSWORD=""; DOWNLOAD=1; SMOKE=1; FROM_UPDATE=0; TTS_BACKEND=""; ASR_BACKEND=""
+MODE=""; ASR_PICK=""; TTS_PICK=""; VD_PICK=""; NET_PICK=""; YES=0; CHOOSE_MODELS=0
 while [ $# -gt 0 ]; do
   case "$1" in
     --small) SMALL=1 ;;
@@ -39,15 +45,27 @@ while [ $# -gt 0 ]; do
     --password) PASSWORD="$2"; shift ;;
     --no-download) DOWNLOAD=0 ;;
     --no-smoke) SMOKE=0 ;;
+    --mode) MODE="$2"; shift ;;
+    --asr) ASR_PICK="$2"; shift ;;
+    --tts) TTS_PICK="$2"; shift ;;
+    --voicedesign) VD_PICK=yes ;;
+    --no-voicedesign) VD_PICK=no ;;
+    --local) NET_PICK=local ;;
+    --network) NET_PICK=network ;;
+    --yes|-y) YES=1 ;;
+    --choose-models) CHOOSE_MODELS=1 ;;  # ask the model questions again (sudo speech-spark models)
     --update) FROM_UPDATE=1 ;;  # set by update.sh
     --uninstall) shift; exec "$SRC/uninstall.sh" "$@" ;;
-    -h|--help) sed -n '2,16p' "$0"; exit 0 ;;
+    -h|--help) sed -n '2,20p' "$0"; exit 0 ;;
     *) echo "unknown option: $1" >&2; exit 2 ;;
   esac
   shift
 done
 case "$TTS_BACKEND" in ""|vllm-omni|transformers) ;; *) echo "--tts-backend must be vllm-omni or transformers" >&2; exit 2 ;; esac
 case "$ASR_BACKEND" in ""|vllm|transformers) ;; *) echo "--asr-backend must be vllm or transformers" >&2; exit 2 ;; esac
+case "$MODE" in ""|full|api) ;; *) echo "--mode must be full or api" >&2; exit 2 ;; esac
+case "$ASR_PICK" in ""|1.7b|0.6b|parakeet|none) ;; *) echo "--asr must be 1.7b, 0.6b, parakeet or none" >&2; exit 2 ;; esac
+case "$TTS_PICK" in ""|0.6b|1.7b|none) ;; *) echo "--tts must be 0.6b, 1.7b or none" >&2; exit 2 ;; esac
 
 say()  { printf '\n\033[1;34m==>\033[0m %s\n' "$*"; progress "$*"; }
 # During an update the panel shows a progress bar; each step also goes into this file.
@@ -119,6 +137,90 @@ big_lane=""
 if systemctl cat qwen38-flash.service >/dev/null 2>&1; then big_lane="qwen38-flash (85 %)"; fi
 if systemctl cat qwen38-sglang.service 2>/dev/null | grep -q -- '--mem-fraction-static 0.7'; then big_lane="qwen38-sglang 1M mode (76 %)"; fi
 
+# ---------------------------------------------------------------- what to install
+# The first install asks (in a terminal): complete or only the models with their APIs, which
+# models, and whether the APIs are reachable from other computers. Later runs and updates keep the
+# answers; "sudo speech-spark models" asks the model questions again. The mode lives in $ETC/mode
+# (root's file, the panel cannot change it).
+FIRST=0; [ -f "$ETC/config.json" ] || FIRST=1
+ASK=0; { [ -t 0 ] && [ "$YES" = 0 ] && [ "$FROM_UPDATE" = 0 ]; } && ASK=1
+[ "$CHOOSE_MODELS" = 1 ] && [ "$ASK" = 0 ] && die "--choose-models needs a terminal"
+OLD_MODE=$(cat "$ETC/mode" 2>/dev/null || true)
+case "$OLD_MODE" in full|api) ;; *) OLD_MODE="" ;; esac
+ask() {  # $1 = question, $2 = default, rest = allowed answers; prints the answer
+  local a ok
+  while true; do
+    read -r -p "$1 [$2]: " a || die "no answer (no terminal); use --yes or give the options"
+    a=${a:-$2}
+    for ok in "${@:3}"; do [ "$a" = "$ok" ] && { echo "$a"; return 0; }; done
+    echo "   please answer with one of: ${*:3}" >&2
+  done
+}
+gib_free() { awk '/^MemAvailable:/ {printf "%.0f", $2 / 1048576}' /proc/meminfo; }
+
+if [ "$ASK" = 1 ] && [ -z "$MODE" ] && [ -z "$OLD_MODE" ]; then
+  echo
+  echo "What should be installed?"
+  echo "  1) Complete: models + APIs + web panel with the voice assistant"
+  echo "  2) Only the models with their APIs, for other services (no web panel)"
+  case "$(ask "Choice" 1 1 2)" in 1) MODE=full ;; 2) MODE=api ;; esac
+fi
+MODE=${MODE:-${OLD_MODE:-full}}
+
+# current choice, as the defaults of the questions
+cur_asr() {
+  if [ "$FIRST" = 1 ]; then { [ "$SMALL" = 1 ] || [ -n "$big_lane" ]; } && echo 0.6b || echo 1.7b; return; fi
+  jq -r 'if .asr.enabled != true then "none" elif .asr.recognizer == "parakeet" then "parakeet"
+         elif (.asr.model | test("0.6B")) then "0.6b" else "1.7b" end' "$ETC/config.json"
+}
+cur_tts() {
+  if [ "$FIRST" = 1 ]; then echo 0.6b; return; fi
+  jq -r 'if .tts.enabled != true then "none" elif .tts.model == "Qwen/Qwen3-TTS-12Hz-0.6B-CustomVoice" then "0.6b"
+         elif .tts.model == "Qwen/Qwen3-TTS-12Hz-1.7B-CustomVoice" then "1.7b" else "keep" end' "$ETC/config.json"
+}
+if [ "$ASK" = 1 ] && { [ "$CHOOSE_MODELS" = 1 ] || { [ "$FIRST" = 1 ] && [ -z "$ASR_PICK$TTS_PICK" ] \
+     && [ "$SMALL$WITH_ASR$WITH_TTS" = 011 ]; }; }; then
+  echo
+  echo "Which models? Memory figures are rough estimates; $(gib_free) GiB are free right now."
+  [ -n "$big_lane" ] && echo "(found $big_lane: the 0.6B models are recommended next to it)"
+  if [ -z "$ASR_PICK" ]; then
+    echo "Speech recognition (ASR, port $(jq -r '.asr.port // 31001' "$ETC/config.json" 2>/dev/null || echo 31001)):"
+    echo "  1) Qwen3-ASR 1.7B      most accurate, ~6 GiB"
+    echo "  2) Qwen3-ASR 0.6B      ~3 GiB"
+    echo "  3) Parakeet            trained on German, runs on the CPU, ~1 GiB"
+    echo "  4) none"
+    d=$(cur_asr); case "$d" in 1.7b) d=1 ;; 0.6b) d=2 ;; parakeet) d=3 ;; *) d=4 ;; esac
+    case "$(ask "Choice" "$d" 1 2 3 4)" in 1) ASR_PICK=1.7b ;; 2) ASR_PICK=0.6b ;; 3) ASR_PICK=parakeet ;; 4) ASR_PICK=none ;; esac
+  fi
+  if [ -z "$TTS_PICK" ]; then
+    echo "Speech output (TTS, port $(jq -r '.tts.port // 31002' "$ETC/config.json" 2>/dev/null || echo 31002)):"
+    echo "  1) Qwen3-TTS 0.6B      built-in voices, ~4 GiB"
+    echo "  2) Qwen3-TTS 1.7B      also follows style instructions, ~7 GiB"
+    echo "  3) none"
+    d=$(cur_tts); opts="1 2 3"
+    if [ "$d" = keep ]; then
+      echo "  4) keep $(jq -r .tts.model "$ETC/config.json")"; opts="1 2 3 4"; d=4
+    else
+      case "$d" in 0.6b) d=1 ;; 1.7b) d=2 ;; *) d=3 ;; esac
+    fi
+    # shellcheck disable=SC2086
+    case "$(ask "Choice" "$d" $opts)" in 1) TTS_PICK=0.6b ;; 2) TTS_PICK=1.7b ;; 3) TTS_PICK=none ;; 4) TTS_PICK=keep ;; esac
+  fi
+  if [ "$TTS_PICK" != none ] && [ -z "$VD_PICK" ]; then
+    d=n; [ "$FIRST" = 0 ] && [ "$(jq -r .tts.voicedesign_enabled "$ETC/config.json")" = true ] && d=y
+    echo "VoiceDesign: design new voices from a description (extra 1.7B model, ~7 GiB)."
+    case "$(ask "Install it? (y/n)" "$d" y n j)" in y|j) VD_PICK=yes ;; n) VD_PICK=no ;; esac
+  fi
+fi
+if [ "$ASK" = 1 ] && [ "$FIRST" = 1 ] && [ -z "$NET_PICK" ]; then
+  echo
+  echo "Should other computers in the network reach the APIs? (An API key is required either way.)"
+  echo "  y) yes, on all network interfaces"
+  echo "  n) no, only on this machine (127.0.0.1), e.g. behind your own reverse proxy"
+  case "$(ask "Choice" y y n j)" in y|j) NET_PICK=network ;; n) NET_PICK=local ;; esac
+fi
+[ "$ASK" = 1 ] && echo
+
 no_links "$ETC/config.json"
 if [ ! -f "$ETC/config.json" ]; then
   say "Writing $ETC/config.json"
@@ -138,6 +240,26 @@ else
 fi
 [ -n "$TTS_BACKEND" ] && jqi --arg b "$TTS_BACKEND" '.tts.backend=$b'
 [ -n "$ASR_BACKEND" ] && jqi --arg b "$ASR_BACKEND" '.asr.backend=$b'
+# the answers (or options) from above
+case "$ASR_PICK" in
+  1.7b) jqi '.asr.enabled=true | .asr.recognizer="qwen" | .asr.model="Qwen/Qwen3-ASR-1.7B"
+             | if .asr.engine_mem < 0.055 then .asr.engine_mem=0.06 else . end' ;;
+  0.6b) jqi '.asr.enabled=true | .asr.recognizer="qwen" | .asr.model="Qwen/Qwen3-ASR-0.6B"' ;;
+  parakeet) jqi '.asr.enabled=true | .asr.recognizer="parakeet"' ;;
+  none) jqi '.asr.enabled=false' ;;
+esac
+case "$TTS_PICK" in
+  0.6b) jqi '.tts.enabled=true | .tts.model="Qwen/Qwen3-TTS-12Hz-0.6B-CustomVoice"' ;;
+  1.7b) jqi '.tts.enabled=true | .tts.model="Qwen/Qwen3-TTS-12Hz-1.7B-CustomVoice"' ;;
+  none) jqi '.tts.enabled=false' ;;
+esac
+case "$VD_PICK" in yes) jqi '.tts.voicedesign_enabled=true' ;; no) jqi '.tts.voicedesign_enabled=false' ;; esac
+case "$NET_PICK" in
+  local) jqi '.asr.host="127.0.0.1" | .tts.host="127.0.0.1"' ;;
+  network) jqi '.asr.host="0.0.0.0" | .tts.host="0.0.0.0"' ;;
+esac
+# api: only the models with their APIs; full: with the web panel
+no_links "$ETC/mode"; echo "$MODE" >"$ETC/mode"; chown -h root:root "$ETC/mode"; chmod 644 "$ETC/mode"
 # Earlier start values were too generous next to a qwen38 lane; move untouched ones down.
 case "$(jq -r .asr.engine_mem "$ETC/config.json")" in 0.08|0.05) jqi '.asr.engine_mem=0.045 | .asr.engine_max_seqs=4' ;; esac
 # (0.03 + 0.015 left no room for the KV cache on the Spark)
@@ -194,7 +316,7 @@ cfg_int() { local v; v=$(cfg "$1"); if [[ "$v" =~ ^[0-9]{1,6}$ ]]; then echo "$v
 # Browsers only allow the microphone on https (or localhost), so the panel also listens on an
 # https port with a self-signed certificate for the voice chat.
 TLS="$ETC/tls"
-if [ "$(cfg '.panel.https_port // 0')" != 0 ] && [ ! -s "$TLS/cert.pem" ]; then
+if [ "$MODE" = full ] && [ "$(cfg '.panel.https_port // 0')" != 0 ] && [ ! -s "$TLS/cert.pem" ]; then
   say "Creating a self-signed certificate for the panel's https port (needed for the microphone)"
   mkdir -p "$TLS"
   san="DNS:localhost,DNS:$(hostname),DNS:$(hostname).local,IP:127.0.0.1"
@@ -213,8 +335,9 @@ BACKEND=$(cfg .tts.backend); ASR_BACKEND=$(cfg .asr.backend)
 
 # ---------------------------------------------------------------- ports
 say "Checking ports (dgx-spark-qwen38 uses 30000-30099)"
-ports="$ASR_PORT $TTS_PORT $PANEL_PORT"
-[ "$HTTPS_PORT" != 0 ] && ports="$ports $HTTPS_PORT"
+ports="$ASR_PORT $TTS_PORT"
+[ "$MODE" = full ] && ports="$ports $PANEL_PORT"
+[ "$MODE" = full ] && [ "$HTTPS_PORT" != 0 ] && ports="$ports $HTTPS_PORT"
 [ "$BACKEND" = vllm-omni ] && ports="$ports $(cfg_int .tts.engine_port 31012) $(cfg_int .tts.voicedesign_port 31013)"
 [ "$ASR_BACKEND" = vllm ] && ports="$ports $(cfg_int .asr.engine_port 31011)"
 for p in $ports; do
@@ -304,7 +427,8 @@ if [ "$DOWNLOAD" = 1 ]; then
       | sudo -u "$SVC_USER" HF_HOME="$VAR/hf" "$PREFIX/venv-$asr_venv/bin/python" - \
       || warn "Parakeet download failed; the ASR service retries when it starts"
   fi
-  if [ "$WITH_ASR" = 1 ] && [ "$ASR_BACKEND" = vllm ]; then
+  # (with Parakeet the engine stays off; it fetches its model itself if Qwen3-ASR is chosen later)
+  if [ "$WITH_ASR" = 1 ] && [ "$ASR_BACKEND" = vllm ] && [ "$(cfg '.asr.recognizer // "qwen"')" != parakeet ]; then
     say "Downloading ASR model for the engine"
     dl engine "$(cfg .asr.model)"
   fi
@@ -372,20 +496,29 @@ cat >/usr/local/bin/speech-spark-bench <<EOF
 exec $PREFIX/venv-panel/bin/python $PREFIX/app/bench.py "\$@"
 EOF
 chmod 755 /usr/local/bin/speech-spark-bench
+# status, connection details, API key, models, update, logs, panel on/off: sudo speech-spark
+cat >/usr/local/bin/speech-spark <<EOF
+#!/bin/sh
+exec /bin/bash $PREFIX/app/speech-spark.sh "\$@"
+EOF
+chmod 755 /usr/local/bin/speech-spark
 
 # ---------------------------------------------------------------- password, sudoers
-# a password given here replaces one changed in the panel (whose hash would win otherwise)
-[ -n "$PASSWORD" ] && rm -f -- "$VAR/state/panel-password"
-if [ ! -f "$ETC/panel.env" ] || [ -n "$PASSWORD" ]; then
-  [ -n "$PASSWORD" ] || PASSWORD=$(head -c 18 /dev/urandom | base64 | tr -dc 'A-Za-z0-9' | head -c 16)
+# Only the web panel has a password (mode full); the APIs use the API key.
+if [ "$MODE" = full ]; then
+  # a password given here replaces one changed in the panel (whose hash would win otherwise)
+  [ -n "$PASSWORD" ] && rm -f -- "$VAR/state/panel-password"
+  if [ ! -f "$ETC/panel.env" ] || [ -n "$PASSWORD" ]; then
+    [ -n "$PASSWORD" ] || PASSWORD=$(head -c 18 /dev/urandom | base64 | tr -dc 'A-Za-z0-9' | head -c 16)
+    no_links "$ETC/panel.env"
+    printf 'PANEL_PASSWORD=%s\n' "$PASSWORD" >"$ETC/panel.env"
+  fi
   no_links "$ETC/panel.env"
-  printf 'PANEL_PASSWORD=%s\n' "$PASSWORD" >"$ETC/panel.env"
+  chown -h "$SVC_USER:$SVC_USER" "$ETC/panel.env"; chmod 600 "$ETC/panel.env"
+  PASSWORD=$(sed -n 's/^PANEL_PASSWORD=//p' "$ETC/panel.env")
+  # changed in the panel since: only its hash is stored, the file above is outdated
+  [ -s "$VAR/state/panel-password" ] && PASSWORD="(changed in the panel; reset with sudo ./install.sh --password NEW)"
 fi
-no_links "$ETC/panel.env"
-chown -h "$SVC_USER:$SVC_USER" "$ETC/panel.env"; chmod 600 "$ETC/panel.env"
-PASSWORD=$(sed -n 's/^PANEL_PASSWORD=//p' "$ETC/panel.env")
-# changed in the panel since: only its hash is stored, the file above is outdated
-[ -s "$VAR/state/panel-password" ] && PASSWORD="(changed in the panel; reset with sudo ./install.sh --password NEW)"
 
 # The panel may start/stop/restart exactly these units and start the update, nothing else.
 {
@@ -532,6 +665,28 @@ RestartSec=5
 WantedBy=multi-user.target
 EOF
 
+# Without the panel (mode api) its watchdog runs on its own: restarts a hung ASR / TTS service or
+# engine with the same rules (app/panel/health.py).
+cat >/etc/systemd/system/speech-spark-watch.service <<EOF
+[Unit]
+Description=Speech on DGX Spark: watchdog for the APIs (mode without the web panel)
+After=network-online.target
+
+[Service]
+LogNamespace=speech-spark
+User=$SVC_USER
+Group=$SVC_USER
+WorkingDirectory=$PREFIX/app/panel
+$common_env
+Environment=SPEECH_SPARK_PREFIX=$PREFIX
+ExecStart=$PREFIX/venv-panel/bin/python $PREFIX/app/api_watchdog.py
+Restart=always
+RestartSec=10
+
+[Install]
+WantedBy=multi-user.target
+EOF
+
 # Runs update.sh from the root-owned clone; started by the panel's update button.
 cat >/etc/systemd/system/speech-spark-update.service <<EOF
 [Unit]
@@ -562,8 +717,19 @@ systemctl daemon-reload
 
 # ---------------------------------------------------------------- start
 say "Starting services"
-systemctl enable speech-spark-panel.service >/dev/null 2>&1
-systemctl restart speech-spark-panel.service
+if [ "$MODE" = full ]; then
+  systemctl disable --now speech-spark-watch.service 2>/dev/null || true
+  rm -f /etc/systemd/system/speech-spark-watch.service
+  systemctl enable speech-spark-panel.service >/dev/null 2>&1
+  systemctl restart speech-spark-panel.service
+else
+  # only the models with their APIs: no web panel (its data in $VAR stays), the watchdog on its own
+  systemctl disable --now speech-spark-panel.service 2>/dev/null || true
+  rm -f /etc/systemd/system/speech-spark-panel.service
+  systemctl enable speech-spark-watch.service >/dev/null 2>&1
+  systemctl restart speech-spark-watch.service
+fi
+systemctl daemon-reload
 
 # an update only restarts an engine when its settings changed: a restart costs a model load
 restart_engine() {  # $1 = unit suffix, $2 = settings signature
@@ -608,17 +774,18 @@ else
   systemctl disable --now speech-spark-tts.service 2>/dev/null || true
 fi
 
-wait_ready() {  # $1 = name, $2 = port, $3 = minutes
+wait_ready() {  # $1 = name, $2 = port, $3 = minutes; the last status stays in st_$1
   local st=""
   for _ in $(seq 1 $(( $3 * 12 ))); do
     st=$(curl -fs "http://127.0.0.1:$2/health" | jq -r .status 2>/dev/null || true)
+    printf -v "st_$1" '%s' "$st"
     case "$st" in ready) echo "   $1 ready"; return 0 ;; error|blocked)
       echo "   $1 $st: $(curl -fs "http://127.0.0.1:$2/health" | jq -r .error)"; return 1 ;; esac
     sleep 5
   done
   echo "   $1 not ready after $3 min (status: ${st:-no answer}); see the panel or: journalctl --namespace=speech-spark -u 'speech-spark-*'"; return 1
 }
-ok_asr=0; ok_tts=0
+ok_asr=0; ok_tts=0; st_asr=""; st_tts=""
 # an update does not wait as long: the services keep starting on their own afterwards
 wait_min=30; [ "$FROM_UPDATE" = 1 ] && wait_min=10
 if [ "$WITH_ASR" = 1 ]; then wait_ready asr "$ASR_PORT" "$wait_min" && ok_asr=1; fi
@@ -648,7 +815,47 @@ if [ "$SMOKE" = 1 ] && [ "$ok_tts" = 1 ]; then
   rm -f "$out"
 fi
 
+# Without the panel nobody checks an update afterwards, so here: TTS speaks a sentence and ASR has
+# to understand it. A failure stops the update, and update.sh puts the previous version back.
+# Services that are still loading (an engine that restarts) only give a warning.
+live_check() {
+  local out text share sentence="Heute ist ein schöner Tag, und der Spark spricht wieder."
+  out=$(mktemp --suffix=.wav)
+  if ! curl -fs --max-time 180 "${auth[@]}" "http://127.0.0.1:$TTS_PORT/v1/audio/speech" -H 'Content-Type: application/json' \
+       -d "$(jq -nc --arg t "$sentence" '{input: $t, language: "German", response_format: "wav"}')" -o "$out" \
+     || [ "$(stat -c %s "$out")" -lt 8000 ]; then
+    echo "   TTS did not speak"; rm -f "$out"; return 1
+  fi
+  echo "   TTS spoke $(stat -c %s "$out") bytes"
+  if [ "$ok_asr" = 1 ]; then
+    text=$(curl -fs --max-time 180 "${auth[@]}" "http://127.0.0.1:$ASR_PORT/v1/audio/transcriptions" \
+      -F "file=@$out" -F language=German | jq -r '.text // ""') || text=""
+    share=$("$PREFIX/venv-panel/bin/python" -c 'import re, sys
+w = lambda s: set(re.findall(r"\w+", s.lower()))
+a = w(sys.argv[1]); print(int(100 * len(a & w(sys.argv[2])) / len(a)))' "$sentence" "$text")
+    echo "   ASR heard: \"$text\" ($share % of the words)"
+    [ "$share" -ge 60 ] || { rm -f "$out"; return 1; }
+  fi
+  rm -f "$out"
+}
+if [ "$MODE" = api ] && [ "$FROM_UPDATE" = 1 ]; then
+  say "Live check: TTS speaks a sentence, ASR has to understand it"
+  # a front end that does not answer at all is broken in the new version, not loading
+  { [ "$WITH_ASR" = 1 ] && [ -z "$st_asr" ]; } && die "the ASR service does not answer after the update"
+  { [ "$WITH_TTS" = 1 ] && [ -z "$st_tts" ]; } && die "the TTS service does not answer after the update"
+  if [ "$WITH_TTS" = 1 ] && [ "$ok_tts" = 1 ]; then
+    live_check || die "live check failed after the update"
+  elif [ "$WITH_TTS" = 1 ]; then
+    warn "TTS is not ready yet (${st_tts}); live check skipped"
+  else
+    echo "   no TTS installed, nothing to speak; the services answer"
+  fi
+fi
+
+# connection details for other services: printed here, kept in $ETC/connection.txt (root only)
+bash "$PREFIX/app/speech-spark.sh" info --save >/dev/null || warn "could not write $ETC/connection.txt"
 IP=$(hostname -I | awk '{print $1}')
+if [ "$MODE" = full ]; then
 cat <<EOF
 
 ------------------------------------------------------------------
@@ -657,8 +864,18 @@ cat <<EOF
  ASR API:   http://$IP:$ASR_PORT/v1/audio/transcriptions   (backend: $ASR_BACKEND)
  TTS API:   http://$IP:$TTS_PORT/v1/audio/speech   (backend: $BACKEND)
  API key:   ${KEY:-none}
- Config:    $ETC/config.json     Logs: journalctl --namespace=speech-spark -u 'speech-spark-*'
- Update:    panel: Übersicht -> System und Update, or: sudo $PREFIX/src/update.sh
+ Config:    $ETC/config.json     Logs: sudo speech-spark logs
+ Update:    panel: Übersicht -> System und Update, or: sudo speech-spark update
  Measure:   panel: Übersicht -> System und Update, or: sudo speech-spark-bench
+ Examples for other services: sudo speech-spark info
 ------------------------------------------------------------------
 EOF
+else
+  echo
+  echo "------------------------------------------------------------------"
+  cat "$ETC/connection.txt" 2>/dev/null || true
+  echo
+  echo " Installed without the web panel. Status: sudo speech-spark status   Update: sudo speech-spark update"
+  echo " Add the panel later: sudo speech-spark panel enable"
+  echo "------------------------------------------------------------------"
+fi
