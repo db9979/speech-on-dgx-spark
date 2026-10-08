@@ -44,3 +44,16 @@ $('milang').onclick=()=>$('langbtn').click();$('mitheme').onclick=()=>$('themebt
 $('milogin').onclick=()=>{closeSheet();showLogin()};$('milogout').onclick=()=>$('logoutbtn').click();
 $('convosel').addEventListener('change',()=>{if(MOBILE.matches)closeSheet()});
 layout();
+// ---------------------------------------------------------------- phone layout, all pages
+// header height for the sticky bars below it; the voice button steps aside while the keyboard is up
+const hdrH=()=>document.documentElement.style.setProperty('--hdrh',document.querySelector('header').offsetHeight+'px');
+addEventListener('resize',hdrH);hdrH();
+const typingEl=e=>e&&e.matches&&e.matches('input:not([type=checkbox]):not([type=range]):not([type=file]),textarea,select');
+document.addEventListener('focusin',e=>{if(typingEl(e.target))document.body.classList.add('kbd')});
+document.addEventListener('focusout',()=>setTimeout(()=>{if(!typingEl(document.activeElement))document.body.classList.remove('kbd')},50));
+// wide tables become one block per row on phones; each cell shows its column name (data-label)
+let tblTimer=null;
+const labelTables=()=>{for(const tb of document.querySelectorAll('table')){const hs=[...tb.querySelectorAll('thead th')].map(h=>h.textContent.trim());if(!hs.length)continue;
+  tb.classList.add('stack');for(const tr of tb.querySelectorAll('tbody tr'))[...tr.children].forEach((td,i)=>{if(hs[i]&&td.dataset.label!==hs[i])td.dataset.label=hs[i]})}};
+new MutationObserver(()=>{clearTimeout(tblTimer);tblTimer=setTimeout(labelTables,60)}).observe(document.querySelector('main'),{childList:true,subtree:true});
+labelTables();

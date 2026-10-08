@@ -63,6 +63,7 @@
       <button data-p="tts">Sprachausgabe</button><button data-p="asr">Spracherkennung</button><button data-p="sec">Sicherheit</button><button data-p="sysc">System</button>
     </div>
     <div>
+    <button class="b cfgback" id="cfgback" type="button"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"><path d="M15 5l-7 7 7 7"/></svg><span>Alle Einstellungen</span></button>
     <div class="card pane on" id="pane-feat"><h2 class="pt">Funktionen</h2><div class="fh" style="margin-top:0">Was der Assistent können soll. Details zu einer Funktion erscheinen erst, wenn sie an ist.</div>
       <div class="setrow"><div class="lbl"><b>Gedächtnis</b><span>Der Assistent merkt sich Dinge pro angemeldetem Profil, für Gäste nie.</span></div><label class="tgl"><input type="checkbox" id="chat.memory"><i></i></label></div>
       <div class="setrow"><div class="lbl"><b>Frühere Gespräche</b><span>Profile können nach früheren Gesprächen fragen („Was hast du mir letzte Woche zum Grill gesagt?“). Ruhige Gespräche liest der Assistent außerdem nach und merkt sich daraus wenige dauerhafte Fakten (im Profil als „automatisch“ markiert, abschaltbar pro Profil). Gäste nie.</span></div><label class="tgl"><input type="checkbox" id="chat.history"><i></i></label></div>
@@ -429,7 +430,7 @@
   <ul class="facts finds" id="findlist"></ul>
 </div></div>
 <div id="profmodal" class="modal" style="display:none"><div class="card modalcard mecard">
-  <div class="mehead"><h2 id="profhead">Gast</h2><div class="mut" id="setscope"></div></div>
+  <div class="mehead"><div class="mehrow"><button class="ib meback" id="meback" type="button" title="Zurück" aria-label="Zurück"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"><path d="M15 5l-7 7 7 7"/></svg></button><h2 id="profhead">Gast</h2><h2 id="mepage"></h2></div><div class="mut" id="setscope"></div></div>
   <div class="mewrap">
     <div class="menav" id="ptabs"></div>
     <div class="mebody">

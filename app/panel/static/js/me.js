@@ -17,13 +17,19 @@ async function showDocs(){if(!DOCS_ON){$('docbox').style.display='none';return}$
   $('doclist').innerHTML=l.map(d=>`<li><span>${esc(d.name)}<br><small class="mut">${d.size<1048576?Math.max(1,Math.round(d.size/1024))+' KB':(d.size/1048576).toFixed(1)+' MB'} · ${d.chunks} ${t('Abschnitte','sections')}</small></span><button class="b" onclick="delDoc('${escq(d.id)}','${esc(d.name)}')">${t('Löschen','Delete')}</button></li>`).join('')||`<li class="mut">${t('Noch keine Dokumente.','No documents yet.')}</li>`}
 let DOCS_ON=true,SPK_ON=false,CAL_ON=true,HA_ON=false,MAIL_ON=false;
 // The "Ich" window: conversation settings for everyone, plus the profile's own pages once logged in.
-function ptab(id){document.querySelectorAll('#ptabs button').forEach(b=>b.classList.toggle('on',b.dataset.t===id));
-  document.querySelectorAll('#profmodal .ptab').forEach(x=>x.classList.toggle('on',x.id===id))}
+// On phones the window opens as a list of its pages (like the iPhone settings); a page then fills the
+// screen with a back arrow. Wider screens keep the side bar.
+const PHONE=matchMedia('(max-width:760px)');
+function ptab(id,page=true){document.querySelectorAll('#ptabs button').forEach(b=>{b.classList.toggle('on',b.dataset.t===id);if(b.dataset.t===id)$('mepage').textContent=b.textContent});
+  document.querySelectorAll('#profmodal .ptab').forEach(x=>x.classList.toggle('on',x.id===id));
+  $('profmodal').classList.toggle('sub',page);if(page)document.querySelector('#profmodal .mebody').scrollTop=0}
+$('meback').onclick=()=>ptab(meLast,false);
 function meTabs(){const items=[['setbox',t('Gespräch','Conversation'),!GATE&&!isGuest()],['loginbox',t('Anmelden','Sign in'),!PROFILE],
     ['factbox',t('Gedächtnis','Memory'),!!PROFILE],['docbox',t('Dokumente','Documents'),PROFILE&&DOCS_ON],['calbox',t('Kalender','Calendar'),PROFILE&&CAL_ON],['mailbox',t('E-Mail','E-mail'),PROFILE&&MAIL_ON],
     ['habox',t('Smart Home','Smart home'),PROFILE&&HA_ON],['voicebox',t('Stimme','Voice'),PROFILE&&SPK_ON],['probox',t('Von selbst','Proactive'),PROFILE&&PRO_ON],['roombox',t('Raum-Modus','Room mode'),PROFILE&&ROOM_ON],['logbox',t('Protokoll','Log'),!!PROFILE],['secbox',t('Sicherheit','Security'),!!PROFILE]].filter(x=>x[2]);
   $('ptabs').innerHTML=items.map(([id,l])=>`<button type="button" data-t="${id}">${esc(l)}</button>`).join('');
-  $('ptabs').querySelectorAll('button').forEach(b=>b.onclick=()=>{meLast=b.dataset.t;ptab(b.dataset.t)});return items.map(x=>x[0])}
+  $('ptabs').querySelectorAll('button').forEach(b=>b.onclick=()=>{meLast=b.dataset.t;ptab(b.dataset.t)});
+  $('profmodal').classList.toggle('one',items.length<2);return items.map(x=>x[0])}
 let meLast='setbox';
 const TZ=()=>{try{return Intl.DateTimeFormat().resolvedOptions().timeZone}catch{return ''}};
 const CALKIND={icloud:{name:'iCloud',url:'https://caldav.icloud.com',user:1,h:t('Benutzer: deine Apple-ID. Passwort: ein app-spezifisches Passwort von appleid.apple.com.','User: your Apple ID. Password: an app-specific password from appleid.apple.com.')},
@@ -139,7 +145,7 @@ window.tidyDo=async what=>{$('factmsg').textContent=what==='check'?t('Der Assist
 $('facttidy').onclick=()=>tidyDo('check');
 window.forgetFact=async id=>{await api('/api/profile/memory/'+encodeURIComponent(id),{method:'DELETE'});showFacts()};
 async function openMe(tab){$('profmsg').textContent='';$('profmodal').style.display='grid';
-  const tabs=meTabs();ptab(tabs.includes(tab)?tab:tabs[0]);
+  const tabs=meTabs(),list=tab==='list'&&PHONE.matches&&tabs.length>1;ptab(tabs.includes(tab)?tab:tabs.includes(meLast)?meLast:tabs[0],!list);
   $('profhead').textContent=PROFILE?PROFILE.name:GATE?t('Anmelden','Sign in'):t('Gast','Guest');
   $('setscope').textContent=GATE?'':PROFILE?t('Einstellungen gelten auf jedem Gerät dieses Profils; „Hey Spark“ stellt jedes Gerät selbst ein.','Settings apply on every device of this profile; "Hey Spark" is set per device.'):isGuest()?t('Als Gast gelten die Vorgaben des Admins. Mit einem Profil kannst du Einstellungen ändern, und der Assistent merkt sich Dinge nur für dich.','As a guest the admin\'s defaults apply. With a profile you can change settings, and the assistant remembers things just for you.'):t('Als Gast gelten die Einstellungen nur in diesem Browser. Mit einem Profil merkt sich der Assistent Dinge nur für dich.','As a guest the settings apply only in this browser. With a profile the assistant remembers things just for you.');
   $('proflogout').style.display=PROFILE?'':'none';$('profclose').style.display=GATE?'none':'';
@@ -147,7 +153,7 @@ async function openMe(tab){$('profmsg').textContent='';$('profmodal').style.disp
   if(PROFILE){try{await showFacts();await showDocs();await showVoice();await showCal();await showMail();await showHa();await showSecurity();await showToolLog();await showPro().catch(()=>{});showRoom();await showPush().catch(()=>{})}catch{setProfile(null);openMe('loginbox')}return}
   $('profpin').value='';if(tab==='loginbox')setTimeout(()=>$($('profuser').value?'profpin':'profuser').focus(),50)}
 window.openMe=openMe;
-$('profbtn').onclick=()=>openMe(meLast);   // same window and page as the settings button
+$('profbtn').onclick=()=>openMe(PHONE.matches?'list':meLast);   // phones: the list of pages; else the same page as the settings button
 $('profuser').onkeydown=e=>{if(e.key==='Enter')$('profpin').focus()};
 $('profpin').onkeydown=e=>{if(e.key==='Enter')$('proflogin').click()};
 $('profcode').onkeydown=e=>{if(e.key==='Enter')$('proflogin').click()};

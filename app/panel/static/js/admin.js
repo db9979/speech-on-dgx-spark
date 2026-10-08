@@ -49,7 +49,9 @@ $('asr.recognizer').addEventListener('change',asrRec);
 // the services whose settings changed).
 const cfgPane=p=>{document.querySelectorAll('#cfgnav button').forEach(b=>b.classList.toggle('on',b.dataset.p===p));
   document.querySelectorAll('.pane').forEach(x=>x.classList.toggle('on',x.id==='pane-'+p));try{localStorage.setItem('cfgpane',p)}catch{}};
-document.querySelectorAll('#cfgnav button').forEach(b=>b.onclick=()=>cfgPane(b.dataset.p));
+// phones: the settings open as a list of pages; a tapped page fills the screen with "back" on top
+document.querySelectorAll('#cfgnav button').forEach(b=>b.onclick=()=>{cfgPane(b.dataset.p);document.querySelector('.cfgwrap').classList.add('sub');window.scrollTo(0,0)});
+$('cfgback').onclick=()=>{document.querySelector('.cfgwrap').classList.remove('sub');window.scrollTo(0,0)};
 try{const p=localStorage.getItem('cfgpane');if(p&&$('pane-'+p))cfgPane(p)}catch{}
 // Details of a feature show only while it is on (Websuche pane, speaker strictness).
 function cfgDeps(){const on=id=>{const e=$(id);return !e||e.checked};

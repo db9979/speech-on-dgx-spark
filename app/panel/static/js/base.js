@@ -18,7 +18,7 @@ const GROUPS={chat:[['chat','']],mon:[['mon',t('Monitoring','Monitoring')],['sys
 const lastSec={};
 function showSec(s){document.querySelectorAll('section').forEach(x=>x.classList.toggle('on',x.id===s));
   document.body.classList.toggle('inchat',s==='chat');
-  if(s==='cfg'){loadCfg();mfaShow('admmfa','/api/mfa')}if(s==='chat')chatTab();if(s==='test'){loadVoices();instrHint()}if(s==='voices')loadClone();if(s==='prof')loadProf();if(s==='logs')loadLogs();if(s==='int')loadInt();if(s==='sys')loadSys()}
+  if(s==='cfg'){document.querySelector('.cfgwrap').classList.remove('sub');loadCfg();mfaShow('admmfa','/api/mfa')}if(s==='chat')chatTab();if(s==='test'){loadVoices();instrHint()}if(s==='voices')loadClone();if(s==='prof')loadProf();if(s==='logs')loadLogs();if(s==='int')loadInt();if(s==='sys')loadSys()}
 function subnav(g,s){const items=GROUPS[g],bar=$('subnav');bar.hidden=items.length<2;
   bar.innerHTML=items.length<2?'':items.map(([id,l])=>`<button type="button" data-sub="${id}"${id===s?' class="on"':''}>${esc(l)}${id==='sys'?' <span class="pill warn subbadge" style="display:none">Update</span>':''}</button>`).join('');
   bar.querySelectorAll('button').forEach(b=>b.onclick=()=>{lastSec[g]=b.dataset.sub;subnav(g,b.dataset.sub);showSec(b.dataset.sub)});updBadge(window.UPD)}
