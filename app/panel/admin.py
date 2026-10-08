@@ -343,7 +343,7 @@ def validate(new):
     if not isinstance(ch.get("tool_temperature", 0.1), (int, float)) or isinstance(ch.get("tool_temperature", 0.1), bool) \
             or not 0 <= ch.get("tool_temperature", 0.1) <= 1.5:
         raise HTTPException(400, "chat tool_temperature must be 0..1.5")
-    for k in ("answer_check", "tool_thinking"):
+    for k in ("answer_check", "tool_thinking", "learn_fixes"):
         if not isinstance(ch.get(k, False), bool):
             raise HTTPException(400, f"chat {k} must be true or false")
     for sec in ("asr", "tts"):

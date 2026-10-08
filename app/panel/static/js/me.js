@@ -186,6 +186,7 @@ const SETF=[
   {k:'length',type:'sel',l:t('Antwortlänge','Answer length'),h:t('Wie ausführlich der Assistent antwortet.','How detailed the assistant answers.'),o:[['short',t('kurz','short')],['normal',t('normal','normal')],['long',t('ausführlich','detailed')]]},
   {k:'learn',type:'bool',prof:1,l:t('Aus Gesprächen lernen','Learn from conversations'),h:t('Nach einem Gespräch merkt sich der Assistent wenige dauerhafte Dinge über dich. Du siehst und löschst sie unter dem Profil-Knopf.','After a conversation the assistant remembers a few lasting things about you. You can see and delete them under the profile button.')},
   {k:'tool_think',type:'bool',prof:1,need:'tool_think',l:t('Bei Werkzeugen nachdenken','Think before using tools'),h:t('Bevor der Assistent nachsieht (Kalender, Mails, Suche …), denkt er kurz nach, welches Werkzeug passt. Zuverlässiger, aber die Antwort beginnt etwas später.','Before the assistant looks something up (calendar, mail, search …) it thinks briefly about which tool fits. More reliable, but the answer starts a little later.')},
+  {k:'fix_learn',type:'bool',prof:1,need:'fix_learn',l:t('Aus Korrekturen lernen','Learn from corrections'),h:t('Korrigierst du den Assistenten, fragt er, ob er sich einen kurzen Satz dazu merken soll. Gespeichert wird erst nach deinem „Ja“.','When you correct the assistant, it asks whether to remember a short sentence about it. It is stored only after your "yes".')},
   {g:t('Anzeige','Display'),k:'daily',type:'bool',l:t('Jeden Tag neues Gespräch','New conversation every day'),h:t('Am nächsten Tag beginnt automatisch ein neues Gespräch; die alten bleiben im Verlauf.','The next day a new conversation starts by itself; older ones stay in the history.')},
   {k:'timing',type:'bool',l:t('Zeiten anzeigen','Show timings'),h:t('Wie lange Erkennung, Modell und erster Ton gebraucht haben.','How long recognition, model and first audio took.')}];
 {let g;SETF.forEach(f=>{g=f.g||g;f.grp=g})}
@@ -260,8 +261,13 @@ $('pushoff').onclick=async()=>{const s=await pushSub();if(s){try{await api('/api
 // ---------------------------------------------------------------- tool log (own turns, a few days)
 async function showToolLog(){const d=await (await api('/api/profile/toollog')).json();$('logdays').textContent=d.days;
   $('loglist').innerHTML=d.items.map(x=>`<li style="display:block"><small class="mut">${esc(new Date(x.t).toLocaleString())}</small><br><b>${esc(x.q)}</b>`+
-    (x.calls.length?x.calls.map(c=>`<details><summary>🔧 ${esc(c.name)} <small class="mut">${esc(c.args)}</small></summary><pre style="white-space:pre-wrap;margin:4px 0">${esc(c.result)}</pre></details>`).join('')
+    (x.calls.length?x.calls.map(c=>`<details><summary>🔧 ${esc(c.name)} <small class="mut">${esc(c.args)}</small></summary><pre style="white-space:pre-wrap;margin:4px 0">${esc(c.result)}</pre></details>`
+      +(c.name==='Korrektur'&&c.args?`<button class="b" type="button" data-qcase="${x.t}">${t('Frage als Testfall an den Admin','Send the question to the admin as a test case')}</button>`:'')).join('')
       :`<div class="mut">${t('kein Werkzeug','no tool')}</div>`)+
     `<div>→ ${esc(x.answer||'–')}</div></li>`).join('')||`<li class="mut">${t('Noch keine Einträge.','No entries yet.')}</li>`}
 $('logreload').onclick=()=>showToolLog();
+// a corrected question as a quality-test case (quality.py): the panel takes the text from the log itself
+$('loglist').addEventListener('click',async e=>{const b=e.target.closest('[data-qcase]');if(!b)return;b.disabled=true;
+  try{await api('/api/profile/quality-case',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({t:Number(b.dataset.qcase)})});b.textContent=t('Übergeben','Handed over')}
+  catch(err){b.textContent=err.message;b.disabled=false}});
 $('logclear').onclick=async()=>{if(!confirm(t('Protokoll leeren?','Clear the log?')))return;await api('/api/profile/toollog',{method:'DELETE'});showToolLog()};

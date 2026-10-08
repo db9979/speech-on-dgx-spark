@@ -31,6 +31,7 @@ All options for running without questions (`--mode api --asr 1.7b --tts 0.6b --y
 
 <!-- New version: add one line at the top here and in CHANGELOG.md, drop the oldest line here (keep 10). Details go to docs/de and docs/en, not into this README. -->
 
+- **V01.0.118** Learning from corrections (off, admin + profile): after "Nein, …" the assistant asks "Soll ich mir merken …?" and stores it only after a yes; corrected questions can go into the quality test
 - **V01.0.117** Required tools from one table, answer check holds back made-up times, dates, scores and amounts, temperature 0.1 when choosing tools, quality test with rewordings, a retry and a history, optional thinking while choosing tools
 - **V01.0.116** Self-test during update fixed: a new test talked to the running TTS engine on the Spark (Event loop is closed)
 - **V01.0.115** Security stage 6: self-test scanner refuses new code with shell=True/eval, routes without login, uploads without a limit, unescaped onclick values and unsorted assistant tools
@@ -40,7 +41,6 @@ All options for running without questions (`--mode api --asr 1.7b --tts 0.6b --y
 - **V01.0.111** Security stage 3: lockout no longer locks out your own browsers, X-Forwarded-For only from the listed proxy, load limits for chat and speech recognition, outbound connections checked (home network only with a switch, answers max. 20 MB, credentials only to their site), API key required on the network
 - **V01.0.110** Adding an appointment without the word “Termin” (e.g. “Trag Zahnarzt am Dienstag ein”) now always goes through the calendar proposal; quality test accepts “3 zu 1” as the score
 - **V01.0.109** Security stage 2: outside text also locks the next message and reaches the model only as data, only a plain yes confirms, at most 4 tools per step, Home Assistant only device domains, foreign voice without personal data
-- **V01.0.108** Update self-test fixed (two new tests looked for install.sh/update.sh in the test copy)
 
 All versions: [CHANGELOG.md](CHANGELOG.md)
 

@@ -69,6 +69,10 @@ def fake_llm():
         LLM_CALLS.append(b)
         last = b["messages"][-1]
         if not b.get("stream"):
+            if "korrigiert gerade" in (b["messages"][0].get("content") or ""):  # fixes.py: "FACT ..." in the correction
+                said = last.get("content") or ""
+                fact = said.split("FACT ", 1)[1] if "FACT " in said else ""
+                return {"choices": [{"message": {"content": json.dumps({"fact": fact})}}]}
             return {"choices": [{"message": {"content": '{"facts": ["Test mag Tee."]}'}}]}
 
         async def gen():

@@ -31,6 +31,7 @@ Alle Optionen ohne Rückfragen (`--mode api --asr 1.7b --tts 0.6b --yes` …) st
 
 <!-- New version: add one line at the top here and in CHANGELOG.md, drop the oldest line here (keep 10). Details go to docs/de and docs/en, not into this README. -->
 
+- **V01.0.118** Aus Korrekturen lernen (aus, Admin + Profil): nach „Nein, …“ fragt der Assistent „Soll ich mir merken …?“ und speichert erst nach „Ja“; korrigierte Fragen können als Testfall in den Qualitätstest
 - **V01.0.117** Werkzeugpflicht per Tabelle, Antwort-Prüfung hält erfundene Uhrzeiten, Daten, Spielstände und Beträge zurück, Temperatur 0.1 bei der Werkzeugwahl, Qualitätstest mit Umformulierungen, Wiederholung und Verlauf, optional Nachdenken bei der Werkzeugwahl
 - **V01.0.116** Selbsttest beim Update repariert: ein neuer Test sprach auf dem Spark die laufende TTS-Engine an (Event loop is closed)
 - **V01.0.115** Sicherheit Stufe 6: Selbsttest-Scanner lehnt neuen Code mit shell=True/eval, Routen ohne Anmeldung, Uploads ohne Grenze, unmaskierte onclick-Werte und uneingeordnete Assistenten-Werkzeuge ab
@@ -40,7 +41,6 @@ Alle Optionen ohne Rückfragen (`--mode api --asr 1.7b --tts 0.6b --yes` …) st
 - **V01.0.111** Sicherheit Stufe 3: Sperre sperrt eigene Browser nicht mehr aus, X-Forwarded-For nur vom eingetragenen Proxy, Lastgrenzen für Chat und Spracherkennung, Verbindungen nach außen geprüft (Heimnetz nur mit Schalter, Antworten max. 20 MB, Zugangsdaten nur an ihre Seite), API-Schlüssel Pflicht im Netz
 - **V01.0.110** Termin eintragen ohne das Wort „Termin“ (z. B. „Trag Zahnarzt am Dienstag ein“) geht jetzt immer über den Kalender-Vorschlag; Qualitätstest nimmt „3 zu 1“ als Ergebnis an
 - **V01.0.109** Sicherheit Stufe 2: fremder Text sperrt auch die nächste Nachricht und geht nur als Daten ans Modell, nur schlichtes Ja bestätigt, höchstens 4 Werkzeuge pro Schritt, Home Assistant nur Geräte-Bereiche, fremde Stimme ohne persönliche Daten
-- **V01.0.108** Selbsttest beim Update repariert (zwei neue Tests suchten install.sh/update.sh in der Testkopie)
 
 Alle Versionen: [CHANGELOG.md](CHANGELOG.md)
 

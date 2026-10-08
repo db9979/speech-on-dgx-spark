@@ -191,6 +191,28 @@ def profile_toollog(prof=Depends(own_profile)):
     return {"days": profiles.TOOL_LOG_DAYS, "items": profiles.tool_log(prof["id"])[::-1]}
 
 
+@router.post("/api/profile/quality-case", dependencies=[Depends(assistant)])
+async def profile_quality_case(request: Request, prof=Depends(browser_profile)):
+    """A question the assistant got wrong goes to the admin's quality test (fixes.py, quality.py). Only the
+    profile's own browser login; the text comes from the profile's own log, not from the request."""
+    guard.limit(request, "chat", uid=prof["id"])
+    if not load_config().get("chat", {}).get("learn_fixes", False):
+        raise HTTPException(403, "learning from corrections is off")
+    body = await request.json()
+    t = body.get("t") if isinstance(body, dict) else None
+    if not isinstance(t, int) or isinstance(t, bool):
+        raise HTTPException(400, "t is required")
+    item = next((x for x in profiles.tool_log(prof["id"]) if x.get("t") == t), None)
+    q = next((c["args"] for c in (item or {}).get("calls", []) if c.get("name") == "Korrektur" and c.get("args")), "")
+    if not q:
+        raise HTTPException(404, "no corrected question in this entry")
+    import quality
+    if not quality.add_own(q):
+        raise HTTPException(409, "already in the test or the list is full")
+    guard.log("quality_case", uid=prof["id"])
+    return {"ok": True}
+
+
 @router.delete("/api/profile/toollog", dependencies=[Depends(assistant)])
 def profile_toollog_clear(prof=Depends(browser_profile)):
     profiles.tool_log_clear(prof["id"])
@@ -590,7 +612,8 @@ def profile_settings(request: Request):
     base = profiles.defaults(load_config().get("chat", {}).get("defaults"))
     chat = load_config().get("chat", {})
     return {"settings": dict(base, **(profiles.settings(prof["id"]) if prof else {})), "defaults": base,
-            "profile": prof, "allow": {"tool_think": bool(prof and chat.get("tool_thinking", False))}}
+            "profile": prof, "allow": {"tool_think": bool(prof and chat.get("tool_thinking", False)),
+                                       "fix_learn": bool(prof and chat.get("learn_fixes", False) and chat.get("memory", True))}}
 
 
 @router.put("/api/profile/settings", dependencies=[Depends(assistant)])

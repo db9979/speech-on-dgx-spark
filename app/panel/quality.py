@@ -23,6 +23,8 @@ from core import DEFAULTS
 STATE = os.environ.get("SPEECH_SPARK_STATE", "/var/lib/speech-spark/state")
 RESULT = os.path.join(STATE, "quality.json")
 HISTORY = os.path.join(STATE, "quality-history.json")
+OWN = os.path.join(STATE, "quality-cases.json")   # questions profiles handed over after a correction
+MAX_OWN = 30
 KEEP = 20  # runs in the history
 TIME = r"\b\d{1,2}([:.]\d{2})\s*(uhr)?\b|\b\d{1,2}\s*uhr\b"
 NO_DATA = r"kein|nicht|nichts|leer|weiß ich nicht"
@@ -123,13 +125,67 @@ ALT = {
 
 
 def cases():
-    """Every case, followed by its other wordings ("id~2", "id~3")."""
+    """Every case, followed by its other wordings ("id~2", "id~3"), then the profiles' own questions."""
     out = []
     for case in _cases():
         out.append(case)
         for n, q in enumerate(ALT.get(case["id"], []), 2):
             out.append(dict(case, id=f"{case['id']}~{n}", q=q))
-    return out
+    return out + [_own_case(x) for x in own()]
+
+
+def _own_case(x):
+    """A question the model got wrong in real life: every sandbox tool offered, each finds nothing. It
+    has to look things up when the question needs it, and must not make up figures."""
+    import chat
+    names = ["calendar_events", "calendar_add", "daily_briefing", "mail_list", "mail_search", "mail_read",
+             "reminder_set", "reminder_list", "reminder_cancel", "web_search", "history_search"]
+    tools = [chat.CALENDAR_TOOL, chat.CALENDAR_ADD_TOOL, chat.BRIEFING_TOOL, chat.SEARCH_TOOL, chat.HISTORY_TOOL] \
+        + chat.MAIL_TOOLS + chat.REMINDER_TOOLS + chat.MEMORY_TOOLS
+    hints = [chat.BRIEFING_HINT, chat.CALENDAR_HINT, chat.CALENDAR_ADD_HINT, chat.MAIL_HINT, chat.REMINDER_HINT,
+             chat.SEARCH_HINT, chat.HISTORY_HINT]
+    nothing = "Nothing found. Say so; do not guess."
+    case = {"id": "eigen-" + x["id"], "q": x["q"], "tools": tools, "hints": hints, "own": True,
+            "results": dict({n: nothing for n in names}, memory_save="Saved.", memory_forget="Nothing to forget."),
+            "must": "", "never": ""}
+    case["tool"] = "any" if _need(case) else "optional"
+    return case
+
+
+def own():
+    try:
+        with open(OWN) as f:
+            items = json.load(f)
+        return [x for x in items if isinstance(x, dict) and isinstance(x.get("q"), str)][:MAX_OWN] \
+            if isinstance(items, list) else []
+    except (OSError, ValueError):
+        return []
+
+
+def add_own(q):
+    """A profile's question for the test (from its own log). Returns False when it was there already
+    or the list is full."""
+    q = re.sub(r"\s+", " ", str(q or "")).strip()[:200]
+    items = own()
+    if not q or any(x["q"].lower() == q.lower() for x in items) or len(items) >= MAX_OWN:
+        return False
+    import secrets
+    _write_own(items + [{"id": secrets.token_hex(4), "q": q, "t": int(time.time())}])
+    return True
+
+
+def drop_own(cid):
+    items = own()
+    keep = [x for x in items if x.get("id") != cid]
+    _write_own(keep)
+    return len(keep) != len(items)
+
+
+def _write_own(items):
+    os.makedirs(STATE, exist_ok=True)
+    with open(OWN + ".tmp", "w") as f:
+        json.dump(items, f, ensure_ascii=False)
+    os.replace(OWN + ".tmp", OWN)
 
 
 def _system(ccfg, hints):
@@ -213,9 +269,11 @@ def _zone():
     return chat.user_zone("Europe/Berlin")
 
 
-def _check(case, answer, called):
+def _check(case, answer, called, held=()):
     """List of reasons why the case failed (empty: passed)."""
     why = []
+    if case.get("own") and held:  # the answer check caught made-up figures: the model is still wrong here
+        why.append("erfundene Angaben (von der Antwort-Prüfung abgefangen): " + ", ".join(held))
     low = answer.lower()
     want = case["tool"]
     if want is None and called:
@@ -264,7 +322,7 @@ async def run(reason="manual"):
                 for attempt in range(2):  # a failed case once more: at temperature 0.3 one miss can be chance
                     try:
                         got = await _run_case(c, ccfg, headers, model, case)
-                        why = _check(case, got["answer"], got["tools"])
+                        why = _check(case, got["answer"], got["tools"], got["held"])
                     except Exception as e:
                         got = {"answer": "", "raw": "", "held": [], "retried": False, "tools": [], "seconds": 0}
                         why = [f"Fehler: {type(e).__name__}: {e}"[:200]]

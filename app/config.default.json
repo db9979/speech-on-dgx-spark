@@ -74,6 +74,7 @@
     "tool_temperature": 0.1,
     "answer_check": true,
     "tool_thinking": false,
+    "learn_fixes": false,
     "datetime": true,
     "search": false,
     "search_url": "",

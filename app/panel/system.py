@@ -1,6 +1,7 @@
 """System page: backups, the live check of the real services and the alerts shown on top."""
 import asyncio
 import json
+import re
 import os
 import secrets
 import sys
@@ -148,7 +149,14 @@ async def livecheck_now():
 
 @router.get("/api/quality", dependencies=[Depends(auth)])
 def quality_result():
-    return {"running": quality.running(), "last": quality.last()}
+    return {"running": quality.running(), "last": quality.last(), "own": quality.own()}
+
+
+@router.delete("/api/quality/cases/{cid}", dependencies=[Depends(auth)])
+def quality_drop_case(cid: str):
+    if not re.fullmatch(r"[0-9a-f]{8}", cid) or not quality.drop_own(cid):
+        raise HTTPException(404, "no such case")
+    return {"own": quality.own()}
 
 
 @router.post("/api/quality", dependencies=[Depends(auth)])

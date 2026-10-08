@@ -22,6 +22,7 @@ import calendars  # noqa: E402
 import profiles  # noqa: E402
 import recall  # noqa: E402
 import answercheck  # noqa: E402
+import fixes  # noqa: E402
 import homeassistant  # noqa: E402
 import mail  # noqa: E402
 import tidy  # noqa: E402
@@ -1060,16 +1061,36 @@ async def _chat(request: Request):
         if xprop:
             cal_note.append(xprop["call"])
             system = (system + "\n\n" + xprop["system"]).strip()
+    pro = None
     if who and own_browser and messages[-1]["role"] == "user" and not prop and not mprop and not xprop:  # one yes confirms one thing
         pro = proactive.reply(who["id"], messages[-1]["content"], said_before)
         if pro:
             cal_note.append(pro["call"])
             system = (system + "\n\n" + pro["system"]).strip()
+    # learning from corrections (fixes.py): a yes saves the proposed sentence, a correction leads to one
+    fix_ok = bool(who and own_browser and private_ok and ccfg.get("memory", True) and fixes.on(ccfg, pset)
+                  and messages[-1]["role"] == "user")
+    fix_fix, fix_prev = False, ""
+    if fix_ok and not prop and not mprop and not xprop and not pro:
+        fp = fixes.pending(who["id"])
+        if fp and fp.get("src", src) == src:
+            fixes.drop_pending(who["id"])
+            if fixes.confirms(messages[-1]["content"]):
+                saved = profiles.remember(who["id"], fp["text"])
+                cal_note.append({"name": "Korrektur gemerkt", "args": "", "result": saved or "nicht gespeichert"})
+                system = (system + "\n\nGedächtnis: Gemerkt wurde „" + (saved or "") + "“. Sag dem Nutzer genau das "
+                          "in einem kurzen Satz.").strip()
+            else:
+                system = (system + "\n\nGedächtnis: Der Vorschlag „" + fp["text"] + "“ wurde NICHT gemerkt, weil der "
+                          "Nutzer nicht zugestimmt hat.").strip()
+        elif fixes.is_correction(messages[-1]["content"], said_before):
+            fix_fix = True
+            fix_prev = next((m["content"] for m in reversed(messages[:-2]) if m["role"] == "user"), "")[:200]
     if who and own_browser and messages[-1]["role"] == "user":
         # one answer settles every proposal waiting in this conversation: a later "ja" meant for
         # something else never carries out an old one
         import tasks
-        for mod in (calendars, tidy, tasks):
+        for mod in (calendars, tidy, tasks, fixes):
             p = mod.pending(who["id"])
             if p and p.get("src", src) == src:
                 mod.drop_pending(who["id"])
@@ -1132,6 +1153,8 @@ async def _chat(request: Request):
     async def llm():
         try:
             model = await llm_model(c, ccfg, lheaders)
+            fix_task = asyncio.create_task(fixes.extract(
+                ccfg, model, who["name"], messages[-1]["content"], said_before, bool(carry))) if fix_fix else None
             base = {"model": model, "stream": True, "max_tokens": int(ccfg.get("max_tokens") or 4096),
                     "temperature": float(ccfg.get("temperature", 0.3))}
             if not ccfg.get("thinking"):
@@ -1285,7 +1308,20 @@ async def _chat(request: Request):
                                                  + ", ".join(answercheck.label(f) for f in st["dropped"])})
                 await out.put({"type": "text", "delta": (" " if st["shown"] else "") + note})
                 trace["said"] += note
+                st["shown"] += len(note) + 1
                 await sentences.put(note)
+            if fix_task:
+                lesson = await fix_task
+                busy = any((m.pending(who["id"]) or {}).get("src") == src for m in (calendars, tidy))
+                trace["calls"].append({"name": "Korrektur", "args": fix_prev,
+                                       "result": lesson or "nichts Dauerhaftes zum Merken"})
+                if lesson and not busy and not st["mail"] and not st["outside"]:
+                    en = guess_language(messages[-1]["content"]) == "English"
+                    ask_it = fixes.question(lesson, en)
+                    fixes.propose(who["id"], lesson, src)
+                    await out.put({"type": "text", "delta": (" " if st["shown"] else "") + ask_it})
+                    trace["said"] += " " + ask_it
+                    await sentences.put(ask_it)
         except Exception as e:
             status = getattr(getattr(e, "response", None), "status_code", None)
             m = re.match(r"LLM HTTP (\d+)", str(e))

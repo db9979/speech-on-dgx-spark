@@ -315,7 +315,11 @@ function qRender(d){const r=d&&d.last;clearTimeout(qTimer);
     +(x.retried?`<div class="mut">${t('Ohne Werkzeug geantwortet, neu gefragt','Answered without a tool, asked again')}</div>`:'');
   const rows=bad.length||flaky.length||held.length?[...bad,...flaky,...held]:r.cases;
   $('qlist').innerHTML=rows.map(x=>`<tr><td style="width:36%">${x.ok?'✅':'❌'} ${esc(x.q)}${mark(x)}<div class="mut">${esc(x.tools.join(', ')||t('kein Werkzeug','no tool'))}</div></td><td>${x.ok?'':`<b>${esc(x.why.join('; '))}</b><br>`}<span class="mut">${esc(x.answer||'–')}</span>${extra(x)}</td></tr>`).join('')}
-async function loadQuality(){try{qRender(await (await api('/api/quality')).json())}catch{}}
+function qOwn(l){if(!l)return;$('qownbox').style.display=l.length?'':'none';
+  $('qown').innerHTML=l.map(x=>`<li><span>${esc(x.q)}</span><button class="b" type="button" data-qdrop="${esc(x.id)}">${t('Löschen','Delete')}</button></li>`).join('')}
+$('qown').addEventListener('click',async e=>{const b=e.target.closest('[data-qdrop]');if(!b)return;
+  try{qOwn((await (await api('/api/quality/cases/'+encodeURIComponent(b.dataset.qdrop),{method:'DELETE'})).json()).own)}catch(err){$('qmsg').innerHTML=`<span class="err">${esc(err.message)}</span>`}});
+async function loadQuality(){try{const d=await (await api('/api/quality')).json();qRender(d);qOwn(d.own)}catch{}}
 $('qgo').onclick=async()=>{try{qRender(await (await api('/api/quality',{method:'POST'})).json())}catch(e){$('qmsg').innerHTML=`<span class="err">${esc(e.message)}</span>`}};
 $('livego').onclick=async()=>{$('livego').disabled=true;$('livemsg').textContent=t('prüft … (bis zu einer Minute)','checking … (up to a minute)');
   try{liveRender(await (await api('/api/livecheck',{method:'POST'})).json())}catch(e){$('livemsg').innerHTML=`<span class="err">${esc(e.message)}</span>`}$('livego').disabled=false;refresh()};
