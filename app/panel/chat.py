@@ -21,6 +21,7 @@ import speakers  # noqa: E402
 import calendars  # noqa: E402
 import profiles  # noqa: E402
 import recall  # noqa: E402
+import answercheck  # noqa: E402
 import homeassistant  # noqa: E402
 import mail  # noqa: E402
 import tidy  # noqa: E402
@@ -303,12 +304,30 @@ NEED_MAIL = re.compile(r"(?i)\b(e-?mails?|mails?|posteingang|inbox)\b")
 # reminders and news-like questions as well: the model listed a made-up reminder and "knew" that
 # there was no Bundesliga match yesterday instead of looking it up (quality test V01.0.110)
 NEED_REMINDER = re.compile(r"(?i)\b(erinnerung\w*|erinnere? mich|timer\w*|wecker\w*|reminders?)\b")
-NEED_SEARCH = re.compile(r"(?i)\b(gewonnen|gewinnt|verloren|gespielt|spielt\w*|spielstand|ergebnis(se)?|tabelle|"
+NEED_SEARCH = re.compile(r"(?i)\b(gewonnen|gewinnt|verloren|gespielt|spielt\w*|spiel(e|s)?|spielstand|ausgegangen|ergebnis(se)?|tabelle|"
                          r"bundesliga|champions league|nachrichten|news|schlagzeilen?)\b")
 CALENDAR_ADD_HINT = ("Neue Termine trägst du mit calendar_add ein. Das Werkzeug speichert noch nichts: Lies dem "
                      "Nutzer den Vorschlag aus dem Ergebnis vor und frag, ob du ihn eintragen sollst. Eingetragen "
                      "wird erst, wenn er in der nächsten Nachricht zustimmt. Frag vorher nach, wenn Tag oder Uhrzeit "
                      "fehlen, statt sie zu raten.")
+NEED_TOOLS = [  # tool that has to be offered, words in the question: one place for chat and quality test
+    ("calendar_events", NEED_CALENDAR),
+    ("mail_list", NEED_MAIL),
+    ("reminder_list", NEED_REMINDER),
+    ("web_search", NEED_SEARCH),
+    ("weather", re.compile(r"(?i)\b(wetter\w*|regnet|regen|schnee\w*|weather|rain\w*)\b")),
+    ("parcels", re.compile(r"(?i)\b(paket\w*|päckchen|lieferung\w*|sendung\w*|parcels?|packages?|deliver\w*)\b")),
+    ("transit", re.compile(r"(?i)\b(bus|busse|bahn|s-?bahn|zug|züge|tram|straßenbahn|abfahrt\w*|verbindung\w*|"
+                           r"fahrplan|train|departures?)\b")),
+    ("tasks_show", re.compile(r"(?i)(einkaufsliste|einkaufszettel|aufgabenliste|to-?do|\b(auf|von) (die|der|meine[rn]?) "
+                              r"liste\b|shopping list)")),
+]
+
+
+def needed(text, offered):
+    """The tools among offered (names) that this question has to go through."""
+    return [name for name, words in NEED_TOOLS if name in offered and words.search(text or "")]
+
 
 
 def appointment(args, tz):
@@ -763,14 +782,15 @@ async def due_briefings(now=None):
 
 
 # Applies to every tool: answers come from what the tools return, never from guesses.
-TOOL_RULES = ("Regeln für deine Werkzeuge: Wenn die Antwort von Daten abhängt, die ein Werkzeug liefert "
-              "(Termine, Erinnerungen, E-Mails, Gemerktes, frühere Gespräche, Smart Home, aktuelle Fakten), "
-              "rufe das Werkzeug auf und antworte nie aus dem Gedächtnis oder aus Vermutung. Gib nur wieder, "
-              "was wörtlich im Ergebnis steht: keine erfundenen Uhrzeiten, Namen, Zahlen, Orte oder Gründe, "
-              "keine Schlüsse, die das Ergebnis nicht hergibt. Ist das Ergebnis leer, ein Fehler oder passt es "
-              "nicht zur Frage, sag das offen, zum Beispiel „Dazu habe ich nichts gefunden“. Sag nie, dass du "
-              "etwas erledigt, gestellt oder gespeichert hast, wenn kein Werkzeug-Ergebnis das bestätigt. "
-              "Ist die Frage unklar, frag kurz nach, statt zu raten.")
+TOOL_RULES = ("Regeln für deine Werkzeuge:\n"
+              "1. Hängt die Antwort von Daten ab (Termine, Erinnerungen, E-Mails, Gemerktes, frühere Gespräche, "
+              "Smart Home, Ergebnisse, Nachrichten), rufe zuerst das Werkzeug auf. Nie aus dem Gedächtnis.\n"
+              "2. Sag nur, was im Ergebnis steht: keine eigenen Uhrzeiten, Daten, Namen, Zahlen oder Gründe.\n"
+              "3. Leeres Ergebnis oder Fehler: sag das offen. Erledigt ist nur, was ein Ergebnis bestätigt.\n"
+              "4. Unklare Frage: kurz nachfragen statt raten.\n"
+              "Beispiele: „Welche Erinnerungen habe ich?“ → reminder_list, nicht „Du hast eine Erinnerung um "
+              "13:30“ ohne Ergebnis. „Wie hat Bayern gespielt?“ → web_search, auch wenn du glaubst, es gab kein "
+              "Spiel. „Trag Zahnarzt am Dienstag ein“ → calendar_add, dann den Vorschlag aus dem Ergebnis vorlesen.")
 
 
 HISTORY_CHARS = 24000  # about 8000 tokens of earlier conversation; documents and tools come on top
@@ -1080,25 +1100,14 @@ async def _chat(request: Request):
         system = (system + "\n\n" + "Du hast in diesem Gespräch keinen Zugriff auf: " + ", ".join(missing)
                   + " (nicht eingerichtet oder nicht mit einem Profil angemeldet). Fragt der Nutzer danach, sag "
                     "genau das und nenne nie Termine oder E-Mails, die du nicht aus einem Werkzeug hast.").strip()
-    # a question about appointments or mail must go through the tool, not the model's imagination
-    need = []
+    # a question about appointments, mail, reminders, news ... must go through the tool, not the
+    # model's imagination (NEED_TOOLS)
     ask_text = messages[-1]["content"] if messages[-1]["role"] == "user" else ""
-    if cal["calendars"] and NEED_CALENDAR.search(ask_text):
-        need.append("calendar_events")
-    if mailbox and NEED_MAIL.search(ask_text):
-        need.append("mail")
-    if REMINDER_TOOLS[0] in tools and NEED_REMINDER.search(ask_text):
-        need.append("reminders")
-    if SEARCH_TOOL in tools and NEED_SEARCH.search(ask_text):
-        need.append("search")
-    if "weather" in ex["run"] and re.search(r"(?i)\b(wetter\w*|regnet|regen|schnee\w*|weather|rain\w*)\b", ask_text):
-        need.append("weather")
-    if "parcels" in ex["run"] and re.search(r"(?i)\b(paket\w*|päckchen|lieferung\w*|sendung\w*|parcels?|packages?|deliver\w*)\b", ask_text):
-        need.append("parcels")
-    if "transit" in ex["run"] and re.search(r"(?i)\b(bus|busse|bahn|s-?bahn|zug|züge|tram|straßenbahn|abfahrt\w*|verbindung\w*|fahrplan|train|departures?)\b", ask_text):
-        need.append("transit")
-    if "tasks_show" in ex["run"] and re.search(r"(?i)(einkaufsliste|einkaufszettel|aufgabenliste|to-?do|\b(auf|von) (die|der|meine[rn]?) liste\b|shopping list)", ask_text):
-        need.append("tasks")
+    need = needed(ask_text, {t["function"]["name"] for t in tools})
+    check_on = bool(ccfg.get("answer_check", True))
+    tool_temp = float(ccfg.get("tool_temperature", 0.1))
+    # thinking only while choosing the tool: the admin allows it, the profile switches it on (never guests)
+    think_tools = bool(who and own_browser and ccfg.get("tool_thinking", False) and pset.get("tool_think"))
     small = bool(SMALLTALK.fullmatch(ask_text))
     if tools:
         system = (system + "\n\n" + TOOL_RULES).strip()
@@ -1128,11 +1137,12 @@ async def _chat(request: Request):
             if not ccfg.get("thinking"):
                 base["chat_template_kwargs"] = {"enable_thinking": False}
             st = {"buf": "", "first": True, "think": False, "n": 0, "mail": carry == "mail", "outside": carry == "outside",
-                  "offered": set(), "saves": 0}
+                  "offered": set(), "saves": 0, "shown": 0, "check": bool(need) and check_on, "hold": None, "dropped": [], "msgs": None}
             if carry:
                 await out.put({"type": carry})
             msgs, finish = list(messages), None
-            searches = 0
+            st["msgs"] = msgs
+            searches, used, retried = 0, False, False
             if ha_direct:
                 await out.put({"type": "home", "command": ha_direct})
                 try:
@@ -1163,8 +1173,14 @@ async def _chat(request: Request):
                 st["offered"] = {t["function"]["name"] for t in offer}
                 if offer:
                     payload["tools"] = offer
-                    if rnd == 0 and need:
+                    if not used:  # choosing the tool: steadier (and, if switched on, with thinking)
+                        payload["temperature"] = tool_temp
+                        if think_tools:
+                            payload["chat_template_kwargs"] = {"enable_thinking": True}
+                    if not used and need:
                         payload["tool_choice"] = "required"
+                # a data question still without a tool: hold the whole round, it may have to be asked again
+                st["hold"] = [] if st["check"] and need and not used and not retried else None
                 try:
                     try:
                         finish, calls = await llm_round(payload, st)
@@ -1187,7 +1203,20 @@ async def _chat(request: Request):
                     head = [m for m in msgs if m["role"] == "system"]
                     rest = trim_history([m for m in msgs if m["role"] in ("user", "assistant")], HISTORY_CHARS // 4)
                     msgs = head + rest
+                    st["msgs"] = msgs
                     finish, calls = await llm_round(dict(payload, messages=msgs), st)
+                held, st["hold"] = st["hold"], None
+                if held is not None and not calls and finish != "length":
+                    # answered a data question without looking anything up: never said, asked once more
+                    print("chat: answer check: no tool for a data question, asked again", flush=True)
+                    trace["calls"].append({"name": "Antwort-Prüfung", "args": "", "result":
+                                           "ohne Werkzeug geantwortet, verworfen: " + " ".join(held)[:300]})
+                    retried = True
+                    st["buf"], st["first"] = "", True
+                    msgs.append({"role": "user", "content": answercheck.RETRY_NOTE})
+                    continue
+                for x in held or []:
+                    await speak(x, st)
                 if not calls or finish == "length":
                     break
                 rest = st["buf"].strip()
@@ -1195,11 +1224,14 @@ async def _chat(request: Request):
                     # a finished sentence right before the tool call (often the last one of the
                     # answer, before a memory note): it stays and is spoken
                     st["first"] = False
-                    await sentences.put(rest)
+                    await speak(rest, st)
+                elif rest and st["check"]:
+                    pass  # held back, never shown
                 elif rest:
                     # words written before the tool call without a sentence end ("Der Fernseher im"):
                     # take them back, the next round says it properly (length in UTF-16 as in the browser)
                     await out.put({"type": "retract", "drop": len(st["buf"].encode("utf-16-le")) // 2})
+                    st["shown"] -= len(st["buf"])
                 st["buf"] = ""
                 msgs.append({"role": "assistant", "content": None, "tool_calls": [
                     {"id": x["id"], "type": "function", "function": {"name": x["name"], "arguments": x["arguments"]}}
@@ -1226,6 +1258,8 @@ async def _chat(request: Request):
                     msgs.append({"role": "tool", "tool_call_id": x["id"], "content": result})
                     if x["name"] == "web_search":
                         searches += 1
+                used = True
+                st["check"] = check_on  # an answer from tool results: its figures are checked
             if (calls or st["xml"]) and finish != "length":
                 # out of tool rounds while the model still wanted one: one last answer without tools
                 msgs.append({"role": "user", "content": "(Keine weiteren Werkzeuge mehr möglich. Sag jetzt kurz, "
@@ -1237,10 +1271,21 @@ async def _chat(request: Request):
                 # tell the browser how much of the shown text to drop.
                 ends = [m.end() for m in BOUNDARY.finditer(buf + " ")]
                 keep = buf[:min(ends[-1], len(buf))] if ends else ""
-                await out.put({"type": "truncated", "drop": len(buf) - len(keep)})
+                if not st["check"]:
+                    await out.put({"type": "truncated", "drop": len(buf) - len(keep)})
                 buf = keep
             if buf.strip():
-                await sentences.put(buf.strip())
+                await speak(buf.strip(), st)
+            if st["dropped"]:
+                # figures that are in no result were not said: one honest sentence instead
+                en = guess_language(messages[-1]["content"]) == "English"
+                note = answercheck.FALLBACK["en" if en else "de"]
+                trace["calls"].append({"name": "Antwort-Prüfung", "args": "",
+                                       "result": "nicht gesagt (steht in keinem Ergebnis): "
+                                                 + ", ".join(answercheck.label(f) for f in st["dropped"])})
+                await out.put({"type": "text", "delta": (" " if st["shown"] else "") + note})
+                trace["said"] += note
+                await sentences.put(note)
         except Exception as e:
             status = getattr(getattr(e, "response", None), "status_code", None)
             m = re.match(r"LLM HTTP (\d+)", str(e))
@@ -1615,6 +1660,22 @@ async def _chat(request: Request):
             await out.put({"type": "sources", "items": srcs})
         return "\n\n".join(parts)
 
+    async def speak(piece, st):
+        """One finished sentence to the browser (if not shown yet) and to TTS. With the answer check
+        on, a sentence naming figures that are in nothing the model was given is not said."""
+        if st["check"]:
+            have = answercheck.known([m.get("content") for m in st["msgs"] or messages])
+            miss = answercheck.unsupported(piece, have)
+            if miss:
+                print("chat: answer check: held back a sentence with", [answercheck.label(f) for f in miss], flush=True)
+                st["dropped"] += [f for f in miss if f not in st["dropped"]]
+                return
+            piece_shown = (" " if st["shown"] else "") + piece
+            await out.put({"type": "text", "delta": piece_shown})
+            trace["said"] += piece_shown
+            st["shown"] += len(piece_shown)
+        await sentences.put(piece)
+
     async def llm_round(payload, st):
         """Streams one LLM call: text goes to the browser and, sentence by sentence, to TTS.
         Returns (finish_reason, tool calls)."""
@@ -1665,13 +1726,18 @@ async def _chat(request: Request):
                 if st["n"] == 0:
                     await out.put({"type": "timing", "llm_first_token": round(time.time() - t0, 3)})
                 st["n"] += 1
-                await out.put({"type": "text", "delta": text})
-                trace["said"] += text
+                if not st["check"]:
+                    await out.put({"type": "text", "delta": text})
+                    trace["said"] += text
+                    st["shown"] += len(text)
                 st["buf"] += text
                 done, st["buf"] = split_sentences(st["buf"], st["first"])
                 for x in done:
                     st["first"] = False
-                    await sentences.put(x)
+                    if st["hold"] is not None:
+                        st["hold"].append(x)
+                    else:
+                        await speak(x, st)
         out_calls = [dict(v, id=v["id"] or f"call_{i}") for i, v in sorted(calls.items()) if v["name"]]
         return finish, out_calls
 

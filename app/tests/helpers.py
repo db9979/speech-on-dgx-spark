@@ -96,6 +96,8 @@ def fake_llm():
                 yield _sse({"choices": [{"delta": {}, "finish_reason": "tool_calls"}]})
                 yield "data: [DONE]\n\n"
                 return
+            if role == "user" and c.startswith("SAY "):  # a model that answers without a tool, whatever is asked
+                c = "NO TOOL" + c[3:]
             if role == "user" and c.startswith("TOOL "):
                 name, _, args = c[5:].partition(" ")
                 force = name.startswith("!")  # a model that calls a tool it was not offered
@@ -108,6 +110,8 @@ def fake_llm():
                     return
                 c = "NO TOOL " + name
             text = ("Ergebnis: " + c[:800]) if role == "tool" else ("Hallo." if not c.startswith("NO TOOL") else c)
+            if c.startswith("NO TOOL |"):  # SAY: just the words after the bar
+                text = c.split("|", 2)[2].strip() if c.count("|") >= 2 else c
             for i in range(0, len(text), 10):
                 yield _sse({"choices": [{"delta": {"content": text[i:i + 10]}, "finish_reason": None}]})
             yield _sse({"choices": [{"delta": {}, "finish_reason": "stop"}]})

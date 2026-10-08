@@ -22,6 +22,8 @@ from core import DEFAULTS
 
 STATE = os.environ.get("SPEECH_SPARK_STATE", "/var/lib/speech-spark/state")
 RESULT = os.path.join(STATE, "quality.json")
+HISTORY = os.path.join(STATE, "quality-history.json")
+KEEP = 20  # runs in the history
 TIME = r"\b\d{1,2}([:.]\d{2})\s*(uhr)?\b|\b\d{1,2}\s*uhr\b"
 NO_DATA = r"kein|nicht|nichts|leer|weiß ich nicht"
 _lock = asyncio.Lock()
@@ -103,6 +105,33 @@ def _cases():
     ]
 
 
+# the same question in other words: one wording may pass by luck, the tool table has to catch them all
+ALT = {
+    "kalender-leer": ["Hab ich morgen irgendwelche Termine?", "Was steht morgen im Kalender?"],
+    "kalender-termin": ["Was hab ich morgen für Termine?"],
+    "termin-vorschlag": ["Trag mir für Dienstag um 10 Uhr einen Zahnarzttermin ein.",
+                         "Kannst du Zahnarzt am Dienstag um 10 Uhr in den Kalender eintragen?"],
+    "mails-neu": ["Sind neue E-Mails da?", "Schau mal in meine Mails."],
+    "erinnerung-setzen": ["Stell mir eine Erinnerung in zehn Minuten für den Tee."],
+    "erinnerungen-leer": ["Was hab ich für Erinnerungen?", "Hab ich noch Timer laufen?"],
+    "suche-fehlgeschlagen": ["Wie ist der letzte Bundesliga-Spieltag ausgegangen?"],
+    "suche-treffer": ["Wie ist das Spiel von Bayern gestern ausgegangen?", "Hat Bayern gestern gewonnen?"],
+    "gedaechtnis-unbekannt": ["Weißt du, wie mein Bruder heißt?"],
+    "dokument-leer": ["Wie lange ist die Kündigungsfrist in meinem Mietvertrag?"],
+    "kontostand": ["Wie viel Geld hab ich auf dem Konto?"],
+}
+
+
+def cases():
+    """Every case, followed by its other wordings ("id~2", "id~3")."""
+    out = []
+    for case in _cases():
+        out.append(case)
+        for n, q in enumerate(ALT.get(case["id"], []), 2):
+            out.append(dict(case, id=f"{case['id']}~{n}", q=q))
+    return out
+
+
 def _system(ccfg, hints):
     import chat
     parts = [ccfg.get("system_prompt") or "", chat.now_line("Europe/Berlin")] + list(hints) + [chat.TOOL_RULES]
@@ -110,24 +139,35 @@ def _system(ccfg, hints):
 
 
 async def _run_case(c, ccfg, headers, model, case):
+    """One case like a real turn: tool table, steady tool choice, answer check (see chat.py)."""
+    import answercheck
     msgs = [{"role": "system", "content": _system(ccfg, case["hints"])}, {"role": "user", "content": case["q"]}]
     called = []
     t0 = time.time()
     answer = ""
-    for rnd in range(3):
+    need = _need(case)
+    check_on = bool(ccfg.get("answer_check", True))
+    retried = False
+    for rnd in range(4):
         payload = {"model": model, "stream": False, "max_tokens": 600, "temperature": float(ccfg.get("temperature", 0.3)),
                    "messages": msgs}
         if not ccfg.get("thinking"):
             payload["chat_template_kwargs"] = {"enable_thinking": False}
-        if case["tools"] and rnd < 2:
+        if case["tools"] and rnd < 3:
             payload["tools"] = case["tools"]
-            if rnd == 0 and _need(case):
-                payload["tool_choice"] = "required"
+            if not called:
+                payload["temperature"] = float(ccfg.get("tool_temperature", 0.1))
+                if need:
+                    payload["tool_choice"] = "required"
         r = await c.post(ccfg["llm_url"].rstrip("/") + "/chat/completions", json=payload, headers=headers)
         r.raise_for_status()
         m = r.json()["choices"][0]["message"]
         calls = m.get("tool_calls") or []
         answer = re.sub(r"(?s)<think>.*?</think>", "", m.get("content") or "").strip()
+        if not calls and need and check_on and not called and not retried:
+            retried = True  # a data question answered without a tool: never said, asked once more
+            msgs.append({"role": "user", "content": answercheck.RETRY_NOTE})
+            continue
         if not calls:
             break
         msgs.append({"role": "assistant", "content": None, "tool_calls": calls})
@@ -136,17 +176,36 @@ async def _run_case(c, ccfg, headers, model, case):
             called.append(name)
             msgs.append({"role": "tool", "tool_call_id": x.get("id", ""),
                          "content": case["results"].get(name, "Unknown tool " + name)})
-    return answer, called, round(time.time() - t0, 1)
+    raw, held = answer, []
+    if check_on and (need or called):
+        answer, held = heard(answer, [m.get("content") for m in msgs])
+    return {"answer": answer, "raw": raw, "held": held, "retried": retried, "tools": called,
+            "seconds": round(time.time() - t0, 1)}
+
+
+def heard(answer, given):
+    """What the user hears of answer after the answer check: sentences with figures that are in
+    nothing given are left out, and one honest sentence comes instead."""
+    import answercheck
+    import chat
+    done, rest = chat.split_sentences(answer + " ", False)
+    have = answercheck.known(given)
+    keep, held = [], []
+    for x in done + ([rest.strip()] if rest.strip() else []):
+        miss = answercheck.unsupported(x, have)
+        if miss:
+            held += [answercheck.label(f) for f in miss]
+        else:
+            keep.append(x)
+    if held:
+        keep.append(answercheck.FALLBACK["de"])
+    return " ".join(keep), held
 
 
 def _need(case):
-    """Like a real turn (chat.py): appointment and mail questions must go through a tool."""
+    """Like a real turn (chat.needed): appointment, mail, reminder and news questions must go through a tool."""
     import chat
-    names = {t["function"]["name"] for t in case["tools"]}
-    return bool(("calendar_events" in names and chat.NEED_CALENDAR.search(case["q"]))
-                or ("mail_list" in names and chat.NEED_MAIL.search(case["q"]))
-                or ("reminder_list" in names and chat.NEED_REMINDER.search(case["q"]))
-                or ("web_search" in names and chat.NEED_SEARCH.search(case["q"])))
+    return bool(chat.needed(case["q"], {t["function"]["name"] for t in case["tools"]}))
 
 
 def _zone():
@@ -200,22 +259,32 @@ async def run(reason="manual"):
                        "cases": [], "passed": 0, "total": 0}
                 _save(res)
                 return res
-            for case in _cases():
-                try:
-                    answer, called, secs = await _run_case(c, ccfg, headers, model, case)
-                    why = _check(case, answer, called)
-                except Exception as e:
-                    answer, called, secs, why = "", [], 0, [f"Fehler: {type(e).__name__}: {e}"[:200]]
-                out.append({"id": case["id"], "q": case["q"], "answer": answer[:600], "tools": called,
-                            "seconds": secs, "ok": not why, "why": why})
+            for case in cases():
+                first = None
+                for attempt in range(2):  # a failed case once more: at temperature 0.3 one miss can be chance
+                    try:
+                        got = await _run_case(c, ccfg, headers, model, case)
+                        why = _check(case, got["answer"], got["tools"])
+                    except Exception as e:
+                        got = {"answer": "", "raw": "", "held": [], "retried": False, "tools": [], "seconds": 0}
+                        why = [f"Fehler: {type(e).__name__}: {e}"[:200]]
+                    if not why or attempt:
+                        break
+                    first = {"why": why, "answer": got["answer"][:300], "tools": got["tools"]}
+                out.append({"id": case["id"], "q": case["q"], "answer": got["answer"][:600], "tools": got["tools"],
+                            "seconds": got["seconds"], "ok": not why, "why": why, "flaky": bool(first and not why),
+                            "first": first, "held": got["held"], "retried": got["retried"],
+                            "raw": got["raw"][:600] if got["held"] else ""})
         res = {"t": int(time.time()), "reason": reason, "model": model, "seconds": round(time.time() - t0),
-               "temperature": float(ccfg.get("temperature", 0.3)), "cases": out,
+               "temperature": float(ccfg.get("temperature", 0.3)),
+               "tool_temperature": float(ccfg.get("tool_temperature", 0.1)), "cases": out,
                "passed": sum(x["ok"] for x in out), "total": len(out)}
         try:
             from core import app_version
             res["version"] = app_version()
         except Exception:
             pass
+        _history(res)
         _save(res)
         print(f"quality test ({reason}): {res['passed']}/{res['total']}", flush=True)
         return res
@@ -226,6 +295,33 @@ def _save(res):
     with open(RESULT + ".tmp", "w") as f:
         json.dump(res, f, ensure_ascii=False, indent=1)
     os.replace(RESULT + ".tmp", RESULT)
+
+
+def history():
+    try:
+        with open(HISTORY) as f:
+            h = json.load(f)
+        return h if isinstance(h, list) else []
+    except (OSError, ValueError):
+        return []
+
+
+def _history(res):
+    """Marks each case against the earlier runs (newly broken, wobbly) and keeps this run."""
+    prev = history()[-KEEP:]
+    for x in res["cases"]:
+        seen = [h for h in prev if x["id"] in h.get("ids", [])]
+        x["wobbly"] = sum(x["id"] in h.get("fail", []) or x["id"] in h.get("flaky", []) for h in seen)
+        x["runs"] = len(seen)
+        x["new"] = bool(not x["ok"] and seen and x["id"] not in seen[-1].get("fail", []))
+    prev.append({"t": res["t"], "version": res.get("version", ""), "model": res["model"], "passed": res["passed"],
+                 "total": res["total"], "ids": [x["id"] for x in res["cases"]],
+                 "fail": [x["id"] for x in res["cases"] if not x["ok"]],
+                 "flaky": [x["id"] for x in res["cases"] if x.get("flaky")]})
+    os.makedirs(STATE, exist_ok=True)
+    with open(HISTORY + ".tmp", "w") as f:
+        json.dump(prev[-KEEP:], f, ensure_ascii=False)
+    os.replace(HISTORY + ".tmp", HISTORY)
 
 
 def last():

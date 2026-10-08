@@ -173,6 +173,7 @@ $('proflogout').onclick=async()=>{await fetch('/api/profile/logout',{method:'POS
 $('factclear').onclick=async()=>{if(!confirm(t('Alles vergessen, was sich der Assistent über dich gemerkt hat?','Forget everything the assistant remembered about you?')))return;
   await api('/api/profile/memory',{method:'DELETE'});showFacts()};
 // ---------------------------------------------------------------- conversation settings
+let ALLOW={};
 const SETF=[
   {g:t('Zuhören','Listening'),k:'hands',type:'bool',l:t('Freihändig','Hands-free'),h:t('Nach der Antwort automatisch wieder zuhören.','Listen again automatically after each answer.')},
   {k:'auto',type:'bool',l:t('Bei Stille beenden','Stop on silence'),h:t('Die Aufnahme endet von selbst, wenn du aufhörst zu sprechen.','Recording ends by itself when you stop talking.')},
@@ -184,6 +185,7 @@ const SETF=[
   {k:'speed',type:'range',l:t('Sprechtempo','Speaking rate'),h:t('Schneller oder langsamer, ohne die Stimmlage zu ändern.','Faster or slower without changing the pitch.'),min:0.7,max:1.4,step:0.05},
   {k:'length',type:'sel',l:t('Antwortlänge','Answer length'),h:t('Wie ausführlich der Assistent antwortet.','How detailed the assistant answers.'),o:[['short',t('kurz','short')],['normal',t('normal','normal')],['long',t('ausführlich','detailed')]]},
   {k:'learn',type:'bool',prof:1,l:t('Aus Gesprächen lernen','Learn from conversations'),h:t('Nach einem Gespräch merkt sich der Assistent wenige dauerhafte Dinge über dich. Du siehst und löschst sie unter dem Profil-Knopf.','After a conversation the assistant remembers a few lasting things about you. You can see and delete them under the profile button.')},
+  {k:'tool_think',type:'bool',prof:1,need:'tool_think',l:t('Bei Werkzeugen nachdenken','Think before using tools'),h:t('Bevor der Assistent nachsieht (Kalender, Mails, Suche …), denkt er kurz nach, welches Werkzeug passt. Zuverlässiger, aber die Antwort beginnt etwas später.','Before the assistant looks something up (calendar, mail, search …) it thinks briefly about which tool fits. More reliable, but the answer starts a little later.')},
   {g:t('Anzeige','Display'),k:'daily',type:'bool',l:t('Jeden Tag neues Gespräch','New conversation every day'),h:t('Am nächsten Tag beginnt automatisch ein neues Gespräch; die alten bleiben im Verlauf.','The next day a new conversation starts by itself; older ones stay in the history.')},
   {k:'timing',type:'bool',l:t('Zeiten anzeigen','Show timings'),h:t('Wie lange Erkennung, Modell und erster Ton gebraucht haben.','How long recognition, model and first audio took.')}];
 {let g;SETF.forEach(f=>{g=f.g||g;f.grp=g})}
@@ -191,7 +193,7 @@ let VOICES=null;
 async function voiceList(admin){if(!PROFILE&&!admin)return [];if(VOICES)return VOICES;try{const r=await fetch(admin?'/api/tts/voices':'/api/assistant/voices');VOICES=r.ok?((await r.json()).voices||[]).filter(x=>typeof x==='string'):[]}catch{VOICES=[]}return VOICES}
 // Builds the settings rows into el; onchange(key, value) after each change. Returns a getter.
 async function renderSet(el,vals,onchange){const admin=!onchange,voices=await voiceList(admin);const v={...vals};
-  const fields=SETF.filter(f=>!(f.k==='voice'||f.prof)||admin||PROFILE);   // guests: default voice, nothing learned
+  const fields=SETF.filter(f=>(!(f.k==='voice'||f.prof)||admin||PROFILE)&&(!f.need||(!admin&&ALLOW[f.need])));   // guests: default voice, nothing learned; need: only when the admin allows it
   let prev;el.innerHTML=fields.map(f=>{let ctl;const id='set_'+el.id+'_'+f.k;
     if(f.type==='bool')ctl=`<label class="tgl"><input type="checkbox" id="${id}"${v[f.k]?' checked':''}><i></i></label>`;
     else if(f.type==='sel')ctl=`<select id="${id}">${f.o.map(([a,b])=>`<option value="${a}"${v[f.k]===a?' selected':''}>${esc(b)}</option>`).join('')}</select>`;
@@ -211,7 +213,7 @@ async function renderSet(el,vals,onchange){const admin=!onchange,voices=await vo
   return()=>({...v})}
 function applySet(){$('chathands').checked=!!S.hands;$('chattiming').style.display=S.timing?'':'none'}
 async function loadSettings(){let d=null;try{d=await (await fetch('/api/profile/settings')).json()}catch{}
-  SDEF={...SDEF,...(d&&d.defaults||{})};S={...SDEF,...(d&&d.settings||{})};
+  SDEF={...SDEF,...(d&&d.defaults||{})};S={...SDEF,...(d&&d.settings||{})};ALLOW=(d&&d.allow)||{};
   if(!PROFILE&&!isGuest()){try{S={...S,...JSON.parse(localStorage.getItem('chatset')||'{}')}}catch{}}
   applySet();if(!S.daily&&!chat.cid&&!chat.msgs.length)openConvo((convos.load()[0]||{}).id||null)}
 let setTimer=null;

@@ -877,7 +877,8 @@ class Quality(unittest.TestCase):
         import quality
         users_before = sorted(os.listdir(os.environ["SPEECH_SPARK_USERS"]))
         res = asyncio.run(quality.run("test"))
-        self.assertEqual(res["total"], 20)
+        self.assertEqual(res["total"], len(quality.cases()))
+        self.assertGreaterEqual(res["total"], 35)
         byid = {x["id"]: x for x in res["cases"]}
         self.assertTrue(byid["witz"]["ok"], byid["witz"])
         self.assertFalse(byid["kalender-leer"]["ok"])              # the fake model calls no tool
@@ -885,7 +886,13 @@ class Quality(unittest.TestCase):
         self.assertEqual(sorted(os.listdir(os.environ["SPEECH_SPARK_USERS"])), users_before)
         c = TestClient(panel.app)
         c.post("/api/login", json={"password": "secret-admin"})
-        self.assertEqual(c.get("/api/quality").json()["last"]["total"], 20)
+        self.assertEqual(c.get("/api/quality").json()["last"]["total"], res["total"])
+        self.assertEqual(len(quality.history()), 1)
+        res2 = asyncio.run(quality.run("test"))
+        byid2 = {x["id"]: x for x in res2["cases"]}
+        self.assertEqual(byid2["kalender-leer"]["wobbly"], 1)   # failed in the run before: wobbly, not new
+        self.assertFalse(byid2["kalender-leer"]["new"])
+        self.assertEqual(byid2["kalender-leer"]["runs"], 1)
         self.assertEqual(TestClient(panel.app).get("/api/quality").status_code, 401)
 
 
@@ -910,6 +917,76 @@ class Quality(unittest.TestCase):
             self.assertFalse(quality._need(cases[cid]), cid)
         self.assertFalse(quality._need(cases["kalender-ohne-zugriff"]))
         self.assertTrue(quality._check(cases["termin-vorschlag"], "Am 13. Oktober um 10 Uhr, oder?", []))
+
+
+class AnswerCheck(unittest.TestCase):
+    def test_figures(self):
+        import answercheck as ac
+        have = ac.known(["Do 08.10. 10:00–11:00: Zahnarzt", "„Zahnarzt“ am Di 13.10.2026 10:00–11:00",
+                         "[1] Bayern gewinnt 3:1 gegen Bremen", "Rechnung über 49,99 EUR", "2026-10-20T08:15"])
+        for ok in ["Am 13. Oktober um 10 Uhr, oder?", "Bayern hat drei zu eins gewonnen.", "Bayern gewann 3 : 1.",
+                   "Die Rechnung über 49,99 € ist da.", "Am 20.10. um 8:15 Uhr.", "Heute ist Donnerstag.",
+                   "Von 10 bis 11 Uhr beim Zahnarzt.", "Um 10 Uhr.", "Um zwei Uhr nachmittags."]:
+            self.assertEqual(ac.unsupported(ok, have), [], ok)
+        for bad, f in [("Du hast eine Erinnerung um 13:30 Uhr.", ("t", 13, 30)), ("Am 14. Oktober.", ("d", 14, 10)),
+                       ("Es stand 2:0.", ("s", 2, 0)), ("Das kostet 12 Euro.", ("m", 12, 0)),
+                       ("Der Termin ist am 13.11. um 9.30 Uhr.", ("t", 9, 30))]:
+            self.assertIn(f, ac.unsupported(bad, have), bad)
+        self.assertEqual(ac.facts("Am 13.10. von 10 bis 11 Uhr"), {("d", 13, 10), ("t", 11, 0)})  # 13.10. no time
+
+    def test_heard_in_quality_test(self):
+        import quality
+        said, held = quality.heard("Du hast eine Erinnerung: Ofen um 13:30 Uhr. Sonst nichts.", ["No pending reminders."])
+        self.assertEqual(held, ["13:30 Uhr"])
+        self.assertNotIn("13:30", said)
+        self.assertIn("Sonst nichts.", said)
+        self.assertIn("Genauere Angaben", said)
+        self.assertEqual(quality.heard("Um 19:42 Uhr klingelt es.", ["Reminder set for 19:42: Tee"]), ("Um 19:42 Uhr klingelt es.", []))
+
+    def test_chat_asks_again_and_holds_back(self):
+        a = profile("Prüfer")
+        helpers.set_config(answer_check=True, tool_temperature=0.1)
+        helpers.LLM_CALLS.clear()
+        evs = ask(a, "SAY Welche Erinnerungen habe ich? | Du hast eine Erinnerung um 13:30 Uhr.")
+        said = answer(evs)
+        self.assertNotIn("13:30", said)                  # made up without a tool: never shown or spoken
+        first = helpers.LLM_CALLS[0]
+        self.assertEqual(first.get("tool_choice"), "required")
+        self.assertEqual(first["temperature"], 0.1)       # steady while choosing the tool
+        self.assertIn("passende Werkzeug", json.dumps(helpers.LLM_CALLS[1]["messages"], ensure_ascii=False))
+        self.assertEqual(said, "Hallo.")
+        log = a.get("/api/profile/toollog").json()["items"][0]["calls"]
+        self.assertEqual(log[0]["name"], "Antwort-Prüfung")
+        # an ordinary question is not checked: figures from the model's general knowledge stay
+        said = answer(ask(a, "SAY Erzähl was über den Mond. | Die Mondlandung war am 20. Juli 1969 um 21:17 Uhr."))
+        self.assertIn("21:17", said)
+        # switched off by the admin: said as it comes
+        helpers.set_config(answer_check=False)
+        self.assertIn("13:30", answer(ask(a, "SAY Welche Erinnerungen habe ich? | Um 13:30 Uhr.")))
+        helpers.set_config(answer_check=True)
+
+    def test_thinking_for_tools_only_when_both_allow(self):
+        a, g = profile("Denker"), TestClient(panel.app)
+        q = "TOOL reminder_list {}"
+        thinks = lambda: [x.get("chat_template_kwargs", {}).get("enable_thinking") for x in helpers.LLM_CALLS]  # noqa: E731
+        helpers.set_config(tool_thinking=False)
+        a.put("/api/profile/settings", json={"tool_think": True})
+        self.assertFalse(a.get("/api/profile/settings").json()["allow"]["tool_think"])
+        helpers.LLM_CALLS.clear()
+        answer(ask(a, q))
+        self.assertNotIn(True, thinks())                # admin has not allowed it
+        helpers.set_config(tool_thinking=True)
+        self.assertTrue(a.get("/api/profile/settings").json()["allow"]["tool_think"])
+        helpers.LLM_CALLS.clear()
+        answer(ask(a, q))
+        self.assertEqual(thinks(), [True, False])        # thinks while choosing, not for the answer
+        helpers.set_config(public=True)
+        helpers.LLM_CALLS.clear()
+        answer(ask(g, "Hallo, wie spät ist es?"))
+        self.assertNotIn(True, thinks())                # never guests
+        self.assertFalse(g.get("/api/profile/settings").json()["allow"]["tool_think"])
+        helpers.set_config(tool_thinking=False)
+        a.put("/api/profile/settings", json={"tool_think": False})
 
 
 class MemoryTidy(unittest.TestCase):

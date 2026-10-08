@@ -301,13 +301,20 @@ async function loadLive(){try{liveRender(await (await api('/api/livecheck')).jso
 // quality test of the language model (sandbox questions, see quality.py)
 let qTimer=null;
 function qRender(d){const r=d&&d.last;clearTimeout(qTimer);
-  if(d&&d.running){$('qmsg').textContent=t('läuft … (ein bis drei Minuten)','running … (one to three minutes)');$('qgo').disabled=true;qTimer=setTimeout(loadQuality,5000)}
+  if(d&&d.running){$('qmsg').textContent=t('läuft … (zwei bis vier Minuten)','running … (two to four minutes)');$('qgo').disabled=true;qTimer=setTimeout(loadQuality,5000)}
   else{$('qgo').disabled=false;$('qmsg').textContent=r?new Date(r.t*1000).toLocaleString()+' · '+(r.version||'')+(r.reason==='after update'?t(' · nach dem Update',' · after the update'):''):''}
   if(!r){$('qsum').innerHTML=`<span class="mut">${t('Noch nicht geprüft.','Not tested yet.')}</span>`;$('qlist').innerHTML='';return}
   if(r.error){$('qsum').innerHTML=`<span class="err">${esc(r.error)}</span>`;$('qlist').innerHTML='';return}
-  const bad=r.cases.filter(x=>!x.ok);
-  $('qsum').innerHTML=`<span class="pill ${bad.length?'warn':'ok'}">${r.passed} / ${r.total}</span> <span class="mut">${esc(r.model||'')} · ${t('Temperatur','temperature')} ${r.temperature} · ${r.seconds} s</span>`;
-  $('qlist').innerHTML=(bad.length?bad:r.cases).map(x=>`<tr><td style="width:36%">${x.ok?'✅':'❌'} ${esc(x.q)}<div class="mut">${esc(x.tools.join(', ')||t('kein Werkzeug','no tool'))}</div></td><td>${x.ok?'':`<b>${esc(x.why.join('; '))}</b><br>`}<span class="mut">${esc(x.answer||'–')}</span></td></tr>`).join('')}
+  const bad=r.cases.filter(x=>!x.ok),flaky=r.cases.filter(x=>x.ok&&x.flaky),held=r.cases.filter(x=>x.ok&&!x.flaky&&x.held&&x.held.length);
+  $('qsum').innerHTML=`<span class="pill ${bad.length?'warn':'ok'}">${r.passed} / ${r.total}</span> <span class="mut">${esc(r.model||'')} · ${t('Temperatur','temperature')} ${r.temperature}${r.tool_temperature!=null?' / '+r.tool_temperature+t(' bei der Werkzeugwahl',' choosing tools'):''} · ${r.seconds} s</span>`
+    +(flaky.length?` <span class="pill warn">${flaky.length} ${t('erst im zweiten Versuch','only on the second try')}</span>`:'');
+  const mark=x=>(x.new?` <span class="pill warn">${t('neu kaputt','newly broken')}</span>`:'')
+    +(x.wobbly?` <span class="mut">${t('wackelt','wobbles')} (${x.wobbly} ${t('von','of')} ${x.runs})</span>`:'');
+  const extra=x=>(x.flaky&&x.first?`<div class="mut">${t('Erster Versuch','First try')}: ${esc(x.first.why.join('; '))}</div>`:'')
+    +(x.held&&x.held.length?`<div class="mut">${t('Antwort-Prüfung hat zurückgehalten','Answer check held back')}: ${esc(x.held.join(', '))}${x.raw?' · „'+esc(x.raw)+'“':''}</div>`:'')
+    +(x.retried?`<div class="mut">${t('Ohne Werkzeug geantwortet, neu gefragt','Answered without a tool, asked again')}</div>`:'');
+  const rows=bad.length||flaky.length||held.length?[...bad,...flaky,...held]:r.cases;
+  $('qlist').innerHTML=rows.map(x=>`<tr><td style="width:36%">${x.ok?'✅':'❌'} ${esc(x.q)}${mark(x)}<div class="mut">${esc(x.tools.join(', ')||t('kein Werkzeug','no tool'))}</div></td><td>${x.ok?'':`<b>${esc(x.why.join('; '))}</b><br>`}<span class="mut">${esc(x.answer||'–')}</span>${extra(x)}</td></tr>`).join('')}
 async function loadQuality(){try{qRender(await (await api('/api/quality')).json())}catch{}}
 $('qgo').onclick=async()=>{try{qRender(await (await api('/api/quality',{method:'POST'})).json())}catch(e){$('qmsg').innerHTML=`<span class="err">${esc(e.message)}</span>`}};
 $('livego').onclick=async()=>{$('livego').disabled=true;$('livemsg').textContent=t('prüft … (bis zu einer Minute)','checking … (up to a minute)');

@@ -2,6 +2,7 @@
 
 Every version in one line, newest first (taken from the commit messages, so some lines are German, some English). Older entries have no version number.
 
+- **V01.0.117** · 2026-10-08 · Werkzeugpflicht per Tabelle, Antwort-Prüfung hält erfundene Uhrzeiten, Daten, Spielstände und Beträge zurück, Temperatur 0.1 bei der Werkzeugwahl, Qualitätstest mit Umformulierungen, Wiederholung und Verlauf, optional Nachdenken bei der Werkzeugwahl
 - **V01.0.116** · 2026-10-08 · Selbsttest beim Update repariert: ein neuer Test sprach auf dem Spark die laufende TTS-Engine an (Event loop is closed)
 - **V01.0.115** · 2026-10-08 · Sicherheit Stufe 6: Selbsttest-Scanner lehnt neuen Code mit shell=True/eval, Routen ohne Anmeldung, Uploads ohne Grenze, unmaskierte onclick-Werte und uneingeordnete Assistenten-Werkzeuge ab
 - **V01.0.114** · 2026-10-08 · Sicherheit Stufe 5: Admin-Abmelden beendet alle Kopien, Admin überall abmelden, Codewort-Nachricht in Telegram gelöscht, Aufräumen nur bei exaktem Absender, gefälschte Paketmails ignoriert, Fehler und Dienst-Details nicht für Gäste

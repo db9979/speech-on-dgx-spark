@@ -340,6 +340,12 @@ def validate(new):
         raise HTTPException(400, "chat max_tokens must be 16..32768")
     if not isinstance(ch.get("temperature", 0.3), (int, float)) or not 0 <= ch.get("temperature", 0.3) <= 1.5:
         raise HTTPException(400, "chat temperature must be 0..1.5")
+    if not isinstance(ch.get("tool_temperature", 0.1), (int, float)) or isinstance(ch.get("tool_temperature", 0.1), bool) \
+            or not 0 <= ch.get("tool_temperature", 0.1) <= 1.5:
+        raise HTTPException(400, "chat tool_temperature must be 0..1.5")
+    for k in ("answer_check", "tool_thinking"):
+        if not isinstance(ch.get(k, False), bool):
+            raise HTTPException(400, f"chat {k} must be true or false")
     for sec in ("asr", "tts"):
         if not MODEL_ID.fullmatch(str(new[sec]["model"])):
             raise HTTPException(400, f"{sec}: only Qwen's own speech models (Qwen/Qwen3-ASR-... or Qwen/Qwen3-TTS-...)")

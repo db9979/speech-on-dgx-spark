@@ -588,8 +588,9 @@ def profile_settings(request: Request):
     """Conversation settings: the admin's defaults, overlaid with the profile's own (if logged in)."""
     prof = profiles.current(request)
     base = profiles.defaults(load_config().get("chat", {}).get("defaults"))
+    chat = load_config().get("chat", {})
     return {"settings": dict(base, **(profiles.settings(prof["id"]) if prof else {})), "defaults": base,
-            "profile": prof}
+            "profile": prof, "allow": {"tool_think": bool(prof and chat.get("tool_thinking", False))}}
 
 
 @router.put("/api/profile/settings", dependencies=[Depends(assistant)])
