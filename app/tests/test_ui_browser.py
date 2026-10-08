@@ -112,7 +112,8 @@ class Browser(unittest.TestCase):
 
     def test_zustand_says_how_it_is_and_what_needs_you(self):
         """V01.0.146: Zustand starts with one sentence and lists unsaved settings pages under "Braucht dich"
-        with a button that opens the page; the dot in the menu follows the sentence."""
+        with a button that opens the page; the dot in the menu follows the sentence. (Services may also be
+        listed there, e.g. "Sprachausgabe ist aus" where systemd runs, so the test looks for "Nicht gespeichert".)"""
         async def go():
             async with async_playwright() as p:
                 br, pg, errors = await self.page(p, 1280, 900)
@@ -123,13 +124,13 @@ class Browser(unittest.TestCase):
                 self.assertEqual(await pg.evaluate("$('hdot').className"), "hdot " + lvl)
                 await pg.evaluate("markDirty($('pane-tts'),true)")
                 self.assertFalse(await pg.evaluate("$('zneed').hidden"))
-                self.assertIn("Sprachausgabe", await pg.inner_text("#zlist"))
+                self.assertIn("Nicht gespeichert: Sprachausgabe", await pg.inner_text("#zlist"))
                 self.assertEqual(await pg.inner_text("#dirtycnt"), "1")
                 await pg.evaluate("[...document.querySelectorAll('#zlist button')].pop().click()")
                 await pg.wait_for_timeout(300)
                 self.assertTrue(await pg.evaluate("$('pane-tts').classList.contains('on')"))
                 await pg.evaluate("markDirty($('pane-tts'),false)")
-                self.assertTrue(await pg.evaluate("$('zneed').hidden||!$('zlist').textContent.includes('Sprachausgabe')"))
+                self.assertTrue(await pg.evaluate("$('zneed').hidden||!$('zlist').textContent.includes('Nicht gespeichert')"))
                 self.assertEqual(errors, [])
                 await br.close()
         self.run_async(go())
