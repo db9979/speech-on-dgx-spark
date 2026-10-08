@@ -1225,7 +1225,9 @@ NO = re.compile(r"(?i)\b(nein|nö|nee|nicht|stopp|abbrechen|lass( es)?|doch nich
 
 
 def confirms(text):
-    return bool(YES.search(text or "")) and not NO.search(text) and len(str(text).split()) <= 12
+    import calendars
+    return bool(YES.search(text or "")) and not NO.search(text) and calendars.confirms(
+        re.sub(r"(?i)^\W*leg (ihn|es|den entwurf) ab\b", "ja", str(text or "").strip()) or "")
 
 
 def _pending_file(uid):

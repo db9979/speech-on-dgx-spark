@@ -173,7 +173,7 @@ async def ask(uid, text):
     async def receive():
         return {"type": "http.request", "body": data, "more_body": False}
     response = await chat.chat(Request(scope, receive))
-    answer, error, from_mail = "", "", False
+    answer, error, from_mail, from_outside = "", "", False, False
     async for chunk in response.body_iterator:
         for line in (chunk.decode() if isinstance(chunk, bytes) else chunk).split("\n"):
             if not line.startswith("data:"):
@@ -188,6 +188,8 @@ async def ask(uid, text):
                 answer = answer[:max(0, len(answer) - int(ev.get("drop") or 0))]
             elif ev.get("type") == "mail":
                 from_mail = True
+            elif ev.get("type") == "outside":
+                from_outside = True
             elif ev.get("type") == "error" and not error:
                 error = "Der Spark konnte gerade nicht antworten."
     answer = answer.strip() or error or "Dazu habe ich keine Antwort."
@@ -196,7 +198,8 @@ async def ask(uid, text):
     if ha and homeassistant.needs_code(ha):
         text = homeassistant.redact(ha, text)   # the code word is never kept
     msgs = history + [{"role": "user", "content": text},
-                      dict({"role": "assistant", "content": answer}, **({"mail": True} if from_mail else {}))]
+                      dict({"role": "assistant", "content": answer}, **({"mail": True} if from_mail else
+                                                                       {"outside": True} if from_outside else {}))]
     _history[uid] = (now, msgs)
     local = datetime.datetime.now(chat.user_zone(s.get("tz", "")))
     day = local.strftime("%Y%m%d")

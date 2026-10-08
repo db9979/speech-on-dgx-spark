@@ -475,10 +475,16 @@ async def test_asr(request: Request, file: UploadFile = File(...), language: str
             spk.cancel()
         raise HTTPException(503, "asr_down: the speech recognition service does not answer")
     if rv is not None:
+        # the voice belongs to exactly this recording: kept together with its words, so a "Ja" heard in
+        # another recording (TV, another person) never borrows the owner's voice
         try:
-            room_mode.set_voice(me["id"], room, (await rv)[0] or "")
+            said = str(r.json().get("text") or "") if r.status_code == 200 else ""
+        except ValueError:
+            said = ""
+        try:
+            room_mode.set_voice(me["id"], room, (await rv)[0] or "", said)
         except Exception:
-            room_mode.set_voice(me["id"], room, "")
+            room_mode.set_voice(me["id"], room, "", said)
     if spk is None or r.status_code != 200:
         return Response(r.content, status_code=r.status_code, media_type="application/json")
     out = r.json()

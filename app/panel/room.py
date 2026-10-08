@@ -320,7 +320,8 @@ async def heard(uid, rid, text, body):
     # kept (and later given to the model) with the code word blacked out; the yes below still
     # sees the words as spoken
     ha = homeassistant.get(uid)
-    r["lines"].append((time.time(), homeassistant.redact(ha, text) if ha and homeassistant.needs_code(ha) else text))
+    red = homeassistant.redact(ha, text) if ha and homeassistant.needs_code(ha) else text
+    r["lines"].append((time.time(), red))
     r["since_comment"] += 1
     r["since_detect"] += 1
     stop = STOP.match(text)
@@ -333,7 +334,7 @@ async def heard(uid, rid, text, body):
     offer = r["offer"]
     if offer and time.time() - offer["t"] < OFFER_SECONDS and len(text) <= 80:
         if calendars.confirms(text):
-            wrong = _not_owner(uid, voice)
+            wrong = _not_owner(uid, voice, text)
             if wrong:
                 offer["t"] = time.time()
                 print(f"room: yes not taken ({offer['kind']}: {wrong})", flush=True)
@@ -353,11 +354,11 @@ async def heard(uid, rid, text, body):
     if kinds["conv"] and conversion(text):
         cue = {"kind": "conv", "say": conversion(text)}
     elif kinds["q"] and open_question(text):
-        cue = {"kind": "question", "text": text, "before": [x[1] for x in r["lines"][-5:-1]
+        cue = {"kind": "question", "text": red, "before": [x[1] for x in r["lines"][-5:-1]
                                                              if time.time() - x[0] < 120]}
     elif level != "questions":
         if kinds["cal"] and appointment_cue(text):
-            cue = {"kind": "calendar", "text": text}
+            cue = {"kind": "calendar", "text": red}
         elif kinds["ha"] and room_cue(text):
             cue = {"kind": "ha", "what": room_cue(text)}
         elif kinds["shop"]:
@@ -368,7 +369,7 @@ async def heard(uid, rid, text, body):
         if not cue and kinds["timer"] and timer_cue(text):
             cue = dict(timer_cue(text), kind="timer")
         if not cue and kinds["remind"] and forget_cue(text):
-            cue = {"kind": "remind", "what": forget_cue(text), "text": text}
+            cue = {"kind": "remind", "what": forget_cue(red), "text": red}
     if cue and r["mute"] > time.time():
         print(f"room: cue {cue['kind']} ignored (asked to be quiet)", flush=True)
         cue = None
@@ -722,18 +723,25 @@ def wants_voice(uid, rid):
     return bool(r and r["offer"] and time.time() - r["offer"]["t"] < OFFER_SECONDS and owner_voice(uid))
 
 
-def set_voice(uid, rid, who):
-    """Whose voice the latest recording of this room was (a user id, "" for nobody known, None unchecked)."""
+def _words(text):
+    return re.sub(r"\W+", " ", str(text or "").lower()).strip()
+
+
+def set_voice(uid, rid, who, text=""):
+    """Whose voice the latest recording of this room was (a user id, "" for nobody known, None unchecked),
+    with the words of that recording."""
     r = ROOMS.get((uid, str(rid)))
     if r is not None:
-        r["voice"] = None if who is None else (time.time(), who)
+        r["voice"] = None if who is None else (time.time(), who, _words(text))
 
 
-def _not_owner(uid, voice):
+def _not_owner(uid, voice, text=None):
     if not owner_voice(uid):
         return None
     if not voice or time.time() - voice[0] > VOICE_SECONDS or not voice[1]:
         return "unknown"
+    if text is not None and len(voice) > 2 and voice[2] and voice[2] != _words(text):
+        return "unknown"  # the voice was checked on another recording than this "Ja"
     return None if voice[1] == uid else "other"
 
 

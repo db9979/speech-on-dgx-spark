@@ -484,11 +484,21 @@ async def _areas(c, item):
     return found
 
 
+def free_text(result):
+    """Does a states text carry words other people chose (a media title, a long text state, every
+    attribute of one entity)? Then it counts as outside text in chat.py."""
+    r = str(result)
+    return "playing=" in r or "\nattributes: " in r or "…" in r
+
+
 def _line(s, names, area):
     a = s.get("attributes") or {}
     eid = s.get("entity_id", "")
     dom = eid.split(".")[0]
-    val = f"{s.get('state', '')}" + (f" {a['unit_of_measurement']}" if a.get("unit_of_measurement") else "")
+    state = str(s.get("state", ""))
+    if len(state) > 40:  # a text sensor (news, messages ...): free text from somewhere else, kept short
+        state = state[:40] + "…"
+    val = state + (f" {a['unit_of_measurement']}" if a.get("unit_of_measurement") else "")
     extra = []
     if dom == "climate":
         extra += [f"{k}={a[k]}" for k in ("current_temperature", "temperature", "hvac_action", "preset_mode") if a.get(k) is not None]
@@ -497,7 +507,7 @@ def _line(s, names, area):
     elif dom == "light" and s.get("state") == "on" and a.get("brightness") is not None:
         extra.append(f"brightness={round(a['brightness'] / 2.55)}%")
     elif dom == "media_player" and a.get("media_title"):
-        extra.append(f"playing={a['media_title']}")
+        extra.append(f"playing={str(a['media_title'])[:60]}")
     elif dom == "weather":
         extra += [f"{k}={a[k]}" for k in ("temperature", "humidity", "wind_speed") if a.get(k) is not None]
     elif dom == "zone":
@@ -633,6 +643,9 @@ _VERBS = [("turn_off", "aus ausschalten ausmachen abschalten off stop stopp"),
           ("toggle", "umschalten toggle")]
 _SWITCHABLE = {"light", "switch", "fan", "cover", "media_player", "climate", "input_boolean", "humidifier",
                "vacuum", "water_heater", "remote", "siren"}
+# Direct actions only for these domains (an allowlist: a script or automation can open a door or turn
+# an alarm off, and new domains in Home Assistant must not become switchable by themselves)
+ALLOWED = _SWITCHABLE | {"scene", "valve", "select", "input_select", "number", "input_number"}
 _FILLER = set("schalte schalt mach mache machen stell stelle bitte mal den die das dem im in am beim vom ganz "
               "the please turn switch set".split())
 
@@ -773,10 +786,11 @@ async def action(item, entity_id, service, data=None):
         _log("action: bad service", repr(service[:80]))
         return False, "Nothing switched. Give the service, e.g. turn_on, turn_off, toggle, set_temperature, set_cover_position."
     domain = eid.split(".")[0]
-    if domain in BLOCKED:
+    if domain in BLOCKED or domain not in ALLOWED:
         _log("action: blocked domain", eid)
-        return False, ("Locks, alarm systems and updates are not switched from here; the user can do it in "
-                       "Home Assistant itself.")
+        return False, ("Only lights, switches, covers, climate, media, fans and similar devices are switched from "
+                       "here; locks, alarm systems, updates, scripts, automations and buttons are not. The user "
+                       "can do it in Home Assistant itself.")
     extra = {}
     for k, v in (data if isinstance(data, dict) else {}).items():
         k = str(k)

@@ -222,7 +222,7 @@ HINT = ("Für Fragen zu Bus und Bahn rufe transit auf und lies die Abfahrten ode
 
 def offer(ctx):
     who = ctx.get("who")
-    if not who or not usable(who["id"]):
+    if not who or not ctx.get("own") or not usable(who["id"]):
         return None
     return {"tools": [TOOL], "hint": HINT, "outside": {"transit"},
             "filler": {"transit": ("Ich schaue in den Fahrplan.", "Let me check the timetable.")}}

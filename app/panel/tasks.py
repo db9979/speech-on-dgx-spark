@@ -346,11 +346,11 @@ HINT = ("Für die Einkaufsliste und die Aufgabenliste nutzt du tasks_show, tasks
 
 def offer(ctx):
     who = ctx.get("who")
-    if not who or not usable(who["id"]):
-        return None
-    tools = TOOLS if ctx.get("own") else TOOLS[:1]
+    if not who or not ctx.get("own") or not usable(who["id"]):
+        return None  # a voice recognized at someone else's device reads no lists either
+    tools = TOOLS
     outside = {"tasks_show"} if _load(who["id"])["targets"] else set()   # shared CalDAV lists hold others' words
-    return {"tools": tools, "hint": HINT, "outside": outside, "changes": {"tasks_add"},
+    return {"tools": tools, "hint": HINT, "outside": outside, "changes": {"tasks_add", "tasks_change"},
             "filler": {"tasks_show": ("Ich schaue auf die Liste.", "Let me check the list.")}}
 
 

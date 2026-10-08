@@ -85,6 +85,15 @@ def fake_llm():
             if role == "tool" and "THEN TOOL " in c:  # outside text asking for another tool
                 c = "TOOL " + c.split("THEN TOOL ", 1)[1].split("\n")[0]
                 role = "user"
+            if role == "user" and c.startswith("MANY "):  # one round with many calls of one tool
+                n, _, rest = c[5:].partition(" ")
+                name, _, args = rest[5:].partition(" ")
+                yield _sse({"choices": [{"delta": {"tool_calls": [
+                    {"index": i, "id": f"m{i}", "type": "function", "function": {"name": name, "arguments": args or "{}"}}
+                    for i in range(int(n))]}, "finish_reason": None}]})
+                yield _sse({"choices": [{"delta": {}, "finish_reason": "tool_calls"}]})
+                yield "data: [DONE]\n\n"
+                return
             if role == "user" and c.startswith("TOOL "):
                 name, _, args = c[5:].partition(" ")
                 force = name.startswith("!")  # a model that calls a tool it was not offered

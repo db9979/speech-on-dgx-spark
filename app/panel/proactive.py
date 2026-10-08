@@ -206,6 +206,11 @@ def feedback(uid, kind, vote):
     return status(uid)
 
 
+def calendars_confirms_or_feedback(text):
+    import calendars
+    return calendars.confirms(text) or bool(LESS.search(text) or NOT_NOW.search(text) or MORE.search(text))
+
+
 def reply(uid, text, prev=None):
     """The panel's part when the person answers a note: a yes to an offered reminder sets it, "nicht
     jetzt" pauses, "interessiert mich nicht" lowers that kind. Returns {"system", "call"} for the
@@ -220,6 +225,8 @@ def reply(uid, text, prev=None):
         return None
     if prev is not None and last.get("text") and _norm(last["text"])[:60] not in _norm(prev):
         return None
+    if prev is None and not calendars_confirms_or_feedback(text):
+        return None  # no note before it in this conversation: only a plain yes/no counts, never a new question
     import calendars
     kind = last.get("kind", "")
     offer = last.get("offer")

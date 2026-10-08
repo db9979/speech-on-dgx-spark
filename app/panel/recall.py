@@ -123,9 +123,11 @@ def learn_messages(prof, convo):
     if start >= len(msgs):  # the stored conversation is capped; its newest messages changed
         start = max(0, len(msgs) - 10)
     part = msgs[max(0, start - 2):]           # a little context before the new part
-    # answers made from e-mails are other people's words, not facts about this person
-    text = "\n".join(("Nutzer: " if m["role"] == "user" else "Assistent: ")
-                     + ("(Antwort aus E-Mails, ausgelassen)" if m.get("mail") else m["content"][:1500]) for m in part)
+    # answers made from e-mails, web pages, calendars ... are other people's words, not facts about this
+    # person; the assistant's own answers only as short context (facts come from what the person said)
+    text = "\n".join(("Nutzer: " + m["content"][:1500]) if m["role"] == "user" else
+                     ("Assistent: (Antwort aus E-Mails oder anderen Texten von außen, ausgelassen)"
+                      if m.get("mail") or m.get("outside") else "Assistent: " + m["content"][:300]) for m in part)
     known = "\n".join("- " + x["text"] for x in profiles.memory(prof["id"])[-60:]) or "(nichts)"
     return [{"role": "system", "content": LEARN_PROMPT.format(name=prof["name"], n=MAX_AUTO_FACTS, known=known)},
             {"role": "user", "content": text[-8000:]}]

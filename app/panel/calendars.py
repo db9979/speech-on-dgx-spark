@@ -398,9 +398,16 @@ NO = re.compile(r"(?i)\b(nein|nö|nee|nicht|stopp|abbrechen|lass( es)?|doch nich
                 r"sondern|lieber|anders|ändern?|änder|verschieb\w*|but|instead|rather|change)\b")
 
 
+# A plain yes holds nothing but yes words: "Okay, wie wird das Wetter?" is a new question, not a yes.
+PLAIN = re.compile(r"(?i)^(\W*\b(ja|jo|jap|jep|jawohl|genau|passt|richtig|stimmt|ok|okay|mach|machs|das|es|ihn|den|"
+                   r"trag|ein|leg|entwurf|ab|bitte|gerne?|danke|klar|gut|super|prima|perfekt|sehr|so|gemacht|"
+                   r"codewort|yes|yeah|sure|do|it|please|thanks|fine)\b)+\W*$")
+
+
 def confirms(text):
-    """A plain yes to a proposal: starts like a yes, no correction in it, and short."""
-    return bool(YES.search(text or "")) and not NO.search(text) and len(str(text).split()) <= 12
+    """A plain yes to a proposal: starts like a yes, nothing else in it (no correction, no new question)."""
+    t = str(text or "").strip()
+    return bool(YES.search(t)) and not NO.search(t) and len(t.split()) <= 8 and bool(PLAIN.fullmatch(t))
 
 
 def _pending_file(uid):

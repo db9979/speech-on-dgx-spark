@@ -161,7 +161,7 @@ function errText(code,msg){const plain=ERRS[code];if(!plain)return msg||t('Unbek
   return plain+(typeof ADMIN!=='undefined'&&ADMIN&&msg&&code!=='net'?' ('+String(msg).slice(0,160)+')':'')}
 async function ask(text,asrS,spk){
   if(S.daily&&chat.cid&&!chat.picked){const c=convos.load().find(x=>x.id===chat.cid);if(c&&c.updated<today0())openConvo(null)}   // past midnight
-const ub=chatLog('user',text);const um={role:'user',content:text};chat.msgs.push(um);deletable(ub,um);let foreign=false,ttsErr=false,mailUsed=false;
+const ub=chatLog('user',text);const um={role:'user',content:text};chat.msgs.push(um);deletable(ub,um);let foreign=false,ttsErr=false,mailUsed=false,outsideUsed=false;
   const el=chatLog('assistant','');$('fabtext').textContent='';let full='',llmS=null,audioS=null,err='';const searches=[],sources=[],mems=[],docs=[];
   const ctrl=new AbortController();chat.ctrl=ctrl;chat.firstPlay=null;chat.gaps=[];chat.blocks=[];chat.t0b=null;setTalk();chatSay(t('Antwort kommt …','Answer coming …'));
   try{const r=await api('/api/chat',{method:'POST',headers:{'Content-Type':'application/json'},signal:ctrl.signal,
@@ -179,6 +179,7 @@ const ub=chatLog('user',text);const um={role:'user',content:text};chat.msgs.push
         else if(ev.type==='sources'){sources.push(...ev.items)}
         else if(ev.type==='proposal'){mems.push('📥 '+t('Vorschlag: ','Proposal: ')+ev.text)}
         else if(ev.type==='mail'){mailUsed=true;chatSay(t('Lese deine E-Mails …','Reading your e-mail …'))}
+        else if(ev.type==='outside'){outsideUsed=true}
         else if(ev.type==='calendar'){chatSay(t('Schaue in deinen Kalender …','Checking your calendar …'))}
         else if(ev.type==='briefing'){chatSay(t('Stelle dein Tagesbriefing zusammen …','Putting your daily briefing together …'))}
         else if(ev.type==='home'){chatSay('🏠 '+ev.command)}
@@ -197,7 +198,7 @@ const ub=chatLog('user',text);const um={role:'user',content:text};chat.msgs.push
   const aborted=ctrl.signal.aborted;if(chat.ctrl===ctrl)chat.ctrl=null;
   // another person's voice: the exchange is theirs, so it stays out of this browser's history and context
   if(foreign){const i=chat.msgs.indexOf(um);if(i>=0)chat.msgs.splice(i,1)}
-  else if(full.trim()){chat.msgs.push(mailUsed?{role:'assistant',content:full.trim(),mail:true}:{role:'assistant',content:full.trim()});deletable(el,chat.msgs.at(-1))}else chat.msgs.pop();saveConvo();
+  else if(full.trim()){chat.msgs.push(mailUsed?{role:'assistant',content:full.trim(),mail:true}:outsideUsed?{role:'assistant',content:full.trim(),outside:true}:{role:'assistant',content:full.trim()});deletable(el,chat.msgs.at(-1))}else chat.msgs.pop();saveConvo();
   el.classList.remove('typing');if(!full.trim())el.textContent=aborted?t('(abgebrochen)','(cancelled)'):'–';
   if(sources.length){const d=document.createElement('div');d.className='src';
     d.innerHTML=`<span>${t('Gesucht','Searched')}: ${esc(searches.join(' · '))}</span>`+sources.slice(0,5).map((s,i)=>`<a href="${esc(s.url)}" target="_blank" rel="noopener noreferrer">${i+1}. ${esc(s.title.slice(0,70))}</a>`).join('');el.appendChild(d)}
