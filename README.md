@@ -31,6 +31,7 @@ All options for running without questions (`--mode api --asr 1.7b --tts 0.6b --y
 
 <!-- New version: add one line at the top here and in CHANGELOG.md, drop the oldest line here (keep 10). Details go to docs/de and docs/en, not into this README. -->
 
+- **V01.0.128** Room mode on the ESP32 speakers too (all board variants): "Raummodus an/aus" by voice or the "Room" switch under Me → Speakers, duration and room per speaker, silent in quiet hours
 - **V01.0.127** Search in the settings and in the Me window (opens the page and marks the spot); browser test for every page on a computer and a phone, runs on GitHub on every push
 - **V01.0.126** Room mode: text only in quiet hours, ends after 2 minutes in the background or with the phone locked, "Raummodus aus" by voice
 - **V01.0.125** New menus: settings in three blocks, all checks under Overview → Checks, Integrate = guides + apps and interfaces, the Me window in the groups of the Features page with an overview and its own Notifications page
@@ -40,7 +41,6 @@ All options for running without questions (`--mode api --asr 1.7b --tts 0.6b --y
 - **V01.0.121** Language model settings: history length, web searches, time limit, top_p/presence_penalty, own keywords that require a tool, prompt preview with a default button, own conversation style per profile (off); the rules stay fixed
 - **V01.0.120** After an update the browser loads the new version by itself (versioned files, an open page reloads when no conversation is running); no more Ctrl+F5
 - **V01.0.119** Quality test: newly broken questions show as a note on top of every admin page for a week
-- **V01.0.118** Learning from corrections (off, admin + profile): after "Nein, …" the assistant asks "Soll ich mir merken …?" and stores it only after a yes; corrected questions can go into the quality test
 
 All versions: [CHANGELOG.md](CHANGELOG.md)
 

@@ -244,6 +244,121 @@ class Speakers(unittest.TestCase):
             with c.websocket_connect("/api/esp32/ws", headers={"Authorization": "Bearer " + s["token"]}) as ws:
                 ws.receive_text()
 
+    @unittest.skipUnless(_has_opus(), "libopus missing")
+    def test_room_mode_on_a_speaker(self):
+        import room
+        helpers.set_config(room=True)
+        a = profile("Esp Rosa")
+        a.put("/api/profile/settings", json={"esp_on": True})
+        s = a.post("/api/profile/esp32/setup", json={"name": "Wohnzimmer", "variant": "bread-compact-wifi",
+                                                     "base": "https://speech.example.de"}).json()
+        did = s["device"]
+        heard = []
+
+        async def asr(pcm):
+            return heard.pop(0) if heard else ""
+
+        async def tts(uid, text):
+            return b"\0" * 4800      # 0.1 s
+        old = esp32.transcribe, esp32.tts_pcm, room.night
+        esp32.transcribe, esp32.tts_pcm = asr, tts
+        room.night = lambda uid, local=None: False      # never the real clock
+        t = np.arange(16000 * 1.0) / 16000
+        voice = (np.sin(2 * np.pi * 220 * t) * 8000).astype("<i2").tobytes()
+        quiet = np.zeros(16000, dtype="<i2").tobytes()
+        c = TestClient(panel.app)
+        hdr = {"Authorization": "Bearer " + s["token"], "Protocol-Version": "1", "Client-Id": s["uuid"]}
+
+        def said(ws):
+            """Texts the board shows until the next tts stop."""
+            out = []
+            while True:
+                m = ws.receive()
+                if m.get("type") == "websocket.close":
+                    raise WebSocketDisconnect(1000)
+                if m.get("bytes") is not None:
+                    continue
+                e = json.loads(m["text"])
+                if e["type"] == "tts" and e.get("state") == "sentence_start":
+                    out.append(e["text"])
+                if e["type"] == "tts" and e.get("state") == "stop":
+                    return out
+
+        def talk(ws, text, mode="auto"):
+            heard.append(text)
+            ws.send_text(json.dumps({"type": "listen", "state": "start", "mode": mode}))
+            for fr in opus16k_frames(quiet[:9600] + voice + quiet):
+                ws.send_bytes(fr)
+
+        def hello(ws):
+            ws.send_text(json.dumps({"type": "hello", "version": 1, "transport": "websocket"}))
+            json.loads(ws.receive_text())
+        try:
+            # by voice: on, a question answered in the pause after the tone, off by voice
+            with c.websocket_connect("/api/esp32/ws", headers=hdr) as ws:
+                hello(ws)
+                talk(ws, "Raummodus an")
+                self.assertIn("Ich höre 30 Minuten zu", said(ws)[0])
+                dev = a.get("/api/profile/esp32").json()["devices"][0]
+                self.assertTrue(dev["room"] and dev["room_until"])
+                # a speaker profile cannot be switched by a device key
+                self.assertEqual(TestClient(panel.app).put(f"/api/profile/esp32/{did}", headers={"X-Speech-Device": s["token"]},
+                                                           json={"room": False}).status_code, 403)
+                talk(ws, "Wie viel sind 180 Grad in Fahrenheit?")
+                self.assertIn("Fahrenheit", said(ws)[0])
+                self.assertTrue(any(k[0] == a.get("/api/whoami").json()["profile"]["id"] for k in room.ROOMS))
+                talk(ws, "Raummodus aus")
+                self.assertEqual(said(ws), ["Raum-Modus aus."])
+                with self.assertRaises(WebSocketDisconnect):
+                    said(ws)
+            uid = a.get("/api/whoami").json()["profile"]["id"]
+            self.assertFalse(any(k[0] == uid for k in room.ROOMS))      # what was heard is gone
+            self.assertFalse(a.get("/api/profile/esp32").json()["devices"][0]["room"])
+            # the switch while the speaker sleeps: starts at its next wake word, then off from the panel
+            a.put(f"/api/profile/esp32/{did}", json={"room": True, "room_mins": 15, "room_level": "questions",
+                                                     "room_area": "Wohnzimmer<b>"})
+            dev = a.get("/api/profile/esp32").json()["devices"][0]
+            self.assertEqual((dev["room_waits"], dev["room_mins"], dev["room_level"], dev["room_area"]),
+                             (True, 15, "questions", "Wohnzimmerb"))
+            with c.websocket_connect("/api/esp32/ws", headers=hdr) as ws:
+                hello(ws)
+                ws.send_text(json.dumps({"type": "listen", "state": "detect", "text": "Jarvis"}))
+                ws.send_text(json.dumps({"type": "listen", "state": "start", "mode": "auto"}))
+                self.assertIn("Ich höre 15 Minuten zu", said(ws)[0])
+                self.assertFalse(a.get("/api/profile/esp32").json()["devices"][0]["room_waits"])
+                a.put(f"/api/profile/esp32/{did}", json={"room": False})
+                self.assertEqual(said(ws), ["Raum-Modus aus."])
+            # at most ROOM_MAX speakers at once
+            fake = type("S", (), {"room": {"rid": "x"}})()
+            for i in range(esp32.ROOM_MAX):
+                esp32._live[f"fake{i}"] = fake
+            try:
+                with c.websocket_connect("/api/esp32/ws", headers=hdr) as ws:
+                    hello(ws)
+                    talk(ws, "Raummodus an")
+                    self.assertIn("zu viele", said(ws)[0])
+            finally:
+                for i in range(esp32.ROOM_MAX):
+                    esp32._live.pop(f"fake{i}", None)
+            # admin switch off: no room mode, also not by voice
+            helpers.set_config(room=False)
+            self.assertEqual(a.put(f"/api/profile/esp32/{did}", json={"room": True}).status_code, 403)
+            with c.websocket_connect("/api/esp32/ws", headers=hdr) as ws:
+                hello(ws)
+                talk(ws, "Raummodus an")
+                self.assertIn("ausgeschaltet", said(ws)[0])
+        finally:
+            esp32.transcribe, esp32.tts_pcm, room.night = old
+            helpers.set_config(room=False)
+        # in the quiet hours a speaker in room mode stays silent (it has no text to show)
+        room.night = lambda uid, local=None: True
+        try:
+            sess = esp32.Session(None, "", {"user": "u", "id": "d", "name": "x"}, "")
+            sess.room_say("Hallo")
+            self.assertIsNone(sess.answer)
+        finally:
+            room.night = old[2]
+
     def test_off_means_off(self):
         helpers.set_config(esp32=False)
         try:
