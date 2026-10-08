@@ -6,6 +6,7 @@ import datetime
 import io
 import json
 import os
+import re
 import struct
 import time
 import unittest
@@ -206,6 +207,13 @@ class Stage1(unittest.TestCase):
         sh = repo_file("update.sh")
         self.assertIn('if [ "$new" != "$prev" ] || ! git merge-base --is-ancestor "$SECURITY_FLOOR" "$new"', sh)
         self.assertIn('[ ! -L "$STATE/update-target" ]', sh)
+
+    def test_apt_waits_for_its_lock(self):
+        # a running unattended-upgrade must not fail the update (lock /var/lib/apt/lists/lock)
+        sh = repo_file("install.sh")
+        self.assertIn("DPkg::Lock::Timeout", sh)
+        bare = [line for line in sh.splitlines() if re.match(r"\s*apt-get\s+(update|install)", line)]
+        self.assertEqual(bare, [], "apt-get without apt_wait")
 
     def test_units_have_memory_limits(self):
         sh = repo_file("install.sh")

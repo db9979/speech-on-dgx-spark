@@ -31,6 +31,7 @@ Alle Optionen ohne Rückfragen (`--mode api --asr 1.7b --tts 0.6b --yes` …) st
 
 <!-- New version: add one line at the top here and in CHANGELOG.md, drop the oldest line here (keep 10). Details go to docs/de and docs/en, not into this README. -->
 
+- **V01.0.151** Update wartet bis zu 10 Minuten, wenn apt gerade belegt ist (z. B. automatische Updates), statt abzubrechen
 - **V01.0.150** Qualitätstest: Kalender-Fragen nennen „morgen“ und „Dienstag“ immer passend zum heutigen Tag (der feste 8.10. war ab dem 8.10. falsch)
 - **V01.0.149** Lautsprecher-Seite geordnet: Liste → eigene Seite pro Lautsprecher (Klang, Raum-Modus mit „Starten“ und wählbaren Arten, Stimme, Firmware, Prüfen), „Lautsprecher hinzufügen“ per USB oder Code, Admin „Adresse prüfen“, Lautsprecher-Schlüssel gekennzeichnet
 - **V01.0.148** Browser-Test für Zustand hält auch dort, wo systemd echte Dienste meldet (GitHub)
@@ -40,7 +41,6 @@ Alle Optionen ohne Rückfragen (`--mode api --asr 1.7b --tts 0.6b --yes` …) st
 - **V01.0.144** Rückfrage ohne Weckwort (aus, Admin + Profil): nach der Antwort auf eine gesprochene Frage hört der Assistent noch 4–10 Sekunden zu, „Und morgen?“ braucht kein „Hey Spark“
 - **V01.0.143** Freihändig hört auch dann wieder zu, wenn der Browser die Wiedergabe angehalten hat (iOS, kein Lautsprecher): „spricht noch“ gilt nur, wenn wirklich etwas abgespielt wird; GitHub-Test wieder grün
 - **V01.0.142** Lautsprecher: „Stimme hier anlernen“ (drei Sätze, eigener Stimmabdruck fürs Board-Mikrofon); „nur bekannte Stimmen“ greift am Lautsprecher erst, wenn dort eine Stimme angelernt ist
-- **V01.0.141** Web-Log mit Diagnose-Filtern: Übersicht → Logs → „Diagnose-Filter“ zeigt chat:, Websuche, Home Assistant, Raum-Modus, Lautsprecher, Update/Selbsttest und Fehler mit Zeitraum und Zeilenzahl, zum Kopieren in einen Thread (statt journalctl | grep auf der Konsole)
 
 Alle Versionen: [CHANGELOG.md](CHANGELOG.md)
 

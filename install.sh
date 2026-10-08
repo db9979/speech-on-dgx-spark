@@ -101,9 +101,27 @@ nvidia-smi --query-gpu=name --format=csv,noheader | head -1 | grep -qi gb10 \
 # ---------------------------------------------------------------- packages
 say "System packages"
 export DEBIAN_FRONTEND=noninteractive
-apt-get update -q
+# apt may be busy (unattended-upgrades, another apt): wait for its locks up to 10 minutes instead of
+# failing at once ("Sperre /var/lib/apt/lists/lock konnte nicht erlangt werden", update V01.0.150)
+apt_wait() {
+  local i
+  for i in $(seq 1 20); do
+    apt-get -o DPkg::Lock::Timeout=30 "$@" && return 0
+    echo "   apt is busy or failed, trying again in 30 s ($i/20)"
+    sleep 30
+  done
+  return 1
+}
+PKGS="python3 python3-venv python3-dev build-essential ninja-build git openssl ffmpeg libopus0 sox libsox-fmt-all libsndfile1 curl jq iproute2"
 # ninja-build + build-essential: vLLM / FlashInfer compile kernels at first start (JIT)
-apt-get install -y -q python3 python3-venv python3-dev build-essential ninja-build git openssl ffmpeg libopus0 sox libsox-fmt-all libsndfile1 curl jq iproute2
+if ! { apt_wait update -q && apt_wait install -y -q $PKGS; }; then
+  # an update only needs packages that the first install already put there
+  if [ "$FROM_UPDATE" = 1 ] && dpkg -s $PKGS >/dev/null 2>&1; then
+    warn "apt is still busy; all needed packages are already installed, going on without apt"
+  else
+    die "apt did not finish (another apt is still running?). Try again in a few minutes."
+  fi
+fi
 PY=$(command -v python3)
 
 # ---------------------------------------------------------------- user and dirs

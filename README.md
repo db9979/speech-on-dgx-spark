@@ -31,6 +31,7 @@ All options for running without questions (`--mode api --asr 1.7b --tts 0.6b --y
 
 <!-- New version: add one line at the top here and in CHANGELOG.md, drop the oldest line here (keep 10). Details go to docs/de and docs/en, not into this README. -->
 
+- **V01.0.151** The update waits up to 10 minutes when apt is busy (e.g. automatic upgrades) instead of failing
 - **V01.0.150** Quality test: calendar cases name "tomorrow" and "Tuesday" relative to today (the fixed 8 Oct was wrong from 8 Oct on)
 - **V01.0.149** Speaker page tidied: list → one page per speaker (sound, room mode with "Start" and selectable kinds, voice, firmware, check), "Add a speaker" over USB or by code, admin "Check address", speaker keys marked
 - **V01.0.148** Browser test for Zustand also holds where systemd reports real services (GitHub)
@@ -40,7 +41,6 @@ All options for running without questions (`--mode api --asr 1.7b --tts 0.6b --y
 - **V01.0.144** Follow-up without wake word (off, admin + profile): after answering a spoken question the assistant keeps listening for 4–10 seconds, "And tomorrow?" needs no "Hey Spark"
 - **V01.0.143** Hands-free listens again even when the browser has paused playback (iOS, no speaker): "still speaking" only counts when something is actually playing; GitHub test green again
 - **V01.0.142** Speakers: "Stimme hier anlernen" (three sentences, own voiceprint for the board microphone); "only known voices" applies at a speaker only once a voice was taught there
-- **V01.0.141** Web log with diagnostic filters: Overview → Logs → "Diagnostic filters" shows chat:, web search, Home Assistant, room mode, speakers, update/self-test and errors with time range and line count, ready to copy into a thread (instead of journalctl | grep on the console)
 
 All versions: [CHANGELOG.md](CHANGELOG.md)
 
