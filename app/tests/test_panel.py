@@ -1530,6 +1530,40 @@ class Room(unittest.TestCase):
         self.assertIn("Milch", helpers.TODO)
         self.assertEqual(a.post("/api/room/heard", json=dict(b, text="Ja.")).json().get("say"), None)   # once
 
+    def test_quiet_hours_and_end_by_voice(self):
+        import datetime
+        import room
+        a = profile("Rieke")
+        uid = a.get("/api/whoami").json()["profile"]["id"]
+        # the profile's quiet hours (22-7 by default), checked with a fixed time, not the clock
+        self.assertTrue(room.night(uid, datetime.datetime(2026, 1, 5, 23, 30)))
+        self.assertTrue(room.night(uid, datetime.datetime(2026, 1, 5, 6, 59)))
+        self.assertFalse(room.night(uid, datetime.datetime(2026, 1, 5, 12, 0)))
+        real = room.night
+        room.night = lambda uid, local=None: True
+        try:
+            a.post("/api/room/heard", json={"room": "qq1234", "text": "Wie viel sind 180 Grad in Fahrenheit?"})
+            r = a.post("/api/room/pause", json={"room": "qq1234", "quiet": 3}).json()
+            self.assertTrue(r["say"] and r["silent"])               # at night: only as text, never spoken
+        finally:
+            room.night = real
+        room.night = lambda uid, local=None: False
+        try:
+            a.post("/api/room/heard", json={"room": "qq1235", "text": "Wie viel sind 180 Grad in Fahrenheit?"})
+            self.assertNotIn("silent", a.post("/api/room/pause", json={"room": "qq1235", "quiet": 3}).json())
+        finally:
+            room.night = real
+        # "Raummodus aus" ends it, from any voice; talking about it does not
+        for t in ("Raummodus aus", "Hey Spark, beende den Raum-Modus.", "Hör auf zuzuhören"):
+            self.assertTrue(a.post("/api/room/heard", json={"room": "qq1236", "text": t}).json().get("end"), t)
+        self.assertFalse(a.post("/api/room/heard", json={"room": "qq1236", "text": "Der Raummodus ist praktisch."}).json().get("end"))
+        # the page ends room mode after two minutes in the background or locked, and when it closes
+        js = open(os.path.join(os.path.dirname(room.__file__), "static", "js", "room.js"), encoding="utf-8").read()
+        self.assertIn("Date.now()-this.hidden>120e3", js)
+        self.assertIn("addEventListener('pagehide',()=>room.stop())", js)
+        self.assertIn("if(d.end){this.stop()", js)
+        self.assertIn("if(silent||", js)
+
     def test_appointment_proposed_and_entered_only_after_yes(self):
         import calendars
         import proactive

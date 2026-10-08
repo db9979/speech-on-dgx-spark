@@ -23,7 +23,10 @@ heard.
 Nothing from the profile's memory, conversations, documents or mail is used: other people may be in
 the room. What the assistant says is in the profile's tool log; what it heard is not.
 
-While it speaks, "Stopp" ends it and "Nicht jetzt" keeps it quiet for a while. With "Genauer erkennen"
+While it speaks, "Stopp" ends the sentence and "Nicht jetzt" keeps it quiet for a while; "Raummodus aus"
+ends room mode altogether. In the profile's quiet hours (pro_quiet, 22-7 unless changed) whatever it says
+only appears as text, never spoken. The page ends room mode when it was in the background or the
+phone was locked for more than two minutes (the microphone stops there anyway). With "Genauer erkennen"
 the model looks for questions, appointments and shopping the fixed rules missed; it counts only with a
 quote that was really said. When room mode ends, the page shows what the assistant said and did (not
 what it heard), and keeps none of it.
@@ -292,6 +295,19 @@ def _room(uid, rid):
     return r
 
 
+def night(uid, local=None):
+    """In the profile's quiet hours room mode only writes, it never speaks."""
+    import proactive
+    p = proactive.prefs(uid)
+    return proactive.quiet(p, local or datetime.datetime.now(proactive._zone(p)))
+
+
+def _night_text(uid, out):
+    if out.get("say") and night(uid):
+        out["silent"] = True
+    return out
+
+
 def _kinds(body):
     k = body.get("kinds") if isinstance(body.get("kinds"), dict) else {}
     return {x: k.get(x, True) is not False for x in KIND_KEYS}
@@ -324,6 +340,10 @@ async def heard(uid, rid, text, body):
     r["lines"].append((time.time(), red))
     r["since_comment"] += 1
     r["since_detect"] += 1
+    if END.match(text) and len(text) <= 60:
+        r["offer"] = r["pending"] = None
+        print("room: ended by voice", flush=True)
+        return {"end": True, "stop": True, "wait": False}
     stop = STOP.match(text)
     if stop and len(text) <= 40 and time.time() - r["said"] < 60:
         r["offer"] = r["pending"] = None
@@ -439,6 +459,11 @@ async def pause(uid, rid, body):
 
 STOP = re.compile(r"(?i)^\W*(stopp?|halt|ruhe|still|sei still|psst|nicht jetzt|jetzt nicht|schon gut|"
                   r"danke,? (das )?(reicht|genügt)|genug|aufhören|hör auf)\b")
+# "Raummodus aus", "Raum-Modus beenden", "beende den Raummodus", "hör auf zuzuhören": room mode ends
+# (only ever less listening, so any voice may say it)
+END = re.compile(r"(?i)^\W*(?:(?:hey )?spark,? )?(?:(?:den )?raum[- ]?modus (?:aus|ausschalten|beenden|stopp?|ende)|"
+                 r"(?:beende|stopp?e?|schalte?) (?:den )?raum[- ]?modus(?: aus| ab)?|"
+                 r"hör (?:jetzt )?(?:bitte )?(?:auf zuzuhören|nicht mehr zu))\b")
 _MUTE = re.compile(r"(?i)\b(nicht jetzt|jetzt nicht|ruhe|still|psst)\b")
 
 
@@ -819,13 +844,13 @@ def _rid(body):
 @router.post("/api/room/heard", dependencies=[Depends(assistant), Depends(_on)])
 async def api_heard(request: Request, prof=Depends(own_profile)):
     body = await request.json()
-    return await heard(prof["id"], _rid(body), body.get("text", ""), body)
+    return _night_text(prof["id"], await heard(prof["id"], _rid(body), body.get("text", ""), body))
 
 
 @router.post("/api/room/pause", dependencies=[Depends(assistant), Depends(_on)])
 async def api_pause(request: Request, prof=Depends(own_profile)):
     body = await request.json()
-    return await pause(prof["id"], _rid(body), body)
+    return _night_text(prof["id"], await pause(prof["id"], _rid(body), body))
 
 
 @router.post("/api/room/stop", dependencies=[Depends(assistant)])
