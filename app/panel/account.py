@@ -46,7 +46,7 @@ router = APIRouter()
 @router.get("/api/whoami")
 def whoami(request: Request, creds: HTTPBasicCredentials | None = Depends(security)):
     cfg = load_config()
-    return {"admin": is_admin(request, creds), "version": app_version(), "public": cfg.get("chat", {}).get("public", True),
+    return {"admin": is_admin(request, creds), "version": app_version(), "public": cfg.get("chat", {}).get("public", False),
             "profile": profiles.current(request), "documents": cfg.get("chat", {}).get("documents", True),
             "reminders": cfg.get("chat", {}).get("reminders", True),
             "speaker_id": cfg.get("chat", {}).get("speaker_id", False),
@@ -64,12 +64,12 @@ def whoami(request: Request, creds: HTTPBasicCredentials | None = Depends(securi
 @router.post("/api/login")
 async def login(request: Request):
     body = await request.json()
-    guard.check(request)
+    guard.check(request, guard.ADMIN)
     if not check_password(str(body.get("password", ""))):
-        guard.failed(request, what="admin_login")
+        guard.failed(request, guard.ADMIN, what="admin_login")
         await asyncio.sleep(1)  # slows down guessing
         raise HTTPException(401, "wrong password")
-    guard.succeeded(request)
+    guard.succeeded(request, guard.ADMIN)
     guard.log("admin_login", ip=guard.client_ip(request))
     r = Response('{"ok": true}', media_type="application/json")
     r.set_cookie(COOKIE, _session_token(), max_age=ADMIN_IDLE, httponly=True, samesite="strict")
@@ -78,7 +78,8 @@ async def login(request: Request):
 
 
 @router.post("/api/logout")
-def logout():
+def logout(request: Request):
+    guard.revoke(request.cookies.get(COOKIE, ""), ADMIN_IDLE)
     r = Response('{"ok": true}', media_type="application/json")
     r.delete_cookie(COOKIE)
     r.set_cookie(NO_BASIC, "1", max_age=365 * 86400, httponly=True, samesite="strict")
@@ -106,7 +107,8 @@ async def profile_login(request: Request):
 
 
 @router.post("/api/profile/logout")
-def profile_logout():
+def profile_logout(request: Request):
+    guard.revoke(request.cookies.get(profiles.COOKIE, ""), profiles.SESSION_DAYS * 86400)
     r = Response('{"ok": true}', media_type="application/json")
     r.delete_cookie(profiles.COOKIE)
     return r

@@ -166,6 +166,18 @@ def languages():
     return {"languages": ["auto"] + list(ASR_ISO.values())}
 
 
+MAX_UPLOAD = 200 * 1024**2  # as much as the engine takes (VLLM_MAX_AUDIO_CLIP_FILESIZE_MB)
+
+
+async def read_upload(upload):
+    data = b""
+    while chunk := await upload.read(1 << 20):
+        data += chunk
+        if len(data) > MAX_UPLOAD:
+            raise HTTPException(413, "audio file larger than 200 MB")
+    return data
+
+
 @app.post("/v1/audio/transcriptions", dependencies=auth)
 async def transcriptions(request: Request):
     form = await request.form()
@@ -190,7 +202,8 @@ async def transcriptions(request: Request):
         data.append(("language", lang))
     if not opts.get("prompt") and cfg.get("context"):
         data.append(("prompt", cfg["context"]))  # names and terms the model should expect
-    files = {"file": (upload.filename or "audio", await upload.read(), upload.content_type)}
+    audio = await read_upload(upload)
+    files = {"file": (upload.filename or "audio", audio, upload.content_type)}
     # httpx takes form fields as a dict of lists
     form_data = {}
     for k, v in data:
@@ -199,7 +212,7 @@ async def transcriptions(request: Request):
     stats["requests"] += 1
     t0 = time.time()
     if local:
-        return await local_transcription(upload, want, stream, lang, t0)
+        return await local_transcription(upload, audio, want, stream, lang, t0)
     if not stream:
         stats["active"] += 1
         try:
@@ -260,11 +273,11 @@ async def transcriptions(request: Request):
                              headers={"Cache-Control": "no-cache", "X-Accel-Buffering": "no"})
 
 
-async def local_transcription(upload, want, stream, lang, t0):
+async def local_transcription(upload, audio, want, stream, lang, t0):
     import tempfile
     suffix = os.path.splitext(upload.filename or "")[1] or ".wav"
     with tempfile.NamedTemporaryFile(suffix=suffix, delete=False) as tmp:
-        tmp.write(await upload.read())
+        tmp.write(audio)  # read once above: a second read of the upload would be empty
         path = tmp.name
     stats["active"] += 1
     try:

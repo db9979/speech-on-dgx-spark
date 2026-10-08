@@ -202,6 +202,9 @@ def _cookie_user(d, raw):
     u = next((u for u in d["users"] if u["id"] == uid), None)
     if not u or time.time() - issued > SESSION_DAYS * 86400 or not secrets.compare_digest(sig, _sign(u, issued)):
         return None, 0
+    import guard
+    if guard.revoked(raw):
+        return None, 0
     return u, issued
 
 

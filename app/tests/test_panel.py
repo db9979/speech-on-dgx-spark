@@ -437,6 +437,47 @@ class Security(unittest.TestCase):
         self.assertEqual(g.post("/api/profile/login", json={"name": "Lotte", "pin": "5678"}).status_code, 429)
         self.assertEqual(g.post("/api/login", json={"password": "secret-admin"}).status_code, 429)
 
+    def test_stranger_cannot_lock_out_the_owner(self):
+        import account
+        import guard
+        import types
+        real = account.asyncio
+        account.asyncio = types.SimpleNamespace(sleep=lambda s: real.sleep(0))  # no 1 s per wrong guess here
+        self.addCleanup(setattr, account, "asyncio", real)
+        profile("Olga", "2468")
+        home = TestClient(panel.app, client=("203.0.113.5", 1))
+        self.assertEqual(home.post("/api/profile/login", json={"name": "Olga", "pin": "2468"}).status_code, 200)
+        for i in range(12):  # strangers from many addresses: the name is locked for them ...
+            TestClient(panel.app, client=(f"198.51.100.{i}", 1)).post(
+                "/api/profile/login", json={"name": "Olga", "pin": "0000"})
+        self.assertEqual(TestClient(panel.app, client=("198.51.100.99", 1)).post(
+            "/api/profile/login", json={"name": "Olga", "pin": "2468"}).status_code, 429)
+        # ... but not for the owner's own address, and the count survives a restart of the panel
+        self.assertEqual(home.post("/api/profile/login", json={"name": "Olga", "pin": "2468"}).status_code, 200)
+        guard._locks.clear()
+        guard._restore()
+        self.assertTrue(any(k[0] == "name" for k in guard._locks))
+        # the admin password has its own count from anywhere
+        for i in range(12):
+            TestClient(panel.app, client=(f"198.51.100.{i}", 1)).post("/api/login", json={"password": "x"})
+        self.assertEqual(TestClient(panel.app, client=("198.51.100.98", 1)).post(
+            "/api/login", json={"password": "secret-admin"}).status_code, 429)
+
+    def test_logout_ends_the_login_on_the_server(self):
+        p = profile("Lena")
+        copy = TestClient(panel.app)
+        copy.cookies.update(p.cookies)
+        self.assertEqual(copy.get("/api/profile/memory").status_code, 200)
+        p.post("/api/profile/logout")
+        self.assertEqual(copy.get("/api/profile/memory").status_code, 401)
+        a = TestClient(panel.app)
+        a.post("/api/login", json={"password": "secret-admin"})
+        stolen = TestClient(panel.app)
+        stolen.cookies.update(a.cookies)
+        self.assertEqual(stolen.get("/api/config").status_code, 200)
+        a.post("/api/logout")
+        self.assertEqual(stolen.get("/api/config").status_code, 401)
+
     def test_foreign_page_cannot_change_anything(self):
         p = profile("Fritz")
         evil = {"origin": "http://other.example:8080"}
@@ -445,6 +486,7 @@ class Security(unittest.TestCase):
         self.assertEqual(p.delete("/api/profile/memory", headers={"origin": "http://testserver"}).status_code, 200)
         self.assertEqual(p.delete("/api/profile/memory", headers={"sec-fetch-site": "same-site"}).status_code, 403)
         # scripts without cookies (device key, HTTP Basic) are not affected
+        helpers.set_config(public=True)
         self.assertEqual(TestClient(panel.app).post("/api/chat", headers=evil, json={
             "messages": [{"role": "user", "content": "Hallo"}]}).status_code, 200)
 

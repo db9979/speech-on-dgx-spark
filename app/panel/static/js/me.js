@@ -7,10 +7,10 @@ function setProfile(p){const changed=(p&&p.id)!==(PROFILE&&PROFILE.id);PROFILE=p
 window.closeProf=()=>{$('profmodal').style.display='none';endEnroll()};
 async function showFacts(){const r=await api('/api/profile/memory');const d=await r.json();
   $('profhead').textContent=d.profile.name;showTidy(d.tidy);
-  $('factlist').innerHTML=d.facts.slice().reverse().map(f=>`<li><span>${esc(f.text)}${f.auto?` <em class="auto">${t('automatisch','automatic')}</em>`:''}</span><button class="b" onclick="forgetFact('${esc(f.id)}')">${t('Löschen','Delete')}</button></li>`).join('')||`<li class="mut">${t('Noch nichts gemerkt.','Nothing remembered yet.')}</li>`}
+  $('factlist').innerHTML=d.facts.slice().reverse().map(f=>`<li><span>${esc(f.text)}${f.auto?` <em class="auto">${t('automatisch','automatic')}</em>`:''}</span><button class="b" onclick="forgetFact('${escq(f.id)}')">${t('Löschen','Delete')}</button></li>`).join('')||`<li class="mut">${t('Noch nichts gemerkt.','Nothing remembered yet.')}</li>`}
 async function showDocs(){if(!DOCS_ON){$('docbox').style.display='none';return}$('docbox').style.display='';
   const l=await (await api('/api/profile/docs')).json();
-  $('doclist').innerHTML=l.map(d=>`<li><span>${esc(d.name)}<br><small class="mut">${d.size<1048576?Math.max(1,Math.round(d.size/1024))+' KB':(d.size/1048576).toFixed(1)+' MB'} · ${d.chunks} ${t('Abschnitte','sections')}</small></span><button class="b" onclick="delDoc('${esc(d.id)}','${esc(d.name)}')">${t('Löschen','Delete')}</button></li>`).join('')||`<li class="mut">${t('Noch keine Dokumente.','No documents yet.')}</li>`}
+  $('doclist').innerHTML=l.map(d=>`<li><span>${esc(d.name)}<br><small class="mut">${d.size<1048576?Math.max(1,Math.round(d.size/1024))+' KB':(d.size/1048576).toFixed(1)+' MB'} · ${d.chunks} ${t('Abschnitte','sections')}</small></span><button class="b" onclick="delDoc('${escq(d.id)}','${esc(d.name)}')">${t('Löschen','Delete')}</button></li>`).join('')||`<li class="mut">${t('Noch keine Dokumente.','No documents yet.')}</li>`}
 let DOCS_ON=true,SPK_ON=false,CAL_ON=true,HA_ON=false,MAIL_ON=false;
 // The "Ich" window: conversation settings for everyone, plus the profile's own pages once logged in.
 function ptab(id){document.querySelectorAll('#ptabs button').forEach(b=>b.classList.toggle('on',b.dataset.t===id));
@@ -31,7 +31,7 @@ function calKind(){const k=CALKIND[$('calkind').value];$('calhint').textContent=
   if(!$('calname').value||Object.values(CALKIND).some(x=>x.name&&x.name===$('calname').value))$('calname').value=k.name;
   $('caluser').closest('.two2').style.display=k.user?'':'none';if(!k.user){$('caluser').value='';$('calpw').value=''}}
 $('calkind').onchange=calKind;
-function calRender(d){$('callist').innerHTML=d.calendars.map(c=>`<li><span><b>${esc(c.name)}</b><br><small class="mut">${esc(c.url.replace(/^\w+:\/\//,'').slice(0,48))}</small></span><button class="b" onclick="calRemove('${esc(c.id)}','${esc(c.name)}')">${t('Entfernen','Remove')}</button></li>`).join('')||`<li class="mut">${t('Noch kein Kalender verbunden.','No calendar connected yet.')}</li>`;
+function calRender(d){$('callist').innerHTML=d.calendars.map(c=>`<li><span><b>${esc(c.name)}</b><br><small class="mut">${esc(c.url.replace(/^\w+:\/\//,'').slice(0,48))}</small></span><button class="b" onclick="calRemove('${escq(c.id)}','${esc(c.name)}')">${t('Entfernen','Remove')}</button></li>`).join('')||`<li class="mut">${t('Noch kein Kalender verbunden.','No calendar connected yet.')}</li>`;
   $('caltopics').value=(d.topics||[]).join(', ');calKind();$('caltest').style.display=d.calendars.length?'':'none';$('caladd').open=!d.calendars.length}
 async function showCal(){if(!CAL_ON)return;calRender(await (await api('/api/profile/calendar')).json());$('calmsg').textContent='';$('calmsg').className=''}
 async function calRemove(id,name){if(!confirm(t('Kalender „','Remove calendar "')+name+t('“ entfernen?','"?')))return;calRender(await (await api('/api/profile/calendar/'+encodeURIComponent(id),{method:'DELETE'})).json())}
@@ -55,7 +55,7 @@ const MAILKIND={icloud:t('Benutzer: deine iCloud-Mailadresse. Passwort: ein neue
 function mailKind(){const k=$('mailkind').value;$('mailhint').textContent=MAILKIND[k];$('mailsrv').style.display=k==='other'?'':'none'}
 $('mailkind').onchange=mailKind;
 const mailMsg=(x,err,list)=>{const m=$('mailmsg');m.className=err?'err':'';m.innerHTML=esc(x)+(list&&list.length?'<ul class="facts small">'+list.map(e=>`<li>${esc(e)}</li>`).join('')+'</ul>':'')};
-function mailRender(d){$('maillist').innerHTML=d.accounts.map(a=>`<li><span><b>${esc(a.name)}</b><br><small class="mut">${esc(a.user)} · ${esc(a.host)}</small></span><button class="b" onclick="mailRemove('${esc(a.id)}','${esc(a.name)}')">${t('Entfernen','Remove')}</button></li>`).join('')||`<li class="mut">${t('Noch kein Postfach verbunden.','No mailbox connected yet.')}</li>`;
+function mailRender(d){$('maillist').innerHTML=d.accounts.map(a=>`<li><span><b>${esc(a.name)}</b><br><small class="mut">${esc(a.user)} · ${esc(a.host)}</small></span><button class="b" onclick="mailRemove('${escq(a.id)}','${esc(a.name)}')">${t('Entfernen','Remove')}</button></li>`).join('')||`<li class="mut">${t('Noch kein Postfach verbunden.','No mailbox connected yet.')}</li>`;
   mailKind();$('mailtest').style.display=d.accounts.length?'':'none';$('mailadd').open=!d.accounts.length}
 async function showMail(){if(!MAIL_ON)return;mailRender(await (await api('/api/profile/mail')).json());mailMsg('')}
 async function mailRemove(id,name){if(!confirm(t('Postfach „','Remove mailbox "')+name+t('“ entfernen?','"?')))return;mailRender(await (await api('/api/profile/mail/'+encodeURIComponent(id),{method:'DELETE'})).json())}
@@ -211,7 +211,7 @@ const when=s=>s?new Date(s*1000).toLocaleString([], {dateStyle:'short',timeStyle
 async function showSecurity(){const d=await (await api('/api/profile/security')).json();secRender(d.devices);
   const ev={profile_login:t('Anmeldung','Sign-in'),profile_login_failed:t('Falsche PIN','Wrong PIN'),profile_logout_all:t('Überall abgemeldet','Logged out everywhere'),profile_device_removed:t('Gerät gesperrt','Device blocked')};
   $('secev').innerHTML=d.events.map(e=>`<li><span>${esc(ev[e.event]||e.event)} <small class="mut">${when(e.t)} · ${esc(e.ip||'')}</small></span></li>`).join('')||`<li class="mut">–</li>`}
-function secRender(devs){$('secdev').innerHTML=devs.map(x=>`<li><span>${esc(x.name)}<br><small class="mut">${t('zuletzt','last used')}: ${x.last?when(x.last.t)+' · '+esc(x.last.ip||''):t('noch nie','never')}</small></span><button class="b" onclick="secDrop('${esc(x.id)}','${esc(x.name)}')">${t('Sperren','Block')}</button></li>`).join('')||`<li class="mut">${t('Keine Geräte mit Schlüssel.','No devices with a key.')}</li>`}
+function secRender(devs){$('secdev').innerHTML=devs.map(x=>`<li><span>${esc(x.name)}<br><small class="mut">${t('zuletzt','last used')}: ${x.last?when(x.last.t)+' · '+esc(x.last.ip||''):t('noch nie','never')}</small></span><button class="b" onclick="secDrop('${escq(x.id)}','${esc(x.name)}')">${t('Sperren','Block')}</button></li>`).join('')||`<li class="mut">${t('Keine Geräte mit Schlüssel.','No devices with a key.')}</li>`}
 window.secDrop=async(id,n)=>{if(!confirm(t('Gerät „','Block device "')+n+t('“ sperren? Sein Schlüssel gilt dann nicht mehr.','"? Its key stops working.')))return;
   secRender((await (await api('/api/profile/devices/'+encodeURIComponent(id),{method:'DELETE'})).json()).devices)};
 $('seclogoutall').onclick=async()=>{if(!confirm(t('Dein Profil in allen anderen Browsern abmelden?','Log your profile out in all other browsers?')))return;

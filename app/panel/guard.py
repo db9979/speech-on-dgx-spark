@@ -2,9 +2,14 @@
 and the change log (who changed what, from where).
 
 Lockout: after MAX_FAILS wrong attempts from one address within WINDOW seconds (or MAX_NAME_FAILS
-for one profile name, from anywhere), logins from there are refused for a while; every new lockout
-doubles the wait, up to LOCK_MAX. A correct login clears the counter. Kept in memory: a restart of
-the panel forgets it, which is fine for a box in the LAN.
+for one profile name or the admin password, from anywhere), logins from there are refused for a
+while; every new lockout doubles the wait, up to LOCK_MAX. On top, a name gets at most DAY_FAILS
+wrong attempts in 24 hours. The locks of a name do not apply to addresses that logged in to it
+before (KNOWN), so a stranger guessing cannot lock the owner out at home. A correct login clears the
+counter. Kept in STATE/guard.json, so a restart of the panel does not reset the count.
+
+Reverse proxy: X-Forwarded-For is taken from panel.trusted_proxies (addresses of the proxy) or, when
+that list is empty, from any peer in the LAN.
 
 Foreign pages: a page from another site (also another port on the same host, e.g. another web app
 on the Spark) must not use the browser's login cookies to change anything here. Changing requests
@@ -25,13 +30,60 @@ from fastapi.responses import JSONResponse
 
 MAX_FAILS, MAX_NAME_FAILS, WINDOW = 5, 10, 15 * 60
 LOCK_FIRST, LOCK_MAX = 60, 3600
-_fails, _locks = {}, {}
+DAY_FAILS, KNOWN = 30, 20
+_fails, _locks, _day, _known = {}, {}, {}, {}
 BASIC = "\0basic"
+ADMIN = "\0admin"
 _lock = threading.Lock()
 
 STATE = os.environ.get("SPEECH_SPARK_STATE", "/var/lib/speech-spark/state")
 AUDIT = os.path.join(STATE, "audit.log")
 AUDIT_MAX = 1_000_000
+SAVED = os.path.join(STATE, "guard.json")
+
+
+def _k(key):
+    return "|".join(key)
+
+
+def _save():
+    """Locks, the 24 hour counts and the known addresses survive a restart (called with _lock held)."""
+    data = {"locks": {_k(k): v for k, v in _locks.items()}, "day": {_k(k): list(v) for k, v in _day.items()},
+            "known": {_k(k): sorted(v) for k, v in _known.items()}}
+    try:
+        tmp = SAVED + ".tmp"
+        with open(os.open(tmp, os.O_WRONLY | os.O_CREAT | os.O_TRUNC, 0o600), "w") as f:
+            json.dump(data, f)
+        os.replace(tmp, SAVED)
+    except OSError:
+        pass
+
+
+def _restore():
+    try:
+        with open(SAVED) as f:
+            data = json.load(f)
+        now = time.time()
+        for k, v in data.get("locks", {}).items():
+            if v[0] > now - LOCK_MAX * 4:  # an old level does not double new waits for ever
+                _locks[tuple(k.split("|", 1))] = (float(v[0]), int(v[1]))
+        for k, v in data.get("day", {}).items():
+            _day[tuple(k.split("|", 1))] = deque((t for t in v if now - t < 86400), maxlen=DAY_FAILS)
+        for k, v in data.get("known", {}).items():
+            _known[tuple(k.split("|", 1))] = set(v[-KNOWN:])
+    except (OSError, ValueError, TypeError, IndexError):
+        pass
+
+
+_restore()
+
+
+def _proxies():
+    try:
+        from common import load_config
+        return [str(x) for x in load_config().get("panel", {}).get("trusted_proxies", []) or []]
+    except Exception:
+        return []
 
 
 def client_ip(request):
@@ -40,7 +92,8 @@ def client_ip(request):
     proxy's address and one bad guesser would lock everybody out."""
     peer = (request.client.host if request.client else "") or "?"
     fwd = request.headers.get("x-forwarded-for", "")
-    if fwd and from_lan(request):
+    proxies = _proxies()
+    if fwd and (peer in proxies if proxies else from_lan(request)):
         return fwd.split(",")[-1].strip()[:64] or peer
     return peer
 
@@ -69,12 +122,18 @@ def _keys(request, name=None):
     return keys
 
 
+def _applies(k, ip):
+    """A name's lock does not hold for addresses that logged in to that name before."""
+    return k[0] != "name" or ip not in _known.get(k, ())
+
+
 def wait_left(request, name=None):
     """Seconds until a login from here (or for this name) is allowed again, 0 if it is now."""
     now = time.time()
+    ip = client_ip(request)
     with _lock:
         return max([int(_locks.get(k, (0, 0))[0] - now) + 1 for k in _keys(request, name)
-                    if _locks.get(k, (0, 0))[0] > now] or [0])
+                    if _locks.get(k, (0, 0))[0] > now and _applies(k, ip)] or [0])
 
 
 def check(request, name=None):
@@ -100,15 +159,75 @@ def failed(request, name=None, what="login"):
                 _locks[k] = (now + secs, level)
                 q.clear()
                 locked = max(locked, secs)
-    log(what + "_failed", ip=client_ip(request), name="" if name == BASIC else name, locked=locked or None)
+            if k[0] == "name":
+                day = _day.setdefault(k, deque(maxlen=DAY_FAILS))
+                day.append(now)
+                if len(day) >= DAY_FAILS and now - day[0] < 86400:  # the day's guesses are used up
+                    until = day[0] + 86400
+                    if until > _locks.get(k, (0, 0))[0]:
+                        _locks[k] = (until, _locks.get(k, (0, 0))[1])
+                        locked = max(locked, int(until - now))
+        _save()
+    log(what + "_failed", ip=client_ip(request), name="" if name in (BASIC, ADMIN) else name, locked=locked or None)
 
 
 def succeeded(request, name=None):
+    ip = client_ip(request)
     with _lock:
         for k in _keys(request, name):
+            if k[0] == "name":
+                known = _known.setdefault(k, set())
+                known.add(ip)
+                while len(known) > KNOWN:
+                    known.pop()
+                continue  # strangers' failed guesses for this name keep counting
             _fails.pop(k, None)
             if k in _locks and _locks[k][0] <= time.time():
                 _locks.pop(k, None)
+        _save()
+
+
+# ---------------------------------------------------------------- logged-out cookies
+# A logout makes that browser's login cookie worthless on the server too (a copy of it no longer
+# works); kept until the cookie would have expired anyway.
+REVOKED = os.path.join(STATE, "revoked.json")
+_revoked = None
+
+
+def _rev():
+    global _revoked
+    if _revoked is None:
+        try:
+            with open(REVOKED) as f:
+                _revoked = {k: float(v) for k, v in json.load(f).items()}
+        except (OSError, ValueError, AttributeError):
+            _revoked = {}
+    return _revoked
+
+
+def revoke(raw, ttl):
+    import hashlib
+    if not raw:
+        return
+    now = time.time()
+    with _lock:
+        r = _rev()
+        for k in [k for k, v in r.items() if v < now]:
+            r.pop(k, None)
+        r[hashlib.sha256(raw.encode()).hexdigest()] = now + ttl
+        try:
+            tmp = REVOKED + ".tmp"
+            with open(os.open(tmp, os.O_WRONLY | os.O_CREAT | os.O_TRUNC, 0o600), "w") as f:
+                json.dump(r, f)
+            os.replace(tmp, REVOKED)
+        except OSError:
+            pass
+
+
+def revoked(raw):
+    import hashlib
+    r = _rev()
+    return bool(r) and hashlib.sha256(raw.encode()).hexdigest() in r
 
 
 def _human(secs):
@@ -119,6 +238,9 @@ def reset():
     with _lock:
         _fails.clear()
         _locks.clear()
+        _day.clear()
+        _known.clear()
+        _save()
 
 
 # ---------------------------------------------------------------- requests from foreign pages

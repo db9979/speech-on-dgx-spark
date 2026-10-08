@@ -37,7 +37,7 @@ async function loadCfg(){CFG=await (await api('/api/config')).json();
   $('asrbackendnote').textContent=av?t('(viele Anfragen gleichzeitig, gestreamter Text)','(many concurrent requests, streamed text)'):t('(eine Anfrage nach der anderen; umstellen mit sudo ./install.sh --asr-backend vllm)','(one request at a time; switch with sudo ./install.sh --asr-backend vllm)');
   $('asrengine').style.display=av?'block':'none';$('asrtf').style.display=av?'none':'block';
   for(const[sec,o]of Object.entries(CFG))for(const[k,v]of Object.entries(o)){const el=$(sec+'.'+k);if(!el)continue;
-    if(el.type==='checkbox')el.checked=v;else{if(el.tagName==='SELECT'&&![...el.options].some(o=>o.value==v))el.add(new Option(v));el.value=v}};instrHint();
+    if(el.type==='checkbox')el.checked=v;else{if(el.tagName==='SELECT'&&![...el.options].some(o=>o.value==v))el.add(new Option(v));el.value=Array.isArray(v)?v.join(', '):v}};instrHint();
   getDefaults=await renderSet($('chatdefaults'),{...SDEF,...(CFG.chat.defaults||{})},null);
   asrRec();cfgDeps();document.querySelectorAll('.pane').forEach(p=>markDirty(p,false));document.querySelectorAll('.savemsg').forEach(m=>m.textContent='')}
 let getDefaults=null;
@@ -62,7 +62,7 @@ document.querySelectorAll('.pane').forEach(pane=>{const f=e=>{if(/^pw/.test(e.ta
 document.querySelectorAll('.savebtn').forEach(btn=>btn.onclick=async()=>{const pane=$('pane-'+btn.dataset.p),msg=btn.nextElementSibling;
   const n=JSON.parse(JSON.stringify(CFG));if(getDefaults&&pane.contains($('chatdefaults')))n.chat.defaults=getDefaults();
   for(const[sec,o]of Object.entries(n))for(const k of Object.keys(o)){const el=$(sec+'.'+k);if(!el||!pane.contains(el))continue;
-    o[k]=el.type==='checkbox'?el.checked:el.type==='number'||el.dataset.num?Number(el.value):el.value}
+    o[k]=el.type==='checkbox'?el.checked:el.dataset.list?el.value.split(/[\s,;]+/).filter(Boolean):el.type==='number'||el.dataset.num?Number(el.value):el.value}
   msg.textContent=t('Speichere…','Saving…');
   try{const r=await (await api('/api/config',{method:'PUT',headers:{'Content-Type':'application/json'},body:JSON.stringify(n)})).json();
     msg.innerHTML=t('Gespeichert.','Saved.')+(r.restarted.length?t(' Neu gestartet: ',' Restarted: ')+r.restarted.join(', ').toUpperCase()+t(' (Modell lädt neu).',' (model reloads).'):'')+(r.stopped&&r.stopped.length?t(' Gestoppt: ',' Stopped: ')+r.stopped.join(', ').toUpperCase()+'.':'')+(r.errors&&r.errors.length?`<div class="err">${esc(r.errors.join('\n'))}</div>`:'')+(r.panel_restart_needed?t(' Panel-Port ändert sich nach: ',' Panel port changes after: ')+'sudo systemctl restart speech-spark-panel':'');CFG=n;markDirty(pane,false)}
@@ -98,7 +98,7 @@ async function ttsStream(body){const t0=performance.now();const r=await api('/ap
   $('ttsmsg').textContent=`${t('erster Ton nach','first audio after')} ${first!=null?first.toFixed(2):'?'} s · ${(bytes/48000).toFixed(1)} s ${t('Audio in','audio in')} ${((performance.now()-t0)/1000).toFixed(2)} s`}
 
 async function loadClone(){const l=await (await api('/api/clone-voices')).json();
-  $('vlist').innerHTML=l.map(n=>`<tr><td>${esc(n)}</td><td style="text-align:right;white-space:nowrap"><button class="b" onclick="playRef('${esc(n)}')">${t('Referenz anhören','Play reference')}</button> <button class="b" onclick="location.href='/api/clone-voices-export?names='+encodeURIComponent('${esc(n)}')">${t('Exportieren','Export')}</button> <button class="b" onclick="delVoice('${esc(n)}')">${t('Löschen','Delete')}</button></td></tr>`).join('')||`<tr><td class="mut">${t('Noch keine.','None yet.')}</td></tr>`}
+  $('vlist').innerHTML=l.map(n=>`<tr><td>${esc(n)}</td><td style="text-align:right;white-space:nowrap"><button class="b" onclick="playRef('${escq(n)}')">${t('Referenz anhören','Play reference')}</button> <button class="b" onclick="location.href='/api/clone-voices-export?names='+encodeURIComponent('${escq(n)}')">${t('Exportieren','Export')}</button> <button class="b" onclick="delVoice('${escq(n)}')">${t('Löschen','Delete')}</button></td></tr>`).join('')||`<tr><td class="mut">${t('Noch keine.','None yet.')}</td></tr>`}
 $('vexpall').onclick=()=>{location.href='/api/clone-voices-export'};
 $('vimpbtn').onclick=()=>$('vimpfile').click();
 $('vimpfile').onchange=async()=>{const f=$('vimpfile').files[0];if(!f)return;$('vimpfile').value='';
@@ -294,7 +294,7 @@ $('livego').onclick=async()=>{$('livego').disabled=true;$('livemsg').textContent
   try{liveRender(await (await api('/api/livecheck',{method:'POST'})).json())}catch(e){$('livemsg').innerHTML=`<span class="err">${esc(e.message)}</span>`}$('livego').disabled=false;refresh()};
 const WHY={daily:t('täglich','daily'),manual:t('von Hand','manual'),'before-update':t('vor Update','before update'),'before-rollback':t('vor Rückkehr','before rollback'),'before-restore':t('vor Wiederherstellung','before restore')};
 const mb=n=>n<1048576?Math.max(1,Math.round(n/1024))+' KB':(n/1048576).toFixed(1)+' MB';
-function bakRender(l){$('baklist').innerHTML=l.map(b=>`<tr><td>${new Date(b.created*1000).toLocaleString()}<div class="mut">${esc(WHY[b.why]||b.why)} · ${mb(b.size)}</div></td><td style="text-align:right;white-space:nowrap"><a class="b" href="/api/backups/${encodeURIComponent(b.name)}" download>${t('Laden','Download')}</a> <button class="b" onclick="bakRestore('${esc(b.name)}')">${t('Wiederherstellen','Restore')}</button> <button class="b" onclick="bakDel('${esc(b.name)}')">${t('Löschen','Delete')}</button></td></tr>`).join('')||`<tr><td class="mut">${t('Noch keine Sicherung.','No backup yet.')}</td></tr>`}
+function bakRender(l){$('baklist').innerHTML=l.map(b=>`<tr><td>${new Date(b.created*1000).toLocaleString()}<div class="mut">${esc(WHY[b.why]||b.why)} · ${mb(b.size)}</div></td><td style="text-align:right;white-space:nowrap"><a class="b" href="/api/backups/${encodeURIComponent(b.name)}" download>${t('Laden','Download')}</a> <button class="b" onclick="bakRestore('${escq(b.name)}')">${t('Wiederherstellen','Restore')}</button> <button class="b" onclick="bakDel('${escq(b.name)}')">${t('Löschen','Delete')}</button></td></tr>`).join('')||`<tr><td class="mut">${t('Noch keine Sicherung.','No backup yet.')}</td></tr>`}
 async function loadBak(){try{bakRender((await (await api('/api/backups')).json()).backups)}catch(e){$('bakmsg').innerHTML=`<span class="err">${esc(e.message)}</span>`}}
 const bakAsk=()=>confirm(t('Wiederherstellen? Profile, Stimmen und Einstellungen werden durch die Sicherung ersetzt (der jetzige Stand wird vorher gesichert). Geänderte Einstellungen der Dienste wirken nach deren Neustart.','Restore? Profiles, voices and settings are replaced by the backup (the current state is backed up first). Changed service settings take effect after their restart.'));
 const bakDone=r=>{$('bakmsg').textContent=t('Wiederhergestellt: ','Restored: ')+r.restored.join(', ');loadBak()};

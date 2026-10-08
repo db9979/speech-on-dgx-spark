@@ -191,7 +191,8 @@ def api_key_dependency():
     from fastapi import Header, HTTPException
 
     def dep(authorization: str = Header(None)):
+        import hmac
         key = load_config().get("api", {}).get("key", "")
-        if key and authorization != f"Bearer {key}":
+        if key and not hmac.compare_digest(str(authorization or "").encode(), f"Bearer {key}".encode()):
             raise HTTPException(401, "invalid or missing API key")
     return dep

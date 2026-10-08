@@ -93,7 +93,7 @@ def _admin_cookie_age(request: Request):
     """Seconds since the admin cookie was issued, or None when it is missing, wrong or expired."""
     raw = request.cookies.get(COOKIE, "")
     issued = raw.split(".", 1)[0]
-    if not issued.isdigit() or time.time() - int(issued) > ADMIN_IDLE:
+    if not issued.isdigit() or time.time() - int(issued) > ADMIN_IDLE or guard.revoked(raw):
         return None
     return time.time() - int(issued) if secrets.compare_digest(raw, _session_token(issued)) else None
 
@@ -125,7 +125,7 @@ def auth(request: Request, creds: HTTPBasicCredentials | None = Depends(security
 def assistant(request: Request, creds: HTTPBasicCredentials | None = Depends(security)):
     """Voice chat endpoints: open when chat.public is on; otherwise for logged-in profiles (cookie or
     device key) and the admin, so guests are locked out but profiles can still sign in."""
-    if load_config().get("chat", {}).get("public", True) or profiles.current(request):
+    if load_config().get("chat", {}).get("public", False) or profiles.current(request):
         return
     auth(request, creds)
 

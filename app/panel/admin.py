@@ -122,9 +122,9 @@ async def change_password(request: Request):
     new = str(body.get("new", ""))
     if len(new) < 6:
         raise HTTPException(400, "the new password needs at least 6 characters")
-    guard.check(request)
+    guard.check(request, guard.ADMIN)
     if password_set() and not check_password(str(body.get("old", ""))):
-        guard.failed(request, what="admin_password")
+        guard.failed(request, guard.ADMIN, what="admin_password")
         await asyncio.sleep(1)
         raise HTTPException(401, "current password is wrong")
     salt = secrets.token_bytes(16)
@@ -184,6 +184,15 @@ def get_config():
     for sec, vals in load_config().items():  # fill keys added by newer versions
         cfg.setdefault(sec, {}).update(vals)
     return cfg
+
+
+def _is_ip(x):
+    import ipaddress
+    try:
+        ipaddress.ip_address(x)
+        return True
+    except ValueError:
+        return False
 
 
 def validate(new):
@@ -248,6 +257,9 @@ def validate(new):
         ports.append(a["engine_port"])
     if t.get("backend") == "vllm-omni":
         ports += [t["engine_port"], t["voicedesign_port"]]
+    tp = new["panel"].get("trusted_proxies", [])
+    if not isinstance(tp, list) or len(tp) > 10 or not all(isinstance(x, str) and _is_ip(x) for x in tp):
+        raise HTTPException(400, "trusted_proxies: a list of up to 10 IP addresses")
     if not isinstance(new["panel"].get("https_port"), int):
         raise HTTPException(400, "https_port must be a number, 0 = off")
     if new["panel"]["https_port"]:

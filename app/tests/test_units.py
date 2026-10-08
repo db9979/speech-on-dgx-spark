@@ -107,3 +107,29 @@ class History(unittest.TestCase):
         self.assertEqual(out[0]["role"], "user")
         self.assertLessEqual(sum(len(m["content"]) for m in out), 5500)
         self.assertEqual([m["role"] for m in chat.trim_history([{"role": "user", "content": "x" * 99999}], 10)], ["user"])
+
+
+class AsrFrontEnd(unittest.TestCase):
+    def test_parakeet_gets_the_whole_recording(self):
+        """With Parakeet the upload goes to the CPU model once (it used to be read twice, the second
+        read was empty)."""
+        import asr_proxy
+        from fastapi.testclient import TestClient
+        seen = []
+
+        class Fake:
+            status, error = "ready", None
+
+            def transcribe_file(self, path):
+                with open(path, "rb") as f:
+                    seen.append(f.read())
+                return "hallo welt", 1.0
+        asr_proxy.local, old = Fake(), asr_proxy.local
+        try:
+            r = TestClient(asr_proxy.app).post("/v1/audio/transcriptions", files={"file": ("a.wav", b"RIFF" + b"x" * 100)},
+                                               headers={"Authorization": "Bearer " + (asr_proxy.load_config().get("api", {}).get("key") or "")})
+            self.assertEqual(r.status_code, 200, r.text)
+            self.assertEqual(seen, [b"RIFF" + b"x" * 100])
+            self.assertIn("hallo welt", r.text)
+        finally:
+            asr_proxy.local = old

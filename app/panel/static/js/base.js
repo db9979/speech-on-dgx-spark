@@ -20,7 +20,9 @@ function subnav(g,s){const items=GROUPS[g],bar=$('subnav');bar.hidden=items.leng
 document.querySelectorAll('nav button').forEach(b=>b.onclick=()=>{const g=b.dataset.s,s=lastSec[g]||g;
   document.querySelectorAll('nav button').forEach(x=>x.classList.toggle('on',x===b));subnav(g,s);showSec(s)});
 window.goSec=s=>{const g=Object.keys(GROUPS).find(k=>GROUPS[k].some(x=>x[0]===s));lastSec[g]=s;document.querySelector(`nav button[data-s=${g}]`).click()};
-const esc=s=>String(s??'').replace(/[&<>"]/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'}[c]));
+const esc=s=>String(s??'').replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
+// for a value inside onclick="f('…')": a JavaScript string first, then HTML (a name with ' or \ stays text)
+const escq=s=>esc(JSON.stringify(String(s??'')).slice(1,-1).replace(/'/g,"\\'"));
 const pill=(s)=>{const c={active:'ok',ready:'ok',loading:'warn',activating:'warn',blocked:'bad',error:'bad',failed:'bad'}[s]||'';return `<span class="pill ${c}">${esc(s)}</span>`};
 // The panel runs on plain http in the LAN, where navigator.clipboard is not available.
 // navigator.clipboard needs https or localhost; the panel is usually plain http on the LAN,

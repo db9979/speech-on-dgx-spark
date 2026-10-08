@@ -417,20 +417,48 @@ class _PageText(html.parser.HTMLParser):
             self.parts.append(data.strip())
 
 
-async def page_text(c, url, limit=3000):
+async def public_url(url):
+    """True when the address is http(s) and its host resolves only to public addresses: pages from
+    search results never reach the Spark itself, the home network or the router."""
+    import ipaddress
+    import socket
+    from urllib.parse import urlsplit
     try:
-        async with c.stream("GET", url, timeout=6, follow_redirects=True,
-                            headers={"User-Agent": "Mozilla/5.0 (speech-on-dgx-spark)"}) as r:
-            if r.status_code != 200 or "html" not in r.headers.get("content-type", ""):
+        u = urlsplit(url)
+        if u.scheme not in ("http", "https") or not u.hostname:
+            return False
+        infos = await asyncio.to_thread(socket.getaddrinfo, u.hostname, u.port or (443 if u.scheme == "https" else 80))
+        return bool(infos) and all(ipaddress.ip_address(i[4][0].split("%")[0]).is_global for i in infos)
+    except (OSError, ValueError):
+        return False
+
+
+async def page_text(c, url, limit=3000):
+    """Readable text of a result page: public addresses only (each redirect checked again), at most
+    1.5 MB and 8 seconds in all."""
+    async def fetch():
+        target = url
+        for _ in range(4):
+            if not await public_url(target):
                 return ""
-            raw = b""
-            async for chunk in r.aiter_bytes():
-                raw += chunk
-                if len(raw) > 1_500_000:
-                    break
-        p = _PageText()
-        p.feed(raw.decode(r.encoding or "utf-8", errors="replace"))
-        return re.sub(r"\s+", " ", " ".join(p.parts))[:limit]
+            async with c.stream("GET", target, timeout=6, follow_redirects=False,
+                                headers={"User-Agent": "Mozilla/5.0 (speech-on-dgx-spark)"}) as r:
+                if r.is_redirect and r.headers.get("location"):
+                    target = str(r.url.join(r.headers["location"]))
+                    continue
+                if r.status_code != 200 or "html" not in r.headers.get("content-type", ""):
+                    return ""
+                raw = b""
+                async for chunk in r.aiter_bytes():
+                    raw += chunk
+                    if len(raw) > 1_500_000:
+                        break
+                p = _PageText()
+                p.feed(raw.decode(r.encoding or "utf-8", errors="replace"))
+                return re.sub(r"\s+", " ", " ".join(p.parts))[:limit]
+        return ""
+    try:
+        return await asyncio.wait_for(fetch(), 8)
     except Exception:
         return ""
 
