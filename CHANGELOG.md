@@ -2,6 +2,7 @@
 
 Every version in one line, newest first (taken from the commit messages, so some lines are German, some English). Older entries have no version number.
 
+- **V01.0.141** · 2026-10-08 · Web-Log mit Diagnose-Filtern: Übersicht → Logs → „Diagnose-Filter“ zeigt chat:, Websuche, Home Assistant, Raum-Modus, Lautsprecher, Update/Selbsttest und Fehler mit Zeitraum und Zeilenzahl, zum Kopieren in einen Thread (statt journalctl | grep auf der Konsole)
 - **V01.0.140** · 2026-10-08 · Raum-Modus flinker und findet mehr Fragen: Lautsprecher schneidet Gespräch in kurze Stücke, spricht nach 1,5 s Stille, streamt die Stimme; Antwort wird schon gesucht, während noch geredet wird; Fragen auch ohne Fragezeichen und nach „Weißt du, …“; „Auch Kommentare“ gesprächiger
 - **V01.0.139** · 2026-10-08 · Raum-Modus überhört Fernsehstimmen: pro Gerät „Wem er zuhört“ (allen / nur bekannte Stimmen, wenn der Fernseher läuft / immer nur bekannte Stimmen), mit Probelauf, der nur zählt; Admin-Schalter „Fernsehstimmen überhören“, standardmäßig aus
 - **V01.0.138** · 2026-10-08 · Lautsprecher: keine Lücken mehr in langen Ansagen, neue Firmware 2.5.1.5 wartet bei vollem Tonpuffer, statt Ton wegzuwerfen; der Spark hält 0,7 s Vorlauf

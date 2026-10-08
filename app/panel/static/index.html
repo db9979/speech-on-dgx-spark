@@ -441,9 +441,20 @@
   <div class="card"><div class="row" style="justify-content:space-between"><h2 style="margin:0">Update-Protokoll</h2><button class="b" onclick="copyEl('updlog',this)">Kopieren</button></div><pre id="updlog" style="margin-top:12px">–</pre></div>
 </section>
 <section id="logs">
-  <div class="row"><select id="logsvc" style="width:auto"><option value="asr">ASR</option><option value="tts">TTS</option><option value="asr-engine">ASR-Engine</option><option value="tts-engine">TTS-Engine</option><option value="tts-design">VoiceDesign-Engine</option><option value="update">Update</option><option value="panel">Panel</option><option value="audit">Änderungsprotokoll</option></select>
+  <div class="row"><select id="logsvc" style="width:auto"><option value="diag">Diagnose-Filter</option><option value="asr">ASR</option><option value="tts">TTS</option><option value="asr-engine">ASR-Engine</option><option value="tts-engine">TTS-Engine</option><option value="tts-design">VoiceDesign-Engine</option><option value="update">Update</option><option value="panel">Panel</option><option value="audit">Änderungsprotokoll</option></select>
     <button class="b" id="logload">Aktualisieren</button><button class="b" onclick="copyEl('logout',this)">Kopieren</button>
     <label class="chk" style="margin:0"><input type="checkbox" id="logfollow" checked> Autoscroll (ans Ende springen, alle 3 s neu laden)</label></div>
+  <div id="logdiag" class="row" style="margin-top:10px;flex-wrap:wrap">
+    <label class="chk" style="margin:0"><input type="checkbox" data-lf="chat"> chat:</label>
+    <label class="chk" style="margin:0"><input type="checkbox" data-lf="search"> Websuche</label>
+    <label class="chk" style="margin:0"><input type="checkbox" data-lf="ha"> Home Assistant</label>
+    <label class="chk" style="margin:0"><input type="checkbox" data-lf="room" checked> Raum-Modus</label>
+    <label class="chk" style="margin:0"><input type="checkbox" data-lf="esp32" checked> Lautsprecher (esp32)</label>
+    <label class="chk" style="margin:0"><input type="checkbox" data-lf="update"> Update und Selbsttest</label>
+    <label class="chk" style="margin:0"><input type="checkbox" data-lf="errors"> Fehler</label>
+    <select id="logmin" style="width:auto"><option value="10">letzte 10 min</option><option value="60" selected>letzte Stunde</option><option value="120">letzte 2 Stunden</option><option value="720">letzte 12 Stunden</option><option value="1440">letzte 24 Stunden</option></select>
+    <select id="loglines" style="width:auto"><option value="30">30 Zeilen</option><option value="100" selected>100 Zeilen</option><option value="300">300 Zeilen</option><option value="1000">1000 Zeilen</option></select>
+    <div class="fh" style="flex-basis:100%">Wie journalctl … | grep … | tail auf der Konsole. Nichts angehakt = alle Zeilen. „Kopieren“ und in den Thread einfügen.</div></div>
   <pre id="logout" style="margin-top:12px">…</pre>
 </section>
 </main>
