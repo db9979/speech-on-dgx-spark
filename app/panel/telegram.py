@@ -42,6 +42,10 @@ HELP = ("Schreib mir oder schick eine Sprachnachricht. /neu beginnt ein neues Ge
 _lock = threading.Lock()
 _codes = {}                  # code -> (uid, expiry)
 _strangers = {}              # chat id -> last time it got STRANGER
+_tries = {}                  # chat id -> [times of wrong codes] (guessing a code is pointless after a few)
+MAX_TRIES = 5                # wrong codes per chat and hour
+FORWARDED = ("Weitergeleitete Nachrichten nehme ich nicht als Auftrag, sie stammen von jemand anderem. "
+             "Schreib mir selbst, was ich tun soll.")
 _history = {}                # uid -> (time, messages)
 
 
@@ -251,7 +255,13 @@ async def handle(c, upd):
     uid = owner(cid)
     if text.startswith("/start"):
         code = text[6:].strip()
+        now = time.time()
+        tries = [t for t in _tries.get(cid, []) if now - t < 3600]
+        if len(tries) >= MAX_TRIES:
+            return    # someone guessing codes: no answer, no check
         new = take_code(code) if code else None
+        if code and not new:
+            _tries[cid] = tries + [now]
         if new:
             for u in profiles.user_ids():          # one profile per Telegram chat
                 if u != new and (link(u) or {}).get("chat") == cid:
@@ -267,6 +277,8 @@ async def handle(c, upd):
             await call(c, "sendMessage", chat_id=cid, text="Der Code passt nicht oder ist abgelaufen. Hol dir im Panel unter Profil → Telegram einen neuen.")
             return
     if not uid:
+        if len(_strangers) > 1000:
+            _strangers.clear()
         if time.time() - _strangers.get(cid, 0) > 24 * 3600:
             _strangers[cid] = time.time()
             await call(c, "sendMessage", chat_id=cid, text=STRANGER)
@@ -287,6 +299,9 @@ async def handle(c, upd):
     if text in ("/trennen", "/stop"):
         unlink(uid)
         await call(c, "sendMessage", chat_id=cid, text="Getrennt. Neu verbinden geht im Panel unter Profil → Telegram.")
+        return
+    if any(k in m for k in ("forward_origin", "forward_from", "forward_from_chat", "forward_sender_name", "forward_date")):
+        await call(c, "sendMessage", chat_id=cid, text=FORWARDED)   # someone else's words never act for the profile
         return
     voice = m.get("voice") or m.get("audio")
     if voice and not text:
@@ -362,6 +377,7 @@ async def notify(uid, text, private=True):
 # ---------------------------------------------------------------- API
 from fastapi import APIRouter, Depends, HTTPException, Request  # noqa: E402
 
+from account import browser_profile  # noqa: E402
 from core import admin_code, assistant, auth, confirm_code, own_profile  # noqa: E402
 
 router = APIRouter()
@@ -411,8 +427,10 @@ def profile_get(prof=Depends(own_profile)):
 
 
 @router.post("/api/profile/telegram/link", dependencies=[Depends(assistant), Depends(_on)])
-async def profile_link(request: Request, prof=Depends(own_profile)):
-    await confirm_code(request, prof["id"], prof["name"])   # a new way into the profile: like a new device
+async def profile_link(request: Request, prof=Depends(browser_profile)):
+    # a new way into the profile: only from its own browser login (never a shared device with a key),
+    # with the second login step when the profile has it
+    await confirm_code(request, prof["id"], prof["name"])
     code = new_code(prof["id"])
     bot = _state().get("bot", "")
     return {"code": code, "bot": bot, "url": f"https://t.me/{bot}?start={code}" if bot else "", "minutes": CODE_SECONDS // 60}
