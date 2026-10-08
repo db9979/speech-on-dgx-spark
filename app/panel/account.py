@@ -24,6 +24,7 @@ import homeassistant  # noqa: E402
 from common import load_config  # noqa: E402
 from core import (  # noqa: E402
     ADMIN_IDLE,
+    admin_cookie_ok,
     COOKIE,
     NO_BASIC,
     _session_token,
@@ -582,6 +583,8 @@ def profile_voice_delete(prof=Depends(browser_profile)):
 @router.post("/api/assistant/say", dependencies=[Depends(assistant)])
 async def assistant_say(request: Request):
     """Speaks a short text (a due reminder) as streamed PCM events, like the chat's audio."""
+    me = profiles.current(request)
+    guard.limit(request, "chat", me and me["id"], not me and admin_cookie_ok(request))
     body = await request.json()
     text = str(body.get("text", "")).strip()[:6000]   # a reminder, or an answer read out again
     if not text:

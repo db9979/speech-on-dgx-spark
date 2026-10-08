@@ -191,4 +191,10 @@ async def app_pair(request: Request):
 @router.get("/api/iphone/hello", dependencies=[Depends(assistant)])
 def app_hello(prof=Depends(own_profile)):
     """The app checks its key: whose it is and which Spark."""
-    return {"profile": prof["name"], "version": app_version(), "language": _language()}
+    s = profiles.settings(prof["id"])
+    import proactive
+    return {"profile": prof["name"], "version": app_version(), "language": _language(),
+            # what the profile allows the app (the panel decides; the app only shows and follows it)
+            "listen": bool(s.get("app_listen")), "act": bool(s.get("app_act")),
+            "proactive": bool(proactive.enabled() and s.get("pro_on")),
+            "reminders": bool(load_config().get("chat", {}).get("reminders", True))}

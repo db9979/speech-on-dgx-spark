@@ -55,7 +55,7 @@ class IPhone(unittest.TestCase):
     def test_off_by_default(self):
         with open(helpers.APP + "/config.default.json") as f:
             self.assertIs(json.load(f)["chat"]["iphone"], False)
-        for k in ("app_on", "app_ha"):
+        for k in ("app_on", "app_ha", "app_listen", "app_act"):
             self.assertIs(profiles.SETTINGS[k][0], False)
 
     def test_pairing_needs_both_switches_and_works_once(self):
@@ -156,6 +156,44 @@ class IPhone(unittest.TestCase):
             self.assertNotIn("NO TOOL home_assistant", said(cmd))
         finally:
             a.delete("/api/profile/homeassistant")
+
+    def test_phone_actions_only_from_the_app_and_when_allowed(self):
+        a = profile("Irma")
+        a.put("/api/profile/settings", json={"app_on": True})
+        h = {"X-Speech-Device": pair(a).json()["token"]}
+        app = TestClient(panel.app)
+        cmd = 'TOOL iphone_action {"kind": "navigate", "target": "Karlsruhe Hbf"}'
+
+        def run(client, headers=None):
+            r = client.post("/api/chat", json={"messages": [{"role": "user", "content": cmd}]}, headers=headers or {})
+            return helpers.events(r)
+        text = lambda evs: "".join(e.get("delta", "") for e in evs if e["type"] == "text")  # noqa: E731
+        self.assertIn("NO TOOL iphone_action", text(run(app, h)))
+        a.put("/api/profile/settings", json={"app_act": True})
+        evs = run(app, h)
+        self.assertIn({"type": "iphone", "kind": "navigate", "target": "Karlsruhe Hbf"},
+                      [{k: e.get(k) for k in ("type", "kind", "target")} for e in evs if e["type"] == "iphone"])
+        # the browser login and other device keys never get it
+        self.assertIn("NO TOOL iphone_action", text(run(a)))
+        key = ADMIN.post("/api/admin/devices", json={"name": "Skript", "user": uid_of("Irma")}).json()["token"]
+        self.assertIn("NO TOOL iphone_action", text(run(app, {"X-Speech-Device": key})))
+        # only navigate and call, the target cleaned
+        r = app.post("/api/chat", json={"messages": [{"role": "user", "content":
+                     'TOOL iphone_action {"kind": "sms", "target": "x"}'}]}, headers=h)
+        self.assertFalse([e for e in helpers.events(r) if e["type"] == "iphone"])
+
+    def test_hello_tells_what_the_profile_allows(self):
+        a = profile("Inge")
+        a.put("/api/profile/settings", json={"app_on": True})
+        h = {"X-Speech-Device": pair(a).json()["token"]}
+        app = TestClient(panel.app)
+        d = app.get("/api/iphone/hello", headers=h).json()
+        self.assertEqual((d["listen"], d["act"]), (False, False))
+        a.put("/api/profile/settings", json={"app_listen": True})
+        self.assertTrue(app.get("/api/iphone/hello", headers=h).json()["listen"])
+        # the app may read its reminders, nothing it could change them with
+        self.assertEqual(app.get("/api/profile/reminders", headers=h).status_code, 200)
+        self.assertEqual(app.delete("/api/profile/reminders/x", headers=h).status_code, 401)
 
     def test_pair_is_rate_limited(self):
         app = TestClient(panel.app)

@@ -7,6 +7,9 @@ An own app for the iPhone (source in `ios/`): press the button, ask, the answer 
 1. Admin: **Settings → Features → iPhone app** on, save.
 2. Profile: **Me → iPhone app → "iPhone app for me"** on.
 3. To switch lights and devices from the app: **"Smart home from the app"** on. The code word applies as everywhere.
+4. For the wake word and stand mode: **"Allow listening all the time"** on.
+5. To start routes and calls by voice: **"Routes and calls on the iPhone"** on.
+6. Notes on its own (morning briefing, reminders) come when **"On its own"** is on for the profile. Reminders and timers ring as iPhone notifications, also with the app closed.
 
 ## Getting the app onto the iPhone (on a Mac, about 15 minutes once)
 
@@ -28,12 +31,33 @@ An own app for the iPhone (source in `ios/`): press the button, ask, the answer 
 
 The link is valid for 10 minutes and once. The address must be https with a real certificate (your reverse proxy); the self-signed certificate on port 31443 is not accepted.
 
+## Using it
+
+- The assistant's face at the top blinks, looks around, listens with a red antenna, thinks with a turning arc and moves its mouth while speaking. Tapping it works like the button.
+- Big button: tap, speak; the app notices when you are done (or tap again). Tapping while the Spark speaks stops it.
+- Questions can also be typed. Top left starts a new conversation; after 10 minutes of quiet it starts anew by itself.
+
+In the app under **Settings (gear)**:
+
+| Switch | What it does |
+|---|---|
+| Hands-free | After each answer the app listens again. 8 seconds of silence: microphone off. |
+| Interrupt | Just start talking to stop the answer and be heard. The iPhone filters the Spark's own voice out of the microphone. |
+| Wake word | "Hey Spark", "Jarvis" or "Computer". The iPhone recognizes it itself, offline and without Apple's servers; only then does anything go to your Spark. If the iPhone cannot do German offline, it stays off. |
+| On battery | How long the wake word listens on battery after the last use (charger only, 30 minutes, 1 or 3 hours). Always on the charger. |
+| Stand mode | On the charger: big face, clock, last answer, screen stays on, dimmed at night. |
+| Speak on its own | The app says the Spark's notes aloud while it is open. |
+
+Routes and calls: "Navigiere zur Arbeit" or "Ruf Anna an". The app asks every time ("Open route to …?", "Call Anna (number)?"). Only "Ja" (tapped or said) opens Maps or calls. Contacts are searched only on the iPhone; the number does not go to the Spark.
+
 ## Security
 
 - Each iPhone gets its own key when pairing, kept only in that iPhone's keychain and on the Spark only as a hash.
 - The key may only ask and listen (chat, speech recognition, Siri question). Settings, memory, devices, connections and further pairings are refused.
 - The profile's switch off locks all its iPhones at once, the admin switch all of them. Remove a lost iPhone under **Me → iPhone app → Remove**.
 - Smart home from the app only with its own switch and the code word. What the app claims to be does not count; the panel decides by the key.
+- Wake word, stand mode, routes and calls only with their own switch in the panel. The Spark only suggests a route or call; the tool exists only for the app key with the switch, and only your "yes" on the iPhone starts it. Outside text (mail, web page) cannot start a route or call.
+- No sound goes to the Spark before the wake word. In the background the app listens only with the wake word on.
 - Pairing only from the profile's own browser login, with the second login step when the profile has it. At most 5 iPhones per profile.
 
 Every push that changes `ios/` builds the app on GitHub for the simulator (`.github/workflows/ios.yml`).

@@ -12,6 +12,32 @@ enum ChatEvent {
     case audio(Data)        // 16-bit PCM, 24 kHz, mono
     case mark(String)       // "mail" or "outside": the answer rests on text from outside
     case error(String)
+    case reminderSet(Reminder)
+    case reminderCancel([String])
+    case action(kind: String, target: String)   // iphone_action: "navigate" or "call"
+}
+
+struct Reminder {
+    let id: String
+    let text: String
+    let due: Date
+}
+
+struct Note {
+    let id: String
+    let t: Int
+    let text: String
+    let mail: Bool
+}
+
+/// What the profile allows the app (from /api/iphone/hello; the panel decides).
+struct Allowed {
+    var profile = ""
+    var language = "auto"
+    var listen = false
+    var act = false
+    var proactive = false
+    var reminders = true
 }
 
 /// The Spark's panel, spoken to with this iPhone's own device key. The key may only ask and
@@ -71,12 +97,77 @@ struct SparkAPI {
         return (key, d["profile"] as? String ?? "", d["language"] as? String ?? "auto")
     }
 
-    /// Checks the key: whose it is.
-    func hello() async throws -> (profile: String, language: String) {
+    /// Checks the key: whose it is and what the profile allows the app.
+    func hello() async throws -> Allowed {
         let (data, response) = try await URLSession.shared.data(for: request("api/iphone/hello"))
         try Self.check(data, response)
         let d = Self.object(data)
-        return (d["profile"] as? String ?? "", d["language"] as? String ?? "auto")
+        return Allowed(profile: d["profile"] as? String ?? "", language: d["language"] as? String ?? "auto",
+                       listen: d["listen"] as? Bool ?? false, act: d["act"] as? Bool ?? false,
+                       proactive: d["proactive"] as? Bool ?? false, reminders: d["reminders"] as? Bool ?? true)
+    }
+
+    static func reminder(_ d: [String: Any]) -> Reminder? {
+        guard let id = d["id"] as? String, let due = (d["due"] as? NSNumber)?.doubleValue else { return nil }
+        return Reminder(id: id, text: d["text"] as? String ?? "Erinnerung", due: Date(timeIntervalSince1970: due / 1000))
+    }
+
+    /// The profile's pending timers and reminders (the iPhone rings for them).
+    func reminders() async throws -> [Reminder] {
+        let (data, response) = try await URLSession.shared.data(for: request("api/profile/reminders"))
+        try Self.check(data, response)
+        let list = (try? JSONSerialization.jsonObject(with: data) as? [[String: Any]]) ?? []
+        return list.compactMap(Self.reminder)
+    }
+
+    /// Notes the Spark wants to say by itself ("Von selbst") since a time (ms).
+    func notes(since: Int) async throws -> [Note] {
+        var c = URLComponents(url: base.appendingPathComponent("api/proactive"), resolvingAgainstBaseURL: false)!
+        c.queryItems = [URLQueryItem(name: "since", value: String(since))]
+        var r = request("api/proactive")
+        r.url = c.url
+        let (data, response) = try await URLSession.shared.data(for: r)
+        try Self.check(data, response)
+        let items = Self.object(data)["items"] as? [[String: Any]] ?? []
+        return items.compactMap { d in
+            guard let id = d["id"] as? String, let text = d["text"] as? String else { return nil }
+            return Note(id: id, t: (d["t"] as? NSNumber)?.intValue ?? 0, text: text, mail: d["mail"] as? Bool ?? false)
+        }
+    }
+
+    /// A greeting when the app opens after a while (the Spark decides whether it says one).
+    func greet() async throws -> Note? {
+        let d = try await post("api/proactive/greet", [:])
+        guard let item = d["item"] as? [String: Any], let id = item["id"] as? String, let text = item["text"] as? String else { return nil }
+        return Note(id: id, t: (item["t"] as? NSNumber)?.intValue ?? 0, text: text, mail: false)
+    }
+
+    /// A text in the Spark voice (reminders, notes): 24 kHz PCM pieces.
+    func say(_ text: String) -> AsyncThrowingStream<Data, Error> {
+        AsyncThrowingStream { cont in
+            let task = Task {
+                do {
+                    var r = request("api/assistant/say", method: "POST")
+                    r.setValue("application/json", forHTTPHeaderField: "Content-Type")
+                    r.httpBody = try JSONSerialization.data(withJSONObject: ["text": String(text.prefix(1000))])
+                    let (bytes, response) = try await URLSession.shared.bytes(for: r)
+                    if let http = response as? HTTPURLResponse, !(200..<300).contains(http.statusCode) {
+                        try Self.check(Data(), response)
+                    }
+                    for try await line in bytes.lines {
+                        guard line.hasPrefix("data:") else { continue }
+                        let ev = Self.object(Data(line.dropFirst(5).utf8))
+                        if ev["type"] as? String == "audio", let s = ev["audio"] as? String, let pcm = Data(base64Encoded: s) {
+                            cont.yield(pcm)
+                        }
+                    }
+                    cont.finish()
+                } catch {
+                    cont.finish(throwing: error)
+                }
+            }
+            cont.onTermination = { _ in task.cancel() }
+        }
     }
 
     /// The recorded question (WAV) as text.
@@ -132,6 +223,14 @@ struct SparkAPI {
                         case "mail": cont.yield(.mark("mail"))
                         case "outside": cont.yield(.mark("outside"))
                         case "error": cont.yield(.error(ev["message"] as? String ?? "Fehler beim Spark."))
+                        case "reminder" where ev["foreign"] as? Bool != true:
+                            if ev["action"] as? String == "set", let item = ev["item"] as? [String: Any], let r = Self.reminder(item) {
+                                cont.yield(.reminderSet(r))
+                            } else if ev["action"] as? String == "cancel" {
+                                cont.yield(.reminderCancel(ev["ids"] as? [String] ?? []))
+                            }
+                        case "iphone":
+                            if let kind = ev["kind"] as? String, let target = ev["target"] as? String { cont.yield(.action(kind: kind, target: target)) }
                         default: break
                         }
                     }

@@ -261,7 +261,8 @@ def seen():
 
 # A key of the iPhone app (scope "app") only asks and listens: these paths and nothing else, and only
 # while the admin and the profile have the app switched on (APP_GATE, set by iphone.py; closed without it).
-APP_PATHS = ("/api/chat", "/api/test/asr", "/api/siri/ask", "/api/iphone/hello")
+APP_PATHS = ("/api/chat", "/api/test/asr", "/api/siri/ask", "/api/iphone/hello", "/api/profile/reminders",
+             "/api/proactive", "/api/proactive/greet", "/api/assistant/say")
 APP_GATE = [lambda uid: False]
 
 
@@ -372,6 +373,8 @@ SETTINGS = {
     # iPhone app (iphone.py): pairing for this profile, and switching the smart home from it, both off
     "app_on": (False, lambda v: isinstance(v, bool)),
     "app_ha": (False, lambda v: isinstance(v, bool)),
+    "app_listen": (False, lambda v: isinstance(v, bool)),   # listening all the time for the wake word
+    "app_act": (False, lambda v: isinstance(v, bool)),      # routes and calls on the iPhone (iphone_action)
 }
 
 

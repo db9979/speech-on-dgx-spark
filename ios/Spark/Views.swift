@@ -58,42 +58,8 @@ struct ChatView: View {
 
     var body: some View {
         NavigationStack {
-            VStack(spacing: 0) {
-                ScrollViewReader { scroll in
-                    ScrollView {
-                        LazyVStack(alignment: .leading, spacing: 10) {
-                            if talk.messages.isEmpty {
-                                Text("Frag mich etwas, zum Beispiel: „Wie wird das Wetter morgen?“")
-                                    .foregroundStyle(.secondary)
-                                    .padding(.top, 40)
-                                    .frame(maxWidth: .infinity)
-                            }
-                            ForEach(talk.messages) { m in
-                                Bubble(message: m).id(m.id)
-                            }
-                        }
-                        .padding()
-                    }
-                    .onChange(of: talk.messages.last?.text) {
-                        if let id = talk.messages.last?.id { withAnimation { scroll.scrollTo(id, anchor: .bottom) } }
-                    }
-                }
-                if let e = talk.error {
-                    Text(e).font(.footnote).foregroundStyle(.red).padding(.horizontal)
-                }
-                VStack(spacing: 8) {
-                    MicButton(phase: talk.phase, level: talk.level) { talk.tap() }
-                    Text(talk.status).font(.footnote).foregroundStyle(.secondary)
-                    HStack {
-                        TextField("Oder schreiben …", text: $typed)
-                            .textFieldStyle(.roundedBorder)
-                            .submitLabel(.send)
-                            .onSubmit(send)
-                        Button(action: send) { Image(systemName: "paperplane.fill") }
-                            .disabled(typed.trimmingCharacters(in: .whitespaces).isEmpty)
-                    }
-                }
-                .padding()
+            Group {
+                if talk.standing { StandView() } else { talking }
             }
             .navigationTitle("Spark")
             .navigationBarTitleDisplayMode(.inline)
@@ -107,18 +73,106 @@ struct ChatView: View {
                         .accessibilityLabel("Einstellungen")
                 }
             }
-            .sheet(isPresented: $settings) { SettingsView() }
-            .task { await app.refresh() }
-            .onChange(of: scene) {
-                // leaving the app while it listens: no recording in the background
-                if scene != .active && talk.phase == .listening { talk.stop() }
+            .sheet(isPresented: $settings, onDismiss: { talk.settingsChanged() }) { SettingsView() }
+            .task { await talk.begin(await app.refresh()) }
+            .onChange(of: scene) { talk.scene(scene) }
+            .onChange(of: talk.standing, initial: true) { UIApplication.shared.isIdleTimerDisabled = talk.standing }
+            .alert(talk.offer?.question ?? "", isPresented: Binding(get: { talk.offer != nil }, set: { if !$0 { talk.offer = nil } })) {
+                Button("Ja") { if let o = talk.offer { talk.offer = nil; PhoneAction.run(o) } }
+                Button("Nein", role: .cancel) { talk.offer = nil }
+            } message: {
+                Text("Du kannst auch „Ja“ oder „Nein“ sagen.")
             }
+        }
+        .environmentObject(talk)
+    }
+
+    private var talking: some View {
+        VStack(spacing: 0) {
+            FaceView(mood: talk.mood, mic: talk.level, out: { talk.audio.outLevel })
+                .frame(maxHeight: talk.messages.isEmpty ? 260 : 130)
+                .padding(.top, 8)
+                .onTapGesture { talk.tap() }
+                .animation(.easeInOut(duration: 0.3), value: talk.messages.isEmpty)
+            ScrollViewReader { scroll in
+                ScrollView {
+                    LazyVStack(alignment: .leading, spacing: 10) {
+                        if talk.messages.isEmpty {
+                            Text("Frag mich etwas, zum Beispiel: „Wie wird das Wetter morgen?“")
+                                .foregroundStyle(.secondary)
+                                .multilineTextAlignment(.center)
+                                .frame(maxWidth: .infinity)
+                        }
+                        ForEach(talk.messages) { m in
+                            Bubble(message: m).id(m.id)
+                        }
+                    }
+                    .padding()
+                }
+                .onChange(of: talk.messages.last?.text) {
+                    if let id = talk.messages.last?.id { withAnimation { scroll.scrollTo(id, anchor: .bottom) } }
+                }
+            }
+            if let e = talk.error {
+                Text(e).font(.footnote).foregroundStyle(.red).padding(.horizontal)
+            } else if let n = talk.notice {
+                Text(n).font(.footnote).foregroundStyle(.secondary).padding(.horizontal)
+            }
+            VStack(spacing: 8) {
+                MicButton(phase: talk.phase, level: talk.level) { talk.tap() }
+                Text(talk.status).font(.footnote).foregroundStyle(.secondary)
+                HStack {
+                    TextField("Oder schreiben …", text: $typed)
+                        .textFieldStyle(.roundedBorder)
+                        .submitLabel(.send)
+                        .onSubmit(send)
+                    Button(action: send) { Image(systemName: "paperplane.fill") }
+                        .disabled(typed.trimmingCharacters(in: .whitespaces).isEmpty)
+                }
+            }
+            .padding()
         }
     }
 
     private func send() {
         talk.write(typed)
         typed = ""
+    }
+}
+
+/// On the charger: big face, the clock and the last answer, like a small speaker on the shelf.
+/// The screen stays on; at night it is dimmed.
+struct StandView: View {
+    @EnvironmentObject var talk: Conversation
+
+    var body: some View {
+        TimelineView(.everyMinute) { tl in
+            let hour = Calendar.current.component(.hour, from: tl.date)
+            let night = hour >= 22 || hour < 7
+            VStack(spacing: 16) {
+                Text(tl.date, format: .dateTime.hour().minute())
+                    .font(.system(size: 64, weight: .light, design: .rounded))
+                    .monospacedDigit()
+                Text(tl.date, format: .dateTime.weekday(.wide).day().month(.wide))
+                    .foregroundStyle(.secondary)
+                FaceView(mood: talk.mood, mic: talk.level, out: { talk.audio.outLevel })
+                    .frame(maxWidth: 320)
+                    .onTapGesture { talk.tap() }
+                if let last = talk.messages.last(where: { $0.role == "assistant" }), !last.text.isEmpty {
+                    Text(last.text)
+                        .font(.title3)
+                        .multilineTextAlignment(.center)
+                        .lineLimit(4)
+                        .padding(.horizontal)
+                }
+                Text(talk.error ?? talk.status).font(.footnote).foregroundStyle(talk.error == nil ? Color.secondary : Color.red)
+            }
+            .frame(maxWidth: .infinity, maxHeight: .infinity)
+            .background(Color.black)
+            .foregroundStyle(.white)
+            .opacity(night && talk.phase == .waiting ? 0.35 : 1)
+            .environment(\.colorScheme, .dark)
+        }
     }
 }
 
@@ -156,12 +210,13 @@ struct MicButton: View {
                 Image(systemName: icon).font(.system(size: 34, weight: .semibold)).foregroundStyle(.white)
             }
         }
-        .accessibilityLabel(phase == .idle ? "Sprechen" : "Anhalten")
+        .accessibilityLabel(phase == .idle || phase == .waiting ? "Sprechen" : "Anhalten")
     }
 
     private var icon: String {
         switch phase {
         case .idle: return "mic.fill"
+        case .waiting: return "ear"
         case .listening: return "stop.fill"
         case .transcribing, .thinking: return "ellipsis"
         case .speaking: return "speaker.wave.2.fill"
@@ -171,6 +226,14 @@ struct MicButton: View {
 
 struct SettingsView: View {
     @EnvironmentObject var app: AppState
+    @EnvironmentObject var talk: Conversation
+    @AppStorage("handsFree") private var handsFree = false
+    @AppStorage("bargeIn") private var bargeIn = true
+    @AppStorage("wake") private var wake = false
+    @AppStorage("wakeWord") private var wakeWord: WakeWord.Word = .spark
+    @AppStorage("stand") private var stand = false
+    @AppStorage("batteryMinutes") private var batteryMinutes = 30
+    @AppStorage("speakNotes") private var speakNotes = true
     @Environment(\.dismiss) private var dismiss
     @State private var confirm = false
 
@@ -180,6 +243,38 @@ struct SettingsView: View {
                 Section("Gekoppelt") {
                     LabeledContent("Profil", value: app.profile)
                     LabeledContent("Spark", value: Store.baseURL?.host ?? "")
+                }
+                Section {
+                    Toggle("Freihändig", isOn: $handsFree)
+                    Toggle("Ins Wort fallen", isOn: $bargeIn)
+                } header: { Text("Gespräch") } footer: {
+                    Text("Freihändig: nach jeder Antwort hört die App wieder zu, bis 8 Sekunden lang nichts kommt. Ins Wort fallen: einfach losreden hält die Antwort an.")
+                }
+                Section {
+                    Toggle("Weckwort", isOn: $wake).disabled(!talk.allowed.listen)
+                    Picker("Wort", selection: $wakeWord) {
+                        ForEach(WakeWord.Word.allCases) { Text($0.rawValue).tag($0) }
+                    }
+                    .disabled(!wake || !talk.allowed.listen)
+                    Picker("Am Akku", selection: $batteryMinutes) {
+                        Text("Nur am Ladekabel").tag(0)
+                        Text("30 Minuten").tag(30)
+                        Text("1 Stunde").tag(60)
+                        Text("3 Stunden").tag(180)
+                    }
+                    .disabled(!wake || !talk.allowed.listen)
+                    Toggle("Ständer-Modus am Ladekabel", isOn: $stand)
+                } header: { Text("Dauerhaft zuhören") } footer: {
+                    Text(talk.allowed.listen
+                         ? "Das Weckwort erkennt das iPhone selbst, ohne Internet. Erst danach geht etwas an deinen Spark. Am Akku hört es nach der letzten Nutzung nur so lange zu wie eingestellt."
+                         : "Im Panel unter Ich → iPhone-App „Dauerhaft zuhören erlauben“ einschalten.")
+                }
+                Section {
+                    Toggle("Von selbst sprechen", isOn: $speakNotes).disabled(!talk.allowed.proactive)
+                } footer: {
+                    Text(talk.allowed.proactive
+                         ? "Hinweise, die der Spark von selbst gibt (Morgenrunde, Erinnerungen), sagt die App laut, solange sie offen ist."
+                         : "Dafür im Panel „Von selbst“ für dein Profil einschalten.")
                 }
                 Section {
                     Text("„Hey Siri, Frag Spark“ fragt den Spark auch ohne die App zu öffnen, auch mit AirPods und im Auto.")

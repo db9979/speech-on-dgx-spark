@@ -273,6 +273,20 @@ SPEAKER_HINT = ("Die Frage kommt über einen kleinen Lautsprecher im Raum, der d
                 "kurz, meist in ein bis drei Sätzen, ohne Listen, Tabellen, Links oder Emojis.")
 SIRI_HINT = ("Die Frage kommt über Siri vom iPhone, der Apple Watch, aus dem Auto oder über AirPods; Siri "
              "liest deine Antwort vor. Antworte kurz, meist in ein bis drei Sätzen, ohne Listen oder Links.")
+# the iPhone app (iphone.py): what only the phone can do; the app asks the person before it starts
+IPHONE_TOOL = {"type": "function", "function": {
+    "name": "iphone_action",
+    "description": "Do something on the user's iPhone that only the phone can do: 'navigate' opens directions "
+                   "in Apple Maps to a place or address, 'call' calls a contact from the iPhone's address book "
+                   "by name. The iPhone asks the user before it starts. Only when the user asks for it.",
+    "parameters": {"type": "object", "properties": {
+        "kind": {"type": "string", "enum": ["navigate", "call"]},
+        "target": {"type": "string", "description": "place or address, or the contact's name"}},
+        "required": ["kind", "target"]}}}
+IPHONE_HINT = ("Die Frage kommt aus der iPhone-App, die deine Antwort vorliest: antworte kurz, ohne Listen oder "
+               "Links. Timer und Erinnerungen stellst du mit reminder_set, das iPhone klingelt dann.")
+IPHONE_ACT_HINT = ("Mit iphone_action öffnest du auf dem iPhone eine Route in Karten oder rufst einen Kontakt an; "
+                   "das iPhone fragt vorher nach.")
 REMINDER_HINT = ("Mit reminder_set stellst du Timer und Erinnerungen, mit reminder_list und reminder_cancel "
                  "siehst und löschst du sie. Bestätige kurz, wann es klingelt.")
 
@@ -492,7 +506,8 @@ HA_READS = {"home_assistant_states", "home_assistant_history", "home_assistant_t
 # after outside text also no proposals and no reminders (a page could plant "Ja"-questions or a
 # reminder text that is read out later)
 LOCKED_OUTSIDE = {"home_assistant", "home_assistant_action", "memory_save", "memory_forget", "reminder_cancel",
-                  "reminder_set", "calendar_add", "mail_tidy_propose", "mail_draft", "tasks_add", "tasks_change"}
+                  "reminder_set", "calendar_add", "mail_tidy_propose", "mail_draft", "tasks_add", "tasks_change",
+                  "iphone_action"}
 MAX_CALLS = 4          # tool calls the model may make in one round (more are not run)
 MAX_SAVES = 3          # memory notes per answer
 OUTSIDE_NOTE = ("The following text comes from outside (web pages, calendar, documents, contacts, the smart home, "
@@ -1059,7 +1074,12 @@ async def _chat(request: Request):
         ha = None
     # from the iPhone app the smart home switches only when the profile allowed it there (app_ha); the
     # key decides, not what the request says it is
-    app_blocked = bool(ha and who and profiles.key_scope(request) == "app" and not profiles.settings(who["id"]).get("app_ha"))
+    app_key = profiles.key_scope(request) == "app"
+    app_blocked = bool(ha and who and app_key and not profiles.settings(who["id"]).get("app_ha"))
+    # actions on the iPhone itself: only from the app's own key, only when the profile allowed them
+    phone_act = bool(app_key and who and own_browser and profiles.settings(who["id"]).get("app_act"))
+    if app_key:
+        system = (system + "\n\n" + IPHONE_HINT + (" " + IPHONE_ACT_HINT if phone_act else "")).strip()
     if app_blocked:
         ha = None
     if tg:
@@ -1244,7 +1264,8 @@ async def _chat(request: Request):
              else [HA_TOOL, HA_STATES_TOOL, HA_ACTION_TOOL, HA_HISTORY_TOOL, HA_TODO_TOOL]) if ha else []) \
         + (REMINDER_TOOLS if timers and own_browser else []) + ([BRIEFING_TOOL] if briefing else []) \
         + ([CALENDAR_TOOL] if cal["calendars"] else []) + ([CALENDAR_ADD_TOOL] if cal_write else []) \
-        + (MAIL_TOOLS if mailbox else []) + (TIDY_TOOLS if tidy_on else []) + ([DRAFT_TOOL] if drafts_on else [])
+        + (MAIL_TOOLS if mailbox else []) + (TIDY_TOOLS if tidy_on else []) + ([DRAFT_TOOL] if drafts_on else []) \
+        + ([IPHONE_TOOL] if phone_act else [])
     # weather, contacts, parcels ... (extras.py): each offers its tools only when the profile switched it on
     ex = extras.offer({"who": who, "own": own_browser, "tz": body.get("tz"), "private": private_ok})
     tools += ex["tools"]
@@ -1641,6 +1662,14 @@ async def _chat(request: Request):
             if hits:
                 await out.put({"type": "docsources", "items": sorted({h["name"] for h in hits})})
             return "\n\n".join(f"[{h['name']}]\n{h['text']}" for h in hits) or "No matching passages in the documents. Say so; do not guess."
+        if name == "iphone_action" and phone_act:
+            kind = args.get("kind")
+            target = re.sub(r"[\x00-\x1f\x7f<>\\]", "", str(args.get("target") or "")).strip()[:120]
+            if kind not in ("navigate", "call") or not target:
+                return "Not done: give kind 'navigate' or 'call' and a target."
+            await out.put({"type": "iphone", "kind": kind, "target": target})
+            return (f"Sent to the iPhone, which now asks the user before it "
+                    f"{'opens the route to' if kind == 'navigate' else 'calls'} '{target}'. Say so in one short sentence.")
         if name.startswith("reminder_") and timers:
             pending = profiles.reminders(who["id"]) if who else guest_rem
             zone = user_zone(body.get("tz"))
