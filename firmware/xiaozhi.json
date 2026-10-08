@@ -2,7 +2,7 @@
   "comment": "Firmware for own ESP32-S3 speakers: upstream XiaoZhi at a fixed commit, German, own server only. Raise 'build' to publish a new version for the same commit. 'id' is the Spark's name for a variant (file prefix), 'name' the XiaoZhi build; 'nodisplay' starts the board without looking for a screen.",
   "repo": "https://github.com/78/xiaozhi-esp32.git",
   "commit": "0d576d3d4c049c6f55eaf879725dc23e516511b4",
-  "build": 3,
+  "build": 4,
   "language": "de-DE",
   "wake_word": "wn9_jarvis_tts",
   "wake_word_label": "Jarvis",
@@ -13,6 +13,12 @@
       "name": "bread-compact-wifi",
       "nodisplay": true,
       "label": "Board ohne Display (INMP441, MAX98357A, Standard-Pins)"
+    },
+    {
+      "id": "esp32-s3-audio-board",
+      "board": "waveshare/esp32-s3-audio-board",
+      "name": "esp32-s3-audio-board",
+      "label": "Waveshare ESP32-S3-AUDIO-Board (rund, 2 Mikrofone, ES8311)"
     },
     {
       "id": "bread-compact-wifi-128x64",

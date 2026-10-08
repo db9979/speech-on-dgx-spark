@@ -993,6 +993,9 @@ async def ota(request: Request):
     once = known.get("token_once")
     m = manifest()
     var = known.get("variant") or info["variant"]
+    rep = info["variant"]
+    if rep and rep != var and rep in (m or {}).get("variants", {}) and not var.startswith(rep):
+        var = rep   # another board type was written over USB: updates follow what the board says it is
     fw = (m or {}).get("variants", {}).get(var)
     offer = bool(fw and newer(m["version"], info["fw"]) and (known.get("auto", True) or known.get("update")))
     if offer:
@@ -1003,7 +1006,7 @@ async def ota(request: Request):
     def note(d):
         e = d["clients"][cid]
         e.update(fw=info["fw"] or e.get("fw", ""), mac=info["mac"] or e.get("mac", ""), seen=int(time.time()),
-                 ip=request.client.host if request.client else "", variant=e.get("variant") or info["variant"])
+                 ip=request.client.host if request.client else "", variant=var)
         if offer:
             e["update"] = False
         e.pop("token_once", None)

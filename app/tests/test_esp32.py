@@ -295,6 +295,32 @@ class Speakers(unittest.TestCase):
         a.delete(f"/api/profile/esp32/{did}")
         self.assertNotIn(did, esp32._diag)
 
+    def test_board_type_follows_the_board(self):
+        """A board rewritten over USB with another variant gets that variant's updates; a board without
+        display (reports its base build) keeps its own."""
+        a = profile("Esp Greta")
+        a.put("/api/profile/settings", json={"esp_on": True})
+        s = a.post("/api/profile/esp32/setup", json={"name": "Bad2", "variant": "bread-compact-wifi",
+                                                     "base": "https://speech.example.de"}).json()
+        real = esp32.manifest()
+        app = lambda f: {"label": f, "parts": [], "app": {"file": f + "__xiaozhi.bin"}}
+        fake = {"version": "9.9.9.9", "variants": {"bread-compact-wifi": app("bread-compact-wifi"),
+                                                   "bread-compact-wifi-nodisplay": app("bread-compact-wifi-nodisplay"),
+                                                   "esp32-s3-audio-board": app("esp32-s3-audio-board")}}
+        old, esp32.manifest = esp32.manifest, lambda: fake
+        try:
+            r = ota(s["uuid"], variant="esp32-s3-audio-board").json()
+            self.assertTrue(r["firmware"]["url"].endswith("/esp32-s3-audio-board__xiaozhi.bin"), r)
+            self.assertEqual(esp32.clients()[s["uuid"]]["variant"], "esp32-s3-audio-board")
+            esp32._update(lambda d: d["clients"][s["uuid"]].update(variant="bread-compact-wifi-nodisplay"))
+            r = ota(s["uuid"], variant="bread-compact-wifi").json()
+            self.assertTrue(r["firmware"]["url"].endswith("/bread-compact-wifi-nodisplay__xiaozhi.bin"), r)
+            r = ota(s["uuid"], variant="something-else").json()
+            self.assertTrue(r["firmware"]["url"].endswith("/bread-compact-wifi-nodisplay__xiaozhi.bin"), r)
+        finally:
+            esp32.manifest = old
+        self.assertEqual(esp32.manifest(), real)
+
     def test_net_check(self):
         """The real way: HTTP and the WebSocket through a running server, like a board would."""
         port = helpers._port()

@@ -31,6 +31,7 @@ Alle Optionen ohne Rückfragen (`--mode api --asr 1.7b --tts 0.6b --yes` …) st
 
 <!-- New version: add one line at the top here and in CHANGELOG.md, drop the oldest line here (keep 10). Details go to docs/de and docs/en, not into this README. -->
 
+- **V01.0.133** Lautsprecher: Firmware für das Waveshare ESP32-S3-AUDIO-Board (Audio-Chip ES8311, zwei Mikrofone), und Updates folgen der Board-Art, die per USB zuletzt geschrieben wurde
 - **V01.0.132** Lautsprecher ohne Display: Absturz direkt nach dem WLAN behoben (die Firmware wollte Schrift und Emojis auf einen nicht vorhandenen Bildschirm laden), neue Firmware 2.5.1.3
 - **V01.0.131** Lautsprecher prüfen: unter Ich → Lautsprecher zeigt „Prüfen“ Schalter, Adresse, letzte Meldungen und Mikrofonpegel, „Netz prüfen“ testet Adresse, Zertifikat und WebSocket, „Test“ spielt Ton und Satz und prüft das Mikrofon, und das Board-Protokoll lässt sich per USB im Browser lesen
 - **V01.0.130** Websuche fehlt nie mehr still: nach einer Antwort aus Mails sucht eine klare Suchfrage wieder, „such im Internet“ oder „google mal“ führt immer über die Suche, sonst sagt der Assistent, warum er gerade nicht sucht
@@ -40,7 +41,6 @@ Alle Optionen ohne Rückfragen (`--mode api --asr 1.7b --tts 0.6b --yes` …) st
 - **V01.0.126** Raum-Modus: in den Ruhezeiten nur als Text, endet nach 2 Minuten im Hintergrund oder bei gesperrtem Handy, „Raummodus aus“ per Sprache
 - **V01.0.125** Neue Menüs: Einstellungen in drei Blöcken, alles Prüfen unter Übersicht → Prüfen, Einbinden = Anleitungen + Apps und Schnittstellen, Ich-Fenster in den Gruppen der Funktionen-Seite mit Überblick und eigener Seite Mitteilungen
 - **V01.0.124** Kein Knacken mehr bei längeren Antworten: Sprache endet und stockt mit kurzem Ausblenden statt hart, Stopp blendet aus, „spricht noch“ zählt die Lautsprecher-Verzögerung mit, das eigene Echo am Satzende gilt nicht mehr als Unterbrechung
-- **V01.0.123** Einstellungen aufgeräumt: jede Einstellung direkt unter ihrem Schalter (Websuche, Wetter, Sprechererkennung; Seite „Websuche“ entfällt), kurze Funktionen mit Kennzeichen, Seiten heißen Sprachmodell, Vorgaben, Betrieb, überall „Ich“, Warnung bei ungespeicherten Änderungen
 
 Alle Versionen: [CHANGELOG.md](CHANGELOG.md)
 
