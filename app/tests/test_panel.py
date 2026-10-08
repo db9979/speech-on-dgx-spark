@@ -641,6 +641,9 @@ class Errors(unittest.TestCase):
         finally:
             self._set("chat", **old)
         self.assertEqual([e["code"] for e in evs if e["type"] == "error"], ["llm_down"])
+        # V01.0.158: said out loud too, so a speaker or the watch does not just stay silent
+        self.assertEqual(answer(evs), chat.LLM_GONE["llm_down"]["de"])
+        self.assertTrue(any(e["type"] == "audio" for e in evs))
 
 
 class Push(unittest.TestCase):
@@ -1700,7 +1703,8 @@ class Room(unittest.TestCase):
             r["said"] = 0
         a.post("/api/room/heard", json=dict(b, text="Ich darf nicht vergessen, Oma anzurufen.", tz="Europe/Berlin"))
         say = a.post("/api/room/pause", json=dict(b, quiet=3, tz="Europe/Berlin")).json()["say"]
-        self.assertTrue(say.startswith("Soll ich dich um ") and say.endswith("erinnern: Oma anrufen?"), say)
+        # late in the evening the hour from now is "morgen um ..." (no dependence on the clock)
+        self.assertRegex(say, r"^Soll ich dich (morgen )?um \d\d:\d\d Uhr erinnern: Oma anrufen\?$")
         self.assertEqual(a.post("/api/room/heard", json=dict(b, text="Nein.")).json()["say"], "Gut, dann nicht.")
         self.assertEqual(len(profiles.reminders(uid)), 1)
 

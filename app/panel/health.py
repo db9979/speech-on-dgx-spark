@@ -12,7 +12,8 @@ update runs or when the unit was started less than GRACE seconds ago.
 Memory: below watch.warn_gib (default 10 GiB; DGX OS starts killing processes at about 8 GiB) the
 panel shows a warning on every admin page and writes it to the change log once per episode.
 
-Live check: after an update (and on request) the real services are tried once; the result is in
+Live check: after an update (and on request) the real services are tried once (LLM, its tool choice,
+web search when switched on, TTS, ASR); the result is in
 STATE/livecheck.json and on the page Zustand → Prüfen.
 """
 import asyncio
@@ -170,6 +171,25 @@ LIVE_SENTENCE = "Heute ist ein schöner Tag, und der Spark spricht wieder."
 _live_lock = asyncio.Lock()
 
 
+CHECK_TOOL = {"type": "function", "function": {
+    "name": "get_time", "description": "Gibt die aktuelle Uhrzeit zurück.",
+    "parameters": {"type": "object", "properties": {}}}}
+
+
+def tool_called(data):
+    """(ok, detail) for the tool step of the live check: did the model call get_time?"""
+    try:
+        msg = data["choices"][0]["message"]
+    except (TypeError, KeyError, IndexError):
+        return False, "keine verwertbare Antwort"
+    names = [str((x.get("function") or {}).get("name")) for x in msg.get("tool_calls") or [] if isinstance(x, dict)]
+    if "get_time" in names:
+        return True, "ruft das Werkzeug auf"
+    if names:
+        return False, "falsches Werkzeug: " + ", ".join(names)[:80]
+    return False, "antwortet ohne Werkzeug (Tool-Parser von vLLM aus?)"
+
+
 def last_live():
     try:
         with open(LIVE_FILE) as f:
@@ -215,6 +235,33 @@ async def livecheck(reason="manual"):
             except Exception as e:
                 steps.append({"name": "llm", "ok": False, "seconds": round(time.time() - t0, 2),
                               "detail": f"{type(e).__name__}: {e}"[:200]})
+            # Tool choice: does the model call a tool when it has to? (the assistant's calendar, mail,
+            # smart home and search all rest on this; a model or parser change can break it silently)
+            if steps[-1]["ok"]:
+                t0 = time.time()
+                try:
+                    r = await c.post(ccfg["llm_url"].rstrip("/") + "/chat/completions", headers=headers, json={
+                        "model": model, "max_tokens": 300, "stream": False, "temperature": 0.1,
+                        "chat_template_kwargs": {"enable_thinking": False},
+                        "tools": [CHECK_TOOL], "tool_choice": "auto",
+                        "messages": [{"role": "user", "content": "Wie spät ist es? Nutze dafür das Werkzeug."}]})
+                    ok, detail = tool_called(r.json() if r.status_code == 200 else None)
+                    steps.append({"name": "tools", "ok": ok, "seconds": round(time.time() - t0, 2),
+                                  "detail": detail if r.status_code == 200 else f"HTTP {r.status_code}"})
+                except Exception as e:
+                    steps.append({"name": "tools", "ok": False, "seconds": round(time.time() - t0, 2),
+                                  "detail": type(e).__name__})
+            # Web search: SearXNG answers and pages can be read (only when it is switched on)
+            if ccfg.get("search") and ccfg.get("search_url"):
+                t0 = time.time()
+                try:
+                    from chat import web_search
+                    _, sources = await asyncio.wait_for(web_search(c, ccfg, "Wetter Deutschland heute"), 60)
+                    steps.append({"name": "search", "ok": bool(sources), "seconds": round(time.time() - t0, 2),
+                                  "detail": f"{len(sources)} Treffer" if sources else "keine Treffer"})
+                except Exception as e:
+                    steps.append({"name": "search", "ok": False, "seconds": round(time.time() - t0, 2),
+                                  "detail": type(e).__name__})
             # TTS
             audio = None
             if cfg["tts"].get("enabled", True):
@@ -300,6 +347,10 @@ def alerts():
         bad = ", ".join(s["name"].upper() for s in live["steps"] if s["ok"] is False)
         out.append({"kind": "livecheck", "level": "bad", "text": f"Funktionsprüfung fehlgeschlagen: {bad}."})
     out += quality_alert()
+    import latency
+    slow = latency.summary()["warn"]
+    if slow:
+        out.append({"kind": "latency", "level": "warn", "text": slow})
     return out
 
 

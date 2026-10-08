@@ -251,6 +251,43 @@ class Stage1(unittest.TestCase):
         self.assertIn("PrivateTmp=yes", sh)
 
 
+class Measured(unittest.TestCase):
+    def test_latency_kept_and_warned(self):
+        # V01.0.158: time to the first sound is kept for two weeks; the page warns when it clearly grew
+        import latency
+        old = latency._load()
+        try:
+            with open(latency._file(), "w") as f:
+                json.dump([], f)
+            now = 2_000_000_000
+            for i in range(12):
+                latency.add(1.0, "web", now=now - 3 * 86400 + i)
+            latency.add(9999, "web", now=now)            # nonsense is not kept
+            latency.add(2.0, "evil client!", now=now)    # client names are cleaned
+            self.assertEqual(latency._load()[-1]["c"], "other")
+            self.assertIsNone(latency.summary(now=now)["warn"])
+            for i in range(12):
+                latency.add(4.0, "speaker", now=now - 60 + i)
+            res = latency.summary(now=now)
+            self.assertEqual(res["week"]["median"], 1.0)
+            self.assertEqual(res["day"]["median"], 4.0)
+            self.assertIn("langsamer", res["warn"])
+            latency.add(1.0, "web", now=now + 20 * 86400)   # old entries go after two weeks
+            self.assertEqual(len(latency._load()), 1)
+        finally:
+            with open(latency._file(), "w") as f:
+                json.dump(old, f)
+
+    def test_live_check_sees_tool_choice(self):
+        import health
+        call = {"choices": [{"message": {"tool_calls": [{"function": {"name": "get_time", "arguments": "{}"}}]}}]}
+        self.assertTrue(health.tool_called(call)[0])
+        self.assertFalse(health.tool_called({"choices": [{"message": {"content": "Es ist 12 Uhr."}}]})[0])
+        self.assertFalse(health.tool_called({"choices": [{"message": {"tool_calls": [{"function": {"name": "x"}}]}}]})[0])
+        self.assertFalse(health.tool_called(None)[0])
+        self.assertFalse(health.tool_called({"choices": []})[0])
+
+
 if __name__ == "__main__":
     unittest.main()
 

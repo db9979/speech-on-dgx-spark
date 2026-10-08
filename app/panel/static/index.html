@@ -319,8 +319,9 @@
 <section id="test">
   <div class="two">
     <div class="card"><div class="row" style="justify-content:space-between"><h2 style="margin:0">Funktionsprüfung</h2><button class="b" type="button" onclick="openWizard()">Einrichtung erneut starten</button></div>
-      <div class="intro sm">Probiert die echten Dienste einmal aus: das Sprachmodell antwortet, die Sprachausgabe spricht einen Satz, die Spracherkennung versteht ihn wieder. Läuft nach jedem Update von selbst.</div>
+      <div class="intro sm">Probiert die echten Dienste einmal aus: das Sprachmodell antwortet und ruft ein Werkzeug auf, die Websuche findet etwas (wenn an), die Sprachausgabe spricht einen Satz, die Spracherkennung versteht ihn wieder. Läuft nach jedem Update von selbst.</div>
       <table style="margin-top:8px"><tbody id="livesteps"></tbody></table>
+      <div id="latsum" style="margin-top:8px"></div>
       <div class="row" style="margin-top:10px"><button class="b" id="livego">Jetzt prüfen</button><span id="livemsg" class="mut"></span></div></div>
     <div class="card"><h2>Qualitätstest</h2>
     <div class="intro sm">Stellt dem echten Sprachmodell 20 feste Fragen, die meisten zusätzlich in zwei anderen Formulierungen, mit vorbereiteten Werkzeug-Ergebnissen (Termine, Mails, Erinnerungen, Suche, Gedächtnis, „weiß ich nicht“-Fälle). Geprüft wird, ob es das richtige Werkzeug nimmt und was du nach der Antwort-Prüfung hörst. Ein Fehlschlag läuft einmal neu; der Verlauf zeigt neu kaputte und wackelnde Fragen. Echte Daten werden dabei weder gelesen noch geändert. Läuft nach jedem Update von selbst, dauert zwei bis vier Minuten.</div>

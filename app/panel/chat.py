@@ -32,6 +32,7 @@ import proactive  # noqa: E402
 import watch  # noqa: E402
 import chat_tools  # noqa: E402  (the tool calls of one answer)
 import chat_turn  # noqa: E402  (rights, prompt and tools of one turn)
+import latency  # noqa: E402
 from common import load_config  # noqa: E402
 from core import DEFAULTS, admin_cookie_ok, api_headers, assistant  # noqa: E402
 
@@ -752,6 +753,14 @@ def llm_error_code(e, status=None):
     return "llm_error"
 
 
+# A fixed sentence when the language model is gone (qwen38 stopped, restarting or overloaded): the
+# person hears why there is no answer instead of silence.
+LLM_GONE = {"llm_down": {"de": "Mein Sprachmodell ist gerade nicht erreichbar. Versuch es bitte gleich noch einmal.",
+                         "en": "My language model cannot be reached right now. Please try again in a moment."},
+            "llm_slow": {"de": "Mein Sprachmodell antwortet gerade nicht. Versuch es bitte gleich noch einmal.",
+                         "en": "My language model is not answering right now. Please try again in a moment."}}
+
+
 class ContextFull(RuntimeError):
     """The LLM refused the request as longer than its context."""
 
@@ -1193,8 +1202,15 @@ async def _answer(request, turn):
             status = getattr(getattr(e, "response", None), "status_code", None)
             m = re.match(r"LLM HTTP (\d+)", str(e))
             status = status or (int(m.group(1)) if m else None)
-            await out.put({"type": "error", "code": llm_error_code(e, status),
-                           "message": f"LLM: {type(e).__name__}: {e}"[:400]})
+            code = llm_error_code(e, status)
+            if code in LLM_GONE and not trace["said"].strip():
+                # said out loud as well: on a speaker, the watch or in the car nobody reads the error
+                note = LLM_GONE[code]["en" if guess_language(messages[-1]["content"]) == "English" else "de"]
+                print("chat: language model not reachable:", code, flush=True)
+                await out.put({"type": "text", "delta": note})
+                trace["said"] += note
+                await sentences.put(note)
+            await out.put({"type": "error", "code": code, "message": f"LLM: {type(e).__name__}: {e}"[:400]})
         finally:
             if who:  # the person can look this up in "Ich" → Protokoll (a few days only)
                 try:
@@ -1369,6 +1385,10 @@ async def _answer(request, turn):
                                 first = False
                                 played_until = time.time()
                                 await out.put({"type": "timing", "first_audio": round(time.time() - t0, 3)})
+                                try:  # for Zustand → Prüfen: how long people wait (latency.py)
+                                    await asyncio.to_thread(latency.add, time.time() - t0, body.get("client") or "web")
+                                except (OSError, ValueError) as e:
+                                    print("latency:", type(e).__name__, flush=True)
                             # 16-bit mono PCM at 24 kHz: 48000 bytes per second of audio
                             played_until = max(played_until, time.time()) + len(ev["audio"]) * 3 / 4 / 48000
                             await out.put({"type": "audio", "audio": ev["audio"]})

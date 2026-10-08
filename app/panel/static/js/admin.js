@@ -368,11 +368,14 @@ setInterval(()=>{if(ADMIN)api('/api/update').then(r=>r.json()).then(u=>updBadge(
 // ---------------------------------------------------------------- previous version, live check, backups
 $('updprev').onclick=async()=>{if(!confirm(t('Die vorige Version wieder installieren? Vorher wird automatisch gesichert. Gilt die vorige Version vor V01.0.37, müssen Kalender-Passwörter und Home-Assistant-Tokens danach neu eingegeben werden.','Install the previous version again? A backup is made first. If the previous version is older than V01.0.37, calendar passwords and Home Assistant tokens have to be entered again afterwards.')))return;
   try{ul.clicked=Date.now();await api('/api/update/rollback',{method:'POST'});ulShow()}catch(e){$('updmsg').innerHTML=`<span class="err">${esc(e.message)}</span>`}};
-const LIVE={llm:t('Sprachmodell','Language model'),tts:t('Sprachausgabe','Speech output'),asr:t('Spracherkennung','Speech recognition')};
+const LIVE={llm:t('Sprachmodell','Language model'),tools:t('Werkzeugwahl','Tool choice'),search:t('Websuche','Web search'),tts:t('Sprachausgabe','Speech output'),asr:t('Spracherkennung','Speech recognition')};
 function liveRender(r){if(!r||!r.steps){$('livesteps').innerHTML=`<tr><td class="mut">${t('Noch nicht geprüft.','Not checked yet.')}</td></tr>`;$('livemsg').textContent='';return}
   $('livesteps').innerHTML=r.steps.map(s=>`<tr><td style="width:34%">${s.ok===true?'✅':s.ok===false?'❌':'➖'} ${esc(LIVE[s.name]||s.name)}</td><td><span class="mut">${s.seconds} s</span> ${esc(s.detail||'')}</td></tr>`).join('');
   $('livemsg').textContent=new Date(r.t*1000).toLocaleString()+' · '+(r.version||'')+(r.reason==='after update'?t(' · nach dem Update',' · after the update'):'')}
-async function loadLive(){try{liveRender(await (await api('/api/livecheck')).json())}catch{}loadQuality()}
+// how long people wait for the first sound of an answer (latency.py)
+function latRender(l){const f=s=>s?`<b>${s.median} s</b> <span class="mut">(${s.n} ${t('Antworten','answers')}, ${t('9 von 10 unter','9 of 10 below')} ${s.p90} s)</span>`:`<span class="mut">${t('noch keine','none yet')}</span>`;
+  $('latsum').innerHTML=!l?'':`${t('Bis zum ersten Ton','Until the first sound')}: ${t('letzte 24 Stunden','last 24 hours')} ${f(l.day)} · ${t('Tage davor','days before')} ${f(l.week)}`+(l.warn?`<div class="err">${esc(l.warn)}</div>`:'')}
+async function loadLive(){try{const r=await (await api('/api/livecheck')).json();liveRender(r);latRender(r.latency)}catch{}loadQuality()}
 // quality test of the language model (sandbox questions, see quality.py)
 let qTimer=null;
 function qRender(d){const r=d&&d.last;clearTimeout(qTimer);
