@@ -31,8 +31,21 @@ Protocol (XiaoZhi, see github.com/78/xiaozhi-esp32):
     STATE/esp32.json   {"clients": {client id: {"device", "uid", "variant", "fw", "auto", "update", ...}},
                         "checked": t, "error": ""}
     FW_DIR/<version>/  manifest.json and the files of each board variant (from the repo's release)
+
+Diagnosis ("Ich" → Lautsprecher → Prüfen): what each speaker did lately (start check, connection,
+refusals with their reason, wake word, microphone level, what was understood, what was sent back)
+stays in memory only (DIAG_MAX lines per speaker, lost at a restart). "Netz prüfen" asks the board's
+address from the Spark itself, like the board does (certificate checked, home network allowed as for
+Home Assistant, only the fixed paths below, answer at most 4 KB, NET_CHECKS per profile in 10 min):
+    GET /api/esp32/ping            {"spark": PROBE}: shows the address really leads to this Spark
+    WS  /api/esp32/ws  x-spark-probe: 1   sends {"type": "probe", "spark": PROBE} and closes (shows the
+                                   reverse proxy passes WebSockets)
+"Test" plays a test sentence at the next wake word (at once when connected), then checks the microphone
+with the next sentence and says what it understood.
 """
 import asyncio
+import base64
+import collections
 import ctypes
 import ctypes.util
 import datetime
@@ -44,6 +57,7 @@ import os
 import re
 import secrets
 import shutil
+import ssl
 import threading
 import time
 import wave
@@ -73,6 +87,11 @@ _pending = {}              # client id -> {"code", "t", "challenge", "variant", 
 _fails = {}                # uid -> [times of wrong codes]
 _history = {}              # device id -> (time, messages)
 _live = {}                 # device id -> Session
+_diag = {}                 # device id -> deque of (time, text): what the speaker did lately (memory only)
+_net_tries = {}            # uid -> [times of "Netz prüfen"]
+DIAG_MAX = 40
+NET_CHECKS = 6
+PROBE = secrets.token_hex(8)   # shows that an address leads to this very Spark (not secret)
 ROOM_MINS = (15, 30, 60, 120, 240)
 ROOM_MAX = 2               # speakers in room mode at once (the speech recognition runs all the time)
 ROOM_LEVELS = ("questions", "hints", "all")
@@ -131,6 +150,21 @@ def clients():
 
 def by_device(did):
     return next(((k, v) for k, v in clients().items() if v.get("device") == did), (None, None))
+
+
+def diag(did, text):
+    """One line of the speaker's diagnosis (in memory, newest last)."""
+    if did:
+        _diag.setdefault(did, collections.deque(maxlen=DIAG_MAX)).append((int(time.time()), str(text)[:200]))
+
+
+def _take_test(did):
+    """"Test" was pressed while the speaker slept: the test runs at its next wake word (within a day)."""
+    cid, c = by_device(did)
+    if not c or not c.get("test_next") or time.time() - c["test_next"] > 24 * 3600:
+        return False
+    _update(lambda d: d["clients"].get(cid, {}).pop("test_next", None))
+    return True
 
 
 def _take_room_next(did):
@@ -460,6 +494,24 @@ class Session:
         self.send_lock = asyncio.Lock()
         self.room_next = False   # room mode switched on in the panel: starts with the next "listen start"
         self.room = None         # room mode: {"rid", "until", "wait", "need", "last", "asking", "queue", "task"}
+        self.mic = None          # this question's sound: [frames, seconds, peak, sum of squares, samples]
+        self.testing = False     # "Test": the next sentence only checks the microphone
+
+    def note(self, text):
+        diag(self.dev["id"], text)
+
+    def mic_report(self, heard):
+        """One diagnosis line about the sound the board sent for this question."""
+        m, self.mic = self.mic, None
+        if not m or self.room is not None:
+            return
+        if not m[0]:
+            self.note("Mikrofon: kein Ton vom Board angekommen")
+            return
+        peak = 20 * np.log10(max(m[2], 1) / 32768)
+        rms = 20 * np.log10(max(np.sqrt(m[3] / max(m[4], 1)), 1) / 32768)
+        self.note(f"Mikrofon: {m[1]:.1f} s Ton, lautester Moment {peak:.0f} dB, Mittel {rms:.0f} dB, "
+                  + ("Sprache gehört" if heard else "keine Sprache erkannt") + (" (zu leise oder nur Rauschen)" if peak < -40 else ""))
 
     async def send(self, obj):
         async with self.send_lock:
@@ -472,11 +524,22 @@ class Session:
     def listen(self, mode):
         self.mode = mode if mode in ("auto", "manual", "realtime") else "auto"
         self.ear = Ear()
+        self.mic = [0, 0.0, 0, 0.0, 0]
         self.dec = self.dec or Decoder(16000)
+
+    async def run_test(self, mode="auto"):
+        """"Test": a sentence and the tone (is the loudspeaker fine?), then the next sentence only checks
+        the microphone."""
+        self.note("Test: Testsatz gesendet")
+        await self.say("Lautsprecher-Test. Wenn du mich hörst, geht der Ton. Sag jetzt einen Satz, dann prüfe ich das Mikrofon.", tone=True)
+        self.testing = True
+        self.listen(mode)
 
     async def on_text(self, m):
         kind = m.get("type")
         if kind == "hello":
+            ap = m.get("audio_params") if isinstance(m.get("audio_params"), dict) else {}
+            self.note(f"Begrüßung vom Board: Ton {str(ap.get('format', '?'))[:10]} {str(ap.get('sample_rate', '?'))[:6]} Hz")
             await self.ws.send_text(json.dumps({"type": "hello", "transport": "websocket", "session_id": self.sid,
                                                 "audio_params": {"format": "opus", "sample_rate": OUT_RATE,
                                                                  "channels": 1, "frame_duration": 60}}))
@@ -486,15 +549,21 @@ class Session:
                 if self.answer and not self.answer.done():
                     self.answer.cancel()
                 self.listen(m.get("mode", "auto"))
+                self.note("Hört zu (" + self.mode + ")")
+                if self.room is None and _take_test(self.dev["id"]):
+                    self.answer = asyncio.create_task(self.run_test(self.mode))
+                    return
                 if self.room_next:
                     self.room_next = False
                     self.start_answer(None)
             elif st == "stop" and self.ear:
                 ear, self.ear = self.ear, None
+                self.mic_report(ear.heard)
                 if ear.heard or len(ear.pcm) > 16000:
                     self.start_answer(bytes(ear.pcm))
             elif st == "detect":
                 print("esp32: wake word at", self.dev["name"], flush=True)
+                self.note("Weckwort erkannt" + (f": {str(m.get('text'))[:30]}" if m.get("text") else ""))
                 if self.room is None and _take_room_next(self.dev["id"]):
                     self.room_next = True   # the switch in the panel: room mode starts at this wake word
         elif kind == "abort":
@@ -506,6 +575,14 @@ class Session:
         if not self.ear or (self.answer and not self.answer.done()):
             return
         pcm = self.dec.decode(packet)
+        if self.mic is not None and pcm:
+            x = np.frombuffer(pcm[:len(pcm) // 2 * 2], dtype="<i2").astype(np.float32)
+            if len(x):
+                self.mic[0] += 1
+                self.mic[1] += len(x) / 16000
+                self.mic[2] = max(self.mic[2], int(np.max(np.abs(x))))
+                self.mic[3] += float(np.sum(x * x))
+                self.mic[4] += len(x)
         if self.room is not None:
             r = self.ear.feed(pcm)
             if self.ear.heard:
@@ -523,9 +600,16 @@ class Session:
         r = self.ear.feed(pcm)
         if r == "done":
             ear, self.ear = self.ear, None
+            self.mic_report(True)
             self.start_answer(bytes(ear.pcm))
         elif r == "nothing":
             self.ear = None
+            self.mic_report(False)
+            if self.testing:
+                self.testing = False
+                self.note("Test: nichts gehört")
+                self.answer = asyncio.create_task(self.say("Ich habe nichts gehört. Das Mikrofon ist vielleicht nicht richtig angeschlossen."))
+                return
             await self.ws.close(1000)   # nobody spoke: the board goes back to waiting for its wake word
 
     def start_answer(self, pcm):
@@ -540,7 +624,15 @@ class Session:
                 text = await transcribe(pcm)
             except Exception as e:
                 print("esp32: speech recognition", type(e).__name__, str(e)[:120], flush=True)
+                self.note("Spracherkennung fehlgeschlagen: " + type(e).__name__)
                 text = ""
+            self.note(f"Verstanden: „{text[:80]}“" if text else "Nichts verstanden")
+            if self.testing:
+                self.testing = False
+                self.note("Test: Mikrofon " + ("geht" if text else "liefert keine verständlichen Wörter"))
+                await self.say(f"Das Mikrofon geht. Verstanden habe ich: {text[:200]}" if text else
+                               "Ich habe Ton bekommen, aber nichts verstanden. Bitte näher ran und deutlich sprechen.")
+                return
             if not text:
                 await self.send({"type": "tts", "state": "start"})
                 await self.send({"type": "tts", "state": "stop"})
@@ -559,6 +651,7 @@ class Session:
             raise
         except Exception as e:
             print("esp32: answer", type(e).__name__, str(e)[:160], flush=True)
+            self.note("Antwort fehlgeschlagen: " + type(e).__name__)
 
     # ------------------------------------------------------------ room mode
     @staticmethod
@@ -701,6 +794,7 @@ class Session:
             pcm = await tts_pcm(self.dev["user"], text)
         except Exception as e:
             print("esp32: tts", type(e).__name__, str(e)[:120], flush=True)
+            self.note("Sprachausgabe fehlgeschlagen: " + type(e).__name__)
             pcm = b""
         frames += await asyncio.to_thread(enc.feed, pcm, True)
         await self.send({"type": "tts", "state": "start"})
@@ -713,6 +807,7 @@ class Session:
                     await asyncio.sleep(ahead - 0.36)
                 await self.send_audio(fr)
             await asyncio.sleep(max(0.0, len(frames) * 0.06 - (time.monotonic() - t0)))
+            self.note(f"Gesprochen: {len(frames) * 0.06:.1f} s Ton gesendet")
         finally:
             try:
                 await self.send({"type": "tts", "state": "stop"})
@@ -790,6 +885,7 @@ class Session:
             if hasattr(response.body_iterator, "aclose"):
                 await response.body_iterator.aclose()   # stops LLM and TTS when cancelled
         await self.send({"type": "tts", "state": "stop"})
+        self.note(f"Antwort gesendet: {sent * 0.06:.1f} s Ton" if sent else "Antwort ohne Ton (Sprachausgabe lieferte nichts)")
         answer = answer.strip()
         if answer:
             remember(self.dev, history, text, answer, from_mail)
@@ -877,15 +973,18 @@ async def ota(request: Request):
     """The board's check at every start (POST with its system info; a code can be handed out here,
     so never on GET)."""
     if not admin_on():
+        print("esp32: start check refused (speakers are switched off in Funktionen)", flush=True)
         return JSONResponse({"error": "off"}, status_code=403)
     info = _client_info(request, await _body(request))
     cid = info["client"]
     if not re.fullmatch(r"[0-9a-fA-F\-]{8,64}", cid):
+        print("esp32: start check without a board id refused", flush=True)
         raise HTTPException(400, "Client-Id missing")
     base = _base(request)
     known = clients().get(cid)
     if not known:
         import guard
+        print(f"esp32: start check from an unknown board (firmware {info['fw'] or '?'}), it gets a pairing code", flush=True)
         return _activation(cid, info, guard.client_ip(request))
     dev = _devices()[known["device"]]
     off, _ = zone_offset(dev["user"])
@@ -913,6 +1012,9 @@ async def ota(request: Request):
         if tok:
             resp["websocket"]["token"] = tok   # only once, right after the code was typed in
     _update(note)
+    print(f"esp32: start check from {dev['name']} (firmware {info['fw'] or '?'})" + (", update offered" if offer else ""), flush=True)
+    diag(dev["id"], f"Start-Prüfung vom Board: Firmware {info['fw'] or '?'}, aus {request.client.host if request.client else '?'}"
+         + (f", Update {m['version']} angeboten" if offer else "") + (", Schlüssel übergeben" if once else ""))
     return resp
 
 
@@ -960,15 +1062,28 @@ def firmware_file(version: str, name: str):
 
 @router.websocket("/api/esp32/ws")
 async def speaker_ws(ws: WebSocket):
+    if ws.headers.get("x-spark-probe") == "1" and admin_on():
+        await ws.accept()   # "Netz prüfen": shows that WebSockets reach this Spark, nothing else
+        await ws.send_text(json.dumps({"type": "probe", "spark": PROBE}))
+        await ws.close(1000)
+        return
     token = ws.headers.get("authorization", "")
     token = token[7:].strip() if token.lower().startswith("bearer ") else token.strip()
     dev = device_for_token(token)
-    if not dev or not admin_on() or not profile_on(dev["user"]):
+    cid = ws.headers.get("client-id", "")[:64]
+    why = ("speakers are switched off in Funktionen" if not admin_on() else "unknown device key" if not dev
+           else "speakers are switched off in the profile" if not profile_on(dev["user"]) else "")
+    if why:
         await ws.close(code=4403)
-        print("esp32: connection refused (unknown key or switched off)", flush=True)
+        known = clients().get(cid) if cid else None
+        did = dev["id"] if dev else (known or {}).get("device")
+        name = (_devices().get(did) or {}).get("name", "") if did else ""
+        print(f"esp32: connection refused ({why})" + (f" from {name}" if name else ""), flush=True)
+        diag(did, "Verbindung abgelehnt: " + {"unknown device key": "Schlüssel unbekannt (Lautsprecher neu einrichten)",
+                                               "speakers are switched off in Funktionen": "Lautsprecher in Funktionen ausgeschaltet",
+                                               "speakers are switched off in the profile": "„Eigene Lautsprecher für mich“ ist aus"}[why])
         return
     await ws.accept()
-    cid = ws.headers.get("client-id", "")[:64]
     s = Session(ws, token, dev, cid)
     old = _live.get(dev["id"])
     _live[dev["id"]] = s
@@ -979,6 +1094,7 @@ async def speaker_ws(ws: WebSocket):
             pass
     profiles._note_device(dev["id"], ws)
     print("esp32: connected", dev["name"], flush=True)
+    diag(dev["id"], "Verbunden")
     try:
         while True:
             msg = await ws.receive()
@@ -1007,6 +1123,7 @@ async def speaker_ws(ws: WebSocket):
             s.answer.cancel()
         if _live.get(dev["id"]) is s:
             _live.pop(dev["id"], None)
+        diag(dev["id"], "Verbindung beendet")
 
 
 def _on(prof=Depends(browser_profile)):
@@ -1091,7 +1208,7 @@ async def profile_setup(request: Request, prof=Depends(_on)):
 
     def put(d):
         d["clients"][cid] = {"device": did, "uid": prof["id"], "variant": var, "fw": "", "auto": True,
-                             "update": False, "created": int(time.time()), "how": "usb"}
+                             "update": False, "created": int(time.time()), "how": "usb", "base": base}
     _update(put)
     print("esp32: new speaker set up over USB for", prof["name"], flush=True)
     return {"device": did, "token": token, "uuid": cid, "ota_url": base + "/api/esp32/ota/", "ws_url": ws_url(base),
@@ -1202,11 +1319,201 @@ async def profile_update_now(did: str, prof=Depends(_on)):
     return {"restarted": restarted, "devices": _list(prof["id"])}
 
 
+# ---------------------------------------------------------------- diagnosis
+@router.get("/api/esp32/ping")
+def ping():
+    """"Netz prüfen" asks this through the speaker's address: does it lead to this very Spark?"""
+    if not admin_on():
+        return JSONResponse({"error": "off"}, status_code=403)
+    return {"spark": PROBE}
+
+
+def _addr_hint(base):
+    """What is wrong with an address before anything is tried (None when nothing)."""
+    if not base:
+        return None
+    host = re.sub(r"^https?://", "", base).split(":")[0].lower()
+    if host.endswith(".invalid"):
+        return "Im Board steht keine Spark-Adresse. Lautsprecher per USB neu einrichten."
+    if host in ("localhost", "127.0.0.1", "::1") or host.startswith("127."):
+        return "Die Adresse zeigt auf den Spark selbst (localhost). Das Board erreicht sie nie: die Adresse im Heimnetz oder die des Reverse Proxys nehmen."
+    if base.startswith("https://") and (re.fullmatch(r"[\d.]+", host) or base.endswith(":31443")):
+        return "https mit IP-Adresse oder Port 31443 hat ein selbst signiertes Zertifikat. Das Board lehnt es ab: http://<Spark-IP>:31080 im Heimnetz oder die Adresse des Reverse Proxys nehmen."
+    return None
+
+
+def _ws_frame_text(buf):
+    """The text of the first WebSocket frame in buf (server frames are not masked), or None."""
+    if len(buf) < 2 or buf[0] & 0x0F != 1:
+        return None
+    n, i = buf[1] & 0x7F, 2
+    if n == 126:
+        if len(buf) < 4:
+            return None
+        n, i = int.from_bytes(buf[2:4], "big"), 4
+    elif n == 127:
+        return None
+    return buf[i:i + n].decode("utf-8", "replace") if len(buf) >= i + n else None
+
+
+async def _ws_probe(base):
+    """Opens the speaker WebSocket like the board does (name resolved once, certificate checked) and
+    waits for the probe answer. "" when fine, else why not."""
+    import netguard
+    from urllib.parse import urlsplit
+    u = urlsplit(base)
+    tls = u.scheme == "https"
+    port = u.port or (443 if tls else 80)
+    ip = await asyncio.to_thread(netguard.resolve, u.hostname, port, netguard.HOME)
+    ctx = None
+    if tls:
+        ctx = ssl.create_default_context()
+        try:
+            import certifi
+            ctx.load_verify_locations(certifi.where())
+        except Exception:
+            pass
+    r, w = await asyncio.wait_for(asyncio.open_connection(ip, port, ssl=ctx, server_hostname=u.hostname if tls else None), 6)
+    try:
+        key = base64.b64encode(secrets.token_bytes(16)).decode()
+        hostport = u.netloc.rsplit("@", 1)[-1]
+        w.write((f"GET /api/esp32/ws HTTP/1.1\r\nHost: {hostport}\r\nUpgrade: websocket\r\nConnection: Upgrade\r\n"
+                 f"Sec-WebSocket-Key: {key}\r\nSec-WebSocket-Version: 13\r\nx-spark-probe: 1\r\n\r\n").encode())
+        await w.drain()
+        head = await asyncio.wait_for(r.readuntil(b"\r\n\r\n"), 6)
+        status = head.split(b"\r\n", 1)[0].decode("latin-1")[:60]
+        if " 101 " not in status + " ":
+            return f"Der WebSocket wird nicht durchgereicht (Antwort „{status}“). Im Reverse Proxy WebSockets für /api/esp32/ws erlauben."
+        buf = b""
+        while len(buf) < 4096:
+            chunk = await asyncio.wait_for(r.read(4096), 6)
+            if not chunk:
+                break
+            buf += chunk
+            txt = _ws_frame_text(buf)
+            if txt is not None:
+                try:
+                    ok = json.loads(txt).get("spark") == PROBE
+                except (ValueError, AttributeError):
+                    ok = False
+                return "" if ok else "Der WebSocket landet nicht bei diesem Spark."
+        return "Der WebSocket öffnet sich, aber es kommt nichts an (Reverse Proxy?)."
+    finally:
+        w.close()
+
+
+async def net_check(base):
+    """The board's way to this Spark, tried from the Spark: [(ok, text)]."""
+    import netguard
+    out = []
+    hint = _addr_hint(base)
+    if hint:
+        out.append((False, hint))
+        if ".invalid" in base:
+            return out
+    try:
+        async with netguard.client(netguard.HOME, max_bytes=4096, timeout=6, follow_redirects=False) as c:
+            r = await c.get(base + "/api/esp32/ping")
+        if r.status_code == 200 and (r.json() if r.headers.get("content-type", "").startswith("application/json") else {}).get("spark") == PROBE:
+            out.append((True, f"{base} erreicht diesen Spark" + (" mit gültigem Zertifikat." if base.startswith("https") else ".")))
+        elif r.status_code == 403:
+            out.append((False, f"{base} antwortet, aber die Lautsprecher sind beim Admin ausgeschaltet."))
+        elif 300 <= r.status_code < 400:
+            out.append((False, f"{base} leitet weiter (Status {r.status_code}). Das Board folgt keiner Weiterleitung: die Zieladresse direkt eintragen."))
+        elif r.status_code in (401, 404):
+            out.append((False, f"{base} antwortet mit {r.status_code}: der Reverse Proxy reicht /api/esp32/ nicht ohne Anmeldung durch."))
+        else:
+            out.append((False, f"{base} antwortet mit Status {r.status_code}, aber das ist nicht dieser Spark."))
+            return out
+    except netguard.Blocked:
+        out.append((False, "Diese Adresse prüft der Spark nicht (sie zeigt auf seine eigenen Dienste oder ist nicht erlaubt)."))
+        return out
+    except Exception as e:
+        cause = e.__cause__ or e.__context__ or e
+        txt = (type(e).__name__ + " " + str(e) + " " + str(cause)).lower()
+        if "certificate" in txt or "ssl" in txt:
+            out.append((False, f"Das Zertifikat von {base} wird nicht anerkannt. Das Board lehnt es genauso ab."))
+        elif "name" in txt and ("not found" in txt or "resolve" in txt):
+            out.append((False, f"Den Namen in {base} findet der Spark nicht. Das Board vermutlich auch nicht."))
+        elif "timeout" in txt or "timed out" in txt:
+            out.append((False, f"{base} antwortet nicht (Zeit abgelaufen). Port oder Firewall prüfen."))
+        else:
+            out.append((False, f"{base} ist nicht erreichbar ({type(e).__name__})."))
+        return out
+    if out[-1][0]:
+        try:
+            why = await _ws_probe(base)
+        except Exception as e:
+            why = f"Der WebSocket ließ sich nicht öffnen ({type(e).__name__})."
+        out.append((not why, why or "Der WebSocket (Gespräch) kommt beim Spark an."))
+    return out
+
+
+def _diag_view(did, c, request):
+    """The diagnosis of one speaker: fixed checks first, then what it did lately (newest first)."""
+    uid = _devices()[did]["user"]
+    m = manifest()
+    var = c.get("variant", "")
+    checks = [(admin_on(), "Lautsprecher in Funktionen eingeschaltet" if admin_on() else "Lautsprecher sind in Funktionen ausgeschaltet (Admin)"),
+              (profile_on(uid), "„Eigene Lautsprecher für mich“ ist an" if profile_on(uid) else "„Eigene Lautsprecher für mich“ ist aus"),
+              (bool(m and var in m.get("variants", {})), f"Firmware für „{var}“ liegt auf dem Spark" if m and var in m.get("variants", {}) else "Für diese Board-Variante liegt keine Firmware auf dem Spark")]
+    if c.get("seen"):
+        checks.append((True, "Das Board hat sich beim Spark gemeldet, zuletzt " + time.strftime("%d.%m. %H:%M", time.localtime(c["seen"]))))
+    else:
+        checks.append((False, "Das Board hat sich noch nie beim Spark gemeldet. Es erreicht ihn nicht: WLAN, Adresse oder Zertifikat. "
+                              "„Netz prüfen“ und „Protokoll vom Board lesen (USB)“ zeigen, woran es liegt."))
+    base = c.get("base") or ""
+    hint = _addr_hint(base)
+    if hint:
+        checks.append((False, hint))
+    return {"base": base or _base(request), "base_known": bool(base), "online": did in _live,
+            "test": bool(c.get("test_next")), "checks": [{"ok": ok, "text": t} for ok, t in checks],
+            "events": [{"t": t, "text": x} for t, x in reversed(list(_diag.get(did, ())))]}
+
+
+@router.get("/api/profile/esp32/{did}/diag", dependencies=[Depends(assistant)])
+def profile_diag(did: str, request: Request, prof=Depends(browser_profile)):
+    cid = _mine(did, prof)
+    return _diag_view(did, clients()[cid], request)
+
+
+@router.post("/api/profile/esp32/{did}/check", dependencies=[Depends(assistant)])
+async def profile_net_check(did: str, request: Request, prof=Depends(browser_profile)):
+    """"Netz prüfen": the speaker's address tried from the Spark (fixed paths only, see net_check)."""
+    cid = _mine(did, prof)
+    await _body(request)
+    now = time.time()
+    tries = [t for t in _net_tries.get(prof["id"], []) if now - t < 600]
+    if len(tries) >= NET_CHECKS:
+        raise HTTPException(429, "Bitte ein paar Minuten warten, dann noch einmal prüfen.")
+    _net_tries[prof["id"]] = tries + [now]
+    c = clients()[cid]
+    base = c.get("base") or _base(request)
+    res = await net_check(_check_base(base))
+    diag(did, "Netz geprüft: " + ("alles gut" if all(ok for ok, _ in res) else next(t for ok, t in res if not ok)))
+    return {"results": [{"ok": ok, "text": t} for ok, t in res], **_diag_view(did, clients()[cid], request)}
+
+
+@router.post("/api/profile/esp32/{did}/test", dependencies=[Depends(assistant)])
+async def profile_test(did: str, request: Request, prof=Depends(_on)):
+    """"Test": a test sentence and then a microphone check, at once when connected, else at the next
+    wake word."""
+    cid = _mine(did, prof)
+    s = _live.get(did)
+    if s and s.room is None and not (s.answer and not s.answer.done()):
+        s.answer = asyncio.create_task(s.run_test())
+        return {"now": True, **_diag_view(did, clients()[cid], request)}
+    _update(lambda d: d["clients"][cid].update(test_next=int(time.time())))
+    diag(did, "Test vorgemerkt: beim nächsten Weckwort oder Knopfdruck")
+    return {"now": False, **_diag_view(did, clients()[cid], request)}
+
+
 @router.delete("/api/profile/esp32/{did}", dependencies=[Depends(assistant)])
 async def profile_delete(did: str, prof=Depends(browser_profile)):
     cid = _mine(did, prof)
     profiles.delete_device(did)
     _update(lambda d: d["clients"].pop(cid, None))
+    _diag.pop(did, None)
     s = _live.pop(did, None)
     if s:
         try:

@@ -44,6 +44,7 @@ OPEN = {
     "/api/esp32/ota/": "the speaker's first contact; only while the admin switched it on, codes are one-time",
     "/api/esp32/ota/activate": "the speaker's first contact; only with a pending one-time code",
     "/api/esp32/fw/{version}/{name}": "public firmware files",
+    "/api/esp32/ping": "\"Netz prüfen\": a random marker of this Spark, nothing else; only while the admin switched speakers on",
     "/": "the page itself",
     "/static/{name}": "page files",
     "/static/js/{name}": "page files",

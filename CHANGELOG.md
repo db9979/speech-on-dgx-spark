@@ -2,6 +2,7 @@
 
 Every version in one line, newest first (taken from the commit messages, so some lines are German, some English). Older entries have no version number.
 
+- **V01.0.131** · 2026-10-08 · Lautsprecher prüfen: unter Ich → Lautsprecher zeigt „Prüfen“ Schalter, Adresse, letzte Meldungen und Mikrofonpegel, „Netz prüfen“ testet Adresse, Zertifikat und WebSocket, „Test“ spielt Ton und Satz und prüft das Mikrofon, und das Board-Protokoll lässt sich per USB im Browser lesen
 - **V01.0.130** · 2026-10-08 · Websuche fehlt nie mehr still: nach einer Antwort aus Mails sucht eine klare Suchfrage wieder (die Mail-Antwort bleibt dabei weg), „such im Internet“/„google mal“ erzwingt die Suche, sonst sagt der Assistent, warum er nicht sucht; Log-Zeile „chat: web search …“
 - **V01.0.129** · 2026-10-08 · iPhone/Safari: Freihändig bleibt an, wenn iOS das Mikrofon beendet (gesperrter Bildschirm, Anruf, Siri): neues Mikrofon statt totem, öffnet sich wieder, sobald die Seite offen ist, und sagt, warum es aus war
 - **V01.0.128** · 2026-10-08 · Raum-Modus auch auf den ESP32-Lautsprechern (alle Board-Varianten): „Raummodus an/aus“ per Sprache oder Schalter „Raum“ unter Ich → Lautsprecher, Dauer und Raum pro Lautsprecher, schweigt in den Ruhezeiten

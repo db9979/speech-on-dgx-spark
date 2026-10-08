@@ -31,6 +31,7 @@ All options for running without questions (`--mode api --asr 1.7b --tts 0.6b --y
 
 <!-- New version: add one line at the top here and in CHANGELOG.md, drop the oldest line here (keep 10). Details go to docs/de and docs/en, not into this README. -->
 
+- **V01.0.131** Checking a speaker: under Me → Speakers "Check" shows switches, address, recent events and microphone level, "Check network" tests address, certificate and WebSocket, "Test" plays a tone and a sentence and checks the microphone, and the board's own log can be read over USB in the browser
 - **V01.0.130** Web search is never silently missing: right after an answer from mail a clear search question searches again, "such im Internet" or "google mal" always goes through the search, otherwise the assistant says why it does not search
 - **V01.0.129** iPhone/Safari: hands-free survives iOS ending the microphone (lock screen, call, Siri): a fresh microphone instead of a dead one, it reopens when the page is visible again and says why it stopped
 - **V01.0.128** Room mode on the ESP32 speakers too (all board variants): "Raummodus an/aus" by voice or the "Room" switch under Me → Speakers, duration and room per speaker, silent in quiet hours
@@ -40,7 +41,6 @@ All options for running without questions (`--mode api --asr 1.7b --tts 0.6b --y
 - **V01.0.124** No more clicks in longer answers: speech fades out briefly when it ends or stalls instead of stopping hard, Stop fades out, "still speaking" includes the speaker delay, the assistant's own echo at a sentence end no longer counts as an interruption
 - **V01.0.123** Tidier settings: every setting right below its switch (web search, weather, speaker identification; the web search page is gone), short feature rows with marks, pages named Language model, Defaults, Operation, "Me" everywhere, warning about unsaved changes
 - **V01.0.122** Cloned voices moved to Settings → Voices (with "Speak a sample"); the menu entry "Users" is now "Profiles"; Me → Voice is now "Speaker identification"
-- **V01.0.121** Language model settings: history length, web searches, time limit, top_p/presence_penalty, own keywords that require a tool, prompt preview with a default button, own conversation style per profile (off); the rules stay fixed
 
 All versions: [CHANGELOG.md](CHANGELOG.md)
 

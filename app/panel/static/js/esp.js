@@ -79,11 +79,12 @@ async function showEsp(){const box=$('espbox');if(!box)return;if(!PROFILE||!ESP_
   const dev=x=>`<li><span><b>${esc(x.name)}</b> ${x.online?`<span style="color:var(--ok)">● ${t('verbunden','connected')}</span>`:''}<br><small class="mut">${t('zuletzt','last')} ${when(x.seen)} · Firmware ${esc(x.fw||'?')}${x.newer?' · '+t('Update da','update available'):''}${x.update?' · '+t('beim nächsten Start','at next start'):''}</small>${d.room?room(x):''}</span>
       <span class="row" style="gap:6px;flex-wrap:wrap;justify-content:flex-end">${x.newer&&!x.update?`<button class="b" type="button" data-eup="${x.id}">${t('Aktualisieren','Update')}</button>`:''}
       <label class="chk" title="${t('Updates beim Start von selbst','Updates at start by themselves')}"><input type="checkbox" data-eauto="${x.id}"${x.auto?' checked':''}> ${t('auto','auto')}</label>
-      <button class="b" type="button" data-eren="${x.id}">${t('Umbenennen','Rename')}</button><button class="b" type="button" data-edel="${x.id}">${t('Entfernen','Remove')}</button></span></li>`;
+      <button class="b" type="button" data-ediag="${x.id}">${t('Prüfen','Check')}</button><button class="b" type="button" data-eren="${x.id}">${t('Umbenennen','Rename')}</button><button class="b" type="button" data-edel="${x.id}">${t('Entfernen','Remove')}</button></span></li>`;
   box.innerHTML=`<div class="intro">${t('Eigene kleine Lautsprecher mit Mikrofon (ESP32-S3-Boards) für jeden Raum. Sie hören auf das Weckwort oder den Knopf, fragen den Spark und antworten in deiner Stimme, mit deinem Gedächtnis und deinem Smart Home (mit Codewort). Kein Cloud-Dienst.','Own small speakers with a microphone (ESP32-S3 boards) for every room. They listen for the wake word or the button, ask the Spark and answer in your voice, with your memory and your smart home (with code word). No cloud service.')}</div>
     ${d.room&&d.on?`<div class="fh">${t('„Raum“: Der Lautsprecher hört für die gewählte Zeit dem Gespräch im Raum zu und hilft in einer Pause, mit einem leisen Ton vorher; geändert wird nur nach „Ja“. Per Sprache: „Jarvis … Raummodus an“ und „Raummodus aus“. Schläft er gerade, startet der Schalter beim nächsten Weckwort. In deinen Ruhezeiten schweigt er. Das Gehörte bleibt nur wenige Minuten auf dem Spark.','"Room": the speaker listens to the conversation in the room for the chosen time and helps in a pause, with a soft tone first; it changes something only after a "yes". By voice: "Jarvis … Raummodus an" and "Raummodus aus". When it sleeps, the switch starts at its next wake word. In your quiet hours it stays silent. What it hears stays on the Spark for a few minutes only.')}</div>`:''}
     ${xsw('esp_on',t('Eigene Lautsprecher für mich','Own speakers for me'),t('Ohne diesen Schalter nimmt der Spark keine Verbindung deiner Lautsprecher an.','Without this switch the Spark accepts no connection from your speakers.'))}
     ${d.on?`<ul class="facts">${d.devices.map(dev).join('')||`<li class="mut">${t('Noch kein Lautsprecher eingerichtet.','No speaker set up yet.')}</li>`}</ul>
+    <div id="espdiag"></div>
     ${!fw?`<div class="fh err">${t('Auf dem Spark liegt noch keine Firmware. Der Admin holt sie unter Einstellungen → Funktionen → Eigene Lautsprecher.','There is no firmware on the Spark yet. The admin fetches it under Settings → Features → Own speakers.')}</div>`:''}
     <details style="margin-top:10px"${d.devices.length?'':' open'}><summary>${t('Neuen Lautsprecher per USB einrichten (Chrome oder Edge)','Set up a new speaker over USB (Chrome or Edge)')}</summary>
       <div class="fh">${t('Board mit einem Datenkabel (nicht nur Ladekabel) an diesen PC stecken. Alles darauf wird überschrieben.','Plug the board into this PC with a data cable (not a charge-only cable). Everything on it is overwritten.')}</div>
@@ -103,6 +104,10 @@ async function showEsp(){const box=$('espbox');if(!box)return;if(!PROFILE||!ESP_
       <div class="fh">${t('Schreibt nur die Firmware neu, WLAN und Kopplung bleiben. Für ein Board, das nicht mehr startet oder kein Update über WLAN bekommt.','Rewrites only the firmware, Wi-Fi and pairing stay. For a board that no longer starts or gets no update over Wi-Fi.')}</div>
       <label>${t('Board','Board')}</label><select id="espvar2">${vars.map(([k,v])=>`<option value="${esc(k)}">${esc(v.label)}</option>`).join('')}</select>
       <div class="row" style="margin-top:8px"><button class="b" type="button" id="esprepair"${fw?'':' disabled'}>${t('Board verbinden und Firmware schreiben','Connect board and write firmware')}</button></div></details>
+    <details style="margin-top:8px" id="espserbox"><summary>${t('Protokoll vom Board lesen (USB)','Read the board\'s log (USB)')}</summary>
+      <div class="fh">${t('Board per USB an diesen PC stecken. Es startet neu und die Seite liest 45 Sekunden lang mit, was es meldet: WLAN, Spark-Adresse, Zertifikat, Abstürze. Der Text bleibt in diesem Browser.','Plug the board into this PC over USB. It restarts and the page reads for 45 seconds what it reports: Wi-Fi, Spark address, certificate, crashes. The text stays in this browser.')}</div>
+      <div class="row" style="margin-top:8px"><button class="b" type="button" id="espser">${t('Board verbinden und mitlesen','Connect board and read')}</button><button class="b" type="button" id="espserstop" style="display:none">${t('Aufhören','Stop')}</button><button class="b" type="button" id="espsercopy" style="display:none">${t('Kopieren','Copy')}</button></div>
+      <ul class="facts small" id="espserres"></ul><pre id="espserlog" style="display:none;max-height:40vh"></pre></details>
     <div id="espbar" class="ulbar" style="display:none;margin-top:10px"><i style="width:0"></i></div><div class="fh" id="espflog"></div>`:''}`;
   xbind(box,showEsp);if(!d.on)return;
   const hint=()=>{$('espbasehint').textContent=espBaseHint($('espbase').value.trim().replace(/\/$/,''))};$('espbase').oninput=hint;hint();
@@ -118,6 +123,8 @@ async function showEsp(){const box=$('espbox');if(!box)return;if(!PROFILE||!ESP_
     espLog(r.restarted?t('Der Lautsprecher startet neu und holt das Update.','The speaker restarts and fetches the update.'):t('Das Update kommt beim nächsten Start (Stecker kurz ziehen genügt).','The update comes at the next start (unplugging briefly is enough).'))}catch(e){espLog(e.message,true)}});
   $('esppair').onclick=async()=>{try{await api('/api/profile/esp32/pair',xjson('POST',{code:$('espcode').value,name:$('espcname').value}));await showEsp();espLog(t('Gekoppelt. Der Lautsprecher verbindet sich gleich.','Paired. The speaker connects in a moment.'))}catch(e){espLog(e.message,true)}};
   $('espflash').onclick=()=>espSetup(fw).catch(e=>{espBar(null);espLog(t('Nicht eingerichtet: ','Not set up: ')+e.message,true)});
+  box.querySelectorAll('[data-ediag]').forEach(b=>b.onclick=()=>espDiag(b.dataset.ediag));
+  $('espser').onclick=()=>espSerial().catch(e=>espSerShow(null,[[false,e.message]]));
   $('esprepair').onclick=()=>espRepair(fw).catch(e=>{espBar(null);espLog(t('Nicht geschrieben: ','Not written: ')+e.message,true)})}
 async function espSetup(fw){
   const name=$('espname').value.trim(),variant=$('espvar').value,ssid=$('espssid').value,pw=$('esppw').value,base=$('espbase').value.trim().replace(/\/$/,'');
@@ -140,6 +147,89 @@ async function espRepair(fw){const v=fw.variants[$('espvar2').value];
   const c=await espConnect();espChip(c,v.flash);
   const files=await espParts(v.parts.map(p=>Object.assign({},p,{url:`/api/esp32/fw/${fw.version}/${p.file}`})));
   await espWrite(c,files);espLog(t('Firmware geschrieben. Das Board startet neu.','Firmware written. The board restarts.'))}
+// ---------------------------------------------------------------- diagnosis ("Prüfen")
+const espWhen=s=>new Date(s*1000).toLocaleString(L==='en'?'en-GB':'de-DE',{day:'2-digit',month:'2-digit',hour:'2-digit',minute:'2-digit',second:'2-digit'});
+const espMark=ok=>ok===true?'<b style="color:var(--ok)">✓</b>':ok===false?'<b style="color:var(--bad)">✗</b>':'<b class="mut">·</b>';
+function espDiagShow(id,d,results){const box=$('espdiag');if(!box)return;
+  const li=x=>`<li>${espMark(x.ok)}<span>${esc(x.text)}</span></li>`;
+  box.innerHTML=`<div style="margin-top:12px;padding:10px 12px;border:1px solid var(--line);border-radius:12px">
+    <div class="row" style="justify-content:space-between"><b>${t('Prüfen','Check')}${d.online?' · <span style="color:var(--ok)">● '+t('verbunden','connected')+'</span>':''}</b><button class="b" type="button" id="espdclose">${t('Schließen','Close')}</button></div>
+    <ul class="facts small">${d.checks.map(li).join('')}${(results||[]).map(li).join('')}</ul>
+    <div class="fh">${t('Adresse im Board','Address in the board')}: <b>${esc(d.base)}</b>${d.base_known?'':' '+t('(nicht gespeichert, eingerichtet vor dieser Version; geprüft wird die Adresse dieser Seite)','(not stored, set up before this version; the address of this page is checked)')}</div>
+    <div class="row" style="margin-top:8px"><button class="b" type="button" id="espdnet">${t('Netz prüfen','Check network')}</button>
+      <button class="b" type="button" id="espdtest">${t('Test: Ton und Mikrofon','Test: sound and microphone')}</button>
+      <button class="b" type="button" id="espdser">${t('Protokoll vom Board lesen (USB)','Read the board\'s log (USB)')}</button>
+      <button class="b" type="button" id="espdre">${t('Aktualisieren','Refresh')}</button></div>
+    <div class="fh">${d.test?t('Test ist vorgemerkt: Sag „Jarvis“ oder drück den Knopf. Er spielt einen Ton und einen Satz, dann sagst du etwas und er sagt, was er verstanden hat.','Test is queued: say "Jarvis" or press the button. It plays a tone and a sentence, then you say something and it tells you what it understood.'):t('„Netz prüfen“ fragt die Adresse vom Spark aus ab, wie es das Board tut. „Test“ spielt beim nächsten Weckwort Ton und Satz und prüft danach das Mikrofon.','"Check network" asks the address from the Spark, as the board does. "Test" plays a tone and a sentence at the next wake word and then checks the microphone.')}</div>
+    <div style="margin-top:8px"><b>${t('Was der Lautsprecher zuletzt gemacht hat','What the speaker did lately')}</b></div>
+    <ul class="facts small">${d.events.map(e=>`<li><small class="mut" style="white-space:nowrap">${espWhen(e.t)}</small><span>${esc(e.text)}</span></li>`).join('')||`<li class="mut">${t('Seit dem letzten Neustart des Spark nichts. Das Board hat sich nicht gemeldet.','Nothing since the Spark last restarted. The board has not checked in.')}</li>`}</ul></div>`;
+  $('espdclose').onclick=()=>{box.innerHTML=''};
+  $('espdre').onclick=()=>espDiag(id);
+  $('espdnet').onclick=async()=>{$('espdnet').disabled=true;$('espdnet').textContent=t('Prüfe …','Checking …');
+    try{const r=await (await api('/api/profile/esp32/'+id+'/check',xjson('POST'))).json();espDiagShow(id,r,r.results)}catch(e){espDiagShow(id,d,[{ok:false,text:e.message}])}};
+  $('espdtest').onclick=async()=>{try{const r=await (await api('/api/profile/esp32/'+id+'/test',xjson('POST'))).json();espDiagShow(id,r,[{ok:null,text:r.now?t('Der Lautsprecher spielt jetzt den Test.','The speaker plays the test now.'):t('Vorgemerkt: beim nächsten „Jarvis“ oder Knopfdruck.','Queued: at the next "Jarvis" or button press.')}])}catch(e){espDiagShow(id,d,[{ok:false,text:e.message}])}};
+  $('espdser').onclick=()=>{const b=$('espserbox');if(b){b.open=true;b.scrollIntoView({block:'nearest'})}espSerial().catch(e=>espSerShow(null,[[false,e.message]]))}}
+async function espDiag(id){try{espDiagShow(id,await (await api('/api/profile/esp32/'+id+'/diag')).json())}catch(e){espLog(e.message,true)}}
+// ---------------------------------------------------------------- the board's own log over USB
+// What XiaoZhi prints at start (see its main/application.cc, ota.cc, esp-wifi-connect), in plain words.
+const ESP_SIGNS=[
+  [/Brownout detector was triggered/i,false,()=>t('Die Spannung bricht ein. Anderes Netzteil oder kürzeres Kabel nehmen.','The voltage drops. Use another power supply or a shorter cable.')],
+  [/Guru Meditation Error|abort\(\) was called|assert failed|Backtrace:/,false,()=>t('Das Board stürzt ab. Meist passt die Board-Variante oder die Pinbelegung nicht. Schick mir den Text.','The board crashes. Usually the board variant or the pins do not match. Send me the text.')],
+  [/NVS namespace wifi doesn't exist/,false,()=>t('Auf dem Board stehen keine WLAN-Daten. Per USB neu einrichten.','There is no Wi-Fi data on the board. Set it up again over USB.')],
+  [/Connecting to WiFi (\S+)/,null,m=>t('Verbinde mit dem WLAN „','Connecting to the Wi-Fi "')+m[1]+t('“','"')],
+  [/Got IP:\s*([\d.]+)/,true,m=>t('Im WLAN, Adresse ','On the Wi-Fi, address ')+m[1]],
+  [/WiFi connection timeout|WiFi config mode entered|Access Point started with SSID/,false,()=>t('Das WLAN klappt nicht: Name oder Passwort falsch, oder nur 5 GHz. Das Board macht jetzt ein eigenes WLAN auf. Per USB mit richtigen Daten neu einrichten.','The Wi-Fi does not work: wrong name or password, or 5 GHz only. The board now opens its own Wi-Fi. Set it up again over USB with the right data.')],
+  [/Current version: ([\d.]+)/,null,m=>'Firmware '+m[1]],
+  [/Check version URL is not properly set/,false,()=>t('Im Board steht keine Spark-Adresse.','There is no Spark address in the board.')],
+  [/Failed to open HTTP connection: (.*)/,false,m=>(/cert|x509|ssl|tls/i.test(m[1])?t('Das Board lehnt das Zertifikat des Spark ab. Adresse des Reverse Proxys oder http://<Spark-IP>:31080 nehmen. ','The board refuses the Spark\'s certificate. Use the reverse proxy address or http://<Spark IP>:31080. '):/dns|resolve|host/i.test(m[1])?t('Das Board findet den Namen der Spark-Adresse nicht. ','The board cannot resolve the Spark address. '):t('Das Board erreicht den Spark nicht. ','The board cannot reach the Spark. '))+'('+m[1].slice(0,120)+')'],
+  [/Failed to check version, status code: (\d+)/,false,m=>t('Der Spark antwortet mit ','The Spark answers with ')+m[1]+(m[1]==='403'?t(': Lautsprecher sind in Funktionen ausgeschaltet.',': speakers are switched off in Features.'):'')],
+  [/Check new version failed/,false,()=>t('Die Start-Prüfung beim Spark ist fehlgeschlagen, das Board versucht es weiter.','The start check at the Spark failed, the board keeps trying.')],
+  [/Alert \[link\]/,null,()=>t('Das Board zeigt einen Kopplungscode: Es kennt den Spark noch nicht. Code unter „Lautsprecher mit Code koppeln“ eingeben.','The board shows a pairing code: it does not know the Spark yet. Enter it under "Pair a speaker with a code".')],
+  [/No websocket section found/,false,()=>t('Der Spark hat keine Gesprächsadresse geschickt.','The Spark sent no conversation address.')],
+  [/Connecting to websocket server: (\S+)/,null,m=>t('Verbinde zum Gespräch: ','Connecting for the conversation: ')+m[1]],
+  [/Failed to connect to websocket server/,false,()=>t('Die Gesprächsverbindung klappt nicht: Reverse Proxy ohne WebSockets oder Schlüssel abgelehnt. „Prüfen“ beim Lautsprecher zeigt den Grund.','The conversation connection fails: reverse proxy without WebSockets or key refused. "Check" at the speaker shows why.')],
+  [/Session ID:/,true,()=>t('Gespräch mit dem Spark steht.','Conversation with the Spark is up.')],
+  [/Wake word detected/,true,()=>t('Weckwort erkannt.','Wake word detected.')],
+  [/Failed to create audio (?:de|en)coder|Read Failed!/,false,()=>t('Ton-Fehler auf dem Board (Mikrofon oder Verstärker). Board-Variante und Pins prüfen.','Sound error on the board (microphone or amplifier). Check board variant and pins.')],
+  [/rst:0x[0-9a-f]+ \((\w+)\)/i,null,m=>t('Board startet (','Board starts (')+m[1]+')']];
+function espAnalyse(text){const out=[],seen=new Set();
+  for(const line of text.split('\n'))for(const [re,ok,msg] of ESP_SIGNS){const m=line.match(re);if(!m)continue;const s=msg(m);if(seen.has(s))continue;seen.add(s);out.push([ok,s])}
+  if(text.length>200&&!/Current version|Connecting to WiFi|ESP-ROM|rst:0x/i.test(text))out.push([false,t('Das Board schreibt etwas, aber nichts Bekanntes. Schick mir den Text.','The board writes something, but nothing known. Send me the text.')]);
+  return out}
+// never show what looks like a key or a password, even if a firmware should print one
+const espMask=s=>s.replace(/((?:token|password|passwd|authorization|bearer)[^:=\s]*\s*[:=]?\s*)\S+/gi,'$1•••');
+function espSerShow(text,res){const r=$('espserres'),l=$('espserlog');if(!r)return;
+  r.innerHTML=(res||[]).map(([ok,s])=>`<li>${espMark(ok)}<span>${esc(s)}</span></li>`).join('');
+  if(text!=null){l.style.display='block';l.textContent=text.split('\n').slice(-300).join('\n');l.scrollTop=l.scrollHeight;$('espsercopy').style.display=''}}
+let ESP_SER=null;
+async function espSerial(){
+  if(!('serial' in navigator))throw new Error(t('Dieser Browser kann nicht per USB lesen. Bitte Chrome oder Edge am PC oder Mac nehmen.','This browser cannot read over USB. Please use Chrome or Edge on a PC or Mac.'));
+  if(!window.isSecureContext)throw new Error(t('Nur über https (oder localhost) erlaubt der Browser USB.','The browser only allows USB over https (or localhost).'));
+  if(ESP_SER)return;
+  let port=await navigator.serial.requestPort({});const info=port.getInfo();
+  const st=ESP_SER={stop:false,text:''};const sleep=ms=>new Promise(r=>setTimeout(r,ms));
+  $('espser').disabled=true;$('espserstop').style.display='';$('espserstop').onclick=()=>{st.stop=true;st.reader&&st.reader.cancel().catch(()=>{})};
+  $('espsercopy').onclick=()=>navigator.clipboard.writeText(espMask(st.text)).catch(()=>{});
+  espSerShow('',[[null,t('Verbunden, starte das Board neu …','Connected, restarting the board …')]]);
+  const end=Date.now()+45000,dec=new TextDecoder();let reset=false;
+  try{while(!st.stop&&Date.now()<end){
+      try{await port.open({baudRate:115200})}catch(e){if(!/already open/i.test(e.message))throw e}
+      if(!reset){reset=true;   // restart into the firmware: boot pin high (DTR off), reset pulse on RTS
+        await port.setSignals({dataTerminalReady:false,requestToSend:true}).catch(()=>{});await sleep(150);await port.setSignals({requestToSend:false}).catch(()=>{})}
+      st.reader=port.readable.getReader();
+      const timer=setInterval(()=>{if(Date.now()>end)st.reader.cancel().catch(()=>{})},500);
+      try{while(true){const {value,done}=await st.reader.read();if(done)break;
+          st.text=(st.text+dec.decode(value,{stream:true})).slice(-200000);espSerShow(espMask(st.text),espAnalyse(st.text))}}
+      catch(e){}   // a board with its own USB vanishes for a moment when it restarts
+      finally{clearInterval(timer);try{st.reader.releaseLock()}catch{}await port.close().catch(()=>{})}
+      if(st.stop||Date.now()>end)break;
+      await sleep(1200);   // find the same board again after it came back
+      const again=(await navigator.serial.getPorts()).find(p=>{const i=p.getInfo();return i.usbVendorId===info.usbVendorId&&i.usbProductId===info.usbProductId});
+      if(again)port=again}}
+  finally{ESP_SER=null;$('espser').disabled=false;$('espserstop').style.display='none'}
+  const res=espAnalyse(st.text);
+  if(!st.text.trim())res.push([false,t('Vom Board kam nichts. Anderes Kabel (Datenkabel) oder die andere USB-Buchse des Boards versuchen.','Nothing came from the board. Try another (data) cable or the board\'s other USB socket.')]);
+  espSerShow(espMask(st.text),res)}
 // ---------------------------------------------------------------- admin (Funktionen)
 async function espAdmin(){if(!$('espadmin'))return;let d={};try{d=await (await api('/api/admin/esp32')).json()}catch{return}
   const fw=d.firmware;

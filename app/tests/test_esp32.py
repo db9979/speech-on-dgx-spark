@@ -1,5 +1,6 @@
 """Own ESP32 speakers (esp32.py): firmware from a fake GitHub release, the board's start check (OTA),
 pairing by code and over USB, and a whole spoken question over the WebSocket like the XiaoZhi firmware."""
+import asyncio
 import ctypes
 import hashlib
 import json
@@ -243,6 +244,130 @@ class Speakers(unittest.TestCase):
         with self.assertRaises(WebSocketDisconnect):
             with c.websocket_connect("/api/esp32/ws", headers={"Authorization": "Bearer " + s["token"]}) as ws:
                 ws.receive_text()
+
+    def test_diagnosis(self):
+        a = profile("Esp Dora")
+        a.put("/api/profile/settings", json={"esp_on": True})
+        s = a.post("/api/profile/esp32/setup", json={"name": "Flur", "variant": "bread-compact-wifi",
+                                                     "base": "https://192.168.1.5:31443"}).json()
+        did = s["device"]
+        d = a.get(f"/api/profile/esp32/{did}/diag").json()
+        self.assertEqual(d["base"], "https://192.168.1.5:31443")
+        text = " ".join(c["text"] for c in d["checks"] if c["ok"] is False)
+        self.assertIn("noch nie", text)
+        self.assertIn("selbst signiertes", text)
+        # only the own profile in its browser
+        self.assertEqual(profile("Esp Emil").get(f"/api/profile/esp32/{did}/diag").status_code, 404)
+        self.assertEqual(TestClient(panel.app).get(f"/api/profile/esp32/{did}/diag",
+                                                   headers={"X-Speech-Device": s["token"]}).status_code, 403)
+        # the start check and a refused connection show up with their reason
+        ota(s["uuid"])
+        c = TestClient(panel.app)
+        with self.assertRaises(WebSocketDisconnect):
+            with c.websocket_connect("/api/esp32/ws", headers={"Authorization": "Bearer sd_wrong", "Client-Id": s["uuid"]}) as ws:
+                ws.receive_text()
+        d = a.get(f"/api/profile/esp32/{did}/diag").json()
+        ev = [e["text"] for e in d["events"]]
+        self.assertTrue(ev[0].startswith("Verbindung abgelehnt: Schlüssel unbekannt"), ev)
+        self.assertTrue(any(e.startswith("Start-Prüfung vom Board: Firmware 2.5.1.1") for e in ev), ev)
+        self.assertTrue(any(x["ok"] and "gemeldet" in x["text"] for x in d["checks"]))
+        # the probe WebSocket says only which Spark it is
+        with c.websocket_connect("/api/esp32/ws", headers={"x-spark-probe": "1"}) as ws:
+            self.assertEqual(json.loads(ws.receive_text()), {"type": "probe", "spark": esp32.PROBE})
+        self.assertEqual(c.get("/api/esp32/ping").json(), {"spark": esp32.PROBE})
+        # "Netz prüfen": at most NET_CHECKS in ten minutes per profile
+        asked = []
+
+        async def check(base):
+            asked.append(base)
+            return [(False, "nicht erreichbar")]
+        old, esp32.net_check = esp32.net_check, check
+        try:
+            for _ in range(esp32.NET_CHECKS):
+                r = a.post(f"/api/profile/esp32/{did}/check", json={})
+                self.assertEqual(r.status_code, 200, r.text)
+                self.assertEqual(r.json()["results"], [{"ok": False, "text": "nicht erreichbar"}])
+            self.assertEqual(a.post(f"/api/profile/esp32/{did}/check", json={}).status_code, 429)
+        finally:
+            esp32.net_check = old
+        self.assertEqual(asked, ["https://192.168.1.5:31443"] * esp32.NET_CHECKS)   # only the speaker's own address
+        self.assertIn("Netz geprüft: nicht erreichbar", [e["text"] for e in a.get(f"/api/profile/esp32/{did}/diag").json()["events"]])
+        a.delete(f"/api/profile/esp32/{did}")
+        self.assertNotIn(did, esp32._diag)
+
+    def test_net_check(self):
+        """The real way: HTTP and the WebSocket through a running server, like a board would."""
+        port = helpers._port()
+        only = FastAPI()   # the speaker routes alone: the whole panel would start its background jobs here
+        only.include_router(esp32.router)
+        helpers._serve(only, port)
+        res = asyncio.run(esp32.net_check(f"http://127.0.0.1:{port}"))
+        self.assertIn("localhost", res[0][1])   # a board never reaches 127.0.0.1: said, but still tried
+        res = res[1:]
+        self.assertTrue(res[0][0], res)
+        try:
+            import websockets  # noqa: F401
+        except ImportError:
+            try:
+                import wsproto  # noqa: F401
+            except ImportError:
+                self.skipTest("no WebSocket library for uvicorn")
+        self.assertEqual(len(res), 2, res)
+        self.assertTrue(res[1][0], res)
+        # another server at that address is not this Spark; a closed port and a wrong name say so
+        other = asyncio.run(esp32.net_check(f"http://127.0.0.1:{helpers.LLM_PORT}"))
+        self.assertFalse(other[-1][0])
+        self.assertIn("127.0.0.1", other[-1][1])
+        self.assertFalse(asyncio.run(esp32.net_check("http://spark.invalid"))[0][0])
+        self.assertIn("Spark-Adresse", asyncio.run(esp32.net_check("http://spark.invalid"))[0][1])
+
+    @unittest.skipUnless(_has_opus(), "libopus missing")
+    def test_speaker_test(self):
+        a = profile("Esp Frieda")
+        a.put("/api/profile/settings", json={"esp_on": True})
+        s = a.post("/api/profile/esp32/setup", json={"name": "Keller", "variant": "bread-compact-wifi",
+                                                     "base": "https://speech.example.de"}).json()
+        did = s["device"]
+        r = a.post(f"/api/profile/esp32/{did}/test", json={})
+        self.assertEqual((r.status_code, r.json()["now"], r.json()["test"]), (200, False, True))
+
+        async def tts(uid, text):
+            return np.zeros(2400, dtype="<i2").tobytes()
+
+        async def heard(pcm):
+            return "Eins zwei drei"
+        old = esp32.tts_pcm, esp32.transcribe
+        esp32.tts_pcm, esp32.transcribe = tts, heard
+        try:
+            with TestClient(panel.app).websocket_connect("/api/esp32/ws", headers={"Authorization": "Bearer " + s["token"],
+                                                                                 "Client-Id": s["uuid"]}) as ws:
+                ws.send_text(json.dumps({"type": "hello", "audio_params": {"format": "opus", "sample_rate": 16000}}))
+                ws.receive_text()
+
+                def until_stop():
+                    texts = []
+                    while True:
+                        m = ws.receive()
+                        if m.get("text") is None:
+                            continue
+                        e = json.loads(m["text"])
+                        texts.append(e.get("text") or "")
+                        if e["type"] == "tts" and e.get("state") == "stop":
+                            return " ".join(texts)
+                ws.send_text(json.dumps({"type": "listen", "state": "start", "mode": "auto"}))
+                self.assertIn("Lautsprecher-Test", until_stop())
+                t = np.arange(16000 * 1.2) / 16000
+                voice = (np.sin(2 * np.pi * 220 * t) * 8000).astype("<i2").tobytes()
+                quiet = np.zeros(16000, dtype="<i2").tobytes()
+                for fr in opus16k_frames(quiet[:9600] + voice + quiet):
+                    ws.send_bytes(fr)
+                self.assertIn("Das Mikrofon geht. Verstanden habe ich: Eins zwei drei", until_stop())
+        finally:
+            esp32.tts_pcm, esp32.transcribe = old
+        ev = [e["text"] for e in a.get(f"/api/profile/esp32/{did}/diag").json()["events"]]
+        self.assertTrue(any(e.startswith("Mikrofon: ") and "Sprache gehört" in e for e in ev), ev)
+        self.assertIn("Test: Mikrofon geht", ev)
+        self.assertFalse(a.get(f"/api/profile/esp32/{did}/diag").json()["test"])   # only once
 
     @unittest.skipUnless(_has_opus(), "libopus missing")
     def test_room_mode_on_a_speaker(self):
