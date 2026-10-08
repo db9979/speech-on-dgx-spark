@@ -293,6 +293,8 @@ def own_devices(uid):
 SETTINGS = {
     "hands": (False, lambda v: isinstance(v, bool)),
     "auto": (True, lambda v: isinstance(v, bool)),
+    # follow-up without the wake word: seconds the microphone stays open after an answer (admin chat.follow_up)
+    "follow": ("0", lambda v: v in ("0", "4", "6", "8", "10")),
     "daily": (True, lambda v: isinstance(v, bool)),
     "turn": (True, lambda v: isinstance(v, bool)),
     "live": (True, lambda v: isinstance(v, bool)),

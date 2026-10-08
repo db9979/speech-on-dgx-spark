@@ -100,7 +100,7 @@ function startVad(o={}){const ctx=audioCtx(),src=ctx.createMediaStreamSource(cha
       if(quiet>=250){if(!paused){paused=true;liveSnap(true)}}
       else{paused=false;chat.turnWait=null;if(S.live&&now-lastSnap>1200){lastSnap=now;liveSnap()}}}
     if(heard>200&&quiet>(chat.turnWait||800))stopListening(false);
-    else if(!heard&&now-t0>8000){chat.stopWhy='quiet';stopListening(true)}                 // nobody spoke
+    else if(!heard&&now-t0>(o.follow?o.follow*1000:8000)){chat.stopWhy='quiet';stopListening(true)}                 // nobody spoke
     else if(now-t0>60000)stopListening(false)},50);
   chat.vad={iv,src}}
 function stopVad(){chat.micLevel=0;chat.micPaused=false;if(chat.vad){clearInterval(chat.vad.iv);try{chat.vad.src.disconnect()}catch{}chat.vad=null}}
@@ -116,7 +116,7 @@ async function startListening(o={}){stopBarge();stopAnswer();chat.turnWait=null;
     const why=chat.stopWhy;chat.stopWhy=null;
     if(cancel){clearLive();if(why!=='lost')chatSay(why==='quiet'&&S.hands?t('Nichts gehört, Mikrofon aus. Tippe „Sprechen“ oder sag „Hey Spark“.','Heard nothing, microphone off. Tap "Speak" or say "Hey Spark".'):t('Bereit.','Ready.'));return}
     transcribe(new Blob(parts,{type:rec.mimeType||'audio/webm'}),performance.now(),rec)};
-  if(rec.state==='inactive')rec.start();chat.rec=rec;setTalk();chatSay(o.speaking?t('Unterbrochen, ich höre zu …','Interrupted, listening …'):t('Ich höre zu …','Listening …'));startVad(o)}
+  if(rec.state==='inactive')rec.start();chat.rec=rec;setTalk();chatSay(o.speaking?t('Unterbrochen, ich höre zu …','Interrupted, listening …'):o.follow?t('Noch eine Frage? Ich höre kurz zu …','Anything else? Listening briefly …'):t('Ich höre zu …','Listening …'));startVad(o)}
 // Barge-in: while the answer plays, the microphone keeps listening (the browser's echo
 // cancellation removes most of the assistant's own voice). A recorder starts at the first sign of
 // speech so the beginning is not lost; if the speech holds for 250 ms the answer stops and that
@@ -166,7 +166,7 @@ async function transcribe2(blob,tEnd,rec){chatSay(t('Erkenne Sprache …','Trans
   clearLive();
   if(!r)try{r=await asrText(blob)}catch(e){chatSay(errText(e instanceof TypeError?'net':/asr_down|unreachable/.test(e.message)?'asr_down':/loading/.test(e.message)?'asr_loading':'asr_error',e.message));return}
   if(!r.text){chatSay(t('Nichts verstanden.','Did not catch that.'));return}
-  chat.asrBusy=false;ask(r.text,(performance.now()-tEnd)/1000,r.speaker)}
+  chat.asrBusy=false;chat.nextSpoken=true;ask(r.text,(performance.now()-tEnd)/1000,r.speaker)}
 // Live transcript: the recording so far is transcribed about every second and shown as a pale
 // bubble. requestData() flushes the recorder first so the snapshot holds the last moments too.
 function liveSnap(pause){const rec=chat.rec,parts=chat.parts;if(!rec||rec.state!=='recording')return;
@@ -211,7 +211,7 @@ const ERRS={llm_auth:t('Das Sprachmodell lehnt den Schlüssel ab. Unter Einstell
   net:t('Keine Verbindung zum Spark. Ist das Netz weg?','No connection to the Spark. Is the network down?')};
 function errText(code,msg){const plain=ERRS[code];if(!plain)return msg||t('Unbekannter Fehler.','Unknown error.');
   return plain+(typeof ADMIN!=='undefined'&&ADMIN&&msg&&code!=='net'?' ('+String(msg).slice(0,160)+')':'')}
-async function ask(text,asrS,spk){
+async function ask(text,asrS,spk){const spoken=!!chat.nextSpoken;chat.nextSpoken=false;
   if(S.daily&&chat.cid&&!chat.picked){const c=convos.load().find(x=>x.id===chat.cid);if(c&&c.updated<today0())openConvo(null)}   // past midnight
 const ub=chatLog('user',text);const um={role:'user',content:text};chat.msgs.push(um);deletable(ub,um);let foreign=false,ttsErr=false,mailUsed=false,outsideUsed=false;
   const el=chatLog('assistant','');$('fabtext').textContent='';let full='',llmS=null,audioS=null,err='';const searches=[],sources=[],mems=[],docs=[];
@@ -267,7 +267,13 @@ const ub=chatLog('user',text);const um={role:'user',content:text};chat.msgs.push
   if(aborted){setTalk();return}
   while(playing()&&!chat.ctrl&&!chat.rec)await new Promise(res=>setTimeout(res,100));   // wait until it has finished speaking
   setTalk();if(chat.ctrl||chat.rec)return;
-  chatSay(t('Bereit.','Ready.'));if(S.hands)startListening()}
+  chatSay(t('Bereit.','Ready.'));if(S.hands)startListening();else if(spoken&&followSecs())startListening({follow:followSecs()})}
+// Follow-up without the wake word (admin chat.follow_up, per profile "follow", off by default): after
+// the answer to a spoken question the microphone stays open a few seconds, so "Und morgen?" needs no
+// "Hey Spark". Unlike hands-free it ends after those seconds of silence and only follows a spoken
+// question; typed questions, guests and room mode never open it.
+function followSecs(){let guest=true;try{guest=isGuest()}catch{}
+  const s=Number(S.follow)||0;return ALLOW.follow&&!guest&&!document.hidden&&!(window.room&&room.on)&&[4,6,8,10].includes(s)?s:0}
 
 
 // Wake word "Hey Spark": while the assistant is idle the microphone keeps a short ring buffer of
@@ -300,7 +306,7 @@ async function checkWake(chunks,rate){wake.busy=true;try{
   const fd=new FormData();fd.append('file',pcmWav(chunks,rate),'wake.wav');fd.append('language',(CFG&&CFG.asr.default_language)||'auto');fd.append('wake','Hey Spark');if(window.room&&room.on)fd.append('room',room.id);
   const text=((await (await api('/api/test/asr',{method:'POST',body:fd})).json()).text||'').trim();
   const m=text&&matchWake(text);if(!m){if(window.room&&room.on&&text)room.heard(text);return}if(!wake.on)return;
-  if(m.rest.split(/\s+/).filter(Boolean).length>=2){wake.busy=false;ask(m.rest,null)}
+  if(m.rest.split(/\s+/).filter(Boolean).length>=2){wake.busy=false;chat.nextSpoken=true;ask(m.rest,null)}
   else{chime();wake.busy=false;startListening()}}
   catch{}finally{wake.busy=false}}
 async function startWake(){if(wake.on)return;

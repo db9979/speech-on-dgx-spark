@@ -615,7 +615,8 @@ def profile_settings(request: Request):
     return {"settings": dict(base, **(profiles.settings(prof["id"]) if prof else {})), "defaults": base,
             "profile": prof, "allow": {"tool_think": bool(prof and chat.get("tool_thinking", False)),
                                        "fix_learn": bool(prof and chat.get("learn_fixes", False) and chat.get("memory", True)),
-                                       "style": bool(prof and chat.get("own_style", False))}}
+                                       "style": bool(prof and chat.get("own_style", False)),
+                                       "follow": bool(prof and chat.get("follow_up", False))}}
 
 
 @router.put("/api/profile/settings", dependencies=[Depends(assistant)])

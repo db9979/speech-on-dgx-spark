@@ -31,6 +31,7 @@ Alle Optionen ohne Rückfragen (`--mode api --asr 1.7b --tts 0.6b --yes` …) st
 
 <!-- New version: add one line at the top here and in CHANGELOG.md, drop the oldest line here (keep 10). Details go to docs/de and docs/en, not into this README. -->
 
+- **V01.0.144** Rückfrage ohne Weckwort (aus, Admin + Profil): nach der Antwort auf eine gesprochene Frage hört der Assistent noch 4–10 Sekunden zu, „Und morgen?“ braucht kein „Hey Spark“
 - **V01.0.143** Freihändig hört auch dann wieder zu, wenn der Browser die Wiedergabe angehalten hat (iOS, kein Lautsprecher): „spricht noch“ gilt nur, wenn wirklich etwas abgespielt wird; GitHub-Test wieder grün
 - **V01.0.142** Lautsprecher: „Stimme hier anlernen“ (drei Sätze, eigener Stimmabdruck fürs Board-Mikrofon); „nur bekannte Stimmen“ greift am Lautsprecher erst, wenn dort eine Stimme angelernt ist
 - **V01.0.141** Web-Log mit Diagnose-Filtern: Übersicht → Logs → „Diagnose-Filter“ zeigt chat:, Websuche, Home Assistant, Raum-Modus, Lautsprecher, Update/Selbsttest und Fehler mit Zeitraum und Zeilenzahl, zum Kopieren in einen Thread (statt journalctl | grep auf der Konsole)
@@ -40,7 +41,6 @@ Alle Optionen ohne Rückfragen (`--mode api --asr 1.7b --tts 0.6b --yes` …) st
 - **V01.0.137** Lautsprecher: Ton stockt nicht mehr, der Spark puffert vor (0,6 s vor dem Start, bis 0,9 s Vorlauf, nach einem Hänger erst wieder 0,3 s sammeln); Hänger stehen unter „Prüfen“ und im Log
 - **V01.0.136** Lautsprecher: „Prüfen“ zeigt live, was der Lautsprecher gerade tut (alle 2 Sekunden), auch im Raum-Modus (nur dass ein Satz gehört wurde und ob er spricht, nie den Text)
 - **V01.0.135** Lautsprecher: Lautstärke und Mikrofon-Empfindlichkeit pro Lautsprecher unter Ich → Lautsprecher einstellbar (wirkt sofort, wenn er verbunden ist, sonst bei der nächsten Verbindung)
-- **V01.0.134** Lautsprecher: leise Mikrofone (Boards mit Audio-Chip wie das Waveshare-Board) zählen jetzt als Sprache, leise Aufnahmen werden vor der Spracherkennung angehoben, und der Mikrofonpegel steht im Log
 
 Alle Versionen: [CHANGELOG.md](CHANGELOG.md)
 

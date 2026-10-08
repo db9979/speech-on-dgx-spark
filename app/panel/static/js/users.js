@@ -21,7 +21,7 @@ $('dadd').onclick=async()=>{try{const r=await (await api('/api/admin/devices',jp
 window.devUser=async(id,u)=>{await api('/api/admin/devices/'+id,jpost('PUT',{user:u}));loadProf()};
 window.delDev=async(id,n)=>{if(!confirm(t('Gerät „','Delete device "')+n+t('“ löschen? Sein Schlüssel gilt dann nicht mehr.','"? Its key stops working.')))return;
   await api('/api/admin/devices/'+id,{method:'DELETE'});$('dmsg').textContent='';loadProf()};
-const sendTyped=()=>{const x=$('chattext').value.trim();if(!x)return;$('chattext').value='';audioCtx();stopListening(true);stopAnswer();ask(x,null)};
+const sendTyped=()=>{const x=$('chattext').value.trim();if(!x)return;$('chattext').value='';audioCtx();stopListening(true);stopAnswer();chat.nextSpoken=false;ask(x,null)};
 $('chatsend').onclick=sendTyped;$('chattext').onkeydown=e=>{if(e.key==='Enter')sendTyped()};
 document.addEventListener('keydown',e=>{if(e.code!=='Space'||!$('chat').classList.contains('on')||/INPUT|TEXTAREA|SELECT|BUTTON/.test(document.activeElement.tagName))return;
   e.preventDefault();$('talk').click()});
