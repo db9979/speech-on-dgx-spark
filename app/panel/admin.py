@@ -19,6 +19,7 @@ import guard  # noqa: E402
 import health  # noqa: E402
 import mfa  # noqa: E402
 import speakers  # noqa: E402
+import wyoming  # noqa: E402
 import profiles  # noqa: E402
 from common import CONFIG_PATH, estimate_gib, journal, load_config  # noqa: E402
 from core import (  # noqa: E402
@@ -307,6 +308,19 @@ def validate(new):
     ch = new["chat"]
     if not re.fullmatch(r"https?://[^\s]+", str(ch["llm_url"])):
         raise HTTPException(400, "chat llm_url must start with http:// or https://")
+    if not isinstance(ch.get("wyoming_port", 31003), int) or not 1024 <= ch.get("wyoming_port", 31003) <= 65535:
+        raise HTTPException(400, "Wyoming port must be 1024..65535")
+    try:
+        nets = wyoming.allowed(ch.get("wyoming_allow", ""))
+    except ValueError as e:
+        raise HTTPException(400, f"Wyoming addresses: {e}")
+    if ch.get("wyoming") and not nets:
+        raise HTTPException(400, "Wyoming needs at least one allowed address (e.g. the Home Assistant address)")
+    if ch.get("wyoming_port", 31003) in (new.get("asr", {}).get("port"), new.get("tts", {}).get("port"),
+                                         new.get("panel", {}).get("port"), new.get("panel", {}).get("https_port")):
+        raise HTTPException(400, "Wyoming port is already used by another service")
+    if not isinstance(ch.get("wyoming_voice", ""), str) or len(ch.get("wyoming_voice", "")) > 64:
+        raise HTTPException(400, "Wyoming voice: invalid")
     if not isinstance(ch["max_tokens"], int) or not 16 <= ch["max_tokens"] <= 32768:
         raise HTTPException(400, "chat max_tokens must be 16..32768")
     if not isinstance(ch.get("temperature", 0.3), (int, float)) or not 0 <= ch.get("temperature", 0.3) <= 1.5:

@@ -42,7 +42,7 @@ for p in (APP, os.path.join(APP, "panel")):
 
 import uvicorn  # noqa: E402
 from fastapi import FastAPI, HTTPException, Request  # noqa: E402
-from fastapi.responses import PlainTextResponse, StreamingResponse  # noqa: E402
+from fastapi.responses import PlainTextResponse, Response, StreamingResponse  # noqa: E402
 
 LLM_CALLS = []   # every request body the fake LLM got
 HA_CALLS = []
@@ -110,7 +110,9 @@ def fake_tts():
 
     @app.post("/v1/audio/speech")
     async def speech(req: Request):
-        await req.json()
+        body = await req.json()
+        if not body.get("stream") and body.get("response_format") == "pcm":   # whole answer at once (Wyoming)
+            return Response(b"\1\0" * 2400, media_type="audio/pcm")
 
         async def gen():
             pcm = base64.b64encode(b"\0\0" * 2400).decode()
