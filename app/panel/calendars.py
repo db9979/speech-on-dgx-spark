@@ -281,13 +281,21 @@ def _expand(texts, start, end, zone, name=""):
 
 
 async def _one(uid, cal, start, end, zone):
-    key = (uid, cal["id"], start.isoformat(), end.isoformat())
+    # fetched for whole days (so the check every minute hits the cache instead of adding an entry
+    # and asking the server each time); expanded for the exact period asked
+    utc = datetime.timezone.utc
+    day0 = start.astimezone(utc).replace(hour=0, minute=0, second=0, microsecond=0)
+    day1 = end.astimezone(utc).replace(hour=0, minute=0, second=0, microsecond=0) + datetime.timedelta(days=1)
+    key = (uid, cal["id"], day0.isoformat(), day1.isoformat())
+    now = time.time()
+    for k in [k for k, v in _cache.items() if now - v[0] >= CACHE_SECONDS]:
+        _cache.pop(k, None)
     hit = _cache.get(key)
-    if hit and time.time() - hit[0] < CACHE_SECONDS:
+    if hit:
         texts = hit[1]
     else:
-        texts, _ = await _fetch(cal, start.astimezone(datetime.timezone.utc), end.astimezone(datetime.timezone.utc))
-        _cache[key] = (time.time(), texts)
+        texts, _ = await _fetch(cal, day0, day1)
+        _cache[key] = (now, texts)
     return _expand(texts, start, end, zone, cal.get("name", ""))
 
 

@@ -355,16 +355,31 @@ def languages():
     return LANGS
 
 
+MAX_AUDIO = 50 * 1024**2  # far more than any spoken question (5 minutes of 16 kHz WAV are ~10 MB)
+
+
+async def read_audio(file):
+    data = b""
+    while chunk := await file.read(1 << 20):
+        data += chunk
+        if len(data) > MAX_AUDIO:
+            raise HTTPException(413, "recording too large")
+    return data
+
+
 @router.post("/api/test/asr", dependencies=[Depends(assistant)])
-async def test_asr(file: UploadFile = File(...), language: str = Form("auto"), wake: str = Form("")):
+async def test_asr(request: Request, file: UploadFile = File(...), language: str = Form("auto"), wake: str = Form("")):
     cfg = load_config()
-    data = await file.read()
+    data = await read_audio(file)
+    # voices are only told apart for a signed-in profile or device: a guest page gets no token that
+    # could open someone's data, and a token only works where it was issued
+    me = profiles.current(request)
     form = {"language": language, "response_format": "verbose_json"}
     if wake:  # wake-word check: tell the model to expect the phrase, besides the usual context
         form["prompt"] = f"{wake[:40]}. {cfg['asr'].get('context') or ''}".strip()
     # speaker identification runs on the CPU while the GPU transcribes
     spk = None
-    if cfg.get("chat", {}).get("speaker_id", False) and not wake:
+    if cfg.get("chat", {}).get("speaker_id", False) and not wake and me:
         th = speakers.STRICTNESS.get(cfg["chat"].get("speaker_strictness"), 0.75)
         spk = asyncio.create_task(asyncio.to_thread(speakers.identify, data, th))
     try:
@@ -385,7 +400,7 @@ async def test_asr(file: UploadFile = File(...), language: str = Form("auto"), w
         uid, score = None, 0.0
     who = uid and profiles.by_id(uid)
     if who:
-        out["speaker"] = {"name": who["name"], "token": speakers.token(uid), "score": round(score, 3)}
+        out["speaker"] = {"name": who["name"], "token": speakers.token(uid, me["id"]), "score": round(score, 3)}
     return out
 
 

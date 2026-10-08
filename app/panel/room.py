@@ -126,10 +126,19 @@ def shopping_items(text):
 
 
 # ---------------------------------------------------------------- the room
-def _room(uid, rid):
+def sweep():
+    """Called every minute: heard text older than KEEP and idle rooms go, even when the page was
+    closed without stopping room mode."""
     now = time.time()
     for k in [k for k, r in ROOMS.items() if now - r["seen"] > IDLE]:
         ROOMS.pop(k, None)
+    for r in ROOMS.values():
+        r["lines"] = [x for x in r["lines"] if now - x[0] < KEEP]
+
+
+def _room(uid, rid):
+    now = time.time()
+    sweep()
     r = ROOMS.setdefault((uid, rid), {"lines": [], "pending": None, "offer": None, "shop": [], "said": 0.0,
                                        "comment": 0.0, "since_comment": 0, "seen": now})
     r["seen"] = now
@@ -161,7 +170,10 @@ async def heard(uid, rid, text, body):
     text = re.sub(r"\s+", " ", str(text or "")).strip()[:600]
     if not text:
         return {"wait": bool(r["pending"])}
-    r["lines"].append((time.time(), text))
+    # kept (and later given to the model) with the code word blacked out; the yes below still
+    # sees the words as spoken
+    ha = homeassistant.get(uid)
+    r["lines"].append((time.time(), homeassistant.redact(ha, text) if ha and homeassistant.needs_code(ha) else text))
     r["since_comment"] += 1
     offer = r["offer"]
     if offer and time.time() - offer["t"] < OFFER_SECONDS and len(text) <= 80:

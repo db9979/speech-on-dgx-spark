@@ -395,7 +395,8 @@ class SpeakerId(unittest.TestCase):
         helpers.set_config(speaker_id=True, public=True)
         x, y = profile("Xaver"), profile("Yvonne")
         y_id = y.get("/api/whoami").json()["profile"]["id"]
-        tok = speakers.token(y_id)
+        x_id = x.get("/api/whoami").json()["profile"]["id"]
+        tok = speakers.token(y_id, x_id)
         history = [{"role": "user", "content": "Mein Passwort ist geheim"}, {"role": "assistant", "content": "Ok."},
                    {"role": "user", "content": "Hallo"}]
         helpers.LLM_CALLS.clear()
@@ -406,11 +407,18 @@ class SpeakerId(unittest.TestCase):
         sent = json.dumps(helpers.LLM_CALLS[0]["messages"])
         self.assertNotIn("Passwort ist geheim", sent)       # Xaver's conversation stays with Xaver
         self.assertNotIn("home_assistant", json.dumps(helpers.LLM_CALLS[0].get("tools")))
+        for t in ("memory_save", "memory_forget", "reminder_cancel"):  # reads, changes nothing that lasts
+            self.assertNotIn(t, json.dumps(helpers.LLM_CALLS[0].get("tools")))
         evs = helpers.events(x.post("/api/chat", json={"messages": history, "speaker": tok}))
         self.assertFalse([e for e in evs if e["type"] == "speaker"])  # a token picks a profile once only
         # the own voice at the own browser keeps the conversation
-        evs = helpers.events(y.post("/api/chat", json={"messages": history, "speaker": speakers.token(y_id)}))
+        evs = helpers.events(y.post("/api/chat", json={"messages": history, "speaker": speakers.token(y_id, y_id)}))
         self.assertFalse([e for e in evs if e["type"] == "speaker"][0]["foreign"])
+        # a token works only where it was issued: not for a guest, not at a third device
+        g, z = TestClient(panel.app), profile("Zora")
+        for c in (g, z):
+            evs = helpers.events(c.post("/api/chat", json={"messages": history, "speaker": speakers.token(y_id, x_id)}))
+            self.assertFalse([e for e in evs if e["type"] == "speaker"])
 
 
 class Security(unittest.TestCase):
@@ -747,6 +755,12 @@ class Siri(unittest.TestCase):
                          ["Wie geht es dir?", "Hallo.", "Und sonst?"])
         c = [x for x in profiles.convos(uid) if x["id"].startswith("siri-")][0]
         self.assertEqual(len(c["msgs"]), 4)
+        # the code word is kept blacked out, as in the browser
+        a.put("/api/profile/homeassistant", json={"url": f"http://127.0.0.1:{helpers.HA_PORT}", "token": helpers.HA_TOKEN})
+        a.put("/api/profile/homeassistant/code", json={"code": "Sonnenblume"})
+        g.post("/api/siri/ask", json={"text": "Sonnenblume, wie warm ist es?"}, headers={"X-Speech-Device": key})
+        self.assertNotIn("Sonnenblume", json.dumps(profiles.convos(uid)))
+        a.put("/api/profile/homeassistant/code", json={"code": ""})
 
 
 class Quality(unittest.TestCase):
@@ -904,7 +918,7 @@ class Mail(unittest.TestCase):
         helpers.set_config(mail=True, speaker_id=True)
         x, y = profile("Xenia"), profile("Yann")
         self.connect(y)
-        tok = speakers.token(y.get("/api/whoami").json()["profile"]["id"])
+        tok = speakers.token(y.get("/api/whoami").json()["profile"]["id"], x.get("/api/whoami").json()["profile"]["id"])
         helpers.LLM_CALLS.clear()
         helpers.events(x.post("/api/chat", json={"messages": [{"role": "user", "content": "Hallo"}], "speaker": tok}))
         self.assertNotIn("mail_list", json.dumps(helpers.LLM_CALLS[0].get("tools")))

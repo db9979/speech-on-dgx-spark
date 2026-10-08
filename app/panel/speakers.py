@@ -239,17 +239,21 @@ def _sig(msg):
     return hmac.new(profiles._secret(), b"speaker:" + msg.encode(), hashlib.sha256).hexdigest()[:32]
 
 
-def token(uid):
-    msg = f"{uid}.{int(time.time()) + TOKEN_SECONDS}.{secrets.token_hex(6)}"
+def token(uid, by):
+    """A one-time token for a recognized voice, valid only at the profile or device (by) that sent the
+    recording."""
+    msg = f"{uid}.{by}.{int(time.time()) + TOKEN_SECONDS}.{secrets.token_hex(6)}"
     return f"{msg}.{_sig(msg)}"
 
 
-def check(tok):
-    """The user id a token was issued for, if it is genuine, fresh and not used before; else None."""
+def check(tok, by):
+    """The user id a token was issued for, if it is genuine, fresh, not used before and presented by
+    the same profile it was issued to; else None."""
     try:
-        uid, exp, nonce, sig = str(tok).rsplit(".", 3)
+        uid, owner, exp, nonce, sig = str(tok).rsplit(".", 4)
         now = time.time()
-        if hmac.compare_digest(sig, _sig(f"{uid}.{exp}.{nonce}")) and int(exp) >= now and sig not in _used:
+        if hmac.compare_digest(sig, _sig(f"{uid}.{owner}.{exp}.{nonce}")) and owner == str(by) \
+                and int(exp) >= now and sig not in _used:
             for k in [k for k, v in _used.items() if v < now]:
                 _used.pop(k, None)
             _used[sig] = int(exp)

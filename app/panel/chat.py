@@ -701,9 +701,11 @@ async def chat(request: Request):
     who = profiles.current(request)
     # A voice recognized by the speech recognition (signed token, see speakers.py) picks that
     # profile for this turn; its own settings apply then, not the ones this browser sends.
-    heard = speakers.check(body.get("speaker")) if ccfg.get("speaker_id", False) and body.get("speaker") else None
+    heard = speakers.check(body.get("speaker"), who["id"]) \
+        if ccfg.get("speaker_id", False) and body.get("speaker") and who else None
     heard = heard and profiles.by_id(heard)
     own_browser = not heard or (who and who["id"] == heard["id"])
+    device_owner = who
     if heard:
         who = heard
     if not own_browser:
@@ -751,6 +753,13 @@ async def chat(request: Request):
         system = (system + "\n\n" + HA_CODE_HINT).strip()
         messages = [dict(m, content=homeassistant.redact(ha, m["content"])) if m["role"] == "user" else m
                     for m in messages]
+    if not own_browser and device_owner:
+        # a voice taken for someone else at this device may still have been the owner saying their
+        # code word: it never reaches the model or the other profile's log either
+        oha = homeassistant.get(device_owner["id"])
+        if oha and homeassistant.needs_code(oha):
+            messages = [dict(m, content=homeassistant.redact(oha, m["content"])) if m["role"] == "user" else m
+                        for m in messages]
     # A plain switching command is carried out by the panel itself, not left to the model: the model
     # only puts the checked result into words. Without the code word the command waits (two minutes)
     # and runs as soon as the next message brings it.
@@ -832,10 +841,13 @@ async def chat(request: Request):
         system = (system + "\n\n" + BRIEFING_HINT + (" " + CALENDAR_HINT if cal["calendars"] else "")
                   + (" Nenne im Briefing nach den Erinnerungen kurz die ungelesenen Mails (Absender und Thema)."
                      if mailbox else "")).strip()
-    tools = ([SEARCH_TOOL] if search else []) + (MEMORY_TOOLS if prof else []) + ([HISTORY_TOOL] if past else []) \
+    # a voice recognized at someone else's device may read its own things but changes nothing that
+    # lasts: no memory changes, no cancelled reminders (it could be a recording of that person)
+    tools = ([SEARCH_TOOL] if search else []) + (MEMORY_TOOLS if prof and own_browser else []) + ([HISTORY_TOOL] if past else []) \
         + ([DOC_TOOL] if docs else []) + (([HA_STATES_TOOL, HA_HISTORY_TOOL] if ha_direct or ha_wait
              else [HA_TOOL, HA_STATES_TOOL, HA_ACTION_TOOL, HA_HISTORY_TOOL, HA_TODO_TOOL]) if ha else []) \
-        + (REMINDER_TOOLS if timers else []) + ([BRIEFING_TOOL] if briefing else []) \
+        + ([t for t in REMINDER_TOOLS if own_browser or t["function"]["name"] != "reminder_cancel"]
+           if timers else []) + ([BRIEFING_TOOL] if briefing else []) \
         + ([CALENDAR_TOOL] if cal["calendars"] else []) + ([CALENDAR_ADD_TOOL] if cal_write else []) \
         + (MAIL_TOOLS if mailbox else [])
     # once mail or other outside text was read in this answer, nothing in it may change the home or
@@ -1465,7 +1477,7 @@ async def siri_ask(request: Request):
     async def receive():
         return {"type": "http.request", "body": data, "more_body": False}
     response = await chat(Request(request.scope, receive))
-    answer, error = "", ""
+    answer, error, from_mail = "", "", False
     async for chunk in response.body_iterator:
         for line in (chunk.decode() if isinstance(chunk, bytes) else chunk).split("\n"):
             if not line.startswith("data:"):
@@ -1478,10 +1490,18 @@ async def siri_ask(request: Request):
                 answer += ev.get("delta", "")
             elif ev.get("type") in ("truncated", "retract"):
                 answer = answer[:max(0, len(answer) - int(ev.get("drop") or 0))]
+            elif ev.get("type") == "mail":
+                from_mail = True
             elif ev.get("type") == "error" and not error and ev.get("code", "").startswith("llm"):
                 error = "Der Spark konnte gerade nicht antworten."
     answer = answer.strip() or error or "Dazu habe ich keine Antwort."
-    msgs = history + [{"role": "user", "content": text}, {"role": "assistant", "content": answer}]
+    # kept like the browser keeps it: the code word blacked out, an answer from mail marked (so the
+    # background learner never reads it)
+    ha = homeassistant.get(prof["id"])
+    if ha and homeassistant.needs_code(ha):
+        text = homeassistant.redact(ha, text)
+    msgs = history + [{"role": "user", "content": text},
+                      dict({"role": "assistant", "content": answer}, **({"mail": True} if from_mail else {}))]
     _SIRI[prof["id"]] = (time.time(), msgs)
     day = datetime.datetime.now().strftime("%Y%m%d")
     try:

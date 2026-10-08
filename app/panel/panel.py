@@ -124,13 +124,22 @@ async def stability():
             if res and res["ok"]:
                 await quality.run("after update")
     async def reminders():
+        # due reminders on their own: a slow briefing or proactive check never holds them up
         while True:
             await asyncio.sleep(15)
             try:
                 await push.due_reminders()
             except Exception as e:
                 print("push reminders:", type(e).__name__, e, flush=True)
-            if int(time.time()) % 60 < 15:  # once a minute
+
+    async def every_minute():
+        # each minute once, even when the work of the one before took longer than a minute
+        last = None
+        while True:
+            minute = int(time.time()) // 60
+            if minute != last:
+                last = minute
+                room.sweep()
                 try:
                     await chat.due_briefings()
                 except Exception as e:
@@ -139,7 +148,9 @@ async def stability():
                     await proactive.due_once()
                 except Exception as e:
                     print("proactive:", type(e).__name__, e, flush=True)
+            await asyncio.sleep(5)
     asyncio.create_task(reminders())
+    asyncio.create_task(every_minute())
     asyncio.create_task(watchdog())
     asyncio.create_task(backups())
     asyncio.create_task(after_update())
