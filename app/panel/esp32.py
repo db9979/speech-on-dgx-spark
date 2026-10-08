@@ -382,6 +382,7 @@ class Encoder:
 class Ear:
     """Collects 16 kHz PCM; done when someone spoke and then was quiet for QUIET seconds."""
     QUIET, MIN_SPEECH, MAX_LEN, NOTHING = 0.7, 0.25, 30.0, 12.0
+    MIN_LEVEL = 150.0   # about -47 dB: boards with a codec chip and echo cancelling send quiet sound
 
     def __init__(self):
         self.pcm = bytearray()
@@ -399,7 +400,7 @@ class Ear:
             return None
         sec = len(x) / 16000
         rms = float(np.sqrt(np.mean(x * x)))
-        loud = rms > max(500.0, (self.noise or rms) * 3)
+        loud = rms > max(self.MIN_LEVEL, (self.noise or rms) * 3)
         if not loud:   # background level: follows quiet frames, rises only slowly
             self.noise = rms if self.noise is None else min(self.noise * 1.02 + 1, max(rms, 1.0))
         if loud:
@@ -428,8 +429,18 @@ def wav16k(pcm: bytes) -> bytes:
     return b.getvalue()
 
 
+def louder(pcm: bytes) -> bytes:
+    """Quiet recordings brought up to a normal level for the speech recognition (at most 20 times)."""
+    x = np.frombuffer(pcm[:len(pcm) // 2 * 2], dtype="<i2").astype(np.float32)
+    peak = float(np.max(np.abs(x))) if len(x) else 0.0
+    if peak < 1 or peak > 16000:
+        return pcm
+    return np.clip(x * min(20.0, 23000.0 / peak), -32768, 32767).astype("<i2").tobytes()
+
+
 async def transcribe(pcm: bytes) -> str:
     from core import api_headers
+    pcm = louder(pcm)
     cfg = load_config()
     async with httpx.AsyncClient(timeout=120) as c:
         r = await c.post(f"http://127.0.0.1:{cfg['asr']['port']}/v1/audio/transcriptions",
@@ -510,6 +521,8 @@ class Session:
             return
         peak = 20 * np.log10(max(m[2], 1) / 32768)
         rms = 20 * np.log10(max(np.sqrt(m[3] / max(m[4], 1)), 1) / 32768)
+        print(f"esp32: microphone at {self.dev['name']}: {m[1]:.1f} s, peak {peak:.0f} dB, mean {rms:.0f} dB, "
+              + ("speech" if heard else "no speech"), flush=True)
         self.note(f"Mikrofon: {m[1]:.1f} s Ton, lautester Moment {peak:.0f} dB, Mittel {rms:.0f} dB, "
                   + ("Sprache gehört" if heard else "keine Sprache erkannt") + (" (zu leise oder nur Rauschen)" if peak < -40 else ""))
 

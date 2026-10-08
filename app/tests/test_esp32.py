@@ -544,6 +544,16 @@ class Speakers(unittest.TestCase):
             self.assertIsNone(ear.feed(loud))
         res = [ear.feed(quiet) for _ in range(15)]
         self.assertIn("done", res)
+        # a quiet board (about -40 dB) still counts as speech, and is brought up for the recognition
+        ear = esp32.Ear()
+        soft = (np.sin(np.arange(960) / 3) * 450).astype("<i2").tobytes()
+        self.assertIsNone(ear.feed(quiet))
+        for _ in range(8):
+            ear.feed(soft)
+        self.assertIn("done", [ear.feed(quiet) for _ in range(15)])
+        up = np.frombuffer(esp32.louder(soft), dtype="<i2")
+        self.assertGreater(int(np.max(np.abs(up))), 8000)
+        self.assertEqual(esp32.louder(loud * 0 + quiet), quiet)
         self.assertTrue(esp32.newer("2.5.1.10", "2.5.1.9"))
         self.assertFalse(esp32.newer("2.5.1", "2.5.1.0"))
         self.assertFalse(esp32.newer("abc", "1.0"))

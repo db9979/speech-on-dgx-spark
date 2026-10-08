@@ -31,6 +31,7 @@ All options for running without questions (`--mode api --asr 1.7b --tts 0.6b --y
 
 <!-- New version: add one line at the top here and in CHANGELOG.md, drop the oldest line here (keep 10). Details go to docs/de and docs/en, not into this README. -->
 
+- **V01.0.134** Speakers: quiet microphones (boards with an audio chip such as the Waveshare board) now count as speech, quiet recordings are raised before speech recognition, and the microphone level is in the log
 - **V01.0.133** Speakers: firmware for the Waveshare ESP32-S3-AUDIO-Board (ES8311 audio chip, two microphones), and updates follow the board type last written over USB
 - **V01.0.132** Speakers without a display: crash right after joining the Wi-Fi fixed (the firmware tried to load font and emoji onto a screen that is not there), new firmware 2.5.1.3
 - **V01.0.131** Checking a speaker: under Me → Speakers "Check" shows switches, address, recent events and microphone level, "Check network" tests address, certificate and WebSocket, "Test" plays a tone and a sentence and checks the microphone, and the board's own log can be read over USB in the browser
@@ -40,7 +41,6 @@ All options for running without questions (`--mode api --asr 1.7b --tts 0.6b --y
 - **V01.0.127** Search in the settings and in the Me window (opens the page and marks the spot); browser test for every page on a computer and a phone, runs on GitHub on every push
 - **V01.0.126** Room mode: text only in quiet hours, ends after 2 minutes in the background or with the phone locked, "Raummodus aus" by voice
 - **V01.0.125** New menus: settings in three blocks, all checks under Overview → Checks, Integrate = guides + apps and interfaces, the Me window in the groups of the Features page with an overview and its own Notifications page
-- **V01.0.124** No more clicks in longer answers: speech fades out briefly when it ends or stalls instead of stopping hard, Stop fades out, "still speaking" includes the speaker delay, the assistant's own echo at a sentence end no longer counts as an interruption
 
 All versions: [CHANGELOG.md](CHANGELOG.md)
 
