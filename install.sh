@@ -71,17 +71,26 @@ say()  { printf '\n\033[1;34m==>\033[0m %s\n' "$*"; progress "$*"; }
 # During an update the panel shows a progress bar; each step also goes into this file.
 progress() {
   [ -n "${SPEECH_SPARK_PROGRESS:-}" ] || return 0
-  local n; n=$(jq -r '.step // 0' "$SPEECH_SPARK_PROGRESS" 2>/dev/null || echo 0)
-  rm -f -- "$SPEECH_SPARK_PROGRESS.tmp"
-  jq -c --arg t "$1" --argjson n "$((n + 1))" --argjson now "$(date +%s)" '.step=$n | .text=$t | .updated=$now' \
-    "$SPEECH_SPARK_PROGRESS" >"$SPEECH_SPARK_PROGRESS.tmp" 2>/dev/null && mv "$SPEECH_SPARK_PROGRESS.tmp" "$SPEECH_SPARK_PROGRESS" || true
+  local n j; n=$(jq -r '.step // 0' "$SPEECH_SPARK_PROGRESS" 2>/dev/null || echo 0)
+  [[ "$n" =~ ^[0-9]{1,4}$ ]] || n=0
+  j=$(jq -c --arg t "$1" --argjson n "$((n + 1))" --argjson now "$(date +%s)" '.step=$n | .text=$t | .updated=$now' \
+    "$SPEECH_SPARK_PROGRESS" 2>/dev/null) || return 0
+  printf '%s\n' "$j" | as_svc tee -- "$SPEECH_SPARK_PROGRESS" >/dev/null 2>&1 || true
 }
 warn() { printf '\033[1;33mWARN:\033[0m %s\n' "$*"; }
 die()  { printf '\033[1;31mERROR:\033[0m %s\n' "$*" >&2; exit 1; }
 # $ETC and $VAR/state belong to the service user, so root never writes or chowns there through a
 # link it may have planted: such links (and anything that is not a plain file) are removed first.
 no_links() { local f; for f in "$@"; do if [ -L "$f" ] || { [ -e "$f" ] && [ ! -f "$f" ]; }; then rm -rf -- "$f"; fi; done; }
-jqi()  { local tmp; tmp=$(mktemp); jq "$@" "$ETC/config.json" >"$tmp" && mv "$tmp" "$ETC/config.json"; }
+# Between such a check and a write the service user could still put a link there. So root writes a
+# file there only by renaming one it made in /etc (root's own folder, same file system; a rename
+# replaces the name and never follows a link), and files in $VAR/state as the service user itself.
+as_svc() { runuser -u "$SVC_USER" -- "$@"; }
+put_file() {  # $1 = file in $ETC, $2 = mode, $3 = owner:group; the content comes from stdin
+  local tmp; tmp=$(mktemp "$(dirname "$ETC")/.speech-spark.XXXXXX")
+  cat >"$tmp"; chmod "$2" "$tmp"; chown "$3" "$tmp"; mv -fT -- "$tmp" "$1"
+}
+jqi()  { local j; j=$(jq "$@" "$ETC/config.json") && printf '%s\n' "$j" | put_file "$ETC/config.json" 640 "$SVC_USER:$SVC_USER"; }
 
 [ "$(id -u)" = 0 ] || die "run with sudo"
 [ "$(uname -m)" = aarch64 ] || warn "this is $(uname -m), not aarch64; the script targets the DGX Spark"
@@ -224,7 +233,7 @@ fi
 no_links "$ETC/config.json"
 if [ ! -f "$ETC/config.json" ]; then
   say "Writing $ETC/config.json"
-  cp "$INSTALL_FROM/app/config.default.json" "$ETC/config.json"
+  put_file "$ETC/config.json" 640 "$SVC_USER:$SVC_USER" <"$INSTALL_FROM/app/config.default.json"
   if [ "$SMALL" = 1 ] || [ -n "$big_lane" ]; then
     [ -n "$big_lane" ] && [ "$SMALL" = 0 ] && warn "found $big_lane: choosing the 0.6B models so speech fits next to it"
     jqi '.asr.model="Qwen/Qwen3-ASR-0.6B" | .tts.model="Qwen/Qwen3-TTS-12Hz-0.6B-CustomVoice"'
@@ -234,8 +243,8 @@ if [ ! -f "$ETC/config.json" ]; then
   jqi --arg k "sk-$(head -c 24 /dev/urandom | od -An -tx1 | tr -d ' \n')" '.api.key=$k'
 else
   say "Keeping $ETC/config.json (adding settings introduced by this version)"
-  tmp=$(mktemp)
-  jq -s '.[0] * .[1]' "$INSTALL_FROM/app/config.default.json" "$ETC/config.json" >"$tmp" && mv "$tmp" "$ETC/config.json"
+  merged=$(jq -s '.[0] * .[1]' "$INSTALL_FROM/app/config.default.json" "$ETC/config.json") \
+    && printf '%s\n' "$merged" | put_file "$ETC/config.json" 640 "$SVC_USER:$SVC_USER"
   [ "$SMALL" = 1 ] && jqi '.asr.model="Qwen/Qwen3-ASR-0.6B" | .tts.model="Qwen/Qwen3-TTS-12Hz-0.6B-CustomVoice"'
 fi
 [ -n "$TTS_BACKEND" ] && jqi --arg b "$TTS_BACKEND" '.tts.backend=$b'
@@ -259,7 +268,7 @@ case "$NET_PICK" in
   network) jqi '.asr.host="0.0.0.0" | .tts.host="0.0.0.0"' ;;
 esac
 # api: only the models with their APIs; full: with the web panel
-no_links "$ETC/mode"; echo "$MODE" >"$ETC/mode"; chown -h root:root "$ETC/mode"; chmod 644 "$ETC/mode"
+echo "$MODE" | put_file "$ETC/mode" 644 root:root
 # Earlier start values were too generous next to a qwen38 lane; move untouched ones down.
 case "$(jq -r .asr.engine_mem "$ETC/config.json")" in 0.08|0.05) jqi '.asr.engine_mem=0.045 | .asr.engine_max_seqs=4' ;; esac
 # (0.03 + 0.015 left no room for the KV cache on the Spark)
@@ -271,7 +280,7 @@ esac
 # 8 frames (the old default) stalled next to a busy qwen38 lane; move to 10 once.
 if [ ! -e "$VAR/state/migrated-chunk10" ]; then
   [ "$(jq -r .tts.initial_chunk_frames "$ETC/config.json")" = 8 ] && jqi '.tts.initial_chunk_frames=10'
-  touch "$VAR/state/migrated-chunk10"
+  as_svc touch "$VAR/state/migrated-chunk10"
 fi
 [ "$(jq -r .chat.max_tokens "$ETC/config.json")" = 600 ] && jqi '.chat.max_tokens=4096'   # old default cut long answers off
 # The first voice-chat prompt gave pompous, overexcited answers; replace it if untouched.
@@ -293,20 +302,28 @@ fi
 # installed qwen38. Panel updates run without SUDO_USER, so also look in the other homes.
 # A key imported earlier is refreshed when the file changes; a hand-entered key is kept.
 qkey=""
+# Root reads it, so only a plain file without links on the way (a link could point at any file of
+# the system, whose content would then go to the LLM address as "key"), owned by the home's owner.
+qkey_ok() {
+  local f="$1/.config/qwen38/api-key"
+  [ -f "$f" ] && [ -s "$f" ] && [ "$(realpath -e -- "$f" 2>/dev/null)" = "$(realpath -e -- "$1")/.config/qwen38/api-key" ] \
+    && [ "$(stat -c %u -- "$f")" = "$(stat -c %u -- "$1")" ] && [ "$(stat -c %s -- "$f")" -le 512 ]
+}
 for h in "$( [ -n "${SUDO_USER:-}" ] && getent passwd "$SUDO_USER" | cut -d: -f6)" /home/* /root; do
-  [ -n "$h" ] && [ -s "$h/.config/qwen38/api-key" ] && { qkey="$h/.config/qwen38/api-key"; break; }
+  [ -n "$h" ] && [ -d "$h" ] && qkey_ok "$h" && { qkey="$h/.config/qwen38/api-key"; break; }
 done
 if [ -n "$qkey" ]; then
   cur="$(jq -r '.chat.llm_key // ""' "$ETC/config.json")"
   from="$(jq -r '.chat.llm_key_from // ""' "$ETC/config.json")"
-  new="$(tr -d ' \n\r' <"$qkey")"
-  if [ -z "$cur" ] || { [ -n "$from" ] && [ "$cur" != "$new" ]; }; then
+  new="$(head -c 512 -- "$qkey" | tr -d ' \n\r')"
+  [[ "$new" =~ ^[A-Za-z0-9._~+/=-]{8,300}$ ]] || new=""
+  if [ -n "$new" ] && { [ -z "$cur" ] || { [ -n "$from" ] && [ "$cur" != "$new" ]; }; }; then
     jqi --arg k "$new" --arg f "$qkey" '.chat.llm_key=$k | .chat.llm_key_from=$f'
     say "Voice chat: using the qwen38 API key from $qkey"
   fi
 fi
 no_links "$ETC/config.json"
-chown -h "$SVC_USER:$SVC_USER" "$ETC/config.json"; chmod 640 "$ETC/config.json"
+chown -h "$SVC_USER:$SVC_USER" "$ETC/config.json"; as_svc chmod 640 "$ETC/config.json"
 
 cfg() { jq -r "$1" "$ETC/config.json"; }
 # Numbers from the config only ever as plain digits: the file belongs to the service user, and bash
@@ -318,15 +335,20 @@ cfg_int() { local v; v=$(cfg "$1"); if [[ "$v" =~ ^[0-9]{1,6}$ ]]; then echo "$v
 TLS="$ETC/tls"
 if [ "$MODE" = full ] && [ "$(cfg '.panel.https_port // 0')" != 0 ] && [ ! -s "$TLS/cert.pem" ]; then
   say "Creating a self-signed certificate for the panel's https port (needed for the microphone)"
-  mkdir -p "$TLS"
+  [ -L "$TLS" ] && rm -f -- "$TLS"
+  as_svc mkdir -p "$TLS"
   san="DNS:localhost,DNS:$(hostname),DNS:$(hostname).local,IP:127.0.0.1"
   for ip in $(hostname -I 2>/dev/null); do case "$ip" in *:*) ;; *) san="$san,IP:$ip" ;; esac; done
-  openssl req -x509 -newkey rsa:2048 -nodes -days 3650 -subj "/CN=$(hostname) speech-spark" \
+  # made by the service user in its own folder (root never writes through a link there)
+  as_svc openssl req -x509 -newkey rsa:2048 -nodes -days 3650 -subj "/CN=$(hostname) speech-spark" \
     -addext "subjectAltName=$san" -keyout "$TLS/key.pem" -out "$TLS/cert.pem" >/dev/null 2>&1 \
     || warn "could not create the certificate; the voice chat then only works on http://localhost"
 fi
 [ -L "$TLS" ] && rm -f -- "$TLS"
-if [ -d "$TLS" ]; then chown -R "$SVC_USER:$SVC_USER" "$TLS"; chmod 700 "$TLS"; chmod 600 "$TLS"/key.pem 2>/dev/null || true; fi
+if [ -d "$TLS" ]; then
+  chown -R "$SVC_USER:$SVC_USER" "$TLS"   # -R never follows links; an old root-made folder becomes the service user's
+  as_svc chmod 700 "$TLS"; as_svc chmod 600 "$TLS"/key.pem 2>/dev/null || true
+fi
 HTTPS_PORT=$(cfg_int '.panel.https_port // 0' 0)
 ASR_PORT=$(cfg_int .asr.port 31001); TTS_PORT=$(cfg_int .tts.port 31002); PANEL_PORT=$(cfg_int .panel.port 31080)
 BACKEND=$(cfg .tts.backend); ASR_BACKEND=$(cfg .asr.backend)
@@ -365,8 +387,10 @@ make_venv() {  # $1 = name, rest = pip packages
     shift
     # PyPI's aarch64 torch has no CUDA; the cu130 build supports Blackwell (GB10).
     "$v/bin/pip" install -q torch torchaudio --index-url "$TORCH_INDEX"
+    PIP_EXTRA_INDEX_URL="$TORCH_INDEX" "$v/bin/pip" install -q "$@"
+  else
+    "$v/bin/pip" install -q "$@"   # only PyPI: a second index could hand out a package of the same name
   fi
-  PIP_EXTRA_INDEX_URL="$TORCH_INDEX" "$v/bin/pip" install -q "$@"
 }
 
 check_cuda() {
@@ -510,11 +534,10 @@ if [ "$MODE" = full ]; then
   [ -n "$PASSWORD" ] && rm -f -- "$VAR/state/panel-password"
   if [ ! -f "$ETC/panel.env" ] || [ -n "$PASSWORD" ]; then
     [ -n "$PASSWORD" ] || PASSWORD=$(head -c 18 /dev/urandom | base64 | tr -dc 'A-Za-z0-9' | head -c 16)
-    no_links "$ETC/panel.env"
-    printf 'PANEL_PASSWORD=%s\n' "$PASSWORD" >"$ETC/panel.env"
+    printf 'PANEL_PASSWORD=%s\n' "$PASSWORD" | put_file "$ETC/panel.env" 600 "$SVC_USER:$SVC_USER"
   fi
   no_links "$ETC/panel.env"
-  chown -h "$SVC_USER:$SVC_USER" "$ETC/panel.env"; chmod 600 "$ETC/panel.env"
+  chown -h "$SVC_USER:$SVC_USER" "$ETC/panel.env"; as_svc chmod 600 "$ETC/panel.env"
   PASSWORD=$(sed -n 's/^PANEL_PASSWORD=//p' "$ETC/panel.env")
   # changed in the panel since: only its hash is stored, the file above is outdated
   [ -s "$VAR/state/panel-password" ] && PASSWORD="(changed in the panel; reset with sudo ./install.sh --password NEW)"
@@ -756,7 +779,7 @@ restart_engine() {  # $1 = unit suffix, $2 = settings signature
     systemctl restart "speech-spark-$1.service"
   fi
   no_links "$sigfile"; rm -f -- "$sigfile"
-  echo "$2" >"$sigfile"; chown -h "$SVC_USER:" "$sigfile"
+  printf '%s\n' "$2" | as_svc tee -- "$sigfile" >/dev/null
 }
 
 if [ "$WITH_ASR" = 1 ] && [ "$ASR_BACKEND" = vllm ]; then
@@ -870,6 +893,11 @@ fi
 # connection details for other services: printed here, kept in $ETC/connection.txt (root only)
 bash "$PREFIX/app/speech-spark.sh" info --save >/dev/null || warn "could not write $ETC/connection.txt"
 IP=$(hostname -I | awk '{print $1}')
+# An update runs from the panel and its output lands in the journal, which the panel shows: no
+# password or key there (sudo speech-spark key prints the key, the password is in $ETC/panel.env).
+if [ "$FROM_UPDATE" = 1 ]; then
+  PASSWORD="(unchanged; sudo cat $ETC/panel.env)"; KEY="(unchanged; sudo speech-spark key)"
+fi
 if [ "$MODE" = full ]; then
 cat <<EOF
 
@@ -888,7 +916,7 @@ EOF
 else
   echo
   echo "------------------------------------------------------------------"
-  cat "$ETC/connection.txt" 2>/dev/null || true
+  if [ "$FROM_UPDATE" = 1 ]; then echo " Connection details and keys: sudo speech-spark info"; else cat "$ETC/connection.txt" 2>/dev/null || true; fi
   echo
   echo " Installed without the web panel. Status: sudo speech-spark status   Update: sudo speech-spark update"
   echo " Add the panel later: sudo speech-spark panel enable"

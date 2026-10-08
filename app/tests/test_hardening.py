@@ -480,3 +480,42 @@ class Stage3(unittest.TestCase):
         for s in slots:
             s.release()
         guard.Slot("asr").release()
+
+
+class Stage4(unittest.TestCase):
+    """root writes nothing through links in the service user's folders, no secrets in the update log."""
+
+    def test_root_writes_only_safely(self):
+        import re
+        install = repo_file("install.sh")
+        update = repo_file("update.sh")
+        cli = open(os.path.join(ROOT, "app", "speech-spark.sh")).read()
+        for name, text in (("install.sh", install), ("update.sh", update)):
+            for line in text.splitlines():
+                code = line.split("#", 1)[0]
+                self.assertNotRegex(code, r'>>?\s*"\$(ETC|VAR|STATE|SPEECH_SPARK_PROGRESS|TLS)', (name, line))
+                self.assertNotRegex(code, r'(^|;|&&)\s*(touch|chmod \d+|cp|mkdir -p) [^|]*"\$((ETC|VAR)/|TLS)', (name, line))
+        self.assertNotIn('mktemp "$ETC/', cli)
+        self.assertRegex(install, r'if \[ "\$FROM_UPDATE" = 1 \]; then\n\s+PASSWORD=')
+        self.assertIn("allowedSignersFile", update)
+        self.assertIn("history of $BRANCH was rewritten", update)
+
+    def test_qwen38_key_not_through_links(self):
+        import re
+        import subprocess
+        import tempfile
+        install = repo_file("install.sh")
+        fn = re.search(r"^qkey_ok\(\) \{.*?^\}", install, re.M | re.S).group(0)
+        with tempfile.TemporaryDirectory() as d:
+            good, bad = os.path.join(d, "good"), os.path.join(d, "bad")
+            for h in (good, bad):
+                os.makedirs(os.path.join(h, ".config", "qwen38"))
+            with open(os.path.join(good, ".config", "qwen38", "api-key"), "w") as f:
+                f.write("sk-1234567890")
+            secret = os.path.join(d, "secret")
+            with open(secret, "w") as f:
+                f.write("root:x:secret")
+            os.symlink(secret, os.path.join(bad, ".config", "qwen38", "api-key"))
+            run = lambda h: subprocess.run(["bash", "-c", fn + '\nqkey_ok "$1"', "x", h]).returncode
+            self.assertEqual(run(good), 0)
+            self.assertNotEqual(run(bad), 0)

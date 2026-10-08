@@ -60,6 +60,22 @@ if [ -n "$TARGET" ]; then
     fi
   fi
   echo "Going to the chosen version instead of the newest."
+elif ! git merge-base --is-ancestor "$old" "$new"; then
+  # the branch never loses commits; a rewritten history is not taken without being asked for
+  echo "The history of $BRANCH was rewritten on GitHub (the installed version is no longer part of it); nothing changed." >&2
+  echo "If that is intended: sudo $0 --to $(git rev-parse --short "$new")" >&2
+  exit 1
+fi
+
+# Optional: only signed versions. With $SIGNERS (root's own file in the format of ssh-keygen's
+# allowed signers) the version must be a commit signed with one of those keys.
+SIGNERS=/etc/speech-spark-signers
+if [ -f "$SIGNERS" ] && [ ! -L "$SIGNERS" ] && [ "$(stat -c %u "$SIGNERS")" = 0 ]; then
+  if ! git -c gpg.format=ssh -c gpg.ssh.allowedSignersFile="$SIGNERS" verify-commit "$new" >/dev/null 2>&1; then
+    echo "Version $(git rev-parse --short "$new") is not signed with a key from $SIGNERS; nothing changed." >&2
+    exit 1
+  fi
+  echo "Signature checked ($SIGNERS)."
 fi
 
 if [ "$old" = "$new" ]; then
@@ -81,18 +97,18 @@ fi
 export SPEECH_SPARK_PROGRESS=${SPEECH_SPARK_PROGRESS:-/var/lib/speech-spark/state/update-progress.json}
 mkdir -p "$(dirname "$SPEECH_SPARK_PROGRESS")"
 newver=$(git show "$new:app/VERSION" 2>/dev/null | head -1 || true)
-# the state folder belongs to the service user: never write through a link planted there
+# the state folder belongs to the service user: the file is written as that user (root never writes
+# through a link planted there)
+as_svc() { runuser -u speech -- "$@"; }
 rm -rf -- "$SPEECH_SPARK_PROGRESS" "$SPEECH_SPARK_PROGRESS.tmp"
 jq -nc --argjson now "$(date +%s)" --arg v "$newver" \
   '{step: 1, text: "Neue Version geladen", started: $now, updated: $now, done: false, ok: null, version: $v}' \
-  >"$SPEECH_SPARK_PROGRESS"
-chmod 644 "$SPEECH_SPARK_PROGRESS"
+  | as_svc tee -- "$SPEECH_SPARK_PROGRESS" >/dev/null
 finish() {  # ok message
-  rm -f -- "$SPEECH_SPARK_PROGRESS.tmp"
-  jq -c --argjson ok "$1" --arg t "$2" --argjson now "$(date +%s)" \
-    '.done=true | .ok=$ok | .text=$t | .updated=$now' \
-    "$SPEECH_SPARK_PROGRESS" >"$SPEECH_SPARK_PROGRESS.tmp" && mv "$SPEECH_SPARK_PROGRESS.tmp" "$SPEECH_SPARK_PROGRESS"
-  chmod 644 "$SPEECH_SPARK_PROGRESS"
+  local j
+  j=$(jq -c --argjson ok "$1" --arg t "$2" --argjson now "$(date +%s)" \
+    '.done=true | .ok=$ok | .text=$t | .updated=$now' "$SPEECH_SPARK_PROGRESS") \
+    && printf '%s\n' "$j" | as_svc tee -- "$SPEECH_SPARK_PROGRESS" >/dev/null
 }
 trap 'finish false "Update abgebrochen"' TERM INT
 

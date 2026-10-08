@@ -91,8 +91,8 @@ cmd_info() {
   )
   if [ "$save" = 1 ]; then
     need_root info --save
-    # $ETC belongs to the service user: a fresh file, renamed over whatever is there (never followed)
-    local tmp; tmp=$(mktemp "$ETC/.connection.XXXXXX")
+    # $ETC belongs to the service user: a fresh file made in /etc (root only), renamed over whatever is there (never followed)
+    local tmp; tmp=$(mktemp "$(dirname "$ETC")/.speech-spark-connection.XXXXXX")
     printf '%s\n' "$out" >"$tmp"; chmod 600 "$tmp"; chown root:root "$tmp"
     mv -fT -- "$tmp" "$ETC/connection.txt"
   fi
@@ -136,7 +136,7 @@ cmd_key() {
       k="sk-$(head -c 24 /dev/urandom | od -An -tx1 | tr -d ' \n')"
       [ -f "$CONFIG" ] && [ ! -L "$CONFIG" ] || die "$CONFIG is not a plain file"
       # the file belongs to the service user (the panel writes it too); keep owner and mode
-      tmp=$(mktemp "$ETC/.config.XXXXXX")
+      tmp=$(mktemp "$(dirname "$ETC")/.speech-spark-config.XXXXXX")   # in root's /etc: nobody else can swap it
       jq --arg k "$k" '.api.key=$k' "$CONFIG" >"$tmp"
       chown --reference="$CONFIG" "$tmp"; chmod --reference="$CONFIG" "$tmp"
       mv -fT -- "$tmp" "$CONFIG"

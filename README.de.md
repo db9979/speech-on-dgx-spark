@@ -31,6 +31,7 @@ Alle Optionen ohne Rückfragen (`--mode api --asr 1.7b --tts 0.6b --yes` …) st
 
 <!-- New version: add one line at the top here and in CHANGELOG.md, drop the oldest line here (keep 10). Details go to docs/de and docs/en, not into this README. -->
 
+- **V01.0.113** Sicherheit Stufe 4: Installation und Update schreiben nie mehr als root durch Verknüpfungen, keine Passwörter im Update-Log, qwen38-Schlüssel nur aus echter Datei, umgeschriebene Geschichte wird abgelehnt, optional nur signierte Versionen
 - **V01.0.112** Fragen nach Erinnerungen, Spielergebnissen und Nachrichten gehen jetzt immer über das Werkzeug statt aus dem Gedächtnis des Modells
 - **V01.0.111** Sicherheit Stufe 3: Sperre sperrt eigene Browser nicht mehr aus, X-Forwarded-For nur vom eingetragenen Proxy, Lastgrenzen für Chat und Spracherkennung, Verbindungen nach außen geprüft (Heimnetz nur mit Schalter, Antworten max. 20 MB, Zugangsdaten nur an ihre Seite), API-Schlüssel Pflicht im Netz
 - **V01.0.110** Termin eintragen ohne das Wort „Termin“ (z. B. „Trag Zahnarzt am Dienstag ein“) geht jetzt immer über den Kalender-Vorschlag; Qualitätstest nimmt „3 zu 1“ als Ergebnis an
@@ -40,7 +41,6 @@ Alle Optionen ohne Rückfragen (`--mode api --asr 1.7b --tts 0.6b --yes` …) st
 - **V01.0.106** Wyoming: Adressfeld erscheint sofort, die Home-Assistant-Adresse wird vorgeschlagen
 - **V01.0.105** Sicherheit: der iPhone-Kurzbefehl holt Listeneinträge per POST, Telegram-Fehler im Log ohne Bot-Token
 - **V01.0.104** Lautsprecher ohne Display, Sicherheits-Checkliste für die Lautsprecher umgesetzt
-- **V01.0.103** Einstellungen → Funktionen: die Einstellungen eines Dienstes stehen direkt unter seinem Schalter
 
 Alle Versionen: [CHANGELOG.md](CHANGELOG.md)
 
