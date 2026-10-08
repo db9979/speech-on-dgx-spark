@@ -260,6 +260,10 @@ def seen():
 def current(request):
     """{"id", "name"} of the profile behind this request (device key first, then cookie), or None."""
     d = _load()
+    inner = request.scope.get("speech_profile")   # set only by the panel itself (Telegram, see telegram.py)
+    if inner:
+        u = next((u for u in d["users"] if u["id"] == inner), None)
+        return {"id": u["id"], "name": u["name"]} if u else None
     token = request.headers.get(DEVICE_HEADER, "")
     if token:
         h = hashlib.sha256(token.encode()).hexdigest()
@@ -325,6 +329,12 @@ SETTINGS = {
     "par_on": (False, lambda v: isinstance(v, bool)),
     "pro_bday": (True, lambda v: isinstance(v, bool)),
     "pro_parcel": (True, lambda v: isinstance(v, bool)),
+    "tasks_on": (False, lambda v: isinstance(v, bool)),   # shopping and to-do list (tasks.py)
+    # Telegram (see telegram.py): what this profile allows over Telegram, all off until it says so
+    "tg_voice": (False, lambda v: isinstance(v, bool)),
+    "tg_private": (False, lambda v: isinstance(v, bool)),
+    "tg_ha": (False, lambda v: isinstance(v, bool)),
+    "tg_push": (False, lambda v: isinstance(v, bool)),
 }
 
 

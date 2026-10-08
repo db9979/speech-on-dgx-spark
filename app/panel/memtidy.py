@@ -169,7 +169,7 @@ async def due_once():
             try:
                 await push.send(uid, "🧹 Gedächtnis aufräumen",
                                 f"{n} Vorschlag{'' if n == 1 else 'e'} zum Aufräumen. Ansehen und bestätigen unter Ich → Gedächtnis.",
-                                tag="memtidy")
+                                tag="memtidy", private=False)
             except Exception:
                 pass
         return uid

@@ -65,34 +65,103 @@ def _clean(s, n=60):
     return re.sub(r"[^\w .,'()/\-]", "", str(s or ""))[:n].strip()
 
 
-async def geocode(place):
-    """{"name", "lat", "lon"} of the best match, or ValueError."""
+NEAR = ("DE", "AT", "CH")   # the assistant speaks German: "Karlsbad" is the one near Karlsruhe, not Karlovy Vary
+
+
+def _coords(text):
+    """(lat, lon) when the text is just two numbers like "48.87, 8.50" or "48,87 8,50"."""
+    nums = re.findall(r"-?\d+(?:[.,]\d+)?", text)
+    if len(nums) != 2 or re.search(r"[^\d\s.,;/\-]", text):
+        return None
+    lat, lon = (float(x.replace(",", ".")) for x in nums)
+    return (lat, lon) if -90 <= lat <= 90 and -180 <= lon <= 180 and ("." in text or "," in text) else None
+
+
+def _hit(x):
+    name = ", ".join(_clean(v, 40) for v in (x.get("name"), x.get("admin1")) if v)
+    return {"name": name, "lat": float(x["latitude"]), "lon": float(x["longitude"]),
+            "country": str(x.get("country_code") or "")[:2], "postcodes": [str(p) for p in (x.get("postcodes") or [])][:20]}
+
+
+async def candidates(place):
+    """Places that fit the text, best first: [{"name", "lat", "lon", "country", "postcodes"}].
+    "76307 Karlsbad" is searched as "Karlsbad" in Germany and checked against the postcode; two
+    numbers are coordinates."""
     place = _clean(place)
     if len(place) < 2:
         raise ValueError("Ort fehlt")
+    xy = _coords(place)
+    if xy:
+        return [{"name": f"{xy[0]:.3f}, {xy[1]:.3f}", "lat": xy[0], "lon": xy[1], "country": "", "postcodes": []}]
+    pc = (re.findall(r"\b\d{4,5}\b", place) or [""])[0]
+    name = re.sub(r"\s+", " ", re.sub(r"\b\d{4,5}\b", " ", place)).strip(" ,-/")
+    country = "DE" if len(pc) == 5 else ""
     _, geo = urls()
+    tries = [(name, country)] if name else []
+    tries += [(part.strip(), country) for part in re.split(r"[-/,(]", name) if part.strip() and part.strip() != name]
+    tries += [(pc, country)] if pc else []
+    tries += [(name, "")] if name and country else []
+    found = []
     async with httpx.AsyncClient(timeout=httpx.Timeout(15, connect=5)) as c:
-        r = await c.get(geo, params={"name": place, "count": 1, "language": "de", "format": "json"})
-    r.raise_for_status()
-    res = (r.json() or {}).get("results") or []
-    if not res:
-        raise ValueError(f"Ort „{place}“ nicht gefunden")
-    x = res[0]
-    name = ", ".join(_clean(v, 40) for v in (x.get("name"), x.get("admin1")) if v)
-    return {"name": name or place, "lat": float(x["latitude"]), "lon": float(x["longitude"])}
+        for q, cc in tries:
+            if len(q) < 2:
+                continue
+            params = {"name": q, "count": 10, "language": "de", "format": "json"}
+            if cc:
+                params["countryCode"] = cc
+            r = await c.get(geo, params=params)
+            r.raise_for_status()
+            for x in (r.json() or {}).get("results") or []:
+                try:
+                    h = _hit(x)
+                except (KeyError, TypeError, ValueError):
+                    continue
+                if not any(abs(h["lat"] - f["lat"]) < 0.01 and abs(h["lon"] - f["lon"]) < 0.01 for f in found):
+                    found.append(h)
+            if found:   # the typed name wins over the postcode (villages often have none of their own)
+                break
+    if not found:
+        raise ValueError(f"Ort „{place}“ nicht gefunden. Versuch den Namen ohne Postleitzahl, den nächsten "
+                         "größeren Ort oder Koordinaten wie „48.87, 8.50“.")
+    # postcode first, then places in German-speaking countries, otherwise as the service ranked them
+    found.sort(key=lambda f: (0 if pc and pc in f["postcodes"] else 1,
+                              NEAR.index(f["country"]) if f["country"] in NEAR else len(NEAR)))
+    return found[:6]
 
 
-async def set_place(uid, place):
-    if not str(place or "").strip():
+async def geocode(place):
+    """{"name", "lat", "lon"} of the best match, or ValueError."""
+    best = (await candidates(place))[0]
+    return {"name": best["name"] or _clean(place), "lat": best["lat"], "lon": best["lon"]}
+
+
+def _store(uid, d):
+    profiles._write(_file(uid), d)
+    return d
+
+
+async def set_place(uid, place, pick=None):
+    """Sets the profile's place; pick ({"lat", "lon", "name"}) is one of the choices the page showed.
+    Returns (place, other choices)."""
+    if not str(place or "").strip() and not pick:
         try:
             os.remove(_file(uid))
         except OSError:
             pass
-        return {}
-    g = await geocode(place)
-    d = dict(g, place=_clean(place))
-    profiles._write(_file(uid), d)
-    return d
+        return {}, []
+    if pick:
+        try:
+            lat, lon = float(pick.get("lat")), float(pick.get("lon"))
+        except (TypeError, ValueError, AttributeError):
+            raise ValueError("Ungültige Koordinaten")
+        if not (-90 <= lat <= 90 and -180 <= lon <= 180):
+            raise ValueError("Ungültige Koordinaten")
+        name = _clean(pick.get("name"), 80) or f"{lat:.3f}, {lon:.3f}"
+        return _store(uid, {"name": name, "lat": lat, "lon": lon, "place": _clean(place) or name}), []
+    found = await candidates(place)
+    best = found[0]
+    d = _store(uid, {"name": best["name"] or _clean(place), "lat": best["lat"], "lon": best["lon"], "place": _clean(place)})
+    return d, found if len(found) > 1 else []
 
 
 async def forecast(lat, lon, days=7):
@@ -288,13 +357,14 @@ async def api_set(request: Request, prof=Depends(own_profile)):
     except ValueError:
         body = {}
     try:
-        d = await set_place(prof["id"], (body or {}).get("place", ""))
+        body = body if isinstance(body, dict) else {}
+        d, choices = await set_place(prof["id"], body.get("place", ""), body.get("pick") if isinstance(body.get("pick"), dict) else None)
         sample = await report(d["lat"], d["lon"], d["name"]) if d else ""
     except ValueError as e:
         raise HTTPException(400, str(e))
     except httpx.HTTPError as e:
         raise HTTPException(400, f"Wetterdienst nicht erreichbar ({type(e).__name__})")
-    return {"place": d, "sample": sample}
+    return {"place": d, "sample": sample, "choices": choices}
 
 
 @router.post("/api/profile/weather/test", dependencies=[Depends(assistant), Depends(_on)])

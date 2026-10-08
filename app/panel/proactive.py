@@ -33,6 +33,8 @@ from core import DEFAULTS, assistant, own_profile
 router = APIRouter()
 
 # kind: (label, at most per day before any feedback, setting that switches it)
+# notes that hold nothing personal: these may also go to Telegram without tg_private (see telegram.py)
+PUBLIC_KINDS = {"weather"}
 KINDS = {"events": ("Termin-Vorlauf", 10, "pro_events"), "ha": ("Smart Home", 10, "pro_ha"),
          "greet": ("Begrüßung", 3, "pro_greet"), "follow": ("Nachfrage", 1, "pro_follow"),
          "mail": ("Wichtige Mail", 10, "pro_mail"), "weather": ("Wetter", 1, "pro_weather"),
@@ -147,7 +149,8 @@ async def deliver(uid, kind, text, why="", data="", offer=None, until=None, forc
             "until": int(until or now + QUEUE_KEEP)}
     if mail:
         item["mail"] = True    # kept out of what the learner reads, like answers made from mail
-    if not page and push.subs(uid):
+    private = kind not in PUBLIC_KINDS
+    if not page and push.reachable(uid, private):
         item["pushed"] = True
 
     def put(st):
@@ -159,7 +162,7 @@ async def deliver(uid, kind, text, why="", data="", offer=None, until=None, forc
     _mut(uid, put)
     if item.get("pushed"):
         try:
-            await push.send(uid, "💬 Spark", text, tag="pro-" + kind)
+            await push.send(uid, "💬 Spark", text, tag="pro-" + kind, private=private)
         except Exception as e:
             print("proactive: push:", type(e).__name__, e, flush=True)
     profiles.tool_log_add(uid, f"(von selbst: {KINDS[kind][0]})",

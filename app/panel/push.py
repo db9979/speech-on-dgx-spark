@@ -158,11 +158,19 @@ def vapid(endpoint):
     return f"vapid t={token}, k={public_key()}"
 
 
-async def send(uid, title, body, tag=""):
+def reachable(uid, private=True):
+    """The profile gets notes somewhere: a browser with push, or Telegram (see telegram.py)."""
+    import telegram
+    return bool(subs(uid) or telegram.push_on(uid, private))
+
+
+async def send(uid, title, body, tag="", private=True):
     """Sends to every device of the profile; drops subscriptions the push service no longer knows.
-    Returns the number of devices reached."""
+    Also to Telegram when the profile wants that; private notes (appointments, mails, the briefing)
+    only when it also allowed personal data over Telegram. Returns the number of devices reached."""
+    import telegram
     payload = json.dumps({"title": title, "body": body, "tag": tag}).encode()[:3000]
-    n = 0
+    n = await telegram.notify(uid, f"{title}\n{body}", private) if tag != "hello" else 0
     async with httpx.AsyncClient(timeout=15) as c:
         for sub in subs(uid):
             try:
@@ -186,12 +194,12 @@ async def due_reminders():
     now = time.time() * 1000
     sent = 0
     for uid in profiles.user_ids():
-        if not subs(uid):
+        if not reachable(uid, private=False):
             continue
         due = [x for x in profiles.reminders(uid) if x.get("due", 0) <= now]
         for x in due:
             if now - x["due"] < 6 * 3600 * 1000:  # older ones (panel was off) are dropped quietly
-                sent += await send(uid, "⏰ " + x["text"], "Erinnerung", tag=x["id"])
+                sent += await send(uid, "⏰ " + x["text"], "Erinnerung", tag=x["id"], private=False)
         if due:
             profiles.remove_reminders(uid, [x["id"] for x in due])
     return sent

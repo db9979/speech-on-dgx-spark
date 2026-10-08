@@ -1,5 +1,6 @@
 """Weather, contacts and parcels (extras.py) against fake Open-Meteo, CardDAV and IMAP servers."""
 import datetime
+import re
 import unittest
 
 from tests import helpers
@@ -21,10 +22,12 @@ def fake_weather():
     app = FastAPI()
 
     @app.get("/v1/search")
-    def search(name: str = ""):
-        WX_CALLS.append(("search", name))
-        if name.lower().startswith("nirgend"):
-            return {}
+    def search(name: str = "", countryCode: str = ""):
+        WX_CALLS.append(("search", name, countryCode))
+        if name.lower().startswith("nirgend") or re.search(r"\d", name) and re.search(r"[a-z]", name, re.I):
+            return {}    # like the real service: a postcode together with a name finds nothing
+        if name in GEO:
+            return {"results": [x for x in GEO[name] if not countryCode or x["country_code"] == countryCode]}
         return {"results": [{"name": name.title(), "admin1": "Baden-Württemberg", "latitude": 48.4, "longitude": 10.0}]}
 
     @app.get("/v1/forecast")
@@ -39,6 +42,15 @@ def fake_weather():
                           "precipitation_sum": [4.2, 1.0] + [0] * 5, "wind_gusts_10m_max": [55, 20] + [10] * 5},
                 "hourly": {"time": hours, "precipitation_probability": [0] * 14 + [90] * 10, "temperature_2m": [10] * 24}}
     return app
+
+
+KV = {"name": "Karlsbad", "admin1": "Karlovarský kraj", "latitude": 50.23, "longitude": 12.87, "country_code": "CZ"}
+KA = {"name": "Karlsbad", "admin1": "Baden-Württemberg", "latitude": 48.91, "longitude": 8.50, "country_code": "DE",
+      "postcodes": ["76307"]}
+LS = {"name": "Langensteinbach", "admin1": "Baden-Württemberg", "latitude": 48.87, "longitude": 8.50,
+      "country_code": "DE"}
+# Open-Meteo ranks the big Karlsbad (Karlovy Vary) first
+GEO = {"Karlsbad": [KV, KA], "Langensteinbach": [LS], "76307": [KA]}
 
 
 def vcard(fn, tel="", email="", bday=""):
@@ -140,6 +152,23 @@ class Weather(unittest.TestCase):
         self.assertIn("NO TOOL weather", ask(a, "TOOL weather {}"))
         helpers.set_config(weather=True, public=True)
         self.assertIn("NO TOOL weather", ask(TestClient(panel.app), "TOOL weather {}"))
+
+    def test_postcode_and_villages(self):
+        a = profile("Dorfkind")
+        r = a.put("/api/profile/weather", json={"place": "76307 Karlsbad"}).json()
+        self.assertEqual((r["place"]["name"], r["place"]["lat"]), ("Karlsbad, Baden-Württemberg", 48.91))
+        r = a.put("/api/profile/weather", json={"place": "76307 Langensteinbach"}).json()
+        self.assertEqual(r["place"]["name"], "Langensteinbach, Baden-Württemberg")
+        # without postcode the German one wins, the other stays one tap away
+        r = a.put("/api/profile/weather", json={"place": "Karlsbad"}).json()
+        self.assertEqual(r["place"]["lat"], 48.91)
+        self.assertEqual([c["country"] for c in r["choices"]], ["DE", "CZ"])
+        r = a.put("/api/profile/weather", json={"place": "Karlsbad", "pick": {"lat": 50.23, "lon": 12.87, "name": "Karlsbad, Karlovarský kraj"}}).json()
+        self.assertEqual(r["place"]["name"], "Karlsbad, Karlovarský kraj")
+        # coordinates directly
+        r = a.put("/api/profile/weather", json={"place": "48,87 8,50"}).json()
+        self.assertEqual((r["place"]["lat"], r["place"]["lon"]), (48.87, 8.5))
+        self.assertEqual(a.put("/api/profile/weather", json={"place": "x", "pick": {"lat": 99, "lon": 0}}).status_code, 400)
 
     def test_notable_tomorrow_is_fixed_text(self):
         import asyncio

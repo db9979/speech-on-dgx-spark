@@ -251,6 +251,9 @@ REMINDER_TOOLS = [
         "parameters": {"type": "object", "properties": {"text": {"type": "string"}}, "required": ["text"]}}}]
 WATCH_HINT = ("Die Frage kommt von einer Smartwatch mit kleinem Display und kleinem Lautsprecher. Antworte "
               "kurz, meist in ein bis drei Sätzen, ohne Listen, Tabellen oder Links.")
+TELEGRAM_HINT = ("Diese Unterhaltung läuft über Telegram: Antworte kurz in einfachem Text, ohne Markdown. "
+                 "Hast du keinen Zugriff auf etwas, sag, dass der Nutzer das im Panel unter Profil → Telegram "
+                 "erlauben kann.")
 SIRI_HINT = ("Die Frage kommt über Siri vom iPhone, der Apple Watch, aus dem Auto oder über AirPods; Siri "
              "liest deine Antwort vor. Antworte kurz, meist in ein bis drei Sätzen, ohne Listen oder Links.")
 REMINDER_HINT = ("Mit reminder_set stellst du Timer und Erinnerungen, mit reminder_list und reminder_cancel "
@@ -688,7 +691,7 @@ async def due_briefings(now=None):
     sent = 0
     for uid in profiles.user_ids():
         s = profiles.settings(uid)
-        if not s.get("briefing_at") or not push.subs(uid):
+        if not s.get("briefing_at") or not push.reachable(uid):
             continue
         local = now or datetime.datetime.now(user_zone(s.get("tz", "")))
         hh, mm = map(int, s["briefing_at"].split(":"))
@@ -810,6 +813,15 @@ async def chat(request: Request):
     # Home Assistant only for the profile's own login or device key: a voice recognized at someone
     # else's device does not switch that profile's home
     ha = homeassistant.get(who["id"]) if who and own_browser and ccfg.get("homeassistant", False) else None
+    # over Telegram the profile decides: personal data only with tg_private, switching only with tg_ha
+    # and a code word (the messages pass Telegram's servers)
+    tg = body.get("client") == "telegram"
+    tset = profiles.settings(who["id"]) if tg and who else {}
+    private_ok = not tg or bool(tset.get("tg_private"))
+    if tg and ha and not (tset.get("tg_ha") and homeassistant.needs_code(ha)):
+        ha = None
+    if tg:
+        system = (system + "\n\n" + TELEGRAM_HINT).strip()
     if ccfg.get("homeassistant", False):  # why the smart home tools are (not) offered, for the journal
         print("homeassistant: turn for", who["name"] if who else "guest", "- tools",
               "offered" if ha else "NOT offered: " + (
@@ -866,7 +878,7 @@ async def chat(request: Request):
             ha_read = await homeassistant.lookup(ha, messages[-1]["content"])
         except (httpx.HTTPError, ValueError) as e:
             print("homeassistant: lookup failed:", type(e).__name__, flush=True)
-    docs = documents.list_docs(who["id"]) if who and ccfg.get("documents", True) else []
+    docs = documents.list_docs(who["id"]) if who and private_ok and ccfg.get("documents", True) else []
     if docs:
         system = (system + "\n\n" + docs_hint(who, docs)).strip()
     timers = bool(ccfg.get("reminders", True))
@@ -878,7 +890,7 @@ async def chat(request: Request):
                  if isinstance(x, dict) and isinstance(x.get("id"), str)
                  and isinstance(x.get("due"), (int, float))][:50] if not who else []
     # e-mail like Home Assistant: only for the profile's own login or device key
-    mailbox = bool(who and own_browser and ccfg.get("mail", False) and mail.get(who["id"])["accounts"])
+    mailbox = bool(who and own_browser and private_ok and ccfg.get("mail", False) and mail.get(who["id"])["accounts"])
     if mailbox:
         system = (system + "\n\n" + MAIL_HINT).strip()
     # tidying and drafts (tidy.py): only for mailboxes the profile switched on; changes after a yes
@@ -893,7 +905,7 @@ async def chat(request: Request):
         system = (system + "\n\n" + DRAFT_HINT).strip()
     briefing = bool(ccfg.get("calendar", True))
     cal_note = []
-    cal = calendars.get(who["id"]) if who and briefing else {"calendars": [], "topics": []}
+    cal = calendars.get(who["id"]) if who and briefing and private_ok else {"calendars": [], "topics": []}
     # new appointments: only the profile's own login or device key, and only after a yes (see calendars.py)
     cal_write = bool(cal["calendars"] and own_browser)
     prop = None
@@ -938,7 +950,14 @@ async def chat(request: Request):
             else:
                 system = (system + "\n\nPostfach: Der Vorschlag „" + what + "“ wurde NICHT ausgeführt, weil der "
                           "Nutzer nicht zugestimmt hat.").strip()
-    if who and own_browser and messages[-1]["role"] == "user" and not prop and not mprop:  # one yes confirms one thing
+    # ticking off a list entry ... (extras.py): the module waiting for a yes in this conversation
+    xprop = None
+    if who and messages[-1]["role"] == "user" and not prop and not mprop:
+        xprop = await extras.answer({"who": who, "own": own_browser, "src": src}, messages[-1]["content"])
+        if xprop:
+            cal_note.append(xprop["call"])
+            system = (system + "\n\n" + xprop["system"]).strip()
+    if who and own_browser and messages[-1]["role"] == "user" and not prop and not mprop and not xprop:  # one yes confirms one thing
         pro = proactive.reply(who["id"], messages[-1]["content"], said_before)
         if pro:
             cal_note.append(pro["call"])
@@ -957,14 +976,14 @@ async def chat(request: Request):
         + ([CALENDAR_TOOL] if cal["calendars"] else []) + ([CALENDAR_ADD_TOOL] if cal_write else []) \
         + (MAIL_TOOLS if mailbox else []) + (TIDY_TOOLS if tidy_on else []) + ([DRAFT_TOOL] if drafts_on else [])
     # weather, contacts, parcels ... (extras.py): each offers its tools only when the profile switched it on
-    ex = extras.offer({"who": who, "own": own_browser, "tz": body.get("tz")})
+    ex = extras.offer({"who": who, "own": own_browser, "tz": body.get("tz"), "private": private_ok})
     tools += ex["tools"]
     if ex["hints"]:
         system = (system + "\n\n" + " ".join(ex["hints"])).strip()
     # once mail or other outside text was read in this answer, nothing in it may change the home or
     # the memory, and after mail no words go to the web (see LOCKED_OUTSIDE / LOCKED_MAIL)
     def locked(st):
-        return LOCKED_MAIL if st["mail"] else LOCKED_OUTSIDE if st["outside"] else set()
+        return (LOCKED_MAIL | ex["changes"]) if st["mail"] else (LOCKED_OUTSIDE | ex["changes"]) if st["outside"] else set()
     # what this request cannot reach: said plainly, so the model does not make up appointments or mails
     missing = ([] if cal["calendars"] else ["Kalender"]) + ([] if mailbox else ["E-Mails"])
     if missing:
@@ -982,6 +1001,8 @@ async def chat(request: Request):
         need.append("weather")
     if "parcels" in ex["run"] and re.search(r"(?i)\b(paket\w*|päckchen|lieferung\w*|sendung\w*|parcels?|packages?|deliver\w*)\b", ask_text):
         need.append("parcels")
+    if "tasks_show" in ex["run"] and re.search(r"(?i)(einkaufsliste|einkaufszettel|aufgabenliste|to-?do|\b(auf|von) (die|der|meine[rn]?) liste\b|shopping list)", ask_text):
+        need.append("tasks")
     small = bool(SMALLTALK.fullmatch(ask_text))
     if tools:
         system = (system + "\n\n" + TOOL_RULES).strip()
@@ -1142,7 +1163,7 @@ async def chat(request: Request):
                 st["mail"] = True
             elif name in ex["outside"]:
                 st["outside"] = True
-            return await ex["run"][name].tool(name, args, {"who": who, "own": own_browser, "tz": body.get("tz")})
+            return await ex["run"][name].tool(name, args, {"who": who, "own": own_browser, "tz": body.get("tz"), "src": src})
         if name.startswith("mail_tidy_") and tidy_on:
             return await tidy_tool(name, args, st)
         if name == "mail_draft" and drafts_on:
@@ -1437,7 +1458,7 @@ async def chat(request: Request):
             parts.append("Reminders today:\n" + ("\n".join(
                 f"{datetime.datetime.fromtimestamp(x['due'] / 1000, zone):%H:%M} {x['text']}" for x in pend) or "none"))
         if who:   # weather, birthdays, parcels (parcels come from mail: then the answer counts as mail)
-            for kind, part in await extras.briefing(who["id"], zone):
+            for kind, part in await extras.briefing(who["id"], zone, private_ok):
                 parts.append(part)
                 if kind == "parcels":
                     st["mail"] = True

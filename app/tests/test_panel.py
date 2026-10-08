@@ -592,7 +592,7 @@ class Push(unittest.TestCase):
         profiles.add_reminder(b_id, "Kaffee", time.time() * 1000 - 1000)
         got = []
 
-        async def fake(uid, title, body, tag=""):
+        async def fake(uid, title, body, tag="", private=True):
             got.append((uid, title))
             return 1
         real, push.send = push.send, fake
@@ -728,7 +728,7 @@ class Briefing(unittest.TestCase):
                          "07:30")
         sent = []
 
-        async def fake_send(u, title, body, tag=""):
+        async def fake_send(u, title, body, tag="", private=True):
             sent.append((u, title, body))
             return 1
         old_send, old_subs = push.send, push.subs

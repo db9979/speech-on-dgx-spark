@@ -159,8 +159,9 @@ async def _propfind(c, url, body, depth):
     return _xml(r.content)
 
 
-async def _calendars(c, url):
-    """[(calendar url, name)] reachable from the address: a calendar, a principal, a home or the server."""
+async def _calendars(c, url, comp="VEVENT"):
+    """[(calendar url, name)] reachable from the address: a calendar, a principal, a home or the server.
+    comp: what the collection must hold, VEVENT (appointments) or VTODO (tasks, see tasks.py)."""
     q = ('<?xml version="1.0"?><d:propfind xmlns:d="DAV:" xmlns:c="urn:ietf:params:xml:ns:caldav"><d:prop>'
          '<d:resourcetype/><d:displayname/><d:current-user-principal/><c:calendar-home-set/>'
          '<c:supported-calendar-component-set/></d:prop></d:propfind>')
@@ -184,7 +185,7 @@ async def _calendars(c, url):
                 if prop is None or not href:
                     continue
                 comps = [x.get("name") for x in prop.findall("c:supported-calendar-component-set/c:comp", NS)]
-                if prop.find("d:resourcetype/c:calendar", NS) is not None and (not comps or "VEVENT" in comps):
+                if prop.find("d:resourcetype/c:calendar", NS) is not None and (not comps or comp in comps):
                     name = (prop.findtext("d:displayname", "", NS) or "").strip()
                     if href not in [x[0] for x in out]:
                         out.append((href, name))

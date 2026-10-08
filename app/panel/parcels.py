@@ -220,7 +220,7 @@ HINT = ("Fragen zu Paketen und Lieferungen beantwortest du mit parcels. Lies die
 
 def offer(ctx):
     who = ctx.get("who")
-    if not who or not ctx.get("own") or not usable(who["id"]):
+    if not who or not ctx.get("own") or not ctx.get("private", True) or not usable(who["id"]):
         return None
     return {"tools": [TOOL], "hint": HINT, "mail": {"parcels"},
             "filler": {"parcels": ("Ich schaue in deine Versandmails.", "Let me check your shipping mails.")}}

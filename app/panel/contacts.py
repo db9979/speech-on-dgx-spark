@@ -401,7 +401,7 @@ HINT = ("Nach Telefonnummern, E-Mail-Adressen oder Geburtstagen von Bekannten fr
 
 def offer(ctx):
     who = ctx.get("who")
-    if not who or not usable(who["id"]):
+    if not who or not ctx.get("private", True) or not usable(who["id"]):
         return None
     return {"tools": [TOOL], "hint": HINT, "outside": {"contacts_search"},
             "filler": {"contacts_search": ("Ich schaue in deine Kontakte.", "Let me check your contacts.")}}
