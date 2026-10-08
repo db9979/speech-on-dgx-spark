@@ -95,6 +95,7 @@ PROBE = secrets.token_hex(8)   # shows that an address leads to this very Spark 
 ROOM_MINS = (15, 30, 60, 120, 240)
 ROOM_MAX = 2               # speakers in room mode at once (the speech recognition runs all the time)
 ROOM_LEVELS = ("questions", "hints", "all")
+MIC_LEVELS = {"low": 300.0, "normal": 150.0, "high": 70.0}   # "Mikrofon" per speaker: least level that counts as speech
 # "Raummodus an", "Raum-Modus einschalten", "starte den Raummodus"
 ROOM_START = re.compile(r"(?i)^\W*(?:(?:hey )?(?:spark|jarvis),? )?(?:(?:den )?raum[- ]?modus (?:an|ein|einschalten|anschalten|starten)|"
                         r"(?:starte|schalte?) (?:den )?raum[- ]?modus(?: an| ein)?)\b")
@@ -384,7 +385,8 @@ class Ear:
     QUIET, MIN_SPEECH, MAX_LEN, NOTHING = 0.7, 0.25, 30.0, 12.0
     MIN_LEVEL = 150.0   # about -47 dB: boards with a codec chip and echo cancelling send quiet sound
 
-    def __init__(self):
+    def __init__(self, level=None):
+        self.level = level or self.MIN_LEVEL
         self.pcm = bytearray()
         self.noise = None
         self.speech = 0.0
@@ -400,7 +402,7 @@ class Ear:
             return None
         sec = len(x) / 16000
         rms = float(np.sqrt(np.mean(x * x)))
-        loud = rms > max(self.MIN_LEVEL, (self.noise or rms) * 3)
+        loud = rms > max(self.level, (self.noise or rms) * 3)
         if not loud:   # background level: follows quiet frames, rises only slowly
             self.noise = rms if self.noise is None else min(self.noise * 1.02 + 1, max(rms, 1.0))
         if loud:
@@ -511,6 +513,20 @@ class Session:
     def note(self, text):
         diag(self.dev["id"], text)
 
+    def new_ear(self):
+        c = clients().get(self.client) or by_device(self.dev["id"])[1] or {}
+        return Ear(MIC_LEVELS.get(c.get("mic"), Ear.MIN_LEVEL))
+
+    async def set_volume(self, volume):
+        """The board's own loudspeaker volume (XiaoZhi MCP tool, kept on the board)."""
+        await self.send_volume(self.ws, volume)
+
+    @staticmethod
+    async def send_volume(ws, volume):
+        await ws.send_text(json.dumps({"type": "mcp", "payload": {
+            "jsonrpc": "2.0", "id": secrets.randbelow(10 ** 6), "method": "tools/call",
+            "params": {"name": "self.audio_speaker.set_volume", "arguments": {"volume": int(volume)}}}}))
+
     def mic_report(self, heard):
         """One diagnosis line about the sound the board sent for this question."""
         m, self.mic = self.mic, None
@@ -536,7 +552,7 @@ class Session:
 
     def listen(self, mode):
         self.mode = mode if mode in ("auto", "manual", "realtime") else "auto"
-        self.ear = Ear()
+        self.ear = self.new_ear()
         self.mic = [0, 0.0, 0, 0.0, 0]
         self.dec = self.dec or Decoder(16000)
 
@@ -556,6 +572,9 @@ class Session:
             await self.ws.send_text(json.dumps({"type": "hello", "transport": "websocket", "session_id": self.sid,
                                                 "audio_params": {"format": "opus", "sample_rate": OUT_RATE,
                                                                  "channels": 1, "frame_duration": 60}}))
+            c = clients().get(self.client) or by_device(self.dev["id"])[1] or {}
+            if isinstance(c.get("volume"), int):
+                await self.set_volume(c["volume"])   # the volume set in the panel, at every connection
         elif kind == "listen":
             st = m.get("state")
             if st == "start":
@@ -601,10 +620,10 @@ class Session:
             if self.ear.heard:
                 self.room["last"] = time.time()
             if r == "done":
-                seg, self.ear = bytes(self.ear.pcm), Ear()
+                seg, self.ear = bytes(self.ear.pcm), self.new_ear()
                 self.room["queue"] = asyncio.ensure_future(self._after(self.room["queue"], self.room_heard(seg)))
             elif r == "nothing":
-                self.ear = Ear()   # in room mode quiet is fine: keep listening
+                self.ear = self.new_ear()   # in room mode quiet is fine: keep listening
             return
         if self.mode == "manual":
             if len(self.ear.pcm) < MAX_LISTEN * 32000:
@@ -1163,7 +1182,8 @@ def _list(uid=None):
                     "fw": c.get("fw", ""), "auto": c.get("auto", True), "update": bool(c.get("update")),
                     "newer": bool(m and newer(m["version"], c.get("fw", ""))), "online": d["id"] in _live,
                     "seen": max(int(c.get("seen") or 0), int((last.get(d["id"]) or {}).get("t") or 0)) or None,
-                    "created": d.get("created"), **_room_info(d["id"], c)})
+                    "created": d.get("created"), "volume": c.get("volume"), "mic": c.get("mic") or "normal",
+                    **_room_info(d["id"], c)})
     return sorted(out, key=lambda x: x["name"].lower())
 
 
@@ -1284,6 +1304,21 @@ async def profile_change(did: str, request: Request, prof=Depends(browser_profil
             profiles._write(profiles._path("profiles.json"), d)
     if isinstance(body.get("auto"), bool):
         _update(lambda d: d["clients"][cid].update(auto=body["auto"]))
+    if "mic" in body:
+        if body["mic"] not in MIC_LEVELS:
+            raise HTTPException(400, "Mikrofon: low, normal oder high.")
+        _update(lambda d: d["clients"][cid].update(mic=body["mic"]))
+    if "volume" in body:
+        v = body["volume"]
+        if not isinstance(v, int) or isinstance(v, bool) or not 0 <= v <= 100:
+            raise HTTPException(400, "Lautstärke: 0 bis 100.")
+        _update(lambda d: d["clients"][cid].update(volume=v))
+        s = _live.get(did)
+        if s:
+            try:
+                await s.set_volume(v)   # connected: at once, else at its next connection
+            except Exception:
+                pass
     if any(k in body for k in ("room_mins", "room_level", "room_area")):
         def put(d):
             e = d["clients"][cid]

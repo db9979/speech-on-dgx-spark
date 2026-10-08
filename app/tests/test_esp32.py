@@ -321,6 +321,31 @@ class Speakers(unittest.TestCase):
             esp32.manifest = old
         self.assertEqual(esp32.manifest(), real)
 
+    def test_volume_and_microphone(self):
+        a = profile("Esp Hanna")
+        a.put("/api/profile/settings", json={"esp_on": True})
+        s = a.post("/api/profile/esp32/setup", json={"name": "Garten", "variant": "bread-compact-wifi",
+                                                     "base": "https://speech.example.de"}).json()
+        did = s["device"]
+        for bad in ({"volume": 101}, {"volume": -1}, {"volume": "50"}, {"volume": True}, {"mic": "loud"}):
+            self.assertEqual(a.put(f"/api/profile/esp32/{did}", json=bad).status_code, 400, bad)
+        self.assertEqual(TestClient(panel.app).put(f"/api/profile/esp32/{did}", headers={"X-Speech-Device": s["token"]},
+                                                   json={"volume": 10}).status_code, 403)
+        r = a.put(f"/api/profile/esp32/{did}", json={"volume": 55, "mic": "high"})
+        dev = next(x for x in r.json()["devices"] if x["id"] == did)
+        self.assertEqual((dev["volume"], dev["mic"]), (55, "high"))
+        # the board gets its volume at every connection; the microphone setting picks the speech level
+        with TestClient(panel.app).websocket_connect("/api/esp32/ws", headers={"Authorization": "Bearer " + s["token"],
+                                                                             "Client-Id": s["uuid"]}) as ws:
+            ws.send_text(json.dumps({"type": "hello", "features": {"mcp": True}}))
+            self.assertEqual(json.loads(ws.receive_text())["type"], "hello")
+            m = json.loads(ws.receive_text())
+            self.assertEqual(m["type"], "mcp")
+            self.assertEqual(m["payload"]["params"], {"name": "self.audio_speaker.set_volume", "arguments": {"volume": 55}})
+            self.assertEqual(esp32._live[did].new_ear().level, esp32.MIC_LEVELS["high"])
+            a.put(f"/api/profile/esp32/{did}", json={"volume": 30})   # connected: at once
+            self.assertEqual(json.loads(ws.receive_text())["payload"]["params"]["arguments"], {"volume": 30})
+
     def test_net_check(self):
         """The real way: HTTP and the WebSocket through a running server, like a board would."""
         port = helpers._port()
