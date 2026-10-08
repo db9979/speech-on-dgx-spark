@@ -218,12 +218,12 @@ details.adv{margin-top:18px;border-top:1px solid var(--line);padding-top:10px}de
 .ptabs{display:flex;gap:4px;margin:4px 0 12px;padding:3px;background:var(--line);border-radius:12px;flex-wrap:wrap}.ptabs button{flex:1;border:0;background:none;color:var(--fg);font:inherit;font-size:13px;padding:7px 8px;border-radius:9px;cursor:pointer;white-space:nowrap}.ptabs button.on{background:var(--card);box-shadow:var(--shadow);font-weight:600}
 .ptab:not(.on){display:none!important}.mebody .ptab{min-height:160px}
 .mecard{width:min(760px,100%);height:min(640px,92vh);display:flex;flex-direction:column;overflow:hidden}.mehead{margin-bottom:12px}.mehead h2{margin:0 0 2px}.mehead .mut{font-size:13px}
-.mewrap{display:grid;grid-template-columns:150px 1fr;gap:18px;align-items:stretch;flex:1;min-height:0}
+.mewrap{display:grid;grid-template-columns:170px minmax(0,1fr);grid-template-rows:minmax(0,1fr);gap:18px;align-items:stretch;flex:1;min-height:0}
 .mebody{overflow-y:auto;min-height:0;padding-right:4px;scrollbar-gutter:stable}
-.menav{display:flex;flex-direction:column;gap:2px;position:sticky;top:0}
+.menav{display:flex;flex-direction:column;gap:2px;min-height:0;overflow-y:auto;overscroll-behavior:contain;scrollbar-width:thin}.menav button{flex:none}
 .menav button{border:0;background:none;color:var(--fg);text-align:left;padding:8px 12px;border-radius:10px;cursor:pointer;font:inherit;font-size:14px}
 .menav button:hover{background:var(--line)}.menav button.on{background:var(--line);font-weight:600}
-.mefoot{margin-top:16px;justify-content:flex-end;border-top:1px solid var(--line);padding-top:12px}.mefoot #proflogout{margin-right:auto}
+.mefoot{flex:none;margin-top:16px;justify-content:flex-end;border-top:1px solid var(--line);padding-top:12px}.mefoot #proflogout{margin-right:auto}
 @media (max-width:640px){.mecard{height:92vh}.mewrap{grid-template-columns:1fr;grid-template-rows:auto 1fr;gap:10px}.menav{flex-direction:row;flex-wrap:wrap;position:static;padding:3px;background:var(--line);border-radius:12px}
   .menav button{flex:1 0 auto;text-align:center;padding:7px 10px;font-size:13px}.menav button.on{background:var(--card);box-shadow:var(--shadow)}}
 #caladd{margin-top:10px;border:1px solid var(--line);border-radius:12px;padding:8px 12px}#caladd summary{cursor:pointer;font-weight:600;font-size:14px}
