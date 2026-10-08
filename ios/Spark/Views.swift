@@ -89,7 +89,7 @@ struct ChatView: View {
 
     private var talking: some View {
         VStack(spacing: 0) {
-            FaceView(mood: talk.mood, mic: talk.level, out: { talk.audio.outLevel })
+            FaceView(mood: talk.mood, mic: talk.level, out: { talk.audio.outLevel }, kind: talk.allowed.face)
                 .frame(maxHeight: talk.messages.isEmpty ? 260 : 130)
                 .padding(.top, 8)
                 .onTapGesture { talk.tap() }
@@ -155,7 +155,7 @@ struct StandView: View {
                     .monospacedDigit()
                 Text(tl.date, format: .dateTime.weekday(.wide).day().month(.wide))
                     .foregroundStyle(.secondary)
-                FaceView(mood: talk.mood, mic: talk.level, out: { talk.audio.outLevel })
+                FaceView(mood: talk.mood, mic: talk.level, out: { talk.audio.outLevel }, kind: talk.allowed.face)
                     .frame(maxWidth: 320)
                     .onTapGesture { talk.tap() }
                 if let last = talk.messages.last(where: { $0.role == "assistant" }), !last.text.isEmpty {

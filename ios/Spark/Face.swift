@@ -40,8 +40,11 @@ struct FaceView: View {
     var mic: Float
     /// read every frame: the loudness of what plays right now
     var out: () -> Float
-    var style: FaceStyle = RobotFace()
+    /// the face the admin picked in the panel ("robot" or "comic", from hello)
+    var kind = "robot"
     @State private var life = FaceLife()
+    @State private var robot = RobotFace()
+    @State private var comic = ComicFace()
 
     var body: some View {
         TimelineView(.animation) { tl in
@@ -50,6 +53,7 @@ struct FaceView: View {
                 let s = min(size.width, size.height) / 200
                 ctx.translateBy(x: (size.width - 200 * s) / 2, y: (size.height - 200 * s) / 2)
                 ctx.scaleBy(x: s, y: s)
+                let style: FaceStyle = kind == "comic" ? comic as FaceStyle : robot
                 style.draw(&ctx, pose)
             }
         }

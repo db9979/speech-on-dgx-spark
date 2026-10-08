@@ -31,6 +31,7 @@ All options for running without questions (`--mode api --asr 1.7b --tts 0.6b --y
 
 <!-- New version: add one line at the top here and in CHANGELOG.md, drop the oldest line here (keep 10). Details go to docs/de and docs/en, not into this README. -->
 
+- **V01.0.155** iPhone app shows the face picked in the panel, now also the comic face with its own life (lids, glances, brows, mouth under the mustache)
 - **V01.0.154** Selectable face: the admin picks "Robot" (as before) or "Comic" under Settings → Defaults (a caricature that looks around, blinks, moves its mouth with the voice and shows the state with a coloured ring); for the panel and the iPhone app
 - **V01.0.153** iPhone app comes alive: face as in the panel (look swappable), hands-free and interrupting, wake word on the iPhone offline, stand mode on the charger, reminders as notifications, notes on its own, route and call only after "yes" (new panel switches, off)
 - **V01.0.152** iPhone app "Spark" (off, admin + profile): own SwiftUI app in ios/, pairing by QR code or link, own key per iPhone that may only ask and listen, answers in the Spark voice, "Hey Siri, Frag Spark" through the app; smart home from it only with its own switch
@@ -40,7 +41,6 @@ All options for running without questions (`--mode api --asr 1.7b --tts 0.6b --y
 - **V01.0.148** Browser test for Zustand also holds where systemd reports real services (GitHub)
 - **V01.0.147** Design "Klar", step 3: on a computer Ich opens as a page beside the sidebar instead of a window; another menu entry closes it
 - **V01.0.146** Design "Klar", step 2: Zustand (status) starts with one sentence ("Everything is running." or what is not) and "Braucht dich" (needs you: update, unsaved settings, service off/failing) with a button to each place; green/yellow/red dot in the menu; qwen38 and GPU processes folded
-- **V01.0.145** Design "Klar", step 1: menu as a sidebar on computers (Assistent, Ich, then "Spark verwalten" with Zustand, Einstellungen, Profile und Geräte, Einbinden) and a bottom bar on phones; "Übersicht" is now "Zustand" (status), count of unsaved settings pages in the menu
 
 All versions: [CHANGELOG.md](CHANGELOG.md)
 

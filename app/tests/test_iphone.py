@@ -191,6 +191,14 @@ class IPhone(unittest.TestCase):
         self.assertEqual((d["listen"], d["act"]), (False, False))
         a.put("/api/profile/settings", json={"app_listen": True})
         self.assertTrue(app.get("/api/iphone/hello", headers=h).json()["listen"])
+        # the face the admin picked; anything not in the fixed list stays the robot
+        self.assertEqual(d["face"], "robot")
+        try:
+            for value, want in (("comic", "comic"), ("../x", "robot")):
+                helpers.set_config(face=value)
+                self.assertEqual(app.get("/api/iphone/hello", headers=h).json()["face"], want)
+        finally:
+            helpers.set_config(face="robot")
         # the app may read its reminders, nothing it could change them with
         self.assertEqual(app.get("/api/profile/reminders", headers=h).status_code, 200)
         self.assertEqual(app.delete("/api/profile/reminders/x", headers=h).status_code, 401)

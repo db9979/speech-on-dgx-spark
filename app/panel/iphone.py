@@ -25,7 +25,7 @@ import guard
 import profiles
 from account import browser_profile
 from common import load_config
-from core import app_version, assistant, confirm_code, own_profile
+from core import FACES, app_version, assistant, confirm_code, own_profile
 
 router = APIRouter()
 _lock = threading.Lock()
@@ -193,8 +193,11 @@ def app_hello(prof=Depends(own_profile)):
     """The app checks its key: whose it is and which Spark."""
     s = profiles.settings(prof["id"])
     import proactive
+    face = load_config().get("chat", {}).get("face")
     return {"profile": prof["name"], "version": app_version(), "language": _language(),
             # what the profile allows the app (the panel decides; the app only shows and follows it)
             "listen": bool(s.get("app_listen")), "act": bool(s.get("app_act")),
             "proactive": bool(proactive.enabled() and s.get("pro_on")),
-            "reminders": bool(load_config().get("chat", {}).get("reminders", True))}
+            "reminders": bool(load_config().get("chat", {}).get("reminders", True)),
+            # the face the admin picked for everybody (Einstellungen → Vorgaben), only names from the fixed list
+            "face": face if face in FACES else "robot"}

@@ -33,7 +33,7 @@ Der Link gilt 10 Minuten und nur einmal. Die Adresse muss https mit echtem Zerti
 
 ## Benutzen
 
-- Oben das Gesicht des Assistenten: es blinzelt, schaut umher, hört mit roter Antenne zu, denkt mit kreisendem Bogen und bewegt beim Sprechen den Mund. Antippen ist wie der Knopf.
+- Oben das Gesicht des Assistenten, dasselbe wie im Panel (Roboter oder Comic, der Admin wählt es unter Einstellungen → Vorgaben; die App übernimmt es beim Öffnen): es blinzelt, schaut umher, hört mit roter Antenne zu, denkt mit kreisendem Bogen und bewegt beim Sprechen den Mund. Antippen ist wie der Knopf.
 - Großer Knopf: tippen, sprechen, die App merkt selbst, wann du fertig bist (oder nochmal tippen). Während der Spark spricht, hält Tippen ihn an.
 - Unten kann man die Frage auch schreiben. Oben links beginnt ein neues Gespräch; nach 10 Minuten Pause beginnt es von selbst neu.
 - „Hey Siri, Frag Spark“ (oder „Hey Siri, Spark fragen“): Siri fragt nach der Frage und liest die Antwort vor.

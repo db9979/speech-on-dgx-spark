@@ -38,6 +38,7 @@ struct Allowed {
     var act = false
     var proactive = false
     var reminders = true
+    var face = "robot"
 }
 
 /// The Spark's panel, spoken to with this iPhone's own device key. The key may only ask and
@@ -104,7 +105,8 @@ struct SparkAPI {
         let d = Self.object(data)
         return Allowed(profile: d["profile"] as? String ?? "", language: d["language"] as? String ?? "auto",
                        listen: d["listen"] as? Bool ?? false, act: d["act"] as? Bool ?? false,
-                       proactive: d["proactive"] as? Bool ?? false, reminders: d["reminders"] as? Bool ?? true)
+                       proactive: d["proactive"] as? Bool ?? false, reminders: d["reminders"] as? Bool ?? true,
+                       face: d["face"] as? String == "comic" ? "comic" : "robot")
     }
 
     static func reminder(_ d: [String: Any]) -> Reminder? {
