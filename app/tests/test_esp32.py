@@ -384,12 +384,12 @@ class Speakers(unittest.TestCase):
         self.assertEqual((r.status_code, r.json()["now"], r.json()["test"]), (200, False, True))
 
         async def tts(uid, text):
-            return np.zeros(2400, dtype="<i2").tobytes()
+            yield np.zeros(2400, dtype="<i2").tobytes()
 
         async def heard(pcm):
             return "Eins zwei drei"
-        old = esp32.tts_pcm, esp32.transcribe
-        esp32.tts_pcm, esp32.transcribe = tts, heard
+        old = esp32.tts_stream, esp32.transcribe
+        esp32.tts_stream, esp32.transcribe = tts, heard
         try:
             with TestClient(panel.app).websocket_connect("/api/esp32/ws", headers={"Authorization": "Bearer " + s["token"],
                                                                                  "Client-Id": s["uuid"]}) as ws:
@@ -415,7 +415,7 @@ class Speakers(unittest.TestCase):
                     ws.send_bytes(fr)
                 self.assertIn("Das Mikrofon geht. Verstanden habe ich: Eins zwei drei", until_stop())
         finally:
-            esp32.tts_pcm, esp32.transcribe = old
+            esp32.tts_stream, esp32.transcribe = old
         ev = [e["text"] for e in a.get(f"/api/profile/esp32/{did}/diag").json()["events"]]
         self.assertTrue(any(e.startswith("Mikrofon: ") and "Sprache gehört" in e for e in ev), ev)
         self.assertIn("Test: Mikrofon geht", ev)
@@ -436,9 +436,9 @@ class Speakers(unittest.TestCase):
             return heard.pop(0) if heard else ""
 
         async def tts(uid, text):
-            return b"\0" * 4800      # 0.1 s
-        old = esp32.transcribe, esp32.tts_pcm, room.night
-        esp32.transcribe, esp32.tts_pcm = asr, tts
+            yield b"\0" * 4800      # 0.1 s
+        old = esp32.transcribe, esp32.tts_stream, room.night
+        esp32.transcribe, esp32.tts_stream = asr, tts
         room.night = lambda uid, local=None: False      # never the real clock
         t = np.arange(16000 * 1.0) / 16000
         voice = (np.sin(2 * np.pi * 220 * t) * 8000).astype("<i2").tobytes()
@@ -484,6 +484,22 @@ class Speakers(unittest.TestCase):
                 talk(ws, "Wie viel sind 180 Grad in Fahrenheit?")
                 self.assertIn("Fahrenheit", said(ws)[0])
                 self.assertTrue(any(k[0] == a.get("/api/whoami").json()["profile"]["id"] for k in room.ROOMS))
+                # one piece with several sentences, the question without "?": answered, looked up only once
+                import proactive
+                asked, llm = [], proactive._llm
+
+                async def fake(system, user, max_tokens=300):
+                    asked.append(user)
+                    return "Die Zugspitze ist 2962 Meter hoch." if "Frage:" in user else "NICHTS"
+                proactive._llm = fake
+                try:
+                    for r in room.ROOMS.values():
+                        r["said"] = 0
+                    talk(ws, "Wir waren gestern am See. Wie hoch ist die Zugspitze")
+                    self.assertIn("2962", said(ws)[0])
+                    self.assertEqual(sum(1 for x in asked if "Frage:" in x), 1)
+                finally:
+                    proactive._llm = llm
                 talk(ws, "Raummodus aus")
                 self.assertEqual(said(ws), ["Raum-Modus aus."])
                 with self.assertRaises(WebSocketDisconnect):
@@ -525,7 +541,7 @@ class Speakers(unittest.TestCase):
                 talk(ws, "Raummodus an")
                 self.assertIn("ausgeschaltet", said(ws)[0])
         finally:
-            esp32.transcribe, esp32.tts_pcm, room.night = old
+            esp32.transcribe, esp32.tts_stream, room.night = old
             helpers.set_config(room=False)
         # in the quiet hours a speaker in room mode stays silent (it has no text to show)
         room.night = lambda uid, local=None: True

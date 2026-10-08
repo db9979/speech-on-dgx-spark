@@ -31,6 +31,7 @@ All options for running without questions (`--mode api --asr 1.7b --tts 0.6b --y
 
 <!-- New version: add one line at the top here and in CHANGELOG.md, drop the oldest line here (keep 10). Details go to docs/de and docs/en, not into this README. -->
 
+- **V01.0.140** Room mode quicker and finds more questions: speaker cuts talk into short pieces, speaks after 1.5 s of quiet, streams the voice; the answer is looked up while people still talk; questions also without a question mark and after "Weißt du, …"; "Also comments" chattier
 - **V01.0.139** Room mode ignores TV voices: per device "Who it listens to" (everybody / known voices while the TV is on / always known voices only), with a trial that only counts; admin switch "Ignore TV voices", off by default
 - **V01.0.138** Speakers: no more gaps in long answers, new firmware 2.5.1.5 waits when its sound buffer is full instead of dropping sound; the Spark keeps 0.7 s lead
 - **V01.0.137** Speakers: sound no longer stutters, the Spark buffers ahead (0.6 s before start, up to 0.9 s lead, after a stall it collects 0.3 s again); stalls show under "Check" and in the log
@@ -40,7 +41,6 @@ All options for running without questions (`--mode api --asr 1.7b --tts 0.6b --y
 - **V01.0.133** Speakers: firmware for the Waveshare ESP32-S3-AUDIO-Board (ES8311 audio chip, two microphones), and updates follow the board type last written over USB
 - **V01.0.132** Speakers without a display: crash right after joining the Wi-Fi fixed (the firmware tried to load font and emoji onto a screen that is not there), new firmware 2.5.1.3
 - **V01.0.131** Checking a speaker: under Me → Speakers "Check" shows switches, address, recent events and microphone level, "Check network" tests address, certificate and WebSocket, "Test" plays a tone and a sentence and checks the microphone, and the board's own log can be read over USB in the browser
-- **V01.0.130** Web search is never silently missing: right after an answer from mail a clear search question searches again, "such im Internet" or "google mal" always goes through the search, otherwise the assistant says why it does not search
 
 All versions: [CHANGELOG.md](CHANGELOG.md)
 

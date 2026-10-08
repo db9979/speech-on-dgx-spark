@@ -1499,8 +1499,8 @@ class Room(unittest.TestCase):
             # comments only on the highest level, after a longer quiet, and "NICHTS" stays unsaid
             for x in ("Wir waren gestern am See.", "Das Wasser war kalt.", "Morgen soll es regnen."):
                 a.post("/api/room/heard", json={"room": "abc125", "text": x, "level": "all", "kinds": {"ha": False}})
-            self.assertEqual(a.post("/api/room/pause", json={"room": "abc125", "quiet": 3, "level": "all"}).json(), {"again": 6})
-            self.assertEqual(a.post("/api/room/pause", json={"room": "abc125", "quiet": 7, "level": "all"}).json(), {})
+            self.assertEqual(a.post("/api/room/pause", json={"room": "abc125", "quiet": 1, "level": "all"}).json(), {"again": 3})
+            self.assertEqual(a.post("/api/room/pause", json={"room": "abc125", "quiet": 4, "level": "all"}).json(), {})
         finally:
             proactive._llm = old
         self.assertEqual(TestClient(panel.app).post("/api/room/heard", json={"room": "abc123", "text": "x"}).status_code, 401)
@@ -1529,6 +1529,44 @@ class Room(unittest.TestCase):
                          "Steht auf der Einkaufsliste: Milch, Eier.")
         self.assertIn("Milch", helpers.TODO)
         self.assertEqual(a.post("/api/room/heard", json=dict(b, text="Ja.")).json().get("say"), None)   # once
+
+    def test_questions_without_question_mark_and_chatty_comments(self):
+        import proactive
+        import room
+        # the speech recognition often writes no "?"; people ask each other ("Weißt du, ...")
+        for q in ("Wie hoch ist die Zugspitze", "Sag mal, wie hoch ist die Zugspitze", "Weißt du, wann Goethe gestorben ist",
+                  "Wie viele Einwohner hat Berlin", "Stimmt es, dass Bananen Beeren sind", "Wer hat die Glühbirne erfunden"):
+            self.assertTrue(room.open_question(q), q)
+        # about the people in the room: nothing for the web
+        for q in ("Wo ist meine Brille", "Wann kommst du nach Hause", "Wie war dein Tag", "Weißt du, wo meine Schlüssel sind",
+                  "Wir gehen heute einkaufen."):
+            self.assertFalse(room.open_question(q), q)
+        a = profile("Rolf")
+        old = proactive._llm
+        asked = []
+
+        async def fake(system, user, max_tokens=300):
+            asked.append(system)
+            if "Frage:" in user:
+                return "Die Zugspitze ist 2962 Meter hoch."
+            return "Wusstet ihr, dass der Bodensee an drei Länder grenzt?" if "freundlicher" in system else "NICHTS"
+        proactive._llm = fake
+        try:
+            # the answer is looked up when the question is heard, so the pause only says it
+            a.post("/api/room/heard", json={"room": "cc1234", "text": "Wie hoch ist die Zugspitze"})
+            self.assertEqual(a.post("/api/room/pause", json={"room": "cc1234", "quiet": 2}).json()["say"],
+                             "Die Zugspitze ist 2962 Meter hoch.")
+            # "auch Kommentare": after two sentences and three seconds of quiet it says something
+            for x in ("Wir fahren am Wochenende an den Bodensee.", "Da war ich als Kind schon mal."):
+                a.post("/api/room/heard", json={"room": "cc1235", "text": x, "level": "all"})
+            self.assertIn("Bodensee", a.post("/api/room/pause", json={"room": "cc1235", "quiet": 3, "level": "all"}).json()["say"])
+            for r in room.ROOMS.values():
+                r["said"] = 0
+            for x in ("Das wird schön.", "Hoffentlich regnet es nicht."):
+                a.post("/api/room/heard", json={"room": "cc1235", "text": x, "level": "all"})
+            self.assertEqual(a.post("/api/room/pause", json={"room": "cc1235", "quiet": 3, "level": "all"}).json(), {})  # not again so soon
+        finally:
+            proactive._llm = old
 
     def test_quiet_hours_and_end_by_voice(self):
         import datetime

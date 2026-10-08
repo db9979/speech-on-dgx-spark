@@ -31,6 +31,7 @@ Alle Optionen ohne Rückfragen (`--mode api --asr 1.7b --tts 0.6b --yes` …) st
 
 <!-- New version: add one line at the top here and in CHANGELOG.md, drop the oldest line here (keep 10). Details go to docs/de and docs/en, not into this README. -->
 
+- **V01.0.140** Raum-Modus flinker und findet mehr Fragen: Lautsprecher schneidet Gespräch in kurze Stücke, spricht nach 1,5 s Stille, streamt die Stimme; Antwort wird schon gesucht, während noch geredet wird; Fragen auch ohne Fragezeichen und nach „Weißt du, …“; „Auch Kommentare“ gesprächiger
 - **V01.0.139** Raum-Modus überhört Fernsehstimmen: pro Gerät „Wem er zuhört“ (allen / nur bekannte Stimmen, wenn der Fernseher läuft / immer nur bekannte Stimmen), mit Probelauf, der nur zählt; Admin-Schalter „Fernsehstimmen überhören“, standardmäßig aus
 - **V01.0.138** Lautsprecher: keine Lücken mehr in langen Ansagen, neue Firmware 2.5.1.5 wartet bei vollem Tonpuffer, statt Ton wegzuwerfen; der Spark hält 0,7 s Vorlauf
 - **V01.0.137** Lautsprecher: Ton stockt nicht mehr, der Spark puffert vor (0,6 s vor dem Start, bis 0,9 s Vorlauf, nach einem Hänger erst wieder 0,3 s sammeln); Hänger stehen unter „Prüfen“ und im Log
@@ -40,7 +41,6 @@ Alle Optionen ohne Rückfragen (`--mode api --asr 1.7b --tts 0.6b --yes` …) st
 - **V01.0.133** Lautsprecher: Firmware für das Waveshare ESP32-S3-AUDIO-Board (Audio-Chip ES8311, zwei Mikrofone), und Updates folgen der Board-Art, die per USB zuletzt geschrieben wurde
 - **V01.0.132** Lautsprecher ohne Display: Absturz direkt nach dem WLAN behoben (die Firmware wollte Schrift und Emojis auf einen nicht vorhandenen Bildschirm laden), neue Firmware 2.5.1.3
 - **V01.0.131** Lautsprecher prüfen: unter Ich → Lautsprecher zeigt „Prüfen“ Schalter, Adresse, letzte Meldungen und Mikrofonpegel, „Netz prüfen“ testet Adresse, Zertifikat und WebSocket, „Test“ spielt Ton und Satz und prüft das Mikrofon, und das Board-Protokoll lässt sich per USB im Browser lesen
-- **V01.0.130** Websuche fehlt nie mehr still: nach einer Antwort aus Mails sucht eine klare Suchfrage wieder, „such im Internet“ oder „google mal“ führt immer über die Suche, sonst sagt der Assistent, warum er gerade nicht sucht
 
 Alle Versionen: [CHANGELOG.md](CHANGELOG.md)
 

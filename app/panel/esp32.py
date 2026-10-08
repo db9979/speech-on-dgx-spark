@@ -93,6 +93,8 @@ DIAG_MAX = 40
 NET_CHECKS = 6
 PROBE = secrets.token_hex(8)   # shows that an address leads to this very Spark (not secret)
 ROOM_MINS = (15, 30, 60, 120, 240)
+ROOM_PIECE = 8.0           # seconds: longest piece of room talk sent to the speech recognition at once
+ROOM_NEED = 1.5            # seconds of quiet after the last loud sound before room mode may speak
 ROOM_MAX = 2               # speakers in room mode at once (the speech recognition runs all the time)
 ROOM_LEVELS = ("questions", "hints", "all")
 ROOM_VOICES = ("all", "tv", "known")   # who room mode listens to (room.py, chat.room_voices)
@@ -465,18 +467,36 @@ def zone_offset(uid):
     return int(datetime.datetime.now(z).utcoffset().total_seconds() // 60), z
 
 
-async def tts_pcm(uid, text):
-    """The text in the profile's voice as 16-bit PCM at 24 kHz (at most a minute)."""
+async def tts_stream(uid, text):
+    """The text in the profile's voice as 16-bit PCM at 24 kHz, piece by piece as the TTS makes it (the first
+    sound plays while the rest is still being made; at most a minute)."""
+    import base64
     from core import api_headers
     cfg = load_config()
     st = profiles.settings(uid)
-    body = {"input": text[:600], "response_format": "pcm"}
+    body = {"input": text[:600], "response_format": "pcm", "stream": True}
     if st.get("voice"):
         body["voice"] = st["voice"]
-    async with httpx.AsyncClient(timeout=120) as c:
-        r = await c.post(f"http://127.0.0.1:{cfg['tts']['port']}/v1/audio/speech", json=body, headers=api_headers())
-    r.raise_for_status()
-    return r.content[:60 * OUT_RATE * 2]
+    left = 60 * OUT_RATE * 2
+    async with httpx.AsyncClient(timeout=httpx.Timeout(120, connect=5)) as c:
+        async with c.stream("POST", f"http://127.0.0.1:{cfg['tts']['port']}/v1/audio/speech", json=body,
+                            headers=api_headers()) as r:
+            r.raise_for_status()
+            async for line in r.aiter_lines():
+                if not line.startswith("data:"):
+                    continue
+                try:
+                    ev = json.loads(line[5:])
+                except ValueError:
+                    continue
+                if ev.get("type") == "speech.audio.error":
+                    raise RuntimeError(str(ev.get("error"))[:120])
+                if ev.get("type") == "speech.audio.delta" and ev.get("audio"):
+                    pcm = base64.b64decode(ev["audio"])[:left]
+                    left -= len(pcm)
+                    yield pcm
+                    if left <= 0:
+                        return
 
 
 def tone_pcm():
@@ -494,7 +514,8 @@ def room_cfg(c):
     level = c.get("room_level") if c.get("room_level") in ROOM_LEVELS else "hints"
     area = re.sub(r"[\x00-\x1f<>\"\\]", "", str(c.get("room_area") or ""))[:60]
     voices = c.get("room_voices") if c.get("room_voices") in ROOM_VOICES else "all"
-    return {"mins": mins, "level": level, "area": area, "voices": voices, "probe": c.get("room_probe") is not False}
+    return {"mins": mins, "level": level, "area": area, "voices": voices, "probe": c.get("room_probe") is not False,
+            "detect": c.get("room_detect") is True}
 
 
 # ---------------------------------------------------------------- one connection of a speaker
@@ -553,7 +574,10 @@ class Session:
 
     def new_ear(self):
         c = clients().get(self.client) or by_device(self.dev["id"])[1] or {}
-        return Ear(MIC_LEVELS.get(c.get("mic"), Ear.MIN_LEVEL))
+        ear = Ear(MIC_LEVELS.get(c.get("mic"), Ear.MIN_LEVEL))
+        if self.room is not None:
+            ear.MAX_LEN = ROOM_PIECE   # in a lively room nobody pauses: cut it into short pieces anyway
+        return ear
 
     async def set_volume(self, volume):
         """The board's own loudspeaker volume (XiaoZhi MCP tool, kept on the board)."""
@@ -655,7 +679,7 @@ class Session:
                 self.mic[4] += len(x)
         if self.room is not None:
             r = self.ear.feed(pcm)
-            if self.ear.heard:
+            if self.ear.speech > 0 and self.ear.silence == 0:   # this very frame was loud
                 self.room["last"] = time.time()
             if r == "done":
                 seg, self.ear = bytes(self.ear.pcm), self.new_ear()
@@ -739,7 +763,7 @@ class Session:
 
     def _room_body(self, **kw):
         c = room_cfg(clients().get(self.client) or by_device(self.dev["id"])[1])
-        return dict({"room": self.room["rid"], "level": c["level"], "area": c["area"], "detect": False,
+        return dict({"room": self.room["rid"], "level": c["level"], "area": c["area"], "detect": c["detect"],
                      "voices": c["voices"], "probe": c["probe"],
                      "tz": profiles.settings(self.dev["user"]).get("tz", "")}, **kw)
 
@@ -758,7 +782,7 @@ class Session:
             return
         mins = room_cfg(by_device(self.dev["id"])[1])["mins"]
         self.room = {"rid": "esp" + re.sub(r"[^A-Za-z0-9]", "", self.dev["id"])[:24], "until": time.time() + mins * 60,
-                     "wait": False, "need": 2.5, "last": time.time(), "asking": False, "queue": None, "task": None}
+                     "wait": False, "need": ROOM_NEED, "last": time.time(), "asking": False, "queue": None, "task": None}
         print(f"room: on at speaker {self.dev['name']} for {mins} min", flush=True)
         await self.say(f"Raum-Modus an. Ich höre {mins} Minuten zu. Mit „Raummodus aus“ beendest du ihn.")
         self.room["last"] = time.time()
@@ -799,7 +823,9 @@ class Session:
                 if time.time() > r["until"]:
                     await self.room_end("time is up")
                     return
-                busy = (self.answer and not self.answer.done()) or (self.ear is not None and self.ear.heard)
+                # quiet counts from the last loud sound, not from the end of a piece (with steady background
+                # noise a piece can stay open long after the talking stopped)
+                busy = bool(self.answer and not self.answer.done())
                 if not r["wait"] or r["asking"] or busy or time.time() - r["last"] < r["need"]:
                     continue
                 r["wait"], r["asking"] = False, True
@@ -834,15 +860,28 @@ class Session:
         except Exception as e:
             print("room: speaker speech recognition", type(e).__name__, flush=True)
             text = ""
+        voice = None
         if rv is not None:
             try:
                 who, best = await rv
-                room.set_voice(uid, rid, who or "", text, known=best >= th)
+                voice = (who or "", best >= th)
             except Exception:
-                room.set_voice(uid, rid, "", text)
+                voice = ("", False)
         if not text or self.room is None:
             return
-        d = await room.heard(uid, rid, text, self._room_body())
+        # one piece can hold several sentences: the rules look at each sentence on its own
+        d = {}
+        for part in [x for x in re.split(r"(?<=[.!?…])\s+", text.strip()) if x.strip()][:8] or [text]:
+            if voice is not None:     # the voice of this recording goes with each of its sentences
+                room.set_voice(uid, rid, voice[0], part, known=voice[1])
+            one = await room.heard(uid, rid, part, self._room_body())
+            if self.room is None:
+                return
+            if one.get("end"):
+                d = one
+                break
+            d = dict(one, say=d.get("say") or one.get("say"), stop=d.get("stop") or one.get("stop"),
+                     wait=bool(d.get("wait") or one.get("wait")))
         # what was heard in the room never goes into the diagnosis, only that something was
         self.note("Raum-Modus: Satz gehört" + (", wartet auf Pause" if d.get("wait") else ", nichts zu tun"))
         if self.room is None:
@@ -854,7 +893,7 @@ class Session:
             self.answer.cancel()
         if d.get("say"):
             self.room_say(d["say"])
-        self.room["wait"], self.room["need"] = bool(d.get("wait")), 2.5
+        self.room["wait"], self.room["need"] = bool(d.get("wait")), ROOM_NEED
 
     def room_say(self, text):
         import room
@@ -868,21 +907,28 @@ class Session:
     async def say(self, text, tone=False):
         """Speaks a fixed text (no model): the tone first if asked, the text on boards with a display."""
         enc = Encoder()
-        frames = enc.feed(tone_pcm()) if tone else []
-        try:
-            pcm = await tts_pcm(self.dev["user"], text)
-        except Exception as e:
-            print("esp32: tts", type(e).__name__, str(e)[:120], flush=True)
-            self.note("Sprachausgabe fehlgeschlagen: " + type(e).__name__)
-            pcm = b""
-        frames += await asyncio.to_thread(enc.feed, pcm, True)
         await self.send({"type": "tts", "state": "start"})
         await self.send({"type": "tts", "state": "sentence_start", "text": text})
         try:
             pace = Pacer(self.send_audio)
+            n = 0
+            if tone:
+                frames = enc.feed(tone_pcm())
+                n += len(frames)
+                await pace.push(frames)
+            try:
+                async for pcm in tts_stream(self.dev["user"], text):
+                    frames = await asyncio.to_thread(enc.feed, pcm)
+                    n += len(frames)
+                    await pace.push(frames)
+            except Exception as e:
+                print("esp32: tts", type(e).__name__, str(e)[:120], flush=True)
+                self.note("Sprachausgabe fehlgeschlagen: " + type(e).__name__)
+            frames = enc.feed(b"", flush=True)
+            n += len(frames)
             await pace.push(frames, final=True)
             await pace.finish()
-            self.note(f"Gesprochen: {len(frames) * 0.06:.1f} s Ton gesendet")
+            self.note(f"Gesprochen: {n * 0.06:.1f} s Ton gesendet")
         finally:
             try:
                 await self.send({"type": "tts", "state": "stop"})
@@ -1353,7 +1399,7 @@ async def profile_change(did: str, request: Request, prof=Depends(browser_profil
                 await s.set_volume(v)   # connected: at once, else at its next connection
             except Exception:
                 pass
-    if any(k in body for k in ("room_mins", "room_level", "room_area", "room_voices", "room_probe")):
+    if any(k in body for k in ("room_mins", "room_level", "room_area", "room_voices", "room_probe", "room_detect")):
         def put(d):
             e = d["clients"][cid]
             if body.get("room_mins") in ROOM_MINS:
@@ -1364,6 +1410,8 @@ async def profile_change(did: str, request: Request, prof=Depends(browser_profil
                 e["room_voices"] = body["room_voices"]
             if isinstance(body.get("room_probe"), bool):
                 e["room_probe"] = body["room_probe"]
+            if isinstance(body.get("room_detect"), bool):
+                e["room_detect"] = body["room_detect"]
             if "room_area" in body:
                 e["room_area"] = room_cfg({"room_area": body["room_area"]})["area"]
         _update(put)
