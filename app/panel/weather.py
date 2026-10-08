@@ -335,7 +335,7 @@ async def briefing(uid, zone=None):
 # ---------------------------------------------------------------- API ("Ich" → Wetter)
 from fastapi import APIRouter, Depends, HTTPException, Request  # noqa: E402
 
-from core import assistant, own_profile  # noqa: E402
+from core import assistant, browser_profile, own_profile  # noqa: E402
 
 router = APIRouter()
 
@@ -351,7 +351,7 @@ def api_get(prof=Depends(own_profile)):
 
 
 @router.put("/api/profile/weather", dependencies=[Depends(assistant), Depends(_on)])
-async def api_set(request: Request, prof=Depends(own_profile)):
+async def api_set(request: Request, prof=Depends(browser_profile)):
     try:
         body = await request.json()
     except ValueError:

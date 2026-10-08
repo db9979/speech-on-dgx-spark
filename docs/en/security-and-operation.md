@@ -17,6 +17,14 @@
 - **Secrets encrypted**: calendar and mail passwords and Home Assistant tokens are stored encrypted in the profile folders; the key is kept apart in `/var/lib/speech-spark/state/secret.key`.
 - **Devices**: *Users → Profiles and devices* and *Me → Security* show when and from where each device key was last used; one click blocks it.
 - **Change log**: *Overview → Logs → Change log* lists logins, wrong attempts, lockouts and every change with time, address and who (`/var/lib/speech-spark/state/audit.log`).
+- **Only Qwen models**: as the model for speech recognition and voice the panel accepts only Qwen's own speech models (`Qwen/Qwen3-ASR-…`, `Qwen/Qwen3-TTS-…`); the engine loads models with their own code, so another repo could bring programs along.
+- **Sensitive settings need a code**: changing the LLM address and key, the Telegram address, SearXNG, the speaker firmware source, models, the API key, "assistant without password" and reverse proxy addresses, downloading a backup and going back to the previous version ask for a code while the second step is on. The connection test sends the stored LLM key only to the stored address.
+- **Backups without login keys**: the keys the panel signs logins with are not in backups; a restore keeps this Spark's own.
+- **Device keys change nothing in the profile**: Siri, watch, speakers and own programs may talk to the assistant but not change connections (Home Assistant, calendar, mail, contacts, push), settings, devices or memory; that only works in the profile's own browser login, credentials and the code word also with a code. A new Home Assistant address needs the token again.
+- **Back to the previous version**: from the panel the update only goes back to exactly the version that ran before, and never to before the security fixes of V01.0.75.
+- **Size limits before reading**: the panel and the speech services refuse requests that are too large, and uploads without a login, before reading them. WAV files with a nonsense sample rate, very long recordings, Word files that unpack to huge sizes and calendars repeating every second or minute are refused or capped; calendars are expanded outside the panel's main loop.
+- **Memory limit**: the panel and the speech proxies have a fixed memory limit (`MemoryMax`) and their own `/tmp`; a runaway restarts only that service and takes nothing from the LLM lanes.
+- **Mailbox tidying**: Message-IDs are used only when they look like one, and compared exactly after a search.
 
 ## Stability
 

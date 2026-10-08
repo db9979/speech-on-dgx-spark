@@ -19,7 +19,7 @@ from fastapi import Depends, FastAPI, HTTPException, Request
 from fastapi.middleware.cors import CORSMiddleware
 from fastapi.responses import JSONResponse, PlainTextResponse, Response, StreamingResponse
 
-from common import ASR_ISO, api_key_dependency, engine_crash_reason, load_config, quiet_access_log
+from common import ASR_ISO, BodyLimit, api_key_dependency, api_key_ok, engine_crash_reason, load_config, quiet_access_log
 
 STATE_DIR = os.environ.get("SPEECH_SPARK_STATE", "/var/lib/speech-spark/state")
 UNIT = "speech-spark-asr-engine"
@@ -28,6 +28,8 @@ NAME_TO_ISO = {v.lower(): k for k, v in ASR_ISO.items()}
 cfg = load_config("asr")
 app = FastAPI(title="Qwen3-ASR via vLLM (DGX Spark)")
 app.add_middleware(CORSMiddleware, allow_origins=["*"], allow_methods=["*"], allow_headers=["*"])
+# bodies are refused before they are read when too large or without the API key
+app.add_middleware(BodyLimit, default=201 * 1024**2, gate=api_key_ok, gated=("/v1/",))
 auth = [Depends(api_key_dependency())]
 client = httpx.AsyncClient(timeout=httpx.Timeout(900, connect=5))
 started = time.time()

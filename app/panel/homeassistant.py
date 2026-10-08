@@ -69,7 +69,9 @@ def entry(body, old=None):
     url = str(body.get("url", "")).strip().rstrip("/")
     if not re.fullmatch(r"https?://[^\s/]{1,200}(/[^\s]{0,200})?", url, re.I):
         raise ValueError("the address must start with http:// or https://, e.g. http://homeassistant.local:8123")
-    token = str(body.get("token", "")).strip() or (old or {}).get("token", "")
+    token = str(body.get("token", "")).strip()
+    if not token and old and old.get("url", "").rstrip("/").lower() == url.lower():
+        token = old.get("token", "")  # same address: the stored token stays (a new address needs it typed again)
     if not re.fullmatch(r"[\w.\-]{20,1000}", token):
         raise ValueError("a long-lived access token is required (Home Assistant: your profile → Security)")
     agent = str(body.get("agent", "")).strip()

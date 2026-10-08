@@ -623,7 +623,10 @@ class Stability(unittest.TestCase):
         self.assertIn("Bruno mag Kuchen.", facts())
         names = [x["name"] for x in ADMIN.get("/api/backups").json()["backups"]]
         self.assertTrue(any("before-restore" in n for n in names))
-        self.assertEqual(ADMIN.get(f"/api/backups/{b['name']}").status_code, 200)
+        self.assertEqual(ADMIN.get(f"/api/backups/{b['name']}").status_code, 403)  # only with a ticket
+        url = ADMIN.post(f"/api/backups/{b['name']}/ticket").json()["url"]
+        self.assertEqual(ADMIN.get(url).status_code, 200)
+        self.assertEqual(ADMIN.get(url).status_code, 403)  # one time only
         self.assertEqual(ADMIN.get("/api/backups/..%2Fconfig.json").status_code, 404)
         # a file with anything outside the known places is refused
         buf = io.BytesIO()

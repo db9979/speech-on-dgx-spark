@@ -15,7 +15,7 @@ from fastapi import FastAPI, HTTPException, Request
 from fastapi.responses import FileResponse
 
 sys.path.insert(0, os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
-from common import load_config, quiet_access_log  # noqa: E402
+from common import BodyLimit, load_config, quiet_access_log  # noqa: E402
 from core import ADMIN_IDLE, COOKIE, SERVICES, STATIC, admin_cookie_ok, renewed_admin_cookie  # noqa: E402
 from monitor import gpu_stats, history, service_health, system_stats  # noqa: E402
 from chat import LEARN_EVERY, learn_once  # noqa: E402
@@ -51,6 +51,23 @@ app = FastAPI(title="Speech on DGX Spark")
 for _module in (account, admin, chat, update, system, proactive, room, tidy, weather, contacts, parcels, telegram, tasks, esp32, transit):
     app.include_router(_module.router)
 app.middleware("http")(update_lock)
+
+
+def _may_upload(scope):
+    """Big uploads only from someone who could be allowed (the real check comes after)."""
+    req = Request(scope)
+    if req.headers.get("authorization") or admin_cookie_ok(req) or profiles.current(req):
+        return True
+    return scope.get("path") == "/api/test/asr" and bool(load_config().get("chat", {}).get("public", False))
+
+
+# Request bodies: small by default; uploads only where they belong and only up to their limit.
+app.add_middleware(BodyLimit, default=2 * 1024**2, gate=_may_upload, limits=[
+    ("/api/backups-upload", backup.MAX_UPLOAD + 1024**2), ("/api/clone-voices-import", 200 * 1024**2),
+    ("/api/clone-voices", 60 * 1024**2), ("/api/test/asr", 51 * 1024**2), ("/api/profile/voice", 11 * 1024**2),
+    ("/api/profile/docs", 21 * 1024**2), ("/api/chat", 4 * 1024**2), ("/api/login", 64 * 1024),
+    ("/api/profile/login", 64 * 1024)],
+    gated=("/api/backups-upload", "/api/clone-voices", "/api/test/asr", "/api/profile/voice", "/api/profile/docs"))
 
 
 @app.middleware("http")

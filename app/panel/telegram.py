@@ -449,6 +449,6 @@ async def profile_link(request: Request, prof=Depends(browser_profile)):
 
 
 @router.delete("/api/profile/telegram", dependencies=[Depends(assistant)])
-def profile_unlink(prof=Depends(own_profile)):
+def profile_unlink(prof=Depends(browser_profile)):
     unlink(prof["id"])
     return profile_get(prof)

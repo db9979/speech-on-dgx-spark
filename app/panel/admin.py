@@ -218,6 +218,10 @@ def _is_ip(x):
         return False
 
 
+# The engines load models with --trust-remote-code: any other repo could bring its own code along.
+MODEL_ID = re.compile(r"Qwen/Qwen3-(ASR|TTS|ForcedAligner)-[\w.\-]+")
+
+
 def validate(new):
     old = load_config()
     with open(DEFAULTS) as f:
@@ -280,8 +284,8 @@ def validate(new):
         raise HTTPException(400, "seed must be a whole number, -1 = random")
     if not isinstance(t["engine_max_seqs"], int) or not 1 <= t["engine_max_seqs"] <= 64:
         raise HTTPException(400, "engine_max_seqs must be 1..64")
-    if not re.fullmatch(r"[\w.\-]+/[\w.\-]+", str(t["voicedesign_model"])):
-        raise HTTPException(400, "invalid VoiceDesign model id")
+    if not MODEL_ID.fullmatch(str(t["voicedesign_model"])):
+        raise HTTPException(400, "VoiceDesign: only Qwen's own speech models (Qwen/Qwen3-TTS-...)")
     ports = [new["asr"]["port"], t["port"], new["panel"]["port"]]
     if a.get("backend") == "vllm":
         ports.append(a["engine_port"])
@@ -332,17 +336,31 @@ def validate(new):
     if not isinstance(ch.get("temperature", 0.3), (int, float)) or not 0 <= ch.get("temperature", 0.3) <= 1.5:
         raise HTTPException(400, "chat temperature must be 0..1.5")
     for sec in ("asr", "tts"):
-        if not re.fullmatch(r"[\w.\-/]+", str(new[sec]["model"])):
-            raise HTTPException(400, f"invalid model id {new[sec]['model']}")
+        if not MODEL_ID.fullmatch(str(new[sec]["model"])):
+            raise HTTPException(400, f"{sec}: only Qwen's own speech models (Qwen/Qwen3-ASR-... or Qwen/Qwen3-TTS-...)")
+    if not MODEL_ID.fullmatch(str(new["asr"].get("aligner_model", "Qwen/Qwen3-ForcedAligner-0.6B"))):
+        raise HTTPException(400, "aligner: only Qwen's own models")
         if new[sec]["dtype"] not in ("bfloat16", "float16", "float32"):
             raise HTTPException(400, "dtype must be bfloat16, float16 or float32")
     return old
+
+
+SENSITIVE = [("api", "key"), ("chat", "llm_url"), ("chat", "llm_key"), ("chat", "telegram_api"),
+             ("chat", "search_url"), ("chat", "public"), ("chat", "esp32_url"), ("chat", "esp32_repo"),
+             ("chat", "mfa"), ("panel", "trusted_proxies"), ("asr", "model"), ("asr", "aligner_model"),
+             ("tts", "model"), ("tts", "voicedesign_model")]
 
 
 @router.put("/api/config", dependencies=[Depends(auth)])
 async def put_config(request: Request):
     new = await request.json()
     old = validate(new)
+    touched = [f"{sec}.{k}" for sec, k in SENSITIVE if new.get(sec, {}).get(k) != old.get(sec, {}).get(k)]
+    if touched:
+        # these send keys or conversations to another address, change who may log in, or which code
+        # runs: a stolen login alone must not be enough (second step, when it is on)
+        await admin_code(request)
+        guard.log("config_sensitive", detail=", ".join(touched))
     if new.get("chat", {}).get("llm_key") != old.get("chat", {}).get("llm_key"):
         new["chat"].pop("llm_key_from", None)  # typed by hand: updates keep it as is
     tmp = CONFIG_PATH + ".tmp"

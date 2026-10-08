@@ -24,6 +24,8 @@ import profiles
 MAX_FILE = 20 * 1024 * 1024
 MAX_DOCS = 200
 MAX_CHARS = 2_000_000          # text per document after extraction
+MAX_UNPACKED = 50 * 1024 * 1024  # a Word file's text part after unpacking
+MAX_PAGES = 1000
 CHUNK, OVERLAP = 900, 150
 TYPES = (".pdf", ".txt", ".md", ".docx", ".html", ".htm", ".csv")
 _lock = threading.Lock()
@@ -74,7 +76,13 @@ def extract(name, data):
             raise ValueError("PDF support is missing; run the update (it installs pypdf)")
         try:
             reader = PdfReader(io.BytesIO(data))
-            text = "\n\n".join((p.extract_text() or "") for p in reader.pages)
+            parts, size = [], 0
+            for page in reader.pages[:MAX_PAGES]:
+                parts.append(page.extract_text() or "")
+                size += len(parts[-1])
+                if size > MAX_CHARS:
+                    break
+            text = "\n\n".join(parts)
         except Exception as e:
             raise ValueError(f"cannot read this PDF: {e}")
         if not text.strip():
@@ -83,9 +91,13 @@ def extract(name, data):
     if ext == ".docx":
         try:
             with zipfile.ZipFile(io.BytesIO(data)) as z:
-                xml = z.read("word/document.xml").decode("utf-8", errors="replace")
+                # the size after unpacking counts, not the upload: a small file can unpack to gigabytes
+                if z.getinfo("word/document.xml").file_size > MAX_UNPACKED:
+                    raise ValueError("too big")
+                with z.open("word/document.xml") as f:
+                    xml = f.read(MAX_UNPACKED + 1)[:MAX_UNPACKED].decode("utf-8", errors="replace")
         except Exception:
-            raise ValueError("cannot read this Word file")
+            raise ValueError("cannot read this Word file (or it is too big unpacked)")
         xml = re.sub(r"</w:p>", "\n", xml)
         xml = re.sub(r"<w:tab/>", "\t", xml)
         return html.unescape(re.sub(r"<[^>]+>", "", xml))

@@ -32,6 +32,7 @@ N_FFT, HOP, N_MELS = 400, 160, 40         # 25 ms windows, 10 ms steps
 PARTIAL = 160                             # frames per partial utterance (1.6 s)
 MAX_SAMPLES = 10
 MIN_SECONDS = 1.0
+MAX_SECONDS = 120
 _W = None
 _lock = threading.Lock()
 
@@ -47,14 +48,19 @@ def decode(data):
                     if w.getnchannels() > 1:
                         x = x.reshape(-1, w.getnchannels()).mean(axis=1)
                     rate = w.getframerate()
+                    # a made-up rate in the header ("1 Hz") would blow a tiny file up 16000-fold
+                    if not 8000 <= rate <= 48000:
+                        raise ValueError("unsupported sample rate")
+                    x = x[:rate * MAX_SECONDS]
                     if rate != SR:
                         n = int(len(x) * SR / rate)
                         x = np.interp(np.arange(n) * rate / SR, np.arange(len(x)), x).astype(np.float32)
                     return x
         except (wave.Error, EOFError):
             pass
-    p = subprocess.run(["ffmpeg", "-nostdin", "-loglevel", "error", "-i", "pipe:0", "-ac", "1", "-ar", str(SR),
-                        "-f", "s16le", "pipe:1"], input=data, capture_output=True, timeout=60)
+    # at most MAX_SECONDS of audio, however small and well compressed the file is
+    p = subprocess.run(["ffmpeg", "-nostdin", "-loglevel", "error", "-i", "pipe:0", "-t", str(MAX_SECONDS),
+                        "-ac", "1", "-ar", str(SR), "-f", "s16le", "pipe:1"], input=data, capture_output=True, timeout=60)
     if p.returncode or not p.stdout:
         raise ValueError("cannot read this audio")
     return np.frombuffer(p.stdout, "<i2").astype(np.float32) / 32768

@@ -84,9 +84,33 @@ ADMIN_IDLE = 7 * 86400
 ADMIN_RENEW = 3600
 
 
+SESSION_KEY_FILE = os.path.join(os.path.dirname(PASSWORD_FILE), "admin-session.key")
+
+
+def _session_key():
+    """A random key of this Spark only, never in a backup: a backup file alone (which holds the password
+    hash) must not be enough to make an admin login."""
+    try:
+        with open(SESSION_KEY_FILE) as f:
+            k = f.read().strip()
+        if len(k) >= 32:
+            return k
+    except OSError:
+        pass
+    k = secrets.token_hex(32)
+    try:
+        os.makedirs(os.path.dirname(SESSION_KEY_FILE), exist_ok=True)
+        with open(os.open(SESSION_KEY_FILE + ".tmp", os.O_WRONLY | os.O_CREAT | os.O_TRUNC | os.O_NOFOLLOW, 0o600), "w") as f:
+            f.write(k)
+        os.replace(SESSION_KEY_FILE + ".tmp", SESSION_KEY_FILE)
+    except OSError:
+        pass
+    return k
+
+
 def _session_token(issued=None):
     stored = _stored_hash()
-    key = ((stored[1] if stored else PASSWORD) + mfa.session_salt(mfa.ADMIN)).encode()
+    key = (_session_key() + (stored[1] if stored else PASSWORD) + mfa.session_salt(mfa.ADMIN)).encode()
     issued = int(issued or time.time())
     return f"{issued}." + hmac.new(key, f"speech-spark-admin-session:{issued}".encode(), hashlib.sha256).hexdigest()
 
@@ -186,6 +210,23 @@ def own_profile(request: Request):
     prof = profiles.current(request)
     if not prof:
         raise HTTPException(401, "no profile")
+    return prof
+
+
+def browser_profile(request: Request):
+    """The profile of a browser login. Device keys (Siri, watch, speakers, own programs) may talk to the
+    assistant but not change the profile's connections, devices or security."""
+    prof = own_profile(request)
+    if request.headers.get(profiles.DEVICE_HEADER) or request.scope.get("speech_profile"):
+        raise HTTPException(403, "only in the profile's own browser login")
+    return prof
+
+
+async def secret_profile(request: Request):
+    """Like browser_profile, plus a fresh code when the profile has the second step: for changes that
+    hand out secrets (tokens, passwords, code word) or add a new way to reach the profile."""
+    prof = browser_profile(request)
+    await confirm_code(request, prof["id"], prof["name"])
     return prof
 
 

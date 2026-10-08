@@ -17,15 +17,19 @@ set -euo pipefail
 
 SRC=${SPEECH_SPARK_SRC:-/opt/speech-spark/src}
 BRANCH=main
+# no way back to before this commit from the panel (V01.0.75: root no longer runs config values)
+SECURITY_FLOOR=7373d1a3bb8df864631ec1f722b839b86e445cdb
 CHECK=0
 TARGET=""
 [ "${1:-}" = --check ] && CHECK=1
 [ "${1:-}" = --to ] && TARGET=${2:-}
 STATE=${SPEECH_SPARK_STATE:-/var/lib/speech-spark/state}
-if [ -z "$TARGET" ] && [ -s "$STATE/update-target" ]; then
+FROM_PANEL=0
+if [ -z "$TARGET" ] && [ -s "$STATE/update-target" ] && [ ! -L "$STATE/update-target" ]; then
   TARGET=$(head -c 64 "$STATE/update-target" | tr -dc '0-9a-f')
-  rm -f "$STATE/update-target"
+  FROM_PANEL=1
 fi
+rm -f "$STATE/update-target"
 [ "$(id -u)" = 0 ] || { echo "run with sudo" >&2; exit 1; }
 [ -d "$SRC/.git" ] || { echo "$SRC is not a git clone; run install.sh from a git checkout first" >&2; exit 1; }
 
@@ -45,6 +49,16 @@ if [ -n "$TARGET" ]; then
     exit 1
   fi
   new=$(git rev-parse "$TARGET")
+  if [ "$FROM_PANEL" = 1 ]; then
+    # The state folder belongs to the service user, so this file is no proof the admin asked for it:
+    # accept only the version root itself kept as "previous", and never one from before the
+    # security fixes (an old install.sh ran config values as commands, as root).
+    prev=$(jq -r '.commit // empty' "$(dirname "$SRC")/VERSION.prev.json" 2>/dev/null || true)
+    if [ "$new" != "$prev" ] || ! git merge-base --is-ancestor "$SECURITY_FLOOR" "$new"; then
+      echo "Version $TARGET is not the previous version this Spark ran; nothing changed." >&2
+      exit 1
+    fi
+  fi
   echo "Going to the chosen version instead of the newest."
 fi
 

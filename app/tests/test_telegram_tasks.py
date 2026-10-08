@@ -258,7 +258,8 @@ class Telegram(unittest.TestCase):
         h = {"X-Speech-Device": key}
         self.assertEqual(dev.post("/api/profile/telegram/link", headers=h).status_code, 403)
         self.assertEqual(dev.put("/api/profile/settings", json={"tg_ha": True}, headers=h).status_code, 403)
-        self.assertEqual(dev.put("/api/profile/settings", json={"tg_ha": False}, headers=h).status_code, 200)
+        # a device key changes no settings at all (only the profile's own browser login does)
+        self.assertEqual(dev.put("/api/profile/settings", json={"tg_ha": False}, headers=h).status_code, 403)
 
     def test_scope_profile_cannot_come_from_outside(self):
         c = TestClient(panel.app)

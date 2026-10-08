@@ -547,9 +547,12 @@ Environment=PYTHONUNBUFFERED=1"
 if [ "$ASR_BACKEND" = vllm ]; then
   asr_exec="$PREFIX/venv-panel/bin/python $PREFIX/app/asr_proxy.py"
   asr_deps="Wants=speech-spark-asr-engine.service"
+  # the proxy (and Parakeet on the CPU, about 1-2 GB) runs here, the model is in the engine
+  asr_mem="MemoryMax=4G"
 else
   asr_exec="$PREFIX/venv-asr/bin/python $PREFIX/app/asr_server.py"
   asr_deps=""
+  asr_mem=""
 fi
 cat >/etc/systemd/system/speech-spark-asr.service <<EOF
 [Unit]
@@ -573,6 +576,8 @@ RestartSec=10
 # If unified memory runs out, the kernel / earlyoom should pick speech before an LLM lane or sshd.
 OOMScoreAdjust=900
 Nice=5
+PrivateTmp=yes
+$asr_mem
 
 [Install]
 WantedBy=multi-user.target
@@ -581,7 +586,11 @@ EOF
 if [ "$BACKEND" = vllm-omni ]; then
   tts_exec="$PREFIX/venv-panel/bin/python $PREFIX/app/tts_proxy.py"
   tts_deps="Wants=speech-spark-tts-engine.service"
+  # only the proxy runs here (the model is in the engine): a runaway request ends in a restart of
+  # this service instead of taking memory from the LLM lanes
+  tts_mem="MemoryMax=3G"
 else
+  tts_mem=""
   tts_exec="$PREFIX/venv-tts/bin/python $PREFIX/app/tts_server.py"
   tts_deps=""
 fi
@@ -605,6 +614,8 @@ Restart=on-failure
 RestartSec=10
 OOMScoreAdjust=900
 Nice=5
+PrivateTmp=yes
+$tts_mem
 
 [Install]
 WantedBy=multi-user.target
@@ -660,6 +671,10 @@ EnvironmentFile=$ETC/panel.env
 ExecStart=$PREFIX/venv-panel/bin/python $PREFIX/app/panel/panel.py
 Restart=always
 RestartSec=5
+# a runaway request restarts the panel instead of taking memory from the LLM lanes
+MemoryMax=4G
+OOMScoreAdjust=900
+PrivateTmp=yes
 
 [Install]
 WantedBy=multi-user.target

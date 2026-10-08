@@ -196,3 +196,67 @@ def api_key_dependency():
         if key and not hmac.compare_digest(str(authorization or "").encode(), f"Bearer {key}".encode()):
             raise HTTPException(401, "invalid or missing API key")
     return dep
+
+
+class _TooLarge(Exception):
+    pass
+
+
+class BodyLimit:
+    """ASGI middleware: refuses request bodies over a per-path limit before anything reads them.
+    FastAPI parses File/Form/JSON parameters before it runs the login check, so without this anyone
+    could fill the disk or memory with a big upload that only gets its 401 afterwards. `limits` is
+    [(path prefix, bytes)], first match wins; `gate(scope)` may refuse a big upload from someone who is
+    clearly not logged in (False -> 401) before a byte of it is read."""
+
+    def __init__(self, app, limits=(), default=2 * 1024**2, gate=None, gated=()):
+        self.app, self.limits, self.default, self.gate, self.gated = app, list(limits), default, gate, tuple(gated)
+
+    async def __call__(self, scope, receive, send):
+        if scope["type"] != "http":
+            return await self.app(scope, receive, send)
+        path = scope.get("path", "")
+        limit = next((n for p, n in self.limits if path.startswith(p)), self.default)
+        cl = dict(scope.get("headers") or []).get(b"content-length", b"")
+        if cl.isdigit() and int(cl) > limit:
+            return await self._reply(send, 413, "request too large")
+        if self.gate and path.startswith(self.gated) and not self.gate(scope):
+            return await self._reply(send, 401, "login required")
+        seen, started = 0, False
+
+        async def recv():
+            nonlocal seen
+            msg = await receive()
+            if msg["type"] == "http.request":
+                seen += len(msg.get("body", b""))
+                if seen > limit:
+                    raise _TooLarge()
+            return msg
+
+        async def snd(msg):
+            nonlocal started
+            if msg["type"] == "http.response.start":
+                started = True
+            await send(msg)
+
+        try:
+            await self.app(scope, recv, snd)
+        except _TooLarge:
+            if not started:
+                await self._reply(send, 413, "request too large")
+
+    @staticmethod
+    async def _reply(send, status, text):
+        import json as _json
+        body = _json.dumps({"detail": text}).encode()
+        await send({"type": "http.response.start", "status": status,
+                    "headers": [(b"content-type", b"application/json"), (b"content-length", str(len(body)).encode())]})
+        await send({"type": "http.response.body", "body": body})
+
+
+def api_key_ok(scope):
+    """For BodyLimit's gate on the speech services: the right Bearer key, or no key configured."""
+    import hmac
+    key = load_config().get("api", {}).get("key", "")
+    got = dict(scope.get("headers") or []).get(b"authorization", b"")
+    return not key or hmac.compare_digest(got, f"Bearer {key}".encode())

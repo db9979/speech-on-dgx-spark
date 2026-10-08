@@ -250,15 +250,39 @@ async def _fetch(d, start, end):
         return texts, len(cals)
 
 
+# Recurrence rules that repeat faster than hourly, or hourly since long ago, cost seconds to minutes to
+# expand: one such invitation would stall every check. They are left out (no real appointment needs them).
+FAST = {"SECONDLY", "MINUTELY"}
+MAX_EVENTS = 2000
+
+
+def _tame(cal, start):
+    for comp in list(cal.subcomponents):
+        rule = comp.get("RRULE")
+        if rule is None:
+            continue
+        rules = rule if isinstance(rule, list) else [rule]
+        freqs = {str(f).upper() for r in rules for f in (r.get("FREQ") or [])}
+        if freqs & FAST:
+            cal.subcomponents.remove(comp)
+            continue
+        if "HOURLY" in freqs:
+            s = comp.get("DTSTART")
+            s = s.dt if s is not None else None
+            if not isinstance(s, datetime.datetime) or abs((start - (s if s.tzinfo else s.replace(tzinfo=start.tzinfo))).days) > 31:
+                cal.subcomponents.remove(comp)
+    return cal
+
+
 def _expand(texts, start, end, zone, name=""):
     out = []
     for text in texts:
         try:
-            cal = icalendar.Calendar.from_ical(text)
+            cal = _tame(icalendar.Calendar.from_ical(text), start)
             items = recurring_ical_events.of(cal).between(start, end)
         except Exception:
             continue
-        for ev in items:
+        for ev in items[:MAX_EVENTS]:
             if ev.name != "VEVENT" or str(ev.get("STATUS", "")).upper() == "CANCELLED":
                 continue
             s, e = ev.get("DTSTART"), ev.get("DTEND")
@@ -297,7 +321,8 @@ async def _one(uid, cal, start, end, zone):
     else:
         texts, _ = await _fetch(cal, day0, day1)
         _cache[key] = (now, texts)
-    return _expand(texts, start, end, zone, cal.get("name", ""))
+    # expanding runs outside the event loop, so a heavy calendar never stalls the panel
+    return await asyncio.to_thread(_expand, texts, start, end, zone, cal.get("name", ""))
 
 
 async def events(uid, start, end, zone):
@@ -331,7 +356,7 @@ async def check(item, zone):
     start = now.replace(hour=0, minute=0, second=0, microsecond=0)
     end = start + datetime.timedelta(days=14)
     texts, n = await _fetch(item, start.astimezone(datetime.timezone.utc), end.astimezone(datetime.timezone.utc))
-    evs = [x for x in _expand(texts, start, end, zone) if x["end"] >= now or x["allday"]]
+    evs = [x for x in await asyncio.to_thread(_expand, texts, start, end, zone) if x["end"] >= now or x["allday"]]
     return {"found": n, "events": [line(x) for x in evs[:5]]}
 
 

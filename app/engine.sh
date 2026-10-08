@@ -37,7 +37,9 @@ else
   else MODEL=$(c model); PORT=$(c engine_port); fi
 fi
 
-[[ "$MODEL" =~ ^[A-Za-z0-9._-]+/[A-Za-z0-9._-]+$ ]] || fail "invalid model id '$MODEL'"
+# only Qwen's own speech models: the engine runs with --trust-remote-code, so any other repo could
+# bring its own Python code along (the config belongs to the service user, so check it here too)
+[[ "$MODEL" =~ ^Qwen/Qwen3-(ASR|TTS|ForcedAligner)-[A-Za-z0-9._-]+$ ]] || fail "model '$MODEL' is not one of Qwen's speech models"
 [[ "$PORT" =~ ^[0-9]{4,5}$ ]] || fail "invalid port '$PORT'"
 [[ "$SEQS" =~ ^[0-9]{1,3}$ ]] || fail "invalid engine_max_seqs '$SEQS'"
 for m in "$MEM0" "$MEM1"; do

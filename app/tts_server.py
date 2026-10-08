@@ -16,7 +16,7 @@ from fastapi.middleware.cors import CORSMiddleware
 from fastapi.responses import Response
 from pydantic import BaseModel
 
-from common import ServiceState, api_key_dependency, check_memory, estimate_gib, load_config, torch_dtype, quiet_access_log
+from common import BodyLimit, ServiceState, api_key_dependency, api_key_ok, check_memory, estimate_gib, load_config, quiet_access_log, torch_dtype
 from textnorm import apply_pronunciations, clean_text, parse_pronunciations, speak_numbers
 
 VOICES_DIR = os.environ.get("SPEECH_SPARK_VOICES", "/var/lib/speech-spark/voices")
@@ -26,6 +26,8 @@ PRONUNCIATION = parse_pronunciations(cfg.get("pronunciation", ""))
 state = ServiceState("tts", cfg)
 app = FastAPI(title="Qwen3-TTS (DGX Spark)")
 app.add_middleware(CORSMiddleware, allow_origins=["*"], allow_methods=["*"], allow_headers=["*"])
+# bodies are refused before they are read when too large or without the API key
+app.add_middleware(BodyLimit, default=1024**2, gate=api_key_ok, gated=("/v1/",))
 auth = [Depends(api_key_dependency())]
 # OpenAI response_format -> (soundfile format, subtype, media type)
 FORMATS = {"mp3": ("MP3", None, "audio/mpeg"), "wav": ("WAV", None, "audio/wav"),

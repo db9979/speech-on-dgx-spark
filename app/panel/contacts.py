@@ -425,7 +425,7 @@ async def briefing(uid, zone=None):
 # ---------------------------------------------------------------- API ("Ich" → Kontakte)
 from fastapi import APIRouter, Depends, HTTPException, Request  # noqa: E402
 
-from core import assistant, own_profile  # noqa: E402
+from core import assistant, browser_profile, own_profile, secret_profile  # noqa: E402
 
 router = APIRouter()
 
@@ -441,7 +441,7 @@ def api_get(prof=Depends(own_profile)):
 
 
 @router.post("/api/profile/contacts", dependencies=[Depends(assistant), Depends(_on)])
-async def api_add(request: Request, prof=Depends(own_profile)):
+async def api_add(request: Request, prof=Depends(secret_profile)):
     try:
         body = await request.json()
         return await add(prof["id"], entry(body if isinstance(body, dict) else {}))
@@ -452,7 +452,7 @@ async def api_add(request: Request, prof=Depends(own_profile)):
 
 
 @router.delete("/api/profile/contacts/{aid}", dependencies=[Depends(assistant)])
-def api_remove(aid: str, prof=Depends(own_profile)):
+def api_remove(aid: str, prof=Depends(browser_profile)):
     return remove(prof["id"], aid)
 
 

@@ -50,6 +50,8 @@ def _add_dir(tar, path, arc):
                 if f.endswith(".tmp"):
                     continue
                 full = os.path.join(root, f)
+                if arc == "users" and os.path.relpath(full, path) == "secret":
+                    continue  # the login key of this Spark: with it, a backup file could forge profile logins
                 tar.add(full, arcname=os.path.join(arc, os.path.relpath(full, path)), recursive=False)
 
 
@@ -183,6 +185,14 @@ def _swap(work, new_cfg):
                 shutil.rmtree(old, ignore_errors=True)
                 shutil.copytree(src, staged)
                 os.chmod(staged, 0o700)
+                if sub == "users":
+                    # keep this Spark's own login key (older backups still carry one)
+                    try:
+                        os.remove(os.path.join(staged, "secret"))
+                    except OSError:
+                        pass
+                    if os.path.exists(os.path.join(target, "secret")):
+                        shutil.copy2(os.path.join(target, "secret"), os.path.join(staged, "secret"))
                 had = os.path.isdir(target)
                 if had:
                     os.replace(target, old)

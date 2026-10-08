@@ -17,6 +17,14 @@
 - **Geheimnisse verschlüsselt**: Kalender- und Mail-Passwörter und Home-Assistant-Tokens liegen verschlüsselt in den Profilordnern; der Schlüssel liegt getrennt in `/var/lib/speech-spark/state/secret.key`.
 - **Geräte**: *Nutzer → Profile und Geräte* und *Ich → Sicherheit* zeigen, wann und von wo jeder Geräteschlüssel zuletzt benutzt wurde; ein Klick sperrt ihn.
 - **Änderungsprotokoll**: *Übersicht → Logs → Änderungsprotokoll* zeigt Anmeldungen, falsche Versuche, Sperren und jede Änderung mit Zeit, Adresse und wer es war (`/var/lib/speech-spark/state/audit.log`).
+- **Nur Qwen-Modelle**: Als Modell für Spracherkennung und Stimme nimmt das Panel nur Qwens eigene Sprachmodelle (`Qwen/Qwen3-ASR-…`, `Qwen/Qwen3-TTS-…`); die Engine lädt Modelle mit eigenem Code, ein fremdes Repo könnte so Programme mitbringen.
+- **Heikle Einstellungen mit Code**: LLM-Adresse und -Schlüssel, Telegram-Adresse, SearXNG, Lautsprecher-Firmware-Quelle, Modelle, API-Schlüssel, „Assistent ohne Passwort“ und Reverse-Proxy-Adressen ändern sowie eine Sicherung herunterladen oder zur Vorversion zurückgehen verlangen bei eingeschaltetem zweiten Schritt einen Code. Der Verbindungstest schickt den gespeicherten LLM-Schlüssel nur an die gespeicherte Adresse.
+- **Sicherungen ohne Anmeldeschlüssel**: Die Schlüssel, mit denen das Panel Anmeldungen unterschreibt, sind nicht in Sicherungen; beim Wiederherstellen bleiben die eigenen.
+- **Geräteschlüssel ändern nichts am Profil**: Siri, Uhr, Lautsprecher und eigene Programme dürfen mit dem Assistenten sprechen, aber keine Verbindungen (Home Assistant, Kalender, Mail, Kontakte, Push), Einstellungen, Geräte oder das Gedächtnis ändern; das geht nur in der eigenen Browser-Anmeldung, Zugangsdaten und Codewort zusätzlich mit Code. Eine neue Home-Assistant-Adresse braucht das Token neu.
+- **Zurück zur Vorversion**: Das Update geht vom Panel aus nur zurück auf genau die Version, die vorher lief, und nie vor die Sicherheitskorrekturen von V01.0.75.
+- **Größengrenzen vor dem Lesen**: Zu große Anfragen und Uploads ohne Anmeldung lehnen Panel und Sprachdienste ab, bevor sie gelesen werden. WAV mit unsinniger Abtastrate, sehr lange Aufnahmen, Word-Dateien, die riesig entpacken, und Kalender mit Wiederholung im Sekunden- oder Minutentakt werden abgewiesen oder begrenzt; Kalender werden außerhalb des Panel-Takts ausgerechnet.
+- **Speichergrenze**: Panel und Sprach-Proxys haben eine feste Speichergrenze (`MemoryMax`) und ein eigenes `/tmp`; ein Ausreißer startet nur diesen Dienst neu und nimmt den LLM-Lanes nichts weg.
+- **Postfach aufräumen**: Message-IDs nutzt das Panel nur, wenn sie wie eine aussehen, und vergleicht sie nach der Suche genau.
 
 ## Stabilität
 

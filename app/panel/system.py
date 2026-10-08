@@ -2,8 +2,10 @@
 import asyncio
 import json
 import os
+import secrets
 import sys
 import tempfile
+import time
 
 import httpx
 from fastapi import APIRouter, Depends, File, HTTPException, Request, UploadFile
@@ -36,12 +38,36 @@ async def backup_now():
     return item
 
 
-@router.get("/api/backups/{name}", dependencies=[Depends(auth)])
-def backup_download(name: str):
+# A backup holds every profile's data: downloading one needs the second step too. The browser first
+# gets a one-time ticket (valid 60 s) with the code, then follows a plain link with it.
+_tickets = {}
+
+
+@router.post("/api/backups/{name}/ticket", dependencies=[Depends(auth), Depends(admin_code)])
+def backup_ticket(name: str):
     try:
-        return FileResponse(backup.path_of(name), media_type="application/gzip", filename=name)
+        backup.path_of(name)
     except FileNotFoundError:
         raise HTTPException(404, "no such backup")
+    now = time.time()
+    for k in [k for k, v in _tickets.items() if v[1] < now]:
+        _tickets.pop(k, None)
+    t = secrets.token_urlsafe(24)
+    _tickets[t] = (name, now + 60)
+    guard.log("backup_download", detail=name)
+    return {"url": f"/api/backups/{name}?t={t}"}
+
+
+@router.get("/api/backups/{name}", dependencies=[Depends(auth)])
+def backup_download(name: str, t: str = ""):
+    try:
+        path = backup.path_of(name)
+    except FileNotFoundError:
+        raise HTTPException(404, "no such backup")
+    got = _tickets.pop(t, None) if t else None
+    if not got or got[0] != name or got[1] < time.time():
+        raise HTTPException(403, "download only through the button (needs a fresh ticket)")
+    return FileResponse(path, media_type="application/gzip", filename=name)
 
 
 @router.delete("/api/backups/{name}", dependencies=[Depends(auth)])
@@ -164,7 +190,9 @@ async def setup_llm_test(request: Request):
     url = str(body.get("url") or ccfg.get("llm_url", "")).rstrip("/")
     if not url.startswith(("http://", "https://")):
         raise HTTPException(400, "the address must start with http:// or https://")
-    key = str(body.get("key") or ccfg.get("llm_key") or "")
+    # the stored key only ever goes to the stored address, never to one typed into this test
+    stored = str(ccfg.get("llm_key") or "") if url == str(ccfg.get("llm_url", "")).rstrip("/") else ""
+    key = str(body.get("key") or stored)
     try:
         async with httpx.AsyncClient(timeout=10) as c:
             r = await c.get(url + "/models", headers={"Authorization": f"Bearer {key}"} if key else {})

@@ -31,6 +31,7 @@ All options for running without questions (`--mode api --asr 1.7b --tts 0.6b --y
 
 <!-- New version: add one line at the top here and in CHANGELOG.md, drop the oldest line here (keep 10). Details go to docs/de and docs/en, not into this README. -->
 
+- **V01.0.107** Security stage 1: rollback only to the real previous version, Qwen models only, sensitive settings and backup download need a code, device keys change no connections, size limits before reading, calendar/WAV/Word bombs defused
 - **V01.0.106** Wyoming: the address field shows at once and the Home Assistant address is suggested
 - **V01.0.105** Security: the iPhone shortcut takes list entries with POST, Telegram errors in the log without the bot token
 - **V01.0.104** Speakers without a display, security checklist applied to the speakers
@@ -40,7 +41,6 @@ All options for running without questions (`--mode api --asr 1.7b --tts 0.6b --y
 - **V01.0.100** Home Assistant Assist over Wyoming: the Spark's speech recognition and voice for HA (port 31003)
 - **V01.0.99** Own speakers (ESP32-S3): firmware, setup over USB from the browser, updates through the Spark
 - **V01.0.98** Telegram hardened: linking only from your own login, forwarded messages are not commands
-- **V01.0.97** Parcels: Amazon subject lines are recognized
 
 All versions: [CHANGELOG.md](CHANGELOG.md)
 

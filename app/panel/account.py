@@ -28,6 +28,8 @@ from core import (  # noqa: E402
     NO_BASIC,
     _session_token,
     admin_code,
+    browser_profile,
+    secret_profile,
     api_headers,
     auth,
     app_version,
@@ -174,13 +176,13 @@ def profile_toollog(prof=Depends(own_profile)):
 
 
 @router.delete("/api/profile/toollog", dependencies=[Depends(assistant)])
-def profile_toollog_clear(prof=Depends(own_profile)):
+def profile_toollog_clear(prof=Depends(browser_profile)):
     profiles.tool_log_clear(prof["id"])
     return {"ok": True}
 
 
 @router.post("/api/profile/logout-all", dependencies=[Depends(assistant)])
-def profile_logout_all(request: Request, prof=Depends(own_profile)):
+def profile_logout_all(request: Request, prof=Depends(browser_profile)):
     """Ends the login in every browser; this one gets a fresh login and stays signed in."""
     profiles.end_sessions(prof["id"])
     mfa.forget_trust(prof["id"])  # trusted browsers have to enter a code again
@@ -194,7 +196,7 @@ def profile_logout_all(request: Request, prof=Depends(own_profile)):
 
 
 @router.delete("/api/profile/devices/{did}", dependencies=[Depends(assistant)])
-def profile_remove_device(did: str, request: Request, prof=Depends(own_profile)):
+def profile_remove_device(did: str, request: Request, prof=Depends(browser_profile)):
     if not any(x["id"] == did for x in profiles.own_devices(prof["id"])):
         raise HTTPException(404, "no such device")
     profiles.delete_device(did)
@@ -257,14 +259,6 @@ def admin_mfa_forget(request: Request):
     return r
 
 
-def browser_profile(request: Request):
-    """The profile of a browser login; a device key cannot change the second step."""
-    prof = own_profile(request)
-    if request.headers.get(profiles.DEVICE_HEADER):
-        raise HTTPException(403, "only in the profile's own browser login")
-    return prof
-
-
 @router.get("/api/profile/mfa", dependencies=[Depends(assistant)])
 def profile_mfa(prof=Depends(own_profile)):
     return dict(mfa.status(prof["id"]), allowed=bool(load_config().get("chat", {}).get("mfa", False)))
@@ -314,7 +308,7 @@ def profile_memory(prof=Depends(own_profile)):
 
 
 @router.post("/api/profile/memory/tidy", dependencies=[Depends(assistant)])
-async def profile_tidy(request: Request, prof=Depends(own_profile)):
+async def profile_tidy(request: Request, prof=Depends(browser_profile)):
     """{"do": "check"} asks for a proposal now, "accept" carries it out, "reject" drops it."""
     do = (await request.json()).get("do")
     if do == "check":
@@ -335,12 +329,12 @@ async def profile_tidy(request: Request, prof=Depends(own_profile)):
 
 
 @router.delete("/api/profile/memory/{fact_id}", dependencies=[Depends(assistant)])
-def profile_forget(fact_id: str, prof=Depends(own_profile)):
+def profile_forget(fact_id: str, prof=Depends(browser_profile)):
     return {"removed": profiles.forget(prof["id"], fact_id=fact_id)}
 
 
 @router.delete("/api/profile/memory", dependencies=[Depends(assistant)])
-def profile_forget_all(prof=Depends(own_profile)):
+def profile_forget_all(prof=Depends(browser_profile)):
     return {"removed": profiles.forget(prof["id"])}
 
 
@@ -375,7 +369,7 @@ def profile_docs(prof=Depends(own_profile)):
 
 
 @router.post("/api/profile/docs", dependencies=[Depends(assistant)])
-async def profile_add_doc(file: UploadFile = File(...), prof=Depends(own_profile)):
+async def profile_add_doc(file: UploadFile = File(...), prof=Depends(browser_profile)):
     if not load_config().get("chat", {}).get("documents", True):
         raise HTTPException(403, "documents are turned off (Einstellungen -> Funktionen)")
     data = await file.read(documents.MAX_FILE + 1)
@@ -386,7 +380,7 @@ async def profile_add_doc(file: UploadFile = File(...), prof=Depends(own_profile
 
 
 @router.delete("/api/profile/docs/{doc_id}", dependencies=[Depends(assistant)])
-def profile_delete_doc(doc_id: str, prof=Depends(own_profile)):
+def profile_delete_doc(doc_id: str, prof=Depends(browser_profile)):
     return {"removed": documents.delete(prof["id"], doc_id)}
 
 
@@ -406,7 +400,7 @@ def profile_calendar(prof=Depends(own_profile)):
 
 
 @router.post("/api/profile/calendar", dependencies=[Depends(assistant), Depends(calendar_on)])
-async def profile_calendar_add(request: Request, prof=Depends(own_profile)):
+async def profile_calendar_add(request: Request, prof=Depends(secret_profile)):
     """Adds a calendar only after it could be read once."""
     body = await request.json()
     body = body if isinstance(body, dict) else {}
@@ -421,18 +415,18 @@ async def profile_calendar_add(request: Request, prof=Depends(own_profile)):
 
 
 @router.delete("/api/profile/calendar/{cid}", dependencies=[Depends(assistant)])
-def profile_calendar_remove(cid: str, prof=Depends(own_profile)):
+def profile_calendar_remove(cid: str, prof=Depends(browser_profile)):
     return calendars.remove(prof["id"], cid)
 
 
 @router.put("/api/profile/calendar/topics", dependencies=[Depends(assistant), Depends(calendar_on)])
-async def profile_calendar_topics(request: Request, prof=Depends(own_profile)):
+async def profile_calendar_topics(request: Request, prof=Depends(browser_profile)):
     body = await request.json()
     return calendars.set_topics(prof["id"], body.get("topics") if isinstance(body, dict) else [])
 
 
 @router.post("/api/profile/calendar/test", dependencies=[Depends(assistant), Depends(calendar_on)])
-async def profile_calendar_test(request: Request, prof=Depends(own_profile)):
+async def profile_calendar_test(request: Request, prof=Depends(browser_profile)):
     body = await request.json()
     try:
         return await calendars.test(prof["id"], user_zone(body.get("tz")))
@@ -446,7 +440,7 @@ def profile_mail(prof=Depends(own_profile)):
 
 
 @router.post("/api/profile/mail", dependencies=[Depends(assistant), Depends(mail_on)])
-async def profile_mail_add(request: Request, prof=Depends(own_profile)):
+async def profile_mail_add(request: Request, prof=Depends(secret_profile)):
     """Adds a mailbox only after its inbox could be opened once."""
     body = await request.json()
     try:
@@ -460,12 +454,12 @@ async def profile_mail_add(request: Request, prof=Depends(own_profile)):
 
 
 @router.delete("/api/profile/mail/{aid}", dependencies=[Depends(assistant)])
-def profile_mail_remove(aid: str, prof=Depends(own_profile)):
+def profile_mail_remove(aid: str, prof=Depends(browser_profile)):
     return mail.remove(prof["id"], aid)
 
 
 @router.post("/api/profile/mail/test", dependencies=[Depends(assistant), Depends(mail_on)])
-async def profile_mail_test(prof=Depends(own_profile)):
+async def profile_mail_test(prof=Depends(browser_profile)):
     return await asyncio.to_thread(mail.test, prof["id"])
 
 
@@ -475,7 +469,7 @@ def profile_ha(prof=Depends(own_profile)):
 
 
 @router.put("/api/profile/homeassistant", dependencies=[Depends(assistant), Depends(ha_on)])
-async def profile_ha_save(request: Request, prof=Depends(own_profile)):
+async def profile_ha_save(request: Request, prof=Depends(secret_profile)):
     """Stores the connection only after Home Assistant accepted the token."""
     body = await request.json()
     try:
@@ -487,12 +481,12 @@ async def profile_ha_save(request: Request, prof=Depends(own_profile)):
 
 
 @router.delete("/api/profile/homeassistant", dependencies=[Depends(assistant)])
-def profile_ha_remove(prof=Depends(own_profile)):
+def profile_ha_remove(prof=Depends(browser_profile)):
     return homeassistant.remove(prof["id"])
 
 
 @router.put("/api/profile/homeassistant/code", dependencies=[Depends(assistant), Depends(ha_on)])
-async def profile_ha_code(request: Request, prof=Depends(own_profile)):
+async def profile_ha_code(request: Request, prof=Depends(secret_profile)):
     """Sets the code word for changes; an empty one removes it. It is never sent back."""
     body = await request.json()
     try:
@@ -505,7 +499,7 @@ async def profile_ha_code(request: Request, prof=Depends(own_profile)):
 
 
 @router.post("/api/profile/homeassistant/test", dependencies=[Depends(assistant), Depends(ha_on)])
-async def profile_ha_test(request: Request, prof=Depends(own_profile)):
+async def profile_ha_test(request: Request, prof=Depends(browser_profile)):
     item = homeassistant.get(prof["id"])
     if not item:
         raise HTTPException(400, "no Home Assistant connected")
@@ -526,8 +520,8 @@ def profile_voice(prof=Depends(own_profile)):
 
 
 @router.post("/api/profile/voice", dependencies=[Depends(assistant), Depends(speaker_on)])
-async def profile_voice_add(file: UploadFile = File(...), prof=Depends(own_profile)):
-    data = await file.read()
+async def profile_voice_add(file: UploadFile = File(...), prof=Depends(secret_profile)):
+    data = await file.read(10 * 1024 * 1024 + 1)
     if len(data) > 10 * 1024 * 1024:
         raise HTTPException(400, "recording is too large")
     try:
@@ -538,7 +532,7 @@ async def profile_voice_add(file: UploadFile = File(...), prof=Depends(own_profi
 
 
 @router.delete("/api/profile/voice", dependencies=[Depends(assistant)])
-def profile_voice_delete(prof=Depends(own_profile)):
+def profile_voice_delete(prof=Depends(browser_profile)):
     speakers.forget(prof["id"])
     return {"samples": 0}
 
@@ -583,7 +577,7 @@ def profile_settings(request: Request):
 
 
 @router.put("/api/profile/settings", dependencies=[Depends(assistant)])
-async def profile_save_settings(request: Request, prof=Depends(own_profile)):
+async def profile_save_settings(request: Request, prof=Depends(browser_profile)):
     body = await request.json()
     # what Telegram may reach (personal data, switching the home) only from the profile's own browser
     # login: a shared device with a key cannot open it up
@@ -613,7 +607,7 @@ def profile_push(prof=Depends(own_profile)):
 
 
 @router.post("/api/profile/push", dependencies=[Depends(assistant), Depends(_push_on)])
-async def profile_push_add(request: Request, prof=Depends(own_profile)):
+async def profile_push_add(request: Request, prof=Depends(secret_profile)):
     body = await request.json()
     try:
         push.add(prof["id"], body.get("subscription"), body.get("name", ""))
@@ -624,5 +618,5 @@ async def profile_push_add(request: Request, prof=Depends(own_profile)):
 
 
 @router.delete("/api/profile/push", dependencies=[Depends(assistant)])
-async def profile_push_remove(request: Request, prof=Depends(own_profile)):
+async def profile_push_remove(request: Request, prof=Depends(browser_profile)):
     return {"removed": push.remove(prof["id"], str((await request.json()).get("endpoint", "")))}

@@ -323,11 +323,21 @@ def sender_of(msg):
     return addr.strip().lower(), (name or addr).strip()[:80]
 
 
+MID = re.compile(r"<[\x21-\x7e]{3,250}>")
+
+
+def clean_mid(value):
+    """The Message-ID only when it looks like one (printable ASCII in <...>): it goes into IMAP commands,
+    and a forged one with line breaks could carry commands of its own."""
+    v = str(value or "").strip()
+    return v if MID.fullmatch(v) and '"' not in v and "\\" not in v else ""
+
+
 def head(msg):
     """The parts of a message header that the decision looks at."""
     sender, name = sender_of(msg)
     return {"sender": sender, "name": name, "subject": mail._hdr(msg.get("Subject", "")),
-            "mid": str(msg.get("Message-ID", "") or "").strip()[:300],
+            "mid": clean_mid(msg.get("Message-ID", "")),
             "h": {k.lower(): str(v)[:300] for k, v in msg.items()}}
 
 
@@ -550,6 +560,14 @@ class Box:
             return []
         return [int(x) for x in b" ".join(x for x in data if x).split() if x.isdigit()]
 
+    def find_mid(self, mid):
+        """UIDs in the selected folder whose Message-ID is exactly mid (SEARCH alone also matches parts)."""
+        if not mid:
+            return []
+        hits = self.search("HEADER", "Message-ID", _q(mid))
+        return [u for u, m in self.headers(hits[-20:], "MESSAGE-ID").items()
+                if str(m.get("Message-ID") or "").strip() == mid] if hits else []
+
     def headers(self, uids, fields=HEAD_FIELDS):
         """{uid: email.message.Message (header only)} without changing any flag."""
         out = {}
@@ -673,7 +691,7 @@ class Box:
         """For servers without MOVE (iCloud): copy, make sure each copy arrived, and only then remove
         exactly those originals with UID EXPUNGE. An unconfirmed copy leaves its original in place."""
         src = self.selected
-        mids = {u: str(m.get("Message-ID") or "").strip() for u, m in self.headers(part, "MESSAGE-ID").items()}
+        mids = {u: clean_mid(m.get("Message-ID")) for u, m in self.headers(part, "MESSAGE-ID").items()}
         self.c.response("COPYUID")      # forget an earlier answer
         typ, data = self.c.uid("COPY", ",".join(map(str, part)), _q(raw))
         if typ != "OK":
@@ -683,7 +701,7 @@ class Box:
             copied = set()
             self.select(dst)
             for u, mid in mids.items():
-                if mid and self.search("HEADER", "Message-ID", _q(mid)):
+                if mid and self.find_mid(mid):
                     copied.add(u)
             self.select(src, write=True)
         done = [u for u in part if u in copied]
@@ -1046,7 +1064,7 @@ def undo(uid, ids=None, run=None, protect=False):
                     continue
                 b.select(name, write=True)
                 for x in [y for y in items if y["aid"] == aid and y["folder"] == path]:
-                    found = b.search("HEADER", "Message-ID", _q(x["mid"]))
+                    found = b.find_mid(clean_mid(x["mid"]))
                     if found and b.move(found[-1:], b.special("\\inbox", ["INBOX"]) or "INBOX"):
                         back.append(x["id"])
                     else:
@@ -1439,7 +1457,7 @@ def forget(uid):
 # ---------------------------------------------------------------- API (the profile's own "Ich" window)
 from fastapi import APIRouter, Depends, HTTPException, Request  # noqa: E402
 
-from core import assistant, own_profile  # noqa: E402
+from core import assistant, browser_profile, own_profile, secret_profile  # noqa: E402
 
 router = APIRouter()
 
@@ -1473,36 +1491,36 @@ def api_get(prof=Depends(own_profile)):
 
 
 @router.put("/api/profile/tidy", dependencies=[Depends(assistant), Depends(_on)])
-async def api_set(request: Request, prof=Depends(own_profile)):
+async def api_set(request: Request, prof=Depends(secret_profile)):
     return await _do(set_settings, prof["id"], await _body(request))
 
 
 @router.post("/api/profile/tidy/run", dependencies=[Depends(assistant), Depends(_on)])
-async def api_run(request: Request, prof=Depends(own_profile)):
+async def api_run(request: Request, prof=Depends(browser_profile)):
     b = await _body(request)     # asked for by the person: the model may help right now
     r = await _do(run_account, prof["id"], str(b.get("aid", "")), True)
     return dict(public(prof["id"]), report=r)
 
 
 @router.post("/api/profile/tidy/rules", dependencies=[Depends(assistant), Depends(_on)])
-async def api_rule(request: Request, prof=Depends(own_profile)):
+async def api_rule(request: Request, prof=Depends(browser_profile)):
     return await _do(panel_rule, prof["id"], await _body(request))
 
 
 @router.delete("/api/profile/tidy/rules/{rid}", dependencies=[Depends(assistant)])
-def api_rule_remove(rid: str, prof=Depends(own_profile)):
+def api_rule_remove(rid: str, prof=Depends(browser_profile)):
     return remove_rule(prof["id"], rid)
 
 
 @router.post("/api/profile/tidy/answer", dependencies=[Depends(assistant), Depends(_on)])
-async def api_answer(request: Request, prof=Depends(own_profile)):
+async def api_answer(request: Request, prof=Depends(browser_profile)):
     b = await _body(request)
     r = await _do(answer, prof["id"], str(b.get("id", "")), str(b.get("cat", "")), b.get("always", True) is not False)
     return dict(public(prof["id"]), report=r)
 
 
 @router.post("/api/profile/tidy/preview", dependencies=[Depends(assistant), Depends(_on)])
-async def api_preview(request: Request, prof=Depends(own_profile)):
+async def api_preview(request: Request, prof=Depends(browser_profile)):
     b = await _body(request)
     if b.get("no"):
         return preview_no(prof["id"], str(b["no"]), bool(b.get("protect")))
@@ -1512,7 +1530,7 @@ async def api_preview(request: Request, prof=Depends(own_profile)):
 
 
 @router.post("/api/profile/tidy/undo", dependencies=[Depends(assistant), Depends(_on)])
-async def api_undo(request: Request, prof=Depends(own_profile)):
+async def api_undo(request: Request, prof=Depends(browser_profile)):
     b = await _body(request)
     ids = [str(x) for x in b.get("ids", [])][:500] if isinstance(b.get("ids"), list) else None
     r = await _do(undo, prof["id"], ids, str(b["run"]) if b.get("run") else None, bool(b.get("protect")))
@@ -1520,7 +1538,7 @@ async def api_undo(request: Request, prof=Depends(own_profile)):
 
 
 @router.post("/api/profile/tidy/backlog", dependencies=[Depends(assistant), Depends(_on)])
-async def api_backlog(request: Request, prof=Depends(own_profile)):
+async def api_backlog(request: Request, prof=Depends(browser_profile)):
     b = await _body(request)
     if b.get("apply"):
         r = await _do(backlog_apply, prof["id"])

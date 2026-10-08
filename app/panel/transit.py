@@ -261,7 +261,7 @@ async def briefing(uid, zone=None):
 # ---------------------------------------------------------------- API ("Ich" → Bus und Bahn)
 from fastapi import APIRouter, Depends, HTTPException, Request  # noqa: E402
 
-from core import assistant, own_profile  # noqa: E402
+from core import assistant, browser_profile, own_profile  # noqa: E402
 
 router = APIRouter()
 
@@ -277,7 +277,7 @@ def api_get(prof=Depends(own_profile)):
 
 
 @router.put("/api/profile/transit", dependencies=[Depends(assistant), Depends(_on)])
-async def api_put(request: Request, prof=Depends(own_profile)):
+async def api_put(request: Request, prof=Depends(browser_profile)):
     body = await request.json()
     try:
         return save(prof["id"], body if isinstance(body, dict) else {})

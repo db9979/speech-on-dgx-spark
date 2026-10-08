@@ -10,12 +10,14 @@ from fastapi import Depends, FastAPI, File, Form, HTTPException, UploadFile
 from fastapi.middleware.cors import CORSMiddleware
 from fastapi.responses import PlainTextResponse
 
-from common import ASR_ISO as ISO, ServiceState, api_key_dependency, check_memory, estimate_gib, load_config, torch_dtype, quiet_access_log
+from common import ASR_ISO as ISO, BodyLimit, ServiceState, api_key_dependency, api_key_ok, check_memory, estimate_gib, load_config, quiet_access_log, torch_dtype
 
 cfg = load_config("asr")
 state = ServiceState("asr", cfg)
 app = FastAPI(title="Qwen3-ASR (DGX Spark)")
 app.add_middleware(CORSMiddleware, allow_origins=["*"], allow_methods=["*"], allow_headers=["*"])
+# bodies are refused before they are read when too large or without the API key
+app.add_middleware(BodyLimit, default=200 * 1024**2, gate=api_key_ok, gated=("/v1/",))
 auth = [Depends(api_key_dependency())]
 
 

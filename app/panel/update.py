@@ -12,7 +12,7 @@ from fastapi.responses import Response
 
 sys.path.insert(0, os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
 from common import journal  # noqa: E402
-from core import PREFIX, auth, run  # noqa: E402
+from core import PREFIX, admin_code, auth, run  # noqa: E402
 import backup  # noqa: E402
 import guard  # noqa: E402
 
@@ -187,7 +187,7 @@ def start_update():
     return _start()
 
 
-@router.post("/api/update/rollback", dependencies=[Depends(auth)])
+@router.post("/api/update/rollback", dependencies=[Depends(auth), Depends(admin_code)])
 def rollback():
     """Installs the version that ran before the last update again."""
     prev = previous_version()

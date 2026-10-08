@@ -28,7 +28,7 @@ from fastapi import APIRouter, Depends, HTTPException, Request
 
 import profiles
 from common import load_config
-from core import DEFAULTS, assistant, own_profile
+from core import DEFAULTS, assistant, browser_profile, own_profile
 
 router = APIRouter()
 
@@ -793,7 +793,7 @@ async def api_feedback(request: Request, prof=Depends(own_profile)):
 
 
 @router.post("/api/proactive/rules", dependencies=[Depends(assistant), Depends(_on)])
-async def api_rule_add(request: Request, prof=Depends(own_profile)):
+async def api_rule_add(request: Request, prof=Depends(browser_profile)):
     body = await request.json()
     try:
         await add_rule(prof["id"], body if isinstance(body, dict) else {})
@@ -803,7 +803,7 @@ async def api_rule_add(request: Request, prof=Depends(own_profile)):
 
 
 @router.delete("/api/proactive/rules/{rid}", dependencies=[Depends(assistant)])
-def api_rule_remove(rid: str, prof=Depends(own_profile)):
+def api_rule_remove(rid: str, prof=Depends(browser_profile)):
     remove_rule(prof["id"], rid)
     return status(prof["id"])
 

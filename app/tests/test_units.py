@@ -31,8 +31,12 @@ class HA(unittest.TestCase):
             homeassistant.entry({"url": "ftp://x", "token": "a" * 40})
         with self.assertRaises(ValueError):
             homeassistant.entry({"url": "http://ha.local:8123", "token": "short"})
-        e = homeassistant.entry({"url": "http://ha.local:8123/", "token": ""}, {"token": "k" * 40})
+        old = {"url": "http://ha.local:8123", "token": "k" * 40}
+        e = homeassistant.entry({"url": "http://ha.local:8123/", "token": ""}, old)
         self.assertEqual((e["url"], e["token"]), ("http://ha.local:8123", "k" * 40))
+        # a new address never gets the stored token (it would be sent there)
+        with self.assertRaises(ValueError):
+            homeassistant.entry({"url": "https://evil.example", "token": ""}, old)
 
 
 class Recall(unittest.TestCase):
