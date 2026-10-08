@@ -107,6 +107,7 @@
     "esp32_repo": "db9979/speech-on-dgx-spark",
     "proactive": false,
     "room": false,
+    "room_voices": false,
     "speaker_id": false,
     "mfa": false,
     "speaker_strictness": "normal",

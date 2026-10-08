@@ -30,7 +30,15 @@ phone was locked for more than two minutes (the microphone stops there anyway). 
 the model looks for questions, appointments and shopping the fixed rules missed; it counts only with a
 quote that was really said. When room mode ends, the page shows what the assistant said and did (not
 what it heard), and keeps none of it.
+
+Voices from the TV (chat.room_voices, off by default; per device "Wem er zuhört"): with "nur bekannte Stimmen,
+wenn der Fernseher läuft" a sentence counts only when the speaker identification knows its voice (any profile
+that taught its voice) while Home Assistant reports a media player on in the device's room; with "immer nur
+bekannte Stimmen" always. A sentence that starts with "Spark" counts from any voice. "Stopp", "Nicht jetzt" and
+"Raummodus aus" always count (they only mean less). An ignored sentence is dropped at once, the model never sees
+it. In the trial ("Probelauf") nothing is dropped, only counted; the count is shown when room mode ends.
 """
+import asyncio
 import datetime
 import json
 import re
@@ -59,6 +67,11 @@ VOICE_SECONDS = 30
 MUTE = 15 * 60             # "Nicht jetzt": quiet this long
 DETECT_GAP = 2 * 60        # the model looks for missed cues at most this often        # the voice of a "Ja" is checked on the recording just before it
 ROOMS = {}                 # (uid, room id) -> state
+VOICES = ("all", "tv", "known")   # who it listens to: everybody, known voices while the TV is on, known voices
+TV_SECONDS = 30            # Home Assistant is asked at most this often whether the TV is on
+TV_ON = ("on", "playing", "buffering")
+_TV = {}                   # (uid, room in HA) -> (time, on / off / None when unknown)
+_ADDRESSED = re.compile(r"(?i)^\W*(?:(?:hey|hallo|ok|okay) )?spark\b[\s,.!:]*")
 
 
 def enabled():
@@ -289,7 +302,8 @@ def _room(uid, rid):
     sweep()
     r = ROOMS.setdefault((uid, rid), {"lines": [], "pending": None, "offer": None, "shop": [], "said": 0.0,
                                        "comment": 0.0, "since_comment": 0, "seen": now, "voice": None,
-                                       "mute": 0.0, "detect": 0.0, "since_detect": 0, "done": []})
+                                       "mute": 0.0, "detect": 0.0, "since_detect": 0, "done": [],
+                                       "vmode": "all", "count": {"heard": 0, "ignored": 0, "probe": False}})
     r["seen"] = now
     r["lines"] = [x for x in r["lines"] if now - x[0] < KEEP]
     return r
@@ -337,7 +351,8 @@ async def heard(uid, rid, text, body):
     # sees the words as spoken
     ha = homeassistant.get(uid)
     red = homeassistant.redact(ha, text) if ha and homeassistant.needs_code(ha) else text
-    r["lines"].append((time.time(), red))
+    entry = (time.time(), red)
+    r["lines"].append(entry)
     r["since_comment"] += 1
     r["since_detect"] += 1
     if END.match(text) and len(text) <= 60:
@@ -365,10 +380,30 @@ async def heard(uid, rid, text, body):
             if offer.get("item_set"):
                 out["reminder"] = offer["item_set"]
             return out
-        if calendars.NO.search(text):
+        if calendars.NO.search(text) and not (_voices(body) != "all" and await _foreign(uid, voice, text, _voices(body), body)):
             r["offer"] = None
             print(f"room: no ({offer['kind']})", flush=True)
             return {"say": "Gut, dann nicht.", "kind": offer["kind"]}
+    vmode = r["vmode"] = _voices(body)
+    if vmode != "all":
+        why = await _foreign(uid, voice, text, vmode, body)
+        r["count"]["heard"] += 1
+        r["count"]["probe"] = bool(body.get("probe"))
+        if why:
+            r["count"]["ignored"] += 1
+            if not body.get("probe"):
+                if entry in r["lines"]:
+                    r["lines"].remove(entry)    # never kept, never given to the model
+                r["since_comment"] -= 1
+                r["since_detect"] -= 1
+                print(f"room: ignored ({why})", flush=True)
+                return {"wait": bool(r["pending"])}
+            print(f"room: would ignore ({why}, trial)", flush=True)
+        m = _ADDRESSED.match(text)
+        if m and m.end() < len(text):    # "Spark, wann war ...?": the rules look at the question itself
+            text = text[m.end():]
+            m = _ADDRESSED.match(red)
+            red = red[m.end():] if m else red
     level, kinds = _level(body), _kinds(body)
     cue = None
     if kinds["conv"] and conversion(text):
@@ -465,6 +500,66 @@ END = re.compile(r"(?i)^\W*(?:(?:hey )?spark,? )?(?:(?:den )?raum[- ]?modus (?:a
                  r"(?:beende|stopp?e?|schalte?) (?:den )?raum[- ]?modus(?: aus| ab)?|"
                  r"hör (?:jetzt )?(?:bitte )?(?:auf zuzuhören|nicht mehr zu))\b")
 _MUTE = re.compile(r"(?i)\b(nicht jetzt|jetzt nicht|ruhe|still|psst)\b")
+
+
+def voices_on():
+    """The admin allowed room mode to listen only to known voices (chat.room_voices, off by default)."""
+    c = load_config().get("chat", {})
+    return bool(c.get("room", False) and c.get("room_voices", False))
+
+
+def _voices(body):
+    v = body.get("voices")
+    return v if voices_on() and v in VOICES else "all"
+
+
+def _known(voice, text):
+    """The voice of exactly this sentence belongs to a profile that taught its voice."""
+    return bool(voice and len(voice) > 3 and voice[3] and time.time() - voice[0] <= VOICE_SECONDS
+                and voice[2] == _words(text))
+
+
+async def _foreign(uid, voice, text, vmode, body):
+    """Why this sentence does not count (a voice nobody taught, while the TV is on), else None."""
+    if _ADDRESSED.match(text) or _known(voice, text):
+        return None
+    if vmode == "known":
+        return "unknown voice"
+    return "unknown voice, tv on" if await tv_on(uid, str(body.get("area") or "").strip()[:60]) else None
+
+
+async def tv_on(uid, area):
+    """Whether Home Assistant reports a TV or another media player on in this room (the whole home when
+    no room is set). None when there is no answer: then it listens to everybody, as without the setting."""
+    key = (uid, homeassistant._norm(area))
+    hit = _TV.get(key)
+    if hit and 0 <= time.time() - hit[0] < TV_SECONDS:
+        return hit[1]
+    ha = homeassistant.get(uid) if proactive.ccfg().get("homeassistant", False) else None
+    on = None
+    if ha:
+        try:
+            states = await asyncio.wait_for(_area_states(ha, area, every=not area), 6)
+            on = any(str(s.get("entity_id")).startswith("media_player.") and s.get("state") in TV_ON for s in states)
+        except Exception as e:
+            print("room: tv check failed:", type(e).__name__, flush=True)   # never the error text (URL, token)
+    if len(_TV) > 200:
+        _TV.clear()
+    _TV[key] = (time.time(), on)
+    return on
+
+
+def finish(uid, r):
+    """When room mode ends: how many sentences it did not take (or would not have, in the trial), never what they
+    were. Shown with the summary and written to the profile's log."""
+    c = (r or {}).get("count") or {}
+    if not c.get("heard") or (r or {}).get("vmode", "all") == "all":
+        return None
+    said = (f"Probelauf: Von {c['heard']} Sätzen hätte ich {c['ignored']} als fremde Stimme überhört."
+            if c.get("probe") else f"Von {c['heard']} Sätzen habe ich {c['ignored']} als fremde Stimme überhört.")
+    _log(uid, "fremde Stimmen", said)
+    print(f"room: {c['ignored']} of {c['heard']} sentences {'would be ' if c.get('probe') else ''}ignored", flush=True)
+    return said
 
 
 def _note(r, said):
@@ -645,12 +740,14 @@ async def propose_appointment(uid, r, tz):
     return f"Soll ich {calendars.describe(item)} eintragen?", calendars.describe(item)
 
 
-async def _area_states(ha, area):
+async def _area_states(ha, area, every=False):
     async with homeassistant._client(ha) as c:
         rr = await c.get(ha["url"] + "/api/states")
         rr.raise_for_status()
         all_states = [s for s in rr.json() or [] if isinstance(s, dict) and s.get("entity_id")]
         areas = await homeassistant._areas(c, ha)
+    if every:
+        return all_states
     want = homeassistant._norm(area)
     return [s for s in all_states if want and (homeassistant._norm(areas.get(s["entity_id"], "")) == want or
             want in homeassistant._norm((s.get("attributes") or {}).get("friendly_name") or ""))]
@@ -742,6 +839,17 @@ def owner_voice(uid):
     return bool(speakers.samples(uid))
 
 
+def needs_voice(uid, rid):
+    """Whether the speech recognition checks the voice of this room's recording: for a yes, or because the room
+    listens only to known voices (unknown at its first sentence, so then too)."""
+    if wants_voice(uid, rid):
+        return True
+    if not voices_on() or not load_config().get("chat", {}).get("speaker_id", False):
+        return False
+    r = ROOMS.get((uid, str(rid)))
+    return r is None or r.get("vmode", "all") != "all"
+
+
 def wants_voice(uid, rid):
     """The speech recognition checks the voice of a recording only while a proposal waits for a yes."""
     r = ROOMS.get((uid, str(rid)))
@@ -752,12 +860,13 @@ def _words(text):
     return re.sub(r"\W+", " ", str(text or "").lower()).strip()
 
 
-def set_voice(uid, rid, who, text=""):
+def set_voice(uid, rid, who, text="", known=False):
     """Whose voice the latest recording of this room was (a user id, "" for nobody known, None unchecked),
-    with the words of that recording."""
-    r = ROOMS.get((uid, str(rid)))
+    with the words of that recording and whether it was the voice of any profile that taught its voice."""
+    rid = str(rid)
+    r = _room(uid, rid) if known and re.fullmatch(r"[A-Za-z0-9]{6,32}", rid) else ROOMS.get((uid, rid))
     if r is not None:
-        r["voice"] = None if who is None else (time.time(), who, _words(text))
+        r["voice"] = None if who is None else (time.time(), who, _words(text), bool(known))
 
 
 def _not_owner(uid, voice, text=None):
@@ -857,4 +966,8 @@ async def api_pause(request: Request, prof=Depends(own_profile)):
 async def api_stop(request: Request, prof=Depends(own_profile)):
     body = await request.json()
     r = ROOMS.pop((prof["id"], str(body.get("room") or "")), None)
-    return {"ok": True, "summary": summary(r) if r else []}
+    out = summary(r) if r else []
+    tv = finish(prof["id"], r) if r else None
+    if tv:
+        out.append({"t": int(time.time() * 1000), "text": tv})
+    return {"ok": True, "summary": out}

@@ -2,6 +2,7 @@
 
 Every version in one line, newest first (taken from the commit messages, so some lines are German, some English). Older entries have no version number.
 
+- **V01.0.139** · 2026-10-08 · Raum-Modus überhört Fernsehstimmen: pro Gerät „Wem er zuhört“ (allen / nur bekannte Stimmen, wenn der Fernseher läuft / immer nur bekannte Stimmen), mit Probelauf, der nur zählt; Admin-Schalter „Fernsehstimmen überhören“, standardmäßig aus
 - **V01.0.138** · 2026-10-08 · Lautsprecher: keine Lücken mehr in langen Ansagen, neue Firmware 2.5.1.5 wartet bei vollem Tonpuffer, statt Ton wegzuwerfen; der Spark hält 0,7 s Vorlauf
 - **V01.0.137** · 2026-10-08 · Lautsprecher: Ton stockt nicht mehr, der Spark puffert vor (0,6 s vor dem Start, bis 0,9 s Vorlauf, nach einem Hänger erst wieder 0,3 s sammeln); Hänger stehen unter „Prüfen“ und im Log
 - **V01.0.136** · 2026-10-08 · Lautsprecher: „Prüfen“ zeigt live, was der Lautsprecher gerade tut (alle 2 Sekunden), auch im Raum-Modus (nur dass ein Satz gehört wurde und ob er spricht, nie den Text)

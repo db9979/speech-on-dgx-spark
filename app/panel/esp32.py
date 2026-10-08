@@ -95,6 +95,7 @@ PROBE = secrets.token_hex(8)   # shows that an address leads to this very Spark 
 ROOM_MINS = (15, 30, 60, 120, 240)
 ROOM_MAX = 2               # speakers in room mode at once (the speech recognition runs all the time)
 ROOM_LEVELS = ("questions", "hints", "all")
+ROOM_VOICES = ("all", "tv", "known")   # who room mode listens to (room.py, chat.room_voices)
 MIC_LEVELS = {"low": 300.0, "normal": 150.0, "high": 70.0}   # "Mikrofon" per speaker: least level that counts as speech
 # "Raummodus an", "Raum-Modus einschalten", "starte den Raummodus"
 ROOM_START = re.compile(r"(?i)^\W*(?:(?:hey )?(?:spark|jarvis),? )?(?:(?:den )?raum[- ]?modus (?:an|ein|einschalten|anschalten|starten)|"
@@ -492,7 +493,8 @@ def room_cfg(c):
     mins = c.get("room_mins") if c.get("room_mins") in ROOM_MINS else 30
     level = c.get("room_level") if c.get("room_level") in ROOM_LEVELS else "hints"
     area = re.sub(r"[\x00-\x1f<>\"\\]", "", str(c.get("room_area") or ""))[:60]
-    return {"mins": mins, "level": level, "area": area}
+    voices = c.get("room_voices") if c.get("room_voices") in ROOM_VOICES else "all"
+    return {"mins": mins, "level": level, "area": area, "voices": voices, "probe": c.get("room_probe") is not False}
 
 
 # ---------------------------------------------------------------- one connection of a speaker
@@ -738,6 +740,7 @@ class Session:
     def _room_body(self, **kw):
         c = room_cfg(clients().get(self.client) or by_device(self.dev["id"])[1])
         return dict({"room": self.room["rid"], "level": c["level"], "area": c["area"], "detect": False,
+                     "voices": c["voices"], "probe": c["probe"],
                      "tz": profiles.settings(self.dev["user"]).get("tz", "")}, **kw)
 
     async def room_start(self):
@@ -768,7 +771,9 @@ class Session:
         r, self.room = self.room, None
         if r is None:
             return
-        room.ROOMS.pop((self.dev["user"], r["rid"]), None)
+        tv = room.finish(self.dev["user"], room.ROOMS.pop((self.dev["user"], r["rid"]), None))
+        if tv:
+            self.note("Raum-Modus: " + tv)
         if r.get("task") and r["task"] is not asyncio.current_task():
             r["task"].cancel()
         print(f"room: off at speaker {self.dev['name']} ({why})", flush=True)
@@ -819,8 +824,10 @@ class Session:
             return
         uid, rid = self.dev["user"], self.room["rid"]
         rv = None
-        if room.wants_voice(uid, rid):   # a yes counts only in the profile's voice, from this very recording
-            th = speakers.STRICTNESS.get(load_config().get("chat", {}).get("speaker_strictness"), 0.75)
+        th = speakers.STRICTNESS.get(load_config().get("chat", {}).get("speaker_strictness"), 0.75)
+        # a yes counts only in the profile's voice, from this very recording; and with "Wem er zuhört" a
+        # sentence counts only in a known voice
+        if room.needs_voice(uid, rid):
             rv = asyncio.create_task(asyncio.to_thread(speakers.identify, wav16k(pcm), th))
         try:
             text = await transcribe(pcm)
@@ -829,7 +836,8 @@ class Session:
             text = ""
         if rv is not None:
             try:
-                room.set_voice(uid, rid, (await rv)[0] or "", text)
+                who, best = await rv
+                room.set_voice(uid, rid, who or "", text, known=best >= th)
             except Exception:
                 room.set_voice(uid, rid, "", text)
         if not text or self.room is None:
@@ -1176,7 +1184,7 @@ async def speaker_ws(ws: WebSocket):
         if s.room is not None:
             import room
             r, s.room = s.room, None
-            room.ROOMS.pop((dev["user"], r["rid"]), None)
+            room.finish(dev["user"], room.ROOMS.pop((dev["user"], r["rid"]), None))
             if r.get("task"):
                 r["task"].cancel()
             print(f"room: off at speaker {dev['name']} (connection ended)", flush=True)
@@ -1345,13 +1353,17 @@ async def profile_change(did: str, request: Request, prof=Depends(browser_profil
                 await s.set_volume(v)   # connected: at once, else at its next connection
             except Exception:
                 pass
-    if any(k in body for k in ("room_mins", "room_level", "room_area")):
+    if any(k in body for k in ("room_mins", "room_level", "room_area", "room_voices", "room_probe")):
         def put(d):
             e = d["clients"][cid]
             if body.get("room_mins") in ROOM_MINS:
                 e["room_mins"] = body["room_mins"]
             if body.get("room_level") in ROOM_LEVELS:
                 e["room_level"] = body["room_level"]
+            if body.get("room_voices") in ROOM_VOICES:
+                e["room_voices"] = body["room_voices"]
+            if isinstance(body.get("room_probe"), bool):
+                e["room_probe"] = body["room_probe"]
             if "room_area" in body:
                 e["room_area"] = room_cfg({"room_area": body["room_area"]})["area"]
         _update(put)

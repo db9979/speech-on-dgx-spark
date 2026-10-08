@@ -512,12 +512,13 @@ async def _test_asr(request, file, language, wake, room):
     th = speakers.STRICTNESS.get(cfg.get("chat", {}).get("speaker_strictness"), 0.75)
     if cfg.get("chat", {}).get("speaker_id", False) and not wake and me:
         spk = asyncio.create_task(asyncio.to_thread(speakers.identify, data, th))
-    # room mode: while a proposal waits for a yes, whose voice this is (only the profile may say yes)
+    # room mode: whose voice this is, while a proposal waits for a yes (only the profile may say yes) and when
+    # the room listens only to known voices (TV)
     import room as room_mode
     rv = None
     if room and me:
         room_mode.set_voice(me["id"], room, None)
-        if room_mode.wants_voice(me["id"], room):
+        if room_mode.needs_voice(me["id"], room):
             rv = asyncio.create_task(asyncio.to_thread(speakers.identify, data, th))
     try:
         async with httpx.AsyncClient(timeout=600) as c:
@@ -536,7 +537,8 @@ async def _test_asr(request, file, language, wake, room):
         except ValueError:
             said = ""
         try:
-            room_mode.set_voice(me["id"], room, (await rv)[0] or "", said)
+            who, best = await rv
+            room_mode.set_voice(me["id"], room, who or "", said, known=best >= th)
         except Exception:
             room_mode.set_voice(me["id"], room, "", said)
     if spk is None or r.status_code != 200:

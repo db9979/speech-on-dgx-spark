@@ -1,9 +1,9 @@
 // Room mode (see room.py): the assistant listens to the conversation in the room for a while and helps
 // in a pause. Per device and per switch-on; what it hears stays on the Spark for a few minutes only.
-let ROOM_ON=false;
+let ROOM_ON=false,RV_ON=false;
 window.room={on:false,speaking:false,id:'',until:0,queue:Promise.resolve(),lastSpeech:0,wait:false,need:2.5,asking:false,
   cfg(){let o={};try{o=JSON.parse(localStorage.getItem('room')||'{}')}catch{}
-    return {mins:30,level:'hints',text:false,area:'',tone:true,detect:false,summary:true,...o,kinds:{q:true,cal:true,ha:true,shop:true,timer:true,remind:true,conv:true,...(o.kinds||{})}}},
+    return {mins:30,level:'hints',text:false,area:'',tone:true,detect:false,summary:true,voices:'all',probe:true,...o,kinds:{q:true,cal:true,ha:true,shop:true,timer:true,remind:true,conv:true,...(o.kinds||{})}}},
   save(o){try{localStorage.setItem('room',JSON.stringify({...this.cfg(),...o}))}catch{}},
   idle(){return !chat.rec&&!chat.ctrl&&!playing()&&!chat.asrBusy},
   show(){$('roomtgl').style.display=ROOM_ON&&PROFILE?'':'none';if(this.on&&!(ROOM_ON&&PROFILE))this.stop()},
@@ -26,7 +26,7 @@ window.room={on:false,speaking:false,id:'',until:0,queue:Promise.resolve(),lastS
     const b=chatLog('assistant',t('Raum-Modus beendet. Das habe ich gesagt und getan:','Room mode ended. What I said and did:')+'\n'+
       items.map(x=>'• '+new Date(x.t).toLocaleTimeString(L==='en'?'en-GB':'de-DE',{hour:'2-digit',minute:'2-digit'})+' '+x.text).join('\n'));
     b.classList.add('pro','recap')},
-  body(o){const c=this.cfg();return JSON.stringify({room:this.id,level:c.level,kinds:c.kinds,area:c.area,detect:!!c.detect,
+  body(o){const c=this.cfg();return JSON.stringify({room:this.id,level:c.level,kinds:c.kinds,area:c.area,detect:!!c.detect,voices:RV_ON?c.voices:'all',probe:c.probe!==false,
     tz:(()=>{try{return Intl.DateTimeFormat().resolvedOptions().timeZone}catch{return ''}})(),...o})},
   async heard(text){if(!this.on)return;
     if(this.speaking&&/^\W*(stopp?|halt|ruhe|still|sei still|psst|nicht jetzt|jetzt nicht|schon gut|genug|aufhören|hör auf)\b/i.test(text))stopAnswer();
@@ -71,6 +71,9 @@ function showRoom(){const box=$('roombox');if(!PROFILE||!ROOM_ON){box.innerHTML=
     kind('remind',t('Erinnerungen','Reminders'),t('„Ich darf nicht vergessen, Oma anzurufen“: „Soll ich dich um 15:30 Uhr erinnern?“ (zur genannten Uhrzeit, „morgen“ um 8 Uhr, sonst in einer Stunde). Erst nach Ja.','"I must not forget to call grandma": "Shall I remind you at 15:30?" (at the time named, "tomorrow" at 8, else in an hour). Only after yes.'))+
     kind('conv',t('Umrechnen','Unit conversion'),t('„Wie viel sind 180 Grad in Fahrenheit?“, Milliliter in Tassen, Zoll in Zentimeter: ausgerechnet, ohne Modell.','"How much is 180 degrees in Fahrenheit?", millilitres in cups, inches in centimetres: calculated, without the model.'))+
     `<label>${t('Raum dieses Geräts in Home Assistant','Room of this device in Home Assistant')}</label><input id="roomarea" placeholder="${t('z. B. Wohnzimmer','e.g. Living room')}" value="${esc(c.area||'')}" autocomplete="off">`+
+    (RV_ON?`<div class="two2"><div><label>${t('Wem er zuhört','Who it listens to')}</label><select id="roomvoices">${[['all',t('allen','everybody')],['tv',t('nur bekannten Stimmen, wenn der Fernseher läuft (empfohlen)','only known voices while the TV is on (recommended)')],['known',t('immer nur bekannten Stimmen','always only known voices')]].map(([v,l])=>`<option value="${v}"${c.voices===v?' selected':''}>${esc(l)}</option>`).join('')}</select></div></div>
+    <div class="fh">${t('Bekannt ist jede Stimme, die unter Ich → Sprechererkennung angelernt ist (bei allen Profilen). Ob der Fernseher läuft, fragt er Home Assistant: ein eingeschalteter Mediaplayer im Raum oben, ohne Raum im ganzen Haus. Fremde Sätze vergisst er sofort. Ein Satz, der mit „Spark“ anfängt, zählt immer, ebenso „Stopp“ und „Raummodus aus“. Sehr kurze Sätze erkennt die Sprechererkennung oft nicht.','A voice is known when it was taught under Me → Speaker identification (any profile). Whether the TV is on comes from Home Assistant: a media player on in the room above, without a room anywhere in the home. Foreign sentences are forgotten at once. A sentence starting with "Spark" always counts, as do "Stopp" and "Raummodus aus". Very short sentences are often not recognized.')}</div>
+    <div class="setrow"><div class="lbl"><b>${t('Probelauf (nur zählen)','Trial (count only)')}</b><span>${t('Er überhört noch nichts, sondern zählt nur. Am Ende steht da, wie viele Sätze er als fremde Stimme überhört hätte. Wenn das zu deinem Abend passt, schalte den Probelauf aus.','It ignores nothing yet but counts. At the end it says how many sentences it would have ignored as a foreign voice. When that fits your evening, switch the trial off.')}</span></div><label class="tgl"><input type="checkbox" id="roomprobe"${c.probe!==false?' checked':''}><i></i></label></div>`:'')+
     `<div class="fh">${t('Fragen, die sich auf vorher Gesagtes beziehen („Wann ist der gestorben?“), ergänzt er aus den letzten Sätzen, aber nur mit Wörtern, die wirklich gefallen sind. Hast du deine Stimme unter „Stimme“ angelernt und ist die Sprechererkennung an, gilt ein „Ja“ nur von dir.','Questions that point back ("When did he die?") are completed from the last sentences, but only with words that were really said. If you taught your voice under "Voice" and speaker recognition is on, only your "yes" counts.')}</div>`+
     `<div class="setrow"><div class="lbl"><b>${t('Genauer erkennen','Detect more')}</b><span>${t('Das Sprachmodell schaut höchstens alle zwei Minuten nach Fragen, Terminen und Einkäufen, die die festen Regeln übersehen. Zählt nur mit einem wörtlichen Zitat. Kostet Rechenzeit auf der GPU.','The language model looks at most every two minutes for questions, appointments and shopping the fixed rules missed. Counts only with a word-for-word quote. Costs GPU time.')}</span></div><label class="tgl"><input type="checkbox" id="roomdetect"${c.detect?' checked':''}><i></i></label></div>`+
     `<div class="setrow"><div class="lbl"><b>${t('Ton vorher','Tone first')}</b><span>${t('Ein leiser Ton, bevor er von selbst spricht. „Stopp“ beendet den Satz, „Nicht jetzt“ hält ihn eine Viertelstunde still, „Raummodus aus“ schaltet ihn ganz ab.','A soft tone before it speaks by itself. "Stopp" ends the sentence, "Nicht jetzt" keeps it quiet for a quarter of an hour, "Raummodus aus" switches it off.')}</span></div><label class="tgl"><input type="checkbox" id="roomtone"${c.tone?' checked':''}><i></i></label></div>`+
@@ -83,4 +86,5 @@ function showRoom(){const box=$('roombox');if(!PROFILE||!ROOM_ON){box.innerHTML=
   $('roomtext').onchange=()=>room.save({text:$('roomtext').checked});
   $('roomdetect').onchange=()=>room.save({detect:$('roomdetect').checked});
   $('roomtone').onchange=()=>room.save({tone:$('roomtone').checked});
-  $('roomsum').onchange=()=>room.save({summary:$('roomsum').checked})}
+  $('roomsum').onchange=()=>room.save({summary:$('roomsum').checked});
+  if(RV_ON){$('roomvoices').onchange=()=>room.save({voices:$('roomvoices').value});$('roomprobe').onchange=()=>room.save({probe:$('roomprobe').checked})}}
