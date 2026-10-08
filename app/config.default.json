@@ -82,6 +82,7 @@
     "reminders": true,
     "calendar": true,
     "mail": false,
+    "mail_tidy": false,
     "proactive": false,
     "room": false,
     "speaker_id": false,

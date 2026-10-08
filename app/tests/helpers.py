@@ -306,6 +306,147 @@ class FakeIMAP:
         return "NO", [b""]
 
 
+def box_mail(frm, subject, text="Hallo", headers=None, mid=None):
+    """A message for FakeMailbox: raw bytes with a Message-ID and any extra header lines."""
+    import email.utils
+    import secrets as _s
+    extra = "".join(f"{k}: {v}\r\n" for k, v in (headers or {}).items())
+    raw = (f"From: {frm}\r\nTo: {MAIL_USER}\r\nSubject: {subject}\r\nMessage-ID: {mid or '<' + _s.token_hex(6) + '@x>'}"
+           f"\r\nDate: {email.utils.format_datetime(email.utils.localtime())}\r\n{extra}"
+           f"Content-Type: text/plain; charset=utf-8\r\n\r\n{text}\r\n").encode()
+    return raw
+
+
+class FakeMailbox:
+    """A mailbox with folders for tidy.py (LIST, CREATE, SELECT/EXAMINE, SEARCH, FETCH, MOVE, APPEND);
+    records every command in calls. Messages: {"uid", "raw", "seen", "flags"}."""
+    boxes, calls, uidnext = {}, [], {}
+    capabilities = ("IMAP4REV1", "MOVE")
+
+    @classmethod
+    def reset(cls, inbox=(), sent=()):
+        cls.boxes = {"INBOX": [], "Sent Messages": [], "Drafts": []}
+        cls.uidnext = {}
+        cls.calls = []
+        for r in inbox:
+            cls.put("INBOX", r)
+        for r in sent:
+            cls.put("Sent Messages", r)
+
+    @classmethod
+    def put(cls, box, raw, flags=()):
+        n = cls.uidnext.get(box, 100)
+        cls.uidnext[box] = n + 1
+        cls.boxes.setdefault(box, []).append({"uid": n, "raw": raw, "seen": False, "flags": list(flags)})
+        return n
+
+    @classmethod
+    def total(cls):
+        return sum(len(v) for v in cls.boxes.values())
+
+    def __init__(self, host, port, ssl_context=None, timeout=None):
+        self.sel, self.ro = None, True
+
+    @staticmethod
+    def _name(n):
+        n = n.decode() if isinstance(n, bytes) else str(n)
+        return n[1:-1].replace('\\"', '"') if n.startswith('"') else n
+
+    def login(self, user, pw):
+        import imaplib
+        if (user, pw) != (MAIL_USER, MAIL_PW):
+            raise imaplib.IMAP4.error("AUTHENTICATIONFAILED")
+        return "OK", [b""]
+
+    def logout(self):
+        return "BYE", [b""]
+
+    def list(self):
+        special = {"Sent Messages": " \\Sent", "Drafts": " \\Drafts"}
+        return "OK", [f'(\\HasNoChildren{special.get(n, "")}) "/" "{n}"'.encode() for n in self.boxes]
+
+    def create(self, name):
+        self.calls.append(("CREATE", (self._name(name),)))
+        self.boxes.setdefault(self._name(name), [])
+        return "OK", [b""]
+
+    def subscribe(self, name):
+        return "OK", [b""]
+
+    def select(self, name, readonly=False):
+        n = self._name(name)
+        self.calls.append(("select", (n, readonly)))
+        if n not in self.boxes:
+            return "NO", [b"no such folder"]
+        self.sel, self.ro = n, readonly
+        return "OK", [str(len(self.boxes[n])).encode()]
+
+    def response(self, code):
+        return code, [b"1"]
+
+    def append(self, name, flags, date, raw):
+        n = self._name(name)
+        self.calls.append(("APPEND", (n, flags)))
+        self.put(n, raw, ["\\Draft"] if "Draft" in flags else [])
+        return "OK", [b""]
+
+    def uid(self, cmd, *args):
+        self.calls.append((cmd, args))
+        box = self.boxes.get(self.sel, [])
+        if cmd == "SEARCH":
+            hit = list(box)
+            a = list(args)
+            while a:
+                k = a.pop(0)
+                if k == "UID":
+                    spec = a.pop(0)
+                    if ":" in spec:
+                        lo = int(spec.split(":")[0])
+                        hit = [m for m in hit if m["uid"] >= lo] or ([box[-1]] if box else [])
+                    else:
+                        want = {int(x) for x in spec.split(",")}
+                        hit = [m for m in hit if m["uid"] in want]
+                elif k == "SINCE":
+                    a.pop(0)
+                elif k == "UNSEEN":
+                    hit = [m for m in hit if not m["seen"]]
+                elif k == "FROM":
+                    w = a.pop(0).strip('"').lower()
+                    hit = [m for m in hit if w in m["raw"].split(b"\r\n")[0].decode().lower()]
+                elif k == "HEADER":
+                    a.pop(0)
+                    w = a.pop(0).strip('"')
+                    hit = [m for m in hit if f"Message-ID: {w}".encode() in m["raw"]]
+                elif k == "TEXT":
+                    w = a.pop(0).strip('"').lower()
+                    hit = [m for m in hit if w in m["raw"].decode().lower()]
+            return "OK", [" ".join(str(m["uid"]) for m in hit).encode()]
+        if cmd == "FETCH":
+            want = {int(x) for x in args[0].split(",")}
+            out = []
+            for m in box:
+                if m["uid"] not in want:
+                    continue
+                if "HEADER" in args[1]:
+                    part = m["raw"].split(b"\r\n\r\n")[0] + b"\r\n\r\n"
+                else:
+                    part = m["raw"]
+                out += [(f"1 (UID {m['uid']} BODY[] {{{len(part)}}}".encode(), part), b")"]
+            return "OK", out
+        if cmd == "MOVE":
+            if self.ro:
+                return "NO", [b"read only"]
+            want = {int(x) for x in args[0].split(",")}
+            dst = self._name(args[1])
+            if dst not in self.boxes:
+                return "NO", [b"no such folder"]
+            for m in [m for m in box if m["uid"] in want]:
+                box.remove(m)
+                self.put(dst, m["raw"])
+            return "OK", [b""]
+        return "NO", [b"not supported here"]
+
+
 CAL_EVENTS = {}   # path -> iCal text the fake CalDAV server holds
 
 
@@ -373,4 +514,3 @@ def set_config(**chat):
 def events(response):
     """The JSON events of a /api/chat stream."""
     return [json.loads(line[5:]) for line in response.text.splitlines() if line.startswith("data:")]
-

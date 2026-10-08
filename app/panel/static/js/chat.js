@@ -177,6 +177,7 @@ const ub=chatLog('user',text);const um={role:'user',content:text};chat.msgs.push
         else if(ev.type==='truncated'){full=full.slice(0,full.length-ev.drop).trimEnd();el.textContent=full+' … '+t('(Längenlimit erreicht: Konfiguration → Assistent → Max. Tokens)','(length limit reached: Configuration → Assistant → Max. tokens)')}
         else if(ev.type==='search'){chatSay(t('Suche im Netz: ','Searching the web: ')+ev.query);searches.push(ev.query)}
         else if(ev.type==='sources'){sources.push(...ev.items)}
+        else if(ev.type==='proposal'){mems.push('📥 '+t('Vorschlag: ','Proposal: ')+ev.text)}
         else if(ev.type==='mail'){mailUsed=true;chatSay(t('Lese deine E-Mails …','Reading your e-mail …'))}
         else if(ev.type==='calendar'){chatSay(t('Schaue in deinen Kalender …','Checking your calendar …'))}
         else if(ev.type==='briefing'){chatSay(t('Stelle dein Tagesbriefing zusammen …','Putting your daily briefing together …'))}

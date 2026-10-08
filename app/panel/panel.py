@@ -36,9 +36,10 @@ import health  # noqa: E402
 import push  # noqa: E402
 import proactive  # noqa: E402
 import room  # noqa: E402
+import tidy  # noqa: E402
 
 app = FastAPI(title="Speech on DGX Spark")
-for _module in (account, admin, chat, update, system, proactive, room):
+for _module in (account, admin, chat, update, system, proactive, room, tidy):
     app.include_router(_module.router)
 app.middleware("http")(update_lock)
 
@@ -154,6 +155,20 @@ async def stability():
     asyncio.create_task(watchdog())
     asyncio.create_task(backups())
     asyncio.create_task(after_update())
+
+
+@app.on_event("startup")
+async def mail_tidy():
+    """Tidying inboxes (see tidy.py): each minute the mailboxes whose interval is due; the language
+    model only sorts while nobody is talking to the assistant."""
+    async def loop():
+        while True:
+            await asyncio.sleep(60)
+            try:
+                await tidy.due_once(idle=time.time() - chat._last_chat[0] > 60)
+            except Exception as e:
+                print("mail tidy:", type(e).__name__, e, flush=True)
+    asyncio.create_task(loop())
 
 
 @app.on_event("startup")

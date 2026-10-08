@@ -57,6 +57,7 @@ def whoami(request: Request, creds: HTTPBasicCredentials | None = Depends(securi
             "calendar": cfg.get("chat", {}).get("calendar", True),
             "homeassistant": cfg.get("chat", {}).get("homeassistant", False),
             "mail": cfg.get("chat", {}).get("mail", False),
+            "mail_tidy": bool(cfg.get("chat", {}).get("mail", False) and cfg.get("chat", {}).get("mail_tidy", False)),
             "proactive": cfg.get("chat", {}).get("proactive", False),
             "room": cfg.get("chat", {}).get("room", False),
             # what the assistant needs without the full configuration (which holds keys)

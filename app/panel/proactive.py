@@ -35,7 +35,8 @@ router = APIRouter()
 # kind: (label, at most per day before any feedback, setting that switches it)
 KINDS = {"events": ("Termin-Vorlauf", 10, "pro_events"), "ha": ("Smart Home", 10, "pro_ha"),
          "greet": ("Begrüßung", 3, "pro_greet"), "follow": ("Nachfrage", 1, "pro_follow"),
-         "mail": ("Wichtige Mail", 10, "pro_mail"), "weather": ("Wetter", 1, "pro_weather")}
+         "mail": ("Wichtige Mail", 10, "pro_mail"), "weather": ("Wetter", 1, "pro_weather"),
+         "tidy": ("Postfach aufräumen", 2, "pro_tidy")}
 PAGE_ACTIVE = 75            # seconds since the page last asked: it is open, no push needed
 QUEUE_KEEP = 2 * 3600
 OFFER_SECONDS = 15 * 60     # an answer to a note counts this long after it

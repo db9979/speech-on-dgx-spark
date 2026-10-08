@@ -312,6 +312,7 @@ SETTINGS = {
     "pro_greet": (True, lambda v: isinstance(v, bool)),
     "pro_follow": (True, lambda v: isinstance(v, bool)),
     "pro_mail": (True, lambda v: isinstance(v, bool)),
+    "pro_tidy": (True, lambda v: isinstance(v, bool)),
     "pro_mail_from": ("", lambda v: isinstance(v, str) and len(v) <= 300 and "\n" not in v),
     "pro_weather": (True, lambda v: isinstance(v, bool)),
     "pro_place": ("", lambda v: isinstance(v, str) and len(v) <= 60 and re.fullmatch(r"[^<>\"\\\n]*", v)),

@@ -25,7 +25,7 @@ function ptab(id,page=true){document.querySelectorAll('#ptabs button').forEach(b
   $('profmodal').classList.toggle('sub',page);if(page)document.querySelector('#profmodal .mebody').scrollTop=0}
 $('meback').onclick=()=>ptab(meLast,false);
 function meTabs(){const items=[['setbox',t('Gespräch','Conversation'),!GATE&&!isGuest()],['loginbox',t('Anmelden','Sign in'),!PROFILE],
-    ['factbox',t('Gedächtnis','Memory'),!!PROFILE],['docbox',t('Dokumente','Documents'),PROFILE&&DOCS_ON],['calbox',t('Kalender','Calendar'),PROFILE&&CAL_ON],['mailbox',t('E-Mail','E-mail'),PROFILE&&MAIL_ON],
+    ['factbox',t('Gedächtnis','Memory'),!!PROFILE],['docbox',t('Dokumente','Documents'),PROFILE&&DOCS_ON],['calbox',t('Kalender','Calendar'),PROFILE&&CAL_ON],['mailbox',t('E-Mail','E-mail'),PROFILE&&MAIL_ON],['mailtidy',t('Aufräumen','Tidying'),PROFILE&&MAIL_ON&&TIDY_ON],
     ['habox',t('Smart Home','Smart home'),PROFILE&&HA_ON],['voicebox',t('Stimme','Voice'),PROFILE&&SPK_ON],['probox',t('Von selbst','Proactive'),PROFILE&&PRO_ON],['roombox',t('Raum-Modus','Room mode'),PROFILE&&ROOM_ON],['logbox',t('Protokoll','Log'),!!PROFILE],['secbox',t('Sicherheit','Security'),!!PROFILE]].filter(x=>x[2]);
   $('ptabs').innerHTML=items.map(([id,l])=>`<button type="button" data-t="${id}">${esc(l)}</button>`).join('');
   $('ptabs').querySelectorAll('button').forEach(b=>b.onclick=()=>{meLast=b.dataset.t;ptab(b.dataset.t)});
@@ -150,7 +150,7 @@ async function openMe(tab){$('profmsg').textContent='';$('profmodal').style.disp
   $('setscope').textContent=GATE?'':PROFILE?t('Einstellungen gelten auf jedem Gerät dieses Profils; „Hey Spark“ stellt jedes Gerät selbst ein.','Settings apply on every device of this profile; "Hey Spark" is set per device.'):isGuest()?t('Als Gast gelten die Vorgaben des Admins. Mit einem Profil kannst du Einstellungen ändern, und der Assistent merkt sich Dinge nur für dich.','As a guest the admin\'s defaults apply. With a profile you can change settings, and the assistant remembers things just for you.'):t('Als Gast gelten die Einstellungen nur in diesem Browser. Mit einem Profil merkt sich der Assistent Dinge nur für dich.','As a guest the settings apply only in this browser. With a profile the assistant remembers things just for you.');
   $('proflogout').style.display=PROFILE?'':'none';$('profclose').style.display=GATE?'none':'';
   if(!GATE&&!isGuest())renderSet($('setform'),S,saveSet);
-  if(PROFILE){try{await showFacts();await showDocs();await showVoice();await showCal();await showMail();await showHa();await showSecurity();await showToolLog();await showPro().catch(()=>{});showRoom();await showPush().catch(()=>{})}catch{setProfile(null);openMe('loginbox')}return}
+  if(PROFILE){try{await showFacts();await showDocs();await showVoice();await showCal();await showMail();await showMailTidy().catch(()=>{});await showHa();await showSecurity();await showToolLog();await showPro().catch(()=>{});showRoom();await showPush().catch(()=>{})}catch{setProfile(null);openMe('loginbox')}return}
   $('profpin').value='';if(tab==='loginbox')setTimeout(()=>$($('profuser').value?'profpin':'profuser').focus(),50)}
 window.openMe=openMe;
 $('profbtn').onclick=()=>openMe(PHONE.matches?'list':meLast);   // phones: the list of pages; else the same page as the settings button
