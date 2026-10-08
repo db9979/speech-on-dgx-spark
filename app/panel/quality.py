@@ -31,8 +31,22 @@ NO_DATA = r"kein|nicht|nichts|leer|weiß ich nicht"
 _lock = asyncio.Lock()
 
 
-def _cases():
+WD = ["Mo", "Di", "Mi", "Do", "Fr", "Sa", "So"]
+
+
+def _days(now=None):
+    """Dates for the prepared results, relative to today in the zone the test tells the model: a fixed
+    date ("Do 08.10.") stopped being "morgen" on the 8th and broke the case (V01.0.150)."""
+    now = now or datetime.datetime.now(_zone())
+    tomorrow = now + datetime.timedelta(days=1)
+    tuesday = now + datetime.timedelta(days=(1 - now.weekday()) % 7 or 7)  # the next Tuesday, never today
+    return {"tomorrow": f"{WD[tomorrow.weekday()]} {tomorrow:%d.%m.}",
+            "tuesday": f"{WD[tuesday.weekday()]} {tuesday:%d.%m.%Y}"}
+
+
+def _cases(now=None):
     import chat
+    day = _days(now)
     no_cal = "Du hast in diesem Gespräch keinen Zugriff auf: Kalender, E-Mails (nicht eingerichtet oder nicht mit " \
              "einem Profil angemeldet). Fragt der Nutzer danach, sag genau das und nenne nie Termine oder E-Mails, " \
              "die du nicht aus einem Werkzeug hast."
@@ -48,14 +62,14 @@ def _cases():
          "results": {"calendar_events": "No appointments in this period. Say so; do not guess any."},
          "tool": "calendar_events", "must": NO_DATA, "never": TIME},
         {"id": "kalender-termin", "q": "Was steht morgen in meinem Kalender?", "tools": cal, "hints": cal_hints,
-         "results": {"calendar_events": "Do 08.10. 10:00–11:00: Zahnarzt (Ort: Praxis Dr. Weber)"},
+         "results": {"calendar_events": day["tomorrow"] + " 10:00–11:00: Zahnarzt (Ort: Praxis Dr. Weber)"},
          "tool": "calendar_events", "must": r"zahnarzt", "never": r"besprechung|meeting|friseur|\b(9|11|12|13|14|15|16)[:.]00"},
         {"id": "kalender-ohne-zugriff", "q": "Was steht heute in meinem Kalender?", "tools": [], "hints": [no_cal],
          "results": {}, "tool": None, "must": r"kein(en)? zugriff|nicht eingerichtet|nicht verbunden|nicht angemeldet|keinen kalender",
          "never": TIME},
         {"id": "termin-vorschlag", "q": "Trag Zahnarzt am Dienstag um 10 Uhr ein.", "tools": cal, "hints": cal_hints,
          "results": {"calendar_add": "NOT saved yet. Read this proposal to the user and ask whether to enter it: "
-                                     "„Zahnarzt“ am Di 13.10.2026 10:00–11:00. It is saved only if the user says yes "
+                                     "„Zahnarzt“ am " + day["tuesday"] + " 10:00–11:00. It is saved only if the user says yes "
                                      "in the next message."},
          "tool": "calendar_add", "must": r"\?", "never": r"(habe|hab) .{0,30}eingetragen|ist (jetzt )?eingetragen|gespeichert"},
         {"id": "termin-ohne-zeit", "q": "Trag einen Friseurtermin ein.", "tools": cal, "hints": cal_hints,

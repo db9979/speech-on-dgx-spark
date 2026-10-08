@@ -921,6 +921,18 @@ class Quality(unittest.TestCase):
         self.assertEqual(TestClient(panel.app).get("/api/quality").status_code, 401)
 
 
+    def test_dates_follow_today(self):
+        # the prepared results name tomorrow and the next Tuesday, whatever day the test runs
+        import datetime
+        import quality
+        for now, tomorrow, tuesday in [(datetime.datetime(2026, 10, 7, 9), "Do 08.10.", "Di 13.10.2026"),
+                                       (datetime.datetime(2026, 10, 8, 20), "Fr 09.10.", "Di 13.10.2026"),
+                                       (datetime.datetime(2026, 10, 13, 8), "Mi 14.10.", "Di 20.10.2026"),
+                                       (datetime.datetime(2026, 12, 31, 8), "Fr 01.01.", "Di 05.01.2027")]:
+            cases = {c["id"]: c for c in quality._cases(now)}
+            self.assertTrue(cases["kalender-termin"]["results"]["calendar_events"].startswith(tomorrow + " 10:00"), now)
+            self.assertIn("am " + tuesday + " 10:00", cases["termin-vorschlag"]["results"]["calendar_add"], now)
+
     def test_checks_match_real_turn(self):
         import chat
         import quality

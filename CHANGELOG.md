@@ -2,6 +2,7 @@
 
 Every version in one line, newest first (taken from the commit messages, so some lines are German, some English). Older entries have no version number.
 
+- **V01.0.150** · 2026-10-08 · Qualitätstest: Kalender-Fragen nennen „morgen“ und „Dienstag“ immer passend zum heutigen Tag (der feste 8.10. war ab dem 8.10. falsch)
 - **V01.0.149** · 2026-10-08 · Lautsprecher-Seite geordnet: Liste → eigene Seite pro Lautsprecher (Klang, Raum-Modus mit „Starten“ und wählbaren Arten, Stimme, Firmware, Prüfen), „Lautsprecher hinzufügen“ per USB oder Code, Admin „Adresse prüfen“, Lautsprecher-Schlüssel gekennzeichnet
 - **V01.0.148** · 2026-10-08 · Browser-Test für Zustand hält auch dort, wo systemd echte Dienste meldet (GitHub)
 - **V01.0.147** · 2026-10-08 · Design „Klar“, Schritt 3: Ich öffnet am Rechner als Seite neben der Menüleiste statt als Fenster; ein anderer Menüpunkt schließt es
