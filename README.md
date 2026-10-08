@@ -31,6 +31,7 @@ All options for running without questions (`--mode api --asr 1.7b --tts 0.6b --y
 
 <!-- New version: add one line at the top here and in CHANGELOG.md, drop the oldest line here (keep 10). Details go to docs/de and docs/en, not into this README. -->
 
+- **V01.0.124** No more clicks in longer answers: speech fades out briefly when it ends or stalls instead of stopping hard, Stop fades out, "still speaking" includes the speaker delay, the assistant's own echo at a sentence end no longer counts as an interruption
 - **V01.0.123** Tidier settings: every setting right below its switch (web search, weather, speaker identification; the web search page is gone), short feature rows with marks, pages named Language model, Defaults, Operation, "Me" everywhere, warning about unsaved changes
 - **V01.0.122** Cloned voices moved to Settings → Voices (with "Speak a sample"); the menu entry "Users" is now "Profiles"; Me → Voice is now "Speaker identification"
 - **V01.0.121** Language model settings: history length, web searches, time limit, top_p/presence_penalty, own keywords that require a tool, prompt preview with a default button, own conversation style per profile (off); the rules stay fixed
@@ -40,7 +41,6 @@ All options for running without questions (`--mode api --asr 1.7b --tts 0.6b --y
 - **V01.0.117** Required tools from one table, answer check holds back made-up times, dates, scores and amounts, temperature 0.1 when choosing tools, quality test with rewordings, a retry and a history, optional thinking while choosing tools
 - **V01.0.116** Self-test during update fixed: a new test talked to the running TTS engine on the Spark (Event loop is closed)
 - **V01.0.115** Security stage 6: self-test scanner refuses new code with shell=True/eval, routes without login, uploads without a limit, unescaped onclick values and unsorted assistant tools
-- **V01.0.114** Security stage 5: admin logout ends every copy, log the admin out everywhere, code word message deleted in Telegram, tidying only on exact sender, forged parcel mails ignored, errors and service details not for guests
 
 All versions: [CHANGELOG.md](CHANGELOG.md)
 

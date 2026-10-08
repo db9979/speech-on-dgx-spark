@@ -31,6 +31,7 @@ Alle Optionen ohne Rückfragen (`--mode api --asr 1.7b --tts 0.6b --yes` …) st
 
 <!-- New version: add one line at the top here and in CHANGELOG.md, drop the oldest line here (keep 10). Details go to docs/de and docs/en, not into this README. -->
 
+- **V01.0.124** Kein Knacken mehr bei längeren Antworten: Sprache endet und stockt mit kurzem Ausblenden statt hart, Stopp blendet aus, „spricht noch“ zählt die Lautsprecher-Verzögerung mit, das eigene Echo am Satzende gilt nicht mehr als Unterbrechung
 - **V01.0.123** Einstellungen aufgeräumt: jede Einstellung direkt unter ihrem Schalter (Websuche, Wetter, Sprechererkennung; Seite „Websuche“ entfällt), kurze Funktionen mit Kennzeichen, Seiten heißen Sprachmodell, Vorgaben, Betrieb, überall „Ich“, Warnung bei ungespeicherten Änderungen
 - **V01.0.122** Geklonte Stimmen jetzt unter Einstellungen → Stimmen (mit „Probe sprechen“); Menüpunkt „Nutzer“ heißt jetzt „Profile“; Ich → Stimme heißt jetzt „Sprechererkennung“
 - **V01.0.121** Einstellungen fürs Sprachmodell: Verlaufslänge, Websuchen, Zeitlimit, top_p/presence_penalty, eigene Stichwörter für die Werkzeugpflicht, Prompt-Vorschau mit Standard-Knopf, eigener Gesprächsstil pro Profil (aus); Regeln bleiben fest
@@ -40,7 +41,6 @@ Alle Optionen ohne Rückfragen (`--mode api --asr 1.7b --tts 0.6b --yes` …) st
 - **V01.0.117** Werkzeugpflicht per Tabelle, Antwort-Prüfung hält erfundene Uhrzeiten, Daten, Spielstände und Beträge zurück, Temperatur 0.1 bei der Werkzeugwahl, Qualitätstest mit Umformulierungen, Wiederholung und Verlauf, optional Nachdenken bei der Werkzeugwahl
 - **V01.0.116** Selbsttest beim Update repariert: ein neuer Test sprach auf dem Spark die laufende TTS-Engine an (Event loop is closed)
 - **V01.0.115** Sicherheit Stufe 6: Selbsttest-Scanner lehnt neuen Code mit shell=True/eval, Routen ohne Anmeldung, Uploads ohne Grenze, unmaskierte onclick-Werte und uneingeordnete Assistenten-Werkzeuge ab
-- **V01.0.114** Sicherheit Stufe 5: Admin-Abmelden beendet alle Kopien, Admin überall abmelden, Codewort-Nachricht in Telegram gelöscht, Aufräumen nur bei exaktem Absender, gefälschte Paketmails ignoriert, Fehler und Dienst-Details nicht für Gäste
 
 Alle Versionen: [CHANGELOG.md](CHANGELOG.md)
 

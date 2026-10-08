@@ -6,6 +6,7 @@
 
 | Teil | Wo | Port |
 |---|---|---|
+| Knacken oder abgeschnittene Wortenden im Assistenten | Seit V01.0.124 blendet der Browser jedes Ende und jeden Aussetzer 5 ms lang aus. Bleibt ein Wort abgeschnitten, liegt es an der Engine selbst: denselben Text über Telegram oder `curl` an Port 31012 (ohne Streaming) anhören. Zeigt der Assistent unter der Antwort „Aussetzer bei …“, kam die Sprachausgabe nicht nach. |
 | ASR-Dienst `speech-spark-asr` (nimmt Anfragen an, reicht sie an die Engine durch) | `/opt/speech-spark/venv-panel` | 31001 |
 | ASR-Engine `speech-spark-asr-engine` (vLLM) | `/opt/speech-spark/venv-engine` | 31011, nur lokal |
 | TTS-Dienst `speech-spark-tts` (nimmt Anfragen an, reicht sie an die Engine durch) | `/opt/speech-spark/venv-panel` | 31002 |

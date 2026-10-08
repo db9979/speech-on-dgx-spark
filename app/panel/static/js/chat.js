@@ -15,22 +15,41 @@ function audioCtx(){if(!chat.ctx)chat.ctx=new (window.AudioContext||window.webki
 // streamed piece would be resampled on its own, and the seams between the pieces click.
 function playCtx(){const AC=window.AudioContext||window.webkitAudioContext;
   if(!chat.pctx){try{chat.pctx=new AC({sampleRate:24000,latencyHint:'interactive'})}catch{chat.pctx=new AC()}
-    chat.out=chat.pctx.createAnalyser();chat.out.fftSize=512;chat.out.connect(chat.pctx.destination)}   /* the face's mouth follows this level */
+    chat.out=chat.pctx.createAnalyser();chat.out.fftSize=512;chat.out.connect(chat.pctx.destination);   /* the face's mouth follows this level */
+    chat.gain=chat.pctx.createGain();chat.gain.connect(chat.out)}   // Stop fades out through this instead of cutting off
   if(chat.pctx.state==='suspended')chat.pctx.resume();return chat.pctx}
-function playPcm(b64){const ctx=playCtx(),bin=atob(b64),n=bin.length>>1;if(!n)return;const f=new Float32Array(n);
+const TAIL=120;   // 5 ms at 24 kHz
+function pcmNode(ctx,f,at){const ab=ctx.createBuffer(1,f.length,24000);ab.copyToChannel(f,0);const src=ctx.createBufferSource();src.buffer=ab;src.connect(chat.gain);
+  src.start(at);chat.sources.push(src);src.onended=()=>{chat.sources=chat.sources.filter(x=>x!==src)};return src}
+function playPcm(b64){const ctx=playCtx(),bin=atob(b64),n=bin.length>>1;if(!n)return;let f=new Float32Array(n);
   for(let i=0;i<n;i++){let v=bin.charCodeAt(2*i)|(bin.charCodeAt(2*i+1)<<8);if(v>=32768)v-=65536;f[i]=v/32768}
+  // The last 5 ms of every piece play as a separate, faded-out copy. If the next piece arrives before
+  // that copy starts, it is cancelled and the real samples go in front of the next piece, so the
+  // seam stays seamless. If the stream falls behind or ends (also when the speech engine stops in
+  // the middle of a sound), the voice fades out instead of stopping on a loud sample, which clicks.
+  const now=ctx.currentTime,tl=chat.tail;chat.tail=null;
+  if(tl&&tl.at>now+0.02){try{tl.src.stop()}catch{}chat.sources=chat.sources.filter(x=>x!==tl.src);
+    const j=new Float32Array(tl.data.length+n);j.set(tl.data);j.set(f,tl.data.length);f=j;chat.playEnd=tl.at}
   // after a gap (first piece, or the stream fell behind) start a little ahead and fade in, so the
   // next pieces join seamlessly and the restart does not click
   // 0.25 s head start: a reserve for when the GPU is busy with the LLM at the same time
-  const gap=chat.playEnd<=ctx.currentTime,at=gap?ctx.currentTime+0.25:chat.playEnd;
-  if(gap)for(let i=0,m=Math.min(n,96);i<m;i++)f[i]*=i/m;
+  const gap=chat.playEnd<=now,at=gap?now+0.25:chat.playEnd;
+  if(gap)for(let i=0,m=Math.min(f.length,96);i<m;i++)f[i]*=i/m;
   if(gap&&chat.ctrl){if(chat.firstPlay==null)chat.firstPlay=at;else chat.gaps.push(at-chat.firstPlay)}   // stalls, shown under the answer
-  if(chat.ctrl&&chat.blocks){chat.t0b=chat.t0b??ctx.currentTime;chat.blocks.push(`${(n/24000).toFixed(2)}@${(ctx.currentTime-chat.t0b).toFixed(2)}${gap&&chat.firstPlay!==at?'!':''}`)}
-  const ab=ctx.createBuffer(1,n,24000);ab.copyToChannel(f,0);const src=ctx.createBufferSource();src.buffer=ab;src.connect(chat.out);
-  src.start(at);chat.playEnd=at+ab.duration;chat.sources.push(src);
-  src.onended=()=>{chat.sources=chat.sources.filter(x=>x!==src)}}
-function stopAnswer(){stopBarge();if(chat.ctrl){chat.ctrl.abort();chat.ctrl=null}chat.sources.forEach(x=>{try{x.stop()}catch{}});chat.sources=[];chat.playEnd=0;$('chatstop').disabled=!chat.rec}
-const playing=()=>chat.pctx&&chat.playEnd>chat.pctx.currentTime;
+  if(chat.ctrl&&chat.blocks){chat.t0b=chat.t0b??now;chat.blocks.push(`${(n/24000).toFixed(2)}@${(now-chat.t0b).toFixed(2)}${gap&&chat.firstPlay!==at?'!':''}`)}
+  const k=Math.min(TAIL,f.length),body=f.subarray(0,f.length-k),data=f.slice(f.length-k),faded=data.slice();
+  for(let i=0;i<k;i++)faded[i]*=0.5+0.5*Math.cos(Math.PI*(i+1)/k);
+  if(body.length)pcmNode(ctx,body,at);const tAt=at+body.length/24000;
+  chat.tail={src:pcmNode(ctx,faded,tAt),at:tAt,data};chat.playEnd=tAt+k/24000}
+function stopAnswer(){stopBarge();if(chat.ctrl){chat.ctrl.abort();chat.ctrl=null}
+  // a short fade instead of cutting the voice off mid-sound (that clicks); then full volume again
+  if(chat.pctx&&chat.sources.length){const t0=chat.pctx.currentTime,g=chat.gain.gain;g.cancelScheduledValues(t0);g.setValueAtTime(g.value,t0);
+    g.linearRampToValueAtTime(0,t0+0.015);g.setValueAtTime(1,t0+0.03);chat.sources.forEach(x=>{try{x.stop(t0+0.02)}catch{}})}
+  chat.sources=[];chat.tail=null;chat.playEnd=0;$('chatstop').disabled=!chat.rec}
+// Still speaking until the last sample has left the speaker: currentTime is where the browser
+// computes audio, the device plays it later (output latency, much more over Bluetooth). Without
+// this, hands-free listening and "Bereit" started while the last syllable was still playing.
+const playing=()=>{const c=chat.pctx;return !!c&&chat.playEnd+(c.outputLatency||0)+(c.baseLatency||0)+0.08>c.currentTime};
 function setTalk(){$('talklbl').textContent=chat.rec?t('Fertig','Done'):t('Sprechen','Speak');$('talk').classList.toggle('rec',!!chat.rec);$('talk').classList.toggle('ans',!chat.rec&&!!(chat.ctrl||playing()));$('chatstop').disabled=!(chat.rec||chat.ctrl||playing())}
 function showSecure(){const port=CFG&&CFG.panel&&CFG.panel.https_port;const u=`https://${location.hostname}:${port}/`;
   $('chatsecure').style.display='block';$('chathttps').href=u;$('chathttps').textContent=port?u:t('https (im Panel unter Konfiguration einschalten)','https (enable it under Configuration)')}
@@ -75,11 +94,13 @@ function startBarge(){if(chat.barge||!chat.stream||!S.barge||(window.room&&room.
   const ctx=audioCtx(),src=ctx.createMediaStreamSource(chat.stream),an=ctx.createAnalyser();an.fftSize=1024;src.connect(an);
   const buf=new Float32Array(an.fftSize),ob=new Float32Array(chat.out.fftSize),floor=Math.max(chat.floor||0.01,0.005);
   const mime=['audio/webm;codecs=opus','audio/webm','audio/mp4','audio/ogg'].find(m=>window.MediaRecorder&&MediaRecorder.isTypeSupported(m))||'';
-  let voiced=0,pre=null,parts=[],last=performance.now();
+  let voiced=0,pre=null,parts=[],last=performance.now(),outHold=0;
   const rms=(a,b)=>{a.getFloatTimeDomainData(b);let e=0;for(const v of b)e+=v*v;return Math.sqrt(e/b.length)};
   const iv=setInterval(()=>{const now=performance.now(),dt=now-last;last=now;
     if(!playing()&&!chat.ctrl){stopBarge();return}
-    const m=rms(an,buf),out=rms(chat.out,ob),b=BARGE[S.barge_level]||BARGE.mid,thr=Math.max(b[0],floor*b[1],out*b[2]);
+    // the speaker and the room still carry the voice a moment after the output level drops (end of a
+    // word or sentence): a slowly falling peak keeps that echo from counting as an interruption
+    const m=rms(an,buf),out=outHold=Math.max(rms(chat.out,ob),outHold*0.85),b=BARGE[S.barge_level]||BARGE.mid,thr=Math.max(b[0],floor*b[1],out*b[2]);
     chat.micLevel=Math.min(1,Math.max(0,m-floor)*12);
     if(m>thr*0.7){voiced+=dt;
       if(!pre){parts=[];pre=new MediaRecorder(chat.stream,mime?{mimeType:mime}:{});pre.ondataavailable=e=>{if(e.data.size)parts.push(e.data)};pre.start()}}
