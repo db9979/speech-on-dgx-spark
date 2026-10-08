@@ -144,7 +144,9 @@ def _need(case):
     import chat
     names = {t["function"]["name"] for t in case["tools"]}
     return bool(("calendar_events" in names and chat.NEED_CALENDAR.search(case["q"]))
-                or ("mail_list" in names and chat.NEED_MAIL.search(case["q"])))
+                or ("mail_list" in names and chat.NEED_MAIL.search(case["q"]))
+                or ("reminder_list" in names and chat.NEED_REMINDER.search(case["q"]))
+                or ("web_search" in names and chat.NEED_SEARCH.search(case["q"])))
 
 
 def _zone():

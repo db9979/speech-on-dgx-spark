@@ -122,7 +122,9 @@ SEARCH_TOOL = {"type": "function", "function": {
     "parameters": {"type": "object", "properties": {"query": {"type": "string", "description": "search query"}},
                    "required": ["query"]}}}
 SEARCH_HINT = ("Du kannst mit dem Werkzeug web_search im Internet suchen. Nutze es, wenn die Frage aktuelle "
-               "oder dir unbekannte Informationen braucht, sonst nicht. Fasse das Gefundene in eigenen Worten "
+               "oder dir unbekannte Informationen braucht, sonst nicht. Bei Ergebnissen, Spielen, Nachrichten und "
+               "allem, was nach deinem Wissensstand passiert sein kann, suchst du immer, statt aus eigenem Wissen "
+               "zu antworten oder zu sagen, dass etwas nicht stattgefunden hat. Fasse das Gefundene in eigenen Worten "
                "kurz zusammen und lies keine Adressen oder Links vor.")
 
 
@@ -298,6 +300,11 @@ CALENDAR_ADD_TOOL = {"type": "function", "function": {
 NEED_CALENDAR = re.compile(r"(?i)\b(termin\w*|kalender\w*|verabred\w*|appointment\w*|calendar)\b"
                            r"|\btr[aä]g\w*\b.{1,80}\bein\b|\beintrag\w*")
 NEED_MAIL = re.compile(r"(?i)\b(e-?mails?|mails?|posteingang|inbox)\b")
+# reminders and news-like questions as well: the model listed a made-up reminder and "knew" that
+# there was no Bundesliga match yesterday instead of looking it up (quality test V01.0.110)
+NEED_REMINDER = re.compile(r"(?i)\b(erinnerung\w*|erinnere? mich|timer\w*|wecker\w*|reminders?)\b")
+NEED_SEARCH = re.compile(r"(?i)\b(gewonnen|gewinnt|verloren|gespielt|spielt\w*|spielstand|ergebnis(se)?|tabelle|"
+                         r"bundesliga|champions league|nachrichten|news|schlagzeilen?)\b")
 CALENDAR_ADD_HINT = ("Neue Termine trägst du mit calendar_add ein. Das Werkzeug speichert noch nichts: Lies dem "
                      "Nutzer den Vorschlag aus dem Ergebnis vor und frag, ob du ihn eintragen sollst. Eingetragen "
                      "wird erst, wenn er in der nächsten Nachricht zustimmt. Frag vorher nach, wenn Tag oder Uhrzeit "
@@ -1077,6 +1084,10 @@ async def _chat(request: Request):
         need.append("calendar_events")
     if mailbox and NEED_MAIL.search(ask_text):
         need.append("mail")
+    if REMINDER_TOOLS[0] in tools and NEED_REMINDER.search(ask_text):
+        need.append("reminders")
+    if SEARCH_TOOL in tools and NEED_SEARCH.search(ask_text):
+        need.append("search")
     if "weather" in ex["run"] and re.search(r"(?i)\b(wetter\w*|regnet|regen|schnee\w*|weather|rain\w*)\b", ask_text):
         need.append("weather")
     if "parcels" in ex["run"] and re.search(r"(?i)\b(paket\w*|päckchen|lieferung\w*|sendung\w*|parcels?|packages?|deliver\w*)\b", ask_text):

@@ -904,6 +904,10 @@ class Quality(unittest.TestCase):
         self.assertTrue(quality._need(cases["termin-vorschlag"]))
         self.assertTrue(quality._need(cases["mails-neu"]))
         self.assertFalse(quality._need(cases["witz"]))
+        for cid in ["erinnerungen-leer", "suche-fehlgeschlagen", "suche-treffer"]:
+            self.assertTrue(quality._need(cases[cid]), cid)
+        for cid in ["datum", "kontostand", "gedaechtnis-unbekannt", "timer-ohne-werkzeug"]:
+            self.assertFalse(quality._need(cases[cid]), cid)
         self.assertFalse(quality._need(cases["kalender-ohne-zugriff"]))
         self.assertTrue(quality._check(cases["termin-vorschlag"], "Am 13. Oktober um 10 Uhr, oder?", []))
 
