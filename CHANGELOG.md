@@ -2,6 +2,7 @@
 
 Every version in one line, newest first (taken from the commit messages, so some lines are German, some English). Older entries have no version number.
 
+- **V01.0.108** · 2026-10-08 · Selbsttest beim Update repariert (zwei neue Tests suchten install.sh/update.sh in der Testkopie)
 - **V01.0.107** · 2026-10-08 · Sicherheit Stufe 1: Rücksprung nur auf echte Vorversion, nur Qwen-Modelle, heikle Einstellungen und Sicherungs-Download mit Code, Geräteschlüssel ändern keine Verbindungen, Größengrenzen vor dem Lesen, Kalender-/WAV-/Word-Bomben entschärft, MemoryMax
 - **V01.0.106** · 2026-10-08 · Wyoming einschalten: Adressfeld erscheint sofort, Home-Assistant-Adresse wird vorgeschlagen, deutsche Meldung am Feld; Details aller Schalter erscheinen beim Einschalten
 - **V01.0.105** · 2026-10-08 · Sicherheit: Einkaufsliste/Aufgaben an den iPhone-Kurzbefehl übergeben nur noch per POST (GET liest nur), Telegram-Fehler im Log ohne Bot-Token

@@ -23,6 +23,14 @@ ADMIN.post("/api/login", json={"password": "secret-admin"})
 ROOT = os.path.dirname(os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
 
 
+def repo_file(*parts):
+    """A file next to app/ (install.sh, update.sh); the self-test during an update only has app/ itself."""
+    path = os.path.join(ROOT, *parts)
+    if not os.path.exists(path):
+        raise unittest.SkipTest(f"{parts[-1]} is not part of this copy")
+    return open(path).read()
+
+
 def profile(name, pin="1234"):
     r = ADMIN.post("/api/admin/profiles", json={"name": name, "pin": pin})
     assert r.status_code in (200, 409), r.text
@@ -195,12 +203,12 @@ class Stage1(unittest.TestCase):
             self.assertEqual(tidy.clean_mid(bad), "", bad)
 
     def test_rollback_only_to_the_kept_previous_version(self):
-        sh = open(os.path.join(ROOT, "update.sh")).read()
+        sh = repo_file("update.sh")
         self.assertIn('if [ "$new" != "$prev" ] || ! git merge-base --is-ancestor "$SECURITY_FLOOR" "$new"', sh)
         self.assertIn('[ ! -L "$STATE/update-target" ]', sh)
 
     def test_units_have_memory_limits(self):
-        sh = open(os.path.join(ROOT, "install.sh")).read()
+        sh = repo_file("install.sh")
         self.assertIn("MemoryMax=4G", sh)
         self.assertIn("PrivateTmp=yes", sh)
 
