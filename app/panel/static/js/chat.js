@@ -145,10 +145,10 @@ function showLive(x){if(!chat.liveEl){chat.liveEl=chatLog('user',x);chat.liveEl.
 function clearLive(){if(chat.liveEl){chat.liveEl.parentNode.remove();chat.liveEl=null}}
 
 // Errors in plain words; the admin also sees the technical detail.
-const ERRS={llm_auth:t('Das Sprachmodell lehnt den Schlüssel ab. Unter Einstellungen → Assistent den qwen38-Schlüssel eintragen (auf dem Spark in ~/.config/qwen38/api-key) oder das Update ausführen, das ihn übernimmt.','The language model rejects the key. Enter the qwen38 key under Settings → Assistant (on the Spark in ~/.config/qwen38/api-key) or run the update, which imports it.'),
+const ERRS={llm_auth:t('Das Sprachmodell lehnt den Schlüssel ab. Unter Einstellungen → Sprachmodell den qwen38-Schlüssel eintragen (auf dem Spark in ~/.config/qwen38/api-key) oder das Update ausführen, das ihn übernimmt.','The language model rejects the key. Enter the qwen38 key under Settings → Language model (on the Spark in ~/.config/qwen38/api-key) or run the update, which imports it.'),
   llm_down:t('Das Sprachmodell läuft gerade nicht oder startet noch. Bitte gleich noch einmal versuchen.','The language model is not running or still starting. Please try again in a moment.'),
   llm_slow:t('Das Sprachmodell antwortet gerade nicht rechtzeitig, es ist wohl stark beschäftigt.','The language model does not answer in time; it is probably very busy.'),
-  llm_model:t('Das eingestellte Sprachmodell gibt es nicht. Einstellungen → Assistent prüfen.','The configured language model does not exist. Check Settings → Assistant.'),
+  llm_model:t('Das eingestellte Sprachmodell gibt es nicht. Einstellungen → Sprachmodell prüfen.','The configured language model does not exist. Check Settings → Language model.'),
   llm_error:t('Das Sprachmodell hat einen Fehler gemeldet.','The language model reported an error.'),
   tts_down:t('Die Sprachausgabe läuft gerade nicht, deshalb nur als Text.','Speech output is not running, so text only.'),
   tts_loading:t('Die Sprachausgabe lädt noch, deshalb nur als Text.','Speech output is still loading, so text only.'),

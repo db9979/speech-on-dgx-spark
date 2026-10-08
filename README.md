@@ -31,6 +31,7 @@ All options for running without questions (`--mode api --asr 1.7b --tts 0.6b --y
 
 <!-- New version: add one line at the top here and in CHANGELOG.md, drop the oldest line here (keep 10). Details go to docs/de and docs/en, not into this README. -->
 
+- **V01.0.123** Tidier settings: every setting right below its switch (web search, weather, speaker identification; the web search page is gone), short feature rows with marks, pages named Language model, Defaults, Operation, "Me" everywhere, warning about unsaved changes
 - **V01.0.122** Cloned voices moved to Settings → Voices (with "Speak a sample"); the menu entry "Users" is now "Profiles"; Me → Voice is now "Speaker identification"
 - **V01.0.121** Language model settings: history length, web searches, time limit, top_p/presence_penalty, own keywords that require a tool, prompt preview with a default button, own conversation style per profile (off); the rules stay fixed
 - **V01.0.120** After an update the browser loads the new version by itself (versioned files, an open page reloads when no conversation is running); no more Ctrl+F5
@@ -40,7 +41,6 @@ All options for running without questions (`--mode api --asr 1.7b --tts 0.6b --y
 - **V01.0.116** Self-test during update fixed: a new test talked to the running TTS engine on the Spark (Event loop is closed)
 - **V01.0.115** Security stage 6: self-test scanner refuses new code with shell=True/eval, routes without login, uploads without a limit, unescaped onclick values and unsorted assistant tools
 - **V01.0.114** Security stage 5: admin logout ends every copy, log the admin out everywhere, code word message deleted in Telegram, tidying only on exact sender, forged parcel mails ignored, errors and service details not for guests
-- **V01.0.113** Security stage 4: install and update never write as root through links, no passwords in the update log, qwen38 key only from a real file, rewritten history is refused, optionally only signed versions
 
 All versions: [CHANGELOG.md](CHANGELOG.md)
 

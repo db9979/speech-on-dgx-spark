@@ -53,11 +53,10 @@ const cfgPane=p=>{document.querySelectorAll('#cfgnav button').forEach(b=>b.class
 document.querySelectorAll('#cfgnav button').forEach(b=>b.onclick=()=>{cfgPane(b.dataset.p);if(b.dataset.p==='voices')loadClone();document.querySelector('.cfgwrap').classList.add('sub');window.scrollTo(0,0)});
 $('cfgback').onclick=()=>{document.querySelector('.cfgwrap').classList.remove('sub');window.scrollTo(0,0)};
 try{const p=localStorage.getItem('cfgpane');if(p&&$('pane-'+p))cfgPane(p)}catch{}
-// Details of a feature show only while it is on (Websuche pane, speaker strictness).
+// Details of a feature show only while it is on (they sit right below its switch).
 function cfgDeps(){const on=id=>{const e=$(id);return !e||e.checked};
   document.querySelectorAll('#pane-cfg [data-show],[data-show]').forEach(x=>x.style.display=on(x.dataset.show)?'':'none');
-  const kb=document.querySelector('#cfgnav button[data-p="know"]');kb.style.display=on('chat.search')?'':'none';
-  if(!on('chat.search')&&$('pane-know').classList.contains('on'))cfgPane('feat')}
+}
 ['chat.search','chat.speaker_id','chat.mail'].forEach(id=>$(id).addEventListener('change',cfgDeps));
 // every switch with details shows them at once when switched on (not only after saving)
 [...new Set([...document.querySelectorAll('[data-show]')].map(x=>x.dataset.show))].forEach(id=>{const e=$(id);if(e&&!['chat.search','chat.speaker_id','chat.mail'].includes(id))e.addEventListener('change',cfgDeps)});
@@ -72,7 +71,20 @@ async function wySuggest(auto){const inp=$('chat.wyoming_allow'),msg=$('wymsg');
   catch(e){if(!auto)msg.textContent=e.message}}
 $('wysuggest').onclick=()=>wySuggest(false);
 $('chat.wyoming').addEventListener('change',e=>{if(e.target.checked&&!$('chat.wyoming_allow').value.trim())wySuggest(true)});
-const markDirty=(pane,on)=>{const b=document.querySelector(`#cfgnav button[data-p="${pane.id.slice(5)}"]`);if(b)b.classList.toggle('dirty',on)};
+const markDirty=(pane,on)=>{const b=document.querySelector(`#cfgnav button[data-p="${pane.id.slice(5)}"]`);if(b)b.classList.toggle('dirty',on);
+  pane.classList.toggle('dirty',on);const bar=pane.querySelector('.savebar');if(bar)bar.classList.toggle('dirty',on)};
+// unsaved changes: the save bar says so and offers "Verwerfen"; leaving the page or the settings asks first
+const dirtyPanes=()=>[...document.querySelectorAll('.pane.dirty')];
+const leaveOk=()=>!dirtyPanes().length||confirm(t('Es gibt ungespeicherte Änderungen. Trotzdem verlassen? Sie gehen dann verloren.','There are unsaved changes. Leave anyway? They will be lost.'));
+window.addEventListener('beforeunload',e=>{if(dirtyPanes().length){e.preventDefault();e.returnValue=''}});
+document.querySelectorAll('.savebar').forEach(bar=>{if(!bar.querySelector('.savebtn'))return;
+  const n=document.createElement('span');n.className='unsaved';n.textContent=t('Ungespeicherte Änderungen','Unsaved changes');
+  const d=document.createElement('button');d.type='button';d.className='b undo';d.textContent=t('Verwerfen','Discard');
+  d.onclick=()=>{if(confirm(t('Änderungen auf dieser Seite verwerfen?','Discard the changes on this page?')))loadCfg()};
+  bar.prepend(n);bar.querySelector('.savebtn').after(d)});
+// leaving the settings with unsaved changes: ask (capture phase, before the menu switches the page)
+document.addEventListener('click',e=>{const b=e.target.closest&&e.target.closest('nav button[data-s],.subnav button');
+  if(b&&b.dataset.s!=='cfg'&&document.getElementById('cfg').classList.contains('on')&&!leaveOk()){e.stopImmediatePropagation();e.preventDefault()}},true);
 document.querySelectorAll('.pane').forEach(pane=>{if(!pane.querySelector('.savebtn'))return;const f=e=>{if(/^pw/.test(e.target.id))return;markDirty(pane,true)};pane.addEventListener('input',f);pane.addEventListener('change',f)});
 document.querySelectorAll('.savebtn').forEach(btn=>btn.onclick=async()=>{const pane=$('pane-'+btn.dataset.p),msg=btn.nextElementSibling;
   const n=JSON.parse(JSON.stringify(CFG));if(getDefaults&&pane.contains($('chatdefaults')))n.chat.defaults=getDefaults();
@@ -217,7 +229,7 @@ async function loadInt(){const c=await (await api('/api/config')).json();const v
   $('int-pbw').href=panelUrl+'/pebble/speech-spark.pbw';
   const siriBase=location.protocol==='https:'?location.origin:panelUrl;
   $('int-siri').innerHTML=kv([['URL',siriBase+'/api/siri/ask'],[t('Methode','Method'),'POST'],['Header','X-Speech-Device: sd_…'],[t('Haupttext (JSON)','Request body (JSON)'),'{"text": "…"}'],[t('Antwort','Answer'),'{"answer": "…"}']]);
-  $('int-voices').textContent=v.model_kind==='voice_design'?t('VoiceDesign-Modell: die Stimme wird über die Standard-Anweisung beschrieben.','VoiceDesign model: the voice is described by the default instruction.'):(v.voices.join(', ')||t('(Dienst lädt noch)','(service still loading)'));
+  $('int-voices').textContent=v.model_kind==='voice_design'?t('VoiceDesign-Modell: die Stimme wird über die Standard-Anweisung beschrieben.','VoiceDesign model: the voice is described by the default instruction.'):((v.voices||[]).join(', ')||t('(Dienst lädt noch)','(service still loading)'));
   const auth=c.api.key?` \\\n  -H "Authorization: Bearer ${c.api.key}"`:'';
   const hello=t('Hallo aus der Spark.','Hello from the Spark.'),lng=t('German','English'),code=t('de','en'),fn=t('hallo','hello');
   $('int-curl').textContent=`# ${t('Text -> Sprache','Text -> speech')} (mp3)

@@ -110,7 +110,7 @@ async function showTg(){const box=$('tgbox');if(!PROFILE||!TG_ON){box.innerHTML=
     ${xsw('tg_voice',t('Antworten auch als Sprachnachricht','Answers also as voice messages'),t('In der Spark-Stimme. Umschalten geht auch mit /stimme.','In the Spark voice. Also with /stimme.'))}
     ${xsw('tg_push',t('Mitteilungen auch über Telegram','Notifications also over Telegram'),t('Erinnerungen, Tagesbriefing und „Von selbst“-Hinweise (Termine und Mails nur mit dem nächsten Schalter).','Reminders, daily briefing and proactive notes (appointments and mail only with the next switch).'))}
     ${xsw('tg_private',t('Persönliches über Telegram erlauben','Allow personal data over Telegram'),t('Kalender, E-Mail, Kontakte, Pakete und Dokumente. Die Nachrichten laufen über die Server von Telegram.','Calendar, e-mail, contacts, parcels and documents. The messages pass Telegram\'s servers.'))}
-    ${xsw('tg_ha',t('Smart Home über Telegram schalten','Switch the smart home over Telegram'),t('Nur mit deinem Codewort (Profil-Knopf → Smart Home). Ohne Codewort schaltet Telegram nie.','Only with your code word (profile button → Smart home). Without a code word Telegram never switches.'))}
+    ${xsw('tg_ha',t('Smart Home über Telegram schalten','Switch the smart home over Telegram'),t('Nur mit deinem Codewort (Ich → Smart Home). Ohne Codewort schaltet Telegram nie.','Only with your code word (Me → Smart home). Without a code word Telegram never switches.'))}
     <div class="fh" id="tgmsg"></div>`;
   xbind(box);
   if($('tglink'))$('tglink').onclick=async()=>{try{const r=await (await api('/api/profile/telegram/link',xjson('POST'))).json();

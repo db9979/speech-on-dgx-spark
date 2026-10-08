@@ -2,6 +2,7 @@
 
 Every version in one line, newest first (taken from the commit messages, so some lines are German, some English). Older entries have no version number.
 
+- **V01.0.123** · 2026-10-08 · Einstellungen aufgeräumt: Einstellungen unter ihrem Schalter, Seite Websuche entfällt, kurze Funktionen mit Kennzeichen, Sprachmodell/Vorgaben/Betrieb, überall „Ich“, Warnung bei ungespeicherten Änderungen, Einbinden-Seite bricht nicht mehr ab, wenn die TTS keine Stimmen meldet
 - **V01.0.122** · 2026-10-08 · Stimmen unter Einstellungen → Stimmen (mit „Probe sprechen“), Menüpunkt „Nutzer“ → „Profile“, Ich → Stimme → „Sprechererkennung“
 - **V01.0.121** · 2026-10-08 · Einstellungen fürs Sprachmodell: Verlaufslänge, Websuchen, Zeitlimit, top_p/presence_penalty, eigene Stichwörter für die Werkzeugpflicht, Prompt-Vorschau mit Standard-Knopf, eigener Gesprächsstil pro Profil (aus); Regeln bleiben fest
 - **V01.0.120** · 2026-10-08 · Nach einem Update lädt der Browser die neue Version von selbst (Dateien mit Versions-Kennung, offene Seite lädt neu, wenn kein Gespräch läuft); kein Strg+F5 mehr

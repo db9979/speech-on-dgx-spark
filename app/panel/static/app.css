@@ -338,3 +338,7 @@ div.guide.inline{border:0;border-bottom:1px solid var(--line);border-radius:0;ma
 @media (max-width:760px){.menav{flex-wrap:nowrap}}
 #conadd{margin-top:10px;border:1px solid var(--line);border-radius:12px;padding:8px 12px}#conadd summary{cursor:pointer;font-weight:600;font-size:14px}
 .setrow:has(>textarea){flex-wrap:wrap}.setrow>textarea{width:100%;min-width:0}
+.ftags{display:flex;flex-wrap:wrap;gap:4px;margin-top:4px}.ftag{font-size:11px;line-height:1.5;padding:0 7px;border-radius:9px;background:var(--line);color:var(--mut);white-space:nowrap}
+.ftag.out{background:color-mix(in srgb,var(--acc) 14%,transparent);color:var(--acc)}
+.savebar .unsaved,.savebar .undo{display:none}.savebar.dirty .unsaved{display:inline;font-size:13px;color:var(--warn,#b7791f);font-weight:600;margin-right:4px}.savebar.dirty .undo{display:inline-flex}
+.savebar.dirty{position:sticky;bottom:0;z-index:3;background:var(--card)}

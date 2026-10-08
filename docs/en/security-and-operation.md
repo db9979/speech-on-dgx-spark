@@ -39,10 +39,10 @@
 
 - **Backups**: every day, before every update, before going back to the previous version and before every restore the panel backs up profiles (memory, conversations, documents, calendars, mail accounts, smart home, speaker ID), cloned voices, settings and the panel password to `/var/lib/speech-spark/backups`. Counted separately, the newest seven daily or manual ones and the newest five from before an update, rollback or restore are kept. *Overview → System and update → Backup* downloads, restores or deletes each one and restores a downloaded file. A restore checks the settings like the settings page does, caps the size and swaps all parts or none; the current state is backed up first. Passwords and tokens are in the backup encrypted, the key is not: on another Spark, calendar and mail passwords and Home Assistant tokens have to be entered again.
 - **Back to the previous version**: after an update the update card shows "Back to the previous version", which installs the version that ran before (only versions of the official branch). By hand: `sudo /opt/speech-spark/src/update.sh --to <commit>`.
-- **Watchdog** (*Settings → System*, on by default): restarts ASR, TTS or an engine that does not answer for 5 minutes, works for 5 minutes without finishing a request, or loads for 45 minutes; at most three times an hour. Every restart is shown on top of the admin pages and in the change log.
+- **Watchdog** (*Settings → Operation*, on by default): restarts ASR, TTS or an engine that does not answer for 5 minutes, works for 5 minutes without finishing a request, or loads for 45 minutes; at most three times an hour. Every restart is shown on top of the admin pages and in the change log.
 - **Live check**: after every update (and on request) the language model answers once, speech output says a sentence and speech recognition has to understand it again. A failure is shown on top of the admin pages.
 - **Quality test**: after every update (when the live check passed) and on request (*Overview → System and update → Qualitätstest → Jetzt prüfen*) the panel asks the real language model 20 fixed questions, most also in two other wordings, with prepared tool results (appointments, mail, reminders, search, memory) and checks that it picks the right tool and what is heard after the answer check. A failure runs once more (then "only on the second try"); the history of the last 20 runs (`quality-history.json`) marks questions as "newly broken" or "wobbles". Newly broken questions show as a note on top of every admin page for a week. No real data is read or changed.
-- **Memory warning**: when free memory drops below *Settings → System → Warn below* (default 10 GiB), every admin page shows a warning on top; DGX OS kills processes at about 8 GiB.
+- **Memory warning**: when free memory drops below *Settings → Operation → Warn below* (default 10 GiB), every admin page shows a warning on top; DGX OS kills processes at about 8 GiB.
 
 ## Self-test
 
@@ -50,4 +50,4 @@ Every install and update runs the panel's self-test (`app/tests`) against fake L
 
 ## Logs
 
-All speech services log into their own journal (`journalctl --namespace=speech-spark -u 'speech-spark-*'`), capped at 500 MB and 14 days; journald deletes older entries automatically. Adjustable under Settings → System, effective after the next update. The panel's constant status polls are not logged at all.
+All speech services log into their own journal (`journalctl --namespace=speech-spark -u 'speech-spark-*'`), capped at 500 MB and 14 days; journald deletes older entries automatically. Adjustable under Settings → Operation, effective after the next update. The panel's constant status polls are not logged at all.

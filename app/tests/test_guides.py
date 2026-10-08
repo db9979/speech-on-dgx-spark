@@ -93,3 +93,53 @@ class MenuPlaces(unittest.TestCase):
             text = read(*f.split("/"))
             for old in ("Nutzer →", "Users →", "Reiter „Stimmen“", "Profil-Knopf → Stimme →"):
                 self.assertNotIn(old, text, f)
+
+
+class SettingsOrder(unittest.TestCase):
+    """V01.0.123: every setting sits below its switch on Funktionen, one name per page, short rows,
+    unsaved changes are shown and asked about."""
+
+    def feat(self):
+        html = read("index.html")
+        return html, html[html.index('id="pane-feat"'):html.index('id="pane-ai"')]
+
+    def test_feature_settings_below_their_switch(self):
+        html, feat = self.feat()
+        for el, sw in (("chat.search_url", "chat.search"), ("chat.weather_url", "chat.weather"),
+                       ("chat.speaker_strictness", "chat.speaker_id")):
+            self.assertIn(f'id="{el}"', feat, el)
+            block = feat[:feat.index(f'id="{el}"')]
+            self.assertEqual(block.rindex('data-show="'), block.rindex(f'data-show="{sw}"'), el)
+        self.assertIn('id="chat.tool_thinking"', feat)
+        self.assertNotIn('pane-know', html)
+        self.assertNotIn('data-p="know"', html)
+
+    def test_one_name_per_page(self):
+        html = read("index.html")
+        nav = html[html.index('id="cfgnav"'):html.index('</div>', html.index('id="cfgnav"'))]
+        names = re.findall(r'data-p="\w+"[^>]*>([^<]+)<', nav)
+        self.assertEqual(len(names), len(set(names)))
+        for old in (">Assistent<", ">Gespräch<", ">System<", ">Websuche<"):
+            self.assertNotIn(old, nav)
+        for f in ("index.html", "js/guides.js", "js/extras.js", "js/me.js", "js/i18n.js", "js/chat.js"):
+            text = read(*f.split("/"))
+            for old in ("Profil-Knopf", "profile button", "Profile button", "Einstellungen → Websuche", "Einstellungen → Assistent"):
+                self.assertNotIn(old, text, f)
+
+    def test_feature_rows_are_short_and_translated(self):
+        _, feat = self.feat()
+        en = read("js", "i18n.js")
+        for text in re.findall(r'<div class="lbl"><b>[^<]+</b><span>([^<]+)</span>', feat):
+            self.assertLessEqual(len(text), 140, text)
+            self.assertIn(json_str(text), en, text)
+
+    def test_unsaved_changes_are_asked(self):
+        js = read("js", "admin.js")
+        self.assertIn("beforeunload", js)
+        self.assertIn("Ungespeicherte Änderungen", js)
+        self.assertIn("leaveOk()", js)
+
+
+def json_str(s):
+    import json
+    return json.dumps(s, ensure_ascii=False)
