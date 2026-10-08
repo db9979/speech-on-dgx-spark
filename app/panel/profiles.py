@@ -89,8 +89,8 @@ def admin_list():
     users = [{"id": u["id"], "name": u["name"], "created": u.get("created"), "facts": len(memory(u["id"]))}
              for u in d["users"]]
     last = seen()
-    devices = [dict({k: v[k] for k in ("id", "name", "user", "created") if k in v}, last=last.get(v["id"]))
-               for v in d["devices"]]
+    devices = [dict({k: v[k] for k in ("id", "name", "user", "created") if k in v}, last=last.get(v["id"]),
+                    app=v.get("scope") == "app") for v in d["devices"]]
     return {"users": users, "devices": devices}
 
 
@@ -128,14 +128,16 @@ def delete_user(uid):
 
 
 # ---------------------------------------------------------------- devices (speakers, scripts)
-def add_device(name, uid):
+def add_device(name, uid, scope=None):
+    """scope "app": a key of the iPhone app, good only for APP_PATHS (see current)."""
     with _lock:
         d = _load()
         if not any(u["id"] == uid for u in d["users"]):
             raise ValueError("no such profile")
         token = "sd_" + secrets.token_urlsafe(24)
-        d["devices"].append({"id": "d_" + secrets.token_hex(6), "name": name.strip(), "user": uid,
-                             "token": hashlib.sha256(token.encode()).hexdigest(), "created": int(time.time())})
+        d["devices"].append(dict({"id": "d_" + secrets.token_hex(6), "name": name.strip(), "user": uid,
+                                  "token": hashlib.sha256(token.encode()).hexdigest(), "created": int(time.time())},
+                                 **({"scope": scope} if scope else {})))
         _write(_path("profiles.json"), d)
         return token  # shown once; only its hash is stored
 
@@ -257,6 +259,28 @@ def seen():
     return dict(d if isinstance(d, dict) else {}, **_seen)
 
 
+# A key of the iPhone app (scope "app") only asks and listens: these paths and nothing else, and only
+# while the admin and the profile have the app switched on (APP_GATE, set by iphone.py; closed without it).
+APP_PATHS = ("/api/chat", "/api/test/asr", "/api/siri/ask", "/api/iphone/hello")
+APP_GATE = [lambda uid: False]
+
+
+def _device(d, request):
+    token = request.headers.get(DEVICE_HEADER, "")
+    if not token:
+        return None
+    h = hashlib.sha256(token.encode()).hexdigest()
+    return next((x for x in d["devices"] if secrets.compare_digest(x["token"], h)), None)
+
+
+def key_scope(request):
+    """The scope of the device key this request carries ("app"), "" for other keys and logins."""
+    if request.scope.get("speech_profile"):
+        return ""
+    dev = _device(_load(), request)
+    return str(dev.get("scope") or "") if dev else ""
+
+
 def current(request):
     """{"id", "name"} of the profile behind this request (device key first, then cookie), or None."""
     d = _load()
@@ -266,9 +290,10 @@ def current(request):
         return {"id": u["id"], "name": u["name"]} if u else None
     token = request.headers.get(DEVICE_HEADER, "")
     if token:
-        h = hashlib.sha256(token.encode()).hexdigest()
-        dev = next((x for x in d["devices"] if secrets.compare_digest(x["token"], h)), None)
+        dev = _device(d, request)
         if not dev:
+            return None
+        if dev.get("scope") == "app" and (request.scope.get("path") not in APP_PATHS or not APP_GATE[0](dev["user"])):
             return None
         _note_device(dev["id"], request)
         uid = dev["user"]
@@ -283,8 +308,8 @@ def current(request):
 
 def own_devices(uid):
     last = seen()
-    return [{"id": x["id"], "name": x["name"], "created": x.get("created"), "last": last.get(x["id"])}
-            for x in _load()["devices"] if x.get("user") == uid]
+    return [{"id": x["id"], "name": x["name"], "created": x.get("created"), "last": last.get(x["id"]),
+             "app": x.get("scope") == "app"} for x in _load()["devices"] if x.get("user") == uid]
 
 
 # ---------------------------------------------------------------- conversation settings
@@ -344,6 +369,9 @@ SETTINGS = {
     "tg_ha": (False, lambda v: isinstance(v, bool)),
     "tg_push": (False, lambda v: isinstance(v, bool)),
     "esp_on": (False, lambda v: isinstance(v, bool)),   # own ESP32 speakers (esp32.py)
+    # iPhone app (iphone.py): pairing for this profile, and switching the smart home from it, both off
+    "app_on": (False, lambda v: isinstance(v, bool)),
+    "app_ha": (False, lambda v: isinstance(v, bool)),
 }
 
 

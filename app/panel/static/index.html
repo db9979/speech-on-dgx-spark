@@ -108,6 +108,7 @@
         <label>Adresse des Spark für die Lautsprecher</label><div class="rowin"><input id="chat.esp32_url" placeholder="https://speech.example.de" autocapitalize="off" autocomplete="off"><button class="b" type="button" id="espcheck">Adresse prüfen</button></div>
         <div class="fh">Leer = die Adresse dieser Seite. Am besten dein Reverse Proxy mit echtem Zertifikat (er muss WebSockets durchlassen); ein selbst signiertes Zertifikat (Port 31443) nimmt das Board nicht an, im Heimnetz geht auch http://&lt;Spark-IP&gt;:31080.</div>
         <ul class="facts small" id="espcheckres"></ul></div>
+      <div class="setrow"><div class="lbl"><b>iPhone-App</b><span>Profile koppeln die App „Spark“ auf ihrem iPhone: fragen und hören mit der Spark-Stimme, auch per Siri.</span></div><label class="tgl"><input type="checkbox" id="chat.iphone"><i></i></label></div>
       <div class="setrow"><div class="lbl"><b>Zweiter Anmeldeschritt für Profile</b><span>Profile können bei der Anmeldung zusätzlich einen Code aus einer Authenticator-App verlangen.</span></div><label class="tgl"><input type="checkbox" id="chat.mfa"><i></i></label></div>
       <div class="setrow"><div class="lbl"><b>Rückfrage ohne Weckwort</b><span>Nach der Antwort auf eine gesprochene Frage hört der Assistent ein paar Sekunden weiter zu; jedes Profil wählt die Dauer.</span></div><label class="tgl"><input type="checkbox" id="chat.follow_up"><i></i></label></div>
       <div class="setrow"><div class="lbl"><b>Aus Korrekturen lernen</b><span>Nach einer Korrektur schlägt der Assistent einen Satz zum Merken vor und speichert ihn erst nach „Ja“.</span></div><label class="tgl"><input type="checkbox" id="chat.learn_fixes"><i></i></label></div>
@@ -568,6 +569,7 @@
     <div id="taskbox" class="ptab"></div>
     <div id="tgbox" class="ptab"></div>
     <div id="espbox" class="ptab"></div>
+    <div id="appbox" class="ptab"></div>
     <div id="wxbox" class="ptab"></div>
     <div id="conbox" class="ptab"></div>
     <div id="trbox" class="ptab"></div>

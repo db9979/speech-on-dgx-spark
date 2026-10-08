@@ -385,7 +385,7 @@ def logged(path, method):
 # the assistant is open without login), so one page or script cannot take the Spark for itself.
 _rate, _busy = {}, {}
 _rate_lock = threading.Lock()
-RATE = {"chat": (30, 120), "asr": (60, 240), "logs": (1, 60)}  # per minute: (guest, profile or admin)
+RATE = {"chat": (30, 120), "asr": (60, 240), "logs": (1, 60), "pair": (10, 10)}  # per minute: (guest, profile or admin)
 BUSY = {"chat": 4, "asr": 3}  # at once, guests together
 
 

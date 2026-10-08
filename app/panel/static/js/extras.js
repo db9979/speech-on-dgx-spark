@@ -68,7 +68,7 @@ async function showPar(fresh){const box=$('parbox');if(!PROFILE||!PAR_ON){box.in
   xbind(box,()=>showPar(true));
   if($('parrun'))$('parrun').onclick=()=>showPar(true)}
 // ---------------------------------------------------------------- tasks and shopping list (tasks.py)
-let TASK_ON=false,TG_ON=false;
+let TASK_ON=false,TG_ON=false,APP_ON=false;
 async function showTasks(){const box=$('taskbox');if(!PROFILE||!TASK_ON){box.innerHTML='';return}
   let d={lists:{}};try{d=await (await api('/api/profile/tasks')).json()}catch{}
   const on=!!S.tasks_on,base=location.origin;
@@ -121,7 +121,24 @@ async function tgAdmin(){if(!$('tgadmin'))return;let d={};try{d=await (await api
   $('tgdel').style.display=d.has_token?'':'none';
   $('tgsave').onclick=async()=>{$('tgstate').textContent=t('Frage Telegram …','Asking Telegram …');try{await api('/api/admin/telegram',xjson('PUT',{token:$('tgtoken').value.trim()}));$('tgtoken').value='';tgAdmin()}catch(e){$('tgstate').textContent=e.message}};
   $('tgdel').onclick=async()=>{if(!confirm(t('Token löschen? Der Bot antwortet dann nicht mehr.','Delete the token? The bot stops answering.')))return;try{await api('/api/admin/telegram',{method:'DELETE'});tgAdmin()}catch(e){$('tgstate').textContent=e.message}}}
-async function showExtras(){for(const f of [showWx,showCon,showPar,showTasks,showTg].concat(typeof showEsp==='function'?[showEsp]:[]))await f().catch(()=>{})}
+async function showExtras(){for(const f of [showWx,showCon,showPar,showTasks,showTg,showApp].concat(typeof showEsp==='function'?[showEsp]:[]))await f().catch(()=>{})}
+// ---------------------------------------------------------------- iPhone app (iphone.py)
+async function showApp(){const box=$('appbox');if(!box)return;if(!PROFILE||!APP_ON){box.innerHTML='';return}
+  let d={phones:[],on:false,minutes:10};try{d=await (await api('/api/profile/iphone')).json()}catch{}
+  const when=x=>x?new Date(x.t*1000).toLocaleString([], {dateStyle:'short',timeStyle:'short'}):t('noch nie','never');
+  box.innerHTML=`<div class="intro">${t('Die App „Spark“ fürs iPhone: Knopf drücken, fragen, die Antwort kommt mit der Spark-Stimme. „Hey Siri, Frag Spark“ geht dann auch ohne Kurzbefehl. Jedes iPhone bekommt einen eigenen Schlüssel, der nur fragen und hören darf.','The "Spark" app for the iPhone: press the button, ask, the answer comes in the Spark voice. "Hey Siri, Ask Spark" then works without a shortcut. Each iPhone gets its own key that may only ask and listen.')}</div>
+    ${xsw('app_on',t('iPhone-App für mich','iPhone app for me'),t('Aus: Deine gekoppelten iPhones bekommen sofort keine Antwort mehr.','Off: your paired iPhones get no answer any more, at once.'))}
+    ${xsw('app_ha',t('Smart Home aus der App','Smart home from the app'),t('Schalten und Abfragen wie im Panel, mit deinem Codewort. Aus: Die App fragt dein Zuhause gar nicht.','Switching and asking as in the panel, with your code word. Off: the app does not touch your home at all.'))}
+    <ul class="facts">${d.phones.map(p=>`<li><span><b>${esc(p.name)}</b><br><small class="mut">${t('zuletzt','last used')}: ${esc(when(p.last))}</small></span><button class="b" type="button" data-appdel="${esc(p.id)}" data-appname="${esc(p.name)}">${t('Entfernen','Remove')}</button></li>`).join('')||`<li class="mut"><span>${t('Noch kein iPhone gekoppelt.','No iPhone paired yet.')}</span></li>`}</ul>
+    ${d.on?`<div class="row"><button class="b p" type="button" id="apppair">${t('iPhone koppeln','Pair an iPhone')}</button></div>`:''}
+    <div id="appqr"></div><div class="fh" id="appmsg"></div>`;
+  xbind(box,showApp);
+  box.querySelectorAll('[data-appdel]').forEach(b=>b.onclick=async()=>{if(!confirm(t('„','"')+b.dataset.appname+t('“ entfernen? Sein Schlüssel gilt dann sofort nicht mehr.','" remove? Its key stops working at once.')))return;
+    try{await api('/api/profile/iphone/'+encodeURIComponent(b.dataset.appdel),{method:'DELETE'});showApp()}catch(e){xmsg('appmsg',e.message,true)}});
+  if($('apppair'))$('apppair').onclick=async()=>{try{const r=await (await api('/api/profile/iphone/pair',xjson('POST',{base:location.origin}))).json();
+    $('appqr').innerHTML=`${r.qr?`<div class="mfaqr" style="background:#fff;display:inline-block;padding:4px;border-radius:6px;margin:6px 0">${r.qr}</div>`:''}
+      <div class="fh">${t('Am PC: den Code mit der Kamera des iPhones scannen. Auf dem iPhone: ','On a PC: scan the code with the iPhone camera. On the iPhone: ')}<a href="${esc(r.link)}">${t('in der App öffnen','open in the app')}</a>. ${t('Gilt ','Valid for ')}${r.minutes} ${t('Minuten und nur einmal.','minutes and once only.')}</div>`}
+    catch(e){xmsg('appmsg',e.message,true)}}}
 // ---------------------------------------------------------------- Bus und Bahn (transit.py)
 let TR_ON=false;
 const TRDAYS=['Mo','Di','Mi','Do','Fr','Sa','So'];

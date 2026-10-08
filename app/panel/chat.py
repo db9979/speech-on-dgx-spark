@@ -1057,12 +1057,18 @@ async def _chat(request: Request):
     private_ok = (not tg or bool(tset.get("tg_private"))) and own_browser
     if tg and ha and not (tset.get("tg_ha") and homeassistant.needs_code(ha)):
         ha = None
+    # from the iPhone app the smart home switches only when the profile allowed it there (app_ha); the
+    # key decides, not what the request says it is
+    app_blocked = bool(ha and who and profiles.key_scope(request) == "app" and not profiles.settings(who["id"]).get("app_ha"))
+    if app_blocked:
+        ha = None
     if tg:
         system = (system + "\n\n" + TELEGRAM_HINT).strip()
     if ccfg.get("homeassistant", False):  # why the smart home tools are (not) offered, for the journal
         print("homeassistant: turn for", who["name"] if who else "guest", "- tools",
               "offered" if ha else "NOT offered: " + (
                   "no profile signed in" if not who else "voice of another profile" if not own_browser
+                  else "not allowed from the iPhone app (Ich → iPhone-App)" if app_blocked
                   else "token unreadable (stored with another key), connect again" if homeassistant._raw(who["id"])
                   else "this profile has not connected Home Assistant"), flush=True)
     if ha:

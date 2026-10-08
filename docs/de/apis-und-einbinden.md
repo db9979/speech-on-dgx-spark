@@ -77,6 +77,10 @@ vorlesen. Geht ohne geöffnete Seite, auch auf der Apple Watch, mit AirPods und 
 innerhalb von 10 Minuten kennen den Zusammenhang, die Fragen eines Tages stehen als Gespräch im Profil.
 Schritt für Schritt unter Einbinden → Anleitungen.
 
+### iPhone-App „Spark“
+
+Eigene App fürs iPhone mit Spark-Stimme und „Hey Siri, Frag Spark“, Kopplung per QR-Code, eigener Schlüssel pro iPhone, der nur fragen und hören darf. Bauen, Koppeln und Sicherheit: [iphone-app.md](iphone-app.md).
+
 ### Pebble-Uhr
 
 Die Watch-App „Spark“ (`app/pebble/speech-spark.pbw`, Quellcode in `pebble/`) bringt den Sprach-Chat auf Pebble Time 2 und Core 2 Duo, mit Antwort als Text und über den Lautsprecher der Uhr. Auf Pebble Round 2 kommt die Antwort nur als Text. Sie braucht eine Uhr-Firmware mit Lautsprecher-API (ab etwa v4.9.170).

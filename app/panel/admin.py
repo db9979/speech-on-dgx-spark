@@ -136,6 +136,9 @@ async def admin_set_device(did: str, request: Request):
     if did in esp32.speaker_ids():
         # a speaker stays with the profile that set it up (its board, voice print and room settings are kept there)
         raise HTTPException(400, "Ein Lautsprecher gehört zum Profil, das ihn eingerichtet hat. Dort entfernen und neu einrichten.")
+    if any(x["id"] == did and x.get("app") for x in profiles.admin_list()["devices"]):
+        # an iPhone was paired by the profile itself (with its login and second step): it stays there
+        raise HTTPException(400, "Ein iPhone gehört zum Profil, das es gekoppelt hat. Dort entfernen und neu koppeln.")
     if not profiles.set_device_user(did, str((await request.json()).get("user", ""))):
         raise HTTPException(404, "no such device or profile")
     return {"ok": True}

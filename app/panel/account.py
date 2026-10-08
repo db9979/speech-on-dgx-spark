@@ -72,6 +72,7 @@ def whoami(request: Request, creds: HTTPBasicCredentials | None = Depends(securi
             "tasks": cfg.get("chat", {}).get("tasks", False),
             "transit": cfg.get("chat", {}).get("transit", False),
             "esp32": cfg.get("chat", {}).get("esp32", False),
+            "iphone": cfg.get("chat", {}).get("iphone", False),
             # what the assistant needs without the full configuration (which holds keys)
             "assistant": {"default_voice": cfg["tts"].get("default_voice"),
                           "asr_language": cfg["asr"].get("default_language"),

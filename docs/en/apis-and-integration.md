@@ -76,6 +76,10 @@ device key of your profile, body `{"text": "..."}`) and lets Siri speak the `ans
 the page open, also on Apple Watch, AirPods and CarPlay; follow-ups within 10 minutes keep the context,
 and each day's questions are kept as a conversation of the profile. Step by step under Einbinden → Guides.
 
+### iPhone app "Spark"
+
+Own iPhone app with the Spark voice and "Hey Siri, Frag Spark", paired by QR code, its own key per iPhone that may only ask and listen. Building, pairing and security: [iphone-app.md](iphone-app.md).
+
 ### Pebble watch
 
 The watch app "Spark" (`app/pebble/speech-spark.pbw`, source in `pebble/`) brings the voice chat to Pebble Time 2 and Core 2 Duo, with the answer as text and through the watch speaker. On Pebble Round 2 the answer is text only. It needs a watch firmware with the speaker API (from about v4.9.170).

@@ -1,0 +1,32 @@
+name: iPhone app
+
+# Compiles the iPhone app (ios/) for the simulator, without signing, so a broken build shows up here
+# and not first in Xcode on the Mac. Signing and installing happen on the owner's Mac (docs/de/iphone-app.md).
+on:
+  workflow_dispatch:
+  push:
+    branches: [main, "claude/**"]
+    paths:
+      - ios/**
+      - .github/workflows/ios.yml
+
+permissions:
+  contents: read
+
+jobs:
+  build:
+    runs-on: macos-15
+    timeout-minutes: 30
+    steps:
+      - uses: actions/checkout@v4
+      - name: Xcode
+        run: |
+          sudo xcode-select -s "$(ls -d /Applications/Xcode_16*.app | sort -V | tail -1)"
+          xcodebuild -version
+      - name: Build for the simulator
+        working-directory: ios
+        run: |
+          set -o pipefail
+          xcodebuild -project Spark.xcodeproj -scheme Spark -configuration Debug \
+            -sdk iphonesimulator -destination "generic/platform=iOS Simulator" \
+            CODE_SIGNING_ALLOWED=NO build | tail -n 80
