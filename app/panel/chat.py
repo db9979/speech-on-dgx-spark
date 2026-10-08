@@ -123,6 +123,15 @@ SEARCH_TOOL = {"type": "function", "function": {
                    "facts after your training). Returns result snippets and the text of the top pages.",
     "parameters": {"type": "object", "properties": {"query": {"type": "string", "description": "search query"}},
                    "required": ["query"]}}}
+# why web_search is missing, said to the model so it tells the person instead of "I cannot find the tool"
+SEARCH_OFF_HINT = ("Eine Websuche hast du gerade nicht: Sie ist im Panel nicht eingeschaltet oder es fehlt die "
+                   "SearXNG-Adresse (Einstellungen → Funktionen → Websuche). Will der Nutzer etwas im Internet "
+                   "nachsehen, sag ihm genau das und antworte nicht aus Vermutungen.")
+SEARCH_LOCKED_HINT = ("Die Websuche ist in dieser Antwort gesperrt, weil die Antwort davor aus E-Mails stammt (eine Mail "
+                      "könnte sonst Inhalte ins Internet tragen). Will der Nutzer etwas im Internet nachsehen, sag ihm "
+                      "das kurz und bitte ihn, die Frage gleich noch einmal zu stellen; dann geht die Suche wieder.")
+SEARCH_LOCKED_NOTE = ("Note: web search is locked for the rest of this answer because e-mail was read. If the user "
+                      "wanted a web search, tell them so; asked again as a new question it works.")
 SEARCH_HINT = ("Du kannst mit dem Werkzeug web_search im Internet suchen. Nutze es, wenn die Frage aktuelle "
                "oder dir unbekannte Informationen braucht, sonst nicht. Bei Ergebnissen, Spielen, Nachrichten und "
                "allem, was nach deinem Wissensstand passiert sein kann, suchst du immer, statt aus eigenem Wissen "
@@ -306,7 +315,10 @@ NEED_MAIL = re.compile(r"(?i)\b(e-?mails?|mails?|posteingang|inbox)\b")
 # there was no Bundesliga match yesterday instead of looking it up (quality test V01.0.110)
 NEED_REMINDER = re.compile(r"(?i)\b(erinnerung\w*|erinnere? mich|timer\w*|wecker\w*|reminders?)\b")
 NEED_SEARCH = re.compile(r"(?i)\b(gewonnen|gewinnt|verloren|gespielt|spielt\w*|spiel(e|s)?|spielstand|ausgegangen|ergebnis(se)?|tabelle|"
-                         r"bundesliga|champions league|nachrichten|news|schlagzeilen?)\b")
+                         r"bundesliga|champions league|nachrichten|news|schlagzeilen?|"
+                         # asked for in so many words: "such im Internet", "google mal", "recherchier"
+                         r"(im|ins|aus dem) (internet|netz|web)|online (such|nachseh|nachschau|schau|nach)\w*|(schau|such|guck)\w* (mal )?online|googl\w*|recherch\w*|websuche|web search|"
+                         r"search the web|look (it )?up online)\b")
 CALENDAR_ADD_HINT = ("Neue Termine trägst du mit calendar_add ein. Das Werkzeug speichert noch nichts: Lies dem "
                      "Nutzer den Vorschlag aus dem Ergebnis vor und frag, ob du ihn eintragen sollst. Eingetragen "
                      "wird erst, wenn er in der nächsten Nachricht zustimmt. Frag vorher nach, wenn Tag oder Uhrzeit "
@@ -864,8 +876,8 @@ def prompt_parts(ccfg):
     parts = [{"label": "Systemanweisung (Admin, hier oben änderbar)", "text": ccfg.get("system_prompt") or "", "fixed": False}]
     if on("datetime", True):
         parts.append({"label": "Datum und Uhrzeit", "text": now_line(None), "fixed": True})
-    if on("search") and ccfg.get("search_url"):
-        parts.append({"label": "Websuche", "text": SEARCH_HINT, "fixed": True})
+    parts.append({"label": "Websuche", "text": SEARCH_HINT if on("search") and ccfg.get("search_url") else SEARCH_OFF_HINT,
+                  "fixed": True})
     parts.append({"label": "Antwortlänge (je Profil: kurz / ausführlich; bei normal nichts)",
                   "text": "kurz: " + LENGTH_HINT["short"] + "\nausführlich: " + LENGTH_HINT["long"], "fixed": False})
     if on("own_style"):
@@ -970,14 +982,27 @@ async def _chat(request: Request):
     # sent again at all.
     marked = [i for i, m in enumerate(messages) if m.get("mark")]
     carry = messages[marked[-1]]["mark"] if marked and marked[-1] >= len(messages) - 3 else None
+    came_from = carry   # what the answer right before rested on (for learning from corrections)
+    search = bool(ccfg.get("search") and ccfg.get("search_url"))
+    # The answer before came from mail: it would lock the web search for this turn too (its text could
+    # carry the mail away). A question that clearly wants the web gets the search instead, and that
+    # mail answer is left out of this turn, so no word from the mail can reach a search query.
+    if carry == "mail" and search and messages[-1]["role"] == "user" \
+            and needed(messages[-1]["content"], {"web_search"}, ccfg.get("tool_words", "")):
+        carry = None
+        print("chat: web search asked for right after an answer from mail: that answer is left out, search offered",
+              flush=True)
     messages = [{"role": m["role"], "content": DROPPED if m.get("mark") and i != (marked[-1] if carry else -1)
                  else m["content"]} for i, m in enumerate(messages)]
     system = ccfg.get("system_prompt") or ""
     if ccfg.get("datetime", True):
         system = (system + "\n\n" + now_line(body.get("tz"))).strip()
-    search = bool(ccfg.get("search") and ccfg.get("search_url"))
-    if search:
-        system = (system + "\n\n" + SEARCH_HINT).strip()
+    # why the search is (not) offered, for the journal and for the model (never silently missing)
+    print("chat: web search", "NOT offered: switched off (Einstellungen → Funktionen → Websuche)" if not ccfg.get("search")
+          else "NOT offered: no SearXNG address" if not search
+          else "locked: the answer before came from e-mail" if carry == "mail" else "offered", flush=True)
+    system = (system + "\n\n" + (SEARCH_LOCKED_HINT if search and carry == "mail" else SEARCH_HINT if search
+                                  else SEARCH_OFF_HINT)).strip()
     who = profiles.current(request)
     # A voice recognized by the speech recognition (signed token, see speakers.py) picks that
     # profile for this turn; its own settings apply then, not the ones this browser sends.
@@ -1265,7 +1290,7 @@ async def _chat(request: Request):
         try:
             model = await llm_model(c, ccfg, lheaders)
             fix_task = asyncio.create_task(fixes.extract(
-                ccfg, model, who["name"], messages[-1]["content"], said_before, bool(carry))) if fix_fix else None
+                ccfg, model, who["name"], messages[-1]["content"], said_before, bool(came_from))) if fix_fix else None
             base = {"model": model, "stream": True, "max_tokens": int(ccfg.get("max_tokens") or 4096),
                     "temperature": float(ccfg.get("temperature", 0.3)), **sampling(ccfg)}
             if not ccfg.get("thinking"):
@@ -1395,6 +1420,10 @@ async def _chat(request: Request):
                     msgs.append({"role": "tool", "tool_call_id": x["id"], "content": result})
                     if x["name"] == "web_search":
                         searches += 1
+                if search and st["mail"] and not st.get("search_said"):
+                    # the search just went away (mail was read): the model hears why, so it can say so
+                    st["search_said"] = True
+                    msgs[-1]["content"] += "\n\n" + SEARCH_LOCKED_NOTE
                 used = True
                 st["check"] = check_on  # an answer from tool results: its figures are checked
             if (calls or st["xml"]) and finish != "length":
