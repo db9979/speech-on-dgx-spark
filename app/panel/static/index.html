@@ -98,6 +98,7 @@
         <div class="fh" id="espstate"></div><div class="row" style="margin-top:6px"><button class="b" type="button" id="espfetch">Firmware jetzt holen</button></div></div>
       <div class="setrow"><div class="lbl"><b>Zweiter Anmeldeschritt für Profile</b><span>Profile können unter dem Profil-Knopf → Sicherheit für sich einschalten, dass die Anmeldung mit Name und PIN zusätzlich einen Code aus einer Authenticator-App verlangt. Jedes Profil entscheidet selbst. Geräte mit Schlüssel (Lautsprecher, Siri, Uhr, Handy) brauchen keinen Code. Ausschalten hier verhindert nur neue Einrichtungen; wer ihn schon an hat, behält ihn.</span></div><label class="tgl"><input type="checkbox" id="chat.mfa"><i></i></label></div>
       <div class="setrow"><div class="lbl"><b>Aus Korrekturen lernen</b><span>Korrigiert ein Profil den Assistenten, schlägt er einen kurzen Satz zum Merken vor und speichert ihn erst nach einem „Ja“. Jedes Profil schaltet es unter Ich → Gespräch selbst ein. Nie für Gäste.</span></div><label class="tgl"><input type="checkbox" id="chat.learn_fixes"><i></i></label></div>
+      <div class="setrow"><div class="lbl"><b>Eigener Gesprächsstil</b><span>Jedes Profil kann unter Ich → Gespräch in eigenen Worten sagen, wie der Assistent mit ihm reden soll (Anrede, Ton, Form). Das ändert nur den Ton, nie die festen Regeln. Nie für Gäste.</span></div><label class="tgl"><input type="checkbox" id="chat.own_style"><i></i></label></div>
       <div class="setrow"><div class="lbl"><b>Sprechererkennung</b><span>Profile lernen unter dem Profil-Knopf ihre Stimme ein. Erkennt der Assistent eine Stimme eindeutig, antwortet er für dieses Profil, auch an einem fremden oder Gast-Gerät. Eine Stimme ist kein Passwort: Wer sehr ähnlich klingt oder eine Aufnahme abspielt, kann ein Profil erwischen.</span></div><label class="tgl"><input type="checkbox" id="chat.speaker_id"><i></i></label></div>
       <div class="savebar"><button class="b p savebtn" data-p="feat">Speichern</button><span class="savemsg"></span></div>
     </div>
@@ -106,6 +107,8 @@
       <label>LLM-API-Schlüssel</label><input id="chat.llm_key" autocomplete="off"><div class="fh">Bei qwen38 steht er in ~/.config/qwen38/api-key; das Update übernimmt ihn automatisch.</div>
       <label>LLM-Modell</label><input id="chat.llm_model"><div class="fh">Leer = das erste, das der Server meldet.</div>
       <label>Systemanweisung</label><textarea id="chat.system_prompt" rows="5"></textarea>
+      <div class="row" style="margin-top:6px"><button class="b" id="promptdef" type="button">Standard wiederherstellen</button><button class="b" id="promptshow" type="button">Ganzen Prompt ansehen</button><span id="promptmsg" class="mut"></span></div>
+      <div id="promptview" style="display:none"></div>
       <label>Max. Tokens pro Antwort</label><input id="chat.max_tokens" type="number">
       <label>Temperatur</label><input id="chat.temperature" type="number" step="0.05" min="0" max="1.5"><div class="fh">Kleiner = hält sich enger an Werkzeug-Ergebnisse und erfindet weniger; 0.3 empfohlen, Qwen-Standard 0.7.</div>
       <label class="chk"><input type="checkbox" id="chat.datetime"> Datum und Uhrzeit mitgeben</label><div class="fh">Das Modell kennt sie sonst nicht.</div>
@@ -113,6 +116,13 @@
       <label>Temperatur bei der Werkzeugwahl</label><input id="chat.tool_temperature" type="number" step="0.05" min="0" max="1.5"><div class="fh">Gilt, solange das Modell entscheidet, welches Werkzeug es nimmt; danach gilt die Temperatur oben. 0.1 empfohlen.</div>
       <label class="chk"><input type="checkbox" id="chat.answer_check"> Antwort-Prüfung</label><div class="fh">Bei Fragen nach Terminen, Mails, Erinnerungen, Ergebnissen usw. sagt der Assistent keine Uhrzeit, kein Datum, keinen Spielstand und keinen Betrag, der in keinem Werkzeug-Ergebnis steht. Antwortet das Modell ohne nachzusehen, wird es einmal neu gefragt. Empfohlen: an.</div>
       <label class="chk"><input type="checkbox" id="chat.tool_thinking"> Profile dürfen bei der Werkzeugwahl nachdenken</label><div class="fh">Jedes Profil schaltet es unter Ich → Gespräch selbst ein. Das Modell denkt dann nur, während es das Werkzeug wählt: zuverlässiger, aber die Antwort beginnt später. Nie für Gäste.</div>
+      <h2>Erweitert</h2>
+      <label>Verlaufslänge (Zeichen)</label><input id="chat.history_chars" type="number" min="4000" max="64000" step="1000"><div class="fh">Wie viel vom bisherigen Gespräch das Modell mitbekommt, 4000 bis 64000. 24000 sind etwa 8000 Tokens. Mehr braucht ein Modell mit großem Kontextfenster und mehr Speicher.</div>
+      <label>Websuchen pro Antwort</label><input id="chat.max_searches" type="number" min="1" max="3"><div class="fh">1 bis 3. Mehr ist gründlicher, aber langsamer.</div>
+      <label>Zeitlimit für eine Antwort (Sekunden)</label><input id="chat.llm_timeout" type="number" min="60" max="600" step="10"><div class="fh">60 bis 600. Kürzer lohnt sich, wenn das Modell auf einem anderen Rechner läuft und dort hängen kann.</div>
+      <label>top_p</label><input id="chat.top_p" type="number" step="0.05" min="0" max="1"><div class="fh">0 = Standard des Servers. Sonst 0.05 bis 1; kleiner = vorsichtigere Wortwahl.</div>
+      <label>presence_penalty</label><input id="chat.presence_penalty" type="number" step="0.1" min="0" max="2"><div class="fh">0 = Standard des Servers. Bis 2; hilft, wenn das Modell sich wiederholt (Qwen empfiehlt dann etwa 1).</div>
+      <label>Eigene Stichwörter für die Werkzeugpflicht</label><textarea id="chat.tool_words" rows="3" placeholder="web_search: elfmeter, aufstellung"></textarea><div class="fh">Kommt eines dieser Wörter in der Frage vor, muss das Modell zuerst das Werkzeug benutzen. Eine Zeile pro Werkzeug: calendar_events, mail_list, reminder_list, web_search, weather, parcels, transit, tasks_show. Nur ganze Wörter, höchstens 20 pro Werkzeug. Die eingebauten Wörter bleiben immer.</div>
       <div class="savebar"><button class="b p savebtn" data-p="ai">Speichern</button><span class="savemsg"></span></div>
     </div>
     <div class="card pane" id="pane-talk"><h2 class="pt">Gespräch</h2>

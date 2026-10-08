@@ -305,6 +305,8 @@ SETTINGS = {
     "learn": (True, lambda v: isinstance(v, bool)),
     "tool_think": (False, lambda v: isinstance(v, bool)),   # think while choosing a tool (admin chat.tool_thinking)
     "fix_learn": (False, lambda v: isinstance(v, bool)),    # learning from corrections (fixes.py, admin chat.learn_fixes)
+    # own wishes for the tone (admin chat.own_style): plain text, no control characters, no markers of outside text
+    "style": ("", lambda v: isinstance(v, str) and len(v) <= 500 and not re.search(r"[\x00-\x09\x0b-\x1f\x7f]|<<<|>>>", v)),
     # daily briefing as a push notification at this local time ("" = off), in the device's time zone
     "briefing_at": ("", lambda v: isinstance(v, str) and re.fullmatch(r"(?:[01]\d|2[0-3]):[0-5]\d|", v)),
     "tz": ("", lambda v: isinstance(v, str) and re.fullmatch(r"(?:[A-Za-z_]+(?:/[A-Za-z0-9_+\-]+){0,2})?", v)),
@@ -350,7 +352,8 @@ def clean_settings(d):
 
 
 def defaults(admin=None):
-    return dict({k: v for k, (v, _) in SETTINGS.items()}, **clean_settings(admin))
+    own = {k: v for k, v in clean_settings(admin).items() if k != "style"}  # the tone is the profile's own
+    return dict({k: v for k, (v, _) in SETTINGS.items()}, **own)
 
 
 def settings(uid):

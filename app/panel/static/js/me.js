@@ -187,6 +187,7 @@ const SETF=[
   {k:'learn',type:'bool',prof:1,l:t('Aus Gesprächen lernen','Learn from conversations'),h:t('Nach einem Gespräch merkt sich der Assistent wenige dauerhafte Dinge über dich. Du siehst und löschst sie unter dem Profil-Knopf.','After a conversation the assistant remembers a few lasting things about you. You can see and delete them under the profile button.')},
   {k:'tool_think',type:'bool',prof:1,need:'tool_think',l:t('Bei Werkzeugen nachdenken','Think before using tools'),h:t('Bevor der Assistent nachsieht (Kalender, Mails, Suche …), denkt er kurz nach, welches Werkzeug passt. Zuverlässiger, aber die Antwort beginnt etwas später.','Before the assistant looks something up (calendar, mail, search …) it thinks briefly about which tool fits. More reliable, but the answer starts a little later.')},
   {k:'fix_learn',type:'bool',prof:1,need:'fix_learn',l:t('Aus Korrekturen lernen','Learn from corrections'),h:t('Korrigierst du den Assistenten, fragt er, ob er sich einen kurzen Satz dazu merken soll. Gespeichert wird erst nach deinem „Ja“.','When you correct the assistant, it asks whether to remember a short sentence about it. It is stored only after your "yes".')},
+  {k:'style',type:'text',prof:1,need:'style',max:500,l:t('So soll der Assistent mit mir reden','How the assistant should talk to me'),h:t('In eigenen Worten, z. B. „Sprich mich mit Dominik an und antworte locker.“ Ändert nur den Ton, nie die Regeln. Leer = aus.','In your own words, e.g. "Call me Dominik and answer casually." Changes the tone only, never the rules. Empty = off.')},
   {g:t('Anzeige','Display'),k:'daily',type:'bool',l:t('Jeden Tag neues Gespräch','New conversation every day'),h:t('Am nächsten Tag beginnt automatisch ein neues Gespräch; die alten bleiben im Verlauf.','The next day a new conversation starts by itself; older ones stay in the history.')},
   {k:'timing',type:'bool',l:t('Zeiten anzeigen','Show timings'),h:t('Wie lange Erkennung, Modell und erster Ton gebraucht haben.','How long recognition, model and first audio took.')}];
 {let g;SETF.forEach(f=>{g=f.g||g;f.grp=g})}
@@ -198,6 +199,7 @@ async function renderSet(el,vals,onchange){const admin=!onchange,voices=await vo
   let prev;el.innerHTML=fields.map(f=>{let ctl;const id='set_'+el.id+'_'+f.k;
     if(f.type==='bool')ctl=`<label class="tgl"><input type="checkbox" id="${id}"${v[f.k]?' checked':''}><i></i></label>`;
     else if(f.type==='sel')ctl=`<select id="${id}">${f.o.map(([a,b])=>`<option value="${a}"${v[f.k]===a?' selected':''}>${esc(b)}</option>`).join('')}</select>`;
+    else if(f.type==='text')ctl=`<textarea id="${id}" rows="3" maxlength="${f.max}">${esc(v[f.k]||'')}</textarea>`;
     else if(f.type==='voice')ctl=`<select id="${id}"><option value="">${t('Standard','Default')}</option>${[...new Set([...voices,...(v.voice?[v.voice]:[])])].map(x=>`<option${x===v.voice?' selected':''}>${esc(x)}</option>`).join('')}</select>`;
     else ctl=`<input type="range" id="${id}" min="${f.min}" max="${f.max}" step="${f.step}" value="${v[f.k]}"><output id="${id}_o">${Number(v[f.k]).toFixed(2)}×</output>`;
     const head=f.grp!==prev;prev=f.grp;
@@ -208,7 +210,8 @@ async function renderSet(el,vals,onchange){const admin=!onchange,voices=await vo
   bar.querySelectorAll('button').forEach((b,i)=>b.onclick=()=>{bar.querySelectorAll('button').forEach(x=>x.classList.toggle('on',x===b));
     el.querySelectorAll('.setpane').forEach(x=>x.classList.toggle('on',x.dataset.g===groups[i]))});
   fields.forEach(f=>{const e=$('set_'+el.id+'_'+f.k);e.oninput=e.onchange=ev=>{
-    const val=f.type==='bool'?e.checked:f.type==='range'?Number(e.value):e.value;
+    const val=f.type==='bool'?e.checked:f.type==='range'?Number(e.value):f.type==='text'?e.value.replace(/<<<|>>>|[\x00-\x09\x0b-\x1f\x7f]/g,'').slice(0,f.max):e.value;
+    if(f.type==='text'&&ev.type==='input')return;   // saved when the field is left
     if(f.type==='range')$(e.id+'_o').textContent=val.toFixed(2)+'×';
     if(v[f.k]===val||(f.type==='range'&&ev.type==='input'))return;v[f.k]=val;onchange&&onchange(f.k,val)}});
   return()=>({...v})}

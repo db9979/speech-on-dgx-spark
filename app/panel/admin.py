@@ -200,6 +200,16 @@ async def status():
             "alerts": health.alerts(), "watchdog": health.events[-10:]}
 
 
+@router.get("/api/admin/prompt", dependencies=[Depends(auth)])
+def prompt_preview():
+    """The prompt as the model gets it (parts in order) and the shipped system prompt for "Standard"."""
+    import chat
+    with open(DEFAULTS) as f:
+        default = json.load(f)["chat"]
+    ccfg = dict(default, **load_config().get("chat", {}))
+    return {"parts": chat.prompt_parts(ccfg), "default": default["system_prompt"]}
+
+
 @router.get("/api/config", dependencies=[Depends(auth)])
 def get_config():
     with open(DEFAULTS) as f:
@@ -343,7 +353,27 @@ def validate(new):
     if not isinstance(ch.get("tool_temperature", 0.1), (int, float)) or isinstance(ch.get("tool_temperature", 0.1), bool) \
             or not 0 <= ch.get("tool_temperature", 0.1) <= 1.5:
         raise HTTPException(400, "chat tool_temperature must be 0..1.5")
-    for k in ("answer_check", "tool_thinking", "learn_fixes"):
+    import chat  # chat imports much of the panel; only needed here
+    num = lambda k, d: ch.get(k, d) if isinstance(ch.get(k, d), (int, float)) and not isinstance(ch.get(k, d), bool) else None  # noqa: E731
+    if not isinstance(ch.get("history_chars", 24000), int) or num("history_chars", 24000) is None \
+            or not chat.HISTORY_RANGE[0] <= ch.get("history_chars", 24000) <= chat.HISTORY_RANGE[1]:
+        raise HTTPException(400, "Verlaufslänge: %d bis %d Zeichen" % chat.HISTORY_RANGE)
+    if not isinstance(ch.get("max_searches", 2), int) or num("max_searches", 2) is None \
+            or not chat.SEARCH_RANGE[0] <= ch.get("max_searches", 2) <= chat.SEARCH_RANGE[1]:
+        raise HTTPException(400, "Websuchen pro Antwort: %d bis %d" % chat.SEARCH_RANGE)
+    if not isinstance(ch.get("llm_timeout", 600), int) or num("llm_timeout", 600) is None \
+            or not chat.TIMEOUT_RANGE[0] <= ch.get("llm_timeout", 600) <= chat.TIMEOUT_RANGE[1]:
+        raise HTTPException(400, "Zeitlimit: %d bis %d Sekunden" % chat.TIMEOUT_RANGE)
+    tp, pp = num("top_p", 0), num("presence_penalty", 0)
+    if tp is None or not (tp == 0 or 0.05 <= tp <= 1):
+        raise HTTPException(400, "top_p: 0 (Standard des Servers) oder 0.05 bis 1")
+    if pp is None or not 0 <= pp <= 2:
+        raise HTTPException(400, "presence_penalty: 0 (Standard des Servers) bis 2")
+    try:
+        chat.parse_tool_words(ch.get("tool_words", ""))
+    except ValueError as e:
+        raise HTTPException(400, f"Eigene Stichwörter: {e}")
+    for k in ("answer_check", "tool_thinking", "learn_fixes", "own_style"):
         if not isinstance(ch.get(k, False), bool):
             raise HTTPException(400, f"chat {k} must be true or false")
     for sec in ("asr", "tts"):

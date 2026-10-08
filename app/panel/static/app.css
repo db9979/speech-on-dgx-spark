@@ -337,3 +337,4 @@ div.guide.inline{border:0;border-bottom:1px solid var(--line);border-radius:0;ma
 @media (max-width:760px){.mgrp{padding:20px 4px 6px}.gbody{font-size:14px}}
 @media (max-width:760px){.menav{flex-wrap:nowrap}}
 #conadd{margin-top:10px;border:1px solid var(--line);border-radius:12px;padding:8px 12px}#conadd summary{cursor:pointer;font-weight:600;font-size:14px}
+.setrow:has(>textarea){flex-wrap:wrap}.setrow>textarea{width:100%;min-width:0}

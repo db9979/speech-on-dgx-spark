@@ -86,6 +86,16 @@ document.querySelectorAll('.savebtn').forEach(btn=>btn.onclick=async()=>{const p
     msg.innerHTML=t('Gespeichert.','Saved.')+(r.restarted.length?t(' Neu gestartet: ',' Restarted: ')+r.restarted.join(', ').toUpperCase()+t(' (Modell lädt neu).',' (model reloads).'):'')+(r.stopped&&r.stopped.length?t(' Gestoppt: ',' Stopped: ')+r.stopped.join(', ').toUpperCase()+'.':'')+(r.errors&&r.errors.length?`<div class="err">${esc(r.errors.join('\n'))}</div>`:'')+(r.panel_restart_needed?t(' Panel-Port ändert sich nach: ',' Panel port changes after: ')+'sudo systemctl restart speech-spark-panel':'');CFG=n;markDirty(pane,false)}
   catch(e){msg.innerHTML=`<span class="err">${esc(e.message)}</span>`}});
 
+// the whole prompt as the model gets it (fixed parts marked) and the shipped system prompt
+$('promptdef').onclick=async()=>{try{const d=await (await api('/api/admin/prompt')).json();const el=$('chat.system_prompt');
+    el.value=d.default;el.dispatchEvent(new Event('input',{bubbles:true}));$('promptmsg').textContent=t('Standard eingesetzt, noch nicht gespeichert.','Default filled in, not saved yet.')}
+  catch(e){$('promptmsg').textContent=e.message}};
+$('promptshow').onclick=async()=>{const v=$('promptview');if(v.style.display!=='none'){v.style.display='none';return}
+  try{const d=await (await api('/api/admin/prompt')).json();
+    v.innerHTML=`<div class="fh">${esc(t('So bekommt das Modell den Prompt, in dieser Reihenfolge (gespeicherter Stand). Feste Teile kann keine Einstellung und kein Prompt abschalten.','This is how the model gets the prompt, in this order (saved state). No setting and no prompt can switch off the fixed parts.'))}</div>`
+      +d.parts.map(p=>`<div style="margin-top:8px"><b>${esc(p.label)}</b> <span class="pill ${p.fixed?'ok':'warn'}">${p.fixed?esc(t('fest','fixed')):esc(t('änderbar','changeable'))}</span><pre style="white-space:pre-wrap;margin:4px 0 0">${esc(p.text||'–')}</pre></div>`).join('');
+    v.style.display=''}
+  catch(e){$('promptmsg').textContent=e.message}};
 $('asrgo').onclick=async()=>{const f=$('asrfile').files[0];if(!f)return;const fd=new FormData();fd.append('file',f);fd.append('language',$('asrlang').value);
   $('asrmsg').textContent=t('läuft…','running…');$('asrout').style.display='none';
   try{const r=await (await api('/api/test/asr',{method:'POST',body:fd})).json();$('asrmsg').textContent=`${r.processing_s}s ${t('für','for')} ${fmt(r.duration,' s',1)} Audio`;

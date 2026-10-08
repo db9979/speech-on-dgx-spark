@@ -111,7 +111,14 @@
     "mfa": false,
     "speaker_strictness": "normal",
     "defaults": {"hands": false, "auto": true, "turn": true, "daily": true, "live": true, "barge": true, "barge_level": "mid", "voice": "", "speed": 1.0, "length": "normal", "timing": true, "learn": true},
-    "max_tokens": 4096
+    "max_tokens": 4096,
+    "history_chars": 24000,
+    "max_searches": 2,
+    "llm_timeout": 600,
+    "top_p": 0,
+    "presence_penalty": 0,
+    "tool_words": "",
+    "own_style": false
   },
   "logs": {
     "max_mb": 500,

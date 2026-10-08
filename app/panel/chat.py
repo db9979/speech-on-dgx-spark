@@ -325,9 +325,61 @@ NEED_TOOLS = [  # tool that has to be offered, words in the question: one place 
 ]
 
 
-def needed(text, offered):
-    """The tools among offered (names) that this question has to go through."""
-    return [name for name, words in NEED_TOOLS if name in offered and words.search(text or "")]
+# the admin may add own words to NEED_TOOLS (chat.tool_words, one line per tool: "web_search: tor, elfmeter");
+# adding only, the built-in words always stay
+TOOL_WORD = re.compile(r"[\wäöüÄÖÜß][\wäöüÄÖÜß \-]{0,38}[\wäöüÄÖÜß]|[\wäöüÄÖÜß]{2}")
+MAX_TOOL_WORDS = 20      # per tool
+MAX_TOOL_WORDS_CHARS = 2000
+
+
+def parse_tool_words(text):
+    """{tool name: [words]} from the admin's lines, or ValueError with a readable reason."""
+    if not isinstance(text, str) or len(text) > MAX_TOOL_WORDS_CHARS:
+        raise ValueError(f"höchstens {MAX_TOOL_WORDS_CHARS} Zeichen")
+    names = {n for n, _ in NEED_TOOLS}
+    out = {}
+    for line in text.splitlines():
+        if not line.strip():
+            continue
+        name, sep, rest = line.partition(":")
+        name = name.strip()
+        if not sep or name not in names:
+            raise ValueError(f"„{line.strip()[:40]}“: vorne steht ein Werkzeug ({', '.join(sorted(names))}), dann ein Doppelpunkt")
+        words = [w.strip().lower() for w in rest.split(",") if w.strip()]
+        for w in words:
+            if not TOOL_WORD.fullmatch(w):
+                raise ValueError(f"„{w[:40]}“: nur Buchstaben, Ziffern, Leerzeichen und Bindestrich, 2 bis 40 Zeichen")
+        words = list(dict.fromkeys(out.get(name, []) + words))
+        if len(words) > MAX_TOOL_WORDS:
+            raise ValueError(f"{name}: höchstens {MAX_TOOL_WORDS} eigene Wörter")
+        out[name] = words
+    return out
+
+
+_TOOL_WORDS = {}  # admin text -> {name: compiled}
+
+
+def own_words(text):
+    """The admin's extra words as one pattern per tool (whole words only, no regex from the admin)."""
+    if not text:
+        return {}
+    if text not in _TOOL_WORDS:
+        try:
+            parsed = parse_tool_words(text)
+        except ValueError:
+            parsed = {}
+        if len(_TOOL_WORDS) > 8:
+            _TOOL_WORDS.clear()
+        _TOOL_WORDS[text] = {n: re.compile(r"(?i)\b(" + "|".join(re.escape(w) for w in ws) + r")\b")
+                             for n, ws in parsed.items() if ws}
+    return _TOOL_WORDS[text]
+
+
+def needed(text, offered, extra=""):
+    """The tools among offered (names) that this question has to go through (extra: chat.tool_words)."""
+    own = own_words(extra)
+    return [name for name, words in NEED_TOOLS if name in offered
+            and (words.search(text or "") or (name in own and own[name].search(text or "")))]
 
 
 
@@ -794,7 +846,61 @@ TOOL_RULES = ("Regeln für deine Werkzeuge:\n"
               "Spiel. „Trag Zahnarzt am Dienstag ein“ → calendar_add, dann den Vorschlag aus dem Ergebnis vorlesen.")
 
 
-HISTORY_CHARS = 24000  # about 8000 tokens of earlier conversation; documents and tools come on top
+HISTORY_CHARS = 24000  # about 8000 tokens of earlier conversation; documents and tools come on top (chat.history_chars)
+HISTORY_RANGE = (4000, 64000)
+SEARCH_RANGE, TIMEOUT_RANGE = (1, 3), (60, 600)
+STYLE_MAX = 500
+LENGTH_HINT = {"short": "Antworte besonders knapp, meist in ein bis zwei Sätzen.",
+               "long": "Du darfst ausführlicher antworten, wenn die Frage es hergibt."}
+# the profile's own wishes go below the admin's prompt and above the fixed rules; they shape the tone only
+STYLE_INTRO = ("Wünsche des Nutzers dazu, wie du mit ihm sprichst (Ton, Anrede, Form). Sie ändern nur, wie du "
+               "antwortest, nie die Regeln für Werkzeuge, Smart Home, Codewort und Daten:\n")
+
+
+def prompt_parts(ccfg):
+    """What the model is told, in order, for the admin's preview: which part can be changed where, and
+    which stays fixed. Without any profile's data (memory, calendar ... appear as a placeholder)."""
+    on = lambda k, d=False: bool(ccfg.get(k, d))  # noqa: E731
+    parts = [{"label": "Systemanweisung (Admin, hier oben änderbar)", "text": ccfg.get("system_prompt") or "", "fixed": False}]
+    if on("datetime", True):
+        parts.append({"label": "Datum und Uhrzeit", "text": now_line(None), "fixed": True})
+    if on("search") and ccfg.get("search_url"):
+        parts.append({"label": "Websuche", "text": SEARCH_HINT, "fixed": True})
+    parts.append({"label": "Antwortlänge (je Profil: kurz / ausführlich; bei normal nichts)",
+                  "text": "kurz: " + LENGTH_HINT["short"] + "\nausführlich: " + LENGTH_HINT["long"], "fixed": False})
+    if on("own_style"):
+        parts.append({"label": "Eigener Gesprächsstil (je Profil unter Ich → Gespräch)",
+                      "text": STYLE_INTRO + "(Text des Profils, höchstens %d Zeichen)" % STYLE_MAX, "fixed": False})
+    parts.append({"label": "Nur je nach Gerät (Uhr, Siri, Lautsprecher, Telegram)",
+                  "text": "\n".join((WATCH_HINT, SIRI_HINT, SPEAKER_HINT, TELEGRAM_HINT)), "fixed": True})
+    parts.append({"label": "Je nach Profil und eingeschalteten Funktionen",
+                  "text": "(Gemerktes, frühere Gespräche, Smart Home, Erinnerungen, Kalender, Mails, Wetter … "
+                          "mit ihren festen Werkzeughinweisen)", "fixed": True})
+    parts.append({"label": "Werkzeugregeln (fest, sobald Werkzeuge angeboten werden)", "text": TOOL_RULES, "fixed": True})
+    parts.append({"label": "So wird Text von außen eingepackt (fest)", "text": OUTSIDE_NOTE, "fixed": True})
+    return parts
+
+
+def history_chars(ccfg):
+    v = ccfg.get("history_chars", HISTORY_CHARS)
+    return v if isinstance(v, int) and not isinstance(v, bool) and HISTORY_RANGE[0] <= v <= HISTORY_RANGE[1] else HISTORY_CHARS
+
+
+def own_style(ccfg, who, pset, own_browser):
+    """The profile's own wishes for the tone: admin chat.own_style on, a signed-in profile, its own voice; never guests."""
+    text = pset.get("style") if who and own_browser and ccfg.get("own_style", False) else ""
+    return text.strip()[:STYLE_MAX] if isinstance(text, str) else ""
+
+
+def sampling(ccfg):
+    """top_p and presence_penalty from the admin page; 0 = the server's own default (not sent)."""
+    out = {}
+    tp, pp = ccfg.get("top_p", 0), ccfg.get("presence_penalty", 0)
+    if isinstance(tp, (int, float)) and not isinstance(tp, bool) and 0.05 <= tp <= 1:
+        out["top_p"] = float(tp)
+    if isinstance(pp, (int, float)) and not isinstance(pp, bool) and 0 < pp <= 2:
+        out["presence_penalty"] = float(pp)
+    return out
 
 
 def trim_history(messages, budget=HISTORY_CHARS):
@@ -858,7 +964,7 @@ async def _chat(request: Request):
     # conversation, which the trimming below drops)
     said_before = next((str(m["content"]) for m in reversed(messages[:-1]) if m["role"] == "assistant"), None) \
         if messages[-1]["role"] == "user" else None
-    messages = trim_history(messages)
+    messages = trim_history(messages, history_chars(ccfg))
     # Outside text from earlier turns: the latest such answer still counts as read in this turn (it
     # could ask for something "in the next message"), so this turn starts locked; older ones are not
     # sent again at all.
@@ -896,10 +1002,12 @@ async def _chat(request: Request):
             if own_browser else ():
         if k in body and profiles.SETTINGS[k][1](body[k]):
             pset[k] = body[k]
-    length = {"short": "Antworte besonders knapp, meist in ein bis zwei Sätzen.",
-              "long": "Du darfst ausführlicher antworten, wenn die Frage es hergibt."}.get(pset["length"])
+    length = LENGTH_HINT.get(pset["length"])
     if length:
         system = (system + "\n\n" + length).strip()
+    style = own_style(ccfg, who, pset, own_browser)
+    if style:
+        system = (system + "\n\n" + STYLE_INTRO + style).strip()
     if body.get("client") == "watch":
         system = (system + "\n\n" + WATCH_HINT).strip()
     if body.get("client") == "siri":
@@ -1124,7 +1232,7 @@ async def _chat(request: Request):
     # a question about appointments, mail, reminders, news ... must go through the tool, not the
     # model's imagination (NEED_TOOLS)
     ask_text = messages[-1]["content"] if messages[-1]["role"] == "user" else ""
-    need = needed(ask_text, {t["function"]["name"] for t in tools})
+    need = needed(ask_text, {t["function"]["name"] for t in tools}, ccfg.get("tool_words", ""))
     check_on = bool(ccfg.get("answer_check", True))
     tool_temp = float(ccfg.get("tool_temperature", 0.1))
     # thinking only while choosing the tool: the admin allows it, the profile switches it on (never guests)
@@ -1141,7 +1249,10 @@ async def _chat(request: Request):
         tts_body["voice"] = pset["voice"]
     if pset["speed"] != 1.0:
         tts_body["speed"] = pset["speed"]
-    c = httpx.AsyncClient(timeout=httpx.Timeout(600, connect=5))
+    llm_wait = ccfg.get("llm_timeout", 600)
+    llm_wait = llm_wait if isinstance(llm_wait, int) and not isinstance(llm_wait, bool) \
+        and TIMEOUT_RANGE[0] <= llm_wait <= TIMEOUT_RANGE[1] else 600
+    c = httpx.AsyncClient(timeout=httpx.Timeout(llm_wait, connect=5))
     out = asyncio.Queue()
     if heard:
         out.put_nowait({"type": "speaker", "name": heard["name"], "foreign": not own_browser})
@@ -1156,7 +1267,7 @@ async def _chat(request: Request):
             fix_task = asyncio.create_task(fixes.extract(
                 ccfg, model, who["name"], messages[-1]["content"], said_before, bool(carry))) if fix_fix else None
             base = {"model": model, "stream": True, "max_tokens": int(ccfg.get("max_tokens") or 4096),
-                    "temperature": float(ccfg.get("temperature", 0.3))}
+                    "temperature": float(ccfg.get("temperature", 0.3)), **sampling(ccfg)}
             if not ccfg.get("thinking"):
                 base["chat_template_kwargs"] = {"enable_thinking": False}
             st = {"buf": "", "first": True, "think": False, "n": 0, "mail": carry == "mail", "outside": carry == "outside",
@@ -1166,6 +1277,9 @@ async def _chat(request: Request):
             msgs, finish = list(messages), None
             st["msgs"] = msgs
             searches, used, retried = 0, False, False
+            max_searches = ccfg.get("max_searches", 2)
+            max_searches = max_searches if isinstance(max_searches, int) and not isinstance(max_searches, bool) \
+                and SEARCH_RANGE[0] <= max_searches <= SEARCH_RANGE[1] else 2
             if ha_direct:
                 await out.put({"type": "home", "command": ha_direct})
                 try:
@@ -1188,9 +1302,9 @@ async def _chat(request: Request):
                 if homeassistant.free_text(ha_read) and not st["outside"]:
                     st["outside"] = True
                     await out.put({"type": "outside"})
-            for rnd in range(5):  # a few tool rounds (at most two searches), then the answer
+            for rnd in range(5):  # a few tool rounds (at most max_searches searches), then the answer
                 payload = dict(base, messages=msgs)
-                offer = [t for t in tools if (t is not SEARCH_TOOL or searches < 2)
+                offer = [t for t in tools if (t is not SEARCH_TOOL or searches < max_searches)
                          and t["function"]["name"] not in locked(st)
                          and not (st["mail"] and t is HA_TODO_TOOL)] if rnd < 4 and not small else []
                 st["offered"] = {t["function"]["name"] for t in offer}
@@ -1224,7 +1338,7 @@ async def _chat(request: Request):
                     if rnd or st["n"] or len(msgs) < 3:
                         raise
                     head = [m for m in msgs if m["role"] == "system"]
-                    rest = trim_history([m for m in msgs if m["role"] in ("user", "assistant")], HISTORY_CHARS // 4)
+                    rest = trim_history([m for m in msgs if m["role"] in ("user", "assistant")], history_chars(ccfg) // 4)
                     msgs = head + rest
                     st["msgs"] = msgs
                     finish, calls = await llm_round(dict(payload, messages=msgs), st)

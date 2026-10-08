@@ -613,7 +613,8 @@ def profile_settings(request: Request):
     chat = load_config().get("chat", {})
     return {"settings": dict(base, **(profiles.settings(prof["id"]) if prof else {})), "defaults": base,
             "profile": prof, "allow": {"tool_think": bool(prof and chat.get("tool_thinking", False)),
-                                       "fix_learn": bool(prof and chat.get("learn_fixes", False) and chat.get("memory", True))}}
+                                       "fix_learn": bool(prof and chat.get("learn_fixes", False) and chat.get("memory", True)),
+                                       "style": bool(prof and chat.get("own_style", False))}}
 
 
 @router.put("/api/profile/settings", dependencies=[Depends(assistant)])
@@ -623,6 +624,10 @@ async def profile_save_settings(request: Request, prof=Depends(browser_profile))
     # login: a shared device with a key cannot open it up
     if isinstance(body, dict) and request.headers.get(profiles.DEVICE_HEADER) \
             and any(k in ("tg_private", "tg_ha", "tg_push") and body[k] for k in body):
+        raise HTTPException(403, "only in the profile's own browser login")
+    # what the model is told about the tone, too: a device key cannot change it
+    if isinstance(body, dict) and request.headers.get(profiles.DEVICE_HEADER) \
+            and "style" in body and body["style"] != profiles.settings(prof["id"]).get("style", ""):
         raise HTTPException(403, "only in the profile's own browser login")
     return {"settings": profiles.save_settings(prof["id"], body)}
 

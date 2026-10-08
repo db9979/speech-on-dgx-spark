@@ -197,16 +197,17 @@ def _system(ccfg, hints):
 async def _run_case(c, ccfg, headers, model, case):
     """One case like a real turn: tool table, steady tool choice, answer check (see chat.py)."""
     import answercheck
+    import chat
     msgs = [{"role": "system", "content": _system(ccfg, case["hints"])}, {"role": "user", "content": case["q"]}]
     called = []
     t0 = time.time()
     answer = ""
-    need = _need(case)
+    need = _need(case, ccfg)
     check_on = bool(ccfg.get("answer_check", True))
     retried = False
     for rnd in range(4):
         payload = {"model": model, "stream": False, "max_tokens": 600, "temperature": float(ccfg.get("temperature", 0.3)),
-                   "messages": msgs}
+                   "messages": msgs, **chat.sampling(ccfg)}
         if not ccfg.get("thinking"):
             payload["chat_template_kwargs"] = {"enable_thinking": False}
         if case["tools"] and rnd < 3:
@@ -258,10 +259,10 @@ def heard(answer, given):
     return " ".join(keep), held
 
 
-def _need(case):
+def _need(case, ccfg=None):
     """Like a real turn (chat.needed): appointment, mail, reminder and news questions must go through a tool."""
     import chat
-    return bool(chat.needed(case["q"], {t["function"]["name"] for t in case["tools"]}))
+    return bool(chat.needed(case["q"], {t["function"]["name"] for t in case["tools"]}, (ccfg or {}).get("tool_words", "")))
 
 
 def _zone():
