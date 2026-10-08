@@ -196,6 +196,24 @@ class Tidy(unittest.TestCase):
             self.assertEqual(tidy._unutf7(tidy._utf7(n)), n)
         self.assertEqual(tidy._utf7("Entwürfe"), "Entw&APw-rfe")
 
+    def test_move_named_after_login_or_missing(self):
+        try:
+            FMB.capabilities = ("IMAP4REV1",)          # before the login: no MOVE yet
+            p, aid = self.setup_profile("Ludmilla")
+            FMB.put("INBOX", helpers.box_mail("Shop <news@shop.example>", "Sommer-Sale", headers=PROMO))
+            r = p.post("/api/profile/tidy/run", json={"aid": aid}).json()
+            self.assertEqual(r["report"]["moved"], 1)
+            self.assertEqual(self.inbox_subjects("Spark/Werbung"), ["Sommer-Sale"])   # folders made on demand
+            FMB.after_login = ("IMAP4REV1", "UIDPLUS")  # no MOVE at all: nothing changes, only the preview
+            FMB.put("INBOX", helpers.box_mail("Shop <news@shop.example>", "Winter-Sale", headers=PROMO))
+            r = p.post("/api/profile/tidy/run", json={"aid": aid}).json()
+            self.assertEqual(r["report"]["moved"], 0)
+            self.assertIn("Winter-Sale", self.inbox_subjects())
+            self.assertTrue(r["accounts"][0]["error"])
+            self.assertFalse([c for c in FMB.calls if c[0] in ("STORE", "EXPUNGE", "COPY")])
+        finally:
+            FMB.capabilities = FMB.after_login = ("IMAP4REV1", "MOVE")
+
 
 if __name__ == "__main__":
     unittest.main()

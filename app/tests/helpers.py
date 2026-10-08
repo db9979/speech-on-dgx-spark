@@ -322,6 +322,7 @@ class FakeMailbox:
     records every command in calls. Messages: {"uid", "raw", "seen", "flags"}."""
     boxes, calls, uidnext = {}, [], {}
     capabilities = ("IMAP4REV1", "MOVE")
+    after_login = ("IMAP4REV1", "MOVE")
 
     @classmethod
     def reset(cls, inbox=(), sent=()):
@@ -360,6 +361,9 @@ class FakeMailbox:
 
     def logout(self):
         return "BYE", [b""]
+
+    def capability(self):
+        return "OK", [" ".join(self.after_login).encode()]
 
     def list(self):
         special = {"Sent Messages": " \\Sent", "Drafts": " \\Drafts"}

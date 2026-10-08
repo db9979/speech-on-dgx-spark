@@ -406,6 +406,14 @@ class Box:
         except imaplib.IMAP4.error:
             self.close()
             raise ValueError("the mail server rejects the user name or password")
+        # many servers name MOVE only after the login, imaplib keeps the list from before it
+        self.caps = {str(x).upper() for x in (getattr(c, "capabilities", ()) or ())}
+        try:
+            typ, data = c.capability()
+            if typ == "OK" and data and data[-1]:
+                self.caps |= set(data[-1].decode(errors="replace").upper().split())
+        except Exception:
+            pass
         self.delim, self.boxes = "/", {}
         typ, data = c.list()
         for line in data or []:
@@ -431,7 +439,7 @@ class Box:
         self.close()
 
     def can_move(self):
-        return "MOVE" in {str(x).upper() for x in (getattr(self.c, "capabilities", ()) or ())}
+        return "MOVE" in self.caps
 
     def name(self, path):
         """Our "Spark/Werbung" in the server's own separator."""
