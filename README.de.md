@@ -31,6 +31,7 @@ Alle Optionen ohne Rückfragen (`--mode api --asr 1.7b --tts 0.6b --yes` …) st
 
 <!-- New version: add one line at the top here and in CHANGELOG.md, drop the oldest line here (keep 10). Details go to docs/de and docs/en, not into this README. -->
 
+- **V01.0.116** Selbsttest beim Update repariert: ein neuer Test sprach auf dem Spark die laufende TTS-Engine an (Event loop is closed)
 - **V01.0.115** Sicherheit Stufe 6: Selbsttest-Scanner lehnt neuen Code mit shell=True/eval, Routen ohne Anmeldung, Uploads ohne Grenze, unmaskierte onclick-Werte und uneingeordnete Assistenten-Werkzeuge ab
 - **V01.0.114** Sicherheit Stufe 5: Admin-Abmelden beendet alle Kopien, Admin überall abmelden, Codewort-Nachricht in Telegram gelöscht, Aufräumen nur bei exaktem Absender, gefälschte Paketmails ignoriert, Fehler und Dienst-Details nicht für Gäste
 - **V01.0.113** Sicherheit Stufe 4: Installation und Update schreiben nie mehr als root durch Verknüpfungen, keine Passwörter im Update-Log, qwen38-Schlüssel nur aus echter Datei, umgeschriebene Geschichte wird abgelehnt, optional nur signierte Versionen
@@ -40,7 +41,6 @@ Alle Optionen ohne Rückfragen (`--mode api --asr 1.7b --tts 0.6b --yes` …) st
 - **V01.0.109** Sicherheit Stufe 2: fremder Text sperrt auch die nächste Nachricht und geht nur als Daten ans Modell, nur schlichtes Ja bestätigt, höchstens 4 Werkzeuge pro Schritt, Home Assistant nur Geräte-Bereiche, fremde Stimme ohne persönliche Daten
 - **V01.0.108** Selbsttest beim Update repariert (zwei neue Tests suchten install.sh/update.sh in der Testkopie)
 - **V01.0.107** Sicherheit Stufe 1: Rücksprung nur auf echte Vorversion, nur Qwen-Modelle, heikle Einstellungen und Sicherungs-Download mit Code, Geräteschlüssel ändern keine Verbindungen, Größengrenzen vor dem Lesen, Kalender-/WAV-/Word-Bomben entschärft, MemoryMax
-- **V01.0.106** Wyoming: Adressfeld erscheint sofort, die Home-Assistant-Adresse wird vorgeschlagen
 
 Alle Versionen: [CHANGELOG.md](CHANGELOG.md)
 

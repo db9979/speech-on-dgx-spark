@@ -584,9 +584,16 @@ class Stage5(unittest.TestCase):
     def test_services_show_details_only_inside(self):
         import asr_proxy
         import tts_proxy
-        out = TestClient(tts_proxy.app, client=("192.168.1.9", 1))
-        self.assertEqual(set(out.get("/health").json()), {"service", "status"})
-        self.assertEqual(out.get("/v1/voices").status_code, 401)
-        self.assertIn("error", TestClient(tts_proxy.app, client=("127.0.0.1", 1)).get("/health").json())
+
+        async def no_engine(role="main"):   # never the real engine (on the Spark one runs on its port)
+            return "down", "test"
+        real, tts_proxy.engine_status = tts_proxy.engine_status, no_engine
+        try:
+            out = TestClient(tts_proxy.app, client=("192.168.1.9", 1))
+            self.assertEqual(set(out.get("/health").json()), {"service", "status"})
+            self.assertEqual(out.get("/v1/voices").status_code, 401)
+            self.assertIn("error", TestClient(tts_proxy.app, client=("127.0.0.1", 1)).get("/health").json())
+        finally:
+            tts_proxy.engine_status = real
         self.assertNotIn("response_format", asr_proxy.ENGINE_FIELDS)
         self.assertLessEqual(asr_proxy.ENGINE_FIELDS, {"prompt", "temperature", "stream"})

@@ -31,6 +31,7 @@ All options for running without questions (`--mode api --asr 1.7b --tts 0.6b --y
 
 <!-- New version: add one line at the top here and in CHANGELOG.md, drop the oldest line here (keep 10). Details go to docs/de and docs/en, not into this README. -->
 
+- **V01.0.116** Self-test during update fixed: a new test talked to the running TTS engine on the Spark (Event loop is closed)
 - **V01.0.115** Security stage 6: self-test scanner refuses new code with shell=True/eval, routes without login, uploads without a limit, unescaped onclick values and unsorted assistant tools
 - **V01.0.114** Security stage 5: admin logout ends every copy, log the admin out everywhere, code word message deleted in Telegram, tidying only on exact sender, forged parcel mails ignored, errors and service details not for guests
 - **V01.0.113** Security stage 4: install and update never write as root through links, no passwords in the update log, qwen38 key only from a real file, rewritten history is refused, optionally only signed versions
@@ -40,7 +41,6 @@ All options for running without questions (`--mode api --asr 1.7b --tts 0.6b --y
 - **V01.0.109** Security stage 2: outside text also locks the next message and reaches the model only as data, only a plain yes confirms, at most 4 tools per step, Home Assistant only device domains, foreign voice without personal data
 - **V01.0.108** Update self-test fixed (two new tests looked for install.sh/update.sh in the test copy)
 - **V01.0.107** Security stage 1: rollback only to the real previous version, Qwen models only, sensitive settings and backup download need a code, device keys change no connections, size limits before reading, calendar/WAV/Word bombs defused
-- **V01.0.106** Wyoming: the address field shows at once and the Home Assistant address is suggested
 
 All versions: [CHANGELOG.md](CHANGELOG.md)
 

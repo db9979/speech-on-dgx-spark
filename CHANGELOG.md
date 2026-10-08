@@ -2,6 +2,7 @@
 
 Every version in one line, newest first (taken from the commit messages, so some lines are German, some English). Older entries have no version number.
 
+- **V01.0.116** · 2026-10-08 · Selbsttest beim Update repariert: ein neuer Test sprach auf dem Spark die laufende TTS-Engine an (Event loop is closed)
 - **V01.0.115** · 2026-10-08 · Sicherheit Stufe 6: Selbsttest-Scanner lehnt neuen Code mit shell=True/eval, Routen ohne Anmeldung, Uploads ohne Grenze, unmaskierte onclick-Werte und uneingeordnete Assistenten-Werkzeuge ab
 - **V01.0.114** · 2026-10-08 · Sicherheit Stufe 5: Admin-Abmelden beendet alle Kopien, Admin überall abmelden, Codewort-Nachricht in Telegram gelöscht, Aufräumen nur bei exaktem Absender, gefälschte Paketmails ignoriert, Fehler und Dienst-Details nicht für Gäste
 - **V01.0.113** · 2026-10-08 · Sicherheit Stufe 4: Installation und Update schreiben nie mehr als root durch Verknüpfungen, keine Passwörter im Update-Log, qwen38-Schlüssel nur aus echter Datei, umgeschriebene Geschichte wird abgelehnt, optional nur signierte Versionen
