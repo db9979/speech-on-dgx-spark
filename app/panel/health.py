@@ -13,7 +13,7 @@ Memory: below watch.warn_gib (default 10 GiB; DGX OS starts killing processes at
 panel shows a warning on every admin page and writes it to the change log once per episode.
 
 Live check: after an update (and on request) the real services are tried once; the result is in
-STATE/livecheck.json and on the page System und Update.
+STATE/livecheck.json and on the page Übersicht → Prüfen.
 """
 import asyncio
 import io
@@ -315,7 +315,7 @@ def quality_alert():
         return []
     return [{"kind": "quality", "level": "warn",
              "text": f"Qualitätstest: {len(new)} Frage(n) neu kaputt, z. B. „{new[0][:80]}“ "
-                     "(System und Update → Qualitätstest)."}]
+                     "(Übersicht → Prüfen → Qualitätstest)."}]
 
 
 def memory_now():

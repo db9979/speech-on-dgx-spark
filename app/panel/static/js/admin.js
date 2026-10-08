@@ -112,8 +112,8 @@ $('asrgo').onclick=async()=>{const f=$('asrfile').files[0];if(!f)return;const fd
   $('asrmsg').textContent=t('läuft…','running…');$('asrout').style.display='none';
   try{const r=await (await api('/api/test/asr',{method:'POST',body:fd})).json();$('asrmsg').textContent=`${r.processing_s}s ${t('für','for')} ${fmt(r.duration,' s',1)} Audio`;
     $('asrout').textContent=`[${r.language||'auto'}] ${r.text}`;$('asrout').style.display='block'}catch(e){$('asrmsg').innerHTML=`<span class="err">${esc(e.message)}</span>`}};
-async function loadVoices(){const v=await (await api('/api/tts/voices')).json();
-  $('ttsvoice').innerHTML=v.voices.length?v.voices.map(x=>`<option>${esc(x)}</option>`).join(''):`<option value="">${t('(Standard)','(default)')}</option>`;
+async function loadVoices(){const v=await (await api('/api/tts/voices')).json(),vs=v.voices||[];   // no list while the TTS loads
+  $('ttsvoice').innerHTML=vs.length?vs.map(x=>`<option>${esc(x)}</option>`).join(''):`<option value="">${t('(Standard)','(default)')}</option>`;
   $('ttsvoice').disabled=v.model_kind==='voice_design'}
 $('ttsgo').onclick=async()=>{const body={input:$('ttstext').value,voice:$('ttsvoice').value||null,language:$('ttslang').value,instruct:$('ttsinstr').value||null};
   if($('ttstask').value)body.task_type=$('ttstask').value;
@@ -154,7 +154,7 @@ $('vimpfile').onchange=async()=>{const f=$('vimpfile').files[0];if(!f)return;$('
   catch(e){$('vimpmsg').innerHTML=`<span class="err">${esc(e.message)}</span>`}};
 function playRef(n){const a=new Audio('/api/clone-voices/'+encodeURIComponent(n)+'.wav');a.play()}
 async function delVoice(n){if(!confirm(t(`Stimme ${n} löschen?`,`Delete voice ${n}?`)))return;await api('/api/clone-voices/'+encodeURIComponent(n),{method:'DELETE'});loadClone()}
-// One short sentence with exactly this voice, through the same admin test route as Einbinden → Testen.
+// One short sentence with exactly this voice, through the same admin test route as Übersicht → Prüfen.
 // Cloned voices only sound like themselves with a Base model; otherwise the engine's answer says why.
 const PROBE={de:'Hallo, so klinge ich als Stimme des Spark.',en:'Hello, this is how I sound as the voice of the Spark.'};
 async function probeVoice(n,btn){const lang=$('vreadlang').value==='en'?'en':'de',msg=$('vprobemsg');btn.disabled=true;msg.textContent=t('Spreche …','Speaking …');
@@ -220,7 +220,7 @@ $('tts.model').addEventListener('change',()=>instrHint(true));$('logload').oncli
 function kv(rows){return rows.map(([k,v])=>`<tr><td class="mut" style="width:40%">${k}</td><td><code>${esc(v)}</code> <button class="b" style="padding:1px 6px;font-size:12px" onclick="copyString(this.previousElementSibling.textContent,this)">${t('kopieren','copy')}</button></td></tr>`).join('')}
 async function loadInt(){const c=await (await api('/api/config')).json();const v=await (await api('/api/tts/voices')).json();
   const host=location.hostname,asr=`http://${host}:${c.asr.port}/v1`,tts=`http://${host}:${c.tts.port}/v1`,key=c.api.key||t('beliebig, z. B. sk-local','anything, e.g. sk-local');
-  const voice=c.tts.default_voice||(v.voices[0]||'ryan');
+  const voice=c.tts.default_voice||((v.voices||[])[0]||'ryan');
   $('int-ep').innerHTML=kv([[t('Spracherkennung (STT)','Speech recognition (STT)'),asr+'/audio/transcriptions'],[t('Sprachausgabe (TTS)','Speech output (TTS)'),tts+'/audio/speech'],[t('API-Schlüssel','API key'),c.api.key||t('(keiner gesetzt)','(none set)')]]);
   $('int-owui-stt').innerHTML=kv([['Speech-to-Text Engine','OpenAI'],['API Base URL',asr],['API Key',key],['STT Model',c.asr.model]]);
   $('int-owui-tts').innerHTML=kv([['Text-to-Speech Engine','OpenAI'],['API Base URL',tts],['API Key',key],['TTS Model',c.tts.model],['TTS Voice',voice],[t('Zusätzliche TTS-Parameter (JSON, optional)','Additional TTS parameters (JSON, optional)'),JSON.stringify({temperature:c.tts.temperature,top_p:c.tts.top_p,seed:c.tts.seed})],[t('Antwort aufteilen','Response splitting'),t('Absätze (Paragraphs)','Paragraphs')]]);
@@ -259,7 +259,7 @@ let updPoll=null;
 async function loadSys(check=false){let u;try{u=await (await api('/api/update'+(check?'?check=true':''))).json()}catch(e){$('updstate').innerHTML=`<span class="err">${esc(e.message)}</span>`;return}
   const i=u.installed||{},r=u.remote||{};
   $('sysver').innerHTML=kvp([[t('Installiert','Installed'),i.short?`${i.short} · ${new Date(i.date).toLocaleString()}`:'–'],[t('Änderung','Change'),i.subject||'–'],['Engines',i.engine||'–'],[t('Quelle','Source'),i.remote||'–'],[t('Zuletzt geprüft','Last checked'),r.checked?new Date(r.checked*1000).toLocaleTimeString():'–']]);
-  updBadge(r);loadBench();loadLive();loadBak();
+  updBadge(r);loadBak();
   const pv=u.previous;$('updprevrow').style.display=pv&&!u.running?'flex':'none';
   if(pv)$('updprevtxt').textContent=(pv.version||pv.short||'')+(pv.subject?' · '+pv.subject:'');
   if(u.running){$('updstate').innerHTML=t('<span class="pill warn">Update läuft</span> Die Seite lädt neu, wenn das Panel neu startet.','<span class="pill warn">Update running</span> The page reloads when the panel restarts.');$('updgo').disabled=true;$('updstop').style.display='inline-block';

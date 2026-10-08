@@ -2,7 +2,7 @@
 // on its page in the "Ich" window and collected under Einbinden → Anleitungen. Services are sorted into
 // fixed groups everywhere. Each guide: sw = admin switch id, me = page in the "Ich" window. Texts are [German, English]; every section is a list of such pairs.
 // A self-test checks that every switch in Funktionen and every "Ich" page has a guide and a group.
-const GGROUPS=[['talk','Gespräch','Conversation'],['day','Mein Tag','My day'],['post','Post und Dokumente','Mail and documents'],
+const GGROUPS=[['talk','Gespräch','Conversation'],['data','Meine Daten','My data'],['day','Mein Tag','My day'],['post','Post und Kontakte','Mail and contacts'],
   ['home','Zuhause','Home'],['go','Unterwegs und Geräte','On the go and devices'],['sec','Zugang','Access']];
 const GSECT=[['what','Was es kann','What it does'],['need','Was du brauchst','What you need'],['setup','Einrichten','Set up'],
   ['say','So benutzt du es','How to use it'],['out','Was das Haus verlässt','What leaves the house'],
@@ -26,7 +26,7 @@ const GUIDES=[
  out:[['Die Suchwörter gehen an deine SearXNG und von dort an die Suchmaschinen. Die Treffer-Seiten liest der Spark direkt.','The search words go to your SearXNG and from there to the search engines. The Spark reads the result pages directly.']],
  off:[['Schalter in Funktionen aus. Es wird nichts gespeichert außer der Antwort im Verlauf.','Switch it off under Features. Nothing is stored except the answer in the history.']],
  fix:[['„Keine Treffer“: In SearXNG das JSON-Format erlauben oder prüfen, ob der Spark die Adresse erreicht.','"No results": allow the JSON format in SearXNG or check that the Spark reaches the address.'],['Nach dem Lesen einer Mail ist die Websuche in derselben Antwort gesperrt. Das ist Absicht.','After reading a mail, web search is locked for that answer. That is on purpose.']]},
-{id:'memory',grp:'talk',sw:'chat.memory',me:'factbox',ng:1,t:['Gedächtnis','Memory'],
+{id:'memory',grp:'data',sw:'chat.memory',me:'factbox',ng:1,t:['Gedächtnis','Memory'],
  what:[['Der Assistent merkt sich Dinge über dich, zum Beispiel Namen, Vorlieben oder wo etwas liegt, und nutzt sie in späteren Gesprächen. Nur für dein Profil.','The assistant remembers things about you, such as names, preferences or where something is, and uses them later. Only for your profile.']],
  need:[['Ein Profil (Name und PIN).','A profile (name and PIN).']],
  setup:[['Admin: Funktionen → Gedächtnis an.','Admin: Features → Memory on.'],['Profil: Ich → Gedächtnis zeigt alles, was gespeichert ist. Ob er auch selbst dazulernt, stellst du unter „Gespräch“ ein.','Profile: Me → Memory shows everything stored. Whether it also learns by itself is set under "Conversation".']],
@@ -34,7 +34,7 @@ const GUIDES=[
  out:NOTHING_OUT,
  off:[['Ich → Gedächtnis: einzelne Einträge löschen oder „Alles vergessen“.','Me → Memory: delete single entries or "Forget everything".']],
  fix:[['Doppelte Einträge: „Aufräumen vorschlagen“ fasst sie zusammen, geändert wird erst nach deinem OK.','Duplicate entries: "Suggest tidy-up" merges them, nothing changes before your OK.']]},
-{id:'history',grp:'talk',sw:'chat.history',ng:1,mep:'setbox',t:['Frühere Gespräche','Past conversations'],
+{id:'history',grp:'data',sw:'chat.history',ng:1,mep:'setbox',t:['Frühere Gespräche','Past conversations'],
  what:[['Du kannst nach früheren Gesprächen fragen. Aus ruhigen Gesprächen merkt sich der Assistent außerdem wenige dauerhafte Fakten (im Gedächtnis als „automatisch“ markiert).','You can ask about past conversations. From quiet conversations the assistant also keeps a few lasting facts (marked "automatic" in memory).']],
  need:[['Ein Profil. Gäste nie.','A profile. Never guests.']],
  setup:[['Admin: Funktionen → Frühere Gespräche an.','Admin: Features → Past conversations on.'],['Profil: Das automatische Lernen schaltest du unter Ich → Gespräch aus, wenn du es nicht willst.','Profile: switch automatic learning off under Me → Conversation if you do not want it.']],
@@ -56,7 +56,7 @@ const GUIDES=[
  setup:[['Admin: Funktionen → Aus Korrekturen lernen an.','Admin: Features → Learning from corrections on.'],['Profil: Ich → Gespräch → „Aus Korrekturen lernen“ an.','Profile: Me → Conversation → "Learn from corrections" on.']],
  say:[['„Nein, das stimmt nicht, mein Bruder heißt Tim.“ Dann auf die Frage mit „Ja“ antworten.','"No, that is wrong, my brother is called Tim." Then answer the question with "yes".']],
  out:NOTHING_OUT,
- off:[['Schalter aus. Gemerkte Sätze löschst du unter Ich → Gedächtnis, Testfälle der Admin unter System und Update → Qualitätstest.','Switch off. Delete remembered sentences under Me → Memory; the admin deletes test cases under System and update → Quality test.']],
+ off:[['Schalter aus. Gemerkte Sätze löschst du unter Ich → Gedächtnis, Testfälle der Admin unter Übersicht → Prüfen → Qualitätstest.','Switch off. Delete remembered sentences under Me → Memory; the admin deletes test cases under Overview → Checks → Quality test.']],
  fix:[['Nichts zum Merken: Weltwissen (Ergebnisse, Preise), Codewörter, PINs, Sicherheitsregeln und das Schalten von Geräten lernt er nie. Aus Mails oder Webseiten lernt er auch nicht.','Nothing to remember: it never learns world knowledge (scores, prices), code words, PINs, security rules or switching devices. It does not learn from mail or web pages either.']]},
 {id:'toolthink',grp:'talk',sw:'chat.tool_thinking',ng:1,mep:'setbox',t:['Bei der Werkzeugwahl nachdenken','Thinking while choosing tools'],
  what:[['Das Modell denkt kurz nach, bevor es ein Werkzeug wählt (Kalender, Mail, Websuche …). Das macht die Wahl zuverlässiger; danach antwortet es ohne Nachdenken.','The model thinks briefly before it picks a tool (calendar, mail, web search …). That makes the choice more reliable; afterwards it answers without thinking.']],
@@ -66,7 +66,7 @@ const GUIDES=[
  out:NOTHING_OUT,
  off:[['Schalter aus, hier oder im eigenen Profil.','Switch off, here or in your own profile.']],
  fix:[['Antworten beginnen spürbar später: Das ist der Preis fürs Nachdenken; dann wieder ausschalten.','Answers start noticeably later: that is the price of thinking; switch it off again then.']]},
-{id:'speaker',grp:'talk',sw:'chat.speaker_id',me:'voicebox',ng:1,t:['Sprechererkennung','Speaker recognition'],
+{id:'speaker',grp:'sec',sw:'chat.speaker_id',me:'voicebox',ng:1,t:['Sprechererkennung','Speaker recognition'],
  what:[['Der Assistent erkennt dich an der Stimme, auch an einem fremden Gerät, und antwortet dann mit deinem Gedächtnis und deinen Einstellungen. Smart Home schaltet er für eine fremde Stimme nie.','The assistant recognises you by voice, even on someone else\'s device, and then answers with your memory and settings. It never switches smart home for a foreign voice.']],
  need:[['Ein Profil und ein Mikrofon (https).','A profile and a microphone (https).']],
  setup:[['Admin: Funktionen → Sprechererkennung an, darunter die Strenge wählen.','Admin: Features → Speaker recognition on, choose the strictness below it.'],['Profil: Ich → Sprechererkennung → „Stimme einlernen“, drei kurze Sätze vorlesen.','Profile: Me → Speaker identification → "Enroll voice", read three short sentences.']],
@@ -74,7 +74,7 @@ const GUIDES=[
  out:NOTHING_OUT,
  off:[['Ich → Sprechererkennung → „Stimme löschen“.','Me → Speaker identification → "Delete voice".']],
  fix:[['Eine Stimme ist kein Passwort: Wer sehr ähnlich klingt oder eine Aufnahme abspielt, kann ein Profil erwischen.','A voice is not a password: someone who sounds very similar or plays a recording can get a profile.'],['Wird selten erkannt: in ruhiger Umgebung neu einlernen oder die Strenge auf „locker“.','Rarely recognised: enroll again somewhere quiet or set strictness to "relaxed".']]},
-{id:'room',grp:'talk',sw:'chat.room',me:'roombox',ng:1,t:['Raum-Modus','Room mode'],
+{id:'room',grp:'home',sw:'chat.room',me:'roombox',ng:1,t:['Raum-Modus','Room mode'],
  what:[['Für eine gewählte Zeit hört der Assistent dem Gespräch im Raum zu und hilft in einer Pause: offene Fragen beantworten, Termine oder Einkäufe vorschlagen, bei „kalt“ oder „dunkel“ den echten Wert nennen. Geändert wird nur nach „Ja“.','For a chosen time the assistant listens to the conversation in the room and helps in a pause: answers open questions, suggests appointments or shopping items, gives the real value on "cold" or "dark". Nothing changes without "Yes".']],
  need:[['Ein Profil und ein Gerät mit Mikrofon. Alle im Raum sollten wissen, dass er zuhört.','A profile and a device with a microphone. Everyone in the room should know it is listening.']],
  setup:[['Admin: Funktionen → Raum-Modus an.','Admin: Features → Room mode on.'],['Profil: Ich → Raum-Modus: was er tun darf, Raum in Home Assistant, „Nur als Text“.','Profile: Me → Room mode: what it may do, room in Home Assistant, "Text only".'],['Am Gerät: Schalter „Raum“ unter dem Gesicht, Dauer wählen.','On the device: "Room" switch below the face, choose the duration.']],
@@ -82,7 +82,7 @@ const GUIDES=[
  out:NOTHING_OUT,
  off:[['Schalter „Raum“ aus. Das Gehörte bleibt nur wenige Minuten im Arbeitsspeicher und wird nie gespeichert.','"Room" switch off. What was heard stays in memory for a few minutes only and is never stored.']],
  fix:[['Meldet sich zu oft: unter Raum-Modus die Stufe auf „nur Fragen“.','Speaks up too often: set the level to "questions only" under Room mode.']]},
-{id:'proactive',grp:'talk',sw:'chat.proactive',me:'probox',ng:1,t:['Von selbst melden','Speaking up by itself'],
+{id:'proactive',grp:'day',sw:'chat.proactive',me:'probox',ng:1,t:['Von selbst melden','Speaking up by itself'],
  what:[['Der Assistent meldet sich, wenn wirklich etwas ist: vor Terminen, bei eigenen Smart-Home-Regeln, Mails von gewählten Absendern, Wetter für morgen, Geburtstagen, Paketen, mit einer Nachfrage oder einer Begrüßung.','The assistant speaks up when something is really up: before appointments, on your own smart-home rules, mails from chosen senders, tomorrow\'s weather, birthdays, parcels, a follow-up or a greeting.']],
  need:[['Ein Profil. Für Mitteilungen ohne offene Seite: Mitteilungen eingeschaltet (siehe „Mitteilungen aufs Handy“).','A profile. For notices without an open page: notifications switched on (see "Notifications to your phone").']],
  setup:[['Admin: Funktionen → Von selbst melden an.','Admin: Features → Speaking up by itself on.'],['Profil: Ich → Von selbst: jede Art einzeln an, Ruhezeit (Standard 22 bis 7 Uhr) und Tageslimit setzen, „Ausprobieren“.','Profile: Me → Proactive: switch on each kind, set quiet hours (default 10 pm to 7 am) and daily limit, "Try it".']],
@@ -118,7 +118,7 @@ const GUIDES=[
 {id:'briefing',grp:'day',me:'calbox',t:['Morgen-Briefing','Morning briefing'],
  what:[['Auf „Guten Morgen“ oder zu einer festen Uhrzeit: Termine, Erinnerungen, Wetter, Geburtstage, Pakete, ungelesene Mails und bis zu drei Themen, kurz zusammengefasst (was davon eingeschaltet ist).','On "Good morning" or at a set time: appointments, reminders, weather, birthdays, parcels, unread mail and up to three topics, briefly (whatever is switched on).']],
  need:[['Einen verbundenen Kalender. Für die feste Uhrzeit: Mitteilungen.','A connected calendar. For the set time: notifications.']],
- setup:[['Profil: Ich → Kalender → Themen eintragen (z. B. „Wetter Ulm, Nachrichten“).','Profile: Me → Calendar → enter topics (e.g. "weather Ulm, news").'],['Profil: Ich → Gespräch → Mitteilungen → Uhrzeit fürs Tagesbriefing.','Profile: Me → Conversation → Notifications → time for the daily briefing.']],
+ setup:[['Profil: Ich → Kalender → Themen eintragen (z. B. „Wetter Ulm, Nachrichten“).','Profile: Me → Calendar → enter topics (e.g. "weather Ulm, news").'],['Profil: Ich → Mitteilungen → Uhrzeit fürs Tagesbriefing.','Profile: Me → Notifications → time for the daily briefing.']],
  say:[['„Guten Morgen.“','"Good morning."'],['„Was steht heute an?“','"What is on today?"']],
  out:[['Für die Themen geht eine Suche an deine SearXNG.','For the topics a search goes to your SearXNG.']],
  off:[['Uhrzeit auf „Aus“, Themen leeren.','Set the time to "Off", clear the topics.']],
@@ -131,7 +131,7 @@ const GUIDES=[
  out:[['Die Koordinaten deines Orts gehen an Open-Meteo, bei einem anderen Ort dessen Name an die Ortssuche.','The coordinates of your place go to Open-Meteo; for another place its name goes to the place search.']],
  off:[['Ich → Wetter → Schalter aus, Ort leeren und speichern.','Me → Weather → switch off, clear the place and save.']],
  fix:[['Ort nicht gefunden: den nächsten größeren Ort oder „Ort, Land“ eintragen.','Place not found: enter the nearest larger town or "town, country".'],['„Nicht erreichbar“: Der Spark braucht Internet zu api.open-meteo.com.','"Not reachable": the Spark needs internet access to api.open-meteo.com.']]},
-{id:'transit',grp:'day',sw:'chat.transit',me:'trbox',ng:1,t:['Bus und Bahn','Bus and train'],
+{id:'transit',grp:'go',sw:'chat.transit',me:'trbox',ng:1,t:['Bus und Bahn','Bus and train'],
  what:[['Die nächsten Abfahrten an deiner Haltestelle und Verbindungen zu einem Ziel, mit Verspätungen und Gleis. Mit einer Pendelstrecke meldet „Von selbst“, wenn dein Zug später kommt oder ausfällt.','The next departures at your stop and connections to a destination, with delays and platform. With a commute set, "Proactive" tells you when your train is late or cancelled.']],
  need:[['Nichts weiter. Der Fahrplan kommt von transport.rest (Deutsche Bahn mit Bus und Tram); der Admin kann einen anderen Dienst eintragen.','Nothing else. The timetable comes from transport.rest (Deutsche Bahn including bus and tram); the admin can enter another service.']],
  setup:[['Admin: Funktionen → Bus und Bahn an.','Admin: Features → Bus and train on.'],['Profil: Ich → Bus und Bahn → Schalter an, Haltestelle suchen und antippen.','Profile: Me → Bus and train → switch on, search your stop and tap it.'],['Für Verspätungshinweise: Ziel und Abfahrtszeit eintragen, Tage wählen, Ziel suchen und antippen; dann unter „Von selbst“ „Bus und Bahn“ einschalten.','For delay notes: enter destination and departure time, pick the days, search the destination and tap it; then switch on "Bus and train" under "Proactive".']],
@@ -139,7 +139,7 @@ const GUIDES=[
  out:[['Die Namen deiner Haltestelle und deines Ziels gehen an den Fahrplandienst.','The names of your stop and destination go to the timetable service.']],
  off:[['Ich → Bus und Bahn → Schalter aus, Pendelstrecke löschen.','Me → Bus and train → switch off, remove the commute.']],
  fix:[['„Nicht erreichbar“: Der öffentliche Dienst ist manchmal überlastet. Der Admin kann eine andere Adresse eintragen, z. B. einen eigenen db-rest.','"Not reachable": the public service is sometimes overloaded. The admin can enter another address, e.g. an own db-rest.'],['Falsche Haltestelle: genauer suchen, z. B. mit Ort („Karlsbad Langensteinbach Bahnhof“).','Wrong stop: search more precisely, e.g. with the town.']]},
-{id:'contacts',grp:'day',sw:'chat.contacts',me:'conbox',ng:1,ro:1,t:['Kontakte','Contacts'],
+{id:'contacts',grp:'post',sw:'chat.contacts',me:'conbox',ng:1,ro:1,t:['Kontakte','Contacts'],
  what:[['Der Assistent kennt Telefonnummern, E-Mail-Adressen und Geburtstage aus deinem Adressbuch. Geburtstage kommen ins Tagesbriefing, Mails zeigen Namen statt Adressen. Er liest nur.','The assistant knows phone numbers, e-mail addresses and birthdays from your address book. Birthdays go into the daily briefing, mails show names instead of addresses. It only reads.']],
  need:[['iCloud: Apple-ID und ein app-spezifisches Passwort von appleid.apple.com. Nextcloud oder anderer CardDAV-Server: Adresse und App-Passwort.','iCloud: Apple ID and an app-specific password from appleid.apple.com. Nextcloud or another CardDAV server: address and app password.']],
  setup:[['Admin: Funktionen → Kontakte an.','Admin: Features → Contacts on.'],['Profil: Ich → Kontakte → „Kontakte für mich nutzen“ an.','Profile: Me → Contacts → switch on "Use contacts for me".'],['„Adressbuch hinzufügen“: Anbieter wählen, Zugangsdaten, „Prüfen und hinzufügen“.','"Add address book": pick the provider, enter the login, "Check and add".']],
@@ -172,7 +172,7 @@ const GUIDES=[
  out:[['Nichts außer den Befehlen an deinen eigenen Mailserver.','Nothing except the commands to your own mail server.']],
  off:[['Modus auf „aus“. Jede Verschiebung lässt sich 30 Tage lang zurückholen.','Mode "off". Every move can be undone for 30 days.']],
  fix:[['Bei Rechnungen und Unklarem fragt er erst. Falsch einsortiert: zurückholen, er lernt daraus.','With invoices and unclear mails it asks first. Wrongly sorted: undo it, it learns from that.']]},
-{id:'documents',grp:'post',sw:'chat.documents',me:'docbox',ng:1,t:['Eigene Dokumente','Own documents'],
+{id:'documents',grp:'data',sw:'chat.documents',me:'docbox',ng:1,t:['Eigene Dokumente','Own documents'],
  what:[['Du lädst Dokumente hoch, der Assistent sucht darin, wenn eine Frage dazu passt. Kein anderes Profil sieht sie.','You upload documents, the assistant searches them when a question fits. No other profile sees them.']],
  need:[['PDF, Word, Text, Markdown, HTML oder CSV, je bis 20 MB.','PDF, Word, text, Markdown, HTML or CSV, up to 20 MB each.']],
  setup:[['Admin: Funktionen → Eigene Dokumente an.','Admin: Features → Own documents on.'],['Profil: Ich → Dokumente → „Dokument hinzufügen“.','Profile: Me → Documents → "Add document".']],
@@ -198,13 +198,13 @@ const GUIDES=[
  off:[['Ich → Smart Home → „Trennen“.','Me → Smart home → "Disconnect".']],
  fix:[['Gerät nicht gefunden: den Namen sagen, den es in Home Assistant hat.','Device not found: say the name it has in Home Assistant.'],['Schaltet nicht: Codewort in derselben Nachricht sagen. Schlösser, Alarmanlagen und Updates schaltet er nie.','Does not switch: say the code word in the same message. Locks, alarms and updates are never switched.']]},
 // ------------------------------------------------------------------ Unterwegs und Geräte
-{id:'push',grp:'go',me:'setbox',t:['Mitteilungen aufs Handy','Notifications to your phone'],
+{id:'push',grp:'day',me:'notebox',t:['Mitteilungen aufs Handy','Notifications to your phone'],
  what:[['Erinnerungen, das Tagesbriefing und „Von selbst melden“ kommen als Mitteilung, auch wenn die Seite zu ist.','Reminders, the daily briefing and proactive notices arrive as notifications, even with the page closed.']],
  need:[['Die Seite über https mit echtem Zertifikat (dein Reverse Proxy). Auf dem iPhone: die Seite als App auf dem Home-Bildschirm.','The page over https with a real certificate (your reverse proxy). On iPhone: the page as an app on the home screen.']],
- setup:[['iPhone: Seite in Safari öffnen, „Teilen → Zum Home-Bildschirm“, dann die App von dort öffnen.','iPhone: open the page in Safari, "Share → Add to Home Screen", then open the app from there.'],['Ich → Gespräch → Mitteilungen → „Einschalten“ und erlauben.','Me → Conversation → Notifications → "Switch on" and allow.']],
+ setup:[['iPhone: Seite in Safari öffnen, „Teilen → Zum Home-Bildschirm“, dann die App von dort öffnen.','iPhone: open the page in Safari, "Share → Add to Home Screen", then open the app from there.'],['Ich → Mitteilungen → „Einschalten“ und erlauben.','Me → Notifications → "Switch on" and allow.']],
  say:[['Nichts zu sagen, sie kommen von selbst.','Nothing to say, they come by themselves.']],
  out:[['Die Mitteilung geht verschlüsselt über den Push-Dienst deines Browsers (bei Apple über Apple).','The notification goes encrypted through your browser\'s push service (Apple\'s for Apple devices).']],
- off:[['Ich → Gespräch → Mitteilungen → „Ausschalten“.','Me → Conversation → Notifications → "Switch off".']],
+ off:[['Ich → Mitteilungen → „Ausschalten“.','Me → Notifications → "Switch off".']],
  fix:[['Knopf fehlt: Seite nicht über https oder auf dem iPhone nicht als App geöffnet.','Button missing: page not over https, or on iPhone not opened as an app.']]},
 {id:'telegram',grp:'go',sw:'chat.telegram',me:'tgbox',ng:1,t:['Telegram','Telegram'],
  what:[['Du schreibst dem Assistenten über einen eigenen Telegram-Bot oder schickst eine Sprachnachricht, von überall. Der Spark fragt Telegram selbst nach neuen Nachrichten, es braucht keinen offenen Port. Auf Wunsch kommen Erinnerungen und Hinweise auch dort an.','You write to the assistant through your own Telegram bot or send a voice message, from anywhere. The Spark asks Telegram for new messages itself, no open port is needed. If you like, reminders and notes arrive there too.']],
@@ -214,7 +214,7 @@ const GUIDES=[
  out:[['Deine Nachrichten und die Antworten laufen über die Server von Telegram. Deshalb sind Kalender, Mail, Kontakte, Pakete und Dokumente dort aus, bis du sie erlaubst.','Your messages and the answers pass Telegram\'s servers. That is why calendar, mail, contacts, parcels and documents stay off there until you allow them.']],
  off:[['Profil: „Trennen“ oder /trennen im Bot. Admin: „Token löschen“ oder Telegram aus; bei @BotFather mit /deletebot ganz löschen.','Profile: "Unlink" or /trennen in the bot. Admin: "Delete token" or Telegram off; delete it for good with /deletebot at @BotFather.']],
  fix:[['Bot antwortet nicht: Ist Telegram unter Funktionen an und gespeichert? Der Spark braucht Internet zu api.telegram.org.','Bot does not answer: is Telegram on under Features and saved? The Spark needs internet access to api.telegram.org.'],['„Dieser Spark-Assistent ist privat“: Das Konto ist noch nicht verbunden, im Panel einen neuen Code holen.','"This Spark assistant is private": the account is not linked yet; get a new code in the panel.'],['Kein Zugriff auf Termine: Ich → Telegram → „Persönliches über Telegram erlauben“.','No access to appointments: Me → Telegram → "Allow personal data over Telegram".']]},
-{id:'esp32',grp:'go',sw:'chat.esp32',me:'espbox',ng:1,t:['Eigene Lautsprecher (ESP32)','Own speakers (ESP32)'],
+{id:'esp32',grp:'home',sw:'chat.esp32',me:'espbox',ng:1,t:['Eigene Lautsprecher (ESP32)','Own speakers (ESP32)'],
  what:[['Ein kleines ESP32-S3-Board mit Mikrofon und Lautsprecher wird zum Sprachassistenten im Raum. Es hört auf „Jarvis“ oder den Knopf, fragt deinen Spark und antwortet in deiner Stimme, mit Gedächtnis, Kalender und Smart Home (mit Codewort). Es spricht nur mit deinem Spark, mit keiner Cloud.','A small ESP32-S3 board with a microphone and speaker becomes a voice assistant in the room. It listens for "Jarvis" or the button, asks your Spark and answers in your voice, with memory, calendar and smart home (with code word). It talks only to your Spark, never to a cloud.']],
  need:[['Ein ESP32-S3-Board mit 16 MB Flash und PSRAM, Mikrofon INMP441 und Verstärker MAX98357A (z. B. die „XiaoZhi“-Steckbrett-Boards, auch von diymore), ein USB-Datenkabel und Chrome oder Edge am PC oder Mac.','An ESP32-S3 board with 16 MB flash and PSRAM, INMP441 microphone and MAX98357A amplifier (e.g. the "XiaoZhi" breadboard boards, also from diymore), a USB data cable and Chrome or Edge on a PC or Mac.'],['Den Spark unter einer Adresse, die das Board erreicht: am besten dein Reverse Proxy mit echtem Zertifikat (WebSockets erlaubt), im Heimnetz geht auch http://<Spark-IP>:31080.','The Spark at an address the board reaches: best your reverse proxy with a real certificate (WebSockets allowed); at home http://<Spark IP>:31080 works too.']],
  setup:[['Admin: Funktionen → Eigene Lautsprecher an, speichern, dann „Firmware jetzt holen“. Die Adresse für die Lautsprecher eintragen, wenn das Panel sonst unter einer anderen geöffnet wird.','Admin: Features → Own speakers on, save, then "Fetch firmware now". Enter the address for the speakers if the panel is usually opened under another one.'],['Profil: Ich → Lautsprecher → „Eigene Lautsprecher für mich“ an.','Profile: Me → Speakers → "Own speakers for me" on.'],['Board per USB an den PC, „Neuen Lautsprecher per USB einrichten“: Name, Board, WLAN eingeben, „Board verbinden und einrichten“, im Fenster des Browsers den USB-Anschluss wählen.','Board to the PC over USB, "Set up a new speaker over USB": enter name, board and Wi-Fi, "Connect board and set up", pick the USB port in the browser\'s window.'],['Nach etwa einer Minute startet das Board neu und steht als „verbunden“ in der Liste, sobald du es ansprichst.','After about a minute the board restarts and shows as "connected" once you talk to it.'],['Ohne PC: Ein Board mit Spark-Firmware zeigt oder sagt beim Start einen 6-stelligen Code, den du unter „Lautsprecher mit Code koppeln“ eingibst.','Without a PC: a board with the Spark firmware shows or says a 6-digit code at start, which you enter under "Pair a speaker with a code".']],
@@ -245,7 +245,7 @@ const GUIDES=[
  say:[['Je nach App.','Depends on the app.']],
  out:NOTHING_OUT,
  off:[['API-Schlüssel ändern sperrt alle Apps mit dem alten Schlüssel aus.','Changing the API key locks out all apps using the old key.']],
- fix:[['Unter Einbinden → Testen beide Dienste direkt ausprobieren.','Try both services directly under Integrate → Test.']]},
+ fix:[['Unter Übersicht → Prüfen beide Dienste direkt ausprobieren.','Try both services directly under Overview → Checks.']]},
 // ------------------------------------------------------------------ Sicherheit und Zugang
 {id:'mfa',grp:'sec',sw:'chat.mfa',me:'secbox',t:['Zweiter Anmeldeschritt','Second sign-in step'],
  what:[['Zur Anmeldung mit Name und PIN kommt ein Code aus einer Authenticator-App. Geräte mit Schlüssel brauchen keinen Code.','Signing in with name and PIN also needs a code from an authenticator app. Devices with a key need no code.']],
@@ -305,7 +305,7 @@ function guidesFeat(){const pane=$('pane-feat');if(!pane||pane.dataset.grouped)r
       box.appendChild(row);take(g.sw)})});
   guidesCount()}
 // small marks behind a feature's name instead of repeating it in every description
-const ME_NAME={setbox:['Gespräch','Conversation'],factbox:['Gedächtnis','Memory'],voicebox:['Sprechererkennung','Speaker identification'],roombox:['Raum-Modus','Room mode'],
+const ME_NAME={setbox:['Gespräch','Conversation'],notebox:['Mitteilungen','Notifications'],factbox:['Gedächtnis','Memory'],voicebox:['Sprechererkennung','Speaker identification'],roombox:['Raum-Modus','Room mode'],
   probox:['Von selbst','Proactive'],taskbox:['Aufgaben','Tasks'],calbox:['Kalender','Calendar'],wxbox:['Wetter','Weather'],conbox:['Kontakte','Contacts'],trbox:['Bus und Bahn','Bus and train'],
   mailbox:['E-Mail','E-mail'],parbox:['Pakete','Parcels'],docbox:['Dokumente','Documents'],habox:['Smart Home','Smart home'],tgbox:['Telegram','Telegram'],espbox:['Lautsprecher','Speakers'],secbox:['Sicherheit','Security']};
 function featTags(g,row){const lbl=row.querySelector('.lbl');if(!lbl||lbl.querySelector('.ftags'))return;const tags=[];
@@ -331,7 +331,7 @@ function guidesSwitches(){GUIDES.filter(g=>g.sw).forEach(g=>{const el=$(g.sw);if
 function guidesMe(id){const page=$(id);if(!page)return;const list=GUIDES.filter(g=>g.me===id);
   list.slice().reverse().forEach(g=>{if(!page.querySelector(`details.guide[data-guide="${g.id}"]`))page.prepend(guideBox(g,false))})}
 // Group of an "Ich" page, for the headers in its menu.
-const meGroup=id=>{const g=GUIDES.find(x=>x.me===id&&x.id!=='push'&&x.id!=='hands');return g?g.grp:null};
+const meGroup=id=>{const g=GUIDES.find(x=>x.me===id&&x.id!=='hands');return g?g.grp:null};
 // Einbinden → Anleitungen: all guides, grouped.
 function guidesAll(){const el=$('guidelist');if(!el)return;
   el.innerHTML=GGROUPS.map(([gid,de,en])=>`<div class="ggrp"><h3>${esc(t(de,en))}</h3><div data-g="${gid}"></div></div>`).join('');

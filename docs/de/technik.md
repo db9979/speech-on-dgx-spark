@@ -24,7 +24,7 @@ Alle Dienste laufen als Systembenutzer `speech`. Per sudoers darf das Panel die 
 
 ## Leistung messen
 
-Im Panel unter **Übersicht → System und Update → Leistung messen** oder auf der Konsole:
+Im Panel unter **Übersicht → Prüfen → Leistung messen** oder auf der Konsole:
 
 ```bash
 sudo speech-spark-bench                 # Zeit bis zum ersten Ton, Tempo einzeln und parallel, Speicher je Dienst

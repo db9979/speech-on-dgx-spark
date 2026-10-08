@@ -59,8 +59,9 @@
 <section id="cfg">
   <div class="cfgwrap">
     <div class="cfgnav" id="cfgnav">
-      <button data-p="feat" class="on">Funktionen</button><button data-p="ai">Sprachmodell</button><button data-p="talk">Vorgaben</button>
-      <button data-p="tts">Sprachausgabe</button><button data-p="voices">Stimmen</button><button data-p="asr">Spracherkennung</button><button data-p="sec">Sicherheit</button><button data-p="sysc">Betrieb</button>
+      <div class="cgrp">Was er kann</div><button data-p="feat" class="on">Funktionen</button>
+      <div class="cgrp">Wie er denkt und spricht</div><button data-p="ai">Sprachmodell</button><button data-p="talk">Vorgaben</button><button data-p="tts">Sprachausgabe</button><button data-p="voices">Stimmen</button><button data-p="asr">Spracherkennung</button>
+      <div class="cgrp">Spark selbst</div><button data-p="sec">Sicherheit</button><button data-p="sysc">Betrieb</button>
     </div>
     <div>
     <button class="b cfgback" id="cfgback" type="button"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"><path d="M15 5l-7 7 7 7"/></svg><span>Alle Einstellungen</span></button>
@@ -309,6 +310,22 @@
 
 <section id="test">
   <div class="two">
+    <div class="card"><div class="row" style="justify-content:space-between"><h2 style="margin:0">Funktionsprüfung</h2><button class="b" type="button" onclick="openWizard()">Einrichtung erneut starten</button></div>
+      <div class="intro sm">Probiert die echten Dienste einmal aus: das Sprachmodell antwortet, die Sprachausgabe spricht einen Satz, die Spracherkennung versteht ihn wieder. Läuft nach jedem Update von selbst.</div>
+      <table style="margin-top:8px"><tbody id="livesteps"></tbody></table>
+      <div class="row" style="margin-top:10px"><button class="b" id="livego">Jetzt prüfen</button><span id="livemsg" class="mut"></span></div></div>
+    <div class="card"><h2>Qualitätstest</h2>
+    <div class="intro sm">Stellt dem echten Sprachmodell 20 feste Fragen, die meisten zusätzlich in zwei anderen Formulierungen, mit vorbereiteten Werkzeug-Ergebnissen (Termine, Mails, Erinnerungen, Suche, Gedächtnis, „weiß ich nicht“-Fälle). Geprüft wird, ob es das richtige Werkzeug nimmt und was du nach der Antwort-Prüfung hörst. Ein Fehlschlag läuft einmal neu; der Verlauf zeigt neu kaputte und wackelnde Fragen. Echte Daten werden dabei weder gelesen noch geändert. Läuft nach jedem Update von selbst, dauert zwei bis vier Minuten.</div>
+    <div id="qsum" style="margin-top:8px"></div>
+    <table style="margin-top:6px"><tbody id="qlist"></tbody></table>
+    <div class="row" style="margin-top:10px"><button class="b" id="qgo">Jetzt prüfen</button><span id="qmsg" class="mut"></span></div>
+    <div id="qownbox" style="display:none;margin-top:10px"><b>Fragen aus Korrekturen</b><div class="fh" style="margin-top:0">Profile haben sie nach einer Korrektur übergeben. Sie laufen bei jedem Test mit; jedes Werkzeug findet dabei nichts, das Modell darf also nichts erfinden.</div><ul id="qown" class="list"></ul></div></div>
+  </div>
+  <div class="card"><h2>Leistung messen</h2>
+    <div class="intro sm">Misst Zeit bis zum ersten Ton, Geschwindigkeit bei einer und bei mehreren gleichzeitigen Anfragen und den Speicher der Dienste. Dauert ein bis zwei Minuten und belastet die GPU in der Zeit. Auf der Konsole: <code>sudo speech-spark-bench</code></div>
+    <div class="row" style="margin-top:12px"><button class="b p" id="benchgo">Messung starten</button><button class="b" onclick="copyEl('benchout',this)">Kopieren</button><span id="benchmsg" class="mut"></span></div>
+    <pre id="benchout" style="margin-top:12px">–</pre></div>
+  <div class="two">
     <div class="card"><h2>Spracherkennung testen</h2>
       <label>Audiodatei (wav, mp3, flac, …)</label><input type="file" id="asrfile" accept="audio/*">
       <label>Sprache</label><select id="asrlang" class="langs"></select>
@@ -356,6 +373,8 @@
     <div class="mut">Zu jedem Dienst, den man einschalten kann: was er kann, was du brauchst, wie du ihn einrichtest und benutzt, was das Haus verlässt und wie du ihn wieder ausschaltest. Dieselbe Anleitung steht auch neben dem Schalter unter Einstellungen → Funktionen und im Ich.</div>
     <div id="guidelist" style="margin-top:6px"></div>
   </div>
+</section>
+<section id="apps">
   <div class="card"><h2>Endpunkte</h2>
     <div class="mut">Beide Dienste sprechen die OpenAI-Audio-API. Jede App, die dort eine eigene „Base URL“ erlaubt, kann sie nutzen.</div>
     <table style="margin-top:8px"><tbody id="int-ep"></tbody></table>
@@ -413,27 +432,11 @@
       <div class="mut" style="font-size:12px;margin-top:8px">Holt den neuesten Stand von GitHub und installiert ihn. Einstellungen, Modelle und Stimmen bleiben. Vor dem Umschalten prüft ein Selbsttest die neue Version; schlägt er oder ein Schritt davor fehl, läuft die bisherige Version unverändert weiter. Geht nach dem Umschalten etwas schief, wird die bisherige Version wieder eingespielt. Während des Updates starten die Dienste kurz neu.</div>
     </div>
   </div>
-  <div class="card"><h2>Qualitätstest</h2>
-    <div class="intro sm">Stellt dem echten Sprachmodell 20 feste Fragen, die meisten zusätzlich in zwei anderen Formulierungen, mit vorbereiteten Werkzeug-Ergebnissen (Termine, Mails, Erinnerungen, Suche, Gedächtnis, „weiß ich nicht“-Fälle). Geprüft wird, ob es das richtige Werkzeug nimmt und was du nach der Antwort-Prüfung hörst. Ein Fehlschlag läuft einmal neu; der Verlauf zeigt neu kaputte und wackelnde Fragen. Echte Daten werden dabei weder gelesen noch geändert. Läuft nach jedem Update von selbst, dauert zwei bis vier Minuten.</div>
-    <div id="qsum" style="margin-top:8px"></div>
-    <table style="margin-top:6px"><tbody id="qlist"></tbody></table>
-    <div class="row" style="margin-top:10px"><button class="b" id="qgo">Jetzt prüfen</button><span id="qmsg" class="mut"></span></div>
-    <div id="qownbox" style="display:none;margin-top:10px"><b>Fragen aus Korrekturen</b><div class="fh" style="margin-top:0">Profile haben sie nach einer Korrektur übergeben. Sie laufen bei jedem Test mit; jedes Werkzeug findet dabei nichts, das Modell darf also nichts erfinden.</div><ul id="qown" class="list"></ul></div></div>
-  <div class="two">
-    <div class="card"><div class="row" style="justify-content:space-between"><h2 style="margin:0">Funktionsprüfung</h2><button class="b" type="button" onclick="openWizard()">Einrichtung erneut starten</button></div>
-      <div class="intro sm">Probiert die echten Dienste einmal aus: das Sprachmodell antwortet, die Sprachausgabe spricht einen Satz, die Spracherkennung versteht ihn wieder. Läuft nach jedem Update von selbst.</div>
-      <table style="margin-top:8px"><tbody id="livesteps"></tbody></table>
-      <div class="row" style="margin-top:10px"><button class="b" id="livego">Jetzt prüfen</button><span id="livemsg" class="mut"></span></div></div>
-    <div class="card"><h2>Sicherung</h2>
+  <div class="card"><h2>Sicherung</h2>
       <div class="intro sm">Profile (Gedächtnis, Gespräche, Dokumente, Kalender, E-Mail-Konten, Smart Home, Stimmerkennung), geklonte Stimmen, Einstellungen und Panel-Passwort. Jeden Tag automatisch, die letzten sieben bleiben; dazu vor jedem Update, jeder Rückkehr zur vorigen Version und jedem Wiederherstellen, davon bleiben die letzten fünf.</div>
       <table style="margin-top:8px"><tbody id="baklist"></tbody></table>
       <div class="row" style="margin-top:10px"><button class="b" id="bakgo">Jetzt sichern</button><button class="b" id="bakup" type="button">Aus Datei wiederherstellen …</button><input type="file" id="bakfile" accept=".gz,.tgz,application/gzip" style="display:none"><span id="bakmsg"></span></div>
       <div class="fh">Kalender- und Mail-Passwörter und Home-Assistant-Tokens lassen sich nur auf diesem Spark wiederherstellen; auf einem anderen müssen sie neu eingegeben werden. Beim Wiederherstellen werden die Einstellungen wie auf der Einstellungsseite geprüft, und es wird alles getauscht oder nichts.</div></div>
-  </div>
-  <div class="card"><h2>Leistung messen</h2>
-    <div class="intro sm">Misst Zeit bis zum ersten Ton, Geschwindigkeit bei einer und bei mehreren gleichzeitigen Anfragen und den Speicher der Dienste. Dauert ein bis zwei Minuten und belastet die GPU in der Zeit. Auf der Konsole: <code>sudo speech-spark-bench</code></div>
-    <div class="row" style="margin-top:12px"><button class="b p" id="benchgo">Messung starten</button><button class="b" onclick="copyEl('benchout',this)">Kopieren</button><span id="benchmsg" class="mut"></span></div>
-    <pre id="benchout" style="margin-top:12px">–</pre></div>
   <div class="card"><div class="row" style="justify-content:space-between"><h2 style="margin:0">Update-Protokoll</h2><button class="b" onclick="copyEl('updlog',this)">Kopieren</button></div><pre id="updlog" style="margin-top:12px">–</pre></div>
 </section>
 <section id="logs">
@@ -480,8 +483,10 @@
     <div class="menav" id="ptabs"></div>
     <div class="mebody">
     <div id="setbox" class="ptab on"><div id="msetwake"></div><div id="setform"></div>
-      <div class="row" style="margin-top:10px"><button class="b" id="setreset" type="button">Auf Vorgaben zurücksetzen</button></div>
-      <div id="pushbox" style="display:none;margin-top:14px"><label>Erinnerungen auf diesem Gerät</label>
+      <div class="row" style="margin-top:10px"><button class="b" id="setreset" type="button">Auf Vorgaben zurücksetzen</button></div></div>
+    <div id="overbox" class="ptab"></div>
+    <div id="notebox" class="ptab"><div class="intro">Erinnerungen und das Tagesbriefing kommen als Mitteilung aufs Handy oder den Rechner, auch wenn die Seite zu ist.</div>
+      <div id="pushbox" style="display:none"><label>Erinnerungen auf diesem Gerät</label>
         <div class="fh" id="pushstate"></div>
         <div class="row" style="margin-top:6px"><button class="b" id="pushgo" type="button">Einschalten</button><button class="b" id="pushoff" type="button" style="display:none">Ausschalten</button></div>
         <label style="margin-top:12px">Tagesbriefing als Mitteilung</label><div class="rowin"><input type="time" id="briefat" style="max-width:140px"><button class="b" id="briefoff" type="button">Aus</button></div>

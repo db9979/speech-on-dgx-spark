@@ -51,12 +51,12 @@ class Guides(unittest.TestCase):
         pages = set(re.findall(r"\['(\w+box)',t\(", me[me.index("function meTabs"):]))
         _, gs = guides()
         have = {g.get("me") for g in gs}
-        # sign-in and the log are no services
-        self.assertEqual(pages - have - {"loginbox", "logbox"}, set(), "Seiten ohne Anleitung")
+        # sign-in, the log and the overview are no services
+        self.assertEqual(pages - have - {"loginbox", "logbox", "overbox"}, set(), "Seiten ohne Anleitung")
 
     def test_guides_complete_and_grouped(self):
         groups, gs = guides()
-        self.assertEqual(len(groups), 6)
+        self.assertEqual(len(groups), 7)
         ids = [g["id"] for g in gs]
         self.assertEqual(len(ids), len(set(ids)))
         for g in gs:
@@ -143,3 +143,41 @@ class SettingsOrder(unittest.TestCase):
 def json_str(s):
     import json
     return json.dumps(s, ensure_ascii=False)
+
+
+class MenuStructure(unittest.TestCase):
+    """V01.0.125: settings menu in three blocks, all checks under Übersicht → Prüfen, Einbinden only guides and
+    apps, the Ich window starts with an overview and keeps the groups of the Funktionen page."""
+
+    def test_settings_menu_blocks(self):
+        html = read("index.html")
+        nav = html[html.index('id="cfgnav"'):html.index('</div>\n    <div>', html.index('id="cfgnav"'))]
+        self.assertEqual(re.findall(r'class="cgrp">([^<]+)<', nav), ["Was er kann", "Wie er denkt und spricht", "Spark selbst"])
+        self.assertEqual(re.findall(r'data-p="(\w+)"', nav), ["feat", "ai", "talk", "tts", "voices", "asr", "sec", "sysc"])
+
+    def test_checks_in_one_place(self):
+        html = read("index.html")
+        sec = lambda s: html[html.index(f'<section id="{s}">'):html.index("</section>", html.index(f'<section id="{s}">'))]
+        for el in ("livesteps", "qlist", "benchout", "asrfile", "ttstext"):
+            self.assertIn(f'id="{el}"', sec("test"), el)
+        for el in ("baklist", "updlog", "sysver"):
+            self.assertIn(f'id="{el}"', sec("sys"), el)
+        self.assertIn('id="guidelist"', sec("int"))
+        self.assertNotIn('id="int-ep"', sec("int"))
+        self.assertIn('id="int-ep"', sec("apps"))
+        base = read("js", "base.js")
+        self.assertIn("['test',t('Prüfen'", base)
+        self.assertIn("['apps',t('Apps und Schnittstellen'", base)
+
+    def test_me_pages_follow_the_groups(self):
+        me = read("js", "me.js")
+        pages = re.findall(r"\['(\w+box)',t\(", me[me.index("function meTabs"):me.index("// pages in the same groups")])
+        self.assertEqual(pages[0], "overbox")
+        groups, gs = guides()
+        grp = {g["me"]: g["grp"] for g in gs if g.get("me") and g["id"] != "hands"}
+        seen = [grp[p] for p in pages if p in grp]
+        order = [g for i, g in enumerate(seen) if i == 0 or seen[i - 1] != g]
+        self.assertEqual(len(order), len(set(order)), f"Gruppen im Ich-Fenster zerrissen: {order}")
+        self.assertEqual(order, [g for g in groups if g in order], "andere Reihenfolge als auf Funktionen")
+        self.assertIn('id="notebox"', read("index.html"))
+        self.assertIn("showOver()", me)

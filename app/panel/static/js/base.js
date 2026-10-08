@@ -39,12 +39,12 @@ const api=async(p,o={},code)=>{const r=await fetch(p,code?Object.assign({},o,{he
   if(r.status===401&&!/^\/api\/(login|password|profile)/.test(p)&&window.showLogin)showLogin();if(!r.ok){let t=await r.text();try{t=JSON.parse(t).detail||t}catch{}throw new Error(t)}return r};
 // Main menu: five entries; Übersicht and Einbinden hold several pages behind a sub-tab bar. The cloned voices
 // are a settings page (Einstellungen → Stimmen), not under Profile.
-const GROUPS={chat:[['chat','']],mon:[['mon',t('Monitoring','Monitoring')],['sys',t('System und Update','System and update')],['logs',t('Logs','Logs')]],
-  cfg:[['cfg','']],prof:[['prof','']],int:[['int',t('Anleitungen','Guides')],['test',t('Testen','Test')]]};
+const GROUPS={chat:[['chat','']],mon:[['mon',t('Monitoring','Monitoring')],['sys',t('System und Update','System and update')],['test',t('Prüfen','Checks')],['logs',t('Logs','Logs')]],
+  cfg:[['cfg','']],prof:[['prof','']],int:[['int',t('Anleitungen','Guides')],['apps',t('Apps und Schnittstellen','Apps and interfaces')]]};
 const lastSec={};
 function showSec(s){document.querySelectorAll('section').forEach(x=>x.classList.toggle('on',x.id===s));
   document.body.classList.toggle('inchat',s==='chat');
-  if(s==='cfg'){document.querySelector('.cfgwrap').classList.remove('sub');loadCfg();mfaShow('admmfa','/api/mfa');if($('pane-voices').classList.contains('on'))loadClone()}if(s==='chat')chatTab();if(s==='test'){loadVoices();instrHint()}if(s==='prof')loadProf();if(s==='logs')loadLogs();if(s==='int')loadInt();if(s==='sys')loadSys()}
+  if(s==='cfg'){document.querySelector('.cfgwrap').classList.remove('sub');loadCfg();mfaShow('admmfa','/api/mfa');if($('pane-voices').classList.contains('on'))loadClone()}if(s==='chat')chatTab();if(s==='test'){loadVoices();instrHint();loadLive();loadBench()}if(s==='prof')loadProf();if(s==='logs')loadLogs();if(s==='apps')loadInt();if(s==='sys')loadSys()}
 function subnav(g,s){const items=GROUPS[g],bar=$('subnav');bar.hidden=items.length<2;
   bar.innerHTML=items.length<2?'':items.map(([id,l])=>`<button type="button" data-sub="${id}"${id===s?' class="on"':''}>${esc(l)}${id==='sys'?' <span class="pill warn subbadge" style="display:none">Update</span>':''}</button>`).join('');
   bar.querySelectorAll('button').forEach(b=>b.onclick=()=>{lastSec[g]=b.dataset.sub;subnav(g,b.dataset.sub);showSec(b.dataset.sub)});updBadge(window.UPD)}

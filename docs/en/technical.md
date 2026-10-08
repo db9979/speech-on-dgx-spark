@@ -24,7 +24,7 @@ All services run as the system user `speech`. A sudoers rule lets the panel star
 
 ## Measuring performance
 
-In the panel under **System → Leistung messen**, or on the console:
+In the panel under **Overview → Checks → Leistung messen**, or on the console:
 
 ```bash
 sudo speech-spark-bench                 # time to first audio, speed single and parallel, memory per service

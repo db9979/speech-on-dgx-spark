@@ -49,7 +49,7 @@ curl -N http://SPARK:31002/v1/audio/speech -H "Authorization: Bearer $KEY" -H 'C
 
 **VoiceDesign** (Stimme per Beschreibung): `"task_type": "VoiceDesign"` und `"instructions": "tiefe, ruhige Männerstimme"`. Dafür braucht es ein eigenes Modell. Im Panel unter Einstellungen → Sprachausgabe „VoiceDesign zusätzlich bereitstellen“ einschalten. Das startet eine zweite Engine mit nochmal demselben Speicherbedarf.
 
-Im Panel unter **Testen** spielt „gestreamt“ den Ton schon während der Erzeugung ab und zeigt die Zeit bis zum ersten Ton.
+Im Panel unter **Übersicht → Prüfen** spielt „gestreamt“ den Ton schon während der Erzeugung ab und zeigt die Zeit bis zum ersten Ton.
 
 ### Allgemein
 

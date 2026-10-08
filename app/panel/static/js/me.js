@@ -20,23 +20,45 @@ let DOCS_ON=true,SPK_ON=false,CAL_ON=true,HA_ON=false,MAIL_ON=false;
 // On phones the window opens as a list of its pages (like the iPhone settings); a page then fills the
 // screen with a back arrow. Wider screens keep the side bar.
 const PHONE=matchMedia('(max-width:760px)');
-function ptab(id,page=true){document.querySelectorAll('#ptabs button').forEach(b=>{b.classList.toggle('on',b.dataset.t===id);if(b.dataset.t===id)$('mepage').textContent=b.textContent});
+function ptab(id,page=true){document.querySelectorAll('#ptabs button').forEach(b=>{b.classList.toggle('on',b.dataset.t===id);if(b.dataset.t===id)$('mepage').textContent=b.firstChild.textContent});
   document.querySelectorAll('#profmodal .ptab').forEach(x=>x.classList.toggle('on',x.id===id));
   if(typeof guidesMe==='function')guidesMe(id);
   $('profmodal').classList.toggle('sub',page);if(page)document.querySelector('#profmodal .mebody').scrollTop=0}
 $('meback').onclick=()=>ptab(meLast,false);
-function meTabs(){const items=[['setbox',t('Gespräch','Conversation'),!GATE&&!isGuest()],['loginbox',t('Anmelden','Sign in'),!PROFILE],
-    ['factbox',t('Gedächtnis','Memory'),!!PROFILE],['voicebox',t('Sprechererkennung','Speaker identification'),PROFILE&&SPK_ON],['roombox',t('Raum-Modus','Room mode'),PROFILE&&ROOM_ON],['probox',t('Von selbst','Proactive'),PROFILE&&PRO_ON],
-    ['taskbox',t('Aufgaben','Tasks'),PROFILE&&TASK_ON],['calbox',t('Kalender','Calendar'),PROFILE&&CAL_ON],['wxbox',t('Wetter','Weather'),PROFILE&&WX_ON],['conbox',t('Kontakte','Contacts'),PROFILE&&CON_ON],['trbox',t('Bus und Bahn','Bus and train'),PROFILE&&TR_ON],
-    ['mailbox',t('E-Mail','E-mail'),PROFILE&&MAIL_ON],['parbox',t('Pakete','Parcels'),PROFILE&&PAR_ON],['docbox',t('Dokumente','Documents'),PROFILE&&DOCS_ON],
-    ['habox',t('Smart Home','Smart home'),PROFILE&&HA_ON],['tgbox',t('Telegram','Telegram'),PROFILE&&TG_ON],['espbox',t('Lautsprecher','Speakers'),PROFILE&&ESP_ON],['secbox',t('Sicherheit','Security'),!!PROFILE],['logbox',t('Protokoll','Log'),!!PROFILE]].filter(x=>x[2]);
+function meTabs(){const items=[['overbox',t('Überblick','Overview'),!!PROFILE&&!PHONE.matches],['setbox',t('Gespräch','Conversation'),!GATE&&!isGuest()],['loginbox',t('Anmelden','Sign in'),!PROFILE],
+    ['factbox',t('Gedächtnis','Memory'),!!PROFILE],['docbox',t('Dokumente','Documents'),PROFILE&&DOCS_ON],['logbox',t('Protokoll','Log'),!!PROFILE],
+    ['calbox',t('Kalender','Calendar'),PROFILE&&CAL_ON],['taskbox',t('Aufgaben','Tasks'),PROFILE&&TASK_ON],['wxbox',t('Wetter','Weather'),PROFILE&&WX_ON],['probox',t('Von selbst','Proactive'),PROFILE&&PRO_ON],['notebox',t('Mitteilungen','Notifications'),PROFILE&&REM_ON],
+    ['mailbox',t('E-Mail','E-mail'),PROFILE&&MAIL_ON],['parbox',t('Pakete','Parcels'),PROFILE&&PAR_ON],['conbox',t('Kontakte','Contacts'),PROFILE&&CON_ON],
+    ['habox',t('Smart Home','Smart home'),PROFILE&&HA_ON],['roombox',t('Raum-Modus','Room mode'),PROFILE&&ROOM_ON],['espbox',t('Lautsprecher','Speakers'),PROFILE&&ESP_ON],
+    ['trbox',t('Bus und Bahn','Bus and train'),PROFILE&&TR_ON],['tgbox',t('Telegram','Telegram'),PROFILE&&TG_ON],
+    ['secbox',t('Sicherheit','Security'),!!PROFILE],['voicebox',t('Sprechererkennung','Speaker identification'),PROFILE&&SPK_ON]].filter(x=>x[2]);
   // pages in the same groups as everywhere else (guides.js), with a small header per group
   let grp=null;$('ptabs').innerHTML=items.map(([id,l])=>{const g=typeof meGroup==='function'?meGroup(id):null,gg=g&&GGROUPS.find(x=>x[0]===g);
     const head=g&&g!==grp?`<div class="mgrp">${esc(t(gg[1],gg[2]))}</div>`:'';if(g)grp=g;
-    return head+`<button type="button" data-t="${id}">${esc(l)}</button>`}).join('');
-  $('ptabs').querySelectorAll('button').forEach(b=>b.onclick=()=>{meLast=b.dataset.t;ptab(b.dataset.t)});
+    return head+`<button type="button" data-t="${id}">${esc(l)}<small class="mst" data-st="${id}"></small></button>`}).join('');
+  $('ptabs').querySelectorAll('button').forEach(b=>b.onclick=()=>{meLast=b.dataset.t;ptab(b.dataset.t)});ME_ITEMS=items;
   $('profmodal').classList.toggle('one',items.length<2);return items.map(x=>x[0])}
-let meLast='setbox';
+let meLast='overbox',ME_ITEMS=[];
+// "Überblick": one line per page with its state, read from the pages just loaded (no extra requests)
+function meState(){const n=id=>[...document.querySelectorAll('#'+id+'>li')].filter(x=>!x.classList.contains('mut')).length;
+  const cnt=(k,de1,deN,en1,enN)=>k?t(k+' '+(k===1?de1:deN),k+' '+(k===1?en1:enN)):t('noch nichts','nothing yet');
+  const txt=id=>{const e=$(id);return e?e.textContent.trim():''};
+  return {factbox:cnt(n('factlist'),'Eintrag','Einträge','entry','entries'),docbox:cnt(n('doclist'),'Dokument','Dokumente','document','documents'),
+    calbox:n('callist')?cnt(n('callist'),'Kalender verbunden','Kalender verbunden','calendar connected','calendars connected'):t('nicht verbunden','not connected'),
+    mailbox:n('maillist')?cnt(n('maillist'),'Postfach','Postfächer','mailbox','mailboxes'):t('nicht verbunden','not connected'),
+    habox:$('hadel')&&$('hadel').style.display!=='none'?t('verbunden','connected'):t('nicht verbunden','not connected'),
+    voicebox:$('voicedel')&&$('voicedel').style.display!=='none'?t('eingelernt','enrolled'):t('nicht eingelernt','not enrolled'),
+    secbox:n('secdev')?cnt(n('secdev'),'Gerät mit Schlüssel','Geräte mit Schlüssel','device with a key','devices with a key'):'',
+    notebox:$('pushoff')&&$('pushoff').style.display!=='none'?t('auf diesem Gerät an','on for this device'):t('auf diesem Gerät aus','off for this device'),
+    setbox:S.hands?t('freihändig','hands-free'):''}}
+function showOver(){const st=meState(),box=$('overbox');
+  document.querySelectorAll('#ptabs .mst').forEach(e=>e.textContent=st[e.dataset.st]||'');
+  if(!box)return;let grp=null;
+  box.innerHTML=`<div class="intro">${esc(t('Alles, was du für dich eingerichtet hast. Antippen öffnet die Seite.','Everything you set up for yourself. Tap to open the page.'))}</div><div class="overlist">`+
+    ME_ITEMS.filter(([id])=>id!=='overbox'&&id!=='loginbox').map(([id,l])=>{const g=typeof meGroup==='function'?meGroup(id):null,gg=g&&GGROUPS.find(x=>x[0]===g);
+      const head=g&&g!==grp?`<div class="mgrp">${esc(t(gg[1],gg[2]))}</div>`:'';if(g)grp=g;
+      return head+`<button type="button" class="overrow" data-go="${id}"><b>${esc(l)}</b><span>${esc(st[id]||'')}</span></button>`}).join('')+'</div>';
+  box.querySelectorAll('[data-go]').forEach(b=>b.onclick=()=>{meLast=b.dataset.go;ptab(b.dataset.go)})}
 const TZ=()=>{try{return Intl.DateTimeFormat().resolvedOptions().timeZone}catch{return ''}};
 const CALKIND={icloud:{name:'iCloud',url:'https://caldav.icloud.com',user:1,h:t('Benutzer: deine Apple-ID. Passwort: ein app-spezifisches Passwort von appleid.apple.com.','User: your Apple ID. Password: an app-specific password from appleid.apple.com.')},
   nextcloud:{name:'Nextcloud',url:'',ph:'https://cloud.example.de/remote.php/dav',user:1,h:t('Adresse mit /remote.php/dav, am besten mit App-Passwort.','Address with /remote.php/dav, best with an app password.')},
@@ -156,10 +178,10 @@ async function openMe(tab){$('profmsg').textContent='';$('profmodal').style.disp
   $('setscope').textContent=GATE?'':PROFILE?t('Einstellungen gelten auf jedem Gerät dieses Profils; „Hey Spark“ stellt jedes Gerät selbst ein.','Settings apply on every device of this profile; "Hey Spark" is set per device.'):isGuest()?t('Als Gast gelten die Vorgaben des Admins. Mit einem Profil kannst du Einstellungen ändern, und der Assistent merkt sich Dinge nur für dich.','As a guest the admin\'s defaults apply. With a profile you can change settings, and the assistant remembers things just for you.'):t('Als Gast gelten die Einstellungen nur in diesem Browser. Mit einem Profil merkt sich der Assistent Dinge nur für dich.','As a guest the settings apply only in this browser. With a profile the assistant remembers things just for you.');
   $('proflogout').style.display=PROFILE?'':'none';$('profclose').style.display=GATE?'none':'';
   if(!GATE&&!isGuest())renderSet($('setform'),S,saveSet);
-  if(PROFILE){try{await showFacts();await showDocs();await showVoice();await showCal();await showMail();await showMailTidy().catch(()=>{});await showHa();await showSecurity();await showToolLog();await showPro().catch(()=>{});await showExtras();showRoom();await showPush().catch(()=>{})}catch{setProfile(null);openMe('loginbox')}return}
+  if(PROFILE){try{await showFacts();await showDocs();await showVoice();await showCal();await showMail();await showMailTidy().catch(()=>{});await showHa();await showSecurity();await showToolLog();await showPro().catch(()=>{});await showExtras();showRoom();await showPush().catch(()=>{});showOver()}catch{setProfile(null);openMe('loginbox')}return}
   $('profpin').value='';if(tab==='loginbox')setTimeout(()=>$($('profuser').value?'profpin':'profuser').focus(),50)}
 window.openMe=openMe;
-$('profbtn').onclick=()=>openMe(PHONE.matches?'list':meLast);   // phones: the list of pages; else the same page as the settings button
+$('profbtn').onclick=()=>openMe(PHONE.matches?'list':meLast);   // phones: the list of pages; else the last page (first time: Überblick)
 $('profuser').onkeydown=e=>{if(e.key==='Enter')$('profpin').focus()};
 $('profpin').onkeydown=e=>{if(e.key==='Enter')$('proflogin').click()};
 $('profcode').onkeydown=e=>{if(e.key==='Enter')$('proflogin').click()};
@@ -225,7 +247,7 @@ function saveSet(k,val){if(isGuest())return;S[k]=val;applySet();
   if(!PROFILE){try{const o=JSON.parse(localStorage.getItem('chatset')||'{}');o[k]=val;localStorage.setItem('chatset',JSON.stringify(o))}catch{}return}
   clearTimeout(setTimer);setTimer=setTimeout(()=>api('/api/profile/settings',{method:'PUT',headers:{'Content-Type':'application/json'},body:JSON.stringify(S)}).catch(()=>{}),300)}
 $('chathands').onchange=()=>saveSet('hands',$('chathands').checked);
-const openSet=()=>openMe(meLast);
+const openSet=()=>openMe('setbox');   // the settings icon below the face: straight to the conversation settings
 $('chatset').onclick=openSet;
 $('setreset').onclick=async()=>{for(const k of Object.keys(SDEF))S[k]=SDEF[k];
   if(PROFILE)await api('/api/profile/settings',{method:'PUT',headers:{'Content-Type':'application/json'},body:JSON.stringify(SDEF)}).catch(()=>{});

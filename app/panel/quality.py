@@ -1,7 +1,7 @@
 """Quality test of the assistant against the real language model: fixed questions with prepared
 tool results (a sandbox, nothing of a profile is read or changed), checked for the right tool and
 for answers that keep to the results instead of guessing. Runs after every update and on demand
-(System und Update); the result is in STATE/quality.json.
+(Übersicht → Prüfen); the result is in STATE/quality.json.
 
 Each case: the question, the tools offered (as in a real turn), what each tool returns, the hints
 of the turn, and the checks: "tool" the model has to call (None: none at all, "any": some,

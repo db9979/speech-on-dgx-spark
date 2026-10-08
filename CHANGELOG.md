@@ -2,6 +2,7 @@
 
 Every version in one line, newest first (taken from the commit messages, so some lines are German, some English). Older entries have no version number.
 
+- **V01.0.125** · 2026-10-08 · Neue Menüs: Einstellungen in drei Blöcken (Was er kann, Wie er denkt und spricht, Spark selbst), Übersicht → Prüfen (Funktionsprüfung, Qualitätstest, Leistung, ASR/TTS testen), Einbinden → Apps und Schnittstellen, Ich-Fenster mit Überblick, Stand pro Seite und Seite Mitteilungen, Gruppe Meine Daten
 - **V01.0.124** · 2026-10-08 · Kein Knacken mehr bei längeren Antworten: Sprache endet und stockt mit kurzem Ausblenden statt hart, Stopp blendet aus, „spricht noch“ zählt die Lautsprecher-Verzögerung mit, das eigene Echo am Satzende gilt nicht mehr als Unterbrechung
 - **V01.0.123** · 2026-10-08 · Einstellungen aufgeräumt: Einstellungen unter ihrem Schalter, Seite Websuche entfällt, kurze Funktionen mit Kennzeichen, Sprachmodell/Vorgaben/Betrieb, überall „Ich“, Warnung bei ungespeicherten Änderungen, Einbinden-Seite bricht nicht mehr ab, wenn die TTS keine Stimmen meldet
 - **V01.0.122** · 2026-10-08 · Stimmen unter Einstellungen → Stimmen (mit „Probe sprechen“), Menüpunkt „Nutzer“ → „Profile“, Ich → Stimme → „Sprechererkennung“

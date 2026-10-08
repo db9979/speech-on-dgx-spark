@@ -342,3 +342,10 @@ div.guide.inline{border:0;border-bottom:1px solid var(--line);border-radius:0;ma
 .ftag.out{background:color-mix(in srgb,var(--acc) 14%,transparent);color:var(--acc)}
 .savebar .unsaved,.savebar .undo{display:none}.savebar.dirty .unsaved{display:inline;font-size:13px;color:var(--warn,#b7791f);font-weight:600;margin-right:4px}.savebar.dirty .undo{display:inline-flex}
 .savebar.dirty{position:sticky;bottom:0;z-index:3;background:var(--card)}
+.cgrp{font-size:11px;text-transform:uppercase;letter-spacing:.06em;color:var(--mut);padding:14px 12px 3px}.cgrp:first-child{padding-top:0}
+@media (max-width:760px){.cgrp{padding:12px 16px 6px;background:var(--bg);border-bottom:1px solid var(--line)}.cgrp:first-child{padding-top:12px}}
+.menav .mst{display:none}
+@media (max-width:760px){.menav .mst{display:block;font-size:13px;color:var(--mut);font-weight:400;margin-top:2px}.menav .mst:empty{display:none}}
+.overlist{display:flex;flex-direction:column;margin-top:8px}.overlist .mgrp{padding:14px 0 4px}
+.overrow{display:flex;justify-content:space-between;align-items:center;gap:12px;border:0;border-bottom:1px solid var(--line);background:none;color:var(--fg);font:inherit;font-size:14px;text-align:left;padding:10px 2px;cursor:pointer}
+.overrow:hover{background:var(--line)}.overrow span{color:var(--mut);font-size:13px;text-align:right}
