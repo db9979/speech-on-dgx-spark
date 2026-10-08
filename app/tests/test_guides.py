@@ -36,6 +36,16 @@ class Guides(unittest.TestCase):
             if g.get("sw"):
                 self.assertIn(f'id="{g["sw"]}"', html, g["id"])
 
+    def test_settings_of_a_switch_sit_below_it(self):
+        # guidesFeat moves every block with data-show="<switch>" under that switch; a block for a
+        # switch without a guide would stay loose at the top of the page
+        html = read("index.html")
+        feat = html[html.index('id="pane-feat"'):html.index('id="pane-ai"')]
+        _, gs = guides()
+        have = {g.get("sw") for g in gs}
+        for sw in set(re.findall(r'data-show="([\w.]+)"', feat)):
+            self.assertIn(sw, have, f"Einstellungen für {sw} hätten keinen Platz unter einem Schalter")
+
     def test_every_profile_page_has_a_guide(self):
         me = read("js", "me.js")
         pages = set(re.findall(r"\['(\w+box)',t\(", me[me.index("function meTabs"):]))

@@ -31,6 +31,7 @@ All options for running without questions (`--mode api --asr 1.7b --tts 0.6b --y
 
 <!-- New version: add one line at the top here and in CHANGELOG.md, drop the oldest line here (keep 10). Details go to docs/de and docs/en, not into this README. -->
 
+- **V01.0.103** Settings → Features: a service's settings sit right below its switch
 - **V01.0.102** Bus and train: departures, connections and a delay note for the commute
 - **V01.0.101** README cleaned up, details in `docs/`, all versions in [CHANGELOG.md](CHANGELOG.md)
 - **V01.0.100** Home Assistant Assist over Wyoming: the Spark's speech recognition and voice for HA (port 31003)
@@ -40,7 +41,6 @@ All options for running without questions (`--mode api --asr 1.7b --tts 0.6b --y
 - **V01.0.96** Telegram bot, tasks and shopping list, weather location by postcode
 - **V01.0.95** Room mode improved (stop, timers, reminders, follow-up questions)
 - **V01.0.94** "Ich" window on the PC: sidebar scrolls
-- **V01.0.93** Weather (Open-Meteo), contacts (CardDAV), parcels from mail
 
 All versions: [CHANGELOG.md](CHANGELOG.md)
 

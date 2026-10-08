@@ -261,8 +261,16 @@ function guidesFeat(){const pane=$('pane-feat');if(!pane||pane.dataset.grouped)r
   GGROUPS.forEach(([gid,de,en])=>{const rows=GUIDES.filter(g=>g.grp===gid&&g.sw).map(g=>{const el=$(g.sw);return el&&pane.contains(el)?[g,el.closest('.setrow')]:null}).filter(Boolean);
     if(!rows.length)return;
     const box=document.createElement('details');box.className='fgrp';box.open=true;box.dataset.grp=gid;
-    box.innerHTML=`<summary><b>${esc(t(de,en))}</b><span class="fcount"></span></summary>`;pane.appendChild(box);
-    rows.forEach(([g,row])=>box.appendChild(row))});
+    box.innerHTML=`<summary><b>${esc(t(de,en))}</b><span class="fcount"></span></summary>`;
+    const bar=pane.querySelector(':scope>.savebar');bar?pane.insertBefore(box,bar):pane.appendChild(box);
+    // each switch takes its settings along: every block on the page with data-show="<its id>" goes right
+    // below it (indented there, only shown while the switch is on), wherever it stands in the HTML
+    // a switch that only shows while another one is on (Pakete under E-Mail) comes along with that one
+    const take=sw=>pane.querySelectorAll(`:scope>[data-show="${sw}"]`).forEach(d=>{
+      if(!d.classList.contains('setrow')){d.classList.add('fdetail');box.appendChild(d);return}
+      box.appendChild(d);const inner=d.querySelector('.tgl input[id]');if(inner)take(inner.id)});
+    rows.forEach(([g,row])=>{if(row.parentNode===box||(row.dataset.show&&rows.some(([x])=>x.sw===row.dataset.show)))return;
+      box.appendChild(row);take(g.sw)})});
   guidesCount()}
 function guidesCount(){document.querySelectorAll('#pane-feat .fgrp').forEach(b=>{const s=[...b.querySelectorAll('.setrow input[type=checkbox]')];
   b.querySelector('.fcount').textContent=t(`${s.filter(x=>x.checked).length} von ${s.length} an`,`${s.filter(x=>x.checked).length} of ${s.length} on`)})}

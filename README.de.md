@@ -31,6 +31,7 @@ Alle Optionen ohne Rückfragen (`--mode api --asr 1.7b --tts 0.6b --yes` …) st
 
 <!-- New version: add one line at the top here and in CHANGELOG.md, drop the oldest line here (keep 10). Details go to docs/de and docs/en, not into this README. -->
 
+- **V01.0.103** Einstellungen → Funktionen: die Einstellungen eines Dienstes stehen direkt unter seinem Schalter
 - **V01.0.102** Bus und Bahn: Abfahrten, Verbindungen und Verspätungshinweis für die Pendelstrecke
 - **V01.0.101** README aufgeräumt, Details in `docs/`, alle Versionen in [CHANGELOG.md](CHANGELOG.md)
 - **V01.0.100** Home Assistant Assist über Wyoming: Spracherkennung und Stimme des Spark für HA (Port 31003)
@@ -40,7 +41,6 @@ Alle Optionen ohne Rückfragen (`--mode api --asr 1.7b --tts 0.6b --yes` …) st
 - **V01.0.96** Telegram-Bot, Aufgaben und Einkaufsliste, Wetter-Ort mit Postleitzahl
 - **V01.0.95** Raum-Modus verbessert (Stopp, Timer, Erinnerung, Rückfragen)
 - **V01.0.94** Ich-Fenster am PC: Seitenleiste scrollt
-- **V01.0.93** Wetter (Open-Meteo), Kontakte (CardDAV), Pakete aus Mails
 
 Alle Versionen: [CHANGELOG.md](CHANGELOG.md)
 
