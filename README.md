@@ -31,6 +31,7 @@ All options for running without questions (`--mode api --asr 1.7b --tts 0.6b --y
 
 <!-- New version: add one line at the top here and in CHANGELOG.md, drop the oldest line here (keep 10). Details go to docs/de and docs/en, not into this README. -->
 
+- **V01.0.120** After an update the browser loads the new version by itself (versioned files, an open page reloads when no conversation is running); no more Ctrl+F5
 - **V01.0.119** Quality test: newly broken questions show as a note on top of every admin page for a week
 - **V01.0.118** Learning from corrections (off, admin + profile): after "Nein, …" the assistant asks "Soll ich mir merken …?" and stores it only after a yes; corrected questions can go into the quality test
 - **V01.0.117** Required tools from one table, answer check holds back made-up times, dates, scores and amounts, temperature 0.1 when choosing tools, quality test with rewordings, a retry and a history, optional thinking while choosing tools
@@ -40,7 +41,6 @@ All options for running without questions (`--mode api --asr 1.7b --tts 0.6b --y
 - **V01.0.113** Security stage 4: install and update never write as root through links, no passwords in the update log, qwen38 key only from a real file, rewritten history is refused, optionally only signed versions
 - **V01.0.112** Questions about reminders, match results and news now always go through the tool instead of the model's own knowledge
 - **V01.0.111** Security stage 3: lockout no longer locks out your own browsers, X-Forwarded-For only from the listed proxy, load limits for chat and speech recognition, outbound connections checked (home network only with a switch, answers max. 20 MB, credentials only to their site), API key required on the network
-- **V01.0.110** Adding an appointment without the word “Termin” (e.g. “Trag Zahnarzt am Dienstag ein”) now always goes through the calendar proposal; quality test accepts “3 zu 1” as the score
 
 All versions: [CHANGELOG.md](CHANGELOG.md)
 

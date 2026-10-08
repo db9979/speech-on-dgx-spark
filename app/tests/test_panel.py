@@ -75,10 +75,26 @@ class Page(unittest.TestCase):
         g = TestClient(panel.app)
         html = g.get("/").text
         files = re.findall(r'(?:src|href)="(/static/[^"]+)"', html)
-        self.assertTrue(any(f.endswith(".js") for f in files))
+        self.assertTrue(any(".js?v=" in f for f in files))
         for f in files:
             self.assertEqual(g.get(f).status_code, 200, f)
         self.assertEqual(g.get("/static/js/../index.html").status_code, 404)
+
+    def test_update_needs_no_hard_reload(self):
+        # the page is never stored, every style/script link carries the version, the files are revalidated
+        import re
+        from core import app_version
+        g = TestClient(panel.app)
+        r = g.get("/")
+        self.assertEqual(r.headers["cache-control"], "no-store")
+        ver = app_version()
+        self.assertIn(f'<meta name="spark-version" content="{ver}">', r.text)
+        links = re.findall(r'(?:src|href)="(/static/(?:js/)?[^"/]+\.(?:js|css)[^"]*)"', r.text)
+        self.assertGreater(len(links), 10)
+        for f in links:
+            self.assertTrue(f.endswith("?v=" + ver), f)
+            self.assertEqual(g.get(f).headers["cache-control"], "no-cache", f)
+        self.assertEqual(g.get("/sw.js?v=" + ver).headers["cache-control"], "no-cache")
 
 
 class Isolation(unittest.TestCase):

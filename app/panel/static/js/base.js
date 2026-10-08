@@ -1,6 +1,31 @@
 // Shared helpers: theme, API calls, main menu, copying, small formatters.
-// Installable as an app ("Add to home screen"); the service worker caches nothing.
-if('serviceWorker' in navigator&&window.isSecureContext)navigator.serviceWorker.register('/sw.js').catch(()=>{}).catch(()=>{});
+// Installable as an app ("Add to home screen"); the service worker caches nothing. Its address carries the
+// version (set by panel.py), so the browser takes the new worker with each update.
+const SPARK_VER=(document.querySelector('meta[name="spark-version"]')||{}).content||'';
+const SW_URL='/sw.js?v='+encodeURIComponent(SPARK_VER);
+if('serviceWorker' in navigator&&window.isSecureContext)navigator.serviceWorker.register(SW_URL).catch(()=>{});
+// A newer version on the Spark (after an update): the page reloads itself, so no Strg+F5 is needed, also in
+// the phone view and the home-screen app. Never during a conversation (recording, answer, playback, wake word,
+// room mode) and not after something was typed in the last 10 minutes; then a bar offers "Neu laden".
+const verWatch={seen:Date.now(),edit:0,back:0,newer:''};
+document.addEventListener('pointerdown',()=>verWatch.seen=Date.now(),true);
+document.addEventListener('keydown',()=>verWatch.seen=Date.now(),true);
+document.addEventListener('input',e=>{if(e.target.type!=='checkbox'&&e.target.id!=='findq')verWatch.edit=Date.now()},true);
+function sparkBusy(){try{return !!(chat.rec||chat.ctrl||chat.asrBusy||chat.busy||playing()||wake.on||room.on)}catch{return true}}
+function verReload(){try{const s=document.querySelector('section.on');if(s)sessionStorage.setItem('versec',s.id)}catch{}location.reload()}
+function verTry(){const now=Date.now(),calm=!sparkBusy()&&now-verWatch.edit>600e3;
+  if(calm&&(document.visibilityState==='hidden'||now-verWatch.back<5000||now-verWatch.seen>120e3))return verReload();
+  let b=$('verbanner');if(b)return;
+  b=document.createElement('div');b.id='verbanner';b.className='updbanner';
+  const sp=document.createElement('span');sp.textContent=t('Neue Version ist da: ','A new version is here: ')+verWatch.newer;
+  const go=document.createElement('button');go.type='button';go.className='b p';go.textContent=t('Neu laden','Reload');go.onclick=verReload;
+  b.append(sp,go);$('updbanner').before(b)}
+async function verCheck(){if(!SPARK_VER)return;if(verWatch.newer)return verTry();
+  try{const r=await fetch('/api/whoami',{cache:'no-store'});if(!r.ok)return;const v=(await r.json()).version;
+    if(v&&v!==SPARK_VER){verWatch.newer=v;verTry()}}catch{}}
+setInterval(verCheck,300e3);
+document.addEventListener('visibilitychange',()=>{if(document.visibilityState==='visible'){verWatch.back=Date.now();verCheck()}});
+window.addEventListener('pageshow',e=>{if(e.persisted){verWatch.back=Date.now();verCheck()}});
 // Theme button: system -> light -> dark -> system; kept per browser.
 $('themebtn').onclick=()=>{const cur=document.documentElement.dataset.theme||'auto',nx={auto:'light',light:'dark',dark:'auto'}[cur];
   if(nx==='auto')delete document.documentElement.dataset.theme;else document.documentElement.dataset.theme=nx;

@@ -251,7 +251,7 @@ async function showPush(){const box=$('pushbox');box.style.display=PROFILE&&REM_
 $('briefat').onchange=()=>{saveSet('tz',TZ());saveSet('briefing_at',$('briefat').value||'')};
 $('briefoff').onclick=()=>{$('briefat').value='';saveSet('briefing_at','')};
 $('pushgo').onclick=async()=>{try{if(await Notification.requestPermission()!=='granted'){$('pushstate').textContent=t('Mitteilungen sind für diese Seite nicht erlaubt (Browser- oder Systemeinstellungen).','Notifications are not allowed for this page (browser or system settings).');return}
-    const reg=await navigator.serviceWorker.register('/sw.js');await navigator.serviceWorker.ready;
+    const reg=await navigator.serviceWorker.register(SW_URL);await navigator.serviceWorker.ready;
     const {key}=await (await api('/api/profile/push')).json();
     const raw=Uint8Array.from(atob(key.replace(/-/g,'+').replace(/_/g,'/')+'='.repeat((4-key.length%4)%4)),c=>c.charCodeAt(0));
     const sub=await reg.pushManager.subscribe({userVisibleOnly:true,applicationServerKey:raw});

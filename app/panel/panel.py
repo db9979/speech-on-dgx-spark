@@ -12,11 +12,11 @@ import time
 import psutil
 import uvicorn
 from fastapi import FastAPI, HTTPException, Request
-from fastapi.responses import FileResponse
+from fastapi.responses import FileResponse, HTMLResponse
 
 sys.path.insert(0, os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
 from common import BodyLimit, load_config, quiet_access_log  # noqa: E402
-from core import ADMIN_IDLE, COOKIE, SERVICES, STATIC, admin_cookie_ok, renewed_admin_cookie  # noqa: E402
+from core import ADMIN_IDLE, COOKIE, SERVICES, STATIC, admin_cookie_ok, app_version, renewed_admin_cookie  # noqa: E402
 from monitor import gpu_stats, history, service_health, system_stats  # noqa: E402
 from chat import LEARN_EVERY, learn_once  # noqa: E402
 from update import update_lock  # noqa: E402
@@ -236,9 +236,29 @@ async def learner():
     asyncio.create_task(loop())
 
 
+_PAGE = {}
+
+
+def page_html():
+    """index.html with the version on every style and script link (/static/js/chat.js?v=V01.0.119) and in
+    <meta name="spark-version">: after an update the browser loads the new files at once (no Strg+F5,
+    also behind a caching proxy), and an open page sees that a newer version is there (base.js)."""
+    path = os.path.join(STATIC, "index.html")
+    ver = re.sub(r"[^A-Za-z0-9.\-]", "", app_version())[:32] or "0"
+    key = (ver, os.path.getmtime(path))
+    if _PAGE.get("key") != key:
+        with open(path, encoding="utf-8") as f:
+            html = f.read()
+        html = re.sub(r'((?:href|src)="/static/(?:js/)?[a-z0-9\-]+\.(?:css|js))"', rf'\1?v={ver}"', html)
+        html = html.replace("<head>", f'<head>\n<meta name="spark-version" content="{ver}">', 1)
+        _PAGE.update(key=key, html=html)
+    return _PAGE["html"]
+
+
 @app.get("/")
 def index():
-    return FileResponse(os.path.join(STATIC, "index.html"), headers={"Cache-Control": "no-cache"})
+    # never stored: the page names the current files, those are only revalidated (no-cache)
+    return HTMLResponse(page_html(), headers={"Cache-Control": "no-store"})
 
 
 # App files (installable assistant). Public like the start page: they hold no data.

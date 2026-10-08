@@ -31,6 +31,7 @@ Alle Optionen ohne Rückfragen (`--mode api --asr 1.7b --tts 0.6b --yes` …) st
 
 <!-- New version: add one line at the top here and in CHANGELOG.md, drop the oldest line here (keep 10). Details go to docs/de and docs/en, not into this README. -->
 
+- **V01.0.120** Nach einem Update lädt der Browser die neue Version von selbst (Dateien mit Versions-Kennung, offene Seite lädt neu, wenn kein Gespräch läuft); kein Strg+F5 mehr
 - **V01.0.119** Qualitätstest: neu kaputte Fragen erscheinen eine Woche lang als Hinweis oben auf jeder Admin-Seite
 - **V01.0.118** Aus Korrekturen lernen (aus, Admin + Profil): nach „Nein, …“ fragt der Assistent „Soll ich mir merken …?“ und speichert erst nach „Ja“; korrigierte Fragen können als Testfall in den Qualitätstest
 - **V01.0.117** Werkzeugpflicht per Tabelle, Antwort-Prüfung hält erfundene Uhrzeiten, Daten, Spielstände und Beträge zurück, Temperatur 0.1 bei der Werkzeugwahl, Qualitätstest mit Umformulierungen, Wiederholung und Verlauf, optional Nachdenken bei der Werkzeugwahl
@@ -40,7 +41,6 @@ Alle Optionen ohne Rückfragen (`--mode api --asr 1.7b --tts 0.6b --yes` …) st
 - **V01.0.113** Sicherheit Stufe 4: Installation und Update schreiben nie mehr als root durch Verknüpfungen, keine Passwörter im Update-Log, qwen38-Schlüssel nur aus echter Datei, umgeschriebene Geschichte wird abgelehnt, optional nur signierte Versionen
 - **V01.0.112** Fragen nach Erinnerungen, Spielergebnissen und Nachrichten gehen jetzt immer über das Werkzeug statt aus dem Gedächtnis des Modells
 - **V01.0.111** Sicherheit Stufe 3: Sperre sperrt eigene Browser nicht mehr aus, X-Forwarded-For nur vom eingetragenen Proxy, Lastgrenzen für Chat und Spracherkennung, Verbindungen nach außen geprüft (Heimnetz nur mit Schalter, Antworten max. 20 MB, Zugangsdaten nur an ihre Seite), API-Schlüssel Pflicht im Netz
-- **V01.0.110** Termin eintragen ohne das Wort „Termin“ (z. B. „Trag Zahnarzt am Dienstag ein“) geht jetzt immer über den Kalender-Vorschlag; Qualitätstest nimmt „3 zu 1“ als Ergebnis an
 
 Alle Versionen: [CHANGELOG.md](CHANGELOG.md)
 

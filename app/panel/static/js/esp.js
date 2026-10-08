@@ -38,7 +38,7 @@ async function espConnect(){
   if(!('serial' in navigator))throw new Error(t('Dieser Browser kann nicht per USB flashen. Bitte Chrome oder Edge am PC oder Mac nehmen.','This browser cannot flash over USB. Please use Chrome or Edge on a PC or Mac.'));
   if(!window.isSecureContext)throw new Error(t('Nur über https (oder localhost) erlaubt der Browser USB.','The browser only allows USB over https (or localhost).'));
   const port=await navigator.serial.requestPort({});
-  const {ESPLoader,Transport}=await import('/static/js/esptool.js');
+  const {ESPLoader,Transport}=await import('/static/js/esptool.js?v='+encodeURIComponent(SPARK_VER));
   const transport=new Transport(port,true);
   const term={clean(){},writeLine(){},write(){}};
   const loader=new ESPLoader({transport,baudrate:460800,romBaudrate:115200,terminal:term});
