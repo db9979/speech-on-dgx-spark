@@ -636,6 +636,49 @@ class Speakers(unittest.TestCase):
         finally:
             esp32.room_cfg, speakers.device_known = old
 
+    def test_speaker_page_settings(self):
+        """Ich → Lautsprecher, one speaker's page: what the room mode may offer (checked and passed on to room
+        mode), the readable board name, and the speaker's key marked (and not moved) elsewhere."""
+        a = profile("Esp Lotte")
+        a.put("/api/profile/settings", json={"esp_on": True})
+        s = a.post("/api/profile/esp32/setup", json={"name": "Flur", "variant": "bread-compact-wifi",
+                                                     "base": "https://speech.example.de"}).json()
+        did = s["device"]
+        dev = next(x for x in a.get("/api/profile/esp32").json()["devices"] if x["id"] == did)
+        self.assertEqual(dev["board"], "Steckbrett")
+        self.assertTrue(all(dev["room_kinds"].values()))   # everything allowed until switched off
+        for bad in ({"room_kinds": {"evil": True}}, {"room_kinds": {"shop": "no"}}, {"room_kinds": {"shop": 0}}):
+            self.assertEqual(a.put(f"/api/profile/esp32/{did}", json=bad).status_code, 400, bad)
+        self.assertEqual(TestClient(panel.app).put(f"/api/profile/esp32/{did}", headers={"X-Speech-Device": s["token"]},
+                                                   json={"room_kinds": {"shop": False}}).status_code, 403)
+        a.put(f"/api/profile/esp32/{did}", json={"room_kinds": {"shop": False}})
+        dev = next(x for x in a.put(f"/api/profile/esp32/{did}", json={"room_kinds": {"cal": False}}).json()["devices"] if x["id"] == did)
+        self.assertEqual({k for k, v in dev["room_kinds"].items() if not v}, {"shop", "cal"})
+        sess = esp32.Session(None, "", {"user": dev["user"], "id": did, "name": "Flur"}, s["uuid"])
+        sess.room = {"rid": "espflur"}
+        import room
+        self.assertFalse(room._kinds(sess._room_body())["shop"])
+        self.assertTrue(room._kinds(sess._room_body())["q"])
+        # the speaker's key: marked under Profile und Geräte and Ich → Sicherheit, and it stays with its profile
+        self.assertTrue(next(x for x in ADMIN.get("/api/admin/profiles").json()["devices"] if x["id"] == did)["speaker"])
+        self.assertTrue(next(x for x in a.get("/api/profile/security").json()["devices"] if x["id"] == did)["speaker"])
+        other = profile("Esp Lotte Zwei")
+        uid2 = next(u["id"] for u in ADMIN.get("/api/admin/profiles").json()["users"] if u["name"] == "Esp Lotte Zwei")
+        self.assertEqual(ADMIN.put(f"/api/admin/devices/{did}", json={"user": uid2}).status_code, 400)
+        del other
+
+    def test_admin_address_check(self):
+        """Funktionen → Eigene Lautsprecher → „Adresse prüfen“: admin only, checked like the board's way, limited."""
+        self.assertIn(TestClient(panel.app).post("/api/admin/esp32/check", json={"base": "http://spark.invalid"}).status_code, (401, 403))
+        self.assertEqual(ADMIN.post("/api/admin/esp32/check", json={"base": "http://x/../etc"}).status_code, 400)
+        esp32._net_tries.pop("admin", None)
+        r = ADMIN.post("/api/admin/esp32/check", json={"base": "http://spark.invalid"})
+        self.assertEqual(r.status_code, 200, r.text)
+        self.assertFalse(r.json()["results"][0]["ok"])
+        esp32._net_tries["admin"] = [time.time()] * esp32.NET_CHECKS
+        self.assertEqual(ADMIN.post("/api/admin/esp32/check", json={"base": "http://spark.invalid"}).status_code, 429)
+        esp32._net_tries.pop("admin", None)
+
     def test_off_means_off(self):
         helpers.set_config(esp32=False)
         try:

@@ -184,7 +184,9 @@ def profile_security(prof=Depends(own_profile)):
     mine = lambda x: x.get("uid") == prof["id"] or (x.get("event") in ("profile_login_failed", "profile_code_failed")
                                                     and str(x.get("name", "")).strip().lower() == prof["name"].lower())
     events = [x for x in guard.read(3000) if x.get("event") in LOGIN_EVENTS and mine(x)][:8]
-    return {"devices": profiles.own_devices(prof["id"]), "events": events}
+    import esp32
+    spk = esp32.speaker_ids()
+    return {"devices": [dict(x, speaker=x["id"] in spk) for x in profiles.own_devices(prof["id"])], "events": events}
 
 
 @router.get("/api/profile/toollog", dependencies=[Depends(assistant)])

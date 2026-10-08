@@ -72,6 +72,10 @@ def admin_profiles():
     d = profiles.admin_list()
     for u in d["users"]:
         u["mfa"] = mfa.enabled(u["id"])
+    import esp32
+    spk = esp32.speaker_ids()
+    for x in d["devices"]:
+        x["speaker"] = x["id"] in spk   # managed under Ich → Lautsprecher of its profile
     return d
 
 
@@ -128,6 +132,10 @@ async def admin_add_device(request: Request):
 
 @router.put("/api/admin/devices/{did}", dependencies=[Depends(auth), Depends(admin_code)])
 async def admin_set_device(did: str, request: Request):
+    import esp32
+    if did in esp32.speaker_ids():
+        # a speaker stays with the profile that set it up (its board, voice print and room settings are kept there)
+        raise HTTPException(400, "Ein Lautsprecher gehört zum Profil, das ihn eingerichtet hat. Dort entfernen und neu einrichten.")
     if not profiles.set_device_user(did, str((await request.json()).get("user", ""))):
         raise HTTPException(404, "no such device or profile")
     return {"ok": True}

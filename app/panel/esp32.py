@@ -524,8 +524,10 @@ def room_cfg(c):
     level = c.get("room_level") if c.get("room_level") in ROOM_LEVELS else "hints"
     area = re.sub(r"[\x00-\x1f<>\"\\]", "", str(c.get("room_area") or ""))[:60]
     voices = c.get("room_voices") if c.get("room_voices") in ROOM_VOICES else "all"
+    import room
+    kinds = c.get("room_kinds") if isinstance(c.get("room_kinds"), dict) else {}
     return {"mins": mins, "level": level, "area": area, "voices": voices, "probe": c.get("room_probe") is not False,
-            "detect": c.get("room_detect") is True}
+            "detect": c.get("room_detect") is True, "kinds": {k: kinds.get(k) is not False for k in room.KIND_KEYS}}
 
 
 # ---------------------------------------------------------------- one connection of a speaker
@@ -830,7 +832,7 @@ class Session:
                 self.room["told"] = True
                 print(f"room: speaker {self.dev['name']} listens to everybody (no voice taught through it yet)", flush=True)
             voices = "all"
-        return dict({"room": self.room["rid"], "level": c["level"], "area": c["area"], "detect": c["detect"],
+        return dict({"room": self.room["rid"], "level": c["level"], "kinds": c.get("kinds") or {}, "area": c["area"], "detect": c["detect"],
                      "voices": voices, "probe": c["probe"],
                      "tz": profiles.settings(self.dev["user"]).get("tz", "")}, **kw)
 
@@ -1330,8 +1332,20 @@ def _list(uid=None):
                     "newer": bool(m and newer(m["version"], c.get("fw", ""))), "online": d["id"] in _live,
                     "seen": max(int(c.get("seen") or 0), int((last.get(d["id"]) or {}).get("t") or 0)) or None,
                     "created": d.get("created"), "volume": c.get("volume"), "mic": c.get("mic") or "normal",
+                    "board": board_label(c.get("variant", ""), m),
                     **_room_info(d["id"], c)})
     return sorted(out, key=lambda x: x["name"].lower())
+
+
+def board_label(var, m=None):
+    """The board's readable name from the firmware manifest ("Waveshare ESP32-S3-AUDIO-Board"), else its id."""
+    m = m if m is not None else manifest()
+    return str(((m or {}).get("variants", {}).get(var) or {}).get("label") or var or "")[:80]
+
+
+def speaker_ids():
+    """Device keys that belong to a speaker (managed under Ich → Lautsprecher, not as plain device keys)."""
+    return {c.get("device") for c in _state().get("clients", {}).values() if c.get("device")}
 
 
 def _room_info(did, c):
@@ -1474,6 +1488,12 @@ async def profile_change(did: str, request: Request, prof=Depends(browser_profil
                 await s.set_volume(v)   # connected: at once, else at its next connection
             except Exception:
                 pass
+    if isinstance(body.get("room_kinds"), dict):
+        import room
+        kinds = body["room_kinds"]
+        if len(kinds) > len(room.KIND_KEYS) or any(k not in room.KIND_KEYS or not isinstance(v, bool) for k, v in kinds.items()):
+            raise HTTPException(400, "Raum-Modus: unbekannte Art.")
+        _update(lambda d: d["clients"][cid].update(room_kinds=dict(room_cfg(d["clients"][cid])["kinds"], **kinds)))
     if any(k in body for k in ("room_mins", "room_level", "room_area", "room_voices", "room_probe", "room_detect")):
         def put(d):
             e = d["clients"][cid]
@@ -1668,12 +1688,12 @@ def _diag_view(did, c, request):
     var = c.get("variant", "")
     checks = [(admin_on(), "Lautsprecher in Funktionen eingeschaltet" if admin_on() else "Lautsprecher sind in Funktionen ausgeschaltet (Admin)"),
               (profile_on(uid), "„Eigene Lautsprecher für mich“ ist an" if profile_on(uid) else "„Eigene Lautsprecher für mich“ ist aus"),
-              (bool(m and var in m.get("variants", {})), f"Firmware für „{var}“ liegt auf dem Spark" if m and var in m.get("variants", {}) else "Für diese Board-Variante liegt keine Firmware auf dem Spark")]
+              (bool(m and var in m.get("variants", {})), f"Firmware für „{board_label(var, m)}“ liegt auf dem Spark" if m and var in m.get("variants", {}) else "Für diese Board-Variante liegt keine Firmware auf dem Spark")]
     if c.get("seen"):
         checks.append((True, "Das Board hat sich beim Spark gemeldet, zuletzt " + time.strftime("%d.%m. %H:%M", time.localtime(c["seen"]))))
     else:
         checks.append((False, "Das Board hat sich noch nie beim Spark gemeldet. Es erreicht ihn nicht: WLAN, Adresse oder Zertifikat. "
-                              "„Netz prüfen“ und „Protokoll vom Board lesen (USB)“ zeigen, woran es liegt."))
+                              "„Netz prüfen“ und „Board-Protokoll (USB)“ zeigen, woran es liegt."))
     base = c.get("base") or ""
     hint = _addr_hint(base)
     if hint:
@@ -1760,6 +1780,21 @@ def admin_get(request: Request):
     return {"firmware": _fw_public(), "checked": st.get("checked"), "error": st.get("error", ""),
             "base": _base(request), "speakers": len(clients()), "online": len(_live),
             "repo": load_config().get("chat", {}).get("esp32_repo") or "db9979/speech-on-dgx-spark"}
+
+
+@router.post("/api/admin/esp32/check", dependencies=[Depends(auth)])
+async def admin_net_check(request: Request):
+    """"Adresse prüfen" under Funktionen: the address the speakers get (the one typed in, else the saved
+    one, else this page's), tried from the Spark like "Netz prüfen"; reads only, same fixed paths."""
+    body = await _body(request)
+    now = time.time()
+    tries = [t for t in _net_tries.get("admin", []) if now - t < 600]
+    if len(tries) >= NET_CHECKS:
+        raise HTTPException(429, "Bitte ein paar Minuten warten, dann noch einmal prüfen.")
+    _net_tries["admin"] = tries + [now]
+    base = _check_base(str(body.get("base") or "").strip() or load_config().get("chat", {}).get("esp32_url") or _base(request))
+    res = await net_check(base)
+    return {"base": base, "results": [{"ok": ok, "text": t} for ok, t in res]}
 
 
 @router.post("/api/admin/esp32/fetch", dependencies=[Depends(auth), Depends(admin_code)])

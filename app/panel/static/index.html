@@ -104,9 +104,10 @@
         <div class="fh" id="tgstate"></div><div class="row" style="margin-top:6px"><button class="b" type="button" id="tgdel">Token löschen</button></div></div>
       <div class="setrow"><div class="lbl"><b>Eigene Lautsprecher (ESP32)</b><span>ESP32-S3-Boards mit Mikrofon und Lautsprecher als Sprachassistent im Raum.</span></div><label class="tgl"><input type="checkbox" id="chat.esp32"><i></i></label></div>
       <div data-show="chat.esp32" style="margin-left:18px" id="espadmin">
-        <label>Adresse des Spark für die Lautsprecher (leer = die Adresse, unter der das Panel geöffnet wird)</label><input id="chat.esp32_url" placeholder="https://speech.example.de" autocapitalize="off" autocomplete="off">
-        <div class="fh">Am besten die Adresse deines Reverse Proxys mit echtem Zertifikat (er muss WebSockets durchlassen). Ein selbst signiertes Zertifikat (Port 31443) nimmt das Board nicht an; im Heimnetz geht auch http://&lt;Spark-IP&gt;:31080.</div>
-        <div class="fh" id="espstate"></div><div class="row" style="margin-top:6px"><button class="b" type="button" id="espfetch">Firmware jetzt holen</button></div></div>
+        <div class="fh" id="espstate"></div><div class="row" style="margin-top:6px"><button class="b" type="button" id="espfetch">Firmware jetzt holen</button></div>
+        <label>Adresse des Spark für die Lautsprecher</label><div class="rowin"><input id="chat.esp32_url" placeholder="https://speech.example.de" autocapitalize="off" autocomplete="off"><button class="b" type="button" id="espcheck">Adresse prüfen</button></div>
+        <div class="fh">Leer = die Adresse dieser Seite. Am besten dein Reverse Proxy mit echtem Zertifikat (er muss WebSockets durchlassen); ein selbst signiertes Zertifikat (Port 31443) nimmt das Board nicht an, im Heimnetz geht auch http://&lt;Spark-IP&gt;:31080.</div>
+        <ul class="facts small" id="espcheckres"></ul></div>
       <div class="setrow"><div class="lbl"><b>Zweiter Anmeldeschritt für Profile</b><span>Profile können bei der Anmeldung zusätzlich einen Code aus einer Authenticator-App verlangen.</span></div><label class="tgl"><input type="checkbox" id="chat.mfa"><i></i></label></div>
       <div class="setrow"><div class="lbl"><b>Rückfrage ohne Weckwort</b><span>Nach der Antwort auf eine gesprochene Frage hört der Assistent ein paar Sekunden weiter zu; jedes Profil wählt die Dauer.</span></div><label class="tgl"><input type="checkbox" id="chat.follow_up"><i></i></label></div>
       <div class="setrow"><div class="lbl"><b>Aus Korrekturen lernen</b><span>Nach einer Korrektur schlägt der Assistent einen Satz zum Merken vor und speichert ihn erst nach „Ja“.</span></div><label class="tgl"><input type="checkbox" id="chat.learn_fixes"><i></i></label></div>

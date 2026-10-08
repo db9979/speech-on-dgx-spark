@@ -420,3 +420,12 @@ details.zmore{margin-top:14px}details.zmore>summary{cursor:pointer;font-weight:6
   body.adm #profmodal .mecard{width:min(1100px,100%);height:calc(100vh - 48px);animation:none}
   body.adm #profmodal .mewrap{grid-template-columns:240px 1fr}
 }
+/* Ich → Lautsprecher (esp.js): list → one speaker in sections */
+#espbox .espgrp{padding:16px 0 4px}#espbox .esplist{margin-top:0}#espbox .esplist .overrow b .pill{margin-left:6px;font-size:11px}
+#espbox .espback{margin-bottom:8px}#espbox .esph{margin:4px 0 6px;font-size:16px}
+#espbox .esptop{display:flex;justify-content:space-between;align-items:flex-start;gap:12px}#espbox .espname{font-size:16px}#espbox .esptop .fh{margin:2px 0 0}
+#espbox .setrow input:not([type]),#espbox .setrow input[type=text]{max-width:170px}
+#espbox .espkinds{border-bottom:1px solid var(--line);padding:8px 0}#espbox .espkinds summary{cursor:pointer;font-size:14px;font-weight:600}#espbox .espkinds .setrow{padding:6px 0 6px 12px}#espbox .espkinds .setrow:last-child{border-bottom:0}
+#espbox .esprepair{gap:6px;margin:6px 0 4px;flex-wrap:wrap}#espbox .esprepair select{width:auto;max-width:100%}
+#espbox .espdel{margin-top:16px;padding-top:12px;border-top:1px solid var(--line)}.b.bad{color:var(--bad)}
+@media (max-width:760px){#espbox .esptop{flex-wrap:wrap}}

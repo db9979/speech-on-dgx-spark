@@ -31,6 +31,7 @@ All options for running without questions (`--mode api --asr 1.7b --tts 0.6b --y
 
 <!-- New version: add one line at the top here and in CHANGELOG.md, drop the oldest line here (keep 10). Details go to docs/de and docs/en, not into this README. -->
 
+- **V01.0.149** Speaker page tidied: list → one page per speaker (sound, room mode with "Start" and selectable kinds, voice, firmware, check), "Add a speaker" over USB or by code, admin "Check address", speaker keys marked
 - **V01.0.148** Browser test for Zustand also holds where systemd reports real services (GitHub)
 - **V01.0.147** Design "Klar", step 3: on a computer Ich opens as a page beside the sidebar instead of a window; another menu entry closes it
 - **V01.0.146** Design "Klar", step 2: Zustand (status) starts with one sentence ("Everything is running." or what is not) and "Braucht dich" (needs you: update, unsaved settings, service off/failing) with a button to each place; green/yellow/red dot in the menu; qwen38 and GPU processes folded
@@ -40,7 +41,6 @@ All options for running without questions (`--mode api --asr 1.7b --tts 0.6b --y
 - **V01.0.142** Speakers: "Stimme hier anlernen" (three sentences, own voiceprint for the board microphone); "only known voices" applies at a speaker only once a voice was taught there
 - **V01.0.141** Web log with diagnostic filters: Overview → Logs → "Diagnostic filters" shows chat:, web search, Home Assistant, room mode, speakers, update/self-test and errors with time range and line count, ready to copy into a thread (instead of journalctl | grep on the console)
 - **V01.0.140** Room mode quicker and finds more questions: speaker cuts talk into short pieces, speaks after 1.5 s of quiet, streams the voice; the answer is looked up while people still talk; questions also without a question mark and after "Weißt du, …"; "Also comments" chattier
-- **V01.0.139** Room mode ignores TV voices: per device "Who it listens to" (everybody / known voices while the TV is on / always known voices only), with a trial that only counts; admin switch "Ignore TV voices", off by default
 
 All versions: [CHANGELOG.md](CHANGELOG.md)
 

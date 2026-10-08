@@ -2,6 +2,7 @@
 
 Every version in one line, newest first (taken from the commit messages, so some lines are German, some English). Older entries have no version number.
 
+- **V01.0.149** · 2026-10-08 · Lautsprecher-Seite geordnet: Liste → eigene Seite pro Lautsprecher (Klang, Raum-Modus mit „Starten“ und wählbaren Arten, Stimme, Firmware, Prüfen), „Lautsprecher hinzufügen“ per USB oder Code, Admin „Adresse prüfen“, Lautsprecher-Schlüssel gekennzeichnet
 - **V01.0.148** · 2026-10-08 · Browser-Test für Zustand hält auch dort, wo systemd echte Dienste meldet (GitHub)
 - **V01.0.147** · 2026-10-08 · Design „Klar“, Schritt 3: Ich öffnet am Rechner als Seite neben der Menüleiste statt als Fenster; ein anderer Menüpunkt schließt es
 - **V01.0.146** · 2026-10-08 · Design „Klar“, Schritt 2: Zustand beginnt mit einem Satz („Alles läuft.“ oder was nicht läuft) und „Braucht dich“ (Update, ungespeicherte Einstellungen, Dienst aus/Fehler) mit Knopf dorthin; Punkt im Menü grün/gelb/rot; qwen38 und GPU-Prozesse zugeklappt

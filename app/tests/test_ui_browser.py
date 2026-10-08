@@ -153,6 +153,56 @@ class Browser(unittest.TestCase):
                 await br.close()
         self.run_async(go())
 
+    def test_speakers_list_and_one_speaker(self):
+        """Ich → Lautsprecher (V01.0.149): a list of the speakers, a tap opens that speaker's page in sections
+        (Klang, Raum-Modus, Stimme, Firmware, Prüfen), back to the list; adding has its own page. On a
+        computer and a phone, without script errors or sideways scrolling."""
+        import json
+        import esp32
+        import profiles
+        helpers.set_config(esp32=True, room=True, room_voices=True)
+        os.makedirs(os.path.join(esp32.FW_DIR, "9.9.9"), exist_ok=True)
+        with open(os.path.join(esp32.FW_DIR, "9.9.9", "manifest.json"), "w") as f:
+            json.dump({"version": "9.9.9", "variants": {"bread-compact-wifi": {"label": "Steckbrett", "parts": []}}}, f)
+        with open(os.path.join(esp32.FW_DIR, "current.json"), "w") as f:
+            json.dump({"version": "9.9.9"}, f)
+        uid = next(u["id"] for u in profiles.admin_list()["users"] if u["name"] == "Uitest")
+        profiles.save_settings(uid, {"esp_on": True})
+        did = esp32.device_for_token(profiles.add_device("Uiflur", uid))["id"]
+        esp32._update(lambda d: d["clients"].__setitem__("ui-flur", {"device": did, "uid": uid, "variant": "bread-compact-wifi",
+                                                                     "fw": "9.9.8", "auto": True, "seen": 1}))
+
+        async def go():
+            async with async_playwright() as p:
+                for name, w, h in VIEWS:
+                    br, pg, errors = await self.page(p, w, h)
+                    await pg.evaluate("goSec('chat');$('profbtn').click()")
+                    await pg.wait_for_timeout(600)
+                    await pg.evaluate("ptab('espbox')")
+                    await pg.wait_for_function("!!document.querySelector('#espbox [data-ego]')", timeout=5000)
+                    rows = await pg.evaluate("[...document.querySelectorAll('#espbox [data-ego]')].map(b=>b.dataset.ego)")
+                    self.assertEqual(rows, [did, "usb", "code"], name)
+                    await pg.evaluate(f"document.querySelector('#espbox [data-ego=\"{did}\"]').click()")
+                    await pg.wait_for_function("!!$('espdiag')&&!!$('espdiag').firstElementChild", timeout=5000)
+                    heads = await pg.evaluate("[...document.querySelectorAll('#espbox .espgrp')].map(e=>e.textContent)")
+                    self.assertEqual(heads, ["Klang", "Raum-Modus", "Stimme", "Firmware", "Prüfen"], name)
+                    self.assertTrue(await pg.evaluate("!!$('espup')&&!!$('esproom')&&!!$('espvoices')&&!!$('espdel')"))
+                    self.assertIn("Steckbrett", await pg.inner_text("#espbox .esptop"))
+                    over = await pg.evaluate("document.documentElement.scrollWidth-window.innerWidth")
+                    self.assertLessEqual(over, 1, f"{name}: {over}px zu breit")
+                    await pg.evaluate("$('espback').click()")
+                    await pg.wait_for_function("!!document.querySelector('#espbox [data-ego=usb]')", timeout=5000)
+                    await pg.evaluate("document.querySelector('#espbox [data-ego=usb]').click()")
+                    await pg.wait_for_function("!!$('espflash')", timeout=5000)
+                    over = await pg.evaluate("document.documentElement.scrollWidth-window.innerWidth")
+                    self.assertLessEqual(over, 1, f"{name}/usb: {over}px zu breit")
+                    self.assertEqual(errors, [], name)
+                    await br.close()
+        try:
+            self.run_async(go())
+        finally:
+            helpers.set_config(esp32=False, room=False, room_voices=False)
+
     def test_settings_search_opens_the_setting(self):
         async def go():
             async with async_playwright() as p:

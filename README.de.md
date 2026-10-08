@@ -31,6 +31,7 @@ Alle Optionen ohne Rückfragen (`--mode api --asr 1.7b --tts 0.6b --yes` …) st
 
 <!-- New version: add one line at the top here and in CHANGELOG.md, drop the oldest line here (keep 10). Details go to docs/de and docs/en, not into this README. -->
 
+- **V01.0.149** Lautsprecher-Seite geordnet: Liste → eigene Seite pro Lautsprecher (Klang, Raum-Modus mit „Starten“ und wählbaren Arten, Stimme, Firmware, Prüfen), „Lautsprecher hinzufügen“ per USB oder Code, Admin „Adresse prüfen“, Lautsprecher-Schlüssel gekennzeichnet
 - **V01.0.148** Browser-Test für Zustand hält auch dort, wo systemd echte Dienste meldet (GitHub)
 - **V01.0.147** Design „Klar“, Schritt 3: Ich öffnet am Rechner als Seite neben der Menüleiste statt als Fenster; ein anderer Menüpunkt schließt es
 - **V01.0.146** Design „Klar“, Schritt 2: Zustand beginnt mit einem Satz („Alles läuft.“ oder was nicht läuft) und „Braucht dich“ (Update, ungespeicherte Einstellungen, Dienst aus/Fehler) mit Knopf dorthin; Punkt im Menü grün/gelb/rot; qwen38 und GPU-Prozesse zugeklappt
@@ -40,7 +41,6 @@ Alle Optionen ohne Rückfragen (`--mode api --asr 1.7b --tts 0.6b --yes` …) st
 - **V01.0.142** Lautsprecher: „Stimme hier anlernen“ (drei Sätze, eigener Stimmabdruck fürs Board-Mikrofon); „nur bekannte Stimmen“ greift am Lautsprecher erst, wenn dort eine Stimme angelernt ist
 - **V01.0.141** Web-Log mit Diagnose-Filtern: Übersicht → Logs → „Diagnose-Filter“ zeigt chat:, Websuche, Home Assistant, Raum-Modus, Lautsprecher, Update/Selbsttest und Fehler mit Zeitraum und Zeilenzahl, zum Kopieren in einen Thread (statt journalctl | grep auf der Konsole)
 - **V01.0.140** Raum-Modus flinker und findet mehr Fragen: Lautsprecher schneidet Gespräch in kurze Stücke, spricht nach 1,5 s Stille, streamt die Stimme; Antwort wird schon gesucht, während noch geredet wird; Fragen auch ohne Fragezeichen und nach „Weißt du, …“; „Auch Kommentare“ gesprächiger
-- **V01.0.139** Raum-Modus überhört Fernsehstimmen: pro Gerät „Wem er zuhört“ (allen / nur bekannte Stimmen, wenn der Fernseher läuft / immer nur bekannte Stimmen), mit Probelauf, der nur zählt; Admin-Schalter „Fernsehstimmen überhören“, standardmäßig aus
 
 Alle Versionen: [CHANGELOG.md](CHANGELOG.md)
 
