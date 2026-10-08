@@ -22,12 +22,17 @@ let DOCS_ON=true,SPK_ON=false,CAL_ON=true,HA_ON=false,MAIL_ON=false;
 const PHONE=matchMedia('(max-width:760px)');
 function ptab(id,page=true){document.querySelectorAll('#ptabs button').forEach(b=>{b.classList.toggle('on',b.dataset.t===id);if(b.dataset.t===id)$('mepage').textContent=b.textContent});
   document.querySelectorAll('#profmodal .ptab').forEach(x=>x.classList.toggle('on',x.id===id));
+  if(typeof guidesMe==='function')guidesMe(id);
   $('profmodal').classList.toggle('sub',page);if(page)document.querySelector('#profmodal .mebody').scrollTop=0}
 $('meback').onclick=()=>ptab(meLast,false);
 function meTabs(){const items=[['setbox',t('Gespräch','Conversation'),!GATE&&!isGuest()],['loginbox',t('Anmelden','Sign in'),!PROFILE],
-    ['factbox',t('Gedächtnis','Memory'),!!PROFILE],['docbox',t('Dokumente','Documents'),PROFILE&&DOCS_ON],['calbox',t('Kalender','Calendar'),PROFILE&&CAL_ON],['mailbox',t('E-Mail','E-mail'),PROFILE&&MAIL_ON],
-    ['habox',t('Smart Home','Smart home'),PROFILE&&HA_ON],['voicebox',t('Stimme','Voice'),PROFILE&&SPK_ON],['probox',t('Von selbst','Proactive'),PROFILE&&PRO_ON],['roombox',t('Raum-Modus','Room mode'),PROFILE&&ROOM_ON],['logbox',t('Protokoll','Log'),!!PROFILE],['secbox',t('Sicherheit','Security'),!!PROFILE]].filter(x=>x[2]);
-  $('ptabs').innerHTML=items.map(([id,l])=>`<button type="button" data-t="${id}">${esc(l)}</button>`).join('');
+    ['factbox',t('Gedächtnis','Memory'),!!PROFILE],['voicebox',t('Stimme','Voice'),PROFILE&&SPK_ON],['roombox',t('Raum-Modus','Room mode'),PROFILE&&ROOM_ON],['probox',t('Von selbst','Proactive'),PROFILE&&PRO_ON],
+    ['calbox',t('Kalender','Calendar'),PROFILE&&CAL_ON],['mailbox',t('E-Mail','E-mail'),PROFILE&&MAIL_ON],['docbox',t('Dokumente','Documents'),PROFILE&&DOCS_ON],
+    ['habox',t('Smart Home','Smart home'),PROFILE&&HA_ON],['secbox',t('Sicherheit','Security'),!!PROFILE],['logbox',t('Protokoll','Log'),!!PROFILE]].filter(x=>x[2]);
+  // pages in the same groups as everywhere else (guides.js), with a small header per group
+  let grp=null;$('ptabs').innerHTML=items.map(([id,l])=>{const g=typeof meGroup==='function'?meGroup(id):null,gg=g&&GGROUPS.find(x=>x[0]===g);
+    const head=g&&g!==grp?`<div class="mgrp">${esc(t(gg[1],gg[2]))}</div>`:'';if(g)grp=g;
+    return head+`<button type="button" data-t="${id}">${esc(l)}</button>`}).join('');
   $('ptabs').querySelectorAll('button').forEach(b=>b.onclick=()=>{meLast=b.dataset.t;ptab(b.dataset.t)});
   $('profmodal').classList.toggle('one',items.length<2);return items.map(x=>x[0])}
 let meLast='setbox';

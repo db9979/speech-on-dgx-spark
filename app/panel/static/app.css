@@ -322,3 +322,17 @@ a.b{text-decoration:none;color:inherit;display:inline-flex;align-items:center}
   .mebody .ptab{min-height:0}
   .facts{max-height:none}
 }
+/* guides (guides.js): groups in Funktionen, an "Anleitung" per service, headers in the "Ich" menu */
+.fgrp{margin-top:14px}.fgrp>summary{display:flex;justify-content:space-between;align-items:center;gap:10px;cursor:pointer;padding:8px 0;border-bottom:2px solid var(--line);font-size:15px}
+.fcount{font-size:12px;color:var(--mut);font-weight:400}
+.gbtn{display:block;border:0;background:none;color:var(--acc);font:inherit;font-size:12px;padding:4px 0 0;cursor:pointer}.gbtn.on{font-weight:600}
+.fh .gbtn{display:inline;margin-left:6px;padding:0}
+details.guide{margin:0 0 12px;border:1px solid var(--line);border-radius:12px;padding:8px 12px}
+details.guide>summary{cursor:pointer;font-weight:600;font-size:14px;color:var(--acc)}
+div.guide.inline{border:0;border-bottom:1px solid var(--line);border-radius:0;margin:0;padding:4px 0 12px}
+.gbody{font-size:13px;line-height:1.5}.gsec{margin-top:8px}.gsec>b{display:block;font-size:12px;color:var(--mut);font-weight:600}
+.gsec ol,.gsec ul{margin:3px 0 0 18px;padding:0}.gsec p{margin:3px 0 0}
+.ggrp h3{font-size:15px;margin:18px 0 8px}.ggrp:first-child h3{margin-top:6px}
+.mgrp{font-size:11px;text-transform:uppercase;letter-spacing:.06em;color:var(--mut);padding:12px 12px 3px}
+@media (max-width:760px){.mgrp{padding:20px 4px 6px}.gbody{font-size:14px}}
+@media (max-width:760px){.menav{flex-wrap:nowrap}}

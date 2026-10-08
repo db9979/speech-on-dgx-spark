@@ -1,0 +1,223 @@
+// Guides: one openable how-to per service, the same text next to its switch (Einstellungen → Funktionen),
+// on its page in the "Ich" window and collected under Einbinden → Anleitungen. Services are sorted into
+// fixed groups everywhere. Each guide: sw = admin switch id, me = page in the "Ich" window. Texts are [German, English]; every section is a list of such pairs.
+// A self-test checks that every switch in Funktionen and every "Ich" page has a guide and a group.
+const GGROUPS=[['talk','Gespräch','Conversation'],['day','Mein Tag','My day'],['post','Post und Dokumente','Mail and documents'],
+  ['home','Zuhause','Home'],['go','Unterwegs und Geräte','On the go and devices'],['sec','Sicherheit und Zugang','Security and access']];
+const GSECT=[['what','Was es kann','What it does'],['need','Was du brauchst','What you need'],['setup','Einrichten','Set up'],
+  ['say','So benutzt du es','How to use it'],['out','Was das Haus verlässt','What leaves the house'],
+  ['off','Ausschalten und löschen','Switch off and delete'],['fix','Wenn es nicht klappt','If it does not work']];
+const NOTHING_OUT=[['Nichts. Alles bleibt auf dem Spark.','Nothing. Everything stays on the Spark.']];
+const GUIDES=[
+// ------------------------------------------------------------------ Gespräch
+{id:'hands',grp:'talk',me:'setbox',t:['Freihändig und „Hey Spark“','Hands-free and "Hey Spark"'],
+ what:[['Freihändig: Nach jeder Antwort hört der Assistent von selbst wieder zu, du musst nichts drücken. „Hey Spark“: Die Seite lauscht dauerhaft auf das Wort und startet dann das Gespräch.','Hands-free: after every answer the assistant listens again by itself, no tapping. "Hey Spark": the page keeps listening for the word and then starts the conversation.']],
+ need:[['Eine Seite mit https (dein Reverse Proxy oder Port 31443), weil der Browser das Mikrofon sonst nicht freigibt.','A page over https (your reverse proxy or port 31443), otherwise the browser does not allow the microphone.'],['Ein angemeldetes Profil. Gäste haben beides nicht.','A signed-in profile. Guests get neither.']],
+ setup:[['Im Assistenten unter dem Gesicht die Schalter „Freihändig“ und „Hey Spark“ antippen.','In the assistant, tap the "Hands-free" and "Hey Spark" switches below the face.'],['Feinheiten (Hineinreden, Gesprächspausen, Live-Text) stehen im Profil-Knopf unter „Gespräch“.','Details (barge-in, pauses, live text) are under the profile button → "Conversation".']],
+ say:[['„Hey Spark, wie wird das Wetter morgen?“','"Hey Spark, what is the weather tomorrow?"'],['Während der Assistent spricht, einfach reinreden: Er hört auf und hört dir zu.','While the assistant speaks, just talk: it stops and listens.']],
+ out:NOTHING_OUT,
+ off:[['Schalter unter dem Gesicht wieder aus. Aufnahmen werden nie gespeichert.','Switch them off again below the face. Recordings are never stored.']],
+ fix:[['Kein Mikrofon: Seite über https öffnen und dem Browser das Mikrofon erlauben.','No microphone: open the page over https and allow the microphone in the browser.'],['„Hey Spark“ reagiert nicht: Bildschirm muss an bleiben, auf dem Handy die Seite im Vordergrund lassen.','"Hey Spark" does not react: the screen has to stay on; on a phone keep the page in front.'],['Er fällt dir ins Wort: unter „Gespräch“ die Pause bis zur Antwort verlängern.','It cuts you off: make the pause before answering longer under "Conversation".']]},
+{id:'search',grp:'talk',sw:'chat.search',t:['Websuche','Web search'],
+ what:[['Braucht eine Frage aktuelle Informationen (Nachrichten, Öffnungszeiten, Preise), sucht der Assistent selbst im Netz und antwortet aus den Treffern.','When a question needs current information (news, opening hours, prices), the assistant searches the web itself and answers from the results.']],
+ need:[['Deine eigene SearXNG-Instanz. Am besten mit JSON-Format (settings.yml: search.formats: [html, json]).','Your own SearXNG instance, ideally with the JSON format (settings.yml: search.formats: [html, json]).']],
+ setup:[['Admin: Einstellungen → Websuche, Adresse der SearXNG eintragen und speichern.','Admin: Settings → Web search, enter the SearXNG address and save.'],['Admin: Einstellungen → Funktionen → Websuche einschalten.','Admin: Settings → Features → switch on Web search.']],
+ say:[['„Was gibt es Neues zur Bahn-Streik?“','"Any news about the rail strike?"'],['„Wann hat der Baumarkt in Ulm heute offen?“','"When is the hardware store in Ulm open today?"']],
+ out:[['Die Suchwörter gehen an deine SearXNG und von dort an die Suchmaschinen. Die Treffer-Seiten liest der Spark direkt.','The search words go to your SearXNG and from there to the search engines. The Spark reads the result pages directly.']],
+ off:[['Schalter in Funktionen aus. Es wird nichts gespeichert außer der Antwort im Verlauf.','Switch it off under Features. Nothing is stored except the answer in the history.']],
+ fix:[['„Keine Treffer“: In SearXNG das JSON-Format erlauben oder prüfen, ob der Spark die Adresse erreicht.','"No results": allow the JSON format in SearXNG or check that the Spark reaches the address.'],['Nach dem Lesen einer Mail ist die Websuche in derselben Antwort gesperrt. Das ist Absicht.','After reading a mail, web search is locked for that answer. That is on purpose.']]},
+{id:'memory',grp:'talk',sw:'chat.memory',me:'factbox',t:['Gedächtnis','Memory'],
+ what:[['Der Assistent merkt sich Dinge über dich, zum Beispiel Namen, Vorlieben oder wo etwas liegt, und nutzt sie in späteren Gesprächen. Nur für dein Profil.','The assistant remembers things about you, such as names, preferences or where something is, and uses them later. Only for your profile.']],
+ need:[['Ein Profil (Name und PIN).','A profile (name and PIN).']],
+ setup:[['Admin: Funktionen → Gedächtnis an.','Admin: Features → Memory on.'],['Profil: Profil-Knopf → Gedächtnis zeigt alles, was gespeichert ist. Ob er auch selbst dazulernt, stellst du unter „Gespräch“ ein.','Profile: profile button → Memory shows everything stored. Whether it also learns by itself is set under "Conversation".']],
+ say:[['„Merk dir, der Ersatzschlüssel liegt in der Garage.“','"Remember, the spare key is in the garage."'],['„Vergiss das mit dem Schlüssel.“','"Forget the thing about the key."'],['„Was weißt du über mich?“','"What do you know about me?"']],
+ out:NOTHING_OUT,
+ off:[['Profil-Knopf → Gedächtnis: einzelne Einträge löschen oder „Alles vergessen“.','Profile button → Memory: delete single entries or "Forget everything".']],
+ fix:[['Doppelte Einträge: „Aufräumen vorschlagen“ fasst sie zusammen, geändert wird erst nach deinem OK.','Duplicate entries: "Suggest tidy-up" merges them, nothing changes before your OK.']]},
+{id:'history',grp:'talk',sw:'chat.history',t:['Frühere Gespräche','Past conversations'],
+ what:[['Du kannst nach früheren Gesprächen fragen. Aus ruhigen Gesprächen merkt sich der Assistent außerdem wenige dauerhafte Fakten (im Gedächtnis als „automatisch“ markiert).','You can ask about past conversations. From quiet conversations the assistant also keeps a few lasting facts (marked "automatic" in memory).']],
+ need:[['Ein Profil. Gäste nie.','A profile. Never guests.']],
+ setup:[['Admin: Funktionen → Frühere Gespräche an.','Admin: Features → Past conversations on.'],['Profil: Das automatische Lernen schaltest du unter Profil-Knopf → Gespräch aus, wenn du es nicht willst.','Profile: switch automatic learning off under profile button → Conversation if you do not want it.']],
+ say:[['„Was hast du mir letzte Woche zum Grill gesagt?“','"What did you tell me about the grill last week?"'],['Im Verlauf: die Lupe durchsucht alle Gespräche.','In the history: the magnifier searches all conversations.']],
+ out:NOTHING_OUT,
+ off:[['Im Verlauf einzelne Nachrichten oder Gespräche löschen. Funktion aus: es wird nicht mehr gesucht.','Delete single messages or conversations in the history. Feature off: no more searching.']],
+ fix:[['Findet nichts: genauer fragen, mit einem Stichwort aus dem damaligen Gespräch.','Finds nothing: ask more precisely, with a keyword from that conversation.']]},
+{id:'speaker',grp:'talk',sw:'chat.speaker_id',me:'voicebox',t:['Sprechererkennung','Speaker recognition'],
+ what:[['Der Assistent erkennt dich an der Stimme, auch an einem fremden Gerät, und antwortet dann mit deinem Gedächtnis und deinen Einstellungen. Smart Home schaltet er für eine fremde Stimme nie.','The assistant recognises you by voice, even on someone else\'s device, and then answers with your memory and settings. It never switches smart home for a foreign voice.']],
+ need:[['Ein Profil und ein Mikrofon (https).','A profile and a microphone (https).']],
+ setup:[['Admin: Funktionen → Sprechererkennung an, unter Assistent die Strenge wählen.','Admin: Features → Speaker recognition on, choose the strictness under Assistant.'],['Profil: Profil-Knopf → Stimme → „Stimme einlernen“, drei kurze Sätze vorlesen.','Profile: profile button → Voice → "Enroll voice", read three short sentences.']],
+ say:[['Einfach sprechen. Wird eine andere Stimme erkannt, steht ihr Name an der Antwort.','Just talk. If another voice is recognised, its name is shown on the answer.']],
+ out:NOTHING_OUT,
+ off:[['Profil-Knopf → Stimme → „Stimme löschen“.','Profile button → Voice → "Delete voice".']],
+ fix:[['Eine Stimme ist kein Passwort: Wer sehr ähnlich klingt oder eine Aufnahme abspielt, kann ein Profil erwischen.','A voice is not a password: someone who sounds very similar or plays a recording can get a profile.'],['Wird selten erkannt: in ruhiger Umgebung neu einlernen oder die Strenge auf „locker“.','Rarely recognised: enroll again somewhere quiet or set strictness to "relaxed".']]},
+{id:'room',grp:'talk',sw:'chat.room',me:'roombox',t:['Raum-Modus','Room mode'],
+ what:[['Für eine gewählte Zeit hört der Assistent dem Gespräch im Raum zu und hilft in einer Pause: offene Fragen beantworten, Termine oder Einkäufe vorschlagen, bei „kalt“ oder „dunkel“ den echten Wert nennen. Geändert wird nur nach „Ja“.','For a chosen time the assistant listens to the conversation in the room and helps in a pause: answers open questions, suggests appointments or shopping items, gives the real value on "cold" or "dark". Nothing changes without "Yes".']],
+ need:[['Ein Profil und ein Gerät mit Mikrofon. Alle im Raum sollten wissen, dass er zuhört.','A profile and a device with a microphone. Everyone in the room should know it is listening.']],
+ setup:[['Admin: Funktionen → Raum-Modus an.','Admin: Features → Room mode on.'],['Profil: Profil-Knopf → Raum-Modus: was er tun darf, Raum in Home Assistant, „Nur als Text“.','Profile: profile button → Room mode: what it may do, room in Home Assistant, "Text only".'],['Am Gerät: Schalter „Raum“ unter dem Gesicht, Dauer wählen.','On the device: "Room" switch below the face, choose the duration.']],
+ say:[['Ihr redet ganz normal. „Ja“ übernimmt einen Vorschlag, „Nein“ verwirft ihn.','Talk normally. "Yes" takes a suggestion, "No" drops it.']],
+ out:NOTHING_OUT,
+ off:[['Schalter „Raum“ aus. Das Gehörte bleibt nur wenige Minuten im Arbeitsspeicher und wird nie gespeichert.','"Room" switch off. What was heard stays in memory for a few minutes only and is never stored.']],
+ fix:[['Meldet sich zu oft: unter Raum-Modus die Stufe auf „nur Fragen“.','Speaks up too often: set the level to "questions only" under Room mode.']]},
+{id:'proactive',grp:'talk',sw:'chat.proactive',me:'probox',t:['Von selbst melden','Speaking up by itself'],
+ what:[['Der Assistent meldet sich, wenn wirklich etwas ist: vor Terminen, bei eigenen Smart-Home-Regeln, Mails von gewählten Absendern, Wetter für morgen, mit einer Nachfrage oder einer Begrüßung.','The assistant speaks up when something is really up: before appointments, on your own smart-home rules, mails from chosen senders, tomorrow\'s weather, a follow-up or a greeting.']],
+ need:[['Ein Profil. Für Mitteilungen ohne offene Seite: Mitteilungen eingeschaltet (siehe „Mitteilungen aufs Handy“).','A profile. For notices without an open page: notifications switched on (see "Notifications to your phone").']],
+ setup:[['Admin: Funktionen → Von selbst melden an.','Admin: Features → Speaking up by itself on.'],['Profil: Profil-Knopf → Von selbst: jede Art einzeln an, Ruhezeit (Standard 22 bis 7 Uhr) und Tageslimit setzen, „Ausprobieren“.','Profile: profile button → Proactive: switch on each kind, set quiet hours (default 10 pm to 7 am) and daily limit, "Try it".']],
+ say:[['Auf eine Meldung: „Ja“, „Nicht jetzt“ oder „Interessiert mich nicht“, oder die drei Knöpfe darunter.','On a notice: "Yes", "Not now" or "Not interested", or the three buttons below it.']],
+ out:[['Für den Wetterhinweis geht eine Suche an deine SearXNG. Sonst nichts.','For the weather hint a search goes to your SearXNG. Nothing else.']],
+ off:[['Profil-Knopf → Von selbst: einzelne Arten oder alles aus.','Profile button → Proactive: single kinds or everything off.']],
+ fix:[['Kommt nichts: Ruhezeit und Tageslimit prüfen, „Ausprobieren“ drücken.','Nothing arrives: check quiet hours and daily limit, press "Try it".']]},
+// ------------------------------------------------------------------ Mein Tag
+{id:'reminders',grp:'day',sw:'chat.reminders',t:['Timer und Erinnerungen','Timers and reminders'],
+ what:[['Timer und Erinnerungen per Sprache. Das Gerät klingelt und sagt es an.','Timers and reminders by voice. The device rings and says it.']],
+ need:[['Nichts. Profile speichern sie auf dem Spark, Gäste nur im Browser. Ohne offene Seite: Mitteilungen einschalten.','Nothing. Profiles keep them on the Spark, guests only in the browser. Without an open page: switch on notifications.']],
+ setup:[['Admin: Funktionen → Timer und Erinnerungen an.','Admin: Features → Timers and reminders on.']],
+ say:[['„Erinnere mich in 10 Minuten an den Ofen.“','"Remind me about the oven in 10 minutes."'],['„Erinnere mich morgen um 8 an den Müll.“','"Remind me about the bins tomorrow at 8."'],['„Welche Erinnerungen habe ich?“','"Which reminders do I have?"']],
+ out:NOTHING_OUT,
+ off:[['Im Assistenten unter der Erinnerungsliste löschen.','Delete them in the reminder list in the assistant.']],
+ fix:[['Klingelt nicht: Seite offen lassen oder Mitteilungen einschalten.','Does not ring: keep the page open or switch on notifications.']]},
+{id:'calendar',grp:'day',sw:'chat.calendar',me:'calbox',t:['Kalender','Calendar'],
+ what:[['Der Assistent liest deine Termine vor und trägt neue ein, aber erst nach deinem „Ja“.','The assistant reads your appointments and adds new ones, but only after your "Yes".']],
+ need:[['iCloud: Apple-ID und ein app-spezifisches Passwort von appleid.apple.com. Nextcloud oder anderer CalDAV-Server: Adresse und App-Passwort. Oder ein Abo-Link (webcal), dann nur lesen.','iCloud: Apple ID and an app-specific password from appleid.apple.com. Nextcloud or another CalDAV server: address and app password. Or a subscription link (webcal), then read only.']],
+ setup:[['Admin: Funktionen → Kalender und Tagesbriefing an.','Admin: Features → Calendar and daily briefing on.'],['Profil: Profil-Knopf → Kalender → „Kalender hinzufügen“, Anbieter wählen, Zugangsdaten eintragen, „Prüfen und hinzufügen“.','Profile: profile button → Calendar → "Add calendar", pick the provider, enter the login, "Check and add".']],
+ say:[['„Was steht heute an?“','"What is on today?"'],['„Hab ich am Freitag Zeit?“','"Am I free on Friday?"'],['„Trag Zahnarzt Dienstag 10 Uhr ein.“ Dann „Ja“.','"Add dentist Tuesday 10 am." Then "Yes".']],
+ out:[['Der Spark spricht direkt mit deinem Kalenderdienst (z. B. iCloud). Sonst geht nichts raus.','The Spark talks directly to your calendar service (e.g. iCloud). Nothing else leaves.']],
+ off:[['Profil-Knopf → Kalender → „Entfernen“. Das Passwort wird dabei gelöscht.','Profile button → Calendar → "Remove". The password is deleted with it.']],
+ fix:[['iCloud lehnt ab: neues app-spezifisches Passwort erzeugen, nicht das Apple-ID-Passwort.','iCloud refuses: create a new app-specific password, not the Apple ID password.'],['„Nächste Termine zeigen“ prüft die Verbindung.','"Show next appointments" checks the connection.']]},
+{id:'briefing',grp:'day',me:'calbox',t:['Morgen-Briefing','Morning briefing'],
+ what:[['Auf „Guten Morgen“ oder zu einer festen Uhrzeit: Termine, Erinnerungen, ungelesene Mails und bis zu drei Themen, kurz zusammengefasst.','On "Good morning" or at a set time: appointments, reminders, unread mail and up to three topics, briefly.']],
+ need:[['Einen verbundenen Kalender. Für die feste Uhrzeit: Mitteilungen.','A connected calendar. For the set time: notifications.']],
+ setup:[['Profil: Profil-Knopf → Kalender → Themen eintragen (z. B. „Wetter Ulm, Nachrichten“).','Profile: profile button → Calendar → enter topics (e.g. "weather Ulm, news").'],['Profil: Profil-Knopf → Gespräch → Mitteilungen → Uhrzeit fürs Tagesbriefing.','Profile: profile button → Conversation → Notifications → time for the daily briefing.']],
+ say:[['„Guten Morgen.“','"Good morning."'],['„Was steht heute an?“','"What is on today?"']],
+ out:[['Für die Themen geht eine Suche an deine SearXNG.','For the topics a search goes to your SearXNG.']],
+ off:[['Uhrzeit auf „Aus“, Themen leeren.','Set the time to "Off", clear the topics.']],
+ fix:[['Kommt morgens nicht: Mitteilungen auf diesem Gerät eingeschaltet?','Does not arrive in the morning: are notifications on for this device?']]},
+// ------------------------------------------------------------------ Post und Dokumente
+{id:'mail',grp:'post',sw:'chat.mail',me:'mailbox',t:['E-Mail lesen','Reading e-mail'],
+ what:[['Der Assistent liest deinen Posteingang der letzten 30 Tage vor. Er sendet, löscht und markiert nichts.','The assistant reads your inbox of the last 30 days. It sends, deletes and marks nothing.']],
+ need:[['Bis zu 4 Postfächer: iCloud, Gmail, GMX, web.de oder IMAP. Bei iCloud und Gmail ein app-spezifisches Passwort.','Up to 4 mailboxes: iCloud, Gmail, GMX, web.de or IMAP. For iCloud and Gmail an app-specific password.']],
+ setup:[['Admin: Funktionen → E-Mail lesen an.','Admin: Features → Reading e-mail on.'],['Profil: Profil-Knopf → E-Mail → „Postfach hinzufügen“, „Prüfen und hinzufügen“.','Profile: profile button → E-mail → "Add mailbox", "Check and add".']],
+ say:[['„Hab ich neue Mails?“','"Do I have new mail?"'],['„Was schreibt Anna?“','"What does Anna write?"'],['„Lies mir die Mail von der Telekom vor.“','"Read me the mail from Telekom."']],
+ out:[['Der Spark spricht direkt mit deinem Mailserver. Sonst nichts.','The Spark talks directly to your mail server. Nothing else.']],
+ off:[['Profil-Knopf → E-Mail → Postfach entfernen. Das Passwort wird gelöscht.','Profile button → E-mail → remove the mailbox. The password is deleted.']],
+ fix:[['Anmeldung scheitert: app-spezifisches Passwort nehmen, bei Gmail IMAP in den Gmail-Einstellungen erlauben.','Login fails: use an app-specific password; for Gmail allow IMAP in the Gmail settings.'],['Nach dem Lesen einer Mail sind Smart Home und Websuche in derselben Antwort gesperrt. Das schützt vor Mails, die etwas auslösen wollen.','After reading a mail, smart home and web search are locked for that answer. That protects against mails trying to trigger something.']]},
+{id:'tidy',grp:'post',sw:'chat.mail_tidy',me:'mailbox',t:['Postfach aufräumen','Inbox tidying'],
+ what:[['Werbung, Newsletter und Ähnliches kommen in eigene Ordner (Hauptordner frei wählbar, sonst „Spark“). Es wird nie gelöscht und nie gesendet. Auf Wunsch legt er Antwort-Entwürfe an.','Advertising, newsletters and the like go into their own folders (main folder of your choice, else "Spark"). Nothing is ever deleted or sent. On request it writes reply drafts.']],
+ need:[['Ein verbundenes Postfach (siehe „E-Mail lesen“).','A connected mailbox (see "Reading e-mail").']],
+ setup:[['Admin: Funktionen → E-Mail lesen und Postfach aufräumen an.','Admin: Features → Reading e-mail and Inbox tidying on.'],['Profil: Profil-Knopf → E-Mail → Aufräumen: pro Postfach Modus wählen. Erst eine Woche „Vorschau“, dann „sicher“ oder „automatisch“.','Profile: profile button → E-mail → Tidying: pick a mode per mailbox. First a week of "preview", then "safe" or "automatic".']],
+ say:[['„Räum mein Postfach auf.“','"Tidy my inbox."'],['„Schreib Anna eine Antwort, dass ich komme.“ Dann „Ja“: der Entwurf landet in Entwürfe.','"Write Anna a reply that I am coming." Then "Yes": the draft goes into Drafts.']],
+ out:[['Nichts außer den Befehlen an deinen eigenen Mailserver.','Nothing except the commands to your own mail server.']],
+ off:[['Modus auf „aus“. Jede Verschiebung lässt sich 30 Tage lang zurückholen.','Mode "off". Every move can be undone for 30 days.']],
+ fix:[['Bei Rechnungen und Unklarem fragt er erst. Falsch einsortiert: zurückholen, er lernt daraus.','With invoices and unclear mails it asks first. Wrongly sorted: undo it, it learns from that.']]},
+{id:'documents',grp:'post',sw:'chat.documents',me:'docbox',t:['Eigene Dokumente','Own documents'],
+ what:[['Du lädst Dokumente hoch, der Assistent sucht darin, wenn eine Frage dazu passt. Kein anderes Profil sieht sie.','You upload documents, the assistant searches them when a question fits. No other profile sees them.']],
+ need:[['PDF, Word, Text, Markdown, HTML oder CSV, je bis 20 MB.','PDF, Word, text, Markdown, HTML or CSV, up to 20 MB each.']],
+ setup:[['Admin: Funktionen → Eigene Dokumente an.','Admin: Features → Own documents on.'],['Profil: Profil-Knopf → Dokumente → „Dokument hinzufügen“.','Profile: profile button → Documents → "Add document".']],
+ say:[['„Was steht in meinem Mietvertrag zur Kündigungsfrist?“','"What does my lease say about the notice period?"']],
+ out:NOTHING_OUT,
+ off:[['Profil-Knopf → Dokumente → „Löschen“.','Profile button → Documents → "Delete".']],
+ fix:[['Findet nichts: gescannte PDFs ohne Text kann er nicht lesen.','Finds nothing: scanned PDFs without text cannot be read.']]},
+// ------------------------------------------------------------------ Zuhause
+{id:'ha',grp:'home',sw:'chat.homeassistant',me:'habox',t:['Home Assistant','Home Assistant'],
+ what:[['Licht, Geräte und Heizung per Sprache steuern und Werte abfragen. Nach jedem Schalten liest der Spark den echten Zustand nach und sagt nur, was wirklich passiert ist.','Control lights, devices and heating by voice and ask for values. After switching, the Spark reads back the real state and reports only what really happened.']],
+ need:[['Dein Home Assistant und einen langlebigen Zugriffstoken, am besten von einem eigenen Benutzer ohne Admin-Rechte.','Your Home Assistant and a long-lived access token, ideally from a separate user without admin rights.']],
+ setup:[['Admin: Funktionen → Home Assistant an.','Admin: Features → Home Assistant on.'],['In Home Assistant: dein Profil → Sicherheit → Langlebige Zugriffstoken → Token erstellen.','In Home Assistant: your profile → Security → Long-lived access tokens → Create token.'],['Profil: Profil-Knopf → Smart Home: Adresse und Token, „Prüfen und speichern“.','Profile: profile button → Smart home: address and token, "Check and save".'],['Empfohlen: ein Codewort für Änderungen setzen.','Recommended: set a code word for changes.']],
+ say:[['„Wie warm ist es im Bad?“','"How warm is the bathroom?"'],['„Mach das Licht im Wohnzimmer an, Codewort Sonnenblume.“','"Turn on the living room light, code word sunflower."'],['„Was steht auf der Einkaufsliste?“','"What is on the shopping list?"']],
+ out:[['Der Spark spricht direkt mit deinem Home Assistant. Sonst nichts.','The Spark talks directly to your Home Assistant. Nothing else.']],
+ off:[['Profil-Knopf → Smart Home → „Trennen“.','Profile button → Smart home → "Disconnect".']],
+ fix:[['Gerät nicht gefunden: den Namen sagen, den es in Home Assistant hat.','Device not found: say the name it has in Home Assistant.'],['Schaltet nicht: Codewort in derselben Nachricht sagen. Schlösser, Alarmanlagen und Updates schaltet er nie.','Does not switch: say the code word in the same message. Locks, alarms and updates are never switched.']]},
+// ------------------------------------------------------------------ Unterwegs und Geräte
+{id:'push',grp:'go',me:'setbox',t:['Mitteilungen aufs Handy','Notifications to your phone'],
+ what:[['Erinnerungen, das Tagesbriefing und „Von selbst melden“ kommen als Mitteilung, auch wenn die Seite zu ist.','Reminders, the daily briefing and proactive notices arrive as notifications, even with the page closed.']],
+ need:[['Die Seite über https mit echtem Zertifikat (dein Reverse Proxy). Auf dem iPhone: die Seite als App auf dem Home-Bildschirm.','The page over https with a real certificate (your reverse proxy). On iPhone: the page as an app on the home screen.']],
+ setup:[['iPhone: Seite in Safari öffnen, „Teilen → Zum Home-Bildschirm“, dann die App von dort öffnen.','iPhone: open the page in Safari, "Share → Add to Home Screen", then open the app from there.'],['Profil-Knopf → Gespräch → Mitteilungen → „Einschalten“ und erlauben.','Profile button → Conversation → Notifications → "Switch on" and allow.']],
+ say:[['Nichts zu sagen, sie kommen von selbst.','Nothing to say, they come by themselves.']],
+ out:[['Die Mitteilung geht verschlüsselt über den Push-Dienst deines Browsers (bei Apple über Apple).','The notification goes encrypted through your browser\'s push service (Apple\'s for Apple devices).']],
+ off:[['Profil-Knopf → Gespräch → Mitteilungen → „Ausschalten“.','Profile button → Conversation → Notifications → "Switch off".']],
+ fix:[['Knopf fehlt: Seite nicht über https oder auf dem iPhone nicht als App geöffnet.','Button missing: page not over https, or on iPhone not opened as an app.']]},
+{id:'siri',grp:'go',t:['„Hey Siri, frag Spark“','"Hey Siri, ask Spark"'],
+ what:[['Ein iPhone-Kurzbefehl schickt deine Frage an den Spark, Siri liest die Antwort vor. Auch auf der Apple Watch, mit AirPods und im Auto.','An iPhone shortcut sends your question to the Spark, Siri reads the answer. Also on Apple Watch, with AirPods and in the car.']],
+ need:[['Ein Geräteschlüssel deines Profils und ein iPhone mit der App Kurzbefehle.','A device key of your profile and an iPhone with the Shortcuts app.']],
+ setup:[['Nutzer → Profile und Geräte: beim eigenen Profil ein Gerät „iPhone Siri“ anlegen, Schlüssel kopieren.','Users → Profiles and devices: add a device "iPhone Siri" to your profile, copy the key.'],['Den Kurzbefehl wie in der Karte „Hey Siri, frag Spark“ unter Einbinden beschrieben anlegen.','Build the shortcut as described in the "Hey Siri, ask Spark" card under Integrate.']],
+ say:[['„Hey Siri, Frag Spark“, dann die Frage.','"Hey Siri, Ask Spark", then the question.']],
+ out:[['Siri macht aus deiner Sprache Text (bei Apple). Die Frage selbst geht direkt an den Spark.','Siri turns your speech into text (at Apple). The question itself goes directly to the Spark.']],
+ off:[['Gerät unter Nutzer → Profile und Geräte löschen.','Delete the device under Users → Profiles and devices.']],
+ fix:[['Unterwegs keine Antwort: im Kurzbefehl die Adresse deines Reverse Proxys statt der Heimnetz-Adresse.','No answer away from home: use your reverse proxy address in the shortcut, not the home address.']]},
+{id:'pebble',grp:'go',t:['Pebble-Uhr','Pebble watch'],
+ what:[['App „Spark“ für die Pebble: Frage per Knopfdruck, Antwort als Text und über den Lautsprecher der Uhr.','"Spark" app for the Pebble: ask with a button, answer as text and through the watch speaker.']],
+ need:[['Pebble Time 2, Core 2 Duo oder Round 2, ein Geräteschlüssel deines Profils.','Pebble Time 2, Core 2 Duo or Round 2, a device key of your profile.']],
+ setup:[['Nutzer → Profile und Geräte: Gerät „Pebble“ anlegen, Schlüssel kopieren.','Users → Profiles and devices: add a device "Pebble", copy the key.'],['Die App-Datei aus der Karte „Pebble-Uhr“ unter Einbinden mit der Pebble-App öffnen.','Open the app file from the "Pebble watch" card under Integrate with the Pebble app.'],['In der Pebble-App bei „Spark“ Adresse und Schlüssel eintragen.','In the Pebble app enter address and key for "Spark".']],
+ say:[['SELECT fragt, nochmal SELECT stoppt, lang SELECT beginnt ein neues Gespräch.','SELECT asks, SELECT again stops, long SELECT starts a new conversation.']],
+ out:[['Das Diktieren macht die Pebble-App auf dem Handy, je nach Einstellung dort auch über einen Online-Dienst.','Dictation is done by the Pebble phone app, depending on its setting also through an online service.']],
+ off:[['Gerät unter Nutzer → Profile und Geräte löschen.','Delete the device under Users → Profiles and devices.']],
+ fix:[['Leise: Uhr → Einstellungen → Töne → Lautstärke.','Quiet: watch → Settings → Sounds → Volume.'],['Unterwegs: das Handy muss den Spark erreichen (VPN oder Proxy).','Away from home: the phone has to reach the Spark (VPN or proxy).']]},
+{id:'apps',grp:'go',t:['Open WebUI und eigene Programme','Open WebUI and own programs'],
+ what:[['Spracherkennung und Sprachausgabe sprechen die OpenAI-Audio-API. Jede App mit eigener „Base URL“ kann sie nutzen.','Speech recognition and speech output speak the OpenAI audio API. Any app with its own "Base URL" can use them.']],
+ need:[['Die Adressen und, falls gesetzt, den API-Schlüssel (Einstellungen → Sicherheit).','The addresses and, if set, the API key (Settings → Security).']],
+ setup:[['Adressen und Beispiele stehen unter Einbinden (Open WebUI, Andere Apps, curl, Python).','Addresses and examples are under Integrate (Open WebUI, Other apps, curl, Python).']],
+ say:[['Je nach App.','Depends on the app.']],
+ out:NOTHING_OUT,
+ off:[['API-Schlüssel ändern sperrt alle Apps mit dem alten Schlüssel aus.','Changing the API key locks out all apps using the old key.']],
+ fix:[['Unter Einbinden → Testen beide Dienste direkt ausprobieren.','Try both services directly under Integrate → Test.']]},
+// ------------------------------------------------------------------ Sicherheit und Zugang
+{id:'mfa',grp:'sec',sw:'chat.mfa',me:'secbox',t:['Zweiter Anmeldeschritt','Second sign-in step'],
+ what:[['Zur Anmeldung mit Name und PIN kommt ein Code aus einer Authenticator-App. Geräte mit Schlüssel brauchen keinen Code.','Signing in with name and PIN also needs a code from an authenticator app. Devices with a key need no code.']],
+ need:[['Eine Authenticator-App (z. B. Apple Passwörter, Google Authenticator, 2FAS).','An authenticator app (e.g. Apple Passwords, Google Authenticator, 2FAS).']],
+ setup:[['Admin: Funktionen → Zweiter Anmeldeschritt an. Für das Admin-Passwort: Einstellungen → Sicherheit.','Admin: Features → Second sign-in step on. For the admin password: Settings → Security.'],['Profil: Profil-Knopf → Sicherheit → QR-Code scannen, Code eingeben, Wiederherstellungscodes aufbewahren.','Profile: profile button → Security → scan the QR code, enter a code, keep the recovery codes.']],
+ say:[['Bei der Anmeldung den 6-stelligen Code eingeben. „Diesem Browser 30 Tage vertrauen“ spart das Eintippen.','Enter the 6-digit code when signing in. "Trust this browser for 30 days" saves typing.']],
+ out:NOTHING_OUT,
+ off:[['Profil-Knopf → Sicherheit → ausschalten (braucht einen Code). Der Admin kann ihn für ein Profil zurücksetzen.','Profile button → Security → switch off (needs a code). The admin can reset it for a profile.']],
+ fix:[['Handy weg: einen Wiederherstellungscode statt des Codes eingeben.','Phone gone: enter a recovery code instead of the code.']]},
+{id:'public',grp:'sec',sw:'chat.public',t:['Assistent ohne Passwort','Assistant without password'],
+ what:[['An: Die Startseite ist für alle im Netz offen, auch für Gäste. Aus: nur angemeldete Profile und Geräte mit Schlüssel.','On: the start page is open to everyone on the network, guests included. Off: only signed-in profiles and devices with a key.']],
+ need:[['Nichts.','Nothing.']],
+ setup:[['Admin: Einstellungen → Sicherheit → Zugang zum Assistenten.','Admin: Settings → Security → Access to the assistant.']],
+ say:[['Gäste können fragen, bekommen aber nie persönliche Daten, Smart Home oder Einstellungen.','Guests can ask but never get personal data, smart home or settings.']],
+ out:NOTHING_OUT,
+ off:[['Schalter aus. Einstellungen sind immer geschützt.','Switch off. Settings are always protected.']],
+ fix:[['Ist der Spark über deinen Reverse Proxy aus dem Internet erreichbar, lieber aus lassen.','If the Spark is reachable from the internet via your reverse proxy, better keep it off.']]},
+{id:'proxies',grp:'sec',sw:'panel.trusted_proxies',t:['Reverse Proxy','Reverse proxy'],
+ what:[['Sagt dem Spark, welchem Gerät er die echte Absender-Adresse glauben darf. Dann greift die Sperre nach falschen Passwörtern pro Absender.','Tells the Spark which device it may believe about the real sender address. Then the lock after wrong passwords works per sender.']],
+ need:[['Die Adresse deines Reverse Proxys im Heimnetz.','The address of your reverse proxy on the home network.']],
+ setup:[['Admin: Einstellungen → Sicherheit → Adressen des Reverse-Proxys, z. B. 192.168.1.10.','Admin: Settings → Security → Reverse proxy addresses, e.g. 192.168.1.10.']],
+ say:[['Nichts zu sagen.','Nothing to say.']],
+ out:NOTHING_OUT,
+ off:[['Feld leeren.','Clear the field.']],
+ fix:[['Danach kein Zugriff über den Proxy: Adresse prüfen, die der Proxy im Heimnetz hat (nicht die öffentliche).','No access through the proxy afterwards: check the proxy\'s home network address (not the public one).']]},
+];
+// ---------------------------------------------------------------- rendering
+const gT=p=>Array.isArray(p)?t(p[0],p[1]):p;
+const guideOf=id=>GUIDES.find(g=>g.id===id);
+function guideHTML(g){return GSECT.filter(([k])=>g[k]&&g[k].length).map(([k,de,en])=>{
+    const items=g[k].map(x=>`<li>${esc(gT(x))}</li>`).join('');
+    return `<div class="gsec"><b>${esc(t(de,en))}</b>${k==='setup'?`<ol>${items}</ol>`:g[k].length>1?`<ul>${items}</ul>`:`<p>${esc(gT(g[k][0]))}</p>`}</div>`}).join('')}
+function guideBox(g,open,plain){const d=document.createElement('details');d.className='guide';d.dataset.guide=g.id;d.open=!!open;
+  d.innerHTML=`<summary>${plain?'':esc(t('Anleitung','Guide'))+': '}${esc(gT(g.t))}</summary><div class="gbody">${guideHTML(g)}</div>`;return d}
+// Einstellungen → Funktionen: rows sorted into the groups (collapsible, "2 von 5 an"), a guide button on each switch.
+function guidesFeat(){const pane=$('pane-feat');if(!pane||pane.dataset.grouped)return;pane.dataset.grouped='1';
+  GGROUPS.forEach(([gid,de,en])=>{const rows=GUIDES.filter(g=>g.grp===gid&&g.sw).map(g=>{const el=$(g.sw);return el&&pane.contains(el)?[g,el.closest('.setrow')]:null}).filter(Boolean);
+    if(!rows.length)return;
+    const box=document.createElement('details');box.className='fgrp';box.open=true;box.dataset.grp=gid;
+    box.innerHTML=`<summary><b>${esc(t(de,en))}</b><span class="fcount"></span></summary>`;pane.appendChild(box);
+    rows.forEach(([g,row])=>box.appendChild(row))});
+  guidesCount()}
+function guidesCount(){document.querySelectorAll('#pane-feat .fgrp').forEach(b=>{const s=[...b.querySelectorAll('.setrow input[type=checkbox]')];
+  b.querySelector('.fcount').textContent=t(`${s.filter(x=>x.checked).length} von ${s.length} an`,`${s.filter(x=>x.checked).length} of ${s.length} on`)})}
+document.addEventListener('change',e=>{if(e.target.closest&&e.target.closest('#pane-feat'))guidesCount()});
+// A small "Anleitung" button next to every admin switch that has a guide; it opens the guide below the row.
+function guidesSwitches(){GUIDES.filter(g=>g.sw).forEach(g=>{const el=$(g.sw);if(!el||document.querySelector(`[data-gbtn="${g.id}"]`))return;
+  const row=el.closest('.setrow'),anchor=row||(el.closest('label.chk')||el),after=row||(anchor.nextElementSibling&&anchor.nextElementSibling.classList.contains('fh')?anchor.nextElementSibling:anchor);
+  const btn=document.createElement('button');btn.type='button';btn.className='gbtn';btn.dataset.gbtn=g.id;btn.textContent=t('Anleitung','Guide');
+  const box=document.createElement('div');box.className='guide inline';box.hidden=true;box.innerHTML=`<div class="gbody">${guideHTML(g)}</div>`;
+  btn.onclick=()=>{box.hidden=!box.hidden;btn.classList.toggle('on',!box.hidden)};
+  (row?row.querySelector('.lbl'):after).appendChild(btn);after.after(box)})}
+// "Ich" window: the guides of a page at its top (re-added when a page redraws itself).
+function guidesMe(id){const page=$(id);if(!page)return;const list=GUIDES.filter(g=>g.me===id);
+  list.slice().reverse().forEach(g=>{if(!page.querySelector(`details.guide[data-guide="${g.id}"]`))page.prepend(guideBox(g,false))})}
+// Group of an "Ich" page, for the headers in its menu.
+const meGroup=id=>{const g=GUIDES.find(x=>x.me===id&&x.id!=='push'&&x.id!=='hands');return g?g.grp:null};
+// Einbinden → Anleitungen: all guides, grouped.
+function guidesAll(){const el=$('guidelist');if(!el)return;
+  el.innerHTML=GGROUPS.map(([gid,de,en])=>`<div class="ggrp"><h3>${esc(t(de,en))}</h3><div data-g="${gid}"></div></div>`).join('');
+  GUIDES.forEach(g=>el.querySelector(`[data-g="${g.grp}"]`).appendChild(guideBox(g,false,true)))}
+function guidesInit(){guidesFeat();guidesSwitches();guidesAll()}
+guidesInit();
