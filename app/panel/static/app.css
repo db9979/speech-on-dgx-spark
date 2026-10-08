@@ -404,3 +404,13 @@ body.guest .navme{display:none}
 @media (min-width:761px){body.adm header nav{order:5}body.adm .hfoot{order:6}body.adm #hdr{padding-left:48px}}
 @media (max-width:760px){body.adm #mmenu{display:none}body.adm #profbtn{margin-left:auto}}
 @media (max-width:760px){body.adm #profmodal .mecard{height:100%}}
+/* Zustand (V01.0.146): one sentence on top, then what needs the admin; details folded */
+.zhead{display:flex;align-items:center;gap:14px;margin-bottom:14px}.zhead b{font-size:16px}
+.zicon{width:40px;height:40px;border-radius:50%;flex:none;display:grid;place-items:center;font-size:20px;font-weight:700;color:#fff;background:var(--line)}
+.zhead[data-lvl=ok]{border-color:color-mix(in srgb,var(--ok) 35%,var(--line));background:color-mix(in srgb,var(--ok) 6%,var(--card))}.zhead[data-lvl=ok] .zicon{background:var(--ok)}
+.zhead[data-lvl=warn]{border-color:color-mix(in srgb,var(--warn) 40%,var(--line));background:color-mix(in srgb,var(--warn) 6%,var(--card))}.zhead[data-lvl=warn] .zicon{background:var(--warn)}
+.zhead[data-lvl=bad]{border-color:color-mix(in srgb,var(--bad) 40%,var(--line));background:color-mix(in srgb,var(--bad) 6%,var(--card))}.zhead[data-lvl=bad] .zicon{background:var(--bad)}
+.zneed{margin-bottom:14px}.zneed[hidden]{display:none}.zrow{display:flex;align-items:center;gap:12px;padding:10px 0;border-top:1px solid var(--line)}.zrow:first-child{border-top:0}
+.zrow>span:nth-child(2){flex:1;min-width:0}
+details.zmore{margin-top:14px}details.zmore>summary{cursor:pointer;font-weight:650;font-size:15px}details.zmore[open]>summary{margin-bottom:10px}
+@media (max-width:760px){.zrow{flex-wrap:wrap}.zrow .b{margin-left:auto}}

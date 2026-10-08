@@ -10,7 +10,7 @@ async function refresh(){
   $('m-gpu').textContent=fmt(g.util,' %');$('m-mem').textContent=fmt(sy.mem_avail_gib,' GiB',1)+' / '+sy.mem_total_gib;
   $('m-temp').textContent=fmt(g.temp,' °C')+' · '+fmt(g.power,' W');$('m-cpu').textContent=fmt(sy.cpu,' %');
   spark($('c-gpu'),H.map(x=>x.gpu),100);spark($('c-mem'),H.map(x=>x.avail),sy.mem_total_gib);spark($('c-temp'),H.map(x=>x.temp),100);spark($('c-cpu'),H.map(x=>x.cpu),100);
-  showAlerts(s.alerts);
+  showAlerts(s.alerts);zustand(s);
   $('memnote').innerHTML=sy.mem_avail_gib<12&&!(s.alerts||[]).some(x=>x.kind==='memory')?`<div class="note">${t(`Nur noch ${fmt(sy.mem_avail_gib,' GiB',1)} frei. Unter ~8 GiB beendet DGX OS (earlyoom) Prozesse. Kleinere Modelle wählen oder einen Dienst stoppen.`,`Only ${fmt(sy.mem_avail_gib,' GiB',1)} free. Below ~8 GiB DGX OS (earlyoom) kills processes. Choose smaller models or stop a service.`)}</div>`:'';
   $('svc').innerHTML=Object.entries(s.services).map(([n,v])=>{const h=v.health||{};
     const st=h.status?pill(h.status):'';const err=h.error?`<div class="err">${esc(h.error)}</div>`:(h.last_error?`<div class="err mut">${t('letzter Fehler','last error')}: ${esc(h.last_error.error)}</div>`:'');
@@ -24,6 +24,37 @@ async function refresh(){
   $('q38').innerHTML=s.qwen38.map(q=>`<tr><td>${esc(q.unit)}</td><td>${pill(q.state)}</td><td>${q.mem_fraction!=null?(q.mem_fraction*100).toFixed(0)+t(' % des Pools',' % of the pool'):'–'}</td></tr>`).join('');
   $('gp').innerHTML=(g.processes||[]).map(p=>`<tr><td>${esc(p.pid)}</td><td>${esc(p.name)}</td><td>${p.mem_mib!=null?fmt(p.mem_mib/1024,' GiB',1):'–'}</td></tr>`).join('')||'<tr><td class="mut" colspan=3>–</td></tr>';
 }
+
+// Zustand (design „Klar“, V01.0.146): one sentence on top (all fine / what is wrong) and "Braucht dich" with
+// what waits for the admin, each with a button to the place; the dot next to "Zustand" in the menus follows it.
+// Built only from what the page already fetched (services, alerts, memory, update, unsaved settings pages).
+const SVCNAME={asr:t('Spracherkennung','Speech recognition'),tts:t('Sprachausgabe','Speech output'),wyoming:'Wyoming'};
+let ZLAST=null;
+function zustand(s){if(s)ZLAST=s;s=ZLAST;if(!s)return;
+  const need=[],bad=[],sy=s.system||{};
+  for(const [n,v] of Object.entries(s.services||{})){const h=v.health||{},name=SVCNAME[n]||n.toUpperCase();
+    if(['failed','error'].includes(v.state)||h.error)bad.push(name);
+    else if(v.enabled&&['inactive','deactivating'].includes(v.state))need.push({lvl:'bad',text:t(`${name} ist aus.`,`${name} is off.`),go:'svc',btn:t('Ansehen','View')})}
+  for(const n of bad)need.push({lvl:'bad',text:t(`${n} meldet einen Fehler.`,`${n} reports an error.`),go:'svc',btn:t('Ansehen','View')});
+  const u=window.UPD;if(u&&u.behind&&u.behind!==0)need.push({lvl:'warn',text:t('Update bereit','Update ready')+(u.version?': '+u.version:'')+'.',go:'sys',btn:t('Zum Update','To the update')});
+  const dirty=[...document.querySelectorAll('.pane.dirty')].map(p=>{const b=document.querySelector(`#cfgnav button[data-p="${p.id.slice(5)}"]`);return b?b.textContent.trim():p.id});
+  if(dirty.length)need.push({lvl:'warn',text:t(`Nicht gespeichert: ${dirty.join(', ')}.`,`Not saved: ${dirty.join(', ')}.`),go:'cfg',btn:t('Öffnen','Open')});
+  // running = systemd says active or the service itself answers; neither = no answer (counts as "needs you")
+  const ok=([,v])=>v.state==='active'||['ready','ok'].includes((v.health||{}).status),nm=([n])=>SVCNAME[n]||n.toUpperCase();
+  const all=Object.entries(s.services||{}).filter(e=>!bad.includes(nm(e))),run=all.filter(ok).map(nm),unk=all.filter(e=>!ok(e)&&e[1].enabled!==false).map(nm);
+  const low=sy.mem_avail_gib!=null&&sy.mem_avail_gib<12;
+  const al=s.alerts||[],lvl=bad.length||need.some(x=>x.lvl==='bad')||al.some(x=>x.level==='bad')?'bad':need.length||unk.length||low||al.length?'warn':'ok';
+  $('ztitle').textContent=lvl==='ok'?t('Alles läuft.','Everything is running.'):lvl==='bad'?t('Etwas läuft nicht.','Something is not running.'):!run.length&&unk.length?t('Die Dienste melden sich nicht.','The services do not answer.'):t('Läuft, aber etwas braucht dich.','Running, but something needs you.');
+  $('ztext').textContent=(bad.length?t('Fehler: ','Errors: ')+bad.join(', ')+'. ':'')+(run.length?run.join(t(' und ',' and '))+(run.length>1?t(' laufen. ',' are running. '):t(' läuft. ',' is running. ')):'')+(unk.length?t('Ohne Rückmeldung: ','No answer from: ')+unk.join(', ')+'. ':'')
+    +(sy.mem_avail_gib!=null?t(`${fmt(sy.mem_avail_gib,' GiB',1)} Speicher frei`,`${fmt(sy.mem_avail_gib,' GiB',1)} memory free`)+(low?t(' (wenig)',' (low)'):'')+'.':'')+(al.length?' '+t('Hinweise stehen oben.','Notes are shown above.'):'');
+  $('zhead').dataset.lvl=lvl;$('zicon').textContent=lvl==='ok'?'✓':'!';
+  document.querySelectorAll('.hdot').forEach(d=>d.className='hdot '+lvl);
+  $('zneed').hidden=!need.length;const L=$('zlist');L.textContent='';
+  for(const x of need){const r=document.createElement('div');r.className='zrow';const sp=document.createElement('span');sp.className='pill '+x.lvl;sp.textContent=x.lvl==='bad'?t('Fehler','Error'):t('Offen','Open');
+    const tx=document.createElement('span');tx.textContent=x.text;const b=document.createElement('button');b.type='button';b.className='b';b.textContent=x.btn;
+    b.onclick=()=>{if(x.go==='svc')$('svc').closest('.card').scrollIntoView({behavior:'smooth'});else if(x.go==='cfg'){goSec('cfg');const d=document.querySelector('.pane.dirty');if(d){const nb=document.querySelector(`#cfgnav button[data-p="${d.id.slice(5)}"]`);if(nb)nb.click()}}else goSec(x.go)};
+    r.append(sp,tx,b);L.appendChild(r)}}
+window.zustand=zustand;
 
 let CFG=null;
 async function loadLangs(){const l=await (await api('/api/languages')).json();document.querySelectorAll('select.langs').forEach(s=>s.innerHTML=l.map(x=>`<option>${x}</option>`).join(''))}
@@ -73,7 +104,7 @@ $('wysuggest').onclick=()=>wySuggest(false);
 $('chat.wyoming').addEventListener('change',e=>{if(e.target.checked&&!$('chat.wyoming_allow').value.trim())wySuggest(true)});
 const markDirty=(pane,on)=>{const b=document.querySelector(`#cfgnav button[data-p="${pane.id.slice(5)}"]`);if(b)b.classList.toggle('dirty',on);
   pane.classList.toggle('dirty',on);const bar=pane.querySelector('.savebar');if(bar)bar.classList.toggle('dirty',on);
-  const n=document.querySelectorAll('.pane.dirty').length,c=$('dirtycnt');c.hidden=!n;c.textContent=n};
+  const n=document.querySelectorAll('.pane.dirty').length,c=$('dirtycnt');c.hidden=!n;c.textContent=n;zustand()};
 // unsaved changes: the save bar says so and offers "Verwerfen"; leaving the page or the settings asks first
 const dirtyPanes=()=>[...document.querySelectorAll('.pane.dirty')];
 const leaveOk=()=>!dirtyPanes().length||confirm(t('Es gibt ungespeicherte Änderungen. Trotzdem verlassen? Sie gehen dann verloren.','There are unsaved changes. Leave anyway? They will be lost.'));
@@ -286,7 +317,7 @@ function updBanner(r){const on=ADMIN&&r&&r.behind&&r.behind!==0&&r.latest;let hi
   $('updbtext').textContent=t('Update verfügbar','Update available')+(r.version?': '+r.version:'')+(r.behind>0?t(` (${r.behind} Änderung${r.behind>1?'en':''})`,` (${r.behind} change${r.behind>1?'s':''})`):'');
   $('updbx').onclick=()=>{try{localStorage.setItem('updhide',r.latest)}catch{}$('updbanner').style.display='none'}}
 $('updbgo').onclick=()=>{$('updbanner').style.display='none';goSec('sys')};
-function updBadge(r){window.UPD=r;updBanner(r);const on=r&&r.behind&&r.behind!==0;$('updbadge').style.display=on?'inline-block':'none';
+function updBadge(r){window.UPD=r;updBanner(r);zustand();const on=r&&r.behind&&r.behind!==0;$('updbadge').style.display=on?'inline-block':'none';
   document.querySelectorAll('.subbadge').forEach(x=>x.style.display=on?'inline-block':'none')}
 $('updcheck').onclick=()=>loadSys(true);
 let benchPoll=null;
