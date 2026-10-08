@@ -252,6 +252,23 @@ class Speakers(unittest.TestCase):
         finally:
             helpers.set_config(esp32=True)
 
+    def test_limits(self):
+        c = TestClient(panel.app)
+        b = board_hello("33333333-2222-4333-8444-555555555555")
+        # a code is never handed out on GET, bodies are small, one address holds only a few codes
+        self.assertEqual(c.get("/api/esp32/ota/", headers=b["headers"]).status_code, 405)
+        self.assertEqual(c.post("/api/esp32/ota/", headers=b["headers"], content=b"{" + b" " * 20000 + b"}").status_code, 413)
+        esp32._pending.clear()
+        for i in range(esp32.PENDING_PER_IP):
+            self.assertEqual(ota(f"4444444{i}-2222-4333-8444-555555555555").status_code, 200)
+        self.assertEqual(ota("55555555-2222-4333-8444-555555555555").status_code, 429)
+        esp32._pending.clear()
+        # firmware only from GitHub's download addresses
+        self.assertTrue(esp32._allowed_download("https://github.com/db9979/speech-on-dgx-spark/releases/download/fw-2.5.1.1/a.bin"))
+        for bad in ("http://github.com/a/b/releases/download/x/a.bin", "https://evil.example/a/b/releases/download/x/a.bin",
+                    "https://github.com.evil.de/a/b/releases/download/x/a.bin", "http://127.0.0.1:80/x"):
+            self.assertFalse(esp32._allowed_download(bad), bad)
+
     def test_end_of_question(self):
         ear = esp32.Ear()
         quiet = np.zeros(960, dtype="<i2").tobytes()

@@ -46,7 +46,7 @@ jobs:
         include: ${{ fromJson(needs.plan.outputs.variants) }}
     steps:
       - uses: actions/checkout@v4
-      - name: Build ${{ matrix.name }}
+      - name: Build ${{ matrix.id }}
         shell: bash
         env:
           VERSION: ${{ needs.plan.outputs.version }}
@@ -64,15 +64,26 @@ jobs:
           sed -i 's#default "https://api.tenclass.net/xiaozhi/ota/"#default "https://spark.invalid/api/esp32/ota/"#' xz/main/Kconfig.projbuild
           grep -q 'spark.invalid' xz/main/Kconfig.projbuild
           sed -i "s/^set(PROJECT_VER \"[0-9.]*\")/set(PROJECT_VER \"$VERSION\")/" xz/CMakeLists.txt
+          if [ "${{ matrix.nodisplay }}" = "true" ]; then
+            # boards without a screen: never touch the display pins, start with no display at all
+            f=$(ls xz/main/boards/${{ matrix.board }}/*.cc | head -1)
+            python3 - "$f" <<'PY'
+          import re, sys
+          p = sys.argv[1]; s = open(p).read()
+          new, n = re.subn(r"InitializeDisplayI2c\(\);\s*InitializeSsd1306Display\(\);", "display_ = new NoDisplay();", s)
+          assert n == 1, "display init not found"
+          open(p, "w").write(new)
+          PY
+          fi
           grep -q "PROJECT_VER \"$VERSION\"" xz/CMakeLists.txt
           cd xz
           python scripts/build.py "${{ matrix.board }}" --name "${{ matrix.name }}" --language "$lang" --wake-word "$wake"
           cd ..
-          python3 firmware/package.py variant xz "${{ matrix.name }}" "${{ matrix.label }}" "out/${{ matrix.name }}"
+          python3 firmware/package.py variant xz "${{ matrix.id }}" "${{ matrix.label }}" "out/${{ matrix.id }}"
       - uses: actions/upload-artifact@v4
         with:
-          name: fw-${{ matrix.name }}
-          path: out/${{ matrix.name }}
+          name: fw-${{ matrix.id }}
+          path: out/${{ matrix.id }}
           if-no-files-found: error
 
   release:

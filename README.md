@@ -31,6 +31,7 @@ All options for running without questions (`--mode api --asr 1.7b --tts 0.6b --y
 
 <!-- New version: add one line at the top here and in CHANGELOG.md, drop the oldest line here (keep 10). Details go to docs/de and docs/en, not into this README. -->
 
+- **V01.0.104** Speakers without a display, security checklist applied to the speakers
 - **V01.0.103** Settings → Features: a service's settings sit right below its switch
 - **V01.0.102** Bus and train: departures, connections and a delay note for the commute
 - **V01.0.101** README cleaned up, details in `docs/`, all versions in [CHANGELOG.md](CHANGELOG.md)

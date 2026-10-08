@@ -2,6 +2,7 @@
 
 Every version in one line, newest first (taken from the commit messages, so some lines are German, some English). Older entries have no version number.
 
+- **V01.0.104** · 2026-10-08 · Lautsprecher: Firmware für Boards ohne Display, Sicherheits-Checkliste umgesetzt (Größengrenzen, Codes pro Adresse, Downloads nur von GitHub)
 - **V01.0.103** · 2026-10-08 · Funktionen: Einstellungen eines Dienstes direkt unter seinem Schalter (Telegram, Lautsprecher, Wyoming, Bus und Bahn), Unterschalter unter ihrem Dienst
 - **V01.0.102** · 2026-10-08 · Bus und Bahn: Abfahrten, Verbindungen und Verspätungshinweis für die Pendelstrecke (transport.rest)
 - **V01.0.101** · 2026-10-08 · README aufgeräumt: nur Installation, letzte Änderungen und Schaubild; Details in docs/, alle Versionen in CHANGELOG.md

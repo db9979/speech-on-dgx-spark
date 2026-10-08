@@ -31,6 +31,7 @@ Alle Optionen ohne Rückfragen (`--mode api --asr 1.7b --tts 0.6b --yes` …) st
 
 <!-- New version: add one line at the top here and in CHANGELOG.md, drop the oldest line here (keep 10). Details go to docs/de and docs/en, not into this README. -->
 
+- **V01.0.104** Lautsprecher ohne Display, Sicherheits-Checkliste für die Lautsprecher umgesetzt
 - **V01.0.103** Einstellungen → Funktionen: die Einstellungen eines Dienstes stehen direkt unter seinem Schalter
 - **V01.0.102** Bus und Bahn: Abfahrten, Verbindungen und Verspätungshinweis für die Pendelstrecke
 - **V01.0.101** README aufgeräumt, Details in `docs/`, alle Versionen in [CHANGELOG.md](CHANGELOG.md)

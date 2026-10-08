@@ -27,6 +27,7 @@ import ctypes
 import ctypes.util
 import datetime
 import hashlib
+import hmac
 import io
 import json
 import os
@@ -49,6 +50,10 @@ STATE = os.environ.get("SPEECH_SPARK_STATE", "/var/lib/speech-spark/state")
 FW_DIR = os.path.join(os.path.dirname(STATE.rstrip("/")), "firmware")
 CODE_SECONDS = 600
 MAX_PENDING = 30
+PENDING_PER_IP = 3         # codes one address may hold at once (nobody blocks the pairing for everyone)
+MAX_BODY = 16 * 1024       # what a board or the page sends: small JSON only
+MAX_FILE = 16 * 1024 * 1024
+MAX_LISTEN = 30            # seconds of sound per question, also with the button held
 FOLLOW_UP = 600            # earlier turns at the same speaker count this long
 FETCH_EVERY = 24 * 3600
 FRAME_IN = 960             # 60 ms at 16 kHz from the board
@@ -140,6 +145,29 @@ def newer(new, old):
 SAFE_NAME = re.compile(r"[A-Za-z0-9][A-Za-z0-9_.\-]{0,120}")
 
 
+def _allowed_download(url):
+    """Firmware only from GitHub's own download addresses (or the test server set by the self-test)."""
+    test = os.environ.get("SPEECH_SPARK_GITHUB_API")
+    if test and url.startswith(test.rstrip("/") + "/"):
+        return True
+    return bool(re.fullmatch(r"https://github\.com/[\w.\-]+/[\w.\-]+/releases/download/[^\s?#]+", url))
+
+
+async def _download(c, url, size):
+    """A release file, streamed and cut off at its announced size (at most MAX_FILE)."""
+    if not _allowed_download(url):
+        raise ValueError("Download-Adresse ist nicht von GitHub.")
+    limit = min(size or MAX_FILE, MAX_FILE)
+    out = bytearray()
+    async with c.stream("GET", url) as r:
+        r.raise_for_status()
+        async for chunk in r.aiter_bytes():
+            out += chunk
+            if len(out) > limit:
+                raise ValueError("Datei ist größer als angekündigt, nichts übernommen.")
+    return bytes(out)
+
+
 async def fetch_firmware(c=None):
     """Takes the newest firmware release (tag fw-…) of the repo, checks every file's SHA-256 against its
     manifest and keeps it with the one before. Returns the version."""
@@ -157,7 +185,7 @@ async def fetch_firmware(c=None):
         assets = {a["name"]: a["browser_download_url"] for a in rel.get("assets", [])}
         if "manifest.json" not in assets:
             raise ValueError("Die Firmware-Version hat kein manifest.json.")
-        m = (await c.get(assets["manifest.json"])).raise_for_status().json()
+        m = json.loads(await _download(c, assets["manifest.json"], MAX_BODY * 8))
         ver = str(m.get("version", ""))
         if not version_tuple(ver) or not isinstance(m.get("variants"), dict):
             raise ValueError("manifest.json ist ungültig.")
@@ -175,7 +203,7 @@ async def fetch_firmware(c=None):
                 dst = os.path.join(tmp, fn)
                 if os.path.exists(dst):
                     continue
-                data = (await c.get(assets[fn])).raise_for_status().content
+                data = await _download(c, assets[fn], int(p.get("size") or 0))
                 if hashlib.sha256(data).hexdigest() != p.get("sha256"):
                     raise ValueError(f"{fn}: Prüfsumme passt nicht, nichts übernommen.")
                 with open(dst, "wb") as f:
@@ -414,7 +442,8 @@ class Session:
             return
         pcm = self.dec.decode(packet)
         if self.mode == "manual":
-            self.ear.pcm += pcm
+            if len(self.ear.pcm) < MAX_LISTEN * 32000:
+                self.ear.pcm += pcm
             return
         r = self.ear.feed(pcm)
         if r == "done":
@@ -577,6 +606,22 @@ def ws_url(base):
     return re.sub(r"^http", "ws", base) + "/api/esp32/ws"
 
 
+async def _body(request, limit=MAX_BODY):
+    """JSON body of at most limit bytes, read before anything else; {} when empty or not JSON."""
+    if int(request.headers.get("content-length") or 0) > limit:
+        raise HTTPException(413, "too large")
+    data = bytearray()
+    async for chunk in request.stream():
+        data += chunk
+        if len(data) > limit:
+            raise HTTPException(413, "too large")
+    try:
+        d = json.loads(bytes(data) or b"{}")
+    except ValueError:
+        return {}
+    return d if isinstance(d, dict) else {}
+
+
 def _client_info(request, body):
     app = body.get("application") if isinstance(body.get("application"), dict) else {}
     board = body.get("board") if isinstance(body.get("board"), dict) else {}
@@ -584,23 +629,22 @@ def _client_info(request, body):
             "fw": str(app.get("version", ""))[:32], "variant": str(board.get("name") or board.get("type") or "")[:64]}
 
 
-@router.api_route("/api/esp32/ota/", methods=["GET", "POST"])
-@router.api_route("/api/esp32/ota", methods=["GET", "POST"], include_in_schema=False)
+@router.post("/api/esp32/ota/")
+@router.post("/api/esp32/ota", include_in_schema=False)
 async def ota(request: Request):
+    """The board's check at every start (POST with its system info; a code can be handed out here,
+    so never on GET)."""
     if not admin_on():
-        return JSONResponse({"error": "speakers are turned off on this Spark"}, status_code=403)
-    try:
-        body = await request.json() if request.method == "POST" else {}
-    except ValueError:
-        body = {}
-    info = _client_info(request, body if isinstance(body, dict) else {})
+        return JSONResponse({"error": "off"}, status_code=403)
+    info = _client_info(request, await _body(request))
     cid = info["client"]
     if not re.fullmatch(r"[0-9a-fA-F\-]{8,64}", cid):
         raise HTTPException(400, "Client-Id missing")
     base = _base(request)
     known = clients().get(cid)
     if not known:
-        return _activation(cid, info)
+        import guard
+        return _activation(cid, info, guard.client_ip(request))
     dev = _devices()[known["device"]]
     off, _ = zone_offset(dev["user"])
     resp = {"server_time": {"timestamp": int(time.time() * 1000), "timezone_offset": off},
@@ -630,18 +674,18 @@ async def ota(request: Request):
     return resp
 
 
-def _activation(cid, info):
+def _activation(cid, info, ip):
     now = time.time()
     with _lock:
         for k in [k for k, v in _pending.items() if now - v["t"] > CODE_SECONDS]:
             _pending.pop(k)
         p = _pending.get(cid)
         if not p:
-            if len(_pending) >= MAX_PENDING:
-                return JSONResponse({"error": "too many speakers waiting for a code"}, status_code=429)
+            if len(_pending) >= MAX_PENDING or sum(1 for v in _pending.values() if v.get("ip") == ip) >= PENDING_PER_IP:
+                return JSONResponse({"error": "busy"}, status_code=429)
             used = {v["code"] for v in _pending.values()}
             code = next(c for c in (f"{secrets.randbelow(10 ** 6):06d}" for _ in range(100)) if c not in used)
-            p = _pending[cid] = dict(info, code=code, t=now, challenge=secrets.token_hex(16), paired=False)
+            p = _pending[cid] = dict(info, code=code, t=now, challenge=secrets.token_hex(16), paired=False, ip=ip)
     return {"activation": {"code": p["code"], "challenge": p["challenge"], "timeout_ms": CODE_SECONDS * 1000,
                            "message": f"Code {p['code']} am Spark unter Ich → Lautsprecher eingeben"},
             "server_time": {"timestamp": int(now * 1000)}}
@@ -651,6 +695,7 @@ def _activation(cid, info):
 async def ota_activate(request: Request):
     if not admin_on():
         return JSONResponse({"error": "off"}, status_code=403)
+    await _body(request)
     p = _pending.get(request.headers.get("client-id", ""))
     if p and p.get("paired"):
         _pending.pop(request.headers.get("client-id", ""), None)
@@ -774,8 +819,8 @@ def _name(x):
 async def profile_setup(request: Request, prof=Depends(_on)):
     """A new speaker set up from this browser: its device key, its client id and the addresses. The
     browser writes them with the Wi-Fi into the board's settings; the key is not kept here in clear."""
+    body = await _body(request)
     await confirm_code(request, prof["id"], prof["name"])   # a new way into the profile
-    body = await request.json()
     m = manifest()
     var = str(body.get("variant", ""))
     if not m or var not in m["variants"]:
@@ -804,11 +849,11 @@ async def profile_pair(request: Request, prof=Depends(_on)):
     tries = [t for t in _fails.get(prof["id"], []) if now - t < CODE_SECONDS]
     if len(tries) >= 5:
         raise HTTPException(429, "Zu viele falsche Codes. Bitte in zehn Minuten noch einmal.")
-    body = await request.json()
-    code = re.sub(r"\D", "", str(body.get("code", "")))
+    body = await _body(request)
+    code = re.sub(r"\D", "", str(body.get("code", "")))[:6]
     name = _name(body.get("name"))
     with _lock:
-        cid, p = next(((k, v) for k, v in _pending.items() if v["code"] == code and not v["paired"]
+        cid, p = next(((k, v) for k, v in _pending.items() if hmac.compare_digest(v["code"], code) and not v["paired"]
                        and now - v["t"] < CODE_SECONDS), (None, None))
     if not p:
         _fails[prof["id"]] = tries + [now]
@@ -838,7 +883,7 @@ def _mine(did, prof):
 @router.put("/api/profile/esp32/{did}", dependencies=[Depends(assistant)])
 async def profile_change(did: str, request: Request, prof=Depends(browser_profile)):
     cid = _mine(did, prof)
-    body = await request.json()
+    body = await _body(request)
     if "name" in body:
         name = _name(body["name"])
         with profiles._lock:

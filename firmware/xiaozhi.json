@@ -1,14 +1,36 @@
 {
-  "comment": "Firmware for own ESP32-S3 speakers: upstream XiaoZhi at a fixed commit, German, own server only. Raise 'build' to publish a new version for the same commit.",
+  "comment": "Firmware for own ESP32-S3 speakers: upstream XiaoZhi at a fixed commit, German, own server only. Raise 'build' to publish a new version for the same commit. 'id' is the Spark's name for a variant (file prefix), 'name' the XiaoZhi build; 'nodisplay' starts the board without looking for a screen.",
   "repo": "https://github.com/78/xiaozhi-esp32.git",
   "commit": "0d576d3d4c049c6f55eaf879725dc23e516511b4",
-  "build": 1,
+  "build": 2,
   "language": "de-DE",
   "wake_word": "wn9_jarvis_tts",
   "wake_word_label": "Jarvis",
   "variants": [
-    {"board": "bread-compact-wifi", "name": "bread-compact-wifi-128x64", "label": "Steckbrett-Board mit OLED 128×64 (INMP441, MAX98357A)"},
-    {"board": "bread-compact-wifi", "name": "bread-compact-wifi", "label": "Steckbrett-Board mit OLED 128×32 (INMP441, MAX98357A)"},
-    {"board": "bread-compact-wifi-lcd", "name": "bread-compact-wifi-lcd", "label": "Steckbrett-Board mit Farbdisplay (INMP441, MAX98357A)"}
+    {
+      "id": "bread-compact-wifi-nodisplay",
+      "board": "bread-compact-wifi",
+      "name": "bread-compact-wifi",
+      "nodisplay": true,
+      "label": "Board ohne Display (INMP441, MAX98357A, Standard-Pins)"
+    },
+    {
+      "id": "bread-compact-wifi-128x64",
+      "board": "bread-compact-wifi",
+      "name": "bread-compact-wifi-128x64",
+      "label": "Steckbrett-Board mit OLED 128×64 (INMP441, MAX98357A)"
+    },
+    {
+      "id": "bread-compact-wifi",
+      "board": "bread-compact-wifi",
+      "name": "bread-compact-wifi",
+      "label": "Steckbrett-Board mit OLED 128×32 (INMP441, MAX98357A)"
+    },
+    {
+      "id": "bread-compact-wifi-lcd",
+      "board": "bread-compact-wifi-lcd",
+      "name": "bread-compact-wifi-lcd",
+      "label": "Steckbrett-Board mit Farbdisplay (INMP441, MAX98357A)"
+    }
   ]
 }
