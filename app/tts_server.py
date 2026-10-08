@@ -11,11 +11,11 @@ import time
 
 import soundfile as sf
 import uvicorn
-from fastapi import Depends, FastAPI, HTTPException
+from fastapi import Depends, FastAPI, HTTPException, Request
 from fastapi.responses import Response
 from pydantic import BaseModel
 
-from common import BodyLimit, KeyedCORS, ServiceState, api_key_dependency, api_key_ok, check_memory, estimate_gib, load_config, quiet_access_log, torch_dtype
+from common import BodyLimit, KeyedCORS, inside, outside_view, ServiceState, api_key_dependency, api_key_ok, check_memory, estimate_gib, load_config, quiet_access_log, torch_dtype
 from textnorm import MAX_INPUT, apply_pronunciations, clean_text, parse_pronunciations, speak_numbers
 
 VOICES_DIR = os.environ.get("SPEECH_SPARK_VOICES", "/var/lib/speech-spark/voices")
@@ -83,8 +83,9 @@ def startup():
 
 
 @app.get("/health")
-def health():
-    return state.health({"model_kind": model_kind()})
+def health(request: Request):
+    out = state.health({"model_kind": model_kind()})
+    return out if inside(request) else outside_view(out)
 
 
 @app.get("/v1/models", dependencies=auth)
@@ -93,7 +94,9 @@ def models():
 
 
 @app.get("/v1/voices")
-def list_voices():
+def list_voices(request: Request):
+    if not inside(request):
+        raise HTTPException(401, "invalid or missing API key")
     if state.status != "ready":
         return {"model_kind": None, "voices": [], "languages": []}
     return {

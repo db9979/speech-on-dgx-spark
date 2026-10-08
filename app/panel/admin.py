@@ -143,8 +143,8 @@ def admin_delete_device(did: str):
 async def change_password(request: Request):
     body = await request.json()
     new = str(body.get("new", ""))
-    if len(new) < 6:
-        raise HTTPException(400, "the new password needs at least 6 characters")
+    if len(new) < 10:
+        raise HTTPException(400, "the new password needs at least 10 characters")
     guard.check(request, guard.ADMIN)
     if password_set() and not check_password(str(body.get("old", ""))):
         guard.failed(request, guard.ADMIN, what="admin_password")
@@ -437,12 +437,12 @@ MAX_AUDIO = 50 * 1024**2  # far more than any spoken question (5 minutes of 16 k
 
 
 async def read_audio(file):
-    data = b""
+    data = bytearray()   # appending to bytes copies everything each time
     while chunk := await file.read(1 << 20):
         data += chunk
         if len(data) > MAX_AUDIO:
             raise HTTPException(413, "recording too large")
-    return data
+    return bytes(data)
 
 
 @router.post("/api/test/asr", dependencies=[Depends(assistant)])

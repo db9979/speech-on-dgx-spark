@@ -270,6 +270,22 @@ class BodyLimit:
         await send({"type": "http.response.body", "body": body})
 
 
+def inside(request):
+    """The caller may see details (errors, model, voices): this machine itself, or the right API key."""
+    import ipaddress
+    try:
+        if ipaddress.ip_address(request.client.host if request.client else "").is_loopback:
+            return True
+    except ValueError:
+        pass
+    return api_key_ok(request.scope)
+
+
+def outside_view(out):
+    """What /health shows to anybody else: whether the service is up, nothing more."""
+    return {"service": out.get("service"), "status": out.get("status")}
+
+
 def api_key_ok(scope):
     """For BodyLimit's gate on the speech services: the right Bearer key, or no key configured."""
     import hmac

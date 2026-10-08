@@ -19,7 +19,7 @@ import uvicorn
 from fastapi import Depends, FastAPI, HTTPException, Request
 from fastapi.responses import Response, StreamingResponse
 
-from common import BodyLimit, KeyedCORS, api_key_dependency, api_key_ok, engine_crash_reason, load_config, quiet_access_log
+from common import BodyLimit, KeyedCORS, inside, outside_view, api_key_dependency, api_key_ok, engine_crash_reason, load_config, quiet_access_log
 from textnorm import MAX_INPUT, apply_pronunciations, clean_text, guess_language, parse_pronunciations, speak_numbers
 
 STATE_DIR = os.environ.get("SPEECH_SPARK_STATE", "/var/lib/speech-spark/state")
@@ -213,7 +213,9 @@ async def watch_engines():
 
 
 @app.get("/health")
-async def health():
+async def health(request: Request):
+    if not inside(request):
+        return outside_view({"service": "tts", "status": (await engine_status("main"))[0]})
     status, error = await engine_status("main")
     lat = [r[0] for r in recent]
     rtf = [r[0] / r[1] for r in recent if r[1]]
@@ -240,7 +242,9 @@ def models():
 
 
 @app.get("/v1/voices")
-async def voices_for_panel():
+async def voices_for_panel(request: Request):
+    if not inside(request):
+        raise HTTPException(401, "invalid or missing API key")
     status, _ = await engine_status("main")
     return {"model_kind": model_kind(cfg["model"]) if status == "ready" else None,
             "voices": await engine_voices("main") if status == "ready" else [],

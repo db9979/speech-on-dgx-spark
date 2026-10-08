@@ -217,6 +217,8 @@ with tts.audio.speech.with_streaming_response.create(
 
 with open("${fn}.mp3", "rb") as f:
     print(stt.audio.transcriptions.create(model="qwen3-asr", file=f, language="${code}").text)`;}
+$('adminout').onclick=async()=>{if(!confirm(t('Admin in allen Browsern abmelden, auch hier?','Log the admin out in every browser, this one too?')))return;
+  try{await api('/api/logout-everywhere',{method:'POST'});location.reload()}catch(e){alert(e.message)}};
 $('genkey').onclick=()=>{const a=new Uint8Array(18);crypto.getRandomValues(a);$('api.key').value='sk-'+[...a].map(x=>x.toString(16).padStart(2,'0')).join('')};
 
 let updPoll=null;

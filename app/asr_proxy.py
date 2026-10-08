@@ -18,7 +18,7 @@ import uvicorn
 from fastapi import Depends, FastAPI, HTTPException, Request
 from fastapi.responses import JSONResponse, PlainTextResponse, Response, StreamingResponse
 
-from common import ASR_ISO, BodyLimit, KeyedCORS, api_key_dependency, api_key_ok, engine_crash_reason, load_config, quiet_access_log
+from common import ASR_ISO, BodyLimit, KeyedCORS, inside, outside_view, api_key_dependency, api_key_ok, engine_crash_reason, load_config, quiet_access_log
 
 STATE_DIR = os.environ.get("SPEECH_SPARK_STATE", "/var/lib/speech-spark/state")
 UNIT = "speech-spark-asr-engine"
@@ -139,7 +139,9 @@ async def watch_engine():
 
 
 @app.get("/health")
-async def health():
+async def health(request: Request):
+    if not inside(request):
+        return outside_view({"service": "asr", "status": (await engine_status())[0]})
     status, error = await engine_status()
     lat = [r[0] for r in recent]
     rtf = [r[0] / r[1] for r in recent if r[1]]
@@ -171,12 +173,17 @@ MAX_UPLOAD = 200 * 1024**2  # as much as the engine takes (VLLM_MAX_AUDIO_CLIP_F
 
 
 async def read_upload(upload):
-    data = b""
+    data = bytearray()   # appending to bytes copies everything each time
     while chunk := await upload.read(1 << 20):
         data += chunk
         if len(data) > MAX_UPLOAD:
             raise HTTPException(413, "audio file larger than 200 MB")
-    return data
+    return bytes(data)
+
+
+# form fields that go on to the engine (OpenAI's transcription API); anything else stays here, so a
+# client cannot switch on engine options nobody checked
+ENGINE_FIELDS = {"prompt", "temperature", "stream"}
 
 
 @app.post("/v1/audio/transcriptions", dependencies=auth)
@@ -197,7 +204,7 @@ async def transcriptions(request: Request):
         raise HTTPException(400, "response_format must be json, text or verbose_json")
     lang = iso_language(opts.get("language"))
     drop = {"model", "language", "response_format", "timestamps", "timestamp_granularities[]"}
-    data = [(k, v) for k, v in fields if k not in drop]
+    data = [(k, v[:2000]) for k, v in fields if k not in drop and k in ENGINE_FIELDS]
     data += [("model", cfg["model"]), ("response_format", "json")]  # text / verbose_json are built here
     if lang:
         data.append(("language", lang))

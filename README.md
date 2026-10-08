@@ -31,6 +31,7 @@ All options for running without questions (`--mode api --asr 1.7b --tts 0.6b --y
 
 <!-- New version: add one line at the top here and in CHANGELOG.md, drop the oldest line here (keep 10). Details go to docs/de and docs/en, not into this README. -->
 
+- **V01.0.114** Security stage 5: admin logout ends every copy, log the admin out everywhere, code word message deleted in Telegram, tidying only on exact sender, forged parcel mails ignored, errors and service details not for guests
 - **V01.0.113** Security stage 4: install and update never write as root through links, no passwords in the update log, qwen38 key only from a real file, rewritten history is refused, optionally only signed versions
 - **V01.0.112** Questions about reminders, match results and news now always go through the tool instead of the model's own knowledge
 - **V01.0.111** Security stage 3: lockout no longer locks out your own browsers, X-Forwarded-For only from the listed proxy, load limits for chat and speech recognition, outbound connections checked (home network only with a switch, answers max. 20 MB, credentials only to their site), API key required on the network
@@ -40,7 +41,6 @@ All options for running without questions (`--mode api --asr 1.7b --tts 0.6b --y
 - **V01.0.107** Security stage 1: rollback only to the real previous version, Qwen models only, sensitive settings and backup download need a code, device keys change no connections, size limits before reading, calendar/WAV/Word bombs defused
 - **V01.0.106** Wyoming: the address field shows at once and the Home Assistant address is suggested
 - **V01.0.105** Security: the iPhone shortcut takes list entries with POST, Telegram errors in the log without the bot token
-- **V01.0.104** Speakers without a display, security checklist applied to the speakers
 
 All versions: [CHANGELOG.md](CHANGELOG.md)
 

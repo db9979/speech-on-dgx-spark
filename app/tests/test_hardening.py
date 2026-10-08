@@ -519,3 +519,74 @@ class Stage4(unittest.TestCase):
             run = lambda h: subprocess.run(["bash", "-c", fn + '\nqkey_ok "$1"', "x", h]).returncode
             self.assertEqual(run(good), 0)
             self.assertNotEqual(run(bad), 0)
+
+
+class Stage5(unittest.TestCase):
+    """The rest: admin logins, Basic auth, Telegram, mail, page escaping, service details."""
+
+    def setUp(self):
+        import guard
+        guard.reset()
+
+    tearDown = setUp
+
+    def test_admin_logout_ends_every_copy(self):
+        import core
+        a = TestClient(panel.app)
+        self.assertEqual(a.post("/api/login", json={"password": "secret-admin"}).status_code, 200)
+        raw = a.cookies.get(core.COOKIE)
+        fam = core.admin_family(raw)
+        self.assertTrue(fam)
+        renewed = core._session_token(time.time() - 10, fam)   # a renewed copy of the same login
+        b = TestClient(panel.app)
+        b.cookies.set(core.COOKIE, renewed)
+        self.assertEqual(b.get("/api/config").status_code, 200)
+        a.post("/api/logout")
+        self.assertEqual(b.get("/api/config").status_code, 401)
+        # everywhere: a fresh login and another browser are both out
+        c = TestClient(panel.app)
+        c.post("/api/login", json={"password": "secret-admin"})
+        d = TestClient(panel.app)
+        d.post("/api/login", json={"password": "secret-admin"})
+        key = open(core.SESSION_KEY_FILE).read()
+        try:
+            self.assertEqual(c.post("/api/logout-everywhere").status_code, 200)
+            self.assertEqual(d.get("/api/config").status_code, 401)
+        finally:   # the other tests' admin logins stay valid
+            with open(core.SESSION_KEY_FILE, "w") as f:
+                f.write(key)
+
+    def test_basic_auth_counts_against_the_password(self):
+        import guard
+        for i in range(10):
+            TestClient(panel.app, client=(f"203.0.113.{i}", 1)).get("/api/config", auth=("admin", "wrong"))
+        r = TestClient(panel.app, client=("203.0.113.50", 1)).get("/api/config", auth=("admin", "secret-admin"))
+        self.assertEqual(r.status_code, 401)   # the password itself is locked for a while
+        guard.reset()
+        self.assertEqual(ADMIN.post("/api/password", json={"old": "secret-admin", "new": "short9chr"}).status_code, 400)
+
+    def test_inline_handlers_escape_for_javascript(self):
+        import glob
+        import re
+        for p in glob.glob(os.path.join(ROOT, "app", "panel", "static", "js", "*.js")):
+            for attr in re.findall(r'on[a-z]+="[^"]*\$\{[^"]*"', open(p, encoding="utf-8").read()):
+                self.assertNotIn("${esc(", attr, os.path.basename(p))
+
+    def test_forged_carrier_mail(self):
+        import email
+        import parcels
+        msg = lambda ar: email.message_from_string(f"Authentication-Results: {ar}\nFrom: DHL <noreply@dhl.de>\n\nx")
+        self.assertTrue(parcels.forged(msg("mx.icloud.com; dmarc=fail header.from=dhl.de")))
+        self.assertTrue(parcels.forged(msg("mx; spf=fail smtp.mailfrom=dhl.de; dkim=none")))
+        self.assertFalse(parcels.forged(msg("mx.icloud.com; dmarc=pass header.from=dhl.de")))
+        self.assertFalse(parcels.forged(email.message_from_string("From: DHL <noreply@dhl.de>\n\nx")))
+
+    def test_services_show_details_only_inside(self):
+        import asr_proxy
+        import tts_proxy
+        out = TestClient(tts_proxy.app, client=("192.168.1.9", 1))
+        self.assertEqual(set(out.get("/health").json()), {"service", "status"})
+        self.assertEqual(out.get("/v1/voices").status_code, 401)
+        self.assertIn("error", TestClient(tts_proxy.app, client=("127.0.0.1", 1)).get("/health").json())
+        self.assertNotIn("response_format", asr_proxy.ENGINE_FIELDS)
+        self.assertLessEqual(asr_proxy.ENGINE_FIELDS, {"prompt", "temperature", "stream"})

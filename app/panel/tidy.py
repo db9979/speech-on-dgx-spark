@@ -969,8 +969,10 @@ def _run(uid, aid, acct, d, a, mode, idle):
 
 
 # ---------------------------------------------------------------- doing what the person decided
-def _move_uids(uid, aid, uids_by_cat, why, run=None):
-    """Moves messages still in the inbox (by UID) into the folders of their category; logs them."""
+def _move_uids(uid, aid, uids_by_cat, why, run=None, senders=None):
+    """Moves messages still in the inbox (by UID) into the folders of their category; logs them.
+    UIDs were noted earlier: when the server has numbered the inbox anew since (UIDVALIDITY), nothing
+    moves; with senders only mail whose sender address is exactly one of them."""
     acct = _account(uid, aid)
     if not acct:
         raise ValueError("unknown mailbox")
@@ -978,7 +980,11 @@ def _move_uids(uid, aid, uids_by_cat, why, run=None):
     run = run or secrets.token_hex(4)
     log = []
     with Box(acct, d) as b:
-        b.select("INBOX", write=True)
+        validity = b.select("INBOX", write=True)
+        known = acct_state(d, aid).get("validity")
+        if known and validity and known != validity:
+            raise ValueError("the mail server has renumbered the inbox since; nothing was moved, "
+                             "the next check makes new proposals")
         for cat, uids in uids_by_cat.items():
             if not uids or cat not in CATS:
                 continue
@@ -987,6 +993,11 @@ def _move_uids(uid, aid, uids_by_cat, why, run=None):
             if not uids:
                 continue
             heads = b.headers(uids)
+            if senders is not None:
+                allowed = {str(s).lower() for s in senders}
+                uids = [u for u in uids if u in heads and head(heads[u])["sender"] in allowed]
+                if not uids:
+                    continue
             path = folder_of(d, cat)
             target = b.ensure(path)
             moved = set(b.move(uids, target))
@@ -1006,7 +1017,7 @@ def answer(uid, qid, cat, always=True):
     n = 0
     if cat in CATS:
         uids = sorted(set(q["uids"]) | {p["uid"] for p in d["preview"] if p["aid"] == q["aid"] and p["sender"] == q["sender"]})
-        n = _move_uids(uid, q["aid"], {cat: uids}, "deine Antwort")
+        n = _move_uids(uid, q["aid"], {cat: uids}, "deine Antwort", senders={q["sender"]})
 
     def fn(dd):
         if always:
@@ -1029,7 +1040,7 @@ def preview_ok(uid, ids):
         for p in items:
             if p["aid"] == aid:
                 by.setdefault(p["cat"], []).append(p["uid"])
-        n += _move_uids(uid, aid, by, "Vorschau bestätigt")
+        n += _move_uids(uid, aid, by, "Vorschau bestätigt", senders={p["sender"] for p in items if p["aid"] == aid})
     _mut(uid, lambda dd: dd.update(preview=[p for p in dd["preview"] if p["id"] not in set(ids)]))
     return {"moved": n}
 
@@ -1261,6 +1272,10 @@ def _inbox_uids_of(uid, aid, senders, days=BACKLOG_DAYS):
         b.select("INBOX")
         for s in senders[:10]:
             out += b.search("SINCE", _since(days), "FROM", _q(s))
+        # SEARCH FROM also matches parts ("anna@x.de" in "hanna@x.de.example"): only exact senders
+        want = {str(s).lower() for s in senders[:10]}
+        heads = b.headers(sorted(set(out))) if out else {}
+        out = [u for u, m in heads.items() if head(m)["sender"] in want]
     return sorted(set(out))
 
 
@@ -1332,7 +1347,7 @@ def carry_out(uid, plan):
     if plan["kind"] == "sort":
         n = 0
         for aid, uids in plan["moves"].items():
-            n += _move_uids(uid, aid, {plan["cat"]: uids}, "per Sprache")
+            n += _move_uids(uid, aid, {plan["cat"]: uids}, "per Sprache", senders=plan["senders"])
         back = undo(uid, ids=plan["back"])["back"] if plan["back"] else 0
 
         def fn(dd):

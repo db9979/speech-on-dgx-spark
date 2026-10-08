@@ -343,11 +343,27 @@ async def handle(c, upd):
     await call(c, "sendChatAction", chat_id=cid, action="typing")
     answer = await ask(uid, text[:2000])
     await call(c, "sendMessage", chat_id=cid, text=answer[:4000])
+    await forget_code(c, uid, cid, m, text)
     if s.get("tg_voice"):
         try:
             await send_voice(c, cid, await speak(uid, answer))
         except Exception as e:
             print("telegram: voice answer", type(e).__name__, safe(e, 120), flush=True)
+
+
+async def forget_code(c, uid, cid, m, text):
+    """The Home Assistant code word must not stay readable in the chat: the bot deletes the person's
+    message with it, or asks them to when Telegram refuses."""
+    import homeassistant
+    ha = homeassistant.get(uid)
+    if not (ha and homeassistant.code_given(ha, text)) or not m.get("message_id"):
+        return
+    try:
+        await call(c, "deleteMessage", chat_id=cid, message_id=m["message_id"])
+    except Exception as e:
+        print("telegram: delete code message", type(e).__name__, safe(e, 120), flush=True)
+        await call(c, "sendMessage", chat_id=cid,
+                   text="Deine Nachricht enthält das Codewort. Bitte lösche sie hier im Chat.")
 
 
 async def poll_once(c, wait=25):

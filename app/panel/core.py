@@ -78,8 +78,10 @@ def check_password(password):
     return bool(PASSWORD) and secrets.compare_digest(password.encode(), PASSWORD.encode())
 
 
-# The admin login "<issued>.<signature>" is signed with the current password and the second step's
-# key (changing either logs every browser out) and ends after ADMIN_IDLE seconds without use; the panel renews it while used.
+# The admin login "<issued>.<family>.<signature>" is signed with the current password and the second
+# step's key (changing either logs every browser out) and ends after ADMIN_IDLE seconds without use;
+# the panel renews it while used. A renewal keeps the family (one per login), so logging out ends
+# every copy of that login, also older renewed ones.
 ADMIN_IDLE = 7 * 86400
 ADMIN_RENEW = 3600
 
@@ -108,30 +110,49 @@ def _session_key():
     return k
 
 
-def _session_token(issued=None):
+def _session_token(issued=None, family=None):
     stored = _stored_hash()
     key = (_session_key() + (stored[1] if stored else PASSWORD) + mfa.session_salt(mfa.ADMIN)).encode()
     issued = int(issued or time.time())
-    return f"{issued}." + hmac.new(key, f"speech-spark-admin-session:{issued}".encode(), hashlib.sha256).hexdigest()
+    family = family or secrets.token_hex(8)
+    sig = hmac.new(key, f"speech-spark-admin-session:{issued}:{family}".encode(), hashlib.sha256).hexdigest()
+    return f"{issued}.{family}.{sig}"
+
+
+def admin_family(raw):
+    parts = (raw or "").split(".")
+    return parts[1] if len(parts) == 3 and re.fullmatch(r"[0-9a-f]{16}", parts[1]) else None
 
 
 def _admin_cookie_age(request: Request):
     """Seconds since the admin cookie was issued, or None when it is missing, wrong or expired."""
     raw = request.cookies.get(COOKIE, "")
-    issued = raw.split(".", 1)[0]
-    if not issued.isdigit() or time.time() - int(issued) > ADMIN_IDLE or guard.revoked(raw):
+    issued, family = raw.split(".", 1)[0], admin_family(raw)
+    if not issued.isdigit() or not family or time.time() - int(issued) > ADMIN_IDLE or guard.revoked(raw) \
+            or guard.revoked("admin-family:" + family):
         return None
-    return time.time() - int(issued) if secrets.compare_digest(raw, _session_token(issued)) else None
+    return time.time() - int(issued) if secrets.compare_digest(raw, _session_token(issued, family)) else None
+
+
+def end_admin_sessions():
+    """Logs every admin browser out (a new session key)."""
+    try:
+        os.remove(SESSION_KEY_FILE)
+    except OSError:
+        pass
 
 
 def is_admin(request: Request, creds: HTTPBasicCredentials | None):
     if not password_set():
         return True
     # HTTP Basic (scripts) knows no second step, so it is off while the admin has one
-    if creds and not request.cookies.get(NO_BASIC) and not mfa.enabled(mfa.ADMIN) and not guard.wait_left(request, guard.BASIC):
+    # wrong guesses count per address and against the admin password itself (from anywhere), like the login page
+    if creds and not request.cookies.get(NO_BASIC) and not mfa.enabled(mfa.ADMIN) \
+            and not guard.wait_left(request, guard.BASIC) and not guard.wait_left(request, guard.ADMIN):
         if check_password(creds.password):
             return True
         guard.failed(request, guard.BASIC, what="admin_basic")
+        guard.failed(request, guard.ADMIN, what="admin_basic")
     return _admin_cookie_age(request) is not None
 
 
@@ -141,7 +162,8 @@ def admin_cookie_ok(request: Request):
 
 def renewed_admin_cookie(request: Request):
     age = _admin_cookie_age(request)
-    return _session_token() if age is not None and age > ADMIN_RENEW else None
+    return _session_token(family=admin_family(request.cookies.get(COOKIE, ""))) \
+        if age is not None and age > ADMIN_RENEW else None
 
 
 def auth(request: Request, creds: HTTPBasicCredentials | None = Depends(security)):

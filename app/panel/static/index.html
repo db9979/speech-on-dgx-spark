@@ -198,11 +198,14 @@
       <label class="chk"><input type="checkbox" id="chat.public"> Assistent ohne Passwort</label><div class="fh">An: Startseite für alle im Netz, auch Gäste. Aus: nur angemeldete Profile (Name und PIN) und Geräte mit Schlüssel, keine Gäste. Einstellungen bleiben immer geschützt.</div>
       <h2>Panel-Passwort</h2>
       <label>Aktuelles Passwort</label><input type="password" id="pwold" autocomplete="current-password">
-      <label>Neues Passwort</label><input type="password" id="pwnew" autocomplete="new-password"><div class="fh">Mindestens 6 Zeichen.</div>
+      <label>Neues Passwort</label><input type="password" id="pwnew" autocomplete="new-password"><div class="fh">Mindestens 10 Zeichen.</div>
       <div class="row" style="margin-top:10px"><button class="b" id="pwset" type="button">Passwort ändern</button><span id="pwmsg"></span></div>
       <h2>Zweiter Anmeldeschritt</h2>
       <div id="admmfa"></div>
       <div class="fh">Gilt für die Admin-Anmeldung. Solange er an ist, geht die Anmeldung per HTTP-Basic (Skripte) nicht mehr, und Passwort ändern, Sicherung wiederherstellen, Geräteschlüssel anlegen oder umhängen und PINs ändern fragen jedes Mal nach einem Code. Notausgang ohne Handy und Codes: auf dem Spark sudo rm /var/lib/speech-spark/state/mfa-admin.json</div>
+      <h2>Admin-Anmeldung</h2>
+      <div class="row"><button class="b" id="adminout" type="button">Admin überall abmelden</button></div>
+      <div class="fh">Beendet die Admin-Anmeldung in allen Browsern, auch in diesem (z. B. nach einem verlorenen Gerät).</div>
       <h2>API-Schlüssel</h2>
       <div class="row"><input id="api.key" style="flex:1" autocomplete="off"><button class="b" id="genkey" type="button">Erzeugen</button></div>
       <div class="fh">Leer = APIs ohne Schlüssel erreichbar. Gesetzt = Apps müssen „Authorization: Bearer &lt;Schlüssel&gt;“ senden.</div>

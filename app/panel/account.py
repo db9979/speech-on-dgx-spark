@@ -27,6 +27,8 @@ from core import (  # noqa: E402
     COOKIE,
     NO_BASIC,
     _session_token,
+    admin_family,
+    end_admin_sessions,
     admin_code,
     browser_profile,
     secret_profile,
@@ -117,10 +119,24 @@ async def login(request: Request):
 
 @router.post("/api/logout")
 def logout(request: Request):
-    guard.revoke(request.cookies.get(COOKIE, ""), ADMIN_IDLE)
+    raw = request.cookies.get(COOKIE, "")
+    guard.revoke(raw, ADMIN_IDLE)
+    if admin_family(raw):  # also every older or newer copy of this login
+        guard.revoke("admin-family:" + admin_family(raw), ADMIN_IDLE)
     r = Response('{"ok": true}', media_type="application/json")
     r.delete_cookie(COOKIE)
     r.set_cookie(NO_BASIC, "1", max_age=365 * 86400, httponly=True, samesite="strict")
+    return r
+
+
+@router.post("/api/logout-everywhere", dependencies=[Depends(auth)])
+async def logout_everywhere(request: Request):
+    """Ends the admin login in every browser (this one too)."""
+    await admin_code(request)
+    end_admin_sessions()
+    guard.log("admin_logout_everywhere", ip=guard.client_ip(request))
+    r = Response('{"ok": true}', media_type="application/json")
+    r.delete_cookie(COOKIE)
     return r
 
 

@@ -336,6 +336,7 @@ class FakeMailbox:
     boxes, calls, uidnext = {}, [], {}
     capabilities = ("IMAP4REV1", "MOVE")
     after_login = ("IMAP4REV1", "MOVE")
+    validity = b"1"
     copyuid = True
 
     @classmethod
@@ -414,7 +415,7 @@ class FakeMailbox:
         if code == "COPYUID":
             r, self.copyuid_answer = getattr(self, "copyuid_answer", None), None
             return code, [r]
-        return code, [b"1"]
+        return code, [FakeMailbox.validity if code == "UIDVALIDITY" else b"1"]
 
     def append(self, name, flags, date, raw):
         n = self._name(name)

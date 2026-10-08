@@ -222,6 +222,11 @@ class Telegram(unittest.TestCase):
             a.put("/api/profile/homeassistant/code", json={"code": "Sonnen Blume"})
             tg_message(4501, 'TOOL home_assistant_states {"query": "Kellerpumpe"}')
             self.assertIn("Kellerpumpe", poll()[0])
+            # a message with the code word does not stay in the chat
+            n = len(SENT)
+            tg_message(4501, "Sonnen Blume, wie warm ist die Kellerpumpe?")
+            poll()
+            self.assertIn("deleteMessage", [m for m, p in SENT[n:]])
             # notes: only with tg_push; private ones only with tg_private
             import push
             uid = telegram.owner(4501)

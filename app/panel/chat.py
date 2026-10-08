@@ -1747,9 +1747,14 @@ async def _chat(request: Request):
 
     tasks = [asyncio.create_task(llm()), asyncio.create_task(tts())]
 
+    # guests get the kind of an error, not its text (which can name internal addresses)
+    guest = not device_owner and not admin_cookie_ok(request)
+
     async def events():
         try:
             while (ev := await out.get()) is not None:
+                if guest and ev.get("type") == "error":
+                    ev = {"type": "error", "code": ev.get("code") or "error"}
                 yield f"data: {json.dumps(ev)}\n\n"
             yield f"data: {json.dumps({'type': 'done', 'total': round(time.time() - t0, 3)})}\n\n"
         finally:  # also runs when the browser aborts (barge-in): stop LLM and TTS

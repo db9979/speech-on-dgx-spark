@@ -6,10 +6,10 @@ import time
 
 import soundfile as sf
 import uvicorn
-from fastapi import Depends, FastAPI, File, Form, HTTPException, UploadFile
+from fastapi import Depends, FastAPI, File, Form, HTTPException, Request, UploadFile
 from fastapi.responses import PlainTextResponse
 
-from common import ASR_ISO as ISO, BodyLimit, KeyedCORS, ServiceState, api_key_dependency, api_key_ok, check_memory, estimate_gib, load_config, quiet_access_log, torch_dtype
+from common import ASR_ISO as ISO, BodyLimit, KeyedCORS, inside, outside_view, ServiceState, api_key_dependency, api_key_ok, check_memory, estimate_gib, load_config, quiet_access_log, torch_dtype
 
 cfg = load_config("asr")
 state = ServiceState("asr", cfg)
@@ -67,8 +67,10 @@ def startup():
 
 
 @app.get("/health")
-def health():
+def health(request: Request):
     out = state.health({"timestamps": bool(cfg.get("timestamps")) and not PARAKEET})
+    if not inside(request):
+        return outside_view(out)
     if PARAKEET:
         import parakeet
         out.update(model=parakeet.NAME, recognizer="parakeet")

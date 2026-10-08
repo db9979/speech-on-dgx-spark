@@ -162,6 +162,20 @@ class Tidy(unittest.TestCase):
         ask(p, "ja")
         self.assertIn("Wochenprospekt", self.inbox_subjects())
 
+    def test_only_exact_senders_and_same_numbering(self):
+        p, aid = self.setup_profile("Hxwalter")
+        uid = p.get("/api/whoami").json()["profile"]["id"]
+        real = FMB.put("INBOX", helpers.box_mail("Lidl <info@lidl.example>", "Prospekt"))
+        FMB.put("INBOX", helpers.box_mail("Fake <info@lidl.example.evil>", "Gewinn"))
+        self.assertEqual(tidy._inbox_uids_of(uid, aid, ["info@lidl.example"]), [real])
+        FMB.validity = b"2"   # the server numbered the inbox anew: noted UIDs mean other mail now
+        try:
+            with self.assertRaises(ValueError):
+                tidy._move_uids(uid, aid, {"werbung": [real]}, "test")
+        finally:
+            FMB.validity = b"1"
+        self.assertEqual(self.inbox_subjects("Spark/Werbung"), [])
+
     def test_drafts_never_sent(self):
         p, aid = self.setup_profile("Dora")
         u = FMB.put("INBOX", helpers.box_mail("Anna <anna.alt@example.de>", "Grillen?", mid="<grill@x>"))

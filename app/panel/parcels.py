@@ -64,6 +64,20 @@ def carrier(sender):
     return next((n for n, ds in CARRIERS if any(dom == d or dom.endswith("." + d) for d in ds)), "")
 
 
+def forged(msg):
+    """True when the mail server says the sender's domain did not send this mail (DMARC, or SPF and
+    DKIM both failed): a fake "DHL" mail never becomes a parcel. The top Authentication-Results header
+    is the one the own mail server added; without one nothing can be told."""
+    try:
+        ar = (msg.get_all("Authentication-Results") or [""])[0]
+    except Exception:
+        return False
+    ar = str(ar).lower()
+    if "dmarc=" in ar:
+        return bool(re.search(r"dmarc=(fail|reject|quarantine)", ar))
+    return bool(re.search(r"\bspf=(fail|softfail)", ar) and re.search(r"\bdkim=(fail|none|neutral)", ar))
+
+
 def _when(text, sent):
     """The expected day the mail names, if any."""
     m = DATE.search(text)
@@ -133,7 +147,7 @@ def _scan_account(acct, days):
         hit = [u for u, h in heads.items() if carrier(h["from"])]
         for u in sorted(hit, key=lambda u: heads[u]["date"], reverse=True)[:40]:
             msg = s.body(u)
-            if msg is None:
+            if msg is None or forged(msg):
                 continue
             text, _ = mail.plain(msg)
             x = classify(heads[u]["from"], heads[u]["subject"], text[:3000], heads[u]["date"].date())
