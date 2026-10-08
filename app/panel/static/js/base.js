@@ -6,14 +6,19 @@ $('themebtn').onclick=()=>{const cur=document.documentElement.dataset.theme||'au
   if(nx==='auto')delete document.documentElement.dataset.theme;else document.documentElement.dataset.theme=nx;
   try{localStorage.setItem('theme',nx)}catch{}
   $('themebtn').title={auto:t('Farbschema: wie das System','Theme: follow the system'),light:t('Farbschema: hell','Theme: light'),dark:t('Farbschema: dunkel','Theme: dark')}[nx]};
-const api=async(p,o={})=>{const r=await fetch(p,o);if(r.status===401&&!/^\/api\/(login|password|profile)/.test(p)&&window.showLogin)showLogin();if(!r.ok){let t=await r.text();try{t=JSON.parse(t).detail||t}catch{}throw new Error(t)}return r};
+// 428: the change needs a current code from the authenticator app (second login step); asked here, then sent again.
+const api=async(p,o={},code)=>{const r=await fetch(p,code?Object.assign({},o,{headers:Object.assign({},o.headers||{},{'X-Speech-Code':code})}):o);
+  if(r.status===428){const wrong=/wrong/.test(await r.text());
+    const c=prompt((wrong?t('Code falsch. ','Wrong code. '):'')+t('Bitte den aktuellen Code aus deiner Authenticator-App eingeben (oder einen Wiederherstellungscode):','Please enter the current code from your authenticator app (or a recovery code):'));
+    if(c&&c.trim())return api(p,o,c.trim());throw new Error(t('Abgebrochen: ohne Code keine Änderung.','Cancelled: no change without a code.'))}
+  if(r.status===401&&!/^\/api\/(login|password|profile)/.test(p)&&window.showLogin)showLogin();if(!r.ok){let t=await r.text();try{t=JSON.parse(t).detail||t}catch{}throw new Error(t)}return r};
 // Main menu: five entries; Übersicht, Nutzer and Einbinden hold several pages behind a sub-tab bar.
 const GROUPS={chat:[['chat','']],mon:[['mon',t('Monitoring','Monitoring')],['sys',t('System und Update','System and update')],['logs',t('Logs','Logs')]],
   cfg:[['cfg','']],prof:[['prof',t('Profile und Geräte','Profiles and devices')],['voices',t('Stimmen','Voices')]],int:[['int',t('Anleitungen','Guides')],['test',t('Testen','Test')]]};
 const lastSec={};
 function showSec(s){document.querySelectorAll('section').forEach(x=>x.classList.toggle('on',x.id===s));
   document.body.classList.toggle('inchat',s==='chat');
-  if(s==='cfg')loadCfg();if(s==='chat')chatTab();if(s==='test'){loadVoices();instrHint()}if(s==='voices')loadClone();if(s==='prof')loadProf();if(s==='logs')loadLogs();if(s==='int')loadInt();if(s==='sys')loadSys()}
+  if(s==='cfg'){loadCfg();mfaShow('admmfa','/api/mfa')}if(s==='chat')chatTab();if(s==='test'){loadVoices();instrHint()}if(s==='voices')loadClone();if(s==='prof')loadProf();if(s==='logs')loadLogs();if(s==='int')loadInt();if(s==='sys')loadSys()}
 function subnav(g,s){const items=GROUPS[g],bar=$('subnav');bar.hidden=items.length<2;
   bar.innerHTML=items.length<2?'':items.map(([id,l])=>`<button type="button" data-sub="${id}"${id===s?' class="on"':''}>${esc(l)}${id==='sys'?' <span class="pill warn subbadge" style="display:none">Update</span>':''}</button>`).join('');
   bar.querySelectorAll('button').forEach(b=>b.onclick=()=>{lastSec[g]=b.dataset.sub;subnav(g,b.dataset.sub);showSec(b.dataset.sub)});updBadge(window.UPD)}

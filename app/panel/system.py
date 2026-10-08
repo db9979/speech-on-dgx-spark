@@ -16,7 +16,7 @@ import health  # noqa: E402
 import profiles  # noqa: E402
 import quality  # noqa: E402
 from common import load_config  # noqa: E402
-from core import DEFAULTS, auth  # noqa: E402
+from core import DEFAULTS, admin_code, auth  # noqa: E402
 
 router = APIRouter()
 
@@ -53,7 +53,7 @@ def backup_delete(name: str):
     return {"backups": backup.listing()}
 
 
-@router.post("/api/backups/{name}/restore", dependencies=[Depends(auth)])
+@router.post("/api/backups/{name}/restore", dependencies=[Depends(auth), Depends(admin_code)])
 async def backup_restore(name: str):
     try:
         path = backup.path_of(name)
@@ -62,7 +62,7 @@ async def backup_restore(name: str):
     return await _restore(open(path, "rb"), name)
 
 
-@router.post("/api/backups-upload", dependencies=[Depends(auth)])
+@router.post("/api/backups-upload", dependencies=[Depends(auth), Depends(admin_code)])
 async def backup_upload(file: UploadFile = File(...)):
     """Restores a backup file from this computer (e.g. one downloaded earlier or from another Spark)."""
     tmp = tempfile.TemporaryFile()

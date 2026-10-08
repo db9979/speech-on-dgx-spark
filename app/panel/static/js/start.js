@@ -2,11 +2,14 @@
 // ---------------------------------------------------------------- login
 // Guests see only the assistant; everything else needs the panel password (cookie login).
 let ADMIN=false,PUBLIC=true,GATE=false;
-window.showLogin=()=>{if($('login').style.display==='none'){$('login').style.display='grid';$('loginmsg').textContent='';$('loginpw').value='';setTimeout(()=>$('loginpw').focus(),50)}};
+window.showLogin=()=>{if($('login').style.display==='none'){$('login').style.display='grid';$('loginmsg').textContent='';$('loginpw').value=$('logincode').value='';$('logincodebox').style.display='none';setTimeout(()=>$('loginpw').focus(),50)}};
 $('loginbtn').onclick=showLogin;$('logincancel').onclick=()=>{$('login').style.display='none';if(GATE)openMe('loginbox')};
 $('loginform').onsubmit=async e=>{e.preventDefault();
-  try{await api('/api/login',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({password:$('loginpw').value})});location.reload()}
-  catch(err){$('loginmsg').textContent=/too many/.test(err.message)?t('Zu viele falsche Versuche, bitte später noch einmal.','Too many wrong attempts, please try again later.'):t('Falsches Passwort.','Wrong password.')}};
+  try{const r=await (await api('/api/login',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({password:$('loginpw').value,code:$('logincode').value,trust:$('logintrust').checked})})).json();
+    // right password, the second step is on: the code field comes next
+    if(r.code){$('logincodebox').style.display='';$('loginmsg').textContent='';$('logincode').focus();return}
+    location.reload()}
+  catch(err){$('loginmsg').textContent=/too many/.test(err.message)?t('Zu viele falsche Versuche, bitte später noch einmal.','Too many wrong attempts, please try again later.'):/wrong code/.test(err.message)?t('Code falsch.','Wrong code.'):t('Falsches Passwort.','Wrong password.')}};
 $('logoutbtn').onclick=async()=>{await fetch('/api/logout',{method:'POST'});location.reload()};
 $('pwset').onclick=async()=>{try{await api('/api/password',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({old:$('pwold').value,new:$('pwnew').value})});
   $('pwold').value=$('pwnew').value='';$('pwmsg').textContent=t('Passwort geändert.','Password changed.')}catch(e){$('pwmsg').innerHTML=`<span class="err">${esc(e.message)}</span>`}};

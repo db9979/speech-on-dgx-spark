@@ -18,6 +18,7 @@ import speakers  # noqa: E402
 import calendars  # noqa: E402
 import mail  # noqa: E402
 import memtidy  # noqa: E402
+import mfa  # noqa: E402
 import profiles  # noqa: E402
 import homeassistant  # noqa: E402
 from common import load_config  # noqa: E402
@@ -26,11 +27,14 @@ from core import (  # noqa: E402
     COOKIE,
     NO_BASIC,
     _session_token,
+    admin_code,
     api_headers,
+    auth,
     app_version,
     assistant,
     calendar_on,
     check_password,
+    confirm_code,
     ha_on,
     is_admin,
     mail_on,
@@ -61,6 +65,26 @@ def whoami(request: Request, creds: HTTPBasicCredentials | None = Depends(securi
                           "https_port": cfg["panel"].get("https_port")}}
 
 
+async def second_step(request: Request, body, who, name, what):
+    """After the right password or PIN: the app's code, unless the second step is off or this
+    browser is trusted. Returns None to go on, or the answer asking for the code."""
+    if not mfa.enabled(who) or mfa.trusted(who, request):
+        return None
+    code = str(body.get("code", "")).strip()
+    if not code:
+        return Response('{"code": true}', media_type="application/json")  # the code field comes next
+    if not mfa.verify(who, code):
+        guard.failed(request, name, what=what)
+        await asyncio.sleep(1)
+        raise HTTPException(401, "wrong code")
+    return None
+
+
+def _trust(r, body, who):
+    if body.get("trust") and mfa.enabled(who):
+        mfa.set_trust(r, who)
+
+
 @router.post("/api/login")
 async def login(request: Request):
     body = await request.json()
@@ -69,11 +93,15 @@ async def login(request: Request):
         guard.failed(request, guard.ADMIN, what="admin_login")
         await asyncio.sleep(1)  # slows down guessing
         raise HTTPException(401, "wrong password")
+    ask = await second_step(request, body, mfa.ADMIN, guard.ADMIN, "admin_code")
+    if ask:
+        return ask
     guard.succeeded(request, guard.ADMIN)
     guard.log("admin_login", ip=guard.client_ip(request))
     r = Response('{"ok": true}', media_type="application/json")
     r.set_cookie(COOKIE, _session_token(), max_age=ADMIN_IDLE, httponly=True, samesite="strict")
     r.delete_cookie(NO_BASIC)
+    _trust(r, body, mfa.ADMIN)
     return r
 
 
@@ -99,10 +127,15 @@ async def profile_login(request: Request):
         guard.failed(request, name, what="profile_login")
         await asyncio.sleep(1)  # slows down guessing
         raise HTTPException(401, "wrong name or PIN")
+    uid = value.split(".", 1)[0]
+    ask = await second_step(request, body, uid, name, "profile_code")
+    if ask:
+        return ask
     guard.succeeded(request, name)
     guard.log("profile_login", ip=guard.client_ip(request), name=name.strip(), uid=value.split(".", 1)[0])
     r = Response('{"ok": true}', media_type="application/json")
     r.set_cookie(profiles.COOKIE, value, max_age=profiles.SESSION_DAYS * 86400, httponly=True, samesite="lax")
+    _trust(r, body, uid)
     return r
 
 
@@ -115,12 +148,13 @@ def profile_logout(request: Request):
 
 
 # The profile's own logins: its device keys (with last use), recent logins, log out everywhere.
-LOGIN_EVENTS = ("profile_login", "profile_login_failed", "profile_logout_all", "profile_device_removed")
+LOGIN_EVENTS = ("profile_login", "profile_login_failed", "profile_code_failed", "profile_logout_all", "profile_device_removed",
+                "profile_mfa_on", "profile_mfa_off", "profile_mfa_reset")
 
 
 @router.get("/api/profile/security", dependencies=[Depends(assistant)])
 def profile_security(prof=Depends(own_profile)):
-    mine = lambda x: x.get("uid") == prof["id"] or (x.get("event") == "profile_login_failed"
+    mine = lambda x: x.get("uid") == prof["id"] or (x.get("event") in ("profile_login_failed", "profile_code_failed")
                                                     and str(x.get("name", "")).strip().lower() == prof["name"].lower())
     events = [x for x in guard.read(3000) if x.get("event") in LOGIN_EVENTS and mine(x)][:8]
     return {"devices": profiles.own_devices(prof["id"]), "events": events}
@@ -141,6 +175,7 @@ def profile_toollog_clear(prof=Depends(own_profile)):
 def profile_logout_all(request: Request, prof=Depends(own_profile)):
     """Ends the login in every browser; this one gets a fresh login and stays signed in."""
     profiles.end_sessions(prof["id"])
+    mfa.forget_trust(prof["id"])  # trusted browsers have to enter a code again
     guard.log("profile_logout_all", ip=guard.client_ip(request), name=prof["name"], uid=prof["id"])
     u = next(u for u in profiles._load()["users"] if u["id"] == prof["id"])
     r = Response('{"ok": true}', media_type="application/json")
@@ -157,6 +192,112 @@ def profile_remove_device(did: str, request: Request, prof=Depends(own_profile))
     profiles.delete_device(did)
     guard.log("profile_device_removed", ip=guard.client_ip(request), name=prof["name"], uid=prof["id"], device=did)
     return {"devices": profiles.own_devices(prof["id"])}
+
+
+# ---------------------------------------------------------------- second step (authenticator app)
+# Admin: under Einstellungen → Sicherheit. Profiles: in their "Ich" window → Sicherheit, only in their
+# own browser login (not with a device key) and only while the admin allows it (chat.mfa). Switching
+# it off, new recovery codes and a new setup need a current code.
+def _admin_reply(request, data):
+    """The admin's login cookie is signed with the second step's key: hand this browser a fresh one."""
+    r = Response(json.dumps(data), media_type="application/json")
+    r.set_cookie(COOKIE, _session_token(), max_age=ADMIN_IDLE, httponly=True, samesite="strict")
+    return r
+
+
+@router.get("/api/mfa", dependencies=[Depends(auth)])
+def admin_mfa():
+    return mfa.status(mfa.ADMIN)
+
+
+@router.post("/api/mfa/setup", dependencies=[Depends(auth), Depends(admin_code)])
+def admin_mfa_setup():
+    return mfa.begin(mfa.ADMIN, "Admin")
+
+
+@router.post("/api/mfa/enable", dependencies=[Depends(auth)])
+async def admin_mfa_enable(request: Request):
+    codes = mfa.finish(mfa.ADMIN, (await request.json()).get("code", ""))
+    if not codes:
+        raise HTTPException(400, "wrong code")
+    guard.log("admin_mfa_on", ip=guard.client_ip(request))
+    return _admin_reply(request, {"recovery": codes})
+
+
+@router.post("/api/mfa/disable", dependencies=[Depends(auth), Depends(admin_code)])
+def admin_mfa_disable(request: Request):
+    mfa.disable(mfa.ADMIN)
+    guard.log("admin_mfa_off", ip=guard.client_ip(request))
+    r = _admin_reply(request, {"ok": True})
+    r.delete_cookie(mfa.trust_cookie(mfa.ADMIN))
+    return r
+
+
+@router.post("/api/mfa/recovery", dependencies=[Depends(auth), Depends(admin_code)])
+def admin_mfa_recovery(request: Request):
+    guard.log("admin_mfa_recovery", ip=guard.client_ip(request))
+    return {"recovery": mfa.new_recovery(mfa.ADMIN) or []}
+
+
+@router.post("/api/mfa/forget", dependencies=[Depends(auth)])
+def admin_mfa_forget(request: Request):
+    """Every trusted browser has to enter a code again, and every other admin login ends."""
+    mfa.forget_trust(mfa.ADMIN)
+    guard.log("admin_mfa_forget", ip=guard.client_ip(request))
+    r = _admin_reply(request, {"ok": True})
+    r.delete_cookie(mfa.trust_cookie(mfa.ADMIN))
+    return r
+
+
+def browser_profile(request: Request):
+    """The profile of a browser login; a device key cannot change the second step."""
+    prof = own_profile(request)
+    if request.headers.get(profiles.DEVICE_HEADER):
+        raise HTTPException(403, "only in the profile's own browser login")
+    return prof
+
+
+@router.get("/api/profile/mfa", dependencies=[Depends(assistant)])
+def profile_mfa(prof=Depends(own_profile)):
+    return dict(mfa.status(prof["id"]), allowed=bool(load_config().get("chat", {}).get("mfa", False)))
+
+
+@router.post("/api/profile/mfa/setup", dependencies=[Depends(assistant)])
+async def profile_mfa_setup(request: Request, prof=Depends(browser_profile)):
+    if not load_config().get("chat", {}).get("mfa", False):
+        raise HTTPException(403, "the second login step is turned off")
+    await confirm_code(request, prof["id"], prof["name"])
+    return mfa.begin(prof["id"], prof["name"])
+
+
+@router.post("/api/profile/mfa/enable", dependencies=[Depends(assistant)])
+async def profile_mfa_enable(request: Request, prof=Depends(browser_profile)):
+    codes = mfa.finish(prof["id"], (await request.json()).get("code", ""))
+    if not codes:
+        raise HTTPException(400, "wrong code")
+    # logins made with the PIN alone end everywhere else; this browser stays signed in
+    profiles.end_sessions(prof["id"])
+    guard.log("profile_mfa_on", ip=guard.client_ip(request), name=prof["name"], uid=prof["id"])
+    u = next(u for u in profiles._load()["users"] if u["id"] == prof["id"])
+    r = Response(json.dumps({"recovery": codes}), media_type="application/json")
+    r.set_cookie(profiles.COOKIE, profiles._cookie_value(u), max_age=profiles.SESSION_DAYS * 86400, httponly=True, samesite="lax")
+    return r
+
+
+@router.post("/api/profile/mfa/disable", dependencies=[Depends(assistant)])
+async def profile_mfa_disable(request: Request, prof=Depends(browser_profile)):
+    await confirm_code(request, prof["id"], prof["name"])
+    mfa.disable(prof["id"])
+    guard.log("profile_mfa_off", ip=guard.client_ip(request), name=prof["name"], uid=prof["id"])
+    r = Response('{"ok": true}', media_type="application/json")
+    r.delete_cookie(mfa.trust_cookie(prof["id"]))
+    return r
+
+
+@router.post("/api/profile/mfa/recovery", dependencies=[Depends(assistant)])
+async def profile_mfa_recovery(request: Request, prof=Depends(browser_profile)):
+    await confirm_code(request, prof["id"], prof["name"])
+    return {"recovery": mfa.new_recovery(prof["id"]) or []}
 
 
 @router.get("/api/profile/memory", dependencies=[Depends(assistant)])

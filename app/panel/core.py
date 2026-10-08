@@ -1,6 +1,7 @@
 """Shared panel helpers: paths, logins (admin password, profiles) and small system calls."""
 import os
 import re
+import asyncio
 import hashlib
 import hmac
 import secrets
@@ -13,6 +14,7 @@ from fastapi.security import HTTPBasic, HTTPBasicCredentials
 
 sys.path.insert(0, os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
 import guard  # noqa: E402
+import mfa  # noqa: E402
 import profiles  # noqa: E402
 from common import load_config  # noqa: E402
 
@@ -76,15 +78,15 @@ def check_password(password):
     return bool(PASSWORD) and secrets.compare_digest(password.encode(), PASSWORD.encode())
 
 
-# The admin login "<issued>.<signature>" is signed with the current password (changing it logs
-# every browser out) and ends after ADMIN_IDLE seconds without use; the panel renews it while used.
+# The admin login "<issued>.<signature>" is signed with the current password and the second step's
+# key (changing either logs every browser out) and ends after ADMIN_IDLE seconds without use; the panel renews it while used.
 ADMIN_IDLE = 7 * 86400
 ADMIN_RENEW = 3600
 
 
 def _session_token(issued=None):
     stored = _stored_hash()
-    key = (stored[1] if stored else PASSWORD).encode()
+    key = ((stored[1] if stored else PASSWORD) + mfa.session_salt(mfa.ADMIN)).encode()
     issued = int(issued or time.time())
     return f"{issued}." + hmac.new(key, f"speech-spark-admin-session:{issued}".encode(), hashlib.sha256).hexdigest()
 
@@ -101,7 +103,8 @@ def _admin_cookie_age(request: Request):
 def is_admin(request: Request, creds: HTTPBasicCredentials | None):
     if not password_set():
         return True
-    if creds and not request.cookies.get(NO_BASIC) and not guard.wait_left(request, guard.BASIC):
+    # HTTP Basic (scripts) knows no second step, so it is off while the admin has one
+    if creds and not request.cookies.get(NO_BASIC) and not mfa.enabled(mfa.ADMIN) and not guard.wait_left(request, guard.BASIC):
         if check_password(creds.password):
             return True
         guard.failed(request, guard.BASIC, what="admin_basic")
@@ -120,6 +123,29 @@ def renewed_admin_cookie(request: Request):
 def auth(request: Request, creds: HTTPBasicCredentials | None = Depends(security)):
     if not is_admin(request, creds):
         raise HTTPException(401, "login required")
+
+
+# Changes that matter most (password, restore, device keys, the second step itself) need a fresh code
+# from the app while the second step is on, even inside a running login: header X-Speech-Code.
+CODE_HEADER = "x-speech-code"
+
+
+async def confirm_code(request: Request, who, name):
+    if not mfa.enabled(who):
+        return
+    code = request.headers.get(CODE_HEADER, "")
+    if not code:
+        raise HTTPException(428, "code required")
+    guard.check(request, name)
+    if not mfa.verify(who, code):
+        guard.failed(request, name, what="code")
+        await asyncio.sleep(1)
+        raise HTTPException(428, "wrong code")
+    guard.succeeded(request, name)
+
+
+async def admin_code(request: Request):
+    await confirm_code(request, mfa.ADMIN, guard.ADMIN)
 
 
 def assistant(request: Request, creds: HTTPBasicCredentials | None = Depends(security)):

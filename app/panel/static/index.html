@@ -74,6 +74,7 @@
       <div class="setrow"><div class="lbl"><b>E-Mail lesen</b><span>Profile verbinden unter dem Profil-Knopf ihre Postfächer (iCloud, Gmail, GMX, web.de oder IMAP). Der Assistent liest nur: Er sendet, löscht und markiert nichts. Gäste und eine fremde Stimme an einem anderen Gerät bekommen keinen Zugriff. Nach dem Lesen einer Mail sind in derselben Antwort Smart Home schalten und Websuche gesperrt.</span></div><label class="tgl"><input type="checkbox" id="chat.mail"><i></i></label></div>
       <div class="setrow"><div class="lbl"><b>Von selbst melden</b><span>Profile können unter dem Profil-Knopf → „Von selbst“ einschalten, dass sich der Assistent meldet, wenn wirklich etwas ist: kurz vor Terminen, bei eigenen Smart-Home-Regeln, wichtigen Mails, Wetter für morgen, mit einer Nachfrage zu gestern oder einer kurzen Begrüßung. Jedes Profil entscheidet selbst, was davon, mit Ruhezeit und Tageslimit; ohne dass es jemand einschaltet, passiert nichts. Gäste nie.</span></div><label class="tgl"><input type="checkbox" id="chat.proactive"><i></i></label></div>
       <div class="setrow"><div class="lbl"><b>Raum-Modus</b><span>Ein angemeldetes Profil schaltet an einem Gerät (Schalter „Raum“ unter dem Gesicht) für eine gewählte Zeit ein, dass der Assistent dem Gespräch im Raum zuhört und in einer Pause hilft: offene Fragen beantworten, genannte Termine zum Eintragen vorschlagen, auf „kalt“ oder „dunkel“ den echten Wert nennen, Einkäufe für die Einkaufsliste vorschlagen. Geändert wird nur nach einem „Ja“. Das Gehörte bleibt nur wenige Minuten im Arbeitsspeicher und wird nie gespeichert. Alle im Raum sollten wissen, dass er zuhört.</span></div><label class="tgl"><input type="checkbox" id="chat.room"><i></i></label></div>
+      <div class="setrow"><div class="lbl"><b>Zweiter Anmeldeschritt für Profile</b><span>Profile können unter dem Profil-Knopf → Sicherheit für sich einschalten, dass die Anmeldung mit Name und PIN zusätzlich einen Code aus einer Authenticator-App verlangt. Jedes Profil entscheidet selbst. Geräte mit Schlüssel (Lautsprecher, Siri, Uhr, Handy) brauchen keinen Code. Ausschalten hier verhindert nur neue Einrichtungen; wer ihn schon an hat, behält ihn.</span></div><label class="tgl"><input type="checkbox" id="chat.mfa"><i></i></label></div>
       <div class="setrow"><div class="lbl"><b>Sprechererkennung</b><span>Profile lernen unter dem Profil-Knopf ihre Stimme ein. Erkennt der Assistent eine Stimme eindeutig, antwortet er für dieses Profil, auch an einem fremden oder Gast-Gerät. Eine Stimme ist kein Passwort: Wer sehr ähnlich klingt oder eine Aufnahme abspielt, kann ein Profil erwischen.</span></div><label class="tgl"><input type="checkbox" id="chat.speaker_id"><i></i></label></div>
       <div class="savebar"><button class="b p savebtn" data-p="feat">Speichern</button><span class="savemsg"></span></div>
     </div>
@@ -174,6 +175,9 @@
       <label>Aktuelles Passwort</label><input type="password" id="pwold" autocomplete="current-password">
       <label>Neues Passwort</label><input type="password" id="pwnew" autocomplete="new-password"><div class="fh">Mindestens 6 Zeichen.</div>
       <div class="row" style="margin-top:10px"><button class="b" id="pwset" type="button">Passwort ändern</button><span id="pwmsg"></span></div>
+      <h2>Zweiter Anmeldeschritt</h2>
+      <div id="admmfa"></div>
+      <div class="fh">Gilt für die Admin-Anmeldung. Solange er an ist, geht die Anmeldung per HTTP-Basic (Skripte) nicht mehr, und Passwort ändern, Sicherung wiederherstellen, Geräteschlüssel anlegen oder umhängen und PINs ändern fragen jedes Mal nach einem Code. Notausgang ohne Handy und Codes: auf dem Spark sudo rm /var/lib/speech-spark/state/mfa-admin.json</div>
       <h2>API-Schlüssel</h2>
       <div class="row"><input id="api.key" style="flex:1" autocomplete="off"><button class="b" id="genkey" type="button">Erzeugen</button></div>
       <div class="fh">Leer = APIs ohne Schlüssel erreichbar. Gesetzt = Apps müssen „Authorization: Bearer &lt;Schlüssel&gt;“ senden.</div>
@@ -397,6 +401,8 @@
 <div id="login" class="modal" style="display:none"><form class="card modalcard" id="loginform">
   <h2>Anmelden</h2><div class="intro">Für Einstellungen, Monitoring und Stimmen braucht es das Panel-Passwort.</div>
   <label>Passwort</label><input type="password" id="loginpw" autocomplete="current-password">
+  <div id="logincodebox" style="display:none"><label>Code aus der Authenticator-App</label><input id="logincode" inputmode="numeric" autocomplete="one-time-code" autocapitalize="off">
+    <label class="chk"><input type="checkbox" id="logintrust"> Diesem Browser 30 Tage vertrauen</label><div class="fh">Handy nicht da? Ein Wiederherstellungscode geht auch.</div></div>
   <div class="row" style="margin-top:14px"><button class="b p" type="submit">Anmelden</button><button class="b" type="button" id="logincancel">Abbrechen</button><span id="loginmsg" class="err"></span></div>
 </form></div>
 <div id="msheet" class="modal sheet" style="display:none"><div class="card sheetcard">
@@ -437,6 +443,8 @@
     <div id="loginbox" class="ptab"><div class="intro" id="profgate" style="display:none">Der Assistent ist nur für Profile freigegeben. Bitte melde dich mit Name und PIN an.</div><div class="intro">Angemeldet merkt sich der Assistent Dinge nur für dich, und deine Gespräche bleiben in deinem Profil.</div>
     <label>Name</label><input id="profuser" autocomplete="username" autocapitalize="off">
     <label>PIN</label><input type="password" id="profpin" autocomplete="current-password">
+    <div id="profcodebox" style="display:none"><label>Code aus der Authenticator-App</label><input id="profcode" inputmode="numeric" autocomplete="one-time-code" autocapitalize="off">
+      <label class="chk"><input type="checkbox" id="proftrust"> Diesem Browser 30 Tage vertrauen</label><div class="fh">Handy nicht da? Ein Wiederherstellungscode geht auch.</div></div>
     <div class="row" style="margin-top:14px"><button class="b p" id="proflogin">Anmelden</button><button class="b" type="button" id="profadmin" style="display:none" onclick="$('profmodal').style.display='none';showLogin()">Admin</button><span id="profmsg" class="err"></span></div></div>
     <div id="factbox" class="ptab"><div class="intro">Das weiß der Assistent über dich. Sag ihm „Merk dir …“ oder „Vergiss …“, oder lösche hier.</div>
     <div id="tidybox" class="tidy" style="display:none"></div>
@@ -490,10 +498,11 @@
     <div id="probox" class="ptab"></div>
     <div id="roombox" class="ptab"></div>
     <div id="secbox" class="ptab"><div class="intro">Wo dein Profil angemeldet ist. Ein Gerät, das du nicht mehr nutzt oder verloren hast, kannst du hier sperren.</div>
+      <label>Zweiter Anmeldeschritt</label><div id="profmfa"></div>
       <label>Geräte mit Schlüssel</label><ul class="facts" id="secdev"></ul>
       <label>Letzte Anmeldungen</label><ul class="facts small" id="secev"></ul>
       <div class="row" style="margin-top:8px"><button class="b" id="seclogoutall" type="button">Überall abmelden</button><span id="secmsg" class="fh"></span></div>
-      <div class="fh">Meldet dein Profil in allen anderen Browsern ab; dieser bleibt angemeldet. Geräte mit Schlüssel (Lautsprecher, Uhr) sperrst du oben einzeln. Eine Anmeldung endet außerdem nach 90 Tagen ohne Nutzung.</div></div>
+      <div class="fh">Meldet dein Profil in allen anderen Browsern ab; dieser bleibt angemeldet. Geräte mit Schlüssel (Lautsprecher, Uhr) sperrst du oben einzeln. Eine Anmeldung endet außerdem nach 90 Tagen ohne Nutzung. Mit zweitem Anmeldeschritt müssen auch vertraute Browser danach wieder einen Code eingeben.</div></div>
 </div>
   </div>
   <div class="row mefoot"><button class="b" id="proflogout" type="button">Abmelden</button><button class="b p" id="profclose" type="button" onclick="closeProf()">Schließen</button></div>
@@ -503,6 +512,7 @@
   <div class="face fabface" id="fabface" data-mode="idle" role="button" aria-label="Sprechen"></div></div>
 <script src="/static/js/i18n.js"></script>
 <script src="/static/js/base.js"></script>
+<script src="/static/js/mfa.js"></script>
 <script src="/static/js/admin.js"></script>
 <script src="/static/js/chat.js"></script>
 <script src="/static/js/reminders.js"></script>

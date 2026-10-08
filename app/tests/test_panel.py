@@ -1365,3 +1365,129 @@ class Gaps(unittest.TestCase):
             self.assertIn(g.post("/api/watch/ask", json={"text": "Hallo"}).status_code, (401, 403, 422))
         finally:
             helpers.set_config(public=True)
+
+
+class SecondStep(unittest.TestCase):
+    """Authenticator app codes for the admin and for profiles (mfa.py)."""
+    def setUp(self):
+        import guard
+        guard.reset()
+
+    tearDown = setUp
+
+    @staticmethod
+    def _code(secret, ahead=0):
+        import mfa
+        return mfa._totp(secret, int(time.time()) // mfa.STEP + ahead)
+
+    def _setup(self, client, base, headers=None):
+        r = client.post(base + "/setup", headers=headers or {})
+        self.assertEqual(r.status_code, 200, r.text)
+        secret = r.json()["secret"].replace(" ", "")
+        self.assertTrue(r.json()["uri"].startswith("otpauth://totp/"))
+        self.assertEqual(client.post(base + "/enable", json={"code": "000000" if self._code(secret) != "000000" else "111111"}).status_code, 400)
+        r = client.post(base + "/enable", json={"code": self._code(secret, -1)})
+        self.assertEqual(r.status_code, 200, r.text)
+        codes = r.json()["recovery"]
+        self.assertEqual(len(codes), 10)
+        return secret, codes
+
+    def test_admin(self):
+        import mfa
+        basic = TestClient(panel.app)
+        self.assertEqual(basic.get("/api/config", auth=("x", "secret-admin")).status_code, 200)
+        secret, codes = self._setup(ADMIN, "/api/mfa")
+        try:
+            self.assertEqual(ADMIN.get("/api/config").status_code, 200)       # this browser got a fresh login
+            self.assertEqual(basic.get("/api/config", auth=("x", "secret-admin")).status_code, 401)  # no Basic any more
+            b = TestClient(panel.app)
+            self.assertEqual(b.post("/api/login", json={"password": "secret-admin"}).json(), {"code": True})
+            self.assertEqual(b.get("/api/config").status_code, 401)
+            self.assertEqual(b.post("/api/login", json={"password": "secret-admin", "code": "12345x"}).status_code, 401)
+            self.assertEqual(b.post("/api/login", json={"password": "wrong", "code": self._code(secret)}).status_code, 401)
+            used = self._code(secret)
+            r = b.post("/api/login", json={"password": "secret-admin", "code": used, "trust": True})
+            self.assertEqual(r.json(), {"ok": True})
+            self.assertEqual(b.get("/api/config").status_code, 200)
+            # the same code a second time does not work (replay)
+            c = TestClient(panel.app)
+            self.assertEqual(c.post("/api/login", json={"password": "secret-admin", "code": used}).status_code, 401)
+            # a recovery code works once
+            self.assertEqual(c.post("/api/login", json={"password": "secret-admin", "code": codes[0].upper()}).json(), {"ok": True})
+            self.assertEqual(TestClient(panel.app).post("/api/login", json={"password": "secret-admin", "code": codes[0]}).status_code, 401)
+            # the trusted browser logs in with the password alone
+            b.cookies.delete(core_cookie())
+            self.assertEqual(b.post("/api/login", json={"password": "secret-admin"}).json(), {"ok": True})
+            # sensitive changes need a current code, also inside the login
+            self.assertEqual(ADMIN.post("/api/password", json={"old": "secret-admin", "new": "secret-admin"}).status_code, 428)
+            r = ADMIN.post("/api/password", json={"old": "secret-admin", "new": "secret-admin"}, headers={"X-Speech-Code": "999999"})
+            self.assertEqual(r.status_code, 428)
+            self.assertEqual(ADMIN.post("/api/admin/devices", json={"name": "Box", "user": "x"}).status_code, 428)
+            self.assertEqual(ADMIN.get("/api/mfa").json()["codes_left"], 9)
+            # forgetting trusted browsers ends the trust and the other admin logins, this one stays
+            self.assertEqual(ADMIN.post("/api/mfa/forget").status_code, 200)
+            self.assertEqual(ADMIN.get("/api/config").status_code, 200)
+            self.assertEqual(c.get("/api/config").status_code, 401)
+            b.cookies.delete(core_cookie())
+            self.assertEqual(b.post("/api/login", json={"password": "secret-admin"}).json(), {"code": True})
+        finally:
+            r = ADMIN.post("/api/mfa/disable", headers={"X-Speech-Code": codes[1]})
+            self.assertEqual(r.status_code, 200, r.text)
+        self.assertFalse(mfa.enabled(mfa.ADMIN))
+        self.assertEqual(ADMIN.get("/api/config").status_code, 200)
+        self.assertEqual(basic.get("/api/config", auth=("x", "secret-admin")).status_code, 200)
+
+    def test_profile(self):
+        p = profile("Mona", "4321")
+        helpers.set_config(mfa=False)
+        self.assertFalse(p.get("/api/profile/mfa").json()["allowed"])
+        self.assertEqual(p.post("/api/profile/mfa/setup").status_code, 403)
+        helpers.set_config(mfa=True)
+        try:
+            other = TestClient(panel.app)
+            self.assertEqual(other.post("/api/profile/login", json={"name": "Mona", "pin": "4321"}).json(), {"ok": True})
+            secret, codes = self._setup(p, "/api/profile/mfa")
+            self.assertEqual(p.get("/api/profile/memory").status_code, 200)      # still signed in here
+            self.assertEqual(other.get("/api/profile/memory").status_code, 401)  # the PIN-only login elsewhere ended
+            n = TestClient(panel.app)
+            self.assertEqual(n.post("/api/profile/login", json={"name": "Mona", "pin": "4321"}).json(), {"code": True})
+            self.assertEqual(n.get("/api/profile/memory").status_code, 401)
+            self.assertEqual(n.post("/api/profile/login", json={"name": "Mona", "pin": "4321", "code": "000000x"}).status_code, 401)
+            r = n.post("/api/profile/login", json={"name": "Mona", "pin": "4321", "code": self._code(secret), "trust": True})
+            self.assertEqual(r.json(), {"ok": True})
+            n.cookies.delete(profiles.COOKIE)
+            self.assertEqual(n.post("/api/profile/login", json={"name": "Mona", "pin": "4321"}).json(), {"ok": True})
+            # a device key still works without a code, but cannot change the second step
+            uid = next(u["id"] for u in ADMIN.get("/api/admin/profiles").json()["users"] if u["name"] == "Mona")
+            self.assertTrue(next(u for u in ADMIN.get("/api/admin/profiles").json()["users"] if u["id"] == uid)["mfa"])
+            token = profiles.add_device("Lautsprecher", uid)
+            d = TestClient(panel.app, headers={"X-Speech-Device": token})
+            self.assertEqual(d.get("/api/profile/memory").status_code, 200)
+            self.assertEqual(d.post("/api/profile/mfa/disable", headers={"X-Speech-Code": codes[0]}).status_code, 403)
+            # switching it off needs a code
+            self.assertEqual(p.post("/api/profile/mfa/disable").status_code, 428)
+            self.assertEqual(p.post("/api/profile/mfa/recovery", headers={"X-Speech-Code": codes[1]}).status_code, 200)
+            self.assertEqual(p.post("/api/profile/mfa/disable", headers={"X-Speech-Code": codes[2]}).status_code, 428)  # old codes gone
+            # log out everywhere also ends the trust
+            self.assertEqual(p.post("/api/profile/logout-all").status_code, 200)
+            n.cookies.delete(profiles.COOKIE)
+            self.assertEqual(n.post("/api/profile/login", json={"name": "Mona", "pin": "4321"}).json(), {"code": True})
+            # the admin resets it for a profile that lost everything (with the admin's own second step off: no code)
+            self.assertEqual(ADMIN.delete(f"/api/admin/profiles/{uid}/mfa").status_code, 200)
+            self.assertEqual(n.post("/api/profile/login", json={"name": "Mona", "pin": "4321"}).json(), {"ok": True})
+        finally:
+            helpers.set_config(mfa=False)
+
+    def test_totp_known_value(self):
+        import base64
+        import mfa
+        # RFC 6238 test secret "12345678901234567890", T = 59 s -> 94287082 (8 digits) -> 287082
+        secret = base64.b32encode(b"12345678901234567890").decode()
+        self.assertEqual(mfa._totp(secret, 59 // 30), "287082")
+        self.assertEqual(mfa._match(secret, "287082", now=59), 1)
+        self.assertIsNone(mfa._match(secret, "287082", after=1, now=59))
+
+
+def core_cookie():
+    import core
+    return core.COOKIE

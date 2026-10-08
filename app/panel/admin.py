@@ -17,6 +17,7 @@ from fastapi.responses import FileResponse, Response, StreamingResponse
 sys.path.insert(0, os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
 import guard  # noqa: E402
 import health  # noqa: E402
+import mfa  # noqa: E402
 import speakers  # noqa: E402
 import profiles  # noqa: E402
 from common import CONFIG_PATH, estimate_gib, journal, load_config  # noqa: E402
@@ -36,6 +37,7 @@ from core import (  # noqa: E402
     VOICES_DIR,
     _hash,
     _session_token,
+    admin_code,
     api_headers,
     assistant,
     auth,
@@ -59,7 +61,10 @@ def audit(limit: int = 300):
 
 @router.get("/api/admin/profiles", dependencies=[Depends(auth)])
 def admin_profiles():
-    return profiles.admin_list()
+    d = profiles.admin_list()
+    for u in d["users"]:
+        u["mfa"] = mfa.enabled(u["id"])
+    return d
 
 
 @router.post("/api/admin/profiles", dependencies=[Depends(auth)])
@@ -76,7 +81,7 @@ async def admin_add_profile(request: Request):
         raise HTTPException(409, str(e))
 
 
-@router.put("/api/admin/profiles/{uid}", dependencies=[Depends(auth)])
+@router.put("/api/admin/profiles/{uid}", dependencies=[Depends(auth), Depends(admin_code)])
 async def admin_set_pin(uid: str, request: Request):
     pin = (await request.json()).get("pin", "")
     if not profiles.valid_pin(pin):
@@ -86,13 +91,23 @@ async def admin_set_pin(uid: str, request: Request):
     return {"ok": True}
 
 
+@router.delete("/api/admin/profiles/{uid}/mfa", dependencies=[Depends(auth), Depends(admin_code)])
+def admin_reset_mfa(uid: str, request: Request):
+    """For a profile that lost its phone and its recovery codes: the second step is off again."""
+    if uid not in profiles.user_ids():
+        raise HTTPException(404, "no such profile")
+    mfa.disable(uid)
+    guard.log("profile_mfa_reset", ip=guard.client_ip(request), uid=uid)
+    return {"ok": True}
+
+
 @router.delete("/api/admin/profiles/{uid}", dependencies=[Depends(auth)])
 def admin_delete_profile(uid: str):
     profiles.delete_user(uid)
     return {"ok": True}
 
 
-@router.post("/api/admin/devices", dependencies=[Depends(auth)])
+@router.post("/api/admin/devices", dependencies=[Depends(auth), Depends(admin_code)])
 async def admin_add_device(request: Request):
     body = await request.json()
     if not profiles.valid_name(body.get("name", "")):
@@ -103,7 +118,7 @@ async def admin_add_device(request: Request):
         raise HTTPException(400, str(e))
 
 
-@router.put("/api/admin/devices/{did}", dependencies=[Depends(auth)])
+@router.put("/api/admin/devices/{did}", dependencies=[Depends(auth), Depends(admin_code)])
 async def admin_set_device(did: str, request: Request):
     if not profiles.set_device_user(did, str((await request.json()).get("user", ""))):
         raise HTTPException(404, "no such device or profile")
@@ -116,7 +131,7 @@ def admin_delete_device(did: str):
     return {"ok": True}
 
 
-@router.post("/api/password", dependencies=[Depends(auth)])
+@router.post("/api/password", dependencies=[Depends(auth), Depends(admin_code)])
 async def change_password(request: Request):
     body = await request.json()
     new = str(body.get("new", ""))
