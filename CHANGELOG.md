@@ -1,0 +1,156 @@
+# Changelog
+
+Every version in one line, newest first (taken from the commit messages, so some lines are German, some English). Older entries have no version number.
+
+- **V01.0.101** · 2026-10-08 · README aufgeräumt: nur Installation, letzte Änderungen und Schaubild; Details in docs/, alle Versionen in CHANGELOG.md
+- **V01.0.100** · 2026-10-08 · Home Assistant Assist über Wyoming (Spracherkennung und Stimme für HA, nur eingetragene Adressen)
+- **V01.0.99** · 2026-10-08 · Eigene Lautsprecher (ESP32-S3): Firmware-Bau, Einrichtung per USB aus dem Browser, Kopplungscode, Updates über den Spark
+- **V01.0.98** · 2026-10-08 · Telegram abgesichert: Verbinden nur aus der eigenen Browser-Anmeldung, Code-Raten gesperrt, weitergeleitete Nachrichten kein Auftrag
+- **V01.0.97** · 2026-10-08 · Pakete: Amazon-Betreffzeilen wie „In Zustellung: …“ erkannt, Betreff vor Mailtext
+- **V01.0.96** · 2026-10-08 · Telegram-Bot, Aufgaben und Einkaufsliste, Wetter-Ort mit Postleitzahl
+- **V01.0.95** · 2026-10-08 · Raum-Modus verbessert (Log-Zeilen, Ja nur vom Besitzer, Stopp, Timer, Erinnerung, Umrechnen, Rückfragen, zweiter Blick, Ton, Zusammenfassung)
+- **V01.0.94** · 2026-10-08 · Ich-Fenster am PC: Seitenleiste scrollt, nichts liegt mehr über "Abmelden"/"Schließen"
+- **V01.0.93** · 2026-10-08 · Wetter (Open-Meteo), Kontakte (CardDAV), Pakete aus Mails
+- **V01.0.92** · 2026-10-08 · Anleitungen für jeden Dienst, Dienste in Gruppen sortiert
+- **V01.0.91** · 2026-10-08 · Hauptordner fürs Aufräumen einstellbar, Aufräumen unter E-Mail
+- **V01.0.90** · 2026-10-08 · Postfach aufräumen auch ohne IMAP MOVE (iCloud)
+- **V01.0.89** · 2026-10-08 · Postfach aufräumen erkennt IMAP MOVE auch nach der Anmeldung
+- **V01.0.88** · 2026-10-08 · Postfach aufräumen (Werbung & Co. nach Spark/ verschieben, Nachfragen, Entwürfe)
+- **V01.0.87** · 2026-10-08 · self-test for appointment notes no longer bound to a fixed date
+- **V01.0.86** · 2026-10-08 · Panel: phone layout for every page and window
+- **V01.0.85** · 2026-10-08 · Installation wahlweise nur mit den Modellen und ihren APIs
+- **V01.0.84** · 2026-10-08 · "Hey Spark" nur für Profile und den Admin
+- **V01.0.83** · 2026-10-08 · Gäste ändern keine Einstellungen und sehen den Raum-Modus nicht
+- **V01.0.82** · 2026-10-08 · Zweiter Anmeldeschritt (Authenticator-App) für Admin und Profile
+- **V01.0.81** · 2026-10-08 · Selbsttest beim Update nicht mehr von der eigenen Update-Sperre blockiert
+- **V01.0.80** · 2026-10-08 · Dokumentation an den aktuellen Stand angepasst, Tests für Update-Sperre, Fortschritt, Dokumente, Uhr
+- **V01.0.79** · 2026-10-08 · Updates fall back cleanly, a yes confirms only what it answers
+- **V01.0.78** · 2026-10-08 · Logins, web pages and Parakeet: safer lockout, no fetching into the home network, Parakeet works on the vllm backend
+- **V01.0.77** · 2026-10-08 · Speaker ID, code word and timers: a voice token only works where it was made, the code word is never kept, reminders are not held up
+- **V01.0.76** · 2026-10-08 · Text from outside (web pages, calendar, documents, old conversations) can no longer switch or change anything
+- **V01.0.75** · 2026-10-08 · Backups and install: restored settings are checked, root never runs config values or writes through links
+- **V01.0.74** · 2026-10-07 · Room mode: listens to the conversation in the room for a while and helps in a pause
+- **V01.0.73** · 2026-10-07 · Parakeet as a second speech recognizer the admin can switch to
+- **V01.0.72** · 2026-10-07 · Assistant speaks up by itself, per profile and off until switched on
+- 2026-10-07 · Home Assistant: compound words (Pooltemperatur) and things HA does not have are answered exactly
+- **V01.0.70** · 2026-10-07 · Home Assistant: questions about a device are answered from states the panel reads itself
+- 2026-10-07 · Memory cleanup: weekly proposal to merge duplicates and drop outdated facts, applied only after confirming
+- 2026-10-07 · Quality test: 20 fixed questions against the real model after every update and on demand
+- **V01.0.67** · 2026-10-07 · "Hey Siri, frag Spark": /api/siri/ask for an iPhone shortcut (device key, text answer, follow-ups, kept as the day's conversation), guide under Einbinden
+- **V01.0.66** · 2026-10-07 · Calendar: new appointments by voice; the assistant proposes, the panel writes to CalDAV only after the person says yes
+- **V01.0.65** · 2026-10-07 · Daily briefing by itself: each profile picks a time, the summary arrives as a push message and stays in the history
+- **V01.0.64** · 2026-10-07 · Assistant: a short spoken sentence at once while calendar, mail, documents or earlier conversations are read; thanks and greetings without a tool round
+- **V01.0.63** · 2026-10-07 · Home Assistant: history, all devices at once, typo-tolerant search, to-do lists
+- **V01.0.62** · 2026-10-07 · Home Assistant: more ways of saying a command are carried out by the panel
+- **V01.0.61** · 2026-10-07 · Home Assistant: direct action accepts the field names the model uses
+- **V01.0.60** · 2026-10-07 · Home Assistant: pick the right entity when Assist does not know the device
+- **V01.0.59** · 2026-10-07 · Home Assistant: the panel carries out plain switching commands itself
+- **V01.0.58** · 2026-10-07 · Ich → Protokoll: each profile sees what the assistant looked up (tools, arguments, short results, answer), kept 7 days / 200 turns
+- **V01.0.57** · 2026-10-07 · README: how the code word is stored and compared
+- **V01.0.56** · 2026-10-07 · Home Assistant: code word recognized as speech recognition writes it
+- **V01.0.55** · 2026-10-07 · Assistant: questions about appointments or mail must use the tool (tool_choice required), the model is told what it cannot reach, every round logs offered and called tools
+- **V01.0.54** · 2026-10-07 · Home Assistant: journal says why the tools are (not) offered and what the model called
+- **V01.0.53** · 2026-10-07 · Assistant: strict rules for every tool (only what the result says, empty results said plainly, no claimed actions without confirmation), temperature 0.3
+- **V01.0.52** · 2026-10-07 · Home Assistant: read the state back after every command, report only that
+- **V01.0.51** · 2026-10-07 · Assistant: long conversations send only the newest ~24000 characters; if the model still finds it too long, once more with a quarter
+- **V01.0.50** · 2026-10-07 · Assistant: a finished last sentence before a tool call stays and is spoken, only half sentences are taken back
+- **V01.0.49** · 2026-10-07 · Update check: no git prompt or config of the service account, find the commit line, log why it fails
+- 2026-10-07 · pitch_end.py: measure at the engine (TTS_URL) or with TTS_KEY when the proxy needs a key
+- **V01.0.47** · 2026-10-07 · Home Assistant: commands for devices Assist does not know, no more cut-off answers
+- 2026-10-07 · Add tools/pitch_end.py: measures pitch at sentence ends of the TTS (stream vs wav)
+- **V01.0.46** · 2026-10-07 · Assistant reads e-mail per profile over IMAP, read only
+- **V01.0.45** · 2026-10-07 · Update notice on top of every page for the logged-in admin
+- **V01.0.44** · 2026-10-07 · Setup wizard on the first admin login; English texts for the new pages
+- **V01.0.43** · 2026-10-07 · Reminders as push notifications on the profile's own devices, also with the page closed
+- **V01.0.42** · 2026-10-07 · Assistant: search earlier conversations and jump to the spot
+- **V01.0.41** · 2026-10-07 · Assistant: plain-language errors; without speech output the answer still comes as text
+- **V01.0.40** · 2026-10-07 · Stability: daily backups with restore, back to the previous version, watchdog, live check after updates, memory warning
+- **V01.0.39** · 2026-10-07 · Home Assistant: code word before any change
+- **V01.0.38** · 2026-10-07 · Speaker ID: another person's voice never lands in the logged-in profile's history
+- **V01.0.37** · 2026-10-07 · Security: login lockout, expiring sessions, foreign-page guard, encrypted secrets, device last use, change log
+- **V01.0.36** · 2026-10-07 · Home Assistant: switch devices Assist does not know
+- **V01.0.35** · 2026-10-07 · Home Assistant: read all states, zones and people, not only Assist
+- **V01.0.34** · 2026-10-07 · Split the page into style and script files
+- **V01.0.33** · 2026-10-07 · 'Ich' window: same page from both buttons, fixed size
+- **V01.0.32** · 2026-10-07 · Split the panel backend into modules
+- **V01.0.31** · 2026-10-07 · Self-test in the repo, run on every install and update
+- **V01.0.30** · 2026-10-07 · Tidy up the panel: five menu entries, one 'Ich' window, Features page
+- **V01.0.29** · 2026-10-07 · Without 'assistant without password' only guests are locked out
+- **V01.0.28** · 2026-10-07 · Home Assistant per profile through its Assist API
+- **V01.0.27** · 2026-10-07 · Memory of earlier conversations: history_search tool and background fact learning
+- **V01.0.26** · 2026-10-07 · Lock the panel with a progress window while an update runs
+- **V01.0.25** · 2026-10-07 · Louder speech on the Pebble watch
+- **V01.0.24** · 2026-10-07 · Pebble watch app: face that listens, thinks and speaks
+- **V01.0.23** · 2026-10-07 · Start a new conversation every day
+- **V01.0.22** · 2026-10-07 · Pebble watch app "Spark" with spoken answers on the watch speaker
+- **V01.0.21** · 2026-10-07 · Close every spoken line with a full stop, keep grouped sentences in one paragraph
+- **V01.0.20** · 2026-10-07 · iCloud CalDAV, webcal/webcals over https, provider presets
+- **V01.0.19** · 2026-10-07 · Several calendars per profile, tabbed profile and settings windows
+- **V01.0.18** · 2026-10-07 · Natural turn-taking, daily briefing with calendar, face-only phone view
+- **V01.0.17** · 2026-10-07 · Gentler TTS block ramp, 10-frame first block, 0.25 s head start
+- **V01.0.16** · 2026-10-07 · Fix TTS block ramp never being applied; flatter ramp
+- **V01.0.15** · 2026-10-07 · Delete messages, read answers again, clearer TTS start setting
+- **V01.0.14** · 2026-10-07 · Speaker identification for profiles, off by default
+- **V01.0.13** · 2026-10-07 · Grow streamed TTS blocks gradually
+- **V01.0.12** · 2026-10-07 · Start follow-up TTS requests earlier, show playback stalls
+- **V01.0.11** · 2026-10-07 · Play streamed speech in a 24 kHz audio context
+- **V01.0.10** · 2026-10-07 · Timers and reminders in the voice chat
+- 2026-10-07 · Phone layout like a messenger: slim top bar, history, fixed bottom bar, menu sheet
+- 2026-10-07 · Own documents per profile with keyword search as an LLM tool
+- 2026-10-07 · Configuration in sub-tabs with per-tab save, short labels and Advanced sections
+- 2026-10-07 · Conversations of a profile are stored on the Spark and shared across devices
+- 2026-10-07 · Guests cannot choose a voice; they always hear the default
+- 2026-10-07 · Conversation settings per profile: settings window, voice, speaking rate, answer length
+- 2026-10-07 · Profile login by typed name instead of a list; names no longer public
+- 2026-10-07 · Profiles with PIN login, device keys and per-profile memory
+- 2026-10-07 · Assistant: wake word "Hey Spark"
+- 2026-10-07 · Web search: read SearXNG's HTML results when JSON is not enabled
+- 2026-10-07 · SearXNG test button checks the address in the form
+- 2026-10-07 · Voice chat: web search through an existing SearXNG instance
+- 2026-10-07 · Assistant: date and time, saved conversations, live transcript; TTS pronunciation list
+- 2026-10-07 · Voices: export and import own voices as ZIP
+- 2026-10-06 · Version V01.0.1 and credit for the idea
+- 2026-10-06 · ASR vLLM engine: 1.7B needs a 0.06 memory share
+- 2026-10-06 · ASR: configurable context for names and terms
+- 2026-10-06 · Panel: log autoscroll, on by default
+- 2026-10-06 · Voice chat: long answers no longer cut off mid-sentence
+- 2026-10-06 · Panel: installable assistant app (PWA) and voice barge-in
+- 2026-10-06 · Panel: theme button (system, light, dark), remembered per browser
+- 2026-10-06 · Panel: log out also ignores HTTP Basic credentials the browser still sends
+- 2026-10-06 · Panel: assistant as open start page, settings behind a password login
+- 2026-10-06 · TTS: cloned voices with Base checkpoints on vllm-omni (task_type Base + reference)
+- 2026-10-06 · Voices: reading text language selectable, German by default
+- 2026-10-06 · Voices: record the clone reference with the microphone, transcript via ASR
+- 2026-10-06 · Steadier voice: pin the language, speak the chat answer in larger pieces
+- 2026-10-06 · Panel: accept chat.llm_key_from when saving the configuration
+- 2026-10-06 · Panel: modern look, animated assistant face, talk button on every tab
+- 2026-10-06 · Calmer speech: flatten exclamations, sober voice-chat prompt
+- 2026-10-06 · TTS streaming: first chunk 8 frames so the start does not stutter
+- 2026-10-06 · Voice chat: import qwen38 key on panel updates too, clear 401 hint
+- 2026-10-06 · Logs: own capped journal namespace, quiet poll access logs
+- 2026-10-06 · TTS: fixed small first audio chunk when streaming (tts.initial_chunk_frames=2)
+- 2026-10-06 · Voice chat in the panel, warm-up after engine start
+- 2026-10-06 · TTS: read numbers as words (dates, times, money, percent, phone numbers)
+- 2026-10-05 · ASR (transformers backend): convert webm/mp4/m4a/ogg to WAV with ffmpeg
+- 2026-10-05 · Panel: English/German language switch
+- 2026-10-05 · README in English and German, MIT license
+- 2026-10-05 · TTS: strip emojis, markdown, laugh words and action markers before synthesis
+- 2026-10-05 · TTS: calmer sampling defaults (temperature 0.7, top_p 0.9, fixed seed), configurable in panel
+- 2026-10-05 · Panel: explain speaking-style instructions, warn that 0.6B models ignore them
+- 2026-10-05 · Panel: fix copy buttons (name clash copied the element id)
+- 2026-10-05 · TTS engine start values 0.04 + 0.025 (0.03 + 0.015 had no KV room on the Spark)
+- 2026-10-05 · ASR engine 0.6B: share 0.035, smaller profiling batch; wait through restart pauses
+- 2026-10-05 · Show why an engine crashed in its status line
+- 2026-10-05 · Engine status: say 'loading' when the model is already downloaded
+- 2026-10-05 · Smaller engine memory shares for running next to qwen38
+- 2026-10-05 · Install ninja and a compiler for vLLM's JIT kernel builds
+- 2026-10-05 · Panel: copy selects the text, Ctrl+C works when the browser refuses
+- 2026-10-05 · Panel: copy buttons for logs, update log and measurement
+- 2026-10-05 · Panel: cancel button for a running update
+- 2026-10-05 · Start the engines one after another
+- 2026-10-05 · Show a crash-looping engine as error, not loading
+- 2026-10-05 · ASR engine: smaller memory share, free the old ASR before the engine starts
+- 2026-10-05 · Spracherkennung auf vLLM, Messskript und Messung im Panel
+- 2026-10-05 · tts_proxy: drop stale Docker wording
+- 2026-10-05 · Streaming TTS via vllm-omni and update button in the panel
+- 2026-10-05 · Speech on DGX Spark: installer, ASR/TTS services and web panel

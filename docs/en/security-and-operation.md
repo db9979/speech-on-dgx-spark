@@ -1,0 +1,36 @@
+# Security and operation
+
+← [README](../../README.md)
+
+## Security
+
+- **Assistant without password**: off on new installs. Then only profiles (name and PIN) and devices with a key reach the assistant. Switch under *Settings → Security*.
+- **Lockout after wrong attempts**: after 5 wrong passwords or PINs from one address (or 10 for one profile name or the admin password, from anywhere) the panel waits 1 minute, twice as long with every further lockout, at most an hour. On top, each name gets at most 30 wrong attempts a day. Addresses that logged in successfully before are not locked out by a stranger this way. The counts survive a restart of the panel.
+- **Reverse proxy**: behind a reverse proxy in the LAN (e.g. Synology) the real address from `X-Forwarded-For` counts, so one guesser cannot lock everybody out. Enter the proxy's address under *Settings → Security → Adressen des Reverse-Proxys* (reverse proxy addresses); then the panel trusts that header only from there, otherwise from any device in the home network.
+- **Logins expire**: the admin login after 7 days without use, a profile login after 90 days; while in use they renew themselves. Logging out ends the login on the server too. *Me → Security → Log out everywhere* ends the profile's login in all other browsers. On https (also behind the proxy) the cookies are `Secure`.
+- **Second login step (authenticator app)**: for the admin under *Settings → Security*, for profiles under *Me → Security* once the admin allows it under *Settings → Features* (off on new installs; each profile decides for itself). Set up with a QR code; then the login asks for the six-digit code, plus 10 recovery codes for a lost phone. "Trust this browser for 30 days" saves the code on your own device; "Log out everywhere" (profile) or "Forget trusted browsers" (admin) ends that. While the admin has it on, HTTP Basic no longer works, and changing the password, restoring a backup, creating or moving device keys and changing PINs ask for a code every time. Devices with a key (speakers, Siri, Pebble, phone) need no code. Way back in: admin `sudo rm /var/lib/speech-spark/state/mfa-admin.json`; the admin resets a profile under *Users → Profiles*.
+- **Outside text switches nothing**: once the assistant read web pages, calendar, documents or earlier conversations in an answer, nothing in that answer can switch Home Assistant, change memory or cancel reminders; after an e-mail it also cannot search the web or enter appointments. The panel only runs tools it offered the model in that step.
+- **Web search**: the panel reads result pages only from public addresses, never from the home network.
+- **Appointments**: a proposed appointment is confirmed only by a plain "yes" in the same conversation.
+- **Speaker identification**: the recognition result is given only to signed-in profiles and devices, and it is valid only there. Someone else's voice at a device gets answers but changes no memory.
+- **No changes from foreign pages**: changing requests with a login cookie must come from the panel's own page (`Sec-Fetch-Site`/`Origin`). Scripts with a device key or HTTP Basic are not affected.
+- **Secrets encrypted**: calendar and mail passwords and Home Assistant tokens are stored encrypted in the profile folders; the key is kept apart in `/var/lib/speech-spark/state/secret.key`.
+- **Devices**: *Users → Profiles and devices* and *Me → Security* show when and from where each device key was last used; one click blocks it.
+- **Change log**: *Overview → Logs → Change log* lists logins, wrong attempts, lockouts and every change with time, address and who (`/var/lib/speech-spark/state/audit.log`).
+
+## Stability
+
+- **Backups**: every day, before every update, before going back to the previous version and before every restore the panel backs up profiles (memory, conversations, documents, calendars, mail accounts, smart home, speaker ID), cloned voices, settings and the panel password to `/var/lib/speech-spark/backups`. Counted separately, the newest seven daily or manual ones and the newest five from before an update, rollback or restore are kept. *Overview → System and update → Backup* downloads, restores or deletes each one and restores a downloaded file. A restore checks the settings like the settings page does, caps the size and swaps all parts or none; the current state is backed up first. Passwords and tokens are in the backup encrypted, the key is not: on another Spark, calendar and mail passwords and Home Assistant tokens have to be entered again.
+- **Back to the previous version**: after an update the update card shows "Back to the previous version", which installs the version that ran before (only versions of the official branch). By hand: `sudo /opt/speech-spark/src/update.sh --to <commit>`.
+- **Watchdog** (*Settings → System*, on by default): restarts ASR, TTS or an engine that does not answer for 5 minutes, works for 5 minutes without finishing a request, or loads for 45 minutes; at most three times an hour. Every restart is shown on top of the admin pages and in the change log.
+- **Live check**: after every update (and on request) the language model answers once, speech output says a sentence and speech recognition has to understand it again. A failure is shown on top of the admin pages.
+- **Quality test**: after every update (when the live check passed) and on request (*Overview → System and update → Qualitätstest → Jetzt prüfen*) the panel asks the real language model 20 fixed questions with prepared tool results (appointments, mail, reminders, search, memory) and checks that it picks the right tool and only says what is in the result. No real data is read or changed.
+- **Memory warning**: when free memory drops below *Settings → System → Warn below* (default 10 GiB), every admin page shows a warning on top; DGX OS kills processes at about 8 GiB.
+
+## Self-test
+
+Every install and update runs the panel's self-test (`app/tests`) against fake LLM, TTS and Home Assistant servers in a throw-away directory: login and access, that profiles never see each other's memory, documents, conversations, mailboxes or Home Assistant, the chat tools, learning from conversations, calendar and text cleaning. It runs before the new version goes live. In an update a failure stops the update and the old version keeps running; on a first install it is only reported. The result is in the update log. By hand: `cd /opt/speech-spark/app && sudo /opt/speech-spark/venv-panel/bin/python -m unittest discover -s tests -t .`
+
+## Logs
+
+All speech services log into their own journal (`journalctl --namespace=speech-spark -u 'speech-spark-*'`), capped at 500 MB and 14 days; journald deletes older entries automatically. Adjustable under Settings → System, effective after the next update. The panel's constant status polls are not logged at all.

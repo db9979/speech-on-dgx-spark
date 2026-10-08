@@ -370,7 +370,7 @@ make_venv() {  # $1 = name, rest = pip packages
 }
 
 check_cuda() {
-  "$PREFIX/venv-$1/bin/python" - <<'EOF' || die "torch in venv-$1 has no CUDA. Re-run; if it persists, see README troubleshooting."
+  "$PREFIX/venv-$1/bin/python" - <<'EOF' || die "torch in venv-$1 has no CUDA. Re-run; if it persists, see docs/en/technical.md (Troubleshooting)."
 import torch
 assert torch.version.cuda and torch.cuda.is_available(), "CPU-only torch"
 print(f"   torch {torch.__version__}, CUDA {torch.version.cuda}, {torch.cuda.get_device_name(0)}, arch {torch.cuda.get_arch_list()[-3:]}")
