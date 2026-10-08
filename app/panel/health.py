@@ -299,7 +299,23 @@ def alerts():
     if live and not live.get("ok") and time.time() - live["t"] < 86400:
         bad = ", ".join(s["name"].upper() for s in live["steps"] if s["ok"] is False)
         out.append({"kind": "livecheck", "level": "bad", "text": f"Funktionsprüfung fehlgeschlagen: {bad}."})
+    out += quality_alert()
     return out
+
+
+def quality_alert():
+    """Questions of the quality test that passed in the run before and fail now (quality.py history):
+    shown on every admin page for a week, so a worse model or update does not go unnoticed."""
+    import quality
+    res = quality.last()
+    if not res or not res.get("cases") or time.time() - res.get("t", 0) > 7 * 86400:
+        return []
+    new = [x["q"] for x in res["cases"] if x.get("new")]
+    if not new:
+        return []
+    return [{"kind": "quality", "level": "warn",
+             "text": f"Qualitätstest: {len(new)} Frage(n) neu kaputt, z. B. „{new[0][:80]}“ "
+                     "(System und Update → Qualitätstest)."}]
 
 
 def memory_now():

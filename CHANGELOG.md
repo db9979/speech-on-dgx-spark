@@ -2,6 +2,7 @@
 
 Every version in one line, newest first (taken from the commit messages, so some lines are German, some English). Older entries have no version number.
 
+- **V01.0.119** · 2026-10-08 · Qualitätstest: neu kaputte Fragen erscheinen eine Woche lang als Hinweis oben auf jeder Admin-Seite
 - **V01.0.118** · 2026-10-08 · Aus Korrekturen lernen (aus, Admin + Profil): nach „Nein, …“ fragt der Assistent „Soll ich mir merken …?“ und speichert erst nach „Ja“; korrigierte Fragen können als Testfall in den Qualitätstest
 - **V01.0.117** · 2026-10-08 · Werkzeugpflicht per Tabelle, Antwort-Prüfung hält erfundene Uhrzeiten, Daten, Spielstände und Beträge zurück, Temperatur 0.1 bei der Werkzeugwahl, Qualitätstest mit Umformulierungen, Wiederholung und Verlauf, optional Nachdenken bei der Werkzeugwahl
 - **V01.0.116** · 2026-10-08 · Selbsttest beim Update repariert: ein neuer Test sprach auf dem Spark die laufende TTS-Engine an (Event loop is closed)

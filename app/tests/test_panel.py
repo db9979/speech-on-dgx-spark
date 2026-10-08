@@ -892,6 +892,15 @@ class Quality(unittest.TestCase):
         byid2 = {x["id"]: x for x in res2["cases"]}
         self.assertEqual(byid2["kalender-leer"]["wobbly"], 1)   # failed in the run before: wobbly, not new
         self.assertFalse(byid2["kalender-leer"]["new"])
+        # newly broken questions show up on every admin page (health.alerts)
+        import health
+        self.assertFalse([a for a in health.alerts() if a["kind"] == "quality"])
+        byid2["witz"]["new"] = True
+        quality._save(res2)
+        self.assertTrue([a for a in health.alerts() if a["kind"] == "quality"])
+        res2["t"] = 0  # a week old: no longer shown
+        quality._save(res2)
+        self.assertFalse([a for a in health.alerts() if a["kind"] == "quality"])
         self.assertEqual(byid2["kalender-leer"]["runs"], 1)
         self.assertEqual(TestClient(panel.app).get("/api/quality").status_code, 401)
 
