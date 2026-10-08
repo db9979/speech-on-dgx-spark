@@ -31,6 +31,7 @@ Alle Optionen ohne Rückfragen (`--mode api --asr 1.7b --tts 0.6b --yes` …) st
 
 <!-- New version: add one line at the top here and in CHANGELOG.md, drop the oldest line here (keep 10). Details go to docs/de and docs/en, not into this README. -->
 
+- **V01.0.156** Chat-Code aufgeteilt (ohne Verhaltensänderung): Rechte und Prompt in chat_turn.py, Werkzeuge in chat_tools.py, Antwort und Ton in chat.py
 - **V01.0.155** iPhone-App zeigt das im Panel gewählte Gesicht, jetzt auch das Comic-Gesicht mit eigenem Leben (Lider, Blicke, Brauen, Mund unterm Schnurrbart)
 - **V01.0.154** Gesicht wählbar: Admin stellt unter Einstellungen → Vorgaben „Roboter“ (bisher) oder „Comic“ ein (Karikatur, schaut umher, blinzelt, Mund folgt der Stimme, farbiger Ring je Zustand); gilt für Panel und iPhone-App
 - **V01.0.153** iPhone-App lebendig: Gesicht wie im Panel (Aussehen austauschbar), Freihändig und Ins-Wort-fallen, Weckwort auf dem iPhone ohne Internet, Ständer-Modus am Ladekabel, Erinnerungen als Mitteilung, Hinweise von selbst, Route und Anruf nur nach „Ja“ (neue Schalter im Panel, aus)
@@ -40,7 +41,6 @@ Alle Optionen ohne Rückfragen (`--mode api --asr 1.7b --tts 0.6b --yes` …) st
 - **V01.0.149** Lautsprecher-Seite geordnet: Liste → eigene Seite pro Lautsprecher (Klang, Raum-Modus mit „Starten“ und wählbaren Arten, Stimme, Firmware, Prüfen), „Lautsprecher hinzufügen“ per USB oder Code, Admin „Adresse prüfen“, Lautsprecher-Schlüssel gekennzeichnet
 - **V01.0.148** Browser-Test für Zustand hält auch dort, wo systemd echte Dienste meldet (GitHub)
 - **V01.0.147** Design „Klar“, Schritt 3: Ich öffnet am Rechner als Seite neben der Menüleiste statt als Fenster; ein anderer Menüpunkt schließt es
-- **V01.0.146** Design „Klar“, Schritt 2: Zustand beginnt mit einem Satz („Alles läuft.“ oder was nicht läuft) und „Braucht dich“ (Update, ungespeicherte Einstellungen, Dienst aus/Fehler) mit Knopf dorthin; Punkt im Menü grün/gelb/rot; qwen38 und GPU-Prozesse zugeklappt
 
 Alle Versionen: [CHANGELOG.md](CHANGELOG.md)
 

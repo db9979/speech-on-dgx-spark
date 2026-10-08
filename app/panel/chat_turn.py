@@ -1,0 +1,361 @@
+"""One chat turn, before the model is asked: who is speaking and what they may use (profile, voice, device
+key, Telegram, iPhone app), the system prompt, answers to waiting proposals ("Ja" to a calendar entry,
+a mail change, a correction ...), the tools on offer and the locks after outside text.
+
+prepare() returns a Turn: every value it worked out, as attributes (t.who, t.ha, t.tools ...).
+chat._answer() asks the model with it, chat_tools.run() carries out the tool calls."""
+import asyncio
+import json
+import os
+import sys
+import time
+
+import httpx
+from fastapi import HTTPException
+
+sys.path.insert(0, os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
+from core import DEFAULTS  # noqa: E402
+from core import admin_cookie_ok  # noqa: E402
+import calendars  # noqa: E402
+import documents  # noqa: E402
+import extras  # noqa: E402
+import fixes  # noqa: E402
+import homeassistant  # noqa: E402
+from common import load_config  # noqa: E402
+import mail  # noqa: E402
+import proactive  # noqa: E402
+import profiles  # noqa: E402
+import speakers  # noqa: E402
+import tidy  # noqa: E402
+import chat  # noqa: E402  (constants and helpers; imported fully before any call)
+
+
+class Turn:
+    """The values prepare() worked out for one turn (plus the queues chat._answer() adds)."""
+
+    def __init__(self, values):
+        self.__dict__.update(values)
+
+
+async def prepare(request):
+    body = await request.json()
+    cfg = load_config()
+    with open(DEFAULTS) as f:
+        ccfg = dict(json.load(f)["chat"], **cfg.get("chat", {}))
+    # text only (no image links or other parts); an answer the browser marked as made from mail or
+    # other outside text keeps that mark (the browser is the person's own and has no reason to lie)
+    messages = [dict({"role": m["role"], "content": m["content"]},
+                     **({"mark": "mail" if m.get("mail") else "outside"} if m.get("mail") or m.get("outside") else {}))
+                for m in (body.get("messages") if isinstance(body.get("messages"), list) else [])
+                if isinstance(m, dict) and m.get("role") in ("user", "assistant") and isinstance(m.get("content"), str)
+                and m["content"].strip()]
+    if not messages:
+        raise HTTPException(400, "messages are required")
+    # what the assistant said right before this message (a note it made by itself may open the
+    # conversation, which the trimming below drops)
+    said_before = next((str(m["content"]) for m in reversed(messages[:-1]) if m["role"] == "assistant"), None) \
+        if messages[-1]["role"] == "user" else None
+    messages = chat.trim_history(messages, chat.history_chars(ccfg))
+    # Outside text from earlier turns: the latest such answer still counts as read in this turn (it
+    # could ask for something "in the next message"), so this turn starts locked; older ones are not
+    # sent again at all.
+    marked = [i for i, m in enumerate(messages) if m.get("mark")]
+    carry = messages[marked[-1]]["mark"] if marked and marked[-1] >= len(messages) - 3 else None
+    came_from = carry   # what the answer right before rested on (for learning from corrections)
+    search = bool(ccfg.get("search") and ccfg.get("search_url"))
+    # The answer before came from mail: it would lock the web search for this turn too (its text could
+    # carry the mail away). A question that clearly wants the web gets the search instead, and that
+    # mail answer is left out of this turn, so no word from the mail can reach a search query.
+    if carry == "mail" and search and messages[-1]["role"] == "user" \
+            and chat.needed(messages[-1]["content"], {"web_search"}, ccfg.get("tool_words", "")):
+        carry = None
+        print("chat: web search asked for right after an answer from mail: that answer is left out, search offered",
+              flush=True)
+    messages = [{"role": m["role"], "content": chat.DROPPED if m.get("mark") and i != (marked[-1] if carry else -1)
+                 else m["content"]} for i, m in enumerate(messages)]
+    system = ccfg.get("system_prompt") or ""
+    if ccfg.get("datetime", True):
+        system = (system + "\n\n" + chat.now_line(body.get("tz"))).strip()
+    # why the search is (not) offered, for the journal and for the model (never silently missing)
+    print("chat: web search", "NOT offered: switched off (Einstellungen → Funktionen → Websuche)" if not ccfg.get("search")
+          else "NOT offered: no SearXNG address" if not search
+          else "locked: the answer before came from e-mail" if carry == "mail" else "offered", flush=True)
+    system = (system + "\n\n" + (chat.SEARCH_LOCKED_HINT if search and carry == "mail" else chat.SEARCH_HINT if search
+                                  else chat.SEARCH_OFF_HINT)).strip()
+    who = profiles.current(request)
+    # A voice recognized by the speech recognition (signed token, see speakers.py) picks that
+    # profile for this turn; its own settings apply then, not the ones this browser sends.
+    heard = speakers.check(body.get("speaker"), who["id"]) \
+        if ccfg.get("speaker_id", False) and body.get("speaker") and who else None
+    heard = heard and profiles.by_id(heard)
+    own_browser = not heard or (who and who["id"] == heard["id"])
+    device_owner = who
+    if heard:
+        who = heard
+    if not own_browser:
+        # someone else's voice at this browser: the browser's conversation is not theirs, so it is
+        # not sent along (and the browser keeps this turn out of its own history, see "foreign")
+        messages = [m for m in messages[-1:] if m["role"] == "user"]
+        if not messages:
+            raise HTTPException(400, "a question is required")
+    # conversation settings: what the request sends, else the profile's, else the admin's defaults
+    # (speakers with a device key send nothing and get their profile's voice, speed and length)
+    pset = dict(profiles.defaults(ccfg.get("defaults")), **(profiles.settings(who["id"]) if who else {}))
+    # guests change nothing: they get the admin's defaults (the admin's own browser may try speed and length)
+    for k in (("voice", "speed", "length") if who else ("speed", "length") if admin_cookie_ok(request) else ()) \
+            if own_browser else ():
+        if k in body and profiles.SETTINGS[k][1](body[k]):
+            pset[k] = body[k]
+    length = chat.LENGTH_HINT.get(pset["length"])
+    if length:
+        system = (system + "\n\n" + length).strip()
+    style = chat.own_style(ccfg, who, pset, own_browser)
+    if style:
+        system = (system + "\n\n" + chat.STYLE_INTRO + style).strip()
+    if body.get("client") == "watch":
+        system = (system + "\n\n" + chat.WATCH_HINT).strip()
+    if body.get("client") == "siri":
+        system = (system + "\n\n" + chat.SIRI_HINT).strip()
+    if body.get("client") == "speaker":
+        system = (system + "\n\n" + chat.SPEAKER_HINT).strip()
+    # a voice recognized at someone else's device gets no personal data at all (it could be a recording
+    # of that person): no memory, history, documents, calendar, contacts, lists or reminders
+    prof = who if ccfg.get("memory", True) and own_browser else None
+    if prof:  # guests get no memory at all
+        system = (system + "\n\n" + chat.memory_hint(prof)).strip()
+    past = bool(prof and ccfg.get("history", True))
+    if past:
+        system = (system + "\n\n" + chat.HISTORY_HINT).strip()
+    # Home Assistant only for the profile's own login or device key: a voice recognized at someone
+    # else's device does not switch that profile's home
+    ha = homeassistant.get(who["id"]) if who and own_browser and ccfg.get("homeassistant", False) else None
+    # over Telegram the profile decides: personal data only with tg_private, switching only with tg_ha
+    # and a code word (the messages pass Telegram's servers)
+    tg = body.get("client") == "telegram"
+    tset = profiles.settings(who["id"]) if tg and who else {}
+    private_ok = (not tg or bool(tset.get("tg_private"))) and own_browser
+    if tg and ha and not (tset.get("tg_ha") and homeassistant.needs_code(ha)):
+        ha = None
+    # from the iPhone app the smart home switches only when the profile allowed it there (app_ha); the
+    # key decides, not what the request says it is
+    app_key = profiles.key_scope(request) == "app"
+    app_blocked = bool(ha and who and app_key and not profiles.settings(who["id"]).get("app_ha"))
+    # actions on the iPhone itself: only from the app's own key, only when the profile allowed them
+    phone_act = bool(app_key and who and own_browser and profiles.settings(who["id"]).get("app_act"))
+    if app_key:
+        system = (system + "\n\n" + chat.IPHONE_HINT + (" " + chat.IPHONE_ACT_HINT if phone_act else "")).strip()
+    if app_blocked:
+        ha = None
+    if tg:
+        system = (system + "\n\n" + chat.TELEGRAM_HINT).strip()
+    if ccfg.get("homeassistant", False):  # why the smart home tools are (not) offered, for the journal
+        print("homeassistant: turn for", who["name"] if who else "guest", "- tools",
+              "offered" if ha else "NOT offered: " + (
+                  "no profile signed in" if not who else "voice of another profile" if not own_browser
+                  else "not allowed from the iPhone app (Ich → iPhone-App)" if app_blocked
+                  else "token unreadable (stored with another key), connect again" if homeassistant._raw(who["id"])
+                  else "this profile has not connected Home Assistant"), flush=True)
+    if ha:
+        system = (system + "\n\n" + chat.HA_HINT).strip()
+    # code word for changes: only the user's own latest message counts, checked here, never by the
+    # model; the model and everything after it see "[Codewort]" instead of the word
+    ha_code = bool(ha and homeassistant.needs_code(ha))
+    ha_code_ok = ha_code and messages[-1]["role"] == "user" and homeassistant.code_given(ha, messages[-1]["content"])
+    if ha_code:
+        system = (system + "\n\n" + chat.HA_CODE_HINT).strip()
+        messages = [dict(m, content=homeassistant.redact(ha, m["content"])) if m["role"] == "user" else m
+                    for m in messages]
+    if not own_browser and device_owner:
+        # a voice taken for someone else at this device may still have been the owner saying their
+        # code word: it never reaches the model or the other profile's log either
+        oha = homeassistant.get(device_owner["id"])
+        if oha and homeassistant.needs_code(oha):
+            messages = [dict(m, content=homeassistant.redact(oha, m["content"])) if m["role"] == "user" else m
+                        for m in messages]
+    # A plain switching command is carried out by the panel itself, not left to the model: the model
+    # only puts the checked result into words. Without the code word the command waits (two minutes)
+    # and runs as soon as the next message brings it.
+    ha_direct = None
+    if ha and messages[-1]["role"] == "user":
+        latest = messages[-1]["content"]
+        pend = chat._HA_PENDING.pop(who["id"], None)
+        if homeassistant.is_command(latest) and await homeassistant.mentions_device(ha, latest):
+            ha_direct = homeassistant.clean_command(latest)
+        elif homeassistant._intent(latest):  # sounds like switching but is not taken as a command: say why
+            print("homeassistant: not taken as a command:", repr(homeassistant.clean_command(latest)[:100]), flush=True)
+        elif ha_code_ok and pend and time.time() - pend[0] < 120:
+            ha_direct = pend[1]
+        if ha_direct and ha_code and not ha_code_ok:
+            chat._HA_PENDING[who["id"]] = (time.time(), ha_direct)
+            print("homeassistant: command waits for the code word", flush=True)
+            system = (system + "\n\n" + "Der Nutzer will etwas im Smart Home schalten, aber das Codewort fehlt. "
+                      "Frag in einem kurzen Satz nach dem Codewort; sag nicht, dass etwas geschaltet wurde.").strip()
+            ha_direct = None
+            ha_wait = True
+        else:
+            ha_wait = False
+    else:
+        ha_wait = False
+    # A question that names a device or room is answered from states the panel reads itself, so the
+    # value never comes from the model's memory of earlier turns or from a guess.
+    ha_read = None
+    if ha and not ha_direct and not ha_wait and messages[-1]["role"] == "user" \
+            and not homeassistant._intent(messages[-1]["content"]):
+        try:
+            ha_read = await homeassistant.lookup(ha, messages[-1]["content"])
+        except (httpx.HTTPError, ValueError) as e:
+            print("homeassistant: lookup failed:", type(e).__name__, flush=True)
+    docs = documents.list_docs(who["id"]) if who and private_ok and ccfg.get("documents", True) else []
+    if docs:
+        system = (system + "\n\n" + chat.docs_hint(who, docs)).strip()
+    timers = bool(ccfg.get("reminders", True))
+    if timers:
+        system = (system + "\n\n" + chat.REMINDER_HINT).strip()
+    # guests keep their reminders in the browser, which sends them along; profiles keep them on the Spark
+    guest_rem = [{"id": x["id"][:16], "text": str(x.get("text", ""))[:200], "due": x["due"]}
+                 for x in (body.get("reminders") if isinstance(body.get("reminders"), list) else [])
+                 if isinstance(x, dict) and isinstance(x.get("id"), str)
+                 and isinstance(x.get("due"), (int, float))][:50] if not who else []
+    # e-mail like Home Assistant: only for the profile's own login or device key
+    mailbox = bool(who and own_browser and private_ok and ccfg.get("mail", False) and mail.get(who["id"])["accounts"])
+    if mailbox:
+        system = (system + "\n\n" + chat.MAIL_HINT).strip()
+    # tidying and drafts (tidy.py): only for mailboxes the profile switched on; changes after a yes
+    tidy_st = tidy.state(who["id"]) if mailbox and tidy.admin_on() else None
+    tidy_on = bool(tidy_st and any(tidy.acct_state(tidy_st, x["id"])["mode"] != "off"
+                                   for x in mail.get(who["id"])["accounts"]))
+    drafts_on = bool(tidy_st and any(tidy.acct_state(tidy_st, x["id"]).get("drafts")
+                                     for x in mail.get(who["id"])["accounts"]))
+    if tidy_on:
+        system = (system + "\n\n" + chat.TIDY_HINT).strip()
+    if drafts_on:
+        system = (system + "\n\n" + chat.DRAFT_HINT).strip()
+    briefing = bool(ccfg.get("calendar", True))
+    cal_note = []
+    cal = calendars.get(who["id"]) if who and briefing and private_ok else {"calendars": [], "topics": []}
+    # new appointments: only the profile's own login or device key, and only after a yes (see calendars.py)
+    cal_write = bool(cal["calendars"] and own_browser)
+    prop = None
+    src = f"{body.get('client') or 'web'}:{body.get('convo') if isinstance(body.get('convo'), str) else ''}"
+    if cal_write:
+        system = (system + "\n\n" + chat.CALENDAR_ADD_HINT).strip()
+        prop = calendars.pending(who["id"])
+        if prop and prop.get("src", src) != src:
+            prop = None  # proposed on another device or in another conversation: the yes is not for it
+        if prop:
+            latest = messages[-1]["content"] if messages[-1]["role"] == "user" else ""
+            calendars.drop_pending(who["id"])
+            if calendars.confirms(latest):
+                try:
+                    where = await calendars.add_event(who["id"], prop)
+                    note = f"Saved in calendar '{where}' (confirmed by the calendar server): {calendars.describe(prop)}"
+                except Exception as e:
+                    note = f"NOT saved, the calendar refused it: {e}. Proposal was {calendars.describe(prop)}"
+                cal_note[:] = [{"name": "calendar_add (bestätigt)", "args": calendars.describe(prop), "result": note}]
+                system = (system + "\n\nKalender: " + note + " Sag dem Nutzer genau das in einem Satz.").strip()
+            else:
+                system = (system + "\n\nKalender: Der vorgeschlagene Termin " + calendars.describe(prop)
+                          + " wurde NICHT eingetragen, weil der Nutzer nicht zugestimmt hat.").strip()
+    # an answer to something the assistant said by itself (yes to its offer, "nicht jetzt", ...):
+    # the panel does what it means and the model only says the checked result (see proactive.py)
+    mprop = None
+    if (tidy_on or drafts_on) and not prop:
+        mprop = tidy.pending(who["id"])
+        if mprop and mprop.get("src", src) != src:
+            mprop = None
+        if mprop:
+            latest = messages[-1]["content"] if messages[-1]["role"] == "user" else ""
+            tidy.drop_pending(who["id"])
+            what = tidy.describe(mprop, tidy_st)
+            if tidy.confirms(latest):
+                try:
+                    note = await asyncio.to_thread(tidy.carry_out, who["id"], mprop)
+                except Exception as e:
+                    note = f"NICHT ausgeführt, Fehler: {e}"
+                cal_note.append({"name": "mail (bestätigt)", "args": what, "result": note})
+                system = (system + "\n\nPostfach: " + note + " Sag dem Nutzer genau das in einem Satz.").strip()
+            else:
+                system = (system + "\n\nPostfach: Der Vorschlag „" + what + "“ wurde NICHT ausgeführt, weil der "
+                          "Nutzer nicht zugestimmt hat.").strip()
+    # ticking off a list entry ... (extras.py): the module waiting for a yes in this conversation
+    xprop = None
+    if who and messages[-1]["role"] == "user" and not prop and not mprop:
+        xprop = await extras.answer({"who": who, "own": own_browser, "src": src}, messages[-1]["content"])
+        if xprop:
+            cal_note.append(xprop["call"])
+            system = (system + "\n\n" + xprop["system"]).strip()
+    pro = None
+    if who and own_browser and messages[-1]["role"] == "user" and not prop and not mprop and not xprop:  # one yes confirms one thing
+        pro = proactive.reply(who["id"], messages[-1]["content"], said_before)
+        if pro:
+            cal_note.append(pro["call"])
+            system = (system + "\n\n" + pro["system"]).strip()
+    # learning from corrections (fixes.py): a yes saves the proposed sentence, a correction leads to one
+    fix_ok = bool(who and own_browser and private_ok and ccfg.get("memory", True) and fixes.on(ccfg, pset)
+                  and messages[-1]["role"] == "user")
+    fix_fix, fix_prev = False, ""
+    if fix_ok and not prop and not mprop and not xprop and not pro:
+        fp = fixes.pending(who["id"])
+        if fp and fp.get("src", src) == src:
+            fixes.drop_pending(who["id"])
+            if fixes.confirms(messages[-1]["content"]):
+                saved = profiles.remember(who["id"], fp["text"])
+                cal_note.append({"name": "Korrektur gemerkt", "args": "", "result": saved or "nicht gespeichert"})
+                system = (system + "\n\nGedächtnis: Gemerkt wurde „" + (saved or "") + "“. Sag dem Nutzer genau das "
+                          "in einem kurzen Satz.").strip()
+            else:
+                system = (system + "\n\nGedächtnis: Der Vorschlag „" + fp["text"] + "“ wurde NICHT gemerkt, weil der "
+                          "Nutzer nicht zugestimmt hat.").strip()
+        elif fixes.is_correction(messages[-1]["content"], said_before):
+            fix_fix = True
+            fix_prev = next((m["content"] for m in reversed(messages[:-2]) if m["role"] == "user"), "")[:200]
+    if who and own_browser and messages[-1]["role"] == "user":
+        # one answer settles every proposal waiting in this conversation: a later "ja" meant for
+        # something else never carries out an old one
+        import tasks
+        for mod in (calendars, tidy, tasks, fixes):
+            p = mod.pending(who["id"])
+            if p and p.get("src", src) == src:
+                mod.drop_pending(who["id"])
+    if briefing:
+        system = (system + "\n\n" + chat.BRIEFING_HINT + (" " + chat.CALENDAR_HINT if cal["calendars"] else "")
+                  + (" Nenne im Briefing nach den Erinnerungen kurz die ungelesenen Mails (Absender und Thema)."
+                     if mailbox else "")).strip()
+    # a voice recognized at someone else's device may read its own things but changes nothing that
+    # lasts: no memory changes, no cancelled reminders (it could be a recording of that person)
+    tools = ([chat.SEARCH_TOOL] if search else []) + (chat.MEMORY_TOOLS if prof and own_browser else []) + ([chat.HISTORY_TOOL] if past else []) \
+        + ([chat.DOC_TOOL] if docs else []) + (([chat.HA_STATES_TOOL, chat.HA_HISTORY_TOOL] if ha_direct or ha_wait
+             else [chat.HA_TOOL, chat.HA_STATES_TOOL, chat.HA_ACTION_TOOL, chat.HA_HISTORY_TOOL, chat.HA_TODO_TOOL]) if ha else []) \
+        + (chat.REMINDER_TOOLS if timers and own_browser else []) + ([chat.BRIEFING_TOOL] if briefing else []) \
+        + ([chat.CALENDAR_TOOL] if cal["calendars"] else []) + ([chat.CALENDAR_ADD_TOOL] if cal_write else []) \
+        + (chat.MAIL_TOOLS if mailbox else []) + (chat.TIDY_TOOLS if tidy_on else []) + ([chat.DRAFT_TOOL] if drafts_on else []) \
+        + ([chat.IPHONE_TOOL] if phone_act else [])
+    # weather, contacts, parcels ... (extras.py): each offers its tools only when the profile switched it on
+    ex = extras.offer({"who": who, "own": own_browser, "tz": body.get("tz"), "private": private_ok})
+    tools += ex["tools"]
+    if ex["hints"]:
+        system = (system + "\n\n" + " ".join(ex["hints"])).strip()
+    # once mail or other outside text was read in this answer, nothing in it may change the home or
+    # the memory, and after mail no words go to the web (see LOCKED_OUTSIDE / LOCKED_MAIL)
+    def locked(st):
+        return (chat.LOCKED_MAIL | ex["changes"]) if st["mail"] else (chat.LOCKED_OUTSIDE | ex["changes"]) if st["outside"] else set()
+    # what this request cannot reach: said plainly, so the model does not make up appointments or mails
+    missing = ([] if cal["calendars"] else ["Kalender"]) + ([] if mailbox else ["E-Mails"])
+    if missing:
+        system = (system + "\n\n" + "Du hast in diesem Gespräch keinen Zugriff auf: " + ", ".join(missing)
+                  + " (nicht eingerichtet oder nicht mit einem Profil angemeldet). Fragt der Nutzer danach, sag "
+                    "genau das und nenne nie Termine oder E-Mails, die du nicht aus einem Werkzeug hast.").strip()
+    # a question about appointments, mail, reminders, news ... must go through the tool, not the
+    # model's imagination (NEED_TOOLS)
+    ask_text = messages[-1]["content"] if messages[-1]["role"] == "user" else ""
+    need = chat.needed(ask_text, {t["function"]["name"] for t in tools}, ccfg.get("tool_words", ""))
+    check_on = bool(ccfg.get("answer_check", True))
+    tool_temp = float(ccfg.get("tool_temperature", 0.1))
+    # thinking only while choosing the tool: the admin allows it, the profile switches it on (never guests)
+    think_tools = bool(who and own_browser and ccfg.get("tool_thinking", False) and pset.get("tool_think"))
+    small = bool(chat.SMALLTALK.fullmatch(ask_text))
+    if tools:
+        system = (system + "\n\n" + chat.TOOL_RULES).strip()
+    if system:
+        messages = [{"role": "system", "content": system}] + messages
+    return Turn(locals())

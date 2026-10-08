@@ -31,6 +31,7 @@ All options for running without questions (`--mode api --asr 1.7b --tts 0.6b --y
 
 <!-- New version: add one line at the top here and in CHANGELOG.md, drop the oldest line here (keep 10). Details go to docs/de and docs/en, not into this README. -->
 
+- **V01.0.156** Chat code split up (no change in behaviour): rights and prompt in chat_turn.py, tools in chat_tools.py, answer and sound in chat.py
 - **V01.0.155** iPhone app shows the face picked in the panel, now also the comic face with its own life (lids, glances, brows, mouth under the mustache)
 - **V01.0.154** Selectable face: the admin picks "Robot" (as before) or "Comic" under Settings → Defaults (a caricature that looks around, blinks, moves its mouth with the voice and shows the state with a coloured ring); for the panel and the iPhone app
 - **V01.0.153** iPhone app comes alive: face as in the panel (look swappable), hands-free and interrupting, wake word on the iPhone offline, stand mode on the charger, reminders as notifications, notes on its own, route and call only after "yes" (new panel switches, off)
@@ -40,7 +41,6 @@ All options for running without questions (`--mode api --asr 1.7b --tts 0.6b --y
 - **V01.0.149** Speaker page tidied: list → one page per speaker (sound, room mode with "Start" and selectable kinds, voice, firmware, check), "Add a speaker" over USB or by code, admin "Check address", speaker keys marked
 - **V01.0.148** Browser test for Zustand also holds where systemd reports real services (GitHub)
 - **V01.0.147** Design "Klar", step 3: on a computer Ich opens as a page beside the sidebar instead of a window; another menu entry closes it
-- **V01.0.146** Design "Klar", step 2: Zustand (status) starts with one sentence ("Everything is running." or what is not) and "Braucht dich" (needs you: update, unsaved settings, service off/failing) with a button to each place; green/yellow/red dot in the menu; qwen38 and GPU processes folded
 
 All versions: [CHANGELOG.md](CHANGELOG.md)
 

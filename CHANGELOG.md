@@ -2,6 +2,7 @@
 
 Every version in one line, newest first (taken from the commit messages, so some lines are German, some English). Older entries have no version number.
 
+- **V01.0.156** · 2026-10-08 · Chat-Code aufgeteilt (ohne Verhaltensänderung): Rechte und Prompt in chat_turn.py, Werkzeuge in chat_tools.py, Antwort und Ton in chat.py
 - **V01.0.155** · 2026-10-08 · iPhone-App zeigt das im Panel gewählte Gesicht, jetzt auch das Comic-Gesicht mit eigenem Leben (Lider, Blicke, Brauen, Mund unterm Schnurrbart)
 - **V01.0.154** · 2026-10-08 · Gesicht wählbar: Admin stellt unter Einstellungen → Vorgaben „Roboter“ (bisher) oder „Comic“ ein (Karikatur, schaut umher, blinzelt, Mund folgt der Stimme, farbiger Ring je Zustand); gilt für Panel und iPhone-App
 - **V01.0.153** · 2026-10-08 · iPhone-App lebendig: Gesicht wie im Panel (Aussehen austauschbar), Freihändig und Ins-Wort-fallen, Weckwort auf dem iPhone ohne Internet, Ständer-Modus am Ladekabel, Erinnerungen als Mitteilung, Hinweise von selbst, Route und Anruf nur nach „Ja“ (neue Schalter im Panel, aus)
