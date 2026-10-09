@@ -31,6 +31,7 @@ Alle Optionen ohne Rückfragen (`--mode api --asr 1.7b --tts 0.6b --yes` …) st
 
 <!-- New version: add one line at the top here and in CHANGELOG.md, drop the oldest line here (keep 10). Details go to docs/de and docs/en, not into this README. -->
 
+- **V01.0.182** GitHub-Abläufe auf Node 24 umgestellt (checkout v5, setup-python v6), keine Warnung mehr
 - **V01.0.181** Mitteilungen kommen nur einmal, auf dem zuletzt genutzten Gerät statt auf allen
 - **V01.0.180** iPhone-App: GitHub-Knopf „TestFlight“ baut, signiert über Apple und lädt hoch (nur grün getestete Stände)
 - **V01.0.179** „Von selbst“-Meldungen werden nur auf einem Gerät gesprochen, nicht auf jedem noch einmal
@@ -40,7 +41,6 @@ Alle Optionen ohne Rückfragen (`--mode api --asr 1.7b --tts 0.6b --yes` …) st
 - **V01.0.175** Agent-Funktionen: Aufträge im Hintergrund, geplante Aufträge, Abläufe und Dienste per MCP, pro Profil freigeschaltet
 - **V01.0.174** iPhone-App: App-Store-Bildschirmfotos zusätzlich in 6,3" (1206 × 2622)
 - **V01.0.173** Einbinden: Anleitung „KI-Agenten“, Hermes Agent und OpenClaw nutzen Spracherkennung und Sprachausgabe der Spark
-- **V01.0.172** iPhone-App: App-Store-Bildschirmfotos (de/en) per GitHub-Ablauf aus dem Simulator, Vorführmodus nur im Testbuild
 
 Alle Versionen: [CHANGELOG.md](CHANGELOG.md)
 

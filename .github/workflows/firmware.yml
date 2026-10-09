@@ -25,7 +25,7 @@ jobs:
       variants: ${{ steps.p.outputs.variants }}
       version: ${{ steps.p.outputs.version }}
     steps:
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@v5
       - id: p
         run: |
           set -e
@@ -45,7 +45,7 @@ jobs:
       matrix:
         include: ${{ fromJson(needs.plan.outputs.variants) }}
     steps:
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@v5
       - name: Build ${{ matrix.id }}
         shell: bash
         env:
@@ -103,7 +103,7 @@ jobs:
     permissions:
       contents: write
     steps:
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@v5
       - uses: actions/download-artifact@v4
         with:
           path: built
