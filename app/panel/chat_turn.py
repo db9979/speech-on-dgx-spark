@@ -64,14 +64,18 @@ async def prepare(request):
     carry = messages[marked[-1]]["mark"] if marked and marked[-1] >= len(messages) - 3 else None
     came_from = carry   # what the answer right before rested on (for learning from corrections)
     search = bool(ccfg.get("search") and ccfg.get("search_url"))
-    # The answer before came from mail: it would lock the web search for this turn too (its text could
-    # carry the mail away). A question that clearly wants the web gets the search instead, and that
-    # mail answer is left out of this turn, so no word from the mail can reach a search query.
-    if carry == "mail" and search and messages[-1]["role"] == "user" \
-            and chat.needed(messages[-1]["content"], {"web_search"}, ccfg.get("tool_words", "")):
-        carry = None
-        print("chat: web search asked for right after an answer from mail: that answer is left out, search offered",
-              flush=True)
+    # The answer before came from mail (also a mail note the assistant made by itself): kept in this
+    # turn it would lock the web search too (its text could carry the mail away). So it is kept only
+    # when the new question goes on about it ("Was schreibt sie noch?"); any other question (or one
+    # that clearly wants the web) leaves it out, and with no word of the mail in this turn the search
+    # and everything else is open again.
+    if carry == "mail" and search and messages[-1]["role"] == "user":
+        ask = messages[-1]["content"]
+        wants_web = bool(chat.needed(ask, {"web_search"}, ccfg.get("tool_words", "")))
+        if wants_web or not chat.MAIL_FOLLOW_UP.search(ask):
+            carry = None
+            print("chat: answer from mail before; this question", "wants the web" if wants_web else "is not about it",
+                  "- that answer is left out, search offered", flush=True)
     messages = [{"role": m["role"], "content": chat.DROPPED if m.get("mark") and i != (marked[-1] if carry else -1)
                  else m["content"]} for i, m in enumerate(messages)]
     system = ccfg.get("system_prompt") or ""

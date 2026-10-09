@@ -333,9 +333,16 @@ NEED_CALENDAR = re.compile(r"(?i)\b(termin\w*|kalender\w*|verabred\w*|appointmen
 NEED_MAIL = re.compile(r"(?i)\b(e-?mails?|mails?|posteingang|inbox)\b")
 # reminders and news-like questions as well: the model listed a made-up reminder and "knew" that
 # there was no Bundesliga match yesterday instead of looking it up (quality test V01.0.110)
+# a question that goes on about the mail answer just before ("Was schreibt sie noch?", "Lies die erste
+# vor"): only then does that answer stay in the next turn (and keeps the web search locked)
+MAIL_FOLLOW_UP = re.compile(r"(?i)\b(e-?mails?|mails?|posteingang|inbox|postfach|absender\w*|betreff|anhang|anhänge|"
+                            r"schreibt|geschrieben|antwort(e|en)?|zurückschreiben|entwurf|darin|drin|davon|dazu|daraus|"
+                            r"darauf|darüber|vorlesen|lies|nochmal|noch mal|mehr|genauer|erste|zweite|dritte|letzte|"
+                            r"neueste|von wem|wer war|pakete?|päckchen|sendung\w*|lieferung\w*|"
+                            r"the (first|second|last) one|reply|sender|subject|attachment)\b")
 NEED_REMINDER = re.compile(r"(?i)\b(erinnerung\w*|erinnere? mich|timer\w*|wecker\w*|reminders?)\b")
 NEED_SEARCH = re.compile(r"(?i)\b(gewonnen|gewinnt|verloren|gespielt|spielt\w*|spiel(e|s)?|spielstand|ausgegangen|ergebnis(se)?|tabelle|"
-                         r"bundesliga|champions league|nachrichten|news|schlagzeilen?|"
+                         r"bundesliga|champions league|nachrichten|news|schlagzeilen?|politi\w*|(heute|gerade) (so )?los|"
                          # asked for in so many words: "such im Internet", "google mal", "recherchier"
                          r"(im|ins|aus dem) (internet|netz|web)|online (such|nachseh|nachschau|schau|nach)\w*|(schau|such|guck)\w* (mal )?online|googl\w*|recherch\w*|websuche|web search|"
                          r"search the web|look (it )?up online)\b")

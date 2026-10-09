@@ -94,9 +94,22 @@ class Search(unittest.TestCase):
         self.assertNotIn("4711", json.dumps(first))
         self.assertNotIn({"type": "mail"}, evs)
 
+    def test_unrelated_question_after_mail_answer_searches(self):
+        """Dominik 2026-10-09: "Was ist heute politisch los?" right after a mail note was locked."""
+        p = profile("Suchi")
+        for q in ("Was ist heute politisch los?", "Wann hat der Baumarkt in Ettlingen offen?", "Wie wird das Wetter?"):
+            helpers.LLM_CALLS.clear()
+            evs = chat_with(p, after_mail(q))
+            first = helpers.LLM_CALLS[0]
+            self.assertIn("web_search", offered(first), q)
+            self.assertIn(chat.SEARCH_HINT, system_of(first), q)
+            self.assertNotIn("4711", json.dumps(first), q)     # no word of the mail in this turn
+            self.assertNotIn({"type": "mail"}, evs, q)
+        self.assertTrue(chat.needed("Was ist heute politisch los?", {"web_search"}))
+
     def test_other_question_after_mail_answer_stays_locked_and_says_why(self):
         p = profile("Suchi")
-        evs = chat_with(p, after_mail("Was meinst du dazu?"))
+        evs = chat_with(p, after_mail("Was schreibt sie noch dazu?"))
         first = helpers.LLM_CALLS[0]
         self.assertNotIn("web_search", offered(first))
         self.assertIn(chat.SEARCH_LOCKED_HINT, system_of(first))
@@ -104,7 +117,7 @@ class Search(unittest.TestCase):
         self.assertIn({"type": "mail"}, evs)
         # the model cannot get around it by calling the tool anyway
         helpers.LLM_CALLS.clear()
-        evs = chat_with(p, after_mail("TOOL !web_search {\"query\": \"4711\"}"))
+        evs = chat_with(p, after_mail("TOOL !web_search {\"query\": \"Absender der Mail 4711\"}"))
         self.assertNotIn("search", [e["type"] for e in evs])
         self.assertTrue(all("web_search" not in offered(c) for c in helpers.LLM_CALLS))
 
