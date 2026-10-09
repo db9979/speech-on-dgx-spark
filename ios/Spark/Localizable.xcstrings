@@ -21,6 +21,16 @@
         }
       }
     },
+    "%lld Minuten": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "%lld minutes"
+          }
+        }
+      }
+    },
     "%lld Zeichen": {
       "localizations": {
         "en": {
@@ -121,6 +131,26 @@
         }
       }
     },
+    "Antworten": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Answers"
+          }
+        }
+      }
+    },
+    "Antwortlänge": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Answer length"
+          }
+        }
+      }
+    },
     "App": {
       "localizations": {
         "en": {
@@ -137,6 +167,46 @@
           "stringUnit": {
             "state": "translated",
             "value": "I found no text in the picture."
+          }
+        }
+      }
+    },
+    "Ausführlich": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Detailed"
+          }
+        }
+      }
+    },
+    "Ausgegraute Themen schaltest du zuerst im Panel ein.": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Switch on greyed-out topics in the panel first."
+          }
+        }
+      }
+    },
+    "Begrüßung": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Greeting"
+          }
+        }
+      }
+    },
+    "Bus und Bahn": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Bus and train"
           }
         }
       }
@@ -321,6 +391,16 @@
         }
       }
     },
+    "Die Wünsche zum Ton änderst du im Panel, weil sie dem Sprachmodell gesagt werden.": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "You change the wishes for the tone in the panel, because the language model is told them."
+          }
+        }
+      }
+    },
     "Diese App spricht mit deinem Spark. Zum Koppeln im Panel unter Ich → iPhone-App auf „iPhone koppeln“ tippen.": {
       "localizations": {
         "en": {
@@ -337,6 +417,16 @@
           "stringUnit": {
             "state": "translated",
             "value": "Document"
+          }
+        }
+      }
+    },
+    "Dokumente ablegen": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Store documents"
           }
         }
       }
@@ -541,6 +631,16 @@
         }
       }
     },
+    "Geburtstage": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Birthdays"
+          }
+        }
+      }
+    },
     "Gekoppelt": {
       "localizations": {
         "en": {
@@ -591,12 +691,32 @@
         }
       }
     },
+    "Hallo, so klinge ich.": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Hello, this is how I sound."
+          }
+        }
+      }
+    },
     "Hinweise, die der Spark von selbst gibt (Morgenrunde, Erinnerungen), sagt die App laut, solange sie offen ist.": {
       "localizations": {
         "en": {
           "stringUnit": {
             "state": "translated",
             "value": "Notes the Spark gives by itself (morning briefing, reminders) are said aloud while the app is open."
+          }
+        }
+      }
+    },
+    "Höchstens %lld am Tag": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "At most %lld a day"
           }
         }
       }
@@ -731,12 +851,52 @@
         }
       }
     },
+    "Kurz": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Short"
+          }
+        }
+      }
+    },
     "Lese den Text …": {
       "localizations": {
         "en": {
           "stringUnit": {
             "state": "translated",
             "value": "Reading the text …"
+          }
+        }
+      }
+    },
+    "Mails": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Mails"
+          }
+        }
+      }
+    },
+    "Mein Profil": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "My profile"
+          }
+        }
+      }
+    },
+    "Meldungen aufs iPhone": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Notifications to the iPhone"
           }
         }
       }
@@ -757,6 +917,26 @@
           "stringUnit": {
             "state": "translated",
             "value": "Pair with this Spark?"
+          }
+        }
+      }
+    },
+    "Morgenrunde": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Morning briefing"
+          }
+        }
+      }
+    },
+    "Morgenrunde um": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Morning briefing at"
           }
         }
       }
@@ -811,6 +991,16 @@
         }
       }
     },
+    "Normal": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Normal"
+          }
+        }
+      }
+    },
     "Nur am Ladekabel": {
       "localizations": {
         "en": {
@@ -841,6 +1031,46 @@
         }
       }
     },
+    "Ort": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Place"
+          }
+        }
+      }
+    },
+    "Pakete": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Parcels"
+          }
+        }
+      }
+    },
+    "Panel öffnen": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Open the panel"
+          }
+        }
+      }
+    },
+    "Probehören": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Listen to a sample"
+          }
+        }
+      }
+    },
     "Profil": {
       "localizations": {
         "en": {
@@ -857,6 +1087,36 @@
           "stringUnit": {
             "state": "translated",
             "value": "Open a route to “%@” in Maps?"
+          }
+        }
+      }
+    },
+    "Route und Anrufe": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Routes and calls"
+          }
+        }
+      }
+    },
+    "Ruhe ab": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Quiet from"
+          }
+        }
+      }
+    },
+    "Ruhe bis": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Quiet until"
           }
         }
       }
@@ -887,6 +1147,26 @@
           "stringUnit": {
             "state": "translated",
             "value": "Quick start: in the iPhone settings under Action Button → Shortcut, choose “Talk to Spark”. The same is in Control Center and as a lock screen widget."
+          }
+        }
+      }
+    },
+    "Smart Home": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Smart home"
+          }
+        }
+      }
+    },
+    "Smart Home im Auto": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Smart home in the car"
           }
         }
       }
@@ -961,12 +1241,42 @@
         }
       }
     },
+    "Sprechtempo": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Speaking speed"
+          }
+        }
+      }
+    },
+    "Spricht …": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Speaking …"
+          }
+        }
+      }
+    },
     "Spricht … tippen zum Anhalten": {
       "localizations": {
         "en": {
           "stringUnit": {
             "state": "translated",
             "value": "Speaking … tap to stop"
+          }
+        }
+      }
+    },
+    "Standard": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Default"
           }
         }
       }
@@ -981,12 +1291,42 @@
         }
       }
     },
+    "Stimme": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Voice"
+          }
+        }
+      }
+    },
+    "Stimme, Antworten und „Von selbst“ wie im Panel.": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Voice, answers and “By itself”, as in the panel."
+          }
+        }
+      }
+    },
     "Ständer-Modus am Ladekabel": {
       "localizations": {
         "en": {
           "stringUnit": {
             "state": "translated",
             "value": "Stand mode on the charger"
+          }
+        }
+      }
+    },
+    "Termine": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Appointments"
           }
         }
       }
@@ -1031,12 +1371,32 @@
         }
       }
     },
+    "Von selbst": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "By itself"
+          }
+        }
+      }
+    },
     "Von selbst sprechen": {
       "localizations": {
         "en": {
           "stringUnit": {
             "state": "translated",
             "value": "Speak by itself"
+          }
+        }
+      }
+    },
+    "Vorlauf": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Lead time"
           }
         }
       }
@@ -1057,6 +1417,16 @@
           "stringUnit": {
             "state": "translated",
             "value": "Delete waiting"
+          }
+        }
+      }
+    },
+    "Was die App darf": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "What the app may do"
           }
         }
       }
@@ -1101,12 +1471,52 @@
         }
       }
     },
+    "Wetter": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Weather"
+          }
+        }
+      }
+    },
+    "Wetter um": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Weather at"
+          }
+        }
+      }
+    },
     "Wort": {
       "localizations": {
         "en": {
           "stringUnit": {
             "state": "translated",
             "value": "Word"
+          }
+        }
+      }
+    },
+    "Wünsche zum Ton": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Wishes for the tone"
+          }
+        }
+      }
+    },
+    "Ändern im Panel unter Ich → iPhone-App.": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Change in the panel under Me → iPhone app."
           }
         }
       }

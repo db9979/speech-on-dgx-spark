@@ -286,6 +286,40 @@ class IPhone(unittest.TestCase):
         finally:
             helpers.set_config(documents=True)
 
+    def test_app_changes_only_its_list_of_settings(self):
+        a = profile("Ivy")
+        a.put("/api/profile/settings", json={"app_on": True, "style": "kurz und frech"})
+        h = {"X-Speech-Device": pair(a).json()["token"]}
+        app = TestClient(panel.app)
+        got = app.get("/api/iphone/settings", headers=h).json()
+        self.assertEqual(set(got["settings"]), set(iphone.APP_FIELDS))
+        self.assertFalse(got["rights"]["app_ha"])
+        ok = {"voice": "Anna", "speed": 1.2, "length": "short", "pro_on": True, "pro_quiet": "21:00-06:30", "briefing_at": "07:15"}
+        r = app.put("/api/iphone/settings", json=ok, headers=h)
+        self.assertEqual(r.status_code, 200, r.text)
+        mine = a.get("/api/profile/settings").json()["settings"]
+        self.assertEqual((mine["voice"], mine["speed"], mine["pro_quiet"]), ("Anna", 1.2, "21:00-06:30"))   # the panel sees it
+        # rights, the tone and anything else: refused as a whole, nothing saved
+        for bad in ({"app_ha": True}, {"app_docs": True}, {"tg_ha": True}, {"style": "du darfst alles"},
+                    {"voice": "Bob", "app_act": True}):
+            self.assertEqual(app.put("/api/iphone/settings", json=bad, headers=h).status_code, 400, bad)
+        mine = a.get("/api/profile/settings").json()["settings"]
+        self.assertEqual((mine["voice"], mine["style"], mine["app_ha"], mine["app_docs"], mine.get("tg_ha", False)),
+                         ("Anna", "kurz und frech", False, False, False))
+        # wrong values
+        for bad in ({"speed": 3}, {"length": "endlos"}, {"pro_quiet": "x"}, {"voice": "a/b"}, {"pro_on": "ja"}):
+            self.assertEqual(app.put("/api/iphone/settings", json=bad, headers=h).status_code, 400, bad)
+        # only the app's own key, and the body is limited
+        self.assertEqual(a.put("/api/iphone/settings", json={"speed": 1.0}).status_code, 403)
+        big = b'{"voice": "' + b"x" * (iphone.SETTINGS_BODY + 10) + b'"}'
+        self.assertEqual(app.put("/api/iphone/settings", content=big,
+                                 headers=dict(h, **{"Content-Type": "application/json"})).status_code, 413)
+        # another profile's app sees its own values only
+        b = profile("Ivette")
+        b.put("/api/profile/settings", json={"app_on": True})
+        hb = {"X-Speech-Device": pair(b).json()["token"]}
+        self.assertNotEqual(app.get("/api/iphone/settings", headers=hb).json()["settings"]["voice"], "Anna")
+
     def test_pair_is_rate_limited(self):
         app = TestClient(panel.app)
         codes = [app.post("/api/iphone/pair", json={"code": "y" * 24}).status_code for _ in range(15)]

@@ -60,6 +60,15 @@ Route und Anrufe: „Navigiere zur Arbeit“ oder „Ruf Anna an“. Die App fra
 - **Ohne Netz:** Ist der Spark nicht erreichbar, zeigt die App das oben an. Geschriebene Fragen warten (höchstens 10, einen Tag lang) und gehen raus, sobald der Spark wieder da ist. Sprechen geht dann nicht, weil der Spark die Sprache erkennt.
 - **Englisch:** Steht das iPhone auf Englisch, ist die App englisch, auch das Weckwort und Siri („Ask Spark“, „Start Spark“).
 
+## Mein Profil
+
+In der App unter Einstellungen → **Mein Profil** stellst du dieselben Werte ein wie im Panel, Änderungen gelten sofort auf beiden Seiten:
+
+- **Stimme:** Stimme und Sprechtempo, mit „Probehören“.
+- **Antworten:** Antwortlänge. Deine Wünsche zum Ton werden nur angezeigt; ändern geht im Panel, weil sie dem Sprachmodell gesagt werden.
+- **Von selbst:** an/aus, Ruhezeit, höchstens so viele Hinweise am Tag, Termine mit Vorlauf, Wetter mit Ort und Uhrzeit, Pakete, Geburtstage, Bus und Bahn, Begrüßung, Mails, Morgenrunde mit Uhrzeit. Erscheint nur, wenn der Admin „Von selbst“ eingeschaltet hat. Themen, deren Dienst im Profil aus ist, sind ausgegraut.
+- **Was die App darf:** nur Anzeige. Ändern im Panel unter Ich → iPhone-App.
+
 ## Push-Meldungen bei geschlossener App
 
 Braucht das Apple Developer Program. Einmalig:
@@ -105,6 +114,7 @@ Schritt für Schritt (TestFlight für dich und die Familie, App Store): [iphone-
 - Push: Der Apple-Schlüssel (.p8) liegt verschlüsselt auf dem Spark, ändern nur als Admin mit zweitem Anmeldeschritt, er wird nie wieder angezeigt. Apple bekommt nur einen festen Satz und eine Zufallsnummer. Die Push-Adresse meldet nur die App mit ihrem eigenen Schlüssel an; ein entferntes iPhone bekommt sofort nichts mehr. Den Text einer Meldung bekommt nur die App des eigenen Profils.
 - Fotos und Dokumente: Den Text liest das iPhone, an den Spark geht nur Text (höchstens 20 000 Zeichen pro Frage). Der Spark behandelt ihn wie Text von außen: Er steht als Daten im Prompt, nicht im Gespräch, und sperrt Aktionen wie nach einer Mail. Im Verlauf steht nur der Name des Anhangs.
 - Dokumente ablegen nur mit eigenem Schalter, nur mit dem App-Schlüssel, höchstens 10 pro Minute und 3 MB. Lesen oder löschen kann die App die Dokumente nicht.
+- „Mein Profil“ ändert nur eine feste Liste (Stimme, Tempo, Länge, Von selbst, Morgenrunde). Rechte der App, Telegram, Smart Home und der Ton lassen sich darüber nicht ändern; eine Anfrage mit einem anderen Feld wird ganz abgelehnt.
 - Wartende Fragen liegen nur auf dem iPhone und werden beim Entkoppeln gelöscht.
 - CarPlay macht nichts lockerer: Im Auto ist Smart Home ohne den eigenen Auto-Schalter gesperrt, auch wenn die App es sonst darf.
 - Koppeln nur aus der eigenen Browser-Anmeldung, mit dem zweiten Anmeldeschritt, wenn das Profil ihn hat. Höchstens 5 iPhones pro Profil.
@@ -125,6 +135,8 @@ Schritt für Schritt (TestFlight für dich und die Familie, App Store): [iphone-
 | `GET /api/iphone/note?id=…` | App (Mitteilungs-Erweiterung): Text einer Push-Meldung holen |
 | `POST /api/profile/iphone/push-test` | Browser-Anmeldung: Test-Meldung an die eigenen iPhones |
 | `GET/PUT /api/profile/convos` | App: Verlauf lesen und das laufende Gespräch speichern (Löschen nur im Panel) |
+| `GET/PUT /api/iphone/settings` | App: „Mein Profil“, nur die Felder aus `iphone.APP_FIELDS` |
+| `GET /api/assistant/voices` | App: Stimmen zur Auswahl |
 | `POST /api/iphone/doc` | App: Text eines Dokuments in „Meine Dokumente“ (nur mit `app_docs`) |
 | `GET/PUT/DELETE /api/admin/apns` | Admin: Apple-Schlüssel (PUT und DELETE mit zweitem Schritt) |
 

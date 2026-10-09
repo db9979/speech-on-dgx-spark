@@ -59,6 +59,15 @@ Routes and calls: "Navigiere zur Arbeit" or "Ruf Anna an". The app asks every ti
 - **Offline:** When the Spark cannot be reached, the app says so at the top. Typed questions wait (at most 10, for one day) and go out once the Spark is back. Speaking does not work then, because the Spark recognises the speech.
 - **English:** On an iPhone set to English the app is in English, including the wake word and Siri ("Ask Spark", "Start Spark").
 
+## My profile
+
+In the app under Settings → **My profile** you set the same values as in the panel; changes apply on both sides at once:
+
+- **Voice:** voice and speaking speed, with "Listen to a sample".
+- **Answers:** answer length. Your wishes for the tone are only shown; they change in the panel, because the language model is told them.
+- **By itself:** on/off, quiet time, at most so many notes a day, appointments with lead time, weather with place and time, parcels, birthdays, bus and train, greeting, mails, morning briefing with time. Shown only when the admin has "By itself" on. Topics whose service is off in the profile are greyed out.
+- **What the app may do:** shown only. Change it in the panel under Me → iPhone app.
+
 ## Push notifications with the app closed
 
 Needs the Apple Developer Program. Once:
@@ -91,6 +100,7 @@ Step by step (TestFlight, App Store): [iphone-publishing.md](iphone-publishing.m
 - Push: the Apple key (.p8) is stored encrypted, changed only by the admin with the second step, never shown again. Apple only gets a fixed sentence and a random number. Only the app with its own key signs up its push address; only the profile's own app gets a notification's text.
 - Photos and documents: the iPhone reads the text, only text goes to the Spark (at most 20,000 characters per question). The Spark treats it as outside text: it sits as data in the prompt, not in the conversation, and locks actions as after a mail. The history keeps only the attachment's name.
 - Storing documents only with its own switch, only with the app key, at most 10 per minute and 3 MB. The app cannot list or delete the documents.
+- "My profile" changes only a fixed list (voice, speed, length, by itself, morning briefing). The app's rights, Telegram, the smart home and the tone cannot be changed through it; a request with any other field is refused as a whole.
 - Waiting questions stay on the iPhone and are deleted when unpairing.
 - CarPlay never loosens anything: in the car the smart home is locked without its own car switch.
 - Pairing only from the profile's own browser login, with the second login step when the profile has it. At most 5 iPhones per profile.

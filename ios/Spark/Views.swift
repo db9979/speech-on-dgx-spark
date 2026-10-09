@@ -423,6 +423,11 @@ struct SettingsView: View {
                     LabeledContent("Spark", value: Store.baseURL?.host ?? "")
                 }
                 Section {
+                    NavigationLink("Mein Profil") { ProfileView() }
+                } footer: {
+                    Text("Stimme, Antworten und „Von selbst“ wie im Panel.")
+                }
+                Section {
                     Toggle("Freihändig", isOn: $handsFree)
                     Toggle("Ins Wort fallen", isOn: $bargeIn)
                 } header: { Text("Gespräch") } footer: {

@@ -249,6 +249,29 @@ struct SparkAPI {
         try Self.check(data, response)
     }
 
+    /// The profile's own settings the app may show ("Mein Profil"; iphone.APP_FIELDS on the Spark).
+    func profileSettings() async throws -> [String: Any] {
+        let (data, response) = try await URLSession.shared.data(for: request("api/iphone/settings"))
+        try Self.check(data, response)
+        return Self.object(data)
+    }
+
+    /// Changes some of those fields; the Spark refuses anything outside its list.
+    func saveProfileSettings(_ change: [String: Any]) async throws {
+        var r = request("api/iphone/settings", method: "PUT")
+        r.setValue("application/json", forHTTPHeaderField: "Content-Type")
+        r.httpBody = try JSONSerialization.data(withJSONObject: change)
+        let (data, response) = try await URLSession.shared.data(for: r)
+        try Self.check(data, response)
+    }
+
+    /// The voice names to choose from.
+    func voices() async throws -> [String] {
+        let (data, response) = try await URLSession.shared.data(for: request("api/assistant/voices"))
+        try Self.check(data, response)
+        return Self.object(data)["voices"] as? [String] ?? []
+    }
+
     /// This iPhone's push address, so the Spark can reach the closed app through Apple.
     func pushToken(_ hex: String) async throws -> Bool {
         try await post("api/iphone/push-token", ["token": hex])["push"] as? Bool ?? false

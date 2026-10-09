@@ -31,6 +31,7 @@ All options for running without questions (`--mode api --asr 1.7b --tts 0.6b --y
 
 <!-- New version: add one line at the top here and in CHANGELOG.md, drop the oldest line here (keep 10). Details go to docs/de and docs/en, not into this README. -->
 
+- **V01.0.162** iPhone app: "My profile" with voice, answer length, by itself and morning briefing; the app's rights and the tone only shown (the Spark changes only a fixed list)
 - **V01.0.161** iPhone app: quick start (Action button, Control Center, lock screen), history like the log, ask about a photo or document (the iPhone reads the text), store documents (off, profile switch), questions wait offline, English interface
 - **V01.0.160** iPhone app has a new icon: a glowing spark on night blue with sound waves
 - **V01.0.159** iPhone app: push with the app closed through Apple (off, admin key + profile; Apple only sees "new message", the app fetches the text from the Spark), CarPlay conversation (waits for Apple's grant), publishing guide
@@ -40,7 +41,6 @@ All options for running without questions (`--mode api --asr 1.7b --tts 0.6b --y
 - **V01.0.155** iPhone app shows the face picked in the panel, now also the comic face with its own life (lids, glances, brows, mouth under the mustache)
 - **V01.0.154** Selectable face: the admin picks "Robot" (as before) or "Comic" under Settings → Defaults (a caricature that looks around, blinks, moves its mouth with the voice and shows the state with a coloured ring); for the panel and the iPhone app
 - **V01.0.153** iPhone app comes alive: face as in the panel (look swappable), hands-free and interrupting, wake word on the iPhone offline, stand mode on the charger, reminders as notifications, notes on its own, route and call only after "yes" (new panel switches, off)
-- **V01.0.152** iPhone app "Spark" (off, admin + profile): own SwiftUI app in ios/, pairing by QR code or link, own key per iPhone that may only ask and listen, answers in the Spark voice, "Hey Siri, Frag Spark" through the app; smart home from it only with its own switch
 
 All versions: [CHANGELOG.md](CHANGELOG.md)
 

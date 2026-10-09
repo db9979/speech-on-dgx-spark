@@ -245,3 +245,48 @@ async def app_doc(request: Request, prof=Depends(own_profile)):
         raise HTTPException(400, str(e))
     print("iphone: document stored,", len(text), "chars", flush=True)
     return r
+
+
+# The app's "Mein Profil": only these fields, each checked by the same rule as in the panel. What the app
+# may do (app_*), Telegram, the smart home and the tone ("style", told to the model) stay in the panel.
+APP_FIELDS = ("voice", "speed", "length", "pro_on", "pro_quiet", "pro_max", "pro_events", "pro_lead",
+              "pro_weather", "pro_place", "pro_weather_at", "pro_parcel", "pro_bday", "pro_transit",
+              "pro_greet", "pro_mail", "briefing_at")
+RIGHTS = ("app_ha", "app_car_ha", "app_act", "app_listen", "app_push", "app_docs")
+SETTINGS_BODY = 8192
+
+
+def _app_only(request):
+    dev = profiles.device(request)
+    if not dev or dev.get("scope") != "app":
+        raise HTTPException(403, "only the iPhone app")
+
+
+@router.get("/api/iphone/settings", dependencies=[Depends(assistant)])
+def app_settings(request: Request, prof=Depends(own_profile)):
+    _app_only(request)
+    import proactive
+    chat = load_config().get("chat", {})
+    p = dict(profiles.defaults(chat.get("defaults")), **profiles.settings(prof["id"]))
+    return {"settings": {k: p[k] for k in APP_FIELDS},
+            # shown only: the tone is changed in the browser login, the rights in Ich -> iPhone-App
+            "style": p.get("style", "") if chat.get("own_style", False) else None,
+            "rights": {k: bool(p.get(k)) for k in RIGHTS},
+            "allow": {"proactive": proactive.enabled(), "documents": bool(chat.get("documents", True))},
+            # services the profile switched on in the panel ("Von selbst" can only use those)
+            "services": {k: bool(p.get(k)) for k in ("wx_on", "par_on", "con_on", "transit_on")}}
+
+
+@router.put("/api/iphone/settings", dependencies=[Depends(assistant)])
+async def app_settings_save(request: Request, prof=Depends(own_profile)):
+    _app_only(request)
+    guard.limit(request, "chat", prof["id"], False)
+    body = await _json(request, SETTINGS_BODY)
+    wrong = [k for k in body if k not in APP_FIELDS]
+    if wrong:
+        raise HTTPException(400, "not changeable from the app: " + ", ".join(sorted(wrong))[:200])
+    bad = [k for k, v in body.items() if not profiles.SETTINGS[k][1](v)]
+    if bad:
+        raise HTTPException(400, "invalid value: " + ", ".join(sorted(bad)))
+    saved = profiles.save_settings(prof["id"], body)
+    return {"settings": {k: saved[k] for k in APP_FIELDS if k in saved}}

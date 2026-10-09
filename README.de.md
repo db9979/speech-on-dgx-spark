@@ -31,6 +31,7 @@ Alle Optionen ohne Rückfragen (`--mode api --asr 1.7b --tts 0.6b --yes` …) st
 
 <!-- New version: add one line at the top here and in CHANGELOG.md, drop the oldest line here (keep 10). Details go to docs/de and docs/en, not into this README. -->
 
+- **V01.0.162** iPhone-App: „Mein Profil“ mit Stimme, Antwortlänge, Von selbst und Morgenrunde; Rechte der App und Ton nur angezeigt (Spark ändert nur eine feste Liste)
 - **V01.0.161** iPhone-App: Schnellstart (Action-Button, Kontrollzentrum, Sperrbildschirm), Verlauf wie im Protokoll, Foto oder Dokument fragen (Text liest das iPhone), Dokumente ablegen (aus, Profilschalter), Fragen warten ohne Netz, englische Oberfläche
 - **V01.0.160** iPhone-App hat ein neues Symbol: leuchtender Funke auf Nachtblau mit Schallwellen
 - **V01.0.159** iPhone-App: Push bei geschlossener App über Apple (aus, Admin-Schlüssel + Profil; Apple sieht nur „Neue Nachricht“, den Text holt die App vom Spark), CarPlay-Gespräch (wartet auf Apples Freigabe), Anleitung zum Veröffentlichen
@@ -40,7 +41,6 @@ Alle Optionen ohne Rückfragen (`--mode api --asr 1.7b --tts 0.6b --yes` …) st
 - **V01.0.155** iPhone-App zeigt das im Panel gewählte Gesicht, jetzt auch das Comic-Gesicht mit eigenem Leben (Lider, Blicke, Brauen, Mund unterm Schnurrbart)
 - **V01.0.154** Gesicht wählbar: Admin stellt unter Einstellungen → Vorgaben „Roboter“ (bisher) oder „Comic“ ein (Karikatur, schaut umher, blinzelt, Mund folgt der Stimme, farbiger Ring je Zustand); gilt für Panel und iPhone-App
 - **V01.0.153** iPhone-App lebendig: Gesicht wie im Panel (Aussehen austauschbar), Freihändig und Ins-Wort-fallen, Weckwort auf dem iPhone ohne Internet, Ständer-Modus am Ladekabel, Erinnerungen als Mitteilung, Hinweise von selbst, Route und Anruf nur nach „Ja“ (neue Schalter im Panel, aus)
-- **V01.0.152** iPhone-App „Spark“ (aus, Admin + Profil): eigene SwiftUI-App in ios/, Kopplung per QR-Code oder Link, eigener Schlüssel pro iPhone, der nur fragen und hören darf, Antwort mit Spark-Stimme, „Hey Siri, Frag Spark“ über die App; Smart Home daraus nur mit eigenem Schalter
 
 Alle Versionen: [CHANGELOG.md](CHANGELOG.md)
 

@@ -265,7 +265,9 @@ APP_PATHS = ("/api/chat", "/api/test/asr", "/api/siri/ask", "/api/iphone/hello",
              "/api/proactive", "/api/proactive/greet", "/api/assistant/say",
              "/api/iphone/push-token", "/api/iphone/note",
              "/api/profile/convos",   # the conversations, the same list as in the panel
-             "/api/iphone/doc")       # a document's text into the profile's documents (app_docs)
+             "/api/iphone/doc",       # a document's text into the profile's documents (app_docs)
+             "/api/iphone/settings",  # the profile's own voice, answers and "Von selbst" (iphone.APP_FIELDS only)
+             "/api/assistant/voices")  # the voice names to choose from
 APP_GATE = [lambda uid: False]
 
 
