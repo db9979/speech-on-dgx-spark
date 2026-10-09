@@ -20,12 +20,16 @@ module.exports = function (s) {
     'button{margin-top:24px;width:100%;padding:14px;border:0;border-radius:10px;background:#3d6df2;' +
     'color:#fff;font-size:17px;font-weight:600}</style></head><body>' +
     '<h1>Spark</h1><p>Sprach-Assistent auf dem DGX Spark.</p>' +
+    '<label for="setup">Einrichtungscode</label>' +
+    '<input id="setup" type="text" autocapitalize="off" autocorrect="off" placeholder="http://…#pebble=…">' +
+    '<small>Im Panel unter Ich → Geräte → „Pebble koppeln“ holen und hier einfügen. Dann trägt die App ' +
+    'Adresse und Schlüssel selbst ein.</small>' +
     '<label for="server">Spark-Adresse</label>' +
     '<input id="server" type="url" autocapitalize="off" autocorrect="off" value="' + esc(s.server || 'http://tars:31080') + '">' +
     '<small>Zu Hause z.&nbsp;B. http://tars:31080 oder http://192.168.x.y:31080, unterwegs die Adresse im VPN (Tailscale).</small>' +
     '<label for="key">Geräteschlüssel</label>' +
     '<input id="key" type="text" autocapitalize="off" autocorrect="off" value="' + esc(s.device_key) + '">' +
-    '<small>Im Panel unter Profile beim Profil ein Gerät hinzufügen. Ohne Schlüssel fragst du als Gast.</small>' +
+    '<small>Kommt mit dem Einrichtungscode. Ohne Schlüssel fragst du als Gast.</small>' +
     '<div class="row"><label for="speak">Antwort vorlesen</label><input id="speak" type="checkbox"' + (s.SPEAK === false ? '' : ' checked') + '></div>' +
     '<label for="vol">Lautstärke <span id="vv">' + (s.VOLUME || 100) + '</span>%</label>' +
     '<input id="vol" type="range" min="10" max="100" step="10" value="' + (s.VOLUME || 100) + '">' +
@@ -34,7 +38,7 @@ module.exports = function (s) {
     '<script>' +
     'var g=function(i){return document.getElementById(i)};' +
     'g("vol").oninput=function(){g("vv").textContent=this.value};' +
-    'g("save").onclick=function(){var r={server:g("server").value.trim(),device_key:g("key").value.trim(),' +
+    'g("save").onclick=function(){var r={setup:g("setup").value.trim(),server:g("server").value.trim(),device_key:g("key").value.trim(),' +
     'SPEAK:g("speak").checked,VOLUME:parseInt(g("vol").value,10),AUTOLISTEN:g("auto").checked};' +
     'var m=/[?&]return_to=([^&]*)/.exec(location.search);' +
     'location.href=(m?decodeURIComponent(m[1]):"pebblejs://close#")+encodeURIComponent(JSON.stringify(r))};' +

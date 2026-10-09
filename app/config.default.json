@@ -122,6 +122,7 @@
     "telegram_api": "",
     "esp32": false,
     "iphone": false,
+    "pebble": false,
     "iphone_push": false,
     "iphone_update": false,
     "esp32_url": "",

@@ -130,6 +130,7 @@
         <div class="fh">Leer = die Adresse dieser Seite. Am besten dein Reverse Proxy mit echtem Zertifikat (er muss WebSockets durchlassen); ein selbst signiertes Zertifikat (Port 31443) nimmt das Board nicht an, im Heimnetz geht auch http://&lt;Spark-IP&gt;:31080.</div>
         <ul class="facts small" id="espcheckres"></ul></div>
       <div class="setrow"><div class="lbl"><b>iPhone-App</b><span>Profile koppeln die App „Spark“ auf ihrem iPhone: fragen und hören mit der Spark-Stimme, auch per Siri.</span></div><label class="tgl"><input type="checkbox" id="chat.iphone"><i></i></label></div>
+      <div class="setrow"><div class="lbl"><b>Pebble-Uhr koppeln</b><span>Uhr-App „Spark“ per Einrichtungscode koppeln statt Adresse und Schlüssel abzutippen. Der Uhr-Schlüssel darf nur fragen.</span></div><label class="tgl"><input type="checkbox" id="chat.pebble"><i></i></label></div>
       <div class="setrow"><div class="lbl"><b>Push an die iPhone-App</b><span>Meldungen kommen auch bei geschlossener App. Apple sieht nur „Neue Nachricht“, den Text holt die App vom Spark.</span></div><label class="tgl"><input type="checkbox" id="chat.iphone_push"><i></i></label></div>
       <div data-show="chat.iphone_push" style="margin-left:18px" id="apnsadmin"><div class="fh">Schlüssel von developer.apple.com → Certificates, IDs &amp; Profiles → Keys → „+“ → Apple Push Notifications service (APNs). Die .p8-Datei gibt es nur einmal zum Herunterladen.</div>
         <label>Schlüsseldatei (.p8)</label><input id="apnsfile" type="file" accept=".p8">
@@ -499,9 +500,9 @@
   <div class="card"><h2>Pebble-Uhr</h2>
     <div class="mut">App „Spark“ für Pebble Time 2 und Core 2 Duo (Antwort als Text und über den Lautsprecher der Uhr) sowie Pebble Round 2 (nur Text). Frage per Knopfdruck, die Pebble-Diktierfunktion macht Text daraus, die Antwort kommt von hier.</div>
     <ol class="mut" style="margin:8px 0 0 18px;padding:0;line-height:1.6">
-      <li>Unter <b>Profile</b> beim eigenen Profil ein Gerät „Pebble“ anlegen und den Schlüssel kopieren.</li>
+      <li>Unter <b>Ich → Pebble-Uhr</b> „Pebble koppeln“ tippen und den Einrichtungscode kopieren (Admin: Funktionen → Pebble-Uhr koppeln an). Ohne das: unter Profile ein Gerät „Pebble“ anlegen und den Schlüssel kopieren.</li>
       <li>Auf dem Handy, das mit der Uhr gekoppelt ist, die App-Datei laden und mit der Pebble-App öffnen: <a id="int-pbw" href="/pebble/speech-spark.pbw">speech-spark.pbw</a></li>
-      <li>In der Pebble-App bei „Spark“ die Einstellungen öffnen, Spark-Adresse und Geräteschlüssel eintragen.</li>
+      <li>In der Pebble-App bei „Spark“ die Einstellungen öffnen und den Einrichtungscode einfügen (oder Spark-Adresse und Geräteschlüssel eintragen). Die Uhr muss dabei mit dem Handy verbunden sein.</li>
       <li>Auf der Uhr: SELECT fragt, nochmal SELECT stoppt die Sprache, lang SELECT beginnt ein neues Gespräch.</li>
     </ol>
     <table style="margin-top:8px"><tbody id="int-pebble"></tbody></table>
@@ -653,6 +654,7 @@
     <div id="tgbox" class="ptab"></div>
     <div id="espbox" class="ptab"></div>
     <div id="appbox" class="ptab"></div>
+    <div id="pebbox" class="ptab"></div>
     <div id="wxbox" class="ptab"></div>
     <div id="conbox" class="ptab"></div>
     <div id="trbox" class="ptab"></div>

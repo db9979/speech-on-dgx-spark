@@ -2,14 +2,22 @@
 
 Source of `app/pebble/speech-spark.pbw`, which the panel serves at `/pebble/speech-spark.pbw`.
 
-- `src/c/main.c`: watch side. SELECT starts dictation, the text goes to the phone; the answer
-  arrives as text (`ANSWER`) and 8 kHz IMA ADPCM (`AUDIO`), decoded into the speaker stream.
-  The phone only sends as much audio as the watch buffer has room for (`CREDIT`).
+- `src/c/main.c`: watch side. SELECT starts dictation, the text goes to the phone with a job
+  number (`SEQ`); the answer arrives as text (`ANSWER`) and 8 kHz IMA ADPCM (`AUDIO`), decoded into
+  the speaker stream. Messages of an older job are dropped. The watch reports how many bytes it
+  played (`FREED`, a running total, repeated every 2 s, so a lost report cannot stall the audio);
+  the phone sends at most that plus the buffer size. Every message to the phone is retried; no
+  message for 30 s ends the answer.
 - `src/c/face.c`: the face above the answer (idle, listen, think, speak, sad; the mouth follows
-  the audio level). A new design replaces only this file and keeps the calls in `face.h`.
+  the audio level): the robot or the comic face, whichever the admin picked in the panel
+  (`chat.face`, sent as `FACE` with each answer and kept on the watch). `src/c/comic_shapes.h` is
+  made by `tools/comic_shapes.py` from the comic face in `app/panel/static/js/face.js`.
 - `src/pkjs/index.js`: phone side. `POST /api/watch/ask`, then `GET /api/watch/poll` until done,
-  with the device key in `X-Speech-Device`.
-- `src/pkjs/config.js`: settings page (Spark address, device key, speech, volume, auto-listen).
+  with the device key in `X-Speech-Device`. Text goes ahead of audio, failed sends are retried,
+  audio pieces are up to 3.8 KB, and at the end `POST /api/watch/report` puts the times into the
+  Spark log (Zustand → Logs, area "Uhr").
+- `src/pkjs/config.js`: settings page (setup code from Ich → Pebble-Uhr, or Spark address and
+  device key; speech, volume, auto-listen).
 
 Platforms: emery (Pebble Time 2) and flint (Core 2 Duo) with speaker, gabbro (Pebble Round 2)
 text only.

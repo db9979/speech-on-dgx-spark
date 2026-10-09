@@ -86,6 +86,7 @@ def whoami(request: Request, creds: HTTPBasicCredentials | None = Depends(securi
             "messages": bool(cfg.get("chat", {}).get("messages", False)),
             "esp32": cfg.get("chat", {}).get("esp32", False),
             "iphone": cfg.get("chat", {}).get("iphone", False),
+            "pebble": cfg.get("chat", {}).get("pebble", False),
             "face": cfg.get("chat", {}).get("face") if cfg.get("chat", {}).get("face") in FACES else "robot",
             # what the assistant needs without the full configuration (which holds keys)
             "assistant": {"default_voice": cfg["tts"].get("default_voice"),

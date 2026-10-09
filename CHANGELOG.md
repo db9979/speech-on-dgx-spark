@@ -2,6 +2,7 @@
 
 Every version in one line, newest first (taken from the commit messages, so some lines are German, some English). Older entries have no version number.
 
+- **V01.0.230** · 2026-10-09 · Pebble-Uhr zuverlässiger und Gesicht wie im Web: Uhr wiederholt fehlgeschlagene Nachrichten, gibt nach 30 s ohne Antwort auf, meldet den Puffer fortlaufend (verlorene Meldung stoppt den Ton nicht mehr), alte Antworten werden verworfen; Handy schickt Text vor Ton, größere Tonstücke (3,8 KB), wiederholt statt still zu verlieren; pro Antwort eine Zeitzeile im Log (Bereich „Uhr“); neu und aus (Admin + Profil): „Pebble-Uhr koppeln“ mit Einrichtungscode aus Ich → Pebble-Uhr, eigener Uhr-Schlüssel nur für /api/watch/; die Uhr zeigt das im Panel gewählte Gesicht (Roboter oder Comic)
 - **V01.0.229** · 2026-10-09 · Update-Selbsttest auf tars lief auf einen Fehler: der Vorrang-Test las install.sh, das im Selbsttest (nur app/) fehlt; er überspringt sich jetzt dort
 - **V01.0.228** · 2026-10-09 · Zustand: Karte „Eigene Dokumente“ unter Zustand → Monitoring zeigt, ob das Bedeutungs-Modell läuft (mit Arbeitsspeicher), startet, auf freien Speicher wartet oder einen Fehler hat, wie viele Stücke schon eine Bedeutung haben und wie viele Seiten noch aufs Lesen warten (nur Zahlen, nur Admin, sichtbar wenn ein Schalter an ist)
 - **V01.0.227** · 2026-10-09 · iPhone-App: „Meine Dokumente“ ansehen (PDF und Bilder in Apples Vorschau, sonst der gespeicherte Text)

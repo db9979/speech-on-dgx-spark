@@ -404,6 +404,10 @@ def _app_path(request):
 # and only while the admin allows it (ROOM_GATE, set by roomlive.py; closed without it).
 ROOM_PATHS = ("/api/room/active", "/api/room/end")
 ROOM_GATE = [lambda uid: False]
+# A watch key (scope "watch", the Pebble app paired by code, pebblewatch.py) only asks on the watch paths,
+# and only while the admin and the profile have the watch switched on (WATCH_GATE, set by pebblewatch.py).
+WATCH_PREFIX = "/api/watch/"
+WATCH_GATE = [lambda uid: False]
 
 
 def _device(d, request):
@@ -466,7 +470,10 @@ def current(request):
             return None
         if dev.get("scope") == "room" and (request.scope.get("path") not in ROOM_PATHS or not ROOM_GATE[0](dev["user"])):
             return None
-        if dev.get("scope") not in (None, "", "app", "room"):
+        if dev.get("scope") == "watch" and (not str(request.scope.get("path") or "").startswith(WATCH_PREFIX)
+                                            or not WATCH_GATE[0](dev["user"])):
+            return None
+        if dev.get("scope") not in (None, "", "app", "room", "watch"):
             return None
         _note_device(dev["id"], request)
         uid = dev["user"]
@@ -485,7 +492,8 @@ def current(request):
 def own_devices(uid):
     last = seen()
     return [{"id": x["id"], "name": x["name"], "created": x.get("created"), "last": last.get(x["id"]),
-             "app": x.get("scope") == "app"} for x in _load()["devices"] if x.get("user") == uid]
+             "app": x.get("scope") == "app", "watch": x.get("scope") == "watch"}
+            for x in _load()["devices"] if x.get("user") == uid]
 
 
 # ---------------------------------------------------------------- conversation settings
@@ -554,6 +562,7 @@ SETTINGS = {
     "tg_push": (False, lambda v: isinstance(v, bool)),
     "tg_images": (False, lambda v: isinstance(v, bool)),    # photos sent to the bot go to the model (images.py)
     "esp_on": (False, lambda v: isinstance(v, bool)),   # own ESP32 speakers (esp32.py)
+    "pebble_on": (False, lambda v: isinstance(v, bool)),   # Pebble watch paired by code (pebblewatch.py)
     # iPhone app (iphone.py): pairing for this profile, and switching the smart home from it, both off
     "app_on": (False, lambda v: isinstance(v, bool)),
     "app_ha": (False, lambda v: isinstance(v, bool)),
