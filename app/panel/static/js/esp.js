@@ -149,7 +149,8 @@ function espOne(d,x){
       +`<details class="espkinds"><summary>${t('Was er anbieten darf','What it may offer')} <small class="mut">(${kon} ${t('von','of')} ${kinds.length})</small></summary>`
       +kinds.map(([v,l])=>espRow(esc(l),'',`<label class="tgl"><input type="checkbox" data-ekind="${v}"${k[v]!==false?' checked':''}><i></i></label>`)).join('')+`</details>`
       +espRow(t('Raum in Home Assistant','Room in Home Assistant'),t('Für Raumklima, Licht und den Fernseher.','For room climate, light and the TV.'),`<input id="esparea" value="${esc(x.room_area||'')}" placeholder="${t('z. B. Wohnzimmer','e.g. Living room')}" autocomplete="off">`)
-      +espRow(t('Genauer erkennen','Detect more'),t('Das Sprachmodell sucht alle zwei Minuten nach Übersehenem; kostet Rechenzeit.','The language model looks for missed things every two minutes; costs GPU time.'),espTgl('espdetect',x.room_detect));
+      +espRow(t('Genauer erkennen','Detect more'),t('Das Sprachmodell sucht alle zwei Minuten nach Übersehenem; kostet Rechenzeit.','The language model looks for missed things every two minutes; costs GPU time.'),espTgl('espdetect',x.room_detect))
+      +espRow(t('Erinnerungston','Reminder tone'),t('Alle 15 Minuten ein leiser Ton, damit niemand vergisst, dass er zuhört. Nie in Ruhezeiten.','A soft tone every 15 minutes, so nobody forgets it listens. Never in quiet hours.'),espTgl('espping',x.room_ping));
     if(RV_ON)h+=espRow(t('Wem er zuhört','Who it listens to'),t('Nur bekannte Stimmen gilt erst, wenn deine Stimme über diesen Lautsprecher angelernt ist.','Known voices only applies once your voice was taught through this speaker.'),
         espSel('espvoices',[['all',t('allen','everybody')],['tv',t('bekannten bei TV','known ones at TV')],['known',t('nur bekannten','known ones only')]],x.room_voices))
       +espRow(t('Probelauf','Trial'),t('Überhört noch nichts, zählt nur; Ergebnis im Protokoll und unter Prüfen.','Ignores nothing yet, only counts; result in the log and under Check.'),espTgl('espprobe',x.room_probe!==false))}
@@ -176,6 +177,7 @@ function espOneBind(d,x){const id=x.id,put=(o,again=true)=>api('/api/profile/esp
   if($('esproom')){$('esproom').onclick=()=>put({room:$('esproom').dataset.on==='1'});
     $('espmins').onchange=()=>put({room_mins:Number($('espmins').value)},false);$('esplevel').onchange=()=>put({room_level:$('esplevel').value},false);
     $('esparea').onchange=()=>put({room_area:$('esparea').value.trim().slice(0,60)},false);$('espdetect').onchange=()=>put({room_detect:$('espdetect').checked},false);
+    $('espping').onchange=()=>put({room_ping:$('espping').checked},false);
     document.querySelectorAll('#espbox [data-ekind]').forEach(b=>b.onchange=()=>put({room_kinds:{[b.dataset.ekind]:b.checked}},false));
     if($('espvoices')){$('espvoices').onchange=()=>put({room_voices:$('espvoices').value},false);$('espprobe').onchange=()=>put({room_probe:$('espprobe').checked},false)}}
   if($('espvoice'))$('espvoice').onclick=async()=>{try{const r=await (await api('/api/profile/esp32/'+id+'/voice',xjson('POST'))).json();

@@ -97,6 +97,7 @@ ROOM_MINS = (15, 30, 60, 120, 240)
 ROOM_PIECE = 8.0           # seconds: longest piece of room talk sent to the speech recognition at once
 ROOM_NEED = 1.5            # seconds of quiet after the last loud sound before room mode may speak
 ROOM_MAX = 2               # speakers in room mode at once (the speech recognition runs all the time)
+ROOM_PING = 15 * 60        # "Erinnerungston": a soft tone this often while room mode listens (per speaker, off by default)
 ROOM_LEVELS = ("questions", "hints", "all")
 ROOM_VOICES = ("all", "tv", "known")   # who room mode listens to (room.py, chat.room_voices)
 MIC_LEVELS = {"low": 300.0, "normal": 150.0, "high": 70.0}   # "Mikrofon" per speaker: least level that counts as speech
@@ -524,6 +525,12 @@ async def tts_stream(uid, text):
                         return
 
 
+async def _nothing():
+    """No speech: say("", tone=True) plays the tone alone (the "Erinnerungston" in room mode)."""
+    return
+    yield b""
+
+
 def tone_pcm():
     """The soft two-note tone the browser plays before room mode speaks by itself (0.45 s at 24 kHz)."""
     t = np.arange(int(OUT_RATE * 0.45)) / OUT_RATE
@@ -542,7 +549,7 @@ def room_cfg(c):
     import room
     kinds = c.get("room_kinds") if isinstance(c.get("room_kinds"), dict) else {}
     return {"mins": mins, "level": level, "area": area, "voices": voices, "probe": c.get("room_probe") is not False,
-            "detect": c.get("room_detect") is True, "kinds": {k: kinds.get(k) is not False for k in room.KIND_KEYS}}
+            "detect": c.get("room_detect") is True, "ping": c.get("room_ping") is True, "kinds": {k: kinds.get(k) is not False for k in room.KIND_KEYS}}
 
 
 # ---------------------------------------------------------------- one connection of a speaker
@@ -821,7 +828,7 @@ class Session:
                 return
             await self.send({"type": "stt", "text": text})
             if ROOM_START.match(text) and len(text) <= 60:
-                await self.room_start()
+                await self.room_start(source="voice")
                 return
             await self.send({"type": "llm", "emotion": "thinking", "text": "🤔"})
             await self.speak(text)
@@ -864,8 +871,10 @@ class Session:
                      "voices": voices, "probe": c["probe"],
                      "tz": profiles.settings(self.dev["user"]).get("tz", "")}, **kw)
 
-    async def room_start(self):
+    async def room_start(self, source="panel"):
+        """source "voice": "Raummodus an" at the board (the profile may get a note, roomlive.tell)."""
         import room
+        import roomlive
         uid = self.dev["user"]
         if self.room is not None:
             await self.say("Der Raum-Modus ist schon an.")
@@ -877,22 +886,34 @@ class Session:
             print("room: speaker refused (already", ROOM_MAX, "speakers in room mode)", flush=True)
             await self.say("Gerade hören schon zu viele Lautsprecher im Raum zu. Bitte später noch einmal.")
             return
-        mins = room_cfg(by_device(self.dev["id"])[1])["mins"]
-        self.room = {"rid": "esp" + re.sub(r"[^A-Za-z0-9]", "", self.dev["id"])[:24], "until": time.time() + mins * 60,
-                     "wait": False, "need": ROOM_NEED, "last": time.time(), "asking": False, "queue": None, "task": None}
+        cfg = room_cfg(by_device(self.dev["id"])[1])
+        mins = cfg["mins"]
+        rid = "esp" + re.sub(r"[^A-Za-z0-9]", "", self.dev["id"])[:24]
+        try:
+            e = roomlive.add(uid, rid, "speaker", self.dev["name"], time.time() + mins * 60, device=self.dev["id"],
+                             voices=cfg["voices"] if room.voices_on() else "all", probe=cfg["probe"], ctl=self, source=source)
+        except HTTPException:
+            await self.say("Gerade hören schon zu viele Geräte im Raum zu. Bitte später noch einmal.")
+            return
+        self.room = {"rid": rid, "until": e["until"], "wait": False, "need": ROOM_NEED, "last": time.time(), "asking": False,
+                     "queue": None, "task": None, "ping": time.time()}
         print(f"room: on at speaker {self.dev['name']} for {mins} min", flush=True)
         await self.say(f"Raum-Modus an. Ich höre {mins} Minuten zu. Mit „Raummodus aus“ beendest du ihn.")
         self.room["last"] = time.time()
         self.room["task"] = asyncio.create_task(self.room_loop())
         self.listen("auto")
 
-    async def room_end(self, why, say=True):
-        """Ends room mode: drops what was heard, says so and lets the board go back to its wake word."""
+    async def room_end(self, why, say=True, code="off"):
+        """Ends room mode: drops what was heard, says so and lets the board go back to its wake word.
+        code: how it ended for the profile's history (roomlive.WHY)."""
         import room
+        import roomlive
         r, self.room = self.room, None
         if r is None:
             return
-        tv = room.finish(self.dev["user"], room.ROOMS.pop((self.dev["user"], r["rid"]), None))
+        rs = room.ROOMS.pop((self.dev["user"], r["rid"]), None)
+        roomlive.remove(self.dev["user"], r["rid"], code, rs)
+        tv = room.finish(self.dev["user"], rs)
         if tv:
             self.note("Raum-Modus: " + tv)
         if r.get("task") and r["task"] is not asyncio.current_task():
@@ -915,11 +936,19 @@ class Session:
                     return
                 uid = self.dev["user"]
                 if not room.enabled() or not admin_on() or not profile_on(uid) or _devices().get(self.dev["id"]) is None:
-                    await self.room_end("switched off", say=False)
+                    await self.room_end("switched off", say=False, code="off")
                     return
                 if time.time() > r["until"]:
-                    await self.room_end("time is up")
+                    await self.room_end("time is up", code="time")
                     return
+                # "Erinnerungston": every ROOM_PING seconds a soft tone, so nobody forgets it listens
+                busy = bool(self.answer and not self.answer.done())
+                if (time.time() - r.get("ping", time.time()) >= ROOM_PING and not busy and not r["asking"]
+                        and time.time() - r["last"] >= r["need"] and room_cfg(by_device(self.dev["id"])[1]).get("ping")):
+                    r["ping"] = time.time()
+                    if not room.night(uid):
+                        self.answer = asyncio.create_task(self.say("", tone=True))
+                        continue
                 # quiet counts from the last loud sound, not from the end of a piece (with steady background
                 # noise a piece can stay open long after the talking stopped)
                 busy = bool(self.answer and not self.answer.done())
@@ -987,7 +1016,7 @@ class Session:
         if self.room is None:
             return
         if d.get("end"):
-            await self.room_end("by voice")
+            await self.room_end("by voice", code="voice")
             return
         if d.get("stop") and self.answer and not self.answer.done():
             self.answer.cancel()
@@ -1016,7 +1045,8 @@ class Session:
         """Speaks a fixed text (no model): the tone first if asked, the text on boards with a display."""
         enc = Encoder()
         await self.send({"type": "tts", "state": "start"})
-        await self.send({"type": "tts", "state": "sentence_start", "text": text})
+        if text:
+            await self.send({"type": "tts", "state": "sentence_start", "text": text})
         try:
             pace = Pacer(self.send_audio)
             n = 0
@@ -1026,7 +1056,7 @@ class Session:
                 await pace.push(frames)
             mine, until = None, 0.0   # another device of the house does not take this for a question (echo.py)
             try:
-                async for pcm in tts_stream(self.dev["user"], text):
+                async for pcm in (tts_stream(self.dev["user"], text) if text else _nothing()):
                     if mine is None:
                         mine, until = echo.said(text, self.dev["user"], "dev:" + self.dev["id"]), time.time()
                     until = max(until, time.time()) + len(pcm) / (OUT_RATE * 2)
@@ -1343,7 +1373,10 @@ async def speaker_ws(ws: WebSocket):
         if s.room is not None:
             import room
             r, s.room = s.room, None
-            room.finish(dev["user"], room.ROOMS.pop((dev["user"], r["rid"]), None))
+            rs = room.ROOMS.pop((dev["user"], r["rid"]), None)
+            room.finish(dev["user"], rs)
+            import roomlive
+            roomlive.remove(dev["user"], r["rid"], "lost", rs)
             if r.get("task"):
                 r["task"].cancel()
             print(f"room: off at speaker {dev['name']} (connection ended)", flush=True)
@@ -1399,6 +1432,24 @@ def _room_info(did, c):
             "room_waits": bool(c.get("room_next")) and not r, **{"room_" + k: v for k, v in room_cfg(c).items()},
             "voice_here": len(_speakers().device_samples(c.get("uid") or _devices()[did]["user"]).get(did, [])),
             "voice_waits": bool(c.get("voice_next")) and time.time() - c["voice_next"] < 3600}
+
+
+def room_waiting():
+    """Speakers whose switch "Raum" waits for their next wake word (shown with the rooms, roomlive.py)."""
+    devs = _devices()
+    out = []
+    for c in clients().values():
+        d = devs.get(c.get("device"))
+        s = _live.get(c.get("device"))
+        if d and c.get("room_next") and time.time() - c["room_next"] <= 24 * 3600 and not (s and s.room):
+            out.append({"key": "w_" + d["id"], "device": d["id"], "name": d["name"], "uid": d["user"]})
+    return out
+
+
+def room_cancel_wait(did):
+    cid, _ = by_device(did)
+    if cid:
+        _update(lambda d: d["clients"].get(cid, {}).pop("room_next", None))
 
 
 def _speakers():
@@ -1538,7 +1589,7 @@ async def profile_change(did: str, request: Request, prof=Depends(browser_profil
         if len(kinds) > len(room.KIND_KEYS) or any(k not in room.KIND_KEYS or not isinstance(v, bool) for k, v in kinds.items()):
             raise HTTPException(400, "Raum-Modus: unbekannte Art.")
         _update(lambda d: d["clients"][cid].update(room_kinds=dict(room_cfg(d["clients"][cid])["kinds"], **kinds)))
-    if any(k in body for k in ("room_mins", "room_level", "room_area", "room_voices", "room_probe", "room_detect")):
+    if any(k in body for k in ("room_mins", "room_level", "room_area", "room_voices", "room_probe", "room_detect", "room_ping")):
         def put(d):
             e = d["clients"][cid]
             if body.get("room_mins") in ROOM_MINS:
@@ -1551,6 +1602,8 @@ async def profile_change(did: str, request: Request, prof=Depends(browser_profil
                 e["room_probe"] = body["room_probe"]
             if isinstance(body.get("room_detect"), bool):
                 e["room_detect"] = body["room_detect"]
+            if isinstance(body.get("room_ping"), bool):
+                e["room_ping"] = body["room_ping"]
             if "room_area" in body:
                 e["room_area"] = room_cfg({"room_area": body["room_area"]})["area"]
         _update(put)
@@ -1576,7 +1629,7 @@ async def _room_switch(did, cid, prof, on):
     else:
         _update(lambda d: d["clients"][cid].pop("room_next", None))
         if s and s.room is not None:
-            await s.room_end("switched off in the panel")
+            await s.room_end("switched off in the panel", code="panel")
 
 
 @router.post("/api/profile/esp32/{did}/update", dependencies=[Depends(assistant)])

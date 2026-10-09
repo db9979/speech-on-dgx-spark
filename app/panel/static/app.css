@@ -242,6 +242,11 @@ a.b{text-decoration:none;color:inherit;display:inline-flex;align-items:center}
 .wizcard{width:min(560px,94vw);min-height:min(520px,90vh);max-height:92vh;display:flex;flex-direction:column}.wizbody{flex:1;overflow:auto;padding:4px 2px}
 .updbanner{position:sticky;top:0;z-index:60;display:flex;align-items:center;gap:10px;flex-wrap:wrap;padding:8px 16px;background:color-mix(in srgb,var(--acc) 14%,var(--card));border-bottom:1px solid color-mix(in srgb,var(--acc) 30%,transparent);font-size:14px}
 .updbanner span{flex:1;font-weight:600}
+.roomlive{position:sticky;top:0;z-index:59;display:flex;align-items:center;gap:10px;padding:7px 16px;background:color-mix(in srgb,var(--ok) 13%,var(--card));border-bottom:1px solid color-mix(in srgb,var(--ok) 30%,transparent);font-size:14px}
+.roomlive[hidden]{display:none}.roomlive span{flex:1;font-weight:600;min-width:0;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.roomlive i{width:9px;height:9px;border-radius:50%;background:var(--ok);flex:none;animation:wk 1.6s ease-in-out infinite}
+@media(max-width:760px){.roomlive{font-size:13px;padding:6px 12px}}
+#zrooms .zrow b{font-weight:600}
 @media(max-width:760px){.updbanner{font-size:13px;padding:6px 12px}.updbanner .b{padding:6px 12px}}
 .prorow{display:flex;gap:6px;margin-top:8px;flex-wrap:wrap}.prorow .ib{padding:4px 10px;font-size:12px}
 .wakeind.room i{background:#f59e0b}

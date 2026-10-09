@@ -31,6 +31,7 @@ All options for running without questions (`--mode api --asr 1.7b --tts 0.6b --y
 
 <!-- New version: add one line at the top here and in CHANGELOG.md, drop the oldest line here (keep 10). Details go to docs/de and docs/en, not into this README. -->
 
+- **V01.0.208** Room mode visible: green strip “… listens until …” on every page, Me → Room mode “Active now” with +30 min/Stop, Status “Listening right now” with “Stop all”, mark and filter in Profiles and devices, “● Room” in the tab title, reminder tone, note when a speaker starts, history without text, key for Home Assistant
 - **V01.0.207** Settings made consistent: same building blocks on every page, menu Assistant/Speech/Spark, "At a glance", update and backup under Settings, Status and Einbinden with a column or list like Settings
 - **V01.0.206** Many users: profile list with search, filter and pages, call names, recipient search with recent and favourites, asks back when names are alike (Siri too)
 - **V01.0.205** Sturdier speech output: if the TTS stream breaks, the piece is tried again and the rest of the answer is still spoken; gaps show as "chat: tts behind" in the diagnosis log
@@ -40,7 +41,6 @@ All options for running without questions (`--mode api --asr 1.7b --tts 0.6b --y
 - **V01.0.201** iPhone app: envelope next to the input, "Ready?" view for messages, Siri "Message with Spark"
 - **V01.0.200** Simpler messages: envelope button in the chat, "Schreib X, dass …" read by the panel itself, switch on with "Ja", ready view
 - **V01.0.199** Browser test: a function switched on and a new version show without F5 (catches bugs like the one in .197)
-- **V01.0.198** Fixed panel error from .197 (pages did not load, "reading 'json'")
 
 All versions: [CHANGELOG.md](CHANGELOG.md)
 

@@ -124,6 +124,7 @@
     "proactive": false,
     "room": false,
     "room_voices": false,
+    "room_ha": false,
     "speaker_id": false,
     "mfa": false,
     "speaker_strictness": "normal",

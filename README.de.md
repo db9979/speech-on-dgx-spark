@@ -31,6 +31,7 @@ Alle Optionen ohne Rückfragen (`--mode api --asr 1.7b --tts 0.6b --yes` …) st
 
 <!-- New version: add one line at the top here and in CHANGELOG.md, drop the oldest line here (keep 10). Details go to docs/de and docs/en, not into this README. -->
 
+- **V01.0.208** Raum-Modus sichtbar: grüner Streifen „… hört zu bis …“ auf jeder Seite, Ich → Raum-Modus „Gerade aktiv“ mit +30 Min./Beenden, Zustand „Hört gerade zu“ mit „Alle beenden“, Marke und Filter in Profile und Geräte, Tab-Titel „● Raum“, Erinnerungston, Mitteilung bei Start am Lautsprecher, Verlauf ohne Text, Schlüssel für Home Assistant
 - **V01.0.207** Einstellungen einheitlich: gleiche Bausteine auf allen Seiten, Menü Assistent/Sprache/Spark, „Auf einen Blick“, Update und Sicherung unter Einstellungen, Zustand und Einbinden mit Spalte bzw. Liste
 - **V01.0.206** Viele Benutzer: Profilliste mit Suche, Filter und Seiten, Rufname, Empfänger per Suchfeld mit Zuletzt und Favoriten, Rückfrage bei gleichen Namen (auch Siri)
 - **V01.0.205** Sprachausgabe robuster: bricht der TTS-Strom ab, wird das Stück noch einmal versucht und der Rest der Antwort weiter gesprochen; Aussetzer stehen als „chat: tts behind“ im Diagnose-Log
@@ -40,7 +41,6 @@ Alle Optionen ohne Rückfragen (`--mode api --asr 1.7b --tts 0.6b --yes` …) st
 - **V01.0.201** iPhone-App: Umschlag neben dem Eingabefeld, Anzeige „Bereit?“ für Nachrichten, Siri „Nachricht mit Spark“
 - **V01.0.200** Nachrichten einfacher: Briefknopf im Chat, „Schreib X, dass …“ ohne Umweg übers Modell, Einschalten mit „Ja“, Bereit-Anzeige
 - **V01.0.199** Browser-Test: eingeschaltete Funktion und neue Version erscheinen ohne F5 (fängt Fehler wie in .197)
-- **V01.0.198** Panel-Fehler aus .197 behoben (Seiten luden nicht, „reading 'json'“)
 
 Alle Versionen: [CHANGELOG.md](CHANGELOG.md)
 

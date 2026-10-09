@@ -55,6 +55,20 @@ function zustand(s){if(s)ZLAST=s;s=ZLAST;if(!s)return;
     b.onclick=()=>{if(x.go==='svc')$('svc').closest('.card').scrollIntoView({behavior:'smooth'});else if(x.go==='cfg'){goSec('cfg');const d=document.querySelector('.pane.dirty');if(d){const nb=document.querySelector(`#cfgnav button[data-p="${d.id.slice(5)}"]`);if(nb)nb.click()}}else goSec(x.go)};
     r.append(sp,tx,b);L.appendChild(r)}}
 window.zustand=zustand;
+// Zustand → "Hört gerade zu" (roomlive.py): every device in room mode, of every profile, with Beenden and
+// "Alle beenden" (e.g. when guests come). Only where and until when, never what was heard.
+async function zRooms(){const box=$('zroom');if(!box||document.hidden)return;let d={rooms:[],waiting:[]};
+  try{const r=await fetch('/api/admin/rooms',{cache:'no-store'});if(!r.ok)return;d=await r.json()}catch{return}
+  const all=d.rooms.concat(d.waiting.map(w=>Object.assign({wait:true},w)));box.hidden=!all.length;
+  const hm=ms=>new Date(ms).toLocaleTimeString(L==='en'?'en-GB':'de-DE',{hour:'2-digit',minute:'2-digit'});
+  const L2=$('zrooms');L2.textContent='';
+  for(const x of all){const r=document.createElement('div');r.className='zrow';const sp=document.createElement('span');sp.className='pill ok';sp.textContent=x.wait?t('wartet','waiting'):t('bis ','until ')+hm(x.until);
+    const tx=document.createElement('span');const b1=document.createElement('b');b1.textContent=x.profile+' · '+x.name;tx.append(b1,' '+(x.wait?t('Lautsprecher, startet beim nächsten Weckwort','speaker, starts at the next wake word'):(x.kind==='speaker'?t('Lautsprecher','speaker'):t('Browser','browser'))+' · '+t('seit ','since ')+hm(x.since)));
+    const b=document.createElement('button');b.type='button';b.className='b';b.textContent=x.wait?t('Nicht starten','Do not start'):t('Beenden','Stop');
+    b.onclick=async()=>{try{await api('/api/admin/rooms/end',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({key:x.key})})}catch{}zRooms()};
+    r.append(sp,tx,b);L2.appendChild(r)}}
+$('zroomall').onclick=async()=>{if(!confirm(t('Raum-Modus an allen Geräten beenden?','End room mode on every device?')))return;
+  try{await api('/api/admin/rooms/end',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({all:true})})}catch{}zRooms()};
 
 let CFG=null;
 async function loadLangs(){const l=await (await api('/api/languages')).json();document.querySelectorAll('select.langs').forEach(s=>s.innerHTML=l.map(x=>`<option>${x}</option>`).join(''))}

@@ -70,7 +70,8 @@ async def wyoming_suggest():
 
 
 def _profile_extra(uid):
-    return {"mfa": mfa.enabled(uid), "msg": bool(profiles.settings(uid).get("msg_on"))}
+    import roomlive
+    return {"mfa": mfa.enabled(uid), "msg": bool(profiles.settings(uid).get("msg_on")), "room": roomlive.count(uid)}
 
 
 @router.get("/api/admin/profiles", dependencies=[Depends(auth)])
@@ -78,9 +79,13 @@ def admin_profiles(q: str = "", show: str = "", sort: str = "name", page: int = 
     """One page of the profiles (search, filter, sort; per 0: all of them, for the setup wizard)."""
     d = profiles.admin_list(q[:40], show, sort, page, per or None, extra=_profile_extra)
     import esp32
-    spk = esp32.speaker_ids()
+    import roomlive
+    spk, listening = esp32.speaker_ids(), roomlive.devices_listening()
     for x in d["devices"]:
         x["speaker"] = x["id"] in spk   # managed under Ich → Lautsprecher of its profile
+        x["room"] = x["id"] in listening   # in room mode right now (roomlive.py)
+    for u in d["users"]:
+        u.setdefault("room", roomlive.count(u["id"]))
     return d
 
 
@@ -127,7 +132,9 @@ def admin_profile(uid: str):
     last = profiles.seen()
     import esp32
     spk = esp32.speaker_ids()
-    devs = [dict(x, speaker=x["id"] in spk) for x in profiles.own_devices(uid)]
+    import roomlive
+    listening = roomlive.devices_listening()
+    devs = [dict(x, speaker=x["id"] in spk, room=x["id"] in listening) for x in profiles.own_devices(uid)]
     return dict(u, **_profile_extra(uid), last=profiles.last_use(uid, last), devices=devs,
                 facts=len(profiles.memory(uid)))
 

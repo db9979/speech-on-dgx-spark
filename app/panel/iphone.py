@@ -216,7 +216,9 @@ def app_hello(prof=Depends(own_profile)):
             # pictures go to the model itself (images.py); without it the app reads text on the phone (OCR)
             "images": images.allowed(prof["id"], "app:x"),
             # Spark updates (appupdate.py): the version page and the start button, rights set by the admin
-            "update": appupdate.for_app(prof["id"])}
+            "update": appupdate.for_app(prof["id"]),
+            # where room mode listens right now (roomlive.py): the line in the chat, the widget and the Live Activity
+            "rooms": bool(load_config().get("chat", {}).get("room", False) and s.get("app_room"))}
 
 
 DOC_BODY = 3 * 1024 * 1024     # the text of one document as JSON (the iPhone reads PDFs and scans itself)
@@ -260,7 +262,7 @@ async def app_doc(request: Request, prof=Depends(own_profile)):
 APP_FIELDS = ("voice", "speed", "length", "pro_on", "pro_quiet", "pro_max", "pro_events", "pro_lead",
               "pro_weather", "pro_place", "pro_weather_at", "pro_parcel", "pro_bday", "pro_transit",
               "pro_greet", "pro_mail", "briefing_at")
-RIGHTS = ("app_ha", "app_car_ha", "app_act", "app_listen", "app_push", "app_docs", "app_ios", "app_images")
+RIGHTS = ("app_ha", "app_car_ha", "app_act", "app_listen", "app_push", "app_docs", "app_ios", "app_images", "app_room")
 SETTINGS_BODY = 8192
 
 

@@ -106,7 +106,7 @@ def last_use(uid, last=None, devs=None):
     return max(ts)
 
 
-ADMIN_SHOW = ("", "mfa", "nomfa", "msg", "nomsg", "idle", "nodev")
+ADMIN_SHOW = ("", "mfa", "nomfa", "msg", "nomsg", "idle", "nodev", "room")
 ADMIN_SORT = ("name", "recent", "new")
 ADMIN_PER = 100      # at most this many profiles per page of the admin list
 IDLE_DAYS = 90
@@ -139,6 +139,10 @@ def admin_list(q="", show="", sort="name", page=0, per=None, now=None, extra=Non
             continue
         if show == "nodev" and mine:
             continue
+        if show == "room":     # in room mode right now (extra adds "room", the number of its rooms)
+            row.update(extra(u["id"]))
+            if not row.get("room"):
+                continue
         if show in ("mfa", "nomfa", "msg", "nomsg"):
             row.update(extra(u["id"]))
             key = "mfa" if "mfa" in show else "msg"
@@ -382,8 +386,14 @@ APP_PATHS = ("/api/chat", "/api/test/asr", "/api/siri/ask", "/api/iphone/hello",
              "/api/messages", "/api/messages/poll", "/api/messages/send", "/api/messages/voice",
              "/api/messages/announce", "/api/messages/played", "/api/messages/read", "/api/messages/delete",
              "/api/messages/audio", "/api/messages/ready",
-             "/api/messages/fav")     # ★ in the recipient picker (the Rufname stays in the browser)
+             "/api/messages/fav",     # ★ in the recipient picker (the Rufname stays in the browser)
+             # where room mode listens and ending it (roomlive.py, only with app_room; never starting or extending)
+             "/api/room/active", "/api/room/end")
 APP_GATE = [lambda uid: False]
+# A room key (scope "room", for Home Assistant) only reads where room mode listens and ends it (roomlive.py),
+# and only while the admin allows it (ROOM_GATE, set by roomlive.py; closed without it).
+ROOM_PATHS = ("/api/room/active", "/api/room/end")
+ROOM_GATE = [lambda uid: False]
 
 
 def _device(d, request):
@@ -435,6 +445,10 @@ def current(request):
         if not dev:
             return None
         if dev.get("scope") == "app" and (request.scope.get("path") not in APP_PATHS or not APP_GATE[0](dev["user"])):
+            return None
+        if dev.get("scope") == "room" and (request.scope.get("path") not in ROOM_PATHS or not ROOM_GATE[0](dev["user"])):
+            return None
+        if dev.get("scope") not in (None, "", "app", "room"):
             return None
         _note_device(dev["id"], request)
         uid = dev["user"]
@@ -527,7 +541,9 @@ SETTINGS = {
     "app_car_ha": (False, lambda v: isinstance(v, bool)),   # smart home from CarPlay
     "app_docs": (False, lambda v: isinstance(v, bool)),     # documents from the app into "Meine Dokumente"
     "app_ios": (False, lambda v: isinstance(v, bool)),      # Apple Reminders and the lists on the iPhone (tasks.py)
-    "app_images": (False, lambda v: isinstance(v, bool)),   # pictures from the app to the model (images.py)
+    "app_images": (False, lambda v: isinstance(v, bool)),
+    "app_room": (False, lambda v: isinstance(v, bool)),     # where room mode listens, in the app (roomlive.py)
+    "room_tell": (False, lambda v: isinstance(v, bool)),    # a note when a speaker starts room mode by voice   # pictures from the app to the model (images.py)
     # agent functions (agent.py): the admin gives the level, the profile switches it on itself
     "agent_on": (False, lambda v: isinstance(v, bool)),
     "agent_doc": (False, lambda v: isinstance(v, bool)),    # every report also under "Meine Dokumente"

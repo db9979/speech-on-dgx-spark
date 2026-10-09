@@ -999,12 +999,19 @@ def _rid(body):
 @router.post("/api/room/heard", dependencies=[Depends(assistant), Depends(_on)])
 async def api_heard(request: Request, prof=Depends(own_profile)):
     body = await request.json()
+    import roomlive
+    if roomlive.ended(prof["id"], _rid(body)):     # ended in the panel, the app or by the admin
+        return {"end": True, "stop": True, "wait": False}
+    roomlive.alive(prof["id"], _rid(body))
     return _night_text(prof["id"], await heard(prof["id"], _rid(body), body.get("text", ""), body))
 
 
 @router.post("/api/room/pause", dependencies=[Depends(assistant), Depends(_on)])
 async def api_pause(request: Request, prof=Depends(own_profile)):
     body = await request.json()
+    import roomlive
+    if roomlive.ended(prof["id"], _rid(body)):
+        return {"end": True}
     return _night_text(prof["id"], await pause(prof["id"], _rid(body), body))
 
 
@@ -1012,6 +1019,8 @@ async def api_pause(request: Request, prof=Depends(own_profile)):
 async def api_stop(request: Request, prof=Depends(own_profile)):
     body = await request.json()
     r = ROOMS.pop((prof["id"], str(body.get("room") or "")), None)
+    import roomlive
+    roomlive.remove(prof["id"], str(body.get("room") or ""), body.get("why") if body.get("why") in ("time", "voice", "here", "lost") else "here", r)
     out = summary(r) if r else []
     tv = finish(prof["id"], r) if r else None
     if tv:
