@@ -1426,43 +1426,60 @@ async def _answer(request, turn):
                         tts_body["language"] = lang
                 req = dict(tts_body, input=text, stream=True, response_format="pcm")
                 await out.put({"type": "tts_request", "chars": len(text)})  # for the stall details in the chat
-                sent, got, mine = time.time(), False, None
-                async with c.stream("POST", tts_url, json=req, headers=api_headers()) as r:
-                    if r.status_code != 200:
-                        detail = (await r.aread()).decode(errors='replace')[:300]
-                        await out.put({"type": "error", "code": "tts_loading" if r.status_code == 503 and "loading" in detail
-                                       else "tts_down" if r.status_code in (502, 503) else "tts_error",
-                                       "message": f"TTS HTTP {r.status_code}: {detail}"})
-                        mute = True
-                        continue
-                    async for line in r.aiter_lines():
-                        if not line.startswith("data:"):
-                            continue
-                        try:
-                            ev = json.loads(line[5:])
-                        except ValueError:
-                            continue
-                        if ev.get("type") == "speech.audio.delta" and ev.get("audio"):
-                            if not got:
-                                got, ttfa = True, time.time() - sent
-                                # this piece plays from here on: another device of the house that hears it
-                                # does not take it for a question (echo.py)
-                                mine = echo.said(text, device_owner and device_owner["id"], echo.device_of(request),
-                                                 start=max(time.time(), played_until))
-                            if first:
-                                first = False
-                                played_until = time.time()
-                                await out.put({"type": "timing", "first_audio": round(time.time() - t0, 3)})
-                                try:  # for Zustand → Prüfen: how long people wait (latency.py)
-                                    await asyncio.to_thread(latency.add, time.time() - t0, body.get("client") or "web")
-                                except (OSError, ValueError) as e:
-                                    print("latency:", type(e).__name__, flush=True)
-                            # 16-bit mono PCM at 24 kHz: 48000 bytes per second of audio
-                            played_until = max(played_until, time.time()) + len(ev["audio"]) * 3 / 4 / 48000
-                            echo.played(mine, played_until)
-                            await out.put({"type": "audio", "audio": ev["audio"]})
-                        elif ev.get("type") == "speech.audio.error":
-                            await out.put({"type": "error", "message": f"TTS: {ev.get('error')}"})
+                # A broken stream (engine restarted, ReadError) costs this piece, never the rest of the
+                # answer: a piece that brought no audio yet is tried once more, then the next one goes on.
+                for attempt in (1, 2):
+                    sent, got, mine = time.time(), False, None
+                    try:
+                        async with c.stream("POST", tts_url, json=req, headers=api_headers()) as r:
+                            if r.status_code != 200:
+                                detail = (await r.aread()).decode(errors='replace')[:300]
+                                await out.put({"type": "error", "code": "tts_loading" if r.status_code == 503 and "loading" in detail
+                                               else "tts_down" if r.status_code in (502, 503) else "tts_error",
+                                               "message": f"TTS HTTP {r.status_code}: {detail}"})
+                                mute = True
+                                break
+                            async for line in r.aiter_lines():
+                                if not line.startswith("data:"):
+                                    continue
+                                try:
+                                    ev = json.loads(line[5:])
+                                except ValueError:
+                                    continue
+                                if ev.get("type") == "speech.audio.delta" and ev.get("audio"):
+                                    now = time.time()
+                                    if not got:
+                                        got, ttfa = True, now - sent
+                                        # this piece plays from here on: another device of the house that hears it
+                                        # does not take it for a question (echo.py)
+                                        mine = echo.said(text, device_owner and device_owner["id"], echo.device_of(request),
+                                                         start=max(now, played_until))
+                                    if first:
+                                        first = False
+                                        played_until = now
+                                        await out.put({"type": "timing", "first_audio": round(now - t0, 3)})
+                                        try:  # for Zustand → Prüfen: how long people wait (latency.py)
+                                            await asyncio.to_thread(latency.add, now - t0, body.get("client") or "web")
+                                        except (OSError, ValueError) as e:
+                                            print("latency:", type(e).__name__, flush=True)
+                                    elif now > played_until + 0.3:
+                                        # the listener ran out of audio: a gap in the speech (Zustand → Logs, "chat:")
+                                        print(f"chat: tts behind by {now - played_until:.1f} s ({len(text)} chars, "
+                                              f"first audio after {ttfa:.1f} s)", flush=True)
+                                    # 16-bit mono PCM at 24 kHz: 48000 bytes per second of audio
+                                    played_until = max(played_until, now) + len(ev["audio"]) * 3 / 4 / 48000
+                                    echo.played(mine, played_until)
+                                    await out.put({"type": "audio", "audio": ev["audio"]})
+                                elif ev.get("type") == "speech.audio.error":
+                                    await out.put({"type": "error", "message": f"TTS: {ev.get('error')}"})
+                        break
+                    except (httpx.ReadError, httpx.RemoteProtocolError, httpx.ReadTimeout) as e:
+                        print(f"chat: tts stream broke ({type(e).__name__}, {len(text)} chars, "
+                              f"{'with' if got else 'no'} audio, try {attempt})", flush=True)
+                        if got or attempt == 2:
+                            await out.put({"type": "error", "code": "tts_error", "message": f"TTS: {type(e).__name__}"})
+                            break
+                        await asyncio.sleep(0.5)
         except Exception as e:
             code = "tts_down" if isinstance(e, (httpx.ConnectError, httpx.ConnectTimeout)) else "tts_error"
             await out.put({"type": "error", "code": code, "message": f"TTS: {type(e).__name__}: {e}"[:400]})

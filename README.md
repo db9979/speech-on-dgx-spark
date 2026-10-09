@@ -31,6 +31,7 @@ All options for running without questions (`--mode api --asr 1.7b --tts 0.6b --y
 
 <!-- New version: add one line at the top here and in CHANGELOG.md, drop the oldest line here (keep 10). Details go to docs/de and docs/en, not into this README. -->
 
+- **V01.0.205** Sturdier speech output: if the TTS stream breaks, the piece is tried again and the rest of the answer is still spoken; gaps show as "chat: tts behind" in the diagnosis log
 - **V01.0.204** Answers without blank lines at the start and end (left over from Qwen's think block), paragraphs stay
 - **V01.0.203** Targeted tool choice in the panel: show the rules, try sentences, own words per group
 - **V01.0.202** Targeted tool choice: fixed rules sort questions into a group, the model sees only matching tools (switch, off); real reason when locked
@@ -40,7 +41,6 @@ All options for running without questions (`--mode api --asr 1.7b --tts 0.6b --y
 - **V01.0.198** Fixed panel error from .197 (pages did not load, "reading 'json'")
 - **V01.0.197** Functions switched on in the admin menu show right after saving (the page reloads itself), API answers are never cached; self-test against script/CSS links without a version
 - **V01.0.196** Messages: asking to write works after a web/mail answer too, otherwise the assistant names the real reason
-- **V01.0.195** iPhone app: messages to other profiles (list, write, reply right from the notification)
 
 All versions: [CHANGELOG.md](CHANGELOG.md)
 

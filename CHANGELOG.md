@@ -2,6 +2,7 @@
 
 Every version in one line, newest first (taken from the commit messages, so some lines are German, some English). Older entries have no version number.
 
+- **V01.0.205** · 2026-10-09 · Sprachausgabe robuster: bricht der TTS-Strom ab, wird das Stück noch einmal versucht und der Rest der Antwort weiter gesprochen; Aussetzer stehen als „chat: tts behind“ im Diagnose-Log
 - **V01.0.204** · 2026-10-09 · Antworten ohne Leerzeilen am Anfang und Ende (Reste des Qwen-Denkblocks), Absätze bleiben; Denk-Tags in einem Stück werden richtig entfernt
 - **V01.0.203** · 2026-10-09 · Gezielte Werkzeugwahl im Panel: Regeln als Tabelle, Satz ausprobieren (Gruppe, Grund, Werkzeuge), eigene Wörter für jede Gruppe (Admin, nur hinzufügen)
 - **V01.0.202** · 2026-10-09 · Gezielte Werkzeugwahl: Weiche `intent.py` ordnet Fragen mit festen Regeln einer Gruppe zu (Journalzeile „weiche:“), mit Schalter nur passende Werkzeuge und Pflicht-Werkzeug, eigene neue Bitte hebt Sperre nach Fremdtext auf, echter Sperrgrund ans Modell, optional Modell als Einordner; Prüfstand mit 90+ Sätzen

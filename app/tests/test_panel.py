@@ -2,6 +2,7 @@
 
 Run:  python -m unittest discover -s app/tests -t app     (from the repository root)
 """
+import base64
 import json
 import os
 import time
@@ -672,6 +673,53 @@ class Errors(unittest.TestCase):
             self._set("tts", **old)
         self.assertEqual(answer(evs), "Hallo.")
         self.assertEqual([e["code"] for e in evs if e["type"] == "error"], ["tts_down"])
+
+    def test_tts_stream_that_breaks_is_tried_again(self):
+        """An engine that drops the stream before any audio (restart, ReadError) costs one retry,
+        not the spoken answer."""
+        import socket
+        import threading
+        calls = []
+        srv = socket.socket()
+        srv.bind(("127.0.0.1", 0))
+        srv.listen(8)
+
+        def serve():
+            while True:
+                try:
+                    conn, _ = srv.accept()
+                except OSError:
+                    return
+                with conn:
+                    req = b""
+                    while b"\r\n\r\n" not in req:
+                        part = conn.recv(65536)
+                        if not part:
+                            break
+                        req += part
+                    if b"/v1/audio/speech" not in req.split(b"\r\n", 1)[0]:
+                        conn.sendall(b"HTTP/1.1 404 Not Found\r\nContent-Length: 0\r\nConnection: close\r\n\r\n")
+                        continue
+                    calls.append(1)
+                    head = b"HTTP/1.1 200 OK\r\nContent-Type: text/event-stream\r\nConnection: close\r\n"
+                    if len(calls) == 1:  # headers, then the connection drops mid-body
+                        conn.sendall(head + b"Transfer-Encoding: chunked\r\n\r\n")
+                        continue
+                    pcm = base64.b64encode(b"\0\0" * 2400).decode()
+                    body = (f'data: {json.dumps({"type": "speech.audio.delta", "audio": pcm})}\n\n'
+                            f'data: {json.dumps({"type": "speech.audio.done"})}\n\n').encode()
+                    conn.sendall(head + f"Content-Length: {len(body)}\r\n\r\n".encode() + body)
+        threading.Thread(target=serve, daemon=True).start()
+        old = self._set("tts", port=srv.getsockname()[1])
+        try:
+            evs = ask(TestClient(panel.app), "Hallo")
+        finally:
+            self._set("tts", **old)
+            srv.close()
+        self.assertEqual(answer(evs), "Hallo.")
+        self.assertEqual(len(calls), 2)
+        self.assertTrue(any(e["type"] == "audio" for e in evs))
+        self.assertFalse([e for e in evs if e["type"] == "error"])
 
     def test_llm_down_is_named(self):
         old = self._set("chat", llm_url=f"http://127.0.0.1:{helpers._port()}/v1", llm_model="x")

@@ -27,14 +27,14 @@ function playPcm(b64){const ctx=playCtx(),bin=atob(b64),n=bin.length>>1;if(!n)re
   // that copy starts, it is cancelled and the real samples go in front of the next piece, so the
   // seam stays seamless. If the stream falls behind or ends (also when the speech engine stops in
   // the middle of a sound), the voice fades out instead of stopping on a loud sample, which clicks.
-  const now=ctx.currentTime,tl=chat.tail;chat.tail=null;
-  if(tl&&tl.at>now+0.02){try{tl.src.stop()}catch{}chat.sources=chat.sources.filter(x=>x!==tl.src);
+  const now=ctx.currentTime,tl=chat.tail;chat.tail=null;let faded0=!!tl;   // the piece before ended in a fade-out
+  if(tl&&tl.at>now+0.02){faded0=false;try{tl.src.stop()}catch{}chat.sources=chat.sources.filter(x=>x!==tl.src);
     const j=new Float32Array(tl.data.length+n);j.set(tl.data);j.set(f,tl.data.length);f=j;chat.playEnd=tl.at}
   // after a gap (first piece, or the stream fell behind) start a little ahead and fade in, so the
   // next pieces join seamlessly and the restart does not click
   // 0.25 s head start: a reserve for when the GPU is busy with the LLM at the same time
   const gap=chat.playEnd<=now,at=gap?now+0.25:chat.playEnd;
-  if(gap)for(let i=0,m=Math.min(f.length,96);i<m;i++)f[i]*=i/m;
+  if(gap||faded0)for(let i=0,m=Math.min(f.length,96);i<m;i++)f[i]*=i/m;   // also right after a fade-out that already began
   if(gap&&chat.ctrl){if(chat.firstPlay==null)chat.firstPlay=at;else chat.gaps.push(at-chat.firstPlay)}   // stalls, shown under the answer
   if(chat.ctrl&&chat.blocks){chat.t0b=chat.t0b??now;chat.blocks.push(`${(n/24000).toFixed(2)}@${(now-chat.t0b).toFixed(2)}${gap&&chat.firstPlay!==at?'!':''}`)}
   const k=Math.min(TAIL,f.length),body=f.subarray(0,f.length-k),data=f.slice(f.length-k),faded=data.slice();
