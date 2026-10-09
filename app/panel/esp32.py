@@ -733,6 +733,13 @@ class Session:
             elif st == "stop" and self.ear and self.enrolling is not None:
                 ear, self.ear = self.ear, None   # the button let go: this recording is one of the sentences
                 self.enroll_q = asyncio.ensure_future(self._after(self.enroll_q, self.enroll_piece(bytes(ear.pcm))))
+            elif st == "stop" and self.ear and self.room is not None:
+                # room mode cuts its own pieces (on_audio): a "stop" from the board is no question of its
+                # own, else the same words were answered twice (room mode and the normal answer)
+                ear, self.ear = self.ear, self.new_ear()
+                if ear.heard or len(ear.pcm) > 16000:
+                    self.room["queue"] = asyncio.ensure_future(self._after(self.room["queue"], self.room_heard(bytes(ear.pcm))))
+                    self.note("Raum-Modus: Board beendet das Zuhören, Satz geht an den Raum-Modus")
             elif st == "stop" and self.ear:
                 ear, self.ear = self.ear, None
                 self.mic_report(ear.heard)
@@ -801,6 +808,10 @@ class Session:
             await self.ws.close(1000)   # nobody spoke: the board goes back to waiting for its wake word
 
     def start_answer(self, pcm):
+        if pcm is not None and self.room is not None:
+            # in room mode every sentence goes through room.py, never a second time as a question
+            self.room["queue"] = asyncio.ensure_future(self._after(self.room["queue"], self.room_heard(pcm)))
+            return
         self.answer = asyncio.create_task(self.run_answer(pcm))
 
     async def run_answer(self, pcm):

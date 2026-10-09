@@ -235,6 +235,41 @@ class RoomLive(unittest.TestCase):
         whys = [x["why"] for x in roomlive.load_history(uid)]
         self.assertIn("admin", whys)
 
+    def test_speaker_board_stop_answers_once(self):
+        """In room mode a "listen stop" from the board is no second question: the piece goes to room mode only."""
+        helpers.set_config(esp32=True)
+        NOW[0] = __import__("time").time()
+        a, uid = profile("Rl Ole")
+        profiles.add_device("Flur", uid)
+        did = next(x["id"] for x in profiles.own_devices(uid) if x["name"] == "Flur")
+
+        async def run():
+            s = esp32.Session(FakeWS(), "", {"user": uid, "id": did, "name": "Flur"}, "")
+            pieces, answers = [], []
+
+            async def quiet(text, tone=False):
+                pass
+
+            async def heard(pcm):
+                pieces.append(len(pcm))
+
+            async def answer(pcm):
+                answers.append(pcm)
+            s.say, s.room_heard, s.run_answer = quiet, heard, answer
+            await s.room_start(source="voice")
+            s.listen("auto")
+            s.ear.pcm += b"\x01\x00" * 20000
+            s.ear.heard = True
+            await s.on_text({"type": "listen", "state": "stop"})
+            s.start_answer(b"\x00\x00" * 16000)   # whatever else hands over a sentence: room mode only
+            await asyncio.sleep(0.05)
+            self.assertEqual(answers, [])
+            self.assertEqual(len(pieces), 2)
+            self.assertIsNotNone(s.ear)            # room mode keeps listening
+            await s.room_end("test")
+        asyncio.run(run())
+        helpers.set_config(esp32=False)
+
     def test_history_kept_short(self):
         a, uid = profile("Rl Kai")
         for i in range(roomlive.HIST_MAX + 5):
