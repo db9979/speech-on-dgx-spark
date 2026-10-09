@@ -118,13 +118,13 @@ def _qr(text):
         return ""
 
 
-async def _json(request):
-    if int(request.headers.get("content-length") or 0) > MAX_BODY:
+async def _json(request, most=MAX_BODY):
+    if int(request.headers.get("content-length") or 0) > most:
         raise HTTPException(413, "too large")
     data = bytearray()
     async for chunk in request.stream():
         data += chunk
-        if len(data) > MAX_BODY:
+        if len(data) > most:
             raise HTTPException(413, "too large")
     import json
     try:
@@ -206,4 +206,42 @@ def app_hello(prof=Depends(own_profile)):
             # Apple push is set up and on for this profile: reminders then come as push, not as local alarms
             "push": apns.on_for(prof["id"]),
             # CarPlay: the smart home only with its own switch
-            "car_ha": bool(s.get("app_car_ha"))}
+            "car_ha": bool(s.get("app_car_ha")),
+            # documents from the app into "Meine Dokumente"
+            "docs": docs_on(prof["id"])}
+
+
+DOC_BODY = 3 * 1024 * 1024     # the text of one document as JSON (the iPhone reads PDFs and scans itself)
+DOC_CHARS = 1_000_000
+
+
+def docs_on(uid):
+    return bool(load_config().get("chat", {}).get("documents", True) and profiles.settings(uid).get("app_docs"))
+
+
+@router.post("/api/iphone/doc", dependencies=[Depends(assistant)])
+async def app_doc(request: Request, prof=Depends(own_profile)):
+    """A document from the app into the profile's documents. Only the app's own key, only with app_docs;
+    the text is stored as it is, like an upload in the panel (it is data, never an instruction)."""
+    import asyncio
+    import documents
+    dev = profiles.device(request)
+    if not dev or dev.get("scope") != "app":
+        raise HTTPException(403, "only the iPhone app")
+    if not docs_on(prof["id"]):
+        raise HTTPException(403, "documents from the app are off (Ich -> iPhone-App)")
+    guard.limit(request, "doc", prof["id"], False)
+    body = await _json(request, DOC_BODY)
+    name, text = body.get("name"), body.get("text")
+    if not isinstance(name, str) or not isinstance(text, str):
+        raise HTTPException(400, "name and text are required")
+    name = re.sub(r"[\x00-\x1f\x7f<>\"\\/:]", "", name).strip()[:100] or "iPhone"
+    text = re.sub(r"[\x00-\x08\x0b\x0c\x0e-\x1f\x7f]", "", text)[:DOC_CHARS]
+    if not text.strip():
+        raise HTTPException(400, "no text")
+    try:
+        r = await asyncio.to_thread(documents.add, prof["id"], name, text.encode(), text)
+    except ValueError as e:
+        raise HTTPException(400, str(e))
+    print("iphone: document stored,", len(text), "chars", flush=True)
+    return r

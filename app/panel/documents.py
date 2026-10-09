@@ -146,11 +146,12 @@ def list_docs(uid):
     return sorted(out, key=lambda x: -(x["created"] or 0))
 
 
-def add(uid, name, data):
+def add(uid, name, data, text=None):
+    """text: already read elsewhere (the iPhone app reads PDFs and scans itself); data is then only its size."""
     if len(data) > MAX_FILE:
         raise ValueError("file is larger than 20 MB")
     name = os.path.basename(str(name or "document"))[:120] or "document"
-    parts = chunks(extract(name, data))
+    parts = chunks(extract(name, data) if text is None else text[:MAX_CHARS])
     if not parts:
         raise ValueError("no text found in this file")
     with _lock:

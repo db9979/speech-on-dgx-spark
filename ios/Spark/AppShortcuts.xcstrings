@@ -1,0 +1,46 @@
+{
+  "sourceLanguage": "de",
+  "strings": {
+    "${applicationName} fragen": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Ask ${applicationName} a question"
+          }
+        }
+      }
+    },
+    "${applicationName} zuhören": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Start ${applicationName}"
+          }
+        }
+      }
+    },
+    "Frag ${applicationName}": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Ask ${applicationName}"
+          }
+        }
+      }
+    },
+    "Mit ${applicationName} sprechen": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Talk to ${applicationName}"
+          }
+        }
+      }
+    }
+  },
+  "version": "1.0"
+}

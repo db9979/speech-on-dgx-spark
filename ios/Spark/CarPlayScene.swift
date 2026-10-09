@@ -18,13 +18,13 @@ final class CarPlayScene: UIResponder, CPTemplateApplicationSceneDelegate {
         interface = interfaceController
         let talk = Conversation.shared
         talk.inCar = true
-        let start = CPListItem(text: "Mit Spark sprechen", detailText: "Antippen und losreden",
+        let start = CPListItem(text: String(localized: "Mit Spark sprechen"), detailText: String(localized: "Antippen und losreden"),
                                image: UIImage(systemName: "waveform"))
         start.handler = { [weak self] _, done in
             self?.begin(fresh: false)
             done()
         }
-        let fresh = CPListItem(text: "Neues Gespräch", detailText: "Das bisherige Gespräch vergessen",
+        let fresh = CPListItem(text: String(localized: "Neues Gespräch"), detailText: String(localized: "Das bisherige Gespräch vergessen"),
                                image: UIImage(systemName: "square.and.pencil"))
         fresh.handler = { [weak self] _, done in
             self?.begin(fresh: true)
@@ -33,11 +33,11 @@ final class CarPlayScene: UIResponder, CPTemplateApplicationSceneDelegate {
         let list = CPListTemplate(title: "Spark", sections: [CPListSection(items: [start, fresh])])
         interfaceController.setRootTemplate(list, animated: false, completion: nil)
         voice = CPVoiceControlTemplate(voiceControlStates: [
-            CPVoiceControlState(identifier: "listen", titleVariants: ["Ich höre zu …"],
+            CPVoiceControlState(identifier: "listen", titleVariants: [String(localized: "Ich höre zu …")],
                                 image: UIImage(systemName: "mic.fill"), repeats: true),
-            CPVoiceControlState(identifier: "think", titleVariants: ["Denke nach …"],
+            CPVoiceControlState(identifier: "think", titleVariants: [String(localized: "Denke nach …")],
                                 image: UIImage(systemName: "ellipsis"), repeats: true),
-            CPVoiceControlState(identifier: "speak", titleVariants: ["Spark spricht …"],
+            CPVoiceControlState(identifier: "speak", titleVariants: [String(localized: "Spark spricht …")],
                                 image: UIImage(systemName: "speaker.wave.2.fill"), repeats: true)])
         watch = talk.$phase.receive(on: RunLoop.main).sink { [weak self] p in self?.show(p) }
     }

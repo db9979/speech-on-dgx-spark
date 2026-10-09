@@ -1,0 +1,1136 @@
+{
+  "sourceLanguage": "de",
+  "strings": {
+    "%@\n\nNur koppeln, wenn das dein eigener Spark ist.": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "%@\n\nOnly pair if this is your own Spark."
+          }
+        }
+      }
+    },
+    "%@ anrufen (%@)?": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Call %@ (%@)?"
+          }
+        }
+      }
+    },
+    "%lld Zeichen": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "%lld characters"
+          }
+        }
+      }
+    },
+    "1 Stunde": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "1 hour"
+          }
+        }
+      }
+    },
+    "3 Stunden": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "3 hours"
+          }
+        }
+      }
+    },
+    "30 Minuten": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "30 minutes"
+          }
+        }
+      }
+    },
+    "Abbrechen": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Cancel"
+          }
+        }
+      }
+    },
+    "Am Akku": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "On battery"
+          }
+        }
+      }
+    },
+    "Am PC: den QR-Code mit der Kamera dieses iPhones scannen. Auf diesem iPhone: dort „in der App öffnen“ antippen.": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "On a computer: scan the QR code with this iPhone’s camera. On this iPhone: tap “open in the app” there."
+          }
+        }
+      }
+    },
+    "Anhang": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Attachment"
+          }
+        }
+      }
+    },
+    "Anhang entfernen": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Remove attachment"
+          }
+        }
+      }
+    },
+    "Antippen und losreden": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Tap and start talking"
+          }
+        }
+      }
+    },
+    "App": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "App"
+          }
+        }
+      }
+    },
+    "Auf dem Bild habe ich keinen Text gefunden.": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "I found no text in the picture."
+          }
+        }
+      }
+    },
+    "Dafür im Panel „Von selbst“ für dein Profil einschalten.": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "For this, switch on “By itself” for your profile in the panel."
+          }
+        }
+      }
+    },
+    "Das Foto kann ich nicht laden.": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "I cannot load the photo."
+          }
+        }
+      }
+    },
+    "Das Weckwort erkennt das iPhone selbst, ohne Internet. Erst danach geht etwas an deinen Spark. Am Akku hört es nach der letzten Nutzung nur so lange zu wie eingestellt.": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "The iPhone recognises the wake word itself, without the internet. Only then does anything go to your Spark. On battery it listens only as long as set after the last use."
+          }
+        }
+      }
+    },
+    "Das Ziel verstehe ich nicht.": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "I do not understand the destination."
+          }
+        }
+      }
+    },
+    "Das bisherige Gespräch vergessen": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Forget the conversation so far"
+          }
+        }
+      }
+    },
+    "Das ist kein gültiger Kopplungs-Link vom Spark.": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "This is not a valid pairing link from the Spark."
+          }
+        }
+      }
+    },
+    "Dauerhaft zuhören": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Listening all the time"
+          }
+        }
+      }
+    },
+    "Denke nach …": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Thinking …"
+          }
+        }
+      }
+    },
+    "Der Spark hat keinen Schlüssel geschickt.": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "The Spark sent no key."
+          }
+        }
+      }
+    },
+    "Der Spark ist gerade ausgelastet. Bitte gleich noch einmal.": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "The Spark is busy right now. Please try again in a moment."
+          }
+        }
+      }
+    },
+    "Der Spark nimmt dieses iPhone nicht an. Im Panel unter Ich → iPhone-App prüfen, ob die App an ist, sonst neu koppeln.": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "The Spark does not accept this iPhone. Check in the panel under Me → iPhone app that the app is on, otherwise pair again."
+          }
+        }
+      }
+    },
+    "Die App darf deine Kontakte nicht lesen. Einstellungen → Spark → Kontakte.": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "The app may not read your contacts. Settings → Spark → Contacts."
+          }
+        }
+      }
+    },
+    "Die App ist noch nicht mit dem Spark gekoppelt.": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "The app is not paired with the Spark yet."
+          }
+        }
+      }
+    },
+    "Die Datei ist zu groß (höchstens 20 MB).": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "The file is too big (20 MB at most)."
+          }
+        }
+      }
+    },
+    "Die Datei kann ich nicht lesen.": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "I cannot read the file."
+          }
+        }
+      }
+    },
+    "Die Nummer verstehe ich nicht.": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "I do not understand the number."
+          }
+        }
+      }
+    },
+    "Die Spracherkennung auf dem iPhone kann diese Sprache nicht ohne Internet. Das Weckwort bleibt aus (Einstellungen → Allgemein → Tastatur → Diktat).": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Speech recognition on the iPhone cannot do this language without the internet. The wake word stays off (Settings → General → Keyboard → Dictation)."
+          }
+        }
+      }
+    },
+    "Die Spracherkennung oder das Sprachmodell läuft gerade nicht.": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Speech recognition or the language model is not running right now."
+          }
+        }
+      }
+    },
+    "Diese App spricht mit deinem Spark. Zum Koppeln im Panel unter Ich → iPhone-App auf „iPhone koppeln“ tippen.": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "This app talks to your Spark. To pair, tap “Pair an iPhone” in the panel under Me → iPhone app."
+          }
+        }
+      }
+    },
+    "Dokument": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Document"
+          }
+        }
+      }
+    },
+    "Du kannst auch „Ja“ oder „Nein“ sagen.": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "You can also say “Yes” or “No”."
+          }
+        }
+      }
+    },
+    "Einstellungen": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Settings"
+          }
+        }
+      }
+    },
+    "Entkoppeln": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Unpair"
+          }
+        }
+      }
+    },
+    "Erinnerung: %@": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Reminder: %@"
+          }
+        }
+      }
+    },
+    "Erkenne Sprache …": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Recognising speech …"
+          }
+        }
+      }
+    },
+    "Erneut versuchen": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Try again"
+          }
+        }
+      }
+    },
+    "Es gibt mehrere Kontakte „%@“. Sag bitte den ganzen Namen.": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "There are several contacts “%@”. Please say the full name."
+          }
+        }
+      }
+    },
+    "Es warten schon zehn Fragen. Diese ist nicht gespeichert.": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Ten questions are already waiting. This one is not saved."
+          }
+        }
+      }
+    },
+    "Fehler %lld vom Spark.": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Error %lld from the Spark."
+          }
+        }
+      }
+    },
+    "Fehler beim Spark.": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Error at the Spark."
+          }
+        }
+      }
+    },
+    "Fertig": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Done"
+          }
+        }
+      }
+    },
+    "Foto": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Photo"
+          }
+        }
+      }
+    },
+    "Foto aufnehmen": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Take a photo"
+          }
+        }
+      }
+    },
+    "Foto auswählen": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Choose a photo"
+          }
+        }
+      }
+    },
+    "Foto oder Dokument anhängen": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Attach a photo or document"
+          }
+        }
+      }
+    },
+    "Frag mich etwas, zum Beispiel: „Wie wird das Wetter morgen?“": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Ask me something, for example: “What will the weather be like tomorrow?”"
+          }
+        }
+      }
+    },
+    "Frage": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Question"
+          }
+        }
+      }
+    },
+    "Frage zum Anhang …": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Question about the attachment …"
+          }
+        }
+      }
+    },
+    "Freihändig": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Hands-free"
+          }
+        }
+      }
+    },
+    "Freihändig: nach jeder Antwort hört die App wieder zu, bis 8 Sekunden lang nichts kommt. Ins Wort fallen: einfach losreden hält die Antwort an.": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Hands-free: after each answer the app listens again until nothing comes for 8 seconds. Barge in: just start talking to stop the answer."
+          }
+        }
+      }
+    },
+    "Gekoppelt": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Paired"
+          }
+        }
+      }
+    },
+    "Geschriebene Fragen gehen raus, sobald er wieder da ist.": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Typed questions go out as soon as it is back."
+          }
+        }
+      }
+    },
+    "Gesicht des Assistenten": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Face of the assistant"
+          }
+        }
+      }
+    },
+    "Gespeichert. Die Frage geht raus, sobald der Spark wieder erreichbar ist.": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Saved. The question goes out as soon as the Spark can be reached again."
+          }
+        }
+      }
+    },
+    "Gespräch": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Conversation"
+          }
+        }
+      }
+    },
+    "Hinweise, die der Spark von selbst gibt (Morgenrunde, Erinnerungen), sagt die App laut, solange sie offen ist.": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Notes the Spark gives by itself (morning briefing, reminders) are said aloud while the app is open."
+          }
+        }
+      }
+    },
+    "Ich finde keinen Kontakt „%@“ mit Telefonnummer.": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "I find no contact “%@” with a phone number."
+          }
+        }
+      }
+    },
+    "Ich höre zu …": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Listening …"
+          }
+        }
+      }
+    },
+    "Im Panel unter Ich → iPhone-App das iPhone auch entfernen, dann gilt der Schlüssel nirgends mehr.": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Also remove the iPhone in the panel under Me → iPhone app, then the key works nowhere any more."
+          }
+        }
+      }
+    },
+    "Im Panel unter Ich → iPhone-App „Dauerhaft zuhören erlauben“ einschalten.": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Switch on “Allow listening all the time” in the panel under Me → iPhone app."
+          }
+        }
+      }
+    },
+    "In dem Dokument habe ich keinen Text gefunden.": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "I found no text in the document."
+          }
+        }
+      }
+    },
+    "In „Meine Dokumente“ speichern": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Save to “My documents”"
+          }
+        }
+      }
+    },
+    "Ins Wort fallen": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Barge in"
+          }
+        }
+      }
+    },
+    "Ja": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Yes"
+          }
+        }
+      }
+    },
+    "Kein Mikrofon verfügbar.": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "No microphone available."
+          }
+        }
+      }
+    },
+    "Kein Zugriff aufs Mikrofon. Einstellungen → Spark → Mikrofon.": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "No access to the microphone. Settings → Spark → Microphone."
+          }
+        }
+      }
+    },
+    "Keine Antwort vom Spark.": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "No answer from the Spark."
+          }
+        }
+      }
+    },
+    "Koppeln": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Pair"
+          }
+        }
+      }
+    },
+    "Kopple …": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Pairing …"
+          }
+        }
+      }
+    },
+    "Lese den Text …": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Reading the text …"
+          }
+        }
+      }
+    },
+    "Mit Spark sprechen": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Talk to Spark"
+          }
+        }
+      }
+    },
+    "Mit diesem Spark koppeln?": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Pair with this Spark?"
+          }
+        }
+      }
+    },
+    "Nein": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "No"
+          }
+        }
+      }
+    },
+    "Neues Gespräch": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "New conversation"
+          }
+        }
+      }
+    },
+    "Nichts gehört, Mikrofon aus. Tippen zum Sprechen.": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Heard nothing, microphone off. Tap to talk."
+          }
+        }
+      }
+    },
+    "Nichts verstanden.": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Did not understand anything."
+          }
+        }
+      }
+    },
+    "Noch keine Gespräche": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "No conversations yet"
+          }
+        }
+      }
+    },
+    "Nur am Ladekabel": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Only on the charger"
+          }
+        }
+      }
+    },
+    "Oder den Link hier einfügen": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Or paste the link here"
+          }
+        }
+      }
+    },
+    "Oder schreiben …": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Or type …"
+          }
+        }
+      }
+    },
+    "Profil": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Profile"
+          }
+        }
+      }
+    },
+    "Route nach „%@“ in Karten öffnen?": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Open a route to “%@” in Maps?"
+          }
+        }
+      }
+    },
+    "Sag „%@“ oder tippe": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Say “%@” or tap"
+          }
+        }
+      }
+    },
+    "Schlüssel von diesem iPhone löschen?": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Delete the key from this iPhone?"
+          }
+        }
+      }
+    },
+    "Schnellstart: In den iPhone-Einstellungen unter Action-Button → Kurzbefehl „Spark zuhören“ wählen. Dasselbe gibt es im Kontrollzentrum und als Widget für den Sperrbildschirm.": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Quick start: in the iPhone settings under Action Button → Shortcut, choose “Talk to Spark”. The same is in Control Center and as a lock screen widget."
+          }
+        }
+      }
+    },
+    "Spark": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Spark"
+          }
+        }
+      }
+    },
+    "Spark fragen": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Ask Spark"
+          }
+        }
+      }
+    },
+    "Spark koppeln": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Pair Spark"
+          }
+        }
+      }
+    },
+    "Spark nicht erreichbar": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Spark not reachable"
+          }
+        }
+      }
+    },
+    "Spark nicht erreichbar. Schreib die Frage, sie geht raus, sobald er wieder da ist.": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Spark not reachable. Type the question, it goes out as soon as it is back."
+          }
+        }
+      }
+    },
+    "Spark spricht …": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Spark is speaking …"
+          }
+        }
+      }
+    },
+    "Spark zuhören": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Talk to Spark"
+          }
+        }
+      }
+    },
+    "Spricht … tippen zum Anhalten": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Speaking … tap to stop"
+          }
+        }
+      }
+    },
+    "Stellt dem Spark eine Frage und liest die Antwort vor.": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Asks the Spark a question and reads the answer aloud."
+          }
+        }
+      }
+    },
+    "Ständer-Modus am Ladekabel": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Stand mode on the charger"
+          }
+        }
+      }
+    },
+    "Tippen und sprechen": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Tap and talk"
+          }
+        }
+      }
+    },
+    "Unter „Meine Dokumente“ gespeichert. Der Spark findet es auch später.": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Saved under “My documents”. The Spark finds it later too."
+          }
+        }
+      }
+    },
+    "Verlauf": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "History"
+          }
+        }
+      }
+    },
+    "Verlauf nicht geladen": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "History not loaded"
+          }
+        }
+      }
+    },
+    "Von selbst sprechen": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Speak by itself"
+          }
+        }
+      }
+    },
+    "Wartende Fragen: %lld. Sie gehen raus, sobald er wieder da ist.": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Waiting questions: %lld. They go out as soon as it is back."
+          }
+        }
+      }
+    },
+    "Wartende löschen": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Delete waiting"
+          }
+        }
+      }
+    },
+    "Was die App darf, stellst du im Panel unter Ich → iPhone-App ein. Dort entfernst du das iPhone auch, wenn es verloren geht.": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "What the app may do is set in the panel under Me → iPhone app. There you also remove the iPhone if it gets lost."
+          }
+        }
+      }
+    },
+    "Was möchtest du wissen?": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "What would you like to know?"
+          }
+        }
+      }
+    },
+    "Weckwort": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Wake word"
+          }
+        }
+      }
+    },
+    "Weckwort pausiert, um Akku zu sparen. Tippen startet es wieder.": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Wake word paused to save battery. Tap to start it again."
+          }
+        }
+      }
+    },
+    "Wort": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Word"
+          }
+        }
+      }
+    },
+    "Öffnet die App und hört sofort zu.": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Opens the app and listens at once."
+          }
+        }
+      }
+    },
+    "„Hey Siri, Frag Spark“ fragt den Spark auch ohne die App zu öffnen, auch mit AirPods und im Auto.": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "“Hey Siri, Ask Spark” asks the Spark without opening the app, also with AirPods and in the car."
+          }
+        }
+      }
+    }
+  },
+  "version": "1.0"
+}

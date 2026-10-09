@@ -1,0 +1,26 @@
+{
+  "sourceLanguage": "de",
+  "strings": {
+    "Spark zuhören": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Talk to Spark"
+          }
+        }
+      }
+    },
+    "Öffnet die App und hört sofort zu.": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Opens the app and listens at once."
+          }
+        }
+      }
+    }
+  },
+  "version": "1.0"
+}

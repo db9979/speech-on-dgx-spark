@@ -19,14 +19,19 @@ final class AppState: ObservableObject {
     @Published var offered: Link?
 
     /// spark-app://pair?url=https://...&code=... (from the panel: QR code or link)
+    /// spark-app://listen (widget, Control Center): listen right away; it carries nothing else.
     func open(_ url: URL) {
+        if url.scheme == "spark-app", url.host == "listen" {
+            if paired { Conversation.shared.listenNow() }
+            return
+        }
         guard url.scheme == "spark-app", url.host == "pair",
               let items = URLComponents(url: url, resolvingAgainstBaseURL: false)?.queryItems,
               let raw = items.first(where: { $0.name == "url" })?.value,
               let code = items.first(where: { $0.name == "code" })?.value,
               code.range(of: "^[A-Za-z0-9_-]{20,40}$", options: .regularExpression) != nil,
               let base = Self.checked(raw) else {
-            message = "Das ist kein gültiger Kopplungs-Link vom Spark."
+            message = String(localized: "Das ist kein gültiger Kopplungs-Link vom Spark.")
             return
         }
         offered = Link(base: base, code: code)

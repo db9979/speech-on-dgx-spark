@@ -18,7 +18,15 @@ final class WakeWord {
         }
     }
 
-    private let recognizer = SFSpeechRecognizer(locale: Locale(identifier: "de-DE"))
+    private let recognizer = SFSpeechRecognizer(locale: WakeWord.locale)
+
+    /// The language of the app's surface: English on an English iPhone, else German.
+    static var locale: Locale {
+        guard Bundle.main.preferredLocalizations.first == "en" else { return Locale(identifier: "de-DE") }
+        let want = "en-" + (Locale.current.region?.identifier ?? "US")
+        let known = SFSpeechRecognizer.supportedLocales().map { $0.identifier.replacingOccurrences(of: "_", with: "-") }
+        return Locale(identifier: known.contains(want) ? want : "en-US")
+    }
     private let lock = NSLock()
     private var request: SFSpeechAudioBufferRecognitionRequest?
     private var task: SFSpeechRecognitionTask?

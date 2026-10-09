@@ -388,9 +388,13 @@ def profile_convos(prof=Depends(own_profile)):
     return profiles.convos(prof["id"])
 
 
+CONVO_BODY = 4 * 1024 * 1024   # 60 messages of 20 000 characters
+
+
 @router.put("/api/profile/convos", dependencies=[Depends(assistant)])
 async def profile_save_convo(request: Request, prof=Depends(own_profile)):
-    body = await request.json()
+    import iphone
+    body = await iphone._json(request, CONVO_BODY)   # size checked while reading (also for the iPhone app)
     ha = homeassistant.get(prof["id"])
     if ha and homeassistant.needs_code(ha) and isinstance(body, dict) and isinstance(body.get("msgs"), list):
         body["msgs"] = [dict(m, content=homeassistant.redact(ha, m.get("content")))

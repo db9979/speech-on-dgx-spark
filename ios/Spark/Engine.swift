@@ -78,7 +78,7 @@ final class AudioEngine {
         guard !tapOn else { return }
         let input = engine.inputNode
         let format = input.outputFormat(forBus: 0)
-        guard format.sampleRate > 0 else { throw SparkError(message: "Kein Mikrofon verfügbar.") }
+        guard format.sampleRate > 0 else { throw SparkError(message: String(localized: "Kein Mikrofon verfügbar.")) }
         converter = AVAudioConverter(from: format, to: target)
         input.installTap(onBus: 0, bufferSize: 2048, format: format) { [weak self] buf, _ in
             guard let self else { return }

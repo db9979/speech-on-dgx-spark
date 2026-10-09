@@ -1,4 +1,6 @@
+import PhotosUI
 import SwiftUI
+import UniformTypeIdentifiers
 
 struct ContentView: View {
     @EnvironmentObject var app: AppState
@@ -54,6 +56,10 @@ struct ChatView: View {
     @ObservedObject private var talk = Conversation.shared
     @State private var typed = ""
     @State private var settings = false
+    @State private var history = false
+    @State private var camera = false
+    @State private var files = false
+    @State private var photo: PhotosPickerItem?
     @Environment(\.scenePhase) private var scene
 
     var body: some View {
@@ -68,12 +74,37 @@ struct ChatView: View {
                     Button { talk.restart() } label: { Image(systemName: "square.and.pencil") }
                         .accessibilityLabel("Neues Gespräch")
                 }
+                ToolbarItem(placement: .topBarLeading) {
+                    Button { history = true } label: { Image(systemName: "clock.arrow.circlepath") }
+                        .accessibilityLabel("Verlauf")
+                }
                 ToolbarItem(placement: .topBarTrailing) {
                     Button { settings = true } label: { Image(systemName: "gearshape") }
                         .accessibilityLabel("Einstellungen")
                 }
             }
             .sheet(isPresented: $settings, onDismiss: { talk.settingsChanged() }) { SettingsView() }
+            .sheet(isPresented: $history) { HistoryView() }
+            .fullScreenCover(isPresented: $camera) {
+                CameraPicker { image in
+                    camera = false
+                    if let image { read { try await Reader.photo(image, name: String(localized: "Foto")) } }
+                }
+                .ignoresSafeArea()
+            }
+            .fileImporter(isPresented: $files, allowedContentTypes: [.pdf, .plainText, .text, .image]) { result in
+                if case .success(let url) = result { read { try await Reader.file(url) } }
+            }
+            .onChange(of: photo) {
+                guard let item = photo else { return }
+                photo = nil
+                read {
+                    guard let data = try await item.loadTransferable(type: Data.self), let image = UIImage(data: data) else {
+                        throw SparkError(message: String(localized: "Das Foto kann ich nicht laden."))
+                    }
+                    return try await Reader.photo(image, name: String(localized: "Foto"))
+                }
+            }
             .task { await talk.begin(await app.refresh()) }
             .onChange(of: scene) { talk.scene(scene) }
             .onChange(of: talk.standing, initial: true) { UIApplication.shared.isIdleTimerDisabled = talk.standing }
@@ -89,6 +120,7 @@ struct ChatView: View {
 
     private var talking: some View {
         VStack(spacing: 0) {
+            if talk.unreachable { OfflineBanner() }
             FaceView(mood: talk.mood, mic: talk.level, out: { talk.audio.outLevel }, kind: talk.allowed.face)
                 .frame(maxHeight: talk.messages.isEmpty ? 260 : 130)
                 .padding(.top, 8)
@@ -121,8 +153,26 @@ struct ChatView: View {
             VStack(spacing: 8) {
                 MicButton(phase: talk.phase, level: talk.level) { talk.tap() }
                 Text(talk.status).font(.footnote).foregroundStyle(.secondary)
+                if talk.reading {
+                    ProgressView("Lese den Text …").font(.footnote)
+                } else if let a = talk.attachment {
+                    AttachmentChip(attachment: a, remove: { talk.attachment = nil },
+                                   store: talk.allowed.docs && !talk.stored ? { Task { await talk.storeAttachment() } } : nil,
+                                   storing: talk.storing)
+                }
                 HStack {
-                    TextField("Oder schreiben …", text: $typed)
+                    Menu {
+                        if UIImagePickerController.isSourceTypeAvailable(.camera) {
+                            Button { camera = true } label: { Label("Foto aufnehmen", systemImage: "camera") }
+                        }
+                        PhotosPicker(selection: $photo, matching: .images) { Label("Foto auswählen", systemImage: "photo") }
+                        Button { files = true } label: { Label("Dokument", systemImage: "doc") }
+                    } label: {
+                        Image(systemName: "paperclip")
+                    }
+                    .accessibilityLabel("Foto oder Dokument anhängen")
+                    .disabled(talk.reading)
+                    TextField(talk.attachment == nil ? LocalizedStringKey("Oder schreiben …") : LocalizedStringKey("Frage zum Anhang …"), text: $typed)
                         .textFieldStyle(.roundedBorder)
                         .submitLabel(.send)
                         .onSubmit(send)
@@ -137,6 +187,131 @@ struct ChatView: View {
     private func send() {
         talk.write(typed)
         typed = ""
+    }
+
+    /// Reads the text on the iPhone; only that text goes along with the next questions.
+    private func read(_ work: @escaping () async throws -> Attachment) {
+        talk.reading = true
+        Task {
+            do { talk.attach(try await work()) } catch { talk.error = error.localizedDescription }
+            talk.reading = false
+        }
+    }
+}
+
+/// The Spark cannot be reached: say so plainly, show what waits, try again.
+struct OfflineBanner: View {
+    @EnvironmentObject var talk: Conversation
+
+    var body: some View {
+        VStack(alignment: .leading, spacing: 6) {
+            Label("Spark nicht erreichbar", systemImage: "wifi.exclamationmark").font(.subheadline.bold())
+            if talk.outbox.isEmpty {
+                Text("Geschriebene Fragen gehen raus, sobald er wieder da ist.").font(.footnote)
+            } else {
+                Text("Wartende Fragen: \(talk.outbox.count). Sie gehen raus, sobald er wieder da ist.").font(.footnote)
+            }
+            HStack {
+                Button("Erneut versuchen") { Task { await talk.check() } }
+                if !talk.outbox.isEmpty {
+                    Spacer()
+                    Button("Wartende löschen", role: .destructive) { talk.dropOutbox() }
+                }
+            }
+            .font(.footnote)
+            .buttonStyle(.bordered)
+        }
+        .frame(maxWidth: .infinity, alignment: .leading)
+        .padding(10)
+        .background(Color.orange.opacity(0.18))
+        .clipShape(RoundedRectangle(cornerRadius: 12))
+        .padding(.horizontal)
+        .padding(.top, 6)
+    }
+}
+
+struct AttachmentChip: View {
+    let attachment: Attachment
+    let remove: () -> Void
+    /// nil: storing is not allowed (panel switch) or already done
+    let store: (() -> Void)?
+    let storing: Bool
+
+    var body: some View {
+        VStack(spacing: 6) {
+            HStack(spacing: 6) {
+                Image(systemName: attachment.kind == "photo" ? "photo" : "doc.text")
+                Text(verbatim: attachment.name).lineLimit(1)
+                Text("\(attachment.text.count) Zeichen").foregroundStyle(.secondary)
+                Button(action: remove) { Image(systemName: "xmark.circle.fill") }
+                    .accessibilityLabel("Anhang entfernen")
+            }
+            .padding(.horizontal, 10)
+            .padding(.vertical, 5)
+            .background(Color(.secondarySystemBackground))
+            .clipShape(Capsule())
+            if storing {
+                ProgressView()
+            } else if let store {
+                Button(action: store) { Label("In „Meine Dokumente“ speichern", systemImage: "tray.and.arrow.down") }
+                    .buttonStyle(.bordered)
+            }
+        }
+        .font(.footnote)
+    }
+}
+
+/// Earlier conversations of this profile (the same list as the panel's Protokoll). Tapping one continues it.
+struct HistoryView: View {
+    @EnvironmentObject var talk: Conversation
+    @Environment(\.dismiss) private var dismiss
+    @State private var list: [SavedConvo] = []
+    @State private var loading = true
+    @State private var failed: String?
+    @State private var search = ""
+
+    private var shown: [SavedConvo] {
+        let q = search.trimmingCharacters(in: .whitespaces).lowercased()
+        guard !q.isEmpty else { return list }
+        return list.filter { c in
+            c.title.lowercased().contains(q) || c.msgs.contains { ($0["content"] as? String)?.lowercased().contains(q) == true }
+        }
+    }
+
+    var body: some View {
+        NavigationStack {
+            Group {
+                if loading {
+                    ProgressView()
+                } else if let failed {
+                    ContentUnavailableView("Verlauf nicht geladen", systemImage: "wifi.exclamationmark", description: Text(failed))
+                } else if list.isEmpty {
+                    ContentUnavailableView("Noch keine Gespräche", systemImage: "clock")
+                } else {
+                    List(shown) { c in
+                        Button {
+                            talk.resume(c)
+                            dismiss()
+                        } label: {
+                            VStack(alignment: .leading, spacing: 3) {
+                                Text(c.title.isEmpty ? String(localized: "Gespräch") : c.title).lineLimit(1)
+                                Text(c.updated, format: .dateTime.day().month().hour().minute())
+                                    .font(.footnote).foregroundStyle(.secondary)
+                            }
+                        }
+                        .foregroundStyle(.primary)
+                    }
+                    .searchable(text: $search)
+                }
+            }
+            .navigationTitle("Verlauf")
+            .navigationBarTitleDisplayMode(.inline)
+            .toolbar { ToolbarItem(placement: .confirmationAction) { Button("Fertig") { dismiss() } } }
+            .task {
+                do { list = try await SparkAPI.current?.convos() ?? [] } catch { failed = error.localizedDescription }
+                loading = false
+            }
+        }
     }
 }
 
@@ -183,7 +358,10 @@ struct Bubble: View {
         let mine = message.role == "user"
         HStack {
             if mine { Spacer(minLength: 40) }
-            Text(message.text.isEmpty ? "…" : message.text)
+            VStack(alignment: .leading, spacing: 4) {
+                if let label = message.label { Text(verbatim: label).font(.footnote).opacity(0.85) }
+                Text(verbatim: message.text.isEmpty ? "…" : message.text)
+            }
                 .textSelection(.enabled)
                 .padding(10)
                 .background(mine ? Color.accentColor.opacity(0.85) : Color(.secondarySystemBackground))
@@ -265,19 +443,25 @@ struct SettingsView: View {
                     .disabled(!wake || !talk.allowed.listen)
                     Toggle("Ständer-Modus am Ladekabel", isOn: $stand)
                 } header: { Text("Dauerhaft zuhören") } footer: {
-                    Text(talk.allowed.listen
-                         ? "Das Weckwort erkennt das iPhone selbst, ohne Internet. Erst danach geht etwas an deinen Spark. Am Akku hört es nach der letzten Nutzung nur so lange zu wie eingestellt."
-                         : "Im Panel unter Ich → iPhone-App „Dauerhaft zuhören erlauben“ einschalten.")
+                    if talk.allowed.listen {
+                        Text("Das Weckwort erkennt das iPhone selbst, ohne Internet. Erst danach geht etwas an deinen Spark. Am Akku hört es nach der letzten Nutzung nur so lange zu wie eingestellt.")
+                    } else {
+                        Text("Im Panel unter Ich → iPhone-App „Dauerhaft zuhören erlauben“ einschalten.")
+                    }
                 }
                 Section {
                     Toggle("Von selbst sprechen", isOn: $speakNotes).disabled(!talk.allowed.proactive)
                 } footer: {
-                    Text(talk.allowed.proactive
-                         ? "Hinweise, die der Spark von selbst gibt (Morgenrunde, Erinnerungen), sagt die App laut, solange sie offen ist."
-                         : "Dafür im Panel „Von selbst“ für dein Profil einschalten.")
+                    if talk.allowed.proactive {
+                        Text("Hinweise, die der Spark von selbst gibt (Morgenrunde, Erinnerungen), sagt die App laut, solange sie offen ist.")
+                    } else {
+                        Text("Dafür im Panel „Von selbst“ für dein Profil einschalten.")
+                    }
                 }
                 Section {
                     Text("„Hey Siri, Frag Spark“ fragt den Spark auch ohne die App zu öffnen, auch mit AirPods und im Auto.")
+                    Text("Schnellstart: In den iPhone-Einstellungen unter Action-Button → Kurzbefehl „Spark zuhören“ wählen. Dasselbe gibt es im Kontrollzentrum und als Widget für den Sperrbildschirm.")
+                        .foregroundStyle(.secondary)
                     Text("Was die App darf, stellst du im Panel unter Ich → iPhone-App ein. Dort entfernst du das iPhone auch, wenn es verloren geht.")
                         .foregroundStyle(.secondary)
                 }

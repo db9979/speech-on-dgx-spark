@@ -12,6 +12,8 @@ final class Conversation: ObservableObject {
         let role: String
         var text: String
         var mark: String?
+        /// "📷 Brief.jpg": the question was asked about a photo or document (shown, never the read text)
+        var label: String?
     }
 
     enum Phase: Equatable { case idle, waiting, listening, transcribing, thinking, speaking }
@@ -32,6 +34,15 @@ final class Conversation: ObservableObject {
     @Published var speechAllowed = false
     /// CarPlay is connected: short answers, the conversation goes on hands-free, notes are said aloud
     @Published var inCar = false
+    /// text read from a photo or document; goes along with every question until removed or a new conversation
+    @Published var attachment: Attachment?
+    @Published var reading = false
+    /// the attachment was stored under "Meine Dokumente" (or is being stored)
+    @Published var stored = false
+    @Published var storing = false
+    /// the Spark cannot be reached (no network, Spark or proxy down): typed questions wait in the outbox
+    @Published var unreachable = false
+    @Published var outbox: [Outbox.Item] = Outbox.load()
 
     /// One assistant for the phone screen and CarPlay.
     static let shared = Conversation()
@@ -56,6 +67,12 @@ final class Conversation: ObservableObject {
     private var timer: Timer?
     private var foreground = true
     private var started = false
+    private var wantListen = false
+    private var labelShown = false
+    private var checking = false
+    private let net = NetWatch()
+    /// the id under which this conversation is kept in the profile's list (the panel's Protokoll)
+    private(set) var convoId = Conversation.newId()
 
     init() {
         let w = wake
@@ -73,7 +90,17 @@ final class Conversation: ObservableObject {
                 if self.phase == .idle || self.phase == .waiting { self.base() }
             }
         }
-        Relay.shared.onDue = { [weak self] text in MainActor.assumeIsolated { self?.local("Erinnerung: " + text) } }
+        Relay.shared.onDue = { [weak self] text in MainActor.assumeIsolated { self?.local(String(localized: "Erinnerung: \(text)")) } }
+        net.onChange = { [weak self] up in
+            MainActor.assumeIsolated {
+                guard let self else { return }
+                if !up { self.unreachable = true } else if self.unreachable { Task { await self.check() } }
+            }
+        }
+    }
+
+    static func newId() -> String {
+        "app-" + UUID().uuidString.replacingOccurrences(of: "-", with: "").prefix(16).lowercased()
     }
 
     static func onPower() -> Bool {
@@ -95,12 +122,12 @@ final class Conversation: ObservableObject {
 
     var status: String {
         switch phase {
-        case .idle: return "Tippen und sprechen"
-        case .waiting: return "Sag „\(Prefs.wakeWord.rawValue)“ oder tippe"
-        case .listening: return "Ich höre zu …"
-        case .transcribing: return "Erkenne Sprache …"
-        case .thinking: return "Denke nach …"
-        case .speaking: return "Spricht … tippen zum Anhalten"
+        case .idle: return String(localized: "Tippen und sprechen")
+        case .waiting: return String(localized: "Sag „\(Prefs.wakeWord.rawValue)“ oder tippe")
+        case .listening: return String(localized: "Ich höre zu …")
+        case .transcribing: return String(localized: "Erkenne Sprache …")
+        case .thinking: return String(localized: "Denke nach …")
+        case .speaking: return String(localized: "Spricht … tippen zum Anhalten")
         }
     }
 
@@ -116,7 +143,7 @@ final class Conversation: ObservableObject {
 
     // ---------------------------------------------------------------- start, foreground, background
     func begin(_ a: Allowed?) async {
-        if let a { allowed = a }
+        if let a { allowed = a; unreachable = false } else { await check() }
         if !started {
             started = true
             _ = await AudioEngine.microphoneAllowed()
@@ -130,12 +157,29 @@ final class Conversation: ObservableObject {
         await syncAlarms()
         if allowed.proactive && Prefs.speakNotes, let api = SparkAPI.current, let n = try? await api.greet() { notes.append(n) }
         if phase == .idle || phase == .waiting { base() }
+        if wantListen { wantListen = false; listenNow() }
+        flushNext()
+    }
+
+    /// Quick start (Action button, Control Center, lock screen, "Spark zuhören"): listen right away.
+    func listenNow() {
+        notice = nil
+        lastActivity = Date()
+        guard started else { wantListen = true; return }
+        switch phase {
+        case .idle, .waiting: tap()
+        case .speaking, .thinking, .transcribing:
+            stop()
+            tap()
+        case .listening: break
+        }
     }
 
     func scene(_ p: ScenePhase) {
         foreground = p == .active
         if foreground {
             lastActivity = Date()
+            if unreachable { Task { await check() } }
             if phase == .idle || phase == .waiting { base() }
         } else if !canWake && !inCar {
             // no listening in the background unless the wake word is on
@@ -148,7 +192,7 @@ final class Conversation: ObservableObject {
         Task {
             if Prefs.wake && allowed.listen && !speechAllowed { speechAllowed = await WakeWord.authorize() }
             if Prefs.wake && allowed.listen && !wake.onDevice {
-                notice = "Die Spracherkennung auf dem iPhone kann kein Deutsch ohne Internet. Das Weckwort bleibt aus (Einstellungen → Allgemein → Tastatur → Diktat)."
+                notice = String(localized: "Die Spracherkennung auf dem iPhone kann diese Sprache nicht ohne Internet. Das Weckwort bleibt aus (Einstellungen → Allgemein → Tastatur → Diktat).")
             }
             if phase == .idle || phase == .waiting { base() }
         }
@@ -157,8 +201,9 @@ final class Conversation: ObservableObject {
     private func tick() {
         if phase == .waiting && !canWake {
             base()
-            notice = "Weckwort pausiert, um Akku zu sparen. Tippen startet es wieder."
+            notice = String(localized: "Weckwort pausiert, um Akku zu sparen. Tippen startet es wieder.")
         }
+        if unreachable { Task { await check() } }
         if allowed.proactive && Prefs.speakNotes && (foreground || phase == .waiting || inCar) { Task { await pollNotes() } }
     }
 
@@ -189,7 +234,16 @@ final class Conversation: ObservableObject {
         notice = nil
         lastActivity = Date()
         switch phase {
-        case .idle, .waiting: listen(preroll: 0, fromWake: false)
+        case .idle, .waiting:
+            guard !unreachable else {
+                // spoken questions need the Spark (it recognizes the speech): check once, else say so
+                Task {
+                    if await check() { listen(preroll: 0, fromWake: false) }
+                    else { error = String(localized: "Spark nicht erreichbar. Schreib die Frage, sie geht raus, sobald er wieder da ist.") }
+                }
+                return
+            }
+            listen(preroll: 0, fromWake: false)
         case .listening: finish()
         default: stop()
         }
@@ -206,9 +260,54 @@ final class Conversation: ObservableObject {
 
     func restart() {
         stop()
-        messages = []
+        fresh()
+        attachment = nil
         error = nil
         last = .distantPast
+    }
+
+    /// A new conversation: a new id in the list (an attached photo stays until it is removed).
+    private func fresh() {
+        messages = []
+        convoId = Self.newId()
+        labelShown = false
+    }
+
+    /// Continue a conversation from the list (also one from the panel).
+    func resume(_ c: SavedConvo) {
+        stop()
+        messages = c.msgs.compactMap { d in
+            guard let role = d["role"] as? String, role == "user" || role == "assistant",
+                  let text = d["content"] as? String else { return nil }
+            let mark = d["mail"] as? Bool == true ? "mail" : d["outside"] as? Bool == true ? "outside" : nil
+            return Message(role: role, text: text, mark: mark)
+        }
+        convoId = c.id
+        attachment = nil
+        labelShown = false
+        error = nil
+        last = Date()
+    }
+
+    func attach(_ a: Attachment) {
+        attachment = a
+        labelShown = false
+        stored = false
+        error = nil
+    }
+
+    /// The attached document's whole text into the profile's "Meine Dokumente" (only with the panel switch).
+    func storeAttachment() async {
+        guard let a = attachment, allowed.docs, !storing, let api = SparkAPI.current else { return }
+        storing = true
+        defer { storing = false }
+        do {
+            try await api.storeDoc(name: a.name, text: a.text)
+            stored = true
+            notice = String(localized: "Unter „Meine Dokumente“ gespeichert. Der Spark findet es auch später.")
+        } catch {
+            fail(error)
+        }
     }
 
     // ---------------------------------------------------------------- listening
@@ -222,7 +321,7 @@ final class Conversation: ObservableObject {
         error = nil
         wake.stop()
         do { try audio.startInput() } catch {
-            self.error = "Kein Zugriff aufs Mikrofon. Einstellungen → Spark → Mikrofon."
+            self.error = String(localized: "Kein Zugriff aufs Mikrofon. Einstellungen → Spark → Mikrofon.")
             phase = .idle
             return
         }
@@ -249,7 +348,7 @@ final class Conversation: ObservableObject {
             if heard && now.timeIntervalSince(lastLoud) > Self.endSilence { finish() }
             else if !heard && now.timeIntervalSince(startedAt) > Self.giveUp {
                 pcm = []
-                notice = Prefs.handsFree ? "Nichts gehört, Mikrofon aus. Tippen zum Sprechen." : nil
+                notice = Prefs.handsFree ? String(localized: "Nichts gehört, Mikrofon aus. Tippen zum Sprechen.") : nil
                 base()
             } else if now.timeIntervalSince(startedAt) > Self.maxQuestion { finish() }
         case .speaking:
@@ -283,7 +382,7 @@ final class Conversation: ObservableObject {
                 guard !Task.isCancelled else { return }
                 if woke { text = wake.strip(text) }
                 if text.isEmpty {
-                    if woke { listen(preroll: 0, fromWake: false) } else { error = "Nichts verstanden."; base() }
+                    if woke { listen(preroll: 0, fromWake: false) } else { error = String(localized: "Nichts verstanden."); base() }
                     return
                 }
                 // a route or a call waits for "Ja": decided here on the iPhone, nothing else counts as yes
@@ -299,27 +398,38 @@ final class Conversation: ObservableObject {
     }
 
     static func yes(_ t: String) -> Bool {
-        t.lowercased().range(of: #"^\W*(ja|jawohl|ja bitte|ja,? mach( das)?|okay|ok)\W*$"#, options: .regularExpression) != nil
+        t.lowercased().range(of: #"^\W*(ja|jawohl|ja bitte|ja,? mach( das)?|okay|ok|yes|yes please|yeah|sure)\W*$"#, options: .regularExpression) != nil
     }
 
     static func no(_ t: String) -> Bool {
-        t.lowercased().range(of: #"^\W*(nein|nee|nö|abbrechen|lass( es)?)\W*$"#, options: .regularExpression) != nil
+        t.lowercased().range(of: #"^\W*(nein|nee|nö|abbrechen|lass( es)?|no|nope|cancel)\W*$"#, options: .regularExpression) != nil
     }
 
     // ---------------------------------------------------------------- asking
     func write(_ text: String) {
         let text = text.trimmingCharacters(in: .whitespacesAndNewlines)
         guard !text.isEmpty, let api = SparkAPI.current else { return }
+        lastActivity = Date()
+        if unreachable {
+            queue(text)
+            Task { await check() }
+            return
+        }
         task?.cancel()
         audio.stopPlaying()
         error = nil
-        lastActivity = Date()
-        task = Task { await send(text, api) }
+        task = Task { await send(text, api, typed: true) }
     }
 
-    private func send(_ text: String, _ api: SparkAPI) async {
-        if Date().timeIntervalSince(last) > Self.newAfter { messages = [] }
-        messages.append(Message(role: "user", text: text))
+    /// typed: a typed question that waits in the outbox when the Spark cannot be reached.
+    private func send(_ text: String, _ api: SparkAPI, typed: Bool = false) async {
+        if Date().timeIntervalSince(last) > Self.newAfter { fresh() }
+        var question = Message(role: "user", text: text)
+        if let a = attachment, !labelShown {
+            question.label = (a.kind == "photo" ? "📷 " : "📄 ") + (a.name.isEmpty ? String(localized: "Anhang") : a.name)
+            labelShown = true
+        }
+        messages.append(question)
         let answer = Message(role: "assistant", text: "")
         messages.append(answer)
         phase = .thinking
@@ -333,8 +443,11 @@ final class Conversation: ObservableObject {
         func edit(_ change: (inout Message) -> Void) {
             if let i = messages.firstIndex(where: { $0.id == answer.id }) { change(&messages[i]) }
         }
+        var got = false
         do {
-            for try await ev in api.chat(history, car: inCar) {
+            for try await ev in api.chat(history, car: inCar, attachment: attachment) {
+                got = true
+                unreachable = false
                 switch ev {
                 case .text(let t): edit { $0.text += t }
                 case .drop(let n): edit { $0.text = String($0.text.dropLast(n)) }
@@ -350,12 +463,77 @@ final class Conversation: ObservableObject {
             }
             streamDone = true
             last = Date()
+            messages.removeAll { $0.id == answer.id && $0.text.isEmpty }
+            save(api)
             if !audio.busy { answered() }
+            return
         } catch is CancellationError {
         } catch {
+            if typed && !got && NetWatch.offline(error) {
+                // nothing came back: the question waits and goes out once the Spark is there again
+                messages.removeAll { $0.id == answer.id || $0.id == question.id }
+                if question.label != nil { labelShown = false }
+                queue(text)
+            }
             fail(error)
         }
         messages.removeAll { $0.id == answer.id && $0.text.isEmpty }
+    }
+
+    /// The conversation into the profile's list (the photo's or document's text never goes there).
+    private func save(_ api: SparkAPI) {
+        let msgs: [[String: Any]] = messages.suffix(60).compactMap { m in
+            guard !m.text.isEmpty else { return nil }
+            var d: [String: Any] = ["role": m.role, "content": m.label.map { $0 + "\n" + m.text } ?? m.text]
+            if let mark = m.mark { d[mark] = true }
+            return d
+        }
+        guard let first = messages.first(where: { $0.role == "user" }) else { return }
+        let id = convoId
+        Task { try? await api.saveConvo(id: id, title: String(first.text.prefix(60)), msgs: msgs) }
+    }
+
+    // ---------------------------------------------------------------- without the Spark
+    private func queue(_ text: String) {
+        if Outbox.add(text) {
+            outbox = Outbox.load()
+            notice = String(localized: "Gespeichert. Die Frage geht raus, sobald der Spark wieder erreichbar ist.")
+        } else {
+            error = String(localized: "Es warten schon zehn Fragen. Diese ist nicht gespeichert.")
+        }
+    }
+
+    /// Is the Spark there? Then the waiting questions go out one by one.
+    @discardableResult
+    func check() async -> Bool {
+        guard let api = SparkAPI.current, !checking else { return !unreachable }
+        checking = true
+        defer { checking = false }
+        do {
+            allowed = try await api.hello(timeout: 8)
+            unreachable = false
+            flushNext()
+            return true
+        } catch {
+            if NetWatch.offline(error) { unreachable = true }
+            return false
+        }
+    }
+
+    /// Sends the oldest waiting question, if the assistant is free.
+    @discardableResult
+    private func flushNext() -> Bool {
+        outbox = Outbox.load()
+        guard !unreachable, phase == .idle || phase == .waiting, let api = SparkAPI.current, let item = outbox.first else { return false }
+        outbox.removeFirst()
+        Outbox.save(outbox)
+        task = Task { await send(item.text, api, typed: true) }
+        return true
+    }
+
+    func dropOutbox() {
+        Outbox.clear()
+        outbox = []
     }
 
     private func propose(_ kind: String, _ target: String) async {
@@ -370,6 +548,10 @@ final class Conversation: ObservableObject {
     /// After an answer: hands-free listens again (also for "Ja"), else back to rest.
     private func answered() {
         lastActivity = Date()
+        if !outbox.isEmpty && !unreachable {
+            phase = .idle
+            if flushNext() { return }
+        }
         if Prefs.handsFree || inCar || offer != nil && canWake {
             listen(preroll: 0, fromWake: false)
         } else {
@@ -379,7 +561,12 @@ final class Conversation: ObservableObject {
 
     private func fail(_ e: Error) {
         if e is CancellationError || (e as? URLError)?.code == .cancelled { return }
-        error = e.localizedDescription
+        if NetWatch.offline(e) {
+            unreachable = true
+            error = nil
+        } else {
+            error = e.localizedDescription
+        }
         streamDone = true
         base()
     }
@@ -409,7 +596,7 @@ final class Conversation: ObservableObject {
     private func sayNote() {
         guard !notes.isEmpty, let api = SparkAPI.current else { return }
         let n = notes.removeFirst()
-        if Date().timeIntervalSince(last) > Self.newAfter { messages = [] }
+        if Date().timeIntervalSince(last) > Self.newAfter { fresh() }
         // like the panel: a note counts as outside text for the next turn
         messages.append(Message(role: "assistant", text: n.text, mark: n.mail ? "mail" : "outside"))
         last = Date()

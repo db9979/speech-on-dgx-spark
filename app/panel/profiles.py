@@ -263,7 +263,9 @@ def seen():
 # while the admin and the profile have the app switched on (APP_GATE, set by iphone.py; closed without it).
 APP_PATHS = ("/api/chat", "/api/test/asr", "/api/siri/ask", "/api/iphone/hello", "/api/profile/reminders",
              "/api/proactive", "/api/proactive/greet", "/api/assistant/say",
-             "/api/iphone/push-token", "/api/iphone/note")
+             "/api/iphone/push-token", "/api/iphone/note",
+             "/api/profile/convos",   # the conversations, the same list as in the panel
+             "/api/iphone/doc")       # a document's text into the profile's documents (app_docs)
 APP_GATE = [lambda uid: False]
 
 
@@ -386,6 +388,7 @@ SETTINGS = {
     "app_act": (False, lambda v: isinstance(v, bool)),      # routes and calls on the iPhone (iphone_action)
     "app_push": (False, lambda v: isinstance(v, bool)),     # notes as Apple push to the closed app (apns.py)
     "app_car_ha": (False, lambda v: isinstance(v, bool)),   # smart home from CarPlay
+    "app_docs": (False, lambda v: isinstance(v, bool)),     # documents from the app into "Meine Dokumente"
 }
 
 

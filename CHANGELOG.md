@@ -2,6 +2,7 @@
 
 Every version in one line, newest first (taken from the commit messages, so some lines are German, some English). Older entries have no version number.
 
+- **V01.0.161** · 2026-10-09 · iPhone-App: Schnellstart (Action-Button, Kontrollzentrum, Sperrbildschirm), Verlauf wie im Protokoll, Foto oder Dokument fragen (Text liest das iPhone), Dokumente ablegen (aus, Profilschalter), Fragen warten ohne Netz, englische Oberfläche
 - **V01.0.160** · 2026-10-09 · iPhone-App hat ein neues Symbol: leuchtender Funke auf Nachtblau mit Schallwellen
 - **V01.0.159** · 2026-10-09 · iPhone-App: Push bei geschlossener App über Apple (aus, Admin-Schlüssel + Profil; Apple sieht nur „Neue Nachricht“, den Text holt die App vom Spark), CarPlay-Gespräch (wartet auf Apples Freigabe), Anleitung zum Veröffentlichen
 - **V01.0.158** · 2026-10-08 · Sprachmodell weg: fester Satz statt Stille (auch Lautsprecher, Uhr, iPhone); Antwortzeit bis zum ersten Ton unter Zustand → Prüfen mit Warnung, wenn deutlich langsamer; Funktionsprüfung prüft auch Werkzeugwahl und Websuche

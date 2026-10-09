@@ -74,6 +74,14 @@ async def prepare(request):
     messages = [{"role": m["role"], "content": chat.DROPPED if m.get("mark") and i != (marked[-1] if carry else -1)
                  else m["content"]} for i, m in enumerate(messages)]
     system = ccfg.get("system_prompt") or ""
+    # an attached photo or document: outside text, so this answer is locked like one made from the web
+    attach = chat.attachment(body) if messages[-1]["role"] == "user" else None
+    if attach:
+        carry = carry or "outside"
+        kind, name, text = attach
+        system = (system + "\n\n" + chat.ATTACH_HINT + " " + ("Foto" if kind == "photo" else "Dokument")
+                  + (f" „{name}“" if name else "") + "\n" + chat.wrap_outside(text)).strip()
+        print("chat: attachment", kind, len(text), "chars, answer locked like outside text", flush=True)
     if ccfg.get("datetime", True):
         system = (system + "\n\n" + chat.now_line(body.get("tz"))).strip()
     # why the search is (not) offered, for the journal and for the model (never silently missing)

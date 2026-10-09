@@ -8,6 +8,7 @@
 
 /* Begin PBXBuildFile section */
 		5A0000000000000000000101 /* SparkNotify.appex in Embed Foundation Extensions */ = {isa = PBXBuildFile; fileRef = 5A0000000000000000000100 /* SparkNotify.appex */; settings = {ATTRIBUTES = (RemoveHeadersOnCopy, ); }; };
+		5A0000000000000000000201 /* SparkWidgets.appex in Embed Foundation Extensions */ = {isa = PBXBuildFile; fileRef = 5A0000000000000000000200 /* SparkWidgets.appex */; settings = {ATTRIBUTES = (RemoveHeadersOnCopy, ); }; };
 /* End PBXBuildFile section */
 
 /* Begin PBXContainerItemProxy section */
@@ -17,6 +18,13 @@
 			proxyType = 1;
 			remoteGlobalIDString = 5A0000000000000000000140;
 			remoteInfo = SparkNotify;
+		};
+		5A0000000000000000000202 /* PBXContainerItemProxy */ = {
+			isa = PBXContainerItemProxy;
+			containerPortal = 5A0000000000000000000050 /* Project object */;
+			proxyType = 1;
+			remoteGlobalIDString = 5A0000000000000000000240;
+			remoteInfo = SparkWidgets;
 		};
 /* End PBXContainerItemProxy section */
 
@@ -28,6 +36,7 @@
 			dstSubfolderSpec = 13;
 			files = (
 				5A0000000000000000000101 /* SparkNotify.appex in Embed Foundation Extensions */,
+				5A0000000000000000000201 /* SparkWidgets.appex in Embed Foundation Extensions */,
 			);
 			name = "Embed Foundation Extensions";
 			runOnlyForDeploymentPostprocessing = 0;
@@ -41,6 +50,8 @@
 		5A0000000000000000000104 /* SparkNotify-Info.plist */ = {isa = PBXFileReference; lastKnownFileType = text.plist.xml; path = "SparkNotify-Info.plist"; sourceTree = "<group>"; };
 		5A0000000000000000000105 /* Spark.entitlements */ = {isa = PBXFileReference; lastKnownFileType = text.plist.entitlements; path = Spark.entitlements; sourceTree = "<group>"; };
 		5A0000000000000000000106 /* SparkNotify.entitlements */ = {isa = PBXFileReference; lastKnownFileType = text.plist.entitlements; path = SparkNotify.entitlements; sourceTree = "<group>"; };
+		5A0000000000000000000200 /* SparkWidgets.appex */ = {isa = PBXFileReference; explicitFileType = "wrapper.app-extension"; includeInIndex = 0; path = SparkWidgets.appex; sourceTree = BUILT_PRODUCTS_DIR; };
+		5A0000000000000000000204 /* SparkWidgets-Info.plist */ = {isa = PBXFileReference; lastKnownFileType = text.plist.xml; path = "SparkWidgets-Info.plist"; sourceTree = "<group>"; };
 /* End PBXFileReference section */
 
 /* Begin PBXFileSystemSynchronizedRootGroup section */
@@ -52,6 +63,11 @@
 		5A0000000000000000000110 /* SparkNotify */ = {
 			isa = PBXFileSystemSynchronizedRootGroup;
 			path = SparkNotify;
+			sourceTree = "<group>";
+		};
+		5A0000000000000000000210 /* SparkWidgets */ = {
+			isa = PBXFileSystemSynchronizedRootGroup;
+			path = SparkWidgets;
 			sourceTree = "<group>";
 		};
 /* End PBXFileSystemSynchronizedRootGroup section */
@@ -71,6 +87,13 @@
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
+		5A0000000000000000000220 /* Frameworks */ = {
+			isa = PBXFrameworksBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+		};
 /* End PBXFrameworksBuildPhase section */
 
 /* Begin PBXGroup section */
@@ -81,8 +104,10 @@
 				5A0000000000000000000105 /* Spark.entitlements */,
 				5A0000000000000000000104 /* SparkNotify-Info.plist */,
 				5A0000000000000000000106 /* SparkNotify.entitlements */,
+				5A0000000000000000000204 /* SparkWidgets-Info.plist */,
 				5A0000000000000000000010 /* Spark */,
 				5A0000000000000000000110 /* SparkNotify */,
+				5A0000000000000000000210 /* SparkWidgets */,
 				5A0000000000000000000031 /* Products */,
 			);
 			sourceTree = "<group>";
@@ -92,6 +117,7 @@
 			children = (
 				5A0000000000000000000001 /* Spark.app */,
 				5A0000000000000000000100 /* SparkNotify.appex */,
+				5A0000000000000000000200 /* SparkWidgets.appex */,
 			);
 			name = Products;
 			sourceTree = "<group>";
@@ -112,6 +138,7 @@
 			);
 			dependencies = (
 				5A0000000000000000000107 /* PBXTargetDependency */,
+				5A0000000000000000000207 /* PBXTargetDependency */,
 			);
 			fileSystemSynchronizedGroups = (
 				5A0000000000000000000010 /* Spark */,
@@ -141,6 +168,26 @@
 			productReference = 5A0000000000000000000100 /* SparkNotify.appex */;
 			productType = "com.apple.product-type.app-extension";
 		};
+		5A0000000000000000000240 /* SparkWidgets */ = {
+			isa = PBXNativeTarget;
+			buildConfigurationList = 5A0000000000000000000260 /* Build configuration list for PBXNativeTarget "SparkWidgets" */;
+			buildPhases = (
+				5A0000000000000000000221 /* Sources */,
+				5A0000000000000000000220 /* Frameworks */,
+				5A0000000000000000000222 /* Resources */,
+			);
+			buildRules = (
+			);
+			dependencies = (
+			);
+			fileSystemSynchronizedGroups = (
+				5A0000000000000000000210 /* SparkWidgets */,
+			);
+			name = SparkWidgets;
+			productName = SparkWidgets;
+			productReference = 5A0000000000000000000200 /* SparkWidgets.appex */;
+			productType = "com.apple.product-type.app-extension";
+		};
 /* End PBXNativeTarget section */
 
 /* Begin PBXProject section */
@@ -157,6 +204,9 @@
 					5A0000000000000000000140 = {
 						CreatedOnToolsVersion = 16.0;
 					};
+					5A0000000000000000000240 = {
+						CreatedOnToolsVersion = 16.0;
+					};
 				};
 			};
 			buildConfigurationList = 5A0000000000000000000061 /* Build configuration list for PBXProject "Spark" */;
@@ -164,6 +214,7 @@
 			hasScannedForEncodings = 0;
 			knownRegions = (
 				de,
+				en,
 				Base,
 			);
 			mainGroup = 5A0000000000000000000030;
@@ -175,6 +226,7 @@
 			targets = (
 				5A0000000000000000000040 /* Spark */,
 				5A0000000000000000000140 /* SparkNotify */,
+				5A0000000000000000000240 /* SparkWidgets */,
 			);
 		};
 /* End PBXProject section */
@@ -188,6 +240,13 @@
 			runOnlyForDeploymentPostprocessing = 0;
 		};
 		5A0000000000000000000122 /* Resources */ = {
+			isa = PBXResourcesBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+		};
+		5A0000000000000000000222 /* Resources */ = {
 			isa = PBXResourcesBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
@@ -211,6 +270,13 @@
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
+		5A0000000000000000000221 /* Sources */ = {
+			isa = PBXSourcesBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+		};
 /* End PBXSourcesBuildPhase section */
 
 /* Begin PBXTargetDependency section */
@@ -218,6 +284,11 @@
 			isa = PBXTargetDependency;
 			target = 5A0000000000000000000140 /* SparkNotify */;
 			targetProxy = 5A0000000000000000000102 /* PBXContainerItemProxy */;
+		};
+		5A0000000000000000000207 /* PBXTargetDependency */ = {
+			isa = PBXTargetDependency;
+			target = 5A0000000000000000000240 /* SparkWidgets */;
+			targetProxy = 5A0000000000000000000202 /* PBXContainerItemProxy */;
 		};
 /* End PBXTargetDependency section */
 
@@ -274,6 +345,7 @@
 				GENERATE_INFOPLIST_FILE = YES;
 				INFOPLIST_FILE = Info.plist;
 				INFOPLIST_KEY_CFBundleDisplayName = Spark;
+				INFOPLIST_KEY_NSCameraUsageDescription = "Damit du ein Foto von einem Brief oder Zettel machen kannst. Den Text liest das iPhone selbst, an den Spark geht nur der Text.";
 				INFOPLIST_KEY_NSContactsUsageDescription = "Damit „Ruf … an“ die Nummer findet. Kontakte bleiben auf dem iPhone und gehen nicht an den Spark.";
 				INFOPLIST_KEY_NSMicrophoneUsageDescription = "Damit du dem Spark Fragen stellen kannst. Die Aufnahme geht nur an deinen eigenen Spark.";
 				INFOPLIST_KEY_NSSpeechRecognitionUsageDescription = "Für das Weckwort. Die Erkennung läuft nur auf dem iPhone, nichts geht an Apple.";
@@ -305,6 +377,7 @@
 				GENERATE_INFOPLIST_FILE = YES;
 				INFOPLIST_FILE = Info.plist;
 				INFOPLIST_KEY_CFBundleDisplayName = Spark;
+				INFOPLIST_KEY_NSCameraUsageDescription = "Damit du ein Foto von einem Brief oder Zettel machen kannst. Den Text liest das iPhone selbst, an den Spark geht nur der Text.";
 				INFOPLIST_KEY_NSContactsUsageDescription = "Damit „Ruf … an“ die Nummer findet. Kontakte bleiben auf dem iPhone und gehen nicht an den Spark.";
 				INFOPLIST_KEY_NSMicrophoneUsageDescription = "Damit du dem Spark Fragen stellen kannst. Die Aufnahme geht nur an deinen eigenen Spark.";
 				INFOPLIST_KEY_NSSpeechRecognitionUsageDescription = "Für das Weckwort. Die Erkennung läuft nur auf dem iPhone, nichts geht an Apple.";
@@ -374,6 +447,54 @@
 			};
 			name = Release;
 		};
+		5A0000000000000000000272 /* Debug */ = {
+			isa = XCBuildConfiguration;
+			buildSettings = {
+				CODE_SIGN_STYLE = Automatic;
+				CURRENT_PROJECT_VERSION = 1;
+				DEVELOPMENT_TEAM = "";
+				GENERATE_INFOPLIST_FILE = YES;
+				INFOPLIST_FILE = "SparkWidgets-Info.plist";
+				INFOPLIST_KEY_CFBundleDisplayName = "Spark Schnellstart";
+				LD_RUNPATH_SEARCH_PATHS = (
+					"$(inherited)",
+					"@executable_path/Frameworks",
+					"@executable_path/../../Frameworks",
+				);
+				MARKETING_VERSION = 1.0;
+				PRODUCT_BUNDLE_IDENTIFIER = "$(APP_BUNDLE_ID).widgets";
+				PRODUCT_NAME = "$(TARGET_NAME)";
+				SKIP_INSTALL = YES;
+				SWIFT_EMIT_LOC_STRINGS = YES;
+				SWIFT_VERSION = 5.0;
+				TARGETED_DEVICE_FAMILY = 1;
+			};
+			name = Debug;
+		};
+		5A0000000000000000000273 /* Release */ = {
+			isa = XCBuildConfiguration;
+			buildSettings = {
+				CODE_SIGN_STYLE = Automatic;
+				CURRENT_PROJECT_VERSION = 1;
+				DEVELOPMENT_TEAM = "";
+				GENERATE_INFOPLIST_FILE = YES;
+				INFOPLIST_FILE = "SparkWidgets-Info.plist";
+				INFOPLIST_KEY_CFBundleDisplayName = "Spark Schnellstart";
+				LD_RUNPATH_SEARCH_PATHS = (
+					"$(inherited)",
+					"@executable_path/Frameworks",
+					"@executable_path/../../Frameworks",
+				);
+				MARKETING_VERSION = 1.0;
+				PRODUCT_BUNDLE_IDENTIFIER = "$(APP_BUNDLE_ID).widgets";
+				PRODUCT_NAME = "$(TARGET_NAME)";
+				SKIP_INSTALL = YES;
+				SWIFT_EMIT_LOC_STRINGS = YES;
+				SWIFT_VERSION = 5.0;
+				TARGETED_DEVICE_FAMILY = 1;
+			};
+			name = Release;
+		};
 /* End XCBuildConfiguration section */
 
 /* Begin XCConfigurationList section */
@@ -400,6 +521,15 @@
 			buildConfigurations = (
 				5A0000000000000000000172 /* Debug */,
 				5A0000000000000000000173 /* Release */,
+			);
+			defaultConfigurationIsVisible = 0;
+			defaultConfigurationName = Release;
+		};
+		5A0000000000000000000260 /* Build configuration list for PBXNativeTarget "SparkWidgets" */ = {
+			isa = XCConfigurationList;
+			buildConfigurations = (
+				5A0000000000000000000272 /* Debug */,
+				5A0000000000000000000273 /* Release */,
 			);
 			defaultConfigurationIsVisible = 0;
 			defaultConfigurationName = Release;

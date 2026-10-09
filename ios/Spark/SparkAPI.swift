@@ -23,6 +23,21 @@ struct Reminder {
     let due: Date
 }
 
+/// Text read from a photo or a document on this iPhone (the Spark gets only the text).
+struct Attachment: Equatable {
+    let kind: String        // "photo" or "document"
+    let name: String
+    let text: String
+}
+
+/// A conversation from the profile's list (the same list as the panel's Protokoll).
+struct SavedConvo: Identifiable {
+    let id: String
+    let title: String
+    let updated: Date
+    let msgs: [[String: Any]]
+}
+
 struct Note {
     let id: String
     let t: Int
@@ -41,6 +56,7 @@ struct Allowed {
     var face = "robot"
     var push = false
     var carHa = false
+    var docs = false
 }
 
 /// The Spark's panel, spoken to with this iPhone's own device key. The key may only ask and
@@ -63,18 +79,18 @@ struct SparkAPI {
     }
 
     private static func check(_ data: Data, _ response: URLResponse) throws {
-        guard let http = response as? HTTPURLResponse else { throw SparkError(message: "Keine Antwort vom Spark.") }
+        guard let http = response as? HTTPURLResponse else { throw SparkError(message: String(localized: "Keine Antwort vom Spark.")) }
         guard !(200..<300).contains(http.statusCode) else { return }
         let detail = (try? JSONSerialization.jsonObject(with: data) as? [String: Any])?["detail"] as? String
         switch http.statusCode {
         case 401:
-            throw SparkError(message: "Der Spark nimmt dieses iPhone nicht an. Im Panel unter Ich → iPhone-App prüfen, ob die App an ist, sonst neu koppeln.")
+            throw SparkError(message: String(localized: "Der Spark nimmt dieses iPhone nicht an. Im Panel unter Ich → iPhone-App prüfen, ob die App an ist, sonst neu koppeln."))
         case 429:
-            throw SparkError(message: "Der Spark ist gerade ausgelastet. Bitte gleich noch einmal.")
+            throw SparkError(message: String(localized: "Der Spark ist gerade ausgelastet. Bitte gleich noch einmal."))
         case 503:
-            throw SparkError(message: "Die Spracherkennung oder das Sprachmodell läuft gerade nicht.")
+            throw SparkError(message: String(localized: "Die Spracherkennung oder das Sprachmodell läuft gerade nicht."))
         default:
-            throw SparkError(message: detail ?? "Fehler \(http.statusCode) vom Spark.")
+            throw SparkError(message: detail ?? String(localized: "Fehler \(http.statusCode) vom Spark."))
         }
     }
 
@@ -95,21 +111,24 @@ struct SparkAPI {
     static func pair(base: URL, code: String, name: String) async throws -> (key: String, profile: String, language: String) {
         let d = try await SparkAPI(base: base, key: nil).post("api/iphone/pair", ["code": code, "name": name])
         guard let key = d["token"] as? String, !key.isEmpty else {
-            throw SparkError(message: "Der Spark hat keinen Schlüssel geschickt.")
+            throw SparkError(message: String(localized: "Der Spark hat keinen Schlüssel geschickt."))
         }
         return (key, d["profile"] as? String ?? "", d["language"] as? String ?? "auto")
     }
 
     /// Checks the key: whose it is and what the profile allows the app.
-    func hello() async throws -> Allowed {
-        let (data, response) = try await URLSession.shared.data(for: request("api/iphone/hello"))
+    func hello(timeout: TimeInterval = 120) async throws -> Allowed {
+        var r = request("api/iphone/hello")
+        r.timeoutInterval = timeout
+        let (data, response) = try await URLSession.shared.data(for: r)
         try Self.check(data, response)
         let d = Self.object(data)
         return Allowed(profile: d["profile"] as? String ?? "", language: d["language"] as? String ?? "auto",
                        listen: d["listen"] as? Bool ?? false, act: d["act"] as? Bool ?? false,
                        proactive: d["proactive"] as? Bool ?? false, reminders: d["reminders"] as? Bool ?? true,
                        face: d["face"] as? String == "comic" ? "comic" : "robot",
-                       push: d["push"] as? Bool ?? false, carHa: d["car_ha"] as? Bool ?? false)
+                       push: d["push"] as? Bool ?? false, carHa: d["car_ha"] as? Bool ?? false,
+                       docs: d["docs"] as? Bool ?? false)
     }
 
     static func reminder(_ d: [String: Any]) -> Reminder? {
@@ -197,14 +216,48 @@ struct SparkAPI {
         return d["answer"] as? String ?? ""
     }
 
-    /// The answer as a stream of text and sound, while the Spark is still writing.
+    /// The profile's conversations, newest first.
+    func convos() async throws -> [SavedConvo] {
+        let (data, response) = try await URLSession.shared.data(for: request("api/profile/convos"))
+        try Self.check(data, response)
+        let list = (try? JSONSerialization.jsonObject(with: data) as? [[String: Any]]) ?? []
+        return list.compactMap { d in
+            guard let id = d["id"] as? String, let msgs = d["msgs"] as? [[String: Any]], !msgs.isEmpty else { return nil }
+            let ms = (d["updated"] as? NSNumber)?.doubleValue ?? 0
+            return SavedConvo(id: id, title: d["title"] as? String ?? "", updated: Date(timeIntervalSince1970: ms / 1000), msgs: msgs)
+        }
+    }
+
+    /// Adds or replaces one conversation in the profile's list.
+    func saveConvo(id: String, title: String, msgs: [[String: Any]]) async throws {
+        var r = request("api/profile/convos", method: "PUT")
+        r.setValue("application/json", forHTTPHeaderField: "Content-Type")
+        r.httpBody = try JSONSerialization.data(withJSONObject: [
+            "id": id, "title": String(title.prefix(80)), "msgs": msgs,
+            "updated": Int(Date().timeIntervalSince1970 * 1000)])
+        let (data, response) = try await URLSession.shared.data(for: r)
+        try Self.check(data, response)
+    }
+
+    /// A document's text into the profile's "Meine Dokumente" (only with the profile's switch).
+    func storeDoc(name: String, text: String) async throws {
+        var r = request("api/iphone/doc", method: "POST")
+        r.setValue("application/json", forHTTPHeaderField: "Content-Type")
+        r.timeoutInterval = 120
+        r.httpBody = try JSONSerialization.data(withJSONObject: ["name": String(name.prefix(100)), "text": text])
+        let (data, response) = try await URLSession.shared.data(for: r)
+        try Self.check(data, response)
+    }
+
     /// This iPhone's push address, so the Spark can reach the closed app through Apple.
     func pushToken(_ hex: String) async throws -> Bool {
         try await post("api/iphone/push-token", ["token": hex])["push"] as? Bool ?? false
     }
 
+    /// The answer as a stream of text and sound, while the Spark is still writing.
     /// car: asked from CarPlay (short answers; the Spark only gets stricter, never looser).
-    func chat(_ messages: [[String: Any]], car: Bool = false) -> AsyncThrowingStream<ChatEvent, Error> {
+    /// attachment: text from a photo or document; the Spark treats it as outside text (locks actions).
+    func chat(_ messages: [[String: Any]], car: Bool = false, attachment: Attachment? = nil) -> AsyncThrowingStream<ChatEvent, Error> {
         AsyncThrowingStream { cont in
             let task = Task {
                 do {
@@ -214,6 +267,7 @@ struct SparkAPI {
                     r.timeoutInterval = 300
                     var body: [String: Any] = ["messages": messages, "tz": TimeZone.current.identifier, "client": "iphone"]
                     if car { body["car"] = true }
+                    if let a = attachment { body["attachment"] = ["kind": a.kind, "name": a.name, "text": String(a.text.prefix(Reader.chatChars))] }
                     r.httpBody = try JSONSerialization.data(withJSONObject: body)
                     let (bytes, response) = try await URLSession.shared.bytes(for: r)
                     if let http = response as? HTTPURLResponse, !(200..<300).contains(http.statusCode) {
@@ -234,7 +288,7 @@ struct SparkAPI {
                             if let s = ev["audio"] as? String, let pcm = Data(base64Encoded: s) { cont.yield(.audio(pcm)) }
                         case "mail": cont.yield(.mark("mail"))
                         case "outside": cont.yield(.mark("outside"))
-                        case "error": cont.yield(.error(ev["message"] as? String ?? "Fehler beim Spark."))
+                        case "error": cont.yield(.error(ev["message"] as? String ?? String(localized: "Fehler beim Spark.")))
                         case "reminder" where ev["foreign"] as? Bool != true:
                             if ev["action"] as? String == "set", let item = ev["item"] as? [String: Any], let r = Self.reminder(item) {
                                 cont.yield(.reminderSet(r))

@@ -50,6 +50,15 @@ In the app under **Settings (gear)**:
 
 Routes and calls: "Navigiere zur Arbeit" or "Ruf Anna an". The app asks every time ("Open route to …?", "Call Anna (number)?"). Only "Ja" (tapped or said) opens Maps or calls. Contacts are searched only on the iPhone; the number does not go to the Spark.
 
+## Quick start, history, photos, offline
+
+- **Quick start:** "Talk to Spark" opens the app and it listens at once. On the Action button: iPhone Settings → Action Button → Shortcut → "Talk to Spark". In Control Center (iOS 18 and later) via "Add a Control", on the lock screen as a widget. With Siri: "Hey Siri, Start Spark".
+- **History:** The clock icon at the top left shows your earlier conversations, the same list as the panel's log. Tapping one continues it. Deleting stays in the panel.
+- **Ask about a photo or document:** The paper clip next to the input: take a photo, choose a photo, or a document (PDF, text, image). The iPhone reads the text itself, scanned pages too. Only the text goes to the Spark, never the picture. The attachment stays for the conversation until you remove it with ✕. Pictures without text do not help, the Spark has no image model.
+- **Save to "My documents":** With "Store documents from the app" on under Me → iPhone app in the panel, the attachment shows a button for it. The Spark then finds the document later, like an upload in the panel.
+- **Offline:** When the Spark cannot be reached, the app says so at the top. Typed questions wait (at most 10, for one day) and go out once the Spark is back. Speaking does not work then, because the Spark recognises the speech.
+- **English:** On an iPhone set to English the app is in English, including the wake word and Siri ("Ask Spark", "Start Spark").
+
 ## Push notifications with the app closed
 
 Needs the Apple Developer Program. Once:
@@ -80,6 +89,9 @@ Step by step (TestFlight, App Store): [iphone-publishing.md](iphone-publishing.m
 - Wake word, stand mode, routes and calls only with their own switch in the panel. The Spark only suggests a route or call; the tool exists only for the app key with the switch, and only your "yes" on the iPhone starts it. Outside text (mail, web page) cannot start a route or call.
 - No sound goes to the Spark before the wake word. In the background the app listens only with the wake word on.
 - Push: the Apple key (.p8) is stored encrypted, changed only by the admin with the second step, never shown again. Apple only gets a fixed sentence and a random number. Only the app with its own key signs up its push address; only the profile's own app gets a notification's text.
+- Photos and documents: the iPhone reads the text, only text goes to the Spark (at most 20,000 characters per question). The Spark treats it as outside text: it sits as data in the prompt, not in the conversation, and locks actions as after a mail. The history keeps only the attachment's name.
+- Storing documents only with its own switch, only with the app key, at most 10 per minute and 3 MB. The app cannot list or delete the documents.
+- Waiting questions stay on the iPhone and are deleted when unpairing.
 - CarPlay never loosens anything: in the car the smart home is locked without its own car switch.
 - Pairing only from the profile's own browser login, with the second login step when the profile has it. At most 5 iPhones per profile.
 

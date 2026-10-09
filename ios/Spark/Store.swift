@@ -85,5 +85,6 @@ enum Store {
         key = nil
         baseURL = nil
         profile = ""
+        Outbox.clear()
     }
 }

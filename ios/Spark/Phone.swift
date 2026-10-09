@@ -68,8 +68,8 @@ enum PhoneAction {
         case "navigate":
             var c = URLComponents(string: "maps://")!
             c.queryItems = [URLQueryItem(name: "daddr", value: target)]
-            guard let url = c.url else { return (nil, "Das Ziel verstehe ich nicht.") }
-            return (Offer(question: "Route nach „\(target)“ in Karten öffnen?", url: url), nil)
+            guard let url = c.url else { return (nil, String(localized: "Das Ziel verstehe ich nicht.")) }
+            return (Offer(question: String(localized: "Route nach „\(target)“ in Karten öffnen?"), url: url), nil)
         case "call":
             return await call(target)
         default:
@@ -80,19 +80,19 @@ enum PhoneAction {
     private static func call(_ name: String) async -> (Offer?, String?) {
         let store = CNContactStore()
         guard (try? await store.requestAccess(for: .contacts)) == true else {
-            return (nil, "Die App darf deine Kontakte nicht lesen. Einstellungen → Spark → Kontakte.")
+            return (nil, String(localized: "Die App darf deine Kontakte nicht lesen. Einstellungen → Spark → Kontakte."))
         }
         let keys = [CNContactGivenNameKey, CNContactFamilyNameKey, CNContactPhoneNumbersKey] as [CNKeyDescriptor]
         let found = (try? store.unifiedContacts(matching: CNContact.predicateForContacts(matchingName: name), keysToFetch: keys)) ?? []
         let withPhone = found.filter { !$0.phoneNumbers.isEmpty }
         guard withPhone.count == 1, let contact = withPhone.first, let number = contact.phoneNumbers.first?.value.stringValue else {
-            return (nil, withPhone.isEmpty ? "Ich finde keinen Kontakt „\(name)“ mit Telefonnummer."
-                                           : "Es gibt mehrere Kontakte „\(name)“. Sag bitte den ganzen Namen.")
+            return (nil, withPhone.isEmpty ? String(localized: "Ich finde keinen Kontakt „\(name)“ mit Telefonnummer.")
+                                           : String(localized: "Es gibt mehrere Kontakte „\(name)“. Sag bitte den ganzen Namen."))
         }
         let digits = number.filter { "+0123456789".contains($0) }
-        guard !digits.isEmpty, let url = URL(string: "tel://" + digits) else { return (nil, "Die Nummer verstehe ich nicht.") }
+        guard !digits.isEmpty, let url = URL(string: "tel://" + digits) else { return (nil, String(localized: "Die Nummer verstehe ich nicht.")) }
         let who = [contact.givenName, contact.familyName].filter { !$0.isEmpty }.joined(separator: " ")
-        return (Offer(question: "\(who) anrufen (\(number))?", url: url), nil)
+        return (Offer(question: String(localized: "\(who) anrufen (\(number))?"), url: url), nil)
     }
 
     @MainActor
