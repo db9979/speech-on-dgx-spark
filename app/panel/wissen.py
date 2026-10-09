@@ -15,6 +15,7 @@ The text the model reads from a picture is stored as data like any other documen
 says ("ignore your rules …") is never an instruction, it is outside text when the assistant searches
 it (chat.READS_OUTSIDE), and nothing from documents is learned into the memory.
 
+    GET  /api/admin/wissen                   Zustand → Monitoring: model state and what waits, counts only
     GET  /api/profile/wissen                 switches, usage, what is still being read
     PUT  /api/profile/wissen/{id}            {"use": bool}  the assistant searches this document or not
     GET  /api/profile/wissen/{id}/file       the kept original (?view=1: pictures and PDFs in the browser)
@@ -24,6 +25,7 @@ it (chat.READS_OUTSIDE), and nothing from documents is learned into the memory.
 """
 import asyncio
 import datetime
+import os
 import re
 import time
 
@@ -36,12 +38,13 @@ import guard
 import profiles
 import vorrang
 from common import load_config
-from core import assistant, browser_profile, own_profile
+from core import assistant, auth, browser_profile, own_profile
 
 router = APIRouter()
 DAY_PAGES = 100
 READ_TIMEOUT = 120
 IDLE = 60
+_last = {"read": 0.0, "failed": 0.0, "vectors": 0.0}    # when background work last did something (Zustand)
 READ_PROMPT = ("Du liest eine Seite oder ein Foto aus den eigenen Dokumenten des Nutzers, damit er später darin "
                "suchen kann. Schreibe zuerst allen lesbaren Text vollständig und genau ab, in der Reihenfolge der "
                "Seite; Tabellen als Zeilen mit Tabulatoren. Danach eine Zeile „Bild:“ mit ein bis drei Sätzen, was "
@@ -145,9 +148,11 @@ async def due_once(idle=True, now=None):
         try:
             text = await read_page(jpeg)
             await asyncio.to_thread(documents.page_read, uid, doc, page, text)
+            _last["read"] = time.time()
             print(f"wissen: page read ({len(text)} chars)", flush=True)
         except Exception as e:
             await asyncio.to_thread(documents.page_read, uid, doc, page, None, True)
+            _last["failed"] = time.time()
             print("wissen: page not read:", type(e).__name__, flush=True)
         return "page"
     for uid in profiles.user_ids():
@@ -162,12 +167,44 @@ async def due_once(idle=True, now=None):
             print("wissen: no vectors:", type(e).__name__, str(e)[:120], flush=True)
             return None
         await asyncio.to_thread(documents.set_vectors, uid, [(i, v) for (i, _), v in zip(miss, vecs)])
+        _last["vectors"] = time.time()
         return "vectors"
     docembed.idle_stop(now)
     return None
 
 
 # ---------------------------------------------------------------- routes
+@router.get("/api/admin/wissen", dependencies=[Depends(auth)])
+def admin_state():
+    """Zustand → Monitoring: is the meaning model running, how much memory, what still waits.
+    Sums over all profiles, never names, document names or text."""
+    c = _chat()
+    on_ = {k: admin_on(k) for k in ("pictures", "semantic")}
+    if not c.get("documents", True) or not any(on_.values()):
+        return {"on": False}
+    out = {"on": True, "pictures": on_["pictures"], "semantic": on_["semantic"], "profiles": 0,
+           "waiting": 0, "today": 0, "day_pages": DAY_PAGES, "vectors": [0, 0],
+           "last": {k: int(v) for k, v in _last.items()}, "quiet": quiet()}
+    day = today(time.time())
+    for uid in profiles.user_ids():
+        p, m = on(uid, "pictures"), on(uid, "semantic")
+        if not (p or m):
+            continue
+        out["profiles"] += 1
+        if p:
+            out["waiting"] += documents.pages_waiting(uid)
+            if os.path.exists(documents.db_path(uid)):
+                out["today"] += documents.count_today(uid, day)
+        if m:
+            have, total = documents.vector_state(uid)
+            out["vectors"][0] += have
+            out["vectors"][1] += total
+    if on_["semantic"]:
+        out["model"] = dict(docembed.status(), mib=docembed.memory_mib(), need_gib=docembed.MIN_FREE_GIB,
+                            stop_min=docembed.IDLE_STOP // 60)
+    return out
+
+
 @router.get("/api/profile/wissen", dependencies=[Depends(assistant)])
 def info(prof=Depends(own_profile)):
     _docs_on()

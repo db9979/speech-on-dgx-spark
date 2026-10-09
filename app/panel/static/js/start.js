@@ -24,4 +24,4 @@ $('pwset').onclick=async()=>{try{await api('/api/password',{method:'POST',header
   document.querySelector('nav button[data-s=chat]').click();       // the assistant is the start page
   try{const s=sessionStorage.getItem('versec');sessionStorage.removeItem('versec');if(s&&s!=='chat'&&$(s))goSec(s)}catch{}
   try{if(sessionStorage.getItem('flagsreload')){sessionStorage.removeItem('flagsreload');const e=$('updtoast');e.textContent=t('Gespeichert, Seite mit den neuen Funktionen geladen.','Saved, page loaded with the new functions.');e.style.display='block';setTimeout(()=>e.style.display='none',5000)}}catch{}   // back where the new version was loaded
-  if(ADMIN){ulCheck();wizCheck();loadLangs();refresh();setInterval(refresh,3000);zRooms();setInterval(zRooms,30e3);api('/api/update').then(r=>r.json()).then(u=>updBadge(u.remote)).catch(()=>{})}})();
+  if(ADMIN){ulCheck();wizCheck();loadLangs();refresh();setInterval(refresh,3000);zRooms();setInterval(zRooms,30e3);zDocs();setInterval(zDocs,30e3);api('/api/update').then(r=>r.json()).then(u=>updBadge(u.remote)).catch(()=>{})}})();

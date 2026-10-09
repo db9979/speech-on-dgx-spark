@@ -241,7 +241,10 @@ class Logs(unittest.TestCase):
 
 class Units(unittest.TestCase):
     def test_speech_units_get_the_larger_share(self):
-        src = _read(os.path.join(helpers.APP, "..", "install.sh"))
+        path = os.path.join(helpers.APP, "..", "install.sh")
+        if not os.path.exists(path):   # the self-test during an update only has app/ itself
+            raise unittest.SkipTest("install.sh is not part of this copy")
+        src = _read(path)
         for unit in ("speech-spark-asr.service", "speech-spark-tts.service", "speech-spark-$1.service"):
             body = src[src.index(unit):]
             body = body[:body.index("\nEOF")]
