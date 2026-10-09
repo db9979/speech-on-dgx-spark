@@ -323,10 +323,18 @@ function updBadge(r){window.UPD=r;updBanner(r);zustand();const on=r&&r.behind&&r
   document.querySelectorAll('.subbadge').forEach(x=>x.style.display=on?'inline-block':'none')}
 $('updcheck').onclick=()=>loadSys(true);
 let benchPoll=null;
+// how good each value is: levels and sentences come from bench.rate(), the page only shows them
+const BENCH_CLS={top:'ok',ok:'ok',warn:'warn',bad:'bad'};
+function benchRender(r){const box=$('benchrate');if(!r){box.innerHTML='';return}
+  const v=r.verdict||{},lvl=BENCH_CLS[v.level]||'warn';
+  box.innerHTML=`<div class="bverdict" data-lvl="${lvl}"><span class="bvicon">${lvl==='ok'?'✓':'!'}</span><div><b>${esc(v.title||'')}</b>${v.detail?`<div class="mut">${esc(v.detail)}</div>`:''}</div></div>`+
+    `<table class="brate"><tbody>${(r.groups||[]).map(g=>`<tr class="bgrp"><td colspan="4">${esc(g.name)}</td></tr>`+g.rows.map(x=>
+      `<tr><td>${esc(x.label)}</td><td class="bnum">${esc(x.value)}</td><td><span class="pill ${BENCH_CLS[x.level]||''}">${esc(x.word)}</span></td><td class="bwhy">${esc(x.why)}${x.before?` <span class="bprev">· ${t('letzte Messung','last run')} ${esc(x.before)}</span>`:''}</td></tr>`).join('')).join('')}</tbody></table>`}
 async function loadBench(){let b;try{b=await (await api('/api/bench')).json()}catch(e){$('benchmsg').innerHTML=`<span class="err">${esc(e.message)}</span>`;return}
   $('benchgo').disabled=b.running;
   $('benchmsg').textContent=b.running?t('läuft…','running…'):b.result?t('letzte Messung: ','last measurement: ')+new Date(b.result.time*1000).toLocaleString():'';
   $('benchout').textContent=b.running?b.log.join('\n'):(b.report||t('(noch nicht gemessen)','(not measured yet)'));
+  if(b.running)$('benchraw').open=true;else if(benchPoll)$('benchraw').open=false;benchRender(b.running?null:b.rating);
   if(b.running&&!benchPoll)benchPoll=setInterval(loadBench,2000);
   if(!b.running&&benchPoll){clearInterval(benchPoll);benchPoll=null}}
 $('benchgo').onclick=async()=>{try{await api('/api/bench',{method:'POST'});loadBench()}catch(e){$('benchmsg').innerHTML=`<span class="err">${esc(e.message)}</span>`}};

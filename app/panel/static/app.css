@@ -429,3 +429,15 @@ details.zmore{margin-top:14px}details.zmore>summary{cursor:pointer;font-weight:6
 #espbox .esprepair{gap:6px;margin:6px 0 4px;flex-wrap:wrap}#espbox .esprepair select{width:auto;max-width:100%}
 #espbox .espdel{margin-top:16px;padding-top:12px;border-top:1px solid var(--line)}.b.bad{color:var(--bad)}
 @media (max-width:760px){#espbox .esptop{flex-wrap:wrap}}
+/* Leistung messen: verdict and one row per value with its level */
+.bverdict{display:flex;gap:12px;align-items:flex-start;padding:12px 14px;border-radius:12px;margin-top:12px;border:1px solid var(--line)}
+.bverdict .mut{font-size:13px}.bverdict b{font-size:15px}
+.bvicon{width:26px;height:26px;border-radius:50%;color:#fff;display:grid;place-items:center;font-weight:700;flex:none;background:var(--mut)}
+.bverdict[data-lvl=ok]{border-color:color-mix(in srgb,var(--ok) 35%,var(--line));background:color-mix(in srgb,var(--ok) 6%,var(--card))}.bverdict[data-lvl=ok] .bvicon{background:var(--ok)}
+.bverdict[data-lvl=warn]{border-color:color-mix(in srgb,var(--warn) 40%,var(--line));background:color-mix(in srgb,var(--warn) 6%,var(--card))}.bverdict[data-lvl=warn] .bvicon{background:var(--warn)}
+.bverdict[data-lvl=bad]{border-color:color-mix(in srgb,var(--bad) 40%,var(--line));background:color-mix(in srgb,var(--bad) 6%,var(--card))}.bverdict[data-lvl=bad] .bvicon{background:var(--bad)}
+.brate{margin-top:6px}.brate td:first-child{width:32%}.brate .bnum{font-variant-numeric:tabular-nums;font-weight:650;white-space:nowrap}
+.brate .pill{white-space:nowrap}.brate .bwhy{color:var(--mut);font-size:12.5px;line-height:1.45}.brate .bprev{white-space:nowrap}
+.brate .bgrp td{font-size:13px;color:var(--mut);font-weight:600;padding-top:16px;border-top:0}
+@media (max-width:600px){.brate td:first-child{width:auto}.brate tr{display:grid;grid-template-columns:1fr auto auto;gap:0 10px;align-items:center;border-top:1px solid var(--line);padding:8px 0}
+  .brate td{border-top:0;padding:2px 0}.brate td.bwhy{grid-column:1/4}.brate tr.bgrp{border-top:0;display:block}}

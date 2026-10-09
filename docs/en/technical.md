@@ -32,6 +32,8 @@ sudo speech-spark-bench --parallel 8    # more concurrent requests
 sudo speech-spark-bench --audio a.wav   # speech recognition with your own recording
 ```
 
+Since V01.0.163 every value gets a level (very good, good, tight, too slow) and a sentence saying when it is good; an overall verdict sits on top, and the last run is shown next to each value. The borders are fixed rules in `bench.rate()`: first audio 0.5/1/2 s, voice speed 2×/1.3×/1× real time, several at once (total ÷ count) 1.5/1/0.7, latest first audio with several 1/1.5/3 s, test sentence recognised in 1.5/3/5 s, words understood 95/90/85 %, free memory 14 GiB good, 10 GiB tight, below critical. "Words understood" is missing with `--audio` (the text of your own recording is unknown). The last ten runs' key numbers are kept in `bench-history.json`.
+
 The benchmark goes through the public ports, so it measures what apps see. The last result is stored in `/var/lib/speech-spark/state/bench-latest.json`.
 
 ## Next to dgx-spark-qwen38

@@ -778,11 +778,13 @@ bench_state = {"running": False, "log": []}
 @router.get("/api/bench", dependencies=[Depends(auth)])
 def bench_status():
     import bench
-    out = {"running": bench_state["running"], "log": bench_state["log"][-40:], "result": None, "report": None}
+    out = {"running": bench_state["running"], "log": bench_state["log"][-40:], "result": None, "report": None,
+           "rating": None}
     try:
         with open(bench.RESULT) as f:
             out["result"] = json.load(f)
         out["report"] = bench.report(out["result"])
+        out["rating"] = bench.rate(out["result"], out["result"].get("previous"))
     except Exception:
         pass
     return out

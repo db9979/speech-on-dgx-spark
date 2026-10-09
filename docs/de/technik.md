@@ -32,6 +32,20 @@ sudo speech-spark-bench --parallel 8    # mehr gleichzeitige Anfragen
 sudo speech-spark-bench --audio a.wav   # Spracherkennung mit eigener Aufnahme
 ```
 
+Seit V01.0.163 bekommt jeder Wert eine Stufe (sehr gut, gut, knapp, zu langsam) und einen Satz, ab wann er gut ist; oben steht ein Gesamturteil, und neben dem Wert die letzte Messung. Die Grenzen sind feste Regeln in `bench.rate()`:
+
+| Wert | sehr gut | gut | knapp |
+|---|---|---|---|
+| Erster Ton (eine Anfrage) | bis 0,5 s | bis 1 s | bis 2 s |
+| Tempo der Stimme | ab 2× Echtzeit | ab 1,3× | ab 1× (darunter stockt sie) |
+| Mehrere gleichzeitig (gesamt / Anzahl) | ab 1,5 | ab 1 | ab 0,7 |
+| Erster Ton bei mehreren (spätester) | bis 1 s | bis 1,5 s | bis 3 s |
+| Testsatz erkannt in | bis 1,5 s | bis 3 s | bis 5 s |
+| Richtig verstanden (Wörter des Testsatzes) | ab 95 % | ab 90 % | ab 85 % |
+| Frei auf dem Spark | | ab 14 GiB | ab 10 GiB (darunter kritisch) |
+
+„Richtig verstanden“ fehlt bei `--audio`, weil der Text der eigenen Aufnahme unbekannt ist. Die Kennzahlen der letzten zehn Messungen stehen in `bench-history.json`.
+
 Die Messung geht über die öffentlichen Ports, misst also das, was Apps sehen. Das letzte Ergebnis steht in `/var/lib/speech-spark/state/bench-latest.json`. Die Speicheranteile der Engines (Konfiguration) sind Startwerte: nach der Messung passend einstellen.
 
 ## Neben dgx-spark-qwen38

@@ -31,6 +31,7 @@ All options for running without questions (`--mode api --asr 1.7b --tts 0.6b --y
 
 <!-- New version: add one line at the top here and in CHANGELOG.md, drop the oldest line here (keep 10). Details go to docs/de and docs/en, not into this README. -->
 
+- **V01.0.163** Performance check rates every value (very good, good, tight, too slow, with one sentence why), an overall verdict on top, new "words understood" percentage and the comparison with the last run
 - **V01.0.162** iPhone app: "My profile" with voice, answer length, by itself and morning briefing; the app's rights and the tone only shown (the Spark changes only a fixed list)
 - **V01.0.161** iPhone app: quick start (Action button, Control Center, lock screen), history like the log, ask about a photo or document (the iPhone reads the text), store documents (off, profile switch), questions wait offline, English interface
 - **V01.0.160** iPhone app has a new icon: a glowing spark on night blue with sound waves
@@ -40,7 +41,6 @@ All options for running without questions (`--mode api --asr 1.7b --tts 0.6b --y
 - **V01.0.156** Chat code split up (no change in behaviour): rights and prompt in chat_turn.py, tools in chat_tools.py, answer and sound in chat.py
 - **V01.0.155** iPhone app shows the face picked in the panel, now also the comic face with its own life (lids, glances, brows, mouth under the mustache)
 - **V01.0.154** Selectable face: the admin picks "Robot" (as before) or "Comic" under Settings → Defaults (a caricature that looks around, blinks, moves its mouth with the voice and shows the state with a coloured ring); for the panel and the iPhone app
-- **V01.0.153** iPhone app comes alive: face as in the panel (look swappable), hands-free and interrupting, wake word on the iPhone offline, stand mode on the charger, reminders as notifications, notes on its own, route and call only after "yes" (new panel switches, off)
 
 All versions: [CHANGELOG.md](CHANGELOG.md)
 

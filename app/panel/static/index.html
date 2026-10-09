@@ -342,7 +342,8 @@
   <div class="card"><h2>Leistung messen</h2>
     <div class="intro sm">Misst Zeit bis zum ersten Ton, Geschwindigkeit bei einer und bei mehreren gleichzeitigen Anfragen und den Speicher der Dienste. Dauert ein bis zwei Minuten und belastet die GPU in der Zeit. Auf der Konsole: <code>sudo speech-spark-bench</code></div>
     <div class="row" style="margin-top:12px"><button class="b p" id="benchgo">Messung starten</button><button class="b" onclick="copyEl('benchout',this)">Kopieren</button><span id="benchmsg" class="mut"></span></div>
-    <pre id="benchout" style="margin-top:12px">–</pre></div>
+    <div id="benchrate"></div>
+    <details id="benchraw" style="margin-top:10px"><summary class="mut">Rohwerte</summary><pre id="benchout" style="margin-top:8px">–</pre></details></div>
   <div class="two">
     <div class="card"><h2>Spracherkennung testen</h2>
       <label>Audiodatei (wav, mp3, flac, …)</label><input type="file" id="asrfile" accept="audio/*">
