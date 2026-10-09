@@ -1507,7 +1507,7 @@ async def _answer(request, turn):
                                 except ValueError:
                                     continue
                                 if ev.get("type") == "speech.audio.delta" and ev.get("audio"):
-                                    now = time.time()
+                                    now, opening = time.time(), not got
                                     if not got:
                                         got, ttfa = True, now - sent
                                         # this piece plays from here on: another device of the house that hears it
@@ -1524,8 +1524,11 @@ async def _answer(request, turn):
                                         except (OSError, ValueError) as e:
                                             print("latency:", type(e).__name__, flush=True)
                                     elif now > played_until + 0.3:
-                                        # the listener ran out of audio: a gap in the speech (Zustand → Logs, "chat:")
-                                        print(f"chat: tts behind by {now - played_until:.1f} s ({len(text)} chars, "
+                                        # the listener ran out of audio (Zustand → Logs, "chat:"): before a piece it is a
+                                        # pause between sentences (the text was not there yet: tool, search, slow LLM),
+                                        # inside a piece the speech engine was slower than real time (a real stall)
+                                        print(f"chat: tts behind by {now - played_until:.1f} s "
+                                              f"{'before the piece' if opening else 'inside the piece'} ({len(text)} chars, "
                                               f"first audio after {ttfa:.1f} s)", flush=True)
                                     # 16-bit mono PCM at 24 kHz: 48000 bytes per second of audio
                                     played_until = max(played_until, now) + len(ev["audio"]) * 3 / 4 / 48000

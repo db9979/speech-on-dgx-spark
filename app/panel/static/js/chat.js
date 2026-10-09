@@ -37,8 +37,12 @@ function playPcm(b64){const ctx=playCtx(),bin=atob(b64),n=bin.length>>1;if(!n)re
     const j=new Float32Array(tl.data.length+n);j.set(tl.data);j.set(f,tl.data.length);f=j;chat.playEnd=tl.at}
   // after a gap (first piece, or the stream fell behind) start a little ahead and fade in, so the
   // next pieces join seamlessly and the restart does not click
-  // 0.25 s head start: a reserve for when the GPU is busy with the LLM at the same time
-  const gap=chat.playEnd<=now,at=gap?now+0.25:chat.playEnd;
+  // 0.25 s head start: a reserve for when the GPU is busy with the LLM at the same time. A stall inside a
+  // piece (the speech engine slower than real time, e.g. while the LLM still writes) waits longer before it
+  // goes on, more after each further stall, so it stutters once instead of every second.
+  const gap=chat.playEnd<=now,inside=gap&&!chat.pieceStart&&chat.firstPlay!=null;
+  if(inside)chat.stalls=(chat.stalls||0)+1;chat.pieceStart=false;
+  const at=gap?now+(inside?Math.min(1.5,0.4+0.4*chat.stalls):0.25):chat.playEnd;
   if(gap||faded0)for(let i=0,m=Math.min(f.length,96);i<m;i++)f[i]*=i/m;   // also right after a fade-out that already began
   if(gap&&chat.ctrl){if(chat.firstPlay==null)chat.firstPlay=at;else chat.gaps.push(at-chat.firstPlay)}   // stalls, shown under the answer
   if(chat.ctrl&&chat.blocks){chat.t0b=chat.t0b??now;chat.blocks.push(`${(n/24000).toFixed(2)}@${(now-chat.t0b).toFixed(2)}${gap&&chat.firstPlay!==at?'!':''}`)}
@@ -223,7 +227,7 @@ const pids=typeof picIds==='function'?picIds():[],thumbs=pids.length?picThumbs()
 const ub=chatLog('user',text);const um={role:'user',content:text};
   if(thumbs.length){const w=document.createElement('div');w.className='picrow';w.innerHTML=thumbs.map(u=>`<img alt="" src="${esc(u)}">`).join('');ub.appendChild(w)}chat.msgs.push(um);deletable(ub,um);let foreign=false,ttsErr=false,mailUsed=false,outsideUsed=false;
   const el=chatLog('assistant','');$('fabtext').textContent='';let full='',llmS=null,audioS=null,err='';const searches=[],sources=[],mems=[],docs=[];
-  const ctrl=new AbortController();chat.ctrl=ctrl;chat.firstPlay=null;chat.gaps=[];chat.blocks=[];chat.t0b=null;setTalk();chatSay(t('Antwort kommt …','Answer coming …'));
+  const ctrl=new AbortController();chat.ctrl=ctrl;chat.firstPlay=null;chat.gaps=[];chat.blocks=[];chat.t0b=null;chat.stalls=0;chat.pieceStart=true;setTalk();chatSay(t('Antwort kommt …','Answer coming …'));
   try{const r=await api('/api/chat',{method:'POST',headers:{'Content-Type':'application/json'},signal:ctrl.signal,
       body:JSON.stringify({messages:chat.msgs.slice(-20),tz:(()=>{try{return Intl.DateTimeFormat().resolvedOptions().timeZone}catch{return ''}})(),voice:PROFILE&&S.voice||undefined,speed:S.speed,length:S.length,reminders:PROFILE?undefined:rem.list,convo:chat.cid||undefined,speaker:spk&&spk.token||undefined,images:pids.length?pids:undefined})});
     const rd=r.body.getReader(),dec=new TextDecoder();let buf='';
@@ -231,7 +235,7 @@ const ub=chatLog('user',text);const um={role:'user',content:text};
       while((i=buf.indexOf('\n\n'))>=0){const line=buf.slice(0,i).split('\n').find(l=>l.startsWith('data:'));buf=buf.slice(i+2);if(!line)continue;
         const ev=JSON.parse(line.slice(5));
         if(ev.type==='text'){full+=ev.delta;el.classList.remove('typing');el.textContent=full;$('fabtext').textContent=full;$('chatlog').scrollTop=1e9}
-        else if(ev.type==='tts_request'){chat.blocks.push('| '+ev.chars+t(' Zeichen:',' chars:'))}
+        else if(ev.type==='tts_request'){chat.pieceStart=true;chat.blocks.push('| '+ev.chars+t(' Zeichen:',' chars:'))}
         else if(ev.type==='audio'){playPcm(ev.audio);if(chat.pctx.state==='running')chatSay(t('Spricht …','Speaking …'));startBarge()}
         else if(ev.type==='retract'){full=full.slice(0,full.length-ev.drop);el.textContent=full}
         else if(ev.type==='truncated'){full=full.slice(0,full.length-ev.drop).trimEnd();el.textContent=full+' … '+t('(Längenlimit erreicht: Konfiguration → Assistent → Max. Tokens)','(length limit reached: Configuration → Assistant → Max. tokens)')}
@@ -382,7 +386,7 @@ function fillConvos(){const l=convos.load(),d=x=>new Date(x).toLocaleString(L===
 function openConvo(id,picked){const c=id&&convos.load().find(x=>x.id===id);chat.cid=c?c.id:null;chat.picked=!!(c&&picked);chat.msgs=c?c.msgs.slice():[];
   $('chatlog').innerHTML='';$('chattiming').textContent='';chat.msgs.forEach(m=>deletable(chatLog(m.role,m.content),m));fillConvos()}
 // Speaks a text with this profile's voice (reminders, "read again"); Stop and barge-in end it.
-async function sayText(text){stopAnswer();const ctrl=new AbortController();chat.ctrl=ctrl;chat.firstPlay=null;chat.gaps=[];chat.blocks=null;setTalk();chatSay(t('Spricht …','Speaking …'));
+async function sayText(text){stopAnswer();const ctrl=new AbortController();chat.ctrl=ctrl;chat.firstPlay=null;chat.gaps=[];chat.blocks=null;chat.stalls=0;setTalk();chatSay(t('Spricht …','Speaking …'));
   try{const r=await api('/api/assistant/say',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({text}),signal:ctrl.signal});
     const rd=r.body.getReader(),dec=new TextDecoder();let buf='';
     for(;;){const{value,done}=await rd.read();if(done)break;buf+=dec.decode(value,{stream:true});let i;

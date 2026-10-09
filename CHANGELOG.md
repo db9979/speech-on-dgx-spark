@@ -2,6 +2,7 @@
 
 Every version in one line, newest first (taken from the commit messages, so some lines are German, some English). Older entries have no version number.
 
+- **V01.0.219** · 2026-10-09 · Aussetzer mitten im Satz: der Browser puffert danach länger (mehr nach jedem weiteren), damit es einmal stockt statt dauernd; das Log trennt „before the piece“ (Pause zwischen Sätzen) von „inside the piece“ (echter Aussetzer)
 - **V01.0.218** · 2026-10-09 · Schnellere Antwort: Admin-Schalter chat.prompt_cache (aus) gibt die Uhrzeit mit der Frage statt früh in der Systemanweisung, damit vLLM Anweisung, Werkzeuge und Verlauf aus dem Präfix-Cache nimmt; Diagnose „Gespräch“ schreibt pro Antwort Zeitzeilen (Vorbereitung, Tokens gelesen/aus Cache, erstes Wort, Denktext, Werkzeuge, erster Ton)
 - **V01.0.217** · 2026-10-09 · Logs: Die Bereiche (Gespräch, Telegram, Raum …) zählen wieder; neuere journalctl-Versionen schreiben die Zeitzone als „+02:00“, das erkannte das Panel nicht, deshalb standen alle Rubriken auf 0
 - **V01.0.216** · 2026-10-09 · Logs: Update-Zeilen mit Versionstext („Available“, „Update finished“) werden nicht mehr rot, nur weil im Text „Fehler“ steht
