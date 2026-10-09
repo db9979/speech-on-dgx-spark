@@ -31,6 +31,7 @@ Alle Optionen ohne Rückfragen (`--mode api --asr 1.7b --tts 0.6b --yes` …) st
 
 <!-- New version: add one line at the top here and in CHANGELOG.md, drop the oldest line here (keep 10). Details go to docs/de and docs/en, not into this README. -->
 
+- **V01.0.229** Update auf tars klappt wieder: ein Selbsttest von .225 suchte install.sh, das beim Update-Selbsttest nicht dabei ist
 - **V01.0.228** Zustand: Karte „Eigene Dokumente“ unter Zustand → Monitoring zeigt, ob das Bedeutungs-Modell läuft (mit Arbeitsspeicher), startet, auf freien Speicher wartet oder einen Fehler hat, wie viele Stücke schon eine Bedeutung haben und wie viele Seiten noch aufs Lesen warten (nur Zahlen, nur Admin, sichtbar wenn ein Schalter an ist)
 - **V01.0.227** iPhone-App: „Meine Dokumente“ ansehen (PDF und Bilder in Apples Vorschau, sonst der gespeicherte Text)
 - **V01.0.226** Fremde Stimme bekam am Lautsprecher die Mails des Inhabers: Persönliches (Mail, Termine, Erinnerungen, Gedächtnis, Dokumente, Smart Home …) gibt es am Lautsprecher nur noch für die sicher erkannte Stimme des Inhabers, sonst Gastrechte mit kurzem Hinweis (feste Regel, ohne Schalter); Logs → Lautsprecher zeigt jede abgewiesene Frage gelb mit Grund
@@ -40,7 +41,6 @@ Alle Optionen ohne Rückfragen (`--mode api --asr 1.7b --tts 0.6b --yes` …) st
 - **V01.0.222** Passwörter und Codes werden nie ausgesprochen: Passwörter, Codewörter, PINs/TANs, Einmalcodes und Schlüssel sagt die Stimme auf allen Wegen (Browser, Lautsprecher, Telegram-Sprachnachricht, Wyoming, Siri) als „nur schriftlich sichtbar“; im geschriebenen Text bleiben sie stehen (feste Regel, ohne Schalter)
 - **V01.0.221** Raum-Modus am Lautsprecher antwortet nur noch einmal: beendet das Board sein Zuhören, geht der Satz an den Raum-Modus statt zusätzlich als normale Frage
 - **V01.0.220** Antwort beginnt früher: Gezielte Werkzeugwahl kann unklaren Fragen nur Websuche und Gedächtnis zeigen (Auswahl „nur Websuche und Gedächtnis“, aus), die Anfrage wird halb so lang; ein langer erster Satz geht schon ab 50 Zeichen am Komma zur Sprachausgabe
-- **V01.0.219** Aussetzer mitten im Satz: der Browser puffert danach länger (mehr nach jedem weiteren), damit es einmal stockt statt dauernd; das Log trennt „before the piece“ (Pause zwischen Sätzen) von „inside the piece“ (echter Aussetzer)
 
 Alle Versionen: [CHANGELOG.md](CHANGELOG.md)
 

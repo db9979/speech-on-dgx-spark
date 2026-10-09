@@ -2,6 +2,7 @@
 
 Every version in one line, newest first (taken from the commit messages, so some lines are German, some English). Older entries have no version number.
 
+- **V01.0.229** · 2026-10-09 · Update-Selbsttest auf tars lief auf einen Fehler: der Vorrang-Test las install.sh, das im Selbsttest (nur app/) fehlt; er überspringt sich jetzt dort
 - **V01.0.228** · 2026-10-09 · Zustand: Karte „Eigene Dokumente“ unter Zustand → Monitoring zeigt, ob das Bedeutungs-Modell läuft (mit Arbeitsspeicher), startet, auf freien Speicher wartet oder einen Fehler hat, wie viele Stücke schon eine Bedeutung haben und wie viele Seiten noch aufs Lesen warten (nur Zahlen, nur Admin, sichtbar wenn ein Schalter an ist)
 - **V01.0.227** · 2026-10-09 · iPhone-App: „Meine Dokumente“ ansehen (PDF und Bilder in Apples Vorschau, sonst der gespeicherte Text)
 - **V01.0.226** · 2026-10-09 · Lautsprecher im Raum sind geteilt: Persönliches (Mail, Termine, Erinnerungen, Gedächtnis, Dokumente, Kontakte, Nachrichten, Smart Home …) nur, wenn die Sprechererkennung in derselben Aufnahme die Stimme des Inhabers sicher erkennt; jede andere Stimme bekommt Gastrechte und einen kurzen Hinweis, frühere Antworten am Lautsprecher gehen nicht mit (feste Regel, ohne Schalter; chat_turn.shared_stranger, esp32.voice_check); Logs → Lautsprecher zeigt jede abgewiesene Frage gelb mit Grund, nie mit Inhalt

@@ -31,6 +31,7 @@ All options for running without questions (`--mode api --asr 1.7b --tts 0.6b --y
 
 <!-- New version: add one line at the top here and in CHANGELOG.md, drop the oldest line here (keep 10). Details go to docs/de and docs/en, not into this README. -->
 
+- **V01.0.229** Updates on tars work again: a self-test from .225 looked for install.sh, which the update self-test does not have
 - **V01.0.228** Status: card “Own documents” under Zustand → Monitoring shows whether the meaning model runs (with its memory), starts, waits for free memory or failed, how many pieces have a meaning and how many pages wait to be read (counts only, admin only, shown while a switch is on)
 - **V01.0.227** iPhone app: look at "My documents" (PDFs and pictures in Apple's preview, otherwise the stored text)
 - **V01.0.226** Another voice got the owner's mail at a speaker: personal things (mail, appointments, reminders, memory, documents, smart home …) at a speaker now only for the clearly recognized owner's voice, else guest rights with a short note (fixed rule, no switch); Logs → speakers shows each refused question in yellow with its reason
@@ -40,7 +41,6 @@ All options for running without questions (`--mode api --asr 1.7b --tts 0.6b --y
 - **V01.0.222** Passwords and codes are never spoken: passwords, code words, PINs/TANs, one-time codes and keys are said as "nur schriftlich sichtbar" on every path (browser, speaker, Telegram voice, Wyoming, Siri); the written text keeps them (fixed rule, no switch)
 - **V01.0.221** Room mode on a speaker answers only once: when the board ends its listening, the sentence goes to room mode instead of also as a normal question
 - **V01.0.220** Answer starts sooner: targeted tool choice can show unclear questions only web search and memory (choice "only web search and memory", off), halving the request; a long first sentence goes to speech output at its comma from 50 characters on
-- **V01.0.219** Stalls mid-sentence: the browser buffers longer afterwards (more after each further one), so it stalls once instead of stuttering; the log tells "before the piece" (pause between sentences) from "inside the piece" (real stall)
 
 All versions: [CHANGELOG.md](CHANGELOG.md)
 
