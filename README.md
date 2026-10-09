@@ -31,6 +31,7 @@ All options for running without questions (`--mode api --asr 1.7b --tts 0.6b --y
 
 <!-- New version: add one line at the top here and in CHANGELOG.md, drop the oldest line here (keep 10). Details go to docs/de and docs/en, not into this README. -->
 
+- **V01.0.217** Logs: the areas (conversation, Telegram, room …) count again; newer journalctl writes the time zone as "+02:00", which the panel did not recognize, so every area showed 0
 - **V01.0.216** Logs: update lines quoting a version text ("Available", "Update finished") no longer turn red just because the text says "Fehler"
 - **V01.0.215** Logs: the log page's own requests no longer count as errors ("f=errors" in the address) and stay out of the journal; for web requests only the status code decides
 - **V01.0.214** Telegram conflict fixed: the panel started its background tasks (Telegram polling, reminders, watchdog …) twice, because the https server ran them again; now once. If Telegram still reports a conflict, the Spark waits longer and longer, logs rarely and shows a hint under State; a weather service outage (503) is retried quietly
@@ -40,7 +41,6 @@ All options for running without questions (`--mode api --asr 1.7b --tts 0.6b --y
 - **V01.0.210** Text instead of speech is explained: if the browser holds back sound, the assistant says "tap once" and speaks afterwards; if speech output fails, the reason shows as "chat: tts …" in the diagnosis log
 - **V01.0.209** Room mode in the iPhone app: line “… listens until …” with Stop at the top of the chat, Live Activity with time left, “Raum-Modus” widget, Siri “End room mode with Spark” (only ending, never starting)
 - **V01.0.208** Room mode visible: green strip “… listens until …” on every page, Me → Room mode “Active now” with +30 min/Stop, Status “Listening right now” with “Stop all”, mark and filter in Profiles and devices, “● Room” in the tab title, reminder tone, note when a speaker starts, history without text, key for Home Assistant
-- **V01.0.207** Settings made consistent: same building blocks on every page, menu Assistant/Speech/Spark, "At a glance", update and backup under Settings, Status and Einbinden with a column or list like Settings
 
 All versions: [CHANGELOG.md](CHANGELOG.md)
 

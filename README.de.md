@@ -31,6 +31,7 @@ Alle Optionen ohne Rückfragen (`--mode api --asr 1.7b --tts 0.6b --yes` …) st
 
 <!-- New version: add one line at the top here and in CHANGELOG.md, drop the oldest line here (keep 10). Details go to docs/de and docs/en, not into this README. -->
 
+- **V01.0.217** Logs: Die Bereiche (Gespräch, Telegram, Raum …) zählen wieder; neuere journalctl-Versionen schreiben die Zeitzone als „+02:00“, das erkannte das Panel nicht, deshalb standen alle Rubriken auf 0
 - **V01.0.216** Logs: Update-Zeilen mit Versionstext („Available“, „Update finished“) werden nicht mehr rot, nur weil im Text „Fehler“ steht
 - **V01.0.215** Logs: Die eigenen Abrufe der Logs-Seite zählen nicht mehr als Fehler („f=errors“ in der Adresse) und stehen nicht mehr im Journal; bei Webanfragen entscheidet nur der Statuscode
 - **V01.0.214** Telegram-Konflikt behoben: Das Panel startete seine Hintergrundaufgaben (Telegram-Abruf, Erinnerungen, Wächter …) doppelt, weil der https-Server sie noch einmal ausführte; jetzt einmal. Meldet Telegram trotzdem einen Konflikt, wartet der Spark immer länger, schreibt selten ins Log und zeigt unter Zustand einen Hinweis; Wetterdienst-Ausfall (503) wird still wiederholt
@@ -40,7 +41,6 @@ Alle Optionen ohne Rückfragen (`--mode api --asr 1.7b --tts 0.6b --yes` …) st
 - **V01.0.210** Nur Text statt Sprache wird erklärt: hält der Browser den Ton zurück, sagt der Assistent „Einmal tippen“ und spricht danach; fällt die Sprachausgabe aus, steht der Grund als „chat: tts …“ im Diagnose-Log
 - **V01.0.209** Raum-Modus in der iPhone-App: Zeile „… hört zu bis …“ mit Beenden oben im Chat, Live-Aktivität mit Restzeit, Widget „Raum-Modus“, Siri „Raummodus beenden mit Spark“ (nur beenden, nie starten)
 - **V01.0.208** Raum-Modus sichtbar: grüner Streifen „… hört zu bis …“ auf jeder Seite, Ich → Raum-Modus „Gerade aktiv“ mit +30 Min./Beenden, Zustand „Hört gerade zu“ mit „Alle beenden“, Marke und Filter in Profile und Geräte, Tab-Titel „● Raum“, Erinnerungston, Mitteilung bei Start am Lautsprecher, Verlauf ohne Text, Schlüssel für Home Assistant
-- **V01.0.207** Einstellungen einheitlich: gleiche Bausteine auf allen Seiten, Menü Assistent/Sprache/Spark, „Auf einen Blick“, Update und Sicherung unter Einstellungen, Zustand und Einbinden mit Spalte bzw. Liste
 
 Alle Versionen: [CHANGELOG.md](CHANGELOG.md)
 

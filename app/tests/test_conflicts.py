@@ -97,6 +97,18 @@ class OwnRequests(unittest.TestCase):
             self.assertEqual(logfilter.parse(pre + msg)["level"], "", msg)
         self.assertEqual(logfilter.parse(pre + "Update failed: tests did not pass")["level"], "err")
 
+    def test_newer_journalctl_time_with_colon_still_finds_the_area(self):
+        """V01.0.217: journalctl prints +02:00 instead of +0200; then every area stayed at 0."""
+        import logfilter
+        for ts in ("2026-10-09T18:35:30+02:00", "2026-10-09T18:35:30+0200", "2026-10-09T16:35:30Z"):
+            r = logfilter.parse(ts + " tars python[1]: chat: web search 3 hits")
+            self.assertEqual((r["area"], r["t"]), ("search", ts[11:19]), ts)
+        rows = [logfilter.parse("2026-10-09T18:35:30+02:00 tars python[1]: telegram: linked a profile")]
+        now = logfilter._when("2026-10-09T18:40:00+02:00")
+        d = logfilter.summary(rows, 60, now)
+        self.assertEqual(d["counts"]["telegram"], 1)
+        self.assertEqual(sum(d["spark"]["telegram"]), 1)
+
     def test_log_page_polls_stay_out_of_the_journal(self):
         import logging
         import common

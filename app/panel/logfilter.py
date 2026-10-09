@@ -55,7 +55,7 @@ HINTS = (
      "Telegram fails: check the bot under Integrate → Telegram."),
 )
 _HINTS = [(a, re.compile(rx), de, en) for a, rx, de, en in HINTS]
-_LINE = re.compile(r"^(\d{4}-\d\d-\d\dT\d\d:\d\d:\d\d[+-]\d{4})\s+\S+\s+([^:\s]+?)(?:\[\d+\])?:\s?(.*)$")
+_LINE = re.compile(r"^(\d{4}-\d\d-\d\dT\d\d:\d\d:\d\d(?:[+-]\d\d:?\d\d|Z))\s+\S+\s+([^:\s]+?)(?:\[\d+\])?:\s?(.*)$")
 BUCKETS = 12
 UPDATE_UNIT = "speech-spark-update"
 MINUTES = (10, 60, 120, 720, 1440)
