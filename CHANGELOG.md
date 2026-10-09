@@ -2,6 +2,7 @@
 
 Every version in one line, newest first (taken from the commit messages, so some lines are German, some English). Older entries have no version number.
 
+- **V01.0.199** · 2026-10-09 · Browser-Test: eingeschaltete Funktion und neue Version erscheinen ohne F5 (fängt Fehler wie in .197)
 - **V01.0.198** · 2026-10-09 · Panel lädt wieder: Anfrage-Hilfsfunktion aus .197 gab nichts zurück (Fehler „reading 'json'“)
 - **V01.0.197** · 2026-10-09 · Im Admin-Menü eingeschaltete Funktionen erscheinen nach dem Speichern sofort (Seite lädt selbst neu), API-Antworten werden nie zwischengespeichert; Selbsttest gegen Skript-/CSS-Links ohne Version
 - **V01.0.196** · 2026-10-09 · Nachrichten: Bitte zu schreiben geht auch nach einer Antwort aus Web/Mail; fehlt das Werkzeug, nennt der Assistent den echten Grund

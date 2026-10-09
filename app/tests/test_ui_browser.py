@@ -110,6 +110,40 @@ class Browser(unittest.TestCase):
                     await br.close()
         self.run_async(go())
 
+    def test_switch_and_update_show_without_f5(self):
+        # a function switched on and saved shows at once (the page loads itself again, V01.0.197), and a new
+        # version on the Spark reloads an idle page with the new files (V01.0.120); api() still answers
+        import account
+        import panel
+        async def go():
+            async with async_playwright() as p:
+                br, pg, errors = await self.page(p, 1280, 900)
+                self.assertFalse(await pg.evaluate("TR_ON"))
+                async with pg.expect_navigation():
+                    await pg.evaluate("""(async()=>{const c=await (await api('/api/config')).json();c.chat.transit=true;
+                      const r=await api('/api/config',{method:'PUT',headers:{'Content-Type':'application/json'},body:JSON.stringify(c)});
+                      window.putOk=!!(r&&r.ok)})()""")
+                await pg.wait_for_timeout(800)
+                self.assertTrue(await pg.evaluate("TR_ON"))
+                self.assertIn("Gespeichert", await pg.evaluate("$('updtoast').textContent"))
+                old_p, old_a = panel.app_version, account.app_version
+                panel.app_version = account.app_version = lambda: "V99.0.1"
+                try:
+                    async with pg.expect_navigation():
+                        await pg.evaluate("verWatch.back=Date.now();verCheck()")
+                    await pg.wait_for_timeout(500)
+                    self.assertEqual(await pg.evaluate("SPARK_VER"), "V99.0.1")
+                    self.assertIn("/static/js/base.js?v=V99.0.1",
+                                  await pg.evaluate("[...document.scripts].map(s=>s.src).join(' ')"))
+                finally:
+                    panel.app_version, account.app_version = old_p, old_a
+                self.assertEqual(errors, [])
+                await br.close()
+        try:
+            self.run_async(go())
+        finally:
+            helpers.set_config(transit=False)
+
     def test_zustand_says_how_it_is_and_what_needs_you(self):
         """V01.0.146: Zustand starts with one sentence and lists unsaved settings pages under "Braucht dich"
         with a button that opens the page; the dot in the menu follows the sentence. (Services may also be
