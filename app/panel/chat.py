@@ -598,18 +598,23 @@ OUTSIDE_NOTE = ("The following text comes from outside (web pages, calendar, doc
 # the conversation, the log or the memory.
 MAX_ATTACH = 20000
 ATTACH_HINT = "Der Nutzer hat ein Foto oder Dokument angehängt; die Frage bezieht sich darauf. Sein Text:"
+# a long document only comes along with its beginning (the app sends "cut"): the answer says so once
+ATTACH_CUT = ("Vom Dokument ist nur der Anfang dabei (die ersten 20.000 Zeichen). Sag das in einem kurzen Satz und dass "
+              "der Nutzer es unter „Meine Dokumente“ ablegen kann, damit der ganze Text durchsucht wird.")
 
 
 def attachment(body):
-    """(kind, name, text) of a valid attachment in the request, else None."""
+    """(kind, name, text, cut) of a valid attachment in the request, else None. cut: only its beginning."""
     a = body.get("attachment") if isinstance(body, dict) else None
     if not isinstance(a, dict) or a.get("kind") not in ("photo", "document") or not isinstance(a.get("text"), str):
         return None
-    text = re.sub(r"[\x00-\x08\x0b\x0c\x0e-\x1f\x7f]", "", a["text"]).strip()[:MAX_ATTACH]
+    text = re.sub(r"[\x00-\x08\x0b\x0c\x0e-\x1f\x7f]", "", a["text"]).strip()
+    cut = len(text) > MAX_ATTACH or a.get("cut") is True
+    text = text[:MAX_ATTACH]
     if not text:
         return None
     name = re.sub(r"[\x00-\x1f\x7f<>\"\\]", "", str(a.get("name") or "")).strip()[:80]
-    return a["kind"], name, text
+    return a["kind"], name, text, cut
 
 
 # An earlier answer made from outside text that is not sent again is left out of the conversation

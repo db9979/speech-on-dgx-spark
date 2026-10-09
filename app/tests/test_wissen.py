@@ -54,9 +54,11 @@ def jpeg(w=400, h=300, exif=None):
     return out.getvalue()
 
 
-def scanned_pdf():
+def scanned_pdf(sizes=((800, 1100),)):
+    """One scanned page per size (a picture without any text layer)."""
     out = io.BytesIO()
-    Image.new("RGB", (800, 1100), (250, 250, 250)).save(out, "PDF")
+    pics = [Image.new("RGB", wh, (250, 250, 250)) for wh in sizes]
+    pics[0].save(out, "PDF", save_all=True, append_images=pics[1:])
     return out.getvalue()
 
 
@@ -396,6 +398,48 @@ class Pictures(Base):
         self.assertEqual(hit["page"], 1)
         self.assertEqual(wissen.where(hit), "scan.pdf, Seite 1")
 
+    def test_whole_pages_are_rendered_and_limits_are_named(self):
+        c = profile("Wselma")
+        self.switch(c, pictures=True)
+        # a page whose picture is small (scanners storing strips lost such pages before V01.0.238)
+        r = upload(c, "streifen.pdf", scanned_pdf(((800, 1100), (150, 150), (800, 1100))))
+        self.assertEqual(r.status_code, 200, r.text)
+        self.assertEqual(r.json()["todo"], 3)
+        pages = sorted(p for _, _, p, _, _ in [documents.next_page(uid_of("Wselma"))])
+        self.assertEqual(pages, [1])
+        old = documents.MAX_SCAN_PAGES
+        documents.MAX_SCAN_PAGES = 2
+        try:
+            r = upload(c, "lang.pdf", scanned_pdf(((800, 1100),) * 3))
+        finally:
+            documents.MAX_SCAN_PAGES = old
+        self.assertEqual(r.json()["todo"], 2)
+        d = [x for x in documents.list_docs(uid_of("Wselma")) if x["name"] == "lang.pdf"][0]
+        self.assertIn("nur die ersten 2 von 3 Seiten", d["note"])
+
+    def test_read_again_from_the_original_keeps_place_and_switches(self):
+        c, other = profile("Wtilda"), profile("Wudo")
+        self.switch(c, pictures=True, originals=True, shared=True)
+        uid = uid_of("Wtilda")
+        doc = upload(c, "scan.pdf", scanned_pdf(((800, 1100), (800, 1100)))).json()["id"]
+        run(wissen.due_once(idle=True, now=NOW + 21 * 86400))
+        run(wissen.due_once(idle=True, now=NOW + 21 * 86400))
+        c.put(f"/api/profile/wissen/{doc}", json={"shared": True})
+        c.put(f"/api/profile/wissen/{doc}", json={"use": False})
+        d = [x for x in documents.list_docs(uid) if x["id"] == doc][0]
+        self.assertEqual((d["state"], d["todo"]), ("ready", 0))
+        r = c.post(f"/api/profile/wissen/{doc}/reread")
+        self.assertEqual(r.status_code, 200, r.text)
+        self.assertEqual((r.json()["id"], r.json()["todo"]), (doc, 2))
+        d = [x for x in documents.list_docs(uid) if x["id"] == doc][0]
+        self.assertEqual((d["state"], d["todo"], d["chunks"], d["shared"], d["use"]), ("reading", 2, 0, True, False))
+        # only the owner, only with a kept original, never a guest
+        self.assertEqual(other.post(f"/api/profile/wissen/{doc}/reread").status_code, 409)
+        self.assertEqual(TestClient(panel.app).post(f"/api/profile/wissen/{doc}/reread").status_code, 401)
+        self.switch(c, originals=False)
+        plain = upload(c, "notiz.txt", b"Ohne Original aufbewahrt. " * 3).json()["id"]
+        self.assertEqual(c.post(f"/api/profile/wissen/{plain}/reread").status_code, 409)
+
     def test_picture_from_the_chat_only_with_both_switches(self):
         c = profile("Wchiara")
         helpers.set_config(images=True)
@@ -530,6 +574,20 @@ class Worker(Base):
             docembed.WORKER, docembed.MIN_FREE_GIB = old
             if os.path.exists(docembed.PINS):
                 os.remove(docembed.PINS)
+
+
+class Attachment(Base):
+    def test_a_long_document_says_it_is_only_the_beginning(self):
+        import chat
+        short = chat.attachment({"attachment": {"kind": "document", "name": "a", "text": "kurz"}})
+        self.assertFalse(short[3])
+        self.assertTrue(chat.attachment({"attachment": {"kind": "document", "text": "x" * 30000}})[3])
+        self.assertTrue(chat.attachment({"attachment": {"kind": "document", "text": "x", "cut": True}})[3])
+        c = profile("Wvalentin")
+        helpers.LLM_CALLS.clear()
+        c.post("/api/chat", json={"messages": [{"role": "user", "content": "Worum geht es?"}],
+                                  "attachment": {"kind": "document", "name": "vertrag.pdf", "text": "Vertrag " * 5000}})
+        self.assertIn("nur der Anfang", helpers.LLM_CALLS[0]["messages"][0]["content"])
 
 
 class Shared(Base):

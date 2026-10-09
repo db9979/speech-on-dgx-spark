@@ -26,6 +26,7 @@ it (chat.READS_OUTSIDE), and nothing from documents is learned into the memory.
     PUT  /api/profile/wissen/{id}            {"use": bool} searched or not, {"shared": bool} "Für alle"
     GET  /api/profile/wissen/{id}/file       the kept original (?view=1: pictures and PDFs in the browser)
     GET  /api/profile/wissen/{id}/text       the stored text, to look at a document again
+    POST /api/profile/wissen/{id}/reread     read it again from the kept original (owner only)
     POST /api/profile/wissen/search          {"q"}  try the search without the language model
     POST /api/profile/wissen/picture         {"id"}  a picture from the chat (images.py) into the documents
 """
@@ -346,6 +347,22 @@ def read_again(doc_id: str, request: Request, prof=Depends(reader)):
             got["owner"] = (profiles.by_id(owner) or {}).get("name", "?")
     if not got:
         raise HTTPException(404, "no such document")
+    return got
+
+
+@router.post("/api/profile/wissen/{doc_id}/reread", dependencies=[Depends(assistant)])
+async def reread(doc_id: str, request: Request, prof=Depends(browser_profile)):
+    """Reads one of the profile's own documents again (after better reading came in, V01.0.238). Only from
+    the kept original, only in the owner's database; the pages count towards the daily limit."""
+    _docs_on()
+    guard.limit(request, "doc", prof["id"], False)
+    try:
+        got = await asyncio.to_thread(documents.reread, prof["id"], doc_id, on(prof["id"], "pictures"))
+    except ValueError as e:
+        raise HTTPException(400, str(e))
+    if not got:
+        raise HTTPException(409, "the original is not kept: upload the file again")
+    print(f"wissen: document read again ({got['chunks']} pieces, {got['todo']} pages waiting)", flush=True)
     return got
 
 

@@ -29,7 +29,7 @@ jobs:
       - name: Install
         run: |
           python -m pip install -q fastapi "uvicorn[standard]" python-multipart httpx psutil num2words numpy pypdf \
-            icalendar recurring-ical-events cryptography segno "pillow==11.3.0" playwright
+            icalendar recurring-ical-events cryptography segno "pillow==11.3.0" "pypdfium2==4.30.0" playwright
           python -m playwright install --with-deps chromium
           sudo apt-get install -y -q ffmpeg
       - name: Self-tests

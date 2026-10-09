@@ -126,9 +126,10 @@ async def prepare(request):
     attach = chat.attachment(body) if messages[-1]["role"] == "user" else None
     if attach:
         carry = carry or "outside"
-        kind, name, text = attach
+        kind, name, text, cut = attach
         system = (system + "\n\n" + chat.ATTACH_HINT + " " + ("Foto" if kind == "photo" else "Dokument")
-                  + (f" „{name}“" if name else "") + "\n" + chat.wrap_outside(text)).strip()
+                  + (f" „{name}“" if name else "") + "\n" + chat.wrap_outside(text)
+                  + ("\n" + chat.ATTACH_CUT if cut and kind == "document" else "")).strip()
         print("chat: attachment", kind, len(text), "chars, answer locked like outside text", flush=True)
     # the time changes every minute: early in the system prompt it would make the model read the
     # prompt, all tools and the whole history anew each turn. With chat.prompt_cache it goes with the

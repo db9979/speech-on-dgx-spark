@@ -51,6 +51,7 @@ async function showDocs(){if(!DOCS_ON){$('docbox').style.display='none';return}$
     (I&&I.allow.shared&&I.on.shared&&d.state==='ready'?`<label class="docshare" title="${esc(t('Alle Profile mit „Gemeinsame Dokumente“ finden und öffnen es','Every profile with "Shared documents" finds and opens it'))}"><input type="checkbox" data-docshare="${esc(d.id)}"${d.shared?' checked':''}> ${t('Für alle','For everyone')}</label>`:'')+
     `<label class="tgl" title="${esc(t('Der Assistent sucht darin','The assistant searches it'))}"><input type="checkbox" data-docuse="${esc(d.id)}"${d.use?' checked':''}><i></i></label>`+
     `<button class="b" type="button" data-docview="${esc(d.id)}">${t('Ansehen','View')}</button>`+
+    (d.file&&d.state!=='reading'?`<button class="b" type="button" data-docreread="${esc(d.id)}" title="${esc(t('Aus dem aufbewahrten Original neu einlesen','Read again from the kept original'))}">${t('Neu einlesen','Read again')}</button>`:'')+
     `<button class="b" type="button" data-docdel="${esc(d.id)}" data-name="${esc(d.name)}">${t('Löschen','Delete')}</button></li>`}).join('')||`<li class="mut">${t('Noch keine Dokumente.','No documents yet.')}</li>`;
   const bits=[];if(I&&I.quota)bits.push(t(`Originale: ${docSize(I.usage)} von ${docSize(I.quota)}`,`Originals: ${docSize(I.usage)} of ${docSize(I.quota)}`));
   if(I&&I.allow.pictures&&I.on.pictures)bits.push(t(`heute ${I.today} von ${I.day_pages} Seiten gelesen`,`${I.today} of ${I.day_pages} pages read today`));
@@ -85,10 +86,15 @@ async function docView(id){const box=$('docview');box.hidden=false;box.textConte
     let page;for(const p of d.parts){if(p.page&&p.page!==page){page=p.page;const h=document.createElement('div');h.className='dvpage';h.textContent=t('Seite ','Page ')+p.page;box.appendChild(h)}
       const tx=document.createElement('p');tx.className='dvtext';tx.textContent=p.text;box.appendChild(tx)}
     if(!d.parts.length){const m=document.createElement('p');m.className='mut';m.textContent=d.state==='reading'?t('Wird noch gelesen.','Still being read.'):t('Kein Text.','No text.');box.appendChild(m)}
+    if(!d.file&&!d.owner){const m=document.createElement('p');m.className='mut';m.textContent=t('Original nicht aufbewahrt: Zum Neu-Einlesen die Datei neu hochladen.','Original not kept: to read it again, upload the file again.');box.appendChild(m)}
     if(d.cut){const m=document.createElement('p');m.className='mut';m.textContent=t('… gekürzt','… shortened');box.appendChild(m)}
     box.scrollIntoView({block:'nearest'})}
   catch(x){box.textContent=x.message}}
 $('doclist').onclick=async e=>{const v=e.target.closest('[data-docview]');if(v){docView(v.dataset.docview);return}
+  const rr=e.target.closest('[data-docreread]');
+  if(rr){rr.disabled=true;try{const r=await (await api('/api/profile/wissen/'+encodeURIComponent(rr.dataset.docreread)+'/reread',{method:'POST'})).json();
+      $('docmsg').textContent=r.todo?t(`Wird neu gelesen: ${r.todo} Seiten warten.`,`Being read again: ${r.todo} pages waiting.`):t(`Neu eingelesen: ${r.chunks} Abschnitte.`,`Read again: ${r.chunks} sections.`)}
+    catch(x){$('docmsg').innerHTML=`<span class="err">${esc(x.message)}</span>`}showDocs();return}
   const b=e.target.closest('[data-docdel]');if(!b)return;
   if(!confirm(t('Dokument „','Delete document "')+b.dataset.name+t('“ löschen?','"?')))return;await api('/api/profile/docs/'+encodeURIComponent(b.dataset.docdel),{method:'DELETE'});showDocs()};
 async function docTry(){const q=$('docq').value.trim();if(!q)return;$('dochits').innerHTML=`<li class="mut">${t('Suche …','Searching …')}</li>`;

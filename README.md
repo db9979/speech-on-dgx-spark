@@ -31,6 +31,7 @@ All options for running without questions (`--mode api --asr 1.7b --tts 0.6b --y
 
 <!-- New version: add one line at the top here and in CHANGELOG.md, drop the oldest line here (keep 10). Details go to docs/de and docs/en, not into this README. -->
 
+- **V01.0.238** Complete scans: scanned PDF pages are rendered as whole pages (pypdfium2 4.30.0) instead of taking the biggest picture, so no pages get lost; up to 300 scanned pages per document (100 a day, then the next day); limits and skipped pages are named on the document; "Read again" from the kept original (keeps place, "For everyone" and search); a shortened chat attachment from the app says it is only the beginning
 - **V01.0.237** Update check: GitHub limit of 60 questions per hour recognised (notice with time instead of an error flood), status code in the log
 - **V01.0.236** Shared documents: a profile shares single finished documents with "For everyone" (no new reading), the other profiles find them in their search and see them under Ich → Dokumente → "Shared for everyone by others"; only the owner or the admin (Zustand → Monitoring) takes it back; never guests or unknown voices at a speaker; admin and profile switch, both off
 - **V01.0.235** Speaker voice check you can follow: Logs → speakers shows per question the match, the value needed and the seconds of speech; a too short question gets asked again as a whole sentence; "teach voice here" takes five sentences
@@ -40,7 +41,6 @@ All options for running without questions (`--mode api --asr 1.7b --tts 0.6b --y
 - **V01.0.231** "Check priority" measures the case with priority like a real conversation (recognition first, then speech output)
 - **V01.0.230** Pebble watch more reliable and the face from the web: the watch retries failed messages, gives up after 30 s without an answer, reports its buffer continuously (a lost report no longer stops the sound), old answers are dropped; the phone sends text before audio, bigger audio pieces (3.8 KB), retries instead of losing silently; one time line per answer in the log (area "Watch"); new and off (admin + profile): "Pair the Pebble watch" with a setup code from Me → Pebble watch, own watch key only for /api/watch/; the watch shows the face picked in the panel (robot or comic)
 - **V01.0.229** Updates on tars work again: a self-test from .225 looked for install.sh, which the update self-test does not have
-- **V01.0.228** Status: card “Own documents” under Zustand → Monitoring shows whether the meaning model runs (with its memory), starts, waits for free memory or failed, how many pieces have a meaning and how many pages wait to be read (counts only, admin only, shown while a switch is on)
 
 All versions: [CHANGELOG.md](CHANGELOG.md)
 

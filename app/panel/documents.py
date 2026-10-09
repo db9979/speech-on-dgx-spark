@@ -40,8 +40,8 @@ MAX_CHARS = 2_000_000          # text per document after extraction
 MAX_UNPACKED = 50 * 1024 * 1024  # an Office file's text parts after unpacking, all together
 MAX_PARTS = 300                # slides or sheets read from one Office file
 MAX_PAGES = 1000
-MAX_SCAN_PAGES = 30            # pages per document handed to the language model
-MAX_QUEUED = 200               # pages per profile waiting for the language model
+MAX_SCAN_PAGES = 300           # pages per document handed to the language model (100 a day, wissen.DAY_PAGES)
+MAX_QUEUED = 600               # pages per profile waiting for the language model
 SCAN_TEXT = 40                 # a PDF page with less text than this (and a picture) counts as scanned
 CHUNK, OVERLAP = 900, 150
 PICTURES = (".jpg", ".jpeg", ".png", ".webp")
@@ -395,12 +395,39 @@ def picture_jpeg(data):
         raise ValueError(f"the picture cannot be read ({type(e).__name__})")
 
 
-def _scan_jpegs(reader, scans):
-    """{page number: JPEG} of the biggest picture on each scanned page (at most MAX_SCAN_PAGES)."""
+def _scan_jpegs(data, reader, scans):
+    """{page number: JPEG} of the scanned pages (at most MAX_SCAN_PAGES): each page rendered whole with
+    pdfium (V01.0.238); without it, the biggest picture on the page as before (scanners that store a page
+    as strips or as JBIG2 lost pages that way)."""
+    try:
+        import pypdfium2 as pdfium
+    except ImportError:
+        pdfium = None
+    out = {}
+    if pdfium is not None:
+        try:
+            pdf = pdfium.PdfDocument(data)
+        except Exception as e:
+            print("documents: pdfium cannot open this PDF:", type(e).__name__, flush=True)
+            pdf = None
+        if pdf is not None:
+            try:
+                for i in scans[:MAX_SCAN_PAGES]:
+                    try:
+                        page = pdf[i]
+                        w, h = page.get_size()
+                        scale = min(4.0, SIDE / max(w, h, 1))      # points -> at most SIDE pixels
+                        im = page.render(scale=scale).to_pil()
+                        out[i + 1] = _jpeg_of(im)
+                        page.close()
+                    except Exception as e:
+                        print("documents: scanned page not rendered:", type(e).__name__, flush=True)
+            finally:
+                pdf.close()
+            return out
     import images
     from PIL import Image
     Image.MAX_IMAGE_PIXELS = images.MAX_PIXELS
-    out = {}
     for i in scans:
         if len(out) >= MAX_SCAN_PAGES:
             break
@@ -449,6 +476,44 @@ def usage(uid):
     return n
 
 
+def _read(name, data, text=None, pictures=False, cleaned=False):
+    """(pieces [(page, text)], {page: JPEG} for the language model, kind, note) of one file.
+    cleaned: a picture kept by the Spark itself (already a cleaned JPEG)."""
+    ext = os.path.splitext(name.lower())[1]
+    pages, todo, kind, notes = [], {}, "text", []
+    if text is not None:
+        pages = [(None, text[:MAX_CHARS])]
+    elif ext in PICTURES:
+        if not pictures:
+            raise ValueError("pictures in documents are off (Einstellungen → Funktionen → Bilder und Scans lesen)")
+        todo, kind = {1: data if cleaned else picture_jpeg(data)}, "picture"
+    elif ext == ".pdf":
+        pages, scans, reader = _pdf(data, pictures)
+        if scans and pictures:
+            todo = _scan_jpegs(data, reader, scans)
+            if todo:
+                kind = "scan"
+            if len(scans) > MAX_SCAN_PAGES:
+                notes.append(f"nur die ersten {MAX_SCAN_PAGES} von {len(scans)} Seiten ohne Text werden gelesen")
+            lost = min(len(scans), MAX_SCAN_PAGES) - len(todo)
+            if lost > 0:
+                notes.append(f"{lost} Seite{'n' if lost > 1 else ''} ohne lesbares Bild übersprungen")
+        elif scans and not "".join(t for _, t in pages).strip():
+            raise ValueError("this PDF has no text layer (scanned pages are read only with "
+                             "Einstellungen → Funktionen → Bilder und Scans lesen)")
+        elif scans:
+            notes.append(f"{len(scans)} Seite{'n' if len(scans) > 1 else ''} ohne Text nicht gelesen "
+                         "(„Bilder und Scans lesen“ ist aus)")
+        if len(pages) and pages[-1][0] and sum(len(t) for _, t in pages) > MAX_CHARS:
+            notes.append(f"Text nach Seite {pages[-1][0]} abgeschnitten")
+    else:
+        pages, _ = extract_pages(name, data)
+    parts = [(p, c) for p, t in pages for c in chunks(_clean_text(t))]
+    if not parts and not todo:
+        raise ValueError("no text found in this file")
+    return parts, todo, kind, "; ".join(notes)
+
+
 def add(uid, name, data, text=None, pictures=False, keep=0, source="upload"):
     """Stores a document. text: already read elsewhere (the iPhone app reads PDFs and scans itself;
     data is then only its size). pictures: photos and scanned pages may wait for the language model.
@@ -456,30 +521,8 @@ def add(uid, name, data, text=None, pictures=False, keep=0, source="upload"):
     if len(data) > MAX_FILE:
         raise ValueError("file is larger than 20 MB")
     name = re.sub(r"[\x00-\x1f\x7f<>\"\\]", "", os.path.basename(str(name or "document")))[:120].strip() or "document"
+    parts, todo, kind, note = _read(name, data, text, pictures)
     ext = os.path.splitext(name.lower())[1]
-    pages, todo, kind, note = [], {}, "text", ""
-    if text is not None:
-        pages = [(None, text[:MAX_CHARS])]
-    elif ext in PICTURES:
-        if not pictures:
-            raise ValueError("pictures in documents are off (Einstellungen → Funktionen → Bilder und Scans lesen)")
-        todo, kind = {1: picture_jpeg(data)}, "picture"
-    elif ext == ".pdf":
-        pages, scans, reader = _pdf(data, pictures)
-        if scans and pictures:
-            todo = _scan_jpegs(reader, scans)
-            if todo:
-                kind = "scan"
-            if len(scans) > MAX_SCAN_PAGES:
-                note = f"nur die ersten {MAX_SCAN_PAGES} Seiten ohne Text werden gelesen"
-        elif scans and not "".join(t for _, t in pages).strip():
-            raise ValueError("this PDF has no text layer (scanned pages are read only with "
-                             "Einstellungen → Funktionen → Bilder und Scans lesen)")
-    else:
-        pages, _ = extract_pages(name, data)
-    parts = [(p, c) for p, t in pages for c in chunks(_clean_text(t))]
-    if not parts and not todo:
-        raise ValueError("no text found in this file")
     doc_id = secrets.token_hex(6)
     stored = ""
     with _Db(uid) as con:
@@ -542,6 +585,37 @@ def set_shared(uid, doc_id, on):
         return False
     with _Db(uid) as con:
         return con.execute("UPDATE docs SET shared=? WHERE id=?", (1 if on else 0, doc_id)).rowcount > 0
+
+
+def reread(uid, doc_id, pictures=False):
+    """Reads a document again from its kept original (V01.0.238): same id, place, "use" and "Für alle";
+    pieces, meaning vectors and waiting pages are replaced. Returns like add, None without an original."""
+    got = original(uid, doc_id)
+    if not got:
+        return None
+    path, name, _ = got
+    with open(path, "rb") as f:
+        data = f.read(MAX_FILE + 1)
+    with _Db(uid) as con:
+        r = con.execute("SELECT name, kind FROM docs WHERE id=?", (doc_id,)).fetchone()
+    if not r:
+        return None
+    parts, todo, kind, note = _read(name, data, None, pictures, cleaned=r["kind"] == "picture")
+    with _Db(uid) as con:
+        waiting = con.execute("SELECT COUNT(*) FROM pages WHERE doc<>?", (doc_id,)).fetchone()[0]
+        if todo and waiting + len(todo) > MAX_QUEUED:
+            raise ValueError(f"at most {MAX_QUEUED} pages may wait to be read; try again later")
+        con.execute("DELETE FROM fts WHERE rowid IN (SELECT id FROM chunks WHERE doc=?)", (doc_id,))
+        con.execute("DELETE FROM chunks WHERE doc=?", (doc_id,))
+        con.execute("DELETE FROM pages WHERE doc=?", (doc_id,))
+        con.execute("UPDATE docs SET kind=?, state=?, note=?, pages=? WHERE id=?",
+                    (kind, "reading" if todo else "ready", note, len(todo), doc_id))
+        for i, (page, c) in enumerate(parts):
+            _put_chunk(con, doc_id, i, page, c)
+        for page, jpeg in todo.items():
+            con.execute("INSERT INTO pages (doc, page, jpeg) VALUES (?,?,?)", (doc_id, page, jpeg))
+    return {"id": doc_id, "name": r["name"], "chunks": len(parts), "state": "reading" if todo else "ready",
+            "todo": len(todo), "kind": kind, "file": True}
 
 
 def list_shared(uid):

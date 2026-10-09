@@ -677,7 +677,8 @@ struct SparkAPI {
                         var body: [String: Any] = ["messages": messages, "tz": TimeZone.current.identifier, "client": "iphone"]
                         if car { body["car"] = true }
                         if !speak { body["speak"] = false }
-                        if let a = att { body["attachment"] = ["kind": a.kind, "name": a.name, "text": String(a.text.prefix(Reader.chatChars))] }
+                        if let a = att { body["attachment"] = ["kind": a.kind, "name": a.name, "text": String(a.text.prefix(Reader.chatChars)),
+                                                                "cut": a.text.count > Reader.chatChars] }
                         if !ids.isEmpty { body["images"] = ids }
                         r.httpBody = try JSONSerialization.data(withJSONObject: body)
                         let (b, response) = try await URLSession.shared.bytes(for: r)
