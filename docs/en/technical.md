@@ -43,11 +43,28 @@ The benchmark goes through the public ports, so it measures what apps see. The l
 - **Memory**: the GB10 has one 128 GB pool shared by CPU and GPU. The qwen38 lanes reserve a fixed share of it: 50 % with `stock`/`fp8`, 76 % in 1M mode and 85 % with `flash`. According to the qwen38 docs only ~16.6 GiB stay free at idle with `flash`, and below ~8 GiB DGX OS's earlyoom kills processes. Therefore:
   - If the installer detects a flash or 1M lane, it picks the 0.6B models.
   - Before a service loads its model it checks that the reserve stays free afterwards (default 10 GiB). If not, it does not load and the panel shows `blocked` with the reason.
-  - If memory still runs short, the system kills the speech services first (`OOMScoreAdjust=900`), not the LLM lane and not sshd.
+  - If memory still runs short, the system kills the panel first (`OOMScoreAdjust=900`), then the speech services (500), not the LLM lane and not sshd (see "Speech first").
   - Speech starts after the qwen38 lanes, so they take their fixed share first.
   - Engines start one after another, because vLLM measures free memory at start-up and parallel starts take each other's share.
 - **Lane switch**: if you switch to `flash` in the cockpit, already loaded speech models stay in memory. With 1.7B models that can get too tight. Stop ASR and TTS in the panel first or switch them to 0.6B.
 - **GPU time**: ASR and TTS share the GPU with the LLM. During a transcription or speech request the LLM gets a little slower.
+
+## Speech first
+
+Speech recognition and speech output always come first (fixed rule without a switch, since V01.0.225, plan `plaene/vorrang-sprache.md`).
+
+- **When "speech is running"**: while an answer of `/api/chat` streams (browser, app, speakers, Telegram, Siri) and while ASR or TTS handle a request from anyone (Open WebUI and Wyoming too). The services report it through `common.SpeechMark`: every `POST /v1/audio/...` request that passed the size limit and API key touches `state/speech-active`. 20 seconds after that still count (follow-up question).
+- **Background work** waits during that time; its running request to the language model is cancelled (vLLM stops it when the connection closes) and repeated in the next pause, at most three times. Only one background request runs at a time. Connected: learning from conversations, memory tidy, agents, proactive notes, daily briefing, mail sorting, quality test, reading documents and meaning search (`wissen.quiet()`), backup (also with low CPU priority).
+- **Interface for new background work** (`app/panel/vorrang.py`):
+  - `r = await vorrang.post(c, "Name", url, json=..., headers=...)`: one request to the language model (httpx client `c`): waits, runs alone, is cancelled on speech and repeated; gives up with `vorrang.Busy` after three cancellations.
+  - `await vorrang.run("Name", lambda: coroutine())`: the same for any other coroutine.
+  - `await vorrang.quiet("Name")`: only wait for a pause.
+  - `await vorrang.in_thread("Name", fn, *args)`: CPU work (e.g. an embedding model) after a pause in its own thread with `nice 15`.
+  - `vorrang.hold("Name")`: inside a worker thread, wait between two steps while speech runs (never call it on the event loop).
+  - `vorrang.speaking()`: whether speech is running.
+- **Operating system**: the ASR and TTS services and their engines run with `Nice=-5`, `CPUWeight=1000`, `IOWeight=1000`. When memory runs out, the system ends the panel first (`OOMScoreAdjust=900`), then the speech services (500), not the LLM lane and not sshd.
+- **GPU**: the GB10 has no priorities between processes. The speech engines' memory is reserved from their start. The language model's own answer runs at the same time as the speech output and sometimes slows it down ("tts behind … inside the piece").
+- **Checking**: Zustand → Prüfen → "Speech first" speaks a sentence alone, under load without priority and under load with priority, and shows first audio, real-time factor and recognition time, above it today's counters. Zustand → Logs shows the lines in the area "Priority" (`vorrang: … wartet`, `… abgebrochen`, `… wartete N s`).
 
 ## Why the installation looks like this
 

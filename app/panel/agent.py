@@ -41,6 +41,7 @@ import httpx
 import calendars
 import mcp
 import profiles
+import vorrang
 from common import load_config
 
 STATE = os.environ.get("SPEECH_SPARK_STATE", "/var/lib/speech-spark/state")
@@ -58,8 +59,6 @@ MAX_SEARCHES = 4
 MAX_PAGES = 5
 MAX_READS = 12            # all tool calls of a job
 JOB_SECONDS = 900
-QUIET = 20                # a job waits while someone talked to the assistant this many seconds ago
-QUIET_MAX = 180
 MAX_REPORT = 20000
 PENDING_SECONDS = 15 * 60
 _lock = threading.Lock()
@@ -355,18 +354,14 @@ async def _llm(messages, tools):
             payload["tools"] = tools
         if not cfg.get("thinking"):
             payload["chat_template_kwargs"] = {"enable_thinking": False}
-        r = await c.post(cfg["llm_url"].rstrip("/") + "/chat/completions", json=payload, headers=headers)
+        r = await vorrang.post(c, "Agent", cfg["llm_url"].rstrip("/") + "/chat/completions", json=payload, headers=headers)
         r.raise_for_status()
         return r.json()["choices"][0]["message"]
 
 
 async def _quiet():
-    """Answers to people come first: wait while somebody talks to the assistant (at most QUIET_MAX)."""
-    import chat
-    waited = 0
-    while time.time() - chat._last_chat[0] < QUIET and waited < QUIET_MAX:
-        await asyncio.sleep(5)
-        waited += 5
+    """Answers to people come first: wait while somebody talks to the assistant (vorrang.py)."""
+    await vorrang.quiet("Agent")
 
 
 def _args(raw):

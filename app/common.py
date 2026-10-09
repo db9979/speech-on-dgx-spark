@@ -15,6 +15,55 @@ def load_config(section=None):
     return cfg[section] if section else cfg
 
 
+# Speech first (panel vorrang.py): every STT/TTS request touches this file, the panel holds its
+# background work (and cancels its background requests to the language model) while it is fresh.
+SPEECH_MARK = os.path.join(os.environ.get("SPEECH_SPARK_STATE", "/var/lib/speech-spark/state"), "speech-active")
+_speech_marked = [0.0]
+
+
+def speech_mark(now=None, path=None, end=False):
+    """Notes "speech is running right now" for the panel; at most once a second (always at the end of
+    a request, the panel's pause counts from there), never fails a request."""
+    now = time.time() if now is None else now
+    if not end and now - _speech_marked[0] < 1:
+        return
+    _speech_marked[0] = now
+    path = path or SPEECH_MARK
+    try:
+        os.utime(path, (now, now))
+    except FileNotFoundError:
+        try:
+            with open(path, "a"):
+                pass
+            os.utime(path, (now, now))
+        except OSError:
+            pass
+    except OSError:
+        pass
+
+
+class SpeechMark:
+    """ASGI middleware: speech_mark() while a speech request (POST /v1/audio/...) runs, also on every
+    piece of a streamed answer, and once more at its end."""
+
+    def __init__(self, app, paths=("/v1/audio/",)):
+        self.app, self.paths = app, tuple(paths)
+
+    async def __call__(self, scope, receive, send):
+        if scope["type"] != "http" or scope.get("method") != "POST" or not scope.get("path", "").startswith(self.paths):
+            return await self.app(scope, receive, send)
+        speech_mark()
+
+        async def sending(msg):
+            if msg.get("type") == "http.response.body":
+                speech_mark()
+            await send(msg)
+        try:
+            await self.app(scope, receive, sending)
+        finally:
+            speech_mark(end=True)
+
+
 # Rough unified-memory footprint per model incl. CUDA context and activations (GiB).
 # Estimates, not measurements; refine them on the box via the panel's numbers.
 MODEL_GIB = {

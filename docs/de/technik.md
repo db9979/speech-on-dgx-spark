@@ -55,11 +55,28 @@ Die Messung geht über die öffentlichen Ports, misst also das, was Apps sehen. 
 - **Speicher**: Die GB10 hat einen gemeinsamen Pool von 128 GB für CPU und GPU. Die qwen38-Lanes reservieren davon einen festen Anteil: 50 % bei `stock`/`fp8`, 76 % im 1M-Modus und 85 % bei `flash`. Laut qwen38-Doku bleiben bei `flash` im Leerlauf nur ~16,6 GiB frei, und unter ~8 GiB beendet earlyoom von DGX OS Prozesse. Deshalb gilt:
   - Erkennt das Skript eine flash- oder 1M-Lane, wählt es automatisch die 0.6B-Modelle.
   - Bevor ein Dienst sein Modell lädt, prüft er, ob danach noch die Reserve frei bleibt (Standard 10 GiB). Wenn nicht, lädt er nicht und zeigt im Panel `blocked` mit Begründung.
-  - Wird der Speicher trotzdem knapp, beendet das System zuerst die Speech-Dienste (`OOMScoreAdjust=900`), nicht die LLM-Lane und nicht sshd.
+  - Wird der Speicher trotzdem knapp, beendet das System zuerst das Panel (`OOMScoreAdjust=900`), dann die Speech-Dienste (500), nicht die LLM-Lane und nicht sshd (siehe „Vorrang für Sprache“).
   - Speech startet nach den qwen38-Lanes, damit diese ihren festen Anteil zuerst belegen.
   - Die Engines starten nacheinander, weil vLLM beim Start den freien Speicher misst und parallele Starts sich gegenseitig den Anteil wegnehmen.
 - **Lane-Wechsel**: Wechselst du im Cockpit auf `flash`, bleiben die schon geladenen Speech-Modelle im Speicher. Mit 1.7B-Modellen kann das zu knapp werden. Dann vorher ASR und TTS im Panel stoppen oder auf 0.6B umstellen.
 - **GPU-Zeit**: ASR und TTS teilen sich die GPU mit dem LLM. Während einer Transkription oder Sprachausgabe wird das LLM etwas langsamer.
+
+## Vorrang für Sprache
+
+Spracherkennung und Sprachausgabe gehen immer vor (feste Regel ohne Schalter, seit V01.0.225, Plan `plaene/vorrang-sprache.md`).
+
+- **Wann gilt „es wird gesprochen“**: während eine Antwort von `/api/chat` läuft (Browser, App, Lautsprecher, Telegram, Siri) und während ASR oder TTS eine Anfrage bearbeiten, egal von wem (auch Open WebUI und Wyoming). Die Dienste melden das über `common.SpeechMark`: jede `POST /v1/audio/...`-Anfrage, die Größenlimit und API-Schlüssel passiert hat, berührt `state/speech-active`. Danach gilt noch 20 Sekunden als Gespräch (Rückfrage).
+- **Hintergrundarbeit** wartet in der Zeit, und ihre laufende Anfrage an das Sprachmodell wird abgebrochen (vLLM beendet sie, sobald die Verbindung zu ist) und in der nächsten Pause wiederholt, höchstens dreimal. Es läuft immer nur eine Hintergrund-Anfrage gleichzeitig. Angeschlossen: Lernen aus Gesprächen, Gedächtnis aufräumen, Agenten, proaktive Hinweise, Tagesüberblick, Mail sortieren, Qualitätstest, Dokumente lesen und Bedeutungssuche (`wissen.quiet()`), Sicherung (läuft zusätzlich mit niedriger CPU-Priorität).
+- **Schnittstelle für neue Hintergrundarbeit** (`app/panel/vorrang.py`):
+  - `r = await vorrang.post(c, "Name", url, json=..., headers=...)`: eine Anfrage an das Sprachmodell (httpx-Client `c`), wartet, läuft allein, wird bei Sprache abgebrochen und wiederholt; gibt nach drei Abbrüchen mit `vorrang.Busy` auf.
+  - `await vorrang.run("Name", lambda: coroutine())`: dasselbe für jede andere Coroutine.
+  - `await vorrang.quiet("Name")`: nur auf eine Pause warten.
+  - `await vorrang.in_thread("Name", fn, *args)`: CPU-Arbeit (z. B. Einbettungsmodell) nach einer Pause in einem eigenen Thread mit `nice 15`.
+  - `vorrang.hold("Name")`: in einem Worker-Thread zwischen zwei Schritten warten, solange gesprochen wird (nie im Event-Loop aufrufen).
+  - `vorrang.speaking()`: ob gerade gesprochen wird.
+- **Betriebssystem**: ASR- und TTS-Dienste und ihre Engines laufen mit `Nice=-5`, `CPUWeight=1000`, `IOWeight=1000`. Bei Speichernot beendet das System zuerst das Panel (`OOMScoreAdjust=900`), dann die Sprachdienste (500), nicht die LLM-Lane und nicht sshd.
+- **GPU**: Prioritäten zwischen Prozessen gibt es auf der GB10 nicht. Der Speicher der Sprach-Engines ist ab dem Start fest reserviert. Die eigene Antwort des Sprachmodells läuft gleichzeitig mit der Sprachausgabe; das bremst sie manchmal („tts behind … inside the piece“).
+- **Prüfen**: Zustand → Prüfen → „Vorrang für Sprache“ spricht einen Satz alleine, unter Last ohne Vorfahrt und unter Last mit Vorfahrt und zeigt erster Ton, Echtzeitfaktor und Erkennungszeit; darüber die Zähler von heute. In Zustand → Logs stehen die Zeilen im Bereich „Vorrang“ (`vorrang: … wartet`, `… abgebrochen`, `… wartete N s`).
 
 ## Warum die Installation so aussieht
 

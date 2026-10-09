@@ -36,6 +36,7 @@ import chat_tools  # noqa: E402  (the tool calls of one answer)
 import chat_turn  # noqa: E402  (rights, prompt and tools of one turn)
 import latency  # noqa: E402
 import echo  # noqa: E402  (the Spark's own voice is no question)
+import vorrang  # noqa: E402  (speech first: background work waits)
 from common import load_config  # noqa: E402
 from core import DEFAULTS, FACES, admin_cookie_ok, api_headers, assistant  # noqa: E402
 
@@ -61,12 +62,13 @@ async def learn_once():
                 continue
             prof = profiles.by_id(uid)
             for convo in recall.pending(uid, time.time() * 1000)[:5]:  # the rest next time
-                if time.time() - _last_chat[0] < 60:
+                if vorrang.speaking():
                     return saved  # someone is talking: try again later
                 payload = {"model": await llm_model(c, ccfg, headers), "temperature": 0.2, "max_tokens": 400,
                            "messages": recall.learn_messages(prof, convo),
                            "chat_template_kwargs": {"enable_thinking": False}}
-                r = await c.post(ccfg["llm_url"].rstrip("/") + "/chat/completions", json=payload, headers=headers)
+                r = await vorrang.post(c, "Lernen aus Gesprächen", ccfg["llm_url"].rstrip("/") + "/chat/completions",
+                                       json=payload, headers=headers)
                 r.raise_for_status()
                 known = {x["text"].lower() for x in profiles.memory(uid)}
                 for fact in recall.parse_facts(r.json()["choices"][0]["message"].get("content") or ""):
@@ -940,7 +942,8 @@ async def morning_briefing(uid, tz=""):
                                 {"role": "user", "content": "\n\n".join(parts)[:20000]}]}
         if not ccfg.get("thinking"):
             payload["chat_template_kwargs"] = {"enable_thinking": False}
-        r = await c.post(ccfg["llm_url"].rstrip("/") + "/chat/completions", json=payload, headers=headers)
+        r = await vorrang.post(c, "Tagesüberblick", ccfg["llm_url"].rstrip("/") + "/chat/completions",
+                               json=payload, headers=headers)
         r.raise_for_status()
         text = r.json()["choices"][0]["message"]["content"] or ""
     return re.sub(r"(?s)<think>.*?</think>", "", text).strip()
@@ -1074,22 +1077,31 @@ async def chat(request: Request):
     admin = not me and admin_cookie_ok(request)
     guard.limit(request, "chat", me and me["id"], admin)
     slot = None if me or admin else guard.Slot("chat")
+    vorrang.mark()   # speech first: background work waits while an answer runs (vorrang.py)
     try:
         response = await _chat(request)
     except BaseException:
         if slot:
             slot.release()
+        vorrang.mark(end=True)
         raise
-    if slot:
-        inner = response.body_iterator
+    inner = getattr(response, "body_iterator", None)
+    if inner is None:
+        if slot:
+            slot.release()
+        vorrang.mark(end=True)
+        return response
 
-        async def held():
-            try:
-                async for chunk in inner:
-                    yield chunk
-            finally:
+    async def held():
+        try:
+            async for chunk in inner:
+                vorrang.mark()
+                yield chunk
+        finally:
+            if slot:
                 slot.release()
-        response.body_iterator = held()
+            vorrang.mark(end=True)
+    response.body_iterator = held()
     return response
 
 
@@ -1577,6 +1589,8 @@ async def _answer(request, turn):
                                         print(f"chat: tts behind by {now - played_until:.1f} s "
                                               f"{'before the piece' if opening else 'inside the piece'} ({len(text)} chars, "
                                               f"first audio after {ttfa:.1f} s)", flush=True)
+                                        if not opening:
+                                            vorrang.count("behind")   # Zustand → Prüfen, "Vorrang für Sprache"
                                     # 16-bit mono PCM at 24 kHz: 48000 bytes per second of audio
                                     played_until = max(played_until, now) + len(ev["audio"]) * 3 / 4 / 48000
                                     echo.played(mine, played_until)

@@ -44,6 +44,7 @@ import httpx
 
 import mail
 import profiles
+import vorrang
 
 CATS = {"werbung": "Werbung", "newsletter": "Newsletter", "rechnungen": "Rechnungen",
         "benachrichtigungen": "Benachrichtigungen", "social": "Social"}
@@ -429,6 +430,7 @@ def classify(h, text):
         payload = {"model": model, "temperature": 0, "max_tokens": 60,
                    "messages": [{"role": "system", "content": CLASSIFY}, {"role": "user", "content": user}],
                    "chat_template_kwargs": {"enable_thinking": False}}
+        vorrang.hold("Mail sortieren")   # a worker thread: waits while somebody speaks
         r = c.post(url + "/chat/completions", json=payload, headers=headers)
         r.raise_for_status()
         return parse_class(r.json()["choices"][0]["message"].get("content") or "")

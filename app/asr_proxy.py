@@ -18,7 +18,7 @@ import uvicorn
 from fastapi import Depends, FastAPI, HTTPException, Request
 from fastapi.responses import JSONResponse, PlainTextResponse, Response, StreamingResponse
 
-from common import ASR_ISO, BodyLimit, KeyedCORS, inside, outside_view, api_key_dependency, api_key_ok, engine_crash_reason, load_config, quiet_access_log
+from common import ASR_ISO, BodyLimit, KeyedCORS, inside, outside_view, api_key_dependency, api_key_ok, engine_crash_reason, load_config, quiet_access_log, SpeechMark
 
 STATE_DIR = os.environ.get("SPEECH_SPARK_STATE", "/var/lib/speech-spark/state")
 UNIT = "speech-spark-asr-engine"
@@ -26,6 +26,8 @@ NAME_TO_ISO = {v.lower(): k for k, v in ASR_ISO.items()}
 
 cfg = load_config("asr")
 app = FastAPI(title="Qwen3-ASR via vLLM (DGX Spark)")
+# innermost: only requests that passed the size limit and API key count as speech
+app.add_middleware(SpeechMark)
 app.add_middleware(KeyedCORS)
 # bodies are refused before they are read when too large or without the API key
 app.add_middleware(BodyLimit, default=201 * 1024**2, gate=api_key_ok, gated=("/v1/",))

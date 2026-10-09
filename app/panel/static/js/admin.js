@@ -438,6 +438,26 @@ async function loadBench(){let b;try{b=await (await api('/api/bench')).json()}ca
   if(b.running&&!benchPoll)benchPoll=setInterval(loadBench,2000);
   if(!b.running&&benchPoll){clearInterval(benchPoll);benchPoll=null}}
 $('benchgo').onclick=async()=>{try{await api('/api/bench',{method:'POST'});loadBench()}catch(e){$('benchmsg').innerHTML=`<span class="err">${esc(e.message)}</span>`}};
+// speech first (vorrang.py): today's counters and the three-way test; the verdict comes from vorrang.verdict()
+let vrPoll=null;
+function vrRender(d){const s=d.today||{},r=d.result;
+  $('vrtoday').textContent=t(`Heute: ${s.held||0}× Hintergrundarbeit angehalten, ${s.cancelled||0}× abgebrochen, längste Wartezeit ${s.waited_max||0} s, ${s.behind||0}× Sprachausgabe mitten im Satz zu langsam.`+(s.speaking?' Gerade wird gesprochen.':''),
+    `Today: background work held ${s.held||0}×, cancelled ${s.cancelled||0}×, longest wait ${s.waited_max||0} s, speech output too slow inside a sentence ${s.behind||0}×.`+(s.speaking?' Speech is running right now.':''));
+  $('vrgo').disabled=!!d.running;
+  $('vrmsg').textContent=d.running?t('läuft … (etwa eine Minute)','running … (about a minute)'):r&&r.t?t('letzte Prüfung: ','last check: ')+new Date(r.t*1000).toLocaleString():'';
+  if(!r||d.running)$('vrout').innerHTML='';
+  else if(!r.alone)$('vrout').innerHTML=`<div class="err">${esc(r.error||'')}</div>`;
+  else{const v=r.verdict||{},lvl=BENCH_CLS[v.level]||'warn',ttl=v.title?(L==='en'?v.title.en:v.title.de):'';
+    const n=x=>x==null?'–':(L==='en'?String(x):String(x).replace('.',','));
+    const row=(name,x)=>x?`<tr><td>${name}</td><td class="bnum">${n(x.first)} s</td><td class="bnum">${n(x.rtf)}</td><td class="bnum">${n(x.asr)} s</td></tr>`:'';
+    $('vrout').innerHTML=`<div class="bverdict" data-lvl="${lvl}"><span class="bvicon">${lvl==='ok'?'✓':'!'}</span><div><b>${esc(ttl)}</b>${r.error?`<div class="mut">${esc(r.error)}</div>`:''}</div></div>`+
+      `<table class="brate"><tbody><tr class="bgrp"><td></td><td>${t('Erster Ton','First audio')}</td><td>${t('Echtzeitfaktor','Real-time factor')}</td><td>${t('Erkennung','Recognition')}</td></tr>`+
+      row(t('Alleine','Alone'),r.alone)+row(t('Unter Last, ohne Vorfahrt','Under load, no priority'),r.load)+row(t('Unter Last, mit Vorfahrt','Under load, with priority'),r.vorrang)+`</tbody></table>`+
+      `<div class="fh">${t('Echtzeitfaktor unter 1 heißt flüssig. Erster Ton und Erkennung in Sekunden.','Real-time factor below 1 means fluent. First audio and recognition in seconds.')}</div>`}
+  if(d.running&&!vrPoll)vrPoll=setInterval(loadVorrang,3000);
+  if(!d.running&&vrPoll){clearInterval(vrPoll);vrPoll=null}}
+async function loadVorrang(){try{vrRender(await (await api('/api/vorrang')).json())}catch{}}
+$('vrgo').onclick=async()=>{try{vrRender(await (await api('/api/vorrang',{method:'POST'})).json())}catch(e){$('vrmsg').innerHTML=`<span class="err">${esc(e.message)}</span>`}};
 $('updstop').onclick=async()=>{if(!confirm(t('Update abbrechen? Was schon installiert ist, bleibt. Ein späteres Update holt den Rest nach.','Cancel the update? What is already installed stays. A later update installs the rest.')))return;
   try{await api('/api/update',{method:'DELETE'});$('updmsg').textContent=t('abgebrochen','cancelled');loadSys()}
   catch(e){$('updmsg').innerHTML=`<span class="err">${esc(e.message)}</span>`}};

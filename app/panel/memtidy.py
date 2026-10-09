@@ -15,6 +15,7 @@ import time
 import httpx
 
 import profiles
+import vorrang
 from common import load_config
 from core import DEFAULTS
 
@@ -111,7 +112,8 @@ async def propose(uid):
                    "messages": [{"role": "system", "content": SYSTEM},
                                 {"role": "user", "content": "\n".join(lines)[:24000]}],
                    "chat_template_kwargs": {"enable_thinking": False}}
-        r = await c.post(ccfg["llm_url"].rstrip("/") + "/chat/completions", json=payload, headers=headers)
+        r = await vorrang.post(c, "Gedächtnis aufräumen", ccfg["llm_url"].rstrip("/") + "/chat/completions",
+                               json=payload, headers=headers)
         r.raise_for_status()
         prop = parse(r.json()["choices"][0]["message"].get("content") or "", facts)
     if not prop["merge"] and not prop["drop"]:

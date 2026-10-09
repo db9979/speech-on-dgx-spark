@@ -19,7 +19,7 @@ import uvicorn
 from fastapi import Depends, FastAPI, HTTPException, Request
 from fastapi.responses import Response, StreamingResponse
 
-from common import BodyLimit, KeyedCORS, inside, outside_view, api_key_dependency, api_key_ok, engine_crash_reason, load_config, quiet_access_log
+from common import BodyLimit, KeyedCORS, inside, outside_view, api_key_dependency, api_key_ok, engine_crash_reason, load_config, quiet_access_log, SpeechMark
 from textnorm import (MAX_INPUT, apply_pronunciations, clean_text, guess_language, hide_secrets, parse_pronunciations,
                       speak_numbers)
 
@@ -32,6 +32,8 @@ PCM_BYTES_PER_S = 24000 * 2  # Qwen3-TTS: 24 kHz, 16 bit, mono
 cfg = load_config("tts")
 PRONUNCIATION = parse_pronunciations(cfg.get("pronunciation", ""))  # the proxy restarts on config changes
 app = FastAPI(title="Qwen3-TTS via vllm-omni (DGX Spark)")
+# innermost: only requests that passed the size limit and API key count as speech
+app.add_middleware(SpeechMark)
 app.add_middleware(KeyedCORS)
 # bodies are refused before they are read when too large or without the API key
 app.add_middleware(BodyLimit, default=20 * 1024**2, gate=api_key_ok, gated=("/v1/",))
