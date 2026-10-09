@@ -44,6 +44,7 @@ router = APIRouter()
 DAY_PAGES = 100
 READ_TIMEOUT = 120
 IDLE = 60
+_now = {}          # the page being read right now: {"uid", "doc", "page"} (Ich → Dokumente shows it)
 _last = {"read": 0.0, "failed": 0.0, "vectors": 0.0}    # when background work last did something (Zustand)
 READ_PROMPT = ("Du liest eine Seite oder ein Foto aus den eigenen Dokumenten des Nutzers, damit er später darin "
                "suchen kann. Schreibe zuerst allen lesbaren Text vollständig und genau ab, in der Reihenfolge der "
@@ -145,6 +146,7 @@ async def due_once(idle=True, now=None):
             continue
         doc, _, page, jpeg, tries = nxt
         documents.count_today(uid, today(now), add=1)
+        _now.update(uid=uid, doc=doc, page=page)
         try:
             text = await read_page(jpeg)
             await asyncio.to_thread(documents.page_read, uid, doc, page, text)
@@ -154,6 +156,8 @@ async def due_once(idle=True, now=None):
             await asyncio.to_thread(documents.page_read, uid, doc, page, None, True)
             _last["failed"] = time.time()
             print("wissen: page not read:", type(e).__name__, flush=True)
+        finally:
+            _now.clear()
         return "page"
     for uid in profiles.user_ids():
         if not on(uid, "semantic"):
@@ -217,6 +221,9 @@ def info(prof=Depends(own_profile)):
             "today": documents.count_today(uid, today(time.time())) if admin_on("pictures") else 0,
             "day_pages": DAY_PAGES, "vectors": [have, total] if admin_on("semantic") else None,
             "model": docembed.status()["state"] if admin_on("semantic") else None,
+            # progress in Ich → Dokumente: the page being read now, or why nothing is read
+            "reading": {"doc": _now["doc"], "page": _now["page"]} if _now.get("uid") == uid else None,
+            "quiet": quiet(),
             "types": list(documents.TYPES)}
 
 

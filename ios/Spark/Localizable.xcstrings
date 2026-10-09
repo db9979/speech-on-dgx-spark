@@ -2631,6 +2631,16 @@
         }
       }
     },
+    "Seite %lld von %lld gelesen": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "page %1$lld of %2$lld read"
+          }
+        }
+      }
+    },
     "wird noch gelesen": {
       "localizations": {
         "en": {

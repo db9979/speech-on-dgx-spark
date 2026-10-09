@@ -51,7 +51,8 @@ struct DocumentsView: View {
                             HStack(spacing: 6) {
                                 Text(d.created, format: .dateTime.day().month().year())
                                 if d.pages > 1 { Text("\(d.pages) Seiten") }
-                                if d.state != "ready" || d.todo > 0 { Text("wird noch gelesen") }
+                                if d.state == "reading" && d.pages > 0 { Text("Seite \(d.pages - d.todo) von \(d.pages) gelesen") }
+                                else if d.state != "ready" || d.todo > 0 { Text("wird noch gelesen") }
                             }
                             .font(.caption).foregroundStyle(.secondary)
                         }

@@ -421,7 +421,7 @@ def _scan_jpegs(reader, scans):
 def _row(r, todo):
     return {"id": r["id"], "name": r["name"], "size": r["size"], "created": r["created"], "chunks": r["nchunks"],
             "kind": r["kind"], "state": r["state"], "note": r["note"], "pages": r["pages"], "todo": todo.get(r["id"], 0),
-            "use": bool(r["use"]), "file": bool(r["file"]), "source": r["source"]}
+            "vecs": r["nvecs"], "use": bool(r["use"]), "file": bool(r["file"]), "source": r["source"]}
 
 
 def list_docs(uid, used_only=False):
@@ -429,7 +429,8 @@ def list_docs(uid, used_only=False):
         return []
     with _Db(uid) as con:
         todo = dict(con.execute("SELECT doc, COUNT(*) FROM pages GROUP BY doc").fetchall())
-        rows = con.execute("SELECT d.*, (SELECT COUNT(*) FROM chunks c WHERE c.doc=d.id) AS nchunks FROM docs d "
+        rows = con.execute("SELECT d.*, (SELECT COUNT(*) FROM chunks c WHERE c.doc=d.id) AS nchunks, "
+                           "(SELECT COUNT(c.vec) FROM chunks c WHERE c.doc=d.id) AS nvecs FROM docs d "
                            + ("WHERE d.use=1 " if used_only else "") + "ORDER BY d.created DESC, d.id").fetchall()
     return [_row(r, todo) for r in rows]
 

@@ -19,21 +19,41 @@ const DOCSW=[['pictures',t('Bilder und Scans lesen lassen','Let pictures and sca
   ['semantic',t('Bedeutungssuche','Meaning search'),t('Findet auch Stellen mit anderen Worten.','Also finds passages in other words.')],
   ['originals',t('Originale aufbewahren','Keep originals'),t('Die Datei bleibt auf dem Spark und lässt sich wieder öffnen (neue Uploads).','The file stays on the Spark and can be opened again (new uploads).')]];
 let DOCINFO=null;
-function docState(d){if(d.state==='reading')return t(`wird gelesen (${d.pages-d.todo} von ${d.pages} Seiten)`,`being read (${d.pages-d.todo} of ${d.pages} pages)`)+(DOCINFO&&DOCINFO.allow.pictures&&DOCINFO.on.pictures?'':t(' · wartet, „Bilder und Scans lesen“ ist aus',' · waiting, "Read pictures and scans" is off'));
-  if(d.state==='error')return t('nicht lesbar','not readable');return `${d.chunks} ${t('Abschnitte','sections')}`}
+// progress of one document (V01.0.232): pages read of all pages, then pieces with a meaning, and why it
+// waits (switch off, daily limit, someone is talking, the model waits for memory). [text, percent or null]
+function docState(d){const I=DOCINFO,pics=I&&I.allow.pictures&&I.on.pictures,mean=I&&I.vectors&&I.on.semantic;
+  if(d.state==='reading'){const done=d.pages-d.todo,pct=d.pages?Math.round(100*done/d.pages):0;let why;
+    if(!pics)why=t('wartet, „Bilder und Scans lesen“ ist aus','waiting, "Read pictures and scans" is off');
+    else if(I.reading&&I.reading.doc===d.id)why=t(`liest gerade Seite ${I.reading.page}`,`reading page ${I.reading.page} now`);
+    else if(I.today>=I.day_pages)why=t('Tagesgrenze erreicht, geht morgen weiter','daily limit reached, continues tomorrow');
+    else if(!I.quiet)why=t('wartet auf eine ruhige Minute','waits for a quiet minute');
+    else why=t('ist gleich dran','next in line');
+    return [t(`Seite ${done} von ${d.pages} gelesen`,`page ${done} of ${d.pages} read`)+' · '+why,pct]}
+  if(d.state==='error')return [t('nicht lesbar','not readable'),null];
+  const base=`${d.chunks} ${t('Abschnitte','sections')}`;
+  if(mean&&d.chunks&&d.vecs<d.chunks){const m=I.model;
+    const why=m==='waiting'?t(' · wartet auf freien Arbeitsspeicher',' · waits for free memory'):m==='error'?t(' · Bedeutungs-Modell hat einen Fehler',' · the meaning model has an error'):m==='starting'?t(' · Modell startet',' · model starting'):'';
+    return [base+' · '+t(`Bedeutung ${d.vecs} von ${d.chunks}`,`meaning ${d.vecs} of ${d.chunks}`)+why,Math.round(100*d.vecs/d.chunks)]}
+  return [base,null]}
+// while something is still being read, the list refreshes itself as long as it is on screen
+let docTimer=null;
+function docAgain(l){clearTimeout(docTimer);const I=DOCINFO;
+  const busy=l.some(d=>d.state==='reading'||(I&&I.vectors&&I.on.semantic&&d.chunks&&d.vecs<d.chunks));
+  if(busy)docTimer=setTimeout(()=>{const box=$('docbox');if(box&&box.offsetParent!==null&&!document.hidden)showDocs();else docAgain(l)},10e3)}
 async function showDocs(){if(!DOCS_ON){$('docbox').style.display='none';return}$('docbox').style.display='';
   const l=await (await api('/api/profile/docs')).json();
   try{DOCINFO=await (await api('/api/profile/wissen')).json()}catch{DOCINFO=null}
   const I=DOCINFO;
   $('docsw').innerHTML=I?DOCSW.filter(([k])=>I.allow[k]).map(([k,l,h])=>`<div class="setrow"><div class="lbl"><b>${esc(l)}</b><span>${esc(h)}</span></div><label class="tgl"><input type="checkbox" data-docsw="${k}"${I.on[k]?' checked':''}><i></i></label></div>`).join(''):'';
-  $('doclist').innerHTML=l.map(d=>`<li><span>${esc(d.name)}<br><small class="mut">${docSize(d.size)} · ${esc(docState(d))}${d.note?' · '+esc(d.note):''}</small></span>`+
+  $('doclist').innerHTML=l.map(d=>{const [st,pct]=docState(d);return `<li><span>${esc(d.name)}<br><small class="mut">${docSize(d.size)} · ${esc(st)}${d.note?' · '+esc(d.note):''}</small>`+
+    (pct===null?'':`<span class="qbar docbar" role="progressbar" aria-valuemin="0" aria-valuemax="100" aria-valuenow="${pct}"><i style="width:${pct}%"></i></span>`)+`</span>`+
     `<label class="tgl" title="${esc(t('Der Assistent sucht darin','The assistant searches it'))}"><input type="checkbox" data-docuse="${esc(d.id)}"${d.use?' checked':''}><i></i></label>`+
     `<button class="b" type="button" data-docview="${esc(d.id)}">${t('Ansehen','View')}</button>`+
-    `<button class="b" type="button" data-docdel="${esc(d.id)}" data-name="${esc(d.name)}">${t('Löschen','Delete')}</button></li>`).join('')||`<li class="mut">${t('Noch keine Dokumente.','No documents yet.')}</li>`;
+    `<button class="b" type="button" data-docdel="${esc(d.id)}" data-name="${esc(d.name)}">${t('Löschen','Delete')}</button></li>`}).join('')||`<li class="mut">${t('Noch keine Dokumente.','No documents yet.')}</li>`;
   const bits=[];if(I&&I.quota)bits.push(t(`Originale: ${docSize(I.usage)} von ${docSize(I.quota)}`,`Originals: ${docSize(I.usage)} of ${docSize(I.quota)}`));
   if(I&&I.allow.pictures&&I.on.pictures)bits.push(t(`heute ${I.today} von ${I.day_pages} Seiten gelesen`,`${I.today} of ${I.day_pages} pages read today`));
   if(I&&I.vectors&&I.on.semantic)bits.push(t(`Bedeutungssuche: ${I.vectors[0]} von ${I.vectors[1]} Abschnitten vorbereitet`,`Meaning search: ${I.vectors[0]} of ${I.vectors[1]} sections prepared`));
-  $('docuse').textContent=bits.join(' · ');
+  $('docuse').textContent=bits.join(' · ');docAgain(l);
   const pics=I&&I.allow.pictures&&I.on.pictures;
   $('docfile').accept='.pdf,.txt,.md,.docx,.html,.htm,.csv,.xlsx,.pptx,.odt,.ods,.odp,.eml'+(pics?',.jpg,.jpeg,.png,.webp':'')}
 $('docsw').onchange=async e=>{const k=e.target.dataset.docsw;if(!k)return;

@@ -31,6 +31,7 @@ All options for running without questions (`--mode api --asr 1.7b --tts 0.6b --y
 
 <!-- New version: add one line at the top here and in CHANGELOG.md, drop the oldest line here (keep 10). Details go to docs/de and docs/en, not into this README. -->
 
+- **V01.0.232** Ich → Dokumente shows each document's progress: "page 3 of 12 read" with a bar and the reason (reading page …, waits for a quiet minute, daily limit, switch off), then "meaning 40 of 120"; the list refreshes every 10 s while something runs; the iPhone app shows "page x of y read"
 - **V01.0.231** "Check priority" measures the case with priority like a real conversation (recognition first, then speech output)
 - **V01.0.230** Pebble watch more reliable and the face from the web: the watch retries failed messages, gives up after 30 s without an answer, reports its buffer continuously (a lost report no longer stops the sound), old answers are dropped; the phone sends text before audio, bigger audio pieces (3.8 KB), retries instead of losing silently; one time line per answer in the log (area "Watch"); new and off (admin + profile): "Pair the Pebble watch" with a setup code from Me → Pebble watch, own watch key only for /api/watch/; the watch shows the face picked in the panel (robot or comic)
 - **V01.0.229** Updates on tars work again: a self-test from .225 looked for install.sh, which the update self-test does not have
@@ -40,7 +41,6 @@ All options for running without questions (`--mode api --asr 1.7b --tts 0.6b --y
 - **V01.0.225** Speech always comes first: background work waits while someone speaks, its running request to the language model is cancelled and repeated later; ASR and TTS get more CPU and disk share; Zustand → Prüfen → "Check priority" measures it (fixed rule, no switch)
 - **V01.0.224** Knowledge from uploads: documents per profile in one SQLite file (old ones taken over, backups consistent), more file types (Excel, PowerPoint, OpenDocument, .eml), view documents (text, pictures and PDFs in the browser), on/off per document, "Try the search", clickable sources with page; new and each off (admin + profile): the language model reads pictures and scans in quiet moments (also "Picture to My documents" in the chat, /merken in Telegram), meaning search with a small CPU model in its own process, keep originals with a space limit; no web search after documents in the same answer
 - **V01.0.223** Conversation goes on normally after answers from documents, web or mail: sometimes only the note "(Diese frühere Antwort beruhte auf Texten von außen …)" came instead of an answer; older such answers now leave the history with their question, the model uses the tool again when needed, and the note is never shown or spoken (locks stay)
-- **V01.0.222** Passwords and codes are never spoken: passwords, code words, PINs/TANs, one-time codes and keys are said as "nur schriftlich sichtbar" on every path (browser, speaker, Telegram voice, Wyoming, Siri); the written text keeps them (fixed rule, no switch)
 
 All versions: [CHANGELOG.md](CHANGELOG.md)
 

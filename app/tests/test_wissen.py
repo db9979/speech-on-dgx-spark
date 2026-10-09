@@ -335,6 +335,33 @@ class Pictures(Base):
         finally:
             wissen.DAY_PAGES = old
 
+    def test_the_owner_sees_the_progress(self):
+        c = profile("Wpia")
+        self.switch(c, pictures=True)
+        doc = upload(c, "rechnung.jpg", jpeg()).json()["id"]
+        d = [x for x in c.get("/api/profile/docs").json() if x["id"] == doc][0]
+        self.assertEqual((d["state"], d["pages"], d["todo"], d["vecs"]), ("reading", 1, 1, 0))
+        info = c.get("/api/profile/wissen").json()
+        self.assertIsNone(info["reading"])
+        self.assertIn("quiet", info)
+        seen = {}
+        real = wissen.read_page
+
+        async def watch(jpeg_):
+            seen["me"] = c.get("/api/profile/wissen").json()["reading"]
+            seen["other"] = profile("Wpeer").get("/api/profile/wissen").json()["reading"]
+            return "Seite mit 42"
+        wissen.read_page = watch
+        try:
+            self.assertEqual(run(wissen.due_once(idle=True, now=NOW + 14 * 86400)), "page")
+        finally:
+            wissen.read_page = real
+        self.assertEqual(seen["me"], {"doc": doc, "page": 1})
+        self.assertIsNone(seen["other"])                       # another profile never sees it
+        self.assertIsNone(c.get("/api/profile/wissen").json()["reading"])
+        d = [x for x in c.get("/api/profile/docs").json() if x["id"] == doc][0]
+        self.assertEqual((d["state"], d["todo"]), ("ready", 0))
+
     def test_a_page_that_fails_is_given_up_after_two_tries(self):
         c = profile("Wfritzi")
         self.switch(c, pictures=True)
