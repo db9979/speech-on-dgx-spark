@@ -1105,7 +1105,10 @@ async def _answer(request, turn):
                         if think_tools:
                             payload["chat_template_kwargs"] = {"enable_thinking": True}
                     if not used and need:
-                        payload["tool_choice"] = "required"
+                        # the switch (intent.py) named the one tool: the model only fills in its arguments
+                        force = getattr(turn, "force", None)
+                        payload["tool_choice"] = {"type": "function", "function": {"name": force}} \
+                            if force and force in st["offered"] else "required"
                 # a data question still without a tool: hold the whole round, it may have to be asked again
                 st["hold"] = [] if st["check"] and need and not used and not retried else None
                 try:

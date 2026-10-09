@@ -20,7 +20,7 @@ router = APIRouter()
 
 # key -> regex on the message; "update" instead picks the update unit (update.sh and the self-tests)
 FILTERS = {
-    "chat": r"\bchat:",
+    "chat": r"\b(chat|weiche):",
     "search": r"\bchat: web search",
     "ha": r"\bhomeassistant:",
     "room": r"\broom:",

@@ -371,6 +371,7 @@ SETTINGS = {
     "timing": (True, lambda v: isinstance(v, bool)),
     "learn": (True, lambda v: isinstance(v, bool)),
     "tool_think": (False, lambda v: isinstance(v, bool)),   # think while choosing a tool (admin chat.tool_thinking)
+    "route": (False, lambda v: isinstance(v, bool)),        # targeted tool choice (intent.py, admin chat.routing)
     "fix_learn": (False, lambda v: isinstance(v, bool)),    # learning from corrections (fixes.py, admin chat.learn_fixes)
     "images_on": (False, lambda v: isinstance(v, bool)),    # pictures for the model (images.py, admin chat.images)
     # own wishes for the tone (admin chat.own_style): plain text, no control characters, no markers of outside text

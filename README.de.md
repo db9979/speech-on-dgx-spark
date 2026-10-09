@@ -31,6 +31,7 @@ Alle Optionen ohne Rückfragen (`--mode api --asr 1.7b --tts 0.6b --yes` …) st
 
 <!-- New version: add one line at the top here and in CHANGELOG.md, drop the oldest line here (keep 10). Details go to docs/de and docs/en, not into this README. -->
 
+- **V01.0.202** Gezielte Werkzeugwahl: feste Regeln ordnen Fragen einer Gruppe zu, das Modell sieht nur passende Werkzeuge (Schalter, aus); echter Grund bei Sperren
 - **V01.0.201** iPhone-App: Umschlag neben dem Eingabefeld, Anzeige „Bereit?“ für Nachrichten, Siri „Nachricht mit Spark“
 - **V01.0.200** Nachrichten einfacher: Briefknopf im Chat, „Schreib X, dass …“ ohne Umweg übers Modell, Einschalten mit „Ja“, Bereit-Anzeige
 - **V01.0.199** Browser-Test: eingeschaltete Funktion und neue Version erscheinen ohne F5 (fängt Fehler wie in .197)
@@ -40,7 +41,6 @@ Alle Optionen ohne Rückfragen (`--mode api --asr 1.7b --tts 0.6b --yes` …) st
 - **V01.0.195** iPhone-App: Nachrichten an andere Profile (Liste, Schreiben, Antworten direkt aus der Mitteilung)
 - **V01.0.194** Websuche nach einer Mail-Antwort nur noch bei Nachfragen zur Mail gesperrt; jede andere Frage lässt die Mail-Antwort weg und sucht
 - **V01.0.193** Stimmenwahl für Profile: die Liste bleibt nicht mehr leer („nur Standard“), wenn die Sprachausgabe gerade lädt; Panel und iPhone-App
-- **V01.0.192** Nachrichten zwischen Profilen: „Sag Anna …“ nach „Ja“, an alle, Durchsagen auf Lautsprechern, Sprachnachrichten
 
 Alle Versionen: [CHANGELOG.md](CHANGELOG.md)
 

@@ -74,6 +74,8 @@
     "tool_temperature": 0.1,
     "answer_check": true,
     "tool_thinking": false,
+    "routing": false,
+    "route_model": "off",
     "learn_fixes": false,
     "follow_up": false,
     "no_self_echo": false,

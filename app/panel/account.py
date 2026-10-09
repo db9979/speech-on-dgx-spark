@@ -661,6 +661,7 @@ def profile_settings(request: Request):
     chat = load_config().get("chat", {})
     return {"settings": dict(base, **(profiles.settings(prof["id"]) if prof else {})), "defaults": base,
             "profile": prof, "allow": {"tool_think": bool(prof and chat.get("tool_thinking", False)),
+                                       "route": bool(prof and chat.get("routing", False) is True),
                                        "fix_learn": bool(prof and chat.get("learn_fixes", False) and chat.get("memory", True)),
                                        "style": bool(prof and chat.get("own_style", False)),
                                        "follow": bool(prof and chat.get("follow_up", False)),

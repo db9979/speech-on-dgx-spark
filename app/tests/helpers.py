@@ -75,6 +75,10 @@ def fake_llm():
         if not b.get("stream"):
             if pics:   # images.vision_test: the model "reads" the number
                 return {"choices": [{"message": {"content": "Die Zahl ist 42."}}]}
+            if (b["messages"][0].get("content") or "").startswith("Ordne die Nachricht"):   # intent.ask_model
+                said = last.get("content") or ""
+                return {"choices": [{"message": {"content": json.dumps(
+                    {"absicht": said.split("ROUTE ", 1)[1].split()[0] if "ROUTE " in said else "unklar"})}}]}
             if "korrigiert gerade" in (b["messages"][0].get("content") or ""):  # fixes.py: "FACT ..." in the correction
                 said = last.get("content") or ""
                 fact = said.split("FACT ", 1)[1] if "FACT " in said else ""

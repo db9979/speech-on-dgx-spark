@@ -85,6 +85,19 @@ async def prepare(request):
             carry = None
             print("chat: answer from outside text before; this message asks to write to someone - that answer "
                   "is left out, messages offered", flush=True)
+    # the switch (intent.py): what the person's own latest message asks for, by fixed rules only.
+    # With the admin's chat.routing and the profile's "route" on, it narrows the tools (further down)
+    # and a new request of the person's own that does not point back at an answer made from outside
+    # text leaves that answer out, and with it its lock ("Setz das auf die Liste" keeps it locked).
+    import intent   # (needs chat fully loaded: its word lists)
+    ask0 = messages[-1]["content"] if messages[-1]["role"] == "user" else ""
+    route = intent.classify(ask0, ccfg.get("tool_words", ""))
+    me0 = profiles.current(request)
+    route_on = bool(ccfg.get("routing", False) and me0 and profiles.settings(me0["id"]).get("route"))
+    if carry == "outside" and route_on and intent.wants_own(route, ask0):
+        carry = None
+        print("weiche: answer from outside text before; this message asks for", route.label(),
+              "in its own words - that answer is left out, nothing locked", flush=True)
     messages = [{"role": m["role"], "content": chat.DROPPED if m.get("mark") and i != (marked[-1] if carry else -1)
                  else m["content"]} for i, m in enumerate(messages)]
     system = ccfg.get("system_prompt") or ""
@@ -380,6 +393,16 @@ async def prepare(request):
     tools += ex["tools"]
     if pics:
         tools = []
+    # the switch narrows what the model sees (never more than the rights above left); a question no
+    # rule recognizes may go to the model once as a pick from a fixed list (chat.route_model)
+    all_tools = len(tools)
+    if route_on and tools and not pics and not ha_direct and not ha_wait:
+        if not route.names and ccfg.get("route_model") == "on":
+            # the message as the model would see it anyway (code words already replaced)
+            pick = await intent.ask_model(ccfg, messages[-1]["content"] if messages[-1]["role"] == "user" else "")
+            if pick:
+                route = intent.Route([pick], {pick: "Modell"})
+        tools = intent.narrow(route, tools)
     if ex["hints"] and not pics:
         system = (system + "\n\n" + " ".join(ex["hints"])).strip()
     # once mail or other outside text was read in this answer, nothing in it may change the home or
@@ -396,6 +419,20 @@ async def prepare(request):
     # model's imagination (NEED_TOOLS)
     ask_text = messages[-1]["content"] if messages[-1]["role"] == "user" else ""
     need = chat.needed(ask_text, {t["function"]["name"] for t in tools}, ccfg.get("tool_words", ""))
+    # one clear intent with one needed tool: the first round must call exactly that one
+    force = intent.forced(route, need, {t["function"]["name"] for t in tools}) if route_on else None
+    # the words that matched, only as far as they are still in the message (a code word is gone by now)
+    why = ", ".join(f"{k}: „{v if v.lower() in ask_text.lower() or v in ('Modell', 'Sende-Bitte') else '…'}“"
+                    for k, v in route.why.items())[:200]
+    print("weiche: Absicht", route.label(), "| Grund", why or "-",
+          "| Werkzeuge", f"{len(tools)} von {all_tools}" if len(tools) != all_tools else len(tools),
+          "| Pflicht", force or ", ".join(need) or "-", "| gesperrt", carry or "nichts",
+          "| eingrenzen", "an" if route_on else "aus", flush=True)
+    if carry:   # what is locked and why, said plainly so the model never makes up another reason
+        line = intent.lock_line(carry, {t["function"]["name"] for t in tools} & locked({"mail": carry == "mail",
+                                                                                          "outside": carry != "mail"}))
+        if line:
+            system = (system + "\n\n" + line).strip()
     check_on = bool(ccfg.get("answer_check", True))
     tool_temp = float(ccfg.get("tool_temperature", 0.1))
     # thinking only while choosing the tool: the admin allows it, the profile switches it on (never guests)

@@ -2,6 +2,7 @@
 
 Every version in one line, newest first (taken from the commit messages, so some lines are German, some English). Older entries have no version number.
 
+- **V01.0.202** · 2026-10-09 · Gezielte Werkzeugwahl: Weiche `intent.py` ordnet Fragen mit festen Regeln einer Gruppe zu (Journalzeile „weiche:“), mit Schalter nur passende Werkzeuge und Pflicht-Werkzeug, eigene neue Bitte hebt Sperre nach Fremdtext auf, echter Sperrgrund ans Modell, optional Modell als Einordner; Prüfstand mit 90+ Sätzen
 - **V01.0.201** · 2026-10-09 · iPhone-App: Umschlag neben dem Eingabefeld, Anzeige „Bereit?“ für Nachrichten, Siri „Nachricht mit Spark“
 - **V01.0.200** · 2026-10-09 · Nachrichten einfacher: Briefknopf im Chat, „Schreib X, dass …“ erkennt das Panel selbst, Einschalten mit „Ja“, Bereit-Anzeige, Admin „für alle einschalten“, echter Grund statt Ausrede
 - **V01.0.199** · 2026-10-09 · Browser-Test: eingeschaltete Funktion und neue Version erscheinen ohne F5 (fängt Fehler wie in .197)

@@ -31,6 +31,7 @@ All options for running without questions (`--mode api --asr 1.7b --tts 0.6b --y
 
 <!-- New version: add one line at the top here and in CHANGELOG.md, drop the oldest line here (keep 10). Details go to docs/de and docs/en, not into this README. -->
 
+- **V01.0.202** Targeted tool choice: fixed rules sort questions into a group, the model sees only matching tools (switch, off); real reason when locked
 - **V01.0.201** iPhone app: envelope next to the input, "Ready?" view for messages, Siri "Message with Spark"
 - **V01.0.200** Simpler messages: envelope button in the chat, "Schreib X, dass …" read by the panel itself, switch on with "Ja", ready view
 - **V01.0.199** Browser test: a function switched on and a new version show without F5 (catches bugs like the one in .197)
@@ -40,7 +41,6 @@ All options for running without questions (`--mode api --asr 1.7b --tts 0.6b --y
 - **V01.0.195** iPhone app: messages to other profiles (list, write, reply right from the notification)
 - **V01.0.194** Web search after an answer from mail is locked only for follow-up questions about that mail; any other question leaves the mail answer out and searches
 - **V01.0.193** Voice choice for profiles: the list no longer stays empty ("Default" only) while the speech output loads; panel and iPhone app
-- **V01.0.192** Messages between profiles: "Tell Anna …" after "Yes", to everybody, announcements on speakers, voice messages
 
 All versions: [CHANGELOG.md](CHANGELOG.md)
 

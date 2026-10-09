@@ -393,9 +393,12 @@ def validate(new):
         raise HTTPException(400, "face: " + " or ".join(FACES))
     if ch.get("self_echo_mode", "pause") not in ("text", "pause"):
         raise HTTPException(400, "self_echo_mode: text or pause")
-    for k in ("answer_check", "tool_thinking", "learn_fixes", "own_style", "follow_up", "no_self_echo", "images"):
+    for k in ("answer_check", "tool_thinking", "learn_fixes", "own_style", "follow_up", "no_self_echo", "images",
+              "routing"):
         if not isinstance(ch.get(k, False), bool):
             raise HTTPException(400, f"chat {k} must be true or false")
+    if ch.get("route_model", "off") not in ("off", "on"):
+        raise HTTPException(400, "route_model: off or on")
     for sec in ("asr", "tts"):
         if not MODEL_ID.fullmatch(str(new[sec]["model"])):
             raise HTTPException(400, f"{sec}: only Qwen's own speech models (Qwen/Qwen3-ASR-... or Qwen/Qwen3-TTS-...)")
