@@ -31,6 +31,7 @@ Alle Optionen ohne Rückfragen (`--mode api --asr 1.7b --tts 0.6b --yes` …) st
 
 <!-- New version: add one line at the top here and in CHANGELOG.md, drop the oldest line here (keep 10). Details go to docs/de and docs/en, not into this README. -->
 
+- **V01.0.237** Update-Prüfung: GitHub-Grenze von 60 Abfragen pro Stunde erkannt (Hinweis mit Uhrzeit statt Fehlerflut), Statuscode im Log
 - **V01.0.236** Gemeinsame Dokumente: ein Profil gibt einzelne fertige Dokumente mit „Für alle“ frei (ohne neu einzulesen), die anderen Profile finden sie in der Suche und sehen sie unter Ich → Dokumente → „Von anderen für alle freigegeben“; nur der Besitzer oder der Admin (Zustand → Monitoring) nimmt es zurück; Gäste und unbekannte Stimmen am Lautsprecher nie; Admin- und Profilschalter, beide aus
 - **V01.0.235** Lautsprecher erkennt die Inhaberstimme nachvollziehbar: Logs → Lautsprecher zeigt pro Frage Ähnlichkeit, nötigen Wert und Sekunden Sprache; bei zu kurzer Frage bittet der Assistent um einen ganzen Satz; „Stimme hier anlernen“ nimmt fünf Sätze
 - **V01.0.234** Pebble einfacher installieren: Ich → Pebble-Uhr zeigt einen QR-Code zur App-Datei und die drei Schritte (App auf die Uhr, Uhr verbunden?, Koppeln); gibt es auf dem Spark eine neuere Uhr-App, steht höchstens einmal am Tag „Neue Uhr-App“ unter einer Antwort (Uhr-App 1.4.0)
@@ -40,7 +41,6 @@ Alle Optionen ohne Rückfragen (`--mode api --asr 1.7b --tts 0.6b --yes` …) st
 - **V01.0.230** Pebble-Uhr zuverlässiger und Gesicht wie im Web: Uhr wiederholt fehlgeschlagene Nachrichten, gibt nach 30 s ohne Antwort auf, meldet den Puffer fortlaufend (verlorene Meldung stoppt den Ton nicht mehr), alte Antworten werden verworfen; Handy schickt Text vor Ton, größere Tonstücke (3,8 KB), wiederholt statt still zu verlieren; pro Antwort eine Zeitzeile im Log (Bereich „Uhr“); neu und aus (Admin + Profil): „Pebble-Uhr koppeln“ mit Einrichtungscode aus Ich → Pebble-Uhr, eigener Uhr-Schlüssel nur für /api/watch/; die Uhr zeigt das im Panel gewählte Gesicht (Roboter oder Comic)
 - **V01.0.229** Update auf tars klappt wieder: ein Selbsttest von .225 suchte install.sh, das beim Update-Selbsttest nicht dabei ist
 - **V01.0.228** Zustand: Karte „Eigene Dokumente“ unter Zustand → Monitoring zeigt, ob das Bedeutungs-Modell läuft (mit Arbeitsspeicher), startet, auf freien Speicher wartet oder einen Fehler hat, wie viele Stücke schon eine Bedeutung haben und wie viele Seiten noch aufs Lesen warten (nur Zahlen, nur Admin, sichtbar wenn ein Schalter an ist)
-- **V01.0.227** iPhone-App: „Meine Dokumente“ ansehen (PDF und Bilder in Apples Vorschau, sonst der gespeicherte Text)
 
 Alle Versionen: [CHANGELOG.md](CHANGELOG.md)
 

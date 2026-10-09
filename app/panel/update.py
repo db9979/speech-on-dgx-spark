@@ -65,20 +65,64 @@ def pick_green(runs, branch, head):
     return green, state
 
 
+class GitHubRefused(Exception):
+    """GitHub answered with an error status; until: when its hourly limit allows the next question."""
+
+    def __init__(self, status, until=None):
+        super().__init__(f"HTTP {status}")
+        self.status, self.until = status, until
+
+
+def rate_limit_until(status, headers, now):
+    """When GitHub's limit for unauthenticated questions (60 per hour and address) is reached: the time
+    it is lifted again, from Retry-After or X-RateLimit-Reset, at most one hour ahead; else None."""
+    if status not in (403, 429):
+        return None
+    try:
+        after = int(headers.get("retry-after", ""))
+        return now + max(0, min(after, 3600))
+    except ValueError:
+        pass
+    if headers.get("x-ratelimit-remaining") != "0" and status != 429:
+        return None
+    try:
+        reset = int(headers.get("x-ratelimit-reset", ""))
+    except ValueError:
+        reset = 0
+    return min(max(reset, now + 60), now + 3600)
+
+
 async def green_runs(repo, branch):
     """The newest runs of the "Tests" workflow (update.sh asks the same before it installs anything)."""
     async with httpx.AsyncClient(timeout=10) as c:
         r = await c.get(f"https://api.github.com/repos/{repo}/actions/workflows/tests.yml/runs",
                         params={"branch": branch, "event": "push", "per_page": 30},
                         headers={"Accept": "application/vnd.github+json"})
-    r.raise_for_status()
+    if r.status_code != 200:
+        raise GitHubRefused(r.status_code, rate_limit_until(r.status_code, r.headers, time.time()))
     return r.json().get("workflow_runs")
+
+
+# a failed question to GitHub is not repeated at once: every page view and the app ask for the
+# state, and without this a refusal turned into a flood of questions and log lines
+_FAIL_PAUSE = 120
+_failed = {"until": 0.0, "data": None, "limited": False}
+
+
+def _remember_failure(data, until, limited):
+    _failed.update(until=until, data=data, limited=limited)
+    data["retry_at"] = until
+    return data
 
 
 async def remote_state(force=False):
     """Newest commit on the remote branch and the commits since the installed one."""
-    if not force and _remote_cache["data"] and time.time() - _remote_cache["time"] < 600:
+    now = time.time()
+    if not force and _remote_cache["data"] and now - _remote_cache["time"] < 600:
         return _remote_cache["data"]
+    # after a refusal: wait the pause out; GitHub's hourly limit holds even for "Jetzt prüfen"
+    if _failed["data"] and now < _failed["until"] and (_failed["limited"] or not force):
+        return _failed["data"]
     ver = installed_version()
     remote, branch = ver.get("remote"), ver.get("branch", "main")
     data = {"checked": time.time(), "latest": None, "behind": None, "commits": [], "error": None}
@@ -99,15 +143,29 @@ async def remote_state(force=False):
     # newest commit of main can be red for a while when several changes land at once.
     repo = github_repo(remote)
     if repo:
+        until, limited = now + _FAIL_PAUSE, False
         try:
             green, data["head_state"] = pick_green(await green_runs(repo, branch), branch, data["head"])
+        except GitHubRefused as e:
+            green, limited = None, e.until is not None
+            until = e.until or until
+            if limited:
+                print(f"update check: GitHub rate limit reached (HTTP {e.status}), next check after "
+                      f"{time.strftime('%H:%M', time.localtime(until))}", flush=True)
+            else:
+                print(f"update check: GitHub test results not readable: HTTP {e.status}", flush=True)
         except (httpx.HTTPError, ValueError) as e:
             print(f"update check: GitHub test results not readable: {type(e).__name__}", flush=True)
             green = None
         if not green:
-            data["error"] = "GitHub-Testergebnisse nicht abrufbar; ohne sie wird nichts installiert"
+            if limited:
+                data["error"] = ("GitHub beantwortet gerade keine Abfragen mehr (Grenze von 60 pro Stunde erreicht). "
+                                 f"Nächste Prüfung ab {time.strftime('%H:%M', time.localtime(until))}; "
+                                 "solange wird nichts installiert.")
+            else:
+                data["error"] = "GitHub-Testergebnisse nicht abrufbar; ohne sie wird nichts installiert"
             data["latest"] = None
-            return data
+            return _remember_failure(data, until, limited)
         data["latest"] = green
     if data["latest"] == ver.get("commit"):
         data["behind"] = 0
@@ -134,6 +192,7 @@ async def remote_state(force=False):
                 pass
         if data["behind"] is None:
             data["behind"] = -1  # newer version exists, details unknown
+    _failed.update(until=0.0, data=None, limited=False)
     _remote_cache.update(time=time.time(), data=data)
     return data
 
