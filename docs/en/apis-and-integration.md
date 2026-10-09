@@ -69,6 +69,27 @@ Admin Panel → Settings → Audio:
 
 If Open WebUI runs in Docker on the same Spark, use the LAN IP or `host.docker.internal` instead of `SPARK` (container started with `--add-host=host.docker.internal:host-gateway`). The panel shows these values ready to copy in the **Einbinden** tab.
 
+### AI agents: Hermes Agent and OpenClaw
+
+An agent such as [Hermes Agent](https://hermes-agent.nousresearch.com) (Nous Research) or [OpenClaw](https://docs.openclaw.ai) can use the Spark's speech recognition and speech output. The agent runs on another computer and only gets audio and text to read out, no access to the assistant's profiles, memory or tools. The panel shows ready-made snippets under Integrate.
+
+Hermes Agent, `~/.hermes/config.yaml`:
+
+```yaml
+stt:
+  enabled: true
+  provider: openai
+  language: en
+  openai: {base_url: "http://SPARK:31001/v1", api_key: "KEY", model: "qwen3-asr"}
+tts:
+  provider: openai
+  openai: {base_url: "http://SPARK:31002/v1", api_key: "KEY", model: "qwen3-tts", voice: "ryan"}
+```
+
+OpenClaw: `tts.provider: "openai"` with `tts.providers.openai.baseUrl` = `http://SPARK:31002/v1` (plus `apiKey`, `model`, `speakerVoice`, `responseFormat: "mp3"`), and for voice messages an entry in `tools.media.models` with `provider: "openai"`, `baseUrl` = `http://SPARK:31001/v1` and `capabilities: ["audio"]`; store the key as an OpenAI API key profile.
+
+Do not install the agent on the Spark itself: it runs commands and could reach settings and keys. Without an API key anyone on the home network can use the speech services.
+
 ### "Hey Siri, ask Spark"
 
 An iPhone shortcut sends the dictated question to `POST /api/siri/ask` (header `X-Speech-Device` with a

@@ -416,6 +416,14 @@
       <h2>Formate</h2><div class="mut">TTS: mp3 (Standard), wav, flac, opus, pcm. Gestreamt mit <code>"stream": true, "response_format": "pcm"</code>: Server-Sent Events <code>speech.audio.delta</code> mit base64-PCM (16 bit, mono, 24 kHz), am Ende <code>speech.audio.done</code>. Pro Anfrage überschreibbar: <code>"temperature"</code>, <code>"top_p"</code>, <code>"top_k"</code>, <code>"seed"</code>. Sprechstil pro Anfrage mit <code>"instructions": "ruhig, freundlich, eher langsam"</code> (ohne Angabe gilt die Standard-Anweisung aus der Konfiguration; nur 1.7B-Modelle werten das aus). VoiceDesign mit <code>"task_type": "VoiceDesign"</code> und <code>"instructions"</code>, falls eingeschaltet. STT: json, verbose_json, text. Sprache als Name („German“) oder ISO-Code („de“).</div>
     </div>
   </div>
+  <div class="card"><h2>KI-Agenten: Hermes und OpenClaw</h2>
+    <div class="mut">Ein Agent wie Hermes Agent (Nous Research) oder OpenClaw kann mit dieser Spark hören und sprechen: Spracherkennung und Sprachausgabe laufen hier, der Agent selbst läuft woanders. Er bekommt nur Audio und den Text zum Vorlesen, keinen Zugang zu Profilen, Gedächtnis oder Werkzeugen des Assistenten.</div>
+    <div class="two">
+      <div><h2>Hermes Agent</h2><div class="mut">Ergänzen in <code>~/.hermes/config.yaml</code>, dann den Agenten neu starten.</div><pre id="int-hermes"></pre></div>
+      <div><h2>OpenClaw</h2><div class="mut">In der OpenClaw-Konfiguration ergänzen. Den Schlüssel für die Spracherkennung als OpenAI-API-Key-Profil hinterlegen.</div><pre id="int-openclaw"></pre></div>
+    </div>
+    <div class="mut" style="margin-top:8px">Läuft der Agent auf einem anderen Rechner, die LAN-IP der Spark nehmen. Ohne API-Schlüssel (Einstellungen → Sicherheit) kann jeder im Heimnetz die Sprachdienste nutzen. Den Agenten nicht auf dieser Spark installieren: Er führt selbst Befehle aus und käme so an Einstellungen und Schlüssel.</div>
+  </div>
   <div class="card"><h2>Pebble-Uhr</h2>
     <div class="mut">App „Spark“ für Pebble Time 2 und Core 2 Duo (Antwort als Text und über den Lautsprecher der Uhr) sowie Pebble Round 2 (nur Text). Frage per Knopfdruck, die Pebble-Diktierfunktion macht Text daraus, die Antwort kommt von hier.</div>
     <ol class="mut" style="margin:8px 0 0 18px;padding:0;line-height:1.6">

@@ -272,6 +272,48 @@ async function loadInt(){const c=await (await api('/api/config')).json();const v
   $('int-voices').textContent=v.model_kind==='voice_design'?t('VoiceDesign-Modell: die Stimme wird über die Standard-Anweisung beschrieben.','VoiceDesign model: the voice is described by the default instruction.'):((v.voices||[]).join(', ')||t('(Dienst lädt noch)','(service still loading)'));
   const auth=c.api.key?` \\\n  -H "Authorization: Bearer ${c.api.key}"`:'';
   const hello=t('Hallo aus der Spark.','Hello from the Spark.'),lng=t('German','English'),code=t('de','en'),fn=t('hallo','hello');
+  const akey=c.api.key||'sk-local';
+  $('int-hermes').textContent=`stt:
+  enabled: true
+  provider: openai
+  language: ${code}
+  openai:
+    base_url: ${asr}
+    api_key: ${akey}
+    model: ${c.asr.model}
+tts:
+  provider: openai
+  openai:
+    base_url: ${tts}
+    api_key: ${akey}
+    model: ${c.tts.model}
+    voice: ${voice}`;
+  $('int-openclaw').textContent=`{
+  tts: {
+    auto: "inbound",
+    provider: "openai",
+    providers: {
+      openai: {
+        baseUrl: "${tts}",
+        apiKey: "${akey}",
+        model: "${c.tts.model}",
+        speakerVoice: "${voice}",
+        responseFormat: "mp3",
+      },
+    },
+  },
+  tools: {
+    media: {
+      models: [{
+        provider: "openai",
+        model: "${c.asr.model}",
+        baseUrl: "${asr}",
+        capabilities: ["audio"],
+      }],
+      audio: { enabled: true },
+    },
+  },
+}`;
   $('int-curl').textContent=`# ${t('Text -> Sprache','Text -> speech')} (mp3)
 curl ${tts}/audio/speech${auth} \\
   -H "Content-Type: application/json" \\

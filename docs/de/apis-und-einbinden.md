@@ -69,6 +69,27 @@ Admin-Panel → Einstellungen → Audio:
 
 Läuft Open WebUI in Docker auf derselben Spark, statt `SPARK` entweder die LAN-IP oder `host.docker.internal` nehmen (Container mit `--add-host=host.docker.internal:host-gateway`). Das Panel zeigt diese Werte im Reiter „Einbinden“ zum Kopieren an.
 
+### KI-Agenten: Hermes Agent und OpenClaw
+
+Ein Agent wie [Hermes Agent](https://hermes-agent.nousresearch.com) (Nous Research) oder [OpenClaw](https://docs.openclaw.ai) kann die Spracherkennung und Sprachausgabe der Spark nutzen. Der Agent läuft auf einem anderen Rechner und bekommt nur Audio und Vorlesetext, keinen Zugang zu Profilen, Gedächtnis oder Werkzeugen des Assistenten. Das Panel zeigt die fertigen Bausteine unter Einbinden zum Kopieren.
+
+Hermes Agent, `~/.hermes/config.yaml`:
+
+```yaml
+stt:
+  enabled: true
+  provider: openai
+  language: de
+  openai: {base_url: "http://SPARK:31001/v1", api_key: "SCHLÜSSEL", model: "qwen3-asr"}
+tts:
+  provider: openai
+  openai: {base_url: "http://SPARK:31002/v1", api_key: "SCHLÜSSEL", model: "qwen3-tts", voice: "ryan"}
+```
+
+OpenClaw: `tts.provider: "openai"` mit `tts.providers.openai.baseUrl` = `http://SPARK:31002/v1` (dazu `apiKey`, `model`, `speakerVoice`, `responseFormat: "mp3"`), und für Sprachnachrichten ein Eintrag in `tools.media.models` mit `provider: "openai"`, `baseUrl` = `http://SPARK:31001/v1` und `capabilities: ["audio"]`; den Schlüssel als OpenAI-API-Key-Profil hinterlegen.
+
+Den Agenten nicht auf der Spark selbst installieren: Er führt Befehle aus und käme an Einstellungen und Schlüssel. Ohne API-Schlüssel kann jeder im Heimnetz die Sprachdienste nutzen.
+
 ### „Hey Siri, frag Spark“
 
 Ein iPhone-Kurzbefehl schickt die diktierte Frage an `POST /api/siri/ask` (Header `X-Speech-Device` mit
