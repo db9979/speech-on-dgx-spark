@@ -31,6 +31,7 @@ Alle Optionen ohne Rückfragen (`--mode api --asr 1.7b --tts 0.6b --yes` …) st
 
 <!-- New version: add one line at the top here and in CHANGELOG.md, drop the oldest line here (keep 10). Details go to docs/de and docs/en, not into this README. -->
 
+- **V01.0.222** Passwörter und Codes werden nie ausgesprochen: Passwörter, Codewörter, PINs/TANs, Einmalcodes und Schlüssel sagt die Stimme auf allen Wegen (Browser, Lautsprecher, Telegram-Sprachnachricht, Wyoming, Siri) als „nur schriftlich sichtbar“; im geschriebenen Text bleiben sie stehen (feste Regel, ohne Schalter)
 - **V01.0.221** Raum-Modus am Lautsprecher antwortet nur noch einmal: beendet das Board sein Zuhören, geht der Satz an den Raum-Modus statt zusätzlich als normale Frage
 - **V01.0.220** Antwort beginnt früher: Gezielte Werkzeugwahl kann unklaren Fragen nur Websuche und Gedächtnis zeigen (Auswahl „nur Websuche und Gedächtnis“, aus), die Anfrage wird halb so lang; ein langer erster Satz geht schon ab 50 Zeichen am Komma zur Sprachausgabe
 - **V01.0.219** Aussetzer mitten im Satz: der Browser puffert danach länger (mehr nach jedem weiteren), damit es einmal stockt statt dauernd; das Log trennt „before the piece“ (Pause zwischen Sätzen) von „inside the piece“ (echter Aussetzer)
@@ -40,7 +41,6 @@ Alle Optionen ohne Rückfragen (`--mode api --asr 1.7b --tts 0.6b --yes` …) st
 - **V01.0.215** Logs: Die eigenen Abrufe der Logs-Seite zählen nicht mehr als Fehler („f=errors“ in der Adresse) und stehen nicht mehr im Journal; bei Webanfragen entscheidet nur der Statuscode
 - **V01.0.214** Telegram-Konflikt behoben: Das Panel startete seine Hintergrundaufgaben (Telegram-Abruf, Erinnerungen, Wächter …) doppelt, weil der https-Server sie noch einmal ausführte; jetzt einmal. Meldet Telegram trotzdem einen Konflikt, wartet der Spark immer länger, schreibt selten ins Log und zeigt unter Zustand einen Hinweis; Wetterdienst-Ausfall (503) wird still wiederholt
 - **V01.0.213** Raum-Modus aus der Ferne: „Raummodus im Wohnzimmer an“ im Panel, in der App oder an einem anderen Lautsprecher startet einen eigenen, verbundenen Lautsprecher nach „Ja“ (feste Regel, kein Home Assistant, kein Codewort), „… aus“ beendet; Admin- und Profil-Schalter, aus
-- **V01.0.212** Logs „Überblick zuerst“: Zustand → Logs mit Kacheln (Fehler, Bereiche mit Verlauf), letztem Fehler samt Hinweis, Filterknöpfen mit Zahlen, aufgeräumter Liste (Uhrzeit, Bereich, rot/gelb, ×n, Pausen), Suche, Live und „Kopieren für Thread“; unter Erweitert ausführliche Diagnose pro Bereich, schaltet sich selbst ab
 
 Alle Versionen: [CHANGELOG.md](CHANGELOG.md)
 

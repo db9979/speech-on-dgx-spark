@@ -1054,6 +1054,11 @@ class Siri(unittest.TestCase):
         g.post("/api/siri/ask", json={"text": "Sonnenblume, wie warm ist es?"}, headers={"X-Speech-Device": key})
         self.assertNotIn("Sonnenblume", json.dumps(profiles.convos(uid)))
         a.put("/api/profile/homeassistant/code", json={"code": ""})
+        # Siri reads the answer aloud: a password in it is not spoken, the app's history keeps it
+        r = g.post("/api/siri/ask", json={"text": "SAY |x| Dein WLAN-Passwort ist Sonne123."}, headers={"X-Speech-Device": key})
+        self.assertNotIn("Sonne123", r.json()["answer"])
+        self.assertIn("nur schriftlich sichtbar", r.json()["answer"])
+        self.assertIn("Sonne123", json.dumps(profiles.convos(uid)))
 
 
 class Quality(unittest.TestCase):

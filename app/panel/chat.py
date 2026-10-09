@@ -14,7 +14,7 @@ from fastapi import APIRouter, Depends, HTTPException, Request
 from fastapi.responses import StreamingResponse
 
 sys.path.insert(0, os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
-from textnorm import guess_language  # noqa: E402
+from textnorm import guess_language, hide_secrets  # noqa: E402
 import documents  # noqa: E402
 import speakers  # noqa: E402
 import calendars  # noqa: E402
@@ -1676,7 +1676,8 @@ async def siri_ask(request: Request):
                                          "updated": int(time.time() * 1000), "msgs": keep})
     except Exception as e:
         print("siri convo:", type(e).__name__, e, flush=True)
-    return {"answer": answer}
+    # Siri reads the answer aloud: no passwords or codes in it (the app's history keeps them)
+    return {"answer": hide_secrets(answer)}
 
 
 def _watch_job(job_id):

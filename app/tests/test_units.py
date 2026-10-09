@@ -25,6 +25,67 @@ class Text(unittest.TestCase):
         self.assertEqual(textnorm.guess_language("What is the weather like and when does the train leave?"), "English")
 
 
+class Secrets(unittest.TestCase):
+    """Fixed rule: passwords, code words, one-time codes and keys are never spoken (textnorm.hide_secrets)."""
+    HIDDEN = [
+        ("Dein WLAN-Passwort ist Sonne123, soll ich es dir schicken?", "Sonne123"),
+        ("Das Passwort für das Gäste-WLAN lautet: Sonne Mond Sterne.", "Mond"),
+        ("Das Passwort ist Sonne.", "Sonne."),
+        ("Dein Passwort lautet sonnenblume", "sonnenblume"),
+        ("Dein Bestätigungscode lautet 482 913. Er gilt zehn Minuten.", "913"),
+        ("Der Code ist 4711.", "4711"),
+        ("Deine SIM-PIN 1234 läuft ab.", "1234"),
+        ("Dein PIN-Code: 0815", "0815"),
+        ("Die TAN ist 123456.", "123456"),
+        ("Dein Codewort ist „Sonnenblume“, sag es leise.", "Sonnenblume"),
+        ("Das Passwort ist S, o, n, n, e.", "n, n"),
+        ("The password is hunter2.", "hunter2"),
+        ("Your API key is sk-proj-abcdefghijklmnop.", "abcdefghijklmnop"),
+        ("Der Schlüssel ghp_abcdefghijklmnopqrstuvwxyz1234 ist neu.", "ghp_"),
+        ("Hier: aB3dE5gH7jK9mN1pQ2", "aB3dE5"),
+        ("otpauth://totp/Spark?secret=JBSWY3DPEHPK3PXP", "JBSWY3DP"),
+    ]
+    KEPT = ["Das Passwort ist falsch.", "Dein Passwort ist im Tresor gespeichert.", "Was ist dein Passwort?",
+            "Der Abstand ist 50 cm.", "Der Pinguin ist 3 Jahre alt.", "Die Tante ist 80.", "Hockey ist toll.",
+            "Sendungsnummer 1Z999AA10123456784 ist unterwegs.", "Das Modell heißt Qwen3.8-27B.",
+            "Die Postleitzahl ist 80331.", "Morgen um 14:30 ist es sonnig."]
+
+    def test_secrets_are_not_spoken(self):
+        for text, value in self.HIDDEN:
+            out = textnorm.hide_secrets(text)
+            self.assertNotIn(value, out, text)
+            self.assertTrue("nur schriftlich sichtbar" in out or "shown in writing only" in out, out)
+
+    def test_ordinary_sentences_stay(self):
+        for text in self.KEPT:
+            self.assertEqual(textnorm.hide_secrets(text), text)
+
+    def test_hint_follows_the_language(self):
+        self.assertIn("shown in writing only", textnorm.hide_secrets("The password is hunter2.", "English"))
+        self.assertIn("nur schriftlich sichtbar", textnorm.hide_secrets("The password is hunter2.", "German"))
+
+    def test_both_speech_services_always_hide(self):
+        """Before the clean_text switch, so turning clean-up off never lets a password through."""
+        import ast
+        import os
+        for name in ("tts_server.py", "tts_proxy.py"):   # read, not imported: the server needs soundfile/torch
+            path = os.path.join(os.path.dirname(textnorm.__file__), name)
+            with open(path, encoding="utf-8") as f:
+                code = f.read()
+            fn = next(n for n in ast.walk(ast.parse(code)) if isinstance(n, (ast.FunctionDef, ast.AsyncFunctionDef))
+                      and n.name == "speech")
+            src = ast.get_source_segment(code, fn)
+            self.assertIn("hide_secrets", src, name)
+            self.assertLess(src.index("hide_secrets"), src.index('cfg.get("clean_text"'), name)
+
+    def test_long_text_is_fast(self):
+        import time
+        start = time.perf_counter()
+        for t in ("Passwort " * 2200, "Code ist " + "x " * 9000, "a" * 20000, "S, " * 6000):
+            textnorm.hide_secrets(t[:20000])
+        self.assertLess(time.perf_counter() - start, 2.0)
+
+
 class HA(unittest.TestCase):
     def test_entry_validation(self):
         with self.assertRaises(ValueError):

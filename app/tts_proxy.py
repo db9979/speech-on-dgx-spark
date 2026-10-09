@@ -20,7 +20,8 @@ from fastapi import Depends, FastAPI, HTTPException, Request
 from fastapi.responses import Response, StreamingResponse
 
 from common import BodyLimit, KeyedCORS, inside, outside_view, api_key_dependency, api_key_ok, engine_crash_reason, load_config, quiet_access_log
-from textnorm import MAX_INPUT, apply_pronunciations, clean_text, guess_language, parse_pronunciations, speak_numbers
+from textnorm import (MAX_INPUT, apply_pronunciations, clean_text, guess_language, hide_secrets, parse_pronunciations,
+                      speak_numbers)
 
 STATE_DIR = os.environ.get("SPEECH_SPARK_STATE", "/var/lib/speech-spark/state")
 VOICES_DIR = os.environ.get("SPEECH_SPARK_VOICES", "/var/lib/speech-spark/voices")  # panel tab "Stimmen"
@@ -285,6 +286,8 @@ async def speech(request: Request):
     if status != "ready":
         raise HTTPException(503, f"TTS engine {status}: {error or ''}".strip())
 
+    # always, whatever clean_text says (textnorm.SECRET_HINT)
+    body["input"] = await asyncio.to_thread(hide_secrets, str(body["input"]), body.get("language"))
     if cfg.get("clean_text", True):
         body["input"] = await asyncio.to_thread(clean_text, body["input"], calm=cfg.get("calm", True))
         if not body["input"]:

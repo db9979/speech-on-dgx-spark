@@ -16,7 +16,7 @@ from fastapi.responses import Response
 from pydantic import BaseModel
 
 from common import BodyLimit, KeyedCORS, inside, outside_view, ServiceState, api_key_dependency, api_key_ok, check_memory, estimate_gib, load_config, quiet_access_log, torch_dtype
-from textnorm import MAX_INPUT, apply_pronunciations, clean_text, parse_pronunciations, speak_numbers
+from textnorm import MAX_INPUT, apply_pronunciations, clean_text, hide_secrets, parse_pronunciations, speak_numbers
 
 VOICES_DIR = os.environ.get("SPEECH_SPARK_VOICES", "/var/lib/speech-spark/voices")
 
@@ -144,6 +144,7 @@ def speech(req: SpeechRequest):
     text = req.input
     if len(text) > MAX_INPUT:
         raise HTTPException(400, f"input: at most {MAX_INPUT} characters per request")
+    text = hide_secrets(text, lang)  # always, whatever clean_text says (textnorm.SECRET_HINT)
     if cfg.get("clean_text", True):
         text = clean_text(text, calm=cfg.get("calm", True))
     if PRONUNCIATION:

@@ -2,6 +2,7 @@
 
 Every version in one line, newest first (taken from the commit messages, so some lines are German, some English). Older entries have no version number.
 
+- **V01.0.222** · 2026-10-09 · Passwörter und Codes werden nie ausgesprochen: Passwörter, Codewörter, PINs/TANs, Einmalcodes und Schlüssel sagt die Stimme auf allen Wegen (Browser, Lautsprecher, Telegram-Sprachnachricht, Wyoming, Siri) als „nur schriftlich sichtbar“; im geschriebenen Text bleiben sie stehen (feste Regel, ohne Schalter)
 - **V01.0.221** · 2026-10-09 · Raum-Modus am Lautsprecher antwortet nur noch einmal: beendet das Board sein Zuhören, geht der Satz an den Raum-Modus statt zusätzlich als normale Frage
 - **V01.0.220** · 2026-10-09 · Antwort beginnt früher: chat.route_model "lean" (Gezielte Werkzeugwahl, aus) gibt Fragen ohne erkannte Regel nur web_search, history_search, memory_save; split_sentences schickt einen langen ersten Satz schon ab 50 Zeichen (vorher 120) am Komma zur Sprachausgabe
 - **V01.0.219** · 2026-10-09 · Aussetzer mitten im Satz: der Browser puffert danach länger (mehr nach jedem weiteren), damit es einmal stockt statt dauernd; das Log trennt „before the piece“ (Pause zwischen Sätzen) von „inside the piece“ (echter Aussetzer)

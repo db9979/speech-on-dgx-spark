@@ -72,6 +72,84 @@ def clean_text(text, calm=False):
     return re.sub(r"(?m)([\w%)\]\"“”»'])$", r"\1.", t)
 
 
+# Passwords, code words, one-time codes and keys are never spoken (fixed rule, no switch): a
+# speaker in the room, the car or Siri would say them to everyone nearby. The written answer keeps
+# them; only the voice says "nur schriftlich sichtbar" instead. Runs in both speech services on
+# every request, whatever clean_text says, so every path (chat, speaker, Telegram voice, Wyoming,
+# reminders) is covered.
+SECRET_HINT = {"de": "nur schriftlich sichtbar", "en": "shown in writing only"}
+SECRET_WORD = (r"(?:\w+-)*(?:\w*(?:passw(?:ort|örter|ord)|kennw(?:ort|örter)|codew(?:ort|örter)|zugangsdaten|"
+               r"passphrase|passcode|geheimzahl|schlüssel|token|secret)\w*|\w*codes?|(?:pin|tan|otp|key)s?)(?!\w)")
+# the value after "Passwort ... ist/lautet/:" (up to six words in between: "für das Gäste-WLAN")
+SECRET_SAID = re.compile(r"(?i)(?<!\w)(" + SECRET_WORD + r"(?:[ \t]+[^\s.,;:!?=]+){0,6}?[ \t]*"
+                         r"(?:(?<!\w)(ist|lautet|lauten|heißt|heissen|heißen|sind|is|are|reads)(?!\w)[ \t]*:?|[:=]))[ \t]*"
+                         r"([^\n]*)")
+# "PIN 1234", "Code 482 913", "Token ab12cd34": a value with a digit right after the word
+SECRET_NEXT = re.compile(r"(?i)(?<!\w)(" + SECRET_WORD + r"[ \t]+)((?=[^\s]*\d)[^\s,;!?]*[^\s,;!?.:](?:[ -]\d{2,4}(?!\w))*)")
+SECRET_TOKEN = re.compile(r"(?<![\w/+=-])(?:"
+                          r"(?:sk|pk|rk)-[A-Za-z0-9_-]{12,}|gh[pousr]_[A-Za-z0-9]{20,}|github_pat_\w{20,}|"
+                          r"xox[abpr]-[A-Za-z0-9-]{10,}|AKIA[A-Z0-9]{12,}|eyJ[A-Za-z0-9_-]{10,}\.[A-Za-z0-9._-]{10,}|"
+                          r"otpauth://\S+|-----BEGIN[^-]{0,40}-----.*?(?:-----END[^-]{0,40}-----|$)|"
+                          r"[A-Za-z0-9_+/=]{16,})(?![\w/+=-])", re.S)
+# words after "ist" that describe the password instead of being it ("ist falsch", "ist im Tresor")
+NOT_A_SECRET = set("""falsch richtig korrekt sicher unsicher schwach stark neu alt leer gültig ungültig bekannt unbekannt
+geheim privat noch schon jetzt leider bereits nur auch sehr zu nicht kein keine keiner keinen nie immer gleich
+lang kurz abgelaufen erforderlich nötig notwendig optional aktiv inaktiv da weg hier dort dabei drin vorhanden
+im in am an auf bei unter über für mit ohne aus von vom zum zur nach vor seit bis ein eine einer einen der die das
+dein deine deinen dein mein meine sein seine ihr ihre dasselbe derselbe dieselbe es er sie wie was wo
+not no wrong right correct incorrect safe unsafe weak strong new old empty valid invalid known unknown secret
+private still already now only also very too never always the a an your my his her its in on at for with without
+from of to by under required needed missing set saved stored expired active inactive there here""".split())
+
+
+def _secret_token(tok):
+    if re.match(r"(?:sk|pk|rk)-|gh[pousr]_|github_pat_|xox|AKIA|eyJ|otpauth:|-----BEGIN", tok):
+        return True
+    digits, letters = sum(c.isdigit() for c in tok), sum(c.isalpha() for c in tok)
+    mixed = any(c.islower() for c in tok) and any(c.isupper() for c in tok)
+    # keys and hashes: letters and digits mixed; long uppercase numbers (parcels) stay
+    return digits >= 3 and letters >= 3 and (mixed or len(tok) >= 24)
+
+
+def _clause(value):
+    """The spoken value up to the end of its clause: ", " "; " or a full stop before a space; a value
+    spelled out letter by letter ("S, o, n, n, e") as a whole."""
+    spelled = re.match(r"(?:[^\s,;]{1,2}(?:\s*[,-]\s*|\s+)){3,}[^\s,;.!?]{1,2}(?![^\s,;.!?])", value)
+    if spelled:
+        return value[:spelled.end()], value[spelled.end():], True
+    m = re.search(r"[,;!?](?:\s|$)|\.(?:\s|$)", value)
+    return (value[:m.start()], value[m.start():], False) if m else (value, "", False)
+
+
+def hide_secrets(text, language=None):
+    """The text with passwords, code words, one-time codes and keys replaced by a short hint."""
+    t = str(text)
+    lang = number_language(language, t) or "de"
+    hint = SECRET_HINT.get(lang, SECRET_HINT["de"])
+
+    def said(m):
+        lead, conn, rest = m.group(1), m.group(2), m.group(3)
+        q = re.match(r"\s*([„“\"'`«»‚‘])", rest)
+        if q:  # quoted: everything up to the closing quote
+            end = re.search(r"[“”\"'`«»‘’]", rest[q.end():])
+            tail = rest[q.end() + end.end():] if end else ""
+            return lead.rstrip() + " " + hint + tail
+        value, tail, spelled = _clause(rest)
+        first = value.strip().split(" ")[0].strip("()[]").lower() if value.strip() else ""
+        if not first:
+            return m.group(0)
+        weak = conn is not None and conn.lower() in ("ist", "sind", "is", "are")
+        if weak and not spelled and not re.search(r"\d|[^\w\s]", value.split(" ")[0]) and (
+                first in NOT_A_SECRET or re.fullmatch(r"ge\w+(?:t|en)|\w+(?:iert|lich|ig|bar)", first)):
+            return m.group(0)
+        return lead.rstrip() + " " + hint + tail
+
+    t = SECRET_SAID.sub(said, t)
+    t = SECRET_NEXT.sub(lambda m: m.group(1) + hint, t)
+    t = SECRET_TOKEN.sub(lambda m: hint if _secret_token(m.group(0)) else m.group(0), t)
+    return t
+
+
 def parse_pronunciations(text):
     """Lines like "DGX = De Ge Ix" (also "->" or "→") -> [(pattern, replacement)], longest first."""
     rules = []
