@@ -2,6 +2,7 @@
 
 Every version in one line, newest first (taken from the commit messages, so some lines are German, some English). Older entries have no version number.
 
+- **V01.0.195** · 2026-10-09 · iPhone-App: Nachrichten an andere Profile (Liste, Schreiben, Antworten direkt aus der Mitteilung)
 - **V01.0.194** · 2026-10-09 · Websuche nach einer Mail-Antwort: gesperrt nur noch bei Nachfragen zur Mail; jede andere Frage lässt die Mail-Antwort weg und sucht
 - **V01.0.193** · 2026-10-09 · Stimmenwahl für Profile: die Liste bleibt nicht mehr leer („nur Standard“), wenn die Sprachausgabe gerade lädt; Panel und iPhone-App
 - **V01.0.192** · 2026-10-09 · Nachrichten zwischen Profilen: per Sprache nach „Ja“, an alle, Durchsagen auf Lautsprechern, Sprachnachrichten, einmal zugestellt

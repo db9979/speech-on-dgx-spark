@@ -31,6 +31,7 @@ Alle Optionen ohne Rückfragen (`--mode api --asr 1.7b --tts 0.6b --yes` …) st
 
 <!-- New version: add one line at the top here and in CHANGELOG.md, drop the oldest line here (keep 10). Details go to docs/de and docs/en, not into this README. -->
 
+- **V01.0.195** iPhone-App: Nachrichten an andere Profile (Liste, Schreiben, Antworten direkt aus der Mitteilung)
 - **V01.0.194** Websuche nach einer Mail-Antwort nur noch bei Nachfragen zur Mail gesperrt; jede andere Frage lässt die Mail-Antwort weg und sucht
 - **V01.0.193** Stimmenwahl für Profile: die Liste bleibt nicht mehr leer („nur Standard“), wenn die Sprachausgabe gerade lädt; Panel und iPhone-App
 - **V01.0.192** Nachrichten zwischen Profilen: „Sag Anna …“ nach „Ja“, an alle, Durchsagen auf Lautsprechern, Sprachnachrichten
@@ -40,7 +41,6 @@ Alle Optionen ohne Rückfragen (`--mode api --asr 1.7b --tts 0.6b --yes` …) st
 - **V01.0.188** iPhone-App: Comic-Gesicht mit kurzem, buschigem Schnurrbart wie im Panel
 - **V01.0.187** Comic-Gesicht mit kurzem, buschigem Schnurrbart nur über der Oberlippe statt bis zum Kinn hängender Spitzen; der Mund ist beim Sprechen besser zu sehen
 - **V01.0.186** TestFlight startet von selbst nach grünen iOS-Commits auf main (höchstens einmal pro Stunde, abschaltbar)
-- **V01.0.185** TestFlight: erst .ipa bauen, dann Upload mit altool, je bis zu drei Versuche bei Zeitüberschreitung
 
 Alle Versionen: [CHANGELOG.md](CHANGELOG.md)
 

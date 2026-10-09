@@ -15,6 +15,8 @@ final class NotificationService: UNNotificationServiceExtension {
                              withContentHandler contentHandler: @escaping (UNNotificationContent) -> Void) {
         let c = (request.content.mutableCopy() as? UNMutableNotificationContent) ?? UNMutableNotificationContent()
         lock.lock(); handler = contentHandler; content = c; lock.unlock()
+        // a message from another profile: the notification gets an "Antworten" field (Relay in the app)
+        if let k = request.content.userInfo["k"] as? String, k.hasPrefix("msg-") { c.categoryIdentifier = "msg" }
         guard let id = request.content.userInfo["n"] as? String,
               id.range(of: "^[0-9a-f]{16}$", options: .regularExpression) != nil,
               let key = Self.read("device-key"),

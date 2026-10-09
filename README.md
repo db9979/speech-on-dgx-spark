@@ -31,6 +31,7 @@ All options for running without questions (`--mode api --asr 1.7b --tts 0.6b --y
 
 <!-- New version: add one line at the top here and in CHANGELOG.md, drop the oldest line here (keep 10). Details go to docs/de and docs/en, not into this README. -->
 
+- **V01.0.195** iPhone app: messages to other profiles (list, write, reply right from the notification)
 - **V01.0.194** Web search after an answer from mail is locked only for follow-up questions about that mail; any other question leaves the mail answer out and searches
 - **V01.0.193** Voice choice for profiles: the list no longer stays empty ("Default" only) while the speech output loads; panel and iPhone app
 - **V01.0.192** Messages between profiles: "Tell Anna …" after "Yes", to everybody, announcements on speakers, voice messages
@@ -40,7 +41,6 @@ All options for running without questions (`--mode api --asr 1.7b --tts 0.6b --y
 - **V01.0.188** iPhone app: comic face with the short, bushy mustache like the panel
 - **V01.0.187** Comic face with a short, bushy mustache only above the upper lip instead of tips hanging down to the chin; the mouth shows better while speaking
 - **V01.0.186** TestFlight starts by itself after green iOS commits on main (at most once an hour, can be turned off)
-- **V01.0.185** TestFlight: build the .ipa first, then upload with altool, up to three tries each on timeouts
 
 All versions: [CHANGELOG.md](CHANGELOG.md)
 

@@ -29,6 +29,10 @@ final class Conversation: ObservableObject {
     @Published var notice: String?
     @Published var level: Float = 0
     @Published var offer: PhoneAction.Offer?
+    /// messages from other profiles: nil while they are off for this profile, else the unread count
+    @Published var unreadMessages: Int?
+    /// a tap on a message notification opens the list
+    @Published var showMessages = false
     @Published var allowed = Allowed() {
         didSet { Reader.sendPictures = allowed.images }
     }
@@ -521,12 +525,18 @@ final class Conversation: ObservableObject {
         do {
             allowed = try await api.hello(timeout: 8)
             unreachable = false
+            Task { await refreshMessages() }
             flushNext()
             return true
         } catch {
             if NetWatch.offline(error) { unreachable = true }
             return false
         }
+    }
+
+    func refreshMessages() async {
+        guard let api = SparkAPI.current else { return }
+        if let box = try? await api.messages() { unreadMessages = box.unread } else { unreadMessages = nil }
     }
 
     /// Sends the oldest waiting question, if the assistant is free.
@@ -627,8 +637,20 @@ final class Relay: NSObject, UNUserNotificationCenterDelegate {
     static let shared = Relay()
     var onDue: ((String) -> Void)?
 
+    /// "msg-<id>": a message from another profile (messages.py)
+    static func messageId(_ info: [AnyHashable: Any]) -> String? {
+        guard let k = info["k"] as? String, k.hasPrefix("msg-") else { return nil }
+        let id = String(k.dropFirst(4))
+        return id.range(of: "^[0-9a-f]{8,32}$", options: .regularExpression) != nil ? id : nil
+    }
+
     func userNotificationCenter(_ center: UNUserNotificationCenter, willPresent n: UNNotification,
                                 withCompletionHandler done: @escaping (UNNotificationPresentationOptions) -> Void) {
+        // someone else's words are not read aloud by themselves: banner, sound, the count goes up
+        if Self.messageId(n.request.content.userInfo) != nil {
+            Task { @MainActor in await Conversation.shared.refreshMessages() }
+            return done([.banner, .sound])
+        }
         guard let text = n.request.content.userInfo["spark"] as? String else { return done([.banner, .sound]) }
         // a reminder of this iPhone: only when no other device played it already
         guard let rid = n.request.content.userInfo["rid"] as? String, let api = SparkAPI.current else {
@@ -640,5 +662,45 @@ final class Relay: NSObject, UNUserNotificationCenterDelegate {
             if play { DispatchQueue.main.async { self.onDue?(text) } }
             done(play ? [.banner, .sound] : [])
         }
+    }
+
+    /// A tap on a message opens the list; "Antworten" in the notification sends the typed text back.
+    func userNotificationCenter(_ center: UNUserNotificationCenter, didReceive response: UNNotificationResponse,
+                                withCompletionHandler done: @escaping () -> Void) {
+        guard let mid = Self.messageId(response.notification.request.content.userInfo) else { return done() }
+        if let r = response as? UNTextInputNotificationResponse {
+            let text = r.userText.trimmingCharacters(in: .whitespacesAndNewlines)
+            guard !text.isEmpty, let api = SparkAPI.current else { return done() }
+            Task {
+                do {
+                    try await api.reply(to: mid, text: String(text.prefix(500)))
+                } catch {
+                    await Self.tell(String(localized: "Antwort nicht gesendet: \(error.localizedDescription)"))
+                }
+                done()
+            }
+            return
+        }
+        if response.actionIdentifier == UNNotificationDefaultActionIdentifier {
+            Task { @MainActor in Conversation.shared.showMessages = true }
+        }
+        done()
+    }
+
+    /// A short local notification when an answer from the notification did not go out.
+    private static func tell(_ text: String) async {
+        let c = UNMutableNotificationContent()
+        c.title = "Spark"
+        c.body = text
+        try? await UNUserNotificationCenter.current().add(UNNotificationRequest(identifier: UUID().uuidString, content: c, trigger: nil))
+    }
+
+    /// The "Antworten" field on message notifications (the extension sets the category).
+    static func registerCategories() {
+        let reply = UNTextInputNotificationAction(identifier: "reply", title: String(localized: "Antworten"), options: [],
+                                                  textInputButtonTitle: String(localized: "Senden"),
+                                                  textInputPlaceholder: String(localized: "Antwort"))
+        UNUserNotificationCenter.current().setNotificationCategories([
+            UNNotificationCategory(identifier: "msg", actions: [reply], intentIdentifiers: [], options: [])])
     }
 }

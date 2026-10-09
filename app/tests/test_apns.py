@@ -126,6 +126,9 @@ class Apns(unittest.TestCase):
         self.assertNotIn("Arzt", raw)
         self.assertNotIn("Tee", raw)
         self.assertEqual(body["aps"]["alert"]["body"], apns.GENERIC)
+        self.assertEqual(body["k"], "rem-1")
+        # the kind carries at most a random id, nothing else gets through
+        self.assertEqual(apns.payload("0" * 16, "msg-a1B2c3 <script>Hallo Welt, sehr lang")["k"], "msg-a1b2c3scripthallowel")
         nid = body["n"]
         # the text comes only to the profile's own app key, by its random id, and not too late
         self.assertEqual(apns.note(uid, nid, now=1001)["body"], "Geheimer Termin beim Arzt")

@@ -21,6 +21,26 @@
         }
       }
     },
+    "%@ nimmt gerade keine Nachrichten von dir an.": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "%@ does not take messages from you right now."
+          }
+        }
+      }
+    },
+    "%lld / %lld Zeichen": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "%lld / %lld characters"
+          }
+        }
+      }
+    },
     "%lld Minuten": {
       "localizations": {
         "en": {
@@ -91,6 +111,16 @@
         }
       }
     },
+    "Alle": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Everyone"
+          }
+        }
+      }
+    },
     "Am Akku": {
       "localizations": {
         "en": {
@@ -107,6 +137,16 @@
           "stringUnit": {
             "state": "translated",
             "value": "On a computer: scan the QR code with this iPhone’s camera. On this iPhone: tap “open in the app” there."
+          }
+        }
+      }
+    },
+    "An": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "To"
           }
         }
       }
@@ -137,6 +177,26 @@
           "stringUnit": {
             "state": "translated",
             "value": "Tap and start talking"
+          }
+        }
+      }
+    },
+    "Antwort": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Answer"
+          }
+        }
+      }
+    },
+    "Antwort nicht gesendet: %@": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Reply not sent: %@"
           }
         }
       }
@@ -551,6 +611,16 @@
         }
       }
     },
+    "Die Nachricht gibt es nicht mehr.": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "That message no longer exists."
+          }
+        }
+      }
+    },
     "Die Nummer verstehe ich nicht.": {
       "localizations": {
         "en": {
@@ -637,6 +707,16 @@
           "stringUnit": {
             "state": "translated",
             "value": "You can also say “Yes” or “No”."
+          }
+        }
+      }
+    },
+    "Eingang": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Inbox"
           }
         }
       }
@@ -921,12 +1001,32 @@
         }
       }
     },
+    "Gerade nimmt niemand Nachrichten von dir an.": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Nobody takes messages from you right now."
+          }
+        }
+      }
+    },
     "Geschriebene Fragen gehen raus, sobald er wieder da ist.": {
       "localizations": {
         "en": {
           "stringUnit": {
             "state": "translated",
             "value": "Typed questions go out as soon as it is back."
+          }
+        }
+      }
+    },
+    "Gesendet.": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Sent."
           }
         }
       }
@@ -1091,6 +1191,16 @@
         }
       }
     },
+    "Jemand": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Someone"
+          }
+        }
+      }
+    },
     "Jetzt aktualisieren": {
       "localizations": {
         "en": {
@@ -1127,6 +1237,16 @@
           "stringUnit": {
             "state": "translated",
             "value": "No answer from the Spark."
+          }
+        }
+      }
+    },
+    "Keine Nachrichten.": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "No messages."
           }
         }
       }
@@ -1201,6 +1321,16 @@
         }
       }
     },
+    "Löschen": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Delete"
+          }
+        }
+      }
+    },
     "Mails": {
       "localizations": {
         "en": {
@@ -1267,6 +1397,56 @@
           "stringUnit": {
             "state": "translated",
             "value": "Morning briefing at"
+          }
+        }
+      }
+    },
+    "Nach links wischen löscht, nach rechts antwortet. Nachrichten bleiben 30 Tage.": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Swipe left to delete, right to reply. Messages stay 30 days."
+          }
+        }
+      }
+    },
+    "Nachricht": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Message"
+          }
+        }
+      }
+    },
+    "Nachrichten": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Messages"
+          }
+        }
+      }
+    },
+    "Nachrichten sind für dein Profil aus. Einschalten im Panel unter Ich → Nachrichten (der Admin muss sie unter Funktionen erlauben).": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Messages are off for your profile. Turn them on in the panel under Me → Messages (the admin must allow them under Features)."
+          }
+        }
+      }
+    },
+    "Nachrichten, %lld neu": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Messages, %lld new"
           }
         }
       }
@@ -1501,6 +1681,26 @@
         }
       }
     },
+    "Schreiben": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Write"
+          }
+        }
+      }
+    },
+    "Senden": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Send"
+          }
+        }
+      }
+    },
     "Setzt etwas auf die Einkaufsliste oder die Aufgaben des Spark. Mehreres mit Komma trennen.": {
       "localizations": {
         "en": {
@@ -1627,6 +1827,26 @@
           "stringUnit": {
             "state": "translated",
             "value": "Spark version"
+          }
+        }
+      }
+    },
+    "Sprachnachricht, %lld s. Anhören im Panel.": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Voice message, %lld s. Listen in the panel."
+          }
+        }
+      }
+    },
+    "Sprachnachricht. Anhören im Panel.": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Voice message. Listen in the panel."
           }
         }
       }

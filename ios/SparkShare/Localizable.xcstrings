@@ -151,6 +151,16 @@
         }
       }
     },
+    "Die Nachricht gibt es nicht mehr.": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "That message no longer exists."
+          }
+        }
+      }
+    },
     "Die Seite antwortet nicht.": {
       "localizations": {
         "en": {

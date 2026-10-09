@@ -76,6 +76,10 @@ In der App unter Einstellungen → **Mein Profil** stellst du dieselben Werte ei
 - **Kurzbefehle:** In der Kurzbefehle-App gibt es „Spark fragen“, „Erinnerung beim Spark“, „Auf die Liste beim Spark“ und „Dokument beim Spark ablegen“. Für die Liste braucht es den Erinnerungen-Schalter, für Dokumente den Dokumente-Schalter.
 - **Notizen:** Apple lässt Apps nicht direkt in die Notizen-App schreiben. Zwei Wege: eine Antwort in der App lange drücken → „Teilen (z. B. als Notiz)“, oder ein Kurzbefehl aus „Spark fragen“ und Apples „Notiz erstellen“ (die Antwort von „Spark fragen“ als Text der Notiz).
 
+## Nachrichten an andere Profile
+
+Sind Nachrichten an (Admin: Funktionen → „Nachrichten an andere“, Profil: Ich → Nachrichten), erscheint oben ein Umschlag, mit Punkt bei neuen Nachrichten. Dort wählst du den Empfänger und schreibst (höchstens 500 Zeichen). Im Eingang wischst du nach rechts zum Antworten und nach links zum Löschen. Kommt eine Nachricht als Mitteilung, antwortest du direkt darin: lange drücken → „Antworten“. Wer dir schreiben darf, stellst du nur im Browser ein. Die App liest Nachrichten nicht von selbst vor. Frag dafür den Assistenten („Habe ich Nachrichten?“), das geht auch im Auto. Sprachnachrichten zeigt die App nur an, anhören kannst du sie im Panel.
+
 ## Spark-Update aus der App
 
 Für ausgewählte Profile, standardmäßig aus. Einschalten als Admin: **Einstellungen → Funktionen → Spark-Update über die iPhone-App**, darunter pro Profil:

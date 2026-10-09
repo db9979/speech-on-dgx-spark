@@ -87,6 +87,14 @@ struct ChatView: View {
                     Button { history = true } label: { Image(systemName: "clock.arrow.circlepath") }
                         .accessibilityLabel("Verlauf")
                 }
+                if let unread = talk.unreadMessages {
+                    ToolbarItem(placement: .topBarTrailing) {
+                        Button { talk.showMessages = true } label: {
+                            Image(systemName: unread > 0 ? "envelope.badge" : "envelope")
+                        }
+                        .accessibilityLabel(unread > 0 ? Text("Nachrichten, \(unread) neu") : Text("Nachrichten"))
+                    }
+                }
                 ToolbarItem(placement: .topBarTrailing) {
                     Button { settings = true } label: { Image(systemName: "gearshape") }
                         .accessibilityLabel("Einstellungen")
@@ -94,6 +102,7 @@ struct ChatView: View {
             }
             .sheet(isPresented: $settings, onDismiss: { talk.settingsChanged() }) { SettingsView() }
             .sheet(isPresented: $history) { HistoryView() }
+            .sheet(isPresented: $talk.showMessages, onDismiss: { Task { await talk.refreshMessages() } }) { MessagesView() }
             .sheet(isPresented: $demoProfile) { NavigationStack { ProfileView() } }
             .fullScreenCover(isPresented: $camera) {
                 CameraPicker { image in

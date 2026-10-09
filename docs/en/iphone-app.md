@@ -75,6 +75,10 @@ In the app under Settings → **My profile** you set the same values as in the p
 - **Shortcuts:** The Shortcuts app gets "Ask Spark", "Reminder at the Spark", "Add to a Spark list" and "Store a document at the Spark". Lists need the reminders switch, documents the documents switch.
 - **Notes:** Apple does not let apps write into Notes directly. Two ways: long-press an answer in the app → "Share (e.g. as a note)", or a shortcut of "Ask Spark" plus Apple's "Create Note".
 
+## Messages to other profiles
+
+With messages on (admin: Features → "Messages to others", profile: Me → Messages) an envelope shows at the top, with a dot for new ones. Pick the recipient and write (at most 500 characters); in the inbox swipe right to reply, left to delete. A message notification can be answered in place (long press → "Reply"). Who may write to you is set in the browser only. The app does not read messages aloud by itself; ask the assistant ("Do I have messages?"), also in the car. Voice messages are listed; listen to them in the panel.
+
 ## Spark update from the app
 
 For chosen profiles, off by default. The admin switches on **Settings → Features → Spark update from the iPhone app** and ticks per profile:

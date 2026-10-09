@@ -199,7 +199,8 @@ def _bearer(s, now):
 
 def payload(nid, tag):
     """What goes through Apple: nothing but a fixed sentence, the inbox id and the kind."""
-    kind = re.sub(r"[^a-z\-]", "", str(tag).lower())[:20]
+    # the kind may carry a random message id ("msg-<12 hex>") so the app can answer it; never text
+    kind = re.sub(r"[^a-z0-9\-]", "", str(tag).lower())[:24]
     return {"aps": {"alert": {"title": "Spark", "body": GENERIC}, "sound": "default", "mutable-content": 1,
                     "thread-id": "spark"}, "n": nid, "k": kind}
 
