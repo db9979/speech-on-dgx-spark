@@ -45,6 +45,7 @@ OPEN = {
     "/api/esp32/ota/activate": "the speaker's first contact; only with a pending one-time code",
     "/api/esp32/fw/{version}/{name}": "public firmware files",
     "/api/iphone/pair": "the iPhone app's first contact; only with a one-time code from the profile's own login",
+    "/api/pebble/pair": "the Pebble phone app's first contact; only with a one-time code from the profile's own login",
     "/api/esp32/ping": "\"Netz prüfen\": a random marker of this Spark, nothing else; only while the admin switched speakers on",
     "/": "the page itself",
     "/static/{name}": "page files",

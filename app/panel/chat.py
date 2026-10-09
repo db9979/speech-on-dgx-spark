@@ -37,7 +37,7 @@ import chat_turn  # noqa: E402  (rights, prompt and tools of one turn)
 import latency  # noqa: E402
 import echo  # noqa: E402  (the Spark's own voice is no question)
 from common import load_config  # noqa: E402
-from core import DEFAULTS, admin_cookie_ok, api_headers, assistant  # noqa: E402
+from core import DEFAULTS, FACES, admin_cookie_ok, api_headers, assistant  # noqa: E402
 
 router = APIRouter()
 
@@ -1648,7 +1648,9 @@ async def watch_ask(request: Request):
     response = await chat(Request(request.scope, receive))
     job.task = asyncio.create_task(watch.run(job, response))
     watch.JOBS[job.id] = job
-    return {"id": job.id, "format": "ima-adpcm-8k"}
+    face = load_config().get("chat", {}).get("face")
+    # the face the admin picked for everybody, so the watch shows the same one (fixed names only)
+    return {"id": job.id, "format": "ima-adpcm-8k", "face": face if face in FACES else "robot"}
 
 
 # "Hey Siri, frag Spark": an iPhone shortcut posts the dictated question with the profile's device
@@ -1736,9 +1738,32 @@ async def watch_poll(id: str, t: int = 0, a: int = 0):
     return await watch.poll(_watch_job(id), max(0, t), max(0, a))
 
 
+@router.post("/api/watch/report", dependencies=[Depends(assistant)])
+async def watch_report(request: Request):
+    """The phone's times for one answer (watch.report_line), once per answer, into the log."""
+    if int(request.headers.get("content-length") or 0) > 1024:
+        raise HTTPException(413, "too large")
+    data = bytearray()
+    async for part in request.stream():
+        data += part
+        if len(data) > 1024:
+            raise HTTPException(413, "too large")
+    try:
+        body = json.loads(bytes(data) or b"{}")
+    except ValueError:
+        body = {}
+    body = body if isinstance(body, dict) else {}
+    job = watch.JOBS.get(str(body.get("id", ""))[:40])
+    if not job or job.reported:
+        return {"ok": False}
+    job.reported = True
+    print(watch.report_line(job, body), flush=True)
+    return {"ok": True}
+
+
 @router.delete("/api/watch/{job_id}", dependencies=[Depends(assistant)])
 async def watch_cancel(job_id: str):
-    job = watch.JOBS.pop(job_id, None)
+    job = watch.JOBS.get(job_id)   # kept until watch.cleanup, so the phone's report still finds it
     if job and job.task:
         job.task.cancel()
     return {"ok": True}

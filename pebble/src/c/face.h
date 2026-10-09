@@ -14,5 +14,7 @@ typedef enum {
 Layer *face_create(GRect frame);
 void face_destroy(void);
 void face_set_mode(FaceMode mode);
+// Which face: 0 robot, 1 comic (the one the admin picked in the panel, chat.face).
+void face_set_kind(int kind);
 // Loudness of what is playing right now, 0 (silent) to 255.
 void face_set_level(uint8_t level);

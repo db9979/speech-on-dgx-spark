@@ -131,7 +131,9 @@ class Job:
         self.enc = Encoder()
         self.changed = asyncio.Event()
         self.task = None
-        self.t = time.time()
+        self.t = self.start = time.time()
+        self.first_text = self.first_audio = 0.0   # when the Spark had them (for the watch's report)
+        self.reported = False
 
     def ping(self):
         self.changed.set()
@@ -164,10 +166,12 @@ async def run(job: Job, response):
                 kind = ev.get("type")
                 if kind == "text":
                     job.text += ev.get("delta", "")
+                    job.first_text = job.first_text or time.time()
                 elif kind in ("truncated", "retract"):
                     job.text = job.text[:max(0, len(job.text) - int(ev.get("drop") or 0))]
                 elif kind == "audio" and job.speak:
                     job.audio += await asyncio.to_thread(job.enc.feed, base64.b64decode(ev["audio"]))
+                    job.first_audio = job.first_audio or time.time()
                 elif kind == "error" and not job.error:
                     job.error = str(ev.get("message", "Fehler"))[:200]
                 else:
@@ -198,3 +202,26 @@ async def poll(job: Job, t: int, a: int, wait: float = 4.0):
     job.t = max(job.t, time.time()) if job.done else job.t
     return {"text": job.text[t:], "t": len(job.text), "audio": base64.b64encode(chunk).decode(),
             "a": a + len(chunk), "done": job.done and a + len(chunk) >= len(job.audio), "error": job.error}
+
+
+OUTCOMES = {"ok": "ok", "cancel": "abgebrochen", "replaced": "neue Frage", "send": "failed: Uhr nimmt nichts an",
+            "poll": "failed: Abruf", "ask": "failed: Frage", "spark": "failed: Fehler vom Spark"}
+
+
+def _ms(x):
+    try:
+        return max(0, min(600000, int(x)))
+    except (TypeError, ValueError):
+        return 0
+
+
+def report_line(job: Job, body: dict):
+    """One log line per answer on the watch: where the time went (watch, phone, Spark) and how it
+    ended. Only numbers and fixed words, nothing the phone sends is written as text."""
+    s = lambda ms: f"{ms / 1000:.1f} s" if ms else "–"
+    sp = lambda t: f"{t - job.start:.1f} s" if t else "–"
+    outcome = OUTCOMES.get(str(body.get("outcome")), "failed: unbekannt")
+    return (f"watch: zeit Diktat {s(_ms(body.get('dictation_ms')))} · erster Text auf der Uhr "
+            f"{s(_ms(body.get('text_ms')))} · erster Ton {s(_ms(body.get('audio_ms')))} · fertig {s(_ms(body.get('done_ms')))}"
+            f" · Spark: Text {sp(job.first_text)}, Ton {sp(job.first_audio)} · Wiederholungen "
+            f"{min(_ms(body.get('retries')), 9999)} · Stück {min(_ms(body.get('chunk')), 9999)} B · {outcome}")

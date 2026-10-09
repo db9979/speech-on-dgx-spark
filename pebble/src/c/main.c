@@ -13,6 +13,11 @@
 #define PERSIST_SPEAK 1
 #define PERSIST_VOLUME 2
 #define PERSIST_AUTOLISTEN 3
+#define PERSIST_FACE 4
+#define ANSWER_TIMEOUT 30      // seconds without any message from the phone: give up
+#define SEND_TRIES 6           // attempts for a message to the phone
+#define FREED_EVERY 2          // seconds: repeat the buffer report (it may get lost)
+#define INBOX_MAX 4096
 
 static Window *s_window;
 static Layer *s_face_layer;
@@ -30,12 +35,30 @@ static bool s_speak = true;
 static int s_volume = 100;
 static bool s_autolisten = true;
 static bool s_busy;            // an answer is being fetched
+static int32_t s_seq;          // number of the current question; older messages are ignored
+static bool s_expect_audio;    // the phone sends speech for this answer
+static bool s_text_done;
+static time_t s_last_rx;       // last message for this question
+static time_t s_dict_start;
+static int32_t s_dict_ms;
+static AppTimer *s_watchdog;
+
+// messages to the phone: one at a time, repeated when they fail
+typedef enum { OutNone, OutQuestion, OutCancel, OutReset, OutFreed } OutKind;
+static OutKind s_out;          // what is on its way right now
+static bool s_q_pending, s_cancel_pending, s_reset_pending, s_freed_due;
+static int32_t s_cancel_seq;
+static int s_tries;
+static AppTimer *s_retry;
+static uint32_t s_inbox;
 
 // audio
 static uint8_t *s_ring;
 static uint32_t s_head, s_tail, s_fill;
 static bool s_audio_end, s_playing;
-static uint32_t s_freed;
+static uint32_t s_freed_total;  // ADPCM bytes played since the question (the phone sends at most this + RING_SIZE)
+static uint32_t s_freed_sent;   // last value the phone confirmed
+static uint32_t s_freed_out;    // value on its way
 static int s_pred, s_index;
 static int16_t s_pcm[DECODE_BYTES * 2];
 static uint32_t s_pcm_len, s_pcm_off;   // bytes of s_pcm not yet accepted by the speaker
@@ -72,12 +95,101 @@ static void update_text(void) {
   scroll_layer_set_content_size(s_scroll_layer, GSize(bounds.size.w, size.h + PBL_IF_ROUND_ELSE(60, 20)));
 }
 
-static void send_int(uint32_t key, int value) {
+static void flush_out(void);
+
+static void retry_fired(void *ctx) {
+  s_retry = NULL;
+  flush_out();
+}
+
+static void retry_later(uint32_t ms) {
+  if (!s_retry) s_retry = app_timer_register(ms, retry_fired, NULL);
+}
+
+// Sends the most important waiting message. Every message is idempotent, so a repeat is harmless.
+static void flush_out(void) {
+  if (s_out != OutNone) return;
+  OutKind kind = s_q_pending ? OutQuestion : s_cancel_pending ? OutCancel : s_reset_pending ? OutReset
+               : (s_busy && s_expect_audio && (s_freed_due || s_freed_total - s_freed_sent >= CREDIT_STEP))
+                 ? OutFreed : OutNone;
+  if (kind == OutNone) return;
   DictionaryIterator *it;
-  if (app_message_outbox_begin(&it) == APP_MSG_OK) {
-    dict_write_int32(it, key, value);
-    app_message_outbox_send();
+  if (app_message_outbox_begin(&it) != APP_MSG_OK) {
+    retry_later(200);
+    return;
   }
+  switch (kind) {
+    case OutQuestion:
+      dict_write_cstring(it, MESSAGE_KEY_QUESTION, s_question);
+      dict_write_int32(it, MESSAGE_KEY_SEQ, s_seq);
+      // the phone may send this much audio before it hears back from the watch
+      dict_write_int32(it, MESSAGE_KEY_CREDIT, s_expect_audio ? RING_SIZE : 0);
+      dict_write_int32(it, MESSAGE_KEY_INBOX, s_inbox);
+      dict_write_int32(it, MESSAGE_KEY_DICT_MS, s_dict_ms);
+      break;
+    case OutCancel:
+      dict_write_int32(it, MESSAGE_KEY_CANCEL, 1);
+      dict_write_int32(it, MESSAGE_KEY_SEQ, s_cancel_seq);
+      break;
+    case OutReset:
+      dict_write_int32(it, MESSAGE_KEY_RESET, 1);
+      break;
+    default:
+      s_freed_out = s_freed_total;
+      s_freed_due = false;
+      dict_write_int32(it, MESSAGE_KEY_FREED, s_freed_out);
+      dict_write_int32(it, MESSAGE_KEY_SEQ, s_seq);
+      break;
+  }
+  if (app_message_outbox_send() == APP_MSG_OK) {
+    s_out = kind;
+  } else {
+    retry_later(200);
+  }
+}
+
+static void outbox_sent(DictionaryIterator *it, void *context) {
+  switch (s_out) {
+    case OutQuestion: s_q_pending = false; break;
+    case OutCancel: s_cancel_pending = false; break;
+    case OutReset: s_reset_pending = false; break;
+    case OutFreed: if (s_freed_out > s_freed_sent) s_freed_sent = s_freed_out; break;
+    default: break;
+  }
+  s_out = OutNone;
+  s_tries = 0;
+  flush_out();
+}
+
+static void give_up(const char *status);
+
+static void outbox_failed(DictionaryIterator *it, AppMessageResult reason, void *context) {
+  OutKind kind = s_out;
+  s_out = OutNone;
+  APP_LOG(APP_LOG_LEVEL_WARNING, "send %d failed: %d", (int)kind, (int)reason);
+  if (++s_tries >= SEND_TRIES) {
+    s_tries = 0;
+    if (kind == OutQuestion) {
+      s_q_pending = false;
+      give_up("Handy nicht erreichbar");
+      return;
+    }
+    if (kind == OutCancel) s_cancel_pending = false;
+    if (kind == OutReset) s_reset_pending = false;
+  }
+  retry_later(150 * s_tries + 100);
+}
+
+static void cancel_answer(void) {
+  if (!s_busy) return;
+  s_busy = false;
+  if (s_q_pending) {       // never reached the phone: nothing to cancel there
+    s_q_pending = false;
+  } else {
+    s_cancel_pending = true;
+    s_cancel_seq = s_seq;
+  }
+  flush_out();
 }
 
 // ---------------------------------------------------------------- audio
@@ -94,7 +206,7 @@ static void audio_reset(void) {
   s_playing = false;
   s_head = s_tail = s_fill = 0;
   s_audio_end = false;
-  s_freed = 0;
+  s_freed_total = s_freed_sent = s_freed_out = 0;
   s_pred = s_index = 0;
   s_pcm_len = s_pcm_off = 0;
   memset(s_levels, 0, sizeof(s_levels));
@@ -144,13 +256,13 @@ static void decode_block(void) {
   s_pred = pred;
   s_index = index;
   s_fill -= n;
-  s_freed += n;
+  s_freed_total += n;
   s_pcm_len = n * 4;
   s_pcm_off = 0;
 }
 
 static void drained(void *ctx) {
-  if (!s_playing && !s_busy) face_set_mode(FaceIdle);
+  if (!s_playing && !s_busy && !s_fill) face_set_mode(FaceIdle);
 }
 
 static void audio_tick(void *ctx) {
@@ -179,10 +291,7 @@ static void audio_tick(void *ctx) {
       if (done < want) break;    // the speaker queue is full: continue on the next tick
     }
     mouth_tick();
-    if (s_freed >= CREDIT_STEP) {
-      send_int(MESSAGE_KEY_CREDIT, s_freed);
-      s_freed = 0;
-    }
+    if (s_freed_total - s_freed_sent >= CREDIT_STEP) flush_out();
     if (s_audio_end && !s_fill && s_pcm_off >= s_pcm_len) {
       speaker_stream_close();    // the queued rest drains and plays out
       s_playing = false;
@@ -209,28 +318,71 @@ static void audio_add(const uint8_t *data, uint16_t len) {
 
 // ---------------------------------------------------------------- asking
 
+static void watchdog_tick(void *ctx);
+
+static void watchdog_start(void) {
+  if (!s_watchdog) s_watchdog = app_timer_register(1000, watchdog_tick, NULL);
+}
+
+static void give_up(const char *status) {
+  cancel_answer();
+  audio_reset();
+  set_status(status);
+  face_set_mode(FaceSad);
+  vibes_double_pulse();
+}
+
+// Once a second while an answer runs: a lost buffer report would stop the speech for good, so it
+// is repeated; and when the phone stays silent, the watch says so instead of waiting forever.
+static void watchdog_tick(void *ctx) {
+  s_watchdog = NULL;
+  if (!s_busy) return;
+  if (time(NULL) - s_last_rx > ANSWER_TIMEOUT) {
+    give_up("Keine Antwort. SELECT: nochmal");
+    return;
+  }
+  if (s_expect_audio && !s_audio_end && time(NULL) % FREED_EVERY == 0) {
+    s_freed_due = true;
+    flush_out();
+  }
+  watchdog_start();
+}
+
 static void ask(const char *text) {
   audio_reset();
   snprintf(s_question, sizeof(s_question), "%s", text);
   s_answer[0] = 0;
   update_text();
   scroll_layer_set_content_offset(s_scroll_layer, GPointZero, false);
-  DictionaryIterator *it;
-  if (app_message_outbox_begin(&it) != APP_MSG_OK) {
-    set_status("Handy nicht erreichbar");
-    return;
-  }
-  dict_write_cstring(it, MESSAGE_KEY_QUESTION, text);
-  // the phone may send this much audio before it waits for CREDIT
-  dict_write_int32(it, MESSAGE_KEY_CREDIT, (s_speak && s_ring) ? RING_SIZE : 0);
-  app_message_outbox_send();
+  s_seq++;
+  s_expect_audio = s_speak && s_ring;
+  s_text_done = false;
   s_busy = true;
+  s_last_rx = time(NULL);
+  s_q_pending = true;
+  s_tries = 0;
+  flush_out();
+  watchdog_start();
   set_status("Denke nach …");
   face_set_mode(FaceThink);
 }
 
+// The answer is complete when the text is in and, if speech was coming, its end too.
+static void finish_if_done(void) {
+  if (!s_busy || !s_text_done || (s_expect_audio && !s_audio_end)) return;
+  s_busy = false;
+  if (!s_playing && !s_fill) {
+    set_status("SELECT: neue Frage");
+    face_set_mode(FaceIdle);
+    if (!s_expect_audio) vibes_short_pulse();
+  } else {
+    set_status("Spreche … SELECT: Stopp");
+  }
+}
+
 static void dictation_done(DictationSession *session, DictationSessionStatus status,
                            char *transcription, void *ctx) {
+  s_dict_ms = (int32_t)(time(NULL) - s_dict_start) * 1000;
   if (status == DictationSessionStatusSuccess && transcription && transcription[0]) {
     ask(transcription);
     return;
@@ -249,10 +401,7 @@ static void dictation_done(DictationSession *session, DictationSessionStatus sta
 }
 
 static void listen(void) {
-  if (s_busy) {  // asking again cancels the running answer
-    send_int(MESSAGE_KEY_CANCEL, 1);
-    s_busy = false;
-  }
+  cancel_answer();  // asking again cancels the running answer
   audio_reset();
   if (!s_dictation) {
     set_status("Kein Mikrofon");
@@ -260,16 +409,14 @@ static void listen(void) {
     return;
   }
   face_set_mode(FaceListen);
+  s_dict_start = time(NULL);
   dictation_session_start(s_dictation);
 }
 
 static void select_click(ClickRecognizerRef recognizer, void *context) {
   if (s_playing || s_fill) {  // first press stops the speech
     audio_reset();
-    if (s_busy) {
-      send_int(MESSAGE_KEY_CANCEL, 1);
-      s_busy = false;
-    }
+    cancel_answer();
     set_status("SELECT: neue Frage");
     face_set_mode(FaceIdle);
     return;
@@ -279,9 +426,9 @@ static void select_click(ClickRecognizerRef recognizer, void *context) {
 
 static void select_long(ClickRecognizerRef recognizer, void *context) {
   audio_reset();
-  if (s_busy) send_int(MESSAGE_KEY_CANCEL, 1);
-  s_busy = false;
-  send_int(MESSAGE_KEY_RESET, 1);
+  cancel_answer();
+  s_reset_pending = true;
+  flush_out();
   s_question[0] = 0;
   s_answer[0] = 0;
   update_text();
@@ -299,6 +446,11 @@ static void click_config(void *context) {
 
 static void inbox_received(DictionaryIterator *it, void *context) {
   Tuple *t;
+  // answer parts carry the question's number: parts of a cancelled answer are dropped
+  if ((t = dict_find(it, MESSAGE_KEY_SEQ))) {
+    if (t->value->int32 != s_seq || !s_busy) return;
+    s_last_rx = time(NULL);
+  }
   if ((t = dict_find(it, MESSAGE_KEY_SPEAK))) {
     s_speak = t->value->int32 != 0;
     persist_write_bool(PERSIST_SPEAK, s_speak);
@@ -311,6 +463,11 @@ static void inbox_received(DictionaryIterator *it, void *context) {
   if ((t = dict_find(it, MESSAGE_KEY_AUTOLISTEN))) {
     s_autolisten = t->value->int32 != 0;
     persist_write_bool(PERSIST_AUTOLISTEN, s_autolisten);
+  }
+  if ((t = dict_find(it, MESSAGE_KEY_FACE))) {
+    // the face the admin picked in the panel (0 robot, 1 comic)
+    persist_write_int(PERSIST_FACE, t->value->int32);
+    face_set_kind(t->value->int32);
   }
   if ((t = dict_find(it, MESSAGE_KEY_STATUS))) {
     set_status(t->value->cstring);
@@ -326,9 +483,11 @@ static void inbox_received(DictionaryIterator *it, void *context) {
   if ((t = dict_find(it, MESSAGE_KEY_AUDIO_END))) {
     s_audio_end = true;
     audio_kick();
+    finish_if_done();
   }
   if ((t = dict_find(it, MESSAGE_KEY_ERROR))) {
     s_busy = false;
+    s_q_pending = false;
     set_status("Fehler");
     face_set_mode(FaceSad);
     size_t have = strlen(s_answer);
@@ -337,14 +496,9 @@ static void inbox_received(DictionaryIterator *it, void *context) {
     vibes_double_pulse();
   }
   if ((t = dict_find(it, MESSAGE_KEY_DONE))) {
-    s_busy = false;
-    if (!s_playing && !s_fill) {
-      set_status("SELECT: neue Frage");
-      face_set_mode(FaceIdle);
-      if (!s_speak || !s_ring) vibes_short_pulse();
-    } else {
-      set_status("Spreche … SELECT: Stopp");
-    }
+    s_text_done = true;
+    if (t->value->int32 != 2) s_expect_audio = false;   // 2: speech follows
+    finish_if_done();
   }
 }
 
@@ -399,6 +553,7 @@ static void init(void) {
   if (persist_exists(PERSIST_SPEAK)) s_speak = persist_read_bool(PERSIST_SPEAK);
   if (persist_exists(PERSIST_VOLUME)) s_volume = persist_read_int(PERSIST_VOLUME);
   if (persist_exists(PERSIST_AUTOLISTEN)) s_autolisten = persist_read_bool(PERSIST_AUTOLISTEN);
+  if (persist_exists(PERSIST_FACE)) face_set_kind(persist_read_int(PERSIST_FACE));
 #if defined(PBL_SPEAKER)
   s_ring = malloc(RING_SIZE);
 #endif
@@ -411,14 +566,25 @@ static void init(void) {
 
   app_message_register_inbox_received(inbox_received);
   app_message_register_inbox_dropped(inbox_dropped);
-  uint32_t inbox = app_message_inbox_size_maximum();
-  app_message_open(inbox > 4096 ? 4096 : inbox, 1024);
+  app_message_register_outbox_sent(outbox_sent);
+  app_message_register_outbox_failed(outbox_failed);
+  s_inbox = app_message_inbox_size_maximum();
+  if (s_inbox > INBOX_MAX) s_inbox = INBOX_MAX;
+  app_message_open(s_inbox, 1024);
+  s_seq = (int32_t)(time(NULL) & 0xffff) * 16;
   if (s_autolisten) app_timer_register(500, start_listening, NULL);
 }
 
 static void deinit(void) {
   audio_reset();
-  if (s_busy) send_int(MESSAGE_KEY_CANCEL, 1);
+  if (s_busy && !s_q_pending) {   // last word to the phone, no time to wait for retries
+    DictionaryIterator *it;
+    if (app_message_outbox_begin(&it) == APP_MSG_OK) {
+      dict_write_int32(it, MESSAGE_KEY_CANCEL, 1);
+      dict_write_int32(it, MESSAGE_KEY_SEQ, s_seq);
+      app_message_outbox_send();
+    }
+  }
   if (s_dictation) dictation_session_destroy(s_dictation);
   window_destroy(s_window);
   free(s_ring);

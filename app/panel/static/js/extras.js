@@ -68,7 +68,7 @@ async function showPar(fresh){const box=$('parbox');if(!PROFILE||!PAR_ON){box.in
   xbind(box,()=>showPar(true));
   if($('parrun'))$('parrun').onclick=()=>showPar(true)}
 // ---------------------------------------------------------------- tasks and shopping list (tasks.py)
-let TASK_ON=false,TG_ON=false,APP_ON=false;
+let TASK_ON=false,TG_ON=false,APP_ON=false,PEB_ON=false;
 async function showTasks(){const box=$('taskbox');if(!PROFILE||!TASK_ON){box.innerHTML='';return}
   let d={lists:{}};try{d=await (await api('/api/profile/tasks')).json()}catch{}
   const on=!!S.tasks_on,base=location.origin;
@@ -134,7 +134,7 @@ async function iupdAdmin(){if(!$('iupdadmin'))return;let d={};try{d=await (await
   $('iupdlist').innerHTML=(d.profiles||[]).map(p=>`<tr><td>${esc(p.name)}<div class="intro sm">${p.mfa?t('mit zweitem Anmeldeschritt','with second login step'):t('ohne zweiten Anmeldeschritt: nur Hinweise','without second login step: notices only')}</div></td><td style="white-space:nowrap"><label><input type="checkbox" data-u="${esc(p.id)}" data-k="notify"${p.notify?' checked':''}> ${t('Hinweise','Notices')}</label> <label><input type="checkbox" data-u="${esc(p.id)}" data-k="start"${p.start?' checked':''}${p.mfa?'':' disabled'}> ${t('Starten','Start')}</label></td></tr>`).join('')||`<tr><td class="mut">${t('Noch keine Profile.','No profiles yet.')}</td></tr>`;
   $('iupdlist').querySelectorAll('input[data-u]').forEach(x=>x.onchange=async()=>{const u=x.dataset.u,q=k=>$('iupdlist').querySelector(`input[data-u="${CSS.escape(u)}"][data-k="${k}"]`).checked;
     try{await api('/api/admin/iphone-update/'+encodeURIComponent(u),xjson('PUT',{notify:q('notify'),start:q('start')}));$('iupdmsg').textContent=t('Gespeichert.','Saved.')}catch(e){$('iupdmsg').textContent=e.message}iupdAdmin()})}
-async function showExtras(){for(const f of [showWx,showCon,showPar,showTasks,showTg,showApp].concat(typeof showAgent==='function'?[showAgent]:[]).concat(typeof showMsg==='function'?[showMsg]:[]).concat(typeof showEsp==='function'?[showEsp]:[]))await f().catch(()=>{})}
+async function showExtras(){for(const f of [showWx,showCon,showPar,showTasks,showTg,showApp,showPeb].concat(typeof showAgent==='function'?[showAgent]:[]).concat(typeof showMsg==='function'?[showMsg]:[]).concat(typeof showEsp==='function'?[showEsp]:[]))await f().catch(()=>{})}
 // ---------------------------------------------------------------- iPhone app (iphone.py)
 async function showApp(){const box=$('appbox');if(!box)return;if(!PROFILE||!APP_ON){box.innerHTML='';return}
   let d={phones:[],on:false,minutes:10};try{d=await (await api('/api/profile/iphone')).json()}catch{}
@@ -161,6 +161,28 @@ async function showApp(){const box=$('appbox');if(!box)return;if(!PROFILE||!APP_
     $('appqr').innerHTML=`${r.qr?`<div class="mfaqr" style="background:#fff;display:inline-block;padding:4px;border-radius:6px;margin:6px 0">${r.qr}</div>`:''}
       <div class="fh">${t('Am PC: den Code mit der Kamera des iPhones scannen. Auf dem iPhone: ','On a PC: scan the code with the iPhone camera. On the iPhone: ')}<a href="${esc(r.link)}">${t('in der App öffnen','open in the app')}</a>. ${t('Gilt ','Valid for ')}${r.minutes} ${t('Minuten und nur einmal.','minutes and once only.')}</div>`}
     catch(e){xmsg('appmsg',e.message,true)}}}
+// ---------------------------------------------------------------- Pebble watch (pebblewatch.py)
+// The watch app's settings on the phone take one line instead of address and key; the address is the
+// plain panel port at home (the Pebble app does not trust the self-signed certificate).
+function pebBase(){return location.protocol==='https:'&&location.port&&location.port!=='443'?'http://'+location.hostname+':31080':location.origin}
+async function showPeb(){const box=$('pebbox');if(!box)return;if(!PROFILE||!PEB_ON){box.innerHTML='';return}
+  let d={watches:[],on:false,minutes:10};try{d=await (await api('/api/profile/pebble')).json()}catch{}
+  const when=x=>x?new Date(x.t*1000).toLocaleString([], {dateStyle:'short',timeStyle:'short'}):t('noch nie','never');
+  box.innerHTML=`<div class="intro">${t('Die Uhr-App „Spark“ für Pebble: Knopf drücken, fragen, die Antwort kommt als Text und über den Lautsprecher der Uhr. Jede Uhr bekommt einen eigenen Schlüssel, der nur fragen darf.','The "Spark" watch app for Pebble: press the button, ask, the answer comes as text and through the watch speaker. Each watch gets its own key that may only ask.')}</div>
+    ${xsw('pebble_on',t('Pebble-Uhr für mich','Pebble watch for me'),t('Aus: Deine gekoppelten Uhren bekommen sofort keine Antwort mehr.','Off: your paired watches get no answer any more, at once.'))}
+    <ul class="facts">${d.watches.map(p=>`<li><span><b>${esc(p.name)}</b><br><small class="mut">${t('zuletzt','last used')}: ${esc(when(p.last))}</small></span><button class="b" type="button" data-pebdel="${esc(p.id)}">${t('Entfernen','Remove')}</button></li>`).join('')||`<li class="mut"><span>${t('Noch keine Uhr gekoppelt.','No watch paired yet.')}</span></li>`}</ul>
+    ${d.on?`<label>${t('Adresse, unter der das Handy den Spark erreicht','Address the phone reaches the Spark at')}</label><input id="pebbase" value="${esc(pebBase())}" autocomplete="off">
+      <div class="row"><button class="b p" type="button" id="pebpair">${t('Pebble koppeln','Pair a Pebble')}</button></div>`:''}
+    <div id="pebcode"></div><div class="fh" id="pebmsg"></div>`;
+  xbind(box,showPeb);
+  box.querySelectorAll('[data-pebdel]').forEach(b=>b.onclick=async()=>{if(!confirm(t('Uhr entfernen? Ihr Schlüssel gilt dann sofort nicht mehr.','Remove the watch? Its key stops working at once.')))return;
+    try{await api('/api/profile/pebble/'+encodeURIComponent(b.dataset.pebdel),{method:'DELETE'});showPeb()}catch(e){xmsg('pebmsg',e.message,true)}});
+  if($('pebpair'))$('pebpair').onclick=async()=>{try{const r=await (await api('/api/profile/pebble/pair',xjson('POST',{base:$('pebbase').value.trim()}))).json();
+    const c=$('pebcode');c.innerHTML='';const inp=document.createElement('input');inp.readOnly=true;inp.value=r.setup;inp.id='pebsetup';c.appendChild(inp);
+    const row=document.createElement('div');row.className='row';const cp=document.createElement('button');cp.type='button';cp.className='b p';cp.textContent=t('Kopieren','Copy');row.appendChild(cp);c.appendChild(row);
+    const fh=document.createElement('div');fh.className='fh';fh.textContent=t('In der Pebble-App am Handy bei „Spark“ die Einstellungen öffnen und unter „Einrichtungscode“ einfügen, dann Speichern. Gilt ','In the Pebble app on the phone open the settings of "Spark", paste under "Setup code", then Save. Valid for ')+r.minutes+t(' Minuten und nur einmal.',' minutes and once only.');c.appendChild(fh);
+    cp.onclick=async()=>{try{await navigator.clipboard.writeText(r.setup);xmsg('pebmsg',t('Kopiert.','Copied.'))}catch{inp.select();xmsg('pebmsg',t('Markiert: jetzt kopieren.','Selected: copy it now.'))}}}
+    catch(e){xmsg('pebmsg',e.message,true)}}}
 // ---------------------------------------------------------------- Bus und Bahn (transit.py)
 let TR_ON=false;
 const TRDAYS=['Mo','Di','Mi','Do','Fr','Sa','So'];
