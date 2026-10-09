@@ -10,6 +10,7 @@ Browsers allow push only on https with a trusted certificate (e.g. behind a reve
 on an iPhone the page has to be added to the home screen first.
 """
 import base64
+import hashlib
 import json
 import os
 import re
@@ -165,18 +166,43 @@ def reachable(uid, private=True):
     return bool(subs(uid) or telegram.push_on(uid, private) or apns.reachable(uid))
 
 
-async def send(uid, title, body, tag="", private=True):
-    """Sends to every device of the profile; drops subscriptions the push service no longer knows.
-    Also to Telegram when the profile wants that; private notes (appointments, mails, the briefing)
-    only when it also allowed personal data over Telegram. Returns the number of devices reached."""
+def sub_id(endpoint):
+    """The short name a page gives for its own push subscription (reminders.js pushId)."""
+    return hashlib.sha256(str(endpoint).encode()).hexdigest()[:16]
+
+
+LAST_KEEP = 12 * 3600
+
+
+def pick(uid, private=True):
+    """One target for a note (V01.0.181: everything once): the device the profile used last, else the
+    iPhone app, else Telegram, else the newest browser. Returns ("app"|"tg"|"web", [subscriptions])."""
     import apns
     import telegram
+    have = {"app": apns.reachable(uid), "tg": telegram.push_on(uid, private), "web": bool(subs(uid))}
+    kind, key, t = profiles.LAST_USED.get(uid, ("", "", 0))
+    if not (have.get(kind) and time.time() - t < LAST_KEEP):
+        kind = next((k for k in ("app", "tg", "web") if have[k]), "")
+    if kind != "web":
+        return kind, []
+    mine = [s for s in subs(uid) if key and sub_id(s["endpoint"]) == key]
+    return "web", mine or subs(uid)[-1:]
+
+
+async def send(uid, title, body, tag="", private=True):
+    """Sends a note once: to one device of the profile (pick), the iPhone app, Telegram (private notes,
+    i.e. appointments, mails, the briefing, only when it allowed personal data there) or a browser.
+    "hello" goes to the browsers only. Drops subscriptions the push service no longer knows.
+    Returns the number of devices reached."""
+    import apns
+    import telegram
+    kind, targets = ("web", subs(uid)) if tag == "hello" else pick(uid, private)
     # the iPhone app: Apple only carries "new message", the text waits on the Spark (apns.py)
-    n0 = await apns.send(uid, title, body, tag=tag) if tag != "hello" else 0
+    n = await apns.send(uid, title, body, tag=tag) if kind == "app" else 0
     payload = json.dumps({"title": title, "body": body, "tag": tag}).encode()[:3000]
-    n = n0 + (await telegram.notify(uid, f"{title}\n{body}", private) if tag != "hello" else 0)
+    n += await telegram.notify(uid, f"{title}\n{body}", private) if kind == "tg" else 0
     async with httpx.AsyncClient(timeout=15) as c:
-        for sub in subs(uid):
+        for sub in targets:
             try:
                 r = await c.post(sub["endpoint"], content=encrypt(sub, payload), headers={
                     "Authorization": vapid(sub["endpoint"]), "Content-Encoding": "aes128gcm",
@@ -200,8 +226,9 @@ PAGE_GRACE = 20 * 1000
 _pages = {}
 
 
-def page_open(uid):
+def page_open(uid, sid=""):
     _pages[uid] = time.monotonic()
+    profiles.used(uid, "web", sid if re.fullmatch(r"[0-9a-f]{16}", sid or "") else "")
     if len(_pages) > 1000:
         _pages.clear()
 

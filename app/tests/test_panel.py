@@ -676,6 +676,36 @@ class Push(unittest.TestCase):
         self.assertEqual(profiles.reminders(a_id), [])
         self.assertEqual(len(profiles.reminders(b_id)), 1)  # no push device: the page rings it
 
+    def test_a_note_goes_to_one_device_the_one_used_last(self):
+        import apns
+        import push
+        import telegram
+        a = profile("Mareike")
+        uid = a.get("/api/whoami").json()["profile"]["id"]
+        s1 = {"endpoint": "https://fcm.googleapis.com/fcm/send/eins",
+              "keys": {"p256dh": push.b64(b"\x04" + b"1" * 64), "auth": push.b64(b"a" * 16)}}
+        s2 = dict(s1, endpoint="https://fcm.googleapis.com/fcm/send/zwei")
+        push.add(uid, s1)
+        push.add(uid, s2)
+        real = apns.reachable, telegram.push_on
+        apns.reachable, telegram.push_on = (lambda u: u == uid), (lambda u, private=True: u == uid and not private)
+        try:
+            profiles.LAST_USED.pop(uid, None)
+            self.assertEqual(push.pick(uid), ("app", []))                      # nothing known: the app first
+            a.get("/api/profile/reminders?page=1&push_id=" + push.sub_id(s1["endpoint"]))
+            kind, subs = push.pick(uid)
+            self.assertEqual((kind, [x["endpoint"] for x in subs]), ("web", [s1["endpoint"]]))   # this browser only
+            a.get("/api/profile/reminders?page=1&push_id=zz")
+            self.assertEqual([x["endpoint"] for x in push.pick(uid)[1]], [s2["endpoint"]])     # unknown: newest
+            profiles.used(uid, "tg")
+            self.assertEqual(push.pick(uid, private=False), ("tg", []))
+            self.assertEqual(push.pick(uid, private=True), ("app", []))        # private not over Telegram
+            profiles.LAST_USED[uid] = ("tg", "", time.time() - push.LAST_KEEP - 1)
+            self.assertEqual(push.pick(uid, private=False), ("app", []))       # too long ago
+        finally:
+            apns.reachable, telegram.push_on = real
+            profiles.LAST_USED.pop(uid, None)
+
     def test_a_played_reminder_rings_on_no_other_device(self):
         # V01.0.176: the first device that plays a due reminder takes it; pages, iPhone and push stay silent
         import asyncio

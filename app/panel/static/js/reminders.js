@@ -9,7 +9,7 @@ let REM_ON=true;
 const rem={list:[],rung:new Set(),
   key(){return PROFILE?'reminders:'+PROFILE.id:'reminders'},
   stored(){try{return JSON.parse(localStorage.getItem(this.key())||'[]')}catch{return []}},
-  async load(){if(PROFILE){let l=[];try{l=await (await api('/api/profile/reminders?page=1')).json()}catch{}this.list=[...l,...this.stored()].sort((a,b)=>a.due-b.due)}
+  async load(){if(PROFILE){let l=[];try{l=await this.fetchList()}catch{}this.list=[...l,...this.stored()].sort((a,b)=>a.due-b.due)}
     else this.list=this.stored();this.show()},
   keep(){try{localStorage.setItem(this.key(),JSON.stringify(PROFILE?this.list.filter(x=>x.local):this.list))}catch{}this.show()},
   event(ev){if(ev.action==='set'){const it={...ev.item,...(ev.foreign&&PROFILE?{local:true}:{})};
@@ -38,10 +38,15 @@ const rem={list:[],rung:new Set(),
     if(document.hidden)try{if(window.Notification&&Notification.permission==='granted')new Notification('⏰ '+x.text,{body:t('Erinnerung','Reminder'),tag:x.id})}catch{}
     if(chat.rec||chat.ctrl||playing())return;   // a conversation is running: the bubble and the chime suffice
     sayText(line)},
+  // this browser's push subscription, short (push.sub_id): notes go to the device used last, once
+  async pushId(){try{const r=await navigator.serviceWorker.getRegistration();const s=r&&await r.pushManager.getSubscription();
+    if(!s||!crypto.subtle)return '';const h=await crypto.subtle.digest('SHA-256',new TextEncoder().encode(s.endpoint));
+    return [...new Uint8Array(h)].slice(0,8).map(b=>b.toString(16).padStart(2,'0')).join('')}catch{return ''}},
+  async fetchList(){return (await api('/api/profile/reminders?page=1&push_id='+await this.pushId())).json()},
   tick(){const now=Date.now();
     for(const x of this.list)if(x.due<=now&&!this.rung.has(x.id)){
       if(now-x.due>6*3600e3){this.drop(x.id);continue}   // long overdue (page was closed): drop quietly
       this.ring(x)}
     if(PROFILE&&!document.hidden&&now-(this.synced||0)>60e3){this.synced=now;    // pick up reminders set on other devices
-      api('/api/profile/reminders?page=1').then(r=>r.json()).then(l=>{if(PROFILE){this.list=[...l,...this.list.filter(x=>x.local)].filter(x=>!this.rung.has(x.id)).sort((a,b)=>a.due-b.due);this.show()}}).catch(()=>{})}}};
+      this.fetchList().then(l=>{if(PROFILE){this.list=[...l,...this.list.filter(x=>x.local)].filter(x=>!this.rung.has(x.id)).sort((a,b)=>a.due-b.due);this.show()}}).catch(()=>{})}}};
 setInterval(()=>rem.tick(),2000);

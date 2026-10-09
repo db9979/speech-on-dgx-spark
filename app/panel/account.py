@@ -440,9 +440,10 @@ def profile_delete_doc(doc_id: str, prof=Depends(browser_profile)):
 
 
 @router.get("/api/profile/reminders", dependencies=[Depends(assistant)])
-def profile_reminders(page: int = 0, prof=Depends(own_profile)):
+def profile_reminders(page: int = 0, push_id: str = "", prof=Depends(own_profile)):
     if page:
-        push.page_open(prof["id"])   # an open panel page rings by itself: push waits a moment for it
+        # an open panel page rings by itself: push waits a moment for it, and later notes go to this browser
+        push.page_open(prof["id"], push_id[:16])
     return profiles.reminders(prof["id"])
 
 

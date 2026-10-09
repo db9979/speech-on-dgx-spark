@@ -300,11 +300,23 @@ def key_scope(request):
     return str(dev.get("scope") or "") if dev else ""
 
 
+# uid -> (kind, key, time) of the device the profile used last: "app" (iPhone app), "tg" (Telegram),
+# "web" (a panel page; key = its push subscription, see push.page_open). Push goes only there (push.pick).
+LAST_USED = {}
+
+
+def used(uid, kind, key=""):
+    if len(LAST_USED) > 1000:
+        LAST_USED.clear()
+    LAST_USED[uid] = (kind, key, time.time())
+
+
 def current(request):
     """{"id", "name"} of the profile behind this request (device key first, then cookie), or None."""
     d = _load()
     inner = request.scope.get("speech_profile")   # set only by the panel itself (Telegram, see telegram.py)
     if inner:
+        used(inner, "tg")
         u = next((u for u in d["users"] if u["id"] == inner), None)
         return {"id": u["id"], "name": u["name"]} if u else None
     token = request.headers.get(DEVICE_HEADER, "")
@@ -316,6 +328,8 @@ def current(request):
             return None
         _note_device(dev["id"], request)
         uid = dev["user"]
+        if dev.get("scope") == "app":
+            used(uid, "app")
     else:
         u, _ = _cookie_user(d, request.cookies.get(COOKIE, ""))
         if not u:

@@ -31,6 +31,7 @@ All options for running without questions (`--mode api --asr 1.7b --tts 0.6b --y
 
 <!-- New version: add one line at the top here and in CHANGELOG.md, drop the oldest line here (keep 10). Details go to docs/de and docs/en, not into this README. -->
 
+- **V01.0.181** Notifications arrive once, on the device used last instead of on all of them
 - **V01.0.180** iPhone app: GitHub button "TestFlight" builds, signs through Apple and uploads (tested commits only)
 - **V01.0.179** "Speaking up by itself" notes are spoken on one device only, not again on every device
 - **V01.0.178** iPhone app: version shown small at the bottom, build number counts up by itself when building
@@ -40,7 +41,6 @@ All options for running without questions (`--mode api --asr 1.7b --tts 0.6b --y
 - **V01.0.174** iPhone app: App Store screenshots also in 6.3" (1206 × 2622)
 - **V01.0.173** Integrate: "AI agents" guide, Hermes Agent and OpenClaw use the Spark for speech recognition and speech output
 - **V01.0.172** iPhone app: App Store screenshots (de/en) from the simulator via GitHub workflow, demo mode in Debug builds only
-- **V01.0.171** Features as short lines: tap to open, filter All/On/Off/Needs you, jump bar to the groups
 
 All versions: [CHANGELOG.md](CHANGELOG.md)
 
