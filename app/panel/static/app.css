@@ -145,6 +145,7 @@ body.inchat #fab{display:none}
 .av{width:26px;height:26px;border-radius:50%;flex:none;background:linear-gradient(135deg,var(--acc),var(--acc2));display:grid;place-items:center}
 .av i{width:14px;height:8px;border-radius:5px;background:var(--visor);display:block;position:relative}
 .av i::before,.av i::after{content:"";position:absolute;top:2px;width:3px;height:4px;border-radius:2px;background:#bff6ff}.av i::before{left:3px}.av i::after{right:3px}
+body[data-face=comic] .av{background:var(--avface) center/cover no-repeat}body[data-face=comic] .av i{display:none}
 .typing::after{content:"";display:inline-block;width:18px;text-align:left;animation:dots 1.2s steps(4) infinite}
 @keyframes dots{0%{content:""}25%{content:"."}50%{content:".."}75%{content:"..."}}
 @keyframes pop{from{opacity:0;transform:translateY(6px) scale(.98)}to{opacity:1;transform:none}}

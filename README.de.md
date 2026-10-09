@@ -31,6 +31,7 @@ Alle Optionen ohne Rückfragen (`--mode api --asr 1.7b --tts 0.6b --yes` …) st
 
 <!-- New version: add one line at the top here and in CHANGELOG.md, drop the oldest line here (keep 10). Details go to docs/de and docs/en, not into this README. -->
 
+- **V01.0.241** Das kleine Bild vor jeder Antwort im Verlauf folgt dem gewählten Gesicht: bei „Comic“ ein Comic-Kopf statt des Roboters
 - **V01.0.240** Lange Dokumente nachts lesen (Admin-Schalter unter Bilder und Scans lesen, aus): tagsüber nur Dokumente bis 10 Seiten in Gesprächspausen, lange erst nach 30 Minuten ohne Frage oder im Nachtfenster (Standard 01:00–06:00), nachts bis 400 Seiten zusätzlich; Ich → Dokumente zeigt „langes Dokument, wird nachts ab 01:00 gelesen“
 - **V01.0.239** Pebble-Ton stockt weniger: die Uhr startet nach 1,5 s Puffer (vorher 0,75 s) und spielt nach leerem Puffer erst weiter, wenn wieder genug da ist (eine Pause statt Häppchen); die Log-Zeile „watch: zeit“ zählt die Aussetzer (Uhr-App 1.5.0)
 - **V01.0.238** Scans vollständig: gescannte PDF-Seiten werden als ganze Seite gerendert (pypdfium2 4.30.0), statt nur das größte Bild zu nehmen, dadurch fallen keine Seiten mehr weg; bis 300 Scan-Seiten pro Dokument (100 pro Tag, danach am nächsten Tag weiter); Grenzen und übersprungene Seiten stehen am Dokument; „Neu einlesen“ aus dem aufbewahrten Original (behält Platz, „Für alle“ und Suche); ein gekürzter Chat-Anhang aus der App sagt, dass nur der Anfang dabei ist
@@ -40,7 +41,6 @@ Alle Optionen ohne Rückfragen (`--mode api --asr 1.7b --tts 0.6b --yes` …) st
 - **V01.0.234** Pebble einfacher installieren: Ich → Pebble-Uhr zeigt einen QR-Code zur App-Datei und die drei Schritte (App auf die Uhr, Uhr verbunden?, Koppeln); gibt es auf dem Spark eine neuere Uhr-App, steht höchstens einmal am Tag „Neue Uhr-App“ unter einer Antwort (Uhr-App 1.4.0)
 - **V01.0.233** iPhone-App: erste Antwort nach dem Start wieder mit Ton (Wiedergabe startet nach dem Einschalten der Echounterdrückung neu)
 - **V01.0.232** Ich → Dokumente zeigt den Fortschritt pro Dokument: „Seite 3 von 12 gelesen“ mit Balken und Grund (liest gerade Seite …, wartet auf eine ruhige Minute, Tagesgrenze, Schalter aus), danach „Bedeutung 40 von 120“; die Liste aktualisiert sich alle 10 s, solange etwas läuft; iPhone-App zeigt „Seite x von y gelesen“
-- **V01.0.231** „Vorrang prüfen“ misst den Fall mit Vorfahrt wie ein echtes Gespräch (erst Erkennung, dann Sprachausgabe)
 
 Alle Versionen: [CHANGELOG.md](CHANGELOG.md)
 

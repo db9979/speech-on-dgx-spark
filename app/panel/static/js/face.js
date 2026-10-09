@@ -53,7 +53,17 @@ function mountComic(el,sfx){const b=comicSvg(sfx);el.innerHTML=b.svg;const q=n=>
   return {el,comic:1,mcy:b.mcy,p:{head:q('head'),iL:q('irisL'),iR:q('irisR'),lL:q('lidL'),lR:q('lidR'),llL:q('llL'),llR:q('llR'),bL:q('browL'),bR:q('browR'),mo:q('mo'),ml:q('ml'),lip:q('lip'),st:q('st'),ring:q('ring')}}}
 function mountAll(){faces.length=0;mountFace($('face'),'A');mountFace($('fabface'),'B')}
 // called with whoami's "face" and after the admin saved another one; unknown names keep the robot
-window.setFaceKind=k=>{k=k==='comic'?'comic':'robot';if(k===FACE_KIND)return;FACE_KIND=k;mountAll()};
+// the small picture before each answer (chat.js .av) follows the face: a still of the comic face,
+// drawn once from the same drawing (lids at rest, mouth closed)
+let COMIC_ICON='';
+function comicIcon(){if(COMIC_ICON)return COMIC_ICON;const box=document.createElement('div'),s=COMIC,b=comicSvg('I');box.innerHTML=b.svg;
+  const q=n=>box.querySelector(`[data-p="${n}"]`),h=(2*s.eRy+2)*s.lidBase;
+  for(const[k,d]of[[-1,'L'],[1,'R']]){const x=100+k*s.eyeX,ly=s.eyeY-s.eRy-1+h;q('lid'+d).setAttribute('height',h.toFixed(2));
+    q('ll'+d).setAttribute('d',`M${x-s.eRx-.5} ${ly.toFixed(2)} Q${x} ${(ly+1.6).toFixed(2)} ${x+s.eRx+.5} ${ly.toFixed(2)}`)}
+  q('ml').setAttribute('d',`M${100-s.mouthW} ${b.mcy} Q100 ${b.mcy+.6} ${100+s.mouthW} ${b.mcy}`);q('ring').setAttribute('stroke-width','0');box.firstElementChild.setAttribute('viewBox','36 24 128 128');   // the head fills the small circle
+  COMIC_ICON=`url("data:image/svg+xml,${encodeURIComponent(new XMLSerializer().serializeToString(box.firstElementChild))}")`;return COMIC_ICON}
+function faceIcon(){document.body.dataset.face=FACE_KIND;if(FACE_KIND==='comic')document.documentElement.style.setProperty('--avface',comicIcon())}
+window.setFaceKind=k=>{k=k==='comic'?'comic':'robot';if(k===FACE_KIND)return;FACE_KIND=k;mountAll();faceIcon()};
 mountAll();
 const F={open:0,smile:1,eyeH:24,lx:0,ly:0,halo:.25,cheeks:.6,blink:0,next:performance.now()+2500,mx:-1,my:-1};
 // the comic face's own life: looking around, heavy lids, brows, head tilt (one state for both places)

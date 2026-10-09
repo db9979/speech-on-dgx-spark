@@ -60,3 +60,15 @@ class Face(unittest.TestCase):
         self.assertIn("window.setFaceKind=k=>{k=k==='comic'?'comic':'robot';", js)
         self.assertNotIn("innerHTML=k", js)
         self.assertIn("setFaceKind(who.face)", read("js", "start.js"))
+
+    def test_answer_picture_follows_the_face(self):
+        # the small picture before each answer (.av) is the robot unless the comic face is chosen
+        js, css = read("js", "face.js"), read("app.css")
+        self.assertIn("function faceIcon(){document.body.dataset.face=FACE_KIND;", js)
+        self.assertIn("mountAll();faceIcon()};", js)
+        self.assertIn("body[data-face=comic] .av{background:var(--avface)", css)
+        self.assertIn("body[data-face=comic] .av i{display:none}", css)
+        # the still is drawn from the face's own fixed drawing, never from outside text
+        fn = js[js.index("function comicIcon()"):js.index("function faceIcon()")]
+        self.assertIn("comicSvg('I')", fn)
+        self.assertIn("encodeURIComponent(", fn)
