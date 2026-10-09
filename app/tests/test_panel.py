@@ -6,6 +6,7 @@ import json
 import os
 import time
 import unittest
+from unittest import mock
 
 from tests import helpers
 
@@ -922,6 +923,28 @@ class Quality(unittest.TestCase):
         self.assertFalse([a for a in health.alerts() if a["kind"] == "quality"])
         self.assertEqual(byid2["kalender-leer"]["runs"], 1)
         self.assertEqual(TestClient(panel.app).get("/api/quality").status_code, 401)
+
+    def test_progress_for_the_bar(self):
+        import asyncio
+        import quality
+        self.assertIsNone(quality.progress())          # idle: no bar
+        seen = []
+        real = quality._run_case
+
+        async def spy(*a, **kw):
+            seen.append(quality.progress())
+            return await real(*a, **kw)
+        with mock.patch.object(quality, "_run_case", spy), mock.patch.object(quality, "_history"), \
+                mock.patch.object(quality, "_save"):  # keeps no state for the other quality tests
+            res = asyncio.run(quality.run("test"))
+        self.assertEqual(seen[0]["done"], 0)
+        self.assertEqual(seen[0]["total"], res["total"])
+        self.assertEqual(seen[-1]["done"], res["total"] - 1)
+        self.assertTrue(all(a["done"] <= b["done"] for a, b in zip(seen, seen[1:])))
+        self.assertIsNone(quality.progress())
+        c = TestClient(panel.app)
+        c.post("/api/login", json={"password": "secret-admin"})
+        self.assertIn("progress", c.get("/api/quality").json())
 
 
     def test_dates_follow_today(self):

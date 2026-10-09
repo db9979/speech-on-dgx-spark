@@ -150,7 +150,7 @@ async def livecheck_now():
 
 @router.get("/api/quality", dependencies=[Depends(auth)])
 def quality_result():
-    return {"running": quality.running(), "last": quality.last(), "own": quality.own()}
+    return {"running": quality.running(), "progress": quality.progress(), "last": quality.last(), "own": quality.own()}
 
 
 @router.delete("/api/quality/cases/{cid}", dependencies=[Depends(auth)])
@@ -165,7 +165,7 @@ async def quality_now():
     if not quality.running():
         asyncio.create_task(quality.run("manual"))
         await asyncio.sleep(0.1)
-    return {"running": True, "last": quality.last()}
+    return {"running": True, "progress": quality.progress(), "last": quality.last()}
 
 
 # ---------------------------------------------------------------- first-start wizard

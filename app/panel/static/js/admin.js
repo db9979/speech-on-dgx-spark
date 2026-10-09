@@ -386,21 +386,36 @@ function latRender(l){const f=s=>s?`<b>${s.median} s</b> <span class="mut">(${s.
 async function loadLive(){try{const r=await (await api('/api/livecheck')).json();liveRender(r);latRender(r.latency)}catch{}loadQuality()}
 // quality test of the language model (sandbox questions, see quality.py)
 let qTimer=null;
-function qRender(d){const r=d&&d.last;clearTimeout(qTimer);
-  if(d&&d.running){$('qmsg').textContent=t('läuft … (zwei bis vier Minuten)','running … (two to four minutes)');$('qgo').disabled=true;qTimer=setTimeout(loadQuality,5000)}
+// bar while the test runs: questions done of all, time left estimated from the pace so far
+function qProg(p){const box=$('qprog'),bar=$('qbar');box.hidden=!p;if(!p)return;
+  const n=p.total||0,d=Math.min(p.done||0,n);bar.classList.toggle('wait',!d);bar.firstChild.style.width=d?Math.round(100*d/n)+'%':'';
+  const left=d?Math.round(p.seconds/d*(n-d)):0;
+  $('qprogtxt').textContent=n?`${t('Frage','Question')} ${Math.min(d+1,n)} ${t('von','of')} ${n}`+(d>=3&&left>0?` · ${t('noch etwa','about')} ${left<60?left+' s':Math.round(left/60)+' min'}${t('',' left')}`:''):t('startet …','starting …')}
+function qRender(d){const r=d&&d.last;clearTimeout(qTimer);qProg(d&&d.running?(d.progress||{done:0,total:0,seconds:0}):null);
+  if(d&&d.running){$('qmsg').textContent=t('läuft …','running …');$('qgo').disabled=true;qTimer=setTimeout(loadQuality,2000)}
   else{$('qgo').disabled=false;$('qmsg').textContent=r?new Date(r.t*1000).toLocaleString()+' · '+(r.version||'')+(r.reason==='after update'?t(' · nach dem Update',' · after the update'):''):''}
-  if(!r){$('qsum').innerHTML=`<span class="mut">${t('Noch nicht geprüft.','Not tested yet.')}</span>`;$('qlist').innerHTML='';return}
-  if(r.error){$('qsum').innerHTML=`<span class="err">${esc(r.error)}</span>`;$('qlist').innerHTML='';return}
+  const none=h=>{$('qsum').innerHTML=h;$('qlist').innerHTML='';$('qallbox').hidden=true};
+  if(!r)return none(`<span class="mut">${t('Noch nicht geprüft.','Not tested yet.')}</span>`);
+  if(r.error)return none(`<span class="err">${esc(r.error)}</span>`);
   const bad=r.cases.filter(x=>!x.ok),flaky=r.cases.filter(x=>x.ok&&x.flaky),held=r.cases.filter(x=>x.ok&&!x.flaky&&x.held&&x.held.length);
-  $('qsum').innerHTML=`<span class="pill ${bad.length?'warn':'ok'}">${r.passed} / ${r.total}</span> <span class="mut">${esc(r.model||'')} · ${t('Temperatur','temperature')} ${r.temperature}${r.tool_temperature!=null?' / '+r.tool_temperature+t(' bei der Werkzeugwahl',' choosing tools'):''} · ${r.seconds} s</span>`
-    +(flaky.length?` <span class="pill warn">${flaky.length} ${t('erst im zweiten Versuch','only on the second try')}</span>`:'');
+  const min=s=>s>=90?Math.round(s/60)+' min':s+' s';
+  $('qsum').innerHTML=`<span class="pill ${bad.length?'warn':'ok'}">${r.passed} / ${r.total}</span> `
+    +(bad.length?'':`<b>${t('Alle Fragen richtig.','All questions right.')}</b> `)
+    +(flaky.length?`<span class="pill warn">${flaky.length} ${t('erst im zweiten Versuch','only on the second try')}</span> `:'')
+    +`<div class="fh">${esc(r.model||'')} · ${t('Temperatur','temperature')} ${r.temperature}${r.tool_temperature!=null?' / '+r.tool_temperature+t(' bei der Werkzeugwahl',' choosing tools'):''} · ${min(r.seconds)}</div>`;
   const mark=x=>(x.new?` <span class="pill warn">${t('neu kaputt','newly broken')}</span>`:'')
     +(x.wobbly?` <span class="mut">${t('wackelt','wobbles')} (${x.wobbly} ${t('von','of')} ${x.runs})</span>`:'');
-  const extra=x=>(x.flaky&&x.first?`<div class="mut">${t('Erster Versuch','First try')}: ${esc(x.first.why.join('; '))}</div>`:'')
-    +(x.held&&x.held.length?`<div class="mut">${t('Antwort-Prüfung hat zurückgehalten','Answer check held back')}: ${esc(x.held.join(', '))}${x.raw?' · „'+esc(x.raw)+'“':''}</div>`:'')
-    +(x.retried?`<div class="mut">${t('Ohne Werkzeug geantwortet, neu gefragt','Answered without a tool, asked again')}</div>`:'');
-  const rows=bad.length||flaky.length||held.length?[...bad,...flaky,...held]:r.cases;
-  $('qlist').innerHTML=rows.map(x=>`<tr><td style="width:36%">${x.ok?'✅':'❌'} ${esc(x.q)}${mark(x)}<div class="mut">${esc(x.tools.join(', ')||t('kein Werkzeug','no tool'))}</div></td><td>${x.ok?'':`<b>${esc(x.why.join('; '))}</b><br>`}<span class="mut">${esc(x.answer||'–')}</span>${extra(x)}</td></tr>`).join('')}
+  const extra=x=>(x.flaky&&x.first?`<br>${t('Erster Versuch','First try')}: ${esc(x.first.why.join('; '))}`:'')
+    +(x.held&&x.held.length?`<br>${t('Antwort-Prüfung hat zurückgehalten','Answer check held back')}: ${esc(x.held.join(', '))}${x.raw?' · „'+esc(x.raw)+'“':''}`:'')
+    +(x.retried?`<br>${t('Ohne Werkzeug geantwortet, neu gefragt','Answered without a tool, asked again')}`:'');
+  const head=x=>`<div class="qq"><span>${x.ok?'✅':'❌'} ${esc(x.q)}${mark(x)}</span><span class="qt">${esc(x.tools.join(', ')||t('kein Werkzeug','no tool'))}</span></div>`;
+  // only questions that need a look stay open (one line each, answer clipped to two lines, tap opens it); the rest is folded
+  const look=[...bad,...flaky,...held];
+  $('qlist').innerHTML=look.map(x=>`<div class="qrow">${head(x)}${x.ok?'':`<div class="qw">${esc(x.why.join('; '))}</div>`}<div class="qa" title="${t('Antippen zeigt alles','Tap to show all')}">${esc(x.answer||'–')}${extra(x)}</div></div>`).join('');
+  const rest=r.cases.filter(x=>!look.includes(x));$('qallbox').hidden=!rest.length;
+  $('qallsum').textContent=look.length?`${rest.length} ${t('weitere Fragen ohne Befund','more questions without findings')}`:`${t('Alle','All')} ${rest.length} ${t('Fragen ansehen','questions')}`;
+  $('qall').innerHTML=rest.map(x=>`<div class="qrow">${head(x)}</div>`).join('')}
+$('qlist').addEventListener('click',e=>{const a=e.target.closest('.qa');if(a)a.classList.toggle('open')});
 function qOwn(l){if(!l)return;$('qownbox').style.display=l.length?'':'none';
   $('qown').innerHTML=l.map(x=>`<li><span>${esc(x.q)}</span><button class="b" type="button" data-qdrop="${esc(x.id)}">${t('Löschen','Delete')}</button></li>`).join('')}
 $('qown').addEventListener('click',async e=>{const b=e.target.closest('[data-qdrop]');if(!b)return;

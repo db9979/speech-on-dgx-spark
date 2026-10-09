@@ -333,10 +333,13 @@
       <div id="latsum" style="margin-top:8px"></div>
       <div class="row" style="margin-top:10px"><button class="b" id="livego">Jetzt prüfen</button><span id="livemsg" class="mut"></span></div></div>
     <div class="card"><h2>Qualitätstest</h2>
-    <div class="intro sm">Stellt dem echten Sprachmodell 20 feste Fragen, die meisten zusätzlich in zwei anderen Formulierungen, mit vorbereiteten Werkzeug-Ergebnissen (Termine, Mails, Erinnerungen, Suche, Gedächtnis, „weiß ich nicht“-Fälle). Geprüft wird, ob es das richtige Werkzeug nimmt und was du nach der Antwort-Prüfung hörst. Ein Fehlschlag läuft einmal neu; der Verlauf zeigt neu kaputte und wackelnde Fragen. Echte Daten werden dabei weder gelesen noch geändert. Läuft nach jedem Update von selbst, dauert zwei bis vier Minuten.</div>
-    <div id="qsum" style="margin-top:8px"></div>
-    <table style="margin-top:6px"><tbody id="qlist"></tbody></table>
+    <div class="intro sm">Stellt dem echten Sprachmodell 20 feste Fragen, die meisten in drei Formulierungen, und prüft Werkzeug und Antwort. Echte Daten werden dabei weder gelesen noch geändert.</div>
+    <details class="qhow"><summary>Wie geprüft wird</summary><div class="fh">Die Werkzeuge liefern vorbereitete Ergebnisse (Termine, Mails, Erinnerungen, Suche, Gedächtnis, „weiß ich nicht“-Fälle). Geprüft wird, ob das Modell das richtige Werkzeug nimmt und was du nach der Antwort-Prüfung hörst. Ein Fehlschlag läuft einmal neu; der Verlauf zeigt neu kaputte und wackelnde Fragen. Läuft nach jedem Update von selbst, dauert zwei bis vier Minuten.</div></details>
     <div class="row" style="margin-top:10px"><button class="b" id="qgo">Jetzt prüfen</button><span id="qmsg" class="mut"></span></div>
+    <div id="qprog" class="qprog" hidden><div class="qbar" id="qbar"><i></i></div><span id="qprogtxt" class="mut"></span></div>
+    <div id="qsum" style="margin-top:10px"></div>
+    <div id="qlist" class="qlist"></div>
+    <details id="qallbox" class="qhow" hidden><summary id="qallsum"></summary><div id="qall" class="qlist"></div></details>
     <div id="qownbox" style="display:none;margin-top:10px"><b>Fragen aus Korrekturen</b><div class="fh" style="margin-top:0">Profile haben sie nach einer Korrektur übergeben. Sie laufen bei jedem Test mit; jedes Werkzeug findet dabei nichts, das Modell darf also nichts erfinden.</div><ul id="qown" class="list"></ul></div></div>
   </div>
   <div class="card"><h2>Leistung messen</h2>

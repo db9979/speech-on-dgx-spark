@@ -441,3 +441,17 @@ details.zmore{margin-top:14px}details.zmore>summary{cursor:pointer;font-weight:6
 .brate .bgrp td{font-size:13px;color:var(--mut);font-weight:600;padding-top:16px;border-top:0}
 @media (max-width:600px){.brate td:first-child{width:auto}.brate tr{display:grid;grid-template-columns:1fr auto auto;gap:0 10px;align-items:center;border-top:1px solid var(--line);padding:8px 0}
   .brate td{border-top:0;padding:2px 0}.brate td.bwhy{grid-column:1/4}.brate tr.bgrp{border-top:0;display:block}}
+/* quality test (V01.0.164): bar while it runs, one short row per question, passed ones folded */
+details.qhow{margin-top:6px}details.qhow>summary{cursor:pointer;font-size:13px;font-weight:600;color:var(--mut)}
+.qprog{display:flex;align-items:center;gap:10px;margin-top:10px}.qprog[hidden],details.qhow[hidden]{display:none}
+.qbar{flex:1;min-width:80px;height:10px;border-radius:99px;background:var(--line);overflow:hidden}
+.qbar i{display:block;height:100%;width:0;border-radius:99px;background:linear-gradient(90deg,var(--acc),var(--acc2));transition:width .5s}
+.qbar.wait i{width:30%;animation:qslide 1.3s ease-in-out infinite}@keyframes qslide{0%{margin-left:-30%}100%{margin-left:100%}}
+.qprog span{font-size:12.5px;white-space:nowrap;font-variant-numeric:tabular-nums}
+.qlist{margin-top:6px}.qrow{padding:6px 0;border-top:1px solid var(--line);line-height:1.4}
+.qrow .qq{display:flex;gap:8px;align-items:baseline}.qrow .qq>span:first-child{flex:1;min-width:0}
+.qrow .qt{color:var(--mut);font-size:12px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;max-width:40%}
+.qrow .qw{font-weight:600;font-size:13px;margin-top:2px}
+.qrow .qa{color:var(--mut);font-size:12.5px;margin-top:2px;display:-webkit-box;-webkit-line-clamp:2;-webkit-box-orient:vertical;overflow:hidden;cursor:pointer}
+.qrow .qa.open{display:block}
+#qall .qrow{padding:3px 0;font-size:13px}#qall .qq>span:first-child{white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
