@@ -91,7 +91,7 @@ async def prepare(request):
     # text leaves that answer out, and with it its lock ("Setz das auf die Liste" keeps it locked).
     import intent   # (needs chat fully loaded: its word lists)
     ask0 = messages[-1]["content"] if messages[-1]["role"] == "user" else ""
-    route = intent.classify(ask0, ccfg.get("tool_words", ""))
+    route = intent.classify(ask0, ccfg.get("tool_words", ""), ccfg.get("route_words", ""))
     me0 = profiles.current(request)
     route_on = bool(ccfg.get("routing", False) and me0 and profiles.settings(me0["id"]).get("route"))
     if carry == "outside" and route_on and intent.wants_own(route, ask0):

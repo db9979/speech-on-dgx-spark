@@ -20,10 +20,14 @@ import json
 import re
 
 import httpx
+from fastapi import APIRouter, Depends, HTTPException, Request
 
 import chat
 import fixes
+import guard
 import homeassistant
+from common import load_config
+from core import auth
 
 # intent -> (tools of this group, words in the person's message); order is only for the journal
 HOME_WORDS = re.compile(r"(?i)\b(licht\w*|lampe\w*|leuchte\w*|heizung\w*|thermostat\w*|temperatur\w*|grad\b|"
@@ -115,8 +119,9 @@ class Route:
         return "+".join(self.names) if self.names else "unklar"
 
 
-def classify(text, extra_words=""):
-    """The person's own latest message -> Route (fixed rules only)."""
+def classify(text, extra_words="", group_words=""):
+    """The person's own latest message -> Route (fixed rules only). extra_words: the admin's words
+    per tool (chat.tool_words), group_words: the admin's words per group (chat.route_words)."""
     text = str(text or "")[:2000]
     if not text.strip():
         return Route([], {})
@@ -141,9 +146,16 @@ def classify(text, extra_words=""):
                        ("paket", "parcels"), ("liste", "tasks_show")):
         if name not in why and tool in own and own[tool].search(text):
             why[name] = own[tool].search(text).group(0)
+    # the admin's own words per group (only adding: a group is found by them as well)
+    mine = own_route_words(group_words)
+    for name, rx in mine.items():
+        m = rx.search(text)
+        if m and name not in why:
+            why[name] = m.group(0)
+    device = bool(HOME_WORDS.search(text) or ("smarthome" in mine and mine["smarthome"].search(text)))
     # the switching verbs alone ("an", "auf", "zu") come in many sentences: they count only when
     # nothing else was recognized ("Fernseher aus" names a device and counts anyway)
-    if "smarthome" in why and not HOME_WORDS.search(text) and len(why) > 1:
+    if "smarthome" in why and not device and len(why) > 1:
         why.pop("smarthome")
     # "Habe ich neue Nachrichten?" are messages for the person, "Was gibt es in den Nachrichten?" news
     if "websuche" in why and "nachricht" in why and why["websuche"].lower().startswith("nachricht"):
@@ -252,3 +264,143 @@ async def ask_model(ccfg, text):
     except (ValueError, AttributeError):
         return None
     return pick if pick in GROUPS else None
+
+
+# ---------------------------------------------------------------- the admin's own words per group
+# chat.route_words: one line per group, "smarthome: sauna, kamin"; adding only, the built-in words
+# always stay. Whole words only (no regex from the admin), as for chat.tool_words.
+MAX_ROUTE_WORDS = 20        # per group
+MAX_ROUTE_CHARS = 3000
+_ROUTE_WORDS = {}           # admin text -> {group: compiled}
+
+
+def parse_route_words(text):
+    """{group: [words]} from the admin's lines, or ValueError with a readable reason."""
+    if not isinstance(text, str) or len(text) > MAX_ROUTE_CHARS:
+        raise ValueError(f"höchstens {MAX_ROUTE_CHARS} Zeichen")
+    out = {}
+    for line in text.splitlines():
+        if not line.strip():
+            continue
+        name, sep, rest = line.partition(":")
+        name = name.strip().lower()
+        if not sep or name not in GROUPS:
+            raise ValueError(f"„{line.strip()[:40]}“: vorne steht eine Gruppe ({', '.join(INTENT_NAMES)}), "
+                             "dann ein Doppelpunkt")
+        words = [w.strip().lower() for w in rest.split(",") if w.strip()]
+        for w in words:
+            if not chat.TOOL_WORD.fullmatch(w):
+                raise ValueError(f"„{w[:40]}“: nur Buchstaben, Ziffern, Leerzeichen und Bindestrich, 2 bis 40 Zeichen")
+        words = list(dict.fromkeys(out.get(name, []) + words))
+        if len(words) > MAX_ROUTE_WORDS:
+            raise ValueError(f"{name}: höchstens {MAX_ROUTE_WORDS} eigene Wörter")
+        out[name] = words
+    return out
+
+
+def own_route_words(text):
+    """The admin's words as one pattern per group (whole words, escaped), {} when none or invalid."""
+    if not text:
+        return {}
+    if text not in _ROUTE_WORDS:
+        try:
+            parsed = parse_route_words(text)
+        except ValueError:
+            parsed = {}
+        if len(_ROUTE_WORDS) > 8:
+            _ROUTE_WORDS.clear()
+        _ROUTE_WORDS[text] = {n: re.compile(r"(?i)\b(" + "|".join(re.escape(w) for w in ws) + r")\b")
+                              for n, ws in parsed.items() if ws}
+    return _ROUTE_WORDS[text]
+
+
+# ---------------------------------------------------------------- the rules in the panel (admin only)
+LABELS = {"smarthome": "Smart Home", "kalender": "Kalender und Briefing", "mail": "E-Mail", "websuche": "Websuche",
+          "erinnerung": "Erinnerungen und Timer", "liste": "Listen", "wetter": "Wetter", "bahn": "Bus und Bahn",
+          "paket": "Pakete", "kontakt": "Kontakte", "gedaechtnis": "Gedächtnis und frühere Gespräche",
+          "dokument": "Dokumente", "nachricht": "Nachrichten an andere", "agent": "Agenten", "iphone": "iPhone"}
+MAX_TEST = 500
+
+
+def _alternatives(pattern):
+    """The words of a pattern, readable: "termin…, kalender…, trag … ein" (for the admin's view only)."""
+    p = pattern.replace("(?i:", "(").replace("(?i)", "")
+    for a, b in ((r"\w*", "…"), (r"\w+", "…"), (r"\b", ""), (r"\s+", " "), (r"\s*", " "), (r"\W*", ""),
+                 (".{1,80}", " … "), (".{1,40}", " … "), (".{0,60}", " … "), ("(?:", "("), ("^", "")):
+        p = p.replace(a, b)
+
+    def split(s):
+        out, depth, cur = [], 0, ""
+        for ch in s:
+            depth += ch == "("
+            depth -= ch == ")"
+            if ch == "|" and depth == 0:
+                out.append(cur)
+                cur = ""
+            else:
+                cur += ch
+        return out + [cur]
+
+    def whole(s):   # "(a|b)" wrapped in one pair of brackets
+        if not (s.startswith("(") and s.endswith(")")):
+            return False
+        depth = 0
+        for i, ch in enumerate(s):
+            depth += (ch == "(") - (ch == ")")
+            if depth == 0 and i < len(s) - 1:
+                return False
+        return True
+
+    words = []
+
+    def walk(s):
+        for alt in split(s):
+            alt = alt.strip()
+            if whole(alt):
+                walk(alt[1:-1])
+            elif alt:
+                words.append(re.sub(r"\s+", " ", alt.replace("\\", "")).strip())
+    walk(p)
+    return list(dict.fromkeys(w for w in words if w))[:80]
+
+
+def rules(group_words=""):
+    """Every group with its tools, built-in words and the admin's own words (for the panel)."""
+    mine = parse_route_words_safe(group_words)
+    out = []
+    for name, (tools, words) in GROUPS.items():
+        built = _alternatives(HOME_WORDS.pattern) + _alternatives(SWITCH_VERBS.pattern) if name == "smarthome" \
+            else _alternatives(words.pattern)
+        out.append({"name": name, "label": LABELS.get(name, name), "tools": sorted(tools), "words": built,
+                    "own": mine.get(name, [])})
+    return out
+
+
+def parse_route_words_safe(text):
+    try:
+        return parse_route_words(text or "")
+    except ValueError:
+        return {}
+
+
+router = APIRouter()
+
+
+@router.get("/api/admin/routing", dependencies=[Depends(auth)])
+def routing_rules():
+    ccfg = load_config().get("chat", {})
+    return {"groups": rules(ccfg.get("route_words", "")), "keep": sorted(NARROW_KEEP)}
+
+
+@router.post("/api/admin/routing/test", dependencies=[Depends(auth)])
+async def routing_test(request: Request):
+    """One sentence through the switch, with the saved words: intent, reason, tools. No model, nothing stored."""
+    guard.limit(request, "route", None, True)
+    body = await request.json()
+    text = body.get("text") if isinstance(body, dict) else None
+    if not isinstance(text, str) or not text.strip() or len(text) > MAX_TEST:
+        raise HTTPException(400, f"text: 1 bis {MAX_TEST} Zeichen")
+    ccfg = load_config().get("chat", {})
+    r = classify(text, ccfg.get("tool_words", ""), ccfg.get("route_words", ""))
+    return {"intent": r.label(), "names": r.names, "clear": r.clear, "why": r.why,
+            "tools": sorted(r.tools() | NARROW_KEEP) if r.clear else [], "refers": refers_back(text)}

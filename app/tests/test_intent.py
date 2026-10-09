@@ -294,5 +294,51 @@ class Turns(unittest.TestCase):
             self.assertEqual(ADMIN.put("/api/config", json=new).status_code, 400, k)
 
 
+class OwnWords(unittest.TestCase):
+    def tearDown(self):
+        helpers.set_config(route_words="")
+
+    def test_parse_and_use(self):
+        self.assertEqual(intent.parse_route_words("smarthome: Sauna, kamin\nkontakt: handy von"),
+                         {"smarthome": ["sauna", "kamin"], "kontakt": ["handy von"]})
+        for bad in ("sauna", "tresor: auf", "smarthome: (.*)", "smarthome: " + ", ".join(f"w{i}x" for i in range(21)),
+                    "smarthome: a" * 400):
+            with self.assertRaises(ValueError, msg=bad):
+                intent.parse_route_words(bad)
+        self.assertEqual(intent.classify("Mach die Sauna an").names, [])          # unknown device: no rule
+        r = intent.classify("Mach die Sauna an", "", "smarthome: sauna")
+        self.assertEqual(r.names, ["smarthome"])
+        self.assertEqual(intent.classify("Mach die Sauna an", "", "kaputt").names, [])   # invalid: nothing added
+        # built-in words always stay
+        self.assertEqual(intent.classify("Wie wird das Wetter?", "", "smarthome: sauna").names, ["wetter"])
+
+    def test_admin_page(self):
+        cfg = ADMIN.get("/api/config").json()
+        new = json.loads(json.dumps(cfg))
+        new["chat"]["route_words"] = "tresor: auf"
+        self.assertEqual(ADMIN.put("/api/config", json=new).status_code, 400)
+        helpers.set_config(route_words="smarthome: sauna")
+        groups = ADMIN.get("/api/admin/routing").json()["groups"]
+        home = next(g for g in groups if g["name"] == "smarthome")
+        self.assertEqual(home["own"], ["sauna"])
+        self.assertIn("home_assistant", home["tools"])
+        self.assertTrue(any(w.startswith("licht") for w in home["words"]), home["words"][:10])
+        self.assertEqual({g["name"] for g in groups}, set(intent.GROUPS))
+        r = ADMIN.post("/api/admin/routing/test", json={"text": "Mach die Sauna an"}).json()
+        self.assertEqual(r["intent"], "smarthome")
+        self.assertIn("memory_save", r["tools"])
+        self.assertTrue(ADMIN.post("/api/admin/routing/test", json={"text": "Setz das auf die Liste"}).json()["refers"])
+        for bad in ("", "x" * 501, 5):
+            self.assertEqual(ADMIN.post("/api/admin/routing/test", json={"text": bad}).status_code, 400)
+        # admin only: not for a profile or a guest
+        helpers.set_config(public=True)
+        try:
+            for c in (profile("Weiche6", route=True), TestClient(panel.app)):
+                self.assertIn(c.get("/api/admin/routing").status_code, (401, 403))
+                self.assertIn(c.post("/api/admin/routing/test", json={"text": "Licht an"}).status_code, (401, 403))
+        finally:
+            helpers.set_config(public=False)
+
+
 if __name__ == "__main__":
     unittest.main()

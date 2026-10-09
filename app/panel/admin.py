@@ -389,6 +389,11 @@ def validate(new):
         chat.parse_tool_words(ch.get("tool_words", ""))
     except ValueError as e:
         raise HTTPException(400, f"Eigene Stichwörter: {e}")
+    import intent   # (needs chat fully loaded)
+    try:
+        intent.parse_route_words(ch.get("route_words", ""))
+    except ValueError as e:
+        raise HTTPException(400, f"Eigene Wörter der Werkzeugwahl: {e}")
     if ch.get("face", "robot") not in FACES:
         raise HTTPException(400, "face: " + " or ".join(FACES))
     if ch.get("self_echo_mode", "pause") not in ("text", "pause"):

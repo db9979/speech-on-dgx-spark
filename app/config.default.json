@@ -76,6 +76,7 @@
     "tool_thinking": false,
     "routing": false,
     "route_model": "off",
+    "route_words": "",
     "learn_fixes": false,
     "follow_up": false,
     "no_self_echo": false,
