@@ -445,6 +445,11 @@ def validate(new):
               "routing", "prompt_cache", "doc_pictures", "doc_semantic", "doc_originals", "doc_shared"):
         if not isinstance(ch.get(k, False), bool):
             raise HTTPException(400, f"chat {k} must be true or false")
+    for k in ("doc_night_from", "doc_night_to"):
+        if not re.fullmatch(r"([01]\d|2[0-3]):[0-5]\d", str(ch.get(k, "01:00"))):
+            raise HTTPException(400, f"{k}: HH:MM")
+    if not isinstance(ch.get("doc_night", False), bool):
+        raise HTTPException(400, "chat doc_night must be true or false")
     q = ch.get("doc_quota_mb", 500)
     if not isinstance(q, int) or isinstance(q, bool) or not 50 <= q <= 5000:
         raise HTTPException(400, "doc_quota_mb: 50 to 5000")

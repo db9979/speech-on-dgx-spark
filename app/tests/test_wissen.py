@@ -4,10 +4,12 @@ moments with a daily limit, originals with a quota and only as a download, more 
 after unpacking, documents switched off are not searched, meaning search merged with full text,
 consistent backups, and no web search after the person's own documents in the same answer."""
 import asyncio
+import datetime
 import io
 import json
 import os
 import tarfile
+import time
 import unittest
 import zipfile
 
@@ -90,7 +92,8 @@ class Base(unittest.TestCase):
 
     def tearDown(self):
         helpers.set_config(doc_pictures=False, doc_semantic=False, doc_originals=False, doc_quota_mb=500, images=False,
-                           search=False, search_url="")
+                           search=False, search_url="", doc_shared=False, doc_night=False, doc_night_from="01:00",
+                           doc_night_to="06:00")
 
     def switch(self, c, **on):
         for k in on:
@@ -574,6 +577,68 @@ class Worker(Base):
             docembed.WORKER, docembed.MIN_FREE_GIB = old
             if os.path.exists(docembed.PINS):
                 os.remove(docembed.PINS)
+
+
+class Night(Base):
+    def setUp(self):
+        super().setUp()
+        helpers.set_config(doc_night=False, doc_night_from="01:00", doc_night_to="06:00")
+
+    def at(self, h, m=0, day=12):
+        return datetime.datetime(2027, 3, day, h, m).timestamp()      # local time, no wall clock
+
+    def test_window_and_its_own_count(self):
+        self.assertIsNone(wissen.night(self.at(2)))                   # off by default
+        helpers.set_config(doc_night=True)
+        self.assertTrue(wissen.night(self.at(2))["active"])
+        self.assertFalse(wissen.night(self.at(14))["active"])
+        self.assertFalse(wissen.night(self.at(6))["active"])          # the end is not inside
+        helpers.set_config(doc_night_from="23:00", doc_night_to="05:30")
+        n = wissen.night(self.at(1, day=13))
+        self.assertEqual((n["active"], n["key"]), (True, "2027-03-12"))   # the night began the day before
+        self.assertTrue(wissen.night(self.at(23, 30))["active"])
+        self.assertFalse(wissen.night(self.at(5, 30))["active"])
+        cfg = ADMIN.get("/api/config").json()
+        for bad in ("25:00", "1:00", True):
+            cfg["chat"]["doc_night_from"] = bad
+            self.assertEqual(ADMIN.put("/api/config", json=cfg).status_code, 400, bad)
+
+    def test_long_documents_wait_for_the_night_while_people_talk(self):
+        import chat
+        c = profile("Wwalda")
+        self.switch(c, pictures=True)
+        uid = uid_of("Wwalda")
+        long_ = upload(c, "lang.pdf", scanned_pdf(((300, 400),) * 12)).json()["id"]
+        short = upload(c, "kurz.pdf", scanned_pdf(((300, 400),) * 2)).json()["id"]
+        seen = []
+        real = wissen.read_page
+
+        async def fake(jpeg_):
+            seen.append(wissen._now["doc"])
+            return "Seite"
+        wissen.read_page = fake
+        old = chat._last_chat[0]
+        try:
+            helpers.set_config(doc_night=True)
+            chat._last_chat[0] = time.time()                            # someone asked just now
+            run(wissen.due_once(idle=True, now=self.at(14)))
+            self.assertEqual(seen[-1], short)                          # by day: the short one first
+            run(wissen.due_once(idle=True, now=self.at(14)))
+            self.assertIsNone(run(wissen.due_once(idle=True, now=self.at(14))))   # the long one waits
+            info = c.get("/api/profile/wissen").json()["night"]
+            self.assertEqual((info["from"], info["long"]), ("01:00", wissen.LONG))
+            # the daily limit is used up, the night still reads, counted on its own
+            documents.count_today(uid, wissen.today(self.at(14)), add=wissen.DAY_PAGES)
+            self.assertEqual(run(wissen.due_once(idle=True, now=self.at(2, day=13))), "page")
+            self.assertEqual(seen[-1], long_)
+            self.assertEqual(documents.count_today(uid, "2027-03-13", key="night"), 1)
+            # 30 minutes without a question: the long one also by day
+            chat._last_chat[0] = time.time() - wissen.LONG_IDLE - 1
+            self.assertEqual(run(wissen.due_once(idle=True, now=self.at(14, day=14))), "page")
+            self.assertEqual(seen[-1], long_)
+        finally:
+            wissen.read_page = real
+            chat._last_chat[0] = old
 
 
 class Attachment(Base):

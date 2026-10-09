@@ -674,13 +674,15 @@ def text_of(uid, doc_id, most=200_000):
 
 
 # ---------------------------------------------------------------- pages for the language model
-def next_page(uid):
-    """(doc id, doc name, page, JPEG, tries) of the oldest page still to read, or None."""
+def next_page(uid, most_pages=None):
+    """(doc id, doc name, page, JPEG, tries) of the oldest page still to read, or None.
+    most_pages: only documents with at most this many pages to read (short ones by day, wissen.night)."""
     if not os.path.exists(db_path(uid)):
         return None
     with _Db(uid) as con:
         r = con.execute("SELECT p.doc, d.name, p.page, p.jpeg, p.tries FROM pages p JOIN docs d ON d.id=p.doc "
-                        "ORDER BY d.created, p.doc, p.page LIMIT 1").fetchone()
+                        + ("WHERE d.pages<=? " if most_pages else "") + "ORDER BY d.created, p.doc, p.page LIMIT 1",
+                        (most_pages,) if most_pages else ()).fetchone()
     return tuple(r) if r else None
 
 
@@ -714,15 +716,16 @@ def page_read(uid, doc_id, page, text=None, failed=False, max_tries=2):
             con.execute("UPDATE docs SET state=? WHERE id=?", ("ready" if has else "error", doc_id))
 
 
-def count_today(uid, day, add=0):
-    """Pages read by the language model on this day (day: "YYYY-MM-DD" from the caller)."""
+def count_today(uid, day, add=0, key="vision"):
+    """Pages read by the language model on this day (day: "YYYY-MM-DD" from the caller); key "night"
+    counts the night window apart."""
     with _Db(uid) as con:
-        r = con.execute("SELECT v FROM meta WHERE k='vision'").fetchone()
+        r = con.execute("SELECT v FROM meta WHERE k=?", (key,)).fetchone()
         d = json.loads(r[0]) if r else {}
         n = d.get("n", 0) if d.get("day") == day else 0
         if add:
             n += add
-            con.execute("INSERT OR REPLACE INTO meta (k, v) VALUES ('vision', ?)", (json.dumps({"day": day, "n": n}),))
+            con.execute("INSERT OR REPLACE INTO meta (k, v) VALUES (?, ?)", (key, json.dumps({"day": day, "n": n})))
     return n
 
 

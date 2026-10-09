@@ -49,6 +49,12 @@ from core import assistant, auth, browser_profile, own_profile
 
 router = APIRouter()
 DAY_PAGES = 100
+# "Lange Dokumente nachts lesen" (V01.0.240, admin chat.doc_night, off): by day only documents with at
+# most LONG pages are read in quiet minutes, longer ones only after LONG_IDLE without any question; in
+# the night window (chat.doc_night_from/_to, default 01:00-06:00) everything, up to NIGHT_PAGES more.
+LONG = 10
+LONG_IDLE = 1800
+NIGHT_PAGES = 400
 READ_TIMEOUT = 120
 IDLE = 60
 _now = {}          # the page being read right now: {"uid", "doc", "page"} (Ich → Dokumente shows it)
@@ -169,20 +175,52 @@ def today(now):
     return datetime.datetime.fromtimestamp(now).strftime("%Y-%m-%d")
 
 
+def _hm(v, default):
+    m = re.fullmatch(r"([01]\d|2[0-3]):([0-5]\d)", str(v or ""))
+    return int(m[1]) * 60 + int(m[2]) if m else default
+
+
+def night(now):
+    """None while "Lange Dokumente nachts lesen" is off, else {"from", "to", "active", "key"}: active
+    inside the window; key names the night (the date it began) for its own page count."""
+    c = _chat()
+    if c.get("doc_night") is not True:
+        return None
+    start, end = _hm(c.get("doc_night_from"), 60), _hm(c.get("doc_night_to"), 360)
+    t = datetime.datetime.fromtimestamp(now)
+    m = t.hour * 60 + t.minute
+    active = (start <= m < end) if start <= end else (m >= start or m < end)
+    began = t - datetime.timedelta(days=1) if active and start > end and m < end else t
+    return {"from": f"{start // 60:02d}:{start % 60:02d}", "to": f"{end // 60:02d}:{end % 60:02d}",
+            "active": active, "key": began.strftime("%Y-%m-%d")}
+
+
+def long_ok(now):
+    """May long documents be read now? Always without the night rule, in the night window, or by day
+    after LONG_IDLE seconds without any question (nothing going on)."""
+    import chat
+    n = night(now)
+    return n is None or n["active"] or time.time() - chat._last_chat[0] > LONG_IDLE
+
+
 async def due_once(idle=True, now=None):
     """One step of background work: one page read, or one batch of vectors. Returns what it did."""
     now = now or time.time()
     if not idle or not _chat().get("documents", True):
         docembed.idle_stop(now)
         return None
+    n = night(now)
+    at_night = bool(n and n["active"])
+    day, key, limit = (n["key"], "night", NIGHT_PAGES) if at_night else (today(now), "vision", DAY_PAGES)
+    most = None if long_ok(now) else LONG
     for uid in profiles.user_ids():
-        if not on(uid, "pictures") or documents.count_today(uid, today(now)) >= DAY_PAGES:
+        if not on(uid, "pictures") or documents.count_today(uid, day, key=key) >= limit:
             continue
-        nxt = await asyncio.to_thread(documents.next_page, uid)
+        nxt = await asyncio.to_thread(documents.next_page, uid, most)
         if not nxt:
             continue
         doc, _, page, jpeg, tries = nxt
-        documents.count_today(uid, today(now), add=1)
+        documents.count_today(uid, day, add=1, key=key)
         _now.update(uid=uid, doc=doc, page=page)
         try:
             text = await read_page(jpeg)
@@ -276,6 +314,7 @@ def info(prof=Depends(own_profile)):
             "model": docembed.status()["state"] if admin_on("semantic") else None,
             # progress in Ich → Dokumente: the page being read now, or why nothing is read
             "reading": {"doc": _now["doc"], "page": _now["page"]} if _now.get("uid") == uid else None,
+            "night": dict(night(time.time()) or {}, long=LONG, long_ok=long_ok(time.time())) if _chat().get("doc_night") is True else None,
             "quiet": quiet(),
             "types": list(documents.TYPES)}
 

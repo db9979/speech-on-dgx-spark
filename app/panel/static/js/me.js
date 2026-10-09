@@ -26,7 +26,8 @@ function docState(d){const I=DOCINFO,pics=I&&I.allow.pictures&&I.on.pictures,mea
   if(d.state==='reading'){const done=d.pages-d.todo,pct=d.pages?Math.round(100*done/d.pages):0;let why;
     if(!pics)why=t('wartet, „Bilder und Scans lesen“ ist aus','waiting, "Read pictures and scans" is off');
     else if(I.reading&&I.reading.doc===d.id)why=t(`liest gerade Seite ${I.reading.page}`,`reading page ${I.reading.page} now`);
-    else if(I.today>=I.day_pages)why=t('Tagesgrenze erreicht, geht morgen weiter','daily limit reached, continues tomorrow');
+    else if(I.night&&!I.night.long_ok&&d.pages>I.night.long)why=t(`langes Dokument, wird nachts ab ${I.night.from} gelesen`,`long document, read at night from ${I.night.from}`);
+    else if(!(I.night&&I.night.active)&&I.today>=I.day_pages)why=I.night?t(`Tagesgrenze erreicht, geht nachts ab ${I.night.from} weiter`,`daily limit reached, continues at night from ${I.night.from}`):t('Tagesgrenze erreicht, geht morgen weiter','daily limit reached, continues tomorrow');
     else if(!I.quiet)why=t('wartet auf eine ruhige Minute','waits for a quiet minute');
     else why=t('ist gleich dran','next in line');
     return [t(`Seite ${done} von ${d.pages} gelesen`,`page ${done} of ${d.pages} read`)+' · '+why,pct]}
