@@ -645,6 +645,22 @@ class Night(Base):
             chat._last_chat[0] = old
 
 
+class ReadOn(Base):
+    def test_a_long_document_is_shown_a_part_at_a_time_but_searched_whole(self):
+        c = profile("Wronja")
+        words = " ".join(f"Wort{i}" for i in range(60000))
+        doc = upload(c, "buch.txt", words.encode()).json()["id"]
+        first = c.get(f"/api/profile/wissen/{doc}/text").json()
+        self.assertTrue(first["cut"])
+        seen, nxt = len(first["parts"]), first["next"]
+        while nxt is not None:
+            got = c.get(f"/api/profile/wissen/{doc}/text?start={nxt}").json()
+            seen += len(got["parts"])
+            nxt = got["next"]
+        self.assertEqual(seen, documents.list_docs(uid_of("Wronja"))[0]["chunks"])
+        self.assertIn("Wort59990", documents.search(uid_of("Wronja"), "Wort59990")[0]["text"])
+
+
 class Attachment(Base):
     def test_a_long_document_says_it_is_only_the_beginning(self):
         import chat

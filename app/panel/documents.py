@@ -666,7 +666,7 @@ def original(uid, doc_id):
     return path, name, CTYPE.get(ext, "application/octet-stream")
 
 
-def text_of(uid, doc_id, most=200_000):
+def text_of(uid, doc_id, most=200_000, start=0):
     """{"name", "kind", "parts": [{"page", "text"}]} of a document for reading it again (pieces without
     their overlap is not worth the effort: they are shown one after another), or None."""
     if not re.fullmatch(r"[0-9a-f]{12}", doc_id):
@@ -675,15 +675,18 @@ def text_of(uid, doc_id, most=200_000):
         d = con.execute("SELECT name, kind, state, file FROM docs WHERE id=?", (doc_id,)).fetchone()
         if not d:
             return None
-        rows = con.execute("SELECT page, text FROM chunks WHERE doc=? ORDER BY COALESCE(page, 0), n", (doc_id,)).fetchall()
+        rows = con.execute("SELECT page, text FROM chunks WHERE doc=? ORDER BY COALESCE(page, 0), n LIMIT -1 OFFSET ?",
+                           (doc_id, max(0, int(start)))).fetchall()
     parts, size = [], 0
     for r in rows:
         if size > most:
             break
         parts.append({"page": r["page"], "text": r["text"]})
         size += len(r["text"])
+    more = len(parts) < len(rows)
+    # the view shows a part at a time ("Weiterlesen", V01.0.243); search always uses the whole text
     return {"name": d["name"], "kind": d["kind"], "state": d["state"], "file": bool(d["file"]), "parts": parts,
-            "cut": size > most}
+            "cut": more, "next": max(0, int(start)) + len(parts) if more else None}
 
 
 # ---------------------------------------------------------------- pages for the language model

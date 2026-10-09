@@ -2,6 +2,7 @@
 
 Every version in one line, newest first (taken from the commit messages, so some lines are German, some English). Older entries have no version number.
 
+- **V01.0.243** · 2026-10-09 · Ich → Dokumente → Ansehen zeigt lange Dokumente stückweise mit „Weiterlesen“ statt „… gekürzt“ nach 200.000 Zeichen; die Suche des Assistenten nutzte schon immer den ganzen Text
 - **V01.0.242** · 2026-10-09 · Dokumente: PDFs bis 100 MB (Admin stellt unter Funktionen → Eigene Dokumente bis 300 MB ein; andere Dateien bis 20 MB, vorher „request too large“ ab 20 MB); Speicher pro Profil gilt für alle Uploads zusammen, Ich → Dokumente zeigt „Belegt: x von y“ mit Balken, der Admin sieht und setzt ihn pro Profil unter Zustand → Monitoring
 - **V01.0.241** · 2026-10-09 · Das kleine Bild vor jeder Antwort im Verlauf folgt dem gewählten Gesicht: bei „Comic“ ein Comic-Kopf statt des Roboters
 - **V01.0.240** · 2026-10-09 · Lange Dokumente nachts lesen (Admin-Schalter unter Bilder und Scans lesen, aus): tagsüber nur Dokumente bis 10 Seiten in Gesprächspausen, lange erst nach 30 Minuten ohne Frage oder im Nachtfenster (Standard 01:00–06:00), nachts bis 400 Seiten zusätzlich; Ich → Dokumente zeigt „langes Dokument, wird nachts ab 01:00 gelesen“

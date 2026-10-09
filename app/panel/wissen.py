@@ -447,14 +447,16 @@ def download(doc_id: str, request: Request, view: int = 0, prof=Depends(reader))
 
 
 @router.get("/api/profile/wissen/{doc_id}/text", dependencies=[Depends(assistant)])
-def read_again(doc_id: str, request: Request, prof=Depends(reader)):
-    """The stored text of a document, to look at it again (also without a kept original)."""
+def read_again(doc_id: str, request: Request, start: int = 0, prof=Depends(reader)):
+    """The stored text of a document, to look at it again (also without a kept original); ?start= the
+    next part ("Weiterlesen")."""
     _docs_on()
     guard.limit(request, "doc", prof["id"], False)
-    got = documents.text_of(prof["id"], doc_id)
+    start = max(0, min(start, 10**6))
+    got = documents.text_of(prof["id"], doc_id, start=start)
     if not got:
         owner = find_shared(prof["id"], doc_id)
-        got = documents.text_of(owner, doc_id) if owner else None
+        got = documents.text_of(owner, doc_id, start=start) if owner else None
         if got:
             got["owner"] = (profiles.by_id(owner) or {}).get("name", "?")
     if not got:

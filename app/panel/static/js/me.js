@@ -87,11 +87,14 @@ async function docView(id){const box=$('docview');box.hidden=false;box.textConte
       if(pic){const img=document.createElement('img');img.alt='';img.src=a.href;box.appendChild(img)}}
     const x=document.createElement('button');x.type='button';x.className='b';x.textContent='✕';x.onclick=()=>{box.hidden=true;box.textContent=''};right.appendChild(x);
     head.appendChild(right);box.prepend(head);
-    let page;for(const p of d.parts){if(p.page&&p.page!==page){page=p.page;const h=document.createElement('div');h.className='dvpage';h.textContent=t('Seite ','Page ')+p.page;box.appendChild(h)}
-      const tx=document.createElement('p');tx.className='dvtext';tx.textContent=p.text;box.appendChild(tx)}
+    let page;const show=parts=>{for(const p of parts){if(p.page&&p.page!==page){page=p.page;const h=document.createElement('div');h.className='dvpage';h.textContent=t('Seite ','Page ')+p.page;box.appendChild(h)}
+      const tx=document.createElement('p');tx.className='dvtext';tx.textContent=p.text;box.appendChild(tx)}};show(d.parts);
     if(!d.parts.length){const m=document.createElement('p');m.className='mut';m.textContent=d.state==='reading'?t('Wird noch gelesen.','Still being read.'):t('Kein Text.','No text.');box.appendChild(m)}
     if(!d.file&&!d.owner){const m=document.createElement('p');m.className='mut';m.textContent=t('Original nicht aufbewahrt: Zum Neu-Einlesen die Datei neu hochladen.','Original not kept: to read it again, upload the file again.');box.appendChild(m)}
-    if(d.cut){const m=document.createElement('p');m.className='mut';m.textContent=t('… gekürzt','… shortened');box.appendChild(m)}
+    // long documents come a part at a time; the assistant always searches the whole text
+    const more=next=>{if(next==null)return;const b=document.createElement('button');b.type='button';b.className='b';b.textContent=t('Weiterlesen','Read on');
+      b.onclick=async()=>{b.disabled=true;try{const n=await (await api('/api/profile/wissen/'+encodeURIComponent(id)+'/text?start='+next)).json();b.remove();show(n.parts);more(n.next)}
+        catch(x){b.disabled=false;b.textContent=x.message}};box.appendChild(b)};more(d.next);
     box.scrollIntoView({block:'nearest'})}
   catch(x){box.textContent=x.message}}
 $('doclist').onclick=async e=>{const v=e.target.closest('[data-docview]');if(v){docView(v.dataset.docview);return}
