@@ -31,6 +31,7 @@ All options for running without questions (`--mode api --asr 1.7b --tts 0.6b --y
 
 <!-- New version: add one line at the top here and in CHANGELOG.md, drop the oldest line here (keep 10). Details go to docs/de and docs/en, not into this README. -->
 
+- **V01.0.183** App Store texts: added Deliverfile, fastlane no longer asks a question and stops
 - **V01.0.182** GitHub workflows moved to Node 24 (checkout v5, setup-python v6), no more warning
 - **V01.0.181** Notifications arrive once, on the device used last instead of on all of them
 - **V01.0.180** iPhone app: GitHub button "TestFlight" builds, signs through Apple and uploads (tested commits only)
@@ -40,7 +41,6 @@ All options for running without questions (`--mode api --asr 1.7b --tts 0.6b --y
 - **V01.0.176** Reminders ring on one device only, not again on every device of the profile
 - **V01.0.175** Agent functions: background jobs, scheduled jobs, routines and services over MCP, allowed per profile
 - **V01.0.174** iPhone app: App Store screenshots also in 6.3" (1206 × 2622)
-- **V01.0.173** Integrate: "AI agents" guide, Hermes Agent and OpenClaw use the Spark for speech recognition and speech output
 
 All versions: [CHANGELOG.md](CHANGELOG.md)
 

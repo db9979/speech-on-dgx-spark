@@ -2,6 +2,7 @@
 
 Every version in one line, newest first (taken from the commit messages, so some lines are German, some English). Older entries have no version number.
 
+- **V01.0.183** · 2026-10-09 · App-Store-Texte: Deliverfile ergänzt, fastlane fragt nicht mehr nach und bricht nicht ab
 - **V01.0.182** · 2026-10-09 · GitHub-Abläufe auf Node 24 umgestellt (checkout v5, setup-python v6), keine Warnung mehr
 - **V01.0.181** · 2026-10-09 · Mitteilungen nur einmal: Push geht an das zuletzt genutzte Gerät (Seite, iPhone-App oder Telegram) statt an alle Geräte des Profils
 - **V01.0.180** · 2026-10-09 · iPhone-App: GitHub-Knopf „TestFlight“ baut, signiert über Apple und lädt hoch (nur grün getestete Stände)

@@ -1,0 +1,8 @@
+# Settings for "fastlane deliver" (workflow "App Store texts"). Only texts and pictures, never a build,
+# never a submission for review. Bundle ID, version, copyright and the API key come from the workflow.
+platform("ios")
+skip_binary_upload(true)
+submit_for_review(false)
+run_precheck_before_submit(false)
+force(true)
+metadata_path("./fastlane/metadata")

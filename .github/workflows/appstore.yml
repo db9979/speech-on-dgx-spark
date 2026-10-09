@@ -43,8 +43,9 @@ jobs:
         with:
           ruby-version: "3.3"
       - name: fastlane
-        run: gem install fastlane -v 2.238.0 --no-document
+        run: gem install fastlane -v 2.240.1 --no-document
       - name: Upload texts
+        working-directory: ios
         env:
           ASC_KEY_ID: ${{ secrets.ASC_KEY_ID }}
           ASC_ISSUER_ID: ${{ secrets.ASC_ISSUER_ID }}
@@ -53,6 +54,10 @@ jobs:
           APP_VERSION: ${{ inputs.version }}
           COPYRIGHT: ${{ inputs.copyright }}
           SHOTS: ${{ inputs.screenshots }}
+          LC_ALL: en_US.UTF-8
+          LANG: en_US.UTF-8
+          FASTLANE_SKIP_UPDATE_CHECK: "1"
+          FASTLANE_OPT_OUT_USAGE: "1"
         run: |
           set -euo pipefail
           if [ -z "$ASC_KEY_ID" ] || [ -z "$ASC_ISSUER_ID" ] || [ -z "$ASC_KEY" ]; then
@@ -62,9 +67,7 @@ jobs:
           key="$RUNNER_TEMP/asc.json"
           trap 'rm -f "$key"' EXIT
           python3 -c 'import json,os; print(json.dumps({"key_id": os.environ["ASC_KEY_ID"], "issuer_id": os.environ["ASC_ISSUER_ID"], "key": os.environ["ASC_KEY"], "in_house": False}))' > "$key"
-          if [ "$SHOTS" = "true" ]; then pics=(--screenshots_path ios/fastlane/screenshots --overwrite_screenshots true); else pics=(--skip_screenshots true); fi
-          fastlane deliver --platform ios --api_key_path "$key" \
-            --app_identifier "$BUNDLE_ID" --app_version "$APP_VERSION" --copyright "$COPYRIGHT" \
-            --metadata_path ios/fastlane/metadata \
-            --skip_binary_upload true "${pics[@]}" \
-            --submit_for_review false --run_precheck_before_submit false --force true
+          if [ "$SHOTS" = "true" ]; then pics=(--screenshots_path ./fastlane/screenshots --overwrite_screenshots true); else pics=(--skip_screenshots true); fi
+          # settings in ios/fastlane/Deliverfile (without it deliver asks a question and stops)
+          fastlane deliver --api_key_path "$key" \
+            --app_identifier "$BUNDLE_ID" --app_version "$APP_VERSION" --copyright "$COPYRIGHT" "${pics[@]}"
