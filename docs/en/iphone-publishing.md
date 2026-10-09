@@ -16,7 +16,7 @@ Three ways; all need the Apple Developer Program (99 €/year).
 ## 2. Upload every new version
 
 1. `git pull` in the repo.
-2. Target **Spark** → **General**: raise **Version** for user-visible changes; **Build** must grow with every upload.
+2. Target **Spark** → **General**: raise **Version** for user-visible changes. The **Build** number counts up by itself: building sets it to the number of commits in the repo, the same for the app and its extensions, so it is larger after every `git pull`. The app shows both small at the bottom, e.g. "1.0 (412)".
 3. Destination **Any iOS Device (arm64)**, then **Product → Archive**.
 4. **Distribute App → App Store Connect → Distribute**.
 5. After 5–30 minutes the build shows under **TestFlight**. The encryption question is answered by the app itself (`ITSAppUsesNonExemptEncryption = NO`, https only).

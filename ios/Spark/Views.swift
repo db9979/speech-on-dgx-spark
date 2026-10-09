@@ -2,6 +2,14 @@ import PhotosUI
 import SwiftUI
 import UniformTypeIdentifiers
 
+/// "1.0 (412)": the version and the build number (the build number is the commit count, set while building).
+enum AppInfo {
+    static var version: String {
+        let i = Bundle.main.infoDictionary
+        return "\(i?["CFBundleShortVersionString"] as? String ?? "?") (\(i?["CFBundleVersion"] as? String ?? "?"))"
+    }
+}
+
 struct ContentView: View {
     @EnvironmentObject var app: AppState
 
@@ -189,8 +197,10 @@ struct ChatView: View {
                     Button(action: send) { Image(systemName: "paperplane.fill") }
                         .disabled(typed.trimmingCharacters(in: .whitespaces).isEmpty)
                 }
+                Text(verbatim: AppInfo.version).font(.caption2).foregroundStyle(.tertiary)
             }
-            .padding()
+            .padding([.horizontal, .top])
+            .padding(.bottom, 4)
         }
     }
 
@@ -498,7 +508,7 @@ struct SettingsView: View {
                     Button("Entkoppeln", role: .destructive) { confirm = true }
                 }
                 Section {
-                    LabeledContent("App", value: Bundle.main.object(forInfoDictionaryKey: "CFBundleShortVersionString") as? String ?? "")
+                    LabeledContent("App", value: AppInfo.version)
                 }
             }
             .navigationTitle("Einstellungen")

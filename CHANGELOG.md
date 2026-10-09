@@ -2,6 +2,7 @@
 
 Every version in one line, newest first (taken from the commit messages, so some lines are German, some English). Older entries have no version number.
 
+- **V01.0.178** · 2026-10-09 · iPhone-App: Version klein unten, Build-Nummer zählt beim Bauen von selbst hoch
 - **V01.0.177** · 2026-10-09 · iPhone-App: Spark-Update aus der App (aus, Rechte nur vom Admin): Hinweis bei neuer geprüfter Version, Start mit Face ID und MFA-Code
 - **V01.0.176** · 2026-10-09 · Erinnerungen klingeln nur einmal: das erste Gerät, das eine Erinnerung abspielt, nimmt sie auf dem Spark weg; andere Seiten, iPhone-App und Push bleiben still
 - **V01.0.175** · 2026-10-09 · Agent-Funktionen: Aufträge im Hintergrund mit Bericht per Push/Telegram, geplante Aufträge und Abläufe nach „Ja“, Dienste per MCP, Stufen pro Profil (aus/lesen/handeln)

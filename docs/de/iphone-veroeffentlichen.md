@@ -16,7 +16,7 @@ Drei Wege, vom einfachsten zum aufwendigsten. Alle brauchen das Apple Developer 
 ## 2. Jede neue Version hochladen
 
 1. Im Repo `git pull`.
-2. Xcode → Target **Spark** → **General**: **Version** (z. B. 1.1) erhöhen, wenn sich für Nutzer etwas ändert; **Build** muss bei jedem Upload größer werden (1, 2, 3 …).
+2. Xcode → Target **Spark** → **General**: **Version** (z. B. 1.1) erhöhen, wenn sich für Nutzer etwas ändert. Die **Build**-Nummer zählt von selbst hoch: Beim Bauen wird sie auf die Zahl der Commits im Repo gesetzt, für die App und alle Erweiterungen gleich. Nach jedem `git pull` ist sie also größer. In der App steht beides klein unten, z. B. „1.0 (412)“.
 3. Oben als Ziel **Any iOS Device (arm64)** wählen.
 4. **Product → Archive**. Nach ein paar Minuten öffnet sich der Organizer.
 5. **Distribute App → App Store Connect → Distribute**. Xcode signiert und lädt hoch.

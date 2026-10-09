@@ -167,6 +167,7 @@
 				5A0000000000000000000020 /* Frameworks */,
 				5A0000000000000000000022 /* Resources */,
 				5A0000000000000000000103 /* Embed Foundation Extensions */,
+				5A0000000000000000000025 /* Build number */,
 			);
 			buildRules = (
 			);
@@ -191,6 +192,7 @@
 				5A0000000000000000000121 /* Sources */,
 				5A0000000000000000000120 /* Frameworks */,
 				5A0000000000000000000122 /* Resources */,
+				5A0000000000000000000125 /* Build number */,
 			);
 			buildRules = (
 			);
@@ -211,6 +213,7 @@
 				5A0000000000000000000221 /* Sources */,
 				5A0000000000000000000220 /* Frameworks */,
 				5A0000000000000000000222 /* Resources */,
+				5A0000000000000000000225 /* Build number */,
 			);
 			buildRules = (
 			);
@@ -231,6 +234,7 @@
 				5A0000000000000000000321 /* Sources */,
 				5A0000000000000000000320 /* Frameworks */,
 				5A0000000000000000000322 /* Resources */,
+				5A0000000000000000000325 /* Build number */,
 			);
 			buildRules = (
 			);
@@ -323,6 +327,89 @@
 		};
 /* End PBXResourcesBuildPhase section */
 
+/* Begin PBXShellScriptBuildPhase section */
+		5A0000000000000000000025 /* Build number */ = {
+			isa = PBXShellScriptBuildPhase;
+			alwaysOutOfDate = 1;
+			buildActionMask = 2147483647;
+			files = (
+			);
+			inputFileListPaths = (
+			);
+			inputPaths = (
+			);
+			name = "Build number";
+			outputFileListPaths = (
+			);
+			outputPaths = (
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+			shellPath = /bin/sh;
+			shellScript = "# Build number = number of commits in the repo, so it grows by itself with every change.\n# App and extensions get the same number (Apple requires that).\nn=$(git -C \"$SRCROOT\" rev-list --count HEAD 2>/dev/null) || exit 0\n[ -n \"$n\" ] || exit 0\n/usr/libexec/PlistBuddy -c \"Set :CFBundleVersion $n\" \"$TARGET_BUILD_DIR/$INFOPLIST_PATH\"\n";
+			showEnvVarsInLog = 0;
+		};
+		5A0000000000000000000125 /* Build number */ = {
+			isa = PBXShellScriptBuildPhase;
+			alwaysOutOfDate = 1;
+			buildActionMask = 2147483647;
+			files = (
+			);
+			inputFileListPaths = (
+			);
+			inputPaths = (
+			);
+			name = "Build number";
+			outputFileListPaths = (
+			);
+			outputPaths = (
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+			shellPath = /bin/sh;
+			shellScript = "# Build number = number of commits in the repo, so it grows by itself with every change.\n# App and extensions get the same number (Apple requires that).\nn=$(git -C \"$SRCROOT\" rev-list --count HEAD 2>/dev/null) || exit 0\n[ -n \"$n\" ] || exit 0\n/usr/libexec/PlistBuddy -c \"Set :CFBundleVersion $n\" \"$TARGET_BUILD_DIR/$INFOPLIST_PATH\"\n";
+			showEnvVarsInLog = 0;
+		};
+		5A0000000000000000000225 /* Build number */ = {
+			isa = PBXShellScriptBuildPhase;
+			alwaysOutOfDate = 1;
+			buildActionMask = 2147483647;
+			files = (
+			);
+			inputFileListPaths = (
+			);
+			inputPaths = (
+			);
+			name = "Build number";
+			outputFileListPaths = (
+			);
+			outputPaths = (
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+			shellPath = /bin/sh;
+			shellScript = "# Build number = number of commits in the repo, so it grows by itself with every change.\n# App and extensions get the same number (Apple requires that).\nn=$(git -C \"$SRCROOT\" rev-list --count HEAD 2>/dev/null) || exit 0\n[ -n \"$n\" ] || exit 0\n/usr/libexec/PlistBuddy -c \"Set :CFBundleVersion $n\" \"$TARGET_BUILD_DIR/$INFOPLIST_PATH\"\n";
+			showEnvVarsInLog = 0;
+		};
+		5A0000000000000000000325 /* Build number */ = {
+			isa = PBXShellScriptBuildPhase;
+			alwaysOutOfDate = 1;
+			buildActionMask = 2147483647;
+			files = (
+			);
+			inputFileListPaths = (
+			);
+			inputPaths = (
+			);
+			name = "Build number";
+			outputFileListPaths = (
+			);
+			outputPaths = (
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+			shellPath = /bin/sh;
+			shellScript = "# Build number = number of commits in the repo, so it grows by itself with every change.\n# App and extensions get the same number (Apple requires that).\nn=$(git -C \"$SRCROOT\" rev-list --count HEAD 2>/dev/null) || exit 0\n[ -n \"$n\" ] || exit 0\n/usr/libexec/PlistBuddy -c \"Set :CFBundleVersion $n\" \"$TARGET_BUILD_DIR/$INFOPLIST_PATH\"\n";
+			showEnvVarsInLog = 0;
+		};
+/* End PBXShellScriptBuildPhase section */
+
 /* Begin PBXSourcesBuildPhase section */
 		5A0000000000000000000021 /* Sources */ = {
 			isa = PBXSourcesBuildPhase;
@@ -384,7 +471,7 @@
 				DEBUG_INFORMATION_FORMAT = dwarf;
 				ENABLE_STRICT_OBJC_MSGSEND = YES;
 				ENABLE_TESTABILITY = YES;
-				ENABLE_USER_SCRIPT_SANDBOXING = YES;
+				ENABLE_USER_SCRIPT_SANDBOXING = NO;
 				GCC_OPTIMIZATION_LEVEL = 0;
 				IPHONEOS_DEPLOYMENT_TARGET = 17.0;
 				ONLY_ACTIVE_ARCH = YES;
@@ -405,7 +492,7 @@
 				DEBUG_INFORMATION_FORMAT = "dwarf-with-dsym";
 				ENABLE_NS_ASSERTIONS = NO;
 				ENABLE_STRICT_OBJC_MSGSEND = YES;
-				ENABLE_USER_SCRIPT_SANDBOXING = YES;
+				ENABLE_USER_SCRIPT_SANDBOXING = NO;
 				IPHONEOS_DEPLOYMENT_TARGET = 17.0;
 				SDKROOT = iphoneos;
 				SWIFT_COMPILATION_MODE = wholemodule;
