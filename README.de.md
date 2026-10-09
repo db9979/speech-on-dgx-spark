@@ -31,6 +31,7 @@ Alle Optionen ohne Rückfragen (`--mode api --asr 1.7b --tts 0.6b --yes` …) st
 
 <!-- New version: add one line at the top here and in CHANGELOG.md, drop the oldest line here (keep 10). Details go to docs/de and docs/en, not into this README. -->
 
+- **V01.0.169** iPhone-App: App-Store-Texte (de/en) per GitHub-Knopf „App Store texts“ in App Store Connect eintragen
 - **V01.0.168** iPhone-App: Datenschutzerklärung für den App Store (de/en)
 - **V01.0.167** iPhone-App: baut mit dem neuen Xcode (iOS 26), Bluetooth-Option für Headsets angepasst
 - **V01.0.166** Eigene Stimme überhören (aus, Admin + Profil): hört das iPhone oder der Browser, wie der Lautsprecher antwortet, nimmt der Spark das nicht als neue Frage
@@ -40,7 +41,6 @@ Alle Optionen ohne Rückfragen (`--mode api --asr 1.7b --tts 0.6b --yes` …) st
 - **V01.0.162** iPhone-App: „Mein Profil“ mit Stimme, Antwortlänge, Von selbst und Morgenrunde; Rechte der App und Ton nur angezeigt (Spark ändert nur eine feste Liste)
 - **V01.0.161** iPhone-App: Schnellstart (Action-Button, Kontrollzentrum, Sperrbildschirm), Verlauf wie im Protokoll, Foto oder Dokument fragen (Text liest das iPhone), Dokumente ablegen (aus, Profilschalter), Fragen warten ohne Netz, englische Oberfläche
 - **V01.0.160** iPhone-App hat ein neues Symbol: leuchtender Funke auf Nachtblau mit Schallwellen
-- **V01.0.159** iPhone-App: Push bei geschlossener App über Apple (aus, Admin-Schlüssel + Profil; Apple sieht nur „Neue Nachricht“, den Text holt die App vom Spark), CarPlay-Gespräch (wartet auf Apples Freigabe), Anleitung zum Veröffentlichen
 
 Alle Versionen: [CHANGELOG.md](CHANGELOG.md)
 

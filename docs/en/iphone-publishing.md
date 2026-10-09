@@ -31,6 +31,10 @@ App Store Connect → **Users and Access**: invite family members; app → **Tes
 
 Also needed: screenshots (6.9" or 6.5"), description, support URL, a privacy policy URL (ready: [app-privacy.md](app-privacy.md), German [app-datenschutz.md](../de/app-datenschutz.md)), App Privacy "Data Not Collected" (everything goes to the user's own Spark), age rating, and review notes: reviewers need a Spark, so offer a test profile and a short video. Unlisted distribution can be requested if the app should not show up in search. Review usually takes 1–3 days.
 
+### Fill in the texts automatically
+
+Name, subtitle, promotional text, description, keywords, URLs and categories (German and English) are in `ios/fastlane/metadata`. The GitHub workflow **App Store texts** (Actions → Run workflow, by hand only) writes them into App Store Connect. It uploads no build or screenshots and never submits for review. It needs the app already created in App Store Connect and three repository secrets from an App Store Connect API team key with role App Manager: `ASC_KEY_ID`, `ASC_ISSUER_ID` and `ASC_KEY` (the whole `.p8` file). App privacy, age rating, review notes, screenshots and price stay manual.
+
 ## CarPlay
 
 Builds with CarPlay can only be uploaded once Apple granted the entitlement and it is in `ios/Spark.entitlements` (see [iphone-app.md](iphone-app.md#carplay)).

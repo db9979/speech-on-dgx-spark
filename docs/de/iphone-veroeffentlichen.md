@@ -44,6 +44,19 @@ Zusätzlich zu Schritt 1–2 in App Store Connect unter der App:
 - **Hinweise für die Prüfung**: Apples Prüfer brauchen einen Spark. Ein eigenes Testprofil anlegen, einen Kopplungs-Link erzeugen (gilt nur 10 Minuten, daher besser ein kurzes Video der App beilegen und anbieten, auf Zuruf einen Link zu schicken) und die Adresse deines Reverse Proxys nennen.
 - **Verfügbarkeit**: „Nicht gelistet“ (nur per Link) bei Apple beantragen, wenn die App nicht in der Suche im App Store auftauchen soll.
 
+
+### Texte automatisch eintragen
+
+Name, Untertitel, Werbetext, Beschreibung, Stichwörter, URLs und Kategorien (deutsch und englisch) liegen in `ios/fastlane/metadata`. Ein Knopf auf GitHub trägt sie in App Store Connect ein. Er lädt keinen Build und keine Bilder hoch und reicht nichts zur Prüfung ein.
+
+1. Die App muss in App Store Connect schon angelegt sein (Schritt 1), mit Hauptsprache Deutsch.
+2. App Store Connect → **Benutzer und Zugriff → Integrationen → App Store Connect API → Team-Schlüssel → +**: Name „GitHub Texte“, Rolle **App-Manager**. Die `.p8`-Datei herunterladen (geht nur einmal), **Schlüssel-ID** und **Issuer-ID** notieren.
+3. GitHub → Repo → **Settings → Secrets and variables → Actions → New repository secret**, dreimal: `ASC_KEY_ID` (Schlüssel-ID), `ASC_ISSUER_ID` (Issuer-ID), `ASC_KEY` (der ganze Inhalt der `.p8`-Datei).
+4. GitHub → **Actions → App Store texts → Run workflow**: Bundle-ID, Version (`1.0`) und Copyright (z. B. `2026 Vorname Nachname`) eintragen, **Run**.
+5. Nach etwa 2 Minuten stehen die Texte in App Store Connect. Den Schlüssel kannst du danach dort wieder widerrufen.
+
+Von Hand bleiben: App-Datenschutz, Altersfreigabe, Hinweise für die Prüfung, Bildschirmfotos und Preis. Die Antworten dafür stehen in den Unterlagen aus dem Projekt („App Store Connect: Angaben für Spark“).
+
 Dann **Zur Prüfung einreichen**. Die Prüfung dauert meist 1–3 Tage. Häufige Ablehnung: Prüfer kommt nicht weiter, weil er keinen Spark hat (Richtlinie 2.1) – deshalb Video und Testzugang.
 
 ## CarPlay

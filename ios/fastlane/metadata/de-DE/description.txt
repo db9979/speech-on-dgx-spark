@@ -1,0 +1,35 @@
+Spark ist die iPhone-App für deinen eigenen Sprachassistenten. Der Assistent läuft auf deinem Rechner zu Hause (dem „Spark“), mit eigenen Sprachmodellen für Hören, Denken und Sprechen. Die App verbindet dich von überall mit ihm. Deine Fragen landen nicht in einer fremden Cloud.
+
+WICHTIG: Die App braucht einen eingerichteten Spark-Server. Ohne ihn kann sie nichts tun. Die Anleitung zur Einrichtung findest du auf der Support-Seite.
+
+GESPRÄCH WIE MIT EINEM MENSCHEN
+• Freihändig sprechen und mittendrin unterbrechen
+• Weckwort „Hey Spark“, erkannt nur auf dem iPhone
+• Ein lebendiges Gesicht zeigt, ob Spark zuhört, denkt oder spricht
+• Antworten in der Stimme, die du in deinem Profil gewählt hast
+
+FOTO UND DOKUMENT FRAGEN
+• Brief abfotografieren und fragen: „Was will die Versicherung von mir?“
+• PDFs und Bilder aus Dateien oder Fotos anhängen
+• Den Text liest das iPhone selbst, an den Spark geht nur der Text
+• Auf Wunsch unter „Meine Dokumente“ ablegen
+
+PASST INS IPHONE
+• Teilen → Spark aus Safari, Mail, Dateien und Fotos
+• Kurzbefehle: „Spark fragen“, „Auf die Liste beim Spark“, „Erinnerung beim Spark“, „Dokument beim Spark ablegen“
+• Erinnerungen und Einkaufsliste nach deinem „Ja“ in Apples Erinnerungen-App
+• Schnellstart über Aktionstaste, Sperrbildschirm-Widget und Kontrollzentrum
+• Antworten als Notiz teilen
+
+DEIN PROFIL IN DER TASCHE
+• Stimme, Sprechtempo und Antwortlänge direkt in der App ändern
+• Hinweise „Von selbst“: Termine, Wetter, Pakete, Morgenrunde
+• Mitteilungen aufs iPhone, ohne dass Apple den Inhalt sieht
+• Verlauf deiner Gespräche
+• Fragen ohne Netz warten und gehen raus, sobald der Spark wieder erreichbar ist
+
+SICHER VON ANFANG AN
+• Koppeln per QR-Code aus dem Panel, ein Schlüssel nur für die App
+• Was die App darf (Smart Home, Anrufe, Route, Dokumente), schaltest du im Panel frei, nicht in der App
+• Aktionen wie Anruf, Route oder Smart Home nur nach deinem „Ja“
+• Kein Tracking, keine Werbung, kein Server des Entwicklers

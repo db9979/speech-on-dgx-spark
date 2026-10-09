@@ -1,0 +1,1 @@
+voice assistant,AI,local,private,self-hosted,smart home,reminders,shopping list,LLM,speech

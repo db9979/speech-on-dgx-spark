@@ -1,0 +1,1 @@
+https://github.com/db9979/speech-on-dgx-spark/blob/main/docs/de/app-datenschutz.md
