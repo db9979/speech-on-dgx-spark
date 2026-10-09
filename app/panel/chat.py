@@ -1434,6 +1434,7 @@ async def _answer(request, turn):
                         async with c.stream("POST", tts_url, json=req, headers=api_headers()) as r:
                             if r.status_code != 200:
                                 detail = (await r.aread()).decode(errors='replace')[:300]
+                                print(f"chat: tts HTTP {r.status_code}, this answer stays text only", flush=True)
                                 await out.put({"type": "error", "code": "tts_loading" if r.status_code == 503 and "loading" in detail
                                                else "tts_down" if r.status_code in (502, 503) else "tts_error",
                                                "message": f"TTS HTTP {r.status_code}: {detail}"})
@@ -1482,6 +1483,7 @@ async def _answer(request, turn):
                         await asyncio.sleep(0.5)
         except Exception as e:
             code = "tts_down" if isinstance(e, (httpx.ConnectError, httpx.ConnectTimeout)) else "tts_error"
+            print(f"chat: tts failed ({type(e).__name__}), the rest of this answer stays text only", flush=True)
             await out.put({"type": "error", "code": code, "message": f"TTS: {type(e).__name__}: {e}"[:400]})
             while not done and await sentences.get() is not None:  # the text still comes to the end
                 pass

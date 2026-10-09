@@ -6,6 +6,7 @@
 
 | Teil | Wo | Port |
 |---|---|---|
+| Antwort kommt nur als Text | Steht „Der Browser spielt gerade keinen Ton ab“ da, einmal tippen (der Browser gibt Ton erst nach einer Berührung frei, iOS hält ihn bei Anrufen an). Sonst im Diagnose-Log (Filter „chat:“) nach „chat: tts HTTP …“ oder „chat: tts failed“ und unter „Fehler“ nach „watchdog:“ schauen: dann war die Sprachausgabe nicht bereit oder wurde neu gestartet. |
 | Knacken oder abgeschnittene Wortenden im Assistenten | Seit V01.0.124 blendet der Browser jedes Ende und jeden Aussetzer 5 ms lang aus. Bleibt ein Wort abgeschnitten, liegt es an der Engine selbst: denselben Text über Telegram oder `curl` an Port 31012 (ohne Streaming) anhören. Zeigt der Assistent unter der Antwort „Aussetzer bei …“, kam die Sprachausgabe nicht nach; dann steht im Diagnose-Log (Filter „chat:“) „chat: tts behind by … s“, bei einem abgebrochenen Strom „chat: tts stream broke“ (das Stück wird einmal neu versucht, der Rest der Antwort weiter gesprochen). |
 | ASR-Dienst `speech-spark-asr` (nimmt Anfragen an, reicht sie an die Engine durch) | `/opt/speech-spark/venv-panel` | 31001 |
 | ASR-Engine `speech-spark-asr-engine` (vLLM) | `/opt/speech-spark/venv-engine` | 31011, nur lokal |

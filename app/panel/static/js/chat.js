@@ -21,7 +21,12 @@ function playCtx(){const AC=window.AudioContext||window.webkitAudioContext;
 const TAIL=120;   // 5 ms at 24 kHz
 function pcmNode(ctx,f,at){const ab=ctx.createBuffer(1,f.length,24000);ab.copyToChannel(f,0);const src=ctx.createBufferSource();src.buffer=ab;src.connect(chat.gain);
   src.start(at);chat.sources.push(src);src.onended=()=>{chat.sources=chat.sources.filter(x=>x!==src)};return src}
-function playPcm(b64){const ctx=playCtx(),bin=atob(b64),n=bin.length>>1;if(!n)return;let f=new Float32Array(n);
+// Audio the browser does not play (it holds back sound until the page was touched, or iOS paused
+// it for a call or another app): say so instead of only showing the text, and play on the next tap.
+function audioBlocked(ctx){if(ctx.state==='running'||chat.blockedHint)return;chat.blockedHint=setTimeout(()=>{chat.blockedHint=null;
+  if(ctx.state==='running')return;chatSay(t('Der Browser spielt gerade keinen Ton ab. Einmal tippen, dann spricht der Assistent.','The browser is not playing sound right now. Tap once and the assistant speaks.'));
+  document.addEventListener('pointerdown',()=>{ctx.resume().catch(()=>{})},{once:true})},600)}
+function playPcm(b64){const ctx=playCtx(),bin=atob(b64),n=bin.length>>1;if(!n)return;audioBlocked(ctx);let f=new Float32Array(n);
   for(let i=0;i<n;i++){let v=bin.charCodeAt(2*i)|(bin.charCodeAt(2*i+1)<<8);if(v>=32768)v-=65536;f[i]=v/32768}
   // The last 5 ms of every piece play as a separate, faded-out copy. If the next piece arrives before
   // that copy starts, it is cancelled and the real samples go in front of the next piece, so the
@@ -227,7 +232,7 @@ const ub=chatLog('user',text);const um={role:'user',content:text};
         const ev=JSON.parse(line.slice(5));
         if(ev.type==='text'){full+=ev.delta;el.classList.remove('typing');el.textContent=full;$('fabtext').textContent=full;$('chatlog').scrollTop=1e9}
         else if(ev.type==='tts_request'){chat.blocks.push('| '+ev.chars+t(' Zeichen:',' chars:'))}
-        else if(ev.type==='audio'){playPcm(ev.audio);chatSay(t('Spricht …','Speaking …'));startBarge()}
+        else if(ev.type==='audio'){playPcm(ev.audio);if(chat.pctx.state==='running')chatSay(t('Spricht …','Speaking …'));startBarge()}
         else if(ev.type==='retract'){full=full.slice(0,full.length-ev.drop);el.textContent=full}
         else if(ev.type==='truncated'){full=full.slice(0,full.length-ev.drop).trimEnd();el.textContent=full+' … '+t('(Längenlimit erreicht: Konfiguration → Assistent → Max. Tokens)','(length limit reached: Configuration → Assistant → Max. tokens)')}
         else if(ev.type==='search'){chatSay(t('Suche im Netz: ','Searching the web: ')+ev.query);searches.push(ev.query)}

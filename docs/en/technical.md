@@ -6,6 +6,7 @@
 
 | Part | Where | Port |
 |---|---|---|
+| Answer comes as text only | If it says "The browser is not playing sound right now", tap once (browsers allow sound only after a touch, iOS pauses it during calls). Otherwise look for "chat: tts HTTP …" or "chat: tts failed" in the diagnosis log (filter "chat:") and for "watchdog:" under errors: speech output was not ready or was restarted. |
 | Clicks or cut-off word endings in the assistant | Since V01.0.124 the browser fades every end and every stall over 5 ms. If a word still ends cut off, it is the engine itself: listen to the same text via Telegram or `curl` on port 31012 (without streaming). If the assistant shows "stalls at …" under the answer, speech output fell behind; the diagnosis log (filter "chat:") then shows "chat: tts behind by … s", a broken stream "chat: tts stream broke" (the piece is tried once more, the rest of the answer is still spoken). |
 | ASR service `speech-spark-asr` (accepts requests, passes them to the engine) | `/opt/speech-spark/venv-panel` | 31001 |
 | ASR engine `speech-spark-asr-engine` (vLLM) | `/opt/speech-spark/venv-engine` | 31011, local only |
