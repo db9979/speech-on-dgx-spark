@@ -32,6 +32,8 @@ async def run(t, name, args, st):
         return chat.MAIL_BLOCKED if st["mail"] else chat.OUTSIDE_BLOCKED
     if name in chat.READS_OUTSIDE:
         st["outside"] = True
+    if name == "document_search":
+        st["docs"] = True
     if name in t.ex["run"]:
         if name in t.ex["mail"]:
             st["mail"] = True
@@ -151,10 +153,12 @@ async def run(t, name, args, st):
     if name == "document_search" and t.docs:
         query = str(args.get("query", "")).strip()
         await t.out.put({"type": "docsearch", "query": query})
-        hits = await asyncio.to_thread(documents.search, t.who["id"], query)
+        import wissen
+        hits = await wissen.search(t.who["id"], query)
         if hits:
-            await t.out.put({"type": "docsources", "items": sorted({h["name"] for h in hits})})
-        return "\n\n".join(f"[{h['name']}]\n{h['text']}" for h in hits) or "No matching passages in the documents. Say so; do not guess."
+            refs = list({(h["id"], h["page"]): {"id": h["id"], "name": h["name"], "page": h["page"], "file": h["file"]} for h in hits}.values())
+            await t.out.put({"type": "docsources", "items": sorted({h["name"] for h in hits}), "refs": refs[:8]})
+        return "\n\n".join(f"[{wissen.where(h)}]\n{h['text']}" for h in hits) or "No matching passages in the documents. Say so; do not guess."
     if name == "iphone_action" and t.phone_act:
         kind = args.get("kind")
         target = re.sub(r"[\x00-\x1f\x7f<>\\]", "", str(args.get("target") or "")).strip()[:120]

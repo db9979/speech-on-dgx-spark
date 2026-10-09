@@ -53,11 +53,12 @@ import apns  # noqa: E402
 import logfilter  # noqa: E402
 import agent  # noqa: E402
 import images  # noqa: E402
+import wissen  # noqa: E402
 import messages  # noqa: E402
 import intent  # noqa: E402
 
 app = FastAPI(title="Speech on DGX Spark")
-for _module in (account, admin, chat, update, system, proactive, room, roomlive, tidy, weather, contacts, parcels, telegram, tasks, esp32, iphone, appupdate, apns, transit, logfilter, agent, images, messages, intent):
+for _module in (account, admin, chat, update, system, proactive, room, roomlive, tidy, weather, contacts, parcels, telegram, tasks, esp32, iphone, appupdate, apns, transit, logfilter, agent, images, messages, intent, wissen):
     app.include_router(_module.router)
 app.middleware("http")(update_lock)
 
@@ -222,6 +223,21 @@ async def mail_tidy():
                 await tidy.due_once(idle=time.time() - chat._last_chat[0] > 60)
             except Exception as e:
                 print("mail tidy:", type(e).__name__, e, flush=True)
+    asyncio.create_task(loop())
+
+
+@app.on_event("startup")
+async def doc_reader():
+    """Documents (wissen.py): pictures and scans read by the language model, meaning vectors; one step
+    at a time and only while nobody is talking to the assistant."""
+    async def loop():
+        while True:
+            await asyncio.sleep(20)
+            try:
+                while await wissen.due_once(idle=wissen.quiet()) in ("page", "vectors"):
+                    await asyncio.sleep(1)
+            except Exception as e:
+                print("documents:", type(e).__name__, e, flush=True)
     asyncio.create_task(loop())
 
 

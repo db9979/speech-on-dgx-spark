@@ -38,7 +38,8 @@ FOLLOW_UP = 30 * 60          # earlier messages of the day's Telegram conversati
 MAX_VOICE = 5 * 1024 * 1024
 STRANGER = "Dieser Spark-Assistent ist privat. Wer ein Profil hat, verbindet Telegram im Panel unter Profil → Telegram."
 HELP = ("Schreib mir oder schick eine Sprachnachricht. /neu beginnt ein neues Gespräch, /stimme schaltet die "
-        "Antwort als Sprachnachricht an oder aus, /trennen löst die Verbindung.")
+        "Antwort als Sprachnachricht an oder aus, /merken als Antwort auf ein Foto legt es in deine Dokumente, "
+        "/trennen löst die Verbindung.")
 _lock = threading.Lock()
 _codes = {}                  # code -> (uid, expiry)
 _strangers = {}              # chat id -> last time it got STRANGER
@@ -323,6 +324,9 @@ async def handle(c, upd):
         return
     # a photo (or a reply to one, for a follow-up question): the model looks at it (images.py), only
     # with the profile's tg_images; the caption is the question
+    if text.lower() in KEEP or str(m.get("caption") or "").strip().lower() in KEEP:
+        await photo_keep(c, uid, cid, m.get("photo") or (m.get("reply_to_message") or {}).get("photo"))
+        return
     photo = m.get("photo") or (((m.get("reply_to_message") or {}).get("photo")) if text else None)
     if photo and isinstance(photo, list):
         await photo_question(c, uid, cid, m, photo, text or str(m.get("caption") or "").strip())
@@ -360,6 +364,56 @@ async def handle(c, upd):
 
 
 PHOTO_ASK = "Was ist auf dem Bild?"
+KEEP = ("/merken", "/save")
+
+
+async def photo_bytes(c, photo):
+    """The biggest size of a Telegram photo, read with a byte limit (ValueError if none fits)."""
+    import images
+    sizes = [p for p in photo if isinstance(p, dict) and isinstance(p.get("file_id"), str)
+             and 0 < int(p.get("file_size") or 0) <= images.MAX_BYTES] if isinstance(photo, list) else []
+    if not sizes:
+        raise ValueError("no photo of a usable size")
+    best = max(sizes, key=lambda p: int(p.get("width") or 0) * int(p.get("height") or 0))
+    f = await call(c, "getFile", file_id=best["file_id"])
+    if int(f.get("file_size") or 0) > images.MAX_BYTES or not re.fullmatch(r"[\w/.\-]{1,200}", str(f.get("file_path"))):
+        raise ValueError("unexpected file")
+    root = (load_config().get("chat", {}).get("telegram_api") or API).rstrip("/")
+    data = bytearray()
+    async with c.stream("GET", f"{root}/file/bot{token()}/{f['file_path']}") as r:
+        r.raise_for_status()
+        async for chunk in r.aiter_bytes():
+            data += chunk
+            if len(data) > images.MAX_BYTES:
+                raise ValueError("too big")
+    return bytes(data)
+
+
+async def photo_keep(c, uid, cid, photo):
+    """/merken on a photo (as its caption or as an answer to it): the photo goes into the profile's
+    documents, where the language model reads it later (wissen.py). Needs the same switches as photos
+    over Telegram plus "Bilder und Scans lesen"."""
+    import asyncio
+    import datetime
+    import images
+    import wissen
+    if not photo:
+        await call(c, "sendMessage", chat_id=cid, text="Antworte mit /merken auf ein Foto, dann lege ich es in deine Dokumente.")
+        return
+    if not images.allowed(uid, "tg") or not wissen.on(uid, "pictures"):
+        await call(c, "sendMessage", chat_id=cid, text="Fotos lege ich nur ab, wenn du es im Panel erlaubst: Ich → Telegram → "
+                   "Fotos über Telegram und Ich → Dokumente → Bilder und Scans lesen lassen.")
+        return
+    try:
+        data = await photo_bytes(c, photo)
+        await asyncio.to_thread(wissen.add, uid, f"Telegram-Foto {datetime.datetime.now():%Y-%m-%d %H-%M}.jpg", data,
+                                None, "telegram")
+    except Exception as e:
+        print("telegram: photo not kept", type(e).__name__, safe(e, 120), flush=True)
+        await call(c, "sendMessage", chat_id=cid, text="Dieses Foto konnte ich nicht ablegen.")
+        return
+    await call(c, "sendMessage", chat_id=cid, text="Abgelegt unter Meine Dokumente. Ich lese es in einer ruhigen Minute, "
+               "danach kannst du danach fragen.")
 
 
 async def photo_question(c, uid, cid, m, photo, text):
@@ -369,26 +423,9 @@ async def photo_question(c, uid, cid, m, photo, text):
             await call(c, "sendMessage", chat_id=cid, text="Fotos schaue ich mir nur an, wenn du es im Panel erlaubst: "
                        "Ich → Gespräch → Bilder an den Assistenten und Ich → Telegram → Fotos über Telegram.")
         return
-    sizes = [p for p in photo if isinstance(p, dict) and isinstance(p.get("file_id"), str)
-             and 0 < int(p.get("file_size") or 0) <= images.MAX_BYTES]
-    if not sizes:
-        await call(c, "sendMessage", chat_id=cid, text="Das Foto ist zu groß.")
-        return
-    best = max(sizes, key=lambda p: int(p.get("width") or 0) * int(p.get("height") or 0))
     await call(c, "sendChatAction", chat_id=cid, action="typing")
     try:
-        f = await call(c, "getFile", file_id=best["file_id"])
-        if int(f.get("file_size") or 0) > images.MAX_BYTES or not re.fullmatch(r"[\w/.\-]{1,200}", str(f.get("file_path"))):
-            raise ValueError("unexpected file")
-        root = (load_config().get("chat", {}).get("telegram_api") or API).rstrip("/")
-        data = bytearray()
-        async with c.stream("GET", f"{root}/file/bot{token()}/{f['file_path']}") as r:
-            r.raise_for_status()
-            async for chunk in r.aiter_bytes():
-                data += chunk
-                if len(data) > images.MAX_BYTES:
-                    raise ValueError("too big")
-        pic = await images.put(uid, "tg", bytes(data))
+        pic = await images.put(uid, "tg", await photo_bytes(c, photo))
     except Exception as e:
         print("telegram: photo", type(e).__name__, safe(e, 120), flush=True)
         await call(c, "sendMessage", chat_id=cid, text="Mit diesem Foto kann ich nichts anfangen.")

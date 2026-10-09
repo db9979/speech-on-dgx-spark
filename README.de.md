@@ -31,6 +31,7 @@ Alle Optionen ohne Rückfragen (`--mode api --asr 1.7b --tts 0.6b --yes` …) st
 
 <!-- New version: add one line at the top here and in CHANGELOG.md, drop the oldest line here (keep 10). Details go to docs/de and docs/en, not into this README. -->
 
+- **V01.0.224** Wissen aus Uploads: Dokumente pro Profil in einer SQLite-Datei (alte werden übernommen, Sicherung konsistent), mehr Dateiarten (Excel, PowerPoint, OpenDocument, .eml), Dokumente ansehen (Text, Bilder und PDFs im Browser), pro Dokument an/aus, „Suche ausprobieren“, Quellen mit Seite anklickbar; neu und je aus (Admin + Profil): Bilder und Scans liest das Sprachmodell in Gesprächspausen ab (auch „Bild in Meine Dokumente“ im Chat, /merken in Telegram), Bedeutungssuche mit kleinem CPU-Modell in eigenem Prozess, Originale aufbewahren mit Speichergrenze; nach Dokumenten keine Websuche in derselben Antwort
 - **V01.0.223** Gespräch nach Antworten aus Dokumenten, Web oder Mail geht normal weiter: statt der Antwort kam manchmal nur der Hinweis „(Diese frühere Antwort beruhte auf Texten von außen …)“; ältere solche Antworten fallen jetzt samt Frage aus dem Verlauf, das Modell nutzt bei Bedarf das Werkzeug neu, und der Hinweis wird nie angezeigt oder gesprochen (Sperren bleiben)
 - **V01.0.222** Passwörter und Codes werden nie ausgesprochen: Passwörter, Codewörter, PINs/TANs, Einmalcodes und Schlüssel sagt die Stimme auf allen Wegen (Browser, Lautsprecher, Telegram-Sprachnachricht, Wyoming, Siri) als „nur schriftlich sichtbar“; im geschriebenen Text bleiben sie stehen (feste Regel, ohne Schalter)
 - **V01.0.221** Raum-Modus am Lautsprecher antwortet nur noch einmal: beendet das Board sein Zuhören, geht der Satz an den Raum-Modus statt zusätzlich als normale Frage
@@ -40,7 +41,6 @@ Alle Optionen ohne Rückfragen (`--mode api --asr 1.7b --tts 0.6b --yes` …) st
 - **V01.0.217** Logs: Die Bereiche (Gespräch, Telegram, Raum …) zählen wieder; neuere journalctl-Versionen schreiben die Zeitzone als „+02:00“, das erkannte das Panel nicht, deshalb standen alle Rubriken auf 0
 - **V01.0.216** Logs: Update-Zeilen mit Versionstext („Available“, „Update finished“) werden nicht mehr rot, nur weil im Text „Fehler“ steht
 - **V01.0.215** Logs: Die eigenen Abrufe der Logs-Seite zählen nicht mehr als Fehler („f=errors“ in der Adresse) und stehen nicht mehr im Journal; bei Webanfragen entscheidet nur der Statuscode
-- **V01.0.214** Telegram-Konflikt behoben: Das Panel startete seine Hintergrundaufgaben (Telegram-Abruf, Erinnerungen, Wächter …) doppelt, weil der https-Server sie noch einmal ausführte; jetzt einmal. Meldet Telegram trotzdem einen Konflikt, wartet der Spark immer länger, schreibt selten ins Log und zeigt unter Zustand einen Hinweis; Wetterdienst-Ausfall (503) wird still wiederholt
 
 Alle Versionen: [CHANGELOG.md](CHANGELOG.md)
 

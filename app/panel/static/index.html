@@ -77,6 +77,10 @@
       <div class="setrow"><div class="lbl"><b>Gedächtnis</b><span>Merkt sich Dinge, die man ihm sagt, getrennt pro Profil.</span></div><label class="tgl"><input type="checkbox" id="chat.memory"><i></i></label></div>
       <div class="setrow"><div class="lbl"><b>Frühere Gespräche</b><span>Profile können nach früheren Gesprächen fragen; aus ruhigen Gesprächen merkt er sich wenige Fakten.</span></div><label class="tgl"><input type="checkbox" id="chat.history"><i></i></label></div>
       <div class="setrow"><div class="lbl"><b>Eigene Dokumente</b><span>Profile laden eigene Dokumente hoch, der Assistent sucht darin.</span></div><label class="tgl"><input type="checkbox" id="chat.documents"><i></i></label></div>
+      <div class="setrow" data-show="chat.documents" style="margin-left:18px"><div class="lbl"><b>Bilder und Scans lesen</b><span>Fotos und gescannte PDF-Seiten liest das Sprachmodell einmal in Gesprächspausen ab; danach findet die Dokumentensuche ihren Text.</span></div><label class="tgl"><input type="checkbox" id="chat.doc_pictures"><i></i></label></div>
+      <div class="setrow" data-show="chat.documents" style="margin-left:18px"><div class="lbl"><b>Bedeutungssuche</b><span>Ein kleines Modell auf dem Prozessor findet auch Stellen mit anderen Worten („Auto“ findet „Kfz“); etwa 300 MB, nur bei Bedarf.</span></div><label class="tgl"><input type="checkbox" id="chat.doc_semantic"><i></i></label></div>
+      <div class="setrow" data-show="chat.documents" style="margin-left:18px"><div class="lbl"><b>Originale aufbewahren</b><span>Die hochgeladene Datei bleibt auf dem Spark, lässt sich wieder öffnen und kommt in die Sicherung.</span></div><label class="tgl"><input type="checkbox" id="chat.doc_originals"><i></i></label></div>
+      <div data-show="chat.doc_originals"><label>Speicher pro Profil (MB)</label><input class="num" id="chat.doc_quota_mb" type="number" min="50" max="5000"><div class="fh">50 bis 5000. Ist er voll, wird nur noch der Text gespeichert.</div></div>
       <div class="setrow"><div class="lbl"><b>Websuche</b><span>Das Modell sucht selbst über deine SearXNG-Instanz, wenn eine Frage aktuelle Informationen braucht.</span></div><label class="tgl"><input type="checkbox" id="chat.search"><i></i></label></div>
       <div data-show="chat.search"><label>Adresse deiner SearXNG-Instanz</label><input id="chat.search_url" data-req placeholder="http://192.168.1.20:8080">
       <label>Treffer pro Suche</label><input id="chat.search_results" type="number" min="1" max="10"><div class="fh">1 bis 10.</div>
@@ -587,9 +591,13 @@
     <ul class="facts" id="factlist"></ul>
     <div class="row" style="margin-top:8px"><button class="b" id="facttidy">Aufräumen vorschlagen</button><button class="b" id="factclear">Alles vergessen</button><span id="factmsg"></span></div>
     <div class="mut" style="margin-top:6px"><small>Einmal pro Woche schlägt der Assistent vor, doppelte oder überholte Einträge zusammenzufassen. Es ändert sich erst etwas, wenn du hier bestätigst.</small></div></div>
-    <div id="docbox" class="ptab"><div class="intro">PDF, Word, Text, Markdown, HTML oder CSV, je bis 20 MB. Der Assistent sucht darin, wenn eine Frage dazu passt. Nur du kannst sie nutzen.</div>
+    <div id="docbox" class="ptab"><div class="intro">PDF, Word, Excel, PowerPoint, OpenDocument, Text, Markdown, HTML, CSV oder E-Mail (.eml), je bis 20 MB. Der Assistent sucht darin, wenn eine Frage dazu passt. Nur du kannst sie nutzen.</div>
+      <div id="docsw"></div>
       <ul class="facts" id="doclist"></ul>
-      <div class="row" style="margin-top:8px"><button class="b" id="docadd" type="button">Dokument hinzufügen …</button><input type="file" id="docfile" multiple accept=".pdf,.txt,.md,.docx,.html,.htm,.csv" style="display:none"><span id="docmsg"></span></div></div>
+      <div id="docview" class="docview" hidden></div>
+      <div class="row" style="margin-top:8px"><button class="b" id="docadd" type="button">Dokument hinzufügen …</button><input type="file" id="docfile" multiple accept=".pdf,.txt,.md,.docx,.html,.htm,.csv,.xlsx,.pptx,.odt,.ods,.odp,.eml" style="display:none"><span id="docmsg"></span></div>
+      <div class="row" style="margin-top:12px"><input id="docq" type="search" maxlength="300" placeholder="Suche ausprobieren, z. B. Kündigungsfrist" style="flex:1"><button class="b" id="docqgo" type="button">Suchen</button></div>
+      <ul class="facts" id="dochits"></ul><div class="mut" id="docuse"></div></div>
     <div id="voicebox" class="ptab"><div class="intro">Lies drei kurze Sätze vor. Danach erkennt der Assistent dich an der Stimme, auch an anderen Geräten, und antwortet mit deinem Gedächtnis, deinen Dokumenten und Einstellungen.</div>
       <div id="voicestate" class="mut" style="margin-top:8px"></div><div id="voicesay" class="voicesay" style="display:none"></div>
       <div class="row" style="margin-top:8px"><button class="b p" id="voicego" type="button">Stimme einlernen</button><button class="b" id="voicedel" type="button">Stimme löschen</button><span id="voicemsg"></span></div></div>

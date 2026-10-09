@@ -12,9 +12,62 @@ window.closeProf=()=>{$('profmodal').style.display='none';endEnroll()};
 async function showFacts(){const r=await api('/api/profile/memory');const d=await r.json();
   $('profhead').textContent=d.profile.name;showTidy(d.tidy);
   $('factlist').innerHTML=d.facts.slice().reverse().map(f=>`<li><span>${esc(f.text)}${f.auto?` <em class="auto">${t('automatisch','automatic')}</em>`:''}</span><button class="b" onclick="forgetFact('${escq(f.id)}')">${t('Löschen','Delete')}</button></li>`).join('')||`<li class="mut">${t('Noch nichts gemerkt.','Nothing remembered yet.')}</li>`}
+// Documents (documents.py, wissen.py): the list with its state, the profile's own switches (only those
+// the admin allows), a search to try without the language model, and the kept originals.
+const docSize=n=>n<1048576?Math.max(1,Math.round(n/1024))+' KB':(n/1048576).toFixed(1)+' MB';
+const DOCSW=[['pictures',t('Bilder und Scans lesen lassen','Let pictures and scans be read'),t('Fotos und Seiten ohne Text liest das Sprachmodell in Gesprächspausen ab.','The language model reads photos and pages without text in quiet moments.')],
+  ['semantic',t('Bedeutungssuche','Meaning search'),t('Findet auch Stellen mit anderen Worten.','Also finds passages in other words.')],
+  ['originals',t('Originale aufbewahren','Keep originals'),t('Die Datei bleibt auf dem Spark und lässt sich wieder öffnen (neue Uploads).','The file stays on the Spark and can be opened again (new uploads).')]];
+let DOCINFO=null;
+function docState(d){if(d.state==='reading')return t(`wird gelesen (${d.pages-d.todo} von ${d.pages} Seiten)`,`being read (${d.pages-d.todo} of ${d.pages} pages)`)+(DOCINFO&&DOCINFO.allow.pictures&&DOCINFO.on.pictures?'':t(' · wartet, „Bilder und Scans lesen“ ist aus',' · waiting, "Read pictures and scans" is off'));
+  if(d.state==='error')return t('nicht lesbar','not readable');return `${d.chunks} ${t('Abschnitte','sections')}`}
 async function showDocs(){if(!DOCS_ON){$('docbox').style.display='none';return}$('docbox').style.display='';
   const l=await (await api('/api/profile/docs')).json();
-  $('doclist').innerHTML=l.map(d=>`<li><span>${esc(d.name)}<br><small class="mut">${d.size<1048576?Math.max(1,Math.round(d.size/1024))+' KB':(d.size/1048576).toFixed(1)+' MB'} · ${d.chunks} ${t('Abschnitte','sections')}</small></span><button class="b" onclick="delDoc('${escq(d.id)}','${escq(d.name)}')">${t('Löschen','Delete')}</button></li>`).join('')||`<li class="mut">${t('Noch keine Dokumente.','No documents yet.')}</li>`}
+  try{DOCINFO=await (await api('/api/profile/wissen')).json()}catch{DOCINFO=null}
+  const I=DOCINFO;
+  $('docsw').innerHTML=I?DOCSW.filter(([k])=>I.allow[k]).map(([k,l,h])=>`<div class="setrow"><div class="lbl"><b>${esc(l)}</b><span>${esc(h)}</span></div><label class="tgl"><input type="checkbox" data-docsw="${k}"${I.on[k]?' checked':''}><i></i></label></div>`).join(''):'';
+  $('doclist').innerHTML=l.map(d=>`<li><span>${esc(d.name)}<br><small class="mut">${docSize(d.size)} · ${esc(docState(d))}${d.note?' · '+esc(d.note):''}</small></span>`+
+    `<label class="tgl" title="${esc(t('Der Assistent sucht darin','The assistant searches it'))}"><input type="checkbox" data-docuse="${esc(d.id)}"${d.use?' checked':''}><i></i></label>`+
+    `<button class="b" type="button" data-docview="${esc(d.id)}">${t('Ansehen','View')}</button>`+
+    `<button class="b" type="button" data-docdel="${esc(d.id)}" data-name="${esc(d.name)}">${t('Löschen','Delete')}</button></li>`).join('')||`<li class="mut">${t('Noch keine Dokumente.','No documents yet.')}</li>`;
+  const bits=[];if(I&&I.quota)bits.push(t(`Originale: ${docSize(I.usage)} von ${docSize(I.quota)}`,`Originals: ${docSize(I.usage)} of ${docSize(I.quota)}`));
+  if(I&&I.allow.pictures&&I.on.pictures)bits.push(t(`heute ${I.today} von ${I.day_pages} Seiten gelesen`,`${I.today} of ${I.day_pages} pages read today`));
+  if(I&&I.vectors&&I.on.semantic)bits.push(t(`Bedeutungssuche: ${I.vectors[0]} von ${I.vectors[1]} Abschnitten vorbereitet`,`Meaning search: ${I.vectors[0]} of ${I.vectors[1]} sections prepared`));
+  $('docuse').textContent=bits.join(' · ');
+  const pics=I&&I.allow.pictures&&I.on.pictures;
+  $('docfile').accept='.pdf,.txt,.md,.docx,.html,.htm,.csv,.xlsx,.pptx,.odt,.ods,.odp,.eml'+(pics?',.jpg,.jpeg,.png,.webp':'')}
+$('docsw').onchange=async e=>{const k=e.target.dataset.docsw;if(!k)return;
+  try{await api('/api/profile/settings',{method:'PUT',headers:{'Content-Type':'application/json'},body:JSON.stringify({['doc_'+k]:e.target.checked})})}
+  catch(x){$('docmsg').innerHTML=`<span class="err">${esc(x.message)}</span>`}showDocs()};
+$('doclist').onchange=async e=>{const id=e.target.dataset.docuse;if(!id)return;
+  try{await api('/api/profile/wissen/'+encodeURIComponent(id),{method:'PUT',headers:{'Content-Type':'application/json'},body:JSON.stringify({use:e.target.checked})})}
+  catch(x){$('docmsg').innerHTML=`<span class="err">${esc(x.message)}</span>`;showDocs()}};
+// a document read again: the kept original (pictures and PDFs in the browser, the rest as a download)
+// and its stored text, built with textContent only
+async function docView(id){const box=$('docview');box.hidden=false;box.textContent=t('Lade …','Loading …');
+  try{const d=await (await api('/api/profile/wissen/'+encodeURIComponent(id)+'/text')).json();box.textContent='';
+    const head=document.createElement('div');head.className='dvhead';const nm=document.createElement('b');nm.textContent=d.name;head.appendChild(nm);
+    const right=document.createElement('span');
+    if(d.file){const a=document.createElement('a');a.className='b';const pdf=/\.pdf$/i.test(d.name),pic=d.kind==='picture';
+      a.href='/api/profile/wissen/'+encodeURIComponent(id)+'/file'+(pdf||pic?'?view=1':'');if(pdf)a.target='_blank';a.rel='noopener';
+      a.textContent=pdf?t('PDF öffnen','Open PDF'):pic?t('Bild öffnen','Open picture'):t('Original herunterladen','Download original');right.appendChild(a);
+      if(pic){const img=document.createElement('img');img.alt='';img.src=a.href;box.appendChild(img)}}
+    const x=document.createElement('button');x.type='button';x.className='b';x.textContent='✕';x.onclick=()=>{box.hidden=true;box.textContent=''};right.appendChild(x);
+    head.appendChild(right);box.prepend(head);
+    let page;for(const p of d.parts){if(p.page&&p.page!==page){page=p.page;const h=document.createElement('div');h.className='dvpage';h.textContent=t('Seite ','Page ')+p.page;box.appendChild(h)}
+      const tx=document.createElement('p');tx.className='dvtext';tx.textContent=p.text;box.appendChild(tx)}
+    if(!d.parts.length){const m=document.createElement('p');m.className='mut';m.textContent=d.state==='reading'?t('Wird noch gelesen.','Still being read.'):t('Kein Text.','No text.');box.appendChild(m)}
+    if(d.cut){const m=document.createElement('p');m.className='mut';m.textContent=t('… gekürzt','… shortened');box.appendChild(m)}
+    box.scrollIntoView({block:'nearest'})}
+  catch(x){box.textContent=x.message}}
+$('doclist').onclick=async e=>{const v=e.target.closest('[data-docview]');if(v){docView(v.dataset.docview);return}
+  const b=e.target.closest('[data-docdel]');if(!b)return;
+  if(!confirm(t('Dokument „','Delete document "')+b.dataset.name+t('“ löschen?','"?')))return;await api('/api/profile/docs/'+encodeURIComponent(b.dataset.docdel),{method:'DELETE'});showDocs()};
+async function docTry(){const q=$('docq').value.trim();if(!q)return;$('dochits').innerHTML=`<li class="mut">${t('Suche …','Searching …')}</li>`;
+  try{const r=await (await api('/api/profile/wissen/search',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({q})})).json();
+    $('dochits').innerHTML=r.hits.map(h=>`<li><span><b>${esc(h.name)}${h.page?' · '+t('Seite ','page ')+h.page:''}</b><br><small>${esc(h.text)}</small></span></li>`).join('')||`<li class="mut">${t('Nichts gefunden.','Nothing found.')}</li>`}
+  catch(x){$('dochits').innerHTML=`<li class="err">${esc(x.message)}</li>`}}
+$('docqgo').onclick=docTry;$('docq').onkeydown=e=>{if(e.key==='Enter')docTry()};
 let DOCS_ON=true,SPK_ON=false,CAL_ON=true,HA_ON=false,MAIL_ON=false;
 // The "Ich" window: conversation settings for everyone, plus the profile's own pages once logged in.
 // On phones the window opens as a list of its pages (like the iPhone settings); a page then fills the
@@ -150,12 +203,11 @@ $('voicego').onclick=async()=>{if(enr.i<0){
     catch(e){$('voicemsg').innerHTML=`<span class="err">${esc(e.message)}</span>`;return}}
   enrollStep()};
 $('voicedel').onclick=async()=>{if(!confirm(t('Gespeicherte Stimme löschen?','Delete the stored voice?')))return;await api('/api/profile/voice',{method:'DELETE'});showVoice()};
-window.delDoc=async(id,n)=>{if(!confirm(t('Dokument „','Delete document "')+n+t('“ löschen?','"?')))return;await api('/api/profile/docs/'+id,{method:'DELETE'});showDocs()};
 $('docadd').onclick=()=>$('docfile').click();
 $('docfile').onchange=async()=>{const files=[...$('docfile').files];$('docfile').value='';
   for(const f of files){$('docmsg').textContent=t('Lade hoch: ','Uploading: ')+f.name+' …';
     try{const fd=new FormData();fd.append('file',f,f.name);const r=await (await api('/api/profile/docs',{method:'POST',body:fd})).json();
-      $('docmsg').textContent=t('Hinzugefügt: ','Added: ')+r.name}
+      $('docmsg').textContent=(r.state==='reading'?t('Wird gelesen: ','Being read: '):t('Hinzugefügt: ','Added: '))+r.name}
     catch(e){$('docmsg').innerHTML=`<span class="err">${esc(f.name)}: ${esc(e.message)}</span>`;}}
   showDocs()};
 function showTidy(p){const b=$('tidybox');if(!p||!(p.merge.length+p.drop.length)){b.style.display='none';b.innerHTML='';return}

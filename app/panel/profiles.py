@@ -502,6 +502,10 @@ SETTINGS = {
     "route": (False, lambda v: isinstance(v, bool)),        # targeted tool choice (intent.py, admin chat.routing)
     "fix_learn": (False, lambda v: isinstance(v, bool)),    # learning from corrections (fixes.py, admin chat.learn_fixes)
     "images_on": (False, lambda v: isinstance(v, bool)),    # pictures for the model (images.py, admin chat.images)
+    # documents (wissen.py): photos and scans read by the model, meaning search, keeping the originals
+    "doc_pictures": (False, lambda v: isinstance(v, bool)),
+    "doc_semantic": (False, lambda v: isinstance(v, bool)),
+    "doc_originals": (False, lambda v: isinstance(v, bool)),
     # own wishes for the tone (admin chat.own_style): plain text, no control characters, no markers of outside text
     "style": ("", lambda v: isinstance(v, str) and len(v) <= 500 and not re.search(r"[\x00-\x09\x0b-\x1f\x7f]|<<<|>>>", v)),
     # daily briefing as a push notification at this local time ("" = off), in the device's time zone

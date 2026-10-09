@@ -673,7 +673,8 @@ def reminder_due(args, tz):
 
 
 def docs_hint(prof, docs):
-    names = ", ".join(d["name"] for d in docs[:30]) + (" …" if len(docs) > 30 else "")
+    # names are the files' own (outside text too): quoted, short, without the data markers
+    names = ", ".join("„" + re.sub(r"<<<|>>>|[„“\n]", "", d["name"])[:80] + "“" for d in docs[:30]) + (" …" if len(docs) > 30 else "")
     return (f"{prof['name']} hat eigene Dokumente hochgeladen: {names}. Wenn eine Frage dazu passen könnte, "
             "suche mit document_search darin und antworte aus den Treffern; nenne das Dokument kurz.")
 

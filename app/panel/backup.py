@@ -81,6 +81,16 @@ def _add_dir(tar, path, arc):
                     continue  # the login key of this Spark: with it, a backup file could forge profile logins
                 if arc == "users" and re.match(r"[^/]+/messages(\.json|-pending\.json|/)", os.path.relpath(full, path)):
                     continue  # messages between profiles are short-lived (messages.py): not in backups
+                if f.endswith((".db-journal", ".db-wal", ".db-shm")):
+                    continue  # (an SQLite file is copied whole below)
+                if f.endswith(".db"):
+                    # an SQLite file (documents, wissen.db) may be written right now: a consistent copy
+                    import documents
+                    with tempfile.TemporaryDirectory() as tmp:
+                        copy = os.path.join(tmp, "copy.db")
+                        documents.sqlite_copy(full, copy)
+                        tar.add(copy, arcname=os.path.join(arc, os.path.relpath(full, path)), recursive=False)
+                    continue
                 tar.add(full, arcname=os.path.join(arc, os.path.relpath(full, path)), recursive=False)
 
 

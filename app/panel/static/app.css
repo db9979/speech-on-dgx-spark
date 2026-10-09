@@ -578,3 +578,10 @@ details.adv h3.sec{margin-top:14px}
 @media (max-width:760px){.lsum{grid-template-columns:1fr 1fr}.ltile b{font-size:18px}.lchips{flex-wrap:nowrap;overflow-x:auto;padding-bottom:4px}
   .lseg{display:flex;width:100%}.lseg button{flex:1;padding:6px 4px}.lsearch{max-width:none;min-width:0;flex-basis:100%}.lsel{flex:1}
   .lrow{grid-template-columns:auto minmax(0,1fr);row-gap:2px;padding:6px 12px}.lrow .lm{grid-column:1/-1}.lout{height:auto;max-height:none}.lhead{flex-direction:column;gap:2px}}
+
+/* Ich → Dokumente: a document read again (text pieces, kept picture) */
+.docview{margin-top:10px;border:1px solid var(--line);border-radius:10px;padding:10px;max-height:50vh;overflow:auto;font-size:14px}
+.docview .dvhead{display:flex;gap:8px;align-items:center;justify-content:space-between;margin-bottom:6px}
+.docview img{max-width:100%;height:auto;border-radius:6px;margin:6px 0}
+.docview .dvpage{font-size:12px;color:var(--mut);margin-top:8px}
+.docview .dvtext{white-space:pre-wrap;margin:2px 0}

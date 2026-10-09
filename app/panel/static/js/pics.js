@@ -39,6 +39,11 @@ async function picSave(text,btn){const name=t('Bild-Antwort ','Picture answer ')
   const f=new FormData();f.append('file',new Blob([text],{type:'text/plain'}),name);btn.disabled=true;
   try{await api('/api/profile/docs',{method:'POST',body:f});btn.textContent=t('Gespeichert unter „Meine Dokumente“','Stored under "My documents"')}
   catch(e){btn.disabled=false;btn.textContent=t('Nicht gespeichert: ','Not stored: ')+e.message}}
+// the picture itself under "Meine Dokumente" (wissen.py): the language model reads it later in a quiet moment
+async function picKeep(ids,btn){btn.disabled=true;
+  try{for(const id of ids)await api('/api/profile/wissen/picture',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({id})});
+    btn.textContent=t('Bild gespeichert, wird bald gelesen','Picture stored, read soon')}
+  catch(e){btn.disabled=false;btn.textContent=t('Nicht gespeichert: ','Not stored: ')+e.message}}
 $('chatpic').onclick=$('mpic').onclick=()=>$('chatpicfile').click();
 $('chatpicfile').onchange=async()=>{for(const f of [...$('chatpicfile').files].slice(0,pics.max))await picAdd(f);$('chatpicfile').value=''};
 $('chatpics').addEventListener('click',e=>{const b=e.target.closest('[data-picx]');if(!b)return;const p=pics.list[Number(b.dataset.picx)];if(p)picDrop(p);picsRender()});

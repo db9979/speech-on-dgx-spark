@@ -269,7 +269,7 @@ async def prepare(request):
             ha_read = await homeassistant.lookup(ha, messages[-1]["content"])
         except (httpx.HTTPError, ValueError) as e:
             print("homeassistant: lookup failed:", type(e).__name__, flush=True)
-    docs = documents.list_docs(who["id"]) if who and private_ok and ccfg.get("documents", True) else []
+    docs = documents.list_docs(who["id"], used_only=True) if who and private_ok and ccfg.get("documents", True) else []
     if docs:
         system = (system + "\n\n" + chat.docs_hint(who, docs)).strip()
     timers = bool(ccfg.get("reminders", True))
@@ -432,8 +432,10 @@ async def prepare(request):
         system = (system + "\n\n" + " ".join(ex["hints"])).strip()
     # once mail or other outside text was read in this answer, nothing in it may change the home or
     # the memory, and after mail no words go to the web (see LOCKED_OUTSIDE / LOCKED_MAIL)
+    # (after the person's own documents also no web search: a document could ask to carry its text away)
     def locked(st):
-        return (chat.LOCKED_MAIL | ex["changes"]) if st["mail"] else (chat.LOCKED_OUTSIDE | ex["changes"]) if st["outside"] else set()
+        return ((chat.LOCKED_MAIL | ex["changes"]) if st["mail"] else (chat.LOCKED_OUTSIDE | ex["changes"]) if st["outside"]
+                else set()) | ({"web_search"} if st.get("docs") else set())
     # what this request cannot reach: said plainly, so the model does not make up appointments or mails
     missing = ([] if cal["calendars"] else ["Kalender"]) + ([] if mailbox else ["E-Mails"])
     if missing:

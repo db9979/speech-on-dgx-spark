@@ -442,9 +442,12 @@ def validate(new):
     if ch.get("self_echo_mode", "pause") not in ("text", "pause"):
         raise HTTPException(400, "self_echo_mode: text or pause")
     for k in ("answer_check", "tool_thinking", "learn_fixes", "own_style", "follow_up", "no_self_echo", "images",
-              "routing", "prompt_cache"):
+              "routing", "prompt_cache", "doc_pictures", "doc_semantic", "doc_originals"):
         if not isinstance(ch.get(k, False), bool):
             raise HTTPException(400, f"chat {k} must be true or false")
+    q = ch.get("doc_quota_mb", 500)
+    if not isinstance(q, int) or isinstance(q, bool) or not 50 <= q <= 5000:
+        raise HTTPException(400, "doc_quota_mb: 50 to 5000")
     if ch.get("route_model", "off") not in ("off", "on", "lean"):
         raise HTTPException(400, "route_model: off, on or lean")
     for sec in ("asr", "tts"):

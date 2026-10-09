@@ -535,7 +535,7 @@ def save_doc(uid, jid):
     name = f"Bericht {datetime.datetime.fromtimestamp(item['created']):%Y-%m-%d} {name}.md"
     text = "# " + item["task"] + "\n\n" + item["report"]
     try:
-        d = documents.add(uid, name, text.encode(), text=text)
+        d = documents.add(uid, name, text.encode(), text=text, source="agent")
     except ValueError as e:
         _set_job(uid, jid, doc_error=str(e)[:200])
         return None

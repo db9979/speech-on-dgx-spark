@@ -15,6 +15,7 @@ from fastapi.security import HTTPBasicCredentials
 sys.path.insert(0, os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
 import agent  # noqa: E402
 import documents  # noqa: E402
+import wissen  # noqa: E402
 import guard  # noqa: E402
 import push  # noqa: E402
 import speakers  # noqa: E402
@@ -433,7 +434,7 @@ async def profile_add_doc(file: UploadFile = File(...), prof=Depends(browser_pro
         raise HTTPException(403, "documents are turned off (Einstellungen -> Funktionen)")
     data = await file.read(documents.MAX_FILE + 1)
     try:
-        return await asyncio.to_thread(documents.add, prof["id"], file.filename, data)
+        return await asyncio.to_thread(wissen.add, prof["id"], file.filename, data)
     except ValueError as e:
         raise HTTPException(400, str(e))
 
@@ -669,7 +670,9 @@ def profile_settings(request: Request):
                                        "style": bool(prof and chat.get("own_style", False)),
                                        "follow": bool(prof and chat.get("follow_up", False)),
                                        "echo": bool(prof and chat.get("no_self_echo", False)),
-                                       "images": bool(prof and chat.get("images", False) is True)}}
+                                       "images": bool(prof and chat.get("images", False) is True),
+                                       # "Bild in Meine Dokumente" under an answer to a picture (wissen.py)
+                                       "docpics": bool(prof and chat.get("images", False) is True and wissen.on(prof["id"], "pictures"))}}
 
 
 @router.put("/api/profile/settings", dependencies=[Depends(assistant)])

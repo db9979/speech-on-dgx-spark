@@ -250,7 +250,7 @@ async def app_doc(request: Request, prof=Depends(own_profile)):
     if not text.strip():
         raise HTTPException(400, "no text")
     try:
-        r = await asyncio.to_thread(documents.add, prof["id"], name, text.encode(), text)
+        r = await asyncio.to_thread(documents.add, prof["id"], name, text.encode(), text, source="app")
     except ValueError as e:
         raise HTTPException(400, str(e))
     print("iphone: document stored,", len(text), "chars", flush=True)

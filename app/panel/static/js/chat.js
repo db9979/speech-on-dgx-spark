@@ -226,7 +226,7 @@ async function ask(text,asrS,spk){const spoken=!!chat.nextSpoken;chat.nextSpoken
 const pids=typeof picIds==='function'?picIds():[],thumbs=pids.length?picThumbs():[];   // attached pictures (pics.js)
 const ub=chatLog('user',text);const um={role:'user',content:text};
   if(thumbs.length){const w=document.createElement('div');w.className='picrow';w.innerHTML=thumbs.map(u=>`<img alt="" src="${esc(u)}">`).join('');ub.appendChild(w)}chat.msgs.push(um);deletable(ub,um);let foreign=false,ttsErr=false,mailUsed=false,outsideUsed=false;
-  const el=chatLog('assistant','');$('fabtext').textContent='';let full='',llmS=null,audioS=null,err='';const searches=[],sources=[],mems=[],docs=[];
+  const el=chatLog('assistant','');$('fabtext').textContent='';let full='',llmS=null,audioS=null,err='';const searches=[],sources=[],mems=[],docs=[],drefs=[];
   const ctrl=new AbortController();chat.ctrl=ctrl;chat.firstPlay=null;chat.gaps=[];chat.blocks=[];chat.t0b=null;chat.stalls=0;chat.pieceStart=true;setTalk();chatSay(t('Antwort kommt …','Answer coming …'));
   try{const r=await api('/api/chat',{method:'POST',headers:{'Content-Type':'application/json'},signal:ctrl.signal,
       body:JSON.stringify({messages:chat.msgs.slice(-20),tz:(()=>{try{return Intl.DateTimeFormat().resolvedOptions().timeZone}catch{return ''}})(),voice:PROFILE&&S.voice||undefined,speed:S.speed,length:S.length,reminders:PROFILE?undefined:rem.list,convo:chat.cid||undefined,speaker:spk&&spk.token||undefined,images:pids.length?pids:undefined})});
@@ -250,7 +250,7 @@ const ub=chatLog('user',text);const um={role:'user',content:text};
         else if(ev.type==='home_done'){mems.push('🏠 '+(ev.ok?'':'⚠ ')+(ev.targets&&ev.targets.length?ev.targets.join(', ')+': ':'')+ev.text)}
         else if(ev.type==='historysearch'){chatSay(t('Schaue in früheren Gesprächen nach …','Looking through earlier conversations …'))}
         else if(ev.type==='docsearch'){chatSay(t('Suche in deinen Dokumenten: ','Searching your documents: ')+ev.query)}
-        else if(ev.type==='docsources'){for(const n of ev.items)if(!docs.includes(n))docs.push(n)}
+        else if(ev.type==='docsources'){for(const n of ev.items)if(!docs.includes(n))docs.push(n);for(const r of (ev.refs||[]))if(!drefs.some(x=>x.id===r.id&&x.page===r.page))drefs.push(r)}
         else if(ev.type==='speaker'){const w=document.createElement('div');w.className='who';foreign=!!ev.foreign;
           w.textContent='🎙 '+ev.name+(foreign?t(' · nicht in diesem Verlauf gespeichert',' · not kept in this history'):'');ub.parentNode.appendChild(w)}
         else if(ev.type==='reminder'){rem.event(ev);mems.push(ev.action==='set'?t('Erinnerung: ','Reminder: ')+rem.when(ev.item.due)+' '+ev.item.text:t('Erinnerung gelöscht','Reminder cancelled'))}
@@ -266,10 +266,16 @@ const ub=chatLog('user',text);const um={role:'user',content:text};
   el.classList.remove('typing');if(!full.trim())el.textContent=aborted?t('(abgebrochen)','(cancelled)'):'–';
   if(sources.length){const d=document.createElement('div');d.className='src';
     d.innerHTML=`<span>${t('Gesucht','Searched')}: ${esc(searches.join(' · '))}</span>`+sources.slice(0,5).map((s,i)=>`<a href="${esc(s.url)}" target="_blank" rel="noopener noreferrer">${i+1}. ${esc(s.title.slice(0,70))}</a>`).join('');el.appendChild(d)}
-  if(docs.length){const d=document.createElement('div');d.className='mem';d.textContent=t('Aus deinen Dokumenten: ','From your documents: ')+docs.join(' · ');el.appendChild(d)}
+  // the sources: a kept original opens as a download, otherwise Ich → Dokumente
+  if(docs.length){const d=document.createElement('div');d.className='mem';const list=drefs.length?drefs.slice(0,6):docs.map(n=>({name:n}));
+    d.innerHTML=esc(t('Aus deinen Dokumenten: ','From your documents: '))+list.map(r=>{const l=esc(r.name+(r.page?' · '+t('S. ','p. ')+r.page:''));
+      return r.id?`<button type="button" class="mlink" data-docopen="${esc(r.id)}">${l}</button>`:`<button type="button" class="mlink" data-docopen="">${l}</button>`}).join(' · ');
+    d.addEventListener('click',async e=>{const b=e.target.closest('[data-docopen]');if(!b)return;await openMe('docbox');if(b.dataset.docopen)docView(b.dataset.docopen)});el.appendChild(d)}
   if(mems.length){const d=document.createElement('div');d.className='mem';d.textContent=mems.join(' · ');el.appendChild(d)}
   if(pids.length&&full.trim()&&PROFILE&&!err){const b=document.createElement('button');b.type='button';b.className='b picsave';   // 7: only on a click
     b.textContent=t('In „Meine Dokumente“ speichern','Store under "My documents"');const said=full.trim();b.onclick=()=>picSave(said,b);el.appendChild(b)}
+  if(pids.length&&full.trim()&&PROFILE&&!err&&ALLOW.docpics){const b=document.createElement('button');b.type='button';b.className='b picsave';   // the picture itself, read by the model later
+    b.textContent=t('Bild in „Meine Dokumente“','Picture to "My documents"');const ids=pids.slice();b.onclick=()=>picKeep(ids,b);el.appendChild(b)}
   const f=v=>v==null?'–':v.toFixed(2)+' s';
   const chip=(k,v,hi)=>`<span class="chip${hi?' hi':''}">${k} <b>${f(v)}</b></span>`;
   $('chattiming').innerHTML=(asrS!=null?chip(t('Spracherkennung','Recognition'),asrS):'')+chip(t('LLM erstes Wort','LLM first word'),llmS)+chip(t('erster Ton','first audio'),audioS)+
