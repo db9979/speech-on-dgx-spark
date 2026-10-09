@@ -262,6 +262,7 @@ def seen():
 # A key of the iPhone app (scope "app") only asks and listens: these paths and nothing else, and only
 # while the admin and the profile have the app switched on (APP_GATE, set by iphone.py; closed without it).
 APP_PATHS = ("/api/chat", "/api/test/asr", "/api/siri/ask", "/api/iphone/hello", "/api/profile/reminders",
+             "/api/profile/reminders/played",   # a due reminder rings once: the first device takes it
              "/api/proactive", "/api/proactive/greet", "/api/assistant/say",
              "/api/iphone/push-token", "/api/iphone/note",
              "/api/profile/convos",   # the conversations, the same list as in the panel
@@ -480,6 +481,17 @@ def add_reminder(uid, text, due):
     with _lock:
         items = sorted(reminders(uid) + [item], key=lambda x: x["due"])[-MAX_REMINDERS:]
         _write(_path(uid, "reminders.json"), items)
+    return item
+
+
+def take_reminder(uid, rid, due_by):
+    """The one device that plays a due reminder takes it off the list; every later one gets None
+    (one ring for the whole profile, not one per device). Only when it is due by due_by (ms)."""
+    with _lock:
+        items = reminders(uid)
+        item = next((x for x in items if x.get("id") == rid and x.get("due", 0) <= due_by), None)
+        if item is not None:
+            _write(_path(uid, "reminders.json"), [x for x in items if x is not item])
     return item
 
 

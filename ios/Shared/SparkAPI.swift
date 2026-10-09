@@ -145,6 +145,13 @@ struct SparkAPI {
         return list.compactMap(Self.reminder)
     }
 
+    /// A due reminder rings on one device only: true when this device is the first to play it.
+    /// Without an answer from the Spark it rings anyway (rather once too often than never).
+    func played(_ id: String) async -> Bool {
+        guard let d = try? await post("api/profile/reminders/played", ["id": id]) else { return true }
+        return d["play"] as? Bool ?? true
+    }
+
     /// Notes the Spark wants to say by itself ("Von selbst") since a time (ms).
     func notes(since: Int) async throws -> [Note] {
         var c = URLComponents(url: base.appendingPathComponent("api/proactive"), resolvingAgainstBaseURL: false)!

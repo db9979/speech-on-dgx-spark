@@ -4,6 +4,7 @@ import asyncio
 import json
 import time
 import os
+import re
 import sys
 
 import httpx
@@ -439,8 +440,23 @@ def profile_delete_doc(doc_id: str, prof=Depends(browser_profile)):
 
 
 @router.get("/api/profile/reminders", dependencies=[Depends(assistant)])
-def profile_reminders(prof=Depends(own_profile)):
+def profile_reminders(page: int = 0, prof=Depends(own_profile)):
+    if page:
+        push.page_open(prof["id"])   # an open panel page rings by itself: push waits a moment for it
     return profiles.reminders(prof["id"])
+
+
+@router.post("/api/profile/reminders/played", dependencies=[Depends(assistant)])
+async def profile_reminder_played(request: Request, prof=Depends(own_profile)):
+    """A device is about to play a due reminder: only the first one gets "play", so the other devices
+    of the profile (pages, the iPhone app, push) do not repeat it."""
+    guard.limit(request, "chat", prof["id"], False)
+    body = await request.json()
+    rid = str(body.get("id", "") if isinstance(body, dict) else "")[:16]
+    if not re.fullmatch(r"[0-9a-f]{1,16}", rid):
+        raise HTTPException(400, "id is required")
+    # only a due one (a device whose clock runs ahead does not take it early)
+    return {"play": profiles.take_reminder(prof["id"], rid, time.time() * 1000 + 60_000) is not None}
 
 
 @router.delete("/api/profile/reminders/{rid}", dependencies=[Depends(assistant)])

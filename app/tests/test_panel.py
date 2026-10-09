@@ -676,6 +676,55 @@ class Push(unittest.TestCase):
         self.assertEqual(profiles.reminders(a_id), [])
         self.assertEqual(len(profiles.reminders(b_id)), 1)  # no push device: the page rings it
 
+    def test_a_played_reminder_rings_on_no_other_device(self):
+        # V01.0.176: the first device that plays a due reminder takes it; pages, iPhone and push stay silent
+        import asyncio
+        import push
+        a = profile("Jule")
+        uid = a.get("/api/whoami").json()["profile"]["id"]
+        now = time.time() * 1000
+        due = profiles.add_reminder(uid, "Ofen aus", now - 1000)
+        later = profiles.add_reminder(uid, "Blumen", now + 3600 * 1000)
+        self.assertEqual(a.post("/api/profile/reminders/played", json={"id": "../x"}).status_code, 400)
+        self.assertEqual(a.post("/api/profile/reminders/played", json={"id": later["id"]}).json(), {"play": False})
+        self.assertEqual(a.post("/api/profile/reminders/played", json={"id": due["id"]}).json(), {"play": True})
+        self.assertEqual(a.post("/api/profile/reminders/played", json={"id": due["id"]}).json(), {"play": False})
+        self.assertEqual([x["id"] for x in profiles.reminders(uid)], [later["id"]])   # not yet due: stays
+        self.assertIn("/api/profile/reminders/played", profiles.APP_PATHS)
+        # another profile cannot take it
+        other = profile("Kai")
+        third = profiles.add_reminder(uid, "Tee", now - 1000)
+        self.assertEqual(other.post("/api/profile/reminders/played", json={"id": third["id"]}).json(), {"play": False})
+        self.assertEqual(len(profiles.reminders(uid)), 2)
+
+        # push: never for a reminder a device already took; waits a moment while a page of the profile is open
+        got = []
+
+        async def fake(u, title, body, tag="", private=True):
+            got.append(title)
+            return 1
+        real_send, real_reach, push.send = push.send, push.reachable, fake
+        push.reachable = lambda u, private=True: u == uid
+        try:
+            profiles.remove_reminders(uid, {third["id"]})
+            fresh = profiles.add_reminder(uid, "Kaffee", now - 5000)
+            a.get("/api/profile/reminders?page=1")
+            asyncio.run(push.due_reminders())
+            self.assertEqual(got, [])                                    # the open page rings it
+            self.assertEqual(a.post("/api/profile/reminders/played", json={"id": fresh["id"]}).json(), {"play": True})
+            asyncio.run(push.due_reminders())
+            self.assertEqual(got, [])                                    # played there: no push afterwards
+            old = profiles.add_reminder(uid, "Müll", now - push.PAGE_GRACE - 5000)
+            asyncio.run(push.due_reminders())
+            self.assertEqual(got, ["⏰ Müll"])                            # no page took it: pushed once
+            self.assertEqual(a.post("/api/profile/reminders/played", json={"id": old["id"]}).json(), {"play": False})
+            push._pages.pop(uid, None)
+            profiles.add_reminder(uid, "Post", now - 1000)
+            asyncio.run(push.due_reminders())
+            self.assertEqual(got, ["⏰ Müll", "⏰ Post"])                  # no page open: right away
+        finally:
+            push.send, push.reachable = real_send, real_reach
+
 
 class Stability(unittest.TestCase):
     def test_backup_and_restore(self):

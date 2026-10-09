@@ -2,6 +2,7 @@
 
 Every version in one line, newest first (taken from the commit messages, so some lines are German, some English). Older entries have no version number.
 
+- **V01.0.176** · 2026-10-09 · Erinnerungen klingeln nur einmal: das erste Gerät, das eine Erinnerung abspielt, nimmt sie auf dem Spark weg; andere Seiten, iPhone-App und Push bleiben still
 - **V01.0.175** · 2026-10-09 · Agent-Funktionen: Aufträge im Hintergrund mit Bericht per Push/Telegram, geplante Aufträge und Abläufe nach „Ja“, Dienste per MCP, Stufen pro Profil (aus/lesen/handeln)
 - **V01.0.174** · 2026-10-09 · iPhone-App: App-Store-Bildschirmfotos zusätzlich in 6,3" (1206 × 2622)
 - **V01.0.173** · 2026-10-09 · Einbinden: Anleitung „KI-Agenten“ – Hermes Agent und OpenClaw nutzen Spracherkennung und Sprachausgabe der Spark

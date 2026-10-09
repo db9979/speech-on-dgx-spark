@@ -31,6 +31,7 @@ All options for running without questions (`--mode api --asr 1.7b --tts 0.6b --y
 
 <!-- New version: add one line at the top here and in CHANGELOG.md, drop the oldest line here (keep 10). Details go to docs/de and docs/en, not into this README. -->
 
+- **V01.0.176** Reminders ring on one device only, not again on every device of the profile
 - **V01.0.175** Agent functions: background jobs, scheduled jobs, routines and services over MCP, allowed per profile
 - **V01.0.174** iPhone app: App Store screenshots also in 6.3" (1206 × 2622)
 - **V01.0.173** Integrate: "AI agents" guide, Hermes Agent and OpenClaw use the Spark for speech recognition and speech output
@@ -40,7 +41,6 @@ All options for running without questions (`--mode api --asr 1.7b --tts 0.6b --y
 - **V01.0.169** iPhone app: App Store texts (de/en) written to App Store Connect by the GitHub workflow "App Store texts"
 - **V01.0.168** iPhone app: privacy policy for the App Store (de/en)
 - **V01.0.167** iPhone app: builds with the new Xcode (iOS 26), Bluetooth headset option adjusted
-- **V01.0.166** Ignore my own voice (off, admin + profile): when the iPhone or a browser hears the speaker answering, the Spark does not take it as a new question
 
 All versions: [CHANGELOG.md](CHANGELOG.md)
 

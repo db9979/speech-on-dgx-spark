@@ -627,9 +627,16 @@ final class Relay: NSObject, UNUserNotificationCenterDelegate {
 
     func userNotificationCenter(_ center: UNUserNotificationCenter, willPresent n: UNNotification,
                                 withCompletionHandler done: @escaping (UNNotificationPresentationOptions) -> Void) {
-        if let text = n.request.content.userInfo["spark"] as? String {
+        guard let text = n.request.content.userInfo["spark"] as? String else { return done([.banner, .sound]) }
+        // a reminder of this iPhone: only when no other device played it already
+        guard let rid = n.request.content.userInfo["rid"] as? String, let api = SparkAPI.current else {
             DispatchQueue.main.async { self.onDue?(text) }
+            return done([.banner, .sound])
         }
-        done([.banner, .sound])
+        Task {
+            let play = await api.played(rid)
+            if play { DispatchQueue.main.async { self.onDue?(text) } }
+            done(play ? [.banner, .sound] : [])
+        }
     }
 }

@@ -34,7 +34,7 @@ enum Alarms {
         c.body = r.text
         c.sound = .default
         c.interruptionLevel = .timeSensitive
-        c.userInfo = ["spark": r.text]
+        c.userInfo = ["spark": r.text, "rid": r.id]
         let secs = max(1, r.due.timeIntervalSinceNow)
         let req = UNNotificationRequest(identifier: prefix + r.id, content: c,
                                         trigger: UNTimeIntervalNotificationTrigger(timeInterval: secs, repeats: false))
@@ -46,8 +46,16 @@ enum Alarms {
     }
 
     /// The iPhone holds exactly the reminders the Spark has (set in the panel or another device too).
+    /// Ones this iPhone already rang while the app was closed are taken on the Spark, so no other
+    /// device plays them again.
     static func sync(_ list: [Reminder]) async {
         let center = UNUserNotificationCenter.current()
+        let rang = Set(await center.deliveredNotifications().map(\.request.identifier).filter { $0.hasPrefix(prefix) })
+        var list = list
+        if let api = SparkAPI.current {
+            for r in list where r.due <= Date() && rang.contains(prefix + r.id) { _ = await api.played(r.id) }
+            list.removeAll { $0.due <= Date() && rang.contains(prefix + $0.id) }
+        }
         let pending = await center.pendingNotificationRequests().map(\.identifier).filter { $0.hasPrefix(prefix) }
         let want = Set(list.map { prefix + $0.id })
         center.removePendingNotificationRequests(withIdentifiers: pending.filter { !want.contains($0) })

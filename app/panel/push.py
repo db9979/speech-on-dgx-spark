@@ -193,17 +193,35 @@ async def send(uid, title, body, tag="", private=True):
     return n
 
 
+# An open panel page rings due reminders itself and takes them (/api/profile/reminders/played).
+# While one was seen lately, push waits PAGE_GRACE so the reminder is not played there and pushed too.
+PAGE_SEEN = 180
+PAGE_GRACE = 20 * 1000
+_pages = {}
+
+
+def page_open(uid):
+    _pages[uid] = time.monotonic()
+    if len(_pages) > 1000:
+        _pages.clear()
+
+
+def page_lately(uid):
+    return time.monotonic() - _pages.get(uid, -1e9) < PAGE_SEEN
+
+
 async def due_reminders():
-    """Sends due reminders of profiles that have push switched on, then removes them."""
+    """Sends due reminders of profiles that have push switched on. Each one is taken off the list
+    first, so a reminder a device already played is never pushed, and a pushed one never rings again."""
     now = time.time() * 1000
     sent = 0
     for uid in profiles.user_ids():
         if not reachable(uid, private=False):
             continue
-        due = [x for x in profiles.reminders(uid) if x.get("due", 0) <= now]
-        for x in due:
+        by = now - (PAGE_GRACE if page_lately(uid) else 0)
+        for x in [x for x in profiles.reminders(uid) if x.get("due", 0) <= by]:
+            if not profiles.take_reminder(uid, x["id"], by):
+                continue   # a device played it in the meantime
             if now - x["due"] < 6 * 3600 * 1000:  # older ones (panel was off) are dropped quietly
                 sent += await send(uid, "⏰ " + x["text"], "Erinnerung", tag=x["id"], private=False)
-        if due:
-            profiles.remove_reminders(uid, [x["id"] for x in due])
     return sent
