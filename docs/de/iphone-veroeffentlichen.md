@@ -24,6 +24,18 @@ Drei Wege, vom einfachsten zum aufwendigsten. Alle brauchen das Apple Developer 
 
 Danach im Panel unter **Einstellungen → Funktionen → Push an die iPhone-App** die Art auf **„Produktion“** stellen: TestFlight- und App-Store-Builds nutzen Apples Produktions-Push. Direkt aus Xcode aufgespielt heißt es wieder „Entwicklung“.
 
+### Hochladen per GitHub-Knopf „TestFlight“
+
+Statt Archive und Distribute am Mac geht es auch auf GitHub. Der Knopf baut die App, lässt sie von Apple signieren und lädt sie zu TestFlight hoch. Er startet nur für einen Stand, dessen Tests grün sind. Die Build-Nummer zählt von selbst hoch.
+
+Einmalig:
+1. App Store Connect → **Benutzer und Zugriff → Integrationen → App Store Connect API → Team-Schlüssel**: einen Schlüssel mit Rolle **Admin** anlegen. Nur Admin darf Zertifikate für das Signieren holen. Hast du für die Texte schon einen App-Manager-Schlüssel, ersetze ihn durch diesen.
+2. GitHub → **Settings → Secrets and variables → Actions**: `ASC_KEY_ID`, `ASC_ISSUER_ID`, `ASC_KEY` (der ganze Inhalt der `.p8`-Datei) und neu `ASC_TEAM_ID` (developer.apple.com → Membership → Team ID).
+
+Dann: GitHub → **Actions → TestFlight → Run workflow**, Bundle-ID eintragen, **Run**. Nach 15 bis 30 Minuten ist der Build in App Store Connect unter TestFlight.
+
+Klappt es beim ersten Mal nicht, schick mir die rote Zeile aus dem Lauf.
+
 ## 3. TestFlight (Empfehlung für dich und die Familie)
 
 1. App Store Connect → **Benutzer und Zugriff**: Familienmitglieder mit ihrer Apple-ID einladen (Rolle z. B. „Marketing“ reicht).

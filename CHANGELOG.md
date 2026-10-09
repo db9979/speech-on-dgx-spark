@@ -2,6 +2,7 @@
 
 Every version in one line, newest first (taken from the commit messages, so some lines are German, some English). Older entries have no version number.
 
+- **V01.0.180** · 2026-10-09 · iPhone-App: GitHub-Knopf „TestFlight“ baut, signiert über Apple und lädt hoch (nur grün getestete Stände)
 - **V01.0.179** · 2026-10-09 · „Von selbst“-Meldungen werden nur auf einem Gerät gesprochen: das erste Gerät nimmt die Meldung auf dem Spark weg, andere Seiten und die iPhone-App bleiben still
 - **V01.0.178** · 2026-10-09 · iPhone-App: Version klein unten, Build-Nummer zählt beim Bauen von selbst hoch
 - **V01.0.177** · 2026-10-09 · iPhone-App: Spark-Update aus der App (aus, Rechte nur vom Admin): Hinweis bei neuer geprüfter Version, Start mit Face ID und MFA-Code
