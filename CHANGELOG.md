@@ -2,6 +2,7 @@
 
 Every version in one line, newest first (taken from the commit messages, so some lines are German, some English). Older entries have no version number.
 
+- **V01.0.211** · 2026-10-09 · Update → „Jetzt prüfen“ zeigt, dass gerade geprüft wird („Prüfe …“), und danach die Uhrzeit der Prüfung
 - **V01.0.210** · 2026-10-09 · Nur Text statt Sprache wird erklärt: hält der Browser den Ton zurück, sagt der Assistent „Einmal tippen“ und spricht danach; fällt die Sprachausgabe aus, steht der Grund als „chat: tts …“ im Diagnose-Log
 - **V01.0.209** · 2026-10-09 · Raum-Modus in der iPhone-App: Zeile „… hört zu bis …“ mit Beenden oben im Chat, Live-Aktivität mit Restzeit, Widget „Raum-Modus“, Siri „Raummodus beenden mit Spark“ (nur beenden, nie starten)
 - **V01.0.208** · 2026-10-09 · Raum-Modus sichtbar: grüner Streifen „… hört zu bis …“ auf jeder Seite, Ich → Raum-Modus „Gerade aktiv“ mit +30 Min./Beenden, Zustand „Hört gerade zu“ mit „Alle beenden“, Marke und Filter in Profile und Geräte, Tab-Titel „● Raum“, Erinnerungston, Mitteilung bei Start am Lautsprecher, Verlauf ohne Text, Schlüssel für Home Assistant

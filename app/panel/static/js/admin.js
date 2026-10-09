@@ -429,7 +429,11 @@ function updBanner(r){const on=ADMIN&&r&&r.behind&&r.behind!==0&&r.latest;let hi
 $('updbgo').onclick=()=>{$('updbanner').style.display='none';goSec('sys')};
 function updBadge(r){window.UPD=r;updBanner(r);zustand();if(CFG)glance();const on=r&&r.behind&&r.behind!==0;$('updbadge').style.display=on?'inline-block':'none';
   document.querySelectorAll('.subbadge').forEach(x=>x.style.display=on?'inline-block':'none')}
-$('updcheck').onclick=()=>loadSys(true);
+// "Jetzt prüfen": the button shows that it is working (asking GitHub takes a few seconds), then when it checked
+$('updcheck').onclick=async()=>{const b=$('updcheck');if(b.disabled)return;b.disabled=true;b.textContent=t('Prüfe …','Checking …');
+  $('updstate').innerHTML=`<span class="pill">${t('Prüfe auf GitHub …','Checking GitHub …')}</span>`;
+  try{await loadSys(true)}finally{b.disabled=false;b.textContent=t('Jetzt prüfen','Check now')}
+  if(!$('updstate').querySelector('.err'))$('updstate').insertAdjacentHTML('beforeend',` <span class="mut">${t('Geprüft um','Checked at')} ${esc(new Date().toLocaleTimeString())}</span>`)};
 let benchPoll=null;
 // how good each value is: levels and sentences come from bench.rate(), the page only shows them
 const BENCH_CLS={top:'ok',ok:'ok',warn:'warn',bad:'bad'};

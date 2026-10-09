@@ -31,6 +31,7 @@ All options for running without questions (`--mode api --asr 1.7b --tts 0.6b --y
 
 <!-- New version: add one line at the top here and in CHANGELOG.md, drop the oldest line here (keep 10). Details go to docs/de and docs/en, not into this README. -->
 
+- **V01.0.211** Update → "Check now" shows that it is checking ("Checking …") and afterwards the time of the check
 - **V01.0.210** Text instead of speech is explained: if the browser holds back sound, the assistant says "tap once" and speaks afterwards; if speech output fails, the reason shows as "chat: tts …" in the diagnosis log
 - **V01.0.209** Room mode in the iPhone app: line “… listens until …” with Stop at the top of the chat, Live Activity with time left, “Raum-Modus” widget, Siri “End room mode with Spark” (only ending, never starting)
 - **V01.0.208** Room mode visible: green strip “… listens until …” on every page, Me → Room mode “Active now” with +30 min/Stop, Status “Listening right now” with “Stop all”, mark and filter in Profiles and devices, “● Room” in the tab title, reminder tone, note when a speaker starts, history without text, key for Home Assistant
@@ -40,7 +41,6 @@ All options for running without questions (`--mode api --asr 1.7b --tts 0.6b --y
 - **V01.0.204** Answers without blank lines at the start and end (left over from Qwen's think block), paragraphs stay
 - **V01.0.203** Targeted tool choice in the panel: show the rules, try sentences, own words per group
 - **V01.0.202** Targeted tool choice: fixed rules sort questions into a group, the model sees only matching tools (switch, off); real reason when locked
-- **V01.0.201** iPhone app: envelope next to the input, "Ready?" view for messages, Siri "Message with Spark"
 
 All versions: [CHANGELOG.md](CHANGELOG.md)
 

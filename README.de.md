@@ -31,6 +31,7 @@ Alle Optionen ohne Rückfragen (`--mode api --asr 1.7b --tts 0.6b --yes` …) st
 
 <!-- New version: add one line at the top here and in CHANGELOG.md, drop the oldest line here (keep 10). Details go to docs/de and docs/en, not into this README. -->
 
+- **V01.0.211** Update → „Jetzt prüfen“ zeigt, dass gerade geprüft wird („Prüfe …“), und danach die Uhrzeit der Prüfung
 - **V01.0.210** Nur Text statt Sprache wird erklärt: hält der Browser den Ton zurück, sagt der Assistent „Einmal tippen“ und spricht danach; fällt die Sprachausgabe aus, steht der Grund als „chat: tts …“ im Diagnose-Log
 - **V01.0.209** Raum-Modus in der iPhone-App: Zeile „… hört zu bis …“ mit Beenden oben im Chat, Live-Aktivität mit Restzeit, Widget „Raum-Modus“, Siri „Raummodus beenden mit Spark“ (nur beenden, nie starten)
 - **V01.0.208** Raum-Modus sichtbar: grüner Streifen „… hört zu bis …“ auf jeder Seite, Ich → Raum-Modus „Gerade aktiv“ mit +30 Min./Beenden, Zustand „Hört gerade zu“ mit „Alle beenden“, Marke und Filter in Profile und Geräte, Tab-Titel „● Raum“, Erinnerungston, Mitteilung bei Start am Lautsprecher, Verlauf ohne Text, Schlüssel für Home Assistant
@@ -40,7 +41,6 @@ Alle Optionen ohne Rückfragen (`--mode api --asr 1.7b --tts 0.6b --yes` …) st
 - **V01.0.204** Antworten ohne Leerzeilen am Anfang und Ende (Reste des Qwen-Denkblocks), Absätze bleiben
 - **V01.0.203** Gezielte Werkzeugwahl im Panel: Regeln ansehen, Sätze ausprobieren, eigene Wörter pro Gruppe
 - **V01.0.202** Gezielte Werkzeugwahl: feste Regeln ordnen Fragen einer Gruppe zu, das Modell sieht nur passende Werkzeuge (Schalter, aus); echter Grund bei Sperren
-- **V01.0.201** iPhone-App: Umschlag neben dem Eingabefeld, Anzeige „Bereit?“ für Nachrichten, Siri „Nachricht mit Spark“
 
 Alle Versionen: [CHANGELOG.md](CHANGELOG.md)
 
