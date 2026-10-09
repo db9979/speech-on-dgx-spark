@@ -31,6 +31,7 @@ Alle Optionen ohne Rückfragen (`--mode api --asr 1.7b --tts 0.6b --yes` …) st
 
 <!-- New version: add one line at the top here and in CHANGELOG.md, drop the oldest line here (keep 10). Details go to docs/de and docs/en, not into this README. -->
 
+- **V01.0.160** iPhone-App hat ein neues Symbol: leuchtender Funke auf Nachtblau mit Schallwellen
 - **V01.0.159** iPhone-App: Push bei geschlossener App über Apple (aus, Admin-Schlüssel + Profil; Apple sieht nur „Neue Nachricht“, den Text holt die App vom Spark), CarPlay-Gespräch (wartet auf Apples Freigabe), Anleitung zum Veröffentlichen
 - **V01.0.158** Sprachmodell weg: fester Satz statt Stille (auch Lautsprecher, Uhr, iPhone); Antwortzeit bis zum ersten Ton unter Zustand → Prüfen mit Warnung, wenn deutlich langsamer; Funktionsprüfung prüft auch Werkzeugwahl und Websuche
 - **V01.0.157** Update nur auf Versionen, deren GitHub-Tests grün sind (Panel und update.sh; neuere rote oder laufende Änderungen nur als Hinweis; von Hand: update.sh --newest)
@@ -40,7 +41,6 @@ Alle Optionen ohne Rückfragen (`--mode api --asr 1.7b --tts 0.6b --yes` …) st
 - **V01.0.153** iPhone-App lebendig: Gesicht wie im Panel (Aussehen austauschbar), Freihändig und Ins-Wort-fallen, Weckwort auf dem iPhone ohne Internet, Ständer-Modus am Ladekabel, Erinnerungen als Mitteilung, Hinweise von selbst, Route und Anruf nur nach „Ja“ (neue Schalter im Panel, aus)
 - **V01.0.152** iPhone-App „Spark“ (aus, Admin + Profil): eigene SwiftUI-App in ios/, Kopplung per QR-Code oder Link, eigener Schlüssel pro iPhone, der nur fragen und hören darf, Antwort mit Spark-Stimme, „Hey Siri, Frag Spark“ über die App; Smart Home daraus nur mit eigenem Schalter
 - **V01.0.151** Update wartet bis zu 10 Minuten, wenn apt gerade belegt ist (z. B. automatische Updates), statt abzubrechen
-- **V01.0.150** Qualitätstest: Kalender-Fragen nennen „morgen“ und „Dienstag“ immer passend zum heutigen Tag (der feste 8.10. war ab dem 8.10. falsch)
 
 Alle Versionen: [CHANGELOG.md](CHANGELOG.md)
 
