@@ -94,6 +94,12 @@ def fake_llm():
                 yield _sse({"choices": [{"delta": {}, "finish_reason": "stop"}]})
                 yield "data: [DONE]\n\n"
                 return
+            if last["role"] == "user" and c.startswith("PAD "):  # Qwen: empty think block, blank lines around
+                for piece in ("<think>\n\n</think>", "\n\n", "\n", "Zeile eins.", "\n\n", "Zeile", " zwei.", "\n\n"):
+                    yield _sse({"choices": [{"delta": {"content": piece}, "finish_reason": None}]})
+                yield _sse({"choices": [{"delta": {}, "finish_reason": "stop"}]})
+                yield "data: [DONE]\n\n"
+                return
             if last["role"] == "user" and c.startswith("PRE "):  # words before the tool call
                 yield _sse({"choices": [{"delta": {"content": "Der Fernseher im"}, "finish_reason": None}]})
                 c = c[4:]

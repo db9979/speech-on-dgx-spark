@@ -1123,6 +1123,13 @@ class AnswerCheck(unittest.TestCase):
         self.assertIn("Genauere Angaben", said)
         self.assertEqual(quality.heard("Um 19:42 Uhr klingelt es.", ["Reminder set for 19:42: Tee"]), ("Um 19:42 Uhr klingelt es.", []))
 
+    def test_no_blank_lines_around_the_answer(self):
+        # Qwen opens with blank lines (after an empty think block) and may end with some: never shown,
+        # the paragraph inside stays
+        self.assertEqual(answer(ask(profile("Leer"), "PAD Hallo")), "Zeile eins.\n\nZeile zwei.")
+        st = {"ws": "", "lead": True, "shown": 5}
+        self.assertEqual([chat.trim_piece(x, st) for x in ("\n\n", "Weiter", " ", "so.\n")], ["", " Weiter", "", " so."])
+
     def test_chat_asks_again_and_holds_back(self):
         a = profile("Prüfer")
         helpers.set_config(answer_check=True, tool_temperature=0.1)

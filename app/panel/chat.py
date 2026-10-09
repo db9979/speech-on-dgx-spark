@@ -105,6 +105,28 @@ def split_sentences(buf, first):
     return out, rest
 
 
+def trim_piece(text, st):
+    """One streamed piece of the answer without blank lines at its start or end. Qwen often opens
+    with "\n\n" (left over from an empty think block) and may close with one: the start of each
+    LLM round loses its whitespace (a single space instead, if something is shown already), and
+    whitespace at the end of a piece waits in st["ws"] until more text follows, so it never ends
+    the answer. Line breaks inside the answer stay."""
+    text = st["ws"] + text
+    st["ws"] = ""
+    if st["lead"]:
+        rest = text.lstrip()
+        if not rest:
+            st["ws"] = text
+            return ""
+        st["lead"] = False
+        if rest != text and st["shown"]:
+            rest = " " + rest
+        text = rest
+    body = text.rstrip()
+    st["ws"] = text[len(body):]
+    return body
+
+
 _llm_models = {}
 
 
@@ -1299,7 +1321,7 @@ async def _answer(request, turn):
         """Streams one LLM call: text goes to the browser and, sentence by sentence, to TTS.
         Returns (finish_reason, tool calls)."""
         finish, calls = None, {}
-        st["xml"] = False
+        st["xml"], st["lead"], st["ws"] = False, True, ""
         async with c.stream("POST", ccfg["llm_url"].rstrip("/") + "/chat/completions",
                             json=payload, headers=lheaders) as r:
             if r.status_code != 200:
@@ -1336,12 +1358,19 @@ async def _answer(request, turn):
                 if not text:
                     continue
                 # models that think inline: drop <think>...</think> from what is spoken
-                if "<think>" in text:
-                    st["think"], text = True, text.split("<think>")[0]
-                if st["think"]:
-                    if "</think>" not in text:
-                        continue
-                    st["think"], text = False, text.split("</think>", 1)[1]
+                # (both tags may come in one piece: "<think>\n\n</think>")
+                kept = ""
+                while text:
+                    if st["think"]:
+                        if "</think>" not in text:
+                            break
+                        st["think"], text = False, text.split("</think>", 1)[1]
+                    else:
+                        before, tag, text = text.partition("<think>")
+                        kept, st["think"] = kept + before, bool(tag)
+                text = trim_piece(kept, st)
+                if not text:
+                    continue
                 if st["n"] == 0:
                     await out.put({"type": "timing", "llm_first_token": round(time.time() - t0, 3)})
                 st["n"] += 1

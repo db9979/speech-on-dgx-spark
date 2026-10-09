@@ -31,6 +31,7 @@ Alle Optionen ohne Rückfragen (`--mode api --asr 1.7b --tts 0.6b --yes` …) st
 
 <!-- New version: add one line at the top here and in CHANGELOG.md, drop the oldest line here (keep 10). Details go to docs/de and docs/en, not into this README. -->
 
+- **V01.0.204** Antworten ohne Leerzeilen am Anfang und Ende (Reste des Qwen-Denkblocks), Absätze bleiben
 - **V01.0.203** Gezielte Werkzeugwahl im Panel: Regeln ansehen, Sätze ausprobieren, eigene Wörter pro Gruppe
 - **V01.0.202** Gezielte Werkzeugwahl: feste Regeln ordnen Fragen einer Gruppe zu, das Modell sieht nur passende Werkzeuge (Schalter, aus); echter Grund bei Sperren
 - **V01.0.201** iPhone-App: Umschlag neben dem Eingabefeld, Anzeige „Bereit?“ für Nachrichten, Siri „Nachricht mit Spark“
@@ -40,7 +41,6 @@ Alle Optionen ohne Rückfragen (`--mode api --asr 1.7b --tts 0.6b --yes` …) st
 - **V01.0.197** Im Admin-Menü eingeschaltete Funktionen erscheinen nach dem Speichern sofort (Seite lädt selbst neu), API-Antworten werden nie zwischengespeichert; Selbsttest gegen Skript-/CSS-Links ohne Version
 - **V01.0.196** Nachrichten: Schreiben geht auch nach einer Web-/Mail-Antwort, sonst nennt der Assistent den echten Grund
 - **V01.0.195** iPhone-App: Nachrichten an andere Profile (Liste, Schreiben, Antworten direkt aus der Mitteilung)
-- **V01.0.194** Websuche nach einer Mail-Antwort nur noch bei Nachfragen zur Mail gesperrt; jede andere Frage lässt die Mail-Antwort weg und sucht
 
 Alle Versionen: [CHANGELOG.md](CHANGELOG.md)
 
