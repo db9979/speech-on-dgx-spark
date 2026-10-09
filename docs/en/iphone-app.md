@@ -68,6 +68,13 @@ In the app under Settings → **My profile** you set the same values as in the p
 - **By itself:** on/off, quiet time, at most so many notes a day, appointments with lead time, weather with place and time, parcels, birthdays, bus and train, greeting, mails, morning briefing with time. Shown only when the admin has "By itself" on. Topics whose service is off in the profile are greyed out.
 - **What the app may do:** shown only. Change it in the panel under Me → iPhone app.
 
+## Reminders, sharing, Shortcuts
+
+- **Apple Reminders:** With "Apple Reminders on the iPhone" (Me → iPhone app, off) the app asks after each Spark reminder "… also put into the Reminders app?". After "yes" it is in the list "Spark", without its own alarm (the Spark rings already). When the Spark cancels a reminder it goes there too. New shopping and to-do entries come into the lists "Shopping" and "To-dos" when the app opens (each entry once). A list kept in a CalDAV account stays there.
+- **Share → Spark:** In Safari, Mail, Files or Photos tap Share → Spark. Text, web page (the iPhone loads it itself), PDF or photo: the iPhone reads the text, then you ask about it or store it under "My documents" (with the documents switch). The answer can be shared, e.g. as a note.
+- **Shortcuts:** The Shortcuts app gets "Ask Spark", "Reminder at the Spark", "Add to a Spark list" and "Store a document at the Spark". Lists need the reminders switch, documents the documents switch.
+- **Notes:** Apple does not let apps write into Notes directly. Two ways: long-press an answer in the app → "Share (e.g. as a note)", or a shortcut of "Ask Spark" plus Apple's "Create Note".
+
 ## Push notifications with the app closed
 
 Needs the Apple Developer Program. Once:
@@ -101,6 +108,8 @@ Step by step (TestFlight, App Store): [iphone-publishing.md](iphone-publishing.m
 - Photos and documents: the iPhone reads the text, only text goes to the Spark (at most 20,000 characters per question). The Spark treats it as outside text: it sits as data in the prompt, not in the conversation, and locks actions as after a mail. The history keeps only the attachment's name.
 - Storing documents only with its own switch, only with the app key, at most 10 per minute and 3 MB. The app cannot list or delete the documents.
 - "My profile" changes only a fixed list (voice, speed, length, by itself, morning briefing). The app's rights, Telegram, the smart home and the tone cannot be changed through it; a request with any other field is refused as a whole.
+- Apple Reminders: only with its own switch, only after "yes" on the iPhone. The app reads nothing from Reminders for the Spark. Shortcuts may only add entries to the lists; list settings stay in the panel.
+- Sharing: shared content is outside text (locks actions), at most 20,000 characters per question; the iPhone loads web pages itself, at most 3 MB.
 - Waiting questions stay on the iPhone and are deleted when unpairing.
 - CarPlay never loosens anything: in the car the smart home is locked without its own car switch.
 - Pairing only from the profile's own browser login, with the second login step when the profile has it. At most 5 iPhones per profile.

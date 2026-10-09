@@ -1,6 +1,16 @@
 {
   "sourceLanguage": "de",
   "strings": {
+    "${applicationName} Einkaufsliste": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "${applicationName} shopping list"
+          }
+        }
+      }
+    },
     "${applicationName} fragen": {
       "localizations": {
         "en": {
@@ -27,6 +37,16 @@
           "stringUnit": {
             "state": "translated",
             "value": "Ask ${applicationName}"
+          }
+        }
+      }
+    },
+    "Mit ${applicationName} auf die Liste": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Add to the list with ${applicationName}"
           }
         }
       }

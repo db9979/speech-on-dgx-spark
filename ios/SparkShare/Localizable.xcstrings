@@ -1,0 +1,296 @@
+{
+  "sourceLanguage": "de",
+  "strings": {
+    "%lld Zeichen": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "%lld characters"
+          }
+        }
+      }
+    },
+    "An Spark": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "To Spark"
+          }
+        }
+      }
+    },
+    "Antwort": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Answer"
+          }
+        }
+      }
+    },
+    "Auf dem Bild habe ich keinen Text gefunden.": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "I found no text in the picture."
+          }
+        }
+      }
+    },
+    "Auf der Seite habe ich keinen Text gefunden.": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "I found no text on the page."
+          }
+        }
+      }
+    },
+    "Damit kann der Spark nichts anfangen.": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "The Spark cannot do anything with this."
+          }
+        }
+      }
+    },
+    "Der Spark hat keinen Schlüssel geschickt.": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "The Spark sent no key."
+          }
+        }
+      }
+    },
+    "Der Spark ist gerade ausgelastet. Bitte gleich noch einmal.": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "The Spark is busy right now. Please try again in a moment."
+          }
+        }
+      }
+    },
+    "Der Spark nimmt dieses iPhone nicht an. Im Panel unter Ich → iPhone-App prüfen, ob die App an ist, sonst neu koppeln.": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "The Spark does not accept this iPhone. Check in the panel under Me → iPhone app that the app is on, otherwise pair again."
+          }
+        }
+      }
+    },
+    "Die Datei ist zu groß (höchstens 20 MB).": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "The file is too big (20 MB at most)."
+          }
+        }
+      }
+    },
+    "Die Datei kann ich nicht lesen.": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "I cannot read the file."
+          }
+        }
+      }
+    },
+    "Die Seite antwortet nicht.": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "The page does not answer."
+          }
+        }
+      }
+    },
+    "Die Spracherkennung oder das Sprachmodell läuft gerade nicht.": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Speech recognition or the language model is not running right now."
+          }
+        }
+      }
+    },
+    "Erst die Spark-App öffnen und koppeln.": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Open and pair the Spark app first."
+          }
+        }
+      }
+    },
+    "Fass das kurz zusammen.": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Summarise this briefly."
+          }
+        }
+      }
+    },
+    "Fehler %lld vom Spark.": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Error %lld from the Spark."
+          }
+        }
+      }
+    },
+    "Fehler beim Spark.": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Error at the Spark."
+          }
+        }
+      }
+    },
+    "Fertig": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Done"
+          }
+        }
+      }
+    },
+    "Foto": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Photo"
+          }
+        }
+      }
+    },
+    "Frage": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Question"
+          }
+        }
+      }
+    },
+    "Fragen": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Ask"
+          }
+        }
+      }
+    },
+    "In dem Dokument habe ich keinen Text gefunden.": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "I found no text in the document."
+          }
+        }
+      }
+    },
+    "In „Meine Dokumente“ speichern": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Save to “My documents”"
+          }
+        }
+      }
+    },
+    "Keine Antwort vom Spark.": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "No answer from the Spark."
+          }
+        }
+      }
+    },
+    "Kopieren": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Copy"
+          }
+        }
+      }
+    },
+    "Lese den Text …": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Reading the text …"
+          }
+        }
+      }
+    },
+    "Teilen (z. B. als Notiz)": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Share (e.g. as a note)"
+          }
+        }
+      }
+    },
+    "Text": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Text"
+          }
+        }
+      }
+    },
+    "Unter „Meine Dokumente“ gespeichert. Der Spark findet es auch später.": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Saved under “My documents”. The Spark finds it later too."
+          }
+        }
+      }
+    }
+  },
+  "version": "1.0"
+}

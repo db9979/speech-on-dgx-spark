@@ -112,7 +112,7 @@ class IPhone(unittest.TestCase):
         self.assertIn(app.get("/api/profile/facts", headers=h).status_code, (401, 404))
         self.assertEqual(app.get("/api/profile/iphone", headers=h).status_code, 401)
         self.assertEqual(app.post("/api/profile/iphone/pair", json={"base": BASE}, headers=h).status_code, 401)
-        self.assertEqual(app.get("/api/tasks/inbox?list=einkauf", headers=h).status_code, 401)
+        self.assertIn(app.get("/api/tasks/inbox?list=einkauf", headers=h).status_code, (401, 403))   # only with app_ios
         # switched off: the key stops at once (profile switch, then admin switch)
         a.put("/api/profile/settings", json={"app_on": False})
         self.assertEqual(app.get("/api/iphone/hello", headers=h).status_code, 401)
@@ -319,6 +319,32 @@ class IPhone(unittest.TestCase):
         b.put("/api/profile/settings", json={"app_on": True})
         hb = {"X-Speech-Device": pair(b).json()["token"]}
         self.assertNotEqual(app.get("/api/iphone/settings", headers=hb).json()["settings"]["voice"], "Anna")
+
+    def test_lists_reach_the_app_only_with_its_switch(self):
+        a = profile("Ilsa")
+        helpers.set_config(tasks=True)
+        try:
+            a.put("/api/profile/settings", json={"app_on": True, "tasks_on": True})
+            h = {"X-Speech-Device": pair(a).json()["token"]}
+            app = TestClient(panel.app)
+            self.assertEqual(a.post("/api/profile/tasks/einkauf", json={"text": "Milch"}).status_code, 200)
+            # switch off: the app neither takes entries nor adds any
+            self.assertFalse(app.get("/api/iphone/hello", headers=h).json()["ios"])
+            self.assertEqual(app.post("/api/tasks/inbox?list=einkauf&format=json", headers=h).status_code, 403)
+            self.assertEqual(app.post("/api/profile/tasks/einkauf", json={"text": "Brot"}, headers=h).status_code, 403)
+            a.put("/api/profile/settings", json={"app_ios": True})
+            self.assertTrue(app.get("/api/iphone/hello", headers=h).json()["ios"])
+            r = app.post("/api/tasks/inbox?list=einkauf&format=json", headers=h)
+            self.assertEqual(r.json()["items"], ["Milch"])
+            self.assertEqual(app.post("/api/tasks/inbox?list=einkauf&format=json", headers=h).json()["items"], [])  # handed over once
+            self.assertEqual(app.post("/api/profile/tasks/einkauf", json={"text": "Brot"}, headers=h).status_code, 200)
+            big = b'{"text": "' + b"x" * 9000 + b'"}'
+            self.assertEqual(app.post("/api/profile/tasks/einkauf", content=big,
+                                      headers=dict(h, **{"Content-Type": "application/json"})).status_code, 413)
+            # still no settings of the lists themselves
+            self.assertEqual(app.put("/api/profile/tasks/target", json={"list": "einkauf"}, headers=h).status_code, 401)
+        finally:
+            helpers.set_config(tasks=False)
 
     def test_pair_is_rate_limited(self):
         app = TestClient(panel.app)

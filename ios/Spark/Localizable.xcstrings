@@ -81,6 +81,16 @@
         }
       }
     },
+    "Abgelegt.": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Stored."
+          }
+        }
+      }
+    },
     "Am Akku": {
       "localizations": {
         "en": {
@@ -167,6 +177,36 @@
           "stringUnit": {
             "state": "translated",
             "value": "I found no text in the picture."
+          }
+        }
+      }
+    },
+    "Auf die Liste": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Add to the list"
+          }
+        }
+      }
+    },
+    "Auf die Liste beim Spark": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Add to a Spark list"
+          }
+        }
+      }
+    },
+    "Aufgaben": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "To-dos"
           }
         }
       }
@@ -271,6 +311,16 @@
         }
       }
     },
+    "Datei": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "File"
+          }
+        }
+      }
+    },
     "Dauerhaft zuhören": {
       "localizations": {
         "en": {
@@ -287,6 +337,16 @@
           "stringUnit": {
             "state": "translated",
             "value": "Thinking …"
+          }
+        }
+      }
+    },
+    "Der Spark erinnert dich, mit Push und auf allen Geräten.": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "The Spark reminds you, with push and on all devices."
           }
         }
       }
@@ -331,6 +391,16 @@
         }
       }
     },
+    "Die App darf nicht in Erinnerungen schreiben. Einstellungen → Spark → Erinnerungen.": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "The app may not write to Reminders. Settings → Spark → Reminders."
+          }
+        }
+      }
+    },
     "Die App ist noch nicht mit dem Spark gekoppelt.": {
       "localizations": {
         "en": {
@@ -357,6 +427,16 @@
           "stringUnit": {
             "state": "translated",
             "value": "I cannot read the file."
+          }
+        }
+      }
+    },
+    "Die Erinnerungen-App hat kein Konto für neue Listen.": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "The Reminders app has no account for new lists."
           }
         }
       }
@@ -421,6 +501,16 @@
         }
       }
     },
+    "Dokument beim Spark ablegen": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Store a document at the Spark"
+          }
+        }
+      }
+    },
     "Dokumente ablegen": {
       "localizations": {
         "en": {
@@ -441,6 +531,26 @@
         }
       }
     },
+    "Einkauf": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Shopping"
+          }
+        }
+      }
+    },
+    "Einkaufsliste": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Shopping list"
+          }
+        }
+      }
+    },
     "Einstellungen": {
       "localizations": {
         "en": {
@@ -457,6 +567,26 @@
           "stringUnit": {
             "state": "translated",
             "value": "Unpair"
+          }
+        }
+      }
+    },
+    "Erinnere mich %@": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Remind me %@"
+          }
+        }
+      }
+    },
+    "Erinnerung beim Spark": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Reminder at the Spark"
           }
         }
       }
@@ -771,6 +901,16 @@
         }
       }
     },
+    "In der Erinnerungen-App eingetragen (Liste „Spark“).": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Put into the Reminders app (list “Spark”)."
+          }
+        }
+      }
+    },
     "In „Meine Dokumente“ speichern": {
       "localizations": {
         "en": {
@@ -831,6 +971,16 @@
         }
       }
     },
+    "Kopieren": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Copy"
+          }
+        }
+      }
+    },
     "Koppeln": {
       "localizations": {
         "en": {
@@ -867,6 +1017,26 @@
           "stringUnit": {
             "state": "translated",
             "value": "Reading the text …"
+          }
+        }
+      }
+    },
+    "Liest den Text einer Datei auf dem iPhone und legt ihn unter „Meine Dokumente“ ab.": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Reads the text of a file on the iPhone and stores it under “My documents”."
+          }
+        }
+      }
+    },
+    "Liste": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "List"
           }
         }
       }
@@ -1151,6 +1321,16 @@
         }
       }
     },
+    "Setzt etwas auf die Einkaufsliste oder die Aufgaben des Spark. Mehreres mit Komma trennen.": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Puts something on the Spark’s shopping list or to-dos. Separate several with commas."
+          }
+        }
+      }
+    },
     "Smart Home": {
       "localizations": {
         "en": {
@@ -1281,6 +1461,16 @@
         }
       }
     },
+    "Steht drauf.": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "It is on the list."
+          }
+        }
+      }
+    },
     "Stellt dem Spark eine Frage und liest die Antwort vor.": {
       "localizations": {
         "en": {
@@ -1317,6 +1507,16 @@
           "stringUnit": {
             "state": "translated",
             "value": "Stand mode on the charger"
+          }
+        }
+      }
+    },
+    "Teilen (z. B. als Notiz)": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Share (e.g. as a note)"
           }
         }
       }
@@ -1421,6 +1621,16 @@
         }
       }
     },
+    "Was": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "What"
+          }
+        }
+      }
+    },
     "Was die App darf": {
       "localizations": {
         "en": {
@@ -1447,6 +1657,16 @@
           "stringUnit": {
             "state": "translated",
             "value": "What would you like to know?"
+          }
+        }
+      }
+    },
+    "Was soll auf die Liste?": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "What should go on the list?"
           }
         }
       }
@@ -1491,6 +1711,26 @@
         }
       }
     },
+    "Woran soll ich dich wann erinnern?": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "What should I remind you of, and when?"
+          }
+        }
+      }
+    },
+    "Woran und wann": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "What and when"
+          }
+        }
+      }
+    },
     "Wort": {
       "localizations": {
         "en": {
@@ -1527,6 +1767,16 @@
           "stringUnit": {
             "state": "translated",
             "value": "Opens the app and listens at once."
+          }
+        }
+      }
+    },
+    "„%@“ auch in die Erinnerungen-App eintragen?": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Also put “%@” into the Reminders app?"
           }
         }
       }

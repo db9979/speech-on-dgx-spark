@@ -267,7 +267,9 @@ APP_PATHS = ("/api/chat", "/api/test/asr", "/api/siri/ask", "/api/iphone/hello",
              "/api/profile/convos",   # the conversations, the same list as in the panel
              "/api/iphone/doc",       # a document's text into the profile's documents (app_docs)
              "/api/iphone/settings",  # the profile's own voice, answers and "Von selbst" (iphone.APP_FIELDS only)
-             "/api/assistant/voices")  # the voice names to choose from
+             "/api/assistant/voices",  # the voice names to choose from
+             # Apple Reminders on the iPhone (app_ios): new list entries to the iPhone, adding from Shortcuts
+             "/api/tasks/inbox", "/api/profile/tasks/einkauf", "/api/profile/tasks/aufgaben")
 APP_GATE = [lambda uid: False]
 
 
@@ -391,6 +393,7 @@ SETTINGS = {
     "app_push": (False, lambda v: isinstance(v, bool)),     # notes as Apple push to the closed app (apns.py)
     "app_car_ha": (False, lambda v: isinstance(v, bool)),   # smart home from CarPlay
     "app_docs": (False, lambda v: isinstance(v, bool)),     # documents from the app into "Meine Dokumente"
+    "app_ios": (False, lambda v: isinstance(v, bool)),      # Apple Reminders and the lists on the iPhone (tasks.py)
 }
 
 

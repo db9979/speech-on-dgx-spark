@@ -69,6 +69,13 @@ In der App unter Einstellungen → **Mein Profil** stellst du dieselben Werte ei
 - **Von selbst:** an/aus, Ruhezeit, höchstens so viele Hinweise am Tag, Termine mit Vorlauf, Wetter mit Ort und Uhrzeit, Pakete, Geburtstage, Bus und Bahn, Begrüßung, Mails, Morgenrunde mit Uhrzeit. Erscheint nur, wenn der Admin „Von selbst“ eingeschaltet hat. Themen, deren Dienst im Profil aus ist, sind ausgegraut.
 - **Was die App darf:** nur Anzeige. Ändern im Panel unter Ich → iPhone-App.
 
+## Erinnerungen, Teilen, Kurzbefehle
+
+- **Apple Erinnerungen:** Mit dem Schalter „Apple Erinnerungen auf dem iPhone“ (Ich → iPhone-App, aus) fragt die App nach jeder Erinnerung des Spark „… auch in die Erinnerungen-App eintragen?“. Nach „Ja“ steht sie in der Liste „Spark“, ohne eigenen Alarm (der Spark klingelt schon). Sagt der Spark eine Erinnerung ab, verschwindet sie dort auch. Neue Einträge der Einkaufs- und Aufgabenliste holt die App beim Öffnen in die Listen „Einkauf“ und „Aufgaben“ (jeder Eintrag einmal). Liegt eine Liste in einem CalDAV-Konto, bleibt sie dort.
+- **Teilen → Spark:** In Safari, Mail, Dateien oder Fotos auf Teilen → Spark. Text, Webseite (die lädt das iPhone selbst), PDF oder Foto: Das iPhone liest den Text, dann fragst du dazu („Fass das kurz zusammen“) oder legst ihn unter „Meine Dokumente“ ab (mit dem Dokumente-Schalter). Die Antwort lässt sich teilen, z. B. als Notiz.
+- **Kurzbefehle:** In der Kurzbefehle-App gibt es „Spark fragen“, „Erinnerung beim Spark“, „Auf die Liste beim Spark“ und „Dokument beim Spark ablegen“. Für die Liste braucht es den Erinnerungen-Schalter, für Dokumente den Dokumente-Schalter.
+- **Notizen:** Apple lässt Apps nicht direkt in die Notizen-App schreiben. Zwei Wege: eine Antwort in der App lange drücken → „Teilen (z. B. als Notiz)“, oder ein Kurzbefehl aus „Spark fragen“ und Apples „Notiz erstellen“ (die Antwort von „Spark fragen“ als Text der Notiz).
+
 ## Push-Meldungen bei geschlossener App
 
 Braucht das Apple Developer Program. Einmalig:
@@ -115,6 +122,8 @@ Schritt für Schritt (TestFlight für dich und die Familie, App Store): [iphone-
 - Fotos und Dokumente: Den Text liest das iPhone, an den Spark geht nur Text (höchstens 20 000 Zeichen pro Frage). Der Spark behandelt ihn wie Text von außen: Er steht als Daten im Prompt, nicht im Gespräch, und sperrt Aktionen wie nach einer Mail. Im Verlauf steht nur der Name des Anhangs.
 - Dokumente ablegen nur mit eigenem Schalter, nur mit dem App-Schlüssel, höchstens 10 pro Minute und 3 MB. Lesen oder löschen kann die App die Dokumente nicht.
 - „Mein Profil“ ändert nur eine feste Liste (Stimme, Tempo, Länge, Von selbst, Morgenrunde). Rechte der App, Telegram, Smart Home und der Ton lassen sich darüber nicht ändern; eine Anfrage mit einem anderen Feld wird ganz abgelehnt.
+- Apple Erinnerungen: nur mit eigenem Schalter, nur nach „Ja“ auf dem iPhone. Aus den Erinnerungen liest die App nichts für den Spark. Kurzbefehle dürfen nur Einträge auf die Listen setzen, die Listen-Einstellungen bleiben im Panel.
+- Teilen: Der geteilte Inhalt ist Text von außen (sperrt Aktionen), höchstens 20 000 Zeichen pro Frage; Webseiten lädt das iPhone selbst, höchstens 3 MB.
 - Wartende Fragen liegen nur auf dem iPhone und werden beim Entkoppeln gelöscht.
 - CarPlay macht nichts lockerer: Im Auto ist Smart Home ohne den eigenen Auto-Schalter gesperrt, auch wenn die App es sonst darf.
 - Koppeln nur aus der eigenen Browser-Anmeldung, mit dem zweiten Anmeldeschritt, wenn das Profil ihn hat. Höchstens 5 iPhones pro Profil.
@@ -137,6 +146,7 @@ Schritt für Schritt (TestFlight für dich und die Familie, App Store): [iphone-
 | `GET/PUT /api/profile/convos` | App: Verlauf lesen und das laufende Gespräch speichern (Löschen nur im Panel) |
 | `GET/PUT /api/iphone/settings` | App: „Mein Profil“, nur die Felder aus `iphone.APP_FIELDS` |
 | `GET /api/assistant/voices` | App: Stimmen zur Auswahl |
+| `POST /api/tasks/inbox`, `POST /api/profile/tasks/einkauf|aufgaben` | App: neue Listeneinträge holen, Einträge aus Kurzbefehlen setzen (nur mit `app_ios`) |
 | `POST /api/iphone/doc` | App: Text eines Dokuments in „Meine Dokumente“ (nur mit `app_docs`) |
 | `GET/PUT/DELETE /api/admin/apns` | Admin: Apple-Schlüssel (PUT und DELETE mit zweitem Schritt) |
 

@@ -26,7 +26,9 @@ jobs:
       - name: Build for the simulator
         working-directory: ios
         run: |
-          set -o pipefail
+          # the whole log is long: on failure show every error line, else the end
           xcodebuild -project Spark.xcodeproj -scheme Spark -configuration Debug \
             -sdk iphonesimulator -destination "generic/platform=iOS Simulator" \
-            CODE_SIGNING_ALLOWED=NO build | tail -n 80
+            CODE_SIGNING_ALLOWED=NO build > build.log 2>&1 \
+            || { grep -E "error:|\*\* BUILD" build.log | sort -u | head -80; exit 1; }
+          tail -n 30 build.log

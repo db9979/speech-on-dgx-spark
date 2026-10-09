@@ -73,6 +73,8 @@ final class AppState: ObservableObject {
 
     func unpair() {
         Store.forget()
+        Outbox.clear()
+        AppleReminders.forget()
         paired = false
         profile = ""
     }

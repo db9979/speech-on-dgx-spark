@@ -454,11 +454,19 @@ async def set_target(request: Request, prof=Depends(browser_profile)):   # a set
     return await get_lists(prof)
 
 
+def _app_ios(request, uid):
+    """The iPhone app's key reaches the lists only with the profile's app_ios switch."""
+    if profiles.key_scope(request) == "app" and not profiles.settings(uid).get("app_ios"):
+        raise HTTPException(403, "Apple Reminders from the app are off (Ich -> iPhone-App)")
+
+
 @router.post("/api/profile/tasks/{lst}")
 async def add_items(lst: str, request: Request, prof=Depends(_on)):
     if lst not in LISTS:
         raise HTTPException(400, "unknown list")
-    text = str((await request.json() or {}).get("text", ""))
+    _app_ios(request, prof["id"])
+    import iphone
+    text = str((await iphone._json(request, 8192)).get("text", ""))
     try:
         await add(prof["id"], lst, [x for x in re.split(r"[,\n]", text)])
     except (httpx.HTTPError, ValueError) as e:
@@ -500,6 +508,7 @@ def _inbox(request, list, take, format):
         raise HTTPException(401, "no profile")
     if not usable(prof["id"]):
         raise HTTPException(403, "tasks are turned off")
+    _app_ios(request, prof["id"])
     lst = list if list in LISTS else which(list)
     if _load(prof["id"])["targets"].get(lst):
         raise HTTPException(409, "this list lives in a CalDAV task list, not on the Spark")

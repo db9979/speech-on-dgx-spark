@@ -155,6 +155,7 @@ final class Conversation: ObservableObject {
         // Apple push: the Spark reaches the closed app; reminders then come from there, not as local alarms
         if allowed.push, await Alarms.allow() { UIApplication.shared.registerForRemoteNotifications() }
         await syncAlarms()
+        if allowed.ios { await AppleReminders.syncLists() }
         if allowed.proactive && Prefs.speakNotes, let api = SparkAPI.current, let n = try? await api.greet() { notes.append(n) }
         if phase == .idle || phase == .waiting { base() }
         if wantListen { wantListen = false; listenNow() }
@@ -180,6 +181,7 @@ final class Conversation: ObservableObject {
         if foreground {
             lastActivity = Date()
             if unreachable { Task { await check() } }
+            if allowed.ios && started { Task { await AppleReminders.syncLists() } }
             if phase == .idle || phase == .waiting { base() }
         } else if !canWake && !inCar {
             // no listening in the background unless the wake word is on
@@ -456,8 +458,13 @@ final class Conversation: ObservableObject {
                     phase = .speaking
                 case .mark(let m): edit { $0.mark = $0.mark == "mail" ? "mail" : m }
                 case .error(let e): error = e
-                case .reminderSet(let r): if !allowed.push { Task { await Alarms.add(r) } }
-                case .reminderCancel(let ids): Alarms.remove(ids)
+                case .reminderSet(let r):
+                    if !allowed.push { Task { await Alarms.add(r) } }
+                    // Apple's Reminders only after "Ja" (offered after the answer, like a route)
+                    if allowed.ios && offer == nil { offer = PhoneAction.remindOffer(r) }
+                case .reminderCancel(let ids):
+                    Alarms.remove(ids)
+                    AppleReminders.remove(ids)
                 case .action(let kind, let target): Task { await propose(kind, target) }
                 }
             }

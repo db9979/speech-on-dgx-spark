@@ -362,11 +362,17 @@ struct Bubble: View {
                 if let label = message.label { Text(verbatim: label).font(.footnote).opacity(0.85) }
                 Text(verbatim: message.text.isEmpty ? "…" : message.text)
             }
-                .textSelection(.enabled)
                 .padding(10)
                 .background(mine ? Color.accentColor.opacity(0.85) : Color(.secondarySystemBackground))
                 .foregroundStyle(mine ? .white : .primary)
                 .clipShape(RoundedRectangle(cornerRadius: 14))
+                .contextMenu {
+                    if !message.text.isEmpty {
+                        Button { UIPasteboard.general.string = message.text } label: { Label("Kopieren", systemImage: "doc.on.doc") }
+                        // "Als Notiz teilen": Notes, Mail, Messages ... from the share sheet
+                        ShareLink(item: message.text) { Label("Teilen (z. B. als Notiz)", systemImage: "square.and.arrow.up") }
+                    }
+                }
             if !mine { Spacer(minLength: 40) }
         }
     }

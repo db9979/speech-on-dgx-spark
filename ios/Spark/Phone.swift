@@ -60,7 +60,13 @@ enum PhoneAction {
     struct Offer: Identifiable {
         let id = UUID()
         let question: String
-        let url: URL
+        var url: URL?
+        /// a Spark reminder to put into Apple's Reminders app
+        var remind: Reminder?
+    }
+
+    static func remindOffer(_ r: Reminder) -> Offer {
+        Offer(question: String(localized: "„\(r.text)“ auch in die Erinnerungen-App eintragen?"), url: nil, remind: r)
     }
 
     static func offer(kind: String, target: String) async -> (Offer?, String?) {
@@ -97,6 +103,13 @@ enum PhoneAction {
 
     @MainActor
     static func run(_ offer: Offer) {
-        UIApplication.shared.open(offer.url)
+        if let r = offer.remind {
+            Task {
+                do { try await AppleReminders.add(r); Conversation.shared.notice = String(localized: "In der Erinnerungen-App eingetragen (Liste „Spark“).") }
+                catch { Conversation.shared.error = error.localizedDescription }
+            }
+        } else if let url = offer.url {
+            UIApplication.shared.open(url)
+        }
     }
 }

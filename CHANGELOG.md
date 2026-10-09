@@ -2,6 +2,7 @@
 
 Every version in one line, newest first (taken from the commit messages, so some lines are German, some English). Older entries have no version number.
 
+- **V01.0.165** · 2026-10-09 · iPhone-App: Apple Erinnerungen nach „Ja“ und Einkaufsliste in die Erinnerungen-App (aus, Profilschalter), Teilen → Spark aus jeder App, Kurzbefehle-Bausteine, Antworten als Notiz teilen
 - **V01.0.164** · 2026-10-09 · Qualitätstest kompakter: nur Fragen mit Befund stehen offen (eine Zeile, Antwort zum Aufklappen), der Rest ist zugeklappt; während des Tests ein Fortschrittsbalken mit „Frage 15 von 36 · noch etwa 2 min“
 - **V01.0.163** · 2026-10-09 · Leistung messen sagt zu jedem Wert, wie gut er ist (sehr gut, gut, knapp, zu langsam, mit einem Satz dazu), oben ein Gesamturteil, neu „Richtig verstanden“ in Prozent und der Vergleich mit der letzten Messung
 - **V01.0.162** · 2026-10-09 · iPhone-App: „Mein Profil“ mit Stimme, Antwortlänge, Von selbst und Morgenrunde; Rechte der App und Ton nur angezeigt (Spark ändert nur eine feste Liste)

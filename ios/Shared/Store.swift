@@ -10,7 +10,8 @@ enum Store {
     private static let defaults = UserDefaults.standard
 
     static var baseURL: URL? {
-        get { defaults.string(forKey: "base").flatMap(URL.init(string:)) }
+        // the app's own defaults first; the share extension finds it in the shared keychain group
+        get { (defaults.string(forKey: "base") ?? read("base-url")).flatMap(URL.init(string:)) }
         set {
             defaults.set(newValue?.absoluteString, forKey: "base")
             write("base-url", newValue?.absoluteString)
@@ -85,6 +86,5 @@ enum Store {
         key = nil
         baseURL = nil
         profile = ""
-        Outbox.clear()
     }
 }

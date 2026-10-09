@@ -57,6 +57,7 @@ struct Allowed {
     var push = false
     var carHa = false
     var docs = false
+    var ios = false
 }
 
 /// The Spark's panel, spoken to with this iPhone's own device key. The key may only ask and
@@ -128,7 +129,7 @@ struct SparkAPI {
                        proactive: d["proactive"] as? Bool ?? false, reminders: d["reminders"] as? Bool ?? true,
                        face: d["face"] as? String == "comic" ? "comic" : "robot",
                        push: d["push"] as? Bool ?? false, carHa: d["car_ha"] as? Bool ?? false,
-                       docs: d["docs"] as? Bool ?? false)
+                       docs: d["docs"] as? Bool ?? false, ios: d["ios"] as? Bool ?? false)
     }
 
     static func reminder(_ d: [String: Any]) -> Reminder? {
@@ -249,6 +250,22 @@ struct SparkAPI {
         try Self.check(data, response)
     }
 
+    /// New entries of a Spark list ("einkauf", "aufgaben"); the Spark hands each one over once.
+    func takeList(_ list: String) async throws -> [String] {
+        var c = URLComponents(url: base.appendingPathComponent("api/tasks/inbox"), resolvingAgainstBaseURL: false)!
+        c.queryItems = [URLQueryItem(name: "list", value: list), URLQueryItem(name: "format", value: "json")]
+        var r = request("api/tasks/inbox", method: "POST")
+        r.url = c.url
+        let (data, response) = try await URLSession.shared.data(for: r)
+        try Self.check(data, response)
+        return (Self.object(data)["items"] as? [String] ?? []).filter { !$0.isEmpty }
+    }
+
+    /// Puts entries on a Spark list (from Shortcuts; comma or line separated).
+    func addToList(_ list: String, _ text: String) async throws {
+        _ = try await post("api/profile/tasks/" + list, ["text": String(text.prefix(2000))])
+    }
+
     /// The profile's own settings the app may show ("Mein Profil"; iphone.APP_FIELDS on the Spark).
     func profileSettings() async throws -> [String: Any] {
         let (data, response) = try await URLSession.shared.data(for: request("api/iphone/settings"))
@@ -280,7 +297,8 @@ struct SparkAPI {
     /// The answer as a stream of text and sound, while the Spark is still writing.
     /// car: asked from CarPlay (short answers; the Spark only gets stricter, never looser).
     /// attachment: text from a photo or document; the Spark treats it as outside text (locks actions).
-    func chat(_ messages: [[String: Any]], car: Bool = false, attachment: Attachment? = nil) -> AsyncThrowingStream<ChatEvent, Error> {
+    func chat(_ messages: [[String: Any]], car: Bool = false, attachment: Attachment? = nil,
+              speak: Bool = true) -> AsyncThrowingStream<ChatEvent, Error> {
         AsyncThrowingStream { cont in
             let task = Task {
                 do {
@@ -290,6 +308,7 @@ struct SparkAPI {
                     r.timeoutInterval = 300
                     var body: [String: Any] = ["messages": messages, "tz": TimeZone.current.identifier, "client": "iphone"]
                     if car { body["car"] = true }
+                    if !speak { body["speak"] = false }
                     if let a = attachment { body["attachment"] = ["kind": a.kind, "name": a.name, "text": String(a.text.prefix(Reader.chatChars))] }
                     r.httpBody = try JSONSerialization.data(withJSONObject: body)
                     let (bytes, response) = try await URLSession.shared.bytes(for: r)

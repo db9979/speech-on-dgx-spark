@@ -208,7 +208,9 @@ def app_hello(prof=Depends(own_profile)):
             # CarPlay: the smart home only with its own switch
             "car_ha": bool(s.get("app_car_ha")),
             # documents from the app into "Meine Dokumente"
-            "docs": docs_on(prof["id"])}
+            "docs": docs_on(prof["id"]),
+            # Apple Reminders: Spark reminders and list entries may be written into the iPhone's Reminders
+            "ios": bool(s.get("app_ios"))}
 
 
 DOC_BODY = 3 * 1024 * 1024     # the text of one document as JSON (the iPhone reads PDFs and scans itself)
@@ -252,7 +254,7 @@ async def app_doc(request: Request, prof=Depends(own_profile)):
 APP_FIELDS = ("voice", "speed", "length", "pro_on", "pro_quiet", "pro_max", "pro_events", "pro_lead",
               "pro_weather", "pro_place", "pro_weather_at", "pro_parcel", "pro_bday", "pro_transit",
               "pro_greet", "pro_mail", "briefing_at")
-RIGHTS = ("app_ha", "app_car_ha", "app_act", "app_listen", "app_push", "app_docs")
+RIGHTS = ("app_ha", "app_car_ha", "app_act", "app_listen", "app_push", "app_docs", "app_ios")
 SETTINGS_BODY = 8192
 
 

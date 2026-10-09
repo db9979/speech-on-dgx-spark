@@ -31,6 +31,7 @@ Alle Optionen ohne Rückfragen (`--mode api --asr 1.7b --tts 0.6b --yes` …) st
 
 <!-- New version: add one line at the top here and in CHANGELOG.md, drop the oldest line here (keep 10). Details go to docs/de and docs/en, not into this README. -->
 
+- **V01.0.165** iPhone-App: Apple Erinnerungen nach „Ja“ und Einkaufsliste in die Erinnerungen-App (aus, Profilschalter), Teilen → Spark aus jeder App, Kurzbefehle-Bausteine, Antworten als Notiz teilen
 - **V01.0.164** Qualitätstest kompakter: nur Fragen mit Befund stehen offen (eine Zeile, Antwort zum Aufklappen), der Rest ist zugeklappt; während des Tests ein Fortschrittsbalken mit „Frage 15 von 36 · noch etwa 2 min“
 - **V01.0.163** Leistung messen sagt zu jedem Wert, wie gut er ist (sehr gut, gut, knapp, zu langsam, mit einem Satz dazu), oben ein Gesamturteil, neu „Richtig verstanden“ in Prozent und der Vergleich mit der letzten Messung
 - **V01.0.162** iPhone-App: „Mein Profil“ mit Stimme, Antwortlänge, Von selbst und Morgenrunde; Rechte der App und Ton nur angezeigt (Spark ändert nur eine feste Liste)
@@ -40,7 +41,6 @@ Alle Optionen ohne Rückfragen (`--mode api --asr 1.7b --tts 0.6b --yes` …) st
 - **V01.0.158** Sprachmodell weg: fester Satz statt Stille (auch Lautsprecher, Uhr, iPhone); Antwortzeit bis zum ersten Ton unter Zustand → Prüfen mit Warnung, wenn deutlich langsamer; Funktionsprüfung prüft auch Werkzeugwahl und Websuche
 - **V01.0.157** Update nur auf Versionen, deren GitHub-Tests grün sind (Panel und update.sh; neuere rote oder laufende Änderungen nur als Hinweis; von Hand: update.sh --newest)
 - **V01.0.156** Chat-Code aufgeteilt (ohne Verhaltensänderung): Rechte und Prompt in chat_turn.py, Werkzeuge in chat_tools.py, Antwort und Ton in chat.py
-- **V01.0.155** iPhone-App zeigt das im Panel gewählte Gesicht, jetzt auch das Comic-Gesicht mit eigenem Leben (Lider, Blicke, Brauen, Mund unterm Schnurrbart)
 
 Alle Versionen: [CHANGELOG.md](CHANGELOG.md)
 
