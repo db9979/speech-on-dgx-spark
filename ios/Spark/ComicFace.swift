@@ -218,6 +218,8 @@ final class ComicFace: FaceStyle {
         for (x, dy, dx, ey) in [(88.0, 3.0, -3.0, 7.0), (95, 2, -1, 7), (105, 2, 1, 7), (112, 3, 3, 7), (80, 7, -4, 7), (120, 7, 4, 7)] {
             strands.move(to: P(x, m + dy)); strands.addLine(to: P(x + dx, m + dy + ey))
         }
+        // the strands shrink with the shorter mustache, around (100, m) like face.js
+        strands = strands.applying(CGAffineTransform(translationX: 100, y: m).scaledBy(x: 0.63, y: 0.77).translatedBy(x: -100, y: -m))
         var sc = mu; sc.opacity = 0.25
         sc.stroke(strands, with: .color(.black), style: StrokeStyle(lineWidth: 0.9, lineCap: .round))
 
@@ -268,14 +270,15 @@ final class ComicFace: FaceStyle {
     private func stachePath() -> Path {
         let P = Self.P
         var s = Path()
+        // short and bushy (same path as face.js)
         s.move(to: P(100, m))
-        s.addCurve(to: P(130, m + 12), control1: P(110, m - 2), control2: P(124, m + 2))
-        s.addCurve(to: P(129, m + 27), control1: P(133, m + 18), control2: P(132, m + 24))
-        s.addCurve(to: P(108, m + 13), control1: P(126, m + 21), control2: P(118, m + 14))
-        s.addQuadCurve(to: P(92, m + 13), control: P(100, m + 11))
-        s.addCurve(to: P(71, m + 27), control1: P(82, m + 14), control2: P(74, m + 21))
-        s.addCurve(to: P(70, m + 12), control1: P(68, m + 24), control2: P(67, m + 18))
-        s.addCurve(to: P(100, m), control1: P(76, m + 2), control2: P(90, m - 2))
+        s.addCurve(to: P(119, m + 4.5), control1: P(106.33, m - 2), control2: P(115.2, m + 2))
+        s.addCurve(to: P(118.43, m + 10), control1: P(120.9, m + 6.7), control2: P(120.33, m + 9))
+        s.addCurve(to: P(105.13, m + 10), control1: P(116.53, m + 7.8), control2: P(111.4, m + 11))
+        s.addQuadCurve(to: P(94.87, m + 10), control: P(100, m + 8))
+        s.addCurve(to: P(81.57, m + 10), control1: P(88.6, m + 11), control2: P(83.47, m + 7.8))
+        s.addCurve(to: P(81, m + 4.5), control1: P(79.67, m + 9), control2: P(79.1, m + 6.7))
+        s.addCurve(to: P(100, m), control1: P(84.8, m + 2), control2: P(93.67, m - 2))
         s.closeSubpath()
         return s
     }
