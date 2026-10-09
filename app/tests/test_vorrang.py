@@ -221,6 +221,33 @@ class Panel(Base):
         finally:
             vorrang._test["running"] = False
 
+    def test_with_priority_the_question_is_heard_first_and_stops_the_load(self):
+        calls, saved = [], (vorrang._speak, vorrang._hear, vorrang._load)
+
+        async def speak(c, cfg, h):
+            calls.append("speak")
+            return 0.5, 0.5, b"wav"
+
+        async def hear(c, cfg, h, wav):
+            calls.append("hear")
+            vorrang.mark()            # the ASR service marks speech
+            return 0.3
+
+        async def load(c, ccfg, h, model, started):
+            calls.append("load")
+            started.set()
+            await asyncio.sleep(30)
+
+        async def sleep(s):
+            self.silence()
+        vorrang._speak, vorrang._hear, vorrang._load = speak, hear, load
+        try:
+            res = asyncio.run(vorrang.measure(sleep=sleep))
+        finally:
+            vorrang._speak, vorrang._hear, vorrang._load = saved
+        self.assertEqual(calls, ["speak", "hear", "load", "speak", "hear", "load", "hear", "speak"])
+        self.assertTrue(res["vorrang"]["stopped"])
+
     def test_verdict_rules(self):
         a = {"first": 0.5, "rtf": 0.5}
         self.assertEqual(vorrang.verdict({"alone": a})["level"], "warn")

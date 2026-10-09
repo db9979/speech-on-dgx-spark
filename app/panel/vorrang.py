@@ -289,6 +289,7 @@ async def measure(sleep=asyncio.sleep):
     res = {"t": int(time.time()), "alone": None, "load": None, "vorrang": None, "error": ""}
     async with httpx.AsyncClient(timeout=httpx.Timeout(120, connect=5)) as c:
         first, rtf, wav = await _speak(c, cfg, h)
+        question = wav   # stands in for the person's question in (c)
         res["alone"] = {"first": _r(first), "rtf": _r(rtf), "asr": _r(await _hear(c, cfg, h, wav))}
         if ccfg.get("llm_url"):
             lh = {"Authorization": f"Bearer {ccfg['llm_key']}"} if ccfg.get("llm_key") else {}
@@ -307,14 +308,19 @@ async def measure(sleep=asyncio.sleep):
                     await task
                 except BaseException:
                     pass
-            # (c) with the rule: the same load as background work, it has to give way
+            # (c) with the rule: the same load as background work, it has to give way. As in a real
+            # conversation the recognition of the question comes first (it already stops the load);
+            # measuring speech output cold under load would count the first moments before the stop.
             started = asyncio.Event()
             job = asyncio.ensure_future(run("Vorrang-Test", lambda: _load(c, ccfg, lh, model, started), retries=0,
                                             sleep=sleep))
             try:
                 await asyncio.wait_for(started.wait(), GRACE + 90)
+                asr = await _hear(c, cfg, h, question)
+                if asr is None:   # no recognition: the speech output itself has to stop the load
+                    mark()
+                await asyncio.sleep(POLL * 2)
                 first, rtf, wav = await _speak(c, cfg, h)
-                asr = await _hear(c, cfg, h, wav)
                 stopped = job.done() and not job.cancelled() and isinstance(job.exception(), Busy)
                 res["vorrang"] = {"first": _r(first), "rtf": _r(rtf), "asr": _r(asr), "stopped": stopped}
             finally:
