@@ -31,6 +31,7 @@ All options for running without questions (`--mode api --asr 1.7b --tts 0.6b --y
 
 <!-- New version: add one line at the top here and in CHANGELOG.md, drop the oldest line here (keep 10). Details go to docs/de and docs/en, not into this README. -->
 
+- **V01.0.245** Document card and tags (admin and profile switch, off): in quiet minutes the language model notes title, kind, sender, deadline, number and keywords of each document; the assistant sees these lines instead of file names and searches by tag or kind, tags filter Ich → Dokumente (own ones win), "Belongs with", "Remind" before deadlines only on click; document search always stays in a narrowed tool set, more rule words (insurance, manual, findings …)
 - **V01.0.244** iPhone app: My documents with "Read on" for long documents
 - **V01.0.243** Ich → Dokumente → View shows long documents a part at a time with "Read on" instead of "… shortened" after 200,000 characters; the assistant's search always used the whole text
 - **V01.0.242** Documents: PDFs up to 100 MB (the admin sets up to 300 MB under Funktionen → Eigene Dokumente; other files up to 20 MB, before "request too large" from 20 MB); the space per profile counts all uploads together, Ich → Dokumente shows "Used: x of y" with a bar, the admin sees and sets it per profile under Zustand → Monitoring
@@ -40,7 +41,6 @@ All options for running without questions (`--mode api --asr 1.7b --tts 0.6b --y
 - **V01.0.238** Complete scans: scanned PDF pages are rendered as whole pages (pypdfium2 4.30.0) instead of taking the biggest picture, so no pages get lost; up to 300 scanned pages per document (100 a day, then the next day); limits and skipped pages are named on the document; "Read again" from the kept original (keeps place, "For everyone" and search); a shortened chat attachment from the app says it is only the beginning
 - **V01.0.237** Update check: GitHub limit of 60 questions per hour recognised (notice with time instead of an error flood), status code in the log
 - **V01.0.236** Shared documents: a profile shares single finished documents with "For everyone" (no new reading), the other profiles find them in their search and see them under Ich → Dokumente → "Shared for everyone by others"; only the owner or the admin (Zustand → Monitoring) takes it back; never guests or unknown voices at a speaker; admin and profile switch, both off
-- **V01.0.235** Speaker voice check you can follow: Logs → speakers shows per question the match, the value needed and the seconds of speech; a too short question gets asked again as a whole sentence; "teach voice here" takes five sentences
 
 All versions: [CHANGELOG.md](CHANGELOG.md)
 

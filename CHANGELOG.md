@@ -2,6 +2,7 @@
 
 Every version in one line, newest first (taken from the commit messages, so some lines are German, some English). Older entries have no version number.
 
+- **V01.0.245** · 2026-10-09 · Steckbrief und Tags (Admin- und Profil-Schalter, aus): das Sprachmodell notiert in ruhigen Minuten Titel, Art, Absender, Frist, Nummer und Schlagwörter jedes Dokuments; der Assistent sieht diese Zeilen statt Dateinamen und sucht nach Tag oder Art, Tags als Filter unter Ich → Dokumente (eigene haben Vorrang), „Dazu gehören“, „Erinnern“ vor Fristen nur auf Klick; Dokumentsuche bleibt bei eingegrenzten Werkzeugen immer dabei, mehr Stichwörter (Versicherung, Anleitung, Befund …)
 - **V01.0.244** · 2026-10-09 · iPhone-App: Meine Dokumente mit „Weiterlesen“ bei langen Dokumenten
 - **V01.0.243** · 2026-10-09 · Ich → Dokumente → Ansehen zeigt lange Dokumente stückweise mit „Weiterlesen“ statt „… gekürzt“ nach 200.000 Zeichen; die Suche des Assistenten nutzte schon immer den ganzen Text
 - **V01.0.242** · 2026-10-09 · Dokumente: PDFs bis 100 MB (Admin stellt unter Funktionen → Eigene Dokumente bis 300 MB ein; andere Dateien bis 20 MB, vorher „request too large“ ab 20 MB); Speicher pro Profil gilt für alle Uploads zusammen, Ich → Dokumente zeigt „Belegt: x von y“ mit Balken, der Admin sieht und setzt ihn pro Profil unter Zustand → Monitoring

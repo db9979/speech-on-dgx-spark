@@ -31,6 +31,7 @@ Alle Optionen ohne Rückfragen (`--mode api --asr 1.7b --tts 0.6b --yes` …) st
 
 <!-- New version: add one line at the top here and in CHANGELOG.md, drop the oldest line here (keep 10). Details go to docs/de and docs/en, not into this README. -->
 
+- **V01.0.245** Steckbrief und Tags (Admin- und Profil-Schalter, aus): das Sprachmodell notiert in ruhigen Minuten Titel, Art, Absender, Frist, Nummer und Schlagwörter jedes Dokuments; der Assistent sieht diese Zeilen statt Dateinamen und sucht nach Tag oder Art, Tags als Filter unter Ich → Dokumente (eigene haben Vorrang), „Dazu gehören“, „Erinnern“ vor Fristen nur auf Klick; Dokumentsuche bleibt bei eingegrenzten Werkzeugen immer dabei, mehr Stichwörter (Versicherung, Anleitung, Befund …)
 - **V01.0.244** iPhone-App: Meine Dokumente mit „Weiterlesen“ bei langen Dokumenten
 - **V01.0.243** Ich → Dokumente → Ansehen zeigt lange Dokumente stückweise mit „Weiterlesen“ statt „… gekürzt“ nach 200.000 Zeichen; die Suche des Assistenten nutzte schon immer den ganzen Text
 - **V01.0.242** Dokumente: PDFs bis 100 MB (Admin stellt unter Funktionen → Eigene Dokumente bis 300 MB ein; andere Dateien bis 20 MB, vorher „request too large“ ab 20 MB); Speicher pro Profil gilt für alle Uploads zusammen, Ich → Dokumente zeigt „Belegt: x von y“ mit Balken, der Admin sieht und setzt ihn pro Profil unter Zustand → Monitoring
@@ -40,7 +41,6 @@ Alle Optionen ohne Rückfragen (`--mode api --asr 1.7b --tts 0.6b --yes` …) st
 - **V01.0.238** Scans vollständig: gescannte PDF-Seiten werden als ganze Seite gerendert (pypdfium2 4.30.0), statt nur das größte Bild zu nehmen, dadurch fallen keine Seiten mehr weg; bis 300 Scan-Seiten pro Dokument (100 pro Tag, danach am nächsten Tag weiter); Grenzen und übersprungene Seiten stehen am Dokument; „Neu einlesen“ aus dem aufbewahrten Original (behält Platz, „Für alle“ und Suche); ein gekürzter Chat-Anhang aus der App sagt, dass nur der Anfang dabei ist
 - **V01.0.237** Update-Prüfung: GitHub-Grenze von 60 Abfragen pro Stunde erkannt (Hinweis mit Uhrzeit statt Fehlerflut), Statuscode im Log
 - **V01.0.236** Gemeinsame Dokumente: ein Profil gibt einzelne fertige Dokumente mit „Für alle“ frei (ohne neu einzulesen), die anderen Profile finden sie in der Suche und sehen sie unter Ich → Dokumente → „Von anderen für alle freigegeben“; nur der Besitzer oder der Admin (Zustand → Monitoring) nimmt es zurück; Gäste und unbekannte Stimmen am Lautsprecher nie; Admin- und Profilschalter, beide aus
-- **V01.0.235** Lautsprecher erkennt die Inhaberstimme nachvollziehbar: Logs → Lautsprecher zeigt pro Frage Ähnlichkeit, nötigen Wert und Sekunden Sprache; bei zu kurzer Frage bittet der Assistent um einen ganzen Satz; „Stimme hier anlernen“ nimmt fünf Sätze
 
 Alle Versionen: [CHANGELOG.md](CHANGELOG.md)
 

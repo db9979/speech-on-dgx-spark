@@ -56,6 +56,15 @@ CTYPE = {".pdf": "application/pdf", ".jpg": "image/jpeg", ".jpeg": "image/jpeg",
 _lock = threading.RLock()
 _vcache = {}                   # uid -> (data_version stamp, ids, matrix)
 
+# added later; old databases get them on first open (V01.0.236 shared, V01.0.244 the profile "Steckbrief")
+NEW_COLUMNS = (("shared", "INTEGER DEFAULT 0"), ("title", "TEXT DEFAULT ''"), ("art", "TEXT DEFAULT ''"),
+               ("sender", "TEXT DEFAULT ''"), ("ddate", "TEXT DEFAULT ''"), ("due", "TEXT DEFAULT ''"),
+               ("ref", "TEXT DEFAULT ''"), ("tags", "TEXT DEFAULT '[]'"), ("mytags", "TEXT DEFAULT ''"),
+               ("brief", "TEXT DEFAULT ''"))
+ARTS = ("Vertrag", "Rechnung", "Brief", "Anleitung", "Bescheid", "Versicherung", "Kontoauszug", "Beleg", "Befund",
+        "Zeugnis", "Buch", "Artikel", "Notiz", "Foto", "Formular", "Sonstiges")
+MAX_TAGS = 10
+
 SCHEMA = """
 CREATE TABLE IF NOT EXISTS docs (id TEXT PRIMARY KEY, name TEXT NOT NULL, size INTEGER, created INTEGER,
     kind TEXT DEFAULT 'text', state TEXT DEFAULT 'ready', note TEXT DEFAULT '', pages INTEGER DEFAULT 0,
@@ -92,8 +101,10 @@ def _open(uid):
     con = sqlite3.connect(path, timeout=15)
     con.row_factory = sqlite3.Row
     con.executescript(SCHEMA)
-    if "shared" not in {r[1] for r in con.execute("PRAGMA table_info(docs)")}:    # databases from V01.0.224
-        con.execute("ALTER TABLE docs ADD COLUMN shared INTEGER DEFAULT 0")
+    have = {r[1] for r in con.execute("PRAGMA table_info(docs)")}
+    for col, kind in NEW_COLUMNS:       # databases from older versions
+        if col not in have:
+            con.execute(f"ALTER TABLE docs ADD COLUMN {col} {kind}")
     _import_json(uid, con)
     return con
 
@@ -452,7 +463,126 @@ def _scan_jpegs(data, reader, scans):
 def _row(r, todo):
     return {"id": r["id"], "name": r["name"], "size": r["size"], "created": r["created"], "chunks": r["nchunks"],
             "kind": r["kind"], "state": r["state"], "note": r["note"], "pages": r["pages"], "todo": todo.get(r["id"], 0),
-            "vecs": r["nvecs"], "use": bool(r["use"]), "shared": bool(r["shared"]), "file": bool(r["file"]), "source": r["source"]}
+            "vecs": r["nvecs"], "use": bool(r["use"]), "shared": bool(r["shared"]), "file": bool(r["file"]), "source": r["source"],
+            **card(r)}
+
+
+def _tags(v):
+    try:
+        t = json.loads(v or "[]")
+        return [x for x in t if isinstance(x, str)][:MAX_TAGS] if isinstance(t, list) else []
+    except ValueError:
+        return []
+
+
+def card(r):
+    """The document's "Steckbrief" (V01.0.244): what the language model read from its beginning, and the
+    tags (the owner's own ones win over the automatic ones)."""
+    mine = _tags(r["mytags"]) if r["mytags"] else None
+    return {"title": r["title"], "art": r["art"], "sender": r["sender"], "date": r["ddate"], "due": r["due"],
+            "ref": r["ref"], "tags": mine if mine is not None else _tags(r["tags"]), "own_tags": mine is not None,
+            "brief": r["brief"]}
+
+
+TAG = re.compile(r"[\w äöüßÄÖÜ&.+/-]{1,24}")
+
+
+def clean_tags(tags):
+    """Tags as they are stored: words, at most MAX_TAGS of at most 24 characters, no doubles."""
+    out = []
+    for t in tags if isinstance(tags, list) else []:
+        t = re.sub(r"\s+", " ", str(t)).strip().strip("#")
+        if t and TAG.fullmatch(t) and t.lower() not in [x.lower() for x in out]:
+            out.append(t)
+    return out[:MAX_TAGS]
+
+
+def _short(v, n):
+    return re.sub(r"[\x00-\x1f\x7f<>\"\\„“]", "", re.sub(r"\s+", " ", str(v or ""))).strip()[:n]
+
+
+def _when(v):
+    """YYYY-MM-DD or YYYY-MM from the model's answer, else ""."""
+    m = re.fullmatch(r"((19|20)\d\d)-(0[1-9]|1[0-2])(-(0[1-9]|[12]\d|3[01]))?", str(v or "").strip())
+    return m[0] if m else ""
+
+
+def set_card(uid, doc_id, d=None, failed=False):
+    """Stores the model's "Steckbrief" (a dict, checked here) or marks it failed ("x" = not again)."""
+    with _Db(uid) as con:
+        if failed or not isinstance(d, dict):
+            con.execute("UPDATE docs SET brief='x' WHERE id=?", (doc_id,))
+            return
+        art = _short(d.get("art"), 30).capitalize()
+        con.execute("UPDATE docs SET title=?, art=?, sender=?, ddate=?, due=?, ref=?, tags=?, brief='ok' WHERE id=?",
+                    (_short(d.get("titel"), 80), art if art in ARTS else ("Sonstiges" if art else ""),
+                     _short(d.get("absender"), 60), _when(d.get("datum")), _when(d.get("frist")),
+                     _short(d.get("nummer"), 40), json.dumps(clean_tags(d.get("tags"))[:6]), doc_id))
+
+
+def set_tags(uid, doc_id, tags):
+    """The owner's own tags (None: back to the automatic ones)."""
+    if not re.fullmatch(r"[0-9a-f]{12}", doc_id):
+        return False
+    with _Db(uid) as con:
+        return con.execute("UPDATE docs SET mytags=? WHERE id=?",
+                           ("" if tags is None else json.dumps(clean_tags(tags)), doc_id)).rowcount > 0
+
+
+def next_card(uid):
+    """(doc id, beginning of its text) of the oldest ready document without a "Steckbrief", or None."""
+    if not os.path.exists(db_path(uid)):
+        return None
+    with _Db(uid) as con:
+        r = con.execute("SELECT id FROM docs WHERE brief='' AND state='ready' ORDER BY created, id LIMIT 1").fetchone()
+        if not r:
+            return None
+        rows = con.execute("SELECT text FROM chunks WHERE doc=? ORDER BY COALESCE(page, 0), n LIMIT 6", (r["id"],)).fetchall()
+    return r["id"], "\n".join(x["text"] for x in rows)[:3000]
+
+
+def related(uid, doc_id, most=8):
+    """[{"id", "name", "why"}] documents of this profile that belong together with this one: the same
+    number, the same sender, or at least two tags in common."""
+    with _Db(uid) as con:
+        rows = con.execute("SELECT * FROM docs").fetchall()
+    me = next((r for r in rows if r["id"] == doc_id), None)
+    if not me:
+        return []
+    mc = card(me)
+    mtags = {t.lower() for t in mc["tags"]}
+    out = []
+    for r in rows:
+        if r["id"] == doc_id:
+            continue
+        c = card(r)
+        why = "Nummer" if mc["ref"] and c["ref"].lower() == mc["ref"].lower() else \
+            "Absender" if mc["sender"] and c["sender"].lower() == mc["sender"].lower() else \
+            "Tags" if len(mtags & {t.lower() for t in c["tags"]}) >= 2 else ""
+        if why:
+            out.append({"id": r["id"], "name": r["name"], "title": c["title"], "why": why})
+    return out[:most]
+
+
+def match_docs(uid, tags=None, art=None, used_only=True, shared_only=False):
+    """Ids of the documents with all these tags (any spelling of case) and this art."""
+    want = {t.lower() for t in clean_tags(tags or [])}
+    art = _short(art, 30).lower()
+    if not os.path.exists(db_path(uid)):
+        return set()
+    with _Db(uid) as con:
+        rows = con.execute("SELECT * FROM docs" + (" WHERE use=1" if used_only else "")).fetchall()
+    out = set()
+    for r in rows:
+        if shared_only and not (r["shared"] and r["state"] == "ready"):
+            continue
+        c = card(r)
+        if want - {t.lower() for t in c["tags"]}:
+            continue
+        if art and c["art"].lower() != art:
+            continue
+        out.add(r["id"])
+    return out
 
 
 def list_docs(uid, used_only=False):
@@ -636,9 +766,9 @@ def list_shared(uid):
     if not os.path.exists(db_path(uid)):
         return []
     with _Db(uid) as con:
-        rows = con.execute("SELECT id, name, file, kind, pages FROM docs WHERE shared=1 AND use=1 AND state='ready' "
+        rows = con.execute("SELECT * FROM docs WHERE shared=1 AND use=1 AND state='ready' "
                            "ORDER BY created DESC, id").fetchall()
-    return [{"id": r["id"], "name": r["name"], "file": bool(r["file"]), "kind": r["kind"], "pages": r["pages"]}
+    return [{"id": r["id"], "name": r["name"], "file": bool(r["file"]), "kind": r["kind"], "pages": r["pages"], **card(r)}
             for r in rows]
 
 
@@ -813,17 +943,22 @@ def _terms(text):
     return out
 
 
-def search(uid, query, k=5, qvec=None, shared_only=False):
+def search(uid, query, k=5, qvec=None, shared_only=False, only_docs=None):
     """Best-matching pieces of this profile's documents in use: [{"id", "name", "page", "text", "file", "score"}].
     qvec: the query's meaning vector (docembed), merged with the full-text ranking. shared_only: only the
-    documents this profile offers to everyone ("Für alle"), for another profile's search."""
+    documents this profile offers to everyone ("Für alle"), for another profile's search. only_docs: a set
+    of document ids (tags, art) the search keeps to."""
     if not os.path.exists(db_path(uid)) and not os.path.isdir(_dir(uid)):
         return []
     q = sorted(set(t for t in _terms(query) if re.fullmatch(r"\w+", t)))
     ranks, only = {}, None
-    cond = "d.use=1" + (" AND d.shared=1 AND d.state='ready'" if shared_only else "")
+    keep = None if only_docs is None else [d for d in only_docs if re.fullmatch(r"[0-9a-f]{12}", d)]
+    if keep is not None and not keep:
+        return []
+    cond = "d.use=1" + (" AND d.shared=1 AND d.state='ready'" if shared_only else "") + \
+        (" AND d.id IN (%s)" % ",".join("'%s'" % d for d in keep) if keep is not None else "")
     with _Db(uid) as con:
-        if shared_only:
+        if shared_only or only_docs is not None:
             only = {r[0] for r in con.execute("SELECT c.id FROM chunks c JOIN docs d ON d.id=c.doc WHERE " + cond)}
             if not only:
                 return []

@@ -44,6 +44,9 @@ MEMORY_WORDS = re.compile(r"(?i)\b(merk dir|merke dir|vergiss|weißt du (noch|wa
                           r"erinnerst du dich|haben wir (schon )?(mal )?(darüber )?(gesprochen|geredet)|letztes mal|"
                           r"remember|forget)\b")
 DOC_WORDS = re.compile(r"(?i)\b(\w*dokument\w*|unterlage\w*|\w*vertrag\w*|\w*verträge\w*|\w*rechnung\w*|pdf|"
+                       r"\w*versicherung\w*|police\w*|garantie\w*|gewährleistung\w*|\w*anleitung\w*|handbuch\w*|"
+                       r"\w*bescheid\w*|kündigung\w*|kündigungsfrist\w*|steuer(erklärung|bescheid|unterlagen)?|"
+                       r"arztbrief\w*|befund\w*|beleg\w*|quittung\w*|zeugnis\w*|lebenslauf\w*|"
                        r"(meine[nmr]?|in den) (dateien|papiere\w*)|documents?)\b")
 CONTACT_WORDS = re.compile(r"(?i)\b(telefonnummer\w*|handynummer\w*|nummer von|adresse von|kontakt\w*|"
                            r"geburtstag\w*|phone number|contacts?)\b")
@@ -76,8 +79,10 @@ GROUPS = {
     "iphone": ({"iphone_action"}, PHONE_WORDS),
 }
 INTENT_NAMES = list(GROUPS)
-# always kept when the tools are narrowed: noting something the person says about themselves
-NARROW_KEEP = {"memory_save"}
+# always kept when the tools are narrowed: noting something the person says about themselves, and the
+# own documents (offered only when the profile has some; V01.0.244: "Wann läuft meine Versicherung ab?"
+# or a question the rules file under another group may well be answered from them)
+NARROW_KEEP = {"memory_save", "document_search"}
 # chat.route_model "lean": a question no rule recognizes gets only these (of those offered). A short
 # tool list makes the model read far less before its first word; the rule groups keep everything else.
 LEAN = {"web_search", "history_search"} | NARROW_KEEP

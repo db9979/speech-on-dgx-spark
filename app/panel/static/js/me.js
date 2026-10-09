@@ -18,7 +18,15 @@ const docSize=n=>n<1048576?Math.max(1,Math.round(n/1024))+' KB':(n/1048576).toFi
 const DOCSW=[['pictures',t('Bilder und Scans lesen lassen','Let pictures and scans be read'),t('Fotos und Seiten ohne Text liest das Sprachmodell in Gesprächspausen ab.','The language model reads photos and pages without text in quiet moments.')],
   ['semantic',t('Bedeutungssuche','Meaning search'),t('Findet auch Stellen mit anderen Worten.','Also finds passages in other words.')],
   ['originals',t('Originale aufbewahren','Keep originals'),t('Die Datei bleibt auf dem Spark und lässt sich wieder öffnen (neue Uploads).','The file stays on the Spark and can be opened again (new uploads).')],
-  ['shared',t('Gemeinsame Dokumente','Shared documents'),t('Eigene Dokumente mit „Für alle“ freigeben und die freigegebenen der anderen nutzen.','Share own documents with "For everyone" and use the ones the others share.')]];
+  ['shared',t('Gemeinsame Dokumente','Shared documents'),t('Eigene Dokumente mit „Für alle“ freigeben und die freigegebenen der anderen nutzen.','Share own documents with "For everyone" and use the ones the others share.')],
+  ['brief',t('Steckbrief und Tags','Document card and tags'),t('Das Sprachmodell notiert in Pausen Titel, Art, Absender, Frist und Schlagwörter; der Assistent sucht damit gezielter.','In quiet minutes the language model notes title, kind, sender, deadline and keywords; the assistant searches more precisely with them.')],
+  ['due',t('Fristen anbieten','Offer deadlines'),t('Hat ein Dokument eine Frist, gibt es den Knopf „Erinnern“. Eine Erinnerung entsteht nur auf deinen Klick.','When a document has a deadline there is a "Remind" button. A reminder is only set on your click.')]];
+let DOCTAG='';
+// the "Steckbrief" of a document (V01.0.244): kind, sender, deadline and the tags as chips (filter on click)
+const docCard=(d,chips=true)=>{const bits=[d.art,d.sender,d.date&&t('vom ','of ')+d.date,d.due&&t('Frist ','deadline ')+d.due].filter(Boolean).map(esc).join(' · ');
+  const tg=(d.tags||[]).map(x=>chips?`<button type="button" class="dtag${x.toLowerCase()===DOCTAG.toLowerCase()?' on':''}" data-doctag="${esc(x)}">${esc(x)}</button>`:`<span class="dtag">${esc(x)}</span>`).join('');
+  return (bits?`<br><small class="mut">${bits}</small>`:'')+(tg?`<br><span class="dtags">${tg}</span>`:'')};
+const docHas=(d,tag)=>!tag||(d.tags||[]).some(x=>x.toLowerCase()===tag.toLowerCase());
 let DOCINFO=null;
 // progress of one document (V01.0.232): pages read of all pages, then pieces with a meaning, and why it
 // waits (switch off, daily limit, someone is talking, the model waits for memory). [text, percent or null]
@@ -46,12 +54,21 @@ async function showDocs(){if(!DOCS_ON){$('docbox').style.display='none';return}$
   const l=await (await api('/api/profile/docs')).json();
   try{DOCINFO=await (await api('/api/profile/wissen')).json()}catch{DOCINFO=null}
   const I=DOCINFO;
-  $('docsw').innerHTML=I?DOCSW.filter(([k])=>I.allow[k]).map(([k,l,h])=>`<div class="setrow"><div class="lbl"><b>${esc(l)}</b><span>${esc(h)}</span></div><label class="tgl"><input type="checkbox" data-docsw="${k}"${I.on[k]?' checked':''}><i></i></label></div>`).join(''):'';
-  $('doclist').innerHTML=l.map(d=>{const [st,pct]=docState(d);return `<li><span>${esc(d.name)}<br><small class="mut">${docSize(d.size)} · ${esc(st)}${d.note?' · '+esc(d.note):''}</small>`+
+  $('docsw').innerHTML=I?DOCSW.filter(([k])=>k==='due'?I.allow.brief&&I.on.brief:I.allow[k]).map(([k,l,h])=>`<div class="setrow"><div class="lbl"><b>${esc(l)}</b><span>${esc(h)}</span></div><label class="tgl"><input type="checkbox" data-docsw="${k}"${I.on[k]?' checked':''}><i></i></label></div>`).join(''):'';
+  const brief=!!(I&&I.allow.brief&&I.on.brief),due=brief&&I.on.due,today=new Date().toISOString().slice(0,10);
+  const o=I&&I.others||[];
+  // all tags of the own and the shared documents, to filter the lists
+  const all={};if(brief)for(const d of l.concat(o))for(const x of d.tags||[]){const k=x.toLowerCase();all[k]=all[k]||[x,0];all[k][1]++}
+  if(DOCTAG&&!all[DOCTAG.toLowerCase()])DOCTAG='';
+  const tags=Object.values(all).sort((a,b)=>b[1]-a[1]||a[0].localeCompare(b[0]));$('doctagbar').hidden=!tags.length;
+  $('doctagbar').innerHTML=tags.length?`<button type="button" class="dtag${DOCTAG?'':' on'}" data-doctag="">${t('Alle','All')}</button>`+tags.map(([x,n])=>`<button type="button" class="dtag${x.toLowerCase()===DOCTAG.toLowerCase()?' on':''}" data-doctag="${esc(x)}">${esc(x)} <small>${n}</small></button>`).join(''):'';
+  $('doclist').innerHTML=l.filter(d=>!brief||docHas(d,DOCTAG)).map(d=>{const [st,pct]=docState(d);return `<li><span>${esc(brief&&d.title||d.name)}<br><small class="mut">${brief&&d.title?esc(d.name)+' · ':''}${docSize(d.size)} · ${esc(st)}${d.note?' · '+esc(d.note):''}</small>`+(brief?docCard(d):'')+
     (pct===null?'':`<span class="qbar docbar" role="progressbar" aria-valuemin="0" aria-valuemax="100" aria-valuenow="${pct}"><i style="width:${pct}%"></i></span>`)+`</span>`+
     (I&&I.allow.shared&&I.on.shared&&d.state==='ready'?`<label class="docshare" title="${esc(t('Alle Profile mit „Gemeinsame Dokumente“ finden und öffnen es','Every profile with "Shared documents" finds and opens it'))}"><input type="checkbox" data-docshare="${esc(d.id)}"${d.shared?' checked':''}> ${t('Für alle','For everyone')}</label>`:'')+
     `<label class="tgl" title="${esc(t('Der Assistent sucht darin','The assistant searches it'))}"><input type="checkbox" data-docuse="${esc(d.id)}"${d.use?' checked':''}><i></i></label>`+
     `<button class="b" type="button" data-docview="${esc(d.id)}">${t('Ansehen','View')}</button>`+
+    (brief&&d.state==='ready'?`<button class="b" type="button" data-doctags="${esc(d.id)}" data-tags="${esc((d.tags||[]).join(', '))}" title="${esc(t('Eigene Schlagwörter; leer = die automatischen','Own keywords; empty = the automatic ones'))}">${t('Tags','Tags')}</button>`:'')+
+    (due&&d.due&&(d.due.length===7?d.due>=today.slice(0,7):d.due>=today)?`<button class="b" type="button" data-docremind="${esc(d.id)}" title="${esc(t('Erinnerung sechs Wochen vor der Frist (oder am Tag davor)','Reminder six weeks before the deadline (or the day before)'))}">${t('Erinnern','Remind')}</button>`:'')+
     (d.file&&d.state!=='reading'?`<button class="b" type="button" data-docreread="${esc(d.id)}" title="${esc(t('Aus dem aufbewahrten Original neu einlesen','Read again from the kept original'))}">${t('Neu einlesen','Read again')}</button>`:'')+
     `<button class="b" type="button" data-docdel="${esc(d.id)}" data-name="${esc(d.name)}">${t('Löschen','Delete')}</button></li>`}).join('')||`<li class="mut">${t('Noch keine Dokumente.','No documents yet.')}</li>`;
   const bits=[];
@@ -61,13 +78,14 @@ async function showDocs(){if(!DOCS_ON){$('docbox').style.display='none';return}$
   if(I&&I.allow.pictures&&I.on.pictures)bits.push(t(`heute ${I.today} von ${I.day_pages} Seiten gelesen`,`${I.today} of ${I.day_pages} pages read today`));
   if(I&&I.vectors&&I.on.semantic)bits.push(t(`Bedeutungssuche: ${I.vectors[0]} von ${I.vectors[1]} Abschnitten vorbereitet`,`Meaning search: ${I.vectors[0]} of ${I.vectors[1]} sections prepared`));
   $('docuse').textContent=bits.join(' · ');docAgain(l);
-  const o=I&&I.others||[];$('docothers').hidden=!o.length;
-  $('docotherlist').innerHTML=o.map(d=>`<li><span>${esc(d.name)}<br><small class="mut">${t('von ','from ')}${esc(d.owner)}</small></span><button class="b" type="button" data-docview="${esc(d.id)}">${t('Ansehen','View')}</button></li>`).join('');
+  $('docothers').hidden=!o.length;
+  $('docotherlist').innerHTML=o.filter(d=>!brief||docHas(d,DOCTAG)).map(d=>`<li><span>${esc(brief&&d.title||d.name)}<br><small class="mut">${t('von ','from ')}${esc(d.owner)}</small>${brief?docCard(d,false):''}</span><button class="b" type="button" data-docview="${esc(d.id)}">${t('Ansehen','View')}</button></li>`).join('');
   const pics=I&&I.allow.pictures&&I.on.pictures;
   $('docfile').accept='.pdf,.txt,.md,.docx,.html,.htm,.csv,.xlsx,.pptx,.odt,.ods,.odp,.eml'+(pics?',.jpg,.jpeg,.png,.webp':'')}
 $('docsw').onchange=async e=>{const k=e.target.dataset.docsw;if(!k)return;
   try{await api('/api/profile/settings',{method:'PUT',headers:{'Content-Type':'application/json'},body:JSON.stringify({['doc_'+k]:e.target.checked})})}
   catch(x){$('docmsg').innerHTML=`<span class="err">${esc(x.message)}</span>`}showDocs()};
+$('doctagbar').onclick=e=>{const c=e.target.closest('[data-doctag]');if(c){DOCTAG=c.dataset.doctag;showDocs()}};
 $('docotherlist').onclick=e=>{const v=e.target.closest('[data-docview]');if(v)docView(v.dataset.docview)};
 $('doclist').onchange=async e=>{const sh=e.target.dataset.docshare;
   if(sh){try{await api('/api/profile/wissen/'+encodeURIComponent(sh),{method:'PUT',headers:{'Content-Type':'application/json'},body:JSON.stringify({shared:e.target.checked})})}
@@ -89,6 +107,10 @@ async function docView(id){const box=$('docview');box.hidden=false;box.textConte
     head.appendChild(right);box.prepend(head);
     let page;const show=parts=>{for(const p of parts){if(p.page&&p.page!==page){page=p.page;const h=document.createElement('div');h.className='dvpage';h.textContent=t('Seite ','Page ')+p.page;box.appendChild(h)}
       const tx=document.createElement('p');tx.className='dvtext';tx.textContent=p.text;box.appendChild(tx)}};show(d.parts);
+    if(d.related&&d.related.length){const r=document.createElement('div');r.className='dvrel';const h=document.createElement('small');h.className='mut';h.textContent=t('Dazu gehören: ','Belongs with: ');r.appendChild(h);
+      for(const x of d.related){const b=document.createElement('button');b.type='button';b.className='dtag';b.textContent=x.title||x.name;
+        b.title={Nummer:t('gleiche Nummer','same number'),Absender:t('gleicher Absender','same sender'),Tags:t('gleiche Schlagwörter','same keywords')}[x.why]||'';b.onclick=()=>docView(x.id);r.appendChild(b)}
+      box.appendChild(r)}
     if(!d.parts.length){const m=document.createElement('p');m.className='mut';m.textContent=d.state==='reading'?t('Wird noch gelesen.','Still being read.'):t('Kein Text.','No text.');box.appendChild(m)}
     if(!d.file&&!d.owner){const m=document.createElement('p');m.className='mut';m.textContent=t('Original nicht aufbewahrt: Zum Neu-Einlesen die Datei neu hochladen.','Original not kept: to read it again, upload the file again.');box.appendChild(m)}
     // long documents come a part at a time; the assistant always searches the whole text
@@ -98,6 +120,16 @@ async function docView(id){const box=$('docview');box.hidden=false;box.textConte
     box.scrollIntoView({block:'nearest'})}
   catch(x){box.textContent=x.message}}
 $('doclist').onclick=async e=>{const v=e.target.closest('[data-docview]');if(v){docView(v.dataset.docview);return}
+  const c=e.target.closest('[data-doctag]');if(c){DOCTAG=c.dataset.doctag;showDocs();return}
+  const tg=e.target.closest('[data-doctags]');
+  if(tg){const s=prompt(t('Schlagwörter, mit Komma getrennt (leer = die automatischen):','Keywords separated by commas (empty = the automatic ones):'),tg.dataset.tags);if(s===null)return;
+    const list=s.split(',').map(x=>x.trim()).filter(Boolean);
+    try{await api('/api/profile/wissen/'+encodeURIComponent(tg.dataset.doctags),{method:'PUT',headers:{'Content-Type':'application/json'},body:JSON.stringify({tags:list.length?list:null})})}
+    catch(x){$('docmsg').innerHTML=`<span class="err">${esc(x.message)}</span>`}showDocs();return}
+  const rm=e.target.closest('[data-docremind]');
+  if(rm){rm.disabled=true;try{const r=await (await api('/api/profile/wissen/'+encodeURIComponent(rm.dataset.docremind)+'/remind',{method:'POST'})).json();
+      $('docmsg').textContent=t('Erinnerung angelegt für ','Reminder set for ')+new Date(r.due).toLocaleString(L==='en'?'en-GB':'de-DE',{dateStyle:'medium',timeStyle:'short'})}
+    catch(x){$('docmsg').innerHTML=`<span class="err">${esc(x.message)}</span>`;rm.disabled=false}return}
   const rr=e.target.closest('[data-docreread]');
   if(rr){rr.disabled=true;try{const r=await (await api('/api/profile/wissen/'+encodeURIComponent(rr.dataset.docreread)+'/reread',{method:'POST'})).json();
       $('docmsg').textContent=r.todo?t(`Wird neu gelesen: ${r.todo} Seiten warten.`,`Being read again: ${r.todo} pages waiting.`):t(`Neu eingelesen: ${r.chunks} Abschnitte.`,`Read again: ${r.chunks} sections.`)}

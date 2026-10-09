@@ -310,7 +310,8 @@ async def prepare(request):
     docs = documents.list_docs(who["id"], used_only=True) if who and private_ok and ccfg.get("documents", True) else []
     shared_docs = wissen.shared_list(who["id"]) if who and private_ok and ccfg.get("documents", True) else []
     if docs or shared_docs:
-        system = (system + "\n\n" + chat.docs_hint(who, docs, shared_docs)).strip()
+        system = (system + "\n\n" + chat.docs_hint(who, docs, shared_docs, str(messages[-1].get("content") or ""),
+                                                     wissen.on(who["id"], "brief"))).strip()
     docs = docs + shared_docs
     timers = bool(ccfg.get("reminders", True))
     if timers:

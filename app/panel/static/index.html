@@ -86,6 +86,7 @@
       <div data-show="chat.documents" style="margin-left:18px"><label>Größte PDF-Datei (MB)</label><input class="num" id="chat.doc_max_mb" type="number" min="20" max="300"><div class="fh">20 bis 300, Standard 100. Andere Dateiarten bis 20 MB. Große Scans brauchen beim Hochladen kurz etwa das Dreifache an Arbeitsspeicher.</div></div>
       <div data-show="chat.documents" style="margin-left:18px"><label>Speicher pro Profil (MB)</label><input class="num" id="chat.doc_quota_mb" type="number" min="50" max="5000"><div class="fh">50 bis 5000, für alle Uploads eines Profils zusammen. Einzelnen Profilen gibst du unter Zustand → Monitoring mehr oder weniger. Ist er voll, nimmt der Spark nichts Neues an; Originale nur, solange Platz ist.</div></div>
       <div class="setrow" data-show="chat.documents" style="margin-left:18px"><div class="lbl"><b>Gemeinsame Dokumente</b><span>Ein Profil gibt einzelne Dokumente „Für alle“ frei, die anderen Profile finden und öffnen sie. Gäste und unbekannte Stimmen nie.</span></div><label class="tgl"><input type="checkbox" id="chat.doc_shared"><i></i></label></div>
+      <div class="setrow" data-show="chat.documents" style="margin-left:18px"><div class="lbl"><b>Steckbrief und Tags</b><span>Das Sprachmodell notiert in Pausen Titel, Art, Absender, Frist und Schlagwörter jedes Dokuments; der Assistent sucht damit gezielter.</span></div><label class="tgl"><input type="checkbox" id="chat.doc_brief"><i></i></label></div>
       <div class="setrow"><div class="lbl"><b>Websuche</b><span>Das Modell sucht selbst über deine SearXNG-Instanz, wenn eine Frage aktuelle Informationen braucht.</span></div><label class="tgl"><input type="checkbox" id="chat.search"><i></i></label></div>
       <div data-show="chat.search"><label>Adresse deiner SearXNG-Instanz</label><input id="chat.search_url" data-req placeholder="http://192.168.1.20:8080">
       <label>Treffer pro Suche</label><input id="chat.search_results" type="number" min="1" max="10"><div class="fh">1 bis 10.</div>
@@ -605,6 +606,7 @@
     <div id="docbox" class="ptab"><div class="intro">PDF bis 100 MB (der Admin kann mehr erlauben); Word, Excel, PowerPoint, OpenDocument, Text, Markdown, HTML, CSV oder E-Mail (.eml) je bis 20 MB. Der Assistent sucht darin, wenn eine Frage dazu passt. Nur du kannst sie nutzen, außer du gibst ein Dokument „Für alle“ frei.</div>
       <div id="docsw"></div>
       <div id="docspace" class="docspace" hidden><span id="docspacet"></span><span class="qbar docbar"><i></i></span></div>
+      <div class="dtags" id="doctagbar" hidden></div>
       <ul class="facts" id="doclist"></ul>
       <div id="docothers" hidden><h3>Von anderen für alle freigegeben</h3><ul class="facts" id="docotherlist"></ul></div>
       <div id="docview" class="docview" hidden></div>

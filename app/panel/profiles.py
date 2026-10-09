@@ -525,6 +525,8 @@ SETTINGS = {
     "doc_semantic": (False, lambda v: isinstance(v, bool)),
     "doc_originals": (False, lambda v: isinstance(v, bool)),
     "doc_shared": (False, lambda v: isinstance(v, bool)),
+    "doc_brief": (False, lambda v: isinstance(v, bool)),
+    "doc_due": (False, lambda v: isinstance(v, bool)),
     # own wishes for the tone (admin chat.own_style): plain text, no control characters, no markers of outside text
     "style": ("", lambda v: isinstance(v, str) and len(v) <= 500 and not re.search(r"[\x00-\x09\x0b-\x1f\x7f]|<<<|>>>", v)),
     # daily briefing as a push notification at this local time ("" = off), in the device's time zone

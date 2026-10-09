@@ -154,7 +154,16 @@ async def run(t, name, args, st):
         query = str(args.get("query", "")).strip()
         await t.out.put({"type": "docsearch", "query": query})
         import wissen
-        hits = await wissen.search(t.who["id"], query)
+        tags = [str(x) for x in args.get("tags") or [] if isinstance(x, (str, int))][:5] if isinstance(args.get("tags"), list) else []
+        art = str(args.get("art") or "")[:30]
+        if not wissen.on(t.who["id"], "brief"):
+            tags, art = [], ""
+        hits = await wissen.search(t.who["id"], query, tags=tags or None, art=art or None)
+        if not hits and (tags or art):      # nothing in the text: at least which documents fit
+            found = wissen.cards(t.who["id"], tags or None, art or None)
+            if found:
+                return ("No passage matches the words, but these documents fit (their profiles):\n"
+                        + "\n".join("- " + wissen.card_line(d) for d in found[:20]))
         if hits:
             refs = list({(h["id"], h["page"]): {"id": h["id"], "name": h["name"], "page": h["page"], "file": h["file"]} for h in hits}.values())
             await t.out.put({"type": "docsources", "items": sorted({h["name"] for h in hits}), "refs": refs[:8]})
