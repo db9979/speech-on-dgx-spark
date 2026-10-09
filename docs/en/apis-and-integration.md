@@ -105,6 +105,7 @@ Own iPhone app with the Spark voice and "Hey Siri, Frag Spark", paired by QR cod
 
 With the profile's browser login or the iPhone app's key (header `X-Speech-Device`), only when the admin switched on "Messages to others" and the profile "Use messages for me"; other device keys get 403. At most 30 calls a minute.
 - `GET /api/messages`: mailbox (`items` with `id, from, name, text, t, read, kind, voice, secs`), recipients `to`, speakers for announcements, switches (`all`, `announce`, `voice`), `max_text`, `max_voice`.
+- `GET /api/messages/ready` (also while the switches are off): `enabled`, `on`, `reach` (`id, name`), `off` (`name, why`), `why`; for the ready view. The admin switches every profile on with `POST /api/admin/messages/enable_all`.
 - `GET /api/messages/poll?since=<ms>`: new messages not spoken anywhere yet; marks the device as open (then no notification).
 - `POST /api/messages/played {"id"}`: `{"play": true}` only for the first device that speaks it.
 - `POST /api/messages/send {"to": "<profile id>" | "all", "text"}` (at most 500 characters).

@@ -277,7 +277,7 @@ APP_PATHS = ("/api/chat", "/api/test/asr", "/api/siri/ask", "/api/iphone/hello",
              # messages between profiles (messages.py; who may write to me stays in the browser)
              "/api/messages", "/api/messages/poll", "/api/messages/send", "/api/messages/voice",
              "/api/messages/announce", "/api/messages/played", "/api/messages/read", "/api/messages/delete",
-             "/api/messages/audio")
+             "/api/messages/audio", "/api/messages/ready")
 APP_GATE = [lambda uid: False]
 
 

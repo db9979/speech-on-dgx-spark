@@ -318,7 +318,7 @@ async def prepare(request):
     # ticking off a list entry ... (extras.py): the module waiting for a yes in this conversation
     xprop = None
     if who and messages[-1]["role"] == "user" and not prop and not mprop:
-        xprop = await extras.answer({"who": who, "own": own_browser, "src": src, "client": body.get("client"),
+        xprop = await extras.answer({"who": who, "own": own_browser, "src": src, "client": body.get("client"), "private": private_ok,
                                      "ha": ha, "ha_code": ha_code, "ha_code_ok": ha_code_ok}, messages[-1]["content"])
         if xprop:
             if xprop.get("outside"):

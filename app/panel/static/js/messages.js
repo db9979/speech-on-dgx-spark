@@ -19,7 +19,28 @@ const msg={since:Date.now()-10*60e3,seen:new Set(),busy:false,
     if(chat.rec||chat.ctrl||playing())return;   // a conversation is running: the bubble and the chime suffice
     if(x.voice){msgPlay(x.id);return}
     sayText(text)}};
-setInterval(()=>msg.poll(),20000);
+setInterval(()=>{msg.poll();msgBar()},20000);
+
+// the envelope beside the chat input: pick a profile, type, send. No model in between, so nothing
+// earlier in the conversation can lock it; the Spark checks the same rules as for the assistant.
+function msgBar(){const on=msg.on();for(const id of ['chatmsg','mmsg'])if($(id))$(id).hidden=!on;if(!on&&$('msgcompose'))$('msgcompose').hidden=true}
+async function msgCompose(){const c=$('msgcompose');if(!c.hidden){c.hidden=true;return}
+  xmsg('mcmsg','');let d,r;try{[d,r]=await Promise.all([(await api('/api/messages')).json(),(await api('/api/messages/ready')).json()])}catch(e){xmsg('mcmsg',e.message,true);c.hidden=false;return}
+  const sel=$('mcto');sel.innerHTML=d.to.map(x=>`<option value="${esc(x.id)}">${esc(x.name)}</option>`).join('')+(d.all&&d.to.length?`<option value="all">${esc(t('alle','everybody'))}</option>`:'');
+  const off=r.off.map(x=>x.name+' '+(x.why==='hat Nachrichten aus'?t('hat Nachrichten aus','has messages off'):t('nimmt keine von dir an','takes none from you'))).join(', ');
+  const can=d.to.length>0;$('mcto').hidden=$('mctext').hidden=$('mcsend').hidden=!can;
+  c.hidden=false;if(can){$('mctext').focus();if(off)xmsg('mcmsg',t('Nicht erreichbar: ','Not reachable: ')+off)}
+  else xmsg('mcmsg',t('Gerade nimmt kein anderes Profil Nachrichten von dir an.','No other profile takes messages from you right now.')+(off?' '+off+'.':''),true)}
+async function msgComposeSend(){const v=$('mctext').value.trim();if(!v)return;
+  try{const r=await (await api('/api/messages/send',xjson('POST',{to:$('mcto').value,text:v}))).json();$('mctext').value='';
+    xmsg('mcmsg',t('Gesendet an ','Sent to ')+r.sent.join(', '));setTimeout(()=>{if(!$('mctext').value)$('msgcompose').hidden=true},2500)}
+  catch(e){xmsg('mcmsg',e.message,true)}}
+if($('chatmsg')){$('chatmsg').onclick=$('mmsg').onclick=()=>msgCompose();$('mcclose').onclick=()=>$('msgcompose').hidden=true;
+  $('mcsend').onclick=msgComposeSend;$('mctext').addEventListener('keydown',e=>{if(e.key==='Enter'){e.preventDefault();msgComposeSend()}})}
+// the admin's "für alle Profile einschalten" (Einstellungen → Funktionen)
+if($('msgallon'))$('msgallon').onclick=async()=>{if(!confirm(t('Nachrichten für alle Profile einschalten?','Switch messages on for every profile?')))return;
+  try{const r=await (await api('/api/admin/messages/enable_all',xjson('POST',{}))).json();xmsg('msgallmsg',t('Für ','Switched on for ')+r.switched+t(' Profil(e) eingeschaltet.',' profile(s).'))}
+  catch(e){xmsg('msgallmsg',e.message==='messages are turned off'?t('Erst „Nachrichten an andere“ einschalten und speichern.','First switch on "Messages to others" and save.'):e.message,true)}};
 setTimeout(()=>msg.poll(),5000);
 document.addEventListener('visibilitychange',()=>{if(!document.hidden)msg.poll()});
 
@@ -30,7 +51,7 @@ async function msgPlay(id){try{if(msgAudio){msgAudio.pause();URL.revokeObjectURL
 const MSG_TIME=s=>new Date(s*1000).toLocaleString(L==='en'?'en-GB':'de-DE',{day:'2-digit',month:'2-digit',hour:'2-digit',minute:'2-digit'});
 const msgRec={rec:null,chunks:[],timer:null,blob:null,stream:null};
 async function showMsg(){const box=$('msgbox');if(!box)return;if(!PROFILE||!MSG_ON){box.innerHTML='';return}
-  let d;try{d=await (await api('/api/messages')).json()}catch{box.innerHTML='';return}
+  let d,rd;try{[d,rd]=await Promise.all([(await api('/api/messages')).json(),(await api('/api/messages/ready')).json()])}catch{box.innerHTML='';return}
   const on=!!d.on,set=d.settings;
   const opt=(v,l,cur)=>`<option value="${esc(v)}"${v===cur?' selected':''}>${esc(l)}</option>`;
   const items=d.items.map(x=>`<li${x.read?'':' class="unread"'}><span><b>${esc(x.name||'?')}</b> <small class="mut">${esc(MSG_TIME(x.t))}${x.kind==='all'?t(' · an alle',' · to everybody'):''}${x.voice?' · 🎙 '+esc(x.secs||'')+' s':''}</small><br>${esc(x.text||'')}</span>
@@ -39,6 +60,7 @@ async function showMsg(){const box=$('msgbox');if(!box)return;if(!PROFILE||!MSG_
   const pick=(key,list)=>d.others.map(o=>`<label class="chk"><input type="checkbox" data-mwho="${key}" value="${esc(o.id)}"${list.includes(o.id)?' checked':''}> ${esc(o.name)}</label>`).join(' ')||`<span class="mut">${t('Noch kein anderes Profil mit Nachrichten.','No other profile with messages yet.')}</span>`;
   const to=d.to.map(r=>opt(r.id,r.name,'')).join('')+(d.all&&d.to.length?opt('all',t('alle','everybody'),''):'');
   box.innerHTML=`<div class="intro">${t('Schreib anderen Profilen dieses Sparks: „Sag Anna, das Essen ist fertig.“ Der Assistent liest die Nachricht vor und schickt sie nach deinem „Ja“. Neue Nachrichten kommen einmal an: hier auf der Seite, auf deinem Lautsprecher oder als Mitteilung auf dem Gerät, das du zuletzt benutzt hast. Was jemand schreibt, kann nie etwas schalten oder senden.','Write to other profiles of this Spark: "Tell Anna dinner is ready." The assistant reads the message back and sends it after your "Yes". New messages arrive once: here on the page, on your speaker or as a notification on the device you used last. What someone writes can never switch or send anything.')}</div>
+    ${msgReady(rd)}
     ${xsw('msg_on',t('Nachrichten für mich nutzen','Use messages for me'),t('Senden und empfangen. Nachrichten bleiben 30 Tage und kommen nicht in Sicherungen.','Send and receive. Messages stay 30 days and are not in backups.'))}
     ${on?`<h3 style="margin:14px 0 4px">${t('Neue Nachricht','New message')}</h3>
     ${d.to.length?`<div class="rowin"><select id="msgto">${to}</select></div>
@@ -64,6 +86,7 @@ async function showMsg(){const box=$('msgbox');if(!box)return;if(!PROFILE||!MSG_
     <div class="fh" id="msgmsg"></div>`;
   xbind(box,showMsg);
   const call=async(p,o,done)=>{try{const r=await (await api(p,o)).json();await showMsg();if(done)xmsg('msgmsg',done(r))}catch(e){xmsg('msgmsg',e.message,true)}};
+  if($('msgallon2'))$('msgallon2').onclick=()=>{if(confirm(t('Nachrichten für alle Profile einschalten?','Switch messages on for every profile?')))call('/api/admin/messages/enable_all',xjson('POST',{}),r=>t('Für ','Switched on for ')+r.switched+t(' Profil(e) eingeschaltet.',' profile(s).'))};
   if($('msgsend'))$('msgsend').onclick=()=>{const v=$('msgtext').value.trim();if(!v)return;
     call('/api/messages/send',xjson('POST',{to:$('msgto').value,text:v}),r=>t('Gesendet an ','Sent to ')+r.sent.join(', '))};
   if($('msgrec'))$('msgrec').onclick=()=>msgRecord();
@@ -84,6 +107,13 @@ async function showMsg(){const box=$('msgbox');if(!box)return;if(!PROFILE||!MSG_
     call('/api/messages/who',xjson('PUT',{[k]:[...box.querySelectorAll(`[data-mwho="${k}"]:checked`)].map(x=>x.value)}))});
   // the open page counts as unread-free once seen
   if(d.unread&&box.classList.contains('on'))api('/api/messages/read',xjson('POST',{ids:d.items.filter(x=>!x.read).map(x=>x.id)})).catch(()=>{})}
+// Bereit: is everything on, who can be reached, and why not
+function msgReady(r){const ok=(b,l)=>`<li>${b?'✅':'⚠️'} ${l}</li>`;
+  const off=r.off.map(x=>`${esc(x.name)} (${x.why==='hat Nachrichten aus'?t('hat Nachrichten aus','has messages off'):t('nimmt keine von dir an','takes none from you')})`).join(', ');
+  return `<h3 style="margin:10px 0 2px">${t('Bereit','Ready')}</h3><ul class="rdy" id="msgready">${ok(r.enabled,t('Vom Admin erlaubt','Allowed by the admin'))}${ok(r.on,t('Für dich eingeschaltet','On for you'))}
+    ${r.reach.length?ok(true,t('Erreichbar: ','Reachable: ')+r.reach.map(x=>esc(x.name)).join(', ')):ok(false,t('Noch niemand erreichbar','Nobody reachable yet'))}
+    ${off?ok(false,t('Nicht erreichbar: ','Not reachable: ')+off):''}</ul>
+    ${r.admin&&r.off_count?`<div class="row"><button class="b" type="button" id="msgallon2">${t('Für alle Profile einschalten','Switch on for every profile')} (${r.off_count})</button></div>`:''}`}
 // a voice message: recorded here, at most max_voice seconds, sent only when the person presses send
 async function msgRecord(){const btn=$('msgrec');
   if(msgRec.rec){msgRec.rec.stop();return}

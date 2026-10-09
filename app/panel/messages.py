@@ -238,8 +238,6 @@ def find(sender, said):
     if not want:
         return None, "Kein Empfänger genannt."
     allowed = recipients(sender)
-    if not allowed:
-        return None, "Niemand nimmt gerade Nachrichten von dir an."
     names = {x["id"]: _norm(x["name"]) for x in allowed}
     for test in (lambda n: n == want, lambda n: n.split(" ")[0] == want,
                  lambda n: want.endswith("s") and n == want[:-1], lambda n: n.split(" ")[0] == want.split(" ")[0]):
@@ -252,9 +250,59 @@ def find(sender, said):
     if len(close) == 1:
         u = next(u for u, n in names.items() if n == close[0])
         return next(x for x in allowed if x["id"] == u), ""
-    if any(_norm(name_of(u)) == want for u in profiles.user_ids()):
-        return None, "Diese Person nimmt gerade keine Nachrichten von dir an."
+    known = [u for u in profiles.user_ids() if u != sender and u not in names and _named(_norm(name_of(u)), want)]
+    if len(known) == 1:
+        return None, reach_why(known[0], sender)
+    if not allowed:
+        return None, "Niemand nimmt gerade Nachrichten von dir an."
     return None, "Unbekannter Empfänger. Möglich sind: " + ", ".join(x["name"] for x in allowed) + "."
+
+
+def _named(n, want):
+    return bool(n) and (n == want or n.split(" ")[0] == want or (want.endswith("s") and n == want[:-1]))
+
+
+def reach_why(rcpt, sender):
+    """Why the sender cannot write to rcpt (said to the sender: only "switched off", never who blocked whom)."""
+    if not usable(rcpt):
+        return f"{name_of(rcpt)} hat Nachrichten nicht eingeschaltet (Ich → Nachrichten → „Nachrichten für mich nutzen“)."
+    return f"{name_of(rcpt)} nimmt gerade keine Nachrichten von dir an."
+
+
+def ready(uid, admin=False):
+    """What the page and the app show under Ich → Nachrichten: is everything on, who can be reached."""
+    me = bool(profiles.settings(uid).get("msg_on"))
+    out = {"enabled": admin_on(), "on": me, "admin": bool(admin), "reach": [], "off": [], "off_count": 0}
+    if not admin_on():
+        out["why"] = "Nachrichten an andere sind ausgeschaltet (Admin: Einstellungen → Funktionen)."
+        return out
+    if not me:
+        out["why"] = "Für dich sind Nachrichten aus."
+    for u in profiles.user_ids():
+        on = bool(profiles.settings(u).get("msg_on"))
+        out["off_count"] += not on
+        if u == uid:
+            continue
+        if not on:
+            out["off"].append({"name": name_of(u), "why": "hat Nachrichten aus"})
+        elif not me or takes_from(u, uid):
+            out["reach"].append({"id": u, "name": name_of(u)})
+        else:
+            out["off"].append({"name": name_of(u), "why": "nimmt keine Nachrichten von dir an"})
+    if not admin:
+        out.pop("off_count")
+    return out
+
+
+def enable_all():
+    """The admin's "für alle Profile einschalten": every profile's own switch on (each can turn it off)."""
+    n = 0
+    for u in profiles.user_ids():
+        if not profiles.settings(u).get("msg_on"):
+            profiles.save_settings(u, {"msg_on": True})
+            n += 1
+    print(f"messages: admin switched messages on for {n} profile(s)", flush=True)
+    return n
 
 
 def _rate(kind, key, most, now):
@@ -618,6 +666,10 @@ def describe(p):
 
 
 async def carry_out(uid, p):
+    if p["kind"] == "enable":
+        profiles.save_settings(uid, {"msg_on": True})
+        print("messages: switched on by the profile's own yes", flush=True)
+        return "Nachrichten für dich sind jetzt eingeschaltet."
     if p["kind"] == "announce":
         names, why = await announce(uid, p["to"], p["text"])
         return f"Durchsage gesendet an: {', '.join(names)}." if names else "NICHT gesendet: " + why
@@ -633,9 +685,23 @@ async def answer(ctx, latest):
     """The person's yes or no to a waiting proposal, or "Antworte ihm: …" right after reading a
     message: {"call", "system"} or None."""
     who = ctx.get("who")
-    if not who or not ctx.get("own") or not usable(who["id"]):
+    if not who or not ctx.get("own") or not ctx.get("private", True) or not admin_on():
         return None
     uid, src = who["id"], ctx.get("src", "")
+    if not usable(uid):
+        p = pending(uid)
+        if p and p.get("kind") == "enable" and p.get("src", src) == src:
+            return await _answer_enable(uid, p, latest, src)
+        got = parse_send(latest)
+        if asks_send(latest) or (got and _profile_named(uid, got[0])):
+            # the person's own request while their switch is off: ask once to switch it on
+            q = {"kind": "enable", "to": [], "names": [], "text": "", "then": clean(latest, 600)}
+            _propose(uid, q, src, fresh=True)
+            return {"call": {"name": "message_send (Nachrichten aus)", "args": "", "result": "Frage: einschalten?"},
+                    "system": "Nachrichten: Für dieses Profil sind Nachrichten an andere noch ausgeschaltet. Frag den "
+                              "Nutzer genau: „Nachrichten an andere sind für dich noch aus. Soll ich sie einschalten?“ "
+                              "Erst sein Ja in der nächsten Nachricht schaltet sie ein."}
+        return None
     p = pending(uid)
     if p and p.get("src", src) == src:
         import calendars
@@ -664,7 +730,97 @@ async def answer(ctx, latest):
         return {"call": {"name": "message_reply (Vorschlag)", "args": describe(q), "result": "wartet auf Ja"},
                 "system": f"Nachrichten: Noch NICHT gesendet. Frag den Nutzer genau: „Soll ich {name_of(last[1])} "
                           f"antworten: ‚{text}‘?“ Erst sein Ja in der nächsten Nachricht sendet es."}
+    return _direct(uid, latest, src)
+
+
+async def _answer_enable(uid, p, latest, src):
+    import calendars
+    try:
+        os.remove(_pending_file(uid))
+    except OSError:
+        pass
+    if not calendars.confirms(latest):
+        return {"call": {"name": "message_send (nicht eingeschaltet)", "args": "", "result": "bleibt aus"},
+                "system": "Nachrichten: Bleiben ausgeschaltet, weil der Nutzer nicht zugestimmt hat. Sag das kurz."}
+    note = await carry_out(uid, p)
+    then = _direct(uid, p.get("then", ""), src) if p.get("then") else None
+    if then and then["call"]["result"] == "wartet auf Ja":
+        return {"call": then["call"], "system": "Nachrichten: " + note + " " + then["system"].split(": ", 1)[1]}
+    return {"call": {"name": "message_send (eingeschaltet)", "args": "", "result": note},
+            "system": "Nachrichten: " + note + " Sag dem Nutzer das und frag, was er wem schreiben möchte."}
+
+
+# "Schreib sb, dass ich später komme", "Sag Anna, das Essen ist fertig", "Nachricht an Ben: komme gleich",
+# "Richte Ben aus, dass …", "Sag allen, wir fahren um acht": the panel reads recipient and text from the
+# person's own words itself (fixed rules), so sending never depends on the model picking the tool.
+_NAME = r"(?P<to>(?!(?:mir|uns|dir|ihm|ihr|mal|bitte|doch|eine|ne|die|das)\b)[\wäöüßÄÖÜ]{2,30})"
+DIRECT = [re.compile(r"(?is)^\s*(?:bitte\s+)?(?:kannst du\s+)?(?:schreib|schick|send)\w*\s+(?:(?:bitte|mal)\s+)*"
+                     r"(?:(?:eine|ne)\s+nachricht\s+)?(?:an\s+)?" + _NAME + r"\s*(?:(?:eine|ne)\s+nachricht\b)?\s*[,:]?\s*"
+                     r"(?:dass\s+)?(?P<text>.{2,600}?)[.!]?\s*$"),
+          re.compile(r"(?is)^\s*(?:bitte\s+)?(?:sag|richte)\w*\s+(?:(?:bitte|mal)\s+)*" + _NAME
+                     + r"\s*(?:bescheid\b|aus\b)?\s*[,:]?\s*(?:dass\s+)?(?P<text>.{2,600}?)(?:\s+aus)?[.!]?\s*$"),
+          re.compile(r"(?is)^\s*(?:bitte\s+)?nachricht\s+(?:an|für)\s+" + _NAME + r"\s*[,:]\s*(?P<text>.{2,600}?)[.!]?\s*$"),
+          re.compile(r"(?is)^\s*(?:kannst|könntest)\s+du\s+(?:(?:bitte|mal)\s+)*(?:an\s+)?" + _NAME
+                     + r"\s+(?:(?:eine|ne)\s+nachricht\s+)?(?:schreiben|schicken|sagen|ausrichten)\s*[,:]?\s*"
+                     r"(?:dass\s+)?(?P<text>.{2,600}?)[.!?]?\s*$")]
+PRONOUN = re.compile(r"(?i)^(ich|wir|du|ihr|er|sie|es|man)\s")
+EVERYBODY = ("alle", "allen", "jeden", "jedem")
+
+
+def parse_send(text):
+    """(recipient as said, message text) from the person's own request, or None."""
+    for rx in DIRECT:
+        m = rx.match(text or "")
+        if m:
+            body = clean(m.group("text"))
+            if re.search(r"(?i)\bdass\s+" + re.escape(m.group("text")[:20]), text or ""):
+                # "dass ich später komme" → "Ich komme später": the verb at the end goes second; only after
+                # a pronoun (else the model words it)
+                words = body.split(" ")
+                if not PRONOUN.match(body):
+                    return None
+                if len(words) >= 3:
+                    body = " ".join(words[:1] + words[-1:] + words[1:-1])
+            if len(body) >= 2:
+                return m.group("to"), body[:1].upper() + body[1:]
     return None
+
+
+def _profile_named(uid, to):
+    want = _norm(to)
+    return any(_named(_norm(name_of(u)), want) for u in profiles.user_ids() if u != uid) or want in EVERYBODY
+
+
+def _direct(uid, latest, src):
+    """A send request in the person's own words becomes the proposal right away (still asks "Ja")."""
+    got = parse_send(latest) if admin_on() and not REPLY.match(latest or "") else None
+    if not got or not (wants_send(latest) or _profile_named(uid, got[0])):
+        return None
+    to, text = got
+    if _norm(to) in EVERYBODY:
+        if not all_on():
+            return None
+        rs = recipients(uid, everybody=True)
+        if not rs:
+            return None
+        q = {"kind": "all", "to": [x["id"] for x in rs], "names": [x["name"] for x in rs], "text": text}
+    else:
+        r, why = find(uid, to)
+        if not r:
+            if why.startswith("Unbekannter") or why.startswith("Kein"):
+                return None   # maybe not a name at all: the model handles it
+            return {"call": {"name": "message_send (nicht möglich)", "args": to, "result": why},
+                    "system": "Nachrichten: NICHT gesendet: " + why + " Sag dem Nutzer genau das."}
+        q = {"kind": "text", "to": [r["id"]], "names": [r["name"]], "text": text}
+    why = allowed_now(uid, q["to"], q["kind"])
+    if why:
+        return {"call": {"name": "message_send (nicht möglich)", "args": describe(q), "result": why},
+                "system": "Nachrichten: NICHT gesendet: " + why + " Sag dem Nutzer genau das."}
+    _propose(uid, q, src, fresh=True)
+    who = "allen (" + ", ".join(q["names"]) + ")" if q["kind"] == "all" else q["names"][0]
+    return {"call": {"name": "message_send (Vorschlag)", "args": describe(q), "result": "wartet auf Ja"},
+            "system": f"Nachrichten: Noch NICHT gesendet. Frag den Nutzer genau: „Soll ich {who} schreiben: ‚{text}‘?“ "
+                      "Erst sein Ja in der nächsten Nachricht sendet es."}
 
 
 # ---------------------------------------------------------------- the assistant's tools
@@ -701,8 +857,12 @@ SEND_ASK = re.compile(r"(?i)\b(?:schick|send|schreib)\w*\b.{0,60}\bnachricht|\bn
                       r"^\s*(?:bitte\s+)?sag\w*\s+(?:allen|alle)\b|\bdurchsage\b")
 
 
+def asks_send(text):
+    return bool(SEND_ASK.search(text or "") and not REPLY.match(text or ""))
+
+
 def wants_send(text):
-    return bool(admin_on() and SEND_ASK.search(text or "") and not REPLY.match(text or ""))
+    return admin_on() and asks_send(text)
 
 
 def why_not(ctx):
@@ -726,7 +886,7 @@ def offer(ctx):
     text = ctx.get("text") or ""
     why = why_not(ctx)
     if why:
-        if admin_on() and WORDS.search(text):
+        if asks_send(text) or (admin_on() and WORDS.search(text)):
             # asked for it but not possible: the model says the real reason instead of guessing one
             print("messages: tools NOT offered:", why, flush=True)
             return {"tools": [], "hint": "Nachrichten an andere sind gerade nicht möglich: " + why
@@ -819,7 +979,7 @@ async def briefing(uid, zone=None):
 from fastapi import APIRouter, Depends, HTTPException, Request  # noqa: E402
 from fastapi.responses import Response  # noqa: E402
 
-from core import assistant, browser_profile, own_profile  # noqa: E402
+from core import admin_cookie_ok, assistant, auth, browser_profile, own_profile  # noqa: E402
 
 router = APIRouter()
 
@@ -874,6 +1034,23 @@ def api_box(request: Request, prof=Depends(own_profile)):
     if not admin_on():
         raise HTTPException(403, "messages are turned off")
     return _state(prof["id"])
+
+
+@router.get("/api/messages/ready", dependencies=[Depends(assistant)])
+def api_ready(request: Request, prof=Depends(own_profile)):
+    """Is everything on, who can be reached (also while the own switch or the admin switch is off)."""
+    import guard
+    _person(request, prof)
+    guard.limit(request, "msg", prof["id"])
+    return ready(prof["id"], admin=admin_cookie_ok(request) and not request.headers.get(profiles.DEVICE_HEADER))
+
+
+@router.post("/api/admin/messages/enable_all", dependencies=[Depends(auth)])
+def api_enable_all():
+    """The admin switches messages on for every profile at once (each profile can switch it off again)."""
+    if not admin_on():
+        raise HTTPException(403, "messages are turned off")
+    return {"switched": enable_all()}
 
 
 @router.get("/api/messages/poll", dependencies=[Depends(assistant)])

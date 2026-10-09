@@ -31,6 +31,7 @@ All options for running without questions (`--mode api --asr 1.7b --tts 0.6b --y
 
 <!-- New version: add one line at the top here and in CHANGELOG.md, drop the oldest line here (keep 10). Details go to docs/de and docs/en, not into this README. -->
 
+- **V01.0.200** Simpler messages: envelope button in the chat, "Schreib X, dass …" read by the panel itself, switch on with "Ja", ready view
 - **V01.0.199** Browser test: a function switched on and a new version show without F5 (catches bugs like the one in .197)
 - **V01.0.198** Fixed panel error from .197 (pages did not load, "reading 'json'")
 - **V01.0.197** Functions switched on in the admin menu show right after saving (the page reloads itself), API answers are never cached; self-test against script/CSS links without a version
@@ -40,7 +41,6 @@ All options for running without questions (`--mode api --asr 1.7b --tts 0.6b --y
 - **V01.0.193** Voice choice for profiles: the list no longer stays empty ("Default" only) while the speech output loads; panel and iPhone app
 - **V01.0.192** Messages between profiles: "Tell Anna …" after "Yes", to everybody, announcements on speakers, voice messages
 - **V01.0.191** iPhone app: photos go to the Spark as pictures with "Let the model look at photos from the app" on; otherwise text recognition as before
-- **V01.0.190** Picture recognition (off): attach a photo in the assistant, the iPhone app or over Telegram and the language model looks at it; answer without tools, picture kept in memory only
 
 All versions: [CHANGELOG.md](CHANGELOG.md)
 

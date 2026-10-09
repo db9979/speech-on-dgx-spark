@@ -106,6 +106,7 @@ Eigene App fürs iPhone mit Spark-Stimme und „Hey Siri, Frag Spark“, Kopplun
 
 Mit der Browser-Anmeldung des Profils oder dem Schlüssel der iPhone-App (Header `X-Speech-Device`), nur wenn der Admin „Nachrichten an andere“ und das Profil „Nachrichten für mich nutzen“ eingeschaltet hat; andere Geräteschlüssel bekommen 403. Höchstens 30 Aufrufe pro Minute.
 - `GET /api/messages`: Postfach (`items` mit `id, from, name, text, t, read, kind, voice, secs`), Empfänger `to`, Lautsprecher für Durchsagen, Schalter (`all`, `announce`, `voice`), `max_text`, `max_voice`.
+- `GET /api/messages/ready` (auch bei ausgeschaltetem Schalter): `enabled`, `on`, `reach` (`id, name`), `off` (`name, why`), `why`; für die Bereit-Anzeige. Der Admin schaltet mit `POST /api/admin/messages/enable_all` alle Profile ein.
 - `GET /api/messages/poll?since=<ms>`: neue, noch nirgends gesprochene Nachrichten; markiert das Gerät als offen (dann keine Mitteilung).
 - `POST /api/messages/played {"id"}`: `{"play": true}` nur für das erste Gerät, das sie spricht.
 - `POST /api/messages/send {"to": "<Profil-id>" | "all", "text"}` (höchstens 500 Zeichen).

@@ -243,7 +243,7 @@ async function renderSet(el,vals,onchange){const admin=!onchange,voices=await vo
     if(f.type==='range')$(e.id+'_o').textContent=val.toFixed(2)+'×';
     if(v[f.k]===val||(f.type==='range'&&ev.type==='input'))return;v[f.k]=val;onchange&&onchange(f.k,val)}});
   return()=>({...v})}
-function applySet(){$('chathands').checked=!!S.hands;$('chattiming').style.display=S.timing?'':'none';if(typeof picsShow==='function')picsShow()}
+function applySet(){$('chathands').checked=!!S.hands;$('chattiming').style.display=S.timing?'':'none';if(typeof picsShow==='function')picsShow();if(typeof msgBar==='function')msgBar()}
 async function loadSettings(){let d=null;try{d=await (await fetch('/api/profile/settings')).json()}catch{}
   SDEF={...SDEF,...(d&&d.defaults||{})};S={...SDEF,...(d&&d.settings||{})};ALLOW=(d&&d.allow)||{};
   if(!PROFILE&&!isGuest()){try{S={...S,...JSON.parse(localStorage.getItem('chatset')||'{}')}}catch{}}
