@@ -295,7 +295,7 @@ async function espSerial(){
 // ---------------------------------------------------------------- admin (Funktionen)
 async function espAdmin(){if(!$('espadmin'))return;let d={};try{d=await (await api('/api/admin/esp32')).json()}catch{return}
   const fw=d.firmware;
-  $('espstate').textContent=(fw?t('Firmware ','Firmware ')+fw.version+' ('+Object.keys(fw.variants).length+t(' Boards)',' boards)'):t('Noch keine Firmware auf dem Spark.','No firmware on the Spark yet.'))
+  $('espstate').dataset.need=fw?'':'1';setTimeout(()=>typeof guidesCount==='function'&&guidesCount());$('espstate').textContent=(fw?t('Firmware ','Firmware ')+fw.version+' ('+Object.keys(fw.variants).length+t(' Boards)',' boards)'):t('Noch keine Firmware auf dem Spark.','No firmware on the Spark yet.'))
     +' · '+d.speakers+t(' Lautsprecher, ',' speakers, ')+d.online+t(' verbunden',' connected')+(d.checked?' · '+t('zuletzt geprüft ','last checked ')+espDate(d.checked):'')+(d.error?' · ⚠ '+d.error:'');
   $('espfetch').onclick=async()=>{$('espstate').textContent=t('Hole die Firmware von GitHub …','Fetching the firmware from GitHub …');
     try{await api('/api/admin/esp32/fetch',xjson('POST'));espAdmin()}catch(e){$('espstate').textContent=e.message}};

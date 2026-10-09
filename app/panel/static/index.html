@@ -68,12 +68,12 @@
     </div>
     <div>
     <button class="b cfgback" id="cfgback" type="button"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"><path d="M15 5l-7 7 7 7"/></svg><span>Alle Einstellungen</span></button>
-    <div class="card pane on" id="pane-feat"><h2 class="pt">Funktionen</h2><div class="fh" style="margin-top:0">Was der Assistent können soll. Details zu einer Funktion erscheinen erst, wenn sie an ist.</div>
+    <div class="card pane on" id="pane-feat"><h2 class="pt">Funktionen</h2><div class="fh" style="margin-top:0">Was der Assistent können soll. Tippe auf eine Funktion für Erklärung und Einstellungen.</div>
       <div class="setrow"><div class="lbl"><b>Gedächtnis</b><span>Merkt sich Dinge, die man ihm sagt, getrennt pro Profil.</span></div><label class="tgl"><input type="checkbox" id="chat.memory"><i></i></label></div>
       <div class="setrow"><div class="lbl"><b>Frühere Gespräche</b><span>Profile können nach früheren Gesprächen fragen; aus ruhigen Gesprächen merkt er sich wenige Fakten.</span></div><label class="tgl"><input type="checkbox" id="chat.history"><i></i></label></div>
       <div class="setrow"><div class="lbl"><b>Eigene Dokumente</b><span>Profile laden eigene Dokumente hoch, der Assistent sucht darin.</span></div><label class="tgl"><input type="checkbox" id="chat.documents"><i></i></label></div>
       <div class="setrow"><div class="lbl"><b>Websuche</b><span>Das Modell sucht selbst über deine SearXNG-Instanz, wenn eine Frage aktuelle Informationen braucht.</span></div><label class="tgl"><input type="checkbox" id="chat.search"><i></i></label></div>
-      <div data-show="chat.search"><label>Adresse deiner SearXNG-Instanz</label><input id="chat.search_url" placeholder="http://192.168.1.20:8080">
+      <div data-show="chat.search"><label>Adresse deiner SearXNG-Instanz</label><input id="chat.search_url" data-req placeholder="http://192.168.1.20:8080">
       <label>Treffer pro Suche</label><input id="chat.search_results" type="number" min="1" max="10"><div class="fh">1 bis 10.</div>
       <label>Seiten ganz lesen</label><input id="chat.search_pages" type="number" min="0" max="5"><div class="fh">0 bis 5; mehr ist genauer, aber langsamer.</div>
       <div class="row" style="margin-top:8px"><button class="b" id="searchtest" type="button">Verbindung testen</button><span id="searchmsg" class="mut"></span></div><div class="fh">Über deine eigene SearXNG-Instanz. Am besten erlaubt sie das JSON-Format (settings.yml: search.formats: [html, json]); sonst liest das Panel die normale Ergebnisseite.</div></div>
@@ -89,7 +89,7 @@
       <div class="setrow"><div class="lbl"><b>Home Assistant</b><span>Licht, Geräte und Heizung per Sprache, jedes Profil mit seinem eigenen Home Assistant.</span></div><label class="tgl"><input type="checkbox" id="chat.homeassistant"><i></i></label></div>
       <div class="setrow"><div class="lbl"><b>Home Assistant Assist (Wyoming)</b><span>Home Assistant nutzt Spracherkennung und Stimme des Spark (Voice PE, HA-App), nur von erlaubten Adressen.</span></div><label class="tgl"><input type="checkbox" id="chat.wyoming"><i></i></label></div>
       <div data-show="chat.wyoming" style="margin-left:18px">
-        <label>Erlaubte Adressen</label><input id="chat.wyoming_allow" placeholder="192.168.1.20" autocomplete="off"><div class="fh">Die Adresse deines Home Assistant, mehrere mit Komma, auch Netze wie 192.168.1.0/24. Leer = niemand.</div>
+        <label>Erlaubte Adressen</label><input id="chat.wyoming_allow" data-req placeholder="192.168.1.20" autocomplete="off"><div class="fh">Die Adresse deines Home Assistant, mehrere mit Komma, auch Netze wie 192.168.1.0/24. Leer = niemand.</div>
         <div class="row" style="margin-top:6px"><button class="b" type="button" id="wysuggest">Adresse von Home Assistant übernehmen</button></div><div class="fh" id="wymsg"></div>
         <div class="two2"><div><label>Port</label><input id="chat.wyoming_port" type="number" min="1024" max="65535"></div><div><label>Stimme</label><input id="chat.wyoming_voice" placeholder="Standardstimme" autocomplete="off"></div></div></div>
       <div class="setrow"><div class="lbl"><b>E-Mail lesen</b><span>Neue Mails nennen und vorlesen; der Assistent sendet, löscht und markiert nie.</span></div><label class="tgl"><input type="checkbox" id="chat.mail"><i></i></label></div>

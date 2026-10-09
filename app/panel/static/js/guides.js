@@ -328,7 +328,8 @@ function guideHTML(g){return GSECT.filter(([k])=>g[k]&&g[k].length).map(([k,de,e
     return `<div class="gsec"><b>${esc(t(de,en))}</b>${k==='setup'?`<ol>${items}</ol>`:g[k].length>1?`<ul>${items}</ul>`:`<p>${esc(gT(g[k][0]))}</p>`}</div>`}).join('')}
 function guideBox(g,open,plain){const d=document.createElement('details');d.className='guide';d.dataset.guide=g.id;d.open=!!open;
   d.innerHTML=`<summary>${plain?'':esc(t('Anleitung','Guide'))+': '}${esc(gT(g.t))}</summary><div class="gbody">${guideHTML(g)}</div>`;return d}
-// Einstellungen → Funktionen: rows sorted into the groups (collapsible, "2 von 5 an"), a guide button on each switch.
+// Einstellungen → Funktionen: rows sorted into the groups, each feature one short line (name, mark, switch).
+// A tap on the name opens its sentence, marks, guide and settings below; switching it on opens it too.
 function guidesFeat(){const pane=$('pane-feat');if(!pane||pane.dataset.grouped)return;pane.dataset.grouped='1';
   GGROUPS.forEach(([gid,de,en])=>{const rows=GUIDES.filter(g=>g.grp===gid&&g.sw).map(g=>{const el=$(g.sw);return el&&pane.contains(el)?[g,el.closest('.setrow')]:null}).filter(Boolean);
     if(!rows.length)return;
@@ -338,12 +339,44 @@ function guidesFeat(){const pane=$('pane-feat');if(!pane||pane.dataset.grouped)r
     // each switch takes its settings along: every block on the page with data-show="<its id>" goes right
     // below it (indented there, only shown while the switch is on), wherever it stands in the HTML
     // a switch that only shows while another one is on (Pakete under E-Mail) comes along with that one
-    const take=sw=>pane.querySelectorAll(`:scope>[data-show="${sw}"]`).forEach(d=>{
-      if(!d.classList.contains('setrow')){d.classList.add('fdetail');box.appendChild(d);return}
-      box.appendChild(d);const inner=d.querySelector('.tgl input[id]');if(inner)take(inner.id)});
-    rows.forEach(([g,row])=>{featTags(g,row);if(row.parentNode===box||(row.dataset.show&&rows.some(([x])=>x.sw===row.dataset.show)))return;
-      box.appendChild(row);take(g.sw)})});
-  guidesCount()}
+    const take=(sw,to)=>pane.querySelectorAll(`:scope>[data-show="${sw}"]`).forEach(d=>{
+      if(!d.classList.contains('setrow')){d.classList.add('fdetail');to.appendChild(d);return}
+      to.appendChild(d);const inner=d.querySelector('.tgl input[id]');if(inner)take(inner.id,to)});
+    rows.forEach(([g,row])=>{featTags(g,row);if(row.parentNode===box||row.closest('.fitem')||(row.dataset.show&&rows.some(([x])=>x.sw===row.dataset.show)))return;
+      const it=document.createElement('div');it.className='fitem';it.dataset.sw=g.sw;box.appendChild(it);it.appendChild(row);take(g.sw,it);featItem(it,row)})});
+  featBar(pane);guidesCount()}
+function featItem(it,row){const btn=document.createElement('button');btn.type='button';btn.className='fexp';btn.setAttribute('aria-expanded','false');
+  btn.setAttribute('aria-label',t('Details','Details'));row.prepend(btn);
+  const nm=row.querySelector('.lbl>b');if(nm){const n=document.createElement('span');n.className='fneed';n.hidden=true;n.textContent=t('braucht dich','needs you');nm.appendChild(n)}
+  btn.onclick=()=>featOpen(it,!it.classList.contains('open'));
+  row.querySelector('.lbl').addEventListener('click',e=>{if(e.target.closest('button,a,input,select,textarea'))return;featOpen(it,!it.classList.contains('open'))});
+  const sw=$(it.dataset.sw);if(sw)sw.addEventListener('change',()=>{if(sw.checked)featOpen(it,true)})}
+function featOpen(it,on){it.classList.toggle('open',on);const b=it.querySelector('.fexp');if(b)b.setAttribute('aria-expanded',on?'true':'false')}
+// an item needs you while its switch is on and a field it needs is empty ([data-req]) or a state says so ([data-need="1"])
+const featNeed=it=>{const sw=$(it.dataset.sw);return !!(sw&&sw.checked&&([...it.querySelectorAll('[data-req]')].some(x=>!x.value.trim())||it.querySelector('[data-need="1"]')))};
+const FFILT=[['all','Alle','All'],['on','An','On'],['off','Aus','Off'],['need','Braucht dich','Needs you']];
+let featF='all';try{featF=localStorage.getItem('featfilter')||'all'}catch(e){}
+function featBar(pane){const top=document.createElement('div');top.className='fbar';
+  top.innerHTML=`<div class="ffilt" role="group">${FFILT.map(([k,de,en])=>`<button type="button" data-f="${k}"><span>${esc(t(de,en))}</span> <i></i></button>`).join('')}</div>`+
+    `<div class="fjump">${[...pane.querySelectorAll('.fgrp')].map(b=>`<button type="button" data-g="${b.dataset.grp}">${esc(b.querySelector('summary b').textContent)}</button>`).join('')}</div>`;
+  const first=pane.querySelector('.fgrp');pane.insertBefore(top,first);
+  top.querySelectorAll('[data-f]').forEach(b=>b.onclick=()=>{featF=b.dataset.f;try{localStorage.setItem('featfilter',featF)}catch(e){}guidesCount()});
+  top.querySelectorAll('[data-g]').forEach(b=>b.onclick=()=>{const g=pane.querySelector(`.fgrp[data-grp="${b.dataset.g}"]`);if(!g)return;
+    if(g.hidden){featF='all';guidesCount()}g.open=true;g.scrollIntoView({block:'start',behavior:'smooth'})})}
+// a search hit inside a closed or filtered-out item: show and open it
+function featShow(el){const it=el&&el.closest&&el.closest('#pane-feat .fitem');if(!it)return;if(it.hidden){featF='all';guidesCount()}featOpen(it,true)}
+function guidesCount(){const pane=$('pane-feat');if(!pane)return;const items=[...pane.querySelectorAll('.fitem')];
+  const st=items.map(it=>{const sw=$(it.dataset.sw),on=!!(sw&&sw.checked),need=featNeed(it);it.querySelector('.fneed').hidden=!need;return {it,on,need}});
+  const n={all:st.length,on:st.filter(x=>x.on).length,off:st.filter(x=>!x.on).length,need:st.filter(x=>x.need).length};
+  if(featF==='need'&&!n.need)featF='all';
+  pane.querySelectorAll('.ffilt [data-f]').forEach(b=>{const k=b.dataset.f;b.querySelector('i').textContent=n[k];b.classList.toggle('on',k===featF);b.hidden=k==='need'&&!n.need;b.classList.toggle('need',k==='need')});
+  st.forEach(x=>{x.it.hidden=featF==='on'?!x.on:featF==='off'?x.on:featF==='need'?!x.need:false});
+  pane.querySelectorAll('.fgrp').forEach(b=>{const s=[...b.querySelectorAll('.setrow input[type=checkbox]')];
+    b.hidden=![...b.querySelectorAll('.fitem')].some(x=>!x.hidden);
+    const j=pane.querySelector(`.fjump [data-g="${b.dataset.grp}"]`);if(j)j.hidden=b.hidden;
+    b.querySelector('.fcount').textContent=t(`${s.filter(x=>x.checked).length} von ${s.length} an`,`${s.filter(x=>x.checked).length} of ${s.length} on`)})}
+document.addEventListener('change',e=>{if(e.target.closest&&e.target.closest('#pane-feat'))guidesCount()});
+document.addEventListener('input',e=>{if(e.target.closest&&e.target.closest('#pane-feat [data-req]'))guidesCount()});
 // small marks behind a feature's name instead of repeating it in every description
 const ME_NAME={setbox:['Gespräch','Conversation'],notebox:['Mitteilungen','Notifications'],factbox:['Gedächtnis','Memory'],voicebox:['Sprechererkennung','Speaker identification'],roombox:['Raum-Modus','Room mode'],
   probox:['Von selbst','Proactive'],taskbox:['Aufgaben','Tasks'],calbox:['Kalender','Calendar'],wxbox:['Wetter','Weather'],conbox:['Kontakte','Contacts'],trbox:['Bus und Bahn','Bus and train'],
@@ -356,10 +389,6 @@ function featTags(g,row){const lbl=row.querySelector('.lbl');if(!lbl||lbl.queryS
   if(g.out&&g.out!==NOTHING_OUT)tags.push(['out',t('verlässt das Haus','leaves the house')]);
   if(!tags.length)return;const d=document.createElement('div');d.className='ftags';
   d.innerHTML=tags.map(([k,x])=>`<span class="ftag ${k}">${esc(x)}</span>`).join('');lbl.querySelector('span').after(d)}
-function guidesCount(){document.querySelectorAll('#pane-feat .fgrp').forEach(b=>{const s=[...b.querySelectorAll('.setrow input[type=checkbox]')];
-  if(!b.dataset.seen&&CFG){b.dataset.seen='1';b.open=s.some(x=>x.checked)}
-  b.querySelector('.fcount').textContent=t(`${s.filter(x=>x.checked).length} von ${s.length} an`,`${s.filter(x=>x.checked).length} of ${s.length} on`)})}
-document.addEventListener('change',e=>{if(e.target.closest&&e.target.closest('#pane-feat'))guidesCount()});
 // A small "Anleitung" button next to every admin switch that has a guide; it opens the guide below the row.
 function guidesSwitches(){GUIDES.filter(g=>g.sw).forEach(g=>{const el=$(g.sw);if(!el||document.querySelector(`[data-gbtn="${g.id}"]`))return;
   const row=el.closest('.setrow'),anchor=row||(el.closest('label.chk')||el),after=row||(anchor.nextElementSibling&&anchor.nextElementSibling.classList.contains('fh')?anchor.nextElementSibling:anchor);

@@ -28,6 +28,7 @@ function cfgGo(h){const b=document.querySelector(`#cfgnav button[data-p="${h.p}"
   let el=h.el;const dep=el.closest('[data-show]');                       // a detail of a switch that is off: show the switch
   if(dep&&dep.style.display==='none'){const sw=$(dep.dataset.show);if(sw)el=sw.closest('.setrow')||sw}
   for(let d=el.closest('details');d;d=d.parentElement.closest('details'))d.open=true;
+  if(typeof featShow==='function')featShow(el);
   setTimeout(()=>sFlash(el),60)}
 function cfgSearchMount(){const nav=$('cfgnav');if(!nav||nav.querySelector('.sbox'))return;
   nav.prepend(sBox(t('Einstellung suchen …','Search settings …'),cfgIndex,cfgGo))}

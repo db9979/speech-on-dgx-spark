@@ -203,6 +203,54 @@ class Browser(unittest.TestCase):
         finally:
             helpers.set_config(esp32=False, room=False, room_voices=False)
 
+    def test_features_are_short_lines(self):
+        """V01.0.171: Funktionen shows one short line per feature; a tap opens it, switching it on opens it,
+        the filter "An" hides what is off, "Braucht dich" lists a switch that is on but misses its address,
+        and a search hit opens its line."""
+        async def go():
+            async with async_playwright() as p:
+                for w, h in ((1280, 900), (390, 844)):
+                    br, pg, errors = await self.page(p, w, h)
+                    await pg.evaluate("goSec('cfg');document.querySelector('#cfgnav button[data-p=feat]').click()")
+                    await pg.wait_for_timeout(300)
+                    n = await pg.evaluate("document.querySelectorAll('#pane-feat .fitem').length")
+                    self.assertGreater(n, 15)
+                    self.assertEqual(await pg.evaluate("document.querySelectorAll('#pane-feat .fitem.open').length"), 0)
+                    # a closed line hides its sentence and settings
+                    self.assertFalse(await pg.is_visible("#chat\\.search_url"))
+                    tall = await pg.evaluate("$('pane-feat').getBoundingClientRect().height")
+                    self.assertLess(tall, 3200 if w < 760 else 2200, f"{w}: {tall}px")
+                    await pg.evaluate("$('chat.search').closest('.fitem').querySelector('.fexp').click()")
+                    self.assertTrue(await pg.evaluate("$('chat.search').closest('.fitem').classList.contains('open')"))
+                    await pg.evaluate("$('chat.search').closest('.fitem').querySelector('.fexp').click()")
+                    # switching on opens the line; without an address it needs you
+                    await pg.evaluate("const s=$('chat.search');s.checked=true;$('chat.search_url').value='';s.dispatchEvent(new Event('change',{bubbles:true}))")
+                    self.assertTrue(await pg.evaluate("$('chat.search').closest('.fitem').classList.contains('open')"))
+                    self.assertTrue(await pg.is_visible("#chat\\.search_url"))
+                    self.assertFalse(await pg.evaluate("$('chat.search').closest('.fitem').querySelector('.fneed').hidden"))
+                    await pg.evaluate("document.querySelector('.ffilt [data-f=need]').click()")
+                    shown = await pg.evaluate("[...document.querySelectorAll('#pane-feat .fitem')].filter(x=>!x.hidden).map(x=>x.dataset.sw)")
+                    self.assertIn("chat.search", shown)
+                    await pg.fill("#chat\\.search_url", "http://192.168.1.20:8080")
+                    self.assertTrue(await pg.evaluate("$('chat.search').closest('.fitem').querySelector('.fneed').hidden"))
+                    await pg.evaluate("document.querySelector('.ffilt [data-f=on]').click()")
+                    vis = await pg.evaluate("[...document.querySelectorAll('#pane-feat .fitem')].filter(x=>!x.hidden).map(x=>$(x.dataset.sw).checked)")
+                    self.assertTrue(vis and all(vis), vis)
+                    await pg.evaluate("document.querySelector('.ffilt [data-f=all]').click()")
+                    self.assertEqual(await pg.evaluate("[...document.querySelectorAll('#pane-feat .fitem')].filter(x=>!x.hidden).length"), n)
+                    over = await pg.evaluate("document.documentElement.scrollWidth-window.innerWidth")
+                    self.assertLessEqual(over, 1, f"{w}: {over}px zu breit")
+                    # a search hit opens its line
+                    if w > 760:
+                        await pg.fill("#cfgnav .sbox input", "Treffer pro Suche")
+                        await pg.evaluate("$('chat.search').closest('.fitem').classList.remove('open')")
+                        await pg.press("#cfgnav .sbox input", "Enter")
+                        await pg.wait_for_timeout(200)
+                        self.assertTrue(await pg.evaluate("$('chat.search').closest('.fitem').classList.contains('open')"))
+                    self.assertEqual(errors, [], w)
+                    await br.close()
+        self.run_async(go())
+
     def test_settings_search_opens_the_setting(self):
         async def go():
             async with async_playwright() as p:

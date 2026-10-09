@@ -2,6 +2,7 @@
 
 Every version in one line, newest first (taken from the commit messages, so some lines are German, some English). Older entries have no version number.
 
+- **V01.0.171** · 2026-10-08 · Funktionen als kurze Zeilen: Antippen klappt auf, Filter Alle/An/Aus/Braucht dich, Sprungleiste zu den Gruppen
 - **V01.0.170** · 2026-10-09 · iPhone-App: Kurzbefehl-Beschreibung ohne „iPhone“ (Apple-Fehler ITMS-90626), Store-Name „Spark Assistent DB“
 - **V01.0.169** · 2026-10-09 · iPhone-App: App-Store-Texte (de/en) per GitHub-Knopf „App Store texts“ in App Store Connect eintragen
 - **V01.0.168** · 2026-10-09 · iPhone-App: Datenschutzerklärung für den App Store (de/en)
