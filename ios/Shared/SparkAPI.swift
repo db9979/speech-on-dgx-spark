@@ -169,6 +169,8 @@ struct DocText {
     var name = ""
     var parts: [(page: Int?, text: String)] = []
     var cut = false
+    /// Where the next part starts ("Weiterlesen"), nil when everything is here.
+    var next: Int?
 }
 
 /// Is everything on for messages, who can be reached (GET /api/messages/ready, also while off).
@@ -433,15 +435,22 @@ struct SparkAPI {
         id.range(of: "^[0-9a-f]{12}$", options: .regularExpression) != nil
     }
 
-    func docText(_ id: String) async throws -> DocText {
+    func docText(_ id: String, start: Int = 0) async throws -> DocText {
         guard Self.docId(id) else { throw SparkError(message: String(localized: "Das Dokument gibt es nicht.")) }
-        let (data, response) = try await URLSession.shared.data(for: request("api/profile/wissen/\(id)/text"))
+        var r = request("api/profile/wissen/\(id)/text")
+        if start > 0 {
+            var c = URLComponents(url: base.appendingPathComponent("api/profile/wissen/\(id)/text"), resolvingAgainstBaseURL: false)!
+            c.queryItems = [URLQueryItem(name: "start", value: String(min(start, 1_000_000)))]
+            r.url = c.url
+        }
+        let (data, response) = try await URLSession.shared.data(for: r)
         try Self.check(data, response)
         let d = Self.object(data)
         var t = DocText()
         t.name = d["name"] as? String ?? ""
         t.parts = (d["parts"] as? [[String: Any]] ?? []).map { p in ((p["page"] as? NSNumber)?.intValue, p["text"] as? String ?? "") }
         t.cut = d["cut"] as? Bool ?? false
+        t.next = t.cut ? (d["next"] as? NSNumber)?.intValue : nil
         return t
     }
 

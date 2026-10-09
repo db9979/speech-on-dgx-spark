@@ -77,7 +77,7 @@ In the app under Settings → **My profile** you set the same values as in the p
 
 ## Looking at my documents
 
-With "Documents from the app" (Me → iPhone app), Settings → **My documents** lists your documents on the Spark, with search. Tap one to open it: a kept PDF or picture opens in Apple's preview (zoom, search, share), and the "Text" tab shows the text the Spark stored. Other file types show as text only. Deleting and uploading stay in the panel.
+With "Documents from the app" (Me → iPhone app), Settings → **My documents** lists your documents on the Spark, with search. Tap one to open it: a kept PDF or picture opens in Apple's preview (zoom, search, share), and the "Text" tab shows the text the Spark stored. Other file types show as text only. Long texts come in parts: "Read on" at the bottom adds the next one. Deleting and uploading stay in the panel.
 
 ## Messages to other profiles
 

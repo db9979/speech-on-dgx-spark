@@ -31,6 +31,7 @@ Alle Optionen ohne Rückfragen (`--mode api --asr 1.7b --tts 0.6b --yes` …) st
 
 <!-- New version: add one line at the top here and in CHANGELOG.md, drop the oldest line here (keep 10). Details go to docs/de and docs/en, not into this README. -->
 
+- **V01.0.244** iPhone-App: Meine Dokumente mit „Weiterlesen“ bei langen Dokumenten
 - **V01.0.243** Ich → Dokumente → Ansehen zeigt lange Dokumente stückweise mit „Weiterlesen“ statt „… gekürzt“ nach 200.000 Zeichen; die Suche des Assistenten nutzte schon immer den ganzen Text
 - **V01.0.242** Dokumente: PDFs bis 100 MB (Admin stellt unter Funktionen → Eigene Dokumente bis 300 MB ein; andere Dateien bis 20 MB, vorher „request too large“ ab 20 MB); Speicher pro Profil gilt für alle Uploads zusammen, Ich → Dokumente zeigt „Belegt: x von y“ mit Balken, der Admin sieht und setzt ihn pro Profil unter Zustand → Monitoring
 - **V01.0.241** Das kleine Bild vor jeder Antwort im Verlauf folgt dem gewählten Gesicht: bei „Comic“ ein Comic-Kopf statt des Roboters
@@ -40,7 +41,6 @@ Alle Optionen ohne Rückfragen (`--mode api --asr 1.7b --tts 0.6b --yes` …) st
 - **V01.0.237** Update-Prüfung: GitHub-Grenze von 60 Abfragen pro Stunde erkannt (Hinweis mit Uhrzeit statt Fehlerflut), Statuscode im Log
 - **V01.0.236** Gemeinsame Dokumente: ein Profil gibt einzelne fertige Dokumente mit „Für alle“ frei (ohne neu einzulesen), die anderen Profile finden sie in der Suche und sehen sie unter Ich → Dokumente → „Von anderen für alle freigegeben“; nur der Besitzer oder der Admin (Zustand → Monitoring) nimmt es zurück; Gäste und unbekannte Stimmen am Lautsprecher nie; Admin- und Profilschalter, beide aus
 - **V01.0.235** Lautsprecher erkennt die Inhaberstimme nachvollziehbar: Logs → Lautsprecher zeigt pro Frage Ähnlichkeit, nötigen Wert und Sekunden Sprache; bei zu kurzer Frage bittet der Assistent um einen ganzen Satz; „Stimme hier anlernen“ nimmt fünf Sätze
-- **V01.0.234** Pebble einfacher installieren: Ich → Pebble-Uhr zeigt einen QR-Code zur App-Datei und die drei Schritte (App auf die Uhr, Uhr verbunden?, Koppeln); gibt es auf dem Spark eine neuere Uhr-App, steht höchstens einmal am Tag „Neue Uhr-App“ unter einer Antwort (Uhr-App 1.4.0)
 
 Alle Versionen: [CHANGELOG.md](CHANGELOG.md)
 

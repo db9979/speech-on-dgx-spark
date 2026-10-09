@@ -78,7 +78,7 @@ In der App unter Einstellungen → **Mein Profil** stellst du dieselben Werte ei
 
 ## Meine Dokumente ansehen
 
-Mit „Dokumente aus der App“ (Ich → iPhone-App) steht unter Einstellungen → **Meine Dokumente** die Liste deiner Dokumente auf dem Spark, mit Suche. Ein Tippen öffnet eines: Ist das Original aufbewahrt und ein PDF oder Bild, zeigt es Apples Vorschau (zoomen, suchen, teilen), daneben gibt es den Reiter „Text“ mit dem Text, den der Spark gespeichert hat. Andere Dateiarten zeigt die App nur als Text. Löschen und Hochladen gehen weiter im Panel.
+Mit „Dokumente aus der App“ (Ich → iPhone-App) steht unter Einstellungen → **Meine Dokumente** die Liste deiner Dokumente auf dem Spark, mit Suche. Ein Tippen öffnet eines: Ist das Original aufbewahrt und ein PDF oder Bild, zeigt es Apples Vorschau (zoomen, suchen, teilen), daneben gibt es den Reiter „Text“ mit dem Text, den der Spark gespeichert hat. Andere Dateiarten zeigt die App nur als Text. Lange Texte kommen stückweise: unten „Weiterlesen“ hängt das nächste Stück an. Löschen und Hochladen gehen weiter im Panel.
 
 ## Nachrichten an andere Profile
 

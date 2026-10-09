@@ -1181,16 +1181,6 @@
         }
       }
     },
-    "Gekürzt. Das ganze Dokument steht im Panel.": {
-      "localizations": {
-        "en": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Shortened. The whole document is in the panel."
-          }
-        }
-      }
-    },
     "Gerade erst gestartet. Wieder möglich in %lld Minuten.": {
       "localizations": {
         "en": {
@@ -2031,6 +2021,16 @@
         }
       }
     },
+    "Seite %lld von %lld gelesen": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "page %1$lld of %2$lld read"
+          }
+        }
+      }
+    },
     "Senden": {
       "localizations": {
         "en": {
@@ -2541,6 +2541,16 @@
         }
       }
     },
+    "Weiterlesen": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Read on"
+          }
+        }
+      }
+    },
     "Wen meinst du?": {
       "localizations": {
         "en": {
@@ -2627,16 +2637,6 @@
           "stringUnit": {
             "state": "translated",
             "value": "Recent"
-          }
-        }
-      }
-    },
-    "Seite %lld von %lld gelesen": {
-      "localizations": {
-        "en": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "page %1$lld of %2$lld read"
           }
         }
       }

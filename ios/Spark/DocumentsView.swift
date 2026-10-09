@@ -75,6 +75,7 @@ struct DocumentView: View {
     @State private var tab = 0
     @State private var loading = true
     @State private var error: String?
+    @State private var more = false
 
     var body: some View {
         VStack(spacing: 0) {
@@ -116,7 +117,15 @@ struct DocumentView: View {
                         // the document's own words: plain text, nothing in it is a link or a command
                         Text(verbatim: p.text).textSelection(.enabled)
                     }
-                    if t.cut { Text("Gekürzt. Das ganze Dokument steht im Panel.").font(.footnote).foregroundStyle(.secondary) }
+                    if let next = t.next {
+                        Button {
+                            Task { await readOn(from: next) }
+                        } label: {
+                            if more { ProgressView() } else { Label("Weiterlesen", systemImage: "arrow.down.circle") }
+                        }
+                        .buttonStyle(.bordered)
+                        .disabled(more)
+                    }
                 }
             }
             .padding()
@@ -130,6 +139,19 @@ struct DocumentView: View {
         do { text = try await api.docText(doc.id) } catch { self.error = error.localizedDescription }
         if original == nil { tab = 1 }
         loading = false
+    }
+
+    /// The next part of a long document, added below what is already shown.
+    private func readOn(from start: Int) async {
+        guard let api = SparkAPI.current, !more else { return }
+        more = true
+        defer { more = false }
+        do {
+            let part = try await api.docText(doc.id, start: start)
+            text?.parts += part.parts
+            text?.cut = part.cut
+            text?.next = part.next.flatMap { $0 > start ? $0 : nil }
+        } catch { self.error = error.localizedDescription }
     }
 }
 
