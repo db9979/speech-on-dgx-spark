@@ -2,6 +2,7 @@
 
 Every version in one line, newest first (taken from the commit messages, so some lines are German, some English). Older entries have no version number.
 
+- **V01.0.209** · 2026-10-09 · Raum-Modus in der iPhone-App: Zeile „… hört zu bis …“ mit Beenden oben im Chat, Live-Aktivität mit Restzeit, Widget „Raum-Modus“, Siri „Raummodus beenden mit Spark“ (nur beenden, nie starten)
 - **V01.0.208** · 2026-10-09 · Raum-Modus sichtbar: grüner Streifen „… hört zu bis …“ auf jeder Seite, Ich → Raum-Modus „Gerade aktiv“ mit +30 Min./Beenden, Zustand „Hört gerade zu“ mit „Alle beenden“, Marke und Filter in Profile und Geräte, Tab-Titel „● Raum“, Erinnerungston, Mitteilung bei Start am Lautsprecher, Verlauf ohne Text, Schlüssel für Home Assistant
 - **V01.0.207** · 2026-10-09 · Einstellungen einheitlich: gleiche Bausteine auf allen Seiten, Menü Assistent/Sprache/Spark, „Auf einen Blick“, Update und Sicherung unter Einstellungen, Zustand und Einbinden mit Spalte bzw. Liste wie Einstellungen
 - **V01.0.206** · 2026-10-09 · Viele Benutzer: Profilliste mit Suche, Filter, Seiten und Details, Rufname, Empfänger per Suchfeld mit Zuletzt und Favoriten (Panel und iPhone), Rückfrage bei gleichen Namen (Sprache und Siri); Profil löschen braucht den frischen Code

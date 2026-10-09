@@ -215,5 +215,9 @@ struct SparkShortcuts: AppShortcutsProvider {
                     phrases: ["\(.applicationName) zuhören", "Mit \(.applicationName) sprechen"],
                     shortTitle: "Spark zuhören",
                     systemImageName: "waveform")
+        AppShortcut(intent: EndRoomsIntent(),
+                    phrases: ["Raummodus beenden mit \(.applicationName)", "\(.applicationName) Raummodus beenden"],
+                    shortTitle: "Raum-Modus beenden",
+                    systemImageName: "ear")
     }
 }

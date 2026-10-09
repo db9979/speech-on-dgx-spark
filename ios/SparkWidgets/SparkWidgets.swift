@@ -76,6 +76,8 @@ struct ListenControl: ControlWidget {
 struct SparkWidgets: WidgetBundle {
     var body: some Widget {
         ListenWidget()
+        RoomWidget()
+        RoomActivityWidget()
         if #available(iOS 18.0, *) {
             ListenControl()
         }

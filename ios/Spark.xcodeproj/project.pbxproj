@@ -64,6 +64,7 @@
 		5A0000000000000000000300 /* SparkShare.appex */ = {isa = PBXFileReference; explicitFileType = "wrapper.app-extension"; includeInIndex = 0; path = SparkShare.appex; sourceTree = BUILT_PRODUCTS_DIR; };
 		5A0000000000000000000304 /* SparkShare-Info.plist */ = {isa = PBXFileReference; lastKnownFileType = text.plist.xml; path = "SparkShare-Info.plist"; sourceTree = "<group>"; };
 		5A0000000000000000000306 /* SparkShare.entitlements */ = {isa = PBXFileReference; lastKnownFileType = text.plist.entitlements; path = SparkShare.entitlements; sourceTree = "<group>"; };
+		5A0000000000000000000206 /* SparkWidgets.entitlements */ = {isa = PBXFileReference; lastKnownFileType = text.plist.entitlements; path = SparkWidgets.entitlements; sourceTree = "<group>"; };
 /* End PBXFileReference section */
 
 /* Begin PBXFileSystemSynchronizedRootGroup section */
@@ -90,6 +91,11 @@
 		5A0000000000000000000410 /* Shared */ = {
 			isa = PBXFileSystemSynchronizedRootGroup;
 			path = Shared;
+			sourceTree = "<group>";
+		};
+		5A0000000000000000000510 /* Rooms */ = {
+			isa = PBXFileSystemSynchronizedRootGroup;
+			path = Rooms;
 			sourceTree = "<group>";
 		};
 /* End PBXFileSystemSynchronizedRootGroup section */
@@ -134,9 +140,11 @@
 				5A0000000000000000000104 /* SparkNotify-Info.plist */,
 				5A0000000000000000000106 /* SparkNotify.entitlements */,
 				5A0000000000000000000204 /* SparkWidgets-Info.plist */,
+				5A0000000000000000000206 /* SparkWidgets.entitlements */,
 				5A0000000000000000000304 /* SparkShare-Info.plist */,
 				5A0000000000000000000306 /* SparkShare.entitlements */,
 				5A0000000000000000000410 /* Shared */,
+				5A0000000000000000000510 /* Rooms */,
 				5A0000000000000000000010 /* Spark */,
 				5A0000000000000000000110 /* SparkNotify */,
 				5A0000000000000000000210 /* SparkWidgets */,
@@ -179,6 +187,7 @@
 			fileSystemSynchronizedGroups = (
 				5A0000000000000000000010 /* Spark */,
 				5A0000000000000000000410 /* Shared */,
+				5A0000000000000000000510 /* Rooms */,
 			);
 			name = Spark;
 			productName = Spark;
@@ -221,6 +230,8 @@
 			);
 			fileSystemSynchronizedGroups = (
 				5A0000000000000000000210 /* SparkWidgets */,
+				5A0000000000000000000410 /* Shared */,
+				5A0000000000000000000510 /* Rooms */,
 			);
 			name = SparkWidgets;
 			productName = SparkWidgets;
@@ -621,6 +632,7 @@
 		5A0000000000000000000272 /* Debug */ = {
 			isa = XCBuildConfiguration;
 			buildSettings = {
+				CODE_SIGN_ENTITLEMENTS = SparkWidgets.entitlements;
 				CODE_SIGN_STYLE = Automatic;
 				CURRENT_PROJECT_VERSION = 1;
 				DEVELOPMENT_TEAM = "";
@@ -645,6 +657,7 @@
 		5A0000000000000000000273 /* Release */ = {
 			isa = XCBuildConfiguration;
 			buildSettings = {
+				CODE_SIGN_ENTITLEMENTS = SparkWidgets.entitlements;
 				CODE_SIGN_STYLE = Automatic;
 				CURRENT_PROJECT_VERSION = 1;
 				DEVELOPMENT_TEAM = "";

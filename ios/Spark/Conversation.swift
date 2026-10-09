@@ -25,6 +25,11 @@ final class AppState: ObservableObject {
             if paired { Conversation.shared.listenNow() }
             return
         }
+        if url.scheme == "spark-app", url.host == "rooms" {
+            // from the room widget or the Live Activity: the app shows the line at the top of the chat
+            if paired { Task { await Conversation.shared.refreshRooms(now: true) } }
+            return
+        }
         guard url.scheme == "spark-app", url.host == "pair",
               let items = URLComponents(url: url, resolvingAgainstBaseURL: false)?.queryItems,
               let raw = items.first(where: { $0.name == "url" })?.value,

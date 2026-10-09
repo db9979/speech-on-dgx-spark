@@ -49,6 +49,8 @@ final class Conversation: ObservableObject {
     /// the Spark cannot be reached (no network, Spark or proxy down): typed questions wait in the outbox
     @Published var unreachable = false
     @Published var outbox: [Outbox.Item] = Outbox.load()
+    /// devices of the profile in room mode (only with "Raum-Modus in der App zeigen"): line in the chat, Live Activity, widget
+    @Published var rooms: [ListeningRoom] = []
 
     /// One assistant for the phone screen and CarPlay.
     static let shared = Conversation()
@@ -76,6 +78,8 @@ final class Conversation: ObservableObject {
     private var wantListen = false
     private var labelShown = false
     private var checking = false
+    private var roomsAt = Date.distantPast
+    private var roomsShown: [ListeningRoom]?
     private let net = NetWatch()
     /// the id under which this conversation is kept in the profile's list (the panel's Protokoll)
     private(set) var convoId = Conversation.newId()
@@ -188,6 +192,7 @@ final class Conversation: ObservableObject {
             lastActivity = Date()
             if unreachable { Task { await check() } }
             if allowed.ios && started { Task { await AppleReminders.syncLists() } }
+            Task { await refreshRooms(now: true) }
             if phase == .idle || phase == .waiting { base() }
         } else if !canWake && !inCar {
             // no listening in the background unless the wake word is on
@@ -213,6 +218,7 @@ final class Conversation: ObservableObject {
         }
         if unreachable { Task { await check() } }
         if allowed.proactive && Prefs.speakNotes && (foreground || phase == .waiting || inCar) { Task { await pollNotes() } }
+        if foreground { Task { await refreshRooms() } }
     }
 
     // ---------------------------------------------------------------- resting state
@@ -526,12 +532,46 @@ final class Conversation: ObservableObject {
             allowed = try await api.hello(timeout: 8)
             unreachable = false
             Task { await refreshMessages() }
+            Task { await refreshRooms(now: true) }
             flushNext()
             return true
         } catch {
             if NetWatch.offline(error) { unreachable = true }
             return false
         }
+    }
+
+    /// Where the profile's devices listen in room mode: every 30 s in front, on opening and on return.
+    /// Only names and end times; the Spark decides (admin room mode and the profile switch app_room).
+    func refreshRooms(now: Bool = false) async {
+        guard allowed.rooms, let api = SparkAPI.current else {
+            if roomsShown != [] {
+                rooms = []
+                roomsShown = []
+                await RoomLive.show([])
+            }
+            return
+        }
+        guard now || Date().timeIntervalSince(roomsAt) >= 28 else { return }
+        roomsAt = Date()
+        guard let list = try? await api.rooms() else { return }
+        if list != rooms { rooms = list }
+        // Live Activity and widget only when something changed (or on return to the front)
+        if now || list != roomsShown {
+            roomsShown = list
+            await RoomLive.show(list)
+        }
+    }
+
+    /// "Beenden" in the chat line: one room or all of them.
+    func endRoom(_ room: ListeningRoom? = nil) async {
+        guard let api = SparkAPI.current else { return }
+        do {
+            try await api.endRoom(room?.id)
+        } catch {
+            self.error = error.localizedDescription
+        }
+        await refreshRooms(now: true)
     }
 
     func refreshMessages() async {

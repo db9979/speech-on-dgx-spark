@@ -93,6 +93,25 @@ struct Allowed {
     /// Spark updates (rights only from the admin): notices and the version page, starting the update
     var updateNotify = false
     var updateStart = false
+    /// the app may show where the profile's devices listen in room mode and end it (admin room mode, profile switch app_room)
+    var rooms = false
+}
+
+/// A device of the profile in room mode (from /api/room/active): only where and until when, never what was heard.
+struct ListeningRoom: Identifiable, Equatable, Hashable, Codable {
+    let id: String          // the room's public key on the Spark (for "Beenden")
+    let name: String
+    let kind: String        // "browser" or "speaker"
+    let until: Date
+}
+
+extension ListeningRoom {
+    init?(_ d: [String: Any]) {
+        guard let key = d["key"] as? String, !key.isEmpty, key.count <= 40,
+              let until = (d["until"] as? NSNumber)?.doubleValue else { return nil }
+        self.init(id: key, name: String((d["name"] as? String ?? "").prefix(40)),
+                  kind: d["kind"] as? String ?? "", until: Date(timeIntervalSince1970: until / 1000))
+    }
 }
 
 /// What /api/iphone/update says: the installed and the newest tested version, a running update.
@@ -231,7 +250,25 @@ struct SparkAPI {
                        docs: d["docs"] as? Bool ?? false, ios: d["ios"] as? Bool ?? false,
                        images: d["images"] as? Bool ?? false,
                        updateNotify: (d["update"] as? [String: Any])?["notify"] as? Bool ?? false,
-                       updateStart: (d["update"] as? [String: Any])?["start"] as? Bool ?? false)
+                       updateStart: (d["update"] as? [String: Any])?["start"] as? Bool ?? false,
+                       rooms: d["rooms"] as? Bool ?? false)
+    }
+
+    /// Where the profile's devices listen in room mode right now (names and end times only).
+    func rooms() async throws -> [ListeningRoom] {
+        var r = request("api/room/active")
+        r.timeoutInterval = 15
+        let (data, response) = try await URLSession.shared.data(for: r)
+        try Self.check(data, response)
+        let list = Self.object(data)["rooms"] as? [[String: Any]] ?? []
+        return list.prefix(50).compactMap { ListeningRoom($0) }
+    }
+
+    /// Ends one room (its key) or, without a key, all rooms of the profile. Starting is not possible from the app.
+    func endRoom(_ key: String? = nil) async throws {
+        var body: [String: Any] = ["all": true]
+        if let key { body = ["key": key] }
+        _ = try await post("api/room/end", body)
     }
 
     static func reminder(_ d: [String: Any]) -> Reminder? {

@@ -21,6 +21,16 @@
         }
       }
     },
+    "${applicationName} Raummodus beenden": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "${applicationName} end room mode"
+          }
+        }
+      }
+    },
     "${applicationName} fragen": {
       "localizations": {
         "en": {
@@ -77,6 +87,16 @@
           "stringUnit": {
             "state": "translated",
             "value": "Message with ${applicationName}"
+          }
+        }
+      }
+    },
+    "Raummodus beenden mit ${applicationName}": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "End room mode with ${applicationName}"
           }
         }
       }

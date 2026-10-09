@@ -140,6 +140,7 @@ struct ChatView: View {
     private var talking: some View {
         VStack(spacing: 0) {
             if talk.unreachable { OfflineBanner() }
+            if !talk.rooms.isEmpty { RoomBanner() }
             FaceView(mood: talk.mood, mic: talk.level, out: { Demo.out ?? talk.audio.outLevel }, kind: talk.allowed.face)
                 .frame(maxHeight: talk.messages.isEmpty ? 260 : 130)
                 .padding(.top, 8)
@@ -250,6 +251,53 @@ struct OfflineBanner: View {
         .frame(maxWidth: .infinity, alignment: .leading)
         .padding(10)
         .background(Color.orange.opacity(0.18))
+        .clipShape(RoundedRectangle(cornerRadius: 12))
+        .padding(.horizontal)
+        .padding(.top, 6)
+    }
+}
+
+/// "● Küche hört zu bis 21:30 · Beenden": a device of the profile is in room mode (only where and until when).
+/// Several: one line with the count, tapping shows each with its own "Beenden".
+struct RoomBanner: View {
+    @EnvironmentObject var talk: Conversation
+    @State private var open = false
+
+    var body: some View {
+        let rooms = talk.rooms
+        VStack(alignment: .leading, spacing: 6) {
+            HStack(spacing: 8) {
+                Circle().fill(Color.green).frame(width: 9, height: 9)
+                if rooms.count == 1, let r = rooms.first {
+                    Text("\(RoomLive.listening([r.name])) bis \(r.until, style: .time)").font(.subheadline.bold()).lineLimit(1)
+                } else {
+                    Button {
+                        open.toggle()
+                    } label: {
+                        Label(RoomLive.listening(rooms.map(\.name)), systemImage: open ? "chevron.up" : "chevron.down")
+                            .font(.subheadline.bold()).lineLimit(1)
+                    }
+                    .buttonStyle(.plain)
+                }
+                Spacer(minLength: 4)
+                Button("Beenden", role: .destructive) { Task { await talk.endRoom(rooms.count == 1 ? rooms.first : nil) } }
+                    .font(.footnote)
+                    .buttonStyle(.bordered)
+                    .accessibilityLabel(rooms.count == 1 ? Text("Raum-Modus beenden") : Text("Raum-Modus überall beenden"))
+            }
+            if open && rooms.count > 1 {
+                ForEach(rooms) { r in
+                    HStack {
+                        Text("\(RoomLive.label([r.name])) bis \(r.until, style: .time)").font(.footnote).lineLimit(1)
+                        Spacer()
+                        Button("Beenden") { Task { await talk.endRoom(r) } }.font(.footnote).buttonStyle(.bordered)
+                    }
+                }
+            }
+        }
+        .frame(maxWidth: .infinity, alignment: .leading)
+        .padding(10)
+        .background(Color.green.opacity(0.16))
         .clipShape(RoundedRectangle(cornerRadius: 12))
         .padding(.horizontal)
         .padding(.top, 6)
