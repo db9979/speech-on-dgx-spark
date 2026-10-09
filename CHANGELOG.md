@@ -2,6 +2,7 @@
 
 Every version in one line, newest first (taken from the commit messages, so some lines are German, some English). Older entries have no version number.
 
+- **V01.0.193** · 2026-10-09 · Stimmenwahl für Profile: die Liste bleibt nicht mehr leer („nur Standard“), wenn die Sprachausgabe gerade lädt; Panel und iPhone-App
 - **V01.0.192** · 2026-10-09 · Nachrichten zwischen Profilen: per Sprache nach „Ja“, an alle, Durchsagen auf Lautsprechern, Sprachnachrichten, einmal zugestellt
 - **V01.0.191** · 2026-10-09 · iPhone-App: Fotos gehen als Bild an den Spark, wenn „Fotos aus der App ansehen lassen“ an ist; sonst wie bisher Texterkennung
 - **V01.0.190** · 2026-10-09 · Bilder erkennen (aus): Foto im Assistenten, in der iPhone-App oder über Telegram anhängen, das Sprachmodell sieht es selbst; Antwort ohne Werkzeuge, Bild nur im Arbeitsspeicher

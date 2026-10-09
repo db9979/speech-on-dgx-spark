@@ -130,6 +130,30 @@ class Isolation(unittest.TestCase):
     def test_guest_cannot_choose_voice(self):
         self.assertEqual(TestClient(panel.app).get("/api/assistant/voices").status_code, 401)
 
+    def test_profile_gets_the_voices_even_while_the_tts_loads(self):
+        import admin
+        admin._last_voices.clear()
+        p = profile("Vroni")
+        self.assertEqual(p.get("/api/assistant/voices").json()["voices"], ["ryan", "serena"])
+        # the TTS restarts and names nothing for a while: the last list stands in, not just "Standard"
+        with mock.patch.object(helpers, "TTS_VOICES", []):
+            self.assertEqual(p.get("/api/assistant/voices").json()["voices"], ["ryan", "serena"])
+            # another model: the old names do not fit it
+            cfg = json.load(open(os.environ["SPEECH_SPARK_CONFIG"]))
+            model = cfg["tts"]["model"]
+            try:
+                cfg["tts"]["model"] = "Qwen/Qwen3-TTS-12Hz-1.7B-Base"
+                json.dump(cfg, open(os.environ["SPEECH_SPARK_CONFIG"], "w"))
+                os.makedirs(admin.VOICES_DIR, exist_ok=True)
+                open(os.path.join(admin.VOICES_DIR, "Oma.wav"), "wb").close()
+                # a Base model speaks the cloned voices, which the panel lists itself
+                self.assertEqual(p.get("/api/assistant/voices").json()["voices"], ["Oma"])
+            finally:
+                os.remove(os.path.join(admin.VOICES_DIR, "Oma.wav"))
+                cfg["tts"]["model"] = model
+                json.dump(cfg, open(os.environ["SPEECH_SPARK_CONFIG"], "w"))
+        self.assertEqual(TestClient(panel.app).get("/api/assistant/voices").status_code, 401)
+
 
 class HomeAssistant(unittest.TestCase):
     def test_per_profile(self):

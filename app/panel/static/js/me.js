@@ -217,8 +217,10 @@ const SETF=[
   {g:t('Anzeige','Display'),k:'daily',type:'bool',l:t('Jeden Tag neues Gespräch','New conversation every day'),h:t('Am nächsten Tag beginnt automatisch ein neues Gespräch; die alten bleiben im Verlauf.','The next day a new conversation starts by itself; older ones stay in the history.')},
   {k:'timing',type:'bool',l:t('Zeiten anzeigen','Show timings'),h:t('Wie lange Erkennung, Modell und erster Ton gebraucht haben.','How long recognition, model and first audio took.')}];
 {let g;SETF.forEach(f=>{g=f.g||g;f.grp=g})}
-let VOICES=null;
-async function voiceList(admin){if(!PROFILE&&!admin)return [];if(VOICES)return VOICES;try{const r=await fetch(admin?'/api/tts/voices':'/api/assistant/voices');VOICES=r.ok?((await r.json()).voices||[]).filter(x=>typeof x==='string'):[]}catch{VOICES=[]}return VOICES}
+// asked again each time the settings open: an empty answer (TTS still loading) must not stick for the page's life,
+// and the admin's list is not the profile's
+async function voiceList(admin){if(!PROFILE&&!admin)return [];try{const r=await fetch(admin?'/api/tts/voices':'/api/assistant/voices');
+  return r.ok?((await r.json()).voices||[]).filter(x=>typeof x==='string'):[]}catch{return []}}
 // Builds the settings rows into el; onchange(key, value) after each change. Returns a getter.
 async function renderSet(el,vals,onchange){const admin=!onchange,voices=await voiceList(admin);const v={...vals};
   const fields=SETF.filter(f=>(!(f.k==='voice'||f.prof)||admin||PROFILE)&&(!f.need||(!admin&&ALLOW[f.need])));   // guests: default voice, nothing learned; need: only when the admin allows it
@@ -226,7 +228,7 @@ async function renderSet(el,vals,onchange){const admin=!onchange,voices=await vo
     if(f.type==='bool')ctl=`<label class="tgl"><input type="checkbox" id="${id}"${v[f.k]?' checked':''}><i></i></label>`;
     else if(f.type==='sel')ctl=`<select id="${id}">${f.o.map(([a,b])=>`<option value="${a}"${v[f.k]===a?' selected':''}>${esc(b)}</option>`).join('')}</select>`;
     else if(f.type==='text')ctl=`<textarea id="${id}" rows="3" maxlength="${f.max}">${esc(v[f.k]||'')}</textarea>`;
-    else if(f.type==='voice')ctl=`<select id="${id}"><option value="">${t('Standard','Default')}</option>${[...new Set([...voices,...(v.voice?[v.voice]:[])])].map(x=>`<option${x===v.voice?' selected':''}>${esc(x)}</option>`).join('')}</select>`;
+    else if(f.type==='voice')ctl=(voices.length?'':'<div>')+`<select id="${id}"><option value="">${t('Standard','Default')}</option>${[...new Set([...voices,...(v.voice?[v.voice]:[])])].map(x=>`<option${x===v.voice?' selected':''}>${esc(x)}</option>`).join('')}</select>`+(voices.length?'':`<div class="fh">${t('Die Sprachausgabe nennt gerade keine Stimmen (startet noch?). Später erneut öffnen.','The speech output lists no voices right now (still starting?). Open again later.')}</div></div>`);
     else ctl=`<input type="range" id="${id}" min="${f.min}" max="${f.max}" step="${f.step}" value="${v[f.k]}"><output id="${id}_o">${Number(v[f.k]).toFixed(2)}×</output>`;
     const head=f.grp!==prev;prev=f.grp;
     return (head?`${f===fields[0]?'':'</div>'}<div class="setpane${f===fields[0]?' on':''}" data-g="${esc(f.grp)}">`:'')+`<div class="setrow"><div class="lbl"><b>${esc(f.l)}</b><span>${esc(f.h)}</span></div>${ctl}</div>`}).join('')+'</div>';

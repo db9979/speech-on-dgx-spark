@@ -146,9 +146,14 @@ def fake_tts():
             yield _sse({"type": "speech.audio.delta", "audio": pcm})
             yield _sse({"type": "speech.audio.done"})
         return StreamingResponse(gen(), media_type="text/event-stream")
+
+    @app.get("/v1/voices")
+    def voices():
+        return {"model_kind": "custom_voice", "voices": list(TTS_VOICES), "languages": ["German"]}
     return app
 
 
+TTS_VOICES = ["ryan", "serena"]
 TODO = {"Brot": "needs_action"}
 HA_STATES = [
     {"entity_id": "sensor.wz_temp", "state": "21.5", "attributes": {"friendly_name": "Temperatur",

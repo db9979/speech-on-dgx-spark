@@ -653,14 +653,36 @@ async def search_test(q: str = "DGX Spark", url: str = ""):
     return {"results": len(sources), "first": sources[:3], "seconds": round(time.time() - t, 2)}
 
 
+# The TTS names its voices only while its engine answers: while it loads, restarts or is busy for a moment
+# the list is empty, and a profile could only pick "Standard". The last list it gave stands in meanwhile
+# (same model only); a Base model's voices are the cloned recordings, which the panel can list itself.
+_last_voices = {}   # model -> the TTS's last non-empty answer
+
+
+def _voice_names(v):
+    return [x for x in (v.get("voices") or []) if isinstance(x, str) and 0 < len(x) <= 64][:200]
+
+
 @router.get("/api/tts/voices", dependencies=[Depends(auth)])
 async def tts_voices():
     cfg = load_config()
+    model = str(cfg.get("tts", {}).get("model", ""))
     try:
         async with httpx.AsyncClient(timeout=5) as c:
-            return (await c.get(f"http://127.0.0.1:{cfg['tts']['port']}/v1/voices")).json()
+            v = (await c.get(f"http://127.0.0.1:{cfg['tts']['port']}/v1/voices")).json()
+        if not isinstance(v, dict):
+            raise ValueError("not a JSON object")
     except Exception:
-        return {"model_kind": None, "voices": [], "languages": []}
+        v = {"model_kind": None, "voices": [], "languages": []}
+    if _voice_names(v):
+        _last_voices.clear()
+        _last_voices[model] = dict(v, voices=_voice_names(v))
+        return v
+    if model in _last_voices:
+        return dict(_last_voices[model], stale=True)
+    if model.lower().endswith("-base"):
+        return dict(v, model_kind="base", voices=clone_voices(), stale=True)
+    return v
 
 
 @router.get("/api/clone-voices", dependencies=[Depends(auth)])
