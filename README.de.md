@@ -31,6 +31,7 @@ Alle Optionen ohne Rückfragen (`--mode api --asr 1.7b --tts 0.6b --yes` …) st
 
 <!-- New version: add one line at the top here and in CHANGELOG.md, drop the oldest line here (keep 10). Details go to docs/de and docs/en, not into this README. -->
 
+- **V01.0.159** iPhone-App: Push bei geschlossener App über Apple (aus, Admin-Schlüssel + Profil; Apple sieht nur „Neue Nachricht“, den Text holt die App vom Spark), CarPlay-Gespräch (wartet auf Apples Freigabe), Anleitung zum Veröffentlichen
 - **V01.0.158** Sprachmodell weg: fester Satz statt Stille (auch Lautsprecher, Uhr, iPhone); Antwortzeit bis zum ersten Ton unter Zustand → Prüfen mit Warnung, wenn deutlich langsamer; Funktionsprüfung prüft auch Werkzeugwahl und Websuche
 - **V01.0.157** Update nur auf Versionen, deren GitHub-Tests grün sind (Panel und update.sh; neuere rote oder laufende Änderungen nur als Hinweis; von Hand: update.sh --newest)
 - **V01.0.156** Chat-Code aufgeteilt (ohne Verhaltensänderung): Rechte und Prompt in chat_turn.py, Werkzeuge in chat_tools.py, Antwort und Ton in chat.py
@@ -40,7 +41,6 @@ Alle Optionen ohne Rückfragen (`--mode api --asr 1.7b --tts 0.6b --yes` …) st
 - **V01.0.152** iPhone-App „Spark“ (aus, Admin + Profil): eigene SwiftUI-App in ios/, Kopplung per QR-Code oder Link, eigener Schlüssel pro iPhone, der nur fragen und hören darf, Antwort mit Spark-Stimme, „Hey Siri, Frag Spark“ über die App; Smart Home daraus nur mit eigenem Schalter
 - **V01.0.151** Update wartet bis zu 10 Minuten, wenn apt gerade belegt ist (z. B. automatische Updates), statt abzubrechen
 - **V01.0.150** Qualitätstest: Kalender-Fragen nennen „morgen“ und „Dienstag“ immer passend zum heutigen Tag (der feste 8.10. war ab dem 8.10. falsch)
-- **V01.0.149** Lautsprecher-Seite geordnet: Liste → eigene Seite pro Lautsprecher (Klang, Raum-Modus mit „Starten“ und wählbaren Arten, Stimme, Firmware, Prüfen), „Lautsprecher hinzufügen“ per USB oder Code, Admin „Adresse prüfen“, Lautsprecher-Schlüssel gekennzeichnet
 
 Alle Versionen: [CHANGELOG.md](CHANGELOG.md)
 

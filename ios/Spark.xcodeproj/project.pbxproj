@@ -6,9 +6,41 @@
 	objectVersion = 77;
 	objects = {
 
+/* Begin PBXBuildFile section */
+		5A0000000000000000000101 /* SparkNotify.appex in Embed Foundation Extensions */ = {isa = PBXBuildFile; fileRef = 5A0000000000000000000100 /* SparkNotify.appex */; settings = {ATTRIBUTES = (RemoveHeadersOnCopy, ); }; };
+/* End PBXBuildFile section */
+
+/* Begin PBXContainerItemProxy section */
+		5A0000000000000000000102 /* PBXContainerItemProxy */ = {
+			isa = PBXContainerItemProxy;
+			containerPortal = 5A0000000000000000000050 /* Project object */;
+			proxyType = 1;
+			remoteGlobalIDString = 5A0000000000000000000140;
+			remoteInfo = SparkNotify;
+		};
+/* End PBXContainerItemProxy section */
+
+/* Begin PBXCopyFilesBuildPhase section */
+		5A0000000000000000000103 /* Embed Foundation Extensions */ = {
+			isa = PBXCopyFilesBuildPhase;
+			buildActionMask = 2147483647;
+			dstPath = "";
+			dstSubfolderSpec = 13;
+			files = (
+				5A0000000000000000000101 /* SparkNotify.appex in Embed Foundation Extensions */,
+			);
+			name = "Embed Foundation Extensions";
+			runOnlyForDeploymentPostprocessing = 0;
+		};
+/* End PBXCopyFilesBuildPhase section */
+
 /* Begin PBXFileReference section */
 		5A0000000000000000000001 /* Spark.app */ = {isa = PBXFileReference; explicitFileType = wrapper.application; includeInIndex = 0; path = Spark.app; sourceTree = BUILT_PRODUCTS_DIR; };
 		5A0000000000000000000002 /* Info.plist */ = {isa = PBXFileReference; lastKnownFileType = text.plist.xml; path = Info.plist; sourceTree = "<group>"; };
+		5A0000000000000000000100 /* SparkNotify.appex */ = {isa = PBXFileReference; explicitFileType = "wrapper.app-extension"; includeInIndex = 0; path = SparkNotify.appex; sourceTree = BUILT_PRODUCTS_DIR; };
+		5A0000000000000000000104 /* SparkNotify-Info.plist */ = {isa = PBXFileReference; lastKnownFileType = text.plist.xml; path = "SparkNotify-Info.plist"; sourceTree = "<group>"; };
+		5A0000000000000000000105 /* Spark.entitlements */ = {isa = PBXFileReference; lastKnownFileType = text.plist.entitlements; path = Spark.entitlements; sourceTree = "<group>"; };
+		5A0000000000000000000106 /* SparkNotify.entitlements */ = {isa = PBXFileReference; lastKnownFileType = text.plist.entitlements; path = SparkNotify.entitlements; sourceTree = "<group>"; };
 /* End PBXFileReference section */
 
 /* Begin PBXFileSystemSynchronizedRootGroup section */
@@ -17,10 +49,22 @@
 			path = Spark;
 			sourceTree = "<group>";
 		};
+		5A0000000000000000000110 /* SparkNotify */ = {
+			isa = PBXFileSystemSynchronizedRootGroup;
+			path = SparkNotify;
+			sourceTree = "<group>";
+		};
 /* End PBXFileSystemSynchronizedRootGroup section */
 
 /* Begin PBXFrameworksBuildPhase section */
 		5A0000000000000000000020 /* Frameworks */ = {
+			isa = PBXFrameworksBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+		};
+		5A0000000000000000000120 /* Frameworks */ = {
 			isa = PBXFrameworksBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
@@ -34,7 +78,11 @@
 			isa = PBXGroup;
 			children = (
 				5A0000000000000000000002 /* Info.plist */,
+				5A0000000000000000000105 /* Spark.entitlements */,
+				5A0000000000000000000104 /* SparkNotify-Info.plist */,
+				5A0000000000000000000106 /* SparkNotify.entitlements */,
 				5A0000000000000000000010 /* Spark */,
+				5A0000000000000000000110 /* SparkNotify */,
 				5A0000000000000000000031 /* Products */,
 			);
 			sourceTree = "<group>";
@@ -43,6 +91,7 @@
 			isa = PBXGroup;
 			children = (
 				5A0000000000000000000001 /* Spark.app */,
+				5A0000000000000000000100 /* SparkNotify.appex */,
 			);
 			name = Products;
 			sourceTree = "<group>";
@@ -57,10 +106,12 @@
 				5A0000000000000000000021 /* Sources */,
 				5A0000000000000000000020 /* Frameworks */,
 				5A0000000000000000000022 /* Resources */,
+				5A0000000000000000000103 /* Embed Foundation Extensions */,
 			);
 			buildRules = (
 			);
 			dependencies = (
+				5A0000000000000000000107 /* PBXTargetDependency */,
 			);
 			fileSystemSynchronizedGroups = (
 				5A0000000000000000000010 /* Spark */,
@@ -69,6 +120,26 @@
 			productName = Spark;
 			productReference = 5A0000000000000000000001 /* Spark.app */;
 			productType = "com.apple.product-type.application";
+		};
+		5A0000000000000000000140 /* SparkNotify */ = {
+			isa = PBXNativeTarget;
+			buildConfigurationList = 5A0000000000000000000160 /* Build configuration list for PBXNativeTarget "SparkNotify" */;
+			buildPhases = (
+				5A0000000000000000000121 /* Sources */,
+				5A0000000000000000000120 /* Frameworks */,
+				5A0000000000000000000122 /* Resources */,
+			);
+			buildRules = (
+			);
+			dependencies = (
+			);
+			fileSystemSynchronizedGroups = (
+				5A0000000000000000000110 /* SparkNotify */,
+			);
+			name = SparkNotify;
+			productName = SparkNotify;
+			productReference = 5A0000000000000000000100 /* SparkNotify.appex */;
+			productType = "com.apple.product-type.app-extension";
 		};
 /* End PBXNativeTarget section */
 
@@ -81,6 +152,9 @@
 				LastUpgradeCheck = 1600;
 				TargetAttributes = {
 					5A0000000000000000000040 = {
+						CreatedOnToolsVersion = 16.0;
+					};
+					5A0000000000000000000140 = {
 						CreatedOnToolsVersion = 16.0;
 					};
 				};
@@ -100,12 +174,20 @@
 			projectRoot = "";
 			targets = (
 				5A0000000000000000000040 /* Spark */,
+				5A0000000000000000000140 /* SparkNotify */,
 			);
 		};
 /* End PBXProject section */
 
 /* Begin PBXResourcesBuildPhase section */
 		5A0000000000000000000022 /* Resources */ = {
+			isa = PBXResourcesBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+		};
+		5A0000000000000000000122 /* Resources */ = {
 			isa = PBXResourcesBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
@@ -122,13 +204,29 @@
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
+		5A0000000000000000000121 /* Sources */ = {
+			isa = PBXSourcesBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+		};
 /* End PBXSourcesBuildPhase section */
+
+/* Begin PBXTargetDependency section */
+		5A0000000000000000000107 /* PBXTargetDependency */ = {
+			isa = PBXTargetDependency;
+			target = 5A0000000000000000000140 /* SparkNotify */;
+			targetProxy = 5A0000000000000000000102 /* PBXContainerItemProxy */;
+		};
+/* End PBXTargetDependency section */
 
 /* Begin XCBuildConfiguration section */
 		5A0000000000000000000070 /* Debug */ = {
 			isa = XCBuildConfiguration;
 			buildSettings = {
 				ALWAYS_SEARCH_USER_PATHS = NO;
+				APP_BUNDLE_ID = io.github.db9979.speechspark;
 				CLANG_ENABLE_MODULES = YES;
 				CLANG_ENABLE_OBJC_ARC = YES;
 				COPY_PHASE_STRIP = NO;
@@ -149,6 +247,7 @@
 			isa = XCBuildConfiguration;
 			buildSettings = {
 				ALWAYS_SEARCH_USER_PATHS = NO;
+				APP_BUNDLE_ID = io.github.db9979.speechspark;
 				CLANG_ENABLE_MODULES = YES;
 				CLANG_ENABLE_OBJC_ARC = YES;
 				COPY_PHASE_STRIP = NO;
@@ -168,6 +267,7 @@
 			buildSettings = {
 				ASSETCATALOG_COMPILER_APPICON_NAME = AppIcon;
 				ASSETCATALOG_COMPILER_GLOBAL_ACCENT_COLOR_NAME = AccentColor;
+				CODE_SIGN_ENTITLEMENTS = Spark.entitlements;
 				CODE_SIGN_STYLE = Automatic;
 				CURRENT_PROJECT_VERSION = 1;
 				DEVELOPMENT_TEAM = "";
@@ -177,7 +277,6 @@
 				INFOPLIST_KEY_NSContactsUsageDescription = "Damit „Ruf … an“ die Nummer findet. Kontakte bleiben auf dem iPhone und gehen nicht an den Spark.";
 				INFOPLIST_KEY_NSMicrophoneUsageDescription = "Damit du dem Spark Fragen stellen kannst. Die Aufnahme geht nur an deinen eigenen Spark.";
 				INFOPLIST_KEY_NSSpeechRecognitionUsageDescription = "Für das Weckwort. Die Erkennung läuft nur auf dem iPhone, nichts geht an Apple.";
-				INFOPLIST_KEY_UIApplicationSceneManifest_Generation = YES;
 				INFOPLIST_KEY_UILaunchScreen_Generation = YES;
 				INFOPLIST_KEY_UISupportedInterfaceOrientations = UIInterfaceOrientationPortrait;
 				INFOPLIST_KEY_UISupportedInterfaceOrientations_iPad = "UIInterfaceOrientationPortrait UIInterfaceOrientationPortraitUpsideDown UIInterfaceOrientationLandscapeLeft UIInterfaceOrientationLandscapeRight";
@@ -186,7 +285,7 @@
 					"@executable_path/Frameworks",
 				);
 				MARKETING_VERSION = 1.0;
-				PRODUCT_BUNDLE_IDENTIFIER = io.github.db9979.speechspark;
+				PRODUCT_BUNDLE_IDENTIFIER = "$(APP_BUNDLE_ID)";
 				PRODUCT_NAME = "$(TARGET_NAME)";
 				SWIFT_EMIT_LOC_STRINGS = YES;
 				SWIFT_VERSION = 5.0;
@@ -199,6 +298,7 @@
 			buildSettings = {
 				ASSETCATALOG_COMPILER_APPICON_NAME = AppIcon;
 				ASSETCATALOG_COMPILER_GLOBAL_ACCENT_COLOR_NAME = AccentColor;
+				CODE_SIGN_ENTITLEMENTS = Spark.entitlements;
 				CODE_SIGN_STYLE = Automatic;
 				CURRENT_PROJECT_VERSION = 1;
 				DEVELOPMENT_TEAM = "";
@@ -208,7 +308,6 @@
 				INFOPLIST_KEY_NSContactsUsageDescription = "Damit „Ruf … an“ die Nummer findet. Kontakte bleiben auf dem iPhone und gehen nicht an den Spark.";
 				INFOPLIST_KEY_NSMicrophoneUsageDescription = "Damit du dem Spark Fragen stellen kannst. Die Aufnahme geht nur an deinen eigenen Spark.";
 				INFOPLIST_KEY_NSSpeechRecognitionUsageDescription = "Für das Weckwort. Die Erkennung läuft nur auf dem iPhone, nichts geht an Apple.";
-				INFOPLIST_KEY_UIApplicationSceneManifest_Generation = YES;
 				INFOPLIST_KEY_UILaunchScreen_Generation = YES;
 				INFOPLIST_KEY_UISupportedInterfaceOrientations = UIInterfaceOrientationPortrait;
 				INFOPLIST_KEY_UISupportedInterfaceOrientations_iPad = "UIInterfaceOrientationPortrait UIInterfaceOrientationPortraitUpsideDown UIInterfaceOrientationLandscapeLeft UIInterfaceOrientationLandscapeRight";
@@ -217,8 +316,58 @@
 					"@executable_path/Frameworks",
 				);
 				MARKETING_VERSION = 1.0;
-				PRODUCT_BUNDLE_IDENTIFIER = io.github.db9979.speechspark;
+				PRODUCT_BUNDLE_IDENTIFIER = "$(APP_BUNDLE_ID)";
 				PRODUCT_NAME = "$(TARGET_NAME)";
+				SWIFT_EMIT_LOC_STRINGS = YES;
+				SWIFT_VERSION = 5.0;
+				TARGETED_DEVICE_FAMILY = 1;
+			};
+			name = Release;
+		};
+		5A0000000000000000000172 /* Debug */ = {
+			isa = XCBuildConfiguration;
+			buildSettings = {
+				CODE_SIGN_ENTITLEMENTS = SparkNotify.entitlements;
+				CODE_SIGN_STYLE = Automatic;
+				CURRENT_PROJECT_VERSION = 1;
+				DEVELOPMENT_TEAM = "";
+				GENERATE_INFOPLIST_FILE = YES;
+				INFOPLIST_FILE = "SparkNotify-Info.plist";
+				INFOPLIST_KEY_CFBundleDisplayName = "Spark Mitteilungen";
+				LD_RUNPATH_SEARCH_PATHS = (
+					"$(inherited)",
+					"@executable_path/Frameworks",
+					"@executable_path/../../Frameworks",
+				);
+				MARKETING_VERSION = 1.0;
+				PRODUCT_BUNDLE_IDENTIFIER = "$(APP_BUNDLE_ID).notify";
+				PRODUCT_NAME = "$(TARGET_NAME)";
+				SKIP_INSTALL = YES;
+				SWIFT_EMIT_LOC_STRINGS = YES;
+				SWIFT_VERSION = 5.0;
+				TARGETED_DEVICE_FAMILY = 1;
+			};
+			name = Debug;
+		};
+		5A0000000000000000000173 /* Release */ = {
+			isa = XCBuildConfiguration;
+			buildSettings = {
+				CODE_SIGN_ENTITLEMENTS = SparkNotify.entitlements;
+				CODE_SIGN_STYLE = Automatic;
+				CURRENT_PROJECT_VERSION = 1;
+				DEVELOPMENT_TEAM = "";
+				GENERATE_INFOPLIST_FILE = YES;
+				INFOPLIST_FILE = "SparkNotify-Info.plist";
+				INFOPLIST_KEY_CFBundleDisplayName = "Spark Mitteilungen";
+				LD_RUNPATH_SEARCH_PATHS = (
+					"$(inherited)",
+					"@executable_path/Frameworks",
+					"@executable_path/../../Frameworks",
+				);
+				MARKETING_VERSION = 1.0;
+				PRODUCT_BUNDLE_IDENTIFIER = "$(APP_BUNDLE_ID).notify";
+				PRODUCT_NAME = "$(TARGET_NAME)";
+				SKIP_INSTALL = YES;
 				SWIFT_EMIT_LOC_STRINGS = YES;
 				SWIFT_VERSION = 5.0;
 				TARGETED_DEVICE_FAMILY = 1;
@@ -242,6 +391,15 @@
 			buildConfigurations = (
 				5A0000000000000000000070 /* Debug */,
 				5A0000000000000000000071 /* Release */,
+			);
+			defaultConfigurationIsVisible = 0;
+			defaultConfigurationName = Release;
+		};
+		5A0000000000000000000160 /* Build configuration list for PBXNativeTarget "SparkNotify" */ = {
+			isa = XCConfigurationList;
+			buildConfigurations = (
+				5A0000000000000000000172 /* Debug */,
+				5A0000000000000000000173 /* Release */,
 			);
 			defaultConfigurationIsVisible = 0;
 			defaultConfigurationName = Release;

@@ -143,8 +143,9 @@ def _on(prof=Depends(browser_profile)):
 
 @router.get("/api/profile/iphone", dependencies=[Depends(assistant)])
 def profile_get(prof=Depends(own_profile)):
+    import apns
     return {"enabled": admin_on(), "on": profile_on(prof["id"]), "phones": phones(prof["id"]),
-            "minutes": CODE_SECONDS // 60}
+            "minutes": CODE_SECONDS // 60, "push": apns.ready()}
 
 
 @router.post("/api/profile/iphone/pair", dependencies=[Depends(assistant)])
@@ -192,6 +193,7 @@ async def app_pair(request: Request):
 def app_hello(prof=Depends(own_profile)):
     """The app checks its key: whose it is and which Spark."""
     s = profiles.settings(prof["id"])
+    import apns
     import proactive
     face = load_config().get("chat", {}).get("face")
     return {"profile": prof["name"], "version": app_version(), "language": _language(),
@@ -200,4 +202,8 @@ def app_hello(prof=Depends(own_profile)):
             "proactive": bool(proactive.enabled() and s.get("pro_on")),
             "reminders": bool(load_config().get("chat", {}).get("reminders", True)),
             # the face the admin picked for everybody (Einstellungen → Vorgaben), only names from the fixed list
-            "face": face if face in FACES else "robot"}
+            "face": face if face in FACES else "robot",
+            # Apple push is set up and on for this profile: reminders then come as push, not as local alarms
+            "push": apns.on_for(prof["id"]),
+            # CarPlay: the smart home only with its own switch
+            "car_ha": bool(s.get("app_car_ha"))}

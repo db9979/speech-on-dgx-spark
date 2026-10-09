@@ -109,6 +109,15 @@
         <div class="fh">Leer = die Adresse dieser Seite. Am besten dein Reverse Proxy mit echtem Zertifikat (er muss WebSockets durchlassen); ein selbst signiertes Zertifikat (Port 31443) nimmt das Board nicht an, im Heimnetz geht auch http://&lt;Spark-IP&gt;:31080.</div>
         <ul class="facts small" id="espcheckres"></ul></div>
       <div class="setrow"><div class="lbl"><b>iPhone-App</b><span>Profile koppeln die App „Spark“ auf ihrem iPhone: fragen und hören mit der Spark-Stimme, auch per Siri.</span></div><label class="tgl"><input type="checkbox" id="chat.iphone"><i></i></label></div>
+      <div class="setrow"><div class="lbl"><b>Push an die iPhone-App</b><span>Meldungen kommen auch bei geschlossener App. Apple sieht nur „Neue Nachricht“, den Text holt die App vom Spark.</span></div><label class="tgl"><input type="checkbox" id="chat.iphone_push"><i></i></label></div>
+      <div data-show="chat.iphone_push" style="margin-left:18px" id="apnsadmin"><div class="fh">Schlüssel von developer.apple.com → Certificates, IDs &amp; Profiles → Keys → „+“ → Apple Push Notifications service (APNs). Die .p8-Datei gibt es nur einmal zum Herunterladen.</div>
+        <label>Schlüsseldatei (.p8)</label><input id="apnsfile" type="file" accept=".p8">
+        <label>Key ID</label><input id="apnskid" autocomplete="off" autocapitalize="characters" placeholder="ABC123DEFG">
+        <label>Team ID</label><input id="apnsteam" autocomplete="off" autocapitalize="characters" placeholder="Apple Developer → Membership">
+        <label>Bundle-ID der App</label><input id="apnsbundle" autocomplete="off" autocapitalize="off" placeholder="io.github.db9979.speechspark">
+        <label>Art der App</label><select id="apnsmode"><option value="dev">Entwicklung (direkt aus Xcode)</option><option value="prod">Produktion (TestFlight, App Store)</option></select>
+        <div class="row" style="margin-top:6px"><button class="b" type="button" id="apnssave">Speichern</button><button class="b" type="button" id="apnsdel">Schlüssel löschen</button></div>
+        <div class="fh" id="apnsstate"></div></div>
       <div class="setrow"><div class="lbl"><b>Zweiter Anmeldeschritt für Profile</b><span>Profile können bei der Anmeldung zusätzlich einen Code aus einer Authenticator-App verlangen.</span></div><label class="tgl"><input type="checkbox" id="chat.mfa"><i></i></label></div>
       <div class="setrow"><div class="lbl"><b>Rückfrage ohne Weckwort</b><span>Nach der Antwort auf eine gesprochene Frage hört der Assistent ein paar Sekunden weiter zu; jedes Profil wählt die Dauer.</span></div><label class="tgl"><input type="checkbox" id="chat.follow_up"><i></i></label></div>
       <div class="setrow"><div class="lbl"><b>Aus Korrekturen lernen</b><span>Nach einer Korrektur schlägt der Assistent einen Satz zum Merken vor und speichert ihn erst nach „Ja“.</span></div><label class="tgl"><input type="checkbox" id="chat.learn_fixes"><i></i></label></div>

@@ -47,10 +47,11 @@ import wyoming  # noqa: E402
 import transit  # noqa: E402
 import esp32  # noqa: E402
 import iphone  # noqa: E402
+import apns  # noqa: E402
 import logfilter  # noqa: E402
 
 app = FastAPI(title="Speech on DGX Spark")
-for _module in (account, admin, chat, update, system, proactive, room, tidy, weather, contacts, parcels, telegram, tasks, esp32, iphone, transit, logfilter):
+for _module in (account, admin, chat, update, system, proactive, room, tidy, weather, contacts, parcels, telegram, tasks, esp32, iphone, apns, transit, logfilter):
     app.include_router(_module.router)
 app.middleware("http")(update_lock)
 

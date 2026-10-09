@@ -30,6 +30,11 @@ final class Conversation: ObservableObject {
     @Published var allowed = Allowed()
     @Published var charging = false
     @Published var speechAllowed = false
+    /// CarPlay is connected: short answers, the conversation goes on hands-free, notes are said aloud
+    @Published var inCar = false
+
+    /// One assistant for the phone screen and CarPlay.
+    static let shared = Conversation()
 
     let audio = AudioEngine()
     let wake = WakeWord()
@@ -120,6 +125,8 @@ final class Conversation: ObservableObject {
             }
         }
         if Prefs.wake && allowed.listen { speechAllowed = await WakeWord.authorize() }
+        // Apple push: the Spark reaches the closed app; reminders then come from there, not as local alarms
+        if allowed.push, await Alarms.allow() { UIApplication.shared.registerForRemoteNotifications() }
         await syncAlarms()
         if allowed.proactive && Prefs.speakNotes, let api = SparkAPI.current, let n = try? await api.greet() { notes.append(n) }
         if phase == .idle || phase == .waiting { base() }
@@ -130,7 +137,7 @@ final class Conversation: ObservableObject {
         if foreground {
             lastActivity = Date()
             if phase == .idle || phase == .waiting { base() }
-        } else if !canWake {
+        } else if !canWake && !inCar {
             // no listening in the background unless the wake word is on
             if phase == .listening || phase == .waiting { stop() }
         }
@@ -152,7 +159,7 @@ final class Conversation: ObservableObject {
             base()
             notice = "Weckwort pausiert, um Akku zu sparen. Tippen startet es wieder."
         }
-        if allowed.proactive && Prefs.speakNotes && (foreground || phase == .waiting) { Task { await pollNotes() } }
+        if allowed.proactive && Prefs.speakNotes && (foreground || phase == .waiting || inCar) { Task { await pollNotes() } }
     }
 
     // ---------------------------------------------------------------- resting state
@@ -327,7 +334,7 @@ final class Conversation: ObservableObject {
             if let i = messages.firstIndex(where: { $0.id == answer.id }) { change(&messages[i]) }
         }
         do {
-            for try await ev in api.chat(history) {
+            for try await ev in api.chat(history, car: inCar) {
                 switch ev {
                 case .text(let t): edit { $0.text += t }
                 case .drop(let n): edit { $0.text = String($0.text.dropLast(n)) }
@@ -336,7 +343,7 @@ final class Conversation: ObservableObject {
                     phase = .speaking
                 case .mark(let m): edit { $0.mark = $0.mark == "mail" ? "mail" : m }
                 case .error(let e): error = e
-                case .reminderSet(let r): Task { await Alarms.add(r) }
+                case .reminderSet(let r): if !allowed.push { Task { await Alarms.add(r) } }
                 case .reminderCancel(let ids): Alarms.remove(ids)
                 case .action(let kind, let target): Task { await propose(kind, target) }
                 }
@@ -363,7 +370,7 @@ final class Conversation: ObservableObject {
     /// After an answer: hands-free listens again (also for "Ja"), else back to rest.
     private func answered() {
         lastActivity = Date()
-        if Prefs.handsFree || offer != nil && (canWake || Prefs.handsFree) {
+        if Prefs.handsFree || inCar || offer != nil && canWake {
             listen(preroll: 0, fromWake: false)
         } else {
             base()
@@ -379,6 +386,7 @@ final class Conversation: ObservableObject {
 
     // ---------------------------------------------------------------- reminders and notes
     func syncAlarms() async {
+        if allowed.push { await Alarms.sync([]); return }   // they come as push now: no double ringing
         guard allowed.reminders, let api = SparkAPI.current, let list = try? await api.reminders() else { return }
         await Alarms.sync(list)
     }

@@ -160,17 +160,21 @@ def vapid(endpoint):
 
 def reachable(uid, private=True):
     """The profile gets notes somewhere: a browser with push, or Telegram (see telegram.py)."""
+    import apns
     import telegram
-    return bool(subs(uid) or telegram.push_on(uid, private))
+    return bool(subs(uid) or telegram.push_on(uid, private) or apns.reachable(uid))
 
 
 async def send(uid, title, body, tag="", private=True):
     """Sends to every device of the profile; drops subscriptions the push service no longer knows.
     Also to Telegram when the profile wants that; private notes (appointments, mails, the briefing)
     only when it also allowed personal data over Telegram. Returns the number of devices reached."""
+    import apns
     import telegram
+    # the iPhone app: Apple only carries "new message", the text waits on the Spark (apns.py)
+    n0 = await apns.send(uid, title, body, tag=tag) if tag != "hello" else 0
     payload = json.dumps({"title": title, "body": body, "tag": tag}).encode()[:3000]
-    n = await telegram.notify(uid, f"{title}\n{body}", private) if tag != "hello" else 0
+    n = n0 + (await telegram.notify(uid, f"{title}\n{body}", private) if tag != "hello" else 0)
     async with httpx.AsyncClient(timeout=15) as c:
         for sub in subs(uid):
             try:

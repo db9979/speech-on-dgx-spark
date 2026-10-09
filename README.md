@@ -31,6 +31,7 @@ All options for running without questions (`--mode api --asr 1.7b --tts 0.6b --y
 
 <!-- New version: add one line at the top here and in CHANGELOG.md, drop the oldest line here (keep 10). Details go to docs/de and docs/en, not into this README. -->
 
+- **V01.0.159** iPhone app: push with the app closed through Apple (off, admin key + profile; Apple only sees "new message", the app fetches the text from the Spark), CarPlay conversation (waits for Apple's grant), publishing guide
 - **V01.0.158** Language model gone: a fixed sentence instead of silence (also speakers, watch, iPhone); time to the first sound under Status → Checks with a warning when clearly slower; the live check also tries tool choice and web search
 - **V01.0.157** Updates only to versions whose GitHub tests passed (panel and update.sh; newer red or running changes only as a note; by hand: update.sh --newest)
 - **V01.0.156** Chat code split up (no change in behaviour): rights and prompt in chat_turn.py, tools in chat_tools.py, answer and sound in chat.py
@@ -40,7 +41,6 @@ All options for running without questions (`--mode api --asr 1.7b --tts 0.6b --y
 - **V01.0.152** iPhone app "Spark" (off, admin + profile): own SwiftUI app in ios/, pairing by QR code or link, own key per iPhone that may only ask and listen, answers in the Spark voice, "Hey Siri, Frag Spark" through the app; smart home from it only with its own switch
 - **V01.0.151** The update waits up to 10 minutes when apt is busy (e.g. automatic upgrades) instead of failing
 - **V01.0.150** Quality test: calendar cases name "tomorrow" and "Tuesday" relative to today (the fixed 8 Oct was wrong from 8 Oct on)
-- **V01.0.149** Speaker page tidied: list → one page per speaker (sound, room mode with "Start" and selectable kinds, voice, firmware, check), "Add a speaker" over USB or by code, admin "Check address", speaker keys marked
 
 All versions: [CHANGELOG.md](CHANGELOG.md)
 

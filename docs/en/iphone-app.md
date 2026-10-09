@@ -17,7 +17,7 @@ An own app for the iPhone (source in `ios/`): press the button, ask, the answer 
 2. Xcode → **Settings → Accounts → +** → sign in with your Apple ID. A free account is enough to try it; the app then runs for 7 days and has to be installed again. With the Apple Developer Program (99 €/year) it runs for a year and works with TestFlight.
 3. Get the repo: `git clone https://github.com/db9979/speech-on-dgx-spark.git` (or `git pull`).
 4. Double-click `ios/Spark.xcodeproj`.
-5. Click the project **Spark** → target **Spark** → **Signing & Capabilities** → pick your account as **Team**. If Xcode says the bundle ID is taken, add something of your own to the **Bundle Identifier**.
+5. Click the project **Spark** → target **Spark** → **Signing & Capabilities** → pick your account as **Team**. Do the same for the second target **SparkNotify** (it fetches the text of push notifications). If Xcode says the bundle ID is taken: project **Spark** (not the target) → **Build Settings** → search `APP_BUNDLE_ID` and add something of your own; both targets take it over.
 6. Connect the iPhone by cable, unlock it, confirm "Trust This Computer".
 7. On the iPhone: **Settings → Privacy & Security → Developer Mode** on (the iPhone restarts).
 8. In Xcode pick your iPhone as the destination at the top, then press **▶︎ (Run)**.
@@ -50,6 +50,27 @@ In the app under **Settings (gear)**:
 
 Routes and calls: "Navigiere zur Arbeit" or "Ruf Anna an". The app asks every time ("Open route to …?", "Call Anna (number)?"). Only "Ja" (tapped or said) opens Maps or calls. Contacts are searched only on the iPhone; the number does not go to the Spark.
 
+## Push notifications with the app closed
+
+Needs the Apple Developer Program. Once:
+
+1. developer.apple.com → **Certificates, IDs & Profiles → Keys → +** → tick **Apple Push Notifications service (APNs)** → **Continue → Register → Download**. The `.p8` file can be downloaded only once. The **Key ID** is shown next to it, the **Team ID** under **Membership**.
+2. Panel as admin: **Settings → Features → Push to the iPhone app** on, enter `.p8`, Key ID, Team ID and the app's bundle ID. **Kind of app**: "Development" while you install from Xcode, "Production" for TestFlight and the App Store. Save.
+3. Profile: **Me → iPhone app → "Notifications to the iPhone"** on.
+4. Open the app once and allow notifications, then **"Send a test message"** in the panel.
+
+Then reminders and timers (also those set in the panel or on a speaker), the morning briefing, notes and memory tidying arrive with the app closed. Only "Neue Nachricht vom Spark" goes through Apple; the text stays on the Spark for 24 hours and the app fetches it with its key. With push, reminders no longer ring twice. At most 30 notifications per hour and profile.
+
+## CarPlay
+
+An own "Spark" icon in the car. Tap → **"Mit Spark sprechen"** → talk. The conversation goes on hands-free until 8 seconds of silence; interrupting works as in the app. The car shows only the state, never text. Answers are short in the car. Smart home in the car only with its own switch **"Smart home in the car too"** and the code word. Route and call only after "Ja".
+
+**Apple must grant CarPlay first**: request the category "Voice-based conversational app" at developer.apple.com/contact/carplay. After approval, enable it for the App ID and add `<key>com.apple.developer.carplay-voice-based-conversation</key><true/>` to `ios/Spark.entitlements` (not before: without the grant Xcode cannot sign the app). After the grant, try it without a car: Simulator → **I/O → External Displays → CarPlay**.
+
+## Publishing
+
+Step by step (TestFlight, App Store): [iphone-publishing.md](iphone-publishing.md).
+
 ## Security
 
 - Each iPhone gets its own key when pairing, kept only in that iPhone's keychain and on the Spark only as a hash.
@@ -58,6 +79,8 @@ Routes and calls: "Navigiere zur Arbeit" or "Ruf Anna an". The app asks every ti
 - Smart home from the app only with its own switch and the code word. What the app claims to be does not count; the panel decides by the key.
 - Wake word, stand mode, routes and calls only with their own switch in the panel. The Spark only suggests a route or call; the tool exists only for the app key with the switch, and only your "yes" on the iPhone starts it. Outside text (mail, web page) cannot start a route or call.
 - No sound goes to the Spark before the wake word. In the background the app listens only with the wake word on.
+- Push: the Apple key (.p8) is stored encrypted, changed only by the admin with the second step, never shown again. Apple only gets a fixed sentence and a random number. Only the app with its own key signs up its push address; only the profile's own app gets a notification's text.
+- CarPlay never loosens anything: in the car the smart home is locked without its own car switch.
 - Pairing only from the profile's own browser login, with the second login step when the profile has it. At most 5 iPhones per profile.
 
 Every push that changes `ios/` builds the app on GitHub for the simulator (`.github/workflows/ios.yml`).

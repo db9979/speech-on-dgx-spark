@@ -39,6 +39,8 @@ struct Allowed {
     var proactive = false
     var reminders = true
     var face = "robot"
+    var push = false
+    var carHa = false
 }
 
 /// The Spark's panel, spoken to with this iPhone's own device key. The key may only ask and
@@ -106,7 +108,8 @@ struct SparkAPI {
         return Allowed(profile: d["profile"] as? String ?? "", language: d["language"] as? String ?? "auto",
                        listen: d["listen"] as? Bool ?? false, act: d["act"] as? Bool ?? false,
                        proactive: d["proactive"] as? Bool ?? false, reminders: d["reminders"] as? Bool ?? true,
-                       face: d["face"] as? String == "comic" ? "comic" : "robot")
+                       face: d["face"] as? String == "comic" ? "comic" : "robot",
+                       push: d["push"] as? Bool ?? false, carHa: d["car_ha"] as? Bool ?? false)
     }
 
     static func reminder(_ d: [String: Any]) -> Reminder? {
@@ -195,7 +198,13 @@ struct SparkAPI {
     }
 
     /// The answer as a stream of text and sound, while the Spark is still writing.
-    func chat(_ messages: [[String: Any]]) -> AsyncThrowingStream<ChatEvent, Error> {
+    /// This iPhone's push address, so the Spark can reach the closed app through Apple.
+    func pushToken(_ hex: String) async throws -> Bool {
+        try await post("api/iphone/push-token", ["token": hex])["push"] as? Bool ?? false
+    }
+
+    /// car: asked from CarPlay (short answers; the Spark only gets stricter, never looser).
+    func chat(_ messages: [[String: Any]], car: Bool = false) -> AsyncThrowingStream<ChatEvent, Error> {
         AsyncThrowingStream { cont in
             let task = Task {
                 do {
@@ -203,8 +212,9 @@ struct SparkAPI {
                     r.setValue("application/json", forHTTPHeaderField: "Content-Type")
                     r.setValue("text/event-stream", forHTTPHeaderField: "Accept")
                     r.timeoutInterval = 300
-                    r.httpBody = try JSONSerialization.data(withJSONObject: [
-                        "messages": messages, "tz": TimeZone.current.identifier, "client": "iphone"])
+                    var body: [String: Any] = ["messages": messages, "tz": TimeZone.current.identifier, "client": "iphone"]
+                    if car { body["car"] = true }
+                    r.httpBody = try JSONSerialization.data(withJSONObject: body)
                     let (bytes, response) = try await URLSession.shared.bytes(for: r)
                     if let http = response as? HTTPURLResponse, !(200..<300).contains(http.statusCode) {
                         var data = Data()

@@ -17,7 +17,7 @@ Eine eigene App fürs iPhone (Quellcode in `ios/`): Knopf drücken, fragen, die 
 2. Xcode → **Settings → Accounts → +** → mit deiner Apple-ID anmelden. Ein kostenloses Konto reicht zum Ausprobieren; die App läuft dann 7 Tage und muss danach neu aufgespielt werden. Mit dem Apple Developer Program (99 €/Jahr) läuft sie ein Jahr und geht auch über TestFlight.
 3. Das Repo holen: im Terminal `git clone https://github.com/db9979/speech-on-dgx-spark.git` (oder `git pull`, wenn es schon da ist).
 4. `ios/Spark.xcodeproj` doppelklicken.
-5. Links oben das Projekt **Spark** anklicken → Target **Spark** → **Signing & Capabilities** → bei **Team** dein Konto wählen. Meldet Xcode, dass die Bundle-ID schon vergeben ist, bei **Bundle Identifier** hinten etwas Eigenes anhängen (z. B. `io.github.db9979.speechspark.dominik`).
+5. Links oben das Projekt **Spark** anklicken → Target **Spark** → **Signing & Capabilities** → bei **Team** dein Konto wählen. Dasselbe beim zweiten Target **SparkNotify** (holt den Text für Push-Meldungen). Meldet Xcode, dass die Bundle-ID schon vergeben ist: Projekt **Spark** (nicht das Target) → **Build Settings** → `APP_BUNDLE_ID` suchen und hinten etwas Eigenes anhängen (z. B. `io.github.db9979.speechspark.dominik`). Beide Targets übernehmen es.
 6. iPhone per Kabel anschließen, entsperren, „Diesem Computer vertrauen“ bestätigen.
 7. Auf dem iPhone: **Einstellungen → Datenschutz & Sicherheit → Entwicklermodus** an (iPhone startet neu).
 8. In Xcode oben in der Mitte dein iPhone als Ziel wählen, dann **▶︎ (Run)** drücken.
@@ -51,6 +51,40 @@ In der App unter **Einstellungen (Zahnrad)**:
 
 Route und Anrufe: „Navigiere zur Arbeit“ oder „Ruf Anna an“. Die App fragt jedes Mal „Route nach … öffnen?“ oder „Anna anrufen (Nummer)?“. Erst „Ja“ (getippt oder gesagt) öffnet Karten oder ruft an. Kontakte sucht nur das iPhone; die Nummer geht nicht an den Spark. Gibt es mehrere passende Kontakte, fragt die App nach dem ganzen Namen.
 
+## Push-Meldungen bei geschlossener App
+
+Braucht das Apple Developer Program. Einmalig:
+
+1. developer.apple.com → **Certificates, IDs & Profiles → Keys → +** → Name z. B. „Spark Push“, **Apple Push Notifications service (APNs)** anhaken → **Continue → Register → Download**. Die `.p8`-Datei gibt es nur dieses eine Mal; gut aufheben. Die **Key ID** steht daneben, die **Team ID** unter **Membership**.
+2. Panel als Admin: **Einstellungen → Funktionen → Push an die iPhone-App** an. Darunter `.p8`, Key ID, Team ID und die Bundle-ID der App eintragen. **Art der App**: „Entwicklung“, solange du die App direkt aus Xcode aufspielst, „Produktion“ für TestFlight und App Store. Speichern.
+3. Profil: **Ich → iPhone-App → „Meldungen aufs iPhone“** an.
+4. App einmal öffnen und Mitteilungen erlauben. Dann im Panel **„Test-Meldung schicken“**.
+
+Was dann kommt: Erinnerungen und Timer (auch die im Panel oder am Lautsprecher gesetzten), Morgenrunde, Hinweise von selbst, Gedächtnis-Aufräumen. Über Apple geht nur „Neue Nachricht vom Spark“; der Text bleibt 24 Stunden auf dem Spark, die App holt ihn mit ihrem Schlüssel und zeigt ihn im Banner. Ist der Spark gerade nicht erreichbar, bleibt es bei „Neue Nachricht“. Mit Push klingeln Erinnerungen nicht mehr doppelt (die App legt dann keine eigenen Wecker mehr an). Höchstens 30 Meldungen pro Stunde und Profil.
+
+Test sagt **BadDeviceToken**: „Entwicklung“ und „Produktion“ vertauscht. **InvalidProviderToken**: Key ID oder Team ID passen nicht zum Schlüssel. **TopicDisallowed**: Bundle-ID passt nicht.
+
+## CarPlay
+
+Ein eigenes Symbol „Spark“ im Auto. Antippen → **„Mit Spark sprechen“** → losreden. Das Gespräch geht freihändig weiter, bis 8 Sekunden lang nichts kommt; Ins-Wort-Fallen geht wie in der App. Das Auto zeigt nur „Ich höre zu“, „Denke nach“, „Spark spricht“, nie Text. Antworten sind im Auto kurz. Smart Home im Auto nur mit dem eigenen Schalter **„Smart Home auch im Auto“** (zusätzlich zu „Smart Home aus der App“) und Codewort. Route und Anruf nur nach „Ja“. Hinweise von selbst sagt die App im Auto laut. Ein eigenes Weckwort im Auto erlaubt Apple nicht; „Hey Siri, Frag Spark“ geht weiter.
+
+**Apple muss CarPlay freigeben**, sonst erscheint das Symbol nicht:
+
+1. developer.apple.com/contact/carplay → Kategorie **„Voice-based conversational app“** beantragen. Apple prüft jeden Antrag; das dauert Tage bis Wochen.
+2. Nach der Zusage: developer.apple.com → **Identifiers** → die App-ID → **Additional Capabilities / CarPlay** die Freigabe anhaken.
+3. In `ios/Spark.entitlements` diese zwei Zeilen innerhalb von `<dict>` ergänzen und die App neu aufspielen:
+   ```xml
+   <key>com.apple.developer.carplay-voice-based-conversation</key>
+   <true/>
+   ```
+   (Vorher nicht eintragen: ohne Freigabe kann Xcode die App sonst nicht signieren.)
+
+Nach der Freigabe ausprobieren ohne Auto: Xcode → **Open Developer Tool → Simulator**, dort **I/O → External Displays → CarPlay**.
+
+## Veröffentlichen
+
+Schritt für Schritt (TestFlight für dich und die Familie, App Store): [iphone-veroeffentlichen.md](iphone-veroeffentlichen.md).
+
 ## Sicherheit
 
 - Jedes iPhone bekommt beim Koppeln einen eigenen Schlüssel. Er liegt nur im Schlüsselbund dieses iPhones und auf dem Spark nur als Hash.
@@ -59,6 +93,8 @@ Route und Anrufe: „Navigiere zur Arbeit“ oder „Ruf Anna an“. Die App fra
 - Smart Home aus der App nur mit eigenem Schalter und Codewort. Was die App als Absender angibt, zählt nicht; das Panel entscheidet am Schlüssel.
 - Weckwort, Ständer-Modus, Route und Anrufe nur mit eigenem Schalter im Panel. Der Spark schlägt Route und Anruf nur vor, das Werkzeug gibt es nur für den App-Schlüssel mit Schalter; starten tut erst dein „Ja“ auf dem iPhone. Ein Hinweis von außen (Mail, Webseite) kann keine Route und keinen Anruf auslösen.
 - Vor dem Weckwort geht kein Ton an den Spark. Im Hintergrund hört die App nur mit eingeschaltetem Weckwort zu.
+- Push: Der Apple-Schlüssel (.p8) liegt verschlüsselt auf dem Spark, ändern nur als Admin mit zweitem Anmeldeschritt, er wird nie wieder angezeigt. Apple bekommt nur einen festen Satz und eine Zufallsnummer. Die Push-Adresse meldet nur die App mit ihrem eigenen Schlüssel an; ein entferntes iPhone bekommt sofort nichts mehr. Den Text einer Meldung bekommt nur die App des eigenen Profils.
+- CarPlay macht nichts lockerer: Im Auto ist Smart Home ohne den eigenen Auto-Schalter gesperrt, auch wenn die App es sonst darf.
 - Koppeln nur aus der eigenen Browser-Anmeldung, mit dem zweiten Anmeldeschritt, wenn das Profil ihn hat. Höchstens 5 iPhones pro Profil.
 
 ## Was der Spark dafür anbietet
@@ -73,5 +109,9 @@ Route und Anrufe: „Navigiere zur Arbeit“ oder „Ruf Anna an“. Die App fra
 | `POST /api/assistant/say` | App: Hinweise mit der Spark-Stimme sprechen |
 | `POST /api/test/asr`, `POST /api/chat`, `POST /api/siri/ask` | Fragen und Antworten wie im Browser und bei Siri |
 | `DELETE /api/profile/iphone/{id}` | Browser-Anmeldung: iPhone entfernen |
+| `POST /api/iphone/push-token` | App: ihre Push-Adresse anmelden (nur mit dem App-Schlüssel) |
+| `GET /api/iphone/note?id=…` | App (Mitteilungs-Erweiterung): Text einer Push-Meldung holen |
+| `POST /api/profile/iphone/push-test` | Browser-Anmeldung: Test-Meldung an die eigenen iPhones |
+| `GET/PUT/DELETE /api/admin/apns` | Admin: Apple-Schlüssel (PUT und DELETE mit zweitem Schritt) |
 
 Jeder Push, der `ios/` ändert, baut die App auf GitHub für den Simulator (`.github/workflows/ios.yml`), damit Fehler dort auffallen und nicht erst in Xcode.

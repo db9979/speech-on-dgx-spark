@@ -262,7 +262,8 @@ def seen():
 # A key of the iPhone app (scope "app") only asks and listens: these paths and nothing else, and only
 # while the admin and the profile have the app switched on (APP_GATE, set by iphone.py; closed without it).
 APP_PATHS = ("/api/chat", "/api/test/asr", "/api/siri/ask", "/api/iphone/hello", "/api/profile/reminders",
-             "/api/proactive", "/api/proactive/greet", "/api/assistant/say")
+             "/api/proactive", "/api/proactive/greet", "/api/assistant/say",
+             "/api/iphone/push-token", "/api/iphone/note")
 APP_GATE = [lambda uid: False]
 
 
@@ -272,6 +273,14 @@ def _device(d, request):
         return None
     h = hashlib.sha256(token.encode()).hexdigest()
     return next((x for x in d["devices"] if secrets.compare_digest(x["token"], h)), None)
+
+
+def device(request):
+    """The device entry behind this request's key (id, user, scope), or None for logins."""
+    if request.scope.get("speech_profile"):
+        return None
+    dev = _device(_load(), request)
+    return {"id": dev["id"], "user": dev["user"], "scope": dev.get("scope") or ""} if dev else None
 
 
 def key_scope(request):
@@ -375,6 +384,8 @@ SETTINGS = {
     "app_ha": (False, lambda v: isinstance(v, bool)),
     "app_listen": (False, lambda v: isinstance(v, bool)),   # listening all the time for the wake word
     "app_act": (False, lambda v: isinstance(v, bool)),      # routes and calls on the iPhone (iphone_action)
+    "app_push": (False, lambda v: isinstance(v, bool)),     # notes as Apple push to the closed app (apns.py)
+    "app_car_ha": (False, lambda v: isinstance(v, bool)),   # smart home from CarPlay
 }
 
 

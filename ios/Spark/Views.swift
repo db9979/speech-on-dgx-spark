@@ -51,7 +51,7 @@ struct PairView: View {
 
 struct ChatView: View {
     @EnvironmentObject var app: AppState
-    @StateObject private var talk = Conversation()
+    @ObservedObject private var talk = Conversation.shared
     @State private var typed = ""
     @State private var settings = false
     @Environment(\.scenePhase) private var scene

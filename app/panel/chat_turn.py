@@ -139,11 +139,17 @@ async def prepare(request):
     # from the iPhone app the smart home switches only when the profile allowed it there (app_ha); the
     # key decides, not what the request says it is
     app_key = profiles.key_scope(request) == "app"
-    app_blocked = bool(ha and who and app_key and not profiles.settings(who["id"]).get("app_ha"))
+    # CarPlay: what the request says only makes it stricter (shorter answers, no smart home without
+    # the profile's own car switch); it never unlocks anything
+    car = bool(app_key and body.get("car") is True)
+    app_blocked = bool(ha and who and app_key and (not profiles.settings(who["id"]).get("app_ha")
+                                                   or car and not profiles.settings(who["id"]).get("app_car_ha")))
     # actions on the iPhone itself: only from the app's own key, only when the profile allowed them
     phone_act = bool(app_key and who and own_browser and profiles.settings(who["id"]).get("app_act"))
     if app_key:
         system = (system + "\n\n" + chat.IPHONE_HINT + (" " + chat.IPHONE_ACT_HINT if phone_act else "")).strip()
+        if car:
+            system = (system + "\n\n" + chat.CAR_HINT).strip()
     if app_blocked:
         ha = None
     if tg:
@@ -152,6 +158,7 @@ async def prepare(request):
         print("homeassistant: turn for", who["name"] if who else "guest", "- tools",
               "offered" if ha else "NOT offered: " + (
                   "no profile signed in" if not who else "voice of another profile" if not own_browser
+                  else "not allowed in the car (Ich → iPhone-App)" if app_blocked and car
                   else "not allowed from the iPhone app (Ich → iPhone-App)" if app_blocked
                   else "token unreadable (stored with another key), connect again" if homeassistant._raw(who["id"])
                   else "this profile has not connected Home Assistant"), flush=True)

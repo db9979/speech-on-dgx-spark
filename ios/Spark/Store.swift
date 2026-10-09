@@ -11,7 +11,10 @@ enum Store {
 
     static var baseURL: URL? {
         get { defaults.string(forKey: "base").flatMap(URL.init(string:)) }
-        set { defaults.set(newValue?.absoluteString, forKey: "base") }
+        set {
+            defaults.set(newValue?.absoluteString, forKey: "base")
+            write("base-url", newValue?.absoluteString)
+        }
     }
 
     static var profile: String {
@@ -26,28 +29,54 @@ enum Store {
     }
 
     static var key: String? {
-        get {
-            var q = query
-            q[kSecReturnData as String] = true
-            q[kSecMatchLimit as String] = kSecMatchLimitOne
-            var out: CFTypeRef?
-            guard SecItemCopyMatching(q as CFDictionary, &out) == errSecSuccess, let data = out as? Data else { return nil }
-            return String(data: data, encoding: .utf8)
-        }
-        set {
-            SecItemDelete(query as CFDictionary)
-            guard let value = newValue, let data = value.data(using: .utf8) else { return }
-            var q = query
-            q[kSecValueData as String] = data
-            q[kSecAttrAccessible as String] = kSecAttrAccessibleAfterFirstUnlockThisDeviceOnly
-            SecItemAdd(q as CFDictionary, nil)
-        }
+        get { read(account) }
+        set { write(account, newValue) }
     }
 
-    private static var query: [String: Any] {
+    /// The keychain group the notification extension can read too ("<team>.<bundle id>.shared");
+    /// nil in builds without signing, then the app keeps its own group.
+    private static let group: String? = {
+        guard let g = Bundle.main.object(forInfoDictionaryKey: "SparkKeychainGroup") as? String,
+              !g.hasPrefix("."), !g.contains("$(") else { return nil }
+        return g
+    }()
+
+    private static func query(_ account: String) -> [String: Any] {
         [kSecClass as String: kSecClassGenericPassword,
          kSecAttrService as String: service,
          kSecAttrAccount as String: account]
+    }
+
+    private static func read(_ account: String) -> String? {
+        var q = query(account)
+        q[kSecReturnData as String] = true
+        q[kSecMatchLimit as String] = kSecMatchLimitOne
+        var out: CFTypeRef?
+        guard SecItemCopyMatching(q as CFDictionary, &out) == errSecSuccess, let data = out as? Data else { return nil }
+        return String(data: data, encoding: .utf8)
+    }
+
+    private static func write(_ account: String, _ value: String?) {
+        SecItemDelete(query(account) as CFDictionary)
+        guard let value, let data = value.data(using: .utf8) else { return }
+        var q = query(account)
+        q[kSecValueData as String] = data
+        q[kSecAttrAccessible as String] = kSecAttrAccessibleAfterFirstUnlockThisDeviceOnly
+        if let group {
+            var shared = q
+            shared[kSecAttrAccessGroup as String] = group
+            if SecItemAdd(shared as CFDictionary, nil) == errSecSuccess { return }
+        }
+        SecItemAdd(q as CFDictionary, nil)
+    }
+
+    /// Key and address into the shared group, so the notification extension can fetch a message's
+    /// text from the Spark (keys stored by older versions sit in the app's own group).
+    static func share() {
+        guard group != nil, !defaults.bool(forKey: "shared1") else { return }
+        if let k = key { key = k }
+        if let b = baseURL { baseURL = b }
+        defaults.set(true, forKey: "shared1")
     }
 
     static var paired: Bool { baseURL != nil && key != nil }

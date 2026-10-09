@@ -289,6 +289,8 @@ IPHONE_HINT = ("Die Frage kommt aus der iPhone-App, die deine Antwort vorliest: 
                "Links. Timer und Erinnerungen stellst du mit reminder_set, das iPhone klingelt dann.")
 IPHONE_ACT_HINT = ("Mit iphone_action öffnest du auf dem iPhone eine Route in Karten oder rufst einen Kontakt an; "
                    "das iPhone fragt vorher nach.")
+CAR_HINT = ("Der Nutzer fährt gerade Auto (CarPlay) und hört nur zu: antworte in höchstens zwei bis drei kurzen "
+            "Sätzen, ohne Aufzählungen, Zahlenkolonnen, Links oder Rückfragen mit vielen Möglichkeiten.")
 REMINDER_HINT = ("Mit reminder_set stellst du Timer und Erinnerungen, mit reminder_list und reminder_cancel "
                  "siehst und löschst du sie. Bestätige kurz, wann es klingelt.")
 
