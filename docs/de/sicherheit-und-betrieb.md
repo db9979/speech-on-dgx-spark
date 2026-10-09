@@ -63,6 +63,6 @@ Alle Speech-Dienste schreiben in ein eigenes Journal (`journalctl --namespace=sp
 
 **Wetterdienst kurz weg** (ab V01.0.214): Antwortet Open-Meteo für die Wetternotiz mit 5xx oder 429 oder gar nicht, steht im Log eine Warnung („retry in 10 min“) statt eines Fehlers, und der Spark versucht es innerhalb des Zeitfensters alle 10 min wieder.
 
-**Webanfragen in den Logs** (ab V01.0.215): Bei Zeilen des Webservers („GET /api/… 200 OK“) entscheidet nur der Statuscode über Rot (ab 500), nie Wörter in der Adresse. Die Abrufe der Logs-Seite selbst schreibt das Panel gar nicht mehr ins Journal.
+**Webanfragen in den Logs** (ab V01.0.215): Bei Zeilen des Webservers („GET /api/… 200 OK“) entscheidet nur der Statuscode über Rot (ab 500), nie Wörter in der Adresse. Die Abrufe der Logs-Seite selbst schreibt das Panel gar nicht mehr ins Journal. Zeilen des Updates, die einen Versionstext zitieren („Available: 46fb0e8 …“, „Update finished: …“), bekommen keine Farbe (ab V01.0.216).
 
 **Ausführliche Diagnose pro Bereich** (Logs → Erweitert): Raum-Modus, Lautsprecher, Home Assistant und Gespräch lassen sich für 15 min, 1 h oder 4 h einschalten; danach und bei jedem Neustart sind sie wieder aus. Sie schreiben zusätzliche `… detail …`-Zeilen nur mit Zahlen und Entscheidungen (Erkennungszeit, Antwortzeit, Wortzahl, Dauer eines Home-Assistant-Aufrufs, Größe des Verlaufs, angebotene Werkzeuge), nie gehörte oder geschriebene Texte, Namen oder Geheimnisse; die Schwärzung läuft trotzdem. Nur für den Admin, mit Rate-Limit.

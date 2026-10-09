@@ -30,6 +30,8 @@ FILTERS = dict(AREAS, update=None, errors=None)
 ERR = re.compile(r"(?i)(error|exception|traceback|failed|broke|refused|timeout|timed out|fehler|not reachable)")
 WARN = re.compile(r"(?i)\b(warn\w*|stalled|behind|ignored|asked again|retry|slow|refused)\b")
 # a uvicorn access-log line: INFO:     1.2.3.4:5 - "GET /x?y HTTP/1.1" 200 OK
+# update.sh: "Available: 46fb0e8 …", "Update finished: 46fb0e8 …", "  46fb0e8 subject"
+COMMIT = re.compile(r"^(?:(?:Installed|Available|Update finished): |\s+)[0-9a-f]{7,40} ")
 ACCESS = re.compile(r'^INFO:\s+\S+ - "[A-Z]+ \S+ HTTP/[\d.]+" (\d{3})\b')
 # a fixed hint for the newest error: (area or None, regex on the message, German, English)
 HINTS = (
@@ -101,7 +103,9 @@ def parse(line):
     ts, msg = (m.group(1), m.group(3)) if m else ("", raw)
     area = next((k for k, rx in _AREAS if rx.search(msg)), "")
     acc = ACCESS.search(msg)
-    if acc:   # a web request: its status decides, never words in the address (?f=errors)
+    if COMMIT.search(msg):   # update.sh quotes commit subjects; their words ("Fehler") are no error
+        level = ""
+    elif acc:   # a web request: its status decides, never words in the address (?f=errors)
         code = int(acc.group(1))
         level = "err" if code >= 500 else ""
     else:

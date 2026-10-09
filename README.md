@@ -31,6 +31,7 @@ All options for running without questions (`--mode api --asr 1.7b --tts 0.6b --y
 
 <!-- New version: add one line at the top here and in CHANGELOG.md, drop the oldest line here (keep 10). Details go to docs/de and docs/en, not into this README. -->
 
+- **V01.0.216** Logs: update lines quoting a version text ("Available", "Update finished") no longer turn red just because the text says "Fehler"
 - **V01.0.215** Logs: the log page's own requests no longer count as errors ("f=errors" in the address) and stay out of the journal; for web requests only the status code decides
 - **V01.0.214** Telegram conflict fixed: the panel started its background tasks (Telegram polling, reminders, watchdog …) twice, because the https server ran them again; now once. If Telegram still reports a conflict, the Spark waits longer and longer, logs rarely and shows a hint under State; a weather service outage (503) is retried quietly
 - **V01.0.213** Room mode from afar: “Raummodus im Wohnzimmer an” in the panel, the app or at another speaker starts an own connected speaker after “Ja” (fixed rule, no Home Assistant, no code word), “… aus” ends it; admin and profile switch, off
@@ -40,7 +41,6 @@ All options for running without questions (`--mode api --asr 1.7b --tts 0.6b --y
 - **V01.0.209** Room mode in the iPhone app: line “… listens until …” with Stop at the top of the chat, Live Activity with time left, “Raum-Modus” widget, Siri “End room mode with Spark” (only ending, never starting)
 - **V01.0.208** Room mode visible: green strip “… listens until …” on every page, Me → Room mode “Active now” with +30 min/Stop, Status “Listening right now” with “Stop all”, mark and filter in Profiles and devices, “● Room” in the tab title, reminder tone, note when a speaker starts, history without text, key for Home Assistant
 - **V01.0.207** Settings made consistent: same building blocks on every page, menu Assistant/Speech/Spark, "At a glance", update and backup under Settings, Status and Einbinden with a column or list like Settings
-- **V01.0.206** Many users: profile list with search, filter and pages, call names, recipient search with recent and favourites, asks back when names are alike (Siri too)
 
 All versions: [CHANGELOG.md](CHANGELOG.md)
 

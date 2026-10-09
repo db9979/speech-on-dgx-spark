@@ -88,6 +88,15 @@ class OwnRequests(unittest.TestCase):
         self.assertEqual(bad["level"], "err")
         self.assertEqual(logfilter.parse(pre.split("INFO")[0] + "chat: tts failed")["level"], "err")
 
+    def test_commit_subjects_of_the_update_are_no_errors(self):
+        """V01.0.216: a commit subject with "Fehler" in it made the update lines red."""
+        import logfilter
+        pre = "2026-10-09T18:46:42+0200 tars update.sh[5]: "
+        subj = "V01.0.215: Logs – eigene Abrufe der Logs-Seite zählen nicht mehr als Fehler"
+        for msg in ("Available: 46fb0e8 2026-10-09 " + subj, "  46fb0e8 " + subj, "Update finished: 46fb0e8 " + subj):
+            self.assertEqual(logfilter.parse(pre + msg)["level"], "", msg)
+        self.assertEqual(logfilter.parse(pre + "Update failed: tests did not pass")["level"], "err")
+
     def test_log_page_polls_stay_out_of_the_journal(self):
         import logging
         import common
