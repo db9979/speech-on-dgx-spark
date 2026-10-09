@@ -6,7 +6,9 @@
 
 #define ANSWER_MAX 3000
 #define RING_SIZE 16384        // ADPCM bytes: 4 s of speech
-#define PREBUFFER 3000         // start playing after 0.75 s of audio (or at the end)
+#define PREBUFFER 6000         // start playing after 1.5 s of audio (or at the end)
+#define REBUFFER 4000          // after the buffer ran dry: wait for 1 s more, plus 0.5 s per earlier stall
+#define REBUFFER_MAX 12000
 #define CREDIT_STEP 2048       // tell the phone about freed space in steps of this
 #define DECODE_BYTES 128       // ADPCM bytes decoded per speaker write (256 samples)
 #define MOUTH_DELAY 12          // audio ticks (40 ms) between decoding and hearing
@@ -55,6 +57,8 @@ static uint32_t s_inbox;
 // audio
 static uint8_t *s_ring;
 static uint32_t s_head, s_tail, s_fill;
+static bool s_rebuf;           // the buffer ran dry: wait until enough is back, one pause instead of stutter
+static int32_t s_stalls;        // how often that happened in this answer (goes to the Spark log)
 static bool s_audio_end, s_playing;
 static uint32_t s_freed_total;  // ADPCM bytes played since the question (the phone sends at most this + RING_SIZE)
 static uint32_t s_freed_sent;   // last value the phone confirmed
@@ -139,6 +143,7 @@ static void flush_out(void) {
       s_freed_due = false;
       dict_write_int32(it, MESSAGE_KEY_FREED, s_freed_out);
       dict_write_int32(it, MESSAGE_KEY_SEQ, s_seq);
+      dict_write_int32(it, MESSAGE_KEY_STALLS, s_stalls);
       break;
   }
   if (app_message_outbox_send() == APP_MSG_OK) {
@@ -205,6 +210,8 @@ static void audio_reset(void) {
   }
   s_playing = false;
   s_head = s_tail = s_fill = 0;
+  s_rebuf = false;
+  s_stalls = 0;
   s_audio_end = false;
   s_freed_total = s_freed_sent = s_freed_out = 0;
   s_pred = s_index = 0;
@@ -279,10 +286,23 @@ static void audio_tick(void *ctx) {
       return;
     }
   }
-  if (s_playing) {
+  if (s_playing && s_rebuf) {
+    uint32_t need = REBUFFER + 2000 * (s_stalls - 1);
+    if (need > REBUFFER_MAX) need = REBUFFER_MAX;
+    if (s_fill >= need || s_audio_end) s_rebuf = false;
+  }
+  if (s_playing && !s_rebuf) {
     for (;;) {
       if (s_pcm_off >= s_pcm_len) {
-        if (!s_fill) break;
+        if (!s_fill) {
+          // nothing left while more is coming: the speaker plays out its queue, then stays quiet
+          // until the buffer holds enough again, so a slow connection gives one pause, not stutter
+          if (!s_audio_end) {
+            s_rebuf = true;
+            s_stalls++;
+          }
+          break;
+        }
         decode_block();
       }
       uint32_t want = s_pcm_len - s_pcm_off;

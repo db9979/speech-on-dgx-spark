@@ -2,6 +2,7 @@
 
 Every version in one line, newest first (taken from the commit messages, so some lines are German, some English). Older entries have no version number.
 
+- **V01.0.239** · 2026-10-09 · Pebble-Ton stockt weniger: die Uhr startet nach 1,5 s Puffer (vorher 0,75 s) und spielt nach leerem Puffer erst weiter, wenn wieder genug da ist (eine Pause statt Häppchen); die Log-Zeile „watch: zeit“ zählt die Aussetzer (Uhr-App 1.5.0)
 - **V01.0.238** · 2026-10-09 · Scans vollständig: gescannte PDF-Seiten werden als ganze Seite gerendert (pypdfium2 4.30.0), statt nur das größte Bild zu nehmen, dadurch fallen keine Seiten mehr weg; bis 300 Scan-Seiten pro Dokument (100 pro Tag, danach am nächsten Tag weiter); Grenzen und übersprungene Seiten stehen am Dokument; „Neu einlesen“ aus dem aufbewahrten Original (behält Platz, „Für alle“ und Suche); ein gekürzter Chat-Anhang aus der App sagt, dass nur der Anfang dabei ist
 - **V01.0.237** · 2026-10-09 · Update-Prüfung: GitHub-Grenze von 60 Abfragen pro Stunde erkannt (Hinweis mit Uhrzeit statt Fehlerflut), Statuscode im Log
 - **V01.0.236** · 2026-10-09 · Gemeinsame Dokumente: ein Profil gibt einzelne fertige Dokumente mit „Für alle“ frei (ohne neu einzulesen), die anderen Profile finden sie in der Suche und sehen sie unter Ich → Dokumente → „Von anderen für alle freigegeben“; nur der Besitzer oder der Admin (Zustand → Monitoring) nimmt es zurück; Gäste und unbekannte Stimmen am Lautsprecher nie; Admin- und Profilschalter, beide aus
