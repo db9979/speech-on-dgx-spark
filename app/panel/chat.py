@@ -18,6 +18,7 @@ from textnorm import guess_language  # noqa: E402
 import documents  # noqa: E402
 import speakers  # noqa: E402
 import calendars  # noqa: E402
+import logfilter  # noqa: E402
 import profiles  # noqa: E402
 import recall  # noqa: E402
 import answercheck  # noqa: E402
@@ -1051,6 +1052,8 @@ async def _answer(request, turn):
         turn.device_owner, turn.ex, turn.fix_fix, turn.fix_prev, turn.ha, turn.ha_direct, turn.ha_read,
         turn.heard, turn.locked, turn.messages, turn.need, turn.own_browser, turn.pset, turn.said_before,
         turn.search, turn.small, turn.src, turn.think_tools, turn.tool_temp, turn.tools, turn.who)
+    logfilter.detail("chat", f"turn: {len(messages)} messages, {sum(len(str(m.get('content') or '')) for m in messages)} "
+                             f"chars of history, {len(tools or [])} tools offered, {'locked' if locked else 'not locked'}")
     lheaders = {"Authorization": f"Bearer {ccfg['llm_key']}"} if ccfg.get("llm_key") else {}
     tts_url = f"http://127.0.0.1:{cfg['tts']['port']}/v1/audio/speech"
     tts_body = {k: body[k] for k in ("language", "instructions") if body.get(k)}

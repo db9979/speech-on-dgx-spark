@@ -73,7 +73,7 @@ def _may_upload(scope):
 # Request bodies: small by default; uploads only where they belong and only up to their limit.
 app.add_middleware(BodyLimit, default=2 * 1024**2, gate=_may_upload, limits=[
     ("/api/backups-upload", backup.MAX_UPLOAD + 1024**2), ("/api/clone-voices-import", 200 * 1024**2),
-    ("/api/clone-voices", 60 * 1024**2), ("/api/test/asr", 51 * 1024**2), ("/api/profile/voice", 11 * 1024**2),
+    ("/api/clone-voices", 60 * 1024**2), ("/api/test/asr", 51 * 1024**2), ("/api/logverbose", 4096), ("/api/profile/voice", 11 * 1024**2),
     ("/api/profile/docs", 21 * 1024**2), ("/api/chat/image", images.MAX_BYTES + 64 * 1024),
     ("/api/chat", 4 * 1024**2), ("/api/login", 64 * 1024),
     ("/api/profile/login", 64 * 1024)],

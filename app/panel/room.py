@@ -49,6 +49,7 @@ from fastapi import APIRouter, Depends, HTTPException, Request
 
 import calendars
 import homeassistant
+import logfilter
 import profiles
 import proactive
 from common import load_config
@@ -364,6 +365,8 @@ async def heard(uid, rid, text, body):
     text = re.sub(r"\s+", " ", str(text or "")).strip()[:600]
     if not text:
         return {"wait": bool(r["pending"])}
+    logfilter.detail("room", f"heard {len(text.split())} words, voice {'known' if voice else 'not checked'}, "
+                             f"{'waiting cue ' + r['pending']['kind'] if r['pending'] else 'nothing waiting'}")
     # kept (and later given to the model) with the code word blacked out; the yes below still
     # sees the words as spoken
     ha = homeassistant.get(uid)

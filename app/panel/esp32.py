@@ -67,6 +67,7 @@ import httpx
 import numpy as np
 
 import echo
+import logfilter
 import profiles
 import vault
 from common import load_config
@@ -813,6 +814,8 @@ class Session:
                 print("esp32: speech recognition", type(e).__name__, str(e)[:120], flush=True)
                 self.note("Spracherkennung fehlgeschlagen: " + type(e).__name__)
                 text = ""
+            logfilter.detail("esp32", f"recognition {(time.time() - ended) * 1000:.0f} ms for {len(pcm) / 32000:.1f} s "
+                                      f"of sound, {len(text.split())} words")
             if text and not self.testing and self.own_voice(text, pcm, ended):
                 text = ""
             self.note(f"Verstanden: „{text[:80]}“" if text else "Nichts verstanden")
@@ -832,6 +835,7 @@ class Session:
                 return
             await self.send({"type": "llm", "emotion": "thinking", "text": "🤔"})
             await self.speak(text)
+            logfilter.detail("esp32", f"answer finished {(time.time() - ended) * 1000:.0f} ms after the question ended")
         except asyncio.CancelledError:
             try:
                 await self.send({"type": "tts", "state": "stop"})

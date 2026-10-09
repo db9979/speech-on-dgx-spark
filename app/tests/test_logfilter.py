@@ -98,5 +98,74 @@ class LogFilterTest(unittest.TestCase):
         guard._rate.clear()
 
 
+class OverviewTest(unittest.TestCase):
+    """V01.0.212: the page gets rows with time, area and level, counts per area, a small history and the
+    newest error with a fixed hint; extra detail per area is admin only, off by default and ends by itself."""
+
+    def test_json_rows_counts_and_hint(self):
+        r, _ = get(ADMIN, f="room,esp32", format="json")
+        self.assertEqual(r.status_code, 200)
+        d = r.json()
+        self.assertEqual({x["area"] for x in d["rows"]}, {"room", "esp32"})
+        self.assertEqual(d["counts"]["chat"], 1)         # counts cover every line, not only the filter
+        self.assertEqual(d["counts"]["search"], 1)       # web search is its own area
+        self.assertGreaterEqual(d["counts"]["errors"], 2)
+        self.assertEqual(d["last_error"]["area"], "mail")   # the newest line with an error word
+        self.assertNotIn("abcdefghijklmnop", r.text)
+        r, _ = get(ADMIN, f="errors", format="json")
+        self.assertTrue(all(x["level"] == "err" for x in r.json()["rows"]))
+        self.assertEqual(get(ADMIN, format="xml")[0].status_code, 400)
+
+    def test_levels_and_hints_are_fixed_rules(self):
+        row = logfilter.parse("2026-01-01T10:00:00+0000 tars python[1]: homeassistant: lookup failed: HTTPStatusError 401")
+        self.assertEqual((row["t"], row["area"], row["level"]), ("10:00:00", "ha", "err"))
+        self.assertEqual(logfilter.parse("2026-01-01T10:00:00+0000 tars p[1]: room: ignored (tv voice)")["level"], "warn")
+        self.assertEqual(logfilter.parse("2026-01-01T10:00:00+0000 tars p[1]: weiche: homeassistant")["area"], "weiche")
+        now = logfilter._when("2026-01-01T10:30:00+0000")
+        s = logfilter.summary([row], 60, now)
+        self.assertIn("Token", s["last_error"]["hint"]["de"])
+        self.assertEqual(sum(s["spark"]["ha"]), 1)
+        self.assertEqual(len(s["spark"]["ha"]), logfilter.BUCKETS)
+
+    def test_detail_switch(self):
+        guard._rate.clear()
+        logfilter._verbose.clear()
+        anon = TestClient(panel.app)
+        self.assertEqual(anon.get("/api/logverbose").status_code, 401)
+        self.assertEqual(anon.post("/api/logverbose", json={"area": "room", "minutes": 15}).status_code, 401)
+        self.assertEqual(ADMIN.get("/api/logverbose").json()["areas"], {"room": 0, "esp32": 0, "ha": 0, "chat": 0})
+        for bad in ({"area": "shell", "minutes": 15}, {"area": "room", "minutes": 7}, {"area": "room", "minutes": True},
+                    {"area": "room", "minutes": "15"}, ["room"]):
+            self.assertEqual(ADMIN.post("/api/logverbose", json=bad).status_code, 400, bad)
+        with mock.patch.object(logfilter.time, "time", return_value=1000.0):
+            self.assertEqual(ADMIN.post("/api/logverbose", json={"area": "room", "minutes": 15}).json()["areas"]["room"], 900)
+        with mock.patch("builtins.print") as out, mock.patch.object(logfilter.time, "time", return_value=1500.0):
+            logfilter.detail("room", "heard 4 words token=geheim")
+            logfilter.detail("esp32", "not on")
+        lines = [" ".join(map(str, c.args)) for c in out.call_args_list]
+        self.assertEqual(lines, ["room: detail heard 4 words token=***"])
+        with mock.patch("builtins.print"), mock.patch.object(logfilter.time, "time", return_value=1000.0 + 901):
+            self.assertFalse(logfilter.verbose("room"))   # ended by itself
+        self.assertEqual(ADMIN.get("/api/logverbose").json()["areas"]["room"], 0)
+        logfilter._verbose.clear()
+
+    def test_room_detail_never_has_the_heard_text(self):
+        import asyncio
+        import room
+        logfilter._verbose.clear()
+        with mock.patch.object(logfilter.time, "time", return_value=1000.0):
+            logfilter._verbose["room"] = 5000.0
+            with mock.patch("builtins.print") as out:
+                try:
+                    asyncio.run(room.heard("u1", "r1", "Mein geheimes Passwort ist Pferd", {}))
+                except Exception:
+                    pass   # only the detail line matters here
+        logfilter._verbose.clear()
+        text = " ".join(" ".join(map(str, c.args)) for c in out.call_args_list)
+        self.assertIn("room: detail heard 5 words", text)
+        self.assertNotIn("Pferd", text)
+        self.assertNotIn("Passwort", text)
+
+
 if __name__ == "__main__":
     unittest.main()

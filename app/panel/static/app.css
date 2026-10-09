@@ -540,3 +540,41 @@ details.adv h3.sec{margin-top:14px}
 @media (max-width:760px){.cfgnav .glneed .glrow{display:flex;flex-direction:row;align-items:center;padding:10px 2px;min-height:0;font-size:15px;border-radius:0;border-bottom:1px solid var(--line)}
   .cfgnav .glneed .glrow:last-child{border-bottom:0}.cfgnav .glneed .glrow::before{display:none}}
 @media (min-width:761px){main.hassub{grid-template-columns:170px minmax(0,1fr)}#svc td.row{flex-wrap:nowrap}}
+/* Zustand → Logs (V01.0.212): tiles, newest error, filter buttons, tidy list */
+.lcard{display:grid;gap:12px;grid-template-columns:minmax(0,1fr);overflow:visible}
+.lbar{display:flex;gap:10px;align-items:center;flex-wrap:wrap}.lbar .sp{flex:1}.lbar[hidden],.lsum[hidden],.lchips[hidden],.lasterr[hidden],.lseg[hidden]{display:none}
+.ltabs{display:flex;gap:4px;padding:4px;border-radius:12px;background:color-mix(in srgb,var(--line) 55%,transparent);max-width:100%;overflow-x:auto}
+.ltabs button,.lseg button{border:0;background:none;color:var(--mut);font:inherit;font-size:13.5px;font-weight:600;padding:7px 14px;border-radius:9px;white-space:nowrap;cursor:pointer}
+.ltabs button.on,.lseg button.on{background:var(--card);color:var(--fg);box-shadow:0 1px 3px rgba(0,0,0,.12)}
+.lseg{display:inline-flex;gap:2px;padding:3px;border-radius:10px;background:color-mix(in srgb,var(--line) 55%,transparent)}.lseg button{padding:5px 10px;font-size:12.5px}
+.lsum{display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:10px}
+.ltile{text-align:left;border:1px solid var(--line);border-radius:12px;padding:12px;background:var(--card);color:var(--fg);font:inherit;cursor:pointer;min-width:0}
+.ltile.on{border-color:color-mix(in srgb,var(--c) 60%,transparent);background:color-mix(in srgb,var(--c) 8%,var(--card))}
+.ltile span{font-size:12px;color:var(--mut)}.ltile b{font-size:22px;display:block;line-height:1.25}.ltile.err b{color:#ef4444}
+.ltile .lsub{font-size:12px;color:var(--mut);margin-top:6px}
+.lspark{display:flex;gap:2px;align-items:flex-end;height:26px;margin-top:6px}.lspark i{flex:1;background:var(--c);border-radius:2px;opacity:.75}
+.lasterr{font-size:13px;padding:10px 12px;border-radius:10px;background:color-mix(in srgb,#ef4444 9%,transparent);border:1px solid color-mix(in srgb,#ef4444 35%,transparent);overflow-wrap:anywhere}
+.lasterr .lhint{color:var(--mut);margin-top:3px}
+.lchips{display:flex;gap:6px;flex-wrap:wrap}
+.lchip{display:inline-flex;align-items:center;gap:6px;border:1px solid var(--line);background:var(--card);color:var(--fg);border-radius:99px;padding:5px 11px;font:inherit;font-size:13px;white-space:nowrap;cursor:pointer}
+.lchip i{width:8px;height:8px;border-radius:50%;background:var(--c)}.lchip b{font-size:11.5px;color:var(--mut);font-weight:600}
+.lchip.on{background:color-mix(in srgb,var(--c,var(--acc)) 16%,var(--card));border-color:color-mix(in srgb,var(--c,var(--acc)) 55%,transparent)}.lchip.err b{color:#ef4444}
+.lsearch{flex:1;min-width:150px;max-width:340px;padding:8px 12px;border-radius:10px;border:1px solid var(--line);background:var(--bg);color:var(--fg);font:inherit;font-size:13.5px}
+.lsel{width:auto;padding:7px 10px;border-radius:10px;border:1px solid var(--line);background:var(--card);color:var(--fg);font:inherit;font-size:13px}
+.llive{display:inline-flex;align-items:center;gap:6px;font:inherit;font-size:13px;font-weight:600;border:0;background:none;color:var(--mut);cursor:pointer;padding:6px 4px}
+.llive i{width:8px;height:8px;border-radius:50%;background:var(--mut)}.llive.on{color:#10b981}.llive.on i{background:#10b981;box-shadow:0 0 0 4px color-mix(in srgb,#10b981 25%,transparent)}
+.lhead{font-size:12.5px;color:var(--mut);display:flex;justify-content:space-between;gap:10px;margin:0 2px -4px}
+.lout{border:1px solid var(--line);border-radius:12px;background:var(--bg);padding:6px 0;font:12.5px/1.5 ui-monospace,SFMono-Regular,Menlo,monospace;height:min(62vh,640px);overflow:auto}
+.lrow{display:grid;grid-template-columns:66px 112px minmax(0,1fr);gap:10px;align-items:baseline;padding:3px 14px;border-left:3px solid transparent}
+.lrow:hover{background:color-mix(in srgb,var(--line) 40%,transparent)}
+.lrow.err{background:color-mix(in srgb,#ef4444 9%,transparent);border-left-color:#ef4444}.lrow.err .lm{color:#dc2626}.lrow.warn{border-left-color:#f59e0b}
+.lt{color:var(--mut)}.lm{overflow-wrap:anywhere;white-space:pre-wrap}.lm mark{background:#facc15;color:#000;border-radius:2px}
+.lbadge{font:600 11.5px/1.6 system-ui,sans-serif;color:var(--c);background:color-mix(in srgb,var(--c) 13%,transparent);border-radius:6px;padding:0 7px;justify-self:start;white-space:nowrap;max-width:100%;overflow:hidden;text-overflow:ellipsis}
+.lrep{font:600 11px system-ui,sans-serif;color:var(--mut);background:var(--line);border-radius:99px;padding:0 6px}
+.lgap{font:11.5px system-ui,sans-serif;color:var(--mut);margin:4px 0;display:flex;gap:10px;align-items:center;padding:0 14px}
+.lgap:before,.lgap:after{content:"";flex:1;border-top:1px dashed var(--line)}
+.lempty{padding:24px;text-align:center;color:var(--mut);font-family:system-ui,sans-serif}
+#logverbose .setrow .lsel{margin-left:auto}
+@media (max-width:760px){.lsum{grid-template-columns:1fr 1fr}.ltile b{font-size:18px}.lchips{flex-wrap:nowrap;overflow-x:auto;padding-bottom:4px}
+  .lseg{display:flex;width:100%}.lseg button{flex:1;padding:6px 4px}.lsearch{max-width:none;min-width:0;flex-basis:100%}.lsel{flex:1}
+  .lrow{grid-template-columns:auto minmax(0,1fr);row-gap:2px;padding:6px 12px}.lrow .lm{grid-column:1/-1}.lout{height:auto;max-height:none}.lhead{flex-direction:column;gap:2px}}

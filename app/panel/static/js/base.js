@@ -96,9 +96,9 @@ const pill=(s)=>{const c={active:'ok',ready:'ok',loading:'warn',activating:'warn
 // The panel runs on plain http in the LAN, where navigator.clipboard is not available.
 // navigator.clipboard needs https or localhost; the panel is usually plain http on the LAN,
 // so there the copy event gets the text directly (copying a selection is unreliable)
-function copyString(t,btn){const label=btn.textContent;const done=ok=>{btn.textContent=ok?t('kopiert','copied'):t('Markiert, jetzt Strg+C','Selected, now press Ctrl+C');setTimeout(()=>btn.textContent=label,2000)};
-  if(navigator.clipboard&&window.isSecureContext){navigator.clipboard.writeText(t).then(()=>done(true),()=>done(false));return true}
-  const onCopy=e=>{e.clipboardData.setData('text/plain',t);e.preventDefault()};
+function copyString(text,btn){const label=btn.textContent;const done=ok=>{btn.textContent=ok?t('kopiert','copied'):t('Markiert, jetzt Strg+C','Selected, now press Ctrl+C');setTimeout(()=>btn.textContent=label,2000)};
+  if(navigator.clipboard&&window.isSecureContext){navigator.clipboard.writeText(text).then(()=>done(true),()=>done(false));return true}
+  const onCopy=e=>{e.clipboardData.setData('text/plain',text);e.preventDefault()};
   document.addEventListener('copy',onCopy);let ok=false;try{ok=document.execCommand('copy')}catch{}document.removeEventListener('copy',onCopy);
   done(ok);return ok}
 function copyEl(id,btn){const el=$(id);if(!copyString(el.innerText||el.textContent,btn)){

@@ -30,6 +30,7 @@ import time
 import httpx
 
 import netguard
+import logfilter
 import profiles
 import vault
 
@@ -809,7 +810,9 @@ async def action(item, entity_id, service, data=None):
         r.raise_for_status()
         before = (r.json() or {}).get("state")
         name = ((r.json() or {}).get("attributes") or {}).get("friendly_name") or eid
+        t0 = time.time()
         r = await c.post(f"{item['url']}/api/services/{domain}/{service}", json=dict(extra, entity_id=eid))
+        logfilter.detail("ha", f"{domain}.{service} answered HTTP {r.status_code} after {(time.time() - t0) * 1000:.0f} ms")
         _log("action:", f"{domain}.{service}", eid, extra or "", "-> HTTP", r.status_code,
              "" if r.status_code == 200 else r.text[:200])
         if r.status_code in (400, 404):

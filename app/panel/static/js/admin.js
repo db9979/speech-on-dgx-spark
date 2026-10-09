@@ -308,19 +308,7 @@ async function auditText(){const d=await (await api('/api/audit?limit=500')).jso
   return d.events.slice().reverse().map(e=>{const who=e.who||(e.uid&&d.names[e.uid])||e.name||'';
     const what=e.event==='change'?`${e.method} ${e.path} → ${e.status}`:(AUDIT[e.event]||e.event)+(e.locked?t(` – gesperrt für ${e.locked} s`,` – locked for ${e.locked} s`):'')+(e.detail?' – '+e.detail:'');
     return `${new Date(e.t*1000).toLocaleString()}  ${(e.ip||'').padEnd(15)}  ${who?who+': ':''}${what}`}).join('\n')}
-function diagUrl(){const f=[...document.querySelectorAll('[data-lf]')].filter(x=>x.checked).map(x=>x.dataset.lf).join(',');
-  return '/api/logfilter?f='+encodeURIComponent(f)+'&minutes='+$('logmin').value+'&lines='+$('loglines').value}
-let diagAt=0;
-async function loadLogs(){const v=$('logsvc').value,el=$('logout');$('logdiag').style.display=v==='diag'?'':'none';if(v==='diag')diagAt=Date.now();
-  const txt=(v==='audit'?await auditText():await (await api(v==='diag'?diagUrl():'/api/logs/'+v+'?lines=300')).text())||t('(leer)','(empty)');
-  if(el.textContent!==txt)el.textContent=txt;if($('logfollow').checked)el.scrollTop=1e9}
-try{$('logfollow').checked=localStorage.getItem('logfollow')!=='0'}catch{}
-$('logfollow').onchange=()=>{try{localStorage.setItem('logfollow',$('logfollow').checked?'1':'0')}catch{}if($('logfollow').checked)loadLogs()};
-setInterval(()=>{if($('logfollow').checked&&$('logs').classList.contains('on')&&!document.hidden&&($('logsvc').value!=='diag'||Date.now()-diagAt>10000))loadLogs().catch(()=>{})},3000);
-try{const d=JSON.parse(localStorage.getItem('logdiag')||'null');if(d){document.querySelectorAll('[data-lf]').forEach(x=>x.checked=d.f.includes(x.dataset.lf));$('logmin').value=d.m;$('loglines').value=d.l}}catch{}
-document.querySelectorAll('#logdiag input,#logdiag select').forEach(x=>x.onchange=()=>{
-  try{localStorage.setItem('logdiag',JSON.stringify({f:[...document.querySelectorAll('[data-lf]')].filter(x=>x.checked).map(x=>x.dataset.lf),m:$('logmin').value,l:$('loglines').value}))}catch{}loadLogs()});
-$('tts.model').addEventListener('change',()=>instrHint(true));$('logload').onclick=loadLogs;$('logsvc').onchange=loadLogs;
+$('tts.model').addEventListener('change',()=>instrHint(true));
 
 
 function kv(rows){return rows.map(([k,v])=>`<tr><td class="mut" style="width:40%">${k}</td><td><code>${esc(v)}</code> <button class="b" style="padding:1px 6px;font-size:12px" onclick="copyString(this.previousElementSibling.textContent,this)">${t('kopieren','copy')}</button></td></tr>`).join('')}
