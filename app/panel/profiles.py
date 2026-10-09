@@ -396,6 +396,9 @@ SETTINGS = {
     "app_car_ha": (False, lambda v: isinstance(v, bool)),   # smart home from CarPlay
     "app_docs": (False, lambda v: isinstance(v, bool)),     # documents from the app into "Meine Dokumente"
     "app_ios": (False, lambda v: isinstance(v, bool)),      # Apple Reminders and the lists on the iPhone (tasks.py)
+    # agent functions (agent.py): the admin gives the level, the profile switches it on itself
+    "agent_on": (False, lambda v: isinstance(v, bool)),
+    "agent_doc": (False, lambda v: isinstance(v, bool)),    # every report also under "Meine Dokumente"
 }
 
 

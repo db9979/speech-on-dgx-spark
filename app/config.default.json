@@ -100,6 +100,8 @@
     "tasks": false,
     "transit": false,
     "transit_url": "",
+    "agent": false,
+    "agent_mcp": false,
     "wyoming": false,
     "wyoming_port": 31003,
     "wyoming_allow": "",

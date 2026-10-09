@@ -80,6 +80,10 @@
       <div class="setrow"><div class="lbl"><b>Timer und Erinnerungen</b><span>„Erinnere mich in 10 Minuten an den Ofen“: Das Gerät klingelt und sagt es an.</span></div><label class="tgl"><input type="checkbox" id="chat.reminders"><i></i></label></div>
       <div class="setrow"><div class="lbl"><b>Kalender und Tagesbriefing</b><span>Termine vorlesen, nach „Ja“ eintragen, und auf „Guten Morgen“ das Tagesbriefing.</span></div><label class="tgl"><input type="checkbox" id="chat.calendar"><i></i></label></div>
       <div class="setrow"><div class="lbl"><b>Aufgaben und Einkaufsliste</b><span>„Setz Milch auf die Einkaufsliste“: Liste auf dem Spark oder in einer CalDAV-Aufgabenliste.</span></div><label class="tgl"><input type="checkbox" id="chat.tasks"><i></i></label></div>
+      <div class="setrow"><div class="lbl"><b>Agent-Funktionen</b><span>„Recherchiere …, sag mir Bescheid“: Aufträge im Hintergrund, geplante Aufträge und eigene Abläufe, nur für freigeschaltete Profile.</span></div><label class="tgl"><input type="checkbox" id="chat.agent"><i></i></label></div>
+      <div data-show="chat.agent" style="margin-left:18px" id="agentadmin"></div>
+      <div class="setrow" data-show="chat.agent" style="margin-left:18px"><div class="lbl"><b>Dienste per MCP</b><span>Werkzeuge fremder Dienste (Paperless, Nextcloud …), jedes einzeln freigegeben.</span></div><label class="tgl"><input type="checkbox" id="chat.agent_mcp"><i></i></label></div>
+      <div data-show="chat.agent_mcp" style="margin-left:18px" id="mcpadmin"></div>
       <div class="setrow"><div class="lbl"><b>Wetter</b><span>Vorhersage für den eigenen Ort von Open-Meteo, ohne Schlüssel.</span></div><label class="tgl"><input type="checkbox" id="chat.weather"><i></i></label></div>
       <div data-show="chat.weather">        <label>Adresse der Vorhersage</label><input id="chat.weather_url" placeholder="https://api.open-meteo.com/v1/forecast" autocomplete="off">
         <label>Adresse der Ortssuche</label><input id="chat.geocode_url" placeholder="https://geocoding-api.open-meteo.com/v1/search" autocomplete="off"><div class="fh">Nur ändern, wenn du Open-Meteo selbst betreibst.</div></div>
@@ -592,6 +596,7 @@
       <div class="row" style="margin-top:8px"><button class="b" id="logreload" type="button">Neu laden</button><button class="b" id="logclear" type="button">Protokoll leeren</button></div></div>
     <div id="probox" class="ptab"></div>
     <div id="taskbox" class="ptab"></div>
+    <div id="agentbox" class="ptab"></div>
     <div id="tgbox" class="ptab"></div>
     <div id="espbox" class="ptab"></div>
     <div id="appbox" class="ptab"></div>
@@ -626,6 +631,7 @@
 <script src="/static/js/proactive.js"></script>
 <script src="/static/js/room.js"></script>
 <script src="/static/js/extras.js"></script>
+<script src="/static/js/agent.js"></script>
 <script src="/static/js/esp.js"></script>
 <script src="/static/js/guides.js"></script>
 <script src="/static/js/search.js"></script>

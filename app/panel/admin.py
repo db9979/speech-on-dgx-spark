@@ -266,6 +266,9 @@ def validate(new):
     for k in ("weather_url", "geocode_url", "telegram_api", "transit_url"):
         if ch.get(k) and not re.fullmatch(r"https?://\S+", ch[k]):
             raise HTTPException(400, f"{k}: the address must start with http:// or https://")
+    for k in ("agent", "agent_mcp"):
+        if not isinstance(ch.get(k, False), bool):
+            raise HTTPException(400, f"{k} must be true or false")
     if ch.get("esp32_url") and not re.fullmatch(r"https?://[A-Za-z0-9.\-]+(?::\d{1,5})?/?", ch["esp32_url"]):
         raise HTTPException(400, "esp32_url: http(s)://name or http(s)://name:port, without a path")
     if not re.fullmatch(r"[\w.\-]+/[\w.\-]+", ch.get("esp32_repo") or "x/x"):

@@ -12,6 +12,7 @@ from fastapi.responses import Response, StreamingResponse
 from fastapi.security import HTTPBasicCredentials
 
 sys.path.insert(0, os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
+import agent  # noqa: E402
 import documents  # noqa: E402
 import guard  # noqa: E402
 import push  # noqa: E402
@@ -75,6 +76,8 @@ def whoami(request: Request, creds: HTTPBasicCredentials | None = Depends(securi
             "telegram": cfg.get("chat", {}).get("telegram", False),
             "tasks": cfg.get("chat", {}).get("tasks", False),
             "transit": cfg.get("chat", {}).get("transit", False),
+            "agent": bool(cfg.get("chat", {}).get("agent", False) and profiles.current(request)
+                          and agent.granted(profiles.current(request)["id"])),
             "esp32": cfg.get("chat", {}).get("esp32", False),
             "iphone": cfg.get("chat", {}).get("iphone", False),
             "face": cfg.get("chat", {}).get("face") if cfg.get("chat", {}).get("face") in FACES else "robot",

@@ -5,16 +5,18 @@ Each module offers, per request, its tools with offer(ctx) -> None or {"tools", 
 lock switching and changing for the rest of the answer, see chat.py); "changes" names tools that
 change something and are locked after such text. tool(name, args, ctx) runs one,
 briefing(uid, zone) adds a part to the daily briefing; answer(ctx, text) handles the person's yes or
-no to a proposal the module made (optional). ctx: {"who", "own", "tz", "private", "src"}; "private"
-is False over Telegram unless the profile allowed it.
+no to a proposal the module made (optional). ctx: {"who", "own", "tz", "private", "src", "client"}, offer()
+also gets "text" (the person's latest message), answer() also "ha", "ha_code", "ha_code_ok" (the smart
+home this turn may switch, see chat_turn); "private" is False over Telegram unless the profile allowed it.
 """
+import agent
 import contacts
 import parcels
 import tasks
 import transit
 import weather
 
-SERVICES = [weather, contacts, parcels, tasks, transit]
+SERVICES = [weather, contacts, parcels, tasks, transit, agent]
 
 
 def offer(ctx):

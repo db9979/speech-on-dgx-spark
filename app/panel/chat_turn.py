@@ -295,8 +295,11 @@ async def prepare(request):
     # ticking off a list entry ... (extras.py): the module waiting for a yes in this conversation
     xprop = None
     if who and messages[-1]["role"] == "user" and not prop and not mprop:
-        xprop = await extras.answer({"who": who, "own": own_browser, "src": src}, messages[-1]["content"])
+        xprop = await extras.answer({"who": who, "own": own_browser, "src": src, "client": body.get("client"),
+                                     "ha": ha, "ha_code": ha_code, "ha_code_ok": ha_code_ok}, messages[-1]["content"])
         if xprop:
+            if xprop.get("outside"):
+                carry = carry or "outside"
             cal_note.append(xprop["call"])
             system = (system + "\n\n" + xprop["system"]).strip()
     pro = None
@@ -327,8 +330,9 @@ async def prepare(request):
     if who and own_browser and messages[-1]["role"] == "user":
         # one answer settles every proposal waiting in this conversation: a later "ja" meant for
         # something else never carries out an old one
+        import agent
         import tasks
-        for mod in (calendars, tidy, tasks, fixes):
+        for mod in (calendars, tidy, tasks, fixes, agent):
             p = mod.pending(who["id"])
             if p and p.get("src", src) == src:
                 mod.drop_pending(who["id"])
@@ -346,7 +350,9 @@ async def prepare(request):
         + (chat.MAIL_TOOLS if mailbox else []) + (chat.TIDY_TOOLS if tidy_on else []) + ([chat.DRAFT_TOOL] if drafts_on else []) \
         + ([chat.IPHONE_TOOL] if phone_act else [])
     # weather, contacts, parcels ... (extras.py): each offers its tools only when the profile switched it on
-    ex = extras.offer({"who": who, "own": own_browser, "tz": body.get("tz"), "private": private_ok})
+    ex = extras.offer({"who": who, "own": own_browser, "tz": body.get("tz"), "private": private_ok,
+                       "client": body.get("client"),
+                       "text": messages[-1]["content"] if messages[-1]["role"] == "user" else ""})
     tools += ex["tools"]
     if ex["hints"]:
         system = (system + "\n\n" + " ".join(ex["hints"])).strip()

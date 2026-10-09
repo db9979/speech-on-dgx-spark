@@ -37,7 +37,8 @@ async def run(t, name, args, st):
             st["mail"] = True
         elif name in t.ex["outside"]:
             st["outside"] = True
-        return await t.ex["run"][name].tool(name, args, {"who": t.who, "own": t.own_browser, "tz": t.body.get("tz"), "src": t.src})
+        return await t.ex["run"][name].tool(name, args, {"who": t.who, "own": t.own_browser, "tz": t.body.get("tz"), "src": t.src,
+                                                         "private": t.private_ok, "client": t.body.get("client")})
     if name.startswith("mail_tidy_") and t.tidy_on:
         return await tidy_tool(t, name, args, st)
     if name == "mail_draft" and t.drafts_on:

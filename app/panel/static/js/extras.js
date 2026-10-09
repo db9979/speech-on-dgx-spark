@@ -129,7 +129,7 @@ async function apnsAdmin(){if(!$('apnsadmin'))return;let d={};try{d=await (await
   $('apnssave').onclick=async()=>{const f=$('apnsfile').files[0];let key='';if(f){if(f.size>1000){$('apnsstate').textContent=t('Das ist keine .p8-Datei.','That is not a .p8 file.');return}key=await f.text()}
     try{await api('/api/admin/apns',xjson('PUT',{key,key_id:$('apnskid').value.trim(),team:$('apnsteam').value.trim(),bundle:$('apnsbundle').value.trim(),sandbox:$('apnsmode').value==='dev'}));$('apnsfile').value='';apnsAdmin()}catch(e){$('apnsstate').textContent=e.message}};
   $('apnsdel').onclick=async()=>{if(!confirm(t('Apple-Schlüssel löschen? Push an die App hört dann auf.','Delete the Apple key? Push to the app stops.')))return;try{await api('/api/admin/apns',{method:'DELETE'});apnsAdmin()}catch(e){$('apnsstate').textContent=e.message}}}
-async function showExtras(){for(const f of [showWx,showCon,showPar,showTasks,showTg,showApp].concat(typeof showEsp==='function'?[showEsp]:[]))await f().catch(()=>{})}
+async function showExtras(){for(const f of [showWx,showCon,showPar,showTasks,showTg,showApp].concat(typeof showAgent==='function'?[showAgent]:[]).concat(typeof showEsp==='function'?[showEsp]:[]))await f().catch(()=>{})}
 // ---------------------------------------------------------------- iPhone app (iphone.py)
 async function showApp(){const box=$('appbox');if(!box)return;if(!PROFILE||!APP_ON){box.innerHTML='';return}
   let d={phones:[],on:false,minutes:10};try{d=await (await api('/api/profile/iphone')).json()}catch{}
