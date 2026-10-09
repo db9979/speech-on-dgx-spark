@@ -11,6 +11,16 @@
         }
       }
     },
+    "${applicationName} Nachricht schreiben": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Write a ${applicationName} message"
+          }
+        }
+      }
+    },
     "${applicationName} fragen": {
       "localizations": {
         "en": {
@@ -57,6 +67,16 @@
           "stringUnit": {
             "state": "translated",
             "value": "Talk to ${applicationName}"
+          }
+        }
+      }
+    },
+    "Nachricht mit ${applicationName}": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Message with ${applicationName}"
           }
         }
       }

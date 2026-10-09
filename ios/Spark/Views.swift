@@ -87,14 +87,6 @@ struct ChatView: View {
                     Button { history = true } label: { Image(systemName: "clock.arrow.circlepath") }
                         .accessibilityLabel("Verlauf")
                 }
-                if let unread = talk.unreadMessages {
-                    ToolbarItem(placement: .topBarTrailing) {
-                        Button { talk.showMessages = true } label: {
-                            Image(systemName: unread > 0 ? "envelope.badge" : "envelope")
-                        }
-                        .accessibilityLabel(unread > 0 ? Text("Nachrichten, \(unread) neu") : Text("Nachrichten"))
-                    }
-                }
                 ToolbarItem(placement: .topBarTrailing) {
                     Button { settings = true } label: { Image(systemName: "gearshape") }
                         .accessibilityLabel("Einstellungen")
@@ -199,6 +191,11 @@ struct ChatView: View {
                     }
                     .accessibilityLabel("Foto oder Dokument anhängen")
                     .disabled(talk.reading)
+                    // a message to someone of this Spark, without the language model
+                    Button { talk.showMessages = true } label: {
+                        Image(systemName: (talk.unreadMessages ?? 0) > 0 ? "envelope.badge" : "envelope")
+                    }
+                    .accessibilityLabel((talk.unreadMessages ?? 0) > 0 ? Text("Nachrichten, \(talk.unreadMessages ?? 0) neu") : Text("Nachrichten"))
                     TextField(talk.attachment == nil ? LocalizedStringKey("Oder schreiben …") : LocalizedStringKey("Frage zum Anhang …"), text: $typed)
                         .textFieldStyle(.roundedBorder)
                         .submitLabel(.send)

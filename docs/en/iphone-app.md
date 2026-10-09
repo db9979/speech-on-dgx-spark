@@ -77,7 +77,7 @@ In the app under Settings → **My profile** you set the same values as in the p
 
 ## Messages to other profiles
 
-With messages on (admin: Features → "Messages to others", profile: Me → Messages) an envelope shows at the top, with a dot for new ones. Pick the recipient and write (at most 500 characters); in the inbox swipe right to reply, left to delete. A message notification can be answered in place (long press → "Reply"). Who may write to you is set in the browser only. The app does not read messages aloud by itself; ask the assistant ("Do I have messages?"), also in the car. Voice messages are listed; listen to them in the panel.
+The envelope next to the input opens the messages (a dot shows new ones), no language model involved. "Ready?" shows whether the admin and your profile allow messages and whom you can reach, with the reason for those you cannot (e.g. "has messages off"). Pick the recipient and write (at most 500 characters); in the inbox swipe right to reply, left to delete. A message notification can be answered in place (long press → "Reply"). Who may write to you is set in the browser only. The app does not read messages aloud by itself; ask the assistant ("Do I have messages?"), also in the car. Voice messages are listed; listen to them in the panel. With Siri: "Message with Spark" asks for recipient and text and confirms before sending; the name must match a profile that takes your messages.
 
 ## Spark update from the app
 

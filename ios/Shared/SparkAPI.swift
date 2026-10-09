@@ -128,6 +128,15 @@ struct Recipient: Identifiable, Hashable {
     let name: String
 }
 
+/// Is everything on for messages, who can be reached (GET /api/messages/ready, also while off).
+struct MessageReady {
+    var enabled = false
+    var on = false
+    var reach: [Recipient] = []
+    var off: [(name: String, why: String)] = []
+    var why: String?
+}
+
 /// The profile's inbox and whom it may write to (GET /api/messages).
 struct MessageBox {
     var items: [SparkMessage] = []
@@ -374,6 +383,24 @@ struct SparkAPI {
         b.maxText = (d["max_text"] as? NSNumber)?.intValue ?? 500
         b.unread = (d["unread"] as? NSNumber)?.intValue ?? 0
         return b
+    }
+
+    func messagesReady() async throws -> MessageReady {
+        let (data, response) = try await URLSession.shared.data(for: request("api/messages/ready"))
+        try Self.check(data, response)
+        let d = Self.object(data)
+        var r = MessageReady()
+        r.enabled = d["enabled"] as? Bool ?? false
+        r.on = d["on"] as? Bool ?? false
+        r.reach = (d["reach"] as? [[String: Any]] ?? []).compactMap { x in
+            guard let id = x["id"] as? String else { return nil }
+            return Recipient(id: id, name: x["name"] as? String ?? id)
+        }
+        r.off = (d["off"] as? [[String: Any]] ?? []).map { x in
+            (String((x["name"] as? String ?? "").prefix(60)), String((x["why"] as? String ?? "").prefix(120)))
+        }
+        r.why = (d["why"] as? String).map { String($0.prefix(200)) }
+        return r
     }
 
     /// to: a profile id or "all"; the Spark checks who may write to whom.

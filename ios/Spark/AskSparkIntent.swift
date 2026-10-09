@@ -103,6 +103,54 @@ struct StoreDocumentIntent: AppIntent {
     }
 }
 
+/// "Nachricht an …": a message to someone of this Spark, without the language model. The name must match
+/// one of the profiles that take messages from you (the Spark's list); before sending Siri asks once more.
+struct SendMessageIntent: AppIntent {
+    static var title: LocalizedStringResource = "Nachricht über den Spark"
+    static var description = IntentDescription("Schickt jemandem dieses Sparks eine kurze Nachricht.")
+    static var openAppWhenRun = false
+
+    @Parameter(title: "An", requestValueDialog: IntentDialog("An wen?"))
+    var recipient: String
+
+    @Parameter(title: "Nachricht", requestValueDialog: IntentDialog("Was soll ich schreiben?"))
+    var text: String
+
+    func perform() async throws -> some IntentResult & ProvidesDialog {
+        guard let api = SparkAPI.current else {
+            throw SparkError(message: String(localized: "Die App ist noch nicht mit dem Spark gekoppelt."))
+        }
+        guard let box = try await api.messages() else {
+            let why = (try? await api.messagesReady())?.why
+            throw SparkError(message: why ?? String(localized: "Nachrichten sind für dein Profil aus."))
+        }
+        let who = Self.match(recipient, box.to, all: box.all)
+        guard let to = who else {
+            let names = box.to.map(\.name).joined(separator: ", ")
+            throw SparkError(message: names.isEmpty
+                ? String(localized: "Gerade nimmt niemand Nachrichten von dir an.")
+                : String(localized: "Den Namen finde ich nicht. Möglich: \(names)."))
+        }
+        let t = String(text.trimmingCharacters(in: .whitespacesAndNewlines).prefix(box.maxText))
+        guard !t.isEmpty else { throw SparkError(message: String(localized: "Die Nachricht ist leer.")) }
+        try await requestConfirmation(result: .result(dialog: "Nachricht an \(to.name): „\(t)“. Senden?"))
+        try await api.sendMessage(to: to.id, text: t)
+        return .result(dialog: "Gesendet.")
+    }
+
+    /// Fixed rule, no model: the same name (any case), else the only name starting with it; "alle" when allowed.
+    static func match(_ said: String, _ list: [Recipient], all: Bool) -> Recipient? {
+        let s = said.trimmingCharacters(in: .whitespacesAndNewlines).lowercased()
+        guard !s.isEmpty else { return nil }
+        if all && ["alle", "allen", "all", "everyone", "everybody"].contains(s) {
+            return Recipient(id: "all", name: String(localized: "Alle"))
+        }
+        if let r = list.first(where: { $0.name.lowercased() == s }) { return r }
+        let start = list.filter { $0.name.lowercased().hasPrefix(s) }
+        return start.count == 1 ? start[0] : nil
+    }
+}
+
 struct SparkShortcuts: AppShortcutsProvider {
     static var appShortcuts: [AppShortcut] {
         AppShortcut(intent: AskSparkIntent(),
@@ -113,6 +161,10 @@ struct SparkShortcuts: AppShortcutsProvider {
                     phrases: ["Mit \(.applicationName) auf die Liste", "\(.applicationName) Einkaufsliste"],
                     shortTitle: "Auf die Liste",
                     systemImageName: "cart")
+        AppShortcut(intent: SendMessageIntent(),
+                    phrases: ["Nachricht mit \(.applicationName)", "\(.applicationName) Nachricht schreiben"],
+                    shortTitle: "Nachricht",
+                    systemImageName: "envelope")
         AppShortcut(intent: StartListeningIntent(),
                     phrases: ["\(.applicationName) zuhören", "Mit \(.applicationName) sprechen"],
                     shortTitle: "Spark zuhören",

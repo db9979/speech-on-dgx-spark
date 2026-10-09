@@ -151,6 +151,16 @@
         }
       }
     },
+    "An wen?": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "To whom?"
+          }
+        }
+      }
+    },
     "Anhang": {
       "localizations": {
         "en": {
@@ -311,6 +321,16 @@
         }
       }
     },
+    "Bereit?": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Ready?"
+          }
+        }
+      }
+    },
     "Bereite vor …": {
       "localizations": {
         "en": {
@@ -437,6 +457,16 @@
           "stringUnit": {
             "state": "translated",
             "value": "Listening all the time"
+          }
+        }
+      }
+    },
+    "Den Namen finde ich nicht. Möglich: %@.": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "I cannot find that name. Possible: %@."
           }
         }
       }
@@ -621,6 +651,16 @@
         }
       }
     },
+    "Die Nachricht ist leer.": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "The message is empty."
+          }
+        }
+      }
+    },
     "Die Nummer verstehe ich nicht.": {
       "localizations": {
         "en": {
@@ -741,6 +781,16 @@
         }
       }
     },
+    "Einschalten im Panel unter Ich → Nachrichten. Den Schalter für alle setzt der Admin unter Einstellungen → Funktionen.": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Turn them on in the panel under Me → Messages. The switch for everyone is set by the admin under Settings → Features."
+          }
+        }
+      }
+    },
     "Einstellungen": {
       "localizations": {
         "en": {
@@ -807,6 +857,16 @@
           "stringUnit": {
             "state": "translated",
             "value": "Try again"
+          }
+        }
+      }
+    },
+    "Erreichbar": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Reachable"
           }
         }
       }
@@ -967,6 +1027,26 @@
           "stringUnit": {
             "state": "translated",
             "value": "Hands-free: after each answer the app listens again until nothing comes for 8 seconds. Barge in: just start talking to stop the answer."
+          }
+        }
+      }
+    },
+    "Für dich an": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "On for you"
+          }
+        }
+      }
+    },
+    "Für dich aus": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Off for you"
           }
         }
       }
@@ -1421,12 +1501,42 @@
         }
       }
     },
+    "Nachricht an %@: „%@“. Senden?": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Message to %@: “%@”. Send?"
+          }
+        }
+      }
+    },
+    "Nachricht über den Spark": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Message through the Spark"
+          }
+        }
+      }
+    },
     "Nachrichten": {
       "localizations": {
         "en": {
           "stringUnit": {
             "state": "translated",
             "value": "Messages"
+          }
+        }
+      }
+    },
+    "Nachrichten sind für dein Profil aus.": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Messages are off for your profile."
           }
         }
       }
@@ -1657,6 +1767,16 @@
           "stringUnit": {
             "state": "translated",
             "value": "Say “%@” or tap"
+          }
+        }
+      }
+    },
+    "Schickt jemandem dieses Sparks eine kurze Nachricht.": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Sends a short message to someone of this Spark."
           }
         }
       }
@@ -2031,6 +2151,26 @@
         }
       }
     },
+    "Vom Admin ausgeschaltet": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Turned off by the admin"
+          }
+        }
+      }
+    },
+    "Vom Admin erlaubt": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Allowed by the admin"
+          }
+        }
+      }
+    },
     "Von selbst": {
       "localizations": {
         "en": {
@@ -2137,6 +2277,16 @@
           "stringUnit": {
             "state": "translated",
             "value": "What should go on the list?"
+          }
+        }
+      }
+    },
+    "Was soll ich schreiben?": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "What should I write?"
           }
         }
       }

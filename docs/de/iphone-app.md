@@ -78,7 +78,7 @@ In der App unter Einstellungen → **Mein Profil** stellst du dieselben Werte ei
 
 ## Nachrichten an andere Profile
 
-Sind Nachrichten an (Admin: Funktionen → „Nachrichten an andere“, Profil: Ich → Nachrichten), erscheint oben ein Umschlag, mit Punkt bei neuen Nachrichten. Dort wählst du den Empfänger und schreibst (höchstens 500 Zeichen). Im Eingang wischst du nach rechts zum Antworten und nach links zum Löschen. Kommt eine Nachricht als Mitteilung, antwortest du direkt darin: lange drücken → „Antworten“. Wer dir schreiben darf, stellst du nur im Browser ein. Die App liest Nachrichten nicht von selbst vor. Frag dafür den Assistenten („Habe ich Nachrichten?“), das geht auch im Auto. Sprachnachrichten zeigt die App nur an, anhören kannst du sie im Panel.
+Der Umschlag neben dem Eingabefeld öffnet die Nachrichten, mit Punkt bei neuen. Das geht ohne Sprachmodell. Unter „Bereit?“ siehst du, ob der Admin und dein Profil Nachrichten erlauben und wen du erreichst. Wer nicht erreichbar ist, steht mit Grund dabei, z. B. „hat Nachrichten aus“. Dort wählst du den Empfänger und schreibst (höchstens 500 Zeichen). Im Eingang wischst du nach rechts zum Antworten und nach links zum Löschen. Kommt eine Nachricht als Mitteilung, antwortest du direkt darin: lange drücken → „Antworten“. Wer dir schreiben darf, stellst du nur im Browser ein. Die App liest Nachrichten nicht von selbst vor. Frag dafür den Assistenten („Habe ich Nachrichten?“), das geht auch im Auto. Sprachnachrichten zeigt die App nur an, anhören kannst du sie im Panel. Mit Siri: „Nachricht mit Spark“. Siri fragt nach Empfänger und Text und vor dem Senden noch einmal nach. Der Name muss zu einem Profil passen, das deine Nachrichten annimmt.
 
 ## Spark-Update aus der App
 

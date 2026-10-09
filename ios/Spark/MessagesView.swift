@@ -13,9 +13,11 @@ final class MessagesModel: ObservableObject {
     @Published var to = ""
     @Published var text = ""
     @Published var sending = false
+    @Published var ready: MessageReady?
 
     func load() async {
         guard let api = SparkAPI.current else { return }
+        ready = try? await api.messagesReady()
         do {
             if let b = try await api.messages() {
                 box = b
@@ -84,12 +86,13 @@ struct MessagesView: View {
                 if m.loading {
                     ProgressView()
                 } else if m.off {
-                    Section {
-                        Text("Nachrichten sind für dein Profil aus. Einschalten im Panel unter Ich → Nachrichten (der Admin muss sie unter Funktionen erlauben).")
+                    if let r = m.ready { ReadyView(r: r, open: true) } else {
+                        Section { Text("Nachrichten sind für dein Profil aus. Einschalten im Panel unter Ich → Nachrichten (der Admin muss sie unter Funktionen erlauben).") }
                     }
                 } else {
                     compose
                     inbox
+                    if let r = m.ready { ReadyView(r: r, open: false) }
                 }
                 if let n = m.notice { Section { Text(verbatim: n) } }
                 if let e = m.error { Section { Text(verbatim: e).foregroundStyle(.red) } }
@@ -158,6 +161,39 @@ struct MessagesView: View {
             }
         } header: { Text("Eingang") } footer: {
             if !m.box.items.isEmpty { Text("Nach links wischen löscht, nach rechts antwortet. Nachrichten bleiben 30 Tage.") }
+        }
+    }
+}
+
+/// Why messages do or do not go through: the Spark's own check, the same as under Ich → Nachrichten.
+struct ReadyView: View {
+    let r: MessageReady
+    @State var open: Bool
+
+    var body: some View {
+        Section {
+            DisclosureGroup(isExpanded: $open) {
+                Label(r.enabled ? LocalizedStringKey("Vom Admin erlaubt") : LocalizedStringKey("Vom Admin ausgeschaltet"),
+                      systemImage: r.enabled ? "checkmark.circle.fill" : "xmark.circle")
+                    .foregroundStyle(r.enabled ? .green : .red)
+                if r.enabled {
+                    Label(r.on ? LocalizedStringKey("Für dich an") : LocalizedStringKey("Für dich aus"), systemImage: r.on ? "checkmark.circle.fill" : "xmark.circle")
+                        .foregroundStyle(r.on ? .green : .red)
+                }
+                if let why = r.why { Text(verbatim: why).font(.footnote) }
+                if !r.reach.isEmpty {
+                    LabeledContent("Erreichbar") { Text(verbatim: r.reach.map(\.name).joined(separator: ", ")) }
+                }
+                ForEach(Array(r.off.enumerated()), id: \.offset) { _, x in
+                    LabeledContent { Text(verbatim: x.why).foregroundStyle(.secondary) } label: { Text(verbatim: x.name) }
+                }
+                if !r.on || !r.enabled {
+                    Text("Einschalten im Panel unter Ich → Nachrichten. Den Schalter für alle setzt der Admin unter Einstellungen → Funktionen.")
+                        .font(.footnote).foregroundStyle(.secondary)
+                }
+            } label: {
+                Text("Bereit?")
+            }
         }
     }
 }
