@@ -102,6 +102,17 @@ Schritt für Schritt unter Einbinden → Anleitungen.
 
 Eigene App fürs iPhone mit Spark-Stimme und „Hey Siri, Frag Spark“, Kopplung per QR-Code, eigener Schlüssel pro iPhone, der nur fragen und hören darf. Bauen, Koppeln und Sicherheit: [iphone-app.md](iphone-app.md).
 
+### Nachrichten zwischen Profilen (für die iPhone-App)
+
+Mit der Browser-Anmeldung des Profils oder dem Schlüssel der iPhone-App (Header `X-Speech-Device`), nur wenn der Admin „Nachrichten an andere“ und das Profil „Nachrichten für mich nutzen“ eingeschaltet hat; andere Geräteschlüssel bekommen 403. Höchstens 30 Aufrufe pro Minute.
+- `GET /api/messages`: Postfach (`items` mit `id, from, name, text, t, read, kind, voice, secs`), Empfänger `to`, Lautsprecher für Durchsagen, Schalter (`all`, `announce`, `voice`), `max_text`, `max_voice`.
+- `GET /api/messages/poll?since=<ms>`: neue, noch nirgends gesprochene Nachrichten; markiert das Gerät als offen (dann keine Mitteilung).
+- `POST /api/messages/played {"id"}`: `{"play": true}` nur für das erste Gerät, das sie spricht.
+- `POST /api/messages/send {"to": "<Profil-id>" | "all", "text"}` (höchstens 500 Zeichen).
+- `POST /api/messages/voice?to=<Profil-id>`: Aufnahme als Body (höchstens 2 MB, 30 Sekunden); `GET /api/messages/audio?id=` liefert sie als Ogg/Opus.
+- `POST /api/messages/announce {"speakers": [id], "text"}`, `POST /api/messages/read {"ids"?}`, `POST /api/messages/delete {"ids"?}` (ohne `ids`: alle).
+- Mitteilungen: APNs mit Tag `msg-<id>`, der Text kommt wie bisher über `/api/iphone/note`. „Wer darf mir schreiben“ (`PUT /api/messages/who`) nur im Browser.
+
 ### Pebble-Uhr
 
 Die Watch-App „Spark“ (`app/pebble/speech-spark.pbw`, Quellcode in `pebble/`) bringt den Sprach-Chat auf Pebble Time 2 und Core 2 Duo, mit Antwort als Text und über den Lautsprecher der Uhr. Auf Pebble Round 2 kommt die Antwort nur als Text. Sie braucht eine Uhr-Firmware mit Lautsprecher-API (ab etwa v4.9.170).

@@ -182,6 +182,20 @@ def _take_test(did):
     return True
 
 
+def _take_said(did):
+    """What this speaker says at its next wake word before it listens: a waiting announcement and the
+    profile's messages nobody has heard yet (messages.py); "" when there is nothing."""
+    import messages
+    cid, c = by_device(did)
+    said = []
+    if c and c.get("announce_next"):
+        said.append(_update(lambda d: messages.take_announcement(d["clients"].get(cid, {}))))
+    dev = _devices().get(did)
+    if dev:
+        said.append(messages.speaker_waiting(dev["user"]))
+    return " ".join(x for x in said if x)
+
+
 def _take_room_next(did):
     """The switch "Raum" was turned on while the speaker slept: room mode starts at its next wake word
     (once, and only within a day)."""
@@ -641,6 +655,12 @@ class Session:
         self.testing = True
         self.listen(mode)
 
+    async def say_then_listen(self, text, mode="auto"):
+        """Waiting messages or an announcement first (messages.py), then the person's question."""
+        self.note("Nachricht oder Durchsage gesagt")
+        await self.say(text, tone=True)
+        self.listen(mode)
+
     VOICE_PIECES = 3
 
     async def run_enroll(self, mode="auto"):
@@ -693,6 +713,10 @@ class Session:
                     return
                 if self.room is None and self.enrolling is None and _take_voice(self.dev["id"]):
                     self.answer = asyncio.create_task(self.run_enroll(self.mode))
+                    return
+                said = _take_said(self.dev["id"]) if self.room is None and self.enrolling is None else ""
+                if said:
+                    self.answer = asyncio.create_task(self.say_then_listen(said, self.mode))
                     return
                 if self.room_next:
                     self.room_next = False

@@ -84,6 +84,10 @@
       <div data-show="chat.agent" style="margin-left:18px" id="agentadmin"></div>
       <div class="setrow" data-show="chat.agent" style="margin-left:18px"><div class="lbl"><b>Dienste per MCP</b><span>Werkzeuge fremder Dienste (Paperless, Nextcloud …), jedes einzeln freigegeben.</span></div><label class="tgl"><input type="checkbox" id="chat.agent_mcp"><i></i></label></div>
       <div data-show="chat.agent_mcp" style="margin-left:18px" id="mcpadmin"></div>
+      <div class="setrow"><div class="lbl"><b>Nachrichten an andere</b><span>„Sag Anna, das Essen ist fertig“: kurze Nachrichten zwischen den Profilen dieses Sparks, gesendet erst nach „Ja“.</span></div><label class="tgl"><input type="checkbox" id="chat.messages"><i></i></label></div>
+      <div class="setrow" data-show="chat.messages" style="margin-left:18px"><div class="lbl"><b>Nachricht an alle</b><span>„Sag allen, wir fahren um acht“ an jedes Profil, das solche Nachrichten annimmt.</span></div><label class="tgl"><input type="checkbox" id="chat.messages_all"><i></i></label></div>
+      <div class="setrow" data-show="chat.messages" style="margin-left:18px"><div class="lbl"><b>Durchsagen auf Lautsprechern</b><span>„Durchsage im Wohnzimmer: Essen ist fertig“, nur auf Lautsprechern, deren Profil Durchsagen erlaubt.</span></div><label class="tgl"><input type="checkbox" id="chat.messages_announce"><i></i></label></div>
+      <div class="setrow" data-show="chat.messages" style="margin-left:18px"><div class="lbl"><b>Sprachnachrichten</b><span>Bis 30 Sekunden im Browser aufnehmen; die Spracherkennung schreibt den Text dazu.</span></div><label class="tgl"><input type="checkbox" id="chat.messages_voice"><i></i></label></div>
       <div class="setrow"><div class="lbl"><b>Wetter</b><span>Vorhersage für den eigenen Ort von Open-Meteo, ohne Schlüssel.</span></div><label class="tgl"><input type="checkbox" id="chat.weather"><i></i></label></div>
       <div data-show="chat.weather">        <label>Adresse der Vorhersage</label><input id="chat.weather_url" placeholder="https://api.open-meteo.com/v1/forecast" autocomplete="off">
         <label>Adresse der Ortssuche</label><input id="chat.geocode_url" placeholder="https://geocoding-api.open-meteo.com/v1/search" autocomplete="off"><div class="fh">Nur ändern, wenn du Open-Meteo selbst betreibst.</div></div>
@@ -604,6 +608,7 @@
     <div id="probox" class="ptab"></div>
     <div id="taskbox" class="ptab"></div>
     <div id="agentbox" class="ptab"></div>
+    <div id="msgbox" class="ptab"></div>
     <div id="tgbox" class="ptab"></div>
     <div id="espbox" class="ptab"></div>
     <div id="appbox" class="ptab"></div>
@@ -640,6 +645,7 @@
 <script src="/static/js/room.js"></script>
 <script src="/static/js/extras.js"></script>
 <script src="/static/js/agent.js"></script>
+<script src="/static/js/messages.js"></script>
 <script src="/static/js/esp.js"></script>
 <script src="/static/js/guides.js"></script>
 <script src="/static/js/search.js"></script>

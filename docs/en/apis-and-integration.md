@@ -101,6 +101,17 @@ and each day's questions are kept as a conversation of the profile. Step by step
 
 Own iPhone app with the Spark voice and "Hey Siri, Frag Spark", paired by QR code, its own key per iPhone that may only ask and listen. Building, pairing and security: [iphone-app.md](iphone-app.md).
 
+### Messages between profiles (for the iPhone app)
+
+With the profile's browser login or the iPhone app's key (header `X-Speech-Device`), only when the admin switched on "Messages to others" and the profile "Use messages for me"; other device keys get 403. At most 30 calls a minute.
+- `GET /api/messages`: mailbox (`items` with `id, from, name, text, t, read, kind, voice, secs`), recipients `to`, speakers for announcements, switches (`all`, `announce`, `voice`), `max_text`, `max_voice`.
+- `GET /api/messages/poll?since=<ms>`: new messages not spoken anywhere yet; marks the device as open (then no notification).
+- `POST /api/messages/played {"id"}`: `{"play": true}` only for the first device that speaks it.
+- `POST /api/messages/send {"to": "<profile id>" | "all", "text"}` (at most 500 characters).
+- `POST /api/messages/voice?to=<profile id>`: the recording as body (at most 2 MB, 30 seconds); `GET /api/messages/audio?id=` returns it as Ogg/Opus.
+- `POST /api/messages/announce {"speakers": [id], "text"}`, `POST /api/messages/read {"ids"?}`, `POST /api/messages/delete {"ids"?}` (without `ids`: all).
+- Notifications: APNs with tag `msg-<id>`, the text comes through `/api/iphone/note` as before. "Who may write to me" (`PUT /api/messages/who`) only in the browser.
+
 ### Pebble watch
 
 The watch app "Spark" (`app/pebble/speech-spark.pbw`, source in `pebble/`) brings the voice chat to Pebble Time 2 and Core 2 Duo, with the answer as text and through the watch speaker. On Pebble Round 2 the answer is text only. It needs a watch firmware with the speaker API (from about v4.9.170).

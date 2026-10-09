@@ -8,7 +8,7 @@ key, ESP32 speakers, agent services, own quality test questions).
 One automatic backup a day (and one before every update, rollback or restore): the newest KEEP
 daily/manual ones and the newest KEEP_EVENT of the others are kept, so a few updates never push
 the daily backups out. A backup holds
-users/, voices/, config.json, state/panel-password and the files in STATE_FILES. The key for the
+users/ (without the messages between profiles), voices/, config.json, state/panel-password and the files in STATE_FILES. The key for the
 encrypted secrets (state/secret.key) is not in it: restored on this Spark everything works, restored
 on another one calendar and mail passwords, tokens and keys have to be entered again.
 
@@ -79,6 +79,8 @@ def _add_dir(tar, path, arc):
                 full = os.path.join(root, f)
                 if arc == "users" and os.path.relpath(full, path) == "secret":
                     continue  # the login key of this Spark: with it, a backup file could forge profile logins
+                if arc == "users" and re.match(r"[^/]+/messages(\.json|-pending\.json|/)", os.path.relpath(full, path)):
+                    continue  # messages between profiles are short-lived (messages.py): not in backups
                 tar.add(full, arcname=os.path.join(arc, os.path.relpath(full, path)), recursive=False)
 
 

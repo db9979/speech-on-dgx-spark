@@ -79,6 +79,7 @@ def whoami(request: Request, creds: HTTPBasicCredentials | None = Depends(securi
             "transit": cfg.get("chat", {}).get("transit", False),
             "agent": bool(cfg.get("chat", {}).get("agent", False) and profiles.current(request)
                           and agent.granted(profiles.current(request)["id"])),
+            "messages": bool(cfg.get("chat", {}).get("messages", False)),
             "esp32": cfg.get("chat", {}).get("esp32", False),
             "iphone": cfg.get("chat", {}).get("iphone", False),
             "face": cfg.get("chat", {}).get("face") if cfg.get("chat", {}).get("face") in FACES else "robot",

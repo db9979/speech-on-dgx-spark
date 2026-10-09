@@ -481,3 +481,4 @@ details.qhow{margin-top:6px}details.qhow>summary{cursor:pointer;font-size:13px;f
 .picsave{margin-top:8px;font-size:12px;padding:6px 12px}
 #visionmsg .ok{color:var(--ok)}
 @media (max-width:760px){body.inchat .composer.haspic .send{display:grid}}
+#msgbox li.unread{border-left:3px solid var(--acc);padding-left:8px}

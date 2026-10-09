@@ -273,7 +273,11 @@ APP_PATHS = ("/api/chat", "/api/test/asr", "/api/siri/ask", "/api/iphone/hello",
              # Apple Reminders on the iPhone (app_ios): new list entries to the iPhone, adding from Shortcuts
              "/api/tasks/inbox", "/api/profile/tasks/einkauf", "/api/profile/tasks/aufgaben",
              # Spark updates (appupdate.py): rights only from the admin, starting needs a fresh code
-             "/api/iphone/update")
+             "/api/iphone/update",
+             # messages between profiles (messages.py; who may write to me stays in the browser)
+             "/api/messages", "/api/messages/poll", "/api/messages/send", "/api/messages/voice",
+             "/api/messages/announce", "/api/messages/played", "/api/messages/read", "/api/messages/delete",
+             "/api/messages/audio")
 APP_GATE = [lambda uid: False]
 
 
@@ -420,6 +424,12 @@ SETTINGS = {
     # agent functions (agent.py): the admin gives the level, the profile switches it on itself
     "agent_on": (False, lambda v: isinstance(v, bool)),
     "agent_doc": (False, lambda v: isinstance(v, bool)),    # every report also under "Meine Dokumente"
+    # messages between profiles (messages.py): off until the profile switches them on
+    "msg_on": (False, lambda v: isinstance(v, bool)),
+    "msg_from": ("all", lambda v: v in ("all", "chosen")),   # every profile, or only the ones picked
+    "msg_all": (True, lambda v: isinstance(v, bool)),        # also messages "an alle"
+    "msg_speaker": ("off", lambda v: v in ("off", "hint", "text")),   # say new ones on my speakers
+    "msg_announce": (False, lambda v: isinstance(v, bool)),  # announcements of others on my speakers
 }
 
 

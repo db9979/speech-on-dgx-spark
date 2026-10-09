@@ -11,12 +11,13 @@ home this turn may switch, see chat_turn); "private" is False over Telegram unle
 """
 import agent
 import contacts
+import messages
 import parcels
 import tasks
 import transit
 import weather
 
-SERVICES = [weather, contacts, parcels, tasks, transit, agent]
+SERVICES = [weather, contacts, parcels, tasks, transit, agent, messages]
 
 
 def offer(ctx):

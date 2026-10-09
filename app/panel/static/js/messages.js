@@ -1,0 +1,99 @@
+// Messages between the profiles of this Spark (messages.py): "Ich" → Nachrichten and new messages on the
+// open page. Off until the admin allows it and the profile switches it on. A message is someone else's
+// words: in the conversation it is marked as outside text, so it can never make the assistant act.
+let MSG_ON=false;
+const msg={since:Date.now()-10*60e3,seen:new Set(),busy:false,
+  on(){return MSG_ON&&!!PROFILE&&!!S.msg_on},
+  async poll(){if(!this.on()||document.hidden||this.busy)return;this.busy=true;
+    try{const r=await fetch('/api/messages/poll?since='+this.since);if(r.ok)for(const x of (await r.json()).items)await this.show(x)}catch{}
+    this.busy=false},
+  // said on one device only: the first that plays it takes it on the Spark, the others stay silent
+  async show(x){if(this.seen.has(x.id))return;this.seen.add(x.id);this.since=Math.max(this.since,x.t*1000);
+    try{const r=await api('/api/messages/played',xjson('POST',{id:x.id}));if(!(await r.json()).play)return}catch{return}
+    const head=(x.voice?t('Sprachnachricht von ','Voice message from '):t('Nachricht von ','Message from '))+(x.name||'?');
+    const text=head+(x.text?': '+x.text:'');
+    const b=chatLog('assistant',text);b.classList.add('pro');
+    const m={role:'assistant',content:text,outside:true};chat.msgs.push(m);deletable(b,m);saveConvo();chime();
+    if(document.hidden)try{if(window.Notification&&Notification.permission==='granted')new Notification('✉️ '+head,{body:x.text||'',tag:'msg-'+x.id})}catch{}
+    if($('msgbox')&&$('msgbox').classList.contains('on'))showMsg().catch(()=>{});
+    if(chat.rec||chat.ctrl||playing())return;   // a conversation is running: the bubble and the chime suffice
+    if(x.voice){msgPlay(x.id);return}
+    sayText(text)}};
+setInterval(()=>msg.poll(),20000);
+setTimeout(()=>msg.poll(),5000);
+document.addEventListener('visibilitychange',()=>{if(!document.hidden)msg.poll()});
+
+let msgAudio=null;
+async function msgPlay(id){try{if(msgAudio){msgAudio.pause();URL.revokeObjectURL(msgAudio.src)}
+  const r=await api('/api/messages/audio?id='+encodeURIComponent(id));msgAudio=new Audio(URL.createObjectURL(await r.blob()));await msgAudio.play()}catch(e){xmsg('msgmsg',e.message,true)}}
+
+const MSG_TIME=s=>new Date(s*1000).toLocaleString(L==='en'?'en-GB':'de-DE',{day:'2-digit',month:'2-digit',hour:'2-digit',minute:'2-digit'});
+const msgRec={rec:null,chunks:[],timer:null,blob:null,stream:null};
+async function showMsg(){const box=$('msgbox');if(!box)return;if(!PROFILE||!MSG_ON){box.innerHTML='';return}
+  let d;try{d=await (await api('/api/messages')).json()}catch{box.innerHTML='';return}
+  const on=!!d.on,set=d.settings;
+  const opt=(v,l,cur)=>`<option value="${esc(v)}"${v===cur?' selected':''}>${esc(l)}</option>`;
+  const items=d.items.map(x=>`<li${x.read?'':' class="unread"'}><span><b>${esc(x.name||'?')}</b> <small class="mut">${esc(MSG_TIME(x.t))}${x.kind==='all'?t(' · an alle',' · to everybody'):''}${x.voice?' · 🎙 '+esc(x.secs||'')+' s':''}</small><br>${esc(x.text||'')}</span>
+      <span class="row">${x.voice?`<button class="b" type="button" data-mplay="${esc(x.id)}">${t('Abspielen','Play')}</button>`:''}${d.to.some(r=>r.id===x.from)?`<button class="b" type="button" data-mre="${esc(x.from)}">${t('Antworten','Reply')}</button>`:''}<button class="b" type="button" data-mdel="${esc(x.id)}">${t('Löschen','Delete')}</button></span></li>`).join('')
+    ||`<li class="mut">${t('Keine Nachrichten.','No messages.')}</li>`;
+  const pick=(key,list)=>d.others.map(o=>`<label class="chk"><input type="checkbox" data-mwho="${key}" value="${esc(o.id)}"${list.includes(o.id)?' checked':''}> ${esc(o.name)}</label>`).join(' ')||`<span class="mut">${t('Noch kein anderes Profil mit Nachrichten.','No other profile with messages yet.')}</span>`;
+  const to=d.to.map(r=>opt(r.id,r.name,'')).join('')+(d.all&&d.to.length?opt('all',t('alle','everybody'),''):'');
+  box.innerHTML=`<div class="intro">${t('Schreib anderen Profilen dieses Sparks: „Sag Anna, das Essen ist fertig.“ Der Assistent liest die Nachricht vor und schickt sie nach deinem „Ja“. Neue Nachrichten kommen einmal an: hier auf der Seite, auf deinem Lautsprecher oder als Mitteilung auf dem Gerät, das du zuletzt benutzt hast. Was jemand schreibt, kann nie etwas schalten oder senden.','Write to other profiles of this Spark: "Tell Anna dinner is ready." The assistant reads the message back and sends it after your "Yes". New messages arrive once: here on the page, on your speaker or as a notification on the device you used last. What someone writes can never switch or send anything.')}</div>
+    ${xsw('msg_on',t('Nachrichten für mich nutzen','Use messages for me'),t('Senden und empfangen. Nachrichten bleiben 30 Tage und kommen nicht in Sicherungen.','Send and receive. Messages stay 30 days and are not in backups.'))}
+    ${on?`<h3 style="margin:14px 0 4px">${t('Neue Nachricht','New message')}</h3>
+    ${d.to.length?`<div class="rowin"><select id="msgto">${to}</select></div>
+      <textarea id="msgtext" rows="2" maxlength="${d.max_text}" placeholder="${esc(t('Deine Nachricht','Your message'))}"></textarea>
+      <div class="row" style="margin-top:6px"><button class="b p" type="button" id="msgsend">${t('Senden','Send')}</button>
+        ${d.voice?`<button class="b" type="button" id="msgrec">🎙 ${t('Aufnehmen','Record')}</button><button class="b" type="button" id="msgvsend" hidden>${t('Sprachnachricht senden','Send voice message')}</button>`:''}</div>
+      ${d.voice?`<div class="fh">${t('Sprachnachricht: höchstens ','Voice message: at most ')+d.max_voice+t(' Sekunden.',' seconds.')}</div>`:''}`
+    :`<div class="fh">${t('Gerade nimmt kein anderes Profil Nachrichten von dir an.','No other profile takes messages from you right now.')}</div>`}
+    ${d.speakers.length?`<h3 style="margin:14px 0 4px">${t('Durchsage','Announcement')}</h3>
+      <div class="row" style="flex-wrap:wrap;gap:6px">${d.speakers.map(s=>`<label class="chk"><input type="checkbox" data-mspk value="${esc(s.id)}"> ${esc(s.name)}</label>`).join(' ')}</div>
+      <div class="rowin"><input id="msgann" maxlength="300" placeholder="${esc(t('z. B. Essen ist fertig','e.g. Dinner is ready'))}"><button class="b" type="button" id="msgannsend">${t('Durchsagen','Announce')}</button></div>`:''}
+    <h3 style="margin:14px 0 4px">${t('Empfangen','Received')}</h3><ul class="facts">${items}</ul>
+    ${d.items.length?`<div class="row"><button class="b" type="button" id="msgreadall">${t('Alle als gelesen','Mark all read')}</button><button class="b" type="button" id="msgdelall">${t('Alle löschen','Delete all')}</button></div>`:''}
+    <h3 style="margin:14px 0 4px">${t('Wer darf mir schreiben','Who may write to me')}</h3>
+    <select id="msgfrom">${opt('all',t('alle Profile mit Nachrichten','every profile with messages'),set.msg_from)}${opt('chosen',t('nur ausgewählte','only picked ones'),set.msg_from)}</select>
+    ${set.msg_from==='chosen'?`<div class="row" style="flex-wrap:wrap;gap:6px;margin-top:6px">${pick('allow',d.allow)}</div>`:''}
+    <details style="margin-top:6px"${d.block.length?' open':''}><summary>${t('Gesperrt','Blocked')}</summary><div class="row" style="flex-wrap:wrap;gap:6px">${pick('block',d.block)}</div></details>
+    ${d.all?xsw('msg_all',t('Nachrichten an alle annehmen','Take messages to everybody'),t('„Sag allen …“ von anderen Profilen.','"Tell everybody …" from other profiles.')):''}
+    <label>${t('Auf meinen Lautsprechern','On my speakers')}</label>
+    <select id="msgspk">${opt('off',t('nichts sagen','say nothing'),set.msg_speaker)}${opt('hint',t('nur sagen, von wem','say only who wrote'),set.msg_speaker)}${opt('text',t('mit Text vorlesen','read with the text'),set.msg_speaker)}</select>
+    <div class="fh">${t('Wenn keine Seite offen ist und der Lautsprecher verbunden ist, sonst beim nächsten Weckwort. In deinen Ruhezeiten nie.','When no page is open and the speaker is connected, else at its next wake word. Never in your quiet hours.')}</div>
+    ${d.announce?xsw('msg_announce',t('Durchsagen auf meinen Lautsprechern erlauben','Allow announcements on my speakers'),t('Von dir und von Profilen, die dir schreiben dürfen.','From you and from profiles that may write to you.')):''}`:''}
+    <div class="fh" id="msgmsg"></div>`;
+  xbind(box,showMsg);
+  const call=async(p,o,done)=>{try{const r=await (await api(p,o)).json();await showMsg();if(done)xmsg('msgmsg',done(r))}catch(e){xmsg('msgmsg',e.message,true)}};
+  if($('msgsend'))$('msgsend').onclick=()=>{const v=$('msgtext').value.trim();if(!v)return;
+    call('/api/messages/send',xjson('POST',{to:$('msgto').value,text:v}),r=>t('Gesendet an ','Sent to ')+r.sent.join(', '))};
+  if($('msgrec'))$('msgrec').onclick=()=>msgRecord();
+  if($('msgvsend'))$('msgvsend').onclick=async()=>{if(!msgRec.blob)return;xmsg('msgmsg',t('Sende …','Sending …'));
+    try{const r=await (await api('/api/messages/voice?to='+encodeURIComponent($('msgto').value),{method:'POST',headers:{'Content-Type':msgRec.blob.type||'application/octet-stream'},body:msgRec.blob})).json();
+      msgRec.blob=null;await showMsg();xmsg('msgmsg',t('Gesendet an ','Sent to ')+r.sent.join(', '))}catch(e){xmsg('msgmsg',e.message,true)}};
+  if($('msgannsend'))$('msgannsend').onclick=()=>{const ids=[...box.querySelectorAll('[data-mspk]:checked')].map(x=>x.value),v=$('msgann').value.trim();
+    if(!ids.length||!v){xmsg('msgmsg',t('Lautsprecher wählen und Text eingeben.','Pick a speaker and enter the text.'),true);return}
+    call('/api/messages/announce',xjson('POST',{speakers:ids,text:v}),r=>t('Durchgesagt auf ','Announced on ')+r.sent.join(', '))};
+  box.querySelectorAll('[data-mdel]').forEach(b=>b.onclick=()=>call('/api/messages/delete',xjson('POST',{ids:[b.dataset.mdel]})));
+  box.querySelectorAll('[data-mplay]').forEach(b=>b.onclick=()=>msgPlay(b.dataset.mplay));
+  box.querySelectorAll('[data-mre]').forEach(b=>b.onclick=()=>{$('msgto').value=b.dataset.mre;$('msgtext').focus()});
+  if($('msgreadall'))$('msgreadall').onclick=()=>call('/api/messages/read',xjson('POST',{}));
+  if($('msgdelall'))$('msgdelall').onclick=()=>{if(confirm(t('Alle Nachrichten löschen?','Delete all messages?')))call('/api/messages/delete',xjson('POST',{}))};
+  if($('msgfrom'))$('msgfrom').onchange=()=>{saveSet('msg_from',$('msgfrom').value);setTimeout(showMsg,400)};
+  if($('msgspk'))$('msgspk').onchange=()=>saveSet('msg_speaker',$('msgspk').value);
+  box.querySelectorAll('[data-mwho]').forEach(c=>c.onchange=()=>{const k=c.dataset.mwho;
+    call('/api/messages/who',xjson('PUT',{[k]:[...box.querySelectorAll(`[data-mwho="${k}"]:checked`)].map(x=>x.value)}))});
+  // the open page counts as unread-free once seen
+  if(d.unread&&box.classList.contains('on'))api('/api/messages/read',xjson('POST',{ids:d.items.filter(x=>!x.read).map(x=>x.id)})).catch(()=>{})}
+// a voice message: recorded here, at most max_voice seconds, sent only when the person presses send
+async function msgRecord(){const btn=$('msgrec');
+  if(msgRec.rec){msgRec.rec.stop();return}
+  try{msgRec.stream=await navigator.mediaDevices.getUserMedia({audio:{echoCancellation:true,noiseSuppression:true,autoGainControl:true}})}
+  catch{xmsg('msgmsg',t('Kein Mikrofon (nur über https erlaubt).','No microphone (only allowed over https).'),true);return}
+  msgRec.chunks=[];msgRec.blob=null;const rec=new MediaRecorder(msgRec.stream);msgRec.rec=rec;
+  rec.ondataavailable=e=>{if(e.data&&e.data.size)msgRec.chunks.push(e.data)};
+  rec.onstop=()=>{clearTimeout(msgRec.timer);msgRec.stream.getTracks().forEach(x=>x.stop());msgRec.rec=null;
+    msgRec.blob=new Blob(msgRec.chunks,{type:rec.mimeType||'audio/webm'});
+    if($('msgrec'))$('msgrec').textContent='🎙 '+t('Neu aufnehmen','Record again');if($('msgvsend'))$('msgvsend').hidden=false;
+    xmsg('msgmsg',t('Aufnahme fertig. Jetzt senden oder neu aufnehmen.','Recording done. Send it now or record again.'))};
+  rec.start();btn.textContent='■ '+t('Stopp','Stop');xmsg('msgmsg',t('Aufnahme läuft …','Recording …'));
+  msgRec.timer=setTimeout(()=>{if(msgRec.rec)msgRec.rec.stop()},30000)}

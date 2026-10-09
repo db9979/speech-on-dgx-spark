@@ -341,8 +341,9 @@ async def prepare(request):
         # one answer settles every proposal waiting in this conversation: a later "ja" meant for
         # something else never carries out an old one
         import agent
+        import messages as inbox   # (messages is the conversation here)
         import tasks
-        for mod in (calendars, tidy, tasks, fixes, agent):
+        for mod in (calendars, tidy, tasks, fixes, agent, inbox):
             p = mod.pending(who["id"])
             if p and p.get("src", src) == src:
                 mod.drop_pending(who["id"])

@@ -153,6 +153,42 @@ class Browser(unittest.TestCase):
                 await br.close()
         self.run_async(go())
 
+    def test_messages_page_sends(self):
+        """Ich → Nachrichten (V01.0.192): switch on, write to another profile, it lands in that mailbox; on a
+        computer and a phone, without script errors or sideways scrolling."""
+        import messages
+        import profiles
+        helpers.set_config(messages=True, messages_all=True, messages_voice=True)
+        try:
+            profiles.add_user("Uitest2", "4711")
+        except Exception:
+            pass
+        other = next(u for u in profiles._load()["users"] if u["name"] == "Uitest2")["id"]
+        me = next(u for u in profiles._load()["users"] if u["name"] == "Uitest")["id"]
+        profiles.save_settings(other, {"msg_on": True})
+        profiles.save_settings(me, {"msg_on": True})
+
+        async def go():
+            async with async_playwright() as p:
+                for name, w, h in VIEWS:
+                    br, pg, errors = await self.page(p, w, h)
+                    await pg.evaluate("openMe('msgbox')")
+                    await pg.wait_for_timeout(800)
+                    self.assertTrue(await pg.evaluate("$('msgbox').classList.contains('on')"), name)
+                    self.assertTrue(await pg.evaluate("!!$('msgsend')"), name)
+                    await pg.evaluate(f"$('msgto').value={other!r};$('msgtext').value='Test {name}';$('msgsend').click()")
+                    await pg.wait_for_timeout(800)
+                    self.assertIn(f"Test {name}", [x["text"] for x in messages.box(other)])
+                    over = await pg.evaluate("document.documentElement.scrollWidth-window.innerWidth")
+                    self.assertLessEqual(over, 1, f"{name}: {over}px zu breit")
+                    self.assertEqual(errors, [], name)
+                    await br.close()
+        try:
+            self.run_async(go())
+        finally:
+            helpers.set_config(messages=False, messages_all=False, messages_voice=False)
+            profiles.save_settings(me, {"msg_on": False})
+
     def test_speakers_list_and_one_speaker(self):
         """Ich → Lautsprecher (V01.0.149): a list of the speakers, a tap opens that speaker's page in sections
         (Klang, Raum-Modus, Stimme, Firmware, Prüfen), back to the list; adding has its own page. On a
