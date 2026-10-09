@@ -756,5 +756,128 @@ class Speakers(unittest.TestCase):
         self.assertFalse(esp32.newer("abc", "1.0"))
 
 
+class SharedSpeaker(unittest.TestCase):
+    """A speaker in a room is shared: personal things only for the voice clearly recognized as the
+    profile's own in this very recording; anyone else gets what a guest gets (fixed rule, no switch)."""
+
+    @classmethod
+    def setUpClass(cls):
+        helpers.set_config(esp32=True)
+        release("2.5.1.2")
+        r = ADMIN.post("/api/admin/esp32/fetch")
+        assert r.status_code == 200, r.text
+
+    def setUp(self):
+        import mail
+        mail.IMAP = helpers.FakeIMAP
+        mail._cache.clear()
+        helpers.set_config(esp32=True, mail=True, public=True)
+
+    def tearDown(self):
+        helpers.set_config(mail=False, speaker_id=False)
+
+    def speaker(self, name):
+        a = profile(name)
+        a.put("/api/profile/settings", json={"esp_on": True})
+        r = a.post("/api/profile/mail", json={"kind": "icloud", "user": helpers.MAIL_USER, "password": helpers.MAIL_PW})
+        self.assertEqual(r.status_code, 200, r.text)
+        r = a.post("/api/profile/esp32/setup", json={"name": "Wohnzimmer", "variant": "bread-compact-wifi",
+                                                     "base": "https://speech.example.de"})
+        self.assertEqual(r.status_code, 200, r.text)
+        s = r.json()
+        ota(s["uuid"])
+        return a, s["token"], a.get("/api/whoami").json()["profile"]["id"]
+
+    def turn(self, token, text, voice=None, history=()):
+        """One turn prepared like esp32.speak builds it (voice None: not set, like any outside request)."""
+        import chat_turn
+        from starlette.requests import Request
+        data = json.dumps({"messages": list(history) + [{"role": "user", "content": text}], "client": "speaker"}).encode()
+        scope = {"type": "http", "method": "POST", "path": "/api/chat", "query_string": b"",
+                 "headers": [(b"x-speech-device", token.encode())], "client": ("speaker", 0),
+                 "server": ("127.0.0.1", 0), "scheme": "http"}
+        if voice is not None:
+            scope.update(speech_voice=voice, speech_voice_why="test")
+
+        async def receive():
+            return {"type": "http.request", "body": data, "more_body": False}
+        return asyncio.run(chat_turn.prepare(Request(scope, receive)))
+
+    @staticmethod
+    def names(t):
+        return {x["function"]["name"] for x in t.tools}
+
+    def test_other_voice_gets_no_mail(self):
+        import chat
+        a, token, uid = self.speaker("Esp Inhaber")
+        _, _, other = self.speaker("Esp Gast")
+        # the reported case: the speaker's key, a voice nobody recognized -> no mail, no memory, no profile
+        for voice in ("", other, None):
+            t = self.turn(token, "Was steht in meinen E-Mails?", voice)
+            self.assertIsNone(t.who)
+            self.assertFalse(t.mailbox or t.prof or t.ha or t.docs)
+            self.assertFalse(self.names(t) & {"mail_list", "mail_search", "mail_read", "memory_save", "memory_forget",
+                                               "reminder_set", "calendar_events", "calendar_add", "history_search", "document_search"})
+            self.assertIn(chat.SHARED_STRANGER_HINT, t.messages[0]["content"])
+        # the journal (Zustand → Logs, Lautsprecher) says that and why, never what was asked
+        import contextlib
+        import io
+        out = io.StringIO()
+        with contextlib.redirect_stdout(out):
+            self.turn(token, "Was steht in meinen E-Mails?", "")
+        line = next(x for x in out.getvalue().splitlines() if "withheld" in x)
+        self.assertTrue(line.startswith("esp32: personal data withheld at Wohnzimmer"), line)
+        self.assertNotIn("E-Mails", line)
+        # over HTTP with the speaker's key (nothing can say whose voice it was): never the mail tool
+        r = TestClient(panel.app).post("/api/chat", headers={"X-Speech-Device": token},
+                                       json={"messages": [{"role": "user", "content": "TOOL mail_list {}"}]})
+        self.assertIn("NO TOOL mail_list", "".join(e.get("delta", "") for e in helpers.events(r) if e["type"] == "text"))
+        # a request that only says it comes from a speaker: stricter, never more
+        r = a.post("/api/chat", json={"messages": [{"role": "user", "content": "TOOL mail_list {}"}], "client": "speaker"})
+        self.assertIn("NO TOOL mail_list", "".join(e.get("delta", "") for e in helpers.events(r) if e["type"] == "text"))
+        # what the owner heard before at this speaker is not sent along for another voice
+        before = [{"role": "user", "content": "Lies meine Mails"},
+                  {"role": "assistant", "content": "Anna schreibt: Grillen am Samstag um 18 Uhr."}]
+        t = self.turn(token, "Und was noch?", "", before)
+        self.assertNotIn("Grillen", json.dumps(t.messages))
+        # the owner's own voice, recognized in this recording: the mail tools as before
+        t = self.turn(token, "Was steht in meinen E-Mails?", uid)
+        self.assertEqual(t.who["id"], uid)
+        self.assertTrue(t.mailbox)
+        self.assertIn("mail_list", self.names(t))
+        self.assertNotIn(chat.SHARED_STRANGER_HINT, t.messages[0]["content"])
+        # the profile's own login in a browser is not a shared device
+        r = a.post("/api/chat", json={"messages": [{"role": "user", "content": "TOOL mail_list {}"}]})
+        self.assertNotIn("NO TOOL", "".join(e.get("delta", "") for e in helpers.events(r) if e["type"] == "text"))
+
+    def test_voice_decides_at_the_speaker(self):
+        import speakers
+        a, token, uid = self.speaker("Esp Vera")
+        dev = {"id": next(x["id"] for x in profiles_devices() if x["user"] == uid), "user": uid, "name": "Wohnzimmer"}
+        s = esp32.Session.__new__(esp32.Session)
+        s.dev = dev
+
+        async def run(found):
+            old = speakers.identify, speakers.has_voice
+            speakers.identify, speakers.has_voice = (lambda data, th: (found, 0.9)), (lambda u: True)
+            try:
+                return await s.voice_result(s.voice_check(b"\0" * 32000))
+            finally:
+                speakers.identify, speakers.has_voice = old
+        # speaker ID off or no voice taught: nobody counts as the owner
+        self.assertEqual(asyncio.run(s.voice_result(s.voice_check(b"\0" * 32000)))[0], "")
+        helpers.set_config(speaker_id=True)
+        self.assertEqual(asyncio.run(s.voice_result(s.voice_check(b"\0" * 32000))),
+                         ("", "the profile has not taught its voice"))
+        self.assertEqual(asyncio.run(run(uid)), (uid, ""))
+        self.assertEqual(asyncio.run(run("someone-else")), ("", "another profile's voice"))
+        self.assertEqual(asyncio.run(run(None)), ("", "voice not recognized"))
+
+
+def profiles_devices():
+    import profiles
+    return profiles._load()["devices"]
+
+
 if __name__ == "__main__":
     unittest.main()

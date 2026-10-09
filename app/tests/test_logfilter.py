@@ -121,6 +121,10 @@ class OverviewTest(unittest.TestCase):
         self.assertEqual((row["t"], row["area"], row["level"]), ("10:00:00", "ha", "err"))
         self.assertEqual(logfilter.parse("2026-01-01T10:00:00+0000 tars p[1]: room: ignored (tv voice)")["level"], "warn")
         self.assertEqual(logfilter.parse("2026-01-01T10:00:00+0000 tars p[1]: weiche: homeassistant")["area"], "weiche")
+        # a speaker in a room that kept personal things from an unknown voice: Lautsprecher, yellow
+        w = logfilter.parse("2026-01-01T10:00:00+0000 tars p[1]: esp32: personal data withheld at Wohnzimmer - "
+                            "voice not recognized - guest rights for this question")
+        self.assertEqual((w["area"], w["level"]), ("esp32", "warn"))
         now = logfilter._when("2026-01-01T10:30:00+0000")
         s = logfilter.summary([row], 60, now)
         self.assertIn("Token", s["last_error"]["hint"]["de"])

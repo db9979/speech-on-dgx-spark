@@ -334,6 +334,12 @@ TELEGRAM_HINT = ("Diese Unterhaltung läuft über Telegram: Antworte kurz in ein
                  "erlauben kann.")
 SPEAKER_HINT = ("Die Frage kommt über einen kleinen Lautsprecher im Raum, der deine Antwort vorliest. Antworte "
                 "kurz, meist in ein bis drei Sätzen, ohne Listen, Tabellen, Links oder Emojis.")
+# a shared speaker (chat_turn.shared_stranger): the voice was not clearly the profile's own
+SHARED_STRANGER_HINT = ("Diese Frage kommt über einen Lautsprecher im Raum, und die Stimme wurde nicht sicher als die "
+                        "des Inhabers erkannt. Persönliches (E-Mails, Termine, Erinnerungen, Gedächtnis, Dokumente, "
+                        "Kontakte, Nachrichten, Pakete, Smart Home) sagst und tust du hier nur für den Inhaber selbst. "
+                        "Fragt jemand danach, sag nur kurz, dass du das an diesem Lautsprecher nur dem Inhaber sagst, "
+                        "wenn du seine Stimme erkennst; nenne nichts davon und rate nichts.")
 SIRI_HINT = ("Die Frage kommt über Siri vom iPhone, der Apple Watch, aus dem Auto oder über AirPods; Siri "
              "liest deine Antwort vor. Antworte kurz, meist in ein bis drei Sätzen, ohne Listen oder Links.")
 # the iPhone app (iphone.py): what only the phone can do; the app asks the person before it starts
