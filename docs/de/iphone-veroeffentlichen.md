@@ -38,7 +38,7 @@ Zusätzlich zu Schritt 1–2 in App Store Connect unter der App:
 
 - **Screenshots**: mindestens für 6,9" (iPhone 16 Pro Max) oder 6,5", aus dem Simulator mit ⌘S.
 - **Beschreibung, Stichwörter, Support-URL** (z. B. die GitHub-Seite).
-- **Datenschutzrichtlinie (URL)**: eine Seite, die sagt, dass die App nur mit dem eigenen Spark spricht und nichts an dich als Entwickler schickt.
+- **Datenschutzrichtlinie (URL)**: fertig in [app-datenschutz.md](app-datenschutz.md), englisch in [app-privacy.md](../en/app-privacy.md). Als URL den GitHub-Link der Datei eintragen.
 - **App-Datenschutz**: „Keine Daten erfasst“ (alles geht an den Spark des Nutzers, nicht an dich). Mitteilungen über Apple enthalten nur einen festen Satz.
 - **Altersfreigabe**: Fragebogen ausfüllen (keine Inhalte der Kategorien → 4+; wegen freier Antworten eines Sprachmodells eher 12+).
 - **Hinweise für die Prüfung**: Apples Prüfer brauchen einen Spark. Ein eigenes Testprofil anlegen, einen Kopplungs-Link erzeugen (gilt nur 10 Minuten, daher besser ein kurzes Video der App beilegen und anbieten, auf Zuruf einen Link zu schicken) und die Adresse deines Reverse Proxys nennen.

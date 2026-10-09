@@ -29,7 +29,7 @@ App Store Connect → **Users and Access**: invite family members; app → **Tes
 
 ## 4. App Store
 
-Also needed: screenshots (6.9" or 6.5"), description, support URL, a privacy policy URL, App Privacy "Data Not Collected" (everything goes to the user's own Spark), age rating, and review notes: reviewers need a Spark, so offer a test profile and a short video. Unlisted distribution can be requested if the app should not show up in search. Review usually takes 1–3 days.
+Also needed: screenshots (6.9" or 6.5"), description, support URL, a privacy policy URL (ready: [app-privacy.md](app-privacy.md), German [app-datenschutz.md](../de/app-datenschutz.md)), App Privacy "Data Not Collected" (everything goes to the user's own Spark), age rating, and review notes: reviewers need a Spark, so offer a test profile and a short video. Unlisted distribution can be requested if the app should not show up in search. Review usually takes 1–3 days.
 
 ## CarPlay
 
