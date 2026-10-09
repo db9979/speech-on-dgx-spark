@@ -77,6 +77,26 @@ class Conflict(unittest.TestCase):
         self.assertIn("denselben Bot-Token", hint)
 
 
+class OwnRequests(unittest.TestCase):
+    def test_log_page_polls_are_no_errors(self):
+        """V01.0.215: "?f=errors" in the address made the log page's own requests count as errors."""
+        import logfilter
+        pre = "2026-10-09T18:35:30+0200 tars python[1]: INFO:     192.168.178.218:46578 - "
+        ok = logfilter.parse(pre + '"GET /api/logfilter?format=json&f=errors&minutes=60&lines=100 HTTP/1.1" 200 OK')
+        self.assertEqual(ok["level"], "")
+        bad = logfilter.parse(pre + '"GET /api/status HTTP/1.1" 500 Internal Server Error')
+        self.assertEqual(bad["level"], "err")
+        self.assertEqual(logfilter.parse(pre.split("INFO")[0] + "chat: tts failed")["level"], "err")
+
+    def test_log_page_polls_stay_out_of_the_journal(self):
+        import logging
+        import common
+        common.quiet_access_log()
+        rec = logging.LogRecord("uvicorn.access", logging.INFO, "", 0, '%s - "GET %s HTTP/1.1" %d',
+                                ("1.2.3.4:5", "/api/logfilter?f=errors", 200), None)
+        self.assertFalse(all(f.filter(rec) for f in logging.getLogger("uvicorn.access").filters))
+
+
 class PassingWeather(unittest.TestCase):
     def _err(self, code):
         req = httpx.Request("GET", "https://api.open-meteo.com/v1/forecast")

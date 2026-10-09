@@ -63,4 +63,6 @@ All speech services log into their own journal (`journalctl --namespace=speech-s
 
 **Weather service briefly down** (since V01.0.214): when Open-Meteo answers the weather note with 5xx or 429 or not at all, the log shows a warning ("retry in 10 min") instead of an error, and the Spark tries again every 10 min within the time window.
 
+**Web requests in the logs** (since V01.0.215): for web server lines ("GET /api/… 200 OK") only the status code makes a line red (500 and up), never words in the address. The panel no longer writes the log page's own requests to the journal at all.
+
 **Detailed diagnosis per area** (Logs → Advanced): room mode, speakers, Home Assistant and conversation can be switched on for 15 min, 1 h or 4 h; afterwards and on every restart they are off again. They add `… detail …` lines with numbers and decisions only (recognition time, answer time, word count, duration of a Home Assistant call, history size, offered tools), never heard or written text, names or secrets; redaction still runs. Admin only, rate limited.

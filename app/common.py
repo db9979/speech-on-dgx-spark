@@ -161,7 +161,7 @@ def journal(unit, lines, fmt="cat"):
     return out
 
 
-def quiet_access_log(paths=("/health", "/api/status", "/api/update", "/api/bench", "/api/logs/")):
+def quiet_access_log(paths=("/health", "/api/status", "/api/update", "/api/bench", "/api/logs/", "/api/logfilter")):
     """Drop the access-log lines of successful status polls (the panel asks every few seconds)."""
     import logging
 
