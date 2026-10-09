@@ -227,7 +227,11 @@ async def prepare(request):
     # only puts the checked result into words. Without the code word the command waits (two minutes)
     # and runs as soon as the next message brings it.
     ha_direct = None
-    if ha and messages[-1]["role"] == "user":
+    # "Raummodus im Wohnzimmer an" is about the profile's own devices (roomfar.py, fixed rules), never
+    # the smart home: no switching, no code word and no smart home tools in this turn
+    import roomfar
+    room_far = messages[-1]["role"] == "user" and roomfar.asks(messages[-1]["content"])
+    if ha and messages[-1]["role"] == "user" and not room_far:
         latest = messages[-1]["content"]
         pend = chat._HA_PENDING.pop(who["id"], None)
         if homeassistant.is_command(latest) and await homeassistant.mentions_device(ha, latest):
@@ -250,7 +254,7 @@ async def prepare(request):
     # A question that names a device or room is answered from states the panel reads itself, so the
     # value never comes from the model's memory of earlier turns or from a guess.
     ha_read = None
-    if ha and not ha_direct and not ha_wait and messages[-1]["role"] == "user" \
+    if ha and not ha_direct and not ha_wait and messages[-1]["role"] == "user" and not room_far \
             and not homeassistant._intent(messages[-1]["content"]):
         try:
             ha_read = await homeassistant.lookup(ha, messages[-1]["content"])
@@ -332,6 +336,7 @@ async def prepare(request):
     xprop = None
     if who and messages[-1]["role"] == "user" and not prop and not mprop:
         xprop = await extras.answer({"who": who, "own": own_browser, "src": src, "client": body.get("client"), "private": private_ok,
+                                     "app": app_key, "device": (profiles.device_name(request) or "")[:40],
                                      "ha": ha, "ha_code": ha_code, "ha_code_ok": ha_code_ok}, messages[-1]["content"])
         if xprop:
             if xprop.get("outside"):
@@ -369,7 +374,7 @@ async def prepare(request):
         import agent
         import messages as inbox   # (messages is the conversation here)
         import tasks
-        for mod in (calendars, tidy, tasks, fixes, agent, inbox):
+        for mod in (calendars, tidy, tasks, fixes, agent, inbox, roomfar):
             p = mod.pending(who["id"])
             if p and p.get("src", src) == src:
                 mod.drop_pending(who["id"])
@@ -393,6 +398,12 @@ async def prepare(request):
     tools += ex["tools"]
     if pics:
         tools = []
+    if room_far:
+        if not xprop:   # a guest or a voice of another profile: the fixed answer, nothing else
+            note = roomfar.why_not({"who": who if own_browser else None, "own": own_browser, "client": body.get("client")})
+            system = (system + "\n\nRaum-Modus: " + (note or "Das geht hier nicht.") + " Sag dem Nutzer genau das, kurz.").strip()
+        tools = []
+        print("room: message about another device's room mode - fixed rules, no tools in this answer", flush=True)
     # the switch narrows what the model sees (never more than the rights above left); a question no
     # rule recognizes may go to the model once as a pick from a fixed list (chat.route_model)
     all_tools = len(tools)

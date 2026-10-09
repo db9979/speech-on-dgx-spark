@@ -412,6 +412,14 @@ def device(request):
     return {"id": dev["id"], "user": dev["user"], "scope": dev.get("scope") or ""} if dev else None
 
 
+def device_name(request):
+    """The name of the device key behind this request ("" for logins and guests)."""
+    if request.scope.get("speech_profile"):
+        return ""
+    dev = _device(_load(), request)
+    return str(dev.get("name") or "") if dev else ""
+
+
 def key_scope(request):
     """The scope of the device key this request carries ("app"), "" for other keys and logins."""
     if request.scope.get("speech_profile"):
@@ -541,9 +549,10 @@ SETTINGS = {
     "app_car_ha": (False, lambda v: isinstance(v, bool)),   # smart home from CarPlay
     "app_docs": (False, lambda v: isinstance(v, bool)),     # documents from the app into "Meine Dokumente"
     "app_ios": (False, lambda v: isinstance(v, bool)),      # Apple Reminders and the lists on the iPhone (tasks.py)
-    "app_images": (False, lambda v: isinstance(v, bool)),
+    "app_images": (False, lambda v: isinstance(v, bool)),   # pictures from the app to the model (images.py)
     "app_room": (False, lambda v: isinstance(v, bool)),     # where room mode listens, in the app (roomlive.py)
-    "room_tell": (False, lambda v: isinstance(v, bool)),    # a note when a speaker starts room mode by voice   # pictures from the app to the model (images.py)
+    "room_tell": (False, lambda v: isinstance(v, bool)),    # a note when a speaker starts room mode by voice
+    "room_remote": (False, lambda v: isinstance(v, bool)),  # start room mode on an own speaker from another device (roomfar.py)
     # agent functions (agent.py): the admin gives the level, the profile switches it on itself
     "agent_on": (False, lambda v: isinstance(v, bool)),
     "agent_doc": (False, lambda v: isinstance(v, bool)),    # every report also under "Meine Dokumente"

@@ -13,11 +13,12 @@ import agent
 import contacts
 import messages
 import parcels
+import roomfar
 import tasks
 import transit
 import weather
 
-SERVICES = [weather, contacts, parcels, tasks, transit, agent, messages]
+SERVICES = [roomfar, weather, contacts, parcels, tasks, transit, agent, messages]
 
 
 def offer(ctx):

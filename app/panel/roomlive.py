@@ -51,7 +51,7 @@ NAME_MAX = 40
 WHY = {   # how a room ended: shown in the history, never free text
     "time": "Zeit um", "voice": "„Raummodus aus“", "here": "am Gerät beendet", "panel": "im Panel beendet",
     "iphone": "in der iPhone-App beendet", "ha": "von Home Assistant beendet", "admin": "vom Admin beendet",
-    "lost": "Gerät nicht mehr erreichbar", "off": "ausgeschaltet",
+    "lost": "Gerät nicht mehr erreichbar", "off": "ausgeschaltet", "far": "von einem anderen Gerät beendet",
 }
 
 ACTIVE = {}                  # (uid, rid) -> entry

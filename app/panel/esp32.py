@@ -600,6 +600,7 @@ class Session:
         self.answer = None       # running answer task
         self.send_lock = asyncio.Lock()
         self.room_next = False   # room mode switched on in the panel: starts with the next "listen start"
+        self.room_ask = None     # started from another device (roomfar.py): {"source", "mins", "by"}
         self.room = None         # room mode: {"rid", "until", "wait", "need", "last", "asking", "queue", "task"}
         self.mic = None          # this question's sound: [frames, seconds, peak, sum of squares, samples]
         self.testing = False     # "Test": the next sentence only checks the microphone
@@ -805,7 +806,8 @@ class Session:
     async def run_answer(self, pcm):
         try:
             if pcm is None:
-                await self.room_start()
+                ask, self.room_ask = self.room_ask, None
+                await self.room_start(**(ask or {}))
                 return
             ended = time.time()
             try:
@@ -830,7 +832,8 @@ class Session:
                 await self.send({"type": "tts", "state": "stop"})
                 return
             await self.send({"type": "stt", "text": text})
-            if ROOM_START.match(text) and len(text) <= 60:
+            # "Starte den Raummodus im Wohnzimmer" names another place: that goes through the chat (roomfar.py)
+            if ROOM_START.match(text) and len(text) <= 60 and not self._room_elsewhere(text):
                 await self.room_start(source="voice")
                 return
             await self.send({"type": "llm", "emotion": "thinking", "text": "🤔"})
@@ -875,8 +878,18 @@ class Session:
                      "voices": voices, "probe": c["probe"],
                      "tz": profiles.settings(self.dev["user"]).get("tz", "")}, **kw)
 
-    async def room_start(self, source="panel"):
-        """source "voice": "Raummodus an" at the board (the profile may get a note, roomlive.tell)."""
+    def _room_elsewhere(self, text):
+        """The sentence names a place that is not this speaker (its name or its room)."""
+        import roomfar
+        got = roomfar.parse(text)
+        if not got:
+            return False
+        area = room_cfg(by_device(self.dev["id"])[1])["area"]
+        return not roomfar._fits(got[1], [self.dev["name"], area])
+
+    async def room_start(self, source="panel", mins=None, by=None):
+        """source "voice": "Raummodus an" at the board (the profile may get a note, roomlive.tell);
+        "remote": asked on another device of the profile (roomfar.py, after its "Ja"), by says which."""
         import room
         import roomlive
         uid = self.dev["user"]
@@ -891,7 +904,7 @@ class Session:
             await self.say("Gerade hören schon zu viele Lautsprecher im Raum zu. Bitte später noch einmal.")
             return
         cfg = room_cfg(by_device(self.dev["id"])[1])
-        mins = cfg["mins"]
+        mins = mins if mins in ROOM_MINS else cfg["mins"]
         rid = "esp" + re.sub(r"[^A-Za-z0-9]", "", self.dev["id"])[:24]
         try:
             e = roomlive.add(uid, rid, "speaker", self.dev["name"], time.time() + mins * 60, device=self.dev["id"],
@@ -901,8 +914,9 @@ class Session:
             return
         self.room = {"rid": rid, "until": e["until"], "wait": False, "need": ROOM_NEED, "last": time.time(), "asking": False,
                      "queue": None, "task": None, "ping": time.time()}
-        print(f"room: on at speaker {self.dev['name']} for {mins} min", flush=True)
-        await self.say(f"Raum-Modus an. Ich höre {mins} Minuten zu. Mit „Raummodus aus“ beendest du ihn.")
+        print(f"room: on at speaker {self.dev['name']} for {mins} min" + (f" (remote from {by})" if by else ""), flush=True)
+        start = f"Raum-Modus an, gestartet von {by}." if by else "Raum-Modus an."
+        await self.say(f"{start} Ich höre {mins} Minuten zu. Mit „Raummodus aus“ beendest du ihn.")
         self.room["last"] = time.time()
         self.room["task"] = asyncio.create_task(self.room_loop())
         self.listen("auto")

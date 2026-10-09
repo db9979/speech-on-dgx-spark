@@ -72,6 +72,8 @@ def whoami(request: Request, creds: HTTPBasicCredentials | None = Depends(securi
             "room": cfg.get("chat", {}).get("room", False),
             "room_voices": bool(cfg.get("chat", {}).get("room", False) and cfg.get("chat", {}).get("room_voices", False)),
             "room_ha": bool(cfg.get("chat", {}).get("room", False) and cfg.get("chat", {}).get("room_ha", False)),
+            "room_remote": bool(cfg.get("chat", {}).get("room", False) and cfg.get("chat", {}).get("room_remote", False)
+                                and cfg.get("chat", {}).get("esp32", False)),
             "weather": cfg.get("chat", {}).get("weather", False),
             "contacts": cfg.get("chat", {}).get("contacts", False),
             "parcels": bool(cfg.get("chat", {}).get("mail", False) and cfg.get("chat", {}).get("parcels", False)),
