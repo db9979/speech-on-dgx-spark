@@ -31,6 +31,7 @@ All options for running without questions (`--mode api --asr 1.7b --tts 0.6b --y
 
 <!-- New version: add one line at the top here and in CHANGELOG.md, drop the oldest line here (keep 10). Details go to docs/de and docs/en, not into this README. -->
 
+- **V01.0.172** iPhone app: App Store screenshots (de/en) from the simulator via GitHub workflow, demo mode in Debug builds only
 - **V01.0.171** Features as short lines: tap to open, filter All/On/Off/Needs you, jump bar to the groups
 - **V01.0.170** iPhone app: Shortcut description without "iPhone" (Apple error ITMS-90626), store name "Spark Assistent DB"
 - **V01.0.169** iPhone app: App Store texts (de/en) written to App Store Connect by the GitHub workflow "App Store texts"
@@ -40,7 +41,6 @@ All options for running without questions (`--mode api --asr 1.7b --tts 0.6b --y
 - **V01.0.165** iPhone app: Apple Reminders after "yes" and the shopping list into the Reminders app (off, profile switch), Share → Spark from any app, Shortcuts actions, share answers as a note
 - **V01.0.164** Quality test more compact: only questions with a finding stay open (one line, answer expands on tap), the rest is folded; while it runs a progress bar with "question 15 of 36 · about 2 min left"
 - **V01.0.163** Performance check rates every value (very good, good, tight, too slow, with one sentence why), an overall verdict on top, new "words understood" percentage and the comparison with the last run
-- **V01.0.162** iPhone app: "My profile" with voice, answer length, by itself and morning briefing; the app's rights and the tone only shown (the Spark changes only a fixed list)
 
 All versions: [CHANGELOG.md](CHANGELOG.md)
 

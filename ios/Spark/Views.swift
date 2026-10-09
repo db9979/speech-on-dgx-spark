@@ -7,7 +7,7 @@ struct ContentView: View {
 
     var body: some View {
         Group {
-            if app.paired { ChatView() } else { PairView() }
+            if app.paired || Demo.scene != nil { ChatView() } else { PairView() }
         }
         .alert(item: $app.offered) { link in
             Alert(title: Text("Mit diesem Spark koppeln?"),
@@ -57,6 +57,7 @@ struct ChatView: View {
     @State private var typed = ""
     @State private var settings = false
     @State private var history = false
+    @State private var demoProfile = false
     @State private var camera = false
     @State private var files = false
     @State private var photo: PhotosPickerItem?
@@ -85,6 +86,7 @@ struct ChatView: View {
             }
             .sheet(isPresented: $settings, onDismiss: { talk.settingsChanged() }) { SettingsView() }
             .sheet(isPresented: $history) { HistoryView() }
+            .sheet(isPresented: $demoProfile) { NavigationStack { ProfileView() } }
             .fullScreenCover(isPresented: $camera) {
                 CameraPicker { image in
                     camera = false
@@ -105,7 +107,15 @@ struct ChatView: View {
                     return try await Reader.photo(image, name: String(localized: "Foto"))
                 }
             }
-            .task { await talk.begin(await app.refresh()) }
+            .task {
+                if let s = Demo.scene {
+                    Demo.fill(talk, s)
+                    history = s == "history"
+                    demoProfile = s == "profile"
+                    return
+                }
+                await talk.begin(await app.refresh())
+            }
             .onChange(of: scene) { talk.scene(scene) }
             .onChange(of: talk.standing, initial: true) { UIApplication.shared.isIdleTimerDisabled = talk.standing }
             .alert(talk.offer?.question ?? "", isPresented: Binding(get: { talk.offer != nil }, set: { if !$0 { talk.offer = nil } })) {
@@ -121,7 +131,7 @@ struct ChatView: View {
     private var talking: some View {
         VStack(spacing: 0) {
             if talk.unreachable { OfflineBanner() }
-            FaceView(mood: talk.mood, mic: talk.level, out: { talk.audio.outLevel }, kind: talk.allowed.face)
+            FaceView(mood: talk.mood, mic: talk.level, out: { Demo.out ?? talk.audio.outLevel }, kind: talk.allowed.face)
                 .frame(maxHeight: talk.messages.isEmpty ? 260 : 130)
                 .padding(.top, 8)
                 .onTapGesture { talk.tap() }
@@ -308,6 +318,7 @@ struct HistoryView: View {
             .navigationBarTitleDisplayMode(.inline)
             .toolbar { ToolbarItem(placement: .confirmationAction) { Button("Fertig") { dismiss() } } }
             .task {
+                if let demo = Demo.convos { list = demo; loading = false; return }
                 do { list = try await SparkAPI.current?.convos() ?? [] } catch { failed = error.localizedDescription }
                 loading = false
             }

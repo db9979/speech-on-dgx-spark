@@ -31,6 +31,7 @@ Alle Optionen ohne Rückfragen (`--mode api --asr 1.7b --tts 0.6b --yes` …) st
 
 <!-- New version: add one line at the top here and in CHANGELOG.md, drop the oldest line here (keep 10). Details go to docs/de and docs/en, not into this README. -->
 
+- **V01.0.172** iPhone-App: App-Store-Bildschirmfotos (de/en) per GitHub-Ablauf aus dem Simulator, Vorführmodus nur im Testbuild
 - **V01.0.171** Funktionen als kurze Zeilen: Antippen klappt auf, Filter Alle/An/Aus/Braucht dich, Sprungleiste zu den Gruppen
 - **V01.0.170** iPhone-App: Kurzbefehl-Beschreibung ohne „iPhone“ (Apple-Fehler ITMS-90626), Store-Name „Spark Assistent DB“
 - **V01.0.169** iPhone-App: App-Store-Texte (de/en) per GitHub-Knopf „App Store texts“ in App Store Connect eintragen
@@ -40,7 +41,6 @@ Alle Optionen ohne Rückfragen (`--mode api --asr 1.7b --tts 0.6b --yes` …) st
 - **V01.0.165** iPhone-App: Apple Erinnerungen nach „Ja“ und Einkaufsliste in die Erinnerungen-App (aus, Profilschalter), Teilen → Spark aus jeder App, Kurzbefehle-Bausteine, Antworten als Notiz teilen
 - **V01.0.164** Qualitätstest kompakter: nur Fragen mit Befund stehen offen (eine Zeile, Antwort zum Aufklappen), der Rest ist zugeklappt; während des Tests ein Fortschrittsbalken mit „Frage 15 von 36 · noch etwa 2 min“
 - **V01.0.163** Leistung messen sagt zu jedem Wert, wie gut er ist (sehr gut, gut, knapp, zu langsam, mit einem Satz dazu), oben ein Gesamturteil, neu „Richtig verstanden“ in Prozent und der Vergleich mit der letzten Messung
-- **V01.0.162** iPhone-App: „Mein Profil“ mit Stimme, Antwortlänge, Von selbst und Morgenrunde; Rechte der App und Ton nur angezeigt (Spark ändert nur eine feste Liste)
 
 Alle Versionen: [CHANGELOG.md](CHANGELOG.md)
 

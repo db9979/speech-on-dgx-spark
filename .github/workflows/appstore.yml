@@ -1,8 +1,9 @@
 name: App Store texts
 
 # Writes the store texts from ios/fastlane/metadata (name, subtitle, description, keywords, URLs,
-# categories, de + en) into App Store Connect. Only by hand (Actions → App Store texts → Run workflow),
-# never on push. Uploads no build, no screenshots and never submits for review.
+# categories, de + en) and, if wanted, the pictures from the branch app-store-screenshots (workflow
+# "App Store screenshots") into App Store Connect. Only by hand (Actions → App Store texts → Run workflow),
+# never on push. Uploads no build and never submits for review.
 # Needs three repository secrets from an App Store Connect API key (role "App Manager"):
 # ASC_KEY_ID, ASC_ISSUER_ID, ASC_KEY (the whole .p8 file). Guide: docs/de/iphone-veroeffentlichen.md.
 on:
@@ -18,6 +19,10 @@ on:
       copyright:
         description: "Copyright, z. B. 2026 Vorname Nachname"
         required: true
+      screenshots:
+        description: "Bildschirmfotos mit hochladen (ersetzt die vorhandenen)"
+        type: boolean
+        default: true
 
 permissions:
   contents: read
@@ -28,6 +33,12 @@ jobs:
     timeout-minutes: 20
     steps:
       - uses: actions/checkout@v4
+      - name: Pictures
+        if: inputs.screenshots
+        run: |
+          git fetch -q --depth 1 origin app-store-screenshots
+          git checkout FETCH_HEAD -- ios/fastlane/screenshots
+          ls -R ios/fastlane/screenshots
       - uses: ruby/setup-ruby@v1
         with:
           ruby-version: "3.3"
@@ -41,6 +52,7 @@ jobs:
           BUNDLE_ID: ${{ inputs.bundle_id }}
           APP_VERSION: ${{ inputs.version }}
           COPYRIGHT: ${{ inputs.copyright }}
+          SHOTS: ${{ inputs.screenshots }}
         run: |
           set -euo pipefail
           if [ -z "$ASC_KEY_ID" ] || [ -z "$ASC_ISSUER_ID" ] || [ -z "$ASC_KEY" ]; then
@@ -50,8 +62,9 @@ jobs:
           key="$RUNNER_TEMP/asc.json"
           trap 'rm -f "$key"' EXIT
           python3 -c 'import json,os; print(json.dumps({"key_id": os.environ["ASC_KEY_ID"], "issuer_id": os.environ["ASC_ISSUER_ID"], "key": os.environ["ASC_KEY"], "in_house": False}))' > "$key"
+          if [ "$SHOTS" = "true" ]; then pics=(--screenshots_path ios/fastlane/screenshots --overwrite_screenshots true); else pics=(--skip_screenshots true); fi
           fastlane deliver --platform ios --api_key_path "$key" \
             --app_identifier "$BUNDLE_ID" --app_version "$APP_VERSION" --copyright "$COPYRIGHT" \
             --metadata_path ios/fastlane/metadata \
-            --skip_binary_upload true --skip_screenshots true \
+            --skip_binary_upload true "${pics[@]}" \
             --submit_for_review false --run_precheck_before_submit false --force true

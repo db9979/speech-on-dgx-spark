@@ -15,20 +15,29 @@ final class ProfileModel: ObservableObject {
     @Published var sample = false
 
     func load() async {
+        if let d = Demo.profile {
+            show(d)
+            voices = Demo.voices
+            loading = false
+            return
+        }
         guard let api = SparkAPI.current else { return }
         do {
-            let d = try await api.profileSettings()
-            s = d["settings"] as? [String: Any] ?? [:]
-            style = d["style"] as? String
-            rights = d["rights"] as? [String: Bool] ?? [:]
-            services = d["services"] as? [String: Bool] ?? [:]
-            proactive = (d["allow"] as? [String: Any])?["proactive"] as? Bool ?? false
+            show(try await api.profileSettings())
             voices = (try? await api.voices()) ?? []
             error = nil
         } catch {
             self.error = error.localizedDescription
         }
         loading = false
+    }
+
+    private func show(_ d: [String: Any]) {
+        s = d["settings"] as? [String: Any] ?? [:]
+        style = d["style"] as? String
+        rights = d["rights"] as? [String: Bool] ?? [:]
+        services = d["services"] as? [String: Bool] ?? [:]
+        proactive = (d["allow"] as? [String: Any])?["proactive"] as? Bool ?? false
     }
 
     func set(_ key: String, _ value: Any) {

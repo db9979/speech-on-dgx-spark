@@ -1,0 +1,79 @@
+name: App Store screenshots
+
+# Takes the App Store pictures of the iPhone app in the simulator (iPhone 16 Pro Max, 6.9",
+# 1320 x 2868), German and English. The app runs as a Debug build with `-SparkDemo <scene>`
+# (ios/Spark/Demo.swift): example content, no Spark, no pairing, nobody's real data.
+# Result: artifact "screenshots" and the branch app-store-screenshots (ios/fastlane/screenshots).
+on:
+  workflow_dispatch:
+  push:
+    branches: ["claude/**"]
+    paths:
+      - ios/Spark/Demo.swift
+      - .github/workflows/screenshots.yml
+
+permissions:
+  contents: write
+
+concurrency:
+  group: screenshots
+  cancel-in-progress: true
+
+jobs:
+  shots:
+    runs-on: macos-15
+    timeout-minutes: 40
+    steps:
+      - uses: actions/checkout@v4
+      - name: Xcode
+        run: |
+          sudo xcode-select -s "$(ls -d /Applications/Xcode_16*.app | sort -V | tail -1)"
+          xcodebuild -version
+      - name: Build for the simulator
+        working-directory: ios
+        run: |
+          xcodebuild -project Spark.xcodeproj -scheme Spark -configuration Debug \
+            -sdk iphonesimulator -destination "generic/platform=iOS Simulator" \
+            -derivedDataPath "$RUNNER_TEMP/dd" CODE_SIGNING_ALLOWED=NO build > build.log 2>&1 \
+            || { grep -E "error:|\*\* BUILD" build.log | sort -u | head -80; exit 1; }
+          tail -n 5 build.log
+      - name: Take the pictures
+        run: |
+          set -euo pipefail
+          app="$RUNNER_TEMP/dd/Build/Products/Debug-iphonesimulator/Spark.app"
+          bundle=$(/usr/libexec/PlistBuddy -c "Print :CFBundleIdentifier" "$app/Info.plist")
+          udid=$(xcrun simctl create shots "iPhone 16 Pro Max")
+          xcrun simctl boot "$udid"
+          xcrun simctl bootstatus "$udid" -b
+          xcrun simctl ui "$udid" appearance light
+          xcrun simctl status_bar "$udid" override --time "9:41" --dataNetwork wifi --wifiMode active --wifiBars 3 \
+            --cellularMode active --cellularBars 4 --batteryState charged --batteryLevel 100
+          xcrun simctl install "$udid" "$app"
+          out=ios/fastlane/screenshots
+          rm -rf "$out"
+          for lang in de en; do
+            case $lang in de) dir=de-DE; loc=de_DE;; en) dir=en-US; loc=en_US;; esac
+            mkdir -p "$out/$dir"
+            n=1
+            for scene in chat photo remind profile history; do
+              xcrun simctl launch --terminate-running-process "$udid" "$bundle" \
+                -SparkDemo "$scene" -AppleLanguages "($lang)" -AppleLocale "$loc"
+              sleep 8
+              xcrun simctl io "$udid" screenshot "$out/$dir/${n}_${scene}.png"
+              n=$((n + 1))
+            done
+          done
+          ls -la "$out"/*
+      - uses: actions/upload-artifact@v4
+        with:
+          name: screenshots
+          path: ios/fastlane/screenshots
+      - name: Keep them on the branch app-store-screenshots
+        run: |
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          git checkout --orphan shots
+          git rm -rq --cached .
+          git add -f ios/fastlane/screenshots
+          git commit -qm "App Store screenshots from ${GITHUB_SHA::7} [skip ci]"
+          git push -fq origin HEAD:refs/heads/app-store-screenshots
