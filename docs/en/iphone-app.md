@@ -75,6 +75,10 @@ In the app under Settings → **My profile** you set the same values as in the p
 - **Shortcuts:** The Shortcuts app gets "Ask Spark", "Reminder at the Spark", "Add to a Spark list" and "Store a document at the Spark". Lists need the reminders switch, documents the documents switch.
 - **Notes:** Apple does not let apps write into Notes directly. Two ways: long-press an answer in the app → "Share (e.g. as a note)", or a shortcut of "Ask Spark" plus Apple's "Create Note".
 
+## Looking at my documents
+
+With "Documents from the app" (Me → iPhone app), Settings → **My documents** lists your documents on the Spark, with search. Tap one to open it: a kept PDF or picture opens in Apple's preview (zoom, search, share), and the "Text" tab shows the text the Spark stored. Other file types show as text only. Deleting and uploading stay in the panel.
+
 ## Messages to other profiles
 
 The envelope next to the input opens the messages (a dot shows new ones), no language model involved. "Ready?" shows whether the admin and your profile allow messages and whom you can reach, with the reason for those you cannot (e.g. "has messages off"). Pick the recipient and write (at most 500 characters); in the inbox swipe right to reply, left to delete. A message notification can be answered in place (long press → "Reply"). Who may write to you is set in the browser only. The app does not read messages aloud by itself; ask the assistant ("Do I have messages?"), also in the car. Voice messages are listed; listen to them in the panel. With Siri: "Message with Spark" asks for recipient and text and confirms before sending; the name must match a profile that takes your messages. With many profiles (V01.0.206) "To" opens a list with a search (name or call name), ★ favourites and recent ones on top; the star keeps a favourite on the Spark. "Ready?" then shows only numbers, the names open on a tap. When several profiles fit for Siri, Siri asks "Whom do you mean?" with at most 4 names; for an unknown name it says at most 3 similar ones.

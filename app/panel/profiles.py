@@ -388,8 +388,18 @@ APP_PATHS = ("/api/chat", "/api/test/asr", "/api/siri/ask", "/api/iphone/hello",
              "/api/messages/audio", "/api/messages/ready",
              "/api/messages/fav",     # ★ in the recipient picker (the Rufname stays in the browser)
              # where room mode listens and ending it (roomlive.py, only with app_room; never starting or extending)
-             "/api/room/active", "/api/room/end")
+             "/api/room/active", "/api/room/end",
+             "/api/profile/docs")     # the list of the own documents (GET only for the app, with app_docs)
+# looking at an own document again (wissen.reader: only with app_docs); reading only, never changing
+APP_PATTERNS = (re.compile(r"/api/profile/wissen/[0-9a-f]{12}/(?:text|file)"),)
 APP_GATE = [lambda uid: False]
+
+
+def _app_path(request):
+    path = request.scope.get("path") or ""
+    if path in APP_PATHS:
+        return True
+    return request.method == "GET" and any(p.fullmatch(path) for p in APP_PATTERNS)
 # A room key (scope "room", for Home Assistant) only reads where room mode listens and ends it (roomlive.py),
 # and only while the admin allows it (ROOM_GATE, set by roomlive.py; closed without it).
 ROOM_PATHS = ("/api/room/active", "/api/room/end")
@@ -452,7 +462,7 @@ def current(request):
         dev = _device(d, request)
         if not dev:
             return None
-        if dev.get("scope") == "app" and (request.scope.get("path") not in APP_PATHS or not APP_GATE[0](dev["user"])):
+        if dev.get("scope") == "app" and (not _app_path(request) or not APP_GATE[0](dev["user"])):
             return None
         if dev.get("scope") == "room" and (request.scope.get("path") not in ROOM_PATHS or not ROOM_GATE[0](dev["user"])):
             return None

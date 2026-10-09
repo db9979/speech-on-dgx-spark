@@ -513,6 +513,9 @@ struct SettingsView: View {
                 }
                 Section {
                     NavigationLink("Mein Profil") { ProfileView() }
+                    if talk.allowed.docs {
+                        NavigationLink("Meine Dokumente") { DocumentsView() }
+                    }
                 } footer: {
                     Text("Stimme, Antworten und „Von selbst“ wie im Panel.")
                 }

@@ -215,6 +215,39 @@ class ReadAgain(Base):
         self.assertEqual(c.get("/api/profile/wissen/..%2Fx/text").status_code, 404)
 
 
+class FromTheApp(Base):
+    def test_app_looks_at_own_documents_only_with_app_docs(self):
+        from tests.test_iphone import pair
+        helpers.set_config(iphone=True)
+        self.addCleanup(helpers.set_config, iphone=False)
+        c = profile("Wapp")
+        self.switch(c, originals=True, pictures=True)
+        c.put("/api/profile/settings", json={"app_on": True})
+        h = {"X-Speech-Device": pair(c).json()["token"]}
+        app = TestClient(panel.app)
+        doc = upload(c, "vertrag.txt", b"Kuendigungsfrist drei Monate zum Quartalsende. " * 3).json()["id"]
+        pic = upload(c, "foto.jpg", jpeg()).json()["id"]
+        for path in ("/api/profile/docs", f"/api/profile/wissen/{doc}/text", f"/api/profile/wissen/{pic}/file?view=1"):
+            self.assertEqual(app.get(path, headers=h).status_code, 403, path)      # app_docs off
+        c.put("/api/profile/settings", json={"app_docs": True})
+        listed = app.get("/api/profile/docs", headers=h)
+        self.assertEqual(listed.status_code, 200, listed.text)
+        self.assertEqual({d["id"] for d in listed.json()}, {doc, pic})
+        self.assertIn("Kuendigungsfrist", app.get(f"/api/profile/wissen/{doc}/text", headers=h).json()["parts"][0]["text"])
+        v = app.get(f"/api/profile/wissen/{pic}/file?view=1", headers=h)
+        self.assertEqual((v.status_code, v.headers["content-type"]), (200, "image/jpeg"))
+        # reading only: the app key changes, uploads or deletes nothing, and never reaches other paths
+        self.assertEqual(app.put(f"/api/profile/wissen/{doc}", json={"use": False}, headers=h).status_code, 401)
+        self.assertIn(app.post("/api/profile/docs", files={"file": ("x.txt", b"x")}, headers=h).status_code, (401, 403))
+        self.assertEqual(app.delete(f"/api/profile/docs/{doc}", headers=h).status_code, 401)
+        self.assertIn(app.get(f"/api/profile/wissen/{doc}/text/x", headers=h).status_code, (401, 404))
+        # another profile's id: not found, a speaker key: never
+        other = profile("Wother")
+        self.assertEqual(other.get(f"/api/profile/wissen/{doc}/text").status_code, 404)
+        tok = ADMIN.post("/api/admin/devices", json={"name": "Lautsprecher", "user": uid_of("Wapp")}).json()["token"]
+        self.assertEqual(app.get("/api/profile/docs", headers={"X-Speech-Device": tok}).status_code, 403)
+
+
 class Originals(Base):
     def test_kept_as_download_with_quota(self):
         c = profile("Wolga")

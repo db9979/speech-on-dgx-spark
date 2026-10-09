@@ -31,6 +31,7 @@ Alle Optionen ohne Rückfragen (`--mode api --asr 1.7b --tts 0.6b --yes` …) st
 
 <!-- New version: add one line at the top here and in CHANGELOG.md, drop the oldest line here (keep 10). Details go to docs/de and docs/en, not into this README. -->
 
+- **V01.0.227** iPhone-App: „Meine Dokumente“ ansehen (PDF und Bilder in Apples Vorschau, sonst der gespeicherte Text)
 - **V01.0.226** Fremde Stimme bekam am Lautsprecher die Mails des Inhabers: Persönliches (Mail, Termine, Erinnerungen, Gedächtnis, Dokumente, Smart Home …) gibt es am Lautsprecher nur noch für die sicher erkannte Stimme des Inhabers, sonst Gastrechte mit kurzem Hinweis (feste Regel, ohne Schalter); Logs → Lautsprecher zeigt jede abgewiesene Frage gelb mit Grund
 - **V01.0.225** Sprache hat immer Vorrang: Hintergrundarbeit wartet, solange gesprochen wird, und ihre laufende Anfrage ans Sprachmodell wird abgebrochen und später wiederholt; ASR und TTS bekommen mehr CPU und Platte; Zustand → Prüfen → „Vorrang prüfen“ misst es (feste Regel, ohne Schalter)
 - **V01.0.224** Wissen aus Uploads: Dokumente pro Profil in einer SQLite-Datei (alte werden übernommen, Sicherung konsistent), mehr Dateiarten (Excel, PowerPoint, OpenDocument, .eml), Dokumente ansehen (Text, Bilder und PDFs im Browser), pro Dokument an/aus, „Suche ausprobieren“, Quellen mit Seite anklickbar; neu und je aus (Admin + Profil): Bilder und Scans liest das Sprachmodell in Gesprächspausen ab (auch „Bild in Meine Dokumente“ im Chat, /merken in Telegram), Bedeutungssuche mit kleinem CPU-Modell in eigenem Prozess, Originale aufbewahren mit Speichergrenze; nach Dokumenten keine Websuche in derselben Antwort
@@ -40,7 +41,6 @@ Alle Optionen ohne Rückfragen (`--mode api --asr 1.7b --tts 0.6b --yes` …) st
 - **V01.0.220** Antwort beginnt früher: Gezielte Werkzeugwahl kann unklaren Fragen nur Websuche und Gedächtnis zeigen (Auswahl „nur Websuche und Gedächtnis“, aus), die Anfrage wird halb so lang; ein langer erster Satz geht schon ab 50 Zeichen am Komma zur Sprachausgabe
 - **V01.0.219** Aussetzer mitten im Satz: der Browser puffert danach länger (mehr nach jedem weiteren), damit es einmal stockt statt dauernd; das Log trennt „before the piece“ (Pause zwischen Sätzen) von „inside the piece“ (echter Aussetzer)
 - **V01.0.218** Schnellere Antwort: Schalter „Schneller Antwortbeginn“ (Sprachmodell, aus) gibt die Uhrzeit mit der Frage statt an den Anfang der Anweisung, damit das Sprachmodell den Rest aus seinem Zwischenspeicher nimmt; die Diagnose „Gespräch“ zeigt pro Antwort, wo die Zeit hingeht (Vorbereitung, gelesene Tokens, erstes Wort, Denktext, Werkzeuge, erster Ton)
-- **V01.0.217** Logs: Die Bereiche (Gespräch, Telegram, Raum …) zählen wieder; neuere journalctl-Versionen schreiben die Zeitzone als „+02:00“, das erkannte das Panel nicht, deshalb standen alle Rubriken auf 0
 
 Alle Versionen: [CHANGELOG.md](CHANGELOG.md)
 
