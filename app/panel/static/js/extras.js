@@ -172,11 +172,20 @@ async function showPeb(){const box=$('pebbox');if(!box)return;if(!PROFILE||!PEB_
     ${xsw('pebble_on',t('Pebble-Uhr für mich','Pebble watch for me'),t('Aus: Deine gekoppelten Uhren bekommen sofort keine Antwort mehr.','Off: your paired watches get no answer any more, at once.'))}
     <ul class="facts">${d.watches.map(p=>`<li><span><b>${esc(p.name)}</b><br><small class="mut">${t('zuletzt','last used')}: ${esc(when(p.last))}</small></span><button class="b" type="button" data-pebdel="${esc(p.id)}">${t('Entfernen','Remove')}</button></li>`).join('')||`<li class="mut"><span>${t('Noch keine Uhr gekoppelt.','No watch paired yet.')}</span></li>`}</ul>
     ${d.on?`<label>${t('Adresse, unter der das Handy den Spark erreicht','Address the phone reaches the Spark at')}</label><input id="pebbase" value="${esc(pebBase())}" autocomplete="off">
+      <div class="fh"><b>1. ${t('App auf die Uhr','App onto the watch')}</b> ${t('Mit der Kamera des Handys scannen, das mit der Uhr verbunden ist, die Datei laden und mit der Pebble-App öffnen.','Scan with the camera of the phone paired with the watch, load the file and open it with the Pebble app.')}${d.app?' '+t('Version','Version')+' '+esc(d.app)+'.':''}</div>
+      <div id="pebqr"></div>
+      <div class="fh"><b>2. ${t('Uhr verbunden?','Watch connected?')}</b> ${t('In der Pebble-App muss die Uhr unter Geräte als verbunden stehen, sonst bleiben die Einstellungen von „Spark“ grau.','The Pebble app must show the watch as connected under Devices, otherwise the settings of "Spark" stay grey.')}</div>
+      <div class="fh"><b>3. ${t('Koppeln','Pair')}</b> ${t('„Pebble koppeln“ tippen, die Zeile kopieren und in den Einstellungen von „Spark“ bei „Einrichtungscode“ einfügen.','Tap "Pair a Pebble", copy the line and paste it in the settings of "Spark" under "Setup code".')}</div>
       <div class="row"><button class="b p" type="button" id="pebpair">${t('Pebble koppeln','Pair a Pebble')}</button></div>`:''}
     <div id="pebcode"></div><div class="fh" id="pebmsg"></div>`;
   xbind(box,showPeb);
   box.querySelectorAll('[data-pebdel]').forEach(b=>b.onclick=async()=>{if(!confirm(t('Uhr entfernen? Ihr Schlüssel gilt dann sofort nicht mehr.','Remove the watch? Its key stops working at once.')))return;
     try{await api('/api/profile/pebble/'+encodeURIComponent(b.dataset.pebdel),{method:'DELETE'});showPeb()}catch(e){xmsg('pebmsg',e.message,true)}});
+  // the QR code leads to the app file at the address above (the server checks it and draws the code)
+  const pebQr=async()=>{const q=$('pebqr');if(!q)return;try{const r=await (await api('/api/profile/pebble/qr?base='+encodeURIComponent($('pebbase').value.trim()))).json();
+    q.innerHTML=`${r.qr?`<div class="mfaqr" style="background:#fff;display:inline-block;padding:4px;border-radius:6px;margin:6px 0">${r.qr}</div>`:''}<div class="fh"><a href="${esc(r.url)}">${t('App-Datei öffnen','Open the app file')}</a></div>`}
+    catch(e){q.innerHTML='';xmsg('pebmsg',e.message,true)}};
+  if($('pebbase')){$('pebbase').onchange=pebQr;pebQr()}
   if($('pebpair'))$('pebpair').onclick=async()=>{try{const r=await (await api('/api/profile/pebble/pair',xjson('POST',{base:$('pebbase').value.trim()}))).json();
     const c=$('pebcode');c.innerHTML='';const inp=document.createElement('input');inp.readOnly=true;inp.value=r.setup;inp.id='pebsetup';c.appendChild(inp);
     const row=document.createElement('div');row.className='row';const cp=document.createElement('button');cp.type='button';cp.className='b p';cp.textContent=t('Kopieren','Copy');row.appendChild(cp);c.appendChild(row);

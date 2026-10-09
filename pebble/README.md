@@ -15,7 +15,8 @@ Source of `app/pebble/speech-spark.pbw`, which the panel serves at `/pebble/spee
 - `src/pkjs/index.js`: phone side. `POST /api/watch/ask`, then `GET /api/watch/poll` until done,
   with the device key in `X-Speech-Device`. Text goes ahead of audio, failed sends are retried,
   audio pieces are up to 3.8 KB, and at the end `POST /api/watch/report` puts the times into the
-  Spark log (Zustand → Logs, area "Uhr").
+  Spark log (Zustand → Logs, area "Uhr"). `APP_VERSION` must match `version` in `package.json`; the Spark
+  compares it with the app file it serves and the phone adds "Neue Uhr-App" under an answer once a day.
 - `src/pkjs/config.js`: settings page (setup code from Ich → Pebble-Uhr, or Spark address and
   device key; speech, volume, auto-listen).
 
