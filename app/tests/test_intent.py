@@ -286,9 +286,29 @@ class Turns(unittest.TestCase):
         self.assertFalse([c for c in helpers.LLM_CALLS if not c.get("stream")
                           and c["messages"][0]["content"].startswith("Ordne die Nachricht")])
 
+    def test_lean_list_only_for_unclear_questions(self):
+        helpers.set_config(route_model="lean")
+        p = profile("Weiche6")
+        chat_with(p, [{"role": "user", "content": "Erzähl mir einen Witz"}])   # no rule: the short list
+        self.assertTrue({"memory_save", "history_search"} <= offered(streamed()[0]) <= intent.LEAN)
+        helpers.LLM_CALLS.clear()
+        chat_with(p, [{"role": "user", "content": "Erinnere mich in 10 Minuten an den Herd"}])   # a rule: its group
+        self.assertEqual(offered(streamed()[0]), {"memory_save", "reminder_set", "reminder_list", "reminder_cancel"})
+        # the profile's switch off: everything as before, also with "lean"
+        helpers.LLM_CALLS.clear()
+        q = profile("Weiche7", route=False)
+        chat_with(q, [{"role": "user", "content": "Erzähl mir einen Witz"}])
+        self.assertIn("reminder_set", offered(streamed()[0]))
+
+    def test_lean_never_adds(self):
+        tools = [{"function": {"name": n}} for n in ("reminder_set", "web_search")]
+        self.assertEqual([t["function"]["name"] for t in intent.lean(intent.Route([], {}), tools)], ["web_search"])
+        self.assertEqual(intent.lean(intent.Route(["wetter"], {}), tools), tools)
+        self.assertEqual(intent.lean(intent.Route([], {}), []), [])
+
     def test_admin_values_are_checked(self):
         cfg = ADMIN.get("/api/config").json()
-        for k, bad in (("routing", "ja"), ("route_model", "immer")):
+        for k, bad in (("routing", "ja"), ("route_model", "immer"), ("route_model", "Lean")):
             new = json.loads(json.dumps(cfg))
             new["chat"][k] = bad
             self.assertEqual(ADMIN.put("/api/config", json=new).status_code, 400, k)

@@ -31,6 +31,7 @@ Alle Optionen ohne Rückfragen (`--mode api --asr 1.7b --tts 0.6b --yes` …) st
 
 <!-- New version: add one line at the top here and in CHANGELOG.md, drop the oldest line here (keep 10). Details go to docs/de and docs/en, not into this README. -->
 
+- **V01.0.220** Antwort beginnt früher: Gezielte Werkzeugwahl kann unklaren Fragen nur Websuche und Gedächtnis zeigen (Auswahl „nur Websuche und Gedächtnis“, aus), die Anfrage wird halb so lang; ein langer erster Satz geht schon ab 50 Zeichen am Komma zur Sprachausgabe
 - **V01.0.219** Aussetzer mitten im Satz: der Browser puffert danach länger (mehr nach jedem weiteren), damit es einmal stockt statt dauernd; das Log trennt „before the piece“ (Pause zwischen Sätzen) von „inside the piece“ (echter Aussetzer)
 - **V01.0.218** Schnellere Antwort: Schalter „Schneller Antwortbeginn“ (Sprachmodell, aus) gibt die Uhrzeit mit der Frage statt an den Anfang der Anweisung, damit das Sprachmodell den Rest aus seinem Zwischenspeicher nimmt; die Diagnose „Gespräch“ zeigt pro Antwort, wo die Zeit hingeht (Vorbereitung, gelesene Tokens, erstes Wort, Denktext, Werkzeuge, erster Ton)
 - **V01.0.217** Logs: Die Bereiche (Gespräch, Telegram, Raum …) zählen wieder; neuere journalctl-Versionen schreiben die Zeitzone als „+02:00“, das erkannte das Panel nicht, deshalb standen alle Rubriken auf 0
@@ -40,7 +41,6 @@ Alle Optionen ohne Rückfragen (`--mode api --asr 1.7b --tts 0.6b --yes` …) st
 - **V01.0.213** Raum-Modus aus der Ferne: „Raummodus im Wohnzimmer an“ im Panel, in der App oder an einem anderen Lautsprecher startet einen eigenen, verbundenen Lautsprecher nach „Ja“ (feste Regel, kein Home Assistant, kein Codewort), „… aus“ beendet; Admin- und Profil-Schalter, aus
 - **V01.0.212** Logs „Überblick zuerst“: Zustand → Logs mit Kacheln (Fehler, Bereiche mit Verlauf), letztem Fehler samt Hinweis, Filterknöpfen mit Zahlen, aufgeräumter Liste (Uhrzeit, Bereich, rot/gelb, ×n, Pausen), Suche, Live und „Kopieren für Thread“; unter Erweitert ausführliche Diagnose pro Bereich, schaltet sich selbst ab
 - **V01.0.211** Update → „Jetzt prüfen“ zeigt, dass gerade geprüft wird („Prüfe …“), und danach die Uhrzeit der Prüfung
-- **V01.0.210** Nur Text statt Sprache wird erklärt: hält der Browser den Ton zurück, sagt der Assistent „Einmal tippen“ und spricht danach; fällt die Sprachausgabe aus, steht der Grund als „chat: tts …“ im Diagnose-Log
 
 Alle Versionen: [CHANGELOG.md](CHANGELOG.md)
 

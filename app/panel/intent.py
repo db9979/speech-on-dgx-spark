@@ -13,7 +13,8 @@ Used for (chat_turn.prepare()):
   4. whether an answer made from outside text stays in this turn (refers_back()): a new request of
      the person's own that does not point back at it leaves it out, and with it the lock (LOCKS);
   5. with chat.route_model "on", a question no rule recognizes is put to the model once as a pick
-     from INTENT_NAMES (ask_model()); its pick can only narrow as well, never unlock.
+     from INTENT_NAMES (ask_model()); its pick can only narrow as well, never unlock. With "lean" it
+     gets only LEAN (web search, earlier conversations, noting something): a shorter, faster prompt.
 
 The rule table is checked sentence by sentence in tests/test_intent.py (no model, no clock)."""
 import json
@@ -77,6 +78,9 @@ GROUPS = {
 INTENT_NAMES = list(GROUPS)
 # always kept when the tools are narrowed: noting something the person says about themselves
 NARROW_KEEP = {"memory_save"}
+# chat.route_model "lean": a question no rule recognizes gets only these (of those offered). A short
+# tool list makes the model read far less before its first word; the rule groups keep everything else.
+LEAN = {"web_search", "history_search"} | NARROW_KEEP
 # more than this many groups at once: not clear enough to narrow
 MAX_MIXED = 2
 
@@ -193,6 +197,14 @@ def narrow(route, tools):
     if not any(t["function"]["name"] in route.tools() for t in kept):
         return tools
     return kept
+
+
+def lean(route, tools):
+    """chat.route_model "lean": for a question no rule recognizes, only the LEAN tools already offered
+    (possibly none). Anything a rule recognized stays as narrow() left it."""
+    if route.names:
+        return tools
+    return [t for t in tools if t["function"]["name"] in LEAN]
 
 
 def forced(route, need, offered):
@@ -403,4 +415,5 @@ async def routing_test(request: Request):
     ccfg = load_config().get("chat", {})
     r = classify(text, ccfg.get("tool_words", ""), ccfg.get("route_words", ""))
     return {"intent": r.label(), "names": r.names, "clear": r.clear, "why": r.why,
-            "tools": sorted(r.tools() | NARROW_KEEP) if r.clear else [], "refers": refers_back(text)}
+            "tools": sorted(r.tools() | NARROW_KEEP) if r.clear
+            else sorted(LEAN) if not r.names and ccfg.get("route_model") == "lean" else [], "refers": refers_back(text)}

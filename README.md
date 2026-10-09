@@ -31,6 +31,7 @@ All options for running without questions (`--mode api --asr 1.7b --tts 0.6b --y
 
 <!-- New version: add one line at the top here and in CHANGELOG.md, drop the oldest line here (keep 10). Details go to docs/de and docs/en, not into this README. -->
 
+- **V01.0.220** Answer starts sooner: targeted tool choice can show unclear questions only web search and memory (choice "only web search and memory", off), halving the request; a long first sentence goes to speech output at its comma from 50 characters on
 - **V01.0.219** Stalls mid-sentence: the browser buffers longer afterwards (more after each further one), so it stalls once instead of stuttering; the log tells "before the piece" (pause between sentences) from "inside the piece" (real stall)
 - **V01.0.218** Faster answers: switch "Schneller Antwortbeginn" (language model, off) sends the time with the question instead of at the start of the instructions, so the language model takes the rest from its cache; the "Gespräch" diagnosis shows per answer where the time goes (preparation, tokens read, first word, thinking text, tools, first sound)
 - **V01.0.217** Logs: the areas (conversation, Telegram, room …) count again; newer journalctl writes the time zone as "+02:00", which the panel did not recognize, so every area showed 0
@@ -40,7 +41,6 @@ All options for running without questions (`--mode api --asr 1.7b --tts 0.6b --y
 - **V01.0.213** Room mode from afar: “Raummodus im Wohnzimmer an” in the panel, the app or at another speaker starts an own connected speaker after “Ja” (fixed rule, no Home Assistant, no code word), “… aus” ends it; admin and profile switch, off
 - **V01.0.212** Logs "overview first": State → Logs with tiles (errors, areas with history), the last error with a hint, filter buttons with counts, a tidy list (time, area, red/yellow, ×n, pauses), search, live and "Copy for thread"; under Advanced detailed diagnosis per area that switches itself off
 - **V01.0.211** Update → "Check now" shows that it is checking ("Checking …") and afterwards the time of the check
-- **V01.0.210** Text instead of speech is explained: if the browser holds back sound, the assistant says "tap once" and speaks afterwards; if speech output fails, the reason shows as "chat: tts …" in the diagnosis log
 
 All versions: [CHANGELOG.md](CHANGELOG.md)
 

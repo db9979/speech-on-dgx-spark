@@ -421,6 +421,11 @@ async def prepare(request):
             if pick:
                 route = intent.Route([pick], {pick: "Modell"})
         tools = intent.narrow(route, tools)
+        if ccfg.get("route_model") == "lean" and not route.names and not chat.needed(
+                messages[-1]["content"] if messages[-1]["role"] == "user" else "",
+                {t["function"]["name"] for t in tools}, ccfg.get("tool_words", "")):
+            # nothing recognized and no tool required: a short list, so the model starts sooner
+            tools = intent.lean(route, tools)
     if ex["hints"] and not pics:
         system = (system + "\n\n" + " ".join(ex["hints"])).strip()
     # once mail or other outside text was read in this answer, nothing in it may change the home or

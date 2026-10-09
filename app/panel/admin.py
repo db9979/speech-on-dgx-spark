@@ -445,8 +445,8 @@ def validate(new):
               "routing", "prompt_cache"):
         if not isinstance(ch.get(k, False), bool):
             raise HTTPException(400, f"chat {k} must be true or false")
-    if ch.get("route_model", "off") not in ("off", "on"):
-        raise HTTPException(400, "route_model: off or on")
+    if ch.get("route_model", "off") not in ("off", "on", "lean"):
+        raise HTTPException(400, "route_model: off, on or lean")
     for sec in ("asr", "tts"):
         if not MODEL_ID.fullmatch(str(new[sec]["model"])):
             raise HTTPException(400, f"{sec}: only Qwen's own speech models (Qwen/Qwen3-ASR-... or Qwen/Qwen3-TTS-...)")

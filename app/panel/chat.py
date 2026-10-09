@@ -85,6 +85,9 @@ ABBREV = {"z", "b", "d", "h", "u", "a", "bzw", "ca", "dr", "nr", "usw", "vgl", "
 BOUNDARY = re.compile(r"[.!?…]+[\"“”»')\]]*\s+|\n+")
 
 
+FIRST_CUT = 50   # a first sentence longer than this goes to TTS at its last comma (from 20 characters on)
+
+
 def split_sentences(buf, first):
     """Cut finished sentences off the front of buf. Returns (sentences, rest). A long first
     sentence is also cut at a comma, so the first audio does not wait for the whole sentence."""
@@ -100,7 +103,7 @@ def split_sentences(buf, first):
             out.append(piece)
         start = m.end()
     rest = buf[start:]
-    if first and not out and len(rest) > 120 and ", " in rest[40:]:
+    if first and not out and len(rest) > FIRST_CUT and ", " in rest[20:]:
         cut = rest.rindex(", ") + 1
         out, rest = [rest[:cut].strip()], rest[cut:]
     return out, rest

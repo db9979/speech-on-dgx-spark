@@ -1307,6 +1307,19 @@ class FasterStart(unittest.TestCase):
                          "zeit: kein Ton, alles nach 1.00 s")
 
 
+class FirstPiece(unittest.TestCase):
+    def test_a_long_first_sentence_goes_at_its_comma(self):
+        buf = "Morgen wird es in Hamburg meist sonnig, dazu weht ein leichter Wind aus"
+        self.assertEqual(chat.split_sentences(buf, True),
+                         (["Morgen wird es in Hamburg meist sonnig,"], " dazu weht ein leichter Wind aus"))
+        self.assertEqual(chat.split_sentences(buf, False), ([], buf))          # only the first piece
+        self.assertEqual(chat.split_sentences("Ja, gern. Das", True), (["Ja, gern."], "Das"))
+        short = "Ja, das mache ich gleich für dich und"                         # under FIRST_CUT: waits
+        self.assertEqual(chat.split_sentences(short, True), ([], short))
+        early = "Ja, ich schaue gern einmal für dich nach dem Wetter in"       # comma before 20 chars: waits
+        self.assertEqual(chat.split_sentences(early, True), ([], early))
+
+
 class Fixes(unittest.TestCase):
     def test_rules(self):
         import fixes
