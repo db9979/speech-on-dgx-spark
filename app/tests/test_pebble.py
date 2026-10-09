@@ -103,11 +103,12 @@ class Pebble(unittest.TestCase):
         job = watch.Job(speak=True)
         job.first_text = job.start + 1.2
         line = watch.report_line(job, {"dictation_ms": 2100, "text_ms": "1800", "audio_ms": -5, "done_ms": 10 ** 9,
-                                       "retries": 3, "chunk": 3800, "outcome": "<script>"})
+                                       "retries": 3, "chunk": 3800, "stalls": "2", "outcome": "<script>"})
         self.assertTrue(line.startswith("watch: zeit Diktat 2.1 s"), line)
         self.assertIn("erster Text auf der Uhr 1.8 s", line)
         self.assertIn("Spark: Text 1.2 s, Ton –", line)
         self.assertIn("fertig 600.0 s", line)
+        self.assertIn("Aussetzer 2 ·", line)
         self.assertTrue(line.endswith("failed: unbekannt"), line)
         self.assertNotIn("<script>", line)
         # once per answer

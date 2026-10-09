@@ -7,7 +7,9 @@ Source of `app/pebble/speech-spark.pbw`, which the panel serves at `/pebble/spee
   the speaker stream. Messages of an older job are dropped. The watch reports how many bytes it
   played (`FREED`, a running total, repeated every 2 s, so a lost report cannot stall the audio);
   the phone sends at most that plus the buffer size. Every message to the phone is retried; no
-  message for 30 s ends the answer.
+  message for 30 s ends the answer. Playback starts with 1.5 s buffered; when the buffer runs dry it waits
+  for 1 s more (plus 0.5 s per earlier stall) instead of playing every scrap, and counts the stall
+  (`STALLS`, "Aussetzer" in the log line).
 - `src/c/face.c`: the face above the answer (idle, listen, think, speak, sad; the mouth follows
   the audio level): the robot or the comic face, whichever the admin picked in the panel
   (`chat.face`, sent as `FACE` with each answer and kept on the watch). `src/c/comic_shapes.h` is

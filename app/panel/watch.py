@@ -224,4 +224,5 @@ def report_line(job: Job, body: dict):
     return (f"watch: zeit Diktat {s(_ms(body.get('dictation_ms')))} · erster Text auf der Uhr "
             f"{s(_ms(body.get('text_ms')))} · erster Ton {s(_ms(body.get('audio_ms')))} · fertig {s(_ms(body.get('done_ms')))}"
             f" · Spark: Text {sp(job.first_text)}, Ton {sp(job.first_audio)} · Wiederholungen "
-            f"{min(_ms(body.get('retries')), 9999)} · Stück {min(_ms(body.get('chunk')), 9999)} B · {outcome}")
+            f"{min(_ms(body.get('retries')), 9999)} · Aussetzer {min(_ms(body.get('stalls')), 999)} · Stück "
+            f"{min(_ms(body.get('chunk')), 9999)} B · {outcome}")

@@ -10,7 +10,7 @@ var keys = require('message_keys');
 var CHUNK_MAX = 3800;  // audio bytes per AppMessage (fewer Bluetooth round trips)
 var CHUNK_OLD = 1500;  // for watch apps that do not tell their inbox size
 var TEXT_CHUNK = 400;  // answer characters per AppMessage
-var APP_VERSION = '1.4.0';  // same as package.json; the Spark says when it serves a newer one
+var APP_VERSION = '1.5.0';  // same as package.json; the Spark says when it serves a newer one
 var MAX_TURNS = 6;     // earlier question/answer pairs sent along as context
 var TRIES = 10;        // attempts per message before the answer is given up
 var KEEPALIVE = 10000; // ms: tell the watch the answer is still coming
@@ -131,7 +131,7 @@ function report(j) {
   var t = function (x) { return x ? x - j.start : 0; };
   request('POST', '/api/watch/report', {
     id: j.id, dictation_ms: j.dictMs, text_ms: t(j.firstText), audio_ms: t(j.firstAudio), done_ms: t(Date.now()),
-    retries: j.retries, chunk: j.chunk, outcome: j.outcome || 'ok'
+    retries: j.retries, chunk: j.chunk, stalls: j.stalls || 0, outcome: j.outcome || 'ok'
   }, function () {});
 }
 
@@ -343,6 +343,8 @@ Pebble.addEventListener('appmessage', function (e) {
   if (val(p, 'RESET') !== undefined) {
     history = [];
   }
+  var stalls = val(p, 'STALLS');
+  if (stalls !== undefined && job && seq === job.seq && stalls > (job.stalls || 0)) job.stalls = stalls;
   var freed = val(p, 'FREED');
   if (freed !== undefined && job && seq === job.seq && freed > job.freed) {
     job.freed = freed;
