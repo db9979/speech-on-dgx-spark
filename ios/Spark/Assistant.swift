@@ -448,6 +448,7 @@ final class Conversation: ObservableObject {
         messages.append(answer)
         phase = .thinking
         streamDone = false
+        audio.warmUp()
         // earlier answers made from mail or outside text keep their mark, so the Spark keeps its locks
         let history: [[String: Any]] = messages.dropLast().suffix(20).map { m in
             var d: [String: Any] = ["role": m.role, "content": m.text]

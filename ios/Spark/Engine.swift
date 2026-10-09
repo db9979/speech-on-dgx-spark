@@ -14,6 +14,9 @@ final class AudioEngine {
     private var converter: AVAudioConverter?
     private var rest = Data()
     private var queued = 0
+    /// Buffers scheduled but not yet played, so they survive an engine restart.
+    private var pending: [(Int, AVAudioPCMBuffer)] = []
+    private var nextId = 0
     private var generation = 0
     private var tapOn = false
     private var configured = false
@@ -36,6 +39,7 @@ final class AudioEngine {
             guard let self, let raw = n.userInfo?[AVAudioSessionInterruptionTypeKey] as? UInt,
                   AVAudioSession.InterruptionType(rawValue: raw) == .ended else { return }
             try? self.ensureRunning()
+            self.resume()
         }
         NotificationCenter.default.addObserver(forName: .AVAudioEngineConfigurationChange, object: engine, queue: .main) { [weak self] _ in
             guard let self else { return }
@@ -43,6 +47,9 @@ final class AudioEngine {
             self.removeTap()
             self.converter = nil
             try? self.ensureRunning()
+            // switching on voice processing (first answer) or a headset change stops the engine
+            // and with it the player: play again what had not been heard yet
+            self.resume()
             if wasListening { try? self.startInput() }
         }
     }
@@ -159,10 +166,24 @@ final class AudioEngine {
         }
         do { try ensureRunning() } catch { return }
         queued += 1
+        nextId += 1
+        pending.append((nextId, buffer))
+        schedule(nextId, buffer)
+        node.play()
+    }
+
+    /// Before an answer arrives: set the engine up now, so the configuration change that
+    /// voice processing causes happens before the first piece of the answer plays.
+    func warmUp() {
+        try? ensureRunning()
+    }
+
+    private func schedule(_ id: Int, _ buffer: AVAudioPCMBuffer) {
         let gen = generation
         node.scheduleBuffer(buffer) { [weak self] in
             DispatchQueue.main.async {
                 guard let self, gen == self.generation else { return }
+                self.pending.removeAll { $0.0 == id }
                 self.queued -= 1
                 if self.queued == 0 {
                     self.outLevel = 0
@@ -170,12 +191,22 @@ final class AudioEngine {
                 }
             }
         }
-        if !node.isPlaying { node.play() }
+    }
+
+    /// After the engine was restarted: schedule again what has not been played and start the player.
+    private func resume() {
+        guard !pending.isEmpty, engine.isRunning else { return }
+        generation += 1
+        node.stop()
+        queued = pending.count
+        for (id, buffer) in pending { schedule(id, buffer) }
+        node.play()
     }
 
     func stopPlaying() {
         generation += 1
         queued = 0
+        pending = []
         rest = Data()
         outLevel = 0
         node.stop()
