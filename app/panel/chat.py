@@ -33,6 +33,7 @@ import watch  # noqa: E402
 import chat_tools  # noqa: E402  (the tool calls of one answer)
 import chat_turn  # noqa: E402  (rights, prompt and tools of one turn)
 import latency  # noqa: E402
+import echo  # noqa: E402  (the Spark's own voice is no question)
 from common import load_config  # noqa: E402
 from core import DEFAULTS, admin_cookie_ok, api_headers, assistant  # noqa: E402
 
@@ -1383,7 +1384,7 @@ async def _answer(request, turn):
                         tts_body["language"] = lang
                 req = dict(tts_body, input=text, stream=True, response_format="pcm")
                 await out.put({"type": "tts_request", "chars": len(text)})  # for the stall details in the chat
-                sent, got = time.time(), False
+                sent, got, mine = time.time(), False, None
                 async with c.stream("POST", tts_url, json=req, headers=api_headers()) as r:
                     if r.status_code != 200:
                         detail = (await r.aread()).decode(errors='replace')[:300]
@@ -1402,6 +1403,10 @@ async def _answer(request, turn):
                         if ev.get("type") == "speech.audio.delta" and ev.get("audio"):
                             if not got:
                                 got, ttfa = True, time.time() - sent
+                                # this piece plays from here on: another device of the house that hears it
+                                # does not take it for a question (echo.py)
+                                mine = echo.said(text, device_owner and device_owner["id"], echo.device_of(request),
+                                                 start=max(time.time(), played_until))
                             if first:
                                 first = False
                                 played_until = time.time()
@@ -1412,6 +1417,7 @@ async def _answer(request, turn):
                                     print("latency:", type(e).__name__, flush=True)
                             # 16-bit mono PCM at 24 kHz: 48000 bytes per second of audio
                             played_until = max(played_until, time.time()) + len(ev["audio"]) * 3 / 4 / 48000
+                            echo.played(mine, played_until)
                             await out.put({"type": "audio", "audio": ev["audio"]})
                         elif ev.get("type") == "speech.audio.error":
                             await out.put({"type": "error", "message": f"TTS: {ev.get('error')}"})

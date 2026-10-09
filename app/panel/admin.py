@@ -15,6 +15,7 @@ from fastapi import APIRouter, Depends, File, Form, HTTPException, Request, Uplo
 from fastapi.responses import FileResponse, Response, StreamingResponse
 
 sys.path.insert(0, os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
+import echo  # noqa: E402
 import guard  # noqa: E402
 import health  # noqa: E402
 import mfa  # noqa: E402
@@ -387,7 +388,9 @@ def validate(new):
         raise HTTPException(400, f"Eigene Stichwörter: {e}")
     if ch.get("face", "robot") not in FACES:
         raise HTTPException(400, "face: " + " or ".join(FACES))
-    for k in ("answer_check", "tool_thinking", "learn_fixes", "own_style", "follow_up"):
+    if ch.get("self_echo_mode", "pause") not in ("text", "pause"):
+        raise HTTPException(400, "self_echo_mode: text or pause")
+    for k in ("answer_check", "tool_thinking", "learn_fixes", "own_style", "follow_up", "no_self_echo"):
         if not isinstance(ch.get(k, False), bool):
             raise HTTPException(400, f"chat {k} must be true or false")
     for sec in ("asr", "tts"):
@@ -510,9 +513,18 @@ async def test_asr(request: Request, file: UploadFile = File(...), language: str
             slot.release()
 
 
+def wav_seconds(data):
+    """Length of a plain 16-bit PCM WAV recording in seconds, None for anything else."""
+    if len(data) < 44 or data[:4] != b"RIFF" or data[8:12] != b"WAVE":
+        return None
+    rate = int.from_bytes(data[28:32], "little")
+    return (len(data) - 44) / rate if rate > 0 else None
+
+
 async def _test_asr(request, file, language, wake, room):
     cfg = load_config()
     data = await read_audio(file)
+    ended = time.time()   # the recording ended about now (for "speaking pause", echo.py)
     # voices are only told apart for a signed-in profile or device: a guest page gets no token that
     # could open someone's data, and a token only works where it was issued
     me = profiles.current(request)
@@ -543,6 +555,23 @@ async def _test_asr(request, file, language, wake, room):
         if spk:
             spk.cancel()
         raise HTTPException(503, "asr_down: the speech recognition service does not answer")
+    # the Spark's own voice from another device (or leaking through this one) is no question: the
+    # recording counts as silence (echo.py; profiles only)
+    if me and r.status_code == 200:
+        try:
+            got = r.json()
+        except ValueError:
+            got = {}
+        got = got if isinstance(got, dict) else {}
+        secs = got.get("duration") if isinstance(got.get("duration"), (int, float)) else wav_seconds(data)
+        dev = echo.device_of(request)
+        why = echo.check(me["id"], dev, str(got.get("text") or ""), secs, now=ended)
+        if why:
+            for task in (spk, rv):
+                if task is not None:
+                    task.cancel()
+            echo.note(why, dev.split(":")[0])
+            return {"text": "", "ignored": why}
     if rv is not None:
         # the voice belongs to exactly this recording: kept together with its words, so a "Ja" heard in
         # another recording (TV, another person) never borrows the owner's voice

@@ -2,6 +2,7 @@
 (memory, conversations, documents, reminders, calendar, e-mail, Home Assistant, voice, settings)."""
 import asyncio
 import json
+import time
 import os
 import sys
 
@@ -16,6 +17,7 @@ import guard  # noqa: E402
 import push  # noqa: E402
 import speakers  # noqa: E402
 import calendars  # noqa: E402
+import echo  # noqa: E402
 import mail  # noqa: E402
 import memtidy  # noqa: E402
 import mfa  # noqa: E402
@@ -604,16 +606,28 @@ async def assistant_say(request: Request):
     if pset.get("speed", 1.0) != 1.0:
         req["speed"] = pset["speed"]
 
+    device = echo.device_of(request)
+
     async def gen():
+        mine, until = None, 0.0   # another device of the house does not take this for a question (echo.py)
         async with httpx.AsyncClient(timeout=httpx.Timeout(120, connect=5)) as c:
             async with c.stream("POST", f"http://127.0.0.1:{cfg['tts']['port']}/v1/audio/speech",
                                 json=req, headers=api_headers()) as r:
                 async for line in r.aiter_lines():
                     if line.startswith("data:") and "speech.audio.delta" in line:
                         try:
-                            yield f"data: {json.dumps({'type': 'audio', 'audio': json.loads(line[5:])['audio']})}\n\n"
-                        except (ValueError, KeyError):
+                            audio = json.loads(line[5:])['audio']
+                        except (ValueError, KeyError, TypeError):
                             continue
+                        if not isinstance(audio, str):
+                            continue
+                        if mine is None:
+                            mine = echo.said(text, who and who["id"], device)
+                            until = time.time()
+                        # 16-bit mono PCM at 24 kHz: 48000 bytes per second, 4 base64 characters per 3 bytes
+                        until = max(until, time.time()) + len(audio) * 3 / 4 / 48000
+                        echo.played(mine, until)
+                        yield f"data: {json.dumps({'type': 'audio', 'audio': audio})}\n\n"
         yield f"data: {json.dumps({'type': 'done'})}\n\n"
     return StreamingResponse(gen(), media_type="text/event-stream", headers={"Cache-Control": "no-cache"})
 
@@ -628,7 +642,8 @@ def profile_settings(request: Request):
             "profile": prof, "allow": {"tool_think": bool(prof and chat.get("tool_thinking", False)),
                                        "fix_learn": bool(prof and chat.get("learn_fixes", False) and chat.get("memory", True)),
                                        "style": bool(prof and chat.get("own_style", False)),
-                                       "follow": bool(prof and chat.get("follow_up", False))}}
+                                       "follow": bool(prof and chat.get("follow_up", False)),
+                                       "echo": bool(prof and chat.get("no_self_echo", False))}}
 
 
 @router.put("/api/profile/settings", dependencies=[Depends(assistant)])

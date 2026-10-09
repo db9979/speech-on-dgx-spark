@@ -31,6 +31,7 @@ All options for running without questions (`--mode api --asr 1.7b --tts 0.6b --y
 
 <!-- New version: add one line at the top here and in CHANGELOG.md, drop the oldest line here (keep 10). Details go to docs/de and docs/en, not into this README. -->
 
+- **V01.0.166** Ignore my own voice (off, admin + profile): when the iPhone or a browser hears the speaker answering, the Spark does not take it as a new question
 - **V01.0.165** iPhone app: Apple Reminders after "yes" and the shopping list into the Reminders app (off, profile switch), Share → Spark from any app, Shortcuts actions, share answers as a note
 - **V01.0.164** Quality test more compact: only questions with a finding stay open (one line, answer expands on tap), the rest is folded; while it runs a progress bar with "question 15 of 36 · about 2 min left"
 - **V01.0.163** Performance check rates every value (very good, good, tight, too slow, with one sentence why), an overall verdict on top, new "words understood" percentage and the comparison with the last run
@@ -40,7 +41,6 @@ All options for running without questions (`--mode api --asr 1.7b --tts 0.6b --y
 - **V01.0.159** iPhone app: push with the app closed through Apple (off, admin key + profile; Apple only sees "new message", the app fetches the text from the Spark), CarPlay conversation (waits for Apple's grant), publishing guide
 - **V01.0.158** Language model gone: a fixed sentence instead of silence (also speakers, watch, iPhone); time to the first sound under Status → Checks with a warning when clearly slower; the live check also tries tool choice and web search
 - **V01.0.157** Updates only to versions whose GitHub tests passed (panel and update.sh; newer red or running changes only as a note; by hand: update.sh --newest)
-- **V01.0.156** Chat code split up (no change in behaviour): rights and prompt in chat_turn.py, tools in chat_tools.py, answer and sound in chat.py
 
 All versions: [CHANGELOG.md](CHANGELOG.md)
 

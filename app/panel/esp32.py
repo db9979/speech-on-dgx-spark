@@ -66,6 +66,7 @@ import zoneinfo
 import httpx
 import numpy as np
 
+import echo
 import profiles
 import vault
 from common import load_config
@@ -774,11 +775,14 @@ class Session:
             if pcm is None:
                 await self.room_start()
                 return
+            ended = time.time()
             try:
                 text = await transcribe(pcm)
             except Exception as e:
                 print("esp32: speech recognition", type(e).__name__, str(e)[:120], flush=True)
                 self.note("Spracherkennung fehlgeschlagen: " + type(e).__name__)
+                text = ""
+            if text and not self.testing and self.own_voice(text, pcm, ended):
                 text = ""
             self.note(f"Verstanden: „{text[:80]}“" if text else "Nichts verstanden")
             if self.testing:
@@ -924,11 +928,14 @@ class Session:
         # sentence counts only in a known voice
         if room.needs_voice(uid, rid):
             rv = asyncio.create_task(asyncio.to_thread(speakers.identify, wav16k(pcm), th))
+        ended = time.time()
         try:
             text = await transcribe(pcm)
         except Exception as e:
             print("room: speaker speech recognition", type(e).__name__, flush=True)
             text = ""
+        if text and self.own_voice(text, pcm, ended):
+            return
         voice = None
         if rv is not None:
             try:
@@ -964,6 +971,14 @@ class Session:
             self.room_say(d["say"])
         self.room["wait"], self.room["need"] = bool(d.get("wait")), ROOM_NEED
 
+    def own_voice(self, text, pcm, ended):
+        """The Spark's own voice from another device (or this one) is no question (echo.py)."""
+        why = echo.check(self.dev["user"], "dev:" + self.dev["id"], text, len(pcm) / 32000, now=ended)
+        if why:
+            echo.note(why, "speaker")
+            self.note("Eigene Stimme überhört" if why == "own voice" else "Überhört: ein anderes Gerät spricht gerade")
+        return bool(why)
+
     def room_say(self, text):
         import room
         if room.night(self.dev["user"]):
@@ -985,8 +1000,13 @@ class Session:
                 frames = enc.feed(tone_pcm())
                 n += len(frames)
                 await pace.push(frames)
+            mine, until = None, 0.0   # another device of the house does not take this for a question (echo.py)
             try:
                 async for pcm in tts_stream(self.dev["user"], text):
+                    if mine is None:
+                        mine, until = echo.said(text, self.dev["user"], "dev:" + self.dev["id"]), time.time()
+                    until = max(until, time.time()) + len(pcm) / (OUT_RATE * 2)
+                    echo.played(mine, until)
                     frames = await asyncio.to_thread(enc.feed, pcm)
                     n += len(frames)
                     await pace.push(frames)

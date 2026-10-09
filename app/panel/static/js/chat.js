@@ -158,14 +158,15 @@ async function asrText(blob){
   const fd=new FormData();fd.append('file',file,name);fd.append('language',(CFG&&CFG.asr.default_language)||'auto');
   const d=await (await api('/api/test/asr',{method:'POST',body:fd})).json();
   // recognized voice: a signed one-time token the chat request sends back, kept with its own text
-  return {text:(d.text||'').trim(),speaker:d.speaker||null}}
+  return {text:(d.text||'').trim(),speaker:d.speaker||null,ignored:d.ignored||''}}
 async function transcribe2(blob,tEnd,rec){chatSay(t('Erkenne Sprache …','Transcribing …'));
   // a live snapshot taken after the last voiced moment already holds the whole question
   const last=chat.live.last;chat.live.last=null;let r=null;
   if(last&&last.rec===rec&&chat.lastVoice!=null&&last.at>chat.lastVoice+150)r=await last.p;
   clearLive();
   if(!r)try{r=await asrText(blob)}catch(e){chatSay(errText(e instanceof TypeError?'net':/asr_down|unreachable/.test(e.message)?'asr_down':/loading/.test(e.message)?'asr_loading':'asr_error',e.message));return}
-  if(!r.text){chatSay(t('Nichts verstanden.','Did not catch that.'));return}
+  // the Spark's own voice (another device answering, echo.py) counts as silence
+  if(!r.text){chatSay(r.ignored?t('Eigene Stimme überhört.','Ignored my own voice.'):t('Nichts verstanden.','Did not catch that.'));return}
   chat.asrBusy=false;chat.nextSpoken=true;ask(r.text,(performance.now()-tEnd)/1000,r.speaker)}
 // Live transcript: the recording so far is transcribed about every second and shown as a pale
 // bubble. requestData() flushes the recorder first so the snapshot holds the last moments too.

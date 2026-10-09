@@ -336,6 +336,8 @@ SETTINGS = {
     "auto": (True, lambda v: isinstance(v, bool)),
     # follow-up without the wake word: seconds the microphone stays open after an answer (admin chat.follow_up)
     "follow": ("0", lambda v: v in ("0", "4", "6", "8", "10")),
+    # the Spark's own voice from another device is no question (admin chat.no_self_echo, echo.py)
+    "echo": (True, lambda v: isinstance(v, bool)),
     "daily": (True, lambda v: isinstance(v, bool)),
     "turn": (True, lambda v: isinstance(v, bool)),
     "live": (True, lambda v: isinstance(v, bool)),

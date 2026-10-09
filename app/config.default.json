@@ -76,6 +76,8 @@
     "tool_thinking": false,
     "learn_fixes": false,
     "follow_up": false,
+    "no_self_echo": false,
+    "self_echo_mode": "pause",
     "datetime": true,
     "search": false,
     "search_url": "",
