@@ -2,6 +2,7 @@
 
 Every version in one line, newest first (taken from the commit messages, so some lines are German, some English). Older entries have no version number.
 
+- **V01.0.189** · 2026-10-09 · Sicherung enthält jetzt auch Admin-MFA, iPhone-/Browser-Push, Telegram-Bot, ESP32, Agent-Dienste und eigene Testfragen; neue Umzugs-Sicherung mit Passwort
 - **V01.0.188** · 2026-10-09 · iPhone-App: Comic-Gesicht mit kurzem, buschigem Schnurrbart wie im Panel
 - **V01.0.187** · 2026-10-09 · Comic-Gesicht mit kurzem, buschigem Schnurrbart nur über der Oberlippe statt bis zum Kinn hängender Spitzen; der Mund ist beim Sprechen besser zu sehen
 - **V01.0.186** · 2026-10-09 · TestFlight startet von selbst nach grünen iOS-Commits auf main (höchstens einmal pro Stunde, abschaltbar)

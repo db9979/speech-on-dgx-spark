@@ -31,6 +31,7 @@ Alle Optionen ohne Rückfragen (`--mode api --asr 1.7b --tts 0.6b --yes` …) st
 
 <!-- New version: add one line at the top here and in CHANGELOG.md, drop the oldest line here (keep 10). Details go to docs/de and docs/en, not into this README. -->
 
+- **V01.0.189** Sicherung enthält jetzt auch Admin-MFA, iPhone-/Browser-Push, Telegram-Bot, ESP32, Agent-Dienste und eigene Testfragen; neue Umzugs-Sicherung mit Passwort
 - **V01.0.188** iPhone-App: Comic-Gesicht mit kurzem, buschigem Schnurrbart wie im Panel
 - **V01.0.187** Comic-Gesicht mit kurzem, buschigem Schnurrbart nur über der Oberlippe statt bis zum Kinn hängender Spitzen; der Mund ist beim Sprechen besser zu sehen
 - **V01.0.186** TestFlight startet von selbst nach grünen iOS-Commits auf main (höchstens einmal pro Stunde, abschaltbar)
@@ -40,7 +41,6 @@ Alle Optionen ohne Rückfragen (`--mode api --asr 1.7b --tts 0.6b --yes` …) st
 - **V01.0.182** GitHub-Abläufe auf Node 24 umgestellt (checkout v5, setup-python v6), keine Warnung mehr
 - **V01.0.181** Mitteilungen kommen nur einmal, auf dem zuletzt genutzten Gerät statt auf allen
 - **V01.0.180** iPhone-App: GitHub-Knopf „TestFlight“ baut, signiert über Apple und lädt hoch (nur grün getestete Stände)
-- **V01.0.179** „Von selbst“-Meldungen werden nur auf einem Gerät gesprochen, nicht auf jedem noch einmal
 
 Alle Versionen: [CHANGELOG.md](CHANGELOG.md)
 

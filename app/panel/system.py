@@ -9,7 +9,7 @@ import tempfile
 import time
 
 import httpx
-from fastapi import APIRouter, Depends, File, HTTPException, Request, UploadFile
+from fastapi import APIRouter, Body, Depends, File, Form, HTTPException, Request, UploadFile
 from fastapi.responses import FileResponse
 
 sys.path.insert(0, os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
@@ -36,6 +36,25 @@ async def backup_now():
     except OSError as e:
         raise HTTPException(500, f"backup failed: {e}")
     guard.log("backup", detail=item["name"])
+    return item
+
+
+@router.post("/api/backups/move", dependencies=[Depends(auth), Depends(admin_code)])
+async def backup_move(password: str = Body("", embed=True)):
+    """A move backup: also carries the key of the encrypted secrets, sealed with this password."""
+    try:
+        backup.check_password(password)
+    except ValueError as e:
+        raise HTTPException(400, str(e))
+    try:
+        from cryptography.fernet import Fernet  # noqa: F401
+    except ImportError:
+        raise HTTPException(503, "encryption library missing on this Spark")
+    try:
+        item = await asyncio.to_thread(backup.create, "", password)
+    except OSError as e:
+        raise HTTPException(500, f"backup failed: {e}")
+    guard.log("backup_move", detail=item["name"])
     return item
 
 
@@ -81,16 +100,16 @@ def backup_delete(name: str):
 
 
 @router.post("/api/backups/{name}/restore", dependencies=[Depends(auth), Depends(admin_code)])
-async def backup_restore(name: str):
+async def backup_restore(name: str, password: str = Body("", embed=True)):
     try:
         path = backup.path_of(name)
     except FileNotFoundError:
         raise HTTPException(404, "no such backup")
-    return await _restore(open(path, "rb"), name)
+    return await _restore(open(path, "rb"), name, password[:backup.MOVE_MAX])
 
 
 @router.post("/api/backups-upload", dependencies=[Depends(auth), Depends(admin_code)])
-async def backup_upload(file: UploadFile = File(...)):
+async def backup_upload(file: UploadFile = File(...), password: str = Form("")):
     """Restores a backup file from this computer (e.g. one downloaded earlier or from another Spark)."""
     tmp = tempfile.TemporaryFile()
     size = 0
@@ -100,7 +119,7 @@ async def backup_upload(file: UploadFile = File(...)):
             raise HTTPException(413, "backup too large")
         tmp.write(chunk)
     tmp.seek(0)
-    return await _restore(tmp, file.filename or "upload")
+    return await _restore(tmp, file.filename or "upload", password[:backup.MOVE_MAX])
 
 
 def _check_config(new):
@@ -125,11 +144,22 @@ def _check_config(new):
     return out
 
 
-async def _restore(f, name):
+_move_tries = []  # times of wrong move passwords (scrypt is slow on purpose; guessing is pointless)
+MOVE_TRIES = 5
+
+
+async def _restore(f, name, password=""):
+    now = time.time()
+    _move_tries[:] = [x for x in _move_tries if now - x < 3600]
+    if password and len(_move_tries) >= MOVE_TRIES:
+        f.close()
+        raise HTTPException(429, "too many wrong passwords, try again in an hour")
     try:
         with f:
-            done = await asyncio.to_thread(backup.restore, f, _check_config)
+            done = await asyncio.to_thread(backup.restore, f, _check_config, password or None)
     except (ValueError, OSError, EOFError) as e:
+        if "wrong password" in str(e):
+            _move_tries.append(now)
         raise HTTPException(400, f"restore failed: {e}")
     except Exception as e:  # broken archive
         raise HTTPException(400, f"restore failed: {type(e).__name__}")

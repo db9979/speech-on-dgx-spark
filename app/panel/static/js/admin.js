@@ -466,20 +466,28 @@ async function loadQuality(){try{const d=await (await api('/api/quality')).json(
 $('qgo').onclick=async()=>{try{qRender(await (await api('/api/quality',{method:'POST'})).json())}catch(e){$('qmsg').innerHTML=`<span class="err">${esc(e.message)}</span>`}};
 $('livego').onclick=async()=>{$('livego').disabled=true;$('livemsg').textContent=t('prüft … (bis zu einer Minute)','checking … (up to a minute)');
   try{liveRender(await (await api('/api/livecheck',{method:'POST'})).json())}catch(e){$('livemsg').innerHTML=`<span class="err">${esc(e.message)}</span>`}$('livego').disabled=false;refresh()};
-const WHY={daily:t('täglich','daily'),manual:t('von Hand','manual'),'before-update':t('vor Update','before update'),'before-rollback':t('vor Rückkehr','before rollback'),'before-restore':t('vor Wiederherstellung','before restore')};
+const WHY={daily:t('täglich','daily'),manual:t('von Hand','manual'),'before-update':t('vor Update','before update'),'before-rollback':t('vor Rückkehr','before rollback'),'before-restore':t('vor Wiederherstellung','before restore'),move:t('Umzug (mit Schlüssel)','move (with key)')};
 const mb=n=>n<1048576?Math.max(1,Math.round(n/1024))+' KB':(n/1048576).toFixed(1)+' MB';
 function bakRender(l){$('baklist').innerHTML=l.map(b=>`<tr><td>${new Date(b.created*1000).toLocaleString()}<div class="mut">${esc(WHY[b.why]||b.why)} · ${mb(b.size)}</div></td><td style="text-align:right;white-space:nowrap"><button class="b" onclick="bakLoad('${escq(b.name)}')">${t('Laden','Download')}</button> <button class="b" onclick="bakRestore('${escq(b.name)}')">${t('Wiederherstellen','Restore')}</button> <button class="b" onclick="bakDel('${escq(b.name)}')">${t('Löschen','Delete')}</button></td></tr>`).join('')||`<tr><td class="mut">${t('Noch keine Sicherung.','No backup yet.')}</td></tr>`}
 async function loadBak(){try{bakRender((await (await api('/api/backups')).json()).backups)}catch(e){$('bakmsg').innerHTML=`<span class="err">${esc(e.message)}</span>`}}
 const bakAsk=()=>confirm(t('Wiederherstellen? Profile, Stimmen und Einstellungen werden durch die Sicherung ersetzt (der jetzige Stand wird vorher gesichert). Geänderte Einstellungen der Dienste wirken nach deren Neustart.','Restore? Profiles, voices and settings are replaced by the backup (the current state is backed up first). Changed service settings take effect after their restart.'));
-const bakDone=r=>{$('bakmsg').textContent=t('Wiederhergestellt: ','Restored: ')+r.restored.join(', ');loadBak()};
+const bakDone=r=>{$('bakpw').value='';$('bakmsg').textContent=t('Wiederhergestellt: ','Restored: ')+r.restored.join(', ')+(r.restored.includes('admin-mfa-kept')?t(' (der zweite Anmeldeschritt des Admins bleibt der von diesem Spark)',' (the admin\'s second login step stays the one of this Spark)'):'')+(r.restored.includes('keys')?t(' – bitte überall neu anmelden.',' – please sign in again everywhere.'):'');loadBak()};
+// a move backup needs its password: taken from the field below the list
+const bakErr=e=>{const m=/move backup|wrong password/.test(e.message)?t('Das ist eine Umzugs-Sicherung: Passwort ins Feld unten eintragen und nochmal wiederherstellen. ','This is a move backup: enter its password in the field below and restore again. '):'';$('bakmsg').innerHTML=`<span class="err">${esc(m+e.message)}</span>`};
 window.bakRestore=async n=>{if(!bakAsk())return;$('bakmsg').textContent=t('stelle wieder her …','restoring …');
-  try{bakDone(await (await api('/api/backups/'+encodeURIComponent(n)+'/restore',{method:'POST'})).json())}catch(e){$('bakmsg').innerHTML=`<span class="err">${esc(e.message)}</span>`}};
+  try{bakDone(await (await api('/api/backups/'+encodeURIComponent(n)+'/restore',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({password:$('bakpw').value})})).json())}catch(e){bakErr(e)}};
 window.bakLoad=async n=>{try{const r=await (await api('/api/backups/'+encodeURIComponent(n)+'/ticket',{method:'POST'})).json();
   const a=document.createElement('a');a.href=r.url;a.download=n;document.body.appendChild(a);a.click();a.remove()}catch(e){$('bakmsg').innerHTML=`<span class="err">${esc(e.message)}</span>`}};
 window.bakDel=async n=>{if(!confirm(t('Diese Sicherung löschen?','Delete this backup?')))return;bakRender((await (await api('/api/backups/'+encodeURIComponent(n),{method:'DELETE'})).json()).backups)};
 $('bakgo').onclick=async()=>{$('bakmsg').textContent=t('sichere …','backing up …');try{const b=await (await api('/api/backups',{method:'POST'})).json();$('bakmsg').textContent=t('Gesichert: ','Saved: ')+mb(b.size);loadBak()}catch(e){$('bakmsg').innerHTML=`<span class="err">${esc(e.message)}</span>`}};
 $('bakup').onclick=()=>$('bakfile').click();
 $('bakfile').onchange=async()=>{const f=$('bakfile').files[0];$('bakfile').value='';if(!f||!bakAsk())return;$('bakmsg').textContent=t('stelle wieder her …','restoring …');
-  const fd=new FormData();fd.append('file',f,f.name);try{bakDone(await (await api('/api/backups-upload',{method:'POST',body:fd})).json())}catch(e){$('bakmsg').innerHTML=`<span class="err">${esc(e.message)}</span>`}};
+  const fd=new FormData();fd.append('file',f,f.name);fd.append('password',$('bakpw').value);try{bakDone(await (await api('/api/backups-upload',{method:'POST',body:fd})).json())}catch(e){bakErr(e)}};
+$('bakmove').onclick=async()=>{const pw=$('bakpw').value;if(pw.length<12){$('bakmsg').innerHTML=`<span class="err">${t('Das Passwort braucht mindestens 12 Zeichen.','The password needs at least 12 characters.')}</span>`;return}
+  const again=prompt(t('Passwort zur Kontrolle noch einmal eingeben:','Enter the password once more:'));if(again===null)return;
+  if(again!==pw){$('bakmsg').innerHTML=`<span class="err">${t('Die Passwörter sind verschieden.','The passwords differ.')}</span>`;return}
+  $('bakmsg').textContent=t('sichere …','backing up …');
+  try{const b=await (await api('/api/backups/move',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({password:pw})})).json();$('bakpw').value='';
+    $('bakmsg').textContent=t('Umzugs-Sicherung angelegt: ','Move backup made: ')+mb(b.size)+t('. Mit „Laden“ herunterladen und das Passwort gut aufheben.','. Download it with "Download" and keep the password safe.');loadBak()}catch(e){$('bakmsg').innerHTML=`<span class="err">${esc(e.message)}</span>`}};
 // alerts on top of every admin page: memory, watchdog, failed live check
 function showAlerts(a){$('alerts').innerHTML=(a||[]).map(x=>`<div class="note ${x.level==='bad'?'bad':''}">${esc(x.text)}</div>`).join('')}

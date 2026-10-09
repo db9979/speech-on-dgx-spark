@@ -31,6 +31,7 @@ All options for running without questions (`--mode api --asr 1.7b --tts 0.6b --y
 
 <!-- New version: add one line at the top here and in CHANGELOG.md, drop the oldest line here (keep 10). Details go to docs/de and docs/en, not into this README. -->
 
+- **V01.0.189** Backups now also hold admin MFA, iPhone/browser push, Telegram bot, ESP32, agent services and own test questions; new password-protected move backup
 - **V01.0.188** iPhone app: comic face with the short, bushy mustache like the panel
 - **V01.0.187** Comic face with a short, bushy mustache only above the upper lip instead of tips hanging down to the chin; the mouth shows better while speaking
 - **V01.0.186** TestFlight starts by itself after green iOS commits on main (at most once an hour, can be turned off)
@@ -40,7 +41,6 @@ All options for running without questions (`--mode api --asr 1.7b --tts 0.6b --y
 - **V01.0.182** GitHub workflows moved to Node 24 (checkout v5, setup-python v6), no more warning
 - **V01.0.181** Notifications arrive once, on the device used last instead of on all of them
 - **V01.0.180** iPhone app: GitHub button "TestFlight" builds, signs through Apple and uploads (tested commits only)
-- **V01.0.179** "Speaking up by itself" notes are spoken on one device only, not again on every device
 
 All versions: [CHANGELOG.md](CHANGELOG.md)
 

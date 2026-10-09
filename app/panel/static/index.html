@@ -472,10 +472,11 @@
     </div>
   </div>
   <div class="card"><h2>Sicherung</h2>
-      <div class="intro sm">Profile (Gedächtnis, Gespräche, Dokumente, Kalender, E-Mail-Konten, Smart Home, Stimmerkennung), geklonte Stimmen, Einstellungen und Panel-Passwort. Jeden Tag automatisch, die letzten sieben bleiben; dazu vor jedem Update, jeder Rückkehr zur vorigen Version und jedem Wiederherstellen, davon bleiben die letzten fünf.</div>
+      <div class="intro sm">Profile (Gedächtnis, Gespräche, Dokumente, Kalender, E-Mail-Konten, Smart Home, Stimmerkennung), geklonte Stimmen, Einstellungen, Panel-Passwort und was der Spark für alle hält (zweiter Anmeldeschritt des Admins, iPhone-Push, Telegram-Bot, Browser-Push, ESP32-Lautsprecher, Agent-Dienste, eigene Testfragen). Jeden Tag automatisch, die letzten sieben bleiben; dazu vor jedem Update, jeder Rückkehr zur vorigen Version und jedem Wiederherstellen, davon bleiben die letzten fünf.</div>
       <table style="margin-top:8px"><tbody id="baklist"></tbody></table>
       <div class="row" style="margin-top:10px"><button class="b" id="bakgo">Jetzt sichern</button><button class="b" id="bakup" type="button">Aus Datei wiederherstellen …</button><input type="file" id="bakfile" accept=".gz,.tgz,application/gzip" style="display:none"><span id="bakmsg"></span></div>
-      <div class="fh">Kalender- und Mail-Passwörter und Home-Assistant-Tokens lassen sich nur auf diesem Spark wiederherstellen; auf einem anderen müssen sie neu eingegeben werden. Beim Wiederherstellen werden die Einstellungen wie auf der Einstellungsseite geprüft, und es wird alles getauscht oder nichts.</div></div>
+      <div class="row" style="margin-top:10px"><input type="password" id="bakpw" autocomplete="new-password" maxlength="200" placeholder="Umzugs-Passwort (mind. 12 Zeichen)" aria-label="Umzugs-Passwort"><button class="b" id="bakmove" type="button">Umzugs-Sicherung anlegen</button></div>
+      <div class="fh">Gespeicherte Passwörter, Tokens und Schlüssel lassen sich mit einer normalen Sicherung nur auf diesem Spark lesen; auf einem anderen müssen sie neu eingegeben werden. Eine Umzugs-Sicherung bringt den Schlüssel dafür mit, verschlüsselt mit deinem Passwort: Auf dem neuen Spark dasselbe Passwort ins Feld eintragen, dann wiederherstellen. Anmelden muss sich danach jeder neu. Beim Wiederherstellen werden die Einstellungen wie auf der Einstellungsseite geprüft, und es wird alles getauscht oder nichts.</div></div>
   <div class="card"><div class="row" style="justify-content:space-between"><h2 style="margin:0">Update-Protokoll</h2><button class="b" onclick="copyEl('updlog',this)">Kopieren</button></div><pre id="updlog" style="margin-top:12px">–</pre></div>
 </section>
 <section id="logs">

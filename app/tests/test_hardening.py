@@ -130,6 +130,93 @@ class Stage1(unittest.TestCase):
         url = ADMIN.post(f"/api/backups/{b['name']}/ticket").json()["url"]
         self.assertEqual(ADMIN.get(url).status_code, 200)
 
+    def test_backup_keeps_state_and_move_backup_needs_its_password(self):
+        import backup
+        import vault
+        tg = os.path.join(backup.STATE, "telegram.json")
+        before_tg = open(tg).read() if os.path.exists(tg) else None
+        before_key = open(vault.KEY_FILE, "rb").read() if os.path.exists(vault.KEY_FILE) else None
+        try:
+            self._backup_state_and_move(backup, vault, tg)
+        finally:
+            if before_tg is None:
+                if os.path.exists(tg):
+                    os.remove(tg)
+            else:
+                with open(tg, "w") as f:
+                    f.write(before_tg)
+            if before_key is not None:
+                with open(vault.KEY_FILE, "wb") as f:
+                    f.write(before_key)
+                vault._fernet = None
+
+    def _backup_state_and_move(self, backup, vault, tg):
+        import io
+        import tarfile
+        with open(tg, "w") as f:
+            json.dump({"token": vault.seal("123:geheim"), "bot": "sparkbot"}, f)
+        b = ADMIN.post("/api/backups").json()
+        with tarfile.open(backup.path_of(b["name"])) as t:
+            names = t.getnames()
+        self.assertIn("state/telegram.json", names)
+        self.assertFalse(any(n.endswith("secret.key") or n.endswith(backup.MOVE_FILE) for n in names))
+        os.remove(tg)
+        r = ADMIN.post(f"/api/backups/{b['name']}/restore", json={})
+        self.assertEqual(r.status_code, 200, r.text)
+        self.assertIn("state", r.json()["restored"])
+        self.assertEqual(json.load(open(tg))["bot"], "sparkbot")
+        # a move backup: short password refused; the key goes in sealed, never readable
+        self.assertEqual(ADMIN.post("/api/backups/move", json={"password": "kurz"}).status_code, 400)
+        pw = "langes-umzugs-passwort"
+        m = ADMIN.post("/api/backups/move", json={"password": pw}).json()
+        self.assertEqual(m["why"], "move")
+        key = open(vault.KEY_FILE, "rb").read().strip()
+        with tarfile.open(backup.path_of(m["name"])) as t:
+            raw = t.extractfile("state/" + backup.MOVE_FILE).read()
+        self.assertNotIn(key, raw)
+        # without or with a wrong password nothing changes
+        r = ADMIN.post(f"/api/backups/{m['name']}/restore", json={})
+        self.assertEqual(r.status_code, 400)
+        self.assertIn("move backup", r.text)
+        r = ADMIN.post(f"/api/backups/{m['name']}/restore", json={"password": "falsches-passwort!"})
+        self.assertEqual(r.status_code, 400)
+        self.assertIn("wrong password", r.text)
+        import system
+        system._move_tries.clear()
+        # another Spark (other key): the right password brings the key, the sealed token reads again
+        with open(vault.KEY_FILE, "wb") as f:
+            f.write(__import__("cryptography.fernet", fromlist=["Fernet"]).Fernet.generate_key())
+        vault._fernet = None
+        self.assertEqual(vault.open_(json.load(open(tg))["token"]), "")
+        r = ADMIN.post(f"/api/backups/{m['name']}/restore", json={"password": pw})
+        self.assertEqual(r.status_code, 200, r.text)
+        self.assertIn("keys", r.json()["restored"])
+        self.assertEqual(open(vault.KEY_FILE, "rb").read().strip(), key)
+        self.assertEqual(vault.open_(json.load(open(tg))["token"]), "123:geheim")
+        # a state file that is not what it claims stops the restore
+        buf = io.BytesIO()
+        with tarfile.open(fileobj=buf, mode="w:gz") as tar:
+            for name, data in (("backup.json", b"{}"), ("state/vapid.pem", b"not a key")):
+                info = tarfile.TarInfo(name)
+                info.size = len(data)
+                tar.addfile(info, io.BytesIO(data))
+        r = ADMIN.post("/api/backups-upload", files={"file": ("x.tar.gz", buf.getvalue())})
+        self.assertEqual(r.status_code, 400, r.text)
+        # an admin second step whose secret this Spark cannot read is not taken over
+        mfa_file = os.path.join(backup.STATE, "mfa-admin.json")
+        self.assertFalse(os.path.exists(mfa_file))
+        buf = io.BytesIO()
+        with tarfile.open(fileobj=buf, mode="w:gz") as tar:
+            for name, data in (("backup.json", b"{}"),
+                               ("state/mfa-admin.json", json.dumps({"secret": vault.PREFIX + "x" * 40}).encode())):
+                info = tarfile.TarInfo(name)
+                info.size = len(data)
+                tar.addfile(info, io.BytesIO(data))
+        r = ADMIN.post("/api/backups-upload", files={"file": ("x.tar.gz", buf.getvalue())})
+        self.assertEqual(r.status_code, 200, r.text)
+        self.assertIn("admin-mfa-kept", r.json()["restored"])
+        self.assertFalse(os.path.exists(mfa_file))
+
     def test_device_key_changes_no_connections(self):
         p = profile("Geraeta")
         key = device_key(p)
