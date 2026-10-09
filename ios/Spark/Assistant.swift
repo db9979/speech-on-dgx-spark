@@ -156,7 +156,7 @@ final class Conversation: ObservableObject {
         if allowed.push, await Alarms.allow() { UIApplication.shared.registerForRemoteNotifications() }
         await syncAlarms()
         if allowed.ios { await AppleReminders.syncLists() }
-        if allowed.proactive && Prefs.speakNotes, let api = SparkAPI.current, let n = try? await api.greet() { notes.append(n) }
+        if allowed.proactive && Prefs.speakNotes, let api = SparkAPI.current, let n = try? await api.greet(), await api.notePlayed(n.id) { notes.append(n) }
         if phase == .idle || phase == .waiting { base() }
         if wantListen { wantListen = false; listenNow() }
         flushNext()
@@ -588,8 +588,8 @@ final class Conversation: ObservableObject {
     private func pollNotes() async {
         guard let api = SparkAPI.current, let items = try? await api.notes(since: noteSince) else { return }
         for n in items where !notes.contains(where: { $0.id == n.id }) {
-            notes.append(n)
             noteSince = max(noteSince, n.t)
+            if await api.notePlayed(n.id) { notes.append(n) }   // another device said it already: stay silent
         }
         if phase == .idle || phase == .waiting { sayNote() }
     }

@@ -172,11 +172,24 @@ async def deliver(uid, kind, text, why="", data="", offer=None, until=None, forc
 
 
 def poll(uid, since=0):
-    """Notes for the open page since a time (ms); also marks the page as open."""
+    """Notes for the open page since a time (ms); also marks the page as open. A note one device
+    already played is left out (V01.0.179: said once, not on every device of the profile)."""
     _polled[uid] = time.time()
     now = time.time()
     return [{k: x[k] for k in ("id", "t", "kind", "text", "mail") if k in x}
-            for x in state(uid).get("queue", []) if x["t"] > since and x.get("until", 0) > now and not x.get("pushed")]
+            for x in state(uid).get("queue", []) if x["t"] > since and x.get("until", 0) > now
+            and not x.get("pushed") and not x.get("played")]
+
+
+def take(uid, nid):
+    """True for the first device that plays the note; every later one gets False."""
+    def mark(st):
+        x = next((x for x in st.get("queue", []) if x.get("id") == nid), None)
+        if not x or x.get("played"):
+            return False
+        x["played"] = True
+        return True
+    return _mut(uid, mark)
 
 
 # ---------------------------------------------------------------- answers to a note
@@ -776,6 +789,18 @@ def status(uid):
 @router.get("/api/proactive", dependencies=[Depends(assistant), Depends(_on)])
 def api_poll(since: int = 0, prof=Depends(own_profile)):
     return {"items": poll(prof["id"], since)}
+
+
+@router.post("/api/proactive/played", dependencies=[Depends(assistant), Depends(_on)])
+async def api_played(request: Request, prof=Depends(own_profile)):
+    """A device is about to say a note: only the first one gets "play" (the others stay silent)."""
+    import guard
+    guard.limit(request, "chat", prof["id"], False)
+    body = await request.json()
+    nid = str(body.get("id", "") if isinstance(body, dict) else "")[:16]
+    if not re.fullmatch(r"[0-9a-f]{1,16}", nid):
+        raise HTTPException(400, "id is required")
+    return {"play": take(prof["id"], nid)}
 
 
 @router.post("/api/proactive/greet", dependencies=[Depends(assistant), Depends(_on)])

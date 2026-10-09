@@ -8,7 +8,10 @@ const pro={since:Date.now()-10*60e3,seen:new Set(),busy:false,greeted:0,
     this.busy=false},
   async greet(){if(!this.on()||document.hidden||Date.now()-this.greeted<10*60e3)return;this.greeted=Date.now();
     try{const r=await fetch('/api/proactive/greet',{method:'POST'});const d=r.ok?await r.json():{};if(d.item)this.show(d.item)}catch{}},
-  show(x){if(this.seen.has(x.id))return;this.seen.add(x.id);this.since=Math.max(this.since,x.t);
+  // a note is said on one device only: the first that plays it takes it on the Spark, the others stay silent
+  async show(x){if(this.seen.has(x.id))return;this.seen.add(x.id);this.since=Math.max(this.since,x.t);
+    try{const r=await api('/api/proactive/played',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({id:x.id})});
+      if(r.ok&&!(await r.json()).play)return}catch{}
     const b=chatLog('assistant',x.text);b.classList.add('pro');
     const m={role:'assistant',content:x.text,...(x.mail?{mail:true}:{outside:true})};chat.msgs.push(m);deletable(b,m);saveConvo();
     const row=document.createElement('div');row.className='prorow';   // quick feedback, same as saying it

@@ -263,7 +263,7 @@ def seen():
 # while the admin and the profile have the app switched on (APP_GATE, set by iphone.py; closed without it).
 APP_PATHS = ("/api/chat", "/api/test/asr", "/api/siri/ask", "/api/iphone/hello", "/api/profile/reminders",
              "/api/profile/reminders/played",   # a due reminder rings once: the first device takes it
-             "/api/proactive", "/api/proactive/greet", "/api/assistant/say",
+             "/api/proactive", "/api/proactive/greet", "/api/proactive/played", "/api/assistant/say",
              "/api/iphone/push-token", "/api/iphone/note",
              "/api/profile/convos",   # the conversations, the same list as in the panel
              "/api/iphone/doc",       # a document's text into the profile's documents (app_docs)

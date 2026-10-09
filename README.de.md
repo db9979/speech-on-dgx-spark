@@ -31,6 +31,7 @@ Alle Optionen ohne Rückfragen (`--mode api --asr 1.7b --tts 0.6b --yes` …) st
 
 <!-- New version: add one line at the top here and in CHANGELOG.md, drop the oldest line here (keep 10). Details go to docs/de and docs/en, not into this README. -->
 
+- **V01.0.179** „Von selbst“-Meldungen werden nur auf einem Gerät gesprochen, nicht auf jedem noch einmal
 - **V01.0.178** iPhone-App: Version klein unten, Build-Nummer zählt beim Bauen von selbst hoch
 - **V01.0.177** iPhone-App: Spark-Update aus der App (aus, Rechte nur vom Admin): Hinweis bei neuer geprüfter Version, Start mit Face ID und MFA-Code
 - **V01.0.176** Erinnerungen klingeln nur auf einem Gerät, nicht auf jedem Gerät des Profils noch einmal
@@ -40,7 +41,6 @@ Alle Optionen ohne Rückfragen (`--mode api --asr 1.7b --tts 0.6b --yes` …) st
 - **V01.0.172** iPhone-App: App-Store-Bildschirmfotos (de/en) per GitHub-Ablauf aus dem Simulator, Vorführmodus nur im Testbuild
 - **V01.0.171** Funktionen als kurze Zeilen: Antippen klappt auf, Filter Alle/An/Aus/Braucht dich, Sprungleiste zu den Gruppen
 - **V01.0.170** iPhone-App: Kurzbefehl-Beschreibung ohne „iPhone“ (Apple-Fehler ITMS-90626), Store-Name „Spark Assistent DB“
-- **V01.0.169** iPhone-App: App-Store-Texte (de/en) per GitHub-Knopf „App Store texts“ in App Store Connect eintragen
 
 Alle Versionen: [CHANGELOG.md](CHANGELOG.md)
 

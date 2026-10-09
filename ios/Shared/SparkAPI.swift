@@ -192,6 +192,12 @@ struct SparkAPI {
         }
     }
 
+    /// A note is said on one device only: true when this device is the first to play it.
+    func notePlayed(_ id: String) async -> Bool {
+        guard let d = try? await post("api/proactive/played", ["id": id]) else { return true }
+        return d["play"] as? Bool ?? true
+    }
+
     /// A greeting when the app opens after a while (the Spark decides whether it says one).
     func greet() async throws -> Note? {
         let d = try await post("api/proactive/greet", [:])

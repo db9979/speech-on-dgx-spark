@@ -31,6 +31,7 @@ All options for running without questions (`--mode api --asr 1.7b --tts 0.6b --y
 
 <!-- New version: add one line at the top here and in CHANGELOG.md, drop the oldest line here (keep 10). Details go to docs/de and docs/en, not into this README. -->
 
+- **V01.0.179** "Speaking up by itself" notes are spoken on one device only, not again on every device
 - **V01.0.178** iPhone app: version shown small at the bottom, build number counts up by itself when building
 - **V01.0.177** iPhone app: Spark update from the app (off, rights only from the admin): notice when a new tested version is ready, start with Face ID and an MFA code
 - **V01.0.176** Reminders ring on one device only, not again on every device of the profile
@@ -40,7 +41,6 @@ All options for running without questions (`--mode api --asr 1.7b --tts 0.6b --y
 - **V01.0.172** iPhone app: App Store screenshots (de/en) from the simulator via GitHub workflow, demo mode in Debug builds only
 - **V01.0.171** Features as short lines: tap to open, filter All/On/Off/Needs you, jump bar to the groups
 - **V01.0.170** iPhone app: Shortcut description without "iPhone" (Apple error ITMS-90626), store name "Spark Assistent DB"
-- **V01.0.169** iPhone app: App Store texts (de/en) written to App Store Connect by the GitHub workflow "App Store texts"
 
 All versions: [CHANGELOG.md](CHANGELOG.md)
 

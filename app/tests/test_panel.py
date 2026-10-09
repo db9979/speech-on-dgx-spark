@@ -1386,6 +1386,14 @@ class Proactive(unittest.TestCase):
         self.assertEqual([x["text"] for x in items], ["In 20 Minuten: Zahnarzt."])
         self.assertEqual(profile("Pavel").get("/api/proactive").json()["items"], [])   # only one's own
         self.assertEqual(TestClient(panel.app).get("/api/proactive").status_code, 401)  # guests never
+        # V01.0.179: said on one device only; the first that plays it takes it, the others stay silent
+        nid = items[0]["id"]
+        self.assertEqual(profile("Pavel").post("/api/proactive/played", json={"id": nid}).json(), {"play": False})
+        self.assertEqual(a.post("/api/proactive/played", json={"id": "../x"}).status_code, 400)
+        self.assertEqual(a.post("/api/proactive/played", json={"id": nid}).json(), {"play": True})
+        self.assertEqual(a.post("/api/proactive/played", json={"id": nid}).json(), {"play": False})
+        self.assertEqual(a.get("/api/proactive").json()["items"], [])           # a later page gets nothing
+        self.assertIn("/api/proactive/played", profiles.APP_PATHS)
         log = a.get("/api/profile/toollog").json()["items"]
         self.assertTrue(log[0]["q"].startswith("(von selbst"))
         self.assertTrue(proactive.quiet({"pro_quiet": "22:00-07:00"}, chat.datetime.datetime(2026, 1, 1, 23, 30)))
