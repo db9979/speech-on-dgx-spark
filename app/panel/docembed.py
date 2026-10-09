@@ -53,6 +53,15 @@ def status():
     return dict(_status, running=bool(_proc and _proc.returncode is None))
 
 
+def memory_mib():
+    """Working memory of the model process in MiB, None while it does not run."""
+    try:
+        import psutil
+        return round(psutil.Process(_proc.pid).memory_info().rss / 1024**2) if _proc and _proc.returncode is None else None
+    except Exception:
+        return None
+
+
 def _free_gib():
     try:
         import psutil

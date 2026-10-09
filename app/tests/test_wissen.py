@@ -119,6 +119,25 @@ class Defaults(Base):
                              ("post", "/api/profile/wissen/picture")):
             self.assertEqual(getattr(g, method)(path, **({"json": {}} if method in ("post", "put") else {})).status_code, 401, path)
 
+    def test_zustand_shows_counts_only_and_only_to_the_admin(self):
+        self.assertEqual(ADMIN.get("/api/admin/wissen").json(), {"on": False})        # all switches off
+        c = profile("Wzora")
+        self.assertIn(c.get("/api/admin/wissen").status_code, (401, 403))           # a profile is not the admin
+        self.assertEqual(TestClient(panel.app).get("/api/admin/wissen").status_code, 401)
+        helpers.set_config(doc_pictures=True, doc_semantic=True)
+        self.switch(c, pictures=True)
+        upload(c, "geheimer-arztbrief.jpg", jpeg())
+        r = ADMIN.get("/api/admin/wissen")
+        self.assertEqual(r.headers["cache-control"], "no-store")
+        d = r.json()
+        self.assertTrue(d["on"] and d["pictures"] and d["semantic"])
+        self.assertGreaterEqual(d["waiting"], 1)
+        self.assertGreaterEqual(d["profiles"], 1)
+        self.assertIn(d["model"]["state"], ("off", "starting", "ready", "waiting", "error"))
+        self.assertEqual(d["model"]["need_gib"], docembed.MIN_FREE_GIB)
+        self.assertNotIn("arztbrief", r.text)
+        self.assertNotIn("Wzora", r.text)
+
     def test_admin_quota_is_checked(self):
         cfg = ADMIN.get("/api/config").json()
         for bad in (10, 99999, "500", True):

@@ -70,6 +70,24 @@ async function zRooms(){const box=$('zroom');if(!box||document.hidden)return;let
 $('zroomall').onclick=async()=>{if(!confirm(t('Raum-Modus an allen Geräten beenden?','End room mode on every device?')))return;
   try{await api('/api/admin/rooms/end',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({all:true})})}catch{}zRooms()};
 
+// Zustand → "Eigene Dokumente" (wissen.py): meaning model state and memory, pages waiting for the language
+// model, pieces with a meaning vector. Counts over all profiles only; shown while a switch is on.
+async function zDocs(){const box=$('zdocs');if(!box||document.hidden)return;let d={on:false};
+  try{const r=await fetch('/api/admin/wissen',{cache:'no-store'});if(!r.ok)return;d=await r.json()}catch{return}
+  box.hidden=!d.on;if(!d.on)return;const L2=$('zdoclist');L2.textContent='';
+  const ago=s=>{if(!s)return t('noch nie','never');const m=Math.round((Date.now()/1e3-s)/60);return m<1?t('gerade eben','just now'):m<90?(L==='en'?m+' min ago':'vor '+m+' Min.'):(L==='en'?Math.round(m/60)+' h ago':'vor '+Math.round(m/60)+' Std.')};
+  const row=(cls,pill,title,text)=>{const r=document.createElement('div');r.className='zrow';const sp=document.createElement('span');sp.className='pill '+cls;sp.textContent=pill;
+    const tx=document.createElement('span');const b=document.createElement('b');b.textContent=title;tx.append(b,' '+text);r.append(sp,tx);L2.appendChild(r)};
+  if(d.semantic&&d.model){const m=d.model;const st={ready:['ok',t('läuft','running')],starting:['warn',t('startet','starting')],waiting:['warn',t('wartet','waiting')],error:['bad',t('Fehler','error')],off:['',t('aus','off')]}[m.state]||['',m.state];
+    let tx=m.state==='ready'?(m.mib?m.mib+' MiB '+t('Arbeitsspeicher','memory')+' · ':'')+t('stoppt nach ','stops after ')+m.stop_min+t(' Min. ohne Arbeit',' min idle')
+      :m.state==='waiting'?t('braucht ','needs ')+m.need_gib+t(' GiB freien Arbeitsspeicher',' GiB free memory')
+      :m.state==='error'?(m.error||''):m.state==='starting'?t('lädt das Modell (beim ersten Mal von Hugging Face)','loading the model (from Hugging Face the first time)')
+      :t('startet, wenn etwas zu tun ist','starts when there is work');
+    const v=d.vectors;tx+=' · '+v[0]+'/'+v[1]+t(' Stücke mit Bedeutung',' pieces with meaning');
+    row(st[0],st[1],t('Bedeutungssuche (CPU-Modell)','Meaning search (CPU model)'),tx)}
+  if(d.pictures){row(d.waiting?'warn':'ok',d.waiting?d.waiting+t(' Seiten',' pages'):t('nichts offen','nothing open'),t('Bilder und Scans lesen','Read pictures and scans'),
+    d.today+t(' heute gelesen (höchstens ',' read today (at most ')+d.day_pages+t(' je Profil)',' per profile)')+' · '+t('zuletzt ','last ')+ago(d.last.read)+(d.waiting&&!d.quiet?' · '+t('wartet auf eine ruhige Minute','waits for a quiet minute'):''))}}
+
 let CFG=null;
 async function loadLangs(){const l=await (await api('/api/languages')).json();document.querySelectorAll('select.langs').forEach(s=>s.innerHTML=l.map(x=>`<option>${x}</option>`).join(''))}
 async function instrHint(sel){if(!CFG)try{CFG=await (await api('/api/config')).json()}catch{return}const m=(sel?$('tts.model').value:CFG.tts.model)||'';const small=/0\.6B/i.test(m);

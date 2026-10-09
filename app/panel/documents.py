@@ -580,6 +580,14 @@ def next_page(uid):
     return tuple(r) if r else None
 
 
+def pages_waiting(uid):
+    """Pages still to be read by the language model (0 without a database; never creates one)."""
+    if not os.path.exists(db_path(uid)):
+        return 0
+    with _Db(uid) as con:
+        return con.execute("SELECT COUNT(*) FROM pages").fetchone()[0]
+
+
 def page_read(uid, doc_id, page, text=None, failed=False, max_tries=2):
     """The model's text of a page (or a failed try); the document is ready once no page waits."""
     with _Db(uid) as con:
