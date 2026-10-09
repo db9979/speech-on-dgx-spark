@@ -602,8 +602,31 @@ def attachment(body):
     return a["kind"], name, text
 
 
-DROPPED = ("(Diese frühere Antwort beruhte auf Texten von außen, z. B. Web, E-Mail oder Kalender, und wird nicht "
-           "erneut mitgegeben. Wenn sie gebraucht wird, das Werkzeug noch einmal benutzen.)")
+# An earlier answer made from outside text that is not sent again is left out of the conversation
+# together with the question before it (V01.0.222). Until then it was replaced by a German note in
+# the assistant's own turn, which the model then copied word for word as its answer (Dominik
+# 2026-10-09). The note goes to the system prompt in English now; an answer that still starts like
+# the old note (kept in browsers and apps) is left out too and is never shown or spoken.
+DROPPED_HEAD = "Diese frühere Antwort beruhte"   # also without the bracket
+LEFT_OUT_NOTE = ("Some earlier answers in this conversation rested on text from outside (web, e-mail, calendar, "
+                 "documents) and are left out. If the user's question needs them, use the tool again (for the "
+                 "user's documents: document_search). Never tell the user that something was left out.")
+
+
+def left_out(messages, keep=-1):
+    """The conversation without the answers marked as made from outside text (except the one at index
+    keep) and without old copies of the former note, each together with the question right before it.
+    Returns (messages, how many answers were left out)."""
+    drop = set()
+    for i, m in enumerate(messages):
+        if m["role"] != "assistant" or i == keep:
+            continue
+        if m.get("mark") or m["content"].lstrip("( \n").startswith(DROPPED_HEAD):
+            drop.add(i)
+            if i > 0 and messages[i - 1]["role"] == "user" and i - 1 != len(messages) - 1:
+                drop.add(i - 1)
+    kept = [{"role": m["role"], "content": m["content"]} for i, m in enumerate(messages) if i not in drop]
+    return kept, sum(1 for i in drop if messages[i]["role"] == "assistant")
 
 
 def wrap_outside(text):
@@ -1370,7 +1393,7 @@ async def _answer(request, turn):
         """Streams one LLM call: text goes to the browser and, sentence by sentence, to TTS.
         Returns (finish_reason, tool calls)."""
         finish, calls = None, {}
-        st["xml"], st["lead"], st["ws"] = False, True, ""
+        st["xml"], st["lead"], st["ws"], st["head"] = False, True, "", ""
         rec = {"start": time.time(), "first": None, "end": None, "usage": None, "think": 0, "tools": []}
         tm["rounds"].append(rec)
         async with c.stream("POST", ccfg["llm_url"].rstrip("/") + "/chat/completions",
@@ -1432,6 +1455,19 @@ async def _answer(request, turn):
                 text = trim_piece(kept, st)
                 if not text:
                     continue
+                # the start of each round waits until it cannot be the former note any more (DROPPED_HEAD):
+                # that note is never shown or spoken, the rest of such a round neither
+                if st["head"] is not None:
+                    head = st["head"] + text
+                    bare = head.lstrip("( ")
+                    if bare.startswith(DROPPED_HEAD):
+                        st["xml"], st["head"] = True, None
+                        print("chat: the model wrote the note for a left-out answer - not shown, not spoken", flush=True)
+                        continue
+                    if DROPPED_HEAD.startswith(bare):
+                        st["head"] = head
+                        continue
+                    text, st["head"] = head, None
                 if st["n"] == 0:
                     await out.put({"type": "timing", "llm_first_token": round(time.time() - t0, 3)})
                 st["n"] += 1
@@ -1447,6 +1483,13 @@ async def _answer(request, turn):
                         st["hold"].append(x)
                     else:
                         await speak(x, st)
+        if st["head"]:   # a short answer that only looked like the start of the note
+            text, st["head"] = st["head"], None
+            if not st["check"]:
+                await out.put({"type": "text", "delta": text})
+                trace["said"] += text
+                st["shown"] += len(text)
+            st["buf"] += text
         rec["end"] = time.time()
         out_calls = [dict(v, id=v["id"] or f"call_{i}") for i, v in sorted(calls.items()) if v["name"]]
         return finish, out_calls

@@ -406,7 +406,8 @@ class Stage2(unittest.TestCase):
                 {"role": "assistant", "content": "Nichts."}, {"role": "user", "content": "Gut"}])
         sent = json.dumps(helpers.LLM_CALLS[0]["messages"], ensure_ascii=False)
         self.assertNotIn("Carla hasst Tee", sent)
-        self.assertIn("nicht erneut mitgegeben", sent)
+        self.assertNotIn("Such was", sent)            # left out with its question (V01.0.222)
+        self.assertIn("are left out", sent)
 
     def test_only_text_messages(self):
         p = profile("Hxcarla")

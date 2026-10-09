@@ -98,9 +98,11 @@ async def prepare(request):
         carry = None
         print("weiche: answer from outside text before; this message asks for", route.label(),
               "in its own words - that answer is left out, nothing locked", flush=True)
-    messages = [{"role": m["role"], "content": chat.DROPPED if m.get("mark") and i != (marked[-1] if carry else -1)
-                 else m["content"]} for i, m in enumerate(messages)]
+    messages, gone = chat.left_out(messages, marked[-1] if carry else -1)
     system = ccfg.get("system_prompt") or ""
+    if gone:
+        system = (system + "\n\n" + chat.LEFT_OUT_NOTE).strip()
+        print("chat:", gone, "earlier answer(s) from outside text left out with their questions", flush=True)
     # an attached photo or document: outside text, so this answer is locked like one made from the web
     attach = chat.attachment(body) if messages[-1]["role"] == "user" else None
     if attach:
