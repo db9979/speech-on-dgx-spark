@@ -34,6 +34,8 @@ Einmalig:
 
 Dann: GitHub → **Actions → TestFlight → Run workflow**, Bundle-ID eintragen, **Run**. Nach 15 bis 30 Minuten ist der Build in App Store Connect unter TestFlight.
 
+**Automatisch:** Ändert ein Commit auf main etwas unter `ios/`, startet TestFlight von selbst, sobald „iPhone app“ und „Tests“ grün sind. Höchstens ein Upload pro Stunde. Kommt in der Wartezeit ein neuerer iOS-Commit, wird nur dieser hochgeladen. Abschalten: GitHub → Settings → Secrets and variables → Actions → Variables → `TESTFLIGHT_AUTO` = `off`. Eine andere Bundle-ID als `io.github.db9979.speechspark` trägst du als Variable `APP_BUNDLE_ID` ein. Zum Neustarten immer **Run workflow** nehmen, nicht „Re-run“, denn ein Re-run baut den alten Stand.
+
 Klappt es beim ersten Mal nicht, schick mir die rote Zeile aus dem Lauf.
 
 ## 3. TestFlight (Empfehlung für dich und die Familie)

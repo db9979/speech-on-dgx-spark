@@ -31,6 +31,7 @@ All options for running without questions (`--mode api --asr 1.7b --tts 0.6b --y
 
 <!-- New version: add one line at the top here and in CHANGELOG.md, drop the oldest line here (keep 10). Details go to docs/de and docs/en, not into this README. -->
 
+- **V01.0.186** TestFlight starts by itself after green iOS commits on main (at most once an hour, can be turned off)
 - **V01.0.185** TestFlight: build the .ipa first, then upload with altool, up to three tries each on timeouts
 - **V01.0.184** TestFlight/App Store texts: .p8 key is cleaned up (line breaks, \n, missing BEGIN/END), clear error message
 - **V01.0.183** App Store texts: added Deliverfile, fastlane no longer asks a question and stops
@@ -40,7 +41,6 @@ All options for running without questions (`--mode api --asr 1.7b --tts 0.6b --y
 - **V01.0.179** "Speaking up by itself" notes are spoken on one device only, not again on every device
 - **V01.0.178** iPhone app: version shown small at the bottom, build number counts up by itself when building
 - **V01.0.177** iPhone app: Spark update from the app (off, rights only from the admin): notice when a new tested version is ready, start with Face ID and an MFA code
-- **V01.0.176** Reminders ring on one device only, not again on every device of the profile
 
 All versions: [CHANGELOG.md](CHANGELOG.md)
 

@@ -1,8 +1,11 @@
 name: TestFlight
 
 # Builds the iPhone app in release mode, lets Apple sign it (Xcode's automatic signing with the
-# App Store Connect API key, no certificate files) and uploads it to TestFlight. Only by hand
-# (Actions → TestFlight → Run workflow) and only for a commit whose "Tests" run passed, like update.sh.
+# App Store Connect API key, no certificate files) and uploads it to TestFlight. By hand
+# (Actions → TestFlight → Run workflow) and by itself after a commit on main that changed ios/: once
+# "iPhone app" and "Tests" passed for it, at most one upload per hour; a newer iOS commit in the
+# waiting time replaces the older one. Off with the repository variable TESTFLIGHT_AUTO=off.
+# Only for a commit whose "Tests" run passed, like update.sh.
 # The build number is the commit count (build phase "Build number"), so every upload is higher.
 # Needs repository secrets: ASC_KEY_ID, ASC_ISSUER_ID, ASC_KEY (the whole .p8 of an App Store Connect
 # team key with role Admin, needed for signing) and ASC_TEAM_ID (Apple Developer → Membership → Team ID).
@@ -12,34 +15,86 @@ on:
       bundle_id:
         description: "Bundle-ID der App (wie APP_BUNDLE_ID in Xcode)"
         required: true
+        default: "io.github.db9979.speechspark"
+  workflow_run:
+    workflows: ["iPhone app"]
+    types: [completed]
+    branches: [main]
 
 permissions:
   contents: read
   actions: read
 
-concurrency:
-  group: testflight
-  cancel-in-progress: false
-
 jobs:
+  # decides whether and which commit goes up; waits cheaply on Linux, not on the Mac
+  gate:
+    runs-on: ubuntu-24.04
+    timeout-minutes: 110
+    concurrency:
+      group: testflight-gate
+      cancel-in-progress: ${{ github.event_name == 'workflow_run' }}
+    if: >-
+      github.event_name == 'workflow_dispatch' ||
+      (github.event.workflow_run.conclusion == 'success' && github.event.workflow_run.event == 'push' &&
+       github.event.workflow_run.head_branch == 'main' && vars.TESTFLIGHT_AUTO != 'off')
+    outputs:
+      go: ${{ steps.check.outputs.go }}
+      sha: ${{ steps.check.outputs.sha }}
+    steps:
+      - id: check
+        env:
+          GH_TOKEN: ${{ github.token }}
+          AUTO: ${{ github.event_name == 'workflow_run' }}
+          SHA: ${{ github.event.workflow_run.head_sha || github.sha }}
+        run: |
+          set -euo pipefail
+          api="https://api.github.com/repos/$GITHUB_REPOSITORY/actions"
+          get() { curl -fsS -H "Authorization: Bearer $GH_TOKEN" "$api/$1"; }
+          # the Tests run of this commit: by hand it must have passed already, automatically wait for it
+          for i in $(seq 1 60); do
+            st=$(get "workflows/tests.yml/runs?head_sha=$SHA&per_page=1" | python3 -c '
+          import json, sys
+          r = json.load(sys.stdin).get("workflow_runs") or []
+          print(r[0]["status"] + ":" + str(r[0]["conclusion"]) if r else "none")')
+            [ "$st" = "completed:success" ] && break
+            if [ "$AUTO" != "true" ] || [ "${st%%:*}" = "completed" ]; then
+              echo "::error::The Tests run of $SHA has not passed ($st). Wait for it, then start again."
+              exit 1
+            fi
+            sleep 30
+          done
+          [ "$st" = "completed:success" ] || { echo "::error::Tests did not finish in time"; exit 1; }
+          if [ "$AUTO" = "true" ]; then
+            # at most one automatic upload per hour: wait for the rest of the hour after the last good upload
+            left=$(get "workflows/testflight.yml/runs?status=success&per_page=1" | python3 -c '
+          import datetime, json, sys
+          r = json.load(sys.stdin).get("workflow_runs") or []
+          if not r:
+              print(0)
+          else:
+              t = datetime.datetime.fromisoformat(r[0]["created_at"].replace("Z", "+00:00"))
+              now = datetime.datetime.now(datetime.timezone.utc)
+              print(max(0, int(3600 - (now - t).total_seconds())))')
+            if [ "$left" -gt 0 ]; then echo "Last upload less than an hour ago, waiting $left s"; sleep "$left"; fi
+          fi
+          echo "go=true" >> "$GITHUB_OUTPUT"
+          echo "sha=$SHA" >> "$GITHUB_OUTPUT"
+
   upload:
+    needs: gate
+    if: needs.gate.outputs.go == 'true'
     runs-on: macos-15
     timeout-minutes: 60
+    concurrency:
+      group: testflight
+      cancel-in-progress: false
+    env:
+      BUNDLE_ID: ${{ inputs.bundle_id || vars.APP_BUNDLE_ID || 'io.github.db9979.speechspark' }}
     steps:
       - uses: actions/checkout@v5
         with:
+          ref: ${{ needs.gate.outputs.sha }}
           fetch-depth: 0          # the build number counts all commits
-      - name: Only a tested commit
-        env:
-          GH_TOKEN: ${{ github.token }}
-        run: |
-          ok=$(curl -fsS -H "Authorization: Bearer $GH_TOKEN" \
-            "https://api.github.com/repos/$GITHUB_REPOSITORY/actions/workflows/tests.yml/runs?head_sha=$GITHUB_SHA&status=success&per_page=1" \
-            | python3 -c 'import json,sys; print(json.load(sys.stdin).get("total_count", 0))')
-          if [ "$ok" = "0" ]; then
-            echo "::error::The Tests run of $GITHUB_SHA has not passed (yet). Wait for it, then start again."
-            exit 1
-          fi
       - name: Xcode
         run: |
           # Apple only takes uploads built with a current SDK: the newest Xcode on the runner
@@ -74,7 +129,6 @@ jobs:
           ASC_KEY_ID: ${{ secrets.ASC_KEY_ID }}
           ASC_ISSUER_ID: ${{ secrets.ASC_ISSUER_ID }}
           ASC_TEAM_ID: ${{ secrets.ASC_TEAM_ID }}
-          BUNDLE_ID: ${{ inputs.bundle_id }}
         run: |
           set -euo pipefail
           case "$BUNDLE_ID" in *[!A-Za-z0-9.-]*|"") echo "::error::Bundle-ID looks wrong"; exit 1;; esac

@@ -27,6 +27,8 @@ Then set the panel's **Push to the iPhone app** to **"Production"**: TestFlight 
 
 Instead of Archive and Distribute on the Mac, the workflow **TestFlight** (Actions → Run workflow, by hand) builds the app, lets Apple sign it with the App Store Connect API key and uploads it to TestFlight, only for a commit whose tests passed. Secrets: `ASC_KEY_ID`, `ASC_ISSUER_ID`, `ASC_KEY` (the whole `.p8` of a team key with role **Admin**, needed to fetch signing certificates) and `ASC_TEAM_ID`. The build number counts up by itself.
 
+**Automatic:** when a commit on main changes `ios/`, TestFlight starts by itself once "iPhone app" and "Tests" passed, at most one upload per hour; a newer iOS commit in the waiting time replaces the older one. Turn it off with the repository variable `TESTFLIGHT_AUTO` = `off`; a different bundle ID goes into the variable `APP_BUNDLE_ID`. To start again use **Run workflow**, not "Re-run" (a re-run builds the old commit).
+
 ## 3. TestFlight
 
 App Store Connect → **Users and Access**: invite family members; app → **TestFlight → Internal Testing → +**: add them and the build. Each installs **TestFlight** from the App Store and accepts. A build runs 90 days.

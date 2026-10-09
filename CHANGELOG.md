@@ -2,6 +2,7 @@
 
 Every version in one line, newest first (taken from the commit messages, so some lines are German, some English). Older entries have no version number.
 
+- **V01.0.186** · 2026-10-09 · TestFlight startet von selbst nach grünen iOS-Commits auf main (höchstens einmal pro Stunde, abschaltbar)
 - **V01.0.185** · 2026-10-09 · TestFlight: erst .ipa bauen, dann Upload mit altool, je bis zu drei Versuche bei Zeitüberschreitung
 - **V01.0.184** · 2026-10-09 · TestFlight/App-Store-Texte: .p8-Schlüssel wird bereinigt (Zeilenumbrüche, \n, ohne BEGIN/END), klare Fehlermeldung
 - **V01.0.183** · 2026-10-09 · App-Store-Texte: Deliverfile ergänzt, fastlane fragt nicht mehr nach und bricht nicht ab
