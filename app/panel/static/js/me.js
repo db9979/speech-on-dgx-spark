@@ -232,12 +232,13 @@ async function renderSet(el,vals,onchange){const admin=!onchange,voices=await vo
     else if(f.type==='voice')ctl=(voices.length?'':'<div>')+`<select id="${id}"><option value="">${t('Standard','Default')}</option>${[...new Set([...voices,...(v.voice?[v.voice]:[])])].map(x=>`<option${x===v.voice?' selected':''}>${esc(x)}</option>`).join('')}</select>`+(voices.length?'':`<div class="fh">${t('Die Sprachausgabe nennt gerade keine Stimmen (startet noch?). Später erneut öffnen.','The speech output lists no voices right now (still starting?). Open again later.')}</div></div>`);
     else ctl=`<input type="range" id="${id}" min="${f.min}" max="${f.max}" step="${f.step}" value="${v[f.k]}"><output id="${id}_o">${Number(v[f.k]).toFixed(2)}×</output>`;
     const head=f.grp!==prev;prev=f.grp;
-    return (head?`${f===fields[0]?'':'</div>'}<div class="setpane${f===fields[0]?' on':''}" data-g="${esc(f.grp)}">`:'')+`<div class="setrow"><div class="lbl"><b>${esc(f.l)}</b><span>${esc(f.h)}</span></div>${ctl}</div>`}).join('')+'</div>';
-  // one group at a time, so the window stays short
+    return (head?`${f===fields[0]?'':'</div>'}<div class="setpane${f===fields[0]||admin?' on':''}" data-g="${esc(f.grp)}">${admin?`<h3 class="sec">${esc(f.grp)}</h3>`:''}`:'')+`<div class="setrow"><div class="lbl"><b>${esc(f.l)}</b><span>${esc(f.h)}</span></div>${ctl}</div>`}).join('')+'</div>';
+  // one group at a time, so the window stays short; the admin page (Vorgaben) shows all groups as sections
   const groups=[...new Set(fields.map(f=>f.grp))],bar=document.createElement('div');bar.className='ptabs';
+  if(!admin){
   bar.innerHTML=groups.map((g,i)=>`<button type="button"${i?'':' class="on"'}>${esc(g)}</button>`).join('');el.prepend(bar);
   bar.querySelectorAll('button').forEach((b,i)=>b.onclick=()=>{bar.querySelectorAll('button').forEach(x=>x.classList.toggle('on',x===b));
-    el.querySelectorAll('.setpane').forEach(x=>x.classList.toggle('on',x.dataset.g===groups[i]))});
+    el.querySelectorAll('.setpane').forEach(x=>x.classList.toggle('on',x.dataset.g===groups[i]))})}
   fields.forEach(f=>{const e=$('set_'+el.id+'_'+f.k);e.oninput=e.onchange=ev=>{
     const val=f.type==='bool'?e.checked:f.type==='range'?Number(e.value):f.type==='text'?e.value.replace(/<<<|>>>|[\x00-\x09\x0b-\x1f\x7f]/g,'').slice(0,f.max):e.value;
     if(f.type==='text'&&ev.type==='input')return;   // saved when the field is left

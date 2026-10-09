@@ -33,9 +33,10 @@
 <button class="b" id="logoutbtn" type="button" style="order:4;display:none">Abmelden</button>
 </div>
 <button class="ib" id="mmenu" type="button" title="Menü" aria-label="Menü"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round"><path d="M4 7h16M4 12h16M4 17h16"/></svg></button>
-<nav><button data-s="chat"><i class="ni" data-ni="chat"></i>Assistent</button><button type="button" class="navme" id="navme"><i class="ni" data-ni="me"></i>Ich</button><span class="navgrp">Spark verwalten</span><button data-s="mon" class="on"><i class="ni" data-ni="mon"></i>Zustand <span class="hdot" id="hdot"></span><span id="updbadge" class="pill warn" style="display:none">Update</span></button><button data-s="cfg"><i class="ni" data-ni="cfg"></i>Einstellungen <span class="ncnt" id="dirtycnt" hidden></span></button><button data-s="prof"><i class="ni" data-ni="prof"></i>Profile und Geräte</button><button data-s="int"><i class="ni" data-ni="int"></i>Einbinden</button></nav></header>
+<nav><button data-s="chat"><i class="ni" data-ni="chat"></i>Assistent</button><button type="button" class="navme" id="navme"><i class="ni" data-ni="me"></i>Ich</button><span class="navgrp">Spark verwalten</span><button data-s="mon" class="on"><i class="ni" data-ni="mon"></i>Zustand <span class="hdot" id="hdot"></span></button><button data-s="cfg"><i class="ni" data-ni="cfg"></i>Einstellungen <span class="ncnt" id="dirtycnt" hidden></span><span id="updbadge" class="pill warn" style="display:none">Update</span></button><button data-s="prof"><i class="ni" data-ni="prof"></i>Profile und Geräte</button><button data-s="int"><i class="ni" data-ni="int"></i>Einbinden</button></nav></header>
 <main>
 <div class="ptabs subnav" id="subnav" hidden></div>
+<button class="b cfgback" id="subback" type="button"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"><path d="M15 5l-7 7 7 7"/></svg><span>Zustand</span></button>
 <div id="alerts"></div>
 
 <section id="mon" class="on">
@@ -62,13 +63,15 @@
 <section id="cfg">
   <div class="cfgwrap">
     <div class="cfgnav" id="cfgnav">
-      <div class="cgrp">Was er kann</div><button data-p="feat" class="on">Funktionen</button>
-      <div class="cgrp">Wie er denkt und spricht</div><button data-p="ai">Sprachmodell</button><button data-p="talk">Vorgaben</button><button data-p="tts">Sprachausgabe</button><button data-p="voices">Stimmen</button><button data-p="asr">Spracherkennung</button>
-      <div class="cgrp">Spark selbst</div><button data-p="sec">Sicherheit</button><button data-p="sysc">Betrieb</button>
+      <button data-p="start" class="on">Auf einen Blick</button>
+      <div class="cgrp">Assistent</div><button data-p="feat">Funktionen</button><button data-p="talk">Vorgaben</button><button data-p="ai">Sprachmodell</button>
+      <div class="cgrp">Sprache</div><button data-p="asr">Spracherkennung</button><button data-p="tts">Sprachausgabe</button><button data-p="voices">Stimmen</button>
+      <div class="cgrp">Spark</div><button data-p="sec">Sicherheit</button><button data-p="sysc">Betrieb</button><button data-p="upd">Update und Sicherung<span class="pill warn subbadge" style="display:none">Update</span></button>
     </div>
     <div>
     <button class="b cfgback" id="cfgback" type="button"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"><path d="M15 5l-7 7 7 7"/></svg><span>Alle Einstellungen</span></button>
-    <div class="card pane on" id="pane-feat"><h2 class="pt">Funktionen</h2><div class="fh" style="margin-top:0">Was der Assistent können soll. Tippe auf eine Funktion für Erklärung und Einstellungen.</div>
+    <div class="card pane on" id="pane-start"><h2 class="pt">Auf einen Blick</h2><div class="pintro">Alle Einstellungen des Spark mit ihrem Stand. Antippen öffnet die Seite.</div><div id="glance"></div></div>
+    <div class="card pane" id="pane-feat"><h2 class="pt">Funktionen</h2><div class="pintro">Was der Assistent können soll. Tippe auf eine Funktion für Erklärung und Einstellungen.</div>
       <div class="setrow"><div class="lbl"><b>Gedächtnis</b><span>Merkt sich Dinge, die man ihm sagt, getrennt pro Profil.</span></div><label class="tgl"><input type="checkbox" id="chat.memory"><i></i></label></div>
       <div class="setrow"><div class="lbl"><b>Frühere Gespräche</b><span>Profile können nach früheren Gesprächen fragen; aus ruhigen Gesprächen merkt er sich wenige Fakten.</span></div><label class="tgl"><input type="checkbox" id="chat.history"><i></i></label></div>
       <div class="setrow"><div class="lbl"><b>Eigene Dokumente</b><span>Profile laden eigene Dokumente hoch, der Assistent sucht darin.</span></div><label class="tgl"><input type="checkbox" id="chat.documents"><i></i></label></div>
@@ -148,167 +151,196 @@
       <div data-show="chat.speaker_id"><label>Strenge der Sprechererkennung</label><select id="chat.speaker_strictness"><option value="low">locker (erkennt öfter, verwechselt eher)</option><option value="normal">normal</option><option value="high">streng (verwechselt kaum, erkennt seltener)</option></select></div>
       <div class="savebar"><button class="b p savebtn" data-p="feat">Speichern</button><span class="savemsg"></span></div>
     </div>
-    <div class="card pane" id="pane-ai"><h2 class="pt">Sprachmodell</h2>
-      <label>LLM-Adresse</label><input id="chat.llm_url"><div class="fh">OpenAI-kompatibel, qwen38: http://127.0.0.1:30001/v1</div>
-      <label>LLM-API-Schlüssel</label><input id="chat.llm_key" autocomplete="off"><div class="fh">Bei qwen38 steht er in ~/.config/qwen38/api-key; das Update übernimmt ihn automatisch.</div>
-      <label>LLM-Modell</label><input id="chat.llm_model"><div class="fh">Leer = das erste, das der Server meldet.</div>
-      <label>Systemanweisung</label><textarea id="chat.system_prompt" rows="5"></textarea>
-      <div class="row" style="margin-top:6px"><button class="b" id="promptdef" type="button">Standard wiederherstellen</button><button class="b" id="promptshow" type="button">Ganzen Prompt ansehen</button><span id="promptmsg" class="mut"></span></div>
+    <div class="card pane" id="pane-ai"><h2 class="pt">Sprachmodell</h2><div class="pintro">Welches Modell antwortet und wie genau.</div>
+      <h3 class="sec">Verbindung</h3>
+      <div class="setrow"><div class="lbl"><b>Adresse</b><span>OpenAI-kompatibel, qwen38: http://127.0.0.1:30001/v1</span></div><input class="wide" id="chat.llm_url" autocomplete="off"></div>
+      <div class="setrow"><div class="lbl"><b>Schlüssel</b><span>Bei qwen38 übernimmt das Update ihn selbst.<button class="mlink" type="button">Mehr</button></span></div><input class="wide" id="chat.llm_key" autocomplete="off"></div>
+      <div class="fh more" hidden>Er steht auf dem Spark in ~/.config/qwen38/api-key. Leer lassen, wenn der Server keinen Schlüssel verlangt.</div>
+      <div class="setrow"><div class="lbl"><b>Modell</b><span>Leer = das erste, das der Server meldet.</span></div><input class="wide" id="chat.llm_model" autocomplete="off"></div>
+      <h3 class="sec">Antworten</h3>
+      <div class="setrow"><div class="lbl"><b>Systemanweisung</b><span>Grundton aller Antworten; die festen Regeln kommen immer dazu.</span></div><div class="ctl"><button class="b" id="promptshow" type="button">Ganzen Prompt ansehen</button><button class="b" id="promptdef" type="button">Standard</button></div></div>
+      <textarea id="chat.system_prompt" rows="4" aria-label="Systemanweisung"></textarea><div class="fh" id="promptmsg"></div>
       <div id="promptview" style="display:none"></div>
-      <label>Max. Tokens pro Antwort</label><input id="chat.max_tokens" type="number">
-      <label>Temperatur</label><input id="chat.temperature" type="number" step="0.05" min="0" max="1.5"><div class="fh">Kleiner = hält sich enger an Werkzeug-Ergebnisse und erfindet weniger; 0.3 empfohlen, Qwen-Standard 0.7.</div>
-      <label class="chk"><input type="checkbox" id="chat.datetime"> Datum und Uhrzeit mitgeben</label><div class="fh">Das Modell kennt sie sonst nicht.</div>
-      <label class="chk"><input type="checkbox" id="chat.thinking"> Vorher nachdenken</label><div class="fh">Genauer, aber die Antwort beginnt deutlich später.</div>
-      <label>Temperatur bei der Werkzeugwahl</label><input id="chat.tool_temperature" type="number" step="0.05" min="0" max="1.5"><div class="fh">Gilt, solange das Modell entscheidet, welches Werkzeug es nimmt; danach gilt die Temperatur oben. 0.1 empfohlen.</div>
-      <label class="chk"><input type="checkbox" id="chat.answer_check"> Antwort-Prüfung</label><div class="fh">Bei Fragen nach Terminen, Mails, Erinnerungen, Ergebnissen usw. sagt der Assistent keine Uhrzeit, kein Datum, keinen Spielstand und keinen Betrag, der in keinem Werkzeug-Ergebnis steht. Antwortet das Modell ohne nachzusehen, wird es einmal neu gefragt. Empfohlen: an.</div>
-      <h2>Erweitert</h2>
-      <label>Verlaufslänge (Zeichen)</label><input id="chat.history_chars" type="number" min="4000" max="64000" step="1000"><div class="fh">Wie viel vom bisherigen Gespräch das Modell mitbekommt, 4000 bis 64000. 24000 sind etwa 8000 Tokens. Mehr braucht ein Modell mit großem Kontextfenster und mehr Speicher.</div>
-      <label>Websuchen pro Antwort</label><input id="chat.max_searches" type="number" min="1" max="3"><div class="fh">1 bis 3. Mehr ist gründlicher, aber langsamer.</div>
-      <label>Zeitlimit für eine Antwort (Sekunden)</label><input id="chat.llm_timeout" type="number" min="60" max="600" step="10"><div class="fh">60 bis 600. Kürzer lohnt sich, wenn das Modell auf einem anderen Rechner läuft und dort hängen kann.</div>
-      <label>top_p</label><input id="chat.top_p" type="number" step="0.05" min="0" max="1"><div class="fh">0 = Standard des Servers. Sonst 0.05 bis 1; kleiner = vorsichtigere Wortwahl.</div>
-      <label>presence_penalty</label><input id="chat.presence_penalty" type="number" step="0.1" min="0" max="2"><div class="fh">0 = Standard des Servers. Bis 2; hilft, wenn das Modell sich wiederholt (Qwen empfiehlt dann etwa 1).</div>
-      <label>Eigene Stichwörter für die Werkzeugpflicht</label><textarea id="chat.tool_words" rows="3" placeholder="web_search: elfmeter, aufstellung"></textarea><div class="fh">Kommt eines dieser Wörter in der Frage vor, muss das Modell zuerst das Werkzeug benutzen. Eine Zeile pro Werkzeug: calendar_events, mail_list, reminder_list, web_search, weather, parcels, transit, tasks_show. Nur ganze Wörter, höchstens 20 pro Werkzeug. Die eingebauten Wörter bleiben immer.</div>
+      <div class="setrow"><div class="lbl"><b>Datum und Uhrzeit mitgeben</b><span>Das Modell kennt sie sonst nicht.</span></div><label class="tgl"><input type="checkbox" id="chat.datetime"><i></i></label></div>
+      <div class="setrow"><div class="lbl"><b>Vorher nachdenken</b><span>Genauer, aber die Antwort beginnt deutlich später.</span></div><label class="tgl"><input type="checkbox" id="chat.thinking"><i></i></label></div>
+      <div class="setrow"><div class="lbl"><b>Antwort-Prüfung<span class="mtag">empfohlen</span></b><span>Keine Uhrzeit, kein Datum und kein Betrag, der in keinem Werkzeug-Ergebnis steht.<button class="mlink" type="button">Mehr</button></span></div><label class="tgl"><input type="checkbox" id="chat.answer_check"><i></i></label></div>
+      <div class="fh more" hidden>Gilt bei Fragen nach Terminen, Mails, Erinnerungen, Ergebnissen und Ähnlichem, auch für Spielstände. Antwortet das Modell ohne nachzusehen, wird es einmal neu gefragt.</div>
+      <div class="setrow"><div class="lbl"><b>Temperatur</b><span>Kleiner = hält sich enger an Werkzeug-Ergebnisse; 0.3 empfohlen, Qwen-Standard 0.7.</span></div><input class="num" id="chat.temperature" type="number" step="0.05" min="0" max="1.5"></div>
+      <div class="setrow"><div class="lbl"><b>Länge einer Antwort</b><span>Höchstens so viele Tokens pro Antwort.</span></div><div class="ctl"><input class="num" id="chat.max_tokens" type="number"><span class="unit">Tokens</span></div></div>
+      <h3 class="sec">Werkzeuge</h3>
+      <div class="setrow"><div class="lbl"><b>Temperatur bei der Werkzeugwahl</b><span>Gilt, solange das Modell ein Werkzeug wählt; danach die Temperatur oben. 0.1 empfohlen.</span></div><input class="num" id="chat.tool_temperature" type="number" step="0.05" min="0" max="1.5"></div>
+      <details class="adv"><summary>Erweitert <span class="mut">· Verlaufslänge, Websuchen, Zeitlimit, Wortwahl, Wiederholungen, Werkzeugpflicht</span></summary>
+        <div class="setrow"><div class="lbl"><b>Verlaufslänge</b><span>Wie viel vom bisherigen Gespräch das Modell mitbekommt, 4000 bis 64000.<button class="mlink" type="button">Mehr</button></span></div><div class="ctl"><input class="num" id="chat.history_chars" type="number" min="4000" max="64000" step="1000"><span class="unit">Zeichen</span></div></div>
+        <div class="fh more" hidden>24000 Zeichen sind etwa 8000 Tokens. Mehr braucht ein Modell mit großem Kontextfenster und mehr Speicher.</div>
+        <div class="setrow"><div class="lbl"><b>Websuchen pro Antwort</b><span>1 bis 3. Mehr ist gründlicher, aber langsamer.</span></div><input class="num" id="chat.max_searches" type="number" min="1" max="3"></div>
+        <div class="setrow"><div class="lbl"><b>Zeitlimit für eine Antwort</b><span>60 bis 600. Kürzer lohnt sich, wenn das Modell auf einem anderen Rechner läuft.</span></div><div class="ctl"><input class="num" id="chat.llm_timeout" type="number" min="60" max="600" step="10"><span class="unit">Sekunden</span></div></div>
+        <div class="setrow"><div class="lbl"><b>Wortwahl (top_p)</b><span>0 = Standard des Servers, sonst 0.05 bis 1; kleiner = vorsichtigere Wortwahl.</span></div><input class="num" id="chat.top_p" type="number" step="0.05" min="0" max="1"></div>
+        <div class="setrow"><div class="lbl"><b>Wiederholungen vermeiden (presence_penalty)</b><span>0 = Standard des Servers, bis 2; hilft, wenn das Modell sich wiederholt (Qwen: etwa 1).</span></div><input class="num" id="chat.presence_penalty" type="number" step="0.1" min="0" max="2"></div>
+        <div class="setrow"><div class="lbl"><b>Eigene Stichwörter für die Werkzeugpflicht</b><span>Kommt eines dieser Wörter vor, muss das Modell zuerst das Werkzeug benutzen.<button class="mlink" type="button">Mehr</button></span></div></div>
+        <div class="fh more" hidden>Eine Zeile pro Werkzeug: calendar_events, mail_list, reminder_list, web_search, weather, parcels, transit, tasks_show. Nur ganze Wörter, höchstens 20 pro Werkzeug. Die eingebauten Wörter bleiben immer.</div>
+        <textarea id="chat.tool_words" rows="3" placeholder="web_search: elfmeter, aufstellung" aria-label="Eigene Stichwörter für die Werkzeugpflicht"></textarea>
+      </details>
       <div class="savebar"><button class="b p savebtn" data-p="ai">Speichern</button><span class="savemsg"></span></div>
     </div>
-    <div class="card pane" id="pane-talk"><h2 class="pt">Vorgaben</h2><div class="fh" style="margin-top:0">Gelten für Gäste und für Profile, die selbst nichts geändert haben.</div>
-      <label>Gesicht des Assistenten</label><select id="chat.face"><option value="robot">Roboter</option><option value="comic">Comic</option></select><div class="fh">Gilt für alle: Assistent, schwebender Knopf und iPhone-App.</div>
+    <div class="card pane" id="pane-talk"><h2 class="pt">Vorgaben</h2><div class="pintro">Gelten für Gäste und für Profile, die selbst nichts geändert haben.</div>
       <div id="chatdefaults"></div>
+      <div class="setrow" id="facerow"><div class="lbl"><b>Gesicht des Assistenten</b><span>Gilt für alle: Assistent, schwebender Knopf und iPhone-App.</span></div><select id="chat.face"><option value="robot">Roboter</option><option value="comic">Comic</option></select></div>
       <div class="savebar"><button class="b p savebtn" data-p="talk">Speichern</button><span class="savemsg"></span></div>
     </div>
-    <div class="card pane" id="pane-tts"><h2 class="pt">Sprachausgabe</h2>
-      <label class="chk"><input type="checkbox" id="tts.enabled"> aktiviert</label>
-      <label>Modell</label><select id="tts.model">
+    <div class="card pane" id="pane-tts"><h2 class="pt">Sprachausgabe</h2><div class="pintro">Wie der Spark spricht: Modell, Stimme und wie Text vorgelesen wird.</div>
+      <div class="setrow"><div class="lbl"><b>Sprachausgabe an</b><span>Aus = der Dienst wird gestoppt; es gibt keine gesprochenen Antworten.</span></div><label class="tgl"><input type="checkbox" id="tts.enabled"><i></i></label></div>
+      <h3 class="sec">Stimme</h3>
+      <div class="setrow"><div class="lbl"><b>Modell</b><span>CustomVoice: feste Sprecher. VoiceDesign: Stimme per Beschreibung. Base: eigene Stimmen (Stimmen).</span></div><select class="wide" id="tts.model">
         <option>Qwen/Qwen3-TTS-12Hz-1.7B-CustomVoice</option><option>Qwen/Qwen3-TTS-12Hz-0.6B-CustomVoice</option>
-        <option>Qwen/Qwen3-TTS-12Hz-1.7B-VoiceDesign</option><option>Qwen/Qwen3-TTS-12Hz-1.7B-Base</option><option>Qwen/Qwen3-TTS-12Hz-0.6B-Base</option></select>
-      <div class="fh">CustomVoice: feste Sprecher. VoiceDesign: Stimme per Beschreibung. Base: Stimmen klonen (Einstellungen → Stimmen).</div>
-      <label>Standardstimme</label><input id="tts.default_voice">
-      <label>Standardsprache</label><select id="tts.default_language" class="langs"></select>
-      <label>Sprechstil</label><input id="tts.default_instruct" placeholder="z. B. Ruhig und freundlich, eher langsam, wie eine Hörbuchsprecherin.">
-      <div class="fh">Gilt, wenn eine Anfrage keine eigene Anweisung mitbringt.</div><div class="fh instrhint"></div>
-      <label class="chk"><input type="checkbox" id="tts.clean_text"> Text bereinigen</label><div class="fh">Emojis, Markdown, „haha“ und *lacht* entfernen.</div>
-      <label class="chk"><input type="checkbox" id="tts.calm"> Ruhig sprechen</label><div class="fh">Ausrufezeichen werden zu Punkten, „Oh“, „Wow“, „Hm“ am Satzanfang fallen weg.</div>
-      <label>Aussprache</label><textarea id="tts.pronunciation" rows="3" placeholder="DGX = De Ge Ix&#10;Bornhäußer = Bornhoiser"></textarea>
-      <div class="fh">Eine Regel pro Zeile, „Wort = so gesprochen“; gilt für ganze Wörter, Groß-/Kleinschreibung egal.</div>
-      <label>Zahlen vorlesen</label><select id="tts.numbers"><option value="words">als Wörter (Datum, Uhrzeit, Geld, Prozent; Telefonnummern in Zweierblöcken)</option><option value="blocks">in Zweierblöcken (Zahlen ab 3 Stellen: 4711 → siebenundvierzig elf)</option><option value="digits">Ziffer für Ziffer (Zahlen ab 3 Stellen: 4711 → vier sieben eins eins)</option><option value="off">unverändert (das Modell rät)</option></select>
-      <div class="fh">Datum, Uhrzeit, Geldbeträge und Kommazahlen werden immer ausgeschrieben, außer bei „unverändert“. Gilt für Deutsch und Englisch.</div>
-      <details class="adv"><summary>Erweitert</summary>
+        <option>Qwen/Qwen3-TTS-12Hz-1.7B-VoiceDesign</option><option>Qwen/Qwen3-TTS-12Hz-1.7B-Base</option><option>Qwen/Qwen3-TTS-12Hz-0.6B-Base</option></select></div>
+      <div class="setrow"><div class="lbl"><b>Standardstimme</b><span>Name des Sprechers, z. B. ryan.</span></div><input class="wide" id="tts.default_voice" autocomplete="off"></div>
+      <div class="setrow"><div class="lbl"><b>Standardsprache</b><span>Gilt, wenn eine Anfrage keine Sprache nennt.</span></div><select id="tts.default_language" class="langs"></select></div>
+      <div class="setrow"><div class="lbl"><b>Sprechstil</b><span>Gilt, wenn eine Anfrage keine eigene Anweisung mitbringt.</span></div><input class="wide" id="tts.default_instruct" placeholder="z. B. Ruhig und freundlich, eher langsam, wie eine Hörbuchsprecherin."></div>
+      <div class="fh instrhint"></div>
+      <h3 class="sec">Text</h3>
+      <div class="setrow"><div class="lbl"><b>Text bereinigen</b><span>Emojis, Markdown, „haha“ und *lacht* entfernen.</span></div><label class="tgl"><input type="checkbox" id="tts.clean_text"><i></i></label></div>
+      <div class="setrow"><div class="lbl"><b>Ruhig sprechen</b><span>Ausrufezeichen werden zu Punkten, „Oh“, „Wow“, „Hm“ am Satzanfang fallen weg.</span></div><label class="tgl"><input type="checkbox" id="tts.calm"><i></i></label></div>
+      <div class="setrow"><div class="lbl"><b>Zahlen vorlesen</b><span>Datum, Uhrzeit, Geld und Kommazahlen werden immer ausgeschrieben, außer bei „unverändert“.</span></div><select class="wide" id="tts.numbers"><option value="words">als Wörter (Datum, Uhrzeit, Geld, Prozent; Telefonnummern in Zweierblöcken)</option><option value="blocks">in Zweierblöcken (Zahlen ab 3 Stellen: 4711 → siebenundvierzig elf)</option><option value="digits">Ziffer für Ziffer (Zahlen ab 3 Stellen: 4711 → vier sieben eins eins)</option><option value="off">unverändert (das Modell rät)</option></select></div>
+      <div class="setrow"><div class="lbl"><b>Aussprache</b><span>Eine Regel pro Zeile, „Wort = so gesprochen“; ganze Wörter, Groß-/Kleinschreibung egal.</span></div></div>
+      <textarea id="tts.pronunciation" rows="3" placeholder="DGX = De Ge Ix&#10;Bornhäußer = Bornhoiser" aria-label="Aussprache"></textarea>
+      <details class="adv"><summary>Erweitert <span class="mut">· Port, Temperatur, Wortwahl, Seed, Engine</span></summary>
         <div class="fh">Backend: <b id="ttsbackend">–</b> <span id="ttsbackendnote"></span></div>
-        <label>Port</label><input id="tts.port" type="number">
-        <label>Temperatur</label><input id="tts.temperature" type="number" step="0.05" min="0.05" max="2"><div class="fh">Kleiner = ruhiger und gleichmäßiger, größer = lebendiger; Qwen-Standard 0.9.</div>
-        <label>top_p</label><input id="tts.top_p" type="number" step="0.05" min="0.05" max="1"><div class="fh">Kleiner = weniger Ausreißer; Qwen-Standard 1.0.</div>
-        <label>Seed</label><input id="tts.seed" type="number" step="1" min="-1"><div class="fh">Feste Zahl = gleiche Stimmführung über alle Sätze; -1 = zufällig.</div>
+        <div class="setrow"><div class="lbl"><b>Port</b><span>Der Port des Dienstes auf dem Spark.</span></div><input class="num" id="tts.port" type="number"></div>
+        <div class="setrow"><div class="lbl"><b>Temperatur</b><span>Kleiner = ruhiger und gleichmäßiger, größer = lebendiger; Qwen-Standard 0.9.</span></div><input class="num" id="tts.temperature" type="number" step="0.05" min="0.05" max="2"></div>
+        <div class="setrow"><div class="lbl"><b>Wortwahl (top_p)</b><span>Kleiner = weniger Ausreißer; Qwen-Standard 1.0.</span></div><input class="num" id="tts.top_p" type="number" step="0.05" min="0.05" max="1"></div>
+        <div class="setrow"><div class="lbl"><b>Seed</b><span>Feste Zahl = gleiche Stimmführung über alle Sätze; -1 = zufällig.</span></div><input class="num" id="tts.seed" type="number" step="1" min="-1"></div>
         <div id="enginecfg">
-          <h2>Engine (vllm-omni)</h2>
-          <label>Speicheranteil Talker</label><input id="tts.engine_mem_talker" type="number" step="0.01"><div class="fh">Anteil am ganzen 128-GB-Pool, z. B. 0.04 ≈ 4,8 GiB.</div>
-          <label>Speicheranteil Code2Wav</label><input id="tts.engine_mem_code2wav" type="number" step="0.01">
-          <label>Max. gleichzeitige Anfragen</label><input id="tts.engine_max_seqs" type="number">
-          <label>Max. Länge pro Anfrage</label><input id="tts.engine_max_model_len" type="number"><div class="fh">In Schritten; 4096 ≈ 5 Min. Audio, kleiner = weniger Speicher.</div>
-          <label>Start der Sprachausgabe</label><select id="tts.initial_chunk_frames" data-num="1">
+          <h3 class="sec">Engine (vllm-omni)</h3>
+          <div class="setrow"><div class="lbl"><b>Speicheranteil Talker</b><span>Anteil am ganzen 128-GB-Pool, z. B. 0.04 ≈ 4,8 GiB.</span></div><input class="num" id="tts.engine_mem_talker" type="number" step="0.01"></div>
+          <div class="setrow"><div class="lbl"><b>Speicheranteil Code2Wav</b><span>Anteil am ganzen 128-GB-Pool.</span></div><input class="num" id="tts.engine_mem_code2wav" type="number" step="0.01"></div>
+          <div class="setrow"><div class="lbl"><b>Max. gleichzeitige Anfragen</b><span>Mehr braucht mehr Speicher.</span></div><input class="num" id="tts.engine_max_seqs" type="number"></div>
+          <div class="setrow"><div class="lbl"><b>Max. Länge pro Anfrage</b><span>In Schritten; 4096 ≈ 5 Min. Audio, kleiner = weniger Speicher.</span></div><input class="num" id="tts.engine_max_model_len" type="number"></div>
+          <div class="setrow"><div class="lbl"><b>Start der Sprachausgabe</b><span>Kleiner erster Block = früher hörbar, größerer = läuft gleichmäßiger an.<button class="mlink" type="button">Mehr</button></span></div><select class="wide" id="tts.initial_chunk_frames" data-num="1">
             <option value="6">sehr schnell: erster Ton am frühesten, kann bei voller GPU stocken</option>
             <option value="8">schnell</option>
             <option value="10">ausgewogen (empfohlen)</option>
             <option value="14">ruhig: erster Ton etwas später, läuft sehr gleichmäßig an</option>
             <option value="18">sehr ruhig: erster Ton spürbar später</option>
-            <option value="0">automatisch: vllm-omni entscheidet nach Auslastung</option></select>
-          <div class="fh">Die Sprachausgabe liefert den Ton in Blöcken. Ein kleiner erster Block ist früher hörbar, ein größerer läuft gleichmäßiger an; danach werden die Blöcke stufenweise größer, damit die Wiedergabe nicht abreißt. Eine Änderung startet die Sprachausgabe neu, das dauert ein paar Minuten.</div>
-          <label class="chk"><input type="checkbox" id="tts.voicedesign_enabled"> VoiceDesign zusätzlich bereitstellen</label><div class="fh">Zweite Engine, braucht den gleichen Speicher noch einmal.</div>
-          <label>VoiceDesign-Modell</label><select id="tts.voicedesign_model"><option>Qwen/Qwen3-TTS-12Hz-1.7B-VoiceDesign</option></select>
+            <option value="0">automatisch: vllm-omni entscheidet nach Auslastung</option></select></div>
+          <div class="fh more" hidden>Die Sprachausgabe liefert den Ton in Blöcken. Ein kleiner erster Block ist früher hörbar, ein größerer läuft gleichmäßiger an; danach werden die Blöcke stufenweise größer, damit die Wiedergabe nicht abreißt. Eine Änderung startet die Sprachausgabe neu, das dauert ein paar Minuten.</div>
+          <div class="setrow"><div class="lbl"><b>VoiceDesign zusätzlich bereitstellen</b><span>Zweite Engine, braucht den gleichen Speicher noch einmal.</span></div><label class="tgl"><input type="checkbox" id="tts.voicedesign_enabled"><i></i></label></div>
+          <div class="setrow"><div class="lbl"><b>VoiceDesign-Modell</b><span>Stimme per Beschreibung.</span></div><select class="wide" id="tts.voicedesign_model"><option>Qwen/Qwen3-TTS-12Hz-1.7B-VoiceDesign</option></select></div>
         </div>
-        <div id="ttsdtype"><label>Datentyp</label><select id="tts.dtype"><option>bfloat16</option><option>float16</option><option>float32</option></select></div>
+        <div id="ttsdtype"><div class="setrow"><div class="lbl"><b>Datentyp</b><span>bfloat16 passt für die meisten Grafikkarten.</span></div><select id="tts.dtype"><option>bfloat16</option><option>float16</option><option>float32</option></select></div></div>
       </details>
       <div class="savebar"><button class="b p savebtn" data-p="tts">Speichern</button><span class="savemsg"></span></div>
     </div>
-    <div class="pane" id="pane-voices"><h2 class="pt">Stimmen</h2><div class="fh" style="margin-top:0;margin-bottom:12px">Eigene Stimmen für die Sprachausgabe: aufnehmen, anhören, sichern. Welche Stimme der Assistent nutzt, steht unter Sprachausgabe → Standardstimme; jedes Profil kann sich unter Ich → Gespräch eine andere wählen. Wer spricht, erkennt dagegen die Sprechererkennung.</div>
-  <div class="two">
-    <div class="card"><h2>Stimme zum Klonen hinzufügen</h2>
-      <div class="mut">Nur mit einem <b>Base</b>-Modell wirksam. 5–15 Sekunden saubere Sprache; der Text sollte genau dem Gesprochenen entsprechen (leer lassen geht, klont dann schlechter).</div>
-      <label>Name</label><input id="vname" placeholder="z. B. dominik">
-      <label>Mit dem Mikrofon aufnehmen</label>
-      <div id="vsecure" class="note" style="display:none">Das Mikrofon geht nur über https: <a class="vhttps" href="#"></a></div>
-      <div class="recbox">
-        <div class="intro sm">Lies diesen Text ruhig und deutlich vor, so wie die Stimme später klingen soll (etwa 10 Sekunden):</div>
-        <div class="row" style="margin-top:6px"><span class="intro sm">Sprache der Stimme:</span>
-          <select id="vreadlang" style="width:auto"><option value="de">Deutsch</option><option value="en">English</option></select></div>
-        <div class="readme" id="vread"></div>
-        <div class="row" style="margin-top:10px">
-          <button class="b p" id="vrec" type="button">Aufnahme starten</button>
-          <span class="meter"><i id="vlevel"></i></span><span id="vtime" class="mut" style="font-variant-numeric:tabular-nums">0,0 s</span>
+    <div class="card pane" id="pane-voices"><h2 class="pt">Stimmen</h2><div class="pintro">Eigene Stimmen für die Sprachausgabe: aufnehmen, anhören, sichern.<button class="mlink" type="button">Mehr</button></div>
+      <div class="fh more" hidden>Welche Stimme der Assistent nutzt, steht unter Sprachausgabe → Standardstimme; jedes Profil kann sich unter Ich → Gespräch eine andere wählen. Wer spricht, erkennt dagegen die Sprechererkennung.</div>
+      <h3 class="sec">Vorhandene Stimmen</h3>
+      <table><tbody id="vlist"></tbody></table><div id="vprobemsg" class="fh"></div>
+      <details class="adv" id="vaddbox"><summary>Stimme hinzufügen <span class="mut">· aufnehmen oder Audiodatei hochladen</span></summary>
+        <div class="fh">Nur mit einem <b>Base</b>-Modell wirksam. 5–15 Sekunden saubere Sprache; der Text sollte genau dem Gesprochenen entsprechen (leer lassen geht, klont dann schlechter).</div>
+        <div class="setrow"><div class="lbl"><b>Name</b><span>So heißt die Stimme später in der Auswahl.</span></div><input class="wide" id="vname" placeholder="z. B. dominik" autocomplete="off"></div>
+        <div class="setrow"><div class="lbl"><b>Mit dem Mikrofon aufnehmen</b><span>Lies den Text ruhig vor, so wie die Stimme später klingen soll.</span></div></div>
+        <div id="vsecure" class="note" style="display:none">Das Mikrofon geht nur über https: <a class="vhttps" href="#"></a></div>
+        <div class="recbox">
+          <div class="intro sm">Lies diesen Text ruhig und deutlich vor, so wie die Stimme später klingen soll (etwa 10 Sekunden):</div>
+          <div class="row" style="margin-top:6px"><span class="intro sm">Sprache der Stimme:</span>
+            <select id="vreadlang" style="width:auto"><option value="de">Deutsch</option><option value="en">English</option></select></div>
+          <div class="readme" id="vread"></div>
+          <div class="row" style="margin-top:10px">
+            <button class="b p" id="vrec" type="button">Aufnahme starten</button>
+            <span class="meter"><i id="vlevel"></i></span><span id="vtime" class="mut" style="font-variant-numeric:tabular-nums">0,0 s</span>
+          </div>
+          <audio id="vplay" controls style="display:none;width:100%;margin-top:10px"></audio>
         </div>
-        <audio id="vplay" controls style="display:none;width:100%;margin-top:10px"></audio>
-      </div>
-      <label>… oder eine Audiodatei hochladen (wav, mp3, m4a, …)</label><input type="file" id="vfile" accept="audio/*">
-      <label>Transkript der Referenz</label><textarea id="vtext" rows="3"></textarea>
-      <div class="row" style="margin-top:12px"><button class="b p" id="vadd">Hinzufügen</button><span id="vmsg"></span></div>
+        <div class="setrow"><div class="lbl"><b>… oder eine Audiodatei hochladen</b><span id="vfilename">wav, mp3, m4a, …</span></div><button class="b" id="vfilebtn" type="button">Datei wählen …</button><input type="file" id="vfile" accept="audio/*" hidden></div>
+        <div class="setrow"><div class="lbl"><b>Transkript der Referenz</b><span>Genau der gesprochene Text; die Spracherkennung trägt ihn nach einer Aufnahme ein.</span></div></div>
+        <textarea id="vtext" rows="3" aria-label="Transkript der Referenz"></textarea>
+        <div class="row" style="margin-top:12px"><button class="b p" id="vadd" type="button">Hinzufügen</button><span id="vmsg"></span></div>
+      </details>
+      <h3 class="sec">Exportieren und importieren</h3>
+      <div class="setrow"><div class="lbl"><b>Alle exportieren</b><span>Eine ZIP-Datei mit Referenz-Audio und Transkript, etwa zum Sichern.</span></div><button class="b" id="vexpall" type="button">Exportieren</button></div>
+      <div class="setrow"><div class="lbl"><b>ZIP importieren</b><span>Stimmen von einem anderen Spark übernehmen.</span></div><div class="ctl full"><select id="vimpconflict" style="width:auto"><option value="rename">gleicher Name: beide behalten</option><option value="overwrite">gleicher Name: ersetzen</option><option value="skip">gleicher Name: überspringen</option></select><button class="b" id="vimpbtn" type="button">Datei wählen …</button><input type="file" id="vimpfile" accept=".zip,application/zip" hidden></div></div>
+      <div id="vimpmsg" class="fh"></div>
     </div>
-    <div class="card"><h2>Vorhandene Stimmen</h2><table><tbody id="vlist"></tbody></table><div id="vprobemsg" class="mut" style="margin-top:6px"></div>
-      <h2>Exportieren und importieren</h2>
-      <div class="intro sm">Eine ZIP-Datei mit Referenz-Audio und Transkript, etwa zum Sichern oder für einen anderen Spark.</div>
-      <div class="row" style="margin-top:10px"><button class="b" id="vexpall">Alle exportieren</button>
-        <button class="b" id="vimpbtn">ZIP importieren …</button><input type="file" id="vimpfile" accept=".zip,application/zip" style="display:none">
-        <select id="vimpconflict" style="width:auto"><option value="rename">gleicher Name: beide behalten</option><option value="overwrite">gleicher Name: ersetzen</option><option value="skip">gleicher Name: überspringen</option></select></div>
-      <div id="vimpmsg" style="margin-top:8px"></div></div>
-  </div>
-    </div>
-    <div class="card pane" id="pane-asr"><h2 class="pt">Spracherkennung</h2>
-      <label class="chk"><input type="checkbox" id="asr.enabled"> aktiviert</label>
-      <label>Erkennung</label><select id="asr.recognizer"><option value="qwen">Qwen3-ASR (Grafikkarte)</option><option value="parakeet">Parakeet Deutsch (Prozessor)</option></select><div class="fh">Parakeet (primeline, deutsch nachtrainiert) läuft auf dem Prozessor, braucht etwa 1 GiB statt mehrerer GiB und ist sehr schnell, kennt aber keinen Kontext und versteht vor allem Deutsch. Beim Umschalten startet die Spracherkennung neu; beim ersten Mal lädt Parakeet etwa 640 MB herunter.</div>
-      <div id="asrqwen"><label>Modell</label><select id="asr.model"><option>Qwen/Qwen3-ASR-1.7B</option><option>Qwen/Qwen3-ASR-0.6B</option></select><div class="fh">1.7B erkennt genauer, braucht aber mehr Speicher.</div></div>
-      <label>Standardsprache</label><select id="asr.default_language" class="langs"></select><div class="fh">Eine feste Sprache erkennt kurze Sätze besser als „auto“.</div>
-      <label>Kontext</label><textarea id="asr.context" rows="2"></textarea><div class="fh">Namen, Fachbegriffe oder ein Satz zum Thema, die die Erkennung erwarten soll (z. B. DGX Spark, Qwen, Open WebUI).</div>
-      <details class="adv"><summary>Erweitert</summary>
+    <div class="card pane" id="pane-asr"><h2 class="pt">Spracherkennung</h2><div class="pintro">Wie der Spark gesprochene Sätze in Text verwandelt.</div>
+      <div class="setrow"><div class="lbl"><b>Spracherkennung an</b><span>Aus = der Dienst wird gestoppt; Sprechen mit dem Assistenten geht dann nicht.</span></div><label class="tgl"><input type="checkbox" id="asr.enabled"><i></i></label></div>
+      <h3 class="sec">Erkennung</h3>
+      <div class="setrow"><div class="lbl"><b>Erkennung</b><span>Qwen3-ASR auf der Grafikkarte oder Parakeet auf dem Prozessor.<button class="mlink" type="button">Mehr</button></span></div><select class="wide" id="asr.recognizer"><option value="qwen">Qwen3-ASR (Grafikkarte)</option><option value="parakeet">Parakeet Deutsch (Prozessor)</option></select></div>
+      <div class="fh more" hidden>Parakeet (primeline, deutsch nachtrainiert) läuft auf dem Prozessor, braucht etwa 1 GiB statt mehrerer GiB und ist sehr schnell, kennt aber keinen Kontext und versteht vor allem Deutsch. Beim Umschalten startet die Spracherkennung neu; beim ersten Mal lädt Parakeet etwa 640 MB herunter.</div>
+      <div id="asrqwen"><div class="setrow"><div class="lbl"><b>Modell</b><span>1.7B erkennt genauer, braucht aber mehr Speicher.</span></div><select id="asr.model"><option>Qwen/Qwen3-ASR-1.7B</option><option>Qwen/Qwen3-ASR-0.6B</option></select></div></div>
+      <div class="setrow"><div class="lbl"><b>Standardsprache</b><span>Eine feste Sprache erkennt kurze Sätze besser als „auto“.</span></div><select id="asr.default_language" class="langs"></select></div>
+      <div class="setrow"><div class="lbl"><b>Kontext</b><span>Namen und Fachbegriffe, die die Erkennung erwarten soll (z. B. DGX Spark, Qwen, Open WebUI).</span></div></div>
+      <textarea id="asr.context" rows="2" aria-label="Kontext"></textarea>
+      <details class="adv"><summary>Erweitert <span class="mut">· Port, Engine</span></summary>
         <div class="fh">Backend: <b id="asrbackend">–</b> <span id="asrbackendnote"></span></div>
-        <label>Port</label><input id="asr.port" type="number">
+        <div class="setrow"><div class="lbl"><b>Port</b><span>Der Port des Dienstes auf dem Spark.</span></div><input class="num" id="asr.port" type="number"></div>
         <div id="asrengine">
-          <h2>Engine (vLLM)</h2>
-          <label>Speicheranteil</label><input id="asr.engine_mem" type="number" step="0.01"><div class="fh">Anteil am ganzen 128-GB-Pool; 1.7B: 0.06 ≈ 7,2 GiB, 0.6B: 0.035 ≈ 4,2 GiB.</div>
-          <label>Max. gleichzeitige Anfragen</label><input id="asr.engine_max_seqs" type="number">
+          <h3 class="sec">Engine (vLLM)</h3>
+          <div class="setrow"><div class="lbl"><b>Speicheranteil</b><span>Anteil am ganzen 128-GB-Pool; 1.7B: 0.06 ≈ 7,2 GiB, 0.6B: 0.035 ≈ 4,2 GiB.</span></div><input class="num" id="asr.engine_mem" type="number" step="0.01"></div>
+          <div class="setrow"><div class="lbl"><b>Max. gleichzeitige Anfragen</b><span>Mehr braucht mehr Speicher.</span></div><input class="num" id="asr.engine_max_seqs" type="number"></div>
         </div>
         <div id="asrtf">
-          <label>Max. Batchgröße</label><input id="asr.max_batch_size" type="number">
-          <label>Max. neue Tokens</label><input id="asr.max_new_tokens" type="number">
-          <label class="chk"><input type="checkbox" id="asr.timestamps"> Zeitstempel</label><div class="fh">Lädt zusätzlich den Forced Aligner (~2 GiB); nur für Untertitel und Ähnliches nötig.</div>
-          <label>Datentyp</label><select id="asr.dtype"><option>bfloat16</option><option>float16</option><option>float32</option></select>
+          <div class="setrow"><div class="lbl"><b>Max. Batchgröße</b><span>Wie viele Aufnahmen auf einmal erkannt werden.</span></div><input class="num" id="asr.max_batch_size" type="number"></div>
+          <div class="setrow"><div class="lbl"><b>Max. neue Tokens</b><span>Obergrenze für den Text einer Aufnahme.</span></div><input class="num" id="asr.max_new_tokens" type="number"></div>
+          <div class="setrow"><div class="lbl"><b>Zeitstempel</b><span>Lädt zusätzlich den Forced Aligner (~2 GiB); nur für Untertitel und Ähnliches nötig.</span></div><label class="tgl"><input type="checkbox" id="asr.timestamps"><i></i></label></div>
+          <div class="setrow"><div class="lbl"><b>Datentyp</b><span>bfloat16 passt für die meisten Grafikkarten.</span></div><select id="asr.dtype"><option>bfloat16</option><option>float16</option><option>float32</option></select></div>
         </div>
       </details>
       <div class="savebar"><button class="b p savebtn" data-p="asr">Speichern</button><span class="savemsg"></span></div>
     </div>
-    <div class="card pane" id="pane-sec"><h2 class="pt">Sicherheit</h2>
-      <h2>Zugang zum Assistenten</h2>
-      <label class="chk"><input type="checkbox" id="chat.public"> Assistent ohne Passwort</label><div class="fh">An: Startseite für alle im Netz, auch Gäste. Aus: nur angemeldete Profile (Name und PIN) und Geräte mit Schlüssel, keine Gäste. Einstellungen bleiben immer geschützt.</div>
-      <h2>Panel-Passwort</h2>
-      <label>Aktuelles Passwort</label><input type="password" id="pwold" autocomplete="current-password">
-      <label>Neues Passwort</label><input type="password" id="pwnew" autocomplete="new-password"><div class="fh">Mindestens 10 Zeichen.</div>
-      <div class="row" style="margin-top:10px"><button class="b" id="pwset" type="button">Passwort ändern</button><span id="pwmsg"></span></div>
-      <h2>Zweiter Anmeldeschritt</h2>
-      <div id="admmfa"></div>
-      <div class="fh">Gilt für die Admin-Anmeldung. Solange er an ist, geht die Anmeldung per HTTP-Basic (Skripte) nicht mehr, und Passwort ändern, Sicherung wiederherstellen, Geräteschlüssel anlegen oder umhängen und PINs ändern fragen jedes Mal nach einem Code. Notausgang ohne Handy und Codes: auf dem Spark sudo rm /var/lib/speech-spark/state/mfa-admin.json</div>
-      <h2>Admin-Anmeldung</h2>
-      <div class="row"><button class="b" id="adminout" type="button">Admin überall abmelden</button></div>
-      <div class="fh">Beendet die Admin-Anmeldung in allen Browsern, auch in diesem (z. B. nach einem verlorenen Gerät).</div>
-      <h2>API-Schlüssel</h2>
-      <div class="row"><input id="api.key" style="flex:1" autocomplete="off"><button class="b" id="genkey" type="button">Erzeugen</button></div>
-      <div class="fh">Leer = APIs ohne Schlüssel erreichbar. Gesetzt = Apps müssen „Authorization: Bearer &lt;Schlüssel&gt;“ senden.</div>
-      <h2>Reverse Proxy</h2>
-      <label>Adressen des Reverse-Proxys</label><input id="panel.trusted_proxies" data-list="1" placeholder="192.168.1.10" autocomplete="off"><div class="fh">Nur von diesen Adressen wird die weitergereichte Absender-Adresse (X-Forwarded-For) geglaubt, z. B. 192.168.1.10. Leer = nur ein Proxy auf dem Spark selbst. Eintragen, wenn das Panel hinter einem Proxy im Heimnetz hängt: sonst teilen sich alle, die über den Proxy kommen, eine Adresse für die Sperre nach falschen Passwörtern.</div>
-      <h2>Heimnetz</h2>
-      <label class="chk"><input type="checkbox" id="panel.allow_lan"> Heimnetz-Adressen für Kalender, Kontakte und Mail erlauben</label><div class="fh">Aus: Kalender, Adressbücher, Aufgaben und Postfächer der Profile dürfen nur auf Adressen im Internet liegen (z. B. iCloud, GMX). An: auch Server im Heimnetz (z. B. ein NAS). Home Assistant darf immer im Heimnetz liegen. Die Dienste des Sparks selbst und Adressen wie 169.254.x sind nie erreichbar.</div>
+    <div class="card pane" id="pane-sec"><h2 class="pt">Sicherheit</h2><div class="pintro">Wer den Spark erreicht und wie du dich als Admin anmeldest.</div>
+      <h3 class="sec">Wer den Spark erreicht <span>wirkt mit Speichern</span></h3>
+      <div class="setrow"><div class="lbl"><b>Assistent ohne Passwort</b><span>An: Startseite für alle im Netz, auch Gäste.<button class="mlink" type="button">Mehr</button></span></div><label class="tgl"><input type="checkbox" id="chat.public"><i></i></label></div>
+      <div class="fh more" hidden>Aus: nur angemeldete Profile (Name und PIN) und Geräte mit Schlüssel, keine Gäste. Einstellungen bleiben immer geschützt.</div>
+      <div class="setrow"><div class="lbl"><b>Heimnetz-Adressen erlauben</b><span>Kalender, Kontakte und Mail der Profile dürfen auch auf Servern im Heimnetz liegen.<button class="mlink" type="button">Mehr</button></span></div><label class="tgl"><input type="checkbox" id="panel.allow_lan"><i></i></label></div>
+      <div class="fh more" hidden>Aus: Kalender, Adressbücher, Aufgaben und Postfächer der Profile dürfen nur auf Adressen im Internet liegen (z. B. iCloud, GMX). An: auch Server im Heimnetz (z. B. ein NAS). Home Assistant darf immer im Heimnetz liegen. Die Dienste des Sparks selbst und Adressen wie 169.254.x sind nie erreichbar.</div>
+      <div class="setrow"><div class="lbl"><b>Reverse Proxy</b><span>Nur diesen Adressen wird die weitergereichte Absender-Adresse geglaubt.<button class="mlink" type="button">Mehr</button></span></div><input class="wide" id="panel.trusted_proxies" data-list="1" placeholder="192.168.1.10" autocomplete="off"></div>
+      <div class="fh more" hidden>Gemeint ist X-Forwarded-For. Leer = nur ein Proxy auf dem Spark selbst. Eintragen, wenn das Panel hinter einem Proxy im Heimnetz hängt: sonst teilen sich alle, die über den Proxy kommen, eine Adresse für die Sperre nach falschen Passwörtern.</div>
+      <div class="setrow"><div class="lbl"><b>API-Schlüssel</b><span>Gesetzt = Apps senden „Authorization: Bearer &lt;Schlüssel&gt;“; leer = ohne Schlüssel.</span></div><div class="ctl full"><input class="wide" id="api.key" autocomplete="off"><button class="b" id="genkey" type="button">Erzeugen</button></div></div>
+      <h3 class="sec">Admin-Anmeldung <span>wirkt sofort, ohne Speichern</span></h3>
+      <div class="setrow"><div class="lbl"><b>Panel-Passwort</b><span>Mindestens 10 Zeichen.</span></div><button class="b" id="pwopen" type="button">Ändern …</button></div>
+      <div class="full" id="pwbox" hidden><label for="pwold">Aktuelles Passwort</label><input type="password" id="pwold" autocomplete="current-password">
+        <label for="pwnew">Neues Passwort</label><input type="password" id="pwnew" autocomplete="new-password">
+        <div class="row" style="margin-top:10px"><button class="b p" id="pwset" type="button">Passwort ändern</button><span id="pwmsg"></span></div></div>
+      <div class="setrow"><div class="lbl"><b>Zweiter Anmeldeschritt</b><span>Code aus einer Authenticator-App bei jeder Admin-Anmeldung.<button class="mlink" type="button">Mehr</button></span></div></div>
+      <div class="fh more" hidden>Solange er an ist, geht die Anmeldung per HTTP-Basic (Skripte) nicht mehr, und Passwort ändern, Sicherung wiederherstellen, Geräteschlüssel anlegen oder umhängen und PINs ändern fragen jedes Mal nach einem Code. Notausgang ohne Handy und Codes: auf dem Spark sudo rm /var/lib/speech-spark/state/mfa-admin.json</div>
+      <div id="admmfa" class="full"></div>
+      <div class="setrow"><div class="lbl"><b>Überall abmelden</b><span>Beendet die Admin-Anmeldung in allen Browsern, auch hier (z. B. nach einem verlorenen Gerät).</span></div><button class="b" id="adminout" type="button">Abmelden</button></div>
       <div class="savebar"><button class="b p savebtn" data-p="sec">Speichern</button><span class="savemsg"></span></div>
     </div>
-    <div class="card pane" id="pane-sysc"><h2 class="pt">Betrieb</h2>
-      <h2>Ports</h2>
-      <label>Panel-Port</label><input id="panel.port" type="number"><div class="fh">Wirkt nach einem Neustart des Panels.</div>
-      <label>HTTPS-Port</label><input id="panel.https_port" type="number"><div class="fh">Das Mikrofon braucht https; 0 = aus.</div>
-      <h2>Speicherschutz</h2>
-      <label class="chk"><input type="checkbox" id="memory.guard"> Speicherschutz an</label><div class="fh">Ein Modell wird nicht geladen, wenn danach weniger als die Reserve frei bliebe.</div>
-      <label>Reserve in GiB</label><input id="memory.reserve_gib" type="number"><div class="fh">DGX OS beendet Prozesse ab etwa 8 GiB freiem Speicher.</div>
-      <label>Warnen unter GiB frei</label><input id="watch.warn_gib" type="number"><div class="fh">Darunter zeigt das Panel oben auf jeder Seite eine Warnung und schreibt es ins Änderungsprotokoll.</div>
-      <h2>Wächter</h2>
-      <label class="chk"><input type="checkbox" id="watch.watchdog"> Hängende Dienste automatisch neu starten</label><div class="fh">Startet ASR, TTS oder eine Engine neu, wenn sie 5 Minuten nicht antwortet, 5 Minuten arbeitet, ohne eine Anfrage fertigzustellen, oder 45 Minuten lädt. Höchstens dreimal pro Stunde, jeder Neustart steht im Änderungsprotokoll.</div>
-      <h2>Logs</h2>
-      <label>Höchstens so viel Platz, in MB</label><input id="logs.max_mb" type="number"><div class="fh">Ältere Einträge werden automatisch gelöscht.</div>
-      <label>Aufbewahren, in Tagen</label><input id="logs.keep_days" type="number">
-      <div class="fh">Wirkt nach dem nächsten Update (System → Update) oder sudo ./install.sh.</div>
+    <div class="card pane" id="pane-sysc"><h2 class="pt">Betrieb</h2><div class="pintro">Wie der Spark mit Speicher, hängenden Diensten, Logs und Ports umgeht.</div>
+      <h3 class="sec">Speicherschutz</h3>
+      <div class="setrow"><div class="lbl"><b>Speicherschutz an</b><span>Ein Modell wird nicht geladen, wenn danach weniger als die Reserve frei bliebe.</span></div><label class="tgl"><input type="checkbox" id="memory.guard"><i></i></label></div>
+      <div class="setrow"><div class="lbl"><b>Reserve</b><span>DGX OS beendet Prozesse ab etwa 8 GiB freiem Speicher.</span></div><div class="ctl"><input class="num" id="memory.reserve_gib" type="number"><span class="unit">GiB</span></div></div>
+      <div class="setrow"><div class="lbl"><b>Warnen unter</b><span>Darunter zeigt das Panel oben auf jeder Seite eine Warnung und schreibt es ins Änderungsprotokoll.</span></div><div class="ctl"><input class="num" id="watch.warn_gib" type="number"><span class="unit">GiB frei</span></div></div>
+      <h3 class="sec">Wächter</h3>
+      <div class="setrow"><div class="lbl"><b>Hängende Dienste neu starten</b><span>Startet ASR, TTS oder eine Engine neu, wenn sie hängt; höchstens dreimal pro Stunde.<button class="mlink" type="button">Mehr</button></span></div><label class="tgl"><input type="checkbox" id="watch.watchdog"><i></i></label></div>
+      <div class="fh more" hidden>Hängen heißt: 5 Minuten keine Antwort, 5 Minuten arbeiten, ohne eine Anfrage fertigzustellen, oder 45 Minuten laden. Jeder Neustart steht im Änderungsprotokoll.</div>
+      <h3 class="sec">Logs</h3>
+      <div class="setrow"><div class="lbl"><b>Höchstens so viel Platz</b><span>Ältere Einträge werden automatisch gelöscht.</span></div><div class="ctl"><input class="num" id="logs.max_mb" type="number"><span class="unit">MB</span></div></div>
+      <div class="setrow"><div class="lbl"><b>Aufbewahren</b><span>Wirkt nach dem nächsten Update oder sudo ./install.sh.</span></div><div class="ctl"><input class="num" id="logs.keep_days" type="number"><span class="unit">Tage</span></div></div>
+      <h3 class="sec">Ports</h3>
+      <div class="setrow"><div class="lbl"><b>Panel-Port</b><span>Wirkt nach einem Neustart des Panels.</span></div><input class="num" id="panel.port" type="number"></div>
+      <div class="setrow"><div class="lbl"><b>HTTPS-Port</b><span>Das Mikrofon braucht https; 0 = aus.</span></div><input class="num" id="panel.https_port" type="number"></div>
       <div class="savebar"><button class="b p savebtn" data-p="sysc">Speichern</button><span class="savemsg"></span></div>
+    </div>
+    <div class="card pane" id="pane-upd"><h2 class="pt">Update und Sicherung</h2><div class="pintro">Neue geprüfte Versionen holen und sichern, was der Spark weiß.<button class="mlink" type="button">Mehr</button></div>
+      <div class="fh more" hidden>Ein Update holt den neuesten Stand von GitHub und installiert ihn. Einstellungen, Modelle und Stimmen bleiben. Vor dem Umschalten prüft ein Selbsttest die neue Version; schlägt er oder ein Schritt davor fehl, läuft die bisherige Version unverändert weiter. Geht nach dem Umschalten etwas schief, wird die bisherige Version wieder eingespielt. Während des Updates starten die Dienste kurz neu.</div>
+      <h3 class="sec">Update <span>wirkt sofort</span></h3>
+      <div class="setrow"><div class="lbl"><b>Stand</b><span id="updstate">–</span></div><div class="ctl full"><button class="b" id="updcheck" type="button">Jetzt prüfen</button><button class="b p" id="updgo" type="button" disabled>Update installieren</button><button class="b" id="updstop" type="button" style="display:none">Update abbrechen</button></div></div>
+      <div class="fh" id="updmsg"></div><div id="updcommits"></div>
+      <div class="setrow" id="updprevrow" style="display:none"><div class="lbl"><b>Zurück zur vorigen Version</b><span id="updprevtxt"></span></div><button class="b" id="updprev" type="button">Zurück</button></div>
+      <h3 class="sec">Version</h3>
+      <table><tbody id="sysver"></tbody></table>
+      <h3 class="sec">Sicherung <span>jeden Tag automatisch</span></h3>
+      <div class="setrow"><div class="lbl"><b>Was gesichert wird</b><span>Profile, geklonte Stimmen, Einstellungen und was der Spark für alle hält.<button class="mlink" type="button">Mehr</button></span></div></div>
+      <div class="fh more" hidden>Profile (Gedächtnis, Gespräche, Dokumente, Kalender, E-Mail-Konten, Smart Home, Stimmerkennung), geklonte Stimmen, Einstellungen, Panel-Passwort und was der Spark für alle hält (zweiter Anmeldeschritt des Admins, iPhone-Push, Telegram-Bot, Browser-Push, ESP32-Lautsprecher, Agent-Dienste, eigene Testfragen). Jeden Tag automatisch, die letzten sieben bleiben; dazu vor jedem Update, jeder Rückkehr zur vorigen Version und jedem Wiederherstellen, davon bleiben die letzten fünf.</div>
+      <table><tbody id="baklist"></tbody></table>
+      <div class="setrow"><div class="lbl"><b>Jetzt sichern</b><span>Legt sofort eine Sicherung auf dem Spark an.</span></div><button class="b" id="bakgo" type="button">Sichern</button></div>
+      <div class="setrow"><div class="lbl"><b>Aus Datei wiederherstellen</b><span>Eine heruntergeladene Sicherung (.tar.gz) einspielen.</span></div><button class="b" id="bakup" type="button">Datei wählen …</button><input type="file" id="bakfile" accept=".gz,.tgz,application/gzip" hidden></div>
+      <div class="fh" id="bakmsg"></div>
+      <div class="setrow"><div class="lbl"><b>Umzugs-Sicherung</b><span>Für einen anderen Spark: bringt den Schlüssel für Passwörter und Tokens mit.<button class="mlink" type="button">Mehr</button></span></div><div class="ctl full"><input type="password" class="wide" id="bakpw" autocomplete="new-password" maxlength="200" placeholder="Umzugs-Passwort (mind. 12 Zeichen)" aria-label="Umzugs-Passwort"><button class="b" id="bakmove" type="button">Anlegen</button></div></div>
+      <div class="fh more" hidden>Gespeicherte Passwörter, Tokens und Schlüssel lassen sich mit einer normalen Sicherung nur auf diesem Spark lesen; auf einem anderen müssen sie neu eingegeben werden. Eine Umzugs-Sicherung bringt den Schlüssel dafür mit, verschlüsselt mit deinem Passwort: Auf dem neuen Spark dasselbe Passwort ins Feld eintragen, dann wiederherstellen. Anmelden muss sich danach jeder neu. Beim Wiederherstellen werden die Einstellungen wie auf der Einstellungsseite geprüft, und es wird alles getauscht oder nichts.</div>
+      <details class="adv"><summary>Update-Protokoll <span class="mut">· was beim letzten Update passiert ist</span></summary>
+        <div class="row" style="margin-top:8px"><button class="b" type="button" onclick="copyEl('updlog',this)">Kopieren</button></div><pre id="updlog" style="margin-top:8px">–</pre></details>
     </div>
     </div>
   </div>
@@ -476,25 +508,6 @@
   <div class="card"><h2>Python (openai-Paket)</h2><pre id="int-py"></pre></div>
 </section>
 
-<section id="sys">
-  <div class="two">
-    <div class="card"><h2>Version</h2><table><tbody id="sysver"></tbody></table></div>
-    <div class="card"><h2>Update</h2>
-      <div id="updstate" class="mut">–</div>
-      <div id="updcommits" style="margin-top:8px"></div>
-      <div class="row" style="margin-top:12px"><button class="b" id="updcheck">Jetzt prüfen</button><button class="b p" id="updgo" disabled>Update installieren</button><button class="b" id="updstop" style="display:none">Update abbrechen</button><span id="updmsg"></span></div>
-      <div class="row" id="updprevrow" style="margin-top:8px;display:none"><button class="b" id="updprev">Zurück zur vorigen Version</button><span class="mut" id="updprevtxt" style="font-size:12px"></span></div>
-      <div class="mut" style="font-size:12px;margin-top:8px">Holt den neuesten Stand von GitHub und installiert ihn. Einstellungen, Modelle und Stimmen bleiben. Vor dem Umschalten prüft ein Selbsttest die neue Version; schlägt er oder ein Schritt davor fehl, läuft die bisherige Version unverändert weiter. Geht nach dem Umschalten etwas schief, wird die bisherige Version wieder eingespielt. Während des Updates starten die Dienste kurz neu.</div>
-    </div>
-  </div>
-  <div class="card"><h2>Sicherung</h2>
-      <div class="intro sm">Profile (Gedächtnis, Gespräche, Dokumente, Kalender, E-Mail-Konten, Smart Home, Stimmerkennung), geklonte Stimmen, Einstellungen, Panel-Passwort und was der Spark für alle hält (zweiter Anmeldeschritt des Admins, iPhone-Push, Telegram-Bot, Browser-Push, ESP32-Lautsprecher, Agent-Dienste, eigene Testfragen). Jeden Tag automatisch, die letzten sieben bleiben; dazu vor jedem Update, jeder Rückkehr zur vorigen Version und jedem Wiederherstellen, davon bleiben die letzten fünf.</div>
-      <table style="margin-top:8px"><tbody id="baklist"></tbody></table>
-      <div class="row" style="margin-top:10px"><button class="b" id="bakgo">Jetzt sichern</button><button class="b" id="bakup" type="button">Aus Datei wiederherstellen …</button><input type="file" id="bakfile" accept=".gz,.tgz,application/gzip" style="display:none"><span id="bakmsg"></span></div>
-      <div class="row" style="margin-top:10px"><input type="password" id="bakpw" autocomplete="new-password" maxlength="200" placeholder="Umzugs-Passwort (mind. 12 Zeichen)" aria-label="Umzugs-Passwort"><button class="b" id="bakmove" type="button">Umzugs-Sicherung anlegen</button></div>
-      <div class="fh">Gespeicherte Passwörter, Tokens und Schlüssel lassen sich mit einer normalen Sicherung nur auf diesem Spark lesen; auf einem anderen müssen sie neu eingegeben werden. Eine Umzugs-Sicherung bringt den Schlüssel dafür mit, verschlüsselt mit deinem Passwort: Auf dem neuen Spark dasselbe Passwort ins Feld eintragen, dann wiederherstellen. Anmelden muss sich danach jeder neu. Beim Wiederherstellen werden die Einstellungen wie auf der Einstellungsseite geprüft, und es wird alles getauscht oder nichts.</div></div>
-  <div class="card"><div class="row" style="justify-content:space-between"><h2 style="margin:0">Update-Protokoll</h2><button class="b" onclick="copyEl('updlog',this)">Kopieren</button></div><pre id="updlog" style="margin-top:12px">–</pre></div>
-</section>
 <section id="logs">
   <div class="row"><select id="logsvc" style="width:auto"><option value="diag">Diagnose-Filter</option><option value="asr">ASR</option><option value="tts">TTS</option><option value="asr-engine">ASR-Engine</option><option value="tts-engine">TTS-Engine</option><option value="tts-design">VoiceDesign-Engine</option><option value="update">Update</option><option value="panel">Panel</option><option value="audit">Änderungsprotokoll</option></select>
     <button class="b" id="logload">Aktualisieren</button><button class="b" onclick="copyEl('logout',this)">Kopieren</button>

@@ -1,4 +1,5 @@
 """Every service that can be switched on has a guide (static/js/guides.js) and sits in exactly one group."""
+import html as html_lib
 import os
 import re
 import unittest
@@ -171,16 +172,19 @@ class MenuStructure(unittest.TestCase):
     def test_settings_menu_blocks(self):
         html = read("index.html")
         nav = html[html.index('id="cfgnav"'):html.index('</div>\n    <div>', html.index('id="cfgnav"'))]
-        self.assertEqual(re.findall(r'class="cgrp">([^<]+)<', nav), ["Was er kann", "Wie er denkt und spricht", "Spark selbst"])
-        self.assertEqual(re.findall(r'data-p="(\w+)"', nav), ["feat", "ai", "talk", "tts", "voices", "asr", "sec", "sysc"])
+        # V01.0.207: Assistent, Sprache (the way of a sentence: hear, speak, own voices), Spark; first "Auf einen Blick"
+        self.assertEqual(re.findall(r'class="cgrp">([^<]+)<', nav), ["Assistent", "Sprache", "Spark"])
+        self.assertEqual(re.findall(r'data-p="(\w+)"', nav), ["start", "feat", "talk", "ai", "asr", "tts", "voices", "sec", "sysc", "upd"])
 
     def test_checks_in_one_place(self):
         html = read("index.html")
         sec = lambda s: html[html.index(f'<section id="{s}">'):html.index("</section>", html.index(f'<section id="{s}">'))]
         for el in ("livesteps", "qlist", "benchout", "asrfile", "ttstext"):
             self.assertIn(f'id="{el}"', sec("test"), el)
-        for el in ("baklist", "updlog", "sysver"):
-            self.assertIn(f'id="{el}"', sec("sys"), el)
+        upd = html[html.index('id="pane-upd"'):html.index('<section id="chat">')]   # V01.0.207: Einstellungen → Update und Sicherung
+        for el in ("baklist", "updlog", "sysver", "updgo", "bakmove"):
+            self.assertIn(f'id="{el}"', upd, el)
+        self.assertNotIn('<section id="sys">', html)
         self.assertIn('id="guidelist"', sec("int"))
         self.assertNotIn('id="int-ep"', sec("int"))
         self.assertIn('id="int-ep"', sec("apps"))
@@ -200,3 +204,63 @@ class MenuStructure(unittest.TestCase):
         self.assertEqual(order, [g for g in groups if g in order], "andere Reihenfolge als auf Funktionen")
         self.assertIn('id="notebox"', read("index.html"))
         self.assertIn("showOver()", me)
+
+
+SAME_IN_EN = {"Port", "Seed", "Reserve", "Logs", "Text", "Update", "Version", "Backend:", "Engine (vllm-omni)", "Engine (vLLM)", "wav, mp3, m4a, …", "–"}
+
+
+class BuildingBlocks(unittest.TestCase):
+    """V01.0.207: every settings page is built from the same blocks (docs/de/technik.md „Bausteine“): title and one
+    sentence, sections as h3.sec, rows with the control on the right (switches, no tick boxes), at most one
+    sentence of help per row with the rest behind „Mehr“, „Erweitert“ folded, every text translated."""
+
+    def panes(self):
+        html = read("index.html")
+        cfg = html[html.index('<section id="cfg">'):html.index('<section id="chat">')]
+        parts = re.split(r'(?=<div class="card pane[^"]*" id="pane-)', cfg)[1:]
+        return cfg, {re.search(r'id="pane-(\w+)"', p).group(1): p for p in parts}
+
+    def test_every_page_has_title_and_one_sentence(self):
+        _, panes = self.panes()
+        self.assertEqual(set(panes), {"start", "feat", "ai", "talk", "tts", "voices", "asr", "sec", "sysc", "upd"})
+        for name, p in panes.items():
+            self.assertRegex(p, r'^<div class="card pane[^"]*" id="pane-\w+"><h2 class="pt">[^<]+</h2><div class="pintro">', name)
+
+    def test_same_controls_everywhere(self):
+        cfg, panes = self.panes()
+        self.assertNotIn('class="chk"', cfg)                       # switches, not tick boxes
+        for name, p in panes.items():
+            self.assertNotRegex(p, r'<h2(?! class="pt")', name)     # sections are h3.sec
+            self.assertNotRegex(p, r'<h2 class="pt">(?:(?!</h2>).)*</h2>.*<h2 class="pt">', name)
+            for m in re.finditer(r'>Erweitert<|>Erweitert ', p):
+                self.assertEqual(p[m.start() - 30:m.start()].rsplit("<", 1)[-1], "summary", name)
+        # a setting row has its control on the right: label-over-field stays only inside Funktionen details
+        for name, p in panes.items():
+            if name in ("feat",):
+                continue
+            self.assertNotRegex(p, r'<label>[^<]+</label><(input|select)', name)
+
+    def test_short_help_and_more(self):
+        cfg, panes = self.panes()
+        en = read("js", "i18n.js")
+        self.assertEqual(cfg.count('class="fh more" hidden'), cfg.count('class="mlink"'))
+        for name, p in panes.items():
+            if name == "feat":
+                continue   # its rows are checked by SettingsOrder
+            missing = []
+            for b, span in re.findall(r'<div class="lbl"><b>([^<]+)(?:<span class="mtag">[^<]*</span>)?</b><span[^>]*>([^<]*)', p):
+                self.assertLessEqual(len(span), 140, span)
+                missing += [x for x in (b, html_lib.unescape(span)) if x and x not in SAME_IN_EN and json_str(x) not in en]
+            missing += [x.strip() for x in re.findall(r'<h3 class="sec">([^<]+?)\s*(?:<|$)', p) if x.strip() not in SAME_IN_EN and json_str(x.strip()) not in en]
+            self.assertEqual(missing, [], f"pane-{name}: ohne Übersetzung in i18n.js")
+
+    def test_zustand_and_einbinden_like_einstellungen(self):
+        # V01.0.207: pages of a group sit in a second column (computer) or a list that opens the page (phone)
+        base = read("js", "base.js")
+        self.assertNotIn("['sys',", base)
+        self.assertIn("classList.toggle('hassub'", base)
+        self.assertIn("'sublist'", base)
+        css = read("app.css")
+        self.assertIn("main.hassub>#subnav", css)
+        self.assertIn("main.sublist>#subnav", css)
+        self.assertIn('id="subback"', read("index.html"))

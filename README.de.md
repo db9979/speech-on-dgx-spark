@@ -21,7 +21,7 @@ Am Ende stehen Adresse, Passwort und API-Schlüssel auf dem Bildschirm, danach s
 
 | Aufgabe | Befehl |
 |---|---|
-| Aktualisieren | Knopf im Portal unter *Zustand → System und Update* oder `sudo speech-spark update` |
+| Aktualisieren | Knopf im Portal unter *Einstellungen → Update und Sicherung* oder `sudo speech-spark update` |
 | Adressen und Schlüssel anzeigen | `sudo speech-spark info` |
 | Deinstallieren | `sudo ./uninstall.sh` (Konfiguration, Modelle und Stimmen bleiben; `--purge` löscht alles) |
 
@@ -31,6 +31,7 @@ Alle Optionen ohne Rückfragen (`--mode api --asr 1.7b --tts 0.6b --yes` …) st
 
 <!-- New version: add one line at the top here and in CHANGELOG.md, drop the oldest line here (keep 10). Details go to docs/de and docs/en, not into this README. -->
 
+- **V01.0.207** Einstellungen einheitlich: gleiche Bausteine auf allen Seiten, Menü Assistent/Sprache/Spark, „Auf einen Blick“, Update und Sicherung unter Einstellungen, Zustand und Einbinden mit Spalte bzw. Liste
 - **V01.0.206** Viele Benutzer: Profilliste mit Suche, Filter und Seiten, Rufname, Empfänger per Suchfeld mit Zuletzt und Favoriten, Rückfrage bei gleichen Namen (auch Siri)
 - **V01.0.205** Sprachausgabe robuster: bricht der TTS-Strom ab, wird das Stück noch einmal versucht und der Rest der Antwort weiter gesprochen; Aussetzer stehen als „chat: tts behind“ im Diagnose-Log
 - **V01.0.204** Antworten ohne Leerzeilen am Anfang und Ende (Reste des Qwen-Denkblocks), Absätze bleiben
@@ -40,7 +41,6 @@ Alle Optionen ohne Rückfragen (`--mode api --asr 1.7b --tts 0.6b --yes` …) st
 - **V01.0.200** Nachrichten einfacher: Briefknopf im Chat, „Schreib X, dass …“ ohne Umweg übers Modell, Einschalten mit „Ja“, Bereit-Anzeige
 - **V01.0.199** Browser-Test: eingeschaltete Funktion und neue Version erscheinen ohne F5 (fängt Fehler wie in .197)
 - **V01.0.198** Panel-Fehler aus .197 behoben (Seiten luden nicht, „reading 'json'“)
-- **V01.0.197** Im Admin-Menü eingeschaltete Funktionen erscheinen nach dem Speichern sofort (Seite lädt selbst neu), API-Antworten werden nie zwischengespeichert; Selbsttest gegen Skript-/CSS-Links ohne Version
 
 Alle Versionen: [CHANGELOG.md](CHANGELOG.md)
 

@@ -79,6 +79,21 @@ Eine Antwort des Assistenten läuft in drei Dateien unter `app/panel/`:
 
 Neue Rechte oder Hinweise gehören nach `chat_turn.py`, neue Werkzeuge nach `chat_tools.py` (Definition und Sperrliste in `chat.py`).
 
+## Bausteine der Einstellungsseiten
+
+Seit V01.0.207 sind alle Seiten unter Einstellungen gleich gebaut (`index.html`, Stil in `app.css`). Neue Einstellungen nutzen nur diese Teile:
+
+- **Kopf**: `<h2 class="pt">` und darunter `<div class="pintro">` mit einem Satz, was die Seite regelt.
+- **Abschnitt**: `<h3 class="sec">Name <span>Hinweis</span></h3>`.
+- **Zeile**: `<div class="setrow"><div class="lbl"><b>Name</b><span>ein Satz</span></div>Bedienelement</div>`, das Bedienelement rechts: Schalter `.tgl` (keine Häkchen `label.chk`), kurze Zahl `input.num` in `.ctl` mit `.unit`, Adresse `input.wide`, Auswahl `select.wide`; mehrere Felder in `.ctl.full`. Textfelder stehen nach der Zeile.
+- **Hilfe**: sichtbar höchstens ein Satz (≤ 140 Zeichen); der Rest in `<div class="fh more" hidden>` direkt nach der Zeile, dazu im Satz `<button class="mlink" type="button">Mehr</button>`.
+- **Erweitert**: immer `<details class="adv"><summary>Erweitert <span class="mut">· was drin ist</span></summary>`.
+- **Sofort-Aktionen** (Passwort, Zweiter Schritt, Abmelden, Update, Sicherung): eigener Abschnitt „wirkt sofort, ohne Speichern“; alles andere sammelt die Speichern-Leiste `.savebar` der Seite.
+- **Auf einen Blick**: neue Seiten bekommen eine Zeile in `glanceText()` (`admin.js`), nur aus Daten, die das Panel schon hat.
+- **Unterseiten** von Zustand und Einbinden kommen aus `GROUPS` (`base.js`) mit einem Satz in `SUBDESC`; `goSec('sys')` führt seit V01.0.207 nach Einstellungen → Update und Sicherung.
+
+`tests/test_guides.py` (Klasse `BuildingBlocks`) prüft das ohne Browser: Titel und Einleitung auf jeder Seite, keine `label.chk`, „Erweitert“ nur als `details`, gleich viele „Mehr“-Knöpfe wie Mehr-Texte, kurze Sätze und englische Übersetzungen.
+
 ## Tests
 
 `app/tests/` enthält die Selbsttests, die bei jedem Update laufen (`cd app && python -m unittest discover -s tests`). Alle Dienste sind dabei nachgebaut (`tests/helpers.py`), kein Test spricht echte Modelle oder Home Assistant an. `tests/test_ui_browser.py` öffnet das Panel zusätzlich in Chromium (Playwright) am Rechner und in Handybreite: jede Seite ohne Skriptfehler und ohne seitliches Scrollen, die Einstellungssuche, das Ich-Fenster. Ohne Playwright (wie im Selbsttest auf dem Spark) wird er übersprungen; auf GitHub läuft er im Workflow „Tests“ bei jedem Push.
@@ -92,7 +107,7 @@ Neue Rechte oder Hinweise gehören nach `chat_turn.py`, neue Werkzeuge nach `cha
 | Panel zeigt `error` | Fehlertext im Panel und unter Logs ansehen. |
 | `no kernel image is available` | Ein Paket wurde ohne Blackwell-Kernel gebaut. Prüfen mit `/opt/speech-spark/venv-asr/bin/python -c "import torch; print(torch.cuda.get_arch_list())"`. |
 | TTS-Engine startet nicht | Panel → Logs → TTS-Engine. Bei „not enough KV cache“ o. Ä. die Speicheranteile der Engine im Panel erhöhen. Der erste Start lädt das Modell und dauert länger. |
-| Update schlägt fehl | Panel → Zustand → System und Update → Update-Protokoll. Die alte Version läuft weiter oder wird wieder eingespielt; das Protokoll sagt, was passiert ist. |
+| Update schlägt fehl | Panel → Einstellungen → Update und Sicherung → Update-Protokoll. Die alte Version läuft weiter oder wird wieder eingespielt; das Protokoll sagt, was passiert ist. |
 | Port belegt | Port in `/etc/speech-spark/config.json` ändern und das Skript erneut ausführen. |
 
 Die Speicherschätzungen pro Modell (`MODEL_GIB` in `app/common.py`) sind grobe Annahmen und noch nicht auf einer Spark gemessen. Nach dem ersten Lauf sollten sie mit den Werten aus dem Panel korrigiert werden.

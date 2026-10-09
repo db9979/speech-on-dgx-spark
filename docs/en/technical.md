@@ -67,6 +67,21 @@ One answer of the assistant runs through three files in `app/panel/`:
 
 New rights or hints go into `chat_turn.py`, new tools into `chat_tools.py` (definition and lock list in `chat.py`).
 
+## Settings page building blocks
+
+Since V01.0.207 all pages under Settings are built the same way (`index.html`, style in `app.css`). New settings use only these parts:
+
+- **Header**: `<h2 class="pt">` and below it `<div class="pintro">` with one sentence on what the page controls.
+- **Section**: `<h3 class="sec">Name <span>hint</span></h3>`.
+- **Row**: `<div class="setrow"><div class="lbl"><b>Name</b><span>one sentence</span></div>control</div>`, the control on the right: switch `.tgl` (no `label.chk` check boxes), short number `input.num` in `.ctl` with `.unit`, address `input.wide`, choice `select.wide`; several fields in `.ctl.full`. Text areas come after the row.
+- **Help**: at most one visible sentence (≤ 140 characters); the rest in `<div class="fh more" hidden>` right after the row, plus `<button class="mlink" type="button">Mehr</button>` in the sentence.
+- **Advanced**: always `<details class="adv"><summary>Erweitert <span class="mut">· what is inside</span></summary>`.
+- **Instant actions** (password, second step, sign out, update, backup): a section of their own, "acts at once, without saving"; everything else is collected by the page's save bar `.savebar`.
+- **At a glance**: new pages get a line in `glanceText()` (`admin.js`), only from data the panel already has.
+- **Sub-pages** of Status and Einbinden come from `GROUPS` (`base.js`) with one sentence in `SUBDESC`; since V01.0.207 `goSec('sys')` leads to Settings → Update and backup.
+
+`tests/test_guides.py` (class `BuildingBlocks`) checks this without a browser: title and intro on every page, no `label.chk`, "Erweitert" only as `details`, as many "More" buttons as more texts, short sentences and English translations.
+
 ## Tests
 
 `app/tests/` holds the self-tests that run on every update (`cd app && python -m unittest discover -s tests`). All services are faked (`tests/helpers.py`); no test talks to real models or Home Assistant. `tests/test_ui_browser.py` also opens the panel in Chromium (Playwright) at computer and phone width: every page without script errors and without sideways scrolling, the settings search, the Me window. Without Playwright (as in the self-test on the Spark) it is skipped; on GitHub it runs in the "Tests" workflow on every push.
@@ -80,7 +95,7 @@ New rights or hints go into `chat_turn.py`, new tools into `chat_tools.py` (defi
 | Panel shows `error` | Read the message in the panel and under Logs. |
 | `no kernel image is available` | A package was built without Blackwell kernels. Check with `/opt/speech-spark/venv-engine/bin/python -c "import torch; print(torch.cuda.get_arch_list())"`. |
 | Engine does not start | Panel → Logs → engine. With "No available memory for the cache blocks", raise the engine's memory share in the panel. The first start downloads the model and takes longer. |
-| Update fails | Panel → Status → System and update → update log. The old version keeps running or is installed again; the log says which. |
+| Update fails | Panel → Settings → Update and backup → update log. The old version keeps running or is installed again; the log says which. |
 | Port taken | Change the port in `/etc/speech-spark/config.json` and run the installer again. |
 
 The per-model memory estimates (`MODEL_GIB` in `app/common.py`) are rough assumptions; correct them with the values the panel shows.

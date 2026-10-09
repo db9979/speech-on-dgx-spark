@@ -37,7 +37,7 @@ function zustand(s){if(s)ZLAST=s;s=ZLAST;if(!s)return;
     else if(v.enabled&&['inactive','deactivating'].includes(v.state))need.push({lvl:'bad',text:t(`${name} ist aus.`,`${name} is off.`),go:'svc',btn:t('Ansehen','View')})}
   for(const n of bad)need.push({lvl:'bad',text:t(`${n} meldet einen Fehler.`,`${n} reports an error.`),go:'svc',btn:t('Ansehen','View')});
   const u=window.UPD;if(u&&u.behind&&u.behind!==0)need.push({lvl:'warn',text:t('Update bereit','Update ready')+(u.version?': '+u.version:'')+'.',go:'sys',btn:t('Zum Update','To the update')});
-  const dirty=[...document.querySelectorAll('.pane.dirty')].map(p=>{const b=document.querySelector(`#cfgnav button[data-p="${p.id.slice(5)}"]`);return b?b.textContent.trim():p.id});
+  const dirty=[...document.querySelectorAll('.pane.dirty')].map(p=>{const b=document.querySelector(`#cfgnav button[data-p="${p.id.slice(5)}"]`);return b?b.firstChild.nodeValue.trim():p.id});
   if(dirty.length)need.push({lvl:'warn',text:t(`Nicht gespeichert: ${dirty.join(', ')}.`,`Not saved: ${dirty.join(', ')}.`),go:'cfg',btn:t('Öffnen','Open')});
   // running = systemd says active or the service itself answers; neither = no answer (counts as "needs you")
   const ok=([,v])=>v.state==='active'||['ready','ok'].includes((v.health||{}).status),nm=([n])=>SVCNAME[n]||n.toUpperCase();
@@ -70,7 +70,7 @@ async function loadCfg(){CFG=await (await api('/api/config')).json();
   for(const[sec,o]of Object.entries(CFG))for(const[k,v]of Object.entries(o)){const el=$(sec+'.'+k);if(!el)continue;
     if(el.type==='checkbox')el.checked=v;else{if(el.tagName==='SELECT'&&![...el.options].some(o=>o.value==v))el.add(new Option(v));el.value=Array.isArray(v)?v.join(', '):v}};instrHint();
   getDefaults=await renderSet($('chatdefaults'),{...SDEF,...(CFG.chat.defaults||{})},null);
-  asrRec();cfgDeps();if(typeof guidesCount==='function')guidesCount();if(typeof tgAdmin==='function')tgAdmin();visionLoad();if(typeof apnsAdmin==='function')apnsAdmin();if(typeof iupdAdmin==='function')iupdAdmin();if(typeof espAdmin==='function')espAdmin();if(typeof agentAdmin==='function')agentAdmin();document.querySelectorAll('.pane').forEach(p=>markDirty(p,false));document.querySelectorAll('.savemsg').forEach(m=>m.textContent='')}
+  asrRec();cfgDeps();if(typeof guidesCount==='function')guidesCount();if(typeof tgAdmin==='function')tgAdmin();visionLoad();if(typeof apnsAdmin==='function')apnsAdmin();if(typeof iupdAdmin==='function')iupdAdmin();if(typeof espAdmin==='function')espAdmin();if(typeof agentAdmin==='function')agentAdmin();document.querySelectorAll('.pane').forEach(p=>markDirty(p,false));document.querySelectorAll('.savemsg').forEach(m=>m.textContent='');glance();glanceLoad()}
 let getDefaults=null;
 // Parakeet has no model choice and no engine: hide those settings while it is chosen.
 function asrRec(){const qw=$('asr.recognizer').value!=='parakeet';$('asrqwen').style.display=qw?'':'none';
@@ -81,9 +81,61 @@ $('asr.recognizer').addEventListener('change',asrRec);
 const cfgPane=p=>{document.querySelectorAll('#cfgnav button').forEach(b=>b.classList.toggle('on',b.dataset.p===p));
   document.querySelectorAll('.pane').forEach(x=>x.classList.toggle('on',x.id==='pane-'+p));try{localStorage.setItem('cfgpane',p)}catch{}};
 // phones: the settings open as a list of pages; a tapped page fills the screen with "back" on top
-document.querySelectorAll('#cfgnav button').forEach(b=>b.onclick=()=>{cfgPane(b.dataset.p);if(b.dataset.p==='voices')loadClone();document.querySelector('.cfgwrap').classList.add('sub');window.scrollTo(0,0)});
+document.querySelectorAll('#cfgnav button').forEach(b=>b.onclick=()=>{cfgPane(b.dataset.p);if(b.dataset.p==='voices')loadClone();if(b.dataset.p==='upd')loadSys();if(b.dataset.p==='start')glance();document.querySelector('.cfgwrap').classList.add('sub');window.scrollTo(0,0)});
 $('cfgback').onclick=()=>{document.querySelector('.cfgwrap').classList.remove('sub');window.scrollTo(0,0)};
+// building blocks (V01.0.207): „Mehr“ unfolds the longer help right below its row; the password fields open on
+// „Ändern …“; the audio file for a new voice is picked with a normal button that shows the chosen name
+document.addEventListener('click',e=>{const b=e.target.closest&&e.target.closest('.mlink');if(!b)return;e.preventDefault();
+  const host=b.closest('.setrow,.pintro'),m=host&&host.nextElementSibling;if(m&&m.classList.contains('more')){m.hidden=!m.hidden;b.textContent=m.hidden?t('Mehr','More'):t('Weniger','Less')}});
+$('pwopen').onclick=()=>{const x=$('pwbox');x.hidden=!x.hidden;if(!x.hidden)$('pwold').focus()};
+$('vfilebtn').onclick=()=>$('vfile').click();
+$('vfile').addEventListener('change',()=>{const f=$('vfile').files[0];$('vfilename').textContent=f?f.name:t('wav, mp3, m4a, …','wav, mp3, m4a, …')});
 try{const p=localStorage.getItem('cfgpane');if(p&&$('pane-'+p))cfgPane(p)}catch{}
+window.goCfg=p=>{goSec('cfg');const b=document.querySelector(`#cfgnav button[data-p="${p}"]`);if(b)b.click()};
+// „Auf einen Blick“ (V01.0.207): every settings page with its state in one line, on top what a switched-on feature
+// still needs. Phones show the same lines right in the settings menu. Built only from what the page already has
+// (the loaded settings, the status, the update check) plus the voice list, the backup list and the admin's second step.
+const GL={};
+const short=m=>String(m||'').split('/').pop();
+async function glanceLoad(){const get=async(u,f)=>{try{GL[f]=await (await api(u)).json()}catch{}};
+  await Promise.all([get('/api/clone-voices','voices'),get('/api/backups','bak'),get('/api/mfa','mfa')]);glance()}
+function glanceText(p){const c=CFG||{},ch=c.chat||{},svc=((ZLAST||{}).services)||{},run=n=>svc[n]&&(svc[n].state==='active');
+  const pill=(cls,txt)=>({cls,txt});
+  if(p==='feat'){const it=[...document.querySelectorAll('#pane-feat .fitem')],on=it.filter(x=>{const s=$(x.dataset.sw);return s&&s.checked}).length,need=it.filter(featNeed).length;
+    return {txt:t(`${on} von ${it.length} an`,`${on} of ${it.length} on`)+(need?t(` · ${need} brauchen dich`,` · ${need} need you`):''),pill:need?pill('warn',t('braucht dich','needs you')):null}}
+  if(p==='talk'){const d=getDefaults?getDefaults():{};const f=$('chat.face');
+    return {txt:[t('Freihändig ','Hands-free ')+(d.hands?t('an','on'):t('aus','off')),t('Antwortlänge ','Answer length ')+(($('set_chatdefaults_length')||{}).selectedOptions||[{text:d.length||'–'}])[0].text,f&&f.selectedOptions[0]?f.selectedOptions[0].text:''].filter(Boolean).join(' · ')}}
+  if(p==='ai'){let host='';try{host=new URL(ch.llm_url).host}catch{}
+    return {txt:(ch.llm_model||t('Modell automatisch','model automatic'))+(host?t(' auf ',' on ')+host:'')+t(' · Temperatur ',' · temperature ')+ch.temperature}}
+  if(p==='asr'){const a=c.asr||{};if(!a.enabled)return {txt:t('aus','off'),pill:pill('',t('aus','off'))};
+    return {txt:(a.recognizer==='parakeet'?'Parakeet':short(a.model))+t(' · Sprache ',' · language ')+a.default_language,pill:run('asr')?pill('ok',t('läuft','running')):null}}
+  if(p==='tts'){const a=c.tts||{};if(!a.enabled)return {txt:t('aus','off'),pill:pill('',t('aus','off'))};
+    return {txt:short(a.model).replace('Qwen3-TTS-12Hz-','')+t(' · Stimme ',' · voice ')+(a.default_voice||'–'),pill:run('tts')?pill('ok',t('läuft','running')):null}}
+  if(p==='voices'){const n=(GL.voices||[]).length;return {txt:GL.voices?(n?t(`${n} eigene Stimme${n>1?'n':''}`,`${n} own voice${n>1?'s':''}`):t('keine eigenen Stimmen','no own voices')):'…'}}
+  if(p==='sec'){const m=GL.mfa;return {txt:(ch.public?t('Assistent ohne Passwort','assistant without password'):t('Assistent nur mit Anmeldung','assistant only after sign-in'))+(m?t(' · Zweiter Schritt ',' · second step ')+(m.on?t('an','on'):t('aus','off')):''),
+    pill:m&&!m.on?pill('warn',t('Zweiter Schritt aus','second step off')):null}}
+  if(p==='sysc'){const m=c.memory||{},w=c.watch||{};return {txt:t('Speicherschutz ','Memory guard ')+(m.guard?t('an','on'):t('aus','off'))+t(' · Reserve ',' · reserve ')+m.reserve_gib+' GiB'+t(' · Wächter ',' · watchdog ')+(w.watchdog?t('an','on'):t('aus','off'))}}
+  if(p==='upd'){const u=window.UPD||{},b=((GL.bak||{}).backups||[])[0];const ready=u.behind&&u.behind!==0;
+    return {txt:[SPARK_VER,(ready?t('Update bereit','update ready'):u.behind===0?t('aktuell','up to date'):t('Stand unbekannt','state unknown')),b&&b.created?t('letzte Sicherung ','last backup ')+new Date(b.created*1000).toLocaleString([], {day:'numeric',month:'numeric',hour:'2-digit',minute:'2-digit'}):''].filter(Boolean).join(' · '),
+      pill:ready?pill('warn',t('Update bereit','update ready')):u.behind===0?pill('ok',t('aktuell','up to date')):null}}
+  return {txt:''}}
+function glanceNeed(){return [...document.querySelectorAll('#pane-feat .fitem')].filter(featNeed).map(it=>{
+  const nm=it.querySelector('.lbl>b'),name=nm&&nm.firstChild?nm.firstChild.nodeValue.trim():'';
+  const empty=[...it.querySelectorAll('[data-req]')].find(x=>!x.value.trim()),lab=empty&&empty.previousElementSibling&&empty.previousElementSibling.tagName==='LABEL'?empty.previousElementSibling.textContent.trim():'';
+  const st=it.querySelector('[data-need="1"]'),stx=st?st.textContent.trim():'';
+  return {name,why:lab?t(`${lab}: fehlt`,`${lab}: missing`):stx&&stx.length<90?stx:t('Eine Angabe fehlt.','Something is missing.'),sw:it.dataset.sw}})}
+function glRow(name,why,pill,go){const r=document.createElement('button');r.type='button';r.className='glrow';
+  const l=document.createElement('span');l.className='lbl';const b=document.createElement('b');b.textContent=name;const s=document.createElement('span');s.textContent=why;l.append(b,s);r.appendChild(l);
+  if(pill&&pill.txt){const p=document.createElement('span');p.className='pill '+pill.cls;p.textContent=pill.txt;r.appendChild(p)}r.onclick=go;return r}
+function glanceNeedBox(){const need=glanceNeed();if(!need.length)return null;const box=document.createElement('div');box.className='glneed';
+  need.forEach(n=>box.appendChild(glRow(n.name,n.why,{cls:'warn',txt:t('braucht dich','needs you')},()=>{goCfg('feat');const sw=$(n.sw);if(sw&&typeof featShow==='function'){featShow(sw.closest('.setrow')||sw);setTimeout(()=>sFlash(sw.closest('.setrow')||sw),60)}})));return box}
+function glance(){if(!CFG)return;const out=$('glance');out.textContent='';const nb=glanceNeedBox();if(nb)out.appendChild(nb);
+  const nav=$('cfgnav');nav.querySelectorAll(':scope>.glneed').forEach(x=>x.remove());const nb2=glanceNeedBox();if(nb2){const sb=nav.querySelector('.sbox');sb?sb.after(nb2):nav.prepend(nb2)}
+  [...nav.children].forEach(el=>{if(el.classList.contains('cgrp')){const h=document.createElement('h3');h.className='sec';h.textContent=el.textContent;out.appendChild(h);return}
+    const p=el.dataset&&el.dataset.p;if(!p||p==='start')return;const g=glanceText(p),name=el.firstChild.nodeValue.trim();
+    out.appendChild(glRow(name,g.txt,g.pill,()=>el.click()));
+    let sm=el.querySelector('small.gls');if(!sm){sm=document.createElement('small');sm.className='gls';el.appendChild(sm)}sm.textContent=g.txt})}
+window.glance=glance;
 // Details of a feature show only while it is on (they sit right below its switch).
 function cfgDeps(){const on=id=>{const e=$(id);return !e||e.checked};
   document.querySelectorAll('#pane-cfg [data-show],[data-show]').forEach(x=>x.style.display=on(x.dataset.show)?'':'none');
@@ -128,7 +180,7 @@ document.querySelectorAll('.savebtn').forEach(btn=>btn.onclick=async()=>{const p
   msg.textContent=t('Speichere…','Saving…');
   try{const r=await (await api('/api/config',{method:'PUT',headers:{'Content-Type':'application/json'},body:JSON.stringify(n)})).json();
     if(pane.contains($('chat.face')))setFaceKind(n.chat.face);
-    msg.innerHTML=t('Gespeichert.','Saved.')+(r.restarted.length?t(' Neu gestartet: ',' Restarted: ')+r.restarted.join(', ').toUpperCase()+t(' (Modell lädt neu).',' (model reloads).'):'')+(r.stopped&&r.stopped.length?t(' Gestoppt: ',' Stopped: ')+r.stopped.join(', ').toUpperCase()+'.':'')+(r.errors&&r.errors.length?`<div class="err">${esc(r.errors.join('\n'))}</div>`:'')+(r.panel_restart_needed?t(' Panel-Port ändert sich nach: ',' Panel port changes after: ')+'sudo systemctl restart speech-spark-panel':'');CFG=n;markDirty(pane,false)}
+    msg.innerHTML=t('Gespeichert.','Saved.')+(r.restarted.length?t(' Neu gestartet: ',' Restarted: ')+r.restarted.join(', ').toUpperCase()+t(' (Modell lädt neu).',' (model reloads).'):'')+(r.stopped&&r.stopped.length?t(' Gestoppt: ',' Stopped: ')+r.stopped.join(', ').toUpperCase()+'.':'')+(r.errors&&r.errors.length?`<div class="err">${esc(r.errors.join('\n'))}</div>`:'')+(r.panel_restart_needed?t(' Panel-Port ändert sich nach: ',' Panel port changes after: ')+'sudo systemctl restart speech-spark-panel':'');CFG=n;markDirty(pane,false);glance()}
   catch(e){msg.innerHTML=`<span class="err">${esc(e.message)}</span>`}});
 
 // the whole prompt as the model gets it (fixed parts marked) and the shipped system prompt
@@ -171,7 +223,7 @@ async function ttsStream(body){const t0=performance.now();const r=await api('/ap
   $('ttsmsg').textContent=`${t('erster Ton nach','first audio after')} ${first!=null?first.toFixed(2):'?'} s · ${(bytes/48000).toFixed(1)} s ${t('Audio in','audio in')} ${((performance.now()-t0)/1000).toFixed(2)} s`}
 
 async function loadClone(){const l=await (await api('/api/clone-voices')).json();
-  $('vlist').innerHTML=l.map(n=>`<tr><td>${esc(n)}</td><td style="text-align:right;white-space:nowrap"><button class="b" type="button" data-vprobe="${esc(n)}">${t('Probe sprechen','Speak a sample')}</button> <button class="b" type="button" data-vref="${esc(n)}">${t('Referenz anhören','Play reference')}</button> <button class="b" type="button" data-vexp="${esc(n)}">${t('Exportieren','Export')}</button> <button class="b" type="button" data-vdel="${esc(n)}">${t('Löschen','Delete')}</button></td></tr>`).join('')||`<tr><td class="mut">${t('Noch keine.','None yet.')}</td></tr>`}
+  $('vlist').innerHTML=l.map(n=>`<tr><td>${esc(n)}</td><td style="text-align:right;white-space:nowrap"><button class="b" type="button" data-vprobe="${esc(n)}">${t('Probe sprechen','Speak a sample')}</button> <button class="b" type="button" data-vref="${esc(n)}">${t('Referenz anhören','Play reference')}</button> <button class="b" type="button" data-vexp="${esc(n)}">${t('Exportieren','Export')}</button> <button class="b" type="button" data-vdel="${esc(n)}">${t('Löschen','Delete')}</button></td></tr>`).join('')||`<tr><td class="mut">${t('Noch keine.','None yet.')}</td></tr>`;if(!l.length)$('vaddbox').open=true}
 // names travel in data attributes, never inside inline JavaScript
 $('vlist').onclick=e=>{const b=e.target.closest('button');if(!b)return;const d=b.dataset;
   if(d.vprobe!=null)probeVoice(d.vprobe,b);else if(d.vref!=null)playRef(d.vref);
@@ -220,7 +272,7 @@ $('vrec').onclick=async()=>{
     $('vrec').classList.remove('rec');$('vrec').textContent=t('Neu aufnehmen','Record again');
     const secs=(performance.now()-t0)/1000;
     try{vr.blob=await toWav(new Blob(parts,{type:rec.mimeType||'audio/webm'}),24000)}catch(e){$('vmsg').innerHTML=`<span class="err">${esc(e.message)}</span>`;return}
-    $('vplay').src=URL.createObjectURL(vr.blob);$('vplay').style.display='block';$('vfile').value='';
+    $('vplay').src=URL.createObjectURL(vr.blob);$('vplay').style.display='block';$('vfile').value='';$('vfilename').textContent='wav, mp3, m4a, …';
     const warn=secs<4?t('Etwas kurz, 5–15 Sekunden klonen besser. ','A bit short, 5–15 seconds clone better. '):peak<0.08?t('Sehr leise, näher ans Mikrofon. ','Very quiet, move closer to the microphone. '):'';
     $('vmsg').textContent=warn+t('Erkenne den gesprochenen Text …','Transcribing what you said …');
     const fd=new FormData();fd.append('file',vr.blob,'ref.wav');fd.append('language',$('vreadlang').value==='en'?'English':'German');
@@ -361,7 +413,7 @@ function updBanner(r){const on=ADMIN&&r&&r.behind&&r.behind!==0&&r.latest;let hi
   $('updbtext').textContent=t('Update verfügbar','Update available')+(r.version?': '+r.version:'')+(r.behind>0?t(` (${r.behind} Änderung${r.behind>1?'en':''})`,` (${r.behind} change${r.behind>1?'s':''})`):'');
   $('updbx').onclick=()=>{try{localStorage.setItem('updhide',r.latest)}catch{}$('updbanner').style.display='none'}}
 $('updbgo').onclick=()=>{$('updbanner').style.display='none';goSec('sys')};
-function updBadge(r){window.UPD=r;updBanner(r);zustand();const on=r&&r.behind&&r.behind!==0;$('updbadge').style.display=on?'inline-block':'none';
+function updBadge(r){window.UPD=r;updBanner(r);zustand();if(CFG)glance();const on=r&&r.behind&&r.behind!==0;$('updbadge').style.display=on?'inline-block':'none';
   document.querySelectorAll('.subbadge').forEach(x=>x.style.display=on?'inline-block':'none')}
 $('updcheck').onclick=()=>loadSys(true);
 let benchPoll=null;

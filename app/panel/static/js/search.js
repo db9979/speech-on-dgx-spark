@@ -20,7 +20,7 @@ function sFlash(el){if(!el)return;el.scrollIntoView({block:'center',behavior:'sm
 function cfgIndex(){const out=[];
   document.querySelectorAll('#cfgnav button[data-p]').forEach(b=>{const p=b.dataset.p,pane=$('pane-'+p),page=visText(b);if(!pane)return;
     out.push({label:page,page:t('Seite','Page'),p,el:null});
-    pane.querySelectorAll('.setrow .lbl>b, label, h2:not(.pt), summary, .fgrp>summary b').forEach(e=>{const l=visText(e);if(!l||l.length>90)return;
+    pane.querySelectorAll('.setrow .lbl>b, label, h2:not(.pt), h3.sec, summary, .fgrp>summary b').forEach(e=>{const l=visText(e);if(!l||l.length>90)return;
       const row=e.closest('.setrow')||e,hint=row.querySelector&&row.querySelector('.lbl>span');out.push({label:l,page,p,el:row,more:hint?hint.textContent:''})})});
   GUIDES.forEach(g=>{if(g.sw&&$(g.sw)){const pane=$(g.sw).closest('.pane');if(pane)out.push({label:gT(g.t),page:t('Funktionen','Features'),p:pane.id.slice(5),el:$(g.sw).closest('.setrow')||$(g.sw)})}});
   return out}

@@ -62,19 +62,33 @@ document.querySelectorAll('i.ni').forEach(e=>e.innerHTML='<svg viewBox="0 0 24 2
 function mbarMark(g){document.querySelectorAll('#mbar button').forEach(x=>x.classList.toggle('on',x.dataset.m===({chat:'chat',mon:'mon',me:'me'}[g]||'more')))}
 // Main menu: five entries; Übersicht and Einbinden hold several pages behind a sub-tab bar. The cloned voices
 // are a settings page (Einstellungen → Stimmen), not under Profile.
-const GROUPS={chat:[['chat','']],mon:[['mon',t('Monitoring','Monitoring')],['sys',t('System und Update','System and update')],['test',t('Prüfen','Checks')],['logs',t('Logs','Logs')]],
+const GROUPS={chat:[['chat','']],mon:[['mon',t('Monitoring','Monitoring')],['test',t('Prüfen','Checks')],['logs',t('Logs','Logs')]],
   cfg:[['cfg','']],prof:[['prof','']],int:[['int',t('Anleitungen','Guides')],['apps',t('Apps und Schnittstellen','Apps and interfaces')]]};
 const lastSec={};
 function showSec(s){document.querySelectorAll('section').forEach(x=>x.classList.toggle('on',x.id===s));
   document.body.classList.toggle('inchat',s==='chat');
-  if(s==='cfg'){document.querySelector('.cfgwrap').classList.remove('sub');loadCfg();mfaShow('admmfa','/api/mfa');if($('pane-voices').classList.contains('on'))loadClone()}if(s==='chat')chatTab();if(s==='test'){loadVoices();instrHint();loadLive();loadBench()}if(s==='prof')loadProf();if(s==='logs')loadLogs();if(s==='apps')loadInt();if(s==='sys')loadSys()}
-function subnav(g,s){const items=GROUPS[g],bar=$('subnav');bar.hidden=items.length<2;
-  bar.innerHTML=items.length<2?'':items.map(([id,l])=>`<button type="button" data-sub="${id}"${id===s?' class="on"':''}>${esc(l)}${id==='sys'?' <span class="pill warn subbadge" style="display:none">Update</span>':''}</button>`).join('');
-  bar.querySelectorAll('button').forEach(b=>b.onclick=()=>{lastSec[g]=b.dataset.sub;subnav(g,b.dataset.sub);showSec(b.dataset.sub)});updBadge(window.UPD)}
+  if(s==='cfg'){document.querySelector('.cfgwrap').classList.remove('sub');loadCfg();mfaShow('admmfa','/api/mfa');if($('pane-voices').classList.contains('on'))loadClone();if($('pane-upd').classList.contains('on'))loadSys()}if(s==='chat')chatTab();if(s==='test'){loadVoices();instrHint();loadLive();loadBench()}if(s==='prof')loadProf();if(s==='logs')loadLogs();if(s==='apps')loadInt();}
+// Zustand and Einbinden have several pages: computers show them as a second column like Einstellungen, phones as a
+// list with one line of state that opens the page, with "back" on top (V01.0.207, same pattern everywhere)
+const NARROW=()=>matchMedia('(max-width:760px)').matches;
+const SUBDESC={mon:()=>($('ztitle')||{}).textContent||'',test:()=>t('Funktionsprüfung, Qualitätstest, Leistung messen, ausprobieren','Function check, quality test, performance, try out'),
+  logs:()=>t('Was die Dienste schreiben, mit Diagnose-Filter','What the services write, with diagnosis filter'),int:()=>t('Zu jedem Dienst: einrichten, benutzen, ausschalten','For every service: set up, use, switch off'),
+  apps:()=>t('Open WebUI, andere Apps, Pebble, Siri, curl und Python','Open WebUI, other apps, Pebble, Siri, curl and Python')};
+const GNAME={mon:t('Zustand','Status'),int:t('Einbinden','Connect')};
+function subnav(g,s){const items=GROUPS[g],bar=$('subnav'),many=items.length>1;bar.hidden=!many;document.querySelector('main').classList.toggle('hassub',many);
+  if(!many)document.querySelector('main').classList.remove('sublist');
+  bar.innerHTML=!many?'':items.map(([id,l])=>`<button type="button" data-sub="${id}"${id===s?' class="on"':''}>${esc(l)}<small class="gls">${esc(SUBDESC[id]?SUBDESC[id]():'')}</small></button>`).join('');
+  $('subback').querySelector('span').textContent=GNAME[g]||'';
+  bar.querySelectorAll('button').forEach(b=>b.onclick=()=>{lastSec[g]=b.dataset.sub;subnav(g,b.dataset.sub);document.querySelector('main').classList.remove('sublist');showSec(b.dataset.sub);if(NARROW())window.scrollTo(0,0)});updBadge(window.UPD)}
+$('subback').onclick=()=>{const m=document.querySelector('main');m.classList.add('sublist');const z=bar=>bar&&bar.querySelector('[data-sub=mon] small');const sm=z($('subnav'));if(sm)sm.textContent=SUBDESC.mon();window.scrollTo(0,0)};
+let goDirect=false;
 document.querySelectorAll('nav button[data-s]').forEach(b=>b.onclick=()=>{const g=b.dataset.s,s=lastSec[g]||g;
   if($('profmodal').style.display==='grid'&&window.closeProf)closeProf();   // Ich is a page beside the menu: another entry closes it
-  document.querySelectorAll('nav button').forEach(x=>x.classList.toggle('on',x===b));subnav(g,s);showSec(s);mbarMark(g)});
-window.goSec=s=>{const g=Object.keys(GROUPS).find(k=>GROUPS[k].some(x=>x[0]===s));lastSec[g]=s;document.querySelector(`nav button[data-s=${g}]`).click()};
+  const direct=goDirect;goDirect=false;
+  document.querySelectorAll('nav button').forEach(x=>x.classList.toggle('on',x===b));subnav(g,s);showSec(s);mbarMark(g);
+  document.querySelector('main').classList.toggle('sublist',!direct&&NARROW()&&GROUPS[g].length>1)});
+window.goSec=s=>{if(s==='sys'){goCfg('upd');return}   // update and backups moved to Einstellungen (V01.0.207)
+  goDirect=true;const g=Object.keys(GROUPS).find(k=>GROUPS[k].some(x=>x[0]===s));lastSec[g]=s;document.querySelector(`nav button[data-s=${g}]`).click()};
 const esc=s=>String(s??'').replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
 // for a value inside onclick="f('…')": a JavaScript string first, then HTML (a name with ' or \ stays text)
 const escq=s=>esc(JSON.stringify(String(s??'')).slice(1,-1).replace(/'/g,"\\'"));

@@ -169,6 +169,49 @@ class Browser(unittest.TestCase):
                 await br.close()
         self.run_async(go())
 
+    def test_settings_glance_and_same_page_pattern(self):
+        """V01.0.207-210: Einstellungen open on „Auf einen Blick“ with one line per page, „Mehr“ unfolds the longer
+        help, update and backups sit under Einstellungen; Zustand and Einbinden show their pages in a second column
+        (computer) or as a list that opens the page with "back" on top (phone), like Einstellungen."""
+        async def go():
+            async with async_playwright() as p:
+                br, pg, errors = await self.page(p, 1280, 900)
+                await pg.evaluate("goSec('cfg');document.querySelector('#cfgnav button[data-p=start]').click()")
+                await pg.wait_for_function("document.querySelectorAll('#glance .glrow').length>=9", timeout=8000)
+                self.assertEqual(await pg.evaluate("[...document.querySelectorAll('#glance h3.sec')].map(h=>h.textContent)"),
+                                 ["Assistent", "Sprache", "Spark"])
+                await pg.evaluate("document.querySelector('#cfgnav button[data-p=ai]').click()")
+                self.assertTrue(await pg.evaluate("document.querySelector('#pane-ai .fh.more').hidden"))
+                await pg.evaluate("document.querySelector('#pane-ai .mlink').click()")
+                self.assertFalse(await pg.evaluate("document.querySelector('#pane-ai .fh.more').hidden"))
+                await pg.evaluate("goSec('sys')")
+                await pg.wait_for_timeout(300)
+                self.assertTrue(await pg.evaluate("$('cfg').classList.contains('on')&&$('pane-upd').classList.contains('on')"))
+                await pg.evaluate("goSec('mon')")
+                await pg.wait_for_timeout(300)
+                self.assertTrue(await pg.evaluate("document.querySelector('main').classList.contains('hassub')"))
+                self.assertLessEqual(await pg.evaluate("$('subnav').getBoundingClientRect().right"),
+                                     await pg.evaluate("$('mon').getBoundingClientRect().left"))
+                self.assertEqual(errors, [])
+                await br.close()
+                br, pg, errors = await self.page(p, 390, 844)
+                await pg.evaluate("document.querySelector('#mbar button[data-m=mon]').click()")
+                await pg.wait_for_timeout(300)
+                self.assertTrue(await pg.evaluate("document.querySelector('main').classList.contains('sublist')"))
+                self.assertFalse(await pg.evaluate("$('mon').offsetParent!==null"))
+                await pg.evaluate("document.querySelector('#subnav [data-sub=test]').click()")
+                await pg.wait_for_timeout(300)
+                self.assertTrue(await pg.evaluate("$('test').classList.contains('on')&&$('test').offsetParent!==null"))
+                self.assertTrue(await pg.evaluate("$('subback').offsetParent!==null"))
+                await pg.evaluate("$('subback').click()")
+                self.assertTrue(await pg.evaluate("document.querySelector('main').classList.contains('sublist')"))
+                await pg.evaluate("goSec('cfg')")
+                await pg.wait_for_function("[...document.querySelectorAll('#cfgnav small.gls')].some(x=>x.textContent.trim())", timeout=8000)
+                self.assertFalse(await pg.evaluate("document.querySelector('#cfgnav button[data-p=start]').offsetParent!==null"))
+                self.assertEqual(errors, [])
+                await br.close()
+        self.run_async(go())
+
     def test_me_is_a_page_beside_the_menu(self):
         """V01.0.147: on a computer "Ich" in the sidebar opens Ich as a page right of the menu (no veil over
         it); another menu entry closes it again."""
@@ -182,7 +225,7 @@ class Browser(unittest.TestCase):
                 self.assertTrue(await pg.evaluate("$('overbox').classList.contains('on')"))
                 await pg.evaluate("document.querySelector('nav button[data-s=mon]').click()")
                 self.assertEqual(await pg.evaluate("$('profmodal').style.display"), "none")
-                self.assertTrue(await pg.evaluate("$('mon').classList.contains('on')||$('sys').classList.contains('on')||$('test').classList.contains('on')||$('logs').classList.contains('on')"))
+                self.assertTrue(await pg.evaluate("$('mon').classList.contains('on')||$('test').classList.contains('on')||$('logs').classList.contains('on')"))
                 self.assertEqual(errors, [])
                 await br.close()
         self.run_async(go())
