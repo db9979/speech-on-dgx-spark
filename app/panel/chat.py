@@ -682,11 +682,15 @@ def reminder_due(args, tz):
     return None
 
 
-def docs_hint(prof, docs):
+def docs_hint(prof, docs, shared=()):
     # names are the files' own (outside text too): quoted, short, without the data markers
-    names = ", ".join("„" + re.sub(r"<<<|>>>|[„“\n]", "", d["name"])[:80] + "“" for d in docs[:30]) + (" …" if len(docs) > 30 else "")
-    return (f"{prof['name']} hat eigene Dokumente hochgeladen: {names}. Wenn eine Frage dazu passen könnte, "
-            "suche mit document_search darin und antworte aus den Treffern; nenne das Dokument kurz.")
+    q = lambda d: "„" + re.sub(r"<<<|>>>|[„“\n]", "", d["name"])[:80] + "“"  # noqa: E731
+    names = ", ".join(q(d) for d in docs[:30]) + (" …" if len(docs) > 30 else "")
+    common = ", ".join(q(d) for d in shared[:30]) + (" …" if len(shared) > 30 else "")
+    have = (f"{prof['name']} hat eigene Dokumente hochgeladen: {names}. " if docs else "") + \
+        (f"Gemeinsame Dokumente des Haushalts, von anderen Profilen für alle freigegeben: {common}. " if shared else "")
+    return have + ("Wenn eine Frage dazu passen könnte, suche mit document_search darin und antworte aus den "
+                   "Treffern; nenne das Dokument kurz.")
 
 
 def memory_hint(prof):

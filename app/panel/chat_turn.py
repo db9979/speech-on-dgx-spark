@@ -28,6 +28,7 @@ import proactive  # noqa: E402
 import profiles  # noqa: E402
 import speakers  # noqa: E402
 import tidy  # noqa: E402
+import wissen  # noqa: E402
 import chat  # noqa: E402  (constants and helpers; imported fully before any call)
 
 
@@ -303,9 +304,13 @@ async def prepare(request):
             ha_read = await homeassistant.lookup(ha, messages[-1]["content"])
         except (httpx.HTTPError, ValueError) as e:
             print("homeassistant: lookup failed:", type(e).__name__, flush=True)
+    # own documents plus the ones other profiles offer to everyone; neither for guests or a voice the
+    # shared speaker does not recognize (private_ok)
     docs = documents.list_docs(who["id"], used_only=True) if who and private_ok and ccfg.get("documents", True) else []
-    if docs:
-        system = (system + "\n\n" + chat.docs_hint(who, docs)).strip()
+    shared_docs = wissen.shared_list(who["id"]) if who and private_ok and ccfg.get("documents", True) else []
+    if docs or shared_docs:
+        system = (system + "\n\n" + chat.docs_hint(who, docs, shared_docs)).strip()
+    docs = docs + shared_docs
     timers = bool(ccfg.get("reminders", True))
     if timers:
         system = (system + "\n\n" + chat.REMINDER_HINT).strip()

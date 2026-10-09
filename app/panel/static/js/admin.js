@@ -86,8 +86,13 @@ async function zDocs(){const box=$('zdocs');if(!box||document.hidden)return;let 
     const v=d.vectors;tx+=' · '+v[0]+'/'+v[1]+t(' Stücke mit Bedeutung',' pieces with meaning');
     row(st[0],st[1],t('Bedeutungssuche (CPU-Modell)','Meaning search (CPU model)'),tx)}
   if(d.pictures){row(d.waiting?'warn':'ok',d.waiting?d.waiting+t(' Seiten',' pages'):t('nichts offen','nothing open'),t('Bilder und Scans lesen','Read pictures and scans'),
-    d.today+t(' heute gelesen (höchstens ',' read today (at most ')+d.day_pages+t(' je Profil)',' per profile)')+' · '+t('zuletzt ','last ')+ago(d.last.read)+(d.waiting&&!d.quiet?' · '+t('wartet auf eine ruhige Minute','waits for a quiet minute'):''))}}
-
+    d.today+t(' heute gelesen (höchstens ',' read today (at most ')+d.day_pages+t(' je Profil)',' per profile)')+' · '+t('zuletzt ','last ')+ago(d.last.read)+(d.waiting&&!d.quiet?' · '+t('wartet auf eine ruhige Minute','waits for a quiet minute'):''))}
+  for(const x of d.shared||[]){const r=document.createElement('div');r.className='zrow';const sp=document.createElement('span');sp.className='pill ok';sp.textContent=t('für alle','shared');
+    const tx=document.createElement('span');const b1=document.createElement('b');b1.textContent=x.name;tx.append(b1,' '+t('von ','from ')+x.who);
+    const b=document.createElement('button');b.type='button';b.className='b';b.textContent=t('Zurücknehmen','Take back');
+    b.onclick=async()=>{if(!confirm(t('„'+x.name+'“ nicht mehr für alle freigeben?','Stop sharing "'+x.name+'" with everyone?')))return;
+      try{await api('/api/admin/wissen/unshare',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({owner:x.owner,id:x.id})})}catch{}zDocs()};
+    r.append(sp,tx,b);L2.appendChild(r)}}
 let CFG=null;
 async function loadLangs(){const l=await (await api('/api/languages')).json();document.querySelectorAll('select.langs').forEach(s=>s.innerHTML=l.map(x=>`<option>${x}</option>`).join(''))}
 async function instrHint(sel){if(!CFG)try{CFG=await (await api('/api/config')).json()}catch{return}const m=(sel?$('tts.model').value:CFG.tts.model)||'';const small=/0\.6B/i.test(m);

@@ -9,15 +9,21 @@ Builds on documents.py (one SQLite file per profile) with three switches, each o
 - doc_semantic  "Bedeutungssuche": pieces get a meaning vector (docembed.py, CPU, own process), the
                 search merges it with the full-text ranking;
 - doc_originals "Originale aufbewahren": the uploaded file is kept (pictures cleaned), up to the
-                admin's chat.doc_quota_mb per profile, and can be opened again.
+                admin's chat.doc_quota_mb per profile, and can be opened again;
+- doc_shared    "Gemeinsame Dokumente" (V01.0.236): a profile marks one of its documents "Für alle"; every
+                profile with the switch on then finds it in its search and can look at it. The document
+                stays in the owner's database: only the owner (or the admin) takes it back or deletes it,
+                guests and voices the speaker does not recognize never get it (chat_turn private_ok), and
+                its text stays outside text like any document.
 
 The text the model reads from a picture is stored as data like any other document text: what a page
 says ("ignore your rules …") is never an instruction, it is outside text when the assistant searches
 it (chat.READS_OUTSIDE), and nothing from documents is learned into the memory.
 
     GET  /api/admin/wissen                   Zustand → Monitoring: model state and what waits, counts only
+    POST /api/admin/wissen/unshare           {"owner", "id"}  the admin takes a "Für alle" back
     GET  /api/profile/wissen                 switches, usage, what is still being read
-    PUT  /api/profile/wissen/{id}            {"use": bool}  the assistant searches this document or not
+    PUT  /api/profile/wissen/{id}            {"use": bool} searched or not, {"shared": bool} "Für alle"
     GET  /api/profile/wissen/{id}/file       the kept original (?view=1: pictures and PDFs in the browser)
     GET  /api/profile/wissen/{id}/text       the stored text, to look at a document again
     POST /api/profile/wissen/search          {"q"}  try the search without the language model
@@ -85,13 +91,43 @@ def add(uid, name, data, text=None, source="upload"):
     return documents.add(uid, name, data, text=text, pictures=on(uid, "pictures"), keep=keep_bytes(uid), source=source)
 
 
+def _sharers(uid):
+    """The other profiles that offer documents to everyone ("Für alle"), when this profile may see them."""
+    if not on(uid, "shared"):
+        return []
+    return [o for o in profiles.user_ids() if o != uid and on(o, "shared")]
+
+
+def shared_list(uid):
+    """[{"id", "name", "file", "kind", "pages", "owner"}] the other profiles offer to this one."""
+    out = []
+    for o in _sharers(uid):
+        owner = (profiles.by_id(o) or {}).get("name", "?")
+        out += [dict(d, owner=owner) for d in documents.list_shared(o)]
+    return out
+
+
+def find_shared(uid, doc_id):
+    """The owner's id of a document another profile offers to this one, else None."""
+    for o in _sharers(uid):
+        if documents.is_shared(o, doc_id):
+            return o
+    return None
+
+
 async def search(uid, query, k=5):
+    """The profile's own documents and the ones the others offer to everyone, best first."""
     qvec = await docembed.query(query) if on(uid, "semantic") and query.strip() else None
-    return await asyncio.to_thread(documents.search, uid, query, k, qvec)
+    hits = await asyncio.to_thread(documents.search, uid, query, k, qvec)
+    for o in _sharers(uid):
+        owner = (profiles.by_id(o) or {}).get("name", "?")
+        theirs = await asyncio.to_thread(documents.search, o, query, k, qvec, True)
+        hits += [dict(h, owner=owner, shared=True) for h in theirs]
+    return sorted(hits, key=lambda h: -h.get("score", 0))[:k]
 
 
 def where(h):
-    return h["name"] + (f", Seite {h['page']}" if h.get("page") else "")
+    return h["name"] + (f", Seite {h['page']}" if h.get("page") else "") + (f", geteilt von {h['owner']}" if h.get("owner") else "")
 
 
 # ---------------------------------------------------------------- background work
@@ -183,7 +219,7 @@ def admin_state():
     """Zustand → Monitoring: is the meaning model running, how much memory, what still waits.
     Sums over all profiles, never names, document names or text."""
     c = _chat()
-    on_ = {k: admin_on(k) for k in ("pictures", "semantic")}
+    on_ = {k: admin_on(k) for k in ("pictures", "semantic", "shared")}
     if not c.get("documents", True) or not any(on_.values()):
         return {"on": False}
     out = {"on": True, "pictures": on_["pictures"], "semantic": on_["semantic"], "profiles": 0,
@@ -203,10 +239,25 @@ def admin_state():
             have, total = documents.vector_state(uid)
             out["vectors"][0] += have
             out["vectors"][1] += total
+    if on_["shared"]:      # what is offered to everyone is no secret in the household: names and owners
+        out["shared"] = [{"owner": uid, "who": (profiles.by_id(uid) or {}).get("name", "?"), "id": d["id"], "name": d["name"]}
+                         for uid in profiles.user_ids() if on(uid, "shared") for d in documents.list_shared(uid)]
     if on_["semantic"]:
         out["model"] = dict(docembed.status(), mib=docembed.memory_mib(), need_gib=docembed.MIN_FREE_GIB,
                             stop_min=docembed.IDLE_STOP // 60)
     return out
+
+
+@router.post("/api/admin/wissen/unshare", dependencies=[Depends(auth)])
+async def admin_unshare(request: Request):
+    guard.limit(request, "doc", admin=True)
+    import iphone
+    body = await iphone._json(request, 1024)
+    owner, doc_id = str(body.get("owner") or ""), str(body.get("id") or "")
+    if owner not in profiles.user_ids() or not documents.set_shared(owner, doc_id, False):
+        raise HTTPException(404, "no such document")
+    guard.log("doc_unshare", ip=guard.client_ip(request))
+    return {"ok": True}
 
 
 @router.get("/api/profile/wissen", dependencies=[Depends(assistant)])
@@ -215,8 +266,9 @@ def info(prof=Depends(own_profile)):
     uid = prof["id"]
     s = profiles.settings(uid)
     have, total = documents.vector_state(uid)
-    return {"allow": {k: admin_on(k) for k in ("pictures", "semantic", "originals")},
-            "on": {k: bool(s.get("doc_" + k)) for k in ("pictures", "semantic", "originals")},
+    return {"allow": {k: admin_on(k) for k in ("pictures", "semantic", "originals", "shared")},
+            "on": {k: bool(s.get("doc_" + k)) for k in ("pictures", "semantic", "originals", "shared")},
+            "others": shared_list(uid),
             "usage": documents.usage(uid), "quota": keep_bytes(uid) or None,
             "today": documents.count_today(uid, today(time.time())) if admin_on("pictures") else 0,
             "day_pages": DAY_PAGES, "vectors": [have, total] if admin_on("semantic") else None,
@@ -233,6 +285,12 @@ async def set_use(doc_id: str, request: Request, prof=Depends(browser_profile)):
     guard.limit(request, "doc", prof["id"], False)
     import iphone
     body = await iphone._json(request, 1024)
+    if isinstance(body.get("shared"), bool):     # only in the owner's own database: nobody else can set it
+        if body["shared"] and not on(prof["id"], "shared"):
+            raise HTTPException(403, "shared documents are off (Einstellungen → Funktionen, Ich → Dokumente)")
+        if not documents.set_shared(prof["id"], doc_id, body["shared"]):
+            raise HTTPException(404, "no such document")
+        return {"ok": True}
     if not isinstance(body.get("use"), bool):
         raise HTTPException(400, "use: true or false")
     if not documents.set_use(prof["id"], doc_id, body["use"]):
@@ -262,6 +320,9 @@ def download(doc_id: str, request: Request, view: int = 0, prof=Depends(reader))
     guard.limit(request, "doc", prof["id"], False)
     got = documents.original(prof["id"], doc_id)
     if not got:
+        owner = find_shared(prof["id"], doc_id)
+        got = documents.original(owner, doc_id) if owner else None
+    if not got:
         raise HTTPException(404, "the original is not kept")
     path, name, ctype = got
     inline = bool(view) and ctype in INLINE
@@ -278,6 +339,11 @@ def read_again(doc_id: str, request: Request, prof=Depends(reader)):
     _docs_on()
     guard.limit(request, "doc", prof["id"], False)
     got = documents.text_of(prof["id"], doc_id)
+    if not got:
+        owner = find_shared(prof["id"], doc_id)
+        got = documents.text_of(owner, doc_id) if owner else None
+        if got:
+            got["owner"] = (profiles.by_id(owner) or {}).get("name", "?")
     if not got:
         raise HTTPException(404, "no such document")
     return got

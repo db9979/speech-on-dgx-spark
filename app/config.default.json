@@ -85,6 +85,7 @@
     "doc_pictures": false,
     "doc_semantic": false,
     "doc_originals": false,
+    "doc_shared": false,
     "doc_quota_mb": 500,
     "self_echo_mode": "pause",
     "datetime": true,

@@ -17,7 +17,8 @@ async function showFacts(){const r=await api('/api/profile/memory');const d=awai
 const docSize=n=>n<1048576?Math.max(1,Math.round(n/1024))+' KB':(n/1048576).toFixed(1)+' MB';
 const DOCSW=[['pictures',t('Bilder und Scans lesen lassen','Let pictures and scans be read'),t('Fotos und Seiten ohne Text liest das Sprachmodell in Gesprächspausen ab.','The language model reads photos and pages without text in quiet moments.')],
   ['semantic',t('Bedeutungssuche','Meaning search'),t('Findet auch Stellen mit anderen Worten.','Also finds passages in other words.')],
-  ['originals',t('Originale aufbewahren','Keep originals'),t('Die Datei bleibt auf dem Spark und lässt sich wieder öffnen (neue Uploads).','The file stays on the Spark and can be opened again (new uploads).')]];
+  ['originals',t('Originale aufbewahren','Keep originals'),t('Die Datei bleibt auf dem Spark und lässt sich wieder öffnen (neue Uploads).','The file stays on the Spark and can be opened again (new uploads).')],
+  ['shared',t('Gemeinsame Dokumente','Shared documents'),t('Eigene Dokumente mit „Für alle“ freigeben und die freigegebenen der anderen nutzen.','Share own documents with "For everyone" and use the ones the others share.')]];
 let DOCINFO=null;
 // progress of one document (V01.0.232): pages read of all pages, then pieces with a meaning, and why it
 // waits (switch off, daily limit, someone is talking, the model waits for memory). [text, percent or null]
@@ -47,6 +48,7 @@ async function showDocs(){if(!DOCS_ON){$('docbox').style.display='none';return}$
   $('docsw').innerHTML=I?DOCSW.filter(([k])=>I.allow[k]).map(([k,l,h])=>`<div class="setrow"><div class="lbl"><b>${esc(l)}</b><span>${esc(h)}</span></div><label class="tgl"><input type="checkbox" data-docsw="${k}"${I.on[k]?' checked':''}><i></i></label></div>`).join(''):'';
   $('doclist').innerHTML=l.map(d=>{const [st,pct]=docState(d);return `<li><span>${esc(d.name)}<br><small class="mut">${docSize(d.size)} · ${esc(st)}${d.note?' · '+esc(d.note):''}</small>`+
     (pct===null?'':`<span class="qbar docbar" role="progressbar" aria-valuemin="0" aria-valuemax="100" aria-valuenow="${pct}"><i style="width:${pct}%"></i></span>`)+`</span>`+
+    (I&&I.allow.shared&&I.on.shared&&d.state==='ready'?`<label class="docshare" title="${esc(t('Alle Profile mit „Gemeinsame Dokumente“ finden und öffnen es','Every profile with "Shared documents" finds and opens it'))}"><input type="checkbox" data-docshare="${esc(d.id)}"${d.shared?' checked':''}> ${t('Für alle','For everyone')}</label>`:'')+
     `<label class="tgl" title="${esc(t('Der Assistent sucht darin','The assistant searches it'))}"><input type="checkbox" data-docuse="${esc(d.id)}"${d.use?' checked':''}><i></i></label>`+
     `<button class="b" type="button" data-docview="${esc(d.id)}">${t('Ansehen','View')}</button>`+
     `<button class="b" type="button" data-docdel="${esc(d.id)}" data-name="${esc(d.name)}">${t('Löschen','Delete')}</button></li>`}).join('')||`<li class="mut">${t('Noch keine Dokumente.','No documents yet.')}</li>`;
@@ -54,19 +56,25 @@ async function showDocs(){if(!DOCS_ON){$('docbox').style.display='none';return}$
   if(I&&I.allow.pictures&&I.on.pictures)bits.push(t(`heute ${I.today} von ${I.day_pages} Seiten gelesen`,`${I.today} of ${I.day_pages} pages read today`));
   if(I&&I.vectors&&I.on.semantic)bits.push(t(`Bedeutungssuche: ${I.vectors[0]} von ${I.vectors[1]} Abschnitten vorbereitet`,`Meaning search: ${I.vectors[0]} of ${I.vectors[1]} sections prepared`));
   $('docuse').textContent=bits.join(' · ');docAgain(l);
+  const o=I&&I.others||[];$('docothers').hidden=!o.length;
+  $('docotherlist').innerHTML=o.map(d=>`<li><span>${esc(d.name)}<br><small class="mut">${t('von ','from ')}${esc(d.owner)}</small></span><button class="b" type="button" data-docview="${esc(d.id)}">${t('Ansehen','View')}</button></li>`).join('');
   const pics=I&&I.allow.pictures&&I.on.pictures;
   $('docfile').accept='.pdf,.txt,.md,.docx,.html,.htm,.csv,.xlsx,.pptx,.odt,.ods,.odp,.eml'+(pics?',.jpg,.jpeg,.png,.webp':'')}
 $('docsw').onchange=async e=>{const k=e.target.dataset.docsw;if(!k)return;
   try{await api('/api/profile/settings',{method:'PUT',headers:{'Content-Type':'application/json'},body:JSON.stringify({['doc_'+k]:e.target.checked})})}
   catch(x){$('docmsg').innerHTML=`<span class="err">${esc(x.message)}</span>`}showDocs()};
-$('doclist').onchange=async e=>{const id=e.target.dataset.docuse;if(!id)return;
+$('docotherlist').onclick=e=>{const v=e.target.closest('[data-docview]');if(v)docView(v.dataset.docview)};
+$('doclist').onchange=async e=>{const sh=e.target.dataset.docshare;
+  if(sh){try{await api('/api/profile/wissen/'+encodeURIComponent(sh),{method:'PUT',headers:{'Content-Type':'application/json'},body:JSON.stringify({shared:e.target.checked})})}
+    catch(x){$('docmsg').innerHTML=`<span class="err">${esc(x.message)}</span>`;showDocs()}return}
+  const id=e.target.dataset.docuse;if(!id)return;
   try{await api('/api/profile/wissen/'+encodeURIComponent(id),{method:'PUT',headers:{'Content-Type':'application/json'},body:JSON.stringify({use:e.target.checked})})}
   catch(x){$('docmsg').innerHTML=`<span class="err">${esc(x.message)}</span>`;showDocs()}};
 // a document read again: the kept original (pictures and PDFs in the browser, the rest as a download)
 // and its stored text, built with textContent only
 async function docView(id){const box=$('docview');box.hidden=false;box.textContent=t('Lade …','Loading …');
   try{const d=await (await api('/api/profile/wissen/'+encodeURIComponent(id)+'/text')).json();box.textContent='';
-    const head=document.createElement('div');head.className='dvhead';const nm=document.createElement('b');nm.textContent=d.name;head.appendChild(nm);
+    const head=document.createElement('div');head.className='dvhead';const nm=document.createElement('b');nm.textContent=d.name+(d.owner?' · '+t('von ','from ')+d.owner:'');head.appendChild(nm);
     const right=document.createElement('span');
     if(d.file){const a=document.createElement('a');a.className='b';const pdf=/\.pdf$/i.test(d.name),pic=d.kind==='picture';
       a.href='/api/profile/wissen/'+encodeURIComponent(id)+'/file'+(pdf||pic?'?view=1':'');if(pdf)a.target='_blank';a.rel='noopener';

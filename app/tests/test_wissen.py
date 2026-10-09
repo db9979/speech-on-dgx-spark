@@ -101,12 +101,13 @@ class Defaults(Base):
     def test_off_by_default_both_switches_needed_and_never_for_guests(self):
         with open(helpers.APP + "/config.default.json") as f:
             ch = json.load(f)["chat"]
-        for k in ("doc_pictures", "doc_semantic", "doc_originals"):
+        for k in ("doc_pictures", "doc_semantic", "doc_originals", "doc_shared"):
             self.assertIs(ch[k], False)
             self.assertIs(profiles.SETTINGS[k][0], False)
         c = profile("Wwanda")
         info = c.get("/api/profile/wissen").json()
-        self.assertEqual(info["allow"], {"pictures": False, "semantic": False, "originals": False})
+        self.assertEqual(info["allow"], {"pictures": False, "semantic": False, "originals": False, "shared": False})
+        self.assertEqual(info["others"], [])
         self.assertEqual(upload(c, "foto.jpg", jpeg()).status_code, 400)          # pictures off
         helpers.set_config(doc_pictures=True)
         self.assertEqual(upload(c, "foto.jpg", jpeg()).status_code, 400)          # the profile's own switch still off
@@ -529,6 +530,57 @@ class Worker(Base):
             docembed.WORKER, docembed.MIN_FREE_GIB = old
             if os.path.exists(docembed.PINS):
                 os.remove(docembed.PINS)
+
+
+class Shared(Base):
+    def test_for_everyone_only_with_both_switches_and_only_the_owner_decides(self):
+        own, other, third = profile("Wsofia"), profile("Wtheo"), profile("Wuli")
+        doc = upload(own, "kaffeemaschine.txt", b"Entkalken: Taste drei Sekunden halten, dann Wasser einfuellen. " * 3).json()["id"]
+        upload(own, "privat.txt", b"Kontoauszug Entkalken geheim. " * 3)
+        # everything off: setting it is refused, nobody sees anything
+        self.assertEqual(own.put(f"/api/profile/wissen/{doc}", json={"shared": True}).status_code, 403)
+        self.switch(own, shared=True)
+        self.assertEqual(own.put(f"/api/profile/wissen/{doc}", json={"shared": True}).status_code, 200)
+        uid_t = uid_of("Wtheo")
+        self.assertEqual(run(wissen.search(uid_t, "Entkalken")), [])                # theo's own switch is off
+        self.assertEqual(other.get(f"/api/profile/wissen/{doc}/text").status_code, 404)
+        self.switch(other, shared=True)
+        hits = run(wissen.search(uid_t, "Entkalken"))
+        self.assertEqual({h["name"] for h in hits}, {"kaffeemaschine.txt"})       # never the not shared one
+        self.assertEqual(hits[0]["owner"], "Wsofia")
+        self.assertIn("geteilt von Wsofia", wissen.where(hits[0]))
+        info = other.get("/api/profile/wissen").json()
+        self.assertEqual([(d["name"], d["owner"]) for d in info["others"]], [("kaffeemaschine.txt", "Wsofia")])
+        got = other.get(f"/api/profile/wissen/{doc}/text").json()
+        self.assertEqual(got["owner"], "Wsofia")
+        # only the owner changes it: theo cannot take it back, change its use or delete it
+        self.assertEqual(other.put(f"/api/profile/wissen/{doc}", json={"shared": False}).status_code, 404)
+        self.assertEqual(other.put(f"/api/profile/wissen/{doc}", json={"use": False}).status_code, 404)
+        other.delete(f"/api/profile/docs/{doc}")
+        self.assertTrue(documents.is_shared(uid_of("Wsofia"), doc))
+        # a profile without the switch never sees it, guests never
+        self.assertEqual(third.get(f"/api/profile/wissen/{doc}/text").status_code, 404)
+        self.assertEqual(TestClient(panel.app).get(f"/api/profile/wissen/{doc}/text").status_code, 401)
+        # the admin sees what is shared and takes it back
+        d = ADMIN.get("/api/admin/wissen").json()
+        self.assertIn({"owner": uid_of("Wsofia"), "who": "Wsofia", "id": doc, "name": "kaffeemaschine.txt"}, d["shared"])
+        self.assertNotIn("privat.txt", str(d))
+        self.assertEqual(ADMIN.post("/api/admin/wissen/unshare", json={"owner": uid_of("Wsofia"), "id": doc}).status_code, 200)
+        self.assertEqual(run(wissen.search(uid_t, "Entkalken")), [])
+        self.assertEqual(other.post("/api/admin/wissen/unshare", json={"owner": uid_of("Wsofia"), "id": doc}).status_code, 401)
+
+    def test_the_assistant_offers_shared_documents_to_the_other_profile(self):
+        own, other = profile("Wvera"), profile("Wwim")
+        self.switch(own, shared=True)
+        self.switch(other, shared=True)
+        doc = upload(own, "heizung.txt", b"Heizung entlueften: Ventil links oben eine halbe Drehung. " * 3).json()["id"]
+        own.put(f"/api/profile/wissen/{doc}", json={"shared": True})
+        r = other.post("/api/chat", json={"messages": [{"role": "user", "content":
+                                                        'TOOL document_search {"query": "Heizung entlueften"}'}]})
+        evs = helpers.events(r)
+        src = next(e for e in evs if e["type"] == "docsources")
+        self.assertEqual(src["refs"][0]["name"], "heizung.txt")
+        self.assertIn("geteilt von Wvera", helpers.LLM_CALLS[-1]["messages"][-1]["content"])
 
 
 class Chat(Base):

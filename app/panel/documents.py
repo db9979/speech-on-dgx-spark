@@ -57,7 +57,7 @@ _vcache = {}                   # uid -> (data_version stamp, ids, matrix)
 SCHEMA = """
 CREATE TABLE IF NOT EXISTS docs (id TEXT PRIMARY KEY, name TEXT NOT NULL, size INTEGER, created INTEGER,
     kind TEXT DEFAULT 'text', state TEXT DEFAULT 'ready', note TEXT DEFAULT '', pages INTEGER DEFAULT 0,
-    use INTEGER DEFAULT 1, file TEXT DEFAULT '', source TEXT DEFAULT 'upload');
+    use INTEGER DEFAULT 1, file TEXT DEFAULT '', source TEXT DEFAULT 'upload', shared INTEGER DEFAULT 0);
 CREATE TABLE IF NOT EXISTS chunks (id INTEGER PRIMARY KEY, doc TEXT NOT NULL, n INTEGER, page INTEGER,
     text TEXT NOT NULL, vec BLOB);
 CREATE INDEX IF NOT EXISTS chunks_doc ON chunks(doc);
@@ -90,6 +90,8 @@ def _open(uid):
     con = sqlite3.connect(path, timeout=15)
     con.row_factory = sqlite3.Row
     con.executescript(SCHEMA)
+    if "shared" not in {r[1] for r in con.execute("PRAGMA table_info(docs)")}:    # databases from V01.0.224
+        con.execute("ALTER TABLE docs ADD COLUMN shared INTEGER DEFAULT 0")
     _import_json(uid, con)
     return con
 
@@ -421,7 +423,7 @@ def _scan_jpegs(reader, scans):
 def _row(r, todo):
     return {"id": r["id"], "name": r["name"], "size": r["size"], "created": r["created"], "chunks": r["nchunks"],
             "kind": r["kind"], "state": r["state"], "note": r["note"], "pages": r["pages"], "todo": todo.get(r["id"], 0),
-            "vecs": r["nvecs"], "use": bool(r["use"]), "file": bool(r["file"]), "source": r["source"]}
+            "vecs": r["nvecs"], "use": bool(r["use"]), "shared": bool(r["shared"]), "file": bool(r["file"]), "source": r["source"]}
 
 
 def list_docs(uid, used_only=False):
@@ -532,6 +534,33 @@ def set_use(uid, doc_id, on):
         return False
     with _Db(uid) as con:
         return con.execute("UPDATE docs SET use=? WHERE id=?", (1 if on else 0, doc_id)).rowcount > 0
+
+
+def set_shared(uid, doc_id, on):
+    """"Für alle": the owner (or the admin) offers one document to the other profiles, or takes it back."""
+    if not re.fullmatch(r"[0-9a-f]{12}", doc_id):
+        return False
+    with _Db(uid) as con:
+        return con.execute("UPDATE docs SET shared=? WHERE id=?", (1 if on else 0, doc_id)).rowcount > 0
+
+
+def list_shared(uid):
+    """[{"id", "name", "file", "kind", "pages"}] this profile offers to everyone (ready and in use)."""
+    if not os.path.exists(db_path(uid)):
+        return []
+    with _Db(uid) as con:
+        rows = con.execute("SELECT id, name, file, kind, pages FROM docs WHERE shared=1 AND use=1 AND state='ready' "
+                           "ORDER BY created DESC, id").fetchall()
+    return [{"id": r["id"], "name": r["name"], "file": bool(r["file"]), "kind": r["kind"], "pages": r["pages"]}
+            for r in rows]
+
+
+def is_shared(uid, doc_id):
+    if not re.fullmatch(r"[0-9a-f]{12}", doc_id) or not os.path.exists(db_path(uid)):
+        return False
+    with _Db(uid) as con:
+        return bool(con.execute("SELECT 1 FROM docs WHERE id=? AND shared=1 AND use=1 AND state='ready'",
+                                (doc_id,)).fetchone())
 
 
 def original(uid, doc_id):
@@ -691,17 +720,23 @@ def _terms(text):
     return out
 
 
-def search(uid, query, k=5, qvec=None):
-    """Best-matching pieces of this profile's documents in use: [{"id", "name", "page", "text", "file"}].
-    qvec: the query's meaning vector (docembed), merged with the full-text ranking."""
+def search(uid, query, k=5, qvec=None, shared_only=False):
+    """Best-matching pieces of this profile's documents in use: [{"id", "name", "page", "text", "file", "score"}].
+    qvec: the query's meaning vector (docembed), merged with the full-text ranking. shared_only: only the
+    documents this profile offers to everyone ("Für alle"), for another profile's search."""
     if not os.path.exists(db_path(uid)) and not os.path.isdir(_dir(uid)):
         return []
     q = sorted(set(t for t in _terms(query) if re.fullmatch(r"\w+", t)))
-    ranks = {}
+    ranks, only = {}, None
+    cond = "d.use=1" + (" AND d.shared=1 AND d.state='ready'" if shared_only else "")
     with _Db(uid) as con:
+        if shared_only:
+            only = {r[0] for r in con.execute("SELECT c.id FROM chunks c JOIN docs d ON d.id=c.doc WHERE " + cond)}
+            if not only:
+                return []
         if q:
             rows = con.execute("SELECT fts.rowid FROM fts JOIN chunks c ON c.id=fts.rowid JOIN docs d ON d.id=c.doc "
-                               "WHERE fts MATCH ? AND d.use=1 ORDER BY bm25(fts) LIMIT 30",
+                               "WHERE fts MATCH ? AND " + cond + " ORDER BY bm25(fts) LIMIT 30",
                                (" OR ".join(f'"{t}"' for t in q),)).fetchall()
             for i, r in enumerate(rows):
                 ranks[r[0]] = 1 / (60 + i)
@@ -710,10 +745,14 @@ def search(uid, query, k=5, qvec=None):
         ids, mat = _vectors(uid)
         if mat is not None and mat.shape[1] == len(qvec):
             sims = mat.astype(np.float32) @ np.asarray(qvec, dtype=np.float32)
-            for i, j in enumerate(np.argsort(-sims)[:30]):
-                if sims[j] < 0.75:     # e5 vectors: below this nothing is really related
+            i = 0
+            for j in np.argsort(-sims):
+                if sims[j] < 0.75 or i >= 30:     # e5 vectors: below 0.75 nothing is really related
                     break
+                if only is not None and ids[j] not in only:
+                    continue
                 ranks[ids[j]] = ranks.get(ids[j], 0) + 1 / (60 + i)
+                i += 1
     if not ranks:
         return []
     best = sorted(ranks, key=lambda x: -ranks[x])[:k]
@@ -722,7 +761,7 @@ def search(uid, query, k=5, qvec=None):
             "SELECT c.id, c.doc, c.page, c.text, d.name, d.file FROM chunks c JOIN docs d ON d.id=c.doc WHERE c.id IN (%s)"
             % ",".join("?" * len(best)), best).fetchall()}
     return [{"id": got[i]["doc"], "name": got[i]["name"], "page": got[i]["page"], "text": got[i]["text"],
-             "file": bool(got[i]["file"])} for i in best if i in got]
+             "file": bool(got[i]["file"]), "score": ranks[i]} for i in best if i in got]
 
 
 def sqlite_copy(src, dst):

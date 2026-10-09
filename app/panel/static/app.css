@@ -467,6 +467,8 @@ details.qhow{margin-top:6px}details.qhow>summary{cursor:pointer;font-size:13px;f
 .qprog{display:flex;align-items:center;gap:10px;margin-top:10px}.qprog[hidden],details.qhow[hidden]{display:none}
 .qbar{flex:1;min-width:80px;height:10px;border-radius:99px;background:var(--line);overflow:hidden}
 .qbar i{display:block;height:100%;width:0;border-radius:99px;background:linear-gradient(90deg,var(--acc),var(--acc2));transition:width .5s}
+.docshare{display:flex;align-items:center;gap:4px;font-size:13px;white-space:nowrap}
+#docothers h3{margin:14px 0 4px;font-size:14px}
 .docbar{display:block;max-width:240px;height:6px;margin-top:5px}
 .qbar.wait i{width:30%;animation:qslide 1.3s ease-in-out infinite}@keyframes qslide{0%{margin-left:-30%}100%{margin-left:100%}}
 .qprog span{font-size:12.5px;white-space:nowrap;font-variant-numeric:tabular-nums}
