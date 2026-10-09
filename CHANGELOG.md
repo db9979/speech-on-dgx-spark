@@ -2,6 +2,7 @@
 
 Every version in one line, newest first (taken from the commit messages, so some lines are German, some English). Older entries have no version number.
 
+- **V01.0.170** · 2026-10-09 · iPhone-App: Kurzbefehl-Beschreibung ohne „iPhone“ (Apple-Fehler ITMS-90626), Store-Name „Spark Assistent DB“
 - **V01.0.169** · 2026-10-09 · iPhone-App: App-Store-Texte (de/en) per GitHub-Knopf „App Store texts“ in App Store Connect eintragen
 - **V01.0.168** · 2026-10-09 · iPhone-App: Datenschutzerklärung für den App Store (de/en)
 - **V01.0.167** · 2026-10-09 · iPhone-App: baut mit dem neuen Xcode (iOS 26), Bluetooth-Option für Headsets angepasst

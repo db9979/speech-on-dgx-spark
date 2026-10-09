@@ -82,7 +82,7 @@ struct RemindIntent: AppIntent {
 /// The iPhone reads the text itself, as in the app.
 struct StoreDocumentIntent: AppIntent {
     static var title: LocalizedStringResource = "Dokument beim Spark ablegen"
-    static var description = IntentDescription("Liest den Text einer Datei auf dem iPhone und legt ihn unter „Meine Dokumente“ ab.")
+    static var description = IntentDescription("Liest den Text einer Datei und legt ihn unter „Meine Dokumente“ ab.")
 
     @Parameter(title: "Datei")
     var file: IntentFile

@@ -31,6 +31,7 @@ All options for running without questions (`--mode api --asr 1.7b --tts 0.6b --y
 
 <!-- New version: add one line at the top here and in CHANGELOG.md, drop the oldest line here (keep 10). Details go to docs/de and docs/en, not into this README. -->
 
+- **V01.0.170** iPhone app: Shortcut description without "iPhone" (Apple error ITMS-90626), store name "Spark Assistent DB"
 - **V01.0.169** iPhone app: App Store texts (de/en) written to App Store Connect by the GitHub workflow "App Store texts"
 - **V01.0.168** iPhone app: privacy policy for the App Store (de/en)
 - **V01.0.167** iPhone app: builds with the new Xcode (iOS 26), Bluetooth headset option adjusted
@@ -40,7 +41,6 @@ All options for running without questions (`--mode api --asr 1.7b --tts 0.6b --y
 - **V01.0.163** Performance check rates every value (very good, good, tight, too slow, with one sentence why), an overall verdict on top, new "words understood" percentage and the comparison with the last run
 - **V01.0.162** iPhone app: "My profile" with voice, answer length, by itself and morning briefing; the app's rights and the tone only shown (the Spark changes only a fixed list)
 - **V01.0.161** iPhone app: quick start (Action button, Control Center, lock screen), history like the log, ask about a photo or document (the iPhone reads the text), store documents (off, profile switch), questions wait offline, English interface
-- **V01.0.160** iPhone app has a new icon: a glowing spark on night blue with sound waves
 
 All versions: [CHANGELOG.md](CHANGELOG.md)
 

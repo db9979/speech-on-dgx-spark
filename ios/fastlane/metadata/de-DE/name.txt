@@ -1,1 +1,1 @@
-Spark Sprachassistent
+Spark Assistent DB

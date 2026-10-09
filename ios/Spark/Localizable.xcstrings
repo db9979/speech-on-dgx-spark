@@ -1021,12 +1021,12 @@
         }
       }
     },
-    "Liest den Text einer Datei auf dem iPhone und legt ihn unter „Meine Dokumente“ ab.": {
+    "Liest den Text einer Datei und legt ihn unter „Meine Dokumente“ ab.": {
       "localizations": {
         "en": {
           "stringUnit": {
             "state": "translated",
-            "value": "Reads the text of a file on the iPhone and stores it under “My documents”."
+            "value": "Reads the text of a file and stores it under “My documents”."
           }
         }
       }
