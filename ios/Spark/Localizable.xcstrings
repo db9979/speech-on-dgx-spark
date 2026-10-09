@@ -251,6 +251,16 @@
         }
       }
     },
+    "Bereite vor …": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Preparing …"
+          }
+        }
+      }
+    },
     "Bus und Bahn": {
       "localizations": {
         "en": {
@@ -277,6 +287,16 @@
           "stringUnit": {
             "state": "translated",
             "value": "For this, switch on “By itself” for your profile in the panel."
+          }
+        }
+      }
+    },
+    "Das Foto ist zu groß für den Spark.": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "The photo is too big for the Spark."
           }
         }
       }
@@ -411,6 +431,16 @@
         }
       }
     },
+    "Der Spark hat das Foto nicht angenommen.": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "The Spark did not accept the photo."
+          }
+        }
+      }
+    },
     "Der Spark hat keinen Schlüssel geschickt.": {
       "localizations": {
         "en": {
@@ -447,6 +477,16 @@
           "stringUnit": {
             "state": "translated",
             "value": "The Spark does not accept this iPhone. Check in the panel under Me → iPhone app that the app is on, otherwise pair again."
+          }
+        }
+      }
+    },
+    "Der Spark sieht es sich an": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "The Spark looks at it"
           }
         }
       }

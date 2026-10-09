@@ -29,7 +29,9 @@ final class Conversation: ObservableObject {
     @Published var notice: String?
     @Published var level: Float = 0
     @Published var offer: PhoneAction.Offer?
-    @Published var allowed = Allowed()
+    @Published var allowed = Allowed() {
+        didSet { Reader.sendPictures = allowed.images }
+    }
     @Published var charging = false
     @Published var speechAllowed = false
     /// CarPlay is connected: short answers, the conversation goes on hands-free, notes are said aloud

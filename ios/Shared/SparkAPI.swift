@@ -1,4 +1,5 @@
 import Foundation
+import UIKit
 
 struct SparkError: LocalizedError {
     let message: String
@@ -28,7 +29,36 @@ struct Attachment: Equatable {
     let kind: String        // "photo" or "document"
     let name: String
     let text: String
+    /// the photo itself (JPEG, at most 1280 px) when the Spark may look at pictures; then text is empty
+    var image: Data? = nil
 }
+
+/// The Spark looks at a photo only for 10 minutes after the last question: the id of an uploaded
+/// photo is used again within that time, after that (or on 410) the photo goes up again.
+actor ImageIds {
+    static let shared = ImageIds()
+    private var known: [Data: (id: String, used: Date)] = [:]
+    private let keep: TimeInterval = 540
+
+    func id(for data: Data, upload: () async throws -> String) async throws -> String {
+        if let k = known[data], Date().timeIntervalSince(k.used) < keep { return k.id }
+        let id = try await upload()
+        known = known.filter { Date().timeIntervalSince($0.value.used) < keep }
+        known[data] = (id, Date())
+        return id
+    }
+
+    func used(_ data: Data) {
+        if let k = known[data] { known[data] = (k.id, Date()) }
+    }
+
+    func forget(_ data: Data) {
+        known[data] = nil
+    }
+}
+
+/// The Spark does not look at pictures for this profile (403) or not at this one (415): read the text instead.
+struct ImagesOff: Error {}
 
 /// A conversation from the profile's list (the same list as the panel's Protokoll).
 struct SavedConvo: Identifiable {
@@ -58,6 +88,8 @@ struct Allowed {
     var carHa = false
     var docs = false
     var ios = false
+    /// the app may send photos for the Spark to look at (admin, profile and app switch)
+    var images = false
     /// Spark updates (rights only from the admin): notices and the version page, starting the update
     var updateNotify = false
     var updateStart = false
@@ -105,6 +137,8 @@ struct SparkAPI {
         switch http.statusCode {
         case 401:
             throw SparkError(message: String(localized: "Der Spark nimmt dieses iPhone nicht an. Im Panel unter Ich → iPhone-App prüfen, ob die App an ist, sonst neu koppeln."))
+        case 413:
+            throw SparkError(message: String(localized: "Das Foto ist zu groß für den Spark."))
         case 428:
             throw SparkError(message: String(localized: "Der Code stimmt nicht. Bitte den aktuellen Code aus der Authenticator-App nehmen."))
         case 429 where (detail ?? "").hasPrefix("Das Update"):   // one start from the app per 10 minutes
@@ -153,6 +187,7 @@ struct SparkAPI {
                        face: d["face"] as? String == "comic" ? "comic" : "robot",
                        push: d["push"] as? Bool ?? false, carHa: d["car_ha"] as? Bool ?? false,
                        docs: d["docs"] as? Bool ?? false, ios: d["ios"] as? Bool ?? false,
+                       images: d["images"] as? Bool ?? false,
                        updateNotify: (d["update"] as? [String: Any])?["notify"] as? Bool ?? false,
                        updateStart: (d["update"] as? [String: Any])?["start"] as? Bool ?? false)
     }
@@ -362,28 +397,71 @@ struct SparkAPI {
     /// The answer as a stream of text and sound, while the Spark is still writing.
     /// car: asked from CarPlay (short answers; the Spark only gets stricter, never looser).
     /// attachment: text from a photo or document; the Spark treats it as outside text (locks actions).
+    /// Uploads a photo for the Spark to look at; its id is good for questions in the next 10 minutes.
+    func uploadImage(_ data: Data) async throws -> String {
+        var r = request("api/chat/image", method: "POST")
+        r.setValue("image/jpeg", forHTTPHeaderField: "Content-Type")
+        r.httpBody = data
+        let (d, response) = try await URLSession.shared.data(for: r)
+        if let http = response as? HTTPURLResponse, http.statusCode == 403 || http.statusCode == 415 { throw ImagesOff() }
+        try Self.check(d, response)
+        guard let id = Self.object(d)["id"] as? String, !id.isEmpty else {
+            throw SparkError(message: String(localized: "Der Spark hat das Foto nicht angenommen."))
+        }
+        return id
+    }
+
+    /// What a question takes along: a photo by its id, or, when the Spark does not look at pictures,
+    /// the text read on the iPhone as before.
+    func chatInput(_ a: Attachment?) async throws -> (Attachment?, [String]) {
+        guard let a, let img = a.image else { return (a, []) }
+        do {
+            let id = try await ImageIds.shared.id(for: img) { try await uploadImage(img) }
+            return (nil, [id])
+        } catch is ImagesOff {
+            guard let ui = UIImage(data: img) else { throw SparkError(message: String(localized: "Die Datei kann ich nicht lesen.")) }
+            return (try await Reader.photo(ui, name: a.name, picture: false), [])
+        }
+    }
+
     func chat(_ messages: [[String: Any]], car: Bool = false, attachment: Attachment? = nil,
               speak: Bool = true) -> AsyncThrowingStream<ChatEvent, Error> {
         AsyncThrowingStream { cont in
             let task = Task {
                 do {
-                    var r = request("api/chat", method: "POST")
-                    r.setValue("application/json", forHTTPHeaderField: "Content-Type")
-                    r.setValue("text/event-stream", forHTTPHeaderField: "Accept")
-                    r.timeoutInterval = 300
-                    var body: [String: Any] = ["messages": messages, "tz": TimeZone.current.identifier, "client": "iphone"]
-                    if car { body["car"] = true }
-                    if !speak { body["speak"] = false }
-                    if let a = attachment { body["attachment"] = ["kind": a.kind, "name": a.name, "text": String(a.text.prefix(Reader.chatChars))] }
-                    r.httpBody = try JSONSerialization.data(withJSONObject: body)
-                    let (bytes, response) = try await URLSession.shared.bytes(for: r)
-                    if let http = response as? HTTPURLResponse, !(200..<300).contains(http.statusCode) {
-                        var data = Data()
-                        for try await b in bytes {
-                            data.append(b)
-                            if data.count > 8192 { break }
+                    var retried = false
+                    var bytes: URLSession.AsyncBytes
+                    while true {
+                        // a photo goes up on its own first; the question then names its id
+                        let (att, ids) = try await chatInput(attachment)
+                        var r = request("api/chat", method: "POST")
+                        r.setValue("application/json", forHTTPHeaderField: "Content-Type")
+                        r.setValue("text/event-stream", forHTTPHeaderField: "Accept")
+                        r.timeoutInterval = 300
+                        var body: [String: Any] = ["messages": messages, "tz": TimeZone.current.identifier, "client": "iphone"]
+                        if car { body["car"] = true }
+                        if !speak { body["speak"] = false }
+                        if let a = att { body["attachment"] = ["kind": a.kind, "name": a.name, "text": String(a.text.prefix(Reader.chatChars))] }
+                        if !ids.isEmpty { body["images"] = ids }
+                        r.httpBody = try JSONSerialization.data(withJSONObject: body)
+                        let (b, response) = try await URLSession.shared.bytes(for: r)
+                        bytes = b
+                        if let http = response as? HTTPURLResponse, !(200..<300).contains(http.statusCode) {
+                            // the Spark forgot the photo (expired): upload it again, once
+                            if http.statusCode == 410, !retried, let img = attachment?.image {
+                                await ImageIds.shared.forget(img)
+                                retried = true
+                                continue
+                            }
+                            var data = Data()
+                            for try await b in bytes {
+                                data.append(b)
+                                if data.count > 8192 { break }
+                            }
+                            try Self.check(data, response)
                         }
-                        try Self.check(data, response)
+                        if let img = attachment?.image { await ImageIds.shared.used(img) }
+                        break
                     }
                     for try await line in bytes.lines {
                         guard line.hasPrefix("data:") else { continue }

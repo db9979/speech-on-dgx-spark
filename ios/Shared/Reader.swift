@@ -6,8 +6,12 @@ import UniformTypeIdentifiers
 import Vision
 
 /// Reads the text of a photo or a document ON THE IPHONE (Apple's text recognition, no server).
-/// Only the text goes to the Spark, never the picture; the Spark has no model that looks at pictures.
+/// Only the text goes to the Spark. Photos are the exception when the Spark may look at pictures
+/// (sendPictures, from hello): then the photo itself goes, made smaller; the text reading stays as fallback.
 enum Reader {
+    /// set from hello ("images"): the admin, the profile and the app switch allow photos
+    static var sendPictures = false
+    static let pictureSide: CGFloat = 1280
     static let chatChars = 20000        // as much as a question takes along (chat.MAX_ATTACH)
     static let maxChars = 1_000_000     // as much as "Meine Dokumente" takes from the app (iphone.DOC_CHARS)
     static let maxPages = 500
@@ -15,14 +19,17 @@ enum Reader {
     static let maxBytes = 20 * 1024 * 1024
     static let maxSide: CGFloat = 3000
 
-    static func photo(_ image: UIImage, name: String) async throws -> Attachment {
+    static func photo(_ image: UIImage, name: String, picture: Bool = sendPictures) async throws -> Attachment {
+        if picture, let jpeg = jpeg(image) {
+            return Attachment(kind: "photo", name: name, text: "", image: jpeg)
+        }
         let text = try await recognize(image)
         guard !text.isEmpty else { throw SparkError(message: String(localized: "Auf dem Bild habe ich keinen Text gefunden.")) }
         return Attachment(kind: "photo", name: name, text: String(text.prefix(maxChars)))
     }
 
     /// A PDF (its text, or the recognized text of scanned pages), a text file or a picture file.
-    static func file(_ url: URL) async throws -> Attachment {
+    static func file(_ url: URL, picture: Bool = sendPictures) async throws -> Attachment {
         let scoped = url.startAccessingSecurityScopedResource()
         defer { if scoped { url.stopAccessingSecurityScopedResource() } }
         let size = (try? url.resourceValues(forKeys: [.fileSizeKey]).fileSize) ?? 0
@@ -36,7 +43,7 @@ enum Reader {
             guard let data = try? Data(contentsOf: url), let image = UIImage(data: data) else {
                 throw SparkError(message: String(localized: "Die Datei kann ich nicht lesen."))
             }
-            return try await photo(image, name: name)
+            return try await photo(image, name: name, picture: picture)
         } else {
             guard let data = try? Data(contentsOf: url),
                   let s = String(data: data, encoding: .utf8) ?? String(data: data, encoding: .isoLatin1) else {
@@ -87,10 +94,15 @@ enum Reader {
         }.value
     }
 
-    private static func scaled(_ image: UIImage) -> UIImage {
+    /// The photo for the Spark: upright, at most 1280 px on the long side, JPEG (HEIC becomes JPEG here).
+    static func jpeg(_ image: UIImage) -> Data? {
+        scaled(image, to: pictureSide, always: true).jpegData(compressionQuality: 0.85)
+    }
+
+    private static func scaled(_ image: UIImage, to limit: CGFloat = maxSide, always: Bool = false) -> UIImage {
         let side = max(image.size.width, image.size.height)
-        guard side > maxSide else { return image }
-        let f = maxSide / side
+        guard side > limit || always else { return image }
+        let f = min(1, limit / side)
         let size = CGSize(width: image.size.width * f, height: image.size.height * f)
         let format = UIGraphicsImageRendererFormat()
         format.scale = 1

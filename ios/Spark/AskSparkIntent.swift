@@ -97,7 +97,7 @@ struct StoreDocumentIntent: AppIntent {
         defer { try? FileManager.default.removeItem(at: dir) }
         let url = dir.appendingPathComponent((name as NSString).lastPathComponent)
         try file.data.write(to: url)
-        let a = try await Reader.file(url)
+        let a = try await Reader.file(url, picture: false)   // "Meine Dokumente" keeps text
         try await api.storeDoc(name: a.name, text: a.text)
         return .result(dialog: "Abgelegt.")
     }

@@ -47,7 +47,9 @@ final class ShareModel: ObservableObject {
             error = String(localized: "Erst die Spark-App öffnen und koppeln.")
             return
         }
-        docs = (try? await api.hello(timeout: 10))?.docs ?? false
+        let allowed = try? await api.hello(timeout: 10)
+        docs = allowed?.docs ?? false
+        Reader.sendPictures = allowed?.images ?? false
         do {
             attachment = try await read()
             if attachment == nil { error = String(localized: "Damit kann der Spark nichts anfangen.") }
@@ -155,12 +157,16 @@ struct ShareView: View {
                 if let a = m.attachment {
                     Section {
                         Label { Text(verbatim: a.name).lineLimit(1) } icon: { Image(systemName: a.kind == "photo" ? "photo" : "doc.text") }
-                        Text("\(a.text.count) Zeichen").foregroundStyle(.secondary)
+                        if a.image != nil {
+                            Text("Der Spark sieht sich das Foto an.").foregroundStyle(.secondary)
+                        } else {
+                            Text("\(a.text.count) Zeichen").foregroundStyle(.secondary)
+                        }
                     }
                     Section("Frage") {
                         TextField("Frage", text: $m.question, axis: .vertical)
                         Button("Fragen") { m.ask() }.disabled(m.asking)
-                        if m.docs {
+                        if m.docs && a.image == nil {
                             Button("In „Meine Dokumente“ speichern") { m.store() }.disabled(m.asking)
                         }
                     }

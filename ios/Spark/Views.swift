@@ -172,10 +172,10 @@ struct ChatView: View {
                 MicButton(phase: talk.phase, level: talk.level) { talk.tap() }
                 Text(talk.status).font(.footnote).foregroundStyle(.secondary)
                 if talk.reading {
-                    ProgressView("Lese den Text …").font(.footnote)
+                    ProgressView(Reader.sendPictures ? LocalizedStringKey("Bereite vor …") : LocalizedStringKey("Lese den Text …")).font(.footnote)
                 } else if let a = talk.attachment {
                     AttachmentChip(attachment: a, remove: { talk.attachment = nil },
-                                   store: talk.allowed.docs && !talk.stored ? { Task { await talk.storeAttachment() } } : nil,
+                                   store: talk.allowed.docs && !talk.stored && a.image == nil ? { Task { await talk.storeAttachment() } } : nil,
                                    storing: talk.storing)
                 }
                 HStack {
@@ -260,9 +260,17 @@ struct AttachmentChip: View {
     var body: some View {
         VStack(spacing: 6) {
             HStack(spacing: 6) {
-                Image(systemName: attachment.kind == "photo" ? "photo" : "doc.text")
-                Text(verbatim: attachment.name).lineLimit(1)
-                Text("\(attachment.text.count) Zeichen").foregroundStyle(.secondary)
+                if let data = attachment.image, let ui = UIImage(data: data) {
+                    // the photo goes to the Spark itself, which looks at it
+                    Image(uiImage: ui).resizable().scaledToFill()
+                        .frame(width: 22, height: 22).clipShape(RoundedRectangle(cornerRadius: 4))
+                    Text(verbatim: attachment.name).lineLimit(1)
+                    Text("Der Spark sieht es sich an").foregroundStyle(.secondary)
+                } else {
+                    Image(systemName: attachment.kind == "photo" ? "photo" : "doc.text")
+                    Text(verbatim: attachment.name).lineLimit(1)
+                    Text("\(attachment.text.count) Zeichen").foregroundStyle(.secondary)
+                }
                 Button(action: remove) { Image(systemName: "xmark.circle.fill") }
                     .accessibilityLabel("Anhang entfernen")
             }

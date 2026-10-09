@@ -2,6 +2,7 @@
 
 Every version in one line, newest first (taken from the commit messages, so some lines are German, some English). Older entries have no version number.
 
+- **V01.0.191** · 2026-10-09 · iPhone-App: Fotos gehen als Bild an den Spark, wenn „Fotos aus der App ansehen lassen“ an ist; sonst wie bisher Texterkennung
 - **V01.0.190** · 2026-10-09 · Bilder erkennen (aus): Foto im Assistenten, in der iPhone-App oder über Telegram anhängen, das Sprachmodell sieht es selbst; Antwort ohne Werkzeuge, Bild nur im Arbeitsspeicher
 - **V01.0.189** · 2026-10-09 · Sicherung enthält jetzt auch Admin-MFA, iPhone-/Browser-Push, Telegram-Bot, ESP32, Agent-Dienste und eigene Testfragen; neue Umzugs-Sicherung mit Passwort
 - **V01.0.188** · 2026-10-09 · iPhone-App: Comic-Gesicht mit kurzem, buschigem Schnurrbart wie im Panel

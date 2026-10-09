@@ -31,6 +31,7 @@ Alle Optionen ohne Rückfragen (`--mode api --asr 1.7b --tts 0.6b --yes` …) st
 
 <!-- New version: add one line at the top here and in CHANGELOG.md, drop the oldest line here (keep 10). Details go to docs/de and docs/en, not into this README. -->
 
+- **V01.0.191** iPhone-App: Fotos gehen als Bild an den Spark, wenn „Fotos aus der App ansehen lassen“ an ist; sonst wie bisher Texterkennung
 - **V01.0.190** Bilder erkennen (aus): Foto im Assistenten, in der iPhone-App oder über Telegram anhängen, das Sprachmodell sieht es selbst; Antwort ohne Werkzeuge, Bild nur im Arbeitsspeicher
 - **V01.0.189** Sicherung enthält jetzt auch Admin-MFA, iPhone-/Browser-Push, Telegram-Bot, ESP32, Agent-Dienste und eigene Testfragen; neue Umzugs-Sicherung mit Passwort
 - **V01.0.188** iPhone-App: Comic-Gesicht mit kurzem, buschigem Schnurrbart wie im Panel
@@ -40,7 +41,6 @@ Alle Optionen ohne Rückfragen (`--mode api --asr 1.7b --tts 0.6b --yes` …) st
 - **V01.0.184** TestFlight/App-Store-Texte: .p8-Schlüssel wird bereinigt (Zeilenumbrüche, \n, ohne BEGIN/END), klare Fehlermeldung
 - **V01.0.183** App-Store-Texte: Deliverfile ergänzt, fastlane fragt nicht mehr nach und bricht nicht ab
 - **V01.0.182** GitHub-Abläufe auf Node 24 umgestellt (checkout v5, setup-python v6), keine Warnung mehr
-- **V01.0.181** Mitteilungen kommen nur einmal, auf dem zuletzt genutzten Gerät statt auf allen
 
 Alle Versionen: [CHANGELOG.md](CHANGELOG.md)
 

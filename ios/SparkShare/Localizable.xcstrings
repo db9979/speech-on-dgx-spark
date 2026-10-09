@@ -61,12 +61,32 @@
         }
       }
     },
+    "Das Foto ist zu groß für den Spark.": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "The photo is too big for the Spark."
+          }
+        }
+      }
+    },
     "Der Code stimmt nicht. Bitte den aktuellen Code aus der Authenticator-App nehmen.": {
       "localizations": {
         "en": {
           "stringUnit": {
             "state": "translated",
             "value": "The code is not right. Please use the current code from the authenticator app."
+          }
+        }
+      }
+    },
+    "Der Spark hat das Foto nicht angenommen.": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "The Spark did not accept the photo."
           }
         }
       }
@@ -97,6 +117,16 @@
           "stringUnit": {
             "state": "translated",
             "value": "The Spark does not accept this iPhone. Check in the panel under Me → iPhone app that the app is on, otherwise pair again."
+          }
+        }
+      }
+    },
+    "Der Spark sieht sich das Foto an.": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "The Spark looks at the photo."
           }
         }
       }
