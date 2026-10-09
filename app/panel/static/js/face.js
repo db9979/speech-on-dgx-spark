@@ -20,7 +20,8 @@ function comicSvg(sfx){const s=COMIC,r=n=>Math.round(n*100)/100,m=s.eyeY+s.noseL
   const cy=s.top+44,rx=s.hw+4;let hair=`M${100+s.hw+2} ${cy}`;
   for(const[a,k]of COMIC_HAIR)hair+=` L${r(100+Math.cos(a*Math.PI/180)*rx*k)} ${r(cy+Math.sin(a*Math.PI/180)*50*k)}`;
   hair+=` L${100-s.hw-2} ${cy} L${100-s.hw+3} ${s.top+38} Q${r(100-s.hw*.45)} ${s.top+13} 100 ${s.top+18} Q${r(100+s.hw*.45)} ${s.top+13} ${100+s.hw-3} ${s.top+38}Z`;
-  const stache=`M100 ${m} C110 ${m-2} 124 ${m+2} 130 ${m+12} C133 ${m+18} 132 ${m+24} 129 ${m+27} C126 ${m+21} 118 ${m+14} 108 ${m+13} Q100 ${m+11} 92 ${m+13} C82 ${m+14} 74 ${m+21} 71 ${m+27} C68 ${m+24} 67 ${m+18} 70 ${m+12} C76 ${m+2} 90 ${m-2} 100 ${m}Z`;
+  // short and bushy, only above the upper lip (Dominik's pick 2026-10-09; was hanging down to the chin)
+  const stache=`M100 ${m} C106.33 ${m-2} 115.2 ${m+2} 119 ${m+4.5} C120.9 ${m+6.7} 120.33 ${m+9} 118.43 ${m+10} C116.53 ${m+7.8} 111.4 ${m+11} 105.13 ${m+10} Q100 ${m+8} 94.87 ${m+10} C88.6 ${m+11} 83.47 ${m+7.8} 81.57 ${m+10} C79.67 ${m+9} 79.1 ${m+6.7} 81 ${m+4.5} C84.8 ${m+2} 93.67 ${m-2} 100 ${m}Z`;
   const c=s.chinY,ny=s.eyeY,nl=s.noseLen,nw=s.noseW;
   let o=`<svg viewBox="0 0 200 200" aria-hidden="true"><defs><clipPath id="cc${sfx}"><circle cx="100" cy="100" r="95"/></clipPath>`;
   for(const[k,d]of[[-1,'L'],[1,'R']])o+=`<clipPath id="ce${d}${sfx}"><ellipse cx="${100+k*s.eyeX}" cy="${s.eyeY}" rx="${s.eRx}" ry="${s.eRy}"/></clipPath>`;
@@ -40,7 +41,7 @@ function comicSvg(sfx){const s=COMIC,r=n=>Math.round(n*100)/100,m=s.eyeY+s.noseL
 <path d="M97 ${ny+4} C97 ${ny+nl*.5} ${100-nw*.5} ${ny+nl*.75} ${100-nw*.6} ${ny+nl-4} C${100-nw-1} ${ny+nl} ${100-nw+1} ${ny+nl+5} 96 ${ny+nl+4} Q100 ${ny+nl+6} 104 ${ny+nl+4} C${100+nw-1} ${ny+nl+5} ${100+nw+1} ${ny+nl} ${100+nw*.6} ${ny+nl-4}" fill="none" ${st}/>
 <path data-p="mo" d="" fill="#5a2320" stroke="${L}" stroke-width="${r(lw*.7)}" stroke-linejoin="round"/><path data-p="ml" d="" fill="none" stroke="${L}" stroke-width="${r(lw*.9)}" stroke-linecap="round"/>
 <path data-p="lip" d="" fill="none" stroke="${s.shade}" stroke-width="1.4" stroke-linecap="round" opacity=".7"/>
-<g data-p="st"><g transform="translate(100 ${m}) scale(${s.stacheS}) translate(-100 ${-m})"><path d="${stache}" fill="${s.stache}" ${st}/><path d="M88 ${m+3} l-3 7 M95 ${m+2} l-1 7 M105 ${m+2} l1 7 M112 ${m+3} l3 7 M80 ${m+7} l-4 7 M120 ${m+7} l4 7" stroke="#000" stroke-width=".9" opacity=".25" stroke-linecap="round"/></g></g>
+<g data-p="st"><g transform="translate(100 ${m}) scale(${s.stacheS}) translate(-100 ${-m})"><path d="${stache}" fill="${s.stache}" ${st}/><path transform="translate(100 ${m}) scale(.63 .77) translate(-100 ${-m})" d="M88 ${m+3} l-3 7 M95 ${m+2} l-1 7 M105 ${m+2} l1 7 M112 ${m+3} l3 7 M80 ${m+7} l-4 7 M120 ${m+7} l4 7" stroke="#000" stroke-width=".9" opacity=".25" stroke-linecap="round"/></g></g>
 <path d="${hair}" fill="${s.hair}" ${st}/></g></g><circle data-p="ring" cx="100" cy="100" r="96" fill="none" stroke="${s.ring.idle}" stroke-width="5"/></svg>`;
   return {svg:o,mcy}}
 

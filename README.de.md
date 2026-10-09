@@ -31,6 +31,7 @@ Alle Optionen ohne Rückfragen (`--mode api --asr 1.7b --tts 0.6b --yes` …) st
 
 <!-- New version: add one line at the top here and in CHANGELOG.md, drop the oldest line here (keep 10). Details go to docs/de and docs/en, not into this README. -->
 
+- **V01.0.187** Comic-Gesicht mit kurzem, buschigem Schnurrbart nur über der Oberlippe statt bis zum Kinn hängender Spitzen; der Mund ist beim Sprechen besser zu sehen
 - **V01.0.186** TestFlight startet von selbst nach grünen iOS-Commits auf main (höchstens einmal pro Stunde, abschaltbar)
 - **V01.0.185** TestFlight: erst .ipa bauen, dann Upload mit altool, je bis zu drei Versuche bei Zeitüberschreitung
 - **V01.0.184** TestFlight/App-Store-Texte: .p8-Schlüssel wird bereinigt (Zeilenumbrüche, \n, ohne BEGIN/END), klare Fehlermeldung
@@ -40,7 +41,6 @@ Alle Optionen ohne Rückfragen (`--mode api --asr 1.7b --tts 0.6b --yes` …) st
 - **V01.0.180** iPhone-App: GitHub-Knopf „TestFlight“ baut, signiert über Apple und lädt hoch (nur grün getestete Stände)
 - **V01.0.179** „Von selbst“-Meldungen werden nur auf einem Gerät gesprochen, nicht auf jedem noch einmal
 - **V01.0.178** iPhone-App: Version klein unten, Build-Nummer zählt beim Bauen von selbst hoch
-- **V01.0.177** iPhone-App: Spark-Update aus der App (aus, Rechte nur vom Admin): Hinweis bei neuer geprüfter Version, Start mit Face ID und MFA-Code
 
 Alle Versionen: [CHANGELOG.md](CHANGELOG.md)
 
