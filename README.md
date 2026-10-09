@@ -31,6 +31,7 @@ All options for running without questions (`--mode api --asr 1.7b --tts 0.6b --y
 
 <!-- New version: add one line at the top here and in CHANGELOG.md, drop the oldest line here (keep 10). Details go to docs/de and docs/en, not into this README. -->
 
+- **V01.0.197** Functions switched on in the admin menu show right after saving (the page reloads itself), API answers are never cached; self-test against script/CSS links without a version
 - **V01.0.196** Messages: asking to write works after a web/mail answer too, otherwise the assistant names the real reason
 - **V01.0.195** iPhone app: messages to other profiles (list, write, reply right from the notification)
 - **V01.0.194** Web search after an answer from mail is locked only for follow-up questions about that mail; any other question leaves the mail answer out and searches
@@ -40,7 +41,6 @@ All options for running without questions (`--mode api --asr 1.7b --tts 0.6b --y
 - **V01.0.190** Picture recognition (off): attach a photo in the assistant, the iPhone app or over Telegram and the language model looks at it; answer without tools, picture kept in memory only
 - **V01.0.189** Backups now also hold admin MFA, iPhone/browser push, Telegram bot, ESP32, agent services and own test questions; new password-protected move backup
 - **V01.0.188** iPhone app: comic face with the short, bushy mustache like the panel
-- **V01.0.187** Comic face with a short, bushy mustache only above the upper lip instead of tips hanging down to the chin; the mouth shows better while speaking
 
 All versions: [CHANGELOG.md](CHANGELOG.md)
 

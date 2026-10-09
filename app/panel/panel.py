@@ -94,6 +94,8 @@ async def sessions(request: Request, call_next):
         who = "admin" if admin_cookie_ok(request) or basic else (prof or {}).get("name", "guest")
         guard.log("change", ip=guard.client_ip(request), who=who, uid=(prof or {}).get("id"),
                   method=request.method, path=path, status=response.status_code)
+    if path.startswith("/api/") and "cache-control" not in response.headers:
+        response.headers["Cache-Control"] = "no-store"   # switches and states: never from a browser or proxy cache
     if path.startswith("/api/") and response.status_code < 400:
         admin_value, user_value = renewed_admin_cookie(request), profiles.renewed_cookie(request)
         if admin_value:
@@ -275,7 +277,7 @@ def page_html():
 @app.get("/")
 def index():
     # never stored: the page names the current files, those are only revalidated (no-cache)
-    return HTMLResponse(page_html(), headers={"Cache-Control": "no-store"})
+    return HTMLResponse(page_html(), headers={"Cache-Control": "no-store", "Pragma": "no-cache", "Expires": "0"})
 
 
 # App files (installable assistant). Public like the start page: they hold no data.

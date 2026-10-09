@@ -13,19 +13,31 @@ document.addEventListener('keydown',()=>verWatch.seen=Date.now(),true);
 document.addEventListener('input',e=>{if(e.target.type!=='checkbox'&&e.target.id!=='findq')verWatch.edit=Date.now()},true);
 function sparkBusy(){try{return !!(chat.rec||chat.resumeMic||chat.ctrl||chat.asrBusy||chat.busy||playing()||wake.on||room.on)}catch{return true}}
 function verReload(){try{const s=document.querySelector('section.on');if(s)sessionStorage.setItem('versec',s.id)}catch{}location.reload()}
-function verTry(){const now=Date.now(),calm=!sparkBusy()&&now-verWatch.edit>600e3;
-  if(calm&&(document.visibilityState==='hidden'||now-verWatch.back<5000||now-verWatch.seen>120e3))return verReload();
-  let b=$('verbanner');if(b)return;
+function verBar(text){let b=$('verbanner');if(b)return;
   b=document.createElement('div');b.id='verbanner';b.className='updbanner';
-  const sp=document.createElement('span');sp.textContent=t('Neue Version ist da: ','A new version is here: ')+verWatch.newer;
+  const sp=document.createElement('span');sp.textContent=text;
   const go=document.createElement('button');go.type='button';go.className='b p';go.textContent=t('Neu laden','Reload');go.onclick=verReload;
   b.append(sp,go);$('updbanner').before(b)}
+function verTry(){const now=Date.now(),calm=!sparkBusy()&&now-verWatch.edit>600e3;
+  if(calm&&(document.visibilityState==='hidden'||now-verWatch.back<5000||now-verWatch.seen>120e3))return verReload();
+  verBar(t('Neue Version ist da: ','A new version is here: ')+verWatch.newer)}
+// Switched a function on or off in the settings: the page reads the switches once at start (start.js), so
+// after a saved change it compares them with the Spark and loads itself again when one differs (no F5).
+const whoFlags=w=>JSON.stringify(Object.keys(w||{}).sort().filter(k=>typeof w[k]==='boolean'||k==='face').map(k=>[k,w[k]]));
+let WHO_FLAGS=null,whoT=null;
+async function whoCheck(){if(WHO_FLAGS===null)return;
+  try{const r=await fetch('/api/whoami',{cache:'no-store'});if(!r.ok)return;const w=await r.json();
+    if(whoFlags(w)===WHO_FLAGS)return;
+    if(!sparkBusy()){try{sessionStorage.setItem('flagsreload','1')}catch{}return verReload()}
+    verBar(t('Funktionen geändert, neu laden zeigt sie: ','Functions changed, reload shows them: '))}catch{}}
+const whoSoon=()=>{clearTimeout(whoT);whoT=setTimeout(whoCheck,300)};
 async function verCheck(){if(!SPARK_VER)return;if(verWatch.newer)return verTry();
   try{const r=await fetch('/api/whoami',{cache:'no-store'});if(!r.ok)return;const v=(await r.json()).version;
     if(v&&v!==SPARK_VER){verWatch.newer=v;verTry()}}catch{}}
 setInterval(verCheck,300e3);
 document.addEventListener('visibilitychange',()=>{if(document.visibilityState==='visible'){verWatch.back=Date.now();verCheck()}});
 window.addEventListener('pageshow',e=>{if(e.persisted){verWatch.back=Date.now();verCheck()}});
+window.addEventListener('focus',()=>{verWatch.back=Date.now();verCheck()});
 // Theme button: system -> light -> dark -> system; kept per browser.
 $('themebtn').onclick=()=>{const cur=document.documentElement.dataset.theme||'auto',nx={auto:'light',light:'dark',dark:'auto'}[cur];
   if(nx==='auto')delete document.documentElement.dataset.theme;else document.documentElement.dataset.theme=nx;
@@ -36,7 +48,9 @@ const api=async(p,o={},code)=>{const r=await fetch(p,code?Object.assign({},o,{he
   if(r.status===428){const wrong=/wrong/.test(await r.text());
     const c=prompt((wrong?t('Code falsch. ','Wrong code. '):'')+t('Bitte den aktuellen Code aus deiner Authenticator-App eingeben (oder einen Wiederherstellungscode):','Please enter the current code from your authenticator app (or a recovery code):'));
     if(c&&c.trim())return api(p,o,c.trim());throw new Error(t('Abgebrochen: ohne Code keine Änderung.','Cancelled: no change without a code.'))}
-  if(r.status===401&&!/^\/api\/(login|password|profile)/.test(p)&&window.showLogin)showLogin();if(!r.ok){let t=await r.text();try{t=JSON.parse(t).detail||t}catch{}throw new Error(t)}return r};
+  if(r.status===401&&!/^\/api\/(login|password|profile)/.test(p)&&window.showLogin)showLogin();if(!r.ok){let t=await r.text();try{t=JSON.parse(t).detail||t}catch{}throw new Error(t)}return
+  if(o.method&&o.method!=='GET'&&/^\/api\/(config|admin\/|profile\/)/.test(p))whoSoon();   // a switch may have changed
+  return r};
 // Main menu (design „Klar“, V01.0.145): on a computer a sidebar with Assistent and Ich for oneself, then
 // "Spark verwalten" with Zustand, Einstellungen, Profile und Geräte, Einbinden; on phones a bar at the bottom.
 const NI={chat:'<path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"/>',me:'<circle cx="12" cy="8" r="4"/><path d="M4 21c0-4 4-6 8-6s8 2 8 6"/>',

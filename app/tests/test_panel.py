@@ -96,6 +96,20 @@ class Page(unittest.TestCase):
             self.assertTrue(f.endswith("?v=" + ver), f)
             self.assertEqual(g.get(f).headers["cache-control"], "no-cache", f)
         self.assertEqual(g.get("/sw.js?v=" + ver).headers["cache-control"], "no-cache")
+        # every script and stylesheet tag, whatever its name, goes through the version (new files too)
+        tags = re.findall(r'<script[^>]*\ssrc="([^"]+)"|<link[^>]*rel="stylesheet"[^>]*href="([^"]+)"', r.text)
+        for f in [a or b for a, b in tags]:
+            self.assertTrue(f.startswith("/static/") and f.endswith("?v=" + ver), "Link ohne Version: " + f)
+        # scripts loading more scripts or styles later name the version as well
+        js_dir = os.path.join(os.path.dirname(panel.__file__), "static", "js")
+        for name in os.listdir(js_dir):
+            with open(os.path.join(js_dir, name), encoding="utf-8") as fh:
+                for m in re.finditer(r"""['"`](/static/[^'"`?]+\.(?:js|css))(['"`])""", fh.read()):
+                    self.fail(f"{name}: {m.group(1)} ohne ?v=SPARK_VER")
+        self.assertEqual(r.headers["pragma"], "no-cache")
+        # switches and states are never cached, so a changed setting shows after the save
+        self.assertEqual(g.get("/api/whoami").headers["cache-control"], "no-store")
+        self.assertEqual(ADMIN.get("/api/config").headers["cache-control"], "no-store")
 
 
 class Isolation(unittest.TestCase):
