@@ -31,6 +31,7 @@ Alle Optionen ohne Rückfragen (`--mode api --asr 1.7b --tts 0.6b --yes` …) st
 
 <!-- New version: add one line at the top here and in CHANGELOG.md, drop the oldest line here (keep 10). Details go to docs/de and docs/en, not into this README. -->
 
+- **V01.0.184** TestFlight/App-Store-Texte: .p8-Schlüssel wird bereinigt (Zeilenumbrüche, \n, ohne BEGIN/END), klare Fehlermeldung
 - **V01.0.183** App-Store-Texte: Deliverfile ergänzt, fastlane fragt nicht mehr nach und bricht nicht ab
 - **V01.0.182** GitHub-Abläufe auf Node 24 umgestellt (checkout v5, setup-python v6), keine Warnung mehr
 - **V01.0.181** Mitteilungen kommen nur einmal, auf dem zuletzt genutzten Gerät statt auf allen
@@ -40,7 +41,6 @@ Alle Optionen ohne Rückfragen (`--mode api --asr 1.7b --tts 0.6b --yes` …) st
 - **V01.0.177** iPhone-App: Spark-Update aus der App (aus, Rechte nur vom Admin): Hinweis bei neuer geprüfter Version, Start mit Face ID und MFA-Code
 - **V01.0.176** Erinnerungen klingeln nur auf einem Gerät, nicht auf jedem Gerät des Profils noch einmal
 - **V01.0.175** Agent-Funktionen: Aufträge im Hintergrund, geplante Aufträge, Abläufe und Dienste per MCP, pro Profil freigeschaltet
-- **V01.0.174** iPhone-App: App-Store-Bildschirmfotos zusätzlich in 6,3" (1206 × 2622)
 
 Alle Versionen: [CHANGELOG.md](CHANGELOG.md)
 

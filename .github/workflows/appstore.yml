@@ -66,7 +66,7 @@ jobs:
           fi
           key="$RUNNER_TEMP/asc.json"
           trap 'rm -f "$key"' EXIT
-          python3 -c 'import json,os; print(json.dumps({"key_id": os.environ["ASC_KEY_ID"], "issuer_id": os.environ["ASC_ISSUER_ID"], "key": os.environ["ASC_KEY"], "in_house": False}))' > "$key"
+          python3 -I ci/asc_key.py json "$key"
           if [ "$SHOTS" = "true" ]; then pics=(--screenshots_path ./fastlane/screenshots --overwrite_screenshots true); else pics=(--skip_screenshots true); fi
           # settings in ios/fastlane/Deliverfile (without it deliver asks a question and stops)
           fastlane deliver --api_key_path "$key" \
