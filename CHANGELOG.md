@@ -2,6 +2,7 @@
 
 Every version in one line, newest first (taken from the commit messages, so some lines are German, some English). Older entries have no version number.
 
+- **V01.0.167** · 2026-10-09 · iPhone-App: baut mit dem neuen Xcode (iOS 26), Bluetooth-Option für Headsets angepasst
 - **V01.0.166** · 2026-10-09 · Eigene Stimme überhören (aus, Admin + Profil): hört das iPhone oder der Browser, wie der Lautsprecher antwortet, nimmt der Spark das nicht als neue Frage
 - **V01.0.165** · 2026-10-09 · iPhone-App: Apple Erinnerungen nach „Ja“ und Einkaufsliste in die Erinnerungen-App (aus, Profilschalter), Teilen → Spark aus jeder App, Kurzbefehle-Bausteine, Antworten als Notiz teilen
 - **V01.0.164** · 2026-10-09 · Qualitätstest kompakter: nur Fragen mit Befund stehen offen (eine Zeile, Antwort zum Aufklappen), der Rest ist zugeklappt; während des Tests ein Fortschrittsbalken mit „Frage 15 von 36 · noch etwa 2 min“

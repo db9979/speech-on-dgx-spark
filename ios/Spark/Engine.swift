@@ -47,10 +47,22 @@ final class AudioEngine {
         }
     }
 
+    /// Speaker plus Bluetooth headsets. iOS 26 renamed .allowBluetooth to .allowBluetoothHFP;
+    /// this builds with the older Xcode (GitHub) and the newer one alike.
+    private static var sessionOptions: AVAudioSession.CategoryOptions {
+        var o: AVAudioSession.CategoryOptions = [.defaultToSpeaker, .allowBluetoothA2DP]
+        #if compiler(>=6.2)
+        if #available(iOS 26.0, *) { o.insert(.allowBluetoothHFP) } else { o.insert(.allowBluetooth) }
+        #else
+        o.insert(.allowBluetooth)
+        #endif
+        return o
+    }
+
     private func configure() throws {
         guard !configured else { return }
         let s = AVAudioSession.sharedInstance()
-        try s.setCategory(.playAndRecord, mode: .voiceChat, options: [.defaultToSpeaker, .allowBluetooth, .allowBluetoothA2DP])
+        try s.setCategory(.playAndRecord, mode: .voiceChat, options: Self.sessionOptions)
         try s.setActive(true)
         try engine.inputNode.setVoiceProcessingEnabled(true)
         engine.inputNode.voiceProcessingOtherAudioDuckingConfiguration = .init(enableAdvancedDucking: false, duckingLevel: .min)
