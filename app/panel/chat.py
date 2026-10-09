@@ -106,6 +106,37 @@ def split_sentences(buf, first):
     return out, rest
 
 
+# chat.prompt_cache: the time goes with the question, marked as the panel's note (chat_turn.prepare)
+TIME_NOTE = "Hinweis vom Panel, nicht vom Nutzer: "
+
+
+def timing_lines(tm, t0, end):
+    """Where the time of one answer went, a few short lines for Zustand → Logs → Diagnose "Gespräch":
+    numbers and tool names only, never text. Seconds count from the moment the question arrived."""
+    req = tm["req"]
+    s = lambda t: f"{t - req:.2f} s"   # noqa: E731
+    out = [f"zeit: Panel-Vorbereitung {t0 - req:.2f} s"]
+    for i, r in enumerate(tm["rounds"][:6], 1):
+        parts = [f"zeit: Runde {i} ab {s(r['start'])}"]
+        u = r["usage"] or {}
+        if isinstance(u.get("prompt_tokens"), int):
+            cached = (u.get("prompt_tokens_details") or {}).get("cached_tokens")
+            parts.append(f"{u['prompt_tokens']} Tokens gelesen"
+                         + (f", davon {cached} aus dem Zwischenspeicher" if isinstance(cached, int) else ""))
+        if r["first"]:
+            parts.append(f"erstes Wort nach {r['first'] - r['start']:.2f} s")
+        if r["think"] > 40:
+            parts.append(f"Denktext {r['think']} Zeichen")
+        if r["end"]:
+            parts.append(f"fertig nach {r['end'] - r['start']:.2f} s")
+        for name, secs in r["tools"][:4]:
+            parts.append(f"Werkzeug {name} {secs:.2f} s")
+        out.append(", ".join(parts))
+    out.append(f"zeit: erster Ton nach {s(tm['audio'])}, alles nach {s(end)}" if tm["audio"]
+               else f"zeit: kein Ton, alles nach {s(end)}")
+    return out
+
+
 def trim_piece(text, st):
     """One streamed piece of the answer without blank lines at its start or end. Qwen often opens
     with "\n\n" (left over from an empty think block) and may close with one: the start of each
@@ -1038,6 +1069,7 @@ async def chat(request: Request):
 async def _chat(request: Request):
     _last_chat[0] = time.time()
     turn = await chat_turn.prepare(request)
+    turn.t_req = _last_chat[0]   # for the timing lines (logfilter detail "chat")
     return await _answer(request, turn)
 
 
@@ -1070,6 +1102,8 @@ async def _answer(request, turn):
         out.put_nowait({"type": "speaker", "name": heard["name"], "foreign": not own_browser})
     sentences = asyncio.Queue()
     t0 = time.time()
+    # where the time goes, for Zustand → Logs → Diagnose "Gespräch" (only while that detail switch is on)
+    tm = {"req": getattr(turn, "t_req", None) or t0, "rounds": [], "audio": None, "on": logfilter.verbose("chat")}
 
     trace = {"calls": list(cal_note), "said": ""}  # for the profile's tool log
     turn.c, turn.out, turn.sentences, turn.trace = c, out, sentences, trace  # the tools (chat_tools.py) use them too
@@ -1083,11 +1117,17 @@ async def _answer(request, turn):
                     "temperature": float(ccfg.get("temperature", 0.3)), **sampling(ccfg)}
             if not ccfg.get("thinking"):
                 base["chat_template_kwargs"] = {"enable_thinking": False}
+            if tm["on"]:   # the server says how much it read and how much came from its cache
+                base["stream_options"] = {"include_usage": True}
             st = {"buf": "", "first": True, "think": False, "n": 0, "mail": carry == "mail", "outside": carry == "outside",
                   "offered": set(), "saves": 0, "shown": 0, "check": bool(need) and check_on, "hold": None, "dropped": [], "msgs": None}
             if carry:
                 await out.put({"type": carry})
             msgs, finish = list(messages), None
+            note = getattr(turn, "time_note", None)
+            if note and msgs and msgs[-1]["role"] == "user" and isinstance(msgs[-1].get("content"), str):
+                # the time goes with the question (chat.prompt_cache): only to the model, never into the history
+                msgs[-1] = dict(msgs[-1], content=msgs[-1]["content"] + "\n\n(" + TIME_NOTE + note + ")")
             if turn.pics:   # the pictures go to the model only, never into the history or the log
                 msgs[-1] = images.with_pictures(msgs[-1], turn.pics)
             st["msgs"] = msgs
@@ -1208,7 +1248,10 @@ async def _answer(request, turn):
                         args = args if isinstance(args, dict) else {}
                     except ValueError:
                         args = {}
+                    t_tool = time.time()
                     result = await run_tool(x["name"], args, st)
+                    if tm["rounds"]:
+                        tm["rounds"][-1]["tools"].append((x["name"], time.time() - t_tool))
                     trace["calls"].append({"name": x["name"], "args": json.dumps(args, ensure_ascii=False), "result": result})
                     msgs.append({"role": "tool", "tool_call_id": x["id"], "content": result})
                     if x["name"] == "web_search":
@@ -1325,6 +1368,8 @@ async def _answer(request, turn):
         Returns (finish_reason, tool calls)."""
         finish, calls = None, {}
         st["xml"], st["lead"], st["ws"] = False, True, ""
+        rec = {"start": time.time(), "first": None, "end": None, "usage": None, "think": 0, "tools": []}
+        tm["rounds"].append(rec)
         async with c.stream("POST", ccfg["llm_url"].rstrip("/") + "/chat/completions",
                             json=payload, headers=lheaders) as r:
             if r.status_code != 200:
@@ -1339,11 +1384,20 @@ async def _answer(request, turn):
                 if data == "[DONE]":
                     break
                 try:
-                    choice = json.loads(data)["choices"][0]
+                    obj = json.loads(data)
+                    if isinstance(obj, dict) and isinstance(obj.get("usage"), dict):
+                        rec["usage"] = obj["usage"]   # the last piece (stream_options), its choices are empty
+                    choice = obj["choices"][0]
                     delta = choice.get("delta") or {}
-                except (ValueError, KeyError, IndexError):
+                except (ValueError, KeyError, IndexError, TypeError):
                     continue
+                if rec["first"] is None and any(delta.get(k) for k in ("content", "tool_calls", "reasoning_content",
+                                                                       "reasoning")):
+                    rec["first"] = time.time()   # first word, thought or tool call: the prompt is read
                 finish = choice.get("finish_reason") or finish
+                for k in ("reasoning_content", "reasoning"):   # thinking a server hands over separately
+                    if isinstance(delta.get(k), str):
+                        rec["think"] += len(delta[k])
                 for tc in delta.get("tool_calls") or []:  # arrives in pieces, keyed by index
                     x = calls.setdefault(tc.get("index", 0), {"id": "", "name": "", "arguments": ""})
                     x["id"] = tc.get("id") or x["id"]
@@ -1362,7 +1416,7 @@ async def _answer(request, turn):
                     continue
                 # models that think inline: drop <think>...</think> from what is spoken
                 # (both tags may come in one piece: "<think>\n\n</think>")
-                kept = ""
+                raw_len, kept = len(text), ""
                 while text:
                     if st["think"]:
                         if "</think>" not in text:
@@ -1371,6 +1425,7 @@ async def _answer(request, turn):
                     else:
                         before, tag, text = text.partition("<think>")
                         kept, st["think"] = kept + before, bool(tag)
+                rec["think"] += raw_len - len(kept)
                 text = trim_piece(kept, st)
                 if not text:
                     continue
@@ -1389,6 +1444,7 @@ async def _answer(request, turn):
                         st["hold"].append(x)
                     else:
                         await speak(x, st)
+        rec["end"] = time.time()
         out_calls = [dict(v, id=v["id"] or f"call_{i}") for i, v in sorted(calls.items()) if v["name"]]
         return finish, out_calls
 
@@ -1461,6 +1517,7 @@ async def _answer(request, turn):
                                     if first:
                                         first = False
                                         played_until = now
+                                        tm["audio"] = now
                                         await out.put({"type": "timing", "first_audio": round(now - t0, 3)})
                                         try:  # for Zustand → Prüfen: how long people wait (latency.py)
                                             await asyncio.to_thread(latency.add, now - t0, body.get("client") or "web")
@@ -1504,6 +1561,9 @@ async def _answer(request, turn):
                 if guest and ev.get("type") == "error":
                     ev = {"type": "error", "code": ev.get("code") or "error"}
                 yield f"data: {json.dumps(ev)}\n\n"
+            if tm["on"]:
+                for line in timing_lines(tm, t0, time.time()):
+                    logfilter.detail("chat", line)
             yield f"data: {json.dumps({'type': 'done', 'total': round(time.time() - t0, 3)})}\n\n"
         finally:  # also runs when the browser aborts (barge-in): stop LLM and TTS
             for t in tasks:

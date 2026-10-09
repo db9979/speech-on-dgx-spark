@@ -109,8 +109,15 @@ async def prepare(request):
         system = (system + "\n\n" + chat.ATTACH_HINT + " " + ("Foto" if kind == "photo" else "Dokument")
                   + (f" „{name}“" if name else "") + "\n" + chat.wrap_outside(text)).strip()
         print("chat: attachment", kind, len(text), "chars, answer locked like outside text", flush=True)
+    # the time changes every minute: early in the system prompt it would make the model read the
+    # prompt, all tools and the whole history anew each turn. With chat.prompt_cache it goes with the
+    # question instead (only to the model, never into the history), so the server's cache keeps the rest.
+    time_note = None
     if ccfg.get("datetime", True):
-        system = (system + "\n\n" + chat.now_line(body.get("tz"))).strip()
+        if ccfg.get("prompt_cache", False) and messages[-1]["role"] == "user":
+            time_note = chat.now_line(body.get("tz"))
+        else:
+            system = (system + "\n\n" + chat.now_line(body.get("tz"))).strip()
     # why the search is (not) offered, for the journal and for the model (never silently missing)
     print("chat: web search", "NOT offered: switched off (Einstellungen → Funktionen → Websuche)" if not ccfg.get("search")
           else "NOT offered: no SearXNG address" if not search

@@ -137,6 +137,9 @@ def fake_llm():
             for i in range(0, len(text), 10):
                 yield _sse({"choices": [{"delta": {"content": text[i:i + 10]}, "finish_reason": None}]})
             yield _sse({"choices": [{"delta": {}, "finish_reason": "stop"}]})
+            if (b.get("stream_options") or {}).get("include_usage"):   # like vLLM: a last piece without choices
+                yield _sse({"choices": [], "usage": {"prompt_tokens": 1200, "completion_tokens": 3,
+                                                     "prompt_tokens_details": {"cached_tokens": 1024}}})
             yield "data: [DONE]\n\n"
         return StreamingResponse(gen(), media_type="text/event-stream")
     return app

@@ -1224,6 +1224,89 @@ class AnswerCheck(unittest.TestCase):
         a.put("/api/profile/settings", json={"tool_think": False})
 
 
+class FasterStart(unittest.TestCase):
+    """chat.prompt_cache: the time goes with the question, so the start of the prompt stays the same
+    and the LLM server can take it from its cache; timing lines only while the detail switch is on."""
+
+    def tearDown(self):
+        helpers.set_config(prompt_cache=False, datetime=True)
+
+    def _ask_twice(self, cache):
+        helpers.set_config(public=True, prompt_cache=cache, datetime=True)
+        g, sent = TestClient(panel.app), []
+        for minute in ("10:01", "10:02"):   # a fixed time line, no wall clock
+            with mock.patch.object(chat, "now_line", lambda tz=None, m=minute: f"Aktuelles Datum und Uhrzeit: {m} Uhr."):
+                helpers.LLM_CALLS.clear()
+                answer(ask(g, "Wie geht es dir?"))
+                sent.append([x for x in helpers.LLM_CALLS if x.get("stream")][-1]["messages"])
+        return sent
+
+    def test_off_keeps_the_time_in_the_system_prompt(self):
+        a, b = self._ask_twice(False)
+        self.assertIn("10:01 Uhr", a[0]["content"])
+        self.assertNotEqual(a[0]["content"], b[0]["content"])
+        self.assertEqual(a[-1]["content"], "Wie geht es dir?")
+
+    def test_on_the_time_goes_with_the_question(self):
+        a, b = self._ask_twice(True)
+        self.assertEqual(a[0]["content"], b[0]["content"])          # same start: the cache can keep it
+        self.assertNotIn("Uhr.", a[0]["content"])
+        self.assertTrue(a[-1]["content"].startswith("Wie geht es dir?\n\n(" + chat.TIME_NOTE))
+        self.assertIn("10:02 Uhr", b[-1]["content"])
+
+    def test_the_time_note_never_enters_the_history(self):
+        a = profile("Zwischenspeicher")
+        helpers.set_config(prompt_cache=True, datetime=True)
+        answer(ask(a, "Wie geht es dir?"))
+        log = a.get("/api/profile/toollog").json()
+        text = json.dumps(log, ensure_ascii=False)
+        self.assertIn("Wie geht es dir?", text)
+        self.assertNotIn(chat.TIME_NOTE, text)
+
+    def test_switch_must_be_a_bool(self):
+        r = ADMIN.get("/api/config").json()
+        r["chat"]["prompt_cache"] = "ja"
+        self.assertEqual(ADMIN.put("/api/config", json=r).status_code, 400)
+
+    def test_timing_lines_only_with_detail_switch(self):
+        import io
+        import contextlib
+        import logfilter
+        helpers.set_config(public=True)
+        g = TestClient(panel.app)
+        for on in (False, True):
+            helpers.LLM_CALLS.clear()
+            buf = io.StringIO()
+            with mock.patch.object(logfilter, "verbose", lambda area, on=on: on and area == "chat"), \
+                    contextlib.redirect_stdout(buf):
+                answer(ask(g, "Hallo"))
+            call = [x for x in helpers.LLM_CALLS if x.get("stream")][-1]
+            self.assertEqual("stream_options" in call, on)
+            lines = [x for x in buf.getvalue().splitlines() if "detail zeit:" in x]
+            if not on:
+                self.assertEqual(lines, [])
+                continue
+            text = "\n".join(lines)
+            self.assertIn("Panel-Vorbereitung", text)
+            self.assertIn("1200 Tokens gelesen, davon 1024 aus dem Zwischenspeicher", text)
+            self.assertIn("erster Ton nach", text)
+            self.assertNotIn("Hallo", text)                        # numbers only, never what was said
+
+    def test_timing_lines_from_fixed_times(self):
+        tm = {"req": 100.0, "audio": 103.5, "rounds": [
+            {"start": 100.2, "first": 101.0, "end": 101.4, "usage": {"prompt_tokens": 5000}, "think": 900,
+             "tools": [("weather", 0.3)]},
+            {"start": 101.8, "first": 102.6, "end": 104.0, "usage": None, "think": 17, "tools": []}]}
+        lines = chat.timing_lines(tm, 100.2, 105.0)
+        self.assertEqual(lines[0], "zeit: Panel-Vorbereitung 0.20 s")
+        self.assertEqual(lines[1], "zeit: Runde 1 ab 0.20 s, 5000 Tokens gelesen, erstes Wort nach 0.80 s, "
+                                   "Denktext 900 Zeichen, fertig nach 1.20 s, Werkzeug weather 0.30 s")
+        self.assertEqual(lines[2], "zeit: Runde 2 ab 1.80 s, erstes Wort nach 0.80 s, fertig nach 2.20 s")
+        self.assertEqual(lines[3], "zeit: erster Ton nach 3.50 s, alles nach 5.00 s")
+        self.assertEqual(chat.timing_lines(dict(tm, audio=None, rounds=[]), 100.0, 101.0)[-1],
+                         "zeit: kein Ton, alles nach 1.00 s")
+
+
 class Fixes(unittest.TestCase):
     def test_rules(self):
         import fixes
