@@ -32,6 +32,7 @@ import quality  # noqa: E402
 import update  # noqa: E402
 import system  # noqa: E402
 import backup  # noqa: E402
+import documents  # noqa: E402
 import health  # noqa: E402
 import push  # noqa: E402
 import proactive  # noqa: E402
@@ -77,7 +78,7 @@ def _may_upload(scope):
 app.add_middleware(BodyLimit, default=2 * 1024**2, gate=_may_upload, limits=[
     ("/api/backups-upload", backup.MAX_UPLOAD + 1024**2), ("/api/clone-voices-import", 200 * 1024**2),
     ("/api/clone-voices", 60 * 1024**2), ("/api/test/asr", 51 * 1024**2), ("/api/logverbose", 4096), ("/api/profile/voice", 11 * 1024**2),
-    ("/api/profile/docs", 21 * 1024**2), ("/api/chat/image", images.MAX_BYTES + 64 * 1024),
+    ("/api/profile/docs", lambda: wissen.pdf_bytes() + 1024**2), ("/api/chat/image", images.MAX_BYTES + 64 * 1024),
     ("/api/chat", 4 * 1024**2), ("/api/login", 64 * 1024),
     ("/api/profile/login", 64 * 1024)],
     gated=("/api/backups-upload", "/api/clone-voices", "/api/test/asr", "/api/profile/voice", "/api/profile/docs",

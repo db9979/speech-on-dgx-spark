@@ -2,6 +2,7 @@
 
 Every version in one line, newest first (taken from the commit messages, so some lines are German, some English). Older entries have no version number.
 
+- **V01.0.242** · 2026-10-09 · Dokumente: PDFs bis 100 MB (Admin stellt unter Funktionen → Eigene Dokumente bis 300 MB ein; andere Dateien bis 20 MB, vorher „request too large“ ab 20 MB); Speicher pro Profil gilt für alle Uploads zusammen, Ich → Dokumente zeigt „Belegt: x von y“ mit Balken, der Admin sieht und setzt ihn pro Profil unter Zustand → Monitoring
 - **V01.0.241** · 2026-10-09 · Das kleine Bild vor jeder Antwort im Verlauf folgt dem gewählten Gesicht: bei „Comic“ ein Comic-Kopf statt des Roboters
 - **V01.0.240** · 2026-10-09 · Lange Dokumente nachts lesen (Admin-Schalter unter Bilder und Scans lesen, aus): tagsüber nur Dokumente bis 10 Seiten in Gesprächspausen, lange erst nach 30 Minuten ohne Frage oder im Nachtfenster (Standard 01:00–06:00), nachts bis 400 Seiten zusätzlich; Ich → Dokumente zeigt „langes Dokument, wird nachts ab 01:00 gelesen“
 - **V01.0.239** · 2026-10-09 · Pebble-Ton stockt weniger: die Uhr startet nach 1,5 s Puffer (vorher 0,75 s) und spielt nach leerem Puffer erst weiter, wenn wieder genug da ist (eine Pause statt Häppchen); die Log-Zeile „watch: zeit“ zählt die Aussetzer (Uhr-App 1.5.0)

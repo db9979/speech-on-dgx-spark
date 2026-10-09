@@ -54,7 +54,10 @@ async function showDocs(){if(!DOCS_ON){$('docbox').style.display='none';return}$
     `<button class="b" type="button" data-docview="${esc(d.id)}">${t('Ansehen','View')}</button>`+
     (d.file&&d.state!=='reading'?`<button class="b" type="button" data-docreread="${esc(d.id)}" title="${esc(t('Aus dem aufbewahrten Original neu einlesen','Read again from the kept original'))}">${t('Neu einlesen','Read again')}</button>`:'')+
     `<button class="b" type="button" data-docdel="${esc(d.id)}" data-name="${esc(d.name)}">${t('Löschen','Delete')}</button></li>`}).join('')||`<li class="mut">${t('Noch keine Dokumente.','No documents yet.')}</li>`;
-  const bits=[];if(I&&I.quota)bits.push(t(`Originale: ${docSize(I.usage)} von ${docSize(I.quota)}`,`Originals: ${docSize(I.usage)} of ${docSize(I.quota)}`));
+  const bits=[];
+  if(I&&I.space){const pct=Math.min(100,Math.round(100*I.used/I.space));$('docspace').hidden=false;
+    $('docspacet').textContent=t(`Belegt: ${docSize(I.used)} von ${docSize(I.space)} (${pct} %)`,`Used: ${docSize(I.used)} of ${docSize(I.space)} (${pct} %)`)+(I.quota?t(`, davon Originale ${docSize(I.usage)}`,`, originals ${docSize(I.usage)}`):'');
+    const bar=$('docspace').querySelector('i');bar.style.width=pct+'%';$('docspace').classList.toggle('full',pct>=90)}
   if(I&&I.allow.pictures&&I.on.pictures)bits.push(t(`heute ${I.today} von ${I.day_pages} Seiten gelesen`,`${I.today} of ${I.day_pages} pages read today`));
   if(I&&I.vectors&&I.on.semantic)bits.push(t(`Bedeutungssuche: ${I.vectors[0]} von ${I.vectors[1]} Abschnitten vorbereitet`,`Meaning search: ${I.vectors[0]} of ${I.vectors[1]} sections prepared`));
   $('docuse').textContent=bits.join(' · ');docAgain(l);
@@ -240,7 +243,9 @@ $('voicego').onclick=async()=>{if(enr.i<0){
 $('voicedel').onclick=async()=>{if(!confirm(t('Gespeicherte Stimme löschen?','Delete the stored voice?')))return;await api('/api/profile/voice',{method:'DELETE'});showVoice()};
 $('docadd').onclick=()=>$('docfile').click();
 $('docfile').onchange=async()=>{const files=[...$('docfile').files];$('docfile').value='';
-  for(const f of files){$('docmsg').textContent=t('Lade hoch: ','Uploading: ')+f.name+' …';
+  for(const f of files){const most=/\.pdf$/i.test(f.name)?(DOCINFO&&DOCINFO.max_mb||100):(DOCINFO&&DOCINFO.other_mb||20);
+    if(f.size>most*1048576){$('docmsg').innerHTML=`<span class="err">${esc(f.name)}: ${t(`größer als ${most} MB`,`larger than ${most} MB`)}</span>`;continue}
+    $('docmsg').textContent=t('Lade hoch: ','Uploading: ')+f.name+' …';
     try{const fd=new FormData();fd.append('file',f,f.name);const r=await (await api('/api/profile/docs',{method:'POST',body:fd})).json();
       $('docmsg').textContent=(r.state==='reading'?t('Wird gelesen: ','Being read: '):t('Hinzugefügt: ','Added: '))+r.name}
     catch(e){$('docmsg').innerHTML=`<span class="err">${esc(f.name)}: ${esc(e.message)}</span>`;}}

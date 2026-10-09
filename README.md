@@ -31,6 +31,7 @@ All options for running without questions (`--mode api --asr 1.7b --tts 0.6b --y
 
 <!-- New version: add one line at the top here and in CHANGELOG.md, drop the oldest line here (keep 10). Details go to docs/de and docs/en, not into this README. -->
 
+- **V01.0.242** Documents: PDFs up to 100 MB (the admin sets up to 300 MB under Funktionen → Eigene Dokumente; other files up to 20 MB, before "request too large" from 20 MB); the space per profile counts all uploads together, Ich → Dokumente shows "Used: x of y" with a bar, the admin sees and sets it per profile under Zustand → Monitoring
 - **V01.0.241** The small picture before each answer in the history follows the chosen face: a comic head instead of the robot when "Comic" is picked
 - **V01.0.240** Read long documents at night (admin switch below Read pictures and scans, off): by day only documents up to 10 pages in quiet moments, long ones only after 30 minutes without a question or in the night window (default 01:00–06:00), up to 400 extra pages at night; Ich → Dokumente shows "long document, read at night from 01:00"
 - **V01.0.239** Pebble sound stutters less: the watch starts after 1.5 s in its buffer (was 0.75 s) and after running dry waits until enough is back (one pause instead of scraps); the "watch: zeit" log line counts the stalls (watch app 1.5.0)
@@ -40,7 +41,6 @@ All options for running without questions (`--mode api --asr 1.7b --tts 0.6b --y
 - **V01.0.235** Speaker voice check you can follow: Logs → speakers shows per question the match, the value needed and the seconds of speech; a too short question gets asked again as a whole sentence; "teach voice here" takes five sentences
 - **V01.0.234** Pebble easier to install: Me → Pebble watch shows a QR code for the app file and the three steps (app onto the watch, watch connected?, pair); when the Spark has a newer watch app, "Neue Uhr-App" shows under an answer at most once a day (watch app 1.4.0)
 - **V01.0.233** iPhone app: first answer after start has sound again (playback restarts after echo cancellation switches on)
-- **V01.0.232** Ich → Dokumente shows each document's progress: "page 3 of 12 read" with a bar and the reason (reading page …, waits for a quiet minute, daily limit, switch off), then "meaning 40 of 120"; the list refreshes every 10 s while something runs; the iPhone app shows "page x of y read"
 
 All versions: [CHANGELOG.md](CHANGELOG.md)
 

@@ -87,6 +87,14 @@ async function zDocs(){const box=$('zdocs');if(!box||document.hidden)return;let 
     row(st[0],st[1],t('Bedeutungssuche (CPU-Modell)','Meaning search (CPU model)'),tx)}
   if(d.pictures){row(d.waiting?'warn':'ok',d.waiting?d.waiting+t(' Seiten',' pages'):t('nichts offen','nothing open'),t('Bilder und Scans lesen','Read pictures and scans'),
     d.today+t(' heute gelesen (höchstens ',' read today (at most ')+d.day_pages+t(' je Profil)',' per profile)')+' · '+t('zuletzt ','last ')+ago(d.last.read)+(d.waiting&&!d.quiet?' · '+t('wartet auf eine ruhige Minute','waits for a quiet minute'):''))}
+  for(const x of d.usage||[]){const r=document.createElement('div');r.className='zrow';const pct=Math.min(100,Math.round(100*x.used/(x.quota_mb*1048576)));
+    const sp=document.createElement('span');sp.className='pill '+(pct>=90?'warn':'ok');sp.textContent=pct+' %';
+    const tx=document.createElement('span');const b1=document.createElement('b');b1.textContent=x.who;
+    tx.append(b1,' '+(x.used<1048576?Math.max(1,Math.round(x.used/1024))+' KB':(x.used/1048576).toFixed(1)+' MB')+t(' von ',' of ')+x.quota_mb+' MB'+(x.own?t(' (eigener Wert)',' (own value)'):''));
+    const inp=document.createElement('input');inp.type='number';inp.min=50;inp.max=50000;inp.className='num';inp.style.maxWidth='90px';inp.value=x.quota_mb;inp.title=t('Speicher für Dokumente in MB','Space for documents in MB');
+    const b=document.createElement('button');b.type='button';b.className='b';b.textContent=t('Setzen','Set');
+    b.onclick=async()=>{const v=inp.value.trim();try{await api('/api/admin/wissen/quota',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({owner:x.owner,mb:v===''||Number(v)===d.default_mb?null:Number(v)})})}catch(e){alert(e.message)}zDocs()};
+    r.append(sp,tx,inp,b);L2.appendChild(r)}
   for(const x of d.shared||[]){const r=document.createElement('div');r.className='zrow';const sp=document.createElement('span');sp.className='pill ok';sp.textContent=t('für alle','shared');
     const tx=document.createElement('span');const b1=document.createElement('b');b1.textContent=x.name;tx.append(b1,' '+t('von ','from ')+x.who);
     const b=document.createElement('button');b.type='button';b.className='b';b.textContent=t('Zurücknehmen','Take back');

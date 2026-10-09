@@ -278,7 +278,7 @@ const GUIDES=[
  fix:[['Bei Rechnungen und Unklarem fragt er erst. Falsch einsortiert: zurückholen, er lernt daraus.','With invoices and unclear mails it asks first. Wrongly sorted: undo it, it learns from that.']]},
 {id:'documents',grp:'data',sw:'chat.documents',me:'docbox',ng:1,t:['Eigene Dokumente','Own documents'],
  what:[['Du lädst Dokumente hoch, der Assistent sucht darin, wenn eine Frage dazu passt. Kein anderes Profil sieht sie.','You upload documents, the assistant searches them when a question fits. No other profile sees them.']],
- need:[['PDF, Word, Excel, PowerPoint, OpenDocument, Text, Markdown, HTML, CSV oder E-Mail (.eml), je bis 20 MB. Fotos und Scans nur mit „Bilder und Scans lesen“.','PDF, Word, Excel, PowerPoint, OpenDocument, text, Markdown, HTML, CSV or e-mail (.eml), up to 20 MB each. Photos and scans only with "Read pictures and scans".']],
+ need:[['PDF bis 100 MB (Admin: Funktionen → Eigene Dokumente → Größte PDF-Datei, bis 300 MB); Word, Excel, PowerPoint, OpenDocument, Text, Markdown, HTML, CSV oder E-Mail (.eml) je bis 20 MB. Fotos und Scans nur mit „Bilder und Scans lesen“.','PDF up to 100 MB (admin: Features → Own documents → Largest PDF file, up to 300 MB); Word, Excel, PowerPoint, OpenDocument, text, Markdown, HTML, CSV or e-mail (.eml) up to 20 MB each. Photos and scans only with "Read pictures and scans".']],
  setup:[['Admin: Funktionen → Eigene Dokumente an.','Admin: Features → Own documents on.'],['Profil: Ich → Dokumente → „Dokument hinzufügen“.','Profile: Me → Documents → "Add document".']],
  say:[['„Was steht in meinem Mietvertrag zur Kündigungsfrist?“','"What does my lease say about the notice period?"']],
  out:NOTHING_OUT,

@@ -32,6 +32,7 @@ it (chat.READS_OUTSIDE), and nothing from documents is learned into the memory.
 """
 import asyncio
 import datetime
+import json
 import os
 import re
 import time
@@ -81,11 +82,44 @@ def on(uid, what):
     return bool(uid and admin_on(what) and profiles.settings(uid).get("doc_" + what) is True)
 
 
+QUOTAS = os.path.join(os.environ.get("SPEECH_SPARK_STATE", "/var/lib/speech-spark/state"), "doc-quotas.json")
+
+
+def _quotas():
+    """{uid: MB} the admin set for single profiles (state/doc-quotas.json, in the backup)."""
+    try:
+        with open(QUOTAS) as f:
+            d = json.load(f)
+        return {k: v for k, v in d.items() if isinstance(v, int) and not isinstance(v, bool) and 50 <= v <= 50000}
+    except (OSError, ValueError, AttributeError):
+        return {}
+
+
+def quota_bytes(uid):
+    """What all uploads of this profile may take together (V01.0.242): the admin's own value for this
+    profile, else chat.doc_quota_mb (50 to 5000, default 500)."""
+    own = _quotas().get(uid)
+    if own:
+        return own * 1024**2
+    q = _chat().get("doc_quota_mb", 500)
+    return (q if isinstance(q, int) and not isinstance(q, bool) and 50 <= q <= 5000 else 500) * 1024**2
+
+
 def keep_bytes(uid):
+    """Room for kept originals: the quota minus the database (documents.add compares it with the files)."""
     if not on(uid, "originals"):
         return 0
-    q = _chat().get("doc_quota_mb", 500)
-    return (q if isinstance(q, int) and 50 <= q <= 5000 else 500) * 1024**2
+    try:
+        db = os.path.getsize(documents.db_path(uid))
+    except OSError:
+        db = 0
+    return max(0, quota_bytes(uid) - db)
+
+
+def pdf_bytes():
+    """The biggest PDF a profile may upload (admin chat.doc_max_mb, 20 to 300, default 100)."""
+    q = _chat().get("doc_max_mb", 100)
+    return (q if isinstance(q, int) and not isinstance(q, bool) and 20 <= q <= 300 else 100) * 1024**2
 
 
 def _docs_on():
@@ -94,8 +128,12 @@ def _docs_on():
 
 
 def add(uid, name, data, text=None, source="upload"):
-    """documents.add with this profile's switches."""
-    return documents.add(uid, name, data, text=text, pictures=on(uid, "pictures"), keep=keep_bytes(uid), source=source)
+    """documents.add with this profile's switches, within its quota."""
+    if documents.usage_total(uid) >= quota_bytes(uid):
+        raise ValueError(f"the space for documents is full ({quota_bytes(uid) // 1024**2} MB): delete documents "
+                         "or ask the admin for more")
+    return documents.add(uid, name, data, text=text, pictures=on(uid, "pictures"), keep=keep_bytes(uid), source=source,
+                         most=pdf_bytes())
 
 
 def _sharers(uid):
@@ -259,9 +297,17 @@ def admin_state():
     Sums over all profiles, never names, document names or text."""
     c = _chat()
     on_ = {k: admin_on(k) for k in ("pictures", "semantic", "shared")}
-    if not c.get("documents", True) or not any(on_.values()):
+    if not c.get("documents", True):
         return {"on": False}
-    out = {"on": True, "pictures": on_["pictures"], "semantic": on_["semantic"], "profiles": 0,
+    own = _quotas()
+    # space per profile: names and sizes only (the admin manages the profiles anyway), never documents
+    usage = [{"owner": uid, "who": (profiles.by_id(uid) or {}).get("name", "?"), "used": documents.usage_total(uid),
+              "quota_mb": quota_bytes(uid) // 1024**2, "own": uid in own}
+             for uid in profiles.user_ids() if os.path.exists(documents.db_path(uid)) or uid in own]
+    if not any(on_.values()):
+        return {"on": True, "pictures": False, "semantic": False, "usage": usage, "default_mb": quota_bytes("") // 1024**2}
+    out = {"on": True, "pictures": on_["pictures"], "semantic": on_["semantic"], "profiles": 0, "usage": usage,
+           "default_mb": quota_bytes("") // 1024**2,
            "waiting": 0, "today": 0, "day_pages": DAY_PAGES, "vectors": [0, 0],
            "last": {k: int(v) for k, v in _last.items()}, "quiet": quiet()}
     day = today(time.time())
@@ -287,6 +333,31 @@ def admin_state():
     return out
 
 
+@router.post("/api/admin/wissen/quota", dependencies=[Depends(auth)])
+async def admin_quota(request: Request):
+    """{"owner", "mb": 50..50000 or null}: the admin's own space for one profile; null = the default."""
+    guard.limit(request, "doc", admin=True)
+    import iphone
+    body = await iphone._json(request, 1024)
+    owner, mb = str(body.get("owner") or ""), body.get("mb")
+    if owner not in profiles.user_ids():
+        raise HTTPException(404, "no such profile")
+    if mb is not None and (not isinstance(mb, int) or isinstance(mb, bool) or not 50 <= mb <= 50000):
+        raise HTTPException(400, "mb: 50 to 50000, or null for the default")
+    d = _quotas()
+    if mb is None:
+        d.pop(owner, None)
+    else:
+        d[owner] = mb
+    os.makedirs(os.path.dirname(QUOTAS), exist_ok=True)
+    tmp = QUOTAS + ".tmp"
+    with open(os.open(tmp, os.O_WRONLY | os.O_CREAT | os.O_TRUNC, 0o600), "w") as f:
+        json.dump(d, f)
+    os.replace(tmp, QUOTAS)
+    guard.log("doc_quota", ip=guard.client_ip(request), mb=mb)
+    return {"ok": True, "quota_mb": quota_bytes(owner) // 1024**2}
+
+
 @router.post("/api/admin/wissen/unshare", dependencies=[Depends(auth)])
 async def admin_unshare(request: Request):
     guard.limit(request, "doc", admin=True)
@@ -309,6 +380,7 @@ def info(prof=Depends(own_profile)):
             "on": {k: bool(s.get("doc_" + k)) for k in ("pictures", "semantic", "originals", "shared")},
             "others": shared_list(uid),
             "usage": documents.usage(uid), "quota": keep_bytes(uid) or None,
+            "used": documents.usage_total(uid), "space": quota_bytes(uid),
             "today": documents.count_today(uid, today(time.time())) if admin_on("pictures") else 0,
             "day_pages": DAY_PAGES, "vectors": [have, total] if admin_on("semantic") else None,
             "model": docembed.status()["state"] if admin_on("semantic") else None,
@@ -316,7 +388,8 @@ def info(prof=Depends(own_profile)):
             "reading": {"doc": _now["doc"], "page": _now["page"]} if _now.get("uid") == uid else None,
             "night": dict(night(time.time()) or {}, long=LONG, long_ok=long_ok(time.time())) if _chat().get("doc_night") is True else None,
             "quiet": quiet(),
-            "types": list(documents.TYPES)}
+            "types": list(documents.TYPES), "max_mb": pdf_bytes() // 1024**2,
+            "other_mb": documents.MAX_OTHER // 1024**2}
 
 
 @router.put("/api/profile/wissen/{doc_id}", dependencies=[Depends(assistant)])

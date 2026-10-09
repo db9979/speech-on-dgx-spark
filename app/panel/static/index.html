@@ -44,7 +44,7 @@
   <div class="card zhead" id="zhead"><span class="zicon" id="zicon"></span><div><b id="ztitle">Zustand wird geladen …</b><div class="mut" id="ztext"></div></div></div>
   <div class="card zneed" id="zneed" hidden><h2>Braucht dich</h2><div id="zlist"></div></div>
   <div class="card zneed" id="zroom" hidden><h2>Hört gerade zu</h2><div id="zrooms"></div><div class="row" style="margin-top:8px"><button class="b" type="button" id="zroomall">Alle beenden</button><span class="mut">Nur wo und bis wann, nie was gehört wurde.</span></div></div>
-  <div class="card zneed" id="zdocs" hidden><h2>Eigene Dokumente</h2><div id="zdoclist"></div><div class="mut" style="margin-top:6px">Nur Zahlen über alle Profile. Namen nur von Dokumenten, die jemand für alle freigegeben hat.</div></div>
+  <div class="card zneed" id="zdocs" hidden><h2>Eigene Dokumente</h2><div id="zdoclist"></div><div class="mut" style="margin-top:6px">Profilnamen, Speicher und Zahlen, nie Inhalte. Dokumentnamen nur, wenn jemand ein Dokument für alle freigegeben hat.</div></div>
   <div id="memnote"></div>
   <div class="grid">
     <div class="card"><div class="k">GPU-Auslastung</div><div class="v" id="m-gpu">–</div><svg class="spark" id="c-gpu"></svg></div>
@@ -83,7 +83,8 @@
       <div data-show="chat.doc_night" style="margin-left:36px"><label>Nachtfenster</label><div class="rowin"><input type="time" id="chat.doc_night_from" style="max-width:140px"><span>bis</span><input type="time" id="chat.doc_night_to" style="max-width:140px"></div></div>
       <div class="setrow" data-show="chat.documents" style="margin-left:18px"><div class="lbl"><b>Bedeutungssuche</b><span>Ein kleines Modell auf dem Prozessor findet auch Stellen mit anderen Worten („Auto“ findet „Kfz“); etwa 300 MB, nur bei Bedarf.</span></div><label class="tgl"><input type="checkbox" id="chat.doc_semantic"><i></i></label></div>
       <div class="setrow" data-show="chat.documents" style="margin-left:18px"><div class="lbl"><b>Originale aufbewahren</b><span>Die hochgeladene Datei bleibt auf dem Spark, lässt sich wieder öffnen und kommt in die Sicherung.</span></div><label class="tgl"><input type="checkbox" id="chat.doc_originals"><i></i></label></div>
-      <div data-show="chat.doc_originals"><label>Speicher pro Profil (MB)</label><input class="num" id="chat.doc_quota_mb" type="number" min="50" max="5000"><div class="fh">50 bis 5000. Ist er voll, wird nur noch der Text gespeichert.</div></div>
+      <div data-show="chat.documents" style="margin-left:18px"><label>Größte PDF-Datei (MB)</label><input class="num" id="chat.doc_max_mb" type="number" min="20" max="300"><div class="fh">20 bis 300, Standard 100. Andere Dateiarten bis 20 MB. Große Scans brauchen beim Hochladen kurz etwa das Dreifache an Arbeitsspeicher.</div></div>
+      <div data-show="chat.documents" style="margin-left:18px"><label>Speicher pro Profil (MB)</label><input class="num" id="chat.doc_quota_mb" type="number" min="50" max="5000"><div class="fh">50 bis 5000, für alle Uploads eines Profils zusammen. Einzelnen Profilen gibst du unter Zustand → Monitoring mehr oder weniger. Ist er voll, nimmt der Spark nichts Neues an; Originale nur, solange Platz ist.</div></div>
       <div class="setrow" data-show="chat.documents" style="margin-left:18px"><div class="lbl"><b>Gemeinsame Dokumente</b><span>Ein Profil gibt einzelne Dokumente „Für alle“ frei, die anderen Profile finden und öffnen sie. Gäste und unbekannte Stimmen nie.</span></div><label class="tgl"><input type="checkbox" id="chat.doc_shared"><i></i></label></div>
       <div class="setrow"><div class="lbl"><b>Websuche</b><span>Das Modell sucht selbst über deine SearXNG-Instanz, wenn eine Frage aktuelle Informationen braucht.</span></div><label class="tgl"><input type="checkbox" id="chat.search"><i></i></label></div>
       <div data-show="chat.search"><label>Adresse deiner SearXNG-Instanz</label><input id="chat.search_url" data-req placeholder="http://192.168.1.20:8080">
@@ -601,8 +602,9 @@
     <ul class="facts" id="factlist"></ul>
     <div class="row" style="margin-top:8px"><button class="b" id="facttidy">Aufräumen vorschlagen</button><button class="b" id="factclear">Alles vergessen</button><span id="factmsg"></span></div>
     <div class="mut" style="margin-top:6px"><small>Einmal pro Woche schlägt der Assistent vor, doppelte oder überholte Einträge zusammenzufassen. Es ändert sich erst etwas, wenn du hier bestätigst.</small></div></div>
-    <div id="docbox" class="ptab"><div class="intro">PDF, Word, Excel, PowerPoint, OpenDocument, Text, Markdown, HTML, CSV oder E-Mail (.eml), je bis 20 MB. Der Assistent sucht darin, wenn eine Frage dazu passt. Nur du kannst sie nutzen, außer du gibst ein Dokument „Für alle“ frei.</div>
+    <div id="docbox" class="ptab"><div class="intro">PDF bis 100 MB (der Admin kann mehr erlauben); Word, Excel, PowerPoint, OpenDocument, Text, Markdown, HTML, CSV oder E-Mail (.eml) je bis 20 MB. Der Assistent sucht darin, wenn eine Frage dazu passt. Nur du kannst sie nutzen, außer du gibst ein Dokument „Für alle“ frei.</div>
       <div id="docsw"></div>
+      <div id="docspace" class="docspace" hidden><span id="docspacet"></span><span class="qbar docbar"><i></i></span></div>
       <ul class="facts" id="doclist"></ul>
       <div id="docothers" hidden><h3>Von anderen für alle freigegeben</h3><ul class="facts" id="docotherlist"></ul></div>
       <div id="docview" class="docview" hidden></div>

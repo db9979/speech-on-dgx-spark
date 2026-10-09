@@ -87,6 +87,7 @@
     "doc_originals": false,
     "doc_shared": false,
     "doc_quota_mb": 500,
+    "doc_max_mb": 100,
     "doc_night": false,
     "doc_night_from": "01:00",
     "doc_night_to": "06:00",

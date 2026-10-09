@@ -438,7 +438,7 @@ def profile_docs(request: Request, prof=Depends(own_profile)):
 async def profile_add_doc(file: UploadFile = File(...), prof=Depends(browser_profile)):
     if not load_config().get("chat", {}).get("documents", True):
         raise HTTPException(403, "documents are turned off (Einstellungen -> Funktionen)")
-    data = await file.read(documents.MAX_FILE + 1)
+    data = await file.read(wissen.pdf_bytes() + 1)
     try:
         return await asyncio.to_thread(wissen.add, prof["id"], file.filename, data)
     except ValueError as e:

@@ -450,6 +450,9 @@ def validate(new):
             raise HTTPException(400, f"{k}: HH:MM")
     if not isinstance(ch.get("doc_night", False), bool):
         raise HTTPException(400, "chat doc_night must be true or false")
+    m = ch.get("doc_max_mb", 100)
+    if not isinstance(m, int) or isinstance(m, bool) or not 20 <= m <= 300:
+        raise HTTPException(400, "doc_max_mb: 20 to 300")
     q = ch.get("doc_quota_mb", 500)
     if not isinstance(q, int) or isinstance(q, bool) or not 50 <= q <= 5000:
         raise HTTPException(400, "doc_quota_mb: 50 to 5000")

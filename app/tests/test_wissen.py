@@ -92,7 +92,7 @@ class Base(unittest.TestCase):
 
     def tearDown(self):
         helpers.set_config(doc_pictures=False, doc_semantic=False, doc_originals=False, doc_quota_mb=500, images=False,
-                           search=False, search_url="", doc_shared=False, doc_night=False, doc_night_from="01:00",
+                           search=False, search_url="", doc_shared=False, doc_max_mb=100, doc_night=False, doc_night_from="01:00",
                            doc_night_to="06:00")
 
     def switch(self, c, **on):
@@ -126,7 +126,12 @@ class Defaults(Base):
             self.assertEqual(getattr(g, method)(path, **({"json": {}} if method in ("post", "put") else {})).status_code, 401, path)
 
     def test_zustand_shows_counts_only_and_only_to_the_admin(self):
-        self.assertEqual(ADMIN.get("/api/admin/wissen").json(), {"on": False})        # all switches off
+        helpers.set_config(documents=False)
+        try:
+            self.assertEqual(ADMIN.get("/api/admin/wissen").json(), {"on": False})    # documents off
+        finally:
+            helpers.set_config(documents=True)
+        self.assertFalse(ADMIN.get("/api/admin/wissen").json()["pictures"])           # all switches off
         c = profile("Wzora")
         self.assertIn(c.get("/api/admin/wissen").status_code, (401, 403))           # a profile is not the admin
         self.assertEqual(TestClient(panel.app).get("/api/admin/wissen").status_code, 401)
@@ -142,7 +147,6 @@ class Defaults(Base):
         self.assertIn(d["model"]["state"], ("off", "starting", "ready", "waiting", "error"))
         self.assertEqual(d["model"]["need_gib"], docembed.MIN_FREE_GIB)
         self.assertNotIn("arztbrief", r.text)
-        self.assertNotIn("Wzora", r.text)
 
     def test_admin_quota_is_checked(self):
         cfg = ADMIN.get("/api/config").json()
@@ -298,9 +302,9 @@ class Originals(Base):
         uid = uid_of("Wolga")
         # quota full: the text is kept, the original not
         helpers.set_config(doc_quota_mb=50)
-        big = b"Heizung Wartung " * (documents.MAX_FILE // 32)
+        big = b"Heizung Wartung " * (documents.MAX_OTHER // 32)
         with open(os.path.join(documents._files(uid), "ffffffffffff.txt"), "wb") as f:
-            f.truncate(50 * 1024**2)            # (sparse: takes no real disk space)
+            f.truncate(45 * 1024**2)            # (sparse: takes no real disk space; the text still fits)
         r = upload(c, "gross.txt", big)
         self.assertEqual(r.status_code, 200, r.text)
         self.assertFalse(r.json()["file"])
@@ -653,6 +657,54 @@ class Attachment(Base):
         c.post("/api/chat", json={"messages": [{"role": "user", "content": "Worum geht es?"}],
                                   "attachment": {"kind": "document", "name": "vertrag.pdf", "text": "Vertrag " * 5000}})
         self.assertIn("nur der Anfang", helpers.LLM_CALLS[0]["messages"][0]["content"])
+
+
+class Space(Base):
+    def test_quota_for_all_uploads_shown_and_set_per_profile(self):
+        c, other = profile("Wxaver"), profile("Wyara")
+        upload(c, "notiz.txt", b"Ein kleines Dokument. " * 5)
+        info = c.get("/api/profile/wissen").json()
+        self.assertEqual(info["space"], 500 * 1024**2)
+        self.assertGreater(info["used"], 0)
+        uid = uid_of("Wxaver")
+        row = next(x for x in ADMIN.get("/api/admin/wissen").json()["usage"] if x["owner"] == uid)
+        self.assertEqual((row["who"], row["quota_mb"], row["own"]), ("Wxaver", 500, False))
+        # only the admin sets it, within bounds; a profile cannot raise its own space
+        self.assertEqual(c.post("/api/admin/wissen/quota", json={"owner": uid, "mb": 50000}).status_code, 401)
+        for bad in (10, 60000, "100", True):
+            self.assertEqual(ADMIN.post("/api/admin/wissen/quota", json={"owner": uid, "mb": bad}).status_code, 400, bad)
+        self.assertEqual(ADMIN.post("/api/admin/wissen/quota", json={"owner": "nobody", "mb": 100}).status_code, 404)
+        self.assertEqual(ADMIN.post("/api/admin/wissen/quota", json={"owner": uid, "mb": 2000}).json()["quota_mb"], 2000)
+        self.assertEqual(c.get("/api/profile/wissen").json()["space"], 2000 * 1024**2)
+        self.assertEqual(other.get("/api/profile/wissen").json()["space"], 500 * 1024**2)
+        self.assertIn("doc-quotas.json", backup.STATE_FILES)
+        # full: nothing new
+        old = wissen.quota_bytes
+        wissen.quota_bytes = lambda u: 1
+        try:
+            r = upload(c, "mehr.txt", b"Noch ein Dokument. " * 5)
+            self.assertEqual(r.status_code, 400)
+            self.assertIn("full", r.text)
+        finally:
+            wissen.quota_bytes = old
+        self.assertEqual(ADMIN.post("/api/admin/wissen/quota", json={"owner": uid, "mb": None}).json()["quota_mb"], 500)
+
+    def test_pdf_size_set_by_the_admin(self):
+        c = profile("Wzeno")
+        self.assertEqual(c.get("/api/profile/wissen").json()["max_mb"], 100)
+        cfg = ADMIN.get("/api/config").json()
+        for bad in (10, 301, "100", True):
+            cfg["chat"]["doc_max_mb"] = bad
+            self.assertEqual(ADMIN.put("/api/config", json=cfg).status_code, 400, bad)
+        helpers.set_config(doc_max_mb=20)
+        try:
+            big = b"%PDF-1.4\n" + b"0" * (21 * 1024**2)
+            r = c.post("/api/profile/docs", files={"file": ("buch.pdf", big, "application/pdf")})
+            self.assertEqual(r.status_code, 413)                       # refused before it is read
+        finally:
+            helpers.set_config(doc_max_mb=100)
+        txt = b"Text " * (documents.MAX_OTHER // 5 + 10)
+        self.assertEqual(upload(c, "gross.txt", txt).status_code, 400)  # other kinds stay at 20 MB
 
 
 class Shared(Base):

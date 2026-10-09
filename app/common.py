@@ -271,7 +271,7 @@ class BodyLimit:
     """ASGI middleware: refuses request bodies over a per-path limit before anything reads them.
     FastAPI parses File/Form/JSON parameters before it runs the login check, so without this anyone
     could fill the disk or memory with a big upload that only gets its 401 afterwards. `limits` is
-    [(path prefix, bytes)], first match wins; `gate(scope)` may refuse a big upload from someone who is
+    [(path prefix, bytes or a function returning them)], first match wins; `gate(scope)` may refuse a big upload from someone who is
     clearly not logged in (False -> 401) before a byte of it is read."""
 
     def __init__(self, app, limits=(), default=2 * 1024**2, gate=None, gated=()):
@@ -282,6 +282,7 @@ class BodyLimit:
             return await self.app(scope, receive, send)
         path = scope.get("path", "")
         limit = next((n for p, n in self.limits if path.startswith(p)), self.default)
+        limit = limit() if callable(limit) else limit       # a limit the admin sets (documents)
         cl = dict(scope.get("headers") or []).get(b"content-length", b"")
         if cl.isdigit() and int(cl) > limit:
             return await self._reply(send, 413, "request too large")

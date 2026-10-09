@@ -34,7 +34,9 @@ import zipfile
 
 import profiles
 
-MAX_FILE = 20 * 1024 * 1024
+MAX_FILE = 100 * 1024 * 1024    # PDFs by default (scanned books are big; V01.0.242, was 20 MB for all)
+MAX_PDF = 300 * 1024 * 1024     # the most the admin may allow (chat.doc_max_mb)
+MAX_OTHER = 20 * 1024 * 1024    # every other kind of file
 MAX_DOCS = 200
 MAX_CHARS = 2_000_000          # text per document after extraction
 MAX_UNPACKED = 50 * 1024 * 1024  # an Office file's text parts after unpacking, all together
@@ -464,6 +466,15 @@ def list_docs(uid, used_only=False):
     return [_row(r, todo) for r in rows]
 
 
+def usage_total(uid):
+    """Bytes this profile's uploads take: the database (text, vectors, pages waiting) and the originals."""
+    try:
+        db = os.path.getsize(db_path(uid))
+    except OSError:
+        db = 0
+    return db + usage(uid)
+
+
 def usage(uid):
     """Bytes of the kept originals of this profile."""
     d, n = _files(uid), 0
@@ -514,15 +525,17 @@ def _read(name, data, text=None, pictures=False, cleaned=False):
     return parts, todo, kind, "; ".join(notes)
 
 
-def add(uid, name, data, text=None, pictures=False, keep=0, source="upload"):
+def add(uid, name, data, text=None, pictures=False, keep=0, source="upload", most=MAX_FILE):
     """Stores a document. text: already read elsewhere (the iPhone app reads PDFs and scans itself;
     data is then only its size). pictures: photos and scanned pages may wait for the language model.
     keep: bytes the original may take (0 = do not keep it)."""
-    if len(data) > MAX_FILE:
-        raise ValueError("file is larger than 20 MB")
+    if len(data) > most:
+        raise ValueError(f"file is larger than {most // 1024**2} MB")
     name = re.sub(r"[\x00-\x1f\x7f<>\"\\]", "", os.path.basename(str(name or "document")))[:120].strip() or "document"
-    parts, todo, kind, note = _read(name, data, text, pictures)
     ext = os.path.splitext(name.lower())[1]
+    if text is None and ext != ".pdf" and len(data) > MAX_OTHER:
+        raise ValueError(f"file is larger than {MAX_OTHER // 1024**2} MB (only PDFs may be bigger)")
+    parts, todo, kind, note = _read(name, data, text, pictures)
     doc_id = secrets.token_hex(6)
     stored = ""
     with _Db(uid) as con:
@@ -595,7 +608,7 @@ def reread(uid, doc_id, pictures=False):
         return None
     path, name, _ = got
     with open(path, "rb") as f:
-        data = f.read(MAX_FILE + 1)
+        data = f.read(MAX_PDF + 1)
     with _Db(uid) as con:
         r = con.execute("SELECT name, kind FROM docs WHERE id=?", (doc_id,)).fetchone()
     if not r:

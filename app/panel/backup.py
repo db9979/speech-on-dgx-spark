@@ -62,6 +62,7 @@ STATE_FILES = {
     "quality-cases.json": "json",   # own quality test questions
     "quality-history.json": "json",
     "setup.json": "json",           # first-start wizard done
+    "doc-quotas.json": "json",      # the admin's own document space per profile (wissen.py)
 }
 MAX_STATE_FILE = 8 * 1024**2
 MOVE_FILE = "move-keys.json"
