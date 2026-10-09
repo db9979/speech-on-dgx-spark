@@ -67,7 +67,7 @@ const GROUPS={chat:[['chat','']],mon:[['mon',t('Monitoring','Monitoring')],['tes
 const lastSec={};
 function showSec(s){document.querySelectorAll('section').forEach(x=>x.classList.toggle('on',x.id===s));
   document.body.classList.toggle('inchat',s==='chat');
-  if(s==='cfg'){document.querySelector('.cfgwrap').classList.remove('sub');loadCfg();mfaShow('admmfa','/api/mfa');if($('pane-voices').classList.contains('on'))loadClone();if($('pane-upd').classList.contains('on'))loadSys()}if(s==='chat')chatTab();if(s==='test'){loadVoices();instrHint();loadLive();loadBench()}if(s==='prof')loadProf();if(s==='logs')loadLogs();if(s==='apps')loadInt();}
+  if(s==='cfg'){document.querySelector('.cfgwrap').classList.remove('sub');loadCfg();mfaShow('admmfa','/api/mfa');if($('pane-voices').classList.contains('on'))loadClone();if($('pane-upd').classList.contains('on'))loadSys()}if(s==='chat')chatTab();if(s==='test'){loadVoices();instrHint();loadLive();loadBench();loadVorrang()}if(s==='prof')loadProf();if(s==='logs')loadLogs();if(s==='apps')loadInt();}
 // Zustand and Einbinden have several pages: computers show them as a second column like Einstellungen, phones as a
 // list with one line of state that opens the page, with "back" on top (V01.0.207, same pattern everywhere)
 const NARROW=()=>matchMedia('(max-width:760px)').matches;

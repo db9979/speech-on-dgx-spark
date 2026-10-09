@@ -17,6 +17,7 @@ import time
 
 import httpx
 
+import vorrang
 from common import load_config
 from core import DEFAULTS
 
@@ -230,7 +231,8 @@ async def _run_case(c, ccfg, headers, model, case):
                 payload["temperature"] = float(ccfg.get("tool_temperature", 0.1))
                 if need:
                     payload["tool_choice"] = "required"
-        r = await c.post(ccfg["llm_url"].rstrip("/") + "/chat/completions", json=payload, headers=headers)
+        r = await vorrang.post(c, "Qualitätstest", ccfg["llm_url"].rstrip("/") + "/chat/completions",
+                               json=payload, headers=headers)
         r.raise_for_status()
         m = r.json()["choices"][0]["message"]
         calls = m.get("tool_calls") or []

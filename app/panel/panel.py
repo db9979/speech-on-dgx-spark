@@ -45,6 +45,7 @@ import extras  # noqa: E402
 import telegram  # noqa: E402
 import tasks  # noqa: E402
 import wyoming  # noqa: E402
+import vorrang  # noqa: E402
 import transit  # noqa: E402
 import esp32  # noqa: E402
 import iphone  # noqa: E402
@@ -150,8 +151,8 @@ async def stability():
     async def backups():
         while True:
             try:
-                if backup.due():
-                    item = await asyncio.to_thread(backup.create, "daily")
+                if backup.due():   # packing is CPU and disk work: in a pause, with low priority
+                    item = await vorrang.in_thread("Sicherung", backup.create, "daily")
                     print("backup:", item["name"], flush=True)
             except Exception as e:
                 guard.log("backup_failed", detail=f"{type(e).__name__}: {e}"[:200])
@@ -220,7 +221,7 @@ async def mail_tidy():
         while True:
             await asyncio.sleep(60)
             try:
-                await tidy.due_once(idle=time.time() - chat._last_chat[0] > 60)
+                await tidy.due_once(idle=not vorrang.speaking())
             except Exception as e:
                 print("mail tidy:", type(e).__name__, e, flush=True)
     asyncio.create_task(loop())
@@ -264,7 +265,7 @@ async def learner():
             except Exception as e:
                 print("learning:", type(e).__name__, e, flush=True)
             try:
-                if time.time() - chat._last_chat[0] > 60:   # never while someone is talking
+                if not vorrang.speaking():   # never while someone is talking (vorrang.py)
                     uid = await memtidy.due_once()
                     if uid:
                         print("memory tidy: checked a profile", flush=True)

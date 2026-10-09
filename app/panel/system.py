@@ -18,6 +18,7 @@ import guard  # noqa: E402
 import health  # noqa: E402
 import profiles  # noqa: E402
 import quality  # noqa: E402
+import vorrang  # noqa: E402
 from common import load_config  # noqa: E402
 from core import DEFAULTS, admin_code, auth  # noqa: E402
 
@@ -176,6 +177,20 @@ def livecheck_result():
 @router.post("/api/livecheck", dependencies=[Depends(auth)])
 async def livecheck_now():
     return await health.livecheck("manual")
+
+
+@router.get("/api/vorrang", dependencies=[Depends(auth)])
+def vorrang_state():
+    """Speech first (vorrang.py): today's counters and the last "Vorrang prüfen" result."""
+    return vorrang.test_state()
+
+
+@router.post("/api/vorrang", dependencies=[Depends(auth)])
+async def vorrang_test():
+    if vorrang.test_state()["running"]:
+        raise HTTPException(409, "the priority test is already running")
+    vorrang.start_test()
+    return vorrang.test_state()
 
 
 @router.get("/api/quality", dependencies=[Depends(auth)])

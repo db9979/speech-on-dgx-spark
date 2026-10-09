@@ -614,9 +614,12 @@ Environment=PYTORCH_CUDA_ALLOC_CONF=expandable_segments:True
 ExecStart=$asr_exec
 Restart=on-failure
 RestartSec=10
-# If unified memory runs out, the kernel / earlyoom should pick speech before an LLM lane or sshd.
-OOMScoreAdjust=900
-Nice=5
+# Speech first (plaene/vorrang-sprache.md): more CPU and disk share than anything else on the box.
+# If unified memory runs out, the panel (900) goes before speech; speech still before an LLM lane or sshd.
+OOMScoreAdjust=500
+Nice=-5
+CPUWeight=1000
+IOWeight=1000
 PrivateTmp=yes
 $asr_mem
 
@@ -653,8 +656,10 @@ Environment=PYTORCH_CUDA_ALLOC_CONF=expandable_segments:True
 ExecStart=$tts_exec
 Restart=on-failure
 RestartSec=10
-OOMScoreAdjust=900
-Nice=5
+OOMScoreAdjust=500
+Nice=-5
+CPUWeight=1000
+IOWeight=1000
 PrivateTmp=yes
 $tts_mem
 
@@ -685,8 +690,10 @@ RestartSec=30
 TimeoutStartSec=infinity
 TimeoutStopSec=30
 KillMode=control-group
-OOMScoreAdjust=900
-Nice=5
+OOMScoreAdjust=500
+Nice=-5
+CPUWeight=1000
+IOWeight=1000
 
 [Install]
 WantedBy=multi-user.target

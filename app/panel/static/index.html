@@ -413,6 +413,11 @@
     <div class="row" style="margin-top:12px"><button class="b p" id="benchgo">Messung starten</button><button class="b" onclick="copyEl('benchout',this)">Kopieren</button><span id="benchmsg" class="mut"></span></div>
     <div id="benchrate"></div>
     <details id="benchraw" style="margin-top:10px"><summary class="mut">Rohwerte</summary><pre id="benchout" style="margin-top:8px">–</pre></details></div>
+  <div class="card"><h2>Vorrang für Sprache</h2>
+    <div class="intro sm">Spracherkennung und Sprachausgabe gehen immer vor: Hintergrundarbeit wartet, solange gesprochen wird, und eine laufende Hintergrund-Anfrage an das Sprachmodell wird abgebrochen und später wiederholt. Der Test spricht einen Satz dreimal: alleine, während das Sprachmodell eine lange Antwort schreibt, und dasselbe mit Vorfahrt. Dauert etwa eine Minute.</div>
+    <div class="row" style="margin-top:12px"><button class="b" id="vrgo">Vorrang prüfen</button><span id="vrmsg" class="mut"></span></div>
+    <div id="vrtoday" class="mut" style="margin-top:8px"></div>
+    <div id="vrout"></div></div>
   <div class="two">
     <div class="card"><h2>Spracherkennung testen</h2>
       <label>Audiodatei (wav, mp3, flac, …)</label><input type="file" id="asrfile" accept="audio/*">

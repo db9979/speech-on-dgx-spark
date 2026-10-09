@@ -27,6 +27,7 @@ import httpx
 from fastapi import APIRouter, Depends, HTTPException, Request
 
 import profiles
+import vorrang
 from common import load_config
 from core import DEFAULTS, assistant, browser_profile, own_profile
 
@@ -570,7 +571,8 @@ async def _llm(system, user, max_tokens=300):
         payload = {"model": await llm_model(c, cc, headers), "temperature": 0.1, "max_tokens": max_tokens,
                    "messages": [{"role": "system", "content": system}, {"role": "user", "content": user[:12000]}],
                    "chat_template_kwargs": {"enable_thinking": False}}
-        r = await c.post(cc["llm_url"].rstrip("/") + "/chat/completions", json=payload, headers=headers)
+        r = await vorrang.post(c, "Proaktiver Hinweis", cc["llm_url"].rstrip("/") + "/chat/completions",
+                               json=payload, headers=headers)
         r.raise_for_status()
         return r.json()["choices"][0]["message"].get("content") or ""
 

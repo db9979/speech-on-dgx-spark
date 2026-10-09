@@ -34,6 +34,7 @@ import docembed
 import documents
 import guard
 import profiles
+import vorrang
 from common import load_config
 from core import assistant, browser_profile, own_profile
 
@@ -105,7 +106,8 @@ async def read_page(jpeg):
                    "chat_template_kwargs": {"enable_thinking": False},
                    "messages": [{"role": "system", "content": READ_PROMPT},
                                 images.with_pictures({"content": "Lies diese Seite."}, [pic])]}
-        r = await c.post(ccfg["llm_url"].rstrip("/") + "/chat/completions", json=payload, headers=headers)
+        r = await vorrang.post(c, "Dokument lesen", ccfg["llm_url"].rstrip("/") + "/chat/completions",
+                               json=payload, headers=headers)
         r.raise_for_status()
         text = str(((r.json().get("choices") or [{}])[0].get("message") or {}).get("content") or "")
     text = re.sub(r"<think>.*?</think>", "", text, flags=re.S).strip()
@@ -116,10 +118,10 @@ async def read_page(jpeg):
 
 def quiet():
     """May background work use the language model now? The one place where the reading waits for the
-    person: until now a minute without a question; the speech priority rule (plaene/vorrang-sprache.md)
-    hooks in here."""
+    person: a minute without a question, and no speech right now (vorrang.py: answers, ASR and TTS of
+    any client); a page being read is cancelled when speech starts and read again later."""
     import chat
-    return time.time() - chat._last_chat[0] > IDLE
+    return time.time() - chat._last_chat[0] > IDLE and not vorrang.speaking()
 
 
 def today(now):

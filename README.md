@@ -31,6 +31,7 @@ All options for running without questions (`--mode api --asr 1.7b --tts 0.6b --y
 
 <!-- New version: add one line at the top here and in CHANGELOG.md, drop the oldest line here (keep 10). Details go to docs/de and docs/en, not into this README. -->
 
+- **V01.0.225** Speech always comes first: background work waits while someone speaks, its running request to the language model is cancelled and repeated later; ASR and TTS get more CPU and disk share; Zustand → Prüfen → "Check priority" measures it (fixed rule, no switch)
 - **V01.0.224** Knowledge from uploads: documents per profile in one SQLite file (old ones taken over, backups consistent), more file types (Excel, PowerPoint, OpenDocument, .eml), view documents (text, pictures and PDFs in the browser), on/off per document, "Try the search", clickable sources with page; new and each off (admin + profile): the language model reads pictures and scans in quiet moments (also "Picture to My documents" in the chat, /merken in Telegram), meaning search with a small CPU model in its own process, keep originals with a space limit; no web search after documents in the same answer
 - **V01.0.223** Conversation goes on normally after answers from documents, web or mail: sometimes only the note "(Diese frühere Antwort beruhte auf Texten von außen …)" came instead of an answer; older such answers now leave the history with their question, the model uses the tool again when needed, and the note is never shown or spoken (locks stay)
 - **V01.0.222** Passwords and codes are never spoken: passwords, code words, PINs/TANs, one-time codes and keys are said as "nur schriftlich sichtbar" on every path (browser, speaker, Telegram voice, Wyoming, Siri); the written text keeps them (fixed rule, no switch)
@@ -40,7 +41,6 @@ All options for running without questions (`--mode api --asr 1.7b --tts 0.6b --y
 - **V01.0.218** Faster answers: switch "Schneller Antwortbeginn" (language model, off) sends the time with the question instead of at the start of the instructions, so the language model takes the rest from its cache; the "Gespräch" diagnosis shows per answer where the time goes (preparation, tokens read, first word, thinking text, tools, first sound)
 - **V01.0.217** Logs: the areas (conversation, Telegram, room …) count again; newer journalctl writes the time zone as "+02:00", which the panel did not recognize, so every area showed 0
 - **V01.0.216** Logs: update lines quoting a version text ("Available", "Update finished") no longer turn red just because the text says "Fehler"
-- **V01.0.215** Logs: the log page's own requests no longer count as errors ("f=errors" in the address) and stay out of the journal; for web requests only the status code decides
 
 All versions: [CHANGELOG.md](CHANGELOG.md)
 

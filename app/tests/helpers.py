@@ -42,6 +42,8 @@ for p in (APP, os.path.join(APP, "panel")):
     if p not in sys.path:
         sys.path.insert(0, p)
 
+import vorrang  # noqa: E402
+vorrang.GRACE = 0   # other features' tests never wait for speech; test_vorrang.py sets its own value
 import uvicorn  # noqa: E402
 from fastapi import FastAPI, HTTPException, Request  # noqa: E402
 from fastapi.responses import PlainTextResponse, Response, StreamingResponse  # noqa: E402

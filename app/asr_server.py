@@ -9,11 +9,13 @@ import uvicorn
 from fastapi import Depends, FastAPI, File, Form, HTTPException, Request, UploadFile
 from fastapi.responses import PlainTextResponse
 
-from common import ASR_ISO as ISO, BodyLimit, KeyedCORS, inside, outside_view, ServiceState, api_key_dependency, api_key_ok, check_memory, estimate_gib, load_config, quiet_access_log, torch_dtype
+from common import ASR_ISO as ISO, BodyLimit, KeyedCORS, inside, outside_view, ServiceState, api_key_dependency, api_key_ok, check_memory, estimate_gib, load_config, quiet_access_log, SpeechMark, torch_dtype
 
 cfg = load_config("asr")
 state = ServiceState("asr", cfg)
 app = FastAPI(title="Qwen3-ASR (DGX Spark)")
+# innermost: only requests that passed the size limit and API key count as speech
+app.add_middleware(SpeechMark)
 app.add_middleware(KeyedCORS)
 # bodies are refused before they are read when too large or without the API key
 app.add_middleware(BodyLimit, default=200 * 1024**2, gate=api_key_ok, gated=("/v1/",))
