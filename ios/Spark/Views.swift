@@ -487,6 +487,13 @@ struct SettingsView: View {
                     Text("Was die App darf, stellst du im Panel unter Ich → iPhone-App ein. Dort entfernst du das iPhone auch, wenn es verloren geht.")
                         .foregroundStyle(.secondary)
                 }
+                if talk.allowed.updateNotify || talk.allowed.updateStart {
+                    Section {
+                        NavigationLink("Spark-Version") { UpdateView() }
+                    } footer: {
+                        Text("Neue geprüfte Versionen und das Update des Spark.")
+                    }
+                }
                 Section {
                     Button("Entkoppeln", role: .destructive) { confirm = true }
                 }

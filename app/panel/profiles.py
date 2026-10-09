@@ -270,7 +270,9 @@ APP_PATHS = ("/api/chat", "/api/test/asr", "/api/siri/ask", "/api/iphone/hello",
              "/api/iphone/settings",  # the profile's own voice, answers and "Von selbst" (iphone.APP_FIELDS only)
              "/api/assistant/voices",  # the voice names to choose from
              # Apple Reminders on the iPhone (app_ios): new list entries to the iPhone, adding from Shortcuts
-             "/api/tasks/inbox", "/api/profile/tasks/einkauf", "/api/profile/tasks/aufgaben")
+             "/api/tasks/inbox", "/api/profile/tasks/einkauf", "/api/profile/tasks/aufgaben",
+             # Spark updates (appupdate.py): rights only from the admin, starting needs a fresh code
+             "/api/iphone/update")
 APP_GATE = [lambda uid: False]
 
 

@@ -110,6 +110,7 @@
     "esp32": false,
     "iphone": false,
     "iphone_push": false,
+    "iphone_update": false,
     "esp32_url": "",
     "esp32_repo": "db9979/speech-on-dgx-spark",
     "proactive": false,

@@ -201,6 +201,16 @@
         }
       }
     },
+    "Auf diesem iPhone ist keine Code-Sperre eingerichtet.": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "This iPhone has no passcode set up."
+          }
+        }
+      }
+    },
     "Aufgaben": {
       "localizations": {
         "en": {
@@ -251,6 +261,16 @@
         }
       }
     },
+    "Code aus der Authenticator-App": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Code from the authenticator app"
+          }
+        }
+      }
+    },
     "Dafür im Panel „Von selbst“ für dein Profil einschalten.": {
       "localizations": {
         "en": {
@@ -267,6 +287,16 @@
           "stringUnit": {
             "state": "translated",
             "value": "I cannot load the photo."
+          }
+        }
+      }
+    },
+    "Das Update hat nicht geklappt. Der Spark läuft weiter mit der alten Version; Details im Panel unter Zustand → System/Update.": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "The update did not work. The Spark keeps running the old version; details in the panel under Status → System/Update."
           }
         }
       }
@@ -341,6 +371,36 @@
         }
       }
     },
+    "Der Assistent ist währenddessen kurz nicht erreichbar.": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "The assistant is briefly unreachable meanwhile."
+          }
+        }
+      }
+    },
+    "Der Code gilt nur einmal.": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "The code works only once."
+          }
+        }
+      }
+    },
+    "Der Code stimmt nicht. Bitte den aktuellen Code aus der Authenticator-App nehmen.": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "The code is not right. Please use the current code from the authenticator app."
+          }
+        }
+      }
+    },
     "Der Spark erinnert dich, mit Push und auf allen Geräten.": {
       "localizations": {
         "en": {
@@ -357,6 +417,16 @@
           "stringUnit": {
             "state": "translated",
             "value": "The Spark sent no key."
+          }
+        }
+      }
+    },
+    "Der Spark ist aktuell.": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "The Spark is up to date."
           }
         }
       }
@@ -621,6 +691,16 @@
         }
       }
     },
+    "Erst eine Sicherung, dann die neue Version. Du bestätigst mit Face ID und dem Code aus deiner Authenticator-App.": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "First a backup, then the new version. You confirm with Face ID and the code from your authenticator app."
+          }
+        }
+      }
+    },
     "Es gibt mehrere Kontakte „%@“. Sag bitte den ganzen Namen.": {
       "localizations": {
         "en": {
@@ -667,6 +747,16 @@
           "stringUnit": {
             "state": "translated",
             "value": "Done"
+          }
+        }
+      }
+    },
+    "Fertig. Der Spark läuft wieder mit %@.": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Done. The Spark runs again with %@."
           }
         }
       }
@@ -777,6 +867,16 @@
           "stringUnit": {
             "state": "translated",
             "value": "Paired"
+          }
+        }
+      }
+    },
+    "Gerade erst gestartet. Wieder möglich in %lld Minuten.": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Just started. Possible again in %lld minutes."
           }
         }
       }
@@ -931,12 +1031,32 @@
         }
       }
     },
+    "Installiert": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Installed"
+          }
+        }
+      }
+    },
     "Ja": {
       "localizations": {
         "en": {
           "stringUnit": {
             "state": "translated",
             "value": "Yes"
+          }
+        }
+      }
+    },
+    "Jetzt aktualisieren": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Update now"
           }
         }
       }
@@ -1117,6 +1237,26 @@
           "stringUnit": {
             "state": "translated",
             "value": "No"
+          }
+        }
+      }
+    },
+    "Neu und geprüft": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "New and tested"
+          }
+        }
+      }
+    },
+    "Neue geprüfte Versionen und das Update des Spark.": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "New tested versions and the Spark’s update."
           }
         }
       }
@@ -1411,12 +1551,42 @@
         }
       }
     },
+    "Spark startet neu …": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Spark is restarting …"
+          }
+        }
+      }
+    },
     "Spark zuhören": {
       "localizations": {
         "en": {
           "stringUnit": {
             "state": "translated",
             "value": "Talk to Spark"
+          }
+        }
+      }
+    },
+    "Spark-Update starten": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Start the Spark update"
+          }
+        }
+      }
+    },
+    "Spark-Version": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Spark version"
           }
         }
       }
@@ -1551,6 +1721,36 @@
         }
       }
     },
+    "Update auf %@ gestartet …": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Update to %@ started …"
+          }
+        }
+      }
+    },
+    "Update läuft": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Update running"
+          }
+        }
+      }
+    },
+    "Update starten": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Start update"
+          }
+        }
+      }
+    },
     "Verlauf": {
       "localizations": {
         "en": {
@@ -1657,6 +1857,16 @@
           "stringUnit": {
             "state": "translated",
             "value": "What would you like to know?"
+          }
+        }
+      }
+    },
+    "Was sich ändert": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "What changes"
           }
         }
       }

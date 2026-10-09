@@ -58,6 +58,25 @@ struct Allowed {
     var carHa = false
     var docs = false
     var ios = false
+    /// Spark updates (rights only from the admin): notices and the version page, starting the update
+    var updateNotify = false
+    var updateStart = false
+}
+
+/// What /api/iphone/update says: the installed and the newest tested version, a running update.
+struct UpdateState {
+    var installed = ""
+    var latest: String?
+    var newer = false
+    var changes: [String] = []
+    var error: String?
+    var running = false
+    var percent = 0
+    var step = ""
+    var done = false
+    var ok: Bool?
+    var start = false
+    var wait = 0
 }
 
 /// The Spark's panel, spoken to with this iPhone's own device key. The key may only ask and
@@ -86,6 +105,10 @@ struct SparkAPI {
         switch http.statusCode {
         case 401:
             throw SparkError(message: String(localized: "Der Spark nimmt dieses iPhone nicht an. Im Panel unter Ich → iPhone-App prüfen, ob die App an ist, sonst neu koppeln."))
+        case 428:
+            throw SparkError(message: String(localized: "Der Code stimmt nicht. Bitte den aktuellen Code aus der Authenticator-App nehmen."))
+        case 429 where (detail ?? "").hasPrefix("Das Update"):   // one start from the app per 10 minutes
+            throw SparkError(message: detail ?? "")
         case 429:
             throw SparkError(message: String(localized: "Der Spark ist gerade ausgelastet. Bitte gleich noch einmal."))
         case 503:
@@ -129,7 +152,9 @@ struct SparkAPI {
                        proactive: d["proactive"] as? Bool ?? false, reminders: d["reminders"] as? Bool ?? true,
                        face: d["face"] as? String == "comic" ? "comic" : "robot",
                        push: d["push"] as? Bool ?? false, carHa: d["car_ha"] as? Bool ?? false,
-                       docs: d["docs"] as? Bool ?? false, ios: d["ios"] as? Bool ?? false)
+                       docs: d["docs"] as? Bool ?? false, ios: d["ios"] as? Bool ?? false,
+                       updateNotify: (d["update"] as? [String: Any])?["notify"] as? Bool ?? false,
+                       updateStart: (d["update"] as? [String: Any])?["start"] as? Bool ?? false)
     }
 
     static func reminder(_ d: [String: Any]) -> Reminder? {
@@ -294,6 +319,33 @@ struct SparkAPI {
         let (data, response) = try await URLSession.shared.data(for: request("api/assistant/voices"))
         try Self.check(data, response)
         return Self.object(data)["voices"] as? [String] ?? []
+    }
+
+    /// The Spark's version page (only with the admin's right for this profile).
+    func updateState() async throws -> UpdateState {
+        var r = request("api/iphone/update")
+        r.timeoutInterval = 30
+        let (data, response) = try await URLSession.shared.data(for: r)
+        try Self.check(data, response)
+        let d = Self.object(data)
+        let p = d["progress"] as? [String: Any] ?? [:]
+        return UpdateState(installed: d["installed"] as? String ?? "", latest: d["latest"] as? String,
+                           newer: d["newer"] as? Bool ?? false,
+                           changes: (d["changes"] as? [String] ?? []).prefix(30).map { String($0.prefix(160)) },
+                           error: d["error"] as? String, running: d["running"] as? Bool ?? false,
+                           percent: (p["percent"] as? NSNumber)?.intValue ?? 0, step: p["text"] as? String ?? "",
+                           done: p["done"] as? Bool ?? false, ok: p["ok"] as? Bool,
+                           start: d["start"] as? Bool ?? false, wait: (d["wait"] as? NSNumber)?.intValue ?? 0)
+    }
+
+    /// Starts the update: only with a fresh 6-digit code from the profile's authenticator app.
+    func startUpdate(code: String) async throws -> String {
+        var r = request("api/iphone/update", method: "POST")
+        r.setValue(code, forHTTPHeaderField: "X-Speech-Code")
+        r.timeoutInterval = 60
+        let (data, response) = try await URLSession.shared.data(for: r)
+        try Self.check(data, response)
+        return Self.object(data)["version"] as? String ?? ""
     }
 
     /// This iPhone's push address, so the Spark can reach the closed app through Apple.

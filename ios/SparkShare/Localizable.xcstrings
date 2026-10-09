@@ -61,6 +61,16 @@
         }
       }
     },
+    "Der Code stimmt nicht. Bitte den aktuellen Code aus der Authenticator-App nehmen.": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "The code is not right. Please use the current code from the authenticator app."
+          }
+        }
+      }
+    },
     "Der Spark hat keinen Schlüssel geschickt.": {
       "localizations": {
         "en": {

@@ -76,6 +76,15 @@ In der App unter Einstellungen → **Mein Profil** stellst du dieselben Werte ei
 - **Kurzbefehle:** In der Kurzbefehle-App gibt es „Spark fragen“, „Erinnerung beim Spark“, „Auf die Liste beim Spark“ und „Dokument beim Spark ablegen“. Für die Liste braucht es den Erinnerungen-Schalter, für Dokumente den Dokumente-Schalter.
 - **Notizen:** Apple lässt Apps nicht direkt in die Notizen-App schreiben. Zwei Wege: eine Antwort in der App lange drücken → „Teilen (z. B. als Notiz)“, oder ein Kurzbefehl aus „Spark fragen“ und Apples „Notiz erstellen“ (die Antwort von „Spark fragen“ als Text der Notiz).
 
+## Spark-Update aus der App
+
+Für ausgewählte Profile, standardmäßig aus. Einschalten als Admin: **Einstellungen → Funktionen → Spark-Update über die iPhone-App**, darunter pro Profil:
+
+- **Hinweise:** Liegt eine neue Version mit grünen GitHub-Tests bereit, kommt eine Mitteilung aufs iPhone („V… ist geprüft und bereit (3 Änderungen)“), pro Version einmal und nicht in der Ruhezeit des Profils. Braucht „Push an die iPhone-App“.
+- **Starten:** In der App unter **Einstellungen → Spark-Version** steht „Jetzt aktualisieren“. Bestätigt wird mit Face ID (oder dem iPhone-Code) und einem frischen Code aus der Authenticator-App des Profils. Darum lässt sich „Starten“ nur für Profile mit zweitem Anmeldeschritt anhaken.
+
+Die Seite zeigt die installierte und die neue Version mit der Liste der Änderungen. Das Update läuft wie im Panel: erst eine Sicherung, dann update.sh, das nur grün getestete Stände installiert. Die App zeigt den Fortschritt, während der Spark neu startet „Spark startet neu …“, am Ende die neue Version. Höchstens ein Start aus der App alle 10 Minuten. Die anderen Profile mit Hinweisen erfahren, wer gestartet hat. Zurück zur alten Version geht nur im Panel unter **Zustand → System/Update**.
+
 ## Push-Meldungen bei geschlossener App
 
 Braucht das Apple Developer Program. Einmalig:
@@ -125,6 +134,7 @@ Schritt für Schritt (TestFlight für dich und die Familie, App Store): [iphone-
 - Apple Erinnerungen: nur mit eigenem Schalter, nur nach „Ja“ auf dem iPhone. Aus den Erinnerungen liest die App nichts für den Spark. Kurzbefehle dürfen nur Einträge auf die Listen setzen, die Listen-Einstellungen bleiben im Panel.
 - Teilen: Der geteilte Inhalt ist Text von außen (sperrt Aktionen), höchstens 20 000 Zeichen pro Frage; Webseiten lädt das iPhone selbst, höchstens 3 MB.
 - Wartende Fragen liegen nur auf dem iPhone und werden beim Entkoppeln gelöscht.
+- Spark-Update: Rechte vergibt nur der Admin (mit seinem Code, wenn der zweite Schritt an ist), ein Profil kann sie sich nicht selbst geben. Starten nur mit dem App-Schlüssel, Face ID und einem frischen 6-stelligen Code des Profils (jeder Code einmal, falsche Codes zählen zur Sperre), höchstens einmal in 10 Minuten. Die App kann keine Version wählen; installiert wird nur, was die GitHub-Tests bestanden hat. Jeder Start steht im Sicherheitsprotokoll. Das Sprachmodell hat kein Werkzeug dafür.
 - CarPlay macht nichts lockerer: Im Auto ist Smart Home ohne den eigenen Auto-Schalter gesperrt, auch wenn die App es sonst darf.
 - Koppeln nur aus der eigenen Browser-Anmeldung, mit dem zweiten Anmeldeschritt, wenn das Profil ihn hat. Höchstens 5 iPhones pro Profil.
 
@@ -148,6 +158,9 @@ Schritt für Schritt (TestFlight für dich und die Familie, App Store): [iphone-
 | `GET /api/assistant/voices` | App: Stimmen zur Auswahl |
 | `POST /api/tasks/inbox`, `POST /api/profile/tasks/einkauf|aufgaben` | App: neue Listeneinträge holen, Einträge aus Kurzbefehlen setzen (nur mit `app_ios`) |
 | `POST /api/iphone/doc` | App: Text eines Dokuments in „Meine Dokumente“ (nur mit `app_docs`) |
+| `GET /api/iphone/update` | App: installierte und neue geprüfte Version, Änderungen, Fortschritt (nur mit Recht vom Admin) |
+| `POST /api/iphone/update` | App: Update starten, Header `X-Speech-Code` mit frischem Code (nur mit Recht „Starten“) |
+| `GET /api/admin/iphone-update`, `PUT /api/admin/iphone-update/{id}` | Admin: wer Hinweise bekommt und wer starten darf |
 | `GET/PUT/DELETE /api/admin/apns` | Admin: Apple-Schlüssel (PUT und DELETE mit zweitem Schritt) |
 
 Jeder Push, der `ios/` ändert, baut die App auf GitHub für den Simulator (`.github/workflows/ios.yml`), damit Fehler dort auffallen und nicht erst in Xcode.

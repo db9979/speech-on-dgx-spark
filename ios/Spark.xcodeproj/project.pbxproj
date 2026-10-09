@@ -425,6 +425,7 @@
 				GENERATE_INFOPLIST_FILE = YES;
 				INFOPLIST_FILE = Info.plist;
 				INFOPLIST_KEY_CFBundleDisplayName = Spark;
+				INFOPLIST_KEY_NSFaceIDUsageDescription = "Damit nur du das Update des Spark starten kannst.";
 				INFOPLIST_KEY_NSCameraUsageDescription = "Damit du ein Foto von einem Brief oder Zettel machen kannst. Den Text liest das iPhone selbst, an den Spark geht nur der Text.";
 				INFOPLIST_KEY_NSRemindersFullAccessUsageDescription = "Damit Erinnerungen und die Einkaufsliste des Spark nach deinem „Ja“ in der Erinnerungen-App stehen. Gelesen wird dort nichts für den Spark.";
 				INFOPLIST_KEY_NSContactsUsageDescription = "Damit „Ruf … an“ die Nummer findet. Kontakte bleiben auf dem iPhone und gehen nicht an den Spark.";
@@ -458,6 +459,7 @@
 				GENERATE_INFOPLIST_FILE = YES;
 				INFOPLIST_FILE = Info.plist;
 				INFOPLIST_KEY_CFBundleDisplayName = Spark;
+				INFOPLIST_KEY_NSFaceIDUsageDescription = "Damit nur du das Update des Spark starten kannst.";
 				INFOPLIST_KEY_NSCameraUsageDescription = "Damit du ein Foto von einem Brief oder Zettel machen kannst. Den Text liest das iPhone selbst, an den Spark geht nur der Text.";
 				INFOPLIST_KEY_NSRemindersFullAccessUsageDescription = "Damit Erinnerungen und die Einkaufsliste des Spark nach deinem „Ja“ in der Erinnerungen-App stehen. Gelesen wird dort nichts für den Spark.";
 				INFOPLIST_KEY_NSContactsUsageDescription = "Damit „Ruf … an“ die Nummer findet. Kontakte bleiben auf dem iPhone und gehen nicht an den Spark.";

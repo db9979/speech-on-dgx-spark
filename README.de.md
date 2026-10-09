@@ -31,6 +31,7 @@ Alle Optionen ohne Rückfragen (`--mode api --asr 1.7b --tts 0.6b --yes` …) st
 
 <!-- New version: add one line at the top here and in CHANGELOG.md, drop the oldest line here (keep 10). Details go to docs/de and docs/en, not into this README. -->
 
+- **V01.0.177** iPhone-App: Spark-Update aus der App (aus, Rechte nur vom Admin): Hinweis bei neuer geprüfter Version, Start mit Face ID und MFA-Code
 - **V01.0.176** Erinnerungen klingeln nur auf einem Gerät, nicht auf jedem Gerät des Profils noch einmal
 - **V01.0.175** Agent-Funktionen: Aufträge im Hintergrund, geplante Aufträge, Abläufe und Dienste per MCP, pro Profil freigeschaltet
 - **V01.0.174** iPhone-App: App-Store-Bildschirmfotos zusätzlich in 6,3" (1206 × 2622)
@@ -40,7 +41,6 @@ Alle Optionen ohne Rückfragen (`--mode api --asr 1.7b --tts 0.6b --yes` …) st
 - **V01.0.170** iPhone-App: Kurzbefehl-Beschreibung ohne „iPhone“ (Apple-Fehler ITMS-90626), Store-Name „Spark Assistent DB“
 - **V01.0.169** iPhone-App: App-Store-Texte (de/en) per GitHub-Knopf „App Store texts“ in App Store Connect eintragen
 - **V01.0.168** iPhone-App: Datenschutzerklärung für den App Store (de/en)
-- **V01.0.167** iPhone-App: baut mit dem neuen Xcode (iOS 26), Bluetooth-Option für Headsets angepasst
 
 Alle Versionen: [CHANGELOG.md](CHANGELOG.md)
 

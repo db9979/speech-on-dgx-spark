@@ -21,6 +21,7 @@ import urllib.parse
 
 from fastapi import APIRouter, Depends, HTTPException, Request
 
+import appupdate
 import guard
 import profiles
 from account import browser_profile
@@ -210,7 +211,9 @@ def app_hello(prof=Depends(own_profile)):
             # documents from the app into "Meine Dokumente"
             "docs": docs_on(prof["id"]),
             # Apple Reminders: Spark reminders and list entries may be written into the iPhone's Reminders
-            "ios": bool(s.get("app_ios"))}
+            "ios": bool(s.get("app_ios")),
+            # Spark updates (appupdate.py): the version page and the start button, rights set by the admin
+            "update": appupdate.for_app(prof["id"])}
 
 
 DOC_BODY = 3 * 1024 * 1024     # the text of one document as JSON (the iPhone reads PDFs and scans itself)

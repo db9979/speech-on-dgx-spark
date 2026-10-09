@@ -75,6 +75,15 @@ In the app under Settings → **My profile** you set the same values as in the p
 - **Shortcuts:** The Shortcuts app gets "Ask Spark", "Reminder at the Spark", "Add to a Spark list" and "Store a document at the Spark". Lists need the reminders switch, documents the documents switch.
 - **Notes:** Apple does not let apps write into Notes directly. Two ways: long-press an answer in the app → "Share (e.g. as a note)", or a shortcut of "Ask Spark" plus Apple's "Create Note".
 
+## Spark update from the app
+
+For chosen profiles, off by default. The admin switches on **Settings → Features → Spark update from the iPhone app** and ticks per profile:
+
+- **Notices:** when a new version with green GitHub tests is ready, a notification arrives on the iPhone, once per version and not during the profile's quiet time. Needs "Push to the iPhone app".
+- **Start:** the app shows "Update now" under **Settings → Spark version**, confirmed with Face ID (or the iPhone passcode) and a fresh code from the profile's authenticator app, so "Start" can only be ticked for profiles with the second login step.
+
+The page shows the installed and the new version with its changes. The update runs as in the panel: a backup, then update.sh, which installs only versions with green tests. The app follows the progress and the restart. At most one start from the app every 10 minutes; the other profiles with notices hear who started it. Going back to the old version stays in the panel (Status → System/Update).
+
 ## Push notifications with the app closed
 
 Needs the Apple Developer Program. Once:
@@ -115,3 +124,4 @@ Step by step (TestFlight, App Store): [iphone-publishing.md](iphone-publishing.m
 - Pairing only from the profile's own browser login, with the second login step when the profile has it. At most 5 iPhones per profile.
 
 Every push that changes `ios/` builds the app on GitHub for the simulator (`.github/workflows/ios.yml`).
+- Spark update: only the admin gives the rights; starting needs the app's key, Face ID and a fresh 6-digit code of the profile (each code once), at most once in 10 minutes. The app cannot pick a version; only versions with passed GitHub tests are installed. Every start is in the security log, and the language model has no tool for it.

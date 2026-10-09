@@ -31,6 +31,7 @@ All options for running without questions (`--mode api --asr 1.7b --tts 0.6b --y
 
 <!-- New version: add one line at the top here and in CHANGELOG.md, drop the oldest line here (keep 10). Details go to docs/de and docs/en, not into this README. -->
 
+- **V01.0.177** iPhone app: Spark update from the app (off, rights only from the admin): notice when a new tested version is ready, start with Face ID and an MFA code
 - **V01.0.176** Reminders ring on one device only, not again on every device of the profile
 - **V01.0.175** Agent functions: background jobs, scheduled jobs, routines and services over MCP, allowed per profile
 - **V01.0.174** iPhone app: App Store screenshots also in 6.3" (1206 × 2622)
@@ -40,7 +41,6 @@ All options for running without questions (`--mode api --asr 1.7b --tts 0.6b --y
 - **V01.0.170** iPhone app: Shortcut description without "iPhone" (Apple error ITMS-90626), store name "Spark Assistent DB"
 - **V01.0.169** iPhone app: App Store texts (de/en) written to App Store Connect by the GitHub workflow "App Store texts"
 - **V01.0.168** iPhone app: privacy policy for the App Store (de/en)
-- **V01.0.167** iPhone app: builds with the new Xcode (iOS 26), Bluetooth headset option adjusted
 
 All versions: [CHANGELOG.md](CHANGELOG.md)
 
