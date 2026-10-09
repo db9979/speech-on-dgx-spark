@@ -31,6 +31,7 @@ Alle Optionen ohne Rückfragen (`--mode api --asr 1.7b --tts 0.6b --yes` …) st
 
 <!-- New version: add one line at the top here and in CHANGELOG.md, drop the oldest line here (keep 10). Details go to docs/de and docs/en, not into this README. -->
 
+- **V01.0.198** Panel-Fehler aus .197 behoben (Seiten luden nicht, „reading 'json'“)
 - **V01.0.197** Im Admin-Menü eingeschaltete Funktionen erscheinen nach dem Speichern sofort (Seite lädt selbst neu), API-Antworten werden nie zwischengespeichert; Selbsttest gegen Skript-/CSS-Links ohne Version
 - **V01.0.196** Nachrichten: Schreiben geht auch nach einer Web-/Mail-Antwort, sonst nennt der Assistent den echten Grund
 - **V01.0.195** iPhone-App: Nachrichten an andere Profile (Liste, Schreiben, Antworten direkt aus der Mitteilung)
@@ -40,7 +41,6 @@ Alle Optionen ohne Rückfragen (`--mode api --asr 1.7b --tts 0.6b --yes` …) st
 - **V01.0.191** iPhone-App: Fotos gehen als Bild an den Spark, wenn „Fotos aus der App ansehen lassen“ an ist; sonst wie bisher Texterkennung
 - **V01.0.190** Bilder erkennen (aus): Foto im Assistenten, in der iPhone-App oder über Telegram anhängen, das Sprachmodell sieht es selbst; Antwort ohne Werkzeuge, Bild nur im Arbeitsspeicher
 - **V01.0.189** Sicherung enthält jetzt auch Admin-MFA, iPhone-/Browser-Push, Telegram-Bot, ESP32, Agent-Dienste und eigene Testfragen; neue Umzugs-Sicherung mit Passwort
-- **V01.0.188** iPhone-App: Comic-Gesicht mit kurzem, buschigem Schnurrbart wie im Panel
 
 Alle Versionen: [CHANGELOG.md](CHANGELOG.md)
 

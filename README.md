@@ -31,6 +31,7 @@ All options for running without questions (`--mode api --asr 1.7b --tts 0.6b --y
 
 <!-- New version: add one line at the top here and in CHANGELOG.md, drop the oldest line here (keep 10). Details go to docs/de and docs/en, not into this README. -->
 
+- **V01.0.198** Fixed panel error from .197 (pages did not load, "reading 'json'")
 - **V01.0.197** Functions switched on in the admin menu show right after saving (the page reloads itself), API answers are never cached; self-test against script/CSS links without a version
 - **V01.0.196** Messages: asking to write works after a web/mail answer too, otherwise the assistant names the real reason
 - **V01.0.195** iPhone app: messages to other profiles (list, write, reply right from the notification)
@@ -40,7 +41,6 @@ All options for running without questions (`--mode api --asr 1.7b --tts 0.6b --y
 - **V01.0.191** iPhone app: photos go to the Spark as pictures with "Let the model look at photos from the app" on; otherwise text recognition as before
 - **V01.0.190** Picture recognition (off): attach a photo in the assistant, the iPhone app or over Telegram and the language model looks at it; answer without tools, picture kept in memory only
 - **V01.0.189** Backups now also hold admin MFA, iPhone/browser push, Telegram bot, ESP32, agent services and own test questions; new password-protected move backup
-- **V01.0.188** iPhone app: comic face with the short, bushy mustache like the panel
 
 All versions: [CHANGELOG.md](CHANGELOG.md)
 
