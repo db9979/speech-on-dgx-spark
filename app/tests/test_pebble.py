@@ -120,6 +120,32 @@ class Pebble(unittest.TestCase):
         finally:
             watch.JOBS.pop(job.id, None)
 
+    def test_qr_leads_to_the_app_file(self):
+        a = profile("Pina")
+        r = a.get("/api/profile/pebble/qr", params={"base": BASE})
+        self.assertEqual(r.status_code, 200, r.text)
+        self.assertEqual(r.json()["url"], BASE + "/pebble/speech-spark.pbw")
+        self.assertIn("<svg", r.json()["qr"])
+        for bad in ("javascript:alert(1)", "http://tars/x", "http://a\"><b"):
+            self.assertEqual(a.get("/api/profile/pebble/qr", params={"base": bad}).status_code, 400, bad)
+        helpers.set_config(pebble=False)
+        self.assertEqual(a.get("/api/profile/pebble/qr", params={"base": BASE}).status_code, 403)
+
+    def test_served_app_and_its_version_note(self):
+        import zipfile
+        with zipfile.ZipFile(pebblewatch.APP_FILE) as z:
+            label = json.loads(z.read("appinfo.json"))["versionLabel"]
+            js = z.read("pebble-js-app.js").decode()
+        # the phone part tells the Spark its version; it must be the one the file says
+        self.assertIn(f"var APP_VERSION = '{label}';", js)
+        self.assertEqual(pebblewatch.app_version(), label)
+        self.assertFalse(pebblewatch.newer_app(label))
+        self.assertTrue(pebblewatch.newer_app("1.0.0"))
+        self.assertFalse(pebblewatch.newer_app("99.0.0"))
+        for odd in (None, "", "1.x", "<b>", 3, "1.2.3.4"):
+            self.assertFalse(pebblewatch.newer_app(odd), odd)
+        self.assertEqual(TestClient(panel.app).get("/pebble/speech-spark.pbw").status_code, 200)
+
 
 if __name__ == "__main__":
     unittest.main()

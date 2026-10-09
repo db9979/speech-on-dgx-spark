@@ -1670,7 +1670,10 @@ async def watch_ask(request: Request):
     watch.JOBS[job.id] = job
     face = load_config().get("chat", {}).get("face")
     # the face the admin picked for everybody, so the watch shows the same one (fixed names only)
-    return {"id": job.id, "format": "ima-adpcm-8k", "face": face if face in FACES else "robot"}
+    import pebblewatch
+    return {"id": job.id, "format": "ima-adpcm-8k", "face": face if face in FACES else "robot",
+            # the panel serves a newer watch app than the one asking: the phone shows a short note
+            "app_new": pebblewatch.newer_app(body.get("app"))}
 
 
 # "Hey Siri, frag Spark": an iPhone shortcut posts the dictated question with the profile's device

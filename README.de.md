@@ -31,6 +31,7 @@ Alle Optionen ohne Rückfragen (`--mode api --asr 1.7b --tts 0.6b --yes` …) st
 
 <!-- New version: add one line at the top here and in CHANGELOG.md, drop the oldest line here (keep 10). Details go to docs/de and docs/en, not into this README. -->
 
+- **V01.0.234** Pebble einfacher installieren: Ich → Pebble-Uhr zeigt einen QR-Code zur App-Datei und die drei Schritte (App auf die Uhr, Uhr verbunden?, Koppeln); gibt es auf dem Spark eine neuere Uhr-App, steht höchstens einmal am Tag „Neue Uhr-App“ unter einer Antwort (Uhr-App 1.4.0)
 - **V01.0.233** iPhone-App: erste Antwort nach dem Start wieder mit Ton (Wiedergabe startet nach dem Einschalten der Echounterdrückung neu)
 - **V01.0.232** Ich → Dokumente zeigt den Fortschritt pro Dokument: „Seite 3 von 12 gelesen“ mit Balken und Grund (liest gerade Seite …, wartet auf eine ruhige Minute, Tagesgrenze, Schalter aus), danach „Bedeutung 40 von 120“; die Liste aktualisiert sich alle 10 s, solange etwas läuft; iPhone-App zeigt „Seite x von y gelesen“
 - **V01.0.231** „Vorrang prüfen“ misst den Fall mit Vorfahrt wie ein echtes Gespräch (erst Erkennung, dann Sprachausgabe)
@@ -40,7 +41,6 @@ Alle Optionen ohne Rückfragen (`--mode api --asr 1.7b --tts 0.6b --yes` …) st
 - **V01.0.227** iPhone-App: „Meine Dokumente“ ansehen (PDF und Bilder in Apples Vorschau, sonst der gespeicherte Text)
 - **V01.0.226** Fremde Stimme bekam am Lautsprecher die Mails des Inhabers: Persönliches (Mail, Termine, Erinnerungen, Gedächtnis, Dokumente, Smart Home …) gibt es am Lautsprecher nur noch für die sicher erkannte Stimme des Inhabers, sonst Gastrechte mit kurzem Hinweis (feste Regel, ohne Schalter); Logs → Lautsprecher zeigt jede abgewiesene Frage gelb mit Grund
 - **V01.0.225** Sprache hat immer Vorrang: Hintergrundarbeit wartet, solange gesprochen wird, und ihre laufende Anfrage ans Sprachmodell wird abgebrochen und später wiederholt; ASR und TTS bekommen mehr CPU und Platte; Zustand → Prüfen → „Vorrang prüfen“ misst es (feste Regel, ohne Schalter)
-- **V01.0.224** Wissen aus Uploads: Dokumente pro Profil in einer SQLite-Datei (alte werden übernommen, Sicherung konsistent), mehr Dateiarten (Excel, PowerPoint, OpenDocument, .eml), Dokumente ansehen (Text, Bilder und PDFs im Browser), pro Dokument an/aus, „Suche ausprobieren“, Quellen mit Seite anklickbar; neu und je aus (Admin + Profil): Bilder und Scans liest das Sprachmodell in Gesprächspausen ab (auch „Bild in Meine Dokumente“ im Chat, /merken in Telegram), Bedeutungssuche mit kleinem CPU-Modell in eigenem Prozess, Originale aufbewahren mit Speichergrenze; nach Dokumenten keine Websuche in derselben Antwort
 
 Alle Versionen: [CHANGELOG.md](CHANGELOG.md)
 

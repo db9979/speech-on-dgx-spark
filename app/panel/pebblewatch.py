@@ -11,10 +11,13 @@ Keys made by hand in the admin's device list keep working as before.
 """
 import hashlib
 import hmac
+import json
+import os
 import re
 import secrets
 import threading
 import time
+import zipfile
 
 from fastapi import APIRouter, Depends, HTTPException, Request
 
@@ -86,6 +89,38 @@ def take_code(code, now=None):
         return _pending.pop(hit)["uid"] if hit else None
 
 
+APP_FILE = os.path.join(os.path.dirname(os.path.dirname(os.path.abspath(__file__))), "pebble", "speech-spark.pbw")
+_app_cache = {}
+
+
+def app_version():
+    """versionLabel of the watch app the panel serves ("1.4.0"), "" when it is missing."""
+    try:
+        mtime = os.path.getmtime(APP_FILE)
+    except OSError:
+        return ""
+    if _app_cache.get("mtime") != mtime:
+        try:
+            with zipfile.ZipFile(APP_FILE) as z:
+                label = str(json.loads(z.read("appinfo.json")).get("versionLabel", ""))
+        except (OSError, KeyError, ValueError, zipfile.BadZipFile):
+            label = ""
+        _app_cache.update(mtime=mtime, label=label if re.fullmatch(r"\d{1,3}(\.\d{1,3}){0,2}", label) else "")
+    return _app_cache["label"]
+
+
+def _parts(v):
+    return tuple(int(x) for x in v.split("."))
+
+
+def newer_app(have):
+    """True when the panel serves a newer watch app than the one asking (the phone sends its version)."""
+    served = app_version()
+    if not served or not isinstance(have, str) or not re.fullmatch(r"\d{1,3}(\.\d{1,3}){0,2}", have):
+        return False
+    return _parts(served) > _parts(have)
+
+
 def watches(uid):
     return [x for x in profiles.own_devices(uid) if x.get("watch")]
 
@@ -107,7 +142,6 @@ async def _json(request):
         data += chunk
         if len(data) > MAX_BODY:
             raise HTTPException(413, "too large")
-    import json
     try:
         d = json.loads(bytes(data) or b"{}")
     except ValueError:
@@ -125,7 +159,19 @@ def _on(prof=Depends(browser_profile)):
 @router.get("/api/profile/pebble", dependencies=[Depends(assistant)])
 def profile_get(prof=Depends(own_profile)):
     return {"enabled": admin_on(), "on": profile_on(prof["id"]), "watches": watches(prof["id"]),
-            "minutes": CODE_SECONDS // 60}
+            "minutes": CODE_SECONDS // 60, "app": app_version()}
+
+
+@router.get("/api/profile/pebble/qr", dependencies=[Depends(assistant)])
+def profile_qr(base: str, prof=Depends(_on)):
+    """QR code of the app file's address, to scan with the phone that is paired with the watch."""
+    url = _base({"base": base}) + "/pebble/speech-spark.pbw"
+    try:
+        import mfa
+        svg = mfa._qr_svg(url)
+    except Exception:
+        svg = ""
+    return {"url": url, "qr": svg}
 
 
 @router.post("/api/profile/pebble/pair", dependencies=[Depends(assistant)])

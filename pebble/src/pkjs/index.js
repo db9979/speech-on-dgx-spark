@@ -10,6 +10,7 @@ var keys = require('message_keys');
 var CHUNK_MAX = 3800;  // audio bytes per AppMessage (fewer Bluetooth round trips)
 var CHUNK_OLD = 1500;  // for watch apps that do not tell their inbox size
 var TEXT_CHUNK = 400;  // answer characters per AppMessage
+var APP_VERSION = '1.4.0';  // same as package.json; the Spark says when it serves a newer one
 var MAX_TURNS = 6;     // earlier question/answer pairs sent along as context
 var TRIES = 10;        // attempts per message before the answer is given up
 var KEEPALIVE = 10000; // ms: tell the watch the answer is still coming
@@ -167,11 +168,12 @@ function ask(question, p) {
     hist.push({role: 'user', content: x.q});
     hist.push({role: 'assistant', content: x.a});
   });
-  request('POST', '/api/watch/ask', {text: question, history: hist, speak: j.speak}, function (err, data) {
+  request('POST', '/api/watch/ask', {text: question, history: hist, speak: j.speak, app: APP_VERSION}, function (err, data) {
     if (j.cancelled) return;
     if (err) return fail(j, err, 'ask');
     j.id = data.id;
     setFace(data.face);
+    j.appNew = !!data.app_new;
     poll(j);
   });
 }
@@ -224,6 +226,12 @@ function poll(j) {
       j.pollDone = true;
       history.push({q: j.question, a: j.text});
       if (history.length > MAX_TURNS) history.shift();
+      // a newer watch app waits in the panel: say so under the answer, at most once a day
+      var today = new Date().toDateString();
+      if (j.appNew && localStorage.getItem('appNote') !== today) {
+        localStorage.setItem('appNote', today);
+        sendText(j, '\n\nNeue Uhr-App: im Panel unter Ich > Pebble-Uhr installieren.');
+      }
       var done = {};
       // 2: speech follows (the watch then waits for AUDIO_END)
       done[keys.DONE] = j.speak ? 2 : 1;
