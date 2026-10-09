@@ -76,6 +76,15 @@ async def prepare(request):
             carry = None
             print("chat: answer from mail before; this question", "wants the web" if wants_web else "is not about it",
                   "- that answer is left out, search offered", flush=True)
+    # The person asks to send a message to someone ("Schreib Anna, dass ..."): the answer before, made
+    # from outside text, would lock that. It is left out instead, so no word of it can get into the
+    # message, and the panel reads the message back before the "Ja" (messages.py).
+    if carry and messages[-1]["role"] == "user":
+        import messages as inbox   # (messages is the conversation here)
+        if inbox.wants_send(messages[-1]["content"]):
+            carry = None
+            print("chat: answer from outside text before; this message asks to write to someone - that answer "
+                  "is left out, messages offered", flush=True)
     messages = [{"role": m["role"], "content": chat.DROPPED if m.get("mark") and i != (marked[-1] if carry else -1)
                  else m["content"]} for i, m in enumerate(messages)]
     system = ccfg.get("system_prompt") or ""

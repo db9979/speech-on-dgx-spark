@@ -31,6 +31,7 @@ All options for running without questions (`--mode api --asr 1.7b --tts 0.6b --y
 
 <!-- New version: add one line at the top here and in CHANGELOG.md, drop the oldest line here (keep 10). Details go to docs/de and docs/en, not into this README. -->
 
+- **V01.0.196** Messages: asking to write works after a web/mail answer too, otherwise the assistant names the real reason
 - **V01.0.195** iPhone app: messages to other profiles (list, write, reply right from the notification)
 - **V01.0.194** Web search after an answer from mail is locked only for follow-up questions about that mail; any other question leaves the mail answer out and searches
 - **V01.0.193** Voice choice for profiles: the list no longer stays empty ("Default" only) while the speech output loads; panel and iPhone app
@@ -40,7 +41,6 @@ All options for running without questions (`--mode api --asr 1.7b --tts 0.6b --y
 - **V01.0.189** Backups now also hold admin MFA, iPhone/browser push, Telegram bot, ESP32, agent services and own test questions; new password-protected move backup
 - **V01.0.188** iPhone app: comic face with the short, bushy mustache like the panel
 - **V01.0.187** Comic face with a short, bushy mustache only above the upper lip instead of tips hanging down to the chin; the mouth shows better while speaking
-- **V01.0.186** TestFlight starts by itself after green iOS commits on main (at most once an hour, can be turned off)
 
 All versions: [CHANGELOG.md](CHANGELOG.md)
 

@@ -2,6 +2,7 @@
 
 Every version in one line, newest first (taken from the commit messages, so some lines are German, some English). Older entries have no version number.
 
+- **V01.0.196** · 2026-10-09 · Nachrichten: Bitte zu schreiben geht auch nach einer Antwort aus Web/Mail; fehlt das Werkzeug, nennt der Assistent den echten Grund
 - **V01.0.195** · 2026-10-09 · iPhone-App: Nachrichten an andere Profile (Liste, Schreiben, Antworten direkt aus der Mitteilung)
 - **V01.0.194** · 2026-10-09 · Websuche nach einer Mail-Antwort: gesperrt nur noch bei Nachfragen zur Mail; jede andere Frage lässt die Mail-Antwort weg und sucht
 - **V01.0.193** · 2026-10-09 · Stimmenwahl für Profile: die Liste bleibt nicht mehr leer („nur Standard“), wenn die Sprachausgabe gerade lädt; Panel und iPhone-App

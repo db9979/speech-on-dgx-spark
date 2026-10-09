@@ -694,12 +694,45 @@ WORDS = re.compile(r"(?i)nachricht|schreib|ausricht|richte|bescheid|sag\w*\s+(al
                    r"antwort|durchsag|message|tell\b|announce|mailbox|postfach")
 
 
+# The person asks to send a message (own words, not a reply to one just read; see chat_turn: an
+# earlier answer from outside text is then left out instead of locking the sending)
+SEND_ASK = re.compile(r"(?i)\b(?:schick|send|schreib)\w*\b.{0,60}\bnachricht|\bnachricht\w*\s+(?:an|für)\b|"
+                      r"^\s*(?:bitte\s+)?(?:schreib|sag|richte|gib)\w*\s+(?!mir\b|uns\b)\w+.{0,200}\b(?:dass|bescheid|aus)\b|"
+                      r"^\s*(?:bitte\s+)?sag\w*\s+(?:allen|alle)\b|\bdurchsage\b")
+
+
+def wants_send(text):
+    return bool(admin_on() and SEND_ASK.search(text or "") and not REPLY.match(text or ""))
+
+
+def why_not(ctx):
+    """Why the message tools are not offered to this request (said to the model and the journal), or ""."""
+    who = ctx.get("who")
+    if not admin_on():
+        return "Nachrichten an andere sind ausgeschaltet (Admin: Einstellungen → Funktionen → Nachrichten an andere)."
+    if not who:
+        return "Nachrichten gibt es nur für angemeldete Profile, nicht für Gäste."
+    if not ctx.get("own"):
+        return "An diesem Gerät ist ein anderes Profil angemeldet; Nachrichten gehen nur am eigenen Gerät."
+    if not ctx.get("private", True):
+        return "Über Telegram gehen Nachrichten nur, wenn dein Profil dort persönliche Daten erlaubt (Ich → Telegram)."
+    if not profiles.settings(who["id"]).get("msg_on"):
+        return "Für dein Profil sind Nachrichten aus (Ich → Nachrichten → „Nachrichten für mich nutzen“)."
+    return ""
+
+
 def offer(ctx):
     who = ctx.get("who")
-    if not who or not ctx.get("own") or not ctx.get("private", True) or not usable(who["id"]):
+    text = ctx.get("text") or ""
+    why = why_not(ctx)
+    if why:
+        if admin_on() and WORDS.search(text):
+            # asked for it but not possible: the model says the real reason instead of guessing one
+            print("messages: tools NOT offered:", why, flush=True)
+            return {"tools": [], "hint": "Nachrichten an andere sind gerade nicht möglich: " + why
+                    + " Sagt der Nutzer, er will jemandem schreiben, nenn genau diesen Grund."}
         return None   # guests, a voice recognized at someone else's device, Telegram without personal data
     uid = who["id"]
-    text = ctx.get("text") or ""
     names = [_norm(x["name"]).split(" ")[0] for x in recipients(uid)]
     named = any(re.search(r"(?i)\b" + re.escape(n) + r"s?\b", text) for n in names if n)
     speakers = speakers_for(uid)

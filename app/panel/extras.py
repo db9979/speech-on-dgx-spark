@@ -31,7 +31,7 @@ def offer(ctx):
             o = None
         if not o:
             continue
-        res["tools"] += o["tools"]
+        res["tools"] += o.get("tools", [])
         res["hints"].append(o["hint"])
         res["outside"] |= o.get("outside", set())
         res["mail"] |= o.get("mail", set())
