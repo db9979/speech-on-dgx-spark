@@ -61,6 +61,16 @@
         }
       }
     },
+    "%lld erreichbar": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "%lld reachable"
+          }
+        }
+      }
+    },
     "1 Stunde": {
       "localizations": {
         "en": {
@@ -461,12 +471,32 @@
         }
       }
     },
+    "Den Namen finde ich nicht.": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "I cannot find that name."
+          }
+        }
+      }
+    },
     "Den Namen finde ich nicht. Möglich: %@.": {
       "localizations": {
         "en": {
           "stringUnit": {
             "state": "translated",
             "value": "I cannot find that name. Possible: %@."
+          }
+        }
+      }
+    },
+    "Den Namen finde ich nicht. Ähnlich: %@.": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "I cannot find that name. Similar: %@."
           }
         }
       }
@@ -801,6 +831,16 @@
         }
       }
     },
+    "Empfänger wählen": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Pick a recipient"
+          }
+        }
+      }
+    },
     "Entkoppeln": {
       "localizations": {
         "en": {
@@ -897,6 +937,26 @@
           "stringUnit": {
             "state": "translated",
             "value": "Ten questions are already waiting. This one is not saved."
+          }
+        }
+      }
+    },
+    "Favorit": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Favourite"
+          }
+        }
+      }
+    },
+    "Favoriten": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Favourites"
           }
         }
       }
@@ -1561,6 +1621,16 @@
         }
       }
     },
+    "Name oder Rufname": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Name or call name"
+          }
+        }
+      }
+    },
     "Nein": {
       "localizations": {
         "en": {
@@ -1601,6 +1671,26 @@
         }
       }
     },
+    "Nicht erreichbar": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Not reachable"
+          }
+        }
+      }
+    },
+    "Nicht gesendet: nicht klar, wen du meinst.": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Not sent: it was not clear whom you meant."
+          }
+        }
+      }
+    },
     "Nichts gehört, Mikrofon aus. Tippen zum Sprechen.": {
       "localizations": {
         "en": {
@@ -1617,6 +1707,16 @@
           "stringUnit": {
             "state": "translated",
             "value": "Did not understand anything."
+          }
+        }
+      }
+    },
+    "Niemand passt.": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Nobody matches."
           }
         }
       }
@@ -2311,6 +2411,16 @@
         }
       }
     },
+    "Wen meinst du?": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Whom do you mean?"
+          }
+        }
+      }
+    },
     "Wetter": {
       "localizations": {
         "en": {
@@ -2367,6 +2477,26 @@
           "stringUnit": {
             "state": "translated",
             "value": "Wishes for the tone"
+          }
+        }
+      }
+    },
+    "Zu viele passen (%lld). Sag den ganzen Namen oder den Rufnamen.": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Too many match (%lld). Say the full name or the call name."
+          }
+        }
+      }
+    },
+    "Zuletzt": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Recent"
           }
         }
       }

@@ -2,6 +2,7 @@
 
 Every version in one line, newest first (taken from the commit messages, so some lines are German, some English). Older entries have no version number.
 
+- **V01.0.206** · 2026-10-09 · Viele Benutzer: Profilliste mit Suche, Filter, Seiten und Details, Rufname, Empfänger per Suchfeld mit Zuletzt und Favoriten (Panel und iPhone), Rückfrage bei gleichen Namen (Sprache und Siri); Profil löschen braucht den frischen Code
 - **V01.0.205** · 2026-10-09 · Sprachausgabe robuster: bricht der TTS-Strom ab, wird das Stück noch einmal versucht und der Rest der Antwort weiter gesprochen; Aussetzer stehen als „chat: tts behind“ im Diagnose-Log
 - **V01.0.204** · 2026-10-09 · Antworten ohne Leerzeilen am Anfang und Ende (Reste des Qwen-Denkblocks), Absätze bleiben; Denk-Tags in einem Stück werden richtig entfernt
 - **V01.0.203** · 2026-10-09 · Gezielte Werkzeugwahl im Panel: Regeln als Tabelle, Satz ausprobieren (Gruppe, Grund, Werkzeuge), eigene Wörter für jede Gruppe (Admin, nur hinzufügen)

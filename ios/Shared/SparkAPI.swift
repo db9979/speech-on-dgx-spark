@@ -126,6 +126,10 @@ struct SparkMessage: Identifiable, Equatable {
 struct Recipient: Identifiable, Hashable {
     let id: String
     let name: String
+    /// The Rufname ("Tom", "Papa") others may use for this profile; "" when there is none.
+    var call = ""
+
+    var label: String { call.isEmpty ? name : "\(name) (\(call))" }
 }
 
 /// Is everything on for messages, who can be reached (GET /api/messages/ready, also while off).
@@ -142,6 +146,9 @@ struct MessageBox {
     var items: [SparkMessage] = []
     var to: [Recipient] = []
     var all = false
+    /// "Zuletzt" (newest first) and the ★ favourites: profile ids, set on the Spark.
+    var recent: [String] = []
+    var fav: [String] = []
     var maxText = 500
     var unread = 0
 }
@@ -377,9 +384,12 @@ struct SparkAPI {
         }
         b.to = (d["to"] as? [[String: Any]] ?? []).compactMap { x in
             guard let id = x["id"] as? String else { return nil }
-            return Recipient(id: id, name: x["name"] as? String ?? id)
+            return Recipient(id: id, name: String((x["name"] as? String ?? id).prefix(60)),
+                             call: String((x["call"] as? String ?? "").prefix(60)))
         }
         b.all = d["all"] as? Bool ?? false
+        b.recent = Array((d["recent"] as? [String] ?? []).prefix(10))
+        b.fav = Array((d["fav"] as? [String] ?? []).prefix(40))
         b.maxText = (d["max_text"] as? NSNumber)?.intValue ?? 500
         b.unread = (d["unread"] as? NSNumber)?.intValue ?? 0
         return b
@@ -401,6 +411,16 @@ struct SparkAPI {
         }
         r.why = (d["why"] as? String).map { String($0.prefix(200)) }
         return r
+    }
+
+    /// ★ a profile in the recipient list (at most 20 on the Spark); returns the favourites now.
+    func setFavourite(_ id: String, on: Bool) async throws -> [String] {
+        var r = request("api/messages/fav", method: "PUT")
+        r.setValue("application/json", forHTTPHeaderField: "Content-Type")
+        r.httpBody = try JSONSerialization.data(withJSONObject: ["id": id, "on": on])
+        let (data, response) = try await URLSession.shared.data(for: r)
+        try Self.check(data, response)
+        return Self.object(data)["fav"] as? [String] ?? []
     }
 
     /// to: a profile id or "all"; the Spark checks who may write to whom.

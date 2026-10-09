@@ -31,6 +31,7 @@ Alle Optionen ohne Rückfragen (`--mode api --asr 1.7b --tts 0.6b --yes` …) st
 
 <!-- New version: add one line at the top here and in CHANGELOG.md, drop the oldest line here (keep 10). Details go to docs/de and docs/en, not into this README. -->
 
+- **V01.0.206** Viele Benutzer: Profilliste mit Suche, Filter und Seiten, Rufname, Empfänger per Suchfeld mit Zuletzt und Favoriten, Rückfrage bei gleichen Namen (auch Siri)
 - **V01.0.205** Sprachausgabe robuster: bricht der TTS-Strom ab, wird das Stück noch einmal versucht und der Rest der Antwort weiter gesprochen; Aussetzer stehen als „chat: tts behind“ im Diagnose-Log
 - **V01.0.204** Antworten ohne Leerzeilen am Anfang und Ende (Reste des Qwen-Denkblocks), Absätze bleiben
 - **V01.0.203** Gezielte Werkzeugwahl im Panel: Regeln ansehen, Sätze ausprobieren, eigene Wörter pro Gruppe
@@ -40,7 +41,6 @@ Alle Optionen ohne Rückfragen (`--mode api --asr 1.7b --tts 0.6b --yes` …) st
 - **V01.0.199** Browser-Test: eingeschaltete Funktion und neue Version erscheinen ohne F5 (fängt Fehler wie in .197)
 - **V01.0.198** Panel-Fehler aus .197 behoben (Seiten luden nicht, „reading 'json'“)
 - **V01.0.197** Im Admin-Menü eingeschaltete Funktionen erscheinen nach dem Speichern sofort (Seite lädt selbst neu), API-Antworten werden nie zwischengespeichert; Selbsttest gegen Skript-/CSS-Links ohne Version
-- **V01.0.196** Nachrichten: Schreiben geht auch nach einer Web-/Mail-Antwort, sonst nennt der Assistent den echten Grund
 
 Alle Versionen: [CHANGELOG.md](CHANGELOG.md)
 

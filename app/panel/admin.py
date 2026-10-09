@@ -69,11 +69,14 @@ async def wyoming_suggest():
     return await asyncio.to_thread(wyoming.suggest)
 
 
+def _profile_extra(uid):
+    return {"mfa": mfa.enabled(uid), "msg": bool(profiles.settings(uid).get("msg_on"))}
+
+
 @router.get("/api/admin/profiles", dependencies=[Depends(auth)])
-def admin_profiles():
-    d = profiles.admin_list()
-    for u in d["users"]:
-        u["mfa"] = mfa.enabled(u["id"])
+def admin_profiles(q: str = "", show: str = "", sort: str = "name", page: int = 0, per: int = 0):
+    """One page of the profiles (search, filter, sort; per 0: all of them, for the setup wizard)."""
+    d = profiles.admin_list(q[:40], show, sort, page, per or None, extra=_profile_extra)
     import esp32
     spk = esp32.speaker_ids()
     for x in d["devices"]:
@@ -115,8 +118,41 @@ def admin_reset_mfa(uid: str, request: Request):
     return {"ok": True}
 
 
-@router.delete("/api/admin/profiles/{uid}", dependencies=[Depends(auth)])
+@router.get("/api/admin/profiles/{uid}", dependencies=[Depends(auth)])
+def admin_profile(uid: str):
+    """One profile in detail: its devices, second step, messages, Rufname, last use."""
+    u = next((x for x in profiles.names() if x["id"] == uid), None)
+    if not u:
+        raise HTTPException(404, "no such profile")
+    last = profiles.seen()
+    import esp32
+    spk = esp32.speaker_ids()
+    devs = [dict(x, speaker=x["id"] in spk) for x in profiles.own_devices(uid)]
+    return dict(u, **_profile_extra(uid), last=profiles.last_use(uid, last), devices=devs,
+                facts=len(profiles.memory(uid)))
+
+
+@router.put("/api/admin/profiles/{uid}/call", dependencies=[Depends(auth)])
+async def admin_set_call(uid: str, request: Request):
+    """The Rufname others use in messages ("Thomas M."): unique among every name and Rufname."""
+    raw = await request.body()
+    if len(raw) > 1024:
+        raise HTTPException(413, "too large")
+    try:
+        call = str((json.loads(raw or b"{}") or {}).get("call") or "")
+    except (ValueError, AttributeError):
+        raise HTTPException(400, "invalid JSON")
+    try:
+        return {"call": profiles.set_call(uid, call)}
+    except LookupError:
+        raise HTTPException(404, "no such profile")
+    except ValueError as e:
+        raise HTTPException(409 if "used" in str(e) else 400, str(e))
+
+
+@router.delete("/api/admin/profiles/{uid}", dependencies=[Depends(auth), Depends(admin_code)])
 def admin_delete_profile(uid: str):
+    """Deleting cannot be undone (memory, conversations, devices): a fresh code, like a new PIN."""
     profiles.delete_user(uid)
     return {"ok": True}
 

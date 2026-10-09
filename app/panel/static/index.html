@@ -342,7 +342,7 @@
       <button class="ib" id="convodel" title="Dieses Gespräch löschen"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round"><path d="M4 7h16M9 7V4h6v3M6 7l1 13h10l1-13"/></svg></button></div>
       <div id="chatlog"></div>
       <div id="chatpics" class="pics" hidden></div>
-      <div id="msgcompose" class="msgc" hidden><select id="mcto" aria-label="Empfänger"></select><input id="mctext" maxlength="500" placeholder="Nachricht an andere"><button class="b p" type="button" id="mcsend">Senden</button><button class="b" type="button" id="mcclose" aria-label="Schließen">✕</button><div class="fh" id="mcmsg"></div></div>
+      <div id="msgcompose" class="msgc" hidden><span id="mcpick" class="mpick"></span><input id="mctext" maxlength="500" placeholder="Nachricht an andere"><button class="b p" type="button" id="mcsend">Senden</button><button class="b" type="button" id="mcclose" aria-label="Schließen">✕</button><div class="fh" id="mcmsg"></div></div>
       <div class="composer"><button class="ib attach" id="chatpic" type="button" title="Bild anhängen" hidden><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="5" width="18" height="14" rx="2"/><circle cx="9" cy="10" r="1.8"/><path d="M21 16l-5-5-8 8"/></svg></button><button class="ib attach" id="chatmsg" type="button" title="Nachricht an andere" hidden><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="5" width="18" height="14" rx="2"/><path d="M3 7l9 6 9-6"/></svg></button><input type="file" id="chatpicfile" accept="image/*" multiple hidden><input id="chattext" placeholder="oder hier tippen und Enter drücken"><button class="send" id="chatsend" title="Senden"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"><path d="M12 19V5M5 12l7-7 7 7"/></svg></button></div>
     </div>
   </div>
@@ -398,7 +398,9 @@
   <div class="two">
     <div class="card"><h2>Profile</h2>
       <div class="intro">Jedes Profil hat ein eigenes Gedächtnis und eigene Gespräche. Ein Browser meldet sich im Gespräch-Reiter mit Name und PIN an; was ein Profil weiß, sieht kein anderes und kein Gast.</div>
+      <div class="row" id="pfilter" style="margin-top:10px;flex-wrap:wrap;gap:6px"></div>
       <table style="margin-top:10px"><tbody id="proflist"></tbody></table>
+      <div class="row" id="ppager" style="gap:6px;align-items:center"></div><datalist id="pnames"></datalist>
       <h2>Neues Profil</h2>
       <div class="row"><input id="pname" placeholder="Name" style="flex:1;min-width:120px"><input id="ppin" type="password" placeholder="PIN (mind. 4 Zeichen)" autocomplete="new-password" style="flex:1;min-width:120px"><button class="b p" id="padd">Anlegen</button></div>
       <div id="pmsg" style="margin-top:8px"></div>
@@ -407,7 +409,7 @@
       <div class="intro">Lautsprecher oder eigene Programme bekommen einen Geräteschlüssel und gehören fest zu einem Profil. Sie senden ihn im Header <code>X-Speech-Device</code> an <code>/api/chat</code>.</div>
       <table style="margin-top:10px"><tbody id="devlist"></tbody></table>
       <h2>Neues Gerät</h2>
-      <div class="row"><input id="dname" placeholder="z. B. Lautsprecher Küche" style="flex:1;min-width:140px"><select id="duser" style="width:auto"></select><button class="b p" id="dadd">Anlegen</button></div>
+      <div class="row"><input id="dname" placeholder="z. B. Lautsprecher Küche" style="flex:1;min-width:140px"><input id="duser" list="pnames" maxlength="40" style="flex:1;min-width:120px"><button class="b p" id="dadd">Anlegen</button></div>
       <div id="dmsg" style="margin-top:8px"></div>
     </div>
   </div>

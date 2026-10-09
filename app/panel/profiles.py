@@ -5,7 +5,8 @@ a request comes only from its login cookie or its device key, never from anythin
 
     USERS_DIR/profiles.json   {"users": [...], "devices": [...]}
     USERS_DIR/secret          signs the login cookies
-    USERS_DIR/seen.json       when and from where each device key was last used
+    USERS_DIR/seen.json       when and from where each device key was last used (a profile id: when
+                              its browser login was last used, without the address)
     USERS_DIR/<user id>/memory.json   [{"id", "text", "created"}]
     USERS_DIR/<user id>/settings.json {conversation settings, see SETTINGS}
     USERS_DIR/<user id>/convos.json   [{"id", "title", "updated", "msgs": [{"role", "content"}]}]
@@ -75,6 +76,13 @@ def valid_name(name):
     return isinstance(name, str) and 1 <= len(name.strip()) <= 40 and not re.search(r"[<>\"\\\n]", name)
 
 
+def valid_call(call):
+    """A Rufname goes into other profiles' conversations (spoken back, asked about): only a short name,
+    never a sentence an assistant could take for an instruction."""
+    return isinstance(call, str) and re.fullmatch(r"[\wäöüÄÖÜß.'\- ]{1,30}", call) is not None \
+        and not re.search(r"\d{4}|_", call) and len(call.split()) <= 3
+
+
 def valid_pin(pin):
     return isinstance(pin, str) and re.fullmatch(r"\S{4,64}", pin) is not None
 
@@ -84,20 +92,114 @@ def user_ids():
     return [u["id"] for u in _load()["users"]]
 
 
-def admin_list():
+def names():
+    """[{"id", "name", "call"}] of every profile, from one read of profiles.json."""
+    return [{"id": u["id"], "name": u["name"], "call": u.get("call", "")} for u in _load()["users"]]
+
+
+def last_use(uid, last=None, devs=None):
+    """When the profile was last used: its browser login or one of its device keys (time, or 0)."""
+    last = seen() if last is None else last
+    devs = _load()["devices"] if devs is None else devs
+    ts = [int((last.get(uid) or {}).get("t") or 0)]
+    ts += [int((last.get(x["id"]) or {}).get("t") or 0) for x in devs if x.get("user") == uid]
+    return max(ts)
+
+
+ADMIN_SHOW = ("", "mfa", "nomfa", "msg", "nomsg", "idle", "nodev")
+ADMIN_SORT = ("name", "recent", "new")
+ADMIN_PER = 100      # at most this many profiles per page of the admin list
+IDLE_DAYS = 90
+
+
+def admin_list(q="", show="", sort="name", page=0, per=None, now=None, extra=None):
+    """The admin's list of profiles: searched (name, Rufname or device name), filtered, sorted and one page
+    of it; the devices of the shown profiles plus every device that matches the search. extra(u) adds
+    what other modules know (second login step, messages on) and is asked only for the profiles a filter
+    or the page needs. per None: every profile (the setup wizard)."""
     d = _load()
-    users = [{"id": u["id"], "name": u["name"], "created": u.get("created"), "facts": len(memory(u["id"]))}
-             for u in d["users"]]
     last = seen()
+    now = time.time() if now is None else now
+    want = re.sub(r"\s+", " ", str(q or "")).strip().lower()[:40]
+    show = show if show in ADMIN_SHOW else ""
+    sort = sort if sort in ADMIN_SORT else "name"
+    extra = extra or (lambda u: {})
+    devs = d["devices"]
+    users = []
+    for u in d["users"]:
+        mine = [x for x in devs if x.get("user") == u["id"]]
+        if want and want not in u["name"].lower() and want not in u.get("call", "").lower() \
+                and not any(want in x["name"].lower() for x in mine):
+            continue
+        row = {"id": u["id"], "name": u["name"], "call": u.get("call", ""), "created": u.get("created"),
+               "last": last_use(u["id"], last, devs), "devices": len(mine)}
+        if show == "idle" and row["last"] and now - row["last"] < IDLE_DAYS * 86400:
+            continue
+        if show == "idle" and not row["last"] and now - int(row["created"] or 0) < IDLE_DAYS * 86400:
+            continue
+        if show == "nodev" and mine:
+            continue
+        if show in ("mfa", "nomfa", "msg", "nomsg"):
+            row.update(extra(u["id"]))
+            key = "mfa" if "mfa" in show else "msg"
+            if bool(row.get(key)) != (not show.startswith("no")):
+                continue
+        users.append(row)
+    if sort == "recent":
+        users.sort(key=lambda r: (-r["last"], r["name"].lower()))
+    elif sort == "new":
+        users.sort(key=lambda r: (-int(r["created"] or 0), r["name"].lower()))
+    else:
+        users.sort(key=lambda r: r["name"].lower())
+    total = len(users)
+    if per is not None:
+        per = max(1, min(int(per), ADMIN_PER))
+        page = max(0, min(int(page), max(0, (total - 1) // per)))
+        users = users[page * per:(page + 1) * per]
+    for r in users:
+        r["facts"] = len(memory(r["id"]))
+        r.update(extra(r["id"]))
+    shown = {r["id"] for r in users}
     devices = [dict({k: v[k] for k in ("id", "name", "user", "created") if k in v}, last=last.get(v["id"]),
-                    app=v.get("scope") == "app") for v in d["devices"]]
-    return {"users": users, "devices": devices}
+                    app=v.get("scope") == "app") for v in devs
+               if v.get("user") in shown or (want and want in v["name"].lower())]
+    return {"users": users, "devices": devices, "total": total, "page": page if per is not None else 0,
+            "per": per or total, "all": len(d["users"]), "names": [{"id": u["id"], "name": u["name"]} for u in d["users"]]}
+
+
+def _taken(d, text, uid=None):
+    """True when a name or Rufname of another profile already reads like this text."""
+    t = text.strip().lower()
+    return any(u["id"] != uid and t in (u["name"].lower(), u.get("call", "").lower()) for u in d["users"])
+
+
+def set_call(uid, call):
+    """The Rufname: how others call this profile in messages ("Thomas M.", "Papa"); "" removes it. Unique
+    among every name and Rufname, so a spoken name never fits two profiles."""
+    call = str(call or "").strip()
+    if call and not valid_call(call):
+        raise ValueError("Rufname: up to 30 letters, digits, spaces, dots, hyphens; at most 3 words")
+    with _lock:
+        d = _load()
+        u = next((u for u in d["users"] if u["id"] == uid), None)
+        if not u:
+            raise LookupError("no such profile")
+        if call.lower() == u["name"].lower():
+            call = ""   # the same as the own name: no Rufname needed
+        if call and _taken(d, call, uid):
+            raise ValueError("this name is already used by another profile")
+        if call:
+            u["call"] = call
+        else:
+            u.pop("call", None)
+        _write(_path("profiles.json"), d)
+        return call
 
 
 def add_user(name, pin):
     with _lock:
         d = _load()
-        if any(u["name"].lower() == name.strip().lower() for u in d["users"]):
+        if _taken(d, name):
             raise ValueError("a profile with this name exists")
         u = {"id": "u_" + secrets.token_hex(6), "name": name.strip(), "pin": _pin_hash(pin), "created": int(time.time())}
         d["users"].append(u)
@@ -236,10 +338,12 @@ SEEN_EVERY = 600
 _seen, _seen_written = {}, [0.0]
 
 
-def _note_device(did, request):
+def _note_device(did, request, ip=True):
+    """did: a device id, or a profile id for its browser login (then without the address)."""
     now = time.time()
-    ip = request.client.host if getattr(request, "client", None) else ""
-    _seen[did] = {"t": int(now), "ip": ip}
+    _seen[did] = {"t": int(now), "ip": request.client.host if ip and getattr(request, "client", None) else ""}
+    if not ip:
+        _seen[did].pop("ip")
     if now - _seen_written[0] > SEEN_EVERY:
         _seen_written[0] = now
         try:
@@ -277,7 +381,8 @@ APP_PATHS = ("/api/chat", "/api/test/asr", "/api/siri/ask", "/api/iphone/hello",
              # messages between profiles (messages.py; who may write to me stays in the browser)
              "/api/messages", "/api/messages/poll", "/api/messages/send", "/api/messages/voice",
              "/api/messages/announce", "/api/messages/played", "/api/messages/read", "/api/messages/delete",
-             "/api/messages/audio", "/api/messages/ready")
+             "/api/messages/audio", "/api/messages/ready",
+             "/api/messages/fav")     # ★ in the recipient picker (the Rufname stays in the browser)
 APP_GATE = [lambda uid: False]
 
 
@@ -340,6 +445,7 @@ def current(request):
         if not u:
             return None
         uid = u["id"]
+        _note_device(uid, request, ip=False)   # "zuletzt benutzt" in the admin's list, without the address
     u = next((u for u in d["users"] if u["id"] == uid), None)
     return {"id": u["id"], "name": u["name"]} if u else None
 

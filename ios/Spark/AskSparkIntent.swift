@@ -124,13 +124,9 @@ struct SendMessageIntent: AppIntent {
             let why = (try? await api.messagesReady())?.why
             throw SparkError(message: why ?? String(localized: "Nachrichten sind für dein Profil aus."))
         }
-        let who = Self.match(recipient, box.to, all: box.all)
-        guard let to = who else {
-            let names = box.to.map(\.name).joined(separator: ", ")
-            throw SparkError(message: names.isEmpty
-                ? String(localized: "Gerade nimmt niemand Nachrichten von dir an.")
-                : String(localized: "Den Namen finde ich nicht. Möglich: \(names)."))
-        }
+        let to = try await Self.resolve(recipient, box: box, ask: { names in
+            try await $recipient.requestDisambiguation(among: names, dialog: IntentDialog("Wen meinst du?"))
+        })
         let t = String(text.trimmingCharacters(in: .whitespacesAndNewlines).prefix(box.maxText))
         guard !t.isEmpty else { throw SparkError(message: String(localized: "Die Nachricht ist leer.")) }
         try await requestConfirmation(result: .result(dialog: "Nachricht an \(to.name): „\(t)“. Senden?"))
@@ -138,16 +134,66 @@ struct SendMessageIntent: AppIntent {
         return .result(dialog: "Gesendet.")
     }
 
-    /// Fixed rule, no model: the same name (any case), else the only name starting with it; "alle" when allowed.
-    static func match(_ said: String, _ list: [Recipient], all: Bool) -> Recipient? {
-        let s = said.trimmingCharacters(in: .whitespacesAndNewlines).lowercased()
-        guard !s.isEmpty else { return nil }
-        if all && ["alle", "allen", "all", "everyone", "everybody"].contains(s) {
-            return Recipient(id: "all", name: String(localized: "Alle"))
+    /// The recipient from the spoken name. Several fit (two "Thomas"): Siri asks which one among at most
+    /// four, and the answer must be one of them. Never a list of every name: at most three similar ones.
+    static func resolve(_ said: String, box: MessageBox, ask: ([String]) async throws -> String) async throws -> Recipient {
+        switch match(said, box.to, all: box.all) {
+        case .one(let r):
+            return r
+        case .several(let list):
+            let chosen = try await ask(list.map(\.label))
+            guard let r = list.first(where: { $0.label == chosen }) else {
+                throw SparkError(message: String(localized: "Nicht gesendet: nicht klar, wen du meinst."))
+            }
+            return r
+        case .tooMany(let n):
+            throw SparkError(message: String(localized: "Zu viele passen (\(n)). Sag den ganzen Namen oder den Rufnamen."))
+        case .none:
+            guard !box.to.isEmpty else { throw SparkError(message: String(localized: "Gerade nimmt niemand Nachrichten von dir an.")) }
+            let near = similar(said, box.to)
+            throw SparkError(message: near.isEmpty
+                ? String(localized: "Den Namen finde ich nicht.")
+                : String(localized: "Den Namen finde ich nicht. Ähnlich: \(near.joined(separator: ", "))."))
         }
-        if let r = list.first(where: { $0.name.lowercased() == s }) { return r }
-        let start = list.filter { $0.name.lowercased().hasPrefix(s) }
-        return start.count == 1 ? start[0] : nil
+    }
+
+    enum Match: Equatable {
+        case one(Recipient), several([Recipient]), tooMany(Int), none
+    }
+
+    static let maxChoice = 4
+
+    /// Fixed rules, no model (as on the Spark): the name or the Rufname (any case), else the first or the
+    /// last name, else the only one starting with it; "alle" when allowed. Several fit: ask, never guess.
+    static func match(_ said: String, _ list: [Recipient], all: Bool) -> Match {
+        let s = said.trimmingCharacters(in: .whitespacesAndNewlines).lowercased()
+        guard !s.isEmpty else { return .none }
+        if all && ["alle", "allen", "all", "everyone", "everybody"].contains(s) {
+            return .one(Recipient(id: "all", name: String(localized: "Alle")))
+        }
+        let keys: (Recipient) -> [String] = { r in [r.name.lowercased(), r.call.lowercased()].filter { !$0.isEmpty } }
+        let tests: [(String) -> Bool] = [
+            { $0 == s },
+            { $0.split(separator: " ").first.map(String.init) == s },
+            { $0.split(separator: " ").last.map(String.init) == s },
+            { $0.hasPrefix(s) },
+        ]
+        for test in tests {
+            let hits = list.filter { keys($0).contains(where: test) }
+            if hits.count == 1 { return .one(hits[0]) }
+            if hits.count > maxChoice { return .tooMany(hits.count) }
+            if hits.count > 1 { return .several(hits) }
+        }
+        return .none
+    }
+
+    /// At most three names that share the first letters with what was said.
+    static func similar(_ said: String, _ list: [Recipient]) -> [String] {
+        let s = String(said.trimmingCharacters(in: .whitespacesAndNewlines).lowercased().prefix(3))
+        guard s.count >= 2 else { return [] }
+        return Array(list.filter { r in
+            [r.name, r.call].contains { $0.lowercased().split(separator: " ").contains { $0.hasPrefix(s) } }
+        }.map(\.name).prefix(3))
     }
 }
 

@@ -112,6 +112,7 @@ With the profile's browser login or the iPhone app's key (header `X-Speech-Devic
 - `POST /api/messages/voice?to=<profile id>`: the recording as body (at most 2 MB, 30 seconds); `GET /api/messages/audio?id=` returns it as Ogg/Opus.
 - `POST /api/messages/announce {"speakers": [id], "text"}`, `POST /api/messages/read {"ids"?}`, `POST /api/messages/delete {"ids"?}` (without `ids`: all).
 - Notifications: APNs with tag `msg-<id>`, the text comes through `/api/iphone/note` as before. "Who may write to me" (`PUT /api/messages/who`) only in the browser.
+- V01.0.206: `to` includes `call` (call name), plus `recent` (last written to, at most 5) and `fav`. `PUT /api/messages/fav {"id", "on"}` sets a favourite (at most 20, also with the app key). `PUT /api/messages/call {"call"}` sets the own call name (browser only). Admin: `GET /api/admin/profiles?q=&show=&sort=&page=&per=` (at most 100 per page), `GET /api/admin/profiles/<id>`, `PUT /api/admin/profiles/<id>/call`.
 
 ### Pebble watch
 

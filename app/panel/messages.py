@@ -27,7 +27,8 @@ connected, else at the next wake word within ANNOUNCE_KEEP; never in that profil
 
     USERS_DIR/<uid>/messages.json   {"items": [{id, from, name, text (sealed), t, read, played, pushed,
                                                 kind: "text"|"voice"|"all", secs?}],
-                                     "allow": [uid], "block": [uid]}
+                                     "allow": [uid], "block": [uid],
+                                     "recent": [uid] (written to last, newest first), "fav": [uid]}
     USERS_DIR/<uid>/messages/<id>.ogg.enc   a voice message (sealed), deleted with the message
     USERS_DIR/<uid>/messages-pending.json   the proposal waiting for "Ja"
 """
@@ -60,6 +61,10 @@ ANNOUNCE_KEEP = 10 * 60
 MAX_VOICE_SECS = 30
 MAX_VOICE_BYTES = 2 * 1024 * 1024
 MAX_LIST = 50           # names in allow/block
+MAX_RECENT = 5          # "Zuletzt" in the recipient picker
+MAX_FAV = 20            # favourites (★) in the recipient picker
+MAX_CHOICE = 4          # "Meinst du A oder B?": at most this many names are asked back
+MAX_SAID = 4            # names said or shown in one sentence ("an alle": A, B, C, D und 38 weitere)
 SPEAKER_MODES = ("off", "hint", "text")
 _lock = threading.Lock()
 _sent = collections.defaultdict(collections.deque)   # (kind, sender[, recipient]) -> send times
@@ -102,6 +107,19 @@ def name_of(uid):
     return (profiles.by_id(uid) or {}).get("name", "")
 
 
+def short(names):
+    """A list of names for one spoken sentence: at most MAX_SAID, then "und N weitere"."""
+    names = list(names)
+    if len(names) <= MAX_SAID + 1:
+        return ", ".join(names)
+    return ", ".join(names[:MAX_SAID]) + f" und {len(names) - MAX_SAID} weitere"
+
+
+def label(x):
+    """"Thomas Müller (Tom)": the name, and the Rufname when there is one."""
+    return x["name"] + (f" ({x['call']})" if x.get("call") else "")
+
+
 # ---------------------------------------------------------------- the mailbox
 def _file(uid):
     return profiles._path(uid, "messages.json")
@@ -121,13 +139,16 @@ def _load(uid, now=None):
     now = time.time() if now is None else now
     items = [x for x in d.get("items") or [] if isinstance(x, dict) and re.fullmatch(r"[0-9a-f]{12}", str(x.get("id")))
              and now - float(x.get("t") or 0) < KEEP]
-    ids = lambda v: [str(u) for u in (v if isinstance(v, list) else []) if re.fullmatch(r"u_[0-9a-f]{12}", str(u))][:MAX_LIST]
-    return {"items": items[-MAX_BOX:], "allow": ids(d.get("allow")), "block": ids(d.get("block"))}
+    ids = lambda v, n=MAX_LIST: [str(u) for u in (v if isinstance(v, list) else [])
+                                 if re.fullmatch(r"u_[0-9a-f]{12}", str(u))][:n]
+    return {"items": items[-MAX_BOX:], "allow": ids(d.get("allow")), "block": ids(d.get("block")),
+            "recent": ids(d.get("recent"), MAX_RECENT), "fav": ids(d.get("fav"), MAX_FAV)}
 
 
 def _save(uid, d):
     keep = d["items"][-MAX_BOX:]
-    profiles._write(_file(uid), {"items": keep, "allow": d["allow"][:MAX_LIST], "block": d["block"][:MAX_LIST]})
+    profiles._write(_file(uid), {"items": keep, "allow": d["allow"][:MAX_LIST], "block": d["block"][:MAX_LIST],
+                                 "recent": d.get("recent", [])[:MAX_RECENT], "fav": d.get("fav", [])[:MAX_FAV]})
     # the sound of every message that is gone (too old, too many, deleted) goes with it
     try:
         stored = os.listdir(profiles._path(uid, "messages"))
@@ -215,10 +236,11 @@ def takes_from(rcpt, sender, everybody=False):
 
 
 def recipients(sender, everybody=False):
-    """[{"id", "name"}] the sender may write to."""
+    """[{"id", "name", "call"}] the sender may write to, by name."""
     if not usable(sender):
         return []
-    return [{"id": u, "name": name_of(u)} for u in profiles.user_ids() if takes_from(u, sender, everybody)]
+    out = [x for x in profiles.names() if takes_from(x["id"], sender, everybody)]
+    return sorted(out, key=lambda x: x["name"].lower())
 
 
 def others(uid):
@@ -231,31 +253,79 @@ def _norm(s):
 
 
 def find(sender, said):
-    """(recipient, why): the profile a spoken name means, among those the sender may write to; exact,
-    first name, a possessive "s" or a close spelling, but only when exactly one fits."""
+    """(recipient, why): the profile a spoken name means, see find_all."""
+    r, why, _ = find_all(sender, said)
+    return r, why
+
+
+ORDINAL = {"erste": 0, "ersten": 0, "eins": 0, "1": 0, "zweite": 1, "zweiten": 1, "zwei": 1, "2": 1,
+           "dritte": 2, "dritten": 2, "drei": 2, "3": 2, "vierte": 3, "vierten": 3, "vier": 3, "4": 3}
+
+
+def find_all(sender, said):
+    """(recipient, why, candidates): the profile a spoken name means, among those the sender may write
+    to; the name or the Rufname, the first or the last name, a possessive "s" or a close spelling, but
+    only when exactly one fits. Several fit: candidates (at most MAX_CHOICE) to ask back, never a guess.
+    Never a list of every name: at most three similar ones."""
     want = _norm(said)
     want = re.sub(r"^(an |für |zu )", "", want)
     if not want:
-        return None, "Kein Empfänger genannt."
+        return None, "Kein Empfänger genannt.", []
     allowed = recipients(sender)
-    names = {x["id"]: _norm(x["name"]) for x in allowed}
-    for test in (lambda n: n == want, lambda n: n.split(" ")[0] == want,
-                 lambda n: want.endswith("s") and n == want[:-1], lambda n: n.split(" ")[0] == want.split(" ")[0]):
-        hits = [u for u, n in names.items() if test(n)]
+    keys = {x["id"]: [k for k in (_norm(x["name"]), _norm(x.get("call"))) if k] for x in allowed}
+    by_id = {x["id"]: x for x in allowed}
+    tests = (lambda n: n == want, lambda n: n.split(" ")[0] == want, lambda n: n.split(" ")[-1] == want,
+             lambda n: want.endswith("s") and want[:-1] in (n, n.split(" ")[0]),
+             lambda n: n.split(" ")[0] == want.split(" ")[0])
+    for test in tests:
+        hits = [u for u, ks in keys.items() if any(test(k) for k in ks)]
         if len(hits) == 1:
-            return next(x for x in allowed if x["id"] == hits[0]), ""
+            return by_id[hits[0]], "", []
+        if len(hits) > MAX_CHOICE:
+            return None, (f"Zu viele Profile passen zu „{said.strip()[:40]}“ ({len(hits)}). Sag den ganzen Namen "
+                          "oder den Rufnamen."), []
         if len(hits) > 1:
-            return None, "Mehrere Profile passen: " + ", ".join(name_of(u) for u in hits) + "."
-    close = difflib.get_close_matches(want, list(names.values()), n=2, cutoff=0.8)
-    if len(close) == 1:
-        u = next(u for u, n in names.items() if n == close[0])
-        return next(x for x in allowed if x["id"] == u), ""
-    known = [u for u in profiles.user_ids() if u != sender and u not in names and _named(_norm(name_of(u)), want)]
+            cands = [by_id[u] for u in hits]
+            return None, "Mehrere Profile passen: " + " oder ".join(label(x) for x in cands) + ".", cands
+    flat = {k: u for u, ks in keys.items() for k in ks}
+    close = difflib.get_close_matches(want, list(flat), n=3, cutoff=0.8)
+    if len({flat[k] for k in close}) == 1:
+        return by_id[flat[close[0]]], "", []
+    everyone = [x for x in profiles.names() if x["id"] != sender and x["id"] not in keys]
+    known = [x["id"] for x in everyone if any(_named(k, want) for k in (_norm(x["name"]), _norm(x.get("call"))) if k)]
     if len(known) == 1:
-        return None, reach_why(known[0], sender)
+        return None, reach_why(known[0], sender), []
     if not allowed:
-        return None, "Niemand nimmt gerade Nachrichten von dir an."
-    return None, "Unbekannter Empfänger. Möglich sind: " + ", ".join(x["name"] for x in allowed) + "."
+        return None, "Niemand nimmt gerade Nachrichten von dir an.", []
+    firsts = {k.split(" ")[0]: u for k, u in flat.items()}
+    near = difflib.get_close_matches(want, list(flat) + list(firsts), n=6, cutoff=0.6)
+    seen, names = set(), []
+    for k in near:
+        u = flat.get(k) or firsts.get(k)
+        if u not in seen:
+            seen.add(u)
+            names.append(by_id[u]["name"])
+    return None, "Unbekannter Empfänger." + (" Ähnlich: " + ", ".join(names[:3]) + "." if names else ""), []
+
+
+def pick(cands, said):
+    """The one candidate the answer to "Meinst du A oder B?" names: "den ersten", "Müller", "Thomas Müller",
+    the Rufname; None when it fits none or several (fixed rules, the model never chooses)."""
+    want = re.sub(r"^(?:ich meine |meine |an |den |die |der |dem |das |für |zu |ja |nein )+", "", _norm(said)).strip()
+    want = re.sub(r"\s+(?:bitte|meine ich|natürlich)$", "", want).strip()
+    if not want or not cands:
+        return None
+    first = want.split(" ")[0]
+    if first in ORDINAL and ORDINAL[first] < len(cands) and len(want.split(" ")) <= 2:
+        return cands[ORDINAL[first]]
+    keys = [[k for k in (_norm(x["name"]), _norm(x.get("call"))) if k] for x in cands]
+    for test in (lambda k: k == want, lambda k: want in k.split(" "), lambda k: want in k):
+        hits = [x for x, ks in zip(cands, keys) if any(test(k) for k in ks)]
+        if len(hits) == 1:
+            return hits[0]
+        if len(hits) > 1:
+            return None
+    return None
 
 
 def _named(n, want):
@@ -359,6 +429,10 @@ async def send(sender, to, text, kind="text", audio=None, secs=None, now=None):
     if why:
         return [], why
     _count(sender, to, kind, now)
+    if kind in ("text", "voice") and len(to) == 1:
+        def remember(d):
+            d["recent"] = ([to[0]] + [u for u in d.get("recent", []) if u != to[0]])[:MAX_RECENT]
+        mutate(sender, remember, now)
     sname = name_of(sender)
     out = []
     for r in to:
@@ -661,7 +735,7 @@ def _propose(uid, p, src, fresh=False):
 def describe(p):
     if p["kind"] == "announce":
         return f"Durchsage auf {', '.join(p['names'])}: „{p['text']}“"
-    who = "alle (" + ", ".join(p["names"]) + ")" if p["kind"] == "all" else ", ".join(p["names"])
+    who = "alle (" + short(p["names"]) + ")" if p["kind"] == "all" else short(p["names"])
     return f"Nachricht an {who}: „{p['text']}“"
 
 
@@ -674,7 +748,7 @@ async def carry_out(uid, p):
         names, why = await announce(uid, p["to"], p["text"])
         return f"Durchsage gesendet an: {', '.join(names)}." if names else "NICHT gesendet: " + why
     names, why = await send(uid, p["to"], p["text"], kind="all" if p["kind"] == "all" else "text")
-    return f"Gesendet an {', '.join(names)}." if names else "NICHT gesendet: " + why
+    return f"Gesendet an {short(names)}." if names else "NICHT gesendet: " + why
 
 
 REPLY = re.compile(r"(?is)^\s*(?:bitte\s+)?(?:antworte|antwort|schreib(?:e)?\s+(?:ihm|ihr)\s+zurück|schreib(?:e)?\s+zurück)"
@@ -709,6 +783,8 @@ async def answer(ctx, latest):
             os.remove(_pending_file(uid))   # answered: gone, whatever its mark
         except OSError:
             pass
+        if p.get("kind") == "choose":
+            return _answer_which(uid, p, latest, src)
         if calendars.confirms(latest):
             note = await carry_out(uid, p)
             return {"call": {"name": "message_send (bestätigt)", "args": describe(p), "result": note},
@@ -731,6 +807,42 @@ async def answer(ctx, latest):
                 "system": f"Nachrichten: Noch NICHT gesendet. Frag den Nutzer genau: „Soll ich {name_of(last[1])} "
                           f"antworten: ‚{text}‘?“ Erst sein Ja in der nächsten Nachricht sendet es."}
     return _direct(uid, latest, src)
+
+
+def _ask_which(uid, cands, text, src, fresh=False):
+    """Several profiles fit the spoken name: ask which one (at most MAX_CHOICE names); the next answer
+    picks only among these (pick), and the message still waits for the "Ja" after that."""
+    cands = cands[:MAX_CHOICE]
+    q = {"kind": "choose", "to": [x["id"] for x in cands], "names": [label(x) for x in cands], "text": text}
+    _propose(uid, q, src, fresh=fresh)
+    ask = "Meinst du " + " oder ".join(q["names"]) + "?"
+    return {"call": {"name": "message_send (Rückfrage)", "args": ", ".join(q["names"]), "result": "wartet auf Auswahl"},
+            "system": f"Nachrichten: Noch NICHT gesendet, mehrere Profile passen. Frag den Nutzer genau: „{ask}“ "
+                      "Seine nächste Antwort wählt nur unter diesen Namen."}
+
+
+def _answer_which(uid, p, latest, src):
+    known = {x["id"]: x for x in profiles.names()}
+    cands = [known[u] for u in p.get("to", []) if u in known]
+    r = pick(cands, latest)
+    if not r:
+        return {"call": {"name": "message_send (keine Auswahl)", "args": ", ".join(p.get("names", [])),
+                         "result": "nicht gesendet"},
+                "system": "Nachrichten: NICHT gesendet, weil nicht klar war, wen der Nutzer meint. Sag das kurz; er "
+                          "kann es mit dem ganzen Namen noch einmal sagen."}
+    if not takes_from(r["id"], uid):
+        note = reach_why(r["id"], uid)
+        return {"call": {"name": "message_send (nicht möglich)", "args": r["name"], "result": note},
+                "system": "Nachrichten: NICHT gesendet: " + note + " Sag dem Nutzer genau das."}
+    q = {"kind": "text", "to": [r["id"]], "names": [r["name"]], "text": p.get("text", "")}
+    why = allowed_now(uid, q["to"], q["kind"])
+    if why:
+        return {"call": {"name": "message_send (nicht möglich)", "args": describe(q), "result": why},
+                "system": "Nachrichten: NICHT gesendet: " + why + " Sag dem Nutzer genau das."}
+    _propose(uid, q, src, fresh=True)
+    return {"call": {"name": "message_send (Vorschlag)", "args": describe(q), "result": "wartet auf Ja"},
+            "system": f"Nachrichten: Noch NICHT gesendet. Frag den Nutzer genau: „Soll ich {r['name']} schreiben: "
+                      f"‚{q['text']}‘?“ Erst sein Ja in der nächsten Nachricht sendet es."}
 
 
 async def _answer_enable(uid, p, latest, src):
@@ -788,7 +900,8 @@ def parse_send(text):
 
 def _profile_named(uid, to):
     want = _norm(to)
-    return any(_named(_norm(name_of(u)), want) for u in profiles.user_ids() if u != uid) or want in EVERYBODY
+    return any(_named(k, want) for x in profiles.names() if x["id"] != uid
+               for k in (_norm(x["name"]), _norm(x.get("call"))) if k) or want in EVERYBODY
 
 
 def _direct(uid, latest, src):
@@ -805,7 +918,9 @@ def _direct(uid, latest, src):
             return None
         q = {"kind": "all", "to": [x["id"] for x in rs], "names": [x["name"] for x in rs], "text": text}
     else:
-        r, why = find(uid, to)
+        r, why, cands = find_all(uid, to)
+        if cands:
+            return _ask_which(uid, cands, text, src, fresh=True)
         if not r:
             if why.startswith("Unbekannter") or why.startswith("Kein"):
                 return None   # maybe not a name at all: the model handles it
@@ -817,7 +932,7 @@ def _direct(uid, latest, src):
         return {"call": {"name": "message_send (nicht möglich)", "args": describe(q), "result": why},
                 "system": "Nachrichten: NICHT gesendet: " + why + " Sag dem Nutzer genau das."}
     _propose(uid, q, src, fresh=True)
-    who = "allen (" + ", ".join(q["names"]) + ")" if q["kind"] == "all" else q["names"][0]
+    who = "allen (" + short(q["names"]) + ")" if q["kind"] == "all" else q["names"][0]
     return {"call": {"name": "message_send (Vorschlag)", "args": describe(q), "result": "wartet auf Ja"},
             "system": f"Nachrichten: Noch NICHT gesendet. Frag den Nutzer genau: „Soll ich {who} schreiben: ‚{text}‘?“ "
                       "Erst sein Ja in der nächsten Nachricht sendet es."}
@@ -893,7 +1008,7 @@ def offer(ctx):
                     + " Sagt der Nutzer, er will jemandem schreiben, nenn genau diesen Grund."}
         return None   # guests, a voice recognized at someone else's device, Telegram without personal data
     uid = who["id"]
-    names = [_norm(x["name"]).split(" ")[0] for x in recipients(uid)]
+    names = [k.split(" ")[0] for x in recipients(uid) for k in (_norm(x["name"]), _norm(x.get("call"))) if k]
     named = any(re.search(r"(?i)\b" + re.escape(n) + r"s?\b", text) for n in names if n)
     speakers = speakers_for(uid)
     place = any(re.search(r"(?i)\b" + re.escape(_norm(x["name"])) + r"\b", text) for x in speakers if x["name"])
@@ -943,7 +1058,9 @@ async def tool(name, args, ctx):
                 return "Nicht gesendet: niemand nimmt gerade Nachrichten an alle an."
             p = {"kind": "all", "to": [x["id"] for x in rs], "names": [x["name"] for x in rs], "text": text}
         else:
-            r, why = find(uid, to)
+            r, why, cands = find_all(uid, to)
+            if cands:
+                return _ask_which(uid, cands, text, src)["system"].split(": ", 1)[1]
             if not r:
                 return "Nicht gesendet: " + why + " Frag nach, wem die Nachricht gehen soll."
             p = {"kind": "text", "to": [r["id"]], "names": [r["name"]], "text": text}
@@ -951,7 +1068,7 @@ async def tool(name, args, ctx):
         if why:
             return "Nicht gesendet: " + why
         _propose(uid, p, src)
-        who = "allen (" + ", ".join(p["names"]) + ")" if p["kind"] == "all" else p["names"][0]
+        who = "allen (" + short(p["names"]) + ")" if p["kind"] == "all" else p["names"][0]
         return (f"Noch NICHT gesendet. Frag den Nutzer genau: „Soll ich {who} schreiben: ‚{text}‘?“ Erst sein Ja in "
                 "der nächsten Nachricht sendet es.")
     if name == "message_announce":
@@ -1023,7 +1140,9 @@ def _state(uid):
     return {"enabled": admin_on(), "on": bool(p.get("msg_on")), "all": all_on(), "announce": announce_on(),
             "voice": voice_on(), "max_text": MAX_TEXT, "max_voice": MAX_VOICE_SECS,
             "items": box(uid), "unread": sum(1 for x in d["items"] if not x.get("read")),
-            "to": recipients(uid), "speakers": [{"id": x["id"], "name": x["name"]} for x in speakers_for(uid)],
+            "to": recipients(uid), "recent": d.get("recent", []), "fav": d.get("fav", []),
+            "call": next((x["call"] for x in profiles.names() if x["id"] == uid), ""),
+            "speakers": [{"id": x["id"], "name": x["name"]} for x in speakers_for(uid)],
             "others": others(uid), "allow": d["allow"], "block": d["block"],
             "settings": {k: p.get(k, profiles.SETTINGS[k][0]) for k in ("msg_on", "msg_from", "msg_all", "msg_speaker", "msg_announce")}}
 
@@ -1170,3 +1289,40 @@ async def api_who(request: Request, prof=Depends(browser_profile)):
             d["block"] = ids(body["block"])
     mutate(prof["id"], f)
     return _state(prof["id"])
+
+
+@router.put("/api/messages/fav", dependencies=[Depends(assistant)])
+async def api_fav(request: Request, prof=Depends(_on)):
+    """★ a profile in the recipient picker (page and iPhone app): {"id", "on"}. At most MAX_FAV."""
+    body = await _json(request, 1024)
+    uid, on = str(body.get("id") or ""), bool(body.get("on"))
+    if uid not in set(profiles.user_ids()) - {prof["id"]}:
+        raise HTTPException(400, "no such profile")
+
+    def f(d):
+        fav = [u for u in d.get("fav", []) if u != uid]
+        if on:
+            if len(fav) >= MAX_FAV:
+                raise HTTPException(400, f"at most {MAX_FAV} favourites")
+            fav.append(uid)
+        d["fav"] = fav
+    mutate(prof["id"], f)
+    return _state(prof["id"])
+
+
+@router.put("/api/messages/call", dependencies=[Depends(assistant)])
+async def api_call(request: Request, prof=Depends(browser_profile)):
+    """The own Rufname ("Thomas M.", "Papa"): how others can name me in messages. A setting: browser login
+    only; unique among every name and Rufname, so a spoken name never fits two profiles."""
+    if not admin_on():
+        raise HTTPException(403, "messages are turned off")
+    import guard
+    guard.limit(request, "msg", prof["id"])
+    body = await _json(request, 1024)
+    try:
+        call = profiles.set_call(prof["id"], body.get("call"))
+    except LookupError:
+        raise HTTPException(404, "no such profile")
+    except ValueError as e:
+        raise HTTPException(409 if "used" in str(e) else 400, str(e))
+    return dict(_state(prof["id"]), call=call)

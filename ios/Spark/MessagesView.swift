@@ -22,7 +22,10 @@ final class MessagesModel: ObservableObject {
             if let b = try await api.messages() {
                 box = b
                 off = false
-                if to.isEmpty || !(b.to.contains { $0.id == to } || (to == "all" && b.all)) { to = b.to.first?.id ?? "" }
+                if to.isEmpty || !(b.to.contains { $0.id == to } || (to == "all" && b.all)) {
+                    // the last one written to, else the only one; with many profiles the person picks
+                    to = b.recent.first { id in b.to.contains { $0.id == id } } ?? (b.to.count == 1 ? b.to[0].id : "")
+                }
                 // seen here: read on the Spark too, so the panel and the other devices stop pointing at them
                 let unread = b.items.filter { !$0.read }.map(\.id)
                 if !unread.isEmpty, (try? await api.markRead(unread)) != nil {
@@ -64,6 +67,20 @@ final class MessagesModel: ObservableObject {
         } catch {
             self.error = error.localizedDescription
         }
+    }
+
+    func toggleFavourite(_ id: String) async {
+        guard let api = SparkAPI.current else { return }
+        do {
+            box.fav = try await api.setFavourite(id, on: !box.fav.contains(id))
+        } catch {
+            self.error = error.localizedDescription
+        }
+    }
+
+    var toLabel: String {
+        if to == "all" { return String(localized: "Alle") }
+        return box.to.first { $0.id == to }?.label ?? String(localized: "Empfänger wählen")
     }
 
     func answer(_ m: SparkMessage) {
@@ -110,9 +127,10 @@ struct MessagesView: View {
             Section { Text("Gerade nimmt niemand Nachrichten von dir an.").foregroundStyle(.secondary) }
         } else {
             Section {
-                Picker("An", selection: $m.to) {
-                    ForEach(m.box.to) { r in Text(verbatim: r.name).tag(r.id) }
-                    if m.box.all { Text("Alle").tag("all") }
+                NavigationLink {
+                    RecipientPicker(m: m)
+                } label: {
+                    LabeledContent("An") { Text(verbatim: m.toLabel).foregroundStyle(m.to.isEmpty ? .secondary : .primary) }
                 }
                 TextField("Nachricht", text: $m.text, axis: .vertical)
                     .lineLimit(2...6)
@@ -165,10 +183,74 @@ struct MessagesView: View {
     }
 }
 
+/// The recipient for many profiles: search by name or Rufname; without a search the ★ favourites and the
+/// last ones written to come first. Only profiles that take messages from me are listed (the Spark's list).
+struct RecipientPicker: View {
+    @ObservedObject var m: MessagesModel
+    @Environment(\.dismiss) private var dismiss
+    @State private var search = ""
+
+    private var hits: [Recipient] {
+        let s = search.trimmingCharacters(in: .whitespacesAndNewlines).lowercased()
+        guard !s.isEmpty else { return m.box.to }
+        return m.box.to.filter { $0.name.lowercased().contains(s) || $0.call.lowercased().contains(s) }
+    }
+
+    private func pick(_ id: String) {
+        m.to = id
+        dismiss()
+    }
+
+    @ViewBuilder private func row(_ r: Recipient) -> some View {
+        HStack {
+            Button { pick(r.id) } label: {
+                HStack {
+                    Text(verbatim: r.label).foregroundStyle(.primary)
+                    Spacer()
+                    if m.to == r.id { Image(systemName: "checkmark").foregroundStyle(.tint) }
+                }
+            }
+            Button { Task { await m.toggleFavourite(r.id) } } label: {
+                Image(systemName: m.box.fav.contains(r.id) ? "star.fill" : "star")
+            }
+            .buttonStyle(.borderless)
+            .accessibilityLabel(Text("Favorit"))
+        }
+    }
+
+    var body: some View {
+        List {
+            if search.isEmpty {
+                let favs = m.box.fav.compactMap { id in m.box.to.first { $0.id == id } }
+                let recent = m.box.recent.filter { !m.box.fav.contains($0) }.compactMap { id in m.box.to.first { $0.id == id } }
+                if !favs.isEmpty { Section("Favoriten") { ForEach(favs) { row($0) } } }
+                if !recent.isEmpty { Section("Zuletzt") { ForEach(recent) { row($0) } } }
+                if m.box.all { Section { Button("Alle") { pick("all") } } }
+            }
+            Section {
+                ForEach(hits) { row($0) }
+                if hits.isEmpty { Text("Niemand passt.").foregroundStyle(.secondary) }
+            } header: {
+                Text("\(m.box.to.count) erreichbar")
+            }
+        }
+        .searchable(text: $search, prompt: Text("Name oder Rufname"))
+        .navigationTitle("An")
+        .navigationBarTitleDisplayMode(.inline)
+    }
+}
+
 /// Why messages do or do not go through: the Spark's own check, the same as under Ich → Nachrichten.
 struct ReadyView: View {
     let r: MessageReady
     @State var open: Bool
+    static let few = 8
+
+    @ViewBuilder private var offList: some View {
+        ForEach(Array(r.off.enumerated()), id: \.offset) { _, x in
+            LabeledContent { Text(verbatim: x.why).foregroundStyle(.secondary) } label: { Text(verbatim: x.name) }
+        }
+    }
 
     var body: some View {
         Section {
@@ -181,11 +263,20 @@ struct ReadyView: View {
                         .foregroundStyle(r.on ? .green : .red)
                 }
                 if let why = r.why { Text(verbatim: why).font(.footnote) }
-                if !r.reach.isEmpty {
+                // with many profiles: the numbers, the names one tap further
+                if r.reach.count > Self.few {
+                    DisclosureGroup {
+                        ForEach(r.reach) { Text(verbatim: $0.name) }
+                    } label: { LabeledContent("Erreichbar") { Text(verbatim: "\(r.reach.count)") } }
+                } else if !r.reach.isEmpty {
                     LabeledContent("Erreichbar") { Text(verbatim: r.reach.map(\.name).joined(separator: ", ")) }
                 }
-                ForEach(Array(r.off.enumerated()), id: \.offset) { _, x in
-                    LabeledContent { Text(verbatim: x.why).foregroundStyle(.secondary) } label: { Text(verbatim: x.name) }
+                if r.off.count > Self.few {
+                    DisclosureGroup {
+                        offList
+                    } label: { LabeledContent("Nicht erreichbar") { Text(verbatim: "\(r.off.count)") } }
+                } else {
+                    offList
                 }
                 if !r.on || !r.enabled {
                     Text("Einschalten im Panel unter Ich → Nachrichten. Den Schalter für alle setzt der Admin unter Einstellungen → Funktionen.")

@@ -113,6 +113,7 @@ Mit der Browser-Anmeldung des Profils oder dem Schlüssel der iPhone-App (Header
 - `POST /api/messages/voice?to=<Profil-id>`: Aufnahme als Body (höchstens 2 MB, 30 Sekunden); `GET /api/messages/audio?id=` liefert sie als Ogg/Opus.
 - `POST /api/messages/announce {"speakers": [id], "text"}`, `POST /api/messages/read {"ids"?}`, `POST /api/messages/delete {"ids"?}` (ohne `ids`: alle).
 - Mitteilungen: APNs mit Tag `msg-<id>`, der Text kommt wie bisher über `/api/iphone/note`. „Wer darf mir schreiben“ (`PUT /api/messages/who`) nur im Browser.
+- V01.0.206: `to` enthält `call` (Rufname), dazu `recent` (zuletzt angeschrieben, höchstens 5) und `fav`. `PUT /api/messages/fav {"id", "on"}` setzt einen Favoriten (höchstens 20, auch mit App-Schlüssel). `PUT /api/messages/call {"call"}` setzt den eigenen Rufnamen (nur Browser). Admin: `GET /api/admin/profiles?q=&show=&sort=&page=&per=` (höchstens 100 pro Seite), `GET /api/admin/profiles/<id>`, `PUT /api/admin/profiles/<id>/call`.
 
 ### Pebble-Uhr
 

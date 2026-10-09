@@ -478,6 +478,8 @@ details.qhow{margin-top:6px}details.qhow>summary{cursor:pointer;font-size:13px;f
 .picx{position:absolute;top:-7px;right:-7px;width:22px;height:22px;border-radius:50%;border:0;background:var(--bad);color:#fff;cursor:pointer;font-size:11px;line-height:22px;padding:0}
 .msgc{display:flex;gap:8px;flex-wrap:wrap;align-items:center;padding:10px 12px 0}.msgc[hidden]{display:none}.msgc select{flex:0 1 auto;width:auto;max-width:40%}.msgc input{flex:1 1 140px;min-width:0}.msgc .fh{flex-basis:100%;margin:0}
 .rdy{list-style:none;padding:0;margin:6px 0}.rdy li{padding:2px 0}
+.mpick{display:flex;flex-wrap:wrap;gap:6px;align-items:center;flex:1 1 100%}.mpick[hidden]{display:none}.mpick input{flex:1 1 140px;min-width:0}.mlist{display:flex;flex-wrap:wrap;gap:4px;flex-basis:100%}.mlist:empty{display:none}.mlist .b{padding:4px 10px}
+.mrdy{display:inline}.mrdy summary{display:inline;cursor:pointer;color:var(--acc)}.mrdy input{margin:6px 0 0}
 .attach{flex:none;padding:9px 11px}.attach svg{width:18px;height:18px}
 .picrow{display:flex;gap:6px;flex-wrap:wrap;margin-top:6px}.picrow img{width:72px;height:72px;object-fit:cover;border-radius:8px;display:block}
 .picsave{margin-top:8px;font-size:12px;padding:6px 12px}
