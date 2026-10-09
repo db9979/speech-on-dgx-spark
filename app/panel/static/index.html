@@ -129,6 +129,8 @@
       <div class="setrow"><div class="lbl"><b>Rückfrage ohne Weckwort</b><span>Nach der Antwort auf eine gesprochene Frage hört der Assistent ein paar Sekunden weiter zu; jedes Profil wählt die Dauer.</span></div><label class="tgl"><input type="checkbox" id="chat.follow_up"><i></i></label></div>
       <div class="setrow"><div class="lbl"><b>Eigene Stimme überhören</b><span>Hört ein Gerät die Antwort eines anderen Geräts (Lautsprecher, iPhone), nimmt der Assistent sie nicht als neue Frage.</span></div><label class="tgl"><input type="checkbox" id="chat.no_self_echo"><i></i></label></div>
       <div data-show="chat.no_self_echo"><label>Was er überhört</label><select id="chat.self_echo_mode"><option value="text">Sätze, die er gerade selbst gesagt hat</option><option value="pause">dazu alles, solange ein anderes Gerät spricht (empfohlen)</option></select></div>
+      <div class="setrow"><div class="lbl"><b>Bilder erkennen</b><span>Profile hängen im Assistenten, in der iPhone-App oder über Telegram ein Foto an; das Sprachmodell (qwen38) sieht es sich selbst an.</span></div><label class="tgl"><input type="checkbox" id="chat.images"><i></i></label></div>
+      <div data-show="chat.images"><div class="fh">Prüft einmal, ob das laufende Sprachmodell Bilder annimmt: Es bekommt ein Testbild mit einer Zahl.</div><div class="row"><button class="b" type="button" id="visiongo">Bilderkennung prüfen</button><span id="visionmsg" class="mut"></span></div></div>
       <div class="setrow"><div class="lbl"><b>Aus Korrekturen lernen</b><span>Nach einer Korrektur schlägt der Assistent einen Satz zum Merken vor und speichert ihn erst nach „Ja“.</span></div><label class="tgl"><input type="checkbox" id="chat.learn_fixes"><i></i></label></div>
       <div class="setrow"><div class="lbl"><b>Eigener Gesprächsstil</b><span>Profile sagen in eigenen Worten, wie der Assistent mit ihnen reden soll; das ändert nur den Ton, nie die Regeln.</span></div><label class="tgl"><input type="checkbox" id="chat.own_style"><i></i></label></div>
       <div class="setrow"><div class="lbl"><b>Bei der Werkzeugwahl nachdenken</b><span>Profile können einschalten, dass das Modell vor der Werkzeugwahl nachdenkt: zuverlässiger, aber die Antwort beginnt später.</span></div><label class="tgl"><input type="checkbox" id="chat.tool_thinking"><i></i></label></div>
@@ -320,7 +322,7 @@
         <label class="tgl" title="Nach der Antwort automatisch wieder zuhören"><input type="checkbox" id="chathands"><i></i><span>Freihändig</span></label>
         <button class="ib" id="chatset" type="button" title="Gesprächs-Einstellungen"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M4 6h10M18 6h2M4 12h4M12 12h8M4 18h12M20 18h0"/><circle cx="16" cy="6" r="2"/><circle cx="10" cy="12" r="2"/><circle cx="18" cy="18" r="2"/></svg><span>Einstellungen</span></button>
       </div>
-      <div class="mbar"><button class="b" id="mset" type="button"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round"><path d="M4 6h10M18 6h2M4 12h4M12 12h8M4 18h12"/><circle cx="16" cy="6" r="2"/><circle cx="10" cy="12" r="2"/><circle cx="18" cy="18" r="2"/></svg><span>Einstellungen</span></button><button class="b" id="mlog" type="button"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 12a8 8 0 0 1-11.6 7.1L4 20l1-4.6A8 8 0 1 1 21 12z"/></svg><span>Verlauf</span></button></div>
+      <div class="mbar"><button class="b" id="mset" type="button"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round"><path d="M4 6h10M18 6h2M4 12h4M12 12h8M4 18h12"/><circle cx="16" cy="6" r="2"/><circle cx="10" cy="12" r="2"/><circle cx="18" cy="18" r="2"/></svg><span>Einstellungen</span></button><button class="b" id="mlog" type="button"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 12a8 8 0 0 1-11.6 7.1L4 20l1-4.6A8 8 0 1 1 21 12z"/></svg><span>Verlauf</span></button><button class="b" id="mpic" type="button" hidden><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="5" width="18" height="14" rx="2"/><circle cx="9" cy="10" r="1.8"/><path d="M21 16l-5-5-8 8"/></svg><span>Bild</span></button></div>
       <div class="mut hint">Leertaste, „Sprechen“ oder ein Klick aufs Gesicht: zuhören bzw. die laufende Antwort unterbrechen.</div>
       <div id="chattiming" class="chips"></div>
       <div id="remlist" class="rems" hidden></div>
@@ -329,7 +331,8 @@
       <button class="ib" id="convofind" title="In früheren Gesprächen suchen"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round"><circle cx="11" cy="11" r="6.5"/><path d="M16 16l4.5 4.5"/></svg></button>
       <button class="ib" id="convodel" title="Dieses Gespräch löschen"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round"><path d="M4 7h16M9 7V4h6v3M6 7l1 13h10l1-13"/></svg></button></div>
       <div id="chatlog"></div>
-      <div class="composer"><input id="chattext" placeholder="oder hier tippen und Enter drücken"><button class="send" id="chatsend" title="Senden"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"><path d="M12 19V5M5 12l7-7 7 7"/></svg></button></div>
+      <div id="chatpics" class="pics" hidden></div>
+      <div class="composer"><button class="ib attach" id="chatpic" type="button" title="Bild anhängen" hidden><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="5" width="18" height="14" rx="2"/><circle cx="9" cy="10" r="1.8"/><path d="M21 16l-5-5-8 8"/></svg></button><input type="file" id="chatpicfile" accept="image/*" multiple hidden><input id="chattext" placeholder="oder hier tippen und Enter drücken"><button class="send" id="chatsend" title="Senden"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"><path d="M12 19V5M5 12l7-7 7 7"/></svg></button></div>
     </div>
   </div>
 </section>
@@ -628,6 +631,7 @@
 <script src="/static/js/mfa.js"></script>
 <script src="/static/js/admin.js"></script>
 <script src="/static/js/chat.js"></script>
+<script src="/static/js/pics.js"></script>
 <script src="/static/js/reminders.js"></script>
 <script src="/static/js/phone.js"></script>
 <script src="/static/js/me.js"></script>

@@ -393,7 +393,7 @@ def validate(new):
         raise HTTPException(400, "face: " + " or ".join(FACES))
     if ch.get("self_echo_mode", "pause") not in ("text", "pause"):
         raise HTTPException(400, "self_echo_mode: text or pause")
-    for k in ("answer_check", "tool_thinking", "learn_fixes", "own_style", "follow_up", "no_self_echo"):
+    for k in ("answer_check", "tool_thinking", "learn_fixes", "own_style", "follow_up", "no_self_echo", "images"):
         if not isinstance(ch.get(k, False), bool):
             raise HTTPException(400, f"chat {k} must be true or false")
     for sec in ("asr", "tts"):

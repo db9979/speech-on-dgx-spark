@@ -435,7 +435,7 @@ if [ "$WITH_TTS" = 1 ] && [ "$BACKEND" = transformers ]; then
 fi
 say "Python env for the panel and the ASR / TTS front ends"
 # sherpa-onnx + huggingface_hub: the Parakeet recognizer (CPU) that asr_proxy.py runs when chosen
-make_venv panel fastapi "uvicorn[standard]" python-multipart "httpx[http2]" psutil num2words numpy pypdf icalendar recurring-ical-events cryptography segno sherpa-onnx huggingface_hub
+make_venv panel fastapi "uvicorn[standard]" python-multipart "httpx[http2]" psutil num2words numpy pypdf icalendar recurring-ical-events cryptography segno sherpa-onnx huggingface_hub "pillow==11.3.0"   # pictures (images.py): fixed version
 
 # ---------------------------------------------------------------- engines (vLLM + vllm-omni, native)
 if [ "$USE_ENGINE" = 1 ]; then

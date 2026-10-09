@@ -472,3 +472,12 @@ details.qhow{margin-top:6px}details.qhow>summary{cursor:pointer;font-size:13px;f
 .qrow .qa.open{display:block}
 #qall .qrow{padding:3px 0;font-size:13px}#qall .qq>span:first-child{white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
 .agrep{background:var(--bg);border:1px solid var(--line);border-radius:10px;padding:10px;margin-top:6px;max-height:50vh;overflow:auto;font-size:13px;line-height:1.5;white-space:pre-wrap;overflow-wrap:anywhere}
+/* pictures for the assistant (pics.js) */
+.pics{display:flex;gap:10px;flex-wrap:wrap;align-items:center;padding:10px 12px 0;font-size:12px}.pics[hidden],.attach[hidden],.mbar .b[hidden]{display:none}
+.pics .pic{position:relative;flex:none}.pics img{width:56px;height:56px;object-fit:cover;border-radius:10px;border:1px solid var(--line);display:block}
+.picx{position:absolute;top:-7px;right:-7px;width:22px;height:22px;border-radius:50%;border:0;background:var(--bad);color:#fff;cursor:pointer;font-size:11px;line-height:22px;padding:0}
+.attach{flex:none;padding:9px 11px}.attach svg{width:18px;height:18px}
+.picrow{display:flex;gap:6px;flex-wrap:wrap;margin-top:6px}.picrow img{width:72px;height:72px;object-fit:cover;border-radius:8px;display:block}
+.picsave{margin-top:8px;font-size:12px;padding:6px 12px}
+#visionmsg .ok{color:var(--ok)}
+@media (max-width:760px){body.inchat .composer.haspic .send{display:grid}}

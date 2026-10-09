@@ -219,7 +219,8 @@ class Browser(unittest.TestCase):
                     # a closed line hides its sentence and settings
                     self.assertFalse(await pg.is_visible("#chat\\.search_url"))
                     tall = await pg.evaluate("$('pane-feat').getBoundingClientRect().height")
-                    self.assertLess(tall, 3200 if w < 760 else 2200, f"{w}: {tall}px")
+                    # about 45 px per closed line on a computer; open boxes would be several times that
+                    self.assertLess(tall, 3200 if w < 760 else 2400, f"{w}: {tall}px")
                     await pg.evaluate("$('chat.search').closest('.fitem').querySelector('.fexp').click()")
                     self.assertTrue(await pg.evaluate("$('chat.search').closest('.fitem').classList.contains('open')"))
                     await pg.evaluate("$('chat.search').closest('.fitem').querySelector('.fexp').click()")
@@ -288,6 +289,49 @@ class Browser(unittest.TestCase):
                 self.assertEqual(errors, [])
                 await br.close()
         self.run_async(go())
+
+    def test_picture_attach_ask_and_store(self):
+        """V01.0.190: with both switches the picture button shows, a photo becomes a chip, the question
+        carries it (also without typed text, the send button shows on the phone), and the answer can be
+        stored under "Meine Dokumente"."""
+        import io
+        import profiles
+        from PIL import Image
+        out = io.BytesIO()
+        Image.new("RGB", (900, 600), (20, 160, 90)).save(out, "JPEG")
+        uid = next(u["id"] for u in profiles._load()["users"] if u["name"] == "Uitest")
+        helpers.set_config(images=True)
+        profiles.save_settings(uid, {"images_on": True})
+
+        async def go():
+            async with async_playwright() as p:
+                br, pg, errors = await self.page(p, 390, 844)
+                await pg.evaluate("goSec('chat')")
+                await pg.wait_for_function("!$('chatpic').hidden", timeout=5000)
+                await pg.set_input_files("#chatpicfile", files=[{"name": "a.jpg", "mimeType": "image/jpeg",
+                                                                 "buffer": out.getvalue()}])
+                await pg.wait_for_function("pics.list.length===1", timeout=5000)
+                self.assertTrue(await pg.is_visible("#chatpics img"), await pg.evaluate(
+                    "JSON.stringify({h:$('chatpics').hidden,r:$('chatpics').getBoundingClientRect(),p:$('chatpics').parentNode.className,"
+                    "i:$('chatpics').querySelector('img')&&$('chatpics').querySelector('img').getBoundingClientRect(),d:getComputedStyle($('chatpics')).display,"
+                    "c:getComputedStyle(document.querySelector('.convo')).display,b:document.body.className})"))
+                self.assertTrue(await pg.is_visible("#chatsend"))
+                await pg.click("#chatsend")
+                await pg.wait_for_function("[...document.querySelectorAll('.msg.bot .bubble')].some(b=>b.textContent.includes('Ich sehe 1 Bild.'))",
+                                           timeout=10000)
+                self.assertEqual(await pg.evaluate("document.querySelectorAll('.msg.user .picrow img').length"), 1)
+                self.assertTrue(await pg.evaluate("pics.list.length===1"))      # kept for a follow-up
+                await pg.click(".picsave")
+                await pg.wait_for_function("document.querySelector('.picsave').textContent.includes('Gespeichert')", timeout=5000)
+                await pg.click("#chatpics .picx")
+                self.assertTrue(await pg.evaluate("pics.list.length===0&&$('chatpics').hidden"))
+                self.assertEqual(errors, [])
+                await br.close()
+        try:
+            self.run_async(go())
+        finally:
+            helpers.set_config(images=False)
+            profiles.save_settings(uid, {"images_on": False})
 
     def test_hands_free_microphone_comes_back(self):
         """iOS ends the microphone track (lock screen, call, Siri): a dead stream is asked for again,

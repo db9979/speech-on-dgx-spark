@@ -21,6 +21,7 @@ import documents  # noqa: E402
 import extras  # noqa: E402
 import fixes  # noqa: E402
 import homeassistant  # noqa: E402
+import images  # noqa: E402
 from common import load_config  # noqa: E402
 import mail  # noqa: E402
 import proactive  # noqa: E402
@@ -134,9 +135,17 @@ async def prepare(request):
     past = bool(prof and ccfg.get("history", True))
     if past:
         system = (system + "\n\n" + chat.HISTORY_HINT).strip()
+    # pictures (images.py): only with the admin's and the profile's switches, from its own login, app or
+    # Telegram. The model sees them in this turn without any tools (no smart home either), and the
+    # answer counts as outside text, so the next turn is locked as well.
+    pics = images.for_turn(request, body, who if own_browser else None) if messages[-1]["role"] == "user" else []
+    if pics:
+        carry = carry or "outside"
+        system = (system + "\n\n" + images.hint(len(pics))).strip()
+        print("chat:", len(pics), "picture(s) attached, no tools in this answer, locked like outside text", flush=True)
     # Home Assistant only for the profile's own login or device key: a voice recognized at someone
     # else's device does not switch that profile's home
-    ha = homeassistant.get(who["id"]) if who and own_browser and ccfg.get("homeassistant", False) else None
+    ha = homeassistant.get(who["id"]) if who and own_browser and ccfg.get("homeassistant", False) and not pics else None
     # over Telegram the profile decides: personal data only with tg_private, switching only with tg_ha
     # and a code word (the messages pass Telegram's servers)
     tg = body.get("client") == "telegram"
@@ -166,6 +175,7 @@ async def prepare(request):
         print("homeassistant: turn for", who["name"] if who else "guest", "- tools",
               "offered" if ha else "NOT offered: " + (
                   "no profile signed in" if not who else "voice of another profile" if not own_browser
+                  else "a picture is attached (no tools in this answer)" if pics
                   else "not allowed in the car (Ich → iPhone-App)" if app_blocked and car
                   else "not allowed from the iPhone app (Ich → iPhone-App)" if app_blocked
                   else "token unreadable (stored with another key), connect again" if homeassistant._raw(who["id"])
@@ -354,7 +364,9 @@ async def prepare(request):
                        "client": body.get("client"),
                        "text": messages[-1]["content"] if messages[-1]["role"] == "user" else ""})
     tools += ex["tools"]
-    if ex["hints"]:
+    if pics:
+        tools = []
+    if ex["hints"] and not pics:
         system = (system + "\n\n" + " ".join(ex["hints"])).strip()
     # once mail or other outside text was read in this answer, nothing in it may change the home or
     # the memory, and after mail no words go to the web (see LOCKED_OUTSIDE / LOCKED_MAIL)

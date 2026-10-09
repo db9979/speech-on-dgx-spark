@@ -214,11 +214,13 @@ function errText(code,msg){const plain=ERRS[code];if(!plain)return msg||t('Unbek
   return plain+(typeof ADMIN!=='undefined'&&ADMIN&&msg&&code!=='net'?' ('+String(msg).slice(0,160)+')':'')}
 async function ask(text,asrS,spk){const spoken=!!chat.nextSpoken;chat.nextSpoken=false;
   if(S.daily&&chat.cid&&!chat.picked){const c=convos.load().find(x=>x.id===chat.cid);if(c&&c.updated<today0())openConvo(null)}   // past midnight
-const ub=chatLog('user',text);const um={role:'user',content:text};chat.msgs.push(um);deletable(ub,um);let foreign=false,ttsErr=false,mailUsed=false,outsideUsed=false;
+const pids=typeof picIds==='function'?picIds():[],thumbs=pids.length?picThumbs():[];   // attached pictures (pics.js)
+const ub=chatLog('user',text);const um={role:'user',content:text};
+  if(thumbs.length){const w=document.createElement('div');w.className='picrow';w.innerHTML=thumbs.map(u=>`<img alt="" src="${esc(u)}">`).join('');ub.appendChild(w)}chat.msgs.push(um);deletable(ub,um);let foreign=false,ttsErr=false,mailUsed=false,outsideUsed=false;
   const el=chatLog('assistant','');$('fabtext').textContent='';let full='',llmS=null,audioS=null,err='';const searches=[],sources=[],mems=[],docs=[];
   const ctrl=new AbortController();chat.ctrl=ctrl;chat.firstPlay=null;chat.gaps=[];chat.blocks=[];chat.t0b=null;setTalk();chatSay(t('Antwort kommt …','Answer coming …'));
   try{const r=await api('/api/chat',{method:'POST',headers:{'Content-Type':'application/json'},signal:ctrl.signal,
-      body:JSON.stringify({messages:chat.msgs.slice(-20),tz:(()=>{try{return Intl.DateTimeFormat().resolvedOptions().timeZone}catch{return ''}})(),voice:PROFILE&&S.voice||undefined,speed:S.speed,length:S.length,reminders:PROFILE?undefined:rem.list,convo:chat.cid||undefined,speaker:spk&&spk.token||undefined})});
+      body:JSON.stringify({messages:chat.msgs.slice(-20),tz:(()=>{try{return Intl.DateTimeFormat().resolvedOptions().timeZone}catch{return ''}})(),voice:PROFILE&&S.voice||undefined,speed:S.speed,length:S.length,reminders:PROFILE?undefined:rem.list,convo:chat.cid||undefined,speaker:spk&&spk.token||undefined,images:pids.length?pids:undefined})});
     const rd=r.body.getReader(),dec=new TextDecoder();let buf='';
     for(;;){const{value,done}=await rd.read();if(done)break;buf+=dec.decode(value,{stream:true});let i;
       while((i=buf.indexOf('\n\n'))>=0){const line=buf.slice(0,i).split('\n').find(l=>l.startsWith('data:'));buf=buf.slice(i+2);if(!line)continue;
@@ -247,7 +249,7 @@ const ub=chatLog('user',text);const um={role:'user',content:text};chat.msgs.push
         else if(ev.type==='search_error'){chatSay(t('Websuche fehlgeschlagen: ','Web search failed: ')+ev.message)}
         else if(ev.type==='timing'){if(ev.llm_first_token!=null)llmS=ev.llm_first_token;if(ev.first_audio!=null)audioS=ev.first_audio}
         else if(ev.type==='error'){if(!err)err=errText(ev.code,ev.message);if(/^tts/.test(ev.code||''))ttsErr=true}}}}
-  catch(e){if(e.name!=='AbortError')err=errText(e instanceof TypeError?'net':'',e.message)}
+  catch(e){if(e.name!=='AbortError')err=errText(e instanceof TypeError?'net':'',e.message);if(pids.length&&/picture is gone/.test(e.message||''))picsGone()}
   const aborted=ctrl.signal.aborted;if(chat.ctrl===ctrl)chat.ctrl=null;
   // another person's voice: the exchange is theirs, so it stays out of this browser's history and context
   if(foreign){const i=chat.msgs.indexOf(um);if(i>=0)chat.msgs.splice(i,1)}
@@ -257,6 +259,8 @@ const ub=chatLog('user',text);const um={role:'user',content:text};chat.msgs.push
     d.innerHTML=`<span>${t('Gesucht','Searched')}: ${esc(searches.join(' · '))}</span>`+sources.slice(0,5).map((s,i)=>`<a href="${esc(s.url)}" target="_blank" rel="noopener noreferrer">${i+1}. ${esc(s.title.slice(0,70))}</a>`).join('');el.appendChild(d)}
   if(docs.length){const d=document.createElement('div');d.className='mem';d.textContent=t('Aus deinen Dokumenten: ','From your documents: ')+docs.join(' · ');el.appendChild(d)}
   if(mems.length){const d=document.createElement('div');d.className='mem';d.textContent=mems.join(' · ');el.appendChild(d)}
+  if(pids.length&&full.trim()&&PROFILE&&!err){const b=document.createElement('button');b.type='button';b.className='b picsave';   // 7: only on a click
+    b.textContent=t('In „Meine Dokumente“ speichern','Store under "My documents"');const said=full.trim();b.onclick=()=>picSave(said,b);el.appendChild(b)}
   const f=v=>v==null?'–':v.toFixed(2)+' s';
   const chip=(k,v,hi)=>`<span class="chip${hi?' hi':''}">${k} <b>${f(v)}</b></span>`;
   $('chattiming').innerHTML=(asrS!=null?chip(t('Spracherkennung','Recognition'),asrS):'')+chip(t('LLM erstes Wort','LLM first word'),llmS)+chip(t('erster Ton','first audio'),audioS)+

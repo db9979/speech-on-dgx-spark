@@ -70,7 +70,7 @@ async function loadCfg(){CFG=await (await api('/api/config')).json();
   for(const[sec,o]of Object.entries(CFG))for(const[k,v]of Object.entries(o)){const el=$(sec+'.'+k);if(!el)continue;
     if(el.type==='checkbox')el.checked=v;else{if(el.tagName==='SELECT'&&![...el.options].some(o=>o.value==v))el.add(new Option(v));el.value=Array.isArray(v)?v.join(', '):v}};instrHint();
   getDefaults=await renderSet($('chatdefaults'),{...SDEF,...(CFG.chat.defaults||{})},null);
-  asrRec();cfgDeps();if(typeof guidesCount==='function')guidesCount();if(typeof tgAdmin==='function')tgAdmin();if(typeof apnsAdmin==='function')apnsAdmin();if(typeof iupdAdmin==='function')iupdAdmin();if(typeof espAdmin==='function')espAdmin();if(typeof agentAdmin==='function')agentAdmin();document.querySelectorAll('.pane').forEach(p=>markDirty(p,false));document.querySelectorAll('.savemsg').forEach(m=>m.textContent='')}
+  asrRec();cfgDeps();if(typeof guidesCount==='function')guidesCount();if(typeof tgAdmin==='function')tgAdmin();visionLoad();if(typeof apnsAdmin==='function')apnsAdmin();if(typeof iupdAdmin==='function')iupdAdmin();if(typeof espAdmin==='function')espAdmin();if(typeof agentAdmin==='function')agentAdmin();document.querySelectorAll('.pane').forEach(p=>markDirty(p,false));document.querySelectorAll('.savemsg').forEach(m=>m.textContent='')}
 let getDefaults=null;
 // Parakeet has no model choice and no engine: hide those settings while it is chosen.
 function asrRec(){const qw=$('asr.recognizer').value!=='parakeet';$('asrqwen').style.display=qw?'':'none';
@@ -491,3 +491,11 @@ $('bakmove').onclick=async()=>{const pw=$('bakpw').value;if(pw.length<12){$('bak
     $('bakmsg').textContent=t('Umzugs-Sicherung angelegt: ','Move backup made: ')+mb(b.size)+t('. Mit „Laden“ herunterladen und das Passwort gut aufheben.','. Download it with "Download" and keep the password safe.');loadBak()}catch(e){$('bakmsg').innerHTML=`<span class="err">${esc(e.message)}</span>`}};
 // alerts on top of every admin page: memory, watchdog, failed live check
 function showAlerts(a){$('alerts').innerHTML=(a||[]).map(x=>`<div class="note ${x.level==='bad'?'bad':''}">${esc(x.text)}</div>`).join('')}
+// ---------------------------------------------------------------- does the language model see pictures? (images.py)
+function visionShow(r){if(!r){$('visionmsg').textContent=t('Noch nicht geprüft.','Not checked yet.');return}
+  const when=new Date(r.t*1000).toLocaleString([], {dateStyle:'short',timeStyle:'short'});
+  $('visionmsg').innerHTML=r.ok?`<span class="ok">✓ ${t('Kann Bilder','Sees pictures')}</span> · ${esc(when)} · ${esc(String(r.seconds))} s`
+    :`<span class="err">✗ ${esc(r.error||t('kann keine Bilder','sees no pictures'))}</span> · ${esc(when)}`}
+async function visionLoad(){if(!$('visiongo'))return;try{visionShow((await (await api('/api/admin/vision-test')).json()).last)}catch{}}
+if($('visiongo'))$('visiongo').onclick=async()=>{$('visiongo').disabled=true;$('visionmsg').textContent=t('prüft …','checking …');
+  try{visionShow((await (await api('/api/admin/vision-test',{method:'POST'})).json()).last)}catch(e){$('visionmsg').innerHTML=`<span class="err">${esc(e.message)}</span>`}$('visiongo').disabled=false};

@@ -33,12 +33,29 @@ def fake_telegram():
         params = await req.json() if req.headers.get("content-type", "").startswith("application/json") else {}
         if method == "getMe":
             return {"ok": True, "result": {"id": 1, "is_bot": True, "username": "spark_test_bot"}}
+        if method == "getFile":   # a photo (see PHOTO)
+            return {"ok": True, "result": {"file_path": "photos/file_1.jpg", "file_size": len(PHOTO)}}
         if method == "getUpdates":
             ups = [u for u in UPDATES if u["update_id"] >= int(params.get("offset") or 0)]
             return {"ok": True, "result": ups}
         SENT.append((method, params))
         return {"ok": True, "result": {}}
+
+    @app.get("/file/bot{token}/{path:path}")
+    async def file(token: str, path: str):
+        return Response(PHOTO if token == TOKEN else b"", media_type="image/jpeg")
     return app
+
+
+def _photo():
+    import io
+    from PIL import Image
+    out = io.BytesIO()
+    Image.new("RGB", (80, 60), (200, 30, 30)).save(out, "JPEG")
+    return out.getvalue()
+
+
+PHOTO = _photo()
 
 
 TASKS = {}       # href -> (etag, ical text)
@@ -266,6 +283,48 @@ class Telegram(unittest.TestCase):
         # a device key changes no settings at all (only the profile's own browser login does)
         self.assertEqual(dev.put("/api/profile/settings", json={"tg_ha": False}, headers=h).status_code, 403)
 
+    def test_photos_only_with_both_switches(self):
+        import images
+        import telegram
+        a = self.link("Tilda", 4701)
+
+        def photo(caption=None, reply=False):
+            tg_message(4701, "Und oben?" if reply else "")
+            m = UPDATES[-1]["message"]
+            pic = [{"file_id": "small", "file_size": 100, "width": 8, "height": 6},
+                   {"file_id": "big", "file_size": len(PHOTO), "width": 80, "height": 60},
+                   {"file_id": "huge", "file_size": images.MAX_BYTES + 1, "width": 9000, "height": 9000}]
+            if reply:
+                m["reply_to_message"] = {"message_id": 1, "photo": pic}
+            else:
+                m.pop("text")
+                m["photo"] = pic
+                if caption:
+                    m["caption"] = caption
+        helpers.set_config(images=True)
+        try:
+            photo("Was ist das?")
+            self.assertIn("nur an, wenn du es im Panel erlaubst", poll()[0])
+            a.put("/api/profile/settings", json={"images_on": True})
+            photo("Was ist das?")
+            self.assertIn("nur an, wenn du es im Panel erlaubst", poll()[0])   # tg_images too
+            a.put("/api/profile/settings", json={"tg_images": True})
+            helpers.LLM_CALLS.clear()
+            photo('TOOL reminder_set {"text": "Tee", "minutes": 5}')
+            self.assertEqual(poll(), ["NO TOOL reminder_set"])                  # no tools with a picture
+            self.assertNotIn("tools", helpers.LLM_CALLS[0])
+            photo()
+            self.assertEqual(poll(), ["Ich sehe 1 Bild."])
+            self.assertEqual(images._store, {})                                  # not kept after the answer
+            photo(reply=True)                                                     # a follow-up: reply to the photo
+            self.assertEqual(poll(), ["Ich sehe 1 Bild."])
+            helpers.set_config(images=False)
+            photo()
+            self.assertIn("nur an, wenn du es im Panel erlaubst", poll()[0])
+            self.assertTrue(telegram.owner(4701))
+        finally:
+            helpers.set_config(images=False)
+
     def test_scope_profile_cannot_come_from_outside(self):
         c = TestClient(panel.app)
         r = c.get("/api/profile/telegram", headers={"speech_profile": "x"})
@@ -275,7 +334,7 @@ class Telegram(unittest.TestCase):
         with open(helpers.APP + "/config.default.json") as f:
             d = json.load(f)["chat"]
         self.assertEqual((d["telegram"], d["tasks"]), (False, False))
-        for k in ("tg_voice", "tg_private", "tg_ha", "tg_push", "tasks_on"):
+        for k in ("tg_voice", "tg_private", "tg_ha", "tg_push", "tg_images", "tasks_on"):
             self.assertIs(profiles.SETTINGS[k][0], False)
 
 

@@ -155,7 +155,7 @@ def push_on(uid, private=False):
 
 
 # ---------------------------------------------------------------- talking to the assistant
-async def ask(uid, text):
+async def ask(uid, text, pictures=None):
     """Runs the assistant for the profile like a device would and returns its answer."""
     import chat
     from starlette.requests import Request
@@ -165,6 +165,8 @@ async def ask(uid, text):
     s = profiles.settings(uid)
     body = {"messages": history + [{"role": "user", "content": text}], "client": "telegram", "speak": False,
             "tz": s.get("tz", "")}
+    if pictures:
+        body["images"] = pictures
     data = json.dumps(body).encode()
     # the profile is set by the panel itself (an HTTP request can never put this key into its scope)
     scope = {"type": "http", "method": "POST", "path": "/api/chat", "headers": [], "query_string": b"",
@@ -197,7 +199,7 @@ async def ask(uid, text):
     ha = homeassistant.get(uid)
     if ha and homeassistant.needs_code(ha):
         text = homeassistant.redact(ha, text)   # the code word is never kept
-    msgs = history + [{"role": "user", "content": text},
+    msgs = history + [{"role": "user", "content": ("(Foto) " if pictures else "") + text},
                       dict({"role": "assistant", "content": answer}, **({"mail": True} if from_mail else
                                                                        {"outside": True} if from_outside else {}))]
     _history[uid] = (now, msgs)
@@ -319,6 +321,12 @@ async def handle(c, upd):
     if any(k in m for k in ("forward_origin", "forward_from", "forward_from_chat", "forward_sender_name", "forward_date")):
         await call(c, "sendMessage", chat_id=cid, text=FORWARDED)   # someone else's words never act for the profile
         return
+    # a photo (or a reply to one, for a follow-up question): the model looks at it (images.py), only
+    # with the profile's tg_images; the caption is the question
+    photo = m.get("photo") or (((m.get("reply_to_message") or {}).get("photo")) if text else None)
+    if photo and isinstance(photo, list):
+        await photo_question(c, uid, cid, m, photo, text or str(m.get("caption") or "").strip())
+        return
     voice = m.get("voice") or m.get("audio")
     if voice and not text:
         if int(voice.get("file_size") or 0) > MAX_VOICE:
@@ -345,6 +353,55 @@ async def handle(c, upd):
     await call(c, "sendMessage", chat_id=cid, text=answer[:4000])
     await forget_code(c, uid, cid, m, text)
     if s.get("tg_voice"):
+        try:
+            await send_voice(c, cid, await speak(uid, answer))
+        except Exception as e:
+            print("telegram: voice answer", type(e).__name__, safe(e, 120), flush=True)
+
+
+PHOTO_ASK = "Was ist auf dem Bild?"
+
+
+async def photo_question(c, uid, cid, m, photo, text):
+    import images
+    if not images.allowed(uid, "tg"):
+        if m.get("photo"):
+            await call(c, "sendMessage", chat_id=cid, text="Fotos schaue ich mir nur an, wenn du es im Panel erlaubst: "
+                       "Ich → Gespräch → Bilder an den Assistenten und Ich → Telegram → Fotos über Telegram.")
+        return
+    sizes = [p for p in photo if isinstance(p, dict) and isinstance(p.get("file_id"), str)
+             and 0 < int(p.get("file_size") or 0) <= images.MAX_BYTES]
+    if not sizes:
+        await call(c, "sendMessage", chat_id=cid, text="Das Foto ist zu groß.")
+        return
+    best = max(sizes, key=lambda p: int(p.get("width") or 0) * int(p.get("height") or 0))
+    await call(c, "sendChatAction", chat_id=cid, action="typing")
+    try:
+        f = await call(c, "getFile", file_id=best["file_id"])
+        if int(f.get("file_size") or 0) > images.MAX_BYTES or not re.fullmatch(r"[\w/.\-]{1,200}", str(f.get("file_path"))):
+            raise ValueError("unexpected file")
+        root = (load_config().get("chat", {}).get("telegram_api") or API).rstrip("/")
+        data = bytearray()
+        async with c.stream("GET", f"{root}/file/bot{token()}/{f['file_path']}") as r:
+            r.raise_for_status()
+            async for chunk in r.aiter_bytes():
+                data += chunk
+                if len(data) > images.MAX_BYTES:
+                    raise ValueError("too big")
+        pic = await images.put(uid, "tg", bytes(data))
+    except Exception as e:
+        print("telegram: photo", type(e).__name__, safe(e, 120), flush=True)
+        await call(c, "sendMessage", chat_id=cid, text="Mit diesem Foto kann ich nichts anfangen.")
+        return
+    try:
+        answer = await ask(uid, (text or PHOTO_ASK)[:2000], [pic["id"]])
+    except Exception as e:
+        print("telegram: photo answer", type(e).__name__, safe(e, 120), flush=True)
+        answer = "Der Spark konnte gerade nicht antworten."
+    finally:
+        images.drop(pic["id"], uid, "tg")     # a follow-up answers the photo again (reply to it)
+    await call(c, "sendMessage", chat_id=cid, text=answer[:4000])
+    if profiles.settings(uid).get("tg_voice"):
         try:
             await send_voice(c, cid, await speak(uid, answer))
         except Exception as e:

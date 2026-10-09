@@ -27,6 +27,7 @@ import mail  # noqa: E402
 import tidy  # noqa: E402
 import extras  # noqa: E402
 import guard  # noqa: E402
+import images  # noqa: E402
 import netguard  # noqa: E402
 import proactive  # noqa: E402
 import watch  # noqa: E402
@@ -1055,6 +1056,8 @@ async def _answer(request, turn):
             if carry:
                 await out.put({"type": carry})
             msgs, finish = list(messages), None
+            if turn.pics:   # the pictures go to the model only, never into the history or the log
+                msgs[-1] = images.with_pictures(msgs[-1], turn.pics)
             st["msgs"] = msgs
             searches, used, retried = 0, False, False
             max_searches = ccfg.get("max_searches", 2)

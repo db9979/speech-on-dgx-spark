@@ -68,7 +68,13 @@ def fake_llm():
         b = await req.json()
         LLM_CALLS.append(b)
         last = b["messages"][-1]
+        pics = 0
+        if isinstance(last.get("content"), list):   # a question with pictures: their number, and the text part
+            pics = sum(1 for p in last["content"] if p.get("type") == "image_url")
+            last = dict(last, content=" ".join(p.get("text", "") for p in last["content"] if p.get("type") == "text"))
         if not b.get("stream"):
+            if pics:   # images.vision_test: the model "reads" the number
+                return {"choices": [{"message": {"content": "Die Zahl ist 42."}}]}
             if "korrigiert gerade" in (b["messages"][0].get("content") or ""):  # fixes.py: "FACT ..." in the correction
                 said = last.get("content") or ""
                 fact = said.split("FACT ", 1)[1] if "FACT " in said else ""
@@ -114,6 +120,8 @@ def fake_llm():
                     return
                 c = "NO TOOL " + name
             text = ("Ergebnis: " + c[:800]) if role == "tool" else ("Hallo." if not c.startswith("NO TOOL") else c)
+            if pics and text == "Hallo.":
+                text = f"Ich sehe {pics} Bild."
             if c.startswith("NO TOOL |"):  # SAY: just the words after the bar
                 text = c.split("|", 2)[2].strip() if c.count("|") >= 2 else c
             for i in range(0, len(text), 10):

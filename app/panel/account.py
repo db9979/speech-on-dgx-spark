@@ -663,7 +663,8 @@ def profile_settings(request: Request):
                                        "fix_learn": bool(prof and chat.get("learn_fixes", False) and chat.get("memory", True)),
                                        "style": bool(prof and chat.get("own_style", False)),
                                        "follow": bool(prof and chat.get("follow_up", False)),
-                                       "echo": bool(prof and chat.get("no_self_echo", False))}}
+                                       "echo": bool(prof and chat.get("no_self_echo", False)),
+                                       "images": bool(prof and chat.get("images", False) is True)}}
 
 
 @router.put("/api/profile/settings", dependencies=[Depends(assistant)])

@@ -267,6 +267,7 @@ APP_PATHS = ("/api/chat", "/api/test/asr", "/api/siri/ask", "/api/iphone/hello",
              "/api/iphone/push-token", "/api/iphone/note",
              "/api/profile/convos",   # the conversations, the same list as in the panel
              "/api/iphone/doc",       # a document's text into the profile's documents (app_docs)
+             "/api/chat/image",       # a picture for the next question (app_images, images.py)
              "/api/iphone/settings",  # the profile's own voice, answers and "Von selbst" (iphone.APP_FIELDS only)
              "/api/assistant/voices",  # the voice names to choose from
              # Apple Reminders on the iPhone (app_ios): new list entries to the iPhone, adding from Shortcuts
@@ -367,6 +368,7 @@ SETTINGS = {
     "learn": (True, lambda v: isinstance(v, bool)),
     "tool_think": (False, lambda v: isinstance(v, bool)),   # think while choosing a tool (admin chat.tool_thinking)
     "fix_learn": (False, lambda v: isinstance(v, bool)),    # learning from corrections (fixes.py, admin chat.learn_fixes)
+    "images_on": (False, lambda v: isinstance(v, bool)),    # pictures for the model (images.py, admin chat.images)
     # own wishes for the tone (admin chat.own_style): plain text, no control characters, no markers of outside text
     "style": ("", lambda v: isinstance(v, str) and len(v) <= 500 and not re.search(r"[\x00-\x09\x0b-\x1f\x7f]|<<<|>>>", v)),
     # daily briefing as a push notification at this local time ("" = off), in the device's time zone
@@ -403,6 +405,7 @@ SETTINGS = {
     "tg_private": (False, lambda v: isinstance(v, bool)),
     "tg_ha": (False, lambda v: isinstance(v, bool)),
     "tg_push": (False, lambda v: isinstance(v, bool)),
+    "tg_images": (False, lambda v: isinstance(v, bool)),    # photos sent to the bot go to the model (images.py)
     "esp_on": (False, lambda v: isinstance(v, bool)),   # own ESP32 speakers (esp32.py)
     # iPhone app (iphone.py): pairing for this profile, and switching the smart home from it, both off
     "app_on": (False, lambda v: isinstance(v, bool)),
@@ -413,6 +416,7 @@ SETTINGS = {
     "app_car_ha": (False, lambda v: isinstance(v, bool)),   # smart home from CarPlay
     "app_docs": (False, lambda v: isinstance(v, bool)),     # documents from the app into "Meine Dokumente"
     "app_ios": (False, lambda v: isinstance(v, bool)),      # Apple Reminders and the lists on the iPhone (tasks.py)
+    "app_images": (False, lambda v: isinstance(v, bool)),   # pictures from the app to the model (images.py)
     # agent functions (agent.py): the admin gives the level, the profile switches it on itself
     "agent_on": (False, lambda v: isinstance(v, bool)),
     "agent_doc": (False, lambda v: isinstance(v, bool)),    # every report also under "Meine Dokumente"

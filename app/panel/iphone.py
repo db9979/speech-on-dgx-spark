@@ -23,6 +23,7 @@ from fastapi import APIRouter, Depends, HTTPException, Request
 
 import appupdate
 import guard
+import images
 import profiles
 from account import browser_profile
 from common import load_config
@@ -212,6 +213,8 @@ def app_hello(prof=Depends(own_profile)):
             "docs": docs_on(prof["id"]),
             # Apple Reminders: Spark reminders and list entries may be written into the iPhone's Reminders
             "ios": bool(s.get("app_ios")),
+            # pictures go to the model itself (images.py); without it the app reads text on the phone (OCR)
+            "images": images.allowed(prof["id"], "app:x"),
             # Spark updates (appupdate.py): the version page and the start button, rights set by the admin
             "update": appupdate.for_app(prof["id"])}
 
@@ -257,7 +260,7 @@ async def app_doc(request: Request, prof=Depends(own_profile)):
 APP_FIELDS = ("voice", "speed", "length", "pro_on", "pro_quiet", "pro_max", "pro_events", "pro_lead",
               "pro_weather", "pro_place", "pro_weather_at", "pro_parcel", "pro_bday", "pro_transit",
               "pro_greet", "pro_mail", "briefing_at")
-RIGHTS = ("app_ha", "app_car_ha", "app_act", "app_listen", "app_push", "app_docs", "app_ios")
+RIGHTS = ("app_ha", "app_car_ha", "app_act", "app_listen", "app_push", "app_docs", "app_ios", "app_images")
 SETTINGS_BODY = 8192
 
 
