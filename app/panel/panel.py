@@ -345,6 +345,11 @@ class Server(uvicorn.Server):
         return contextlib.nullcontext()
 
 
+def https_config(pcfg, cert, key):
+    return uvicorn.Config(app, host=pcfg["host"], port=pcfg["https_port"], ssl_certfile=cert, ssl_keyfile=key,
+                          lifespan="off")
+
+
 async def serve():
     import signal
     quiet_access_log()
@@ -353,8 +358,9 @@ async def serve():
     cert, key = os.path.join(TLS_DIR, "cert.pem"), os.path.join(TLS_DIR, "key.pem")
     # Browsers only allow the microphone on https (or localhost); the voice chat needs it.
     if pcfg.get("https_port") and os.path.exists(cert) and os.path.exists(key):
-        servers.append(Server(uvicorn.Config(app, host=pcfg["host"], port=pcfg["https_port"],
-                                             ssl_certfile=cert, ssl_keyfile=key)))
+        # lifespan off: the startup handlers (Telegram poller, reminders, watchdog, backups …) run once, with
+        # the http server; before V01.0.214 they ran twice, and two Telegram pollers knocked each other out
+        servers.append(Server(https_config(pcfg, cert, key)))
     loop = asyncio.get_running_loop()
     for sig in (signal.SIGINT, signal.SIGTERM):
         loop.add_signal_handler(sig, lambda: [setattr(x, "should_exit", True) for x in servers])

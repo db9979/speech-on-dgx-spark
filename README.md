@@ -31,6 +31,7 @@ All options for running without questions (`--mode api --asr 1.7b --tts 0.6b --y
 
 <!-- New version: add one line at the top here and in CHANGELOG.md, drop the oldest line here (keep 10). Details go to docs/de and docs/en, not into this README. -->
 
+- **V01.0.214** Telegram conflict fixed: the panel started its background tasks (Telegram polling, reminders, watchdog …) twice, because the https server ran them again; now once. If Telegram still reports a conflict, the Spark waits longer and longer, logs rarely and shows a hint under State; a weather service outage (503) is retried quietly
 - **V01.0.213** Room mode from afar: “Raummodus im Wohnzimmer an” in the panel, the app or at another speaker starts an own connected speaker after “Ja” (fixed rule, no Home Assistant, no code word), “… aus” ends it; admin and profile switch, off
 - **V01.0.212** Logs "overview first": State → Logs with tiles (errors, areas with history), the last error with a hint, filter buttons with counts, a tidy list (time, area, red/yellow, ×n, pauses), search, live and "Copy for thread"; under Advanced detailed diagnosis per area that switches itself off
 - **V01.0.211** Update → "Check now" shows that it is checking ("Checking …") and afterwards the time of the check
@@ -40,7 +41,6 @@ All options for running without questions (`--mode api --asr 1.7b --tts 0.6b --y
 - **V01.0.207** Settings made consistent: same building blocks on every page, menu Assistant/Speech/Spark, "At a glance", update and backup under Settings, Status and Einbinden with a column or list like Settings
 - **V01.0.206** Many users: profile list with search, filter and pages, call names, recipient search with recent and favourites, asks back when names are alike (Siri too)
 - **V01.0.205** Sturdier speech output: if the TTS stream breaks, the piece is tried again and the rest of the answer is still spoken; gaps show as "chat: tts behind" in the diagnosis log
-- **V01.0.204** Answers without blank lines at the start and end (left over from Qwen's think block), paragraphs stay
 
 All versions: [CHANGELOG.md](CHANGELOG.md)
 

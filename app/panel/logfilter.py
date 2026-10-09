@@ -43,6 +43,10 @@ HINTS = (
      "Web search fails: check the SearXNG address under Features → Web search."),
     ("esp32", r"(?i)connect", "Lautsprecher nicht erreichbar: Strom und WLAN prüfen.",
      "Speaker not reachable: check power and Wi-Fi."),
+    ("telegram", r"(?i)conflict", "Ein anderes Programm nutzt denselben Bot-Token: Token nur an einer Stelle nutzen "
+     "oder bei @BotFather einen neuen holen und unter Einbinden → Telegram eintragen.",
+     "Another program uses the same bot token: use it in one place only or get a new one from @BotFather "
+     "and enter it under Integrate → Telegram."),
     ("telegram", r".", "Telegram klappt nicht: Bot unter Einbinden → Telegram prüfen.",
      "Telegram fails: check the bot under Integrate → Telegram."),
 )

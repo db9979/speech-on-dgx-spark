@@ -436,16 +436,73 @@ async def poll_once(c, wait=25):
     return len(ups or [])
 
 
+# Telegram hands new messages to one getUpdates at a time; a second one ("Conflict: terminated by other
+# getUpdates request") means another poller uses the same token: a second loop in this process (guarded by
+# _poller) or another program. Then wait longer and longer instead of every 15 s, log rarely and show a
+# fixed hint (alert()); one conflict right after a restart is normal (the old process's long poll still runs).
+CONFLICT_WAIT = (5, 30, 60, 120, 300, 600)
+_poller = {"on": False}
+conflict = {"count": 0, "since": 0.0}
+
+
+def is_conflict(e):
+    return isinstance(e, ValueError) and str(e).lower().startswith("conflict")
+
+
+def conflict_wait(n):
+    """Seconds to wait after the n-th conflict in a row (n >= 1)."""
+    return CONFLICT_WAIT[min(max(n, 1), len(CONFLICT_WAIT)) - 1]
+
+
+def on_conflict(now):
+    """Counts one conflict; returns the wait. Logs the 2nd and then every 20th, never the token."""
+    conflict["count"] += 1
+    n = conflict["count"]
+    if n == 1:
+        conflict["since"] = now
+    wait = conflict_wait(n)
+    if n == 2 or n % 20 == 0:
+        print(f"telegram: conflict: another program polls with the same bot token ({n} times), "
+              f"retry in {wait} s; use the token in one place only (Einbinden → Telegram)", flush=True)
+    return wait
+
+
+def conflict_over():
+    if conflict["count"] >= 2:
+        print(f"telegram: conflict over after {conflict['count']} times, polling again", flush=True)
+    conflict.update(count=0, since=0.0)
+
+
+def alert():
+    """For Zustand (health.alerts): the hint while another program keeps taking the bot's messages."""
+    if conflict["count"] < 2 or not admin_on():
+        return []
+    return [{"kind": "telegram", "level": "warn",
+             "text": "Telegram: Ein anderes Programm fragt mit demselben Bot-Token nach Nachrichten, deshalb "
+                     "kommen Nachrichten nicht sicher an. Den Token nur an einer Stelle nutzen oder bei @BotFather "
+                     "einen neuen holen (/revoke) und unter Einbinden → Telegram eintragen."}]
+
+
 async def loop():
+    if _poller["on"]:   # one poller per process, however often startup runs
+        print("telegram: a poller runs already, not starting a second one", flush=True)
+        return
+    _poller["on"] = True
     while True:
         if not admin_on() or not token():
+            conflict_over()
             await asyncio.sleep(10)
             continue
         try:
             async with httpx.AsyncClient(timeout=httpx.Timeout(40, connect=10)) as c:
                 while admin_on() and token():
                     await poll_once(c)
+                    if conflict["count"]:
+                        conflict_over()
         except Exception as e:
+            if is_conflict(e):
+                await asyncio.sleep(on_conflict(time.time()))
+                continue
             print("telegram:", type(e).__name__, safe(e, 160), flush=True)
             await asyncio.sleep(15)
 
@@ -476,7 +533,7 @@ router = APIRouter()
 def admin_get():
     st = _state()
     return {"bot": st.get("bot", ""), "has_token": bool(st.get("token")),
-            "linked": sum(1 for u in profiles.user_ids() if link(u))}
+            "linked": sum(1 for u in profiles.user_ids() if link(u)), "conflict": conflict["count"] >= 2}
 
 
 @router.put("/api/admin/telegram", dependencies=[Depends(auth), Depends(admin_code)])

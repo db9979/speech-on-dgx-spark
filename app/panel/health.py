@@ -351,6 +351,8 @@ def alerts():
     slow = latency.summary()["warn"]
     if slow:
         out.append({"kind": "latency", "level": "warn", "text": slow})
+    import telegram
+    out += telegram.alert()
     return out
 
 

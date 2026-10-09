@@ -648,6 +648,9 @@ def parse_weather(text, source):
     return [k for k in WEATHER_SAY if d.get(k) is True]
 
 
+WEATHER_RETRY = 600   # seconds until the next try after a passing failure of the weather service
+
+
 async def check_weather(uid, p, now):
     import weather
     cc = ccfg()
@@ -655,7 +658,8 @@ async def check_weather(uid, p, now):
     at = re.fullmatch(r"(\d\d):(\d\d)", p.get("pro_weather_at") or "")
     day = now.strftime("%Y-%m-%d")
     direct = weather.usable(uid)   # the profile's own weather service: numbers, no search, no model
-    if not at or state(uid).get("weather_day") == day or \
+    st = state(uid)
+    if not at or st.get("weather_day") == day or float(st.get("weather_wait") or 0) > time.time() or \
             (not direct and (not place or not cc.get("search") or not cc.get("search_url"))):
         return
     start = now.replace(hour=int(at[1]), minute=int(at[2]), second=0, microsecond=0)
@@ -663,7 +667,16 @@ async def check_weather(uid, p, now):
         return
     _mut(uid, lambda st: st.update(weather_day=day))
     if direct:
-        text, kinds = await weather.notable_tomorrow(uid)
+        try:
+            text, kinds = await weather.notable_tomorrow(uid)
+        except Exception as e:
+            why = weather.passing(e)
+            if not why:
+                raise
+            # the weather service is busy or briefly down (503, timeout): no error, try again within the time window
+            _mut(uid, lambda st: st.update(weather_day="", weather_wait=time.time() + WEATHER_RETRY))
+            print(f"proactive: weather: Open-Meteo {why}, retry in {WEATHER_RETRY // 60} min", flush=True)
+            return
         if text:
             await deliver(uid, "weather", text + " " + " ".join(WEATHER_SAY[k][1] for k in kinds[:2]),
                           why="Wettervorhersage (Open-Meteo)", data=text)

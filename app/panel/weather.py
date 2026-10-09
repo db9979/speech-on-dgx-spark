@@ -183,6 +183,17 @@ async def forecast(lat, lon, days=7):
     return d
 
 
+def passing(e):
+    """A short reason when the weather service failed only for the moment (busy, down, slow), else ""."""
+    if isinstance(e, httpx.HTTPStatusError) and (e.response.status_code >= 500 or e.response.status_code == 429):
+        return f"busy (HTTP {e.response.status_code})"
+    if isinstance(e, httpx.TimeoutException):
+        return "slow (no answer in time)"
+    if isinstance(e, httpx.TransportError):
+        return "down for the moment"
+    return ""
+
+
 def _n(v):
     return int(round(float(v))) if isinstance(v, (int, float)) else None
 
