@@ -46,7 +46,7 @@ def shared_stranger(request, body, who):
     voice = request.scope.get("speech_voice")
     if voice and voice == who["id"]:
         return ""
-    return str(request.scope.get("speech_voice_why") or "voice not recognized as the profile's own")[:80]
+    return str(request.scope.get("speech_voice_why") or "voice not recognized as the profile's own")[:160]
 
 
 class Turn:
@@ -165,7 +165,8 @@ async def prepare(request):
         who = heard
     if stranger:
         who, own_browser = None, False
-        system = (system + "\n\n" + chat.SHARED_STRANGER_HINT).strip()
+        system = (system + "\n\n" + chat.SHARED_STRANGER_HINT
+                  + (" " + chat.SHARED_SHORT_HINT if stranger.startswith("too little speech") else "")).strip()
     if not own_browser:
         # someone else's voice at this browser: the browser's conversation is not theirs, so it is
         # not sent along (and the browser keeps this turn out of its own history, see "foreign")

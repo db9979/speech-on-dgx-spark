@@ -2,6 +2,7 @@
 
 Every version in one line, newest first (taken from the commit messages, so some lines are German, some English). Older entries have no version number.
 
+- **V01.0.235** · 2026-10-09 · Lautsprecher-Stimmprüfung nachvollziehbar: speakers.verify prüft die Inhaberstimme gegen alle Profile und liefert Zahlen; Logs → Lautsprecher zeigt „match … of … needed, other profiles …, … s speech, taught here …“ (nie Stimmabdrücke); zu kurze Fragen: Assistent bittet um einen ganzen Satz; „Stimme hier anlernen“ nimmt fünf Sätze und meldet Erfolg erst ab drei
 - **V01.0.234** · 2026-10-09 · Pebble einfacher installieren: Ich → Pebble-Uhr zeigt einen QR-Code zur App-Datei und die drei Schritte (App auf die Uhr, Uhr verbunden?, Koppeln); gibt es auf dem Spark eine neuere Uhr-App, steht höchstens einmal am Tag „Neue Uhr-App“ unter einer Antwort (Uhr-App 1.4.0)
 - **V01.0.233** · 2026-10-09 · iPhone-App: erste Antwort nach dem Start wieder mit Ton (Wiedergabe startet nach dem Einschalten der Echounterdrückung neu)
 - **V01.0.232** · 2026-10-09 · Ich → Dokumente zeigt den Fortschritt pro Dokument: „Seite 3 von 12 gelesen“ mit Balken und Grund (liest gerade Seite …, wartet auf eine ruhige Minute, Tagesgrenze, Schalter aus), danach „Bedeutung 40 von 120“; die Liste aktualisiert sich alle 10 s, solange etwas läuft; iPhone-App zeigt „Seite x von y gelesen“

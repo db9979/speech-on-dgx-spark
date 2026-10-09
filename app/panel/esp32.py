@@ -670,12 +670,13 @@ class Session:
         await self.say(text, tone=True)
         self.listen(mode)
 
-    VOICE_PIECES = 3
+    VOICE_PIECES = 5
+    VOICE_MIN = 3              # recordings that make a usable voiceprint at this speaker
 
     async def run_enroll(self, mode="auto"):
         """"Stimme hier anlernen": the profile's voice through this speaker's microphone, three sentences."""
         self.note("Stimme anlernen: gestartet")
-        await self.say("Stimme anlernen. Bitte sprich jetzt drei Sätze nacheinander, zum Beispiel lies etwas vor. "
+        await self.say("Stimme anlernen. Bitte sprich jetzt fünf Sätze nacheinander, zum Beispiel lies etwas vor. "
                        "Ich sage Bescheid, wenn es reicht.", tone=True)
         self.enrolling = {"n": 0, "tries": 0}
         self.listen(mode)
@@ -696,8 +697,10 @@ class Session:
             self.enrolling = None
             print(f"esp32: voice taught at {self.dev['name']} ({e['n']} recordings)", flush=True)
             self.ear = None
-            self.answer = asyncio.create_task(self.say("Danke. Ich erkenne deine Stimme jetzt auch an diesem Lautsprecher." if e["n"] else
-                           "Das war zu kurz. Bitte noch einmal und jeweils ein paar Sekunden am Stück sprechen."))
+            self.answer = asyncio.create_task(self.say(
+                "Danke. Ich erkenne deine Stimme jetzt auch an diesem Lautsprecher." if e["n"] >= self.VOICE_MIN else
+                f"Ich habe nur {e['n']} von {self.VOICE_PIECES} Sätzen gut verstanden. Bitte noch einmal anlernen und "
+                "jeweils ein paar Sekunden am Stück sprechen."))
 
     async def on_text(self, m):
         kind = m.get("type")
@@ -1113,30 +1116,34 @@ class Session:
             self.room["last"] = time.time()
 
     def voice_check(self, pcm):
-        """Whose voice this question is, while the speech recognition runs (speakers.identify): only
-        when it can be the profile's own (speaker ID on, its voice taught); else None."""
+        """Whether this question is in the profile's own voice, while the speech recognition runs
+        (speakers.verify): only when it can be (speaker ID on, its voice taught); else None."""
         import speakers
         cc = load_config().get("chat", {})
         if not cc.get("speaker_id", False) or not speakers.has_voice(self.dev["user"]):
             return None
         th = speakers.STRICTNESS.get(cc.get("speaker_strictness"), 0.75)
-        return asyncio.create_task(asyncio.to_thread(speakers.identify, wav16k(pcm), th))
+        return asyncio.create_task(asyncio.to_thread(speakers.verify, self.dev["user"], wav16k(pcm), th,
+                                                     did=self.dev["id"]))
 
     async def voice_result(self, vt):
         """(the profile's id or "", why not) for this question: personal things at a speaker in a room
-        only for the voice clearly recognized as the profile's own (chat_turn.shared_stranger)."""
+        only for the voice clearly recognized as the profile's own (chat_turn.shared_stranger). The
+        journal gets the numbers (match, needed, other profiles, seconds of speech), never a voiceprint."""
+        import speakers
         if vt is None:
             cc = load_config().get("chat", {})
             return "", ("speaker ID is off" if not cc.get("speaker_id", False) else "the profile has not taught its voice")
         try:
-            who, _ = await vt
+            v = await vt
         except Exception as e:
             print("esp32: voice check", type(e).__name__, flush=True)
             return "", "voice check failed"
-        if who == self.dev["user"]:
-            print("esp32: owner's voice recognized at", self.dev.get("name", "?")[:40], "- personal data allowed", flush=True)
-            return who, ""
-        return "", "another profile's voice" if who else "voice not recognized"
+        if v["ok"]:
+            print("esp32: owner's voice recognized at", self.dev.get("name", "?")[:40], f"({speakers.numbers(v)})",
+                  "- personal data allowed", flush=True)
+            return self.dev["user"], ""
+        return "", (v["why"] + (f" ({speakers.numbers(v)})" if v["score"] or v["seconds"] else ""))[:160]
 
     async def speak(self, text, voice="", why=""):
         import chat

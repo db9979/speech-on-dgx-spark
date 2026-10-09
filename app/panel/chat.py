@@ -340,6 +340,8 @@ SHARED_STRANGER_HINT = ("Diese Frage kommt über einen Lautsprecher im Raum, und
                         "Kontakte, Nachrichten, Pakete, Smart Home) sagst und tust du hier nur für den Inhaber selbst. "
                         "Fragt jemand danach, sag nur kurz, dass du das an diesem Lautsprecher nur dem Inhaber sagst, "
                         "wenn du seine Stimme erkennst; nenne nichts davon und rate nichts.")
+SHARED_SHORT_HINT = ("Die Frage war zu kurz, um die Stimme zu prüfen: Sag, dass der Inhaber sie in einem ganzen Satz "
+                     "wiederholen soll.")
 SIRI_HINT = ("Die Frage kommt über Siri vom iPhone, der Apple Watch, aus dem Auto oder über AirPods; Siri "
              "liest deine Antwort vor. Antworte kurz, meist in ein bis drei Sätzen, ohne Listen oder Links.")
 # the iPhone app (iphone.py): what only the phone can do; the app asks the person before it starts

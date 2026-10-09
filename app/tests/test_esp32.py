@@ -596,15 +596,15 @@ class Speakers(unittest.TestCase):
                         if e["type"] == "tts" and e.get("state") == "stop":
                             return
                 until_stop()
-                self.assertIn("drei Sätze", texts[-1])
-                for _ in range(3):
+                self.assertIn("fünf Sätze", texts[-1])
+                for _ in range(5):
                     for fr in opus16k_frames(quiet[:9600] + voice + quiet):
                         ws.send_bytes(fr)
                 until_stop()
                 self.assertIn("erkenne deine Stimme", texts[-1])
-            self.assertEqual(len(speakers.device_samples(uid)[did]), 3)
+            self.assertEqual(len(speakers.device_samples(uid)[did]), 5)
             self.assertTrue(speakers.device_known(did) and speakers.has_voice(uid))
-            self.assertEqual(a.get("/api/profile/esp32").json()["devices"][0]["voice_here"], 3)
+            self.assertEqual(a.get("/api/profile/esp32").json()["devices"][0]["voice_here"], 5)
             # its own voiceprint next to the browser one: a recording through the board matches the profile
             browser = np.zeros(256, np.float32)
             browser[1] = 1.0
@@ -788,7 +788,7 @@ class SharedSpeaker(unittest.TestCase):
         ota(s["uuid"])
         return a, s["token"], a.get("/api/whoami").json()["profile"]["id"]
 
-    def turn(self, token, text, voice=None, history=()):
+    def turn(self, token, text, voice=None, history=(), why="test"):
         """One turn prepared like esp32.speak builds it (voice None: not set, like any outside request)."""
         import chat_turn
         from starlette.requests import Request
@@ -797,7 +797,7 @@ class SharedSpeaker(unittest.TestCase):
                  "headers": [(b"x-speech-device", token.encode())], "client": ("speaker", 0),
                  "server": ("127.0.0.1", 0), "scheme": "http"}
         if voice is not None:
-            scope.update(speech_voice=voice, speech_voice_why="test")
+            scope.update(speech_voice=voice, speech_voice_why=why)
 
         async def receive():
             return {"type": "http.request", "body": data, "more_body": False}
@@ -857,21 +857,54 @@ class SharedSpeaker(unittest.TestCase):
         s = esp32.Session.__new__(esp32.Session)
         s.dev = dev
 
-        async def run(found):
-            old = speakers.identify, speakers.has_voice
-            speakers.identify, speakers.has_voice = (lambda data, th: (found, 0.9)), (lambda u: True)
-            try:
-                return await s.voice_result(s.voice_check(b"\0" * 32000))
-            finally:
-                speakers.identify, speakers.has_voice = old
+        def found(v):
+            async def run():
+                vt = asyncio.get_running_loop().create_future()
+                vt.set_result(v)
+                return await s.voice_result(vt)
+            return asyncio.run(run())
+        base = {"ok": False, "why": "", "score": 0.0, "other": -1.0, "need": 0.75, "seconds": 0.0, "here": 0}
         # speaker ID off or no voice taught: nobody counts as the owner
         self.assertEqual(asyncio.run(s.voice_result(s.voice_check(b"\0" * 32000)))[0], "")
         helpers.set_config(speaker_id=True)
         self.assertEqual(asyncio.run(s.voice_result(s.voice_check(b"\0" * 32000))),
                          ("", "the profile has not taught its voice"))
-        self.assertEqual(asyncio.run(run(uid)), (uid, ""))
-        self.assertEqual(asyncio.run(run("someone-else")), ("", "another profile's voice"))
-        self.assertEqual(asyncio.run(run(None)), ("", "voice not recognized"))
+        self.assertEqual(found(dict(base, ok=True, score=0.9, seconds=2.0))[0], uid)
+        voice, why = found(dict(base, why="voice not recognized", score=0.68, other=0.4, seconds=1.4, here=5))
+        self.assertEqual(voice, "")
+        # the journal gets the numbers, so a too strict check can be seen
+        self.assertEqual(why, "voice not recognized (match 0.68 of 0.75 needed, other profiles 0.40, 1.4 s speech, taught here 5)")
+
+    def test_verify_owner_voice(self):
+        """speakers.verify: the owner's voiceprints against this recording, ahead of every other profile."""
+        import speakers
+        _, _, uid = self.speaker("Esp Walter")
+        _, _, other = self.speaker("Esp Xaver")
+        me, them = np.zeros(256, np.float32), np.zeros(256, np.float32)
+        me[0], them[1] = 1.0, 1.0
+        old = speakers.voiceprints, speakers.decode, speakers.embed
+        speakers.decode = lambda data: np.ones(16000 * 2, np.float32) * 0.1
+        try:
+            speakers.voiceprints = lambda: {uid: [me], other: [them]}
+            for heard, ok, why in ((me, True, ""), (them, False, "voice not recognized (voice not taught at this speaker)"),
+                                   ((me * 0.75 + them * 0.72) / np.linalg.norm(me * 0.75 + them * 0.72), False,
+                                    "too close to another profile's voice")):
+                speakers.embed = lambda x, heard=heard: heard
+                v = speakers.verify(uid, b"x", 0.7)
+                self.assertEqual((v["ok"], v["why"]), (ok, why))
+                self.assertNotIn("[", speakers.numbers(v))   # numbers only, never a voiceprint
+            speakers.embed = lambda x: None
+            self.assertEqual(speakers.verify(uid, b"x")["why"], "too little speech to check the voice")
+            speakers.voiceprints = lambda: {other: [them]}
+            self.assertEqual(speakers.verify(uid, b"x")["why"], "the profile has not taught its voice")
+        finally:
+            speakers.voiceprints, speakers.decode, speakers.embed = old
+
+    def test_too_short_is_said(self):
+        import chat
+        _, token, _ = self.speaker("Esp Yvonne")
+        t = self.turn(token, "Mails?", "", why="too little speech to check the voice")
+        self.assertIn(chat.SHARED_SHORT_HINT, t.messages[0]["content"])
 
 
 def profiles_devices():

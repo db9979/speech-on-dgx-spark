@@ -278,6 +278,36 @@ def identify(data, threshold=0.75, margin=0.05):
     return None, best
 
 
+def verify(uid, data, threshold=0.75, margin=0.05, did=None):
+    """Whether this recording is clearly the voice of uid (the owner of a speaker), with the numbers for
+    the journal (never the voiceprint): {"ok", "why", "score", "other", "need", "seconds", "here"}.
+    score: best match with uid's voiceprints, other: best match of any other profile (-1 without any),
+    seconds: speech left after the pauses are cut, here: recordings taught through the speaker did."""
+    here = len(device_samples(uid).get(did) or []) if did else 0
+    out = {"ok": False, "why": "", "score": 0.0, "other": -1.0, "need": threshold, "seconds": 0.0, "here": here}
+    prints = voiceprints()
+    if not prints.get(uid):
+        return dict(out, why="the profile has not taught its voice")
+    x = decode(data)
+    out["seconds"] = round(len(preprocess(x)) / SR, 1)
+    e = embed(x)
+    if e is None:
+        return dict(out, why="too little speech to check the voice")
+    out["score"] = round(max(float(v @ e) for v in prints[uid]), 2)
+    out["other"] = round(max((max(float(v @ e) for v in vs) for u, vs in prints.items() if u != uid), default=-1.0), 2)
+    if out["score"] < threshold:
+        return dict(out, why="voice not recognized" + ("" if here else " (voice not taught at this speaker)"))
+    if out["score"] - out["other"] < margin:
+        return dict(out, why="too close to another profile's voice")
+    return dict(out, ok=True)
+
+
+def numbers(v):
+    """The journal's short form of verify(): numbers only."""
+    return (f"match {v['score']:.2f} of {v['need']:.2f} needed, other profiles {max(v['other'], 0):.2f}, "
+            f"{v['seconds']:.1f} s speech, taught here {v['here']}")
+
+
 # ---------------------------------------------------------------- recognized speaker for one chat turn
 # The speech recognition answers with a short-lived signed token; the chat request sends it back.
 # So the profile still comes from the server, never from what the browser claims.

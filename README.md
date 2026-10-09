@@ -31,6 +31,7 @@ All options for running without questions (`--mode api --asr 1.7b --tts 0.6b --y
 
 <!-- New version: add one line at the top here and in CHANGELOG.md, drop the oldest line here (keep 10). Details go to docs/de and docs/en, not into this README. -->
 
+- **V01.0.235** Speaker voice check you can follow: Logs → speakers shows per question the match, the value needed and the seconds of speech; a too short question gets asked again as a whole sentence; "teach voice here" takes five sentences
 - **V01.0.234** Pebble easier to install: Me → Pebble watch shows a QR code for the app file and the three steps (app onto the watch, watch connected?, pair); when the Spark has a newer watch app, "Neue Uhr-App" shows under an answer at most once a day (watch app 1.4.0)
 - **V01.0.233** iPhone app: first answer after start has sound again (playback restarts after echo cancellation switches on)
 - **V01.0.232** Ich → Dokumente shows each document's progress: "page 3 of 12 read" with a bar and the reason (reading page …, waits for a quiet minute, daily limit, switch off), then "meaning 40 of 120"; the list refreshes every 10 s while something runs; the iPhone app shows "page x of y read"
@@ -40,7 +41,6 @@ All options for running without questions (`--mode api --asr 1.7b --tts 0.6b --y
 - **V01.0.228** Status: card “Own documents” under Zustand → Monitoring shows whether the meaning model runs (with its memory), starts, waits for free memory or failed, how many pieces have a meaning and how many pages wait to be read (counts only, admin only, shown while a switch is on)
 - **V01.0.227** iPhone app: look at "My documents" (PDFs and pictures in Apple's preview, otherwise the stored text)
 - **V01.0.226** Another voice got the owner's mail at a speaker: personal things (mail, appointments, reminders, memory, documents, smart home …) at a speaker now only for the clearly recognized owner's voice, else guest rights with a short note (fixed rule, no switch); Logs → speakers shows each refused question in yellow with its reason
-- **V01.0.225** Speech always comes first: background work waits while someone speaks, its running request to the language model is cancelled and repeated later; ASR and TTS get more CPU and disk share; Zustand → Prüfen → "Check priority" measures it (fixed rule, no switch)
 
 All versions: [CHANGELOG.md](CHANGELOG.md)
 
