@@ -277,8 +277,9 @@ class IPhone(unittest.TestCase):
         self.assertEqual(len(docs), 1)
         self.assertNotIn("/", docs[0]["name"])
         self.assertNotIn("<", docs[0]["name"])
-        # the app may store, but not list or delete the documents
-        self.assertEqual(app.get("/api/profile/docs", headers=h).status_code, 401)
+        # the app may store and (with app_docs) list and look at them, but never delete them
+        self.assertEqual(app.get("/api/profile/docs", headers=h).status_code, 200)
+        self.assertEqual(app.delete(f"/api/profile/docs/{docs[0]['id']}", headers=h).status_code, 401)
         # admin switch for documents off: nothing is stored
         helpers.set_config(documents=False)
         try:

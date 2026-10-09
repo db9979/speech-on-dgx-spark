@@ -425,7 +425,12 @@ def profile_delete_convo(cid: str, prof=Depends(own_profile)):
 
 # Documents: profiles only. Guests can neither upload nor search anything.
 @router.get("/api/profile/docs", dependencies=[Depends(assistant)])
-def profile_docs(prof=Depends(own_profile)):
+def profile_docs(request: Request, prof=Depends(own_profile)):
+    dev = profiles.device(request)
+    if dev:   # only the profile's iPhone app with "Dokumente aus der App" (app_docs), never other keys
+        import iphone
+        if dev.get("scope") != "app" or not iphone.docs_on(prof["id"]):
+            raise HTTPException(403, "only in the profile's own login or its iPhone app")
     return documents.list_docs(prof["id"])
 
 

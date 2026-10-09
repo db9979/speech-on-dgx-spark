@@ -61,6 +61,16 @@
         }
       }
     },
+    "Das Dokument gibt es nicht.": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "That document does not exist."
+          }
+        }
+      }
+    },
     "Das Foto ist zu groß für den Spark.": {
       "localizations": {
         "en": {

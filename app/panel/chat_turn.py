@@ -31,6 +31,24 @@ import tidy  # noqa: E402
 import chat  # noqa: E402  (constants and helpers; imported fully before any call)
 
 
+def shared_stranger(request, body, who):
+    """Why this turn at a shared device gets no personal things ("" when it may): the request comes
+    from an own speaker (its key, or it says so: that only makes it stricter) and the voice of this
+    recording was not clearly the profile's own. Whose voice it was comes only from the panel itself
+    (esp32.py sets it in the request scope), never from what a request says."""
+    dev = profiles.device(request)
+    shared = body.get("client") == "speaker" or "speech_voice" in request.scope
+    if not shared and dev and not dev["scope"]:
+        import esp32
+        shared = esp32.by_device(dev["id"])[0] is not None
+    if not shared or not who:
+        return ""
+    voice = request.scope.get("speech_voice")
+    if voice and voice == who["id"]:
+        return ""
+    return str(request.scope.get("speech_voice_why") or "voice not recognized as the profile's own")[:80]
+
+
 class Turn:
     """The values prepare() worked out for one turn (plus the queues chat._answer() adds)."""
 
@@ -127,15 +145,27 @@ async def prepare(request):
     system = (system + "\n\n" + (chat.SEARCH_LOCKED_HINT if search and carry == "mail" else chat.SEARCH_HINT if search
                                   else chat.SEARCH_OFF_HINT)).strip()
     who = profiles.current(request)
+    # A shared device (an own speaker in a room, see esp32.py): anyone in the room can talk to it, so
+    # the device key alone is nobody's word. Personal things (mail, calendar, memory, documents,
+    # contacts, reminders, messages, smart home ...) only when the speech recognition clearly heard the
+    # profile's own voice in this very recording; anyone else gets what a guest gets. Fixed rule, no switch.
+    stranger = shared_stranger(request, body, who)
+    if stranger:   # Zustand → Logs, area "Lautsprecher", yellow: only the reason, never what was asked
+        print("esp32: personal data withheld at", (profiles.device_name(request) or "speaker")[:40],
+              "-", stranger, "- guest rights for this question", flush=True)
+    sound_of = who      # voice, speed and length of the answer stay the speaker's own
     # A voice recognized by the speech recognition (signed token, see speakers.py) picks that
     # profile for this turn; its own settings apply then, not the ones this browser sends.
     heard = speakers.check(body.get("speaker"), who["id"]) \
-        if ccfg.get("speaker_id", False) and body.get("speaker") and who else None
+        if ccfg.get("speaker_id", False) and body.get("speaker") and who and not stranger else None
     heard = heard and profiles.by_id(heard)
     own_browser = not heard or (who and who["id"] == heard["id"])
     device_owner = who
     if heard:
         who = heard
+    if stranger:
+        who, own_browser = None, False
+        system = (system + "\n\n" + chat.SHARED_STRANGER_HINT).strip()
     if not own_browser:
         # someone else's voice at this browser: the browser's conversation is not theirs, so it is
         # not sent along (and the browser keeps this turn out of its own history, see "foreign")
@@ -145,6 +175,9 @@ async def prepare(request):
     # conversation settings: what the request sends, else the profile's, else the admin's defaults
     # (speakers with a device key send nothing and get their profile's voice, speed and length)
     pset = dict(profiles.defaults(ccfg.get("defaults")), **(profiles.settings(who["id"]) if who else {}))
+    if stranger and sound_of:
+        own = profiles.settings(sound_of["id"])
+        pset.update({k: own[k] for k in ("voice", "speed", "length") if k in own})
     # guests change nothing: they get the admin's defaults (the admin's own browser may try speed and length)
     for k in (("voice", "speed", "length") if who else ("speed", "length") if admin_cookie_ok(request) else ()) \
             if own_browser else ():

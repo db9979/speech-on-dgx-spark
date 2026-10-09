@@ -821,6 +821,7 @@ class Session:
                 await self.room_start(**(ask or {}))
                 return
             ended = time.time()
+            vt = None if self.testing else self.voice_check(pcm)
             try:
                 text = await transcribe(pcm)
             except Exception as e:
@@ -848,7 +849,9 @@ class Session:
                 await self.room_start(source="voice")
                 return
             await self.send({"type": "llm", "emotion": "thinking", "text": "🤔"})
-            await self.speak(text)
+            voice, why = await self.voice_result(vt)
+            self.note("Stimme: Inhaber erkannt" if voice else "Stimme nicht als Inhaber erkannt: nur Allgemeines")
+            await self.speak(text, voice, why)
             logfilter.detail("esp32", f"answer finished {(time.time() - ended) * 1000:.0f} ms after the question ended")
         except asyncio.CancelledError:
             try:
@@ -1109,7 +1112,33 @@ class Session:
         if self.room is not None:
             self.room["last"] = time.time()
 
-    async def speak(self, text):
+    def voice_check(self, pcm):
+        """Whose voice this question is, while the speech recognition runs (speakers.identify): only
+        when it can be the profile's own (speaker ID on, its voice taught); else None."""
+        import speakers
+        cc = load_config().get("chat", {})
+        if not cc.get("speaker_id", False) or not speakers.has_voice(self.dev["user"]):
+            return None
+        th = speakers.STRICTNESS.get(cc.get("speaker_strictness"), 0.75)
+        return asyncio.create_task(asyncio.to_thread(speakers.identify, wav16k(pcm), th))
+
+    async def voice_result(self, vt):
+        """(the profile's id or "", why not) for this question: personal things at a speaker in a room
+        only for the voice clearly recognized as the profile's own (chat_turn.shared_stranger)."""
+        if vt is None:
+            cc = load_config().get("chat", {})
+            return "", ("speaker ID is off" if not cc.get("speaker_id", False) else "the profile has not taught its voice")
+        try:
+            who, _ = await vt
+        except Exception as e:
+            print("esp32: voice check", type(e).__name__, flush=True)
+            return "", "voice check failed"
+        if who == self.dev["user"]:
+            print("esp32: owner's voice recognized at", self.dev.get("name", "?")[:40], "- personal data allowed", flush=True)
+            return who, ""
+        return "", "another profile's voice" if who else "voice not recognized"
+
+    async def speak(self, text, voice="", why=""):
         import chat
         from starlette.requests import Request
         uid, did = self.dev["user"], self.dev["id"]
@@ -1123,7 +1152,9 @@ class Session:
         scope = {"type": "http", "method": "POST", "path": "/api/chat", "query_string": b"",
                  "headers": [(profiles.DEVICE_HEADER.encode(), self.token.encode())],
                  "client": (self.ws.client.host if self.ws.client else "speaker", 0),
-                 "server": ("127.0.0.1", 0), "scheme": "http"}
+                 "server": ("127.0.0.1", 0), "scheme": "http",
+                 # whose voice this was (set only here, never by a request): see chat_turn.shared_stranger
+                 "speech_voice": voice or "", "speech_voice_why": why}
 
         async def receive():
             return {"type": "http.request", "body": data, "more_body": False}

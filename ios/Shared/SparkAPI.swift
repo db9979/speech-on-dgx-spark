@@ -151,6 +151,26 @@ struct Recipient: Identifiable, Hashable {
     var label: String { call.isEmpty ? name : "\(name) (\(call))" }
 }
 
+/// One of the profile's documents (GET /api/profile/docs).
+struct SparkDoc: Identifiable, Equatable {
+    let id: String
+    let name: String
+    let kind: String        // text, scan, picture
+    let state: String       // ready, reading, ...
+    let file: Bool          // the original is kept on the Spark
+    let size: Int
+    let created: Date
+    let pages: Int
+    let todo: Int
+}
+
+/// What a document says, as the Spark stored it.
+struct DocText {
+    var name = ""
+    var parts: [(page: Int?, text: String)] = []
+    var cut = false
+}
+
 /// Is everything on for messages, who can be reached (GET /api/messages/ready, also while off).
 struct MessageReady {
     var enabled = false
@@ -390,6 +410,63 @@ struct SparkAPI {
             "updated": Int(Date().timeIntervalSince1970 * 1000)])
         let (data, response) = try await URLSession.shared.data(for: r)
         try Self.check(data, response)
+    }
+
+    // ---------------------------------------------------------------- looking at the own documents
+    /// The profile's documents (only with "Dokumente aus der App"); nil when that is off.
+    func docs() async throws -> [SparkDoc]? {
+        let (data, response) = try await URLSession.shared.data(for: request("api/profile/docs"))
+        if [401, 403].contains((response as? HTTPURLResponse)?.statusCode ?? 0) { return nil }
+        try Self.check(data, response)
+        let list = (try? JSONSerialization.jsonObject(with: data) as? [[String: Any]]) ?? []
+        return list.compactMap { d in
+            guard let id = d["id"] as? String, Self.docId(id) else { return nil }
+            return SparkDoc(id: id, name: String((d["name"] as? String ?? "").prefix(200)), kind: d["kind"] as? String ?? "text",
+                            state: d["state"] as? String ?? "ready", file: d["file"] as? Bool ?? false,
+                            size: (d["size"] as? NSNumber)?.intValue ?? 0,
+                            created: Date(timeIntervalSince1970: (d["created"] as? NSNumber)?.doubleValue ?? 0),
+                            pages: (d["pages"] as? NSNumber)?.intValue ?? 0, todo: (d["todo"] as? NSNumber)?.intValue ?? 0)
+        }
+    }
+
+    private static func docId(_ id: String) -> Bool {
+        id.range(of: "^[0-9a-f]{12}$", options: .regularExpression) != nil
+    }
+
+    func docText(_ id: String) async throws -> DocText {
+        guard Self.docId(id) else { throw SparkError(message: String(localized: "Das Dokument gibt es nicht.")) }
+        let (data, response) = try await URLSession.shared.data(for: request("api/profile/wissen/\(id)/text"))
+        try Self.check(data, response)
+        let d = Self.object(data)
+        var t = DocText()
+        t.name = d["name"] as? String ?? ""
+        t.parts = (d["parts"] as? [[String: Any]] ?? []).map { p in ((p["page"] as? NSNumber)?.intValue, p["text"] as? String ?? "") }
+        t.cut = d["cut"] as? Bool ?? false
+        return t
+    }
+
+    /// The kept original, only when it is a PDF or a picture (the Spark sends nothing else for looking at).
+    /// Written to a file of its own in the app's temporary folder; the caller deletes it.
+    func docOriginal(_ id: String) async throws -> URL? {
+        guard Self.docId(id) else { return nil }
+        var c = URLComponents(url: base.appendingPathComponent("api/profile/wissen/\(id)/file"), resolvingAgainstBaseURL: false)!
+        c.queryItems = [URLQueryItem(name: "view", value: "1")]
+        var r = request("api/profile/wissen/\(id)/file")
+        r.url = c.url
+        let (data, response) = try await URLSession.shared.data(for: r)
+        if (response as? HTTPURLResponse)?.statusCode == 404 { return nil }
+        try Self.check(data, response)
+        let type = ((response as? HTTPURLResponse)?.value(forHTTPHeaderField: "Content-Type") ?? "").lowercased()
+        let ext: String
+        if type.hasPrefix("application/pdf") && data.starts(with: Data("%PDF".utf8)) { ext = "pdf" }
+        else if type.hasPrefix("image/jpeg") && data.starts(with: Data([0xFF, 0xD8, 0xFF])) { ext = "jpg" }
+        else { return nil }
+        guard data.count <= 40 * 1024 * 1024 else { return nil }
+        let dir = FileManager.default.temporaryDirectory.appendingPathComponent("docs", isDirectory: true)
+        try FileManager.default.createDirectory(at: dir, withIntermediateDirectories: true)
+        let url = dir.appendingPathComponent("\(id).\(ext)")
+        try data.write(to: url, options: [.atomic, .completeFileProtection])
+        return url
     }
 
     /// A document's text into the profile's "Meine Dokumente" (only with the profile's switch).

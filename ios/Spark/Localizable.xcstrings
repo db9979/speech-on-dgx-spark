@@ -21,6 +21,16 @@
         }
       }
     },
+    "%@ bis %@": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "%@ until %@"
+          }
+        }
+      }
+    },
     "%@ nimmt gerade keine Nachrichten von dir an.": {
       "localizations": {
         "en": {
@@ -47,6 +57,16 @@
           "stringUnit": {
             "state": "translated",
             "value": "%lld minutes"
+          }
+        }
+      }
+    },
+    "%lld Seiten": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "%lld pages"
           }
         }
       }
@@ -191,6 +211,16 @@
         }
       }
     },
+    "Ansicht": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "View"
+          }
+        }
+      }
+    },
     "Antippen und losreden": {
       "localizations": {
         "en": {
@@ -321,6 +351,16 @@
         }
       }
     },
+    "Beenden": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "End"
+          }
+        }
+      }
+    },
     "Begrüßung": {
       "localizations": {
         "en": {
@@ -371,12 +411,32 @@
         }
       }
     },
+    "Dafür im Panel unter Ich → iPhone-App „Dokumente aus der App“ einschalten.": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "For this, turn on “Documents from the app” in the panel under Me → iPhone app."
+          }
+        }
+      }
+    },
     "Dafür im Panel „Von selbst“ für dein Profil einschalten.": {
       "localizations": {
         "en": {
           "stringUnit": {
             "state": "translated",
             "value": "For this, switch on “By itself” for your profile in the panel."
+          }
+        }
+      }
+    },
+    "Das Dokument gibt es nicht.": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "That document does not exist."
           }
         }
       }
@@ -477,16 +537,6 @@
           "stringUnit": {
             "state": "translated",
             "value": "I cannot find that name."
-          }
-        }
-      }
-    },
-    "Den Namen finde ich nicht. Möglich: %@.": {
-      "localizations": {
-        "en": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "I cannot find that name. Possible: %@."
           }
         }
       }
@@ -836,7 +886,7 @@
         "en": {
           "stringUnit": {
             "state": "translated",
-            "value": "Pick a recipient"
+            "value": "Choose recipient"
           }
         }
       }
@@ -1127,6 +1177,16 @@
           "stringUnit": {
             "state": "translated",
             "value": "Paired"
+          }
+        }
+      }
+    },
+    "Gekürzt. Das ganze Dokument steht im Panel.": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Shortened. The whole document is in the panel."
           }
         }
       }
@@ -1491,6 +1551,16 @@
         }
       }
     },
+    "Meine Dokumente": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "My documents"
+          }
+        }
+      }
+    },
     "Meldungen aufs iPhone": {
       "localizations": {
         "en": {
@@ -1626,7 +1696,7 @@
         "en": {
           "stringUnit": {
             "state": "translated",
-            "value": "Name or call name"
+            "value": "Name or nickname"
           }
         }
       }
@@ -1686,7 +1756,7 @@
         "en": {
           "stringUnit": {
             "state": "translated",
-            "value": "Not sent: it was not clear whom you meant."
+            "value": "Not sent: it is not clear whom you mean."
           }
         }
       }
@@ -1717,6 +1787,16 @@
           "stringUnit": {
             "state": "translated",
             "value": "Nobody matches."
+          }
+        }
+      }
+    },
+    "Noch keine Dokumente.": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "No documents yet."
           }
         }
       }
@@ -1771,6 +1851,16 @@
         }
       }
     },
+    "Original": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Original"
+          }
+        }
+      }
+    },
     "Ort": {
       "localizations": {
         "en": {
@@ -1817,6 +1907,26 @@
           "stringUnit": {
             "state": "translated",
             "value": "Profile"
+          }
+        }
+      }
+    },
+    "Raum-Modus beenden": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "End room mode"
+          }
+        }
+      }
+    },
+    "Raum-Modus überall beenden": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "End room mode everywhere"
           }
         }
       }
@@ -1907,6 +2017,16 @@
           "stringUnit": {
             "state": "translated",
             "value": "Write"
+          }
+        }
+      }
+    },
+    "Seite %lld": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Page %lld"
           }
         }
       }
@@ -2177,6 +2297,16 @@
           "stringUnit": {
             "state": "translated",
             "value": "Appointments"
+          }
+        }
+      }
+    },
+    "Text": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Text"
           }
         }
       }
@@ -2481,12 +2611,12 @@
         }
       }
     },
-    "Zu viele passen (%lld). Sag den ganzen Namen oder den Rufnamen.": {
+    "Zu viele passen (%@). Sag den ganzen Namen oder den Rufnamen.": {
       "localizations": {
         "en": {
           "stringUnit": {
             "state": "translated",
-            "value": "Too many match (%lld). Say the full name or the call name."
+            "value": "Too many match (%@). Say the whole name or the nickname."
           }
         }
       }
@@ -2497,6 +2627,16 @@
           "stringUnit": {
             "state": "translated",
             "value": "Recent"
+          }
+        }
+      }
+    },
+    "wird noch gelesen": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "still being read"
           }
         }
       }

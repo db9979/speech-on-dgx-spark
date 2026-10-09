@@ -1,12 +1,122 @@
 {
   "sourceLanguage": "de",
   "strings": {
+    "%@ %@ bis %@": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "%@ %@ until %@"
+          }
+        }
+      }
+    },
+    "App öffnen": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Open app"
+          }
+        }
+      }
+    },
+    "Beenden": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "End"
+          }
+        }
+      }
+    },
+    "Im Panel unter Ich → iPhone-App einschalten": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Turn on in the panel under Me → iPhone app"
+          }
+        }
+      }
+    },
+    "Niemand hört zu": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Nobody is listening"
+          }
+        }
+      }
+    },
+    "Raum-Modus": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Room mode"
+          }
+        }
+      }
+    },
+    "Raum-Modus beenden": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "End room mode"
+          }
+        }
+      }
+    },
     "Spark zuhören": {
       "localizations": {
         "en": {
           "stringUnit": {
             "state": "translated",
             "value": "Talk to Spark"
+          }
+        }
+      }
+    },
+    "Zeigt, wo gerade zugehört wird, und beendet es.": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Shows where the Spark is listening right now and ends it."
+          }
+        }
+      }
+    },
+    "bis %@": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "until %@"
+          }
+        }
+      }
+    },
+    "bis %@ ·": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "until %@ ·"
+          }
+        }
+      }
+    },
+    "vorbei": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "over"
           }
         }
       }

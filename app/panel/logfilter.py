@@ -29,7 +29,7 @@ _AREAS = [(k, re.compile(rx)) for k, rx in AREAS]
 FILTERS = dict(AREAS, update=None, errors=None)
 # levels by fixed words, never by a model
 ERR = re.compile(r"(?i)(error|exception|traceback|failed|broke|refused|timeout|timed out|fehler|not reachable)")
-WARN = re.compile(r"(?i)\b(warn\w*|stalled|behind|ignored|asked again|retry|slow|refused)\b")
+WARN = re.compile(r"(?i)\b(warn\w*|stalled|behind|ignored|asked again|retry|slow|refused|withheld)\b")
 # a uvicorn access-log line: INFO:     1.2.3.4:5 - "GET /x?y HTTP/1.1" 200 OK
 # update.sh: "Available: 46fb0e8 …", "Update finished: 46fb0e8 …", "  46fb0e8 subject"
 COMMIT = re.compile(r"^(?:(?:Installed|Available|Update finished): |\s+)[0-9a-f]{7,40} ")
