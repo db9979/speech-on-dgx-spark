@@ -55,7 +55,7 @@ Name, Untertitel, Werbetext, Beschreibung, Stichwörter, URLs und Kategorien (de
 4. GitHub → **Actions → App Store texts → Run workflow**: Bundle-ID, Version (`1.0`) und Copyright (z. B. `2026 Vorname Nachname`) eintragen, **Run**.
 5. Nach etwa 2 Minuten stehen die Texte in App Store Connect. Den Schlüssel kannst du danach dort wieder widerrufen.
 
-Die Bildschirmfotos (deutsch und englisch, 6,9") macht der Ablauf **App Store screenshots** im iPhone-Simulator mit Beispielinhalten. Er legt sie in den Zweig `app-store-screenshots`. Mit dem Häkchen „Bildschirmfotos mit hochladen“ trägt **App Store texts** sie gleich mit ein. Den Vorführmodus (`-SparkDemo`) gibt es nur im Testbuild, nicht in der App aus dem Store.
+Die Bildschirmfotos (deutsch und englisch, 6,9" und 6,3") macht der Ablauf **App Store screenshots** im iPhone-Simulator mit Beispielinhalten. Er legt sie in den Zweig `app-store-screenshots`. Mit dem Häkchen „Bildschirmfotos mit hochladen“ trägt **App Store texts** sie gleich mit ein. Den Vorführmodus (`-SparkDemo`) gibt es nur im Testbuild, nicht in der App aus dem Store.
 
 Von Hand bleiben: App-Datenschutz, Altersfreigabe, Hinweise für die Prüfung und Preis. Die Antworten dafür stehen in den Unterlagen aus dem Projekt („App Store Connect: Angaben für Spark“).
 

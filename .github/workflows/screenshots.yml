@@ -1,7 +1,7 @@
 name: App Store screenshots
 
-# Takes the App Store pictures of the iPhone app in the simulator (iPhone 16 Pro Max, 6.9",
-# 1320 x 2868), German and English. The app runs as a Debug build with `-SparkDemo <scene>`
+# Takes the App Store pictures of the iPhone app in the simulator (iPhone 16 Pro Max 6.9" 1320 x 2868
+# and iPhone 16 Pro 6.3" 1206 x 2622), German and English. The app runs as a Debug build with `-SparkDemo <scene>`
 # (ios/Spark/Demo.swift): example content, no Spark, no pairing, nobody's real data.
 # Result: artifact "screenshots" and the branch app-store-screenshots (ios/fastlane/screenshots).
 on:
@@ -42,26 +42,31 @@ jobs:
           set -euo pipefail
           app="$RUNNER_TEMP/dd/Build/Products/Debug-iphonesimulator/Spark.app"
           bundle=$(/usr/libexec/PlistBuddy -c "Print :CFBundleIdentifier" "$app/Info.plist")
-          udid=$(xcrun simctl create shots "iPhone 16 Pro Max")
-          xcrun simctl boot "$udid"
-          xcrun simctl bootstatus "$udid" -b
-          xcrun simctl ui "$udid" appearance light
-          xcrun simctl status_bar "$udid" override --time "9:41" --dataNetwork wifi --wifiMode active --wifiBars 3 \
-            --cellularMode active --cellularBars 4 --batteryState charged --batteryLevel 100
-          xcrun simctl install "$udid" "$app"
           out=ios/fastlane/screenshots
           rm -rf "$out"
-          for lang in de en; do
-            case $lang in de) dir=de-DE; loc=de_DE;; en) dir=en-US; loc=en_US;; esac
-            mkdir -p "$out/$dir"
-            n=1
-            for scene in chat photo remind profile history; do
-              xcrun simctl launch --terminate-running-process "$udid" "$bundle" \
-                -SparkDemo "$scene" -AppleLanguages "($lang)" -AppleLocale "$loc"
-              sleep 8
-              xcrun simctl io "$udid" screenshot "$out/$dir/${n}_${scene}.png"
-              n=$((n + 1))
+          # 6.9" (1320 x 2868) and 6.3" (1206 x 2622); App Store Connect sorts them by size
+          for size in "69:iPhone 16 Pro Max" "63:iPhone 16 Pro"; do
+            tag=${size%%:*}
+            udid=$(xcrun simctl create "shots$tag" "${size#*:}")
+            xcrun simctl boot "$udid"
+            xcrun simctl bootstatus "$udid" -b
+            xcrun simctl ui "$udid" appearance light
+            xcrun simctl status_bar "$udid" override --time "9:41" --dataNetwork wifi --wifiMode active --wifiBars 3 \
+              --cellularMode active --cellularBars 4 --batteryState charged --batteryLevel 100
+            xcrun simctl install "$udid" "$app"
+            for lang in de en; do
+              case $lang in de) dir=de-DE; loc=de_DE;; en) dir=en-US; loc=en_US;; esac
+              mkdir -p "$out/$dir"
+              n=1
+              for scene in chat photo remind profile history; do
+                xcrun simctl launch --terminate-running-process "$udid" "$bundle" \
+                  -SparkDemo "$scene" -AppleLanguages "($lang)" -AppleLocale "$loc"
+                sleep 8
+                xcrun simctl io "$udid" screenshot "$out/$dir/${tag}_${n}_${scene}.png"
+                n=$((n + 1))
+              done
             done
+            xcrun simctl shutdown "$udid"
           done
           ls -la "$out"/*
       - uses: actions/upload-artifact@v4

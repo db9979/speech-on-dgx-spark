@@ -2,6 +2,7 @@
 
 Every version in one line, newest first (taken from the commit messages, so some lines are German, some English). Older entries have no version number.
 
+- **V01.0.174** · 2026-10-09 · iPhone-App: App-Store-Bildschirmfotos zusätzlich in 6,3" (1206 × 2622)
 - **V01.0.173** · 2026-10-09 · Einbinden: Anleitung „KI-Agenten“ – Hermes Agent und OpenClaw nutzen Spracherkennung und Sprachausgabe der Spark
 - **V01.0.172** · 2026-10-09 · iPhone-App: App-Store-Bildschirmfotos (de/en) per GitHub-Ablauf aus dem Simulator, Vorführmodus nur im Testbuild
 - **V01.0.171** · 2026-10-08 · Funktionen als kurze Zeilen: Antippen klappt auf, Filter Alle/An/Aus/Braucht dich, Sprungleiste zu den Gruppen

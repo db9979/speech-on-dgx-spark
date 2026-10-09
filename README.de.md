@@ -31,6 +31,7 @@ Alle Optionen ohne Rückfragen (`--mode api --asr 1.7b --tts 0.6b --yes` …) st
 
 <!-- New version: add one line at the top here and in CHANGELOG.md, drop the oldest line here (keep 10). Details go to docs/de and docs/en, not into this README. -->
 
+- **V01.0.174** iPhone-App: App-Store-Bildschirmfotos zusätzlich in 6,3" (1206 × 2622)
 - **V01.0.173** Einbinden: Anleitung „KI-Agenten“, Hermes Agent und OpenClaw nutzen Spracherkennung und Sprachausgabe der Spark
 - **V01.0.172** iPhone-App: App-Store-Bildschirmfotos (de/en) per GitHub-Ablauf aus dem Simulator, Vorführmodus nur im Testbuild
 - **V01.0.171** Funktionen als kurze Zeilen: Antippen klappt auf, Filter Alle/An/Aus/Braucht dich, Sprungleiste zu den Gruppen
@@ -40,7 +41,6 @@ Alle Optionen ohne Rückfragen (`--mode api --asr 1.7b --tts 0.6b --yes` …) st
 - **V01.0.167** iPhone-App: baut mit dem neuen Xcode (iOS 26), Bluetooth-Option für Headsets angepasst
 - **V01.0.166** Eigene Stimme überhören (aus, Admin + Profil): hört das iPhone oder der Browser, wie der Lautsprecher antwortet, nimmt der Spark das nicht als neue Frage
 - **V01.0.165** iPhone-App: Apple Erinnerungen nach „Ja“ und Einkaufsliste in die Erinnerungen-App (aus, Profilschalter), Teilen → Spark aus jeder App, Kurzbefehle-Bausteine, Antworten als Notiz teilen
-- **V01.0.164** Qualitätstest kompakter: nur Fragen mit Befund stehen offen (eine Zeile, Antwort zum Aufklappen), der Rest ist zugeklappt; während des Tests ein Fortschrittsbalken mit „Frage 15 von 36 · noch etwa 2 min“
 
 Alle Versionen: [CHANGELOG.md](CHANGELOG.md)
 

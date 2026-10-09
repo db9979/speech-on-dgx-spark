@@ -31,6 +31,7 @@ All options for running without questions (`--mode api --asr 1.7b --tts 0.6b --y
 
 <!-- New version: add one line at the top here and in CHANGELOG.md, drop the oldest line here (keep 10). Details go to docs/de and docs/en, not into this README. -->
 
+- **V01.0.174** iPhone app: App Store screenshots also in 6.3" (1206 × 2622)
 - **V01.0.173** Integrate: "AI agents" guide, Hermes Agent and OpenClaw use the Spark for speech recognition and speech output
 - **V01.0.172** iPhone app: App Store screenshots (de/en) from the simulator via GitHub workflow, demo mode in Debug builds only
 - **V01.0.171** Features as short lines: tap to open, filter All/On/Off/Needs you, jump bar to the groups
@@ -40,7 +41,6 @@ All options for running without questions (`--mode api --asr 1.7b --tts 0.6b --y
 - **V01.0.167** iPhone app: builds with the new Xcode (iOS 26), Bluetooth headset option adjusted
 - **V01.0.166** Ignore my own voice (off, admin + profile): when the iPhone or a browser hears the speaker answering, the Spark does not take it as a new question
 - **V01.0.165** iPhone app: Apple Reminders after "yes" and the shopping list into the Reminders app (off, profile switch), Share → Spark from any app, Shortcuts actions, share answers as a note
-- **V01.0.164** Quality test more compact: only questions with a finding stay open (one line, answer expands on tap), the rest is folded; while it runs a progress bar with "question 15 of 36 · about 2 min left"
 
 All versions: [CHANGELOG.md](CHANGELOG.md)
 
