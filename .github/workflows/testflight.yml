@@ -99,22 +99,46 @@ jobs:
           <!DOCTYPE plist PUBLIC "-//Apple//DTD PLIST 1.0//EN" "http://www.apple.com/DTDs/PropertyList-1.0.dtd">
           <plist version="1.0"><dict>
             <key>method</key><string>app-store-connect</string>
-            <key>destination</key><string>upload</string>
+            <key>destination</key><string>export</string>
             <key>teamID</key><string>${ASC_TEAM_ID}</string>
             <key>signingStyle</key><string>automatic</string>
             <key>manageAppVersionAndBuildNumber</key><false/>
             <key>uploadSymbols</key><true/>
           </dict></plist>
           PLIST
-          xcodebuild -exportArchive -archivePath "$RUNNER_TEMP/Spark.xcarchive" \
-            -exportOptionsPlist "$RUNNER_TEMP/export.plist" -exportPath "$RUNNER_TEMP/export" \
-            -allowProvisioningUpdates -authenticationKeyPath "$RUNNER_TEMP/AuthKey.p8" \
-            -authenticationKeyID "$ASC_KEY_ID" -authenticationKeyIssuerID "$ASC_ISSUER_ID" > export.log 2>&1 \
-            || { grep -iE "error|fail" export.log | sort -u | head -60; exit 1; }
-          tail -n 10 export.log
-          echo "Uploaded. The build shows in App Store Connect → TestFlight after 5 to 30 minutes."
+          # first a signed .ipa here, then the upload on its own: Apple's upload service sometimes times out,
+          # so each part gets up to three tries
+          for try in 1 2 3; do
+            rm -rf "$RUNNER_TEMP/export"
+            if xcodebuild -exportArchive -archivePath "$RUNNER_TEMP/Spark.xcarchive" \
+                -exportOptionsPlist "$RUNNER_TEMP/export.plist" -exportPath "$RUNNER_TEMP/export" \
+                -allowProvisioningUpdates -authenticationKeyPath "$RUNNER_TEMP/AuthKey.p8" \
+                -authenticationKeyID "$ASC_KEY_ID" -authenticationKeyIssuerID "$ASC_ISSUER_ID" > export.log 2>&1; then
+              break
+            fi
+            grep -iE "error|fail" export.log | sort -u | head -30
+            [ "$try" = 3 ] && exit 1
+            echo "Export try $try failed, again in 60 s"; sleep 60
+          done
+          ipa=$(ls "$RUNNER_TEMP"/export/*.ipa | head -1)
+          ls -l "$ipa"
+          # altool finds the key as AuthKey_<ID>.p8 in API_PRIVATE_KEYS_DIR
+          export API_PRIVATE_KEYS_DIR="$RUNNER_TEMP/keys"
+          mkdir -p "$API_PRIVATE_KEYS_DIR"
+          cp "$RUNNER_TEMP/AuthKey.p8" "$API_PRIVATE_KEYS_DIR/AuthKey_${ASC_KEY_ID}.p8"
+          for try in 1 2 3; do
+            if xcrun altool --upload-app -f "$ipa" -t ios --apiKey "$ASC_KEY_ID" --apiIssuer "$ASC_ISSUER_ID" > upload.log 2>&1; then
+              tail -n 5 upload.log
+              echo "Uploaded. The build shows in App Store Connect → TestFlight after 5 to 30 minutes."
+              exit 0
+            fi
+            grep -iE "error|fail|timed out" upload.log | sort -u | head -30
+            [ "$try" = 3 ] && exit 1
+            echo "Upload try $try failed, again in 60 s"; sleep 60
+          done
       - name: Clean up
         if: always()
         run: |
           rm -f "$RUNNER_TEMP/AuthKey.p8"
+          rm -rf "$RUNNER_TEMP/keys"
           security delete-keychain "$RUNNER_TEMP/signing.keychain-db" 2>/dev/null || true
