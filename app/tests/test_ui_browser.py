@@ -352,7 +352,7 @@ class Browser(unittest.TestCase):
                     await pg.evaluate("$('mcpmake').closest('details').open=true")
                     await pg.click("#mcpmake")      # no name, no tool: says so right under the button
                     self.assertIn("Namen", await pg.inner_text("#mcpmakemsg"))
-                    await pg.fill("#mcpname", f"Test {name}")
+                    await pg.fill("#mcsname", f"Test {name}")
                     await pg.click("#mcpmake")
                     self.assertIn("Werkzeug", await pg.inner_text("#mcpmakemsg"))
                     await pg.evaluate("document.querySelector('#mcpbox [data-mcn=transcribe]').checked=true")

@@ -33,6 +33,7 @@ All options for running without questions (`--mode api --asr 1.7b --tts 0.6b --y
 
 <!-- New version: add one line at the top here and in CHANGELOG.md, drop the oldest line here (keep 10). Details go to docs/de and docs/en, not into this README. -->
 
+- **V01.0.320** MCP "Create key": said "Please enter a name first" although one was there; the name field had the same id as a field of the admin Agents page and the page read the empty one; own ids plus a self-test
 - **V01.0.319** Smart home rules can be edited, not only deleted
 - **V01.0.318** Live overview: full-screen button for the picture "Where the requests go right now"
 - **V01.0.317** Smart home rules: pick devices from a list instead of typing, "Zuletzt geändert" and "Gerät erkennen" (trigger the sensor, tap the device)
@@ -42,7 +43,6 @@ All options for running without questions (`--mode api --asr 1.7b --tts 0.6b --y
 - **V01.0.313** Fetch ahead on a question back shows in the live overview at its service (calendar, mail, weather, parcels)
 - **V01.0.312** Live overview (off): Status → Live shows who is asking, each request's way with times, what the guard decides, failed logins and what the services give back; plus a live monitor for a screen in the home network, paired with a one-time code
 - **V01.0.311** Self-test invitation: waits for the page to reload after "Create profile" instead of a fixed 15 seconds (was red twice on GitHub)
-- **V01.0.310** Diagram "How it works" shows the current state: iPhone and Android app, speakers, MCP programs, router, priority, own knowledge, guard and the outside services
 
 All versions: [CHANGELOG.md](CHANGELOG.md)
 

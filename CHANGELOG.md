@@ -2,6 +2,7 @@
 
 Every version in one line, newest first (taken from the commit messages, so some lines are German, some English). Older entries have no version number.
 
+- **V01.0.320** · 2026-10-10 · mcp.js: #mcpname/#mcpmsg gab es auch in agent.js (MCP-Client des Admins), $('mcpname') las dort das leere Feld; jetzt #mcsname/#mcsmsg, Selbsttest test_mcpserver.PageIds prüft, dass keine Kennung von mcp.js anderswo vorkommt
 - **V01.0.319** · 2026-10-10 · Smart-Home-Regeln bearbeiten: Knopf „Bearbeiten“ füllt das Formular, PUT /api/proactive/rules/<id> prüft wie beim Anlegen und ersetzt an derselben Stelle (gleiche id, Gedächtnis der Regel neu), andere Profile 404; Selbsttests inkl. Browsertest
 - **V01.0.318** · 2026-10-10 · Zustand → Live und Live-Monitor: Knopf ⛶ zeigt das Bild „Wohin die Anfragen gerade gehen“ bildschirmfüllend, die Höhe richtet sich nach dem Bildschirm; Esc oder der Knopf wieder zurück
 - **V01.0.317** · 2026-10-10 · Smart-Home-Regeln: Geräte aus einer Liste wählen (GET /api/proactive/ha-devices, Rate-Limit hament 40/min), „Zuletzt geändert“ und „Gerät erkennen“ (40 s auslösen, geänderte Geräte erscheinen zum Antippen; Vergleich über last_changed von Home Assistant im Browser); Selbsttests inkl. Browsertest

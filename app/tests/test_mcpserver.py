@@ -327,5 +327,27 @@ class Outside(Base):
         self.assertEqual(mine[0]["kind"], "oauth")
 
 
+class PageIds(unittest.TestCase):
+    def test_ids_of_the_page_are_its_own(self):
+        """V01.0.320 (Dominik: "Namen eingeben" although a name was there): agent.js had an #mcpname too, so the
+        button read the admin's empty field. No id of mcp.js may appear in another script or the page."""
+        import glob
+        import os
+        import re
+        js = os.path.join(os.path.dirname(os.path.dirname(os.path.abspath(__file__))), "panel", "static")
+        mine = os.path.join(js, "js", "mcp.js")
+        with open(mine, encoding="utf-8") as f:
+            ids = set(re.findall(r'id="([A-Za-z0-9_-]+)"', f.read()))
+        self.assertIn("mcsname", ids)
+        clash = []
+        for p in sorted(glob.glob(os.path.join(js, "js", "*.js"))) + [os.path.join(js, "index.html")]:
+            if p == mine:
+                continue
+            with open(p, encoding="utf-8") as f:
+                text = f.read()
+            clash += [f"{os.path.basename(p)}: {i}" for i in ids if re.search(rf"""id=["']{re.escape(i)}["']""", text)]
+        self.assertEqual(clash, [])
+
+
 if __name__ == "__main__":
     unittest.main()
