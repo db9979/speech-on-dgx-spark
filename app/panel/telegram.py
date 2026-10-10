@@ -28,6 +28,7 @@ import time
 import httpx
 
 import profiles
+import notaus
 import vault
 import features
 from common import load_config
@@ -527,13 +528,13 @@ async def loop():
         return
     _poller["on"] = True
     while True:
-        if not admin_on() or not token():
+        if not admin_on() or not token() or notaus.blocks("aussen"):   # Notaus: Telegram rests (notaus.py)
             conflict_over()
             await asyncio.sleep(10)
             continue
         try:
             async with httpx.AsyncClient(timeout=httpx.Timeout(40, connect=10)) as c:
-                while admin_on() and token():
+                while admin_on() and token() and not notaus.blocks("aussen"):
                     await poll_once(c)
                     if conflict["count"]:
                         conflict_over()
@@ -547,7 +548,7 @@ async def loop():
 
 async def notify(uid, text, private=True):
     """A reminder, briefing or proactive note as a Telegram message (when the profile wants that)."""
-    if not push_on(uid, private):
+    if not push_on(uid, private) or notaus.refuse("aussen"):
         return 0
     try:
         async with httpx.AsyncClient(timeout=20) as c:

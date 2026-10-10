@@ -68,6 +68,7 @@ import numpy as np
 
 import echo
 import logfilter
+import notaus
 import profiles
 import spkcode
 import vault
@@ -321,11 +322,21 @@ async def fetch_firmware(c=None):
             await c.aclose()
 
 
+async def notaus_close():
+    """Notaus stage 3 (notaus.py): every speaker connection ends now; new ones are refused while it holds."""
+    for s in list(_live.values()):
+        try:
+            await s.ws.close(code=4503)
+        except Exception:
+            pass
+    return len(_live)
+
+
 async def fetch_loop():
     while True:
         await asyncio.sleep(60)
         try:
-            if admin_on() and time.time() - float(_state().get("checked") or 0) > FETCH_EVERY:
+            if admin_on() and not notaus.blocks("internet") and time.time() - float(_state().get("checked") or 0) > FETCH_EVERY:
                 err = ""
                 try:
                     await fetch_firmware()
@@ -1463,6 +1474,9 @@ async def speaker_ws(ws: WebSocket):
         await ws.send_text(json.dumps({"type": "probe", "spark": PROBE}))
         await ws.close(1000)
         return
+    if notaus.refuse("gespraech"):   # Notaus stage 3: speakers stay silent (notaus.py)
+        await ws.close(code=4503)
+        return
     token = ws.headers.get("authorization", "")
     token = token[7:].strip() if token.lower().startswith("bearer ") else token.strip()
     dev = device_for_token(token)
@@ -1495,6 +1509,8 @@ async def speaker_ws(ws: WebSocket):
         while True:
             msg = await ws.receive()
             if msg.get("type") == "websocket.disconnect":
+                break
+            if notaus.blocks("gespraech"):
                 break
             if msg.get("bytes") is not None:
                 await s.on_audio(msg["bytes"])

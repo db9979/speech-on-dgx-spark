@@ -38,8 +38,8 @@ function skeleton(root){
   const ev=`<div class="card"><h3>${tt('Ereignisse','Events')}</h3><div class="mono ev" id="lvev"></div></div>`;
   const cn=`<div class="card" id="lvcnc"><h3>${tt('Offene Verbindungen','Open connections')} <span class="n" id="lvncn"></span><span class="kdots"></span></h3><table id="lvcn"></table></div>`;
   const flow=`<div class="card flow"><h3 style="padding:4px 10px 0">${tt('Wohin die Anfragen gerade gehen','Where the requests go right now')} <small class="mut hideph">${tt('Geräte erscheinen bei einer Anfrage; die letzte bleibt stehen, bis eine neue kommt, dann blendet sie in 10 s aus · oben Heimnetz, unten Internet','devices show while they ask; the last one stays until a new one comes, then fades in 10 s · home network above, internet below')}</small></h3><div id="lvflow"></div></div>`;
-  if(KIOSK)root.innerHTML=`<div class="kpis" id="lvkpi"></div>${flow}<div class="kside">${run}${ev}</div><div class="kbot">${way}<div class="krot">${gd}${dr}${rt}${cn}</div></div>`;
-  else root.innerHTML=`<div class="kpis" id="lvkpi"></div>${flow}${way}<div class="gates">${gd}${dr}</div><div style="margin-bottom:14px">${rt}</div><div class="grid2">${run}<div class="split">${cn}${ev}</div></div>`;
+  if(KIOSK)root.innerHTML=`<div class="lvna" id="lvna" hidden></div><div class="kpis" id="lvkpi"></div>${flow}<div class="kside">${run}${ev}</div><div class="kbot">${way}<div class="krot">${gd}${dr}${rt}${cn}</div></div>`;
+  else root.innerHTML=`<div class="lvna" id="lvna" hidden></div><div class="kpis" id="lvkpi"></div>${flow}${way}<div class="gates">${gd}${dr}</div><div style="margin-bottom:14px">${rt}</div><div class="grid2">${run}<div class="split">${cn}${ev}</div></div>`;
   if(!tip){tip=document.createElement('div');tip.id='lvtip';document.body.appendChild(tip)}
   const fl=el('lvflow');
   fl.addEventListener('mousemove',e=>{const x=e.target.closest('[data-tip]');if(!x){tip.style.display='none';return}
@@ -193,7 +193,12 @@ function events(){el('lvev').innerHTML=LV.data.events.length?LV.data.events.map(
 function pickSel(){const R=LV.data.reqs,run=R.filter(r=>!r.done);
   if(KIOSK&&run.length&&Date.now()-LV.lastSel>8000){const i=run.findIndex(r=>r.id===LV.sel);LV.sel=run[(i+1)%run.length].id;LV.lastSel=Date.now()}
   if(!R.some(r=>r.id===LV.sel))LV.sel=(run[run.length-1]||R[R.length-1]||{}).id||''}
-function draw(){if(!LV.data)return;pickSel();kpis(LV.data);flow();way();guardList();doorList();rets();running();conns();events();if(KIOSK)rotate()}
+// Notaus (notaus.py): stage, since when, through which channel, and per kind held or running with a count; never content
+function notaus(){const n=LV.data.notaus||{},box=el('lvna');if(!box)return;box.hidden=!n.level;if(!n.level){box.innerHTML='';return}
+  const nm={1:tt('Außen zu','Outside closed'),2:tt('Hände weg','Hands off'),3:tt('Alles still','All quiet')}[n.level]||'';
+  box.innerHTML=`<div class="lvnah"><b>${tt('NOTAUS · STUFE ','KILL SWITCH · STAGE ')}${lvE(n.level)} · ${lvE(nm.toUpperCase())}</b><span class="mut">${n.since?tt('seit ','since ')+hm(n.since):''}${n.channel?' · '+lvE(n.channel):''}</span></div>`
+    +`<div class="lvnak">${(n.kinds||[]).map(k=>{const held=n.level>=k.from;return `<span class="${held?'held':'run'}">${lvE(tt(k.de,k.en))} <b>${held?lvE(k.n):'–'}</b></span>`}).join('')}</div>`}
+function draw(){if(!LV.data)return;pickSel();notaus();kpis(LV.data);flow();way();guardList();doorList();rets();running();conns();events();if(KIOSK)rotate()}
 function rotate(){const cards=['lvguardc','lvdoorc','lvretc','lvcnc'],i=Math.floor(Date.now()/10000)%cards.length;
   cards.forEach((c,k)=>{const x=el(c);if(x)x.classList.toggle('on',k===i)});document.querySelectorAll('.kdots').forEach(d=>d.innerHTML=cards.map((_,k)=>`<i class="${k===i?'on':''}"></i>`).join(''));
   const s=el('lvshow');if(s)s.textContent=LV.sel?tt('zeigt gerade: ','showing: ')+LV.sel:''}

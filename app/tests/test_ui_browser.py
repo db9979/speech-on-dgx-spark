@@ -127,6 +127,43 @@ class Browser(unittest.TestCase):
                     await br.close()
         self.run_async(go())
 
+    def test_notaus_button_band_and_lifting(self):
+        """Notaus (notaus.py): the red button opens the stages, triggering shows the band and Zustand's card on every
+        page, lifting asks for the password (no second step here) and everything is back."""
+        import notaus
+
+        async def go():
+            async with async_playwright() as p:
+                br, pg, errors = await self.page(p, 1280, 900, csp=True)
+                try:
+                    await pg.wait_for_selector("#notausbtn:not([hidden])", timeout=5000)
+                    await pg.click("#notausbtn")
+                    await pg.wait_for_selector("#notausmodal .nastage.on", timeout=3000)
+                    await pg.click("#nmstages .nastage[data-n='1']")
+                    await pg.fill("#nmreason", "Browsertest")
+                    await pg.click("#nmgo")
+                    await pg.wait_for_selector("#notausband:not([hidden])", timeout=5000)
+                    self.assertIn("STUFE 1", await pg.text_content("#nbtitle"))
+                    self.assertEqual(notaus.level(), 1)
+                    await pg.evaluate("goSec('mon')")
+                    await pg.wait_for_selector("#znotaus:not([hidden]) .znrow", timeout=3000)
+                    await pg.click("#nblift")
+                    await pg.fill("#nopw", "secret-admin")
+                    await pg.click("#nogo")
+                    for _ in range(50):
+                        if not notaus.level():
+                            break
+                        await pg.wait_for_timeout(100)
+                    self.assertEqual(notaus.level(), 0)
+                    self.assertEqual(errors, [])
+                finally:
+                    try:
+                        os.remove(notaus.FILE)
+                    except FileNotFoundError:
+                        pass
+                    await br.close()
+        self.run_async(go())
+
     def test_switch_and_update_show_without_f5(self):
         # a function switched on and saved shows at once (the page loads itself again, V01.0.197), and a new
         # version on the Spark reloads an idle page with the new files (V01.0.120); api() still answers
@@ -1019,7 +1056,7 @@ class Browser(unittest.TestCase):
                     self.assertTrue(await pg.evaluate("$('logs').classList.contains('on')"), name)
                     await pg.keyboard.press("Control+k")
                     await pg.fill("#palq", "freihändig")
-                    self.assertIn("Für dich", await pg.evaluate("$('palres').textContent"), name)
+                    await self.until(pg, "$('palres').textContent.includes('Für dich')", 5)
                     await pg.keyboard.press("Escape")
                     self.assertFalse(await pg.is_visible("#fpal"), name)
                     over = await pg.evaluate("document.documentElement.scrollWidth-window.innerWidth")

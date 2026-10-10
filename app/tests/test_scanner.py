@@ -75,6 +75,8 @@ OPEN = {
     "/.well-known/oauth-authorization-server": "public OAuth addresses, no data; 404 unless allowed",
     "/.well-known/oauth-protected-resource": "public OAuth addresses, no data; 404 unless allowed",
     "/.well-known/oauth-protected-resource/mcp": "public OAuth addresses, no data; 404 unless allowed",
+    "/api/notaus": "the kill switch: strangers see only the stage; triggering checks the caller itself (notaus._caller), only up, rate limit",
+    "/api/admin/notaus/off": "lifting checks the admin itself (notaus._lift_how): browser at home, fresh code or password, rate limit",
 }
 LOGIN = re.compile(r"Depends\((auth|main_auth|owner_auth|assistant|own_profile|browser_profile|secret_profile|secret_profile_fresh|_on)\)")
 ROUTE = re.compile(r'@(?:router|app)\.(?:get|post|put|delete|patch|api_route)\("([^"]*)"[^\n]*\n((?:@[^\n]*\n)*)'

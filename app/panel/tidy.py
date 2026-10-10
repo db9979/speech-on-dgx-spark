@@ -44,6 +44,7 @@ import httpx
 
 import hintergrund
 import mail
+import notaus
 import profiles
 import vorrang
 import features
@@ -726,6 +727,7 @@ class Box:
         return done
 
     def append_draft(self, raw_msg):
+        notaus.stop("aktion")
         folder = self.special("\\drafts", ["Drafts", "Entwürfe", "[Gmail]/Drafts", "[Gmail]/Entwürfe",
                                            "INBOX.Drafts", "INBOX/Drafts"])
         if not folder:
@@ -1350,6 +1352,7 @@ def describe(plan, d=None):
 
 def carry_out(uid, plan):
     """Does a confirmed proposal; returns a sentence saying what happened (checked)."""
+    notaus.stop("aktion")   # the Notaus holds every action off (notaus.py)
     if plan["kind"] == "sort":
         n = 0
         for aid, uids in plan["moves"].items():

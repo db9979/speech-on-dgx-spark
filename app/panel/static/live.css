@@ -77,3 +77,8 @@ body.kiosk{height:100vh;overflow:hidden;background:var(--bg)}
 .kiosk .pairbox button{padding:12px;border-radius:12px;border:0;background:var(--acc);color:#fff;font:inherit;font-weight:700;cursor:pointer}
 .kiosk .pairbox ul{margin:0;padding-left:18px;color:var(--mut);font-size:13px}
 @media (max-width:1100px){body.kiosk{height:auto;overflow:auto}.kiosk .lv{display:block;height:auto}.kiosk .lv>*{margin-bottom:14px}.kiosk .krot>.card{display:block;margin-bottom:14px}}
+/* Notaus (notaus.py): red band with the stage and what it holds off */
+.lvna{border:2px solid var(--bad);border-radius:12px;padding:10px 14px;margin-bottom:12px;background:color-mix(in srgb,var(--bad) 10%,transparent)}
+.lvna .lvnah{display:flex;flex-wrap:wrap;gap:4px 12px;align-items:baseline}.lvna .lvnah b{color:var(--bad);letter-spacing:.04em}
+.lvna .lvnak{display:flex;flex-wrap:wrap;gap:6px;margin-top:8px}.lvna .lvnak span{font-size:12px;border-radius:999px;padding:2px 9px;border:1px solid var(--line,#8884);min-width:0;overflow-wrap:anywhere}
+.lvna .lvnak .held{border-color:var(--bad);color:var(--bad)}.lvna .lvnak .run{opacity:.65}

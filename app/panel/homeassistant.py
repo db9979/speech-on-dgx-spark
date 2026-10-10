@@ -31,6 +31,7 @@ import httpx
 
 import hintergrund
 import netguard
+import notaus
 import logfilter
 import profiles
 import vault
@@ -278,6 +279,7 @@ async def command(item, text, language="de"):
     """Hands one spoken command to Home Assistant's Assist; when Assist does not know the device, finds
     it among all states and switches it directly (see fallback). Whatever Assist reports, the states of
     the devices it names are read back afterwards, and only that counts. Returns (ok, answer, targets)."""
+    notaus.stop("aktion")   # the Notaus holds every action off (notaus.py)
     ok, speech, targets, unknown, ids = await _assist(item, text, language)
     if unknown:
         done, more = await fallback(item, text)
@@ -774,6 +776,7 @@ async def _bulk(item, all_states, areas, names, words, service):
 
 async def action(item, entity_id, service, data=None):
     """Calls one service of the entity's own domain; returns (ok, text for the model)."""
+    notaus.stop("aktion")   # the Notaus holds every action off (notaus.py)
     eid = str(entity_id or "").strip().lower()
     service = str(service or "").strip().lower().split(".")[-1]  # "media_player.turn_off" is fine too
     if ("_" not in service or not re.fullmatch(r"[a-z0-9_]{1,64}", service)) and _intent(service):
@@ -900,6 +903,8 @@ async def todo(item, list_name="", act="show", text=""):
     act = str(act or "show").strip().lower()
     act = {"list": "show", "read": "show", "get": "show", "add_item": "add", "complete": "done",
            "check": "done", "remove_item": "remove", "delete": "remove"}.get(act, act)
+    if act != "show":
+        notaus.stop("aktion")   # a change of the list: held off by the Notaus (notaus.py)
     async with _client(item) as c:
         r = await c.get(item["url"] + "/api/states")
         r.raise_for_status()

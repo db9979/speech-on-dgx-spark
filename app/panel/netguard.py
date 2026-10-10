@@ -7,7 +7,8 @@ One place decides where such a connection may go (allowed):
   admin allows it (panel.allow_lan, Einstellungen -> Sicherheit, default off).
 - HOME (Home Assistant, which lives in the home network): public and home network addresses.
 Never: link-local (169.254.x, cloud metadata), multicast, unspecified, and on this machine the ports
-of the Spark's own services (30000-31099).
+of the Spark's own services (30000-31099). While the Notaus is on (notaus.py, stage 1 and up) also no
+public internet address at any level; the home network stays reachable as the level allows.
 
 The name is resolved once and the connection goes to exactly the checked address (a second lookup
 could answer differently: DNS rebinding); TLS still checks the certificate for the name. Every
@@ -55,6 +56,9 @@ def allowed(ip, port, level):
     if ip.is_loopback and int(port or 0) in OWN_PORTS:
         return "the Spark's own services are not reachable this way"
     if ip.is_global:
+        import notaus   # Notaus stage 1 and up: nothing to the internet (notaus.py)
+        if notaus.refuse("internet"):
+            return "Notaus: no connections to the internet"
         return None
     if level == PUBLIC:
         return "only public internet addresses"

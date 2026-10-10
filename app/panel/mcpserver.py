@@ -49,6 +49,7 @@ from fastapi.responses import JSONResponse, RedirectResponse, Response
 
 import features
 import guard
+import notaus
 import profiles
 from common import load_config
 from core import admin_code, api_headers, app_version, auth, browser_profile, confirm_code
@@ -732,6 +733,8 @@ def plan(uid, name, args):
 
 async def propose(c, name, args, now=None):
     """Leaves the action waiting for the profile's decision and tells it by push."""
+    if notaus.refuse("aktion"):   # the Notaus holds every action off (notaus.py)
+        return "Nicht vorgeschlagen: Der Notaus ist an, der Spark führt gerade nichts aus."
     now = time.time() if now is None else now
     uid = c["uid"]
     try:
@@ -767,6 +770,8 @@ def status(uid, aid):
 
 async def carry_out(uid, x):
     """Runs a confirmed action; returns (ok, text)."""
+    if notaus.refuse("aktion"):
+        return False, "Der Notaus ist an, nichts ausgeführt."
     item = x["item"]
     if x["tool"] == "home_assistant":
         import homeassistant

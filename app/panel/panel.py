@@ -12,7 +12,7 @@ import time
 import psutil
 import uvicorn
 from fastapi import FastAPI, HTTPException, Request
-from fastapi.responses import FileResponse, HTMLResponse
+from fastapi.responses import FileResponse, HTMLResponse, JSONResponse
 
 sys.path.insert(0, os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
 from common import BodyLimit, load_config, quiet_access_log  # noqa: E402
@@ -74,9 +74,10 @@ import offsite  # noqa: E402
 import mcpserver  # noqa: E402
 import live  # noqa: E402
 import hamelden  # noqa: E402
+import notaus  # noqa: E402
 
 app = FastAPI(title="Speech on DGX Spark")
-for _module in (account, admin, chat, update, system, proactive, room, roomlive, tidy, weather, contacts, parcels, telegram, tasks, esp32, iphone, pebblewatch, android, appupdate, apns, transit, logfilter, agent, images, messages, intent, wissen, tracelog, lokal, features, remarkable, join, onboard, hintergrund, stufe, today, offsite, mcpserver, live, hamelden):
+for _module in (account, admin, chat, update, system, proactive, room, roomlive, tidy, weather, contacts, parcels, telegram, tasks, esp32, iphone, pebblewatch, android, appupdate, apns, transit, logfilter, agent, images, messages, intent, wissen, tracelog, lokal, features, remarkable, join, onboard, hintergrund, stufe, today, offsite, mcpserver, live, hamelden, notaus):
     app.include_router(_module.router)
 app.middleware("http")(update_lock)
 
@@ -171,6 +172,26 @@ async def sessions(request: Request, call_next):
     return response
 
 
+@app.middleware("http")
+async def emergency(request: Request, call_next):
+    """Notaus (notaus.py): from stage 1 nothing from outside but the page and the Notaus itself, in stage 3 at home
+    only logins, reading Zustand and the logs, and lifting it. Decided before any route reads the request."""
+    held = notaus.gate(request)
+    if held:
+        status, detail = held
+        r = JSONResponse({"detail": detail, "notaus": notaus.level()}, status_code=status,
+                         headers={"Retry-After": "60", "Cache-Control": "no-store"})
+        protect(request, r)
+        return r
+    return await call_next(request)
+
+
+@app.exception_handler(notaus.NotausAktiv)
+async def held_off(request: Request, exc: notaus.NotausAktiv):
+    """An action the Notaus held off deep down (the last line of defence): said plainly, never a 500."""
+    return JSONResponse({"detail": str(exc), "notaus": notaus.level()}, status_code=503)
+
+
 @app.on_event("startup")
 async def sampler():
     async def loop():
@@ -226,6 +247,8 @@ async def stability():
         # due reminders on their own: a slow briefing or proactive check never holds them up
         while True:
             await asyncio.sleep(15)
+            if notaus.blocks("gespraech"):   # Notaus stage 3: not even reminders ring
+                continue
             try:
                 await push.due_reminders()
             except Exception as e:
@@ -239,6 +262,9 @@ async def stability():
             if minute != last:
                 last = minute
                 room.sweep()
+                if notaus.blocks("auto"):   # Notaus stage 2: nothing happens by itself (notaus.py)
+                    await asyncio.sleep(5)
+                    continue
                 try:
                     await chat.due_briefings()
                 except Exception as e:
@@ -278,6 +304,8 @@ async def mail_tidy():
     async def loop():
         while True:
             await asyncio.sleep(60)
+            if notaus.blocks("auto"):
+                continue
             try:
                 await tidy.due_once(idle=not vorrang.speaking())
             except Exception as e:
@@ -292,6 +320,8 @@ async def doc_reader():
     async def loop():
         while True:
             await asyncio.sleep(20)
+            if notaus.blocks("gespraech"):
+                continue
             try:
                 while await wissen.due_once(idle=wissen.quiet()) in ("page", "vectors"):
                     await asyncio.sleep(1)
@@ -307,6 +337,8 @@ async def remarkable_sync():
     async def loop():
         while True:
             await asyncio.sleep(60)
+            if notaus.blocks("internet"):   # the reMarkable cloud is on the internet
+                continue
             try:
                 await remarkable.due_once(idle=not vorrang.speaking())
             except Exception as e:
@@ -330,6 +362,8 @@ async def learner():
     async def loop():
         while True:
             await asyncio.sleep(LEARN_EVERY)
+            if notaus.blocks("auto"):   # Notaus stage 2: nothing is learned or tidied in the memory
+                continue
             try:
                 n = await learn_once()
                 if n:

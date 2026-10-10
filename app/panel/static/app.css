@@ -758,3 +758,34 @@ details.ztech{margin-top:4px}details.ztech>summary{cursor:pointer;font-weight:65
 @media (max-width:760px){.zcards{grid-template-columns:repeat(2,minmax(0,1fr))}}
 /* Rückgängig above the admin log (C5, V01.0.286) */
 .lundo{border:1px solid var(--line);border-radius:12px;padding:8px 12px;margin:0 0 10px;background:var(--card)}.lundo .zrow span{font-size:13.5px}
+/* Notaus (notaus.js, plan plaene/notaus.md): red button, band on every page, the whole page in stage 3 or from outside */
+.b.notausbtn{display:inline-flex;align-items:center;justify-content:center;gap:7px;background:var(--bad);color:#fff;border-color:var(--bad);font-weight:700;order:1}
+.b.notausbtn[hidden]{display:none}.b.notausbtn:hover{filter:brightness(1.08)}
+body.adm .notausbtn{flex:1 1 100%}
+.napow{width:13px;height:13px;border-radius:50%;border:2px solid currentColor;border-top-color:transparent;position:relative;flex:none}
+.napow:after{content:"";position:absolute;left:50%;top:-5px;width:2px;height:8px;margin-left:-1px;background:currentColor;border-radius:2px}
+.b.nared{background:var(--bad);color:#fff;border-color:var(--bad);font-weight:700}
+.notausband{position:sticky;top:0;z-index:61;display:flex;align-items:center;gap:10px 14px;flex-wrap:wrap;padding:9px 16px;background:var(--bad);color:#fff;font-size:14px}
+.notausband[hidden]{display:none}.notausband b{letter-spacing:.04em}.notausband span{flex:1;min-width:0;opacity:.95}
+.notausband .b{background:#fff;color:var(--bad);border-color:#fff;font-weight:700;padding:5px 12px}
+.notausband .b[hidden]{display:none}
+.notauscard{width:min(720px,100%)}.notauscard h2{display:flex;align-items:center;gap:10px;margin-top:0}
+.nadot{width:12px;height:12px;border-radius:50%;background:var(--bad);flex:none;box-shadow:0 0 0 0 color-mix(in srgb,var(--bad) 55%,transparent);animation:nap 1.6s infinite}
+@keyframes nap{70%{box-shadow:0 0 0 9px transparent}100%{box-shadow:0 0 0 0 transparent}}
+.nastages{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:10px;margin:14px 0 12px}
+.nastage{display:flex;flex-direction:column;justify-content:flex-start;border:2px solid var(--line);border-radius:14px;padding:11px 12px;cursor:pointer;text-align:left;background:var(--card);color:var(--fg);font:inherit}
+.nastage.on{border-color:var(--bad);background:color-mix(in srgb,var(--bad) 6%,var(--card))}
+.nastage:disabled{opacity:.45;cursor:default}
+.nastage small{display:block;font-size:11px;font-weight:600;color:var(--mut);text-transform:uppercase;letter-spacing:.06em}
+.nastage b{display:block;font-size:15px;margin:1px 0 4px}.nastage span{display:block;font-size:12.5px;color:var(--mut);line-height:1.4}
+#nmreason{width:100%}
+.naopt{display:flex;gap:9px;align-items:flex-start;margin-top:10px;text-align:left}.naopt input{width:auto;flex:none;margin:3px 0 0}.naopt[hidden]{display:none}
+.notausall{position:fixed;inset:0;z-index:45;display:grid;place-items:center;padding:16px;background:color-mix(in srgb,var(--bad) 10%,var(--bg))}
+.notausall[hidden]{display:none}.notausall .card{width:min(520px,100%);text-align:center;border-color:color-mix(in srgb,var(--bad) 45%,var(--line))}
+.notausall .nadot{margin:4px auto 10px;width:18px;height:18px}.notausall h2{margin:0 0 6px}.notausall .row{justify-content:center;flex-wrap:wrap}
+.notausall .b[hidden]{display:none}
+.znotaus{margin-bottom:14px;border-color:color-mix(in srgb,var(--bad) 40%,var(--line))}.znotaus[hidden]{display:none}
+.znotaus h2{display:flex;gap:10px;align-items:baseline;flex-wrap:wrap}.znotaus h2 .mut{font-size:13px;font-weight:500}
+.znrow{display:flex;gap:10px;align-items:center;padding:7px 0;border-top:1px solid var(--line)}.znrow:first-child{border-top:0}
+.znrow>span:first-child{flex:1;min-width:0}.znrow .n{min-width:3ch;text-align:right;font-variant-numeric:tabular-nums}
+@media (max-width:760px){.nastages{grid-template-columns:1fr}.notausband{font-size:13px;padding:8px 12px}.notausband span{flex-basis:100%}}

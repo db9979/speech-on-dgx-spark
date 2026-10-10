@@ -50,6 +50,12 @@ def shared_stranger(request, body, who):
     return str(request.scope.get("speech_voice_why") or "voice not recognized as the profile's own")[:160]
 
 
+def notaus_note(held):
+    return (f"Notaus Stufe {held} ist an: " + ("Du kannst nichts ändern oder auslösen und " if held >= 2 else "")
+            + "erreichst nichts im Internet. Fragt der Nutzer danach, sag ihm genau das in einem Satz: der Notaus "
+            "sperrt es, bis ein Admin ihn aufhebt.")
+
+
 class Turn:
     """The values prepare() worked out for one turn (plus the queues chat._answer() adds)."""
 
@@ -385,9 +391,22 @@ async def prepare(request):
     cal = calendars.get(who["id"]) if who and briefing and private_ok and (not mcp or "calendar_events" in mcp["tools"]) \
         else {"calendars": [], "topics": []}
     # new appointments: only the profile's own login or device key, and only after a yes (see calendars.py)
-    cal_write = bool(cal["calendars"] and own_browser and not mcp)
-    prop = None
+    # Notaus stage 2 (notaus.py): no "Ja" carries anything out, every proposal waiting in this conversation is
+    # dropped, and below no tool that changes something is offered (stage 1: none that goes to the internet)
+    import notaus
+    held = notaus.level()
     src = f"{body.get('client') or 'web'}:{body.get('convo') if isinstance(body.get('convo'), str) else ''}"
+    if held >= 2 and who:
+        import agent
+        import messages as inbox   # (messages is the conversation here)
+        import tasks
+        import roomfar
+        for mod in (calendars, tidy, tasks, fixes, agent, inbox, roomfar):
+            if mod.pending(who["id"]):
+                mod.drop_pending(who["id"])
+        print(f"notaus: Stufe {held} - keine Aktion, kein Ja, nur lesen", flush=True)
+    cal_write = bool(cal["calendars"] and own_browser and not mcp and held < 2)
+    prop = None
     if cal_write:
         system = (system + "\n\n" + chat.CALENDAR_ADD_HINT).strip()
         prop = calendars.pending(who["id"])
@@ -410,7 +429,7 @@ async def prepare(request):
     # an answer to something the assistant said by itself (yes to its offer, "nicht jetzt", ...):
     # the panel does what it means and the model only says the checked result (see proactive.py)
     mprop = None
-    if (tidy_on or drafts_on) and not prop and not mcp:
+    if (tidy_on or drafts_on) and not prop and not mcp and held < 2:
         mprop = tidy.pending(who["id"])
         if mprop and mprop.get("src", src) != src:
             mprop = None
@@ -430,7 +449,7 @@ async def prepare(request):
                                   "Nutzer nicht zugestimmt hat.")
     # ticking off a list entry ... (extras.py): the module waiting for a yes in this conversation
     xprop = None
-    if who and messages[-1]["role"] == "user" and not prop and not mprop and not mcp:
+    if who and messages[-1]["role"] == "user" and not prop and not mprop and not mcp and held < 2:
         xprop = await extras.answer({"who": who, "own": own_browser, "src": src, "client": body.get("client"), "private": private_ok,
                                      "app": app_key, "device": (profiles.device_name(request) or "")[:40],
                                      "ha": ha, "ha_code": ha_code, "ha_code_ok": ha_code_ok}, messages[-1]["content"])
@@ -440,14 +459,15 @@ async def prepare(request):
             cal_note.append(xprop["call"])
             system = per_turn(system, xprop["system"])
     pro = None
-    if who and own_browser and messages[-1]["role"] == "user" and not prop and not mprop and not xprop and not mcp:  # one yes confirms one thing
+    if who and own_browser and messages[-1]["role"] == "user" and not prop and not mprop and not xprop and not mcp \
+            and held < 2:  # one yes confirms one thing
         pro = proactive.reply(who["id"], messages[-1]["content"], said_before)
         if pro:
             cal_note.append(pro["call"])
             system = per_turn(system, pro["system"])
     # learning from corrections (fixes.py): a yes saves the proposed sentence, a correction leads to one
     fix_ok = bool(who and own_browser and private_ok and ccfg.get("memory", True) and fixes.on(ccfg, pset)
-                  and messages[-1]["role"] == "user" and not mcp)
+                  and messages[-1]["role"] == "user" and not mcp and held < 2)
     fix_fix, fix_prev = False, ""
     if fix_ok and not prop and not mprop and not xprop and not pro:
         fp = fixes.pending(who["id"])
@@ -492,6 +512,11 @@ async def prepare(request):
                        "client": body.get("client"),
                        "text": messages[-1]["content"] if messages[-1]["role"] == "user" else ""})
     tools += ex["tools"]
+    if held:
+        gone_n = len(tools)
+        tools = [t for t in tools if t["function"]["name"] not in notaus.locked_tools(held, ex["changes"])]
+        system = per_turn(system, notaus_note(held))
+        print(f"notaus: Stufe {held} - {gone_n - len(tools)} Werkzeuge nicht angeboten", flush=True)
     if mcp:   # only what the connection was given (mcpserver.ASK_TOOLS), never more than the rights above left
         tools = [t for t in tools if t["function"]["name"] in mcp["tools"]]
     if pics or role_cmd:
@@ -560,8 +585,10 @@ async def prepare(request):
     # (after the person's own documents also no web search: a document could ask to carry its text away;
     # with "Erst lokal suchen" it stays open, but only the person's own words go out, see chat_tools.py)
     def locked(st):
+        # the Notaus is read again for every tool call: switched on during an answer it holds the next call off
         return ((chat.LOCKED_MAIL | ex["changes"]) if st["mail"] else (chat.LOCKED_OUTSIDE | ex["changes"]) if st["outside"]
-                else set()) | ({"web_search"} if st.get("docs") and not web_own else set())
+                else set()) | ({"web_search"} if st.get("docs") and not web_own else set()) \
+            | notaus.locked_tools(notaus.level(), ex["changes"])
     # what this request cannot reach: said plainly, so the model does not make up appointments or mails
     missing = ([] if cal["calendars"] else ["Kalender"]) + ([] if mailbox else ["E-Mails"])
     if missing:

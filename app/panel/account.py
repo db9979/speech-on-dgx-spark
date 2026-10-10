@@ -25,6 +25,7 @@ import echo  # noqa: E402
 import mail  # noqa: E402
 import memtidy  # noqa: E402
 import mfa  # noqa: E402
+import notaus  # noqa: E402
 import passkey  # noqa: E402
 import profiles  # noqa: E402
 import homeassistant  # noqa: E402
@@ -101,6 +102,9 @@ def whoami(request: Request, creds: HTTPBasicCredentials | None = Depends(securi
             # the profile's own role: Ich → Sicherheit offers its admin mode (with what it still needs)
             "admin_role": {"role": own, "mfa": mfa.enabled(prof["id"]), "main_mfa": mfa.enabled(mfa.ADMIN)} if own else None,
             "version": app_version(), "public": cfg.get("chat", {}).get("public", False),
+            # the Notaus (notaus.py): its stage, and whether this login may trigger it (the button in the header)
+            "notaus": notaus.level(), "notaus_may": bool(main or elev or (prof and notaus.profiles_may()
+                                                                            and not request.headers.get(profiles.DEVICE_HEADER))),
             # the login form's "trust this browser" (days) and a right code that still counts (core.CONFIRM_WINDOW)
             "trust_days": mfa.trust_days(), "confirm_until": confirmed_until(request),
             "profile": prof,

@@ -52,6 +52,7 @@ const api=async(p,o={},code)=>{const hd=!code?null:typeof code==='string'?{'X-Sp
     try{const h=r.headers.get('X-Speech-Passkey-Options');if(h)opt=JSON.parse(atob(h.replace(/-/g,'+').replace(/_/g,'/')+'==='.slice((h.length+3)%4)))}catch{}
     const a=window.confirmAsk?await confirmAsk(wrong,opt):null;
     if(a){const r2=await api(p,o,a.code||{pk:a.pk});if(window.confirmRefresh)confirmRefresh();return r2}throw new Error(t('Abgebrochen: ohne Code keine Änderung.','Cancelled: no change without a code.'))}
+  if(r.status===503&&window.notausLoad)notausLoad();   // the Notaus holds this off: band and page show it (notaus.js)
   if(r.status===401&&!/^\/api\/(login|password|profile)/.test(p)&&window.showLogin){if(typeof elevated==='function'&&elevated()){location.reload();return r}showLogin()}if(!r.ok){let t=await r.text();try{t=JSON.parse(t).detail||t}catch{}throw new Error(t)}
   if(o.method&&o.method!=='GET'&&/^\/api\/(config|admin\/|profile\/)/.test(p)&&!/^\/api\/profile\/(setup|handoff)/.test(p))whoSoon();   // a switch may have changed
   return r};

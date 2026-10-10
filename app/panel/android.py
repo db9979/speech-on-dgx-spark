@@ -30,6 +30,7 @@ from fastapi.responses import FileResponse
 
 import features
 import guard
+import notaus
 from common import load_config
 from core import assistant, auth, own_profile
 from account import browser_profile
@@ -170,7 +171,7 @@ async def fetch_loop():
     while True:
         await asyncio.sleep(90)
         try:
-            if admin_on() and time.time() - _state["checked"] > FETCH_EVERY:
+            if admin_on() and not notaus.blocks("internet") and time.time() - _state["checked"] > FETCH_EVERY:
                 await _check()
         except Exception as e:
             print("android: loop", type(e).__name__, e, flush=True)

@@ -184,7 +184,7 @@ function lookAct(a){if(a==='lang')$('langbtn').click();else if(a==='theme')$('th
   else if(a==='desk'||a==='app'){if(a==='desk'&&window.closeProf)closeProf();try{localStorage.setItem('appview',a==='desk'?'off':'on')}catch{}apply();
     if(a==='app'){if(window.closeProf)closeProf();tab('spark')}}
   else if(a==='login'){if(window.closeProf)closeProf();showLogin()}
-  else if(a==='logout')$('logoutbtn').click();else if(a==='find')palOpen()}
+  else if(a==='logout')$('logoutbtn').click();else if(a==='find')palOpen();else if(a==='notaus'&&window.naOpen)naOpen()}
 // ---------------------------------------------------------------- Verwalten
 let mSig='';
 const manageSig=()=>['mon','feat','prof','cfg'].map(s=>{const b=navBtn(s);return b&&!b.hidden&&b.style.display!=='none'?1:0}).join('')+(($('ztitle')||{}).textContent||'')+(($('ztext')||{}).textContent||'');
@@ -198,6 +198,8 @@ function renderManage(){mSig=manageSig();const z=$('zhead'),lvl=(z&&z.dataset.lv
   manage.innerHTML=`<h1 class="aplt">${esc(t('Verwalten','Manage'))}</h1>`+
     `<button type="button" class="apsearch" data-ax="find">${SV(IC.find)}<span>${esc(t('Seite, Schalter oder Anleitung','Page, switch or guide'))}</span></button>`+
     (zt?`<button type="button" class="apstat" data-sec="mon" data-lvl="${esc(lvl)}"><b>${esc(zt)}</b>${zx?`<span>${esc(zx)}</span>`:''}</button>`:'')+
+    (typeof NA!=='undefined'&&NA.s.may?grp('',row('data-ax="notaus"',esc(NA.s.level?t('Notaus: Stufe ändern','Kill switch: change stage'):t('Notaus','Kill switch')),
+      NA.s.level?esc(t('Stufe ','Stage ')+NA.s.level):'',{cls:'apred'})):'')+
     grp('',pages)+grp(t('Darstellung','Appearance'),lookRows())+
     grp('',row('data-ax="logout"',esc(t('Admin abmelden','Sign out admin')),'',{cls:'apred',nochev:1}))}
 manage.addEventListener('click',e=>{const b=e.target.closest('button');if(!b)return;

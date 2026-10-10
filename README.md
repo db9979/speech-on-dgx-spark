@@ -33,6 +33,7 @@ All options for running without questions (`--mode api --asr 1.7b --tts 0.6b --y
 
 <!-- New version: add one line at the top here and in CHANGELOG.md, drop the oldest line here (keep 10). Details go to docs/de and docs/en, not into this README. -->
 
+- **V01.0.316** Kill switch: a red button stops the Spark in three stages (outside closed, hands off, all quiet); only the admin at home with a code lifts it; shown as a red band, under Status and in the live overview
 - **V01.0.315** Live overview: the last request stays until a new one comes
 - **V01.0.314** Home Assistant tells the Spark (all off): smart home rules with a pause, on/off and "only when …", instant notes instead of every minute, house notes on speakers, events from Home Assistant with their own key, rules by voice ("Sag mir Bescheid, wenn …") and a camera picture in words
 - **V01.0.313** Fetch ahead on a question back shows in the live overview at its service (calendar, mail, weather, parcels)
@@ -42,7 +43,6 @@ All options for running without questions (`--mode api --asr 1.7b --tts 0.6b --y
 - **V01.0.309** MCP "Create key" answers right under the button: a missing name or no ticked tool is said there (before at the very end of the page, it looked like nothing happened), plus "creating …" and a clear hint when the code is missing
 - **V01.0.308** Logs → Requests shows at the step "Weiche" whether the model routing came in time
 - **V01.0.307** Fetch ahead on a question back (off): when the assistant asks back, the panel already fetches calendar, mail, weather or parcels while the question is spoken; the model routing of unclear questions runs beside the preparation
-- **V01.0.306** Self-test "phone like the app" waits by polling under the strict CSP instead of wait_for_function (was red on GitHub once)
 
 All versions: [CHANGELOG.md](CHANGELOG.md)
 

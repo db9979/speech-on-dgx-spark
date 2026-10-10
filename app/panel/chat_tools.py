@@ -18,6 +18,7 @@ from textnorm import guess_language  # noqa: E402
 import homeassistant  # noqa: E402
 import kiwix  # noqa: E402
 import mail  # noqa: E402
+import notaus  # noqa: E402
 import profiles  # noqa: E402
 import recall  # noqa: E402
 import tidy  # noqa: E402
@@ -30,6 +31,12 @@ async def run(t, name, args, st):
     if name not in st["offered"]:
         return chat.MAIL_BLOCKED if st["mail"] and name in chat.LOCKED_MAIL else chat.NOT_OFFERED
     todo_change = name == "home_assistant_todo" and str(args.get("action") or "show").strip().lower() not in chat.TODO_READ
+    # the Notaus (notaus.py) is read for every call: switched on during an answer it holds the next one off
+    held = notaus.level()
+    if held and (name in notaus.locked_tools(held, t.ex["changes"]) or (todo_change and held >= 2)):
+        notaus.refuse("internet" if name in notaus.INTERNET_TOOLS else "aktion")
+        print(f"notaus: Werkzeug {name} gesperrt (Stufe {held})", flush=True)
+        return notaus.BLOCKED
     if name in t.locked(st) or (todo_change and (st["mail"] or st["outside"])):
         return chat.MAIL_BLOCKED if st["mail"] else chat.OUTSIDE_BLOCKED
     if name in chat.READS_OUTSIDE:

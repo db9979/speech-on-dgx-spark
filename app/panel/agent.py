@@ -41,6 +41,7 @@ import httpx
 import calendars
 import hintergrund
 import mcp
+import notaus
 import profiles
 import vorrang
 import features
@@ -191,6 +192,8 @@ def _today(uid):
 
 def enqueue(uid, task, doc=False, private=True, origin="chat", plan=""):
     """Puts a job in the queue; returns (job, None) or (None, reason in German)."""
+    if notaus.refuse("auftrag"):
+        return None, "Der Notaus ist an: keine neuen Aufträge, bis ein Admin ihn aufhebt."
     task = clean(task)
     if not task:
         return None, "Kein Auftrag genannt."
@@ -244,6 +247,8 @@ def next_job():
 
 async def worker():
     while True:
+        if notaus.blocks("auftrag"):   # held: waiting jobs stay queued until the Notaus is lifted (notaus_release)
+            return
         nxt = next_job()
         if not nxt:
             return
@@ -277,6 +282,32 @@ def cancel(uid, jid):
     if cur and cur[0] == uid and cur[1] == jid:
         cur[2].cancel()
     return True
+
+
+def notaus_hold():
+    """Notaus stage 2 (notaus.py): the running job stops and waits in the queue again, from the start."""
+    cur = _worker["current"]
+    if not cur:
+        return
+    uid, jid, task = cur
+    _set_job(uid, jid, state="queued", started=None, error="Vom Notaus angehalten.")
+    task.cancel()
+    notaus.refuse("auftrag")
+    print("agent: job held by the Notaus", flush=True)
+
+
+def notaus_release(resume=False):
+    """The Notaus is lifted below stage 2: waiting jobs run on (resume) or are cancelled."""
+    if resume:
+        kick()
+        return 0
+    n = 0
+    for uid in profiles.user_ids():
+        for x in load(uid)["jobs"]:
+            if x.get("state") == "queued":
+                _set_job(uid, x["id"], state="cancelled", finished=int(time.time()), error="Wegen Notaus abgebrochen.")
+                n += 1
+    return n
 
 
 def recover():
@@ -393,6 +424,8 @@ async def _job_tool(uid, name, args, extra, counts, steps):
     counts["all"] += 1
     if counts["all"] > MAX_READS:
         return "Not done: the job used all its tool calls. Write the report now."
+    if name in notaus.INTERNET_TOOLS and notaus.refuse("internet"):
+        return notaus.BLOCKED
     cfg = dict(_defaults(), **ccfg())
     zone = chat.user_zone(profiles.settings(uid).get("tz", ""))
     if name == "web_search":
@@ -850,6 +883,7 @@ async def answer(ctx, latest):
 
 async def carry_out(uid, p, ctx):
     """Does what a proposal says, after the yes; returns the checked result in German."""
+    notaus.stop("aktion")
     if p["kind"] == "plan":
         if not may(uid, "read"):
             raise ValueError("Agent-Funktionen sind für dich aus")

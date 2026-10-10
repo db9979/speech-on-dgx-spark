@@ -53,6 +53,7 @@
     "https_port": 31443,
     "trusted_proxies": [],
     "allow_lan": false,
+    "notaus_profiles": false,
     "session_days": 30,
     "trust_days": 60
   },

@@ -24,6 +24,7 @@ import httpx
 from urllib.parse import urlsplit
 
 from common import load_config
+import notaus
 
 MAX_AUDIO = 16000 * 2 * 120      # two minutes of 16 kHz mono 16 bit
 CHUNK = 2048                     # bytes of audio per chunk sent to HA
@@ -190,6 +191,9 @@ async def voices(s):
 async def handle(reader, writer):
     peer = (writer.get_extra_info("peername") or ("?",))[0]
     s = settings()
+    if notaus.refuse("gespraech"):   # Notaus stage 3: no speech for Home Assistant either (notaus.py)
+        writer.close()
+        return
     if not s["on"] or not permitted(peer, s["allow"]):
         print("wyoming: refused", peer, flush=True)
         shown = str(peer).removeprefix("::ffff:")
@@ -204,6 +208,8 @@ async def handle(reader, writer):
             if ev is None:
                 break
             kind, data, payload = ev
+            if notaus.blocks("gespraech"):
+                break
             if kind == "describe":
                 await write_event(writer, "info", info(s, await voices(s)))
             elif kind == "transcribe":

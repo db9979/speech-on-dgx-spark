@@ -127,6 +127,10 @@ def status(uid):
 async def ensure():
     """Starts, renews and ends the live connections (once a minute and after a rule changes)."""
     import homeassistant
+    import notaus
+    if notaus.blocks("auto"):         # the Notaus from stage 2 holds every rule off (notaus.py)
+        stop_all()
+        return
     loop = asyncio.get_running_loop()
     for uid in [u for u, s in _streams.items() if s.task and s.task.get_loop() is not loop]:
         stop(uid)        # started in another event loop (only in tests): that loop no longer serves it
@@ -470,6 +474,10 @@ def _live(text):
 async def said(uid, rule, text, data, item, why=""):
     """A rule (or an event) is true: the note to the profile's devices, with the camera's words when
     asked, and the fixed sentence on speakers when the rule says so."""
+    import notaus
+    if notaus.refuse("auto"):         # the Notaus from stage 2: no note, no camera, nothing on speakers
+        _live(("Ereignis" if rule.get("conds") == [] else "Regel") + " gehalten · Notaus")
+        return
     reason = proactive.blocked(uid, "ha")
     if rule.get("camera") and not reason:
         desc = await describe_camera(uid, item, rule["camera"])

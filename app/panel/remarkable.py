@@ -53,6 +53,7 @@ import features
 import guard
 import hintergrund
 import netguard
+import notaus
 import profiles
 import vault
 import vorrang
@@ -785,6 +786,7 @@ def where(uid, items=None):
 async def send(uid, title, text):
     """A new EPUB with this text in the chosen folder (default "Spark", created when missing). Only adds a new
     document; nothing existing is changed. Returns {"title", "where", "lost"} (lost: the chosen folder is gone)."""
+    notaus.stop("aktion")   # the Notaus holds every action off (notaus.py)
     title = _clean(title, 80) or "Vom Spark"
     text = re.sub(r"[\x00-\x08\x0b\x0c\x0e-\x1f\x7f]", "", str(text or ""))[:MAX_SEND].strip()
     if not text:

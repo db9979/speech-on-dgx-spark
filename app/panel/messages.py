@@ -44,6 +44,7 @@ import threading
 import time
 
 import profiles
+import notaus
 import vault
 import features
 from common import load_config
@@ -413,6 +414,8 @@ def _count(sender, rcpts, kind, now):
 async def send(sender, to, text, kind="text", audio=None, secs=None, now=None):
     """Puts the message into each recipient's mailbox and delivers it. to: [uid]. Rechecks every rule
     (a proposal may be minutes old). Returns (names reached, why not)."""
+    if notaus.refuse("aktion"):   # the Notaus holds every action off (notaus.py)
+        return [], "Der Notaus ist an: keine Nachrichten, bis ein Admin ihn aufhebt."
     now = time.time() if now is None else now
     text = clean(text)
     if not text and audio is None:
@@ -586,6 +589,8 @@ async def announce(sender, dids, text, now=None, house=False):
     """Says the text on the speakers (at once when connected, else at their next wake word). Returns
     (names, why not). house: a note of the profile's smart home (hamelden.py) with its own limits there,
     said as it is, without "Durchsage von"."""
+    if notaus.refuse("aktion"):   # the Notaus holds every action off (notaus.py)
+        return [], "Der Notaus ist an: keine Nachrichten, bis ein Admin ihn aufhebt."
     import esp32
     import room
     now = time.time() if now is None else now

@@ -545,6 +545,8 @@ def validate(new):
         ports += [t["engine_port"], t["voicedesign_port"]]
     if not isinstance(new["panel"].get("allow_lan", False), bool):
         raise HTTPException(400, "allow_lan must be true or false")
+    if not isinstance(new["panel"].get("notaus_profiles", False), bool):
+        raise HTTPException(400, "notaus_profiles must be true or false")
     sd = new["panel"].get("session_days", 30)
     if not isinstance(sd, int) or isinstance(sd, bool) or not 7 <= sd <= 90:
         raise HTTPException(400, "session_days must be 7..90")
