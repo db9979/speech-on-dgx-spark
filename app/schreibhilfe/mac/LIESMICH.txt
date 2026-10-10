@@ -1,0 +1,28 @@
+Spark Schreibhilfe für den Mac
+==============================
+
+Installieren
+1. Doppelklick auf „Mit Spark verbessern.workflow“ und „Installieren“ wählen.
+   (Fragt macOS nach, ob du das Programm öffnen willst: Systemeinstellungen → Datenschutz & Sicherheit → „Trotzdem öffnen“.)
+2. Optional ein Tastenkürzel: Systemeinstellungen → Tastatur → Tastaturkurzbefehle → Dienste → Text →
+   „Mit Spark verbessern“, z. B. ⌥⌘S.
+
+Benutzen
+- In Apple Mail, Pages, Word, Excel, Notizen oder jedem anderen Programm Text markieren.
+- Rechtsklick → Dienste → „Mit Spark verbessern“ (oder dein Tastenkürzel).
+- Beim ersten Mal fragt der Mac nach der Einrichtungszeile: im Panel unter Ich → Schreibhilfe → „Programm koppeln“
+  holen und einfügen. Adresse und Schlüssel liegen danach im Schlüsselbund („Spark Schreibhilfe“).
+- Art wählen (Korrigieren, Glätten, Kürzer, Freundlicher, Förmlicher, Ins Englische, Ins Deutsche),
+  Vorschlag ansehen, „Übernehmen“ ersetzt den markierten Text. „Abbrechen“ lässt alles, wie es war.
+
+Wenn es nicht klappt
+- Ersetzt das Programm den Text nicht (manche Programme lassen das nicht zu), kommt die Schnellaktion ohne
+  Ersetzen aus: Automator öffnen → Neue Schnellaktion → „Arbeitsablauf empfängt aktuell: Text“, Haken bei
+  „Ausgabe ersetzt ausgewählten Text“ → Aktion „Shell-Skript ausführen“ (Shell /bin/zsh, Eingabe „an stdin“) →
+  den Inhalt von schreibhilfe.sh hineinkopieren → speichern als „Mit Spark verbessern“.
+- „kennt diesen Mac nicht mehr“: im Panel wurde das Programm entfernt; beim nächsten Mal neu koppeln.
+
+Entfernen
+- ~/Library/Services/Mit Spark verbessern.workflow löschen.
+- Schlüsselbundverwaltung → Eintrag „Spark Schreibhilfe“ löschen.
+- Im Panel unter Ich → Schreibhilfe das Programm entfernen.

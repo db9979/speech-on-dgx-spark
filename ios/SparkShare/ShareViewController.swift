@@ -32,6 +32,13 @@ final class ShareModel: ObservableObject {
     @Published var error: String?
     @Published var notice: String?
     @Published var docs = false
+    /// "Text verbessern" for shared text: nil hidden (no plain text, or the Spark does not know it), false off in the panel
+    @Published var write: Bool?
+    @Published var art = WriteArt.korrigieren
+    @Published var writing = false
+    @Published var improved: WriteResult?
+    @Published var result = ""
+    private var plain = false
     let done: () -> Void
     private let items: [NSExtensionItem]
 
@@ -53,6 +60,7 @@ final class ShareModel: ObservableObject {
         do {
             attachment = try await read()
             if attachment == nil { error = String(localized: "Damit kann der Spark nichts anfangen.") }
+            if plain { write = try? await api.writeOn() }
         } catch {
             self.error = error.localizedDescription
         }
@@ -74,6 +82,7 @@ final class ShareModel: ObservableObject {
         }
         if let p = has(.plainText) ?? has(.text), let text = try await p.loadItem(forTypeIdentifier: UTType.plainText.identifier, options: nil) as? String {
             let t = text.trimmingCharacters(in: .whitespacesAndNewlines)
+            plain = !t.isEmpty
             return t.isEmpty ? nil : Attachment(kind: "document", name: String(localized: "Text"), text: String(t.prefix(Reader.maxChars)))
         }
         return nil
@@ -130,6 +139,27 @@ final class ShareModel: ObservableObject {
         }
     }
 
+    /// The shared text through the Spark's writing help; the result can be edited and copied.
+    func improve() {
+        guard let a = attachment, let api = SparkAPI.current, !asking else { return }
+        asking = true
+        writing = true
+        improved = nil
+        error = nil
+        let art = self.art
+        Task {
+            do {
+                let r = try await api.improve(a.text, art: art)
+                improved = r
+                result = r.text
+            } catch {
+                self.error = error.localizedDescription
+            }
+            writing = false
+            asking = false
+        }
+    }
+
     func store() {
         guard let a = attachment, let api = SparkAPI.current, !asking else { return }
         asking = true
@@ -171,7 +201,29 @@ struct ShareView: View {
                         }
                     }
                 }
-                if m.asking && m.answer.isEmpty { ProgressView() }
+                if let w = m.write, m.attachment != nil {
+                    Section("Text verbessern") {
+                        if w {
+                            Picker("Art", selection: $m.art) {
+                                ForEach(WriteArt.allCases) { Text(verbatim: $0.label).tag($0) }
+                            }
+                            Button("Text verbessern") { m.improve() }.disabled(m.asking)
+                        } else {
+                            Text(verbatim: SparkAPI.writeOff).foregroundStyle(.secondary)
+                        }
+                    }
+                }
+                if m.writing { ProgressView("Der Spark schreibt …") }
+                if let r = m.improved {
+                    Section("Verbessert") {
+                        if let diff = r.diff {
+                            Text(Self.marked(diff)).textSelection(.enabled)
+                        }
+                        TextField("Verbessert", text: $m.result, axis: .vertical)
+                        Button { UIPasteboard.general.string = m.result } label: { Label("Kopieren", systemImage: "doc.on.doc") }
+                    }
+                }
+                if m.asking && !m.writing && m.answer.isEmpty { ProgressView() }
                 if !m.answer.isEmpty {
                     Section("Antwort") {
                         Text(verbatim: m.answer).textSelection(.enabled)
@@ -186,5 +238,21 @@ struct ShareView: View {
             .navigationBarTitleDisplayMode(.inline)
             .toolbar { ToolbarItem(placement: .confirmationAction) { Button("Fertig") { m.done() } } }
         }
+    }
+
+    /// The changes: removed words red and struck through, added ones green.
+    static func marked(_ diff: [(op: String, text: String)]) -> AttributedString {
+        var out = AttributedString()
+        for (op, text) in diff {
+            var piece = AttributedString(text)
+            if op == "-" {
+                piece[AttributeScopes.SwiftUIAttributes.ForegroundColorAttribute.self] = Color.red
+                piece[AttributeScopes.SwiftUIAttributes.StrikethroughStyleAttribute.self] = Text.LineStyle.single
+            } else if op == "+" {
+                piece[AttributeScopes.SwiftUIAttributes.ForegroundColorAttribute.self] = Color.green
+            }
+            out += piece
+        }
+        return out
     }
 }

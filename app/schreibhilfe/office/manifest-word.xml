@@ -1,0 +1,94 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!-- Spark Schreibhilfe für Word. {{BASE}} = https-Adresse des Spark-Panels (ohne Schrägstrich am Ende). -->
+<OfficeApp xmlns="http://schemas.microsoft.com/office/appforoffice/1.1"
+           xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+           xmlns:bt="http://schemas.microsoft.com/office/officeappbasictypes/1.0"
+           xmlns:ov="http://schemas.microsoft.com/office/taskpaneappversionoverrides"
+           xsi:type="TaskPaneApp">
+  <Id>27be0763-da30-4c53-9e39-87f796f500ec</Id>
+  <Version>1.0.0.0</Version>
+  <ProviderName>Speech on DGX Spark</ProviderName>
+  <DefaultLocale>de-DE</DefaultLocale>
+  <DisplayName DefaultValue="Spark Schreibhilfe"/>
+  <Description DefaultValue="Markierten Text mit dem eigenen Spark korrigieren, glätten, kürzen oder übersetzen."/>
+  <IconUrl DefaultValue="{{BASE}}/office/icon-32.png"/>
+  <HighResolutionIconUrl DefaultValue="{{BASE}}/office/icon-64.png"/>
+  <SupportUrl DefaultValue="{{BASE}}/"/>
+  <AppDomains>
+    <AppDomain>{{BASE}}</AppDomain>
+  </AppDomains>
+  <Hosts>
+    <Host Name="Document"/>
+  </Hosts>
+  <Requirements>
+    <Sets DefaultMinVersion="1.1">
+      <Set Name="WordApi" MinVersion="1.1"/>
+    </Sets>
+  </Requirements>
+  <DefaultSettings>
+    <SourceLocation DefaultValue="{{BASE}}/office/taskpane.html"/>
+  </DefaultSettings>
+  <Permissions>ReadWriteDocument</Permissions>
+  <VersionOverrides xmlns="http://schemas.microsoft.com/office/taskpaneappversionoverrides" xsi:type="VersionOverridesV1_0">
+    <Hosts>
+      <Host xsi:type="Document">
+        <DesktopFormFactor>
+          <GetStarted>
+            <Title resid="GetStarted.Title"/>
+            <Description resid="GetStarted.Description"/>
+            <LearnMoreUrl resid="Support.Url"/>
+          </GetStarted>
+          <FunctionFile resid="Taskpane.Url"/>
+          <ExtensionPoint xsi:type="PrimaryCommandSurface">
+            <OfficeTab id="TabHome">
+              <Group id="SparkSchreib.Group">
+                <Label resid="Group.Label"/>
+                <Icon>
+                  <bt:Image size="16" resid="Icon.16"/>
+                  <bt:Image size="32" resid="Icon.32"/>
+                  <bt:Image size="80" resid="Icon.80"/>
+                </Icon>
+                <Control xsi:type="Button" id="SparkSchreib.TaskpaneButton">
+                  <Label resid="Button.Label"/>
+                  <Supertip>
+                    <Title resid="Button.Label"/>
+                    <Description resid="Button.Tooltip"/>
+                  </Supertip>
+                  <Icon>
+                    <bt:Image size="16" resid="Icon.16"/>
+                    <bt:Image size="32" resid="Icon.32"/>
+                    <bt:Image size="80" resid="Icon.80"/>
+                  </Icon>
+                  <Action xsi:type="ShowTaskpane">
+                    <TaskpaneId>SparkSchreibPane</TaskpaneId>
+                    <SourceLocation resid="Taskpane.Url"/>
+                  </Action>
+                </Control>
+              </Group>
+            </OfficeTab>
+          </ExtensionPoint>
+        </DesktopFormFactor>
+      </Host>
+    </Hosts>
+    <Resources>
+      <bt:Images>
+        <bt:Image id="Icon.16" DefaultValue="{{BASE}}/office/icon-16.png"/>
+        <bt:Image id="Icon.32" DefaultValue="{{BASE}}/office/icon-32.png"/>
+        <bt:Image id="Icon.80" DefaultValue="{{BASE}}/office/icon-80.png"/>
+      </bt:Images>
+      <bt:Urls>
+        <bt:Url id="Taskpane.Url" DefaultValue="{{BASE}}/office/taskpane.html"/>
+        <bt:Url id="Support.Url" DefaultValue="{{BASE}}/"/>
+      </bt:Urls>
+      <bt:ShortStrings>
+        <bt:String id="GetStarted.Title" DefaultValue="Spark Schreibhilfe ist bereit"/>
+        <bt:String id="Group.Label" DefaultValue="Spark"/>
+        <bt:String id="Button.Label" DefaultValue="Spark Schreibhilfe"/>
+      </bt:ShortStrings>
+      <bt:LongStrings>
+        <bt:String id="GetStarted.Description" DefaultValue="Start → Spark Schreibhilfe öffnet den Bereich. Einmal mit dem Code aus dem Panel koppeln, dann Text markieren."/>
+        <bt:String id="Button.Tooltip" DefaultValue="Markierten Text mit dem eigenen Spark korrigieren, glätten, kürzen oder übersetzen."/>
+      </bt:LongStrings>
+    </Resources>
+  </VersionOverrides>
+</OfficeApp>

@@ -1,4 +1,5 @@
 import AppIntents
+import SwiftUI
 import UniformTypeIdentifiers
 
 /// "Hey Siri, Frag Spark": Siri asks for the question, the Spark answers, Siri reads it out.
@@ -197,6 +198,44 @@ struct SendMessageIntent: AppIntent {
     }
 }
 
+enum SparkWriteArt: String, AppEnum {
+    case korrigieren, glaetten, kuerzer, freundlicher, foermlicher, englisch, deutsch
+    static var typeDisplayRepresentation: TypeDisplayRepresentation = "Art"
+    static var caseDisplayRepresentations: [SparkWriteArt: DisplayRepresentation] = [
+        .korrigieren: "Korrigieren", .glaetten: "Glätten", .kuerzer: "Kürzer", .freundlicher: "Freundlicher",
+        .foermlicher: "Förmlicher", .englisch: "Ins Englische", .deutsch: "Ins Deutsche"]
+}
+
+/// Shortcuts, Siri and the share sheet: the Spark's writing help (admin and profile switches "Schreibhilfe")
+/// improves a text and gives it back, e.g. for the clipboard. Works without opening the app.
+struct ImproveTextIntent: AppIntent {
+    static var title: LocalizedStringResource = "Text mit Spark verbessern"
+    static var description = IntentDescription("Der Spark korrigiert, glättet, kürzt oder übersetzt einen Text und gibt ihn zurück.")
+    static var openAppWhenRun = false
+
+    @Parameter(title: "Text", requestValueDialog: IntentDialog("Welchen Text soll ich verbessern?"))
+    var text: String
+
+    @Parameter(title: "Art", default: .korrigieren)
+    var art: SparkWriteArt
+
+    func perform() async throws -> some IntentResult & ReturnsValue<String> & ProvidesDialog & ShowsSnippetView {
+        guard let api = SparkAPI.current else {
+            throw SparkError(message: String(localized: "Die App ist noch nicht mit dem Spark gekoppelt."))
+        }
+        let r = try await api.improve(text, art: WriteArt(rawValue: art.rawValue) ?? .korrigieren)
+        let dialog: IntentDialog
+        if let n = r.changes, n > 0 {
+            dialog = "Geändert: \(n)"
+        } else if r.changes == 0 {
+            dialog = "Der Text war schon gut."
+        } else {
+            dialog = "Fertig."
+        }
+        return .result(value: r.text, dialog: dialog, view: Text(verbatim: r.text).lineLimit(12).padding())
+    }
+}
+
 struct SparkShortcuts: AppShortcutsProvider {
     static var appShortcuts: [AppShortcut] {
         AppShortcut(intent: AskSparkIntent(),
@@ -211,6 +250,10 @@ struct SparkShortcuts: AppShortcutsProvider {
                     phrases: ["Nachricht mit \(.applicationName)", "\(.applicationName) Nachricht schreiben"],
                     shortTitle: "Nachricht",
                     systemImageName: "envelope")
+        AppShortcut(intent: ImproveTextIntent(),
+                    phrases: ["Text mit \(.applicationName) verbessern", "\(.applicationName) Text verbessern"],
+                    shortTitle: "Text verbessern",
+                    systemImageName: "text.badge.checkmark")
         AppShortcut(intent: StartListeningIntent(),
                     phrases: ["\(.applicationName) zuhören", "Mit \(.applicationName) sprechen"],
                     shortTitle: "Spark zuhören",

@@ -31,7 +31,10 @@ async function showWrite(){const box=$('writebox');if(!box)return;if(!PROFILE||!
         <div class="fh">${t('Der Entwurf landet im Ordner „Entwürfe“ deines Postfachs. Gesendet wird er nur von dir, im Mailprogramm.','The draft lands in your mailbox\'s drafts folder. Only you send it, in your mail program.')}</div>
         <div class="row" style="margin-top:6px"><button class="b" type="button" id="wrdraft">${t('Entwurf ablegen','Save draft')}</button></div></details>`:''}
     </div>
-    <input type="file" id="wrfile" accept="image/*" hidden>`:''}`;
+    <input type="file" id="wrfile" accept="image/*" hidden>`:''}
+    ${on&&d.apps_spark?`<h3 style="margin:18px 0 4px">${t('In anderen Programmen','In other programs')}</h3>
+    ${xsw('write_apps',t('In anderen Programmen nutzen','Use in other programs'),t('Mac-Schnellaktion, Windows-Programm, Office-Add-in, Browser-Erweiterung und iPhone-Kurzbefehl. Jedes Programm bekommt einen eigenen Schlüssel, der nur Texte verbessern darf.','Mac quick action, Windows program, Office add-in, browser extension and iPhone shortcut. Each program gets its own key that may only improve texts.'))}
+    <div id="wrapps"></div>`:''}`;
   xbind(box,showWrite);
   if(!on)return;
   const art=()=>$('wrart').value,lang=$('wrlang');
@@ -47,6 +50,7 @@ async function showWrite(){const box=$('writebox');if(!box)return;if(!PROFILE||!
   if($('wrdraft'))$('wrdraft').onclick=writeDraft;
   box.querySelectorAll('[data-wrpic]').forEach(b=>b.onclick=()=>{WR.into=b.dataset.wrpic;$('wrfile').value='';$('wrfile').click()});
   $('wrfile').onchange=()=>{const f=$('wrfile').files[0];if(f)writePic(f,WR.into||'wrtext')};
+  if(d.apps)writeApps();
   if(d.pics)['wrtext','wrmail'].forEach(id=>$(id).addEventListener('paste',e=>{const it=[...(e.clipboardData&&e.clipboardData.items||[])].find(x=>/^image\//.test(x.type));
     if(it){e.preventDefault();writePic(it.getAsFile(),id)}}))}
 async function writeGo(){const a=$('wrart').value,body={art:a,text:$('wrtext').value,wunsch:$('wrwish').value};
@@ -69,3 +73,29 @@ async function writeDraft(){const b=$('wrdraft');b.disabled=true;
   try{const r=await (await api('/api/write/draft',xjson('POST',{to:$('wrto').value,subject:$('wrsubj').value,text:$('wrres').value}))).json();
     xmsg('wrmsg',t(`Entwurf liegt im Ordner „${r.folder}“. Nicht gesendet.`,`Draft is in the folder "${r.folder}". Not sent.`))}
   catch(e){xmsg('wrmsg',t('Kein Entwurf: ','No draft: ')+e.message,true)}finally{b.disabled=false}}
+// ---------------------------------------------------------------- the programs (Mac, Windows, Office, browser, iPhone)
+async function writeApps(){const box=$('wrapps');if(!box)return;
+  let d={devices:[],minutes:10,windows:''};try{d=await (await api('/api/profile/write/devices')).json()}catch{}
+  const https=location.protocol==='https:',o=encodeURIComponent(location.origin);
+  const dl=(href,label,ext)=>`<a class="b" href="${esc(href)}"${ext?' target="_blank" rel="noopener"':' download'}>${esc(label)}</a>`;
+  box.innerHTML=`<div class="fh">${t('1. Programm holen, 2. „Programm koppeln“ und die Zeile ins Programm einfügen. Die Zeile gilt '+d.minutes+' Minuten und nur einmal.','1. Get the program, 2. "Pair a program" and paste the line into it. The line works for '+d.minutes+' minutes and once.')}</div>
+    <ul class="facts">
+      <li><span><b>Mac</b><br><small class="mut">${t('Schnellaktion für Apple Mail, Pages, Word, Excel und alle anderen Programme: Text markieren, Rechtsklick → Dienste → „Mit Spark verbessern“.','Quick action for Apple Mail, Pages, Word, Excel and every other program: mark text, right-click → Services → "Mit Spark verbessern".')}</small></span>${dl('/api/write/download/mac',t('Laden','Download'))}</li>
+      <li><span><b>Windows (x64 und ARM)</b><br><small class="mut">${t('Text markieren, Strg+Alt+S, Vorschlag übernehmen. Für Outlook, Word, Excel und alles andere.','Mark text, Ctrl+Alt+S, take the suggestion. For Outlook, Word, Excel and everything else.')}</small></span>${dl(d.windows,t('Zur Seite','Open page'),1)}</li>
+      <li><span><b>Office-Add-in</b><br><small class="mut">${https?t('Knopf in Outlook (auch im Web), Word und Excel. Datei laden und in Office als eigenes Add-in hinzufügen.','Button in Outlook (also on the web), Word and Excel. Download the file and add it in Office as a custom add-in.'):t('Office braucht https: öffne das Panel über seine https-Adresse, dann gibt es hier die Dateien.','Office needs https: open the panel at its https address to get the files here.')}</small></span>${https?['outlook','word','excel'].map(a=>dl('/api/write/office/'+a+'.xml?base='+o,a[0].toUpperCase()+a.slice(1))).join(' '):''}</li>
+      <li><span><b>${t('Browser','Browser')}</b><br><small class="mut">${t('Erweiterung für Chrome, Edge und Firefox: Rechtsklick auf markierten Text in Gmail, iCloud, GMX, web.de oder Outlook im Web.','Extension for Chrome, Edge and Firefox: right-click marked text in Gmail, iCloud, GMX, web.de or Outlook on the web.')}</small></span>${dl('/api/write/download/browser',t('Laden','Download'))}</li>
+      <li><span><b>iPhone</b><br><small class="mut">${t('In der Spark-App: Kurzbefehl „Text mit Spark verbessern“ oder Teilen → Spark → Text verbessern. Braucht keine Kopplung.','In the Spark app: shortcut "Improve text with Spark" or Share → Spark → Improve text. Needs no pairing.')}</small></span></li>
+    </ul>
+    <div class="row" style="margin-top:8px"><button class="b p" type="button" id="wrpair">${t('Programm koppeln','Pair a program')}</button></div>
+    <div id="wrsetupbox" hidden><label>${t('Einrichtungszeile','Setup line')}</label><div class="rowin"><code id="wrsetup" style="overflow-wrap:anywhere"></code><button class="b" type="button" id="wrsetupcopy">${t('Kopieren','Copy')}</button></div></div>
+    <div class="fh" id="wrpmsg"></div>
+    <label>${t('Gekoppelte Programme','Paired programs')}</label>
+    <ul class="facts">${d.devices.map(x=>`<li><span>${esc(x.name.replace(/^Schreibhilfe /,''))}${x.last?`<br><small class="mut">${t('zuletzt ','last ')+esc(new Date(x.last*1000).toLocaleString(L==='en'?'en-GB':'de-DE',{day:'2-digit',month:'2-digit',hour:'2-digit',minute:'2-digit'}))}</small>`:''}</span><button class="b" type="button" data-wrdel="${esc(x.id)}">${t('Entfernen','Remove')}</button></li>`).join('')||`<li class="mut">${t('Noch keins.','None yet.')}</li>`}</ul>`;
+  $('wrpair').onclick=async()=>{xmsg('wrpmsg','…');
+    try{const r=await (await api('/api/profile/write/pair',xjson('POST',{base:location.origin}))).json();
+      $('wrsetup').textContent=r.setup;$('wrsetupbox').hidden=false;
+      xmsg('wrpmsg',t('Diese Zeile ins Programm einfügen (gilt '+r.minutes+' Minuten, einmal). Im Office-Add-in reicht der Code '+r.code+'.','Paste this line into the program (works '+r.minutes+' minutes, once). In the Office add-in the code '+r.code+' is enough.'))}
+    catch(e){xmsg('wrpmsg',e.message,true)}};
+  $('wrsetupcopy').onclick=()=>copyString($('wrsetup').textContent,$('wrsetupcopy'));
+  box.querySelectorAll('[data-wrdel]').forEach(b=>b.onclick=async()=>{if(!confirm(t('Programm entfernen? Sein Schlüssel gilt dann nicht mehr.','Remove the program? Its key stops working.')))return;
+    try{await api('/api/profile/write/devices/'+encodeURIComponent(b.dataset.wrdel),{method:'DELETE'});writeApps()}catch(e){xmsg('wrpmsg',e.message,true)}})}

@@ -551,6 +551,16 @@
         }
       }
     },
+    "Art": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Kind"
+          }
+        }
+      }
+    },
     "Auf dem Bild habe ich keinen Text gefunden.": {
       "localizations": {
         "en": {
@@ -1251,6 +1261,16 @@
         }
       }
     },
+    "Der Spark korrigiert, glättet, kürzt oder übersetzt einen Text und gibt ihn zurück.": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "The Spark corrects, smooths, shortens or translates a text and returns it."
+          }
+        }
+      }
+    },
     "Der Spark nimmt dieses iPhone nicht an. Im Panel unter Ich → iPhone-App prüfen, ob die App an ist, sonst neu koppeln.": {
       "localizations": {
         "en": {
@@ -1277,6 +1297,36 @@
           "stringUnit": {
             "state": "translated",
             "value": "The Spark looks at it"
+          }
+        }
+      }
+    },
+    "Der Text ist leer.": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "The text is empty."
+          }
+        }
+      }
+    },
+    "Der Text ist zu lang (höchstens %lld Zeichen).": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "The text is too long (at most %lld characters)."
+          }
+        }
+      }
+    },
+    "Der Text war schon gut.": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "The text was fine already."
           }
         }
       }
@@ -1437,6 +1487,16 @@
           "stringUnit": {
             "state": "translated",
             "value": "The PIN needs at least %lld characters."
+          }
+        }
+      }
+    },
+    "Die Schreibhilfe ist im Panel aus.": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "The writing help is switched off in the panel."
           }
         }
       }
@@ -2071,6 +2131,16 @@
         }
       }
     },
+    "Fertig.": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Done."
+          }
+        }
+      }
+    },
     "Fertig. Der Spark läuft wieder mit %@.": {
       "localizations": {
         "en": {
@@ -2181,6 +2251,16 @@
         }
       }
     },
+    "Freundlicher": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Friendlier"
+          }
+        }
+      }
+    },
     "Fristen": {
       "localizations": {
         "en": {
@@ -2231,6 +2311,16 @@
         }
       }
     },
+    "Förmlicher": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "More formal"
+          }
+        }
+      }
+    },
     "Für alle": {
       "localizations": {
         "en": {
@@ -2267,6 +2357,26 @@
           "stringUnit": {
             "state": "translated",
             "value": "Off for you"
+          }
+        }
+      }
+    },
+    "Geändert: %lld": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Changed: %lld"
+          }
+        }
+      }
+    },
+    "Glätten": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Smooth"
           }
         }
       }
@@ -2761,6 +2871,26 @@
         }
       }
     },
+    "Ins Deutsche": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Into German"
+          }
+        }
+      }
+    },
+    "Ins Englische": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Into English"
+          }
+        }
+      }
+    },
     "Ins Wort fallen": {
       "localizations": {
         "en": {
@@ -3081,12 +3211,32 @@
         }
       }
     },
+    "Korrigieren": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Correct"
+          }
+        }
+      }
+    },
     "Kurz": {
       "localizations": {
         "en": {
           "stringUnit": {
             "state": "translated",
             "value": "Short"
+          }
+        }
+      }
+    },
+    "Kürzer": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Shorter"
           }
         }
       }
@@ -4811,6 +4961,26 @@
         }
       }
     },
+    "Text mit Spark verbessern": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Improve text with Spark"
+          }
+        }
+      }
+    },
+    "Text verbessern": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Improve text"
+          }
+        }
+      }
+    },
     "Timer und Erinnerungen": {
       "localizations": {
         "en": {
@@ -5287,6 +5457,16 @@
           "stringUnit": {
             "state": "translated",
             "value": "Read on"
+          }
+        }
+      }
+    },
+    "Welchen Text soll ich verbessern?": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Which text should I improve?"
           }
         }
       }

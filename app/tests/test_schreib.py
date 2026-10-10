@@ -51,14 +51,14 @@ def notaus_off():
 class Schreib(unittest.TestCase):
     def setUp(self):
         helpers.set_config(write_help=True)
-        for k in [k for k in guard._rate if k[0] in ("write", "image")]:   # every test client shares one address
+        for k in [k for k in guard._rate if k[0] in ("write", "image", "pair")]:   # every test client shares one address
             guard._rate.pop(k, None)
         schreib._busy.clear()
         schreib._all[0] = 0
         notaus_off()
 
     def tearDown(self):
-        helpers.set_config(write_help=False, images=False, mail=False, mail_tidy=False, public=False)
+        helpers.set_config(write_help=False, write_apps=False, images=False, mail=False, mail_tidy=False, public=False)
         notaus_off()
 
     def on(self, name):
@@ -214,6 +214,101 @@ class Schreib(unittest.TestCase):
         self.assertEqual(out, "Ein Fehler.")
         helpers.set_config(write_help=False)
         self.assertFalse(mcpserver.tool_ok("write_text", uid))
+
+    def apps_on(self, name):
+        helpers.set_config(write_help=True, write_apps=True)
+        c = self.on(name)
+        self.assertEqual(c.put("/api/profile/settings", json={"write_on": True, "write_apps": True}).status_code, 200)
+        return c
+
+    def pair(self, c, kind="windows", name="Laptop"):
+        r = c.post("/api/profile/write/pair", json={"base": "https://spark.example.de"})
+        self.assertEqual(r.status_code, 200, r.text)
+        self.assertRegex(r.json()["setup"], r"^https://spark\.example\.de#schreib=[A-Z2-9]{4}-[A-Z2-9]{4}$")
+        prog = TestClient(panel.app, client=HOME)
+        r2 = prog.post("/api/write/pair", json={"code": r.json()["code"].lower(), "name": name, "kind": kind})
+        self.assertEqual(r2.status_code, 200, r2.text)
+        return r.json()["code"], r2.json()["key"], prog
+
+    def test_programs_pair_once_and_their_key_only_improves_texts(self):
+        c = self.on("Bert")
+        self.assertEqual(c.post("/api/profile/write/pair", json={"base": "https://x.de"}).status_code, 403)   # apps off
+        c = self.apps_on("Bert")
+        code, key, prog = self.pair(c)
+        k = {profiles.DEVICE_HEADER: key}
+        self.assertEqual(prog.post("/api/write/pair", json={"code": code, "kind": "windows"}).status_code, 400)  # once
+        self.assertEqual(prog.post("/api/write/pair", json={"code": "ABCD-EFGH", "kind": "mac"}).status_code, 400)
+        self.assertEqual(prog.post("/api/write/pair", json={"code": code, "kind": "toaster"}).status_code, 400)
+        self.assertTrue(prog.get("/api/write", headers=k).json()["on"])
+        r = prog.post("/api/write/assist", json={"text": "Ein Feler."}, headers=k)
+        self.assertEqual((r.status_code, r.json()["text"]), (200, "Ein Fehler."), r.text)
+        r = prog.post("/api/write/plain?art=korrigieren", content="Noch ein Feler.".encode(), headers=dict(k, **{"Content-Type": "text/plain"}))
+        self.assertEqual((r.status_code, r.text), (200, "Noch ein Fehler."))
+        # nothing else with this key
+        for path in ("/api/profile/settings", "/api/profile/memory", "/api/write/devices"):
+            self.assertIn(prog.get(path, headers=k).status_code, (401, 404), path)
+        self.assertEqual(prog.post("/api/chat", json={"messages": [{"role": "user", "content": "x"}]}, headers=k).status_code, 401)
+        self.assertEqual(prog.post("/api/write/draft", json={"to": "a@b.de", "text": "x"}, headers=k).status_code, 401)
+        self.assertEqual(prog.post("/api/profile/write/pair", json={"base": "https://x.de"}, headers=k).status_code, 401)
+        # the program shows in the profile's list and only with its kind in logs
+        devs = c.get("/api/profile/write/devices").json()["devices"]
+        self.assertEqual([d["name"] for d in devs], ["Schreibhilfe Windows · Laptop"])
+        # switching "In anderen Programmen" off stops the key, the browser goes on
+        c.put("/api/profile/settings", json={"write_apps": False})
+        self.assertEqual(prog.post("/api/write/assist", json={"text": "x"}, headers=k).status_code, 401)
+        self.assertEqual(c.post("/api/write/assist", json={"text": "x"}).status_code, 200)
+        c.put("/api/profile/settings", json={"write_apps": True})
+        # removing it in the panel cuts it off at once
+        self.assertEqual(c.delete("/api/profile/write/devices/" + devs[0]["id"]).status_code, 200)
+        self.assertEqual(prog.post("/api/write/assist", json={"text": "x"}, headers=k).status_code, 401)
+        # other device keys never (speakers, watches, keys made by hand)
+        other = profiles.add_device("Küche", uid_of("Bert"))
+        self.assertEqual(prog.post("/api/write/assist", json={"text": "x"}, headers={profiles.DEVICE_HEADER: other}).status_code, 403)
+
+    def test_pair_code_limits(self):
+        c = self.apps_on("Carla")
+        self.assertEqual(c.post("/api/profile/write/pair", json={"base": "javascript:alert(1)"}).status_code, 400)
+        self.assertEqual(c.post("/api/profile/write/pair", json={"base": "https://x.de/pfad"}).status_code, 400)
+        self.assertIsNone(schreib.norm_code("ABCD-EFG0"))           # 0 is not in the alphabet
+        self.assertEqual(schreib.norm_code(" abcd efgh "), "ABCDEFGH")
+        uid = uid_of("Carla")
+        code = schreib.new_code(uid, now=1000)
+        self.assertIsNone(schreib.take_code(code, now=1000 + schreib.CODE_SECONDS + 1))   # expired
+
+    def test_downloads_and_office_files(self):
+        import plistlib
+        import zipfile
+        c = self.on("Dora")
+        self.assertEqual(c.get("/api/write/download/mac").status_code, 403)
+        self.assertEqual(c.get("/office/taskpane.html").status_code, 404)        # admin switch off
+        c = self.apps_on("Dora")
+        r = c.get("/api/write/download/mac")
+        self.assertEqual(r.status_code, 200)
+        z = zipfile.ZipFile(io.BytesIO(r.content))
+        wf = plistlib.loads(z.read("Mit Spark verbessern.workflow/Contents/document.wflow"))
+        script = wf["actions"][0]["action"]["ActionParameters"]["COMMAND_STRING"]
+        self.assertIn("/api/write/plain", script)
+        self.assertEqual(wf["workflowMetaData"]["serviceOutputTypeIdentifier"], "com.apple.Automator.text")
+        info = plistlib.loads(z.read("Mit Spark verbessern.workflow/Contents/Info.plist"))
+        self.assertEqual(info["NSServices"][0]["NSMenuItem"]["default"], "Mit Spark verbessern")
+        self.assertEqual(c.get("/api/write/download/nope").status_code, 404)
+        if os.path.isdir(os.path.join(schreib.FILES, "browser")):
+            r = c.get("/api/write/download/browser")
+            self.assertEqual(r.status_code, 200)
+            self.assertIn("spark-schreibhilfe/manifest.json", zipfile.ZipFile(io.BytesIO(r.content)).namelist())
+        if os.path.isdir(os.path.join(schreib.FILES, "office")):
+            self.assertEqual(c.get("/api/write/office/outlook.xml?base=http://x.de").status_code, 400)   # https only
+            self.assertEqual(c.get("/api/write/office/outlook.xml?base=https://x.de\"><a").status_code, 400)
+            r = c.get("/api/write/office/word.xml?base=https://spark.example.de")
+            self.assertEqual(r.status_code, 200, r.text)
+            self.assertIn("https://spark.example.de/office/taskpane.html", r.text)
+            self.assertNotIn("{{BASE}}", r.text)
+            guest = TestClient(panel.app, client=HOME)
+            r = guest.get("/office/taskpane.html")
+            self.assertEqual(r.status_code, 200)
+            self.assertIn("appsforoffice.microsoft.com", r.headers["content-security-policy"])
+            self.assertEqual(guest.get("/office/manifest-word.xml").status_code, 404)
+            self.assertEqual(guest.get("/office/..%2Fschreib.py").status_code, 404)
 
     def test_units(self):
         d, n = schreib.diff("Ich gehe morgen nach Hause.", "Ich gehe heute nach Hause.")

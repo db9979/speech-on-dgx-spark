@@ -512,7 +512,8 @@ APP_PATHS = ("/api/chat", "/api/test/asr", "/api/siri/ask", "/api/iphone/hello",
              "/api/profile/hintergrund",   # Ich → Mein Zustand (hintergrund.py, read only, own switch my_status)
              "/api/vorrang/spricht",       # "recording starts" for a profile with Vorrang (stufe.py)
              "/api/profile/today",    # Heute: numbers and short titles of today (today.py, read only)
-             "/api/notaus")           # the Notaus: its stage, and raising it when the admin allows profiles (notaus.py)
+             "/api/notaus",           # the Notaus: its stage, and raising it when the admin allows profiles (notaus.py)
+             "/api/write", "/api/write/assist")   # Schreibhilfe (schreib.py, only with "In anderen Programmen")
 # looking at an own document again (wissen.reader: only with app_docs); reading only, never changing
 APP_PATTERNS = (re.compile(r"/api/profile/wissen/[0-9a-f]{12}/(?:text|file)"),)
 APP_GATE = [lambda uid: False]
@@ -550,6 +551,11 @@ WATCH_GATE = [lambda uid: False]
 # one path, and only while the admin and the profile have "Home Assistant meldet an Spark" on (HAEV_GATE).
 HAEV_PATHS = ("/api/ha/event",)
 HAEV_GATE = [lambda uid: False]
+# A writing help key (scope "write", Mac quick action, Windows program, Office add-in, browser extension, paired
+# by code in schreib.py) only gets texts improved, on these paths, and only while the admin and the profile have
+# the writing help and "In anderen Programmen" on (WRITE_GATE, set by schreib.py).
+WRITE_PATHS = ("/api/write", "/api/write/assist", "/api/write/plain")
+WRITE_GATE = [lambda uid: False]
 
 
 def _device(d, request):
@@ -626,7 +632,9 @@ def current(request):
             return None
         if dev.get("scope") == "haev" and (request.scope.get("path") not in HAEV_PATHS or not HAEV_GATE[0](dev["user"])):
             return None
-        if dev.get("scope") not in (None, "", "app", "room", "watch", "haev"):
+        if dev.get("scope") == "write" and (request.scope.get("path") not in WRITE_PATHS or not WRITE_GATE[0](dev["user"])):
+            return None
+        if dev.get("scope") not in (None, "", "app", "room", "watch", "haev", "write"):
             return None
         _note_device(dev["id"], request)
         uid = dev["user"]
@@ -645,7 +653,7 @@ def current(request):
 def own_devices(uid):
     last = seen()
     return [{"id": x["id"], "name": x["name"], "created": x.get("created"), "last": last.get(x["id"]),
-             "app": x.get("scope") == "app", "watch": x.get("scope") == "watch"}
+             "app": x.get("scope") == "app", "watch": x.get("scope") == "watch", "write": x.get("scope") == "write"}
             for x in _load()["devices"] if x.get("user") == uid]
 
 
@@ -698,6 +706,7 @@ SETTINGS = {
     "prefetch": (False, lambda v: isinstance(v, bool)),     # fetch ahead on a question back (vorab.py, admin chat.prefetch)
     "spark_help": (False, lambda v: isinstance(v, bool)),   # questions about the Spark itself (hilfe.py, admin chat.spark_help)
     "write_on": (False, lambda v: isinstance(v, bool)),     # Schreibhilfe (schreib.py, admin chat.write_help)
+    "write_apps": (False, lambda v: isinstance(v, bool)),   # ... also from paired programs and the iPhone app (chat.write_apps)
     # daily briefing as a push notification at this local time ("" = off), in the device's time zone
     "briefing_at": ("", lambda v: isinstance(v, str) and re.fullmatch(r"(?:[01]\d|2[0-3]):[0-5]\d|", v)),
     "tz": ("", lambda v: isinstance(v, str) and re.fullmatch(r"(?:[A-Za-z_]+(?:/[A-Za-z0-9_+\-]+){0,2})?", v)),

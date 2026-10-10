@@ -84,6 +84,7 @@
     "prefetch": false,
     "spark_help": false,
     "write_help": false,
+    "write_apps": false,
     "spark_suggest": false,
     "spark_drawer": false,
     "route_words": "",

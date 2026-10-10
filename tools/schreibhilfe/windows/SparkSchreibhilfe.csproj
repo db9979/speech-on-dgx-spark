@@ -1,0 +1,27 @@
+<Project Sdk="Microsoft.NET.Sdk">
+
+  <!--
+    Spark Schreibhilfe für Windows: Tray-Programm, das markierten Text aus beliebigen Programmen
+    an den eigenen Spark schickt (Strg+Alt+S) und die verbesserte Fassung zurück einfügt.
+    Gebaut von .github/workflows/schreibhilfe-windows.yml für win-x64 und win-arm64.
+  -->
+  <PropertyGroup>
+    <OutputType>WinExe</OutputType>
+    <TargetFramework>net8.0-windows</TargetFramework>
+    <UseWindowsForms>true</UseWindowsForms>
+    <Nullable>enable</Nullable>
+    <ImplicitUsings>enable</ImplicitUsings>
+    <!-- Erlaubt das Bauen (nicht Ausführen) auf Linux/macOS, z. B. für schnelle Prüfungen. -->
+    <EnableWindowsTargeting>true</EnableWindowsTargeting>
+    <RuntimeIdentifiers>win-x64;win-arm64</RuntimeIdentifiers>
+    <AssemblyName>SparkSchreibhilfe</AssemblyName>
+    <RootNamespace>SparkSchreibhilfe</RootNamespace>
+    <Version>1.0.0</Version>
+    <Product>Spark Schreibhilfe</Product>
+    <Description>Spark Schreibhilfe für Windows</Description>
+    <NeutralLanguage>de-DE</NeutralLanguage>
+    <SatelliteResourceLanguages>de</SatelliteResourceLanguages>
+    <AnalysisLevel>latest</AnalysisLevel>
+  </PropertyGroup>
+
+</Project>

@@ -124,6 +124,8 @@ FEATURES = (
     F("tidy", "Postfach aufräumen", "Inbox tidying", "post", ("mail_tidy",), parent="mail", me="mailbox", guide="tidy"),
     F("parcels", "Pakete", "Parcels", "post", ("parcels",), "par_on", parent="mail", me="parbox", guide="parcels"),
     F("schreib", "Schreibhilfe", "Writing help", "post", ("write_help",), "write_on", me="writebox", guide="schreib"),
+    F("schreibapps", "Schreibhilfe in anderen Programmen", "Writing help in other programs", "post", ("write_apps",),
+      "write_apps", parent="schreib", me="writebox", guide="schreibapps"),
     F("contacts", "Kontakte", "Contacts", "post", ("contacts",), "con_on", me="conbox", guide="contacts"),
     # home
     F("ha", "Home Assistant", "Home Assistant", "home", ("homeassistant",), me="habox", guide="ha"),

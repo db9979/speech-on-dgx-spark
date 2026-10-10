@@ -1,0 +1,74 @@
+<!doctype html>
+<html lang="de">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Spark Schreibhilfe – Einstellungen</title>
+  <link rel="stylesheet" href="options.css">
+</head>
+<body>
+  <main>
+    <header>
+      <img src="icons/icon-48.png" alt="" width="40" height="40">
+      <h1>Spark Schreibhilfe</h1>
+    </header>
+
+    <section id="paired" hidden>
+      <h2>Verbindung</h2>
+      <p id="state" class="state"></p>
+      <div class="row">
+        <button type="button" id="test">Verbindung prüfen</button>
+        <button type="button" id="unpair" class="danger">Entkoppeln</button>
+      </div>
+      <p id="pairedMsg" class="msg" role="status" aria-live="polite"></p>
+    </section>
+
+    <section id="pairing">
+      <h2>Mit dem Spark koppeln</h2>
+      <p>Im Spark-Panel: <b>Ich → Schreibhilfe → „Programm koppeln“</b>. Die angezeigte Einrichtungszeile hier einfügen.</p>
+      <label for="setup">Einrichtungszeile</label>
+      <input id="setup" type="text" autocomplete="off" spellcheck="false" placeholder="https://spark.example.org#schreib=ABCD-EFGH">
+      <details id="manual">
+        <summary>Adresse und Code einzeln eingeben</summary>
+        <label for="base">Adresse des Spark</label>
+        <input id="base" type="url" autocomplete="off" spellcheck="false" placeholder="https://spark.example.org">
+        <label for="code">Code</label>
+        <input id="code" type="text" autocomplete="off" spellcheck="false" maxlength="12" placeholder="ABCD-EFGH">
+      </details>
+      <label for="name">Name dieses Geräts</label>
+      <input id="name" type="text" maxlength="40" value="Browser">
+      <p id="warn" class="warn" hidden></p>
+      <div class="row">
+        <button type="button" id="pair" class="primary">Koppeln</button>
+      </div>
+      <p id="msg" class="msg" role="status" aria-live="polite"></p>
+    </section>
+
+    <section>
+      <h2>Standard-Aktion</h2>
+      <p>Für das Tastenkürzel <kbd id="shortcut">Strg+Umschalt+Y</kbd> und den Knopf in der Symbolleiste.</p>
+      <label for="defaultArt">Aktion</label>
+      <select id="defaultArt"></select>
+      <p class="small">Das Tastenkürzel lässt sich ändern: Chrome/Edge unter <code>chrome://extensions/shortcuts</code>
+        bzw. <code>edge://extensions/shortcuts</code>, Firefox unter Add-ons → Zahnrad → „Tastenkombinationen für Erweiterungen verwalten“.</p>
+    </section>
+
+    <section>
+      <h2>Eingebettete Rahmen (optional)</h2>
+      <p>Manche Mail-Seiten zeigen das Schreibfeld in einem eingebetteten Rahmen einer anderen Adresse.
+        Dort darf die Erweiterung nur arbeiten, wenn du es für alle Seiten erlaubst. Der Text geht trotzdem nur an deinen Spark.</p>
+      <div class="row">
+        <button type="button" id="allSites">Auf allen Seiten erlauben</button>
+        <button type="button" id="noAllSites" hidden>Wieder zurücknehmen</button>
+      </div>
+      <p id="allMsg" class="msg" role="status" aria-live="polite"></p>
+    </section>
+
+    <footer>
+      <p class="small">Der markierte Text geht nur an deinen eigenen Spark. Keine Telemetrie, keine Daten an Dritte.</p>
+    </footer>
+  </main>
+  <script src="common.js"></script>
+  <script src="options.js"></script>
+</body>
+</html>

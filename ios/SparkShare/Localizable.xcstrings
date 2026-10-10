@@ -31,6 +31,16 @@
         }
       }
     },
+    "Art": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Kind"
+          }
+        }
+      }
+    },
     "Auf dem Bild habe ich keinen Text gefunden.": {
       "localizations": {
         "en": {
@@ -131,12 +141,42 @@
         }
       }
     },
+    "Der Spark schreibt …": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "The Spark is writing …"
+          }
+        }
+      }
+    },
     "Der Spark sieht sich das Foto an.": {
       "localizations": {
         "en": {
           "stringUnit": {
             "state": "translated",
             "value": "The Spark looks at the photo."
+          }
+        }
+      }
+    },
+    "Der Text ist leer.": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "The text is empty."
+          }
+        }
+      }
+    },
+    "Der Text ist zu lang (höchstens %lld Zeichen).": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "The text is too long (at most %lld characters)."
           }
         }
       }
@@ -167,6 +207,16 @@
           "stringUnit": {
             "state": "translated",
             "value": "That message no longer exists."
+          }
+        }
+      }
+    },
+    "Die Schreibhilfe ist im Panel aus.": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "The writing help is switched off in the panel."
           }
         }
       }
@@ -271,6 +321,36 @@
         }
       }
     },
+    "Freundlicher": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Friendlier"
+          }
+        }
+      }
+    },
+    "Förmlicher": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "More formal"
+          }
+        }
+      }
+    },
+    "Glätten": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Smooth"
+          }
+        }
+      }
+    },
     "In dem Dokument habe ich keinen Text gefunden.": {
       "localizations": {
         "en": {
@@ -291,6 +371,26 @@
         }
       }
     },
+    "Ins Deutsche": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Into German"
+          }
+        }
+      }
+    },
+    "Ins Englische": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Into English"
+          }
+        }
+      }
+    },
     "Keine Antwort vom Spark.": {
       "localizations": {
         "en": {
@@ -307,6 +407,26 @@
           "stringUnit": {
             "state": "translated",
             "value": "Copy"
+          }
+        }
+      }
+    },
+    "Korrigieren": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Correct"
+          }
+        }
+      }
+    },
+    "Kürzer": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Shorter"
           }
         }
       }
@@ -341,12 +461,32 @@
         }
       }
     },
+    "Text verbessern": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Improve text"
+          }
+        }
+      }
+    },
     "Unter „Meine Dokumente“ gespeichert. Der Spark findet es auch später.": {
       "localizations": {
         "en": {
           "stringUnit": {
             "state": "translated",
             "value": "Saved under “My documents”. The Spark finds it later too."
+          }
+        }
+      }
+    },
+    "Verbessert": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Improved"
           }
         }
       }

@@ -1,0 +1,76 @@
+<!doctype html>
+<html lang="de">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <meta name="referrer" content="no-referrer">
+  <title>Spark Schreibhilfe</title>
+  <link rel="stylesheet" href="./taskpane.css">
+  <script src="https://appsforoffice.microsoft.com/lib/1/hosted/office.js"></script>
+  <script src="./taskpane.js" defer></script>
+</head>
+<body>
+  <header class="kopf">
+    <img src="./icon-32.png" alt="" width="20" height="20">
+    <h1>Spark Schreibhilfe</h1>
+  </header>
+
+  <p id="laden" class="hinweis">Wird geladen …</p>
+
+  <!-- Koppeln -->
+  <section id="koppeln" hidden>
+    <h2>Mit dem Spark koppeln</h2>
+    <p class="hinweis">Im Panel: <b>Ich → Schreibhilfe → Programm koppeln</b>. Den Code (XXXX-XXXX) oder die ganze Zeile hier einfügen.</p>
+    <label for="code">Code</label>
+    <input id="code" type="text" autocomplete="off" autocapitalize="characters" spellcheck="false" placeholder="ABCD-EFGH">
+    <label for="geraet">Gerätename</label>
+    <input id="geraet" type="text" maxlength="40" autocomplete="off" spellcheck="false" value="Office">
+    <button id="koppelnBtn" type="button" class="primaer">Koppeln</button>
+    <p id="koppelnMeldung" class="meldung" role="status" hidden></p>
+  </section>
+
+  <!-- Hauptbereich -->
+  <section id="haupt" hidden>
+    <p id="kontext" class="hinweis"></p>
+
+    <label for="art">Was soll der Spark tun?</label>
+    <select id="art"></select>
+
+    <div id="spracheZeile" hidden>
+      <label for="sprache">Sprache</label>
+      <select id="sprache"></select>
+    </div>
+
+    <div id="notizenZeile" hidden>
+      <label for="notizen">Stichpunkte für die Antwort (optional)</label>
+      <textarea id="notizen" rows="3" maxlength="20000" placeholder="z. B. Termin passt, Unterlagen folgen Freitag"></textarea>
+    </div>
+
+    <label for="wunsch">Wunsch (optional)</label>
+    <input id="wunsch" type="text" maxlength="300" autocomplete="off" placeholder="z. B. per Du, max. 3 Sätze">
+
+    <button id="los" type="button" class="primaer">Los</button>
+
+    <p id="status" class="meldung" role="status" hidden></p>
+
+    <div id="ergebnis" hidden>
+      <div id="diffBox" hidden>
+        <h2>Änderungen <span id="anzahl" class="hinweis"></span></h2>
+        <div id="diff" class="diff"></div>
+      </div>
+      <label for="text">Ergebnis (bearbeitbar)</label>
+      <textarea id="text" rows="8" spellcheck="true"></textarea>
+      <div class="knoepfe">
+        <button id="uebernehmen" type="button" class="primaer">Übernehmen</button>
+        <button id="kopieren" type="button">Kopieren</button>
+      </div>
+      <p id="ergebnisMeldung" class="meldung" role="status" hidden></p>
+    </div>
+
+    <footer class="fuss">
+      <span id="verbunden" class="hinweis"></span>
+      <button id="neuKoppeln" type="button" class="link">Neu koppeln</button>
+    </footer>
+  </section>
+</body>
+</html>
