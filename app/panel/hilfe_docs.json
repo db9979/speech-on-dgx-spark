@@ -909,7 +909,7 @@
 "file": "Assistent und Oberfläche",
 "head": "Sprach-Chat",
 "title": "Schreibhilfe in anderen Programmen (V01.0.339)",
-"text": "Schreibhilfe in anderen Programmen (V01.0.339): Unter-Schalter Funktionen → Schreibhilfe → „In anderen Programmen“ (Admin, aus) und Ich → Schreibhilfe → „In anderen Programmen nutzen“ (Profil, aus). Dann zeigt Ich → Schreibhilfe die Programme zum Holen und „Programm koppeln“: ein Klick (mit Bestätigungscode) ergibt eine Einrichtungszeile wie https://spark.example.de#schreib=ABCD-EFGH, 10 Minuten gültig, einmal benutzbar. Das Programm tauscht sie gegen einen eigenen Geräteschlüssel der Art „write“, der nur Texte verbessern darf (kein Chat, keine Post, keine Entwürfe, kein Verlauf). Gekoppelte Programme stehen darunter und lassen sich einzeln entfernen; höchstens 10 pro Profil. - Mac (Download „Mac-Schnellaktion“): Dienste-Menü „Mit Spark verbessern“ in Apple Mail, Pages, Word, Excel und jedem anderen Programm, optional mit Tastenkürzel. Art wählen, Vorschlag ansehen, „Übernehmen“ ersetzt die Markierung. Schlüssel im Schlüsselbund. - Windows (x64 und ARM, Seite „Windows-Programm“ auf GitHub, GitHub-Action „Schreibhilfe Windows“): kleines Programm im Infobereich, Text markieren und Strg+Alt+S drücken, Vorschlag ansehen, übernehmen. Nicht signiert, SmartScreen fragt beim ersten Start ("
+"text": "Schreibhilfe in anderen Programmen (V01.0.339): Unter-Schalter Funktionen → Schreibhilfe → „In anderen Programmen“ (Admin, aus) und Ich → Schreibhilfe → „In anderen Programmen nutzen“ (Profil, aus). Dann zeigt Ich → Schreibhilfe die Programme zum Holen und „Programm koppeln“: ein Klick (mit Bestätigungscode) ergibt eine Einrichtungszeile wie https://spark.example.de#schreib=ABCD-EFGH, 10 Minuten gültig, einmal benutzbar. Das Programm tauscht sie gegen einen eigenen Geräteschlüssel der Art „write“, der nur Texte verbessern darf (kein Chat, keine Post, keine Entwürfe, kein Verlauf). Gekoppelte Programme stehen darunter und lassen sich einzeln entfernen; höchstens 10 pro Profil. - Mac (Download „Mac-Schnellaktion“): Dienste-Menü „Mit Spark verbessern“ in Apple Mail, Pages, Word, Excel und jedem anderen Programm, optional mit Tastenkürzel. Art wählen, Vorschlag ansehen, „Übernehmen“ ersetzt die Markierung. Schlüssel im Schlüsselbund. - Windows (x64 und ARM): seit V01.0.341 Teil des Spark-Begleiters (unten), gekoppelt unter Ich → Begleiter. - Outlook, Word, Excel (Office-Add-in, nur mit https-Adresse des Spark): Manifest-Datei holen und in Outlook unter „Add-Ins abrufen“ → „Meine Add-In"
 },
 {
 "lang": "de",
@@ -917,7 +917,31 @@
 "file": "Assistent und Oberfläche",
 "head": "Sprach-Chat",
 "title": "Schreibhilfe in anderen Programmen (V01.0.339)",
-"text": "„Weitere Informationen“ → „Trotzdem ausführen“). Schlüssel mit Windows-DPAPI verschlüsselt. - Outlook, Word, Excel (Office-Add-in, nur mit https-Adresse des Spark): Manifest-Datei holen und in Outlook unter „Add-Ins abrufen“ → „Meine Add-Ins“ → „Benutzerdefiniertes Add-In“ bzw. in Word/Excel als freigegebenes Add-In laden. Seitenleiste mit Art, Vorschlag und „Übernehmen“ in Mail, Dokument oder Zelle. Läuft in Outlook für Windows, Mac und im Web. - Browser (Erweiterung für Chrome, Edge, Firefox): Rechtsklick auf markierten Text in Webmailern (Outlook im Web, Gmail, GMX, web.de und andere) → „Mit Spark verbessern“. Laden als entpackte Erweiterung; in Firefox nur bis zum Neustart. - iPhone und iPad (Spark-App): Teilen → Spark → „Text verbessern“ und der Kurzbefehl „Text mit Spark verbessern“; nutzt den App-Schlüssel. Alle Programme schicken nur den markierten Text, der Spark speichert ihn nicht; http geht nur im Heimnetz. Live und Logs zeigen Programmart, Art und Zeichenzahl."
+"text": "s“ → „Benutzerdefiniertes Add-In“ bzw. in Word/Excel als freigegebenes Add-In laden. Seitenleiste mit Art, Vorschlag und „Übernehmen“ in Mail, Dokument oder Zelle. Läuft in Outlook für Windows, Mac und im Web. - Browser (Erweiterung für Chrome, Edge, Firefox): Rechtsklick auf markierten Text in Webmailern (Outlook im Web, Gmail, GMX, web.de und andere) → „Mit Spark verbessern“. Laden als entpackte Erweiterung; in Firefox nur bis zum Neustart. - iPhone und iPad (Spark-App): Teilen → Spark → „Text verbessern“ und der Kurzbefehl „Text mit Spark verbessern“; nutzt den App-Schlüssel. Alle Programme schicken nur den markierten Text, der Spark speichert ihn nicht; http geht nur im Heimnetz. Live und Logs zeigen Programmart, Art und Zeichenzahl."
+},
+{
+"lang": "de",
+"src": "assistent",
+"file": "Assistent und Oberfläche",
+"head": "Sprach-Chat",
+"title": "Spark-Begleiter am PC und Mac (V01.0.341, `begleiter.py`, `tools/begleiter`)",
+"text": "Spark-Begleiter am PC und Mac (V01.0.341, begleiter.py, tools/begleiter): ein kleines Programm in der Windows-Taskleiste (x64 und ARM, GitHub-Action „Spark-Begleiter Windows“, Release begleiter-windows) und der Mac-Menüleiste (macOS 13 und neuer, Action „Spark-Begleiter Mac“, Release begleiter-mac). Schalter: Funktionen → Unterwegs und Geräte → „Spark-Begleiter am PC und Mac“ (Admin, aus) und Ich → Begleiter → „Spark-Begleiter für mich“ (Profil, aus); Gäste nie. Koppeln: Ich → Begleiter → „Gerät koppeln“ ergibt eine Einrichtungszeile …#begleiter=ABCD-EFGH (10 Minuten, einmal, mit Bestätigungscode); das Programm bekommt einen eigenen Schlüssel der Art „desk“, der nur seine Wege kennt. Teile, pro Gerät unter Ich → Begleiter an oder aus (neu: Schreibhilfe, Frag Spark, Meldungen und Zustand an; Diktieren und Notaus-Knopf aus): - Schreibhilfe (braucht die Schreibhilfe selbst): Text markieren, Strg+Alt+S (Mac ⌥⌘S oder Dienste-Menü). Voreinstellungen pro Gerät: Art, Sprache beim Übersetzen, fester Wunsch, welche Arten im Menü stehen, Vorschlag erst zeigen oder gleich ersetzen. - Frag Spark: Strg+Alt+A (⌥⌘A) öffnet ein Fenster für eine Frage, die Antwort kommt als Text; Rückfragen innerhal"
+},
+{
+"lang": "de",
+"src": "assistent",
+"file": "Assistent und Oberfläche",
+"head": "Sprach-Chat",
+"title": "Spark-Begleiter am PC und Mac (V01.0.341, `begleiter.py`, `tools/begleiter`)",
+"text": "b von 10 Minuten behalten den Zusammenhang, die Fragen eines Tages stehen als Gespräch „Begleiter“ im Verlauf. - Diktieren: Strg+Alt+D (⌥⌘D) startet und beendet die Aufnahme (höchstens 60 Sekunden, sichtbare Anzeige), der erkannte Text landet an der Schreibmarke. Sprache pro Gerät. - Meldungen: Hinweise des Spark als Systemmitteilung, wenn der Begleiter das zuletzt benutzte Gerät ist (wie bei der Android-App holt das Programm sie alle 30 Sekunden ab). - Zustandspunkt: Symbol normal, grau (Spark nicht erreichbar) oder rot (Notaus oder Mein Notaus). - Mein Notaus: Menüpunkt mit Rückfrage, legt das eigene Profil still (wie Ich → Sicherheit). Aufheben nur im Browser mit PIN. Tastenkürzel stellt man im Programm unter Einstellungen ein. Was im Panel geändert wird, übernimmt das Programm beim nächsten Abruf. Ein Gerät unter Ich → Begleiter entfernen sperrt seinen Schlüssel sofort. Windows: nicht signiert, SmartScreen beim ersten Start („Weitere Informationen“ → „Trotzdem ausführen“), Schlüssel mit DPAPI verschlüsselt. Mac: noch nicht notarisiert, beim ersten Start Rechtsklick → Öffnen; für das Tastenkürzel der Schreibhilfe und fürs Einfügen fragt macOS einmal nach „Bedienungshilfen“, fürs"
+},
+{
+"lang": "de",
+"src": "assistent",
+"file": "Assistent und Oberfläche",
+"head": "Sprach-Chat",
+"title": "Spark-Begleiter am PC und Mac (V01.0.341, `begleiter.py`, `tools/begleiter`)",
+"text": " Diktieren nach dem Mikrofon; Schlüssel im Schlüsselbund. Zustand → Live zeigt Koppeln, Fragen, Diktate (nur Zeichenzahl) und Meldungen an „Spark-Begleiter“."
 },
 {
 "lang": "de",
@@ -3333,7 +3357,7 @@
 "file": "Assistant and panel",
 "head": "Voice chat",
 "title": "Writing help in other programs (V01.0.339)",
-"text": "Writing help in other programs (V01.0.339): sub-switches Features → Schreibhilfe → \"In other programs\" (admin, off) and Me → Writing help → \"Use in other programs\" (profile, off). Then Me → Writing help shows the programs to download and \"Pair a program\": one click (with confirmation code) gives a setup line like https://spark.example.de#schreib=ABCD-EFGH, valid 10 minutes, usable once. The program swaps it for its own device key of kind \"write\" that can only improve texts (no chat, no mail, no drafts, no history). Paired programs are listed below and can be removed one by one; at most 10 per profile. - Mac (download \"Mac quick action\"): Services menu \"Mit Spark verbessern\" in Apple Mail, Pages, Word, Excel and any other program, optionally with a shortcut. Pick what to do, look at the suggestion, \"Übernehmen\" replaces the selection. Key in the keychain. - Windows (x64 and ARM, page \"Windows program\" on GitHub, GitHub Action \"Schreibhilfe Windows\"): small program in the notification area, select text and press Ctrl+Alt+S, look at the suggestion, take it. Not signed, SmartScreen asks on first start (\"More info\" → \"Run anyway\"). Key encrypted with Windows DPAPI. - Outlook, Word, Exce"
+"text": "Writing help in other programs (V01.0.339): sub-switches Features → Schreibhilfe → \"In other programs\" (admin, off) and Me → Writing help → \"Use in other programs\" (profile, off). Then Me → Writing help shows the programs to download and \"Pair a program\": one click (with confirmation code) gives a setup line like https://spark.example.de#schreib=ABCD-EFGH, valid 10 minutes, usable once. The program swaps it for its own device key of kind \"write\" that can only improve texts (no chat, no mail, no drafts, no history). Paired programs are listed below and can be removed one by one; at most 10 per profile. - Mac (download \"Mac quick action\"): Services menu \"Mit Spark verbessern\" in Apple Mail, Pages, Word, Excel and any other program, optionally with a shortcut. Pick what to do, look at the suggestion, \"Übernehmen\" replaces the selection. Key in the keychain. - Windows (x64 and ARM): since V01.0.341 part of the Spark companion (below), paired under Me → Companion. - Outlook, Word, Excel (Office add-in, only with the Spark's https address): download the manifest and load it in Outlook under \"Get Add-ins\" → \"My add-ins\" → \"Custom add-in\", or in Word/Excel as a shared add-in. Side pane wit"
 },
 {
 "lang": "en",
@@ -3341,7 +3365,23 @@
 "file": "Assistant and panel",
 "head": "Voice chat",
 "title": "Writing help in other programs (V01.0.339)",
-"text": "l (Office add-in, only with the Spark's https address): download the manifest and load it in Outlook under \"Get Add-ins\" → \"My add-ins\" → \"Custom add-in\", or in Word/Excel as a shared add-in. Side pane with kind, suggestion and \"Übernehmen\" into the mail, document or cell. Works in Outlook for Windows, Mac and the web. - Browser (extension for Chrome, Edge, Firefox): right-click selected text in webmailers (Outlook on the web, Gmail, GMX, web.de and others) → \"Mit Spark verbessern\". Load as unpacked extension; in Firefox only until restart. - iPhone and iPad (Spark app): Share → Spark → \"Improve text\" and the shortcut \"Improve text with Spark\"; uses the app key. All programs send only the selected text, the Spark does not store it; http only in the home network. Live and logs show program kind, kind and number of characters."
+"text": "h kind, suggestion and \"Übernehmen\" into the mail, document or cell. Works in Outlook for Windows, Mac and the web. - Browser (extension for Chrome, Edge, Firefox): right-click selected text in webmailers (Outlook on the web, Gmail, GMX, web.de and others) → \"Mit Spark verbessern\". Load as unpacked extension; in Firefox only until restart. - iPhone and iPad (Spark app): Share → Spark → \"Improve text\" and the shortcut \"Improve text with Spark\"; uses the app key. All programs send only the selected text, the Spark does not store it; http only in the home network. Live and logs show program kind, kind and number of characters."
+},
+{
+"lang": "en",
+"src": "assistant",
+"file": "Assistant and panel",
+"head": "Voice chat",
+"title": "Spark companion on PC and Mac (V01.0.341, `begleiter.py`, `tools/begleiter`)",
+"text": "Spark companion on PC and Mac (V01.0.341, begleiter.py, tools/begleiter): a small program in the Windows taskbar (x64 and ARM, GitHub Action \"Spark-Begleiter Windows\", release begleiter-windows) and the Mac menu bar (macOS 13 and later, Action \"Spark-Begleiter Mac\", release begleiter-mac). Switches: Features → On the go and devices → \"Spark companion on PC and Mac\" (admin, off) and Me → Companion → \"Spark companion for me\" (profile, off); never guests. Pairing: Me → Companion → \"Pair a device\" gives a setup line …#begleiter=ABCD-EFGH (10 minutes, once, with confirmation code); the program gets its own key of kind \"desk\" that knows only its own paths. Parts, on or off per device under Me → Companion (new devices: writing help, Ask Spark, notes and state on; dictation and the kill-switch button off): - Writing help (needs the writing help itself): select text, Ctrl+Alt+S (Mac ⌥⌘S or the Services menu). Defaults per device: kind, language for translating, fixed wish, which kinds show in the menu, show the suggestion first or replace at once. - Ask Spark: Ctrl+Alt+A (⌥⌘A) opens a window for a question, the answer comes as text; follow-ups within 10 minutes keep the context, a day's que"
+},
+{
+"lang": "en",
+"src": "assistant",
+"file": "Assistant and panel",
+"head": "Voice chat",
+"title": "Spark companion on PC and Mac (V01.0.341, `begleiter.py`, `tools/begleiter`)",
+"text": "stions are a conversation \"Begleiter\" in the history. - Dictation: Ctrl+Alt+D (⌥⌘D) starts and ends the recording (at most 60 seconds, visible indicator), the recognised text lands at the cursor. Language per device. - Notes: the Spark's notes as system notifications when the companion is the device used last (like the Android app, the program fetches them every 30 seconds). - State dot: icon normal, grey (Spark not reachable) or red (Notaus or my kill switch). - My kill switch: menu item with a confirmation, stops the own profile (as Me → Security). Lifting only in the browser with the PIN. Hotkeys are set in the program under Settings. Changes in the panel reach the program with its next check. Removing a device under Me → Companion stops its key at once. Windows: not signed, SmartScreen on first start (\"More info\" → \"Run anyway\"), key encrypted with DPAPI. Mac: not notarized yet, first start right-click → Open; for the writing-help hotkey and pasting macOS asks once for \"Accessibility\", for dictation for the microphone; key in the keychain. Status → Live shows pairing, questions, dictations (character count only) and notes to \"Spark-Begleiter\"."
 },
 {
 "lang": "en",
