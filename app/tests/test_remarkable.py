@@ -435,6 +435,43 @@ class Writing(Base):
         self.assertIn("Einkauf", out)
 
 
+class Target(Base):
+    """V01.0.291: "Ablegen in" picks one own folder for new documents (default "Spark"); only new documents go
+    there, a folder that is gone means "Spark" again and the person is told."""
+    def test_chosen_folder_and_fallback(self):
+        c, uid = self.paired("Rmtarget")
+        CLOUD[0].doc(FOLDER, "Notizen", folder=True)
+        CLOUD[0].doc(NB, "Alt", [(P1, page_file("bleibt"))], parent=FOLDER)
+        run(remarkable.refresh_library(uid))
+        self.assertEqual(c.put("/api/profile/remarkable/target", json={"id": FOLDER}).status_code, 403)   # sending off
+        helpers.set_config(remarkable_send=True)
+        c.put("/api/profile/settings", json={"rm_send": True})
+        self.assertEqual(c.get("/api/profile/remarkable").json()["target_path"], "Spark")
+        for bad in (NB, str(uuid.UUID(int=999)), "../x", 5):      # a notebook, unknown, no id
+            self.assertEqual(c.put("/api/profile/remarkable/target", json={"id": bad}).status_code, 400, bad)
+        r = c.put("/api/profile/remarkable/target", json={"id": FOLDER})
+        self.assertEqual(r.status_code, 200, r.text)
+        self.assertEqual(r.json()["target_path"], "Notizen")
+        before = dict(CLOUD[0].entries)
+        r = c.post("/api/profile/remarkable/send", json={"title": "Hier", "text": "y"})
+        self.assertEqual(r.status_code, 200, r.text)
+        self.assertEqual((r.json()["where"], r.json()["lost"]), ("Notizen", False))
+        for k, v in before.items():
+            self.assertEqual(CLOUD[0].entries[k], v)                 # nothing existing changed, the folder neither
+        listed = CLOUD[0].listed()
+        self.assertEqual(next(m for m in listed.values() if m["visibleName"] == "Hier")["parent"], FOLDER)
+        self.assertNotIn("Spark", [m["visibleName"] for m in listed.values()])   # no Spark folder needed
+        CLOUD[0].drop(FOLDER)                                          # deleted on the device
+        r = c.post("/api/profile/remarkable/send", json={"title": "Danach", "text": "y"})
+        self.assertEqual((r.json()["where"], r.json()["lost"]), ("Spark", True))
+        listed = CLOUD[0].listed()
+        spark = next(i for i, m in listed.items() if m["visibleName"] == "Spark")
+        self.assertEqual(next(m for m in listed.values() if m["visibleName"] == "Danach")["parent"], spark)
+        self.assertNotIn("target", remarkable.load(uid))
+        ok, note = run(remarkable.send_answer(uid, "Fass zusammen", "Text"))
+        self.assertIn("„Spark“", note)
+        self.assertNotIn("nicht mehr da", note)                         # told once, then Spark is the choice
+
 class SendErrors(Base):
     """V01.0.290: a refused upload says which file and what the cloud answered (never a token), any 2xx counts,
     and a root line the Spark does not understand stops the write before anything could vanish."""

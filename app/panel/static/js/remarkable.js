@@ -28,7 +28,10 @@ async function showRm(){const box=$('rmbox');if(!box)return;clearTimeout(rmTimer
       <ul class="facts small" id="rmlist">${shown.map(x=>`<li><label class="chk" style="flex:1"><input type="checkbox" data-rmid="${esc(x.id)}"${(RMPICK?RMPICK.has(x.id):x.picked)?' checked':''}> <span><b>${esc(x.path)}</b><br><small class="mut">${esc(t(...(RMKIND[x.kind]||RMKIND.notebook)))}${x.folder?'':' · '+x.pages+t(' Seiten',' pages')}${x.read&&!x.picked?' · '+t('wird gelesen','is read'):''}</small></span></label></li>`).join('')||`<li class="mut"><span>${d.busy?t('Liste wird geladen …','Loading the list …')+(d.progress&&d.progress[1]?` ${d.progress[0]} / ${d.progress[1]}`:''):t('Nichts gefunden.','Nothing found.')}</span></li>`}</ul>
       ${lib.length>shown.length?`<div class="fh">${t('Weitere mit der Suche finden.','Find more with the search.')}</div>`:''}
       <div class="row" style="margin-top:8px"><button class="b p" type="button" id="rmsave">${t('Auswahl speichern','Save choice')}</button><button class="b" type="button" id="rmsync"${d.busy?' disabled':''}>${t('Jetzt abgleichen','Compare now')}</button><button class="b" type="button" id="rmdel">${t('Trennen','Disconnect')}</button></div>
-      ${d.send?`<div class="fh">${t('Heute aufs reMarkable geschickt: ','Sent to the reMarkable today: ')}${d.sent_today} / ${d.send_day}</div>`:''}`}
+      ${d.send?`<h3>${t('Ablegen in','Put into')}</h3>
+      <select id="rmtarget"><option value="">${t('Spark (Standard)','Spark (default)')}</option>${lib.filter(x=>x.folder).map(x=>`<option value="${esc(x.id)}"${x.id===d.target?' selected':''}>${esc(x.path)}</option>`).join('')}</select>
+      <div class="fh">${t('Dorthin legt der Spark neue Dokumente; Bestehendes ändert er nie. Fehlt der Ordner später, nimmt er wieder „Spark“ und sagt es dir.','New documents go there; the Spark never changes anything that exists. If the folder is gone later, it takes "Spark" again and tells you.')}</div>
+      <div class="fh">${t('Heute aufs reMarkable geschickt: ','Sent to the reMarkable today: ')}${d.sent_today} / ${d.send_day}</div>`:''}`}
   box.innerHTML=head+body+`<div class="fh" id="rmmsg"></div>`;
   xbind(box,showRm);
   if(!conn)RMALL=null;if($('rmall'))$('rmall').onchange=e=>{RMALL=e.target.checked};
@@ -40,6 +43,7 @@ async function showRm(){const box=$('rmbox');if(!box)return;clearTimeout(rmTimer
     catch(e){xmsg('rmmsg',e.message,true)}};
   if($('rmsave'))$('rmsave').onclick=async()=>{try{await api('/api/profile/remarkable/pick',xjson('PUT',{ids:[...picked],all:$('rmall').checked}));RMPICK=null;RMALL=null;xmsg('rmmsg',t('Gespeichert. Der Abgleich beginnt in den nächsten Minuten.','Saved. The comparison starts within the next minutes.'))}
     catch(e){xmsg('rmmsg',e.message,true)}};
+  if($('rmtarget'))$('rmtarget').onchange=async e=>{try{await api('/api/profile/remarkable/target',xjson('PUT',{id:e.target.value}));xmsg('rmmsg',t('Gespeichert.','Saved.'))}catch(x){xmsg('rmmsg',x.message,true)}};
   if($('rmsync'))$('rmsync').onclick=async()=>{try{await api('/api/profile/remarkable/sync',{method:'POST'});showRm()}catch(e){xmsg('rmmsg',e.message,true)}};
   if($('rmdel'))$('rmdel').onclick=async()=>{if(!confirm(t('reMarkable trennen? Alle gelesenen Notizbücher verschwinden vom Spark (auf dem reMarkable bleibt alles).','Disconnect the reMarkable? All notebooks read disappear from the Spark (everything stays on the reMarkable).')))return;
     try{const r=await (await api('/api/profile/remarkable',{method:'DELETE'})).json();xmsg('rmmsg',t('Getrennt. Entferne das Gerät „desktop-linux“ auch auf my.remarkable.com.','Disconnected. Also remove the device "desktop-linux" on my.remarkable.com.'));RM=null;showRm().then(()=>xmsg('rmmsg',r.hint||''))}
@@ -48,5 +52,5 @@ async function showRm(){const box=$('rmbox');if(!box)return;clearTimeout(rmTimer
     showRm().then(()=>{const f=id&&$(id);if(f){f.focus();if(c!=null)f.setSelectionRange(c,c)}})},5e3)}
 // an answer onto the reMarkable, only on the person's click (chat.js adds the button)
 async function rmSend(text,b){b.disabled=true;const first=(text.split('\n').find(x=>x.trim())||'').replace(/[#*_`>]/g,'').trim();
-  try{const r=await (await api('/api/profile/remarkable/send',xjson('POST',{title:first.slice(0,60)||t('Vom Spark','From the Spark'),text}))).json();b.textContent=t('Auf dem reMarkable: ','On the reMarkable: ')+r.title}
+  try{const r=await (await api('/api/profile/remarkable/send',xjson('POST',{title:first.slice(0,60)||t('Vom Spark','From the Spark'),text}))).json();b.textContent=t('Auf dem reMarkable: ','On the reMarkable: ')+r.where+' / '+r.title+(r.lost?t(' (gewählter Ordner fehlt)',' (chosen folder is gone)'):'')}
   catch(e){b.disabled=false;b.textContent=e.message}}

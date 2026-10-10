@@ -31,6 +31,7 @@ All options for running without questions (`--mode api --asr 1.7b --tts 0.6b --y
 
 <!-- New version: add one line at the top here and in CHANGELOG.md, drop the oldest line here (keep 10). Details go to docs/de and docs/en, not into this README. -->
 
+- **V01.0.291** reMarkable "Put into" (Me → reMarkable): choose an own folder for new documents, default "Spark"; the Spark only adds new documents, and if the folder is gone later it takes "Spark" again and says so
 - **V01.0.290** reMarkable sending: errors now say which file the cloud refused and what it answered (no token, also in the journal "remarkable: sending failed"), any 2xx answer counts, and a root line the Spark does not understand stops the write before anything could vanish
 - **V01.0.289** Fewer codes: trusted browsers for 60 days (7–90, a code again after 30 days without use) with a list to remove them one by one and a push note, a right code counts 10 minutes in the same login (bar with „End“; password, second step, roles, backups, code word and admin mode always ask), admin mode in a trusted browser 60 instead of 15 minutes; calendar, mail and Home Assistant now ask for the code instead of showing „code required“
 - **V01.0.288** Self-test "rmscene does not downgrade packaging" fits the hash lock (fallback line indented, lock checked for --no-deps and packaging ≥ 24); main green again
@@ -40,7 +41,6 @@ All options for running without questions (`--mode api --asr 1.7b --tts 0.6b --y
 - **V01.0.284** Priority for people, part 2: while an answer with priority has no first sentence yet, others' new requests to the language model wait at most 2 s (0–5 adjustable, running ones never stopped); the browser and the iPhone app report the start of a recording, background work then stops at once; Logs → Requests shows the wait
 - **V01.0.283** New people: accepted invitations disappear 7 days after acceptance or at once with the deleted profile (its PIN links too); leftovers of profiles already deleted are removed when the list opens
 - **V01.0.282** Priority for people (Features → Conversation, off; stage per profile only by the admin under People and devices, at most 3): sentences and recordings with priority overtake others' waiting ones in speech output and recognition (running ones never stopped, nobody starves), only the panel may say the stage; Logs → Requests shows the wait, Status → Check measures "two people at once"
-- **V01.0.281** My status (Features → Everyday, off; Me → My status): what the Spark does for you in the background (reading documents, meaning search, document cards, reMarkable, inbox tidying, contacts, jobs, morning briefing, memory) with the reason it waits, last/next time and a 7-day history, plus connected services with their last answer; a red dot at "Me" when something needs you; names and numbers only; the iPhone app reads the same source, the admin sees counts only
 
 All versions: [CHANGELOG.md](CHANGELOG.md)
 

@@ -732,8 +732,19 @@ def _meta(name, parent, kind):
                        "source": "", "synced": False, "type": kind, "version": 1, "visibleName": name}, sort_keys=True).encode()
 
 
+def where(uid, items=None):
+    """(folder id, path) the profile chose under Ich → reMarkable → "Ablegen in"; ("", "Spark") for the default
+    or when that folder is gone or in the trash."""
+    t = load(uid).get("target") or ""
+    items = library(uid) if items is None else items
+    it = items.get(t) if t else None
+    p = path_of(items, t) if it and it.get("folder") else None
+    return (t, p) if p else ("", "Spark")
+
+
 async def send(uid, title, text):
-    """A new EPUB with this text in the folder "Spark" (created when missing). Nothing else is changed."""
+    """A new EPUB with this text in the chosen folder (default "Spark", created when missing). Only adds a new
+    document; nothing existing is changed. Returns {"title", "where", "lost"} (lost: the chosen folder is gone)."""
     title = _clean(title, 80) or "Vom Spark"
     text = re.sub(r"[\x00-\x08\x0b\x0c\x0e-\x1f\x7f]", "", str(text or ""))[:MAX_SEND].strip()
     if not text:
@@ -748,7 +759,10 @@ async def send(uid, title, text):
     except CloudError as e:     # a few unreadable entries must not stop a new document: the last listing
         print("remarkable: listing before sending:", _redact(e), "- using the last listing", flush=True)
         items = library(uid)
-    folder = next((i for i, it in items.items() if it.get("folder") and it["name"] == "Spark" and not it["parent"]), None)
+    folder, path = where(uid, items)
+    lost = bool(load(uid).get("target")) and not folder
+    if not folder:
+        folder = next((i for i, it in items.items() if it.get("folder") and it["name"] == "Spark" and not it["parent"]), None)
     new = []
     if not folder:
         folder = str(uuid.uuid4())
@@ -765,8 +779,16 @@ async def send(uid, title, text):
     d = load(uid)
     s["n"] += 1
     d["sent"] = s
+    if lost:
+        d.pop("target", None)    # the chosen folder is gone: from now on "Spark" again, and the person is told
     save(uid, d)
-    return title
+    return {"title": title, "where": path, "lost": lost}
+
+
+def _told(r):
+    """The sentence after sending: where it is, and when the chosen folder was gone."""
+    gone = " Dein gewählter Ordner ist nicht mehr da, deshalb liegt es in „Spark“." if r["lost"] else ""
+    return f"im Ordner „{r['where']}“ („{r['title']}“).{gone}"
 
 
 # ---------------------------------------------------------------- the assistant: a dictated note
@@ -820,8 +842,8 @@ async def send_answer(uid, question, answer):
     if not str(answer or "").strip():
         return False, "Es gab keine Antwort zum Ablegen."
     try:
-        t = await send(uid, answer_title(question), answer)
-        return True, f"Die Antwort liegt jetzt auf deinem reMarkable im Ordner Spark („{t}“)."
+        r = await send(uid, answer_title(question), answer)
+        return True, "Die Antwort liegt jetzt auf deinem reMarkable " + _told(r)
     except (CloudError, ValueError, httpx.HTTPError, netguard.Blocked, netguard.TooLarge) as e:
         why = _redact(e if isinstance(e, (ValueError, CloudError)) else type(e).__name__)
         print("remarkable: sending failed:", why, flush=True)
@@ -851,8 +873,8 @@ async def tool(name, args, ctx):
     if name != "remarkable_note" or not send_allowed(uid):
         return "Aufs reMarkable schicken ist aus."
     try:
-        t = await send(uid, args.get("title"), args.get("text"))
-        return f"Auf dem reMarkable liegt jetzt „{t}“ im Ordner Spark."
+        r = await send(uid, args.get("title"), args.get("text"))
+        return "Liegt jetzt auf dem reMarkable " + _told(r)
     except (CloudError, ValueError, httpx.HTTPError, netguard.Blocked, netguard.TooLarge) as e:
         why = _redact(e if isinstance(e, (ValueError, CloudError)) else type(e).__name__)
         print("remarkable: sending failed:", why, flush=True)
@@ -884,6 +906,7 @@ def public(uid):
     return {"connected": bool(d.get("token")), "since": d.get("paired", 0), "last": d.get("last", 0),
             "error": d.get("error", ""), "count": len(d["docs"]), "all": bool(d.get("all")), "library": lib,
             "pictures": _pictures(uid), "send": send_allowed(uid), "connect_url": CONNECT_URL,
+            "target": where(uid, items)[0], "target_path": where(uid, items)[1],
             "sent_today": (d.get("sent") or {}).get("n", 0) if (d.get("sent") or {}).get("day") == time.strftime("%Y-%m-%d") else 0,
             "send_day": SEND_DAY, "busy": uid in _busy, "progress": list(_progress.get(uid) or [])}
 
@@ -978,6 +1001,30 @@ async def pick(request: Request, prof=Depends(browser_profile)):
     return public(uid)
 
 
+@router.put("/api/profile/remarkable/target", dependencies=[Depends(assistant)])
+async def target(request: Request, prof=Depends(browser_profile)):
+    """Ich → reMarkable → "Ablegen in": one folder of the own account ("" = "Spark"). Only where new documents go."""
+    uid = prof["id"]
+    _on(prof)
+    if not send_allowed(uid):
+        raise HTTPException(403, "Aufs reMarkable schicken ist aus (Funktionen und Ich → reMarkable)")
+    guard.limit(request, "rm", uid)
+    import iphone
+    body = await iphone._json(request, 1024)
+    t = body.get("id") or ""
+    items = library(uid)
+    if t and (not isinstance(t, str) or not ID.fullmatch(t) or not (items.get(t) or {}).get("folder")
+              or path_of(items, t) is None):
+        raise HTTPException(400, "id: ein Ordner aus deiner reMarkable-Liste (nicht im Papierkorb)")
+    d = load(uid)
+    if t:
+        d["target"] = t
+    else:
+        d.pop("target", None)
+    save(uid, d)
+    return public(uid)
+
+
 @router.post("/api/profile/remarkable/sync", dependencies=[Depends(assistant)])
 async def sync_now(request: Request, prof=Depends(browser_profile)):
     uid = prof["id"]
@@ -1006,7 +1053,7 @@ async def send_route(request: Request, prof=Depends(browser_profile)):
     if not load(uid).get("token"):
         raise HTTPException(400, "nicht verbunden")
     try:
-        t = await send(uid, body.get("title"), body.get("text"))
+        r = await send(uid, body.get("title"), body.get("text"))
     except ValueError as e:
         raise HTTPException(400, str(e))
     except (CloudError, httpx.HTTPError, netguard.Blocked, netguard.TooLarge) as e:
@@ -1014,4 +1061,4 @@ async def send_route(request: Request, prof=Depends(browser_profile)):
         print("remarkable: sending failed:", why, flush=True)
         raise HTTPException(502, "reMarkable hat das Dokument nicht angenommen: " + why)
     guard.log("remarkable_send", ip=guard.client_ip(request), profile=uid)
-    return {"ok": True, "title": t}
+    return {"ok": True, "title": r["title"], "where": r["where"], "lost": r["lost"]}
