@@ -60,7 +60,11 @@ _vcache = {}                   # uid -> (data_version stamp, ids, matrix)
 NEW_COLUMNS = (("shared", "INTEGER DEFAULT 0"), ("title", "TEXT DEFAULT ''"), ("art", "TEXT DEFAULT ''"),
                ("sender", "TEXT DEFAULT ''"), ("ddate", "TEXT DEFAULT ''"), ("due", "TEXT DEFAULT ''"),
                ("ref", "TEXT DEFAULT ''"), ("tags", "TEXT DEFAULT '[]'"), ("mytags", "TEXT DEFAULT ''"),
-               ("brief", "TEXT DEFAULT ''"))
+               ("brief", "TEXT DEFAULT ''"), ("changed", "INTEGER DEFAULT 0"))
+# when a piece / page last changed (reMarkable: the page's own time, else the document's); 0 = the document's time
+MORE_COLUMNS = {"chunks": (("changed", "INTEGER DEFAULT 0"),), "pagetext": (("changed", "INTEGER DEFAULT 0"),)}
+FRESH = 1 / 60 - 1 / 62      # the most a fresh piece gains in the search: about two places in the ranking
+FRESH_HALF = 14 * 86400      # ... halved every two weeks
 ARTS = ("Vertrag", "Rechnung", "Brief", "Anleitung", "Bescheid", "Versicherung", "Kontoauszug", "Beleg", "Befund",
         "Zeugnis", "Buch", "Artikel", "Notiz", "Foto", "Formular", "Sonstiges")
 MAX_TAGS = 10
@@ -107,6 +111,11 @@ def _open(uid):
     for col, kind in NEW_COLUMNS:       # databases from older versions
         if col not in have:
             con.execute(f"ALTER TABLE docs ADD COLUMN {col} {kind}")
+    for table, cols in MORE_COLUMNS.items():
+        have = {r[1] for r in con.execute(f"PRAGMA table_info({table})")}
+        for col, kind in cols:
+            if col not in have:
+                con.execute(f"ALTER TABLE {table} ADD COLUMN {col} {kind}")
     _import_json(uid, con)
     return con
 
@@ -161,8 +170,8 @@ def _import_json(uid, con):
             print("documents: old document not taken over:", type(e).__name__, flush=True)
 
 
-def _put_chunk(con, doc, n, page, text):
-    cur = con.execute("INSERT INTO chunks (doc, n, page, text) VALUES (?,?,?,?)", (doc, n, page, text))
+def _put_chunk(con, doc, n, page, text, changed=0):
+    cur = con.execute("INSERT INTO chunks (doc, n, page, text, changed) VALUES (?,?,?,?,?)", (doc, n, page, text, int(changed or 0)))
     con.execute("INSERT INTO fts (rowid, terms) VALUES (?,?)", (cur.lastrowid, " ".join(_terms(text))))
 
 
@@ -839,10 +848,10 @@ def has_doc(uid, doc_id):
         return bool(con.execute("SELECT 1 FROM docs WHERE id=?", (doc_id,)).fetchone())
 
 
-def notebook_put(uid, doc_id, name, pages, note="", source="remarkable"):
+def notebook_put(uid, doc_id, name, pages, note="", source="remarkable", changed=0):
     """Stores a notebook kept elsewhere, replacing what was stored for it before: pages is a list of
-    (page number, text, JPEG or None); a JPEG waits for the language model, its text comes on top of
-    the page's own text. doc_id None: a new document. Returns (doc id, pages that could not wait, as the
+    (page number, text, JPEG or None[, when the page last changed]); a JPEG waits for the language model, its
+    text comes on top of the page's own text. changed: when the notebook last changed (0 = now). doc_id None: a new document. Returns (doc id, pages that could not wait, as the
     queue was full; they are left out and tried again with the next comparison)."""
     name = re.sub(r"[\x00-\x1f\x7f<>\"\\]", "", str(name or "Notizbuch"))[:120].strip() or "Notizbuch"
     with _Db(uid) as con:
@@ -860,14 +869,18 @@ def notebook_put(uid, doc_id, name, pages, note="", source="remarkable"):
         con.execute("DELETE FROM pagetext WHERE doc=?", (doc_id,))
         room = MAX_QUEUED - con.execute("SELECT COUNT(*) FROM pages").fetchone()[0]
         n, size, waiting, left = 0, 0, 0, 0
-        for page, text, jpeg in pages:
+        changed = int(changed or time.time())
+        for row in pages:
+            page, text, jpeg = row[:3]
+            when = int(row[3]) if len(row) > 3 and row[3] else changed
             text = str(text or "")[:MAX_CHARS]
             if jpeg and room <= 0:
                 left += 1
                 continue
-            con.execute("INSERT INTO pagetext (doc, page, text, done) VALUES (?,?,?,?)", (doc_id, page, text, 0 if jpeg else 1))
+            con.execute("INSERT INTO pagetext (doc, page, text, done, changed) VALUES (?,?,?,?,?)",
+                        (doc_id, page, text, 0 if jpeg else 1, when))
             for c in chunks(_clean_text(text)):
-                _put_chunk(con, doc_id, n, page, c)
+                _put_chunk(con, doc_id, n, page, c, when)
                 n += 1
             size += len(text.encode())
             if jpeg:
@@ -878,8 +891,8 @@ def notebook_put(uid, doc_id, name, pages, note="", source="remarkable"):
         state = "reading" if waiting else "ready"
         if left:
             note = (note + "; " if note else "") + f"{left} Seite{'n' if left > 1 else ''} warten auf Platz"
-        con.execute("UPDATE docs SET name=?, size=?, kind='notebook', state=?, note=?, pages=? WHERE id=?",
-                    (name, size, state, note[:300], waiting, doc_id))
+        con.execute("UPDATE docs SET name=?, size=?, kind='notebook', state=?, note=?, pages=?, changed=? WHERE id=?",
+                    (name, size, state, note[:300], waiting, changed, doc_id))
     return doc_id, left
 
 
@@ -942,9 +955,10 @@ def page_read(uid, doc_id, page, text=None, failed=False, max_tries=2):
             con.execute("UPDATE pagetext SET done=1 WHERE doc=? AND page=?", (doc_id, page))   # not tried again
         else:
             n = con.execute("SELECT COALESCE(MAX(n), -1) FROM chunks WHERE doc=?", (doc_id,)).fetchone()[0]
+            w = con.execute("SELECT changed FROM pagetext WHERE doc=? AND page=?", (doc_id, page)).fetchone()
             for c in chunks(_clean_text(text or "")):
                 n += 1
-                _put_chunk(con, doc_id, n, page, c)
+                _put_chunk(con, doc_id, n, page, c, w[0] if w else 0)
         # a notebook page (reMarkable): its whole text is kept, so an unchanged page is not read again
         con.execute("UPDATE pagetext SET text=CASE WHEN text='' THEN ? ELSE text || char(10) || ? END, done=1 "
                     "WHERE doc=? AND page=?", (text or "", text or "", doc_id, page))
@@ -1035,11 +1049,12 @@ def _terms(text):
     return out
 
 
-def search(uid, query, k=5, qvec=None, shared_only=False, only_docs=None):
+def search(uid, query, k=5, qvec=None, shared_only=False, only_docs=None, fresh=False, now=None):
     """Best-matching pieces of this profile's documents in use: [{"id", "name", "page", "text", "file", "score"}].
     qvec: the query's meaning vector (docembed), merged with the full-text ranking. shared_only: only the
     documents this profile offers to everyone ("Für alle"), for another profile's search. only_docs: a set
-    of document ids (tags, art) the search keeps to."""
+    of document ids (tags, art) the search keeps to. fresh ("Neueste zuerst"): a piece changed lately gains up
+    to FRESH (about two places), halved every FRESH_HALF; fit stays first. Each hit then carries "changed"."""
     if not os.path.exists(db_path(uid)) and not os.path.isdir(_dir(uid)):
         return []
     q = sorted(set(t for t in _terms(query) if re.fullmatch(r"\w+", t)))
@@ -1075,13 +1090,50 @@ def search(uid, query, k=5, qvec=None, shared_only=False, only_docs=None):
                 i += 1
     if not ranks:
         return []
+    when = {}
+    if fresh:
+        now = now or time.time()
+        when = _changed(uid, list(ranks))
+        for i in ranks:
+            if when.get(i):
+                ranks[i] += FRESH * 0.5 ** (max(0, now - when[i]) / FRESH_HALF)
     best = sorted(ranks, key=lambda x: -ranks[x])[:k]
     with _Db(uid) as con:
         got = {r["id"]: r for r in con.execute(
             "SELECT c.id, c.doc, c.page, c.text, d.name, d.file, d.source FROM chunks c JOIN docs d ON d.id=c.doc WHERE c.id IN (%s)"
             % ",".join("?" * len(best)), best).fetchall()}
-    return [{"id": got[i]["doc"], "name": got[i]["name"], "page": got[i]["page"], "text": got[i]["text"],
-             "file": bool(got[i]["file"]), "source": got[i]["source"], "score": ranks[i]} for i in best if i in got]
+    return [dict({"id": got[i]["doc"], "name": got[i]["name"], "page": got[i]["page"], "text": got[i]["text"],
+                  "file": bool(got[i]["file"]), "source": got[i]["source"], "score": ranks[i]},
+                 **({"changed": when.get(i, 0)} if fresh else {})) for i in best if i in got]
+
+
+def _changed(uid, ids):
+    """{chunk id: when it last changed}: the piece's own time, else its document's change, else its upload."""
+    out = {}
+    with _Db(uid) as con:
+        for at in range(0, len(ids), 500):
+            part = ids[at:at + 500]
+            for r in con.execute("SELECT c.id, COALESCE(NULLIF(c.changed, 0), NULLIF(d.changed, 0), d.created, 0) "
+                                 "FROM chunks c JOIN docs d ON d.id=c.doc WHERE c.id IN (%s)" % ",".join("?" * len(part)), part):
+                out[r[0]] = int(r[1] or 0)
+    return out
+
+
+def recent(uid, since=0, until=None, k=8, shared_only=False):
+    """The pages changed last (newest first), within [since, until): [{"id", "name", "page", "text", "file",
+    "source", "changed"}]: "Was habe ich zuletzt notiert?" (only for "Neueste zuerst"). One hit per page."""
+    if not os.path.exists(db_path(uid)):
+        return []
+    until = until or 2 ** 62
+    cond = "d.use=1" + (" AND d.shared=1 AND d.state='ready'" if shared_only else "")
+    t = "COALESCE(NULLIF(c.changed, 0), NULLIF(d.changed, 0), d.created, 0)"
+    with _Db(uid) as con:
+        rows = con.execute(f"SELECT c.doc, c.page, d.name, d.file, d.source, MAX({t}) AS w, "
+                           f"GROUP_CONCAT(c.text, char(10)) AS text FROM chunks c JOIN docs d ON d.id=c.doc "
+                           f"WHERE {cond} AND {t} >= ? AND {t} < ? GROUP BY c.doc, COALESCE(c.page, 0) "
+                           f"ORDER BY w DESC LIMIT ?", (int(since or 0), int(until), int(k))).fetchall()
+    return [{"id": r["doc"], "name": r["name"], "page": r["page"], "text": (r["text"] or "")[:1500], "file": bool(r["file"]),
+             "source": r["source"], "changed": int(r["w"] or 0)} for r in rows]
 
 
 def sqlite_copy(src, dst):

@@ -10,6 +10,7 @@ the note tool only when the person's own words name the reMarkable, and it is lo
 Run:  python -m unittest discover -s app/tests -t app     (from the repository root)
 """
 import asyncio
+import datetime
 import hashlib
 import io
 import json
@@ -83,14 +84,16 @@ class Cloud:
         lines = "".join(f"{h}:0:{i}:{n}:{s}\n" for i, (h, n, s) in sorted(self.entries.items()))
         self.root = self.put(f"4\n0:.:{len(self.entries)}:0\n{lines}".encode())
 
-    def doc(self, did, name, pages=(), parent="", folder=False, kind="notebook", deleted=False):
-        """pages: [(page id, page file)]."""
+    def doc(self, did, name, pages=(), parent="", folder=False, kind="notebook", deleted=False, times=None):
+        """pages: [(page id, page file)]; times: {page id: when it changed (ms)} as newer software writes it."""
         meta = {"visibleName": name, "parent": parent, "type": "CollectionType" if folder else "DocumentType",
                 "deleted": deleted, "lastModified": "1760000000000"}
         files = [(did + ".metadata", json.dumps(meta).encode())]
         if not folder:
             content = {"fileType": kind, "formatVersion": 2,
-                       "cPages": {"pages": [{"id": p, "idx": {"value": f"b{i:03d}"}} for i, (p, _) in enumerate(pages)]}}
+                       "cPages": {"pages": [dict({"id": p, "idx": {"value": f"b{i:03d}"}},
+                                                 **({"modifed": {"timestamp": "1:2", "value": str(times[p])}} if p in (times or {}) else {}))
+                                            for i, (p, _) in enumerate(pages)]}}
             files.append((did + ".content", json.dumps(content).encode()))
             files += [(f"{did}/{p}.rm", data) for p, data in pages if data is not None]
         rows = sorted((self.put(data), fid, len(data)) for fid, data in files)
@@ -186,6 +189,7 @@ class Base(unittest.TestCase):
         remarkable._request = CLOUD[0].request
         remarkable._user.clear()
         remarkable._auto_last.clear()
+        remarkable._peek_last.clear()
         remarkable.BACKGROUND = False
         if si is None:
             remarkable.parse_page = lambda data, draw=True: (json.loads(data)["text"], [], b"jpeg" if draw and json.loads(data)["strokes"] else None,
@@ -196,7 +200,7 @@ class Base(unittest.TestCase):
 
     def tearDown(self):
         remarkable._request = REAL_REQUEST
-        helpers.set_config(doc_pictures=False, remarkable=False, remarkable_send=False)
+        helpers.set_config(doc_pictures=False, remarkable=False, remarkable_send=False, remarkable_fresh=False)
 
     def ready(self, name, pictures=True):
         c = profile(name)
@@ -379,7 +383,7 @@ class Reading(Base):
         self.assertIsNone(run(remarkable.due_once(idle=False)))
         for other in profiles.user_ids():          # other tests' profiles are not due
             if other != uid:
-                remarkable._auto_last[other] = 1e12
+                remarkable._auto_last[other] = remarkable._peek_last[other] = 1e12
         self.assertEqual(run(remarkable.due_once(idle=True)), uid)
         self.assertEqual(len(self.docs(uid)), 1)
         self.assertIsNone(run(remarkable.due_once(idle=True)))       # not due again yet
@@ -565,6 +569,141 @@ class AnswerToRemarkable(Base):
         ok, note = run(remarkable.send_answer(uid, self.ASK, "Text"))
         self.assertFalse(ok)
         self.assertIn("ging es nicht", note)
+
+
+class Fresh(Base):
+    """V01.0.299 "Neueste zuerst": newer notes count a little more, "Was habe ich zuletzt notiert?" lists the
+    newest pages, and a quick look at the account's root every few minutes brings new notes in soon."""
+    DAY = 86400
+    NOW = 1_760_000_000          # fixed: no test depends on the clock
+
+    def fresh(self, name):
+        c, uid = self.paired(name)
+        helpers.set_config(remarkable_fresh=True)
+        self.assertEqual(c.put("/api/profile/settings", json={"rm_fresh": True}).status_code, 200)
+        return c, uid
+
+    def test_off_by_default_both_switches_never_guests(self):
+        with open(helpers.APP + "/config.default.json") as f:
+            self.assertIs(json.load(f)["chat"]["remarkable_fresh"], False)
+        self.assertIs(profiles.SETTINGS["rm_fresh"][0], False)
+        c, uid = self.paired("Rmfreshoff")
+        self.assertFalse(wissen.fresh_on(uid))
+        helpers.set_config(remarkable_fresh=True)
+        self.assertFalse(wissen.fresh_on(uid))                               # profile switch still off
+        c.put("/api/profile/settings", json={"rm_fresh": True})
+        self.assertTrue(wissen.fresh_on(uid))
+        helpers.set_config(remarkable=False)
+        self.assertFalse(wissen.fresh_on(uid))                               # sits under "reMarkable-Notizen"
+        helpers.set_config(remarkable=True, remarkable_fresh=False)
+        self.assertFalse(wissen.fresh_on(uid))
+        self.assertFalse(wissen.fresh_on(""))                                # a guest never
+        self.assertEqual(TestClient(panel.app).put("/api/profile/settings", json={"rm_fresh": True}).status_code, 401)
+
+    def test_page_times_from_the_content(self):
+        content = {"cPages": {"pages": [{"id": "a", "modifed": {"timestamp": "1:2", "value": "1760000000000"}},
+                                        {"id": "b", "modified": "1760000500000"}, {"id": "c", "modifed": "x"},
+                                        {"id": "d", "modifed": "5"}, {"id": "e"}, "f", {"id": 7, "modifed": "1760000000000"}]}}
+        self.assertEqual(remarkable.page_times(content), {"a": 1760000000, "b": 1760000500})
+        self.assertEqual(remarkable.page_times({}), {})
+        self.assertEqual(remarkable.page_times({"cPages": []}), {})
+
+    def test_newer_note_gains_a_little_old_good_fit_stays(self):
+        c, uid = self.fresh("Rmfreshrank")
+        old, _ = documents.notebook_put(uid, None, "Alt", [(1, "Heizung Wartung Termin beim Installateur", None)],
+                                        changed=self.NOW - 400 * self.DAY)
+        new, _ = documents.notebook_put(uid, None, "Neu", [(1, "Heizung Wartung Termin beim Installateur", None, self.NOW - self.DAY)],
+                                        changed=self.NOW - 30 * self.DAY)
+        plain = documents.search(uid, "Heizung Wartung Termin")
+        self.assertEqual({h["id"] for h in plain}, {old, new})
+        self.assertFalse(any("changed" in h for h in plain))                 # switch off: as before
+        self.assertEqual([h["id"] for h in plain], [old, new])               # equal text: the order of storing
+        before = {h["id"]: h["score"] for h in plain}
+        hits = documents.search(uid, "Heizung Wartung Termin", fresh=True, now=self.NOW)
+        self.assertEqual([h["id"] for h in hits], [new, old])                # one place up: newer counts
+        self.assertEqual(hits[0]["changed"], self.NOW - self.DAY)            # the page's own time, not the notebook's
+        gain = {h["id"]: h["score"] - before[h["id"]] for h in hits}
+        self.assertTrue(0 < gain[new] <= documents.FRESH < 1 / 60 - 1 / 63)  # at most about two places, never three
+        self.assertLess(gain[old], gain[new] / 100)                         # over a year old: next to nothing
+        self.assertIn("geändert am", wissen.where(hits[0]))
+        self.assertNotIn("geändert am", wissen.where(plain[0]))
+        # through wissen.search, the one place document_search and "Erst lokal suchen" rank in
+        got = run(wissen.search(uid, "Heizung Wartung Termin", semantic=False))
+        self.assertEqual({h["id"]: h["changed"] for h in got}, {new: self.NOW - self.DAY, old: self.NOW - 400 * self.DAY})
+
+    def test_recent_window_on_own_words(self):
+        zone = datetime.timezone.utc
+        now = datetime.datetime(2026, 10, 7, 15, 0, tzinfo=zone).timestamp()        # a Wednesday
+        day = lambda *a: int(datetime.datetime(*a, tzinfo=zone).timestamp())     # noqa: E731
+        cases = {"Was habe ich heute notiert?": (day(2026, 10, 7), None),
+                 "Was habe ich gestern aufgeschrieben?": (day(2026, 10, 6), day(2026, 10, 7)),
+                 "Was hab ich vorgestern notiert": (day(2026, 10, 5), day(2026, 10, 6)),
+                 "Was habe ich diese Woche notiert?": (day(2026, 10, 5), None),
+                 "Welche Notizen habe ich letzte Woche gemacht?": (day(2026, 9, 28), day(2026, 10, 5)),
+                 "Was steht in meinen Notizen von diesem Monat?": (day(2026, 10, 1), None),
+                 "Was habe ich letzten Monat notiert?": (day(2026, 9, 1), day(2026, 10, 1)),
+                 "Was habe ich zuletzt notiert?": (0, None),
+                 "Was sind meine neuesten Notizen?": (0, None),
+                 "What did I note today?": (day(2026, 10, 7), None)}
+        for text, want in cases.items():
+            self.assertEqual(wissen.recent_window(text, zone, now), want, text)
+        for text in ("Was hat mir Anna heute geschrieben?", "Notier heute Milch", "Schreib in meine Notizen: heute Milch",
+                     "Wie wird das Wetter heute?", "Was steht in meinen Notizen über die Heizung?", "Leg meine Notizen von heute ab", ""):
+            self.assertIsNone(wissen.recent_window(text, zone, now), text)
+
+    def test_what_did_i_note_lately_lists_the_newest_pages(self):
+        c, uid = self.fresh("Rmfreshask")
+        CLOUD[0].doc(NB, "Einkauf", [(P1, page_file("Milch und Brot")), (P2, page_file("Gartenschlauch kaufen"))],
+                     times={P1: (self.NOW - 90 * self.DAY) * 1000, P2: (self.NOW - self.DAY) * 1000})
+        c.put("/api/profile/remarkable/pick", json={"ids": [NB], "all": False})
+        run(remarkable.sync(uid))
+        ask = 'TOOL document_search {"query": "Was habe ich zuletzt notiert"}'
+        helpers.LLM_CALLS.clear()
+        r = c.post("/api/chat", json={"messages": [{"role": "user", "content": ask}], "convo": "neu"})
+        said = "".join(e.get("delta", "") for e in helpers.events(r) if e["type"] == "text")
+        self.assertEqual(helpers.LLM_CALLS[0].get("tool_choice"), {"type": "function", "function": {"name": "document_search"}})
+        self.assertIn("Gartenschlauch", said)
+        self.assertLess(said.index("Gartenschlauch"), said.index("Milch"))   # newest first
+        self.assertIn("geändert am", said)
+        c.put("/api/profile/settings", json={"rm_fresh": False})            # switch off: the model decides, no dates
+        helpers.LLM_CALLS.clear()
+        r = c.post("/api/chat", json={"messages": [{"role": "user", "content": "SAY | Was habe ich zuletzt notiert?"}], "convo": "neu"})
+        self.assertNotEqual(helpers.LLM_CALLS[0].get("tool_choice"), {"type": "function", "function": {"name": "document_search"}})
+
+    def test_nothing_in_the_window_is_said(self):
+        c, uid = self.fresh("Rmfreshnone")
+        CLOUD[0].doc(NB, "Alt", [(P1, page_file("Altes Rezept"))], times={P1: (self.NOW - 900 * self.DAY) * 1000})
+        c.put("/api/profile/remarkable/pick", json={"ids": [NB], "all": False})
+        run(remarkable.sync(uid))
+        r = c.post("/api/chat", json={"messages": [{"role": "user", "content":
+                   'TOOL document_search {"query": "Was habe ich heute notiert"}'}], "convo": "neu"})
+        said = "".join(e.get("delta", "") for e in helpers.events(r) if e["type"] == "text")
+        self.assertIn("Nothing was noted", said)
+        self.assertNotIn("Altes Rezept", said)
+
+    def test_quick_look_brings_new_notes_soon(self):
+        c, uid = self.paired("Rmpeek")
+        CLOUD[0].doc(NB, "Ideen", [(P1, page_file("Gartenhaus planen"))])
+        c.put("/api/profile/remarkable/pick", json={"ids": [NB], "all": False})
+        for other in profiles.user_ids():          # other tests' profiles are not due
+            if other != uid:
+                remarkable._auto_last[other] = remarkable._peek_last[other] = 1e12
+        self.assertEqual(run(remarkable.due_once(idle=True)), uid)
+        d = remarkable.load(uid)
+        self.assertEqual(d["root"], CLOUD[0].root)
+        t = max(d["last"], remarkable._auto_last[uid])
+        CLOUD[0].calls.clear()
+        self.assertIsNone(run(remarkable.due_once(idle=True, now=t + 60)))       # not yet: no request at all
+        self.assertEqual(CLOUD[0].calls, [])
+        self.assertIsNone(run(remarkable.due_once(idle=True, now=t + remarkable.PEEK + 1)))
+        self.assertEqual([x[1] for x in CLOUD[0].calls], ["v4/root"])         # one small look, nothing changed
+        CLOUD[0].doc(NB, "Ideen", [(P1, page_file("Gartenhaus planen")), (P2, page_file("Teich anlegen"))])
+        self.assertIsNone(run(remarkable.due_once(idle=True, now=t + remarkable.PEEK + 60)))   # the next look waits
+        self.assertIsNone(run(remarkable.due_once(idle=False, now=t + 2 * remarkable.PEEK + 2)))   # never while busy
+        self.assertEqual(run(remarkable.due_once(idle=True, now=t + 2 * remarkable.PEEK + 2)), uid)
+        self.assertTrue(documents.search(uid, "Teich anlegen"))
+        self.assertEqual(remarkable.load(uid)["root"], CLOUD[0].root)
+
 
 class Guards(unittest.TestCase):
     def test_hosts_and_index_lines(self):

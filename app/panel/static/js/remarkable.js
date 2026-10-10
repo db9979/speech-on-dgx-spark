@@ -1,14 +1,15 @@
 // Ich → reMarkable (remarkable.py): connect the own my.remarkable account with a one-time code, pick
 // notebooks or folders, compare now, disconnect; "Aufs reMarkable" under answers (rm_send).
 // Names from the cloud are put in with esc()/textContent only.
-let RM_ON=false,RMSEND_ON=false,RM=null,rmTimer=null,rmFind='',RMPICK=null,RMALL=null;
+let RM_ON=false,RMSEND_ON=false,RMFRESH_ON=false,RM=null,rmTimer=null,rmFind='',RMPICK=null,RMALL=null;
 const rmWhen=x=>x?new Date(x*1000).toLocaleString([], {dateStyle:'short',timeStyle:'short'}):t('noch nie','never');
 const RMKIND={folder:['Ordner','folder'],notebook:['Notizbuch','notebook'],pdf:['PDF','PDF'],epub:['E-Book','e-book']};
 async function showRm(){const box=$('rmbox');if(!box)return;clearTimeout(rmTimer);if(!PROFILE||!RM_ON){box.innerHTML='';return}
   let d=null;if(S.rm_on){try{d=await (await api('/api/profile/remarkable')).json()}catch{}}RM=d;
   const head=`<div class="intro">${t('Verbinde dein my.remarkable-Konto (reMarkable 2, Paper Pro, Paper Pro Move). Der Assistent liest die Notizbücher, die du unten auswählst: getippten Text und Markierungen direkt, Handschrift liest das Sprachmodell auf dem Spark in Gesprächspausen ab. Danach findest du sie in der Dokumentensuche. Der Spark ändert dort nichts; nur „Aufs reMarkable schicken“ legt neue Dokumente im Ordner „Spark“ an.','Connect your my.remarkable account (reMarkable 2, Paper Pro, Paper Pro Move). The assistant reads the notebooks you pick below: typed text and highlights directly, handwriting is read by the language model on the Spark in quiet moments. The document search then finds them. The Spark changes nothing there; only "Send to the reMarkable" adds new documents in the folder "Spark".')}</div>
     ${xsw('rm_on',t('reMarkable für mich','reMarkable for me'),t('Aus: Es wird nichts mehr abgeglichen; die gelesenen Notizbücher bleiben, bis du trennst.','Off: nothing is compared any more; notebooks already read stay until you disconnect.'))}
-    ${RMSEND_ON?xsw('rm_send',t('Aufs reMarkable schicken','Send to the reMarkable'),t('Unter jeder Antwort „Aufs reMarkable“, und „Schreib aufs reMarkable: …“ legt eine Notiz an. Höchstens 20 am Tag.','"To the reMarkable" below every answer, and "Write on the reMarkable: …" makes a note. At most 20 a day.')):''}`;
+    ${RMSEND_ON?xsw('rm_send',t('Aufs reMarkable schicken','Send to the reMarkable'),t('Unter jeder Antwort „Aufs reMarkable“, und „Schreib aufs reMarkable: …“ legt eine Notiz an. Höchstens 20 am Tag.','"To the reMarkable" below every answer, and "Write on the reMarkable: …" makes a note. At most 20 a day.')):''}
+    ${RMFRESH_ON?xsw('rm_fresh',t('Neueste zuerst','Newest first'),t('Bei ähnlich guten Treffern nimmt der Assistent die neuere Notiz und nennt ihr Datum; „Was habe ich zuletzt notiert?“ (auch heute, gestern, diese Woche) nennt die neuesten Seiten. Gilt für alle deine Dokumente.','With similar hits the assistant takes the newer note and names its date; "What did I note last?" (also today, yesterday, this week) names the newest pages. Applies to all your documents.')):''}`;
   if(!d){box.innerHTML=head+`<div class="fh" id="rmmsg"></div>`;xbind(box,showRm);return}
   const conn=d.connected;
   let body='';

@@ -177,6 +177,13 @@ async def run(t, name, args, st):
         if not wissen.on(t.who["id"], "brief"):
             tags, art = [], ""
         hits = await wissen.search(t.who["id"], query, tags=tags or None, art=art or None)
+        win = getattr(t, "recent_ask", None)
+        if win is not None:      # "Was habe ich zuletzt notiert?": the newest pages first, then what fits the words
+            newest = await wissen.recent(t.who["id"], win[0], win[1])
+            seen = {(h["id"], h["page"]) for h in newest}
+            hits = newest + [h for h in hits if (h["id"], h["page"]) not in seen and win[0] <= h.get("changed", 0) < (win[1] or 2 ** 62)]
+            if not newest:
+                return "Nothing was noted or changed in the documents in this time. Say so; do not guess."
         if not hits and (tags or art):      # nothing in the text: at least which documents fit
             found = wissen.cards(t.who["id"], tags or None, art or None)
             if found:
@@ -185,7 +192,10 @@ async def run(t, name, args, st):
         if hits:
             refs = list({(h["id"], h["page"]): {"id": h["id"], "name": h["name"], "page": h["page"], "file": h["file"]} for h in hits}.values())
             await t.out.put({"type": "docsources", "items": sorted({h["name"] for h in hits}), "refs": refs[:8]})
-        return "\n\n".join(f"[{wissen.where(h)}]\n{h['text']}" for h in hits) or "No matching passages in the documents. Say so; do not guess."
+        dated = any(h.get("changed") for h in hits)
+        return ("\n\n".join(f"[{wissen.where(h)}]\n{h['text']}" for h in hits)
+                + ("\n\n(Each passage names when it last changed; where passages disagree, the newer one counts, and say its date.)"
+                   if dated and hits else "")) or "No matching passages in the documents. Say so; do not guess."
     if name == "iphone_action" and t.phone_act:
         kind = args.get("kind")
         target = re.sub(r"[\x00-\x1f\x7f<>\\]", "", str(args.get("target") or "")).strip()[:120]

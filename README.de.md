@@ -33,6 +33,7 @@ Alle Optionen ohne Rückfragen (`--mode api --asr 1.7b --tts 0.6b --yes` …) st
 
 <!-- New version: add one line at the top here and in CHANGELOG.md, drop the oldest line here (keep 10). Details go to docs/de and docs/en, not into this README. -->
 
+- **V01.0.299** reMarkable „Neueste zuerst“ (Admin-Unterschalter + Ich → reMarkable, aus): Änderungszeit pro Seite, bei ähnlich guten Treffern rückt die neuere Notiz bis zu zwei Plätze vor (auch für „Erst lokal“), Treffer mit „geändert am“, „Was habe ich zuletzt/heute/gestern/diese Woche notiert?“ als feste Regel; neue Notizen kommen schneller: alle 3 Minuten ein kurzer Blick aufs Konto, bei Änderung sofort abgleichen
 - **V01.0.298** Buy me a coffee: Link in der README und auf GitHub (Sponsor-Knopf), wie bei U-Jagd; an der App ändert sich nichts
 - **V01.0.297** Codewort am Lautsprecher (aus): Erkennt der Lautsprecher deine Stimme nur knapp oder ist etwas ungewöhnlich, fragt er vor Persönlichem nach deinem eigenen Codewort; eine fremde Stimme nie; nach 3 falschen 30 Minuten Pause und eine Mitteilung
 - **V01.0.296** Handy wie die iPhone-App (immer unter 760 px, abschaltbar unter Darstellung → „Am Rechner-Layout zeigen“): Tabs Spark · Heute · Dokumente · Ich · Verwalten je nach Rolle, Chat mit Gesicht, großem Mikrofon und immer sichtbarem Tippfeld, Heute mit denselben Karten wie Ich → Heute, Verlauf als Blatt von unten, Listen und Schalter wie in iOS, Unterseiten schieben von rechts rein, Zurück-Geste von Android und Safari geht eine Ebene zurück; gleich auf iPhone und Android, keine neuen Endpunkte
@@ -42,7 +43,6 @@ Alle Optionen ohne Rückfragen (`--mode api --asr 1.7b --tts 0.6b --yes` …) st
 - **V01.0.292** Sprachmodell: Auswahlliste der Modelle, die der eingestellte Server meldet (Einstellungen → Sprachmodell → Modell, „Automatisch“ = das erste, „Anderes eingeben …“ für freie Eingabe, „Neu laden“); nur Admin, Anfrage nur an die eingestellte Adresse, 5 s, 256 KB, 60 s Cache
 - **V01.0.291** reMarkable „Ablegen in“ (Ich → reMarkable): eigener Zielordner für neue Dokumente wählbar, Standard „Spark“; der Spark legt nur neue Dokumente an, fehlt der Ordner später, nimmt er wieder „Spark“ und sagt es
 - **V01.0.290** reMarkable senden: Fehler sagen jetzt, welche Datei die Cloud abgelehnt hat und was sie antwortet (ohne Token, auch im Journal „remarkable: sending failed“), jede 2xx-Antwort zählt, und eine nicht verstandene Zeile im Wurzelverzeichnis stoppt das Schreiben, bevor etwas verschwinden könnte
-- **V01.0.289** Seltener Code eingeben: vertraute Browser 60 Tage (einstellbar 7–90, nach 30 Tagen ohne Nutzung wieder Code) mit Liste zum einzelnen Entfernen und Push-Meldung, ein richtiger Code gilt 10 Minuten in derselben Anmeldung (Balken mit „Beenden“; Passwort, zweiter Schritt, Rollen, Sicherungen, Codewort und Admin-Modus fragen immer), Admin-Modus im vertrauten Browser 60 statt 15 Minuten; Kalender, Mail und Home Assistant fragen den Code jetzt richtig ab statt „code required“
 
 Alle Versionen: [CHANGELOG.md](CHANGELOG.md)
 

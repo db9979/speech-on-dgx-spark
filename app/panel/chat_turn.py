@@ -544,6 +544,14 @@ async def prepare(request):
     force = intent.forced(route, need, {t["function"]["name"] for t in tools}) if route_on else None
     if not force and need == ["archive_search"]:
         force = "archive_search"   # "Schau in meinem Archiv": the archive, never the uploaded documents (V01.0.264)
+    # "Was habe ich zuletzt / heute notiert?" ("Neueste zuerst", wissen.recent_window): a fixed rule on the person's
+    # own words; the first round must look in the documents, which then lists the pages changed last
+    recent_ask = None
+    if docs and own_browser and private_ok and ask_text and "document_search" in {t["function"]["name"] for t in tools} \
+            and wissen.fresh_on(who["id"]):
+        recent_ask = wissen.recent_window(ask_text, chat.user_zone(body.get("tz")))
+        if recent_ask is not None:
+            force, need = "document_search", ["document_search"]
     # the words that matched, only as far as they are still in the message (a code word is gone by now)
     why = ", ".join(f"{k}: „{v if v.lower() in ask_text.lower() or v in ('Modell', 'Sende-Bitte') else '…'}“"
                     for k, v in route.why.items())[:200]

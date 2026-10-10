@@ -670,7 +670,8 @@ SETTINGS = {
     "doc_brief": (False, lambda v: isinstance(v, bool)),
     "doc_due": (False, lambda v: isinstance(v, bool)),
     "rm_on": (False, lambda v: isinstance(v, bool)),        # reMarkable notebooks (remarkable.py, admin chat.remarkable)
-    "rm_send": (False, lambda v: isinstance(v, bool)),      # answers onto the reMarkable (admin chat.remarkable_send)
+    "rm_send": (False, lambda v: isinstance(v, bool)),
+    "rm_fresh": (False, lambda v: isinstance(v, bool)),     # newer notes first in the document search (chat.remarkable_fresh)      # answers onto the reMarkable (admin chat.remarkable_send)
     "my_status": (False, lambda v: isinstance(v, bool)),    # Ich → Mein Zustand (hintergrund.py, admin chat.my_status)
     # own wishes for the tone (admin chat.own_style): plain text, no control characters, no markers of outside text
     "style": ("", lambda v: isinstance(v, str) and len(v) <= 500 and not re.search(r"[\x00-\x09\x0b-\x1f\x7f]|<<<|>>>", v)),

@@ -83,6 +83,7 @@ MAX_RUN_PAGES = 300         # page files fetched in one comparison (the rest fol
 MAX_POINTS = 2_000_000      # stroke points drawn per page
 SYNC_EVERY = 1800
 SOON = 120                  # next comparison when one was cut short
+PEEK = 180                  # in between: one small look at the account's root every 3 minutes; changed -> compare now
 TIMEOUT = httpx.Timeout(60, connect=10)
 CONCURRENT = 6
 SEND_DAY = 20               # uploads per profile and day
@@ -92,6 +93,8 @@ _user = {}                  # uid -> (user token, until)
 _busy = set()               # profiles being compared right now
 _progress = {}              # uid -> [entries read, entries to read] while the list loads
 _auto_last = {}             # uid -> when the background comparison last ran (in memory)
+_peek_last = {}             # uid -> when the root was last looked at (in memory)
+_roots = {}                 # uid -> the root hash the last listing read
 BACKGROUND = True           # tests run the listing and the comparison themselves
 
 
@@ -297,6 +300,24 @@ def page_order(content):
     return []
 
 
+def page_times(content):
+    """{page id: when it last changed (s)} where the .content names it per page (newer software), else {}."""
+    out = {}
+    pages = (content.get("cPages") or {}).get("pages") if isinstance(content.get("cPages"), dict) else None
+    for p in pages if isinstance(pages, list) else []:
+        if not isinstance(p, dict) or not isinstance(p.get("id"), str):
+            continue
+        v = p.get("modifed", p.get("modified"))
+        v = v.get("value") if isinstance(v, dict) else v
+        try:
+            t = int(str(v)) // 1000
+        except (TypeError, ValueError):
+            continue
+        if 1262304000 < t < time.time() + 86400:      # 2010 .. tomorrow: anything else is no time
+            out[p["id"]] = t
+    return out
+
+
 def _clean(v, n=120):
     return re.sub(r"[\x00-\x1f\x7f<>\"\\]", "", str(v or ""))[:n].strip()
 
@@ -305,6 +326,7 @@ async def refresh_library(uid):
     """The account's documents and folders: {id: {"h", "name", "parent", "folder", "kind", "n", "mod"}}.
     Entries whose hash did not change are taken from the last listing."""
     rh, _ = await root(uid)
+    _roots[uid] = rh
     entries = parse_index(await blob(uid, rh, "root.docSchema"))[:MAX_ENTRIES]
     old = library(uid)
     out, todo = {}, []
@@ -550,6 +572,8 @@ async def _notebook(uid, rid, it, path, st, draw, budget):
     order = page_order(content)[:MAX_PAGES]
     old = st.get("pages") or {}
     texts = documents.notebook_texts(uid, st.get("doc", ""))
+    times = page_times(content)
+    doc_time = int(it.get("mod") or 0) or int(time.time())
     pages, new_map, fetched, ink_skipped, failed = [], {}, 0, False, 0
     for n, pid in enumerate(order, 1):
         f = byid.get(f"{rid}/{pid}.rm")
@@ -557,8 +581,9 @@ async def _notebook(uid, rid, it, path, st, draw, budget):
             continue                      # an empty page (or a PDF page without notes)
         o = old.get(pid)
         if o and o[0] == f["hash"] and not (draw and o[2]) and o[1] in texts:
-            pages.append((n, texts[o[1]], None))
-            new_map[pid] = [f["hash"], n, o[2]]
+            when = times.get(pid) or (o[3] if len(o) > 3 else 0) or doc_time
+            pages.append((n, texts[o[1]], None, when))
+            new_map[pid] = [f["hash"], n, o[2], when]
             continue
         if fetched >= budget:
             break
@@ -576,8 +601,9 @@ async def _notebook(uid, rid, it, path, st, draw, budget):
             continue
         skipped = ink and not draw
         ink_skipped = ink_skipped or skipped
-        pages.append((n, page_text(typed, marks), jpeg))
-        new_map[pid] = [f["hash"], n, 1 if skipped else 0]
+        when = times.get(pid) or doc_time   # changed since the last look: its own time, else the notebook's
+        pages.append((n, page_text(typed, marks), jpeg, when))
+        new_map[pid] = [f["hash"], n, 1 if skipped else 0, when]
     notes = []
     if len(page_order(content)) > MAX_PAGES:
         notes.append(f"nur die ersten {MAX_PAGES} Seiten")
@@ -587,7 +613,8 @@ async def _notebook(uid, rid, it, path, st, draw, budget):
         notes.append(f"{failed} Seite{'n' if failed > 1 else ''} nicht lesbar")
     if it.get("mod"):
         notes.append("geändert am " + time.strftime("%d.%m.%Y", time.localtime(it["mod"])))
-    doc, left = await asyncio.to_thread(documents.notebook_put, uid, st.get("doc"), path, pages, "; ".join(notes))
+    doc, left = await asyncio.to_thread(documents.notebook_put, uid, st.get("doc"), path, pages, "; ".join(notes),
+                                        "remarkable", doc_time)
     cut = fetched >= budget and len(new_map) < len([p for p in order if f"{rid}/{p}.rm" in byid])
     return {"fetched": fetched, "state": {"doc": doc, "h": "" if cut else it["h"], "pages": new_map,
                                           "left": left, "ink_skipped": ink_skipped, "seen": True}}
@@ -606,8 +633,19 @@ async def due_once(idle=True, now=None):
             continue
         wait = SOON if d.get("more") else SYNC_EVERY
         if now - max(d.get("last", 0), _auto_last.get(uid, 0)) < wait:
-            continue
-        _auto_last[uid] = now
+            # new notes come quickly: one small request for the root; only when it changed, a comparison now
+            if now - _peek_last.get(uid, 0) < PEEK or not d.get("root"):
+                continue
+            _peek_last[uid] = now
+            try:
+                rh, _ = await root(uid)
+            except (CloudError, httpx.HTTPError, netguard.Blocked, netguard.TooLarge) as e:
+                print("remarkable: quick look failed:", type(e).__name__, flush=True)
+                continue
+            if rh == d.get("root"):
+                continue
+            print("remarkable: account changed, comparing now", flush=True)
+        _auto_last[uid] = _peek_last[uid] = now
         await run(uid)
         return uid
     return None
@@ -627,6 +665,8 @@ async def run(uid):
         return None
     d = load(uid)
     d["more"] = res["more"]
+    if uid in _roots:
+        d["root"] = _roots[uid]     # what the quick look compares with (due_once)
     save(uid, d)
     hintergrund.note(uid, "remarkable", True, res["pages"])
     print(f"remarkable: {res['docs']} notebook(s), {res['pages']} page(s) new, {res['removed']} removed", flush=True)

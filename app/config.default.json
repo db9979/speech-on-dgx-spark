@@ -91,6 +91,7 @@
     "doc_brief": false,
     "remarkable": false,
     "remarkable_send": false,
+    "remarkable_fresh": false,
     "my_status": false,
     "person_priority": false,
     "person_priority_wait": 2,

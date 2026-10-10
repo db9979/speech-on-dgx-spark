@@ -630,7 +630,7 @@ def validate(new):
     if ch.get("self_echo_mode", "pause") not in ("text", "pause"):
         raise HTTPException(400, "self_echo_mode: text or pause")
     for k in ("answer_check", "tool_thinking", "learn_fixes", "own_style", "follow_up", "no_self_echo", "images",
-              "routing", "prompt_cache", "doc_pictures", "doc_semantic", "doc_originals", "doc_shared", "doc_brief", "remarkable", "remarkable_send", "my_status", "person_priority",
+              "routing", "prompt_cache", "doc_pictures", "doc_semantic", "doc_originals", "doc_shared", "doc_brief", "remarkable", "remarkable_send", "remarkable_fresh", "my_status", "person_priority",
               "face_life"):
         if not isinstance(ch.get(k, False), bool):
             raise HTTPException(400, f"chat {k} must be true or false")

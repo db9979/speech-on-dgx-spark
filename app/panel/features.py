@@ -81,6 +81,8 @@ FEATURES = (
       parent="docpics", me="rmbox", guide="remarkable"),
     F("rmsend", "Aufs reMarkable schicken", "Sending to the reMarkable", "data", ("remarkable_send",), "rm_send",
       parent="remarkable", me="rmbox", guide="rmsend"),
+    F("rmfresh", "Neueste zuerst", "Newest first", "data", ("remarkable_fresh",), "rm_fresh",
+      parent="remarkable", me="rmbox", guide="rmfresh"),
     F("docbrief", "Steckbrief und Tags", "Document card and tags", "data", ("doc_brief",), "doc_brief",
       parent="documents", me="docbox", guide="docbrief"),
     # everyday

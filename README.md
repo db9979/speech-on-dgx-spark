@@ -33,6 +33,7 @@ All options for running without questions (`--mode api --asr 1.7b --tts 0.6b --y
 
 <!-- New version: add one line at the top here and in CHANGELOG.md, drop the oldest line here (keep 10). Details go to docs/de and docs/en, not into this README. -->
 
+- **V01.0.299** reMarkable "Newest first" (admin sub-switch + Me → reMarkable, off): change time per page, with similar hits the newer note moves up to two places (also for "Search locally first"), hits say "changed on", "What did I note last/today/yesterday/this week?" as a fixed rule; new notes arrive sooner: a quick look at the account every 3 minutes, compare at once when it changed
 - **V01.0.298** Buy me a coffee: link in the README and on GitHub (Sponsor button), same as in U-Jagd; nothing changes in the app
 - **V01.0.297** Code word at a speaker (off): if a speaker recognises your voice only narrowly or something is unusual, it asks for your own code word before personal things; never a foreign voice; after 3 wrong ones a 30-minute pause and a notification
 - **V01.0.296** Phone looks like the iPhone app (always below 760 px, can be turned off under Appearance → "Show the computer layout"): tabs Spark · Today · Documents · Me · Manage by role, chat with face, big mic and an always visible text field, Today with the same cards as Me → Today, history as a sheet from below, iOS-style lists and switches, sub-pages slide in from the right, the Android and Safari back gesture goes one level back; same on iPhone and Android, no new endpoints
@@ -42,7 +43,6 @@ All options for running without questions (`--mode api --asr 1.7b --tts 0.6b --y
 - **V01.0.292** Language model: a choice list of the models the configured server reports (Settings → Language model → Model, "Automatic" = the first, "Type another …" for free text, "Reload"); admin only, request only to the configured address, 5 s, 256 KB, 60 s cache
 - **V01.0.291** reMarkable "Put into" (Me → reMarkable): choose an own folder for new documents, default "Spark"; the Spark only adds new documents, and if the folder is gone later it takes "Spark" again and says so
 - **V01.0.290** reMarkable sending: errors now say which file the cloud refused and what it answered (no token, also in the journal "remarkable: sending failed"), any 2xx answer counts, and a root line the Spark does not understand stops the write before anything could vanish
-- **V01.0.289** Fewer codes: trusted browsers for 60 days (7–90, a code again after 30 days without use) with a list to remove them one by one and a push note, a right code counts 10 minutes in the same login (bar with „End“; password, second step, roles, backups, code word and admin mode always ask), admin mode in a trusted browser 60 instead of 15 minutes; calendar, mail and Home Assistant now ask for the code instead of showing „code required“
 
 All versions: [CHANGELOG.md](CHANGELOG.md)
 

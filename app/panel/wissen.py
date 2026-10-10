@@ -175,18 +175,25 @@ def find_shared(uid, doc_id):
     return None
 
 
+def fresh_on(uid):
+    """"Neueste zuerst" (under reMarkable-Notizen): newer pieces gain a little in the search, hits carry their date."""
+    return bool(uid) and features.allowed("rmfresh", uid)
+
+
 async def search(uid, query, k=5, tags=None, art=None, semantic=True):
     """The profile's own documents and the ones the others offer to everyone, best first; tags / art:
     only documents with these tags or of this kind (their "Steckbrief"). semantic=False: full text only
-    (lokal.py's quick look before the answer does not wait for the meaning model)."""
+    (lokal.py's quick look before the answer does not wait for the meaning model). The one place both
+    document_search and "Erst lokal suchen" rank in, so "Neueste zuerst" (fresh_on) works for both."""
     qvec = await docembed.query(query) if semantic and on(uid, "semantic") and query.strip() else None
     narrow = bool(tags or art)
+    fresh = fresh_on(uid)
     own = documents.match_docs(uid, tags, art) if narrow else None
-    hits = await asyncio.to_thread(documents.search, uid, query, k, qvec, False, own)
+    hits = await asyncio.to_thread(documents.search, uid, query, k, qvec, False, own, fresh)
     for o in _sharers(uid):
         owner = (profiles.by_id(o) or {}).get("name", "?")
         keep = documents.match_docs(o, tags, art, shared_only=True) if narrow else None
-        theirs = await asyncio.to_thread(documents.search, o, query, k, qvec, True, keep)
+        theirs = await asyncio.to_thread(documents.search, o, query, k, qvec, True, keep, fresh)
         hits += [dict(h, owner=owner, shared=True) for h in theirs]
     return sorted(hits, key=lambda h: -h.get("score", 0))[:k]
 
@@ -214,8 +221,58 @@ def card_line(d):
             + (f"; geteilt von {q(d['owner'])}" if d.get("owner") else ""))
 
 
+# "Was habe ich zuletzt / heute / diese Woche notiert?": a fixed rule on the person's own words (chat_turn), never the model
+RECENT_WHEN = re.compile(r"\b(?:zuletzt|neueste\w*|kürzlich|jüngste\w*|heute|gestern|vorgestern|"
+                         r"(?:diese|letzte)[nmrs]?\s+(?:woche|monat)|latest|recently|today|yesterday|(?:this|last)\s+(?:week|month))\b", re.I)
+RECENT_WHAT = re.compile(r"\b(?:notiert|aufgeschrieben|geschrieben|eingetragen|festgehalten|skizziert|"
+                         r"notiz\w*|aufzeichnung\w*|mitschrift\w*|notizbuch\w*|noted|wrote|written|notes?)\b", re.I)
+RECENT_ME = re.compile(r"\b(?:ich|mein\w*|i|my)\b", re.I)          # about the person's own notes, not a message from Anna
+RECENT_NOT = re.compile(r"^\W*(?:notier|schreib|leg|erstell|speicher|merk|note|write|save|put)\w*\b", re.I)   # a dictation
+
+
+def recent_window(text, zone=None, now=None):
+    """(since, until) when the person's own words ask for what they noted lately, else None. "heute",
+    "gestern", "vorgestern", "diese/letzte Woche", "diesen Monat" give that span, otherwise everything (0, None)."""
+    text = str(text or "")[:500]
+    m = RECENT_WHEN.search(text)
+    if not m or not RECENT_WHAT.search(text) or not RECENT_ME.search(text) or RECENT_NOT.search(text):
+        return None
+    now = datetime.datetime.fromtimestamp(now or time.time(), zone)
+    day = now.replace(hour=0, minute=0, second=0, microsecond=0)
+    w = re.sub(r"\s+", " ", m.group(0).lower())
+    ts = lambda d: int(d.timestamp())  # noqa: E731
+    if w in ("heute", "today"):
+        return ts(day), None
+    if w in ("gestern", "yesterday"):
+        return ts(day - datetime.timedelta(days=1)), ts(day)
+    if w == "vorgestern":
+        return ts(day - datetime.timedelta(days=2)), ts(day - datetime.timedelta(days=1))
+    monday = day - datetime.timedelta(days=day.weekday())
+    if "woche" in w or "week" in w:
+        return (ts(monday - datetime.timedelta(days=7)), ts(monday)) if w.startswith("letzte") else (ts(monday), None)
+    if "monat" in w:
+        first = day.replace(day=1)
+        if w.startswith("letzte"):
+            prev = (first - datetime.timedelta(days=1)).replace(day=1)
+            return ts(prev), ts(first)
+        return ts(first), None
+    return 0, None
+
+
+async def recent(uid, since=0, until=None, k=8):
+    """"Was habe ich zuletzt notiert?": the own pages changed last (and the ones others offer), newest first."""
+    hits = await asyncio.to_thread(documents.recent, uid, since, until, k)
+    for o in _sharers(uid):
+        owner = (profiles.by_id(o) or {}).get("name", "?")
+        hits += [dict(h, owner=owner, shared=True) for h in await asyncio.to_thread(documents.recent, o, since, until, k, True)]
+    return sorted(hits, key=lambda h: -h.get("changed", 0))[:k]
+
+
 def where(h):
-    return ("reMarkable: " if h.get("source") == "remarkable" else "") + h["name"] + (f", Seite {h['page']}" if h.get("page") else "") + (f", geteilt von {h['owner']}" if h.get("owner") else "")
+    """Where a hit is from, for the model: source, name, page, owner, and with "Neueste zuerst" its date."""
+    when = time.strftime("%d.%m.%Y", time.localtime(h["changed"])) if h.get("changed") else ""
+    return (("reMarkable: " if h.get("source") == "remarkable" else "") + h["name"] + (f", Seite {h['page']}" if h.get("page") else "")
+            + (f", geteilt von {h['owner']}" if h.get("owner") else "") + (f", geändert am {when}" if when else ""))
 
 
 # ---------------------------------------------------------------- background work
