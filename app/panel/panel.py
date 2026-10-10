@@ -178,7 +178,7 @@ async def sessions(request: Request, call_next):
 async def emergency(request: Request, call_next):
     """Notaus (notaus.py): from stage 1 nothing from outside but the page and the Notaus itself, in stage 3 at home
     only logins, reading Zustand and the logs, and lifting it. Decided before any route reads the request."""
-    held = notaus.gate(request)
+    held = notaus.mine_gate(request) or notaus.gate(request)
     if held:
         status, detail = held
         r = JSONResponse({"detail": detail, "notaus": notaus.level()}, status_code=status,
@@ -205,6 +205,7 @@ async def sampler():
                 s = system_stats()
                 h = {n: await service_health(n, cfg) for n in SERVICES}
                 health.check_memory(s["mem_avail_gib"], cfg)
+                live.services(h, cfg)
                 history.append({"t": time.time(), "gpu": g.get("util"), "cpu": s["cpu"],
                                 "avail": s["mem_avail_gib"], "temp": g.get("temp"), "power": g.get("power"),
                                 "asr_req": (h["asr"] or {}).get("requests"),

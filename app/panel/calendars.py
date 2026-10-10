@@ -485,7 +485,7 @@ def ical(item, uid_text):
 async def add_event(uid, item):
     """Writes the appointment to the first writable CalDAV calendar (the one named in item
     "calendar" when it exists). Returns the calendar's name; ValueError when none can take it."""
-    notaus.stop("aktion")   # the Notaus holds every action off (notaus.py)
+    notaus.stop("aktion", uid)   # the Notaus (or the profile's own) holds every action off (notaus.py)
     wanted = str(item.get("calendar") or "").strip().lower()
     last_error = "no CalDAV calendar connected (iCal links are read only)"
     for d in get(uid)["calendars"]:

@@ -17,6 +17,8 @@ one use) and then keeps a cookie that may only read /api/live/state. Requests fr
 refused (the monitor is for the home network). Monitors are kept as hashes in STATE/live-monitors.json,
 unused ones expire after 90 days, deleting one cuts it off at once. At most logs.live_screens at a time.
 """
+import contextlib
+import contextvars
 import hashlib
 import hmac
 import ipaddress
@@ -62,6 +64,10 @@ TOOLS = {
     "message_announce": "mem", "message_read": "mem", "message_send": "mem", "agent_list": "mem",
     "agent_schedule": "mem", "agent_task": "mem", "routine_save": "mem",
     "spark_hilfe": "hilfe", "spark_vorschlag": "hilfe",
+    # tools only programs use over MCP (mcpserver.py; transcribe/speak/voices show as Hören/Sprechen)
+    "today": "cal", "action_status": "mem", "Vorschlag": "mem",
+    # notes the Spark sends (push.py) and what it says by itself (proactive.py, live.note)
+    "Web Push": "webpush", "Apple Push": "push", "Android-App": "android", "Telegram": "tg", "Panel-Seite": "page",
     # steps the panel runs itself (tracelog "… (Panel)")
     "Erst lokal": "mem", "remarkable": "rm", "Ablauf": "mem",
 }
@@ -84,14 +90,20 @@ TARGETS = {
     "rm": ("reMarkable", "Cloud · Internet", "net", True),
     "push": ("Apple Push", "APNs · Internet", "net", True),
     "hilfe": ("Spark-Hilfe", "Anleitungen · auf dem Spark", "spark", False),
+    "webpush": ("Web Push", "Push-Dienst des Browsers · Internet", "net", False),
+    "tg": ("Telegram", "Bot-API · Internet", "net", False),
+    "android": ("Android-App", "wartet, bis die App abholt", "spark", False),
+    "page": ("Panel-Seite", "beim nächsten Abruf der offenen Seite", "spark", False),
 }
 RETURNS = {"cal": "Termine oder Aufgaben", "ha": "Zustände oder Schaltung", "web": "Suchergebnisse", "pages": "Seitentext", "kiwix": "Archiv-Treffer",
            "wiki": "Artikel", "mail": "Mails (nur Anzahl und Größe)", "contacts": "Kontakte", "rm": "Ablage", "push": "Zustellung",
            "weather": "Wetterwerte", "parcels": "Sendungen", "transit": "Verbindungen", "mem": "eigene Daten",
-           "hilfe": "Anleitungen oder Vorschlagskarte"}
+           "hilfe": "Anleitungen oder Vorschlagskarte", "webpush": "Zustellung", "tg": "Zustellung",
+           "android": "liegt bereit", "page": "liegt bereit"}
 CLIENT = {"web": "Browser", "speaker": "Lautsprecher", "watch": "Uhr", "siri": "Siri", "telegram": "Telegram",
-          "app": "iPhone-App", "car": "CarPlay", "mcp": "MCP-Client", "other": "Gerät"}
-VOICE = ("speaker", "watch", "siri", "app", "car")
+          "app": "iPhone-App", "car": "CarPlay", "mcp": "MCP-Client", "ha": "Home Assistant", "auto": "Von selbst",
+          "other": "Gerät"}
+VOICE = ("speaker", "watch", "siri", "app", "car", "ha")
 LEVEL = {"public": "Öffentlich (Seiten aus Suchergebnissen)", "user": "Nutzer-Dienst", "home": "Heimnetz"}
 
 _run = {}                         # request id -> tracelog.Rec while it runs and FADE seconds after
@@ -227,6 +239,9 @@ def ended(rec, now=None):
         now = now or time.time()
         rec.t_end = now
         status = rec.status()
+        bad = next((e for e in rec.errors if str(e).startswith("llm_")), "")
+        if bad or any(s["k"] == "llm" and s["n"].startswith("Runde") for s in rec.steps):
+            llm_seen(not bad, bad, now)
         event("Anfrage", f"{rec.id} fertig in {max(0, now - rec.t0):.1f} s".replace(".", ",")
               + (f" · {rec.intent}" if rec.intent else "") + (" · Fehler" if status == "err" else ""), now)
     except Exception:
@@ -297,6 +312,89 @@ def refused(request, what, locked=0):
         pass
 
 
+def begin(client, device, t=None, uid=None, auto=False, why=""):
+    """A request that does not go through the chat (Wyoming, MCP tools, rules that speak up): watched like
+    one, written to Logs → Anfragen only when that switch is on. With uid it belongs to that profile (its
+    name and the device name show only with its consent). auto: the Spark started it itself (no way back
+    to a device); why: a fixed word shown like the Weiche's intent. None while both are off; never raises."""
+    try:
+        import tracelog
+        rec = tracelog.start(time.time() if t is None else t, client, uid, "profile" if uid else "guest", device)
+        if rec is not None:
+            rec.auto, rec.direct = bool(auto), True
+            if why:
+                rec.intent = str(why)[:40]
+        return rec
+    except Exception:
+        return None
+
+
+_cur = contextvars.ContextVar("live_rec", default=None)
+
+
+def current():
+    """The watched request this code runs for (set with within), or None."""
+    return _cur.get()
+
+
+@contextlib.contextmanager
+def within(rec):
+    """Steps that code further down adds (a note by push.py) go to this request instead of one of their own."""
+    tok = _cur.set(rec)
+    try:
+        yield rec
+    finally:
+        _cur.reset(tok)
+
+
+NOTE = {"web": "Web Push", "app": "Apple Push", "and": "Android-App", "tg": "Telegram", "page": "Panel-Seite"}
+
+
+def note(uid, kind, t0, n, why=""):
+    """push.py sent a note ("web", "app", "and", "tg"; "page" when the open page shows it): a step on the
+    request that asked for it, else a request of its own from "Von selbst"."""
+    try:
+        if kind not in NOTE:
+            return
+        rec, own = current(), None
+        if rec is None:
+            rec = own = begin("auto", "", t=t0, uid=uid, auto=True, why=why or "Benachrichtigung")
+            if rec is not None:
+                rec.step("in", "Von selbst", t0)
+        if rec is not None:
+            rec.step("tool", NOTE[kind], t0, time.time(), ok=n > 0)
+        if own is not None:
+            end(own, n > 0)
+    except Exception:
+        pass
+
+
+def end(rec, ok=True):
+    try:
+        import tracelog
+        if rec is not None:
+            if not ok:
+                rec.fail("error")
+            tracelog.finish(rec)
+    except Exception:
+        pass
+
+
+def door(who, ip, ok, why, steps):
+    """One line in the Eingang list for a way in that is not a login (Wyoming, MCP, devices)."""
+    try:
+        if not on():
+            return
+        with _lock:
+            _bump("door_in" if ok else "door_out")
+            _door.append({"t": time.time(), "ok": ok, "who": str(who)[:40], "from": short_ip(ip), "why": str(why)[:80],
+                          "steps": [str(x)[:100] for x in steps][:5]})
+            if not ok:
+                _events.append((time.time(), "Eingang", f"{str(who)[:40]} abgewiesen von {short_ip(ip)}"))
+    except Exception:
+        pass
+
+
 def _door_no(request, why, steps):
     with _lock:
         _bump("door_out")
@@ -313,6 +411,8 @@ def _now_at(rec, now):
     if cur and (not last or cur[2] >= rec.t0 + (last["a"] + last["d"]) / 1000 - 0.01):
         return cur[0], cur[1]
     k = last["k"] if last else "in"
+    if getattr(rec, "direct", False):    # no Weiche and no language model unless a step says so
+        return k, ""
     if k in ("in", "prep"):
         return "weiche", ""
     if k in ("weiche", "tool"):
@@ -356,7 +456,9 @@ def _req(rec, view, now):
                       "to": TOOLS.get(n, "") if s["k"] == "tool" else ("qwen" if s["k"] == "llm" else "")})
     end, gone = getattr(rec, "t_end", None), _gone_from(rec)
     return {"id": rec.id, "client": rec.client, "dev": device or CLIENT.get(rec.client, "Gerät"), "who": person,
-            "voice": rec.client in VOICE or any((s.get("x") or {}).get("voice") for s in rec.steps[:1]),
+            "voice": not getattr(rec, "auto", False) and (rec.client in VOICE or any((s.get("x") or {}).get("voice") for s in rec.steps[:1])),
+            "auto": bool(getattr(rec, "auto", False)), "direct": bool(getattr(rec, "direct", False)),
+            "prio": bool(getattr(rec, "prio", False)),
             "net": bool(getattr(rec, "net", False)), "intent": rec.intent, "stage": stage, "tool": tool,
             "to": TOOLS.get(tool, "") if stage == "tool" else ("qwen" if stage == "llm" else ""),
             "steps": steps, "marks": dict(rec.marks), "age": round((end or now) - rec.t0, 2),
@@ -402,6 +504,144 @@ def _conns(now):
     return out
 
 
+# ------------------------------------------------------------------ the services' state (Hören, Sprechen, Sprachmodell)
+_svc = {}       # "asr" | "tts" | "qwen" -> (state ok|load|down|off, word, time)
+_queue = {}     # "asr" | "tts" -> (waiting, running) from the front end's gate (common.Gate.view)
+SVC_WORD = {"ok": "läuft", "load": "lädt", "down": "antwortet nicht", "off": "aus"}
+
+
+def services(health, cfg, now=None):
+    """The sampler (panel.py, every 3 s) read the front ends' /health: a dot on Hören and Sprechen."""
+    now = time.time() if now is None else now
+    for name, h in health.items():
+        if name not in ("asr", "tts"):
+            continue
+        st = "off" if not (cfg.get(name) or {}).get("enabled", True) else "down" if not isinstance(h, dict) \
+            else "down" if h.get("status") in ("blocked", "error") else "load" if h.get("status") == "loading" else "ok"
+        old = _svc.get(name)
+        _svc[name] = (st, SVC_WORD[st], now)
+        q = (h or {}).get("queue") if isinstance(h, dict) else None
+        num = lambda v: v if isinstance(v, int) and not isinstance(v, bool) and 0 <= v < 10000 else 0  # noqa: E731
+        _queue[name] = (num(q.get("waiting")), num(q.get("running"))) if isinstance(q, dict) else (0, 0)
+        if (old[0] if old else "ok") != st and on():
+            event("Dienste", f"{'Hören' if name == 'asr' else 'Sprechen'}: {SVC_WORD[st]}", now)
+
+
+# ------------------------------------------------------------------ background work (vorrang.py)
+_bg = {}        # job name (fixed words from the code) -> (state wait|run, since)
+BG_MAX = 12
+
+
+def bg(job, state, now=None):
+    """vorrang.py: a background job waits for a pause (wait), runs (run) or is gone (None)."""
+    now = time.time() if now is None else now
+    job = str(job)[:40]
+    with _lock:
+        if state is None:
+            _bg.pop(job, None)
+        elif state in ("wait", "run"):
+            if job in _bg or len(_bg) < BG_MAX:
+                _bg[job] = (state, _bg[job][1] if job in _bg and _bg[job][0] == state else now)
+
+
+def bg_done(job, ok, secs=None, why=""):
+    """A background job ended: off the list, a line under "Ereignisse"."""
+    job = str(job)[:40]
+    with _lock:
+        _bg.pop(job, None)
+    if on():
+        event("Hintergrund", f"{job} " + ("fertig" if ok else why or "nicht fertig")
+              + (f" in {secs:.0f} s" if ok and isinstance(secs, (int, float)) else ""))
+
+
+def _bg_now(now):
+    with _lock:
+        for k in [k for k, v in _bg.items() if now - v[1] > 6 * 3600]:    # a job that never said it ended
+            _bg.pop(k, None)
+        return [{"job": k, "st": v[0], "secs": int(now - v[1])} for k, v in sorted(_bg.items(), key=lambda x: x[1][1])]
+
+
+def llm_seen(ok, code="", now=None):
+    """A request used the language model (ended): its state as the last answer showed it."""
+    now = time.time() if now is None else now
+    st = "ok" if ok else "load" if code == "llm_slow" else "down"
+    old = _svc.get("qwen")
+    _svc["qwen"] = (st, SVC_WORD[st] if ok or code in ("llm_down", "llm_slow") else "Fehler", now)
+    if (old[0] if old else "ok") != st:
+        event("Dienste", f"Sprachmodell: {_svc['qwen'][1]}", now)
+
+
+def restarted(name, reason, done):
+    """The watchdog (health.py) restarted a service, or would have but may not."""
+    event("Dienste", f"{name} {'neu gestartet' if done else 'nicht neu gestartet'} · {str(reason)[:60]}")
+
+
+def _svc_now(now):
+    return {k: dict({"st": v[0], "word": v[1], "ago": int(now - v[2])},
+                    **({"wait": _queue[k][0], "run": _queue[k][1]} if k in _queue else {}))
+            for k, v in _svc.items() if now - v[2] < 3600}
+
+
+# ------------------------------------------------------------------ the Spark's own warnings (health.alerts)
+_hint_cache = [0.0, []]
+_hint_seen = set()
+LIVECHECK_AT = {"llm": "llm", "tools": "tool", "search": "web", "tts": "tts", "asr": "asr"}
+
+
+def _num(v):
+    return f"{v:g}".replace(".", ",") if isinstance(v, (int, float)) else "?"
+
+
+def hints(now=None):
+    """The warnings the admin pages show on top (health.alerts), at the part of the picture they are about
+    (Dominik 2026-10-10: "Antworten sind langsamer geworden" belongs to its connection). Fixed words and
+    numbers only: the quality test's question or a server's error text never come here."""
+    now = time.time() if now is None else now
+    if 0 <= now - _hint_cache[0] < 5:
+        return _hint_cache[1]
+    out = []
+    try:
+        import health
+        m = health.memory_state
+        if m.get("low"):
+            out.append({"at": "llm", "level": "bad", "word": f"Speicher knapp: {_num(round(m.get('avail') or 0, 1))} GiB frei"})
+        for e in [e for e in health.events if now - e.get("t", 0) < 3600][-3:]:
+            at = "asr" if str(e.get("unit", "")).upper().startswith("ASR") else "tts"
+            out.append({"at": at, "level": "warn" if e.get("done") else "bad",
+                        "word": "vom Wächter neu gestartet" if e.get("done") else "hängt, Neustart-Grenze erreicht"})
+        lc = health.last_live()
+        if lc and not lc.get("ok") and now - lc.get("t", 0) < 86400:
+            for st in lc.get("steps", []):
+                if st.get("ok") is False and st.get("name") in LIVECHECK_AT:
+                    out.append({"at": LIVECHECK_AT[st["name"]], "level": "bad", "word": "Funktionsprüfung fehlgeschlagen"})
+        import quality
+        res = quality.last()
+        if res and res.get("cases") and now - res.get("t", 0) < 7 * 86400:
+            n = sum(1 for x in res["cases"] if x.get("new"))
+            if n:
+                out.append({"at": "llm", "level": "warn", "word": f"Qualitätstest: {n} neu kaputt"})
+        import latency
+        sm = latency.summary(now)
+        if sm.get("warn"):
+            out.append({"at": "tts", "level": "warn", "word": f"erster Ton {_num(sm['day']['median'])} s statt "
+                                                               f"{_num(sm['week']['median'])} s"})
+        import telegram
+        if telegram.alert():
+            out.append({"at": "tg", "level": "warn", "word": "Bot-Token wird woanders auch benutzt"})
+    except Exception:
+        pass
+    for h in out:          # a warning that is new: one line under "Ereignisse"
+        key = h["at"] + h["word"].split(":")[0]
+        if key not in _hint_seen:
+            _hint_seen.add(key)
+            event("Hinweis", f"{h['word']}", now)
+    for key in list(_hint_seen):
+        if not any(h["at"] + h["word"].split(":")[0] == key for h in out):
+            _hint_seen.discard(key)
+    _hint_cache[:] = [now, out]
+    return out
+
+
 def _sys():
     try:
         import monitor
@@ -433,12 +673,14 @@ def snapshot(view="admin", now=None):
         held = notaus.for_live()
     except Exception:
         held = {"level": 0}
-    used = {s["to"] for r in reqs for s in r["steps"] if s["to"]} | {r["to"] for r in reqs if r["to"]} | {x["to"] for x in rets if now - x["t"] < 60 and x["to"]}
+    hs = hints(now)
+    used = {h["at"] for h in hs} | {s["to"] for r in reqs for s in r["steps"] if s["to"]} | {r["to"] for r in reqs if r["to"]} | {x["to"] for x in rets if now - x["t"] < 60 and x["to"]}
     targets = [{"id": k, "name": v[0], "sub": v[1], "zone": v[2]} for k, v in TARGETS.items() if v[3] or k in used]
     return {"t": round(now, 1), "view": view, "fade": FADE, "reqs": reqs, "targets": targets, "speaking": speaking,
             "guard": {"ok": cnt.get("guard_ok", 0), "bad": cnt.get("guard_bad", 0), "cut": cnt.get("guard_cut", 0), "items": guard_items},
             "door": {"in": cnt.get("door_in", 0), "out": cnt.get("door_out", 0), "items": door_items},
-            "rets": rets, "events": [{"t": t, "area": a, "text": x} for t, a, x in events], "conns": _conns(now), "sys": _sys(), "notaus": held}
+            "rets": rets, "events": [{"t": t, "area": a, "text": x} for t, a, x in events], "conns": _conns(now), "sys": _sys(), "notaus": held,
+            "svc": _svc_now(now), "bg": _bg_now(now), "hints": hs}
 
 
 # ------------------------------------------------------------------ admin view

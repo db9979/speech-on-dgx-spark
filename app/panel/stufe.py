@@ -127,6 +127,8 @@ def begin(turn):
     if turn_level(turn) != "vorrang":
         return None
     tok = object()
+    if getattr(turn, "tr", None) is not None:
+        turn.tr.prio = True      # Zustand → Live: a star at the request
     _active[tok] = (turn.who["id"], time.monotonic())
     _hints.pop(turn.who["id"], None)
     return tok

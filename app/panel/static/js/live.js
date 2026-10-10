@@ -17,7 +17,8 @@ const col=id=>COLS[parseInt(String(id).slice(0,4),16)%COLS.length]||COLS[0];
 const STAGES=[['asr',tt('Hören','Listening'),'ASR · 31001'],['weiche',tt('Weiche','Switch'),tt('Absicht','Intent')],['llm',tt('Sprachmodell','Language model'),'qwen38'],
   ['tool',tt('Werkzeuge','Tools'),'chat_tools'],['tts',tt('Sprechen','Speaking'),'TTS · 31002']];
 const SNAME=Object.fromEntries(STAGES.map(s=>[s[0],s[1]]));
-const KIND={in:tt('Eingang','Arrival'),prep:tt('Vorbereitung','Preparation'),weiche:tt('Weiche','Switch'),llm:tt('Modell','Model'),tool:tt('Werkzeug','Tool'),check:tt('Prüfung','Check'),tts:tt('Sprechen','Speaking'),err:tt('Abbruch','Stopped'),done:tt('fertig','done')};
+const SVC={ok:'var(--ok)',load:'var(--warn)',down:'var(--bad)',off:'var(--mut)'};
+const KIND={in:tt('Eingang','Arrival'),asr:tt('Hören','Listening'),prep:tt('Vorbereitung','Preparation'),weiche:tt('Weiche','Switch'),llm:tt('Modell','Model'),tool:tt('Werkzeug','Tool'),check:tt('Prüfung','Check'),tts:tt('Sprechen','Speaking'),err:tt('Abbruch','Stopped'),done:tt('fertig','done')};
 const ZONE={spark:[tt('im Spark','on the Spark'),'loc'],lan:[tt('Heimnetz','Home network'),'lan'],net:['Internet','net']};
 const PH=()=>matchMedia('(max-width:760px)').matches;
 let tip=null;
@@ -84,26 +85,33 @@ function layout(d,ph){const W=ph?360:1140,pos={},reqs=d.reqs.slice(-7),lan=reqs.
   return {pos,W,H,reqs,order}}
 function curve(a,b,ph){return ph?`M${a.x+a.w/2} ${a.y+a.h} C${a.x+a.w/2} ${(a.y+a.h+b.y)/2} ${b.x+b.w/2} ${(a.y+a.h+b.y)/2} ${b.x+b.w/2} ${b.y}`
   :`M${a.x+a.w} ${a.y+a.h/2} C${(a.x+a.w+b.x)/2} ${a.y+a.h/2} ${(a.x+a.w+b.x)/2} ${b.y+b.h/2} ${b.x} ${b.y+b.h/2}`}
-const entry=r=>r.voice?'asr':'weiche';
+// direct requests without the assistant (live.begin): Home Assistant over Wyoming (Hören or Sprechen alone), programs
+// calling one MCP tool, notes the Spark sends by itself (auto: no way back to a device). They start at their first step.
+const direct=r=>!!r.direct;
+const speechOnly=r=>direct(r)&&r.stage!=='tool'&&!r.steps.some(s=>s.k==='tool');
+const entry=r=>{if(!direct(r))return r.voice?'asr':'weiche';const s=r.steps.find(x=>x.k!=='in'&&x.k!=='prep');
+  return s?(s.k==='tool'&&!r.auto?'tool':s.k):(r.stage==='in'||r.stage==='done'?'':r.stage)};
 // the way of one request as hops between nodes of the picture: d = done, c = here now, p = still to come
 function hops(r){const H=[],at=['r'+r.id];const go=(n,t,st,what)=>{const a=at[at.length-1];if(a!==n)H.push([a,n,t||'',st,what||'']);at.push(n)};
-  if(r.net)go('door','','d');go(entry(r),'','d');
-  r.steps.forEach(s=>{if(s.k==='weiche')go('weiche',secs(s.d),'d');else if(s.k==='llm'){go('llm',secs(s.d),'d')}
+  if(r.net)go('door','','d');const hearing=!r.done&&r.stage==='asr'&&!r.steps.some(s=>s.k==='asr');if(entry(r))go(entry(r),hearing?secs(r.age*1000):'',hearing?'c':'d',hearing?tt('erkennt Sprache','recognising speech'):'');
+  r.steps.forEach(s=>{if(s.k==='asr')go('asr',secs(s.d),'d');else if(s.k==='weiche')go('weiche',secs(s.d),'d');else if(s.k==='llm'){go('llm',secs(s.d),'d')}
     else if(s.k==='tool'){go('tool','','d');if(s.to&&tgt(s.to)){if(zoneOf(s.to)==='net')go('guard','','d');go(s.to,secs(s.d),'d');
       const ret=((LV.data||{}).rets||[]).find(x=>x.req===r.id&&x.tool===s.n);go('tool','↩ '+(s.ok?'ok':tt('nicht ok','not ok'))+(ret&&ret.size!=null?' · '+kb(ret.size):''),'d')}}
     else if(s.k==='tts')go('tts',secs(s.d),'d')});
   // the way back: where the answer is heard or shown (Dominik 2026-10-10)
-  const back=r.voice?tt('↩ gesprochen am ','↩ spoken at ')+r.dev:tt('↩ Antwort an ','↩ answer to ')+r.dev;
-  if(r.done){go('r'+r.id,back,'d');return H}
+  const so=speechOnly(r),heard=so&&(r.steps.some(s=>s.k==='asr')||r.stage==='asr');
+  const back=heard?tt('↩ Text an ','↩ text to ')+r.dev:r.voice?tt('↩ gesprochen am ','↩ spoken at ')+r.dev:tt('↩ Antwort an ','↩ answer to ')+r.dev;
+  if(r.done){if(!r.auto)go('r'+r.id,back,'d');return H}
   const last=r.steps.length?r.steps[r.steps.length-1]:null,since=Math.max(0,r.age*1000-(last?last.a+last.d:0));
   const now=secs(since);
   if(r.stage==='tool'&&r.to&&tgt(r.to)){go('tool','','d');if(zoneOf(r.to)==='net')go('guard','','d');go(r.to,now,'c',tt('wartet auf ','waiting for ')+tgt(r.to).name);go('tool','↩ '+tt('erwartet','expected'),'p')}
   else if(r.stage==='tool')go('tool',now,'c',r.tool||'');
   else if(r.stage==='llm'){go('llm',now,'c',tt('denkt nach oder streamt','thinking or streaming'))}
+  else if(r.stage==='tts'&&r.auto){go('tts',now,'c',tt('sagt es an','announcing'));return H}
   else if(r.stage==='tts'){go('tts','','d');go('r'+r.id,now,'c',(r.voice?tt('spricht am ','speaking at '):tt('schickt die Antwort an ','sending the answer to '))+r.dev);return H}
   else if(r.stage==='weiche')go('weiche',now,'c',tt('wählt Werkzeuge','picks tools'));
-  if(r.stage!=='tts'){go('llm','','p');go('tts','','p')}
-  go('r'+r.id,back,'p');return H}
+  if(r.stage!=='tts'&&!direct(r)){go('llm','','p');go('tts','','p')}
+  if(!r.auto)go('r'+r.id,back,'p');return H}
 function route(r,pos,W,H,ph){const c=col(r.id);let o='',lab='',call='';const ctr=p=>({x:p.x+p.w/2,y:p.y+p.h/2});
   hops(r).forEach(([a,b,t,st,what],i)=>{const A=pos[a],B=pos[b];if(!A||!B)return;const ca=ctr(A),cb=ctr(B);let d,mx,my;
     if(Math.abs(ca.x-cb.x)<40){const down=cb.y>ca.y,x=down?A.x+A.w:A.x,k=down?70:-70;d=`M${x} ${ca.y} C${x+k} ${ca.y} ${x+k} ${cb.y} ${x} ${cb.y}`;mx=x+k*.75;my=(ca.y+cb.y)/2}
@@ -121,8 +129,8 @@ function route(r,pos,W,H,ph){const c=col(r.id);let o='',lab='',call='';const ctr
 function nm(id){if(id==='door')return tt('Eingang','Entrance');if(id==='guard')return tt('Wächter','Wächter');if(SNAME[id])return SNAME[id];if(tgt(id))return tgt(id).name;
   const r=((LV.data||{}).reqs||[]).find(x=>'r'+x.id===id);return r?r.dev:id}
 function flow(){const d=LV.data,ph=PH(),{pos,W,H,reqs,order}=layout(d,ph);
-  const NL=(d.notaus||{}).level||0,key=[LV.sel,ph,NL,...reqs.map(r=>r.id+r.stage+r.steps.length+(r.done?'d':'')),...order.map(x=>x.id)].join('|');
-  if(key===LV.lastKey){reqs.filter(r=>r.done).forEach(r=>{const g=el('lvd'+r.id);if(g){g.style.opacity=op(r,d);const b=g.querySelector('.cd');if(b)b.textContent=doneTxt(r)}});return}
+  const NL=(d.notaus||{}).level||0,key=[LV.sel,ph,NL,...reqs.map(r=>r.id+r.stage+r.steps.length+(r.done?'d':'')),...order.map(x=>x.id),...Object.entries(d.svc||{}).map(([k,v])=>k+v.st+(v.wait||0)),...(d.hints||[]).map(h=>h.at+h.word)].join('|');
+  if(key===LV.lastKey){reqs.filter(r=>r.done).forEach(r=>{const g=el('lvd'+r.id);if(g){g.style.opacity=op(r,d);const b=g.querySelector('.cd');if(b)b.textContent=(r.prio?'★ ':'')+doneTxt(r)}});return}
   LV.lastKey=key;
   // Notaus (notaus.py STAGE): from stage 1 the internet and the door are cut off, from 2 Home Assistant only reads, at 3 the conversation stands still
   const held=id=>{const x=tgt(id);if(NL>=1&&(x&&x.zone==='net'||id==='door'||id==='guard'))return tt('abgehängt · Notaus','cut off · kill switch');
@@ -146,12 +154,19 @@ function flow(){const d=LV.data,ph=PH(),{pos,W,H,reqs,order}=layout(d,ph);
     return `<g class="node${on?' act':''}${hd?' held':''}${o.cls||''}" ${o.attrs||''} data-tip="${lvE((o.tip||a)+(hd?' · '+hd:''))}"><rect x="${p.x}" y="${p.y}" width="${p.w}" height="${p.h}" rx="10" ${o.stroke?`style="stroke:${o.stroke}${hd?';stroke-dasharray:5 4':''}"`:''}/>${hd?`<text x="${p.x+p.w-12}" y="${p.y+p.h/2+5}" text-anchor="end" style="font-size:${ph?11:14}px">🔒</text>`:''}${o.dot?`<circle cx="${p.x+p.w-14}" cy="${p.y+14}" r="4" fill="${o.dot}"/>`:''}
       <text class="a" x="${p.x+10}" y="${p.y+(ph?20:Math.min(p.h/2-1,24))}">${lvE(a)}</text><text class="b${o.cd?' cd':''}" x="${p.x+10}" y="${p.y+(ph?36:Math.min(p.h/2+13,38))}">${lvE(b)}</text>
       ${k&&!ph&&!o.dev?`<circle class="badge" cx="${p.x+p.w-16}" cy="${p.y+p.h/2}" r="10"/><text class="bt" text-anchor="middle" x="${p.x+p.w-16}" y="${p.y+p.h/2+3.5}">${k}</text>`:''}</g>`};
-  reqs.forEach(r=>{const sub=r.done?doneTxt(r):(ph?(r.net?'Internet':r.who):`${r.who}${r.intent?' · '+r.intent:''}${r.net?' · Internet':''}`);
+  reqs.forEach(r=>{const sub=(r.prio?'★ ':'')+(r.done?doneTxt(r):(ph?(r.net?'Internet':r.who):`${r.who}${r.intent?' · '+r.intent:''}${r.net?' · Internet':''}`));
     s+=node('r'+r.id,ph?r.dev.slice(0,12):r.dev,sub,!r.done,{dev:1,cd:r.done,stroke:r.done?'':col(r.id),dot:r.done?'var(--mut)':col(r.id),cls:' dv'+(r.age<1.2?' pop':''),
       attrs:`id="lvd${r.id}" data-req="${lvE(r.id)}" ${r.done?`style="opacity:${op(r,d)}"`:''}`,
       tip:`${r.dev} · ${r.who} · ${r.id}${r.intent?' · '+r.intent:''}${r.net?' · '+tt('kam über das Internet','came through the internet'):''} · ${r.done?tt('fertig','done'):KIND[r.stage]||r.stage}`})});
-  STAGES.forEach(x=>s+=node(x[0],x[1],ph?'':x[2],act.has(x[0])));
-  order.forEach(x=>s+=node(x.id,ph?x.name.split(' ')[0]:x.name,ph?ZONE[x.zone][0]:x.sub,act.has(x.id),{tip:`${x.name} · ${x.sub}`}));
+  // the services' own state (live.services/llm_seen): a dot green, yellow (loading) or red (not answering)
+  const sv=id=>(d.svc||{})[id==='llm'?'qwen':id],svo=(v,name)=>v?{dot:SVC[v.st],stroke:v.st==='down'?'var(--bad)':'',tip:name+' · '+v.word}:{};
+  // the Spark's own warnings (live.hints) at the part they are about: ⚠ with a short word, yellow or red
+  const hint=id=>(d.hints||[]).find(h=>h.at===id||(id==='qwen'&&h.at==='llm')),
+    hb=(id,b,o)=>{const h=hint(id);if(!h)return b;o.stroke=h.level==='bad'?'var(--bad)':'var(--warn)';o.dot=o.stroke;o.tip=(o.tip||'')+' · ⚠ '+h.word;o.cls=(o.cls||'')+' warned';return '⚠ '+h.word};
+  // waiting at the gate of Hören or Sprechen (common.Gate): "2 warten"
+  const qw=v=>v&&v.wait?' · '+v.wait+' '+tt('warten','waiting'):'';
+  STAGES.forEach(x=>{const v=sv(x[0]),o=svo(v,x[1]);if(!o.tip)o.tip=x[1];const b=hb(x[0],ph?'':(v&&v.st!=='ok'?v.word:x[2])+qw(v),o);s+=node(x[0],x[1],b,act.has(x[0]),o)});
+  order.forEach(x=>{const v=x.id==='qwen'?sv('qwen'):null,o=Object.assign({tip:`${x.name} · ${x.sub}`},svo(v,x.name));const b=hb(x.id,ph?ZONE[x.zone][0]:v&&v.st!=='ok'?v.word:x.sub,o);s+=node(x.id,ph?x.name.split(' ')[0]:x.name,b,act.has(x.id),o)});
   if(!ph&&pos.guard){const G=pos.guard,gx=G.x+15,gy=G.y+17;s+=`<g class="gate" data-gate="guard" data-tip="${lvE(tt(`Wächter (netguard) · prüft jede Verbindung nach außen · heute ${d.guard.ok} erlaubt, ${d.guard.bad} geblockt · antippen für die Gründe`,`Wächter · checks every outgoing connection · today ${d.guard.ok} allowed, ${d.guard.bad} blocked`))}"><path d="M${gx} ${gy-17} l15 6 v10 c0 11 -8 18 -15 21 c-7 -3 -15 -10 -15 -21 v-10z" fill="var(--card)" stroke="${NL>=1?'var(--bad)':netOn?'var(--ok)':'var(--mut)'}" stroke-width="2"/><text x="${gx}" y="${gy+5}" text-anchor="middle" style="font-size:12px;font-weight:700;fill:var(--ok)">✓</text>
     <text x="${gx}" y="${gy+34}" text-anchor="middle" style="font-size:10px;font-weight:600;fill:var(--fg)">${tt('Wächter','Wächter')}</text><text x="${gx}" y="${gy+46}" text-anchor="middle" style="font-size:10px;fill:var(--bad)">${NL>=1?tt('Internet zu','internet closed'):d.guard.bad+' '+tt('geblockt','blocked')}</text></g>`;
     s+=`<line class="netline" x1="925" x2="1135" y1="${pos._net1}" y2="${pos._net1}"/><text x="920" y="${pos._net1+4}" text-anchor="end" style="font-size:10px;fill:var(--c4);font-weight:700;letter-spacing:.08em">INTERNET ↓</text>`}
@@ -170,12 +185,12 @@ function way(){const r=LV.data.reqs.find(x=>x.id===LV.sel),box=el('lvway');
     return {k:KIND[s.k]||s.k,n:name,d:`${secs(s.d)}${s.k==='tool'?' · '+(s.ok?'ok':tt('nicht ok','not ok'))+(s.to&&tgt(s.to)?' · '+tgt(s.to).name:''):''}`,z,ms:s.d,cur:false}});
   if(!r.done){const last=r.steps[r.steps.length-1],since=Math.max(0,r.age*1000-(last?last.a+last.d:0));
     items.push({k:KIND[r.stage]||r.stage,n:r.stage==='tool'?(r.tool||KIND.tool):SNAME[r.stage]||r.stage,d:tt('läuft seit ','running for ')+secs(since)+(r.to&&tgt(r.to)?' · '+tgt(r.to).name:''),z:r.to?zoneOf(r.to):'spark',ms:since,cur:true});
-    if(r.stage!=='tts')items.push({k:KIND.tts,n:SNAME.tts,d:tt('kommt noch','still to come'),z:'spark',ms:0,todo:true})}
+    if(r.stage!=='tts'&&!direct(r))items.push({k:KIND.tts,n:SNAME.tts,d:tt('kommt noch','still to come'),z:'spark',ms:0,todo:true})}
   // the way back to the device (zone of the device: internet when it came through the proxy)
-  items.push({k:tt('Zurück','Back'),n:r.dev,d:r.voice?tt('↩ gesprochen','↩ spoken'):tt('↩ Antwort','↩ answer'),z:r.net?'net':'lan',ms:0,todo:!r.done&&r.stage!=='tts',cur:!r.done&&r.stage==='tts'});
+  if(!r.auto)items.push({k:tt('Zurück','Back'),n:r.dev,d:r.voice?tt('↩ gesprochen','↩ spoken'):tt('↩ Antwort','↩ answer'),z:r.net?'net':'lan',ms:0,todo:!r.done&&r.stage!=='tts',cur:!r.done&&r.stage==='tts'});
   const usesNet=r.net||r.steps.some(s=>zoneOf(s.to)==='net'),tot=items.reduce((a,x)=>a+x.ms,0)||1;
   let h=`<div class="hd"><span class="lvc" style="background:${col(r.id)}"></span><span class="who">${lvE(r.who)}</span><span class="mut">${lvE(r.dev)}${r.voice?' · '+tt('Stimme','voice'):''}</span>
-    ${r.intent?`<span class="pill">${lvE(r.intent)}</span>`:''}<span class="pill ${usesNet?'net':'lan'}">${usesNet?tt('nutzt Internet','uses the internet'):tt('bleibt im Heimnetz','stays at home')}</span>${r.err?`<span class="pill bad">${tt('Fehler','error')}</span>`:''}
+    ${r.prio?`<span class="pill warn">★ ${tt('Vorrang','priority')}</span>`:''}${r.intent?`<span class="pill">${lvE(r.intent)}</span>`:''}<span class="pill ${usesNet?'net':'lan'}">${usesNet?tt('nutzt Internet','uses the internet'):tt('bleibt im Heimnetz','stays at home')}</span>${r.err?`<span class="pill bad">${tt('Fehler','error')}</span>`:''}
     <span class="mono mut" style="margin-left:auto">${lvE(r.id)} · ${secs(r.age*1000)}${r.done?' · '+tt('fertig','done'):''}</span></div><div class="hops">`;
   items.forEach((x,i)=>{h+=`${i?'<div class="arrow">›</div>':''}<div class="hop${x.cur?' cur':''}${x.z==='net'?' net':''}${x.todo?' todo':''}"><span class="pill ${ZONE[x.z][1]}">${ZONE[x.z][0]}</span><div class="k">${lvE(x.k)}</div><div class="nn">${lvE(x.n)}</div><div class="d">${lvE(x.d)}</div></div>`});
   h+='</div><div class="gantt">';let o=0;items.forEach((x,i)=>{if(!x.ms)return;const w=x.ms/tot*100;h+=`<i style="left:${o}%;width:${w}%;background:${x.z==='net'?'var(--c4)':COLS[i%COLS.length]}">${w>9?`<span>${lvE(x.k)} ${secs(x.ms)}</span>`:''}</i>`;o+=w});
@@ -195,9 +210,11 @@ function running(){const R=LV.data.reqs;el('lvnrq').textContent=R.filter(r=>!r.d
   const all=['in','asr','weiche','llm','tool','tts'],lab={in:tt('Ein','In'),asr:SNAME.asr,weiche:SNAME.weiche,llm:tt('Modell','Model'),tool:tt('Werkzeug','Tool'),tts:SNAME.tts};
   el('lvrq').innerHTML=R.length?R.slice().reverse().map(r=>{const ks=all.filter(k=>k!=='asr'||r.voice),cur=r.done?'tts':r.stage,ci=ks.indexOf(cur);
     return `<div class="rq${r.id===LV.sel?' sel':''}" data-req="${lvE(r.id)}"><span class="c" style="background:${col(r.id)}"></span><span class="mono mut">${lvE(r.id)}</span>
-    <span><b>${lvE(r.dev)}</b> <span class="mut">· ${lvE(r.who)}</span> ${r.intent?`<span class="pill">${lvE(r.intent)}</span>`:''}${r.net?' <span class="pill net">Internet</span>':''}${r.done?` <span class="pill ok">${tt('fertig','done')}</span>`:''}</span><span class="t">${secs(r.age*1000)}</span>
+    <span><b>${lvE(r.dev)}</b> <span class="mut">· ${lvE(r.who)}</span> ${r.prio?`<span class="pill warn">★ ${tt('Vorrang','priority')}</span>`:''}${r.intent?`<span class="pill">${lvE(r.intent)}</span>`:''}${r.net?' <span class="pill net">Internet</span>':''}${r.done?` <span class="pill ok">${tt('fertig','done')}</span>`:''}</span><span class="t">${secs(r.age*1000)}</span>
     <div class="beads">${ks.map((k,i)=>`${i?`<i class="${i<=ci?'d':''}"></i>`:''}<b class="${!r.done&&i===ci?'n':i<=ci?'d':''}"></b>${!PH()||i===ci?`<span${i===ci?' style="color:var(--fg);font-weight:600"':''}>${lab[k]}</span>`:''}`).join('')}</div></div>`}).join('')
-   :`<div class="mut">${tt('Gerade nichts.','Nothing right now.')}</div>`}
+   :`<div class="mut">${tt('Gerade nichts.','Nothing right now.')}</div>`;
+  // background work (vorrang.py): what runs and what waits because somebody speaks
+  const B=LV.data.bg||[];if(B.length)el('lvrq').innerHTML+=`<div class="bgh mut">${tt('Im Hintergrund','In the background')}</div>`+B.map(b=>`<div class="rq bg"><span class="c" style="background:${b.st==='wait'?'var(--warn)':'var(--mut)'}"></span><span><b>${lvE(b.job)}</b> <span class="mut">· ${b.st==='wait'?tt('wartet, Sprache hat Vorrang','waiting, speech goes first'):tt('läuft','running')}</span></span><span class="t">${secs(b.secs*1000)}</span></div>`).join('')}
 function conns(){const C=LV.data.conns;el('lvncn').textContent=C.reduce((a,c)=>a+c.n,0);
   el('lvcn').innerHTML=C.length?C.map(c=>`<tr><td><span class="pill ${c.dir==='ein'?'':'ok'}">${c.dir==='ein'?'↘ '+tt('ein','in'):'↗ '+tt('aus','out')}</span></td><td><b>${lvE(c.name)}</b></td><td class="mut">${lvE(c.proto)}</td><td class="num">${c.n}</td></tr>`).join('')
    :`<tr><td class="mut">${tt('Keine offene Verbindung.','No open connection.')}</td></tr>`}
@@ -209,10 +226,12 @@ function pickSel(){const R=LV.data.reqs,run=R.filter(r=>!r.done);
   if(KIOSK&&run.length&&Date.now()-LV.lastSel>8000){const i=run.findIndex(r=>r.id===LV.sel);LV.sel=run[(i+1)%run.length].id;LV.lastSel=Date.now()}
   if(!R.some(r=>r.id===LV.sel))LV.sel=(run[run.length-1]||R[R.length-1]||{}).id||''}
 // Notaus (notaus.py): stage, since when, through which channel, and per kind held or running with a count; never content
-function notaus(){const n=LV.data.notaus||{},box=el('lvna');if(!box)return;box.hidden=!n.level;if(!n.level){box.innerHTML='';return}
+function notaus(){const n=LV.data.notaus||{},box=el('lvna');if(!box)return;const mi=n.mine||{};box.hidden=!n.level&&!mi.n;
+  const ml=mi.n?`<div class="lvnam">${tt('Mein Notaus','My kill switch')}: <b>${mi.n<0?tt('alle Profile (Datei unlesbar)','all profiles (file unreadable)'):lvE(mi.n)+' '+(mi.n===1?tt('Profil','profile'):tt('Profile','profiles'))}</b> · ${lvE(mi.held||0)} ${tt('gehalten','held')}</div>`:'';
+  if(!n.level){box.innerHTML=ml;return}
   const nm={1:tt('Außen zu','Outside closed'),2:tt('Hände weg','Hands off'),3:tt('Alles still','All quiet')}[n.level]||'';
   box.innerHTML=`<div class="lvnah"><b>${tt('NOTAUS · STUFE ','KILL SWITCH · STAGE ')}${lvE(n.level)} · ${lvE(nm.toUpperCase())}</b><span class="mut">${n.since?tt('seit ','since ')+hm(n.since):''}${n.channel?' · '+lvE(n.channel):''}</span></div>`
-    +`<div class="lvnak">${(n.kinds||[]).map(k=>{const held=n.level>=k.from;return `<span class="${held?'held':'run'}">${lvE(tt(k.de,k.en))} <b>${held?lvE(k.n):'–'}</b></span>`}).join('')}</div>`}
+    +`<div class="lvnak">${(n.kinds||[]).map(k=>{const held=n.level>=k.from;return `<span class="${held?'held':'run'}">${lvE(tt(k.de,k.en))} <b>${held?lvE(k.n):'–'}</b></span>`}).join('')}</div>`+ml}
 function draw(){if(!LV.data)return;pickSel();notaus();kpis(LV.data);flow();way();guardList();doorList();rets();running();conns();events();if(KIOSK)rotate()}
 function rotate(){const cards=['lvguardc','lvdoorc','lvretc','lvcnc'],i=Math.floor(Date.now()/10000)%cards.length;
   cards.forEach((c,k)=>{const x=el(c);if(x)x.classList.toggle('on',k===i)});document.querySelectorAll('.kdots').forEach(d=>d.innerHTML=cards.map((_,k)=>`<i class="${k===i?'on':''}"></i>`).join(''));

@@ -118,6 +118,9 @@ def blocked(uid, kind, p=None, local=None, st=None):
     st = state(uid) if st is None else st
     if not enabled():
         return "turned off by the admin"
+    import notaus
+    if notaus.refuse("auto", uid):     # the Notaus from stage 2, or the profile's own (notaus.py)
+        return "Notaus"
     if not p.get("pro_on"):
         return "turned off in the profile"
     if not p.get(KINDS[kind][2], True):
@@ -162,11 +165,26 @@ async def deliver(uid, kind, text, why="", data="", offer=None, until=None, forc
         st["last"] = {"t": now, "kind": kind, "offer": offer, "text": text}
         st["queue"] = [x for x in st.get("queue", []) if x.get("until", 0) > now][-19:] + [item]
     _mut(uid, put)
-    if item.get("pushed"):
-        try:
-            await push.send(uid, "💬 Spark", text, tag="pro-" + kind, private=private)
-        except Exception as e:
-            print("proactive: push:", type(e).__name__, e, flush=True)
+    # Zustand → Live: what it says by itself shows as a request of "Von selbst" (or on the rule's own way,
+    # hamelden.said), with the push or the open page as target; never the text
+    import live
+    rec = own = live.current()
+    if rec is None:
+        rec = own = live.begin("auto", "", uid=uid, auto=True, why=KINDS[kind][0])
+        if rec is not None:
+            rec.step("in", "Von selbst", now)
+    else:
+        own = None
+    with live.within(rec):
+        if item.get("pushed"):
+            try:
+                await push.send(uid, "💬 Spark", text, tag="pro-" + kind, private=private)
+            except Exception as e:
+                print("proactive: push:", type(e).__name__, e, flush=True)
+        else:
+            live.note(uid, "page", now, 1)
+    if own is not None:
+        live.end(own)
     profiles.tool_log_add(uid, f"(von selbst: {KINDS[kind][0]})",
                           [{"name": "von selbst: " + kind, "args": why, "result": data or text}], text)
     print(f"proactive: {kind} said ({'push' if item.get('pushed') else 'page'})", flush=True)

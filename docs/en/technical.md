@@ -55,6 +55,7 @@ Speech recognition and speech output always come first (fixed rule without a swi
 
 - **When "speech is running"**: while an answer of `/api/chat` streams (browser, app, speakers, Telegram, Siri) and while ASR or TTS handle a request from anyone (Open WebUI and Wyoming too). The services report it through `common.SpeechMark`: every `POST /v1/audio/...` request that passed the size limit and API key touches `state/speech-active`. 20 seconds after that still count (follow-up question).
 - **Background work** waits during that time; its running request to the language model is cancelled (vLLM stops it when the connection closes) and repeated in the next pause, at most three times. Only one background request runs at a time. Connected: learning from conversations, memory tidy, agents, proactive notes, daily briefing, mail sorting, quality test, reading documents and meaning search (`wissen.quiet()`), backup (also with low CPU priority).
+- **New hint in `health.alerts`**: add it to `live.hints` too, with its place in the picture and fixed words.
 - **Interface for new background work** (`app/panel/vorrang.py`):
   - `r = await vorrang.post(c, "Name", url, json=..., headers=...)`: one request to the language model (httpx client `c`): waits, runs alone, is cancelled on speech and repeated; gives up with `vorrang.Busy` after three cancellations.
   - `await vorrang.run("Name", lambda: coroutine())`: the same for any other coroutine.
@@ -140,6 +141,9 @@ Since V01.0.312 *Status → Live* (and the monitor `/live`) show everything the 
 - **New tool:** a target in `live.TOOLS` (an existing one or a new one in `live.TARGETS` with zone `spark`, `lan` or `net`) and a word in `live.RETURNS`. `tests/test_live.py` turns red when a tool from `chat.py` or an extra service is missing.
 - **New kind of device:** a word in `live.CLIENT` (the test compares with `tracelog.CLIENTS`).
 - **New channel** (WebSocket, long poll): a line in `live._conns`.
+- **Request without a conversation** (only hearing or only speaking, e.g. Wyoming): `rec = live.begin(client, device)`, then `rec.step("asr"|"tts", …)` and `live.end(rec, ok)`; refused senders with `live.door(...)`.
+- **Something the Spark does by itself** (rule, reminder, task): `live.begin(client, "", uid=…, auto=True, why="fixed word")` and the steps below it inside `with live.within(rec):` (no way back to a device). Notes are reported by `push.send` itself (`live.note`, targets Web Push, Apple Push, Android app, Telegram); a new tag gets a word in `push.WHY`.
+- **Background work** runs through `vorrang.run`/`post`/`in_thread`/`quiet`/`hold` with a fixed name; that reports it to `live.bg` itself (no contents in the name).
 - **New entry check or guard level:** `guard.failed` and `netguard.resolve` already report to `live.refused` and `live.outgoing`; add new words there.
 - Only fixed words and numbers, never contents; names only through `live._who`.
 

@@ -137,7 +137,7 @@ async def ensure():
     want = {}
     for uid in profiles.user_ids():
         try:
-            if live_wanted(uid):
+            if live_wanted(uid) and not notaus.own(uid):   # Mein Notaus: no live connection for this profile
                 item = homeassistant.get(uid)
                 eids = _entities(uid)
                 want[uid] = (item, eids, _fingerprint(item, eids))
@@ -475,16 +475,30 @@ async def said(uid, rule, text, data, item, why=""):
     """A rule (or an event) is true: the note to the profile's devices, with the camera's words when
     asked, and the fixed sentence on speakers when the rule says so."""
     import notaus
-    if notaus.refuse("auto"):         # the Notaus from stage 2: no note, no camera, nothing on speakers
+    if notaus.refuse("auto", uid):    # the Notaus from stage 2 (or the profile's own): no note, no camera, nothing on speakers
         _live(("Ereignis" if rule.get("conds") == [] else "Regel") + " gehalten · Notaus")
         return
     reason = proactive.blocked(uid, "ha")
+    # Zustand → Live: "Home Assistant" on the left, its way through the camera picture to the note and the speakers
+    import live
+    t0 = time.time()
+    rec = live.begin("ha", "", t=t0, uid=uid, auto=True, why="Ereignis" if rule.get("conds") == [] else "Regel")
+    if rec is not None:
+        rec.step("in", "Home Assistant meldet", t0)
     if rule.get("camera") and not reason:
         desc = await describe_camera(uid, item, rule["camera"])
+        if rec is not None:
+            rec.step("llm", "Kamerabild beschreiben", t0, time.time(), ok=bool(desc))
         if desc:
             text, data = f"{text} Kamera: {desc}", f"{data}; Kamera: {desc}"
-    await proactive.deliver(uid, "ha", text, why=why or "Regel: " + proactive.rule_line(rule), data=data)
+    with live.within(rec):
+        await proactive.deliver(uid, "ha", text, why=why or "Regel: " + proactive.rule_line(rule), data=data)
+    t_loud = time.time()
     names = await loud(uid, rule, reason) if rule.get("loud") else []
+    if rec is not None:
+        if names:
+            rec.step("tts", f"Ansage auf {len(names)} Lautsprecher(n)", t_loud, time.time())
+        live.end(rec)
     _live(("Ereignis" if rule.get("conds") == [] else "Regel") + " gemeldet" + (" · gesperrt" if reason else "")
           + (" · mit Kamerabild" if rule.get("camera") and not reason else "")
           + (f" · laut auf {len(names)} Lautsprecher(n)" if names else ""))

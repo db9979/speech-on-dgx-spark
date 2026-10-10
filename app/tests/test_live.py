@@ -160,6 +160,10 @@ class Live(unittest.TestCase):
         names -= {"parameters"}
         self.assertEqual(sorted(n for n in names if n not in live.TOOLS), [],
                          "a new tool: add it to live.TOOLS (and a target to live.TARGETS if it goes somewhere new)")
+        import mcpserver   # tools programs call over MCP show as their own requests
+        self.assertEqual(sorted(n for n in mcpserver.TOOLS if n not in live.TOOLS and n not in mcpserver.SHOW
+                                and n != "ask_spark"), [], "a new MCP tool: add it to live.TOOLS or mcpserver.SHOW")
+        self.assertEqual(sorted(v[1] for v in mcpserver.SHOW.values() if v[0] == "tool" and v[1] not in live.TOOLS), [])
         for n, tgt in live.TOOLS.items():
             self.assertIn(tgt, live.TARGETS, n)
             self.assertIn(tgt, live.RETURNS, n)
@@ -170,6 +174,102 @@ class Live(unittest.TestCase):
         import tracelog as tl
         self.assertEqual(set(live.CLIENT) - {"other"}, set(tl.CLIENTS) - {"other"},
                          "a new kind of device: add a word to live.CLIENT")
+
+    def test_services_state(self):
+        """Hören, Sprechen and the language model carry a dot: running, loading, not answering, off; a change and a
+        watchdog restart are events (point 10 of the list, Dominik 2026-10-10)."""
+        reset()
+        set_logs(live=True)
+        try:
+            live._svc.clear()
+            cfg = {"asr": {"enabled": True}, "tts": {"enabled": True}}
+            live.services({"asr": {"status": "ok", "queue": {"waiting": 2, "running": 1}}, "tts": {"status": "loading"}}, cfg, now=1000)
+            self.assertEqual(live.snapshot(now=1001)["svc"]["asr"], {"st": "ok", "word": "läuft", "ago": 1, "wait": 2, "run": 1})
+            live.services({"asr": None, "tts": {"status": "loading"}}, cfg, now=1003)
+            live.llm_seen(False, "llm_down", now=1004)
+            d = live.snapshot(now=1010)
+            self.assertEqual({k: v["st"] for k, v in d["svc"].items()}, {"asr": "down", "tts": "load", "qwen": "down"})
+            self.assertEqual(d["svc"]["asr"]["word"], "antwortet nicht")
+            live.services({"asr": None, "tts": None}, {"asr": {"enabled": True}, "tts": {"enabled": False}}, now=1011)
+            self.assertEqual(live.snapshot(now=1012)["svc"]["tts"]["st"], "off")
+            live.restarted("ASR", "antwortet seit 300 s nicht", True)
+            texts = [e["text"] for e in live.snapshot(now=1013)["events"] if e["area"] == "Dienste"]
+            self.assertIn("Hören: antwortet nicht", texts)
+            self.assertIn("Sprachmodell: antwortet nicht", texts)
+            self.assertTrue(any(t.startswith("ASR neu gestartet") for t in texts))
+            # Vorrang für Personen (stufe.py): a star at the request
+            import stufe
+            from types import SimpleNamespace
+            rec = live.begin("web", "", t=1012)
+            turn = SimpleNamespace(who={"id": "u1"}, own_browser=True, ccfg={}, tr=rec)
+            real = stufe.level
+            stufe.level = lambda uid, c=None: "vorrang"
+            try:
+                stufe.first(stufe.begin(turn))
+            finally:
+                stufe.level = real
+            self.assertTrue(next(r for r in live.snapshot(now=1013)["reqs"] if r["id"] == rec.id)["prio"])
+            # an hour without news: no dot (nothing known)
+            self.assertEqual(live.snapshot(now=1011 + 3601)["svc"], {})
+        finally:
+            live._svc.clear()
+            set_logs(live=False)
+
+    def test_background_work(self):
+        """Point 8 of the list: background work (vorrang.py) shows under "Läuft gerade", waiting while somebody
+        speaks; its end is an event. Only the job's fixed name, never what it works on."""
+        import asyncio
+        import vorrang
+        reset()
+        set_logs(live=True)
+        real = vorrang.speaking
+        try:
+            talk = [True]
+            vorrang.speaking = lambda now=None: talk[0]
+            seen = []
+
+            async def nap(s):
+                seen.append([(b["job"], b["st"]) for b in live.snapshot()["bg"]])
+                talk[0] = False
+
+            async def work():
+                seen.append([(b["job"], b["st"]) for b in live.snapshot()["bg"]])
+                return 7
+            self.assertEqual(asyncio.run(vorrang.run("Dokument lesen", work, sleep=nap)), 7)
+            self.assertEqual(seen, [[("Dokument lesen", "wait")], [("Dokument lesen", "run")]])
+            self.assertEqual(live.snapshot()["bg"], [])
+            self.assertTrue(any(e["area"] == "Hintergrund" and e["text"].startswith("Dokument lesen fertig")
+                                for e in live.snapshot()["events"]))
+            self.assertEqual(asyncio.run(vorrang.in_thread("Sicherung", lambda: 3)), 3)
+            self.assertEqual(live.snapshot()["bg"], [])
+        finally:
+            vorrang.speaking = real
+            set_logs(live=False)
+
+    def test_warnings_at_their_place(self):
+        """Dominik 2026-10-10: a warning like "Antworten sind langsamer geworden" shows at its connection on the
+        live page, in fixed words with numbers, and once under Ereignisse; never the quality test's question."""
+        from unittest import mock
+        import latency
+        import quality
+        reset()
+        set_logs(live=True)
+        live._hint_cache[:] = [0.0, []]
+        live._hint_seen.clear()
+        slow = {"day": {"n": 12, "median": 5.03, "p90": 7}, "week": {"n": 80, "median": 3.23, "p90": 4}, "warn": "x"}
+        try:
+            with mock.patch.object(latency, "summary", lambda now=None: slow), \
+                    mock.patch.object(quality, "last", lambda: {"t": 1000, "cases": [{"q": "Geheime Testfrage", "new": True}]}):
+                d = live.snapshot(now=1000)
+                live.snapshot(now=1010)
+            self.assertIn({"at": "tts", "level": "warn", "word": "erster Ton 5,03 s statt 3,23 s"}, d["hints"])
+            self.assertIn({"at": "llm", "level": "warn", "word": "Qualitätstest: 1 neu kaputt"}, d["hints"])
+            self.assertNotIn("Geheime", json.dumps(d))
+            ev = [e["text"] for e in live.snapshot(now=1020)["events"] if e["area"] == "Hinweis"]
+            self.assertEqual(sorted(ev), sorted(["erster Ton 5,03 s statt 3,23 s", "Qualitätstest: 1 neu kaputt"]))
+        finally:
+            live._hint_cache[:] = [0.0, []]
+            set_logs(live=False)
 
     def test_waechter_decisions_with_reasons(self):
         with self.assertRaises(Exception):

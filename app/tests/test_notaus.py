@@ -58,21 +58,23 @@ def set_panel(**kw):
 
 
 def off():
-    try:
-        os.remove(notaus.FILE)
-    except FileNotFoundError:
-        pass
+    for f in (notaus.FILE, notaus.MINE_FILE):
+        try:
+            os.remove(f)
+        except FileNotFoundError:
+            pass
     notaus._cache.update(key=None, state=None)
+    notaus._mine_cache.update(key=None, d=None)
 
 
 class Base(unittest.TestCase):
     def setUp(self):
         off()
-        set_panel(notaus_profiles=False, trusted_proxies=[])
+        set_panel(trusted_proxies=[])
 
     def tearDown(self):
         off()
-        set_panel(notaus_profiles=False, trusted_proxies=[])
+        set_panel(trusted_proxies=[])
 
 
 class State(Base):
@@ -181,7 +183,7 @@ class Api(Base):
         out.cookies = admin().cookies
         self.assertEqual(out.post("/api/admin/notaus/off", json={"to": 0, "password": "secret-admin"}).status_code, 503)
         self.assertEqual(out.get("/api/notaus").json()["outside"], True)
-        p, _ = profile("Nora")
+        p, _ = profile("NxNora")
         self.assertEqual(p.post("/api/admin/notaus/off", json={"to": 0}).status_code, 403)
         # HTTP Basic (scripts) never lifts it
         basic = client()
@@ -189,19 +191,20 @@ class Api(Base):
                                     auth=("admin", "secret-admin")).status_code, 403)
         self.assertEqual(notaus.level(), 2)
 
-    def test_profiles_only_when_the_admin_allows_it(self):
-        p, uid = profile("Paula")
+    def test_only_admins_see_and_trigger_it(self):
+        p, uid = profile("NxPaula")
         self.assertEqual(p.get("/api/whoami").json()["notaus_may"], False)
         self.assertEqual(p.post("/api/notaus", json={"level": 2}).status_code, 403)
         self.assertEqual(client().post("/api/notaus", json={"level": 2}).status_code, 401)   # guests never
-        set_panel(notaus_profiles=True)
-        self.assertEqual(p.get("/api/whoami").json()["notaus_may"], True)
-        r = p.post("/api/notaus", json={"level": 1})
-        self.assertEqual((r.status_code, r.json()["level"], r.json()["lift"]), (200, 1, ""))
-        self.assertEqual(p.post("/api/notaus", json={"level": "3"}).status_code, 400)
-        # from outside it can still go up (the phone on the way), never down
+        set_panel(notaus_profiles=True)                                                     # the old switch counts no more
+        self.assertEqual(p.post("/api/notaus", json={"level": 1}).status_code, 403)
+        notaus.trigger(1, "Anna", "u_x", "panel", "geheim")
+        self.assertEqual(set(p.get("/api/notaus").json()), {"level", "outside", "mine"})    # not who, why or how
+        a = admin()
+        self.assertEqual(a.post("/api/notaus", json={"level": "3"}).status_code, 400)
+        # from outside an admin can still go up (the phone on the way), never down
         out = client(OUTSIDE)
-        out.cookies = p.cookies
+        out.cookies = a.cookies
         self.assertEqual(out.post("/api/notaus", json={"level": 2}).json()["level"], 2)
         self.assertEqual(out.post("/api/admin/notaus/off", json={"to": 0}).status_code, 503)
 
@@ -279,7 +282,7 @@ class Holds(Base):
             hamelden._streams.clear()
 
     def test_the_model_is_not_offered_the_smart_home(self):
-        a, _ = profile("Hanna")
+        a, _ = profile("NxHanna")
         url = f"http://127.0.0.1:{helpers.HA_PORT}"
         self.assertEqual(a.put("/api/profile/homeassistant", json={"url": url, "token": helpers.HA_TOKEN}).status_code, 200)
         try:
@@ -294,6 +297,103 @@ class Holds(Base):
             notaus.trigger(3, "x", "", "panel")
             r = a.post("/api/chat", json={"messages": [{"role": "user", "content": "Hallo"}]})
             self.assertEqual(r.status_code, 503)
+        finally:
+            off()
+            a.delete("/api/profile/homeassistant")
+
+
+
+class Mine(Base):
+    """Mein Notaus (3b): one profile stops its own part; reading goes on, everything else of it waits."""
+
+    def test_on_closes_the_profiles_ways_in_but_this_browser(self):
+        p, uid = profile("NxMira")
+        other = client()
+        self.assertEqual(other.post("/api/profile/login", json={"name": "NxMira", "pin": "1234"}).status_code, 200)
+        key = profiles.add_device("Mira Lautsprecher", uid)
+        dev = client()
+        dev.headers[profiles.DEVICE_HEADER] = key
+        self.assertEqual(dev.get("/api/whoami").status_code, 200)
+        r = p.post("/api/notaus/mine", json={})
+        self.assertEqual((r.status_code, r.json()["mine"]["on"], r.json()["level"]), (200, True, 0))
+        self.assertEqual(p.post("/api/notaus/mine", json={}).status_code, 409)
+        self.assertTrue(notaus.own(uid))
+        self.assertEqual(p.get("/api/whoami").json()["profile"]["id"], uid)      # this browser stays
+        self.assertFalse((other.get("/api/whoami").json().get("profile") or {}).get("id"))   # the other login ended
+        self.assertEqual(dev.get("/api/whoami").status_code, 503)                # the device key is closed
+        self.assertEqual(dev.get("/api/notaus").status_code, 200)              # the status stays readable
+        req = request("192.168.178.20")
+        req.scope["speech_mcp"] = {"uid": uid}
+        self.assertIsNone(profiles.current(req))                                 # MCP
+        req = request("192.168.178.20")
+        req.scope["speech_profile"] = uid
+        self.assertIsNone(profiles.current(req))                                 # Telegram
+        # the whole Spark goes on: no stage, the internet stays open, other profiles act
+        self.assertEqual(notaus.level(), 0)
+        self.assertFalse(notaus.blocks("internet", uid))
+        with self.assertRaises(notaus.NotausAktiv):
+            notaus.stop("aktion", uid)
+        notaus.stop("aktion", "u_jemand")
+        notaus.acting(uid)
+        try:
+            with self.assertRaises(notaus.NotausAktiv):
+                notaus.stop("aktion")                                            # the acting profile, without a uid
+        finally:
+            notaus.acting("")
+        # Zustand → Live: how many, never who
+        lv = notaus.for_live()["mine"]
+        self.assertEqual(lv["n"], 1)
+        self.assertNotIn("NxMira", json.dumps(notaus.for_live(), ensure_ascii=False))
+        # the admin sees which profile, and may lift it
+        a = admin()
+        self.assertEqual([x["name"] for x in a.get("/api/notaus").json()["mine_list"]], ["NxMira"])
+
+    def test_lifting_by_the_profile_with_its_pin_or_by_an_admin(self):
+        p, uid = profile("NxNele", pin="4321")
+        self.assertEqual(p.post("/api/notaus/mine/off", json={"pin": "4321"}).status_code, 409)   # not on
+        p.post("/api/notaus/mine", json={})
+        key = profiles.add_device("Nele App", uid, scope="app")
+        app = client()
+        app.headers[profiles.DEVICE_HEADER] = key
+        self.assertIn(app.post("/api/notaus/mine/off", json={"pin": "4321"}).status_code, (403, 503))   # never from the app
+        self.assertEqual(p.post("/api/notaus/mine/off", json={"pin": "0000"}).status_code, 401)
+        self.assertEqual(p.post("/api/notaus/mine/off", json={"pin": 4321}).status_code, 401)
+        self.assertTrue(notaus.own(uid))
+        r = p.post("/api/notaus/mine/off", json={"pin": "4321"})
+        self.assertEqual((r.status_code, r.json()["mine"]["on"]), (200, False))
+        self.assertFalse(notaus.own(uid))
+        # an admin, in the browser at home, with the password (no second step here)
+        p.post("/api/notaus/mine", json={})
+        self.assertEqual(p.post("/api/admin/notaus/mine/off", json={"uid": uid}).status_code, 403)   # not an admin
+        a = admin()
+        self.assertEqual(a.post("/api/admin/notaus/mine/off", json={"uid": uid, "password": "falsch"}).status_code, 401)
+        self.assertEqual(a.post("/api/admin/notaus/mine/off", json={"uid": uid, "password": "secret-admin"}).status_code, 200)
+        self.assertFalse(notaus.own(uid))
+
+    def test_a_damaged_file_holds_everyone_and_only_an_admin_clears_it(self):
+        p, uid = profile("NxOda", pin="5555")
+        os.makedirs(os.path.dirname(notaus.MINE_FILE), exist_ok=True)
+        with open(notaus.MINE_FILE, "w") as f:
+            f.write("{kaputt")
+        self.assertTrue(notaus.own(uid) and notaus.own("u_jemand"))
+        self.assertEqual(p.post("/api/notaus/mine/off", json={"pin": "5555"}).status_code, 409)
+        a = admin()
+        self.assertEqual(a.post("/api/admin/notaus/mine/off", json={"uid": "", "password": "secret-admin"}).status_code, 200)
+        self.assertFalse(notaus.own(uid))
+
+    def test_the_model_reads_but_does_not_act(self):
+        a, uid = profile("NxInes")
+        url = f"http://127.0.0.1:{helpers.HA_PORT}"
+        self.assertEqual(a.put("/api/profile/homeassistant", json={"url": url, "token": helpers.HA_TOKEN}).status_code, 200)
+        try:
+            def said(cmd):
+                r = a.post("/api/chat", json={"messages": [{"role": "user", "content": cmd}]})
+                return "".join(e.get("delta", "") for e in helpers.events(r) if e["type"] == "text")
+            a.post("/api/notaus/mine", json={})
+            self.assertIn("NO TOOL home_assistant", said('TOOL home_assistant {"command": "Licht in der Küche an"}'))
+            self.assertNotIn("NO TOOL home_assistant_states", said('TOOL home_assistant_states {}'))   # reading stays
+            b, _ = profile("NxJule")                                                                     # others act
+            self.assertEqual(b.get("/api/notaus").json()["mine"]["on"], False)
         finally:
             off()
             a.delete("/api/profile/homeassistant")

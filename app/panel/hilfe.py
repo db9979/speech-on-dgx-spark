@@ -1,6 +1,6 @@
 """Spark-Hilfe (plan plaene/panel-hilfe.md, V01.0.326): the assistant answers questions about the Spark itself
 ("Wie bekomme ich schnellere Antworten?", "Was macht dieser Schalter?", "Was sollte ich hier noch einstellen?")
-and suggests settings, and "Frag Spark" asks it from any page of the panel.
+and suggests settings, and "Frag Spark" (the face at the bottom right) knows the page it is asked from.
 
 Knowledge: only texts that ship with the panel: the guides (static/js/guides.js), the switches and settings with
 their sentences (index.html, the Ich settings in me.js), the function register (features.py) and the paragraphs of

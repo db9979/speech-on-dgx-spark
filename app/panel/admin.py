@@ -546,6 +546,7 @@ def validate(new):
         ports += [t["engine_port"], t["voicedesign_port"]]
     if not isinstance(new["panel"].get("allow_lan", False), bool):
         raise HTTPException(400, "allow_lan must be true or false")
+    # unused since V01.0.338 (the Notaus is for admins only); kept so saved settings stay valid
     if not isinstance(new["panel"].get("notaus_profiles", False), bool):
         raise HTTPException(400, "notaus_profiles must be true or false")
     sd = new["panel"].get("session_days", 30)

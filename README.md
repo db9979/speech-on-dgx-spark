@@ -33,16 +33,16 @@ All options for running without questions (`--mode api --asr 1.7b --tts 0.6b --y
 
 <!-- New version: add one line at the top here and in CHANGELOG.md, drop the oldest line here (keep 10). Details go to docs/de and docs/en, not into this README. -->
 
+- **V01.0.338** Kill switch for admins only; plus "my kill switch" for every profile (Me → Security): stops only that profile, ways in closed and no actions, reading stays; lifted with the PIN
+- **V01.0.337** Live overview: the Spark's warnings (slower answers, quality test, memory …) show at their place in the picture
+- **V01.0.336** Live overview: queues at hearing and speaking, a star for priority requests, background work under "Running now"
+- **V01.0.335** Ask Spark now lives in the face at the bottom right (no button of its own): it knows the page, also over Me, and takes spoken or typed questions; Me shows admin switches turned on meanwhile without reloading
+- **V01.0.334** Live overview: Home Assistant Assist over Wyoming shows as device "Home Assistant" (hearing, speaking), refused Wyoming senders under Entrance, every MCP tool call of a program, Home Assistant rules and everything the Spark says by itself with its note target (Web Push, Telegram, Android), a state dot on hearing, speaking and the language model
 - **V01.0.333** Android app: signing key with one command on the Spark (tools/android-schluessel.sh, only openssl), it shows the two values for the GitHub secrets; Features → Android app says what to do while there is no app yet
 - **V01.0.332** Writing help (off): correct, smooth, shorten, translate mails and other texts or draft a reply, with the changes marked in colour
 - **V01.0.331** Assistant: no more sideways scroll bar under the face
 - **V01.0.330** TestFlight: each run revokes the signing certificates it made, so Apple's certificate limit no longer stops uploads
 - **V01.0.329** Live overview: the way back from speaking to the device shows
-- **V01.0.328** Invitation self-test: pack the test server's daily backup before the browser test (it slowed the server down on GitHub while the page reloaded), wait for the new page to start instead of "load"
-- **V01.0.327** Assistant on computers uses the whole window: face and history reach the bottom, only the history scrolls
-- **V01.0.326** Help with the Spark (off): the assistant answers questions about settings from its own guides, suggests switches as a card (only "Apply" changes something) and "Ask Spark" is on every page
-- **V01.0.325** Live overview: kill switch in the picture, cut-off targets red with a lock
-- **V01.0.324** Self-test invitation: waits up to 45 s for the reload, taps a second time if the first tap sent no /api/join, and writes a trace to the log (red on GitHub again)
 
 All versions: [CHANGELOG.md](CHANGELOG.md)
 

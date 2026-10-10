@@ -169,6 +169,48 @@ class OffAndKeys(Base):
                                                                           "Content-Type": "application/json"}).status_code, 400)
 
 
+def _live(on):
+    import os
+    with open(os.environ["SPEECH_SPARK_CONFIG"]) as f:
+        c = json.load(f)
+    c.setdefault("logs", {})["live"] = on
+    with open(os.environ["SPEECH_SPARK_CONFIG"], "w") as f:
+        json.dump(c, f)
+
+
+class OnTheLivePage(Base):
+    def test_programs_show_with_their_tools(self):
+        """Zustand → Live (Dominik 2026-10-10: everything that can be shown): each tool call of a program is a request
+        of "MCP-Client" (its name only with the profile's consent) with the tool and its target, a proposal shows
+        as the push that asks, a confirmed action as its own request; never what was asked or answered."""
+        import live
+        helpers.set_config(mcp_server_act=True)
+        _live(True)
+        try:
+            c, uid = profile("McpLiva")
+            c.put("/api/profile/settings", json={"mcps_on": True})
+            token = self.key(c, ["voices", "speak", "today", "reminder_set"], name="Claude Desktop")
+            with live._lock:
+                live._run.clear()
+            call(self.lan, token, "speak", {"text": "Geheimer Satz"})
+            call(self.lan, token, "today")
+            call(self.lan, token, "reminder_set", {"text": "Ofen aus", "minutes": 30})
+            aid = c.get("/api/profile/mcp").json()["actions"][0]["id"]
+            self.assertEqual(c.post(f"/api/profile/mcp/actions/{aid}", json={"yes": True}).json()["state"], "done")
+            d = live.snapshot()
+            mcp = [r for r in d["reqs"] if r["client"] == "mcp"]
+            self.assertEqual(sorted(tuple((s["k"], s["n"], s["to"]) for s in r["steps"][1:]) for r in mcp),
+                             sorted([(("tts", "Sprachausgabe", ""),), (("tool", "today", "cal"),),
+                                     (("tool", "Vorschlag", "mem"),), (("tool", "reminder_set", "mem"),)]))
+            self.assertTrue(all(r["done"] and r["dev"] == "MCP-Client" for r in mcp))
+            self.assertNotIn("Geheimer", json.dumps(d))
+            self.assertNotIn("Ofen", json.dumps(d))
+            c.put("/api/profile/settings", json={"trace_name": True})
+            self.assertEqual({r["dev"] for r in live.snapshot()["reqs"] if r["client"] == "mcp"}, {"Claude Desktop"})
+        finally:
+            _live(False)
+
+
 class Never(unittest.TestCase):
     def test_never_offered(self):
         self.assertEqual(set(mcpserver.TOOLS) & mcpserver.NEVER, set())

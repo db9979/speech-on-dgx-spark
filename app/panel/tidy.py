@@ -1352,7 +1352,7 @@ def describe(plan, d=None):
 
 def carry_out(uid, plan):
     """Does a confirmed proposal; returns a sentence saying what happened (checked)."""
-    notaus.stop("aktion")   # the Notaus holds every action off (notaus.py)
+    notaus.stop("aktion", uid)   # the Notaus holds every action off (notaus.py)
     if plan["kind"] == "sort":
         n = 0
         for aid, uids in plan["moves"].items():

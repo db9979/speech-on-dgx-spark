@@ -15,6 +15,7 @@
 .lv .flow.full{position:fixed;inset:0;z-index:60;margin:0;border-radius:0;display:flex;flex-direction:column;padding:14px 18px}.lv .flow.full #lvflow{flex:1;min-height:0}.lv .flow.full svg{height:100%}
 .lv .node rect{fill:var(--card);stroke:var(--line);stroke-width:1.2}
 .lv .node.held rect{fill:color-mix(in srgb,var(--bad) 7%,var(--card))}.lv .node.held .a{opacity:.7}.lv .node.held .b{fill:var(--bad)}
+.lv .node.warned rect{fill:color-mix(in srgb,var(--warn) 8%,var(--card))}.lv .node.warned .b{fill:var(--warn);font-weight:600}
 .lv .node.act rect{stroke:var(--acc);stroke-width:1.8}
 .lv .node .a{font-size:13px;font-weight:600;fill:var(--fg)}.lv .node .b{font-size:10.5px;fill:var(--mut)}
 .lv .node .badge{fill:var(--acc)}.lv .node .bt{fill:#fff;font-size:10px;font-weight:700}
@@ -44,10 +45,12 @@
 .lv .gantt i{position:absolute;top:0;bottom:0;border-right:1px solid var(--card)}.lv .gantt i span{position:absolute;left:4px;top:3px;font-size:10px;color:#fff;font-weight:600;white-space:nowrap}
 .lv .pill.net{background:color-mix(in srgb,var(--c4) 18%,transparent);color:var(--c4)}.lv .pill.lan{background:color-mix(in srgb,var(--c5) 15%,transparent);color:var(--c5)}
 .lv .pill.loc{background:color-mix(in srgb,var(--mut) 18%,transparent);color:var(--mut)}
+.lv .pill.warn{background:color-mix(in srgb,var(--warn) 18%,transparent);color:var(--warn)}.lv .pill.bad{background:color-mix(in srgb,var(--bad) 15%,transparent);color:var(--bad)}
 .lv .grid2{display:grid;grid-template-columns:1.35fr 1fr;gap:14px}.lv .split{display:grid;gap:14px;align-content:start}
 .lv .rq{display:grid;grid-template-columns:12px 64px 1fr auto;gap:4px 10px;align-items:center;padding:9px 6px;border-top:1px solid var(--line);cursor:pointer;border-radius:8px}
 .lv .rq.sel{background:color-mix(in srgb,var(--acc) 9%,transparent)}.lv .rq .c{width:10px;height:10px;border-radius:50%}
 .lv .rq .t{font-variant-numeric:tabular-nums;font-weight:600}
+.lv .rq.bg{grid-template-columns:12px 1fr auto;cursor:default}.lv .bgh{font-size:11.5px;text-transform:uppercase;letter-spacing:.06em;margin:10px 6px 2px}
 .lv .beads{grid-column:2/5;display:flex;align-items:center;font-size:10.5px;color:var(--mut)}
 .lv .beads b{width:9px;height:9px;border-radius:50%;background:var(--line);display:inline-block;flex:none}.lv .beads b.d{background:var(--mut)}
 .lv .beads b.n{background:var(--acc);box-shadow:0 0 0 4px color-mix(in srgb,var(--acc) 25%,transparent)}
@@ -85,3 +88,4 @@ body.kiosk{height:100vh;overflow:hidden;background:var(--bg)}
 .lvna .lvnah{display:flex;flex-wrap:wrap;gap:4px 12px;align-items:baseline}.lvna .lvnah b{color:var(--bad);letter-spacing:.04em}
 .lvna .lvnak{display:flex;flex-wrap:wrap;gap:6px;margin-top:8px}.lvna .lvnak span{font-size:12px;border-radius:999px;padding:2px 9px;border:1px solid var(--line,#8884);min-width:0;overflow-wrap:anywhere}
 .lvna .lvnak .held{border-color:var(--bad);color:var(--bad)}.lvna .lvnak .run{opacity:.65}
+.lvna .lvnam{font-size:13px;margin-top:6px}
