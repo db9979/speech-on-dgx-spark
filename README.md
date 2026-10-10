@@ -31,6 +31,7 @@ All options for running without questions (`--mode api --asr 1.7b --tts 0.6b --y
 
 <!-- New version: add one line at the top here and in CHANGELOG.md, drop the oldest line here (keep 10). Details go to docs/de and docs/en, not into this README. -->
 
+- **V01.0.293** My status no longer jumps to the top: the 10-second refresh replaces only the card (scroll position and open histories stay) instead of rebuilding the whole page
 - **V01.0.292** Language model: a choice list of the models the configured server reports (Settings → Language model → Model, "Automatic" = the first, "Type another …" for free text, "Reload"); admin only, request only to the configured address, 5 s, 256 KB, 60 s cache
 - **V01.0.291** reMarkable "Put into" (Me → reMarkable): choose an own folder for new documents, default "Spark"; the Spark only adds new documents, and if the folder is gone later it takes "Spark" again and says so
 - **V01.0.290** reMarkable sending: errors now say which file the cloud refused and what it answered (no token, also in the journal "remarkable: sending failed"), any 2xx answer counts, and a root line the Spark does not understand stops the write before anything could vanish
@@ -40,7 +41,6 @@ All options for running without questions (`--mode api --asr 1.7b --tts 0.6b --y
 - **V01.0.286** UI stages 4, 5 and 7: Me → Today with "Try saying", answers explain switched-off functions, status as cards, strict CSP without inline code, undo in the admin log, encrypted offsite backup (WebDAV, off), package versions with hashes, iPhone "Today"
 - **V01.0.285** Spark verwalten: the header button (and "Admin-Anmeldung" in the phone menu) only for profiles with an admin role, not for guests and ordinary profiles; panel-password login via the address with #admin at the end
 - **V01.0.284** Priority for people, part 2: while an answer with priority has no first sentence yet, others' new requests to the language model wait at most 2 s (0–5 adjustable, running ones never stopped); the browser and the iPhone app report the start of a recording, background work then stops at once; Logs → Requests shows the wait
-- **V01.0.283** New people: accepted invitations disappear 7 days after acceptance or at once with the deleted profile (its PIN links too); leftovers of profiles already deleted are removed when the list opens
 
 All versions: [CHANGELOG.md](CHANGELOG.md)
 

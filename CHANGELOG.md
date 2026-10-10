@@ -2,6 +2,7 @@
 
 Every version in one line, newest first (taken from the commit messages, so some lines are German, some English). Older entries have no version number.
 
+- **V01.0.293** · 2026-10-10 · Mein Zustand springt nicht mehr nach oben: die 10-Sekunden-Aktualisierung ersetzt nur noch die Karte (Scrollposition und offene Verläufe bleiben), statt die ganze Seite neu zu bauen
 - **V01.0.292** · 2026-10-10 · Sprachmodell: Auswahlliste der Modelle, die der eingestellte Server meldet (Einstellungen → Sprachmodell → Modell, „Automatisch“ = das erste, „Anderes eingeben …“ für freie Eingabe, „Neu laden“); nur Admin, Anfrage nur an die eingestellte Adresse, 5 s, 256 KB, 60 s Cache
 - **V01.0.291** · 2026-10-10 · reMarkable „Ablegen in“ (Ich → reMarkable): eigener Zielordner für neue Dokumente wählbar, Standard „Spark“; der Spark legt nur neue Dokumente an, fehlt der Ordner später, nimmt er wieder „Spark“ und sagt es
 - **V01.0.290** · 2026-10-10 · reMarkable senden: Fehler sagen jetzt, welche Datei die Cloud abgelehnt hat und was sie antwortet (ohne Token, auch im Journal „remarkable: sending failed“), jede 2xx-Antwort zählt, und eine nicht verstandene Zeile im Wurzelverzeichnis stoppt das Schreiben, bevor etwas verschwinden könnte

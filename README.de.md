@@ -31,6 +31,7 @@ Alle Optionen ohne Rückfragen (`--mode api --asr 1.7b --tts 0.6b --yes` …) st
 
 <!-- New version: add one line at the top here and in CHANGELOG.md, drop the oldest line here (keep 10). Details go to docs/de and docs/en, not into this README. -->
 
+- **V01.0.293** Mein Zustand springt nicht mehr nach oben: die 10-Sekunden-Aktualisierung ersetzt nur noch die Karte (Scrollposition und offene Verläufe bleiben), statt die ganze Seite neu zu bauen
 - **V01.0.292** Sprachmodell: Auswahlliste der Modelle, die der eingestellte Server meldet (Einstellungen → Sprachmodell → Modell, „Automatisch“ = das erste, „Anderes eingeben …“ für freie Eingabe, „Neu laden“); nur Admin, Anfrage nur an die eingestellte Adresse, 5 s, 256 KB, 60 s Cache
 - **V01.0.291** reMarkable „Ablegen in“ (Ich → reMarkable): eigener Zielordner für neue Dokumente wählbar, Standard „Spark“; der Spark legt nur neue Dokumente an, fehlt der Ordner später, nimmt er wieder „Spark“ und sagt es
 - **V01.0.290** reMarkable senden: Fehler sagen jetzt, welche Datei die Cloud abgelehnt hat und was sie antwortet (ohne Token, auch im Journal „remarkable: sending failed“), jede 2xx-Antwort zählt, und eine nicht verstandene Zeile im Wurzelverzeichnis stoppt das Schreiben, bevor etwas verschwinden könnte
@@ -40,7 +41,6 @@ Alle Optionen ohne Rückfragen (`--mode api --asr 1.7b --tts 0.6b --yes` …) st
 - **V01.0.286** Bedienung Stufen 4, 5 und 7: Ich → Heute mit „Probier mal“, Antwort erklärt abgeschaltete Funktionen, Zustand als Karten, strenge CSP ohne Inline-Code, Rückgängig im Admin-Protokoll, verschlüsselte Sicherung nach außen (WebDAV, aus), Paketversionen mit Hashes, iPhone „Heute“
 - **V01.0.285** Spark verwalten: der Knopf oben (und „Admin-Anmeldung“ im Handy-Menü) nur noch für Profile mit Admin-Rolle, nicht für Gäste und normale Profile; Anmeldung mit dem Panel-Passwort über die Adresse mit #admin am Ende
 - **V01.0.284** Vorrang für Personen, Teil 2: Solange eine Antwort mit Vorrang ihren ersten Satz nicht hat, warten neue Anfragen anderer ans Sprachmodell höchstens 2 s (einstellbar 0–5, laufende nie abgebrochen); Browser und iPhone-App melden den Aufnahmebeginn, dann stoppt Hintergrundarbeit sofort; Logs → Anfragen zeigt die Wartezeit
-- **V01.0.283** Neue Personen: angenommene Einladungen verschwinden 7 Tage nach der Annahme oder sofort mit dem gelöschten Profil (auch seine PIN-Links); Reste schon gelöschter Profile räumt die Liste beim Öffnen weg
 
 Alle Versionen: [CHANGELOG.md](CHANGELOG.md)
 

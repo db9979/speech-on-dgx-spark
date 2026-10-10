@@ -27,23 +27,30 @@ async function bgCard(el,d){if(!el)return;
   const head=need.length?[need.length===1?t(`${bgW(need[0].name)} braucht dich`,`${bgW(need[0].name)} needs you`):t(`${need.length} Dinge brauchen dich`,`${need.length} things need you`),'bad']
     :s.run?[t('Der Spark arbeitet für dich.','The Spark is working for you.'),'run']:rows.length?[t('Alles in Ordnung.','All fine.'),'ok']:[t('Für dich läuft nichts im Hintergrund.','Nothing runs in the background for you.'),'idle'];
   const when=d.now?bgWhen(d.now):'';
-  el.innerHTML=`<div class="bgsum"><span class="bgdot ${head[1]}"></span><div><b>${esc(head[0])}</b><span>${esc(bgLine(s))}${when?' · '+esc(t('Stand ','as of ')+when):''}</span></div></div>`+
+  const html=`<div class="bgsum"><span class="bgdot ${head[1]}"></span><div><b>${esc(head[0])}</b><span>${esc(bgLine(s))}${when?' · '+esc(t('Stand ','as of ')+when):''}</span></div></div>`+
     (jobs.length?`<h3 class="sec">${esc(t('Im Hintergrund','In the background'))}</h3><div>${jobs.map(bgRow).join('')}</div>`:'')+
     (svc.length?`<h3 class="sec">${esc(t('Verbunden','Connected'))}</h3><div>${svc.map(bgRow).join('')}</div>`:'')+
     `<div class="fh">${esc(t('Nur was bei dir an und verbunden ist. Inhalte von Mails und Dokumenten stehen hier nie; der Stand eines Dienstes ist die letzte echte Abfrage.','Only what is on and connected for you. Contents of mails and documents never appear here; a service shows the outcome of its last real request.'))}</div>`;
+  // a refresh that changed nothing leaves the card alone; one that did keeps where the page was scrolled to
+  bgDotSet(s);if(el.dataset.bghtml===html)return;
+  let sc=el.parentElement;while(sc&&sc.scrollHeight<=sc.clientHeight)sc=sc.parentElement;const top=sc?sc.scrollTop:0,wy=window.scrollY;
+  el.style.minHeight=el.offsetHeight+'px';el.innerHTML=html;el.dataset.bghtml=html;el.style.minHeight='';
+  if(sc)sc.scrollTop=top;if(window.scrollY!==wy)window.scrollTo(0,wy);
   el.querySelectorAll('[data-bggo]').forEach(b=>b.onclick=()=>{meLast=b.dataset.bggo;ptab(b.dataset.bggo)});
   el.querySelectorAll('[data-bghist]').forEach(b=>b.onclick=()=>{const k=b.dataset.bghist;BGOPEN.has(k)?BGOPEN.delete(k):BGOPEN.add(k);bgCard(el,d)});
   el.querySelectorAll('[data-bgact]').forEach(b=>b.onclick=async()=>{b.disabled=true;
-    try{await api(BGACT[b.dataset.bgact][0],{method:'POST',headers:{'Content-Type':'application/json'},body:'{}'})}catch(e){alert(e.message)}setTimeout(()=>bgCard(el),800)});
-  bgDotSet(s)}
+    try{await api(BGACT[b.dataset.bgact][0],{method:'POST',headers:{'Content-Type':'application/json'},body:'{}'})}catch(e){alert(e.message)}setTimeout(()=>bgCard(el),800)})}
 async function showBg(){const box=$('bgbox');if(!box)return;clearTimeout(bgTimer);if(!PROFILE||!MYST_ON){box.innerHTML='';return}
   box.innerHTML=`<div class="intro">${esc(t('Was der Spark gerade für dich erledigt, worauf es wartet und ob deine verbundenen Dienste antworten. Nur deine eigenen Sachen, nur Namen und Zahlen.','What the Spark is doing for you right now, what it waits for and whether your connected services answer. Only your own things, only names and numbers.'))}</div>
     ${xsw('my_status',t('Mein Zustand anzeigen','Show my status'),t('Aus: Die Seite bleibt leer und der Punkt bei „Ich“ kommt nicht.','Off: the page stays empty and the dot at "Me" does not come.'))}<div id="bgcard"></div>`;
   xbind(box,showBg);
   if(!S.my_status){bgDotSet(null);return}
-  await bgCard($('bgcard'));
-  // while the page is open it follows the work every 10 seconds
-  bgTimer=setTimeout(()=>{if(box.classList.contains('on')&&!document.hidden&&$('profmodal')&&$('profmodal').style.display!=='none')showBg()},10e3)}
+  await bgCard($('bgcard'));bgFollow()}
+// while the page is open it follows the work every 10 seconds; only the card is redrawn (V01.0.293: the whole
+// page was rebuilt before, which threw the page back to the top)
+function bgFollow(){clearTimeout(bgTimer);bgTimer=setTimeout(async()=>{const box=$('bgbox'),card=$('bgcard');
+  if(!box||!card||!box.classList.contains('on')||!$('profmodal')||$('profmodal').style.display==='none')return;
+  if(!document.hidden&&S.my_status)await bgCard(card);bgFollow()},10e3)}
 function bgDotSet(s){document.querySelectorAll('.medot').forEach(e=>e.hidden=!(s&&s.need))}
 async function bgDot(){if(!PROFILE||!MYST_ON||!S.my_status||document.hidden){if(!MYST_ON||!S.my_status)bgDotSet(null);return}
   try{const r=await fetch('/api/profile/hintergrund?brief=1',{cache:'no-store'});if(r.ok)bgDotSet((await r.json()).sum)}catch{}}
