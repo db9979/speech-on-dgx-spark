@@ -57,6 +57,14 @@ class Browser(unittest.TestCase):
     def run_async(self, coro):
         return asyncio.run(coro)
 
+    async def until(self, pg, expr, seconds=10):
+        """wait_for_function evaluates a string, which the strict CSP forbids (pages with csp=True): poll instead."""
+        for _ in range(int(seconds * 10)):
+            if await pg.evaluate(expr):
+                return
+            await pg.wait_for_timeout(100)
+        self.fail(f"never true: {expr}")
+
     async def page(self, p, width, height, mic=False, csp=False):
         exe = chromium()
         args = ["--use-fake-ui-for-media-stream", "--use-fake-device-for-media-stream",
@@ -1199,7 +1207,7 @@ class Browser(unittest.TestCase):
                 await pg.click("#aptabs [data-tab=spark]")
                 await pg.click("#apbar [data-ap=hist]")
                 self.assertTrue(await pg.evaluate("!$('apsheet').hidden&&$('apsheet').querySelectorAll('[data-cid]').length>=1"))
-                await pg.wait_for_function("history.state&&history.state.ap===1")   # the step is in the history (after the tap's render)
+                await self.until(pg, "history.state&&history.state.ap===1")   # the step is in the history (after the tap's render)
                 await pg.evaluate("history.back()")
                 await pg.wait_for_timeout(500)
                 self.assertTrue(await pg.evaluate("$('apsheet').hidden"))
@@ -1208,7 +1216,7 @@ class Browser(unittest.TestCase):
                 await pg.wait_for_selector("#profmodal", state="visible")
                 await pg.click("#ptabs button[data-t=setbox]")
                 self.assertTrue(await pg.evaluate("$('profmodal').classList.contains('sub')&&$('meback').offsetParent!==null"))
-                await pg.wait_for_function("history.state&&history.state.ap>=1")
+                await self.until(pg, "history.state&&history.state.ap>=1")
                 await pg.evaluate("history.back()")
                 await pg.wait_for_timeout(500)
                 self.assertFalse(await pg.evaluate("$('profmodal').classList.contains('sub')"))
