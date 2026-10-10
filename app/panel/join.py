@@ -48,7 +48,8 @@ MODES = ("off", "invite")
 MFA_MODES = ("off", "data")
 DAYS = (1, 7, 30)
 MAX_OPEN = 50
-KEEP_DAYS = 30            # used and expired invitations stay visible this long
+KEEP_DAYS = 30            # expired invitations stay visible this long
+KEEP_USED_DAYS = 7        # used ones this long after use; with the profile deleted they go at once (forget)
 MAX_PACKS, MAX_PACK_KEYS = 10, 40
 MAX_BODY = 4096
 PIN_MIN = profiles.STRONG_PIN
@@ -92,8 +93,21 @@ def _write(d):
 
 def _prune(d, now):
     for k in [k for k, v in d["invites"].items()
-              if (v.get("used") or v.get("until", 0) < now) and max(v.get("used") or 0, v.get("until", 0)) < now - KEEP_DAYS * 86400]:
+              if (v.get("used") and v["used"] < now - KEEP_USED_DAYS * 86400)
+              or (not v.get("used") and v.get("until", 0) < now - KEEP_DAYS * 86400)]:
         d["invites"].pop(k)
+
+
+def forget(uid):
+    """A deleted profile: its invitation (the one it came in with), its PIN links and its entry go."""
+    with _lock:
+        d = _read()
+        j = d["joined"].pop(uid, None)
+        drop = [k for k, v in d["invites"].items() if v.get("uid") == uid or (j and k == j.get("invite"))]
+        for k in drop:
+            d["invites"].pop(k)
+        if j or drop:
+            _write(d)
 
 
 def mode():
@@ -191,8 +205,20 @@ def _public(i, v, now):
 
 
 def listing(now=None):
+    """The admin's list; tidied first: old entries and those of profiles deleted meanwhile go."""
     now = int(now if now is not None else time.time())
-    d = _read()
+    with _lock:
+        d = _read()
+        before = json.dumps(d, sort_keys=True)
+        _prune(d, now)
+        alive = {u["id"] for u in profiles._load()["users"]}
+        for uid in [u for u in d["joined"] if u not in alive]:
+            iid = d["joined"].pop(uid).get("invite")
+            d["invites"].pop(iid, None)
+        for k in [k for k, v in d["invites"].items() if v.get("uid") and v["uid"] not in alive]:
+            d["invites"].pop(k)
+        if json.dumps(d, sort_keys=True) != before:
+            _write(d)
     out = [_public(i, v, now) for i, v in d["invites"].items()]
     return sorted(out, key=lambda x: (x["state"] != "open", -(x["made"] or 0)))
 

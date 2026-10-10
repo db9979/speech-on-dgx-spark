@@ -106,6 +106,28 @@ class Invite(unittest.TestCase):
         helpers.set_config(weather=True, tasks=False, mfa=False)
         switch(mode="invite", mfa="data")
 
+    def test_used_invitations_go_with_the_profile_and_after_a_week(self):
+        ids = lambda: {i["id"] for i in ADMIN.get("/api/admin/join").json()["invites"]}
+        code, made = invite("Gone Gina")
+        TestClient(panel.app).post("/api/join", json={"code": code, "name": "Gone Gina", "pin": "123456"})
+        uid = uid_of("Gone Gina")
+        pin_code, pin = invite(uid=uid, days=1)
+        self.assertTrue({made["id"], pin["id"]} <= ids())
+        self.assertEqual(ADMIN.delete("/api/admin/profiles/" + uid).status_code, 200)
+        self.assertFalse({made["id"], pin["id"]} & ids())
+        self.assertNotIn(uid, join._read()["joined"])
+        # deleted before this rule existed: the list tidies itself
+        code, made = invite("Old Olga")
+        TestClient(panel.app).post("/api/join", json={"code": code, "name": "Old Olga", "pin": "123456"})
+        profiles.delete_user(uid_of("Old Olga"))
+        self.assertNotIn(made["id"], ids())
+        # used ones go a week after use
+        code, made = invite("Week Willi")
+        TestClient(panel.app).post("/api/join", json={"code": code, "name": "Week Willi", "pin": "123456"})
+        self.assertIn(made["id"], ids())
+        later = time.time() + 8 * 86400
+        self.assertNotIn(made["id"], {i["id"] for i in join.listing(later)})
+
     def test_big_bodies_are_refused_before_reading(self):
         c = TestClient(panel.app)
         big = '{"code": "' + "a" * 5000 + '"}'

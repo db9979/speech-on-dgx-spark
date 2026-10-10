@@ -223,6 +223,8 @@ def admin_delete_profile(uid: str, request: Request):
     _no_admin_profile(request, uid)
     profiles.delete_user(uid)
     coadmin.forget(uid)
+    import join
+    join.forget(uid)
     return {"ok": True}
 
 
