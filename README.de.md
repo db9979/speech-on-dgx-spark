@@ -33,6 +33,7 @@ Alle Optionen ohne Rückfragen (`--mode api --asr 1.7b --tts 0.6b --yes` …) st
 
 <!-- New version: add one line at the top here and in CHANGELOG.md, drop the oldest line here (keep 10). Details go to docs/de and docs/en, not into this README. -->
 
+- **V01.0.342** Spark-Begleiter am PC und Mac (aus): Programm in Taskleiste und Menüleiste mit Schreibhilfe, Frag Spark, Diktieren, Meldungen, Zustand und Notaus-Knopf, je eigenes Tastenkürzel; pro Gerät im Panel eingestellt
 - **V01.0.341** Ich → Von selbst: Schalter und Knöpfe bei den Smart-Home-Regeln stehen wieder sauber untereinander (Rechner und Handy)
 - **V01.0.340** Einordnung mit Wahrscheinlichkeit (aus): qwen38 /v1/systemone für Werkzeugwahl (ab 80 %), Postfach aufräumen (ab 90 %), wichtige Mails nach Absender und Betreff und eine zweite Meinung im Qualitätstest
 - **V01.0.339** Schreibhilfe in anderen Programmen (aus): Mac-Schnellaktion, Windows-Programm (x64 und ARM, Strg+Alt+S), Add-in für Outlook, Word und Excel, Browser-Erweiterung und iPhone-Teilen, jedes mit eigenem Schlüssel gekoppelt
@@ -42,7 +43,6 @@ Alle Optionen ohne Rückfragen (`--mode api --asr 1.7b --tts 0.6b --yes` …) st
 - **V01.0.335** Frag Spark steckt jetzt im Kopf unten rechts (kein eigener Knopf): er kennt die Seite, auch über Ich, und nimmt Fragen gesprochen oder getippt; Ich zeigt neu eingeschaltete Admin-Schalter ohne Neuladen
 - **V01.0.334** Live-Übersicht: Home Assistant Assist (Wyoming) , MCP-Werkzeuge, HA-Regeln, Benachrichtigungen und Dienste-Zustand sichtbar
 - **V01.0.333** Android-App: Signierschlüssel mit einem Befehl auf dem Spark (tools/android-schluessel.sh, nur openssl), der zeigt die zwei Werte für die GitHub-Secrets; Funktionen → Android-App sagt, was zu tun ist, solange es noch keine App gibt
-- **V01.0.332** Schreibhilfe (aus): Mails und andere Texte korrigieren, glätten, kürzen, übersetzen oder eine Antwort entwerfen, mit farbig markierten Änderungen
 
 Alle Versionen: [CHANGELOG.md](CHANGELOG.md)
 
