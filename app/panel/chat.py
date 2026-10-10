@@ -8,6 +8,7 @@ import re
 import html.parser
 import sys
 import time
+import zlib
 
 import httpx
 from fastapi import APIRouter, Depends, HTTPException, Request
@@ -117,6 +118,25 @@ def split_sentences(buf, first):
 
 # chat.prompt_cache: the time goes with the question, marked as the panel's note (chat_turn.prepare)
 TIME_NOTE = "Hinweis vom Panel, nicht vom Nutzer: "
+# chat.prompt_cache: the model always sees the same tool list; fewer for this question are named with it
+TOOLS_NOW = "Für diese Frage stehen nur diese Werkzeuge bereit, andere werden abgelehnt: "
+TOOLS_NONE = "keine, antworte ohne Werkzeug."
+
+
+def prompt_sizes(payload):
+    """How long the parts of one call to the model are, in characters (Logs → Anfragen): the system prompt,
+    the tool list and the conversation with this turn's tool results. Numbers only."""
+    msgs = payload.get("messages") or []
+    system = sum(len(str(m.get("content") or "")) for m in msgs if m.get("role") == "system")
+    rest = sum(len(json.dumps(m.get("content"), ensure_ascii=False)) + len(json.dumps(m.get("tool_calls") or "", ensure_ascii=False))
+               for m in msgs if m.get("role") != "system")
+    return {"system": system, "tools": len(json.dumps(payload.get("tools") or [], ensure_ascii=False)), "history": rest}
+
+
+def panel_note(time_note, notes):
+    """What holds for this turn only, after the question (chat.prompt_cache); "" when there is nothing."""
+    parts = [x for x in [time_note] + list(notes or []) if x]
+    return "\n\n(" + TIME_NOTE + "\n".join(parts) + ")" if parts else ""
 
 
 def timing_lines(tm, t0, end):
@@ -1126,9 +1146,13 @@ def sampling(ccfg):
     return out
 
 
-def trim_history(messages, budget=HISTORY_CHARS):
+def trim_history(messages, budget=HISTORY_CHARS, anchor=False):
     """The newest messages that fit the budget (the last one always). A long conversation would
-    otherwise fill the model's context until answers break off or fail."""
+    otherwise fill the model's context until answers break off or fail.
+
+    anchor (chat.prompt_cache): start at the oldest question that fits and whose text marks it as an
+    anchor (ANCHOR_EVERY); it stays the first one for several turns while the browser's window and the
+    budget move on, so the LLM server can keep the conversation in its cache. None fits: as without."""
     keep, used = [], 0
     for m in reversed(messages):
         n = len(str(m["content"]))
@@ -1139,6 +1163,19 @@ def trim_history(messages, budget=HISTORY_CHARS):
     keep.reverse()
     while len(keep) > 1 and keep[0]["role"] != "user":  # start with a question of the user
         keep.pop(0)
+    if anchor and len(keep) > 2:
+        # among the questions that keep at least half of it, the one whose text has the "highest rank" (trailing
+        # zero bits of its checksum, the oldest on a tie): a high one stays the first for many turns
+        total = sum(len(str(m["content"])) for m in keep)
+        best, rank = 0, -1
+        for i, m in enumerate(keep[:-1]):
+            if m["role"] != "user" or sum(len(str(x["content"])) for x in keep[i:]) * 2 < total:
+                continue
+            crc = zlib.crc32(str(m["content"]).encode()) or 1 << 31
+            r = (crc & -crc).bit_length()
+            if r > rank:
+                best, rank = i, r
+        return keep[best:]
     return keep
 
 
@@ -1285,10 +1322,11 @@ async def _answer(request, turn):
             if carry:
                 await out.put({"type": carry})
             msgs, finish = list(messages), None
-            note = getattr(turn, "time_note", None)
+            note = panel_note(getattr(turn, "time_note", None), getattr(turn, "turn_notes", None))
             if note and msgs and msgs[-1]["role"] == "user" and isinstance(msgs[-1].get("content"), str):
-                # the time goes with the question (chat.prompt_cache): only to the model, never into the history
-                msgs[-1] = dict(msgs[-1], content=msgs[-1]["content"] + "\n\n(" + TIME_NOTE + note + ")")
+                # time and this turn's notes go with the question (chat.prompt_cache): only to the model, never
+                # into the history
+                msgs[-1] = dict(msgs[-1], content=msgs[-1]["content"] + note)
             if turn.pics:   # the pictures go to the model only, never into the history or the log
                 msgs[-1] = images.with_pictures(msgs[-1], turn.pics)
             st["msgs"] = msgs
@@ -1345,14 +1383,37 @@ async def _answer(request, turn):
                         await out.put({"type": "outside"})
                     if any(h["src"] == "docs" for h in found["hits"]):
                         st["docs"] = True
+            direct = getattr(turn, "direct", None)
+            if direct and direct not in locked(st):
+                # "Eindeutiges direkt abrufen": the panel calls the one tool the question names (intent.DIRECT), the
+                # model's first round would only have picked it; its result goes in like any tool result
+                t_dr = time.time()
+                st["offered"] = {direct}
+                filler = FILLERS.get(direct) or ex["filler"].get(direct)
+                if filler and st["first"]:
+                    st["first"] = False
+                    await sentences.put(filler[1] if guess_language(messages[-1]["content"]) == "English" else filler[0])
+                result = await run_tool(direct, {}, st)
+                if tr:
+                    tr.step("tool", f"{direct} (Panel)", t_dr, time.time(), panel=True)
+                trace["calls"].append({"name": direct + " (Panel)", "args": "{}", "result": result})
+                msgs += [{"role": "assistant", "content": None, "tool_calls": [{"id": "dr0", "type": "function",
+                          "function": {"name": direct, "arguments": "{}"}}]},
+                         {"role": "tool", "tool_call_id": "dr0", "content": result}]
+                used = True
+                st["check"] = check_on   # an answer from a tool result: its figures are checked
             for rnd in range(5):  # a few tool rounds (at most max_searches searches), then the answer
                 payload = dict(base, messages=msgs)
                 offer = [t for t in tools if (t is not SEARCH_TOOL or searches < max_searches)
                          and t["function"]["name"] not in locked(st)
                          and not (st["mail"] and t is HA_TODO_TOOL)] if rnd < 4 and not small else []
                 st["offered"] = {t["function"]["name"] for t in offer}
+                stable = getattr(turn, "tools_stable", None)
+                if stable and not offer:
+                    # "Schneller Antwortbeginn": the same list as always, but no call in this round
+                    payload["tools"], payload["tool_choice"] = stable, "none"
                 if offer:
-                    payload["tools"] = offer
+                    payload["tools"] = stable or offer
                     if not used:  # choosing the tool: steadier (and, if switched on, with thinking)
                         payload["temperature"] = tool_temp
                         if think_tools:
@@ -1372,6 +1433,8 @@ async def _answer(request, turn):
                             raise
                         print("chat: tool_choice refused, without it:", str(e)[:200], flush=True)
                         payload.pop("tool_choice")
+                        if not offer:
+                            payload.pop("tools", None)
                         finish, calls = await llm_round(payload, st)
                     print(f"chat: {'profile' if who else 'no profile'}, round {rnd}, offered",
                           [t["function"]["name"] for t in offer], "called", [x["name"] for x in calls] or "nothing",
@@ -1685,10 +1748,15 @@ async def _answer(request, turn):
         out_calls = [dict(v, id=v["id"] or f"call_{i}") for i, v in sorted(calls.items()) if v["name"]]
         if tr:
             use = rec["usage"] if isinstance(rec["usage"], dict) else {}
+            cached = (use.get("prompt_tokens_details") or {}).get("cached_tokens") \
+                if isinstance(use.get("prompt_tokens_details"), dict) else None
+            size = prompt_sizes(payload)
             tr.step("llm", f"Runde {len(tm['rounds'])}", rec["start"], rec["end"],
                     first=tr.ms(rec["first"]) - tr.ms(rec["start"]) if rec["first"] else None,
                     tokens=use.get("prompt_tokens") if isinstance(use.get("prompt_tokens"), int) else None,
-                    tools=len(payload.get("tools") or []), held_ms=int(rec["held"] * 1000) or None,
+                    cached=cached if isinstance(cached, int) else None,
+                    system_chars=size["system"], tool_chars=size["tools"], history_chars=size["history"],
+                    tools=len(st["offered"]), held_ms=int(rec["held"] * 1000) or None,
                     calls=", ".join(x["name"] if x["name"] in known else "unbekannt" for x in out_calls)[:60] or None,
                     think=rec["think"] or None)
         return finish, out_calls

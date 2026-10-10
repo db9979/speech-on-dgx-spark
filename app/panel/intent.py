@@ -208,6 +208,35 @@ def narrow(route, tools):
     return kept
 
 
+# "Eindeutiges direkt abrufen" (chat.direct_read, profile direct_read): short, plain reading questions the
+# panel answers by calling the tool itself (no arguments: today, the own place, the usual list), so the
+# model's first round, which would only pick that tool, is saved. The whole sentence must match; anything
+# with a place, a day or more wishes goes to the model as before.
+_END = r"\s*(bitte)?\s*[?.!]*\s*"
+DIRECT = (
+    ("mail_list", re.compile(r"(?i)\s*(hab(e)? ich|gibt es|sind( da)?)( (denn|schon|gerade|jetzt))? (neue|ungelesene) "
+                             r"(e-?mails?|mails?)( für mich)?" + _END + r"|\s*(neue|ungelesene) (e-?)?mails" + _END)),
+    ("reminder_list", re.compile(r"(?i)\s*((welche|was für) erinnerungen (hab(e)? ich|gibt es|sind (gestellt|offen))|"
+                                 r"(zeig|nenn|sag)( mir)? (meine|die) erinnerungen)" + _END)),
+    ("weather", re.compile(r"(?i)\s*(wie (ist|wird) das wetter( heute| gerade| jetzt)?|wie ist das wetter draußen|"
+                           r"(und )?das wetter( heute)?)" + _END)),
+    ("parcels", re.compile(r"(?i)\s*(wo (ist|sind|bleibt|bleiben) meine? pakete?|kommt heute (ein|mein) paket|"
+                           r"(hab(e)? ich|kommen) (heute )?pakete?( unterwegs)?|meine pakete)" + _END)),
+)
+
+
+def direct(text, offered):
+    """The tool the panel calls itself for this question (DIRECT), or None: only a whole-sentence match, only a
+    tool this turn offers anyway (rights and locks stay where they are)."""
+    text = str(text or "")
+    if len(text) > 80:
+        return None
+    for name, rx in DIRECT:
+        if name in offered and rx.fullmatch(text):
+            return name
+    return None
+
+
 def lean(route, tools):
     """chat.route_model "lean": for a question no rule recognizes, only the LEAN tools already offered
     (possibly none). Anything a rule recognized stays as narrow() left it."""

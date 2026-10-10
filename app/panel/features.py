@@ -62,6 +62,8 @@ FEATURES = (
     F("toolthink", "Bei der Werkzeugwahl nachdenken", "Thinking while choosing tools", "talk", ("tool_thinking",), "tool_think",
       me="setbox", guide="toolthink"),
     F("routing", "Gezielte Werkzeugwahl", "Targeted tool choice", "talk", ("routing",), "route", me="setbox", guide="routing"),
+    F("direct", "Eindeutiges direkt abrufen", "Fetch clear questions directly", "talk", ("direct_read",), "direct_read",
+      me="setbox", guide="direct"),
     F("vorrang", "Vorrang für Personen", "Priority for people", "talk", ("person_priority",), guide="vorrang"),
     # knowledge and memory
     F("memory", "Gedächtnis", "Memory", "data", ("memory",), me="factbox", guide="memory"),

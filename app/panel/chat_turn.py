@@ -73,7 +73,8 @@ async def prepare(request):
     # conversation, which the trimming below drops)
     said_before = next((str(m["content"]) for m in reversed(messages[:-1]) if m["role"] == "assistant"), None) \
         if messages[-1]["role"] == "user" else None
-    messages = chat.trim_history(messages, chat.history_chars(ccfg))
+    # with chat.prompt_cache the kept part starts at a fixed question for several turns (chat.trim_history)
+    messages = chat.trim_history(messages, chat.history_chars(ccfg), anchor=ccfg.get("prompt_cache") is True)
     # Outside text from earlier turns: the latest such answer still counts as read in this turn (it
     # could ask for something "in the next message"), so this turn starts locked; older ones are not
     # sent again at all.
@@ -117,8 +118,19 @@ async def prepare(request):
               "in its own words - that answer is left out, nothing locked", flush=True)
     messages, gone = chat.left_out(messages, marked[-1] if carry else -1)
     system = ccfg.get("system_prompt") or ""
+    # "Schneller Antwortbeginn" (chat.prompt_cache): what holds for this turn only goes with the question
+    # (turn_notes, chat._answer), so the system prompt, the tool list and the conversation before stay the same
+    # from turn to turn and the LLM server reads them from its cache. Switched off, all of it is in the system prompt.
+    cache_on = ccfg.get("prompt_cache") is True and messages[-1]["role"] == "user"
+    turn_notes = []
+
+    def per_turn(system, text):
+        if cache_on:
+            turn_notes.append(text)
+            return system
+        return (system + "\n\n" + text).strip()
     if gone:
-        system = (system + "\n\n" + chat.LEFT_OUT_NOTE).strip()
+        system = per_turn(system, chat.LEFT_OUT_NOTE)
         print("chat:", gone, "earlier answer(s) from outside text left out with their questions", flush=True)
     # "Spark fragen" from another program over MCP (mcpserver.py; only the panel sets this in the scope): the
     # question is outside text from the start, and the turn only reads, with the tools the connection was given.
@@ -134,16 +146,16 @@ async def prepare(request):
     if attach:
         carry = carry or "outside"
         kind, name, text, cut = attach
-        system = (system + "\n\n" + chat.ATTACH_HINT + " " + ("Foto" if kind == "photo" else "Dokument")
-                  + (f" „{name}“" if name else "") + "\n" + chat.wrap_outside(text)
-                  + ("\n" + chat.ATTACH_CUT if cut and kind == "document" else "")).strip()
+        system = per_turn(system, (chat.ATTACH_HINT + " " + ("Foto" if kind == "photo" else "Dokument")
+                                   + (f" „{name}“" if name else "") + "\n" + chat.wrap_outside(text)
+                                   + ("\n" + chat.ATTACH_CUT if cut and kind == "document" else "")).strip())
         print("chat: attachment", kind, len(text), "chars, answer locked like outside text", flush=True)
     # the time changes every minute: early in the system prompt it would make the model read the
     # prompt, all tools and the whole history anew each turn. With chat.prompt_cache it goes with the
     # question instead (only to the model, never into the history), so the server's cache keeps the rest.
     time_note = None
     if ccfg.get("datetime", True):
-        if ccfg.get("prompt_cache", False) and messages[-1]["role"] == "user":
+        if cache_on:
             time_note = chat.now_line(body.get("tz"))
         else:
             system = (system + "\n\n" + chat.now_line(body.get("tz"))).strip()
@@ -151,8 +163,12 @@ async def prepare(request):
     print("chat: web search", "NOT offered: switched off (Funktionen → Websuche)" if not ccfg.get("search")
           else "NOT offered: no SearXNG address" if not search
           else "locked: the answer before came from e-mail" if carry == "mail" else "offered", flush=True)
-    system = (system + "\n\n" + (chat.SEARCH_LOCKED_HINT if search and carry == "mail" else chat.SEARCH_HINT if search
-                                  else chat.SEARCH_OFF_HINT)).strip()
+    if cache_on and search and carry == "mail":   # the usual hint stays, the lock goes with the question
+        system = (system + "\n\n" + chat.SEARCH_HINT).strip()
+        turn_notes.append(chat.SEARCH_LOCKED_HINT)
+    else:
+        system = (system + "\n\n" + (chat.SEARCH_LOCKED_HINT if search and carry == "mail" else chat.SEARCH_HINT if search
+                                      else chat.SEARCH_OFF_HINT)).strip()
     who = profiles.current(request)
     # A shared device (an own speaker in a room, see esp32.py): anyone in the room can talk to it, so
     # the device key alone is nobody's word. Personal things (mail, calendar, memory, documents,
@@ -208,7 +224,7 @@ async def prepare(request):
         if role_cmd:
             note = role_note = roles.carry_out(who["id"], role_cmd, pset) if not mcp else "nicht über MCP"
             print("rolle:", role_cmd[0], "-", role_cmd[1] or "-", "(fixed rule, no tools in this answer)", flush=True)
-            system = (system + "\n\nRolle: " + note).strip()
+            system = per_turn(system, "Rolle: " + note)
     role = roles.prompt(pset) if roles.on(ccfg, who, pset, own_browser) else ""
     if role:
         system = (system + "\n\n" + role).strip()
@@ -232,7 +248,7 @@ async def prepare(request):
     pics = images.for_turn(request, body, who if own_browser else None) if messages[-1]["role"] == "user" and not mcp else []
     if pics:
         carry = carry or "outside"
-        system = (system + "\n\n" + images.hint(len(pics))).strip()
+        system = per_turn(system, images.hint(len(pics)))
         print("chat:", len(pics), "picture(s) attached, no tools in this answer, locked like outside text", flush=True)
     # Home Assistant only for the profile's own login or device key: a voice recognized at someone
     # else's device does not switch that profile's home
@@ -308,8 +324,8 @@ async def prepare(request):
         if ha_direct and ha_code and not ha_code_ok:
             chat._HA_PENDING[who["id"]] = (time.time(), ha_direct)
             print("homeassistant: command waits for the code word", flush=True)
-            system = (system + "\n\n" + "Der Nutzer will etwas im Smart Home schalten, aber das Codewort fehlt. "
-                      "Frag in einem kurzen Satz nach dem Codewort; sag nicht, dass etwas geschaltet wurde.").strip()
+            system = per_turn(system, "Der Nutzer will etwas im Smart Home schalten, aber das Codewort fehlt. "
+                              "Frag in einem kurzen Satz nach dem Codewort; sag nicht, dass etwas geschaltet wurde.")
             ha_direct = None
             ha_wait = True
         else:
@@ -331,8 +347,8 @@ async def prepare(request):
     docs = documents.list_docs(who["id"], used_only=True) if docs_ok else []
     shared_docs = wissen.shared_list(who["id"]) if docs_ok else []
     if docs or shared_docs:
-        system = (system + "\n\n" + chat.docs_hint(who, docs, shared_docs, str(messages[-1].get("content") or ""),
-                                                     wissen.on(who["id"], "brief"))).strip()
+        system = per_turn(system, chat.docs_hint(who, docs, shared_docs, str(messages[-1].get("content") or ""),
+                                                 wissen.on(who["id"], "brief")))
     docs = docs + shared_docs
     timers = bool(ccfg.get("reminders", True))
     if timers:
@@ -381,10 +397,10 @@ async def prepare(request):
                 except Exception as e:
                     note = f"NOT saved, the calendar refused it: {e}. Proposal was {calendars.describe(prop)}"
                 cal_note[:] = [{"name": "calendar_add (bestätigt)", "args": calendars.describe(prop), "result": note}]
-                system = (system + "\n\nKalender: " + note + " Sag dem Nutzer genau das in einem Satz.").strip()
+                system = per_turn(system, "Kalender: " + note + " Sag dem Nutzer genau das in einem Satz.")
             else:
-                system = (system + "\n\nKalender: Der vorgeschlagene Termin " + calendars.describe(prop)
-                          + " wurde NICHT eingetragen, weil der Nutzer nicht zugestimmt hat.").strip()
+                system = per_turn(system, "Kalender: Der vorgeschlagene Termin " + calendars.describe(prop)
+                                  + " wurde NICHT eingetragen, weil der Nutzer nicht zugestimmt hat.")
     # an answer to something the assistant said by itself (yes to its offer, "nicht jetzt", ...):
     # the panel does what it means and the model only says the checked result (see proactive.py)
     mprop = None
@@ -402,10 +418,10 @@ async def prepare(request):
                 except Exception as e:
                     note = f"NICHT ausgeführt, Fehler: {e}"
                 cal_note.append({"name": "mail (bestätigt)", "args": what, "result": note})
-                system = (system + "\n\nPostfach: " + note + " Sag dem Nutzer genau das in einem Satz.").strip()
+                system = per_turn(system, "Postfach: " + note + " Sag dem Nutzer genau das in einem Satz.")
             else:
-                system = (system + "\n\nPostfach: Der Vorschlag „" + what + "“ wurde NICHT ausgeführt, weil der "
-                          "Nutzer nicht zugestimmt hat.").strip()
+                system = per_turn(system, "Postfach: Der Vorschlag „" + what + "“ wurde NICHT ausgeführt, weil der "
+                                  "Nutzer nicht zugestimmt hat.")
     # ticking off a list entry ... (extras.py): the module waiting for a yes in this conversation
     xprop = None
     if who and messages[-1]["role"] == "user" and not prop and not mprop and not mcp:
@@ -416,13 +432,13 @@ async def prepare(request):
             if xprop.get("outside"):
                 carry = carry or "outside"
             cal_note.append(xprop["call"])
-            system = (system + "\n\n" + xprop["system"]).strip()
+            system = per_turn(system, xprop["system"])
     pro = None
     if who and own_browser and messages[-1]["role"] == "user" and not prop and not mprop and not xprop and not mcp:  # one yes confirms one thing
         pro = proactive.reply(who["id"], messages[-1]["content"], said_before)
         if pro:
             cal_note.append(pro["call"])
-            system = (system + "\n\n" + pro["system"]).strip()
+            system = per_turn(system, pro["system"])
     # learning from corrections (fixes.py): a yes saves the proposed sentence, a correction leads to one
     fix_ok = bool(who and own_browser and private_ok and ccfg.get("memory", True) and fixes.on(ccfg, pset)
                   and messages[-1]["role"] == "user" and not mcp)
@@ -434,11 +450,11 @@ async def prepare(request):
             if fixes.confirms(messages[-1]["content"]):
                 saved = profiles.remember(who["id"], fp["text"])
                 cal_note.append({"name": "Korrektur gemerkt", "args": "", "result": saved or "nicht gespeichert"})
-                system = (system + "\n\nGedächtnis: Gemerkt wurde „" + (saved or "") + "“. Sag dem Nutzer genau das "
-                          "in einem kurzen Satz.").strip()
+                system = per_turn(system, "Gedächtnis: Gemerkt wurde „" + (saved or "") + "“. Sag dem Nutzer genau das "
+                                  "in einem kurzen Satz.")
             else:
-                system = (system + "\n\nGedächtnis: Der Vorschlag „" + fp["text"] + "“ wurde NICHT gemerkt, weil der "
-                          "Nutzer nicht zugestimmt hat.").strip()
+                system = per_turn(system, "Gedächtnis: Der Vorschlag „" + fp["text"] + "“ wurde NICHT gemerkt, weil der "
+                                  "Nutzer nicht zugestimmt hat.")
         elif fixes.is_correction(messages[-1]["content"], said_before):
             fix_fix = True
             fix_prev = next((m["content"] for m in reversed(messages[:-2]) if m["role"] == "user"), "")[:200]
@@ -453,9 +469,9 @@ async def prepare(request):
             if p and p.get("src", src) == src:
                 mod.drop_pending(who["id"])
     if briefing:
-        system = (system + "\n\n" + chat.BRIEFING_HINT + (" " + chat.CALENDAR_HINT if cal["calendars"] else "")
-                  + (" Nenne im Briefing nach den Erinnerungen kurz die ungelesenen Mails (Absender und Thema)."
-                     if mailbox else "")).strip()
+        system = per_turn(system, chat.BRIEFING_HINT + (" " + chat.CALENDAR_HINT if cal["calendars"] else "")
+                          + (" Nenne im Briefing nach den Erinnerungen kurz die ungelesenen Mails (Absender und Thema)."
+                             if mailbox else ""))
     # a voice recognized at someone else's device may read its own things but changes nothing that
     # lasts: no memory changes, no cancelled reminders (it could be a recording of that person)
     tools = ([chat.SEARCH_TOOL] if search else []) + (chat.MEMORY_TOOLS if prof and own_browser else []) + ([chat.HISTORY_TOOL] if past else []) \
@@ -477,12 +493,15 @@ async def prepare(request):
     if room_far:
         if not xprop:   # a guest or a voice of another profile: the fixed answer, nothing else
             note = roomfar.why_not({"who": who if own_browser else None, "own": own_browser, "client": body.get("client")})
-            system = (system + "\n\nRaum-Modus: " + (note or "Das geht hier nicht.") + " Sag dem Nutzer genau das, kurz.").strip()
+            system = per_turn(system, "Raum-Modus: " + (note or "Das geht hier nicht.") + " Sag dem Nutzer genau das, kurz.")
         tools = []
         print("room: message about another device's room mode - fixed rules, no tools in this answer", flush=True)
     # the switch narrows what the model sees (never more than the rights above left); a question no
     # rule recognizes may go to the model once as a pick from a fixed list (chat.route_model)
     all_tools = len(tools)
+    # "Schneller Antwortbeginn": the model always sees this list; what the rules below leave for this turn is
+    # what the panel runs (st["offered"], chat_tools.run), and the model is told so with the question
+    tools_stable = list(tools) if cache_on else None
     offered_all = {t["function"]["name"] for t in tools}
     if route_on and tools and not pics and not ha_direct and not ha_wait:
         if not route.names and ccfg.get("route_model") == "on":
@@ -510,7 +529,7 @@ async def prepare(request):
         web_own = lokal.own_words(lk_text)
         if lk_kind == "lokal" and any(t["function"]["name"] == "web_search" for t in tools):
             tools = [t for t in tools if t["function"]["name"] != "web_search"]
-            system = (system + "\n\n" + lokal.LOCAL_ONLY).strip()
+            system = per_turn(system, lokal.LOCAL_ONLY)
         if lk_kind == "wissen" and lk_src:
             local_task = asyncio.create_task(lokal.run(who["id"], lk_text, lk_src, lokal.budget(ccfg),
                                                        body.get("convo") if isinstance(body.get("convo"), str) else None))
@@ -523,9 +542,9 @@ async def prepare(request):
                     and remarkable.answer_wanted(messages[-1]["content"])
                     and remarkable.answer_ok(who, own_browser, private_ok))
     if rm_after:
-        system = (system + "\n\n" + remarkable.ANSWER_HINT).strip()
+        system = per_turn(system, remarkable.ANSWER_HINT)
     if ex["hints"] and not pics:
-        system = (system + "\n\n" + " ".join(ex["hints"])).strip()
+        system = per_turn(system, " ".join(ex["hints"]))
     # once mail or other outside text was read in this answer, nothing in it may change the home or
     # the memory, and after mail no words go to the web (see LOCKED_OUTSIDE / LOCKED_MAIL)
     # (after the person's own documents also no web search: a document could ask to carry its text away;
@@ -549,9 +568,9 @@ async def prepare(request):
             and (kiwix.admin_on() or "kiwix" in ask_text.lower()):
         why_not = kiwix.why_not(who, own_browser) or "es ist in dieser Antwort nicht angeboten"
         print("kiwix: archive asked, not offered:", why_not, flush=True)
-        system = (system + "\n\n" + "Der Nutzer fragt nach seinem Kiwix-Archiv, das ist hier nicht verfügbar: " + why_not
-                  + ". Sag ihm das in einem Satz. Das Archiv ist nicht dasselbe wie seine hochgeladenen Dokumente: "
-                    "durchsuche die Dokumente nicht stattdessen und antworte nicht aus ihnen.").strip()
+        system = per_turn(system, "Der Nutzer fragt nach seinem Kiwix-Archiv, das ist hier nicht verfügbar: " + why_not
+                          + ". Sag ihm das in einem Satz. Das Archiv ist nicht dasselbe wie seine hochgeladenen Dokumente: "
+                            "durchsuche die Dokumente nicht stattdessen und antworte nicht aus ihnen.")
     need = chat.needed(ask_text, {t["function"]["name"] for t in tools}, ccfg.get("tool_words", ""))
     # one clear intent with one needed tool: the first round must call exactly that one
     force = intent.forced(route, need, {t["function"]["name"] for t in tools}) if route_on else None
@@ -576,19 +595,30 @@ async def prepare(request):
         line = intent.lock_line(carry, {t["function"]["name"] for t in tools} & locked({"mail": carry == "mail",
                                                                                           "outside": carry != "mail"}))
         if line:
-            system = (system + "\n\n" + line).strip()
+            system = per_turn(system, line)
     # "Erklären statt Schweigen" (B4): asked for a function this turn does not offer -> a hint under the answer
     # with the reason from the rules above; the model only answers, the reason is never its own
     explain = intent.explain(route, offered_all, who, stranger, ccfg) \
         if messages[-1]["role"] == "user" and not pics and not role_cmd and not room_far else None
     if explain:
         print("weiche: erklärt", explain["key"], "-", explain["why"], flush=True)
+    # "Eindeutiges direkt abrufen" (intent.DIRECT): a short, plain reading question; the panel calls the tool itself
+    # in chat._answer and the model only says the result. Admin and profile switch, never guests or another voice.
+    direct = intent.direct(ask_text, {t["function"]["name"] for t in tools}) \
+        if who and own_browser and features.allowed("direct", who["id"], ccfg) and not pics and not role_cmd \
+        and not room_far and not ha_direct and not ha_wait and not local_task and not recent_ask else None
+    if direct:
+        print("weiche: direkt abgerufen", direct, flush=True)
     check_on = bool(ccfg.get("answer_check", True))
     tool_temp = float(ccfg.get("tool_temperature", 0.1))
     # thinking only while choosing the tool: the admin allows it, the profile switches it on (never guests)
     think_tools = bool(who and own_browser and features.admin_on("toolthink", ccfg) and pset.get("tool_think") is True)
     small = bool(chat.SMALLTALK.fullmatch(ask_text))
-    if tools:
+    if tools_stable is not None and tools_stable:
+        names = [t["function"]["name"] for t in tools]
+        if len(names) < len(tools_stable):   # fewer for this question: said with it, the list itself stays
+            turn_notes.append(chat.TOOLS_NOW + (", ".join(names) + "." if names else chat.TOOLS_NONE))
+    if tools or tools_stable:
         system = (system + "\n\n" + chat.TOOL_RULES).strip()
     if system:
         messages = [{"role": "system", "content": system}] + messages

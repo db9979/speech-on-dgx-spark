@@ -78,6 +78,7 @@
     "answer_check": true,
     "tool_thinking": false,
     "routing": false,
+    "direct_read": false,
     "route_model": "off",
     "route_words": "",
     "learn_fixes": false,
