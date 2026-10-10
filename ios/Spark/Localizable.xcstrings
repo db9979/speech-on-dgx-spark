@@ -231,12 +231,12 @@
         }
       }
     },
-    "Admin-Rolle": {
+    "Admin-Rechte": {
       "localizations": {
         "en": {
           "stringUnit": {
             "state": "translated",
-            "value": "Admin role"
+            "value": "Admin rights"
           }
         }
       }
@@ -287,6 +287,16 @@
           "stringUnit": {
             "state": "translated",
             "value": "All fine"
+          }
+        }
+      }
+    },
+    "Als Haupt-Admin, mit dem Code deines Profils: alles wie mit dem Admin-Passwort. Nach 15 Minuten ohne Bedienung endet die Anmeldung.": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "As main admin, with your profile's code: everything like with the admin password. Signing in ends after 15 minutes without use."
           }
         }
       }
@@ -2377,6 +2387,16 @@
           "stringUnit": {
             "state": "translated",
             "value": "Search stop"
+          }
+        }
+      }
+    },
+    "Haupt-Admin": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Main admin"
           }
         }
       }
@@ -5037,6 +5057,16 @@
           "stringUnit": {
             "state": "translated",
             "value": "Whom do you mean?"
+          }
+        }
+      }
+    },
+    "Werkzeug-Verlauf": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Tool history"
           }
         }
       }

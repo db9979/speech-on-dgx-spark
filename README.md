@@ -31,6 +31,7 @@ All options for running without questions (`--mode api --asr 1.7b --tts 0.6b --y
 
 <!-- New version: add one line at the top here and in CHANGELOG.md, drop the oldest line here (keep 10). Details go to docs/de and docs/en, not into this README. -->
 
+- **V01.0.275** Main admin as a profile (one login, the password stays the emergency access), one shell for signed-in profiles, words tidied (admin rights, tool history, update history, Spark verwalten)
 - **V01.0.274** reMarkable: the "All notebooks" tick and single ticks stay while the list loads (counter "x / y"), the search field keeps focus; the connect link goes straight to my.remarkable.com/pair
 - **V01.0.273** reMarkable notes (Features → Read pictures and scans, off; Me → reMarkable): connect the my.remarkable account with a one-time code, chosen notebooks go into the document search (typed text and highlights directly, the language model reads handwriting in quiet moments, only changed pages again); "Send to the reMarkable" (off) puts answers and dictated notes as EPUB into the folder "Spark"
 - **V01.0.272** iPhone app reads function names, groups and locks from the Spark instead of its own lists; profile in the app with functions "n of m on", role and browsers; hands-free and barge-in belong to the profile
@@ -40,7 +41,6 @@ All options for running without questions (`--mode api --asr 1.7b --tts 0.6b --y
 - **V01.0.268** Unify phase 2: defaults only from config.default.json (load_config fills missing keys), presets and own values only through profiles.effective; self-test against second defaults and hand merges
 - **V01.0.267** Unify phase 0–1: every function once in features.py, one check "Spark on, profile on" for all modules, /api/features with the reason; gaps closed (learning from corrections needs memory, push and update need the iPhone app, room from afar needs speakers)
 - **V01.0.266** Kiwix: "look in your/our archive" and "in the archive" are recognised; the first round must then ask the archive instead of the uploaded documents
-- **V01.0.265** Menu: Funktionen is its own entry (with guides), "Personen und Geräte" (with apps and interfaces), "Einbinden" is gone; Ctrl K/⌘ K search across pages, switches, settings, Ich, checks, logs and guides
 
 All versions: [CHANGELOG.md](CHANGELOG.md)
 

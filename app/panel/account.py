@@ -45,6 +45,7 @@ from core import (  # noqa: E402
     api_headers,
     auth,
     main_auth,
+    owner_auth,
     app_version,
     assistant,
     calendar_on,
@@ -186,7 +187,7 @@ ADMIN_EVENTS = ("admin_login", "admin_login_failed", "admin_code_failed", "admin
                 "feature_profile", "agent_level", "iphone_update_rights")
 
 
-@router.get("/api/admin/roles", dependencies=[Depends(main_auth)])
+@router.get("/api/admin/roles", dependencies=[Depends(owner_auth)])
 def admin_roles():
     return coadmin.listing()
 
@@ -204,7 +205,7 @@ async def _small_body(request):
     return body
 
 
-@router.put("/api/admin/roles", dependencies=[Depends(main_auth), Depends(admin_code)])
+@router.put("/api/admin/roles", dependencies=[Depends(owner_auth), Depends(admin_code)])
 async def admin_roles_set(request: Request):
     """{"on": bool} the switch "Benutzer als Admin", {"notify": "<profile id>" | ""} who hears of admin modes."""
     body = await _small_body(request)
@@ -223,10 +224,12 @@ async def admin_roles_set(request: Request):
     return coadmin.listing()
 
 
-@router.put("/api/admin/roles/{uid}", dependencies=[Depends(main_auth), Depends(admin_code)])
+@router.put("/api/admin/roles/{uid}", dependencies=[Depends(owner_auth), Depends(admin_code)])
 async def admin_role_set(uid: str, request: Request):
     """{"role": "coadmin" | "manager" | ""}: give, change or take away a profile's role (ends its admin mode)."""
     role = (await _small_body(request)).get("role", "")
+    if acting_profile(request) and "owner" in (role, coadmin.role(uid)):
+        raise HTTPException(403, "Den Haupt-Admin gibt und nimmt nur das Panel-Passwort.")
     try:
         coadmin.set_role(uid, str(role or ""))
     except LookupError:
@@ -310,7 +313,7 @@ def admin_protocol(request: Request, limit: int = 300):
     for x in guard.read(5000):
         if not (x.get("by") or x.get("event") in ADMIN_EVENTS):
             continue
-        if me and x.get("by") != me["id"] and not (x.get("event", "").startswith("admin_mode") and x.get("uid") == me["id"]):
+        if me and me["role"] != "owner" and x.get("by") != me["id"] and not (x.get("event", "").startswith("admin_mode") and x.get("uid") == me["id"]):
             continue
         out.append(x)
         if len(out) >= max(1, min(limit, 1000)):

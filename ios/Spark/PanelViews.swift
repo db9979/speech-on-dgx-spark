@@ -9,7 +9,7 @@ struct PanelBridgeView: View {
     @State private var off: Set<String> = []
 
     static let mine: [(LocalizedStringKey, String)] = [
-        (LocalizedStringKey("Gespräch"), "me=setbox"), (LocalizedStringKey("Gedächtnis"), "me=factbox"), (LocalizedStringKey("Dokumente"), "me=docbox"), (LocalizedStringKey("Protokoll"), "me=logbox"),
+        (LocalizedStringKey("Gespräch"), "me=setbox"), (LocalizedStringKey("Gedächtnis"), "me=factbox"), (LocalizedStringKey("Dokumente"), "me=docbox"), (LocalizedStringKey("Werkzeug-Verlauf"), "me=logbox"),
         (LocalizedStringKey("Kalender"), "me=calbox"), (LocalizedStringKey("Aufgaben"), "me=taskbox"), (LocalizedStringKey("Aufträge"), "me=agentbox"), (LocalizedStringKey("Nachrichten"), "me=msgbox"),
         (LocalizedStringKey("Wetter"), "me=wxbox"), (LocalizedStringKey("Von selbst"), "me=probox"), (LocalizedStringKey("Mitteilungen"), "me=notebox"), (LocalizedStringKey("E-Mail"), "me=mailbox"),
         (LocalizedStringKey("Pakete"), "me=parbox"), (LocalizedStringKey("Kontakte"), "me=conbox"), (LocalizedStringKey("Smart Home"), "me=habox"), (LocalizedStringKey("Raum-Modus"), "me=roombox"),

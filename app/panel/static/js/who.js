@@ -54,7 +54,7 @@ function drawWho(){const box=$('whobox');if(!box||!WHO)return;box.textContent=''
     return}
   const wrap=document.createElement('div');wrap.className='whowrap';const tb=document.createElement('table');tb.className='who';
   const hr=document.createElement('tr');const th=x=>{const c=document.createElement('th');c.textContent=x;hr.appendChild(c);return c};
-  th(t('Funktion','Function'));th('Spark');for(const p of WHO.profiles){const c=th(p.name);if(p.role)c.title=t('Admin-Rolle','Admin role')}
+  th(t('Funktion','Function'));th('Spark');for(const p of WHO.profiles){const c=th(p.name);if(p.role)c.title=t('Admin-Rechte','Admin rights')}
   th(t('Neue Profile','New profiles')).title=t('Für jedes neu angelegte Profil gleich an','On for every new profile from the start');th(t('Gäste','Guests'));
   const head=document.createElement('thead');head.appendChild(hr);tb.appendChild(head);const body=document.createElement('tbody');
   for(const g of WHO.groups){const fs=rows.filter(f=>f.group===g.key);if(!fs.length)continue;

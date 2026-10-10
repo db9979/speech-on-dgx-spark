@@ -144,6 +144,33 @@ class CoAdmin(unittest.TestCase):
                              ("GET", "/api/clone-voices"), ("GET", "/api/admin/telegram")):
             self.assertEqual(c.request(method, path, json={}).status_code, 403, (method, path))
 
+    def test_owner_is_the_main_admin_but_not_the_password(self):
+        """Vereinheitlichen Phase 7: the role Haupt-Admin gives one login for everything the panel password may,
+        except the password's own things; only the password gives it, and only one profile has it."""
+        c, uid = self.give("KoOtto", role="owner")
+        self.elevate(c)
+        self.assertEqual(c.get("/api/whoami").json()["admin_by"], "owner")
+        self.assertEqual(c.get("/api/admin/roles").status_code, 200)
+        self.assertEqual(c.get("/api/audit").status_code, 200)
+        self.assertEqual(c.get("/api/backups/nichtda.tar.gz").status_code in (400, 404), True)   # reaches it, no 403
+        for method, path in (("POST", "/api/password"), ("GET", "/api/mfa"), ("POST", "/api/mfa/disable"),
+                             ("POST", "/api/logout-everywhere")):
+            self.assertEqual(c.request(method, path, json={}, headers=CODE).status_code, 403, (method, path))
+        other = profile("KoOttosKind")
+        oid = uid_of("KoOttosKind")
+        self.assertEqual(c.put(f"/api/admin/roles/{oid}", json={"role": "owner"}, headers=CODE).status_code, 403)
+        self.assertEqual(c.put(f"/api/admin/roles/{uid}", json={"role": ""}, headers=CODE).status_code, 403)
+        self.assertEqual(c.put(f"/api/admin/roles/{oid}", json={"role": "coadmin"}, headers=CODE).status_code, 200)
+        # he changes another admin profile, not his own one here
+        self.assertEqual(c.put(f"/api/admin/profiles/{oid}", json={"pin": "5555"}, headers=CODE).status_code, 200)
+        self.assertEqual(c.put(f"/api/admin/profiles/{uid}", json={"pin": "5555"}, headers=CODE).status_code, 403)
+        with self.assertRaises(ValueError):
+            coadmin.set_role(oid, "owner")                # only one Haupt-Admin
+        self.assertEqual(ADMIN.put(f"/api/admin/roles/{oid}", json={"role": "owner"}, headers=CODE).status_code, 409)
+        ADMIN.put(f"/api/admin/profiles/{oid}/call", json={"call": "Kindchen"})
+        events = c.get("/api/admin/protocol").json()["events"]
+        self.assertTrue(any(e.get("by") == "main" for e in events))   # he sees the main admin's actions too
+
     def test_manager_profile_detail_without_rights(self):
         c, uid = self.give("KoVeit", role="manager")
         self.elevate(c)

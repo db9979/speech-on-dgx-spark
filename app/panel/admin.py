@@ -51,6 +51,7 @@ from core import (  # noqa: E402
     assistant,
     auth,
     main_auth,
+    owner_auth,
     check_password,
     password_set,
     run,
@@ -62,7 +63,7 @@ from chat import web_search  # noqa: E402
 router = APIRouter()
 
 
-@router.get("/api/audit", dependencies=[Depends(main_auth)])
+@router.get("/api/audit", dependencies=[Depends(owner_auth)])
 def audit(limit: int = 300):
     """The change log: logins, failed logins, lockouts and every change, newest first."""
     names = {u: (profiles.by_id(u) or {}).get("name") for u in profiles.user_ids()}
@@ -116,7 +117,9 @@ async def admin_add_profile(request: Request):
 def _no_admin_profile(request, *uids):
     """A profile in its admin mode (coadmin.py) never changes an admin profile, another one or its own: PIN,
     second step, devices, deleting. That stays with the main admin, so nobody locks another admin out."""
-    if acting_profile(request) and any(u and coadmin.role(u) for u in uids):
+    me = acting_profile(request)
+    # the Haupt-Admin (role owner) is the main admin: he changes the other admin profiles, only not his own here
+    if me and any(u and coadmin.role(u) and (me["role"] != "owner" or u == me["id"]) for u in uids):
         raise HTTPException(403, "Profile mit Admin-Rolle ändert nur der Hauptadmin.")
 
 
@@ -164,7 +167,7 @@ def admin_profile(uid: str, request: Request):
     me = acting_profile(request)
     out = dict(u, **_profile_extra(uid), last=profiles.last_use(uid, last), devices=devs,
                facts=len(profiles.memory(uid)), sessions=profiles.sessions(uid),
-               features={"on": on, "of": of}, main=not me, roles=coadmin.on())
+               features={"on": on, "of": of}, main=not me or me["role"] == "owner", owner=not me, roles=coadmin.on())
     if not me or coadmin.role(me["id"]) != "manager":
         out["rights"] = _rights(uid)
     return out

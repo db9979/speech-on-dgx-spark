@@ -31,6 +31,7 @@ Alle Optionen ohne Rückfragen (`--mode api --asr 1.7b --tts 0.6b --yes` …) st
 
 <!-- New version: add one line at the top here and in CHANGELOG.md, drop the oldest line here (keep 10). Details go to docs/de and docs/en, not into this README. -->
 
+- **V01.0.275** Haupt-Admin als Profil (eine Anmeldung, Passwort bleibt Notzugang), eine Hülle für angemeldete Profile, Wörter aufgeräumt (Admin-Rechte, Werkzeug-Verlauf, Update-Verlauf, Spark verwalten)
 - **V01.0.274** reMarkable: Häkchen „Alle Notizbücher“ und einzelne Häkchen bleiben, während die Liste lädt (Zähler „x / y“), Suchfeld behält den Fokus; Verbinden-Link führt direkt zu my.remarkable.com/pair
 - **V01.0.273** reMarkable-Notizen (Funktionen → Bilder und Scans lesen, aus; Ich → reMarkable): my.remarkable-Konto per Einmalcode verbinden, ausgewählte Notizbücher kommen in die Dokumentensuche (getippter Text und Markierungen direkt, Handschrift liest das Sprachmodell in Pausen, nur geänderte Seiten neu); „Aufs reMarkable schicken“ (aus) legt Antworten und diktierte Notizen als EPUB in den Ordner „Spark“
 - **V01.0.272** iPhone-App liest Funktionsnamen, Gruppen und Sperren vom Spark statt eigener Listen; Profil in der App mit Funktionen „n von m an“, Rolle und Browsern; Freihändig und Ins Wort fallen gelten fürs Profil
@@ -40,7 +41,6 @@ Alle Optionen ohne Rückfragen (`--mode api --asr 1.7b --tts 0.6b --yes` …) st
 - **V01.0.268** Vereinheitlichen Phase 2: Standardwerte nur noch aus config.default.json (load_config füllt fehlende Schlüssel), Vorgaben und eigene Werte nur über profiles.effective; Selbsttest gegen zweite Standardwerte und Handmischungen
 - **V01.0.267** Vereinheitlichen Phase 0–1: jede Funktion einmal in features.py, eine Prüfung „Spark an, Profil an“ für alle Module, /api/features mit Grund; Lücken geschlossen (Korrekturen lernen braucht das Gedächtnis, Push und Update brauchen die iPhone-App, Raum aus der Ferne braucht Lautsprecher)
 - **V01.0.266** Kiwix: „Schau in deinem/unserem Archiv“ und „im Archiv“ werden erkannt, die erste Runde muss dann das Archiv fragen statt der hochgeladenen Dokumente
-- **V01.0.265** Bedienung: Funktionen eigener Menüpunkt (mit Anleitungen), „Personen und Geräte“ (mit Apps und Schnittstellen), „Einbinden“ entfällt; Suche Strg K/⌘ K über Seiten, Schalter, Einstellungen, Ich, Prüfen, Logs und Anleitungen
 
 Alle Versionen: [CHANGELOG.md](CHANGELOG.md)
 

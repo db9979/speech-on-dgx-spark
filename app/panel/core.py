@@ -196,6 +196,22 @@ def main_auth(request: Request, creds: HTTPBasicCredentials | None = Depends(sec
     raise HTTPException(401, "login required")
 
 
+def owner_auth(request: Request, creds: HTTPBasicCredentials | None = Depends(security)):
+    """The main admin: the panel password, or the profile with the role "owner" (Haupt-Admin, coadmin.py) in its
+    admin mode, so Dominik needs one login only (plan „Vereinheitlichen“ Phase 7). The password's own things
+    (itself, its second step, signing it out everywhere) stay with main_auth: it is the way in when nothing else works."""
+    if is_main_admin(request, creds):
+        request.scope["speech_main_admin"] = True
+        return
+    s = coadmin.session(request)
+    if s and s["role"] == "owner":
+        request.scope["speech_coadmin"] = s
+        return
+    if s:
+        raise HTTPException(403, "Das darf nur der Hauptadmin.")
+    raise HTTPException(401, "login required")
+
+
 # Changes that matter most (password, restore, device keys, the second step itself) need a fresh code
 # from the app while the second step is on, even inside a running login: header X-Speech-Code.
 CODE_HEADER = "x-speech-code"

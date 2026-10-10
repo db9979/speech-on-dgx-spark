@@ -58,7 +58,7 @@ OPEN = {
     "/pebble/speech-spark.pbw": "the watch app",
     "/sw.js": "the page's service worker",
 }
-LOGIN = re.compile(r"Depends\((auth|main_auth|assistant|own_profile|browser_profile|secret_profile|_on)\)")
+LOGIN = re.compile(r"Depends\((auth|main_auth|owner_auth|assistant|own_profile|browser_profile|secret_profile|_on)\)")
 ROUTE = re.compile(r'@(?:router|app)\.(?:get|post|put|delete|patch|api_route)\("([^"]*)"[^\n]*\n((?:@[^\n]*\n)*)'
                    r'(?:async )?def \w+\((.*?)\):\n', re.S)
 

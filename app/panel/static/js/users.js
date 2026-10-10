@@ -48,16 +48,16 @@ async function loadProf(){profFilter();let d;
 // One profile in detail (plan „Vereinheitlichen“ Phase 5): Zugang (PIN, zweiter Schritt, Rolle, Browser), Rufname,
 // Geräte, Funktionen „n von m an“ (springt zu Wer darf was), Rechte (Aufträge, Spark-Update aus der App, Platz für
 // Uploads) and Löschen. Everything that used to sit on other pages per profile is here; the pages stay for the overview.
-const PROLE=()=>typeof ROLE_NAME!=='undefined'?ROLE_NAME:{coadmin:t('Mit-Admin','Co-admin'),manager:t('Verwalter','Manager')};
+const PROLE=()=>typeof ROLE_NAME!=='undefined'?ROLE_NAME:{owner:t('Haupt-Admin','Main admin'),coadmin:t('Mit-Admin','Co-admin'),manager:t('Verwalter','Manager')};
 const pbtn=(id,l,extra='')=>`<button class="b" type="button" id="${id}"${extra}>${esc(l)}</button>`;
 const pmb=b=>b>=1024**2?(b/1024**2).toFixed(b>=10*1024**2?0:1)+' MB':Math.ceil(b/1024)+' KB';
 async function profDetail(id){let u;try{u=await (await api('/api/admin/profiles/'+encodeURIComponent(id))).json()}catch(e){perr('pmsg',e);return}
   const R=PROLE(),r=u.rights,h3=x=>`<h3 class="sec">${esc(x)}</h3>`,sel=(v,cur,l)=>`<option value="${esc(v)}"${v===cur?' selected':''}>${esc(l)}</option>`;
   let role='';
-  if(u.main)role=setRow(esc(t('Admin-Rolle','Admin role')),esc(u.roles?t('Mit-Admin darf fast alles, Verwalter nur Zustand, Profile und Funktionen. Gilt erst mit dem zweiten Schritt.','A co-admin may do almost everything, a manager only status, profiles and functions. Works only with the second step.')
+  if(u.main)role=setRow(esc(t('Admin-Rechte','Admin rights')),esc(u.roles?t('Haupt-Admin: du als Profil, eine Anmeldung. Mit-Admin darf fast alles, Verwalter nur Zustand, Profile und Funktionen. Gilt erst mit dem zweiten Schritt.','Main admin: you as a profile, one login. A co-admin may do almost everything, a manager only status, profiles and functions. Works only with the second step.')
       :t('Der Schalter „Benutzer als Admin“ ist aus (Einstellungen → Sicherheit).','The switch "Users as admins" is off (Settings → Security).')),
-    `<select id="prole" aria-label="${esc(t('Admin-Rolle','Admin role'))}">${sel('',u.role,t('keine','none'))}${sel('coadmin',u.role,R.coadmin)}${sel('manager',u.role,R.manager)}</select>`);
-  else if(u.role)role=setRow(esc(t('Admin-Rolle','Admin role')),esc(t('Ändert nur der Hauptadmin.','Only the main admin changes it.')),`<span class="pill">${esc(R[u.role]||u.role)}</span>`);
+    `<select id="prole" aria-label="${esc(t('Admin-Rechte','Admin rights'))}">${sel('',u.role,t('keine','none'))}${u.owner||u.role==='owner'?sel('owner',u.role,R.owner):''}${sel('coadmin',u.role,R.coadmin)}${sel('manager',u.role,R.manager)}</select>`);
+  else if(u.role)role=setRow(esc(t('Admin-Rechte','Admin rights')),esc(t('Ändert nur der Hauptadmin.','Only the main admin changes it.')),`<span class="pill">${esc(R[u.role]||u.role)}</span>`);
   const sess=u.sessions.map(x=>`<li><span>${esc(x.agent)}<br><small class="mut">${t('angemeldet','signed in')} ${esc(pwhen(x.first))} · ${t('zuletzt','last used')} ${esc(pwhen(x.last))}</small></span><button class="b" type="button" data-psess="${esc(x.id)}">${t('Abmelden','Sign out')}</button></li>`).join('')
     ||`<li class="mut">${t('Kein Browser angemeldet.','No browser signed in.')}</li>`;
   let rights='';

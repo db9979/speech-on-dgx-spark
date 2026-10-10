@@ -1,6 +1,12 @@
 """Profiles as admins (V01.0.255, plan plaene/benutzer-als-admin.md).
 
-The main admin (the panel password) can give a profile one of two roles:
+The main admin (the panel password) can give a profile one of three roles:
+
+    "owner"     Haupt-Admin (V01.0.275, plan „Vereinheitlichen“ Phase 7): the main admin as a profile, so one login
+                (PIN, second step, admin mode with a fresh code) is enough. Everything the panel password may
+                (core.owner_auth) except the password's own things: the password itself, its second step and
+                signing it out everywhere stay the way in when nothing else works. Only the password gives or
+                takes this role, and only one profile has it.
 
     "coadmin"   Mit-Admin: everything the main admin can, except the main admin's own things (core.main_auth:
                 roles, admin password and second step, restoring and downloading backups) and changes to
@@ -37,8 +43,8 @@ import profiles
 
 STATE = os.environ.get("SPEECH_SPARK_STATE", "/var/lib/speech-spark/state")
 FILE = os.path.join(STATE, "admins.json")
-ROLES = ("coadmin", "manager")
-NAMES = {"coadmin": "Mit-Admin", "manager": "Verwalter"}
+ROLES = ("owner", "coadmin", "manager")
+NAMES = {"owner": "Haupt-Admin", "coadmin": "Mit-Admin", "manager": "Verwalter"}
 MAX_ADMINS = 5
 COOKIE = "speech_spark_elev"
 IDLE = 900               # 15 minutes without use end the admin mode
@@ -129,10 +135,12 @@ def set_role(uid, new):
     if uid not in profiles.user_ids():
         raise LookupError("no such profile")
     if new and new not in ROLES:
-        raise ValueError("role must be coadmin, manager or empty")
+        raise ValueError("role must be owner, coadmin, manager or empty")
     with _lock:
         d = _read()
         d["users"] = {u: x for u, x in d["users"].items() if u in profiles.user_ids()}
+        if new == "owner" and any(x["role"] == "owner" for u, x in d["users"].items() if u != uid):
+            raise ValueError("Es gibt schon einen Haupt-Admin. Dort zuerst die Rolle ändern.")
         if not new:
             d["users"].pop(uid, None)
         else:

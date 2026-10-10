@@ -12,7 +12,7 @@ final class AdminSession: ObservableObject {
 
     @Published private(set) var signedIn = false
     @Published var version = ""
-    /// who is signed in: "main" (admin password) or a profile in its admin mode ("coadmin", "manager")
+    /// who is signed in: "main" (admin password) or a profile in its admin mode ("owner", "coadmin", "manager")
     @Published private(set) var role = "main"
     private var session = AdminSession.fresh()
     private var kept = Date.distantPast
@@ -56,7 +56,7 @@ final class AdminSession: ObservableObject {
         if let who = try? await object("GET", "api/whoami") {
             version = who["version"] as? String ?? ""
             let by = who["admin_by"] as? String ?? "main"
-            role = ["coadmin", "manager"].contains(by) ? by : "main"
+            role = ["owner", "coadmin", "manager"].contains(by) ? by : "main"
         }
     }
 
@@ -175,6 +175,7 @@ struct AdminView: View {
             if let e = error { Text(verbatim: e).foregroundStyle(.red) }
         } footer: {
             Text(profileRole == "manager" ? String(localized: "Als Verwalter: Monitoring, Logs, Funktionen, Personen und Geräte. Mit dem Code deines Profils.")
+                 : profileRole == "owner" ? String(localized: "Als Haupt-Admin, mit dem Code deines Profils: alles wie mit dem Admin-Passwort. Nach 15 Minuten ohne Bedienung endet die Anmeldung.")
                                           : String(localized: "Als Mit-Admin, mit dem Code deines Profils. Nach 15 Minuten ohne Bedienung endet die Anmeldung."))
         }
     }
@@ -606,7 +607,7 @@ struct AdminProfileView: View {
             if let e = error { Text(verbatim: e).foregroundStyle(.red) }
             if let n = note { Text(verbatim: n).foregroundStyle(.secondary) }
             if !role.isEmpty {
-                LabeledContent("Admin-Rolle") { Text(role == "manager" ? String(localized: "Verwalter") : String(localized: "Mit-Admin")) }
+                LabeledContent("Admin-Rechte") { Text(role == "owner" ? String(localized: "Haupt-Admin") : role == "manager" ? String(localized: "Verwalter") : String(localized: "Mit-Admin")) }
             }
             Section {
                 ForEach(funcs, id: \.key) { f in
@@ -738,7 +739,7 @@ struct BackupsView: View {
                         Text(b.created, format: .dateTime.day().month().year().hour().minute())
                         Text(verbatim: ByteCountFormatter.string(fromByteCount: Int64(b.size), countStyle: .file)).font(.caption).foregroundStyle(.secondary)
                     }
-                    .swipeActions { if s.role == "main" { Button("Löschen", role: .destructive) { Task { await remove(b.name) } } } }
+                    .swipeActions { if s.role == "main" || s.role == "owner" { Button("Löschen", role: .destructive) { Task { await remove(b.name) } } } }
                 }
             } header: { Text("Sicherungen") }
         }

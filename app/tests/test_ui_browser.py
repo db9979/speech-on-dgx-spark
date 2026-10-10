@@ -902,6 +902,43 @@ class Browser(unittest.TestCase):
                     await br.close()
         self.run_async(go())
 
+    def test_profile_gets_the_same_shell(self):
+        """Phase 7: a signed-in profile (no admin login) gets the admin's menu with only Assistent and Ich; guests keep
+        the plain page."""
+        async def go():
+            async with async_playwright() as p:
+                for name, w, h in VIEWS:
+                    exe = chromium()
+                    br = await p.chromium.launch(**({"executable_path": exe} if exe else {}))
+                    pg = await (await br.new_context(viewport={"width": w, "height": h}, locale="de-DE")).new_page()
+                    errors = []
+                    pg.on("pageerror", lambda e: errors.append(str(e)))
+                    base = f"http://127.0.0.1:{self.port}"
+                    await pg.goto(base + "/")
+                    await pg.wait_for_timeout(500)
+                    self.assertIn("guest", await pg.evaluate("document.body.className"))
+                    await pg.request.post(base + "/api/profile/login", data={"name": "Uitest", "pin": "4711"})
+                    await pg.goto(base + "/")
+                    await pg.wait_for_timeout(800)
+                    cls = await pg.evaluate("document.body.className")
+                    self.assertIn("prof", cls)
+                    self.assertNotIn("guest", cls)
+                    if name == "pc":
+                        self.assertTrue(await pg.is_visible("nav button[data-s=chat]"))
+                        self.assertTrue(await pg.is_visible("#navme"))
+                        for s in ("mon", "feat", "prof", "cfg"):
+                            self.assertFalse(await pg.is_visible(f"nav button[data-s={s}]"), s)
+                        await pg.click("#navme")
+                    else:
+                        shown = await pg.evaluate("[...document.querySelectorAll('#mbar button')].filter(b=>b.offsetParent).map(b=>b.dataset.m)")
+                        self.assertEqual(shown, ["chat", "me"])
+                        await pg.click("#mbar button[data-m=me]")
+                    await pg.wait_for_selector("#profmodal", state="visible")
+                    self.assertTrue(await pg.is_visible("#loginbtn"))
+                    self.assertEqual(errors, [], name)
+                    await br.close()
+        self.run_async(go())
+
     def test_locked_shows_why(self):
         """Phase 4 (V01.0.270): what the admin switched off stays visible under Ich, locked with the reason, and Ich
         names the functions the admin has not switched on."""
