@@ -982,6 +982,41 @@ async def api_rule_add(request: Request, prof=Depends(browser_profile)):
     return status(prof["id"])     # a live connection takes the new rule's device with the next minute (hamelden.ensure)
 
 
+MAX_DEVICES = 1500      # devices the rule form may pick from
+
+
+def devices(all_states):
+    """For the rule form: what the profile's Home Assistant token sees, last changed first. Only id, name,
+    state and the time of the last change as HA wrote it (the browser compares it, no clock here)."""
+    out = []
+    for x in all_states:
+        eid = str(x.get("entity_id", ""))
+        if not re.fullmatch(r"[a-z0-9_]{1,40}\.[a-z0-9_]{1,120}", eid):
+            continue
+        name = str((x.get("attributes") or {}).get("friendly_name") or eid)
+        out.append({"id": eid, "name": re.sub(r"[\x00-\x1f<>]", "", name)[:80],
+                    "state": re.sub(r"[\x00-\x1f<>]", "", str(x.get("state", "")))[:40],
+                    "lc": str(x.get("last_changed") or "")[:40]})
+    out.sort(key=lambda d: d["lc"], reverse=True)
+    return out[:MAX_DEVICES]
+
+
+@router.get("/api/proactive/ha-devices", dependencies=[Depends(assistant), Depends(_on)])
+async def api_devices(request: Request, prof=Depends(browser_profile)):
+    """Devices to pick for a rule ("Zuletzt geändert", "Gerät erkennen" in Ich → Von selbst)."""
+    import guard
+    import homeassistant
+    guard.limit(request, "hament", prof["id"])
+    item = homeassistant.get(prof["id"]) if ccfg().get("homeassistant", False) else None
+    if not item:
+        raise HTTPException(409, "Home Assistant ist nicht verbunden.")
+    try:
+        items = devices(await _all_states(item))
+    except Exception as e:
+        raise HTTPException(502, f"Home Assistant: {type(e).__name__}")
+    return {"items": items}
+
+
 @router.delete("/api/proactive/rules/{rid}", dependencies=[Depends(assistant)])
 def api_rule_remove(rid: str, prof=Depends(browser_profile)):
     remove_rule(prof["id"], rid)

@@ -1016,6 +1016,55 @@ class Browser(unittest.TestCase):
         finally:
             helpers.set_config(kiwix=False, kiwix_url="", kiwix_books=[])
 
+    def test_rule_device_picker(self):
+        """Ich → Von selbst → Regel hinzufügen: devices from a list, "Zuletzt geändert" and "Gerät erkennen"
+        (press, trigger the sensor, the changed device shows up; tapping takes it into the field)."""
+        extra = [{"entity_id": "binary_sensor.ui_flur", "state": "off", "last_changed": "2026-10-10T18:00:00+00:00",
+                  "attributes": {"friendly_name": "UI Flur Bewegung"}},
+                 {"entity_id": "binary_sensor.ui_tuer", "state": "off", "last_changed": "2026-10-10T10:00:00+00:00",
+                  "attributes": {"friendly_name": "UI Haustür"}}]
+        helpers.HA_STATES.extend(extra)
+        helpers.set_config(proactive=True)
+
+        async def go():
+            async with async_playwright() as p:
+                br, pg, errors = await self.page(p, 1280, 900, csp=True)
+                base = f"http://127.0.0.1:{self.port}"
+                r = await pg.request.put(base + "/api/profile/homeassistant",
+                                         data={"url": f"http://127.0.0.1:{helpers.HA_PORT}", "token": helpers.HA_TOKEN})
+                self.assertEqual(r.status, 200, await r.text())
+                r = await pg.request.put(base + "/api/profile/settings", data={"pro_on": True, "pro_ha": True})
+                self.assertEqual(r.status, 200)
+                await pg.goto(base + "/")
+                await pg.wait_for_timeout(800)
+                await pg.evaluate("document.getElementById('wizmodal')&&(document.getElementById('wizmodal').style.display='none')")
+                await pg.evaluate("openMe('probox')")
+                await pg.wait_for_selector("#proruleadd", state="attached", timeout=5000)
+                await pg.click("#proruleadd > summary")
+                await pg.wait_for_selector("#proents option[value='binary_sensor.ui_flur']", state="attached", timeout=5000)
+                await pg.click("#prorecent")
+                await pg.wait_for_selector("#prodevs button[title='binary_sensor.ui_flur']", timeout=5000)
+                await pg.click("#prodevs button[title='binary_sensor.ui_flur']")
+                self.assertEqual(await pg.input_value("#proent1"), "binary_sensor.ui_flur")
+                # detect: the door changes while the panel listens
+                await pg.click("#prodetect")
+                await pg.wait_for_timeout(500)
+                next(x for x in helpers.HA_STATES if x["entity_id"] == "binary_sensor.ui_tuer").update(
+                    state="on", last_changed="2026-10-10T18:30:00+00:00")
+                await pg.wait_for_selector("#prodevs button[title='binary_sensor.ui_tuer']", timeout=8000)
+                self.assertEqual(await pg.evaluate("document.querySelectorAll('#prodevs button').length"), 1)
+                await pg.click("#proruleadd details > summary")      # "und eine zweite Bedingung"
+                await pg.click("#proent2")
+                await pg.click("#prodevs button[title='binary_sensor.ui_tuer']")
+                self.assertEqual(await pg.input_value("#proent2"), "binary_sensor.ui_tuer")
+                self.assertEqual(errors, [])
+                await br.close()
+        try:
+            self.run_async(go())
+        finally:
+            helpers.HA_STATES[:] = [x for x in helpers.HA_STATES if not x["entity_id"].startswith("binary_sensor.ui_")]
+            helpers.set_config(proactive=False)
+
     def test_menu_search_and_features_page(self):
         """Plan „Bedienung gesamt“ (V01.0.265): Funktionen is its own menu entry (without the settings menu),
         Anleitungen sit under it, Apps und Schnittstellen under Personen und Geräte, and Strg K finds pages,

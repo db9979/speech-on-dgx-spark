@@ -155,6 +155,42 @@ class RuleOptions(Base):
                                                               "only": "sometimes"}).status_code, 400)
 
 
+class Devices(Base):
+    def test_device_list_for_the_rule_form(self):
+        """Ich → Von selbst → Regel hinzufügen: pick devices instead of typing; last changed first, only id,
+        name, state and HA's own last_changed (the browser compares it, no clock in the panel)."""
+        a, uid = profile("Dorle")
+        state("binary_sensor.flur_bewegung").update(last_changed="2026-10-10T18:00:00+00:00")
+        state("light.garten").update(last_changed="2026-10-10T17:00:00+00:00")
+        state("camera.haustuer")["attributes"]["friendly_name"] = "Kamera <b>Haustür</b>"
+        r = a.get("/api/proactive/ha-devices")
+        self.assertEqual(r.status_code, 200, r.text)
+        items = r.json()["items"]
+        self.assertEqual([x["id"] for x in items[:2]], ["binary_sensor.flur_bewegung", "light.garten"])
+        self.assertEqual(set(items[0]), {"id", "name", "state", "lc"})
+        cam = next(x for x in items if x["id"] == "camera.haustuer")
+        self.assertNotIn("<", cam["name"])
+        # "Gerät erkennen": a sensor fires, its last_changed moves, the browser sees the difference
+        before = {x["id"]: x["lc"] for x in items}
+        state("binary_sensor.garten_bewegung").update(state="on", last_changed="2026-10-10T18:05:00+00:00")
+        after = a.get("/api/proactive/ha-devices").json()["items"]
+        self.assertEqual([x["id"] for x in after if before.get(x["id"]) != x["lc"]], ["binary_sensor.garten_bewegung"])
+
+    def test_device_list_needs_ha_switch_and_login(self):
+        a, uid = profile("Dorle")
+        self.assertIn(TestClient(panel.app).get("/api/proactive/ha-devices").status_code, (401, 403))
+        helpers.set_config(proactive=False)
+        self.assertEqual(a.get("/api/proactive/ha-devices").status_code, 403)
+        helpers.set_config(proactive=True)
+        a.delete("/api/profile/homeassistant")
+        self.assertEqual(a.get("/api/proactive/ha-devices").status_code, 409)
+
+    def test_device_list_rate_limit(self):
+        a, uid = profile("Dorian")
+        codes = [a.get("/api/proactive/ha-devices").status_code for _ in range(42)]
+        self.assertIn(429, codes)
+
+
 class Live(Base):
     def wait(self, check, steps=150):
         async def go():

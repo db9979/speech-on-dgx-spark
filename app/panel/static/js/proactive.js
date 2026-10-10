@@ -74,12 +74,15 @@ const PROX={
   pro_ha:st=>!st.has.ha?'':proHaSubs(st)+`<ul class="facts small" style="margin-top:6px">${st.rules.map(r=>`<li><span>${esc(r.line)}${r.text?`<br><small class="mut">„${esc(r.text)}“</small>`:''}${r.src==='voice'?` <small class="mut">${t('(per Sprache)','(by voice)')}</small>`:''}</span><button class="b" type="button" ${onAttr('proRuleDel',r.id)}>${t('Löschen','Delete')}</button></li>`).join('')||`<li class="mut">${t('Noch keine Regel.','No rule yet.')}</li>`}</ul>
     ${proLive(st)}
     <details id="proruleadd"><summary>${t('Regel hinzufügen','Add a rule')}</summary>
+      <datalist id="proents"></datalist>
+      <div class="row" style="margin-top:6px;flex-wrap:wrap"><button class="b" type="button" id="prorecent">${t('Zuletzt geändert','Recently changed')}</button><button class="b" type="button" id="prodetect">${t('Gerät erkennen','Detect device')}</button><span id="prodevmsg" class="fh"></span></div>
+      <div id="prodevs" class="row" style="flex-wrap:wrap;gap:4px"></div>
       ${proCond('1')}
       <details><summary>${t('und eine zweite Bedingung','and a second condition')}</summary>${proCond('2')}</details>
       <div class="two2"><div><label>${t('Mindestens so lange (Minuten)','For at least (minutes)')}</label><input id="promin" inputmode="numeric" value="0"></div><div><label>${t('Eigene Meldung (leer = automatisch)','Own message (empty = automatic)')}</label><input id="protext" autocomplete="off"></div></div>
       <div class="two2"><div><label>${t('Höchstens alle (Minuten)','At most every (minutes)')}</label><input id="propause" inputmode="numeric" value="0"></div><div><label>${t('Nur wenn','Only when')}</label><select id="proonly"><option value="">${t('immer','always')}</option><option value="away">${t('ich unterwegs bin','I am away')}</option><option value="empty">${t('niemand zu Hause ist','nobody is home')}</option><option value="night">${t('nachts','at night')}</option><option value="day">${t('tagsüber','during the day')}</option></select></div></div>
       <div id="promebox" hidden><label>${t('Ich in Home Assistant (Person)','Me in Home Assistant (person)')}</label><input id="prome" placeholder="person.dominik" value="${esc(S.pro_ha_me||'')}" autocomplete="off"><span class="fh" style="display:block">${t('Leer: die Person mit deinem Profilnamen.','Empty: the person with your profile name.')}</span></div>
-      ${HACAM_ON&&S.pro_ha_cam?`<label>${t('Kamerabild dazu (leer = keins)','Camera picture with it (empty = none)')}</label><input id="procam" placeholder="${t('z. B. Kamera Haustür oder camera.haustuer','e.g. front door camera or camera.haustuer')}" autocomplete="off">`:''}
+      ${HACAM_ON&&S.pro_ha_cam?`<label>${t('Kamerabild dazu (leer = keins)','Camera picture with it (empty = none)')}</label><input id="procam" list="proents" placeholder="${t('z. B. Kamera Haustür oder camera.haustuer','e.g. front door camera or camera.haustuer')}" autocomplete="off">`:''}
       ${HALOUD_ON&&S.pro_ha_loud?`<label class="chk" style="display:block;margin-top:6px"><input type="checkbox" id="proloud"> ${t('Auch laut auf Lautsprechern (nur der eigene Satz, ohne Namen)','Also aloud on speakers (own sentence only, no names)')}</label><span id="prospk" style="display:block">${(st.speakers||[]).map(x=>`<label class="chk" style="margin-right:10px"><input type="checkbox" data-spk="${esc(x.id)}"> ${esc(x.name)}</label>`).join('')||`<small class="mut">${t('Kein Lautsprecher nimmt gerade Durchsagen von dir an.','No speaker takes announcements from you right now.')}</small>`}</span>`:''}
       <div class="row" style="margin-top:8px"><button class="b p" type="button" id="proruleok">${t('Prüfen und hinzufügen','Check and add')}</button><span id="prorulemsg" class="fh"></span></div>
       <span style="display:block">${t('Beispiele: „Whirlpool“ über 37,5 · „Bad Fenster“ ist offen und „Regen“ ist an · „Waschmaschine Leistung“ unter 5, mindestens 3 Minuten · „Bewegung Flur“ ändert sich, bei an, höchstens alle 10 Minuten. Eine Regel meldet sich erst, nachdem sie einmal nicht zugetroffen hat, und dann einmal, bis sie wieder nicht zutrifft.','Examples: "Whirlpool" above 37.5 · "Bathroom window" is open and "Rain" is on · "Washing machine power" below 5, at least 3 minutes · "Motion hallway" changes, on, at most every 10 minutes. A rule speaks only after it was false once, then once until it is false again.')}</span></details>
@@ -92,12 +95,16 @@ const proHaSubs=()=>(HALIVE_ON?proHaSub('pro_ha_live',t('Sofort statt minütlich
   +(HACAM_ON?proHaSub('pro_ha_cam',t('Kamerabild beschreiben','Describe a camera picture'),t('Eine Regel kann ein Standbild einer Kamera kurz beschreiben lassen, nur auf deine Geräte. Das Bild wird nicht gespeichert.','A rule can add a short description of a camera still, to your devices only. The picture is not stored.')):'')
   +(HAEV_ON?proHaSub('pro_ha_events',t('Ereignisse aus Home Assistant','Events from Home Assistant'),t('Home Assistant schickt ein Ereignis wie „klingel“ mit eigenem Schlüssel; der Spark sagt deinen Satz dazu.','Home Assistant sends an event like "klingel" with its own key; the Spark says your sentence for it.')):'');
 const proLive=st=>!(HALIVE_ON&&S.pro_ha_live)||!st.ha?'':`<div class="fh">${st.ha.live?t('Live verbunden','Live connected')+(st.ha.devices?` · ${st.ha.devices} ${t('Geräte','devices')}`:''):st.ha.error?t('Live getrennt, Prüfung jede Minute: ','Live disconnected, checking every minute: ')+esc(st.ha.error):t('Live startet mit der ersten Regel (bis zu einer Minute).','Live starts with the first rule (up to a minute).')}</div>`;
-const proCond=n=>`<div class="two2"><div><label>${t('Gerät oder Sensor','Device or sensor')}</label><input id="proent${n}" placeholder="${t('Name oder entity_id','name or entity_id')}" autocomplete="off"></div><div><label>${t('Bedingung','Condition')}</label><span class="rowin"><select id="proop${n}" style="width:auto"><option value="above">${t('über','above')}</option><option value="below">${t('unter','below')}</option><option value="is">${t('ist','is')}</option><option value="changes">${t('ändert sich','changes')}</option></select><input id="proval${n}" placeholder="${t('z. B. 38 oder offen','e.g. 38 or open')}" autocomplete="off"><select id="prowhen${n}" style="width:auto" hidden><option value="">${t('bei an und aus','on and off')}</option><option value="on">${t('bei an','on')}</option><option value="off">${t('bei aus','off')}</option></select></span></div></div>`;
+const proCond=n=>`<div class="two2"><div><label>${t('Gerät oder Sensor','Device or sensor')}</label><input id="proent${n}" list="proents" placeholder="${t('Name oder entity_id','name or entity_id')}" autocomplete="off"></div><div><label>${t('Bedingung','Condition')}</label><span class="rowin"><select id="proop${n}" style="width:auto"><option value="above">${t('über','above')}</option><option value="below">${t('unter','below')}</option><option value="is">${t('ist','is')}</option><option value="changes">${t('ändert sich','changes')}</option></select><input id="proval${n}" placeholder="${t('z. B. 38 oder offen','e.g. 38 or open')}" autocomplete="off"><select id="prowhen${n}" style="width:auto" hidden><option value="">${t('bei an und aus','on and off')}</option><option value="on">${t('bei an','on')}</option><option value="off">${t('bei aus','off')}</option></select></span></div></div>`;
 const PROBIND={
   lead(){if($('prolead'))$('prolead').onchange=()=>saveSet('pro_lead',Number($('prolead').value))},
   mail(){if($('promailfrom'))$('promailfrom').onchange=()=>saveSet('pro_mail_from',$('promailfrom').value.trim().slice(0,300))},
   weather(){if($('proplace')){$('proplace').onchange=()=>saveSet('pro_place',$('proplace').value.trim().slice(0,60));$('proweatherat').onchange=()=>{if($('proweatherat').value)saveSet('pro_weather_at',$('proweatherat').value)}}},
   rule(){if(!$('proruleok'))return;
+    $('proruleadd').ontoggle=()=>{if($('proruleadd').open)proDevs()};
+    for(const id of ['proent1','proent2','procam'])if($(id))$(id).onfocus=()=>{PRODEV.at=id};
+    $('prorecent').onclick=async()=>{const d=await proDevs(true);if(d)proChips(d.slice(0,12),t('Zuletzt geändert – antippen übernimmt:','Recently changed – tap to take:'))};
+    $('prodetect').onclick=()=>proDetect();
     for(const n of ['1','2']){const op=$('proop'+n),w=$('prowhen'+n),v=$('proval'+n);op.onchange=()=>{w.hidden=op.value!=='changes';v.hidden=op.value==='changes';if(op.value==='changes'&&!Number($('propause').value))$('propause').value='10'}}
     $('proonly').onchange=()=>{$('promebox').hidden=$('proonly').value!=='away'};
     $('prome').onchange=()=>{const v=$('prome').value.trim().toLowerCase();if(!v||/^person\.[a-z0-9_]{1,80}$/.test(v))saveSet('pro_ha_me',v)};
@@ -109,6 +116,30 @@ const PROBIND={
     const r=await fetch('/api/proactive/rules',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify(body)});
     const d=await r.json();if(!r.ok){m.className='fh err';m.textContent=d.detail||r.status;return}showPro()}},
   haev(){if($('haevbox'))haEvents()}};
+// Picking devices for a rule (GET /api/proactive/ha-devices): a list to choose from, the last changed ones,
+// and "Gerät erkennen": press, then trigger the sensor; whatever changes in the next 40 s shows up.
+// The browser compares HA's own last_changed values, so no clock has to agree.
+const PRODEV={items:null,at:'proent1',run:0};
+async function proDevs(fresh){const m=$('prodevmsg');
+  if(PRODEV.items&&!fresh)return PRODEV.items;
+  try{const r=await api('/api/proactive/ha-devices');const d=await r.json();if(!r.ok){if(m){m.className='fh err';m.textContent=d.detail||r.status}return null}
+    PRODEV.items=d.items;const dl=$('proents');
+    if(dl)dl.innerHTML=d.items.map(x=>`<option value="${esc(x.id)}" label="${esc(x.name)} · ${esc(x.state)}"></option>`).join('');
+    return d.items}catch{if(m){m.className='fh err';m.textContent=t('Home Assistant nicht erreichbar.','Home Assistant not reachable.')}return null}}
+function proChips(items,head){const box=$('prodevs');if(!box)return;
+  box.innerHTML=items.length?`<small class="mut" style="width:100%">${esc(head)}</small>`+items.map(x=>`<button class="b" type="button" ${onAttr('proPick',x.id)} title="${esc(x.id)}">${esc(x.name)} <small class="mut">${esc(x.state)}</small></button>`).join(''):''}
+async function proDetect(){const m=$('prodevmsg'),run=++PRODEV.run;
+  const base=await proDevs(true);if(!base)return;const was=new Map(base.map(x=>[x.id,x.lc])),seen=new Map();
+  m.className='fh';proChips([],'');
+  for(let i=20;i>0&&run===PRODEV.run;i--){m.textContent=t(`Jetzt auslösen (Bewegung, Tür, Klingel) … noch ${i*2} s`,`Trigger it now (motion, door, bell) … ${i*2} s left`);
+    await new Promise(r=>setTimeout(r,2000));if(run!==PRODEV.run||!$('prodevs'))return;
+    const now=await proDevs(true);if(!now)return;
+    for(const x of now)if(was.get(x.id)!==x.lc)seen.set(x.id,x);
+    if(seen.size)proChips([...seen.values()].slice(0,12),t('Hat sich gerade geändert – antippen übernimmt:','Just changed – tap to take:'))}
+  if(run===PRODEV.run)m.textContent=seen.size?'':t('Nichts hat sich geändert. Noch einmal versuchen?','Nothing changed. Try again?')}
+ON.proPick=(b,id)=>{PRODEV.run++;
+  const f=id.startsWith('camera.')&&$('procam')?'procam':(['proent1','proent2'].includes(PRODEV.at)&&$(PRODEV.at)?PRODEV.at:'proent1');
+  $(f).value=id;$(f).focus();$('prodevmsg').textContent='';$('prodevs').innerHTML=''};
 // Ich → Von selbst → Ereignisse aus Home Assistant (hamelden.py): names with a fixed sentence, a key of their own
 let HAEV=null;
 async function haEvents(){const box=$('haevbox');if(!box)return;try{HAEV=await (await api('/api/profile/ha-events')).json()}catch(e){box.innerHTML=`<div class="fh err">${esc(e.message)}</div>`;return}
