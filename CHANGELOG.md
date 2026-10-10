@@ -2,6 +2,7 @@
 
 Every version in one line, newest first (taken from the commit messages, so some lines are German, some English). Older entries have no version number.
 
+- **V01.0.325** · 2026-10-10 · Zustand → Live und Live-Monitor zeigen den Notaus auch im Bild: ab Stufe 1 Internet-Ziele, Eingang und Wächter rot gestrichelt mit Schloss („abgehängt“), ab Stufe 2 Home Assistant „nur lesen“, Stufe 3 die Stufen im Spark „still“; der Notaus-Streifen drückt auf dem Monitor das Bild nicht mehr zusammen
 - **V01.0.324** · 2026-10-10 · Selbsttest test_invitation_and_handoff: statt expect_navigation (lief auf GitHub ohne Neuladen in 45 s ab) Abfrage, ob /api/join 200 kam und die Seite neu geladen ist; ohne Anfrage nach 8 und 20 s „WARNUNG kein /api/join“ mit Zustand ins Log, PIN neu füllen und noch einmal tippen
 - **V01.0.323** · 2026-10-10 · iPhone-App: „Gesicht zeigt, was es tut“ wie im Panel (.294): Zeichen, Blick und Haltung für Suche, Kalender, Mail, Smart Home, Merken, erledigt, Fehler, Schlaf; nur aus festen Chat-Ereignisnamen, nur mit Admin-Schalter chat.face_life
 - **V01.0.322** · 2026-10-10 · Zustand → Live: Websuche steht unter Internet („SearXNG (Heimnetz) → Internet“, die Suchbegriffe gehen an Suchmaschinen draußen), Seiten aus Treffern (read_page) als eigenes Ziel „Webseiten“ unter Internet

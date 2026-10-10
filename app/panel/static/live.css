@@ -14,6 +14,7 @@
 .lv .lvfs{margin-left:auto;border:1px solid var(--line);background:var(--card);color:var(--fg);border-radius:8px;width:30px;height:28px;cursor:pointer;font-size:15px}
 .lv .flow.full{position:fixed;inset:0;z-index:60;margin:0;border-radius:0;display:flex;flex-direction:column;padding:14px 18px}.lv .flow.full #lvflow{flex:1;min-height:0}.lv .flow.full svg{height:100%}
 .lv .node rect{fill:var(--card);stroke:var(--line);stroke-width:1.2}
+.lv .node.held rect{fill:color-mix(in srgb,var(--bad) 7%,var(--card))}.lv .node.held .a{opacity:.7}.lv .node.held .b{fill:var(--bad)}
 .lv .node.act rect{stroke:var(--acc);stroke-width:1.8}
 .lv .node .a{font-size:13px;font-weight:600;fill:var(--fg)}.lv .node .b{font-size:10.5px;fill:var(--mut)}
 .lv .node .badge{fill:var(--acc)}.lv .node .bt{fill:#fff;font-size:10px;font-weight:700}
@@ -66,8 +67,8 @@ body.kiosk{height:100vh;overflow:hidden;background:var(--bg)}
 .kiosk .kh h1{font-size:18px;margin:0 8px 0 0;display:flex;align-items:center;gap:10px}
 .kiosk .kh .live{margin-left:auto;display:flex;gap:10px;align-items:center;font:14px ui-monospace,Menlo,monospace}
 .kiosk .kh .dot{width:8px;height:8px;border-radius:50%;background:var(--ok)}.kiosk .kh .dot.bad{background:var(--bad)}
-.kiosk .lv{display:grid;grid-template-columns:minmax(0,1fr) 560px;grid-template-rows:auto minmax(0,1fr) 300px;gap:14px;padding:14px 22px;height:calc(100vh - 53px)}
-.kiosk .lv .kpis{grid-column:1/3;margin:0}.kiosk .lv .flow{margin:0;display:flex;flex-direction:column}.kiosk #lvflow{flex:1;min-height:0}.kiosk #lvflow svg{height:100%}
+.kiosk .lv{display:grid;grid-template-columns:minmax(0,1fr) 560px;grid-template-rows:auto auto minmax(0,1fr) 300px;gap:14px;padding:14px 22px;height:calc(100vh - 53px)}
+.kiosk .lv .lvna{grid-column:1/3;grid-row:1;margin:0}.kiosk .lv .kpis{grid-column:1/3;grid-row:2;margin:0}.kiosk .lv .flow,.kiosk .kside{grid-row:3}.kiosk .kbot{grid-row:4}.kiosk .lv .flow{margin:0;display:flex;flex-direction:column}.kiosk #lvflow{flex:1;min-height:0}.kiosk #lvflow svg{height:100%}
 .kiosk .kside{display:grid;grid-template-rows:auto minmax(0,1fr);gap:14px;min-height:0}
 .kiosk .kbot{grid-column:1/3;display:grid;grid-template-columns:minmax(0,1.25fr) minmax(0,1fr);gap:14px;min-height:0}
 .kiosk .krot{display:grid;min-height:0}.kiosk .krot>.card{grid-area:1/1;display:none;margin:0}.kiosk .krot>.card.on{display:block;animation:lvfade .6s}
