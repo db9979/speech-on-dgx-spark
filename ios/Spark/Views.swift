@@ -532,7 +532,7 @@ struct SettingsView: View {
                         NavigationLink("Sicherheit") { SecurityView() }
                     }
                     if talk.allowed.areas.contains("app_admin") {
-                        NavigationLink("Spark verwalten") { AdminView() }
+                        NavigationLink("Spark verwalten") { AdminView(profileRole: talk.allowed.adminRole) }
                     }
                     if talk.allowed.panel {
                         NavigationLink("Im Panel öffnen") { PanelBridgeView(admin: talk.allowed.areas.contains("app_admin")) }

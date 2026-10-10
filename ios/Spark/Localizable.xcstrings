@@ -281,6 +281,26 @@
         }
       }
     },
+    "Als Mit-Admin, mit dem Code deines Profils. Nach 15 Minuten ohne Bedienung endet die Anmeldung.": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "As co-admin, with your profile's code. The sign-in ends after 15 minutes without use."
+          }
+        }
+      }
+    },
+    "Als Verwalter: Monitoring, Logs, Funktionen, Profile und Geräte. Mit dem Code deines Profils.": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "As manager: monitoring, logs, features, profiles and devices. With your profile's code."
+          }
+        }
+      }
+    },
     "Am Akku": {
       "localizations": {
         "en": {
@@ -3037,6 +3057,16 @@
           "stringUnit": {
             "state": "translated",
             "value": "Pair with this Spark?"
+          }
+        }
+      }
+    },
+    "Mit meinem Profil anmelden": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Sign in with my profile"
           }
         }
       }

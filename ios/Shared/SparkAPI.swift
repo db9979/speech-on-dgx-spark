@@ -98,6 +98,8 @@ struct Allowed {
     /// panel areas in the app (admin switch chat.iphone_panel): "Im Panel öffnen" and the areas the profile switched on
     var panel = false
     var areas: Set<String> = []
+    /// the profile's own admin role ("coadmin" or "manager", V01.0.255): "Mit meinem Profil anmelden" in Spark verwalten
+    var adminRole = ""
 }
 
 /// A device of the profile in room mode (from /api/room/active): only where and until when, never what was heard.
@@ -284,7 +286,8 @@ struct SparkAPI {
                        updateStart: (d["update"] as? [String: Any])?["start"] as? Bool ?? false,
                        rooms: d["rooms"] as? Bool ?? false,
                        panel: d["panel"] as? Bool ?? false,
-                       areas: Set(((d["areas"] as? [String: Any]) ?? [:]).compactMap { $0.value as? Bool == true ? $0.key : nil }))
+                       areas: Set(((d["areas"] as? [String: Any]) ?? [:]).compactMap { $0.value as? Bool == true ? $0.key : nil }),
+                       adminRole: ["coadmin", "manager"].contains(d["admin_role"] as? String ?? "") ? d["admin_role"] as? String ?? "" : "")
     }
 
     /// Where the profile's devices listen in room mode right now (names and end times only).

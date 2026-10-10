@@ -31,6 +31,7 @@ Alle Optionen ohne Rückfragen (`--mode api --asr 1.7b --tts 0.6b --yes` …) st
 
 <!-- New version: add one line at the top here and in CHANGELOG.md, drop the oldest line here (keep 10). Details go to docs/de and docs/en, not into this README. -->
 
+- **V01.0.256** iPhone-App: „Mit meinem Profil anmelden“ in Spark verwalten für Mit-Admin und Verwalter (Profil-Code, endet nach 15 Min. ohne Bedienung)
 - **V01.0.255** Benutzer als Admin (Schalter unter Einstellungen → Sicherheit, aus; nur mit zweitem Schritt des Hauptadmins): Rollen Mit-Admin und Verwalter für Profile, Admin-Modus unter Ich → Sicherheit mit eigenem Code (15 min ohne Bedienung, höchstens 8 h), Hauptadmin behält Passwort, Rollen, Sicherungen und Admin-Profile, Logs → Admin-Protokoll zeigt wer, App-Anmeldung mit Profil-Code (Server)
 - **V01.0.254** Einstellungen: Spracherkennung und Sicherheit springen auf breiten Bildschirmen nicht mehr nach rechts (Platz für die Scrollleiste immer frei), Zweiter Anmeldeschritt in einem Rahmen, Modell-Auswahl der Spracherkennung nicht mehr abgeschnitten; Browsertest prüft das
 - **V01.0.253** Funktionen: „Wikipedia direkt“ steht unter der Websuche, „Rollen per Sprache“ unter dem eigenen Gesprächsstil (Seite bleibt kurz, Browsertest wieder grün)
@@ -40,7 +41,6 @@ Alle Optionen ohne Rückfragen (`--mode api --asr 1.7b --tts 0.6b --yes` …) st
 - **V01.0.249** Rollen per Sprache und Wikipedia direkt (je Admin- und Profil-Schalter, aus): eigene Rollen unter Ich → Gespräch, „Sei jetzt der Butler“ / „Sei wieder normal“ schaltet das Panel mit festen Regeln; Wissensfragen aus der Wikipedia-Einleitung statt Websuche, 24 Stunden Cache
 - **V01.0.248** Funktionen: „Panel-Bereiche in der iPhone-App“ steht unter dem Schalter der iPhone-App (Seite bleibt kurz)
 - **V01.0.247** iPhone-App übernimmt das Panel, Stufe 3: „Spark verwalten“ mit Admin-Passwort und Code, Monitoring, Logs mit „Kopieren für Thread“, Prüfen
-- **V01.0.246** iPhone-App übernimmt das Panel, Stufe 1–2: „Im Panel öffnen“, Panel-Bereiche mit eigenem Schalter, „Mein Alltag“ (Termine, Erinnerungen, Gedächtnis, Gesprächsschalter)
 
 Alle Versionen: [CHANGELOG.md](CHANGELOG.md)
 

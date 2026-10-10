@@ -12,7 +12,10 @@ final class AdminSession: ObservableObject {
 
     @Published private(set) var signedIn = false
     @Published var version = ""
+    /// who is signed in: "main" (admin password) or a profile in its admin mode ("coadmin", "manager")
+    @Published private(set) var role = "main"
     private var session = AdminSession.fresh()
+    private var kept = Date.distantPast
 
     private static func fresh() -> URLSession {
         let c = URLSessionConfiguration.ephemeral
@@ -43,13 +46,36 @@ final class AdminSession: ObservableObject {
             default: throw SparkError(message: d["detail"] as? String ?? String(localized: "Fehler \(statusCode) vom Spark."))
             }
         }
-        signedIn = true
-        if let who = try? await object("GET", "api/whoami") { version = who["version"] as? String ?? "" }
+        await signedInNow()
         return true
     }
 
+    private func signedInNow() async {
+        signedIn = true
+        kept = Date()
+        if let who = try? await object("GET", "api/whoami") {
+            version = who["version"] as? String ?? ""
+            let by = who["admin_by"] as? String ?? "main"
+            role = ["coadmin", "manager"].contains(by) ? by : "main"
+        }
+    }
+
+    /// "Mit meinem Profil anmelden": the profile's admin role with the iPhone's key and the profile's own code.
+    func elevate(code: String) async throws {
+        guard let base = Store.baseURL, let key = Store.key else { throw SparkError(message: String(localized: "Nicht gekoppelt.")) }
+        var r = URLRequest(url: base.appendingPathComponent("api/admin/elevate"))
+        r.httpMethod = "POST"
+        // the app's own key goes along only here: the Spark checks the profile's role and switches for it
+        r.setValue(key, forHTTPHeaderField: "X-Speech-Device")
+        r.setValue(code, forHTTPHeaderField: "X-Speech-Code")
+        let (data, response) = try await session.data(for: r)
+        try SparkAPI.check(data, response)
+        await signedInNow()
+    }
+
     func logout() async {
-        _ = try? await call("POST", "api/logout")
+        _ = try? await call("POST", role == "main" ? "api/logout" : "api/admin/elevate/end")
+        role = "main"
         session.invalidateAndCancel()
         session = Self.fresh()
         signedIn = false
@@ -69,6 +95,11 @@ final class AdminSession: ObservableObject {
         }
         if let code { r.setValue(code, forHTTPHeaderField: "X-Speech-Code") }
         let (data, response) = try await session.data(for: r)
+        // a profile's admin mode ends after 15 minutes without use: while used, renew it at most every 2 minutes
+        if role != "main" && signedIn && path != "api/admin/elevate/keep" && Date().timeIntervalSince(kept) > 120 {
+            kept = Date()
+            Task { _ = try? await self.call("POST", "api/admin/elevate/keep") }
+        }
         if (response as? HTTPURLResponse)?.statusCode == 401 {
             signedIn = false
             throw SparkError(message: String(localized: "Die Admin-Anmeldung ist abgelaufen. Bitte neu anmelden."))
@@ -91,7 +122,10 @@ final class AdminSession: ObservableObject {
 }
 
 struct AdminView: View {
+    /// the profile's own admin role from the Spark ("coadmin", "manager" or "")
+    var profileRole = ""
     @ObservedObject private var s = AdminSession.shared
+    @State private var ask: CodeRequest?
     @State private var unlocked = false
     @State private var password = ""
     @State private var code = ""
@@ -106,17 +140,18 @@ struct AdminView: View {
                     Button("Mit Face ID entsperren") { Task { unlocked = await AdminSession.unlock(String(localized: "Spark verwalten")) } }
                 } footer: { Text("Danach meldest du dich mit dem Admin-Passwort und dem Code des Admins an, wie im Browser.") }
             } else if !s.signedIn {
+                if !profileRole.isEmpty { profileLogin }
                 login
             } else {
                 Section {
                     NavigationLink("Monitoring") { StatusView() }
                     NavigationLink("Logs") { LogsView() }
-                    NavigationLink("Prüfen") { ChecksView() }
+                    if s.role != "manager" { NavigationLink("Prüfen") { ChecksView() } }
                 } header: { Text("Zustand") }
                 Section {
                     NavigationLink("Funktionen") { FeaturesView() }
                     NavigationLink("Profile und Geräte") { AdminProfilesView() }
-                    NavigationLink("Sicherungen") { BackupsView() }
+                    if s.role != "manager" { NavigationLink("Sicherungen") { BackupsView() } }
                 } header: { Text("Ändern") } footer: {
                     Text("Was einen Code braucht (neue PIN, Profil löschen), fragt danach. Sprachmodell, Engines und Ports bleiben im Browser.")
                 }
@@ -127,6 +162,21 @@ struct AdminView: View {
         }
         .navigationTitle("Spark verwalten")
         .task { if !unlocked { unlocked = await AdminSession.unlock(String(localized: "Spark verwalten")) } }
+        .codeAlert($ask)
+    }
+
+    private var profileLogin: some View {
+        Section {
+            Button("Mit meinem Profil anmelden") {
+                ask = CodeRequest { c in
+                    do { try await s.elevate(code: c); error = nil } catch { self.error = error.localizedDescription }
+                }
+            }
+            if let e = error { Text(verbatim: e).foregroundStyle(.red) }
+        } footer: {
+            Text(profileRole == "manager" ? String(localized: "Als Verwalter: Monitoring, Logs, Funktionen, Profile und Geräte. Mit dem Code deines Profils.")
+                                          : String(localized: "Als Mit-Admin, mit dem Code deines Profils. Nach 15 Minuten ohne Bedienung endet die Anmeldung."))
+        }
     }
 
     private var login: some View {
@@ -639,7 +689,7 @@ struct BackupsView: View {
                         Text(b.created, format: .dateTime.day().month().year().hour().minute())
                         Text(verbatim: ByteCountFormatter.string(fromByteCount: Int64(b.size), countStyle: .file)).font(.caption).foregroundStyle(.secondary)
                     }
-                    .swipeActions { Button("Löschen", role: .destructive) { Task { await remove(b.name) } } }
+                    .swipeActions { if s.role == "main" { Button("Löschen", role: .destructive) { Task { await remove(b.name) } } } }
                 }
             } header: { Text("Sicherungen") }
         }
