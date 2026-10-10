@@ -33,6 +33,7 @@ Alle Optionen ohne Rückfragen (`--mode api --asr 1.7b --tts 0.6b --yes` …) st
 
 <!-- New version: add one line at the top here and in CHANGELOG.md, drop the oldest line here (keep 10). Details go to docs/de and docs/en, not into this README. -->
 
+- **V01.0.327** Assistent auf dem Rechner nutzt das ganze Fenster: Gesicht und Verlauf gehen bis ganz unten, nur der Verlauf rollt
 - **V01.0.326** Hilfe zum Spark (aus): der Assistent beantwortet Fragen zu Einstellungen aus den eigenen Anleitungen, schlägt Schalter als Karte vor (erst „Übernehmen“ ändert etwas) und „Frag Spark“ gibt es auf jeder Seite
 - **V01.0.325** Live-Übersicht: Notaus im Bild, abgehängte Ziele rot mit Schloss
 - **V01.0.324** Selbsttest Einladung: wartet bis 45 s auf das Neuladen, tippt ein zweites Mal, falls das erste Tippen kein /api/join auslöste, und schreibt dann eine Spur ins Log (auf GitHub wieder rot)
@@ -41,7 +42,6 @@ Alle Optionen ohne Rückfragen (`--mode api --asr 1.7b --tts 0.6b --yes` …) st
 - **V01.0.321** iPhone-App kommt wieder bei TestFlight an: Wurden die Tests eines iOS-Stands von einem neueren Push abgebrochen, geht der neueste grüne main-Stand hoch, der ihn enthält
 - **V01.0.320** MCP „Schlüssel erzeugen“: meldete „Bitte zuerst einen Namen eingeben“, obwohl einer drinstand; das Namensfeld hatte dieselbe Kennung wie ein Feld der Admin-Seite Agenten, die Seite las das leere; eigene Kennungen plus Selbsttest
 - **V01.0.319** Smart-Home-Regeln lassen sich bearbeiten, nicht nur löschen
-- **V01.0.318** Live-Übersicht: Vollbild-Knopf für das Bild „Wohin die Anfragen gerade gehen“
 - **V01.0.317** Smart-Home-Regeln: Geräte aus einer Liste wählen statt abtippen, „Zuletzt geändert“ und „Gerät erkennen“ (Sensor auslösen, Gerät antippen)
 
 Alle Versionen: [CHANGELOG.md](CHANGELOG.md)

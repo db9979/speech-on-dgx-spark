@@ -127,6 +127,35 @@ class Browser(unittest.TestCase):
                     await br.close()
         self.run_async(go())
 
+    def test_assistant_fills_the_window(self):
+        """Assistent on computers (V01.0.327): face and history reach the bottom of the window, the page itself
+        does not scroll, only the history does; narrow windows put the face above the history."""
+        async def go():
+            async with async_playwright() as p:
+                for w, h in ((1440, 900), (1920, 1080), (900, 1000)):
+                    br, pg, errors = await self.page(p, w, h, csp=True)
+                    try:
+                        await pg.evaluate("goSec('chat')")
+                        await pg.wait_for_timeout(300)
+                        await pg.evaluate("for(let i=0;i<40;i++)chatLog(i%2?'bot':'user','Zeile '+i)")
+                        await pg.wait_for_timeout(300)
+                        box = await pg.evaluate("""(()=>{const r=e=>document.querySelector(e).getBoundingClientRect(),
+                            s=r('#chat .stage'),c=r('#chat .convo'),l=$('chatlog');
+                            return {sb:s.bottom,st:s.top,cb:c.bottom,ct:c.top,page:document.documentElement.scrollHeight,
+                                    logs:l.scrollHeight>l.clientHeight}})()""")
+                        self.assertGreater(box["cb"], h - 50, f"{w}: Verlauf endet bei {box['cb']}")
+                        self.assertLessEqual(box["cb"], h, f"{w}: Verlauf ragt unten heraus")
+                        self.assertLessEqual(box["page"], h + 1, f"{w}: Seite rollt")
+                        self.assertTrue(box["logs"], f"{w}: Verlauf rollt nicht in sich")
+                        if w > 1100:
+                            self.assertAlmostEqual(box["sb"], box["cb"], delta=1)   # both cards equally tall
+                        else:
+                            self.assertLessEqual(box["sb"], box["ct"])   # small face bar above the history
+                        self.assertEqual(errors, [], w)
+                    finally:
+                        await br.close()
+        self.run_async(go())
+
     def test_frag_spark_window_and_card(self):
         """Spark-Hilfe (hilfe.js): "Frag Spark" on a page, the card under the answer, "Übernehmen" switches only
         after the tap; no sideways scrolling on a phone, with the strict CSP on."""
