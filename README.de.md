@@ -33,6 +33,7 @@ Alle Optionen ohne Rückfragen (`--mode api --asr 1.7b --tts 0.6b --yes` …) st
 
 <!-- New version: add one line at the top here and in CHANGELOG.md, drop the oldest line here (keep 10). Details go to docs/de and docs/en, not into this README. -->
 
+- **V01.0.330** TestFlight: Jeder Lauf widerruft die Zertifikate, die er angelegt hat, damit Apples Höchstzahl die Uploads nicht mehr stoppt
 - **V01.0.329** Live-Übersicht: Rückweg vom Sprechen zum Gerät sichtbar
 - **V01.0.328** Selbsttest Einladung: Tages-Sicherung des Testservers vor dem Browsertest packen (sie bremste ihn auf GitHub beim Neuladen aus), auf den Start der neuen Seite statt auf „load“ warten
 - **V01.0.327** Assistent auf dem Rechner nutzt das ganze Fenster: Gesicht und Verlauf gehen bis ganz unten, nur der Verlauf rollt
@@ -42,7 +43,6 @@ Alle Optionen ohne Rückfragen (`--mode api --asr 1.7b --tts 0.6b --yes` …) st
 - **V01.0.323** iPhone-App: Das Gesicht zeigt, was es tut, wie im Panel (mit dem Admin-Schalter „Gesicht zeigt, was es tut“)
 - **V01.0.322** Live-Übersicht: Websuche und Webseiten stehen unter Internet
 - **V01.0.321** iPhone-App kommt wieder bei TestFlight an: Wurden die Tests eines iOS-Stands von einem neueren Push abgebrochen, geht der neueste grüne main-Stand hoch, der ihn enthält
-- **V01.0.320** MCP „Schlüssel erzeugen“: meldete „Bitte zuerst einen Namen eingeben“, obwohl einer drinstand; das Namensfeld hatte dieselbe Kennung wie ein Feld der Admin-Seite Agenten, die Seite las das leere; eigene Kennungen plus Selbsttest
 
 Alle Versionen: [CHANGELOG.md](CHANGELOG.md)
 
