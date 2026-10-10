@@ -33,6 +33,7 @@ All options for running without questions (`--mode api --asr 1.7b --tts 0.6b --y
 
 <!-- New version: add one line at the top here and in CHANGELOG.md, drop the oldest line here (keep 10). Details go to docs/de and docs/en, not into this README. -->
 
+- **V01.0.339** Writing help in other programs (off): Mac quick action, Windows program (x64 and ARM, Ctrl+Alt+S), add-in for Outlook, Word and Excel, browser extension and iPhone share, each paired with its own key
 - **V01.0.338** Kill switch for admins only; plus "my kill switch" for every profile (Me → Security): stops only that profile, ways in closed and no actions, reading stays; lifted with the PIN
 - **V01.0.337** Live overview: the Spark's warnings (slower answers, quality test, memory …) show at their place in the picture
 - **V01.0.336** Live overview: queues at hearing and speaking, a star for priority requests, background work under "Running now"
@@ -42,7 +43,6 @@ All options for running without questions (`--mode api --asr 1.7b --tts 0.6b --y
 - **V01.0.332** Writing help (off): correct, smooth, shorten, translate mails and other texts or draft a reply, with the changes marked in colour
 - **V01.0.331** Assistant: no more sideways scroll bar under the face
 - **V01.0.330** TestFlight: each run revokes the signing certificates it made, so Apple's certificate limit no longer stops uploads
-- **V01.0.329** Live overview: the way back from speaking to the device shows
 
 All versions: [CHANGELOG.md](CHANGELOG.md)
 

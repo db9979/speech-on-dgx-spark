@@ -33,6 +33,7 @@ Alle Optionen ohne Rückfragen (`--mode api --asr 1.7b --tts 0.6b --yes` …) st
 
 <!-- New version: add one line at the top here and in CHANGELOG.md, drop the oldest line here (keep 10). Details go to docs/de and docs/en, not into this README. -->
 
+- **V01.0.339** Schreibhilfe in anderen Programmen (aus): Mac-Schnellaktion, Windows-Programm (x64 und ARM, Strg+Alt+S), Add-in für Outlook, Word und Excel, Browser-Erweiterung und iPhone-Teilen, jedes mit eigenem Schlüssel gekoppelt
 - **V01.0.338** Notaus nur noch für Admins; dazu „Mein Notaus“ für jedes Profil (Ich → Sicherheit): legt nur das eigene Profil still, Zugänge zu und keine Aktionen, Lesen bleibt; aufheben mit PIN
 - **V01.0.337** Live-Übersicht: Hinweise wie „Antworten langsamer“ an der passenden Stelle im Bild
 - **V01.0.336** Live-Übersicht: Warteschlangen, Vorrang-Stern und Hintergrundarbeit sichtbar
@@ -42,7 +43,6 @@ Alle Optionen ohne Rückfragen (`--mode api --asr 1.7b --tts 0.6b --yes` …) st
 - **V01.0.332** Schreibhilfe (aus): Mails und andere Texte korrigieren, glätten, kürzen, übersetzen oder eine Antwort entwerfen, mit farbig markierten Änderungen
 - **V01.0.331** Assistent: kein waagrechter Rollbalken mehr unter dem Gesicht
 - **V01.0.330** TestFlight: Jeder Lauf widerruft die Zertifikate, die er angelegt hat, damit Apples Höchstzahl die Uploads nicht mehr stoppt
-- **V01.0.329** Live-Übersicht: Rückweg vom Sprechen zum Gerät sichtbar
 
 Alle Versionen: [CHANGELOG.md](CHANGELOG.md)
 
