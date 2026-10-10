@@ -152,6 +152,8 @@
         <div class="fh">Leer = die Adresse dieser Seite. Am besten dein Reverse Proxy mit echtem Zertifikat (er muss WebSockets durchlassen); ein selbst signiertes Zertifikat (Port 31443) nimmt das Board nicht an, im Heimnetz geht auch http://&lt;Spark-IP&gt;:31080.</div>
         <ul class="facts small" id="espcheckres"></ul></div>
       <div class="setrow"><div class="lbl"><b>iPhone-App</b><span>Profile koppeln die App „Spark“ auf ihrem iPhone: fragen und hören mit der Spark-Stimme, auch per Siri.</span></div><label class="tgl"><input type="checkbox" id="chat.iphone"><i></i></label></div>
+      <div class="setrow"><div class="lbl"><b>Android-App</b><span>App „Spark“ als APK von dieser Seite: der Spark wie am Handy, dazu Mitteilungen und Teilen an Spark.</span></div><label class="tgl"><input type="checkbox" id="chat.android"><i></i></label></div>
+      <div data-show="chat.android" style="margin-left:18px" id="andadmin"><div class="fh" id="andstate"></div><div class="row" style="margin-top:6px"><button class="b" type="button" id="andfetch">App jetzt holen</button></div></div>
       <div class="setrow"><div class="lbl"><b>Pebble-Uhr koppeln</b><span>Uhr-App „Spark“ per Einrichtungscode koppeln statt Adresse und Schlüssel abzutippen. Der Uhr-Schlüssel darf nur fragen.</span></div><label class="tgl"><input type="checkbox" id="chat.pebble"><i></i></label></div>
       <div class="setrow"><div class="lbl"><b>Push an die iPhone-App</b><span>Meldungen kommen auch bei geschlossener App. Apple sieht nur „Neue Nachricht“, den Text holt die App vom Spark.</span></div><label class="tgl"><input type="checkbox" id="chat.iphone_push"><i></i></label></div>
       <div data-show="chat.iphone_push" style="margin-left:18px" id="apnsadmin"><div class="fh">Schlüssel von developer.apple.com → Certificates, IDs &amp; Profiles → Keys → „+“ → Apple Push Notifications service (APNs). Die .p8-Datei gibt es nur einmal zum Herunterladen.</div>
@@ -729,6 +731,7 @@
     <div id="tgbox" class="ptab"></div>
     <div id="espbox" class="ptab"></div>
     <div id="appbox" class="ptab"></div>
+    <div id="andbox" class="ptab"></div>
     <div id="pebbox" class="ptab"></div>
     <div id="rmbox" class="ptab"></div>
     <div id="wxbox" class="ptab"></div>
@@ -782,6 +785,7 @@
 <script src="/static/js/who.js"></script>
 <script src="/static/js/join.js"></script>
 <script src="/static/js/today.js"></script>
+<script src="/static/js/android.js"></script>
 <script src="/static/js/appview.js"></script>
 <script src="/static/js/start.js"></script>
 </body>

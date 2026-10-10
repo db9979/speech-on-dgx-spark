@@ -720,6 +720,7 @@ SETTINGS = {
     "esp_on": (False, lambda v: isinstance(v, bool)),   # own ESP32 speakers (esp32.py)
     "spk_code": (False, lambda v: isinstance(v, bool)),   # code word at an own speaker when the voice is not sure (spkcode.py)
     "pebble_on": (False, lambda v: isinstance(v, bool)),   # Pebble watch paired by code (pebblewatch.py)
+    "android_on": (False, lambda v: isinstance(v, bool)),  # Android app (android.py)
     # iPhone app (iphone.py): pairing for this profile, and switching the smart home from it, both off
     "app_on": (False, lambda v: isinstance(v, bool)),
     "app_ha": (False, lambda v: isinstance(v, bool)),

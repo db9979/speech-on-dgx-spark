@@ -160,10 +160,11 @@ def vapid(endpoint):
 
 
 def reachable(uid, private=True):
-    """The profile gets notes somewhere: a browser with push, or Telegram (see telegram.py)."""
+    """The profile gets notes somewhere: a browser with push, Telegram (see telegram.py) or one of the apps."""
+    import android
     import apns
     import telegram
-    return bool(subs(uid) or telegram.push_on(uid, private) or apns.reachable(uid))
+    return bool(subs(uid) or telegram.push_on(uid, private) or apns.reachable(uid) or android.reachable(uid))
 
 
 def sub_id(endpoint):
@@ -176,13 +177,16 @@ LAST_KEEP = 12 * 3600
 
 def pick(uid, private=True):
     """One target for a note (V01.0.181: everything once): the device the profile used last, else the
-    iPhone app, else Telegram, else the newest browser. Returns ("app"|"tg"|"web", [subscriptions])."""
+    iPhone app, else the Android app (android.py, it asks for notes itself), else Telegram, else the newest
+    browser. Returns ("app"|"and"|"tg"|"web", [subscriptions])."""
+    import android
     import apns
     import telegram
-    have = {"app": apns.reachable(uid), "tg": telegram.push_on(uid, private), "web": bool(subs(uid))}
+    have = {"app": apns.reachable(uid), "and": android.reachable(uid), "tg": telegram.push_on(uid, private),
+            "web": bool(subs(uid))}
     kind, key, t = profiles.LAST_USED.get(uid, ("", "", 0))
     if not (have.get(kind) and time.time() - t < LAST_KEEP):
-        kind = next((k for k in ("app", "tg", "web") if have[k]), "")
+        kind = next((k for k in ("app", "and", "tg", "web") if have[k]), "")
     if kind != "web":
         return kind, []
     mine = [s for s in subs(uid) if key and sub_id(s["endpoint"]) == key]
@@ -199,6 +203,10 @@ async def send(uid, title, body, tag="", private=True):
     kind, targets = ("web", subs(uid)) if tag == "hello" else pick(uid, private)
     # the iPhone app: Apple only carries "new message", the text waits on the Spark (apns.py)
     n = await apns.send(uid, title, body, tag=tag) if kind == "app" else 0
+    if kind == "and":   # the Android app fetches it with its next question (android.py)
+        import android
+        android.keep(uid, title, body, tag)
+        n += 1
     payload = json.dumps({"title": title, "body": body, "tag": tag}).encode()[:3000]
     n += await telegram.notify(uid, f"{title}\n{body}", private) if kind == "tg" else 0
     async with httpx.AsyncClient(timeout=15) as c:

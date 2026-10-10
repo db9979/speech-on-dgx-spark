@@ -58,6 +58,7 @@ OPEN = {
     "/apple-touch-icon.png": "page files",
     "/favicon.ico": "page files",
     "/pebble/speech-spark.pbw": "the watch app",
+    "/android/spark.apk": "the Android app file; only with a download link (one-time token, 30 minutes) from a profile's own login",
     "/sw.js": "the page's service worker",
     "/api/join/check": "an invited person's first contact; 404 unless the admin allows invitations, one-time codes, lockout",
     "/api/join": "an invited person's first contact; 404 unless the admin allows invitations, one-time codes, lockout",

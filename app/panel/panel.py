@@ -52,6 +52,7 @@ import transit  # noqa: E402
 import esp32  # noqa: E402
 import iphone  # noqa: E402
 import pebblewatch  # noqa: E402
+import android  # noqa: E402
 import appupdate  # noqa: E402
 import apns  # noqa: E402
 import logfilter  # noqa: E402
@@ -72,7 +73,7 @@ import today  # noqa: E402
 import offsite  # noqa: E402
 
 app = FastAPI(title="Speech on DGX Spark")
-for _module in (account, admin, chat, update, system, proactive, room, roomlive, tidy, weather, contacts, parcels, telegram, tasks, esp32, iphone, pebblewatch, appupdate, apns, transit, logfilter, agent, images, messages, intent, wissen, tracelog, lokal, features, remarkable, join, onboard, hintergrund, stufe, today, offsite):
+for _module in (account, admin, chat, update, system, proactive, room, roomlive, tidy, weather, contacts, parcels, telegram, tasks, esp32, iphone, pebblewatch, android, appupdate, apns, transit, logfilter, agent, images, messages, intent, wissen, tracelog, lokal, features, remarkable, join, onboard, hintergrund, stufe, today, offsite):
     app.include_router(_module.router)
 app.middleware("http")(update_lock)
 
@@ -260,6 +261,7 @@ async def stability():
     asyncio.create_task(telegram.loop())
     asyncio.create_task(wyoming.loop())
     asyncio.create_task(esp32.fetch_loop())
+    asyncio.create_task(android.fetch_loop())
     asyncio.create_task(every_minute())
     asyncio.create_task(watchdog())
     asyncio.create_task(backups())
@@ -403,6 +405,12 @@ def apple_icon():
 @app.get("/favicon.ico")
 def favicon():
     return static_file("favicon-32.png")
+
+
+@app.get("/android/spark.apk")
+def android_app(request: Request, t: str = ""):
+    """The Android app, only with a download link of a profile (android.py)."""
+    return android.apk_response(request, t)
 
 
 @app.get("/pebble/speech-spark.pbw")

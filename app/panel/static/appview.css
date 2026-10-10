@@ -147,3 +147,6 @@ body.appview main.sublist #subnav{background:var(--apcard);border-radius:11px;bo
 body.appview .apin{animation:apin .3s cubic-bezier(.2,.8,.2,1)}body.appview .apout{animation:apout .26s ease-out}
 @media (prefers-reduced-motion:reduce){body.appview .apin,body.appview .apout,body.appview .appg.on{animation:none}}
 body.appview.appage #credit{display:none}
+
+/* the QR code of the Android app download (android.js), on white like the other QR codes */
+.andqr{background:#fff;display:inline-block;padding:4px;border-radius:6px;margin:6px 0}

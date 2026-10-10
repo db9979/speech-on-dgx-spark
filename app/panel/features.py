@@ -119,6 +119,7 @@ FEATURES = (
     # on the go and devices
     F("transit", "Bus und Bahn", "Bus and train", "go", ("transit",), "transit_on", me="trbox", guide="transit"),
     F("telegram", "Telegram", "Telegram", "go", ("telegram",), me="tgbox", guide="telegram"),
+    F("android", "Android-App", "Android app", "go", ("android",), "android_on", me="andbox", guide="android"),
     F("pebble", "Pebble-Uhr", "Pebble watch", "go", ("pebble",), "pebble_on", me="pebbox", guide="pebblepair"),
     F("iphone", "iPhone-App", "iPhone app", "go", ("iphone",), "app_on", me="appbox", guide="iphone"),
     F("iphonepush", "Push an die iPhone-App", "Push to the iPhone app", "go", ("iphone_push",), "app_push", parent="iphone",

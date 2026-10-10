@@ -146,6 +146,7 @@
     "iphone": false,
     "iphone_panel": false,
     "pebble": false,
+    "android": false,
     "iphone_push": false,
     "iphone_update": false,
     "esp32_url": "",

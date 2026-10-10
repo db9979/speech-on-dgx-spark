@@ -76,6 +76,7 @@ WHO = {"documents": "documents", "reminders": "reminders", "speaker_id": "speake
        "room_voices": "roomtv", "room_ha": "roomha", "room_remote": "roomfar", "weather": "weather", "contacts": "contacts",
        "parcels": "parcels", "telegram": "telegram", "tasks": "tasks", "transit": "transit", "messages": "messages",
        "esp32": "esp32", "iphone": "iphone", "iphone_panel": "iphonepanel", "pebble": "pebble",
+       "android": "android",
        "remarkable": "remarkable", "remarkable_send": "rmsend", "remarkable_fresh": "rmfresh", "my_status": "mystatus", "person_priority": "vorrang"}
 
 
@@ -826,10 +827,13 @@ def profile_delete_doc(doc_id: str, prof=Depends(browser_profile)):
 
 
 @router.get("/api/profile/reminders", dependencies=[Depends(assistant)])
-def profile_reminders(page: int = 0, push_id: str = "", prof=Depends(own_profile)):
+def profile_reminders(request: Request, page: int = 0, push_id: str = "", prof=Depends(own_profile)):
     if page:
         # an open panel page rings by itself: push waits a moment for it, and later notes go to this browser
         push.page_open(prof["id"], push_id[:16])
+        import android
+        if android.from_app(request) and android.reachable(prof["id"]):
+            profiles.used(prof["id"], "and")   # the page inside the Android app: later notes go to that app
     return profiles.reminders(prof["id"])
 
 
