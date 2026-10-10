@@ -1324,6 +1324,22 @@
 "src": "assistent",
 "file": "Assistent und Oberfläche",
 "head": "Sprach-Chat",
+"title": "Mehr mit dem reMarkable (V01.0.344)",
+"text": "Mehr mit dem reMarkable (V01.0.344): Admin-Unterschalter „Mehr mit dem reMarkable“ unter „Aufs reMarkable schicken“, dazu unter Ich → reMarkable ein Schalter je Funktion, alles aus (Code: app/panel/rmplus.py). *Morgenblatt:* zur gewählten Uhrzeit (Standard 06:30, zwei Stunden Spielraum) der Tagesüberblick als PDF mit Linien für Notizen. *@Spark:* „@Spark“ und eine Frage auf einer gelesenen Seite; nach dem Abgleich (bei Handschrift nach dem Lesen) liegt „Antwort: …“ daneben, aus den eigenen Dokumenten und, wenn vorhanden, der Websuche; jede Frage nur einmal. *Aufgaben:* Zeilen mit ☐, [ ], „TODO“ oder „Aufgabe:“ erscheinen unter Ich → reMarkable, eine Erinnerung erst nach Klick auf „Erinnern“. *Besprechungen:* Notizbuch oder erste Zeile mit „Besprechung“, „Meeting“, „Protokoll“ …: 30 Minuten nach der letzten Änderung Zusammenfassung mit Entscheidungen und Aufgaben als neues Dokument plus Mitteilung. *Wochenrückblick:* freitags ab 17 Uhr ein PDF mit dem Wichtigsten der Woche. *Webseiten und Anhänge:* Werkzeuge remarkable_page (öffentliche Seite als EPUB) und remarkable_attachment (neuester PDF- oder EPUB-Anhang einer passenden Mail der letzten 30 Tage, nur vollständige Dateien bis 30 "
+},
+{
+"lang": "de",
+"src": "assistent",
+"file": "Assistent und Oberfläche",
+"head": "Sprach-Chat",
+"title": "Mehr mit dem reMarkable (V01.0.344)",
+"text": "MB), nur wenn die eigenen Worte eine Adresse oder einen Anhang nennen. *Eingang pro Tag:* diktierte Notizen sammeln sich in einem Dokument „Eingang TT.MM.JJJJ“. *Spark-Anleitung:* ein E-Book nur zu den reMarkable-Funktionen und dem Dienst (Abgleich, Datenschutz, Grenzen, Trennen), jede Funktion mit „an“/„aus“; der Spark vergleicht alle 10 Minuten den Text und erneuert dasselbe Dokument, sobald er sich ändert (neue Funktion, Schalter, Freigabe). Ein Selbsttest verlangt für jede Funktion unter „reMarkable-Notizen“ einen Abschnitt, damit die Anleitung nicht veraltet. Nur die Anleitung und der Eingang des Tages gehören dem Spark und werden erneuert (deine Markierungen darin bleiben); alles andere ist immer ein neues Dokument. Höchstens 30 Dokumente von selbst pro Tag; nie während gesprochen wird. Notizen gehen nur als Daten an das Sprachmodell, ohne Werkzeuge."
+},
+{
+"lang": "de",
+"src": "assistent",
+"file": "Assistent und Oberfläche",
+"head": "Sprach-Chat",
 "title": "Antwort aufs reMarkable (V01.0.279)",
 "text": "Antwort aufs reMarkable (V01.0.279): „Fass die politische Lage zusammen und leg es aufs reMarkable“ legt die ganze Antwort als neues Dokument in den Ordner „Spark“. Das entscheidet eine feste Regel auf den eigenen Worten der Frage (ablegen, schicken, speichern … plus „aufs/auf dem/meinem reMarkable“, ohne Doppelpunkt), nicht das Sprachmodell: Das Modell schreibt nur die Antwort, danach schickt das Panel sie und sagt „Die Antwort liegt jetzt auf deinem reMarkable …“ (oder warum nicht). So geht es auch nach einer Websuche, nach der das Werkzeug remarkable_note gesperrt ist; das Ziel ist fest, fremder Text kann nur den Inhalt der Antwort prägen, nie wohin sie geht. Gleiche Schalter und Tagesgrenze wie oben, nur im eigenen Browser bzw. am Lautsprecher mit erkannter Stimme, nie Gäste. Logs → Anfragen zeigt „remarkable (Panel)“."
 },
@@ -3750,6 +3766,22 @@
 "head": "Voice chat",
 "title": "Newest first (V01.0.299)",
 "text": "Newest first (V01.0.299): sub-switch under \"reMarkable notes\" (Functions, admin) plus a switch under Me → reMarkable, both off. The Spark keeps when each page last changed (newer reMarkable software names the time per page, else the notebook's; uploaded documents count with their upload). With similar hits the newer passage moves up at most two places, the gain halves every two weeks, a clearly better old hit stays first; this applies to the document search and to \"Search locally first\". Each hit then carries \"changed on …\", and the model is told to follow the newer passage where they disagree and say its date. \"What did I note last / today / yesterday / this week / last month?\" is a fixed rule on the person's own words: the first round must search the documents and gets the pages changed last, newest first; if nothing is in that span, the assistant says so. New notes arrive sooner: between comparisons the Spark looks every 3 minutes with one small request whether anything changed in the account, and only then compares at once (journal \"remarkable: account changed, comparing now\")."
+},
+{
+"lang": "en",
+"src": "assistant",
+"file": "Assistant and panel",
+"head": "Voice chat",
+"title": "More with the reMarkable (V01.0.344)",
+"text": "More with the reMarkable (V01.0.344): admin sub-switch \"More with the reMarkable\" below \"Sending to the reMarkable\", plus one switch per function under Me → reMarkable, all off (code: app/panel/rmplus.py). *Morning sheet:* at the chosen time (default 06:30, two hours' window) the daily briefing as a PDF with lines for notes. *@Spark:* \"@Spark\" and a question on a page that is read; after the comparison (for handwriting after reading) \"Antwort: …\" lies next to it, from the own documents and, if there is one, the web search; each question only once. *Tasks:* lines with ☐, [ ], \"TODO\" or \"Aufgabe:\" show up under Me → reMarkable, a reminder only after clicking \"Remind\". *Meetings:* notebook or first line with \"Besprechung\", \"Meeting\", \"Protokoll\" …: 30 minutes after the last change a summary with decisions and tasks as a new document plus a note. *Week in review:* on Fridays from 5 pm a PDF with the week's main points. *Web pages and attachments:* tools remarkable_page (a public page as EPUB) and remarkable_attachment (the newest PDF or EPUB attached to a fitting mail of the last 30 days, whole files up to 30 MB only), only when the person's own words name an address or an attachment. "
+},
+{
+"lang": "en",
+"src": "assistant",
+"file": "Assistant and panel",
+"head": "Voice chat",
+"title": "More with the reMarkable (V01.0.344)",
+"text": "*Daily inbox:* dictated notes gather in one document \"Eingang DD.MM.YYYY\". *Spark guide:* an e-book only about the reMarkable functions and the service (comparison, privacy, limits, disconnecting), each function marked on/off; the Spark compares the text every 10 minutes and renews the same document as soon as it changes (a new function, a switch, the admin's permission). A self-test demands a section for every function below \"reMarkable notes\", so the guide cannot go stale. Only the guide and the day's inbox belong to the Spark and are renewed (your marks in them stay); everything else is always a new document. At most 30 documents of its own a day; never while someone is talking. Notes only go to the language model as data, without tools."
 },
 {
 "lang": "en",
