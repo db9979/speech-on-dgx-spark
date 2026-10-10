@@ -5,7 +5,8 @@ name: TestFlight
 # (Actions → TestFlight → Run workflow) and by itself after a commit on main that changed ios/: once
 # "iPhone app" and "Tests" passed for it, at most one upload per hour; a newer iOS commit in the
 # waiting time replaces the older one. Off with the repository variable TESTFLIGHT_AUTO=off.
-# Only for a commit whose "Tests" run passed, like update.sh.
+# Only for a commit whose "Tests" run passed, like update.sh. If a newer push cancelled that run, the
+# newest main commit with passed Tests goes up instead, but only when it contains the iOS commit.
 # The build number is the commit count (build phase "Build number"), so every upload is higher.
 # Needs repository secrets: ASC_KEY_ID, ASC_ISSUER_ID, ASC_KEY (the whole .p8 of an App Store Connect
 # team key with role Admin, needed for signing) and ASC_TEAM_ID (Apple Developer → Membership → Team ID).
@@ -50,13 +51,34 @@ jobs:
           set -euo pipefail
           api="https://api.github.com/repos/$GITHUB_REPOSITORY/actions"
           get() { curl -fsS -H "Authorization: Bearer $GH_TOKEN" "$api/$1"; }
-          # the Tests run of this commit: by hand it must have passed already, automatically wait for it
+          # the Tests run of this commit: by hand it must have passed already, automatically wait for it.
+          # Many commits land on main close together and a newer push cancels the older Tests run. A
+          # cancelled run is no verdict: then the newest main commit with passed Tests goes up, but only
+          # if it contains this commit (so it carries the same iOS change). Failed Tests still stop.
           for i in $(seq 1 60); do
             st=$(get "workflows/tests.yml/runs?head_sha=$SHA&per_page=1" | python3 -c '
           import json, sys
           r = json.load(sys.stdin).get("workflow_runs") or []
           print(r[0]["status"] + ":" + str(r[0]["conclusion"]) if r else "none")')
             [ "$st" = "completed:success" ] && break
+            if [ "$st" = "completed:cancelled" ]; then
+              newer=$(get "workflows/tests.yml/runs?branch=main&event=push&status=success&per_page=1" | python3 -c '
+          import json, sys
+          r = json.load(sys.stdin).get("workflow_runs") or []
+          print(r[0]["head_sha"] if r else "")')
+              case "$newer" in *[!0-9a-f]*|"") newer="";; esac
+              rel=""
+              if [ -n "$newer" ]; then
+                rel=$(curl -fsS -H "Authorization: Bearer $GH_TOKEN" \
+                  "https://api.github.com/repos/$GITHUB_REPOSITORY/compare/$SHA...$newer" \
+                  | python3 -c 'import json, sys; print(json.load(sys.stdin).get("status", ""))')
+              fi
+              if [ "$rel" = "ahead" ]; then
+                echo "Tests of $SHA were cancelled by a newer push; taking $newer, which contains it and passed"
+                SHA=$newer; st="completed:success"; break
+              fi
+              [ "$AUTO" = "true" ] && { sleep 30; continue; }
+            fi
             if [ "$AUTO" != "true" ] || [ "${st%%:*}" = "completed" ]; then
               echo "::error::The Tests run of $SHA has not passed ($st). Wait for it, then start again."
               exit 1

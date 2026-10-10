@@ -33,6 +33,7 @@ Alle Optionen ohne Rückfragen (`--mode api --asr 1.7b --tts 0.6b --yes` …) st
 
 <!-- New version: add one line at the top here and in CHANGELOG.md, drop the oldest line here (keep 10). Details go to docs/de and docs/en, not into this README. -->
 
+- **V01.0.321** iPhone-App kommt wieder bei TestFlight an: Wurden die Tests eines iOS-Stands von einem neueren Push abgebrochen, geht der neueste grüne main-Stand hoch, der ihn enthält
 - **V01.0.320** MCP „Schlüssel erzeugen“: meldete „Bitte zuerst einen Namen eingeben“, obwohl einer drinstand; das Namensfeld hatte dieselbe Kennung wie ein Feld der Admin-Seite Agenten, die Seite las das leere; eigene Kennungen plus Selbsttest
 - **V01.0.319** Smart-Home-Regeln lassen sich bearbeiten, nicht nur löschen
 - **V01.0.318** Live-Übersicht: Vollbild-Knopf für das Bild „Wohin die Anfragen gerade gehen“
@@ -42,7 +43,6 @@ Alle Optionen ohne Rückfragen (`--mode api --asr 1.7b --tts 0.6b --yes` …) st
 - **V01.0.314** Home Assistant meldet an Spark (alles aus): Smart-Home-Regeln mit Pause, bei an/aus und „nur wenn …“, Sofort-Meldungen statt minütlich, Haus-Meldungen auf Lautsprechern, Ereignisse aus Home Assistant mit eigenem Schlüssel, Regel per Sprache („Sag mir Bescheid, wenn …“) und Kamerabild in Worten
 - **V01.0.313** Vorab holen bei Rückfrage erscheint in der Live-Übersicht beim jeweiligen Dienst (Kalender, Mail, Wetter, Pakete)
 - **V01.0.312** Live-Übersicht (aus): Zustand → Live zeigt, wer gerade fragt, den Weg jeder Anfrage mit Zeiten, was der Wächter entscheidet, fehlgeschlagene Anmeldungen und was die Dienste zurückgeben; dazu ein Live-Monitor für einen Bildschirm im Heimnetz, gekoppelt mit einmaligem Code
-- **V01.0.311** Selbsttest Einladung: wartet nach „Profil anlegen“ auf das Neuladen der Seite statt fester 15 Sekunden (war auf GitHub zweimal rot)
 
 Alle Versionen: [CHANGELOG.md](CHANGELOG.md)
 

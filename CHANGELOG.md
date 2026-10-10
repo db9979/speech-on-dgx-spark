@@ -2,6 +2,7 @@
 
 Every version in one line, newest first (taken from the commit messages, so some lines are German, some English). Older entries have no version number.
 
+- **V01.0.321** · 2026-10-10 · TestFlight: Tests eines iOS-Stands von neuerem Push abgebrochen → neuester grüner main-Stand, der ihn enthält, geht hoch (vorher seit .272 kein Upload); Selbsttest test_testflight_gate
 - **V01.0.320** · 2026-10-10 · mcp.js: #mcpname/#mcpmsg gab es auch in agent.js (MCP-Client des Admins), $('mcpname') las dort das leere Feld; jetzt #mcsname/#mcsmsg, Selbsttest test_mcpserver.PageIds prüft, dass keine Kennung von mcp.js anderswo vorkommt
 - **V01.0.319** · 2026-10-10 · Smart-Home-Regeln bearbeiten: Knopf „Bearbeiten“ füllt das Formular, PUT /api/proactive/rules/<id> prüft wie beim Anlegen und ersetzt an derselben Stelle (gleiche id, Gedächtnis der Regel neu), andere Profile 404; Selbsttests inkl. Browsertest
 - **V01.0.318** · 2026-10-10 · Zustand → Live und Live-Monitor: Knopf ⛶ zeigt das Bild „Wohin die Anfragen gerade gehen“ bildschirmfüllend, die Höhe richtet sich nach dem Bildschirm; Esc oder der Knopf wieder zurück
