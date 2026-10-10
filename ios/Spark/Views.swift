@@ -160,6 +160,7 @@ struct ChatView: View {
     @State private var typed = ""
     @State private var settings = false
     @State private var history = false
+    @State private var today = false
     @State private var demoProfile = false
     @State private var camera = false
     @State private var files = false
@@ -183,10 +184,15 @@ struct ChatView: View {
                         .accessibilityLabel("Verlauf")
                 }
                 ToolbarItem(placement: .topBarTrailing) {
+                    Button { today = true } label: { Image(systemName: "sun.max") }
+                        .accessibilityLabel("Heute")
+                }
+                ToolbarItem(placement: .topBarTrailing) {
                     Button { settings = true } label: { Image(systemName: "gearshape") }
                         .accessibilityLabel("Einstellungen")
                 }
             }
+            .sheet(isPresented: $today) { TodayView() }
             .sheet(isPresented: $settings, onDismiss: { talk.settingsChanged() }) { SettingsView() }
             .sheet(isPresented: $history) { HistoryView() }
             .sheet(isPresented: $talk.showMessages, onDismiss: { Task { await talk.refreshMessages() } }) { MessagesView() }

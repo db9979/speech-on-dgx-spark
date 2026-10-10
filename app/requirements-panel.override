@@ -1,0 +1,2 @@
+# rmscene pins packaging<24 but only uses packaging.version.Version; wheel and pip tools need packaging>=24 (see install.sh)
+packaging>=24

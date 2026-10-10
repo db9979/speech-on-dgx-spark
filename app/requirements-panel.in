@@ -1,0 +1,25 @@
+# The panel's Python environment (venv-panel: panel, ASR/TTS front ends, Parakeet). install.sh builds a new
+# environment from requirements-panel.lock (versions and hashes, pip --require-hashes); the GitHub test installs the
+# same file. After changing this list: uv pip compile --universal --generate-hashes --python-version 3.11 \
+#   --override requirements-panel.override requirements-panel.in -o requirements-panel.lock
+fastapi
+uvicorn[standard]
+python-multipart
+httpx[http2]
+psutil
+num2words
+numpy
+pypdf
+icalendar
+recurring-ical-events
+cryptography
+segno
+sherpa-onnx
+sherpa-onnx-core  # lock only: the x86 wheels of sherpa-onnx need it, the resolver does not see that
+huggingface_hub
+pillow==11.3.0
+onnxruntime==1.22.1
+tokenizers==0.22.1
+pypdfium2==4.30.0
+rmscene==0.8.0
+packaging>=24

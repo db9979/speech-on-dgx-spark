@@ -4,7 +4,8 @@ the reviews removed. Reads only files inside app/ (the self-test runs on a copy 
 - no shell=True, eval, exec, os.system, pickle or yaml.load in the Python code
 - every panel route has a login check, or is on OPEN with the reason why it needs none
 - an uploaded file is never read without a size (UploadFile.read() needs a limit)
-- values in inline handlers of the page (onclick="...${x}...") are escaped for JavaScript (escq)
+- strict CSP (V01.0.286): no inline handler (onclick="..."), no inline <script>, no javascript: link, no eval or
+  new Function in the page's scripts; buttons name their function with data-on (base.js ON)
 - every tool the assistant can call is sorted: reads outside text, reads Home Assistant, changes
   something, mail, or only reads the person's own data
 """
@@ -96,15 +97,29 @@ class Scanner(unittest.TestCase):
                         found.append(f"{p}:{n}")
         self.assertEqual(found, [])
 
-    def test_inline_handlers_escaped(self):
+    def test_no_inline_script_for_the_strict_csp(self):
         found = []
-        for p in sorted(glob.glob(os.path.join(PANEL, "static", "js", "*.js"))):
+        files = sorted(glob.glob(os.path.join(PANEL, "static", "js", "*.js"))) + [os.path.join(PANEL, "static", "index.html")]
+        for p in files:
+            if p.endswith("esptool.js"):   # Espressif's bundle, unchanged (checked once: no eval, no Function)
+                continue
             with open(p, encoding="utf-8") as f:
                 text = f.read()
-            for attr in re.findall(r'\son[a-z]+="[^"]*\$\{[^"]*"', text):
-                found += [f"{os.path.basename(p)}: {v}" for v in re.findall(r"\$\{([^}]*)\}", attr)
-                          if not v.startswith("escq(")]
+            name = os.path.basename(p)
+            found += [f"{name}: {m}" for m in re.findall(r"<[a-z][^<>]*\son[a-z]+\s*=", text)]
+            found += [f"{name}: javascript:" for _ in re.findall(r"(?i)javascript:", text)]
+            found += [f"{name}: eval" for _ in re.findall(r"\beval\(|\bnew Function\(|setTimeout\(\s*['\"`]", text)]
+            if name == "index.html":
+                found += [f"{name}: inline <script>" for _ in re.findall(r"<script(?![^>]*\ssrc=)[^>]*>", text)]
         self.assertEqual(found, [])
+
+    def test_csp_is_strict(self):
+        import panel
+        csp = panel.SECURITY_HEADERS["Content-Security-Policy"]
+        self.assertIn("script-src 'self';", csp)
+        self.assertNotIn("unsafe-eval", csp)
+        self.assertEqual(csp.count("unsafe-inline"), 1)        # only for styles
+        self.assertIn("style-src 'self' 'unsafe-inline'", csp)
 
     def test_every_tool_is_sorted(self):
         with open(os.path.join(PANEL, "chat.py"), encoding="utf-8") as f:

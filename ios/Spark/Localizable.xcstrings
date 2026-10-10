@@ -81,6 +81,16 @@
         }
       }
     },
+    "%lld Seiten warten aufs Lesen": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "%lld pages waiting to be read"
+          }
+        }
+      }
+    },
     "%lld Zeichen": {
       "localizations": {
         "en": {
@@ -277,6 +287,16 @@
           "stringUnit": {
             "state": "translated",
             "value": "All"
+          }
+        }
+      }
+    },
+    "Alles gelesen": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "All read"
           }
         }
       }
@@ -1681,6 +1701,16 @@
         }
       }
     },
+    "Ein Kalender war nicht erreichbar.": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "A calendar could not be reached."
+          }
+        }
+      }
+    },
     "Ein neues iPhone koppelt das Profil danach selbst unter Ich → iPhone-App.": {
       "localizations": {
         "en": {
@@ -2491,6 +2521,36 @@
         }
       }
     },
+    "Heute": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Today"
+          }
+        }
+      }
+    },
+    "Heute und morgen frei": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Free today and tomorrow"
+          }
+        }
+      }
+    },
+    "Hier erscheint, was heute dran ist, sobald der Admin Kalender, Erinnerungen, Nachrichten oder Dokumente für dich einschaltet.": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "What is due today shows here once the admin switches on calendar, reminders, messages or documents for you."
+          }
+        }
+      }
+    },
     "Hinweise, die der Spark von selbst gibt (Morgenrunde, Erinnerungen), sagt die App laut, solange sie offen ist.": {
       "localizations": {
         "en": {
@@ -2597,6 +2657,16 @@
           "stringUnit": {
             "state": "translated",
             "value": "Set up in the panel"
+          }
+        }
+      }
+    },
+    "Im Panel unter Ich → Kalender": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "In the panel under Ich → Kalender"
           }
         }
       }
@@ -2811,6 +2881,16 @@
         }
       }
     },
+    "Kalender verbinden": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Connect a calendar"
+          }
+        }
+      }
+    },
     "Kannst du mir bitte sagen, wie das Wetter morgen wird und ob ich einen Schirm brauche?": {
       "localizations": {
         "en": {
@@ -2917,6 +2997,16 @@
           "stringUnit": {
             "state": "translated",
             "value": "No appointments in the next 14 days."
+          }
+        }
+      }
+    },
+    "Keine offen": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "None open"
           }
         }
       }
@@ -3277,6 +3367,16 @@
           "stringUnit": {
             "state": "translated",
             "value": "Monitoring"
+          }
+        }
+      }
+    },
+    "Morgen": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Tomorrow"
           }
         }
       }
@@ -5551,6 +5651,26 @@
         }
       }
     },
+    "ganztägig": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "all day"
+          }
+        }
+      }
+    },
+    "gemerkte Fakten": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "remembered facts"
+          }
+        }
+      }
+    },
     "gestoppt": {
       "localizations": {
         "en": {
@@ -5597,6 +5717,16 @@
           "stringUnit": {
             "state": "translated",
             "value": "spark-app://pair?… / spark-app://join?…"
+          }
+        }
+      }
+    },
+    "ungelesen": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "unread"
           }
         }
       }

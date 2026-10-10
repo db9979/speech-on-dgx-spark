@@ -556,6 +556,12 @@ async def prepare(request):
                                                                                           "outside": carry != "mail"}))
         if line:
             system = (system + "\n\n" + line).strip()
+    # "Erklären statt Schweigen" (B4): asked for a function this turn does not offer -> a hint under the answer
+    # with the reason from the rules above; the model only answers, the reason is never its own
+    explain = intent.explain(route, offered_all, who, stranger, ccfg) \
+        if messages[-1]["role"] == "user" and not pics and not role_cmd and not room_far else None
+    if explain:
+        print("weiche: erklärt", explain["key"], "-", explain["why"], flush=True)
     check_on = bool(ccfg.get("answer_check", True))
     tool_temp = float(ccfg.get("tool_temperature", 0.1))
     # thinking only while choosing the tool: the admin allows it, the profile switches it on (never guests)

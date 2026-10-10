@@ -78,6 +78,28 @@ const ADM_EVENT={admin_login:t('Hauptadmin angemeldet','Main admin signed in'),a
   admin_logout_everywhere:t('Hauptadmin überall abgemeldet','Main admin signed out everywhere'),
   feature_profile:t('Funktion für ein Profil','Function for a profile'),agent_level:t('Aufträge für ein Profil','Jobs for a profile'),person_priority:t('Vorrang für ein Profil','Priority for a profile'),
   iphone_update_rights:t('Spark-Update aus der App','Spark update from the app')};
+// Rückgängig (undo.py, plan „Bedienung gesamt“ C5, V01.0.286): above the admin log the last saved changes of the
+// settings with their old values; "Rückgängig" puts back what is still as that change left it (same checks as saving).
+const undoVal=v=>v===true?t('an','on'):v===false?t('aus','off'):v===''?'–':String(v);
+function undoName(k){const i=document.getElementById(k),r=i&&i.closest('.setrow'),b=r&&r.querySelector('.lbl b');
+  return b?b.textContent.trim():(i&&i.previousElementSibling&&i.previousElementSibling.tagName==='LABEL'?i.previousElementSibling.textContent.trim():k)}
+async function loadUndo(){const box=$('logundo');if(!box)return;let d;
+  try{d=await (await api('/api/admin/undo')).json()}catch{box.hidden=true;return}
+  const key=JSON.stringify(d);if(key===loadUndo.last&&box.childElementCount){box.hidden=false;return}loadUndo.last=key;
+  box.textContent='';box.hidden=!d.items.length;if(!d.items.length)return;
+  const h=document.createElement('div');h.className='mgrp';h.textContent=t('Letzte Änderungen an Einstellungen','Latest settings changes');box.appendChild(h);
+  for(const x of d.items.slice(0,10)){const r=document.createElement('div');r.className='zrow';const tx=document.createElement('span');
+    const who=x.by==='main'?t('Hauptadmin','Main admin'):x.by||'';const b=document.createElement('b');b.textContent=new Date(x.t*1000).toLocaleString([],{day:'numeric',month:'numeric',hour:'2-digit',minute:'2-digit'})+(who?' · '+who:'');
+    const ch=x.changes.slice(0,3).map(c=>undoName(c.k)+': '+undoVal(c.old)+' → '+undoVal(c.new)).join(' · ')+(x.changes.length>3?t(` · und ${x.changes.length-3} mehr`,` · and ${x.changes.length-3} more`):'');
+    tx.append(b,document.createElement('br'),ch);const btn=document.createElement('button');btn.type='button';btn.className='b';
+    btn.textContent=x.undone?t('Rückgängig gemacht','Undone'):t('Rückgängig','Undo');btn.disabled=x.undone;
+    btn.onclick=async()=>{if(!confirm(t('Diese Änderung rückgängig machen? Werte, die seitdem wieder geändert wurden, bleiben.','Undo this change? Values changed again since stay.')))return;
+      btn.disabled=true;try{const res=await (await api('/api/admin/undo/'+encodeURIComponent(x.id),{method:'POST'})).json();
+        if(typeof loadCfg==='function')await loadCfg().catch(()=>{});
+        if(res.kept&&res.kept.length)alert(t('Zurückgesetzt. Seitdem wieder geändert und deshalb geblieben: ','Undone. Changed again since and so kept: ')+res.kept.map(undoName).join(', '))}
+      catch(e){alert(e.message)}loadUndo.last='';loadUndo()};
+    r.append(tx,btn);box.appendChild(r)}}
+window.loadUndo=loadUndo;
 async function adminRows(){const d=await (await api('/api/admin/protocol?limit=500')).json();
   return d.events.map(e=>{const dt=new Date(e.t*1000),by=e.by==='main'?t('Hauptadmin','Main admin'):e.by?(d.names[e.by]||e.by):(e.name||(e.uid&&d.names[e.uid])||'');
     const what=e.event==='change'?`${e.method} ${e.path} → ${e.status}`:(ADM_EVENT[e.event]||e.event)+(e.uid&&e.event==='admin_role'?' ('+(d.names[e.uid]||e.uid)+')':'')+(e.detail?' – '+e.detail:'');

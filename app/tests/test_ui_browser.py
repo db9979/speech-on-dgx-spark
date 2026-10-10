@@ -57,16 +57,20 @@ class Browser(unittest.TestCase):
     def run_async(self, coro):
         return asyncio.run(coro)
 
-    async def page(self, p, width, height, mic=False):
+    async def page(self, p, width, height, mic=False, csp=False):
         exe = chromium()
         args = ["--use-fake-ui-for-media-stream", "--use-fake-device-for-media-stream",
                 "--autoplay-policy=no-user-gesture-required"] if mic else []
         br = await p.chromium.launch(args=args, **({"executable_path": exe} if exe else {}))
+        # Playwright's wait_for_function evaluates its text in the page, which the strict CSP refuses: tests that
+        # walk the pages with the CSP on (csp=True) wait for selectors only, the others leave it out
         ctx = await br.new_context(viewport={"width": width, "height": height}, locale="de-DE",
-                                   permissions=["microphone"] if mic else [])
+                                   permissions=["microphone"] if mic else [], bypass_csp=not csp)
         pg = await ctx.new_page()
         errors = []
         pg.on("pageerror", lambda e: errors.append(str(e)))
+        # the strict CSP (V01.0.286): anything it blocks (an inline handler, an inline script) counts as an error
+        pg.on("console", lambda m: errors.append(m.text) if "Content Security Policy" in m.text else None)
         base = f"http://127.0.0.1:{self.port}"
         await pg.goto(base + "/")
         r = await pg.request.post(base + "/api/login", data={"password": "secret-admin"})
@@ -82,7 +86,7 @@ class Browser(unittest.TestCase):
         async def go():
             async with async_playwright() as p:
                 for name, w, h in VIEWS:
-                    br, pg, errors = await self.page(p, w, h)
+                    br, pg, errors = await self.page(p, w, h, csp=True)   # every page with the strict CSP on
                     for s in SECTIONS:
                         await pg.evaluate(f"goSec('{s}')")
                         await pg.wait_for_timeout(300)
@@ -166,6 +170,19 @@ class Browser(unittest.TestCase):
                 self.assertTrue(await pg.evaluate("$('pane-tts').classList.contains('on')"))
                 await pg.evaluate("markDirty($('pane-tts'),false)")
                 self.assertTrue(await pg.evaluate("$('zneed').hidden||!$('zlist').textContent.includes('Nicht gespeichert')"))
+                # C3 (V01.0.286): four plain cards, version line, the service table folded under "Technische Details"
+                await pg.evaluate("goSec('mon')")
+                self.assertEqual(await pg.evaluate("[...document.querySelectorAll('#zcards .zcard .zk')].map(x=>x.textContent)"),
+                                 ["Zuhören", "Sprechen", "Sprachmodell", "Speicher"])
+                self.assertIn("V01.0.", await pg.inner_text("#zmeta"))
+                self.assertFalse(await pg.is_visible("#svc"))
+                await pg.click("#zcards .zcard")
+                await pg.wait_for_timeout(300)
+                self.assertTrue(await pg.evaluate("$('ztech').open"))
+                # B4: the reason under an answer comes from the panel, with a way to change it
+                note = await pg.evaluate("whyNote({key:'weather',name:['Wetter','Weather'],why:'profile',me:'wxbox'}).textContent")
+                self.assertIn("„Wetter“ ist für dich aus.", note)
+                self.assertIn("Unter Ich einschalten", note)
                 self.assertEqual(errors, [])
                 await br.close()
         self.run_async(go())
@@ -226,7 +243,7 @@ class Browser(unittest.TestCase):
             async with async_playwright() as p:
                 exe = chromium()
                 br = await p.chromium.launch(ignore_default_args=["--hide-scrollbars"], **({"executable_path": exe} if exe else {}))
-                pg = await (await br.new_context(viewport={"width": 1920, "height": 1080}, locale="de-DE")).new_page()
+                pg = await (await br.new_context(viewport={"width": 1920, "height": 1080}, locale="de-DE", bypass_csp=True)).new_page()
                 base = f"http://127.0.0.1:{self.port}"
                 await pg.goto(base + "/")
                 self.assertEqual((await pg.request.post(base + "/api/login", data={"password": "secret-admin"})).status, 200)
@@ -579,7 +596,7 @@ class Browser(unittest.TestCase):
                     coadmin.set_role(uid, role)
                     exe = chromium()
                     br = await p.chromium.launch(**({"executable_path": exe} if exe else {}))
-                    pg = await (await br.new_context(viewport={"width": 1280, "height": 900}, locale="de-DE")).new_page()
+                    pg = await (await br.new_context(viewport={"width": 1280, "height": 900}, locale="de-DE", bypass_csp=True)).new_page()
                     errs = []
                     pg.on("pageerror", lambda e: errs.append(str(e)))
                     await pg.goto(base + "/")
@@ -911,7 +928,7 @@ class Browser(unittest.TestCase):
                 for name, w, h in VIEWS:
                     exe = chromium()
                     br = await p.chromium.launch(**({"executable_path": exe} if exe else {}))
-                    pg = await (await br.new_context(viewport={"width": w, "height": h}, locale="de-DE")).new_page()
+                    pg = await (await br.new_context(viewport={"width": w, "height": h}, locale="de-DE", bypass_csp=True)).new_page()
                     errors = []
                     pg.on("pageerror", lambda e: errors.append(str(e)))
                     base = f"http://127.0.0.1:{self.port}"
@@ -945,6 +962,80 @@ class Browser(unittest.TestCase):
                     self.assertEqual(errors, [], name)
                     await br.close()
         self.run_async(go())
+
+    def test_me_starts_with_today(self):
+        """Bedienung Stufe 4: Ich starts with Heute (cards) and Probier mal; a sentence asks right away."""
+        helpers.set_config(memory=True, reminders=True, weather=True)
+        async def go():
+            async with async_playwright() as p:
+                for name, w, h in VIEWS:
+                    br, pg, errors = await self.page(p, w, h)
+                    await pg.evaluate("openMe(PHONE.matches?'list':'overbox')")
+                    await pg.wait_for_selector("#metoday .tcard")
+                    self.assertTrue(await pg.is_visible("#metoday .tcard"))
+                    chips = await pg.evaluate("[...document.querySelectorAll('#metoday .ttry .chip')].map(b=>b.textContent)")
+                    self.assertTrue(chips, name)
+                    self.assertTrue(all(not c.startswith("„") for c in chips))
+                    over = await pg.evaluate("document.documentElement.scrollWidth-window.innerWidth")
+                    self.assertLessEqual(over, 1, name)
+                    # the last sentence can be scrolled to and is not hidden behind the window's footer
+                    await pg.evaluate("[...document.querySelectorAll('#metoday .ttry .chip')].pop().scrollIntoView({block:'end'})")
+                    hidden = await pg.evaluate("(()=>{const c=[...document.querySelectorAll('#metoday .ttry .chip')].pop().getBoundingClientRect(),"
+                                               "f=document.querySelector('#profmodal .mefoot').getBoundingClientRect();return c.bottom>f.top+1})()")
+                    self.assertFalse(hidden, name)
+                    await pg.click("#metoday .tcard")
+                    await pg.wait_for_function("document.getElementById('profmodal').classList.contains('sub')")
+                    self.assertEqual(errors, [], name)
+                    await br.close()
+        self.run_async(go())
+
+    def test_strict_csp_blocks_inline_code(self):
+        """D1 Stufe 2 (V01.0.286): the page runs without any inline script; an injected inline handler does not run,
+        buttons with data-on do."""
+        async def go():
+            async with async_playwright() as p:
+                br, pg, errors = await self.page(p, 1280, 900, csp=True)
+                csp = await pg.evaluate("fetch('/').then(r=>r.headers.get('content-security-policy'))")
+                self.assertIn("script-src 'self';", csp)
+                await pg.evaluate("document.body.insertAdjacentHTML('beforeend','<img id=\"cspx\" src=\"/nothing.png\" onerror=\"window.__csp=1\">')")
+                await pg.wait_for_timeout(500)
+                self.assertIsNone(await pg.evaluate("window.__csp"))
+                self.assertTrue(any("Content Security Policy" in e for e in errors))
+                errors.clear()
+                await pg.evaluate("$('findmodal').style.display='grid'")
+                await pg.click("#findmodal [data-on=findClose]")
+                self.assertEqual(await pg.evaluate("$('findmodal').style.display"), "none")
+                self.assertEqual(errors, [])
+                await br.close()
+        self.run_async(go())
+
+    def test_undo_in_the_admin_log(self):
+        """C5 (V01.0.286): the admin log lists the last settings change with its old value; Rückgängig puts it back."""
+        helpers.set_config(weather=False)
+        async def go():
+            async with async_playwright() as p:
+                br, pg, errors = await self.page(p, 1280, 900)
+                await pg.evaluate("api('/api/admin/switches',xjson('PUT',{key:'weather',on:true}))")
+                await pg.evaluate("goSec('logs')")
+                await pg.click("#logtabs button[data-lt=adm]")
+                await pg.wait_for_selector("#logundo .zrow button:not([disabled])")
+                row = await pg.inner_text("#logundo .zrow")
+                self.assertIn("aus → an", row)
+                pg.on("dialog", lambda d: asyncio.ensure_future(d.accept()))
+                await pg.click("#logundo .zrow button")
+                # a switched feature flag makes the page reload (base.js api), so the result is read outside the page
+                for _ in range(50):
+                    cfg = await (await pg.request.get(f"http://127.0.0.1:{self.port}/api/config")).json()
+                    if cfg["chat"]["weather"] is False:
+                        break
+                    await asyncio.sleep(0.2)
+                self.assertIs(cfg["chat"]["weather"], False)
+                self.assertEqual(errors, [])
+                await br.close()
+        try:
+            self.run_async(go())
+        finally:
+            helpers.set_config(weather=False)
 
     def test_locked_shows_why(self):
         """Phase 4 (V01.0.270): what the admin switched off stays visible under Ich, locked with the reason, and Ich
@@ -1005,7 +1096,7 @@ class JoinBrowser(unittest.TestCase):
                 exe = chromium()
                 br = await p.chromium.launch(**({"executable_path": exe} if exe else {}))
                 for w, h in ((1280, 900), (390, 844)):
-                    ctx = await br.new_context(viewport={"width": w, "height": h}, locale="de-DE")
+                    ctx = await br.new_context(viewport={"width": w, "height": h}, locale="de-DE", bypass_csp=True)
                     pg = await ctx.new_page()
                     errors = []
                     pg.on("pageerror", lambda e: errors.append(str(e)))
@@ -1049,7 +1140,7 @@ class JoinBrowser(unittest.TestCase):
                         import onboard
                         hid2, c2 = onboard.hand_new(hcode["uid"])
                         await pg.evaluate("GO.hand=" + repr(hid2) + ";$('handnums').innerHTML=''")
-                        phone = await br.new_context(viewport={"width": 390, "height": 844}, locale="de-DE")
+                        phone = await br.new_context(viewport={"width": 390, "height": 844}, locale="de-DE", bypass_csp=True)
                         ph = await phone.new_page()
                         ph.on("pageerror", lambda e: errors.append(str(e)))
                         await ph.goto(base + "/#hand=" + c2)
@@ -1067,7 +1158,7 @@ class JoinBrowser(unittest.TestCase):
                     self.assertEqual(errors, [], w)
                     await ctx.close()
                 # the admin card
-                ctx = await br.new_context(viewport={"width": 390, "height": 844}, locale="de-DE")
+                ctx = await br.new_context(viewport={"width": 390, "height": 844}, locale="de-DE", bypass_csp=True)
                 pg = await ctx.new_page()
                 errors = []
                 pg.on("pageerror", lambda e: errors.append(str(e)))

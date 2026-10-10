@@ -1255,6 +1255,8 @@ async def _answer(request, turn):
     out = asyncio.Queue()
     if heard:
         out.put_nowait({"type": "speaker", "name": heard["name"], "foreign": not own_browser})
+    if getattr(turn, "explain", None):
+        out.put_nowait(dict(turn.explain, type="why"))
     sentences = asyncio.Queue()
     t0 = time.time()
     # where the time goes, for Zustand → Logs → Diagnose "Gespräch" (only while that detail switch is on)

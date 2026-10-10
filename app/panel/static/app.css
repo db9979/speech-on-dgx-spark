@@ -737,3 +737,24 @@ table.who tr.sub td:first-child{padding-left:26px}
 #joinprint{display:none}
 @media print{body.printjoin>*:not(#joinprint){display:none!important}body.printjoin #joinprint{display:block}
   #joinprint .jcard{width:105mm;border:1px dashed #999;border-radius:6mm;padding:8mm;font:12pt system-ui;color:#000}#joinprint .jqr svg{width:45mm;height:45mm}}
+/* Ich → Heute (today.js, plan „Bedienung gesamt“ B1–B3): cards, Einrichten with a bar, Probier mal */
+.metoday{margin-bottom:14px}.tcards{display:grid;grid-template-columns:repeat(auto-fill,minmax(150px,1fr));gap:8px;margin:6px 0 4px}
+.tcard{display:flex;flex-direction:column;align-items:flex-start;gap:2px;text-align:left;border:1px solid var(--line);background:var(--card);color:var(--fg);border-radius:12px;padding:10px 12px;font:inherit;cursor:pointer;min-width:0}
+.tcard:hover{border-color:color-mix(in srgb,var(--acc) 45%,var(--line))}.tcard .tct{font-size:12px;color:var(--mut)}.tcard b{font-size:16px}
+.tcard small{font-size:12px;color:var(--mut);overflow:hidden;text-overflow:ellipsis;white-space:nowrap;max-width:100%}
+.ttry .tchips{display:flex;flex-wrap:wrap;gap:6px;margin-top:6px}.ttry .chip{border:1px solid var(--line);background:var(--card);color:var(--fg);border-radius:99px;padding:6px 12px;font:inherit;font-size:13px;cursor:pointer;text-align:left}
+.mewrap>.metoday{padding:0 4px 8px;border-bottom:1px solid var(--line);flex:none}
+@media (max-width:760px){#profmodal:not(.sub):not(.one) .mewrap{overflow-y:auto;-webkit-overflow-scrolling:touch}#profmodal:not(.sub):not(.one) .menav{overflow:visible;flex:none}}#profmodal.sub .mewrap>.metoday{display:none}
+/* Zustand in plain words (C3, V01.0.286): four cards, a "Heute" line, the technical details folded */
+.zmeta{font-size:12.5px;margin-top:2px}.zmeta:empty{display:none}
+.zcards{display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:10px;margin-bottom:12px}
+.zcard{display:flex;flex-direction:column;align-items:flex-start;gap:3px;text-align:left;padding:12px 14px;border:1px solid var(--line);border-radius:14px;background:var(--card);color:var(--fg);font:inherit;cursor:pointer;min-width:0}
+.zcard .zk{font-size:12.5px;color:var(--mut)}.zcard b{font-size:16px;font-weight:650}.zcard small{font-size:12.5px;color:var(--mut);overflow-wrap:anywhere}
+.zcard[data-lvl=ok] b{color:var(--ok)}.zcard[data-lvl=warn] b{color:var(--warn)}.zcard[data-lvl=bad]{border-color:color-mix(in srgb,var(--bad) 45%,var(--line))}.zcard[data-lvl=bad] b{color:var(--bad)}
+.zbar{position:relative;display:block;width:100%;height:6px;border-radius:99px;background:var(--line);margin-top:4px}.zbar i{display:block;height:100%;border-radius:99px;background:linear-gradient(90deg,var(--acc),var(--acc2))}
+.zbar em{position:absolute;top:-3px;bottom:-3px;width:2px;background:var(--bad);border-radius:2px}
+.ztoday{font-size:14px;color:var(--mut);margin:0 2px 14px}.ztoday b{color:var(--fg);font-weight:600}
+details.ztech{margin-top:4px}details.ztech>summary{cursor:pointer;font-weight:650;font-size:15px;padding:8px 2px;color:var(--mut)}details.ztech[open]>summary{margin-bottom:10px;color:var(--fg)}
+@media (max-width:760px){.zcards{grid-template-columns:repeat(2,minmax(0,1fr))}}
+/* Rückgängig above the admin log (C5, V01.0.286) */
+.lundo{border:1px solid var(--line);border-radius:12px;padding:8px 12px;margin:0 0 10px;background:var(--card)}.lundo .zrow span{font-size:13.5px}

@@ -16,6 +16,7 @@ from fastapi.responses import FileResponse, Response, StreamingResponse
 
 sys.path.insert(0, os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
 import backup  # noqa: E402
+import undo  # noqa: E402
 import echo  # noqa: E402
 import guard  # noqa: E402
 import kiwix  # noqa: E402
@@ -330,7 +331,27 @@ async def status():
               for u in QWEN38_UNITS if unit_exists(u)]
     return {"time": time.time(), "system": system_stats(), "gpu": gpu_stats(),
             "services": services, "qwen38": qwen38, "history": list(history),
-            "alerts": health.alerts(), "watchdog": health.events[-10:]}
+            "alerts": health.alerts(), "watchdog": health.events[-10:], "glance": glance(cfg)}
+
+
+def glance(cfg):
+    """Zustand in plain words (plan „Bedienung gesamt“ C3, V01.0.286): version, last backup, the last live check
+    (does the language model answer?) and a "Heute" line. Only times and counts, never what was said."""
+    import latency
+    import vorrang
+    from core import app_version
+    live = health.last_live() or {}
+    llm = next((x for x in live.get("steps") or [] if x.get("name") == "llm"), None)
+    last = backup.listing()
+    day = latency.summary()["day"] or {}
+    out = {"version": app_version(), "backup": last[0]["created"] if last else None,
+           "check": {"time": live.get("t"), "llm": None if llm is None else bool(llm.get("ok")),
+                     "seconds": llm.get("seconds") if llm else None},
+           "answers": day.get("n", 0), "first_sound": day.get("median"), "background": vorrang.today()}
+    if features.admin_on("esp32", cfg.get("chat", {})):
+        import esp32
+        out["speakers"] = {"known": len(esp32.clients()), "online": len(esp32._live)}
+    return out
 
 
 @router.get("/api/admin/prompt", dependencies=[Depends(auth)])
@@ -585,10 +606,21 @@ async def put_config(request: Request):
         guard.log("config_sensitive", detail=", ".join(touched))
     if new.get("chat", {}).get("llm_key") != old.get("chat", {}).get("llm_key"):
         new["chat"].pop("llm_key_from", None)  # typed by hand: updates keep it as is
+    return _save(new, old, _by(request))
+
+
+def _by(request):
+    me = acting_profile(request)
+    return me["id"] if me else "main"
+
+
+def _save(new, old, by):
+    """Writes a checked config, keeps what may be undone (undo.py) and starts or stops the services it touches."""
     tmp = CONFIG_PATH + ".tmp"
     with open(tmp, "w") as f:
         json.dump(new, f, indent=2)
     os.replace(tmp, CONFIG_PATH)
+    undo.record(old, new, by, SENSITIVE)
     # the API key is read per request, so changing it needs no restart
     mem_changed = new["memory"] != old.get("memory")
     actions = {}  # unit name -> start | stop | restart
@@ -663,13 +695,49 @@ async def admin_switch(request: Request):
         raise HTTPException(400, "not a switch the app may change")
     new = get_config()
     new["chat"][key] = on
-    validate(new)
+    old = validate(new)
     tmp = CONFIG_PATH + ".tmp"
     with open(tmp, "w") as f:
         json.dump(new, f, indent=2)
     os.replace(tmp, CONFIG_PATH)
+    undo.record(old, new, _by(request), SENSITIVE)
     guard.log("config_switch", detail=f"chat.{key}={'on' if on else 'off'}")
     return {"key": key, "on": on}
+
+
+# Rückgängig (undo.py, plan „Bedienung gesamt“ C5): the last 50 saved changes with their old values. The main admin
+# sees all, a profile in its admin mode its own; undoing goes through validate() and _save() like saving.
+def _undo_view(x, names):
+    by = x.get("by")
+    return {"id": x["id"], "t": x["t"], "by": "main" if by == "main" else names.get(by, ""), "mine": by,
+            "changes": x["changes"], "undone": bool(x.get("undone"))}
+
+
+@router.get("/api/admin/undo", dependencies=[Depends(auth)])
+def undo_list(request: Request):
+    me = acting_profile(request)
+    names = {u["id"]: u["name"] for u in profiles.names()}
+    mine = me["id"] if me and me["role"] != "owner" else None
+    return {"items": [_undo_view(x, names) for x in undo.listing(mine)]}
+
+
+@router.post("/api/admin/undo/{uid}", dependencies=[Depends(auth)])
+def undo_one(uid: str, request: Request):
+    guard.limit(request, "undo", admin=True)
+    item = undo.get(uid) if undo.ID.fullmatch(uid) else None
+    me = acting_profile(request)
+    if not item or (me and me["role"] != "owner" and item.get("by") != me["id"]):
+        raise HTTPException(404, "no such change")
+    if item.get("undone"):
+        raise HTTPException(409, "already undone")
+    new, done, kept = undo.revert(item, get_config(), SENSITIVE)
+    if not done:
+        raise HTTPException(409, "every value was changed again since")
+    old = validate(new)   # the same checks as saving
+    res = _save(new, old, _by(request))
+    undo.mark_undone(uid, _by(request))
+    guard.log("config_undo", detail=", ".join(done)[:300])
+    return dict(res, undone=done, kept=kept)
 
 
 @router.post("/api/service/{name}/{action}", dependencies=[Depends(auth)])

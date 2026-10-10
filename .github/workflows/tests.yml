@@ -28,9 +28,9 @@ jobs:
           python-version: "3.11"
       - name: Install
         run: |
-          python -m pip install -q fastapi "uvicorn[standard]" python-multipart httpx psutil num2words numpy pypdf \
-            icalendar recurring-ical-events cryptography segno "pillow==11.3.0" "pypdfium2==4.30.0" "packaging>=24" playwright
-          python -m pip install -q --no-deps "rmscene==0.8.0"   # as in install.sh: its packaging<24 pin is not needed
+          # the panel's packages exactly as install.sh builds them: versions and hashes from the lock (V01.0.286)
+          python -m pip install -q --no-deps --require-hashes -r app/requirements-panel.lock
+          python -m pip install -q playwright
           python -m playwright install --with-deps chromium
           sudo apt-get install -y -q ffmpeg
       - name: Self-tests

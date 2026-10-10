@@ -324,6 +324,37 @@ class Turns(unittest.TestCase):
             self.assertEqual(ADMIN.put("/api/config", json=new).status_code, 400, k)
 
 
+class Explain(unittest.TestCase):
+    """B4 „Erklären statt Schweigen“ (V01.0.286): asked for a function the turn does not offer, the reason comes from
+    the panel's rules, never from the model; nothing when the function is offered or the question is unclear."""
+    def tearDown(self):
+        helpers.set_config(weather=False)
+
+    def test_reason_from_the_rules(self):
+        wx = intent.classify("Wie wird das Wetter morgen?")
+        helpers.set_config(weather=False)
+        self.assertEqual(intent.explain(wx, {"web_search"}, None, "")["why"], "spark")
+        helpers.set_config(weather=True)
+        self.assertEqual(intent.explain(wx, {"web_search"}, None, "")["why"], "guest")
+        self.assertEqual(intent.explain(wx, set(), {"id": "u1"}, "voice not recognized")["why"], "voice")
+        self.assertIsNone(intent.explain(wx, {"weather"}, None, ""))                       # offered: nothing to say
+        self.assertIsNone(intent.explain(intent.classify("Erzähl mir einen Witz"), set(), None, ""))
+        self.assertIsNone(intent.explain(intent.classify("Danke"), set(), None, ""))
+
+    def test_hint_in_the_stream(self):
+        p = profile("Erklaer1")
+        helpers.set_config(weather=False)
+        ev = [e for e in chat_with(p, [{"role": "user", "content": "Wie wird das Wetter morgen?"}]) if e["type"] == "why"]
+        self.assertEqual([(e["key"], e["why"]) for e in ev], [("weather", "spark")])
+        self.assertEqual(ev[0]["name"], ["Wetter", "Weather"])
+        helpers.set_config(weather=True)
+        ev = [e for e in chat_with(p, [{"role": "user", "content": "Wie wird das Wetter morgen?"}]) if e["type"] == "why"]
+        self.assertEqual([(e["why"], e["me"]) for e in ev], [("profile", "wxbox")])
+        p.put("/api/profile/settings", json={"wx_on": True})
+        ev = [e for e in chat_with(p, [{"role": "user", "content": "Wie wird das Wetter morgen?"}]) if e["type"] == "why"]
+        self.assertEqual(ev, [])
+
+
 class OwnWords(unittest.TestCase):
     def tearDown(self):
         helpers.set_config(route_words="")

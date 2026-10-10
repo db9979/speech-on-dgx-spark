@@ -29,7 +29,7 @@ async function loadLogs(){
     if(tab!==LG.tab)return;LDATA=tab==='diag'?d:null;rows=d.rows;head=d.head}
   else if(tab==='svc'){const txt=await (await api(`/api/logs/${encodeURIComponent(LG.svc)}?lines=${LG.lines}`)).text();
     if(tab!==LG.tab)return;rows=txt.split('\n').filter(x=>x.trim()&&!x.startsWith('-- ')).map(lparse);LDATA=null;head=`# ${LG.svc} · ${rows.length} Zeilen`}
-  else if(tab==='adm'){rows=(await adminRows()).slice(-LG.lines);if(tab!==LG.tab)return;LDATA=null;head=`# ${t('Admin-Protokoll','Admin log')} · ${rows.length}`}
+  else if(tab==='adm'){loadUndo().catch(()=>{});rows=(await adminRows()).slice(-LG.lines);if(tab!==LG.tab)return;LDATA=null;head=`# ${t('Admin-Protokoll','Admin log')} · ${rows.length}`}
   else{rows=(await auditRows()).slice(-LG.lines);if(tab!==LG.tab)return;LDATA=null;head=`# ${t('Änderungsprotokoll','Change log')} · ${rows.length}`}
   LROWS=rows;LROWS.head=head;lrender()}
 function lshow(){
@@ -37,7 +37,7 @@ function lshow(){
   document.querySelectorAll('#logtabs button').forEach(b=>b.classList.toggle('on',b.dataset.lt===LG.tab));
   document.querySelectorAll('#logmin button').forEach(b=>b.classList.toggle('on',+b.dataset.v===LG.min));
   const diag=LG.tab==='diag';$('logmin').hidden=!(diag||LG.tab==='update'||req);$('logsum').hidden=!diag;$('logchips').hidden=!(diag||req);
-  if(!diag)$('lasterr').hidden=true;$('logsvcbar').hidden=LG.tab!=='svc';$('logsvc').value=LG.svc;$('loglines').value=String(LG.lines);
+  if(!diag)$('lasterr').hidden=true;if(LG.tab!=='adm')$('logundo').hidden=true;$('logsvcbar').hidden=LG.tab!=='svc';$('logsvc').value=LG.svc;$('loglines').value=String(LG.lines);
   $('loglive').classList.toggle('on',LG.live);$('loglive').setAttribute('aria-pressed',LG.live?'true':'false')}
 function ltile(key,label,color,count,spark,sub){
   const b=el('button','ltile'+(key==='errors'?' err':'')+(LG.f.length===1&&LG.f[0]===key?' on':''));b.type='button';b.style.setProperty('--c',color);

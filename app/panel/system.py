@@ -157,6 +157,21 @@ async def _restore(f, name, password=""):
         f.close()
         raise HTTPException(429, "too many wrong passwords, try again in an hour")
     try:
+        import offsite
+        if offsite.encrypted(f):
+            # a copy from the NAS (offsite.py): decrypted with the backup password first, then as any move backup
+            if not password:
+                f.close()
+                raise ValueError("this backup is encrypted: the backup password is needed")
+            plain = tempfile.TemporaryFile()
+            try:
+                with f:
+                    await asyncio.to_thread(offsite.decrypt, f, plain, password)
+            except BaseException:
+                plain.close()
+                raise
+            plain.seek(0)
+            f = plain
         with f:
             done = await asyncio.to_thread(backup.restore, f, _check_config, password or None)
     except (ValueError, OSError, EOFError) as e:

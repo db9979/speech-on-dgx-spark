@@ -12,7 +12,7 @@
 <meta name="apple-mobile-web-app-capable" content="yes">
 <meta name="apple-mobile-web-app-title" content="Assistent">
 <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
-<script>try{const th=localStorage.getItem("theme");if(th==="light"||th==="dark")document.documentElement.dataset.theme=th}catch{}</script>
+<script src="/static/js/theme.js"></script>
 <link rel="stylesheet" href="/static/app.css">
 </head>
 <body>
@@ -41,27 +41,31 @@
 <div id="alerts"></div>
 
 <section id="mon" class="on">
-  <div class="card zhead" id="zhead"><span class="zicon" id="zicon"></span><div><b id="ztitle">Zustand wird geladen …</b><div class="mut" id="ztext"></div></div></div>
+  <div class="card zhead" id="zhead"><span class="zicon" id="zicon"></span><div><b id="ztitle">Zustand wird geladen …</b><div class="mut" id="ztext"></div><div class="mut zmeta" id="zmeta"></div></div></div>
+  <div class="zcards" id="zcards"></div>
+  <div class="ztoday" id="ztoday" hidden></div>
   <div class="card zneed" id="zneed" hidden><h2>Braucht dich</h2><div id="zlist"></div></div>
   <div class="card zneed" id="zroom" hidden><h2>Hört gerade zu</h2><div id="zrooms"></div><div class="row" style="margin-top:8px"><button class="b" type="button" id="zroomall">Alle beenden</button><span class="mut">Nur wo und bis wann, nie was gehört wurde.</span></div></div>
   <div class="card zneed" id="zbg" hidden><h2>Mein Zustand aller Profile</h2><div id="zbglist"></div><div class="mut" style="margin-top:6px">Nur Anzahlen über alle Profile, die die Seite nutzen; nie Namen, Dienste oder Inhalte.</div></div>
   <div class="card zneed" id="zdocs" hidden><h2>Eigene Dokumente</h2><div id="zdoclist"></div><div class="mut" style="margin-top:6px">Profilnamen, Speicher und Zahlen, nie Inhalte. Dokumentnamen nur, wenn jemand ein Dokument für alle freigegeben hat.</div></div>
   <div id="memnote"></div>
-  <div class="grid">
+  <details class="ztech" id="ztech"><summary>Technische Details</summary>
+    <div class="grid">
     <div class="card"><div class="k">GPU-Auslastung</div><div class="v" id="m-gpu">–</div><svg class="spark" id="c-gpu"></svg></div>
     <div class="card"><div class="k">Unified Memory frei</div><div class="v" id="m-mem">–</div><svg class="spark" id="c-mem"></svg></div>
     <div class="card"><div class="k">GPU-Temperatur / Leistung</div><div class="v" id="m-temp">–</div><svg class="spark" id="c-temp"></svg></div>
     <div class="card"><div class="k">CPU</div><div class="v" id="m-cpu">–</div><svg class="spark" id="c-cpu"></svg></div>
-  </div>
-  <div class="card"><h2>Speech-Dienste</h2>
+    </div>
+    <div class="card"><h2>Speech-Dienste</h2>
     <table><thead><tr><th>Dienst</th><th>systemd</th><th>Modell</th><th>Anfragen</th><th>Ø Latenz</th><th>Ø erster Ton</th><th>RTF</th><th>Speicher (Torch)</th><th></th></tr></thead><tbody id="svc"></tbody></table>
-  </div>
-  <details class="card zmore"><summary>dgx-spark-qwen38 auf dieser Box</summary>
+    </div>
+    <details class="card zmore"><summary>dgx-spark-qwen38 auf dieser Box</summary>
     <table><thead><tr><th>Unit</th><th>Status</th><th>Speicheranteil</th></tr></thead><tbody id="q38"></tbody></table>
     <div class="mut" id="q38none" style="display:none">Keine qwen38-Units gefunden.</div>
-  </details>
-  <details class="card zmore"><summary>GPU-Prozesse</summary>
+    </details>
+    <details class="card zmore"><summary>GPU-Prozesse</summary>
     <table><thead><tr><th>PID</th><th>Prozess</th><th>Speicher</th></tr></thead><tbody id="gp"></tbody></table></details>
+  </details>
 </section>
 
 <section id="cfg">
@@ -380,12 +384,21 @@
       <div class="fh more" hidden>Profile (Gedächtnis, Gespräche, Dokumente, Kalender, E-Mail-Konten, Smart Home, Stimmerkennung), geklonte Stimmen, Einstellungen, Panel-Passwort und was der Spark für alle hält (zweiter Anmeldeschritt des Admins, iPhone-Push, Telegram-Bot, Browser-Push, ESP32-Lautsprecher, Agent-Dienste, eigene Testfragen). Jeden Tag automatisch, die letzten sieben bleiben; dazu vor jedem Update, jeder Rückkehr zur vorigen Version und jedem Wiederherstellen, davon bleiben die letzten fünf.</div>
       <table><tbody id="baklist"></tbody></table>
       <div class="setrow"><div class="lbl"><b>Jetzt sichern</b><span>Legt sofort eine Sicherung auf dem Spark an.</span></div><button class="b" id="bakgo" type="button">Sichern</button></div>
-      <div class="setrow mainonly"><div class="lbl"><b>Aus Datei wiederherstellen</b><span>Eine heruntergeladene Sicherung (.tar.gz) einspielen.</span></div><button class="b" id="bakup" type="button">Datei wählen …</button><input type="file" id="bakfile" accept=".gz,.tgz,application/gzip" hidden></div>
+      <div class="setrow mainonly"><div class="lbl"><b>Aus Datei wiederherstellen</b><span>Eine heruntergeladene Sicherung (.tar.gz) einspielen.</span></div><button class="b" id="bakup" type="button">Datei wählen …</button><input type="file" id="bakfile" accept=".gz,.tgz,.enc,application/gzip,application/octet-stream" hidden></div>
       <div class="fh" id="bakmsg"></div>
       <div class="setrow mainonly"><div class="lbl"><b>Umzugs-Sicherung</b><span>Für einen anderen Spark: bringt den Schlüssel für Passwörter und Tokens mit.<button class="mlink" type="button">Mehr</button></span></div><div class="ctl full"><input type="password" class="wide" id="bakpw" autocomplete="new-password" maxlength="200" placeholder="Umzugs-Passwort (mind. 12 Zeichen)" aria-label="Umzugs-Passwort"><button class="b" id="bakmove" type="button">Anlegen</button></div></div>
       <div class="fh more" hidden>Gespeicherte Passwörter, Tokens und Schlüssel lassen sich mit einer normalen Sicherung nur auf diesem Spark lesen; auf einem anderen müssen sie neu eingegeben werden. Eine Umzugs-Sicherung bringt den Schlüssel dafür mit, verschlüsselt mit deinem Passwort: Auf dem neuen Spark dasselbe Passwort ins Feld eintragen, dann wiederherstellen. Anmelden muss sich danach jeder neu. Beim Wiederherstellen werden die Einstellungen wie auf der Einstellungsseite geprüft, und es wird alles getauscht oder nichts.</div>
+      <h3 class="sec mainonly">Sicherung nach außen <span>aus, bis du sie einschaltest</span></h3>
+      <div class="mainonly" id="offbox">
+        <div class="setrow"><div class="lbl"><b>Jeden Tag verschlüsselt auf den NAS</b><span>Eine Kopie der Sicherung geht per WebDAV in einen Ordner (NAS, Nextcloud, Synology). Der NAS sieht nur verschlüsselte Daten.<button class="mlink" type="button">Mehr</button></span></div><label class="tgl"><input type="checkbox" id="offon"><i></i></label></div>
+        <div class="fh more" hidden>Die Kopie ist eine Umzugs-Sicherung, als Ganzes mit dem Sicherungs-Passwort verschlüsselt (scrypt, AES-256-GCM), bevor sie den Spark verlässt. Wiederherstellen: die Datei vom NAS laden, oben unter „Aus Datei wiederherstellen“ mit demselben Passwort einspielen; das geht auch auf einem neuen Spark. Ohne das Passwort ist die Kopie verloren: schreib es auf. Dort bleiben die letzten 7 Kopien; der Spark löscht nur, was er selbst geschickt hat. Nur https.</div>
+        <label for="offurl">WebDAV-Ordner</label><input class="wide" id="offurl" autocomplete="off" autocapitalize="off" spellcheck="false" maxlength="300" placeholder="https://nas.example.de:5006/sicherung/spark/">
+        <div class="rowin"><input id="offuser" autocomplete="off" autocapitalize="off" maxlength="128" placeholder="Benutzer" aria-label="WebDAV-Benutzer"><input type="password" id="offpw" autocomplete="new-password" maxlength="256" placeholder="WebDAV-Passwort" aria-label="WebDAV-Passwort"></div>
+        <input type="password" class="wide" id="offkey" autocomplete="new-password" maxlength="200" placeholder="Sicherungs-Passwort (mind. 12 Zeichen, aufschreiben)" aria-label="Sicherungs-Passwort">
+        <div class="row"><button class="b p" id="offsave" type="button">Speichern</button><button class="b" id="offnow" type="button">Jetzt senden</button><span class="fh" id="offmsg"></span></div>
+      </div>
       <details class="adv"><summary>Update-Protokoll <span class="mut">· was beim letzten Update passiert ist</span></summary>
-        <div class="row" style="margin-top:8px"><button class="b" type="button" onclick="copyEl('updlog',this)">Kopieren</button></div><pre id="updlog" style="margin-top:8px">–</pre></details>
+        <div class="row" style="margin-top:8px"><button class="b" type="button" data-on="copyEl" data-args='["updlog"]'>Kopieren</button></div><pre id="updlog" style="margin-top:8px">–</pre></details>
     </div>
     </div>
   </div>
@@ -428,7 +441,7 @@
 
 <section id="test">
   <div class="two">
-    <div class="card"><div class="row" style="justify-content:space-between"><h2 style="margin:0">Funktionsprüfung</h2><button class="b" type="button" onclick="openWizard()">Einrichtung erneut starten</button></div>
+    <div class="card"><div class="row" style="justify-content:space-between"><h2 style="margin:0">Funktionsprüfung</h2><button class="b" type="button" data-on="openWizard">Einrichtung erneut starten</button></div>
       <div class="intro sm">Probiert die echten Dienste einmal aus: das Sprachmodell antwortet und ruft ein Werkzeug auf, die Websuche findet etwas (wenn an), die Sprachausgabe spricht einen Satz, die Spracherkennung versteht ihn wieder. Läuft nach jedem Update von selbst.</div>
       <table style="margin-top:8px"><tbody id="livesteps"></tbody></table>
       <div id="latsum" style="margin-top:8px"></div>
@@ -445,7 +458,7 @@
   </div>
   <div class="card"><h2>Leistung messen</h2>
     <div class="intro sm">Misst Zeit bis zum ersten Ton, Geschwindigkeit bei einer und bei mehreren gleichzeitigen Anfragen und den Speicher der Dienste. Dauert ein bis zwei Minuten und belastet die GPU in der Zeit. Auf der Konsole: <code>sudo speech-spark-bench</code></div>
-    <div class="row" style="margin-top:12px"><button class="b p" id="benchgo">Messung starten</button><button class="b" onclick="copyEl('benchout',this)">Kopieren</button><span id="benchmsg" class="mut"></span></div>
+    <div class="row" style="margin-top:12px"><button class="b p" id="benchgo">Messung starten</button><button class="b" data-on="copyEl" data-args='["benchout"]'>Kopieren</button><span id="benchmsg" class="mut"></span></div>
     <div id="benchrate"></div>
     <details id="benchraw" style="margin-top:10px"><summary class="mut">Rohwerte</summary><pre id="benchout" style="margin-top:8px">–</pre></details></div>
   <div class="card"><h2>Vorrang für Sprache</h2>
@@ -586,6 +599,7 @@
     <div class="lbar"><input id="logq" class="lsearch" type="search" placeholder="In der Ausgabe suchen …" autocomplete="off"><select id="loglines" class="lsel"><option value="30">30 Zeilen</option><option value="100" selected>100 Zeilen</option><option value="300">300 Zeilen</option><option value="1000">1000 Zeilen</option></select>
       <span class="sp"></span><button type="button" class="llive on" id="loglive" title="Alle paar Sekunden neu laden; pausiert, solange du hochscrollst oder etwas markierst"><i></i>Live</button><button type="button" class="b" id="logcopy">Kopieren für Thread</button></div>
     <div class="lhead"><span id="loghead"></span><span id="logcount"></span></div>
+    <div class="lundo" id="logundo" hidden></div>
     <div class="lout" id="logout" role="log" aria-live="off"></div>
     <div class="lreq" id="logreq" hidden></div>
   </div>
@@ -620,7 +634,7 @@
 </div></div>
 <div id="findmodal" class="modal" style="display:none"><div class="card modalcard findcard">
   <h2>Frühere Gespräche durchsuchen</h2>
-  <div class="rowin"><input id="findq" placeholder="z. B. Rosen schneiden" autocomplete="off"><button class="b" type="button" onclick="$('findmodal').style.display='none'">Schließen</button></div>
+  <div class="rowin"><input id="findq" placeholder="z. B. Rosen schneiden" autocomplete="off"><button class="b" type="button" data-on="findClose">Schließen</button></div>
   <div class="fh" id="findinfo"></div>
   <ul class="facts finds" id="findlist"></ul>
 </div></div>
@@ -645,7 +659,7 @@
     <label>PIN</label><input type="password" id="profpin" autocomplete="current-password">
     <div id="profcodebox" style="display:none"><label>Code aus der Authenticator-App</label><input id="profcode" inputmode="numeric" autocomplete="one-time-code" autocapitalize="off">
       <label class="chk"><input type="checkbox" id="proftrust"> Diesem Browser 30 Tage vertrauen</label><div class="fh">Handy nicht da? Ein Wiederherstellungscode geht auch.</div></div>
-    <div class="row" style="margin-top:14px"><button class="b p" id="proflogin">Anmelden</button><button class="b" type="button" id="profadmin" style="display:none" onclick="$('profmodal').style.display='none';showLogin()">Admin</button><span id="profmsg" class="err"></span></div></div>
+    <div class="row" style="margin-top:14px"><button class="b p" id="proflogin">Anmelden</button><button class="b" type="button" id="profadmin" style="display:none" data-on="adminLogin">Admin</button><span id="profmsg" class="err"></span></div></div>
     <div id="factbox" class="ptab"><div class="intro">Das weiß der Assistent über dich. Sag ihm „Merk dir …“ oder „Vergiss …“, oder lösche hier.</div>
     <div id="tidybox" class="tidy" style="display:none"></div>
     <ul class="facts" id="factlist"></ul>
@@ -727,7 +741,7 @@
       <div class="fh">Meldet dein Profil in allen anderen Browsern ab; dieser bleibt angemeldet. Geräte mit Schlüssel (Lautsprecher, Uhr) sperrst du oben einzeln. Einzelne Browser meldest du in der Liste darüber ab. Eine Anmeldung endet außerdem nach <span id="secdays">30</span> Tagen ohne Nutzung. Mit zweitem Anmeldeschritt müssen auch vertraute Browser danach wieder einen Code eingeben.</div></div>
 </div>
   </div>
-  <div class="row mefoot"><button class="b" id="proflogout" type="button">Abmelden</button><button class="b p" id="profclose" type="button" onclick="closeProf()">Schließen</button></div>
+  <div class="row mefoot"><button class="b" id="proflogout" type="button">Abmelden</button><button class="b p" id="profclose" type="button" data-on="closeProf">Schließen</button></div>
 </div></div>
 <div id="mbar" class="mbar"><button type="button" data-m="chat"><i class="ni" data-ni="chat"></i>Assistent</button><button type="button" data-m="me"><i class="ni" data-ni="me"></i>Ich<span class="medot" hidden></span></button><button type="button" data-m="mon"><i class="ni" data-ni="mon"></i>Zustand<span class="hdot"></span></button><button type="button" data-m="more"><i class="ni" data-ni="more"></i>Verwalten</button></div>
 <div id="fab" title="Gespräch"><div class="fabpop" id="fabpop"><div class="fabstate" id="fabstate"></div><div class="fabtext" id="fabtext"></div>
@@ -762,6 +776,7 @@
 <script src="/static/js/find.js"></script>
 <script src="/static/js/who.js"></script>
 <script src="/static/js/join.js"></script>
+<script src="/static/js/today.js"></script>
 <script src="/static/js/start.js"></script>
 </body>
 </html>

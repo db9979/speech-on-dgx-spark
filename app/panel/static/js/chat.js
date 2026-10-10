@@ -228,7 +228,7 @@ async function ask(text,asrS,spk){const spoken=!!chat.nextSpoken;chat.nextSpoken
   if(S.daily&&chat.cid&&!chat.picked){const c=convos.load().find(x=>x.id===chat.cid);if(c&&c.updated<today0())openConvo(null)}   // past midnight
 const pids=typeof picIds==='function'?picIds():[],thumbs=pids.length?picThumbs():[];   // attached pictures (pics.js)
 const ub=chatLog('user',text);const um={role:'user',content:text};
-  if(thumbs.length){const w=document.createElement('div');w.className='picrow';w.innerHTML=thumbs.map(u=>`<img alt="" src="${esc(u)}">`).join('');ub.appendChild(w)}chat.msgs.push(um);deletable(ub,um);let foreign=false,ttsErr=false,mailUsed=false,outsideUsed=false;
+  if(thumbs.length){const w=document.createElement('div');w.className='picrow';w.innerHTML=thumbs.map(u=>`<img alt="" src="${esc(u)}">`).join('');ub.appendChild(w)}chat.msgs.push(um);deletable(ub,um);let foreign=false,ttsErr=false,mailUsed=false,outsideUsed=false,why=null;
   const el=chatLog('assistant','');$('fabtext').textContent='';let full='',llmS=null,audioS=null,err='';const searches=[],sources=[],mems=[],docs=[],drefs=[];
   const ctrl=new AbortController();chat.ctrl=ctrl;chat.firstPlay=null;chat.gaps=[];chat.blocks=[];chat.t0b=null;chat.stalls=0;chat.pieceStart=true;setTalk();chatSay(t('Antwort kommt …','Answer coming …'));
   try{const r=await api('/api/chat',{method:'POST',headers:{'Content-Type':'application/json'},signal:ctrl.signal,
@@ -256,6 +256,7 @@ const ub=chatLog('user',text);const um={role:'user',content:text};
         else if(ev.type==='docsources'){for(const n of ev.items)if(!docs.includes(n))docs.push(n);for(const r of (ev.refs||[]))if(!drefs.some(x=>x.id===r.id&&x.page===r.page))drefs.push(r)}
         else if(ev.type==='speaker'){const w=document.createElement('div');w.className='who';foreign=!!ev.foreign;
           w.textContent='🎙 '+ev.name+(foreign?t(' · nicht in diesem Verlauf gespeichert',' · not kept in this history'):'');ub.parentNode.appendChild(w)}
+        else if(ev.type==='why'){why=ev}
         else if(ev.type==='reminder'){rem.event(ev);mems.push(ev.action==='set'?t('Erinnerung: ','Reminder: ')+rem.when(ev.item.due)+' '+ev.item.text:t('Erinnerung gelöscht','Reminder cancelled'))}
         else if(ev.type==='memory'){mems.push((ev.action==='saved'?t('Gemerkt: ','Remembered: '):t('Vergessen: ','Forgotten: '))+ev.text)}
         else if(ev.type==='search_error'){chatSay(t('Websuche fehlgeschlagen: ','Web search failed: ')+ev.message)}
@@ -275,6 +276,7 @@ const ub=chatLog('user',text);const um={role:'user',content:text};
       return r.id?`<button type="button" class="mlink" data-docopen="${esc(r.id)}">${l}</button>`:`<button type="button" class="mlink" data-docopen="">${l}</button>`}).join(' · ');
     d.addEventListener('click',async e=>{const b=e.target.closest('[data-docopen]');if(!b)return;await openMe('docbox');if(b.dataset.docopen)docView(b.dataset.docopen)});el.appendChild(d)}
   if(mems.length){const d=document.createElement('div');d.className='mem';d.textContent=mems.join(' · ');el.appendChild(d)}
+  if(why)el.appendChild(whyNote(why));
   if(pids.length&&full.trim()&&PROFILE&&!err){const b=document.createElement('button');b.type='button';b.className='b picsave';   // 7: only on a click
     b.textContent=t('In „Meine Dokumente“ speichern','Store under "My documents"');const said=full.trim();b.onclick=()=>picSave(said,b);el.appendChild(b)}
   if(pids.length&&full.trim()&&PROFILE&&!err&&ALLOW.docpics){const b=document.createElement('button');b.type='button';b.className='b picsave';   // the picture itself, read by the model later
@@ -293,6 +295,18 @@ const ub=chatLog('user',text);const um={role:'user',content:text};
   while(playing()&&!chat.ctrl&&!chat.rec)await new Promise(res=>setTimeout(res,100));   // wait until it has finished speaking
   setTalk();if(chat.ctrl||chat.rec)return;
   chatSay(t('Bereit.','Ready.'));if(S.hands)startListening();else if(spoken&&followSecs())startListening({follow:followSecs()})}
+// "Erklären statt Schweigen" (plan „Bedienung gesamt“ B4, V01.0.286): asked for a function this answer could not
+// use, the reason under it comes from the panel's rules (intent.explain), never from the model; with a way to change it.
+function whyNote(w){const d=document.createElement('div');d.className='mem whynote';const n='„'+(w.name||[])[L==='en'?1:0]+'“';
+  const txt={spark:t(n+' ist auf dem Spark ausgeschaltet.',n+' is switched off on the Spark.'),profile:t(n+' ist für dich aus.',n+' is off for you.'),
+    guest:t(n+' gibt es nur mit Profil.',n+' needs a profile.'),mfa:t(n+' braucht zuerst den zweiten Anmeldeschritt.',n+' needs the second login step first.'),
+    voice:t('Am geteilten Lautsprecher gibt es Persönliches nur, wenn er deine Stimme erkennt.','At a shared speaker personal things need your recognized voice.')}[w.why];
+  if(!txt)return d;d.textContent='ℹ '+txt;const go=(l,f)=>{const b=document.createElement('button');b.type='button';b.className='mlink';b.textContent=l;b.onclick=f;d.append(' ',b)};
+  if(w.why==='spark'&&document.body.classList.contains('adm')&&!document.body.classList.contains('prof')&&typeof goSec==='function')go(t('Wer darf was','Who may do what'),()=>goSec('who'));
+  else if(w.why==='profile'&&w.me&&typeof openMe==='function')go(t('Unter Ich einschalten','Switch on under Ich'),()=>openMe(w.me));
+  else if(w.why==='guest'&&typeof openMe==='function')go(t('Anmelden','Sign in'),()=>openMe('loginbox'));
+  else if(w.why==='mfa'&&typeof openMe==='function')go(t('Einrichten','Set up'),()=>openMe('secbox'));
+  return d}
 // Follow-up without the wake word (admin chat.follow_up, per profile "follow", off by default): after
 // the answer to a spoken question the microphone stays open a few seconds, so "Und morgen?" needs no
 // "Hey Spark". Unlike hands-free it ends after those seconds of silence and only follows a spoken

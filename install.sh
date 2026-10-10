@@ -435,13 +435,25 @@ if [ "$WITH_TTS" = 1 ] && [ "$BACKEND" = transformers ]; then
 fi
 say "Python env for the panel and the ASR / TTS front ends"
 # sherpa-onnx + huggingface_hub: the Parakeet recognizer (CPU) that asr_proxy.py runs when chosen
-# rmscene pins packaging<24 although it only uses packaging.version.Version; resolved together
-# with the rest, pip downgraded packaging to 23.2 and broke wheel (packaging>=24), which showed up
-# as "pip's dependency resolver ... dependency conflicts" in every update log. So packaging stays
-# current and rmscene comes in without its dependencies; the first line repairs venvs from .273-.276.
-[ -x "$PREFIX/venv-panel/bin/pip" ] && "$PREFIX/venv-panel/bin/pip" install -q --no-deps "packaging>=24"
-make_venv panel fastapi "uvicorn[standard]" python-multipart "httpx[http2]" psutil num2words numpy pypdf icalendar recurring-ical-events cryptography segno sherpa-onnx huggingface_hub "packaging>=24" "pillow==11.3.0" "onnxruntime==1.22.1" "tokenizers==0.22.1" "pypdfium2==4.30.0"   # pictures (images.py), meaning search (docembed.py), scanned pages (documents.py): fixed versions
-"$PREFIX/venv-panel/bin/pip" install -q --no-deps "rmscene==0.8.0"   # reMarkable pages (remarkable.py)
+# A new environment is built from app/requirements-panel.lock: exactly those versions, each file checked against
+# its hash (pip --require-hashes), the same file the GitHub test installs (V01.0.286). The lock already holds every
+# dependency, so pip installs it with --no-deps: rmscene's packaging<24 pin (it only uses packaging.version.Version)
+# is overridden there, packaging stays current (requirements-panel.override). An environment made before keeps its
+# packages as they are (see below) until it is built again (remove $PREFIX/venv-panel, run install.sh).
+PANEL_LOCK="$INSTALL_FROM/app/requirements-panel.lock"
+if [ -f "$PANEL_LOCK" ] && { [ ! -x "$PREFIX/venv-panel/bin/python" ] || [ -f "$PREFIX/venv-panel/.locked" ]; }; then
+  [ -x "$PREFIX/venv-panel/bin/python" ] || "$PY" -m venv "$PREFIX/venv-panel"
+  "$PREFIX/venv-panel/bin/pip" install -q --no-deps --require-hashes -r "$PANEL_LOCK"
+  touch "$PREFIX/venv-panel/.locked"
+else
+  # rmscene pins packaging<24 although it only uses packaging.version.Version; resolved together
+  # with the rest, pip downgraded packaging to 23.2 and broke wheel (packaging>=24), which showed up
+  # as "pip's dependency resolver ... dependency conflicts" in every update log. So packaging stays
+  # current and rmscene comes in without its dependencies; the first line repairs venvs from .273-.276.
+  [ -x "$PREFIX/venv-panel/bin/pip" ] && "$PREFIX/venv-panel/bin/pip" install -q --no-deps "packaging>=24"
+  make_venv panel fastapi "uvicorn[standard]" python-multipart "httpx[http2]" psutil num2words numpy pypdf icalendar recurring-ical-events cryptography segno sherpa-onnx huggingface_hub "packaging>=24" "pillow==11.3.0" "onnxruntime==1.22.1" "tokenizers==0.22.1" "pypdfium2==4.30.0"   # pictures (images.py), meaning search (docembed.py), scanned pages (documents.py): fixed versions
+  "$PREFIX/venv-panel/bin/pip" install -q --no-deps "rmscene==0.8.0"   # reMarkable pages (remarkable.py)
+fi
 
 # ---------------------------------------------------------------- engines (vLLM + vllm-omni, native)
 if [ "$USE_ENGINE" = 1 ]; then

@@ -106,8 +106,13 @@ const setRow=(l,h,ctl,o={})=>{if(o.why)ctl=ctl.replace(/<(input|select|textarea)
   return `<div class="setrow${o.why?' locked':''}"><div class="lbl"><b>${l}</b>${h||o.why?`<span>${h||''}${o.why?`<em class="why">${esc(o.why)}</em>`:''}</span>`:''}${o.extra||''}</div>${ctl}</div>`};
 const tglIn=(attrs,on)=>`<label class="tgl"><input type="checkbox" ${attrs}${on?' checked':''}><i></i></label>`;
 const esc=s=>String(s??'').replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
-// for a value inside onclick="f('…')": a JavaScript string first, then HTML (a name with ' or \ stays text)
-const escq=s=>esc(JSON.stringify(String(s??'')).slice(1,-1).replace(/'/g,"\\'"));
+// Strict CSP (plan „Bedienung gesamt“ D1 Stufe 2, V01.0.286): no inline handlers. A generated button names a function
+// of ON and its arguments, data-on="bakDel" data-args="[…]" (JSON through esc, so a name with ' or " stays text);
+// one listener calls it with the button first. Only functions put into ON can be called this way.
+const ON=Object.create(null);
+const onAttr=(name,...args)=>`data-on="${esc(name)}" data-args="${esc(JSON.stringify(args))}"`;
+document.addEventListener('click',e=>{const b=e.target.closest('[data-on]');if(!b||b.disabled||typeof ON[b.dataset.on]!=='function')return;
+  let a;try{a=JSON.parse(b.dataset.args||'[]')}catch{return}if(Array.isArray(a))ON[b.dataset.on](b,...a)});
 const pill=(s)=>{const c={active:'ok',ready:'ok',loading:'warn',activating:'warn',blocked:'bad',error:'bad',failed:'bad'}[s]||'';return `<span class="pill ${c}">${esc(s)}</span>`};
 // The panel runs on plain http in the LAN, where navigator.clipboard is not available.
 // navigator.clipboard needs https or localhost; the panel is usually plain http on the LAN,
@@ -120,6 +125,7 @@ function copyString(text,btn){const label=btn.textContent;const done=ok=>{btn.te
 function copyEl(id,btn){const el=$(id);if(!copyString(el.innerText||el.textContent,btn)){
   const sel=window.getSelection(),r=document.createRange();r.selectNodeContents(el);sel.removeAllRanges();sel.addRange(r)}}
 window.copyString=copyString;window.copyEl=copyEl;
+ON.copyEl=(b,id)=>copyEl(id,b);ON.findClose=()=>{$('findmodal').style.display='none'};
 const fmt=(v,u='',d=0)=>v==null?'–':(+v).toFixed(d)+u;
 
 function spark(svg,vals,max){const w=300,h=60;svg.setAttribute('viewBox',`0 0 ${w} ${h}`);svg.setAttribute('preserveAspectRatio','none');

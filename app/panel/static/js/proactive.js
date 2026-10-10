@@ -71,7 +71,7 @@ const PROX={
   pro_events:()=>`<span style="display:block;margin-top:4px">${t('Wie lange vorher: ','How long before: ')}<select id="prolead" style="width:auto">${[5,10,15,20,30,45,60].map(n=>`<option value="${n}"${n===S.pro_lead?' selected':''}>${n} ${t('Minuten','minutes')}</option>`).join('')}</select></span>`,
   pro_mail:()=>`<input id="promailfrom" style="margin-top:4px" placeholder="${t('z. B. chef@firma.de, Schule, Anna','e.g. boss@company.com, school, Anna')}" value="${esc(S.pro_mail_from||'')}" autocomplete="off"><span style="display:block">${t('Absender, mit Komma getrennt; ein Teil der Adresse oder des Namens genügt.','Senders, separated by commas; part of the address or name is enough.')}</span>`,
   pro_weather:()=>`<span class="two2" style="margin-top:4px"><input id="proplace" placeholder="${t('Ort, z. B. Köln','Place, e.g. Cologne')}" value="${esc(S.pro_place||'')}" autocomplete="off"><input type="time" id="proweatherat" value="${esc(S.pro_weather_at||'18:00')}"></span>`,
-  pro_ha:st=>!st.has.ha?'':`<ul class="facts small" style="margin-top:6px">${st.rules.map(r=>`<li><span>${esc(r.line)}${r.text?`<br><small class="mut">„${esc(r.text)}“</small>`:''}</span><button class="b" type="button" onclick="proRuleDel('${escq(r.id)}')">${t('Löschen','Delete')}</button></li>`).join('')||`<li class="mut">${t('Noch keine Regel.','No rule yet.')}</li>`}</ul>
+  pro_ha:st=>!st.has.ha?'':`<ul class="facts small" style="margin-top:6px">${st.rules.map(r=>`<li><span>${esc(r.line)}${r.text?`<br><small class="mut">„${esc(r.text)}“</small>`:''}</span><button class="b" type="button" ${onAttr('proRuleDel',r.id)}>${t('Löschen','Delete')}</button></li>`).join('')||`<li class="mut">${t('Noch keine Regel.','No rule yet.')}</li>`}</ul>
     <details id="proruleadd"><summary>${t('Regel hinzufügen','Add a rule')}</summary>
       ${proCond('1')}
       <details><summary>${t('und eine zweite Bedingung','and a second condition')}</summary>${proCond('2')}</details>
@@ -88,3 +88,4 @@ const PROBIND={
     const r=await fetch('/api/proactive/rules',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({conds,minutes:Number($('promin').value)||0,text:$('protext').value.trim()})});
     const d=await r.json();if(!r.ok){m.className='fh err';m.textContent=d.detail||r.status;return}showPro()}}};
 window.proRuleDel=async id=>{await api('/api/proactive/rules/'+encodeURIComponent(id),{method:'DELETE'});showPro()};
+ON.proRuleDel=(b,id)=>proRuleDel(id);

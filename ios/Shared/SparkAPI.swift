@@ -616,6 +616,18 @@ struct SparkAPI {
         _ = try await post("api/profile/tasks/" + list, ["text": String(text.prefix(2000))])
     }
 
+    /// What is due today (today.py, the panel's Ich → Heute): cards of the functions the profile may use.
+    func today() async throws -> [String: Any] {
+        var r = request("api/profile/today")
+        if let url = r.url, var c = URLComponents(url: url, resolvingAgainstBaseURL: false) {
+            c.queryItems = [URLQueryItem(name: "tz", value: TimeZone.current.identifier)]
+            r.url = c.url
+        }
+        let (data, response) = try await URLSession.shared.data(for: r)
+        try Self.check(data, response)
+        return Self.object(data)
+    }
+
     /// The profile's own settings the app may show ("Mein Profil"; iphone.APP_FIELDS on the Spark).
     func profileSettings() async throws -> [String: Any] {
         let (data, response) = try await URLSession.shared.data(for: request("api/iphone/settings"))

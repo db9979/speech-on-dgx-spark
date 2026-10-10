@@ -1,7 +1,7 @@
 // Admin pages: monitoring, settings, tests, voices, logs, guides, system and the update lock.
-const btns=(n,st)=>`<button class="b" onclick="act('${escq(n)}','restart',this)">${t('Neustart','Restart')}</button>`+(st==='active'||st==='activating'?`<button class="b" onclick="act('${escq(n)}','stop',this)">${t('Stopp','Stop')}</button>`:`<button class="b" onclick="act('${escq(n)}','start',this)">Start</button>`);
+const btns=(n,st)=>`<button class="b" ${onAttr('act',n,'restart')}>${t('Neustart','Restart')}</button>`+(st==='active'||st==='activating'?`<button class="b" ${onAttr('act',n,'stop')}>${t('Stopp','Stop')}</button>`:`<button class="b" ${onAttr('act',n,'start')}>Start</button>`);
 async function act(n,a,btn){btn.disabled=true;try{await api(`/api/service/${n}/${a}`,{method:'POST'})}catch(e){alert(e.message)}btn.disabled=false;refresh()}
-window.act=act;
+window.act=act;ON.act=(b,n,a)=>act(n,a,b);ON.copyPrev=b=>copyString(b.previousElementSibling.textContent,b);
 
 async function refresh(){
   let s;try{s=await (await api('/api/status')).json()}catch(e){$('hdr').textContent=t('Panel nicht erreichbar','Panel not reachable');return}
@@ -48,14 +48,48 @@ function zustand(s){if(s)ZLAST=s;s=ZLAST;if(!s)return;
   $('ztitle').textContent=lvl==='ok'?t('Alles läuft.','Everything is running.'):lvl==='bad'?t('Etwas läuft nicht.','Something is not running.'):!run.length&&unk.length?t('Die Dienste melden sich nicht.','The services do not answer.'):t('Läuft, aber etwas braucht dich.','Running, but something needs you.');
   $('ztext').textContent=(bad.length?t('Fehler: ','Errors: ')+bad.join(', ')+'. ':'')+(run.length?run.join(t(' und ',' and '))+(run.length>1?t(' laufen. ',' are running. '):t(' läuft. ',' is running. ')):'')+(unk.length?t('Ohne Rückmeldung: ','No answer from: ')+unk.join(', ')+'. ':'')
     +(sy.mem_avail_gib!=null?t(`${fmt(sy.mem_avail_gib,' GiB',1)} Speicher frei`,`${fmt(sy.mem_avail_gib,' GiB',1)} memory free`)+(low?t(' (wenig)',' (low)'):'')+'.':'')+(al.length?' '+t('Hinweise stehen oben.','Notes are shown above.'):'');
-  $('zhead').dataset.lvl=lvl;$('zicon').textContent=lvl==='ok'?'✓':'!';
+  zCards(s);$('zhead').dataset.lvl=lvl;$('zicon').textContent=lvl==='ok'?'✓':'!';
   document.querySelectorAll('.hdot').forEach(d=>d.className='hdot '+lvl);
   $('zneed').hidden=!need.length;const L=$('zlist');L.textContent='';
   for(const x of need){const r=document.createElement('div');r.className='zrow';const sp=document.createElement('span');sp.className='pill '+x.lvl;sp.textContent=x.lvl==='bad'?t('Fehler','Error'):t('Offen','Open');
     const tx=document.createElement('span');tx.textContent=x.text;const b=document.createElement('button');b.type='button';b.className='b';b.textContent=x.btn;
-    b.onclick=()=>{if(x.go.startsWith('sec:'))secGo(x.go.slice(4));else if(x.go==='svc')$('svc').closest('.card').scrollIntoView({behavior:'smooth'});else if(x.go==='cfg'){goSec('cfg');const d=document.querySelector('.pane.dirty');if(d){const nb=document.querySelector(`#cfgnav button[data-p="${d.id.slice(5)}"]`);if(nb)nb.click()}}else goSec(x.go)};
+    b.onclick=()=>{if(x.go.startsWith('sec:'))secGo(x.go.slice(4));else if(x.go==='svc')zTech('svc');else if(x.go==='cfg'){goSec('cfg');const d=document.querySelector('.pane.dirty');if(d){const nb=document.querySelector(`#cfgnav button[data-p="${d.id.slice(5)}"]`);if(nb)nb.click()}}else goSec(x.go)};
     r.append(sp,tx,b);L.appendChild(r)}}
 window.zustand=zustand;
+// Zustand in plain words (plan „Bedienung gesamt“ C3, V01.0.286): under the sentence version, last backup and last
+// check; four cards Zuhören, Sprechen, Sprachmodell, Speicher (with the 8 GiB line below which DGX OS ends
+// processes); a "Heute" line (answers, first sound, speakers online, background work that waited for speech). The
+// service table, GPU and qwen38 stay complete under "Technische Details". From /api/status (admin.glance).
+const zAgo=s=>{if(!s)return t('noch nie','never');const m=Math.round((Date.now()/1e3-s)/60);return m<1?t('gerade eben','just now'):m<90?(L==='en'?m+' min ago':'vor '+m+' Min.'):m<2880?(L==='en'?Math.round(m/60)+' h ago':'vor '+Math.round(m/60)+' Std.'):(L==='en'?Math.round(m/1440)+' days ago':'vor '+Math.round(m/1440)+' Tagen')};
+function zTech(id){const d=$('ztech');d.open=true;const el=id&&$(id);(el?el.closest('.card'):d).scrollIntoView({behavior:'smooth',block:'start'})}
+function zCard(lvl,name,big,small,go){const b=document.createElement('button');b.type='button';b.className='zcard';b.dataset.lvl=lvl;
+  const k=document.createElement('span');k.className='zk';k.textContent=name;const v=document.createElement('b');v.textContent=big;b.append(k,v);
+  if(small){const m=document.createElement('small');m.textContent=small;b.appendChild(m)}if(go)b.onclick=go;return b}
+function zSvc(v){if(!v)return['',t('nicht eingerichtet','not set up')];const h=v.health||{};
+  if(['failed','error'].includes(v.state)||h.error)return['bad',t('Fehler','Error')];
+  if(v.state==='active'||['ready','ok'].includes(h.status))return['ok',h.busy?t('arbeitet','working'):t('läuft','running')];
+  if(v.enabled===false)return['',t('ausgeschaltet','switched off')];
+  return v.state==='activating'?['warn',t('startet','starting')]:['inactive','deactivating'].includes(v.state)?['bad',t('aus','off')]:['warn',t('keine Antwort','no answer')]}
+function zCards(s){const box=$('zcards');if(!box)return;const g=s.glance||{},sv=s.services||{},sy=s.system||{};box.textContent='';
+  const short=m=>String(m||'').split('/').pop();
+  const a=sv.asr,ah=(a&&a.health)||{},[al,at]=zSvc(a);
+  box.appendChild(zCard(al,t('Zuhören','Listening'),at,[short(ah.model),ah.avg_latency_s!=null?t('Ø ','avg ')+fmt(ah.avg_latency_s,' s',1):''].filter(Boolean).join(' · '),()=>zTech('svc')));
+  const p=sv.tts,ph=(p&&p.health)||{},[pl,pt]=zSvc(p),ft=ph.avg_ttfa_s??ph.avg_ttft_s;
+  box.appendChild(zCard(pl,t('Sprechen','Speaking'),pt,[short(ph.model),ft!=null?t('erster Ton Ø ','first sound avg ')+fmt(ft,' s',1):''].filter(Boolean).join(' · '),()=>zTech('svc')));
+  const c=g.check||{};
+  box.appendChild(zCard(c.llm===true?'ok':c.llm===false?'bad':'',t('Sprachmodell','Language model'),c.llm===true?t('antwortet','answers'):c.llm===false?t('antwortet nicht','does not answer'):t('noch nicht geprüft','not checked yet'),
+    c.time?t('geprüft ','checked ')+zAgo(c.time)+(c.seconds!=null?' · '+fmt(c.seconds,' s',1):''):t('Prüfen startet die Funktionsprüfung','Prüfen runs the check'),()=>goSec('test')));
+  const free=sy.mem_avail_gib,tot=sy.mem_total_gib,ml=free==null?'':free<8?'bad':free<12?'warn':'ok';
+  const mc=zCard(ml,t('Speicher','Memory'),free==null?'–':fmt(free,' GiB',1)+t(' frei',' free'),t('Grenze 8 GiB: darunter beendet DGX OS Prozesse','Limit 8 GiB: below it DGX OS ends processes'),()=>zTech('c-mem'));
+  if(free!=null&&tot){const bar=document.createElement('span');bar.className='zbar';const f=document.createElement('i');f.style.width=Math.max(2,Math.min(100,Math.round(100*free/tot)))+'%';
+    const line=document.createElement('em');line.style.left=Math.min(100,Math.round(100*8/tot))+'%';bar.append(f,line);mc.appendChild(bar)}
+  box.appendChild(mc);
+  $('zmeta').textContent=[g.version,t('Sicherung ','Backup ')+zAgo(g.backup),c.time?t('Prüfung ','Check ')+zAgo(c.time):''].filter(Boolean).join(' · ');
+  const bg=g.background||{},td=[];
+  td.push(g.answers?(L==='en'?g.answers+' answers':g.answers+' Antworten')+(g.first_sound!=null?t(' (erster Ton im Mittel ',' (first sound median ')+fmt(g.first_sound,' s',1)+')':''):t('noch keine Antwort','no answer yet'));
+  if(g.speakers)td.push(t('Lautsprecher ','Speakers ')+g.speakers.online+t(' von ',' of ')+g.speakers.known+t(' online',' online'));
+  if(bg.held)td.push(t('Hintergrund hat ','Background waited ')+bg.held+t('-mal auf Sprache gewartet',' times for speech'));
+  const tb=$('ztoday');tb.hidden=false;tb.textContent='';const h=document.createElement('b');h.textContent=t('Heute (24 Std.): ','Today (24 h): ');tb.append(h,td.join(' · '))}
 // Zustand → "Hört gerade zu" (roomlive.py): every device in room mode, of every profile, with Beenden and
 // "Alle beenden" (e.g. when guests come). Only where and until when, never what was heard.
 async function zRooms(){const box=$('zroom');if(!box||document.hidden)return;let d={rooms:[],waiting:[]};
@@ -366,7 +400,7 @@ async function auditText(){const d=await (await api('/api/audit?limit=500')).jso
 $('tts.model').addEventListener('change',()=>instrHint(true));
 
 
-function kv(rows){return rows.map(([k,v])=>`<tr><td class="mut" style="width:40%">${k}</td><td><code>${esc(v)}</code> <button class="b" style="padding:1px 6px;font-size:12px" onclick="copyString(this.previousElementSibling.textContent,this)">${t('kopieren','copy')}</button></td></tr>`).join('')}
+function kv(rows){return rows.map(([k,v])=>`<tr><td class="mut" style="width:40%">${k}</td><td><code>${esc(v)}</code> <button class="b" style="padding:1px 6px;font-size:12px" ${onAttr('copyPrev')}>${t('kopieren','copy')}</button></td></tr>`).join('')}
 async function loadInt(){const c=await (await api('/api/config')).json();const v=await (await api('/api/tts/voices')).json();
   const host=location.hostname,asr=`http://${host}:${c.asr.port}/v1`,tts=`http://${host}:${c.tts.port}/v1`,key=c.api.key||t('beliebig, z. B. sk-local','anything, e.g. sk-local');
   const voice=c.tts.default_voice||((v.voices||[])[0]||'ryan');
@@ -686,8 +720,8 @@ $('livego').onclick=async()=>{$('livego').disabled=true;$('livemsg').textContent
   try{liveRender(await (await api('/api/livecheck',{method:'POST'})).json())}catch(e){$('livemsg').innerHTML=`<span class="err">${esc(e.message)}</span>`}$('livego').disabled=false;refresh()};
 const WHY={daily:t('täglich','daily'),manual:t('von Hand','manual'),'before-update':t('vor Update','before update'),'before-rollback':t('vor Rückkehr','before rollback'),'before-restore':t('vor Wiederherstellung','before restore'),move:t('Umzug (mit Schlüssel)','move (with key)')};
 const mb=n=>n<1048576?Math.max(1,Math.round(n/1024))+' KB':(n/1048576).toFixed(1)+' MB';
-function bakRender(l){$('baklist').innerHTML=l.map(b=>`<tr><td>${new Date(b.created*1000).toLocaleString()}<div class="mut">${esc(WHY[b.why]||b.why)} · ${mb(b.size)}</div></td><td style="text-align:right;white-space:nowrap"><button class="b mainonly" onclick="bakLoad('${escq(b.name)}')">${t('Laden','Download')}</button> <button class="b mainonly" onclick="bakRestore('${escq(b.name)}')">${t('Wiederherstellen','Restore')}</button> <button class="b mainonly" onclick="bakDel('${escq(b.name)}')">${t('Löschen','Delete')}</button></td></tr>`).join('')||`<tr><td class="mut">${t('Noch keine Sicherung.','No backup yet.')}</td></tr>`}
-async function loadBak(){try{bakRender((await (await api('/api/backups')).json()).backups)}catch(e){$('bakmsg').innerHTML=`<span class="err">${esc(e.message)}</span>`}}
+function bakRender(l){$('baklist').innerHTML=l.map(b=>`<tr><td>${new Date(b.created*1000).toLocaleString()}<div class="mut">${esc(WHY[b.why]||b.why)} · ${mb(b.size)}</div></td><td style="text-align:right;white-space:nowrap"><button class="b mainonly" ${onAttr('bakLoad',b.name)}>${t('Laden','Download')}</button> <button class="b mainonly" ${onAttr('bakRestore',b.name)}>${t('Wiederherstellen','Restore')}</button> <button class="b mainonly" ${onAttr('bakDel',b.name)}>${t('Löschen','Delete')}</button></td></tr>`).join('')||`<tr><td class="mut">${t('Noch keine Sicherung.','No backup yet.')}</td></tr>`}
+async function loadBak(){loadOff();try{bakRender((await (await api('/api/backups')).json()).backups)}catch(e){$('bakmsg').innerHTML=`<span class="err">${esc(e.message)}</span>`}}
 const bakAsk=()=>confirm(t('Wiederherstellen? Profile, Stimmen und Einstellungen werden durch die Sicherung ersetzt (der jetzige Stand wird vorher gesichert). Geänderte Einstellungen der Dienste wirken nach deren Neustart.','Restore? Profiles, voices and settings are replaced by the backup (the current state is backed up first). Changed service settings take effect after their restart.'));
 const bakDone=r=>{$('bakpw').value='';$('bakmsg').textContent=t('Wiederhergestellt: ','Restored: ')+r.restored.join(', ')+(r.restored.includes('admin-mfa-kept')?t(' (der zweite Anmeldeschritt des Admins bleibt der von diesem Spark)',' (the admin\'s second login step stays the one of this Spark)'):'')+(r.restored.includes('keys')?t(' – bitte überall neu anmelden.',' – please sign in again everywhere.'):'');loadBak()};
 // a move backup needs its password: taken from the field below the list
@@ -697,7 +731,24 @@ window.bakRestore=async n=>{if(!bakAsk())return;$('bakmsg').textContent=t('stell
 window.bakLoad=async n=>{try{const r=await (await api('/api/backups/'+encodeURIComponent(n)+'/ticket',{method:'POST'})).json();
   const a=document.createElement('a');a.href=r.url;a.download=n;document.body.appendChild(a);a.click();a.remove()}catch(e){$('bakmsg').innerHTML=`<span class="err">${esc(e.message)}</span>`}};
 window.bakDel=async n=>{if(!confirm(t('Diese Sicherung löschen?','Delete this backup?')))return;bakRender((await (await api('/api/backups/'+encodeURIComponent(n),{method:'DELETE'})).json()).backups)};
+ON.bakLoad=(b,n)=>bakLoad(n);ON.bakRestore=(b,n)=>bakRestore(n);ON.bakDel=(b,n)=>bakDel(n);
 $('bakgo').onclick=async()=>{$('bakmsg').textContent=t('sichere …','backing up …');try{const b=await (await api('/api/backups',{method:'POST'})).json();$('bakmsg').textContent=t('Gesichert: ','Saved: ')+mb(b.size);loadBak()}catch(e){$('bakmsg').innerHTML=`<span class="err">${esc(e.message)}</span>`}};
+// Sicherung nach außen (offsite.py, plan „Bedienung gesamt“ D4, V01.0.286): main admin only, off by default.
+// The passwords are never shown again: an empty field keeps the saved one.
+function offShow(d){$('offon').checked=d.on;$('offurl').value=d.url;$('offuser').value=d.user;$('offpw').value=$('offkey').value='';
+  $('offpw').placeholder=d.has_password?t('WebDAV-Passwort (gespeichert)','WebDAV password (saved)'):t('WebDAV-Passwort','WebDAV password');
+  $('offkey').placeholder=d.has_key?t('Sicherungs-Passwort (gespeichert)','Backup password (saved)'):t('Sicherungs-Passwort (mind. 12 Zeichen, aufschreiben)','Backup password (at least 12 characters, write it down)');
+  const l=d.last;$('offmsg').textContent=d.running?t('wird gesendet …','sending …'):!l?t('Noch nie gesendet.','Never sent.')
+    :l.ok?t('Zuletzt gesendet: ','Last sent: ')+new Date(l.t*1000).toLocaleString()+' · '+mb(l.bytes):t('Fehler am ','Failed on ')+new Date(l.t*1000).toLocaleString()+': '+l.error;
+  $('offmsg').classList.toggle('err',!!(l&&!l.ok)&&!d.running)}
+async function loadOff(){if(!$('offbox')||document.body.classList.contains('coadm')&&!document.body.classList.contains('owner'))return;
+  try{offShow(await (await api('/api/admin/offsite')).json())}catch{}}
+async function offPut(b){try{offShow(await (await api('/api/admin/offsite',xjson('PUT',b))).json())}catch(e){$('offmsg').textContent=e.message;$('offmsg').classList.add('err');return false}return true}
+if($('offsave'))$('offsave').onclick=()=>offPut({url:$('offurl').value.trim(),user:$('offuser').value.trim(),password:$('offpw').value,key:$('offkey').value});
+if($('offon'))$('offon').onchange=async e=>{const on=e.target.checked;if(!await offPut({on,url:$('offurl').value.trim(),user:$('offuser').value.trim(),password:$('offpw').value,key:$('offkey').value}))e.target.checked=!on};
+if($('offnow'))$('offnow').onclick=async()=>{try{offShow(await (await api('/api/admin/offsite/now',{method:'POST'})).json());
+  const poll=async()=>{let d;try{d=await (await api('/api/admin/offsite')).json()}catch{return}offShow(d);if(d.running)setTimeout(poll,3000)};setTimeout(poll,3000)}
+  catch(e){$('offmsg').textContent=e.message;$('offmsg').classList.add('err')}};
 $('bakup').onclick=()=>$('bakfile').click();
 $('bakfile').onchange=async()=>{const f=$('bakfile').files[0];$('bakfile').value='';if(!f||!bakAsk())return;$('bakmsg').textContent=t('stelle wieder her …','restoring …');
   const fd=new FormData();fd.append('file',f,f.name);fd.append('password',$('bakpw').value);try{bakDone(await (await api('/api/backups-upload',{method:'POST',body:fd})).json())}catch(e){bakErr(e)}};

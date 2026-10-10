@@ -58,4 +58,5 @@ $('wizskip').onclick=async()=>{wiz.step++;await wizShow()};
 $('wizback').onclick=async()=>{wiz.step=Math.max(0,wiz.step-1);await wizShow()};
 $('wizclose').onclick=async()=>{$('wizmodal').style.display='none';await api('/api/setup',jreq('POST',{done:true})).catch(()=>{})};
 window.openWizard=async()=>{wiz.step=0;wiz.cfg=null;$('wizmodal').style.display='grid';await wizShow()};
+ON.openWizard=()=>openWizard();
 async function wizCheck(){try{const s=await (await api('/api/setup')).json();if(!s.done)openWizard()}catch{}}

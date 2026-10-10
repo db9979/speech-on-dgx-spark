@@ -68,9 +68,11 @@ import join  # noqa: E402
 import onboard  # noqa: E402
 import hintergrund  # noqa: E402
 import stufe  # noqa: E402
+import today  # noqa: E402
+import offsite  # noqa: E402
 
 app = FastAPI(title="Speech on DGX Spark")
-for _module in (account, admin, chat, update, system, proactive, room, roomlive, tidy, weather, contacts, parcels, telegram, tasks, esp32, iphone, pebblewatch, appupdate, apns, transit, logfilter, agent, images, messages, intent, wissen, tracelog, lokal, features, remarkable, join, onboard, hintergrund, stufe):
+for _module in (account, admin, chat, update, system, proactive, room, roomlive, tidy, weather, contacts, parcels, telegram, tasks, esp32, iphone, pebblewatch, appupdate, apns, transit, logfilter, agent, images, messages, intent, wissen, tracelog, lokal, features, remarkable, join, onboard, hintergrund, stufe, today, offsite):
     app.include_router(_module.router)
 app.middleware("http")(update_lock)
 
@@ -103,7 +105,13 @@ SECURITY_HEADERS = {
     "Referrer-Policy": "same-origin",
     "Permissions-Policy": "microphone=(self), camera=(self), geolocation=(), payment=(), usb=(), serial=(), bluetooth=()",
     "Cross-Origin-Opener-Policy": "same-origin",
-    "Content-Security-Policy": "frame-ancestors 'self'; base-uri 'self'; object-src 'none'; form-action 'self'",
+    # strict since V01.0.286 (plan „Bedienung gesamt“ D1 Stufe 2): scripts only as files from the panel, no inline
+    # script, no inline handler, no eval; styles may stay inline (style attributes run no code, older Safari in the
+    # iPhone app needs them). Pictures and sound also from data:/blob: (recordings, QR codes, the face).
+    "Content-Security-Policy": "default-src 'self'; script-src 'self'; style-src 'self' 'unsafe-inline'; "
+                               "img-src 'self' data: blob:; media-src 'self' blob:; connect-src 'self'; font-src 'self'; "
+                               "worker-src 'self'; frame-src 'none'; frame-ancestors 'self'; base-uri 'self'; "
+                               "object-src 'none'; form-action 'self'",
 }
 
 
@@ -197,6 +205,8 @@ async def stability():
                 if backup.due():   # packing is CPU and disk work: in a pause, with low priority
                     item = await vorrang.in_thread("Sicherung", backup.create, "daily")
                     print("backup:", item["name"], flush=True)
+                if offsite.due():  # the encrypted copy to the NAS (off unless switched on)
+                    await offsite.run("daily")
             except Exception as e:
                 guard.log("backup_failed", detail=f"{type(e).__name__}: {e}"[:200])
             await asyncio.sleep(3600)

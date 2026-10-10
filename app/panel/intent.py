@@ -341,6 +341,32 @@ LABELS = {"smarthome": "Smart Home", "kalender": "Kalender und Briefing", "mail"
           "paket": "Pakete", "kontakt": "Kontakte", "gedaechtnis": "Gedächtnis und frühere Gespräche",
           "dokument": "Dokumente", "nachricht": "Nachrichten an andere", "agent": "Agenten", "iphone": "iPhone"}
 MAX_TEST = 500
+# "Erklären statt Schweigen" (plan „Bedienung gesamt“ B4, V01.0.286): the function behind each group (features.py)
+FEATURE = {"smarthome": "ha", "kalender": "calendar", "mail": "mail", "websuche": "search", "erinnerung": "reminders",
+           "liste": "tasks", "wetter": "weather", "bahn": "transit", "paket": "parcels", "kontakt": "contacts",
+           "gedaechtnis": "memory", "dokument": "documents", "nachricht": "messages", "agent": "agent",
+           "iphone": "iphone", "wikipedia": "wiki", "archiv": "kiwix"}
+
+
+def explain(route, offered, who, stranger, c=None):
+    """The person asks for something this turn does not offer: which function and why, from the panel's own rules
+    (features.reason, the shared speaker rule), never from the model. None when nothing is missing or the reason
+    is not a switch (not set up, locked after outside text: the model is told that itself)."""
+    import features
+    if not route.clear:
+        return None
+    for name in route.names:
+        key = FEATURE.get(name)
+        if not key or GROUPS[name][0] & set(offered):
+            continue
+        f = features.BY_KEY[key]
+        if stranger and not f.guests:
+            why = "voice"
+        else:
+            why = features.reason(key, who and who["id"], c)
+        if why:
+            return {"key": key, "name": [f.de, f.en], "why": why, "me": f.me if why == "profile" else ""}
+    return None
 
 
 def _alternatives(pattern):
