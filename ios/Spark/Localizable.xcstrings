@@ -101,6 +101,46 @@
         }
       }
     },
+    "1 Tag": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "1 day"
+          }
+        }
+      }
+    },
+    "10 Minuten": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "10 minutes"
+          }
+        }
+      }
+    },
+    "12 Stunden": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "12 hours"
+          }
+        }
+      }
+    },
+    "2 Stunden": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "2 hours"
+          }
+        }
+      }
+    },
     "3 Stunden": {
       "localizations": {
         "en": {
@@ -141,12 +181,42 @@
         }
       }
     },
+    "Abmelden": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Sign out"
+          }
+        }
+      }
+    },
+    "Admin-Anmeldung": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Admin sign-in"
+          }
+        }
+      }
+    },
     "Alle": {
       "localizations": {
         "en": {
           "stringUnit": {
             "state": "translated",
-            "value": "Everyone"
+            "value": "All"
+          }
+        }
+      }
+    },
+    "Alles in Ordnung": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "All fine"
           }
         }
       }
@@ -207,6 +277,16 @@
           "stringUnit": {
             "state": "translated",
             "value": "Remove attachment"
+          }
+        }
+      }
+    },
+    "Anmelden": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Sign in"
           }
         }
       }
@@ -441,6 +521,26 @@
         }
       }
     },
+    "Bestanden": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Passed"
+          }
+        }
+      }
+    },
+    "Braucht dich": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Needs you"
+          }
+        }
+      }
+    },
     "Bus und Bahn": {
       "localizations": {
         "en": {
@@ -451,12 +551,32 @@
         }
       }
     },
+    "CPU": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "CPU"
+          }
+        }
+      }
+    },
     "Code aus der Authenticator-App": {
       "localizations": {
         "en": {
           "stringUnit": {
             "state": "translated",
             "value": "Code from the authenticator app"
+          }
+        }
+      }
+    },
+    "Code falsch.": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Wrong code."
           }
         }
       }
@@ -477,6 +597,16 @@
           "stringUnit": {
             "state": "translated",
             "value": "For this, switch on “By itself” for your profile in the panel."
+          }
+        }
+      }
+    },
+    "Danach meldest du dich mit dem Admin-Passwort und dem Code des Admins an, wie im Browser.": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Then sign in with the admin password and the admin's code, as in the browser."
           }
         }
       }
@@ -577,6 +707,16 @@
           "stringUnit": {
             "state": "translated",
             "value": "Listening all the time"
+          }
+        }
+      }
+    },
+    "Dauert etwa eine Minute.": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Takes about a minute."
           }
         }
       }
@@ -707,6 +847,26 @@
           "stringUnit": {
             "state": "translated",
             "value": "The Spark looks at it"
+          }
+        }
+      }
+    },
+    "Die Admin-Anmeldung ist abgelaufen. Bitte neu anmelden.": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "The admin sign-in has expired. Please sign in again."
+          }
+        }
+      }
+    },
+    "Die Anmeldung gilt nur, solange die App offen ist.": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "The sign-in lasts only while the app is open."
           }
         }
       }
@@ -1091,6 +1251,16 @@
         }
       }
     },
+    "Falsches Passwort.": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Wrong password."
+          }
+        }
+      }
+    },
     "Favorit": {
       "localizations": {
         "en": {
@@ -1251,6 +1421,16 @@
         }
       }
     },
+    "Funktionsprüfung": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Function check"
+          }
+        }
+      }
+    },
     "Für dich an": {
       "localizations": {
         "en": {
@@ -1271,6 +1451,16 @@
         }
       }
     },
+    "GPU": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "GPU"
+          }
+        }
+      }
+    },
     "Geburtstage": {
       "localizations": {
         "en": {
@@ -1287,6 +1477,16 @@
           "stringUnit": {
             "state": "translated",
             "value": "Memory"
+          }
+        }
+      }
+    },
+    "Geht nur mit dem zweiten Anmeldeschritt des Admins und mit „Spark verwalten in der App“ unter Ich → iPhone-App.": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Works only with the admin's second login step and with \"Manage the Spark in the app\" under Me → iPhone app."
           }
         }
       }
@@ -1397,6 +1597,16 @@
           "stringUnit": {
             "state": "translated",
             "value": "Notes the Spark gives by itself (morning briefing, reminders) are said aloud while the app is open."
+          }
+        }
+      }
+    },
+    "Home Assistant": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Home Assistant"
           }
         }
       }
@@ -1561,6 +1771,16 @@
         }
       }
     },
+    "Jetzt prüfen": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Check now"
+          }
+        }
+      }
+    },
     "Kalender": {
       "localizations": {
         "en": {
@@ -1641,6 +1861,26 @@
         }
       }
     },
+    "Kopieren für Thread": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Copy for thread"
+          }
+        }
+      }
+    },
+    "Kopiert": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Copied"
+          }
+        }
+      }
+    },
     "Koppeln": {
       "localizations": {
         "en": {
@@ -1691,6 +1931,16 @@
         }
       }
     },
+    "Letzter Fehler": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Last error"
+          }
+        }
+      }
+    },
     "Liest den Text einer Datei und legt ihn unter „Meine Dokumente“ ab.": {
       "localizations": {
         "en": {
@@ -1727,6 +1977,16 @@
           "stringUnit": {
             "state": "translated",
             "value": "Delete"
+          }
+        }
+      }
+    },
+    "Mail": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Mail"
           }
         }
       }
@@ -1777,6 +2037,16 @@
           "stringUnit": {
             "state": "translated",
             "value": "Notifications to the iPhone"
+          }
+        }
+      }
+    },
+    "Mit Face ID entsperren": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Unlock with Face ID"
           }
         }
       }
@@ -1981,6 +2251,16 @@
         }
       }
     },
+    "Nicht gekoppelt.": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Not paired."
+          }
+        }
+      }
+    },
     "Nicht gesendet: nicht klar, wen du meinst.": {
       "localizations": {
         "en": {
@@ -2087,6 +2367,16 @@
           "stringUnit": {
             "state": "translated",
             "value": "Normal"
+          }
+        }
+      }
+    },
+    "Nur Fehler": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Errors only"
           }
         }
       }
@@ -2217,6 +2507,36 @@
           "stringUnit": {
             "state": "translated",
             "value": "Checks"
+          }
+        }
+      }
+    },
+    "Qualitätstest": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Quality test"
+          }
+        }
+      }
+    },
+    "Qualitätstest starten": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Start quality test"
+          }
+        }
+      }
+    },
+    "Raum": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Room"
           }
         }
       }
@@ -2521,6 +2841,46 @@
         }
       }
     },
+    "Speech auf DGX Spark": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Speech on DGX Spark"
+          }
+        }
+      }
+    },
+    "Speech-Dienste": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Speech services"
+          }
+        }
+      }
+    },
+    "Speicher frei": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Memory free"
+          }
+        }
+      }
+    },
+    "Sprachmodell, Sprachausgabe und Spracherkennung einmal durch.": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Language model, speech output and speech recognition once."
+          }
+        }
+      }
+    },
     "Sprachnachricht, %lld s. Anhören im Panel.": {
       "localizations": {
         "en": {
@@ -2641,6 +3001,16 @@
         }
       }
     },
+    "Teilen": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Share"
+          }
+        }
+      }
+    },
     "Teilen (z. B. als Notiz)": {
       "localizations": {
         "en": {
@@ -2691,12 +3061,32 @@
         }
       }
     },
+    "Uhr": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Watch"
+          }
+        }
+      }
+    },
     "Unter „Meine Dokumente“ gespeichert. Der Spark findet es auch später.": {
       "localizations": {
         "en": {
           "stringUnit": {
             "state": "translated",
             "value": "Saved under “My documents”. The Spark finds it later too."
+          }
+        }
+      }
+    },
+    "Update": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Update"
           }
         }
       }
@@ -2821,6 +3211,36 @@
         }
       }
     },
+    "Vorrang": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Priority"
+          }
+        }
+      }
+    },
+    "Vorrang für Sprache": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Speech first"
+          }
+        }
+      }
+    },
+    "Vorrang prüfen": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Check priority"
+          }
+        }
+      }
+    },
     "Wartende Fragen: %lld. Sie gehen raus, sobald er wieder da ist.": {
       "localizations": {
         "en": {
@@ -2911,6 +3331,16 @@
         }
       }
     },
+    "Websuche": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Web search"
+          }
+        }
+      }
+    },
     "Weckwort": {
       "localizations": {
         "en": {
@@ -2937,6 +3367,16 @@
           "stringUnit": {
             "state": "translated",
             "value": "Leave out:"
+          }
+        }
+      }
+    },
+    "Weiche": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Router"
           }
         }
       }
@@ -3031,6 +3471,26 @@
         }
       }
     },
+    "Zeitraum": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Time span"
+          }
+        }
+      }
+    },
+    "Zu viele falsche Versuche, bitte später noch einmal.": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Too many wrong attempts, please try again later."
+          }
+        }
+      }
+    },
     "Zu viele passen (%@). Sag den ganzen Namen oder den Rufnamen.": {
       "localizations": {
         "en": {
@@ -3057,6 +3517,16 @@
           "stringUnit": {
             "state": "translated",
             "value": "Merge:"
+          }
+        }
+      }
+    },
+    "Zustand": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Status"
           }
         }
       }

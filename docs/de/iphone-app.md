@@ -82,6 +82,7 @@ Die App übernimmt das Panel Stück für Stück (Plan „iPhone-App übernimmt d
 
 - **Im Panel öffnen** (Einstellungen): Alles, was die App noch nicht selbst zeigt, öffnet das Panel in Safari an der richtigen Stelle (Gedächtnis, E-Mail, Sicherheit …). Mit „Spark verwalten“ auch Monitoring, Logs, Funktionen und Profile.
 - **Mein Alltag** (Schalter „Mein Alltag in der App“): die nächsten Termine aus deinen Kalendern, die Erinnerungen des Spark (wischen zum Löschen) und das Gedächtnis (ansehen, einzeln löschen, Aufräumen vorschlagen lassen und übernehmen). Unter Mein Profil kommen die Gesprächsschalter dazu: aus Gesprächen lernen, jeden Tag neues Gespräch und, wenn der Admin sie erlaubt, aus Korrekturen lernen, bei Werkzeugen nachdenken und gezielte Werkzeugwahl. Alles auf einmal vergessen geht weiter nur im Browser.
+- **Spark verwalten** (Schalter „Spark verwalten in der App“): Nach Face ID meldest du dich mit dem Admin-Passwort und dem Code des Admins an, wie im Browser. Ohne zweiten Anmeldeschritt des Admins lässt der Spark diese Anmeldung vom iPhone nicht zu. Die Anmeldung gilt nur, solange die App offen ist. Darin: **Monitoring** („Braucht dich“, Speicher, CPU/GPU, Dienste), **Logs** (Diagnose wie im Panel mit Bereichen und Zeitraum, „Kopieren für Thread“ und Teilen) und **Prüfen** (Funktionsprüfung, Qualitätstest, Vorrang prüfen).
 
 ## Meine Dokumente ansehen
 

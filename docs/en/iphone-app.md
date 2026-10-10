@@ -81,6 +81,7 @@ The app takes over the panel bit by bit (plan "iPhone app takes over the panel")
 
 - **Open in the panel** (Settings): whatever the app does not show itself opens the panel in Safari at the right place (memory, e-mail, security …). With "Manage the Spark" also monitoring, logs, features and profiles.
 - **My day** (switch "My day in the app"): the next appointments of your calendars, the Spark's reminders (swipe to delete) and the memory (look at it, delete single entries, ask for a tidy-up and apply it). Under My profile the conversation switches join: learn from conversations, a new conversation every day and, when the admin allows them, learn from corrections, think when choosing tools and targeted tool choice. Forgetting everything at once stays in the browser.
+- **Manage the Spark** (switch "Manage the Spark in the app"): after Face ID you sign in with the admin password and the admin's code, as in the browser. Without the admin's second login step the Spark refuses this sign-in from an iPhone. The sign-in lasts only while the app is open. Inside: **Monitoring** ("Needs you", memory, CPU/GPU, services), **Logs** (diagnosis as in the panel with areas and time span, "Copy for thread" and share) and **Checks** (function check, quality test, priority check).
 
 ## Looking at my documents
 

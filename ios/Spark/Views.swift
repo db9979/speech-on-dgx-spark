@@ -519,6 +519,9 @@ struct SettingsView: View {
                     if talk.allowed.areas.contains("app_mine") {
                         NavigationLink("Mein Alltag") { MineView() }
                     }
+                    if talk.allowed.areas.contains("app_admin") {
+                        NavigationLink("Spark verwalten") { AdminView() }
+                    }
                     if talk.allowed.panel {
                         NavigationLink("Im Panel öffnen") { PanelBridgeView(admin: talk.allowed.areas.contains("app_admin")) }
                     }

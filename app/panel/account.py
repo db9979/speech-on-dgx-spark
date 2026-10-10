@@ -110,6 +110,22 @@ async def second_step(request: Request, body, who, name, what):
     return None
 
 
+def _app_admin(request):
+    """The admin login from the iPhone app ("Spark verwalten", iphone.py): the app sends its own key along,
+    and signs in only with the profile's switch for it and while the admin has the second step (the
+    password alone is not enough on a phone)."""
+    dev = profiles.device(request)
+    if request.headers.get(profiles.DEVICE_HEADER) and not dev:
+        raise HTTPException(401, "unknown device")
+    if not dev:
+        return
+    import iphone
+    if dev["scope"] != "app" or not iphone.allowed(dev["user"]) or not iphone.area_on(dev["user"], "app_admin"):
+        raise HTTPException(403, "Spark verwalten ist für dieses iPhone aus (Ich → iPhone-App).")
+    if not mfa.enabled(mfa.ADMIN):
+        raise HTTPException(409, "Erst den zweiten Anmeldeschritt für den Admin einschalten (Einstellungen → Sicherheit).")
+
+
 def _trust(r, body, who):
     if body.get("trust") and mfa.enabled(who):
         mfa.set_trust(r, who)
@@ -119,6 +135,7 @@ def _trust(r, body, who):
 async def login(request: Request):
     body = await request.json()
     guard.check(request, guard.ADMIN)
+    _app_admin(request)
     if not check_password(str(body.get("password", ""))):
         guard.failed(request, guard.ADMIN, what="admin_login")
         await asyncio.sleep(1)  # slows down guessing

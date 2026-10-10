@@ -91,5 +91,36 @@ class Areas(unittest.TestCase):
             self.assertIn(a.get(path).status_code, (401, 403), path)
 
 
+    def test_admin_login_from_the_app_needs_switch_and_second_step(self):
+        import mfa
+        c, a = self.app("Tamo")
+        real = (mfa.enabled, mfa.verify)
+        try:
+            mfa.enabled = lambda who: False
+            self.assertEqual(a.post("/api/login", json={"password": "secret-admin"}).status_code, 403)
+            c.put("/api/profile/settings", json={"app_admin": True})
+            # the password alone is not enough on a phone
+            self.assertEqual(a.post("/api/login", json={"password": "secret-admin"}).status_code, 409)
+            mfa.enabled = lambda who: who == mfa.ADMIN
+            mfa.verify = lambda who, code: who == mfa.ADMIN and code == "123456"
+            r = a.post("/api/login", json={"password": "secret-admin"})
+            self.assertEqual(r.json(), {"code": True})
+            self.assertEqual(a.post("/api/login", json={"password": "secret-admin", "code": "000000"}).status_code, 401)
+            r = a.post("/api/login", json={"password": "secret-admin", "code": "123456"})
+            self.assertEqual(r.status_code, 200, r.text)
+            # a key that is not the app's, or an unknown one, never signs in as admin
+            from fastapi.testclient import TestClient
+            import panel
+            x = TestClient(panel.app)
+            x.headers[H] = "not-a-key"
+            self.assertEqual(x.post("/api/login", json={"password": "secret-admin", "code": "123456"}).status_code, 401)
+            helpers.set_config(iphone_panel=False)
+            self.assertEqual(a.post("/api/login", json={"password": "secret-admin", "code": "123456"}).status_code, 403)
+        finally:
+            mfa.enabled, mfa.verify = real
+            guard._fails.clear()
+            guard._locks.clear()
+
+
 if __name__ == "__main__":
     unittest.main()
