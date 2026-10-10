@@ -703,7 +703,7 @@ class Browser(unittest.TestCase):
                     await pg.wait_for_timeout(100)
                     self.assertEqual(await pg.evaluate("document.querySelectorAll('#kxlist .kxrow').length"), 1)
                     await pg.click("#kxlist .kxrow input")
-                    self.assertEqual(await pg.input_value("[id='chat.kiwix_books']"), "ted_103_maxi_2026-07")
+                    self.assertEqual(await pg.input_value("[id='chat.kiwix_books']"), "ted_103_maxi")   # without the date
                     self.assertIn("TED talk 103", await pg.inner_text("#kxsel"))
                     await pg.fill("#kxpick input[type=search]", "")
                     for i in range(12):                                                   # at most 10

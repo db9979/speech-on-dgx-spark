@@ -31,6 +31,7 @@ Alle Optionen ohne Rückfragen (`--mode api --asr 1.7b --tts 0.6b --yes` …) st
 
 <!-- New version: add one line at the top here and in CHANGELOG.md, drop the oldest line here (keep 10). Details go to docs/de and docs/en, not into this README. -->
 
+- **V01.0.261** Kiwix: Bücher werden ohne Datum gespeichert, aktualisierte Dateien bleiben gewählt (neueste wird genommen, Katalog bei 404 neu gelesen); „Schau in meinem Archiv“ sucht nie in den hochgeladenen Dokumenten und sagt, welcher Schalter fehlt
 - **V01.0.260** Kiwix: Bücherauswahl als Liste mit Suche, Sprach- und Artfilter (Deutsch/Englisch zuerst), gruppiert, mit Sprache, Variante, Artikelzahl, Größe und Stand; gewählte oben als Chips; ohne Auswahl deutsche und englische Wikipedia; Katalog bis 2000 Bücher
 - **V01.0.259** Selbsttest „Profile und Geräte“ sucht das Testgerät statt auf Seite 1 zu warten (GitHub-Tests wieder grün)
 - **V01.0.258** Eigenes Kiwix-Archiv (Funktionen → Websuche, aus; Profil-Schalter): Wikipedia-Fragen zuerst aus dem eigenen kiwix-serve, Volltextsuche in gewählten Büchern, „Erzähl mehr“ liest weiter, fällt die Websuche aus antwortet das Offline-Archiv; Zustand → Prüfen → „Kiwix prüfen“, Logs-Bereich „Wissen“
@@ -40,7 +41,6 @@ Alle Optionen ohne Rückfragen (`--mode api --asr 1.7b --tts 0.6b --yes` …) st
 - **V01.0.254** Einstellungen: Spracherkennung und Sicherheit springen auf breiten Bildschirmen nicht mehr nach rechts (Platz für die Scrollleiste immer frei), Zweiter Anmeldeschritt in einem Rahmen, Modell-Auswahl der Spracherkennung nicht mehr abgeschnitten; Browsertest prüft das
 - **V01.0.253** Funktionen: „Wikipedia direkt“ steht unter der Websuche, „Rollen per Sprache“ unter dem eigenen Gesprächsstil (Seite bleibt kurz, Browsertest wieder grün)
 - **V01.0.252** Einstellungen → Sprachausgabe: Standardstimme ist eine Auswahlliste passend zum Modell (CustomVoice feste Sprecher, Base eigene Stimmen, VoiceDesign gesperrt); ein gespeicherter Name außerhalb der Liste bleibt erhalten
-- **V01.0.251** Doku: Panel-Bereiche der iPhone-App mit richtiger Versionsnummer (V01.0.250)
 
 Alle Versionen: [CHANGELOG.md](CHANGELOG.md)
 

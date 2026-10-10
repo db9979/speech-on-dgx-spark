@@ -193,7 +193,7 @@ ARCHIVE = {"type": "function", "function": {
         "book": {"type": "string", "description": "optional: only this book (its name)"}},
         "required": ["query"]}}}
 ARCHIVE_HINT = ("Mit archive_search suchst du im eigenen Offline-Archiv (Kiwix) nach Anleitungen, Reiseführern und "
-                "Nachschlagewerken. Sagt der Nutzer „erzähl mehr“, lies mit article_more den nächsten Teil des "
+                "Nachschlagewerken. „Archiv“ meint immer archive_search, nie die hochgeladenen Dokumente (document_search). Sagt der Nutzer „erzähl mehr“, lies mit article_more den nächsten Teil des "
                 "Artikels. Nenne bei Antworten aus dem Archiv kurz die Quelle.")
 
 

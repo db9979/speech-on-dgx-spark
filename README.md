@@ -31,6 +31,7 @@ All options for running without questions (`--mode api --asr 1.7b --tts 0.6b --y
 
 <!-- New version: add one line at the top here and in CHANGELOG.md, drop the oldest line here (keep 10). Details go to docs/de and docs/en, not into this README. -->
 
+- **V01.0.261** Kiwix: books are saved without their date, updated files stay chosen (the newest is used, catalog re-read on 404); "Look in my archive" never searches the uploaded documents and says which switch is missing
 - **V01.0.260** Kiwix: book choice as a list with search, language and kind filter (German/English first), grouped, with language, variant, article count, size and date; chosen ones on top as chips; without a choice German and English Wikipedia; catalog up to 2000 books
 - **V01.0.259** Self-test "Profiles and devices" searches the test device instead of waiting on page 1 (GitHub tests green again)
 - **V01.0.258** Own Kiwix archive (Features → Web search, off; profile switch): Wikipedia questions first from your own kiwix-serve, full-text search in chosen books, "Tell me more" reads on, the offline archive answers when the web search fails; Status → Checks → "Check Kiwix", Logs area "Knowledge"
@@ -40,7 +41,6 @@ All options for running without questions (`--mode api --asr 1.7b --tts 0.6b --y
 - **V01.0.254** Settings: Speech recognition and Security no longer jump to the right on wide screens (scrollbar space always kept), second login step inside one frame, speech recognition model list no longer cut off; browser test checks it
 - **V01.0.253** Features: "Wikipedia straight away" sits below Web search, "Roles by voice" below Own conversation style (page stays short, browser test green again)
 - **V01.0.252** Settings → Speech output: default voice is a list that fits the model (CustomVoice built-in speakers, Base own voices, VoiceDesign locked); a saved name outside the list is kept
-- **V01.0.251** Docs: iPhone app panel areas with the right version number (V01.0.250)
 
 All versions: [CHANGELOG.md](CHANGELOG.md)
 

@@ -514,7 +514,9 @@ async function kxCheck(){return await (await api('/api/admin/kiwix/check',{metho
 // the picker: chosen books as chips on top (also before the catalog is loaded), below the catalog as a
 // list with search, language and group filter, grouped, each with language, variant, articles, size, date
 const KX={books:null,q:'',lang:'',grp:''};
-const kxSel=()=>$('chat.kiwix_books').value.split(/[\s,;]+/).filter(Boolean);
+// a book is chosen by its name without the date: an updated file (newer date) stays chosen (V01.0.261)
+const kxKey=id=>String(id||'').replace(/_\d{4}-\d{2}(-\d{2})?$/,'')||String(id||'');
+const kxSel=()=>[...new Set($('chat.kiwix_books').value.split(/[\s,;]+/).filter(Boolean).map(kxKey))];
 function kxSet(v){$('chat.kiwix_books').value=v.slice(0,10).join(', ');$('chat.kiwix_books').dispatchEvent(new Event('input',{bubbles:true}));kxChips();kxList()}
 let KXLN=null;try{KXLN=new Intl.DisplayNames([L==='en'?'en':'de'],{type:'language'})}catch{}
 const kxLang=c=>!c?t('ohne Sprache','no language'):c==='mul'?t('mehrsprachig','multilingual'):(()=>{try{const n=KXLN&&KXLN.of(c);return n&&n!==c?n:c}catch{return c}})();
@@ -523,11 +525,11 @@ const kxGrp=g=>KXG[g]||(g?g.charAt(0).toUpperCase()+g.slice(1).replace(/_/g,' ')
 const kxSize=n=>!n?'':n>=1e9?(n/1e9).toFixed(1).replace('.',L==='en'?'.':',')+' GB':Math.max(1,Math.round(n/1e6))+' MB';
 const kxNum=n=>n?n.toLocaleString(L==='en'?'en':'de')+' '+t('Artikel','articles'):'';
 const kxMeta=b=>[kxLang(b.lang),b.flavour,kxNum(b.count),kxSize(b.size),b.date].filter(Boolean).join(' · ');
-function kxChips(){const box=$('kxsel'),sel=kxSel(),known=Object.fromEntries((KX.books||[]).map(b=>[b.id,b]));box.textContent='';
+function kxChips(){const box=$('kxsel'),sel=kxSel(),known=Object.fromEntries((KX.books||[]).map(b=>[b.key||kxKey(b.id),b]));box.textContent='';
   if(!sel.length){const m=document.createElement('span');m.className='mut';m.textContent=t('Keine Auswahl: deutsche und englische Wikipedia.','No choice: German and English Wikipedia.');box.appendChild(m);return}
   sel.forEach(id=>{const b=known[id],c=document.createElement('span');c.className='kxchip';c.title=id;
     const n=document.createElement('span');n.textContent=b?b.title:id;c.appendChild(n);
-    if(b){const m=document.createElement('small');m.textContent=[kxLang(b.lang),b.flavour].filter(Boolean).join(', ');c.appendChild(m)}
+    if(b){const m=document.createElement('small');m.textContent=[kxLang(b.lang),b.flavour,b.date].filter(Boolean).join(', ');c.appendChild(m)}
     const x=document.createElement('button');x.type='button';x.textContent='×';x.setAttribute('aria-label',t('Entfernen','Remove'));x.onclick=()=>kxSet(kxSel().filter(y=>y!==id));c.appendChild(x);
     box.appendChild(c)})}
 function kxPicker(){const box=$('kxpick');box.hidden=false;box.textContent='';const bar=document.createElement('div');bar.className='kxbar';
@@ -545,16 +547,16 @@ function kxList(){const list=$('kxlist');if(!list||!KX.books)return;list.textCon
   const q=KX.q.trim().toLowerCase();
   const hit=b=>(KX.lang==='*'||(KX.lang?b.lang===KX.lang:['de','en'].includes(b.lang)))&&(!KX.grp||b.group===KX.grp)
     &&(!q||(b.title+' '+b.id+' '+(b.desc||'')).toLowerCase().includes(q));
-  const rows=KX.books.filter(b=>sel.includes(b.id)||hit(b));
-  const order=b=>(sel.includes(b.id)?0:1);
+  const rows=KX.books.filter(b=>sel.includes(b.key)||hit(b));
+  const order=b=>(sel.includes(b.key)?0:1);
   const groups={};rows.forEach(b=>{(groups[b.group]=groups[b.group]||[]).push(b)});
   const names=Object.keys(groups).sort((a,b)=>(a==='wikipedia'?-1:b==='wikipedia'?1:kxGrp(a).localeCompare(kxGrp(b))));
   let shown=0;const MAX=150;
   for(const g of names){if(shown>=MAX)break;const h=document.createElement('div');h.className='kxgrp';h.textContent=`${kxGrp(g)} (${groups[g].length})`;list.appendChild(h);
     groups[g].sort((a,b)=>order(a)-order(b)||(a.lang==='de'?0:1)-(b.lang==='de'?0:1)||(b.count||0)-(a.count||0)||a.title.localeCompare(b.title));
-    for(const b of groups[g]){if(shown++>=MAX)break;const on=sel.includes(b.id),r=document.createElement('label');r.className='kxrow'+(!on&&full?' dis':'');r.title=b.id;
+    for(const b of groups[g]){if(shown++>=MAX)break;const on=sel.includes(b.key),r=document.createElement('label');r.className='kxrow'+(!on&&full?' dis':'');r.title=b.id;
       const c=document.createElement('input');c.type='checkbox';c.checked=on;c.disabled=!on&&full;
-      c.onchange=()=>kxSet(c.checked?kxSel().concat([b.id]):kxSel().filter(y=>y!==b.id));
+      c.onchange=()=>kxSet(c.checked?kxSel().concat([b.key]):kxSel().filter(y=>y!==b.key));
       const tx=document.createElement('div'),tt=document.createElement('div'),mm=document.createElement('div');tt.className='kxt';tt.textContent=b.title;mm.className='kxm';mm.textContent=kxMeta(b)+(b.desc?' – '+b.desc:'');
       tx.append(tt,mm);r.append(c,tx);list.appendChild(r)}}
   if(!rows.length){const m=document.createElement('div');m.className='kxmore';m.textContent=t('Nichts gefunden. Andere Sprache oder Art wählen.','Nothing found. Pick another language or kind.');list.appendChild(m)}
@@ -562,7 +564,7 @@ function kxList(){const list=$('kxlist');if(!list||!KX.books)return;list.textCon
   if(full){const m=document.createElement('div');m.className='kxmore';m.textContent=t('10 Bücher gewählt, mehr geht nicht.','10 books chosen, that is the most.');list.prepend(m)}}
 $('kxload').onclick=async()=>{if(KX.books&&!$('kxpick').hidden){$('kxpick').hidden=true;return}
   $('kxmsg').textContent=t('Lade …','Loading …');
-  try{const d=await kxCheck();KX.books=d.books||[];$('kxmsg').textContent=d.ok?t(`${KX.books.length} Bücher im Kiwix`,`${KX.books.length} books in the Kiwix`):(d.error||'');kxChips();if(d.ok)kxPicker()}
+  try{const d=await kxCheck(),best={};(d.books||[]).forEach(b=>{b.key=b.key||kxKey(b.id);const o=best[b.key];if(!o||(b.date||'')+b.id>(o.date||'')+o.id)best[b.key]=b});KX.books=Object.values(best);$('kxmsg').textContent=d.ok?t(`${KX.books.length} Bücher im Kiwix`,`${KX.books.length} books in the Kiwix`):(d.error||'');kxChips();if(d.ok)kxPicker()}
   catch(e){$('kxmsg').textContent=e.message}};
 $('kxgo').onclick=async()=>{$('kxgomsg').textContent=t('Prüfe …','Checking …');$('kxout').textContent='';
   try{const d=await kxCheck(),out=$('kxout');$('kxgomsg').textContent='';

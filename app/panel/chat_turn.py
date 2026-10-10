@@ -501,6 +501,15 @@ async def prepare(request):
     # a question about appointments, mail, reminders, news ... must go through the tool, not the
     # model's imagination (NEED_TOOLS)
     ask_text = messages[-1]["content"] if messages[-1]["role"] == "user" else ""
+    # "Schau in meinem Archiv ..." means the own Kiwix (V01.0.261); when it is not offered, the model is told
+    # why, so it does not answer from the uploaded documents instead
+    if chat.needed(ask_text, {"archive_search"}) and "archive_search" not in {t["function"]["name"] for t in tools}:
+        import kiwix
+        why_not = kiwix.why_not(who, own_browser) or "es ist in dieser Antwort nicht angeboten"
+        print("kiwix: archive asked, not offered:", why_not, flush=True)
+        system = (system + "\n\n" + "Der Nutzer fragt nach seinem Kiwix-Archiv, das ist hier nicht verfügbar: " + why_not
+                  + ". Sag ihm das in einem Satz. Das Archiv ist nicht dasselbe wie seine hochgeladenen Dokumente: "
+                    "durchsuche die Dokumente nicht stattdessen und antworte nicht aus ihnen.").strip()
     need = chat.needed(ask_text, {t["function"]["name"] for t in tools}, ccfg.get("tool_words", ""))
     # one clear intent with one needed tool: the first round must call exactly that one
     force = intent.forced(route, need, {t["function"]["name"] for t in tools}) if route_on else None

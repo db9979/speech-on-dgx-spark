@@ -269,6 +269,56 @@ class Tools(unittest.TestCase):
         ask(a, "TOOL article_more {\"article\": \"../../etc/passwd\", \"part\": 1}")
         self.assertIn("kenne ich nicht", tool_msg())
 
+    def test_archive_means_kiwix_not_documents(self):
+        # V01.0.261: "Schau in meinem Archiv" with the archive off for the profile: the model hears why and
+        # that the uploaded documents are something else; with it on, archive_search is required
+        a = profile("Archiv6")
+        helpers.LLM_CALLS.clear()
+        ask(a, "Schaue in meinem Archiv nach, was du über Albert Einstein weisst.")
+        sys_ = next(m["content"] for m in helpers.LLM_CALLS[0]["messages"] if m["role"] == "system")
+        self.assertIn("Kiwix-Archiv, das ist hier nicht verfügbar: der Profil-Schalter ist aus", sys_)
+        self.assertIn("durchsuche die Dokumente nicht stattdessen", sys_)
+        a.put("/api/profile/settings", json={"kiwix_on": True})
+        helpers.LLM_CALLS.clear()
+        ask(a, "Schaue in meinem Archiv nach, was du über Albert Einstein weisst.")
+        sys_ = next(m["content"] for m in helpers.LLM_CALLS[0]["messages"] if m["role"] == "system")
+        self.assertNotIn("nicht verfügbar", sys_)
+        self.assertIn("nie die hochgeladenen Dokumente", sys_)
+        self.assertEqual(chat.needed("Schau im Archiv nach Einstein", {"archive_search", "document_search"}),
+                         ["archive_search"])
+        helpers.set_config(kiwix=False)
+        self.assertIn("Admin-Schalter", kiwix.why_not({"id": "x"}))
+        self.assertIn("Gäste", kiwix.why_not(None))
+
+    def test_updated_files_stay_chosen(self):
+        # V01.0.261: the Kiwix replaces wikivoyage_…_2024-11 by …_2025-03; the choice (saved with or without
+        # a date) takes the newest file, and an article named before is read from the new file
+        global CATALOG
+        helpers.set_config(kiwix_books=["wikivoyage_de_all_maxi_2024-11"])
+        self.assertEqual(kiwix.key("wikivoyage_de_all_maxi_2024-11"), "wikivoyage_de_all_maxi")
+        self.assertEqual(kiwix.key("ted_x_2026-07-01"), "ted_x")
+        a = profile("Archiv7")
+        a.put("/api/profile/settings", json={"kiwix_on": True})
+        helpers.LLM_CALLS.clear()
+        ask(a, "TOOL archive_search {\"query\": \"Sauerteig\"}")
+        ref = tool_msg().split("[article: ", 1)[1].split("]", 1)[0]
+        old_catalog, old_page = CATALOG, ARTICLES.pop(("wikivoyage_de_all_maxi_2024-11", "A/Sauerteig"))
+        CATALOG = old_catalog.replace("wikivoyage_de_all_maxi_2024-11", "wikivoyage_de_all_maxi_2025-03")
+        ARTICLES[("wikivoyage_de_all_maxi_2025-03", "A/Sauerteig")] = old_page
+        kiwix._cache.clear()
+        try:
+            ask(a, f"TOOL article_more {{\"article\": \"{ref}\", \"part\": 2}}")
+            self.assertIn("Teil 2 von 3", tool_msg())                          # found in the new file
+            self.assertEqual([b["id"] for b in asyncio.run(kiwix.chosen())], ["wikivoyage_de_all_maxi_2025-03"])
+            helpers.set_config(kiwix_books=["wikivoyage_de_all_maxi"])         # saved without a date
+            self.assertEqual([b["id"] for b in asyncio.run(kiwix.chosen())], ["wikivoyage_de_all_maxi_2025-03"])
+            both = kiwix.parse_catalog(old_catalog) + kiwix.parse_catalog(CATALOG)
+            self.assertEqual(kiwix.newest(both)["wikivoyage_de_all_maxi"]["id"], "wikivoyage_de_all_maxi_2025-03")
+        finally:
+            CATALOG = old_catalog
+            ARTICLES.pop(("wikivoyage_de_all_maxi_2025-03", "A/Sauerteig"), None)
+            ARTICLES[("wikivoyage_de_all_maxi_2024-11", "A/Sauerteig")] = old_page
+
     def test_redirect_to_another_host_refused(self):
         with self.assertRaises(ValueError):
             asyncio.run(kiwix.article("wikipedia_de_all_maxi_2025-01", "A/Weg"))

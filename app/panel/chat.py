@@ -431,7 +431,7 @@ NEED_TOOLS = [  # tool that has to be offered, words in the question: one place 
     ("transit", re.compile(r"(?i)\b(bus|busse|bahn|s-?bahn|zug|züge|tram|straßenbahn|abfahrt\w*|verbindung\w*|"
                            r"fahrplan|train|departures?)\b")),
     ("wikipedia", re.compile(r"(?i)\b(wikipedia|wiki|lexikon|enzyklopädie|encyclopedia)\b")),
-    ("archive_search", re.compile(r"(?i)\b(kiwix|offline-?archiv\w*|(in )?mein(em)? archiv|nachschlagewerk\w*)\b")),
+    ("archive_search", re.compile(r"(?i)\b(kiwix|offline-?archiv\w*|(in )?mein(em)? archiv|im archiv|nachschlagewerk\w*)\b")),
     ("tasks_show", re.compile(r"(?i)(einkaufsliste|einkaufszettel|aufgabenliste|to-?do|\b(auf|von) (die|der|meine[rn]?) "
                               r"liste\b|shopping list)")),
 ]

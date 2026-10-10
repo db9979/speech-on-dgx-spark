@@ -65,6 +65,21 @@ def usable(uid):
     return bool(uid and admin_on() and profiles.settings(uid).get("kiwix_on"))
 
 
+def why_not(who, own=True):
+    """Why the archive is not offered to this person in this turn (plain German, for the model and the log)."""
+    if not who:
+        return "nicht mit einem Profil angemeldet (Gäste bekommen das Archiv nie)"
+    if not own:
+        return "die Stimme wurde nicht als Inhaber dieses Geräts erkannt"
+    if ccfg().get("kiwix", False) is not True:
+        return "der Admin-Schalter ist aus (Einstellungen → Funktionen → Websuche → Eigenes Kiwix-Archiv)"
+    if not base():
+        return "keine Kiwix-Adresse eingetragen (Einstellungen → Funktionen → Eigenes Kiwix-Archiv)"
+    if not profiles.settings(who["id"]).get("kiwix_on"):
+        return "der Profil-Schalter ist aus (Ich → Gespräch → Antwort → Eigenes Archiv (Kiwix))"
+    return ""
+
+
 def web_fallback(uid):
     """The web search may answer from the Kiwix when SearXNG or the internet is gone (always with the switches)."""
     return usable(uid)
@@ -165,6 +180,27 @@ def _lang(raw):
     return LANG2.get(codes[0], codes[0])
 
 
+def key(book):
+    """A book's name without its date ('wikipedia_de_all_maxi_2025-01' -> 'wikipedia_de_all_maxi'): kiwix
+    updates replace the file with a newer date, the choice keeps working and takes the newest one."""
+    return re.sub(r"_\d{4}-\d{2}(-\d{2})?$", "", str(book or "")) or str(book or "")
+
+
+def newest(books):
+    """One book per key, the newest (by date, then name)."""
+    best = {}
+    for b in books:
+        k = b.get("key") or key(b["id"])
+        if k not in best or (b.get("date", ""), b["id"]) > (best[k].get("date", ""), best[k]["id"]):
+            best[k] = b
+    return best
+
+
+def stale():
+    """A book answered 404: maybe the Kiwix replaced it with a newer file; read the catalog again next time."""
+    _catalog[0] = float("-inf")
+
+
 def _group(category, book):
     """What kind of book: the catalog's category, else the first word of its name ('wikipedia', 'ted')."""
     g = re.sub(r"[^a-z0-9_]", "", str(category or "").lower())[:30]
@@ -197,7 +233,7 @@ def parse_catalog(text, root_path=""):
         count = _text(e, "articleCount", 12)
         flavour = re.sub(r"[^a-z0-9_]", "", _text(e, "flavour", 20).lower()) \
             or next((f for f in ("maxi", "nopic", "mini") if f"_{f}_" in book or book.endswith("_" + f)), "")
-        books.append({"id": book, "title": _clean(_text(e, "title") or book, 120), "lang": _lang(_text(e, "language", 40)),
+        books.append({"id": book, "key": key(book), "title": _clean(_text(e, "title") or book, 120), "lang": _lang(_text(e, "language", 40)),
                       "group": _group(_text(e, "category", 40), book), "flavour": flavour,
                       "date": date if re.fullmatch(r"\d{4}-\d{2}(-\d{2})?", date) else (m.group(1) if m else ""),
                       "count": int(count) if count.isdigit() else 0, "size": size,
@@ -242,10 +278,16 @@ async def chosen():
         books = []
     ids = chosen_ids()
     if ids:
-        known = {b["id"]: b for b in books}
-        return [known.get(i) or {"id": i, "title": i, "lang": "", "group": _group("", i), "date": "", "count": 0}
-                for i in ids]
-    return default_books(books)
+        # chosen by name without date (also older choices with a date): the newest file of that name
+        known = newest(books)
+        out = []
+        for i in ids:
+            b = known.get(key(i)) or {"id": i, "key": key(i), "title": i, "lang": "", "group": _group("", i),
+                                      "date": "", "count": 0}
+            if b not in out:
+                out.append(b)
+        return out
+    return default_books(list(newest(books).values()))
 
 
 def _german(b):
@@ -367,6 +409,8 @@ async def article(book, path):
     root_path = urlsplit(base()).path.rstrip("/")
     page, _ = await _get(f"/content/{book}/" + quote(_path(path), safe="/:,()'!*-._~"),
                          most=ARTICLE_BYTES, under=f"{root_path}/content/{book}/")
+    if page is None:
+        stale()
     out = parts(page_text(page)) if page else []
     keep(key, out)
     return out
@@ -375,6 +419,8 @@ async def article(book, path):
 async def suggest(book, query):
     """[(title, path)] of article titles that fit (kiwix-serve /suggest)."""
     text, _ = await _get("/suggest", {"content": book, "term": query, "count": "5"})
+    if text is None:
+        stale()
     try:
         items = json.loads(text or "[]")
     except ValueError:
@@ -411,6 +457,8 @@ def parse_search(text, book, root_path=""):
 async def fulltext(book, query):
     root_path = urlsplit(base()).path.rstrip("/")
     text, _ = await _get("/search", {"content": book, "pattern": query, "format": "xml", "pageLength": "5"})
+    if text is None:
+        stale()
     return parse_search(text, book, root_path)
 
 
@@ -467,6 +515,11 @@ async def more(article_ref, part):
         return "Diesen Artikel kenne ich nicht; suche ihn zuerst mit wikipedia oder archive_search."
     book, path, title = hit
     got = await article(book, path)
+    if not got:   # the file was replaced by a newer one since: the same article there
+        stale()
+        now = newest(await catalog()).get(key(book))
+        if now and now["id"] != book:
+            got = await article(now["id"], path)
     if part < 1 or part > len(got):
         return f"Vom Artikel „{title}“ gibt es nur {len(got)} Teil(e) zum Vorlesen; mehr lese ich nicht."
     return f"Kiwix-Archiv, Artikel „{title}“, Teil {part} von {len(got)}: {got[part - 1]}"
