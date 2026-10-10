@@ -10,7 +10,7 @@ async function refresh(){
   $('m-gpu').textContent=fmt(g.util,' %');$('m-mem').textContent=fmt(sy.mem_avail_gib,' GiB',1)+' / '+sy.mem_total_gib;
   $('m-temp').textContent=fmt(g.temp,' °C')+' · '+fmt(g.power,' W');$('m-cpu').textContent=fmt(sy.cpu,' %');
   spark($('c-gpu'),H.map(x=>x.gpu),100);spark($('c-mem'),H.map(x=>x.avail),sy.mem_total_gib);spark($('c-temp'),H.map(x=>x.temp),100);spark($('c-cpu'),H.map(x=>x.cpu),100);
-  showAlerts(s.alerts);zustand(s);
+  showAlerts(s.alerts);zustand(s);if(typeof loadSecGlance==='function')loadSecGlance();
   $('memnote').innerHTML=sy.mem_avail_gib<12&&!(s.alerts||[]).some(x=>x.kind==='memory')?`<div class="note">${t(`Nur noch ${fmt(sy.mem_avail_gib,' GiB',1)} frei. Unter ~8 GiB beendet DGX OS (earlyoom) Prozesse. Kleinere Modelle wählen oder einen Dienst stoppen.`,`Only ${fmt(sy.mem_avail_gib,' GiB',1)} free. Below ~8 GiB DGX OS (earlyoom) kills processes. Choose smaller models or stop a service.`)}</div>`:'';
   $('svc').innerHTML=Object.entries(s.services).map(([n,v])=>{const h=v.health||{};
     const st=h.status?pill(h.status):'';const err=h.error?`<div class="err">${esc(h.error)}</div>`:(h.last_error?`<div class="err mut">${t('letzter Fehler','last error')}: ${esc(h.last_error.error)}</div>`:'');
@@ -37,6 +37,7 @@ function zustand(s){if(s)ZLAST=s;s=ZLAST;if(!s)return;
     else if(v.enabled&&['inactive','deactivating'].includes(v.state))need.push({lvl:'bad',text:t(`${name} ist aus.`,`${name} is off.`),go:'svc',btn:t('Ansehen','View')})}
   for(const n of bad)need.push({lvl:'bad',text:t(`${n} meldet einen Fehler.`,`${n} reports an error.`),go:'svc',btn:t('Ansehen','View')});
   const u=window.UPD;if(u&&u.behind&&u.behind!==0)need.push({lvl:'warn',text:t('Update bereit','Update ready')+(u.version?': '+u.version:'')+'.',go:'sys',btn:t('Zum Update','To the update')});
+  if(typeof SECNEED!=='undefined')need.push(...SECNEED);   // red points of "Sicherheit auf einen Blick" (secglance.js)
   const dirty=[...document.querySelectorAll('.pane.dirty')].map(p=>{const b=document.querySelector(`#cfgnav button[data-p="${p.id.slice(5)}"]`);return b?b.firstChild.nodeValue.trim():p.id});
   if(dirty.length)need.push({lvl:'warn',text:t(`Nicht gespeichert: ${dirty.join(', ')}.`,`Not saved: ${dirty.join(', ')}.`),go:'cfg',btn:t('Öffnen','Open')});
   // running = systemd says active or the service itself answers; neither = no answer (counts as "needs you")
@@ -52,7 +53,7 @@ function zustand(s){if(s)ZLAST=s;s=ZLAST;if(!s)return;
   $('zneed').hidden=!need.length;const L=$('zlist');L.textContent='';
   for(const x of need){const r=document.createElement('div');r.className='zrow';const sp=document.createElement('span');sp.className='pill '+x.lvl;sp.textContent=x.lvl==='bad'?t('Fehler','Error'):t('Offen','Open');
     const tx=document.createElement('span');tx.textContent=x.text;const b=document.createElement('button');b.type='button';b.className='b';b.textContent=x.btn;
-    b.onclick=()=>{if(x.go==='svc')$('svc').closest('.card').scrollIntoView({behavior:'smooth'});else if(x.go==='cfg'){goSec('cfg');const d=document.querySelector('.pane.dirty');if(d){const nb=document.querySelector(`#cfgnav button[data-p="${d.id.slice(5)}"]`);if(nb)nb.click()}}else goSec(x.go)};
+    b.onclick=()=>{if(x.go.startsWith('sec:'))secGo(x.go.slice(4));else if(x.go==='svc')$('svc').closest('.card').scrollIntoView({behavior:'smooth'});else if(x.go==='cfg'){goSec('cfg');const d=document.querySelector('.pane.dirty');if(d){const nb=document.querySelector(`#cfgnav button[data-p="${d.id.slice(5)}"]`);if(nb)nb.click()}}else goSec(x.go)};
     r.append(sp,tx,b);L.appendChild(r)}}
 window.zustand=zustand;
 // Zustand → "Hört gerade zu" (roomlive.py): every device in room mode, of every profile, with Beenden and
@@ -146,7 +147,7 @@ $('asr.recognizer').addEventListener('change',asrRec);
 const cfgPane=p=>{document.querySelectorAll('#cfgnav button').forEach(b=>b.classList.toggle('on',b.dataset.p===p));
   document.querySelectorAll('.pane').forEach(x=>x.classList.toggle('on',x.id==='pane-'+p));try{localStorage.setItem('cfgpane',p)}catch{}};
 // phones: the settings open as a list of pages; a tapped page fills the screen with "back" on top
-document.querySelectorAll('#cfgnav button').forEach(b=>b.onclick=()=>{cfgPane(b.dataset.p);if(b.dataset.p==='voices')loadClone();if(b.dataset.p==='upd')loadSys();if(b.dataset.p==='start')glance();document.querySelector('.cfgwrap').classList.add('sub');window.scrollTo(0,0)});
+document.querySelectorAll('#cfgnav button').forEach(b=>b.onclick=()=>{cfgPane(b.dataset.p);if(b.dataset.p==='voices')loadClone();if(b.dataset.p==='upd')loadSys();if(b.dataset.p==='start')glance();if(b.dataset.p==='sec')loadSecGlance(true);document.querySelector('.cfgwrap').classList.add('sub');window.scrollTo(0,0)});
 $('cfgback').onclick=()=>{document.querySelector('.cfgwrap').classList.remove('sub');window.scrollTo(0,0)};
 // building blocks (V01.0.207): „Mehr“ unfolds the longer help right below its row; the password fields open on
 // „Ändern …“; the audio file for a new voice is picked with a normal button that shows the chosen name

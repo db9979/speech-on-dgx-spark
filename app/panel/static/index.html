@@ -311,6 +311,8 @@
       <div class="savebar"><button class="b p savebtn" data-p="asr">Speichern</button><span class="savemsg"></span></div>
     </div>
     <div class="card pane" id="pane-sec"><h2 class="pt">Sicherheit</h2><div class="pintro">Wer den Spark erreicht und wie du dich als Admin anmeldest.</div>
+      <h3 class="sec">Auf einen Blick <span>rot = offen, gelb = empfohlen, grün = gut</span></h3>
+      <div id="secglance" class="sglance" data-nodirty="1"></div>
       <h3 class="sec">Wer den Spark erreicht <span>wirkt mit Speichern</span></h3>
       <div class="setrow"><div class="lbl"><b>Assistent ohne Passwort</b><span>An: Startseite für alle im Netz, auch Gäste.<button class="mlink" type="button">Mehr</button></span></div><label class="tgl"><input type="checkbox" id="chat.public"><i></i></label></div>
       <div class="fh more" hidden>Aus: nur angemeldete Profile (Name und PIN) und Geräte mit Schlüssel, keine Gäste. Einstellungen bleiben immer geschützt.</div>
@@ -318,6 +320,7 @@
       <div class="fh more" hidden>Aus: Kalender, Adressbücher, Aufgaben und Postfächer der Profile dürfen nur auf Adressen im Internet liegen (z. B. iCloud, GMX). An: auch Server im Heimnetz (z. B. ein NAS). Home Assistant darf immer im Heimnetz liegen. Die Dienste des Sparks selbst und Adressen wie 169.254.x sind nie erreichbar.</div>
       <div class="setrow"><div class="lbl"><b>Reverse Proxy</b><span>Nur diesen Adressen wird die weitergereichte Absender-Adresse geglaubt.<button class="mlink" type="button">Mehr</button></span></div><input class="wide" id="panel.trusted_proxies" data-list="1" placeholder="192.168.1.10" autocomplete="off"></div>
       <div class="fh more" hidden>Gemeint ist X-Forwarded-For. Leer = nur ein Proxy auf dem Spark selbst. Eintragen, wenn das Panel hinter einem Proxy im Heimnetz hängt: sonst teilen sich alle, die über den Proxy kommen, eine Adresse für die Sperre nach falschen Passwörtern.</div>
+      <div class="setrow"><div class="lbl"><b>Anmeldung im Browser</b><span>Ein Profil bleibt so viele Tage ohne Nutzung angemeldet (7 bis 90).</span></div><div class="ctl"><input class="num" id="panel.session_days" type="number" min="7" max="90"><span class="unit">Tage</span></div></div>
       <div class="setrow"><div class="lbl"><b>API-Schlüssel</b><span>Gesetzt = Apps senden „Authorization: Bearer &lt;Schlüssel&gt;“; leer = ohne Schlüssel.</span></div><div class="ctl full"><input class="wide" id="api.key" autocomplete="off"><button class="b" id="genkey" type="button">Erzeugen</button></div></div>
       <div class="mainonly" data-nodirty="1">
       <h3 class="sec">Admin-Anmeldung <span>wirkt sofort, ohne Speichern</span></h3>
@@ -689,9 +692,10 @@
       <div id="coadmbox"></div>
       <label>Zweiter Anmeldeschritt</label><div id="profmfa"></div>
       <label>Geräte mit Schlüssel</label><ul class="facts" id="secdev"></ul>
+      <label>Angemeldete Browser</label><ul class="facts" id="secsess"></ul>
       <label>Letzte Anmeldungen</label><ul class="facts small" id="secev"></ul>
       <div class="row" style="margin-top:8px"><button class="b" id="seclogoutall" type="button">Überall abmelden</button><span id="secmsg" class="fh"></span></div>
-      <div class="fh">Meldet dein Profil in allen anderen Browsern ab; dieser bleibt angemeldet. Geräte mit Schlüssel (Lautsprecher, Uhr) sperrst du oben einzeln. Eine Anmeldung endet außerdem nach 90 Tagen ohne Nutzung. Mit zweitem Anmeldeschritt müssen auch vertraute Browser danach wieder einen Code eingeben.</div></div>
+      <div class="fh">Meldet dein Profil in allen anderen Browsern ab; dieser bleibt angemeldet. Geräte mit Schlüssel (Lautsprecher, Uhr) sperrst du oben einzeln. Einzelne Browser meldest du in der Liste darüber ab. Eine Anmeldung endet außerdem nach <span id="secdays">30</span> Tagen ohne Nutzung. Mit zweitem Anmeldeschritt müssen auch vertraute Browser danach wieder einen Code eingeben.</div></div>
 </div>
   </div>
   <div class="row mefoot"><button class="b" id="proflogout" type="button">Abmelden</button><button class="b p" id="profclose" type="button" onclick="closeProf()">Schließen</button></div>
@@ -723,6 +727,7 @@
 <script src="/static/js/face.js"></script>
 <script src="/static/js/wizard.js"></script>
 <script src="/static/js/coadmin.js"></script>
+<script src="/static/js/secglance.js"></script>
 <script src="/static/js/start.js"></script>
 </body>
 </html>

@@ -605,3 +605,9 @@ span.dtag{cursor:default}.dtag.on{background:color-mix(in srgb,var(--acc) 18%,tr
 .kxlist{max-height:420px;overflow:auto;margin-top:8px}.kxgrp{position:sticky;top:0;background:var(--card);font-weight:600;font-size:12.5px;color:var(--mut);padding:8px 2px 4px;border-bottom:1px solid var(--line)}
 .kxrow{display:flex;gap:10px;align-items:flex-start;padding:7px 2px;border-bottom:1px solid var(--line);cursor:pointer}.kxrow:last-child{border-bottom:0}.kxrow input{margin-top:3px;flex:none}
 .kxrow .kxt{font-weight:500}.kxrow .kxm{color:var(--mut);font-size:12px}.kxrow.dis{opacity:.5;cursor:default}.kxmore{color:var(--mut);font-size:12.5px;padding:8px 2px}
+
+/* Einstellungen → Sicherheit: Sicherheit auf einen Blick (V01.0.262) */
+.sglance{margin-bottom:6px}.sgsum{font-size:13px;color:var(--mut);margin:2px 0 4px}
+.sgrow{display:flex;align-items:center;gap:12px;padding:9px 0;border-bottom:1px solid var(--line)}.sgrow .lbl{flex:1;min-width:0}
+.sgrow .lbl b{display:block;font-weight:600;font-size:14px}.sgrow .lbl span{font-size:12px;color:var(--mut)}
+.amp{width:11px;height:11px;border-radius:50%;flex:none;background:var(--ok)}.amp.warn{background:var(--warn)}.amp.bad{background:var(--bad)}

@@ -200,12 +200,31 @@ def set_call(uid, call):
         return call
 
 
+# Only the length of a PIN is noted ("short": fewer than STRONG_PIN characters), when it is set and at a
+# sign-in, for "Sicherheit auf einen Blick"; PINs from before V01.0.262 count from their next sign-in.
+STRONG_PIN = 6
+
+
+def _note_short(uid, short):
+    with _lock:
+        d = _load()
+        for u in d["users"]:
+            if u["id"] == uid and u.get("short") != short:
+                u["short"] = short
+                _write(_path("profiles.json"), d)
+
+
+def short_pins():
+    return [u["name"] for u in _load()["users"] if u.get("short")]
+
+
 def add_user(name, pin):
     with _lock:
         d = _load()
         if _taken(d, name):
             raise ValueError("a profile with this name exists")
-        u = {"id": "u_" + secrets.token_hex(6), "name": name.strip(), "pin": _pin_hash(pin), "created": int(time.time())}
+        u = {"id": "u_" + secrets.token_hex(6), "name": name.strip(), "pin": _pin_hash(pin), "created": int(time.time()),
+             "short": len(str(pin)) < STRONG_PIN}
         d["users"].append(u)
         _write(_path("profiles.json"), d)
         return u["id"]
@@ -217,6 +236,7 @@ def set_pin(uid, pin):
         for u in d["users"]:
             if u["id"] == uid:
                 u["pin"] = _pin_hash(pin)  # also ends the logins made with the old PIN
+                u["short"] = len(str(pin)) < STRONG_PIN
                 _write(_path("profiles.json"), d)
                 return True
         return False
@@ -269,28 +289,117 @@ def delete_device(did):
 
 
 # ---------------------------------------------------------------- who is asking
-# A browser login is "<user id>.<issued>.<signature>". It ends after SESSION_DAYS without use (the
-# panel renews it while it is used), when the PIN changes, or with "log out everywhere" (epoch).
-SESSION_DAYS = 90
+# A browser login is "<user id>.<issued>.<session>.<signature>". It ends after session_days() without use
+# (the panel renews it while it is used), when the PIN changes, with "log out everywhere" (epoch) or when
+# its session is ended in the list of signed-in browsers (V01.0.262). Logins from before V01.0.262 have no
+# session part ("<user id>.<issued>.<signature>") and get one at their next renewal.
+SESSION_DAYS = 90   # the longest an admin may set (panel.session_days, 7..90, default 30)
 RENEW_AFTER = 86400
+MAX_SESSIONS = 20   # per profile; the oldest login ends when a new one would be the 21st
+_slock = threading.Lock()
 
 
-def _sign(u, issued):
-    msg = f"{u['id']}|{u['pin']}|{u.get('epoch', 0)}|{issued}"
+def session_days():
+    try:
+        from common import load_config
+        d = int(load_config().get("panel", {}).get("session_days", 30))
+    except Exception:
+        d = 30
+    return min(max(d, 7), SESSION_DAYS)
+
+
+def session_secs():
+    return session_days() * 86400
+
+
+def _sign(u, issued, sid=""):
+    msg = f"{u['id']}|{u['pin']}|{u.get('epoch', 0)}|{issued}" + (f"|{sid}" if sid else "")
     return hmac.new(_secret(), msg.encode(), hashlib.sha256).hexdigest()
 
 
-def _cookie_value(u, issued=None):
+def _sessions():
+    try:
+        with open(_path("sessions.json")) as f:
+            d = json.load(f)
+        return d if isinstance(d, dict) else {}
+    except (OSError, ValueError):
+        return {}
+
+
+def agent_label(ua):
+    """A short name for a browser ("iPhone · Safari"), never the raw user agent."""
+    ua = str(ua or "")[:400]
+    dev = next((n for k, n in (("iPhone", "iPhone"), ("iPad", "iPad"), ("Android", "Android"), ("Macintosh", "Mac"),
+                               ("Windows", "Windows"), ("CrOS", "ChromeOS"), ("Linux", "Linux")) if k in ua), "")
+    br = next((n for k, n in (("Edg/", "Edge"), ("OPR/", "Opera"), ("Firefox/", "Firefox"), ("CriOS", "Chrome"),
+                              ("Chrome/", "Chrome"), ("Safari/", "Safari"), ("SparkApp", "Spark-App")) if k in ua), "")
+    return " · ".join(x for x in (dev, br) if x) or "Browser"
+
+
+def _new_session(uid, agent=""):
+    sid = secrets.token_hex(8)
+    now = int(time.time())
+    with _slock:
+        d = _sessions()
+        for k in [k for k, v in d.items() if now - v.get("l", 0) > SESSION_DAYS * 86400]:
+            d.pop(k)
+        mine = sorted((v.get("l", 0), k) for k, v in d.items() if v.get("u") == uid)
+        for _, k in mine[:max(0, len(mine) - MAX_SESSIONS + 1)]:
+            d.pop(k)
+        d[sid] = {"u": uid, "f": now, "l": now, "a": agent_label(agent)}
+        _write(_path("sessions.json"), d)
+    return sid
+
+
+def _touch_session(sid):
+    with _slock:
+        d = _sessions()
+        if sid in d:
+            d[sid]["l"] = int(time.time())
+            _write(_path("sessions.json"), d)
+
+
+def sessions(uid, current=""):
+    """The signed-in browsers of a profile, newest use first (no address, only a short browser name)."""
+    cur = (current or "").split(".")
+    cur = cur[2] if len(cur) == 4 else ""
+    out = [{"id": k, "first": v.get("f", 0), "last": v.get("l", 0), "agent": v.get("a", "Browser"), "this": k == cur}
+           for k, v in _sessions().items() if v.get("u") == uid and time.time() - v.get("l", 0) <= session_secs()]
+    return sorted(out, key=lambda x: -x["last"])
+
+
+def end_session(uid, sid):
+    """Ends one browser login of this profile; False when there is no such login."""
+    with _slock:
+        d = _sessions()
+        if d.get(sid, {}).get("u") != uid:
+            return False
+        d.pop(sid)
+        _write(_path("sessions.json"), d)
+    return True
+
+
+def _drop_sessions(uid):
+    with _slock:
+        d = _sessions()
+        for k in [k for k, v in d.items() if v.get("u") == uid]:
+            d.pop(k)
+        _write(_path("sessions.json"), d)
+
+
+def _cookie_value(u, issued=None, sid=None, agent=""):
     issued = int(issued or time.time())
-    return f"{u['id']}.{issued}.{_sign(u, issued)}"
+    sid = sid or _new_session(u["id"], agent)
+    return f"{u['id']}.{issued}.{sid}.{_sign(u, issued, sid)}"
 
 
-def login(name, pin):
+def login(name, pin, agent=""):
     """Returns the cookie value, or None for an unknown name or a wrong PIN (indistinguishable)."""
     name = str(name).strip().lower()
     u = next((u for u in _load()["users"] if u["name"].lower() == name), None)
     if u and _pin_ok(pin, u["pin"]):
-        return _cookie_value(u)
+        _note_short(u["id"], len(str(pin)) < STRONG_PIN)
+        return _cookie_value(u, agent=agent)
     if not u:
         _pin_hash(pin)  # same work as a wrong PIN, so timing does not reveal which names exist
     return None
@@ -304,11 +413,14 @@ def by_id(uid):
 def _cookie_user(d, raw):
     """(user, issued) of a valid browser login, else (None, 0)."""
     parts = raw.split(".")
-    if len(parts) != 3 or not parts[1].isdigit():
+    if len(parts) not in (3, 4) or not parts[1].isdigit():
         return None, 0
-    uid, issued, sig = parts[0], int(parts[1]), parts[2]
+    uid, issued, sig = parts[0], int(parts[1]), parts[-1]
+    sid = parts[2] if len(parts) == 4 else ""
     u = next((u for u in d["users"] if u["id"] == uid), None)
-    if not u or time.time() - issued > SESSION_DAYS * 86400 or not secrets.compare_digest(sig, _sign(u, issued)):
+    if not u or time.time() - issued > session_secs() or not secrets.compare_digest(sig, _sign(u, issued, sid)):
+        return None, 0
+    if sid and _sessions().get(sid, {}).get("u") != uid:   # ended in the list of signed-in browsers
         return None, 0
     import guard
     if guard.revoked(raw):
@@ -319,9 +431,14 @@ def _cookie_user(d, raw):
 def renewed_cookie(request):
     """A fresh cookie value when this request's login is valid and older than a day, else None."""
     d = _load()
-    u, issued = _cookie_user(d, request.cookies.get(COOKIE, ""))
+    raw = request.cookies.get(COOKIE, "")
+    u, issued = _cookie_user(d, raw)
     if u and time.time() - issued > RENEW_AFTER and not request.headers.get(DEVICE_HEADER):
-        return _cookie_value(u)
+        parts = raw.split(".")
+        if len(parts) == 4:
+            _touch_session(parts[2])
+            return _cookie_value(u, sid=parts[2])
+        return _cookie_value(u, agent=request.headers.get("user-agent", ""))
     return None
 
 
@@ -333,6 +450,7 @@ def end_sessions(uid):
             if u["id"] == uid:
                 u["epoch"] = int(u.get("epoch", 0)) + 1
                 _write(_path("profiles.json"), d)
+                _drop_sessions(uid)
                 return True
         return False
 

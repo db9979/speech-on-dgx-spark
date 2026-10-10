@@ -31,6 +31,7 @@ Alle Optionen ohne Rückfragen (`--mode api --asr 1.7b --tts 0.6b --yes` …) st
 
 <!-- New version: add one line at the top here and in CHANGELOG.md, drop the oldest line here (keep 10). Details go to docs/de and docs/en, not into this README. -->
 
+- **V01.0.262** Sicherheit: Schutz-Kopfzeilen auf jeder Antwort (kein Einbetten in fremde Seiten, nosniff, Referrer-Policy, Mikrofon/Kamera nur fürs Panel, HSTS auf https), Liste der angemeldeten Browser mit Einzel-Abmelden (Ich → Sicherheit, Admin in den Profil-Details), Profil-Anmeldung endet nach 30 Tagen ohne Nutzung (7–90 einstellbar), „Sicherheit auf einen Blick“ als Ampel oben unter Einstellungen → Sicherheit
 - **V01.0.261** Kiwix: Bücher werden ohne Datum gespeichert, aktualisierte Dateien bleiben gewählt (neueste wird genommen, Katalog bei 404 neu gelesen); „Schau in meinem Archiv“ sucht nie in den hochgeladenen Dokumenten und sagt, welcher Schalter fehlt
 - **V01.0.260** Kiwix: Bücherauswahl als Liste mit Suche, Sprach- und Artfilter (Deutsch/Englisch zuerst), gruppiert, mit Sprache, Variante, Artikelzahl, Größe und Stand; gewählte oben als Chips; ohne Auswahl deutsche und englische Wikipedia; Katalog bis 2000 Bücher
 - **V01.0.259** Selbsttest „Profile und Geräte“ sucht das Testgerät statt auf Seite 1 zu warten (GitHub-Tests wieder grün)
@@ -40,7 +41,6 @@ Alle Optionen ohne Rückfragen (`--mode api --asr 1.7b --tts 0.6b --yes` …) st
 - **V01.0.255** Benutzer als Admin (Schalter unter Einstellungen → Sicherheit, aus; nur mit zweitem Schritt des Hauptadmins): Rollen Mit-Admin und Verwalter für Profile, Admin-Modus unter Ich → Sicherheit mit eigenem Code (15 min ohne Bedienung, höchstens 8 h), Hauptadmin behält Passwort, Rollen, Sicherungen und Admin-Profile, Logs → Admin-Protokoll zeigt wer, App-Anmeldung mit Profil-Code (Server)
 - **V01.0.254** Einstellungen: Spracherkennung und Sicherheit springen auf breiten Bildschirmen nicht mehr nach rechts (Platz für die Scrollleiste immer frei), Zweiter Anmeldeschritt in einem Rahmen, Modell-Auswahl der Spracherkennung nicht mehr abgeschnitten; Browsertest prüft das
 - **V01.0.253** Funktionen: „Wikipedia direkt“ steht unter der Websuche, „Rollen per Sprache“ unter dem eigenen Gesprächsstil (Seite bleibt kurz, Browsertest wieder grün)
-- **V01.0.252** Einstellungen → Sprachausgabe: Standardstimme ist eine Auswahlliste passend zum Modell (CustomVoice feste Sprecher, Base eigene Stimmen, VoiceDesign gesperrt); ein gespeicherter Name außerhalb der Liste bleibt erhalten
 
 Alle Versionen: [CHANGELOG.md](CHANGELOG.md)
 

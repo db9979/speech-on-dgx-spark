@@ -15,6 +15,7 @@ from fastapi import APIRouter, Depends, File, Form, HTTPException, Request, Uplo
 from fastapi.responses import FileResponse, Response, StreamingResponse
 
 sys.path.insert(0, os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
+import backup  # noqa: E402
 import echo  # noqa: E402
 import guard  # noqa: E402
 import kiwix  # noqa: E402
@@ -153,7 +154,17 @@ def admin_profile(uid: str):
     listening = roomlive.devices_listening()
     devs = [dict(x, speaker=x["id"] in spk, room=x["id"] in listening) for x in profiles.own_devices(uid)]
     return dict(u, **_profile_extra(uid), last=profiles.last_use(uid, last), devices=devs,
-                facts=len(profiles.memory(uid)))
+                facts=len(profiles.memory(uid)), sessions=profiles.sessions(uid))
+
+
+@router.delete("/api/admin/profiles/{uid}/sessions/{sid}", dependencies=[Depends(auth)])
+def admin_end_session(uid: str, sid: str, request: Request):
+    """Ends one signed-in browser of a profile (protective, so no code; a profile with a role only by the main admin)."""
+    _no_admin_profile(request, uid)
+    if not re.fullmatch(r"[0-9a-f]{16}", sid) or not profiles.end_session(uid, sid):
+        raise HTTPException(404, "no such login")
+    guard.log("profile_session_end", ip=guard.client_ip(request), uid=uid, by="admin")
+    return {"ok": True}
 
 
 @router.put("/api/admin/profiles/{uid}/call", dependencies=[Depends(auth)])
@@ -404,6 +415,9 @@ def validate(new):
         ports += [t["engine_port"], t["voicedesign_port"]]
     if not isinstance(new["panel"].get("allow_lan", False), bool):
         raise HTTPException(400, "allow_lan must be true or false")
+    sd = new["panel"].get("session_days", 30)
+    if not isinstance(sd, int) or isinstance(sd, bool) or not 7 <= sd <= 90:
+        raise HTTPException(400, "session_days must be 7..90")
     tp = new["panel"].get("trusted_proxies", [])
     if not isinstance(tp, list) or len(tp) > 10 or not all(isinstance(x, str) and _is_ip(x) for x in tp):
         raise HTTPException(400, "trusted_proxies: a list of up to 10 IP addresses")
@@ -509,7 +523,7 @@ def validate(new):
 
 SENSITIVE = [("api", "key"), ("chat", "llm_url"), ("chat", "llm_key"), ("chat", "telegram_api"),
              ("chat", "search_url"), ("chat", "kiwix_url"), ("chat", "public"), ("chat", "esp32_url"), ("chat", "esp32_repo"),
-             ("chat", "mfa"), ("panel", "trusted_proxies"), ("panel", "allow_lan"), ("asr", "model"), ("asr", "aligner_model"),
+             ("chat", "mfa"), ("panel", "trusted_proxies"), ("panel", "allow_lan"), ("panel", "session_days"), ("asr", "model"), ("asr", "aligner_model"),
              ("tts", "model"), ("tts", "voicedesign_model")]
 
 
@@ -1003,3 +1017,34 @@ async def bench_start():
             bench_state["running"] = False
     asyncio.create_task(go())
     return {"started": True}
+
+
+# ---------------------------------------------------------------- Sicherheit auf einen Blick (V01.0.262)
+# Fixed checks with a traffic light; the page writes the sentences. Only states and numbers, no secrets.
+@router.get("/api/admin/security-glance", dependencies=[Depends(auth)])
+def security_glance(request: Request):
+    cfg = load_config()
+    chat, panel_cfg = cfg.get("chat", {}), cfg.get("panel", {})
+    items = []
+
+    def add(key, lvl, **extra):
+        items.append(dict(key=key, lvl=lvl, **extra))
+
+    add("admin_mfa", "ok" if mfa.enabled(mfa.ADMIN) else "bad")
+    last = backup.listing()
+    age = int((time.time() - last[0]["created"]) / 86400) if last else None
+    add("backup", "bad" if age is None or age > 3 else "warn", days=age, count=len(last))
+    short = profiles.short_pins()
+    add("short_pins", "warn" if short else "ok", names=short[:10], count=len(short))
+    no_mfa = [r["name"] for r in coadmin.listing()["users"] if not r["mfa"]]
+    if no_mfa:
+        add("role_mfa", "warn", names=no_mfa[:10])
+    add("https", "ok" if guard.https(request) else "warn")
+    add("public", "warn" if chat.get("public") else "ok")
+    add("allow_lan", "warn" if panel_cfg.get("allow_lan") else "ok")
+    add("session_days", "ok" if panel_cfg.get("session_days", 30) <= 30 else "warn", days=panel_cfg.get("session_days", 30))
+    for k in ("headers", "updates", "vault", "outside"):   # fixed protections of the panel itself
+        add(k, "ok")
+    order = {"bad": 0, "warn": 1, "ok": 2}
+    items.sort(key=lambda x: order[x["lvl"]])
+    return {"items": items}

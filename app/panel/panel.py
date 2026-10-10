@@ -86,13 +86,36 @@ app.add_middleware(BodyLimit, default=2 * 1024**2, gate=_may_upload, limits=[
            "/api/chat/image"))
 
 
+# Browser protection on every answer (V01.0.262): no other page may show the panel in a frame (clickjacking),
+# no guessing of file types, no address leaks to other sites, microphone and camera only for the panel itself,
+# and on https the browser keeps using https. A page that sets its own policy (wissen.py "Ansehen") keeps it.
+SECURITY_HEADERS = {
+    "X-Frame-Options": "SAMEORIGIN",
+    "X-Content-Type-Options": "nosniff",
+    "Referrer-Policy": "same-origin",
+    "Permissions-Policy": "microphone=(self), camera=(self), geolocation=(), payment=(), usb=(), serial=(), bluetooth=()",
+    "Cross-Origin-Opener-Policy": "same-origin",
+    "Content-Security-Policy": "frame-ancestors 'self'; base-uri 'self'; object-src 'none'; form-action 'self'",
+}
+
+
+def protect(request, response):
+    for k, v in SECURITY_HEADERS.items():
+        if k.lower() not in response.headers:
+            response.headers[k] = v
+    if guard.https(request):
+        response.headers.setdefault("Strict-Transport-Security", "max-age=15552000")
+
+
 @app.middleware("http")
 async def sessions(request: Request, call_next):
     """Refuses changes from foreign pages, writes the change log and renews logins in use."""
     if not guard.same_origin(request, (COOKIE, profiles.COOKIE, coadmin.COOKIE)):
         guard.log("foreign_page_refused", ip=guard.client_ip(request), path=request.url.path,
                   origin=request.headers.get("origin", ""))
-        return guard.foreign_page()
+        r = guard.foreign_page()
+        protect(request, r)
+        return r
     response = await call_next(request)
     path = request.url.path
     if guard.logged(path, request.method):
@@ -105,6 +128,7 @@ async def sessions(request: Request, call_next):
         by = "main" if request.scope.get("speech_main_admin") else elev["id"] if elev else None
         guard.log("change", ip=guard.client_ip(request), who=who, uid=(prof or {}).get("id"), by=by,
                   method=request.method, path=path, status=response.status_code)
+    protect(request, response)
     if path.startswith("/api/") and "cache-control" not in response.headers:
         response.headers["Cache-Control"] = "no-store"   # switches and states: never from a browser or proxy cache
     if path.startswith("/api/") and response.status_code < 400:
@@ -116,7 +140,7 @@ async def sessions(request: Request, call_next):
         if elev_value:
             response.set_cookie(coadmin.COOKIE, elev_value, max_age=coadmin.LONGEST, httponly=True, samesite="strict")
         if user_value:
-            response.set_cookie(profiles.COOKIE, user_value, max_age=profiles.SESSION_DAYS * 86400,
+            response.set_cookie(profiles.COOKIE, user_value, max_age=profiles.session_secs(),
                                 httponly=True, samesite="lax")
     if guard.https(request):  # on https (also behind a proxy) logins never travel over plain http
         raw = response.headers.getlist("set-cookie") if hasattr(response.headers, "getlist") else []

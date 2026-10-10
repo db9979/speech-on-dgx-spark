@@ -335,7 +335,7 @@ async def profile_login(request: Request):
     body = await request.json()
     name = str(body.get("name", ""))[:60]
     guard.check(request, name)
-    value = profiles.login(name, str(body.get("pin", "")))
+    value = profiles.login(name, str(body.get("pin", "")), request.headers.get("user-agent", ""))
     if not value:
         guard.failed(request, name, what="profile_login")
         await asyncio.sleep(1)  # slows down guessing
@@ -347,14 +347,18 @@ async def profile_login(request: Request):
     r = Response('{"ok": true}', media_type="application/json")
     guard.succeeded(request, name, r)
     guard.log("profile_login", ip=guard.client_ip(request), name=name.strip(), uid=value.split(".", 1)[0])
-    r.set_cookie(profiles.COOKIE, value, max_age=profiles.SESSION_DAYS * 86400, httponly=True, samesite="lax")
+    r.set_cookie(profiles.COOKIE, value, max_age=profiles.session_secs(), httponly=True, samesite="lax")
     _trust(r, body, uid)
     return r
 
 
 @router.post("/api/profile/logout")
 def profile_logout(request: Request):
-    guard.revoke(request.cookies.get(profiles.COOKIE, ""), profiles.SESSION_DAYS * 86400)
+    raw = request.cookies.get(profiles.COOKIE, "")
+    guard.revoke(raw, profiles.session_secs())
+    u, _ = profiles._cookie_user(profiles._load(), raw)
+    if u and raw.count(".") == 3:
+        profiles.end_session(u["id"], raw.split(".")[2])
     coadmin.end(request)   # the admin mode ends with the profile's login
     r = Response('{"ok": true}', media_type="application/json")
     r.delete_cookie(profiles.COOKIE)
@@ -363,7 +367,7 @@ def profile_logout(request: Request):
 
 
 # The profile's own logins: its device keys (with last use), recent logins, log out everywhere.
-LOGIN_EVENTS = ("profile_login", "profile_login_failed", "profile_code_failed", "profile_logout_all", "profile_device_removed",
+LOGIN_EVENTS = ("profile_login", "profile_login_failed", "profile_code_failed", "profile_logout_all", "profile_device_removed", "profile_session_end",
                 "profile_mfa_on", "profile_mfa_off", "profile_mfa_reset")
 
 
@@ -410,6 +414,21 @@ def profile_toollog_clear(prof=Depends(browser_profile)):
     return {"ok": True}
 
 
+@router.get("/api/profile/sessions", dependencies=[Depends(assistant)])
+def profile_sessions(request: Request, prof=Depends(browser_profile)):
+    """The browsers signed in to this profile (short browser name, first and last use; this one marked)."""
+    return {"sessions": profiles.sessions(prof["id"], request.cookies.get(profiles.COOKIE, "")),
+            "days": profiles.session_days()}
+
+
+@router.delete("/api/profile/sessions/{sid}", dependencies=[Depends(assistant)])
+def profile_end_session(sid: str, request: Request, prof=Depends(browser_profile)):
+    if not re.fullmatch(r"[0-9a-f]{16}", sid) or not profiles.end_session(prof["id"], sid):
+        raise HTTPException(404, "no such login")
+    guard.log("profile_session_end", ip=guard.client_ip(request), name=prof["name"], uid=prof["id"])
+    return {"ok": True}
+
+
 @router.post("/api/profile/logout-all", dependencies=[Depends(assistant)])
 def profile_logout_all(request: Request, prof=Depends(browser_profile)):
     """Ends the login in every browser; this one gets a fresh login and stays signed in."""
@@ -419,7 +438,7 @@ def profile_logout_all(request: Request, prof=Depends(browser_profile)):
     u = next(u for u in profiles._load()["users"] if u["id"] == prof["id"])
     r = Response('{"ok": true}', media_type="application/json")
     if not request.headers.get(profiles.DEVICE_HEADER):
-        r.set_cookie(profiles.COOKIE, profiles._cookie_value(u), max_age=profiles.SESSION_DAYS * 86400,
+        r.set_cookie(profiles.COOKIE, profiles._cookie_value(u, agent=request.headers.get("user-agent", "")), max_age=profiles.session_secs(),
                      httponly=True, samesite="lax")
     return r
 
@@ -511,7 +530,7 @@ async def profile_mfa_enable(request: Request, prof=Depends(browser_profile)):
     guard.log("profile_mfa_on", ip=guard.client_ip(request), name=prof["name"], uid=prof["id"])
     u = next(u for u in profiles._load()["users"] if u["id"] == prof["id"])
     r = Response(json.dumps({"recovery": codes}), media_type="application/json")
-    r.set_cookie(profiles.COOKIE, profiles._cookie_value(u), max_age=profiles.SESSION_DAYS * 86400, httponly=True, samesite="lax")
+    r.set_cookie(profiles.COOKIE, profiles._cookie_value(u, agent=request.headers.get("user-agent", "")), max_age=profiles.session_secs(), httponly=True, samesite="lax")
     return r
 
 

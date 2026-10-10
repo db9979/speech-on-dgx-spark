@@ -394,10 +394,20 @@ $('setreset').onclick=async()=>{for(const k of Object.keys(SDEF))S[k]=SDEF[k];
   applySet();renderSet($('setform'),S,saveSet)};
 // ---------------------------------------------------------------- security: devices and logins
 const when=s=>s?new Date(s*1000).toLocaleString([], {dateStyle:'short',timeStyle:'short'}):t('noch nie','never');
-async function showSecurity(){if(typeof coadmMe==='function')coadmMe();const d=await (await api('/api/profile/security')).json();secRender(d.devices);mfaShow('profmfa','/api/profile/mfa');
-  const ev={profile_login:t('Anmeldung','Sign-in'),profile_login_failed:t('Falsche PIN','Wrong PIN'),profile_logout_all:t('Überall abgemeldet','Logged out everywhere'),profile_code_failed:t('Falscher Code','Wrong code'),profile_mfa_on:t('Zweiter Schritt an','Second step on'),profile_mfa_off:t('Zweiter Schritt aus','Second step off'),profile_mfa_reset:t('Zweiter Schritt vom Admin zurückgesetzt','Second step reset by the admin'),profile_device_removed:t('Gerät gesperrt','Device blocked')};
+async function showSecurity(){if(typeof coadmMe==='function')coadmMe();const d=await (await api('/api/profile/security')).json();secRender(d.devices);mfaShow('profmfa','/api/profile/mfa');secSessions();
+  const ev={profile_login:t('Anmeldung','Sign-in'),profile_login_failed:t('Falsche PIN','Wrong PIN'),profile_logout_all:t('Überall abgemeldet','Logged out everywhere'),profile_code_failed:t('Falscher Code','Wrong code'),profile_mfa_on:t('Zweiter Schritt an','Second step on'),profile_mfa_off:t('Zweiter Schritt aus','Second step off'),profile_mfa_reset:t('Zweiter Schritt vom Admin zurückgesetzt','Second step reset by the admin'),profile_device_removed:t('Gerät gesperrt','Device blocked'),profile_session_end:t('Browser abgemeldet','Browser signed out')};
   $('secev').innerHTML=d.events.map(e=>`<li><span>${esc(ev[e.event]||e.event)} <small class="mut">${when(e.t)} · ${esc(e.ip||'')}</small></span></li>`).join('')||`<li class="mut">–</li>`}
 function secRender(devs){$('secdev').innerHTML=devs.map(x=>`<li><span>${esc(x.name)}<br><small class="mut">${x.speaker?t('Lautsprecher, verwaltet unter Ich → Lautsprecher · ','Speaker, managed under Me → Speakers · '):''}${t('zuletzt','last used')}: ${x.last?when(x.last.t)+' · '+esc(x.last.ip||''):t('noch nie','never')}</small></span><button class="b" onclick="secDrop('${escq(x.id)}','${escq(x.name)}','${escq(x.speaker?'1':'')}')">${t('Sperren','Block')}</button></li>`).join('')||`<li class="mut">${t('Keine Geräte mit Schlüssel.','No devices with a key.')}</li>`}
+// every signed-in browser of this profile, with its short name and last use; "Abmelden" ends just that one (V01.0.262)
+async function secSessions(){const box=$('secsess');let d={sessions:[],days:30};try{d=await (await api('/api/profile/sessions')).json()}catch{}
+  $('secdays').textContent=d.days;box.textContent='';
+  for(const x of d.sessions){const li=document.createElement('li'),sp=document.createElement('span'),sm=document.createElement('small');
+    sp.textContent=x.agent+(x.this?t(' (dieser Browser)',' (this browser)'):'');sm.className='mut';sm.textContent=t('angemeldet ','signed in ')+when(x.first)+' · '+t('zuletzt ','last used ')+when(x.last);
+    sp.append(document.createElement('br'),sm);li.appendChild(sp);
+    if(!x.this){const b=document.createElement('button');b.type='button';b.className='b';b.textContent=t('Abmelden','Sign out');
+      b.onclick=async()=>{await api('/api/profile/sessions/'+encodeURIComponent(x.id),{method:'DELETE'}).catch(()=>{});showSecurity()};li.appendChild(b)}
+    box.appendChild(li)}
+  if(!d.sessions.length)box.innerHTML=`<li class="mut">${t('Ältere Anmeldungen erscheinen nach ihrer nächsten Nutzung.','Older sign-ins appear after their next use.')}</li>`}
 window.secDrop=async(id,n,spk)=>{if(!confirm(t('Gerät „','Block device "')+n+t('“ sperren? Sein Schlüssel gilt dann nicht mehr.','"? Its key stops working.')+(spk?t(' Der Lautsprecher muss danach neu eingerichtet werden.',' The speaker then has to be set up again.'):'')))return;
   await api('/api/profile/devices/'+encodeURIComponent(id),{method:'DELETE'});showSecurity()};
 $('seclogoutall').onclick=async()=>{if(!confirm(t('Dein Profil in allen anderen Browsern abmelden?','Log your profile out in all other browsers?')))return;
