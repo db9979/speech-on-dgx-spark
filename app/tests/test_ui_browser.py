@@ -34,7 +34,7 @@ STATE = ("JSON.stringify({hidden:document.hidden,rec:!!chat.rec,live:micLive(),r
          "ctrl:!!chat.ctrl,playing:playing(),asr:!!chat.asrBusy,pctx:chat.pctx&&[chat.pctx.state,chat.pctx.currentTime],"
          "ctx:chat.ctx&&[chat.ctx.state,chat.ctx.currentTime],say:$('chatstate').textContent})")
 
-SECTIONS = ("chat", "mon", "sys", "test", "logs", "cfg", "prof", "who", "int", "apps")
+SECTIONS = ("chat", "mon", "live", "sys", "test", "logs", "cfg", "prof", "who", "int", "apps")
 VIEWS = (("pc", 1280, 900), ("handy", 390, 844))
 
 
@@ -799,6 +799,81 @@ class Browser(unittest.TestCase):
             self.run_async(go())
         finally:
             trace(False)
+            tracelog.clear()
+
+    def test_live_page_and_monitor(self):
+        """Zustand → Live and the wall monitor /live (V01.0.312): the picture with the running request, its way and
+        the Wächter, no text of the question, no sideways scrolling on a phone; the monitor pairs with its code
+        and then shows the same picture on one screen."""
+        import json as _json
+        import time
+        import live
+        import tracelog
+        from fastapi.testclient import TestClient
+        import panel
+
+        def logs(**kw):
+            with open(os.environ["SPEECH_SPARK_CONFIG"]) as f:
+                c = _json.load(f)
+            c.setdefault("logs", {}).update(kw)
+            with open(os.environ["SPEECH_SPARK_CONFIG"], "w") as f:
+                _json.dump(c, f)
+        logs(live=True, live_monitor=True)
+        c = TestClient(panel.app)
+        c.post("/api/profile/login", json={"name": "Uitest", "pin": "4711"})
+        self.assertEqual(c.post("/api/chat", json={"messages": [{"role": "user", "content":
+                                                                 'TOOL memory_save {"fact": "Uitest mag Kakao."}'}]}).status_code, 200)
+        live.outgoing("x", 31002, "public", "127.0.0.1", "own services are not reachable")
+        for r in list(live._run.values()):
+            r.t_end = time.time() + 120     # stays on the picture for this test (no fading while the browser looks)
+
+        async def go():
+            async with async_playwright() as p:
+                for name, w, h in VIEWS:
+                    br, pg, errors = await self.page(p, w, h, csp=True)
+                    await pg.evaluate("goSec('live')")
+                    await pg.wait_for_selector("#lvflow svg .node", timeout=8000)
+                    await pg.wait_for_timeout(600)
+                    text = await pg.inner_text("#live")
+                    self.assertIn("memory_save", text)
+                    self.assertIn("127.0.0.1:31002", text)
+                    self.assertNotIn("Kakao", text)
+                    over = await pg.evaluate("document.documentElement.scrollWidth-window.innerWidth")
+                    self.assertLessEqual(over, 1, f"{name}: {over}px zu breit")
+                    await pg.screenshot(path=os.path.join(os.environ.get("SPEECH_SPARK_SHOTS", helpers.TMP),
+                                                          f"live-{name}.png"), full_page=True)
+                    self.assertEqual(errors, [], name)
+                    await br.close()
+                # the monitor: a code from the admin, entered on the screen
+                code = c_admin.post("/api/admin/live/monitors", json={"name": "Flur"}).json()["code"]
+                br = await p.chromium.launch(**({"executable_path": chromium()} if chromium() else {}))
+                ctx = await br.new_context(viewport={"width": 1920, "height": 1080}, locale="de-DE")
+                pg = await ctx.new_page()
+                errors = []
+                pg.on("pageerror", lambda e: errors.append(str(e)))
+                pg.on("console", lambda m: errors.append(m.text) if m.type == "error" and "401" not in m.text else None)
+                await pg.goto(f"http://127.0.0.1:{self.port}/live")
+                await pg.wait_for_selector("#lvcode", timeout=8000)
+                await pg.fill("#lvcode", code)
+                await pg.click("#lvpair")
+                await pg.wait_for_selector("#lvflow svg .node", timeout=8000)
+                await pg.wait_for_timeout(800)
+                self.assertEqual(await pg.inner_text("#lvname"), "Flur")
+                self.assertNotIn("Kakao", await pg.inner_text("body"))
+                self.assertLessEqual(await pg.evaluate("document.documentElement.scrollHeight-window.innerHeight"), 1)
+                await pg.screenshot(path=os.path.join(os.environ.get("SPEECH_SPARK_SHOTS", helpers.TMP), "live-monitor.png"))
+                self.assertEqual(errors, [])
+                await br.close()
+        c_admin = TestClient(panel.app)
+        c_admin.post("/api/login", json={"password": "secret-admin"})
+        try:
+            self.run_async(go())
+        finally:
+            logs(live=False, live_monitor=False)
+            with live._lock:
+                live._run.clear()
+                live._guard.clear()
+                live._codes.clear()
             tracelog.clear()
 
     def test_device_profiles_are_a_list_or_fixed(self):

@@ -33,6 +33,7 @@ All options for running without questions (`--mode api --asr 1.7b --tts 0.6b --y
 
 <!-- New version: add one line at the top here and in CHANGELOG.md, drop the oldest line here (keep 10). Details go to docs/de and docs/en, not into this README. -->
 
+- **V01.0.312** Live overview (off): Status → Live shows who is asking, each request's way with times, what the guard decides, failed logins and what the services give back; plus a live monitor for a screen in the home network, paired with a one-time code
 - **V01.0.311** Self-test invitation: waits for the page to reload after "Create profile" instead of a fixed 15 seconds (was red twice on GitHub)
 - **V01.0.310** Diagram "How it works" shows the current state: iPhone and Android app, speakers, MCP programs, router, priority, own knowledge, guard and the outside services
 - **V01.0.309** MCP "Create key" answers right under the button: a missing name or no ticked tool is said there (before at the very end of the page, it looked like nothing happened), plus "creating …" and a clear hint when the code is missing
@@ -42,7 +43,6 @@ All options for running without questions (`--mode api --asr 1.7b --tts 0.6b --y
 - **V01.0.305** Self-test Features page: height limit raised for the new line "Fetch clear questions directly" (GitHub tests were red after V01.0.304, the update waited)
 - **V01.0.304** Answer starts sooner: "Schneller Antwortbeginn" now keeps instructions, tool list and the start of the history the same (everything that changes goes with the question), "Eindeutiges direkt abrufen" (off) fetches mail, reminders, weather and parcels itself for short questions, Logs → Requests shows instructions, tools and conversation per round in characters
 - **V01.0.303** Spark as an MCP server (Features → Spark as MCP server, profile Me → Services over MCP, all off): Open WebUI, n8n, Claude & co. use speech (transcribe, speak), look-ups (Wikipedia, archive, documents, calendar, reminders, today) and ask_spark; each program gets its own access with its own tools, "local" home network only or "external" via OAuth with a warning and the second sign-in step; acting (lights, appointments, reminders) only as a proposal with a yes in the panel; never mail, memory, history, secrets or settings
-- **V01.0.302** Phone: the buttons under the face (conversation settings, history, picture, message) wrap into rows instead of being cut off left and right; a new browser test checks at 320 and 390 px, in the app view and the computer layout, that nothing reaches over the edge on any page, settings page or Me page
 
 All versions: [CHANGELOG.md](CHANGELOG.md)
 

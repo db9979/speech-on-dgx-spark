@@ -133,6 +133,16 @@ Since V01.0.267 every function the admin can switch is written once in `app/pane
 - **App** (since V01.0.272): `GET /api/admin/switches` returns `names` and `groups` for every switch from `features.switch_names()`; the app keeps no list of its own. The app key may read `GET /api/features`; `hands` and `barge` are in `iphone.APP_FIELDS`.
 - **Profile detail** (since V01.0.271): `GET /api/admin/profiles/{uid}` also returns `features` (`features.count(uid)`: on / allowed by the Spark), `role`, `main` (is the main admin asking?) and `rights` (agent level, update right, upload space; missing for managers). `PUT /api/admin/agent/levels/{uid}` (`{"level": "" | "read" | "act"}`, logged as `agent_level`) sets one profile's agent level. The profile list carries `guests` (`features.guests()`).
 
+## Keeping the live overview current (live.py)
+
+Since V01.0.312 *Status → Live* (and the monitor `/live`) show everything the Spark does right now. So the picture never lies by leaving something out, every change also adds its entry there:
+
+- **New tool:** a target in `live.TOOLS` (an existing one or a new one in `live.TARGETS` with zone `spark`, `lan` or `net`) and a word in `live.RETURNS`. `tests/test_live.py` turns red when a tool from `chat.py` or an extra service is missing.
+- **New kind of device:** a word in `live.CLIENT` (the test compares with `tracelog.CLIENTS`).
+- **New channel** (WebSocket, long poll): a line in `live._conns`.
+- **New entry check or guard level:** `guard.failed` and `netguard.resolve` already report to `live.refused` and `live.outgoing`; add new words there.
+- Only fixed words and numbers, never contents; names only through `live._who`.
+
 ## Tests
 
 `app/tests/` holds the self-tests that run on every update (`cd app && python -m unittest discover -s tests`). All services are faked (`tests/helpers.py`); no test talks to real models or Home Assistant. `tests/test_ui_browser.py` also opens the panel in Chromium (Playwright) at computer and phone width: every page without script errors and without sideways scrolling, the settings search, the Me window. Without Playwright (as in the self-test on the Spark) it is skipped; on GitHub it runs in the "Tests" workflow on every push.

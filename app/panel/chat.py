@@ -1226,6 +1226,9 @@ def start_trace(request, turn, t_req, t0):
     tr = tracelog.start(t_req, client, who and who["id"], kind, profiles.device_name(request) if who or kind == "admin" else "")
     if not tr:
         return None
+    if getattr(tr, "watched", False):   # Zustand → Live: from the internet? (shown under "Über das Internet")
+        import live
+        live.came_in(request, tr)
     route = getattr(turn, "route", None)
     tr.intent = route.label() if route else ""
     ask_text = getattr(turn, "ask_text", "") or ""
@@ -1505,6 +1508,8 @@ async def _answer(request, turn):
                     except ValueError:
                         args = {}
                     t_tool = time.time()
+                    if tr:
+                        tr.now("tool", x["name"] if x["name"] in known else "unbekannt", t_tool)
                     result = await run_tool(x["name"], args, st)
                     if tm["rounds"]:
                         tm["rounds"][-1]["tools"].append((x["name"], time.time() - t_tool))

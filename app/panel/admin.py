@@ -577,6 +577,11 @@ def validate(new):
         raise HTTPException(400, "logs keep_days must be 1..365")
     if not isinstance(lg.get("trace", False), bool):
         raise HTTPException(400, "logs trace must be true or false")
+    for k in ("live", "live_monitor", "live_names"):   # Zustand → Live and the monitor page (live.py)
+        if not isinstance(lg.get(k, False), bool):
+            raise HTTPException(400, f"logs {k} must be true or false")
+    if isinstance(lg.get("live_screens", 3), bool) or not isinstance(lg.get("live_screens", 3), int) or not 1 <= lg.get("live_screens", 3) <= 5:
+        raise HTTPException(400, "logs live_screens must be 1..5")
     ch = new["chat"]
     if not re.fullmatch(r"https?://[^\s]+", str(ch["llm_url"])):
         raise HTTPException(400, "chat llm_url must start with http:// or https://")

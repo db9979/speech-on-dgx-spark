@@ -197,7 +197,7 @@ $('asr.recognizer').addEventListener('change',asrRec);
 const cfgPane=p=>{document.querySelectorAll('#cfgnav button').forEach(b=>b.classList.toggle('on',b.dataset.p===p));
   document.querySelectorAll('.pane').forEach(x=>x.classList.toggle('on',x.id==='pane-'+p));try{localStorage.setItem('cfgpane',p)}catch{}};
 // phones: the settings open as a list of pages; a tapped page fills the screen with "back" on top
-document.querySelectorAll('#cfgnav button').forEach(b=>b.onclick=()=>{cfgPane(b.dataset.p);if(b.dataset.p==='voices')loadClone();if(b.dataset.p==='upd')loadSys();if(b.dataset.p==='start')glance();if(b.dataset.p==='sec')loadSecGlance(true);document.querySelector('.cfgwrap').classList.add('sub');window.scrollTo(0,0)});
+document.querySelectorAll('#cfgnav button').forEach(b=>b.onclick=()=>{cfgPane(b.dataset.p);if(b.dataset.p==='voices')loadClone();if(b.dataset.p==='upd')loadSys();if(b.dataset.p==='start')glance();if(b.dataset.p==='sec')loadSecGlance(true);if(b.dataset.p==='sysc'&&window.liveMons)liveMons();document.querySelector('.cfgwrap').classList.add('sub');window.scrollTo(0,0)});
 $('cfgback').onclick=()=>{document.querySelector('.cfgwrap').classList.remove('sub');window.scrollTo(0,0)};
 // building blocks (V01.0.207): „Mehr“ unfolds the longer help right below its row; the password fields open on
 // „Ändern …“; the audio file for a new voice is picked with a normal button that shows the chosen name

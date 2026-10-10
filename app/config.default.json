@@ -181,6 +181,10 @@
   "logs": {
     "max_mb": 500,
     "keep_days": 14,
-    "trace": false
+    "trace": false,
+    "live": false,
+    "live_monitor": false,
+    "live_names": false,
+    "live_screens": 3
   }
 }

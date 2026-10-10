@@ -72,9 +72,10 @@ import stufe  # noqa: E402
 import today  # noqa: E402
 import offsite  # noqa: E402
 import mcpserver  # noqa: E402
+import live  # noqa: E402
 
 app = FastAPI(title="Speech on DGX Spark")
-for _module in (account, admin, chat, update, system, proactive, room, roomlive, tidy, weather, contacts, parcels, telegram, tasks, esp32, iphone, pebblewatch, android, appupdate, apns, transit, logfilter, agent, images, messages, intent, wissen, tracelog, lokal, features, remarkable, join, onboard, hintergrund, stufe, today, offsite, mcpserver):
+for _module in (account, admin, chat, update, system, proactive, room, roomlive, tidy, weather, contacts, parcels, telegram, tasks, esp32, iphone, pebblewatch, android, appupdate, apns, transit, logfilter, agent, images, messages, intent, wissen, tracelog, lokal, features, remarkable, join, onboard, hintergrund, stufe, today, offsite, mcpserver, live):
     app.include_router(_module.router)
 app.middleware("http")(update_lock)
 
@@ -128,7 +129,7 @@ def protect(request, response):
 @app.middleware("http")
 async def sessions(request: Request, call_next):
     """Refuses changes from foreign pages, writes the change log and renews logins in use."""
-    if not guard.same_origin(request, (COOKIE, profiles.COOKIE, coadmin.COOKIE)):
+    if not guard.same_origin(request, (COOKIE, profiles.COOKIE, coadmin.COOKIE, live.COOKIE)):
         guard.log("foreign_page_refused", ip=guard.client_ip(request), path=request.url.path,
                   origin=request.headers.get("origin", ""))
         r = guard.foreign_page()
@@ -377,7 +378,7 @@ PUBLIC_FILES = {"icon.svg": "image/svg+xml", "icon-192.png": "image/png", "icon-
 
 @app.get("/static/{name}")
 def static_file(name: str):
-    if name in ("app.css", "appview.css"):  # the page's style and scripts: revalidated, so an update shows at once
+    if name in ("app.css", "appview.css", "live.css"):  # the page's style and scripts: revalidated, so an update shows at once
         return FileResponse(os.path.join(STATIC, name), media_type="text/css", headers={"Cache-Control": "no-cache"})
     if name not in PUBLIC_FILES:
         raise HTTPException(404, "not found")

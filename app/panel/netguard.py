@@ -76,8 +76,19 @@ def resolve(host, port, level):
     for info in infos:
         why = allowed(info[4][0], port, level)
         if why:
+            _live(host, port, level, info[4][0], why)
             raise Blocked(f"{host}: {why}")
+    _live(host, port, level, infos[0][4][0], None)
     return infos[0][4][0]
+
+
+def _live(host, port, level, ip, why):
+    """Zustand → Live (live.py): each decision with its reason; never raises."""
+    try:
+        import live
+        live.outgoing(host, port, level, ip, why)
+    except Exception:
+        pass
 
 
 class _Backend(httpcore.AsyncNetworkBackend):
@@ -162,6 +173,11 @@ class _Transport(httpx.AsyncHTTPTransport):
         else:
             self._why = self._why or ("adresse" if r.status_code in (404, 410) else "dienst")
         if int(r.headers.get("content-length") or 0) > self.most:
+            try:
+                import live
+                live.cut(request.url.host)
+            except Exception:
+                pass
             await r.aclose()
             raise TooLarge(f"the answer is larger than {self.most // 1048576} MB")
         enc = r.headers.get("content-encoding", "identity").lower().strip()

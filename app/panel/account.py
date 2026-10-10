@@ -110,6 +110,8 @@ def whoami(request: Request, creds: HTTPBasicCredentials | None = Depends(securi
             "setup": _setup(prof, request),
             # Logs → Anfragen: main admin and co-admins (tracelog.py), not the Verwalter role
             "trace": bool(main or elev and elev.get("role") != "manager") and cfg.get("logs", {}).get("trace", False) is True,
+            # Zustand → Live (live.py): the same people
+            "live": bool(main or elev and elev.get("role") != "manager") and cfg.get("logs", {}).get("live", False) is True,
             "face": cfg.get("chat", {}).get("face") if cfg.get("chat", {}).get("face") in FACES else "robot",
             # "Gesicht zeigt, was es tut" (face.js lifeMode): only a plain true switches it on
             "face_life": cfg.get("chat", {}).get("face_life") is True,
@@ -231,7 +233,8 @@ async def logout_everywhere(request: Request):
 # fresh code, in its browser login or from its iPhone app ("Spark verwalten").
 ADMIN_EVENTS = ("admin_login", "admin_login_failed", "admin_code_failed", "admin_mode_on", "admin_mode_off", "admin_mode_failed",
                 "admin_role", "admin_roles_switch", "admin_mfa_on", "admin_mfa_off", "admin_logout_everywhere",
-                "feature_profile", "agent_level", "iphone_update_rights", "person_priority")
+                "feature_profile", "agent_level", "iphone_update_rights", "person_priority",
+                "live_monitor_code", "live_monitor_paired", "live_monitor_deleted", "live_code_failed")
 
 
 @router.get("/api/admin/roles", dependencies=[Depends(owner_auth)])

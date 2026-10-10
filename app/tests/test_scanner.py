@@ -36,6 +36,9 @@ def code_lines(text):
 # routes that need no login, and why
 OPEN = {
     "/api/whoami": "says who is logged in (nothing private without a login)",
+    "/live": "the monitor page: static, 404 while off, home network only (live.py)",
+    "/api/live/pair": "a screen enters its one-time code (home network, lockout and rate limit in live.py)",
+    "/api/live/state": "checks the monitor's own cookie itself, 401 otherwise, home network only (live.py)",
     "/api/login": "the admin's way in (lockout in guard.py)",
     "/api/logout": "ends a login",
     "/api/profile/login": "a profile's way in (lockout in guard.py)",

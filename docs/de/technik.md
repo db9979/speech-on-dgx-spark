@@ -145,6 +145,16 @@ Seit V01.0.267 steht jede Funktion, die der Admin schalten kann, genau einmal in
 - **Heute** (seit V01.0.286): `today.py` baut `GET /api/profile/today` nur aus `features.allowed`; jede Karte ist ein eigener Block, der fehlt, wenn die Funktion nicht erlaubt ist. Kalender mit `asyncio.wait_for` (3 s) und 5 Minuten Zwischenspeicher pro Profil und Zeitzone; was noch einzurichten ist, liefert `onboard.py` („Los geht's“). Die Sätze von „Probier mal“ kommen aus `guides.js` (`say`), gefiltert nach `/api/features` (`can`).
 - Feste Schutzregeln (Geheimnisse nie sprechen, Vorrang für Sprache, Inhaberstimme am geteilten Lautsprecher) sind keine Schalter und bleiben eigene Regeln.
 
+## Live-Übersicht aktuell halten (live.py)
+
+Seit V01.0.312 zeigt *Zustand → Live* (und der Monitor `/live`) alles, was der Spark gerade tut. Damit das Bild nicht durch Weglassen lügt, gehört zu jeder Änderung auch der Eintrag dort:
+
+- **Neues Werkzeug:** Ziel in `live.TOOLS` (vorhandenes oder neues in `live.TARGETS` mit Zone `spark`, `lan` oder `net`) und ein Wort in `live.RETURNS`. `tests/test_live.py` wird rot, wenn ein Werkzeug aus `chat.py` oder einem Zusatzdienst fehlt.
+- **Neue Geräteart:** Wort in `live.CLIENT` (Test vergleicht mit `tracelog.CLIENTS`).
+- **Neuer Kanal** (WebSocket, Long-Poll): Zeile in `live._conns`.
+- **Neue Prüfung am Eingang oder neue Wächter-Stufe:** `guard.failed` und `netguard.resolve` melden schon selbst an `live.refused` bzw. `live.outgoing`; neue Wörter dort ergänzen.
+- Nur feste Wörter und Zahlen, nie Inhalte; Namen nur über `live._who`.
+
 ## Tests
 
 `app/tests/` enthält die Selbsttests, die bei jedem Update laufen (`cd app && python -m unittest discover -s tests`). Alle Dienste sind dabei nachgebaut (`tests/helpers.py`), kein Test spricht echte Modelle oder Home Assistant an. `tests/test_ui_browser.py` öffnet das Panel zusätzlich in Chromium (Playwright) am Rechner und in Handybreite: jede Seite ohne Skriptfehler und ohne seitliches Scrollen, die Einstellungssuche, das Ich-Fenster. Ohne Playwright (wie im Selbsttest auf dem Spark) wird er übersprungen; auf GitHub läuft er im Workflow „Tests“ bei jedem Push.

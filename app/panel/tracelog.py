@@ -57,8 +57,10 @@ def safe(v):
 class Rec:
     """One request on its way. t0 is when the request came in (epoch seconds)."""
 
-    def __init__(self, t0, client, who=None, kind="guest", device=""):
+    def __init__(self, t0, client, who=None, kind="guest", device="", persist=True):
         self.id = secrets.token_hex(3)
+        self.persist = persist    # kept in traces.jsonl (Logs → Anfragen on); else only watched live
+        self.cur = None           # (kind, name, time) of what runs now, for Zustand → Live
         self.t0 = float(t0)
         self.client = client if client in CLIENTS else "other"
         self.who = who if isinstance(who, str) and re.fullmatch(r"[A-Za-z0-9_-]{1,64}", who) else None
@@ -78,6 +80,14 @@ class Rec:
         a = self.ms(start)
         self.steps.append({"k": kind, "n": name, "a": a, "d": max(0, self.ms(end if end is not None else start) - a),
                            **({"x": info} if info else {})})
+        if getattr(self, "watched", False):
+            import live
+            live.step(self, self.steps[-1])
+
+    def now(self, kind, name, t=None):
+        """What starts right now (a tool call): only for the live picture, never stored."""
+        if kind in KINDS:
+            self.cur = (kind, safe(str(name)[:60]) or "unbekannt", time.time() if t is None else t)
 
     def mark(self, name, t):
         if name in MARKS and name not in self.marks:
@@ -102,9 +112,18 @@ class Rec:
 
 
 def start(t0, client, who=None, kind="guest", device=""):
-    """A new record, or None while the admin switch is off (then nothing is kept at all)."""
+    """A new record, or None while both admin switches are off (then nothing is kept at all). With only
+    Zustand → Live on (live.py) the record is watched in memory and never written."""
     try:
-        return Rec(t0, client, who, kind, device) if on() else None
+        import live
+        keep, watch = on(), live.on()
+        if not keep and not watch:
+            return None
+        rec = Rec(t0, client, who, kind, device, persist=keep)
+        if watch:
+            rec.watched = True
+            live.track(rec)
+        return rec
     except Exception:
         return None
 
@@ -125,6 +144,11 @@ def finish(rec, now=None):
         return
     rec.done = True
     rec.mark("end", time.time() if now is None else now)
+    if getattr(rec, "watched", False):
+        import live
+        live.ended(rec, now)
+    if not rec.persist:
+        return
     d = rec.data()
     print(line(d), flush=True)
     with _lock:
