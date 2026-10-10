@@ -31,6 +31,7 @@ All options for running without questions (`--mode api --asr 1.7b --tts 0.6b --y
 
 <!-- New version: add one line at the top here and in CHANGELOG.md, drop the oldest line here (keep 10). Details go to docs/de and docs/en, not into this README. -->
 
+- **V01.0.277** iPhone app: first answer with sound (waits out the route switch after start, replays dropped pieces), "Copy sound log" in settings
 - **V01.0.276** New people by invitation (Personen und Geräte → Neue Personen, off): link, QR code or printed card, valid once, starter packs "Familie"/"Gast plus", second sign-in step required for e-mail, documents and jobs; then Me → "Los geht's" walks through devices and services (the Spark ticks off itself), "Continue on the phone" by QR code with number matching, PIN link and Remind in the profile details, the iPhone app takes invitations
 - **V01.0.275** Main admin as a profile (one login, the password stays the emergency access), one shell for signed-in profiles, words tidied (admin rights, tool history, update history, Spark verwalten)
 - **V01.0.274** reMarkable: the "All notebooks" tick and single ticks stay while the list loads (counter "x / y"), the search field keeps focus; the connect link goes straight to my.remarkable.com/pair
@@ -40,7 +41,6 @@ All options for running without questions (`--mode api --asr 1.7b --tts 0.6b --y
 - **V01.0.270** Unify phase 4: one row building block (setRow) for all settings, what the admin switched off stays visible under Ich with the reason, Ich names functions not switched on, column "Neue Profile" under Wer darf was, presets never turn on a function switch
 - **V01.0.269** Unify phase 3: Funktionen → "Wer darf was" (Spark, each profile, guests; filters new/needs you; phone with profile chips), the admin switches profile switches with an admin log entry, also for managers
 - **V01.0.268** Unify phase 2: defaults only from config.default.json (load_config fills missing keys), presets and own values only through profiles.effective; self-test against second defaults and hand merges
-- **V01.0.267** Unify phase 0–1: every function once in features.py, one check "Spark on, profile on" for all modules, /api/features with the reason; gaps closed (learning from corrections needs memory, push and update need the iPhone app, room from afar needs speakers)
 
 All versions: [CHANGELOG.md](CHANGELOG.md)
 

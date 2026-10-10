@@ -639,6 +639,15 @@ struct SettingsView: View {
                     Text("Stimme, Antworten und „Von selbst“ wie im Panel.")
                 }
                 Section {
+                    Button("Ton-Protokoll kopieren") {
+                        let v = Bundle.main.infoDictionary?["CFBundleShortVersionString"] as? String ?? ""
+                        let b = Bundle.main.infoDictionary?["CFBundleVersion"] as? String ?? ""
+                        UIPasteboard.general.string = "Spark-App \(v) (\(b)) · Ton\n```\n" + AudioEngine.diary.joined(separator: "\n") + "\n```"
+                    }
+                } footer: {
+                    Text("Bleibt eine Antwort stumm: hier tippen und in den Thread einfügen. Es steht nur drin, wann der Ton startet und wohin er geht.")
+                }
+                Section {
                     Toggle("Freihändig", isOn: $handsFree)
                     Toggle("Ins Wort fallen", isOn: $bargeIn)
                 } header: { Text("Gespräch") } footer: {
