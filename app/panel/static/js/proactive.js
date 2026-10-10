@@ -1,6 +1,6 @@
 // The assistant speaks up by itself (see proactive.py): notes arrive while the page is open and are
 // spoken like a reminder; the "Ich" window page "Von selbst" sets everything, all off by default.
-let PRO_ON=false,HALIVE_ON=false,HALOUD_ON=false,HAEV_ON=false,HAVOICE_ON=false,HACAM_ON=false;
+let PRO_ON=false,S1MAIL_ON=false,HALIVE_ON=false,HALOUD_ON=false,HAEV_ON=false,HAVOICE_ON=false,HACAM_ON=false;
 const pro={since:Date.now()-10*60e3,seen:new Set(),busy:false,greeted:0,
   on(){return PRO_ON&&!!PROFILE&&!!S.pro_on},
   async poll(){if(!this.on()||document.hidden||this.busy)return;this.busy=true;
@@ -69,7 +69,7 @@ async function showPro(){const box=$('probox');if(!PROFILE||!PRO_ON){box.innerHT
 // extra fields under a kind, and their handlers
 const PROX={
   pro_events:()=>`<span style="display:block;margin-top:4px">${t('Wie lange vorher: ','How long before: ')}<select id="prolead" style="width:auto">${[5,10,15,20,30,45,60].map(n=>`<option value="${n}"${n===S.pro_lead?' selected':''}>${n} ${t('Minuten','minutes')}</option>`).join('')}</select></span>`,
-  pro_mail:()=>`<input id="promailfrom" style="margin-top:4px" placeholder="${t('z. B. chef@firma.de, Schule, Anna','e.g. boss@company.com, school, Anna')}" value="${esc(S.pro_mail_from||'')}" autocomplete="off"><span style="display:block">${t('Absender, mit Komma getrennt; ein Teil der Adresse oder des Namens genügt.','Senders, separated by commas; part of the address or name is enough.')}</span>`,
+  pro_mail:()=>`<input id="promailfrom" style="margin-top:4px" placeholder="${t('z. B. chef@firma.de, Schule, Anna','e.g. boss@company.com, school, Anna')}" value="${esc(S.pro_mail_from||'')}" autocomplete="off"><span style="display:block">${t('Absender, mit Komma getrennt; ein Teil der Adresse oder des Namens genügt.','Senders, separated by commas; part of the address or name is enough.')}</span>`+(S1MAIL_ON?proHaSub('pro_mail_smart',t('Wichtige Mails erkennen','Recognize important mail'),t('Auch Mails von anderen Absendern, wenn die Einordnung sie nach Absender und Betreff mit mindestens 80 % für wichtig hält. Der Mailtext wird dafür nicht gelesen.','Also mail from other senders when the classification rates it important by sender and subject with at least 80 %. The mail text is not read for it.')):''),
   pro_weather:()=>`<span class="two2" style="margin-top:4px"><input id="proplace" placeholder="${t('Ort, z. B. Köln','Place, e.g. Cologne')}" value="${esc(S.pro_place||'')}" autocomplete="off"><input type="time" id="proweatherat" value="${esc(S.pro_weather_at||'18:00')}"></span>`,
   pro_ha:st=>!st.has.ha?'':proHaSubs(st)+`<ul class="facts small" style="margin-top:6px">${st.rules.map(r=>`<li><span>${esc(r.line)}${r.text?`<br><small class="mut">„${esc(r.text)}“</small>`:''}${r.src==='voice'?` <small class="mut">${t('(per Sprache)','(by voice)')}</small>`:''}</span><span><button class="b" type="button" ${onAttr('proRuleEdit',r.id)}>${t('Bearbeiten','Edit')}</button><button class="b" type="button" ${onAttr('proRuleDel',r.id)}>${t('Löschen','Delete')}</button></span></li>`).join('')||`<li class="mut">${t('Noch keine Regel.','No rule yet.')}</li>`}</ul>
     ${proLive(st)}

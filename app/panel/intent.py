@@ -13,7 +13,8 @@ Used for (chat_turn.prepare()):
   4. whether an answer made from outside text stays in this turn (refers_back()): a new request of
      the person's own that does not point back at it leaves it out, and with it the lock (LOCKS);
   5. with chat.route_model "on", a question no rule recognizes is put to the model once as a pick
-     from INTENT_NAMES (ask_model()); its pick can only narrow as well, never unlock. With "lean" it
+     from INTENT_NAMES (ask_model()); its pick can only narrow as well, never unlock. With "systemone"
+     the pick is one choice with probabilities (systemone.py), used only from 80 %. With "lean" it
      gets only LEAN (web search, Wikipedia, earlier conversations, noting something): a shorter, faster prompt.
 
 The rule table is checked sentence by sentence in tests/test_intent.py (no model, no clock)."""
@@ -297,10 +298,60 @@ ASK_TIMEOUT = 4
 CACHED_WAIT = 0.3
 
 
-async def ask_model(ccfg, text):
+# chat.route_model "systemone" (systemone.py): one choice with probabilities; the panel narrows only from
+# systemone.ROUTE_MIN on. What each group is for, as the question names it (fixed words, never outside text).
+GROUP_SAYS = {
+    "smarthome": "Licht, Heizung, Geräte oder Zustände im Haus schalten oder abfragen",
+    "kalender": "Termine ansehen oder eintragen, Tagesüberblick",
+    "mail": "E-Mails lesen, suchen, aufräumen oder entwerfen",
+    "websuche": "aktuelle Dinge im Internet nachsehen (Nachrichten, Preise, Öffnungszeiten, Ergebnisse)",
+    "erinnerung": "Timer oder Erinnerung stellen, ansehen oder löschen",
+    "liste": "Einkaufsliste oder Aufgaben ansehen oder ändern",
+    "wetter": "Wetter oder Vorhersage",
+    "bahn": "Bus- und Bahnverbindungen, Abfahrten, Verspätungen",
+    "paket": "Pakete und Sendungen verfolgen",
+    "kontakt": "Telefonnummer, Adresse oder Geburtstag aus den Kontakten",
+    "gedaechtnis": "sich etwas merken, vergessen oder an frühere Gespräche erinnern",
+    "dokument": "in eigenen Dokumenten, Verträgen oder Unterlagen nachsehen",
+    "nachricht": "Nachricht an andere Personen im Haus schicken, lesen oder durchsagen",
+    "agent": "Agent-Aufgaben oder Routinen anlegen, ansehen, planen",
+    "iphone": "etwas auf dem iPhone auslösen (Kurzbefehl)",
+    "spark": "Fragen zum Spark selbst, seinen Einstellungen und Funktionen",
+}
+
+
+async def ask_systemone(ccfg, text, info=None):
+    """chat.route_model "systemone": the pick from INTENT_NAMES as one choice of qwen38's /v1/systemone, only
+    from systemone.ROUTE_MIN on; None for "unklar", too unsure, busy or missing (the turn goes on as without).
+    `info` gets the probability for Logs → Anfragen. Like ask_model, it can only narrow."""
+    import systemone
+    names = list(INTENT_NAMES)   # every group, also one added later (its name when GROUP_SAYS has no words for it)
+    try:
+        ans = await systemone.ask(ccfg, "weiche", str(text or "")[:500],
+                                  systemone.route_question(names, GROUP_SAYS), timeout=ASK_TIMEOUT)
+    except (systemone.Unavailable, ValueError) as e:
+        if info is not None:
+            info["why"] = getattr(e, "why", "Frage ungültig")
+        return None
+    pick, p = systemone.route_pick(ans, names)
+    if info is not None:
+        info.update(p=round(p, 2), raw=(ans.get("absicht") or {}).get("pick"))
+    print(f"weiche: systemone {(ans.get('absicht') or {}).get('pick')} {p:.2f}"
+          + ("" if pick else f" (unter {systemone.ROUTE_MIN:.2f} oder unklar: keine Eingrenzung)"), flush=True)
+    return pick
+
+
+async def ask_model(ccfg, text, info=None, uid=None):
     """The model's pick from INTENT_NAMES for a message the rules did not recognize, or None.
     Only the person's own message goes in (at most 500 characters); anything else that comes back
-    is None. The pick can only narrow the tools (narrow()), it never allows or starts anything."""
+    is None. The pick can only narrow the tools (narrow()), it never allows or starts anything.
+    With chat.route_model "systemone" (and Einordnung allowed for the profile) the pick comes from
+    ask_systemone instead; not allowed there means no pick at all."""
+    if ccfg.get("route_model") == "systemone":
+        import features
+        if not uid or not features.allowed("einordnung", uid, ccfg):
+            return None
+        return await ask_systemone(ccfg, text, info)
     if not ccfg.get("llm_url"):
         return None
     headers = {"Authorization": f"Bearer {ccfg['llm_key']}"} if ccfg.get("llm_key") else {}

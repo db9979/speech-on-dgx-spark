@@ -133,8 +133,9 @@ async def prepare(request):
     # chat.route_model "on": the model's pick for a question no rule recognizes starts right here and runs while
     # the panel prepares the rest of the turn (plan „Anfrage aufteilen“ 2); it is waited for further down
     pick_state = None   # Logs → Anfragen: what became of the model's pick
-    pick_task = asyncio.create_task(intent.ask_model(ccfg, ask0)) \
-        if route_on and ask0 and not route.names and ccfg.get("route_model") == "on" else None
+    pick_info = {}      # with chat.route_model "systemone": its probability
+    pick_task = asyncio.create_task(intent.ask_model(ccfg, ask0, pick_info, me0["id"])) \
+        if route_on and ask0 and not route.names and ccfg.get("route_model") in ("on", "systemone") else None
     if carry == "outside" and route_on and intent.wants_own(route, ask0):
         carry = None
         print("weiche: answer from outside text before; this message asks for", route.label(),
@@ -557,7 +558,8 @@ async def prepare(request):
             pick = await intent.pick_in_time(pick_task, intent.CACHED_WAIT if cache_on else intent.ASK_TIMEOUT + 1)
             if pick:
                 route = intent.Route([pick], {pick: "Modell"})
-            pick_state = "gewählt" if pick else "zu spät" if pick_task.cancelled() else "keine"
+            pick_state = "gewählt" if pick else "zu spät" if pick_task.cancelled() else \
+                "unsicher" if pick_info.get("p") is not None else "keine"
         tools = intent.narrow(route, tools)
         if ccfg.get("route_model") == "lean" and not route.names and not chat.needed(
                 messages[-1]["content"] if messages[-1]["role"] == "user" else "",

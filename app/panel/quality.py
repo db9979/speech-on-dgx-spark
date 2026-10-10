@@ -252,7 +252,23 @@ async def _run_case(c, ccfg, headers, model, case):
     if check_on and (need or called):
         answer, held = heard(answer, [m.get("content") for m in msgs])
     return {"answer": answer, "raw": raw, "held": held, "retried": retried, "tools": called,
-            "seconds": round(time.time() - t0, 1)}
+            "seconds": round(time.time() - t0, 1), "results": [m.get("content") for m in msgs if m.get("role") == "tool"]}
+
+
+async def judge(ccfg, case, got):
+    """Einordnung im Qualitätstest (chat.systemone_quality): qwen38's /v1/systemone rates the answer, a second
+    opinion beside the fixed checks; it never passes or fails a case. {"passt": 0..2, "erfunden": 0..1} or None."""
+    import features
+    import systemone
+    if not features.admin_on("einordnungtest", ccfg):
+        return None
+    res = "\n".join(str(x or "")[:800] for x in (got.get("results") or [])[:4]) or "(keine)"
+    state = f"Frage: {case['q']}\nWerkzeugergebnisse:\n{res}\nAntwort: {got.get('answer') or ''}"
+    try:
+        ans = await systemone.ask(ccfg, "qualitaet", state, systemone.quality_questions(), timeout=30)
+    except systemone.Unavailable:
+        return None
+    return {"passt": round(ans["passt"]["score"], 2), "erfunden": round(ans["erfunden"]["yes"], 2)}
 
 
 def heard(answer, given):
@@ -347,10 +363,11 @@ async def run(reason="manual"):
                     if not why or attempt:
                         break
                     first = {"why": why, "answer": got["answer"][:300], "tools": got["tools"]}
+                rated = await judge(ccfg, case, got) if got.get("answer") else None
                 out.append({"id": case["id"], "q": case["q"], "answer": got["answer"][:600], "tools": got["tools"],
                             "seconds": got["seconds"], "ok": not why, "why": why, "flaky": bool(first and not why),
                             "first": first, "held": got["held"], "retried": got["retried"],
-                            "raw": got["raw"][:600] if got["held"] else ""})
+                            "raw": got["raw"][:600] if got["held"] else "", **({"judge": rated} if rated else {})})
                 _progress["done"] = len(out)
         res = {"t": int(time.time()), "reason": reason, "model": model, "seconds": round(time.time() - t0),
                "temperature": float(ccfg.get("temperature", 0.3)),

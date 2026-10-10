@@ -740,30 +740,75 @@ async def check_follow(uid, p, now):
 
 
 # ---------------------------------------------------------------- 6: mail from chosen senders
+# "Wichtige Mails erkennen" (pro_mail_smart, chat.systemone_mail): a mail from a sender not on the list counts
+# when qwen38's /v1/systemone says yes to WICHTIG with at least systemone.WICHTIG_MIN, judged from sender and
+# subject only (never the text); at most SMART_PER_CHECK such questions per check, only while nobody speaks
+SMART_PER_CHECK = 5
+
+
+def mail_smart(uid, p):
+    return p.get("pro_mail_smart") is True and features.allowed("mailwichtig", uid)
+
+
+async def important(h):
+    """The probability that a mail is important to its reader, from its sender and subject; None when
+    qwen38 cannot answer (asked again at the next check)."""
+    import systemone
+    await vorrang.quiet("Wichtige Mail")
+    def one(v):     # a header stays one line of data
+        return re.sub(r"\s+", " ", str(v or ""))[:300]
+    state = f"Absender: {one(h['from'])}\nBetreff: {one(h['subject']) or '(ohne Betreff)'}"
+    try:
+        ans = await systemone.ask(ccfg(), "wichtig", state, systemone.wichtig_question(), timeout=20)
+    except systemone.Unavailable:
+        return None
+    return ans["wichtig"]["yes"]
+
+
 async def check_mail(uid, p):
     import mail
+    import systemone
     senders = [s.strip().lower() for s in str(p.get("pro_mail_from", "")).split(",") if len(s.strip()) > 2]
+    smart = mail_smart(uid, p)
     st = state(uid)
-    if not senders or not ccfg().get("mail", False) or not mail.get(uid)["accounts"]:
+    if not (senders or smart) or not ccfg().get("mail", False) or not mail.get(uid)["accounts"]:
         return
     if time.time() - st.get("mail_checked", 0) < MAIL_EVERY - 5:
         return
     first = not st.get("mail_since")
-    _mut(uid, lambda s: s.update(mail_checked=time.time(), mail_since=s.get("mail_since") or time.time()))
+    first_smart = smart and not st.get("mail_smart_since")
+    now = time.time()
+    _mut(uid, lambda s: s.update(mail_checked=now, mail_since=s.get("mail_since") or now,
+                                 mail_smart_since=(s.get("mail_smart_since") or now) if smart else 0))
     if first:
         return      # only mails that come after switching it on
     since = st["mail_since"]
+    smart_since = now if first_smart else st.get("mail_smart_since") or now
     found, _, _ = await asyncio.to_thread(mail.find, uid, "", 2, True, 20)
     seen = set(st.get("mail_seen", []))
+    asked = 0
     for aid, u, h in reversed(found):
         key = f"{aid}:{u}"
-        if key in seen or h["date"].timestamp() < since or not any(s in h["from"].lower() for s in senders):
+        if key in seen or h["date"].timestamp() < since:
             continue
+        why = "Absender auf deiner Liste" if any(s in h["from"].lower() for s in senders) else ""
+        if not why:
+            if not smart or h["date"].timestamp() < smart_since or asked >= SMART_PER_CHECK:
+                continue
+            asked += 1
+            yes = await important(h)
+            if yes is None:
+                break       # busy or missing: these mails are asked about at the next check
+            if yes < systemone.WICHTIG_MIN:
+                seen.add(key)
+                _mut(uid, lambda s, key=key: s.update(mail_seen=(s.get("mail_seen", []) + [key])[-200:]))
+                continue
+            why = f"Einordnung: wichtig ({int(round(yes * 100))} %)"
         seen.add(key)
         _mut(uid, lambda s, key=key: s.update(mail_seen=(s.get("mail_seen", []) + [key])[-200:]))
         who = h["from"].split(" <")[0].strip() or h["from"]
         await deliver(uid, "mail", f"Neue Mail von {who}: {(h['subject'] or 'ohne Betreff')[:120]}.",
-                      why="Absender auf deiner Liste", data=f"{h['from']}: {h['subject']}"[:300], mail=True)
+                      why=why, data=f"{h['from']}: {h['subject']}"[:300], mail=True)
 
 
 # ---------------------------------------------------------------- 8: weather for tomorrow

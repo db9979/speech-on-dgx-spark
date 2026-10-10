@@ -71,6 +71,13 @@ FEATURES = (
       parent="hilfe", me="setbox", guide="hilfevorschlag"),
     F("hilfeseite", "Frag Spark auf jeder Seite", "Ask Spark on every page", "talk", ("spark_drawer",), "spark_help",
       parent="hilfe", me="setbox", guide="hilfeseite"),
+    # qwen38's /v1/systemone (systemone.py): probabilities instead of words, the panel decides with fixed thresholds
+    F("einordnung", "Einordnung mit Wahrscheinlichkeit", "Classification with probabilities", "talk", ("systemone",),
+      "systemone_on", me="setbox", guide="einordnung"),
+    F("einordnungpost", "Einordnung beim Postfach aufräumen", "Classification when tidying the inbox", "talk",
+      ("systemone_tidy", "mail_tidy", "mail"), "systemone_on", parent="einordnung", me="setbox", guide="einordnungpost"),
+    F("einordnungtest", "Einordnung im Qualitätstest", "Classification in the quality test", "talk", ("systemone_quality",),
+      parent="einordnung", guide="einordnungtest"),
     F("vorrang", "Vorrang für Personen", "Priority for people", "talk", ("person_priority",), guide="vorrang"),
     # knowledge and memory
     F("memory", "Gedächtnis", "Memory", "data", ("memory",), me="factbox", guide="memory"),
@@ -105,6 +112,8 @@ FEATURES = (
       "pro_ha_events", parent="proactive", me="probox", guide="haevent"),
     F("havoice", "Smart-Home-Regel per Sprache", "Smart home rule by voice", "day", ("ha_voice_rules", "homeassistant"),
       "pro_ha_voice", parent="proactive", me="probox", guide="havoice"),
+    F("mailwichtig", "Wichtige Mails erkennen", "Recognize important mail", "day", ("systemone_mail", "systemone", "mail"),
+      "pro_mail_smart", parent="proactive", me="probox", guide="mailwichtig"),
     F("hacam", "Kamerabild beschreiben", "Describe a camera picture", "day", ("ha_camera", "homeassistant"),
       "pro_ha_cam", parent="proactive", me="probox", guide="hacam"),
     F("reminders", "Timer und Erinnerungen", "Timers and reminders", "day", ("reminders",), guests=True, guide="reminders"),

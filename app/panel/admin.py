@@ -640,7 +640,8 @@ def validate(new):
         raise HTTPException(400, "self_echo_mode: text or pause")
     for k in ("answer_check", "tool_thinking", "learn_fixes", "own_style", "follow_up", "no_self_echo", "images",
               "routing", "direct_read", "prompt_cache", "doc_pictures", "doc_semantic", "doc_originals", "doc_shared", "doc_brief", "remarkable", "remarkable_send", "remarkable_fresh", "my_status", "person_priority",
-              "face_life", "ha_live", "ha_loud", "ha_events", "ha_voice_rules", "ha_camera"):
+              "face_life", "ha_live", "ha_loud", "ha_events", "ha_voice_rules", "ha_camera",
+              "systemone", "systemone_tidy", "systemone_mail", "systemone_quality"):
         if not isinstance(ch.get(k, False), bool):
             raise HTTPException(400, f"chat {k} must be true or false")
     for k in ("doc_night_from", "doc_night_to"):
@@ -660,8 +661,8 @@ def validate(new):
     q = ch.get("doc_quota_mb", 500)
     if not isinstance(q, int) or isinstance(q, bool) or not 50 <= q <= 5000:
         raise HTTPException(400, "doc_quota_mb: 50 to 5000")
-    if ch.get("route_model", "off") not in ("off", "on", "lean"):
-        raise HTTPException(400, "route_model: off, on or lean")
+    if ch.get("route_model", "off") not in ("off", "on", "lean", "systemone"):
+        raise HTTPException(400, "route_model: off, on, lean or systemone")
     for sec in ("asr", "tts"):
         if not MODEL_ID.fullmatch(str(new[sec]["model"])):
             raise HTTPException(400, f"{sec}: only Qwen's own speech models (Qwen/Qwen3-ASR-... or Qwen/Qwen3-TTS-...)")
