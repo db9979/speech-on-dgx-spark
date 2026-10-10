@@ -31,6 +31,7 @@ All options for running without questions (`--mode api --asr 1.7b --tts 0.6b --y
 
 <!-- New version: add one line at the top here and in CHANGELOG.md, drop the oldest line here (keep 10). Details go to docs/de and docs/en, not into this README. -->
 
+- **V01.0.248** Features: "Panel areas in the iPhone app" sits below the iPhone app switch (page stays short)
 - **V01.0.247** iPhone app takes over the panel, step 3: "Manage the Spark" with admin password and code, monitoring, logs with "Copy for thread", checks
 - **V01.0.246** iPhone app takes over the panel, steps 1–2: "Open in the panel", panel areas with their own switch, "My day" (appointments, reminders, memory, conversation switches)
 - **V01.0.245** Document card and tags (admin and profile switch, off): in quiet minutes the language model notes title, kind, sender, deadline, number and keywords of each document; the assistant sees these lines instead of file names and searches by tag or kind, tags filter Ich → Dokumente (own ones win), "Belongs with", "Remind" before deadlines only on click; document search always stays in a narrowed tool set, more rule words (insurance, manual, findings …)
@@ -40,7 +41,6 @@ All options for running without questions (`--mode api --asr 1.7b --tts 0.6b --y
 - **V01.0.241** The small picture before each answer in the history follows the chosen face: a comic head instead of the robot when "Comic" is picked
 - **V01.0.240** Read long documents at night (admin switch below Read pictures and scans, off): by day only documents up to 10 pages in quiet moments, long ones only after 30 minutes without a question or in the night window (default 01:00–06:00), up to 400 extra pages at night; Ich → Dokumente shows "long document, read at night from 01:00"
 - **V01.0.239** Pebble sound stutters less: the watch starts after 1.5 s in its buffer (was 0.75 s) and after running dry waits until enough is back (one pause instead of scraps); the "watch: zeit" log line counts the stalls (watch app 1.5.0)
-- **V01.0.238** Complete scans: scanned PDF pages are rendered as whole pages (pypdfium2 4.30.0) instead of taking the biggest picture, so no pages get lost; up to 300 scanned pages per document (100 a day, then the next day); limits and skipped pages are named on the document; "Read again" from the kept original (keeps place, "For everyone" and search); a shortened chat attachment from the app says it is only the beginning
 
 All versions: [CHANGELOG.md](CHANGELOG.md)
 

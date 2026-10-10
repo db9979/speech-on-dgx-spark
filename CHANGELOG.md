@@ -2,6 +2,7 @@
 
 Every version in one line, newest first (taken from the commit messages, so some lines are German, some English). Older entries have no version number.
 
+- **V01.0.248** · 2026-10-10 · Funktionen: „Panel-Bereiche in der iPhone-App“ steht unter dem Schalter der iPhone-App (Seite bleibt kurz)
 - **V01.0.247** · 2026-10-10 · iPhone-App übernimmt das Panel, Stufe 3: „Spark verwalten“ mit Admin-Passwort und Code, Monitoring, Logs mit „Kopieren für Thread“, Prüfen
 - **V01.0.246** · 2026-10-10 · iPhone-App übernimmt das Panel, Stufe 1–2: „Im Panel öffnen“, Panel-Bereiche mit eigenem Schalter, „Mein Alltag“ (Termine, Erinnerungen, Gedächtnis, Gesprächsschalter)
 - **V01.0.245** · 2026-10-09 · Steckbrief und Tags (Admin- und Profil-Schalter, aus): das Sprachmodell notiert in ruhigen Minuten Titel, Art, Absender, Frist, Nummer und Schlagwörter jedes Dokuments; der Assistent sieht diese Zeilen statt Dateinamen und sucht nach Tag oder Art, Tags als Filter unter Ich → Dokumente (eigene haben Vorrang), „Dazu gehören“, „Erinnern“ vor Fristen nur auf Klick; Dokumentsuche bleibt bei eingegrenzten Werkzeugen immer dabei, mehr Stichwörter (Versicherung, Anleitung, Befund …)
