@@ -89,6 +89,8 @@ New rights or hints go into `chat_turn.py`, new tools into `chat_tools.py` (defi
 
 Since V01.0.207 all pages under Settings are built the same way (`index.html`, style in `app.css`). New settings use only these parts:
 
+- **Row from JavaScript** (since V01.0.270): `setRow(l, h, ctl, {why, extra})` and `tglIn(attrs, on)` in `base.js` build every row, whether Ich → Gespräch, presets, weather/contacts, speaking up or speakers. `why` locks the row visibly with a reason ("Switched off by the admin") instead of hiding it.
+
 - **Header**: `<h2 class="pt">` and below it `<div class="pintro">` with one sentence on what the page controls.
 - **Section**: `<h3 class="sec">Name <span>hint</span></h3>`.
 - **Row**: `<div class="setrow"><div class="lbl"><b>Name</b><span>one sentence</span></div>control</div>`, the control on the right: switch `.tgl` (no `label.chk` check boxes), short number `input.num` in `.ctl` with `.unit`, address `input.wide`, choice `select.wide`; several fields in `.ctl.full`. Text areas come after the row.

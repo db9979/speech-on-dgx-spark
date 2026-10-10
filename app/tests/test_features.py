@@ -251,5 +251,37 @@ class Matrix(unittest.TestCase):
         self.assertIn("features-seen.json", __import__("backup").STATE_FILES)
 
 
+class Presets(unittest.TestCase):
+    """Phase 4 (V01.0.270): presets for new profiles, never a preset that fakes a function switch."""
+    def test_new_profiles_get_what_the_admin_chose(self):
+        self.assertEqual(ADMIN.put("/api/admin/features/weather/new", json={"on": True}).status_code, 200)
+        try:
+            _, uid = profile("FeaDora")
+            self.assertIs(profiles.settings(uid).get("wx_on"), True)
+            row = next(f for f in ADMIN.get("/api/admin/features").json()["features"] if f["key"] == "weather")
+            self.assertIs(row["new"], True)
+        finally:
+            ADMIN.put("/api/admin/features/weather/new", json={"on": False})
+        _, uid = profile("FeaEmil")
+        self.assertIsNone(profiles.settings(uid).get("wx_on"))
+        self.assertEqual(ADMIN.put("/api/admin/features/memory/new", json={"on": True}).status_code, 404)   # no own switch
+        self.assertEqual(TestClient(panel.app).put("/api/admin/features/weather/new", json={"on": True}).status_code, 401)
+
+    def test_config_check(self):
+        cfg = ADMIN.get("/api/config").json()
+        for bad in (["nothing"], ["memory"], ["weather", "weather"], "weather"):
+            cfg["chat"]["new_profile_on"] = bad
+            self.assertEqual(ADMIN.put("/api/config", json=cfg).status_code, 400, bad)
+
+    def test_presets_never_switch_a_function_on(self):
+        _, uid = profile("FeaFrida")
+        chat = {"defaults": {"route": True, "wx_on": True, "length": "short", "echo": False}}
+        eff = profiles.effective(uid, chat)
+        self.assertIs(eff["route"], False)          # the Wer-darf-was switch, not a preset
+        self.assertIs(eff["wx_on"], False)
+        self.assertEqual(eff["length"], "short")
+        self.assertIs(eff["echo"], False)           # no function switch of its own: a preset is fine
+
+
 if __name__ == "__main__":
     unittest.main()

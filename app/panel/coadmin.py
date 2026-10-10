@@ -57,6 +57,7 @@ MANAGER = tuple((frozenset(m), re.compile(p)) for m, p in (
     (("GET",), r"/api/admin/rooms"), (("GET",), r"/api/admin/wissen"), (("GET",), r"/api/admin/protocol"),
     (("GET", "PUT"), r"/api/admin/switches"), (("POST",), r"/api/admin/elevate/keep"),
     (("GET",), r"/api/admin/features"), (("PUT",), rf"/api/admin/features/[a-z0-9_]+/profiles/{_P}"),
+    (("PUT",), r"/api/admin/features/[a-z0-9_]+/new"),
     (("GET", "POST"), r"/api/admin/profiles"), (("GET", "PUT", "DELETE"), rf"/api/admin/profiles/{_P}"),
     (("PUT",), rf"/api/admin/profiles/{_P}/call"), (("DELETE",), rf"/api/admin/profiles/{_P}/mfa"),
     (("POST",), r"/api/admin/devices"), (("PUT", "DELETE"), rf"/api/admin/devices/{_D}"),

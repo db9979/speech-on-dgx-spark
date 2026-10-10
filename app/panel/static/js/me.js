@@ -305,9 +305,23 @@ async function openMe(tab){$('profmsg').textContent='';$('profmodal').style.disp
   $('setscope').textContent=GATE?'':PROFILE?t('Einstellungen gelten auf jedem Gerät dieses Profils; „Hey Spark“ stellt jedes Gerät selbst ein.','Settings apply on every device of this profile; "Hey Spark" is set per device.'):isGuest()?t('Als Gast gelten die Vorgaben des Admins. Mit einem Profil kannst du Einstellungen ändern, und der Assistent merkt sich Dinge nur für dich.','As a guest the admin\'s defaults apply. With a profile you can change settings, and the assistant remembers things just for you.'):t('Als Gast gelten die Einstellungen nur in diesem Browser. Mit einem Profil merkt sich der Assistent Dinge nur für dich.','As a guest the settings apply only in this browser. With a profile the assistant remembers things just for you.');
   $('proflogout').style.display=PROFILE?'':'none';$('profclose').style.display=GATE?'none':'';
   if(!GATE&&!isGuest())renderSet($('setform'),S,saveSet);
-  if(PROFILE){try{await showFacts();await showDocs();await showVoice();await showCal();await showMail();await showMailTidy().catch(()=>{});await showHa();await showSecurity();await showToolLog();await showPro().catch(()=>{});await showExtras();showRoom();await showPush().catch(()=>{});showOver()}catch{setProfile(null);openMe('loginbox')}return}
+  if(PROFILE){try{await showFacts();await showDocs();await showVoice();await showCal();await showMail();await showMailTidy().catch(()=>{});await showHa();await showSecurity();await showToolLog();await showPro().catch(()=>{});await showExtras();showRoom();await showPush().catch(()=>{});showOver();loadFeats().then(()=>{meLocked($('overbox'));meLocked($('setbox'))})}catch{setProfile(null);openMe('loginbox')}return}
   $('profpin').value='';if(tab==='loginbox')setTimeout(()=>$($('profuser').value?'profpin':'profuser').focus(),50)}
 window.openMe=openMe;
+// Ich says what the admin has not switched on instead of hiding it without a word (plan „Vereinheitlichen“ Phase 4,
+// V01.0.270): the names with the reason, for an admin a jump to Funktionen → Wer darf was. From /api/features.
+let FEATS=null;
+async function loadFeats(){if(!PROFILE){FEATS=null;return}try{FEATS=await (await api('/api/features')).json()}catch{FEATS=null}}
+function meLocked(box){if(!box)return;let el=box.querySelector(':scope>.melocked');
+  const off=(FEATS?FEATS.features:[]).filter(f=>f.why==='spark'&&f.me&&!f.parent);
+  if(!off.length){if(el)el.remove();return}
+  if(!el){el=document.createElement('div');el.className='melocked';box.appendChild(el)}
+  el.textContent='';const h=document.createElement('div');h.className='mgrp';h.textContent=t('Vom Admin nicht eingeschaltet','Not switched on by the admin');
+  const p=document.createElement('p');p.className='fh';
+  p.textContent=off.map(f=>f.name[L==='en'?1:0]).join(', ')+'. '+(ADMIN?'':t('Frag den Admin, wenn du etwas davon nutzen möchtest.','Ask the admin if you would like to use one of them.'));
+  el.append(h,p);
+  if(ADMIN){const b=document.createElement('button');b.type='button';b.className='b';b.textContent=t('Wer darf was','Who may do what');
+    b.onclick=()=>{if(window.closeProf)closeProf();goSec('who')};el.appendChild(b)}}
 $('profbtn').onclick=()=>openMe(PHONE.matches?'list':meLast);
 $('navme').onclick=()=>openMe(meLast);   // phones: the list of pages; else the last page (first time: Überblick)
 $('profuser').onkeydown=e=>{if(e.key==='Enter')$('profpin').focus()};
@@ -326,8 +340,8 @@ $('factclear').onclick=async()=>{if(!confirm(t('Alles vergessen, was sich der As
 let ALLOW={};
 const SETF=[
   {g:t('Zuhören','Listening'),k:'hands',type:'bool',l:t('Freihändig','Hands-free'),h:t('Nach der Antwort automatisch wieder zuhören.','Listen again automatically after each answer.')},
-  {k:'follow',type:'sel',prof:1,need:'follow',l:t('Rückfrage ohne Weckwort','Follow-up without wake word'),h:t('Nach der Antwort auf eine gesprochene Frage hört der Assistent noch kurz zu, z. B. für „Und morgen?“. Danach braucht es wieder „Hey Spark“ oder „Sprechen“.','After answering a spoken question the assistant keeps listening briefly, e.g. for "And tomorrow?". After that it needs "Hey Spark" or "Speak" again.'),o:[['0',t('aus','off')],['4',t('4 Sekunden','4 seconds')],['6',t('6 Sekunden','6 seconds')],['8',t('8 Sekunden','8 seconds')],['10',t('10 Sekunden','10 seconds')]]},
-  {k:'echo',type:'bool',prof:1,need:'echo',l:t('Eigene Stimme überhören','Ignore my own voice'),h:t('Hört dieses Gerät, wie ein anderes Gerät gerade antwortet (Lautsprecher, iPhone), nimmt der Assistent das nicht als Frage.','When this device hears another device answering (speaker, iPhone), the assistant does not take it as a question.')},
+  {k:'follow',type:'sel',prof:1,need:'follow',preset:1,l:t('Rückfrage ohne Weckwort','Follow-up without wake word'),h:t('Nach der Antwort auf eine gesprochene Frage hört der Assistent noch kurz zu, z. B. für „Und morgen?“. Danach braucht es wieder „Hey Spark“ oder „Sprechen“.','After answering a spoken question the assistant keeps listening briefly, e.g. for "And tomorrow?". After that it needs "Hey Spark" or "Speak" again.'),o:[['0',t('aus','off')],['4',t('4 Sekunden','4 seconds')],['6',t('6 Sekunden','6 seconds')],['8',t('8 Sekunden','8 seconds')],['10',t('10 Sekunden','10 seconds')]]},
+  {k:'echo',type:'bool',prof:1,need:'echo',preset:1,l:t('Eigene Stimme überhören','Ignore my own voice'),h:t('Hört dieses Gerät, wie ein anderes Gerät gerade antwortet (Lautsprecher, iPhone), nimmt der Assistent das nicht als Frage.','When this device hears another device answering (speaker, iPhone), the assistant does not take it as a question.')},
   {k:'auto',type:'bool',l:t('Bei Stille beenden','Stop on silence'),h:t('Die Aufnahme endet von selbst, wenn du aufhörst zu sprechen.','Recording ends by itself when you stop talking.')},
   {k:'turn',type:'bool',l:t('Natürlicher Sprecherwechsel','Natural turn-taking'),h:t('Erkennt am Satz, ob du fertig bist: Ein fertiger Satz wird sofort beantwortet, bei „und …“, „weil …“ oder „ähm“ wartet der Assistent länger.','Tells from the sentence whether you are done: a finished sentence is answered at once, after "and …", "because …" or "um" the assistant waits longer.')},
   {k:'live',type:'bool',l:t('Live-Transkript','Live transcript'),h:t('Text schon beim Sprechen zeigen; die Antwort kommt etwas früher.','Show the text while you speak; the answer comes a little sooner.')},
@@ -357,7 +371,11 @@ async function voiceList(admin){if(!PROFILE&&!admin)return [];try{const r=await 
   return r.ok?((await r.json()).voices||[]).filter(x=>typeof x==='string'):[]}catch{return []}}
 // Builds the settings rows into el; onchange(key, value) after each change. Returns a getter.
 async function renderSet(el,vals,onchange){const admin=!onchange,voices=await voiceList(admin);const v={...vals};
-  const fields=SETF.filter(f=>(!(f.k==='voice'||f.prof)||admin||PROFILE)&&(!f.need||(!admin&&ALLOW[f.need])));   // guests: default voice, nothing learned; need: only when the admin allows it
+  // guests: default voice, nothing learned. need: a switch of the admin; switched off it stays visible, locked with
+  // the reason (V01.0.270). The admin page presets only what is no function of its own (follow, echo: preset:1);
+  // the profiles' function switches are set under Funktionen → Wer darf was.
+  const fields=SETF.filter(f=>(!(f.k==='voice'||f.prof)||admin||PROFILE)&&(!f.need||!admin||f.preset));
+  const why=f=>!admin&&f.need&&!ALLOW[f.need]?t('Vom Admin ausgeschaltet','Switched off by the admin'):'';
   let prev;el.innerHTML=fields.map(f=>{let ctl;const id='set_'+el.id+'_'+f.k;
     if(f.type==='bool')ctl=`<label class="tgl"><input type="checkbox" id="${id}"${v[f.k]?' checked':''}><i></i></label>`;
     else if(f.type==='sel')ctl=`<select id="${id}">${f.o.map(([a,b])=>`<option value="${a}"${v[f.k]===a?' selected':''}>${esc(b)}</option>`).join('')}</select>`;
@@ -365,7 +383,7 @@ async function renderSet(el,vals,onchange){const admin=!onchange,voices=await vo
     else if(f.type==='voice')ctl=(voices.length?'':'<div>')+`<select id="${id}"><option value="">${t('Standard','Default')}</option>${[...new Set([...voices,...(v.voice?[v.voice]:[])])].map(x=>`<option${x===v.voice?' selected':''}>${esc(x)}</option>`).join('')}</select>`+(voices.length?'':`<div class="fh">${t('Die Sprachausgabe nennt gerade keine Stimmen (startet noch?). Später erneut öffnen.','The speech output lists no voices right now (still starting?). Open again later.')}</div></div>`);
     else ctl=`<input type="range" id="${id}" min="${f.min}" max="${f.max}" step="${f.step}" value="${v[f.k]}"><output id="${id}_o">${Number(v[f.k]).toFixed(2)}×</output>`;
     const head=f.grp!==prev;prev=f.grp;
-    return (head?`${f===fields[0]?'':'</div>'}<div class="setpane${f===fields[0]||admin?' on':''}" data-g="${esc(f.grp)}">${admin?`<h3 class="sec">${esc(f.grp)}</h3>`:''}`:'')+`<div class="setrow"><div class="lbl"><b>${esc(f.l)}</b><span>${esc(f.h)}</span></div>${ctl}</div>`}).join('')+'</div>';
+    return (head?`${f===fields[0]?'':'</div>'}<div class="setpane${f===fields[0]||admin?' on':''}" data-g="${esc(f.grp)}">${admin?`<h3 class="sec">${esc(f.grp)}</h3>`:''}`:'')+setRow(esc(f.l),esc(f.h),ctl,{why:why(f)})}).join('')+'</div>';
   // one group at a time, so the window stays short; the admin page (Vorgaben) shows all groups as sections
   const groups=[...new Set(fields.map(f=>f.grp))],bar=document.createElement('div');bar.className='ptabs';
   if(!admin){

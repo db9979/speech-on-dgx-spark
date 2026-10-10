@@ -874,3 +874,21 @@ class Browser(unittest.TestCase):
             self.run_async(go())
         finally:
             helpers.set_config(weather=True)
+
+    def test_locked_shows_why(self):
+        """Phase 4 (V01.0.270): what the admin switched off stays visible under Ich, locked with the reason, and Ich
+        names the functions the admin has not switched on."""
+        helpers.set_config(routing=False, transit=False)
+        async def go():
+            async with async_playwright() as p:
+                for name, w, h in VIEWS:
+                    br, pg, errors = await self.page(p, w, h)
+                    await pg.evaluate("openMe('setbox')")
+                    await pg.wait_for_selector("#setbox .melocked")
+                    rows = await pg.evaluate("[...document.querySelectorAll('#setform .setrow.locked')].map(r=>r.querySelector('b').textContent+'|'+(r.querySelector('.why')||{}).textContent+'|'+r.querySelector('input,select,textarea').disabled)")
+                    self.assertIn("Gezielte Werkzeugwahl|Vom Admin ausgeschaltet|true", rows, name)
+                    self.assertIn("Bus und Bahn", await pg.inner_text("#setbox .melocked"), name)
+                    self.assertTrue(await pg.is_visible("#setbox .melocked button"), name)   # this browser is admin too
+                    self.assertEqual(errors, [], name)
+                    await br.close()
+        self.run_async(go())

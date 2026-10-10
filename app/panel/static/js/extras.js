@@ -3,7 +3,7 @@
 let WX_ON=false,CON_ON=false,PAR_ON=false;
 const xjson=(m,b)=>({method:m,headers:{'Content-Type':'application/json'},body:JSON.stringify(b||{})});
 const xmsg=(id,x,err)=>{const m=$(id);if(m){m.textContent=x||'';m.className='fh'+(err?' err':'')}};
-const xsw=(k,l,h)=>`<div class="setrow"><div class="lbl"><b>${esc(l)}</b><span>${esc(h)}</span></div><label class="tgl"><input type="checkbox" data-xk="${k}"${S[k]?' checked':''}><i></i></label></div>`;
+const xsw=(k,l,h)=>setRow(esc(l),esc(h),tglIn(`data-xk="${k}"`,S[k]));
 function xbind(box,after){box.querySelectorAll('[data-xk]').forEach(e=>e.onchange=()=>{saveSet(e.dataset.xk,e.checked);if(after)setTimeout(after,400)})}
 // ---------------------------------------------------------------- weather
 async function showWx(){const box=$('wxbox');if(!PROFILE||!WX_ON){box.innerHTML='';return}

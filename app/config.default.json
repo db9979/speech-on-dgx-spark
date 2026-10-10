@@ -160,6 +160,7 @@
     "presence_penalty": 0,
     "tool_words": "",
     "own_style": false,
+    "new_profile_on": [],
     "face": "robot"
   },
   "logs": {

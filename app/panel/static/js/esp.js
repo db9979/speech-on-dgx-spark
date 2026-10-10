@@ -67,8 +67,8 @@ function espBaseHint(b){if(/^https:\/\/[^/]*:31443$/.test(b)||/^https:\/\/\d+\.\
 // Ich → Lautsprecher: the switch, a list of the speakers and the two ways to add one. A speaker opens its
 // own page: Klang, Raum-Modus, Stimme, Firmware, Prüfen, Entfernen. One row per setting, one sentence each.
 let ESP_VIEW=null,ESP_MSG=null;   // view: null = list, 'usb' / 'code' = add a speaker, else the device id
-const espRow=(l,h,ctl='')=>`<div class="setrow"><div class="lbl"><b>${l}</b>${h?`<span>${h}</span>`:''}</div>${ctl}</div>`;
-const espTgl=(id,on)=>`<label class="tgl"><input type="checkbox" id="${id}"${on?' checked':''}><i></i></label>`;
+const espRow=(l,h,ctl='')=>setRow(l,h,ctl);
+const espTgl=(id,on)=>tglIn(`id="${id}"`,on);
 const espSel=(id,opts,val)=>`<select id="${id}">${opts.map(([v,l])=>`<option value="${esc(v)}"${v===val?' selected':''}>${esc(l)}</option>`).join('')}</select>`;
 const espGrp=l=>`<div class="mgrp espgrp">${esc(l)}</div>`;
 const espDate=s=>s?new Date(s*1000).toLocaleString(L==='en'?'en-GB':'de-DE',{day:'2-digit',month:'2-digit',hour:'2-digit',minute:'2-digit'}):'–';

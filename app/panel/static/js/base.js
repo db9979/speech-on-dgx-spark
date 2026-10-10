@@ -99,6 +99,12 @@ document.querySelectorAll('nav button[data-s]').forEach(b=>b.onclick=()=>{const 
   document.querySelector('main').classList.toggle('sublist',!direct&&NARROW()&&GROUPS[g].length>1)});
 window.goSec=s=>{if(s==='sys'){goCfg('upd');return}   // update and backups moved to Einstellungen (V01.0.207)
   goDirect=true;const g=Object.keys(GROUPS).find(k=>GROUPS[k].some(x=>x[0]===s));lastSec[g]=s;document.querySelector(`nav button[data-s=${g}]`).click()};
+// One row for every setting (plan „Vereinheitlichen“ Phase 4, V01.0.270): label, one sentence, the control on the
+// right. l, h and ctl are HTML (callers escape). A locked row stays visible with its reason (o.why, from the panel's
+// rules in features.py, never from the model) and a disabled control; o.extra goes below the sentence.
+const setRow=(l,h,ctl,o={})=>{if(o.why)ctl=ctl.replace(/<(input|select|textarea)\b/g,'<$1 disabled');
+  return `<div class="setrow${o.why?' locked':''}"><div class="lbl"><b>${l}</b>${h||o.why?`<span>${h||''}${o.why?`<em class="why">${esc(o.why)}</em>`:''}</span>`:''}${o.extra||''}</div>${ctl}</div>`};
+const tglIn=(attrs,on)=>`<label class="tgl"><input type="checkbox" ${attrs}${on?' checked':''}><i></i></label>`;
 const esc=s=>String(s??'').replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
 // for a value inside onclick="f('…')": a JavaScript string first, then HTML (a name with ' or \ stays text)
 const escq=s=>esc(JSON.stringify(String(s??'')).slice(1,-1).replace(/'/g,"\\'"));

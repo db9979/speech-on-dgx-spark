@@ -103,9 +103,12 @@ async def admin_add_profile(request: Request):
     if not profiles.valid_pin(pin):
         raise HTTPException(400, "PIN: 4 to 64 characters without spaces")
     try:
-        return {"id": profiles.add_user(name, pin)}
+        uid = profiles.add_user(name, pin)
     except ValueError as e:
         raise HTTPException(409, str(e))
+    import features
+    features.new_profile(uid)   # the functions the admin switches on for every new profile (Wer darf was)
+    return {"id": uid}
 
 
 def _no_admin_profile(request, *uids):
@@ -366,6 +369,11 @@ def validate(new):
         raise HTTPException(400, "esp32_url: http(s)://name or http(s)://name:port, without a path")
     if not re.fullmatch(r"[\w.\-]+/[\w.\-]+", ch.get("esp32_repo") or "x/x"):
         raise HTTPException(400, "esp32_repo: owner/name")
+    import features
+    npo = ch.get("new_profile_on", [])
+    if not (isinstance(npo, list) and len(npo) <= len(features.FEATURES) and len(set(npo)) == len(npo)
+            and all(isinstance(k, str) and k in features.BY_KEY and features.BY_KEY[k].profile for k in npo)):
+        raise HTTPException(400, "new_profile_on: functions with an own switch, each once")
     if not isinstance(ch.get("defaults"), dict) or profiles.clean_settings(ch["defaults"]) != ch["defaults"]:
         raise HTTPException(400, "chat defaults: invalid value")
     if ch.get("speaker_strictness") not in speakers.STRICTNESS:

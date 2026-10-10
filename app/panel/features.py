@@ -124,6 +124,7 @@ FEATURES = (
     F("mfa", "Zweiter Anmeldeschritt", "Second sign-in step", "sec", ("mfa",), me="secbox", guide="mfa"),
 )
 BY_KEY = {f.key: f for f in FEATURES}
+profiles.NO_PRESET.update(f.profile for f in FEATURES if f.profile)
 
 # Spark-wide conditions besides the switches (an address that must be set), registered by the module
 # that knows them, so this file imports none of them: key -> function(chat config) -> bool
@@ -254,6 +255,13 @@ def _seen(c):
     return d
 
 
+def new_profile(uid):
+    """A new profile gets the functions the admin chose for new profiles (chat.new_profile_on)."""
+    keys = [k for k in chat_cfg().get("new_profile_on", []) if k in BY_KEY and BY_KEY[k].profile]
+    if keys:
+        profiles.save_settings(uid, {BY_KEY[k].profile: True for k in keys})
+
+
 def matrix():
     c = chat_cfg()
     seen = _seen(c)
@@ -262,11 +270,11 @@ def matrix():
     import admin
     import coadmin
     switchable = set(admin.app_switches())   # what /api/admin/switches may change (not public, mfa, iphone …)
-    rows = []
+    rows, new = [], set(c.get("new_profile_on", []))
     for f in FEATURES:
         rows.append({"key": f.key, "name": [f.de, f.en], "group": f.group, "switch": f.admin[0], "spark": admin_on(f.key, c),
                      "own": _switch(c, f.admin[0]), "switchable": f.admin[0] in switchable, "parent": f.parent or None, "guests": f.guests, "seen": f.key in seen,
-                     "profile": f.profile or None, "guide": f.guide,
+                     "profile": f.profile or None, "guide": f.guide, "new": f.key in new if f.profile else None,
                      "cells": {u["id"]: s[u["id"]].get(f.profile) is True for u in users} if f.profile else None})
     return {"groups": [{"key": k, "name": [de, en]} for k, de, en in GROUPS], "features": rows,
             "profiles": [{"id": u["id"], "name": u["name"], "role": coadmin.role(u["id"]) if coadmin.on() else ""} for u in users],
@@ -304,3 +312,34 @@ async def admin_feature_profile(key: str, uid: str, request: Request):
     guard.log("feature_profile", uid=uid, by=by,
               detail=f"{f.de} für {profiles.by_id(uid)['name']} {'an' if on else 'aus'}")
     return {"key": key, "uid": uid, "on": on}
+
+
+@router.put("/api/admin/features/{key}/new", dependencies=[Depends(auth)])
+async def admin_feature_new(key: str, request: Request):
+    """On for every new profile (chat.new_profile_on); profiles that exist keep their own switch."""
+    guard.limit(request, "features", admin=True)
+    f = BY_KEY.get(key)
+    if not f or not f.profile:
+        raise HTTPException(404, "no such function with an own switch")
+    raw = await request.body()
+    if len(raw) > 256:
+        raise HTTPException(413, "too large")
+    try:
+        body = json.loads(raw or b"{}")
+    except ValueError:
+        raise HTTPException(400, "invalid JSON")
+    on = body.get("on") if isinstance(body, dict) else None
+    if not isinstance(on, bool):
+        raise HTTPException(400, "on: true or false")
+    import admin
+    new = admin.get_config()
+    keys = [k for k in new["chat"].get("new_profile_on", []) if k != key] + ([key] if on else [])
+    new["chat"]["new_profile_on"] = [k for k in BY_KEY if k in keys]
+    admin.validate(new)
+    tmp = admin.CONFIG_PATH + ".tmp"
+    with open(tmp, "w") as fh:
+        json.dump(new, fh, indent=2)
+    os.replace(tmp, admin.CONFIG_PATH)
+    elev = None if request.scope.get("speech_main_admin") else request.scope.get("speech_coadmin")
+    guard.log("feature_profile", by="main" if not elev else elev["id"], detail=f"{f.de} für neue Profile {'an' if on else 'aus'}")
+    return {"key": key, "on": on}

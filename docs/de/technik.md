@@ -101,6 +101,8 @@ Neue Rechte oder Hinweise gehören nach `chat_turn.py`, neue Werkzeuge nach `cha
 
 Seit V01.0.207 sind alle Seiten unter Einstellungen gleich gebaut (`index.html`, Stil in `app.css`). Neue Einstellungen nutzen nur diese Teile:
 
+- **Zeile aus JavaScript** (seit V01.0.270): `setRow(l, h, ctl, {why, extra})` und `tglIn(attrs, on)` in `base.js` bauen jede Zeile, ob Ich → Gespräch, Vorgaben, Wetter/Kontakte, Von selbst melden oder Lautsprecher. `why` sperrt die Zeile sichtbar mit Grund („Vom Admin ausgeschaltet“), statt sie auszublenden.
+
 - **Kopf**: `<h2 class="pt">` und darunter `<div class="pintro">` mit einem Satz, was die Seite regelt.
 - **Abschnitt**: `<h3 class="sec">Name <span>Hinweis</span></h3>`.
 - **Zeile**: `<div class="setrow"><div class="lbl"><b>Name</b><span>ein Satz</span></div>Bedienelement</div>`, das Bedienelement rechts: Schalter `.tgl` (keine Häkchen `label.chk`), kurze Zahl `input.num` in `.ctl` mit `.unit`, Adresse `input.wide`, Auswahl `select.wide`; mehrere Felder in `.ctl.full`. Textfelder stehen nach der Zeile.

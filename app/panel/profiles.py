@@ -746,6 +746,9 @@ SETTINGS = {
 
 # what only the profile itself writes, never the admin's defaults: its tone and its roles
 OWN_ONLY = ("style", "roles", "role")
+# the profiles' own function switches (features.py fills it): never from the presets either, they are set per
+# profile (by the profile, or the admin under Funktionen → Wer darf was, also for new profiles)
+NO_PRESET = set()
 
 
 def clean_settings(d):
@@ -755,7 +758,7 @@ def clean_settings(d):
 
 
 def defaults(admin=None):
-    own = {k: v for k, v in clean_settings(admin).items() if k not in OWN_ONLY}  # the tone is the profile's own
+    own = {k: v for k, v in clean_settings(admin).items() if k not in OWN_ONLY and k not in NO_PRESET}  # the tone is the profile's own
     return dict({k: v for k, (v, _) in SETTINGS.items()}, **own)
 
 

@@ -31,6 +31,7 @@ All options for running without questions (`--mode api --asr 1.7b --tts 0.6b --y
 
 <!-- New version: add one line at the top here and in CHANGELOG.md, drop the oldest line here (keep 10). Details go to docs/de and docs/en, not into this README. -->
 
+- **V01.0.270** Unify phase 4: one row building block (setRow) for all settings, what the admin switched off stays visible under Ich with the reason, Ich names functions not switched on, column "Neue Profile" under Wer darf was, presets never turn on a function switch
 - **V01.0.269** Unify phase 3: Funktionen → "Wer darf was" (Spark, each profile, guests; filters new/needs you; phone with profile chips), the admin switches profile switches with an admin log entry, also for managers
 - **V01.0.268** Unify phase 2: defaults only from config.default.json (load_config fills missing keys), presets and own values only through profiles.effective; self-test against second defaults and hand merges
 - **V01.0.267** Unify phase 0–1: every function once in features.py, one check "Spark on, profile on" for all modules, /api/features with the reason; gaps closed (learning from corrections needs memory, push and update need the iPhone app, room from afar needs speakers)
@@ -40,7 +41,6 @@ All options for running without questions (`--mode api --asr 1.7b --tts 0.6b --y
 - **V01.0.263** Logs → Requests (switch under Settings → Operation, off): the way of every request as a list with a bead chain and a time line (switch, model rounds, tools, check, speech output, first sound), without question or answer text; names only with the profile's consent
 - **V01.0.262** Security: protection headers on every answer (no embedding in other pages, nosniff, referrer policy, microphone/camera only for the panel, HSTS on https), list of signed-in browsers with single sign-out (Me → Security, admin in the profile details), profile sign-in ends after 30 days without use (7–90 adjustable), "Security at a glance" as a traffic light at the top of Settings → Security
 - **V01.0.261** Kiwix: books are saved without their date, updated files stay chosen (the newest is used, catalog re-read on 404); "Look in my archive" never searches the uploaded documents and says which switch is missing
-- **V01.0.260** Kiwix: book choice as a list with search, language and kind filter (German/English first), grouped, with language, variant, article count, size and date; chosen ones on top as chips; without a choice German and English Wikipedia; catalog up to 2000 books
 
 All versions: [CHANGELOG.md](CHANGELOG.md)
 

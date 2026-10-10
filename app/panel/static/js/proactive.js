@@ -39,7 +39,7 @@ const PROK=[['pro_events','calendar',t('Termin-Vorlauf','Upcoming appointments')
   ['pro_parcel','parcels',t('Paket kommt heute','Parcel comes today'),t('Wenn eine Versandmail sagt, dass ein Paket heute kommt (7 bis 20 Uhr, einmal pro Paket).','When a shipping mail says a parcel comes today (7 am to 8 pm, once per parcel).'),t('Pakete einschalten','switch on parcels')],
   ['pro_transit','transit',t('Bus und Bahn','Bus and train'),t('An deinen Pendeltagen 45 bis 5 Minuten vor deiner Abfahrt: wenn die Verbindung 5 Minuten oder mehr Verspätung hat oder ausfällt. Höchstens einmal am Tag.','On your commute days 45 to 5 minutes before you leave: when the connection is 5 minutes or more late or cancelled. At most once a day.'),t('Bus und Bahn mit Pendelstrecke einrichten','set up bus and train with a commute')]];
 let PROST=null;
-const proRow=(k,l,h,extra='')=>`<div class="setrow"><div class="lbl"><b>${esc(l)}</b><span>${esc(h)}</span>${extra}</div><label class="tgl"><input type="checkbox" data-k="${k}"${S[k]?' checked':''}><i></i></label></div>`;
+const proRow=(k,l,h,extra='')=>setRow(esc(l),esc(h),tglIn(`data-k="${k}"`,S[k]),{extra});
 async function showPro(){const box=$('probox');if(!PROFILE||!PRO_ON){box.innerHTML='';return}
   PROST=await (await api('/api/proactive/status')).json();const st=PROST;
   const [qa,qb]=(S.pro_quiet||'').split('-');
