@@ -152,6 +152,8 @@ Seit V01.0.312 zeigt *Zustand → Live* (und der Monitor `/live`) alles, was der
 - **Neues Werkzeug:** Ziel in `live.TOOLS` (vorhandenes oder neues in `live.TARGETS` mit Zone `spark`, `lan` oder `net`) und ein Wort in `live.RETURNS`. `tests/test_live.py` wird rot, wenn ein Werkzeug aus `chat.py` oder einem Zusatzdienst fehlt.
 - **Neue Geräteart:** Wort in `live.CLIENT` (Test vergleicht mit `tracelog.CLIENTS`).
 - **Neuer Kanal** (WebSocket, Long-Poll): Zeile in `live._conns`.
+- **Anfrage ohne Gespräch** (nur Hören oder nur Sprechen, z. B. Wyoming): `rec = live.begin(client, gerät)`, dann `rec.step("asr"|"tts", …)` und `live.end(rec, ok)`; abgewiesene Absender mit `live.door(...)`.
+- **Etwas, das der Spark von selbst tut** (Regel, Erinnerung, Auftrag): `live.begin(client, "", uid=…, auto=True, why="festes Wort")` und die Schritte darunter mit `with live.within(rec):` (kein Rückweg zum Gerät). Benachrichtigungen meldet `push.send` selbst (`live.note`, Ziele Web Push, Apple Push, Android-App, Telegram); ein neues Tag bekommt ein Wort in `push.WHY`.
 - **Neue Prüfung am Eingang oder neue Wächter-Stufe:** `guard.failed` und `netguard.resolve` melden schon selbst an `live.refused` bzw. `live.outgoing`; neue Wörter dort ergänzen.
 - Nur feste Wörter und Zahlen, nie Inhalte; Namen nur über `live._who`.
 

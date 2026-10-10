@@ -33,6 +33,7 @@ All options for running without questions (`--mode api --asr 1.7b --tts 0.6b --y
 
 <!-- New version: add one line at the top here and in CHANGELOG.md, drop the oldest line here (keep 10). Details go to docs/de and docs/en, not into this README. -->
 
+- **V01.0.334** Live overview: Home Assistant Assist over Wyoming shows as device "Home Assistant" (hearing, speaking), refused Wyoming senders under Entrance, every MCP tool call of a program, Home Assistant rules and everything the Spark says by itself with its note target (Web Push, Telegram, Android), a state dot on hearing, speaking and the language model
 - **V01.0.333** Android app: signing key with one command on the Spark (tools/android-schluessel.sh, only openssl), it shows the two values for the GitHub secrets; Features → Android app says what to do while there is no app yet
 - **V01.0.332** Writing help (off): correct, smooth, shorten, translate mails and other texts or draft a reply, with the changes marked in colour
 - **V01.0.331** Assistant: no more sideways scroll bar under the face
@@ -42,7 +43,6 @@ All options for running without questions (`--mode api --asr 1.7b --tts 0.6b --y
 - **V01.0.327** Assistant on computers uses the whole window: face and history reach the bottom, only the history scrolls
 - **V01.0.326** Help with the Spark (off): the assistant answers questions about settings from its own guides, suggests switches as a card (only "Apply" changes something) and "Ask Spark" is on every page
 - **V01.0.325** Live overview: kill switch in the picture, cut-off targets red with a lock
-- **V01.0.324** Self-test invitation: waits up to 45 s for the reload, taps a second time if the first tap sent no /api/join, and writes a trace to the log (red on GitHub again)
 
 All versions: [CHANGELOG.md](CHANGELOG.md)
 

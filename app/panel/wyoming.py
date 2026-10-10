@@ -17,6 +17,7 @@ import ipaddress
 import json
 import socket
 import struct
+import time
 import wave
 
 import httpx
@@ -24,6 +25,7 @@ import httpx
 from urllib.parse import urlsplit
 
 from common import load_config
+import live
 import notaus
 
 MAX_AUDIO = 16000 * 2 * 120      # two minutes of 16 kHz mono 16 bit
@@ -197,11 +199,15 @@ async def handle(reader, writer):
     if not s["on"] or not permitted(peer, s["allow"]):
         print("wyoming: refused", peer, flush=True)
         shown = str(peer).removeprefix("::ffff:")
+        if s["on"]:
+            live.door("Home Assistant (Wyoming)", shown, False, "Adresse nicht freigegeben",
+                      ["Wyoming-Port 31003", "Absender steht nicht in der Liste erlaubter Adressen", "→ Verbindung geschlossen"])
         if s["on"] and shown not in _knocked:
             _knocked.append(shown)
         writer.close()
         return
     audio, fmt, language = bytearray(), (16000, 2, 1), ""
+    rec = None   # Zustand → Live: each transcription and each spoken answer shows as a request of Home Assistant
     try:
         while True:
             ev = await asyncio.wait_for(read_event(reader), timeout=120)
@@ -216,17 +222,32 @@ async def handle(reader, writer):
                 language = str(data.get("language") or "")[:8]
             elif kind == "audio-start":
                 audio.clear()
+                live.end(rec)
+                rec = live.begin("ha", "Assist (Wyoming)")
+                if rec:
+                    rec.step("in", "Eingang", time.time())
+                    rec.now("asr", "Spracherkennung")
                 fmt = (int(data.get("rate", 16000)), int(data.get("width", 2)), int(data.get("channels", 1)))
             elif kind == "audio-chunk":
                 if len(audio) + len(payload) > MAX_AUDIO:
                     raise ValueError("audio too long")
                 audio += payload
             elif kind == "audio-stop":
+                t_asr = time.time()
                 text = await transcribe(s, wav_of(bytes(audio), *fmt), language) if audio else ""
+                if rec:
+                    rec.step("asr", "Spracherkennung", t_asr, time.time(), chars=len(text))
+                    live.end(rec)
+                    rec = None
                 print(f"wyoming: transcript for {peer}: {len(text)} chars", flush=True)
                 await write_event(writer, "transcript", {"text": text})
                 audio.clear()
             elif kind == "synthesize":
+                live.end(rec)
+                rec, t_tts = live.begin("ha", "Assist (Wyoming)"), time.time()
+                if rec:
+                    rec.step("in", "Eingang", t_tts)
+                    rec.now("tts", "Sprachausgabe")
                 rate, width, channels, pcm = await synthesize(s, str(data.get("text", "")),
                                                               str((data.get("voice") or {}).get("name") or ""))
                 fmt_out = {"rate": rate, "width": width, "channels": channels}
@@ -235,6 +256,10 @@ async def handle(reader, writer):
                     await write_event(writer, "audio-chunk", fmt_out, pcm[i:i + CHUNK])
                 await write_event(writer, "audio-stop")
                 print(f"wyoming: spoke {len(pcm)} bytes for {peer}", flush=True)
+                if rec:
+                    rec.step("tts", "Sprachausgabe", t_tts, time.time())
+                    live.end(rec)
+                    rec = None
     except (asyncio.TimeoutError, asyncio.IncompleteReadError, ConnectionError):
         pass
     except Exception as e:
@@ -244,6 +269,8 @@ async def handle(reader, writer):
         except Exception:
             pass
     finally:
+        if rec:
+            live.end(rec, ok=False)   # the connection ended in the middle
         writer.close()
 
 

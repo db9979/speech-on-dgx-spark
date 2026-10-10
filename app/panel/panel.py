@@ -205,6 +205,7 @@ async def sampler():
                 s = system_stats()
                 h = {n: await service_health(n, cfg) for n in SERVICES}
                 health.check_memory(s["mem_avail_gib"], cfg)
+                live.services(h, cfg)
                 history.append({"t": time.time(), "gpu": g.get("util"), "cpu": s["cpu"],
                                 "avail": s["mem_avail_gib"], "temp": g.get("temp"), "power": g.get("power"),
                                 "asr_req": (h["asr"] or {}).get("requests"),

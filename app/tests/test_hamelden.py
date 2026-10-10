@@ -104,6 +104,48 @@ class RuleOptions(Base):
         run("on")
         self.assertEqual(notes(a), ["Bewegung im Flur.", "Bewegung im Flur."])
 
+    def test_shows_on_the_live_page(self):
+        """Zustand → Live (Dominik 2026-10-10: everything that can be shown): a rule that fires is a request of
+        "Home Assistant" with "Regel", its note to the open page (or the push) as target, no way back; a note
+        of its own (Begrüßung) a request of "Von selbst". Never the sentence or the device."""
+        import json
+        import os
+        import live
+        with open(os.environ["SPEECH_SPARK_CONFIG"]) as f:
+            c = json.load(f)
+        c.setdefault("logs", {})["live"] = True
+        with open(os.environ["SPEECH_SPARK_CONFIG"], "w") as f:
+            json.dump(c, f)
+        try:
+            a, uid = profile("Hlive")
+            a.post("/api/proactive/rules", json={"conds": [{"entity": "Flur Bewegung", "op": "changes"}],
+                                                 "text": "Bewegung im Flur."})
+            proactive._polled[uid] = time.time()     # the page is open: no push
+            with live._lock:
+                live._run.clear()
+            flur = dict(state("binary_sensor.flur_bewegung"))
+            for st in ("off", "on"):
+                asyncio.run(proactive.check_ha(uid, proactive.prefs(uid), by_id={flur["entity_id"]: dict(flur, state=st)}))
+            asyncio.run(proactive.deliver(uid, "greet", "Hallo Hlive.", force=True))
+            d = live.snapshot()
+            got = sorted((r["client"], r["intent"], tuple((s["k"], s["n"], s["to"]) for s in r["steps"]), r["auto"],
+                          r["direct"], r["voice"]) for r in d["reqs"])
+            self.assertEqual(got, [("auto", "Begrüßung", (("in", "Von selbst", ""), ("tool", "Panel-Seite", "page")), True, True, False),
+                                   ("ha", "Regel", (("in", "Home Assistant meldet", ""), ("tool", "Panel-Seite", "page")), True, True, False)])
+            self.assertTrue(all(r["done"] for r in d["reqs"]))
+            self.assertNotIn("Bewegung", json.dumps(d))
+            self.assertNotIn("Hallo", json.dumps(d))
+            # a note that goes out by push is a step to its target
+            with live._lock:
+                live._run.clear()
+            live.note(uid, "tg", time.time(), 1, "Erinnerung")
+            r = live.snapshot()["reqs"][0]
+            self.assertEqual((r["client"], r["intent"], r["steps"][-1]["to"]), ("auto", "Erinnerung", "tg"))
+        finally:
+            c["logs"]["live"] = False
+            with open(os.environ["SPEECH_SPARK_CONFIG"], "w") as f:
+                json.dump(c, f)
+
     def test_only_when(self):
         local = datetime.datetime(2026, 10, 10, 14, 0)
         home = {"person.anna": {"entity_id": "person.anna", "state": "home"},

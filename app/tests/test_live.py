@@ -160,6 +160,10 @@ class Live(unittest.TestCase):
         names -= {"parameters"}
         self.assertEqual(sorted(n for n in names if n not in live.TOOLS), [],
                          "a new tool: add it to live.TOOLS (and a target to live.TARGETS if it goes somewhere new)")
+        import mcpserver   # tools programs call over MCP show as their own requests
+        self.assertEqual(sorted(n for n in mcpserver.TOOLS if n not in live.TOOLS and n not in mcpserver.SHOW
+                                and n != "ask_spark"), [], "a new MCP tool: add it to live.TOOLS or mcpserver.SHOW")
+        self.assertEqual(sorted(v[1] for v in mcpserver.SHOW.values() if v[0] == "tool" and v[1] not in live.TOOLS), [])
         for n, tgt in live.TOOLS.items():
             self.assertIn(tgt, live.TARGETS, n)
             self.assertIn(tgt, live.RETURNS, n)
@@ -170,6 +174,33 @@ class Live(unittest.TestCase):
         import tracelog as tl
         self.assertEqual(set(live.CLIENT) - {"other"}, set(tl.CLIENTS) - {"other"},
                          "a new kind of device: add a word to live.CLIENT")
+
+    def test_services_state(self):
+        """Hören, Sprechen and the language model carry a dot: running, loading, not answering, off; a change and a
+        watchdog restart are events (point 10 of the list, Dominik 2026-10-10)."""
+        reset()
+        set_logs(live=True)
+        try:
+            live._svc.clear()
+            cfg = {"asr": {"enabled": True}, "tts": {"enabled": True}}
+            live.services({"asr": {"status": "ok"}, "tts": {"status": "loading"}}, cfg, now=1000)
+            live.services({"asr": None, "tts": {"status": "loading"}}, cfg, now=1003)
+            live.llm_seen(False, "llm_down", now=1004)
+            d = live.snapshot(now=1010)
+            self.assertEqual({k: v["st"] for k, v in d["svc"].items()}, {"asr": "down", "tts": "load", "qwen": "down"})
+            self.assertEqual(d["svc"]["asr"]["word"], "antwortet nicht")
+            live.services({"asr": None, "tts": None}, {"asr": {"enabled": True}, "tts": {"enabled": False}}, now=1011)
+            self.assertEqual(live.snapshot(now=1012)["svc"]["tts"]["st"], "off")
+            live.restarted("ASR", "antwortet seit 300 s nicht", True)
+            texts = [e["text"] for e in live.snapshot(now=1013)["events"] if e["area"] == "Dienste"]
+            self.assertIn("Hören: antwortet nicht", texts)
+            self.assertIn("Sprachmodell: antwortet nicht", texts)
+            self.assertTrue(any(t.startswith("ASR neu gestartet") for t in texts))
+            # an hour without news: no dot (nothing known)
+            self.assertEqual(live.snapshot(now=1011 + 3601)["svc"], {})
+        finally:
+            live._svc.clear()
+            set_logs(live=False)
 
     def test_waechter_decisions_with_reasons(self):
         with self.assertRaises(Exception):

@@ -95,6 +95,11 @@ def _restart(name, unit, reason, now):
     guard.log("watchdog", who="watchdog", detail=f"{name}: {reason}" + (", neu gestartet" if item["done"] else
                                                                        f" ({item['note']})"))
     print("watchdog:", name, reason, "restarted" if item["done"] else item["note"], flush=True)
+    try:
+        import live
+        live.restarted(name, reason, item["done"])
+    except Exception:
+        pass
     return item
 
 

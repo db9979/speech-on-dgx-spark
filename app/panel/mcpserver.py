@@ -487,8 +487,11 @@ async def call(request, c, name, args):
             return _result("Gerade zu viele Anfragen gleichzeitig, bitte gleich noch einmal.", True)
         _busy[c["id"]] = _busy.get(c["id"], 0) + 1
     t0 = time.monotonic()
+    rec, t_rec = _watch(c, name), time.time()
+    import live
     try:
-        res = await run(request, c, name, args)
+        with live.within(rec):
+            res = await run(request, c, name, args)
     except (httpx.HTTPError, OSError) as e:
         res = _result(f"Der Dienst antwortet gerade nicht ({type(e).__name__}).", True)
     except (ValueError, TypeError, KeyError) as e:
@@ -498,9 +501,40 @@ async def call(request, c, name, args):
             _busy[c["id"]] = max(0, _busy.get(c["id"], 1) - 1)
             if not _busy[c["id"]]:
                 _busy.pop(c["id"], None)
+    _shown(rec, name, t_rec, not res.get("isError"))
     print(f"mcp-server: {c['name'][:40]} ({c['where']}) {name} {'Fehler' if res.get('isError') else 'ok'} "
           f"{int((time.monotonic() - t0) * 1000)} ms", flush=True)
     return res
+
+
+# how a tool call shows on Zustand → Live (live.py): speech as Hören/Sprechen, a proposal as "Vorschlag" (the
+# push that asks for the yes adds its own step, push.py → live.note)
+SHOW = {"transcribe": ("asr", "Spracherkennung"), "speak": ("tts", "Sprachausgabe"), "voices": ("tts", "Stimmen"),
+        "home_assistant": ("tool", "Vorschlag"), "reminder_set": ("tool", "Vorschlag"), "calendar_add": ("tool", "Vorschlag"),
+        "write_text": ("llm", "Schreibhilfe")}
+
+
+def _watch(c, name):
+    """A request of this program on the live page (ask_spark shows as the assistant's own request).
+    The program's name shows like a device name: only with the profile's consent."""
+    if name == "ask_spark":
+        return None
+    import live
+    rec = live.begin("mcp", c["name"][:30], uid=c["uid"])
+    if rec is not None:
+        kind, label = SHOW.get(name, ("tool", name))
+        rec.step("in", "MCP · " + ("Internet" if c["where"] == "extern" else "Heimnetz"), time.time())
+        rec.now(kind, label)
+    return rec
+
+
+def _shown(rec, name, t0, ok):
+    if rec is None:
+        return
+    import live
+    kind, label = SHOW.get(name, ("tool", name))
+    rec.step(kind, label, t0, time.time(), ok=ok)
+    live.end(rec, ok)
 
 
 def _text(args, key, most):
@@ -818,10 +852,18 @@ async def decide(uid, aid, yes, now=None):
         x["state"] = "busy"
         _save_actions(uid, items)
     if yes and act_on() and any(c["id"] == x["conn"] for c in _load()["conns"]):
+        import live
+        rec, t0 = live.begin("mcp", str(x["by"])[:30], uid=uid), time.time()
+        if rec is not None:
+            rec.step("in", "MCP · bestätigt", t0)
+            rec.now("tool", x["tool"])
         try:
             ok, text = await carry_out(uid, x)
         except Exception as e:
             ok, text = False, type(e).__name__
+        if rec is not None:
+            rec.step("tool", x["tool"], t0, time.time(), ok=ok)
+            live.end(rec, ok)
         state, result = ("done" if ok else "fail"), text
     else:
         state, result = "no", ("Abgelehnt." if yes is False else "Verbindung oder Schalter nicht mehr da.")

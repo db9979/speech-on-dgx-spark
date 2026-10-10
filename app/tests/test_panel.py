@@ -750,7 +750,7 @@ class Push(unittest.TestCase):
         profiles.add_reminder(b_id, "Kaffee", time.time() * 1000 - 1000)
         got = []
 
-        async def fake(uid, title, body, tag="", private=True):
+        async def fake(uid, title, body, tag="", private=True, why=""):
             got.append((uid, title))
             return 1
         real, push.send = push.send, fake
@@ -816,7 +816,7 @@ class Push(unittest.TestCase):
         # push: never for a reminder a device already took; waits a moment while a page of the profile is open
         got = []
 
-        async def fake(u, title, body, tag="", private=True):
+        async def fake(u, title, body, tag="", private=True, why=""):
             got.append(title)
             return 1
         real_send, real_reach, push.send = push.send, push.reachable, fake
@@ -968,7 +968,7 @@ class Briefing(unittest.TestCase):
                          "07:30")
         sent = []
 
-        async def fake_send(u, title, body, tag="", private=True):
+        async def fake_send(u, title, body, tag="", private=True, why=""):
             sent.append((u, title, body))
             return 1
         old_send, old_subs = push.send, push.subs

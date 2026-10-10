@@ -193,7 +193,16 @@ def pick(uid, private=True):
     return "web", mine or subs(uid)[-1:]
 
 
-async def send(uid, title, body, tag="", private=True):
+# what a note is for on Zustand → Live (live.note), by its tag; fixed words only
+WHY = {"agent": "Auftrag", "briefing": "Tagesüberblick", "msg-": "Nachricht", "notaus": "Notaus", "setup": "Einrichtung",
+       "pro-": "Von selbst", "mcp": "MCP-Bestätigung", "admin": "Hinweis", "hello": "Test"}
+
+
+def _why(tag):
+    return next((v for k, v in WHY.items() if tag == k or (k.endswith("-") and tag.startswith(k))), "")
+
+
+async def send(uid, title, body, tag="", private=True, why=""):
     """Sends a note once: to one device of the profile (pick), the iPhone app, Telegram (private notes,
     i.e. appointments, mails, the briefing, only when it allowed personal data there) or a browser.
     "hello" goes to the browsers only. Drops subscriptions the push service no longer knows.
@@ -201,6 +210,7 @@ async def send(uid, title, body, tag="", private=True):
     import apns
     import telegram
     kind, targets = ("web", subs(uid)) if tag == "hello" else pick(uid, private)
+    t0 = time.time()
     # the iPhone app: Apple only carries "new message", the text waits on the Spark (apns.py)
     n = await apns.send(uid, title, body, tag=tag) if kind == "app" else 0
     if kind == "and":   # the Android app fetches it with its next question (android.py)
@@ -224,6 +234,8 @@ async def send(uid, title, body, tag="", private=True):
                 n += 1
             else:
                 print("push:", r.status_code, r.text[:200], flush=True)
+    import live
+    live.note(uid, kind, t0, n, why or _why(tag))
     return n
 
 
@@ -258,5 +270,5 @@ async def due_reminders():
             if not profiles.take_reminder(uid, x["id"], by):
                 continue   # a device played it in the meantime
             if now - x["due"] < 6 * 3600 * 1000:  # older ones (panel was off) are dropped quietly
-                sent += await send(uid, "⏰ " + x["text"], "Erinnerung", tag=x["id"], private=False)
+                sent += await send(uid, "⏰ " + x["text"], "Erinnerung", tag=x["id"], private=False, why="Erinnerung")
     return sent

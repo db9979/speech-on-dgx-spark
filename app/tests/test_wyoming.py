@@ -89,6 +89,37 @@ class Wyoming(unittest.TestCase):
         self.assertEqual(got[0][1], {"rate": 24000, "width": 2, "channels": 1})
         self.assertEqual(b"".join(e[2] for e in got if e[0] == "audio-chunk"), b"\1\0" * 2400)
 
+    def test_shows_on_the_live_page(self):
+        """Zustand → Live (Dominik 2026-10-10: everything that can be shown): Home Assistant's transcriptions and
+        spoken answers show as requests of "Home Assistant" with Hören or Sprechen, refused senders in the
+        Eingang list; never the words."""
+        import os
+        import live
+        with open(os.environ["SPEECH_SPARK_CONFIG"]) as f:
+            c = json.load(f)
+        c.setdefault("logs", {})["live"] = True
+        with open(os.environ["SPEECH_SPARK_CONFIG"], "w") as f:
+            json.dump(c, f)
+        try:
+            with live._lock:
+                live._run.clear()
+                live._door.clear()
+            pcm = b"\0\1" * 8000
+            run([("transcribe", {}, b""), ("audio-start", {"rate": 16000, "width": 2, "channels": 1}, b""),
+                 ("audio-chunk", {"rate": 16000, "width": 2, "channels": 1}, pcm), ("audio-stop", {}, b"")])
+            run([("synthesize", {"text": "Das Licht ist an."}, b"")])
+            run([("describe", {}, b"")], allow="192.168.1.20")
+            d = live.snapshot()
+            ha = [r for r in d["reqs"] if r["client"] == "ha"]
+            self.assertEqual([[s["k"] for s in r["steps"]] for r in ha], [["in", "asr"], ["in", "tts"]])
+            self.assertTrue(all(r["voice"] and r["done"] for r in ha))
+            self.assertIn("Wyoming", d["door"]["items"][0]["who"])
+            self.assertNotIn("Licht", json.dumps(d))
+        finally:
+            c["logs"]["live"] = False
+            with open(os.environ["SPEECH_SPARK_CONFIG"], "w") as f:
+                json.dump(c, f)
+
     def test_only_listed_addresses(self):
         self.assertEqual(run([("describe", {}, b"")], allow="192.168.1.20"), [])
         self.assertEqual(run([("describe", {}, b"")], allow="127.0.0.0/8")[0][0], "info")

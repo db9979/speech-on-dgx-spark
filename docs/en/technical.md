@@ -140,6 +140,8 @@ Since V01.0.312 *Status → Live* (and the monitor `/live`) show everything the 
 - **New tool:** a target in `live.TOOLS` (an existing one or a new one in `live.TARGETS` with zone `spark`, `lan` or `net`) and a word in `live.RETURNS`. `tests/test_live.py` turns red when a tool from `chat.py` or an extra service is missing.
 - **New kind of device:** a word in `live.CLIENT` (the test compares with `tracelog.CLIENTS`).
 - **New channel** (WebSocket, long poll): a line in `live._conns`.
+- **Request without a conversation** (only hearing or only speaking, e.g. Wyoming): `rec = live.begin(client, device)`, then `rec.step("asr"|"tts", …)` and `live.end(rec, ok)`; refused senders with `live.door(...)`.
+- **Something the Spark does by itself** (rule, reminder, task): `live.begin(client, "", uid=…, auto=True, why="fixed word")` and the steps below it inside `with live.within(rec):` (no way back to a device). Notes are reported by `push.send` itself (`live.note`, targets Web Push, Apple Push, Android app, Telegram); a new tag gets a word in `push.WHY`.
 - **New entry check or guard level:** `guard.failed` and `netguard.resolve` already report to `live.refused` and `live.outgoing`; add new words there.
 - Only fixed words and numbers, never contents; names only through `live._who`.
 

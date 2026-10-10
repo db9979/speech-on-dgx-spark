@@ -110,6 +110,7 @@ Other programs use the Spark over the [Model Context Protocol](https://modelcont
 - Acting: a program only leaves a proposal. The profile gets a notification and decides under Me → Services over MCP ("Yes, do it" with the code window, or "No"). A proposal waits 15 minutes.
 - Limits: 60 calls per minute and access (`ask_spark` 10), 2 at once per access, 6 overall; speech runs with the stage "last", people at the Spark go first. Without use an access ends after 90 days.
 - The journal shows each request as `mcp-server:` with program, tool and time, never the content.
+- Status → Live (since V01.0.334) shows each tool call as its own request "MCP-Client" with tool and target (speech as hearing or speaking, a proposal as "Bestätigung anfragen" → push, a confirmed action as its own request); the access's name shows only with the profile's consent ("My name in the request log"), contents never. `ask_spark` shows like a conversation.
 
 **From outside (OAuth):** admin: *MCP server from outside* below the switch. An access "from outside" needs the profile's second sign-in step and a fresh code. Programs like claude.ai sign in with OAuth 2.1 (dynamic registration, PKCE S256, `/.well-known/oauth-authorization-server`): add a custom MCP connector with `https://your-proxy/mcp` in the program, it sends you to the panel, there you see a warning, pick the tools and confirm with your code. Access tokens last 1 hour, refresh tokens 30 days and are swapped with every use. Everything such a program reads goes to its provider.
 
