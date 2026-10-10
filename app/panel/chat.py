@@ -37,6 +37,7 @@ import chat_turn  # noqa: E402  (rights, prompt and tools of one turn)
 import latency  # noqa: E402
 import echo  # noqa: E402  (the Spark's own voice is no question)
 import vorrang  # noqa: E402  (speech first: background work waits)
+import tracelog  # noqa: E402  (Logs → Anfragen: the way of each request)
 from common import load_config  # noqa: E402
 from core import DEFAULTS, FACES, admin_cookie_ok, api_headers, assistant  # noqa: E402
 
@@ -1170,10 +1171,51 @@ async def chat(request: Request):
     return response
 
 
+def start_trace(request, turn, t_req, t0):
+    """Logs → Anfragen: a new record for this turn with its arrival, preparation and switch (None while the
+    admin switch is off). Only fixed words and numbers: never the question or a name the profile did not allow."""
+    body = turn.body if isinstance(turn.body, dict) else {}
+    client = "car" if getattr(turn, "car", False) else "app" if getattr(turn, "app_key", False) \
+        else body.get("client") if body.get("client") in tracelog.CLIENTS else "web"
+    who = turn.who
+    kind = "profile" if who else "admin" if not turn.device_owner and admin_cookie_ok(request) else "guest"
+    tr = tracelog.start(t_req, client, who and who["id"], kind, profiles.device_name(request) if who or kind == "admin" else "")
+    if not tr:
+        return None
+    route = getattr(turn, "route", None)
+    tr.intent = route.label() if route else ""
+    ask_text = getattr(turn, "ask_text", "") or ""
+    tr.step("in", {"web": "Browser", "speaker": "Lautsprecher", "watch": "Uhr", "siri": "Siri", "telegram": "Telegram",
+                   "app": "iPhone-App", "car": "CarPlay"}.get(client, "Gerät"), t_req,
+            chars=len(ask_text), voice=bool(turn.heard) or None, pictures=len(getattr(turn, "pics", None) or []) or None,
+            attachment=bool(getattr(turn, "attach", None)) or None)
+    rights = "fremde Stimme am Lautsprecher" if getattr(turn, "stranger", "") else "Stimme eines anderen Profils" \
+        if not turn.own_browser else "eigenes Profil" if who else "Admin" if kind == "admin" else "Gast"
+    tr.step("prep", "Panel-Vorbereitung", t_req, t0, rights=rights, allowed=getattr(turn, "all_tools", None),
+            locked=turn.carry or None, history=len([m for m in turn.messages if m.get("role") in ("user", "assistant")]))
+    tr.step("weiche", "Weiche: " + (tr.intent or "-"), t0, t0, offered=len(turn.tools or []),
+            of=getattr(turn, "all_tools", None), narrow=bool(getattr(turn, "route_on", False)),
+            must=(getattr(turn, "force", None) or ", ".join(sorted(turn.need or [])))[:60] or None,
+            why=", ".join(route.why) if route and route.why else None)
+    for c in turn.cal_note or []:   # what the panel did itself (a confirmed appointment, a role ...)
+        name = str(c.get("name") or "Panel")
+        tr.step("tool", "Ablauf" if name.startswith("Ablauf ") else name[:60], t0, t0, panel=True)   # (a routine's own name stays out)
+    return tr
+
+
+def tool_info(name, result, st, ex):
+    """Numbers about one tool call for Logs → Anfragen: never its arguments or its result."""
+    text = result if isinstance(result, str) else ""
+    ok = bool(text) and not re.match(r"(?i)\s*(not done|not proposed|unknown tool|unknown action|search failed|invalid|no query|"
+                                         r"no command|nicht ausgeführt|fehler|error|failed)", text)
+    outside = name in READS_OUTSIDE or name in HA_READS or name in ex["outside"] or name in ex["mail"]
+    return {"ok": ok, "chars": len(text), "outside": outside or None, "locked": (name not in st["offered"]) or None}
+
+
 async def _chat(request: Request):
-    _last_chat[0] = time.time()
+    t_req = _last_chat[0] = time.time()
     turn = await chat_turn.prepare(request)
-    turn.t_req = _last_chat[0]   # for the timing lines (logfilter detail "chat")
+    turn.t_req = t_req   # for the timing lines (logfilter detail "chat") and Logs → Anfragen
     return await _answer(request, turn)
 
 
@@ -1210,6 +1252,9 @@ async def _answer(request, turn):
     tm = {"req": getattr(turn, "t_req", None) or t0, "rounds": [], "audio": None, "on": logfilter.verbose("chat")}
 
     trace = {"calls": list(cal_note), "said": ""}  # for the profile's tool log
+    # Logs → Anfragen (tracelog.py, admin switch logs.trace): only ways, tool names and numbers, never text
+    tr = turn.tr = start_trace(request, turn, tm["req"], t0)
+    known = {t["function"]["name"] for t in tools or []}
     turn.c, turn.out, turn.sentences, turn.trace = c, out, sentences, trace  # the tools (chat_tools.py) use them too
 
     async def llm():
@@ -1221,7 +1266,7 @@ async def _answer(request, turn):
                     "temperature": float(ccfg.get("temperature", 0.3)), **sampling(ccfg)}
             if not ccfg.get("thinking"):
                 base["chat_template_kwargs"] = {"enable_thinking": False}
-            if tm["on"]:   # the server says how much it read and how much came from its cache
+            if tm["on"] or tr:   # the server says how much it read and how much came from its cache
                 base["stream_options"] = {"include_usage": True}
             st = {"buf": "", "first": True, "think": False, "n": 0, "mail": carry == "mail", "outside": carry == "outside",
                   "offered": set(), "saves": 0, "shown": 0, "check": bool(need) and check_on, "hold": None, "dropped": [], "msgs": None}
@@ -1240,6 +1285,7 @@ async def _answer(request, turn):
             max_searches = max_searches if isinstance(max_searches, int) and not isinstance(max_searches, bool) \
                 and SEARCH_RANGE[0] <= max_searches <= SEARCH_RANGE[1] else 2
             if ha_direct:
+                t_ha = time.time()
                 await out.put({"type": "home", "command": ha_direct})
                 try:
                     ok, answer, targets = await homeassistant.command(
@@ -1247,6 +1293,8 @@ async def _answer(request, turn):
                 except (httpx.HTTPError, ValueError) as e:  # also a proxy page instead of JSON
                     ok, answer, targets = False, f"Home Assistant not reachable: {type(e).__name__}", []
                 print("homeassistant: panel ran", repr(ha_direct[:80]), "->", "ok" if ok else "not ok", flush=True)
+                if tr:
+                    tr.step("tool", "home_assistant (Panel)", t_ha, time.time(), ok=bool(ok), panel=True)
                 await out.put({"type": "home_done", "ok": ok, "text": answer[:300], "targets": targets})
                 msgs += [{"role": "assistant", "content": None, "tool_calls": [{"id": "ha0", "type": "function",
                           "function": {"name": "home_assistant", "arguments": json.dumps({"command": ha_direct})}}]},
@@ -1258,6 +1306,8 @@ async def _answer(request, turn):
                           "function": {"name": "home_assistant_states",
                                        "arguments": json.dumps({"query": messages[-1]["content"][:200]})}}]},
                          {"role": "tool", "tool_call_id": "ha1", "content": wrap_outside(ha_read)}]
+                if tr:
+                    tr.step("tool", "home_assistant_states (Panel)", t0, t0, chars=len(ha_read), panel=True)
                 if homeassistant.free_text(ha_read) and not st["outside"]:
                     st["outside"] = True
                     await out.put({"type": "outside"})
@@ -1311,6 +1361,8 @@ async def _answer(request, turn):
                     trace["calls"].append({"name": "Antwort-Prüfung", "args": "", "result":
                                            "ohne Werkzeug geantwortet, verworfen: " + " ".join(held)[:300]})
                     retried = True
+                    if tr:
+                        tr.step("check", "Antwort-Prüfung", time.time(), again=True)
                     st["buf"], st["first"] = "", True
                     msgs.append({"role": "user", "content": answercheck.RETRY_NOTE})
                     continue
@@ -1344,6 +1396,8 @@ async def _answer(request, turn):
                     await sentences.put(filler[1] if en else filler[0])
                 for k, x in enumerate(calls):
                     if k >= MAX_CALLS:
+                        if tr:
+                            tr.step("tool", x["name"] if x["name"] in known else "unbekannt", time.time(), ok=False, many=True)
                         msgs.append({"role": "tool", "tool_call_id": x["id"],
                                      "content": f"Not done: at most {MAX_CALLS} tool calls per step."})
                         continue
@@ -1356,6 +1410,9 @@ async def _answer(request, turn):
                     result = await run_tool(x["name"], args, st)
                     if tm["rounds"]:
                         tm["rounds"][-1]["tools"].append((x["name"], time.time() - t_tool))
+                    if tr:
+                        tr.step("tool", x["name"] if x["name"] in known else "unbekannt", t_tool, time.time(),
+                                **tool_info(x["name"], result, st, ex))
                     trace["calls"].append({"name": x["name"], "args": json.dumps(args, ensure_ascii=False), "result": result})
                     msgs.append({"role": "tool", "tool_call_id": x["id"], "content": result})
                     if x["name"] == "web_search":
@@ -1382,6 +1439,8 @@ async def _answer(request, turn):
                 buf = keep
             if buf.strip():
                 await speak(buf.strip(), st)
+            if tr and st["check"] and used:
+                tr.step("check", "Antwort-Prüfung", time.time(), held=len(st["dropped"]))
             if st["dropped"]:
                 # figures that are in no result were not said: one honest sentence instead
                 en = guess_language(messages[-1]["content"]) == "English"
@@ -1410,6 +1469,8 @@ async def _answer(request, turn):
             m = re.match(r"LLM HTTP (\d+)", str(e))
             status = status or (int(m.group(1)) if m else None)
             code = llm_error_code(e, status)
+            if tr:
+                tr.fail(code)
             if code in LLM_GONE and not trace["said"].strip():
                 # said out loud as well: on a speaker, the watch or in the car nobody reads the error
                 note = LLM_GONE[code]["en" if guess_language(messages[-1]["content"]) == "English" else "de"]
@@ -1548,6 +1609,8 @@ async def _answer(request, turn):
                     text, st["head"] = head, None
                 if st["n"] == 0:
                     await out.put({"type": "timing", "llm_first_token": round(time.time() - t0, 3)})
+                    if tr:
+                        tr.mark("first", time.time())
                 st["n"] += 1
                 if not st["check"]:
                     await out.put({"type": "text", "delta": text})
@@ -1570,12 +1633,21 @@ async def _answer(request, turn):
             st["buf"] += text
         rec["end"] = time.time()
         out_calls = [dict(v, id=v["id"] or f"call_{i}") for i, v in sorted(calls.items()) if v["name"]]
+        if tr:
+            use = rec["usage"] if isinstance(rec["usage"], dict) else {}
+            tr.step("llm", f"Runde {len(tm['rounds'])}", rec["start"], rec["end"],
+                    first=tr.ms(rec["first"]) - tr.ms(rec["start"]) if rec["first"] else None,
+                    tokens=use.get("prompt_tokens") if isinstance(use.get("prompt_tokens"), int) else None,
+                    tools=len(payload.get("tools") or []),
+                    calls=", ".join(x["name"] if x["name"] in known else "unbekannt" for x in out_calls)[:60] or None,
+                    think=rec["think"] or None)
         return finish, out_calls
 
     async def tts():
         first, played_until, ttfa = True, 0.0, 0.5
         mute = body.get("speak") is False  # text only (Siri) or speech output failed: no TTS
         done = False
+        said = {"start": None, "pieces": 0, "chars": 0, "behind": 0}   # for Logs → Anfragen
         try:
             while not done:
                 text = await sentences.get()
@@ -1608,6 +1680,9 @@ async def _answer(request, turn):
                     if lang:
                         tts_body["language"] = lang
                 req = dict(tts_body, input=text, stream=True, response_format="pcm")
+                said["start"] = said["start"] or time.time()
+                said["pieces"] += 1
+                said["chars"] += len(text)
                 await out.put({"type": "tts_request", "chars": len(text)})  # for the stall details in the chat
                 # A broken stream (engine restarted, ReadError) costs this piece, never the rest of the
                 # answer: a piece that brought no audio yet is tried once more, then the next one goes on.
@@ -1618,6 +1693,8 @@ async def _answer(request, turn):
                             if r.status_code != 200:
                                 detail = (await r.aread()).decode(errors='replace')[:300]
                                 print(f"chat: tts HTTP {r.status_code}, this answer stays text only", flush=True)
+                                if tr:
+                                    tr.fail(f"tts_http_{r.status_code}")
                                 await out.put({"type": "error", "code": "tts_loading" if r.status_code == 503 and "loading" in detail
                                                else "tts_down" if r.status_code in (502, 503) else "tts_error",
                                                "message": f"TTS HTTP {r.status_code}: {detail}"})
@@ -1642,6 +1719,8 @@ async def _answer(request, turn):
                                         first = False
                                         played_until = now
                                         tm["audio"] = now
+                                        if tr:
+                                            tr.mark("sound", now)
                                         await out.put({"type": "timing", "first_audio": round(now - t0, 3)})
                                         try:  # for Zustand → Prüfen: how long people wait (latency.py)
                                             await asyncio.to_thread(latency.add, now - t0, body.get("client") or "web")
@@ -1656,6 +1735,7 @@ async def _answer(request, turn):
                                               f"first audio after {ttfa:.1f} s)", flush=True)
                                         if not opening:
                                             vorrang.count("behind")   # Zustand → Prüfen, "Vorrang für Sprache"
+                                            said["behind"] += 1
                                     # 16-bit mono PCM at 24 kHz: 48000 bytes per second of audio
                                     played_until = max(played_until, now) + len(ev["audio"]) * 3 / 4 / 48000
                                     echo.played(mine, played_until)
@@ -1667,16 +1747,23 @@ async def _answer(request, turn):
                         print(f"chat: tts stream broke ({type(e).__name__}, {len(text)} chars, "
                               f"{'with' if got else 'no'} audio, try {attempt})", flush=True)
                         if got or attempt == 2:
+                            if tr:
+                                tr.fail("tts_error")
                             await out.put({"type": "error", "code": "tts_error", "message": f"TTS: {type(e).__name__}"})
                             break
                         await asyncio.sleep(0.5)
         except Exception as e:
             code = "tts_down" if isinstance(e, (httpx.ConnectError, httpx.ConnectTimeout)) else "tts_error"
             print(f"chat: tts failed ({type(e).__name__}), the rest of this answer stays text only", flush=True)
+            if tr:
+                tr.fail(code)
             await out.put({"type": "error", "code": code, "message": f"TTS: {type(e).__name__}: {e}"[:400]})
             while not done and await sentences.get() is not None:  # the text still comes to the end
                 pass
         finally:
+            if tr and said["start"]:
+                tr.step("tts", "Sprachausgabe", said["start"], time.time(), pieces=said["pieces"], chars=said["chars"],
+                        behind=said["behind"] or None)
             await out.put(None)
 
     tasks = [asyncio.create_task(llm()), asyncio.create_task(tts())]
@@ -1693,10 +1780,21 @@ async def _answer(request, turn):
             if tm["on"]:
                 for line in timing_lines(tm, t0, time.time()):
                     logfilter.detail("chat", line)
+            if tr:
+                try:
+                    await asyncio.to_thread(tracelog.finish, tr)
+                except OSError as e:
+                    print("anfrage:", type(e).__name__, flush=True)
             yield f"data: {json.dumps({'type': 'done', 'total': round(time.time() - t0, 3)})}\n\n"
         finally:  # also runs when the browser aborts (barge-in): stop LLM and TTS
             for t in tasks:
                 t.cancel()
+            if tr and not tr.done:   # ended early (barge-in, browser gone): kept as far as it came
+                tr.step("err", "abgebrochen", time.time())
+                try:
+                    tracelog.finish(tr)
+                except OSError as e:
+                    print("anfrage:", type(e).__name__, flush=True)
             await c.aclose()
     return StreamingResponse(events(), media_type="text/event-stream",
                              headers={"Cache-Control": "no-cache", "X-Accel-Buffering": "no"})

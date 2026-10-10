@@ -589,6 +589,38 @@ details.adv h3.sec{margin-top:14px}
   .lseg{display:flex;width:100%}.lseg button{flex:1;padding:6px 4px}.lsearch{max-width:none;min-width:0;flex-basis:100%}.lsel{flex:1}
   .lrow{grid-template-columns:auto minmax(0,1fr);row-gap:2px;padding:6px 12px}.lrow .lm{grid-column:1/-1}.lout{height:auto;max-height:none}.lhead{flex-direction:column;gap:2px}}
 
+/* Logs → Anfragen (V01.0.262): list with a bead chain, where the time went, steps as a time line */
+.lreq{display:grid;grid-template-columns:minmax(260px,380px) minmax(0,1fr);gap:18px;align-items:start}.lreq[hidden],.lout[hidden],#logcopy[hidden],#loglines[hidden],.ltabs button[hidden]{display:none}
+.rlist{display:flex;flex-direction:column;gap:2px;max-height:min(70vh,760px);overflow:auto}
+.rq{display:block;width:100%;text-align:left;font:inherit;color:var(--fg);background:none;border:1px solid transparent;border-radius:11px;padding:8px 10px;cursor:pointer}
+.rq:hover{background:color-mix(in srgb,var(--line) 40%,transparent)}
+.rq.on{background:color-mix(in srgb,var(--acc) 7%,transparent);border-color:color-mix(in srgb,var(--acc) 30%,transparent)}
+.rq.err{box-shadow:inset 3px 0 0 #dc2626}.rq.slow{box-shadow:inset 3px 0 0 #f59e0b}
+.rtop{display:flex;gap:6px;align-items:baseline;min-width:0}.rtop .rt{font:12.5px ui-monospace,Menlo,monospace;color:var(--mut);margin-right:4px}
+.rtop .rdev{color:var(--mut);white-space:nowrap;overflow:hidden;text-overflow:ellipsis;flex:1;min-width:0}.rtop .rdur{font:12.5px ui-monospace,Menlo,monospace;white-space:nowrap}
+.rrow{display:flex;gap:6px;align-items:center;flex-wrap:wrap;margin:4px 0 0 66px}
+.rpill{display:inline-block;padding:1px 8px;border-radius:99px;font-size:11.5px;font-weight:600;background:var(--line);white-space:nowrap}
+.rpill.int{background:color-mix(in srgb,var(--acc) 12%,transparent);color:var(--acc)}
+.rchain{display:inline-flex;align-items:center;flex-wrap:wrap;row-gap:3px}.rchain i{width:9px;height:9px;border-radius:50%;display:block}
+.rchain s{display:block;width:10px;height:2px;background:var(--line)}
+.rchain i.rtool{width:auto;height:auto;border-radius:6px;padding:0 5px;font:10.5px/1.5 ui-monospace,Menlo,monospace;font-style:normal;color:#fff;background:#0d9488}.rchain i.rtool.bad{background:#dc2626}
+.rdet{border-left:1px solid var(--line);padding-left:18px;min-width:0;display:grid;gap:10px;align-content:start}
+.rdet h3{margin:0;font-size:17px}.rsub{font-size:12.5px;color:var(--mut)}.rnote{font-size:12px;color:var(--mut)}
+.rback{font:inherit;font-weight:600;color:var(--acc);background:none;border:0;padding:0;justify-self:start;cursor:pointer}
+.rbar{height:10px;border-radius:5px;display:flex;overflow:hidden;background:var(--line);margin:5px 0 7px}.rbar i{display:block;height:100%}
+.rleg{display:flex;gap:12px;flex-wrap:wrap;font-size:12px;color:var(--mut)}.rleg span{display:inline-flex;gap:5px;align-items:center}.rleg i{width:11px;height:9px;border-radius:3px;display:inline-block}
+.rtl{position:relative}.rtl:before{content:"";position:absolute;left:69px;top:14px;bottom:14px;width:2px;background:var(--line)}
+.rst{display:grid;grid-template-columns:44px 30px minmax(0,1fr) auto;gap:0 10px;padding-bottom:10px;position:relative}
+.rat{font:12px ui-monospace,Menlo,monospace;color:var(--mut);text-align:right;padding-top:5px}
+.ric{width:28px;height:28px;border-radius:50%;display:grid;place-items:center;color:#fff;font-size:13px;position:relative;z-index:1;box-shadow:0 0 0 4px var(--card)}
+.rst.mark .ric{width:12px;height:12px;margin:7px 8px 0}
+.rtx b{display:block;font-size:14px}.rtx .rd{font-size:12.5px;color:var(--mut);overflow-wrap:anywhere}
+.rst.tw .rtx{border:1px solid color-mix(in srgb,#0d9488 35%,transparent);background:color-mix(in srgb,#0d9488 5%,transparent);border-radius:10px;padding:5px 10px}
+.rst.tw.bad .rtx{border-color:color-mix(in srgb,#dc2626 40%,transparent);background:color-mix(in srgb,#dc2626 6%,transparent)}
+.rdu{font:12px ui-monospace,Menlo,monospace;padding:2px 8px;border-radius:8px;background:color-mix(in srgb,var(--line) 60%,transparent);align-self:start;margin-top:3px;white-space:nowrap}
+.rlines{height:auto;max-height:50vh}
+@media (max-width:760px){.lreq{grid-template-columns:minmax(0,1fr)}.rlist{max-height:none}.rdet{border-left:0;padding-left:0}.rrow{margin-left:0}}
+
 /* Ich → Dokumente: a document read again (text pieces, kept picture) */
 .docview{margin-top:10px;border:1px solid var(--line);border-radius:10px;padding:10px;max-height:50vh;overflow:auto;font-size:14px}
 .docview .dvhead{display:flex;gap:8px;align-items:center;justify-content:space-between;margin-bottom:6px}

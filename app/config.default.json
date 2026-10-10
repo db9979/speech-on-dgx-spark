@@ -162,6 +162,7 @@
   },
   "logs": {
     "max_mb": 500,
-    "keep_days": 14
+    "keep_days": 14,
+    "trace": false
   }
 }

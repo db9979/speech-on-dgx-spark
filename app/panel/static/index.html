@@ -350,6 +350,8 @@
       <h3 class="sec">Logs</h3>
       <div class="setrow"><div class="lbl"><b>Höchstens so viel Platz</b><span>Ältere Einträge werden automatisch gelöscht.</span></div><div class="ctl"><input class="num" id="logs.max_mb" type="number"><span class="unit">MB</span></div></div>
       <div class="setrow"><div class="lbl"><b>Aufbewahren</b><span>Wirkt nach dem nächsten Update oder sudo ./install.sh.</span></div><div class="ctl"><input class="num" id="logs.keep_days" type="number"><span class="unit">Tage</span></div></div>
+      <div class="setrow"><div class="lbl"><b>Anfragen verfolgen</b><span>Zeigt unter Zustand → Logs → Anfragen den Weg jeder Anfrage mit Werkzeugen und Zeiten.<button class="mlink" type="button">Mehr</button></span></div><label class="tgl"><input type="checkbox" id="logs.trace"><i></i></label></div>
+      <div class="fh more" hidden>Aufgezeichnet werden nur Wege, Werkzeugnamen und Zahlen, nie Frage, Antwort, Suchbegriffe oder Ergebnisse. Höchstens 48 Stunden und 500 Anfragen. Den Namen eines Profils zeigt die Liste nur, wenn das Profil es unter Ich → Gespräch erlaubt; sonst steht dort „Profil“. Sehen können es der Admin und Mit-Admins.</div>
       <h3 class="sec">Ports</h3>
       <div class="setrow"><div class="lbl"><b>Panel-Port</b><span>Wirkt nach einem Neustart des Panels.</span></div><input class="num" id="panel.port" type="number"></div>
       <div class="setrow"><div class="lbl"><b>HTTPS-Port</b><span>Das Mikrofon braucht https; 0 = aus.</span></div><input class="num" id="panel.https_port" type="number"></div>
@@ -553,7 +555,7 @@
 
 <section id="logs">
   <div class="card lcard">
-    <div class="lbar"><div class="ltabs" id="logtabs" role="tablist"><button type="button" data-lt="diag" class="on">Diagnose</button><button type="button" data-lt="svc">Dienste</button><button type="button" data-lt="update">Update</button><button type="button" data-lt="audit" class="mainonly">Änderungen</button><button type="button" data-lt="adm">Admin-Protokoll</button></div>
+    <div class="lbar"><div class="ltabs" id="logtabs" role="tablist"><button type="button" data-lt="diag" class="on">Diagnose</button><button type="button" data-lt="req" id="logreqtab" hidden>Anfragen</button><button type="button" data-lt="svc">Dienste</button><button type="button" data-lt="update">Update</button><button type="button" data-lt="audit" class="mainonly">Änderungen</button><button type="button" data-lt="adm">Admin-Protokoll</button></div>
       <span class="sp"></span><div class="lseg" id="logmin"><button type="button" data-v="10">10 min</button><button type="button" data-v="60" class="on">1 h</button><button type="button" data-v="120">2 h</button><button type="button" data-v="720">12 h</button><button type="button" data-v="1440">24 h</button></div></div>
     <div class="lsum" id="logsum"></div>
     <div class="lasterr" id="lasterr" hidden></div>
@@ -563,6 +565,7 @@
       <span class="sp"></span><button type="button" class="llive on" id="loglive" title="Alle paar Sekunden neu laden; pausiert, solange du hochscrollst oder etwas markierst"><i></i>Live</button><button type="button" class="b" id="logcopy">Kopieren für Thread</button></div>
     <div class="lhead"><span id="loghead"></span><span id="logcount"></span></div>
     <div class="lout" id="logout" role="log" aria-live="off"></div>
+    <div class="lreq" id="logreq" hidden></div>
   </div>
   <div class="card" id="logverbose"></div>
 </section>

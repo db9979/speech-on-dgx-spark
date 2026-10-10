@@ -23,7 +23,7 @@ router = APIRouter()
 # areas: which kind of line it is, from the word before the colon (search before chat: it is a chat line)
 AREAS = (("search", r"^chat: web search"), ("chat", r"^chat:"), ("weiche", r"^weiche:"), ("ha", r"^homeassistant:"),
          ("room", r"^room:"), ("esp32", r"^esp32:"), ("watch", r"^watch:"), ("telegram", r"^telegram:"), ("mail", r"^(mail|tidy|imap)\b"),
-         ("vorrang", r"^vorrang:"), ("wissen", r"^kiwix:"))
+         ("vorrang", r"^vorrang:"), ("wissen", r"^kiwix:"), ("anfrage", r"^anfrage:"))
 _AREAS = [(k, re.compile(rx)) for k, rx in AREAS]
 # filter keys the page may send: every area, "errors" (lines at level err) and "update" (the update unit)
 FILTERS = dict(AREAS, update=None, errors=None)
@@ -95,6 +95,22 @@ def read_journal(minutes, unit=None):
         if out.strip() and "-- No entries --" not in out:
             return out
     return out
+
+
+def between(start, end):
+    """Parsed journal lines of the speech-spark namespace between two moments (epoch seconds; only numbers
+    reach journalctl), for Logs → Anfragen: the lines from the time of one request."""
+    start, end = int(start), int(end) + 1
+    base = ["journalctl", f"--since=@{start}", f"--until=@{end}", "-n", "2000", "--no-pager", "-o", "short-iso"]
+    out = ""
+    for cmd in (base[:1] + [f"--namespace={JOURNAL_NAMESPACE}"] + base[1:], base):
+        try:
+            out = subprocess.run(cmd, capture_output=True, text=True, timeout=10).stdout[-OUT_MAX:]
+        except Exception:
+            continue
+        if out.strip() and "-- No entries --" not in out:
+            break
+    return [parse(ln) for ln in out.splitlines() if ln.strip() and not ln.startswith("-- ")]
 
 
 def parse(line):

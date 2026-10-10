@@ -620,6 +620,60 @@ class Browser(unittest.TestCase):
             except OSError:
                 pass
 
+    def test_requests_tab_list_and_way(self):
+        """Logs → Anfragen (V01.0.262): only with the admin switch; a list with the bead chain, the way of the
+        chosen request as a time line, no sideways scrolling; on a phone list first, then the way with a back button."""
+        import json as _json
+        import tracelog
+        from fastapi.testclient import TestClient
+        import panel
+
+        def trace(on):
+            with open(os.environ["SPEECH_SPARK_CONFIG"]) as f:
+                c = _json.load(f)
+            c.setdefault("logs", {})["trace"] = on
+            with open(os.environ["SPEECH_SPARK_CONFIG"], "w") as f:
+                _json.dump(c, f)
+        tracelog.clear()
+        trace(True)
+        c = TestClient(panel.app)
+        c.post("/api/profile/login", json={"name": "Uitest", "pin": "4711"})
+        c.put("/api/profile/settings", json={"trace_name": True})
+        for q in ("Hallo", 'TOOL memory_save {"fact": "Uitest mag Tee."}'):
+            self.assertEqual(c.post("/api/chat", json={"messages": [{"role": "user", "content": q}]}).status_code, 200)
+
+        async def go():
+            async with async_playwright() as p:
+                for name, w, h in VIEWS:
+                    br, pg, errors = await self.page(p, w, h)
+                    await pg.evaluate("goSec('logs')")
+                    await pg.wait_for_timeout(300)
+                    self.assertTrue(await pg.is_visible("#logtabs button[data-lt=req]"))
+                    await pg.click("#logtabs button[data-lt=req]")
+                    await pg.wait_for_selector("#logreq .rq")
+                    self.assertGreaterEqual(await pg.evaluate("document.querySelectorAll('#logreq .rq').length"), 2)
+                    self.assertIn("memory_save", await pg.inner_text("#logreq .rlist"))
+                    self.assertIn("Uitest", await pg.inner_text("#logreq .rlist"))
+                    if name == "handy":
+                        self.assertFalse(await pg.is_visible("#logreq .rdet"))
+                        await pg.click("#logreq .rq")
+                        await pg.wait_for_selector("#logreq .rdet")
+                        self.assertTrue(await pg.is_visible("#logreq .rback"))
+                    self.assertTrue(await pg.is_visible("#logreq .rtl"))
+                    self.assertIn("Sprachmodell", await pg.inner_text("#logreq .rdet"))
+                    self.assertNotIn("Uitest mag Tee", await pg.inner_text("#logs"))
+                    over = await pg.evaluate("document.documentElement.scrollWidth-window.innerWidth")
+                    self.assertLessEqual(over, 1, f"{name}: {over}px zu breit")
+                    await pg.screenshot(path=os.path.join(os.environ.get("SPEECH_SPARK_SHOTS", helpers.TMP),
+                                                          f"anfragen-{name}.png"), full_page=True)
+                    self.assertEqual(errors, [], name)
+                    await br.close()
+        try:
+            self.run_async(go())
+        finally:
+            trace(False)
+            tracelog.clear()
+
     def test_device_profiles_are_a_list_or_fixed(self):
         """Profile und Geräte: own keys pick their profile from a list, keys a profile set up itself
         (iPhone app, Pebble watch, Home Assistant) show the owner fixed; the three columns line up."""

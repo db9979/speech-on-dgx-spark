@@ -100,6 +100,8 @@ def whoami(request: Request, creds: HTTPBasicCredentials | None = Depends(securi
             "iphone": cfg.get("chat", {}).get("iphone", False),
             "iphone_panel": bool(cfg.get("chat", {}).get("iphone", False) and cfg.get("chat", {}).get("iphone_panel", False)),
             "pebble": cfg.get("chat", {}).get("pebble", False),
+            # Logs → Anfragen: main admin and co-admins (tracelog.py), not the Verwalter role
+            "trace": bool(main or elev and elev.get("role") != "manager") and cfg.get("logs", {}).get("trace", False) is True,
             "face": cfg.get("chat", {}).get("face") if cfg.get("chat", {}).get("face") in FACES else "robot",
             # what the assistant needs without the full configuration (which holds keys)
             "assistant": {"default_voice": cfg["tts"].get("default_voice"),
@@ -863,6 +865,7 @@ def profile_settings(request: Request):
     return {"settings": dict(base, **(profiles.settings(prof["id"]) if prof else {})), "defaults": base,
             "profile": prof, "allow": {"tool_think": bool(prof and chat.get("tool_thinking", False)),
                                        "route": bool(prof and chat.get("routing", False) is True),
+                                       "trace": bool(prof and load_config().get("logs", {}).get("trace", False) is True),
                                        "fix_learn": bool(prof and chat.get("learn_fixes", False) and chat.get("memory", True)),
                                        "style": bool(prof and chat.get("own_style", False)),
                                        "roles": bool(prof and chat.get("roles", False) is True),
@@ -881,7 +884,7 @@ async def profile_save_settings(request: Request, prof=Depends(browser_profile))
     # what Telegram may reach (personal data, switching the home) only from the profile's own browser
     # login: a shared device with a key cannot open it up
     if isinstance(body, dict) and request.headers.get(profiles.DEVICE_HEADER) \
-            and any(k in ("tg_private", "tg_ha", "tg_push") and body[k] for k in body):
+            and any(k in ("tg_private", "tg_ha", "tg_push", "trace_name") and body[k] for k in body):
         raise HTTPException(403, "only in the profile's own browser login")
     # what the model is told about the tone, too: a device key cannot change it
     if isinstance(body, dict) and request.headers.get(profiles.DEVICE_HEADER) \

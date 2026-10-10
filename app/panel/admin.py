@@ -442,6 +442,8 @@ def validate(new):
         raise HTTPException(400, "logs max_mb must be 50..20000")
     if not isinstance(lg["keep_days"], int) or not 1 <= lg["keep_days"] <= 365:
         raise HTTPException(400, "logs keep_days must be 1..365")
+    if not isinstance(lg.get("trace", False), bool):
+        raise HTTPException(400, "logs trace must be true or false")
     ch = new["chat"]
     if not re.fullmatch(r"https?://[^\s]+", str(ch["llm_url"])):
         raise HTTPException(400, "chat llm_url must start with http:// or https://")

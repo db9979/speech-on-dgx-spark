@@ -2,6 +2,7 @@
 
 Every version in one line, newest first (taken from the commit messages, so some lines are German, some English). Older entries have no version number.
 
+- **V01.0.263** · 2026-10-10 · Logs → Anfragen (Schalter unter Einstellungen → Betrieb, aus): Weg jeder Anfrage als Liste mit Perlenkette und Zeitstrahl (Weiche, Sprachmodell-Runden, Werkzeuge, Prüfung, Sprachausgabe, erster Ton), ohne Frage- und Antworttext; Name nur mit Zustimmung des Profils
 - **V01.0.262** · 2026-10-10 · Sicherheit: Schutz-Kopfzeilen auf jeder Antwort (kein Einbetten in fremde Seiten, nosniff, Referrer-Policy, Mikrofon/Kamera nur fürs Panel, HSTS auf https), Liste der angemeldeten Browser mit Einzel-Abmelden (Ich → Sicherheit, Admin in den Profil-Details), Profil-Anmeldung endet nach 30 Tagen ohne Nutzung (7–90 einstellbar), „Sicherheit auf einen Blick“ als Ampel oben unter Einstellungen → Sicherheit
 - **V01.0.261** · 2026-10-10 · Kiwix: Bücher werden ohne Datum gespeichert, aktualisierte Dateien bleiben gewählt (neueste wird genommen, Katalog bei 404 neu gelesen); „Schau in meinem Archiv“ sucht nie in den hochgeladenen Dokumenten und sagt, welcher Schalter fehlt
 - **V01.0.260** · 2026-10-10 · Kiwix: Bücherauswahl als Liste mit Suche, Sprach- und Artfilter (Deutsch/Englisch zuerst), gruppiert, mit Sprache, Variante, Artikelzahl, Größe und Stand; gewählte oben als Chips; ohne Auswahl deutsche und englische Wikipedia; Katalog bis 2000 Bücher
