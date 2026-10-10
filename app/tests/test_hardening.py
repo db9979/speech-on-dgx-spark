@@ -303,6 +303,17 @@ class Stage1(unittest.TestCase):
         bare = [line for line in sh.splitlines() if re.match(r"\s*apt-get\s+(update|install)", line)]
         self.assertEqual(bare, [], "apt-get without apt_wait")
 
+    def test_rmscene_does_not_downgrade_packaging(self):
+        # V01.0.278: rmscene pins packaging<24; in the shared resolve pip downgraded packaging and
+        # broke wheel, an ERROR line in every update log. rmscene comes in alone with --no-deps.
+        sh = repo_file("install.sh")
+        for line in sh.splitlines():
+            if "rmscene==" in line and not line.lstrip().startswith("#"):
+                self.assertIn("--no-deps", line)
+        panel = next(line for line in sh.splitlines() if line.startswith("make_venv panel"))
+        self.assertIn('"packaging>=24"', panel)
+        self.assertNotIn("rmscene", panel)
+
     def test_update_takes_only_green_versions(self):
         # V01.0.157: main can be red for a while; root installs only commits whose GitHub run passed
         sh = repo_file("update.sh")

@@ -31,6 +31,7 @@ Alle Optionen ohne Rückfragen (`--mode api --asr 1.7b --tts 0.6b --yes` …) st
 
 <!-- New version: add one line at the top here and in CHANGELOG.md, drop the oldest line here (keep 10). Details go to docs/de and docs/en, not into this README. -->
 
+- **V01.0.278** Update-Log ohne pip-Fehler „dependency conflicts“: rmscene (reMarkable) kommt ohne seine Abhängigkeiten, packaging bleibt aktuell (vorher auf 23.2 herabgestuft, wheel kaputt); bestehende Installationen werden beim Update repariert
 - **V01.0.277** iPhone-App: erste Antwort mit Ton (Tonweg-Wechsel nach dem Start abgewartet, verworfene Stücke nachgespielt), „Ton-Protokoll kopieren“ in den Einstellungen
 - **V01.0.276** Neue Personen per Einladung (Personen und Geräte → Neue Personen, aus): Link, QR-Code oder Karte, einmal gültig, Startpakete „Familie“/„Gast plus“, zweiter Anmeldeschritt Pflicht für E-Mail, Dokumente und Aufträge; danach führt Ich → „Los geht's“ durch Geräte und Dienste (Spark hakt selbst ab), „Am Handy weitermachen“ per QR-Code mit Zahlenabgleich, PIN-Link und Erinnern in den Profil-Details, iPhone-App nimmt Einladungen an
 - **V01.0.275** Haupt-Admin als Profil (eine Anmeldung, Passwort bleibt Notzugang), eine Hülle für angemeldete Profile, Wörter aufgeräumt (Admin-Rechte, Werkzeug-Verlauf, Update-Verlauf, Spark verwalten)
@@ -40,7 +41,6 @@ Alle Optionen ohne Rückfragen (`--mode api --asr 1.7b --tts 0.6b --yes` …) st
 - **V01.0.271** Personen und Geräte: ein Profil an einer Stelle mit Zugang, Funktionen „n von m an“, Rechten (Aufträge, App-Update, Upload-Platz), Browser abmelden, Gäste-Zeile und „+ Neu“
 - **V01.0.270** Vereinheitlichen Phase 4: ein Zeilen-Baustein (setRow) für alle Einstellungen, vom Admin Ausgeschaltetes bleibt unter Ich sichtbar mit Grund, Ich nennt nicht eingeschaltete Funktionen, Spalte „Neue Profile“ unter Wer darf was, Vorgaben nehmen nie einen Funktionsschalter ein
 - **V01.0.269** Vereinheitlichen Phase 3: Funktionen → „Wer darf was“ (Spark, jedes Profil, Gäste; Filter Neu/Braucht dich; Handy mit Profil-Chips), Admin schaltet Profilschalter mit Eintrag im Admin-Protokoll, auch für Verwalter
-- **V01.0.268** Vereinheitlichen Phase 2: Standardwerte nur noch aus config.default.json (load_config füllt fehlende Schlüssel), Vorgaben und eigene Werte nur über profiles.effective; Selbsttest gegen zweite Standardwerte und Handmischungen
 
 Alle Versionen: [CHANGELOG.md](CHANGELOG.md)
 

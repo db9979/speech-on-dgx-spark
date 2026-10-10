@@ -435,7 +435,13 @@ if [ "$WITH_TTS" = 1 ] && [ "$BACKEND" = transformers ]; then
 fi
 say "Python env for the panel and the ASR / TTS front ends"
 # sherpa-onnx + huggingface_hub: the Parakeet recognizer (CPU) that asr_proxy.py runs when chosen
-make_venv panel fastapi "uvicorn[standard]" python-multipart "httpx[http2]" psutil num2words numpy pypdf icalendar recurring-ical-events cryptography segno sherpa-onnx huggingface_hub "pillow==11.3.0" "onnxruntime==1.22.1" "tokenizers==0.22.1" "pypdfium2==4.30.0" "rmscene==0.8.0"   # pictures (images.py), meaning search (docembed.py), scanned pages (documents.py), reMarkable pages (remarkable.py): fixed versions
+# rmscene pins packaging<24 although it only uses packaging.version.Version; resolved together
+# with the rest, pip downgraded packaging to 23.2 and broke wheel (packaging>=24), which showed up
+# as "pip's dependency resolver ... dependency conflicts" in every update log. So packaging stays
+# current and rmscene comes in without its dependencies; the first line repairs venvs from .273-.276.
+[ -x "$PREFIX/venv-panel/bin/pip" ] && "$PREFIX/venv-panel/bin/pip" install -q --no-deps "packaging>=24"
+make_venv panel fastapi "uvicorn[standard]" python-multipart "httpx[http2]" psutil num2words numpy pypdf icalendar recurring-ical-events cryptography segno sherpa-onnx huggingface_hub "packaging>=24" "pillow==11.3.0" "onnxruntime==1.22.1" "tokenizers==0.22.1" "pypdfium2==4.30.0"   # pictures (images.py), meaning search (docembed.py), scanned pages (documents.py): fixed versions
+"$PREFIX/venv-panel/bin/pip" install -q --no-deps "rmscene==0.8.0"   # reMarkable pages (remarkable.py)
 
 # ---------------------------------------------------------------- engines (vLLM + vllm-omni, native)
 if [ "$USE_ENGINE" = 1 ]; then
