@@ -53,7 +53,7 @@ _lock = threading.RLock()
 TOOLS = {
     "calendar_add": "cal", "calendar_events": "cal", "daily_briefing": "cal", "tasks_add": "cal", "tasks_change": "cal",
     "tasks_show": "cal", "home_assistant": "ha", "home_assistant_action": "ha", "home_assistant_history": "ha",
-    "home_assistant_states": "ha", "home_assistant_todo": "ha", "web_search": "web", "read_page": "web",
+    "home_assistant_states": "ha", "home_assistant_todo": "ha", "web_search": "web", "read_page": "pages",
     "archive_search": "kiwix", "article_more": "wiki", "wikipedia": "wiki", "mail_draft": "mail", "mail_list": "mail",
     "mail_read": "mail", "mail_search": "mail", "mail_tidy_overview": "mail", "mail_tidy_propose": "mail",
     "contacts_search": "contacts", "remarkable_note": "rm", "iphone_action": "push", "weather": "weather",
@@ -68,9 +68,11 @@ TOOLS = {
 TARGETS = {
     "qwen": ("Sprachmodell qwen38", "LLM · auf dem Spark", "spark", True),
     "ha": ("Home Assistant", "HTTP · Heimnetz", "lan", True),
-    "web": ("Websuche", "SearXNG · Heimnetz", "lan", True),
     "kiwix": ("Kiwix", "Archiv · Heimnetz", "lan", True),
     "mem": ("Spark-Speicher", "Dokumente, Erinnerungen", "spark", False),
+    # SearXNG runs in the home network but asks search engines outside: the search words leave the house
+    "web": ("Websuche", "SearXNG (Heimnetz) → Internet", "net", True),
+    "pages": ("Webseiten", "aus Treffern · Internet", "net", False),
     "cal": ("Kalender", "CalDAV · Internet", "net", True),
     "mail": ("Mail", "IMAP · Internet", "net", True),
     "contacts": ("Kontakte", "CardDAV · Internet", "net", False),
@@ -81,7 +83,7 @@ TARGETS = {
     "rm": ("reMarkable", "Cloud · Internet", "net", True),
     "push": ("Apple Push", "APNs · Internet", "net", True),
 }
-RETURNS = {"cal": "Termine oder Aufgaben", "ha": "Zustände oder Schaltung", "web": "Suchergebnisse", "kiwix": "Archiv-Treffer",
+RETURNS = {"cal": "Termine oder Aufgaben", "ha": "Zustände oder Schaltung", "web": "Suchergebnisse", "pages": "Seitentext", "kiwix": "Archiv-Treffer",
            "wiki": "Artikel", "mail": "Mails (nur Anzahl und Größe)", "contacts": "Kontakte", "rm": "Ablage", "push": "Zustellung",
            "weather": "Wetterwerte", "parcels": "Sendungen", "transit": "Verbindungen", "mem": "eigene Daten"}
 CLIENT = {"web": "Browser", "speaker": "Lautsprecher", "watch": "Uhr", "siri": "Siri", "telegram": "Telegram",

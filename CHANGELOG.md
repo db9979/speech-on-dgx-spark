@@ -2,6 +2,7 @@
 
 Every version in one line, newest first (taken from the commit messages, so some lines are German, some English). Older entries have no version number.
 
+- **V01.0.322** · 2026-10-10 · Zustand → Live: Websuche steht unter Internet („SearXNG (Heimnetz) → Internet“, die Suchbegriffe gehen an Suchmaschinen draußen), Seiten aus Treffern (read_page) als eigenes Ziel „Webseiten“ unter Internet
 - **V01.0.321** · 2026-10-10 · TestFlight: Tests eines iOS-Stands von neuerem Push abgebrochen → neuester grüner main-Stand, der ihn enthält, geht hoch (vorher seit .272 kein Upload); Selbsttest test_testflight_gate
 - **V01.0.320** · 2026-10-10 · mcp.js: #mcpname/#mcpmsg gab es auch in agent.js (MCP-Client des Admins), $('mcpname') las dort das leere Feld; jetzt #mcsname/#mcsmsg, Selbsttest test_mcpserver.PageIds prüft, dass keine Kennung von mcp.js anderswo vorkommt
 - **V01.0.319** · 2026-10-10 · Smart-Home-Regeln bearbeiten: Knopf „Bearbeiten“ füllt das Formular, PUT /api/proactive/rules/<id> prüft wie beim Anlegen und ersetzt an derselben Stelle (gleiche id, Gedächtnis der Regel neu), andere Profile 404; Selbsttests inkl. Browsertest

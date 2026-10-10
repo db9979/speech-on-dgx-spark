@@ -165,6 +165,8 @@ class Live(unittest.TestCase):
             self.assertIn(tgt, live.RETURNS, n)
         for k, v in live.TARGETS.items():
             self.assertIn(v[2], ("spark", "lan", "net"), k)
+        # Dominik 2026-10-10: the web search asks search engines outside, pages from hits come from outside
+        self.assertEqual((live.TARGETS["web"][2], live.TARGETS[live.TOOLS["read_page"]][2]), ("net", "net"))
         import tracelog as tl
         self.assertEqual(set(live.CLIENT) - {"other"}, set(tl.CLIENTS) - {"other"},
                          "a new kind of device: add a word to live.CLIENT")
