@@ -57,6 +57,42 @@ def allowed(uid):
 profiles.APP_GATE[0] = allowed
 
 
+# ---------------------------------------------------------------- panel areas in the app
+# The app takes over the panel bit by bit (plan plaene/iphone-uebernimmt-panel.md). Each area has its own
+# profile switch (Ich -> iPhone-App, set only in the browser) and all need the admin switch
+# chat.iphone_panel. Only these paths open for the app's key; each keeps its own checks (secret_profile
+# wants a fresh code from the app, so the profile needs its second step). "Spark verwalten" (app_admin)
+# opens no path: the app signs in like the browser, with the admin password and the admin's code.
+_ID = r"[0-9a-f]{1,16}"
+AREAS = {
+    # Mein Alltag: memory, the next appointments, the Spark's own reminders
+    "app_mine": ((("GET",), r"/api/profile/memory"), (("DELETE",), rf"/api/profile/memory/{_ID}"),
+                 (("POST",), r"/api/profile/memory/tidy"), (("POST",), r"/api/profile/calendar/test"),
+                 (("DELETE",), rf"/api/profile/reminders/{_ID}")),
+}
+RIGHTS_PANEL = ("app_mine", "app_admin")
+# conversation settings the app may change with "Mein Alltag" (each still needs its admin switch to matter)
+MINE_FIELDS = ("daily", "learn", "fix_learn", "tool_think", "route")
+
+
+def panel_on():
+    return bool(load_config().get("chat", {}).get("iphone_panel", False))
+
+
+def area_on(uid, right):
+    return admin_on() and panel_on() and bool(profiles.settings(uid).get(right))
+
+
+profiles.APP_AREAS.update({right: tuple((frozenset(m), re.compile(p)) for m, p in rules)
+                           for right, rules in AREAS.items()})
+profiles.APP_AREA_GATE[0] = area_on
+
+
+def panel_rights(uid):
+    """What hello tells the app: which panel areas it shows."""
+    return {r: area_on(uid, r) for r in RIGHTS_PANEL}
+
+
 def _hash(code):
     return hashlib.sha256(code.encode()).hexdigest()
 
@@ -218,7 +254,9 @@ def app_hello(prof=Depends(own_profile)):
             # Spark updates (appupdate.py): the version page and the start button, rights set by the admin
             "update": appupdate.for_app(prof["id"]),
             # where room mode listens right now (roomlive.py): the line in the chat, the widget and the Live Activity
-            "rooms": bool(load_config().get("chat", {}).get("room", False) and s.get("app_room"))}
+            "rooms": bool(load_config().get("chat", {}).get("room", False) and s.get("app_room")),
+            # panel areas in the app (plaene/iphone-uebernimmt-panel.md); panel: the bridge "Im Panel öffnen"
+            "panel": panel_on(), "areas": panel_rights(prof["id"])}
 
 
 DOC_BODY = 3 * 1024 * 1024     # the text of one document as JSON (the iPhone reads PDFs and scans itself)
@@ -262,7 +300,8 @@ async def app_doc(request: Request, prof=Depends(own_profile)):
 APP_FIELDS = ("voice", "speed", "length", "pro_on", "pro_quiet", "pro_max", "pro_events", "pro_lead",
               "pro_weather", "pro_place", "pro_weather_at", "pro_parcel", "pro_bday", "pro_transit",
               "pro_greet", "pro_mail", "briefing_at")
-RIGHTS = ("app_ha", "app_car_ha", "app_act", "app_listen", "app_push", "app_docs", "app_ios", "app_images", "app_room")
+RIGHTS = ("app_ha", "app_car_ha", "app_act", "app_listen", "app_push", "app_docs", "app_ios", "app_images",
+          "app_room") + RIGHTS_PANEL
 SETTINGS_BODY = 8192
 
 
@@ -278,7 +317,11 @@ def app_settings(request: Request, prof=Depends(own_profile)):
     import proactive
     chat = load_config().get("chat", {})
     p = dict(profiles.defaults(chat.get("defaults")), **profiles.settings(prof["id"]))
-    return {"settings": {k: p[k] for k in APP_FIELDS},
+    fields = _fields(prof["id"])
+    return {"settings": {k: p[k] for k in fields},
+            # which of the conversation switches the admin allows (the rest change nothing)
+            "admin": {"tool_think": bool(chat.get("tool_thinking", False)), "route": bool(chat.get("routing", False)),
+                      "fix_learn": bool(chat.get("learn_fixes", False))},
             # shown only: the tone is changed in the browser login, the rights in Ich -> iPhone-App
             "style": p.get("style", "") if chat.get("own_style", False) else None,
             "rights": {k: bool(p.get(k)) for k in RIGHTS},
@@ -292,11 +335,16 @@ async def app_settings_save(request: Request, prof=Depends(own_profile)):
     _app_only(request)
     guard.limit(request, "chat", prof["id"], False)
     body = await _json(request, SETTINGS_BODY)
-    wrong = [k for k in body if k not in APP_FIELDS]
+    fields = _fields(prof["id"])
+    wrong = [k for k in body if k not in fields]
     if wrong:
         raise HTTPException(400, "not changeable from the app: " + ", ".join(sorted(wrong))[:200])
     bad = [k for k, v in body.items() if not profiles.SETTINGS[k][1](v)]
     if bad:
         raise HTTPException(400, "invalid value: " + ", ".join(sorted(bad)))
     saved = profiles.save_settings(prof["id"], body)
-    return {"settings": {k: saved[k] for k in APP_FIELDS if k in saved}}
+    return {"settings": {k: saved[k] for k in fields if k in saved}}
+
+
+def _fields(uid):
+    return APP_FIELDS + (MINE_FIELDS if area_on(uid, "app_mine") else ())

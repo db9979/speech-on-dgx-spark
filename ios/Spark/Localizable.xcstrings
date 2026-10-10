@@ -331,6 +331,46 @@
         }
       }
     },
+    "Aufräumen vorschlagen": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Suggest a tidy-up"
+          }
+        }
+      }
+    },
+    "Aufträge": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Jobs"
+          }
+        }
+      }
+    },
+    "Aus Gesprächen lernen": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Learn from conversations"
+          }
+        }
+      }
+    },
+    "Aus Korrekturen lernen": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Learn from corrections"
+          }
+        }
+      }
+    },
     "Ausführlich": {
       "localizations": {
         "en": {
@@ -367,6 +407,16 @@
           "stringUnit": {
             "state": "translated",
             "value": "Greeting"
+          }
+        }
+      }
+    },
+    "Bei Werkzeugen nachdenken": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Think when choosing tools"
           }
         }
       }
@@ -781,6 +831,16 @@
         }
       }
     },
+    "Die nächsten Termine": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "The next appointments"
+          }
+        }
+      }
+    },
     "Diese App spricht mit deinem Spark. Zum Koppeln im Panel unter Ich → iPhone-App auf „iPhone koppeln“ tippen.": {
       "localizations": {
         "en": {
@@ -811,6 +871,16 @@
         }
       }
     },
+    "Dokumente": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Documents"
+          }
+        }
+      }
+    },
     "Dokumente ablegen": {
       "localizations": {
         "en": {
@@ -827,6 +897,26 @@
           "stringUnit": {
             "state": "translated",
             "value": "You can also say “Yes” or “No”."
+          }
+        }
+      }
+    },
+    "E-Mail": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "E-mail"
+          }
+        }
+      }
+    },
+    "Einbinden": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Connect"
           }
         }
       }
@@ -927,6 +1017,16 @@
           "stringUnit": {
             "state": "translated",
             "value": "Reminder: %@"
+          }
+        }
+      }
+    },
+    "Erinnerungen": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Reminders"
           }
         }
       }
@@ -1141,6 +1241,16 @@
         }
       }
     },
+    "Funktionen": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Features"
+          }
+        }
+      }
+    },
     "Für dich an": {
       "localizations": {
         "en": {
@@ -1167,6 +1277,16 @@
           "stringUnit": {
             "state": "translated",
             "value": "Birthdays"
+          }
+        }
+      }
+    },
+    "Gedächtnis": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Memory"
           }
         }
       }
@@ -1251,6 +1371,16 @@
         }
       }
     },
+    "Gezielte Werkzeugwahl": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Targeted tool choice"
+          }
+        }
+      }
+    },
     "Hallo, so klinge ich.": {
       "localizations": {
         "en": {
@@ -1277,6 +1407,16 @@
           "stringUnit": {
             "state": "translated",
             "value": "At most %lld a day"
+          }
+        }
+      }
+    },
+    "Ich": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Me"
           }
         }
       }
@@ -1317,6 +1457,16 @@
           "stringUnit": {
             "state": "translated",
             "value": "Switch on “Allow listening all the time” in the panel under Me → iPhone app."
+          }
+        }
+      }
+    },
+    "Im Panel öffnen": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Open in the panel"
           }
         }
       }
@@ -1381,6 +1531,16 @@
         }
       }
     },
+    "Jeden Tag neues Gespräch": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "New conversation every day"
+          }
+        }
+      }
+    },
     "Jemand": {
       "localizations": {
         "en": {
@@ -1397,6 +1557,16 @@
           "stringUnit": {
             "state": "translated",
             "value": "Update now"
+          }
+        }
+      }
+    },
+    "Kalender": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Calendar"
           }
         }
       }
@@ -1441,6 +1611,26 @@
         }
       }
     },
+    "Keine Termine in den nächsten 14 Tagen.": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "No appointments in the next 14 days."
+          }
+        }
+      }
+    },
+    "Kontakte": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Contacts"
+          }
+        }
+      }
+    },
     "Kopieren": {
       "localizations": {
         "en": {
@@ -1481,6 +1671,16 @@
         }
       }
     },
+    "Lautsprecher": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Speakers"
+          }
+        }
+      }
+    },
     "Lese den Text …": {
       "localizations": {
         "en": {
@@ -1511,6 +1711,16 @@
         }
       }
     },
+    "Logs": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Logs"
+          }
+        }
+      }
+    },
     "Löschen": {
       "localizations": {
         "en": {
@@ -1527,6 +1737,16 @@
           "stringUnit": {
             "state": "translated",
             "value": "Mails"
+          }
+        }
+      }
+    },
+    "Mein Alltag": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "My day"
           }
         }
       }
@@ -1577,6 +1797,26 @@
           "stringUnit": {
             "state": "translated",
             "value": "Pair with this Spark?"
+          }
+        }
+      }
+    },
+    "Mitteilungen": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Notifications"
+          }
+        }
+      }
+    },
+    "Monitoring": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Monitoring"
           }
         }
       }
@@ -1751,6 +1991,16 @@
         }
       }
     },
+    "Nichts aufzuräumen.": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Nothing to tidy up."
+          }
+        }
+      }
+    },
     "Nichts gehört, Mikrofon aus. Tippen zum Sprechen.": {
       "localizations": {
         "en": {
@@ -1781,6 +2031,16 @@
         }
       }
     },
+    "Noch kein Kalender verbunden.": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "No calendar connected yet."
+          }
+        }
+      }
+    },
     "Noch keine Dokumente.": {
       "localizations": {
         "en": {
@@ -1791,12 +2051,32 @@
         }
       }
     },
+    "Noch keine Einträge.": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "No entries yet."
+          }
+        }
+      }
+    },
     "Noch keine Gespräche": {
       "localizations": {
         "en": {
           "stringUnit": {
             "state": "translated",
             "value": "No conversations yet"
+          }
+        }
+      }
+    },
+    "Noch nichts gemerkt.": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Nothing remembered yet."
           }
         }
       }
@@ -1881,6 +2161,16 @@
         }
       }
     },
+    "Pebble-Uhr": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Pebble watch"
+          }
+        }
+      }
+    },
     "Probehören": {
       "localizations": {
         "en": {
@@ -1897,6 +2187,46 @@
           "stringUnit": {
             "state": "translated",
             "value": "Profile"
+          }
+        }
+      }
+    },
+    "Profile und Geräte": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Profiles and devices"
+          }
+        }
+      }
+    },
+    "Protokoll": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Log"
+          }
+        }
+      }
+    },
+    "Prüfen": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Checks"
+          }
+        }
+      }
+    },
+    "Raum-Modus": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Room mode"
           }
         }
       }
@@ -2051,6 +2381,16 @@
         }
       }
     },
+    "Sicherheit": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Security"
+          }
+        }
+      }
+    },
     "Smart Home": {
       "localizations": {
         "en": {
@@ -2141,6 +2481,16 @@
         }
       }
     },
+    "Spark verwalten": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Manage the Spark"
+          }
+        }
+      }
+    },
     "Spark zuhören": {
       "localizations": {
         "en": {
@@ -2187,6 +2537,16 @@
           "stringUnit": {
             "state": "translated",
             "value": "Voice message. Listen in the panel."
+          }
+        }
+      }
+    },
+    "Sprechererkennung": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Speaker recognition"
           }
         }
       }
@@ -2291,6 +2651,16 @@
         }
       }
     },
+    "Telegram": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Telegram"
+          }
+        }
+      }
+    },
     "Termine": {
       "localizations": {
         "en": {
@@ -2361,6 +2731,16 @@
         }
       }
     },
+    "Update und Sicherung": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Update and backup"
+          }
+        }
+      }
+    },
     "Verlauf": {
       "localizations": {
         "en": {
@@ -2377,6 +2757,16 @@
           "stringUnit": {
             "state": "translated",
             "value": "History not loaded"
+          }
+        }
+      }
+    },
+    "Verwerfen": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Discard"
           }
         }
       }
@@ -2541,6 +2931,16 @@
         }
       }
     },
+    "Weglassen:": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Leave out:"
+          }
+        }
+      }
+    },
     "Weiterlesen": {
       "localizations": {
         "en": {
@@ -2577,6 +2977,16 @@
           "stringUnit": {
             "state": "translated",
             "value": "Weather at"
+          }
+        }
+      }
+    },
+    "Wischen zum Löschen. Aufräumen fasst doppelte Einträge zusammen, erst nach deinem Übernehmen.": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Swipe to delete. A tidy-up merges duplicate entries, only after you apply it."
           }
         }
       }
@@ -2641,6 +3051,36 @@
         }
       }
     },
+    "Zusammenfassen:": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Merge:"
+          }
+        }
+      }
+    },
+    "aus einem Gespräch gelernt": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "learned from a conversation"
+          }
+        }
+      }
+    },
+    "iPhone-App": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "iPhone app"
+          }
+        }
+      }
+    },
     "wird noch gelesen": {
       "localizations": {
         "en": {
@@ -2661,12 +3101,32 @@
         }
       }
     },
+    "Öffnet das Panel in Safari an dieser Stelle. Dort meldest du dich an wie gewohnt.": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Opens the panel in Safari at this place. Sign in there as usual."
+          }
+        }
+      }
+    },
     "Öffnet die App und hört sofort zu.": {
       "localizations": {
         "en": {
           "stringUnit": {
             "state": "translated",
             "value": "Opens the app and listens at once."
+          }
+        }
+      }
+    },
+    "Übernehmen": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Apply"
           }
         }
       }

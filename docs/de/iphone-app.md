@@ -76,6 +76,13 @@ In der App unter Einstellungen → **Mein Profil** stellst du dieselben Werte ei
 - **Kurzbefehle:** In der Kurzbefehle-App gibt es „Spark fragen“, „Erinnerung beim Spark“, „Auf die Liste beim Spark“ und „Dokument beim Spark ablegen“. Für die Liste braucht es den Erinnerungen-Schalter, für Dokumente den Dokumente-Schalter.
 - **Notizen:** Apple lässt Apps nicht direkt in die Notizen-App schreiben. Zwei Wege: eine Antwort in der App lange drücken → „Teilen (z. B. als Notiz)“, oder ein Kurzbefehl aus „Spark fragen“ und Apples „Notiz erstellen“ (die Antwort von „Spark fragen“ als Text der Notiz).
 
+## Panel-Bereiche in der App
+
+Die App übernimmt das Panel Stück für Stück (Plan „iPhone-App übernimmt das Panel“). Dafür schaltet der Admin unter Funktionen „Panel-Bereiche in der iPhone-App“ ein, und jedes Profil schaltet unter Ich → iPhone-App jeden Bereich einzeln ein. Alles ist zuerst aus, Gäste bekommen nichts davon. Die App selbst kann keinen Bereich einschalten.
+
+- **Im Panel öffnen** (Einstellungen): Alles, was die App noch nicht selbst zeigt, öffnet das Panel in Safari an der richtigen Stelle (Gedächtnis, E-Mail, Sicherheit …). Mit „Spark verwalten“ auch Monitoring, Logs, Funktionen und Profile.
+- **Mein Alltag** (Schalter „Mein Alltag in der App“): die nächsten Termine aus deinen Kalendern, die Erinnerungen des Spark (wischen zum Löschen) und das Gedächtnis (ansehen, einzeln löschen, Aufräumen vorschlagen lassen und übernehmen). Unter Mein Profil kommen die Gesprächsschalter dazu: aus Gesprächen lernen, jeden Tag neues Gespräch und, wenn der Admin sie erlaubt, aus Korrekturen lernen, bei Werkzeugen nachdenken und gezielte Werkzeugwahl. Alles auf einmal vergessen geht weiter nur im Browser.
+
 ## Meine Dokumente ansehen
 
 Mit „Dokumente aus der App“ (Ich → iPhone-App) steht unter Einstellungen → **Meine Dokumente** die Liste deiner Dokumente auf dem Spark, mit Suche. Ein Tippen öffnet eines: Ist das Original aufbewahrt und ein PDF oder Bild, zeigt es Apples Vorschau (zoomen, suchen, teilen), daneben gibt es den Reiter „Text“ mit dem Text, den der Spark gespeichert hat. Andere Dateiarten zeigt die App nur als Text. Lange Texte kommen stückweise: unten „Weiterlesen“ hängt das nächste Stück an. Löschen und Hochladen gehen weiter im Panel.

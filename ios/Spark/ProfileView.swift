@@ -8,6 +8,8 @@ final class ProfileModel: ObservableObject {
     @Published var style: String?
     @Published var rights: [String: Bool] = [:]
     @Published var services: [String: Bool] = [:]
+    /// conversation switches the admin allows (the profile's own switch matters only with it)
+    @Published var adminAllows: [String: Bool] = [:]
     @Published var proactive = false
     @Published var voices: [String] = []
     @Published var loading = true
@@ -38,6 +40,7 @@ final class ProfileModel: ObservableObject {
         rights = d["rights"] as? [String: Bool] ?? [:]
         services = d["services"] as? [String: Bool] ?? [:]
         proactive = (d["allow"] as? [String: Any])?["proactive"] as? Bool ?? false
+        adminAllows = d["admin"] as? [String: Bool] ?? [:]
     }
 
     func set(_ key: String, _ value: Any) {
@@ -145,6 +148,12 @@ struct ProfileView: View {
                 Text("Normal").tag("normal")
                 Text("Ausführlich").tag("long")
             }
+            // with "Mein Alltag" (Ich → iPhone-App): the conversation switches of the panel
+            if m.s["learn"] != nil { Toggle("Aus Gesprächen lernen", isOn: m.bool("learn")) }
+            if m.s["daily"] != nil { Toggle("Jeden Tag neues Gespräch", isOn: m.bool("daily")) }
+            if m.s["fix_learn"] != nil && m.adminAllows["fix_learn"] == true { Toggle("Aus Korrekturen lernen", isOn: m.bool("fix_learn")) }
+            if m.s["tool_think"] != nil && m.adminAllows["tool_think"] == true { Toggle("Bei Werkzeugen nachdenken", isOn: m.bool("tool_think")) }
+            if m.s["route"] != nil && m.adminAllows["route"] == true { Toggle("Gezielte Werkzeugwahl", isOn: m.bool("route")) }
             if let style = m.style {
                 LabeledContent("Wünsche zum Ton") { Text(verbatim: style.isEmpty ? "–" : style).foregroundStyle(.secondary) }
             }

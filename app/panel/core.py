@@ -239,6 +239,8 @@ def browser_profile(request: Request):
     """The profile of a browser login. Device keys (Siri, watch, speakers, own programs) may talk to the
     assistant but not change the profile's connections, devices or security."""
     prof = own_profile(request)
+    if request.scope.get("speech_app_area"):
+        return prof   # a panel area the profile opened for its iPhone app (iphone.py AREAS, own switch per area)
     if request.headers.get(profiles.DEVICE_HEADER) or request.scope.get("speech_profile"):
         raise HTTPException(403, "only in the profile's own browser login")
     return prof
@@ -246,8 +248,11 @@ def browser_profile(request: Request):
 
 async def secret_profile(request: Request):
     """Like browser_profile, plus a fresh code when the profile has the second step: for changes that
-    hand out secrets (tokens, passwords, code word) or add a new way to reach the profile."""
+    hand out secrets (tokens, passwords, code word) or add a new way to reach the profile. From the iPhone
+    app always with a fresh code: the profile needs its second step for that."""
     prof = browser_profile(request)
+    if request.scope.get("speech_app_area") and not mfa.enabled(prof["id"]):
+        raise HTTPException(403, "Dafür braucht dein Profil den zweiten Anmeldeschritt (Ich → Sicherheit).")
     await confirm_code(request, prof["id"], prof["name"])
     return prof
 

@@ -393,6 +393,11 @@ APP_PATHS = ("/api/chat", "/api/test/asr", "/api/siri/ask", "/api/iphone/hello",
 # looking at an own document again (wissen.reader: only with app_docs); reading only, never changing
 APP_PATTERNS = (re.compile(r"/api/profile/wissen/[0-9a-f]{12}/(?:text|file)"),)
 APP_GATE = [lambda uid: False]
+# Panel areas in the app (iphone.py, V01.0.246): with the admin switch chat.iphone_panel and the profile's
+# own switch for an area, the app's key also reaches that area's panel paths. right -> ((methods, pattern), ...);
+# filled by iphone.py, APP_AREA_GATE(uid, right) says whether the area is open for the profile.
+APP_AREAS = {}
+APP_AREA_GATE = [lambda uid, right: False]
 
 
 def _app_path(request):
@@ -400,6 +405,16 @@ def _app_path(request):
     if path in APP_PATHS:
         return True
     return request.method == "GET" and any(p.fullmatch(path) for p in APP_PATTERNS)
+
+
+def _app_area(request, uid):
+    """The panel area (its switch name) this request of the app's key belongs to, when it is open; else None."""
+    path = request.scope.get("path") or ""
+    for right, rules in APP_AREAS.items():
+        if any(request.method in methods and pat.fullmatch(path) for methods, pat in rules) \
+                and APP_AREA_GATE[0](uid, right):
+            return right
+    return None
 # A room key (scope "room", for Home Assistant) only reads where room mode listens and ends it (roomlive.py),
 # and only while the admin allows it (ROOM_GATE, set by roomlive.py; closed without it).
 ROOM_PATHS = ("/api/room/active", "/api/room/end")
@@ -466,8 +481,12 @@ def current(request):
         dev = _device(d, request)
         if not dev:
             return None
-        if dev.get("scope") == "app" and (not _app_path(request) or not APP_GATE[0](dev["user"])):
-            return None
+        if dev.get("scope") == "app":
+            area = None if _app_path(request) else _app_area(request, dev["user"])
+            if (not area and not _app_path(request)) or not APP_GATE[0](dev["user"]):
+                return None
+            # core.browser_profile lets the app into the area's paths like the profile's own browser login
+            request.scope["speech_app_area"] = area
         if dev.get("scope") == "room" and (request.scope.get("path") not in ROOM_PATHS or not ROOM_GATE[0](dev["user"])):
             return None
         if dev.get("scope") == "watch" and (not str(request.scope.get("path") or "").startswith(WATCH_PREFIX)
@@ -577,6 +596,9 @@ SETTINGS = {
     "app_ios": (False, lambda v: isinstance(v, bool)),      # Apple Reminders and the lists on the iPhone (tasks.py)
     "app_images": (False, lambda v: isinstance(v, bool)),   # pictures from the app to the model (images.py)
     "app_room": (False, lambda v: isinstance(v, bool)),     # where room mode listens, in the app (roomlive.py)
+    # panel areas in the app (iphone.AREAS, admin chat.iphone_panel): one switch per area, set in the browser
+    "app_mine": (False, lambda v: isinstance(v, bool)),
+    "app_admin": (False, lambda v: isinstance(v, bool)),
     "room_tell": (False, lambda v: isinstance(v, bool)),    # a note when a speaker starts room mode by voice
     "room_remote": (False, lambda v: isinstance(v, bool)),  # start room mode on an own speaker from another device (roomfar.py)
     # agent functions (agent.py): the admin gives the level, the profile switches it on itself

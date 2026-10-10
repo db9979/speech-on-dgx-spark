@@ -75,6 +75,13 @@ In the app under Settings → **My profile** you set the same values as in the p
 - **Shortcuts:** The Shortcuts app gets "Ask Spark", "Reminder at the Spark", "Add to a Spark list" and "Store a document at the Spark". Lists need the reminders switch, documents the documents switch.
 - **Notes:** Apple does not let apps write into Notes directly. Two ways: long-press an answer in the app → "Share (e.g. as a note)", or a shortcut of "Ask Spark" plus Apple's "Create Note".
 
+## Panel areas in the app
+
+The app takes over the panel bit by bit (plan "iPhone app takes over the panel"). The admin switches on "Panel areas in the iPhone app" under Features, and each profile switches on each area on its own under Me → iPhone app. Everything starts off, guests get none of it. The app itself cannot switch an area on.
+
+- **Open in the panel** (Settings): whatever the app does not show itself opens the panel in Safari at the right place (memory, e-mail, security …). With "Manage the Spark" also monitoring, logs, features and profiles.
+- **My day** (switch "My day in the app"): the next appointments of your calendars, the Spark's reminders (swipe to delete) and the memory (look at it, delete single entries, ask for a tidy-up and apply it). Under My profile the conversation switches join: learn from conversations, a new conversation every day and, when the admin allows them, learn from corrections, think when choosing tools and targeted tool choice. Forgetting everything at once stays in the browser.
+
 ## Looking at my documents
 
 With "Documents from the app" (Me → iPhone app), Settings → **My documents** lists your documents on the Spark, with search. Tap one to open it: a kept PDF or picture opens in Apple's preview (zoom, search, share), and the "Text" tab shows the text the Spark stored. Other file types show as text only. Long texts come in parts: "Read on" at the bottom adds the next one. Deleting and uploading stay in the panel.

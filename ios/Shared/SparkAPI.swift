@@ -95,6 +95,9 @@ struct Allowed {
     var updateStart = false
     /// the app may show where the profile's devices listen in room mode and end it (admin room mode, profile switch app_room)
     var rooms = false
+    /// panel areas in the app (admin switch chat.iphone_panel): "Im Panel öffnen" and the areas the profile switched on
+    var panel = false
+    var areas: Set<String> = []
 }
 
 /// A device of the profile in room mode (from /api/room/active): only where and until when, never what was heard.
@@ -205,7 +208,7 @@ struct SparkAPI {
         return SparkAPI(base: base, key: key)
     }
 
-    private func request(_ path: String, method: String = "GET") -> URLRequest {
+    func request(_ path: String, method: String = "GET") -> URLRequest {
         var r = URLRequest(url: base.appendingPathComponent(path))
         r.httpMethod = method
         r.timeoutInterval = 120
@@ -213,7 +216,7 @@ struct SparkAPI {
         return r
     }
 
-    private static func check(_ data: Data, _ response: URLResponse) throws {
+    static func check(_ data: Data, _ response: URLResponse) throws {
         guard let http = response as? HTTPURLResponse else { throw SparkError(message: String(localized: "Keine Antwort vom Spark.")) }
         guard !(200..<300).contains(http.statusCode) else { return }
         let detail = (try? JSONSerialization.jsonObject(with: data) as? [String: Any])?["detail"] as? String
@@ -235,7 +238,7 @@ struct SparkAPI {
         }
     }
 
-    private static func object(_ data: Data) -> [String: Any] {
+    static func object(_ data: Data) -> [String: Any] {
         (try? JSONSerialization.jsonObject(with: data) as? [String: Any]) ?? [:]
     }
 
@@ -273,7 +276,9 @@ struct SparkAPI {
                        images: d["images"] as? Bool ?? false,
                        updateNotify: (d["update"] as? [String: Any])?["notify"] as? Bool ?? false,
                        updateStart: (d["update"] as? [String: Any])?["start"] as? Bool ?? false,
-                       rooms: d["rooms"] as? Bool ?? false)
+                       rooms: d["rooms"] as? Bool ?? false,
+                       panel: d["panel"] as? Bool ?? false,
+                       areas: Set(((d["areas"] as? [String: Any]) ?? [:]).compactMap { $0.value as? Bool == true ? $0.key : nil }))
     }
 
     /// Where the profile's devices listen in room mode right now (names and end times only).

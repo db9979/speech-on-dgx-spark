@@ -516,6 +516,12 @@ struct SettingsView: View {
                     if talk.allowed.docs {
                         NavigationLink("Meine Dokumente") { DocumentsView() }
                     }
+                    if talk.allowed.areas.contains("app_mine") {
+                        NavigationLink("Mein Alltag") { MineView() }
+                    }
+                    if talk.allowed.panel {
+                        NavigationLink("Im Panel öffnen") { PanelBridgeView(admin: talk.allowed.areas.contains("app_admin")) }
+                    }
                 } footer: {
                     Text("Stimme, Antworten und „Von selbst“ wie im Panel.")
                 }
