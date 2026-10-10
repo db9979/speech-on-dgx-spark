@@ -183,7 +183,8 @@ class Live(unittest.TestCase):
         try:
             live._svc.clear()
             cfg = {"asr": {"enabled": True}, "tts": {"enabled": True}}
-            live.services({"asr": {"status": "ok"}, "tts": {"status": "loading"}}, cfg, now=1000)
+            live.services({"asr": {"status": "ok", "queue": {"waiting": 2, "running": 1}}, "tts": {"status": "loading"}}, cfg, now=1000)
+            self.assertEqual(live.snapshot(now=1001)["svc"]["asr"], {"st": "ok", "word": "läuft", "ago": 1, "wait": 2, "run": 1})
             live.services({"asr": None, "tts": {"status": "loading"}}, cfg, now=1003)
             live.llm_seen(False, "llm_down", now=1004)
             d = live.snapshot(now=1010)
@@ -196,10 +197,53 @@ class Live(unittest.TestCase):
             self.assertIn("Hören: antwortet nicht", texts)
             self.assertIn("Sprachmodell: antwortet nicht", texts)
             self.assertTrue(any(t.startswith("ASR neu gestartet") for t in texts))
+            # Vorrang für Personen (stufe.py): a star at the request
+            import stufe
+            from types import SimpleNamespace
+            rec = live.begin("web", "", t=1012)
+            turn = SimpleNamespace(who={"id": "u1"}, own_browser=True, ccfg={}, tr=rec)
+            real = stufe.level
+            stufe.level = lambda uid, c=None: "vorrang"
+            try:
+                stufe.first(stufe.begin(turn))
+            finally:
+                stufe.level = real
+            self.assertTrue(next(r for r in live.snapshot(now=1013)["reqs"] if r["id"] == rec.id)["prio"])
             # an hour without news: no dot (nothing known)
             self.assertEqual(live.snapshot(now=1011 + 3601)["svc"], {})
         finally:
             live._svc.clear()
+            set_logs(live=False)
+
+    def test_background_work(self):
+        """Point 8 of the list: background work (vorrang.py) shows under "Läuft gerade", waiting while somebody
+        speaks; its end is an event. Only the job's fixed name, never what it works on."""
+        import asyncio
+        import vorrang
+        reset()
+        set_logs(live=True)
+        real = vorrang.speaking
+        try:
+            talk = [True]
+            vorrang.speaking = lambda now=None: talk[0]
+            seen = []
+
+            async def nap(s):
+                seen.append([(b["job"], b["st"]) for b in live.snapshot()["bg"]])
+                talk[0] = False
+
+            async def work():
+                seen.append([(b["job"], b["st"]) for b in live.snapshot()["bg"]])
+                return 7
+            self.assertEqual(asyncio.run(vorrang.run("Dokument lesen", work, sleep=nap)), 7)
+            self.assertEqual(seen, [[("Dokument lesen", "wait")], [("Dokument lesen", "run")]])
+            self.assertEqual(live.snapshot()["bg"], [])
+            self.assertTrue(any(e["area"] == "Hintergrund" and e["text"].startswith("Dokument lesen fertig")
+                                for e in live.snapshot()["events"]))
+            self.assertEqual(asyncio.run(vorrang.in_thread("Sicherung", lambda: 3)), 3)
+            self.assertEqual(live.snapshot()["bg"], [])
+        finally:
+            vorrang.speaking = real
             set_logs(live=False)
 
     def test_waechter_decisions_with_reasons(self):

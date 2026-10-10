@@ -458,6 +458,7 @@ def _req(rec, view, now):
     return {"id": rec.id, "client": rec.client, "dev": device or CLIENT.get(rec.client, "Gerät"), "who": person,
             "voice": not getattr(rec, "auto", False) and (rec.client in VOICE or any((s.get("x") or {}).get("voice") for s in rec.steps[:1])),
             "auto": bool(getattr(rec, "auto", False)), "direct": bool(getattr(rec, "direct", False)),
+            "prio": bool(getattr(rec, "prio", False)),
             "net": bool(getattr(rec, "net", False)), "intent": rec.intent, "stage": stage, "tool": tool,
             "to": TOOLS.get(tool, "") if stage == "tool" else ("qwen" if stage == "llm" else ""),
             "steps": steps, "marks": dict(rec.marks), "age": round((end or now) - rec.t0, 2),
@@ -505,6 +506,7 @@ def _conns(now):
 
 # ------------------------------------------------------------------ the services' state (Hören, Sprechen, Sprachmodell)
 _svc = {}       # "asr" | "tts" | "qwen" -> (state ok|load|down|off, word, time)
+_queue = {}     # "asr" | "tts" -> (waiting, running) from the front end's gate (common.Gate.view)
 SVC_WORD = {"ok": "läuft", "load": "lädt", "down": "antwortet nicht", "off": "aus"}
 
 
@@ -518,8 +520,45 @@ def services(health, cfg, now=None):
             else "down" if h.get("status") in ("blocked", "error") else "load" if h.get("status") == "loading" else "ok"
         old = _svc.get(name)
         _svc[name] = (st, SVC_WORD[st], now)
+        q = (h or {}).get("queue") if isinstance(h, dict) else None
+        num = lambda v: v if isinstance(v, int) and not isinstance(v, bool) and 0 <= v < 10000 else 0  # noqa: E731
+        _queue[name] = (num(q.get("waiting")), num(q.get("running"))) if isinstance(q, dict) else (0, 0)
         if (old[0] if old else "ok") != st and on():
             event("Dienste", f"{'Hören' if name == 'asr' else 'Sprechen'}: {SVC_WORD[st]}", now)
+
+
+# ------------------------------------------------------------------ background work (vorrang.py)
+_bg = {}        # job name (fixed words from the code) -> (state wait|run, since)
+BG_MAX = 12
+
+
+def bg(job, state, now=None):
+    """vorrang.py: a background job waits for a pause (wait), runs (run) or is gone (None)."""
+    now = time.time() if now is None else now
+    job = str(job)[:40]
+    with _lock:
+        if state is None:
+            _bg.pop(job, None)
+        elif state in ("wait", "run"):
+            if job in _bg or len(_bg) < BG_MAX:
+                _bg[job] = (state, _bg[job][1] if job in _bg and _bg[job][0] == state else now)
+
+
+def bg_done(job, ok, secs=None, why=""):
+    """A background job ended: off the list, a line under "Ereignisse"."""
+    job = str(job)[:40]
+    with _lock:
+        _bg.pop(job, None)
+    if on():
+        event("Hintergrund", f"{job} " + ("fertig" if ok else why or "nicht fertig")
+              + (f" in {secs:.0f} s" if ok and isinstance(secs, (int, float)) else ""))
+
+
+def _bg_now(now):
+    with _lock:
+        for k in [k for k, v in _bg.items() if now - v[1] > 6 * 3600]:    # a job that never said it ended
+            _bg.pop(k, None)
+        return [{"job": k, "st": v[0], "secs": int(now - v[1])} for k, v in sorted(_bg.items(), key=lambda x: x[1][1])]
 
 
 def llm_seen(ok, code="", now=None):
@@ -538,7 +577,9 @@ def restarted(name, reason, done):
 
 
 def _svc_now(now):
-    return {k: {"st": v[0], "word": v[1], "ago": int(now - v[2])} for k, v in _svc.items() if now - v[2] < 3600}
+    return {k: dict({"st": v[0], "word": v[1], "ago": int(now - v[2])},
+                    **({"wait": _queue[k][0], "run": _queue[k][1]} if k in _queue else {}))
+            for k, v in _svc.items() if now - v[2] < 3600}
 
 
 def _sys():
@@ -578,7 +619,7 @@ def snapshot(view="admin", now=None):
             "guard": {"ok": cnt.get("guard_ok", 0), "bad": cnt.get("guard_bad", 0), "cut": cnt.get("guard_cut", 0), "items": guard_items},
             "door": {"in": cnt.get("door_in", 0), "out": cnt.get("door_out", 0), "items": door_items},
             "rets": rets, "events": [{"t": t, "area": a, "text": x} for t, a, x in events], "conns": _conns(now), "sys": _sys(), "notaus": held,
-            "svc": _svc_now(now)}
+            "svc": _svc_now(now), "bg": _bg_now(now)}
 
 
 # ------------------------------------------------------------------ admin view

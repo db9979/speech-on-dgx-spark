@@ -154,6 +154,7 @@ Seit V01.0.312 zeigt *Zustand → Live* (und der Monitor `/live`) alles, was der
 - **Neuer Kanal** (WebSocket, Long-Poll): Zeile in `live._conns`.
 - **Anfrage ohne Gespräch** (nur Hören oder nur Sprechen, z. B. Wyoming): `rec = live.begin(client, gerät)`, dann `rec.step("asr"|"tts", …)` und `live.end(rec, ok)`; abgewiesene Absender mit `live.door(...)`.
 - **Etwas, das der Spark von selbst tut** (Regel, Erinnerung, Auftrag): `live.begin(client, "", uid=…, auto=True, why="festes Wort")` und die Schritte darunter mit `with live.within(rec):` (kein Rückweg zum Gerät). Benachrichtigungen meldet `push.send` selbst (`live.note`, Ziele Web Push, Apple Push, Android-App, Telegram); ein neues Tag bekommt ein Wort in `push.WHY`.
+- **Hintergrundarbeit** läuft über `vorrang.run`/`post`/`in_thread`/`quiet`/`hold` mit einem festen Namen; das meldet sie selbst an `live.bg` (kein Inhalt im Namen).
 - **Neue Prüfung am Eingang oder neue Wächter-Stufe:** `guard.failed` und `netguard.resolve` melden schon selbst an `live.refused` bzw. `live.outgoing`; neue Wörter dort ergänzen.
 - Nur feste Wörter und Zahlen, nie Inhalte; Namen nur über `live._who`.
 

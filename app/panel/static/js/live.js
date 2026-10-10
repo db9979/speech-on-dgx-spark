@@ -129,8 +129,8 @@ function route(r,pos,W,H,ph){const c=col(r.id);let o='',lab='',call='';const ctr
 function nm(id){if(id==='door')return tt('Eingang','Entrance');if(id==='guard')return tt('Wächter','Wächter');if(SNAME[id])return SNAME[id];if(tgt(id))return tgt(id).name;
   const r=((LV.data||{}).reqs||[]).find(x=>'r'+x.id===id);return r?r.dev:id}
 function flow(){const d=LV.data,ph=PH(),{pos,W,H,reqs,order}=layout(d,ph);
-  const NL=(d.notaus||{}).level||0,key=[LV.sel,ph,NL,...reqs.map(r=>r.id+r.stage+r.steps.length+(r.done?'d':'')),...order.map(x=>x.id),...Object.entries(d.svc||{}).map(([k,v])=>k+v.st)].join('|');
-  if(key===LV.lastKey){reqs.filter(r=>r.done).forEach(r=>{const g=el('lvd'+r.id);if(g){g.style.opacity=op(r,d);const b=g.querySelector('.cd');if(b)b.textContent=doneTxt(r)}});return}
+  const NL=(d.notaus||{}).level||0,key=[LV.sel,ph,NL,...reqs.map(r=>r.id+r.stage+r.steps.length+(r.done?'d':'')),...order.map(x=>x.id),...Object.entries(d.svc||{}).map(([k,v])=>k+v.st+(v.wait||0))].join('|');
+  if(key===LV.lastKey){reqs.filter(r=>r.done).forEach(r=>{const g=el('lvd'+r.id);if(g){g.style.opacity=op(r,d);const b=g.querySelector('.cd');if(b)b.textContent=(r.prio?'★ ':'')+doneTxt(r)}});return}
   LV.lastKey=key;
   // Notaus (notaus.py STAGE): from stage 1 the internet and the door are cut off, from 2 Home Assistant only reads, at 3 the conversation stands still
   const held=id=>{const x=tgt(id);if(NL>=1&&(x&&x.zone==='net'||id==='door'||id==='guard'))return tt('abgehängt · Notaus','cut off · kill switch');
@@ -154,13 +154,15 @@ function flow(){const d=LV.data,ph=PH(),{pos,W,H,reqs,order}=layout(d,ph);
     return `<g class="node${on?' act':''}${hd?' held':''}${o.cls||''}" ${o.attrs||''} data-tip="${lvE((o.tip||a)+(hd?' · '+hd:''))}"><rect x="${p.x}" y="${p.y}" width="${p.w}" height="${p.h}" rx="10" ${o.stroke?`style="stroke:${o.stroke}${hd?';stroke-dasharray:5 4':''}"`:''}/>${hd?`<text x="${p.x+p.w-12}" y="${p.y+p.h/2+5}" text-anchor="end" style="font-size:${ph?11:14}px">🔒</text>`:''}${o.dot?`<circle cx="${p.x+p.w-14}" cy="${p.y+14}" r="4" fill="${o.dot}"/>`:''}
       <text class="a" x="${p.x+10}" y="${p.y+(ph?20:Math.min(p.h/2-1,24))}">${lvE(a)}</text><text class="b${o.cd?' cd':''}" x="${p.x+10}" y="${p.y+(ph?36:Math.min(p.h/2+13,38))}">${lvE(b)}</text>
       ${k&&!ph&&!o.dev?`<circle class="badge" cx="${p.x+p.w-16}" cy="${p.y+p.h/2}" r="10"/><text class="bt" text-anchor="middle" x="${p.x+p.w-16}" y="${p.y+p.h/2+3.5}">${k}</text>`:''}</g>`};
-  reqs.forEach(r=>{const sub=r.done?doneTxt(r):(ph?(r.net?'Internet':r.who):`${r.who}${r.intent?' · '+r.intent:''}${r.net?' · Internet':''}`);
+  reqs.forEach(r=>{const sub=(r.prio?'★ ':'')+(r.done?doneTxt(r):(ph?(r.net?'Internet':r.who):`${r.who}${r.intent?' · '+r.intent:''}${r.net?' · Internet':''}`));
     s+=node('r'+r.id,ph?r.dev.slice(0,12):r.dev,sub,!r.done,{dev:1,cd:r.done,stroke:r.done?'':col(r.id),dot:r.done?'var(--mut)':col(r.id),cls:' dv'+(r.age<1.2?' pop':''),
       attrs:`id="lvd${r.id}" data-req="${lvE(r.id)}" ${r.done?`style="opacity:${op(r,d)}"`:''}`,
       tip:`${r.dev} · ${r.who} · ${r.id}${r.intent?' · '+r.intent:''}${r.net?' · '+tt('kam über das Internet','came through the internet'):''} · ${r.done?tt('fertig','done'):KIND[r.stage]||r.stage}`})});
   // the services' own state (live.services/llm_seen): a dot green, yellow (loading) or red (not answering)
   const sv=id=>(d.svc||{})[id==='llm'?'qwen':id],svo=(v,name)=>v?{dot:SVC[v.st],stroke:v.st==='down'?'var(--bad)':'',tip:name+' · '+v.word}:{};
-  STAGES.forEach(x=>{const v=sv(x[0]);s+=node(x[0],x[1],ph?'':v&&v.st!=='ok'?v.word:x[2],act.has(x[0]),svo(v,x[1]))});
+  // waiting at the gate of Hören or Sprechen (common.Gate): "2 warten"
+  const qw=v=>v&&v.wait?' · '+v.wait+' '+tt('warten','waiting'):'';
+  STAGES.forEach(x=>{const v=sv(x[0]);s+=node(x[0],x[1],ph?'':(v&&v.st!=='ok'?v.word:x[2])+qw(v),act.has(x[0]),svo(v,x[1]))});
   order.forEach(x=>{const v=x.id==='qwen'?sv('qwen'):null;s+=node(x.id,ph?x.name.split(' ')[0]:x.name,ph?ZONE[x.zone][0]:v&&v.st!=='ok'?v.word:x.sub,act.has(x.id),Object.assign({tip:`${x.name} · ${x.sub}`},svo(v,x.name)))});
   if(!ph&&pos.guard){const G=pos.guard,gx=G.x+15,gy=G.y+17;s+=`<g class="gate" data-gate="guard" data-tip="${lvE(tt(`Wächter (netguard) · prüft jede Verbindung nach außen · heute ${d.guard.ok} erlaubt, ${d.guard.bad} geblockt · antippen für die Gründe`,`Wächter · checks every outgoing connection · today ${d.guard.ok} allowed, ${d.guard.bad} blocked`))}"><path d="M${gx} ${gy-17} l15 6 v10 c0 11 -8 18 -15 21 c-7 -3 -15 -10 -15 -21 v-10z" fill="var(--card)" stroke="${NL>=1?'var(--bad)':netOn?'var(--ok)':'var(--mut)'}" stroke-width="2"/><text x="${gx}" y="${gy+5}" text-anchor="middle" style="font-size:12px;font-weight:700;fill:var(--ok)">✓</text>
     <text x="${gx}" y="${gy+34}" text-anchor="middle" style="font-size:10px;font-weight:600;fill:var(--fg)">${tt('Wächter','Wächter')}</text><text x="${gx}" y="${gy+46}" text-anchor="middle" style="font-size:10px;fill:var(--bad)">${NL>=1?tt('Internet zu','internet closed'):d.guard.bad+' '+tt('geblockt','blocked')}</text></g>`;
@@ -185,7 +187,7 @@ function way(){const r=LV.data.reqs.find(x=>x.id===LV.sel),box=el('lvway');
   if(!r.auto)items.push({k:tt('Zurück','Back'),n:r.dev,d:r.voice?tt('↩ gesprochen','↩ spoken'):tt('↩ Antwort','↩ answer'),z:r.net?'net':'lan',ms:0,todo:!r.done&&r.stage!=='tts',cur:!r.done&&r.stage==='tts'});
   const usesNet=r.net||r.steps.some(s=>zoneOf(s.to)==='net'),tot=items.reduce((a,x)=>a+x.ms,0)||1;
   let h=`<div class="hd"><span class="lvc" style="background:${col(r.id)}"></span><span class="who">${lvE(r.who)}</span><span class="mut">${lvE(r.dev)}${r.voice?' · '+tt('Stimme','voice'):''}</span>
-    ${r.intent?`<span class="pill">${lvE(r.intent)}</span>`:''}<span class="pill ${usesNet?'net':'lan'}">${usesNet?tt('nutzt Internet','uses the internet'):tt('bleibt im Heimnetz','stays at home')}</span>${r.err?`<span class="pill bad">${tt('Fehler','error')}</span>`:''}
+    ${r.prio?`<span class="pill warn">★ ${tt('Vorrang','priority')}</span>`:''}${r.intent?`<span class="pill">${lvE(r.intent)}</span>`:''}<span class="pill ${usesNet?'net':'lan'}">${usesNet?tt('nutzt Internet','uses the internet'):tt('bleibt im Heimnetz','stays at home')}</span>${r.err?`<span class="pill bad">${tt('Fehler','error')}</span>`:''}
     <span class="mono mut" style="margin-left:auto">${lvE(r.id)} · ${secs(r.age*1000)}${r.done?' · '+tt('fertig','done'):''}</span></div><div class="hops">`;
   items.forEach((x,i)=>{h+=`${i?'<div class="arrow">›</div>':''}<div class="hop${x.cur?' cur':''}${x.z==='net'?' net':''}${x.todo?' todo':''}"><span class="pill ${ZONE[x.z][1]}">${ZONE[x.z][0]}</span><div class="k">${lvE(x.k)}</div><div class="nn">${lvE(x.n)}</div><div class="d">${lvE(x.d)}</div></div>`});
   h+='</div><div class="gantt">';let o=0;items.forEach((x,i)=>{if(!x.ms)return;const w=x.ms/tot*100;h+=`<i style="left:${o}%;width:${w}%;background:${x.z==='net'?'var(--c4)':COLS[i%COLS.length]}">${w>9?`<span>${lvE(x.k)} ${secs(x.ms)}</span>`:''}</i>`;o+=w});
@@ -205,9 +207,11 @@ function running(){const R=LV.data.reqs;el('lvnrq').textContent=R.filter(r=>!r.d
   const all=['in','asr','weiche','llm','tool','tts'],lab={in:tt('Ein','In'),asr:SNAME.asr,weiche:SNAME.weiche,llm:tt('Modell','Model'),tool:tt('Werkzeug','Tool'),tts:SNAME.tts};
   el('lvrq').innerHTML=R.length?R.slice().reverse().map(r=>{const ks=all.filter(k=>k!=='asr'||r.voice),cur=r.done?'tts':r.stage,ci=ks.indexOf(cur);
     return `<div class="rq${r.id===LV.sel?' sel':''}" data-req="${lvE(r.id)}"><span class="c" style="background:${col(r.id)}"></span><span class="mono mut">${lvE(r.id)}</span>
-    <span><b>${lvE(r.dev)}</b> <span class="mut">· ${lvE(r.who)}</span> ${r.intent?`<span class="pill">${lvE(r.intent)}</span>`:''}${r.net?' <span class="pill net">Internet</span>':''}${r.done?` <span class="pill ok">${tt('fertig','done')}</span>`:''}</span><span class="t">${secs(r.age*1000)}</span>
+    <span><b>${lvE(r.dev)}</b> <span class="mut">· ${lvE(r.who)}</span> ${r.prio?`<span class="pill warn">★ ${tt('Vorrang','priority')}</span>`:''}${r.intent?`<span class="pill">${lvE(r.intent)}</span>`:''}${r.net?' <span class="pill net">Internet</span>':''}${r.done?` <span class="pill ok">${tt('fertig','done')}</span>`:''}</span><span class="t">${secs(r.age*1000)}</span>
     <div class="beads">${ks.map((k,i)=>`${i?`<i class="${i<=ci?'d':''}"></i>`:''}<b class="${!r.done&&i===ci?'n':i<=ci?'d':''}"></b>${!PH()||i===ci?`<span${i===ci?' style="color:var(--fg);font-weight:600"':''}>${lab[k]}</span>`:''}`).join('')}</div></div>`}).join('')
-   :`<div class="mut">${tt('Gerade nichts.','Nothing right now.')}</div>`}
+   :`<div class="mut">${tt('Gerade nichts.','Nothing right now.')}</div>`;
+  // background work (vorrang.py): what runs and what waits because somebody speaks
+  const B=LV.data.bg||[];if(B.length)el('lvrq').innerHTML+=`<div class="bgh mut">${tt('Im Hintergrund','In the background')}</div>`+B.map(b=>`<div class="rq bg"><span class="c" style="background:${b.st==='wait'?'var(--warn)':'var(--mut)'}"></span><span><b>${lvE(b.job)}</b> <span class="mut">· ${b.st==='wait'?tt('wartet, Sprache hat Vorrang','waiting, speech goes first'):tt('läuft','running')}</span></span><span class="t">${secs(b.secs*1000)}</span></div>`).join('')}
 function conns(){const C=LV.data.conns;el('lvncn').textContent=C.reduce((a,c)=>a+c.n,0);
   el('lvcn').innerHTML=C.length?C.map(c=>`<tr><td><span class="pill ${c.dir==='ein'?'':'ok'}">${c.dir==='ein'?'↘ '+tt('ein','in'):'↗ '+tt('aus','out')}</span></td><td><b>${lvE(c.name)}</b></td><td class="mut">${lvE(c.proto)}</td><td class="num">${c.n}</td></tr>`).join('')
    :`<tr><td class="mut">${tt('Keine offene Verbindung.','No open connection.')}</td></tr>`}

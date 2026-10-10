@@ -89,8 +89,10 @@ async def quiet(job, sleep=asyncio.sleep):
     t0 = time.time()
     count("held")
     print(f"vorrang: {job} wartet (Gespräch)", flush=True)
+    _live(job, "wait")
     while speaking():
         await sleep(1)
+    _live(job, None)
     waited = time.time() - t0
     count("waited_max", value=waited)
     print(f"vorrang: {job} wartete {waited:.0f} s", flush=True)
@@ -104,12 +106,31 @@ def hold(job, sleep=time.sleep):
     t0 = time.time()
     count("held")
     print(f"vorrang: {job} wartet (Gespräch)", flush=True)
+    _live(job, "wait")
     while speaking():
         sleep(1)
+    _live(job, None)
     waited = time.time() - t0
     count("waited_max", value=waited)
     print(f"vorrang: {job} wartete {waited:.0f} s", flush=True)
     return waited
+
+
+def _live(job, state):
+    """Zustand → Live: the job on the list of background work (live.bg); never raises."""
+    try:
+        import live
+        live.bg(job, state)
+    except Exception:
+        pass
+
+
+def _live_done(job, ok, secs=None, why=""):
+    try:
+        import live
+        live.bg_done(job, ok, secs, why)
+    except Exception:
+        pass
 
 
 def _slot():
@@ -122,9 +143,11 @@ def _slot():
 
 async def run(job, factory, retries=RETRIES, sleep=asyncio.sleep):
     """Runs factory() (a function returning a fresh coroutine) as background work, see above."""
+    t0 = time.time()
     async with _slot():
         for _ in range(retries + 1):
             await quiet(job, sleep)
+            _live(job, "run")
             task = asyncio.ensure_future(factory())
             while not task.done():
                 await asyncio.wait({task}, timeout=POLL)
@@ -135,11 +158,14 @@ async def run(job, factory, retries=RETRIES, sleep=asyncio.sleep):
                     except BaseException:
                         pass
                     count("cancelled")
+                    _live(job, "wait")
                     print(f"vorrang: {job} abgebrochen (Gespräch), läuft in der nächsten Pause neu", flush=True)
                     break
             else:
+                _live_done(job, task.exception() is None if not task.cancelled() else False, time.time() - t0)
                 return task.result()
         count("gave_up")
+        _live_done(job, False, why="aufgegeben (Gespräche)")
         print(f"vorrang: {job} aufgegeben nach {retries + 1} Abbrüchen", flush=True)
         raise Busy(job)
 
@@ -155,8 +181,11 @@ async def in_thread(job, fn, *args):
     await quiet(job)
     loop = asyncio.get_running_loop()
     fut = loop.create_future()
+    t0 = time.time()
+    _live(job, "run")
 
     def done(value, err):
+        _live_done(job, err is None, time.time() - t0)
         if fut.done():
             return
         if err is not None:
