@@ -332,3 +332,21 @@ class Detail(unittest.TestCase):
         sid = ADMIN.get(f"/api/admin/profiles/{uid}").json()["sessions"][0]["id"]
         self.assertEqual(ADMIN.delete(f"/api/admin/profiles/{uid}/sessions/{sid}").status_code, 200)
         self.assertIsNone(c.get("/api/whoami").json()["profile"])
+
+
+class AppNames(unittest.TestCase):
+    """Phase 6: the app's Funktionen page takes names and groups from the Spark, it keeps no list of its own."""
+    def test_every_app_switch_has_a_name(self):
+        d = ADMIN.get("/api/admin/switches").json()
+        self.assertEqual(set(d["names"]), set(d["switches"]))
+        grouped = [k for g in d["groups"] for k in g["switches"]]
+        self.assertEqual(len(grouped), len(set(grouped)))
+        self.assertTrue(set(grouped) <= set(d["switches"]))
+        for v in d["names"].values():
+            self.assertEqual(len(v), 2)
+
+    def test_swift_keeps_no_list(self):
+        with open(os.path.join(HERE, "..", "..", "ios", "Spark", "AdminViews.swift")) if os.path.exists(
+                os.path.join(HERE, "..", "..", "ios")) else open(os.devnull) as f:
+            swift = f.read()
+        self.assertNotIn('("memory", LocalizedStringKey(', swift)

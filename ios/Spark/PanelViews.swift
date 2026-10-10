@@ -4,6 +4,9 @@ import SwiftUI
 /// place (the profile signs in there as usual). The app takes over more of them bit by bit.
 struct PanelBridgeView: View {
     let admin: Bool
+    /// the Ich pages whose functions the admin has all switched off (from /api/features, the same list as the panel):
+    /// they stay in the list and say why, instead of leading to an empty page
+    @State private var off: Set<String> = []
 
     static let mine: [(LocalizedStringKey, String)] = [
         (LocalizedStringKey("Gespräch"), "me=setbox"), (LocalizedStringKey("Gedächtnis"), "me=factbox"), (LocalizedStringKey("Dokumente"), "me=docbox"), (LocalizedStringKey("Protokoll"), "me=logbox"),
@@ -33,15 +36,32 @@ struct PanelBridgeView: View {
             }
         }
         .navigationTitle("Im Panel öffnen")
+        .task { await loadOff() }
     }
 
     @ViewBuilder private func row(_ title: LocalizedStringKey, _ place: String) -> some View {
         if let url = SparkAPI.panelLink(place) {
             Link(destination: url) {
-                LabeledContent(title) { Image(systemName: "arrow.up.forward.app").foregroundStyle(.secondary) }
+                LabeledContent {
+                    Image(systemName: "arrow.up.forward.app").foregroundStyle(.secondary)
+                } label: {
+                    Text(title)
+                    if off.contains(place) { Text("Vom Admin ausgeschaltet") }
+                }
             }
             .foregroundStyle(.primary)
         }
+    }
+
+    private func loadOff() async {
+        guard let api = SparkAPI.current, let d = try? await api.object("GET", "api/features"),
+              let list = d["features"] as? [[String: Any]] else { return }
+        var on: [String: Bool] = [:]
+        for f in list.prefix(200) {
+            guard let me = f["me"] as? String, me.range(of: #"^[a-z0-9]{1,20}$"#, options: .regularExpression) != nil else { continue }
+            on["me=" + me] = (on["me=" + me] ?? false) || (f["spark"] as? Bool ?? false)
+        }
+        off = Set(on.filter { !$0.value }.keys)
     }
 }
 

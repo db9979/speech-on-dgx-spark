@@ -134,6 +134,25 @@ GRANTED = {}
 
 # chat.* switches that are no function a profile uses (how the Spark itself works)
 SPARK_ONLY = {"public", "thinking", "prompt_cache", "answer_check", "datetime"}
+# names for the Spark-wide switches that are no function of their own (the app's Funktionen page shows them under "Spark")
+SPARK_NAMES = {"public": ("Gastzugang", "Guest access"), "thinking": ("Vorher nachdenken", "Think first"),
+               "prompt_cache": ("Schneller Antwortbeginn", "Faster first words"),
+               "answer_check": ("Antworten prüfen", "Check answers"), "datetime": ("Datum und Uhrzeit mitgeben", "Pass date and time")}
+
+
+def switch_names(keys):
+    """For the app (GET /api/admin/switches): a name per admin switch and the groups in menu order, from this
+    table, so the app keeps no list of its own. A switch shared by several functions takes the first one's name."""
+    names, groups = {}, {g: [] for g, _, _ in GROUPS}
+    for f in FEATURES:
+        k = f.admin[0]
+        if k in keys and k not in names:
+            names[k] = [f.de, f.en]
+            groups[f.group].append(k)
+    for k, (de, en) in SPARK_NAMES.items():
+        if k in keys and k not in names:
+            names[k] = [de, en]
+    return names, [{"key": g, "name": [de, en], "switches": groups[g]} for g, de, en in GROUPS if groups[g]]
 
 
 def _defaults():

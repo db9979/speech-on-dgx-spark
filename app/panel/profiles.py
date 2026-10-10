@@ -507,7 +507,8 @@ APP_PATHS = ("/api/chat", "/api/test/asr", "/api/siri/ask", "/api/iphone/hello",
              "/api/messages/fav",     # ★ in the recipient picker (the Rufname stays in the browser)
              # where room mode listens and ending it (roomlive.py, only with app_room; never starting or extending)
              "/api/room/active", "/api/room/end",
-             "/api/profile/docs")     # the list of the own documents (GET only for the app, with app_docs)
+             "/api/profile/docs",     # the list of the own documents (GET only for the app, with app_docs)
+             "/api/features")         # what the Spark and the profile allow (features.py, read only; "Im Panel öffnen")
 # looking at an own document again (wissen.reader: only with app_docs); reading only, never changing
 APP_PATTERNS = (re.compile(r"/api/profile/wissen/[0-9a-f]{12}/(?:text|file)"),)
 APP_GATE = [lambda uid: False]

@@ -634,7 +634,9 @@ def app_switches():
 @router.get("/api/admin/switches", dependencies=[Depends(auth)])
 def admin_switches():
     cfg = get_config()["chat"]
-    return {"switches": {k: bool(cfg.get(k)) for k in app_switches()}}
+    keys = app_switches()
+    names, groups = features.switch_names(set(keys))
+    return {"switches": {k: bool(cfg.get(k)) for k in keys}, "names": names, "groups": groups}
 
 
 @router.put("/api/admin/switches", dependencies=[Depends(auth)])

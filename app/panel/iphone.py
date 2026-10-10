@@ -340,7 +340,8 @@ async def app_doc(request: Request, prof=Depends(own_profile)):
 # may do (app_*), Telegram, the smart home and the tone ("style", told to the model) stay in the panel.
 APP_FIELDS = ("voice", "speed", "length", "pro_on", "pro_quiet", "pro_max", "pro_events", "pro_lead",
               "pro_weather", "pro_place", "pro_weather_at", "pro_parcel", "pro_bday", "pro_transit",
-              "pro_greet", "pro_mail", "briefing_at")
+              "pro_greet", "pro_mail", "briefing_at",
+              "hands", "barge")   # Freihändig and Ins Wort fallen: the same values as in the browser (Vereinheitlichen Phase 6)
 RIGHTS = ("app_ha", "app_car_ha", "app_act", "app_listen", "app_push", "app_docs", "app_ios", "app_images",
           "app_room") + RIGHTS_PANEL
 SETTINGS_BODY = 8192

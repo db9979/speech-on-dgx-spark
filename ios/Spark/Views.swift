@@ -503,6 +503,9 @@ struct SettingsView: View {
     @AppStorage("speakNotes") private var speakNotes = true
     @Environment(\.dismiss) private var dismiss
     @State private var confirm = false
+    /// Freihändig and Ins Wort fallen are the profile's own values (hands, barge), the same as in the browser:
+    /// read once when the page opens, saved back on every change (plan „Vereinheitlichen“ Phase 6)
+    @State private var synced = false
 
     var body: some View {
         NavigationStack {
@@ -544,8 +547,10 @@ struct SettingsView: View {
                     Toggle("Freihändig", isOn: $handsFree)
                     Toggle("Ins Wort fallen", isOn: $bargeIn)
                 } header: { Text("Gespräch") } footer: {
-                    Text("Freihändig: nach jeder Antwort hört die App wieder zu, bis 8 Sekunden lang nichts kommt. Ins Wort fallen: einfach losreden hält die Antwort an.")
+                    Text("Freihändig: nach jeder Antwort hört die App wieder zu, bis 8 Sekunden lang nichts kommt. Ins Wort fallen: einfach losreden hält die Antwort an. Gilt für dein Profil, also auch im Browser.")
                 }
+                .onChange(of: handsFree) { _, v in if synced { Task { await saveTalk("hands", v) } } }
+                .onChange(of: bargeIn) { _, v in if synced { Task { await saveTalk("barge", v) } } }
                 Section {
                     Toggle("Weckwort", isOn: $wake).disabled(!talk.allowed.listen)
                     Picker("Wort", selection: $wakeWord) {
@@ -598,6 +603,7 @@ struct SettingsView: View {
                 }
             }
             .navigationTitle("Einstellungen")
+            .task { await loadTalk() }
             .toolbar { ToolbarItem(placement: .confirmationAction) { Button("Fertig") { dismiss() } } }
             .confirmationDialog("Schlüssel von diesem iPhone löschen?", isPresented: $confirm, titleVisibility: .visible) {
                 Button("Entkoppeln", role: .destructive) {
@@ -608,5 +614,19 @@ struct SettingsView: View {
                 Text("Im Panel unter Ich → iPhone-App das iPhone auch entfernen, dann gilt der Schlüssel nirgends mehr.")
             }
         }
+    }
+
+    private func loadTalk() async {
+        guard Demo.scene == nil, let api = SparkAPI.current, let d = try? await api.profileSettings(),
+              let p = d["settings"] as? [String: Any] else { synced = true; return }
+        if let h = p["hands"] as? Bool, h != handsFree { handsFree = h }
+        if let b = p["barge"] as? Bool, b != bargeIn { bargeIn = b }
+        // the onChange calls for the values just read run before this (at worst they save the same value back)
+        await Task.yield()
+        synced = true
+    }
+
+    private func saveTalk(_ key: String, _ value: Bool) async {
+        try? await SparkAPI.current?.saveProfileSettings([key: value])
     }
 }

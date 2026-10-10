@@ -451,45 +451,29 @@ struct ChecksView: View {
 struct FeaturesView: View {
     @ObservedObject private var s = AdminSession.shared
     @State private var on: [String: Bool] = [:]
+    @State private var names: [String: String] = [:]
+    @State private var groups: [SwitchGroup] = []
     @State private var error: String?
-    @State private var search = ""
 
-    static let names: [(String, LocalizedStringKey)] = [
-        ("memory", LocalizedStringKey("Gedächtnis")), ("history", LocalizedStringKey("Frühere Gespräche")),
-        ("documents", LocalizedStringKey("Eigene Dokumente")), ("doc_pictures", LocalizedStringKey("Bilder und Scans lesen")),
-        ("doc_night", LocalizedStringKey("Lange Dokumente nachts lesen")), ("doc_semantic", LocalizedStringKey("Bedeutungssuche")),
-        ("doc_originals", LocalizedStringKey("Originale aufbewahren")), ("doc_shared", LocalizedStringKey("Gemeinsame Dokumente")),
-        ("doc_brief", LocalizedStringKey("Steckbrief und Tags")), ("search", LocalizedStringKey("Websuche")),
-        ("reminders", LocalizedStringKey("Timer und Erinnerungen")), ("calendar", LocalizedStringKey("Kalender und Tagesbriefing")),
-        ("tasks", LocalizedStringKey("Aufgaben und Einkaufsliste")), ("agent", LocalizedStringKey("Agent-Funktionen")),
-        ("agent_mcp", LocalizedStringKey("Dienste per MCP")), ("messages", LocalizedStringKey("Nachrichten an andere")),
-        ("messages_all", LocalizedStringKey("Nachricht an alle")), ("messages_announce", LocalizedStringKey("Durchsagen auf Lautsprechern")),
-        ("messages_voice", LocalizedStringKey("Sprachnachrichten")), ("weather", LocalizedStringKey("Wetter")),
-        ("transit", LocalizedStringKey("Bus und Bahn")), ("contacts", LocalizedStringKey("Kontakte")),
-        ("homeassistant", LocalizedStringKey("Home Assistant")), ("wyoming", LocalizedStringKey("Home Assistant Assist (Wyoming)")),
-        ("mail", LocalizedStringKey("E-Mail lesen")), ("mail_tidy", LocalizedStringKey("Postfach aufräumen")),
-        ("parcels", LocalizedStringKey("Pakete")), ("proactive", LocalizedStringKey("Von selbst melden")),
-        ("room", LocalizedStringKey("Raum-Modus")), ("room_voices", LocalizedStringKey("Fernsehstimmen überhören")),
-        ("room_ha", LocalizedStringKey("Raum-Modus für Home Assistant")), ("room_remote", LocalizedStringKey("Raum-Modus aus der Ferne starten")),
-        ("telegram", LocalizedStringKey("Telegram")), ("esp32", LocalizedStringKey("Eigene Lautsprecher (ESP32)")),
-        ("pebble", LocalizedStringKey("Pebble-Uhr koppeln")), ("iphone_push", LocalizedStringKey("Push an die iPhone-App")),
-        ("iphone_update", LocalizedStringKey("Spark-Update über die iPhone-App")), ("follow_up", LocalizedStringKey("Rückfrage ohne Weckwort")),
-        ("no_self_echo", LocalizedStringKey("Eigene Stimme überhören")), ("images", LocalizedStringKey("Bilder erkennen")),
-        ("learn_fixes", LocalizedStringKey("Aus Korrekturen lernen")), ("own_style", LocalizedStringKey("Eigener Gesprächsstil")),
-        ("tool_thinking", LocalizedStringKey("Bei der Werkzeugwahl nachdenken")), ("routing", LocalizedStringKey("Gezielte Werkzeugwahl")),
-        ("speaker_id", LocalizedStringKey("Sprechererkennung")), ("datetime", LocalizedStringKey("Datum und Uhrzeit mitgeben")),
-        ("thinking", LocalizedStringKey("Vorher nachdenken")), ("prompt_cache", LocalizedStringKey("Schneller Antwortbeginn")),
-    ]
+    /// a group of switches as the Spark sends it (features.py: names and groups, no list of its own in the app)
+    struct SwitchGroup: Identifiable {
+        let id: String
+        let name: String
+        let keys: [String]
+    }
 
     var body: some View {
         Form {
             if let e = error { Text(verbatim: e).foregroundStyle(.red) }
-            ForEach(Self.names.filter { on[$0.0] != nil }, id: \.0) { k in
-                Toggle(k.1, isOn: Binding(get: { on[k.0] ?? false }, set: { v in on[k.0] = v; Task { await save(k.0, v) } }))
+            ForEach(groups) { g in
+                let keys = g.keys.filter { on[$0] != nil }
+                if !keys.isEmpty {
+                    Section { ForEach(keys, id: \.self) { toggle($0) } } header: { Text(verbatim: g.name) }
+                }
             }
-            let other = on.keys.filter { key in !Self.names.contains { $0.0 == key } }.sorted()
-            ForEach(other, id: \.self) { key in
-                Toggle(isOn: Binding(get: { on[key] ?? false }, set: { v in on[key] = v; Task { await save(key, v) } })) { Text(verbatim: key) }
+            let rest = on.keys.filter { k in !groups.contains { $0.keys.contains(k) } }.sorted()
+            if !rest.isEmpty {
+                Section { ForEach(rest, id: \.self) { toggle($0) } } header: { Text(verbatim: "Spark") }
             }
         }
         .navigationTitle("Funktionen")
@@ -497,10 +481,26 @@ struct FeaturesView: View {
         .task { await load() }
     }
 
+    private func toggle(_ key: String) -> some View {
+        Toggle(isOn: Binding(get: { on[key] ?? false }, set: { v in on[key] = v; Task { await save(key, v) } })) {
+            Text(verbatim: names[key] ?? key)
+        }
+    }
+
+    static func pick(_ x: Any?) -> String? {
+        guard let a = x as? [String], a.count == 2 else { return nil }
+        return String(a[(Locale.preferredLanguages.first?.hasPrefix("en") ?? false) ? 1 : 0].prefix(80))
+    }
+
     private func load() async {
         do {
             let d = try await s.object("GET", "api/admin/switches")
             on = ((d["switches"] as? [String: Any]) ?? [:]).compactMapValues { $0 as? Bool }
+            names = ((d["names"] as? [String: Any]) ?? [:]).compactMapValues { Self.pick($0) }
+            groups = ((d["groups"] as? [[String: Any]]) ?? []).prefix(20).compactMap { g in
+                guard let k = g["key"] as? String, let n = Self.pick(g["name"]) else { return nil }
+                return SwitchGroup(id: k, name: n, keys: (g["switches"] as? [String]) ?? [])
+            }
             error = nil
         } catch { self.error = error.localizedDescription }
     }
@@ -596,11 +596,33 @@ struct AdminProfileView: View {
     @State private var confirmDelete = false
     @State private var error: String?
     @State private var note: String?
+    @State private var role = ""
+    @State private var sessions: [(id: String, agent: String, last: Date?)] = []
+    /// the functions with an own switch the Spark allows, and whether this profile has them on (Wer darf was)
+    @State private var funcs: [(key: String, name: String, on: Bool)] = []
 
     var body: some View {
         Form {
             if let e = error { Text(verbatim: e).foregroundStyle(.red) }
             if let n = note { Text(verbatim: n).foregroundStyle(.secondary) }
+            if !role.isEmpty {
+                LabeledContent("Admin-Rolle") { Text(role == "manager" ? String(localized: "Verwalter") : String(localized: "Mit-Admin")) }
+            }
+            Section {
+                ForEach(funcs, id: \.key) { f in
+                    Toggle(isOn: Binding(get: { f.on }, set: { v in Task { await setFunc(f.key, v) } })) { Text(verbatim: f.name) }
+                }
+                if funcs.isEmpty { Text("Keine Funktion mit eigenem Schalter an.").foregroundStyle(.secondary) }
+            } header: { Text("Funktionen: \(funcsOn) von \(funcs.count) an") } footer: {
+                Text("Die eigenen Schalter dieses Profils. Das Profil sieht und ändert sie selbst unter Ich.")
+            }
+            Section {
+                ForEach(sessions, id: \.id) { x in
+                    LabeledContent { if let l = x.last { Text(l, format: .dateTime.day().month().hour().minute()) } } label: { Text(verbatim: x.agent) }
+                        .swipeActions { Button("Abmelden", role: .destructive) { Task { await endSession(x.id) } } }
+                }
+                if sessions.isEmpty { Text("Kein Browser angemeldet.").foregroundStyle(.secondary) }
+            } header: { Text("Angemeldete Browser") } footer: { Text("Wischen meldet einen Browser ab.") }
             Section {
                 ForEach(devices, id: \.id) { d in
                     LabeledContent { Text(d.app ? String(localized: "iPhone-App") : String(localized: "Gerät")) } label: { Text(verbatim: d.name) }
@@ -633,11 +655,38 @@ struct AdminProfileView: View {
         do {
             let d = try await s.object("GET", path)
             mfa = d["mfa"] as? Bool ?? false
+            role = d["role"] as? String ?? ""
             devices = (d["devices"] as? [[String: Any]] ?? []).prefix(50).compactMap { x in
                 guard let id = x["id"] as? String, SparkAPI.devId(id) else { return nil }
                 return (id, String((x["name"] as? String ?? "").prefix(40)), x["app"] as? Bool ?? false)
             }
+            sessions = (d["sessions"] as? [[String: Any]] ?? []).prefix(50).compactMap { x in
+                guard let id = x["id"] as? String, id.range(of: #"^[0-9a-f]{16}$"#, options: .regularExpression) != nil else { return nil }
+                let last = (x["last"] as? NSNumber)?.doubleValue ?? 0
+                return (id, String((x["agent"] as? String ?? "Browser").prefix(60)), last > 0 ? Date(timeIntervalSince1970: last) : nil)
+            }
+            let m = try await s.object("GET", "api/admin/features")
+            funcs = (m["features"] as? [[String: Any]] ?? []).prefix(200).compactMap { f in
+                guard let key = f["key"] as? String, key.range(of: #"^[a-z0-9_]{1,40}$"#, options: .regularExpression) != nil,
+                      f["spark"] as? Bool == true, let cells = f["cells"] as? [String: Any],
+                      let name = FeaturesView.pick(f["name"]) else { return nil }
+                return (key, name, cells[user.id] as? Bool ?? false)
+            }
         } catch { self.error = error.localizedDescription }
+    }
+
+    private var funcsOn: Int { funcs.filter { $0.on }.count }
+
+    private func setFunc(_ key: String, _ on: Bool) async {
+        do { _ = try await s.call("PUT", "api/admin/features/\(key)/profiles/\(user.id)", body: ["on": on]); error = nil }
+        catch { self.error = error.localizedDescription }
+        await load()
+    }
+
+    private func endSession(_ id: String) async {
+        do { _ = try await s.call("DELETE", path + "/sessions/\(id)"); error = nil }
+        catch { self.error = error.localizedDescription }
+        await load()
     }
 
     private func removeDevice(_ id: String) async {

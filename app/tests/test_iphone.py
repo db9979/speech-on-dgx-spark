@@ -287,6 +287,22 @@ class IPhone(unittest.TestCase):
         finally:
             helpers.set_config(documents=True)
 
+    def test_app_reads_functions_and_shares_hands_free(self):
+        """Vereinheitlichen Phase 6: the app reads the same function list as the panel (read only) and Freihändig /
+        Ins Wort fallen are the profile's values, the same in browser and app."""
+        a = profile("Ivo")
+        a.put("/api/profile/settings", json={"app_on": True})
+        h = {"X-Speech-Device": pair(a).json()["token"]}
+        app = TestClient(panel.app)
+        r = app.get("/api/features", headers=h)
+        self.assertEqual(r.status_code, 200, r.text)
+        self.assertTrue(any(f["key"] == "mail" for f in r.json()["features"]))   # a profile's list, not the guests'
+        self.assertEqual(app.put("/api/admin/features/weather/profiles/x", json={"on": True}, headers=h).status_code, 401)
+        self.assertEqual(app.put("/api/iphone/settings", json={"hands": True, "barge": False}, headers=h).status_code, 200)
+        mine = a.get("/api/profile/settings").json()["settings"]
+        self.assertEqual((mine["hands"], mine["barge"]), (True, False))
+        self.assertEqual(app.put("/api/iphone/settings", json={"hands": "ja"}, headers=h).status_code, 400)
+
     def test_app_changes_only_its_list_of_settings(self):
         a = profile("Ivy")
         a.put("/api/profile/settings", json={"app_on": True, "style": "kurz und frech"})
