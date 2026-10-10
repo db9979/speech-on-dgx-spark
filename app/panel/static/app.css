@@ -528,7 +528,7 @@ h3.sec{display:flex;align-items:baseline;gap:10px;flex-wrap:wrap;margin:22px 0 2
 h3.sec span{font-size:12px;font-weight:400;color:var(--mut)}
 .setrow .ctl{display:flex;gap:8px;align-items:center;flex:none;max-width:60%}.setrow .ctl>*{flex:none}
 .setrow input.num{width:92px;text-align:right;padding:7px 10px}.setrow .unit{font-size:12px;color:var(--mut)}
-.setrow input.wide{width:300px;padding:7px 10px}.setrow .ctl input.wide{flex:1 1 auto;min-width:140px}
+.setrow input.wide{width:300px;padding:7px 10px}.setrow .ctl input.wide,.setrow .ctl select.wide{flex:1 1 auto;min-width:140px}
 .setrow select.wide{max-width:320px}
 /* a row whose content follows below it (second login step, password box): one frame, the line under the content */
 .setrow:has(+.rowtail:not([hidden])),.setrow:has(+.fh.more+.rowtail:not([hidden])){border-bottom:0;padding-bottom:4px}.rowtail{padding:0 0 12px;border-bottom:1px solid var(--line)}.rowtail .fh{margin-top:0}

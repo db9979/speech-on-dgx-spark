@@ -387,7 +387,7 @@ def logged(path, method):
 _rate, _busy = {}, {}
 _rate_lock = threading.Lock()
 RATE = {"chat": (30, 120), "asr": (60, 240), "logs": (1, 60), "pair": (10, 10), "doc": (0, 10), "image": (0, 10), "msg": (0, 30), "route": (0, 60), "room": (0, 60), "kiwix": (0, 10), "lokal": (0, 20), "features": (30, 120),
-        "rmpair": (0, 3), "rm": (0, 30), "rmsync": (0, 2), "rmsend": (0, 6), "handoff": (60, 60), "bg": (0, 30), "vorrang": (0, 60), "undo": (0, 20), "offsite": (0, 10), "trust": (10, 30)}  # per minute: (guest, profile or admin)
+        "rmpair": (0, 3), "rm": (0, 30), "rmsync": (0, 2), "rmsend": (0, 6), "handoff": (60, 60), "bg": (0, 30), "vorrang": (0, 60), "undo": (0, 20), "llmmodels": (0, 30), "offsite": (0, 10), "trust": (10, 30)}  # per minute: (guest, profile or admin)
 BUSY = {"chat": 4, "asr": 3}  # at once, guests together
 
 

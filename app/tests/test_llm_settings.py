@@ -147,3 +147,74 @@ class Preview(unittest.TestCase):
 
 if __name__ == "__main__":
     unittest.main()
+
+
+class ModelList(unittest.TestCase):
+    """V01.0.292: the choice under Einstellungen -> Sprachmodell lists what /v1/models of the stored address
+    reports; only for the admin, only to the stored address, small answers only, short cache."""
+
+    def setUp(self):
+        import admin
+        self.admin = admin
+        self.real = admin.httpx.AsyncClient
+        self.seen = []
+        self.answer = lambda req: admin.httpx.Response(200, json={"data": [{"id": "Qwen/Qwen3.8-27B"}, {"id": "lean"}]})
+        admin._llm_list.clear()
+
+        def fake(**kw):
+            def handler(req):
+                self.seen.append((str(req.url), req.headers.get("authorization")))
+                return self.answer(req)
+            return self.real(transport=admin.httpx.MockTransport(handler), **kw)
+        admin.httpx.AsyncClient = fake
+
+    def tearDown(self):
+        self.admin.httpx.AsyncClient = self.real
+        self.admin._llm_list.clear()
+        helpers.set_config(llm_key="", llm_model="", llm_url=f"http://127.0.0.1:{helpers.LLM_PORT}/v1")
+
+    def test_lists_models_of_the_stored_address_with_its_key(self):
+        helpers.set_config(llm_key="k-123", llm_model="lean")
+        r = ADMIN.get("/api/admin/llm-models", params={"url": "https://evil.example/v1"}).json()
+        self.assertEqual(r, {"models": ["Qwen/Qwen3.8-27B", "lean"], "current": "lean", "error": ""})
+        self.assertEqual(self.seen, [(f"http://127.0.0.1:{helpers.LLM_PORT}/v1/models", "Bearer k-123")])
+        ADMIN.get("/api/admin/llm-models")                     # kept a short while: no second request
+        self.assertEqual(len(self.seen), 1)
+        ADMIN.get("/api/admin/llm-models", params={"fresh": 1})
+        self.assertEqual(len(self.seen), 2)
+
+    def test_only_the_admin(self):
+        c = profile("Modellwahl")
+        self.assertIn(c.get("/api/admin/llm-models").status_code, (401, 403))
+        self.assertIn(TestClient(panel.app).get("/api/admin/llm-models").status_code, (401, 403))
+        self.assertEqual(self.seen, [])
+
+    def test_odd_names_are_dropped_and_the_list_is_capped(self):
+        data = [{"id": "ok-1"}, {"id": "<img src=x>"}, {"id": "a b"}, {"id": "x" * 201}, {"id": 5}, "plain", {"id": "ok-1"}]
+        data += [{"id": f"m{i}"} for i in range(80)]
+        self.answer = lambda req: self.admin.httpx.Response(200, json={"data": data})
+        ms = ADMIN.get("/api/admin/llm-models").json()["models"]
+        self.assertEqual(ms[:2], ["ok-1", "m0"])
+        self.assertEqual(len(ms), self.admin.LLM_MODELS_MAX)
+
+    def test_failures_leave_an_empty_list_with_a_reason(self):
+        for answer in (lambda req: self.admin.httpx.Response(401),
+                       lambda req: self.admin.httpx.Response(302, headers={"Location": "https://evil.example/"}),
+                       lambda req: self.admin.httpx.Response(200, content=b"x" * (self.admin.LLM_MODELS_BYTES + 10)),
+                       lambda req: self.admin.httpx.Response(200, content=b"not json"),
+                       lambda req: self.admin.httpx.Response(200, json=[1, 2])):
+            self.answer = answer
+            self.admin._llm_list.clear()
+            r = ADMIN.get("/api/admin/llm-models")
+            self.assertEqual(r.status_code, 200)
+            self.assertEqual(r.json()["models"], [])
+            self.assertTrue(r.json()["error"])
+        self.assertFalse(any("evil" in u for u, _ in self.seen))   # no redirect followed
+
+        def down(req):
+            raise self.admin.httpx.ConnectError("refused")
+        self.answer = down
+        self.admin._llm_list.clear()
+        self.assertIn("nicht erreichbar", ADMIN.get("/api/admin/llm-models").json()["error"])
+        helpers.set_config(llm_url="file:///etc/passwd")
+        self.assertEqual(ADMIN.get("/api/admin/llm-models").json()["models"], [])

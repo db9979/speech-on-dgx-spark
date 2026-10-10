@@ -191,7 +191,7 @@
       <div class="setrow"><div class="lbl"><b>Adresse</b><span>OpenAI-kompatibel, qwen38: http://127.0.0.1:30001/v1</span></div><input class="wide" id="chat.llm_url" autocomplete="off"></div>
       <div class="setrow"><div class="lbl"><b>Schlüssel</b><span>Bei qwen38 übernimmt das Update ihn selbst.<button class="mlink" type="button">Mehr</button></span></div><input class="wide" id="chat.llm_key" autocomplete="off"></div>
       <div class="fh more" hidden>Er steht auf dem Spark in ~/.config/qwen38/api-key. Leer lassen, wenn der Server keinen Schlüssel verlangt.</div>
-      <div class="setrow"><div class="lbl"><b>Modell</b><span>Leer = das erste, das der Server meldet.</span></div><input class="wide" id="chat.llm_model" autocomplete="off"></div>
+      <div class="setrow"><div class="lbl"><b>Modell</b><span id="llmmodelhint">Die Modelle, die der Server unter dieser Adresse meldet.</span></div><div class="ctl full"><select class="wide" id="llmmodelsel" aria-label="Modell" hidden></select><input class="wide" id="chat.llm_model" autocomplete="off" aria-label="Modell" placeholder="leer = das erste, das der Server meldet"><button class="b" id="llmmodelre" type="button">Neu laden</button></div></div>
       <h3 class="sec">Antworten</h3>
       <div class="setrow"><div class="lbl"><b>Systemanweisung</b><span>Grundton aller Antworten; die festen Regeln kommen immer dazu.</span></div><div class="ctl"><button class="b" id="promptshow" type="button">Ganzen Prompt ansehen</button><button class="b" id="promptdef" type="button">Standard</button></div></div>
       <textarea id="chat.system_prompt" rows="4" aria-label="Systemanweisung"></textarea><div class="fh" id="promptmsg"></div>

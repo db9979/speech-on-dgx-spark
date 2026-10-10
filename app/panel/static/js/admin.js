@@ -170,8 +170,24 @@ async function loadCfg(){CFG=await (await api('/api/config')).json();
   for(const[sec,o]of Object.entries(CFG))for(const[k,v]of Object.entries(o)){const el=$(sec+'.'+k);if(!el)continue;
     if(el.type==='checkbox')el.checked=v;else{if(el.tagName==='SELECT'&&![...el.options].some(o=>o.value==v))el.add(new Option(v));el.value=Array.isArray(v)?v.join(', '):v}};instrHint();ttsVoiceOpts();try{kxChips()}catch{};
   getDefaults=await renderSet($('chatdefaults'),{...SDEF,...(CFG.chat.defaults||{})},null);
-  asrRec();cfgDeps();if(typeof guidesCount==='function')guidesCount();if(typeof tgAdmin==='function')tgAdmin();visionLoad();if(typeof apnsAdmin==='function')apnsAdmin();if(typeof iupdAdmin==='function')iupdAdmin();if(typeof coadmAdmin==='function')coadmAdmin();if(typeof espAdmin==='function')espAdmin();if(typeof agentAdmin==='function')agentAdmin();document.querySelectorAll('.pane').forEach(p=>markDirty(p,false));document.querySelectorAll('.savemsg').forEach(m=>m.textContent='');glance();glanceLoad()}
+  asrRec();cfgDeps();if(typeof guidesCount==='function')guidesCount();if(typeof tgAdmin==='function')tgAdmin();visionLoad();if(typeof apnsAdmin==='function')apnsAdmin();if(typeof iupdAdmin==='function')iupdAdmin();if(typeof coadmAdmin==='function')coadmAdmin();if(typeof espAdmin==='function')espAdmin();if(typeof agentAdmin==='function')agentAdmin();document.querySelectorAll('.pane').forEach(p=>markDirty(p,false));document.querySelectorAll('.savemsg').forEach(m=>m.textContent='');glance();glanceLoad();llmModels()}
 let getDefaults=null;
+// Sprachmodell (V01.0.292): a choice of the models the configured server reports (/api/admin/llm-models). The text
+// field chat.llm_model stays what is saved; the list only fills it. Without a list (server down, no address) or
+// with „Anderes eingeben …“ the text field shows, so a name can always be typed by hand.
+const LLM_OTHER=' other';  // a space never passes the server's name check
+async function llmModels(fresh){const sel=$('llmmodelsel'),inp=$('chat.llm_model'),hint=$('llmmodelhint');if(!sel)return;
+  let r;try{r=await (await api('/api/admin/llm-models'+(fresh?'?fresh=1':''))).json()}catch{r={models:[],error:t('Liste nicht abrufbar.','List not available.')}}
+  const ms=r.models||[],cur=inp.value.trim();
+  if(!ms.length){sel.hidden=true;inp.hidden=false;hint.textContent=(r.error||t('Der Server meldet keine Modelle.','The server reports no models.'))+' '+t('Leer = das erste, das der Server meldet.','Empty = the first one the server reports.');return}
+  const known=!cur||ms.includes(cur);
+  sel.innerHTML=`<option value="">${esc(t('Automatisch','Automatic')+' ('+ms[0]+')')}</option>`+ms.map(m=>`<option value="${esc(m)}">${esc(m)}</option>`).join('')+
+    (known?'':`<option value="${esc(cur)}">${esc(cur+' '+t('(meldet der Server nicht)','(not reported by the server)'))}</option>`)+`<option value="${LLM_OTHER}">${esc(t('Anderes eingeben …','Type another …'))}</option>`;
+  sel.value=cur;sel.hidden=false;inp.hidden=true;
+  hint.textContent=ms.length===1?t('Der Server meldet ein Modell.','The server reports one model.'):t(`Der Server meldet ${ms.length} Modelle.`,`The server reports ${ms.length} models.`)}
+$('llmmodelsel').addEventListener('change',()=>{const sel=$('llmmodelsel'),inp=$('chat.llm_model');
+  if(sel.value===LLM_OTHER){inp.hidden=false;inp.focus();return}inp.hidden=true;inp.value=sel.value});
+$('llmmodelre').onclick=()=>llmModels(true);
 // Parakeet has no model choice and no engine: hide those settings while it is chosen.
 function asrRec(){const qw=$('asr.recognizer').value!=='parakeet';$('asrqwen').style.display=qw?'':'none';
   $('asrengine').style.display=qw&&CFG.asr.backend==='vllm'?'block':'none'}

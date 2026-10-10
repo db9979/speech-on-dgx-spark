@@ -567,6 +567,32 @@ class Browser(unittest.TestCase):
                 await br.close()
         self.run_async(go())
 
+    def test_llm_model_choice(self):
+        """V01.0.292: Einstellungen → Sprachmodell offers the models the server reports; picking one fills the saved
+        field, „Anderes eingeben …“ shows the text field again."""
+        import admin
+        admin._llm_list.clear()
+
+        async def go():
+            async with async_playwright() as p:
+                for name, w, h in VIEWS:
+                    br, pg, errors = await self.page(p, w, h, csp=True)
+                    await pg.evaluate("goCfg('ai')")
+                    await pg.wait_for_selector("#llmmodelsel", state="visible", timeout=8000)
+                    await pg.screenshot(path=os.path.join(os.environ.get("SPEECH_SPARK_SHOTS", helpers.TMP), f"llm-models-{name}.png"))
+                    opts = await pg.evaluate("[...$('llmmodelsel').options].map(o=>o.value)")
+                    self.assertIn("fake", opts, name)
+                    self.assertFalse(await pg.is_visible("#chat\\.llm_model"), name)
+                    await pg.select_option("#llmmodelsel", "fake")
+                    self.assertEqual(await pg.evaluate("$('chat.llm_model').value"), "fake", name)
+                    await pg.select_option("#llmmodelsel", index=len(opts) - 1)
+                    self.assertTrue(await pg.is_visible("#chat\\.llm_model"), name)
+                    over = await pg.evaluate("document.documentElement.scrollWidth-window.innerWidth")
+                    self.assertLessEqual(over, 1, name)
+                    self.assertEqual(errors, [], name)
+                    await br.close()
+        self.run_async(go())
+
     def test_profile_as_admin(self):
         """V01.0.255 (coadmin.py): the main admin gives a role under Einstellungen → Sicherheit; the profile opens
         its admin mode under Ich → Sicherheit; then a bar says so, the main admin's own things are hidden, and a

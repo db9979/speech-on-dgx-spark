@@ -375,6 +375,66 @@ def prompt_preview():
     return {"parts": chat.prompt_parts(ccfg), "default": default["system_prompt"]}
 
 
+# The models the configured LLM server offers, for the choice under Einstellungen -> Sprachmodell. The request
+# goes only to the stored address (never one from the request: no way to make the panel call elsewhere), with
+# the stored key, no redirects, 5 seconds and 256 KB at most; at most 50 names of up to 200 plain characters.
+# Not through netguard: that refuses this machine's ports 30000-31099, where qwen38 lives. Kept 60 seconds.
+LLM_MODELS_TTL, LLM_MODELS_MAX, LLM_MODELS_BYTES = 60, 50, 256 * 1024
+_llm_list = {}                    # url -> (time, models)
+_MODEL_ID = re.compile(r"^[\w.:/@+-]{1,200}$")
+
+
+async def _fetch_llm_models(url, key):
+    headers = {"Authorization": f"Bearer {key}"} if key else {}
+    async with httpx.AsyncClient(timeout=5, follow_redirects=False, trust_env=False) as c:
+        async with c.stream("GET", url + "/models", headers=headers) as r:
+            if r.status_code in (401, 403):
+                raise ValueError("Der Server lehnt den Schlüssel ab.")
+            if r.status_code != 200:
+                raise ValueError(f"Der Server antwortet mit HTTP {r.status_code}.")
+            body = b""
+            async for part in r.aiter_bytes():
+                body += part
+                if len(body) > LLM_MODELS_BYTES:
+                    raise ValueError("Die Antwort des Servers ist zu groß.")
+    data = json.loads(body).get("data")
+    if not isinstance(data, list):
+        raise ValueError("Der Server meldet keine Modellliste.")
+    out = []
+    for m in data:
+        mid = m.get("id") if isinstance(m, dict) else None
+        if isinstance(mid, str) and _MODEL_ID.match(mid) and mid not in out:
+            out.append(mid)
+        if len(out) >= LLM_MODELS_MAX:
+            break
+    return out
+
+
+@router.get("/api/admin/llm-models", dependencies=[Depends(auth)])
+async def llm_models(request: Request, fresh: bool = False):
+    """{models, current, error}: the names /v1/models of the configured address lists (empty with error
+    when it cannot be read; the page then keeps the free text field)."""
+    guard.limit(request, "llmmodels", admin=True)
+    ccfg = load_config().get("chat", {})
+    url = str(ccfg.get("llm_url") or "").rstrip("/")
+    current = str(ccfg.get("llm_model") or "")
+    if not url.startswith(("http://", "https://")):
+        return {"models": [], "current": current, "error": "Keine gültige Adresse eingestellt."}
+    hit = _llm_list.get(url)
+    if hit and not fresh and time.monotonic() - hit[0] < LLM_MODELS_TTL:
+        return {"models": hit[1], "current": current, "error": ""}
+    try:
+        models = await _fetch_llm_models(url, str(ccfg.get("llm_key") or ""))
+    except httpx.HTTPError as e:
+        return {"models": [], "current": current, "error": f"Server nicht erreichbar ({type(e).__name__})."}
+    except (ValueError, AttributeError) as e:   # also an answer that is no JSON object
+        msg = str(e) if type(e) is ValueError else "Der Server meldet keine Modellliste."
+        return {"models": [], "current": current, "error": msg}
+    _llm_list.clear()             # only the configured address is kept
+    _llm_list[url] = (time.monotonic(), models)
+    return {"models": models, "current": current, "error": ""}
+
+
 @router.get("/api/config", dependencies=[Depends(auth)])
 def get_config():
     with open(DEFAULTS) as f:
