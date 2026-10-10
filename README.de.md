@@ -33,6 +33,7 @@ Alle Optionen ohne Rückfragen (`--mode api --asr 1.7b --tts 0.6b --yes` …) st
 
 <!-- New version: add one line at the top here and in CHANGELOG.md, drop the oldest line here (keep 10). Details go to docs/de and docs/en, not into this README. -->
 
+- **V01.0.309** MCP „Schlüssel erzeugen“ antwortet direkt unter dem Knopf: fehlt der Name oder ist kein Werkzeug angekreuzt, steht das dort (vorher ganz unten auf der Seite, wirkte wie „passiert nichts“), dazu „wird erzeugt …“ und ein klarer Hinweis, wenn der Code fehlt
 - **V01.0.308** Logs → Anfragen zeigt beim Schritt „Weiche“, ob die Modell-Zuordnung rechtzeitig kam
 - **V01.0.307** Vorab holen bei Rückfrage (aus): Fragt der Assistent zurück, holt das Panel schon Kalender, Mails, Wetter oder Pakete, während die Frage gesprochen wird; die Modell-Zuordnung unklarer Fragen läuft neben der Vorbereitung
 - **V01.0.306** Selbsttest „Handy wie die App“ wartet unter der strengen CSP per Abfrage statt mit wait_for_function (war auf GitHub mal rot)
@@ -42,7 +43,6 @@ Alle Optionen ohne Rückfragen (`--mode api --asr 1.7b --tts 0.6b --yes` …) st
 - **V01.0.302** Handy: Die Knöpfe unter dem Gesicht (Gespräch einstellen, Verlauf, Bild, Nachricht) brechen in Zeilen um statt links und rechts abgeschnitten zu werden; neuer Browsertest prüft auf 320 und 390 px in App-Ansicht und Rechner-Layout jede Seite, Einstellungsseite und Ich-Seite, dass nichts über den Rand ragt
 - **V01.0.301** Selbsttest „Handy wie die App“ wartet, bis der Schritt in der Browser-Historie steht, bevor er zurückgeht (lief auf GitHub einmal aus der Seite heraus)
 - **V01.0.300** Android-App „Spark“ als APK ohne Store (Funktionen → Android-App, aus; Ich → Android-App): Hülle um die Spark-Seite mit Mitteilungen bei geschlossener App (fragt alle 15 Minuten selbst nach, kein Google), Assistenten-Taste, Teilen an Spark und Hinweis auf neue Versionen; GitHub baut und signiert sie als android-v…, der Spark holt sie mit SHA-256-Prüfung und gibt sie per Download-Link mit Einmal-Token (QR, 30 Minuten) aus (docs/de/android-app.md)
-- **V01.0.299** reMarkable „Neueste zuerst“ (Admin-Unterschalter + Ich → reMarkable, aus): Änderungszeit pro Seite, bei ähnlich guten Treffern rückt die neuere Notiz bis zu zwei Plätze vor (auch für „Erst lokal“), Treffer mit „geändert am“, „Was habe ich zuletzt/heute/gestern/diese Woche notiert?“ als feste Regel; neue Notizen kommen schneller: alle 3 Minuten ein kurzer Blick aufs Konto, bei Änderung sofort abgleichen
 
 Alle Versionen: [CHANGELOG.md](CHANGELOG.md)
 

@@ -37,6 +37,7 @@ async function showMcp(){const box=$('mcpbox');if(!box)return;if(!PROFILE||!MCPS
       <div class="fh err" id="mcpwarn" hidden>${esc(MCP_WARN())}</div>
       ${mcpTools(d.tools,[],'mcn')}
       <div class="row" style="margin-top:8px"><button class="b p" type="button" id="mcpmake">${t('Schlüssel erzeugen','Create key')}</button></div>
+      <div class="fh" id="mcpmakemsg" role="status"></div>
       <div id="mcpkey"></div></details>
     ${d.extern?`<details style="margin-top:6px"><summary>${t('claude.ai, ChatGPT und andere mit Anmeldung (OAuth)','claude.ai, ChatGPT and others with sign-in (OAuth)')}</summary>
       <div class="fh">${t('Im Programm einen eigenen MCP-Connector mit dieser Adresse anlegen:','In the program add a custom MCP connector with this address:')} <code>${esc(d.url)}</code>. ${t('Das Programm schickt dich zur Anmeldung hierher; du wählst die Werkzeuge und bestätigst mit deinem Code.','The program sends you here to sign in; you pick the tools and confirm with your code.')}</div>
@@ -46,11 +47,17 @@ async function showMcp(){const box=$('mcpbox');if(!box)return;if(!PROFILE||!MCPS
   xbind(box,showMcp);
   mcpAuthShow(d);mcpKeyShow();
   if($('mcpwhere'))$('mcpwhere').onchange=()=>{$('mcpwarn').hidden=$('mcpwhere').value!=='extern'};
-  if($('mcpmake'))$('mcpmake').onclick=async()=>{const where=$('mcpwhere').value;
+  // V01.0.309 (Dominik: "da passiert nichts"): every answer shows right under the button, not at the end of the page
+  if($('mcpmake'))$('mcpmake').onclick=async()=>{const where=$('mcpwhere').value,b=$('mcpmake'),say=(x,err)=>{xmsg('mcpmakemsg',x,err);$('mcpmakemsg').scrollIntoView({block:'nearest'})};
+    const name=$('mcpname').value.trim(),tools=mcpPicked(box,'mcn');
+    if(!name){say(t('Bitte zuerst einen Namen für das Programm eingeben.','Please enter a name for the program first.'),true);$('mcpname').focus();return}
+    if(!tools.length){say(t('Bitte mindestens ein Werkzeug ankreuzen.','Please tick at least one tool.'),true);return}
     if(where==='extern'&&!confirm(MCP_WARN()))return;
-    try{const r=await (await api('/api/profile/mcp/keys',xjson('POST',{name:$('mcpname').value.trim(),tools:mcpPicked(box,'mcn'),where}))).json();
-      MCP_NEW=Object.assign({},r,{url:where==='extern'?r.url:mcpLan(CFG&&CFG.panel&&CFG.panel.port)});await showMcp()}
-    catch(e){xmsg('mcpmsg',e.message,true)}};
+    b.disabled=true;say(t('Schlüssel wird erzeugt …','Creating the key …'));
+    try{const r=await (await api('/api/profile/mcp/keys',xjson('POST',{name,tools,where}))).json();
+      MCP_NEW=Object.assign({},r,{url:where==='extern'?r.url:mcpLan(CFG&&CFG.panel&&CFG.panel.port)});await showMcp();
+      const k=$('mcpkey');if(k)k.scrollIntoView({block:'nearest'})}
+    catch(e){b.disabled=false;say(/code required|Code/i.test(e.message||'')?t('Ohne deinen Code geht es nicht: bitte noch einmal tippen und den Code aus der Authenticator-App eingeben.','Not without your code: tap again and enter the code from your authenticator app.'):e.message,true)}};
   box.querySelectorAll('[data-mcdel]').forEach(b=>b.onclick=async()=>{if(!confirm(t('„','"')+b.dataset.mcname+t('“ entfernen? Sein Zugang gilt dann sofort nicht mehr.','" remove? Its access stops working at once.')))return;
     try{await api('/api/profile/mcp/conns/'+encodeURIComponent(b.dataset.mcdel),{method:'DELETE'});showMcp()}catch(e){xmsg('mcpmsg',e.message,true)}});
   box.querySelectorAll('[data-mcsave]').forEach(b=>b.onclick=async()=>{const id=b.dataset.mcsave,body={tools:mcpPicked(box,'mce-'+id)};

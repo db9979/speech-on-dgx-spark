@@ -297,6 +297,36 @@ class Browser(unittest.TestCase):
                 await br.close()
         self.run_async(go())
 
+    def test_mcp_key_is_made_and_shown(self):
+        """Ich → Dienste per MCP (V01.0.309, Dominik: "Schlüssel erzeugen" did nothing): the button makes a key and
+        shows it once, on a computer and a phone, without script errors."""
+        import mcpserver
+        import profiles
+        helpers.set_config(mcp_server=True)
+        me = next(u for u in profiles._load()["users"] if u["name"] == "Uitest")["id"]
+        profiles.save_settings(me, {"mcps_on": True})
+
+        async def go():
+            async with async_playwright() as p:
+                for name, w, h in VIEWS:
+                    br, pg, errors = await self.page(p, w, h, csp=True)
+                    await pg.evaluate("openMe('mcpbox')")
+                    await pg.wait_for_selector("#mcpmake", state="attached", timeout=8000)
+                    await pg.evaluate("$('mcpmake').closest('details').open=true")
+                    await pg.click("#mcpmake")      # no name, no tool: says so right under the button
+                    self.assertIn("Namen", await pg.inner_text("#mcpmakemsg"))
+                    await pg.fill("#mcpname", f"Test {name}")
+                    await pg.click("#mcpmake")
+                    self.assertIn("Werkzeug", await pg.inner_text("#mcpmakemsg"))
+                    await pg.evaluate("document.querySelector('#mcpbox [data-mcn=transcribe]').checked=true")
+                    await pg.click("#mcpmake")
+                    await pg.wait_for_selector("#mcpkey code", timeout=8000)
+                    self.assertIn("spk_mcp_", await pg.inner_text("#mcpkey"))
+                    self.assertIn(f"Test {name}", [c["name"] for c in mcpserver.conns(me)])
+                    self.assertEqual(errors, [], name)
+                    await br.close()
+        self.run_async(go())
+
     def test_messages_page_sends(self):
         """Ich → Nachrichten (V01.0.192): switch on, write to another profile, it lands in that mailbox; on a
         computer and a phone, without script errors or sideways scrolling."""
