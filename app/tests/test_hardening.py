@@ -310,9 +310,14 @@ class Stage1(unittest.TestCase):
         for line in sh.splitlines():
             if "rmscene==" in line and not line.lstrip().startswith("#"):
                 self.assertIn("--no-deps", line)
-        panel = next(line for line in sh.splitlines() if line.startswith("make_venv panel"))
+        # (since V01.0.286 the fallback for an environment made before the lock, indented in its else branch)
+        panel = next(line for line in sh.splitlines() if line.lstrip().startswith("make_venv panel"))
         self.assertIn('"packaging>=24"', panel)
         self.assertNotIn("rmscene", panel)
+        # the hash lock (V01.0.286) is installed whole with --no-deps (nothing is resolved there) and holds packaging>=24
+        self.assertIn('install -q --no-deps --require-hashes -r "$PANEL_LOCK"', sh)
+        pin = re.search(r"^packaging==(\d+)\.", repo_file("app", "requirements-panel.lock"), re.M)
+        self.assertGreaterEqual(int(pin.group(1)), 24)
 
     def test_update_takes_only_green_versions(self):
         # V01.0.157: main can be red for a while; root installs only commits whose GitHub run passed
