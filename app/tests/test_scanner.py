@@ -57,6 +57,11 @@ OPEN = {
     "/favicon.ico": "page files",
     "/pebble/speech-spark.pbw": "the watch app",
     "/sw.js": "the page's service worker",
+    "/api/join/check": "an invited person's first contact; 404 unless the admin allows invitations, one-time codes, lockout",
+    "/api/join": "an invited person's first contact; 404 unless the admin allows invitations, one-time codes, lockout",
+    "/api/iphone/join": "the iPhone app with an invitation; 404 unless the admin allows invitations, one-time codes, lockout",
+    "/api/handoff/claim": "a phone scanned the computer's code; 404 unless the admin allows it, two minutes, once, lockout",
+    "/api/handoff/finish": "the phone signs in only after its number was picked on the computer; 404 unless allowed",
 }
 LOGIN = re.compile(r"Depends\((auth|main_auth|owner_auth|assistant|own_profile|browser_profile|secret_profile|_on)\)")
 ROUTE = re.compile(r'@(?:router|app)\.(?:get|post|put|delete|patch|api_route)\("([^"]*)"[^\n]*\n((?:@[^\n]*\n)*)'

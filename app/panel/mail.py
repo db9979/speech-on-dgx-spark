@@ -101,6 +101,9 @@ def entry(body):
 
 
 def add(uid, item):
+    import join
+    if join.mfa_due(uid):   # came in by invitation: mail waits for the second step
+        raise ValueError("Erst den zweiten Anmeldeschritt einrichten (Ich → Sicherheit), dann E-Mail verbinden.")
     d = get(uid)
     if len(d["accounts"]) >= MAX_ACCOUNTS:
         raise ValueError(f"at most {MAX_ACCOUNTS} mailboxes")

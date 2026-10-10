@@ -1011,6 +1011,16 @@
         }
       }
     },
+    "Das ist kein gültiger Einladungs-Link vom Spark.": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "This is not a valid invitation link from the Spark."
+          }
+        }
+      }
+    },
     "Das ist kein gültiger Kopplungs-Link vom Spark.": {
       "localizations": {
         "en": {
@@ -1057,6 +1067,16 @@
           "stringUnit": {
             "state": "translated",
             "value": "Takes about a minute."
+          }
+        }
+      }
+    },
+    "Dein Name": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Your name"
           }
         }
       }
@@ -1391,6 +1411,16 @@
         }
       }
     },
+    "Die PIN braucht mindestens %lld Zeichen.": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "The PIN needs at least %lld characters."
+          }
+        }
+      }
+    },
     "Die Spracherkennung auf dem iPhone kann diese Sprache nicht ohne Internet. Das Weckwort bleibt aus (Einstellungen → Allgemein → Tastatur → Diktat).": {
       "localizations": {
         "en": {
@@ -1431,6 +1461,16 @@
         }
       }
     },
+    "Die beiden PINs sind nicht gleich.": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "The two PINs differ."
+          }
+        }
+      }
+    },
     "Die eigenen Schalter dieses Profils. Das Profil sieht und ändert sie selbst unter Ich.": {
       "localizations": {
         "en": {
@@ -1461,12 +1501,32 @@
         }
       }
     },
+    "Diese App ist schon gekoppelt. Die Einladung im Browser öffnen oder die App erst in den Einstellungen entkoppeln.": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "This app is already paired. Open the invitation in the browser, or unpair the app in the settings first."
+          }
+        }
+      }
+    },
     "Diese App spricht mit deinem Spark. Zum Koppeln im Panel unter Ich → iPhone-App auf „iPhone koppeln“ tippen.": {
       "localizations": {
         "en": {
           "stringUnit": {
             "state": "translated",
             "value": "This app talks to your Spark. To pair, tap “Pair an iPhone” in the panel under Me → iPhone app."
+          }
+        }
+      }
+    },
+    "Diese Einladung setzt eine neue PIN. Bitte im Browser öffnen.": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "This invitation sets a new PIN. Please open it in the browser."
           }
         }
       }
@@ -1517,6 +1577,16 @@
           "stringUnit": {
             "state": "translated",
             "value": "Store documents"
+          }
+        }
+      }
+    },
+    "Du bist zum Sprachassistenten auf diesem Spark eingeladen:": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "You are invited to the voice assistant on this Spark:"
           }
         }
       }
@@ -1657,6 +1727,26 @@
           "stringUnit": {
             "state": "translated",
             "value": "Shopping list"
+          }
+        }
+      }
+    },
+    "Einladung": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Invitation"
+          }
+        }
+      }
+    },
+    "Einladung wird geprüft …": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Checking the invitation …"
           }
         }
       }
@@ -3111,6 +3201,16 @@
         }
       }
     },
+    "Mit Name und PIN meldest du dich auch im Browser an. Danach führt dich der Spark durch die Einrichtung.": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "You also sign in to the browser with your name and PIN. Then the Spark walks you through the setup."
+          }
+        }
+      }
+    },
     "Mit Spark sprechen": {
       "localizations": {
         "en": {
@@ -3531,6 +3631,16 @@
         }
       }
     },
+    "Noch kein Profil? Mit einer Einladung vom Admin legst du es hier gleich an: den Einladungs-Link öffnen und „Lieber gleich in der iPhone-App“ antippen.": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "No profile yet? With an invitation from the admin you create it right here: open the invitation link and tap \"Rather straight in the iPhone app\"."
+          }
+        }
+      }
+    },
     "Noch keine Dokumente.": {
       "localizations": {
         "en": {
@@ -3611,6 +3721,16 @@
         }
       }
     },
+    "Nur weitermachen, wenn du diese Einladung erwartest.": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Only continue if you expect this invitation."
+          }
+        }
+      }
+    },
     "Oder den Link hier einfügen": {
       "localizations": {
         "en": {
@@ -3681,12 +3801,32 @@
         }
       }
     },
+    "PIN (mindestens %lld Zeichen)": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "PIN (at least %lld characters)"
+          }
+        }
+      }
+    },
     "PIN setzen": {
       "localizations": {
         "en": {
           "stringUnit": {
             "state": "translated",
             "value": "Set PIN"
+          }
+        }
+      }
+    },
+    "PIN wiederholen": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Repeat the PIN"
           }
         }
       }
@@ -5447,6 +5587,16 @@
           "stringUnit": {
             "state": "translated",
             "value": "not connected"
+          }
+        }
+      }
+    },
+    "spark-app://pair?… / spark-app://join?…": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "spark-app://pair?… / spark-app://join?…"
           }
         }
       }

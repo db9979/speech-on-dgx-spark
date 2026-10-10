@@ -23,7 +23,7 @@ async function loadProf(){profFilter();let d;
   try{d=await (await api('/api/admin/profiles?'+new URLSearchParams({q:PL.q,show:PL.show,sort:PL.sort,page:PL.page,per:25}))).json()}catch(e){perr('pmsg',e);return}
   PL.page=d.page;PL.names=d.names;const name=id=>(d.names.find(u=>u.id===id)||{}).name||'?';
   $('duser').innerHTML=popts($('duser').value,t('Profil wählen …','Pick a profile …'));
-  $('proflist').innerHTML=d.users.map(u=>`<tr><td><b>${esc(u.name)}</b>${u.call?` <span class="mut">(${esc(u.call)})</span>`:''}${u.role?` <span class="pill">${esc(PROLE()[u.role]||u.role)}</span>`:''}${u.room?` <span class="pill ok">${t('hört zu','listening')}</span>`:''}<div class="intro sm">${t('zuletzt','last used')}: ${esc(pwhen(u.last))} · ${u.devices} ${t('Gerät(e)','device(s)')} · ${u.facts} ${t('gemerkte Fakten','remembered facts')}${u.mfa?' · '+t('mit zweitem Anmeldeschritt','with second login step'):''}${u.msg?' · '+t('Nachrichten an','messages on'):''}</div></td>
+  $('proflist').innerHTML=d.users.map(u=>`<tr><td><b>${esc(u.name)}</b>${u.call?` <span class="mut">(${esc(u.call)})</span>`:''}${u.role?` <span class="pill">${esc(PROLE()[u.role]||u.role)}</span>`:''}${u.room?` <span class="pill ok">${t('hört zu','listening')}</span>`:''}<div class="intro sm">${t('zuletzt','last used')}: ${esc(pwhen(u.last))} · ${u.devices} ${t('Gerät(e)','device(s)')} · ${u.facts} ${t('gemerkte Fakten','remembered facts')}${u.mfa?' · '+t('mit zweitem Anmeldeschritt','with second login step'):''}${u.msg?' · '+t('Nachrichten an','messages on'):''}${typeof joinSetupLine==='function'&&u.setup&&u.setup.total?' · '+joinSetupLine(u.setup):''}</div></td>
     <td style="text-align:right;white-space:nowrap"><button class="b" type="button" data-popen="${esc(u.id)}">${PL.open===u.id?t('Schließen','Close'):t('Details','Details')}</button></td></tr>${PL.open===u.id?`<tr><td colspan="2"><div id="pdetail" class="mut">…</div></td></tr>`:''}`).join('')
     ||`<tr><td class="mut">${d.all?t('Kein Profil passt.','No profile matches.'):t('Noch keine.','None yet.')}</td></tr>`;
   // Gäste as the first row: who talks without a profile, and what they get (Wer darf was has the details)
@@ -72,6 +72,8 @@ async function profDetail(id){let u;try{u=await (await api('/api/admin/profiles/
   $('pdetail').innerHTML=`<div class="pdet"><div class="intro sm">${t('Angelegt','Created')}: ${esc(pwhen(u.created))} · ${t('zuletzt benutzt','last used')}: ${esc(pwhen(u.last))} · ${u.facts} ${t('gemerkte Fakten','remembered facts')} · ${u.msg?t('Nachrichten an','messages on'):t('Nachrichten aus','messages off')}</div>
     ${h3(t('Zugang','Access'))}
     ${setRow(esc('PIN'),esc(t('Eine neue PIN meldet alle Browser dieses Profils ab.','A new PIN signs out every browser of this profile.')),pbtn('ppinnew',t('PIN ändern','Change PIN')))}
+    ${setRow(esc(t('PIN-Link','PIN link')),esc(t('Ein Link, mit dem die Person ihre PIN selbst wählt (gilt einen Tag, einmal). Besser als eine PIN weiterzusagen.','A link with which the person picks the PIN themselves (one day, once). Better than passing a PIN on.')),pbtn('ppinlink',t('PIN-Link','PIN link')))}
+    <div id="ppinout"></div>
     ${setRow(esc(t('Zweiter Anmeldeschritt','Second login step')),esc(u.mfa?t('An. Zurücksetzen, falls Handy und Wiederherstellungscodes weg sind.','On. Reset it if phone and recovery codes are lost.'):t('Aus. Das Profil schaltet ihn unter Ich → Sicherheit ein.','Off. The profile switches it on under Ich → Security.')),
       u.mfa?pbtn('pmfa',t('Zurücksetzen','Reset')):`<span class="mut">${t('aus','off')}</span>`)}
     ${role}
@@ -82,10 +84,14 @@ async function profDetail(id){let u;try{u=await (await api('/api/admin/profiles/
     ${h3(t('Geräte','Devices'))}<ul class="facts">${u.devices.map(x=>`<li><span>${esc(x.name)}${x.room?` <span class="pill ok">${t('hört zu','listening')}</span>`:''} <small class="mut">${x.speaker?t('Lautsprecher','speaker'):x.app?t('iPhone-App','iPhone app'):t('Schlüssel','key')} · ${t('zuletzt','last used')}: ${x.last?esc(pwhen(x.last.t)):t('noch nie','never')}</small></span></li>`).join('')||`<li class="mut">${t('Keine.','None.')}</li>`}</ul>
     ${h3(t('Funktionen','Functions'))}
     ${setRow(esc(u.features.on+' '+t('von','of')+' '+u.features.of+' '+t('an','on')),esc(t('Funktionen mit eigenem Schalter, die der Spark erlaubt. Das Profil schaltet sie unter Ich, du unter Wer darf was.','Functions with an own switch the Spark allows. The profile switches them under Ich, you under Who may do what.')),pbtn('pfeat',t('Wer darf was','Who may do what')))}
+    ${u.setup&&u.setup.total?setRow(joinSetupLine(u.setup),esc(u.setup.open.length?t('Offen: ','Open: ')+u.setup.open.join(', '):t('Alles eingerichtet.','Everything set up.')),u.setup.open.length?pbtn('premind',t('Erinnern','Remind')):''):''}
     ${rights}
     ${h3(t('Daten','Data'))}
     ${setRow(esc(t('Profil löschen','Delete profile')),esc(t('Mit Gedächtnis, Gesprächen und Geräten. Geht nicht rückgängig.','With memory, conversations and devices. Cannot be undone.')),pbtn('pdel',t('Löschen','Delete')))}</div>`;
   const ok=m=>{$('pmsg').textContent=m},again=()=>profDetail(id);
+  $('ppinlink').onclick=()=>joinPinLink(id,u.name,$('ppinout'));
+  if($('premind'))$('premind').onclick=async()=>{try{const r=await (await api('/api/admin/profiles/'+encodeURIComponent(id)+'/remind',jpost('POST',{}))).json();
+    ok(r.sent?t('Erinnerung geschickt.','Reminder sent.'):t('Keine Mitteilung möglich: das Profil hat noch kein Gerät mit Mitteilungen.','No notification possible: the profile has no device with notifications yet.'))}catch(e){perr('pmsg',e)}};
   $('pcallsave').onclick=async()=>{try{const r=await (await api('/api/admin/profiles/'+encodeURIComponent(id)+'/call',jpost('PUT',{call:$('pcall').value}))).json();
     ok(r.call?t('Rufname gespeichert: ','Call name saved: ')+r.call:t('Rufname entfernt.','Call name removed.'));loadProf()}catch(e){perr('pmsg',e)}};
   if($('pmfa'))$('pmfa').onclick=()=>resetMfa(id,u.name);$('ppinnew').onclick=()=>newPin(id,u.name);$('pdel').onclick=()=>delProf(id,u.name);

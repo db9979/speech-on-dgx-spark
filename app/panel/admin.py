@@ -78,8 +78,9 @@ async def wyoming_suggest():
 
 def _profile_extra(uid):
     import roomlive
+    import onboard
     return {"mfa": mfa.enabled(uid), "msg": bool(profiles.settings(uid).get("msg_on")), "room": roomlive.count(uid),
-            "role": coadmin.role(uid) if coadmin.on() else ""}
+            "role": coadmin.role(uid) if coadmin.on() else "", "setup": onboard.summary(uid)}
 
 
 @router.get("/api/admin/profiles", dependencies=[Depends(auth)])

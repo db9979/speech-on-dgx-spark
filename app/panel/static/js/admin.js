@@ -355,6 +355,9 @@ const AUDIT={admin_login:t('Admin angemeldet','admin signed in'),admin_login_fai
   admin_password_changed:t('Admin-Passwort geändert','admin password changed'),profile_login:t('Profil angemeldet','profile signed in'),
   profile_login_failed:t('PIN falsch','wrong PIN'),profile_logout_all:t('überall abgemeldet','logged out everywhere'),
   profile_device_removed:t('Gerät gesperrt','device blocked'),foreign_page_refused:t('fremde Seite abgewiesen','foreign page refused'),
+  invite_made:t('Einladung erstellt','invitation created'),invite_used:t('neue Person über Einladung','new person by invitation'),
+  invite_app:t('neue Person über Einladung (iPhone-App)','new person by invitation (iPhone app)'),invite_pin:t('neue PIN über Einladungslink','new PIN through an invitation link'),
+  invite_revoked:t('Einladung zurückgezogen','invitation withdrawn'),handoff_login:t('Handy über QR-Code angemeldet','phone signed in by QR code'),
   backup:t('Sicherung','backup'),restore:t('Wiederherstellung','restore'),watchdog:t('Wächter','watchdog')};
 async function auditText(){const d=await (await api('/api/audit?limit=500')).json();
   return d.events.slice().reverse().map(e=>{const who=e.who||(e.uid&&d.names[e.uid])||e.name||'';

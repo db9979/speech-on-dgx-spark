@@ -140,6 +140,9 @@ def _docs_on():
 
 def add(uid, name, data, text=None, source="upload"):
     """documents.add with this profile's switches, within its quota."""
+    import join
+    if join.mfa_due(uid):   # came in by invitation: documents wait for the second step
+        raise ValueError("Erst den zweiten Anmeldeschritt einrichten (Ich → Sicherheit), dann Dokumente ablegen.")
     if documents.usage_total(uid) >= quota_bytes(uid):
         raise ValueError(f"the space for documents is full ({quota_bytes(uid) // 1024**2} MB): delete documents "
                          "or ask the admin for more")

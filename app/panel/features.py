@@ -135,6 +135,9 @@ profiles.NO_PRESET.update(f.profile for f in FEATURES if f.profile)
 READY = {}
 # extra per-profile conditions given by the admin (the agent level): key -> function(uid) -> bool
 GRANTED = {}
+# the second step a profile still owes before using a function (join.py, new profiles by invitation):
+# function(uid, key) -> bool, set by join.py
+DUTY = None
 
 # chat.* switches that are no function a profile uses (how the Spark itself works)
 SPARK_ONLY = {"public", "thinking", "prompt_cache", "answer_check", "datetime"}
@@ -205,12 +208,15 @@ def profile_on(key, uid, s=None):
 
 
 def reason(key, uid, c=None, s=None):
-    """Why it cannot be used: "spark" (admin switch), "guest", "profile" (own switch) or None."""
+    """Why it cannot be used: "spark" (admin switch), "guest", "profile" (own switch), "mfa" (the second
+    step first, join.py) or None."""
     if not admin_on(key, c):
         return "spark"
     if not uid:
         return None if BY_KEY[key].guests else "guest"
-    return None if profile_on(key, uid, s) else "profile"
+    if not profile_on(key, uid, s):
+        return "profile"
+    return "mfa" if DUTY and DUTY(uid, key) else None
 
 
 def allowed(key, uid, c=None, s=None):
@@ -233,7 +239,8 @@ def guests(c=None):
 
 WHY = {"spark": ("Vom Admin ausgeschaltet", "Switched off by the admin"),
        "guest": ("Nur mit Profil", "Only with a profile"),
-       "profile": ("Bei dir aus", "Off for you")}
+       "profile": ("Bei dir aus", "Off for you"),
+       "mfa": ("Erst den zweiten Anmeldeschritt einrichten (Ich → Sicherheit)", "Set up the second sign-in step first (Me → Security)")}
 
 
 def state(uid, c=None):

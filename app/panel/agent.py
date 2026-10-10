@@ -114,6 +114,9 @@ def granted(uid):
     """The level the admin gave this profile ("" when the feature is off)."""
     if not uid or not admin_on() or not profiles.by_id(uid):
         return ""
+    import join
+    if join.mfa_due(uid):   # came in by invitation: agent functions wait for the second step
+        return ""
     return admin_state()["levels"].get(uid, "")
 
 

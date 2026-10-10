@@ -268,6 +268,21 @@ struct SparkAPI {
         return (key, d["profile"] as? String ?? "", d["language"] as? String ?? "auto")
     }
 
+    /// What an invitation offers before it is used: the suggested name and how long the PIN must be.
+    static func invitation(base: URL, code: String) async throws -> (name: String, pinMin: Int, pinOnly: Bool) {
+        let d = try await SparkAPI(base: base, key: nil).post("api/join/check", ["code": code])
+        return (d["name"] as? String ?? "", max(4, min(d["pin_min"] as? Int ?? 6, 32)), d["kind"] as? String == "pin")
+    }
+
+    /// An invitation makes the profile and gives this iPhone its key in one step (api/iphone/join).
+    static func join(base: URL, code: String, name: String, pin: String, device: String) async throws -> (key: String, profile: String, language: String) {
+        let d = try await SparkAPI(base: base, key: nil).post("api/iphone/join", ["code": code, "name": name, "pin": pin, "device": device])
+        guard let key = d["token"] as? String, !key.isEmpty else {
+            throw SparkError(message: String(localized: "Der Spark hat keinen Schlüssel geschickt."))
+        }
+        return (key, d["profile"] as? String ?? "", d["language"] as? String ?? "auto")
+    }
+
     /// Checks the key: whose it is and what the profile allows the app.
     func hello(timeout: TimeInterval = 120) async throws -> Allowed {
         var r = request("api/iphone/hello")

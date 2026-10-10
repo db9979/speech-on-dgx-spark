@@ -73,6 +73,13 @@ WHO = {"documents": "documents", "reminders": "reminders", "speaker_id": "speake
        "remarkable": "remarkable", "remarkable_send": "rmsend"}
 
 
+def _setup(prof, request):
+    if not prof or request.headers.get(profiles.DEVICE_HEADER):
+        return None
+    import onboard
+    return onboard.whoami(prof["id"])
+
+
 @router.get("/api/whoami")
 def whoami(request: Request, creds: HTTPBasicCredentials | None = Depends(security)):
     cfg = load_config()
@@ -90,6 +97,8 @@ def whoami(request: Request, creds: HTTPBasicCredentials | None = Depends(securi
             # which pages the panel shows: the Spark's switches from features.py (one place for "on")
             **{name: features.admin_on(key, chat) for name, key in WHO.items()},
             "agent": bool(features.admin_on("agent", chat) and prof and agent.granted(prof["id"])),
+            # "Los geht's" / "Einrichten x von y" (onboard.py): only for the profile's own login
+            "setup": _setup(prof, request),
             # Logs → Anfragen: main admin and co-admins (tracelog.py), not the Verwalter role
             "trace": bool(main or elev and elev.get("role") != "manager") and cfg.get("logs", {}).get("trace", False) is True,
             "face": cfg.get("chat", {}).get("face") if cfg.get("chat", {}).get("face") in FACES else "robot",
@@ -363,7 +372,7 @@ def profile_logout(request: Request):
 
 # The profile's own logins: its device keys (with last use), recent logins, log out everywhere.
 LOGIN_EVENTS = ("profile_login", "profile_login_failed", "profile_code_failed", "profile_logout_all", "profile_device_removed", "profile_session_end",
-                "profile_mfa_on", "profile_mfa_off", "profile_mfa_reset")
+                "profile_mfa_on", "profile_mfa_off", "profile_mfa_reset", "invite_pin", "handoff_login")
 
 
 @router.get("/api/profile/security", dependencies=[Depends(assistant)])
@@ -531,6 +540,9 @@ async def profile_mfa_enable(request: Request, prof=Depends(browser_profile)):
 
 @router.post("/api/profile/mfa/disable", dependencies=[Depends(assistant)])
 async def profile_mfa_disable(request: Request, prof=Depends(browser_profile)):
+    import join
+    if join.mfa_kept(prof["id"]):
+        raise HTTPException(403, "Dein Admin verlangt den zweiten Anmeldeschritt für dein Profil.")
     await confirm_code(request, prof["id"], prof["name"])
     mfa.disable(prof["id"])
     guard.log("profile_mfa_off", ip=guard.client_ip(request), name=prof["name"], uid=prof["id"])
@@ -710,6 +722,9 @@ def profile_mail(prof=Depends(own_profile)):
 @router.post("/api/profile/mail", dependencies=[Depends(assistant), Depends(mail_on)])
 async def profile_mail_add(request: Request, prof=Depends(secret_profile)):
     """Adds a mailbox only after its inbox could be opened once."""
+    import join
+    if join.mfa_due(prof["id"]):
+        raise HTTPException(403, "Erst den zweiten Anmeldeschritt einrichten (Ich → Sicherheit), dann E-Mail verbinden.")
     body = await request.json()
     try:
         item = mail.entry(body if isinstance(body, dict) else {})

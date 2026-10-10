@@ -956,3 +956,116 @@ class Browser(unittest.TestCase):
                     self.assertEqual(errors, [], name)
                     await br.close()
         self.run_async(go())
+
+
+@unittest.skipUnless(browser_ok(), "no Playwright/Chromium here")
+class JoinBrowser(unittest.TestCase):
+    """V01.0.276: an invitation link opens the welcome page, the new profile lands on "Los geht's", the
+    admin card "Neue Personen" draws, and "Am Handy weitermachen" signs a second browser in after the
+    right number is tapped."""
+
+    @classmethod
+    def setUpClass(cls):
+        helpers.start()
+        import panel
+        cls.port = helpers._port()
+        helpers._serve(panel.app, cls.port)
+
+    def test_invitation_and_handoff(self):
+        import guard
+        import join
+        from fastapi.testclient import TestClient
+        import panel
+        with guard._lock:   # earlier tests used up 127.0.0.1's pairing rate and wrong-code tries
+            guard._locks.clear()
+            guard._fails.clear()
+            guard._day.clear()
+        guard._rate.clear()
+        helpers.set_config(weather=True, mfa=True)
+        join._write(dict(join._read(), mode="invite", handoff=True))
+        admin = TestClient(panel.app)
+        admin.post("/api/login", json={"password": "secret-admin"})
+        r = admin.post("/api/admin/join/invites", json={"name": "Wilma", "pack": "familie", "days": 7,
+                                                         "base": "https://spark.example"})
+        self.assertEqual(r.status_code, 200, r.text)
+        code = r.json()["link"].split("#join=")[1]
+        r = admin.post("/api/admin/join/invites", json={"name": "", "pack": "", "days": 1, "base": "https://spark.example"})
+        codes = {1280: code, 390: r.json()["link"].split("#join=")[1]}
+        base = f"http://127.0.0.1:{self.port}"
+
+        async def go():
+            async with async_playwright() as p:
+                exe = chromium()
+                br = await p.chromium.launch(**({"executable_path": exe} if exe else {}))
+                for w, h in ((1280, 900), (390, 844)):
+                    ctx = await br.new_context(viewport={"width": w, "height": h}, locale="de-DE")
+                    pg = await ctx.new_page()
+                    errors = []
+                    pg.on("pageerror", lambda e: errors.append(str(e)))
+                    await pg.goto(base + "/#join=" + codes[w])
+                    await pg.wait_for_selector("#joinpin")
+                    over = await pg.evaluate("document.documentElement.scrollWidth-window.innerWidth")
+                    self.assertLessEqual(over, 1, f"{w}: {over}px zu breit")
+                    if w == 1280:
+                        await pg.fill("#joinpin", "246810")
+                        await pg.fill("#joinpin2", "246810")
+                        await pg.click("#joingo")
+                        await pg.wait_for_selector("#gobox .gocard", timeout=15000)
+                        self.assertIn("Erledigtes hakt der Spark selbst ab", await pg.inner_text("#gobox"))
+                        for _ in range(3):   # Willkommen, Absichern, then Geräte
+                            if await pg.query_selector("#gohandgo"):
+                                break
+                            await pg.click("#gonext")
+                            await pg.wait_for_timeout(300)
+                        await pg.wait_for_selector("#gohandgo", timeout=8000)
+                        await pg.click("#gohandgo")
+                        await pg.wait_for_selector("#gohand .jqr svg")
+                        hid = await pg.evaluate("GO.hand")
+                        hcode = None
+                        for k, v in __import__("onboard")._hand.items():
+                            if k == hid:
+                                hcode = v
+                        self.assertIsNotNone(hcode)
+                        # the phone: a code made here, as the QR cannot be read back; same flow as a scan
+                        import onboard
+                        hid2, c2 = onboard.hand_new(hcode["uid"])
+                        await pg.evaluate("GO.hand=" + repr(hid2) + ";$('handnums').innerHTML=''")
+                        phone = await br.new_context(viewport={"width": 390, "height": 844}, locale="de-DE")
+                        ph = await phone.new_page()
+                        ph.on("pageerror", lambda e: errors.append(str(e)))
+                        await ph.goto(base + "/#hand=" + c2)
+                        await ph.wait_for_selector(".gonum")
+                        num = (await ph.inner_text(".gonum")).strip()
+                        ok = await pg.evaluate("""async([hid,num])=>{const s=await (await api('/api/profile/handoff/'+hid)).json();
+                            if(!s.choices.includes(+num))return 'missing';
+                            return (await (await api('/api/profile/handoff/'+hid+'/confirm',xjson('POST',{num:+num}))).json()).state}""",
+                                               [hid2, num])
+                        self.assertEqual(ok, "ok")
+                        await ph.wait_for_function("typeof PROFILE!=='undefined'&&PROFILE&&PROFILE.name==='Wilma'", timeout=10000)
+                        await phone.close()
+                    else:
+                        await pg.evaluate("location.hash=''")
+                    self.assertEqual(errors, [], w)
+                    await ctx.close()
+                # the admin card
+                ctx = await br.new_context(viewport={"width": 390, "height": 844}, locale="de-DE")
+                pg = await ctx.new_page()
+                errors = []
+                pg.on("pageerror", lambda e: errors.append(str(e)))
+                await pg.goto(base + "/")
+                await pg.request.post(base + "/api/login", data={"password": "secret-admin"})
+                await pg.goto(base + "/")
+                await pg.wait_for_timeout(600)
+                await pg.evaluate("document.getElementById('wizmodal')&&(document.getElementById('wizmodal').style.display='none')")
+                await pg.evaluate("goSec('prof')")
+                await pg.wait_for_selector("#joinadmin .jlist")
+                self.assertIn("Wilma", await pg.inner_text("#joinadmin"))
+                over = await pg.evaluate("document.documentElement.scrollWidth-window.innerWidth")
+                self.assertLessEqual(over, 1)
+                self.assertEqual(errors, [])
+                await br.close()
+
+        try:
+            asyncio.run(go())
+        finally:
+            join._write(dict(join._read(), mode="off", handoff=False))

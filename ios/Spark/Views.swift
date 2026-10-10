@@ -23,6 +23,99 @@ struct ContentView: View {
                   primaryButton: .default(Text("Koppeln")) { Task { await app.pair(link) } },
                   secondaryButton: .cancel(Text("Abbrechen")))
         }
+        .sheet(item: $app.invited) { link in JoinView(link: link) }
+    }
+}
+
+/// An invitation from the panel: name and PIN, then the Spark makes the profile and this iPhone's key.
+/// Shows which Spark the link leads to first, as with pairing.
+struct JoinView: View {
+    @EnvironmentObject var app: AppState
+    @Environment(\.dismiss) private var dismiss
+    let link: AppState.Link
+    @State private var name = ""
+    @State private var pin = ""
+    @State private var pin2 = ""
+    @State private var pinMin = 6
+    @State private var loading = true
+    @State private var ready = false
+    @State private var problem: String?
+
+    var body: some View {
+        NavigationStack {
+            Form {
+                Section {
+                    Text("Du bist zum Sprachassistenten auf diesem Spark eingeladen:")
+                    Text(verbatim: link.base.host ?? "").font(.headline)
+                    Text("Nur weitermachen, wenn du diese Einladung erwartest.").foregroundStyle(.secondary)
+                }
+                if loading {
+                    Section { ProgressView("Einladung wird geprüft …") }
+                } else if ready {
+                    Section {
+                        TextField("Dein Name", text: $name)
+                            .textContentType(.username)
+                            .autocorrectionDisabled()
+                        SecureField("PIN (mindestens \(pinMin) Zeichen)", text: $pin)
+                            .textContentType(.newPassword)
+                        SecureField("PIN wiederholen", text: $pin2)
+                            .textContentType(.newPassword)
+                    } footer: {
+                        Text("Mit Name und PIN meldest du dich auch im Browser an. Danach führt dich der Spark durch die Einrichtung.")
+                    }
+                    Section {
+                        Button("Profil anlegen") { Task { await go() } }
+                            .disabled(app.busy || name.trimmingCharacters(in: .whitespaces).isEmpty || pin.isEmpty)
+                    }
+                }
+                if let p = problem {
+                    Section { Text(verbatim: p).foregroundStyle(.red) }
+                }
+            }
+            .navigationTitle("Einladung")
+            .navigationBarTitleDisplayMode(.inline)
+            .toolbar {
+                ToolbarItem(placement: .cancellationAction) {
+                    Button("Abbrechen") { app.invited = nil; dismiss() }
+                }
+            }
+            .task { await check() }
+        }
+        .interactiveDismissDisabled(app.busy)
+    }
+
+    private func check() async {
+        defer { loading = false }
+        do {
+            let r = try await SparkAPI.invitation(base: link.base, code: link.code)
+            if r.pinOnly {
+                problem = String(localized: "Diese Einladung setzt eine neue PIN. Bitte im Browser öffnen.")
+                return
+            }
+            name = r.name
+            pinMin = r.pinMin
+            ready = true
+        } catch {
+            problem = error.localizedDescription
+        }
+    }
+
+    private func go() async {
+        problem = nil
+        guard pin.count >= pinMin else {
+            problem = String(localized: "Die PIN braucht mindestens \(pinMin) Zeichen.")
+            return
+        }
+        guard pin == pin2 else {
+            problem = String(localized: "Die beiden PINs sind nicht gleich.")
+            return
+        }
+        do {
+            try await app.join(link, name: name.trimmingCharacters(in: .whitespaces), pin: pin)
+            dismiss()
+        } catch {
+            problem = error.localizedDescription
+        }
     }
 }
 
@@ -37,9 +130,11 @@ struct PairView: View {
                     Text("Diese App spricht mit deinem Spark. Zum Koppeln im Panel unter Ich → iPhone-App auf „iPhone koppeln“ tippen.")
                     Text("Am PC: den QR-Code mit der Kamera dieses iPhones scannen. Auf diesem iPhone: dort „in der App öffnen“ antippen.")
                         .foregroundStyle(.secondary)
+                    Text("Noch kein Profil? Mit einer Einladung vom Admin legst du es hier gleich an: den Einladungs-Link öffnen und „Lieber gleich in der iPhone-App“ antippen.")
+                        .foregroundStyle(.secondary)
                 }
                 Section("Oder den Link hier einfügen") {
-                    TextField("spark-app://pair?…", text: $pasted, axis: .vertical)
+                    TextField("spark-app://pair?… / spark-app://join?…", text: $pasted, axis: .vertical)
                         .textInputAutocapitalization(.never)
                         .autocorrectionDisabled()
                     Button("Koppeln") {
