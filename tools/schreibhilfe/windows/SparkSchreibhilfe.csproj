@@ -24,4 +24,10 @@
     <AnalysisLevel>latest</AnalysisLevel>
   </PropertyGroup>
 
+  <!-- Einzelne .exe (selbstständig, ohne installiertes .NET): komprimiert, sonst wäre sie ~150 MB groß. -->
+  <PropertyGroup Condition="'$(PublishSingleFile)' == 'true'">
+    <EnableCompressionInSingleFile>true</EnableCompressionInSingleFile>
+    <DebugType>none</DebugType>
+  </PropertyGroup>
+
 </Project>

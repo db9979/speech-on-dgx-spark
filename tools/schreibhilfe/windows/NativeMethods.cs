@@ -20,6 +20,7 @@ internal static class NativeMethods
     public const ushort VK_C = 0x43;
     public const ushort VK_S = 0x53;
     public const ushort VK_V = 0x56;
+    public const ushort VK_CONTROL = 0x11;
     public const ushort VK_LCONTROL = 0xA2;
     public const ushort VK_RCONTROL = 0xA3;
     public const ushort VK_LSHIFT = 0xA0;
@@ -55,6 +56,11 @@ internal static class NativeMethods
 
     [DllImport("user32.dll")]
     public static extern uint GetClipboardSequenceNumber();
+
+    public const uint MAPVK_VK_TO_VSC = 0;
+
+    [DllImport("user32.dll")]
+    public static extern uint MapVirtualKey(uint uCode, uint uMapType);
 
     [DllImport("user32.dll", SetLastError = true)]
     public static extern uint SendInput(uint nInputs, INPUT[] pInputs, int cbSize);

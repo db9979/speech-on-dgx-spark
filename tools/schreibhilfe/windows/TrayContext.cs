@@ -140,12 +140,19 @@ internal sealed class TrayContext : ApplicationContext
                 _assist = null;
             }
 
-            if (form.TextToApply is { } result)
+            IntPtr target = form.Target;
+            string? result = form.TextToApply;
+            if (result is not null)
             {
-                await ApplyAsync(result, form.Target);
+                try
+                {
+                    await ApplyAsync(result, target);
+                }
+                catch (Exception ex)
+                {
+                    Notify("Der Text konnte nicht eingefügt werden: " + ex.Message, ToolTipIcon.Error);
+                }
             }
-
-            form.Dispose();
         };
         _assist = form;
         form.Show();

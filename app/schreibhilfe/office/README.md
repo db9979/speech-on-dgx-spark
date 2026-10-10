@@ -8,7 +8,7 @@ selbstsignierte Zertifikate ab).
 
 ## Einrichten
 
-1. Im Panel: **Ich → Schreibhilfe → Office** das passende Manifest herunterladen
+1. Im Panel: **Ich → Schreibhilfe → In anderen Programmen** das passende Manifest herunterladen
    (`manifest-outlook.xml`, `manifest-word.xml` oder `manifest-excel.xml`, Adresse ist schon eingetragen).
 2. In Office hochladen:
    - **Outlook** (neu, klassisch, Mac, im Web): *Add-ins abrufen → Meine Add-ins → Benutzerdefiniertes

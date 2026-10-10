@@ -52,7 +52,7 @@ internal sealed class AssistForm : Form
     };
 
     private readonly TextBox _result = NewTextBox(readOnly: false);
-    private readonly Label _status = new() { AutoSize = true, Anchor = AnchorStyles.Left, Padding = new Padding(0, 4, 0, 0) };
+    private readonly Label _status = new() { AutoSize = true, MaximumSize = new Size(500, 0), Anchor = AnchorStyles.Left, Padding = new Padding(0, 4, 0, 0) };
     private readonly ProgressBar _progress = new() { Style = ProgressBarStyle.Marquee, Width = 90, Height = 12, Visible = false, Anchor = AnchorStyles.Left };
     private readonly Button _apply = new() { Text = "Übernehmen", AutoSize = true, Enabled = false };
     private readonly Button _copy = new() { Text = "Kopieren", AutoSize = true, Enabled = false };
@@ -192,12 +192,12 @@ internal sealed class AssistForm : Form
 
         if (_source.Text.Trim().Length > 0)
         {
-            _result.Focus();
+            ActiveControl = _result;
             BeginInvoke(new Action(async () => await RunAsync()));
         }
         else
         {
-            _source.Focus();
+            ActiveControl = _source;
             SetStatus("Text eingeben oder einfügen, dann „Neu“.", error: false);
         }
     }
@@ -304,6 +304,11 @@ internal sealed class AssistForm : Form
             {
                 SetStatus(ex.Message, error: true);
             }
+        }
+        catch (Exception ex) when (!IsDisposed)
+        {
+            // Unerwartetes (z. B. kaputte Antwort) – anzeigen statt das Programm zu beenden.
+            SetStatus("Unerwarteter Fehler: " + ex.Message, error: true);
         }
         finally
         {

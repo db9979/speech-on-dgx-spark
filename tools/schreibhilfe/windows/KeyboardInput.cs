@@ -40,10 +40,10 @@ internal static class KeyboardInput
     {
         Send(new[]
         {
-            Key(VK_LCONTROL, up: false),
+            Key(VK_CONTROL, up: false),
             Key(vk, up: false),
             Key(vk, up: true),
-            Key(VK_LCONTROL, up: true),
+            Key(VK_CONTROL, up: true),
         });
     }
 
@@ -53,7 +53,11 @@ internal static class KeyboardInput
         return new INPUT
         {
             type = INPUT_KEYBOARD,
-            u = new InputUnion { ki = new KEYBDINPUT { wVk = vk, dwFlags = flags } },
+            // Scan-Code mitgeben: manche Programme (z. B. Remote-Desktop) werten nur ihn aus.
+            u = new InputUnion
+            {
+                ki = new KEYBDINPUT { wVk = vk, wScan = (ushort)MapVirtualKey(vk, MAPVK_VK_TO_VSC), dwFlags = flags },
+            },
         };
     }
 

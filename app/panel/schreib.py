@@ -110,7 +110,7 @@ OFFICE_CSP = ("default-src 'self'; script-src 'self' https://appsforoffice.micro
               "img-src 'self' data:; connect-src 'self'; font-src 'self'; object-src 'none'; base-uri 'self'; "
               "form-action 'self'; frame-ancestors 'self' https://*.office.com https://*.office365.com "
               "https://*.officeapps.live.com https://*.outlook.com https://outlook.live.com https://*.microsoft.com "
-              "https://*.sharepoint.com")
+              "https://*.sharepoint.com https://*.cloud.microsoft https://*.live.com")
 
 _lock = threading.Lock()
 _pending = {}               # sha256(code) -> {"uid", "t"}

@@ -1,0 +1,77 @@
+name: Schreibhilfe Windows
+
+# Builds the Windows helper "Spark Schreibhilfe" (tools/schreibhilfe/windows, .NET 8 WinForms tray app) as
+# self-contained single .exe files for x64 and ARM64 and publishes them in the release "schreibhilfe-windows"
+# (created on the first run, files replaced on later runs). The exe files are not signed.
+on:
+  workflow_dispatch:
+  push:
+    branches: [main]
+    paths:
+      - tools/schreibhilfe/windows/**
+      - .github/workflows/schreibhilfe-windows.yml
+
+permissions:
+  contents: write
+
+concurrency:
+  group: schreibhilfe-windows
+  cancel-in-progress: true
+
+jobs:
+  build:
+    runs-on: windows-latest
+    defaults:
+      run:
+        shell: pwsh
+    steps:
+      - uses: actions/checkout@v5
+
+      - uses: actions/setup-dotnet@v4
+        with:
+          dotnet-version: 8.0.x
+
+      - name: Build x64 and ARM64
+        env:
+          DOTNET_CLI_TELEMETRY_OPTOUT: '1'
+          DOTNET_NOLOGO: '1'
+        run: |
+          $project = 'tools/schreibhilfe/windows/SparkSchreibhilfe.csproj'
+          New-Item -ItemType Directory -Force -Path dist | Out-Null
+          foreach ($arch in 'x64', 'arm64') {
+            dotnet publish $project -c Release -r "win-$arch" --self-contained true `
+              -p:PublishSingleFile=true -p:IncludeNativeLibrariesForSelfExtract=true `
+              -o "publish/$arch"
+            if ($LASTEXITCODE -ne 0) { exit $LASTEXITCODE }
+            Copy-Item "publish/$arch/SparkSchreibhilfe.exe" "dist/SparkSchreibhilfe-$arch.exe"
+          }
+          Get-ChildItem dist | Format-Table Name, Length
+
+      - uses: actions/upload-artifact@v4
+        with:
+          name: SparkSchreibhilfe-windows
+          path: dist/*.exe
+          if-no-files-found: error
+
+      - name: Publish release schreibhilfe-windows
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          $tag = 'schreibhilfe-windows'
+          $files = @('dist/SparkSchreibhilfe-x64.exe', 'dist/SparkSchreibhilfe-arm64.exe')
+          gh release view $tag 2>$null | Out-Null
+          if ($LASTEXITCODE -eq 0) {
+            gh release upload $tag @files --clobber
+          } else {
+            $notes = @(
+              'Spark Schreibhilfe für Windows: Text in einem beliebigen Programm markieren, Strg+Alt+S drücken, die verbesserte Fassung vom eigenen Spark übernehmen.',
+              '',
+              '- SparkSchreibhilfe-x64.exe: die meisten PCs (Intel/AMD)',
+              '- SparkSchreibhilfe-arm64.exe: Windows auf ARM',
+              '',
+              'Nicht signiert: SmartScreen beim ersten Start mit „Weitere Informationen“ → „Trotzdem ausführen“ bestätigen.',
+              'Koppeln im Panel unter Ich → Schreibhilfe → „Programm koppeln“. Anleitung: tools/schreibhilfe/windows/README.md'
+            ) -join "`n"
+            gh release create $tag @files --title 'Spark Schreibhilfe für Windows' --notes $notes --target $env:GITHUB_SHA
+          }
+          if ($LASTEXITCODE -ne 0) { exit $LASTEXITCODE }

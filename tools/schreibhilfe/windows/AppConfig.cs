@@ -1,6 +1,7 @@
 using System.Security.Cryptography;
 using System.Text;
 using System.Text.Json;
+using System.Text.Json.Serialization;
 
 namespace SparkSchreibhilfe;
 
@@ -40,6 +41,7 @@ internal sealed class AppConfig
 
     private static string FilePath => Path.Combine(Folder, "config.json");
 
+    [JsonIgnore]
     public bool IsPaired => !string.IsNullOrEmpty(Base) && GetKey() is not null;
 
     public static AppConfig Load()
