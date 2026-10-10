@@ -105,6 +105,26 @@ let CFG=null;
 async function loadLangs(){const l=await (await api('/api/languages')).json();document.querySelectorAll('select.langs').forEach(s=>s.innerHTML=l.map(x=>`<option>${x}</option>`).join(''))}
 async function instrHint(sel){if(!CFG)try{CFG=await (await api('/api/config')).json()}catch{return}const m=(sel?$('tts.model').value:CFG.tts.model)||'';const small=/0\.6B/i.test(m);
   document.querySelectorAll('.instrhint').forEach(e=>e.innerHTML=small?t('<b>Hinweis:</b> '+m.split('/').pop()+' wertet Anweisungen nicht aus (laut Qwen nur die 1.7B-Modelle). Für Stilsteuerung Qwen3-TTS-12Hz-1.7B-CustomVoice wählen; braucht etwa 2 bis 3 GiB mehr Speicher.','<b>Note:</b> '+m.split('/').pop()+' ignores instructions (per Qwen only the 1.7B models follow them). For style control choose Qwen3-TTS-12Hz-1.7B-CustomVoice; it needs about 2 to 3 GiB more memory.'):t('Beschreibung in normaler Sprache, z. B. Tonfall, Tempo, Emotion, Rolle. Deutsch oder Englisch.','Plain-language description, e.g. tone, pace, emotion, role. German or English.'))}
+// Standardstimme (V01.0.252): a list that fits the chosen model instead of free text. The running model names its voices;
+// a model only picked (not saved yet) offers the cloned recordings (Base) or Qwen's fixed speakers (CustomVoice);
+// VoiceDesign has no speakers. A saved name missing from the list stays as its own entry, so it is never lost.
+const QWEN_SPEAKERS=['aiden','dylan','eric','ono_anna','ryan','serena','sohee','uncle_fu','vivian'];
+const ttsKind=m=>/-Base$/i.test(m)?'base':/VoiceDesign/i.test(m)?'voice_design':'custom_voice';
+async function ttsVoiceOpts(){const sel=$('tts.default_voice');if(!sel||!CFG)return;const m=$('tts.model').value||'',kind=ttsKind(m);
+  const cur=sel.value||String(CFG.tts.default_voice||'');let vs=[];
+  try{if(m===CFG.tts.model)vs=(await (await api('/api/tts/voices')).json()).voices||[];
+    if(!vs.length&&kind==='base')vs=await (await api('/api/clone-voices')).json()}catch{}
+  if(!vs.length&&kind==='custom_voice')vs=QWEN_SPEAKERS;
+  if(kind==='voice_design')vs=[];
+  vs=[...new Set(vs.filter(x=>typeof x==='string'&&x))];
+  const hit=vs.find(x=>x.toLowerCase()===cur.toLowerCase());
+  sel.innerHTML=(cur&&!hit?`<option value="${esc(cur)}">${esc(cur)} ${esc(t('(nicht in der Liste)','(not in the list)'))}</option>`:'')+
+    vs.map(x=>`<option value="${esc(x)}">${esc(x)}</option>`).join('')+(!cur&&!vs.length?`<option value="">${t('(keine)','(none)')}</option>`:'');
+  sel.value=hit||cur;sel.disabled=kind==='voice_design';
+  $('ttsvoicehint').textContent=kind==='voice_design'?t('VoiceDesign hat keine Sprecher; die Stimme kommt aus dem Sprechstil.','VoiceDesign has no speakers; the voice comes from the speaking style.')
+    :kind==='base'?(vs.length?t('Eine eigene Stimme aus „Stimmen“.','One of your own voices from "Voices".'):t('Noch keine eigenen Stimmen; unter „Stimmen“ anlegen.','No own voices yet; add them under "Voices".'))
+    :t('Einer der festen Sprecher des Modells.','One of the model\'s fixed speakers.')}
+$('tts.model').addEventListener('change',ttsVoiceOpts);
 async function loadCfg(){CFG=await (await api('/api/config')).json();
   const vo=CFG.tts.backend==='vllm-omni';$('ttsbackend').textContent=CFG.tts.backend;
   $('ttsbackendnote').textContent=vo?t('(gestreamte Ausgabe)','(streamed output)'):t('(ohne Streaming; umstellen mit sudo ./install.sh --tts-backend vllm-omni)','(no streaming; switch with sudo ./install.sh --tts-backend vllm-omni)');
@@ -113,7 +133,7 @@ async function loadCfg(){CFG=await (await api('/api/config')).json();
   $('asrbackendnote').textContent=av?t('(viele Anfragen gleichzeitig, gestreamter Text)','(many concurrent requests, streamed text)'):t('(eine Anfrage nach der anderen; umstellen mit sudo ./install.sh --asr-backend vllm)','(one request at a time; switch with sudo ./install.sh --asr-backend vllm)');
   $('asrengine').style.display=av?'block':'none';$('asrtf').style.display=av?'none':'block';
   for(const[sec,o]of Object.entries(CFG))for(const[k,v]of Object.entries(o)){const el=$(sec+'.'+k);if(!el)continue;
-    if(el.type==='checkbox')el.checked=v;else{if(el.tagName==='SELECT'&&![...el.options].some(o=>o.value==v))el.add(new Option(v));el.value=Array.isArray(v)?v.join(', '):v}};instrHint();
+    if(el.type==='checkbox')el.checked=v;else{if(el.tagName==='SELECT'&&![...el.options].some(o=>o.value==v))el.add(new Option(v));el.value=Array.isArray(v)?v.join(', '):v}};instrHint();ttsVoiceOpts();
   getDefaults=await renderSet($('chatdefaults'),{...SDEF,...(CFG.chat.defaults||{})},null);
   asrRec();cfgDeps();if(typeof guidesCount==='function')guidesCount();if(typeof tgAdmin==='function')tgAdmin();visionLoad();if(typeof apnsAdmin==='function')apnsAdmin();if(typeof iupdAdmin==='function')iupdAdmin();if(typeof espAdmin==='function')espAdmin();if(typeof agentAdmin==='function')agentAdmin();document.querySelectorAll('.pane').forEach(p=>markDirty(p,false));document.querySelectorAll('.savemsg').forEach(m=>m.textContent='');glance();glanceLoad()}
 let getDefaults=null;

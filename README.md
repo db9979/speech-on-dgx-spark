@@ -31,6 +31,7 @@ All options for running without questions (`--mode api --asr 1.7b --tts 0.6b --y
 
 <!-- New version: add one line at the top here and in CHANGELOG.md, drop the oldest line here (keep 10). Details go to docs/de and docs/en, not into this README. -->
 
+- **V01.0.252** Settings → Speech output: default voice is a list that fits the model (CustomVoice built-in speakers, Base own voices, VoiceDesign locked); a saved name outside the list is kept
 - **V01.0.251** Docs: iPhone app panel areas with the right version number (V01.0.250)
 - **V01.0.250** iPhone app takes over the panel, steps 4–9: manage documents, teach your voice, proactive, security, connect accounts (with a code), features, profiles and backups for admins
 - **V01.0.249** Roles by voice and Wikipedia straight away (admin and profile switch each, off): own roles under Me → Conversation, "Sei jetzt der Butler" / "Sei wieder normal" switched by the panel with fixed rules; knowledge questions from the Wikipedia intro instead of a web search, 24-hour cache
@@ -40,7 +41,6 @@ All options for running without questions (`--mode api --asr 1.7b --tts 0.6b --y
 - **V01.0.245** Document card and tags (admin and profile switch, off): in quiet minutes the language model notes title, kind, sender, deadline, number and keywords of each document; the assistant sees these lines instead of file names and searches by tag or kind, tags filter Ich → Dokumente (own ones win), "Belongs with", "Remind" before deadlines only on click; document search always stays in a narrowed tool set, more rule words (insurance, manual, findings …)
 - **V01.0.244** iPhone app: My documents with "Read on" for long documents
 - **V01.0.243** Ich → Dokumente → View shows long documents a part at a time with "Read on" instead of "… shortened" after 200,000 characters; the assistant's search always used the whole text
-- **V01.0.242** Documents: PDFs up to 100 MB (the admin sets up to 300 MB under Funktionen → Eigene Dokumente; other files up to 20 MB, before "request too large" from 20 MB); the space per profile counts all uploads together, Ich → Dokumente shows "Used: x of y" with a bar, the admin sees and sets it per profile under Zustand → Monitoring
 
 All versions: [CHANGELOG.md](CHANGELOG.md)
 

@@ -393,6 +393,30 @@ class Browser(unittest.TestCase):
                 await br.close()
         self.run_async(go())
 
+    def test_default_voice_is_a_list_for_the_model(self):
+        """V01.0.252: Standardstimme is a list fitting the chosen model (running model: its voices; Base: own voices;
+        VoiceDesign: none, locked); a saved name missing from the list stays selected instead of being lost."""
+        async def go():
+            async with async_playwright() as p:
+                br, pg, errors = await self.page(p, 1280, 900)
+                await pg.evaluate("goSec('cfg');document.querySelector('#cfgnav button[data-p=tts]').click()")
+                await pg.wait_for_function("[...$('tts.default_voice').options].some(o=>o.value==='serena')", timeout=8000)
+                self.assertEqual(await pg.evaluate("$('tts.default_voice').tagName"), "SELECT")
+                self.assertEqual(await pg.evaluate("$('tts.default_voice').value"), "ryan")
+                await pg.evaluate("$('tts.default_voice').innerHTML='<option>Jarvis</option>';$('tts.default_voice').value='Jarvis';"
+                                  "$('tts.model').value='Qwen/Qwen3-TTS-12Hz-1.7B-Base';$('tts.model').dispatchEvent(new Event('change'))")
+                await pg.wait_for_function("$('tts.default_voice').options[0].textContent.includes('nicht in der Liste')", timeout=8000)
+                self.assertEqual(await pg.evaluate("$('tts.default_voice').value"), "Jarvis")
+                await pg.evaluate("$('tts.model').value='Qwen/Qwen3-TTS-12Hz-1.7B-VoiceDesign';$('tts.model').dispatchEvent(new Event('change'))")
+                await pg.wait_for_function("$('tts.default_voice').disabled", timeout=8000)
+                self.assertEqual(await pg.evaluate("$('tts.default_voice').value"), "Jarvis")
+                await pg.evaluate("$('tts.model').value='Qwen/Qwen3-TTS-12Hz-1.7B-CustomVoice';$('tts.model').dispatchEvent(new Event('change'))")
+                await pg.wait_for_function("[...$('tts.default_voice').options].some(o=>o.value==='vivian')", timeout=8000)
+                self.assertFalse(await pg.evaluate("$('tts.default_voice').disabled"))
+                self.assertEqual(errors, [])
+                await br.close()
+        self.run_async(go())
+
     def test_me_window_overview_and_search(self):
         async def go():
             async with async_playwright() as p:
