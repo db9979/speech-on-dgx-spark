@@ -9,8 +9,9 @@
     3 "Alles still" stage 2, and no conversation at all: chat, speech recognition, speakers, Wyoming, room mode,
                     the watch; the panel shows only the Notaus page (login, logs and lifting stay)
 
-Triggering is easy and lifting is hard. Any admin may trigger, and every profile when the admin allows it
-(panel.notaus_profiles); a stage can only go up that way. Lifting (down to stage 1, or off) only by the main
+Triggering is easy and lifting is hard. Only admins (main admin, or a profile in its admin mode) see and
+trigger it (Dominik 2026-10-10: it stops the Spark for everyone); a stage can only go up that way. Ordinary
+profiles and guests see neither the button nor who or why, only that the Spark is stopped. Lifting (down to stage 1, or off) only by the main
 admin or a profile in its admin mode (not the Verwalter role), in a browser in the home network, never from an
 app key, with a fresh code (the main admin without a second step types the panel password again). The language
 model, mail, web pages, documents, Home Assistant, Telegram or MCP can never trigger or lift it: nothing reads
@@ -20,7 +21,16 @@ The stage survives a restart and an update (STATE/notaus.json). Way out without 
 sudo rm /var/lib/speech-spark/state/notaus.json (the panel reads the file anew on its next request).
 
 What it held off is counted by kind only, in memory (Zustand → Notaus), never with contents.
+
+"Mein Notaus" (V01.0.338, Dominik 2026-10-10 "3b"): every signed-in profile can stop its own part only. While it is
+on, every way in of that profile is closed except the browser it was switched on in (device keys of the phone
+apps, Siri, watch, speakers and Home Assistant, MCP keys and OAuth, Telegram, other browser logins), and nothing
+is done in its name (actions, jobs, "Von selbst" and smart home notes). Reading stays: the profile's own browser
+still talks with the Spark and may read its mail, calendar and memory. Lifting: the profile itself in a browser
+with its PIN (and its code when its second step is on), or an admin. STATE/notaus-mine.json; a damaged file
+holds every profile (a Notaus must never go away by a damaged file).
 """
+import contextvars
 import ipaddress
 import json
 import os
@@ -31,6 +41,7 @@ import guard
 
 STATE = os.environ.get("SPEECH_SPARK_STATE", "/var/lib/speech-spark/state")
 FILE = os.path.join(STATE, "notaus.json")
+MINE_FILE = os.path.join(STATE, "notaus-mine.json")
 LEVELS = (0, 1, 2, 3)
 NAMES = {1: "Außen zu", 2: "Hände weg", 3: "Alles still"}
 NAMES_EN = {1: "Outside closed", 2: "Hands off", 3: "All quiet"}
@@ -38,6 +49,8 @@ CHANNELS = ("panel", "app", "android", "telegram", "sprache", "esp32", "ha", "pe
 MAX_REASON = 120
 MAX_HISTORY = 20
 
+# the kinds "Mein Notaus" holds off for its profile (reading, the internet and the conversation go on)
+PERSONAL = ("aktion", "auftrag", "auto")
 # from which stage each kind of thing is held off
 STAGE = {"aussen": 1, "internet": 1, "aktion": 2, "auftrag": 2, "auto": 2, "gespraech": 3}
 # the rows of Zustand → Notaus, in this order (kind, German, English)
@@ -55,12 +68,17 @@ INTERNET_TOOLS = {"web_search", "weather", "transit", "wikipedia", "article_more
 BLOCKED = ("Not done: the Notaus (emergency stop) is on and holds this off. Tell the user exactly that in one "
            "sentence: the Notaus blocks it until an admin switches it off. Do not try again, do not offer a workaround.")
 
+BLOCKED_MINE = ("Not done: the user's own Notaus (\"Mein Notaus\") is on and holds every action in their name off. "
+                "Tell the user exactly that in one sentence: they can lift it under Ich → Sicherheit with their PIN. "
+                "Do not try again, do not offer a workaround.")
 
-def locked_tools(held, changes=()):
+
+def locked_tools(held, changes=(), mine=False):
     """The tool names the Notaus holds off at this stage: from 1 the ones that go to the internet by themselves,
-    from 2 every one that changes something (chat.LOCKED_OUTSIDE, mail changes, the extras' changing tools)."""
+    from 2 (or with the profile's own Notaus) every one that changes something (chat.LOCKED_OUTSIDE, mail
+    changes, the extras' changing tools)."""
     out = set(INTERNET_TOOLS) if held >= 1 else set()
-    if held >= 2:
+    if held >= 2 or mine:
         import chat
         out |= chat.LOCKED_OUTSIDE | set(changes) | {"mail_draft", "mail_tidy_propose"}
     return out
@@ -74,6 +92,12 @@ class NotausAktiv(ValueError):
 _lock = threading.Lock()
 _cache = {"key": None, "state": None}
 _counts = {}
+_mine_cache = {"key": None, "d": None}
+_mine_counts = {}
+# the profile a request or turn acts for (set by the panel's middleware, chat_turn, the agent): the last line of
+# defence (stop/refuse) holds its actions off without every sink knowing who it is for
+ACTING = contextvars.ContextVar("notaus_acting", default="")
+ALL = "*"     # a damaged notaus-mine.json: every profile counts as held
 
 
 def _empty():
@@ -126,24 +150,138 @@ def level():
     return state()["level"]
 
 
-def blocks(kind):
-    """True while the Notaus holds this kind of thing off (see STAGE)."""
-    return level() >= STAGE[kind]
+def blocks(kind, uid=None):
+    """True while the Notaus holds this kind of thing off (see STAGE), or the own Notaus of the profile it is
+    for (uid, else the acting profile) holds a PERSONAL kind."""
+    return level() >= STAGE[kind] or _mine_blocks(kind, uid)
 
 
-def refuse(kind):
+def _mine_blocks(kind, uid=None):
+    return kind in PERSONAL and own(uid if uid is not None else ACTING.get())
+
+
+def refuse(kind, uid=None):
     """Like blocks(), and counts it when it holds something off (for Zustand → Notaus)."""
-    if not blocks(kind):
+    if level() >= STAGE[kind]:
+        with _lock:
+            _counts[kind] = min(_counts.get(kind, 0) + 1, 10**9)
+        return True
+    if _mine_blocks(kind, uid):
+        with _lock:
+            _mine_counts[kind] = min(_mine_counts.get(kind, 0) + 1, 10**9)
+        return True
+    return False
+
+
+def stop(kind, uid=None):
+    """Raises NotausAktiv while the Notaus (or the profile's own) holds this kind off."""
+    if refuse(kind, uid):
+        what = dict((k, de) for k, de, _ in KINDS)[kind]
+        if level() >= STAGE[kind]:
+            raise NotausAktiv(f"Notaus Stufe {level()}: {what} gesperrt")
+        raise NotausAktiv(f"Mein Notaus ist an: {what} gesperrt")
+
+
+def why(uid, what):
+    """A sentence for the person: which Notaus holds `what` off."""
+    if level() >= 2 or not own(uid):
+        return f"Der Notaus ist an: {what}, bis ein Admin ihn aufhebt."
+    return f"Mein Notaus ist an: {what}, bis du ihn unter Ich → Sicherheit aufhebst."
+
+
+# ---------------------------------------------------------------- Mein Notaus (one profile)
+def acting(uid):
+    """Marks the profile this request or task acts for (see ACTING)."""
+    ACTING.set(str(uid or ""))
+
+
+def mine():
+    """{uid: {"since", "channel"}} of the profiles whose own Notaus is on; {ALL: …} for a damaged file."""
+    try:
+        st = os.stat(MINE_FILE)
+        key = (st.st_mtime_ns, st.st_size, st.st_ino)
+    except FileNotFoundError:
+        return {}
+    except OSError:
+        return {ALL: {"since": None, "channel": ""}}
+    if _mine_cache["key"] == key and _mine_cache["d"] is not None:
+        return _mine_cache["d"]
+    try:
+        with open(MINE_FILE, encoding="utf-8") as f:
+            raw = json.load(f)
+        if not isinstance(raw, dict) or not isinstance(raw.get("profiles"), dict):
+            raise ValueError("form")
+        d = {}
+        for uid, v in list(raw["profiles"].items())[:500]:
+            if isinstance(uid, str) and 0 < len(uid) <= 40 and isinstance(v, dict):
+                since = v.get("since")
+                d[uid] = {"since": int(since) if isinstance(since, (int, float)) and not isinstance(since, bool) else None,
+                          "channel": str(v.get("channel") or "") if v.get("channel") in CHANNELS else ""}
+    except (OSError, ValueError):
+        d = {ALL: {"since": None, "channel": ""}}
+    _mine_cache.update(key=key, d=d)
+    return d
+
+
+def own(uid):
+    """True while this profile's own Notaus is on."""
+    if not uid:
         return False
+    m = mine()
+    return bool(m) and (uid in m or ALL in m)
+
+
+def _mine_write(d):
+    os.makedirs(STATE, exist_ok=True)
+    tmp = MINE_FILE + ".tmp"
+    with open(os.open(tmp, os.O_WRONLY | os.O_CREAT | os.O_TRUNC | os.O_NOFOLLOW, 0o600), "w", encoding="utf-8") as f:
+        json.dump({"profiles": d}, f, ensure_ascii=False)
+    os.replace(tmp, MINE_FILE)
+    _mine_cache.update(key=None, d=None)
+
+
+def mine_on(uid, name, channel, now=None):
+    """Switches the profile's own Notaus on; False when it already was."""
+    if not uid or channel not in CHANNELS:
+        raise ValueError("profile and channel")
+    now = int(time.time() if now is None else now)
     with _lock:
-        _counts[kind] = min(_counts.get(kind, 0) + 1, 10**9)
+        cur = {k: v for k, v in mine().items() if k != ALL}
+        if uid in cur:
+            return False
+        cur[uid] = {"since": now, "channel": channel}
+        _mine_write(cur)
+    guard.log("notaus_mine_on", who=str(name or "")[:60], uid=uid, detail=f"über {channel}")
+    print(f"notaus: Mein Notaus an ({channel})", flush=True)
+    _live(f"ein Profil schaltet Mein Notaus an über {channel}")
     return True
 
 
-def stop(kind):
-    """Raises NotausAktiv while the Notaus holds this kind off."""
-    if refuse(kind):
-        raise NotausAktiv(f"Notaus Stufe {level()}: {dict((k, de) for k, de, _ in KINDS)[kind]} gesperrt")
+def mine_off(uid, by, admin=False):
+    """Switches the profile's own Notaus off (the profile itself or an admin; checked by the endpoints). A damaged
+    file (every profile held) only an admin clears, and then for all."""
+    with _lock:
+        cur = mine()
+        if ALL in cur:
+            if not admin:
+                return False
+            cur = {}
+        elif uid not in cur:
+            return False
+        else:
+            cur = {k: v for k, v in cur.items() if k != uid}
+        if cur:
+            _mine_write(cur)
+        else:
+            try:
+                os.remove(MINE_FILE)
+            except FileNotFoundError:
+                pass
+            _mine_cache.update(key=None, d=None)
+    guard.log("notaus_mine_off", who=str(by or "")[:60], uid=uid)
+    print("notaus: Mein Notaus aufgehoben", flush=True)
+    _live("ein Profil hebt Mein Notaus auf")
+    return True
 
 
 def counts():
@@ -205,8 +343,13 @@ def for_live():
     """What Zustand → Live and the monitor show: stage, since, channel and per kind held/count, no content."""
     s = state()
     lvl, cnt = s["level"], counts()
+    m = mine()
+    with _lock:
+        mc = dict(_mine_counts)
     return {"level": lvl, "name": NAMES.get(lvl, ""), "since": s["since"] if lvl else None, "channel": s["channel"] if lvl else "",
-            "kinds": [{"k": k, "de": de, "en": en, "from": STAGE[k], "n": cnt.get(k, 0)} for k, de, en in KINDS] if lvl else []}
+            "kinds": [{"k": k, "de": de, "en": en, "from": STAGE[k], "n": cnt.get(k, 0)} for k, de, en in KINDS] if lvl else [],
+            # Mein Notaus: how many profiles, and what it held off; never which profile
+            "mine": {"n": len(m) if ALL not in m else -1, "held": sum(mc.values()) if m else 0}}
 
 
 def lift(to, by, uid="", now=None):
@@ -270,6 +413,30 @@ STILL_READ_PREFIX = ("/api/logs/",)
 
 def _page(path):
     return path in PAGE or path.startswith("/static/")
+
+
+def mine_gate(request):
+    """Mein Notaus: a device key of a held profile gets nothing (the status aside), and the request's profile is
+    marked as acting (ACTING) so the last line of defence knows whose action it would be. None or (503, detail)."""
+    if not mine():
+        return None
+    import profiles
+    if request.headers.get(profiles.DEVICE_HEADER):
+        dev = profiles.device(request)
+        if dev and own(dev["user"]):
+            if request.url.path == "/api/notaus" and request.method == "GET":
+                return None
+            with _lock:
+                _mine_counts["zugang"] = min(_mine_counts.get("zugang", 0) + 1, 10**9)
+            return 503, "Mein Notaus ist an: dieser Zugang ist gesperrt, bis das Profil ihn im Browser aufhebt."
+        return None
+    try:
+        prof = profiles.current(request)
+    except Exception:
+        prof = None
+    if prof:
+        acting(prof["id"])
+    return None
 
 
 def gate(request):
@@ -354,6 +521,7 @@ async def tell_admins(old, new, by, channel):
 
 # ---------------------------------------------------------------- API
 from fastapi import APIRouter, Depends, HTTPException, Request  # noqa: E402
+from fastapi.responses import JSONResponse  # noqa: E402
 from fastapi.security import HTTPBasicCredentials  # noqa: E402
 
 router = APIRouter()
@@ -363,11 +531,6 @@ MAX_BODY = 2048
 def _settings():
     from common import load_config
     return load_config().get("panel", {})
-
-
-def profiles_may():
-    """The admin lets every profile trigger the Notaus (Einstellungen → Sicherheit → Notaus, default off)."""
-    return _settings().get("notaus_profiles") is True
 
 
 def _caller(request, creds=None):
@@ -384,8 +547,8 @@ def _caller(request, creds=None):
     if not dev and core.is_main_admin(request, creds) and core.password_set():
         return "Admin", "", True, None, "panel"
     elev = coadmin.session(request)
-    if elev and not dev:
-        return elev["name"], elev["id"], True, None, "panel"
+    if elev:          # a profile in its admin mode, in the browser or in the phone app (coadmin holds it there)
+        return elev["name"], elev["id"], True, None, ("app" if dev else "panel")
     prof = profiles.current(request)
     if not prof:
         return None
@@ -415,12 +578,49 @@ def view(request, creds=None):
     who = _caller(request, creds)
     if not who:
         return out
-    may = bool(who[2] or profiles_may())
-    out.update(may=may, lift=_lift_how(request, creds), names=NAMES)
+    me = _mine_uid(request, who)
+    if me:           # Mein Notaus of this profile (the admin mode's profile, or the profile beside the main admin)
+        m = mine()
+        on = own(me)
+        out["mine"] = {"on": on, "since": (m.get(me) or {}).get("since") if on else None,
+                       "lift": bool(on and _mine_lift_ok(request) and (ALL not in m or me in m))}
+    if not who[2]:
+        return out    # ordinary profiles: only that the Spark is stopped, not who, why or how to change it
+    out.update(may=True, lift=_lift_how(request, creds), names=NAMES)
+    out["mine_list"] = _mine_list()
     if s["level"]:
         out.update(since=s["since"], by=s["by"], channel=s["channel"], reason=s["reason"], counts=counts(),
                    kinds=[{"k": k, "de": de, "en": en, "from": STAGE[k]} for k, de, en in KINDS])
     return out
+
+
+def _mine_uid(request, who):
+    """The profile whose own Notaus this request is about: the caller's, or the signed-in profile next to the
+    main admin's login."""
+    if who and who[1]:
+        return who[1]
+    import profiles
+    try:
+        prof = profiles.current(request)
+    except Exception:
+        prof = None
+    return prof["id"] if prof else ""
+
+
+def _mine_lift_ok(request):
+    """The profile lifts its own Notaus only in a browser (no device key, no Authorization header)."""
+    import profiles
+    return not request.headers.get(profiles.DEVICE_HEADER) and not request.headers.get("authorization")
+
+
+def _mine_list():
+    """For admins: the profiles whose own Notaus is on (name, since), never why."""
+    import profiles
+    m = mine()
+    if ALL in m:
+        return [{"uid": "", "name": "alle (Datei unlesbar)", "since": None}]
+    names = {u["id"]: u["name"] for u in profiles._load()["users"]}
+    return [{"uid": uid, "name": names.get(uid, "?"), "since": v["since"]} for uid, v in m.items()][:50]
 
 
 async def _body(request):
@@ -454,8 +654,8 @@ async def post_trigger(request: Request):
         raise HTTPException(401, "login required")
     name, uid, admin, prof, channel = who
     guard.limit(request, "notausset", uid=uid or None, admin=admin)
-    if not admin and not profiles_may():
-        raise HTTPException(403, "Den Notaus dürfen hier nur Admins auslösen (Einstellungen → Sicherheit → Notaus).")
+    if not admin:
+        raise HTTPException(403, "Den Notaus dürfen nur Admins auslösen.")
     body = await _body(request)
     lvl = body.get("level")
     if not isinstance(lvl, int) or isinstance(lvl, bool) or lvl not in (1, 2, 3):
@@ -505,3 +705,123 @@ async def post_lift(request: Request):
     except Exception as e:
         print("notaus: push", type(e).__name__, flush=True)
     return view(request, _creds(request))
+
+
+# ---------------------------------------------------------------- Mein Notaus endpoints
+@router.post("/api/notaus/mine")
+async def post_mine(request: Request):
+    """The profile stops its own part: every way in but this browser, every action in its name."""
+    import agent
+    import profiles
+    who = _caller(request, _creds(request))
+    uid = _mine_uid(request, who)
+    if not who or not uid:
+        raise HTTPException(401, "login required")
+    name, _, admin, prof, channel = who
+    if not who[1]:      # the main admin's login beside a profile: the profile's name
+        name = (profiles.current(request) or {}).get("name", name)
+    guard.limit(request, "notausset", uid=uid, admin=admin)
+    await _body(request)
+    if not mine_on(uid, name, channel):
+        raise HTTPException(409, "Mein Notaus ist schon an.")
+    agent.notaus_hold(only=uid)
+    try:
+        import hamelden
+        hamelden.stop(uid)
+    except Exception as e:
+        print("notaus: ha rules", type(e).__name__, flush=True)
+    # every other browser login ends; this browser gets a fresh one and stays signed in (as "logout everywhere")
+    profiles.end_sessions(uid)
+    out = view(request, _creds(request))
+    out["mine"] = {"on": True, "since": int(time.time()), "lift": _mine_lift_ok(request)}
+    r = JSONResponse(out, headers={"Cache-Control": "no-store"})
+    if not request.headers.get(profiles.DEVICE_HEADER):
+        u = next((u for u in profiles._load()["users"] if u["id"] == uid), None)
+        if u:
+            r.set_cookie(profiles.COOKIE, profiles._cookie_value(u, agent=request.headers.get("user-agent", "")),
+                         max_age=profiles.session_secs(), httponly=True, samesite="lax")
+    try:
+        await tell_admins_mine(name, True)
+    except Exception as e:
+        print("notaus: push", type(e).__name__, flush=True)
+    return r
+
+
+@router.post("/api/notaus/mine/off")
+async def post_mine_off(request: Request):
+    """The profile lifts its own Notaus: in a browser, with its PIN, and its code when its second step is on."""
+    import agent
+    import core
+    import profiles
+    if not _mine_lift_ok(request):
+        raise HTTPException(403, "Aufheben nur im Browser.")
+    prof = profiles.current(request)
+    if not prof:
+        raise HTTPException(401, "login required")
+    uid = prof["id"]
+    guard.limit(request, "notausoff", uid=uid)
+    body = await _body(request)
+    if not own(uid) or (ALL in mine() and uid not in mine()):
+        raise HTTPException(409, "Mein Notaus ist nicht an." if not own(uid) else "Nur ein Admin kann ihn gerade aufheben.")
+    u = next((u for u in profiles._load()["users"] if u["id"] == uid), None)
+    guard.check(request, prof["name"])
+    pin = body.get("pin")
+    if not u or not isinstance(pin, str) or len(pin) > 64 or not profiles._pin_ok(pin, u["pin"]):
+        guard.failed(request, prof["name"], what="notaus_pin")
+        raise HTTPException(401, "Falsche PIN.")
+    await core.confirm_code(request, uid, prof["name"], fresh=True)
+    mine_off(uid, prof["name"])
+    agent.kick()
+    try:
+        await tell_admins_mine(prof["name"], False)
+    except Exception as e:
+        print("notaus: push", type(e).__name__, flush=True)
+    return view(request, _creds(request))
+
+
+@router.post("/api/admin/notaus/mine/off")
+async def post_mine_off_admin(request: Request):
+    """An admin lifts a profile's own Notaus (the same rules as lifting the big one)."""
+    import agent
+    import core
+    import coadmin
+    how = _lift_how(request, _creds(request))
+    if not how:
+        raise HTTPException(403, "Aufheben nur als Admin, im Browser, im Heimnetz.")
+    guard.limit(request, "notausoff", admin=True)
+    body = await _body(request)
+    uid = body.get("uid")
+    if not isinstance(uid, str) or len(uid) > 40:
+        raise HTTPException(400, "uid")
+    m = mine()
+    if not (uid in m or (ALL in m and uid == "")):
+        raise HTTPException(404, "Für dieses Profil ist Mein Notaus nicht an.")
+    main = core.password_set() and core._admin_cookie_age(request) is not None
+    if how == "password":
+        guard.check(request, guard.ADMIN)
+        if not core.check_password(str(body.get("password") or "")[:200]):
+            guard.failed(request, guard.ADMIN, what="notaus_password")
+            raise HTTPException(401, "Falsches Passwort.")
+    elif main:
+        import mfa
+        await core.confirm_code(request, mfa.ADMIN, guard.ADMIN, fresh=True)
+    else:
+        elev = coadmin.session(request)
+        await core.confirm_code(request, elev["id"], elev["name"], fresh=True)
+    by = "Admin" if main else coadmin.session(request)["name"]
+    mine_off(uid, by, admin=True)
+    agent.kick()
+    return view(request, _creds(request))
+
+
+async def tell_admins_mine(name, on):
+    """Admins hear when a profile switches its own Notaus on or off (the name, never a reason)."""
+    import push
+    title = "Mein Notaus an" if on else "Mein Notaus aufgehoben"
+    body = (f"{name} hat den eigenen Notaus eingeschaltet. Aufheben kann {name} selbst mit PIN, oder ein Admin unter Zustand."
+            if on else f"{name} hat den eigenen Notaus aufgehoben.")
+    for uid in admin_uids():
+        try:
+            await push.send(uid, title, body, tag="notaus", private=False)
+        except Exception as e:
+            print("notaus: push to an admin", type(e).__name__, flush=True)

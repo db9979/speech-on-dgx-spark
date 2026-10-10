@@ -599,12 +599,17 @@ def current(request):
     """{"id", "name"} of the profile behind this request (device key first, then cookie), or None."""
     d = _load()
     # "Spark fragen" over MCP (mcpserver.py): set only by the panel itself after checking the connection's token
+    import notaus
     mcp = request.scope.get("speech_mcp")
     if mcp:
+        if notaus.own(mcp.get("uid")):   # Mein Notaus closes every way in of the profile but its own browser
+            return None
         u = next((u for u in d["users"] if u["id"] == mcp.get("uid")), None)
         return {"id": u["id"], "name": u["name"]} if u else None
     inner = request.scope.get("speech_profile")   # set only by the panel itself (Telegram, see telegram.py)
     if inner:
+        if notaus.own(inner):
+            return None
         used(inner, "tg")
         u = next((u for u in d["users"] if u["id"] == inner), None)
         return {"id": u["id"], "name": u["name"]} if u else None
@@ -627,6 +632,8 @@ def current(request):
         if dev.get("scope") == "haev" and (request.scope.get("path") not in HAEV_PATHS or not HAEV_GATE[0](dev["user"])):
             return None
         if dev.get("scope") not in (None, "", "app", "room", "watch", "haev"):
+            return None
+        if notaus.own(dev["user"]):
             return None
         _note_device(dev["id"], request)
         uid = dev["user"]

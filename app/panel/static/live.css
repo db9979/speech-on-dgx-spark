@@ -88,3 +88,4 @@ body.kiosk{height:100vh;overflow:hidden;background:var(--bg)}
 .lvna .lvnah{display:flex;flex-wrap:wrap;gap:4px 12px;align-items:baseline}.lvna .lvnah b{color:var(--bad);letter-spacing:.04em}
 .lvna .lvnak{display:flex;flex-wrap:wrap;gap:6px;margin-top:8px}.lvna .lvnak span{font-size:12px;border-radius:999px;padding:2px 9px;border:1px solid var(--line,#8884);min-width:0;overflow-wrap:anywhere}
 .lvna .lvnak .held{border-color:var(--bad);color:var(--bad)}.lvna .lvnak .run{opacity:.65}
+.lvna .lvnam{font-size:13px;margin-top:6px}

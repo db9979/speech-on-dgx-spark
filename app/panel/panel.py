@@ -178,7 +178,7 @@ async def sessions(request: Request, call_next):
 async def emergency(request: Request, call_next):
     """Notaus (notaus.py): from stage 1 nothing from outside but the page and the Notaus itself, in stage 3 at home
     only logins, reading Zustand and the logs, and lifting it. Decided before any route reads the request."""
-    held = notaus.gate(request)
+    held = notaus.mine_gate(request) or notaus.gate(request)
     if held:
         status, detail = held
         r = JSONResponse({"detail": detail, "notaus": notaus.level()}, status_code=status,

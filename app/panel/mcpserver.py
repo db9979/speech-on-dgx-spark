@@ -389,6 +389,8 @@ def check_conn(request, now=None):
         return None, JSONResponse({"error": "Dieser Schlüssel gilt nur im Heimnetz."}, status_code=403)
     if c["where"] == "extern" and not extern_on():
         return None, JSONResponse({"error": "Zugriff von außen ist vom Admin ausgeschaltet."}, status_code=403)
+    if notaus.own(c["uid"]):
+        return None, JSONResponse({"error": "Mein Notaus ist an: dieser Zugang ist gesperrt."}, status_code=503)
     if not features.allowed("mcpserver", c["uid"]):
         return None, JSONResponse({"error": "Spark als MCP-Server ist für dieses Profil aus."}, status_code=403)
     return c, None
@@ -818,7 +820,7 @@ def status(uid, aid):
 
 async def carry_out(uid, x):
     """Runs a confirmed action; returns (ok, text)."""
-    if notaus.refuse("aktion"):
+    if notaus.refuse("aktion", uid):
         return False, "Der Notaus ist an, nichts ausgeführt."
     item = x["item"]
     if x["tool"] == "home_assistant":

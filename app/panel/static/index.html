@@ -64,6 +64,8 @@
 <section id="mon" class="on">
   <div class="card znotaus" id="znotaus" hidden><h2>Was der Notaus gerade abhält <span class="mut" id="znsince"></span></h2><div id="znrows"></div>
     <div class="mut" style="margin-top:6px">Nur Art und Anzahl seit dem Auslösen, nie Inhalte.</div></div>
+  <div class="card znotaus" id="znmine" hidden><h2>Mein Notaus von Profilen</h2><div class="mut">Diese Profile haben nur ihren eigenen Teil stillgelegt. Aufheben kann das Profil selbst mit PIN, oder du hier.</div><div id="znmrows"></div>
+    <div class="row" id="znmpwbox" hidden style="margin-top:6px"><input type="password" id="znmpw" autocomplete="current-password" placeholder="Panel-Passwort" aria-label="Panel-Passwort"></div><span id="znmmsg" class="fh"></span></div>
   <div class="card zhead" id="zhead"><span class="zicon" id="zicon"></span><div><b id="ztitle">Zustand wird geladen …</b><div class="mut" id="ztext"></div><div class="mut zmeta" id="zmeta"></div></div></div>
   <div class="zcards" id="zcards"></div>
   <div class="ztoday" id="ztoday" hidden></div>
@@ -373,8 +375,6 @@
       <div class="fh more" hidden>Aus: nur angemeldete Profile (Name und PIN) und Geräte mit Schlüssel, keine Gäste. Einstellungen bleiben immer geschützt.</div>
       <div class="setrow"><div class="lbl"><b>Heimnetz-Adressen erlauben</b><span>Kalender, Kontakte und Mail der Profile dürfen auch auf Servern im Heimnetz liegen.<button class="mlink" type="button">Mehr</button></span></div><label class="tgl"><input type="checkbox" id="panel.allow_lan"><i></i></label></div>
       <div class="fh more" hidden>Aus: Kalender, Adressbücher, Aufgaben und Postfächer der Profile dürfen nur auf Adressen im Internet liegen (z. B. iCloud, GMX). An: auch Server im Heimnetz (z. B. ein NAS). Home Assistant darf immer im Heimnetz liegen. Die Dienste des Sparks selbst und Adressen wie 169.254.x sind nie erreichbar.</div>
-      <div class="setrow"><div class="lbl"><b>Notaus auch für Profile</b><span>An: jedes angemeldete Profil darf den Notaus auslösen, auch aus der App. Aufheben bleibt beim Admin.<button class="mlink" type="button">Mehr</button></span></div><label class="tgl"><input type="checkbox" id="panel.notaus_profiles"><i></i></label></div>
-      <div class="fh more" hidden>Aus: nur Admins sehen den roten Knopf „Notaus“ oben. Auslösen geht ohne Code und nur nach oben (Stufe 1 Außen zu, 2 Hände weg, 3 Alles still). Aufheben nur als Admin im Browser im Heimnetz mit frischem Code. Notausgang ohne Panel: auf dem Spark sudo rm /var/lib/speech-spark/state/notaus.json</div>
       <div class="setrow"><div class="lbl"><b>Reverse Proxy</b><span>Nur diesen Adressen wird die weitergereichte Absender-Adresse geglaubt.<button class="mlink" type="button">Mehr</button></span></div><input class="wide" id="panel.trusted_proxies" data-list="1" placeholder="192.168.1.10" autocomplete="off"></div>
       <div class="fh more" hidden>Gemeint ist X-Forwarded-For. Leer = nur ein Proxy auf dem Spark selbst. Eintragen, wenn das Panel hinter einem Proxy im Heimnetz hängt: sonst teilen sich alle, die über den Proxy kommen, eine Adresse für die Sperre nach falschen Passwörtern.</div>
       <div class="setrow"><div class="lbl"><b>Anmeldung im Browser</b><span>Ein Profil bleibt so viele Tage ohne Nutzung angemeldet (7 bis 90).</span></div><div class="ctl"><input class="num" id="panel.session_days" type="number" min="7" max="90"><span class="unit">Tage</span></div></div>
@@ -798,7 +798,12 @@
       <label>Angemeldete Browser</label><ul class="facts" id="secsess"></ul>
       <label>Letzte Anmeldungen</label><ul class="facts small" id="secev"></ul>
       <div class="row" style="margin-top:8px"><button class="b" id="seclogoutall" type="button">Überall abmelden</button><span id="secmsg" class="fh"></span></div>
-      <div class="fh">Meldet dein Profil in allen anderen Browsern ab; dieser bleibt angemeldet. Geräte mit Schlüssel (Lautsprecher, Uhr) sperrst du oben einzeln. Einzelne Browser meldest du in der Liste darüber ab. Eine Anmeldung endet außerdem nach <span id="secdays">30</span> Tagen ohne Nutzung. Mit zweitem Anmeldeschritt müssen auch vertraute Browser danach wieder einen Code eingeben.</div></div>
+      <div class="fh">Meldet dein Profil in allen anderen Browsern ab; dieser bleibt angemeldet. Geräte mit Schlüssel (Lautsprecher, Uhr) sperrst du oben einzeln. Einzelne Browser meldest du in der Liste darüber ab. Eine Anmeldung endet außerdem nach <span id="secdays">30</span> Tagen ohne Nutzung. Mit zweitem Anmeldeschritt müssen auch vertraute Browser danach wieder einen Code eingeben.</div>
+      <label>Mein Notaus</label><div class="mynabox" id="mynabox">
+        <div class="fh" id="mynatext">Legt nur dein Profil still: alle anderen Anmeldungen und Geräte-Schlüssel, MCP und Telegram sind zu, und in deinem Namen passiert nichts mehr (Smart Home, Mail, Termine, Nachrichten, Aufträge, Von selbst). Lesen und Fragen gehen in diesem Browser weiter. Die anderen Profile merken nichts.</div>
+        <div class="row" style="margin-top:6px"><button class="b nared" id="mynaon" type="button">Mein Notaus auslösen</button></div>
+        <div class="row" id="mynaoff" hidden style="margin-top:6px"><input type="password" id="mynapin" inputmode="numeric" autocomplete="off" maxlength="12" placeholder="PIN" aria-label="PIN"><button class="b p" id="mynago" type="button">Wieder einschalten</button></div>
+        <span id="mynamsg" class="fh"></span></div></div>
 </div>
   </div>
   <div class="row mefoot"><button class="b" id="proflogout" type="button">Abmelden</button><button class="b p" id="profclose" type="button" data-on="closeProf">Schließen</button></div>

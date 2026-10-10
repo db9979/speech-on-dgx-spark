@@ -226,10 +226,12 @@ function pickSel(){const R=LV.data.reqs,run=R.filter(r=>!r.done);
   if(KIOSK&&run.length&&Date.now()-LV.lastSel>8000){const i=run.findIndex(r=>r.id===LV.sel);LV.sel=run[(i+1)%run.length].id;LV.lastSel=Date.now()}
   if(!R.some(r=>r.id===LV.sel))LV.sel=(run[run.length-1]||R[R.length-1]||{}).id||''}
 // Notaus (notaus.py): stage, since when, through which channel, and per kind held or running with a count; never content
-function notaus(){const n=LV.data.notaus||{},box=el('lvna');if(!box)return;box.hidden=!n.level;if(!n.level){box.innerHTML='';return}
+function notaus(){const n=LV.data.notaus||{},box=el('lvna');if(!box)return;const mi=n.mine||{};box.hidden=!n.level&&!mi.n;
+  const ml=mi.n?`<div class="lvnam">${tt('Mein Notaus','My kill switch')}: <b>${mi.n<0?tt('alle Profile (Datei unlesbar)','all profiles (file unreadable)'):lvE(mi.n)+' '+(mi.n===1?tt('Profil','profile'):tt('Profile','profiles'))}</b> · ${lvE(mi.held||0)} ${tt('gehalten','held')}</div>`:'';
+  if(!n.level){box.innerHTML=ml;return}
   const nm={1:tt('Außen zu','Outside closed'),2:tt('Hände weg','Hands off'),3:tt('Alles still','All quiet')}[n.level]||'';
   box.innerHTML=`<div class="lvnah"><b>${tt('NOTAUS · STUFE ','KILL SWITCH · STAGE ')}${lvE(n.level)} · ${lvE(nm.toUpperCase())}</b><span class="mut">${n.since?tt('seit ','since ')+hm(n.since):''}${n.channel?' · '+lvE(n.channel):''}</span></div>`
-    +`<div class="lvnak">${(n.kinds||[]).map(k=>{const held=n.level>=k.from;return `<span class="${held?'held':'run'}">${lvE(tt(k.de,k.en))} <b>${held?lvE(k.n):'–'}</b></span>`}).join('')}</div>`}
+    +`<div class="lvnak">${(n.kinds||[]).map(k=>{const held=n.level>=k.from;return `<span class="${held?'held':'run'}">${lvE(tt(k.de,k.en))} <b>${held?lvE(k.n):'–'}</b></span>`}).join('')}</div>`+ml}
 function draw(){if(!LV.data)return;pickSel();notaus();kpis(LV.data);flow();way();guardList();doorList();rets();running();conns();events();if(KIOSK)rotate()}
 function rotate(){const cards=['lvguardc','lvdoorc','lvretc','lvcnc'],i=Math.floor(Date.now()/10000)%cards.length;
   cards.forEach((c,k)=>{const x=el(c);if(x)x.classList.toggle('on',k===i)});document.querySelectorAll('.kdots').forEach(d=>d.innerHTML=cards.map((_,k)=>`<i class="${k===i?'on':''}"></i>`).join(''));

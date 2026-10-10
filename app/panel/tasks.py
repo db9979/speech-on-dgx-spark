@@ -176,7 +176,7 @@ def sent_count(uid, lst):
 
 async def add(uid, lst, texts):
     """Adds the entries; returns the ones added (the same text twice is added once)."""
-    notaus.stop("aktion")   # the Notaus holds every action off (notaus.py)
+    notaus.stop("aktion", uid)   # the Notaus (or the profile's own) holds every action off (notaus.py)
     seen, out = set(), []
     for t in (clean(x) for x in texts):
         if t and t.lower() not in seen:
@@ -210,7 +210,7 @@ async def add(uid, lst, texts):
 
 async def change(uid, lst, picked, action):
     """Ticks off ("done") or deletes ("delete") the picked entries [{"id", "etag"?, "text"}]; returns how many."""
-    notaus.stop("aktion")   # the Notaus holds every action off (notaus.py)
+    notaus.stop("aktion", uid)   # the Notaus (or the profile's own) holds every action off (notaus.py)
     d = _load(uid)
     tgt = d["targets"].get(lst)
     if not tgt:

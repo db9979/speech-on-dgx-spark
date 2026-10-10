@@ -2,6 +2,7 @@
 
 Every version in one line, newest first (taken from the commit messages, so some lines are German, some English). Older entries have no version number.
 
+- **V01.0.338** · 2026-10-10 · Notaus nur für Admins (Schalter „Notaus auch für Profile“ entfällt, normale Profile sehen nur „Spark angehalten“) und „Mein Notaus“ pro Profil unter Ich → Sicherheit: schließt alle anderen Anmeldungen, Geräte-Schlüssel, MCP und Telegram des Profils, sperrt jede Aktion in seinem Namen, Lesen bleibt (Wahl 3b); Aufheben im Browser mit PIN und Code oder durch einen Admin unter Zustand; Push an Admins, Live zeigt nur die Anzahl; state/notaus-mine.json; Selbsttests und Browsertest
 - **V01.0.337** · 2026-10-10 · Zustand → Live: Hinweise des Spark (langsamere Antworten, Qualitätstest, Speicher, Wächter-Neustart, Funktionsprüfung, Telegram) stehen mit ⚠ an der passenden Stelle im Bild und einmal unter Ereignisse
 - **V01.0.336** · 2026-10-10 · Zustand → Live: „2 warten“ an Hören und Sprechen, Stern an Anfragen mit Vorrang, Hintergrundarbeit (läuft / wartet, Sprache hat Vorrang) unter „Läuft gerade“ und ihr Ende als Ereignis
 - **V01.0.335** · 2026-10-10 · Frag Spark im Kopf (hilfe.js): eigener Knopf und Fenster weg, #fab zeigt mit chat.spark_drawer die Seite (auch über Ich und für Profile, body.hilfeon), Feld zum Tippen, ask() schickt page mit, Karte auch im Kopf-Fenster; Ich fragt beim Öffnen /api/profile/settings und /api/whoami neu (stand „Vom Admin ausgeschaltet“ bis zum Neuladen), Admin-Speichern ebenso

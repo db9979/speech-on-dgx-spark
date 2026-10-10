@@ -192,7 +192,7 @@ def _today(uid):
 
 def enqueue(uid, task, doc=False, private=True, origin="chat", plan=""):
     """Puts a job in the queue; returns (job, None) or (None, reason in German)."""
-    if notaus.refuse("auftrag"):
+    if notaus.refuse("auftrag", uid):
         return None, "Der Notaus ist an: keine neuen Aufträge, bis ein Admin ihn aufhebt."
     task = clean(task)
     if not task:
@@ -240,7 +240,8 @@ def next_job():
     best = None
     for uid in profiles.user_ids():
         for x in load(uid)["jobs"]:
-            if x.get("state") == "queued" and (best is None or x["created"] < best[1]["created"]):
+            if x.get("state") == "queued" and (best is None or x["created"] < best[1]["created"]) \
+                    and not notaus.own(uid):     # Mein Notaus: the profile's jobs wait until it is lifted
                 best = (uid, x)
     return best
 
@@ -284,10 +285,11 @@ def cancel(uid, jid):
     return True
 
 
-def notaus_hold():
-    """Notaus stage 2 (notaus.py): the running job stops and waits in the queue again, from the start."""
+def notaus_hold(only=None):
+    """Notaus stage 2 (notaus.py), or Mein Notaus of the profile `only`: the running job stops and waits in the
+    queue again, from the start."""
     cur = _worker["current"]
-    if not cur:
+    if not cur or (only and cur[0] != only):
         return
     uid, jid, task = cur
     _set_job(uid, jid, state="queued", started=None, error="Vom Notaus angehalten.")
@@ -883,7 +885,7 @@ async def answer(ctx, latest):
 
 async def carry_out(uid, p, ctx):
     """Does what a proposal says, after the yes; returns the checked result in German."""
-    notaus.stop("aktion")
+    notaus.stop("aktion", uid)
     if p["kind"] == "plan":
         if not may(uid, "read"):
             raise ValueError("Agent-Funktionen sind für dich aus")

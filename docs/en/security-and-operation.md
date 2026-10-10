@@ -65,12 +65,22 @@ The red "Notaus" button (bottom of the sidebar, on phones at the top of Manage) 
 | 2 | Hands off | Plus every action: smart home, mail drafts and tidying, messages and announcements, appointments, lists, new reminders, reMarkable, MCP actions, memory. No "yes" carries anything out, waiting proposals are dropped. Running jobs are held, new ones refused; "on its own", Home Assistant notes (and their live connection), briefings, mail tidying and learning pause. The assistant still answers from what it knows and may read. |
 | 3 | All quiet | Plus no conversation, no speech recognition; speakers, Wyoming, room mode and reminders are silent. The panel shows only the Notaus page; login, status, logs and lifting work. |
 
-- **Who triggers:** every admin (also co-admin and manager); every signed-in profile when Settings → Security → "Notaus also for profiles" is on (off by default), also from the iPhone app and on the way. Never guests, speaker, Siri or watch keys, Telegram, MCP or the language model.
+- **Who triggers:** only admins (main admin, co-admin, manager in admin mode), also from the iPhone app in admin mode and on the way (since V01.0.338; before, a switch could allow it for every profile). Ordinary profiles see neither the button nor the band nor the Status card; only in stage 3 or from outside a page "The Spark is stopped right now" without a name or reason. Never guests, speaker, Siri or watch keys, Telegram, MCP or the language model.
 - **Lifting:** only the main admin or a profile in its admin mode (owner, co-admin), only in a browser (no app key, no HTTP Basic), only in the home network, with a fresh code (without a second step: the panel password again). Choice: back to stage 1 or off; held jobs then run on or are cancelled (default).
 - **Home network** means a direct connection from a private network. Through a reverse proxy only what a listed proxy (Settings → Security → Reverse proxy) passes on as a home address counts; a listed proxy without that counts as outside. So list the proxy there.
 - **Kept** across restart and update (`state/notaus.json`). A damaged file counts as stage 3, never as off. Way out without the panel: `sudo rm /var/lib/speech-spark/state/notaus.json`.
 - **Visible:** red band on every page, a card under Status (kinds and counts since it was triggered, never contents), a push to the admin profiles when triggered and lifted, an entry in the admin log. Status → Live and the live monitor /live show a red band with stage, time, channel and per kind "held" with a count (never the reason or a name) and keep running in stage 3 (reading only; pairing a new monitor waits).
 - **Not yet:** triggering by Telegram, voice, Home Assistant, ESP32 button, Pebble and guard rules (coming).
+
+### My kill switch (own profile only)
+
+Since V01.0.338 every signed-in profile has its own, weaker kill switch under *Me → Security → My kill switch* (admins have it besides the big one). It stops only this profile; the others notice nothing:
+
+- **Ways in closed:** every other browser login ends (the browser that triggered it stays signed in); the profile's device keys (iPhone and Android app, Siri, watch, speakers, Home Assistant events) only get "locked", as do MCP keys, OAuth access and Telegram.
+- **Nothing in its name:** smart home, mail drafts and tidying, messages and announcements, appointments, lists, reMarkable, MCP actions; no "yes" carries anything out; jobs wait in the queue; "on its own", Home Assistant notes and briefings of the profile stay silent.
+- **Reading stays** (Dominik's choice 3b): in its own browser the profile still asks and may read mail, calendar, memory and documents.
+- **Lifting:** the profile itself, only in the browser (no app key), with its PIN (wrong tries lock like at sign-in) and a fresh code when its second step is on; or an admin under *Status → Profiles' own kill switch* (same rules as the big one). The admin profiles get a push with the name, never a reason.
+- **File:** `state/notaus-mine.json`. A damaged file holds every profile, and only an admin lifts that. Status → Live shows only how many profiles, never which.
 
 ## Stability
 

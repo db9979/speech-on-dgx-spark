@@ -65,12 +65,22 @@ Der rote Knopf „Notaus“ (unten in der Seitenleiste, auf dem Handy oben unter
 | 2 | Hände weg | Dazu jede Aktion: Home Assistant schalten, Mail-Entwürfe und -Aufräumen, Nachrichten und Durchsagen, Termine, Listen, Erinnerungen anlegen, reMarkable, MCP-Aktionen, Gedächtnis. Kein „Ja“ führt etwas aus, wartende Vorschläge verfallen. Laufende Aufträge werden angehalten, neue nicht angenommen; „Von selbst“, Home-Assistant-Meldungen (auch die Live-Verbindung), Briefings, Mail-Aufräumen und Lernen pausieren. Der Assistent antwortet weiter aus dem, was er weiß und lesen darf. |
 | 3 | Alles still | Dazu kein Gespräch, keine Spracherkennung, Lautsprecher, Wyoming, Raummodus und Erinnerungen stumm. Das Panel zeigt nur noch die Notaus-Seite; Anmelden, Zustand, Logs und Aufheben gehen. |
 
-- **Wer auslöst:** jeder Admin (auch Mit-Admin und Verwalter); jedes angemeldete Profil, wenn Einstellungen → Sicherheit → „Notaus auch für Profile“ an ist (aus ab Werk), auch aus der iPhone-App und von unterwegs. Gäste, Lautsprecher-, Siri- und Uhren-Schlüssel, Telegram, MCP und das Sprachmodell nie.
+- **Wer auslöst:** nur Admins (Haupt-Admin, Mit-Admin, Verwalter im Admin-Modus), auch aus der iPhone-App im Admin-Modus und von unterwegs (seit V01.0.338; vorher konnte ein Schalter es allen Profilen erlauben). Normale Profile sehen weder Knopf noch Band noch Zustand-Karte, nur bei Stufe 3 oder von außen eine Seite „Der Spark ist gerade angehalten“ ohne Namen oder Grund. Gäste, Lautsprecher-, Siri- und Uhren-Schlüssel, Telegram, MCP und das Sprachmodell nie.
 - **Aufheben:** nur Hauptadmin oder Profil im Admin-Modus (Haupt-Admin, Mit-Admin), nur im Browser (kein App-Schlüssel, kein HTTP-Basic), nur im Heimnetz, mit frischem Code (ohne zweiten Schritt: Panel-Passwort neu eingeben). Wahl: zurück auf Stufe 1 oder ganz aus; angehaltene Aufträge laufen danach weiter oder werden abgebrochen (Standard).
 - **Heimnetz** heißt: direkte Verbindung aus einem privaten Netz. Über einen Reverse Proxy zählt nur, was ein eingetragener Proxy (Einstellungen → Sicherheit → Reverse Proxy) als Heimnetz-Adresse weiterreicht; ein eingetragener Proxy ohne solche Angabe gilt als „von außen“. Den Proxy deshalb dort eintragen.
 - **Bleibt erhalten** über Neustart und Update (`state/notaus.json`). Eine beschädigte Datei zählt als Stufe 3, nie als aus. Notausgang ohne Panel: `sudo rm /var/lib/speech-spark/state/notaus.json`.
 - **Sichtbar:** rotes Band auf jeder Seite, Karte unter Zustand („Was der Notaus gerade abhält“: nur Art und Anzahl seit dem Auslösen, nie Inhalte), Push an die Admin-Profile beim Auslösen und Aufheben, Eintrag im Admin-Protokoll. Zustand → Live und der Live-Monitor /live zeigen oben ein rotes Band mit Stufe, Uhrzeit, Kanal und je Art „gesperrt“ mit Anzahl (nie Grund oder Name) und laufen in Stufe 3 weiter (nur lesen; neu koppeln geht dann nicht).
 - **Noch nicht:** Auslösen per Telegram, Sprache, Home Assistant, ESP32-Taste, Pebble und Wächter-Regeln (folgen).
+
+### Mein Notaus (nur das eigene Profil)
+
+Seit V01.0.338 hat jedes angemeldete Profil unter *Ich → Sicherheit → Mein Notaus* einen eigenen, schwächeren Notaus (Admins haben ihn zusätzlich zum großen). Er legt nur dieses Profil still, die anderen merken nichts:
+
+- **Zugänge zu:** alle anderen Browser-Anmeldungen enden (der auslösende Browser bleibt angemeldet), Geräte-Schlüssel des Profils (iPhone- und Android-App, Siri, Uhr, Lautsprecher, Home-Assistant-Ereignisse) bekommen nur noch „gesperrt“, MCP-Schlüssel und OAuth-Zugänge und Telegram ebenso.
+- **Nichts in seinem Namen:** Smart Home schalten, Mail-Entwürfe und -Aufräumen, Nachrichten und Durchsagen, Termine, Listen, reMarkable, MCP-Aktionen; kein „Ja“ führt etwas aus; Aufträge warten in der Warteschlange; „Von selbst“, Home-Assistant-Meldungen und Briefings des Profils schweigen.
+- **Lesen bleibt** (Dominiks Wahl 3b): Im eigenen Browser fragt das Profil weiter und darf Mail, Kalender, Gedächtnis und Dokumente lesen.
+- **Aufheben:** das Profil selbst, nur im Browser (kein App-Schlüssel), mit PIN (Fehlversuche sperren wie bei der Anmeldung) und, wenn sein zweiter Anmeldeschritt an ist, einem frischen Code; oder ein Admin unter *Zustand → Mein Notaus von Profilen* (Regeln wie beim großen Notaus). Die Admin-Profile bekommen beim Ein- und Ausschalten einen Push mit dem Namen, nie einem Grund.
+- **Datei:** `state/notaus-mine.json`. Ist sie beschädigt, gelten alle Profile als gesperrt, und nur ein Admin hebt das auf. Zustand → Live zeigt nur die Anzahl der Profile, nie welche.
 
 ## Stabilität
 

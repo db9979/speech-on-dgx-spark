@@ -33,10 +33,11 @@ async def run(t, name, args, st):
     todo_change = name == "home_assistant_todo" and str(args.get("action") or "show").strip().lower() not in chat.TODO_READ
     # the Notaus (notaus.py) is read for every call: switched on during an answer it holds the next one off
     held = notaus.level()
-    if held and (name in notaus.locked_tools(held, t.ex["changes"]) or (todo_change and held >= 2)):
-        notaus.refuse("internet" if name in notaus.INTERNET_TOOLS else "aktion")
-        print(f"notaus: Werkzeug {name} gesperrt (Stufe {held})", flush=True)
-        return notaus.BLOCKED
+    mine = bool(t.who and notaus.own(t.who["id"]))
+    if (held or mine) and (name in notaus.locked_tools(held, t.ex["changes"], mine) or (todo_change and (held >= 2 or mine))):
+        notaus.refuse("internet" if name in notaus.INTERNET_TOOLS else "aktion", t.who["id"] if t.who else "")
+        print(f"notaus: Werkzeug {name} gesperrt (Stufe {held}{', Mein Notaus' if mine else ''})", flush=True)
+        return notaus.BLOCKED if held >= 2 or name in notaus.INTERNET_TOOLS and held else notaus.BLOCKED_MINE
     if name in t.locked(st) or (todo_change and (st["mail"] or st["outside"])):
         return chat.MAIL_BLOCKED if st["mail"] else chat.OUTSIDE_BLOCKED
     if name in chat.READS_OUTSIDE:

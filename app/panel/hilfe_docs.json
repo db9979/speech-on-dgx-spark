@@ -2029,7 +2029,7 @@
 "file": "Sicherheit und Betrieb",
 "head": "Sicherheit",
 "title": "Sicherheit",
-"text": "- Wer auslöst: jeder Admin (auch Mit-Admin und Verwalter); jedes angemeldete Profil, wenn Einstellungen → Sicherheit → „Notaus auch für Profile“ an ist (aus ab Werk), auch aus der iPhone-App und von unterwegs. Gäste, Lautsprecher-, Siri- und Uhren-Schlüssel, Telegram, MCP und das Sprachmodell nie. - Aufheben: nur Hauptadmin oder Profil im Admin-Modus (Haupt-Admin, Mit-Admin), nur im Browser (kein App-Schlüssel, kein HTTP-Basic), nur im Heimnetz, mit frischem Code (ohne zweiten Schritt: Panel-Passwort neu eingeben). Wahl: zurück auf Stufe 1 oder ganz aus; angehaltene Aufträge laufen danach weiter oder werden abgebrochen (Standard). - Heimnetz heißt: direkte Verbindung aus einem privaten Netz. Über einen Reverse Proxy zählt nur, was ein eingetragener Proxy (Einstellungen → Sicherheit → Reverse Proxy) als Heimnetz-Adresse weiterreicht; ein eingetragener Proxy ohne solche Angabe gilt als „von außen“. Den Proxy deshalb dort eintragen. - Bleibt erhalten über Neustart und Update (state/notaus.json). Eine beschädigte Datei zählt als Stufe 3, nie als aus. Notausgang ohne Panel: sudo rm /var/lib/speech-spark/state/notaus.json. - Sichtbar: rotes Band auf jeder Seite, Karte unter Zustand („Was"
+"text": "- Wer auslöst: nur Admins (Haupt-Admin, Mit-Admin, Verwalter im Admin-Modus), auch aus der iPhone-App im Admin-Modus und von unterwegs (seit V01.0.338; vorher konnte ein Schalter es allen Profilen erlauben). Normale Profile sehen weder Knopf noch Band noch Zustand-Karte, nur bei Stufe 3 oder von außen eine Seite „Der Spark ist gerade angehalten“ ohne Namen oder Grund. Gäste, Lautsprecher-, Siri- und Uhren-Schlüssel, Telegram, MCP und das Sprachmodell nie. - Aufheben: nur Hauptadmin oder Profil im Admin-Modus (Haupt-Admin, Mit-Admin), nur im Browser (kein App-Schlüssel, kein HTTP-Basic), nur im Heimnetz, mit frischem Code (ohne zweiten Schritt: Panel-Passwort neu eingeben). Wahl: zurück auf Stufe 1 oder ganz aus; angehaltene Aufträge laufen danach weiter oder werden abgebrochen (Standard). - Heimnetz heißt: direkte Verbindung aus einem privaten Netz. Über einen Reverse Proxy zählt nur, was ein eingetragener Proxy (Einstellungen → Sicherheit → Reverse Proxy) als Heimnetz-Adresse weiterreicht; ein eingetragener Proxy ohne solche Angabe gilt als „von außen“. Den Proxy deshalb dort eintragen. - Bleibt erhalten über Neustart und Update (state/notaus.json). Eine beschädigte Datei zählt al"
 },
 {
 "lang": "de",
@@ -2037,7 +2037,31 @@
 "file": "Sicherheit und Betrieb",
 "head": "Sicherheit",
 "title": "Sicherheit",
-"text": " der Notaus gerade abhält“: nur Art und Anzahl seit dem Auslösen, nie Inhalte), Push an die Admin-Profile beim Auslösen und Aufheben, Eintrag im Admin-Protokoll. Zustand → Live und der Live-Monitor /live zeigen oben ein rotes Band mit Stufe, Uhrzeit, Kanal und je Art „gesperrt“ mit Anzahl (nie Grund oder Name) und laufen in Stufe 3 weiter (nur lesen; neu koppeln geht dann nicht). - Noch nicht: Auslösen per Telegram, Sprache, Home Assistant, ESP32-Taste, Pebble und Wächter-Regeln (folgen)."
+"text": "s Stufe 3, nie als aus. Notausgang ohne Panel: sudo rm /var/lib/speech-spark/state/notaus.json. - Sichtbar: rotes Band auf jeder Seite, Karte unter Zustand („Was der Notaus gerade abhält“: nur Art und Anzahl seit dem Auslösen, nie Inhalte), Push an die Admin-Profile beim Auslösen und Aufheben, Eintrag im Admin-Protokoll. Zustand → Live und der Live-Monitor /live zeigen oben ein rotes Band mit Stufe, Uhrzeit, Kanal und je Art „gesperrt“ mit Anzahl (nie Grund oder Name) und laufen in Stufe 3 weiter (nur lesen; neu koppeln geht dann nicht). - Noch nicht: Auslösen per Telegram, Sprache, Home Assistant, ESP32-Taste, Pebble und Wächter-Regeln (folgen)."
+},
+{
+"lang": "de",
+"src": "sicherheit-und-betrieb",
+"file": "Sicherheit und Betrieb",
+"head": "Mein Notaus (nur das eigene Profil)",
+"title": "Mein Notaus (nur das eigene Profil)",
+"text": "Seit V01.0.338 hat jedes angemeldete Profil unter *Ich → Sicherheit → Mein Notaus* einen eigenen, schwächeren Notaus (Admins haben ihn zusätzlich zum großen). Er legt nur dieses Profil still, die anderen merken nichts:"
+},
+{
+"lang": "de",
+"src": "sicherheit-und-betrieb",
+"file": "Sicherheit und Betrieb",
+"head": "Mein Notaus (nur das eigene Profil)",
+"title": "Mein Notaus (nur das eigene Profil)",
+"text": "- Zugänge zu: alle anderen Browser-Anmeldungen enden (der auslösende Browser bleibt angemeldet), Geräte-Schlüssel des Profils (iPhone- und Android-App, Siri, Uhr, Lautsprecher, Home-Assistant-Ereignisse) bekommen nur noch „gesperrt“, MCP-Schlüssel und OAuth-Zugänge und Telegram ebenso. - Nichts in seinem Namen: Smart Home schalten, Mail-Entwürfe und -Aufräumen, Nachrichten und Durchsagen, Termine, Listen, reMarkable, MCP-Aktionen; kein „Ja“ führt etwas aus; Aufträge warten in der Warteschlange; „Von selbst“, Home-Assistant-Meldungen und Briefings des Profils schweigen. - Lesen bleibt (Dominiks Wahl 3b): Im eigenen Browser fragt das Profil weiter und darf Mail, Kalender, Gedächtnis und Dokumente lesen. - Aufheben: das Profil selbst, nur im Browser (kein App-Schlüssel), mit PIN (Fehlversuche sperren wie bei der Anmeldung) und, wenn sein zweiter Anmeldeschritt an ist, einem frischen Code; oder ein Admin unter *Zustand → Mein Notaus von Profilen* (Regeln wie beim großen Notaus). Die Admin-Profile bekommen beim Ein- und Ausschalten einen Push mit dem Namen, nie einem Grund. - Datei: state/notaus-mine.json. Ist sie beschädigt, gelten alle Profile als gesperrt, und nur ein Admin hebt das "
+},
+{
+"lang": "de",
+"src": "sicherheit-und-betrieb",
+"file": "Sicherheit und Betrieb",
+"head": "Mein Notaus (nur das eigene Profil)",
+"title": "Mein Notaus (nur das eigene Profil)",
+"text": "auf. Zustand → Live zeigt nur die Anzahl der Profile, nie welche."
 },
 {
 "lang": "de",
@@ -4229,7 +4253,7 @@
 "file": "Security and operation",
 "head": "Security",
 "title": "Security",
-"text": "- Who triggers: every admin (also co-admin and manager); every signed-in profile when Settings → Security → \"Notaus also for profiles\" is on (off by default), also from the iPhone app and on the way. Never guests, speaker, Siri or watch keys, Telegram, MCP or the language model. - Lifting: only the main admin or a profile in its admin mode (owner, co-admin), only in a browser (no app key, no HTTP Basic), only in the home network, with a fresh code (without a second step: the panel password again). Choice: back to stage 1 or off; held jobs then run on or are cancelled (default). - Home network means a direct connection from a private network. Through a reverse proxy only what a listed proxy (Settings → Security → Reverse proxy) passes on as a home address counts; a listed proxy without that counts as outside. So list the proxy there. - Kept across restart and update (state/notaus.json). A damaged file counts as stage 3, never as off. Way out without the panel: sudo rm /var/lib/speech-spark/state/notaus.json. - Visible: red band on every page, a card under Status (kinds and counts since it was triggered, never contents), a push to the admin profiles when triggered and lifted, an entr"
+"text": "- Who triggers: only admins (main admin, co-admin, manager in admin mode), also from the iPhone app in admin mode and on the way (since V01.0.338; before, a switch could allow it for every profile). Ordinary profiles see neither the button nor the band nor the Status card; only in stage 3 or from outside a page \"The Spark is stopped right now\" without a name or reason. Never guests, speaker, Siri or watch keys, Telegram, MCP or the language model. - Lifting: only the main admin or a profile in its admin mode (owner, co-admin), only in a browser (no app key, no HTTP Basic), only in the home network, with a fresh code (without a second step: the panel password again). Choice: back to stage 1 or off; held jobs then run on or are cancelled (default). - Home network means a direct connection from a private network. Through a reverse proxy only what a listed proxy (Settings → Security → Reverse proxy) passes on as a home address counts; a listed proxy without that counts as outside. So list the proxy there. - Kept across restart and update (state/notaus.json). A damaged file counts as stage 3, never as off. Way out without the panel: sudo rm /var/lib/speech-spark/state/notaus.json. - Vis"
 },
 {
 "lang": "en",
@@ -4237,7 +4261,23 @@
 "file": "Security and operation",
 "head": "Security",
 "title": "Security",
-"text": "y in the admin log. Status → Live and the live monitor /live show a red band with stage, time, channel and per kind \"held\" with a count (never the reason or a name) and keep running in stage 3 (reading only; pairing a new monitor waits). - Not yet: triggering by Telegram, voice, Home Assistant, ESP32 button, Pebble and guard rules (coming)."
+"text": "ible: red band on every page, a card under Status (kinds and counts since it was triggered, never contents), a push to the admin profiles when triggered and lifted, an entry in the admin log. Status → Live and the live monitor /live show a red band with stage, time, channel and per kind \"held\" with a count (never the reason or a name) and keep running in stage 3 (reading only; pairing a new monitor waits). - Not yet: triggering by Telegram, voice, Home Assistant, ESP32 button, Pebble and guard rules (coming)."
+},
+{
+"lang": "en",
+"src": "security-and-operation",
+"file": "Security and operation",
+"head": "My kill switch (own profile only)",
+"title": "My kill switch (own profile only)",
+"text": "Since V01.0.338 every signed-in profile has its own, weaker kill switch under *Me → Security → My kill switch* (admins have it besides the big one). It stops only this profile; the others notice nothing:"
+},
+{
+"lang": "en",
+"src": "security-and-operation",
+"file": "Security and operation",
+"head": "My kill switch (own profile only)",
+"title": "My kill switch (own profile only)",
+"text": "- Ways in closed: every other browser login ends (the browser that triggered it stays signed in); the profile's device keys (iPhone and Android app, Siri, watch, speakers, Home Assistant events) only get \"locked\", as do MCP keys, OAuth access and Telegram. - Nothing in its name: smart home, mail drafts and tidying, messages and announcements, appointments, lists, reMarkable, MCP actions; no \"yes\" carries anything out; jobs wait in the queue; \"on its own\", Home Assistant notes and briefings of the profile stay silent. - Reading stays (Dominik's choice 3b): in its own browser the profile still asks and may read mail, calendar, memory and documents. - Lifting: the profile itself, only in the browser (no app key), with its PIN (wrong tries lock like at sign-in) and a fresh code when its second step is on; or an admin under *Status → Profiles' own kill switch* (same rules as the big one). The admin profiles get a push with the name, never a reason. - File: state/notaus-mine.json. A damaged file holds every profile, and only an admin lifts that. Status → Live shows only how many profiles, never which."
 },
 {
 "lang": "en",

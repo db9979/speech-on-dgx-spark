@@ -251,6 +251,44 @@ class Browser(unittest.TestCase):
                     await br.close()
         self.run_async(go())
 
+    def test_my_notaus_on_and_off_with_the_pin(self):
+        """Mein Notaus (notaus.py, 3b): Ich → Sicherheit switches only this profile off, the band says so, the PIN
+        switches it back on; the whole Spark stays at stage 0."""
+        import notaus
+        import profiles
+
+        async def go():
+            async with async_playwright() as p:
+                br, pg, errors = await self.page(p, 1280, 900, csp=True)
+                uid = next(u["id"] for u in profiles._load()["users"] if u["name"] == "Uitest")
+                pg.on("dialog", lambda d: asyncio.ensure_future(d.accept()))
+                try:
+                    await pg.evaluate("openMe('secbox')")
+                    await pg.wait_for_selector("#mynaon:not([hidden])", state="visible", timeout=5000)
+                    await pg.click("#mynaon")
+                    await pg.wait_for_selector("#notausband:not([hidden])", timeout=5000)
+                    self.assertIn("MEIN NOTAUS", await pg.text_content("#nbtitle"))
+                    self.assertTrue(notaus.own(uid))
+                    self.assertEqual(notaus.level(), 0)
+                    await pg.wait_for_selector("#mynaoff:not([hidden])", timeout=3000)
+                    await pg.fill("#mynapin", "4711")
+                    await pg.click("#mynago")
+                    for _ in range(50):
+                        if not notaus.own(uid):
+                            break
+                        await pg.wait_for_timeout(100)
+                    self.assertFalse(notaus.own(uid))
+                    await pg.wait_for_selector("#notausband", state="hidden", timeout=3000)
+                    self.assertEqual(errors, [])
+                finally:
+                    try:
+                        os.remove(notaus.MINE_FILE)
+                    except FileNotFoundError:
+                        pass
+                    notaus._mine_cache.update(key=None, d=None)
+                    await br.close()
+        self.run_async(go())
+
     def test_switch_and_update_show_without_f5(self):
         # a function switched on and saved shows at once (the page loads itself again, V01.0.197), and a new
         # version on the Spark reloads an idle page with the new files (V01.0.120); api() still answers

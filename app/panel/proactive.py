@@ -118,6 +118,9 @@ def blocked(uid, kind, p=None, local=None, st=None):
     st = state(uid) if st is None else st
     if not enabled():
         return "turned off by the admin"
+    import notaus
+    if notaus.refuse("auto", uid):     # the Notaus from stage 2, or the profile's own (notaus.py)
+        return "Notaus"
     if not p.get("pro_on"):
         return "turned off in the profile"
     if not p.get(KINDS[kind][2], True):

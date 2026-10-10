@@ -137,7 +137,7 @@ async def ensure():
     want = {}
     for uid in profiles.user_ids():
         try:
-            if live_wanted(uid):
+            if live_wanted(uid) and not notaus.own(uid):   # Mein Notaus: no live connection for this profile
                 item = homeassistant.get(uid)
                 eids = _entities(uid)
                 want[uid] = (item, eids, _fingerprint(item, eids))
@@ -475,7 +475,7 @@ async def said(uid, rule, text, data, item, why=""):
     """A rule (or an event) is true: the note to the profile's devices, with the camera's words when
     asked, and the fixed sentence on speakers when the rule says so."""
     import notaus
-    if notaus.refuse("auto"):         # the Notaus from stage 2: no note, no camera, nothing on speakers
+    if notaus.refuse("auto", uid):    # the Notaus from stage 2 (or the profile's own): no note, no camera, nothing on speakers
         _live(("Ereignis" if rule.get("conds") == [] else "Regel") + " gehalten · Notaus")
         return
     reason = proactive.blocked(uid, "ha")

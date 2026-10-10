@@ -103,8 +103,7 @@ def whoami(request: Request, creds: HTTPBasicCredentials | None = Depends(securi
             "admin_role": {"role": own, "mfa": mfa.enabled(prof["id"]), "main_mfa": mfa.enabled(mfa.ADMIN)} if own else None,
             "version": app_version(), "public": cfg.get("chat", {}).get("public", False),
             # the Notaus (notaus.py): its stage, and whether this login may trigger it (the button in the header)
-            "notaus": notaus.level(), "notaus_may": bool(main or elev or (prof and notaus.profiles_may()
-                                                                            and not request.headers.get(profiles.DEVICE_HEADER))),
+            "notaus": notaus.level(), "notaus_may": bool(main or elev),
             # the login form's "trust this browser" (days) and a right code that still counts (core.CONFIRM_WINDOW)
             "trust_days": mfa.trust_days(), "confirm_until": confirmed_until(request),
             "profile": prof,

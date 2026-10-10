@@ -17,17 +17,27 @@ async function notausLoad(){try{const r=await fetch('/api/notaus',{cache:'no-sto
 window.notausLoad=notausLoad;
 function naRender(){const s=NA.s,l=s.level||0,may=!!s.may,lift=s.lift||'';
   const btn=$('notausbtn');btn.hidden=!may;btn.querySelector('span').textContent=l?t('Stufe ändern','Change stage'):t('Notaus','Kill switch');
-  const band=$('notausband');band.hidden=!l;document.body.classList.toggle('notaus',!!l);
-  if(l){$('nbtitle').textContent=(t('NOTAUS · STUFE ','KILL SWITCH · STAGE ')+l+' · '+naName(l)).toUpperCase();
+  // only admins see the band, who and why (Dominik 2026-10-10: the Notaus is the admins' matter);
+  // a profile whose own Notaus is on sees a band of its own
+  const mi=s.mine||{},own=!!mi.on&&!(l&&may);
+  const band=$('notausband');band.hidden=!((l&&may)||own);document.body.classList.toggle('notaus',!!((l&&may)||own));
+  if(own){$('nbtitle').textContent=t('MEIN NOTAUS IST AN','MY KILL SWITCH IS ON');
+    $('nbtext').textContent=t('In deinem Namen passiert nichts, andere Anmeldungen und Geräte sind gesperrt. Lesen und Fragen gehen weiter.','Nothing happens in your name, other logins and devices are locked. Reading and asking go on.')+(mi.since?' · '+t('seit ','since ')+naWhen(mi.since):'');
+    $('nbup').hidden=true;$('nblift').hidden=!mi.lift}
+  if(l&&may){$('nbtitle').textContent=(t('NOTAUS · STUFE ','KILL SWITCH · STAGE ')+l+' · '+naName(l)).toUpperCase();
     $('nbtext').textContent=s.since?naLine(s):t('Nicht alles ist erreichbar, bis ein Admin ihn aufhebt.','Not everything works until an admin lifts it.');
     $('nbup').hidden=!(may&&l<3);$('nblift').hidden=!lift}
   // the whole page: stage 3, or any stage from outside the home network
   const all=l>=3||(l&&s.outside);$('notausall').hidden=!all;
-  if(all){$('natitle').textContent=t('Notaus Stufe ','Kill switch stage ')+l+': '+naName(l);
+  if(all&&!may){$('natitle').textContent=t('Der Spark ist gerade angehalten','The Spark is stopped right now');
+    $('natext').textContent=t('Ein Admin kümmert sich darum. Bis dahin geht hier nichts.','An admin is looking after it. Until then nothing works here.');
+    $('nameta').textContent='';$('naup').hidden=true;$('nalift').hidden=true;$('nalogin').hidden=!!s.outside}
+  else if(all){$('natitle').textContent=t('Notaus Stufe ','Kill switch stage ')+l+': '+naName(l);
     $('natext').textContent=s.outside?t('Von außen ist der Spark gerade gesperrt. Im Heimnetz geht, was die Stufe erlaubt.','The Spark is closed from outside right now. At home, what the stage allows still works.')
       :t('Der Spark ist angehalten: kein Gespräch, kein Zuhören, keine Aktionen.','The Spark is stopped: no conversation, no listening, no actions.');
     $('nameta').textContent=s.since?naLine(s):'';
-    $('naup').hidden=!(may&&l<3);$('nalift').hidden=!lift;$('nalogin').hidden=!!(lift||s.outside||may)}
+    $('naup').hidden=!(l<3);$('nalift').hidden=!lift;$('nalogin').hidden=true}
+  naMine();
   const card=$('znotaus');card.hidden=!(l&&s.kinds);
   if(l&&s.kinds){$('znsince').textContent=naLine(s);
     $('znrows').innerHTML=s.kinds.map(k=>{const held=l>=k.from,n=(s.counts||{})[k.k]||0;
@@ -57,7 +67,27 @@ $('nogo').addEventListener('click',async()=>{$('nogo').disabled=true;$('nomsg').
       body:JSON.stringify({to,resume:$('noresumebox').checked,password:NA.s.lift==='password'?$('nopw').value:undefined})});
     NA.s=await r.json();$('notausoff').style.display='none';naRender();if(!NA.s.level)location.reload()}catch(e){$('nomsg').textContent=e.message}finally{$('nogo').disabled=false}});
 for(const id of ['notausbtn','nbup','naup'])$(id).addEventListener('click',naOpen);
-for(const id of ['nblift','nalift'])$(id).addEventListener('click',naLiftOpen);
+$('nalift').addEventListener('click',naLiftOpen);
+$('nblift').addEventListener('click',()=>{const mi=NA.s.mine||{};if(mi.on&&!((NA.s.level||0)&&NA.s.may)){if(typeof openMe==='function')openMe('secbox')}else naLiftOpen()});
+// Mein Notaus (notaus.py, 3b): Ich → Sicherheit for the profile, and Zustand's list for the admins
+function naMine(){const s=NA.s,mi=s.mine||{};
+  if($('mynabox')){$('mynabox').hidden=!('mine' in s);$('mynaon').hidden=!!mi.on;$('mynaoff').hidden=!(mi.on&&mi.lift);
+    $('mynamsg').textContent=mi.on?(t('Mein Notaus ist an','My kill switch is on')+(mi.since?' · '+t('seit ','since ')+naWhen(mi.since):'')+(mi.lift?'':' · '+t('Aufheben nur im Browser mit PIN.','Lift only in the browser with your PIN.'))):''}
+  const L2=s.mine_list||[],box=$('znmine');if(!box)return;box.hidden=!L2.length;
+  $('znmpwbox').hidden=!(L2.length&&s.lift==='password');
+  $('znmrows').innerHTML=L2.map(x=>`<div class="znrow"><span>${esc(x.name)}</span><span class="mut">${x.since?esc(t('seit ','since ')+naWhen(x.since)):''}</span>${s.lift?`<button class="b" type="button" data-mineoff="${esc(x.uid)}">${esc(t('Aufheben','Lift'))}</button>`:''}</div>`).join('')}
+$('mynaon').addEventListener('click',async()=>{
+  if(!confirm(t('Mein Notaus auslösen? Alle anderen Anmeldungen und Geräte deines Profils werden gesperrt, und in deinem Namen passiert nichts mehr, bis du ihn hier mit deiner PIN aufhebst.','Trigger my kill switch? All other logins and devices of your profile are locked and nothing happens in your name until you lift it here with your PIN.')))return;
+  $('mynaon').disabled=true;$('mynamsg').textContent='';
+  try{const r=await api('/api/notaus/mine',{method:'POST',headers:{'Content-Type':'application/json'},body:'{}'});NA.s=await r.json();naRender()}
+  catch(e){$('mynamsg').textContent=e.message}finally{$('mynaon').disabled=false}});
+$('mynago').addEventListener('click',async()=>{$('mynago').disabled=true;$('mynamsg').textContent='';
+  try{const r=await api('/api/notaus/mine/off',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({pin:$('mynapin').value})});
+    $('mynapin').value='';NA.s=await r.json();naRender()}catch(e){$('mynamsg').textContent=e.message}finally{$('mynago').disabled=false}});
+$('znmrows').addEventListener('click',async e=>{const b=e.target.closest('[data-mineoff]');if(!b)return;b.disabled=true;$('znmmsg').textContent='';
+  try{const r=await api('/api/admin/notaus/mine/off',{method:'POST',headers:{'Content-Type':'application/json'},
+      body:JSON.stringify({uid:b.dataset.mineoff,password:NA.s.lift==='password'?$('znmpw').value:undefined})});
+    NA.s=await r.json();$('znmpw').value='';naRender()}catch(e2){$('znmmsg').textContent=e2.message;b.disabled=false}});
 $('nalogin').addEventListener('click',()=>{if(window.showLogin)showLogin()});
 // the stage of other devices: looked at every 15 seconds and when the page comes back
 notausLoad();NA.timer=setInterval(notausLoad,15000);
