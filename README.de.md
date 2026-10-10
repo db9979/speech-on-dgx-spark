@@ -33,6 +33,7 @@ Alle Optionen ohne Rückfragen (`--mode api --asr 1.7b --tts 0.6b --yes` …) st
 
 <!-- New version: add one line at the top here and in CHANGELOG.md, drop the oldest line here (keep 10). Details go to docs/de and docs/en, not into this README. -->
 
+- **V01.0.305** Selbsttest Funktionen-Seite: Höhengrenze um die neue Zeile „Eindeutiges direkt abrufen“ erhöht (Tests auf GitHub waren nach V01.0.304 rot, das Update wartete)
 - **V01.0.304** Antwort beginnt früher: „Schneller Antwortbeginn“ hält jetzt Anweisung, Werkzeugliste und Verlaufsbeginn gleich (alles Wechselnde geht mit der Frage), „Eindeutiges direkt abrufen“ (aus) holt Mails, Erinnerungen, Wetter und Pakete bei kurzen Fragen selbst, Logs → Anfragen zeigt pro Runde Anweisung, Werkzeuge und Gespräch in Zeichen
 - **V01.0.303** Spark als MCP-Server (Funktionen → Spark als MCP-Server, Profil Ich → Dienste per MCP, alles aus): Open WebUI, n8n, Claude & Co. nutzen Sprache (transcribe, speak), Nachschlagen (Wikipedia, Archiv, Dokumente, Kalender, Erinnerungen, Heute) und ask_spark; pro Programm eigener Zugang mit eigenen Werkzeugen, „lokal“ nur im Heimnetz oder „extern“ per OAuth mit Warnhinweis und zweitem Anmeldeschritt; Handeln (Licht, Termine, Erinnerungen) nur als Vorschlag mit Ja im Panel; nie Mail, Gedächtnis, Verlauf, Geheimnisse oder Einstellungen
 - **V01.0.302** Handy: Die Knöpfe unter dem Gesicht (Gespräch einstellen, Verlauf, Bild, Nachricht) brechen in Zeilen um statt links und rechts abgeschnitten zu werden; neuer Browsertest prüft auf 320 und 390 px in App-Ansicht und Rechner-Layout jede Seite, Einstellungsseite und Ich-Seite, dass nichts über den Rand ragt
@@ -42,7 +43,6 @@ Alle Optionen ohne Rückfragen (`--mode api --asr 1.7b --tts 0.6b --yes` …) st
 - **V01.0.298** Buy me a coffee: Link in der README und auf GitHub (Sponsor-Knopf), wie bei U-Jagd; an der App ändert sich nichts
 - **V01.0.297** Codewort am Lautsprecher (aus): Erkennt der Lautsprecher deine Stimme nur knapp oder ist etwas ungewöhnlich, fragt er vor Persönlichem nach deinem eigenen Codewort; eine fremde Stimme nie; nach 3 falschen 30 Minuten Pause und eine Mitteilung
 - **V01.0.296** Handy wie die iPhone-App (immer unter 760 px, abschaltbar unter Darstellung → „Am Rechner-Layout zeigen“): Tabs Spark · Heute · Dokumente · Ich · Verwalten je nach Rolle, Chat mit Gesicht, großem Mikrofon und immer sichtbarem Tippfeld, Heute mit denselben Karten wie Ich → Heute, Verlauf als Blatt von unten, Listen und Schalter wie in iOS, Unterseiten schieben von rechts rein, Zurück-Geste von Android und Safari geht eine Ebene zurück; gleich auf iPhone und Android, keine neuen Endpunkte
-- **V01.0.295** Passkeys statt Code (Face ID, Touch ID, Windows Hello): unter Sicherheit anlegen (mit frischem Code), dann bei Anmeldung, Admin-Modus und wichtigen Änderungen „Mit Passkey“; nur über die Adresse mit Namen, App-Code bleibt als Rückfall, python-fido2 fest mit Hash
 
 Alle Versionen: [CHANGELOG.md](CHANGELOG.md)
 
