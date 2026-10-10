@@ -13,6 +13,7 @@ import time
 
 import mail
 import profiles
+import features
 from common import load_config
 
 DAYS = 14
@@ -50,12 +51,11 @@ ITEM = re.compile(r"[„\"“']([^“”\"']{3,60})[“”\"']")
 
 
 def admin_on():
-    c = load_config().get("chat", {})
-    return bool(c.get("mail", False) and c.get("parcels", False))
+    return features.admin_on("parcels")
 
 
 def usable(uid):
-    return bool(uid and admin_on() and profiles.settings(uid).get("par_on") and mail.get(uid)["accounts"])
+    return bool(features.allowed("parcels", uid) and mail.get(uid)["accounts"])
 
 
 def carrier(sender):

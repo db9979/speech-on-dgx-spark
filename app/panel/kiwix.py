@@ -28,6 +28,7 @@ import httpx
 
 import netguard
 import profiles
+import features
 from common import load_config
 
 MAX_BOOKS = 10             # chosen books (admin) and books asked at once
@@ -57,12 +58,15 @@ def base():
     return url if URL.fullmatch(url) else ""
 
 
+features.READY["kiwix"] = lambda c: bool(base())   # the archive address is part of "on"
+
+
 def admin_on():
-    return bool(ccfg().get("kiwix", False) is True and base())
+    return features.admin_on("kiwix")
 
 
 def usable(uid):
-    return bool(uid and admin_on() and profiles.settings(uid).get("kiwix_on"))
+    return features.allowed("kiwix", uid)
 
 
 def why_not(who, own=True):

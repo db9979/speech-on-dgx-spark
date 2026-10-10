@@ -62,9 +62,10 @@ import messages  # noqa: E402
 import intent  # noqa: E402
 import tracelog  # noqa: E402
 import lokal  # noqa: E402
+import features  # noqa: E402
 
 app = FastAPI(title="Speech on DGX Spark")
-for _module in (account, admin, chat, update, system, proactive, room, roomlive, tidy, weather, contacts, parcels, telegram, tasks, esp32, iphone, pebblewatch, appupdate, apns, transit, logfilter, agent, images, messages, intent, wissen, tracelog, lokal):
+for _module in (account, admin, chat, update, system, proactive, room, roomlive, tidy, weather, contacts, parcels, telegram, tasks, esp32, iphone, pebblewatch, appupdate, apns, transit, logfilter, agent, images, messages, intent, wissen, tracelog, lokal, features):
     app.include_router(_module.router)
 app.middleware("http")(update_lock)
 

@@ -16,6 +16,7 @@ import time
 import httpx
 
 import profiles
+import features
 from common import load_config
 
 FORECAST = "https://api.open-meteo.com/v1/forecast"
@@ -35,7 +36,7 @@ WEEKDAYS = ["Montag", "Dienstag", "Mittwoch", "Donnerstag", "Freitag", "Samstag"
 
 
 def admin_on():
-    return bool(load_config().get("chat", {}).get("weather", False))
+    return features.admin_on("weather")
 
 
 def urls():
@@ -58,7 +59,7 @@ def get(uid):
 
 def usable(uid):
     """The profile switched weather on and set its place."""
-    return bool(uid and admin_on() and profiles.settings(uid).get("wx_on") and get(uid))
+    return bool(features.allowed("weather", uid) and get(uid))
 
 
 def _clean(s, n=60):

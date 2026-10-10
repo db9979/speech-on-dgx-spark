@@ -52,6 +52,7 @@ import homeassistant
 import logfilter
 import profiles
 import proactive
+import features
 from common import load_config
 from core import assistant, own_profile
 
@@ -76,7 +77,7 @@ _ADDRESSED = re.compile(r"(?i)^\W*(?:(?:hey|hallo|ok|okay) )?spark\b[\s,.!:]*")
 
 
 def enabled():
-    return bool(load_config().get("chat", {}).get("room", False))
+    return features.admin_on("room")
 
 
 # ---------------------------------------------------------------- cues (fixed rules)

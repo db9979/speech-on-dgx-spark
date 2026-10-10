@@ -24,6 +24,7 @@ from fastapi import APIRouter, Depends, HTTPException, Request
 import guard
 import mfa
 import profiles
+import features
 from common import load_config
 from core import CODE_HEADER, admin_code, assistant, auth, confirm_code, own_profile
 
@@ -59,7 +60,7 @@ def _write(d):
 
 
 def admin_on():
-    return bool(load_config().get("chat", {}).get("iphone_update", False))
+    return features.admin_on("iphoneupdate")
 
 
 def rights(uid):

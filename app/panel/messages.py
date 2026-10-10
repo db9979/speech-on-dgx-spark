@@ -45,6 +45,7 @@ import time
 
 import profiles
 import vault
+import features
 from common import load_config
 
 MAX_TEXT = 500          # characters per message
@@ -77,7 +78,7 @@ def cfg():
 
 
 def admin_on():
-    return bool(cfg().get("messages", False))
+    return features.admin_on("messages")
 
 
 def all_on():
@@ -93,7 +94,7 @@ def voice_on():
 
 
 def usable(uid):
-    return bool(uid and admin_on() and profiles.by_id(uid) and profiles.settings(uid).get("msg_on"))
+    return bool(features.allowed("messages", uid) and profiles.by_id(uid))
 
 
 def clean(text, n=MAX_TEXT):

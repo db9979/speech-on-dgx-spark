@@ -19,6 +19,7 @@ import re
 import time
 
 import profiles
+import features
 from common import load_config
 
 PENDING_SECONDS = 900
@@ -43,12 +44,11 @@ NUM = {"eine": 1, "einen": 1, "ein": 1, "eins": 1, "zwei": 2, "drei": 3, "vier":
 
 
 def admin_on():
-    c = load_config().get("chat", {})
-    return bool(c.get("room", False) and c.get("room_remote", False))
+    return features.admin_on("roomfar")
 
 
 def profile_on(uid):
-    return bool(profiles.settings(uid).get("room_remote"))
+    return features.profile_on("roomfar", uid)
 
 
 def _norm(s):

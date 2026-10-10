@@ -38,6 +38,7 @@ import latency  # noqa: E402
 import echo  # noqa: E402  (the Spark's own voice is no question)
 import vorrang  # noqa: E402  (speech first: background work waits)
 import tracelog  # noqa: E402  (Logs → Anfragen: the way of each request)
+import features  # noqa: E402
 from common import load_config  # noqa: E402
 from core import DEFAULTS, FACES, admin_cookie_ok, api_headers, assistant  # noqa: E402
 
@@ -1107,7 +1108,7 @@ def history_chars(ccfg):
 
 def own_style(ccfg, who, pset, own_browser):
     """The profile's own wishes for the tone: admin chat.own_style on, a signed-in profile, its own voice; never guests."""
-    text = pset.get("style") if who and own_browser and ccfg.get("own_style", False) else ""
+    text = pset.get("style") if who and own_browser and features.admin_on("style", ccfg) else ""
     return text.strip()[:STYLE_MAX] if isinstance(text, str) else ""
 
 

@@ -24,6 +24,7 @@ import httpx
 import netguard
 import profiles
 import vault
+import features
 from common import load_config
 
 MAX_ACCOUNTS = 4
@@ -37,7 +38,7 @@ _mem = {}   # uid -> (fetched, contacts): the opened cache
 
 
 def admin_on():
-    return bool(load_config().get("chat", {}).get("contacts", False))
+    return features.admin_on("contacts")
 
 
 def _file(uid):
@@ -86,7 +87,7 @@ def cards(uid):
 
 
 def usable(uid):
-    return bool(uid and admin_on() and profiles.settings(uid).get("con_on") and accounts(uid))
+    return bool(features.allowed("contacts", uid) and accounts(uid))
 
 
 def public(uid):

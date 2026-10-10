@@ -35,6 +35,7 @@ from fastapi import APIRouter, Depends, HTTPException, Request
 
 import guard
 import profiles
+import features
 from common import load_config
 from core import assistant, auth, own_profile
 
@@ -71,7 +72,7 @@ TEST_QUESTION = "Welche Zahl steht auf dem Bild? Antworte nur mit der Zahl."
 
 
 def admin_on():
-    return load_config().get("chat", {}).get("images", False) is True
+    return features.admin_on("images")
 
 
 def channel(request):

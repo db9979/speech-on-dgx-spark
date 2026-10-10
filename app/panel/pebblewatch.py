@@ -23,6 +23,7 @@ from fastapi import APIRouter, Depends, HTTPException, Request
 
 import guard
 import profiles
+import features
 from account import browser_profile
 from common import load_config
 from core import FACES, assistant, confirm_code, own_profile
@@ -40,15 +41,15 @@ _pending = {}             # sha256(code) -> {"uid", "t"}
 
 
 def admin_on():
-    return bool(load_config().get("chat", {}).get("pebble", False))
+    return features.admin_on("pebble")
 
 
 def profile_on(uid):
-    return bool(profiles.settings(uid).get("pebble_on"))
+    return features.profile_on("pebble", uid)
 
 
 def allowed(uid):
-    return admin_on() and profile_on(uid)
+    return features.allowed("pebble", uid)
 
 
 profiles.WATCH_GATE[0] = allowed

@@ -14,6 +14,7 @@ it on (setting roles_on). Guests and a voice that is not the profile's own never
 import re
 
 import profiles
+import features
 
 MAX_ROLES = 8
 MAX_NAME = 30
@@ -38,7 +39,7 @@ LIST = re.compile(r"^(?:(?:welche|was\s+für)\s+rollen\s+(?:hast|kennst|gibt|kan
 
 
 def admin_on(ccfg):
-    return bool(ccfg.get("roles", False))
+    return features.admin_on("roles", ccfg)
 
 
 def _key(name):

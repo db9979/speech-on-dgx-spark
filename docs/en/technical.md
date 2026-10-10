@@ -102,6 +102,15 @@ Since V01.0.207 all pages under Settings are built the same way (`index.html`, s
 
 `tests/test_guides.py` (class `BuildingBlocks`) checks this without a browser: title and intro on every page, no `label.chk`, "Erweitert" only as `details`, as many "More" buttons as more texts, short sentences and English translations.
 
+## Features and rights (features.py)
+
+Since V01.0.267 every function the admin can switch is written once in `app/panel/features.py`: name (de/en), group, the admin switches (`chat.*`), the function it builds on (`parent`), the profile's own switch (`profile`), whether guests may ever use it, the Ich page and the guide. Values are still stored under the old names in `config.json` and `settings.json`; only this table knows both.
+
+- **One check:** `features.admin_on(key)`, `features.profile_on(key, uid)`, `features.allowed(key, uid)` and `features.reason(key, uid)` (reason: `spark`, `profile`, `guest`). Modules only ask here (`admin_on`, `usable`, `allowed` are one-liners); what must be set up besides (Kiwix address, agent level) the module registers in `features.READY` or `features.GRANTED`.
+- **One list for the pages:** `GET /api/features` (signed in, rate limited) returns every function with Spark on/off, own switch, "may" and reason; guests see only guest functions. The flags in `/api/whoami` and `allow` in `/api/profile/settings` and `/api/iphone/settings` come from the same table.
+- **New function:** an entry in `features.py`, a guide in `guides.js`. `tests/test_features.py` fails when a `chat.*` switch belongs to no function, a profile switch does not start off, or a module builds its own check.
+- Fixed protection rules (secrets never spoken, speech first, the owner's voice at a shared speaker) are no switches and stay rules of their own.
+
 ## Tests
 
 `app/tests/` holds the self-tests that run on every update (`cd app && python -m unittest discover -s tests`). All services are faked (`tests/helpers.py`); no test talks to real models or Home Assistant. `tests/test_ui_browser.py` also opens the panel in Chromium (Playwright) at computer and phone width: every page without script errors and without sideways scrolling, the settings search, the Me window. Without Playwright (as in the self-test on the Spark) it is skipped; on GitHub it runs in the "Tests" workflow on every push.

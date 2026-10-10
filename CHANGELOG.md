@@ -2,6 +2,7 @@
 
 Every version in one line, newest first (taken from the commit messages, so some lines are German, some English). Older entries have no version number.
 
+- **V01.0.267** · 2026-10-10 · Vereinheitlichen Phase 0–1: jede Funktion einmal in features.py, eine Prüfung „Spark an, Profil an“ für alle Module, /api/features mit Grund; Lücken geschlossen (Korrekturen lernen braucht das Gedächtnis, Push und Update brauchen die iPhone-App, Raum aus der Ferne braucht Lautsprecher)
 - **V01.0.266** · 2026-10-10 · Kiwix: „Schau in deinem/unserem Archiv“ und „im Archiv“ werden erkannt, die erste Runde muss dann das Archiv fragen statt der hochgeladenen Dokumente
 - **V01.0.265** · 2026-10-10 · Bedienung: Funktionen eigener Menüpunkt (mit Anleitungen), „Personen und Geräte“ (mit Apps und Schnittstellen), „Einbinden“ entfällt; Suche Strg K/⌘ K über Seiten, Schalter, Einstellungen, Ich, Prüfen, Logs und Anleitungen
 - **V01.0.264** · 2026-10-10 · Erst lokal suchen (Funktionen → Websuche, aus; Profil-Schalter): Wissensfragen schauen zuerst in Dokumenten, Kiwix-Archiv und früheren Gesprächen (höchstens 400 ms, Treffer als Daten mit Quelle), Aktuelles geht direkt hinaus, „in meinen Unterlagen“ bleibt lokal; Websuche nach Dokumenten nur mit den Worten der Frage; Zustand → Prüfen → „Erst lokal testen“, Logzeile „lokal:“

@@ -45,6 +45,7 @@ import httpx
 import mail
 import profiles
 import vorrang
+import features
 
 CATS = {"werbung": "Werbung", "newsletter": "Newsletter", "rechnungen": "Rechnungen",
         "benachrichtigungen": "Benachrichtigungen", "social": "Social"}
@@ -84,9 +85,7 @@ _running = set()
 
 # ---------------------------------------------------------------- settings and state
 def admin_on():
-    from common import load_config
-    c = load_config().get("chat", {})
-    return bool(c.get("mail", False) and c.get("mail_tidy", False))
+    return features.admin_on("tidy")
 
 
 def _file(uid):

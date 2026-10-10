@@ -29,6 +29,7 @@ import httpx
 
 import profiles
 import vault
+import features
 from common import load_config
 
 API = "https://api.telegram.org"
@@ -78,7 +79,7 @@ def token():
 
 
 def admin_on():
-    return bool(load_config().get("chat", {}).get("telegram", False))
+    return features.admin_on("telegram")
 
 
 def base():

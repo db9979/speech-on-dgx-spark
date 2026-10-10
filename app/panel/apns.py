@@ -27,6 +27,7 @@ import httpx
 
 import profiles
 import vault
+import features
 from common import load_config
 
 try:
@@ -78,7 +79,7 @@ def settings():
 
 
 def admin_on():
-    return bool(load_config().get("chat", {}).get("iphone_push", False))
+    return features.admin_on("iphonepush")
 
 
 def ready():

@@ -21,6 +21,7 @@ import httpx
 
 import kiwix
 import profiles
+import features
 from common import load_config
 
 DEFAULT_URL = "https://de.wikipedia.org"
@@ -33,7 +34,7 @@ _cache = {}
 
 
 def admin_on():
-    return bool(load_config().get("chat", {}).get("wiki", False))
+    return features.admin_on("wiki")
 
 
 def base():
@@ -41,7 +42,7 @@ def base():
 
 
 def usable(uid):
-    return bool(uid and admin_on() and profiles.settings(uid).get("wiki_on"))
+    return features.allowed("wiki", uid)
 
 
 def _query(text):

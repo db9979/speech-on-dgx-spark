@@ -18,6 +18,7 @@ import httpx
 
 import calendars
 import profiles
+import features
 
 PENDING_SECONDS = 15 * 60
 MAX_LEN = 160
@@ -41,7 +42,7 @@ PROMPT = (
 
 
 def on(ccfg, pset):
-    return bool(ccfg.get("learn_fixes", False) and pset.get("fix_learn"))
+    return features.admin_on("fixes", ccfg) and pset.get("fix_learn") is True
 
 
 def is_correction(text, said_before):

@@ -70,6 +70,7 @@ import echo
 import logfilter
 import profiles
 import vault
+import features
 from common import load_config
 
 STATE = os.environ.get("SPEECH_SPARK_STATE", "/var/lib/speech-spark/state")
@@ -108,11 +109,11 @@ ROOM_START = re.compile(r"(?i)^\W*(?:(?:hey )?(?:spark|jarvis),? )?(?:(?:den )?r
 
 
 def admin_on():
-    return bool(load_config().get("chat", {}).get("esp32", False))
+    return features.admin_on("esp32")
 
 
 def profile_on(uid):
-    return bool(profiles.settings(uid).get("esp_on"))
+    return features.profile_on("esp32", uid)
 
 
 def _file():

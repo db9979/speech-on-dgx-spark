@@ -25,6 +25,7 @@ import appupdate
 import guard
 import images
 import profiles
+import features
 from account import browser_profile
 from common import load_config
 from core import FACES, app_version, assistant, confirm_code, own_profile
@@ -43,15 +44,15 @@ _pending = {}             # sha256(code) -> {"uid", "t"}
 
 
 def admin_on():
-    return bool(load_config().get("chat", {}).get("iphone", False))
+    return features.admin_on("iphone")
 
 
 def profile_on(uid):
-    return bool(profiles.settings(uid).get("app_on"))
+    return features.profile_on("iphone", uid)
 
 
 def allowed(uid):
-    return admin_on() and profile_on(uid)
+    return features.allowed("iphone", uid)
 
 
 profiles.APP_GATE[0] = allowed
@@ -360,12 +361,12 @@ def app_settings(request: Request, prof=Depends(own_profile)):
     fields = _fields(prof["id"])
     return {"settings": {k: p[k] for k in fields},
             # which of the conversation switches the admin allows (the rest change nothing)
-            "admin": {"tool_think": bool(chat.get("tool_thinking", False)), "route": bool(chat.get("routing", False)),
-                      "fix_learn": bool(chat.get("learn_fixes", False))},
+            "admin": {"tool_think": features.admin_on("toolthink", chat), "route": features.admin_on("routing", chat),
+                      "fix_learn": features.admin_on("fixes", chat)},
             # shown only: the tone is changed in the browser login, the rights in Ich -> iPhone-App
-            "style": p.get("style", "") if chat.get("own_style", False) else None,
+            "style": p.get("style", "") if features.admin_on("style", chat) else None,
             "rights": {k: bool(p.get(k)) for k in RIGHTS},
-            "allow": {"proactive": proactive.enabled(), "documents": bool(chat.get("documents", True))},
+            "allow": {"proactive": proactive.enabled(), "documents": features.admin_on("documents", chat)},
             # services the profile switched on in the panel ("Von selbst" can only use those)
             "services": {k: bool(p.get(k)) for k in ("wx_on", "par_on", "con_on", "transit_on")}}
 

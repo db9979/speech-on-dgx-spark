@@ -32,6 +32,7 @@ from fastapi import APIRouter, Depends, HTTPException, Request
 
 import guard
 import profiles
+import features
 from common import load_config
 from core import assistant, auth, browser_profile, own_profile, secret_profile
 
@@ -60,13 +61,12 @@ _TOLD = {}                   # (uid, device) -> time of the last note
 
 
 def enabled():
-    return bool(load_config().get("chat", {}).get("room", False))
+    return features.admin_on("room")
 
 
 def ha_on():
     """The admin allows Home Assistant to read the list with a room key (chat.room_ha, off by default)."""
-    c = load_config().get("chat", {})
-    return bool(c.get("room", False) and c.get("room_ha", False))
+    return features.admin_on("roomha")
 
 
 def _gate(uid):

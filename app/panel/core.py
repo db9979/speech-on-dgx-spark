@@ -289,24 +289,28 @@ async def secret_profile(request: Request):
 
 # Calendar and briefing topics: profiles only; the stored password is never sent back.
 def calendar_on():
-    if not load_config().get("chat", {}).get("calendar", True):
+    import features   # features.py imports this module
+    if not features.admin_on("calendar"):
         raise HTTPException(403, "calendar and daily briefing are turned off")
 
 
 # Home Assistant: each profile connects its own; the token is never sent back.
 def ha_on():
-    if not load_config().get("chat", {}).get("homeassistant", False):
+    import features   # features.py imports this module
+    if not features.admin_on("ha"):
         raise HTTPException(403, "Home Assistant is turned off")
 
 
 # E-mail: each profile connects its own mailboxes, read only; the password is never sent back.
 def mail_on():
-    if not load_config().get("chat", {}).get("mail", False):
+    import features   # features.py imports this module
+    if not features.admin_on("mail"):
         raise HTTPException(403, "reading e-mail is turned off")
 
 
 def speaker_on():
-    if not load_config().get("chat", {}).get("speaker_id", False):
+    import features   # features.py imports this module
+    if not features.admin_on("speaker"):
         raise HTTPException(403, "speaker identification is turned off")
 
 

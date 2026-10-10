@@ -18,6 +18,7 @@ import time
 import httpx
 
 import profiles
+import features
 from common import load_config
 
 DEFAULT_URL = "https://v6.db.transport.rest"
@@ -27,7 +28,7 @@ _cache = {}
 
 
 def admin_on():
-    return bool(load_config().get("chat", {}).get("transit", False))
+    return features.admin_on("transit")
 
 
 def base():
@@ -48,7 +49,7 @@ def get(uid):
 
 
 def usable(uid):
-    return bool(uid and admin_on() and profiles.settings(uid).get("transit_on") and (get(uid).get("home") or {}).get("id"))
+    return bool(features.allowed("transit", uid) and (get(uid).get("home") or {}).get("id"))
 
 
 def _clean(s, n=80):

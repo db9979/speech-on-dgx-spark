@@ -37,6 +37,7 @@ import guard
 import kiwix
 import profiles
 import recall
+import features
 from common import load_config
 from core import auth
 
@@ -88,7 +89,7 @@ def ccfg():
 
 
 def admin_on(cfg=None):
-    return (cfg if cfg is not None else ccfg()).get("local_first", False) is True
+    return features.admin_on("lokal", cfg)
 
 
 def on(cfg, who):

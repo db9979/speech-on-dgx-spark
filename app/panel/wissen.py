@@ -51,6 +51,7 @@ import documents
 import guard
 import profiles
 import vorrang
+import features
 from common import load_config
 from core import assistant, auth, browser_profile, own_profile
 
@@ -78,14 +79,18 @@ def _chat():
     return load_config().get("chat", {})
 
 
+# the switch words used here -> the functions in features.py
+DOC_FEATURE = {"pictures": "docpics", "semantic": "docmeaning", "originals": "docfiles", "night": "docnight",
+               "shared": "docshared", "brief": "docbrief"}
+
+
 def admin_on(what):
-    c = _chat()
-    return bool(c.get("documents", True) and c.get("doc_" + what, False) is True)
+    return features.admin_on(DOC_FEATURE[what])
 
 
 def on(uid, what):
     """The admin's and the profile's own switch (never a default from the admin's presets)."""
-    return bool(uid and admin_on(what) and profiles.settings(uid).get("doc_" + what) is True)
+    return features.allowed(DOC_FEATURE[what], uid)
 
 
 QUOTAS = os.path.join(os.environ.get("SPEECH_SPARK_STATE", "/var/lib/speech-spark/state"), "doc-quotas.json")
@@ -465,7 +470,7 @@ def info(prof=Depends(own_profile)):
     uid = prof["id"]
     s = profiles.settings(uid)
     have, total = documents.vector_state(uid)
-    return {"allow": {k: admin_on(k) for k in ("pictures", "semantic", "originals", "shared", "brief")},
+    return {"allow": {k: admin_on(k) for k in ("pictures", "semantic", "originals", "shared", "brief")},   # features.py
             "on": {k: bool(s.get("doc_" + k)) for k in ("pictures", "semantic", "originals", "shared", "brief", "due")},
             "others": shared_list(uid),
             "usage": documents.usage(uid), "quota": keep_bytes(uid) or None,

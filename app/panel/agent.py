@@ -42,6 +42,7 @@ import calendars
 import mcp
 import profiles
 import vorrang
+import features
 from common import load_config
 
 STATE = os.environ.get("SPEECH_SPARK_STATE", "/var/lib/speech-spark/state")
@@ -95,11 +96,18 @@ def ccfg():
 
 
 def admin_on():
-    return bool(ccfg().get("agent", False))
+    return features.admin_on("agent")
+
+
+def _granted(uid):
+    return bool(granted(uid))
+
+
+features.GRANTED["agent"] = _granted   # the admin gives the level, the profile switches it on itself
 
 
 def mcp_on():
-    return admin_on() and bool(ccfg().get("agent_mcp", False))
+    return features.admin_on("mcp")
 
 
 def granted(uid):

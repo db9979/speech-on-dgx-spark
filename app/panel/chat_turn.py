@@ -30,6 +30,7 @@ import speakers  # noqa: E402
 import tidy  # noqa: E402
 import wissen  # noqa: E402
 import chat  # noqa: E402  (constants and helpers; imported fully before any call)
+import features  # noqa: E402
 
 
 def shared_stranger(request, body, who):
@@ -112,7 +113,7 @@ async def prepare(request):
     ask0 = messages[-1]["content"] if messages[-1]["role"] == "user" else ""
     route = intent.classify(ask0, ccfg.get("tool_words", ""), ccfg.get("route_words", ""))
     me0 = profiles.current(request)
-    route_on = bool(ccfg.get("routing", False) and me0 and profiles.settings(me0["id"]).get("route"))
+    route_on = bool(me0 and features.allowed("routing", me0["id"], ccfg))
     if carry == "outside" and route_on and intent.wants_own(route, ask0):
         carry = None
         print("weiche: answer from outside text before; this message asks for", route.label(),
@@ -553,7 +554,7 @@ async def prepare(request):
     check_on = bool(ccfg.get("answer_check", True))
     tool_temp = float(ccfg.get("tool_temperature", 0.1))
     # thinking only while choosing the tool: the admin allows it, the profile switches it on (never guests)
-    think_tools = bool(who and own_browser and ccfg.get("tool_thinking", False) and pset.get("tool_think"))
+    think_tools = bool(who and own_browser and features.admin_on("toolthink", ccfg) and pset.get("tool_think") is True)
     small = bool(chat.SMALLTALK.fullmatch(ask_text))
     if tools:
         system = (system + "\n\n" + chat.TOOL_RULES).strip()

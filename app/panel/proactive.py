@@ -28,6 +28,7 @@ from fastapi import APIRouter, Depends, HTTPException, Request
 
 import profiles
 import vorrang
+import features
 from common import load_config
 from core import DEFAULTS, assistant, browser_profile, own_profile
 
@@ -57,7 +58,7 @@ def ccfg():
 
 
 def enabled():
-    return bool(load_config().get("chat", {}).get("proactive", False))
+    return features.admin_on("proactive")
 
 
 def prefs(uid):

@@ -27,6 +27,7 @@ import memtidy  # noqa: E402
 import mfa  # noqa: E402
 import profiles  # noqa: E402
 import homeassistant  # noqa: E402
+import features  # noqa: E402
 from common import load_config  # noqa: E402
 from core import (  # noqa: E402
     ADMIN_IDLE,
@@ -62,9 +63,18 @@ from admin import tts_voices  # noqa: E402
 router = APIRouter()
 
 
+# whoami flag -> function in features.py
+WHO = {"documents": "documents", "reminders": "reminders", "speaker_id": "speaker", "calendar": "calendar",
+       "homeassistant": "ha", "mail": "mail", "mail_tidy": "tidy", "proactive": "proactive", "room": "room",
+       "room_voices": "roomtv", "room_ha": "roomha", "room_remote": "roomfar", "weather": "weather", "contacts": "contacts",
+       "parcels": "parcels", "telegram": "telegram", "tasks": "tasks", "transit": "transit", "messages": "messages",
+       "esp32": "esp32", "iphone": "iphone", "iphone_panel": "iphonepanel", "pebble": "pebble"}
+
+
 @router.get("/api/whoami")
 def whoami(request: Request, creds: HTTPBasicCredentials | None = Depends(security)):
     cfg = load_config()
+    chat = features.chat_cfg()
     main = is_main_admin(request, creds)
     elev = None if main else coadmin.session(request)
     prof = profiles.current(request)
@@ -74,32 +84,10 @@ def whoami(request: Request, creds: HTTPBasicCredentials | None = Depends(securi
             # the profile's own role: Ich → Sicherheit offers its admin mode (with what it still needs)
             "admin_role": {"role": own, "mfa": mfa.enabled(prof["id"]), "main_mfa": mfa.enabled(mfa.ADMIN)} if own else None,
             "version": app_version(), "public": cfg.get("chat", {}).get("public", False),
-            "profile": prof, "documents": cfg.get("chat", {}).get("documents", True),
-            "reminders": cfg.get("chat", {}).get("reminders", True),
-            "speaker_id": cfg.get("chat", {}).get("speaker_id", False),
-            "calendar": cfg.get("chat", {}).get("calendar", True),
-            "homeassistant": cfg.get("chat", {}).get("homeassistant", False),
-            "mail": cfg.get("chat", {}).get("mail", False),
-            "mail_tidy": bool(cfg.get("chat", {}).get("mail", False) and cfg.get("chat", {}).get("mail_tidy", False)),
-            "proactive": cfg.get("chat", {}).get("proactive", False),
-            "room": cfg.get("chat", {}).get("room", False),
-            "room_voices": bool(cfg.get("chat", {}).get("room", False) and cfg.get("chat", {}).get("room_voices", False)),
-            "room_ha": bool(cfg.get("chat", {}).get("room", False) and cfg.get("chat", {}).get("room_ha", False)),
-            "room_remote": bool(cfg.get("chat", {}).get("room", False) and cfg.get("chat", {}).get("room_remote", False)
-                                and cfg.get("chat", {}).get("esp32", False)),
-            "weather": cfg.get("chat", {}).get("weather", False),
-            "contacts": cfg.get("chat", {}).get("contacts", False),
-            "parcels": bool(cfg.get("chat", {}).get("mail", False) and cfg.get("chat", {}).get("parcels", False)),
-            "telegram": cfg.get("chat", {}).get("telegram", False),
-            "tasks": cfg.get("chat", {}).get("tasks", False),
-            "transit": cfg.get("chat", {}).get("transit", False),
-            "agent": bool(cfg.get("chat", {}).get("agent", False) and profiles.current(request)
-                          and agent.granted(profiles.current(request)["id"])),
-            "messages": bool(cfg.get("chat", {}).get("messages", False)),
-            "esp32": cfg.get("chat", {}).get("esp32", False),
-            "iphone": cfg.get("chat", {}).get("iphone", False),
-            "iphone_panel": bool(cfg.get("chat", {}).get("iphone", False) and cfg.get("chat", {}).get("iphone_panel", False)),
-            "pebble": cfg.get("chat", {}).get("pebble", False),
+            "profile": prof,
+            # which pages the panel shows: the Spark's switches from features.py (one place for "on")
+            **{name: features.admin_on(key, chat) for name, key in WHO.items()},
+            "agent": bool(features.admin_on("agent", chat) and prof and agent.granted(prof["id"])),
             # Logs → Anfragen: main admin and co-admins (tracelog.py), not the Verwalter role
             "trace": bool(main or elev and elev.get("role") != "manager") and cfg.get("logs", {}).get("trace", False) is True,
             "face": cfg.get("chat", {}).get("face") if cfg.get("chat", {}).get("face") in FACES else "robot",
@@ -863,20 +851,20 @@ def profile_settings(request: Request):
     base = profiles.defaults(load_config().get("chat", {}).get("defaults"))
     chat = load_config().get("chat", {})
     return {"settings": dict(base, **(profiles.settings(prof["id"]) if prof else {})), "defaults": base,
-            "profile": prof, "allow": {"tool_think": bool(prof and chat.get("tool_thinking", False)),
-                                       "route": bool(prof and chat.get("routing", False) is True),
-                                       "trace": bool(prof and load_config().get("logs", {}).get("trace", False) is True),
-                                       "fix_learn": bool(prof and chat.get("learn_fixes", False) and chat.get("memory", True)),
-                                       "style": bool(prof and chat.get("own_style", False)),
-                                       "roles": bool(prof and chat.get("roles", False) is True),
-                                       "wiki": bool(prof and chat.get("wiki", False) is True),
-                                       "kiwix": bool(prof and chat.get("kiwix", False) is True and chat.get("kiwix_url")),
-                                       "local": bool(prof and chat.get("local_first", False) is True),
-                                       "follow": bool(prof and chat.get("follow_up", False)),
-                                       "echo": bool(prof and chat.get("no_self_echo", False)),
-                                       "images": bool(prof and chat.get("images", False) is True),
-                                       # "Bild in Meine Dokumente" under an answer to a picture (wissen.py)
-                                       "docpics": bool(prof and chat.get("images", False) is True and wissen.on(prof["id"], "pictures"))}}
+            "profile": prof, "allow": _allow(prof, chat)}
+
+
+# which conversation switches the admin allows (features.py), only for a signed-in profile
+ALLOW = {"tool_think": "toolthink", "route": "routing", "fix_learn": "fixes", "style": "style", "roles": "roles",
+         "wiki": "wiki", "kiwix": "kiwix", "local": "lokal", "follow": "follow", "echo": "selfecho", "images": "images"}
+
+
+def _allow(prof, chat):
+    out = {k: bool(prof and features.admin_on(f, chat)) for k, f in ALLOW.items()}
+    out["trace"] = bool(prof and load_config().get("logs", {}).get("trace", False) is True)
+    # "Bild in Meine Dokumente" under an answer to a picture (wissen.py)
+    out["docpics"] = bool(prof and out["images"] and wissen.on(prof["id"], "pictures"))
+    return out
 
 
 @router.put("/api/profile/settings", dependencies=[Depends(assistant)])

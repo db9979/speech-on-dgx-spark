@@ -114,6 +114,15 @@ Seit V01.0.207 sind alle Seiten unter Einstellungen gleich gebaut (`index.html`,
 
 `tests/test_guides.py` (Klasse `BuildingBlocks`) prüft das ohne Browser: Titel und Einleitung auf jeder Seite, keine `label.chk`, „Erweitert“ nur als `details`, gleich viele „Mehr“-Knöpfe wie Mehr-Texte, kurze Sätze und englische Übersetzungen.
 
+## Funktionen und Rechte (features.py)
+
+Seit V01.0.267 steht jede Funktion, die der Admin schalten kann, genau einmal in `app/panel/features.py`: Name (de/en), Gruppe, die Admin-Schalter (`chat.*`), die Funktion, auf der sie aufbaut (`parent`), der eigene Schalter des Profils (`profile`), ob Gäste sie je nutzen dürfen, die Ich-Seite und die Anleitung. Gespeichert wird weiter unter den alten Namen in `config.json` und `settings.json`; nur diese Tabelle kennt beide.
+
+- **Eine Prüfung:** `features.admin_on(key)`, `features.profile_on(key, uid)`, `features.allowed(key, uid)` und `features.reason(key, uid)` (Grund: `spark`, `profile`, `guest`). Die Module fragen nur noch hier (`admin_on`, `usable`, `allowed` sind Einzeiler); was zusätzlich eingerichtet sein muss (Kiwix-Adresse, Agent-Stufe), meldet das Modul über `features.READY` bzw. `features.GRANTED` an.
+- **Eine Liste für die Oberfläche:** `GET /api/features` (angemeldet, Rate-Limit) liefert jede Funktion mit Spark an/aus, eigenem Schalter, „darf“ und Grund; Gäste sehen nur Gast-Funktionen. Die Flags in `/api/whoami` und `allow` in `/api/profile/settings` und `/api/iphone/settings` kommen aus derselben Tabelle.
+- **Neue Funktion:** Eintrag in `features.py`, Anleitung in `guides.js`. `tests/test_features.py` wird rot, wenn ein `chat.*`-Schalter keiner Funktion gehört, ein Profilschalter nicht mit „aus“ beginnt oder ein Modul seine eigene Prüfung baut.
+- Feste Schutzregeln (Geheimnisse nie sprechen, Vorrang für Sprache, Inhaberstimme am geteilten Lautsprecher) sind keine Schalter und bleiben eigene Regeln.
+
 ## Tests
 
 `app/tests/` enthält die Selbsttests, die bei jedem Update laufen (`cd app && python -m unittest discover -s tests`). Alle Dienste sind dabei nachgebaut (`tests/helpers.py`), kein Test spricht echte Modelle oder Home Assistant an. `tests/test_ui_browser.py` öffnet das Panel zusätzlich in Chromium (Playwright) am Rechner und in Handybreite: jede Seite ohne Skriptfehler und ohne seitliches Scrollen, die Einstellungssuche, das Ich-Fenster. Ohne Playwright (wie im Selbsttest auf dem Spark) wird er übersprungen; auf GitHub läuft er im Workflow „Tests“ bei jedem Push.
