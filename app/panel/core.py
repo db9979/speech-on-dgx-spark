@@ -7,6 +7,7 @@ import hmac
 import secrets
 import subprocess
 import sys
+import threading
 import time
 
 from fastapi import Depends, HTTPException, Request
@@ -215,10 +216,88 @@ def owner_auth(request: Request, creds: HTTPBasicCredentials | None = Depends(se
 # Changes that matter most (password, restore, device keys, the second step itself) need a fresh code
 # from the app while the second step is on, even inside a running login: header X-Speech-Code.
 CODE_HEADER = "x-speech-code"
+# One right code counts for CONFIRM_WINDOW seconds in the same login (plan plaene/zweiter-schritt-seltener.md,
+# "sudo" window): the admin's login, the profile's browser login or the iPhone app's key, never another one.
+# Kept in memory only (a restart of the panel ends it); logging out, ending the admin mode and the button
+# "Bestätigung beenden" end it too. The most important changes ask every time (fresh=True).
+CONFIRM_WINDOW = 600
+MAX_WINDOWS = 200
+_windows = {}                     # (who, login) -> until
+_wlock = threading.Lock()
 
 
-async def confirm_code(request: Request, who, name):
+def _login_key(request: Request, who):
+    """The login this request comes with, for `who`: "d:<device>" (its app key), "a:<family>" (the main admin's
+    browser login) or "p:<session>" (the profile's browser login, also while its admin mode is open). Only
+    checked logins count; None without one (HTTP Basic, a foreign cookie)."""
+    if request.headers.get(profiles.DEVICE_HEADER):
+        dev = profiles._device(profiles._load(), request)
+        return "d:" + dev["id"] if dev and dev.get("user") == who else None
+    if who == mfa.ADMIN:
+        fam = admin_family(request.cookies.get(COOKIE, ""))
+        return "a:" + fam if fam and _admin_cookie_age(request) is not None else None
+    raw = request.cookies.get(profiles.COOKIE, "")
+    u, _ = profiles._cookie_user(profiles._load(), raw)
+    return "p:" + raw.split(".")[2] if u and u["id"] == who and raw.count(".") == 3 else None
+
+
+def window_until(who, login, now=None):
+    now = now if now is not None else time.time()
+    with _wlock:
+        until = _windows.get((who, login), 0) if login else 0
+    return until if until > now else 0
+
+
+def _open_window(who, login, now=None):
+    if not login:
+        return
+    now = now if now is not None else time.time()
+    with _wlock:
+        for k in [k for k, v in _windows.items() if v <= now]:
+            _windows.pop(k)
+        if len(_windows) >= MAX_WINDOWS:
+            _windows.pop(min(_windows, key=_windows.get))
+        _windows[(who, login)] = now + CONFIRM_WINDOW
+
+
+def end_window(request: Request):
+    """Ends every confirmation window of the logins this request carries."""
+    keys = set()
+    for who in [mfa.ADMIN] + [x for x in (_cookie_uid(request), _device_uid(request)) if x]:
+        k = _login_key(request, who)
+        if k:
+            keys.add((who, k))
+    with _wlock:
+        for k in keys:
+            _windows.pop(k, None)
+    return len(keys)
+
+
+def _cookie_uid(request):
+    u, _ = profiles._cookie_user(profiles._load(), request.cookies.get(profiles.COOKIE, ""))
+    return u["id"] if u else None
+
+
+def _device_uid(request):
+    if not request.headers.get(profiles.DEVICE_HEADER):
+        return None
+    dev = profiles._device(profiles._load(), request)
+    return dev.get("user") if dev else None
+
+
+def confirmed_until(request: Request):
+    """Until when a right code still counts in this request's login (whoami shows it), 0 when it does not."""
+    if is_main_admin(request, None) and mfa.enabled(mfa.ADMIN):
+        return int(window_until(mfa.ADMIN, _login_key(request, mfa.ADMIN)))
+    uid = _device_uid(request) or _cookie_uid(request)
+    return int(window_until(uid, _login_key(request, uid))) if uid and mfa.enabled(uid) else 0
+
+
+async def confirm_code(request: Request, who, name, fresh=False):
     if not mfa.enabled(who):
+        return
+    login = _login_key(request, who)
+    if not fresh and window_until(who, login):
         return
     code = request.headers.get(CODE_HEADER, "")
     if not code:
@@ -229,15 +308,26 @@ async def confirm_code(request: Request, who, name):
         await asyncio.sleep(1)
         raise HTTPException(428, "wrong code")
     guard.succeeded(request, name)
+    _open_window(who, login)
+
+
+async def _admin_code(request, fresh):
+    prof = acting_profile(request)
+    if prof:
+        await confirm_code(request, prof["id"], prof["name"], fresh)
+    else:
+        await confirm_code(request, mfa.ADMIN, guard.ADMIN, fresh)
 
 
 async def admin_code(request: Request):
-    """A fresh code for the most important changes: the main admin's, or the code of the profile in its admin mode."""
-    prof = acting_profile(request)
-    if prof:
-        await confirm_code(request, prof["id"], prof["name"])
-    else:
-        await confirm_code(request, mfa.ADMIN, guard.ADMIN)
+    """A code for important changes: the main admin's, or the code of the profile in its admin mode. A right
+    code from the last CONFIRM_WINDOW seconds in the same login counts too."""
+    await _admin_code(request, False)
+
+
+async def admin_code_fresh(request: Request):
+    """Always a fresh code: the second step itself, the password, roles, backups (no confirmation window)."""
+    await _admin_code(request, True)
 
 
 def assistant(request: Request, creds: HTTPBasicCredentials | None = Depends(security)):
@@ -292,15 +382,24 @@ def browser_profile(request: Request):
     return prof
 
 
-async def secret_profile(request: Request):
+async def _secret_profile(request, fresh):
     """Like browser_profile, plus a fresh code when the profile has the second step: for changes that
     hand out secrets (tokens, passwords, code word) or add a new way to reach the profile. From the iPhone
     app always with a fresh code: the profile needs its second step for that."""
     prof = browser_profile(request)
     if request.scope.get("speech_app_area") and not mfa.enabled(prof["id"]):
         raise HTTPException(403, "Dafür braucht dein Profil den zweiten Anmeldeschritt (Ich → Sicherheit).")
-    await confirm_code(request, prof["id"], prof["name"])
+    await confirm_code(request, prof["id"], prof["name"], fresh)
     return prof
+
+
+async def secret_profile(request: Request):
+    return await _secret_profile(request, False)
+
+
+async def secret_profile_fresh(request: Request):
+    """Like secret_profile, always with a fresh code (the code word, the second step itself)."""
+    return await _secret_profile(request, True)
 
 
 # Calendar and briefing topics: profiles only; the stored password is never sent back.

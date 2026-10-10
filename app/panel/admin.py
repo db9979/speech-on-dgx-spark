@@ -48,6 +48,7 @@ from core import (  # noqa: E402
     admin_cookie_ok,
     acting_profile,
     admin_code,
+    admin_code_fresh,
     api_headers,
     assistant,
     auth,
@@ -140,7 +141,7 @@ async def admin_set_pin(uid: str, request: Request):
     return {"ok": True}
 
 
-@router.delete("/api/admin/profiles/{uid}/mfa", dependencies=[Depends(auth), Depends(admin_code)])
+@router.delete("/api/admin/profiles/{uid}/mfa", dependencies=[Depends(auth), Depends(admin_code_fresh)])
 def admin_reset_mfa(uid: str, request: Request):
     """For a profile that lost its phone and its recovery codes: the second step is off again."""
     _no_admin_profile(request, uid)
@@ -168,7 +169,7 @@ def admin_profile(uid: str, request: Request):
     on, of = features.count(uid)
     me = acting_profile(request)
     out = dict(u, **_profile_extra(uid), last=profiles.last_use(uid, last), devices=devs,
-               facts=len(profiles.memory(uid)), sessions=profiles.sessions(uid),
+               facts=len(profiles.memory(uid)), sessions=profiles.sessions(uid), trusted=mfa.list_trusted(uid),
                features={"on": on, "of": of}, main=not me or me["role"] == "owner", owner=not me, roles=coadmin.on())
     if not me or coadmin.role(me["id"]) != "manager":
         out["rights"] = _rights(uid)
@@ -197,6 +198,16 @@ def admin_end_session(uid: str, sid: str, request: Request):
     if not re.fullmatch(r"[0-9a-f]{16}", sid) or not profiles.end_session(uid, sid):
         raise HTTPException(404, "no such login")
     guard.log("profile_session_end", ip=guard.client_ip(request), uid=uid, by="admin")
+    return {"ok": True}
+
+
+@router.delete("/api/admin/profiles/{uid}/trusted/{tid}", dependencies=[Depends(auth)])
+def admin_untrust(uid: str, tid: str, request: Request):
+    """This trusted browser of a profile has to enter a code again (protective, so no code)."""
+    _no_admin_profile(request, uid)
+    if not re.fullmatch(r"[0-9a-f]{16}", tid) or uid not in profiles.user_ids() or not mfa.remove_trusted(uid, tid):
+        raise HTTPException(404, "no such browser")
+    guard.log("trusted_browser_removed", ip=guard.client_ip(request), uid=uid, by="admin")
     return {"ok": True}
 
 
@@ -273,7 +284,7 @@ def admin_delete_device(did: str, request: Request):
     return {"ok": True}
 
 
-@router.post("/api/password", dependencies=[Depends(main_auth), Depends(admin_code)])
+@router.post("/api/password", dependencies=[Depends(main_auth), Depends(admin_code_fresh)])
 async def change_password(request: Request):
     body = await request.json()
     new = str(body.get("new", ""))
@@ -477,6 +488,9 @@ def validate(new):
     sd = new["panel"].get("session_days", 30)
     if not isinstance(sd, int) or isinstance(sd, bool) or not 7 <= sd <= 90:
         raise HTTPException(400, "session_days must be 7..90")
+    td = new["panel"].get("trust_days", 60)
+    if not isinstance(td, int) or isinstance(td, bool) or not 7 <= td <= 90:
+        raise HTTPException(400, "trust_days must be 7..90")
     tp = new["panel"].get("trusted_proxies", [])
     if not isinstance(tp, list) or len(tp) > 10 or not all(isinstance(x, str) and _is_ip(x) for x in tp):
         raise HTTPException(400, "trusted_proxies: a list of up to 10 IP addresses")
@@ -590,7 +604,7 @@ def validate(new):
 
 SENSITIVE = [("api", "key"), ("chat", "llm_url"), ("chat", "llm_key"), ("chat", "telegram_api"),
              ("chat", "search_url"), ("chat", "kiwix_url"), ("chat", "public"), ("chat", "esp32_url"), ("chat", "esp32_repo"),
-             ("chat", "mfa"), ("panel", "trusted_proxies"), ("panel", "allow_lan"), ("panel", "session_days"), ("asr", "model"), ("asr", "aligner_model"),
+             ("chat", "mfa"), ("panel", "trusted_proxies"), ("panel", "allow_lan"), ("panel", "session_days"), ("panel", "trust_days"), ("asr", "model"), ("asr", "aligner_model"),
              ("tts", "model"), ("tts", "voicedesign_model")]
 
 

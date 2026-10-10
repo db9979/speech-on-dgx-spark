@@ -334,6 +334,7 @@
       <div class="setrow"><div class="lbl"><b>Reverse Proxy</b><span>Nur diesen Adressen wird die weitergereichte Absender-Adresse geglaubt.<button class="mlink" type="button">Mehr</button></span></div><input class="wide" id="panel.trusted_proxies" data-list="1" placeholder="192.168.1.10" autocomplete="off"></div>
       <div class="fh more" hidden>Gemeint ist X-Forwarded-For. Leer = nur ein Proxy auf dem Spark selbst. Eintragen, wenn das Panel hinter einem Proxy im Heimnetz hängt: sonst teilen sich alle, die über den Proxy kommen, eine Adresse für die Sperre nach falschen Passwörtern.</div>
       <div class="setrow"><div class="lbl"><b>Anmeldung im Browser</b><span>Ein Profil bleibt so viele Tage ohne Nutzung angemeldet (7 bis 90).</span></div><div class="ctl"><input class="num" id="panel.session_days" type="number" min="7" max="90"><span class="unit">Tage</span></div></div>
+      <div class="setrow"><div class="lbl"><b>Vertraute Browser</b><span>So lange fragt ein Browser, dem man bei der Anmeldung vertraut, keinen Code (7 bis 90). Nach 30 Tagen ohne Nutzung fragt er wieder.</span></div><div class="ctl"><input class="num" id="panel.trust_days" type="number" min="7" max="90"><span class="unit">Tage</span></div></div>
       <div class="setrow"><div class="lbl"><b>API-Schlüssel</b><span>Gesetzt = Apps senden „Authorization: Bearer &lt;Schlüssel&gt;“; leer = ohne Schlüssel.</span></div><div class="ctl full"><input class="wide" id="api.key" autocomplete="off"><button class="b" id="genkey" type="button">Erzeugen</button></div></div>
       <div class="pwonly" data-nodirty="1">
       <h3 class="sec">Admin-Anmeldung <span>wirkt sofort, ohne Speichern</span></h3>
@@ -611,7 +612,7 @@
   <h2>Anmelden</h2><div class="intro">Für Einstellungen, Monitoring und Stimmen braucht es das Panel-Passwort.</div>
   <label>Passwort</label><input type="password" id="loginpw" autocomplete="current-password">
   <div id="logincodebox" style="display:none"><label>Code aus der Authenticator-App</label><input id="logincode" inputmode="numeric" autocomplete="one-time-code" autocapitalize="off">
-    <label class="chk"><input type="checkbox" id="logintrust"> Diesem Browser 30 Tage vertrauen</label><div class="fh">Handy nicht da? Ein Wiederherstellungscode geht auch.</div></div>
+    <label class="chk"><input type="checkbox" id="logintrust"> <span class="trusttxt">Diesem Browser 60 Tage vertrauen</span></label><div class="fh">Handy nicht da? Ein Wiederherstellungscode geht auch.</div></div>
   <div class="row" style="margin-top:14px"><button class="b p" type="submit">Anmelden</button><button class="b" type="button" id="logincancel">Abbrechen</button><span id="loginmsg" class="err"></span></div>
 </form></div>
 <div id="msheet" class="modal sheet" style="display:none"><div class="card sheetcard">
@@ -658,7 +659,7 @@
     <label>Name</label><input id="profuser" autocomplete="username" autocapitalize="off">
     <label>PIN</label><input type="password" id="profpin" autocomplete="current-password">
     <div id="profcodebox" style="display:none"><label>Code aus der Authenticator-App</label><input id="profcode" inputmode="numeric" autocomplete="one-time-code" autocapitalize="off">
-      <label class="chk"><input type="checkbox" id="proftrust"> Diesem Browser 30 Tage vertrauen</label><div class="fh">Handy nicht da? Ein Wiederherstellungscode geht auch.</div></div>
+      <label class="chk"><input type="checkbox" id="proftrust"> <span class="trusttxt">Diesem Browser 60 Tage vertrauen</span></label><div class="fh">Handy nicht da? Ein Wiederherstellungscode geht auch.</div></div>
     <div class="row" style="margin-top:14px"><button class="b p" id="proflogin">Anmelden</button><button class="b" type="button" id="profadmin" style="display:none" data-on="adminLogin">Admin</button><span id="profmsg" class="err"></span></div></div>
     <div id="factbox" class="ptab"><div class="intro">Das weiß der Assistent über dich. Sag ihm „Merk dir …“ oder „Vergiss …“, oder lösche hier.</div>
     <div id="tidybox" class="tidy" style="display:none"></div>

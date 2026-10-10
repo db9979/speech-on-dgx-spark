@@ -53,7 +53,8 @@
     "https_port": 31443,
     "trusted_proxies": [],
     "allow_lan": false,
-    "session_days": 30
+    "session_days": 30,
+    "trust_days": 60
   },
   "memory": {
     "reserve_gib": 10,

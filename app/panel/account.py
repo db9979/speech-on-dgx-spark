@@ -40,8 +40,12 @@ from core import (  # noqa: E402
     admin_family,
     end_admin_sessions,
     admin_code,
+    admin_code_fresh,
+    confirmed_until,
+    end_window,
     browser_profile,
     secret_profile,
+    secret_profile_fresh,
     api_headers,
     auth,
     main_auth,
@@ -93,6 +97,8 @@ def whoami(request: Request, creds: HTTPBasicCredentials | None = Depends(securi
             # the profile's own role: Ich → Sicherheit offers its admin mode (with what it still needs)
             "admin_role": {"role": own, "mfa": mfa.enabled(prof["id"]), "main_mfa": mfa.enabled(mfa.ADMIN)} if own else None,
             "version": app_version(), "public": cfg.get("chat", {}).get("public", False),
+            # the login form's "trust this browser" (days) and a right code that still counts (core.CONFIRM_WINDOW)
+            "trust_days": mfa.trust_days(), "confirm_until": confirmed_until(request),
             "profile": prof,
             # which pages the panel shows: the Spark's switches from features.py (one place for "on")
             **{name: features.admin_on(key, chat) for name, key in WHO.items()},
@@ -139,9 +145,27 @@ def _app_admin(request):
         raise HTTPException(409, "Erst den zweiten Anmeldeschritt für den Admin einschalten (Einstellungen → Sicherheit).")
 
 
-def _trust(r, body, who):
+def _trust(r, body, who, request):
+    """"Diesem Browser vertrauen": an entry in the list of trusted browsers, and a note about it."""
     if body.get("trust") and mfa.enabled(who):
-        mfa.set_trust(r, who)
+        name = profiles.agent_label(request.headers.get("user-agent", ""))
+        if mfa.set_trust(r, who, name):
+            guard.log("trusted_browser", ip=guard.client_ip(request), uid=None if who == mfa.ADMIN else who, detail=name)
+            asyncio.create_task(_tell_trusted(who, name))
+
+
+async def _tell_trusted(who, name):
+    """A short note to the person (the admin: the profile chosen for admin notes), if push is set up."""
+    uid = coadmin.notify_uid() if who == mfa.ADMIN else who
+    if not uid:
+        return 0
+    whose = "den Admin" if who == mfa.ADMIN else "dein Profil"
+    try:
+        return await push.send(uid, "🔐 Spark", f"Neuer vertrauter Browser für {whose}: {name}. "
+                               "Warst du das nicht? Unter Sicherheit entfernen.", tag="security", private=False)
+    except Exception as e:
+        print("trust note failed:", type(e).__name__, flush=True)
+        return 0
 
 
 @router.post("/api/login")
@@ -161,12 +185,13 @@ async def login(request: Request):
     guard.log("admin_login", ip=guard.client_ip(request))
     r.set_cookie(COOKIE, _session_token(), max_age=ADMIN_IDLE, httponly=True, samesite="strict")
     r.delete_cookie(NO_BASIC)
-    _trust(r, body, mfa.ADMIN)
+    _trust(r, body, mfa.ADMIN, request)
     return r
 
 
 @router.post("/api/logout")
 def logout(request: Request):
+    end_window(request)
     raw = request.cookies.get(COOKIE, "")
     guard.revoke(raw, ADMIN_IDLE)
     if admin_family(raw):  # also every older or newer copy of this login
@@ -214,7 +239,7 @@ async def _small_body(request):
     return body
 
 
-@router.put("/api/admin/roles", dependencies=[Depends(owner_auth), Depends(admin_code)])
+@router.put("/api/admin/roles", dependencies=[Depends(owner_auth), Depends(admin_code_fresh)])
 async def admin_roles_set(request: Request):
     """{"on": bool} the switch "Benutzer als Admin", {"notify": "<profile id>" | ""} who hears of admin modes."""
     body = await _small_body(request)
@@ -233,7 +258,7 @@ async def admin_roles_set(request: Request):
     return coadmin.listing()
 
 
-@router.put("/api/admin/roles/{uid}", dependencies=[Depends(owner_auth), Depends(admin_code)])
+@router.put("/api/admin/roles/{uid}", dependencies=[Depends(owner_auth), Depends(admin_code_fresh)])
 async def admin_role_set(uid: str, request: Request):
     """{"role": "coadmin" | "manager" | ""}: give, change or take away a profile's role (ends its admin mode)."""
     role = (await _small_body(request)).get("role", "")
@@ -279,18 +304,20 @@ async def admin_elevate(request: Request):
     if not mfa.enabled(prof["id"]):
         raise HTTPException(409, "Erst den zweiten Anmeldeschritt für dein Profil einschalten (Ich → Sicherheit).")
     try:
-        await confirm_code(request, prof["id"], prof["name"])   # always asked: the second step is on (checked above)
+        await confirm_code(request, prof["id"], prof["name"], fresh=True)   # always asked: the second step is on (checked above)
     except HTTPException as e:
         if e.detail == "wrong code":
             guard.log("admin_mode_failed", ip=guard.client_ip(request), uid=prof["id"], name=prof["name"])
         raise
+    if via == "b" and mfa.trusted(prof["id"], request):
+        via = "t"   # a trusted browser: the admin mode stays open longer without use (coadmin.limits)
     value = coadmin.start(prof["id"], via)
     if not value:
         raise HTTPException(403, "Dein Profil hat keine Admin-Rolle.")
-    where = "iPhone-App" if via != "b" else "Browser"
+    where = "iPhone-App" if via not in ("b", "t") else "vertrauter Browser" if via == "t" else "Browser"
     guard.log("admin_mode_on", ip=guard.client_ip(request), uid=prof["id"], name=prof["name"], detail=f"{coadmin.NAMES[role]}, {where}")
     asyncio.create_task(coadmin.tell_main(prof["name"], coadmin.NAMES[role], via))
-    r = Response(json.dumps({"ok": True, "role": role, "until": int(time.time()) + coadmin.IDLE}), media_type="application/json")
+    r = Response(json.dumps({"ok": True, "role": role, "until": int(time.time()) + coadmin.limits(via)[0]}), media_type="application/json")
     r.set_cookie(coadmin.COOKIE, value, max_age=coadmin.LONGEST, httponly=True, samesite="strict")
     return r
 
@@ -299,6 +326,7 @@ async def admin_elevate(request: Request):
 def admin_elevate_end(request: Request):
     s = coadmin.session(request)
     coadmin.end(request)
+    end_window(request)
     if s:
         guard.log("admin_mode_off", ip=guard.client_ip(request), uid=s["id"], name=s["name"])
     r = Response('{"ok": true}', media_type="application/json")
@@ -311,7 +339,10 @@ def admin_elevate_keep(request: Request):
     """The page is in use: the answer renews the admin mode (only changing requests renew it, so a page left
     open alone, which keeps reading the state, does not keep it open)."""
     s = acting_profile(request)
-    return {"until": min(int(time.time()) + coadmin.IDLE, s["start"] + coadmin.LONGEST) if s else None}
+    if not s:
+        return {"until": None}
+    idle, longest = coadmin.limits(s["via"], s.get("short"))
+    return {"until": min(int(time.time()) + idle, s["start"] + longest)}
 
 
 @router.get("/api/admin/protocol", dependencies=[Depends(auth)])
@@ -352,12 +383,13 @@ async def profile_login(request: Request):
     guard.succeeded(request, name, r)
     guard.log("profile_login", ip=guard.client_ip(request), name=name.strip(), uid=value.split(".", 1)[0])
     r.set_cookie(profiles.COOKIE, value, max_age=profiles.session_secs(), httponly=True, samesite="lax")
-    _trust(r, body, uid)
+    _trust(r, body, uid, request)
     return r
 
 
 @router.post("/api/profile/logout")
 def profile_logout(request: Request):
+    end_window(request)
     raw = request.cookies.get(profiles.COOKIE, "")
     guard.revoke(raw, profiles.session_secs())
     u, _ = profiles._cookie_user(profiles._load(), raw)
@@ -472,7 +504,7 @@ def admin_mfa():
     return mfa.status(mfa.ADMIN)
 
 
-@router.post("/api/mfa/setup", dependencies=[Depends(main_auth), Depends(admin_code)])
+@router.post("/api/mfa/setup", dependencies=[Depends(main_auth), Depends(admin_code_fresh)])
 def admin_mfa_setup():
     return mfa.begin(mfa.ADMIN, "Admin")
 
@@ -486,7 +518,7 @@ async def admin_mfa_enable(request: Request):
     return _admin_reply(request, {"recovery": codes})
 
 
-@router.post("/api/mfa/disable", dependencies=[Depends(main_auth), Depends(admin_code)])
+@router.post("/api/mfa/disable", dependencies=[Depends(main_auth), Depends(admin_code_fresh)])
 def admin_mfa_disable(request: Request):
     mfa.disable(mfa.ADMIN)
     guard.log("admin_mfa_off", ip=guard.client_ip(request))
@@ -495,7 +527,7 @@ def admin_mfa_disable(request: Request):
     return r
 
 
-@router.post("/api/mfa/recovery", dependencies=[Depends(main_auth), Depends(admin_code)])
+@router.post("/api/mfa/recovery", dependencies=[Depends(main_auth), Depends(admin_code_fresh)])
 def admin_mfa_recovery(request: Request):
     guard.log("admin_mfa_recovery", ip=guard.client_ip(request))
     return {"recovery": mfa.new_recovery(mfa.ADMIN) or []}
@@ -511,6 +543,45 @@ def admin_mfa_forget(request: Request):
     return r
 
 
+# Trusted browsers one by one (mfa.py): the admin's under Einstellungen → Sicherheit, a profile's under Ich → Sicherheit.
+_TID = re.compile(r"[0-9a-f]{16}")
+
+
+@router.get("/api/mfa/trusted", dependencies=[Depends(main_auth)])
+def admin_trusted(request: Request):
+    return {"items": mfa.list_trusted(mfa.ADMIN, request), "days": mfa.trust_days(), "idle": mfa.TRUST_IDLE_DAYS}
+
+
+@router.delete("/api/mfa/trusted/{tid}", dependencies=[Depends(main_auth)])
+def admin_untrust(tid: str, request: Request):
+    guard.limit(request, "trust", admin=True)
+    if not _TID.fullmatch(tid) or not mfa.remove_trusted(mfa.ADMIN, tid):
+        raise HTTPException(404, "no such browser")
+    guard.log("trusted_browser_removed", ip=guard.client_ip(request))
+    return {"ok": True}
+
+
+@router.get("/api/profile/mfa/trusted", dependencies=[Depends(assistant)])
+def profile_trusted(request: Request, prof=Depends(browser_profile)):
+    return {"items": mfa.list_trusted(prof["id"], request), "days": mfa.trust_days(), "idle": mfa.TRUST_IDLE_DAYS}
+
+
+@router.delete("/api/profile/mfa/trusted/{tid}", dependencies=[Depends(assistant)])
+def profile_untrust(tid: str, request: Request, prof=Depends(browser_profile)):
+    guard.limit(request, "trust", uid=prof["id"])
+    if not _TID.fullmatch(tid) or not mfa.remove_trusted(prof["id"], tid):
+        raise HTTPException(404, "no such browser")
+    guard.log("trusted_browser_removed", ip=guard.client_ip(request), name=prof["name"], uid=prof["id"])
+    return {"ok": True}
+
+
+@router.post("/api/confirm/end")  # open: ends only the confirmation window of the logins this request carries
+def confirm_end(request: Request):
+    """"Bestätigung beenden": the next important change asks for a code again."""
+    guard.limit(request, "trust")
+    return {"ended": end_window(request)}
+
+
 @router.get("/api/profile/mfa", dependencies=[Depends(assistant)])
 def profile_mfa(prof=Depends(own_profile)):
     return dict(mfa.status(prof["id"]), allowed=bool(load_config().get("chat", {}).get("mfa", False)))
@@ -520,7 +591,7 @@ def profile_mfa(prof=Depends(own_profile)):
 async def profile_mfa_setup(request: Request, prof=Depends(browser_profile)):
     if not load_config().get("chat", {}).get("mfa", False):
         raise HTTPException(403, "the second login step is turned off")
-    await confirm_code(request, prof["id"], prof["name"])
+    await confirm_code(request, prof["id"], prof["name"], fresh=True)
     return mfa.begin(prof["id"], prof["name"])
 
 
@@ -543,7 +614,7 @@ async def profile_mfa_disable(request: Request, prof=Depends(browser_profile)):
     import join
     if join.mfa_kept(prof["id"]):
         raise HTTPException(403, "Dein Admin verlangt den zweiten Anmeldeschritt für dein Profil.")
-    await confirm_code(request, prof["id"], prof["name"])
+    await confirm_code(request, prof["id"], prof["name"], fresh=True)
     mfa.disable(prof["id"])
     guard.log("profile_mfa_off", ip=guard.client_ip(request), name=prof["name"], uid=prof["id"])
     r = Response('{"ok": true}', media_type="application/json")
@@ -553,7 +624,7 @@ async def profile_mfa_disable(request: Request, prof=Depends(browser_profile)):
 
 @router.post("/api/profile/mfa/recovery", dependencies=[Depends(assistant)])
 async def profile_mfa_recovery(request: Request, prof=Depends(browser_profile)):
-    await confirm_code(request, prof["id"], prof["name"])
+    await confirm_code(request, prof["id"], prof["name"], fresh=True)
     return {"recovery": mfa.new_recovery(prof["id"]) or []}
 
 
@@ -769,7 +840,7 @@ def profile_ha_remove(prof=Depends(browser_profile)):
 
 
 @router.put("/api/profile/homeassistant/code", dependencies=[Depends(assistant), Depends(ha_on)])
-async def profile_ha_code(request: Request, prof=Depends(secret_profile)):
+async def profile_ha_code(request: Request, prof=Depends(secret_profile_fresh)):
     """Sets the code word for changes; an empty one removes it. It is never sent back."""
     body = await request.json()
     try:

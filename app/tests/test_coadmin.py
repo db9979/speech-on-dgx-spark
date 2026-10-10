@@ -122,7 +122,10 @@ class CoAdmin(unittest.TestCase):
             self.assertEqual(c.delete(f"/api/admin/profiles/{u}/mfa", headers=CODE).status_code, 403)
             self.assertEqual(c.delete(f"/api/admin/profiles/{u}", headers=CODE).status_code, 403)
             self.assertEqual(c.post("/api/admin/devices", json={"name": "Box", "user": u}, headers=CODE).status_code, 403)
-        # a normal profile: like the main admin, the most important changes with the profile's own code
+        # a normal profile: like the main admin, the most important changes with the profile's own code (the code that
+        # opened the admin mode counts for ten minutes, core.CONFIRM_WINDOW; "Bestätigung beenden" ends that)
+        self.assertEqual(c.put(f"/api/admin/profiles/{normal}", json={"pin": "9998"}).status_code, 200)
+        self.assertEqual(c.post("/api/confirm/end").json()["ended"], 1)
         self.assertEqual(c.put(f"/api/admin/profiles/{normal}", json={"pin": "9999"}).status_code, 428)
         self.assertEqual(c.put(f"/api/admin/profiles/{normal}", json={"pin": "9999"}, headers=CODE).status_code, 200)
         tok = c.post("/api/admin/devices", json={"name": "Box", "user": normal}, headers=CODE)

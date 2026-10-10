@@ -27,6 +27,7 @@ const whoFlags=w=>JSON.stringify(Object.keys(w||{}).sort().filter(k=>typeof w[k]
 let WHO_FLAGS=null,whoT=null;
 async function whoCheck(){if(WHO_FLAGS===null)return;
   try{const r=await fetch('/api/whoami',{cache:'no-store'});if(!r.ok)return;const w=await r.json();
+    if(window.confirmShow)confirmShow(w.confirm_until||0);
     if(whoFlags(w)===WHO_FLAGS)return;
     if(!sparkBusy()){try{sessionStorage.setItem('flagsreload','1')}catch{}return verReload()}
     verBar(t('Funktionen geändert, neu laden zeigt sie: ','Functions changed, reload shows them: '))}catch{}}
@@ -47,10 +48,12 @@ $('themebtn').onclick=()=>{const cur=document.documentElement.dataset.theme||'au
 const api=async(p,o={},code)=>{const r=await fetch(p,code?Object.assign({},o,{headers:Object.assign({},o.headers||{},{'X-Speech-Code':code})}):o);
   if(r.status===428){const wrong=/wrong/.test(await r.text());
     const c=prompt((wrong?t('Code falsch. ','Wrong code. '):'')+t('Bitte den aktuellen Code aus deiner Authenticator-App eingeben (oder einen Wiederherstellungscode):','Please enter the current code from your authenticator app (or a recovery code):'));
-    if(c&&c.trim())return api(p,o,c.trim());throw new Error(t('Abgebrochen: ohne Code keine Änderung.','Cancelled: no change without a code.'))}
+    if(c&&c.trim()){const r2=await api(p,o,c.trim());if(window.confirmRefresh)confirmRefresh();return r2}throw new Error(t('Abgebrochen: ohne Code keine Änderung.','Cancelled: no change without a code.'))}
   if(r.status===401&&!/^\/api\/(login|password|profile)/.test(p)&&window.showLogin){if(typeof elevated==='function'&&elevated()){location.reload();return r}showLogin()}if(!r.ok){let t=await r.text();try{t=JSON.parse(t).detail||t}catch{}throw new Error(t)}
   if(o.method&&o.method!=='GET'&&/^\/api\/(config|admin\/|profile\/)/.test(p)&&!/^\/api\/profile\/(setup|handoff)/.test(p))whoSoon();   // a switch may have changed
   return r};
+// like fetch(...) plus .json(), but with api()'s code prompt (428): {r, d}; errors come back as d.detail
+const apiTry=async(p,o)=>{try{const r=await api(p,o);return {r,d:await r.json()}}catch(e){return {r:{ok:false,status:0},d:{detail:e.message}}}};
 // Main menu (design „Klar“, V01.0.145; plan „Bedienung gesamt“ V01.0.265): on a computer a sidebar with the search
 // (Strg K), Assistent and Ich for oneself, then "Spark verwalten" with Zustand, Funktionen, Personen und Geräte,
 // Einstellungen; on phones a bar at the bottom. Einbinden is gone: Anleitungen sit under Funktionen, Apps und

@@ -161,7 +161,7 @@ async def app_start(request: Request, prof=Depends(own_profile)):
     # a fresh code from the authenticator app, always (rights() already needs the second step on)
     if not re.fullmatch(r"\d{6}", request.headers.get(CODE_HEADER, "").strip()):
         raise HTTPException(428, "code required")
-    await confirm_code(request, uid, prof["name"])
+    await confirm_code(request, uid, prof["name"], fresh=True)   # never the confirmation window: it starts the Spark update
     import update
     async with _start_lock:
         if _wait_left():

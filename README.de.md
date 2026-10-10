@@ -31,6 +31,7 @@ Alle Optionen ohne Rückfragen (`--mode api --asr 1.7b --tts 0.6b --yes` …) st
 
 <!-- New version: add one line at the top here and in CHANGELOG.md, drop the oldest line here (keep 10). Details go to docs/de and docs/en, not into this README. -->
 
+- **V01.0.289** Seltener Code eingeben: vertraute Browser 60 Tage (einstellbar 7–90, nach 30 Tagen ohne Nutzung wieder Code) mit Liste zum einzelnen Entfernen und Push-Meldung, ein richtiger Code gilt 10 Minuten in derselben Anmeldung (Balken mit „Beenden“; Passwort, zweiter Schritt, Rollen, Sicherungen, Codewort und Admin-Modus fragen immer), Admin-Modus im vertrauten Browser 60 statt 15 Minuten; Kalender, Mail und Home Assistant fragen den Code jetzt richtig ab statt „code required“
 - **V01.0.288** Selbsttest „rmscene senkt packaging nicht“ passt zum Hash-Lock (Ersatzzeile eingerückt, Lock mit --no-deps und packaging ≥ 24 geprüft); main wieder grün
 - **V01.0.287** Vorrang für Personen: Warteschlange von TTS/ASR gibt beim Abbruch eines Wartenden seinen Platz zuverlässig frei (auch unter Python 3.11)
 - **V01.0.286** Bedienung Stufen 4, 5 und 7: Ich → Heute mit „Probier mal“, Antwort erklärt abgeschaltete Funktionen, Zustand als Karten, strenge CSP ohne Inline-Code, Rückgängig im Admin-Protokoll, verschlüsselte Sicherung nach außen (WebDAV, aus), Paketversionen mit Hashes, iPhone „Heute“
@@ -40,7 +41,6 @@ Alle Optionen ohne Rückfragen (`--mode api --asr 1.7b --tts 0.6b --yes` …) st
 - **V01.0.282** Vorrang für Personen (Funktionen → Gespräch, aus; Stufe pro Profil nur vom Admin unter Personen und Geräte, höchstens 3): Sätze und Aufnahmen mit Vorrang überholen in Sprachausgabe und Spracherkennung die wartenden anderer (laufende nie abgebrochen, niemand verhungert), nur das Panel darf die Stufe sagen; Logs → Anfragen zeigt Wartezeit, Zustand → Prüfen misst „Zwei Personen gleichzeitig“
 - **V01.0.281** Mein Zustand (Funktionen → Alltag, aus; Ich → Mein Zustand): was der Spark im Hintergrund für dich erledigt (Dokumente lesen, Bedeutungssuche, Steckbriefe, reMarkable, Postfach aufräumen, Kontakte, Aufträge, Morgenbriefing, Gedächtnis) mit Wartegrund, zuletzt/nächstes Mal und 7-Tage-Verlauf, dazu verbundene Dienste mit ihrer letzten Antwort; roter Punkt bei „Ich“, wenn dich etwas braucht; nur Namen und Zahlen; iPhone-App liest dieselbe Quelle, Admin sieht nur Anzahlen
 - **V01.0.280** „Los geht's“: Speichern des Einrichtungsstands lädt die Seite nicht mehr neu (Schalter-Prüfung übersprungen); Browsertest schreibt eine Diagnose statt zu hängen
-- **V01.0.279** reMarkable: „… und leg es aufs reMarkable“ legt die ganze Antwort ab, auch nach einer Websuche; eine feste Regel auf den eigenen Worten entscheidet, das Panel schickt nach der Antwort und sagt Bescheid (vorher schnitt die Weiche das Werkzeug weg)
 
 Alle Versionen: [CHANGELOG.md](CHANGELOG.md)
 

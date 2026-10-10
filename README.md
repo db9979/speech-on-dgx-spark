@@ -31,6 +31,7 @@ All options for running without questions (`--mode api --asr 1.7b --tts 0.6b --y
 
 <!-- New version: add one line at the top here and in CHANGELOG.md, drop the oldest line here (keep 10). Details go to docs/de and docs/en, not into this README. -->
 
+- **V01.0.289** Fewer codes: trusted browsers for 60 days (7–90, a code again after 30 days without use) with a list to remove them one by one and a push note, a right code counts 10 minutes in the same login (bar with „End“; password, second step, roles, backups, code word and admin mode always ask), admin mode in a trusted browser 60 instead of 15 minutes; calendar, mail and Home Assistant now ask for the code instead of showing „code required“
 - **V01.0.288** Self-test "rmscene does not downgrade packaging" fits the hash lock (fallback line indented, lock checked for --no-deps and packaging ≥ 24); main green again
 - **V01.0.287** Priority for people: the TTS/ASR queue reliably frees the place of a waiting request that gives up (Python 3.11 too)
 - **V01.0.286** UI stages 4, 5 and 7: Me → Today with "Try saying", answers explain switched-off functions, status as cards, strict CSP without inline code, undo in the admin log, encrypted offsite backup (WebDAV, off), package versions with hashes, iPhone "Today"
@@ -40,7 +41,6 @@ All options for running without questions (`--mode api --asr 1.7b --tts 0.6b --y
 - **V01.0.282** Priority for people (Features → Conversation, off; stage per profile only by the admin under People and devices, at most 3): sentences and recordings with priority overtake others' waiting ones in speech output and recognition (running ones never stopped, nobody starves), only the panel may say the stage; Logs → Requests shows the wait, Status → Check measures "two people at once"
 - **V01.0.281** My status (Features → Everyday, off; Me → My status): what the Spark does for you in the background (reading documents, meaning search, document cards, reMarkable, inbox tidying, contacts, jobs, morning briefing, memory) with the reason it waits, last/next time and a 7-day history, plus connected services with their last answer; a red dot at "Me" when something needs you; names and numbers only; the iPhone app reads the same source, the admin sees counts only
 - **V01.0.280** "Los geht's": saving the setup state no longer reloads the page (switch check skipped); the browser test logs a diagnosis instead of hanging
-- **V01.0.279** reMarkable: "… and put it on my reMarkable" stores the whole answer, also after a web search; a fixed rule on the person's own words decides, the panel sends it after the answer and says so (before, the switch cut the tool)
 
 All versions: [CHANGELOG.md](CHANGELOG.md)
 

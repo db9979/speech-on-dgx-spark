@@ -60,6 +60,8 @@ async function profDetail(id){let u;try{u=await (await api('/api/admin/profiles/
   else if(u.role)role=setRow(esc(t('Admin-Rechte','Admin rights')),esc(t('Ändert nur der Hauptadmin.','Only the main admin changes it.')),`<span class="pill">${esc(R[u.role]||u.role)}</span>`);
   const sess=u.sessions.map(x=>`<li><span>${esc(x.agent)}<br><small class="mut">${t('angemeldet','signed in')} ${esc(pwhen(x.first))} · ${t('zuletzt','last used')} ${esc(pwhen(x.last))}</small></span><button class="b" type="button" data-psess="${esc(x.id)}">${t('Abmelden','Sign out')}</button></li>`).join('')
     ||`<li class="mut">${t('Kein Browser angemeldet.','No browser signed in.')}</li>`;
+  // trusted browsers (second step without code at sign-in, mfa.py): remove one, it asks for a code again
+  const trust=(u.trusted||[]).map(x=>`<li><span>${esc(x.name)}<br><small class="mut">${t('seit','since')} ${esc(pwhen(x.first))} · ${t('zuletzt','last used')} ${esc(pwhen(x.last))}</small></span><button class="b" type="button" data-ptrust="${esc(x.id)}">${t('Entfernen','Remove')}</button></li>`).join('');
   let rights='';
   if(r){const off=t('Auf dem Spark aus','Off on the Spark');
     rights=h3(t('Rechte','Rights'))
@@ -79,7 +81,7 @@ async function profDetail(id){let u;try{u=await (await api('/api/admin/profiles/
     ${setRow(esc(t('Zweiter Anmeldeschritt','Second login step')),esc(u.mfa?t('An. Zurücksetzen, falls Handy und Wiederherstellungscodes weg sind.','On. Reset it if phone and recovery codes are lost.'):t('Aus. Das Profil schaltet ihn unter Ich → Sicherheit ein.','Off. The profile switches it on under Ich → Security.')),
       u.mfa?pbtn('pmfa',t('Zurücksetzen','Reset')):`<span class="mut">${t('aus','off')}</span>`)}
     ${role}
-    <b>${t('Angemeldete Browser','Signed-in browsers')}</b><ul class="facts" id="psess">${sess}</ul>
+    <b>${t('Angemeldete Browser','Signed-in browsers')}</b><ul class="facts" id="psess">${sess}</ul>${trust?`<b>${t('Vertraute Browser','Trusted browsers')}</b><ul class="facts" id="ptrust">${trust}</ul>`:''}
     ${h3(t('Rufname','Call name'))}
     <div class="rowin"><input id="pcall" maxlength="40" value="${esc(u.call||'')}" placeholder="${esc(t('z. B. Thomas M. oder Papa','e.g. Thomas M. or Dad'))}" aria-label="${esc(t('Rufname für Nachrichten','Call name for messages'))}"><button class="b" type="button" id="pcallsave">${t('Speichern','Save')}</button></div>
     <div class="fh">${t('So können andere ihn in Nachrichten nennen, wenn Namen sich ähneln. Muss eindeutig sein.','How others can name this profile in messages when names are alike. Must be unique.')}</div>
@@ -98,6 +100,7 @@ async function profDetail(id){let u;try{u=await (await api('/api/admin/profiles/
     ok(r.call?t('Rufname gespeichert: ','Call name saved: ')+r.call:t('Rufname entfernt.','Call name removed.'));loadProf()}catch(e){perr('pmsg',e)}};
   if($('pmfa'))$('pmfa').onclick=()=>resetMfa(id,u.name);$('ppinnew').onclick=()=>newPin(id,u.name);$('pdel').onclick=()=>delProf(id,u.name);
   $('pfeat').onclick=()=>goSec('who');
+  if($('ptrust'))$('ptrust').querySelectorAll('[data-ptrust]').forEach(b=>b.onclick=async()=>{try{await api('/api/admin/profiles/'+encodeURIComponent(id)+'/trusted/'+encodeURIComponent(b.dataset.ptrust),{method:'DELETE'});ok(t('Entfernt: fragt wieder einen Code.','Removed: asks for a code again.'))}catch(e){perr('pmsg',e)}again()});
   $('psess').querySelectorAll('[data-psess]').forEach(b=>b.onclick=async()=>{try{await api('/api/admin/profiles/'+encodeURIComponent(id)+'/sessions/'+encodeURIComponent(b.dataset.psess),{method:'DELETE'});ok(t('Abgemeldet.','Signed out.'))}catch(e){perr('pmsg',e)}again()});
   if($('prole'))$('prole').onchange=async()=>{const v=$('prole').value;
     if(!v&&!confirm(t('Rolle entziehen? Ein offener Admin-Modus endet sofort.','Take the role away? An open admin mode ends at once.'))){$('prole').value=u.role;return}

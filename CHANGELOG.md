@@ -2,6 +2,7 @@
 
 Every version in one line, newest first (taken from the commit messages, so some lines are German, some English). Older entries have no version number.
 
+- **V01.0.289** · 2026-10-10 · Seltener Code eingeben: vertraute Browser 60 Tage (einstellbar 7–90, nach 30 Tagen ohne Nutzung wieder Code) mit Liste zum einzelnen Entfernen und Push-Meldung, ein richtiger Code gilt 10 Minuten in derselben Anmeldung (Balken mit „Beenden“; Passwort, zweiter Schritt, Rollen, Sicherungen, Codewort und Admin-Modus fragen immer), Admin-Modus im vertrauten Browser 60 statt 15 Minuten; Kalender, Mail und Home Assistant fragen den Code jetzt richtig ab statt „code required“
 - **V01.0.288** · 2026-10-10 · Selbsttest „rmscene senkt packaging nicht“ passt zum Hash-Lock (Ersatzzeile eingerückt, Lock mit --no-deps und packaging ≥ 24 geprüft); main wieder grün
 - **V01.0.287** · 2026-10-10 · Vorrang für Personen: Warteschlange von TTS/ASR gibt beim Abbruch eines Wartenden seinen Platz zuverlässig frei (auch unter Python 3.11)
 - **V01.0.286** · 2026-10-10 · Bedienung Stufen 4, 5 und 7: Ich → Heute mit „Probier mal“, Antwort erklärt abgeschaltete Funktionen, Zustand als Karten, strenge CSP ohne Inline-Code, Rückgängig im Admin-Protokoll, verschlüsselte Sicherung nach außen (WebDAV, aus), Paketversionen mit Hashes, iPhone „Heute“

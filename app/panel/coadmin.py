@@ -49,9 +49,11 @@ MAX_ADMINS = 5
 COOKIE = "speech_spark_elev"
 IDLE = 900               # 15 minutes without use end the admin mode
 LONGEST = 8 * 3600       # and 8 hours in any case
+TRUSTED_IDLE = 3600      # opened in a browser the profile trusts (via "t"): 60 minutes without use
+TRUSTED_LONGEST = 12 * 3600   # and 12 hours (plan plaene/zweiter-schritt-seltener.md)
 RENEW = 60               # the cookie is renewed at most once a minute while used
 _UID = re.compile(r"u_[0-9a-f]{12}")
-_VIA = re.compile(r"b|d_[0-9a-f]{12}")
+_VIA = re.compile(r"b|t|d_[0-9a-f]{12}")   # browser, trusted browser, the iPhone app's key
 _lock = threading.Lock()
 
 # What a Verwalter may reach (method, path); everything else stays closed for him.
@@ -67,6 +69,7 @@ MANAGER = tuple((frozenset(m), re.compile(p)) for m, p in (
     (("GET", "POST"), r"/api/admin/profiles"), (("GET", "PUT", "DELETE"), rf"/api/admin/profiles/{_P}"),
     (("PUT",), rf"/api/admin/profiles/{_P}/call"), (("DELETE",), rf"/api/admin/profiles/{_P}/mfa"),
     (("DELETE",), rf"/api/admin/profiles/{_P}/sessions/[0-9a-f]{{16}}"),
+    (("DELETE",), rf"/api/admin/profiles/{_P}/trusted/[0-9a-f]{{16}}"),
     (("POST",), r"/api/admin/devices"), (("PUT", "DELETE"), rf"/api/admin/devices/{_D}"),
     (("GET",), r"/api/admin/join"), (("POST",), r"/api/admin/join/invites"), (("DELETE",), r"/api/admin/join/invites/i_[0-9a-f]{12}"),
     (("POST",), rf"/api/admin/profiles/{_P}/remind"),
@@ -204,22 +207,33 @@ def session(request, now=None):
     entry = d["users"].get(t["uid"])
     if not d["on"] or not entry or not mfa.enabled(mfa.ADMIN) or not mfa.enabled(t["uid"]):
         return None
-    if now - t["issued"] > IDLE or now - t["start"] > LONGEST or t["issued"] < t["start"] or t["issued"] > now + 60:
+    if t["via"] == "t" and not mfa.trusted(t["uid"], request, now):
+        t["via"] = "b"   # the trust was removed: from now on the short limits (the signature stays the one for "t")
+        sig_via = "t"
+    else:
+        sig_via = t["via"]
+    idle, longest = limits(t["via"])
+    if now - t["issued"] > idle or now - t["start"] > longest or t["issued"] < t["start"] or t["issued"] > now + 60:
         return None
     u = next((x for x in profiles._load()["users"] if x["id"] == t["uid"]), None)
-    if not u or not secrets.compare_digest(t["sig"], _sig(u, entry, t["start"], t["issued"], t["family"], t["via"])):
+    if not u or not secrets.compare_digest(t["sig"], _sig(u, entry, t["start"], t["issued"], t["family"], sig_via)):
         return None
     if guard.revoked("elev-family:" + t["family"]):
         return None
-    if t["via"] == "b":
+    if t["via"] in ("b", "t"):
         # only together with the same profile's own browser login
         cu, _ = profiles._cookie_user(profiles._load(), request.cookies.get(profiles.COOKIE, ""))
         if not cu or cu["id"] != t["uid"]:
             return None
     elif not app_ok(t["uid"], t["via"]):
         return None
-    return {"id": u["id"], "name": u["name"], "role": entry["role"], "via": t["via"], "start": t["start"],
-            "issued": t["issued"], "family": t["family"]}
+    return {"id": u["id"], "name": u["name"], "role": entry["role"], "via": sig_via, "short": sig_via != t["via"],
+            "start": t["start"], "issued": t["issued"], "family": t["family"]}
+
+
+def limits(via, short=False):
+    """(seconds without use, seconds in any case) of an admin mode opened this way."""
+    return (TRUSTED_IDLE, TRUSTED_LONGEST) if via == "t" and not short else (IDLE, LONGEST)
 
 
 def app_ok(uid, did):
@@ -264,7 +278,15 @@ def end(request):
 
 def expires(s, now=None):
     """When the admin mode ends without further use (unix time)."""
-    return min(s["issued"] + IDLE, s["start"] + LONGEST)
+    idle, longest = limits(s["via"], s.get("short"))
+    return min(s["issued"] + idle, s["start"] + longest)
+
+
+def notify_uid():
+    """The profile that hears about admin things: the one the main admin chose, else the Haupt-Admin profile."""
+    d = _read()
+    uid = d["notify"] or next((u for u, x in d["users"].items() if x.get("role") == "owner"), "")
+    return uid if uid in profiles.user_ids() else ""
 
 
 async def tell_main(name, role_name, via):
@@ -273,7 +295,7 @@ async def tell_main(name, role_name, via):
     if not uid or uid not in profiles.user_ids():
         return 0
     import push
-    where = "in der iPhone-App" if via != "b" else "im Browser"
+    where = "in der iPhone-App" if via not in ("b", "t") else "im Browser"
     try:
         return await push.send(uid, "🔐 Spark", f"{name} hat den Admin-Modus geöffnet ({role_name}, {where}).",
                                tag="admin", private=False)

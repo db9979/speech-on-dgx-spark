@@ -589,7 +589,8 @@ class Browser(unittest.TestCase):
                 await pg.wait_for_timeout(600)
                 await pg.screenshot(path=os.path.join(os.environ.get("SPEECH_SPARK_SHOTS", helpers.TMP), "coadmin-main.png"), full_page=True)
                 self.assertEqual(errors, [])
-                self.assertTrue(await pg.is_visible("#coadmuser"))
+                # the list of profiles may take a moment when many profiles exist (the whole test run)
+                await pg.wait_for_selector("#coadmuser", state="visible", timeout=8000)
                 await br.close()
                 for role in ("coadmin", "manager"):
                     coadmin.set_on(True)
