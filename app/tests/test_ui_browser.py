@@ -1583,7 +1583,14 @@ class JoinBrowser(unittest.TestCase):
     @classmethod
     def setUpClass(cls):
         helpers.start()
+        import backup
         import panel
+        # the new server packs its daily backup in a thread once it is quiet (panel.stability). On a 2-core
+        # runner that thread, late in the suite with a large state, starved the server for over 45 s exactly
+        # while the page reloaded after "Profil anlegen" (red on GitHub at .307, .309, .323). Packed here,
+        # before the server starts, it is not due during the test.
+        if backup.due():
+            backup.create("daily")
         cls.port = helpers._port()
         helpers._serve(panel.app, cls.port)
 
@@ -1652,7 +1659,8 @@ class JoinBrowser(unittest.TestCase):
                                     await pg.fill("#joinpin2", "246810")
                                 await pg.click("#joingo")
                         self.assertEqual(joined, [200], f"asked {asked} errors {errors}")
-                        await pg.wait_for_load_state("load")
+                        # not "load": on a busy runner every script of the new page can take long; the profile is what counts
+                        await pg.wait_for_function("typeof PROFILE!=='undefined'&&PROFILE&&PROFILE.name==='Wilma'", timeout=60000)
                         try:
                             await pg.wait_for_selector("#gobox .gocard", timeout=30000)
                         except Exception:
@@ -1670,7 +1678,7 @@ class JoinBrowser(unittest.TestCase):
                                 break
                             await pg.click("#gonext")
                             await pg.wait_for_timeout(300)
-                        await pg.wait_for_selector("#gohandgo", timeout=8000)
+                        await pg.wait_for_selector("#gohandgo", timeout=30000)
                         await pg.click("#gohandgo")
                         await pg.wait_for_selector("#gohand .jqr svg")
                         hid = await pg.evaluate("GO.hand")

@@ -33,6 +33,7 @@ All options for running without questions (`--mode api --asr 1.7b --tts 0.6b --y
 
 <!-- New version: add one line at the top here and in CHANGELOG.md, drop the oldest line here (keep 10). Details go to docs/de and docs/en, not into this README. -->
 
+- **V01.0.328** Invitation self-test: pack the test server's daily backup before the browser test (it slowed the server down on GitHub while the page reloaded), wait for the new page to start instead of "load"
 - **V01.0.327** Assistant on computers uses the whole window: face and history reach the bottom, only the history scrolls
 - **V01.0.326** Help with the Spark (off): the assistant answers questions about settings from its own guides, suggests switches as a card (only "Apply" changes something) and "Ask Spark" is on every page
 - **V01.0.325** Live overview: kill switch in the picture, cut-off targets red with a lock
@@ -42,7 +43,6 @@ All options for running without questions (`--mode api --asr 1.7b --tts 0.6b --y
 - **V01.0.321** iPhone app reaches TestFlight again: when a newer push cancelled the Tests of an iOS commit, the newest green main commit that contains it goes up
 - **V01.0.320** MCP "Create key": said "Please enter a name first" although one was there; the name field had the same id as a field of the admin Agents page and the page read the empty one; own ids plus a self-test
 - **V01.0.319** Smart home rules can be edited, not only deleted
-- **V01.0.317** Smart home rules: pick devices from a list instead of typing, "Zuletzt geändert" and "Gerät erkennen" (trigger the sensor, tap the device)
 
 All versions: [CHANGELOG.md](CHANGELOG.md)
 
