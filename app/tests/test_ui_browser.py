@@ -1366,9 +1366,15 @@ class JoinBrowser(unittest.TestCase):
                     if w == 1280:
                         await pg.fill("#joinpin", "246810")
                         await pg.fill("#joinpin2", "246810")
-                        await pg.click("#joingo")
+                        # the PIN hash and the new profile can take a while on a busy CI runner: wait for the page
+                        # to load again after /api/join instead of a fixed 15 s for the card (red twice on GitHub)
+                        joined = []
+                        pg.on("response", lambda r: r.url.endswith("/api/join") and joined.append(r.status))
+                        async with pg.expect_navigation(timeout=45000):   # join.js reloads the page after /api/join
+                            await pg.click("#joingo")
+                        self.assertEqual(joined, [200])
                         try:
-                            await pg.wait_for_selector("#gobox .gocard", timeout=15000)
+                            await pg.wait_for_selector("#gobox .gocard", timeout=30000)
                         except Exception:
                             state = await pg.evaluate("""JSON.stringify({p:typeof PROFILE!=='undefined'&&PROFILE&&PROFILE.name,
                                 setup:typeof SETUP!=='undefined'?SETUP:'-',modal:$('profmodal').style.display,

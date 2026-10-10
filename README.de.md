@@ -33,6 +33,7 @@ Alle Optionen ohne Rückfragen (`--mode api --asr 1.7b --tts 0.6b --yes` …) st
 
 <!-- New version: add one line at the top here and in CHANGELOG.md, drop the oldest line here (keep 10). Details go to docs/de and docs/en, not into this README. -->
 
+- **V01.0.311** Selbsttest Einladung: wartet nach „Profil anlegen“ auf das Neuladen der Seite statt fester 15 Sekunden (war auf GitHub zweimal rot)
 - **V01.0.310** Schaubild „So funktioniert es“ zeigt den aktuellen Stand: iPhone- und Android-App, Lautsprecher, MCP-Programme, Weiche, Vorrang, eigenes Wissen, Wächter und die Dienste draußen
 - **V01.0.309** MCP „Schlüssel erzeugen“ antwortet direkt unter dem Knopf: fehlt der Name oder ist kein Werkzeug angekreuzt, steht das dort (vorher ganz unten auf der Seite, wirkte wie „passiert nichts“), dazu „wird erzeugt …“ und ein klarer Hinweis, wenn der Code fehlt
 - **V01.0.308** Logs → Anfragen zeigt beim Schritt „Weiche“, ob die Modell-Zuordnung rechtzeitig kam
@@ -42,7 +43,6 @@ Alle Optionen ohne Rückfragen (`--mode api --asr 1.7b --tts 0.6b --yes` …) st
 - **V01.0.304** Antwort beginnt früher: „Schneller Antwortbeginn“ hält jetzt Anweisung, Werkzeugliste und Verlaufsbeginn gleich (alles Wechselnde geht mit der Frage), „Eindeutiges direkt abrufen“ (aus) holt Mails, Erinnerungen, Wetter und Pakete bei kurzen Fragen selbst, Logs → Anfragen zeigt pro Runde Anweisung, Werkzeuge und Gespräch in Zeichen
 - **V01.0.303** Spark als MCP-Server (Funktionen → Spark als MCP-Server, Profil Ich → Dienste per MCP, alles aus): Open WebUI, n8n, Claude & Co. nutzen Sprache (transcribe, speak), Nachschlagen (Wikipedia, Archiv, Dokumente, Kalender, Erinnerungen, Heute) und ask_spark; pro Programm eigener Zugang mit eigenen Werkzeugen, „lokal“ nur im Heimnetz oder „extern“ per OAuth mit Warnhinweis und zweitem Anmeldeschritt; Handeln (Licht, Termine, Erinnerungen) nur als Vorschlag mit Ja im Panel; nie Mail, Gedächtnis, Verlauf, Geheimnisse oder Einstellungen
 - **V01.0.302** Handy: Die Knöpfe unter dem Gesicht (Gespräch einstellen, Verlauf, Bild, Nachricht) brechen in Zeilen um statt links und rechts abgeschnitten zu werden; neuer Browsertest prüft auf 320 und 390 px in App-Ansicht und Rechner-Layout jede Seite, Einstellungsseite und Ich-Seite, dass nichts über den Rand ragt
-- **V01.0.301** Selbsttest „Handy wie die App“ wartet, bis der Schritt in der Browser-Historie steht, bevor er zurückgeht (lief auf GitHub einmal aus der Seite heraus)
 
 Alle Versionen: [CHANGELOG.md](CHANGELOG.md)
 

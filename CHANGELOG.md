@@ -2,6 +2,7 @@
 
 Every version in one line, newest first (taken from the commit messages, so some lines are German, some English). Older entries have no version number.
 
+- **V01.0.311** · 2026-10-10 · Selbsttest test_invitation_and_handoff: nach „Profil anlegen“ auf das Neuladen (expect_navigation, 45 s) und die Antwort 200 von /api/join warten, dann 30 s für die Los-geht's-Karte
 - **V01.0.310** · 2026-10-10 · README: Schaubild „So funktioniert es“ auf den aktuellen Stand gebracht (Apps, MCP-Server, Weiche, Vorrang, eigenes Wissen, Wächter, qwen38 auf dem Spark, Dienste und Quellen), Text darunter angepasst, Anleitungen liegen unter Funktionen
 - **V01.0.309** · 2026-10-10 · MCP „Schlüssel erzeugen“: Meldungen direkt unter dem Knopf (#mcpmakemsg) statt am Seitenende, Name und mindestens ein Werkzeug werden vorher geprüft, Knopf während der Anfrage gesperrt, fehlender Code klar benannt; Browsertest test_mcp_key_is_made_and_shown
 - **V01.0.308** · 2026-10-10 · Logs → Anfragen: der Schritt „Weiche“ zeigt, was aus der Modell-Zuordnung wurde (gewählt, zu spät, keine)
