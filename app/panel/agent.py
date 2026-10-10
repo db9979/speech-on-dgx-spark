@@ -39,6 +39,7 @@ import time
 import httpx
 
 import calendars
+import hintergrund
 import mcp
 import profiles
 import vorrang
@@ -515,6 +516,7 @@ async def run_job(uid, jid):
     if not report and not (job(uid, jid) or {}).get("error"):
         upd["error"] = "Kein Bericht entstanden."
     _set_job(uid, jid, **upd)
+    hintergrund.note(uid, "agent", bool(report))
     done = job(uid, jid)
     if report and (done.get("doc") or s.get("agent_doc")):
         save_doc(uid, jid)

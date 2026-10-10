@@ -21,6 +21,7 @@ from urllib.parse import urljoin
 
 import httpx
 
+import hintergrund
 import netguard
 import profiles
 import vault
@@ -252,7 +253,8 @@ async def _cards(c, book):
 async def fetch_account(acct):
     auth = (acct["user"], acct.get("password", "")) if acct.get("user") else None
     async with netguard.client(netguard.USER, origin=acct["url"], timeout=httpx.Timeout(30, connect=8), auth=auth,
-                               follow_redirects=True, headers={"User-Agent": "speech-on-dgx-spark"}) as c:
+                               follow_redirects=True, headers={"User-Agent": "speech-on-dgx-spark"},
+                               seen=hintergrund.tracker("contacts", acct.get("id")) if acct.get("id") else None) as c:
         books = await _books(c, acct["url"])
         if not books:
             raise ValueError("kein Adressbuch unter dieser Adresse gefunden")
@@ -277,6 +279,7 @@ async def refresh(uid):
             errors.append(f"{a.get('name', '')}: {e if isinstance(e, ValueError) else type(e).__name__}")
     if errors and not allc:
         _save(uid, errors=errors)
+        hintergrund.note(uid, "contacts", False)
         return public(uid)
     seen, uniq = set(), []
     for x in allc:
@@ -285,6 +288,7 @@ async def refresh(uid):
             seen.add(k)
             uniq.append(x)
     _save(uid, cards=uniq, errors=errors)
+    hintergrund.note(uid, "contacts", not errors, len(uniq))
     return public(uid)
 
 

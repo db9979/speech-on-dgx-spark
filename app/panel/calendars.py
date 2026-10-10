@@ -24,6 +24,7 @@ import httpx
 import icalendar
 import recurring_ical_events
 
+import hintergrund
 import netguard
 import profiles
 import vault
@@ -221,7 +222,8 @@ async def _fetch(d, start, end):
     auth = (d["user"], d.get("password", "")) if d.get("user") else None
     web = re.sub(r"^webcals?://", "https://", url, flags=re.I)
     async with netguard.client(netguard.USER, origin=web, timeout=httpx.Timeout(20, connect=8), auth=auth,
-                               follow_redirects=True, headers={"User-Agent": "speech-on-dgx-spark"}) as c:
+                               follow_redirects=True, headers={"User-Agent": "speech-on-dgx-spark"},
+                               seen=hintergrund.tracker("cal", d.get("id")) if d.get("id") else None) as c:
         if re.match(r"webcals?://", url, re.I):
             # webcal:// is a subscription link; iCloud, Google and most others serve it over https only
             # (plain http only for a link without login data: a password never goes unencrypted)

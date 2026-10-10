@@ -70,7 +70,7 @@ WHO = {"documents": "documents", "reminders": "reminders", "speaker_id": "speake
        "room_voices": "roomtv", "room_ha": "roomha", "room_remote": "roomfar", "weather": "weather", "contacts": "contacts",
        "parcels": "parcels", "telegram": "telegram", "tasks": "tasks", "transit": "transit", "messages": "messages",
        "esp32": "esp32", "iphone": "iphone", "iphone_panel": "iphonepanel", "pebble": "pebble",
-       "remarkable": "remarkable", "remarkable_send": "rmsend"}
+       "remarkable": "remarkable", "remarkable_send": "rmsend", "my_status": "mystatus"}
 
 
 def _setup(prof, request):

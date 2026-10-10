@@ -49,6 +49,7 @@ from fastapi.responses import FileResponse
 import docembed
 import documents
 import guard
+import hintergrund
 import profiles
 import vorrang
 import features
@@ -345,6 +346,7 @@ async def due_once(idle=True, now=None):
             text = await read_page(jpeg)
             await asyncio.to_thread(documents.page_read, uid, doc, page, text)
             _last["read"] = time.time()
+            hintergrund.note(uid, "docs", True, 1, per_day=True)
             print(f"wissen: page read ({len(text)} chars)", flush=True)
         except Exception as e:
             await asyncio.to_thread(documents.page_read, uid, doc, page, None, True)
@@ -364,6 +366,7 @@ async def due_once(idle=True, now=None):
         try:
             got = await make_brief(text)
             await asyncio.to_thread(documents.set_card, uid, doc, got)
+            hintergrund.note(uid, "brief", True, 1, per_day=True)
             print("wissen: steckbrief made", flush=True)
         except Exception as e:
             await asyncio.to_thread(documents.set_card, uid, doc, None, True)
@@ -382,6 +385,7 @@ async def due_once(idle=True, now=None):
             return None
         await asyncio.to_thread(documents.set_vectors, uid, [(i, v) for (i, _), v in zip(miss, vecs)])
         _last["vectors"] = time.time()
+        hintergrund.note(uid, "meaning", True, len(vecs), per_day=True)
         return "vectors"
     docembed.idle_stop(now)
     return None

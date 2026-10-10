@@ -42,6 +42,7 @@ import time
 
 import httpx
 
+import hintergrund
 import mail
 import profiles
 import vorrang
@@ -487,13 +488,16 @@ class Box:
             c = mail.IMAP(a["host"], int(a.get("port") or 993), ssl_context=ssl.create_default_context(),
                           timeout=mail.TIMEOUT)
         except (OSError, socket.timeout) as e:
+            hintergrund.seen("mail", a.get("id"), False, "nicht_erreichbar")    # Ich → Mein Zustand
             raise ValueError(f"mail server not reachable ({type(e).__name__})")
         self.c = c
         try:
             c.login(a["user"], a.get("password", ""))
         except imaplib.IMAP4.error:
             self.close()
+            hintergrund.seen("mail", a.get("id"), False, "anmeldung")
             raise ValueError("the mail server rejects the user name or password")
+        hintergrund.seen("mail", a.get("id"), True)
         # many servers name MOVE only after the login, imaplib keeps the list from before it
         self.caps = {str(x).upper() for x in (getattr(c, "capabilities", ()) or ())}
         try:
@@ -812,10 +816,13 @@ def run_account(uid, aid, idle=True, now=None):
         return {"skipped": True}
     _running.add(key)
     try:
-        return _run(uid, aid, acct, d, a, mode, idle)
+        r = _run(uid, aid, acct, d, a, mode, idle)
+        hintergrund.note(uid, "tidy", not r.get("stopped"), r.get("moved", 0))
+        return r
     except (ValueError, OSError, imaplib.IMAP4.error) as e:
         msg = str(e) if isinstance(e, ValueError) else f"{type(e).__name__}"
         _mut(uid, lambda dd: acct_state(dd, aid).update(error=msg[:200], last_run=int(time.time())))
+        hintergrund.note(uid, "tidy", False)
         return {"error": msg}
     finally:
         _running.discard(key)

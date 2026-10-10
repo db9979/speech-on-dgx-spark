@@ -904,6 +904,30 @@ def pages_waiting(uid):
         return con.execute("SELECT COUNT(*) FROM pages").fetchone()[0]
 
 
+def waiting_state(uid, long_pages, doc_id=None):
+    """Numbers for Ich → Mein Zustand (hintergrund.py), never text: pages still to read (in short
+    documents and in long ones), documents without a card yet, and for doc_id its name and pages."""
+    out = {"docs": 0, "pages": 0, "short": 0, "long_docs": 0, "long_pages": 0, "briefs": 0, "doc": None}
+    if not os.path.exists(db_path(uid)):
+        return out
+    with _Db(uid) as con:
+        for pages, n in con.execute("SELECT d.pages, COUNT(*) FROM pages p JOIN docs d ON d.id=p.doc GROUP BY p.doc").fetchall():
+            out["pages"] += n
+            if (pages or 0) <= long_pages:
+                out["short"] += n
+            else:
+                out["long_docs"] += 1
+                out["long_pages"] += n
+        out["docs"] = con.execute("SELECT COUNT(*) FROM docs").fetchone()[0]
+        out["briefs"] = con.execute("SELECT COUNT(*) FROM docs WHERE brief='' AND state='ready'").fetchone()[0]
+        if doc_id:
+            r = con.execute("SELECT name, pages, (SELECT COUNT(*) FROM pages p WHERE p.doc=d.id) FROM docs d WHERE id=?",
+                            (doc_id,)).fetchone()
+            if r:
+                out["doc"] = {"name": r[0], "pages": r[1] or 0, "left": r[2]}
+    return out
+
+
 def page_read(uid, doc_id, page, text=None, failed=False, max_tries=2):
     """The model's text of a page (or a failed try); the document is ready once no page waits."""
     with _Db(uid) as con:

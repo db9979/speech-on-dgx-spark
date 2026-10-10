@@ -29,6 +29,7 @@ import time
 
 import httpx
 
+import hintergrund
 import netguard
 import logfilter
 import profiles
@@ -55,6 +56,7 @@ def get(uid):
     d = _raw(uid)
     if d:
         d["token"] = vault.open_(d["token"])
+        d["_uid"] = uid      # only for Ich → Mein Zustand (hintergrund.tracker); save() never stores it
     return d if d and d["token"] else None
 
 
@@ -86,6 +88,7 @@ def save(uid, item):
     with _lock:
         old = _raw(uid) or {}
         keep = {"code": old["code"]} if old.get("code") else {}  # a new connection keeps the code word
+        item = {k: v for k, v in item.items() if not k.startswith("_")}
         profiles._write(_file(uid), dict(item, token=vault.seal(item["token"]), updated=int(time.time()), **keep))
     return public(uid)
 
@@ -249,7 +252,8 @@ def remove(uid):
 
 def _client(item):
     return netguard.client(netguard.HOME, origin=item.get("url"), verify=item.get("verify", True),
-                           timeout=httpx.Timeout(15, connect=5), headers={"Authorization": f"Bearer {item['token']}"})
+                           timeout=httpx.Timeout(15, connect=5), headers={"Authorization": f"Bearer {item['token']}"},
+                           seen=hintergrund.tracker("ha", item["_uid"]) if item.get("_uid") else None)
 
 
 async def check(item):

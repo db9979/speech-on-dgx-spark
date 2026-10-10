@@ -377,7 +377,7 @@ class Browser(unittest.TestCase):
                     self.assertFalse(await pg.is_visible("#chat\\.search_url"))
                     tall = await pg.evaluate("$('pane-feat').getBoundingClientRect().height")
                     # about 45 px per closed line on a computer (limit grows with new rows); open boxes would be several times that
-                    self.assertLess(tall, 3200 if w < 760 else 2450, f"{w}: {tall}px")
+                    self.assertLess(tall, 3250 if w < 760 else 2500, f"{w}: {tall}px")   # V01.0.281: +1 line "Mein Zustand"
                     await pg.evaluate("$('chat.search').closest('.fitem').querySelector('.fexp').click()")
                     self.assertTrue(await pg.evaluate("$('chat.search').closest('.fitem').classList.contains('open')"))
                     await pg.evaluate("$('chat.search').closest('.fitem').querySelector('.fexp').click()")

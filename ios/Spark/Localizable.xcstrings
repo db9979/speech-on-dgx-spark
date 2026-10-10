@@ -5750,6 +5750,196 @@
           }
         }
       }
+    },
+    "%@ braucht dich": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "%@ needs you"
+          }
+        }
+      }
+    },
+    "%lld Dinge brauchen dich": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "%lld things need you"
+          }
+        }
+      }
+    },
+    "%lld gestört": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "%lld with a problem"
+          }
+        }
+      }
+    },
+    "%lld in Ordnung": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "%lld fine"
+          }
+        }
+      }
+    },
+    "%lld läuft": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "%lld running"
+          }
+        }
+      }
+    },
+    "%lld wartet": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "%lld waiting"
+          }
+        }
+      }
+    },
+    "Alles in Ordnung.": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "All fine."
+          }
+        }
+      }
+    },
+    "Der Spark arbeitet für dich.": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "The Spark is working for you."
+          }
+        }
+      }
+    },
+    "Für dich läuft nichts im Hintergrund.": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Nothing runs in the background for you."
+          }
+        }
+      }
+    },
+    "Im Hintergrund": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "In the background"
+          }
+        }
+      }
+    },
+    "Mein Zustand": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "My status"
+          }
+        }
+      }
+    },
+    "Nur was bei dir an und verbunden ist. Inhalte von Mails und Dokumenten stehen hier nie.": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Only what is on and connected for you. Contents of mails and documents never appear here."
+          }
+        }
+      }
+    },
+    "Stand %@": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "as of %@"
+          }
+        }
+      }
+    },
+    "Verbunden": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Connected"
+          }
+        }
+      }
+    },
+    "braucht dich": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "needs you"
+          }
+        }
+      }
+    },
+    "in Ordnung": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "fine"
+          }
+        }
+      }
+    },
+    "noch nichts": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "nothing yet"
+          }
+        }
+      }
+    },
+    "nächstes Mal %@": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "next %@"
+          }
+        }
+      }
+    },
+    "zuletzt %@": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "last %@"
+          }
+        }
+      }
     }
   },
   "version": "1.0"

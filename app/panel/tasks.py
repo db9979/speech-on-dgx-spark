@@ -28,6 +28,7 @@ import httpx
 import icalendar
 
 import calendars
+import hintergrund
 import netguard
 import profiles
 import features
@@ -91,7 +92,8 @@ def _account(uid, acc):
 def _client(acc):
     auth = (acc["user"], acc.get("password", "")) if acc.get("user") else None
     return netguard.client(netguard.USER, origin=acc["url"], timeout=httpx.Timeout(20, connect=8), auth=auth,
-                           follow_redirects=True, headers={"User-Agent": "speech-on-dgx-spark"})
+                           follow_redirects=True, headers={"User-Agent": "speech-on-dgx-spark"},
+                           seen=hintergrund.tracker("cal", acc.get("id")) if acc.get("id") else None)
 
 
 async def collections(uid):

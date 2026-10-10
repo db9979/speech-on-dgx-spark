@@ -14,6 +14,7 @@ import time
 
 import httpx
 
+import hintergrund
 import profiles
 import vorrang
 from common import load_config
@@ -164,6 +165,7 @@ async def due_once():
         if os.path.exists(_file(uid, "memory-tidy.json")):
             continue   # still waiting for an answer
         prop = await propose(uid)
+        hintergrund.note(uid, "memtidy", True, len(prop["merge"]) + len(prop["drop"]) if prop else 0)
         if prop:
             import push
             n = len(prop["merge"]) + len(prop["drop"])

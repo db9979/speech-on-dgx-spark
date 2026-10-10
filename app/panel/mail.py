@@ -26,6 +26,7 @@ import ssl
 import threading
 import time
 
+import hintergrund
 import netguard
 import profiles
 import vault
@@ -143,20 +144,25 @@ class _Session:
 
     def __enter__(self):
         a = self.acct
+        seen = lambda ok, why="": hintergrund.seen("mail", a.get("id"), ok, why)   # Ich → Mein Zustand
         try:
             c = IMAP(a["host"], int(a.get("port") or 993), ssl_context=ssl.create_default_context(), timeout=TIMEOUT)
         except (OSError, socket.timeout) as e:
+            seen(False, "nicht_erreichbar")
             raise ValueError(f"mail server not reachable ({type(e).__name__})")
         self.c = c
         try:
             c.login(a["user"], a.get("password", ""))
         except imaplib.IMAP4.error:
             self._close()
+            seen(False, "anmeldung")
             raise ValueError("the mail server rejects the user name or password")
         typ, _ = c.select("INBOX", readonly=True)   # EXAMINE: nothing can change
         if typ != "OK":
             self._close()
+            seen(False, "dienst")
             raise ValueError("the inbox could not be opened")
+        seen(True)
         return self
 
     def _close(self):

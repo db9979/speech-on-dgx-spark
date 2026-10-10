@@ -601,6 +601,8 @@ struct SettingsView: View {
     /// Freihändig and Ins Wort fallen are the profile's own values (hands, barge), the same as in the browser:
     /// read once when the page opens, saved back on every change (plan „Vereinheitlichen“ Phase 6)
     @State private var synced = false
+    /// Ich → Mein Zustand: only when /api/features says this profile may use it ("mystatus", can)
+    @State private var myStatus = false
 
     var body: some View {
         NavigationStack {
@@ -616,6 +618,9 @@ struct SettingsView: View {
                     }
                     if talk.allowed.areas.contains("app_mine") {
                         NavigationLink("Mein Alltag") { MineView() }
+                    }
+                    if myStatus {
+                        NavigationLink("Mein Zustand") { MyStatusView() }
                     }
                     if talk.allowed.areas.contains("app_auto") {
                         NavigationLink("Von selbst") { AutoView() }
@@ -708,6 +713,7 @@ struct SettingsView: View {
             }
             .navigationTitle("Einstellungen")
             .task { await loadTalk() }
+            .task { if Demo.scene == nil { myStatus = await SparkAPI.current?.can("mystatus") ?? false } }
             .toolbar { ToolbarItem(placement: .confirmationAction) { Button("Fertig") { dismiss() } } }
             .confirmationDialog("Schlüssel von diesem iPhone löschen?", isPresented: $confirm, titleVisibility: .visible) {
                 Button("Entkoppeln", role: .destructive) {

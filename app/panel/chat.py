@@ -23,6 +23,7 @@ import profiles  # noqa: E402
 import recall  # noqa: E402
 import answercheck  # noqa: E402
 import fixes  # noqa: E402
+import hintergrund  # noqa: E402
 import homeassistant  # noqa: E402
 import mail  # noqa: E402
 import tidy  # noqa: E402
@@ -1043,6 +1044,7 @@ async def due_briefings(now=None):
         if not text:
             continue
         sent += await push.send(uid, "☀️ Dein Tag", text[:1500], tag="briefing")
+        hintergrund.note(uid, "briefing", True)
         ms = int(time.time() * 1000)
         profiles.save_convo(uid, {"id": "brief-" + local.strftime("%Y%m%d"), "title": "Tagesbriefing " + local.strftime("%d.%m."),
                                   "updated": ms, "msgs": [{"role": "user", "content": "Tagesbriefing"},

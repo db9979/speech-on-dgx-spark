@@ -390,6 +390,23 @@ div.guide.inline{border:0;border-bottom:1px solid var(--line);border-radius:0;ma
 .hdot{width:8px;height:8px;border-radius:50%;background:var(--line);margin-left:auto;flex:none}
 .hdot.ok{background:var(--ok)}.hdot.warn{background:var(--warn)}.hdot.bad{background:var(--bad)}
 body.guest .navme{display:none}
+/* Ich → Mein Zustand (hintergrund.js): a red dot at "Ich" only when something needs the person */
+.medot{display:inline-block;width:8px;height:8px;border-radius:50%;background:var(--bad);margin-left:6px;vertical-align:1px;flex:none}.medot[hidden]{display:none}
+#mbar .medot{position:absolute;top:4px;left:calc(50% + 9px);margin:0}
+.bgsum{display:flex;gap:12px;align-items:center;padding:12px 14px;border:1px solid var(--line);border-radius:12px;margin:8px 0 14px}
+.bgsum b{display:block}.bgsum span{color:var(--mut);font-size:13px}
+.bgdot{width:10px;height:10px;border-radius:50%;flex:none;background:var(--line);margin-top:5px}
+.bgdot.run{background:var(--acc2)}.bgdot.wait{background:var(--warn)}.bgdot.ok{background:var(--ok)}.bgdot.bad{background:var(--bad)}.bgdot.idle{background:var(--line)}
+.bgsum .bgdot{width:14px;height:14px;margin:0}
+.bgrow{display:grid;grid-template-columns:14px minmax(0,1fr) auto;gap:10px;align-items:start;padding:11px 2px;border-top:1px solid var(--line)}
+.bgrow:first-child{border-top:0}.bgrow b{font-weight:600}.bgrow .bgd{color:var(--mut);font-size:13px;margin-top:2px;overflow-wrap:anywhere}
+.bgtag{display:inline-block;font-size:12px;padding:0 8px;border-radius:999px;margin-left:6px;font-weight:500;background:color-mix(in srgb,var(--line) 70%,transparent);color:var(--mut)}
+.bgtag.run{background:color-mix(in srgb,var(--acc2) 14%,transparent);color:var(--acc2)}.bgtag.wait{background:color-mix(in srgb,var(--warn) 14%,transparent);color:var(--warn)}
+.bgtag.ok{background:color-mix(in srgb,var(--ok) 14%,transparent);color:var(--ok)}.bgtag.bad{background:color-mix(in srgb,var(--bad) 14%,transparent);color:var(--bad)}
+.bgbar{height:6px;background:var(--line);border-radius:3px;margin-top:7px;overflow:hidden;max-width:420px}.bgbar i{display:block;height:100%;background:var(--acc2)}
+.bgbtns{display:flex;gap:6px;flex-wrap:wrap;justify-content:flex-end}
+.bghist{grid-column:2/-1;font-size:12px;color:var(--mut);margin-top:4px}.bghist li{margin:1px 0}
+@media (max-width:760px){.bgrow{grid-template-columns:14px minmax(0,1fr)}.bgbtns{grid-column:2;justify-content:flex-start}}
 @media (min-width:761px){
   body.adm{padding-left:232px}
   body.adm header{position:fixed;left:0;top:0;bottom:0;width:232px;flex-direction:column;align-items:stretch;gap:4px;padding:16px 12px;

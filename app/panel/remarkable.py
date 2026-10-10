@@ -51,6 +51,7 @@ from fastapi import APIRouter, Depends, HTTPException, Request
 import documents
 import features
 import guard
+import hintergrund
 import netguard
 import profiles
 import vault
@@ -612,11 +613,13 @@ async def run(uid):
         d["error"] = _redact(f"{type(e).__name__}: {e}") if isinstance(e, (CloudError, ValueError)) else type(e).__name__
         d["more"] = False
         save(uid, d)
+        hintergrund.note(uid, "remarkable", False)
         print("remarkable: comparison failed:", type(e).__name__, flush=True)
         return None
     d = load(uid)
     d["more"] = res["more"]
     save(uid, d)
+    hintergrund.note(uid, "remarkable", True, res["pages"])
     print(f"remarkable: {res['docs']} notebook(s), {res['pages']} page(s) new, {res['removed']} removed", flush=True)
     return res
 

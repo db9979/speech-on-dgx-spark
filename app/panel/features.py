@@ -86,6 +86,7 @@ FEATURES = (
     F("proactive", "Von selbst melden", "Speaking up by itself", "day", ("proactive",), "pro_on", me="probox", guide="proactive"),
     F("reminders", "Timer und Erinnerungen", "Timers and reminders", "day", ("reminders",), guests=True, guide="reminders"),
     F("tasks", "Aufgaben und Einkaufsliste", "Tasks and shopping list", "day", ("tasks",), "tasks_on", me="taskbox", guide="tasks"),
+    F("mystatus", "Mein Zustand", "My status", "day", ("my_status",), "my_status", me="bgbox", guide="mystatus"),
     F("agent", "Agent-Funktionen", "Agent functions", "day", ("agent",), "agent_on", me="agentbox", guide="agent"),
     F("mcp", "Dienste per MCP", "Services over MCP", "day", ("agent_mcp",), parent="agent", guide="mcp"),
     F("messages", "Nachrichten an andere", "Messages to others", "day", ("messages",), "msg_on", me="msgbox", guide="messages"),

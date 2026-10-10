@@ -508,7 +508,8 @@ APP_PATHS = ("/api/chat", "/api/test/asr", "/api/siri/ask", "/api/iphone/hello",
              # where room mode listens and ending it (roomlive.py, only with app_room; never starting or extending)
              "/api/room/active", "/api/room/end",
              "/api/profile/docs",     # the list of the own documents (GET only for the app, with app_docs)
-             "/api/features")         # what the Spark and the profile allow (features.py, read only; "Im Panel öffnen")
+             "/api/features",         # what the Spark and the profile allow (features.py, read only; "Im Panel öffnen")
+             "/api/profile/hintergrund")   # Ich → Mein Zustand (hintergrund.py, read only, own switch my_status)
 # looking at an own document again (wissen.reader: only with app_docs); reading only, never changing
 APP_PATTERNS = (re.compile(r"/api/profile/wissen/[0-9a-f]{12}/(?:text|file)"),)
 APP_GATE = [lambda uid: False]
@@ -668,6 +669,7 @@ SETTINGS = {
     "doc_due": (False, lambda v: isinstance(v, bool)),
     "rm_on": (False, lambda v: isinstance(v, bool)),        # reMarkable notebooks (remarkable.py, admin chat.remarkable)
     "rm_send": (False, lambda v: isinstance(v, bool)),      # answers onto the reMarkable (admin chat.remarkable_send)
+    "my_status": (False, lambda v: isinstance(v, bool)),    # Ich → Mein Zustand (hintergrund.py, admin chat.my_status)
     # own wishes for the tone (admin chat.own_style): plain text, no control characters, no markers of outside text
     "style": ("", lambda v: isinstance(v, str) and len(v) <= 500 and not re.search(r"[\x00-\x09\x0b-\x1f\x7f]|<<<|>>>", v)),
     # roles switched by voice (roles.py, admin chat.roles): one "Name: ..." per line, the active name

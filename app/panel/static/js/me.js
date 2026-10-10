@@ -151,7 +151,7 @@ function ptab(id,page=true){document.querySelectorAll('#ptabs button').forEach(b
   if(typeof guidesMe==='function')guidesMe(id);if(id==='gobox'&&typeof goBar==='function')goBar(false);
   $('profmodal').classList.toggle('sub',page);if(page)document.querySelector('#profmodal .mebody').scrollTop=0}
 $('meback').onclick=()=>ptab(meLast,false);
-function meTabs(){const items=[['overbox',t('Überblick','Overview'),!!PROFILE&&!PHONE.matches],['gobox',t('Los geht\'s','Let\'s go'),!!PROFILE&&typeof SETUP!=='undefined'&&!!SETUP&&SETUP.open>0],['setbox',t('Gespräch','Conversation'),!GATE&&!isGuest()],['loginbox',t('Anmelden','Sign in'),!PROFILE],
+function meTabs(){const items=[['overbox',t('Überblick','Overview'),!!PROFILE&&!PHONE.matches],['bgbox',t('Mein Zustand','My status'),PROFILE&&MYST_ON],['gobox',t('Los geht\'s','Let\'s go'),!!PROFILE&&typeof SETUP!=='undefined'&&!!SETUP&&SETUP.open>0],['setbox',t('Gespräch','Conversation'),!GATE&&!isGuest()],['loginbox',t('Anmelden','Sign in'),!PROFILE],
     ['factbox',t('Gedächtnis','Memory'),!!PROFILE],['docbox',t('Dokumente','Documents'),PROFILE&&DOCS_ON],['rmbox','reMarkable',PROFILE&&RM_ON],['logbox',t('Werkzeug-Verlauf','Tool history'),!!PROFILE],
     ['calbox',t('Kalender','Calendar'),PROFILE&&CAL_ON],['taskbox',t('Aufgaben','Tasks'),PROFILE&&TASK_ON],['agentbox',t('Aufträge','Jobs'),PROFILE&&AGENT_ON],['msgbox',t('Nachrichten','Messages'),PROFILE&&MSG_ON],['wxbox',t('Wetter','Weather'),PROFILE&&WX_ON],['probox',t('Von selbst','Proactive'),PROFILE&&PRO_ON],['notebox',t('Mitteilungen','Notifications'),PROFILE&&REM_ON],
     ['mailbox',t('E-Mail','E-mail'),PROFILE&&MAIL_ON],['parbox',t('Pakete','Parcels'),PROFILE&&PAR_ON],['conbox',t('Kontakte','Contacts'),PROFILE&&CON_ON],

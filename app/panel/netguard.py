@@ -138,10 +138,11 @@ class _Capped(httpx.AsyncByteStream):
 
 
 class _Transport(httpx.AsyncHTTPTransport):
-    def __init__(self, level, origin, most, verify=True):
+    def __init__(self, level, origin, most, verify=True, seen=None):
         super().__init__(verify=verify, retries=0)
         self._pool._network_backend = _Backend(level)
-        self.origin, self.most = origin, most
+        self.origin, self.most, self.seen = origin, most, seen
+        self._fine, self._why = False, ""      # for seen: one verdict per client, given when it closes
 
     async def handle_async_request(self, request):
         if self.origin is not None and "authorization" in request.headers:
@@ -149,7 +150,17 @@ class _Transport(httpx.AsyncHTTPTransport):
             if not same_site(request.url.host, o.hostname) or (o.scheme == "https" and request.url.scheme != "https"):
                 del request.headers["authorization"]
         request.headers["accept-encoding"] = "gzip, deflate"
-        r = await super().handle_async_request(request)
+        try:
+            r = await super().handle_async_request(request)
+        except Exception as e:
+            self._why = self._why or ("gesperrt" if isinstance(e, Blocked) else "nicht_erreichbar")
+            raise
+        if r.status_code < 400:
+            self._fine = True
+        elif r.status_code in (401, 403):
+            self._why = "anmeldung"           # a refused login outweighs every other reason
+        else:
+            self._why = self._why or ("adresse" if r.status_code in (404, 410) else "dienst")
         if int(r.headers.get("content-length") or 0) > self.most:
             await r.aclose()
             raise TooLarge(f"the answer is larger than {self.most // 1048576} MB")
@@ -162,11 +173,35 @@ class _Transport(httpx.AsyncHTTPTransport):
             del r.headers["content-encoding"]
         return r
 
+    def _verdict(self):
+        # one look-up asks several addresses (CalDAV): it worked when one answered and none refused the login
+        if self.seen and (self._fine or self._why):
+            _tell(self.seen, self._fine and self._why != "anmeldung", self._why or "fehler")
+        self.seen = None
 
-def client(level, origin=None, max_bytes=MAX_BYTES, verify=True, **kw):
+    async def aclose(self):
+        self._verdict()
+        await super().aclose()
+
+    async def __aexit__(self, *exc):     # "async with client" ends here, not in aclose
+        self._verdict()
+        await super().__aexit__(*exc)
+
+
+def _tell(seen, ok, why):
+    """Ich → Mein Zustand (hintergrund.py): whether the service answered, as a fixed word; never raises."""
+    if seen:
+        try:
+            seen(ok, "" if ok else why)
+        except Exception:
+            pass
+
+
+def client(level, origin=None, max_bytes=MAX_BYTES, verify=True, seen=None, **kw):
     """An httpx.AsyncClient that keeps the rules above. origin: the address the user entered (login
-    data goes only to its site)."""
-    t = _Transport(level, urlsplit(origin) if origin else None, max_bytes, verify=verify)
+    data goes only to its site). seen: called with (answered, fixed reason) once the client closes
+    (hintergrund.tracker), so a profile sees whether its service works without the page asking it."""
+    t = _Transport(level, urlsplit(origin) if origin else None, max_bytes, verify=verify, seen=seen)
     return httpx.AsyncClient(transport=t, trust_env=False, **kw)
 
 

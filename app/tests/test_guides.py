@@ -52,8 +52,8 @@ class Guides(unittest.TestCase):
         pages = set(re.findall(r"\['(\w+box)',t\(", me[me.index("function meTabs"):]))
         _, gs = guides()
         have = {g.get("me") for g in gs}
-        # sign-in, the log, the overview and "Los geht's" are no services
-        self.assertEqual(pages - have - {"loginbox", "logbox", "overbox", "gobox"}, set(), "Seiten ohne Anleitung")
+        # sign-in, the log, the overview, "Los geht's" and "Mein Zustand" (an overview of the others) are no services
+        self.assertEqual(pages - have - {"loginbox", "logbox", "overbox", "gobox", "bgbox"}, set(), "Seiten ohne Anleitung")
 
     def test_guides_complete_and_grouped(self):
         groups, gs = guides()
