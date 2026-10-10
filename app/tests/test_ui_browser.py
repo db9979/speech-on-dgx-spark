@@ -212,6 +212,40 @@ class Browser(unittest.TestCase):
                 await br.close()
         self.run_async(go())
 
+    def test_settings_pages_stand_still_and_framed(self):
+        """V01.0.254: with a real scrollbar (Windows, Linux) every Einstellungen page starts at the same place, also a
+        page short enough to need no scrollbar (Spracherkennung, Sicherheit jumped 7 px to the right before), and no
+        block between the rows of a page stands without the row line under it (second login step on Sicherheit)."""
+        frame = ("[...document.querySelectorAll('.pane.on > div')].filter(d=>{let b=d.previousElementSibling;"
+                 "while(b&&(!b.offsetHeight||b.matches('.fh,.guide')))b=b.previousElementSibling;"   # the row it follows
+                 "return b&&b.matches('.setrow')&&d.offsetHeight&&!d.querySelector('.setrow')"
+                 "&&!d.matches('.setrow,.savebar,.fh,.guide')&&!parseFloat(getComputedStyle(d).borderBottomWidth)})"
+                 ".map(d=>d.id||d.className)")
+        async def go():
+            async with async_playwright() as p:
+                exe = chromium()
+                br = await p.chromium.launch(ignore_default_args=["--hide-scrollbars"], **({"executable_path": exe} if exe else {}))
+                pg = await (await br.new_context(viewport={"width": 1920, "height": 1080}, locale="de-DE")).new_page()
+                base = f"http://127.0.0.1:{self.port}"
+                await pg.goto(base + "/")
+                self.assertEqual((await pg.request.post(base + "/api/login", data={"password": "secret-admin"})).status, 200)
+                await pg.goto(base + "/")
+                await pg.wait_for_timeout(800)
+                await pg.evaluate("document.getElementById('wizmodal')&&(document.getElementById('wizmodal').style.display='none')")
+                await pg.evaluate("goSec('cfg')")
+                lefts, tall, short = {}, [], []
+                for p_id in await pg.evaluate("[...document.querySelectorAll('#cfgnav button[data-p]')].map(b=>b.dataset.p)"):
+                    await pg.evaluate(f"document.querySelector('#cfgnav button[data-p={p_id}]').click()")
+                    await pg.wait_for_timeout(200)
+                    lefts[p_id] = await pg.evaluate("Math.round(document.querySelector('.pane.on').getBoundingClientRect().left)")
+                    scrolls = await pg.evaluate("document.documentElement.scrollHeight>window.innerHeight")
+                    (tall if scrolls else short).append(p_id)
+                    self.assertEqual(await pg.evaluate(frame), [], f"cfg-{p_id}: Block ohne Rahmenlinie")
+                self.assertTrue(tall and short, (tall, short))     # both kinds, else the test proves nothing
+                self.assertEqual(len(set(lefts.values())), 1, lefts)
+                await br.close()
+        self.run_async(go())
+
     def test_me_is_a_page_beside_the_menu(self):
         """V01.0.147: on a computer "Ich" in the sidebar opens Ich as a page right of the menu (no veil over
         it); another menu entry closes it again."""

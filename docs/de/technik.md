@@ -109,6 +109,7 @@ Seit V01.0.207 sind alle Seiten unter Einstellungen gleich gebaut (`index.html`,
 - **Sofort-Aktionen** (Passwort, Zweiter Schritt, Abmelden, Update, Sicherung): eigener Abschnitt „wirkt sofort, ohne Speichern“; alles andere sammelt die Speichern-Leiste `.savebar` der Seite.
 - **Auf einen Blick**: neue Seiten bekommen eine Zeile in `glanceText()` (`admin.js`), nur aus Daten, die das Panel schon hat.
 - **Unterseiten** von Zustand und Einbinden kommen aus `GROUPS` (`base.js`) mit einem Satz in `SUBDESC`; `goSec('sys')` führt seit V01.0.207 nach Einstellungen → Update und Sicherung.
+- **Rahmen**: Was unter einer Zeile weitergeht (Passwort ändern, Zweiter Anmeldeschritt), bekommt `class="rowtail"`; die Linie steht dann unter dem Inhalt, nicht zwischen Zeile und Inhalt. `html{scrollbar-gutter:stable}` hält den Platz der Scrollleiste frei, damit kurze Seiten nicht seitlich springen (V01.0.254).
 
 `tests/test_guides.py` (Klasse `BuildingBlocks`) prüft das ohne Browser: Titel und Einleitung auf jeder Seite, keine `label.chk`, „Erweitert“ nur als `details`, gleich viele „Mehr“-Knöpfe wie Mehr-Texte, kurze Sätze und englische Übersetzungen.
 

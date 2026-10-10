@@ -97,6 +97,7 @@ Since V01.0.207 all pages under Settings are built the same way (`index.html`, s
 - **Instant actions** (password, second step, sign out, update, backup): a section of their own, "acts at once, without saving"; everything else is collected by the page's save bar `.savebar`.
 - **At a glance**: new pages get a line in `glanceText()` (`admin.js`), only from data the panel already has.
 - **Sub-pages** of Status and Einbinden come from `GROUPS` (`base.js`) with one sentence in `SUBDESC`; since V01.0.207 `goSec('sys')` leads to Settings → Update and backup.
+- **Frame**: content that continues below a row (change password, second login step) gets `class="rowtail"`; the line then sits below the content, not between row and content. `html{scrollbar-gutter:stable}` keeps the scrollbar's space, so short pages do not move sideways (V01.0.254).
 
 `tests/test_guides.py` (class `BuildingBlocks`) checks this without a browser: title and intro on every page, no `label.chk`, "Erweitert" only as `details`, as many "More" buttons as more texts, short sentences and English translations.
 

@@ -31,6 +31,7 @@ All options for running without questions (`--mode api --asr 1.7b --tts 0.6b --y
 
 <!-- New version: add one line at the top here and in CHANGELOG.md, drop the oldest line here (keep 10). Details go to docs/de and docs/en, not into this README. -->
 
+- **V01.0.254** Settings: Speech recognition and Security no longer jump to the right on wide screens (scrollbar space always kept), second login step inside one frame, speech recognition model list no longer cut off; browser test checks it
 - **V01.0.253** Features: "Wikipedia straight away" sits below Web search, "Roles by voice" below Own conversation style (page stays short, browser test green again)
 - **V01.0.252** Settings → Speech output: default voice is a list that fits the model (CustomVoice built-in speakers, Base own voices, VoiceDesign locked); a saved name outside the list is kept
 - **V01.0.251** Docs: iPhone app panel areas with the right version number (V01.0.250)
@@ -40,7 +41,6 @@ All options for running without questions (`--mode api --asr 1.7b --tts 0.6b --y
 - **V01.0.247** iPhone app takes over the panel, step 3: "Manage the Spark" with admin password and code, monitoring, logs with "Copy for thread", checks
 - **V01.0.246** iPhone app takes over the panel, steps 1–2: "Open in the panel", panel areas with their own switch, "My day" (appointments, reminders, memory, conversation switches)
 - **V01.0.245** Document card and tags (admin and profile switch, off): in quiet minutes the language model notes title, kind, sender, deadline, number and keywords of each document; the assistant sees these lines instead of file names and searches by tag or kind, tags filter Ich → Dokumente (own ones win), "Belongs with", "Remind" before deadlines only on click; document search always stays in a narrowed tool set, more rule words (insurance, manual, findings …)
-- **V01.0.244** iPhone app: My documents with "Read on" for long documents
 
 All versions: [CHANGELOG.md](CHANGELOG.md)
 

@@ -2,6 +2,7 @@
 
 Every version in one line, newest first (taken from the commit messages, so some lines are German, some English). Older entries have no version number.
 
+- **V01.0.254** · 2026-10-10 · Einstellungen: Spracherkennung und Sicherheit springen auf breiten Bildschirmen nicht mehr nach rechts (Platz für die Scrollleiste immer frei), Zweiter Anmeldeschritt in einem Rahmen, Modell-Auswahl der Spracherkennung nicht mehr abgeschnitten; Browsertest prüft das
 - **V01.0.253** · 2026-10-10 · Funktionen: „Wikipedia direkt“ steht unter der Websuche, „Rollen per Sprache“ unter dem eigenen Gesprächsstil (Seite bleibt kurz, Browsertest wieder grün)
 - **V01.0.252** · 2026-10-10 · Einstellungen → Sprachausgabe: Standardstimme ist eine Auswahlliste passend zum Modell (CustomVoice feste Sprecher, Base eigene Stimmen, VoiceDesign gesperrt); ein gespeicherter Name außerhalb der Liste bleibt erhalten
 - **V01.0.251** · 2026-10-10 · Doku: Panel-Bereiche der iPhone-App mit richtiger Versionsnummer (V01.0.250)

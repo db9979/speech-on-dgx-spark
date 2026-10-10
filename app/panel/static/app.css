@@ -7,6 +7,8 @@
   --shadow:0 1px 2px rgba(0,0,0,.3),0 8px 28px rgba(0,0,0,.25);--visor:#070912;color-scheme:dark}
 :root[data-theme=light]{color-scheme:light}
 *{box-sizing:border-box}
+/* keep room for the scrollbar on every page, so short pages (Spracherkennung, Sicherheit) do not move sideways (V01.0.254) */
+html{scrollbar-gutter:stable}
 body{margin:0;min-height:100vh;color:var(--fg);font:14px/1.5 system-ui,-apple-system,"Segoe UI",Roboto,sans-serif;-webkit-font-smoothing:antialiased;
   background:radial-gradient(900px 420px at 0% -10%,color-mix(in srgb,var(--acc) 12%,transparent),transparent 70%),
              radial-gradient(800px 400px at 100% -15%,color-mix(in srgb,var(--acc2) 10%,transparent),transparent 70%),var(--bg);background-attachment:fixed}
@@ -506,6 +508,8 @@ h3.sec span{font-size:12px;font-weight:400;color:var(--mut)}
 .setrow input.num{width:92px;text-align:right;padding:7px 10px}.setrow .unit{font-size:12px;color:var(--mut)}
 .setrow input.wide{width:300px;padding:7px 10px}.setrow .ctl input.wide{flex:1 1 auto;min-width:140px}
 .setrow select.wide{max-width:320px}
+/* a row whose content follows below it (second login step, password box): one frame, the line under the content */
+.setrow:has(+.rowtail:not([hidden])),.setrow:has(+.fh.more+.rowtail:not([hidden])){border-bottom:0;padding-bottom:4px}.rowtail{padding:0 0 12px;border-bottom:1px solid var(--line)}.rowtail .fh{margin-top:0}
 .setrow .lbl span .mlink{border:0;background:none;padding:0;margin-left:4px;font:inherit;font-size:12px;color:var(--acc);cursor:pointer}
 .fh.more{margin:-4px 0 8px}.fh.more[hidden]{display:none}
 .setrow+textarea,.setrow+.full{margin:-2px 0 8px}
