@@ -529,7 +529,7 @@ async def put_config(request: Request):
             "panel_restart_needed": new["panel"] != old["panel"]}
 
 
-# Einstellungen → Funktionen from the iPhone app ("Spark verwalten", V01.0.249): only the on/off switches of
+# Einstellungen → Funktionen from the iPhone app ("Spark verwalten", V01.0.250): only the on/off switches of
 # chat.*, never the sensitive ones (SENSITIVE: those want the admin's code in the browser) nor the ones that
 # would shut the app itself out. The admin signs in there with password and code, like the browser.
 APP_SWITCH_SKIP = {"public", "mfa", "iphone", "iphone_panel"}

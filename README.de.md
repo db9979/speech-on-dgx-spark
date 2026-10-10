@@ -31,6 +31,7 @@ Alle Optionen ohne Rückfragen (`--mode api --asr 1.7b --tts 0.6b --yes` …) st
 
 <!-- New version: add one line at the top here and in CHANGELOG.md, drop the oldest line here (keep 10). Details go to docs/de and docs/en, not into this README. -->
 
+- **V01.0.251** Doku: Panel-Bereiche der iPhone-App mit richtiger Versionsnummer (V01.0.250)
 - **V01.0.250** iPhone-App übernimmt das Panel, Stufe 4–9: Dokumente verwalten, Stimme einlernen, Von selbst, Sicherheit, Konten verbinden (mit Code), Funktionen, Profile und Sicherungen für Admins
 - **V01.0.249** Rollen per Sprache und Wikipedia direkt (je Admin- und Profil-Schalter, aus): eigene Rollen unter Ich → Gespräch, „Sei jetzt der Butler“ / „Sei wieder normal“ schaltet das Panel mit festen Regeln; Wissensfragen aus der Wikipedia-Einleitung statt Websuche, 24 Stunden Cache
 - **V01.0.248** Funktionen: „Panel-Bereiche in der iPhone-App“ steht unter dem Schalter der iPhone-App (Seite bleibt kurz)
@@ -40,7 +41,6 @@ Alle Optionen ohne Rückfragen (`--mode api --asr 1.7b --tts 0.6b --yes` …) st
 - **V01.0.244** iPhone-App: Meine Dokumente mit „Weiterlesen“ bei langen Dokumenten
 - **V01.0.243** Ich → Dokumente → Ansehen zeigt lange Dokumente stückweise mit „Weiterlesen“ statt „… gekürzt“ nach 200.000 Zeichen; die Suche des Assistenten nutzte schon immer den ganzen Text
 - **V01.0.242** Dokumente: PDFs bis 100 MB (Admin stellt unter Funktionen → Eigene Dokumente bis 300 MB ein; andere Dateien bis 20 MB, vorher „request too large“ ab 20 MB); Speicher pro Profil gilt für alle Uploads zusammen, Ich → Dokumente zeigt „Belegt: x von y“ mit Balken, der Admin sieht und setzt ihn pro Profil unter Zustand → Monitoring
-- **V01.0.241** Das kleine Bild vor jeder Antwort im Verlauf folgt dem gewählten Gesicht: bei „Comic“ ein Comic-Kopf statt des Roboters
 
 Alle Versionen: [CHANGELOG.md](CHANGELOG.md)
 
