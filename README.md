@@ -31,6 +31,7 @@ All options for running without questions (`--mode api --asr 1.7b --tts 0.6b --y
 
 <!-- New version: add one line at the top here and in CHANGELOG.md, drop the oldest line here (keep 10). Details go to docs/de and docs/en, not into this README. -->
 
+- **V01.0.285** Spark verwalten: the header button (and "Admin-Anmeldung" in the phone menu) only for profiles with an admin role, not for guests and ordinary profiles; panel-password login via the address with #admin at the end
 - **V01.0.284** Priority for people, part 2: while an answer with priority has no first sentence yet, others' new requests to the language model wait at most 2 s (0–5 adjustable, running ones never stopped); the browser and the iPhone app report the start of a recording, background work then stops at once; Logs → Requests shows the wait
 - **V01.0.283** New people: accepted invitations disappear 7 days after acceptance or at once with the deleted profile (its PIN links too); leftovers of profiles already deleted are removed when the list opens
 - **V01.0.282** Priority for people (Features → Conversation, off; stage per profile only by the admin under People and devices, at most 3): sentences and recordings with priority overtake others' waiting ones in speech output and recognition (running ones never stopped, nobody starves), only the panel may say the stage; Logs → Requests shows the wait, Status → Check measures "two people at once"
@@ -40,7 +41,6 @@ All options for running without questions (`--mode api --asr 1.7b --tts 0.6b --y
 - **V01.0.278** Update log without the pip error "dependency conflicts": rmscene (reMarkable) is installed without its dependencies, packaging stays current (was downgraded to 23.2, breaking wheel); existing installs are repaired on update
 - **V01.0.277** iPhone app: first answer with sound (waits out the route switch after start, replays dropped pieces), "Copy sound log" in settings
 - **V01.0.276** New people by invitation (Personen und Geräte → Neue Personen, off): link, QR code or printed card, valid once, starter packs "Familie"/"Gast plus", second sign-in step required for e-mail, documents and jobs; then Me → "Los geht's" walks through devices and services (the Spark ticks off itself), "Continue on the phone" by QR code with number matching, PIN link and Remind in the profile details, the iPhone app takes invitations
-- **V01.0.275** Main admin as a profile (one login, the password stays the emergency access), one shell for signed-in profiles, words tidied (admin rights, tool history, update history, Spark verwalten)
 
 All versions: [CHANGELOG.md](CHANGELOG.md)
 

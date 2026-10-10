@@ -2,6 +2,7 @@
 
 Every version in one line, newest first (taken from the commit messages, so some lines are German, some English). Older entries have no version number.
 
+- **V01.0.285** · 2026-10-10 · Spark verwalten: der Knopf oben (und „Admin-Anmeldung“ im Handy-Menü) nur noch für Profile mit Admin-Rolle, nicht für Gäste und normale Profile; Anmeldung mit dem Panel-Passwort über die Adresse mit #admin am Ende
 - **V01.0.284** · 2026-10-10 · Vorrang für Personen, Teil 2: Solange eine Antwort mit Vorrang ihren ersten Satz nicht hat, warten neue Anfragen anderer ans Sprachmodell höchstens 2 s (einstellbar 0–5, laufende nie abgebrochen); Browser und iPhone-App melden den Aufnahmebeginn, dann stoppt Hintergrundarbeit sofort; Logs → Anfragen zeigt die Wartezeit
 - **V01.0.283** · 2026-10-10 · Neue Personen: angenommene Einladungen verschwinden 7 Tage nach der Annahme oder sofort mit dem gelöschten Profil (auch seine PIN-Links); Reste schon gelöschter Profile räumt die Liste beim Öffnen weg
 - **V01.0.282** · 2026-10-10 · Vorrang für Personen (Funktionen → Gespräch, aus; Stufe pro Profil nur vom Admin unter Personen und Geräte, höchstens 3): Sätze und Aufnahmen mit Vorrang überholen in Sprachausgabe und Spracherkennung die wartenden anderer (laufende nie abgebrochen, niemand verhungert), nur das Panel darf die Stufe sagen; Logs → Anfragen zeigt Wartezeit, Zustand → Prüfen misst „Zwei Personen gleichzeitig“

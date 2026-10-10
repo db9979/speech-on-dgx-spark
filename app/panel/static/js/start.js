@@ -19,11 +19,14 @@ $('pwset').onclick=async()=>{try{await api('/api/password',{method:'POST',header
   if(!ADMIN){document.body.classList.add('guest');
     CFG={tts:{default_voice:a.default_voice},asr:{default_language:a.asr_language},panel:{https_port:a.https_port}};
     PUBLIC=who.public!==false;
+    const toAdmin=location.hash==='#admin';if(toAdmin){history.replaceState(null,'',location.pathname+location.search);showLogin()}   // the main admin's way in
     // without "Assistent ohne Passwort" guests are locked out, but profiles still sign in with name and PIN
-    if(!PUBLIC&&!who.profile){GATE=true;$('profgate').style.display='';$('profadmin').style.display='';openMe('loginbox');return}
+    if(!PUBLIC&&!who.profile){GATE=true;$('profgate').style.display='';$('profadmin').style.display='';if(!toAdmin)openMe('loginbox');return}
     // one shell for everybody (plan „Vereinheitlichen“ Phase 7): a signed-in profile gets the same menu as the admin,
     // with only what it may (Assistent, Ich); guests keep the plain page with the assistant
-    if(who.profile){document.body.classList.remove('guest');document.body.classList.add('adm','prof')}}
+    if(who.profile){document.body.classList.remove('guest');document.body.classList.add('adm','prof')}
+    // "Spark verwalten" only for a profile with an admin role; the main admin opens the page with #admin (above)
+    if(who.profile&&who.admin_role)document.body.classList.add('mayadm');}
   else{$('logoutbtn').style.display='inline-block';document.body.classList.add('adm');hdrH()}
   document.querySelector('nav button[data-s=chat]').click();       // the assistant is the start page
   try{const s=sessionStorage.getItem('versec');sessionStorage.removeItem('versec');if(s&&s!=='chat'&&$(s))goSec(s)}catch{}

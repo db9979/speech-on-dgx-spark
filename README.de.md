@@ -31,6 +31,7 @@ Alle Optionen ohne Rückfragen (`--mode api --asr 1.7b --tts 0.6b --yes` …) st
 
 <!-- New version: add one line at the top here and in CHANGELOG.md, drop the oldest line here (keep 10). Details go to docs/de and docs/en, not into this README. -->
 
+- **V01.0.285** Spark verwalten: der Knopf oben (und „Admin-Anmeldung“ im Handy-Menü) nur noch für Profile mit Admin-Rolle, nicht für Gäste und normale Profile; Anmeldung mit dem Panel-Passwort über die Adresse mit #admin am Ende
 - **V01.0.284** Vorrang für Personen, Teil 2: Solange eine Antwort mit Vorrang ihren ersten Satz nicht hat, warten neue Anfragen anderer ans Sprachmodell höchstens 2 s (einstellbar 0–5, laufende nie abgebrochen); Browser und iPhone-App melden den Aufnahmebeginn, dann stoppt Hintergrundarbeit sofort; Logs → Anfragen zeigt die Wartezeit
 - **V01.0.283** Neue Personen: angenommene Einladungen verschwinden 7 Tage nach der Annahme oder sofort mit dem gelöschten Profil (auch seine PIN-Links); Reste schon gelöschter Profile räumt die Liste beim Öffnen weg
 - **V01.0.282** Vorrang für Personen (Funktionen → Gespräch, aus; Stufe pro Profil nur vom Admin unter Personen und Geräte, höchstens 3): Sätze und Aufnahmen mit Vorrang überholen in Sprachausgabe und Spracherkennung die wartenden anderer (laufende nie abgebrochen, niemand verhungert), nur das Panel darf die Stufe sagen; Logs → Anfragen zeigt Wartezeit, Zustand → Prüfen misst „Zwei Personen gleichzeitig“
@@ -40,7 +41,6 @@ Alle Optionen ohne Rückfragen (`--mode api --asr 1.7b --tts 0.6b --yes` …) st
 - **V01.0.278** Update-Log ohne pip-Fehler „dependency conflicts“: rmscene (reMarkable) kommt ohne seine Abhängigkeiten, packaging bleibt aktuell (vorher auf 23.2 herabgestuft, wheel kaputt); bestehende Installationen werden beim Update repariert
 - **V01.0.277** iPhone-App: erste Antwort mit Ton (Tonweg-Wechsel nach dem Start abgewartet, verworfene Stücke nachgespielt), „Ton-Protokoll kopieren“ in den Einstellungen
 - **V01.0.276** Neue Personen per Einladung (Personen und Geräte → Neue Personen, aus): Link, QR-Code oder Karte, einmal gültig, Startpakete „Familie“/„Gast plus“, zweiter Anmeldeschritt Pflicht für E-Mail, Dokumente und Aufträge; danach führt Ich → „Los geht's“ durch Geräte und Dienste (Spark hakt selbst ab), „Am Handy weitermachen“ per QR-Code mit Zahlenabgleich, PIN-Link und Erinnern in den Profil-Details, iPhone-App nimmt Einladungen an
-- **V01.0.275** Haupt-Admin als Profil (eine Anmeldung, Passwort bleibt Notzugang), eine Hülle für angemeldete Profile, Wörter aufgeräumt (Admin-Rechte, Werkzeug-Verlauf, Update-Verlauf, Spark verwalten)
 
 Alle Versionen: [CHANGELOG.md](CHANGELOG.md)
 

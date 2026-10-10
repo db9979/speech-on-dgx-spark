@@ -918,6 +918,12 @@ class Browser(unittest.TestCase):
                     await pg.goto(base + "/")
                     await pg.wait_for_timeout(500)
                     self.assertIn("guest", await pg.evaluate("document.body.className"))
+                    # V01.0.285: "Spark verwalten" is not for guests; the admin opens the page with #admin
+                    self.assertFalse(await pg.is_visible("#loginbtn"))
+                    await pg.goto(base + "/#admin")
+                    await pg.reload()                                    # the hash alone does not load the page again
+                    await pg.wait_for_selector("#login", state="visible")
+                    self.assertFalse(await pg.is_visible("#profmodal"))  # the password dialog is not covered
                     await pg.request.post(base + "/api/profile/login", data={"name": "Uitest", "pin": "4711"})
                     await pg.goto(base + "/")
                     await pg.wait_for_timeout(800)
@@ -935,7 +941,7 @@ class Browser(unittest.TestCase):
                         self.assertEqual(shown, ["chat", "me"])
                         await pg.click("#mbar button[data-m=me]")
                     await pg.wait_for_selector("#profmodal", state="visible")
-                    self.assertTrue(await pg.is_visible("#loginbtn"))
+                    self.assertFalse(await pg.is_visible("#loginbtn"))   # a profile without an admin role
                     self.assertEqual(errors, [], name)
                     await br.close()
         self.run_async(go())

@@ -56,11 +56,11 @@ body.guest #themebtn{margin-left:auto}
 @media (display-mode:standalone){header{padding-top:max(12px,env(safe-area-inset-top))}main{padding-bottom:max(48px,env(safe-area-inset-bottom))}}
 /* login */
 body.guest nav,body.guest #hdr,body.guest #fab,body.guest #logoutbtn{display:none!important}
-body.guest #loginbtn{display:inline-flex!important}
+/* "Spark verwalten" only for a profile with an admin role (start.js: body.mayadm); everybody else: #admin in the address */
+body.mayadm #loginbtn{display:inline-flex!important}
 /* a signed-in profile without admin login (start.js): the admin's shell with only Assistent and Ich */
 body.prof #hdr,body.prof #fab,body.prof #logoutbtn,body.prof .navgrp,body.prof nav button[data-s]:not([data-s=chat]),body.prof #findbtn,
 body.prof #mbar button[data-m=mon],body.prof #mbar button[data-m=more],body.prof #mmenu{display:none!important}
-body.prof #loginbtn{display:inline-flex!important}
 body.coadm:not(.owner) .mainonly,body.coadm .pwonly,nav button[hidden]{display:none!important}   /* .pwonly: only with the panel password, also not for the Haupt-Admin profile */   /* a profile in its admin mode (coadmin.js): what only the main admin may do */
 .modal{position:fixed;inset:0;z-index:50;display:grid;place-items:center;align-items:safe center;overflow-y:auto;background:rgba(10,12,20,.45);backdrop-filter:blur(4px);padding:16px}
 .updlock{z-index:1000;backdrop-filter:blur(3px)}.updlock .modalcard{width:min(440px,100%)}

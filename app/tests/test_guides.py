@@ -162,6 +162,18 @@ class DesignKlar(unittest.TestCase):
         self.assertLess(nav.index("Spark verwalten"), nav.index('data-s="mon"'))
         self.assertEqual(re.findall(r'data-m="(\w+)"', html), ["chat", "me", "mon", "more"])
 
+    def test_manage_button_only_for_admin_roles(self):
+        """V01.0.285: the header button "Spark verwalten" (and the phone menu's admin login) shows only for a
+        profile with an admin role (whoami admin_role), not for guests or ordinary profiles."""
+        css = read("app.css")
+        self.assertNotIn("body.guest #loginbtn{display:inline-flex", css)
+        self.assertNotIn("body.prof #loginbtn{display:inline-flex", css)
+        self.assertIn("body.mayadm #loginbtn{display:inline-flex", css)
+        start = read("js", "start.js")
+        self.assertIn("if(who.profile&&who.admin_role)document.body.classList.add('mayadm')", start)
+        self.assertIn("location.hash==='#admin'", start)
+        self.assertIn("$('milogin').style.display=!ADMIN&&document.body.classList.contains('mayadm')", read("js", "phone.js"))
+
     def test_no_old_page_name(self):
         for f in ("guides.js", "admin.js", "wizard.js"):
             self.assertNotIn("Übersicht →", read("js", f), f)
