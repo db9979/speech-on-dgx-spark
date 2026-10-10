@@ -32,7 +32,11 @@ CATALOG = """<?xml version="1.0" encoding="UTF-8"?>
 <feed xmlns="http://www.w3.org/2005/Atom" xmlns:dc="http://purl.org/dc/terms/">
  <entry><title>Wikipedia</title><language>deu</language><name>wikipedia_de_all</name>
   <articleCount>2800000</articleCount><updated>2025-01-15T00:00:00Z</updated>
-  <link type="text/html" href="/content/wikipedia_de_all_maxi_2025-01"/></entry>
+  <category>wikipedia</category><flavour>maxi</flavour>
+  <link type="text/html" href="/content/wikipedia_de_all_maxi_2025-01"/>
+  <link rel="http://opds-spec.org/acquisition/open-access" type="application/x-zim" href="/x.zim" length="41000000000"/></entry>
+ <entry><title>Wikipedia</title><language>fra</language><name>wikipedia_fr_all</name>
+  <link type="text/html" href="/content/wikipedia_fr_all_nopic_2025-02"/></entry>
  <entry><title>Wikivoyage</title><language>deu</language><name>wikivoyage_de_all</name>
   <updated>2024-11-02T00:00:00Z</updated>
   <link type="text/html" href="/content/wikivoyage_de_all_maxi_2024-11"/></entry>
@@ -137,9 +141,17 @@ def reset():
 class Parsing(unittest.TestCase):
     def test_catalog(self):
         books = kiwix.parse_catalog(CATALOG)
-        self.assertEqual([b["id"] for b in books], ["wikipedia_de_all_maxi_2025-01", "wikivoyage_de_all_maxi_2024-11"])
-        self.assertEqual(books[0]["date"], "2025-01-15")
-        self.assertEqual(books[0]["count"], 2800000)
+        self.assertEqual([b["id"] for b in books], ["wikipedia_de_all_maxi_2025-01", "wikipedia_fr_all_nopic_2025-02",
+                                                     "wikivoyage_de_all_maxi_2024-11"])
+        de, fr, voy = books
+        self.assertEqual((de["date"], de["count"], de["size"], de["lang"], de["group"], de["flavour"]),
+                         ("2025-01-15", 2800000, 41000000000, "de", "wikipedia", "maxi"))
+        self.assertEqual((fr["lang"], fr["group"], fr["flavour"], fr["date"]), ("fr", "wikipedia", "nopic", "2025-02"))
+        self.assertEqual(voy["group"], "wikivoyage")
+        self.assertEqual(kiwix._lang("eng,fra"), "mul")
+        self.assertEqual(kiwix._lang("<x>"), "")
+        # without a choice: only the German and English Wikipedias
+        self.assertEqual([b["id"] for b in kiwix.default_books(books)], ["wikipedia_de_all_maxi_2025-01"])
         # entities and DOCTYPEs are refused before parsing
         bomb = '<?xml version="1.0"?><!DOCTYPE x [<!ENTITY a "aaaa">]><feed>&a;</feed>'
         self.assertEqual(kiwix.parse_catalog(bomb), [])
@@ -238,6 +250,7 @@ class Tools(unittest.TestCase):
         self.assertIn("Neutronenstern", ask(a, "TOOL wikipedia {\"query\": \"Pulsar\"}"))
 
     def test_archive_search_and_reading_on(self):
+        helpers.set_config(kiwix_books=["wikipedia_de_all_maxi_2025-01", "wikivoyage_de_all_maxi_2024-11"])
         a = profile("Archiv4")
         a.put("/api/profile/settings", json={"kiwix_on": True})
         helpers.LLM_CALLS.clear()
@@ -272,7 +285,8 @@ class Tools(unittest.TestCase):
             kiwix.ARTICLE_BYTES = old
 
     def test_web_search_falls_back_when_internet_gone(self):
-        helpers.set_config(search=True, search_url=f"http://127.0.0.1:{DEAD_PORT}")
+        helpers.set_config(search=True, search_url=f"http://127.0.0.1:{DEAD_PORT}",
+                           kiwix_books=["wikivoyage_de_all_maxi_2024-11"])
         a = profile("Archiv5")
         helpers.LLM_CALLS.clear()
         ask(a, "TOOL web_search {\"query\": \"Sauerteig\"}")
@@ -289,7 +303,9 @@ class Tools(unittest.TestCase):
         self.assertEqual(r.status_code, 200, r.text)
         d = r.json()
         self.assertTrue(d["ok"])
-        self.assertEqual(len(d["books"]), 2)
+        self.assertEqual(len(d["books"]), 3)
+        self.assertFalse(d["picked"])
+        self.assertEqual(d["chosen"], ["wikipedia_de_all_maxi_2025-01"])
         self.assertEqual(d["test"]["book"], "Wikipedia")
         self.assertIn(TestClient(panel.app).post("/api/admin/kiwix/check").status_code, (401, 403))
         helpers.set_config(kiwix_books=["wikivoyage_de_all_maxi_2024-11"])

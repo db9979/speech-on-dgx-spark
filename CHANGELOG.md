@@ -2,6 +2,7 @@
 
 Every version in one line, newest first (taken from the commit messages, so some lines are German, some English). Older entries have no version number.
 
+- **V01.0.260** · 2026-10-10 · Kiwix: Bücherauswahl als Liste mit Suche, Sprach- und Artfilter (Deutsch/Englisch zuerst), gruppiert, mit Sprache, Variante, Artikelzahl, Größe und Stand; gewählte oben als Chips; ohne Auswahl deutsche und englische Wikipedia; Katalog bis 2000 Bücher
 - **V01.0.259** · 2026-10-10 · Selbsttest „Profile und Geräte“ sucht das Testgerät statt auf Seite 1 zu warten (GitHub-Tests wieder grün)
 - **V01.0.258** · 2026-10-10 · Eigenes Kiwix-Archiv (Funktionen → Websuche, aus; Profil-Schalter): Wikipedia-Fragen zuerst aus dem eigenen kiwix-serve, Volltextsuche in gewählten Büchern, „Erzähl mehr“ liest weiter, fällt die Websuche aus antwortet das Offline-Archiv; Zustand → Prüfen → „Kiwix prüfen“, Logs-Bereich „Wissen“
 - **V01.0.257** · 2026-10-10 · Profile und Geräte: Profil eines Geräts als Auswahlliste statt Namensfeld; iPhone-App, Lautsprecher, Pebble-Uhr und Home Assistant stehen „🔒 fest“ mit Ort der Verwaltung (Server lehnt Umhängen ab), Zeilen gleich ausgerichtet

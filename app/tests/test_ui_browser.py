@@ -658,3 +658,69 @@ class Browser(unittest.TestCase):
             for did in ids.values():
                 profiles.delete_device(did)
         self.assertEqual(len(made), 3)
+
+    def test_kiwix_book_picker(self):
+        """Funktionen → Kiwix (V01.0.260): a catalog of many books in many languages is a list with search,
+        language and kind filter, German and English first, chosen books as chips on top, at most 10."""
+        from fastapi import FastAPI, Response
+        langs = ["deu", "eng", "fra", "spa", "zho", "ara", "hye", "kor"]
+        entries = "".join(
+            f'<entry><title>{"Wikipedia" if i % 3 == 0 else "TED talk " + str(i) if i % 3 == 1 else "PhET"}</title>'
+            f'<language>{langs[i % len(langs)]}</language><category>{["wikipedia", "ted", "phet"][i % 3]}</category>'
+            f'<articleCount>{1000 * i}</articleCount><issued>2026-07-{1 + i % 28:02d}</issued>'
+            f'<link type="text/html" href="/content/{["wikipedia", "ted", "phet"][i % 3]}_{i}_maxi_2026-07"/>'
+            f'<link type="application/x-zim" href="/x.zim" length="{i * 50_000_000}"/></entry>' for i in range(160))
+        fake = FastAPI()
+
+        @fake.get("/catalog/v2/entries")
+        def cat():
+            return Response(f'<?xml version="1.0"?><feed xmlns="http://www.w3.org/2005/Atom">{entries}</feed>',
+                            media_type="application/atom+xml")
+        port = helpers._port()
+        helpers._serve(fake, port)
+        helpers.set_config(kiwix=True, kiwix_url=f"http://127.0.0.1:{port}", kiwix_books=[])
+        import kiwix
+        kiwix._catalog[:] = [0.0, []]
+
+        async def go():
+            async with async_playwright() as p:
+                for name, w, h in VIEWS:
+                    br, pg, errors = await self.page(p, w, h)
+                    await pg.evaluate("goSec('cfg');document.querySelector('#cfgnav button[data-p=feat]').click()")
+                    await pg.wait_for_timeout(300)
+                    await pg.evaluate("const f=$('chat.kiwix').closest('.fitem');if(!f.classList.contains('open'))f.querySelector('.fexp').click()")
+                    await pg.wait_for_timeout(200)
+                    self.assertTrue(await pg.is_hidden("#kxpick"), name)
+                    self.assertIn("deutsche und englische Wikipedia", await pg.inner_text("#kxsel"))
+                    await pg.click("#kxload")
+                    await pg.wait_for_selector("#kxlist .kxrow", timeout=5000)
+                    langs_shown = await pg.evaluate("[...document.querySelectorAll('#kxlist .kxm')].map(x=>x.textContent.split(' · ')[0])")
+                    self.assertEqual(set(langs_shown), {"Deutsch", "Englisch"}, name)          # German and English first
+                    self.assertIn("Wikipedia (", await pg.inner_text("#kxlist .kxgrp"))        # grouped, Wikipedia on top
+                    await pg.select_option("#kxpick select >> nth=0", "*")
+                    self.assertGreater(await pg.evaluate("document.querySelectorAll('#kxlist .kxrow').length"), 100)
+                    await pg.fill("#kxpick input[type=search]", "TED talk 103")
+                    await pg.wait_for_timeout(100)
+                    self.assertEqual(await pg.evaluate("document.querySelectorAll('#kxlist .kxrow').length"), 1)
+                    await pg.click("#kxlist .kxrow input")
+                    self.assertEqual(await pg.input_value("[id='chat.kiwix_books']"), "ted_103_maxi_2026-07")
+                    self.assertIn("TED talk 103", await pg.inner_text("#kxsel"))
+                    await pg.fill("#kxpick input[type=search]", "")
+                    for i in range(12):                                                   # at most 10
+                        free = await pg.query_selector("#kxlist .kxrow input:not(:checked):not(:disabled)")
+                        if free:
+                            await free.click()
+                    self.assertEqual(len((await pg.input_value("[id='chat.kiwix_books']")).split(", ")), 10)
+                    self.assertIn("10 Bücher gewählt", await pg.inner_text("#kxlist"))
+                    await pg.click("#kxsel .kxchip button")                                   # × removes one
+                    self.assertEqual(len((await pg.input_value("[id='chat.kiwix_books']")).split(", ")), 9)
+                    over = await pg.evaluate("document.documentElement.scrollWidth-window.innerWidth")
+                    self.assertLessEqual(over, 0, name)
+                    await pg.evaluate("document.getElementById('kxpick').scrollIntoView({block:'center'})")
+                    await pg.screenshot(path=os.path.join(os.environ.get("SPEECH_SPARK_SHOTS", helpers.TMP), f"kiwix-{name}.png"))
+                    self.assertEqual(errors, [])
+                    await br.close()
+        try:
+            self.run_async(go())
+        finally:
+            helpers.set_config(kiwix=False, kiwix_url="", kiwix_books=[])

@@ -143,29 +143,66 @@ def _clean(text, n=200):
 
 
 # ---------------------------------------------------------------- books
+# ISO 639-3 (the catalog) -> 639-1 (the browser names it with Intl.DisplayNames)
+LANG2 = {"deu": "de", "eng": "en", "fra": "fr", "spa": "es", "ita": "it", "por": "pt", "nld": "nl", "pol": "pl",
+         "rus": "ru", "ukr": "uk", "ces": "cs", "slk": "sk", "hun": "hu", "ron": "ro", "bul": "bg", "hrv": "hr",
+         "srp": "sr", "slv": "sl", "dan": "da", "swe": "sv", "nor": "no", "nob": "nb", "fin": "fi", "est": "et",
+         "lav": "lv", "lit": "lt", "ell": "el", "tur": "tr", "ara": "ar", "fas": "fa", "heb": "he", "hin": "hi",
+         "ben": "bn", "urd": "ur", "zho": "zh", "jpn": "ja", "kor": "ko", "vie": "vi", "tha": "th", "ind": "id",
+         "msa": "ms", "tgl": "tl", "swa": "sw", "afr": "af", "cat": "ca", "eus": "eu", "glg": "gl", "isl": "is",
+         "gle": "ga", "cym": "cy", "hye": "hy", "kat": "ka", "epo": "eo", "lat": "la", "bre": "br", "asm": "as"}
+MAX_CATALOG = 2000
+CATALOG_BYTES = 6_000_000
+
+
+def _lang(raw):
+    """The first language of a book as a short code ('de'), '' when none, 'mul' for several."""
+    codes = [c for c in re.split(r"[,\s]+", str(raw or "").lower()) if re.fullmatch(r"[a-z]{2,3}", c)]
+    if not codes:
+        return ""
+    if len(codes) > 1:
+        return "mul"
+    return LANG2.get(codes[0], codes[0])
+
+
+def _group(category, book):
+    """What kind of book: the catalog's category, else the first word of its name ('wikipedia', 'ted')."""
+    g = re.sub(r"[^a-z0-9_]", "", str(category or "").lower())[:30]
+    return g or re.sub(r"[^a-z0-9]", "", book.split("_", 1)[0].lower())[:30] or "other"
+
+
 def parse_catalog(text, root_path=""):
-    """[{"id", "title", "lang", "date", "count"}] from an OPDS catalog (kiwix-serve /catalog/v2/entries)."""
+    """[{"id", "title", "lang", "group", "flavour", "date", "count", "size", "desc"}] from an OPDS catalog
+    (kiwix-serve /catalog/v2/entries)."""
     doc = _xml(text)
     if doc is None:
         return []
-    books = []
+    books, seen = [], set()
     for e in (x for x in doc.iter() if _local(x) == "entry"):
-        book = ""
+        book, size = "", 0
         for link in (x for x in e if _local(x) == "link"):
             href = unquote(link.get("href") or "")
-            if (link.get("type") or "").startswith("text/html") and "/content/" in href:
+            kind = link.get("type") or ""
+            if kind.startswith("text/html") and "/content/" in href:
                 book = href.split("/content/", 1)[1].strip("/")
-            elif (link.get("type") or "").startswith("text/html") and not book:
+            elif kind.startswith("text/html") and not book:
                 book = href[len(root_path):].strip("/") if href.startswith(root_path) else ""
-        if not BOOK.fullmatch(book) or any(b["id"] == book for b in books):
+            elif "zim" in kind and str(link.get("length") or "").isdigit():
+                size = int(link.get("length"))
+        if not BOOK.fullmatch(book) or book in seen:
             continue
+        seen.add(book)
         date = _text(e, "issued", 10) or _text(e, "updated", 10)
         m = re.search(r"_(\d{4}-\d{2})$", book)
-        books.append({"id": book, "title": _clean(_text(e, "title") or book, 120),
-                      "lang": re.sub(r"[^a-z,]", "", _text(e, "language", 20).lower())[:20],
+        count = _text(e, "articleCount", 12)
+        flavour = re.sub(r"[^a-z0-9_]", "", _text(e, "flavour", 20).lower()) \
+            or next((f for f in ("maxi", "nopic", "mini") if f"_{f}_" in book or book.endswith("_" + f)), "")
+        books.append({"id": book, "title": _clean(_text(e, "title") or book, 120), "lang": _lang(_text(e, "language", 40)),
+                      "group": _group(_text(e, "category", 40), book), "flavour": flavour,
                       "date": date if re.fullmatch(r"\d{4}-\d{2}(-\d{2})?", date) else (m.group(1) if m else ""),
-                      "count": int(_text(e, "articleCount", 12)) if _text(e, "articleCount", 12).isdigit() else 0})
-        if len(books) >= 200:
+                      "count": int(count) if count.isdigit() else 0, "size": size,
+                      "desc": _clean(_text(e, "summary", 300), 160)})
+        if len(books) >= MAX_CATALOG:
             break
     return books
 
@@ -175,23 +212,30 @@ async def catalog(fresh=False):
     if not fresh and _catalog[1] and time.monotonic() - _catalog[0] < CATALOG_SECONDS:
         return _catalog[1]
     root_path = urlsplit(base()).path.rstrip("/")
-    text, _ = await _get("/catalog/v2/entries", {"count": "200"})
+    text, _ = await _get("/catalog/v2/entries", {"count": str(MAX_CATALOG)}, most=CATALOG_BYTES)
     books = parse_catalog(text, root_path)
     if not books:   # kiwix-serve before 3.1: the first catalog
-        text, _ = await _get("/catalog/root.xml")
+        text, _ = await _get("/catalog/root.xml", most=CATALOG_BYTES)
         books = parse_catalog(text, root_path)
     _catalog[:] = [time.monotonic(), books]
     return books
 
 
 def chosen_ids():
-    """The admin's choice (chat.kiwix_books): book names, at most MAX_BOOKS; empty = all."""
+    """The admin's choice (chat.kiwix_books): book names, at most MAX_BOOKS; empty = the default below."""
     raw = ccfg().get("kiwix_books") or []
     return [b for b in raw if isinstance(b, str) and BOOK.fullmatch(b)][:MAX_BOOKS] if isinstance(raw, list) else []
 
 
+def default_books(books):
+    """Without a choice: the German and English Wikipedias, the biggest first (at most MAX_BOOKS)."""
+    wp = [b for b in books if b.get("group") == "wikipedia" or b["id"].lower().startswith("wikipedia")]
+    wp = [b for b in wp if b.get("lang") in ("de", "en")]
+    return sorted(wp, key=lambda b: (0 if b["lang"] == "de" else 1, -b.get("count", 0)))[:MAX_BOOKS]
+
+
 async def chosen():
-    """The books to search: the admin's choice (or all, at most MAX_BOOKS), with title and date when known."""
+    """The books to search: the admin's choice (or the default), with title and date when known."""
     try:
         books = await catalog()
     except (httpx.HTTPError, ValueError):
@@ -199,18 +243,19 @@ async def chosen():
     ids = chosen_ids()
     if ids:
         known = {b["id"]: b for b in books}
-        return [known.get(i) or {"id": i, "title": i, "lang": "", "date": "", "count": 0} for i in ids]
-    return books[:MAX_BOOKS]
+        return [known.get(i) or {"id": i, "title": i, "lang": "", "group": _group("", i), "date": "", "count": 0}
+                for i in ids]
+    return default_books(books)
 
 
 def _german(b):
-    return "_de_" in b["id"] or b["id"].endswith("_de") or b["lang"].startswith(("deu", "de"))
+    return "_de_" in b["id"] or b["id"].endswith("_de") or b.get("lang") == "de"
 
 
 async def wiki_books():
     """The chosen Wikipedia books, German first, then English, then the rest."""
-    wp = [b for b in await chosen() if b["id"].lower().startswith("wikipedia")]
-    return sorted(wp, key=lambda b: 0 if _german(b) else 1 if ("_en_" in b["id"] or b["lang"].startswith("en")) else 2)
+    wp = [b for b in await chosen() if b.get("group") == "wikipedia" or b["id"].lower().startswith("wikipedia")]
+    return sorted(wp, key=lambda b: 0 if _german(b) else 1 if ("_en_" in b["id"] or b.get("lang") == "en") else 2)
 
 
 def label(b):
@@ -447,8 +492,9 @@ async def check():
     try:
         books = await catalog(fresh=True)
         out["ms"] = int((time.monotonic() - t0) * 1000)
-        out["books"] = books[:200]
+        out["books"] = books
         out["chosen"] = [b["id"] for b in await chosen()]
+        out["picked"] = bool(chosen_ids())     # False: the default (German and English Wikipedia)
         out["ok"] = bool(books)
         if not books:
             out["error"] = "Kiwix antwortet, aber der Katalog ist leer oder nicht lesbar."

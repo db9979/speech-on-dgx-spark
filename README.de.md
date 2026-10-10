@@ -31,6 +31,7 @@ Alle Optionen ohne Rückfragen (`--mode api --asr 1.7b --tts 0.6b --yes` …) st
 
 <!-- New version: add one line at the top here and in CHANGELOG.md, drop the oldest line here (keep 10). Details go to docs/de and docs/en, not into this README. -->
 
+- **V01.0.260** Kiwix: Bücherauswahl als Liste mit Suche, Sprach- und Artfilter (Deutsch/Englisch zuerst), gruppiert, mit Sprache, Variante, Artikelzahl, Größe und Stand; gewählte oben als Chips; ohne Auswahl deutsche und englische Wikipedia; Katalog bis 2000 Bücher
 - **V01.0.259** Selbsttest „Profile und Geräte“ sucht das Testgerät statt auf Seite 1 zu warten (GitHub-Tests wieder grün)
 - **V01.0.258** Eigenes Kiwix-Archiv (Funktionen → Websuche, aus; Profil-Schalter): Wikipedia-Fragen zuerst aus dem eigenen kiwix-serve, Volltextsuche in gewählten Büchern, „Erzähl mehr“ liest weiter, fällt die Websuche aus antwortet das Offline-Archiv; Zustand → Prüfen → „Kiwix prüfen“, Logs-Bereich „Wissen“
 - **V01.0.257** Profile und Geräte: Profil eines Geräts als Auswahlliste statt Namensfeld; iPhone-App, Lautsprecher, Pebble-Uhr und Home Assistant stehen „🔒 fest“ mit Ort der Verwaltung (Server lehnt Umhängen ab), Zeilen gleich ausgerichtet
@@ -40,7 +41,6 @@ Alle Optionen ohne Rückfragen (`--mode api --asr 1.7b --tts 0.6b --yes` …) st
 - **V01.0.253** Funktionen: „Wikipedia direkt“ steht unter der Websuche, „Rollen per Sprache“ unter dem eigenen Gesprächsstil (Seite bleibt kurz, Browsertest wieder grün)
 - **V01.0.252** Einstellungen → Sprachausgabe: Standardstimme ist eine Auswahlliste passend zum Modell (CustomVoice feste Sprecher, Base eigene Stimmen, VoiceDesign gesperrt); ein gespeicherter Name außerhalb der Liste bleibt erhalten
 - **V01.0.251** Doku: Panel-Bereiche der iPhone-App mit richtiger Versionsnummer (V01.0.250)
-- **V01.0.250** iPhone-App übernimmt das Panel, Stufe 4–9: Dokumente verwalten, Stimme einlernen, Von selbst, Sicherheit, Konten verbinden (mit Code), Funktionen, Profile und Sicherungen für Admins
 
 Alle Versionen: [CHANGELOG.md](CHANGELOG.md)
 

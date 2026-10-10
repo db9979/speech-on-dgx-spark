@@ -133,7 +133,7 @@ async function loadCfg(){CFG=await (await api('/api/config')).json();
   $('asrbackendnote').textContent=av?t('(viele Anfragen gleichzeitig, gestreamter Text)','(many concurrent requests, streamed text)'):t('(eine Anfrage nach der anderen; umstellen mit sudo ./install.sh --asr-backend vllm)','(one request at a time; switch with sudo ./install.sh --asr-backend vllm)');
   $('asrengine').style.display=av?'block':'none';$('asrtf').style.display=av?'none':'block';
   for(const[sec,o]of Object.entries(CFG))for(const[k,v]of Object.entries(o)){const el=$(sec+'.'+k);if(!el)continue;
-    if(el.type==='checkbox')el.checked=v;else{if(el.tagName==='SELECT'&&![...el.options].some(o=>o.value==v))el.add(new Option(v));el.value=Array.isArray(v)?v.join(', '):v}};instrHint();ttsVoiceOpts();
+    if(el.type==='checkbox')el.checked=v;else{if(el.tagName==='SELECT'&&![...el.options].some(o=>o.value==v))el.add(new Option(v));el.value=Array.isArray(v)?v.join(', '):v}};instrHint();ttsVoiceOpts();try{kxChips()}catch{};
   getDefaults=await renderSet($('chatdefaults'),{...SDEF,...(CFG.chat.defaults||{})},null);
   asrRec();cfgDeps();if(typeof guidesCount==='function')guidesCount();if(typeof tgAdmin==='function')tgAdmin();visionLoad();if(typeof apnsAdmin==='function')apnsAdmin();if(typeof iupdAdmin==='function')iupdAdmin();if(typeof coadmAdmin==='function')coadmAdmin();if(typeof espAdmin==='function')espAdmin();if(typeof agentAdmin==='function')agentAdmin();document.querySelectorAll('.pane').forEach(p=>markDirty(p,false));document.querySelectorAll('.savemsg').forEach(m=>m.textContent='');glance();glanceLoad()}
 let getDefaults=null;
@@ -511,16 +511,58 @@ async function loadVorrang(){try{vrRender(await (await api('/api/vorrang')).json
 $('vrgo').onclick=async()=>{try{vrRender(await (await api('/api/vorrang',{method:'POST'})).json())}catch(e){$('vrmsg').innerHTML=`<span class="err">${esc(e.message)}</span>`}};
 // own Kiwix (kiwix.py): check, and the book list to choose from (built with textContent only)
 async function kxCheck(){return await (await api('/api/admin/kiwix/check',{method:'POST'})).json()}
-function kxBooks(d){const box=$('kxbooks'),inp=$('chat.kiwix_books');box.textContent='';
-  const sel=()=>inp.value.split(/[\s,;]+/).filter(Boolean);
-  (d.books||[]).forEach(b=>{const btn=document.createElement('button');btn.type='button';btn.className='b';btn.style.margin='4px 6px 0 0';
-    const paint=()=>{const on=sel().includes(b.id);btn.classList.toggle('p',on);btn.textContent=(on?'✓ ':'')+b.title+(b.date?` (${b.date})`:'')};
-    btn.title=b.id;paint();
-    btn.onclick=()=>{let v=sel();v=v.includes(b.id)?v.filter(x=>x!==b.id):v.concat([b.id]).slice(0,10);inp.value=v.join(', ');
-      inp.dispatchEvent(new Event('input',{bubbles:true}));paint()};
-    box.appendChild(btn)})}
-$('kxload').onclick=async()=>{$('kxmsg').textContent=t('Lade …','Loading …');
-  try{const d=await kxCheck();kxBooks(d);$('kxmsg').textContent=d.ok?t(`${d.books.length} Bücher`,`${d.books.length} books`):(d.error||'')}
+// the picker: chosen books as chips on top (also before the catalog is loaded), below the catalog as a
+// list with search, language and group filter, grouped, each with language, variant, articles, size, date
+const KX={books:null,q:'',lang:'',grp:''};
+const kxSel=()=>$('chat.kiwix_books').value.split(/[\s,;]+/).filter(Boolean);
+function kxSet(v){$('chat.kiwix_books').value=v.slice(0,10).join(', ');$('chat.kiwix_books').dispatchEvent(new Event('input',{bubbles:true}));kxChips();kxList()}
+let KXLN=null;try{KXLN=new Intl.DisplayNames([L==='en'?'en':'de'],{type:'language'})}catch{}
+const kxLang=c=>!c?t('ohne Sprache','no language'):c==='mul'?t('mehrsprachig','multilingual'):(()=>{try{const n=KXLN&&KXLN.of(c);return n&&n!==c?n:c}catch{return c}})();
+const KXG={wikipedia:'Wikipedia',wiktionary:'Wiktionary',wikivoyage:'Wikivoyage',wikibooks:'Wikibooks',wikiquote:'Wikiquote',wikisource:'Wikisource',wikiversity:'Wikiversity',wikinews:'Wikinews',ted:'TED',phet:'PhET',stack_exchange:'Stack Exchange',stackexchange:'Stack Exchange',gutenberg:'Gutenberg',devdocs:'Docs',vikidia:'Vikidia',wikihow:'wikiHow',other:t('Sonstiges','Other')};
+const kxGrp=g=>KXG[g]||(g?g.charAt(0).toUpperCase()+g.slice(1).replace(/_/g,' '):t('Sonstiges','Other'));
+const kxSize=n=>!n?'':n>=1e9?(n/1e9).toFixed(1).replace('.',L==='en'?'.':',')+' GB':Math.max(1,Math.round(n/1e6))+' MB';
+const kxNum=n=>n?n.toLocaleString(L==='en'?'en':'de')+' '+t('Artikel','articles'):'';
+const kxMeta=b=>[kxLang(b.lang),b.flavour,kxNum(b.count),kxSize(b.size),b.date].filter(Boolean).join(' · ');
+function kxChips(){const box=$('kxsel'),sel=kxSel(),known=Object.fromEntries((KX.books||[]).map(b=>[b.id,b]));box.textContent='';
+  if(!sel.length){const m=document.createElement('span');m.className='mut';m.textContent=t('Keine Auswahl: deutsche und englische Wikipedia.','No choice: German and English Wikipedia.');box.appendChild(m);return}
+  sel.forEach(id=>{const b=known[id],c=document.createElement('span');c.className='kxchip';c.title=id;
+    const n=document.createElement('span');n.textContent=b?b.title:id;c.appendChild(n);
+    if(b){const m=document.createElement('small');m.textContent=[kxLang(b.lang),b.flavour].filter(Boolean).join(', ');c.appendChild(m)}
+    const x=document.createElement('button');x.type='button';x.textContent='×';x.setAttribute('aria-label',t('Entfernen','Remove'));x.onclick=()=>kxSet(kxSel().filter(y=>y!==id));c.appendChild(x);
+    box.appendChild(c)})}
+function kxPicker(){const box=$('kxpick');box.hidden=false;box.textContent='';const bar=document.createElement('div');bar.className='kxbar';
+  const q=document.createElement('input');q.type='search';q.placeholder=t('Suchen: Titel, Name, Beschreibung','Search: title, name, description');q.value=KX.q;q.maxLength=60;
+  q.oninput=()=>{KX.q=q.value;kxList()};
+  const counts=(key)=>{const m={};(KX.books||[]).forEach(b=>{m[b[key]]=(m[b[key]]||0)+1});return m};
+  const ls=document.createElement('select'),lc=counts('lang');
+  const opt=(sel,v,l)=>{const o=document.createElement('option');o.value=v;o.textContent=l;sel.appendChild(o)};
+  opt(ls,'',t('Deutsch und Englisch','German and English'));opt(ls,'*',t('Alle Sprachen','All languages')+` (${(KX.books||[]).length})`);
+  Object.keys(lc).sort((a,b)=>kxLang(a).localeCompare(kxLang(b))).forEach(c=>opt(ls,c,`${kxLang(c)} (${lc[c]})`));ls.value=KX.lang;ls.onchange=()=>{KX.lang=ls.value;kxList()};
+  const gs=document.createElement('select'),gc=counts('group');opt(gs,'',t('Alle Arten','All kinds'));
+  Object.keys(gc).sort((a,b)=>kxGrp(a).localeCompare(kxGrp(b))).forEach(g=>opt(gs,g,`${kxGrp(g)} (${gc[g]})`));gs.value=KX.grp;gs.onchange=()=>{KX.grp=gs.value;kxList()};
+  bar.append(q,ls,gs);const list=document.createElement('div');list.className='kxlist';list.id='kxlist';box.append(bar,list);kxList()}
+function kxList(){const list=$('kxlist');if(!list||!KX.books)return;list.textContent='';const sel=kxSel(),full=sel.length>=10;
+  const q=KX.q.trim().toLowerCase();
+  const hit=b=>(KX.lang==='*'||(KX.lang?b.lang===KX.lang:['de','en'].includes(b.lang)))&&(!KX.grp||b.group===KX.grp)
+    &&(!q||(b.title+' '+b.id+' '+(b.desc||'')).toLowerCase().includes(q));
+  const rows=KX.books.filter(b=>sel.includes(b.id)||hit(b));
+  const order=b=>(sel.includes(b.id)?0:1);
+  const groups={};rows.forEach(b=>{(groups[b.group]=groups[b.group]||[]).push(b)});
+  const names=Object.keys(groups).sort((a,b)=>(a==='wikipedia'?-1:b==='wikipedia'?1:kxGrp(a).localeCompare(kxGrp(b))));
+  let shown=0;const MAX=150;
+  for(const g of names){if(shown>=MAX)break;const h=document.createElement('div');h.className='kxgrp';h.textContent=`${kxGrp(g)} (${groups[g].length})`;list.appendChild(h);
+    groups[g].sort((a,b)=>order(a)-order(b)||(a.lang==='de'?0:1)-(b.lang==='de'?0:1)||(b.count||0)-(a.count||0)||a.title.localeCompare(b.title));
+    for(const b of groups[g]){if(shown++>=MAX)break;const on=sel.includes(b.id),r=document.createElement('label');r.className='kxrow'+(!on&&full?' dis':'');r.title=b.id;
+      const c=document.createElement('input');c.type='checkbox';c.checked=on;c.disabled=!on&&full;
+      c.onchange=()=>kxSet(c.checked?kxSel().concat([b.id]):kxSel().filter(y=>y!==b.id));
+      const tx=document.createElement('div'),tt=document.createElement('div'),mm=document.createElement('div');tt.className='kxt';tt.textContent=b.title;mm.className='kxm';mm.textContent=kxMeta(b)+(b.desc?' – '+b.desc:'');
+      tx.append(tt,mm);r.append(c,tx);list.appendChild(r)}}
+  if(!rows.length){const m=document.createElement('div');m.className='kxmore';m.textContent=t('Nichts gefunden. Andere Sprache oder Art wählen.','Nothing found. Pick another language or kind.');list.appendChild(m)}
+  else if(rows.length>MAX){const m=document.createElement('div');m.className='kxmore';m.textContent=t(`${rows.length-MAX} weitere – Suche oder Filter eingrenzen.`,`${rows.length-MAX} more – narrow the search or filter.`);list.appendChild(m)}
+  if(full){const m=document.createElement('div');m.className='kxmore';m.textContent=t('10 Bücher gewählt, mehr geht nicht.','10 books chosen, that is the most.');list.prepend(m)}}
+$('kxload').onclick=async()=>{if(KX.books&&!$('kxpick').hidden){$('kxpick').hidden=true;return}
+  $('kxmsg').textContent=t('Lade …','Loading …');
+  try{const d=await kxCheck();KX.books=d.books||[];$('kxmsg').textContent=d.ok?t(`${KX.books.length} Bücher im Kiwix`,`${KX.books.length} books in the Kiwix`):(d.error||'');kxChips();if(d.ok)kxPicker()}
   catch(e){$('kxmsg').textContent=e.message}};
 $('kxgo').onclick=async()=>{$('kxgomsg').textContent=t('Prüfe …','Checking …');$('kxout').textContent='';
   try{const d=await kxCheck(),out=$('kxout');$('kxgomsg').textContent='';
@@ -529,7 +571,7 @@ $('kxgo').onclick=async()=>{$('kxgomsg').textContent=t('Prüfe …','Checking �
     line(t(`Erreichbar in ${d.ms} ms, ${d.books.length} Bücher; durchsucht werden ${(d.chosen||[]).length}.`,`Reachable in ${d.ms} ms, ${d.books.length} books; ${(d.chosen||[]).length} are searched.`));
     if(d.test)line(t(`Testsuche in „${d.test.book}“: ${d.test.hits} Treffer in ${d.test.ms} ms.`,`Test search in "${d.test.book}": ${d.test.hits} hits in ${d.test.ms} ms.`));
     else line(t('Kein Wikipedia-Buch gewählt: Testsuche übersprungen.','No Wikipedia book chosen: test search skipped.'),'mut');
-    d.books.slice(0,30).forEach(b=>line(`${(d.chosen||[]).includes(b.id)?'✓':'·'} ${b.title}${b.date?' ('+b.date+')':''} – ${b.id}`,'mut'))}
+    const known=Object.fromEntries(d.books.map(b=>[b.id,b]));line((d.picked?t('Durchsucht:','Searched:'):t('Keine Auswahl, durchsucht:','No choice, searched:'))+' '+((d.chosen||[]).map(id=>known[id]?known[id].title+(known[id].lang?' ('+known[id].lang+')':''):id).join(', ')||t('nichts','nothing')),'mut')}
   catch(e){$('kxgomsg').textContent=e.message}};
 $('updstop').onclick=async()=>{if(!confirm(t('Update abbrechen? Was schon installiert ist, bleibt. Ein späteres Update holt den Rest nach.','Cancel the update? What is already installed stays. A later update installs the rest.')))return;
   try{await api('/api/update',{method:'DELETE'});$('updmsg').textContent=t('abgebrochen','cancelled');loadSys()}
