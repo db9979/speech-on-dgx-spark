@@ -114,6 +114,13 @@ struct AdminView: View {
                     NavigationLink("Prüfen") { ChecksView() }
                 } header: { Text("Zustand") }
                 Section {
+                    NavigationLink("Funktionen") { FeaturesView() }
+                    NavigationLink("Profile und Geräte") { AdminProfilesView() }
+                    NavigationLink("Sicherungen") { BackupsView() }
+                } header: { Text("Ändern") } footer: {
+                    Text("Was einen Code braucht (neue PIN, Profil löschen), fragt danach. Sprachmodell, Engines und Ports bleiben im Browser.")
+                }
+                Section {
                     Button("Abmelden", role: .destructive) { Task { await s.logout() } }
                 } footer: { Text("Die Anmeldung gilt nur, solange die App offen ist.") }
             }
@@ -382,6 +389,291 @@ struct ChecksView: View {
 
     private func run(_ path: String, timeout: TimeInterval = 60) async {
         do { _ = try await AdminSession.shared.call("POST", path, timeout: timeout); await load() }
+        catch { self.error = error.localizedDescription }
+    }
+}
+
+
+// MARK: - Ändern (Funktionen, Profile und Geräte, Sicherungen)
+
+/// Einstellungen → Funktionen: the plain on/off switches (the Spark names them; the sensitive ones stay in
+/// the browser, where they want the admin's code).
+struct FeaturesView: View {
+    @ObservedObject private var s = AdminSession.shared
+    @State private var on: [String: Bool] = [:]
+    @State private var error: String?
+    @State private var search = ""
+
+    static let names: [(String, LocalizedStringKey)] = [
+        ("memory", LocalizedStringKey("Gedächtnis")), ("history", LocalizedStringKey("Frühere Gespräche")),
+        ("documents", LocalizedStringKey("Eigene Dokumente")), ("doc_pictures", LocalizedStringKey("Bilder und Scans lesen")),
+        ("doc_night", LocalizedStringKey("Lange Dokumente nachts lesen")), ("doc_semantic", LocalizedStringKey("Bedeutungssuche")),
+        ("doc_originals", LocalizedStringKey("Originale aufbewahren")), ("doc_shared", LocalizedStringKey("Gemeinsame Dokumente")),
+        ("doc_brief", LocalizedStringKey("Steckbrief und Tags")), ("search", LocalizedStringKey("Websuche")),
+        ("reminders", LocalizedStringKey("Timer und Erinnerungen")), ("calendar", LocalizedStringKey("Kalender und Tagesbriefing")),
+        ("tasks", LocalizedStringKey("Aufgaben und Einkaufsliste")), ("agent", LocalizedStringKey("Agent-Funktionen")),
+        ("agent_mcp", LocalizedStringKey("Dienste per MCP")), ("messages", LocalizedStringKey("Nachrichten an andere")),
+        ("messages_all", LocalizedStringKey("Nachricht an alle")), ("messages_announce", LocalizedStringKey("Durchsagen auf Lautsprechern")),
+        ("messages_voice", LocalizedStringKey("Sprachnachrichten")), ("weather", LocalizedStringKey("Wetter")),
+        ("transit", LocalizedStringKey("Bus und Bahn")), ("contacts", LocalizedStringKey("Kontakte")),
+        ("homeassistant", LocalizedStringKey("Home Assistant")), ("wyoming", LocalizedStringKey("Home Assistant Assist (Wyoming)")),
+        ("mail", LocalizedStringKey("E-Mail lesen")), ("mail_tidy", LocalizedStringKey("Postfach aufräumen")),
+        ("parcels", LocalizedStringKey("Pakete")), ("proactive", LocalizedStringKey("Von selbst melden")),
+        ("room", LocalizedStringKey("Raum-Modus")), ("room_voices", LocalizedStringKey("Fernsehstimmen überhören")),
+        ("room_ha", LocalizedStringKey("Raum-Modus für Home Assistant")), ("room_remote", LocalizedStringKey("Raum-Modus aus der Ferne starten")),
+        ("telegram", LocalizedStringKey("Telegram")), ("esp32", LocalizedStringKey("Eigene Lautsprecher (ESP32)")),
+        ("pebble", LocalizedStringKey("Pebble-Uhr koppeln")), ("iphone_push", LocalizedStringKey("Push an die iPhone-App")),
+        ("iphone_update", LocalizedStringKey("Spark-Update über die iPhone-App")), ("follow_up", LocalizedStringKey("Rückfrage ohne Weckwort")),
+        ("no_self_echo", LocalizedStringKey("Eigene Stimme überhören")), ("images", LocalizedStringKey("Bilder erkennen")),
+        ("learn_fixes", LocalizedStringKey("Aus Korrekturen lernen")), ("own_style", LocalizedStringKey("Eigener Gesprächsstil")),
+        ("tool_thinking", LocalizedStringKey("Bei der Werkzeugwahl nachdenken")), ("routing", LocalizedStringKey("Gezielte Werkzeugwahl")),
+        ("speaker_id", LocalizedStringKey("Sprechererkennung")), ("datetime", LocalizedStringKey("Datum und Uhrzeit mitgeben")),
+        ("thinking", LocalizedStringKey("Vorher nachdenken")), ("prompt_cache", LocalizedStringKey("Schneller Antwortbeginn")),
+    ]
+
+    var body: some View {
+        Form {
+            if let e = error { Text(verbatim: e).foregroundStyle(.red) }
+            ForEach(Self.names.filter { on[$0.0] != nil }, id: \.0) { k in
+                Toggle(k.1, isOn: Binding(get: { on[k.0] ?? false }, set: { v in on[k.0] = v; Task { await save(k.0, v) } }))
+            }
+            let other = on.keys.filter { key in !Self.names.contains { $0.0 == key } }.sorted()
+            ForEach(other, id: \.self) { key in
+                Toggle(isOn: Binding(get: { on[key] ?? false }, set: { v in on[key] = v; Task { await save(key, v) } })) { Text(verbatim: key) }
+            }
+        }
+        .navigationTitle("Funktionen")
+        .refreshable { await load() }
+        .task { await load() }
+    }
+
+    private func load() async {
+        do {
+            let d = try await s.object("GET", "api/admin/switches")
+            on = ((d["switches"] as? [String: Any]) ?? [:]).compactMapValues { $0 as? Bool }
+            error = nil
+        } catch { self.error = error.localizedDescription }
+    }
+
+    private func save(_ key: String, _ value: Bool) async {
+        do { _ = try await s.call("PUT", "api/admin/switches", body: ["key": key, "on": value]); error = nil }
+        catch { self.error = error.localizedDescription; on[key] = !value }
+    }
+}
+
+struct AdminProfile: Identifiable, Hashable {
+    let id: String
+    let name: String
+    let devices: Int
+    let mfa: Bool
+    let last: Date?
+}
+
+/// Profile und Geräte: the profiles, a new one, a profile's devices; a new PIN, the second step reset and
+/// deleting need the admin's code.
+struct AdminProfilesView: View {
+    @ObservedObject private var s = AdminSession.shared
+    @State private var users: [AdminProfile] = []
+    @State private var name = ""
+    @State private var pin = ""
+    @State private var error: String?
+    @State private var note: String?
+
+    var body: some View {
+        Form {
+            if let e = error { Text(verbatim: e).foregroundStyle(.red) }
+            if let n = note { Text(verbatim: n).foregroundStyle(.secondary) }
+            Section {
+                ForEach(users) { u in
+                    NavigationLink { AdminProfileView(user: u) } label: {
+                        VStack(alignment: .leading, spacing: 2) {
+                            Text(verbatim: u.name)
+                            HStack {
+                                Text("\(u.devices) Geräte")
+                                if u.mfa { Text("zweiter Schritt") }
+                                if let last = u.last { Text(last, format: .dateTime.day().month().year()) }
+                            }
+                            .font(.caption).foregroundStyle(.secondary)
+                        }
+                    }
+                }
+            } header: { Text("Profile") }
+            Section {
+                TextField("Name", text: $name)
+                SecureField("PIN (mindestens 4 Zeichen)", text: $pin)
+                Button("Profil anlegen") { Task { await add() } }.disabled(name.trimmingCharacters(in: .whitespaces).isEmpty || pin.count < 4)
+            } header: { Text("Neues Profil") } footer: {
+                Text("Ein neues iPhone koppelt das Profil danach selbst unter Ich → iPhone-App.")
+            }
+        }
+        .navigationTitle("Profile und Geräte")
+        .refreshable { await load() }
+        .task { await load() }
+    }
+
+    private func load() async {
+        do {
+            let d = try await s.object("GET", "api/admin/profiles")
+            users = (d["users"] as? [[String: Any]] ?? []).prefix(500).compactMap { x in
+                guard let id = x["id"] as? String, id.range(of: #"^u_[0-9a-f]{6,32}$"#, options: .regularExpression) != nil else { return nil }
+                let last = (x["last"] as? NSNumber)?.doubleValue ?? 0
+                return AdminProfile(id: id, name: String((x["name"] as? String ?? "").prefix(40)), devices: (x["devices"] as? NSNumber)?.intValue ?? 0,
+                                    mfa: x["mfa"] as? Bool ?? false, last: last > 0 ? Date(timeIntervalSince1970: last) : nil)
+            }
+            error = nil
+        } catch { self.error = error.localizedDescription }
+    }
+
+    private func add() async {
+        do {
+            _ = try await s.call("POST", "api/admin/profiles", body: ["name": name.trimmingCharacters(in: .whitespaces), "pin": pin])
+            note = String(localized: "Profil angelegt.")
+            name = ""
+            pin = ""
+            await load()
+        } catch { self.error = error.localizedDescription }
+    }
+}
+
+struct AdminProfileView: View {
+    let user: AdminProfile
+    @ObservedObject private var s = AdminSession.shared
+    @Environment(\.dismiss) private var dismiss
+    @State private var devices: [(id: String, name: String, app: Bool)] = []
+    @State private var mfa = false
+    @State private var pin = ""
+    @State private var ask: CodeRequest?
+    @State private var confirmDelete = false
+    @State private var error: String?
+    @State private var note: String?
+
+    var body: some View {
+        Form {
+            if let e = error { Text(verbatim: e).foregroundStyle(.red) }
+            if let n = note { Text(verbatim: n).foregroundStyle(.secondary) }
+            Section {
+                ForEach(devices, id: \.id) { d in
+                    LabeledContent { Text(d.app ? String(localized: "iPhone-App") : String(localized: "Gerät")) } label: { Text(verbatim: d.name) }
+                        .swipeActions { Button("Entfernen", role: .destructive) { Task { await removeDevice(d.id) } } }
+                }
+                if devices.isEmpty { Text("Keine Geräte.").foregroundStyle(.secondary) }
+            } header: { Text("Geräte") } footer: { Text("Wischen entfernt ein Gerät, sein Schlüssel gilt sofort nicht mehr.") }
+            Section {
+                SecureField("Neue PIN", text: $pin)
+                Button("PIN setzen") { ask = CodeRequest { c in await setPin(code: c) } }.disabled(pin.count < 4)
+                if mfa {
+                    Button("Zweiten Schritt zurücksetzen") { ask = CodeRequest { c in await resetMfa(code: c) } }
+                }
+                Button("Profil löschen", role: .destructive) { confirmDelete = true }
+            } header: { Text("Anmeldung") } footer: {
+                Text("Zurücksetzen nur, wenn das Profil Handy und Wiederherstellungscodes verloren hat. Löschen entfernt Gedächtnis, Gespräche und Geräte.")
+            }
+        }
+        .navigationTitle(Text(verbatim: user.name))
+        .task { await load() }
+        .codeAlert($ask)
+        .confirmationDialog("Profil endgültig löschen?", isPresented: $confirmDelete, titleVisibility: .visible) {
+            Button("Löschen", role: .destructive) { ask = CodeRequest { c in await delete(code: c) } }
+        }
+    }
+
+    private var path: String { "api/admin/profiles/\(user.id)" }
+
+    private func load() async {
+        do {
+            let d = try await s.object("GET", path)
+            mfa = d["mfa"] as? Bool ?? false
+            devices = (d["devices"] as? [[String: Any]] ?? []).prefix(50).compactMap { x in
+                guard let id = x["id"] as? String, SparkAPI.devId(id) else { return nil }
+                return (id, String((x["name"] as? String ?? "").prefix(40)), x["app"] as? Bool ?? false)
+            }
+        } catch { self.error = error.localizedDescription }
+    }
+
+    private func removeDevice(_ id: String) async {
+        guard SparkAPI.devId(id) else { return }
+        do { _ = try await s.call("DELETE", "api/admin/devices/\(id)"); await load() }
+        catch { self.error = error.localizedDescription }
+    }
+
+    private func setPin(code: String) async {
+        do {
+            _ = try await s.call("PUT", path, body: ["pin": pin], code: code)
+            pin = ""
+            note = String(localized: "Neue PIN gesetzt.")
+            error = nil
+        } catch { self.error = error.localizedDescription }
+    }
+
+    private func resetMfa(code: String) async {
+        do {
+            _ = try await s.call("DELETE", path + "/mfa", code: code)
+            note = String(localized: "Der zweite Schritt ist für dieses Profil aus.")
+            await load()
+        } catch { self.error = error.localizedDescription }
+    }
+
+    private func delete(code: String) async {
+        do { _ = try await s.call("DELETE", path, code: code); dismiss() }
+        catch { self.error = error.localizedDescription }
+    }
+}
+
+/// Update und Sicherung: the backups on the Spark, a new one now, deleting an old one. Restoring and
+/// downloading stay in the browser.
+struct BackupsView: View {
+    @ObservedObject private var s = AdminSession.shared
+    @State private var items: [(name: String, size: Int, created: Date)] = []
+    @State private var busy = false
+    @State private var error: String?
+
+    var body: some View {
+        Form {
+            if let e = error { Text(verbatim: e).foregroundStyle(.red) }
+            Section {
+                Button { Task { await create() } } label: { if busy { ProgressView() } else { Text("Jetzt sichern") } }.disabled(busy)
+            } footer: { Text("Zurückspielen und Herunterladen gehen im Browser.") }
+            Section {
+                ForEach(items, id: \.name) { b in
+                    VStack(alignment: .leading, spacing: 2) {
+                        Text(b.created, format: .dateTime.day().month().year().hour().minute())
+                        Text(verbatim: ByteCountFormatter.string(fromByteCount: Int64(b.size), countStyle: .file)).font(.caption).foregroundStyle(.secondary)
+                    }
+                    .swipeActions { Button("Löschen", role: .destructive) { Task { await remove(b.name) } } }
+                }
+            } header: { Text("Sicherungen") }
+        }
+        .navigationTitle("Sicherungen")
+        .refreshable { await load() }
+        .task { await load() }
+    }
+
+    private static func valid(_ n: String) -> Bool {
+        n.range(of: #"^speech-spark-\d{8}-\d{6}(-[a-z\-]{1,20})?\.tar\.gz$"#, options: .regularExpression) != nil
+    }
+
+    private func parse(_ d: [String: Any]) {
+        items = (d["backups"] as? [[String: Any]] ?? []).prefix(100).compactMap { x in
+            guard let n = x["name"] as? String, Self.valid(n) else { return nil }
+            return (n, (x["size"] as? NSNumber)?.intValue ?? 0, Date(timeIntervalSince1970: (x["created"] as? NSNumber)?.doubleValue ?? 0))
+        }
+    }
+
+    private func load() async {
+        do { parse(try await s.object("GET", "api/backups")); error = nil }
+        catch { self.error = error.localizedDescription }
+    }
+
+    private func create() async {
+        busy = true
+        defer { busy = false }
+        do { _ = try await s.call("POST", "api/backups", timeout: 600); await load() }
+        catch { self.error = error.localizedDescription }
+    }
+
+    private func remove(_ name: String) async {
+        guard Self.valid(name) else { return }
+        do { parse(try await s.object("DELETE", "api/backups/\(name)")) }
         catch { self.error = error.localizedDescription }
     }
 }

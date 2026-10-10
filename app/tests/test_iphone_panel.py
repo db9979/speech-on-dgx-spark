@@ -90,6 +90,99 @@ class Areas(unittest.TestCase):
         for path in ("/api/admin/profiles", "/api/config", "/api/update"):
             self.assertIn(a.get(path).status_code, (401, 403), path)
 
+    def uid(self, name):
+        return next(u["id"] for u in profiles._load()["users"] if u["name"] == name)
+
+    def test_each_area_opens_its_own_paths_only(self):
+        c, a = self.app("Uli")
+        probe = {"app_docs_edit": "/api/profile/wissen", "app_voice": "/api/profile/voice",
+                 "app_auto": "/api/profile/weather", "app_security": "/api/profile/security",
+                 "app_accounts": "/api/profile/calendar"}
+        for right, path in probe.items():
+            self.assertEqual(a.get(path).status_code, 401, path)
+        for right, path in probe.items():
+            c.put("/api/profile/settings", json={right: True})
+            self.assertEqual(a.get(path).status_code, 200, path)
+            # the other areas stay closed
+            for other, p in probe.items():
+                if not profiles.settings(self.uid("Uli")).get(other):
+                    self.assertEqual(a.get(p).status_code, 401, (right, p))
+            c.put("/api/profile/settings", json={right: False})
+            self.assertEqual(a.get(path).status_code, 401, path)
+
+    def test_setting_up_the_second_step_stays_in_the_browser(self):
+        c, a = self.app("Vera")
+        helpers.set_config(mfa=True)
+        try:
+            c.put("/api/profile/settings", json={"app_security": True})
+            self.assertEqual(a.get("/api/profile/mfa").status_code, 200)
+            for path in ("/api/profile/mfa/setup", "/api/profile/mfa/enable"):
+                self.assertEqual(a.post(path, json={"code": "123456"}).status_code, 401, path)
+        finally:
+            helpers.set_config(mfa=False)
+
+    def test_secrets_from_the_app_need_the_second_step_and_a_code(self):
+        import mfa
+        c, a = self.app("Wim")
+        helpers.set_config(mail=True, speaker_id=True)
+        c.put("/api/profile/settings", json={"app_accounts": True, "app_voice": True})
+        body = {"kind": "gmail", "user": "wim@example.org", "password": "pw"}
+        real = (mfa.enabled, mfa.verify)
+        try:
+            r = a.post("/api/profile/mail", json=body)
+            self.assertEqual(r.status_code, 403, r.text)
+            self.assertIn("zweiten Anmeldeschritt", r.json()["detail"])
+            self.assertEqual(a.post("/api/profile/voice", files={"file": ("a.wav", b"x")}).status_code, 403)
+            mfa.enabled = lambda who: True
+            mfa.verify = lambda who, code: False
+            self.assertEqual(a.post("/api/profile/mail", json=body).status_code, 428)
+            self.assertEqual(a.post("/api/profile/mail", json=body, headers={"X-Speech-Code": "000000"}).status_code, 428)
+            self.assertEqual(a.post("/api/profile/voice", files={"file": ("a.wav", b"x")}).status_code, 428)
+        finally:
+            mfa.enabled, mfa.verify = real
+            helpers.set_config(mail=False, speaker_id=False)
+            guard._fails.clear()
+            guard._locks.clear()
+        # the smart home code word stays in the browser
+        self.assertEqual(a.put("/api/profile/homeassistant/code", json={"code": "x"}).status_code, 401)
+        # a Telegram link is a new way into the profile: the same rule as passwords
+        import inspect
+        import telegram
+        self.assertIn("secret_profile", inspect.signature(telegram.profile_link).parameters["prof"].default.dependency.__name__)
+
+    def test_document_and_service_switches_only_with_their_area(self):
+        c, a = self.app("Xena")
+        for k in iphone.DOC_FIELDS + iphone.AUTO_FIELDS:
+            self.assertEqual(a.put("/api/iphone/settings", json={k: True}).status_code, 400, k)
+        c.put("/api/profile/settings", json={"app_docs_edit": True, "app_auto": True})
+        for k in iphone.DOC_FIELDS + iphone.AUTO_FIELDS:
+            self.assertEqual(a.put("/api/iphone/settings", json={k: True}).status_code, 200, k)
+        self.assertEqual(a.put("/api/iphone/settings", json={"app_docs_edit": False}).status_code, 400)
+
+    def test_feature_switches_from_the_app_only_plain_ones(self):
+        """Einstellungen → Funktionen in "Spark verwalten": the admin's login; only chat on/off switches,
+        never the sensitive ones nor the ones that close the app out."""
+        import admin
+        from fastapi.testclient import TestClient
+        import panel
+        x = TestClient(panel.app)
+        self.assertEqual(x.get("/api/admin/switches").status_code, 401)
+        self.assertEqual(x.put("/api/admin/switches", json={"key": "weather", "on": True}).status_code, 401)
+        x.post("/api/login", json={"password": "secret-admin"})
+        keys = set(x.get("/api/admin/switches").json()["switches"])
+        self.assertIn("weather", keys)
+        for k in ("public", "mfa", "iphone", "iphone_panel"):
+            self.assertNotIn(k, keys)
+            self.assertEqual(x.put("/api/admin/switches", json={"key": k, "on": False}).status_code, 400, k)
+        self.assertEqual(x.put("/api/admin/switches", json={"key": "llm_url", "on": True}).status_code, 400)
+        self.assertEqual(x.put("/api/admin/switches", json={"key": "weather", "on": "yes"}).status_code, 400)
+        self.assertEqual(set(admin.app_switches()) & {k for sec, k in admin.SENSITIVE if sec == "chat"}, set())
+        r = x.put("/api/admin/switches", json={"key": "weather", "on": True})
+        self.assertEqual(r.status_code, 200, r.text)
+        self.assertIs(x.get("/api/admin/switches").json()["switches"]["weather"], True)
+        x.put("/api/admin/switches", json={"key": "weather", "on": False})
+        self.assertIs(x.get("/api/config").json()["chat"]["weather"], False)
+
 
     def test_admin_login_from_the_app_needs_switch_and_second_step(self):
         import mfa

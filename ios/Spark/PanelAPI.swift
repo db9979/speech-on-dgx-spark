@@ -92,3 +92,45 @@ extension SparkAPI {
         _ = try await call("DELETE", "api/profile/reminders/\(id)")
     }
 }
+
+// MARK: - Dokumente verwalten, Stimme, Von selbst, Sicherheit, Konten (each its own area switch)
+
+extension SparkAPI {
+    static func isDoc(_ s: String) -> Bool { s.range(of: #"^[0-9a-f]{12}$"#, options: .regularExpression) != nil }
+    static func devId(_ s: String) -> Bool { s.range(of: #"^d_[0-9a-f]{12}$"#, options: .regularExpression) != nil }
+    static func accId(_ s: String) -> Bool { s.range(of: #"^[mck][0-9a-f]{8}$"#, options: .regularExpression) != nil }
+
+    /// One of the profile's own documents: "Für alle", searchable or not, own tags (nil: the automatic ones).
+    func setDoc(_ id: String, _ body: [String: Any]) async throws {
+        guard Self.isDoc(id) else { return }
+        _ = try await call("PUT", "api/profile/wissen/\(id)", body: body)
+    }
+
+    func deleteDoc(_ id: String) async throws {
+        guard Self.isDoc(id) else { return }
+        _ = try await call("DELETE", "api/profile/docs/\(id)")
+    }
+
+    /// "reread" or "remind" (a reminder before the document's deadline)
+    func docAction(_ id: String, _ action: String) async throws -> [String: Any] {
+        guard Self.isDoc(id), ["reread", "remind"].contains(action) else { return [:] }
+        return try await object("POST", "api/profile/wissen/\(id)/\(action)", timeout: 120)
+    }
+
+    /// A recording (WAV) for speaker recognition; the Spark wants a fresh code for it.
+    func addVoice(wav: Data, code: String) async throws -> Int {
+        let boundary = "spark-" + UUID().uuidString
+        var r = request("api/profile/voice", method: "POST")
+        r.setValue("multipart/form-data; boundary=\(boundary)", forHTTPHeaderField: "Content-Type")
+        r.setValue(code, forHTTPHeaderField: "X-Speech-Code")
+        r.timeoutInterval = 90
+        var body = Data()
+        body.append(Data("--\(boundary)\r\nContent-Disposition: form-data; name=\"file\"; filename=\"stimme.wav\"\r\nContent-Type: audio/wav\r\n\r\n".utf8))
+        body.append(wav)
+        body.append(Data("\r\n--\(boundary)--\r\n".utf8))
+        r.httpBody = body
+        let (data, response) = try await URLSession.shared.data(for: r)
+        try Self.check(data, response)
+        return (Self.object(data)["samples"] as? NSNumber)?.intValue ?? 0
+    }
+}

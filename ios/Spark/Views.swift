@@ -514,10 +514,22 @@ struct SettingsView: View {
                 Section {
                     NavigationLink("Mein Profil") { ProfileView() }
                     if talk.allowed.docs {
-                        NavigationLink("Meine Dokumente") { DocumentsView() }
+                        NavigationLink("Meine Dokumente") { DocumentsView(manage: talk.allowed.areas.contains("app_docs_edit")) }
                     }
                     if talk.allowed.areas.contains("app_mine") {
                         NavigationLink("Mein Alltag") { MineView() }
+                    }
+                    if talk.allowed.areas.contains("app_auto") {
+                        NavigationLink("Von selbst") { AutoView() }
+                    }
+                    if talk.allowed.areas.contains("app_voice") {
+                        NavigationLink("Stimme einlernen") { VoiceView() }
+                    }
+                    if talk.allowed.areas.contains("app_accounts") {
+                        NavigationLink("Konten verbinden") { AccountsView() }
+                    }
+                    if talk.allowed.areas.contains("app_security") {
+                        NavigationLink("Sicherheit") { SecurityView() }
                     }
                     if talk.allowed.areas.contains("app_admin") {
                         NavigationLink("Spark verwalten") { AdminView() }

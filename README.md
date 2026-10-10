@@ -31,6 +31,7 @@ All options for running without questions (`--mode api --asr 1.7b --tts 0.6b --y
 
 <!-- New version: add one line at the top here and in CHANGELOG.md, drop the oldest line here (keep 10). Details go to docs/de and docs/en, not into this README. -->
 
+- **V01.0.250** iPhone app takes over the panel, steps 4–9: manage documents, teach your voice, proactive, security, connect accounts (with a code), features, profiles and backups for admins
 - **V01.0.249** Roles by voice and Wikipedia straight away (admin and profile switch each, off): own roles under Me → Conversation, "Sei jetzt der Butler" / "Sei wieder normal" switched by the panel with fixed rules; knowledge questions from the Wikipedia intro instead of a web search, 24-hour cache
 - **V01.0.248** Features: "Panel areas in the iPhone app" sits below the iPhone app switch (page stays short)
 - **V01.0.247** iPhone app takes over the panel, step 3: "Manage the Spark" with admin password and code, monitoring, logs with "Copy for thread", checks
@@ -40,7 +41,6 @@ All options for running without questions (`--mode api --asr 1.7b --tts 0.6b --y
 - **V01.0.243** Ich → Dokumente → View shows long documents a part at a time with "Read on" instead of "… shortened" after 200,000 characters; the assistant's search always used the whole text
 - **V01.0.242** Documents: PDFs up to 100 MB (the admin sets up to 300 MB under Funktionen → Eigene Dokumente; other files up to 20 MB, before "request too large" from 20 MB); the space per profile counts all uploads together, Ich → Dokumente shows "Used: x of y" with a bar, the admin sees and sets it per profile under Zustand → Monitoring
 - **V01.0.241** The small picture before each answer in the history follows the chosen face: a comic head instead of the robot when "Comic" is picked
-- **V01.0.239** Pebble sound stutters less: the watch starts after 1.5 s in its buffer (was 0.75 s) and after running dry waits until enough is back (one pause instead of scraps); the "watch: zeit" log line counts the stalls (watch app 1.5.0)
 
 All versions: [CHANGELOG.md](CHANGELOG.md)
 

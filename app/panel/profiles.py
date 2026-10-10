@@ -604,6 +604,11 @@ SETTINGS = {
     # panel areas in the app (iphone.AREAS, admin chat.iphone_panel): one switch per area, set in the browser
     "app_mine": (False, lambda v: isinstance(v, bool)),
     "app_admin": (False, lambda v: isinstance(v, bool)),
+    "app_docs_edit": (False, lambda v: isinstance(v, bool)),
+    "app_voice": (False, lambda v: isinstance(v, bool)),
+    "app_auto": (False, lambda v: isinstance(v, bool)),
+    "app_security": (False, lambda v: isinstance(v, bool)),
+    "app_accounts": (False, lambda v: isinstance(v, bool)),
     "room_tell": (False, lambda v: isinstance(v, bool)),    # a note when a speaker starts room mode by voice
     "room_remote": (False, lambda v: isinstance(v, bool)),  # start room mode on an own speaker from another device (roomfar.py)
     # agent functions (agent.py): the admin gives the level, the profile switches it on itself

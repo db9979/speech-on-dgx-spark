@@ -64,15 +64,48 @@ profiles.APP_GATE[0] = allowed
 # wants a fresh code from the app, so the profile needs its second step). "Spark verwalten" (app_admin)
 # opens no path: the app signs in like the browser, with the admin password and the admin's code.
 _ID = r"[0-9a-f]{1,16}"
+_DOC = r"[0-9a-f]{12}"
+_DEV = r"d_[0-9a-f]{12}"
+_ACC = r"[mck][0-9a-f]{8}"
 AREAS = {
     # Mein Alltag: memory, the next appointments, the Spark's own reminders
     "app_mine": ((("GET",), r"/api/profile/memory"), (("DELETE",), rf"/api/profile/memory/{_ID}"),
                  (("POST",), r"/api/profile/memory/tidy"), (("POST",), r"/api/profile/calendar/test"),
                  (("DELETE",), rf"/api/profile/reminders/{_ID}")),
+    # Dokumente verwalten: switches, "Für alle", tags, read again, deadline reminder, delete (own documents only)
+    "app_docs_edit": ((("GET",), r"/api/profile/wissen"), (("PUT",), rf"/api/profile/wissen/{_DOC}"),
+                      (("POST",), rf"/api/profile/wissen/{_DOC}/(?:reread|remind)"),
+                      (("DELETE",), rf"/api/profile/docs/{_DOC}")),
+    # Stimme einlernen: the speaker ID sample from the iPhone's microphone (with a fresh code), and
+    # "Stimme hier anlernen" at one of the profile's own speakers
+    "app_voice": ((("GET", "POST", "DELETE"), r"/api/profile/voice"), (("GET",), r"/api/profile/esp32"),
+                  (("POST",), rf"/api/profile/esp32/{_DEV}/voice")),
+    # Von selbst: weather place, parcels, bus and train, the profile's jobs (look, stop), room mode longer
+    "app_auto": ((("GET", "PUT"), r"/api/profile/weather"), (("POST",), r"/api/profile/weather/test"),
+                 (("GET", "PUT"), r"/api/profile/transit"), (("POST",), r"/api/profile/transit/(?:find|test)"),
+                 (("GET",), r"/api/profile/parcels"), (("GET",), r"/api/profile/agent"),
+                 (("GET",), rf"/api/profile/agent/jobs/{_ID}"), (("POST",), rf"/api/profile/agent/jobs/{_ID}/cancel"),
+                 (("POST",), r"/api/room/extend"), (("GET",), r"/api/room/history")),
+    # Sicherheit: own logins and devices, log out everywhere, the second step off or new recovery codes
+    # (each with a current code). Setting the second step up stays in the browser: there the PIN proves
+    # the person, here only the key would.
+    "app_security": ((("GET",), r"/api/profile/(?:security|mfa)"), (("POST",), r"/api/profile/logout-all"),
+                     (("POST",), r"/api/profile/mfa/(?:disable|recovery)"), (("DELETE",), rf"/api/profile/devices/{_DEV}")),
+    # Konten verbinden: mailboxes, calendars, address books, Home Assistant, Telegram. Adding hands the
+    # Spark a password or token: secret_profile, from the app only with the profile's second step and a
+    # fresh code. Passwords go straight to the Spark's vault and are never sent back.
+    "app_accounts": ((("GET", "POST"), r"/api/profile/(?:mail|calendar|contacts)"),
+                     (("DELETE",), rf"/api/profile/(?:mail|calendar|contacts)/{_ACC}"),
+                     (("POST",), r"/api/profile/mail/test"),
+                     (("GET", "PUT", "DELETE"), r"/api/profile/homeassistant"),   # the code word stays in the browser
+                     (("GET", "DELETE"), r"/api/profile/telegram"), (("POST",), r"/api/profile/telegram/link")),
 }
-RIGHTS_PANEL = ("app_mine", "app_admin")
+RIGHTS_PANEL = ("app_mine", "app_docs_edit", "app_voice", "app_auto", "app_security", "app_accounts", "app_admin")
 # conversation settings the app may change with "Mein Alltag" (each still needs its admin switch to matter)
 MINE_FIELDS = ("daily", "learn", "fix_learn", "tool_think", "route")
+# document switches (Ich -> Dokumente) with "Dokumente verwalten", services with "Von selbst"
+DOC_FIELDS = ("doc_pictures", "doc_semantic", "doc_originals", "doc_shared", "doc_brief", "doc_due")
+AUTO_FIELDS = ("wx_on", "par_on", "transit_on", "agent_on")
 
 
 def panel_on():
@@ -347,4 +380,5 @@ async def app_settings_save(request: Request, prof=Depends(own_profile)):
 
 
 def _fields(uid):
-    return APP_FIELDS + (MINE_FIELDS if area_on(uid, "app_mine") else ())
+    return APP_FIELDS + sum((f for right, f in (("app_mine", MINE_FIELDS), ("app_docs_edit", DOC_FIELDS),
+                                                ("app_auto", AUTO_FIELDS)) if area_on(uid, right)), ())

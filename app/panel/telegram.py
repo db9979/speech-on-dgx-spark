@@ -560,8 +560,8 @@ async def notify(uid, text, private=True):
 # ---------------------------------------------------------------- API
 from fastapi import APIRouter, Depends, HTTPException, Request  # noqa: E402
 
-from account import browser_profile  # noqa: E402
-from core import admin_code, assistant, auth, confirm_code, own_profile  # noqa: E402
+from account import browser_profile, secret_profile  # noqa: E402
+from core import admin_code, assistant, auth, own_profile  # noqa: E402
 
 router = APIRouter()
 
@@ -610,10 +610,9 @@ def profile_get(prof=Depends(own_profile)):
 
 
 @router.post("/api/profile/telegram/link", dependencies=[Depends(assistant), Depends(_on)])
-async def profile_link(request: Request, prof=Depends(browser_profile)):
+async def profile_link(request: Request, prof=Depends(secret_profile)):
     # a new way into the profile: only from its own browser login (never a shared device with a key),
-    # with the second login step when the profile has it
-    await confirm_code(request, prof["id"], prof["name"])
+    # with the second login step when the profile has it; from its iPhone app always with a fresh code
     code = new_code(prof["id"])
     bot = _state().get("bot", "")
     return {"code": code, "bot": bot, "url": f"https://t.me/{bot}?start={code}" if bot else "", "minutes": CODE_SECONDS // 60}

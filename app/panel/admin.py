@@ -529,6 +529,48 @@ async def put_config(request: Request):
             "panel_restart_needed": new["panel"] != old["panel"]}
 
 
+# Einstellungen → Funktionen from the iPhone app ("Spark verwalten", V01.0.249): only the on/off switches of
+# chat.*, never the sensitive ones (SENSITIVE: those want the admin's code in the browser) nor the ones that
+# would shut the app itself out. The admin signs in there with password and code, like the browser.
+APP_SWITCH_SKIP = {"public", "mfa", "iphone", "iphone_panel"}
+
+
+def app_switches():
+    with open(DEFAULTS) as f:
+        d = json.load(f)["chat"]
+    sens = {k for sec, k in SENSITIVE if sec == "chat"}
+    return [k for k, v in d.items() if isinstance(v, bool) and k not in APP_SWITCH_SKIP and k not in sens]
+
+
+@router.get("/api/admin/switches", dependencies=[Depends(auth)])
+def admin_switches():
+    cfg = get_config()["chat"]
+    return {"switches": {k: bool(cfg.get(k)) for k in app_switches()}}
+
+
+@router.put("/api/admin/switches", dependencies=[Depends(auth)])
+async def admin_switch(request: Request):
+    raw = await request.body()
+    if len(raw) > 512:
+        raise HTTPException(413, "too large")
+    try:
+        body = json.loads(raw or b"{}")
+    except ValueError:
+        raise HTTPException(400, "invalid JSON")
+    key, on = (body.get("key"), body.get("on")) if isinstance(body, dict) else (None, None)
+    if key not in app_switches() or not isinstance(on, bool):
+        raise HTTPException(400, "not a switch the app may change")
+    new = get_config()
+    new["chat"][key] = on
+    validate(new)
+    tmp = CONFIG_PATH + ".tmp"
+    with open(tmp, "w") as f:
+        json.dump(new, f, indent=2)
+    os.replace(tmp, CONFIG_PATH)
+    guard.log("config_switch", detail=f"chat.{key}={'on' if on else 'off'}")
+    return {"key": key, "on": on}
+
+
 @router.post("/api/service/{name}/{action}", dependencies=[Depends(auth)])
 def service_action(name: str, action: str):
     if name not in UNITS or action not in ("start", "stop", "restart"):

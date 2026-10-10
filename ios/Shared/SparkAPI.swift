@@ -165,6 +165,12 @@ struct SparkDoc: Identifiable, Equatable {
     let created: Date
     let pages: Int
     let todo: Int
+    /// "Dokumente verwalten": searchable, "Für alle", the Steckbrief's title, deadline and tags
+    var use = true
+    var shared = false
+    var title = ""
+    var due = ""
+    var tags: [String] = []
 }
 
 /// What a document says, as the Spark stored it.
@@ -432,7 +438,10 @@ struct SparkAPI {
                             state: d["state"] as? String ?? "ready", file: d["file"] as? Bool ?? false,
                             size: (d["size"] as? NSNumber)?.intValue ?? 0,
                             created: Date(timeIntervalSince1970: (d["created"] as? NSNumber)?.doubleValue ?? 0),
-                            pages: (d["pages"] as? NSNumber)?.intValue ?? 0, todo: (d["todo"] as? NSNumber)?.intValue ?? 0)
+                            pages: (d["pages"] as? NSNumber)?.intValue ?? 0, todo: (d["todo"] as? NSNumber)?.intValue ?? 0,
+                            use: d["use"] as? Bool ?? true, shared: d["shared"] as? Bool ?? false,
+                            title: String((d["title"] as? String ?? "").prefix(200)), due: String((d["due"] as? String ?? "").prefix(10)),
+                            tags: (d["tags"] as? [String] ?? []).prefix(12).map { String($0.prefix(24)) })
         }
     }
 
