@@ -33,6 +33,7 @@ All options for running without questions (`--mode api --asr 1.7b --tts 0.6b --y
 
 <!-- New version: add one line at the top here and in CHANGELOG.md, drop the oldest line here (keep 10). Details go to docs/de and docs/en, not into this README. -->
 
+- **V01.0.302** Phone: the buttons under the face (conversation settings, history, picture, message) wrap into rows instead of being cut off left and right; a new browser test checks at 320 and 390 px, in the app view and the computer layout, that nothing reaches over the edge on any page, settings page or Me page
 - **V01.0.301** Self-test "phone like the app" waits until the step is in the browser history before going back (once left the page on GitHub)
 - **V01.0.300** Android app "Spark" as APK without a store (Features → Android app, off; Me → Android app): a shell around the Spark page with notes while closed (asks itself every 15 minutes, no Google), assistant button, share to Spark and a hint on new versions; GitHub builds and signs it as android-v…, the Spark fetches it with a SHA-256 check and hands it out by download link with a one-time token (QR, 30 minutes) (docs/en/android-app.md)
 - **V01.0.299** reMarkable "Newest first" (admin sub-switch + Me → reMarkable, off): change time per page, with similar hits the newer note moves up to two places (also for "Search locally first"), hits say "changed on", "What did I note last/today/yesterday/this week?" as a fixed rule; new notes arrive sooner: a quick look at the account every 3 minutes, compare at once when it changed
@@ -42,7 +43,6 @@ All options for running without questions (`--mode api --asr 1.7b --tts 0.6b --y
 - **V01.0.295** Passkeys instead of the code (Face ID, Touch ID, Windows Hello): add one under Security (with a fresh code), then „With passkey“ at sign-in, for the admin mode and important changes; only over the address with a name, the app code stays as the way back, python-fido2 pinned with hash
 - **V01.0.294** Face shows what it does (Settings → Defaults, admin, off): robot and comic show a small sign while working (magnifier for searches, calendar sheet, letter, light bulb for Home Assistant, note pad for memory, thought bubbles), wink after something was done, look puzzled on errors and fall asleep after 5 quiet minutes; only from the panel's own chat events
 - **V01.0.293** My status no longer jumps to the top: the 10-second refresh replaces only the card (scroll position and open histories stay) instead of rebuilding the whole page
-- **V01.0.292** Language model: a choice list of the models the configured server reports (Settings → Language model → Model, "Automatic" = the first, "Type another …" for free text, "Reload"); admin only, request only to the configured address, 5 s, 256 KB, 60 s cache
 
 All versions: [CHANGELOG.md](CHANGELOG.md)
 

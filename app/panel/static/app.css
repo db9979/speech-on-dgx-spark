@@ -206,7 +206,7 @@ body[data-face=comic] .av{background:var(--avface) center/cover no-repeat}body[d
   body.inchat.mempty .convo{display:none}
   body.inchat.mempty .stage{gap:18px}
   body.inchat.mempty .mbar{display:flex}
-  .mbar{display:none;gap:12px;justify-content:center;margin-top:8px}.mbar .b{display:flex;align-items:center;gap:8px;min-height:48px;padding:10px 18px;border-radius:999px;font-size:15px}.mbar svg{width:20px;height:20px}
+  .mbar{display:none;gap:10px 12px;flex-wrap:wrap;justify-content:center;margin-top:8px;padding:0 12px;max-width:100%;box-sizing:border-box}.mbar .b{display:flex;white-space:nowrap;align-items:center;gap:8px;min-height:48px;padding:10px 18px;border-radius:999px;font-size:15px}.mbar svg{width:20px;height:20px}
   body.inchat:not(.mempty) #mback{display:flex}#mback{padding:8px 6px;min-height:40px}#mback svg{width:20px;height:20px}
   #msetwake:not(:empty){padding:10px 0 4px;border-bottom:1px solid var(--line);margin-bottom:6px}
 }

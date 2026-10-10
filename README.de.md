@@ -33,6 +33,7 @@ Alle Optionen ohne Rückfragen (`--mode api --asr 1.7b --tts 0.6b --yes` …) st
 
 <!-- New version: add one line at the top here and in CHANGELOG.md, drop the oldest line here (keep 10). Details go to docs/de and docs/en, not into this README. -->
 
+- **V01.0.302** Handy: Die Knöpfe unter dem Gesicht (Gespräch einstellen, Verlauf, Bild, Nachricht) brechen in Zeilen um statt links und rechts abgeschnitten zu werden; neuer Browsertest prüft auf 320 und 390 px in App-Ansicht und Rechner-Layout jede Seite, Einstellungsseite und Ich-Seite, dass nichts über den Rand ragt
 - **V01.0.301** Selbsttest „Handy wie die App“ wartet, bis der Schritt in der Browser-Historie steht, bevor er zurückgeht (lief auf GitHub einmal aus der Seite heraus)
 - **V01.0.300** Android-App „Spark“ als APK ohne Store (Funktionen → Android-App, aus; Ich → Android-App): Hülle um die Spark-Seite mit Mitteilungen bei geschlossener App (fragt alle 15 Minuten selbst nach, kein Google), Assistenten-Taste, Teilen an Spark und Hinweis auf neue Versionen; GitHub baut und signiert sie als android-v…, der Spark holt sie mit SHA-256-Prüfung und gibt sie per Download-Link mit Einmal-Token (QR, 30 Minuten) aus (docs/de/android-app.md)
 - **V01.0.299** reMarkable „Neueste zuerst“ (Admin-Unterschalter + Ich → reMarkable, aus): Änderungszeit pro Seite, bei ähnlich guten Treffern rückt die neuere Notiz bis zu zwei Plätze vor (auch für „Erst lokal“), Treffer mit „geändert am“, „Was habe ich zuletzt/heute/gestern/diese Woche notiert?“ als feste Regel; neue Notizen kommen schneller: alle 3 Minuten ein kurzer Blick aufs Konto, bei Änderung sofort abgleichen
@@ -42,7 +43,6 @@ Alle Optionen ohne Rückfragen (`--mode api --asr 1.7b --tts 0.6b --yes` …) st
 - **V01.0.295** Passkeys statt Code (Face ID, Touch ID, Windows Hello): unter Sicherheit anlegen (mit frischem Code), dann bei Anmeldung, Admin-Modus und wichtigen Änderungen „Mit Passkey“; nur über die Adresse mit Namen, App-Code bleibt als Rückfall, python-fido2 fest mit Hash
 - **V01.0.294** Gesicht zeigt, was es tut (Einstellungen → Vorgaben, Admin, aus): Roboter und Comic zeigen beim Arbeiten ein kleines Zeichen (Lupe beim Suchen, Kalenderblatt, Brief, Glühbirne bei Home Assistant, Notizblock beim Merken, Denkblasen), zwinkern nach Erledigtem, schauen bei Fehlern ratlos und schlafen nach 5 Minuten Ruhe ein; nur aus den eigenen Chat-Ereignissen des Panels
 - **V01.0.293** Mein Zustand springt nicht mehr nach oben: die 10-Sekunden-Aktualisierung ersetzt nur noch die Karte (Scrollposition und offene Verläufe bleiben), statt die ganze Seite neu zu bauen
-- **V01.0.292** Sprachmodell: Auswahlliste der Modelle, die der eingestellte Server meldet (Einstellungen → Sprachmodell → Modell, „Automatisch“ = das erste, „Anderes eingeben …“ für freie Eingabe, „Neu laden“); nur Admin, Anfrage nur an die eingestellte Adresse, 5 s, 256 KB, 60 s Cache
 
 Alle Versionen: [CHANGELOG.md](CHANGELOG.md)
 

@@ -2,6 +2,7 @@
 
 Every version in one line, newest first (taken from the commit messages, so some lines are German, some English). Older entries have no version number.
 
+- **V01.0.302** · 2026-10-10 · Handy: Die Knöpfe unter dem Gesicht (Gespräch einstellen, Verlauf, Bild, Nachricht) brechen in Zeilen um statt links und rechts abgeschnitten zu werden; neuer Browsertest prüft auf 320 und 390 px in App-Ansicht und Rechner-Layout jede Seite, Einstellungsseite und Ich-Seite, dass nichts über den Rand ragt
 - **V01.0.301** · 2026-10-10 · Selbsttest „Handy wie die App“ wartet, bis der Schritt in der Browser-Historie steht, bevor er zurückgeht (lief auf GitHub einmal aus der Seite heraus)
 - **V01.0.300** · 2026-10-10 · Android-App „Spark“ als APK ohne Store (Funktionen → Android-App, aus; Ich → Android-App): Hülle um die Spark-Seite mit Mitteilungen bei geschlossener App (fragt alle 15 Minuten selbst nach, kein Google), Assistenten-Taste, Teilen an Spark und Hinweis auf neue Versionen; GitHub baut und signiert sie als android-v…, der Spark holt sie mit SHA-256-Prüfung und gibt sie per Download-Link mit Einmal-Token (QR, 30 Minuten) aus
 - **V01.0.299** · 2026-10-10 · reMarkable „Neueste zuerst“ (Admin-Unterschalter + Ich → reMarkable, aus): Änderungszeit pro Seite, bei ähnlich guten Treffern rückt die neuere Notiz bis zu zwei Plätze vor (auch für „Erst lokal“), Treffer mit „geändert am“, „Was habe ich zuletzt/heute/gestern/diese Woche notiert?“ als feste Regel; neue Notizen kommen schneller: alle 3 Minuten ein kurzer Blick aufs Konto, bei Änderung sofort abgleichen

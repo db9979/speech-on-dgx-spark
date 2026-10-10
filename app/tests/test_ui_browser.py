@@ -1093,6 +1093,63 @@ class Browser(unittest.TestCase):
                 await br.close()
         self.run_async(go())
 
+    def test_nothing_sticks_out_on_phones(self):
+        """V01.0.302 (Dominik: buttons under the face cut off left and right): on phone widths, in the app view and
+        in the computer layout, no visible element reaches over the screen's edge on any page, settings page, tab
+        or Ich page, unless it sits in a row that scrolls sideways on purpose."""
+        out = """(()=>{const W=document.documentElement.clientWidth,bad=[];for(const e of document.querySelectorAll('body *')){
+          const cs=getComputedStyle(e);if(cs.visibility==='hidden'||cs.display==='none')continue;if(!e.offsetParent&&cs.position!=='fixed')continue;
+          const r=e.getBoundingClientRect();if(r.width<2||r.height<2||(r.right<=W+1&&r.left>=-1))continue;
+          let p=e.parentElement,ok=false;while(p&&p!==document.body){const o=getComputedStyle(p).overflowX;if(o==='auto'||o==='scroll'){ok=true;break}p=p.parentElement}
+          if(!ok)bad.push((e.id?'#'+e.id:e.tagName.toLowerCase()+'.'+String(e.className||'').trim().replace(/\\s+/g,'.'))+' '+Math.round(r.left)+'..'+Math.round(r.right))}
+          return bad.slice(0,6)})()"""
+        helpers.set_config(images=True, messages=True)
+        async def go():
+            async with async_playwright() as p:
+                for w in (320, 390):
+                    for mode in ("app", "desk"):
+                        br, pg, errors = await self.page(p, w, 800)
+                        if mode == "desk":
+                            await pg.evaluate("localStorage.setItem('appview','off')")
+                            await pg.reload()
+                            await pg.wait_for_timeout(800)
+                            await pg.evaluate("document.getElementById('wizmodal')&&(document.getElementById('wizmodal').style.display='none')")
+                        # every button of the row under the face, as for a profile with pictures and messages
+                        await pg.evaluate("document.querySelectorAll('.mbar .b[hidden]').forEach(b=>b.hidden=false)")
+                        found = []
+
+                        async def check(where):
+                            await pg.wait_for_timeout(150)
+                            bad = await pg.evaluate(out)
+                            if bad:
+                                found.append((w, mode, where, bad))
+                        await check("start")
+                        for s in await pg.evaluate("[...document.querySelectorAll('nav button[data-s]')].map(b=>b.dataset.s)"):
+                            await pg.evaluate(f"goSec('{s}')")
+                            await check(s)
+                        await pg.evaluate("goSec('cfg')")
+                        for pid in await pg.evaluate("[...document.querySelectorAll('#cfgnav button[data-p]')].map(b=>b.dataset.p)"):
+                            await pg.evaluate(f"document.querySelector('#cfgnav button[data-p={pid}]').click()")
+                            await check("cfg " + pid)
+                            await pg.evaluate("$('cfgback')&&$('cfgback').click()")
+                        await pg.evaluate("goSec('chat')")
+                        if mode == "app":
+                            for tab in ("today", "manage"):
+                                await pg.evaluate(f"APV.tab('{tab}')")
+                                await check("tab " + tab)
+                        await pg.evaluate("openMe('list')")
+                        await pg.wait_for_timeout(500)
+                        for t in await pg.evaluate("[...document.querySelectorAll('#ptabs button[data-t]')].map(b=>b.dataset.t)"):
+                            await pg.evaluate(f"ptab('{t}')")
+                            await check("me " + t)
+                        self.assertEqual(found, [])
+                        self.assertEqual(errors, [], (w, mode))
+                        await br.close()
+        try:
+            self.run_async(go())
+        finally:
+            helpers.set_config(images=False, messages=False)
+
     def test_phone_looks_like_the_app(self):
         """V01.0.296 (plan handy-wie-app.md): on a phone the page looks and works like the iPhone app: tab bar, the chat
         with face, bubbles, big microphone and text field, Heute, Verwalten as a list, pages with "back" on top that the
