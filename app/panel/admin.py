@@ -179,9 +179,10 @@ def _rights(uid):
     import appupdate
     import wissen
     import documents
+    import stufe
     lv = agent.admin_state().get("levels", {}).get(uid, "")
     docs = features.chat_cfg().get("documents", True) is not False
-    return {"agent": {"spark": agent.admin_on(), "level": lv},
+    return {"agent": {"spark": agent.admin_on(), "level": lv}, "vorrang": stufe.rights(uid),
             "update": dict(appupdate.rights(uid), spark=appupdate.admin_on()),
             "quota": {"spark": docs, "mb": wissen.quota_bytes(uid) // 1024**2, "own": uid in wissen._quotas(),
                       "default_mb": wissen.quota_bytes("") // 1024**2,
@@ -532,7 +533,7 @@ def validate(new):
     if ch.get("self_echo_mode", "pause") not in ("text", "pause"):
         raise HTTPException(400, "self_echo_mode: text or pause")
     for k in ("answer_check", "tool_thinking", "learn_fixes", "own_style", "follow_up", "no_self_echo", "images",
-              "routing", "prompt_cache", "doc_pictures", "doc_semantic", "doc_originals", "doc_shared", "doc_brief", "remarkable", "remarkable_send", "my_status"):
+              "routing", "prompt_cache", "doc_pictures", "doc_semantic", "doc_originals", "doc_shared", "doc_brief", "remarkable", "remarkable_send", "my_status", "person_priority"):
         if not isinstance(ch.get(k, False), bool):
             raise HTTPException(400, f"chat {k} must be true or false")
     for k in ("doc_night_from", "doc_night_to"):
@@ -540,6 +541,9 @@ def validate(new):
             raise HTTPException(400, f"{k}: HH:MM")
     if not isinstance(ch.get("doc_night", False), bool):
         raise HTTPException(400, "chat doc_night must be true or false")
+    pw = ch.get("person_priority_wait", 2)
+    if isinstance(pw, bool) or not isinstance(pw, (int, float)) or not 0 <= pw <= 5:
+        raise HTTPException(400, "person_priority_wait: 0 to 5 seconds")
     ms = ch.get("local_first_ms", 400)
     if not isinstance(ms, int) or isinstance(ms, bool) or not 200 <= ms <= 1500:
         raise HTTPException(400, "local_first_ms: 200 to 1500")
@@ -750,9 +754,10 @@ async def _test_asr(request, file, language, wake, room):
             rv = asyncio.create_task(asyncio.to_thread(speakers.identify, data, th))
     try:
         async with httpx.AsyncClient(timeout=600) as c:
+            import stufe   # priority for people: the profile's own recording goes first (not at shared speakers)
             r = await c.post(f"http://127.0.0.1:{cfg['asr']['port']}/v1/audio/transcriptions",
                              files={"file": (file.filename or "audio.wav", data)},
-                             data=form, headers=api_headers())
+                             data=form, headers=dict(api_headers(), **stufe.headers(stufe.asr_level(request))))
     except (httpx.ConnectError, httpx.ConnectTimeout):
         if spk:
             spk.cancel()

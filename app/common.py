@@ -90,6 +90,154 @@ class SpeechMark:
             speech_mark(end=True)
 
 
+# Priority for people (panel stufe.py, plan plaene/vorrang-personen.md): the panel tells the ASR/TTS
+# services how urgent a request is. Only the panel can: it sends the stage together with a key from
+# STATE/vorrang-key (made by the panel, readable only by the service user) and only from this machine.
+# Anybody else (Open WebUI, apps with the API key, other machines) is always "normal".
+STAGE_LOW, STAGE_NORMAL, STAGE_HIGH = 0, 1, 2
+STAGE_HEADER, STAGE_KEY_HEADER = "x-spark-stufe", "x-spark-vorrang"
+_stage_key = [None]
+
+
+def stage_key_path():
+    return os.path.join(os.environ.get("SPEECH_SPARK_STATE", "/var/lib/speech-spark/state"), "vorrang-key")
+
+
+def stage_key(create=False):
+    """The shared secret ("" while there is none). The panel creates it once (create=True)."""
+    if _stage_key[0]:
+        return _stage_key[0]
+    path = stage_key_path()
+    try:
+        with open(path) as f:
+            key = f.read().strip()
+    except OSError:
+        key = ""
+    if not key and create:
+        import secrets
+        key = secrets.token_hex(32)
+        try:
+            os.makedirs(os.path.dirname(path), exist_ok=True)
+            fd = os.open(path + ".tmp", os.O_WRONLY | os.O_CREAT | os.O_TRUNC, 0o600)
+            with os.fdopen(fd, "w") as f:
+                f.write(key)
+            os.replace(path + ".tmp", path)
+        except OSError:
+            return ""
+    if len(key) == 64:
+        _stage_key[0] = key
+        return key
+    return ""
+
+
+def stage_of(request):
+    """The stage of a request to a speech service: what the panel says, else normal."""
+    import hmac
+    import ipaddress
+    h = request.headers
+    got = h.get(STAGE_HEADER, "")
+    if got not in ("0", "2"):
+        return STAGE_NORMAL
+    try:
+        local = ipaddress.ip_address(request.client.host if request.client else "").is_loopback
+    except ValueError:
+        local = False
+    key = stage_key()
+    if not local or not key or not hmac.compare_digest(h.get(STAGE_KEY_HEADER, "").encode(), key.encode()):
+        return STAGE_NORMAL
+    return int(got)
+
+
+class GateFull(Exception):
+    """Too many requests wait already."""
+
+
+class PrioGate:
+    """At most `slots` requests at once go on to an engine (as many as it takes, engine_max_seqs); the
+    others wait here instead of in the engine's own first-come queue. Who waits goes by stage (2
+    Vorrang, 1 normal, 0 hinten), then by arrival; a request never stops one that already runs. Every
+    `age` seconds of waiting move a request one stage up, so nobody starves. A slot is given back at
+    the end of the request, at the latest after `lease` seconds (a stream the client dropped before it
+    began must not block the engine for good). One gate per engine and process (asyncio only)."""
+
+    def __init__(self, slots, age=4.0, lease=90.0, most=64, clock=time.monotonic):
+        self.slots, self.age, self.lease, self.most, self.clock = max(1, int(slots)), age, lease, most, clock
+        self.running = {}       # ticket -> start
+        self.waiting = []       # [stage, arrival, seq, future, ticket]
+        self.seq = 0
+        self.stats = {"waited": 0, "overtook": 0, "waited_max_ms": 0, "full": 0}
+
+    def _busy(self):
+        now = self.clock()
+        for t, s in list(self.running.items()):
+            if now - s > self.lease:
+                del self.running[t]
+        return len(self.running)
+
+    def _rank(self, w, now):
+        return (min(STAGE_HIGH, w[0] + int((now - w[1]) // self.age)) if self.age else w[0], -w[2])
+
+    def _grant(self):
+        while self.waiting and self._busy() < self.slots:
+            now = self.clock()
+            best = max(self.waiting, key=lambda w: self._rank(w, now))
+            self.waiting.remove(best)
+            if best[3].done():          # given up while waiting
+                continue
+            best[4]["overtook"] = sum(1 for w in self.waiting if w[2] < best[2])
+            self.running[best[4]["id"]] = now
+            best[3].set_result(True)
+
+    async def enter(self, stage=STAGE_NORMAL):
+        """Waits for a slot. Returns the ticket: {"id", "waited_ms", "overtook"}; pass it to leave()."""
+        import asyncio
+        self.seq += 1
+        ticket = {"id": self.seq, "waited_ms": 0, "overtook": 0}
+        if not self.waiting and self._busy() < self.slots:
+            self.running[ticket["id"]] = self.clock()
+            return ticket
+        if len(self.waiting) >= self.most:
+            self.stats["full"] += 1
+            raise GateFull()
+        t0 = self.clock()
+        fut = asyncio.get_running_loop().create_future()
+        self.waiting.append([stage if stage in (STAGE_LOW, STAGE_NORMAL, STAGE_HIGH) else STAGE_NORMAL, t0, self.seq, fut, ticket])
+        self._grant()
+        while not fut.done():   # a slot whose lease ran out frees itself: look again now and then
+            try:
+                await asyncio.wait_for(asyncio.shield(fut), timeout=1.0)
+            except asyncio.TimeoutError:
+                self._grant()
+            except asyncio.CancelledError:
+                if fut.done():
+                    self.leave(ticket)
+                else:
+                    fut.cancel()
+                    self.waiting = [w for w in self.waiting if w[3] is not fut]
+                raise
+        ticket["waited_ms"] = int((self.clock() - t0) * 1000)
+        self.stats["waited"] += 1
+        self.stats["overtook"] += ticket["overtook"]
+        self.stats["waited_max_ms"] = max(self.stats["waited_max_ms"], ticket["waited_ms"])
+        if ticket["overtook"]:
+            print(f"vorrang: Stufe {stage} überholt {ticket['overtook']} wartende Anfrage(n), wartete "
+                  f"{ticket['waited_ms'] / 1000:.1f} s", flush=True)
+        return ticket
+
+    def leave(self, ticket):
+        """Gives the slot back (twice is harmless)."""
+        if ticket and self.running.pop(ticket["id"], None) is not None:
+            self._grant()
+
+    def view(self):
+        return dict(self.stats, running=self._busy(), waiting=len(self.waiting), slots=self.slots)
+
+    @staticmethod
+    def headers(ticket):
+        """For the response: how long this request waited and how many it overtook (Logs → Anfragen)."""
+        return {"X-Spark-Wait-Ms": str(ticket["waited_ms"]), "X-Spark-Overtook": str(ticket["overtook"])}
+
+
 # Rough unified-memory footprint per model incl. CUDA context and activations (GiB).
 # Estimates, not measurements; refine them on the box via the panel's numbers.
 MODEL_GIB = {

@@ -91,6 +91,8 @@
     "remarkable": false,
     "remarkable_send": false,
     "my_status": false,
+    "person_priority": false,
+    "person_priority_wait": 2,
     "doc_quota_mb": 500,
     "doc_max_mb": 100,
     "doc_night": false,

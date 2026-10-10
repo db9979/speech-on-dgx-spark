@@ -59,6 +59,7 @@ STATE_FILES = {
     "vapid.pem": "pem",             # browser push key: the browsers' push subscriptions belong to it
     "esp32.json": "json",           # ESP32 speakers: board variant, firmware, automatic updates
     "agent.json": "json",           # agent levels and MCP services (tokens sealed)
+    "personen-vorrang.json": "json",  # priority for people: the stage the admin gave each profile (stufe.py)
     "quality-cases.json": "json",   # own quality test questions
     "quality-history.json": "json",
     "setup.json": "json",           # first-start wizard done

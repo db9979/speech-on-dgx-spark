@@ -31,6 +31,7 @@ Alle Optionen ohne Rückfragen (`--mode api --asr 1.7b --tts 0.6b --yes` …) st
 
 <!-- New version: add one line at the top here and in CHANGELOG.md, drop the oldest line here (keep 10). Details go to docs/de and docs/en, not into this README. -->
 
+- **V01.0.282** Vorrang für Personen (Funktionen → Gespräch, aus; Stufe pro Profil nur vom Admin unter Personen und Geräte, höchstens 3): Sätze und Aufnahmen mit Vorrang überholen in Sprachausgabe und Spracherkennung die wartenden anderer (laufende nie abgebrochen, niemand verhungert), nur das Panel darf die Stufe sagen; Logs → Anfragen zeigt Wartezeit, Zustand → Prüfen misst „Zwei Personen gleichzeitig“
 - **V01.0.281** Mein Zustand (Funktionen → Alltag, aus; Ich → Mein Zustand): was der Spark im Hintergrund für dich erledigt (Dokumente lesen, Bedeutungssuche, Steckbriefe, reMarkable, Postfach aufräumen, Kontakte, Aufträge, Morgenbriefing, Gedächtnis) mit Wartegrund, zuletzt/nächstes Mal und 7-Tage-Verlauf, dazu verbundene Dienste mit ihrer letzten Antwort; roter Punkt bei „Ich“, wenn dich etwas braucht; nur Namen und Zahlen; iPhone-App liest dieselbe Quelle, Admin sieht nur Anzahlen
 - **V01.0.280** „Los geht's“: Speichern des Einrichtungsstands lädt die Seite nicht mehr neu (Schalter-Prüfung übersprungen); Browsertest schreibt eine Diagnose statt zu hängen
 - **V01.0.279** reMarkable: „… und leg es aufs reMarkable“ legt die ganze Antwort ab, auch nach einer Websuche; eine feste Regel auf den eigenen Worten entscheidet, das Panel schickt nach der Antwort und sagt Bescheid (vorher schnitt die Weiche das Werkzeug weg)
@@ -40,7 +41,6 @@ Alle Optionen ohne Rückfragen (`--mode api --asr 1.7b --tts 0.6b --yes` …) st
 - **V01.0.275** Haupt-Admin als Profil (eine Anmeldung, Passwort bleibt Notzugang), eine Hülle für angemeldete Profile, Wörter aufgeräumt (Admin-Rechte, Werkzeug-Verlauf, Update-Verlauf, Spark verwalten)
 - **V01.0.274** reMarkable: Häkchen „Alle Notizbücher“ und einzelne Häkchen bleiben, während die Liste lädt (Zähler „x / y“), Suchfeld behält den Fokus; Verbinden-Link führt direkt zu my.remarkable.com/pair
 - **V01.0.273** reMarkable-Notizen (Funktionen → Bilder und Scans lesen, aus; Ich → reMarkable): my.remarkable-Konto per Einmalcode verbinden, ausgewählte Notizbücher kommen in die Dokumentensuche (getippter Text und Markierungen direkt, Handschrift liest das Sprachmodell in Pausen, nur geänderte Seiten neu); „Aufs reMarkable schicken“ (aus) legt Antworten und diktierte Notizen als EPUB in den Ordner „Spark“
-- **V01.0.272** iPhone-App liest Funktionsnamen, Gruppen und Sperren vom Spark statt eigener Listen; Profil in der App mit Funktionen „n von m an“, Rolle und Browsern; Freihändig und Ins Wort fallen gelten fürs Profil
 
 Alle Versionen: [CHANGELOG.md](CHANGELOG.md)
 

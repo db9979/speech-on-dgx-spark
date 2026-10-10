@@ -153,6 +153,8 @@ def fake_tts():
     @app.post("/v1/audio/speech")
     async def speech(req: Request):
         body = await req.json()
+        TTS_SEEN.append({k: v for k, v in req.headers.items() if k.startswith("x-spark-")})   # priority for people
+        del TTS_SEEN[:-20]
         if not body.get("stream") and body.get("response_format") == "pcm":   # whole answer at once (Wyoming)
             return Response(b"\1\0" * 2400, media_type="audio/pcm")
 
@@ -169,6 +171,7 @@ def fake_tts():
 
 
 TTS_VOICES = ["ryan", "serena"]
+TTS_SEEN = []   # the x-spark-* headers of the last speech requests
 TODO = {"Brot": "needs_action"}
 HA_STATES = [
     {"entity_id": "sensor.wz_temp", "state": "21.5", "attributes": {"friendly_name": "Temperatur",

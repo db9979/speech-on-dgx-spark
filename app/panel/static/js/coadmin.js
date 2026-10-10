@@ -76,7 +76,7 @@ const ADM_EVENT={admin_login:t('Hauptadmin angemeldet','Main admin signed in'),a
   admin_mode_failed:t('Admin-Modus: Code falsch','Admin mode: wrong code'),admin_role:t('Rolle geändert','Role changed'),admin_roles_switch:t('Benutzer als Admin','Users as admins'),
   admin_mfa_on:t('Zweiter Schritt Hauptadmin an','Main admin second step on'),admin_mfa_off:t('Zweiter Schritt Hauptadmin aus','Main admin second step off'),
   admin_logout_everywhere:t('Hauptadmin überall abgemeldet','Main admin signed out everywhere'),
-  feature_profile:t('Funktion für ein Profil','Function for a profile'),agent_level:t('Aufträge für ein Profil','Jobs for a profile'),
+  feature_profile:t('Funktion für ein Profil','Function for a profile'),agent_level:t('Aufträge für ein Profil','Jobs for a profile'),person_priority:t('Vorrang für ein Profil','Priority for a profile'),
   iphone_update_rights:t('Spark-Update aus der App','Spark update from the app')};
 async function adminRows(){const d=await (await api('/api/admin/protocol?limit=500')).json();
   return d.events.map(e=>{const dt=new Date(e.t*1000),by=e.by==='main'?t('Hauptadmin','Main admin'):e.by?(d.names[e.by]||e.by):(e.name||(e.uid&&d.names[e.uid])||'');

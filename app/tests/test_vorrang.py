@@ -222,7 +222,7 @@ class Panel(Base):
             vorrang._test["running"] = False
 
     def test_with_priority_the_question_is_heard_first_and_stops_the_load(self):
-        calls, saved = [], (vorrang._speak, vorrang._hear, vorrang._load)
+        calls, saved = [], (vorrang._speak, vorrang._hear, vorrang._load, vorrang._people)
 
         async def speak(c, cfg, h):
             calls.append("speak")
@@ -240,12 +240,15 @@ class Panel(Base):
 
         async def sleep(s):
             self.silence()
-        vorrang._speak, vorrang._hear, vorrang._load = speak, hear, load
+        async def people(c, cfg, h):
+            calls.append("people")
+            return {"load": 4}
+        vorrang._speak, vorrang._hear, vorrang._load, vorrang._people = speak, hear, load, people
         try:
             res = asyncio.run(vorrang.measure(sleep=sleep))
         finally:
-            vorrang._speak, vorrang._hear, vorrang._load = saved
-        self.assertEqual(calls, ["speak", "hear", "load", "speak", "hear", "load", "hear", "speak"])
+            vorrang._speak, vorrang._hear, vorrang._load, vorrang._people = saved
+        self.assertEqual(calls, ["speak", "hear", "load", "speak", "hear", "load", "hear", "speak", "people"])
         self.assertTrue(res["vorrang"]["stopped"])
 
     def test_verdict_rules(self):

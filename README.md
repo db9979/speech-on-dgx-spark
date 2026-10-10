@@ -31,6 +31,7 @@ All options for running without questions (`--mode api --asr 1.7b --tts 0.6b --y
 
 <!-- New version: add one line at the top here and in CHANGELOG.md, drop the oldest line here (keep 10). Details go to docs/de and docs/en, not into this README. -->
 
+- **V01.0.282** Priority for people (Features → Conversation, off; stage per profile only by the admin under People and devices, at most 3): sentences and recordings with priority overtake others' waiting ones in speech output and recognition (running ones never stopped, nobody starves), only the panel may say the stage; Logs → Requests shows the wait, Status → Check measures "two people at once"
 - **V01.0.281** My status (Features → Everyday, off; Me → My status): what the Spark does for you in the background (reading documents, meaning search, document cards, reMarkable, inbox tidying, contacts, jobs, morning briefing, memory) with the reason it waits, last/next time and a 7-day history, plus connected services with their last answer; a red dot at "Me" when something needs you; names and numbers only; the iPhone app reads the same source, the admin sees counts only
 - **V01.0.280** "Los geht's": saving the setup state no longer reloads the page (switch check skipped); the browser test logs a diagnosis instead of hanging
 - **V01.0.279** reMarkable: "… and put it on my reMarkable" stores the whole answer, also after a web search; a fixed rule on the person's own words decides, the panel sends it after the answer and says so (before, the switch cut the tool)
@@ -40,7 +41,6 @@ All options for running without questions (`--mode api --asr 1.7b --tts 0.6b --y
 - **V01.0.275** Main admin as a profile (one login, the password stays the emergency access), one shell for signed-in profiles, words tidied (admin rights, tool history, update history, Spark verwalten)
 - **V01.0.274** reMarkable: the "All notebooks" tick and single ticks stay while the list loads (counter "x / y"), the search field keeps focus; the connect link goes straight to my.remarkable.com/pair
 - **V01.0.273** reMarkable notes (Features → Read pictures and scans, off; Me → reMarkable): connect the my.remarkable account with a one-time code, chosen notebooks go into the document search (typed text and highlights directly, the language model reads handwriting in quiet moments, only changed pages again); "Send to the reMarkable" (off) puts answers and dictated notes as EPUB into the folder "Spark"
-- **V01.0.272** iPhone app reads function names, groups and locks from the Spark instead of its own lists; profile in the app with functions "n of m on", role and browsers; hands-free and barge-in belong to the profile
 
 All versions: [CHANGELOG.md](CHANGELOG.md)
 

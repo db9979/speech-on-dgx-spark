@@ -66,6 +66,18 @@ Speech recognition and speech output always come first (fixed rule without a swi
 - **GPU**: the GB10 has no priorities between processes. The speech engines' memory is reserved from their start. The language model's own answer runs at the same time as the speech output and sometimes slows it down ("tts behind … inside the piece").
 - **Checking**: Zustand → Prüfen → "Speech first" speaks a sentence alone, under load without priority and under load with priority, and shows first audio, real-time factor and recognition time, above it today's counters. Zustand → Logs shows the lines in the area "Priority" (`vorrang: … wartet`, `… abgebrochen`, `… wartete N s`).
 
+## Priority for people
+
+When several people talk at once, chosen profiles get their answer first (since V01.0.282, plan `plaene/vorrang-personen.md`). Off by default.
+
+- **Switching on**: Funktionen → Gespräch → "Vorrang für Personen" (`chat.person_priority`, feature register `vorrang`). Only the admin sets the stage per profile under Personen und Geräte → profile → Rechte → Vorrang: "Vorrang" (three profiles at most), "normal" or "hinten anstellen" (last in line). Stored in `state/personen-vorrang.json` (in the backup), changes in the admin log (`person_priority`). Under Ich the profile sees the function as on or "off for you".
+- **Who asks**: only from the sign-in (browser, app, device key), never from the text. Guests and programs without a profile (Open WebUI, Wyoming) are always normal. At a shared speaker the stage counts only when the speaker recognition heard the profile's voice; the recording itself goes to the recognition as normal there, because the voice is known only afterwards.
+- **Speech output and recognition**: both services let only as many requests go to the engine at once as it takes (`tts.engine_max_seqs`, `asr.engine_max_seqs`); the rest wait in the service (`common.PrioGate`) by stage, then by arrival. A running request is never stopped. Every 4 s of waiting move a request one stage up, so nobody starves. At most 64 wait, else 503. A slot comes back after 90 s at the latest, even when a device dropped the connection before its stream began.
+- **Who may say the stage**: only the panel. It sends `X-Spark-Stufe` (0, 1, 2) together with the key from `state/vorrang-key` (made once by the panel, mode 0600, not in the backup). The services believe it only from 127.0.0.1 and only with that key; everybody else is normal, even with the API key.
+- **Seeing it**: Zustand → Logs → Anfragen shows "with priority" at the arrival and, at speech output, how long the sentences queued and how many they overtook. Journal: `vorrang: Stufe 2 überholt N wartende Anfrage(n)`. The services' `/health` shows slots, waiting requests and counters under `queue`.
+- **Measuring**: Zustand → Prüfen → "Speech first" also measures the case "two people at once": the speech output is full with sentences of others (all slots plus two waiting), then one more sentence comes, once normal and once with priority. It shows the first audio of both.
+- **Limits**: the language model (qwen38) knows no order; Open WebUI and other programs that ask it directly are not held back. With one person talking nothing gets faster.
+
 ## Why the installation looks like this
 
 - **PyTorch from the cu130 index**: the aarch64 torch on PyPI has no CUDA, so a plain `pip install qwen-tts` would run on the CPU. torch and torchaudio must come from the same index, otherwise `libtorchaudio.so` does not load.

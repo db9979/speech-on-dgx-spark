@@ -276,6 +276,44 @@ def t2(de, en):
     return {"de": de, "en": en}
 
 
+async def _people(c, cfg, h):
+    """Case "Zwei Personen gleichzeitig" (priority for people, stufe.py): the TTS is full with sentences of
+    others (as many as it takes at once plus two waiting), then one more sentence comes, once as a normal
+    profile and once with Vorrang. With Vorrang it skips the waiting ones and only waits for a free slot."""
+    import stufe
+    n = cfg["tts"].get("engine_max_seqs", 2)
+    n = (n if isinstance(n, int) and not isinstance(n, bool) and 1 <= n <= 8 else 2) + 2
+    out = {"load": n}
+    for name, extra in (("normal", {}), ("vorrang", stufe.headers("vorrang"))):
+        loads = [asyncio.ensure_future(_speak(c, cfg, h)) for _ in range(n)]
+        try:
+            await asyncio.sleep(0.5)        # the others are in the TTS first
+            first, rtf, _ = await _speak(c, cfg, dict(h, **extra))
+            out[name] = {"first": _r(first), "rtf": _r(rtf)}
+        finally:
+            for task in loads:
+                task.cancel()
+            for task in loads:
+                try:
+                    await task
+                except BaseException:
+                    pass
+        await asyncio.sleep(1)
+    return out
+
+
+def people_verdict(p):
+    a, b = (p or {}).get("normal") or {}, (p or {}).get("vorrang") or {}
+    if a.get("first") is None or b.get("first") is None:
+        return None
+    if b["first"] <= a["first"] * 0.8:
+        d = round(a["first"] - b["first"], 1)
+        return {"level": "ok", "title": t2(f"Mit Vorrang kommt der erste Ton {d} s früher, wenn mehrere gleichzeitig reden.",
+                                            f"With priority the first audio comes {d} s sooner when several people talk at once.")}
+    return {"level": "warn", "title": t2("Kaum Unterschied: Die Sprachausgabe staut sich hier wenig.",
+                                          "Hardly a difference: speech output hardly queues here.")}
+
+
 async def measure(sleep=asyncio.sleep):
     """Zustand → Prüfen → "Vorrang prüfen": a sentence spoken and heard (a) alone, (b) while a long
     background answer of the language model runs without the rule, (c) the same with the rule."""
@@ -329,12 +367,16 @@ async def measure(sleep=asyncio.sleep):
                     await job
                 except BaseException:
                     pass
+        if cfg["tts"].get("backend") == "vllm-omni":
+            res["people"] = await _people(c, cfg, h)
+            res["people_verdict"] = people_verdict(res["people"])
     res["verdict"] = verdict(res)
     return res
 
 
 def test_state(now=None):
-    return {"running": _test["running"], "result": _test["result"], "today": today(now)}
+    import stufe
+    return {"running": _test["running"], "result": _test["result"], "today": today(now), "people": stufe.today()}
 
 
 def start_test():

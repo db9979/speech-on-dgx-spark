@@ -78,6 +78,18 @@ Spracherkennung und Sprachausgabe gehen immer vor (feste Regel ohne Schalter, se
 - **GPU**: Prioritäten zwischen Prozessen gibt es auf der GB10 nicht. Der Speicher der Sprach-Engines ist ab dem Start fest reserviert. Die eigene Antwort des Sprachmodells läuft gleichzeitig mit der Sprachausgabe; das bremst sie manchmal („tts behind … inside the piece“).
 - **Prüfen**: Zustand → Prüfen → „Vorrang für Sprache“ spricht einen Satz alleine, unter Last ohne Vorfahrt und unter Last mit Vorfahrt und zeigt erster Ton, Echtzeitfaktor und Erkennungszeit; darüber die Zähler von heute. In Zustand → Logs stehen die Zeilen im Bereich „Vorrang“ (`vorrang: … wartet`, `… abgebrochen`, `… wartete N s`).
 
+## Vorrang für Personen
+
+Reden mehrere Personen gleichzeitig, bekommen ausgewählte Profile ihre Antwort zuerst (seit V01.0.282, Plan `plaene/vorrang-personen.md`). Standardmäßig aus.
+
+- **Einschalten**: Funktionen → Gespräch → „Vorrang für Personen“ (`chat.person_priority`, Funktionsregister `vorrang`). Die Stufe pro Profil setzt nur der Admin unter Personen und Geräte → Profil → Rechte → Vorrang: „Vorrang“ (höchstens drei Profile), „normal“ oder „hinten anstellen“. Gespeichert in `state/personen-vorrang.json` (in der Sicherung), Änderungen im Admin-Protokoll (`person_priority`). Unter Ich sieht das Profil „Vorrang für Personen“ als an oder „bei dir aus“.
+- **Wer fragt**: nur aus der Anmeldung (Browser, App, Geräteschlüssel), nie aus dem Text. Gäste und Programme ohne Profil (Open WebUI, Wyoming) sind immer normal. Am geteilten Lautsprecher zählt die Stufe nur, wenn die Sprechererkennung die Stimme des Profils erkannt hat; die Aufnahme selbst geht dort normal in die Erkennung, weil die Stimme erst danach feststeht.
+- **Sprachausgabe und Spracherkennung**: Beide Dienste lassen nur so viele Anfragen gleichzeitig zur Engine, wie sie annimmt (`tts.engine_max_seqs`, `asr.engine_max_seqs`), der Rest wartet im Dienst (`common.PrioGate`) nach Stufe, dann nach Eingang. Eine laufende Anfrage wird nie abgebrochen. Wer 4 s wartet, rückt eine Stufe hoch, damit niemand verhungert. Höchstens 64 warten, sonst 503. Ein Platz kommt spätestens nach 90 s zurück, auch wenn ein Gerät die Verbindung vor dem Start fallen ließ.
+- **Wer die Stufe sagen darf**: nur das Panel. Es schickt `X-Spark-Stufe` (0, 1, 2) zusammen mit dem Schlüssel aus `state/vorrang-key` (vom Panel einmal erzeugt, Rechte 0600, nicht in der Sicherung). Die Dienste glauben das nur von 127.0.0.1 und nur mit diesem Schlüssel; alle anderen sind normal, auch mit dem API-Schlüssel.
+- **Sehen**: Zustand → Logs → Anfragen zeigt bei „Eingang“ „mit Vorrang“ und bei „Sprachausgabe“, wie lange die Sätze in der Reihe warteten und wie viele sie überholten. Journal: `vorrang: Stufe 2 überholt N wartende Anfrage(n)`. `/health` der Dienste zeigt unter `queue` Plätze, Wartende und Zähler.
+- **Messen**: Zustand → Prüfen → „Vorrang für Sprache“ misst zusätzlich den Fall „Zwei Personen gleichzeitig“: die Sprachausgabe ist mit Sätzen anderer voll (alle Plätze plus zwei Wartende), dann kommt ein Satz einmal normal und einmal mit Vorrang. Gezeigt wird der erste Ton beider Fälle.
+- **Grenzen**: Das Sprachmodell (qwen38) kennt keine Reihenfolge, Open WebUI und andere Programme, die direkt dorthin fragen, bremst der Vorrang nicht. Spricht nur eine Person, ist nichts schneller.
+
 ## Warum die Installation so aussieht
 
 - **PyTorch aus dem cu130-Index**: Das aarch64-torch auf PyPI hat kein CUDA. Ein einfaches `pip install qwen-tts` würde also auf der CPU laufen. torch und torchaudio müssen außerdem aus demselben Index kommen, sonst lädt `libtorchaudio.so` nicht.

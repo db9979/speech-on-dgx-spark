@@ -496,8 +496,8 @@ $('benchgo').onclick=async()=>{try{await api('/api/bench',{method:'POST'});loadB
 // speech first (vorrang.py): today's counters and the three-way test; the verdict comes from vorrang.verdict()
 let vrPoll=null;
 function vrRender(d){const s=d.today||{},r=d.result;
-  $('vrtoday').textContent=t(`Heute: ${s.held||0}× Hintergrundarbeit angehalten, ${s.cancelled||0}× abgebrochen, längste Wartezeit ${s.waited_max||0} s, ${s.behind||0}× Sprachausgabe mitten im Satz zu langsam.`+(s.speaking?' Gerade wird gesprochen.':''),
-    `Today: background work held ${s.held||0}×, cancelled ${s.cancelled||0}×, longest wait ${s.waited_max||0} s, speech output too slow inside a sentence ${s.behind||0}×.`+(s.speaking?' Speech is running right now.':''));
+  $('vrtoday').textContent=t(`Heute: ${s.held||0}× Hintergrundarbeit angehalten, ${s.cancelled||0}× abgebrochen, längste Wartezeit ${s.waited_max||0} s, ${s.behind||0}× Sprachausgabe mitten im Satz zu langsam.`+(s.speaking?' Gerade wird gesprochen.':'')+(d.people&&d.people.held?` Vorrang für Personen: ${d.people.held}× warteten andere, höchstens ${(d.people.held_ms_max/1000).toFixed(1)} s.`:''),
+    `Today: background work held ${s.held||0}×, cancelled ${s.cancelled||0}×, longest wait ${s.waited_max||0} s, speech output too slow inside a sentence ${s.behind||0}×.`+(s.speaking?' Speech is running right now.':'')+(d.people&&d.people.held?` Priority for people: others waited ${d.people.held}×, at most ${(d.people.held_ms_max/1000).toFixed(1)} s.`:''));
   $('vrgo').disabled=!!d.running;
   $('vrmsg').textContent=d.running?t('läuft … (etwa eine Minute)','running … (about a minute)'):r&&r.t?t('letzte Prüfung: ','last check: ')+new Date(r.t*1000).toLocaleString():'';
   if(!r||d.running)$('vrout').innerHTML='';
@@ -507,7 +507,9 @@ function vrRender(d){const s=d.today||{},r=d.result;
     const row=(name,x)=>x?`<tr><td>${name}</td><td class="bnum">${n(x.first)} s</td><td class="bnum">${n(x.rtf)}</td><td class="bnum">${n(x.asr)} s</td></tr>`:'';
     $('vrout').innerHTML=`<div class="bverdict" data-lvl="${lvl}"><span class="bvicon">${lvl==='ok'?'✓':'!'}</span><div><b>${esc(ttl)}</b>${r.error?`<div class="mut">${esc(r.error)}</div>`:''}</div></div>`+
       `<table class="brate"><tbody><tr class="bgrp"><td></td><td>${t('Erster Ton','First audio')}</td><td>${t('Echtzeitfaktor','Real-time factor')}</td><td>${t('Erkennung','Recognition')}</td></tr>`+
-      row(t('Alleine','Alone'),r.alone)+row(t('Unter Last, ohne Vorfahrt','Under load, no priority'),r.load)+row(t('Unter Last, mit Vorfahrt','Under load, with priority'),r.vorrang)+`</tbody></table>`+
+      row(t('Alleine','Alone'),r.alone)+row(t('Unter Last, ohne Vorfahrt','Under load, no priority'),r.load)+row(t('Unter Last, mit Vorfahrt','Under load, with priority'),r.vorrang)
+      +(r.people?row(t('Zwei Personen gleichzeitig, ohne Vorrang','Two people at once, no priority'),r.people.normal)+row(t('Zwei Personen gleichzeitig, mit Vorrang','Two people at once, with priority'),r.people.vorrang):'')+`</tbody></table>`
+      +(r.people_verdict?`<div class="fh">${esc(L==='en'?r.people_verdict.title.en:r.people_verdict.title.de)}</div>`:'')+
       `<div class="fh">${t('Echtzeitfaktor unter 1 heißt flüssig. Erster Ton und Erkennung in Sekunden.','Real-time factor below 1 means fluent. First audio and recognition in seconds.')}</div>`}
   if(d.running&&!vrPoll)vrPoll=setInterval(loadVorrang,3000);
   if(!d.running&&vrPoll){clearInterval(vrPoll);vrPoll=null}}

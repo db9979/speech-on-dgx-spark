@@ -295,7 +295,7 @@ class Detail(unittest.TestCase):
         self.assertEqual(set(d["features"]), {"on", "of"})
         self.assertEqual(d["features"]["on"], 0)            # everything off for a new profile
         self.assertTrue(d["main"])
-        self.assertEqual(set(d["rights"]), {"agent", "update", "quota"})
+        self.assertEqual(set(d["rights"]), {"agent", "update", "quota", "vorrang"})
         self.assertEqual(d["rights"]["agent"]["level"], "")
         self.assertIsInstance(d["sessions"], list)
         self.assertEqual(len(d["sessions"]), 1)              # the login above

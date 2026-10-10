@@ -18,7 +18,8 @@ import uvicorn
 from fastapi import Depends, FastAPI, HTTPException, Request
 from fastapi.responses import JSONResponse, PlainTextResponse, Response, StreamingResponse
 
-from common import ASR_ISO, BodyLimit, KeyedCORS, inside, outside_view, api_key_dependency, api_key_ok, engine_crash_reason, load_config, quiet_access_log, SpeechMark
+from common import (ASR_ISO, BodyLimit, GateFull, KeyedCORS, PrioGate, inside, outside_view, api_key_dependency, api_key_ok,
+                    engine_crash_reason, load_config, quiet_access_log, SpeechMark, stage_of)
 
 STATE_DIR = os.environ.get("SPEECH_SPARK_STATE", "/var/lib/speech-spark/state")
 UNIT = "speech-spark-asr-engine"
@@ -41,6 +42,11 @@ local = None
 if cfg.get("recognizer") == "parakeet":
     import parakeet
     local = parakeet.Recognizer()
+
+
+# Priority for people (panel stufe.py): as many recordings at once as the engine takes, the rest wait here by stage
+_n = cfg.get("engine_max_seqs", 4)
+gate = PrioGate(_n if isinstance(_n, int) and not isinstance(_n, bool) and 1 <= _n <= 64 else 4)
 
 
 def engine_url(path):
@@ -157,7 +163,7 @@ async def health(request: Request):
         "avg_latency_s": round(sum(lat) / len(lat), 3) if lat else None,
         "avg_rtf": round(sum(rtf) / len(rtf), 3) if rtf else None,
         "avg_ttft_s": round(sum(ttft) / len(ttft), 3) if ttft else None,
-        "timestamps": False,
+        "timestamps": False, "queue": gate.view(),
     }
 
 
@@ -219,10 +225,17 @@ async def transcriptions(request: Request):
     for k, v in data:
         form_data.setdefault(k, []).append(v)
 
+    try:
+        ticket = await gate.enter(stage_of(request))
+    except GateFull:
+        raise HTTPException(503, "ASR busy: too many recordings waiting")
     stats["requests"] += 1
     t0 = time.time()
     if local:
-        return await local_transcription(upload, audio, want, stream, lang, t0)
+        try:
+            return await local_transcription(upload, audio, want, stream, lang, t0, PrioGate.headers(ticket))
+        finally:
+            gate.leave(ticket)
     if not stream:
         stats["active"] += 1
         try:
@@ -232,6 +245,7 @@ async def transcriptions(request: Request):
             raise HTTPException(502, f"engine unreachable: {e}")
         finally:
             stats["active"] -= 1
+            gate.leave(ticket)
         dt = time.time() - t0
         if r.status_code != 200:
             fail(r.text[:300])
@@ -239,7 +253,7 @@ async def transcriptions(request: Request):
         out = r.json()
         audio_s = (out.get("usage") or {}).get("seconds")
         recent.append((dt, audio_s or None, None))
-        headers = {"X-Processing-Seconds": f"{dt:.3f}"}
+        headers = {"X-Processing-Seconds": f"{dt:.3f}", **PrioGate.headers(ticket)}
         if want == "text":
             return PlainTextResponse(out["text"], headers=headers)
         if want == "verbose_json":
@@ -253,10 +267,14 @@ async def transcriptions(request: Request):
     req = client.build_request("POST", engine_url("/v1/audio/transcriptions"), data=form_data, files=files)
     try:
         upstream = await client.send(req, stream=True)
-    except httpx.HTTPError as e:
-        fail(f"engine unreachable: {e}")
-        raise HTTPException(502, f"engine unreachable: {e}")
+    except BaseException as e:
+        gate.leave(ticket)
+        if isinstance(e, httpx.HTTPError):
+            fail(f"engine unreachable: {e}")
+            raise HTTPException(502, f"engine unreachable: {e}")
+        raise
     if upstream.status_code != 200:
+        gate.leave(ticket)
         content = await upstream.aread()
         await upstream.aclose()
         fail(content.decode(errors="replace")[:300])
@@ -277,13 +295,14 @@ async def transcriptions(request: Request):
             raise
         finally:
             stats["active"] -= 1
+            gate.leave(ticket)
             await upstream.aclose()
 
     return StreamingResponse(relay(), status_code=200, media_type=upstream.headers.get("content-type"),
-                             headers={"Cache-Control": "no-cache", "X-Accel-Buffering": "no"})
+                             headers={"Cache-Control": "no-cache", "X-Accel-Buffering": "no", **PrioGate.headers(ticket)})
 
 
-async def local_transcription(upload, audio, want, stream, lang, t0):
+async def local_transcription(upload, audio, want, stream, lang, t0, waited=None):
     import tempfile
     suffix = os.path.splitext(upload.filename or "")[1] or ".wav"
     with tempfile.NamedTemporaryFile(suffix=suffix, delete=False) as tmp:
@@ -303,7 +322,7 @@ async def local_transcription(upload, audio, want, stream, lang, t0):
         os.unlink(path)
     dt = time.time() - t0
     recent.append((dt, audio_s or None, dt if stream else None))
-    headers = {"X-Processing-Seconds": f"{dt:.3f}"}
+    headers = {"X-Processing-Seconds": f"{dt:.3f}", **(waited or {})}
     if stream:
         stats["streams"] += 1
         return Response(parakeet.sse(text, audio_s), media_type="text/event-stream",

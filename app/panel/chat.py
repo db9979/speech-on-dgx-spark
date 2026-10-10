@@ -38,6 +38,7 @@ import chat_turn  # noqa: E402  (rights, prompt and tools of one turn)
 import latency  # noqa: E402
 import echo  # noqa: E402  (the Spark's own voice is no question)
 import vorrang  # noqa: E402  (speech first: background work waits)
+import stufe  # noqa: E402  (priority for people)
 import tracelog  # noqa: E402  (Logs → Anfragen: the way of each request)
 import features  # noqa: E402
 from common import load_config  # noqa: E402
@@ -1193,7 +1194,7 @@ def start_trace(request, turn, t_req, t0):
     tr.step("in", {"web": "Browser", "speaker": "Lautsprecher", "watch": "Uhr", "siri": "Siri", "telegram": "Telegram",
                    "app": "iPhone-App", "car": "CarPlay"}.get(client, "Gerät"), t_req,
             chars=len(ask_text), voice=bool(turn.heard) or None, pictures=len(getattr(turn, "pics", None) or []) or None,
-            attachment=bool(getattr(turn, "attach", None)) or None)
+            attachment=bool(getattr(turn, "attach", None)) or None, stufe=getattr(turn, "stufe", "") or None)
     rights = "fremde Stimme am Lautsprecher" if getattr(turn, "stranger", "") else "Stimme eines anderen Profils" \
         if not turn.own_browser else "eigenes Profil" if who else "Admin" if kind == "admin" else "Gast"
     tr.step("prep", "Panel-Vorbereitung", t_req, t0, rights=rights, allowed=getattr(turn, "all_tools", None),
@@ -1239,6 +1240,9 @@ async def _answer(request, turn):
                              f"chars of history, {len(tools or [])} tools offered, {'locked' if locked else 'not locked'}")
     lheaders = {"Authorization": f"Bearer {ccfg['llm_key']}"} if ccfg.get("llm_key") else {}
     tts_url = f"http://127.0.0.1:{cfg['tts']['port']}/v1/audio/speech"
+    # priority for people (stufe.py): the profile's own turn goes before others in the TTS queue
+    turn.stufe = stufe.turn_level(turn)
+    tts_headers = dict(api_headers(), **stufe.headers(turn.stufe))
     tts_body = {k: body[k] for k in ("language", "instructions") if body.get(k)}
     if pset["voice"]:
         tts_body["voice"] = pset["voice"]
@@ -1686,7 +1690,7 @@ async def _answer(request, turn):
         first, played_until, ttfa = True, 0.0, 0.5
         mute = body.get("speak") is False  # text only (Siri) or speech output failed: no TTS
         done = False
-        said = {"start": None, "pieces": 0, "chars": 0, "behind": 0}   # for Logs → Anfragen
+        said = {"start": None, "pieces": 0, "chars": 0, "behind": 0, "waited": 0, "overtook": 0}   # for Logs → Anfragen
         try:
             while not done:
                 text = await sentences.get()
@@ -1728,7 +1732,10 @@ async def _answer(request, turn):
                 for attempt in (1, 2):
                     sent, got, mine = time.time(), False, None
                     try:
-                        async with c.stream("POST", tts_url, json=req, headers=api_headers()) as r:
+                        async with c.stream("POST", tts_url, json=req, headers=tts_headers) as r:
+                            for k, h in (("waited", "x-spark-wait-ms"), ("overtook", "x-spark-overtook")):
+                                v = r.headers.get(h, "")   # how long it queued in the TTS (common.PrioGate)
+                                said[k] += int(v) if v.isdigit() and len(v) < 7 else 0
                             if r.status_code != 200:
                                 detail = (await r.aread()).decode(errors='replace')[:300]
                                 print(f"chat: tts HTTP {r.status_code}, this answer stays text only", flush=True)
@@ -1802,7 +1809,7 @@ async def _answer(request, turn):
         finally:
             if tr and said["start"]:
                 tr.step("tts", "Sprachausgabe", said["start"], time.time(), pieces=said["pieces"], chars=said["chars"],
-                        behind=said["behind"] or None)
+                        behind=said["behind"] or None, waited_ms=said["waited"] or None, overtook=said["overtook"] or None)
             await out.put(None)
 
     tasks = [asyncio.create_task(llm()), asyncio.create_task(tts())]

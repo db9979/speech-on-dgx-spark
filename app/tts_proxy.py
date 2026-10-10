@@ -19,7 +19,8 @@ import uvicorn
 from fastapi import Depends, FastAPI, HTTPException, Request
 from fastapi.responses import Response, StreamingResponse
 
-from common import BodyLimit, KeyedCORS, inside, outside_view, api_key_dependency, api_key_ok, engine_crash_reason, load_config, quiet_access_log, SpeechMark
+from common import (BodyLimit, GateFull, KeyedCORS, PrioGate, inside, outside_view, api_key_dependency, api_key_ok,
+                    engine_crash_reason, load_config, quiet_access_log, SpeechMark, stage_of)
 from textnorm import (MAX_INPUT, apply_pronunciations, clean_text, guess_language, hide_secrets, parse_pronunciations,
                       speak_numbers)
 
@@ -235,6 +236,7 @@ async def health(request: Request):
     }
     if "design" in engines():
         out["voicedesign"] = dict(zip(("status", "error"), await engine_status("design")))
+    out["queue"] = gate("main").view()
     return out
 
 
@@ -259,6 +261,18 @@ async def audio_voices():
     _, port = engines()["main"]
     r = await client.get(f"http://127.0.0.1:{port}/v1/audio/voices")
     return Response(r.content, status_code=r.status_code, media_type="application/json")
+
+
+# Priority for people (panel stufe.py): as many requests at once as the engine takes, the rest wait here
+# by stage instead of in the engine's first-come queue (one gate per engine)
+gates = {}
+
+
+def gate(role):
+    if role not in gates:
+        n = cfg.get("engine_max_seqs", 2)
+        gates[role] = PrioGate(n if isinstance(n, int) and not isinstance(n, bool) and 1 <= n <= 64 else 2)
+    return gates[role]
 
 
 def fail(msg):
@@ -356,6 +370,11 @@ async def speech(request: Request):
                 print("speed ignored: numpy is not installed", flush=True)
 
     url = f"http://127.0.0.1:{port}/v1/audio/speech"
+    g = gate(role)
+    try:
+        ticket = await g.enter(stage_of(request))
+    except GateFull:
+        raise HTTPException(503, "TTS busy: too many requests waiting")
     stats["requests"] += 1
     t0 = time.time()
     if not stream:
@@ -367,6 +386,7 @@ async def speech(request: Request):
             raise HTTPException(502, f"engine unreachable: {e}")
         finally:
             stats["active"] -= 1
+            g.leave(ticket)
         dt = time.time() - t0
         if r.status_code != 200:
             fail(r.text[:300])
@@ -375,6 +395,7 @@ async def speech(request: Request):
             recent.append((dt, audio_s, None))
         headers = {k: v for k, v in r.headers.items() if k.lower().startswith("x-vllm-omni")}
         headers["X-Processing-Seconds"] = f"{dt:.3f}"
+        headers.update(PrioGate.headers(ticket))
         return Response(r.content, status_code=r.status_code,
                         media_type=r.headers.get("content-type"), headers=headers)
 
@@ -383,10 +404,14 @@ async def speech(request: Request):
     req = client.build_request("POST", url, json=body)
     try:
         upstream = await client.send(req, stream=True)
-    except httpx.HTTPError as e:
-        fail(f"engine unreachable: {e}")
-        raise HTTPException(502, f"engine unreachable: {e}")
+    except BaseException as e:
+        g.leave(ticket)
+        if isinstance(e, httpx.HTTPError):
+            fail(f"engine unreachable: {e}")
+            raise HTTPException(502, f"engine unreachable: {e}")
+        raise
     if upstream.status_code != 200:
+        g.leave(ticket)
         content = await upstream.aread()
         await upstream.aclose()
         fail(content.decode(errors="replace")[:300])
@@ -457,10 +482,11 @@ async def speech(request: Request):
             raise
         finally:
             stats["active"] -= 1
+            g.leave(ticket)
             await upstream.aclose()
 
     return StreamingResponse(relay(), status_code=200, media_type=upstream.headers.get("content-type"),
-                             headers={"Cache-Control": "no-cache", "X-Accel-Buffering": "no"})
+                             headers={"Cache-Control": "no-cache", "X-Accel-Buffering": "no", **PrioGate.headers(ticket)})
 
 
 if __name__ == "__main__":
