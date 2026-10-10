@@ -586,7 +586,8 @@ OUTSIDE_BLOCKED = ("Not done: this answer already read text from outside (web pa
 NOT_OFFERED = "Not done: this tool is not available in this step. Do not call it again; answer without it."
 # Tools whose results bring in text other people wrote: after one of them, nothing in the same
 # answer may change the home or the memory (a web page or an invitation could ask for it).
-READS_OUTSIDE = {"web_search", "document_search", "calendar_events", "daily_briefing", "history_search"}
+# (local_search: the panel's own quick look before the answer, lokal.py; the model is never offered it)
+READS_OUTSIDE = {"web_search", "document_search", "calendar_events", "daily_briefing", "history_search", "local_search"}
 # Home Assistant reads: names, media titles and text states can come from other people (anyone in the
 # LAN can cast a title); they are handed over as data, and free text in them locks like outside text
 HA_READS = {"home_assistant_states", "home_assistant_history", "home_assistant_todo"}
@@ -1311,6 +1312,28 @@ async def _answer(request, turn):
                 if homeassistant.free_text(ha_read) and not st["outside"]:
                     st["outside"] = True
                     await out.put({"type": "outside"})
+            local_task = getattr(turn, "local_task", None)
+            if local_task:   # "Erst lokal suchen" (lokal.py): what the quick look found goes in as data
+                import lokal
+                t_lk = time.time()
+                found = await local_task
+                if tr:   # Logs → Anfragen: one step, the numbers only
+                    tr.step("tool", "Erst lokal (Panel)", t_lk, time.time(), hits=len(found["hits"]), docs=found["n"].get("docs"),
+                            archive=found["n"].get("kiwix"), history=found["n"].get("history"), late=len(found["late"]), ms=found["ms"],
+                            panel=True)
+                trace["calls"].append({"name": "Erst lokal (Panel)", "args": ", ".join(lokal.LABELS[k] for k in found["n"]),
+                                       "result": f"{len(found['hits'])} Treffer in {found['ms']} ms"})
+                if found["hits"]:
+                    msgs += [{"role": "assistant", "content": None, "tool_calls": [{"id": "lk0", "type": "function",
+                              "function": {"name": "local_search",
+                                           "arguments": json.dumps({"query": messages[-1]["content"][:200]})}}]},
+                             {"role": "tool", "tool_call_id": "lk0",
+                              "content": lokal.HEAD + "\n" + wrap_outside(lokal.block(found["hits"]))}]
+                    if not st["outside"]:
+                        st["outside"] = True
+                        await out.put({"type": "outside"})
+                    if any(h["src"] == "docs" for h in found["hits"]):
+                        st["docs"] = True
             for rnd in range(5):  # a few tool rounds (at most max_searches searches), then the answer
                 payload = dict(base, messages=msgs)
                 offer = [t for t in tools if (t is not SEARCH_TOOL or searches < max_searches)

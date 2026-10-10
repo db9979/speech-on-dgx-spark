@@ -121,6 +121,8 @@
     "kiwix": false,
     "kiwix_url": "",
     "kiwix_books": [],
+    "local_first": false,
+    "local_first_ms": 400,
     "roles": false,
     "agent": false,
     "agent_mcp": false,

@@ -472,6 +472,7 @@ async def prepare(request):
     # the switch narrows what the model sees (never more than the rights above left); a question no
     # rule recognizes may go to the model once as a pick from a fixed list (chat.route_model)
     all_tools = len(tools)
+    offered_all = {t["function"]["name"] for t in tools}
     if route_on and tools and not pics and not ha_direct and not ha_wait:
         if not route.names and ccfg.get("route_model") == "on":
             # the message as the model would see it anyway (code words already replaced)
@@ -484,14 +485,35 @@ async def prepare(request):
                 {t["function"]["name"] for t in tools}, ccfg.get("tool_words", "")):
             # nothing recognized and no tool required: a short list, so the model starts sooner
             tools = intent.lean(route, tools)
+    # "Erst lokal suchen" (lokal.py): the own sources before anything outside, by a fixed rule on the person's
+    # own words. A knowledge question gets a quick look in exactly the sources this turn offers (tools before
+    # narrowing: the same rights), started here and waited for in chat._answer (at most chat.local_first_ms);
+    # naming an own source leaves the web out of this answer; anything current goes out as before.
+    local_task, web_own = None, ""
+    import lokal
+    if lokal.on(ccfg, who) and own_browser and private_ok and messages[-1]["role"] == "user" and tools \
+            and not pics and not role_cmd and not room_far and not ha_direct and not ha_wait:
+        lk_text = messages[-1]["content"]
+        lk_kind, lk_why = lokal.classify(lk_text, route, ccfg.get("tool_words", ""))
+        lk_src = lokal.sources(offered_all)
+        web_own = lokal.own_words(lk_text)
+        if lk_kind == "lokal" and any(t["function"]["name"] == "web_search" for t in tools):
+            tools = [t for t in tools if t["function"]["name"] != "web_search"]
+            system = (system + "\n\n" + lokal.LOCAL_ONLY).strip()
+        if lk_kind == "wissen" and lk_src:
+            local_task = asyncio.create_task(lokal.run(who["id"], lk_text, lk_src, lokal.budget(ccfg),
+                                                       body.get("convo") if isinstance(body.get("convo"), str) else None))
+        else:
+            print(lokal.log_line(lk_kind, lk_why, lk_src), flush=True)
     if ex["hints"] and not pics:
         system = (system + "\n\n" + " ".join(ex["hints"])).strip()
     # once mail or other outside text was read in this answer, nothing in it may change the home or
     # the memory, and after mail no words go to the web (see LOCKED_OUTSIDE / LOCKED_MAIL)
-    # (after the person's own documents also no web search: a document could ask to carry its text away)
+    # (after the person's own documents also no web search: a document could ask to carry its text away;
+    # with "Erst lokal suchen" it stays open, but only the person's own words go out, see chat_tools.py)
     def locked(st):
         return ((chat.LOCKED_MAIL | ex["changes"]) if st["mail"] else (chat.LOCKED_OUTSIDE | ex["changes"]) if st["outside"]
-                else set()) | ({"web_search"} if st.get("docs") else set())
+                else set()) | ({"web_search"} if st.get("docs") and not web_own else set())
     # what this request cannot reach: said plainly, so the model does not make up appointments or mails
     missing = ([] if cal["calendars"] else ["Kalender"]) + ([] if mailbox else ["E-Mails"])
     if missing:

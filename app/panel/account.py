@@ -871,6 +871,7 @@ def profile_settings(request: Request):
                                        "roles": bool(prof and chat.get("roles", False) is True),
                                        "wiki": bool(prof and chat.get("wiki", False) is True),
                                        "kiwix": bool(prof and chat.get("kiwix", False) is True and chat.get("kiwix_url")),
+                                       "local": bool(prof and chat.get("local_first", False) is True),
                                        "follow": bool(prof and chat.get("follow_up", False)),
                                        "echo": bool(prof and chat.get("no_self_echo", False)),
                                        "images": bool(prof and chat.get("images", False) is True),

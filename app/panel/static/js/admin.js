@@ -576,6 +576,23 @@ $('kxgo').onclick=async()=>{$('kxgomsg').textContent=t('Prüfe …','Checking �
     else line(t('Kein Wikipedia-Buch gewählt: Testsuche übersprungen.','No Wikipedia book chosen: test search skipped.'),'mut');
     const known=Object.fromEntries(d.books.map(b=>[b.id,b]));line((d.picked?t('Durchsucht:','Searched:'):t('Keine Auswahl, durchsucht:','No choice, searched:'))+' '+((d.chosen||[]).map(id=>known[id]?known[id].title+(known[id].lang?' ('+known[id].lang+')':''):id).join(', ')||t('nichts','nothing')),'mut')}
   catch(e){$('kxgomsg').textContent=e.message}};
+// "Erst lokal suchen" (lokal.py): one sentence through the rule and the quick look (built with textContent only)
+const LKKIND={wissen:t('Wissensfrage: erst lokal nachsehen','Knowledge question: look locally first'),lokal:t('Eigene Quelle genannt: nur lokal, kein Web','Own source named: local only, no web'),
+  extern:t('Klar extern: direkt hinaus, kein Vorlauf','Clearly outside: straight out, no local look'),'':t('Kein Fall für die lokale Suche','Not a case for the local look')};
+const LKSRC={docs:t('Dokumente','Documents'),kiwix:t('Kiwix-Archiv','Kiwix archive'),history:t('Frühere Gespräche','Earlier conversations')};
+if($('lkgo'))$('lkgo').onclick=async()=>{const text=$('lktext').value.trim();if(!text)return;$('lkgo').disabled=true;const out=$('lkout');out.textContent='';
+  const line=(txt,cls)=>{const x=document.createElement('div');if(cls)x.className=cls;x.textContent=txt;out.appendChild(x)};
+  try{const r=await (await api('/api/admin/lokal/test',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({text})})).json();
+    line(`${LKKIND[r.kind]??r.kind} (${r.why})`);
+    if(r.words&&r.words.length)line(t('Suchwörter: ','Search words: ')+r.words.join(', '),'mut');
+    if(r.kind==='wissen'){
+      if(!r.sources.length)line(t('Keine eigene Quelle: kein Profil angemeldet und kein Kiwix eingerichtet.','No own source: no profile signed in and no Kiwix set up.'),'mut');
+      r.sources.forEach(k=>line(`${LKSRC[k]||k}: `+(k in r.n?t(`${r.n[k]} Treffer`,`${r.n[k]} hits`):r.late.includes(k)?t(`zu langsam (über ${r.budget} ms)`,`too slow (over ${r.budget} ms)`):t('nicht erreichbar','not reachable'))));
+      if(r.sources.length)line(t(`Zusammen ${r.ms} ms von höchstens ${r.budget} ms.`,`Together ${r.ms} ms of at most ${r.budget} ms.`),'mut');
+      r.hits.forEach(h=>line(`✓ ${h.title} (${h.chars} ${t('Zeichen','chars')})`));
+      if(r.sources.length&&!r.hits.length)line(t('Lokal nichts Passendes: das Modell antwortet aus eigenem Wissen oder sucht im Web.','Nothing fitting locally: the model answers from its own knowledge or searches the web.'),'mut')}
+    if(r.profile)line(t(`Profil: ${r.profile}`,`Profile: ${r.profile}`),'mut')}
+  catch(e){line(e.message,'err')}$('lkgo').disabled=false};
 $('updstop').onclick=async()=>{if(!confirm(t('Update abbrechen? Was schon installiert ist, bleibt. Ein späteres Update holt den Rest nach.','Cancel the update? What is already installed stays. A later update installs the rest.')))return;
   try{await api('/api/update',{method:'DELETE'});$('updmsg').textContent=t('abgebrochen','cancelled');loadSys()}
   catch(e){$('updmsg').innerHTML=`<span class="err">${esc(e.message)}</span>`}};

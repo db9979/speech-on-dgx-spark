@@ -51,6 +51,13 @@ async def run(t, name, args, st):
         return await mail_tool(t, name, args, st)
     if name == "web_search" and t.search:
         query = str(args.get("query", "")).strip()
+        if st.get("docs") and t.web_own:
+            # "Erst lokal suchen": after the person's documents only their own words go out, never the model's
+            # (a document could ask to carry its text away in a query; lokal.py)
+            print("lokal: weiter ins Web nach den Unterlagen, mit den eigenen Worten der Frage", flush=True)
+            query = t.web_own
+        elif t.local_task:
+            print("lokal: weiter ins Web (lokal nicht genug)", flush=True)
         if not query:
             return "No query given."
         await t.out.put({"type": "search", "query": query})

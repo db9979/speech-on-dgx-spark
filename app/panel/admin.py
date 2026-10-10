@@ -359,7 +359,7 @@ def validate(new):
             or not all(isinstance(b, str) and kiwix.BOOK.fullmatch(b) for b in books):
         raise HTTPException(400, f"kiwix_books: at most {kiwix.MAX_BOOKS} book names (letters, digits, . _ -)")
     for k in ("agent", "agent_mcp", "messages", "messages_all", "messages_announce", "messages_voice", "pebble",
-              "kiwix"):
+              "kiwix", "local_first"):
         if not isinstance(ch.get(k, False), bool):
             raise HTTPException(400, f"{k} must be true or false")
     if ch.get("esp32_url") and not re.fullmatch(r"https?://[A-Za-z0-9.\-]+(?::\d{1,5})?/?", ch["esp32_url"]):
@@ -505,6 +505,9 @@ def validate(new):
             raise HTTPException(400, f"{k}: HH:MM")
     if not isinstance(ch.get("doc_night", False), bool):
         raise HTTPException(400, "chat doc_night must be true or false")
+    ms = ch.get("local_first_ms", 400)
+    if not isinstance(ms, int) or isinstance(ms, bool) or not 200 <= ms <= 1500:
+        raise HTTPException(400, "local_first_ms: 200 to 1500")
     m = ch.get("doc_max_mb", 100)
     if not isinstance(m, int) or isinstance(m, bool) or not 20 <= m <= 300:
         raise HTTPException(400, "doc_max_mb: 20 to 300")

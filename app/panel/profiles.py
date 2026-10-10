@@ -673,6 +673,7 @@ SETTINGS = {
     "role": ("", lambda v: isinstance(v, str) and len(v) <= 30 and re.fullmatch(r"[\w äöüÄÖÜß\-]*", v)),
     "wiki_on": (False, lambda v: isinstance(v, bool)),      # Wikipedia straight away (wiki.py, admin chat.wiki)
     "kiwix_on": (False, lambda v: isinstance(v, bool)),     # own Kiwix archive (kiwix.py, admin chat.kiwix)
+    "local_first": (False, lambda v: isinstance(v, bool)),  # own sources before the web (lokal.py, admin chat.local_first)
     # daily briefing as a push notification at this local time ("" = off), in the device's time zone
     "briefing_at": ("", lambda v: isinstance(v, str) and re.fullmatch(r"(?:[01]\d|2[0-3]):[0-5]\d|", v)),
     "tz": ("", lambda v: isinstance(v, str) and re.fullmatch(r"(?:[A-Za-z_]+(?:/[A-Za-z0-9_+\-]+){0,2})?", v)),

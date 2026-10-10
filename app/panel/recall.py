@@ -31,15 +31,41 @@ def _pieces(uid, skip=None, since=None):
         for i, m in enumerate(msgs):
             if m.get("role") != "user":
                 continue
-            ans = msgs[i + 1]["content"] if i + 1 < len(msgs) and msgs[i + 1].get("role") == "assistant" else ""
+            nxt = msgs[i + 1] if i + 1 < len(msgs) and msgs[i + 1].get("role") == "assistant" else {}
+            # "mark": the answer was made from e-mail or other outside text (profiles.save_convo keeps that)
             out.append({"convo": c.get("id"), "title": c.get("title", ""), "updated": c.get("updated", 0),
-                        "q": m["content"], "a": ans})
+                        "q": m["content"], "a": nxt.get("content", ""),
+                        "mark": "mail" if nxt.get("mail") else "outside" if nxt.get("outside") else ""})
     return out
 
 
 def _day(ms):
     d = datetime.datetime.fromtimestamp(ms / 1000)
     return f"{d:%d.%m.%Y}"
+
+
+def rank(pieces, q):
+    """[(score, piece)] best first: BM25 of the query terms q over each question with its answer."""
+    if not pieces or not q:
+        return []
+    docs = [(p, Counter(t), len(t)) for p in pieces for t in [documents._terms(p["q"] + " " + p["a"])]]
+    n = len(docs)
+    avg = sum(x[2] for x in docs) / n or 1
+    df = {t: sum(1 for x in docs if t in x[1]) for t in q}
+    scored = []
+    for p, tf, length in docs:
+        s = sum(math.log(1 + (n - df[t] + 0.5) / (df[t] + 0.5)) * tf[t] * 2.2
+                / (tf[t] + 1.2 * (0.25 + 0.75 * length / avg)) for t in q if tf.get(t))
+        if s > 0:
+            scored.append((s, p))
+    scored.sort(key=lambda x: -x[0])
+    return scored
+
+
+def scored(uid, terms, skip=None, k=4):
+    """The best earlier question/answer pairs for these terms, without answers made from e-mail
+    (lokal.py: those stay in the mailbox, never in another answer)."""
+    return rank([p for p in _pieces(uid, skip) if p["mark"] != "mail"], set(terms))[:k]
 
 
 def search(uid, query, days=None, skip=None, k=4):
@@ -61,21 +87,11 @@ def search(uid, query, days=None, skip=None, k=4):
             if len(lines) >= 12:
                 break
         return "Earlier conversations, newest first:\n" + "\n".join(lines)
-    docs = [(p, Counter(t), len(t)) for p in pieces for t in [documents._terms(p["q"] + " " + p["a"])]]
-    n = len(docs)
-    avg = sum(x[2] for x in docs) / n or 1
-    df = {t: sum(1 for x in docs if t in x[1]) for t in q}
-    scored = []
-    for p, tf, length in docs:
-        s = sum(math.log(1 + (n - df[t] + 0.5) / (df[t] + 0.5)) * tf[t] * 2.2
-                / (tf[t] + 1.2 * (0.25 + 0.75 * length / avg)) for t in q if tf.get(t))
-        if s > 0:
-            scored.append((s, p))
-    scored.sort(key=lambda x: -x[0])
-    if not scored:
+    best = rank(pieces, q)
+    if not best:
         return "Nothing about this in earlier conversations."
     return "\n\n".join(f"[{_day(p['updated'])}, Gespräch „{p['title'][:60]}“]\nFrage: {p['q'][:600]}\n"
-                       f"Antwort: {p['a'][:900]}" for _, p in scored[:k])
+                       f"Antwort: {p['a'][:900]}" for _, p in best[:k])
 
 
 # ---------------------------------------------------------------- learning facts

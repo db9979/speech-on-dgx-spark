@@ -166,10 +166,11 @@ def find_shared(uid, doc_id):
     return None
 
 
-async def search(uid, query, k=5, tags=None, art=None):
+async def search(uid, query, k=5, tags=None, art=None, semantic=True):
     """The profile's own documents and the ones the others offer to everyone, best first; tags / art:
-    only documents with these tags or of this kind (their "Steckbrief")."""
-    qvec = await docembed.query(query) if on(uid, "semantic") and query.strip() else None
+    only documents with these tags or of this kind (their "Steckbrief"). semantic=False: full text only
+    (lokal.py's quick look before the answer does not wait for the meaning model)."""
+    qvec = await docembed.query(query) if semantic and on(uid, "semantic") and query.strip() else None
     narrow = bool(tags or art)
     own = documents.match_docs(uid, tags, art) if narrow else None
     hits = await asyncio.to_thread(documents.search, uid, query, k, qvec, False, own)
