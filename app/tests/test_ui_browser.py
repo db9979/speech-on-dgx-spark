@@ -877,6 +877,15 @@ class Browser(unittest.TestCase):
                     self.assertLessEqual(over, 1, f"{name}: {over}px zu breit")
                     await pg.screenshot(path=os.path.join(os.environ.get("SPEECH_SPARK_SHOTS", helpers.TMP),
                                                           f"live-{name}.png"), full_page=True)
+                    if name == "pc":   # the picture alone, filling the screen; Esc goes back
+                        await pg.click("[data-lvfs]")
+                        await pg.wait_for_selector(".lv .flow.full #lvflow svg .node")
+                        hgt = await pg.evaluate("document.querySelector('#lvflow svg').getBoundingClientRect().height")
+                        self.assertGreater(hgt, h * 0.75)
+                        await pg.screenshot(path=os.path.join(os.environ.get("SPEECH_SPARK_SHOTS", helpers.TMP), "live-vollbild.png"))
+                        await pg.keyboard.press("Escape")
+                        await pg.wait_for_timeout(300)
+                        self.assertFalse(await pg.evaluate("!!document.querySelector('.lv .flow.full')"))
                     self.assertEqual(errors, [], name)
                     await br.close()
                 # the monitor: a code from the admin, entered on the screen

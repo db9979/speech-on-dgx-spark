@@ -33,6 +33,7 @@ All options for running without questions (`--mode api --asr 1.7b --tts 0.6b --y
 
 <!-- New version: add one line at the top here and in CHANGELOG.md, drop the oldest line here (keep 10). Details go to docs/de and docs/en, not into this README. -->
 
+- **V01.0.318** Live overview: full-screen button for the picture "Where the requests go right now"
 - **V01.0.317** Smart home rules: pick devices from a list instead of typing, "Zuletzt geändert" and "Gerät erkennen" (trigger the sensor, tap the device)
 - **V01.0.316** Kill switch: a red button stops the Spark in three stages (outside closed, hands off, all quiet); only the admin at home with a code lifts it; shown as a red band, under Status and in the live overview
 - **V01.0.315** Live overview: the last request stays until a new one comes
@@ -42,7 +43,6 @@ All options for running without questions (`--mode api --asr 1.7b --tts 0.6b --y
 - **V01.0.311** Self-test invitation: waits for the page to reload after "Create profile" instead of a fixed 15 seconds (was red twice on GitHub)
 - **V01.0.310** Diagram "How it works" shows the current state: iPhone and Android app, speakers, MCP programs, router, priority, own knowledge, guard and the outside services
 - **V01.0.309** MCP "Create key" answers right under the button: a missing name or no ticked tool is said there (before at the very end of the page, it looked like nothing happened), plus "creating …" and a clear hint when the code is missing
-- **V01.0.308** Logs → Requests shows at the step "Weiche" whether the model routing came in time
 
 All versions: [CHANGELOG.md](CHANGELOG.md)
 

@@ -33,6 +33,7 @@ Alle Optionen ohne Rückfragen (`--mode api --asr 1.7b --tts 0.6b --yes` …) st
 
 <!-- New version: add one line at the top here and in CHANGELOG.md, drop the oldest line here (keep 10). Details go to docs/de and docs/en, not into this README. -->
 
+- **V01.0.318** Live-Übersicht: Vollbild-Knopf für das Bild „Wohin die Anfragen gerade gehen“
 - **V01.0.317** Smart-Home-Regeln: Geräte aus einer Liste wählen statt abtippen, „Zuletzt geändert“ und „Gerät erkennen“ (Sensor auslösen, Gerät antippen)
 - **V01.0.316** Notaus: roter Knopf hält den Spark in drei Stufen an (Außen zu, Hände weg, Alles still); aufheben nur der Admin zu Hause mit Code; sichtbar als rotes Band, in Zustand und in der Live-Übersicht
 - **V01.0.315** Live-Übersicht: die letzte Anfrage bleibt stehen, bis eine neue kommt
@@ -42,7 +43,6 @@ Alle Optionen ohne Rückfragen (`--mode api --asr 1.7b --tts 0.6b --yes` …) st
 - **V01.0.311** Selbsttest Einladung: wartet nach „Profil anlegen“ auf das Neuladen der Seite statt fester 15 Sekunden (war auf GitHub zweimal rot)
 - **V01.0.310** Schaubild „So funktioniert es“ zeigt den aktuellen Stand: iPhone- und Android-App, Lautsprecher, MCP-Programme, Weiche, Vorrang, eigenes Wissen, Wächter und die Dienste draußen
 - **V01.0.309** MCP „Schlüssel erzeugen“ antwortet direkt unter dem Knopf: fehlt der Name oder ist kein Werkzeug angekreuzt, steht das dort (vorher ganz unten auf der Seite, wirkte wie „passiert nichts“), dazu „wird erzeugt …“ und ein klarer Hinweis, wenn der Code fehlt
-- **V01.0.308** Logs → Anfragen zeigt beim Schritt „Weiche“, ob die Modell-Zuordnung rechtzeitig kam
 
 Alle Versionen: [CHANGELOG.md](CHANGELOG.md)
 

@@ -5,7 +5,7 @@
 // the tab is open; the monitor (body.kiosk) asks /api/live/state and pairs once with a 6-digit code.
 (()=>{
 const KIOSK=document.body.classList.contains('kiosk');
-const LV={sel:'',data:null,timer:0,gsel:0,dsel:0,rot:0,lastSel:0,lastKey:'',fail:0};
+const LV={fit:false,sel:'',data:null,timer:0,gsel:0,dsel:0,rot:0,lastSel:0,lastKey:'',fail:0};
 const lvE=s=>String(s??'').replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
 const tt=(de,en)=>typeof t==='function'?t(de,en):de;
 const num=(v,d=1)=>v==null?'–':Number(v).toFixed(d).replace('.',',');
@@ -22,6 +22,13 @@ const ZONE={spark:[tt('im Spark','on the Spark'),'loc'],lan:[tt('Heimnetz','Home
 const PH=()=>matchMedia('(max-width:760px)').matches;
 let tip=null;
 function el(id){return document.getElementById(id)}
+// the picture alone, filling the screen (the button again, Esc or leaving the browser's full screen ends it)
+function full(on){const f=document.querySelector('.lv .flow');if(!f)return;f.classList.toggle('full',on);LV.fit=on;LV.lastKey='';
+  try{if(on&&f.requestFullscreen&&!document.fullscreenElement)f.requestFullscreen().catch(()=>{});if(!on&&document.fullscreenElement)document.exitFullscreen()}catch(e){}
+  if(LV.data)draw()}
+document.addEventListener('keydown',e=>{if(e.key==='Escape'&&document.querySelector('.lv .flow.full'))full(false)});
+document.addEventListener('fullscreenchange',()=>{if(!document.fullscreenElement&&document.querySelector('.lv .flow.full'))full(false)});
+addEventListener('resize',()=>{if(LV.fit&&LV.data){LV.lastKey='';draw()}});
 const op=(r,d)=>r.last?'.85':Math.max(.15,(r.left||0)/d.fade).toFixed(2);
 const ago=n=>n<60?n+' s':n<3600?Math.floor(n/60)+' min':Math.floor(n/3600)+' h';
 const doneTxt=r=>r.last?tt(`letzte Aktion · vor ${ago(r.ago)}`,`last action · ${ago(r.ago)} ago`):tt(`fertig · weg in ${r.left} s`,`done · gone in ${r.left} s`);
@@ -37,7 +44,7 @@ function skeleton(root){
   const run=`<div class="card"><h3>${tt('Läuft gerade','Running now')} <span class="n" id="lvnrq"></span></h3><div id="lvrq"></div></div>`;
   const ev=`<div class="card"><h3>${tt('Ereignisse','Events')}</h3><div class="mono ev" id="lvev"></div></div>`;
   const cn=`<div class="card" id="lvcnc"><h3>${tt('Offene Verbindungen','Open connections')} <span class="n" id="lvncn"></span><span class="kdots"></span></h3><table id="lvcn"></table></div>`;
-  const flow=`<div class="card flow"><h3 style="padding:4px 10px 0">${tt('Wohin die Anfragen gerade gehen','Where the requests go right now')} <small class="mut hideph">${tt('Geräte erscheinen bei einer Anfrage; die letzte bleibt stehen, bis eine neue kommt, dann blendet sie in 10 s aus · oben Heimnetz, unten Internet','devices show while they ask; the last one stays until a new one comes, then fades in 10 s · home network above, internet below')}</small></h3><div id="lvflow"></div></div>`;
+  const flow=`<div class="card flow"><h3 style="padding:4px 10px 0">${tt('Wohin die Anfragen gerade gehen','Where the requests go right now')} <small class="mut hideph">${tt('Geräte erscheinen bei einer Anfrage; die letzte bleibt stehen, bis eine neue kommt, dann blendet sie in 10 s aus · oben Heimnetz, unten Internet','devices show while they ask; the last one stays until a new one comes, then fades in 10 s · home network above, internet below')}</small><button type="button" class="lvfs hideph" data-lvfs="1" title="${tt('Bild bildschirmfüllend (Esc zurück)','Picture full screen (Esc back)')}" aria-label="${tt('Vollbild','Full screen')}">⛶</button></h3><div id="lvflow"></div></div>`;
   if(KIOSK)root.innerHTML=`<div class="lvna" id="lvna" hidden></div><div class="kpis" id="lvkpi"></div>${flow}<div class="kside">${run}${ev}</div><div class="kbot">${way}<div class="krot">${gd}${dr}${rt}${cn}</div></div>`;
   else root.innerHTML=`<div class="lvna" id="lvna" hidden></div><div class="kpis" id="lvkpi"></div>${flow}${way}<div class="gates">${gd}${dr}</div><div style="margin-bottom:14px">${rt}</div><div class="grid2">${run}<div class="split">${cn}${ev}</div></div>`;
   if(!tip){tip=document.createElement('div');tip.id='lvtip';document.body.appendChild(tip)}
@@ -45,7 +52,7 @@ function skeleton(root){
   fl.addEventListener('mousemove',e=>{const x=e.target.closest('[data-tip]');if(!x){tip.style.display='none';return}
     tip.textContent=x.dataset.tip;tip.style.display='block';tip.style.left=Math.min(e.clientX+14,innerWidth-tip.offsetWidth-8)+'px';tip.style.top=(e.clientY+16)+'px'});
   fl.addEventListener('mouseleave',()=>tip.style.display='none');
-  root.addEventListener('click',e=>{const d=e.target.closest('[data-req]');if(d){LV.sel=d.dataset.req;LV.lastSel=Date.now();LV.lastKey='';draw();return}
+  root.addEventListener('click',e=>{if(e.target.closest('[data-lvfs]')){full(!document.querySelector('.lv .flow.full'));return}const d=e.target.closest('[data-req]');if(d){LV.sel=d.dataset.req;LV.lastSel=Date.now();LV.lastKey='';draw();return}
     const g=e.target.closest('[data-gd]');if(g){LV.gsel=+g.dataset.gd;guardList();return}
     const o=e.target.closest('[data-dr]');if(o){LV.dsel=+o.dataset.dr;doorList();return}
     if(!KIOSK&&e.target.closest('[data-gate=guard]'))el('lvguardc').scrollIntoView({behavior:'smooth',block:'start'});
@@ -66,7 +73,7 @@ function kpis(d){const s=d.sys||{},h=s.hist||{},run=d.reqs.filter(r=>!r.done);
 // ------------------------------------------------------------------ the flow picture
 function layout(d,ph){const W=ph?360:1140,pos={},reqs=d.reqs.slice(-7),lan=reqs.filter(r=>!r.net).slice(-4),net=reqs.filter(r=>r.net).slice(-3);
   const T=d.targets,order=[...T.filter(x=>x.zone!=='net'),...T.filter(x=>x.zone==='net')];let H;
-  if(!ph){H=520;const NETY=300;
+  if(!ph){H=520;const box=el('lvflow');if(LV.fit&&box&&box.clientWidth>200&&box.clientHeight>200)H=Math.max(420,Math.min(900,Math.round(W*box.clientHeight/box.clientWidth)));const NETY=Math.round(H*.58);
     lan.forEach((r,i)=>pos['r'+r.id]={x:10,y:34+i*54,w:190,h:44});net.forEach((r,i)=>pos['r'+r.id]={x:10,y:NETY+14+i*54,w:190,h:44});
     STAGES.forEach((s,i)=>{const step=(H-40)/5;pos[s[0]]={x:470,y:34+step*i+(step-58)/2,w:200,h:58}});
     const th=Math.min(40,(H-40)/order.length-6),step=(H-40)/order.length;order.forEach((x,i)=>pos[x.id]={x:940,y:34+i*step+(step-th)/2,w:190,h:th});
