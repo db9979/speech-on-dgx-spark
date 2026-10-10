@@ -709,6 +709,8 @@ function qRender(d){const r=d&&d.last;clearTimeout(qTimer);qProg(d&&d.running?(d
   if(!r)return none(`<span class="mut">${t('Noch nicht geprüft.','Not tested yet.')}</span>`);
   if(r.error)return none(`<span class="err">${esc(r.error)}</span>`);
   const bad=r.cases.filter(x=>!x.ok),flaky=r.cases.filter(x=>x.ok&&x.flaky),held=r.cases.filter(x=>x.ok&&!x.flaky&&x.held&&x.held.length);
+  // Einordnung im Qualitätstest (systemone): a second opinion only; a passed case it doubts stays open to look at
+  const doubt=x=>!!(x.judge&&(x.judge.passt<1||x.judge.erfunden>=0.5)),doubted=r.cases.filter(x=>x.ok&&!x.flaky&&!(x.held&&x.held.length)&&doubt(x));
   const min=s=>s>=90?Math.round(s/60)+' min':s+' s';
   $('qsum').innerHTML=`<span class="pill ${bad.length?'warn':'ok'}">${r.passed} / ${r.total}</span> `
     +(bad.length?'':`<b>${t('Alle Fragen richtig.','All questions right.')}</b> `)
@@ -718,10 +720,11 @@ function qRender(d){const r=d&&d.last;clearTimeout(qTimer);qProg(d&&d.running?(d
     +(x.wobbly?` <span class="mut">${t('wackelt','wobbles')} (${x.wobbly} ${t('von','of')} ${x.runs})</span>`:'');
   const extra=x=>(x.flaky&&x.first?`<br>${t('Erster Versuch','First try')}: ${esc(x.first.why.join('; '))}`:'')
     +(x.held&&x.held.length?`<br>${t('Antwort-Prüfung hat zurückgehalten','Answer check held back')}: ${esc(x.held.join(', '))}${x.raw?' · „'+esc(x.raw)+'“':''}`:'')
-    +(x.retried?`<br>${t('Ohne Werkzeug geantwortet, neu gefragt','Answered without a tool, asked again')}`:'');
+    +(x.retried?`<br>${t('Ohne Werkzeug geantwortet, neu gefragt','Answered without a tool, asked again')}`:'')
+    +(x.judge?`<br>${t('Einordnung (systemone)','Classification (systemone)')}: ${t('beantwortet','answers')} ${String(x.judge.passt).replace('.',',')} ${t('von 2','of 2')} · ${t('erfunden','made up')} ${Math.round(x.judge.erfunden*100)} %${doubt(x)?' · '+t('zweifelt','doubts'):''}`:'');
   const head=x=>`<div class="qq"><span>${x.ok?'✅':'❌'} ${esc(x.q)}${mark(x)}</span><span class="qt">${esc(x.tools.join(', ')||t('kein Werkzeug','no tool'))}</span></div>`;
   // only questions that need a look stay open (one line each, answer clipped to two lines, tap opens it); the rest is folded
-  const look=[...bad,...flaky,...held];
+  const look=[...bad,...flaky,...held,...doubted];
   $('qlist').innerHTML=look.map(x=>`<div class="qrow">${head(x)}${x.ok?'':`<div class="qw">${esc(x.why.join('; '))}</div>`}<div class="qa" title="${t('Antippen zeigt alles','Tap to show all')}">${esc(x.answer||'–')}${extra(x)}</div></div>`).join('');
   const rest=r.cases.filter(x=>!look.includes(x));$('qallbox').hidden=!rest.length;
   $('qallsum').textContent=look.length?`${rest.length} ${t('weitere Fragen ohne Befund','more questions without findings')}`:`${t('Alle','All')} ${rest.length} ${t('Fragen ansehen','questions')}`;
@@ -795,5 +798,11 @@ if($('routego'))$('routego').onclick=async()=>{const text=$('routetext').value.t
       +(why?` · ${esc(t('Grund','Reason'))} ${esc(why)}`:'')+(r.tools.length?`<br>${esc(t('Werkzeuge','Tools'))}: ${esc(r.tools.join(', '))}`:'')
       +(r.refers?`<br>${esc(t('Zeigt auf die Antwort davor (nach Fremdtext bleibt gesperrt).','Points at the answer before (stays locked after outside text).'))}`:'')}
   catch(e){$('routeout').innerHTML=`<span class="err">${esc(e.message)}</span>`}$('routego').disabled=false};
+// Einordnung mit Wahrscheinlichkeit (systemone.py): one question of the switch through qwen38's /v1/systemone
+if($('s1go'))$('s1go').onclick=async()=>{$('s1go').disabled=true;$('s1msg').textContent=t('prüft …','checking …');
+  try{const r=await (await api('/api/admin/systemone/test',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({text:($('routetext')&&$('routetext').value.trim())||''})})).json();
+    $('s1msg').innerHTML=r.ok?`<b>${t('antwortet','answers')}</b> ${t('in','in')} ${r.ms} ms · ${(r.top||[]).map(([k,p])=>esc(k)+' '+Math.round(p*100)+' %').join(', ')} · ${r.used?t('Weiche grenzt ein','switch narrows'):t('unter 80 % oder unklar: alle Werkzeuge','below 80 % or unclear: all tools')}${r.sentence?' '+t('(Beispielsatz; ein Satz unter „Ausprobieren“ wird genommen)','(sample sentence; a sentence under "Try it" is used)'):''}`
+      :`<span class="err">${esc(t('Keine Antwort: ','No answer: ')+(r.why||''))}</span>`}
+  catch(e){$('s1msg').innerHTML=`<span class="err">${esc(e.message)}</span>`}$('s1go').disabled=false};
 if($('visiongo'))$('visiongo').onclick=async()=>{$('visiongo').disabled=true;$('visionmsg').textContent=t('prüft …','checking …');
   try{visionShow((await (await api('/api/admin/vision-test',{method:'POST'})).json()).last)}catch(e){$('visionmsg').innerHTML=`<span class="err">${esc(e.message)}</span>`}$('visiongo').disabled=false};

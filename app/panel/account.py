@@ -79,7 +79,8 @@ WHO = {"documents": "documents", "reminders": "reminders", "speaker_id": "speake
        "esp32": "esp32", "iphone": "iphone", "iphone_panel": "iphonepanel", "pebble": "pebble",
        "android": "android", "mcp_server": "mcpserver", "write_help": "schreib", "write_apps": "schreibapps", "desk": "begleiter",
        "remarkable": "remarkable", "remarkable_send": "rmsend", "remarkable_fresh": "rmfresh", "my_status": "mystatus", "person_priority": "vorrang",
-       "ha_live": "halive", "ha_loud": "haloud", "ha_events": "haevent", "ha_voice_rules": "havoice", "ha_camera": "hacam"}
+       "ha_live": "halive", "ha_loud": "haloud", "ha_events": "haevent", "ha_voice_rules": "havoice", "ha_camera": "hacam",
+       "systemone_mail": "mailwichtig"}
 
 
 def _setup(prof, request):
@@ -1069,7 +1070,7 @@ def profile_settings(request: Request):
 # which conversation switches the admin allows (features.py), only for a signed-in profile
 ALLOW = {"tool_think": "toolthink", "route": "routing", "direct_read": "direct", "fix_learn": "fixes", "style": "style", "roles": "roles",
          "wiki": "wiki", "kiwix": "kiwix", "local": "lokal", "follow": "follow", "echo": "selfecho", "images": "images",
-         "prefetch": "vorab", "spark_help": "hilfe"}
+         "prefetch": "vorab", "spark_help": "hilfe", "systemone_on": "einordnung"}
 
 
 def _allow(prof, chat):

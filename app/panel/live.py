@@ -3,7 +3,8 @@
 Running requests with their way through the panel (from tracelog.Rec, also while Logs → Anfragen is off),
 what the Wächter (netguard.py) decides for each outgoing connection and why, who came in from the
 internet or was turned away (guard.failed, monitor pairing), what the tools gave back, open channels and
-the machine's numbers. Everything lives in memory only and is gone after a restart.
+the machine's numbers, and how often Einordnung mit Wahrscheinlichkeit (systemone.py) asked the language model
+today, per use. Everything lives in memory only and is gone after a restart.
 
 Only fixed words, tool names, numbers and service names: never a question, an answer, tool arguments or
 results, mail subjects, URLs with paths or secrets. Web pages from search results show as "Webseite",
@@ -675,6 +676,11 @@ def snapshot(view="admin", now=None):
         held = notaus.for_live()
     except Exception:
         held = {"level": 0}
+    try:
+        import systemone
+        sys1 = systemone.for_live(now)
+    except Exception:
+        sys1 = {"n": 0}
     hs = hints(now)
     used = {h["at"] for h in hs} | {s["to"] for r in reqs for s in r["steps"] if s["to"]} | {r["to"] for r in reqs if r["to"]} | {x["to"] for x in rets if now - x["t"] < 60 and x["to"]}
     targets = [{"id": k, "name": v[0], "sub": v[1], "zone": v[2]} for k, v in TARGETS.items() if v[3] or k in used]
@@ -682,7 +688,7 @@ def snapshot(view="admin", now=None):
             "guard": {"ok": cnt.get("guard_ok", 0), "bad": cnt.get("guard_bad", 0), "cut": cnt.get("guard_cut", 0), "items": guard_items},
             "door": {"in": cnt.get("door_in", 0), "out": cnt.get("door_out", 0), "items": door_items},
             "rets": rets, "events": [{"t": t, "area": a, "text": x} for t, a, x in events], "conns": _conns(now), "sys": _sys(), "notaus": held,
-            "svc": _svc_now(now), "bg": _bg_now(now), "hints": hs}
+            "svc": _svc_now(now), "bg": _bg_now(now), "hints": hs, "sys1": sys1}
 
 
 # ------------------------------------------------------------------ admin view

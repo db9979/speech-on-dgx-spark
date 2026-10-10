@@ -12,6 +12,8 @@ mailbox. Who decides, in this order; the first sure stage wins:
      networks, no-reply senders
   4. the language model, only for the rest: one category from a fixed list and how sure it is; it
      has no tools, and anything else in its answer is thrown away. Unsure: the profile is asked.
+     With Einordnung mit Wahrscheinlichkeit (systemone.py) the percent is a real probability, and it
+     moves by itself only from systemone.TIDY_SURE (90 %); qwen38 busy or missing: the JSON answer as before.
 
 Modes per mailbox: off, preview (only proposals), safe (moves stages 2 and 3), auto (also the
 model when it is sure). Brakes: at most MAX_MOVES per run; a run that would move more than half of
@@ -372,14 +374,14 @@ def decide(d, aid, h, own=""):
     return None, "", 4
 
 
-def action(d, cat, stage, conf=100):
+def action(d, cat, stage, conf=100, sure=SURE):
     """What to do with a decision: "move", "ask" or "keep"."""
     if cat in (None, "keep"):
         return "keep"
     if stage == 2:
         return "move"                       # the profile's own rule
     act = d["actions"].get(cat, "ask")
-    if stage == 4 and act == "move" and conf < SURE:
+    if stage == 4 and act == "move" and conf < sure:
         return "ask"
     return act
 
@@ -433,6 +435,33 @@ def classify(h, text):
         r = c.post(url + "/chat/completions", json=payload, headers=headers)
         r.raise_for_status()
         return parse_class(r.json()["choices"][0]["message"].get("content") or "")
+
+
+def classify_systemone(h, text):
+    """Stage 4 with Einordnung mit Wahrscheinlichkeit (systemone.py, chat.systemone_tidy, profile systemone_on):
+    (category or "keep", percent) from qwen38's /v1/systemone; systemone.Unavailable when it cannot answer.
+    The mail is the state (data, fenced by qwen38); the categories are the fixed TIDY_OPTIONS."""
+    import systemone
+    from common import load_config
+    body = re.sub(r"<{3,}|>{3,}", " ", text or "")[:1500]
+    state = f"Absender: {h['name']} <{h['sender']}>\nBetreff: {h['subject']}\nText:\n{body}"
+    ans = systemone.ask_sync(load_config().get("chat", {}), "mail", state, systemone.tidy_question(), job="Mail sortieren")
+    a = ans["kategorie"]
+    return ("keep" if a["pick"] == "wichtig" else a["pick"]), int(round(a["p"] * 100))
+
+
+def classify_for(uid, h, text):
+    """(category or "keep" or None, percent, the percent from which it may move by itself, how):
+    systemone when the profile may use it there, else (or when qwen38 cannot answer) the model's own JSON."""
+    if features.allowed("einordnungpost", uid):
+        import systemone
+        try:
+            cat, conf = classify_systemone(h, text)
+            return cat, conf, systemone.TIDY_SURE, "systemone"
+        except systemone.Unavailable:
+            pass
+    cat, conf = classify(h, text)
+    return cat, conf, SURE, "Modell"
 
 
 # ---------------------------------------------------------------- IMAP (writing)
@@ -891,7 +920,7 @@ def _run(uid, aid, acct, d, a, mode, idle):
                     continue
                 h = head(msg)
                 try:
-                    cat, conf = classify(h, b.text(x["uid"]))
+                    cat, conf, sure, how = classify_for(uid, h, b.text(x["uid"]))
                 except Exception as e:
                     print("mail tidy: model:", type(e).__name__, str(e)[:120], flush=True)
                     break
@@ -899,9 +928,9 @@ def _run(uid, aid, acct, d, a, mode, idle):
                 if cat is None:
                     questions_add.append((x["uid"], h, "", "das Modell war sich nicht sicher"))
                     continue
-                why = f"Modell, {conf} % sicher"
-                act = action(d, cat, 4, conf)
-                if cat != "keep" and conf < SURE:
+                why = f"{how}, {conf} % sicher"
+                act = action(d, cat, 4, conf, sure)
+                if cat != "keep" and conf < sure:
                     questions_add.append((x["uid"], h, cat, why))
                     continue
                 decided.append((x["uid"], h, cat, why, 4, act))

@@ -696,6 +696,7 @@ SETTINGS = {
     "tool_think": (False, lambda v: isinstance(v, bool)),   # think while choosing a tool (admin chat.tool_thinking)
     "route": (False, lambda v: isinstance(v, bool)),        # targeted tool choice (intent.py, admin chat.routing)
     "direct_read": (False, lambda v: isinstance(v, bool)),  # the panel fetches clear questions itself (intent.direct)
+    "systemone_on": (False, lambda v: isinstance(v, bool)), # Einordnung mit Wahrscheinlichkeit (systemone.py, chat.systemone)
     "trace_name": (False, lambda v: isinstance(v, bool)),   # Logs → Anfragen may show this profile's name (tracelog.py)
     "fix_learn": (False, lambda v: isinstance(v, bool)),    # learning from corrections (fixes.py, admin chat.learn_fixes)
     "images_on": (False, lambda v: isinstance(v, bool)),    # pictures for the model (images.py, admin chat.images)
@@ -741,6 +742,7 @@ SETTINGS = {
     "pro_ha_voice": (False, lambda v: isinstance(v, bool)),    # "Sag mir Bescheid, wenn …" makes a rule after a yes
     "pro_ha_cam": (False, lambda v: isinstance(v, bool)),      # a camera's still picture in a few words
     "pro_ha_me": ("", lambda v: isinstance(v, str) and (v == "" or re.fullmatch(r"person\.[a-z0-9_]{1,80}", v) is not None)),
+    "pro_mail_smart": (False, lambda v: isinstance(v, bool)),  # important mail recognized by systemone (chat.systemone_mail)
     "pro_greet": (True, lambda v: isinstance(v, bool)),
     "pro_follow": (True, lambda v: isinstance(v, bool)),
     "pro_mail": (True, lambda v: isinstance(v, bool)),
