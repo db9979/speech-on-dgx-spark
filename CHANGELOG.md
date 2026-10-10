@@ -2,6 +2,7 @@
 
 Every version in one line, newest first (taken from the commit messages, so some lines are German, some English). Older entries have no version number.
 
+- **V01.0.273** · 2026-10-10 · reMarkable-Notizen (Funktionen → Bilder und Scans lesen, aus; Ich → reMarkable): my.remarkable-Konto per Einmalcode verbinden, ausgewählte Notizbücher kommen in die Dokumentensuche (getippter Text und Markierungen direkt, Handschrift liest das Sprachmodell in Pausen, nur geänderte Seiten neu); „Aufs reMarkable schicken“ (aus) legt Antworten und diktierte Notizen als EPUB in den Ordner „Spark“
 - **V01.0.272** · 2026-10-10 · iPhone-App liest Funktionsnamen, Gruppen und Sperren vom Spark statt eigener Listen; Profil in der App mit Funktionen „n von m an“, Rolle und Browsern; Freihändig und Ins Wort fallen gelten fürs Profil
 - **V01.0.271** · 2026-10-10 · Personen und Geräte: ein Profil an einer Stelle mit Zugang, Funktionen „n von m an“, Rechten (Aufträge, App-Update, Upload-Platz), Browser abmelden, Gäste-Zeile und „+ Neu“
 - **V01.0.270** · 2026-10-10 · Vereinheitlichen Phase 4: ein Zeilen-Baustein (setRow) für alle Einstellungen, vom Admin Ausgeschaltetes bleibt unter Ich sichtbar mit Grund, Ich nennt nicht eingeschaltete Funktionen, Spalte „Neue Profile“ unter Wer darf was, Vorgaben nehmen nie einen Funktionsschalter ein

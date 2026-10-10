@@ -31,6 +31,7 @@ Alle Optionen ohne Rückfragen (`--mode api --asr 1.7b --tts 0.6b --yes` …) st
 
 <!-- New version: add one line at the top here and in CHANGELOG.md, drop the oldest line here (keep 10). Details go to docs/de and docs/en, not into this README. -->
 
+- **V01.0.273** reMarkable-Notizen (Funktionen → Bilder und Scans lesen, aus; Ich → reMarkable): my.remarkable-Konto per Einmalcode verbinden, ausgewählte Notizbücher kommen in die Dokumentensuche (getippter Text und Markierungen direkt, Handschrift liest das Sprachmodell in Pausen, nur geänderte Seiten neu); „Aufs reMarkable schicken“ (aus) legt Antworten und diktierte Notizen als EPUB in den Ordner „Spark“
 - **V01.0.272** iPhone-App liest Funktionsnamen, Gruppen und Sperren vom Spark statt eigener Listen; Profil in der App mit Funktionen „n von m an“, Rolle und Browsern; Freihändig und Ins Wort fallen gelten fürs Profil
 - **V01.0.271** Personen und Geräte: ein Profil an einer Stelle mit Zugang, Funktionen „n von m an“, Rechten (Aufträge, App-Update, Upload-Platz), Browser abmelden, Gäste-Zeile und „+ Neu“
 - **V01.0.270** Vereinheitlichen Phase 4: ein Zeilen-Baustein (setRow) für alle Einstellungen, vom Admin Ausgeschaltetes bleibt unter Ich sichtbar mit Grund, Ich nennt nicht eingeschaltete Funktionen, Spalte „Neue Profile“ unter Wer darf was, Vorgaben nehmen nie einen Funktionsschalter ein
@@ -40,7 +41,6 @@ Alle Optionen ohne Rückfragen (`--mode api --asr 1.7b --tts 0.6b --yes` …) st
 - **V01.0.266** Kiwix: „Schau in deinem/unserem Archiv“ und „im Archiv“ werden erkannt, die erste Runde muss dann das Archiv fragen statt der hochgeladenen Dokumente
 - **V01.0.265** Bedienung: Funktionen eigener Menüpunkt (mit Anleitungen), „Personen und Geräte“ (mit Apps und Schnittstellen), „Einbinden“ entfällt; Suche Strg K/⌘ K über Seiten, Schalter, Einstellungen, Ich, Prüfen, Logs und Anleitungen
 - **V01.0.264** Erst lokal suchen (Funktionen → Websuche, aus; Profil-Schalter): Wissensfragen schauen zuerst in Dokumenten, Kiwix-Archiv und früheren Gesprächen (höchstens 400 ms, Treffer als Daten mit Quelle), Aktuelles geht direkt hinaus, „in meinen Unterlagen“ bleibt lokal; Websuche nach Dokumenten nur mit den Worten der Frage; Zustand → Prüfen → „Erst lokal testen“, Logzeile „lokal:“
-- **V01.0.263** Logs → Anfragen (Schalter unter Einstellungen → Betrieb, aus): Weg jeder Anfrage als Liste mit Perlenkette und Zeitstrahl (Weiche, Sprachmodell-Runden, Werkzeuge, Prüfung, Sprachausgabe, erster Ton), ohne Frage- und Antworttext; Name nur mit Zustimmung des Profils
 
 Alle Versionen: [CHANGELOG.md](CHANGELOG.md)
 

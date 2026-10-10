@@ -666,6 +666,8 @@ SETTINGS = {
     "doc_shared": (False, lambda v: isinstance(v, bool)),
     "doc_brief": (False, lambda v: isinstance(v, bool)),
     "doc_due": (False, lambda v: isinstance(v, bool)),
+    "rm_on": (False, lambda v: isinstance(v, bool)),        # reMarkable notebooks (remarkable.py, admin chat.remarkable)
+    "rm_send": (False, lambda v: isinstance(v, bool)),      # answers onto the reMarkable (admin chat.remarkable_send)
     # own wishes for the tone (admin chat.own_style): plain text, no control characters, no markers of outside text
     "style": ("", lambda v: isinstance(v, str) and len(v) <= 500 and not re.search(r"[\x00-\x09\x0b-\x1f\x7f]|<<<|>>>", v)),
     # roles switched by voice (roles.py, admin chat.roles): one "Name: ..." per line, the active name

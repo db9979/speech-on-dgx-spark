@@ -211,7 +211,7 @@ def card_line(d):
 
 
 def where(h):
-    return h["name"] + (f", Seite {h['page']}" if h.get("page") else "") + (f", geteilt von {h['owner']}" if h.get("owner") else "")
+    return ("reMarkable: " if h.get("source") == "remarkable" else "") + h["name"] + (f", Seite {h['page']}" if h.get("page") else "") + (f", geteilt von {h['owner']}" if h.get("owner") else "")
 
 
 # ---------------------------------------------------------------- background work

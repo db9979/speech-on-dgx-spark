@@ -76,6 +76,8 @@ CREATE VIRTUAL TABLE IF NOT EXISTS fts USING fts5(terms);
 CREATE TABLE IF NOT EXISTS pages (doc TEXT NOT NULL, page INTEGER NOT NULL, jpeg BLOB NOT NULL,
     tries INTEGER DEFAULT 0, PRIMARY KEY (doc, page));
 CREATE TABLE IF NOT EXISTS meta (k TEXT PRIMARY KEY, v TEXT);
+CREATE TABLE IF NOT EXISTS pagetext (doc TEXT NOT NULL, page INTEGER NOT NULL, text TEXT NOT NULL,
+    done INTEGER DEFAULT 0, PRIMARY KEY (doc, page));
 """
 
 
@@ -706,6 +708,7 @@ def delete(uid, doc_id):
         con.execute("DELETE FROM fts WHERE rowid IN (SELECT id FROM chunks WHERE doc=?)", (doc_id,))
         con.execute("DELETE FROM chunks WHERE doc=?", (doc_id,))
         con.execute("DELETE FROM pages WHERE doc=?", (doc_id,))
+        con.execute("DELETE FROM pagetext WHERE doc=?", (doc_id,))
         con.execute("DELETE FROM docs WHERE id=?", (doc_id,))
         if r["file"]:
             try:
@@ -819,6 +822,67 @@ def text_of(uid, doc_id, most=200_000, start=0):
             "cut": more, "next": max(0, int(start)) + len(parts) if more else None}
 
 
+# ---------------------------------------------------------------- notebooks from elsewhere (remarkable.py)
+def notebook_texts(uid, doc_id):
+    """{page: text} of the pages of a notebook that are completely read (typed text, highlights and
+    what the language model read), to keep them when the notebook changes elsewhere."""
+    if not re.fullmatch(r"[0-9a-f]{12}", doc_id or "") or not os.path.exists(db_path(uid)):
+        return {}
+    with _Db(uid) as con:
+        return {r[0]: r[1] for r in con.execute("SELECT page, text FROM pagetext WHERE doc=? AND done=1", (doc_id,))}
+
+
+def has_doc(uid, doc_id):
+    if not re.fullmatch(r"[0-9a-f]{12}", doc_id or "") or not os.path.exists(db_path(uid)):
+        return False
+    with _Db(uid) as con:
+        return bool(con.execute("SELECT 1 FROM docs WHERE id=?", (doc_id,)).fetchone())
+
+
+def notebook_put(uid, doc_id, name, pages, note="", source="remarkable"):
+    """Stores a notebook kept elsewhere, replacing what was stored for it before: pages is a list of
+    (page number, text, JPEG or None); a JPEG waits for the language model, its text comes on top of
+    the page's own text. doc_id None: a new document. Returns (doc id, pages that could not wait, as the
+    queue was full; they are left out and tried again with the next comparison)."""
+    name = re.sub(r"[\x00-\x1f\x7f<>\"\\]", "", str(name or "Notizbuch"))[:120].strip() or "Notizbuch"
+    with _Db(uid) as con:
+        if doc_id and not con.execute("SELECT 1 FROM docs WHERE id=?", (doc_id,)).fetchone():
+            doc_id = None
+        if not doc_id:
+            if con.execute("SELECT COUNT(*) FROM docs").fetchone()[0] >= MAX_DOCS:
+                raise ValueError(f"at most {MAX_DOCS} documents per profile")
+            doc_id = secrets.token_hex(6)
+            con.execute("INSERT INTO docs (id, name, size, created, kind, state, note, pages, source) "
+                        "VALUES (?,?,?,?,?,?,?,?,?)", (doc_id, name, 0, int(time.time()), "notebook", "ready", "", 0, source))
+        con.execute("DELETE FROM fts WHERE rowid IN (SELECT id FROM chunks WHERE doc=?)", (doc_id,))
+        con.execute("DELETE FROM chunks WHERE doc=?", (doc_id,))
+        con.execute("DELETE FROM pages WHERE doc=?", (doc_id,))
+        con.execute("DELETE FROM pagetext WHERE doc=?", (doc_id,))
+        room = MAX_QUEUED - con.execute("SELECT COUNT(*) FROM pages").fetchone()[0]
+        n, size, waiting, left = 0, 0, 0, 0
+        for page, text, jpeg in pages:
+            text = str(text or "")[:MAX_CHARS]
+            if jpeg and room <= 0:
+                left += 1
+                continue
+            con.execute("INSERT INTO pagetext (doc, page, text, done) VALUES (?,?,?,?)", (doc_id, page, text, 0 if jpeg else 1))
+            for c in chunks(_clean_text(text)):
+                _put_chunk(con, doc_id, n, page, c)
+                n += 1
+            size += len(text.encode())
+            if jpeg:
+                con.execute("INSERT INTO pages (doc, page, jpeg) VALUES (?,?,?)", (doc_id, page, jpeg))
+                room -= 1
+                waiting += 1
+                size += len(jpeg)
+        state = "reading" if waiting else "ready"
+        if left:
+            note = (note + "; " if note else "") + f"{left} Seite{'n' if left > 1 else ''} warten auf Platz"
+        con.execute("UPDATE docs SET name=?, size=?, kind='notebook', state=?, note=?, pages=? WHERE id=?",
+                    (name, size, state, note[:300], waiting, doc_id))
+    return doc_id, left
+
+
 # ---------------------------------------------------------------- pages for the language model
 def next_page(uid, most_pages=None):
     """(doc id, doc name, page, JPEG, tries) of the oldest page still to read, or None.
@@ -851,11 +915,15 @@ def page_read(uid, doc_id, page, text=None, failed=False, max_tries=2):
                 return
             con.execute("UPDATE docs SET note=CASE WHEN note='' THEN ? ELSE note || '; ' || ? END WHERE id=?",
                         (f"Seite {page} nicht lesbar", f"Seite {page} nicht lesbar", doc_id))
+            con.execute("UPDATE pagetext SET done=1 WHERE doc=? AND page=?", (doc_id, page))   # not tried again
         else:
             n = con.execute("SELECT COALESCE(MAX(n), -1) FROM chunks WHERE doc=?", (doc_id,)).fetchone()[0]
             for c in chunks(_clean_text(text or "")):
                 n += 1
                 _put_chunk(con, doc_id, n, page, c)
+        # a notebook page (reMarkable): its whole text is kept, so an unchanged page is not read again
+        con.execute("UPDATE pagetext SET text=CASE WHEN text='' THEN ? ELSE text || char(10) || ? END, done=1 "
+                    "WHERE doc=? AND page=?", (text or "", text or "", doc_id, page))
         con.execute("DELETE FROM pages WHERE doc=? AND page=?", (doc_id, page))
         if not con.execute("SELECT 1 FROM pages WHERE doc=?", (doc_id,)).fetchone():
             has = con.execute("SELECT 1 FROM chunks WHERE doc=?", (doc_id,)).fetchone()
@@ -986,10 +1054,10 @@ def search(uid, query, k=5, qvec=None, shared_only=False, only_docs=None):
     best = sorted(ranks, key=lambda x: -ranks[x])[:k]
     with _Db(uid) as con:
         got = {r["id"]: r for r in con.execute(
-            "SELECT c.id, c.doc, c.page, c.text, d.name, d.file FROM chunks c JOIN docs d ON d.id=c.doc WHERE c.id IN (%s)"
+            "SELECT c.id, c.doc, c.page, c.text, d.name, d.file, d.source FROM chunks c JOIN docs d ON d.id=c.doc WHERE c.id IN (%s)"
             % ",".join("?" * len(best)), best).fetchall()}
     return [{"id": got[i]["doc"], "name": got[i]["name"], "page": got[i]["page"], "text": got[i]["text"],
-             "file": bool(got[i]["file"]), "score": ranks[i]} for i in best if i in got]
+             "file": bool(got[i]["file"]), "source": got[i]["source"], "score": ranks[i]} for i in best if i in got]
 
 
 def sqlite_copy(src, dst):

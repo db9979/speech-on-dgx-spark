@@ -79,6 +79,8 @@
       <div class="setrow"><div class="lbl"><b>Frühere Gespräche</b><span>Profile können nach früheren Gesprächen fragen; aus ruhigen Gesprächen merkt er sich wenige Fakten.</span></div><label class="tgl"><input type="checkbox" id="chat.history"><i></i></label></div>
       <div class="setrow"><div class="lbl"><b>Eigene Dokumente</b><span>Profile laden eigene Dokumente hoch, der Assistent sucht darin.</span></div><label class="tgl"><input type="checkbox" id="chat.documents"><i></i></label></div>
       <div class="setrow" data-show="chat.documents" style="margin-left:18px"><div class="lbl"><b>Bilder und Scans lesen</b><span>Fotos und gescannte PDF-Seiten liest das Sprachmodell einmal in Gesprächspausen ab; danach findet die Dokumentensuche ihren Text.</span></div><label class="tgl"><input type="checkbox" id="chat.doc_pictures"><i></i></label></div>
+      <div class="setrow" data-show="chat.doc_pictures" style="margin-left:36px"><div class="lbl"><b>reMarkable-Notizen</b><span>Profile verbinden ihr my.remarkable-Konto; gewählte Notizbücher kommen in ihre Dokumente, Handschrift liest das Sprachmodell.</span></div><label class="tgl"><input type="checkbox" id="chat.remarkable"><i></i></label></div>
+      <div class="setrow" data-show="chat.remarkable" style="margin-left:54px"><div class="lbl"><b>Aufs reMarkable schicken</b><span>Antworten und diktierte Notizen als neues Dokument in den Ordner „Spark“; sonst ändert der Spark dort nichts.</span></div><label class="tgl"><input type="checkbox" id="chat.remarkable_send"><i></i></label></div>
       <div class="setrow" data-show="chat.doc_pictures" style="margin-left:36px"><div class="lbl"><b>Lange Dokumente nachts lesen</b><span>Tagsüber nur kurze Dokumente (bis 10 Seiten) in Pausen, lange erst nach 30 Minuten Ruhe oder im Nachtfenster, dort bis 400 Seiten mehr.</span></div><label class="tgl"><input type="checkbox" id="chat.doc_night"><i></i></label></div>
       <div data-show="chat.doc_night" style="margin-left:36px"><label>Nachtfenster</label><div class="rowin"><input type="time" id="chat.doc_night_from" style="max-width:140px"><span>bis</span><input type="time" id="chat.doc_night_to" style="max-width:140px"></div></div>
       <div class="setrow" data-show="chat.documents" style="margin-left:18px"><div class="lbl"><b>Bedeutungssuche</b><span>Ein kleines Modell auf dem Prozessor findet auch Stellen mit anderen Worten („Auto“ findet „Kfz“); etwa 300 MB, nur bei Bedarf.</span></div><label class="tgl"><input type="checkbox" id="chat.doc_semantic"><i></i></label></div>
@@ -700,6 +702,7 @@
     <div id="espbox" class="ptab"></div>
     <div id="appbox" class="ptab"></div>
     <div id="pebbox" class="ptab"></div>
+    <div id="rmbox" class="ptab"></div>
     <div id="wxbox" class="ptab"></div>
     <div id="conbox" class="ptab"></div>
     <div id="trbox" class="ptab"></div>
@@ -735,6 +738,7 @@
 <script src="/static/js/proactive.js"></script>
 <script src="/static/js/room.js"></script>
 <script src="/static/js/extras.js"></script>
+<script src="/static/js/remarkable.js"></script>
 <script src="/static/js/agent.js"></script>
 <script src="/static/js/messages.js"></script>
 <script src="/static/js/esp.js"></script>

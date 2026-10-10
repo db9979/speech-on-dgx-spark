@@ -31,6 +31,7 @@ All options for running without questions (`--mode api --asr 1.7b --tts 0.6b --y
 
 <!-- New version: add one line at the top here and in CHANGELOG.md, drop the oldest line here (keep 10). Details go to docs/de and docs/en, not into this README. -->
 
+- **V01.0.273** reMarkable notes (Features → Read pictures and scans, off; Me → reMarkable): connect the my.remarkable account with a one-time code, chosen notebooks go into the document search (typed text and highlights directly, the language model reads handwriting in quiet moments, only changed pages again); "Send to the reMarkable" (off) puts answers and dictated notes as EPUB into the folder "Spark"
 - **V01.0.272** iPhone app reads function names, groups and locks from the Spark instead of its own lists; profile in the app with functions "n of m on", role and browsers; hands-free and barge-in belong to the profile
 - **V01.0.271** People and devices: one profile in one place with access, functions "n of m on", rights (jobs, app update, upload space), signing browsers out, a guests row and "+ New"
 - **V01.0.270** Unify phase 4: one row building block (setRow) for all settings, what the admin switched off stays visible under Ich with the reason, Ich names functions not switched on, column "Neue Profile" under Wer darf was, presets never turn on a function switch
@@ -40,7 +41,6 @@ All options for running without questions (`--mode api --asr 1.7b --tts 0.6b --y
 - **V01.0.266** Kiwix: "look in your/our archive" and "in the archive" are recognised; the first round must then ask the archive instead of the uploaded documents
 - **V01.0.265** Menu: Funktionen is its own entry (with guides), "Personen und Geräte" (with apps and interfaces), "Einbinden" is gone; Ctrl K/⌘ K search across pages, switches, settings, Ich, checks, logs and guides
 - **V01.0.264** Look locally first (Features → Web search, off; profile switch): knowledge questions first look in documents, the Kiwix archive and earlier conversations (at most 400 ms, hits as data with their source), current things go straight out, "in my documents" stays local; web search after documents only with the words of the question; Status → Checks → "Test looking locally first", log line "lokal:"
-- **V01.0.263** Logs → Requests (switch under Settings → Operation, off): the way of every request as a list with a bead chain and a time line (switch, model rounds, tools, check, speech output, first sound), without question or answer text; names only with the profile's consent
 
 All versions: [CHANGELOG.md](CHANGELOG.md)
 

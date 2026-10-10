@@ -276,6 +276,8 @@ const ub=chatLog('user',text);const um={role:'user',content:text};
     b.textContent=t('In „Meine Dokumente“ speichern','Store under "My documents"');const said=full.trim();b.onclick=()=>picSave(said,b);el.appendChild(b)}
   if(pids.length&&full.trim()&&PROFILE&&!err&&ALLOW.docpics){const b=document.createElement('button');b.type='button';b.className='b picsave';   // the picture itself, read by the model later
     b.textContent=t('Bild in „Meine Dokumente“','Picture to "My documents"');const ids=pids.slice();b.onclick=()=>picKeep(ids,b);el.appendChild(b)}
+  if(full.trim()&&PROFILE&&!err&&RMSEND_ON&&S.rm_send&&typeof rmSend==='function'){const b=document.createElement('button');b.type='button';b.className='b picsave';   // only on a click
+    b.textContent=t('Aufs reMarkable','To the reMarkable');const said=full.trim();b.onclick=()=>rmSend(said,b);el.appendChild(b)}
   const f=v=>v==null?'–':v.toFixed(2)+' s';
   const chip=(k,v,hi)=>`<span class="chip${hi?' hi':''}">${k} <b>${f(v)}</b></span>`;
   $('chattiming').innerHTML=(asrS!=null?chip(t('Spracherkennung','Recognition'),asrS):'')+chip(t('LLM erstes Wort','LLM first word'),llmS)+chip(t('erster Ton','first audio'),audioS)+

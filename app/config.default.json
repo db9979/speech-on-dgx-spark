@@ -88,6 +88,8 @@
     "doc_originals": false,
     "doc_shared": false,
     "doc_brief": false,
+    "remarkable": false,
+    "remarkable_send": false,
     "doc_quota_mb": 500,
     "doc_max_mb": 100,
     "doc_night": false,

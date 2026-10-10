@@ -63,9 +63,10 @@ import intent  # noqa: E402
 import tracelog  # noqa: E402
 import lokal  # noqa: E402
 import features  # noqa: E402
+import remarkable  # noqa: E402
 
 app = FastAPI(title="Speech on DGX Spark")
-for _module in (account, admin, chat, update, system, proactive, room, roomlive, tidy, weather, contacts, parcels, telegram, tasks, esp32, iphone, pebblewatch, appupdate, apns, transit, logfilter, agent, images, messages, intent, wissen, tracelog, lokal, features):
+for _module in (account, admin, chat, update, system, proactive, room, roomlive, tidy, weather, contacts, parcels, telegram, tasks, esp32, iphone, pebblewatch, appupdate, apns, transit, logfilter, agent, images, messages, intent, wissen, tracelog, lokal, features, remarkable):
     app.include_router(_module.router)
 app.middleware("http")(update_lock)
 
@@ -277,6 +278,20 @@ async def doc_reader():
                     await asyncio.sleep(1)
             except Exception as e:
                 print("documents:", type(e).__name__, e, flush=True)
+    asyncio.create_task(loop())
+
+
+@app.on_event("startup")
+async def remarkable_sync():
+    """reMarkable notebooks (remarkable.py): each minute one profile whose comparison is due, never
+    while someone is talking (vorrang.py)."""
+    async def loop():
+        while True:
+            await asyncio.sleep(60)
+            try:
+                await remarkable.due_once(idle=not vorrang.speaking())
+            except Exception as e:
+                print("remarkable:", type(e).__name__, flush=True)
     asyncio.create_task(loop())
 
 

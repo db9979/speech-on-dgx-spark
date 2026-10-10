@@ -76,6 +76,10 @@ FEATURES = (
       parent="documents", me="docbox", guide="docnight"),
     F("docshared", "Gemeinsame Dokumente", "Shared documents", "data", ("doc_shared",), "doc_shared",
       parent="documents", me="docbox", guide="docshared"),
+    F("remarkable", "reMarkable-Notizen", "reMarkable notes", "data", ("remarkable",), "rm_on",
+      parent="docpics", me="rmbox", guide="remarkable"),
+    F("rmsend", "Aufs reMarkable schicken", "Sending to the reMarkable", "data", ("remarkable_send",), "rm_send",
+      parent="remarkable", me="rmbox", guide="rmsend"),
     F("docbrief", "Steckbrief und Tags", "Document card and tags", "data", ("doc_brief",), "doc_brief",
       parent="documents", me="docbox", guide="docbrief"),
     # everyday
