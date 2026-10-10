@@ -129,7 +129,7 @@ function route(r,pos,W,H,ph){const c=col(r.id);let o='',lab='',call='';const ctr
 function nm(id){if(id==='door')return tt('Eingang','Entrance');if(id==='guard')return tt('Wächter','Wächter');if(SNAME[id])return SNAME[id];if(tgt(id))return tgt(id).name;
   const r=((LV.data||{}).reqs||[]).find(x=>'r'+x.id===id);return r?r.dev:id}
 function flow(){const d=LV.data,ph=PH(),{pos,W,H,reqs,order}=layout(d,ph);
-  const NL=(d.notaus||{}).level||0,key=[LV.sel,ph,NL,...reqs.map(r=>r.id+r.stage+r.steps.length+(r.done?'d':'')),...order.map(x=>x.id),...Object.entries(d.svc||{}).map(([k,v])=>k+v.st+(v.wait||0))].join('|');
+  const NL=(d.notaus||{}).level||0,key=[LV.sel,ph,NL,...reqs.map(r=>r.id+r.stage+r.steps.length+(r.done?'d':'')),...order.map(x=>x.id),...Object.entries(d.svc||{}).map(([k,v])=>k+v.st+(v.wait||0)),...(d.hints||[]).map(h=>h.at+h.word)].join('|');
   if(key===LV.lastKey){reqs.filter(r=>r.done).forEach(r=>{const g=el('lvd'+r.id);if(g){g.style.opacity=op(r,d);const b=g.querySelector('.cd');if(b)b.textContent=(r.prio?'★ ':'')+doneTxt(r)}});return}
   LV.lastKey=key;
   // Notaus (notaus.py STAGE): from stage 1 the internet and the door are cut off, from 2 Home Assistant only reads, at 3 the conversation stands still
@@ -160,10 +160,13 @@ function flow(){const d=LV.data,ph=PH(),{pos,W,H,reqs,order}=layout(d,ph);
       tip:`${r.dev} · ${r.who} · ${r.id}${r.intent?' · '+r.intent:''}${r.net?' · '+tt('kam über das Internet','came through the internet'):''} · ${r.done?tt('fertig','done'):KIND[r.stage]||r.stage}`})});
   // the services' own state (live.services/llm_seen): a dot green, yellow (loading) or red (not answering)
   const sv=id=>(d.svc||{})[id==='llm'?'qwen':id],svo=(v,name)=>v?{dot:SVC[v.st],stroke:v.st==='down'?'var(--bad)':'',tip:name+' · '+v.word}:{};
+  // the Spark's own warnings (live.hints) at the part they are about: ⚠ with a short word, yellow or red
+  const hint=id=>(d.hints||[]).find(h=>h.at===id||(id==='qwen'&&h.at==='llm')),
+    hb=(id,b,o)=>{const h=hint(id);if(!h)return b;o.stroke=h.level==='bad'?'var(--bad)':'var(--warn)';o.dot=o.stroke;o.tip=(o.tip||'')+' · ⚠ '+h.word;o.cls=(o.cls||'')+' warned';return '⚠ '+h.word};
   // waiting at the gate of Hören or Sprechen (common.Gate): "2 warten"
   const qw=v=>v&&v.wait?' · '+v.wait+' '+tt('warten','waiting'):'';
-  STAGES.forEach(x=>{const v=sv(x[0]);s+=node(x[0],x[1],ph?'':(v&&v.st!=='ok'?v.word:x[2])+qw(v),act.has(x[0]),svo(v,x[1]))});
-  order.forEach(x=>{const v=x.id==='qwen'?sv('qwen'):null;s+=node(x.id,ph?x.name.split(' ')[0]:x.name,ph?ZONE[x.zone][0]:v&&v.st!=='ok'?v.word:x.sub,act.has(x.id),Object.assign({tip:`${x.name} · ${x.sub}`},svo(v,x.name)))});
+  STAGES.forEach(x=>{const v=sv(x[0]),o=svo(v,x[1]);if(!o.tip)o.tip=x[1];const b=hb(x[0],ph?'':(v&&v.st!=='ok'?v.word:x[2])+qw(v),o);s+=node(x[0],x[1],b,act.has(x[0]),o)});
+  order.forEach(x=>{const v=x.id==='qwen'?sv('qwen'):null,o=Object.assign({tip:`${x.name} · ${x.sub}`},svo(v,x.name));const b=hb(x.id,ph?ZONE[x.zone][0]:v&&v.st!=='ok'?v.word:x.sub,o);s+=node(x.id,ph?x.name.split(' ')[0]:x.name,b,act.has(x.id),o)});
   if(!ph&&pos.guard){const G=pos.guard,gx=G.x+15,gy=G.y+17;s+=`<g class="gate" data-gate="guard" data-tip="${lvE(tt(`Wächter (netguard) · prüft jede Verbindung nach außen · heute ${d.guard.ok} erlaubt, ${d.guard.bad} geblockt · antippen für die Gründe`,`Wächter · checks every outgoing connection · today ${d.guard.ok} allowed, ${d.guard.bad} blocked`))}"><path d="M${gx} ${gy-17} l15 6 v10 c0 11 -8 18 -15 21 c-7 -3 -15 -10 -15 -21 v-10z" fill="var(--card)" stroke="${NL>=1?'var(--bad)':netOn?'var(--ok)':'var(--mut)'}" stroke-width="2"/><text x="${gx}" y="${gy+5}" text-anchor="middle" style="font-size:12px;font-weight:700;fill:var(--ok)">✓</text>
     <text x="${gx}" y="${gy+34}" text-anchor="middle" style="font-size:10px;font-weight:600;fill:var(--fg)">${tt('Wächter','Wächter')}</text><text x="${gx}" y="${gy+46}" text-anchor="middle" style="font-size:10px;fill:var(--bad)">${NL>=1?tt('Internet zu','internet closed'):d.guard.bad+' '+tt('geblockt','blocked')}</text></g>`;
     s+=`<line class="netline" x1="925" x2="1135" y1="${pos._net1}" y2="${pos._net1}"/><text x="920" y="${pos._net1+4}" text-anchor="end" style="font-size:10px;fill:var(--c4);font-weight:700;letter-spacing:.08em">INTERNET ↓</text>`}

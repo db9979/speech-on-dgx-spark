@@ -582,6 +582,66 @@ def _svc_now(now):
             for k, v in _svc.items() if now - v[2] < 3600}
 
 
+# ------------------------------------------------------------------ the Spark's own warnings (health.alerts)
+_hint_cache = [0.0, []]
+_hint_seen = set()
+LIVECHECK_AT = {"llm": "llm", "tools": "tool", "search": "web", "tts": "tts", "asr": "asr"}
+
+
+def _num(v):
+    return f"{v:g}".replace(".", ",") if isinstance(v, (int, float)) else "?"
+
+
+def hints(now=None):
+    """The warnings the admin pages show on top (health.alerts), at the part of the picture they are about
+    (Dominik 2026-10-10: "Antworten sind langsamer geworden" belongs to its connection). Fixed words and
+    numbers only: the quality test's question or a server's error text never come here."""
+    now = time.time() if now is None else now
+    if 0 <= now - _hint_cache[0] < 5:
+        return _hint_cache[1]
+    out = []
+    try:
+        import health
+        m = health.memory_state
+        if m.get("low"):
+            out.append({"at": "llm", "level": "bad", "word": f"Speicher knapp: {_num(round(m.get('avail') or 0, 1))} GiB frei"})
+        for e in [e for e in health.events if now - e.get("t", 0) < 3600][-3:]:
+            at = "asr" if str(e.get("unit", "")).upper().startswith("ASR") else "tts"
+            out.append({"at": at, "level": "warn" if e.get("done") else "bad",
+                        "word": "vom Wächter neu gestartet" if e.get("done") else "hängt, Neustart-Grenze erreicht"})
+        lc = health.last_live()
+        if lc and not lc.get("ok") and now - lc.get("t", 0) < 86400:
+            for st in lc.get("steps", []):
+                if st.get("ok") is False and st.get("name") in LIVECHECK_AT:
+                    out.append({"at": LIVECHECK_AT[st["name"]], "level": "bad", "word": "Funktionsprüfung fehlgeschlagen"})
+        import quality
+        res = quality.last()
+        if res and res.get("cases") and now - res.get("t", 0) < 7 * 86400:
+            n = sum(1 for x in res["cases"] if x.get("new"))
+            if n:
+                out.append({"at": "llm", "level": "warn", "word": f"Qualitätstest: {n} neu kaputt"})
+        import latency
+        sm = latency.summary(now)
+        if sm.get("warn"):
+            out.append({"at": "tts", "level": "warn", "word": f"erster Ton {_num(sm['day']['median'])} s statt "
+                                                               f"{_num(sm['week']['median'])} s"})
+        import telegram
+        if telegram.alert():
+            out.append({"at": "tg", "level": "warn", "word": "Bot-Token wird woanders auch benutzt"})
+    except Exception:
+        pass
+    for h in out:          # a warning that is new: one line under "Ereignisse"
+        key = h["at"] + h["word"].split(":")[0]
+        if key not in _hint_seen:
+            _hint_seen.add(key)
+            event("Hinweis", f"{h['word']}", now)
+    for key in list(_hint_seen):
+        if not any(h["at"] + h["word"].split(":")[0] == key for h in out):
+            _hint_seen.discard(key)
+    _hint_cache[:] = [now, out]
+    return out
+
+
 def _sys():
     try:
         import monitor
@@ -613,13 +673,14 @@ def snapshot(view="admin", now=None):
         held = notaus.for_live()
     except Exception:
         held = {"level": 0}
-    used = {s["to"] for r in reqs for s in r["steps"] if s["to"]} | {r["to"] for r in reqs if r["to"]} | {x["to"] for x in rets if now - x["t"] < 60 and x["to"]}
+    hs = hints(now)
+    used = {h["at"] for h in hs} | {s["to"] for r in reqs for s in r["steps"] if s["to"]} | {r["to"] for r in reqs if r["to"]} | {x["to"] for x in rets if now - x["t"] < 60 and x["to"]}
     targets = [{"id": k, "name": v[0], "sub": v[1], "zone": v[2]} for k, v in TARGETS.items() if v[3] or k in used]
     return {"t": round(now, 1), "view": view, "fade": FADE, "reqs": reqs, "targets": targets, "speaking": speaking,
             "guard": {"ok": cnt.get("guard_ok", 0), "bad": cnt.get("guard_bad", 0), "cut": cnt.get("guard_cut", 0), "items": guard_items},
             "door": {"in": cnt.get("door_in", 0), "out": cnt.get("door_out", 0), "items": door_items},
             "rets": rets, "events": [{"t": t, "area": a, "text": x} for t, a, x in events], "conns": _conns(now), "sys": _sys(), "notaus": held,
-            "svc": _svc_now(now), "bg": _bg_now(now)}
+            "svc": _svc_now(now), "bg": _bg_now(now), "hints": hs}
 
 
 # ------------------------------------------------------------------ admin view

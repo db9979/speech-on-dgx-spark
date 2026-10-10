@@ -15,6 +15,7 @@
 .lv .flow.full{position:fixed;inset:0;z-index:60;margin:0;border-radius:0;display:flex;flex-direction:column;padding:14px 18px}.lv .flow.full #lvflow{flex:1;min-height:0}.lv .flow.full svg{height:100%}
 .lv .node rect{fill:var(--card);stroke:var(--line);stroke-width:1.2}
 .lv .node.held rect{fill:color-mix(in srgb,var(--bad) 7%,var(--card))}.lv .node.held .a{opacity:.7}.lv .node.held .b{fill:var(--bad)}
+.lv .node.warned rect{fill:color-mix(in srgb,var(--warn) 8%,var(--card))}.lv .node.warned .b{fill:var(--warn);font-weight:600}
 .lv .node.act rect{stroke:var(--acc);stroke-width:1.8}
 .lv .node .a{font-size:13px;font-weight:600;fill:var(--fg)}.lv .node .b{font-size:10.5px;fill:var(--mut)}
 .lv .node .badge{fill:var(--acc)}.lv .node .bt{fill:#fff;font-size:10px;font-weight:700}

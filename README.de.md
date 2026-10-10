@@ -33,6 +33,7 @@ Alle Optionen ohne Rückfragen (`--mode api --asr 1.7b --tts 0.6b --yes` …) st
 
 <!-- New version: add one line at the top here and in CHANGELOG.md, drop the oldest line here (keep 10). Details go to docs/de and docs/en, not into this README. -->
 
+- **V01.0.337** Live-Übersicht: Hinweise wie „Antworten langsamer“ an der passenden Stelle im Bild
 - **V01.0.336** Live-Übersicht: Warteschlangen, Vorrang-Stern und Hintergrundarbeit sichtbar
 - **V01.0.335** Frag Spark steckt jetzt im Kopf unten rechts (kein eigener Knopf): er kennt die Seite, auch über Ich, und nimmt Fragen gesprochen oder getippt; Ich zeigt neu eingeschaltete Admin-Schalter ohne Neuladen
 - **V01.0.334** Live-Übersicht: Home Assistant Assist (Wyoming) , MCP-Werkzeuge, HA-Regeln, Benachrichtigungen und Dienste-Zustand sichtbar
@@ -42,7 +43,6 @@ Alle Optionen ohne Rückfragen (`--mode api --asr 1.7b --tts 0.6b --yes` …) st
 - **V01.0.330** TestFlight: Jeder Lauf widerruft die Zertifikate, die er angelegt hat, damit Apples Höchstzahl die Uploads nicht mehr stoppt
 - **V01.0.329** Live-Übersicht: Rückweg vom Sprechen zum Gerät sichtbar
 - **V01.0.328** Selbsttest Einladung: Tages-Sicherung des Testservers vor dem Browsertest packen (sie bremste ihn auf GitHub beim Neuladen aus), auf den Start der neuen Seite statt auf „load“ warten
-- **V01.0.327** Assistent auf dem Rechner nutzt das ganze Fenster: Gesicht und Verlauf gehen bis ganz unten, nur der Verlauf rollt
 
 Alle Versionen: [CHANGELOG.md](CHANGELOG.md)
 

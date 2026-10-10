@@ -246,6 +246,31 @@ class Live(unittest.TestCase):
             vorrang.speaking = real
             set_logs(live=False)
 
+    def test_warnings_at_their_place(self):
+        """Dominik 2026-10-10: a warning like "Antworten sind langsamer geworden" shows at its connection on the
+        live page, in fixed words with numbers, and once under Ereignisse; never the quality test's question."""
+        from unittest import mock
+        import latency
+        import quality
+        reset()
+        set_logs(live=True)
+        live._hint_cache[:] = [0.0, []]
+        live._hint_seen.clear()
+        slow = {"day": {"n": 12, "median": 5.03, "p90": 7}, "week": {"n": 80, "median": 3.23, "p90": 4}, "warn": "x"}
+        try:
+            with mock.patch.object(latency, "summary", lambda now=None: slow), \
+                    mock.patch.object(quality, "last", lambda: {"t": 1000, "cases": [{"q": "Geheime Testfrage", "new": True}]}):
+                d = live.snapshot(now=1000)
+                live.snapshot(now=1010)
+            self.assertIn({"at": "tts", "level": "warn", "word": "erster Ton 5,03 s statt 3,23 s"}, d["hints"])
+            self.assertIn({"at": "llm", "level": "warn", "word": "Qualitätstest: 1 neu kaputt"}, d["hints"])
+            self.assertNotIn("Geheime", json.dumps(d))
+            ev = [e["text"] for e in live.snapshot(now=1020)["events"] if e["area"] == "Hinweis"]
+            self.assertEqual(sorted(ev), sorted(["erster Ton 5,03 s statt 3,23 s", "Qualitätstest: 1 neu kaputt"]))
+        finally:
+            live._hint_cache[:] = [0.0, []]
+            set_logs(live=False)
+
     def test_waechter_decisions_with_reasons(self):
         with self.assertRaises(Exception):
             netguard.resolve("127.0.0.1", 31002, "public")
