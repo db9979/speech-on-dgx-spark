@@ -92,16 +92,18 @@ function hops(r){const H=[],at=['r'+r.id];const go=(n,t,st,what)=>{const a=at[at
     else if(s.k==='tool'){go('tool','','d');if(s.to&&tgt(s.to)){if(zoneOf(s.to)==='net')go('guard','','d');go(s.to,secs(s.d),'d');
       const ret=((LV.data||{}).rets||[]).find(x=>x.req===r.id&&x.tool===s.n);go('tool','↩ '+(s.ok?'ok':tt('nicht ok','not ok'))+(ret&&ret.size!=null?' · '+kb(ret.size):''),'d')}}
     else if(s.k==='tts')go('tts',secs(s.d),'d')});
-  if(r.done)return H;
+  // the way back: where the answer is heard or shown (Dominik 2026-10-10)
+  const back=r.voice?tt('↩ gesprochen am ','↩ spoken at ')+r.dev:tt('↩ Antwort an ','↩ answer to ')+r.dev;
+  if(r.done){go('r'+r.id,back,'d');return H}
   const last=r.steps.length?r.steps[r.steps.length-1]:null,since=Math.max(0,r.age*1000-(last?last.a+last.d:0));
   const now=secs(since);
   if(r.stage==='tool'&&r.to&&tgt(r.to)){go('tool','','d');if(zoneOf(r.to)==='net')go('guard','','d');go(r.to,now,'c',tt('wartet auf ','waiting for ')+tgt(r.to).name);go('tool','↩ '+tt('erwartet','expected'),'p')}
   else if(r.stage==='tool')go('tool',now,'c',r.tool||'');
   else if(r.stage==='llm'){go('llm',now,'c',tt('denkt nach oder streamt','thinking or streaming'))}
-  else if(r.stage==='tts')go('tts',now,'c',tt('spricht','speaking'));
+  else if(r.stage==='tts'){go('tts','','d');go('r'+r.id,now,'c',(r.voice?tt('spricht am ','speaking at '):tt('schickt die Antwort an ','sending the answer to '))+r.dev);return H}
   else if(r.stage==='weiche')go('weiche',now,'c',tt('wählt Werkzeuge','picks tools'));
   if(r.stage!=='tts'){go('llm','','p');go('tts','','p')}
-  go('r'+r.id,'','p');return H}
+  go('r'+r.id,back,'p');return H}
 function route(r,pos,W,H,ph){const c=col(r.id);let o='',lab='',call='';const ctr=p=>({x:p.x+p.w/2,y:p.y+p.h/2});
   hops(r).forEach(([a,b,t,st,what],i)=>{const A=pos[a],B=pos[b];if(!A||!B)return;const ca=ctr(A),cb=ctr(B);let d,mx,my;
     if(Math.abs(ca.x-cb.x)<40){const down=cb.y>ca.y,x=down?A.x+A.w:A.x,k=down?70:-70;d=`M${x} ${ca.y} C${x+k} ${ca.y} ${x+k} ${cb.y} ${x} ${cb.y}`;mx=x+k*.75;my=(ca.y+cb.y)/2}
@@ -169,6 +171,8 @@ function way(){const r=LV.data.reqs.find(x=>x.id===LV.sel),box=el('lvway');
   if(!r.done){const last=r.steps[r.steps.length-1],since=Math.max(0,r.age*1000-(last?last.a+last.d:0));
     items.push({k:KIND[r.stage]||r.stage,n:r.stage==='tool'?(r.tool||KIND.tool):SNAME[r.stage]||r.stage,d:tt('läuft seit ','running for ')+secs(since)+(r.to&&tgt(r.to)?' · '+tgt(r.to).name:''),z:r.to?zoneOf(r.to):'spark',ms:since,cur:true});
     if(r.stage!=='tts')items.push({k:KIND.tts,n:SNAME.tts,d:tt('kommt noch','still to come'),z:'spark',ms:0,todo:true})}
+  // the way back to the device (zone of the device: internet when it came through the proxy)
+  items.push({k:tt('Zurück','Back'),n:r.dev,d:r.voice?tt('↩ gesprochen','↩ spoken'):tt('↩ Antwort','↩ answer'),z:r.net?'net':'lan',ms:0,todo:!r.done&&r.stage!=='tts',cur:!r.done&&r.stage==='tts'});
   const usesNet=r.net||r.steps.some(s=>zoneOf(s.to)==='net'),tot=items.reduce((a,x)=>a+x.ms,0)||1;
   let h=`<div class="hd"><span class="lvc" style="background:${col(r.id)}"></span><span class="who">${lvE(r.who)}</span><span class="mut">${lvE(r.dev)}${r.voice?' · '+tt('Stimme','voice'):''}</span>
     ${r.intent?`<span class="pill">${lvE(r.intent)}</span>`:''}<span class="pill ${usesNet?'net':'lan'}">${usesNet?tt('nutzt Internet','uses the internet'):tt('bleibt im Heimnetz','stays at home')}</span>${r.err?`<span class="pill bad">${tt('Fehler','error')}</span>`:''}
