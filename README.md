@@ -33,6 +33,7 @@ All options for running without questions (`--mode api --asr 1.7b --tts 0.6b --y
 
 <!-- New version: add one line at the top here and in CHANGELOG.md, drop the oldest line here (keep 10). Details go to docs/de and docs/en, not into this README. -->
 
+- **V01.0.341** Me → Von selbst: switches and buttons of the smart home rules line up again (computer and phone)
 - **V01.0.340** Classification with probabilities (off): qwen38 /v1/systemone for tool choice (from 80 %), inbox tidying (from 90 %), important mail by sender and subject and a second opinion in the quality test
 - **V01.0.339** Writing help in other programs (off): Mac quick action, Windows program (x64 and ARM, Ctrl+Alt+S), add-in for Outlook, Word and Excel, browser extension and iPhone share, each paired with its own key
 - **V01.0.338** Kill switch for admins only; plus "my kill switch" for every profile (Me → Security): stops only that profile, ways in closed and no actions, reading stays; lifted with the PIN
@@ -42,7 +43,6 @@ All options for running without questions (`--mode api --asr 1.7b --tts 0.6b --y
 - **V01.0.334** Live overview: Home Assistant Assist over Wyoming shows as device "Home Assistant" (hearing, speaking), refused Wyoming senders under Entrance, every MCP tool call of a program, Home Assistant rules and everything the Spark says by itself with its note target (Web Push, Telegram, Android), a state dot on hearing, speaking and the language model
 - **V01.0.333** Android app: signing key with one command on the Spark (tools/android-schluessel.sh, only openssl), it shows the two values for the GitHub secrets; Features → Android app says what to do while there is no app yet
 - **V01.0.332** Writing help (off): correct, smooth, shorten, translate mails and other texts or draft a reply, with the changes marked in colour
-- **V01.0.331** Assistant: no more sideways scroll bar under the face
 
 All versions: [CHANGELOG.md](CHANGELOG.md)
 
