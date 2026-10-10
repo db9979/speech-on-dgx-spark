@@ -357,7 +357,7 @@ def app_settings(request: Request, prof=Depends(own_profile)):
     _app_only(request)
     import proactive
     chat = load_config().get("chat", {})
-    p = dict(profiles.defaults(chat.get("defaults")), **profiles.settings(prof["id"]))
+    p = profiles.effective(prof["id"], chat)
     fields = _fields(prof["id"])
     return {"settings": {k: p[k] for k in fields},
             # which of the conversation switches the admin allows (the rest change nothing)

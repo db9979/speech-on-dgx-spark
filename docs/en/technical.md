@@ -109,6 +109,7 @@ Since V01.0.267 every function the admin can switch is written once in `app/pane
 - **One check:** `features.admin_on(key)`, `features.profile_on(key, uid)`, `features.allowed(key, uid)` and `features.reason(key, uid)` (reason: `spark`, `profile`, `guest`). Modules only ask here (`admin_on`, `usable`, `allowed` are one-liners); what must be set up besides (Kiwix address, agent level) the module registers in `features.READY` or `features.GRANTED`.
 - **One list for the pages:** `GET /api/features` (signed in, rate limited) returns every function with Spark on/off, own switch, "may" and reason; guests see only guest functions. The flags in `/api/whoami` and `allow` in `/api/profile/settings` and `/api/iphone/settings` come from the same table.
 - **New function:** an entry in `features.py`, a guide in `guides.js`. `tests/test_features.py` fails when a `chat.*` switch belongs to no function, a profile switch does not start off, or a module builds its own check.
+- **Values in one place** (since V01.0.268): `common.load_config()` fills every missing key from `config.default.json` (like `jq '.[0] * .[1]'` in install.sh); a second default in code (`.get(k, other)`) and hand merges fail the self-test. What applies to a profile comes only from `profiles.effective(uid)`: the admin's presets (`chat.defaults`) with the profile's own values on top; guests get the presets.
 - Fixed protection rules (secrets never spoken, speech first, the owner's voice at a shared speaker) are no switches and stay rules of their own.
 
 ## Tests

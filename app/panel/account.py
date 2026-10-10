@@ -811,7 +811,7 @@ async def assistant_say(request: Request):
         raise HTTPException(400, "text is required")
     cfg = load_config()
     who = profiles.current(request)
-    pset = dict(profiles.defaults(cfg.get("chat", {}).get("defaults")), **(profiles.settings(who["id"]) if who else {}))
+    pset = profiles.effective(who and who["id"], cfg.get("chat", {}))
     req = {"input": text, "stream": True, "response_format": "pcm"}
     if who and pset.get("voice"):
         req["voice"] = pset["voice"]

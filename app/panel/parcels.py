@@ -14,7 +14,6 @@ import time
 import mail
 import profiles
 import features
-from common import load_config
 
 DAYS = 14
 CACHE_SECONDS = 600

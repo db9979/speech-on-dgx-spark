@@ -411,9 +411,7 @@ _model = {}
 def classify(h, text):
     """(category or "keep", confidence) from the language model; (None, 0) when it gives no valid answer."""
     from common import load_config
-    from core import DEFAULTS
-    with open(DEFAULTS) as f:
-        cc = dict(json.load(f)["chat"], **load_config().get("chat", {}))
+    cc = load_config().get("chat", {})   # with the shipped defaults
     if not cc.get("llm_url"):
         return None, 0
     url = cc["llm_url"].rstrip("/")

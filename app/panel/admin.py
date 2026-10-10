@@ -799,7 +799,7 @@ async def test_tts_stream(request: Request):
 async def search_test(q: str = "DGX Spark", url: str = ""):
     """Tests the address in the form (url), so it works before saving; else the saved one."""
     cfg = load_config()
-    ccfg = dict(json.load(open(DEFAULTS))["chat"], **cfg.get("chat", {}))
+    ccfg = cfg.get("chat", {})   # with the shipped defaults (common.load_config)
     if url:
         if not re.fullmatch(r"https?://\S+", url):
             raise HTTPException(400, "SearXNG address must start with http:// or https://")

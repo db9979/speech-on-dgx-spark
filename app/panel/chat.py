@@ -52,7 +52,7 @@ async def learn_once():
     """Reads quiet conversations of profiles that allow it and keeps a few lasting facts (marked
     "auto"). Runs only while nobody is chatting, so it never slows down an answer."""
     cfg = load_config()
-    ccfg = dict(json.load(open(DEFAULTS))["chat"], **cfg.get("chat", {}))
+    ccfg = cfg.get("chat", {})   # with the shipped defaults (common.load_config)
     if not (ccfg.get("memory", True) and ccfg.get("history", True) and ccfg.get("llm_url")):
         return 0
     adm = profiles.defaults(ccfg.get("defaults"))
@@ -968,7 +968,7 @@ BRIEF_SYSTEM = ("Schreibe aus den Daten unten ein kurzes Tagesbriefing für eine
 async def morning_briefing(uid, tz=""):
     """The text of a profile's daily briefing (calendar, reminders, mail, topics) for a push message."""
     cfg = load_config()
-    ccfg = dict(json.load(open(DEFAULTS))["chat"], **cfg.get("chat", {}))
+    ccfg = cfg.get("chat", {})   # with the shipped defaults (common.load_config)
     prof = profiles.by_id(uid)
     zone = user_zone(tz)
     now = datetime.datetime.now(zone)

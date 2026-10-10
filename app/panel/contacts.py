@@ -25,7 +25,6 @@ import netguard
 import profiles
 import vault
 import features
-from common import load_config
 
 MAX_ACCOUNTS = 4
 MAX_CONTACTS = 5000

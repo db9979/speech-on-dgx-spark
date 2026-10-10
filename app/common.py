@@ -9,9 +9,35 @@ from collections import deque
 CONFIG_PATH = os.environ.get("SPEECH_SPARK_CONFIG", "/etc/speech-spark/config.json")
 
 
+DEFAULTS_PATH = os.path.join(os.path.dirname(os.path.abspath(__file__)), "config.default.json")
+_shipped = {"mtime": None, "cfg": {}}
+
+
+def _merge(base, over):
+    """Like jq's `*` in install.sh: objects merged key by key, everything else taken from `over`."""
+    out = dict(base)
+    for k, v in over.items():
+        out[k] = _merge(base[k], v) if isinstance(v, dict) and isinstance(base.get(k), dict) else v
+    return out
+
+
+def shipped():
+    """config.default.json (re-read when it changes, e.g. after an update)."""
+    try:
+        m = os.stat(DEFAULTS_PATH).st_mtime
+        if m != _shipped["mtime"]:
+            with open(DEFAULTS_PATH) as f:
+                _shipped["cfg"], _shipped["mtime"] = json.load(f), m
+    except (OSError, ValueError):
+        pass
+    return _shipped["cfg"]
+
+
 def load_config(section=None):
+    """The configuration with the shipped default for every key that is missing (plan „Vereinheitlichen“,
+    V01.0.268): one place for defaults instead of a `.get(key, default)` at every caller."""
     with open(CONFIG_PATH) as f:
-        cfg = json.load(f)
+        cfg = _merge(shipped(), json.load(f))
     return cfg[section] if section else cfg
 
 

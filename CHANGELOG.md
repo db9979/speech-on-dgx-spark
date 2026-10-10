@@ -2,6 +2,7 @@
 
 Every version in one line, newest first (taken from the commit messages, so some lines are German, some English). Older entries have no version number.
 
+- **V01.0.268** · 2026-10-10 · Vereinheitlichen Phase 2: Standardwerte nur noch aus config.default.json (load_config füllt fehlende Schlüssel), Vorgaben und eigene Werte nur über profiles.effective; Selbsttest gegen zweite Standardwerte und Handmischungen
 - **V01.0.267** · 2026-10-10 · Vereinheitlichen Phase 0–1: jede Funktion einmal in features.py, eine Prüfung „Spark an, Profil an“ für alle Module, /api/features mit Grund; Lücken geschlossen (Korrekturen lernen braucht das Gedächtnis, Push und Update brauchen die iPhone-App, Raum aus der Ferne braucht Lautsprecher)
 - **V01.0.266** · 2026-10-10 · Kiwix: „Schau in deinem/unserem Archiv“ und „im Archiv“ werden erkannt, die erste Runde muss dann das Archiv fragen statt der hochgeladenen Dokumente
 - **V01.0.265** · 2026-10-10 · Bedienung: Funktionen eigener Menüpunkt (mit Anleitungen), „Personen und Geräte“ (mit Apps und Schnittstellen), „Einbinden“ entfällt; Suche Strg K/⌘ K über Seiten, Schalter, Einstellungen, Ich, Prüfen, Logs und Anleitungen

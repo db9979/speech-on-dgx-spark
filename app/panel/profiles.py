@@ -759,6 +759,15 @@ def defaults(admin=None):
     return dict({k: v for k, (v, _) in SETTINGS.items()}, **own)
 
 
+def effective(uid, chat=None):
+    """What applies to this profile (or a guest, uid None): the admin's presets, overlaid with its own.
+    The one place that mixes them (plan „Vereinheitlichen“, V01.0.268)."""
+    if chat is None:
+        from common import load_config
+        chat = load_config().get("chat", {})
+    return dict(defaults(chat.get("defaults")), **(settings(uid) if uid else {}))
+
+
 def settings(uid):
     try:
         with open(_path(uid, "settings.json")) as f:

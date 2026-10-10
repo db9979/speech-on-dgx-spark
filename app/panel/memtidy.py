@@ -17,7 +17,6 @@ import httpx
 import profiles
 import vorrang
 from common import load_config
-from core import DEFAULTS
 
 EVERY = 7 * 86400
 MIN_FACTS = 6          # fewer facts: nothing worth tidying
@@ -97,7 +96,7 @@ def parse(text, facts):
 async def propose(uid):
     """Asks the model for a proposal and keeps it; returns the proposal (None: nothing to do)."""
     cfg = load_config()
-    ccfg = dict(json.load(open(DEFAULTS))["chat"], **cfg.get("chat", {}))
+    ccfg = cfg.get("chat", {})   # with the shipped defaults (common.load_config)
     facts = profiles.memory(uid)
     os.makedirs(profiles._path(uid), mode=0o700, exist_ok=True)
     with open(os.open(_file(uid, "memory-tidy-checked"), os.O_WRONLY | os.O_CREAT | os.O_TRUNC, 0o600), "w") as f:
@@ -156,7 +155,7 @@ async def due_once():
     """At most one profile per call whose weekly check is due; sends a push note when a proposal is
     ready. Returns the profile id checked, or None."""
     cfg = load_config()
-    ccfg = dict(json.load(open(DEFAULTS))["chat"], **cfg.get("chat", {}))
+    ccfg = cfg.get("chat", {})   # with the shipped defaults (common.load_config)
     if not ccfg.get("memory", True):
         return None
     for uid in profiles.user_ids():

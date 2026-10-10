@@ -152,5 +152,55 @@ class Api(unittest.TestCase):
         helpers.set_config(mail=False, parcels=False)
 
 
+class Values(unittest.TestCase):
+    """Phase 2 (V01.0.268): defaults in one place, one mix of presets and own values."""
+    def test_missing_keys_get_the_shipped_default(self):
+        import common
+        with open(os.environ["SPEECH_SPARK_CONFIG"]) as f:
+            saved = f.read()
+        try:
+            c = json.loads(saved)
+            c["chat"].pop("weather", None)
+            c["chat"].setdefault("defaults", {}).pop("length", None)
+            with open(os.environ["SPEECH_SPARK_CONFIG"], "w") as f:
+                json.dump(c, f)
+            got = common.load_config()
+            self.assertIs(got["chat"]["weather"], False)
+            self.assertEqual(got["chat"]["defaults"]["length"], common.shipped()["chat"]["defaults"]["length"])
+            self.assertEqual(got["chat"]["defaults"].get("hands"), c["chat"]["defaults"].get("hands", False))
+        finally:
+            with open(os.environ["SPEECH_SPARK_CONFIG"], "w") as f:
+                f.write(saved)
+
+    def test_effective_mixes_presets_and_own(self):
+        _, uid = profile("FeaZora")
+        chat = {"defaults": {"length": "short", "style": "nie übernehmen"}}
+        self.assertEqual(profiles.effective(uid, chat)["length"], "short")
+        self.assertEqual(profiles.effective(uid, chat)["style"], "")          # the tone is the profile's own
+        profiles.save_settings(uid, {"length": "long"})
+        self.assertEqual(profiles.effective(uid, chat)["length"], "long")
+        self.assertEqual(profiles.effective(None, chat)["length"], "short")   # guests: the presets
+
+    def test_no_second_place_for_defaults(self):
+        """No module merges the shipped defaults or the presets by hand, and no code default disagrees."""
+        import common
+        chat = common.shipped()["chat"]
+        for fn in sorted(os.listdir(PANEL)):
+            if not fn.endswith(".py"):
+                continue
+            with open(os.path.join(PANEL, fn)) as f:
+                src = f.read()
+            self.assertNotRegex(src, r'dict\(json\.load\([^)]*\)\)?\["chat"\], \*\*', fn)
+            if fn != "profiles.py":
+                self.assertNotIn("dict(profiles.defaults(", src, fn)
+            for k, d in re.findall(r'\.get\("chat", \{\}\)\.get\("([a-z_0-9]+)", ([^()]+?)\)', src):
+                if k in chat and isinstance(chat[k], (bool, int, float, str)):
+                    try:
+                        val = ast.literal_eval(d)
+                    except ValueError:
+                        continue
+                    self.assertEqual(val, chat[k], f"{fn}: chat.{k} default {d} differs from config.default.json")
+
+
 if __name__ == "__main__":
     unittest.main()

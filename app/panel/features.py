@@ -145,8 +145,8 @@ _DEF = _defaults()
 
 
 def chat_cfg():
-    """The chat section with the shipped defaults for every key that is missing."""
-    return dict(_DEF, **load_config().get("chat", {}))
+    """The chat section; common.load_config fills every missing key with the shipped default."""
+    return load_config().get("chat", {})
 
 
 def _switch(c, k):

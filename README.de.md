@@ -31,6 +31,7 @@ Alle Optionen ohne Rückfragen (`--mode api --asr 1.7b --tts 0.6b --yes` …) st
 
 <!-- New version: add one line at the top here and in CHANGELOG.md, drop the oldest line here (keep 10). Details go to docs/de and docs/en, not into this README. -->
 
+- **V01.0.268** Vereinheitlichen Phase 2: Standardwerte nur noch aus config.default.json (load_config füllt fehlende Schlüssel), Vorgaben und eigene Werte nur über profiles.effective; Selbsttest gegen zweite Standardwerte und Handmischungen
 - **V01.0.267** Vereinheitlichen Phase 0–1: jede Funktion einmal in features.py, eine Prüfung „Spark an, Profil an“ für alle Module, /api/features mit Grund; Lücken geschlossen (Korrekturen lernen braucht das Gedächtnis, Push und Update brauchen die iPhone-App, Raum aus der Ferne braucht Lautsprecher)
 - **V01.0.266** Kiwix: „Schau in deinem/unserem Archiv“ und „im Archiv“ werden erkannt, die erste Runde muss dann das Archiv fragen statt der hochgeladenen Dokumente
 - **V01.0.265** Bedienung: Funktionen eigener Menüpunkt (mit Anleitungen), „Personen und Geräte“ (mit Apps und Schnittstellen), „Einbinden“ entfällt; Suche Strg K/⌘ K über Seiten, Schalter, Einstellungen, Ich, Prüfen, Logs und Anleitungen
@@ -40,7 +41,6 @@ Alle Optionen ohne Rückfragen (`--mode api --asr 1.7b --tts 0.6b --yes` …) st
 - **V01.0.261** Kiwix: Bücher werden ohne Datum gespeichert, aktualisierte Dateien bleiben gewählt (neueste wird genommen, Katalog bei 404 neu gelesen); „Schau in meinem Archiv“ sucht nie in den hochgeladenen Dokumenten und sagt, welcher Schalter fehlt
 - **V01.0.260** Kiwix: Bücherauswahl als Liste mit Suche, Sprach- und Artfilter (Deutsch/Englisch zuerst), gruppiert, mit Sprache, Variante, Artikelzahl, Größe und Stand; gewählte oben als Chips; ohne Auswahl deutsche und englische Wikipedia; Katalog bis 2000 Bücher
 - **V01.0.259** Selbsttest „Profile und Geräte“ sucht das Testgerät statt auf Seite 1 zu warten (GitHub-Tests wieder grün)
-- **V01.0.258** Eigenes Kiwix-Archiv (Funktionen → Websuche, aus; Profil-Schalter): Wikipedia-Fragen zuerst aus dem eigenen kiwix-serve, Volltextsuche in gewählten Büchern, „Erzähl mehr“ liest weiter, fällt die Websuche aus antwortet das Offline-Archiv; Zustand → Prüfen → „Kiwix prüfen“, Logs-Bereich „Wissen“
 
 Alle Versionen: [CHANGELOG.md](CHANGELOG.md)
 

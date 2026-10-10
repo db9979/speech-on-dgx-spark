@@ -33,7 +33,6 @@ from fastapi import APIRouter, Depends, HTTPException, Request
 import guard
 import profiles
 import features
-from common import load_config
 from core import assistant, auth, browser_profile, own_profile, secret_profile
 
 router = APIRouter()

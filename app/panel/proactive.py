@@ -30,7 +30,7 @@ import profiles
 import vorrang
 import features
 from common import load_config
-from core import DEFAULTS, assistant, browser_profile, own_profile
+from core import assistant, browser_profile, own_profile
 
 router = APIRouter()
 
@@ -54,7 +54,7 @@ _polled = {}                # uid -> time the page last asked
 
 
 def ccfg():
-    return dict(json.load(open(DEFAULTS))["chat"], **load_config().get("chat", {}))
+    return load_config().get("chat", {})   # with the shipped defaults
 
 
 def enabled():
@@ -62,7 +62,7 @@ def enabled():
 
 
 def prefs(uid):
-    return dict(profiles.defaults(load_config().get("chat", {}).get("defaults")), **profiles.settings(uid))
+    return profiles.effective(uid)
 
 
 def _zone(p):

@@ -31,7 +31,6 @@ import calendars
 import netguard
 import profiles
 import features
-from common import load_config
 
 LISTS = {"einkauf": ("Einkaufsliste", "shopping list"), "aufgaben": ("Aufgaben", "tasks")}
 MAX_ITEMS = 200

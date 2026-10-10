@@ -28,7 +28,6 @@ import httpx
 import profiles
 import vault
 import features
-from common import load_config
 
 try:
     from cryptography.hazmat.primitives import hashes, serialization

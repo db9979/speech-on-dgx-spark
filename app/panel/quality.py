@@ -19,7 +19,6 @@ import httpx
 
 import vorrang
 from common import load_config
-from core import DEFAULTS
 
 STATE = os.environ.get("SPEECH_SPARK_STATE", "/var/lib/speech-spark/state")
 RESULT = os.path.join(STATE, "quality.json")
@@ -322,7 +321,7 @@ async def run(reason="manual"):
     async with _lock:
         import chat
         cfg = load_config()
-        ccfg = dict(json.load(open(DEFAULTS))["chat"], **cfg.get("chat", {}))
+        ccfg = cfg.get("chat", {})   # with the shipped defaults (common.load_config)
         headers = {"Authorization": f"Bearer {ccfg['llm_key']}"} if ccfg.get("llm_key") else {}
         out = []
         t0 = time.time()

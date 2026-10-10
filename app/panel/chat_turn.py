@@ -5,7 +5,6 @@ a mail change, a correction ...), the tools on offer and the locks after outside
 prepare() returns a Turn: every value it worked out, as attributes (t.who, t.ha, t.tools ...).
 chat._answer() asks the model with it, chat_tools.run() carries out the tool calls."""
 import asyncio
-import json
 import os
 import sys
 import time
@@ -14,7 +13,6 @@ import httpx
 from fastapi import HTTPException
 
 sys.path.insert(0, os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
-from core import DEFAULTS  # noqa: E402
 from core import admin_cookie_ok  # noqa: E402
 import calendars  # noqa: E402
 import documents  # noqa: E402
@@ -61,8 +59,7 @@ class Turn:
 async def prepare(request):
     body = await request.json()
     cfg = load_config()
-    with open(DEFAULTS) as f:
-        ccfg = dict(json.load(f)["chat"], **cfg.get("chat", {}))
+    ccfg = cfg.get("chat", {})   # with the shipped defaults (common.load_config)
     # text only (no image links or other parts); an answer the browser marked as made from mail or
     # other outside text keeps that mark (the browser is the person's own and has no reason to lie)
     messages = [dict({"role": m["role"], "content": m["content"]},
@@ -178,7 +175,7 @@ async def prepare(request):
             raise HTTPException(400, "a question is required")
     # conversation settings: what the request sends, else the profile's, else the admin's defaults
     # (speakers with a device key send nothing and get their profile's voice, speed and length)
-    pset = dict(profiles.defaults(ccfg.get("defaults")), **(profiles.settings(who["id"]) if who else {}))
+    pset = profiles.effective(who and who["id"], ccfg)
     if stranger and sound_of:
         own = profiles.settings(sound_of["id"])
         pset.update({k: own[k] for k in ("voice", "speed", "length") if k in own})

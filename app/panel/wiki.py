@@ -20,7 +20,6 @@ import time
 import httpx
 
 import kiwix
-import profiles
 import features
 from common import load_config
 

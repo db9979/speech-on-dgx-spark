@@ -18,9 +18,7 @@ the switch "Raum" under Ich → Lautsprecher still does that on purpose.
 import re
 import time
 
-import profiles
 import features
-from common import load_config
 
 PENDING_SECONDS = 900
 MAX_CHOICE = 4
