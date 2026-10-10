@@ -114,6 +114,7 @@ async def prepare(request):
     route_on = bool(me0 and features.allowed("routing", me0["id"], ccfg))
     # chat.route_model "on": the model's pick for a question no rule recognizes starts right here and runs while
     # the panel prepares the rest of the turn (plan „Anfrage aufteilen“ 2); it is waited for further down
+    pick_state = None   # Logs → Anfragen: what became of the model's pick
     pick_task = asyncio.create_task(intent.ask_model(ccfg, ask0)) \
         if route_on and ask0 and not route.names and ccfg.get("route_model") == "on" else None
     if carry == "outside" and route_on and intent.wants_own(route, ask0):
@@ -514,6 +515,7 @@ async def prepare(request):
             pick = await intent.pick_in_time(pick_task, intent.CACHED_WAIT if cache_on else intent.ASK_TIMEOUT + 1)
             if pick:
                 route = intent.Route([pick], {pick: "Modell"})
+            pick_state = "gewählt" if pick else "zu spät" if pick_task.cancelled() else "keine"
         tools = intent.narrow(route, tools)
         if ccfg.get("route_model") == "lean" and not route.names and not chat.needed(
                 messages[-1]["content"] if messages[-1]["role"] == "user" else "",

@@ -1240,7 +1240,7 @@ def start_trace(request, turn, t_req, t0):
     tr.step("weiche", "Weiche: " + (tr.intent or "-"), t0, t0, offered=len(turn.tools or []),
             of=getattr(turn, "all_tools", None), narrow=bool(getattr(turn, "route_on", False)),
             must=(getattr(turn, "force", None) or ", ".join(sorted(turn.need or [])))[:60] or None,
-            why=", ".join(route.why) if route and route.why else None)
+            why=", ".join(route.why) if route and route.why else None, model=getattr(turn, "pick_state", None))
     for c in turn.cal_note or []:   # what the panel did itself (a confirmed appointment, a role ...)
         name = str(c.get("name") or "Panel")
         tr.step("tool", "Ablauf" if name.startswith("Ablauf ") else name[:60], t0, t0, panel=True)   # (a routine's own name stays out)

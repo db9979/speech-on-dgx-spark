@@ -2,6 +2,7 @@
 
 Every version in one line, newest first (taken from the commit messages, so some lines are German, some English). Older entries have no version number.
 
+- **V01.0.308** · 2026-10-10 · Logs → Anfragen: der Schritt „Weiche“ zeigt, was aus der Modell-Zuordnung wurde (gewählt, zu spät, keine)
 - **V01.0.307** · 2026-10-10 · Anfrage aufteilen: chat.prefetch + Profil prefetch (aus, unter Gezielte Werkzeugwahl): endet die Antwort mit einer Rückfrage, wärmt vorab.py nach festen Regeln die Zwischenspeicher von Kalender (8 Tage), Mail, Wetter und Paketen, während die Rückfrage gesprochen wird; Kalender nimmt kürzere Zeiträume aus einem längeren; die Modell-Zuordnung (route_model on) läuft neben der Vorbereitung, mit prompt_cache höchstens 0,3 s Wartezeit
 - **V01.0.306** · 2026-10-10 · Selbsttest „Handy wie die App“ wartet unter der strengen CSP per Abfrage (self.until) statt mit wait_for_function, das einen Text auswertet und von der CSP abgelehnt wird
 - **V01.0.305** · 2026-10-10 · Selbsttest Funktionen-Seite: Höhengrenze um die neue Zeile „Eindeutiges direkt abrufen“ erhöht (Tests auf GitHub waren nach V01.0.304 rot, das Update wartete)
