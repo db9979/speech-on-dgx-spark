@@ -548,6 +548,11 @@ SETTINGS = {
     "doc_due": (False, lambda v: isinstance(v, bool)),
     # own wishes for the tone (admin chat.own_style): plain text, no control characters, no markers of outside text
     "style": ("", lambda v: isinstance(v, str) and len(v) <= 500 and not re.search(r"[\x00-\x09\x0b-\x1f\x7f]|<<<|>>>", v)),
+    # roles switched by voice (roles.py, admin chat.roles): one "Name: ..." per line, the active name
+    "roles_on": (False, lambda v: isinstance(v, bool)),
+    "roles": ("", lambda v: isinstance(v, str) and len(v) <= 1500 and not re.search(r"[\x00-\x09\x0b-\x1f\x7f]|<<<|>>>", v)),
+    "role": ("", lambda v: isinstance(v, str) and len(v) <= 30 and re.fullmatch(r"[\w äöüÄÖÜß\-]*", v)),
+    "wiki_on": (False, lambda v: isinstance(v, bool)),      # Wikipedia straight away (wiki.py, admin chat.wiki)
     # daily briefing as a push notification at this local time ("" = off), in the device's time zone
     "briefing_at": ("", lambda v: isinstance(v, str) and re.fullmatch(r"(?:[01]\d|2[0-3]):[0-5]\d|", v)),
     "tz": ("", lambda v: isinstance(v, str) and re.fullmatch(r"(?:[A-Za-z_]+(?:/[A-Za-z0-9_+\-]+){0,2})?", v)),
@@ -613,6 +618,10 @@ SETTINGS = {
 }
 
 
+# what only the profile itself writes, never the admin's defaults: its tone and its roles
+OWN_ONLY = ("style", "roles", "role")
+
+
 def clean_settings(d):
     """Only known keys with valid values."""
     d = d if isinstance(d, dict) else {}
@@ -620,7 +629,7 @@ def clean_settings(d):
 
 
 def defaults(admin=None):
-    own = {k: v for k, v in clean_settings(admin).items() if k != "style"}  # the tone is the profile's own
+    own = {k: v for k, v in clean_settings(admin).items() if k not in OWN_ONLY}  # the tone is the profile's own
     return dict({k: v for k, (v, _) in SETTINGS.items()}, **own)
 
 

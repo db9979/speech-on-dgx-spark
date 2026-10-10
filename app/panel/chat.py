@@ -430,6 +430,7 @@ NEED_TOOLS = [  # tool that has to be offered, words in the question: one place 
     ("parcels", re.compile(r"(?i)\b(paket\w*|päckchen|lieferung\w*|sendung\w*|parcels?|packages?|deliver\w*)\b")),
     ("transit", re.compile(r"(?i)\b(bus|busse|bahn|s-?bahn|zug|züge|tram|straßenbahn|abfahrt\w*|verbindung\w*|"
                            r"fahrplan|train|departures?)\b")),
+    ("wikipedia", re.compile(r"(?i)\b(wikipedia|wiki|lexikon|enzyklopädie|encyclopedia)\b")),
     ("tasks_show", re.compile(r"(?i)(einkaufsliste|einkaufszettel|aufgabenliste|to-?do|\b(auf|von) (die|der|meine[rn]?) "
                               r"liste\b|shopping list)")),
 ]
@@ -1073,6 +1074,10 @@ def prompt_parts(ccfg):
     if on("own_style"):
         parts.append({"label": "Eigener Gesprächsstil (je Profil unter Ich → Gespräch)",
                       "text": STYLE_INTRO + "(Text des Profils, höchstens %d Zeichen)" % STYLE_MAX, "fixed": False})
+    if on("roles"):
+        import roles
+        parts.append({"label": "Gewählte Rolle (je Profil unter Ich → Gespräch, per Sprache gewechselt)",
+                      "text": roles.INTRO + "(Name und Text der aktiven Rolle)", "fixed": False})
     parts.append({"label": "Nur je nach Gerät (Uhr, Siri, Lautsprecher, Telegram)",
                   "text": "\n".join((WATCH_HINT, SIRI_HINT, SPEAKER_HINT, TELEGRAM_HINT)), "fixed": True})
     parts.append({"label": "Je nach Profil und eingeschalteten Funktionen",

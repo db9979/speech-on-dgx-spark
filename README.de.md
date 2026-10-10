@@ -31,6 +31,7 @@ Alle Optionen ohne Rückfragen (`--mode api --asr 1.7b --tts 0.6b --yes` …) st
 
 <!-- New version: add one line at the top here and in CHANGELOG.md, drop the oldest line here (keep 10). Details go to docs/de and docs/en, not into this README. -->
 
+- **V01.0.249** Rollen per Sprache und Wikipedia direkt (je Admin- und Profil-Schalter, aus): eigene Rollen unter Ich → Gespräch, „Sei jetzt der Butler“ / „Sei wieder normal“ schaltet das Panel mit festen Regeln; Wissensfragen aus der Wikipedia-Einleitung statt Websuche, 24 Stunden Cache
 - **V01.0.248** Funktionen: „Panel-Bereiche in der iPhone-App“ steht unter dem Schalter der iPhone-App (Seite bleibt kurz)
 - **V01.0.247** iPhone-App übernimmt das Panel, Stufe 3: „Spark verwalten“ mit Admin-Passwort und Code, Monitoring, Logs mit „Kopieren für Thread“, Prüfen
 - **V01.0.246** iPhone-App übernimmt das Panel, Stufe 1–2: „Im Panel öffnen“, Panel-Bereiche mit eigenem Schalter, „Mein Alltag“ (Termine, Erinnerungen, Gedächtnis, Gesprächsschalter)
@@ -39,7 +40,6 @@ Alle Optionen ohne Rückfragen (`--mode api --asr 1.7b --tts 0.6b --yes` …) st
 - **V01.0.243** Ich → Dokumente → Ansehen zeigt lange Dokumente stückweise mit „Weiterlesen“ statt „… gekürzt“ nach 200.000 Zeichen; die Suche des Assistenten nutzte schon immer den ganzen Text
 - **V01.0.242** Dokumente: PDFs bis 100 MB (Admin stellt unter Funktionen → Eigene Dokumente bis 300 MB ein; andere Dateien bis 20 MB, vorher „request too large“ ab 20 MB); Speicher pro Profil gilt für alle Uploads zusammen, Ich → Dokumente zeigt „Belegt: x von y“ mit Balken, der Admin sieht und setzt ihn pro Profil unter Zustand → Monitoring
 - **V01.0.241** Das kleine Bild vor jeder Antwort im Verlauf folgt dem gewählten Gesicht: bei „Comic“ ein Comic-Kopf statt des Roboters
-- **V01.0.240** Lange Dokumente nachts lesen (Admin-Schalter unter Bilder und Scans lesen, aus): tagsüber nur Dokumente bis 10 Seiten in Gesprächspausen, lange erst nach 30 Minuten ohne Frage oder im Nachtfenster (Standard 01:00–06:00), nachts bis 400 Seiten zusätzlich; Ich → Dokumente zeigt „langes Dokument, wird nachts ab 01:00 gelesen“
 - **V01.0.239** Pebble-Ton stockt weniger: die Uhr startet nach 1,5 s Puffer (vorher 0,75 s) und spielt nach leerem Puffer erst weiter, wenn wieder genug da ist (eine Pause statt Häppchen); die Log-Zeile „watch: zeit“ zählt die Aussetzer (Uhr-App 1.5.0)
 
 Alle Versionen: [CHANGELOG.md](CHANGELOG.md)

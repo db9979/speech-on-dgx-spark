@@ -17,8 +17,9 @@ import roomfar
 import tasks
 import transit
 import weather
+import wiki
 
-SERVICES = [roomfar, weather, contacts, parcels, tasks, transit, agent, messages]
+SERVICES = [roomfar, weather, contacts, parcels, tasks, transit, wiki, agent, messages]
 
 
 def offer(ctx):

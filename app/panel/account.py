@@ -692,6 +692,8 @@ def profile_settings(request: Request):
                                        "route": bool(prof and chat.get("routing", False) is True),
                                        "fix_learn": bool(prof and chat.get("learn_fixes", False) and chat.get("memory", True)),
                                        "style": bool(prof and chat.get("own_style", False)),
+                                       "roles": bool(prof and chat.get("roles", False) is True),
+                                       "wiki": bool(prof and chat.get("wiki", False) is True),
                                        "follow": bool(prof and chat.get("follow_up", False)),
                                        "echo": bool(prof and chat.get("no_self_echo", False)),
                                        "images": bool(prof and chat.get("images", False) is True),
@@ -709,7 +711,7 @@ async def profile_save_settings(request: Request, prof=Depends(browser_profile))
         raise HTTPException(403, "only in the profile's own browser login")
     # what the model is told about the tone, too: a device key cannot change it
     if isinstance(body, dict) and request.headers.get(profiles.DEVICE_HEADER) \
-            and "style" in body and body["style"] != profiles.settings(prof["id"]).get("style", ""):
+            and any(k in body and body[k] != profiles.settings(prof["id"]).get(k, "") for k in ("style", "roles")):
         raise HTTPException(403, "only in the profile's own browser login")
     return {"settings": profiles.save_settings(prof["id"], body)}
 

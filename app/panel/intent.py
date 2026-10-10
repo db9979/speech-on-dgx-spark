@@ -14,7 +14,7 @@ Used for (chat_turn.prepare()):
      the person's own that does not point back at it leaves it out, and with it the lock (LOCKS);
   5. with chat.route_model "on", a question no rule recognizes is put to the model once as a pick
      from INTENT_NAMES (ask_model()); its pick can only narrow as well, never unlock. With "lean" it
-     gets only LEAN (web search, earlier conversations, noting something): a shorter, faster prompt.
+     gets only LEAN (web search, Wikipedia, earlier conversations, noting something): a shorter, faster prompt.
 
 The rule table is checked sentence by sentence in tests/test_intent.py (no model, no clock)."""
 import json
@@ -77,15 +77,17 @@ GROUPS = {
     "nachricht": ({"message_send", "message_read", "message_announce"}, MESSAGE_WORDS),
     "agent": ({"agent_list", "agent_task", "agent_schedule", "routine_save"}, AGENT_WORDS),
     "iphone": ({"iphone_action"}, PHONE_WORDS),
+    # only when the person names it ("Schau in Wikipedia ..."); other knowledge questions stay "unklar"
+    "wikipedia": ({"wikipedia"}, dict(chat.NEED_TOOLS)["wikipedia"]),
 }
-INTENT_NAMES = list(GROUPS)
+INTENT_NAMES = [n for n in GROUPS if n != "wikipedia"]   # the model's pick (ask_model) never narrows to it
 # always kept when the tools are narrowed: noting something the person says about themselves, and the
 # own documents (offered only when the profile has some; V01.0.244: "Wann läuft meine Versicherung ab?"
 # or a question the rules file under another group may well be answered from them)
 NARROW_KEEP = {"memory_save", "document_search"}
 # chat.route_model "lean": a question no rule recognizes gets only these (of those offered). A short
 # tool list makes the model read far less before its first word; the rule groups keep everything else.
-LEAN = {"web_search", "history_search"} | NARROW_KEEP
+LEAN = {"web_search", "wikipedia", "history_search"} | NARROW_KEEP
 # more than this many groups at once: not clear enough to narrow
 MAX_MIXED = 2
 

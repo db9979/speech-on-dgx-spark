@@ -2,6 +2,7 @@
 
 Every version in one line, newest first (taken from the commit messages, so some lines are German, some English). Older entries have no version number.
 
+- **V01.0.249** · 2026-10-10 · Rollen per Sprache und Wikipedia direkt (je Admin- und Profil-Schalter, aus): eigene Rollen unter Ich → Gespräch, „Sei jetzt der Butler“ / „Sei wieder normal“ schaltet das Panel mit festen Regeln; Wissensfragen aus der Wikipedia-Einleitung statt Websuche, 24 Stunden Cache
 - **V01.0.248** · 2026-10-10 · Funktionen: „Panel-Bereiche in der iPhone-App“ steht unter dem Schalter der iPhone-App (Seite bleibt kurz)
 - **V01.0.247** · 2026-10-10 · iPhone-App übernimmt das Panel, Stufe 3: „Spark verwalten“ mit Admin-Passwort und Code, Monitoring, Logs mit „Kopieren für Thread“, Prüfen
 - **V01.0.246** · 2026-10-10 · iPhone-App übernimmt das Panel, Stufe 1–2: „Im Panel öffnen“, Panel-Bereiche mit eigenem Schalter, „Mein Alltag“ (Termine, Erinnerungen, Gedächtnis, Gesprächsschalter)

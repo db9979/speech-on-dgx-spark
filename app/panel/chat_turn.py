@@ -192,6 +192,19 @@ async def prepare(request):
     style = chat.own_style(ccfg, who, pset, own_browser)
     if style:
         system = (system + "\n\n" + chat.STYLE_INTRO + style).strip()
+    # roles (roles.py): "Sei jetzt der Butler" is carried out by the panel with fixed rules, only for a
+    # name the profile saved, only from its own words and voice; the model just says the result
+    import roles
+    role_cmd = None
+    if roles.on(ccfg, who, pset, own_browser) and messages[-1]["role"] == "user":
+        role_cmd = roles.command(messages[-1]["content"], roles.parse(pset.get("roles")))
+        if role_cmd:
+            note = role_note = roles.carry_out(who["id"], role_cmd, pset)
+            print("rolle:", role_cmd[0], "-", role_cmd[1] or "-", "(fixed rule, no tools in this answer)", flush=True)
+            system = (system + "\n\nRolle: " + note).strip()
+    role = roles.prompt(pset) if roles.on(ccfg, who, pset, own_browser) else ""
+    if role:
+        system = (system + "\n\n" + role).strip()
     if body.get("client") == "watch":
         system = (system + "\n\n" + chat.WATCH_HINT).strip()
     if body.get("client") == "siri":
@@ -337,6 +350,8 @@ async def prepare(request):
         system = (system + "\n\n" + chat.DRAFT_HINT).strip()
     briefing = bool(ccfg.get("calendar", True))
     cal_note = []
+    if role_cmd:   # shown in the tool log like a tool the panel ran itself
+        cal_note.append({"name": "Rolle (Panel)", "args": role_cmd[1], "result": role_note})
     cal = calendars.get(who["id"]) if who and briefing and private_ok else {"calendars": [], "topics": []}
     # new appointments: only the profile's own login or device key, and only after a yes (see calendars.py)
     cal_write = bool(cal["calendars"] and own_browser)
@@ -446,7 +461,7 @@ async def prepare(request):
                        "client": body.get("client"),
                        "text": messages[-1]["content"] if messages[-1]["role"] == "user" else ""})
     tools += ex["tools"]
-    if pics:
+    if pics or role_cmd:
         tools = []
     if room_far:
         if not xprop:   # a guest or a voice of another profile: the fixed answer, nothing else
