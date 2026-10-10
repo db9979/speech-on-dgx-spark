@@ -1,0 +1,537 @@
+import AppKit
+import ServiceManagement
+import UserNotifications
+
+struct ArtInfo: Identifiable, Equatable {
+    let id: String
+    let de: String
+    let changes: Bool
+}
+
+struct LangInfo: Identifiable, Equatable {
+    let id: String
+    let de: String
+}
+
+/// GET /api/desk/config, every value checked; anything missing or odd falls back to a safe default.
+struct DeskConfig: Equatable {
+    static let partNames = ["write", "ask", "dictate", "notes", "status", "notaus"]
+    static let fallbackArts = [
+        ArtInfo(id: "korrigieren", de: "Korrigieren", changes: true),
+        ArtInfo(id: "glaetten", de: "Glätten", changes: true),
+        ArtInfo(id: "kuerzer", de: "Kürzer", changes: true),
+        ArtInfo(id: "freundlicher", de: "Freundlicher", changes: true),
+        ArtInfo(id: "foermlicher", de: "Förmlicher", changes: true),
+        ArtInfo(id: "uebersetzen", de: "Übersetzen", changes: false),
+    ]
+    static let fallbackLangs = [
+        LangInfo(id: "de", de: "Deutsch"), LangInfo(id: "en", de: "Englisch"), LangInfo(id: "fr", de: "Französisch"),
+        LangInfo(id: "es", de: "Spanisch"), LangInfo(id: "it", de: "Italienisch"), LangInfo(id: "nl", de: "Niederländisch"),
+    ]
+
+    var rev = 0
+    var profile = ""
+    var parts: [String: Bool] = [:]
+    var allowed: [String: Bool] = [:]
+    var writeArt = "korrigieren"
+    var writeSprache = "en"
+    var writeWunsch = ""
+    var writeArts: [String] = ["korrigieren"]
+    var preview = true
+    var dictateSprache = "auto"
+    var autostart: Bool?
+    var arts: [ArtInfo] = DeskConfig.fallbackArts
+    var langs: [LangInfo] = DeskConfig.fallbackLangs
+    var poll = 30
+
+    init() {}
+
+    init(_ d: [String: Any]) {
+        rev = (d["rev"] as? NSNumber)?.intValue ?? 0
+        profile = Self.plain(d["profile"] as? String ?? "", max: 80)
+        let p = d["parts"] as? [String: Any] ?? [:]
+        let a = d["allowed"] as? [String: Any] ?? [:]
+        for name in Self.partNames {
+            parts[name] = (p[name] as? Bool) ?? false
+            allowed[name] = (a[name] as? Bool) ?? false
+        }
+        if let w = d["write"] as? [String: Any] {
+            if let s = w["art"] as? String, !s.isEmpty { writeArt = s }
+            if let s = w["sprache"] as? String, !s.isEmpty { writeSprache = s }
+            if let s = w["wunsch"] as? String { writeWunsch = String(s.prefix(300)) }
+            if let l = w["arts"] as? [String], !l.isEmpty { writeArts = l }
+            if let b = w["preview"] as? Bool { preview = b }
+        }
+        if let s = (d["dictate"] as? [String: Any])?["sprache"] as? String,
+           ["auto", "de", "en", "fr", "es", "it", "nl"].contains(s) {
+            dictateSprache = s
+        }
+        autostart = d["autostart"] as? Bool
+        let artList = (d["arts"] as? [[String: Any]] ?? []).compactMap { x -> ArtInfo? in
+            guard let id = x["id"] as? String, let de = x["de"] as? String else { return nil }
+            return ArtInfo(id: id, de: Self.plain(de, max: 40), changes: (x["changes"] as? Bool) ?? true)
+        }
+        if !artList.isEmpty { arts = artList }
+        let langList = (d["langs"] as? [[String: Any]] ?? []).compactMap { x -> LangInfo? in
+            guard let id = x["id"] as? String, let de = x["de"] as? String else { return nil }
+            return LangInfo(id: id, de: Self.plain(de, max: 40))
+        }
+        if !langList.isEmpty { langs = langList }
+        poll = min(max((d["poll"] as? NSNumber)?.intValue ?? 30, 10), 600)
+    }
+
+    /// the arts this device offers, in the Spark's order
+    var offeredArts: [ArtInfo] {
+        let list = arts.filter { writeArts.contains($0.id) }
+        return list.isEmpty ? Array(arts.prefix(1)) : list
+    }
+
+    static func plain(_ s: String, max: Int) -> String {
+        let one = s.replacingOccurrences(of: "\n", with: " ").trimmingCharacters(in: .whitespacesAndNewlines)
+        return String(one.prefix(max))
+    }
+}
+
+enum Reach {
+    case unknown, ok, offline, notaus
+}
+
+/// The program's state: pairing, the Spark's config, the poll, the hotkeys, the menu-bar icon.
+@MainActor
+final class AppModel: ObservableObject {
+    static let shared = AppModel()
+
+    @Published private(set) var base: String?
+    @Published private(set) var config: DeskConfig?
+    @Published private(set) var reach: Reach = .unknown
+    @Published private(set) var reachText = ""
+    @Published private(set) var hotkeys: [HotAction: Hotkey] = HotkeyStore.load()
+    @Published private(set) var hotkeyProblem = ""
+    @Published private(set) var autostartProblem = ""
+
+    private(set) var client: SparkClient?
+    private var loop: Task<Void, Never>?
+    private var lastNote: Int?
+
+    var paired: Bool { client != nil }
+
+    var version: String {
+        (Bundle.main.object(forInfoDictionaryKey: "CFBundleShortVersionString") as? String) ?? "?"
+    }
+
+    static func offHint(_ name: String) -> String {
+        "\(name) ist aus. Im Panel unter Ich → Begleiter einschalten."
+    }
+
+    func part(_ p: String) -> Bool { config?.parts[p] == true }
+
+    func allowedPart(_ p: String) -> Bool { config?.allowed[p] == true }
+
+    func hotkeyLabel(_ a: HotAction) -> String { hotkeys[a]?.label ?? "" }
+
+    // ------------------------------------------------------------------ start, pairing
+
+    func start() {
+        HotkeyCenter.shared.install()
+        HotkeyCenter.shared.onPress = { [weak self] a in self?.hotkey(a) }
+        Notifier.setup()
+        if let saved = Keychain.load(), let base = try? SparkAddress.checkBase(saved.base) {
+            connect(base: base, key: saved.key)
+        } else {
+            Windows.showPairing()
+        }
+    }
+
+    func connect(base: String, key: String) {
+        loop?.cancel()
+        client?.close()
+        client = SparkClient(base: base, key: key)
+        self.base = base
+        config = nil
+        lastNote = nil
+        reach = .unknown
+        reachText = "Verbinde …"
+        applyHotkeys()
+        loop = Task { [weak self] in await self?.run() }
+    }
+
+    /// "Entkoppeln": the key goes from the keychain; the device stays in the panel until removed there.
+    func unpair() {
+        loop?.cancel()
+        loop = nil
+        client?.close()
+        client = nil
+        Keychain.delete()
+        base = nil
+        config = nil
+        reach = .unknown
+        reachText = ""
+        applyHotkeys()
+    }
+
+    /// 401: the Spark no longer knows the key.
+    private func forgetDevice() {
+        unpair()
+        Windows.showPairing(message: SparkProblem.unknownDevice.message)
+    }
+
+    func openPanel() {
+        guard let base, let url = URL(string: base + "/") else { return }
+        NSWorkspace.shared.open(url)
+    }
+
+    // ------------------------------------------------------------------ poll
+
+    private func run() async {
+        while !Task.isCancelled {
+            let wait = await cycle()
+            if Task.isCancelled { return }
+            try? await Task.sleep(nanoseconds: UInt64(wait) * 1_000_000_000)
+        }
+    }
+
+    /// One poll (and the config when it is missing or its rev changed); the seconds until the next one.
+    private func cycle() async -> Int {
+        guard let client else { return 30 }
+        do {
+            if config == nil {
+                try await loadConfig(client)
+            }
+            let d = try await client.get("api/desk/poll?after=\(lastNote ?? 0)")
+            guard client === self.client else { return 1 }
+            if let rev = (d["rev"] as? NSNumber)?.intValue, rev != config?.rev {
+                try await loadConfig(client)
+            }
+            takePoll(d)
+            return config?.poll ?? 30
+        } catch is CancellationError {
+            return 1
+        } catch {
+            guard client === self.client else { return 1 }
+            absorb(error)
+            if let p = error as? SparkProblem, case .notaus = p { return 60 }   // slower while a Notaus holds
+            return config?.poll ?? 30
+        }
+    }
+
+    private func loadConfig(_ client: SparkClient) async throws {
+        let d = try await client.get("api/desk/config")
+        guard client === self.client else { return }
+        let c = DeskConfig(d)
+        config = c
+        applyHotkeys()
+        if let want = c.autostart { applyAutostart(want) }
+        if c.parts["notes"] == true { Notifier.ask() }
+        if reach == .unknown || reach == .offline {
+            reach = .ok
+            reachText = ""
+        }
+    }
+
+    func refreshConfig() async {
+        guard let client else { return }
+        do {
+            try await loadConfig(client)
+        } catch {
+            absorb(error)
+        }
+    }
+
+    private func takePoll(_ d: [String: Any]) {
+        let level = ((d["notaus"] as? [String: Any])?["level"] as? NSNumber)?.intValue ?? 0
+        if level > 0 {
+            reach = .notaus
+            reachText = "Notaus Stufe \(level) ist an."
+        } else {
+            reach = .ok
+            reachText = ""
+        }
+        let last = (d["last"] as? NSNumber)?.intValue ?? 0
+        guard let prev = lastNote else {
+            // the first poll: notes from before the program started are not shown
+            lastNote = last
+            return
+        }
+        if part("notes") {
+            let notes = (d["notes"] as? [[String: Any]] ?? []).compactMap { x -> (n: Int, title: String, body: String, tag: String)? in
+                guard let n = (x["n"] as? NSNumber)?.intValue, n > prev else { return nil }
+                return (n, x["title"] as? String ?? "", x["body"] as? String ?? "", x["tag"] as? String ?? "")
+            }
+            for note in notes.sorted(by: { $0.n < $1.n }).suffix(5) {
+                Notifier.show(title: note.title, body: note.body, tag: note.tag, id: "note-\(note.n)")
+            }
+        }
+        // last smaller than before: the Spark started anew
+        lastNote = last
+    }
+
+    /// Applies what an error means for the program (contract, "Errors") and gives the text to show.
+    @discardableResult
+    func absorb(_ error: Error) -> String {
+        guard let p = error as? SparkProblem else {
+            return "Unerwarteter Fehler."
+        }
+        switch p {
+        case .unknownDevice:
+            forgetDevice()
+        case .off:
+            Task { await self.refreshConfig() }
+        case .busy, .failed:
+            break
+        case .notaus(let m):
+            reach = .notaus
+            reachText = m
+        case .offline(let m):
+            if reach != .notaus || config == nil {
+                reach = .offline
+                reachText = m
+            }
+        }
+        return p.message
+    }
+
+    // ------------------------------------------------------------------ autostart (from the panel)
+
+    private func applyAutostart(_ want: Bool) {
+        let s = SMAppService.mainApp
+        do {
+            if want && (s.status == .notRegistered || s.status == .notFound) {
+                try s.register()
+            } else if !want && (s.status == .enabled || s.status == .requiresApproval) {
+                try s.unregister()
+            }
+            autostartProblem = s.status == .requiresApproval
+                ? "Autostart wartet auf Freigabe: Systemeinstellungen → Allgemein → Anmeldeobjekte." : ""
+        } catch {
+            autostartProblem = "Autostart ließ sich nicht einrichten (Programm in den Ordner „Programme“ legen)."
+        }
+    }
+
+    var autostartOn: Bool { SMAppService.mainApp.status == .enabled }
+
+    // ------------------------------------------------------------------ hotkeys
+
+    /// Registers the hotkeys of the parts that are on; the others have none.
+    func applyHotkeys() {
+        let hc = HotkeyCenter.shared
+        hc.unregisterAll()
+        var taken: [String] = []
+        if paired {
+            for a in HotAction.allCases where part(a.part) {
+                if let hk = hotkeys[a], !hc.register(a, hk) {
+                    taken.append("\(hk.label) (\(a.title))")
+                }
+            }
+        }
+        hotkeyProblem = taken.isEmpty ? ""
+            : "Schon von macOS oder einem anderen Programm belegt: " + taken.joined(separator: ", ")
+    }
+
+    /// A new combination from the settings window; an error text or nil.
+    func setHotkey(_ a: HotAction, _ hk: Hotkey) -> String? {
+        if let other = HotAction.allCases.first(where: { $0 != a && hotkeys[$0]?.same(as: hk) == true }) {
+            return "\(hk.label) ist schon für „\(other.title)“ vergeben."
+        }
+        hotkeys[a] = hk
+        HotkeyStore.save(hk, for: a)
+        applyHotkeys()
+        return nil
+    }
+
+    private func hotkey(_ a: HotAction) {
+        switch a {
+        case .write:
+            Task { await startWrite(fromMenu: false) }
+        case .ask:
+            openAsk()
+        case .dictate:
+            if NSApp.isActive, let key = NSApp.keyWindow, key === Windows.shared.window("ask") {
+                Dictation.shared.toggle(.ask)
+            } else {
+                Dictation.shared.toggle(.cursor(frontApp()))
+            }
+        }
+    }
+
+    private func frontApp() -> NSRunningApplication? {
+        let f = NSWorkspace.shared.frontmostApplication
+        return f == NSRunningApplication.current ? nil : f
+    }
+
+    // ------------------------------------------------------------------ parts
+
+    /// Schreibhilfe: from the hotkey the marked text is copied (with Accessibility); from the menu the window
+    /// opens empty and the result goes to the clipboard.
+    func startWrite(fromMenu: Bool) async {
+        guard paired else {
+            Windows.showPairing()
+            return
+        }
+        guard part("write") else {
+            HUD.show(Self.offHint("Die Schreibhilfe"))
+            return
+        }
+        let target = fromMenu ? nil : frontApp()
+        var text = ""
+        if !fromMenu {
+            if Access.trusted {
+                text = await Clip.copySelection() ?? ""
+            } else {
+                Access.askOnce()
+            }
+        }
+        let cfg = config ?? DeskConfig()
+        let core = text.trimmingCharacters(in: .whitespacesAndNewlines)
+        if !fromMenu && Access.trusted && !cfg.preview && !core.isEmpty, let client {
+            await writeDirect(text, cfg: cfg, client: client, target: target)
+            return
+        }
+        WriteController.open(text: text, target: fromMenu ? .menu : .hotkey(target), config: cfg)
+    }
+
+    /// Without preview (set in the panel): improve and paste right away.
+    private func writeDirect(_ text: String, cfg: DeskConfig, client: SparkClient, target: NSRunningApplication?) async {
+        let parts = WriteController.split(text)
+        guard parts.core.count <= SparkClient.writeMax else {
+            HUD.show("Der Text ist zu lang (höchstens \(SparkClient.writeMax) Zeichen).")
+            return
+        }
+        HUD.show("Spark arbeitet …", symbol: "hourglass", seconds: 200)
+        do {
+            let art = cfg.writeArt
+            let r = try await client.improve(text: parts.core, art: art,
+                                             sprache: art == "uebersetzen" ? cfg.writeSprache : nil, wunsch: cfg.writeWunsch)
+            HUD.hide()
+            let out = parts.lead + r.text.trimmingCharacters(in: .whitespacesAndNewlines) + parts.trail
+            if await Clip.paste(out, into: target) {
+                HUD.show(WriteController.changesText(r), symbol: "checkmark.circle")
+            } else {
+                HUD.show("Text ist in der Zwischenablage (⌘V fügt ihn ein).", symbol: "doc.on.clipboard")
+            }
+        } catch is CancellationError {
+            HUD.hide()
+        } catch {
+            HUD.show(absorb(error), symbol: "exclamationmark.triangle")
+        }
+    }
+
+    func openAsk() {
+        guard paired else {
+            Windows.showPairing()
+            return
+        }
+        guard part("ask") else {
+            HUD.show(Self.offHint("Frag Spark"))
+            return
+        }
+        AskController.open()
+    }
+
+    func confirmNotaus() {
+        guard part("notaus"), let client else { return }
+        NSApp.activate(ignoringOtherApps: true)
+        let a = NSAlert()
+        a.alertStyle = .critical
+        a.messageText = "Mein Notaus auslösen?"
+        a.informativeText = """
+            Der Spark hält dann für dein Profil alles an, was er für dich tut. Auch dieser Begleiter bekommt \
+            keine Antworten mehr.
+
+            Aufheben geht nur im Panel im Browser, mit deiner PIN.
+            """
+        let go = a.addButton(withTitle: "Notaus auslösen")
+        go.hasDestructiveAction = true
+        a.addButton(withTitle: "Abbrechen")
+        guard a.runModal() == .alertFirstButtonReturn else { return }
+        Task {
+            do {
+                _ = try await client.postJSON("api/desk/notaus", [:], timeout: 30)
+                reach = .notaus
+                reachText = "Mein Notaus ist an."
+                let done = NSAlert()
+                done.messageText = "Mein Notaus ist an."
+                done.informativeText = "Aufheben geht nur im Panel im Browser, mit deiner PIN."
+                done.addButton(withTitle: "Panel öffnen")
+                done.addButton(withTitle: "OK")
+                NSApp.activate(ignoringOtherApps: true)
+                if done.runModal() == .alertFirstButtonReturn { openPanel() }
+            } catch {
+                HUD.show(absorb(error), symbol: "exclamationmark.triangle")
+            }
+        }
+    }
+
+    // ------------------------------------------------------------------ menu bar
+
+    var statusLine: String {
+        guard paired else { return "Nicht gekoppelt" }
+        switch reach {
+        case .unknown: return "Verbinde mit dem Spark …"
+        case .ok:
+            let p = config?.profile ?? ""
+            return p.isEmpty ? "Spark erreichbar" : "Spark erreichbar · \(p)"
+        case .offline: return reachText.isEmpty ? "Spark nicht erreichbar" : reachText
+        case .notaus: return reachText.isEmpty ? "Notaus ist an" : reachText
+        }
+    }
+
+    var menuIcon: NSImage {
+        let showState = part("status") || !paired || reach == .notaus
+        if paired && showState && reach == .notaus {
+            return Self.symbol("exclamationmark.octagon.fill", color: .systemRed)
+        }
+        if !paired || (showState && reach == .offline) {
+            return Self.symbol("sparkles", color: .systemGray)
+        }
+        return Self.symbol("sparkles", color: nil)
+    }
+
+    private static func symbol(_ name: String, color: NSColor?) -> NSImage {
+        let base = NSImage(systemSymbolName: name, accessibilityDescription: "Spark-Begleiter")
+            ?? NSImage(systemSymbolName: "circle", accessibilityDescription: "Spark-Begleiter")
+            ?? NSImage()
+        guard let color else {
+            base.isTemplate = true
+            return base
+        }
+        let configured = base.withSymbolConfiguration(NSImage.SymbolConfiguration(paletteColors: [color])) ?? base
+        configured.isTemplate = false
+        return configured
+    }
+}
+
+// ------------------------------------------------------------------ notifications ("Meldungen")
+
+final class NotificationDelegate: NSObject, UNUserNotificationCenterDelegate {
+    func userNotificationCenter(_ center: UNUserNotificationCenter, willPresent notification: UNNotification,
+                                withCompletionHandler completionHandler: @escaping (UNNotificationPresentationOptions) -> Void) {
+        completionHandler([.banner, .list, .sound])
+    }
+}
+
+@MainActor
+enum Notifier {
+    private static let delegate = NotificationDelegate()
+    private static var asked = false
+
+    static func setup() {
+        UNUserNotificationCenter.current().delegate = delegate
+    }
+
+    static func ask() {
+        guard !asked else { return }
+        asked = true
+        UNUserNotificationCenter.current().requestAuthorization(options: [.alert, .sound]) { _, _ in }
+    }
+
+    /// The Spark's note as plain text.
+    static func show(title: String, body: String, tag: String, id: String) {
+        let c = UNMutableNotificationContent()
+        c.title = DeskConfig.plain(title, max: 200).isEmpty ? "Spark" : DeskConfig.plain(title, max: 200)
+        c.body = String(body.prefix(1500))
+        c.sound = .default
+        if !tag.isEmpty { c.threadIdentifier = String(tag.prefix(20)) }
+        let r = UNNotificationRequest(identifier: id, content: c, trigger: nil)
+        UNUserNotificationCenter.current().add(r) { _ in }
+    }
+}

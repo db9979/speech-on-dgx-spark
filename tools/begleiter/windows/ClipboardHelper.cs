@@ -1,7 +1,7 @@
 using System.Diagnostics;
 using System.Runtime.InteropServices;
 
-namespace SparkSchreibhilfe;
+namespace SparkBegleiter;
 
 /// <summary>
 /// Zwischenablage: Inhalt sichern und wiederherstellen, markierten Text holen, Ergebnis einfügen.
@@ -89,12 +89,12 @@ internal static class ClipboardHelper
     /// Strg+C senden, bis zu ~600 ms auf Text warten, Zwischenablage wiederherstellen.
     /// Gibt <c>null</c> zurück, wenn nichts markiert war (oder das Programm nichts kopiert hat).
     /// </summary>
-    public static async Task<string?> CopySelectionAsync()
+    public static async Task<string?> CopySelectionAsync(ushort hotkeyKey)
     {
         Snapshot original = Snapshot.Take();
 
-        // Die Person hält Strg+Alt(+S) vermutlich noch gedrückt.
-        await KeyboardInput.WaitForHotkeyReleaseAsync(timeoutMs: 800);
+        // Die Person hält das Tastenkürzel (z. B. Strg+Alt+S) vermutlich noch gedrückt.
+        await KeyboardInput.WaitForHotkeyReleaseAsync(hotkeyKey, timeoutMs: 800).ConfigureAwait(true);
 
         TryClear();
         uint sequence = NativeMethods.GetClipboardSequenceNumber();
@@ -104,7 +104,7 @@ internal static class ClipboardHelper
         var watch = Stopwatch.StartNew();
         while (watch.ElapsedMilliseconds < CopyTimeoutMs)
         {
-            await Task.Delay(30);
+            await Task.Delay(30).ConfigureAwait(true);
             if (NativeMethods.GetClipboardSequenceNumber() == sequence)
             {
                 continue;
@@ -146,7 +146,7 @@ internal static class ClipboardHelper
         }
 
         NativeMethods.SetForegroundWindow(target);
-        await Task.Delay(120);
+        await Task.Delay(120).ConfigureAwait(true);
 
         // Nur einfügen, wenn wirklich das gemerkte Fenster vorne ist – sonst landet der Text woanders.
         if (NativeMethods.GetForegroundWindow() != target)
@@ -158,7 +158,7 @@ internal static class ClipboardHelper
         KeyboardInput.SendCtrlChord(NativeMethods.VK_V);
 
         // Das Zielprogramm liest die Zwischenablage oft erst etwas später.
-        await Task.Delay(500);
+        await Task.Delay(500).ConfigureAwait(true);
         original.Restore();
         return true;
     }

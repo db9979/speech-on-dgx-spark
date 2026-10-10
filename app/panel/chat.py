@@ -1982,12 +1982,23 @@ async def siri_ask(request: Request):
     except ValueError:
         body = {}
     body = body if isinstance(body, dict) else {}
+    return await text_ask(request, prof, body)
+
+
+# who asks with a plain text and reads the answer: (trace client, conversation id start, its title)
+ASKERS = {"siri": ("siri", "siri-", "Siri"), "desk": ("other", "desk-", "Begleiter")}
+
+
+async def text_ask(request, prof, body, who="siri"):
+    """One question as text, the answer as text: Siri's shortcut and the Spark-Begleiter (begleiter.py).
+    Follow-ups within SIRI_FOLLOW_UP keep the context; each day's questions are one conversation."""
+    client, conv, title = ASKERS[who]
     text = str(body.get("text", "")).strip()[:2000]
     if not text:
         return {"answer": "Ich habe keine Frage gehört."}
-    last = _SIRI.get(prof["id"])
+    last = _SIRI.get((who, prof["id"]))
     history = last[1][-8:] if last and time.time() - last[0] < SIRI_FOLLOW_UP else []
-    inner = {"messages": history + [{"role": "user", "content": text}], "client": "siri", "speak": False}
+    inner = {"messages": history + [{"role": "user", "content": text}], "client": client, "speak": False}
     if isinstance(body.get("tz"), str):
         inner["tz"] = body["tz"]
     data = json.dumps(inner).encode()
@@ -2023,14 +2034,14 @@ async def siri_ask(request: Request):
     msgs = history + [{"role": "user", "content": text},
                       dict({"role": "assistant", "content": answer}, **({"mail": True} if from_mail else
                                                                        {"outside": True} if from_outside else {}))]
-    _SIRI[prof["id"]] = (time.time(), msgs)
+    _SIRI[(who, prof["id"])] = (time.time(), msgs)
     # the day as the person sees it (the shortcut may send its time zone, else the profile's)
     local = datetime.datetime.now(user_zone(body.get("tz") or profiles.settings(prof["id"]).get("tz", "")))
     day = local.strftime("%Y%m%d")
     try:
-        old = next((c for c in profiles.convos(prof["id"]) if c.get("id") == "siri-" + day), None)
+        old = next((c for c in profiles.convos(prof["id"]) if c.get("id") == conv + day), None)
         keep = (old["msgs"] if old else []) + msgs[-2:]
-        profiles.save_convo(prof["id"], {"id": "siri-" + day, "title": "Siri " + local.strftime("%d.%m."),
+        profiles.save_convo(prof["id"], {"id": conv + day, "title": title + " " + local.strftime("%d.%m."),
                                          "updated": int(time.time() * 1000), "msgs": keep})
     except Exception as e:
         print("siri convo:", type(e).__name__, e, flush=True)

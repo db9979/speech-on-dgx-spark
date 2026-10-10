@@ -67,7 +67,7 @@ TOOLS = {
     # tools only programs use over MCP (mcpserver.py; transcribe/speak/voices show as Hören/Sprechen)
     "today": "cal", "action_status": "mem", "Vorschlag": "mem",
     # notes the Spark sends (push.py) and what it says by itself (proactive.py, live.note)
-    "Web Push": "webpush", "Apple Push": "push", "Android-App": "android", "Telegram": "tg", "Panel-Seite": "page",
+    "Web Push": "webpush", "Apple Push": "push", "Android-App": "android", "Spark-Begleiter": "desk", "Telegram": "tg", "Panel-Seite": "page",
     # steps the panel runs itself (tracelog "… (Panel)")
     "Erst lokal": "mem", "remarkable": "rm", "Ablauf": "mem",
 }
@@ -93,13 +93,14 @@ TARGETS = {
     "webpush": ("Web Push", "Push-Dienst des Browsers · Internet", "net", False),
     "tg": ("Telegram", "Bot-API · Internet", "net", False),
     "android": ("Android-App", "wartet, bis die App abholt", "spark", False),
+    "desk": ("Spark-Begleiter", "wartet, bis PC oder Mac abholt", "spark", False),
     "page": ("Panel-Seite", "beim nächsten Abruf der offenen Seite", "spark", False),
 }
 RETURNS = {"cal": "Termine oder Aufgaben", "ha": "Zustände oder Schaltung", "web": "Suchergebnisse", "pages": "Seitentext", "kiwix": "Archiv-Treffer",
            "wiki": "Artikel", "mail": "Mails (nur Anzahl und Größe)", "contacts": "Kontakte", "rm": "Ablage", "push": "Zustellung",
            "weather": "Wetterwerte", "parcels": "Sendungen", "transit": "Verbindungen", "mem": "eigene Daten",
            "hilfe": "Anleitungen oder Vorschlagskarte", "webpush": "Zustellung", "tg": "Zustellung",
-           "android": "liegt bereit", "page": "liegt bereit"}
+           "android": "liegt bereit", "desk": "liegt bereit", "page": "liegt bereit"}
 CLIENT = {"web": "Browser", "speaker": "Lautsprecher", "watch": "Uhr", "siri": "Siri", "telegram": "Telegram",
           "app": "iPhone-App", "car": "CarPlay", "mcp": "MCP-Client", "ha": "Home Assistant", "auto": "Von selbst",
           "other": "Gerät"}
@@ -347,7 +348,8 @@ def within(rec):
         _cur.reset(tok)
 
 
-NOTE = {"web": "Web Push", "app": "Apple Push", "and": "Android-App", "tg": "Telegram", "page": "Panel-Seite"}
+NOTE = {"web": "Web Push", "app": "Apple Push", "and": "Android-App", "desk": "Spark-Begleiter", "tg": "Telegram",
+        "page": "Panel-Seite"}
 
 
 def note(uid, kind, t0, n, why=""):

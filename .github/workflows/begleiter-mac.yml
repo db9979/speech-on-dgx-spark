@@ -1,0 +1,120 @@
+name: Spark-Begleiter Mac
+
+# Builds the Mac menu-bar program "Spark-Begleiter" (tools/begleiter/mac, Swift/SwiftUI, macOS 13+) as a universal
+# app (arm64 + x86_64) with the Xcode command line tools only, signs it ad hoc and publishes
+# Spark-Begleiter-mac.zip in the release "begleiter-mac" (created on the first run, the file replaced later).
+# Not notarized: the README explains the first start. The optional step "Developer ID + notarization" runs only
+# when the secrets MAC_DEVID_P12 (base64 of the .p12) and MAC_DEVID_P12_PASSWORD exist; it uses the App Store
+# Connect key secrets ASC_KEY_ID, ASC_ISSUER_ID and ASC_KEY (the whole .p8) for notarytool.
+on:
+  workflow_dispatch:
+  push:
+    branches: [main]
+    paths:
+      - tools/begleiter/mac/**
+      - .github/workflows/begleiter-mac.yml
+
+permissions:
+  contents: write
+
+concurrency:
+  group: begleiter-mac
+  cancel-in-progress: true
+
+jobs:
+  build:
+    runs-on: macos-15
+    env:
+      HAS_DEVID: ${{ secrets.MAC_DEVID_P12 != '' && secrets.MAC_DEVID_P12_PASSWORD != '' }}
+    steps:
+      - uses: actions/checkout@v5
+
+      - name: Build (universal, ad-hoc signed)
+        run: |
+          set -euo pipefail
+          xcodebuild -version
+          tools/begleiter/mac/build.sh
+          app=tools/begleiter/mac/build/Spark-Begleiter.app
+          lipo -archs "$app/Contents/MacOS/Spark-Begleiter"
+          /usr/libexec/PlistBuddy -c "Print :CFBundleShortVersionString" "$app/Contents/Info.plist"
+
+      # ---------------------------------------------------------------- OPTIONAL: Developer ID + notarization
+      # Skipped unless the secrets MAC_DEVID_P12 and MAC_DEVID_P12_PASSWORD are set. Then the app is signed again
+      # with the "Developer ID Application" certificate (hardened runtime, microphone entitlement), notarized with
+      # notarytool (App Store Connect key) and stapled, so macOS opens it without the first-start detour.
+      - name: OPTIONAL Developer ID signing and notarization
+        if: env.HAS_DEVID == 'true'
+        env:
+          MAC_DEVID_P12: ${{ secrets.MAC_DEVID_P12 }}
+          MAC_DEVID_P12_PASSWORD: ${{ secrets.MAC_DEVID_P12_PASSWORD }}
+          ASC_KEY_ID: ${{ secrets.ASC_KEY_ID }}
+          ASC_ISSUER_ID: ${{ secrets.ASC_ISSUER_ID }}
+          ASC_KEY: ${{ secrets.ASC_KEY }}
+        run: |
+          set -euo pipefail
+          for v in ASC_KEY_ID ASC_ISSUER_ID ASC_KEY; do
+            if [ -z "${!v}" ]; then echo "::error::Secret $v is missing (needed for notarization)"; exit 1; fi
+          done
+          umask 077
+          app=tools/begleiter/mac/build/Spark-Begleiter.app
+          kc="$RUNNER_TEMP/devid.keychain-db"
+          p12="$RUNNER_TEMP/devid.p12"
+          p8="$RUNNER_TEMP/AuthKey.p8"
+          trap 'security delete-keychain "$kc" >/dev/null 2>&1 || true; rm -f "$p12" "$p8"' EXIT
+          printf '%s' "$MAC_DEVID_P12" | base64 --decode > "$p12"
+          pw=$(openssl rand -hex 16)
+          security create-keychain -p "$pw" "$kc"
+          security set-keychain-settings -lut 3600 "$kc"
+          security unlock-keychain -p "$pw" "$kc"
+          security import "$p12" -k "$kc" -P "$MAC_DEVID_P12_PASSWORD" -T /usr/bin/codesign
+          security set-key-partition-list -S apple-tool:,apple: -s -k "$pw" "$kc" >/dev/null
+          security list-keychains -d user -s "$kc" $(security list-keychains -d user | tr -d '"')
+          identity=$(security find-identity -v -p codesigning "$kc" | sed -n 's/.*"\(Developer ID Application: [^"]*\)".*/\1/p' | head -n 1)
+          if [ -z "$identity" ]; then echo "::error::No 'Developer ID Application' identity in MAC_DEVID_P12"; exit 1; fi
+          codesign --force --timestamp --options runtime \
+            --entitlements tools/begleiter/mac/Begleiter.entitlements --sign "$identity" "$app"
+          codesign --verify --strict --verbose=2 "$app"
+          python3 -I ios/ci/asc_key.py pem "$p8"
+          ditto -c -k --keepParent "$app" "$RUNNER_TEMP/notarize.zip"
+          xcrun notarytool submit "$RUNNER_TEMP/notarize.zip" \
+            --key "$p8" --key-id "$ASC_KEY_ID" --issuer "$ASC_ISSUER_ID" --wait --timeout 30m
+          xcrun stapler staple "$app"
+          spctl --assess --type execute --verbose "$app"
+      # ---------------------------------------------------------------- end of the optional step
+
+      - name: Zip
+        run: |
+          set -euo pipefail
+          mkdir -p dist
+          cd tools/begleiter/mac/build
+          ditto -c -k --keepParent Spark-Begleiter.app "$GITHUB_WORKSPACE/dist/Spark-Begleiter-mac.zip"
+          ls -l "$GITHUB_WORKSPACE/dist"
+
+      - uses: actions/upload-artifact@v4
+        with:
+          name: Spark-Begleiter-mac
+          path: dist/Spark-Begleiter-mac.zip
+          if-no-files-found: error
+
+      - name: Publish release begleiter-mac
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          set -euo pipefail
+          tag=begleiter-mac
+          file=dist/Spark-Begleiter-mac.zip
+          if gh release view "$tag" >/dev/null 2>&1; then
+            gh release upload "$tag" "$file" --clobber
+          else
+            notes=$(cat <<'NOTES'
+          Spark-Begleiter für den Mac (macOS 13 oder neuer, Apple-Chip und Intel): ein kleines Programm in der Menüleiste für den eigenen Spark – Schreibhilfe (⌥⌘S und „Mit Spark verbessern“ im Dienste-Menü), Frag Spark (⌥⌘A), Diktieren (⌥⌘D), Meldungen, Zustandspunkt und Mein-Notaus-Knopf.
+
+          - Spark-Begleiter-mac.zip herunterladen, entpacken, „Spark-Begleiter“ in den Ordner „Programme“ ziehen.
+          - Nicht notarisiert: beim ersten Start Rechtsklick → „Öffnen“, oder Systemeinstellungen → Datenschutz & Sicherheit → „Dennoch öffnen“.
+          - Koppeln im Panel unter Ich → Begleiter → „Gerät koppeln“.
+
+          Anleitung: tools/begleiter/mac/README.md
+          NOTES
+          )
+            gh release create "$tag" "$file" --title "Spark-Begleiter für den Mac" --notes "$notes" --target "$GITHUB_SHA"
+          fi

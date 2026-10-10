@@ -1,12 +1,12 @@
 using Microsoft.Win32;
 
-namespace SparkSchreibhilfe;
+namespace SparkBegleiter;
 
 /// <summary>"Mit Windows starten": Eintrag unter HKCU\Software\Microsoft\Windows\CurrentVersion\Run.</summary>
 internal static class Autostart
 {
     private const string RunKey = @"Software\Microsoft\Windows\CurrentVersion\Run";
-    private const string ValueName = "SparkSchreibhilfe";
+    private const string ValueName = "SparkBegleiter";
 
     private static string Command => $"\"{Environment.ProcessPath}\"";
 

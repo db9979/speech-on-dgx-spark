@@ -1,0 +1,148 @@
+using System.Globalization;
+
+namespace SparkBegleiter;
+
+/// <summary>Die Teile des Begleiters (Kennungen wie im Vertrag mit dem Spark).</summary>
+internal static class Parts
+{
+    public const string Write = "write";
+    public const string Ask = "ask";
+    public const string Dictate = "dictate";
+    public const string Notes = "notes";
+    public const string Status = "status";
+    public const string Notaus = "notaus";
+
+    /// <summary>Alle Teile in der Reihenfolge, in der sie angezeigt werden.</summary>
+    public static readonly string[] All = { Write, Ask, Dictate, Notes, Status, Notaus };
+
+    /// <summary>Teile mit eigenem Tastenkürzel.</summary>
+    public static readonly string[] WithHotkey = { Write, Ask, Dictate };
+
+    public static string Label(string part) => part switch
+    {
+        Write => "Schreibhilfe",
+        Ask => "Frag Spark",
+        Dictate => "Diktieren",
+        Notes => "Meldungen",
+        Status => "Zustandspunkt",
+        Notaus => "Mein-Notaus-Knopf",
+        _ => part,
+    };
+}
+
+/// <summary>
+/// Ein globales Tastenkürzel: Modifikatoren (Strg/Alt/Umschalt) plus eine Taste.
+/// Gespeichert wird es als Text wie <c>"S, Control, Alt"</c> (Schreibweise von <see cref="Keys"/>).
+/// </summary>
+internal readonly record struct Hotkey(Keys Modifiers, Keys Key)
+{
+    public static Hotkey DefaultFor(string part) => part switch
+    {
+        Parts.Ask => new Hotkey(Keys.Control | Keys.Alt, Keys.A),
+        Parts.Dictate => new Hotkey(Keys.Control | Keys.Alt, Keys.D),
+        _ => new Hotkey(Keys.Control | Keys.Alt, Keys.S),
+    };
+
+    /// <summary>Aus einem KeyDown-Ereignis (KeyData = Taste | Modifikatoren).</summary>
+    public static Hotkey FromKeyData(Keys keyData) =>
+        new(keyData & (Keys.Control | Keys.Alt | Keys.Shift), keyData & Keys.KeyCode);
+
+    public static bool TryParse(string? text, out Hotkey hotkey)
+    {
+        hotkey = default;
+        if (string.IsNullOrWhiteSpace(text) || !Enum.TryParse(text, ignoreCase: true, out Keys keys))
+        {
+            return false;
+        }
+
+        hotkey = FromKeyData(keys);
+        return hotkey.IsValid;
+    }
+
+    /// <summary>Text zum Speichern.</summary>
+    public string Serialize() => (Key | Modifiers).ToString();
+
+    /// <summary>Gültig nur mit Strg oder Alt (Umschalt allein würde beim Tippen stören) und einer echten Taste.</summary>
+    public bool IsValid =>
+        (Modifiers & (Keys.Control | Keys.Alt)) != 0 && !IsModifierKey(Key) && Key != Keys.None;
+
+    /// <summary>Taste für Win32 (virtueller Tastencode).</summary>
+    public ushort VirtualKey => (ushort)Key;
+
+    /// <summary>Modifikatoren für RegisterHotKey.</summary>
+    public uint Win32Modifiers =>
+        ((Modifiers & Keys.Control) != 0 ? NativeMethods.MOD_CONTROL : 0) |
+        ((Modifiers & Keys.Alt) != 0 ? NativeMethods.MOD_ALT : 0) |
+        ((Modifiers & Keys.Shift) != 0 ? NativeMethods.MOD_SHIFT : 0);
+
+    public static bool IsModifierKey(Keys key) => key is Keys.ControlKey or Keys.LControlKey or Keys.RControlKey
+        or Keys.ShiftKey or Keys.LShiftKey or Keys.RShiftKey or Keys.Menu or Keys.LMenu or Keys.RMenu
+        or Keys.LWin or Keys.RWin or Keys.Apps;
+
+    /// <summary>Deutsche Anzeige, z. B. "Strg+Alt+S".</summary>
+    public override string ToString()
+    {
+        var parts = new List<string>(4);
+        if ((Modifiers & Keys.Control) != 0)
+        {
+            parts.Add("Strg");
+        }
+
+        if ((Modifiers & Keys.Alt) != 0)
+        {
+            parts.Add("Alt");
+        }
+
+        if ((Modifiers & Keys.Shift) != 0)
+        {
+            parts.Add("Umschalt");
+        }
+
+        parts.Add(KeyName(Key));
+        return string.Join("+", parts);
+    }
+
+    private static string KeyName(Keys key)
+    {
+        if (key is >= Keys.A and <= Keys.Z)
+        {
+            return ((char)key).ToString();
+        }
+
+        if (key is >= Keys.D0 and <= Keys.D9)
+        {
+            return ((int)(key - Keys.D0)).ToString(CultureInfo.InvariantCulture);
+        }
+
+        if (key is >= Keys.NumPad0 and <= Keys.NumPad9)
+        {
+            return "Num " + ((int)(key - Keys.NumPad0)).ToString(CultureInfo.InvariantCulture);
+        }
+
+        return key switch
+        {
+            Keys.None => "?",
+            Keys.Space => "Leertaste",
+            Keys.Return => "Eingabe",
+            Keys.Back => "Rücktaste",
+            Keys.Tab => "Tab",
+            Keys.Insert => "Einfg",
+            Keys.Delete => "Entf",
+            Keys.Home => "Pos1",
+            Keys.End => "Ende",
+            Keys.PageUp => "Bild↑",
+            Keys.PageDown => "Bild↓",
+            Keys.Up => "↑",
+            Keys.Down => "↓",
+            Keys.Left => "←",
+            Keys.Right => "→",
+            Keys.Escape => "Esc",
+            Keys.Pause => "Pause",
+            Keys.OemPeriod => ".",
+            Keys.Oemcomma => ",",
+            Keys.OemMinus => "-",
+            Keys.Oemplus => "+",
+            _ => key.ToString(),
+        };
+    }
+}

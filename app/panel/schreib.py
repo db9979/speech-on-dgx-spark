@@ -104,7 +104,7 @@ HERE = os.path.dirname(os.path.abspath(__file__))
 FILES = os.path.join(os.path.dirname(HERE), "schreibhilfe")      # app/schreibhilfe: mac, browser, office
 OFFICE_FILE = re.compile(r"[a-z0-9\-]{1,40}\.(html|js|css|png)")
 OFFICE_APPS = ("outlook", "word", "excel")
-WINDOWS_URL = "https://github.com/db9979/speech-on-dgx-spark/releases/tag/schreibhilfe-windows"
+WINDOWS_URL = "https://github.com/db9979/speech-on-dgx-spark/releases/tag/begleiter-windows"
 # the task pane runs inside Outlook, Word and Excel (also in their web versions, in a frame)
 OFFICE_CSP = ("default-src 'self'; script-src 'self' https://appsforoffice.microsoft.com; style-src 'self' 'unsafe-inline'; "
               "img-src 'self' data:; connect-src 'self'; font-src 'self'; object-src 'none'; base-uri 'self'; "
@@ -408,6 +408,11 @@ def writer(request):
         if request.headers.get(profiles.DEVICE_HEADER):
             raise HTTPException(401, "unknown key")
         return prof, "web", "Browser"
+    if dev["scope"] == "desk":   # the Spark-Begleiter (begleiter.py): its own part switch per device
+        import begleiter
+        if not allowed(prof["id"]) or not begleiter.part_on(prof["id"], dev["id"], "write"):
+            raise HTTPException(403, "Die Schreibhilfe ist für dieses Gerät aus (Ich → Begleiter).")
+        return prof, "other", begleiter.kind_of(profiles.device_name(request))
     if dev["scope"] not in ("write", "app"):
         raise HTTPException(403, "only in the profile's own browser login or from a paired program")
     if not apps_ok(prof["id"]):
@@ -541,7 +546,8 @@ def norm_code(v):
     return v if len(v) == 8 and all(c in ALPHABET for c in v) else None
 
 
-def new_code(uid, now=None):
+def new_code(uid, now=None, what="schreib"):
+    """A one-time code for one program; what: "schreib" (this module) or "begleiter" (begleiter.py)."""
     now = time.time() if now is None else now
     code = "".join(secrets.choice(ALPHABET) for _ in range(8))
     with _lock:
@@ -551,11 +557,11 @@ def new_code(uid, now=None):
             _pending.pop(k, None)
         if len(_pending) >= MAX_PENDING:
             raise HTTPException(429, "Zu viele offene Kopplungen. Bitte in zehn Minuten noch einmal.")
-        _pending[_hash(code)] = {"uid": uid, "t": now}
+        _pending[_hash(code)] = {"uid": uid, "t": now, "w": what}
     return code
 
 
-def take_code(code, now=None):
+def take_code(code, now=None, what="schreib"):
     """The profile id the code was made for, once; None when unknown, used or expired."""
     now = time.time() if now is None else now
     code = norm_code(code)
@@ -564,7 +570,7 @@ def take_code(code, now=None):
     h = _hash(code)
     with _lock:
         _clean_codes(now)
-        hit = next((k for k in _pending if hmac.compare_digest(k, h)), None)
+        hit = next((k for k in _pending if hmac.compare_digest(k, h) and _pending[k].get("w") == what), None)
         return _pending.pop(hit)["uid"] if hit else None
 
 

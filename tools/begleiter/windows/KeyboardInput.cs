@@ -1,8 +1,8 @@
 using System.Diagnostics;
 using System.Runtime.InteropServices;
-using static SparkSchreibhilfe.NativeMethods;
+using static SparkBegleiter.NativeMethods;
 
-namespace SparkSchreibhilfe;
+namespace SparkBegleiter;
 
 /// <summary>Simulierte Tastendrücke (Strg+C / Strg+V) für das Programm im Vordergrund.</summary>
 internal static class KeyboardInput
@@ -19,16 +19,16 @@ internal static class KeyboardInput
     private static bool IsDown(ushort vk) => (GetAsyncKeyState(vk) & 0x8000) != 0;
 
     /// <summary>
-    /// Wartet, bis die Person Strg, Alt und S des Tastenkürzels losgelassen hat (höchstens
+    /// Wartet, bis die Person die Tasten des Tastenkürzels (Modifikatoren und <paramref name="key"/>) losgelassen hat (höchstens
     /// <paramref name="timeoutMs"/>), und löst dann noch gedrückte Modifikatoren per Key-up.
     /// Sonst käme beim Ziel statt Strg+C z. B. Strg+Alt+C an.
     /// </summary>
-    public static async Task WaitForHotkeyReleaseAsync(int timeoutMs)
+    public static async Task WaitForHotkeyReleaseAsync(ushort key, int timeoutMs)
     {
         var watch = Stopwatch.StartNew();
-        while (watch.ElapsedMilliseconds < timeoutMs && (IsDown(VK_S) || Modifiers.Any(m => IsDown(m.Vk))))
+        while (watch.ElapsedMilliseconds < timeoutMs && (IsDown(key) || Modifiers.Any(m => IsDown(m.Vk))))
         {
-            await Task.Delay(15);
+            await Task.Delay(15).ConfigureAwait(true);
         }
 
         var ups = Modifiers.Where(m => IsDown(m.Vk)).Select(m => Key(m.Vk, up: true, m.Extended)).ToArray();

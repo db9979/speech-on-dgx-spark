@@ -541,6 +541,12 @@ def _app_area(request, uid):
     return None
 # A room key (scope "room", for Home Assistant) only reads where room mode listens and ends it (roomlive.py),
 # and only while the admin allows it (ROOM_GATE, set by roomlive.py; closed without it).
+# A Spark-Begleiter key (scope "desk", begleiter.py, the program in the Windows notification area or the Mac menu
+# bar) only reaches its own paths, only while the admin and the profile allow it (DESK_GATE, set by begleiter.py);
+# each part (writing help, questions, dictation, notes, Notaus button) is checked again per device there.
+DESK_PATHS = ("/api/write", "/api/write/assist", "/api/desk/config", "/api/desk/poll", "/api/desk/ask",
+              "/api/desk/dictate", "/api/desk/notaus")
+DESK_GATE = [lambda uid: False]
 ROOM_PATHS = ("/api/room/active", "/api/room/end")
 ROOM_GATE = [lambda uid: False]
 # A watch key (scope "watch", the Pebble app paired by code, pebblewatch.py) only asks on the watch paths,
@@ -639,7 +645,9 @@ def current(request):
             return None
         if dev.get("scope") == "write" and (request.scope.get("path") not in WRITE_PATHS or not WRITE_GATE[0](dev["user"])):
             return None
-        if dev.get("scope") not in (None, "", "app", "room", "watch", "haev", "write"):
+        if dev.get("scope") == "desk" and (request.scope.get("path") not in DESK_PATHS or not DESK_GATE[0](dev["user"])):
+            return None
+        if dev.get("scope") not in (None, "", "app", "room", "watch", "haev", "write", "desk"):
             return None
         if notaus.own(dev["user"]):
             return None
@@ -660,7 +668,8 @@ def current(request):
 def own_devices(uid):
     last = seen()
     return [{"id": x["id"], "name": x["name"], "created": x.get("created"), "last": last.get(x["id"]),
-             "app": x.get("scope") == "app", "watch": x.get("scope") == "watch", "write": x.get("scope") == "write"}
+             "app": x.get("scope") == "app", "watch": x.get("scope") == "watch", "write": x.get("scope") == "write",
+             "desk": x.get("scope") == "desk"}
             for x in _load()["devices"] if x.get("user") == uid]
 
 
@@ -714,6 +723,7 @@ SETTINGS = {
     "spark_help": (False, lambda v: isinstance(v, bool)),   # questions about the Spark itself (hilfe.py, admin chat.spark_help)
     "write_on": (False, lambda v: isinstance(v, bool)),     # Schreibhilfe (schreib.py, admin chat.write_help)
     "write_apps": (False, lambda v: isinstance(v, bool)),   # ... also from paired programs and the iPhone app (chat.write_apps)
+    "desk_on": (False, lambda v: isinstance(v, bool)),      # the Spark-Begleiter on PC and Mac (chat.desk, begleiter.py)
     # daily briefing as a push notification at this local time ("" = off), in the device's time zone
     "briefing_at": ("", lambda v: isinstance(v, str) and re.fullmatch(r"(?:[01]\d|2[0-3]):[0-5]\d|", v)),
     "tz": ("", lambda v: isinstance(v, str) and re.fullmatch(r"(?:[A-Za-z_]+(?:/[A-Za-z0-9_+\-]+){0,2})?", v)),

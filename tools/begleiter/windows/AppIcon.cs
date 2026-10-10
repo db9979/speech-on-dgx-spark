@@ -2,24 +2,68 @@ using System.Drawing.Drawing2D;
 using System.Drawing.Imaging;
 using System.Drawing.Text;
 
-namespace SparkSchreibhilfe;
+namespace SparkBegleiter;
+
+/// <summary>Zustand für den Punkt im Symbol (Teil "status").</summary>
+internal enum StatusDot
+{
+    None,
+    Green,
+    Grey,
+    Red,
+}
 
 /// <summary>
-/// Das Programmsymbol wird im Code gezeichnet (blaues Quadrat mit weißem "S" und Stift-Strich),
-/// damit keine Binärdatei im Repository liegt. Es entsteht ein .ico mit mehreren Größen (PNG-Einträge).
+/// Das Programmsymbol wird im Code gezeichnet (blaues Quadrat mit weißem "S", optional mit farbigem
+/// Zustandspunkt unten rechts), damit keine Binärdatei im Repository liegt. Es entsteht ein .ico mit
+/// mehreren Größen (PNG-Einträge).
 /// </summary>
 internal static class AppIcon
 {
     private static readonly int[] Sizes = { 16, 20, 24, 32, 40, 48, 64 };
 
-    private static Icon? _icon;
+    private static readonly Dictionary<StatusDot, Icon> Cache = new();
 
-    /// <summary>Das Symbol mit allen Größen; Windows wählt für Infobereich und Fenster die passende.</summary>
-    public static Icon Icon => _icon ??= Build();
+    /// <summary>Das Symbol ohne Punkt mit allen Größen; Windows wählt für Infobereich und Fenster die passende.</summary>
+    public static Icon Icon => For(StatusDot.None);
 
-    private static Icon Build()
+    /// <summary>Das Symbol mit Zustandspunkt.</summary>
+    public static Icon For(StatusDot dot)
     {
-        var images = Sizes.Select(size => (size, Png: RenderPng(size))).ToList();
+        if (!Cache.TryGetValue(dot, out Icon? icon))
+        {
+            icon = Build(dot);
+            Cache[dot] = icon;
+        }
+
+        return icon;
+    }
+
+    private static readonly Dictionary<StatusDot, Icon> TrayCache = new();
+
+    /// <summary>Das Symbol in der kleinen Größe für den Infobereich (sonst skaliert Windows unschön).</summary>
+    public static Icon ForTray(StatusDot dot)
+    {
+        if (!TrayCache.TryGetValue(dot, out Icon? icon))
+        {
+            icon = new Icon(For(dot), SystemInformation.SmallIconSize);
+            TrayCache[dot] = icon;
+        }
+
+        return icon;
+    }
+
+    private static Color? DotColor(StatusDot dot) => dot switch
+    {
+        StatusDot.Green => Color.FromArgb(0x22, 0xC5, 0x5E),
+        StatusDot.Grey => Color.FromArgb(0x9C, 0xA3, 0xAF),
+        StatusDot.Red => Color.FromArgb(0xEF, 0x44, 0x44),
+        _ => null,
+    };
+
+    private static Icon Build(StatusDot dot)
+    {
+        var images = Sizes.Select(size => (size, Png: RenderPng(size, DotColor(dot)))).ToList();
 
         using var ico = new MemoryStream();
         using (var w = new BinaryWriter(ico, System.Text.Encoding.UTF8, leaveOpen: true))
@@ -54,7 +98,7 @@ internal static class AppIcon
         return new Icon(ico);
     }
 
-    private static byte[] RenderPng(int size)
+    private static byte[] RenderPng(int size, Color? dot)
     {
         using var bitmap = new Bitmap(size, size, PixelFormat.Format32bppArgb);
         using (Graphics g = Graphics.FromImage(bitmap))
@@ -77,13 +121,18 @@ internal static class AppIcon
             var textBox = new RectangleF(0, -size * 0.04f, size * 0.92f, size);
             g.DrawString("S", font, Brushes.White, textBox, format);
 
-            // Kleiner grüner Strich unten rechts: "verbessert".
-            using var pen = new Pen(Color.FromArgb(0x4A, 0xDE, 0x80), Math.Max(1.5f, size / 10f))
+            // Zustandspunkt unten rechts mit weißem Rand, damit er auf hellen und dunklen Leisten sichtbar ist.
+            if (dot is { } color)
             {
-                StartCap = LineCap.Round,
-                EndCap = LineCap.Round,
-            };
-            g.DrawLine(pen, size * 0.66f, size * 0.80f, size * 0.84f, size * 0.62f);
+                float d = size * 0.46f;
+                var circle = new RectangleF(size - d, size - d, d, d);
+                using var ring = new SolidBrush(Color.White);
+                using var fillDot = new SolidBrush(color);
+                g.FillEllipse(ring, circle);
+                float border = Math.Max(1f, size / 16f);
+                circle.Inflate(-border, -border);
+                g.FillEllipse(fillDot, circle);
+            }
         }
 
         using var png = new MemoryStream();

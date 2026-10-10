@@ -2,12 +2,12 @@ using System.Net;
 using System.Net.Sockets;
 using System.Text.RegularExpressions;
 
-namespace SparkSchreibhilfe;
+namespace SparkBegleiter;
 
-/// <summary>Einrichtungszeile "&lt;base&gt;#schreib=XXXX-XXXX" zerlegen und die Adresse prüfen.</summary>
+/// <summary>Einrichtungszeile "&lt;base&gt;#begleiter=XXXX-XXXX" zerlegen und die Adresse prüfen.</summary>
 internal static partial class SparkAddress
 {
-    private const string Marker = "#schreib=";
+    private const string Marker = "#begleiter=";
 
     /// <summary>Ergebnis der Prüfung: normierte Adresse und ob sie unverschlüsselt (http) ist.</summary>
     public readonly record struct Parsed(string Base, string? Code, bool Insecure);
@@ -56,7 +56,7 @@ internal static partial class SparkAddress
             return false;
         }
 
-        // Nur Schema, Host und Port – die Schnittstelle liegt immer unter /api/write.
+        // Nur Schema, Host und Port – die Schnittstelle liegt immer unter /api/desk bzw. /api/write.
         result = new Parsed(uri.GetLeftPart(UriPartial.Authority), string.IsNullOrEmpty(code) ? null : code, insecure);
         return true;
     }

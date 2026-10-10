@@ -155,6 +155,7 @@
     "iphone_panel": false,
     "pebble": false,
     "android": false,
+    "desk": false,
     "mcp_server": false,
     "mcp_server_extern": false,
     "mcp_server_act": false,

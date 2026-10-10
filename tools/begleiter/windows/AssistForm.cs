@@ -1,33 +1,13 @@
-namespace SparkSchreibhilfe;
+namespace SparkBegleiter;
 
 /// <summary>
-/// Das kleine Fenster am Mauszeiger: Art wählen, Text schicken, Änderungen ansehen, übernehmen.
+/// Schreibhilfe mit Vorschau: das kleine Fenster am Mauszeiger – Art wählen, Text schicken, Änderungen
+/// ansehen, übernehmen. Voreinstellungen (Art, Sprache, Wunsch, angebotene Arten) kommen aus dem Panel.
 /// Das Einfügen selbst macht <see cref="TrayContext"/> nach dem Schließen (siehe <see cref="TextToApply"/>).
 /// </summary>
 internal sealed class AssistForm : Form
 {
     private const int MaxTextLength = 20000;
-    private const string TranslateArt = "uebersetzen";
-
-    private static readonly Choice[] Arts =
-    {
-        new("korrigieren", "Korrigieren"),
-        new("glaetten", "Glätten"),
-        new("kuerzer", "Kürzer"),
-        new("freundlicher", "Freundlicher"),
-        new("foermlicher", "Förmlicher"),
-        new(TranslateArt, "Übersetzen"),
-    };
-
-    private static readonly Choice[] Languages =
-    {
-        new("en", "Englisch"),
-        new("de", "Deutsch"),
-        new("fr", "Französisch"),
-        new("es", "Spanisch"),
-        new("it", "Italienisch"),
-        new("nl", "Niederländisch"),
-    };
 
     private static readonly Color RemovedColor = Color.FromArgb(0xB9, 0x1C, 0x1C);
     private static readonly Color RemovedBack = Color.FromArgb(0xFE, 0xE2, 0xE2);
@@ -35,7 +15,9 @@ internal sealed class AssistForm : Form
     private static readonly Color AddedBack = Color.FromArgb(0xDC, 0xFC, 0xE7);
 
     private readonly AppConfig _config;
-    private readonly Func<IWin32Window?, bool> _repair;
+    private readonly Action<SparkException> _report;
+    private readonly ArtInfo[] _arts;
+    private readonly LangInfo[] _languages;
 
     private readonly ComboBox _art = new() { DropDownStyle = ComboBoxStyle.DropDownList, Width = 130 };
     private readonly ComboBox _language = new() { DropDownStyle = ComboBoxStyle.DropDownList, Width = 120 };
@@ -57,7 +39,6 @@ internal sealed class AssistForm : Form
     private readonly Button _apply = new() { Text = "Übernehmen", AutoSize = true, Enabled = false };
     private readonly Button _copy = new() { Text = "Kopieren", AutoSize = true, Enabled = false };
     private readonly Button _cancel = new() { Text = "Abbrechen", AutoSize = true };
-    private readonly Button _repairButton = new() { Text = "Neu koppeln", AutoSize = true, Visible = false };
 
     private CancellationTokenSource? _cts;
     private bool _busy;
@@ -66,20 +47,23 @@ internal sealed class AssistForm : Form
     private string _lead = "";
     private string _trail = "";
 
-    public AssistForm(AppConfig config, string text, IntPtr target, Func<IWin32Window?, bool> repair)
+    public AssistForm(AppConfig config, DeskConfig desk, string text, IntPtr target, Action<SparkException> report)
     {
         _config = config;
-        _repair = repair;
+        _report = report;
+        _arts = desk.OfferedArts().ToArray();
+        _languages = desk.Languages().ToArray();
         Target = target;
 
         BuildLayout();
 
-        _art.Items.AddRange(Arts);
-        _language.Items.AddRange(Languages);
-        _art.SelectedItem = Arts.FirstOrDefault(a => a.Id == config.Art) ?? Arts[0];
-        _language.SelectedItem = Languages.FirstOrDefault(l => l.Id == config.Sprache) ?? Languages[0];
-        _language.Visible = SelectedArt == TranslateArt;
-        _art.SelectedIndexChanged += (_, _) => _language.Visible = SelectedArt == TranslateArt;
+        _art.Items.AddRange(_arts);
+        _language.Items.AddRange(_languages);
+        _art.SelectedItem = _arts.FirstOrDefault(a => a.Id == desk.WriteArt) ?? _arts[0];
+        _language.SelectedItem = _languages.FirstOrDefault(l => l.Id == desk.WriteSprache) ?? _languages[0];
+        _wish.Text = desk.WriteWunsch;
+        _language.Visible = SelectedArt == DeskConfig.TranslateArt;
+        _art.SelectedIndexChanged += (_, _) => _language.Visible = SelectedArt == DeskConfig.TranslateArt;
 
         _source.Text = text;
         _source.PlaceholderText = "Kein markierter Text – Text hier einfügen";
@@ -88,7 +72,6 @@ internal sealed class AssistForm : Form
         _apply.Click += (_, _) => Apply();
         _copy.Click += (_, _) => CopyResult();
         _cancel.Click += (_, _) => Close();
-        _repairButton.Click += (_, _) => Repair();
         _wish.KeyDown += async (_, e) =>
         {
             if (e.KeyCode == Keys.Enter)
@@ -111,9 +94,9 @@ internal sealed class AssistForm : Form
     /// <summary>Fenster, aus dem der Text stammt und in das eingefügt wird.</summary>
     public IntPtr Target { get; }
 
-    private string SelectedArt => (_art.SelectedItem as Choice)?.Id ?? Arts[0].Id;
+    private string SelectedArt => (_art.SelectedItem as ArtInfo)?.Id ?? _arts[0].Id;
 
-    private string SelectedLanguage => (_language.SelectedItem as Choice)?.Id ?? Languages[0].Id;
+    private string SelectedLanguage => (_language.SelectedItem as LangInfo)?.Id ?? _languages[0].Id;
 
     private static TextBox NewTextBox(bool readOnly) => new()
     {
@@ -131,7 +114,7 @@ internal sealed class AssistForm : Form
         AutoScaleDimensions = new SizeF(96F, 96F);
         AutoScaleMode = AutoScaleMode.Dpi;
         Font = SystemFonts.MessageBoxFont ?? Font;
-        Text = "Spark Schreibhilfe";
+        Text = "Spark-Begleiter – Schreibhilfe";
         Icon = AppIcon.Icon;
         TopMost = true;
         ShowInTaskbar = true;
@@ -156,7 +139,6 @@ internal sealed class AssistForm : Form
         buttons.Controls.Add(_cancel);
         buttons.Controls.Add(_copy);
         buttons.Controls.Add(_apply);
-        buttons.Controls.Add(_repairButton);
 
         var root = new TableLayoutPanel { Dock = DockStyle.Fill, ColumnCount = 1 };
         root.ColumnStyles.Add(new ColumnStyle(SizeType.Percent, 100));
@@ -259,7 +241,7 @@ internal sealed class AssistForm : Form
         string? key = _config.GetKey();
         if (key is null || string.IsNullOrEmpty(_config.Base))
         {
-            ShowRepair("Diese Schreibhilfe ist nicht gekoppelt.");
+            SetStatus("Der Begleiter ist nicht gekoppelt (Einstellungen → Neu koppeln).", error: true);
             return;
         }
 
@@ -268,10 +250,7 @@ internal sealed class AssistForm : Form
         _trail = full[(start + core.Length)..];
 
         string art = SelectedArt;
-        string? language = art == TranslateArt ? SelectedLanguage : null;
-        _config.Art = art;
-        _config.Sprache = SelectedLanguage;
-        TrySaveConfig();
+        string? language = art == DeskConfig.TranslateArt ? SelectedLanguage : null;
 
         SetBusy(true);
         _cts = new CancellationTokenSource();
@@ -296,14 +275,8 @@ internal sealed class AssistForm : Form
                 return;
             }
 
-            if (ex.Status == 401)
-            {
-                ShowRepair(ex.Message);
-            }
-            else
-            {
-                SetStatus(ex.Message, error: true);
-            }
+            SetStatus(ex.Message, error: true);
+            _report(ex);
         }
         catch (Exception ex) when (!IsDisposed)
         {
@@ -419,25 +392,6 @@ internal sealed class AssistForm : Form
         }
     }
 
-    private void ShowRepair(string message)
-    {
-        SetStatus(message, error: true);
-        _repairButton.Visible = true;
-    }
-
-    private void Repair()
-    {
-        if (_repair(this))
-        {
-            _repairButton.Visible = false;
-            SetStatus("Neu gekoppelt.", error: false);
-            if (_source.Text.Trim().Length > 0)
-            {
-                BeginInvoke(new Action(async () => await RunAsync()));
-            }
-        }
-    }
-
     private void SetBusy(bool busy)
     {
         _busy = busy;
@@ -449,7 +403,6 @@ internal sealed class AssistForm : Form
         {
             _apply.Enabled = false;
             _copy.Enabled = false;
-            _repairButton.Visible = false;
             SetStatus("Der Spark schreibt …", error: false);
         }
         else if (_result.Text.Length > 0)
@@ -465,27 +418,9 @@ internal sealed class AssistForm : Form
         _status.ForeColor = error ? Color.Firebrick : SystemColors.ControlText;
     }
 
-    private void TrySaveConfig()
-    {
-        try
-        {
-            _config.Save();
-        }
-        catch (Exception ex) when (ex is IOException or UnauthorizedAccessException)
-        {
-            // Nur die zuletzt gewählte Art – nicht wichtig genug für eine Meldung.
-        }
-    }
-
     protected override void OnFormClosing(FormClosingEventArgs e)
     {
         _cts?.Cancel();
         base.OnFormClosing(e);
-    }
-
-    /// <summary>Eintrag für die Auswahllisten: Kennung für den Spark, deutscher Text für die Anzeige.</summary>
-    private sealed record Choice(string Id, string Label)
-    {
-        public override string ToString() => Label;
     }
 }

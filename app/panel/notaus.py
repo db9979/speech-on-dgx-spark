@@ -542,7 +542,8 @@ def _caller(request, creds=None):
     if request.scope.get("speech_mcp") or request.scope.get("speech_profile"):
         return None
     dev = profiles.device(request) if request.headers.get(profiles.DEVICE_HEADER) else None
-    if dev is not None and dev["scope"] != "app":
+    # the Spark-Begleiter's key only for its own "Mein Notaus" button (begleiter.py), never for anything else
+    if dev is not None and dev["scope"] != "app" and not (dev["scope"] == "desk" and request.url.path == "/api/desk/notaus"):
         return None
     if not dev and core.is_main_admin(request, creds) and core.password_set():
         return "Admin", "", True, None, "panel"

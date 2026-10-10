@@ -1,10 +1,10 @@
-namespace SparkSchreibhilfe;
+namespace SparkBegleiter;
 
 /// <summary>
-/// "Einrichten …": Einrichtungszeile aus dem Panel (Ich → Schreibhilfe → „Programm koppeln“)
-/// einfügen, Gerätename wählen, koppeln. Speichert Adresse und DPAPI-geschützten Schlüssel.
+/// Koppeln: Einrichtungszeile aus dem Panel (Ich → Begleiter → „Gerät koppeln“) einfügen,
+/// Gerätename wählen, koppeln. Speichert Adresse und DPAPI-geschützten Schlüssel.
 /// </summary>
-internal sealed class SetupForm : Form
+internal sealed class PairForm : Form
 {
     private readonly AppConfig _config;
     private readonly TextBox _line = new() { Dock = DockStyle.Fill };
@@ -16,7 +16,7 @@ internal sealed class SetupForm : Form
 
     private CancellationTokenSource? _cts;
 
-    public SetupForm(AppConfig config)
+    public PairForm(AppConfig config, string? message = null)
     {
         _config = config;
 
@@ -24,7 +24,7 @@ internal sealed class SetupForm : Form
         AutoScaleDimensions = new SizeF(96F, 96F);
         AutoScaleMode = AutoScaleMode.Dpi;
         Font = SystemFonts.MessageBoxFont ?? Font;
-        Text = "Spark Schreibhilfe einrichten";
+        Text = "Spark-Begleiter koppeln";
         Icon = AppIcon.Icon;
         FormBorderStyle = FormBorderStyle.FixedDialog;
         MaximizeBox = false;
@@ -40,8 +40,9 @@ internal sealed class SetupForm : Form
         {
             AutoSize = true,
             MaximumSize = new Size(520, 0),
-            Text = "Im Panel des Spark: Ich → Schreibhilfe → „Programm koppeln“. "
-                   + "Die angezeigte Einrichtungszeile hier einfügen (der Code gilt 10 Minuten).",
+            Text = (string.IsNullOrEmpty(message) ? "" : message + "\n\n")
+                   + "Im Panel des Spark: Ich → Begleiter → „Gerät koppeln“. "
+                   + "Die angezeigte Einrichtungszeile hier einfügen (der Code gilt 10 Minuten, nur einmal).",
             Padding = new Padding(0, 0, 0, 8),
         };
 
@@ -73,7 +74,7 @@ internal sealed class SetupForm : Form
         CancelButton = _cancel;
         ResumeLayout(performLayout: true);
 
-        _line.PlaceholderText = "https://…#schreib=XXXX-XXXX";
+        _line.PlaceholderText = "https://…#begleiter=XXXX-XXXX";
         _line.Text = config.Base ?? "";
         _name.Text = config.Device ?? SparkAddress.SanitizeDeviceName(Environment.MachineName);
         _line.TextChanged += (_, _) => UpdateHint();
@@ -114,7 +115,7 @@ internal sealed class SetupForm : Form
             return;
         }
 
-        string code = _code.Text.Trim().Length > 0 ? _code.Text.Trim() : parsed.Code ?? "";
+        string code = (_code.Text.Trim().Length > 0 ? _code.Text.Trim() : parsed.Code ?? "").ToUpperInvariant();
         if (!SparkAddress.LooksLikeCode(code))
         {
             ShowHint("Bitte den Code aus dem Panel angeben (8 Zeichen, z. B. ABCD-EFGH).", warning: false, error: true);
@@ -134,6 +135,11 @@ internal sealed class SetupForm : Form
         try
         {
             PairResult result = await SparkClient.PairAsync(parsed.Base, code, name, _cts.Token);
+            if (!string.Equals(_config.Base, parsed.Base, StringComparison.OrdinalIgnoreCase))
+            {
+                _config.Desk = null; // Einstellungen eines anderen Spark nicht weiterverwenden.
+            }
+
             _config.Base = parsed.Base;
             _config.SetKey(result.Key);
             _config.Profile = result.Profile;

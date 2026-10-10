@@ -523,6 +523,45 @@ class Browser(unittest.TestCase):
             helpers.set_config(write_help=False)
             profiles.save_settings(me, {"write_on": False})
 
+    def test_begleiter_page(self):
+        """Ich → Begleiter (begleiter.js): a setup line, and the parts of a paired device saved centrally; on a
+        computer and a phone, with the strict CSP, without sideways scrolling."""
+        import begleiter
+        import profiles
+        helpers.set_config(desk=True)
+        me = next(u for u in profiles._load()["users"] if u["name"] == "Uitest")["id"]
+        profiles.save_settings(me, {"desk_on": True})
+        profiles.add_device("Begleiter Windows · Uitest-PC", me, scope="desk")
+        did = next(x["id"] for x in profiles._load()["devices"] if x["name"] == "Begleiter Windows · Uitest-PC")
+        begleiter._save_cfg(did, me, begleiter.DEFAULT)
+
+        async def go():
+            async with async_playwright() as p:
+                for name, w, h in VIEWS:
+                    br, pg, errors = await self.page(p, w, h, csp=True)
+                    try:
+                        await pg.evaluate("openMe('deskbox')")
+                        await pg.wait_for_selector("#dkpair", state="visible", timeout=8000)
+                        await pg.click("#dkpair")
+                        await pg.wait_for_selector("#dksetup:has-text('#begleiter=')", timeout=8000)
+                        box = f'[data-desk="{did}"]'
+                        await pg.locator(box + ' [data-dk="dictate"]').evaluate("e=>e.click()")
+                        await pg.click(f'[data-dsave="{did}"]')
+                        await pg.wait_for_selector(f'[data-dmsg="{did}"]:has-text("Gespeichert")', timeout=8000)
+                        self.assertTrue(begleiter.device_cfg(did)[0]["parts"]["dictate"])
+                        over = await pg.evaluate("document.documentElement.scrollWidth-window.innerWidth")
+                        self.assertLessEqual(over, 1, f"{name}: {over}px zu breit")
+                        self.assertEqual(errors, [], name)
+                        begleiter._save_cfg(did, me, begleiter.DEFAULT)
+                    finally:
+                        await br.close()
+        try:
+            self.run_async(go())
+        finally:
+            helpers.set_config(desk=False)
+            profiles.save_settings(me, {"desk_on": False})
+            profiles.delete_device(did)
+
     def test_messages_page_sends(self):
         """Ich → Nachrichten (V01.0.192): switch on, write to another profile, it lands in that mailbox; on a
         computer and a phone, without script errors or sideways scrolling."""
@@ -635,7 +674,7 @@ class Browser(unittest.TestCase):
                     self.assertFalse(await pg.is_visible("#chat\\.search_url"))
                     tall = await pg.evaluate("$('pane-feat').getBoundingClientRect().height")
                     # about 45 px per closed line on a computer (limit grows with new rows); open boxes would be several times that
-                    self.assertLess(tall, 3700 if w < 760 else 2850, f"{w}: {tall}px")   # V01.0.339: +1 sub-switch "In anderen Programmen", V01.0.332: +1 line "Schreibhilfe", V01.0.326: +1 line "Hilfe zum Spark", V01.0.300: +1 line "Android-App", V01.0.303: +1 line "Spark als MCP-Server", V01.0.304: +1 line "Eindeutiges direkt abrufen", V01.0.307: +1 sub-switch "Vorab holen bei Rückfrage"
+                    self.assertLess(tall, 3800 if w < 760 else 2920, f"{w}: {tall}px")   # V01.0.340: +1 line "Spark-Begleiter am PC und Mac", V01.0.339: +1 sub-switch "In anderen Programmen", V01.0.332: +1 line "Schreibhilfe", V01.0.326: +1 line "Hilfe zum Spark", V01.0.300: +1 line "Android-App", V01.0.303: +1 line "Spark als MCP-Server", V01.0.304: +1 line "Eindeutiges direkt abrufen", V01.0.307: +1 sub-switch "Vorab holen bei Rückfrage"
                     await pg.evaluate("$('chat.search').closest('.fitem').querySelector('.fexp').click()")
                     self.assertTrue(await pg.evaluate("$('chat.search').closest('.fitem').classList.contains('open')"))
                     await pg.evaluate("$('chat.search').closest('.fitem').querySelector('.fexp').click()")

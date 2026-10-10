@@ -54,6 +54,7 @@ OPEN = {
     "/api/confirm/end": "ends only the confirmation window of the logins this request carries",
     "/api/pebble/pair": "the Pebble phone app's first contact; only with a one-time code from the profile's own login",
     "/api/write/pair": "a writing help program's first contact; only with a one-time code from the profile's own login",
+    "/api/desk/pair": "the Spark-Begleiter's first contact; only with a one-time code from the profile's own login",
     "/office/{name}": "the Office add-in's task pane files: static, no data, 404 while the admin has it off",
     "/api/esp32/ping": "\"Netz prüfen\": a random marker of this Spark, nothing else; only while the admin switched speakers on",
     "/": "the page itself",

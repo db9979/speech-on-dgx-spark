@@ -143,6 +143,8 @@ FEATURES = (
     F("transit", "Bus und Bahn", "Bus and train", "go", ("transit",), "transit_on", me="trbox", guide="transit"),
     F("telegram", "Telegram", "Telegram", "go", ("telegram",), me="tgbox", guide="telegram"),
     F("android", "Android-App", "Android app", "go", ("android",), "android_on", me="andbox", guide="android"),
+    F("begleiter", "Spark-Begleiter am PC und Mac", "Spark companion on PC and Mac", "go", ("desk",), "desk_on",
+      me="deskbox", guide="begleiter"),
     F("pebble", "Pebble-Uhr", "Pebble watch", "go", ("pebble",), "pebble_on", me="pebbox", guide="pebblepair"),
     F("mcpserver", "Spark als MCP-Server", "Spark as MCP server", "go", ("mcp_server",), "mcps_on", me="mcpbox", guide="mcpserver"),
     F("mcpextern", "MCP-Server von außen (OAuth)", "MCP server from outside (OAuth)", "go", ("mcp_server_extern",),

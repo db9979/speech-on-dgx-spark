@@ -3,15 +3,16 @@ using System.Text;
 using System.Text.Json;
 using System.Text.Json.Serialization;
 
-namespace SparkSchreibhilfe;
+namespace SparkBegleiter;
 
 /// <summary>
-/// Einstellungen in %APPDATA%\SparkSchreibhilfe\config.json.
+/// Einstellungen in %APPDATA%\Spark Begleiter\config.json.
 /// Der Geräteschlüssel liegt nur DPAPI-verschlüsselt (an das Windows-Konto gebunden) als Base64 darin.
+/// Außerdem: die lokal gewählten Tastenkürzel und die zuletzt vom Spark geholten Einstellungen.
 /// </summary>
 internal sealed class AppConfig
 {
-    private static readonly byte[] Entropy = Encoding.UTF8.GetBytes("SparkSchreibhilfe.v1");
+    private static readonly byte[] Entropy = Encoding.UTF8.GetBytes("SparkBegleiter.v1");
 
     private static readonly JsonSerializerOptions JsonOptions = new()
     {
@@ -31,13 +32,14 @@ internal sealed class AppConfig
     /// <summary>Gerätename, unter dem dieses Programm im Panel erscheint.</summary>
     public string? Device { get; set; }
 
-    /// <summary>Zuletzt gewählte Art und Zielsprache.</summary>
-    public string? Art { get; set; }
+    /// <summary>Lokale Tastenkürzel je Teil (write/ask/dictate), siehe <see cref="Hotkey.Serialize"/>.</summary>
+    public Dictionary<string, string> Hotkeys { get; set; } = new();
 
-    public string? Sprache { get; set; }
+    /// <summary>Zuletzt vom Spark geholte Einstellungen (enthält keine Geheimnisse).</summary>
+    public DeskConfig? Desk { get; set; }
 
     public static string Folder =>
-        Path.Combine(Environment.GetFolderPath(Environment.SpecialFolder.ApplicationData), "SparkSchreibhilfe");
+        Path.Combine(Environment.GetFolderPath(Environment.SpecialFolder.ApplicationData), "Spark Begleiter");
 
     private static string FilePath => Path.Combine(Folder, "config.json");
 
@@ -96,4 +98,22 @@ internal sealed class AppConfig
     }
 
     public void ForgetKey() => ProtectedKey = null;
+
+    /// <summary>Gewähltes oder voreingestelltes Tastenkürzel eines Teils.</summary>
+    public Hotkey GetHotkey(string part) =>
+        Hotkeys.TryGetValue(part, out string? text) && Hotkey.TryParse(text, out Hotkey hotkey)
+            ? hotkey
+            : Hotkey.DefaultFor(part);
+
+    public void SetHotkey(string part, Hotkey hotkey)
+    {
+        if (hotkey == Hotkey.DefaultFor(part))
+        {
+            Hotkeys.Remove(part);
+        }
+        else
+        {
+            Hotkeys[part] = hotkey.Serialize();
+        }
+    }
 }

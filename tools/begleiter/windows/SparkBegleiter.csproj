@@ -1,9 +1,10 @@
 <Project Sdk="Microsoft.NET.Sdk">
 
   <!--
-    Spark Schreibhilfe für Windows: Tray-Programm, das markierten Text aus beliebigen Programmen
-    an den eigenen Spark schickt (Strg+Alt+S) und die verbesserte Fassung zurück einfügt.
-    Gebaut von .github/workflows/schreibhilfe-windows.yml für win-x64 und win-arm64.
+    Spark-Begleiter für Windows: Tray-Programm für den eigenen Spark – Schreibhilfe (Strg+Alt+S),
+    Frag Spark (Strg+Alt+A), Diktieren (Strg+Alt+D), Meldungen, Zustandspunkt und Mein-Notaus-Knopf.
+    Welche Teile an sind, legt das Panel fest (Ich → Begleiter); die Tastenkürzel werden lokal eingestellt.
+    Gebaut von .github/workflows/begleiter-windows.yml für win-x64 und win-arm64.
   -->
   <PropertyGroup>
     <OutputType>WinExe</OutputType>
@@ -14,11 +15,11 @@
     <!-- Erlaubt das Bauen (nicht Ausführen) auf Linux/macOS, z. B. für schnelle Prüfungen. -->
     <EnableWindowsTargeting>true</EnableWindowsTargeting>
     <RuntimeIdentifiers>win-x64;win-arm64</RuntimeIdentifiers>
-    <AssemblyName>SparkSchreibhilfe</AssemblyName>
-    <RootNamespace>SparkSchreibhilfe</RootNamespace>
+    <AssemblyName>SparkBegleiter</AssemblyName>
+    <RootNamespace>SparkBegleiter</RootNamespace>
     <Version>1.0.0</Version>
-    <Product>Spark Schreibhilfe</Product>
-    <Description>Spark Schreibhilfe für Windows</Description>
+    <Product>Spark-Begleiter</Product>
+    <Description>Spark-Begleiter für Windows</Description>
     <NeutralLanguage>de-DE</NeutralLanguage>
     <SatelliteResourceLanguages>de</SatelliteResourceLanguages>
     <AnalysisLevel>latest</AnalysisLevel>

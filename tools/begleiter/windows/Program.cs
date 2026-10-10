@@ -1,9 +1,9 @@
-namespace SparkSchreibhilfe;
+namespace SparkBegleiter;
 
 internal static class Program
 {
     /// <summary>Name des Mutex, der eine zweite Instanz in derselben Windows-Sitzung verhindert.</summary>
-    private const string MutexName = @"Local\SparkSchreibhilfe.SingleInstance";
+    private const string MutexName = @"Local\SparkBegleiter.SingleInstance";
 
     [STAThread]
     private static void Main()
@@ -12,8 +12,8 @@ internal static class Program
         if (!createdNew)
         {
             MessageBox.Show(
-                "Die Spark Schreibhilfe läuft bereits – das Symbol ist im Infobereich der Taskleiste.",
-                "Spark Schreibhilfe", MessageBoxButtons.OK, MessageBoxIcon.Information);
+                "Der Spark-Begleiter läuft bereits – das Symbol ist im Infobereich der Taskleiste.",
+                TrayContext.Title, MessageBoxButtons.OK, MessageBoxIcon.Information);
             return;
         }
 
