@@ -33,6 +33,7 @@ All options for running without questions (`--mode api --asr 1.7b --tts 0.6b --y
 
 <!-- New version: add one line at the top here and in CHANGELOG.md, drop the oldest line here (keep 10). Details go to docs/de and docs/en, not into this README. -->
 
+- **V01.0.314** Home Assistant tells the Spark (all off): smart home rules with a pause, on/off and "only when …", instant notes instead of every minute, house notes on speakers, events from Home Assistant with their own key, rules by voice ("Sag mir Bescheid, wenn …") and a camera picture in words
 - **V01.0.313** Fetch ahead on a question back shows in the live overview at its service (calendar, mail, weather, parcels)
 - **V01.0.312** Live overview (off): Status → Live shows who is asking, each request's way with times, what the guard decides, failed logins and what the services give back; plus a live monitor for a screen in the home network, paired with a one-time code
 - **V01.0.311** Self-test invitation: waits for the page to reload after "Create profile" instead of a fixed 15 seconds (was red twice on GitHub)
@@ -42,7 +43,6 @@ All options for running without questions (`--mode api --asr 1.7b --tts 0.6b --y
 - **V01.0.307** Fetch ahead on a question back (off): when the assistant asks back, the panel already fetches calendar, mail, weather or parcels while the question is spoken; the model routing of unclear questions runs beside the preparation
 - **V01.0.306** Self-test "phone like the app" waits by polling under the strict CSP instead of wait_for_function (was red on GitHub once)
 - **V01.0.305** Self-test Features page: height limit raised for the new line "Fetch clear questions directly" (GitHub tests were red after V01.0.304, the update waited)
-- **V01.0.304** Answer starts sooner: "Schneller Antwortbeginn" now keeps instructions, tool list and the start of the history the same (everything that changes goes with the question), "Eindeutiges direkt abrufen" (off) fetches mail, reminders, weather and parcels itself for short questions, Logs → Requests shows instructions, tools and conversation per round in characters
 
 All versions: [CHANGELOG.md](CHANGELOG.md)
 

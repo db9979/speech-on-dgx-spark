@@ -5,6 +5,7 @@ import atexit
 import base64
 import json
 import os
+import queue
 import shutil
 import socket
 import sys
@@ -45,7 +46,7 @@ for p in (APP, os.path.join(APP, "panel")):
 import vorrang  # noqa: E402
 vorrang.GRACE = 0   # other features' tests never wait for speech; test_vorrang.py sets its own value
 import uvicorn  # noqa: E402
-from fastapi import FastAPI, HTTPException, Request  # noqa: E402
+from fastapi import FastAPI, HTTPException, Request, WebSocket  # noqa: E402
 from fastapi.responses import PlainTextResponse, Response, StreamingResponse  # noqa: E402
 
 LLM_CALLS = []   # every request body the fake LLM got
@@ -291,7 +292,46 @@ def fake_ha():
         return {"response": {"response_type": "action_done", "speech": {"plain": {"speech": "Erledigt"}},
                              "data": {"success": [{"name": "Licht Küche", "type": "entity", "id": "light.kueche"}],
                                       "failed": []}}}
+
+    @app.get("/api/camera_proxy/{eid}")
+    def camera(eid: str, request: Request):
+        auth(request)
+        import images
+        return Response(images.TEST_PNG, media_type="image/png")
+
+    @app.websocket("/api/websocket")
+    async def ws(sock: WebSocket):
+        """Home Assistant's WebSocket API as hamelden.py uses it: auth, subscribe_entities, then whatever a
+        test puts into HA_WS["push"] (an event dict, or "close")."""
+        await sock.accept()
+        await sock.send_json({"type": "auth_required", "ha_version": "2026.10.0"})
+        m = await sock.receive_json()
+        if m.get("type") != "auth" or m.get("access_token") != HA_TOKEN:
+            await sock.send_json({"type": "auth_invalid", "message": "Invalid access token"})
+            await sock.close()
+            return
+        await sock.send_json({"type": "auth_ok", "ha_version": "2026.10.0"})
+        m = await sock.receive_json()
+        HA_WS["subs"].append(m)
+        await sock.send_json({"id": m["id"], "type": "result", "success": True, "result": None})
+        ids = m.get("entity_ids") or []
+        await sock.send_json({"id": m["id"], "type": "event", "event": {"a": {
+            x["entity_id"]: {"s": x["state"], "a": x["attributes"], "c": "", "lc": 0, "lu": 0}
+            for x in HA_STATES if x["entity_id"] in ids}}})
+        while True:
+            try:
+                ev = HA_WS["push"].get_nowait()
+            except queue.Empty:
+                await asyncio.sleep(0.02)
+                continue
+            if ev == "close":
+                await sock.close()
+                return
+            await sock.send_json({"id": m["id"], "type": "event", "event": ev})
     return app
+
+
+HA_WS = {"push": queue.Queue(), "subs": []}
 
 
 MAIL_USER, MAIL_PW = "anna@example.de", "app-pass-1234"

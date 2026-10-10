@@ -33,6 +33,7 @@ Alle Optionen ohne Rückfragen (`--mode api --asr 1.7b --tts 0.6b --yes` …) st
 
 <!-- New version: add one line at the top here and in CHANGELOG.md, drop the oldest line here (keep 10). Details go to docs/de and docs/en, not into this README. -->
 
+- **V01.0.314** Home Assistant meldet an Spark (alles aus): Smart-Home-Regeln mit Pause, bei an/aus und „nur wenn …“, Sofort-Meldungen statt minütlich, Haus-Meldungen auf Lautsprechern, Ereignisse aus Home Assistant mit eigenem Schlüssel, Regel per Sprache („Sag mir Bescheid, wenn …“) und Kamerabild in Worten
 - **V01.0.313** Vorab holen bei Rückfrage erscheint in der Live-Übersicht beim jeweiligen Dienst (Kalender, Mail, Wetter, Pakete)
 - **V01.0.312** Live-Übersicht (aus): Zustand → Live zeigt, wer gerade fragt, den Weg jeder Anfrage mit Zeiten, was der Wächter entscheidet, fehlgeschlagene Anmeldungen und was die Dienste zurückgeben; dazu ein Live-Monitor für einen Bildschirm im Heimnetz, gekoppelt mit einmaligem Code
 - **V01.0.311** Selbsttest Einladung: wartet nach „Profil anlegen“ auf das Neuladen der Seite statt fester 15 Sekunden (war auf GitHub zweimal rot)
@@ -42,7 +43,6 @@ Alle Optionen ohne Rückfragen (`--mode api --asr 1.7b --tts 0.6b --yes` …) st
 - **V01.0.307** Vorab holen bei Rückfrage (aus): Fragt der Assistent zurück, holt das Panel schon Kalender, Mails, Wetter oder Pakete, während die Frage gesprochen wird; die Modell-Zuordnung unklarer Fragen läuft neben der Vorbereitung
 - **V01.0.306** Selbsttest „Handy wie die App“ wartet unter der strengen CSP per Abfrage statt mit wait_for_function (war auf GitHub mal rot)
 - **V01.0.305** Selbsttest Funktionen-Seite: Höhengrenze um die neue Zeile „Eindeutiges direkt abrufen“ erhöht (Tests auf GitHub waren nach V01.0.304 rot, das Update wartete)
-- **V01.0.304** Antwort beginnt früher: „Schneller Antwortbeginn“ hält jetzt Anweisung, Werkzeugliste und Verlaufsbeginn gleich (alles Wechselnde geht mit der Frage), „Eindeutiges direkt abrufen“ (aus) holt Mails, Erinnerungen, Wetter und Pakete bei kurzen Fragen selbst, Logs → Anfragen zeigt pro Runde Anweisung, Werkzeuge und Gespräch in Zeichen
 
 Alle Versionen: [CHANGELOG.md](CHANGELOG.md)
 

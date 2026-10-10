@@ -636,7 +636,7 @@ def validate(new):
         raise HTTPException(400, "self_echo_mode: text or pause")
     for k in ("answer_check", "tool_thinking", "learn_fixes", "own_style", "follow_up", "no_self_echo", "images",
               "routing", "direct_read", "prompt_cache", "doc_pictures", "doc_semantic", "doc_originals", "doc_shared", "doc_brief", "remarkable", "remarkable_send", "remarkable_fresh", "my_status", "person_priority",
-              "face_life"):
+              "face_life", "ha_live", "ha_loud", "ha_events", "ha_voice_rules", "ha_camera"):
         if not isinstance(ch.get(k, False), bool):
             raise HTTPException(400, f"chat {k} must be true or false")
     for k in ("doc_night_from", "doc_night_to"):

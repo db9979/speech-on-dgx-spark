@@ -361,8 +361,32 @@ async def _resolve(item, text):
     return eid, names[eid]
 
 
-async def add_rule(uid, body):
+ONLY = {"": "", "away": "nur wenn ich unterwegs bin", "empty": "nur wenn niemand zu Hause ist",
+        "night": "nur nachts", "day": "nur tagsüber"}
+WHEN = {"both": "", "on": "bei an", "off": "bei aus"}
+MAX_PAUSE = 24 * 60
+# entities whose state says where a person is: never said aloud in a room (shared speaker rule)
+PERSONAL = {"person", "device_tracker", "calendar", "todo", "notify", "camera", "image"}
+
+
+def _me(all_states, uid):
+    """The profile's person in Home Assistant: the one chosen under Ich (pro_ha_me), else the person
+    whose name is the profile's name."""
+    want = str(prefs(uid).get("pro_ha_me") or "")
+    persons = [s for s in all_states if s["entity_id"].startswith("person.")]
+    if want:
+        return want if any(s["entity_id"] == want for s in persons) else ""
+    name = _norm((profiles.by_id(uid) or {}).get("name", ""))
+    hits = [s["entity_id"] for s in persons if name and _norm((s.get("attributes") or {}).get("friendly_name", "")) == name]
+    return hits[0] if len(hits) == 1 else ""
+
+
+async def add_rule(uid, body, src=""):
+    """Checks a rule against what Home Assistant has and stores it. body: {"conds": [{entity, op, value,
+    when}], "minutes", "text", "pause", "only", "loud", "speakers", "camera"}; src "voice" for a rule made by
+    voice (hamelden.py, after a yes)."""
     import homeassistant
+    import hamelden
     item = homeassistant.get(uid)
     if not item:
         raise ValueError("Home Assistant ist nicht verbunden.")
@@ -388,7 +412,10 @@ async def add_rule(uid, body):
             eid, name = await _resolve(item, str(c["entity"])[:80])
         except httpx.HTTPError as e:
             raise ValueError(f"Home Assistant nicht erreichbar: {type(e).__name__}")
-        conds.append({"entity": eid, "name": name, "op": op, "value": value})
+        cond = {"entity": eid, "name": name, "op": op, "value": value if op != "changes" else ""}
+        if op == "changes" and c.get("when") in ("on", "off"):
+            cond["when"] = c["when"]
+        conds.append(cond)
     if not conds:
         raise ValueError("Bitte ein Gerät angeben.")
     if any(c["op"] == "changes" for c in conds) and len(conds) > 1:
@@ -397,8 +424,34 @@ async def add_rule(uid, body):
         minutes = max(0, min(int(body.get("minutes") or 0), 720))
     except (TypeError, ValueError):
         minutes = 0
+    try:
+        pause = max(0, min(int(body.get("pause") or 0), MAX_PAUSE))
+    except (TypeError, ValueError):
+        pause = 0
+    only = body.get("only") or ""
+    if only not in ONLY:
+        raise ValueError("Unbekannte Zusatzbedingung.")
     rule = {"id": secrets.token_hex(4), "conds": conds, "minutes": minutes,
-            "text": re.sub(r"\s+", " ", str(body.get("text") or "")).strip()[:200]}
+            "text": re.sub(r"\s+", " ", re.sub(r"[\x00-\x1f\x7f<>]", " ", str(body.get("text") or ""))).strip()[:200]}
+    if pause:
+        rule["pause"] = pause
+    if only:
+        rule["only"] = only
+    if only == "away":
+        try:
+            me = _me(await _all_states(item), uid)
+        except httpx.HTTPError as e:
+            raise ValueError(f"Home Assistant nicht erreichbar: {type(e).__name__}")
+        if not me:
+            raise ValueError("Ich finde dich in Home Assistant nicht als Person. Wähle unter Ich → Von selbst "
+                             "„Ich in Home Assistant“.")
+        rule["me"] = me
+    if body.get("loud"):
+        rule.update(hamelden.check_loud(uid, rule, body.get("speakers")))
+    if body.get("camera"):
+        rule["camera"] = await hamelden.check_camera(uid, item, str(body.get("camera"))[:80])
+    if src == "voice":
+        rule["src"] = "voice"
     _save_rules(uid, have + [rule])
     return rules(uid)
 
@@ -446,6 +499,30 @@ def met(cond, s):
     return False
 
 
+def on_like(s):
+    return met({"op": "is", "value": "an"}, s) or str((s or {}).get("state", "")) in ("home", "detected", "playing")
+
+
+def off_like(s):
+    return met({"op": "is", "value": "aus"}, s) or str((s or {}).get("state", "")) in ("not_home", "clear", "idle")
+
+
+def only_ok(r, by_id, local):
+    """The extra condition of a rule ("nur wenn ich unterwegs bin" ...), checked by the panel itself."""
+    only = r.get("only") or ""
+    if not only:
+        return True
+    if only == "away":
+        s = by_id.get(r.get("me") or "")
+        return bool(s) and s.get("state") not in ("home", "unavailable", "unknown", None)
+    if only == "empty":
+        persons = [s for e, s in by_id.items() if e.startswith("person.")]
+        return bool(persons) and all(s.get("state") not in ("home", "unavailable", "unknown") for s in persons)
+    sun = (by_id.get("sun.sun") or {}).get("state")
+    night = sun == "below_horizon" if sun in ("below_horizon", "above_horizon") else (local.hour >= 21 or local.hour < 6)
+    return night if only == "night" else not night
+
+
 def describe(cond, s):
     """What the state is now, in words, e.g. "Whirlpool hat jetzt 38 °C"."""
     v, unit = _number(s)
@@ -454,14 +531,22 @@ def describe(cond, s):
     return f"{cond['name']} ist jetzt {_word(s)}"
 
 
-async def check_ha(uid, p):
+async def check_ha(uid, p, by_id=None):
+    """Every rule of the profile against the states: from the live connection when it runs (hamelden.py,
+    by_id), else read once now. The panel decides; nothing here switches anything."""
     import homeassistant
+    import hamelden
     rs = rules(uid)
     item = homeassistant.get(uid) if rs and ccfg().get("homeassistant", False) else None
     if not item:
         return
-    by_id = {s["entity_id"]: s for s in await _all_states(item)}
+    if by_id is None:
+        by_id = hamelden.cache(uid)
+    if by_id is None or any(c.get("entity") not in by_id for r in rs for c in r.get("conds") or []):
+        # no live connection, or it does not follow a new rule's device yet: read once now
+        by_id = dict({s["entity_id"]: s for s in await _all_states(item)}, **(by_id or {}))
     now = time.time()
+    fired = []
     for r in rs:
         conds = r.get("conds") or []
         if not conds:
@@ -475,7 +560,10 @@ async def check_ha(uid, p):
                 if cur in (None, "unavailable", "unknown"):
                     return None
                 prev, mem["prev"] = mem.get("prev"), cur
-                return prev is not None and prev != cur
+                if prev is None or prev == cur:
+                    return False
+                when = conds[0].get("when")
+                return (when != "on" or on_like(s)) and (when != "off" or off_like(s))
             if all(met(c, by_id.get(c["entity"])) for c in conds):
                 mem.setdefault("since", now)
                 if mem.get("armed") and not mem.get("fired") and now - mem["since"] >= r.get("minutes", 0) * 60:
@@ -485,19 +573,47 @@ async def check_ha(uid, p):
                 mem.update(armed=True, fired=False)
                 mem.pop("since", None)
             return False
-        fire = _mut(uid, step)
-        if fire:
-            said = "; ".join(describe(c, by_id.get(c["entity"])) for c in conds)
-            text = r.get("text") or (said + ".")
-            await deliver(uid, "ha", text, why="Regel: " + rule_line(r), data=said)
+        if _mut(uid, step):
+            fired.append(r)
+    if not fired:
+        return
+    local = datetime.datetime.now(_zone(p))
+    full = by_id
+    if any(r.get("only") for r in fired) and hamelden.cache(uid) is not None:
+        # the live list holds only the rules' devices: persons and the sun are read once now
+        full = dict({s["entity_id"]: s for s in await _all_states(item)}, **by_id)
+    for r in fired:
+        if not only_ok(r, full, local):
+            print(f"proactive: ha rule {r['id']} true, but not now ({r['only']})", flush=True)
+            continue
+
+        def gap(st, r=r):
+            mem = st.setdefault("rules", {}).setdefault(r["id"], {})
+            if r.get("pause") and now - mem.get("said", 0) < r["pause"] * 60:
+                return False
+            mem["said"] = now
+            return True
+        if not _mut(uid, gap):
+            print(f"proactive: ha rule {r['id']} true, but in its pause", flush=True)
+            continue
+        conds = r["conds"]
+        said = "; ".join(describe(c, by_id.get(c["entity"])) for c in conds)
+        text = r.get("text") or (said + ".")
+        await hamelden.said(uid, r, text, said, item)
 
 
 def rule_line(r):
     parts = []
     for c in r.get("conds") or []:
         v = f" {c['value']:g}" if isinstance(c.get("value"), (int, float)) else (f" {c['value']}" if c.get("value") else "")
-        parts.append(f"{c['name']} {OPS[c['op']]}{v}")
-    return " und ".join(parts) + (f", mindestens {r['minutes']} Minuten" if r.get("minutes") else "")
+        when = f" ({WHEN[c['when']]})" if c.get("when") in ("on", "off") else ""
+        parts.append(f"{c.get('name') or c.get('entity', '?')} {OPS.get(c.get('op'), '')}{v}{when}")
+    extra = [f"mindestens {r['minutes']} Minuten"] if r.get("minutes") else []
+    extra += [ONLY[r["only"]]] if r.get("only") in ONLY and r.get("only") else []
+    extra += [f"höchstens alle {r['pause']} Minuten"] if r.get("pause") else []
+    extra += ["auch laut"] if r.get("loud") else []
+    extra += ["mit Kamerabild"] if r.get("camera") else []
+    return " und ".join(parts) + "".join(", " + x for x in extra)
 
 
 # ---------------------------------------------------------------- 4: greeting when the page opens
@@ -747,6 +863,11 @@ async def check_transit(uid, p, now):
 # ---------------------------------------------------------------- the minute loop
 async def due_once(now=None):
     """Called once a minute: every check for every profile that switched it on."""
+    import hamelden
+    try:
+        await hamelden.ensure()      # the live connections to Home Assistant (started, ended, renewed)
+    except Exception as e:
+        print("proactive: ha live:", type(e).__name__, str(e)[:200], flush=True)
     if not enabled():
         return
     for uid in profiles.user_ids():
@@ -783,6 +904,7 @@ def status(uid):
     import transit
     import weather
     import homeassistant
+    import hamelden
     import mail
     p, st = prefs(uid), state(uid)
     cc = ccfg()
@@ -793,6 +915,8 @@ def status(uid):
             "kinds": [{"kind": k, "label": v[0], "cap": cap(st, p, k), "full": v[1], "today": per.get(k, 0)}
                       for k, v in KINDS.items()],
             "rules": [dict(r, line=rule_line(r)) for r in rules(uid)],
+            "ha": hamelden.status(uid),
+            "speakers": hamelden.speakers(uid) if features.allowed("haloud", uid) else [],
             "has": {"calendar": bool(cc.get("calendar", True) and calendars.get(uid)["calendars"]),
                     "ha": bool(cc.get("homeassistant", False) and homeassistant.get(uid)),
                     "mail": bool(cc.get("mail", False) and mail.get(uid)["accounts"]),
@@ -842,12 +966,20 @@ async def api_feedback(request: Request, prof=Depends(own_profile)):
 
 @router.post("/api/proactive/rules", dependencies=[Depends(assistant), Depends(_on)])
 async def api_rule_add(request: Request, prof=Depends(browser_profile)):
-    body = await request.json()
+    import guard
+    guard.limit(request, "hamelden", prof["id"])
+    raw = await request.body()
+    if len(raw) > 8192:
+        raise HTTPException(413, "too large")
+    try:
+        body = json.loads(raw or b"{}")
+    except ValueError:
+        raise HTTPException(400, "invalid JSON")
     try:
         await add_rule(prof["id"], body if isinstance(body, dict) else {})
     except ValueError as e:
         raise HTTPException(400, str(e))
-    return status(prof["id"])
+    return status(prof["id"])     # a live connection takes the new rule's device with the next minute (hamelden.ensure)
 
 
 @router.delete("/api/proactive/rules/{rid}", dependencies=[Depends(assistant)])

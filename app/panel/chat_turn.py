@@ -18,6 +18,7 @@ import calendars  # noqa: E402
 import documents  # noqa: E402
 import extras  # noqa: E402
 import fixes  # noqa: E402
+import hamelden  # noqa: E402
 import homeassistant  # noqa: E402
 import images  # noqa: E402
 from common import load_config  # noqa: E402
@@ -469,7 +470,7 @@ async def prepare(request):
         import agent
         import messages as inbox   # (messages is the conversation here)
         import tasks
-        for mod in (calendars, tidy, tasks, fixes, agent, inbox, roomfar):
+        for mod in (calendars, tidy, tasks, fixes, agent, inbox, roomfar, hamelden):
             p = mod.pending(who["id"])
             if p and p.get("src", src) == src:
                 mod.drop_pending(who["id"])

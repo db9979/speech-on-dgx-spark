@@ -582,9 +582,10 @@ def find_speakers(sender, where):
     return [], "Kein passender Lautsprecher. Möglich sind: " + ", ".join(x["name"] for x in allowed) + "."
 
 
-async def announce(sender, dids, text, now=None):
+async def announce(sender, dids, text, now=None, house=False):
     """Says the text on the speakers (at once when connected, else at their next wake word). Returns
-    (names, why not)."""
+    (names, why not). house: a note of the profile's smart home (hamelden.py) with its own limits there,
+    said as it is, without "Durchsage von"."""
     import esp32
     import room
     now = time.time() if now is None else now
@@ -595,11 +596,12 @@ async def announce(sender, dids, text, now=None):
     dids = [d for d in dict.fromkeys(dids) if d in allowed]
     if not dids:
         return [], "Kein Lautsprecher nimmt gerade Durchsagen von dir an."
-    why = allowed_now(sender, [], "announce", now)
-    if why:
-        return [], why
-    _count(sender, [], "announce", now)
-    said = f"Durchsage von {name_of(sender)}: {text}"
+    if not house:
+        why = allowed_now(sender, [], "announce", now)
+        if why:
+            return [], why
+        _count(sender, [], "announce", now)
+    said = text if house else f"Durchsage von {name_of(sender)}: {text}"
     out = []
     for did in dids:
         sp = allowed[did]

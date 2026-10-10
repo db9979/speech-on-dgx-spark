@@ -11,6 +11,7 @@ home this turn may switch, see chat_turn); "private" is False over Telegram unle
 """
 import agent
 import contacts
+import hamelden
 import messages
 import parcels
 import roomfar
@@ -20,7 +21,7 @@ import weather
 import remarkable
 import wiki
 
-SERVICES = [roomfar, weather, contacts, parcels, tasks, transit, wiki, agent, messages, remarkable]
+SERVICES = [roomfar, weather, contacts, parcels, tasks, transit, wiki, agent, messages, remarkable, hamelden]
 
 
 def offer(ctx):

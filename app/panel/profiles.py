@@ -545,6 +545,10 @@ ROOM_GATE = [lambda uid: False]
 # and only while the admin and the profile have the watch switched on (WATCH_GATE, set by pebblewatch.py).
 WATCH_PREFIX = "/api/watch/"
 WATCH_GATE = [lambda uid: False]
+# A Home Assistant event key (scope "haev", hamelden.py) only tells the Spark that something happened, on this
+# one path, and only while the admin and the profile have "Home Assistant meldet an Spark" on (HAEV_GATE).
+HAEV_PATHS = ("/api/ha/event",)
+HAEV_GATE = [lambda uid: False]
 
 
 def _device(d, request):
@@ -619,7 +623,9 @@ def current(request):
         if dev.get("scope") == "watch" and (not str(request.scope.get("path") or "").startswith(WATCH_PREFIX)
                                             or not WATCH_GATE[0](dev["user"])):
             return None
-        if dev.get("scope") not in (None, "", "app", "room", "watch"):
+        if dev.get("scope") == "haev" and (request.scope.get("path") not in HAEV_PATHS or not HAEV_GATE[0](dev["user"])):
+            return None
+        if dev.get("scope") not in (None, "", "app", "room", "watch", "haev"):
             return None
         _note_device(dev["id"], request)
         uid = dev["user"]
@@ -699,6 +705,13 @@ SETTINGS = {
     "pro_events": (True, lambda v: isinstance(v, bool)),
     "pro_lead": (20, lambda v: v in (5, 10, 15, 20, 30, 45, 60)),
     "pro_ha": (True, lambda v: isinstance(v, bool)),
+    # Home Assistant tells the Spark (hamelden.py, each behind its own admin switch)
+    "pro_ha_live": (False, lambda v: isinstance(v, bool)),     # live connection instead of the minute check
+    "pro_ha_loud": (False, lambda v: isinstance(v, bool)),     # rules may also speak on speakers
+    "pro_ha_events": (False, lambda v: isinstance(v, bool)),   # Home Assistant sends events with its own key
+    "pro_ha_voice": (False, lambda v: isinstance(v, bool)),    # "Sag mir Bescheid, wenn …" makes a rule after a yes
+    "pro_ha_cam": (False, lambda v: isinstance(v, bool)),      # a camera's still picture in a few words
+    "pro_ha_me": ("", lambda v: isinstance(v, str) and (v == "" or re.fullmatch(r"person\.[a-z0-9_]{1,80}", v) is not None)),
     "pro_greet": (True, lambda v: isinstance(v, bool)),
     "pro_follow": (True, lambda v: isinstance(v, bool)),
     "pro_mail": (True, lambda v: isinstance(v, bool)),

@@ -91,6 +91,17 @@ FEATURES = (
       parent="documents", me="docbox", guide="docbrief"),
     # everyday
     F("proactive", "Von selbst melden", "Speaking up by itself", "day", ("proactive",), "pro_on", me="probox", guide="proactive"),
+    # Home Assistant tells the Spark (hamelden.py): each part below "Von selbst melden"
+    F("halive", "Sofort-Meldungen aus Home Assistant", "Instant notes from Home Assistant", "day", ("ha_live", "homeassistant"),
+      "pro_ha_live", parent="proactive", me="probox", guide="halive"),
+    F("haloud", "Haus-Meldungen über Lautsprecher", "House notes on speakers", "day",
+      ("ha_loud", "homeassistant", "messages_announce"), "pro_ha_loud", parent="proactive", me="probox", guide="haloud"),
+    F("haevent", "Home Assistant meldet an Spark", "Home Assistant tells the Spark", "day", ("ha_events", "homeassistant"),
+      "pro_ha_events", parent="proactive", me="probox", guide="haevent"),
+    F("havoice", "Smart-Home-Regel per Sprache", "Smart home rule by voice", "day", ("ha_voice_rules", "homeassistant"),
+      "pro_ha_voice", parent="proactive", me="probox", guide="havoice"),
+    F("hacam", "Kamerabild beschreiben", "Describe a camera picture", "day", ("ha_camera", "homeassistant"),
+      "pro_ha_cam", parent="proactive", me="probox", guide="hacam"),
     F("reminders", "Timer und Erinnerungen", "Timers and reminders", "day", ("reminders",), guests=True, guide="reminders"),
     F("tasks", "Aufgaben und Einkaufsliste", "Tasks and shopping list", "day", ("tasks",), "tasks_on", me="taskbox", guide="tasks"),
     F("mystatus", "Mein Zustand", "My status", "day", ("my_status",), "my_status", me="bgbox", guide="mystatus"),

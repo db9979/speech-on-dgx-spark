@@ -182,6 +182,22 @@ def came_in(request, rec):
         pass
 
 
+def key_call(request, who, why):
+    """A device key call outside a chat request (Home Assistant events, hamelden.py): a line under
+    "Ereignisse" and, from the internet, an entry in Eingang. Fixed words only."""
+    try:
+        event(who, why)
+        if not from_internet(request):
+            return
+        with _lock:
+            _bump("door_in")
+            _door.append({"t": time.time(), "ok": True, "who": who, "from": short_ip(guard.client_ip(request)), "why": why,
+                          "steps": ["Absender aus X-Forwarded-For des eingetragenen Proxys (panel.trusted_proxies)",
+                                    "Geräteschlüssel gültig (Bereich haev)", "Rate-Limit eingehalten"]})
+    except Exception:
+        pass
+
+
 def step(rec, s):
     """A step was added to a watched request: tool steps also go to "Was die Dienste zurückgeben"."""
     try:
@@ -352,6 +368,13 @@ def _conns(now):
         n = sum(1 for v in (getattr(mcpserver, "_busy", {}) or {}).values() if v)
         if n:
             out.append({"name": "MCP-Clients", "proto": "HTTPS", "dir": "ein", "n": n})
+    except Exception:
+        pass
+    try:
+        import hamelden
+        n = sum(1 for x in list((getattr(hamelden, "_streams", {}) or {}).values()) if x.synced and not x.error)
+        if n:
+            out.append({"name": "Home Assistant live", "proto": "WebSocket · Heimnetz", "dir": "aus", "n": n})
     except Exception:
         pass
     n = sum(1 for t, _ in _seen.values() if now - t < SEEN_S)
