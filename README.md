@@ -33,6 +33,7 @@ All options for running without questions (`--mode api --asr 1.7b --tts 0.6b --y
 
 <!-- New version: add one line at the top here and in CHANGELOG.md, drop the oldest line here (keep 10). Details go to docs/de and docs/en, not into this README. -->
 
+- **V01.0.307** Fetch ahead on a question back (off): when the assistant asks back, the panel already fetches calendar, mail, weather or parcels while the question is spoken; the model routing of unclear questions runs beside the preparation
 - **V01.0.306** Self-test "phone like the app" waits by polling under the strict CSP instead of wait_for_function (was red on GitHub once)
 - **V01.0.305** Self-test Features page: height limit raised for the new line "Fetch clear questions directly" (GitHub tests were red after V01.0.304, the update waited)
 - **V01.0.304** Answer starts sooner: "Schneller Antwortbeginn" now keeps instructions, tool list and the start of the history the same (everything that changes goes with the question), "Eindeutiges direkt abrufen" (off) fetches mail, reminders, weather and parcels itself for short questions, Logs → Requests shows instructions, tools and conversation per round in characters
@@ -42,7 +43,6 @@ All options for running without questions (`--mode api --asr 1.7b --tts 0.6b --y
 - **V01.0.300** Android app "Spark" as APK without a store (Features → Android app, off; Me → Android app): a shell around the Spark page with notes while closed (asks itself every 15 minutes, no Google), assistant button, share to Spark and a hint on new versions; GitHub builds and signs it as android-v…, the Spark fetches it with a SHA-256 check and hands it out by download link with a one-time token (QR, 30 minutes) (docs/en/android-app.md)
 - **V01.0.299** reMarkable "Newest first" (admin sub-switch + Me → reMarkable, off): change time per page, with similar hits the newer note moves up to two places (also for "Search locally first"), hits say "changed on", "What did I note last/today/yesterday/this week?" as a fixed rule; new notes arrive sooner: a quick look at the account every 3 minutes, compare at once when it changed
 - **V01.0.298** Buy me a coffee: link in the README and on GitHub (Sponsor button), same as in U-Jagd; nothing changes in the app
-- **V01.0.297** Code word at a speaker (off): if a speaker recognises your voice only narrowly or something is unusual, it asks for your own code word before personal things; never a foreign voice; after 3 wrong ones a 30-minute pause and a notification
 
 All versions: [CHANGELOG.md](CHANGELOG.md)
 

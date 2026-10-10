@@ -80,6 +80,7 @@
     "routing": false,
     "direct_read": false,
     "route_model": "off",
+    "prefetch": false,
     "route_words": "",
     "learn_fixes": false,
     "follow_up": false,

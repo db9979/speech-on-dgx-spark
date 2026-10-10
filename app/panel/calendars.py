@@ -322,7 +322,8 @@ async def _one(uid, cal, start, end, zone):
     now = time.time()
     for k in [k for k, v in _cache.items() if now - v[0] >= CACHE_SECONDS]:
         _cache.pop(k, None)
-    hit = _cache.get(key)
+    # a longer period fetched before (e.g. the next days, vorab.py) holds every event of a shorter one in it
+    hit = _cache.get(key) or next((v for k, v in _cache.items() if k[:2] == key[:2] and k[2] <= key[2] and k[3] >= key[3]), None)
     if hit:
         texts = hit[1]
     else:

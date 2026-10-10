@@ -112,6 +112,10 @@ async def prepare(request):
     route = intent.classify(ask0, ccfg.get("tool_words", ""), ccfg.get("route_words", ""))
     me0 = profiles.current(request)
     route_on = bool(me0 and features.allowed("routing", me0["id"], ccfg))
+    # chat.route_model "on": the model's pick for a question no rule recognizes starts right here and runs while
+    # the panel prepares the rest of the turn (plan „Anfrage aufteilen“ 2); it is waited for further down
+    pick_task = asyncio.create_task(intent.ask_model(ccfg, ask0)) \
+        if route_on and ask0 and not route.names and ccfg.get("route_model") == "on" else None
     if carry == "outside" and route_on and intent.wants_own(route, ask0):
         carry = None
         print("weiche: answer from outside text before; this message asks for", route.label(),
@@ -504,9 +508,10 @@ async def prepare(request):
     tools_stable = list(tools) if cache_on else None
     offered_all = {t["function"]["name"] for t in tools}
     if route_on and tools and not pics and not ha_direct and not ha_wait:
-        if not route.names and ccfg.get("route_model") == "on":
-            # the message as the model would see it anyway (code words already replaced)
-            pick = await intent.ask_model(ccfg, messages[-1]["content"] if messages[-1]["role"] == "user" else "")
+        if pick_task:
+            # the message as the model would see it anyway (code words already replaced); with the stable start
+            # (chat.prompt_cache) the model sees every tool anyway, so a pick that is late is left out
+            pick = await intent.pick_in_time(pick_task, intent.CACHED_WAIT if cache_on else intent.ASK_TIMEOUT + 1)
             if pick:
                 route = intent.Route([pick], {pick: "Modell"})
         tools = intent.narrow(route, tools)
@@ -515,6 +520,8 @@ async def prepare(request):
                 {t["function"]["name"] for t in tools}, ccfg.get("tool_words", "")):
             # nothing recognized and no tool required: a short list, so the model starts sooner
             tools = intent.lean(route, tools)
+    if pick_task and not pick_task.done():   # not needed in this turn (no tools, a picture, a direct command)
+        pick_task.cancel()
     # "Erst lokal suchen" (lokal.py): the own sources before anything outside, by a fixed rule on the person's
     # own words. A knowledge question gets a quick look in exactly the sources this turn offers (tools before
     # narrowing: the same rights), started here and waited for in chat._answer (at most chat.local_first_ms);

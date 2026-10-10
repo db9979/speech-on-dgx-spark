@@ -21,7 +21,7 @@ from core import auth
 router = APIRouter()
 
 # areas: which kind of line it is, from the word before the colon (search before chat: it is a chat line)
-AREAS = (("search", r"^chat: web search"), ("chat", r"^chat:"), ("weiche", r"^weiche:"), ("ha", r"^homeassistant:"),
+AREAS = (("search", r"^chat: web search"), ("chat", r"^(chat|vorab):"), ("weiche", r"^weiche:"), ("ha", r"^homeassistant:"),
          ("room", r"^room:"), ("esp32", r"^esp32:"), ("watch", r"^watch:"), ("telegram", r"^telegram:"), ("mail", r"^(mail|tidy|imap)\b"),
          ("vorrang", r"^vorrang:"), ("wissen", r"^(kiwix|lokal):"), ("anfrage", r"^anfrage:"))
 _AREAS = [(k, re.compile(rx)) for k, rx in AREAS]

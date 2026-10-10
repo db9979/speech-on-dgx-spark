@@ -42,6 +42,7 @@ import vorrang  # noqa: E402  (speech first: background work waits)
 import stufe  # noqa: E402  (priority for people)
 import tracelog  # noqa: E402  (Logs → Anfragen: the way of each request)
 import features  # noqa: E402
+import vorab  # noqa: E402  (fetching ahead when the answer asks back)
 from common import load_config  # noqa: E402
 from core import DEFAULTS, FACES, admin_cookie_ok, api_headers, assistant  # noqa: E402
 
@@ -1573,6 +1574,9 @@ async def _answer(request, turn):
                 await out.put({"type": "text", "delta": (" " if st["shown"] else "") + note})
                 trace["said"] += " " + note
                 await sentences.put(note)
+            # "Vorab holen bei Rückfrage" (vorab.py): the answer asks back, the panel already fetches by fixed rules
+            # what the next answer will most likely read, while the question is being spoken
+            vorab.after(turn, trace["said"], st, trace["calls"], tr)
         except Exception as e:
             status = getattr(getattr(e, "response", None), "status_code", None)
             m = re.match(r"LLM HTTP (\d+)", str(e))
@@ -1601,6 +1605,8 @@ async def _answer(request, turn):
         """Runs one tool call and hands outside text over as data; tells the browser when an answer now
         rests on outside text (it marks the answer, see the start of chat())."""
         was = (st["mail"], st["outside"])
+        if who:
+            vorab.used(who["id"], name)
         if name == "memory_save" and name in st["offered"]:
             st["saves"] += 1
             if st["saves"] > MAX_SAVES:
