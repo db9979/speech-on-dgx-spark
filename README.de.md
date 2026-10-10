@@ -31,6 +31,7 @@ Alle Optionen ohne Rückfragen (`--mode api --asr 1.7b --tts 0.6b --yes` …) st
 
 <!-- New version: add one line at the top here and in CHANGELOG.md, drop the oldest line here (keep 10). Details go to docs/de and docs/en, not into this README. -->
 
+- **V01.0.266** Kiwix: „Schau in deinem/unserem Archiv“ und „im Archiv“ werden erkannt, die erste Runde muss dann das Archiv fragen statt der hochgeladenen Dokumente
 - **V01.0.265** Bedienung: Funktionen eigener Menüpunkt (mit Anleitungen), „Personen und Geräte“ (mit Apps und Schnittstellen), „Einbinden“ entfällt; Suche Strg K/⌘ K über Seiten, Schalter, Einstellungen, Ich, Prüfen, Logs und Anleitungen
 - **V01.0.264** Erst lokal suchen (Funktionen → Websuche, aus; Profil-Schalter): Wissensfragen schauen zuerst in Dokumenten, Kiwix-Archiv und früheren Gesprächen (höchstens 400 ms, Treffer als Daten mit Quelle), Aktuelles geht direkt hinaus, „in meinen Unterlagen“ bleibt lokal; Websuche nach Dokumenten nur mit den Worten der Frage; Zustand → Prüfen → „Erst lokal testen“, Logzeile „lokal:“
 - **V01.0.263** Logs → Anfragen (Schalter unter Einstellungen → Betrieb, aus): Weg jeder Anfrage als Liste mit Perlenkette und Zeitstrahl (Weiche, Sprachmodell-Runden, Werkzeuge, Prüfung, Sprachausgabe, erster Ton), ohne Frage- und Antworttext; Name nur mit Zustimmung des Profils
@@ -40,7 +41,6 @@ Alle Optionen ohne Rückfragen (`--mode api --asr 1.7b --tts 0.6b --yes` …) st
 - **V01.0.259** Selbsttest „Profile und Geräte“ sucht das Testgerät statt auf Seite 1 zu warten (GitHub-Tests wieder grün)
 - **V01.0.258** Eigenes Kiwix-Archiv (Funktionen → Websuche, aus; Profil-Schalter): Wikipedia-Fragen zuerst aus dem eigenen kiwix-serve, Volltextsuche in gewählten Büchern, „Erzähl mehr“ liest weiter, fällt die Websuche aus antwortet das Offline-Archiv; Zustand → Prüfen → „Kiwix prüfen“, Logs-Bereich „Wissen“
 - **V01.0.257** Profile und Geräte: Profil eines Geräts als Auswahlliste statt Namensfeld; iPhone-App, Lautsprecher, Pebble-Uhr und Home Assistant stehen „🔒 fest“ mit Ort der Verwaltung (Server lehnt Umhängen ab), Zeilen gleich ausgerichtet
-- **V01.0.256** iPhone-App: „Mit meinem Profil anmelden“ in Spark verwalten für Mit-Admin und Verwalter (Profil-Code, endet nach 15 Min. ohne Bedienung)
 
 Alle Versionen: [CHANGELOG.md](CHANGELOG.md)
 

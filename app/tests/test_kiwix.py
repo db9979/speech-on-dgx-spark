@@ -280,14 +280,20 @@ class Tools(unittest.TestCase):
         self.assertIn("durchsuche die Dokumente nicht stattdessen", sys_)
         a.put("/api/profile/settings", json={"kiwix_on": True})
         helpers.LLM_CALLS.clear()
-        ask(a, "Schaue in meinem Archiv nach, was du über Albert Einstein weisst.")
+        ask(a, "Schaue in deinem Archiv nach, was du über Albert Einstein")
         sys_ = next(m["content"] for m in helpers.LLM_CALLS[0]["messages"] if m["role"] == "system")
         self.assertNotIn("nicht verfügbar", sys_)
+        self.assertEqual(helpers.LLM_CALLS[0].get("tool_choice"),                # only the archive, not the documents
+                         {"type": "function", "function": {"name": "archive_search"}})
         self.assertIn("nie die hochgeladenen Dokumente", sys_)
         self.assertEqual(chat.needed("Schau im Archiv nach Einstein", {"archive_search", "document_search"}),
                          ["archive_search"])
         helpers.set_config(kiwix=False)
         self.assertIn("Admin-Schalter", kiwix.why_not({"id": "x"}))
+        helpers.LLM_CALLS.clear()
+        ask(a, "Schau im Archiv nach der Rechnung")                            # no Kiwix set up: no note at all
+        sys_ = next(m["content"] for m in helpers.LLM_CALLS[0]["messages"] if m["role"] == "system")
+        self.assertNotIn("Kiwix-Archiv", sys_)
         self.assertIn("Gäste", kiwix.why_not(None))
 
     def test_updated_files_stay_chosen(self):

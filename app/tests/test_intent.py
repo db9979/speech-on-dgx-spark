@@ -20,6 +20,11 @@ ADMIN.post("/api/login", json={"password": "secret-admin"})
 # the test bench: sentence -> expected intent ("" = no rule fits, "+" = two at once).
 # Every reported wrong turn becomes a line here.
 BENCH = [
+    # the own Kiwix archive (V01.0.264): mein, dein, im Archiv, never the uploaded documents
+    ("Schaue in deinem Archiv nach, was du über Albert Einstein", "archiv"),
+    ("Schau in meinem Archiv nach Sauerteig", "archiv"),
+    ("Was steht im Archiv über Quasare?", "archiv"),
+    ("Durchsuche unser Archiv nach Rom", "archiv"),
     ("Mach das Licht im Wohnzimmer aus", "smarthome"),
     ("Schalte den Fernseher ein", "smarthome"),
     ("Ist das Licht in der Küche noch an?", "smarthome"),

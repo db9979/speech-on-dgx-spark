@@ -525,8 +525,9 @@ async def prepare(request):
     ask_text = messages[-1]["content"] if messages[-1]["role"] == "user" else ""
     # "Schau in meinem Archiv ..." means the own Kiwix (V01.0.261); when it is not offered, the model is told
     # why, so it does not answer from the uploaded documents instead
-    if chat.needed(ask_text, {"archive_search"}) and "archive_search" not in {t["function"]["name"] for t in tools}:
-        import kiwix
+    import kiwix
+    if chat.needed(ask_text, {"archive_search"}) and "archive_search" not in {t["function"]["name"] for t in tools} \
+            and (kiwix.admin_on() or "kiwix" in ask_text.lower()):
         why_not = kiwix.why_not(who, own_browser) or "es ist in dieser Antwort nicht angeboten"
         print("kiwix: archive asked, not offered:", why_not, flush=True)
         system = (system + "\n\n" + "Der Nutzer fragt nach seinem Kiwix-Archiv, das ist hier nicht verfügbar: " + why_not
@@ -535,6 +536,8 @@ async def prepare(request):
     need = chat.needed(ask_text, {t["function"]["name"] for t in tools}, ccfg.get("tool_words", ""))
     # one clear intent with one needed tool: the first round must call exactly that one
     force = intent.forced(route, need, {t["function"]["name"] for t in tools}) if route_on else None
+    if not force and need == ["archive_search"]:
+        force = "archive_search"   # "Schau in meinem Archiv": the archive, never the uploaded documents (V01.0.264)
     # the words that matched, only as far as they are still in the message (a code word is gone by now)
     why = ", ".join(f"{k}: „{v if v.lower() in ask_text.lower() or v in ('Modell', 'Sende-Bitte') else '…'}“"
                     for k, v in route.why.items())[:200]
