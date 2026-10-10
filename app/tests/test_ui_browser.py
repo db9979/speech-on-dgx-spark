@@ -806,7 +806,6 @@ class Browser(unittest.TestCase):
         the Wächter, no text of the question, no sideways scrolling on a phone; the monitor pairs with its code
         and then shows the same picture on one screen."""
         import json as _json
-        import time
         import live
         import tracelog
         from fastapi.testclient import TestClient
@@ -824,8 +823,7 @@ class Browser(unittest.TestCase):
         self.assertEqual(c.post("/api/chat", json={"messages": [{"role": "user", "content":
                                                                  'TOOL memory_save {"fact": "Uitest mag Kakao."}'}]}).status_code, 200)
         live.outgoing("x", 31002, "public", "127.0.0.1", "own services are not reachable")
-        for r in list(live._run.values()):
-            r.t_end = time.time() + 120     # stays on the picture for this test (no fading while the browser looks)
+        # the last action stays on the picture until a new one comes (no fading while the browser looks)
 
         async def go():
             async with async_playwright() as p:

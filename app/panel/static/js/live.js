@@ -22,6 +22,9 @@ const ZONE={spark:[tt('im Spark','on the Spark'),'loc'],lan:[tt('Heimnetz','Home
 const PH=()=>matchMedia('(max-width:760px)').matches;
 let tip=null;
 function el(id){return document.getElementById(id)}
+const op=(r,d)=>r.last?'.85':Math.max(.15,(r.left||0)/d.fade).toFixed(2);
+const ago=n=>n<60?n+' s':n<3600?Math.floor(n/60)+' min':Math.floor(n/3600)+' h';
+const doneTxt=r=>r.last?tt(`letzte Aktion · vor ${ago(r.ago)}`,`last action · ${ago(r.ago)} ago`):tt(`fertig · weg in ${r.left} s`,`done · gone in ${r.left} s`);
 function tgt(id){return ((LV.data||{}).targets||[]).find(x=>x.id===id)}
 function zoneOf(id){const x=tgt(id);return x?x.zone:'spark'}
 
@@ -34,7 +37,7 @@ function skeleton(root){
   const run=`<div class="card"><h3>${tt('Läuft gerade','Running now')} <span class="n" id="lvnrq"></span></h3><div id="lvrq"></div></div>`;
   const ev=`<div class="card"><h3>${tt('Ereignisse','Events')}</h3><div class="mono ev" id="lvev"></div></div>`;
   const cn=`<div class="card" id="lvcnc"><h3>${tt('Offene Verbindungen','Open connections')} <span class="n" id="lvncn"></span><span class="kdots"></span></h3><table id="lvcn"></table></div>`;
-  const flow=`<div class="card flow"><h3 style="padding:4px 10px 0">${tt('Wohin die Anfragen gerade gehen','Where the requests go right now')} <small class="mut hideph">${tt('Geräte erscheinen bei einer Anfrage und blenden 10 s nach dem Ende aus · oben Heimnetz, unten Internet','devices show while they ask and fade 10 s after the end · home network above, internet below')}</small></h3><div id="lvflow"></div></div>`;
+  const flow=`<div class="card flow"><h3 style="padding:4px 10px 0">${tt('Wohin die Anfragen gerade gehen','Where the requests go right now')} <small class="mut hideph">${tt('Geräte erscheinen bei einer Anfrage; die letzte bleibt stehen, bis eine neue kommt, dann blendet sie in 10 s aus · oben Heimnetz, unten Internet','devices show while they ask; the last one stays until a new one comes, then fades in 10 s · home network above, internet below')}</small></h3><div id="lvflow"></div></div>`;
   if(KIOSK)root.innerHTML=`<div class="kpis" id="lvkpi"></div>${flow}<div class="kside">${run}${ev}</div><div class="kbot">${way}<div class="krot">${gd}${dr}${rt}${cn}</div></div>`;
   else root.innerHTML=`<div class="kpis" id="lvkpi"></div>${flow}${way}<div class="gates">${gd}${dr}</div><div style="margin-bottom:14px">${rt}</div><div class="grid2">${run}<div class="split">${cn}${ev}</div></div>`;
   if(!tip){tip=document.createElement('div');tip.id='lvtip';document.body.appendChild(tip)}
@@ -102,7 +105,7 @@ function route(r,pos,W,H,ph){const c=col(r.id);let o='',lab='',call='';const ctr
     if(t){if(ret){my+=26;mx+=(cb.x<ca.x?-30:30)}const s=st==='c'?'● '+t:t,w=s.length*6.2+14;
       lab+=`<g><rect x="${mx-w/2}" y="${my-10}" width="${w}" height="20" rx="${ret?4:10}" fill="${st==='c'?c:'var(--card)'}" stroke="${st==='p'?'var(--mut)':c}" ${ret?'stroke-dasharray="3 2"':''}/><text x="${mx}" y="${my+4}" text-anchor="middle" style="font-size:11px;font-weight:700;fill:${st==='c'?'#fff':'var(--fg)'}">${lvE(s)}</text></g>`}
     if(st==='c')call=`${r.id} ${tt('ist jetzt','is now')}: ${nm(a)} → ${nm(b)} · ${t}${what?' · '+what:''}`});
-  if(r.done)call=`${r.id} ${tt('ist fertig','is done')} · ${secs(r.age*1000)}`;
+  if(r.done)call=r.last?`${tt('Letzte Aktion','Last action')} ${r.id} · ${secs(r.age*1000)}`:`${r.id} ${tt('ist fertig','is done')} · ${secs(r.age*1000)}`;
   if(call){const mw=ph?W-16:520,w=Math.min(call.length*6.6+26,mw),y=H-30,x=8;
     lab+=`<g><rect x="${x}" y="${y}" width="${w}" height="26" rx="13" fill="color-mix(in srgb,${c} 16%,var(--card))" stroke="${c}"/><circle cx="${x+13}" cy="${y+13}" r="4" fill="${c}"><animate attributeName="opacity" values="1;.2;1" dur="1s" repeatCount="indefinite"/></circle><text x="${x+24}" y="${y+17}" style="font-size:${ph?10.5:11.5}px;font-weight:600;fill:var(--fg)" ${call.length*6.6+26>mw?`textLength="${mw-34}" lengthAdjust="spacingAndGlyphs"`:''}>${lvE(call)}</text></g>`}
   return ph?`<g>${lab.slice(lab.lastIndexOf('<g><rect'))}</g>`:`<g>${o}${lab}</g>`}
@@ -110,7 +113,7 @@ function nm(id){if(id==='door')return tt('Eingang','Entrance');if(id==='guard')r
   const r=((LV.data||{}).reqs||[]).find(x=>'r'+x.id===id);return r?r.dev:id}
 function flow(){const d=LV.data,ph=PH(),{pos,W,H,reqs,order}=layout(d,ph);
   const key=[LV.sel,ph,...reqs.map(r=>r.id+r.stage+r.steps.length+(r.done?'d':'')),...order.map(x=>x.id)].join('|');
-  if(key===LV.lastKey){reqs.filter(r=>r.done).forEach(r=>{const g=el('lvd'+r.id);if(g){g.style.opacity=Math.max(.15,(r.left||0)/d.fade).toFixed(2);const b=g.querySelector('.cd');if(b)b.textContent=tt(`fertig · weg in ${r.left} s`,`done · gone in ${r.left} s`)}});return}
+  if(key===LV.lastKey){reqs.filter(r=>r.done).forEach(r=>{const g=el('lvd'+r.id);if(g){g.style.opacity=op(r,d);const b=g.querySelector('.cd');if(b)b.textContent=doneTxt(r)}});return}
   LV.lastKey=key;
   const act=new Set(['qwen']),cnt={};const inc=k=>cnt[k]=(cnt[k]||0)+1;reqs.filter(r=>!r.done).forEach(r=>{act.add(r.stage);inc(r.stage);if(r.to){act.add(r.to);inc(r.to)}});
   let s=`<svg viewBox="0 0 ${W} ${H}" role="img" aria-label="${lvE(tt('Fluss der Anfragen','Flow of the requests'))}">`;
@@ -130,9 +133,9 @@ function flow(){const d=LV.data,ph=PH(),{pos,W,H,reqs,order}=layout(d,ph);
     return `<g class="node${on?' act':''}${o.cls||''}" ${o.attrs||''} data-tip="${lvE(o.tip||a)}"><rect x="${p.x}" y="${p.y}" width="${p.w}" height="${p.h}" rx="10" ${o.stroke?`style="stroke:${o.stroke}"`:''}/>${o.dot?`<circle cx="${p.x+p.w-14}" cy="${p.y+14}" r="4" fill="${o.dot}"/>`:''}
       <text class="a" x="${p.x+10}" y="${p.y+(ph?20:Math.min(p.h/2-1,24))}">${lvE(a)}</text><text class="b${o.cd?' cd':''}" x="${p.x+10}" y="${p.y+(ph?36:Math.min(p.h/2+13,38))}">${lvE(b)}</text>
       ${k&&!ph&&!o.dev?`<circle class="badge" cx="${p.x+p.w-16}" cy="${p.y+p.h/2}" r="10"/><text class="bt" text-anchor="middle" x="${p.x+p.w-16}" y="${p.y+p.h/2+3.5}">${k}</text>`:''}</g>`};
-  reqs.forEach(r=>{const sub=r.done?tt(`fertig · weg in ${r.left} s`,`done · gone in ${r.left} s`):(ph?(r.net?'Internet':r.who):`${r.who}${r.intent?' · '+r.intent:''}${r.net?' · Internet':''}`);
+  reqs.forEach(r=>{const sub=r.done?doneTxt(r):(ph?(r.net?'Internet':r.who):`${r.who}${r.intent?' · '+r.intent:''}${r.net?' · Internet':''}`);
     s+=node('r'+r.id,ph?r.dev.slice(0,12):r.dev,sub,!r.done,{dev:1,cd:r.done,stroke:r.done?'':col(r.id),dot:r.done?'var(--mut)':col(r.id),cls:' dv'+(r.age<1.2?' pop':''),
-      attrs:`id="lvd${r.id}" data-req="${lvE(r.id)}" ${r.done?`style="opacity:${Math.max(.15,(r.left||0)/d.fade).toFixed(2)}"`:''}`,
+      attrs:`id="lvd${r.id}" data-req="${lvE(r.id)}" ${r.done?`style="opacity:${op(r,d)}"`:''}`,
       tip:`${r.dev} · ${r.who} · ${r.id}${r.intent?' · '+r.intent:''}${r.net?' · '+tt('kam über das Internet','came through the internet'):''} · ${r.done?tt('fertig','done'):KIND[r.stage]||r.stage}`})});
   STAGES.forEach(x=>s+=node(x[0],x[1],ph?'':x[2],act.has(x[0])));
   order.forEach(x=>s+=node(x.id,ph?x.name.split(' ')[0]:x.name,ph?ZONE[x.zone][0]:x.sub,act.has(x.id),{tip:`${x.name} · ${x.sub}`}));

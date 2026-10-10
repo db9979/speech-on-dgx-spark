@@ -115,14 +115,25 @@ class Live(unittest.TestCase):
         # Logs → Anfragen is off: nothing was written
         self.assertEqual(ADMIN.get("/api/admin/traces?minutes=60").json()["items"], [])
 
-    def test_finished_request_fades(self):
+    def test_last_action_stays_until_a_new_one_comes(self):
+        """Dominik 2026-10-10: the last action stays on the picture; it fades only once something new came."""
         rec = tracelog.start(1000.0, "web")
         self.assertFalse(rec.persist)
         rec.step("in", "Eingang", 1000.0, 1000.1)
         tracelog.finish(rec, now=1001.0)
-        self.assertEqual(len(live.snapshot(now=1005.0)["reqs"]), 1)
-        self.assertEqual(live.snapshot(now=1005.0)["reqs"][0]["left"], 6)
-        self.assertEqual(live.snapshot(now=1012.0)["reqs"], [])
+        r = live.snapshot(now=5000.0)["reqs"]
+        self.assertEqual(len(r), 1)
+        self.assertTrue(r[0]["last"])
+        self.assertIsNone(r[0]["left"])
+        self.assertEqual(r[0]["ago"], 3999)
+        new = tracelog.start(5001.0, "speaker")
+        r = {x["id"]: x for x in live.snapshot(now=5005.0)["reqs"]}
+        self.assertFalse(r[rec.id]["last"])
+        self.assertEqual(r[rec.id]["left"], 6)
+        self.assertFalse(r[new.id]["done"])
+        self.assertEqual([x["id"] for x in live.snapshot(now=5012.0)["reqs"]], [new.id])
+        tracelog.finish(new, now=5013.0)
+        self.assertTrue(live.snapshot(now=9000.0)["reqs"][0]["last"])
 
     def test_names_only_with_consent_and_on_the_monitor_only_when_allowed(self):
         a = profile("Lname")

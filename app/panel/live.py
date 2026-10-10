@@ -38,7 +38,7 @@ from core import auth
 router = APIRouter()
 STATE = os.environ.get("SPEECH_SPARK_STATE", "/var/lib/speech-spark/state")
 STATIC = os.path.join(os.path.dirname(os.path.abspath(__file__)), "static")
-FADE = 10                 # a finished request stays this many seconds, then fades out
+FADE = 10                 # a finished request fades out this many seconds after a newer one came
 MAX_RUN = 40              # requests watched at once (more: the oldest go)
 CODE_S = 600              # a pairing code lasts 10 minutes
 MAX_CODES, MAX_MONITORS = 5, 10
@@ -330,6 +330,16 @@ def _who(rec, view):
     return ("Profil" if view == "admin" else "Person"), ""
 
 
+def _gone_from(rec):
+    """When a finished request starts to fade: once a newer request came (Dominik 2026-10-10: the last action
+    stays until something new comes), never before it ended. None while it is the newest."""
+    end = getattr(rec, "t_end", None)
+    if not end:
+        return None
+    newer = [r.t0 for r in _run.values() if r is not rec and r.t0 > rec.t0]
+    return max(end, min(newer)) if newer else None
+
+
 def _req(rec, view, now):
     stage, tool = _now_at(rec, now)
     person, device = _who(rec, view)
@@ -339,13 +349,14 @@ def _req(rec, view, now):
         x = s.get("x") or {}
         steps.append({"k": s["k"], "n": n, "a": s["a"], "d": s["d"], "ok": x.get("ok", True) is not False,
                       "to": TOOLS.get(n, "") if s["k"] == "tool" else ("qwen" if s["k"] == "llm" else "")})
-    end = getattr(rec, "t_end", None)
+    end, gone = getattr(rec, "t_end", None), _gone_from(rec)
     return {"id": rec.id, "client": rec.client, "dev": device or CLIENT.get(rec.client, "Gerät"), "who": person,
             "voice": rec.client in VOICE or any((s.get("x") or {}).get("voice") for s in rec.steps[:1]),
             "net": bool(getattr(rec, "net", False)), "intent": rec.intent, "stage": stage, "tool": tool,
             "to": TOOLS.get(tool, "") if stage == "tool" else ("qwen" if stage == "llm" else ""),
             "steps": steps, "marks": dict(rec.marks), "age": round((end or now) - rec.t0, 2),
-            "done": bool(end), "left": max(0, int(FADE - (now - end))) if end else None, "err": bool(rec.errors)}
+            "done": bool(end), "left": max(0, int(FADE - (now - gone))) if gone else None, "last": bool(end and not gone),
+            "ago": int(now - end) if end else None, "err": bool(rec.errors)}
 
 
 def _conns(now):
@@ -401,7 +412,7 @@ def _sys():
 def snapshot(view="admin", now=None):
     now = now or time.time()
     with _lock:
-        for k in [k for k, r in _run.items() if getattr(r, "t_end", None) and now - r.t_end > FADE]:
+        for k in [k for k, r in _run.items() if (g := _gone_from(r)) and now - g > FADE]:
             _run.pop(k, None)
         reqs = [_req(r, view, now) for r in sorted(_run.values(), key=lambda r: r.t0)]
         cnt = dict(_count) if _count.get("day") == time.strftime("%Y-%m-%d", time.localtime(now)) else {}
