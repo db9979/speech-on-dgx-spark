@@ -5730,6 +5730,26 @@
           }
         }
       }
+    },
+    "Ton-Protokoll kopieren": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Copy sound log"
+          }
+        }
+      }
+    },
+    "Bleibt eine Antwort stumm: hier tippen und in den Thread einfügen. Es steht nur drin, wann der Ton startet und wohin er geht.": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "If an answer stays silent: tap here and paste it into the thread. It only says when the sound starts and where it goes."
+          }
+        }
+      }
     }
   },
   "version": "1.0"

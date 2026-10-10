@@ -20,6 +20,20 @@ final class AudioEngine {
     private var generation = 0
     private var tapOn = false
     private var configured = false
+    /// When the engine last started: right after a start iOS may still switch the route (voice processing)
+    /// and stop it again, which threw away the first answer. Pieces wait until the start has settled.
+    private var startedAt = Date.distantPast
+    private var holding = false
+    private static let settle: TimeInterval = 0.6
+
+    /// "Ton-Protokoll" (Einstellungen): the last steps of the audio engine, to copy into the thread.
+    private(set) static var diary: [String] = []
+    static func note(_ s: String) {
+        let t = Date().formatted(.dateTime.hour(.twoDigits(amPM: .omitted)).minute(.twoDigits).second(.twoDigits))
+        let route = AVAudioSession.sharedInstance().currentRoute.outputs.map { $0.portType.rawValue }.joined(separator: "+")
+        diary.append("\(t) \(s) [\(route)]")
+        if diary.count > 80 { diary.removeFirst(diary.count - 80) }
+    }
 
     /// Main thread: 16 kHz samples and their loudness (0...1).
     var onInput: (([Int16], Float) -> Void)?
@@ -36,21 +50,21 @@ final class AudioEngine {
     init() {
         engine.attach(node)
         NotificationCenter.default.addObserver(forName: AVAudioSession.interruptionNotification, object: nil, queue: .main) { [weak self] n in
-            guard let self, let raw = n.userInfo?[AVAudioSessionInterruptionTypeKey] as? UInt,
-                  AVAudioSession.InterruptionType(rawValue: raw) == .ended else { return }
+            guard let self, let raw = n.userInfo?[AVAudioSessionInterruptionTypeKey] as? UInt else { return }
+            Self.note(raw == AVAudioSession.InterruptionType.ended.rawValue ? "Unterbrechung vorbei" : "Unterbrechung")
+            guard AVAudioSession.InterruptionType(rawValue: raw) == .ended else { return }
             try? self.ensureRunning()
             self.resume()
         }
         NotificationCenter.default.addObserver(forName: .AVAudioEngineConfigurationChange, object: engine, queue: .main) { [weak self] _ in
             guard let self else { return }
+            Self.note("Konfiguration geändert, offen \(self.pending.count)")
             let wasListening = self.tapOn
             self.removeTap()
             self.converter = nil
-            try? self.ensureRunning()
             // switching on voice processing (first answer) or a headset change stops the engine
             // and with it the player: play again what had not been heard yet
-            self.resume()
-            if wasListening { try? self.startInput() }
+            self.restart(wasListening, tries: 3)
         }
     }
 
@@ -87,7 +101,21 @@ final class AudioEngine {
         if !engine.isRunning {
             try AVAudioSession.sharedInstance().setActive(true)
             engine.prepare()
-            try engine.start()
+            do { try engine.start() } catch { Self.note("Start fehlgeschlagen: \(error.localizedDescription)"); throw error }
+            startedAt = Date()
+            Self.note("Engine gestartet")
+        }
+    }
+
+    /// After a route change the session is sometimes not ready yet: try again a little later.
+    private func restart(_ listen: Bool, tries: Int) {
+        do {
+            try ensureRunning()
+            resume()
+            if listen { try? startInput() }
+        } catch {
+            guard tries > 1 else { return }
+            DispatchQueue.main.asyncAfter(deadline: .now() + 0.3) { [weak self] in self?.restart(listen, tries: tries - 1) }
         }
     }
 
@@ -168,6 +196,22 @@ final class AudioEngine {
         queued += 1
         nextId += 1
         pending.append((nextId, buffer))
+        if pending.count == 1 { Self.note("Antwort: erstes Stück") }
+        let wait = Self.settle - Date().timeIntervalSince(startedAt)
+        if wait > 0 || holding {
+            // just started: hold the pieces until a route switch would have happened, then play all of them
+            if !holding {
+                holding = true
+                Self.note("warte \(Int(wait * 1000)) ms")
+                DispatchQueue.main.asyncAfter(deadline: .now() + max(wait, 0.05)) { [weak self] in
+                    guard let self else { return }
+                    self.holding = false
+                    try? self.ensureRunning()
+                    self.resume()
+                }
+            }
+            return
+        }
         schedule(nextId, buffer)
         node.play()
     }
@@ -183,6 +227,12 @@ final class AudioEngine {
         node.scheduleBuffer(buffer) { [weak self] in
             DispatchQueue.main.async {
                 guard let self, gen == self.generation else { return }
+                // the engine stopped (route switch): the player let go of the piece unheard; resume() plays it again
+                guard self.engine.isRunning else {
+                    Self.note("Stück verworfen, Engine aus")
+                    self.watchStopped()
+                    return
+                }
                 self.pending.removeAll { $0.0 == id }
                 self.queued -= 1
                 if self.queued == 0 {
@@ -193,9 +243,23 @@ final class AudioEngine {
         }
     }
 
+    /// The engine stopped with pieces left and nobody restarted it: try once, else give up so the
+    /// conversation does not wait for sound that never comes.
+    private func watchStopped() {
+        DispatchQueue.main.asyncAfter(deadline: .now() + 3) { [weak self] in
+            guard let self, !self.engine.isRunning, !self.pending.isEmpty else { return }
+            do { try self.ensureRunning(); self.resume() } catch {
+                Self.note("aufgegeben")
+                self.stopPlaying()
+                self.onIdle?()
+            }
+        }
+    }
+
     /// After the engine was restarted: schedule again what has not been played and start the player.
     private func resume() {
-        guard !pending.isEmpty, engine.isRunning else { return }
+        guard !pending.isEmpty, engine.isRunning, !holding else { return }
+        Self.note("spiele \(pending.count) Stücke")
         generation += 1
         node.stop()
         queued = pending.count
@@ -204,6 +268,7 @@ final class AudioEngine {
     }
 
     func stopPlaying() {
+        holding = false
         generation += 1
         queued = 0
         pending = []
