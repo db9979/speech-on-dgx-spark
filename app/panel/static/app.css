@@ -662,3 +662,28 @@ span.dtag{cursor:default}.dtag.on{background:color-mix(in srgb,var(--acc) 18%,tr
 .fpal .ffoot{display:flex;gap:14px;padding:8px 16px;border-top:1px solid var(--line);font-size:12px;color:var(--mut)}
 .fpal .fnone{padding:14px 16px;color:var(--mut);font-size:14px}
 @media (max-width:760px){.fpal{padding-top:8px}.fpal .ffoot{display:none}}
+/* Funktionen → Wer darf was (who.js, V01.0.269) */
+.wfilt{display:flex;flex-wrap:wrap;gap:6px;margin:10px 0}
+.whowrap{overflow-x:auto;max-width:100%;border:1px solid var(--line);border-radius:12px}
+table.who{border-collapse:collapse;width:100%;font-size:14px}
+table.who th,table.who td{padding:6px 10px;border-bottom:1px solid var(--line);text-align:center;white-space:nowrap}
+table.who th:first-child,table.who td:first-child{text-align:left;position:sticky;left:0;background:var(--card);white-space:normal;min-width:190px}
+table.who thead th{font-size:12px;color:var(--mut);font-weight:600}
+table.who tr.wgrp td{font-size:11.5px;color:var(--mut);font-weight:600;text-transform:uppercase;letter-spacing:.04em;text-align:left;padding-top:14px}
+table.who tr.sub td:first-child{padding-left:26px}
+.wname{border:0;background:none;padding:0;font:inherit;color:var(--fg);cursor:pointer;text-align:left}
+.wname:hover{color:var(--acc)}
+.wnew,.wneed{font-size:11px;border-radius:8px;padding:1px 6px;margin-left:6px}
+.wnew{background:color-mix(in srgb,var(--acc) 14%,transparent);color:var(--acc)}
+.wneed{background:color-mix(in srgb,#d97706 18%,transparent);color:#b45309}
+.wbox{width:22px;height:22px;border-radius:6px;border:1.5px solid var(--mut);background:none;cursor:pointer;padding:0;vertical-align:middle}
+.wbox.on{background:var(--acc);border-color:var(--acc);box-shadow:inset 0 0 0 3px var(--card)}
+.wbox.no{border-style:dashed;opacity:.55;cursor:not-allowed}
+.wdash{color:var(--mut)}
+.wcard{border-bottom:1px solid var(--line);padding:10px 0}.wcard.sub{padding-left:16px}
+.wtop{display:flex;justify-content:space-between;align-items:center;gap:10px}
+.wchips{display:flex;flex-wrap:wrap;gap:6px;margin-top:6px;align-items:center}
+.wbox.chip{width:auto;height:auto;padding:3px 10px;border-radius:14px;font-size:13px;color:var(--fg)}
+.wbox.chip.on{color:#fff;box-shadow:none}
+.wg{font-size:12.5px}.wnote{font-size:12.5px;margin-top:10px}
+.wlink{border:0;background:none;padding:0;margin-left:4px;font:inherit;color:var(--acc);cursor:pointer}

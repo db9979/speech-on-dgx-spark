@@ -202,5 +202,54 @@ class Values(unittest.TestCase):
                     self.assertEqual(val, chat[k], f"{fn}: chat.{k} default {d} differs from config.default.json")
 
 
+class Matrix(unittest.TestCase):
+    """Phase 3 (V01.0.269): Funktionen → Wer darf was."""
+    def test_matrix_and_switching_a_profile(self):
+        _, uid = profile("FeaAnton")
+        helpers.set_config(weather=True)
+        d = ADMIN.get("/api/admin/features").json()
+        row = next(f for f in d["features"] if f["key"] == "weather")
+        self.assertIs(row["cells"][uid], False)
+        self.assertTrue(row["switchable"])
+        self.assertTrue(row["seen"])                                    # on now, so no longer "new"
+        self.assertTrue(any(p["id"] == uid for p in d["profiles"]))
+        self.assertIsNone(next(f for f in d["features"] if f["key"] == "memory")["cells"])   # no own switch
+        r = ADMIN.put(f"/api/admin/features/weather/profiles/{uid}", json={"on": True})
+        self.assertEqual(r.status_code, 200)
+        self.assertIs(profiles.settings(uid)["wx_on"], True)
+        prot = ADMIN.get("/api/admin/protocol?limit=50").json()["events"]
+        self.assertTrue(any(x.get("event") == "feature_profile" and "FeaAnton" in x.get("detail", "") for x in prot))
+        helpers.set_config(weather=False)
+
+    def test_refuses_what_is_not_there(self):
+        _, uid = profile("FeaBerta")
+        for path, body, code in ((f"/api/admin/features/memory/profiles/{uid}", {"on": True}, 404),      # no own switch
+                                 ("/api/admin/features/weather/profiles/u_000000000000", {"on": True}, 404),
+                                 (f"/api/admin/features/nothing/profiles/{uid}", {"on": True}, 404),
+                                 (f"/api/admin/features/weather/profiles/{uid}", {"on": "yes"}, 400),
+                                 (f"/api/admin/features/weather/profiles/{uid}", "x" * 300, 413)):
+            r = ADMIN.put(path, content=body) if isinstance(body, str) else ADMIN.put(path, json=body)
+            self.assertEqual(r.status_code, code, path)
+
+    def test_only_admins(self):
+        c, uid = profile("FeaCarl")
+        self.assertEqual(TestClient(panel.app).get("/api/admin/features").status_code, 401)
+        self.assertIn(c.get("/api/admin/features").status_code, (401, 403))
+        self.assertIn(c.put(f"/api/admin/features/weather/profiles/{uid}", json={"on": True}).status_code, (401, 403))
+        self.assertNotEqual(profiles.settings(uid).get("wx_on"), True)
+
+    def test_new_until_first_on(self):
+        helpers.set_config(transit=False)
+        rows = {f["key"]: f for f in ADMIN.get("/api/admin/features").json()["features"]}
+        if not rows["transit"]["seen"]:
+            helpers.set_config(transit=True)
+            rows = {f["key"]: f for f in ADMIN.get("/api/admin/features").json()["features"]}
+            self.assertTrue(rows["transit"]["seen"])
+            helpers.set_config(transit=False)
+            rows = {f["key"]: f for f in ADMIN.get("/api/admin/features").json()["features"]}
+            self.assertTrue(rows["transit"]["seen"])                  # stays known once it was on
+        self.assertIn("features-seen.json", __import__("backup").STATE_FILES)
+
+
 if __name__ == "__main__":
     unittest.main()

@@ -33,7 +33,7 @@ STATE = ("JSON.stringify({hidden:document.hidden,rec:!!chat.rec,live:micLive(),r
          "ctrl:!!chat.ctrl,playing:playing(),asr:!!chat.asrBusy,pctx:chat.pctx&&[chat.pctx.state,chat.pctx.currentTime],"
          "ctx:chat.ctx&&[chat.ctx.state,chat.ctx.currentTime],say:$('chatstate').textContent})")
 
-SECTIONS = ("chat", "mon", "sys", "test", "logs", "cfg", "prof", "int", "apps")
+SECTIONS = ("chat", "mon", "sys", "test", "logs", "cfg", "prof", "who", "int", "apps")
 VIEWS = (("pc", 1280, 900), ("handy", 390, 844))
 
 
@@ -836,3 +836,41 @@ class Browser(unittest.TestCase):
                     self.assertEqual(errors, [], name)
                     await br.close()
         self.run_async(go())
+
+    def test_who_may_do_what(self):
+        """Plan „Vereinheitlichen“ Phase 3 (V01.0.269): Funktionen → Wer darf was. A table on computers, cards with
+        chips on phones; a profile box switches only that profile, Spark off makes the boxes dashed."""
+        helpers.set_config(weather=True, transit=False)
+        async def go():
+            async with async_playwright() as p:
+                for name, w, h in VIEWS:
+                    br, pg, errors = await self.page(p, w, h)
+                    await pg.evaluate("goSec('who')")
+                    await pg.wait_for_selector("#whobox .wfilt")
+                    if name == "pc":
+                        self.assertTrue(await pg.is_visible("table.who"))
+                        heads = await pg.evaluate("[...document.querySelectorAll('table.who thead th')].map(x=>x.textContent)")
+                        self.assertIn("Uitest", heads)
+                        self.assertEqual(heads[1], "Spark")
+                        sel = "table.who button[aria-label^='Wetter – Uitest']"
+                    else:
+                        self.assertFalse(await pg.is_visible("table.who"))
+                        sel = "#whobox .wcard button.chip[aria-label^='Wetter – Uitest']"
+                    before = await pg.get_attribute(sel, "aria-pressed")
+                    await pg.click(sel)
+                    await pg.wait_for_function(f"document.querySelector(\"{sel}\").getAttribute('aria-pressed')!=='{before}'")
+                    # transit is off on the Spark: its profile boxes cannot be used
+                    off = "table.who button[aria-label^='Bus und Bahn – Uitest']" if name == "pc" else \
+                        "#whobox button.chip[aria-label^='Bus und Bahn – Uitest']"
+                    self.assertTrue(await pg.evaluate(f"document.querySelector(\"{off}\").disabled"))
+                    await pg.click("#whobox .wfilt button[data-f=on]")
+                    self.assertFalse(await pg.evaluate(f"!!document.querySelector(\"{off}\")"))
+                    await pg.click("#whobox .wfilt button[data-f=all]")
+                    over = await pg.evaluate("document.documentElement.scrollWidth-window.innerWidth")
+                    self.assertLessEqual(over, 1, name)
+                    self.assertEqual(errors, [], name)
+                    await br.close()
+        try:
+            self.run_async(go())
+        finally:
+            helpers.set_config(weather=True)

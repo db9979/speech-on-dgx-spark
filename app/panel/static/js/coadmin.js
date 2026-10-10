@@ -8,7 +8,9 @@ const hm=s=>new Date(s*1000).toLocaleTimeString([],{hour:'2-digit',minute:'2-dig
 function coadmStart(who){ADMIN_BY=who.admin_by||'';ADMIN_UNTIL=who.admin_until||0;ADMIN_ROLE=who.admin_role||null;
   if(!elevated())return;document.body.classList.add('coadm');if(LG.tab==='audit')LG.tab='adm';
   if(ADMIN_BY==='manager'){document.body.classList.add('mgr');
-    document.querySelectorAll('nav button[data-s=cfg],nav button[data-s=feat]').forEach(b=>b.hidden=true);GROUPS.mon=GROUPS.mon.filter(x=>x[0]!=='test')}
+    document.querySelectorAll('nav button[data-s=cfg]').forEach(b=>b.hidden=true);GROUPS.mon=GROUPS.mon.filter(x=>x[0]!=='test');
+    // Funktionen: only "Wer darf was" (the switches over /api/admin/switches, like in the app), not the settings form
+    GROUPS.feat=GROUPS.feat.filter(x=>x[0]!=='feat');lastSec.feat='who'}
   const b=$('logoutbtn');b.textContent=t('Admin-Modus beenden','End admin mode');b.onclick=coadmEnd;
   const bar=document.createElement('div');bar.id='coadmbar';bar.className='updbanner';
   const sp=document.createElement('span');sp.id='coadmtext';const end=document.createElement('button');end.type='button';end.className='b';
@@ -70,7 +72,8 @@ const ADM_EVENT={admin_login:t('Hauptadmin angemeldet','Main admin signed in'),a
   admin_code_failed:t('Admin-Code falsch','Admin code wrong'),admin_mode_on:t('Admin-Modus geöffnet','Admin mode opened'),admin_mode_off:t('Admin-Modus beendet','Admin mode ended'),
   admin_mode_failed:t('Admin-Modus: Code falsch','Admin mode: wrong code'),admin_role:t('Rolle geändert','Role changed'),admin_roles_switch:t('Benutzer als Admin','Users as admins'),
   admin_mfa_on:t('Zweiter Schritt Hauptadmin an','Main admin second step on'),admin_mfa_off:t('Zweiter Schritt Hauptadmin aus','Main admin second step off'),
-  admin_logout_everywhere:t('Hauptadmin überall abgemeldet','Main admin signed out everywhere')};
+  admin_logout_everywhere:t('Hauptadmin überall abgemeldet','Main admin signed out everywhere'),
+  feature_profile:t('Funktion für ein Profil','Function for a profile')};
 async function adminRows(){const d=await (await api('/api/admin/protocol?limit=500')).json();
   return d.events.map(e=>{const dt=new Date(e.t*1000),by=e.by==='main'?t('Hauptadmin','Main admin'):e.by?(d.names[e.by]||e.by):(e.name||(e.uid&&d.names[e.uid])||'');
     const what=e.event==='change'?`${e.method} ${e.path} → ${e.status}`:(ADM_EVENT[e.event]||e.event)+(e.uid&&e.event==='admin_role'?' ('+(d.names[e.uid]||e.uid)+')':'')+(e.detail?' – '+e.detail:'');

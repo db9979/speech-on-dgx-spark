@@ -66,7 +66,7 @@ function mbarMark(g){document.querySelectorAll('#mbar button').forEach(x=>x.clas
 // Main menu: Zustand, Funktionen and Personen und Geräte hold several pages behind a sub-tab bar. Funktionen is the
 // page "feat" of the settings form (saved with it), shown alone without the settings menu (class featmode).
 const GROUPS={chat:[['chat','']],mon:[['mon',t('Monitoring','Monitoring')],['test',t('Prüfen','Checks')],['logs',t('Logs','Logs')]],
-  feat:[['feat',t('Funktionen','Features')],['int',t('Anleitungen','Guides')]],
+  feat:[['feat',t('Funktionen','Features')],['who',t('Wer darf was','Who may do what')],['int',t('Anleitungen','Guides')]],
   prof:[['prof',t('Personen und Geräte','People and devices')],['apps',t('Apps und Schnittstellen','Apps and interfaces')]],cfg:[['cfg','']]};
 const lastSec={};
 function showSec(s){const sec=s==='feat'?'cfg':s;document.querySelectorAll('section').forEach(x=>x.classList.toggle('on',x.id===sec));
@@ -74,13 +74,14 @@ function showSec(s){const sec=s==='feat'?'cfg':s;document.querySelectorAll('sect
   const cw=document.querySelector('.cfgwrap');cw.classList.toggle('featmode',s==='feat');
   if(s==='feat'){cw.classList.add('sub');loadCfg();if(typeof cfgPane==='function')cfgPane('feat')}
   if(s==='cfg'&&$('pane-feat').classList.contains('on')&&typeof cfgPane==='function')cfgPane('start');
-  if(s==='cfg'){document.querySelector('.cfgwrap').classList.remove('sub');loadCfg();mfaShow('admmfa','/api/mfa');if($('pane-voices').classList.contains('on'))loadClone();if($('pane-upd').classList.contains('on'))loadSys()}if(s==='chat')chatTab();if(s==='test'){loadVoices();instrHint();loadLive();loadBench();loadVorrang()}if(s==='prof')loadProf();if(s==='logs')loadLogs();if(s==='apps')loadInt();}
+  if(s==='cfg'){document.querySelector('.cfgwrap').classList.remove('sub');loadCfg();mfaShow('admmfa','/api/mfa');if($('pane-voices').classList.contains('on'))loadClone();if($('pane-upd').classList.contains('on'))loadSys()}if(s==='chat')chatTab();if(s==='test'){loadVoices();instrHint();loadLive();loadBench();loadVorrang()}if(s==='prof')loadProf();if(s==='logs')loadLogs();if(s==='apps')loadInt();if(s==='who'&&window.loadWho)loadWho();}
 // Zustand, Funktionen and Personen und Geräte have several pages: computers show them as a second column like Einstellungen, phones as a
 // list with one line of state that opens the page, with "back" on top (V01.0.207, same pattern everywhere)
 const NARROW=()=>matchMedia('(max-width:760px)').matches;
 const SUBDESC={mon:()=>($('ztitle')||{}).textContent||'',test:()=>t('Funktionsprüfung, Qualitätstest, Leistung messen, ausprobieren','Function check, quality test, performance, try out'),
   logs:()=>t('Was die Dienste schreiben, mit Diagnose-Filter','What the services write, with diagnosis filter'),int:()=>t('Zu jedem Dienst: einrichten, benutzen, ausschalten','For every service: set up, use, switch off'),
   feat:()=>t('Was der Assistent können soll, für den Spark und jedes Profil','What the assistant may do, for the Spark and each profile'),
+  who:()=>t('Jede Funktion für Spark, Profile und Gäste','Every function for the Spark, profiles and guests'),
   prof:()=>t('Profile, Gäste und Geräte mit Schlüssel','Profiles, guests and devices with a key'),
   apps:()=>t('Open WebUI, andere Apps, Pebble, Siri, curl und Python','Open WebUI, other apps, Pebble, Siri, curl and Python')};
 const GNAME={mon:t('Zustand','Status'),feat:t('Funktionen','Features'),prof:t('Personen und Geräte','People and devices')};

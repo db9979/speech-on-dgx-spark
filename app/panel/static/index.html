@@ -74,7 +74,7 @@
     <div>
     <button class="b cfgback" id="cfgback" type="button"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"><path d="M15 5l-7 7 7 7"/></svg><span>Alle Einstellungen</span></button>
     <div class="card pane on" id="pane-start"><h2 class="pt">Auf einen Blick</h2><div class="pintro">Alle Einstellungen des Spark mit ihrem Stand. Antippen öffnet die Seite.</div><div id="glance"></div></div>
-    <div class="card pane" id="pane-feat"><h2 class="pt">Funktionen</h2><div class="pintro">Was der Assistent können soll. Tippe auf eine Funktion für Erklärung und Einstellungen.</div>
+    <div class="card pane" id="pane-feat"><h2 class="pt">Funktionen</h2><div class="pintro">Was der Assistent können soll. Tippe auf eine Funktion für Erklärung und Einstellungen. <button type="button" class="wlink" id="featwho">Wer darf was</button></div>
       <div class="setrow"><div class="lbl"><b>Gedächtnis</b><span>Merkt sich Dinge, die man ihm sagt, getrennt pro Profil.</span></div><label class="tgl"><input type="checkbox" id="chat.memory"><i></i></label></div>
       <div class="setrow"><div class="lbl"><b>Frühere Gespräche</b><span>Profile können nach früheren Gesprächen fragen; aus ruhigen Gesprächen merkt er sich wenige Fakten.</span></div><label class="tgl"><input type="checkbox" id="chat.history"><i></i></label></div>
       <div class="setrow"><div class="lbl"><b>Eigene Dokumente</b><span>Profile laden eigene Dokumente hoch, der Assistent sucht darin.</span></div><label class="tgl"><input type="checkbox" id="chat.documents"><i></i></label></div>
@@ -498,6 +498,12 @@
   </div>
 </section>
 
+<section id="who">
+  <div class="card"><h2>Wer darf was</h2>
+    <div class="mut">Jede Funktion mit dem Schalter für den Spark, dem eigenen Schalter jedes Profils und dem, was Gäste dürfen.</div>
+    <div id="whobox"></div>
+  </div>
+</section>
 <section id="int">
   <div class="card"><h2>Alle Anleitungen</h2>
     <div class="mut">Zu jedem Dienst, den man einschalten kann: was er kann, was du brauchst, wie du ihn einrichtest und benutzt, was das Haus verlässt und wie du ihn wieder ausschaltest. Dieselbe Anleitung steht auch neben dem Schalter unter Funktionen und im Ich.</div>
@@ -739,6 +745,7 @@
 <script src="/static/js/coadmin.js"></script>
 <script src="/static/js/secglance.js"></script>
 <script src="/static/js/find.js"></script>
+<script src="/static/js/who.js"></script>
 <script src="/static/js/start.js"></script>
 </body>
 </html>

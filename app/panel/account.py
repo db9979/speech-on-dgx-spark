@@ -181,7 +181,8 @@ async def logout_everywhere(request: Request):
 # The main admin gives roles (Mit-Admin, Verwalter); a profile with a role opens its admin mode with its own
 # fresh code, in its browser login or from its iPhone app ("Spark verwalten").
 ADMIN_EVENTS = ("admin_login", "admin_login_failed", "admin_code_failed", "admin_mode_on", "admin_mode_off", "admin_mode_failed",
-                "admin_role", "admin_roles_switch", "admin_mfa_on", "admin_mfa_off", "admin_logout_everywhere")
+                "admin_role", "admin_roles_switch", "admin_mfa_on", "admin_mfa_off", "admin_logout_everywhere",
+                "feature_profile")
 
 
 @router.get("/api/admin/roles", dependencies=[Depends(main_auth)])

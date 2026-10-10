@@ -12,14 +12,16 @@ the owner's voice at a shared speaker) are not switches and stay where they are.
 """
 import json
 import os
+import re
+import time
 from typing import NamedTuple
 
-from fastapi import APIRouter, Depends, Request
+from fastapi import APIRouter, Depends, HTTPException, Request
 
 import guard
 import profiles
 from common import load_config
-from core import assistant
+from core import assistant, auth
 
 DEFAULTS = os.path.join(os.path.dirname(os.path.abspath(__file__)), "..", "config.default.json")
 
@@ -223,3 +225,82 @@ def features_list(request: Request):
     guard.limit(request, "features", prof and prof["id"])
     return {"groups": [{"key": k, "name": [de, en]} for k, de, en in GROUPS],
             "features": state(prof["id"] if prof else None), "why": WHY}
+
+
+# ---------------------------------------------------------------- Funktionen → "Wer darf was" (admin)
+SEEN = os.path.join(os.environ.get("SPEECH_SPARK_STATE", "/var/lib/speech-spark/state"), "features-seen.json")
+_UID = re.compile(r"u_[0-9a-f]{12}")
+
+
+def _seen(c):
+    """When each function was first on on this Spark: "Neu, noch nie an" lists the others."""
+    try:
+        with open(SEEN) as f:
+            d = json.load(f)
+        d = {k: int(v) for k, v in d.items() if k in BY_KEY and isinstance(v, (int, float))} if isinstance(d, dict) else {}
+    except (OSError, ValueError):
+        d = {}
+    new = {f.key: int(time.time()) for f in FEATURES if f.key not in d and admin_on(f.key, c)}
+    if new:
+        d.update(new)
+        try:
+            os.makedirs(os.path.dirname(SEEN), exist_ok=True)
+            tmp = SEEN + ".tmp"
+            with open(tmp, "w") as f:
+                json.dump(d, f)
+            os.replace(tmp, SEEN)
+        except OSError:
+            pass
+    return d
+
+
+def matrix():
+    c = chat_cfg()
+    seen = _seen(c)
+    users = profiles.names()
+    s = {u["id"]: profiles.settings(u["id"]) for u in users}
+    import admin
+    import coadmin
+    switchable = set(admin.app_switches())   # what /api/admin/switches may change (not public, mfa, iphone …)
+    rows = []
+    for f in FEATURES:
+        rows.append({"key": f.key, "name": [f.de, f.en], "group": f.group, "switch": f.admin[0], "spark": admin_on(f.key, c),
+                     "own": _switch(c, f.admin[0]), "switchable": f.admin[0] in switchable, "parent": f.parent or None, "guests": f.guests, "seen": f.key in seen,
+                     "profile": f.profile or None, "guide": f.guide,
+                     "cells": {u["id"]: s[u["id"]].get(f.profile) is True for u in users} if f.profile else None})
+    return {"groups": [{"key": k, "name": [de, en]} for k, de, en in GROUPS], "features": rows,
+            "profiles": [{"id": u["id"], "name": u["name"], "role": coadmin.role(u["id"]) if coadmin.on() else ""} for u in users],
+            "public": _switch(c, "public"), "why": WHY}
+
+
+@router.get("/api/admin/features", dependencies=[Depends(auth)])
+def admin_features(request: Request):
+    guard.limit(request, "features", admin=True)
+    return matrix()
+
+
+@router.put("/api/admin/features/{key}/profiles/{uid}", dependencies=[Depends(auth)])
+async def admin_feature_profile(key: str, uid: str, request: Request):
+    """The admin switches a function for one profile (its own switch, which the profile sees under Ich)."""
+    guard.limit(request, "features", admin=True)
+    f = BY_KEY.get(key)
+    if not f or not f.profile or not _UID.fullmatch(uid) or not profiles.by_id(uid):
+        raise HTTPException(404, "no such function or profile")
+    raw = await request.body()
+    if len(raw) > 256:
+        raise HTTPException(413, "too large")
+    try:
+        body = json.loads(raw or b"{}")
+    except ValueError:
+        raise HTTPException(400, "invalid JSON")
+    on = body.get("on") if isinstance(body, dict) else None
+    if not isinstance(on, bool):
+        raise HTTPException(400, "on: true or false")
+    import admin
+    admin._no_admin_profile(request, uid)
+    profiles.save_settings(uid, {f.profile: on})
+    elev = None if request.scope.get("speech_main_admin") else request.scope.get("speech_coadmin")
+    by = "main" if not elev else elev["id"]
+    guard.log("feature_profile", uid=uid, by=by,
+              detail=f"{f.de} für {profiles.by_id(uid)['name']} {'an' if on else 'aus'}")
+    return {"key": key, "uid": uid, "on": on}
