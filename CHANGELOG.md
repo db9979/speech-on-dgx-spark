@@ -2,6 +2,7 @@
 
 Every version in one line, newest first (taken from the commit messages, so some lines are German, some English). Older entries have no version number.
 
+- **V01.0.258** · 2026-10-10 · Eigenes Kiwix-Archiv (Funktionen → Websuche, aus; Profil-Schalter): Wikipedia-Fragen zuerst aus dem eigenen kiwix-serve, Volltextsuche in gewählten Büchern, „Erzähl mehr“ liest weiter, fällt die Websuche aus antwortet das Offline-Archiv; Zustand → Prüfen → „Kiwix prüfen“, Logs-Bereich „Wissen“
 - **V01.0.257** · 2026-10-10 · Profile und Geräte: Profil eines Geräts als Auswahlliste statt Namensfeld; iPhone-App, Lautsprecher, Pebble-Uhr und Home Assistant stehen „🔒 fest“ mit Ort der Verwaltung (Server lehnt Umhängen ab), Zeilen gleich ausgerichtet
 - **V01.0.256** · 2026-10-10 · iPhone-App: „Mit meinem Profil anmelden“ in Spark verwalten für Mit-Admin und Verwalter (Profil-Code, endet nach 15 Min. ohne Bedienung)
 - **V01.0.255** · 2026-10-10 · Benutzer als Admin (Schalter unter Einstellungen → Sicherheit, aus; nur mit zweitem Schritt des Hauptadmins): Rollen Mit-Admin und Verwalter für Profile, Admin-Modus unter Ich → Sicherheit mit eigenem Code (15 min ohne Bedienung, höchstens 8 h), Hauptadmin behält Passwort, Rollen, Sicherungen und Admin-Profile, Logs → Admin-Protokoll zeigt wer, App-Anmeldung mit Profil-Code (Server)

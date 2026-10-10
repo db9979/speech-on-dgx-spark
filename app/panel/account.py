@@ -848,6 +848,7 @@ def profile_settings(request: Request):
                                        "style": bool(prof and chat.get("own_style", False)),
                                        "roles": bool(prof and chat.get("roles", False) is True),
                                        "wiki": bool(prof and chat.get("wiki", False) is True),
+                                       "kiwix": bool(prof and chat.get("kiwix", False) is True and chat.get("kiwix_url")),
                                        "follow": bool(prof and chat.get("follow_up", False)),
                                        "echo": bool(prof and chat.get("no_self_echo", False)),
                                        "images": bool(prof and chat.get("images", False) is True),

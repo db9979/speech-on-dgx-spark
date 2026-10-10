@@ -106,6 +106,9 @@
       <div data-show="chat.messages" style="margin-left:18px"><div class="row"><button class="b" type="button" id="msgallon">Für alle Profile einschalten</button></div><div class="fh" id="msgallmsg">Schaltet „Nachrichten für mich nutzen“ bei jedem Profil ein; jedes kann es unter Ich → Nachrichten wieder ausschalten. Erst nach dem Speichern des Schalters oben.</div></div>
       <div class="setrow" data-show="chat.search" style="margin-left:18px"><div class="lbl"><b>Wikipedia direkt</b><span>Wissensfragen wie „Was ist ein Quasar?“ beantwortet der Assistent aus dem Wikipedia-Artikel, ohne Websuche.</span></div><label class="tgl"><input type="checkbox" id="chat.wiki"><i></i></label></div>
       <div data-show="chat.wiki" style="margin-left:36px"><label>Adresse der Wikipedia</label><input id="chat.wiki_url" placeholder="https://de.wikipedia.org" autocomplete="off"><div class="fh">Leer = de.wikipedia.org, ohne Treffer dort en.wikipedia.org. Nur die Suchwörter verlassen den Spark.</div></div>
+      <div class="setrow" data-show="chat.search" style="margin-left:18px"><div class="lbl"><b>Eigenes Kiwix-Archiv</b><span>Wissen aus deinem kiwix-serve, auch ohne Internet. Fällt die Websuche aus, antwortet der Assistent daraus.</span></div><label class="tgl"><input type="checkbox" id="chat.kiwix"><i></i></label></div>
+      <div data-show="chat.kiwix" style="margin-left:36px"><label>Adresse des Kiwix</label><input id="chat.kiwix_url" placeholder="http://192.168.178.20:8080" autocomplete="off"><div class="fh">Am besten die Adresse im Heimnetz: schneller und geht ohne Internet. Ändern braucht den zweiten Anmeldeschritt.</div>
+        <label>Bücher</label><input id="chat.kiwix_books" data-list="1" placeholder="leer = alle, höchstens 10" autocomplete="off"><div class="row"><button class="b" type="button" id="kxload">Bücher laden</button><span id="kxmsg" class="mut"></span></div><div id="kxbooks" data-nodirty="1"></div><div class="fh">Antippen nimmt ein Buch in die Liste auf oder heraus; danach speichern. Wikipedia-Bücher beantworten „Was ist …?“, die übrigen durchsucht der Assistent bei „Schau in meinem Archiv …“.</div></div>
       <div class="setrow"><div class="lbl"><b>Wetter</b><span>Vorhersage für den eigenen Ort von Open-Meteo, ohne Schlüssel.</span></div><label class="tgl"><input type="checkbox" id="chat.weather"><i></i></label></div>
       <div data-show="chat.weather">        <label>Adresse der Vorhersage</label><input id="chat.weather_url" placeholder="https://api.open-meteo.com/v1/forecast" autocomplete="off">
         <label>Adresse der Ortssuche</label><input id="chat.geocode_url" placeholder="https://geocoding-api.open-meteo.com/v1/search" autocomplete="off"><div class="fh">Nur ändern, wenn du Open-Meteo selbst betreibst.</div></div>
@@ -435,6 +438,10 @@
     <div class="row" style="margin-top:12px"><button class="b" id="vrgo">Vorrang prüfen</button><span id="vrmsg" class="mut"></span></div>
     <div id="vrtoday" class="mut" style="margin-top:8px"></div>
     <div id="vrout"></div></div>
+  <div class="card"><h2>Kiwix-Archiv</h2>
+    <div class="intro sm">Prüft, ob der Spark dein Kiwix erreicht, welche Bücher es hat und wie schnell eine Testsuche antwortet. Adresse und Schalter unter Einstellungen → Funktionen → Websuche.</div>
+    <div class="row" style="margin-top:12px"><button class="b" id="kxgo">Kiwix prüfen</button><span id="kxgomsg" class="mut"></span></div>
+    <div id="kxout"></div></div>
   <div class="two">
     <div class="card"><h2>Spracherkennung testen</h2>
       <label>Audiodatei (wav, mp3, flac, …)</label><input type="file" id="asrfile" accept="audio/*">

@@ -78,16 +78,18 @@ GROUPS = {
     "agent": ({"agent_list", "agent_task", "agent_schedule", "routine_save"}, AGENT_WORDS),
     "iphone": ({"iphone_action"}, PHONE_WORDS),
     # only when the person names it ("Schau in Wikipedia ..."); other knowledge questions stay "unklar"
-    "wikipedia": ({"wikipedia"}, dict(chat.NEED_TOOLS)["wikipedia"]),
+    "wikipedia": ({"wikipedia", "article_more"}, dict(chat.NEED_TOOLS)["wikipedia"]),
+    # the own offline archive (Kiwix, V01.0.258): only when the person names it
+    "archiv": ({"archive_search", "article_more", "wikipedia"}, dict(chat.NEED_TOOLS)["archive_search"]),
 }
-INTENT_NAMES = [n for n in GROUPS if n != "wikipedia"]   # the model's pick (ask_model) never narrows to it
+INTENT_NAMES = [n for n in GROUPS if n not in ("wikipedia", "archiv")]   # the model's pick (ask_model) never narrows to it
 # always kept when the tools are narrowed: noting something the person says about themselves, and the
 # own documents (offered only when the profile has some; V01.0.244: "Wann läuft meine Versicherung ab?"
 # or a question the rules file under another group may well be answered from them)
 NARROW_KEEP = {"memory_save", "document_search"}
 # chat.route_model "lean": a question no rule recognizes gets only these (of those offered). A short
 # tool list makes the model read far less before its first word; the rule groups keep everything else.
-LEAN = {"web_search", "wikipedia", "history_search"} | NARROW_KEEP
+LEAN = {"web_search", "wikipedia", "archive_search", "article_more", "history_search"} | NARROW_KEEP
 # more than this many groups at once: not clear enough to narrow
 MAX_MIXED = 2
 

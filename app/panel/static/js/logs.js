@@ -2,7 +2,7 @@
 // buttons, a tidy list (time, area, message; errors red, repeats ×n, pauses), search in the browser only,
 // live reload, copy for a thread, and the per-area detail switches. Lines are built with textContent only.
 const LAREA={chat:[t('Gespräch','Conversation'),'#6366f1'],search:[t('Websuche','Web search'),'#0ea5e9'],weiche:[t('Weiche','Router'),'#8b5cf6'],
-  ha:['Home Assistant','#f59e0b'],room:[t('Raum','Room'),'#10b981'],esp32:[t('Lautsprecher','Speakers'),'#14b8a6'],watch:[t('Uhr','Watch'),'#ec4899'],telegram:['Telegram','#3b82f6'],mail:['Mail','#64748b'],vorrang:[t('Vorrang','Priority'),'#ef4444']};
+  ha:['Home Assistant','#f59e0b'],room:[t('Raum','Room'),'#10b981'],esp32:[t('Lautsprecher','Speakers'),'#14b8a6'],watch:[t('Uhr','Watch'),'#ec4899'],telegram:['Telegram','#3b82f6'],mail:['Mail','#64748b'],vorrang:[t('Vorrang','Priority'),'#ef4444'],wissen:[t('Wissen','Knowledge'),'#a16207']};
 const LV_AREAS={room:t('Raum-Modus','Room mode'),esp32:t('Lautsprecher','Speakers'),ha:'Home Assistant',chat:t('Gespräch','Conversation')};
 // display only: the same fixed words as the panel uses for the diagnosis tab, for the plain service logs
 const LERR=/error|exception|traceback|failed|broke|refused|timeout|timed out|fehler|not reachable/i,LWARN=/\b(warn\w*|stalled|behind|ignored|asked again|retry|slow)\b/i;

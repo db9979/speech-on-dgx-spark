@@ -16,10 +16,12 @@ import documents  # noqa: E402
 import extras  # noqa: E402
 from textnorm import guess_language  # noqa: E402
 import homeassistant  # noqa: E402
+import kiwix  # noqa: E402
 import mail  # noqa: E402
 import profiles  # noqa: E402
 import recall  # noqa: E402
 import tidy  # noqa: E402
+import wiki  # noqa: E402
 import chat  # noqa: E402  (constants and helpers; imported fully before any call)
 
 
@@ -61,6 +63,15 @@ async def run(t, name, args, st):
             await t.out.put({"type": "sources", "items": sources})
             return result
         except Exception as e:
+            # the internet or SearXNG is gone: the own Kiwix answers instead, saying so (kiwix.py)
+            if t.who and t.own_browser and kiwix.web_fallback(t.who["id"]):
+                try:
+                    result, sources = await kiwix.web_instead(wiki._query(query))
+                    print("chat: web search failed, answered from Kiwix:", type(e).__name__, flush=True)
+                    await t.out.put({"type": "sources", "items": sources})
+                    return result
+                except (httpx.HTTPError, ValueError) as e2:
+                    print("kiwix: web search fallback failed", type(e2).__name__, flush=True)
             await t.out.put({"type": "search_error", "message": str(e)})
             return f"Search failed: {e}. Tell the user the search did not work; do not answer from guesses."
     if name == "home_assistant" and t.ha:

@@ -16,6 +16,7 @@ sys.path.insert(0, os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
 import backup  # noqa: E402
 import guard  # noqa: E402
 import health  # noqa: E402
+import kiwix  # noqa: E402
 import profiles  # noqa: E402
 import quality  # noqa: E402
 import vorrang  # noqa: E402
@@ -191,6 +192,13 @@ async def vorrang_test():
         raise HTTPException(409, "the priority test is already running")
     vorrang.start_test()
     return vorrang.test_state()
+
+
+@router.post("/api/admin/kiwix/check", dependencies=[Depends(auth)])
+async def kiwix_check(request: Request):
+    """"Kiwix prüfen": reachable, the books (for choosing them) and one test lookup (kiwix.py)."""
+    guard.limit(request, "kiwix", admin=True)
+    return await kiwix.check()
 
 
 @router.get("/api/quality", dependencies=[Depends(auth)])

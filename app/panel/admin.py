@@ -17,6 +17,7 @@ from fastapi.responses import FileResponse, Response, StreamingResponse
 sys.path.insert(0, os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
 import echo  # noqa: E402
 import guard  # noqa: E402
+import kiwix  # noqa: E402
 import health  # noqa: E402
 import coadmin  # noqa: E402
 import mfa  # noqa: E402
@@ -340,7 +341,14 @@ def validate(new):
     for k in ("weather_url", "geocode_url", "telegram_api", "transit_url", "wiki_url"):
         if ch.get(k) and not re.fullmatch(r"https?://\S+", ch[k]):
             raise HTTPException(400, f"{k}: the address must start with http:// or https://")
-    for k in ("agent", "agent_mcp", "messages", "messages_all", "messages_announce", "messages_voice", "pebble"):
+    if ch.get("kiwix_url") and not kiwix.URL.fullmatch(str(ch["kiwix_url"]).strip().rstrip("/")):
+        raise HTTPException(400, "kiwix_url: http(s)://name or http(s)://name:port, optionally a path, nothing else")
+    books = ch.get("kiwix_books", [])
+    if not isinstance(books, list) or len(books) > kiwix.MAX_BOOKS \
+            or not all(isinstance(b, str) and kiwix.BOOK.fullmatch(b) for b in books):
+        raise HTTPException(400, f"kiwix_books: at most {kiwix.MAX_BOOKS} book names (letters, digits, . _ -)")
+    for k in ("agent", "agent_mcp", "messages", "messages_all", "messages_announce", "messages_voice", "pebble",
+              "kiwix"):
         if not isinstance(ch.get(k, False), bool):
             raise HTTPException(400, f"{k} must be true or false")
     if ch.get("esp32_url") and not re.fullmatch(r"https?://[A-Za-z0-9.\-]+(?::\d{1,5})?/?", ch["esp32_url"]):
@@ -500,7 +508,7 @@ def validate(new):
 
 
 SENSITIVE = [("api", "key"), ("chat", "llm_url"), ("chat", "llm_key"), ("chat", "telegram_api"),
-             ("chat", "search_url"), ("chat", "public"), ("chat", "esp32_url"), ("chat", "esp32_repo"),
+             ("chat", "search_url"), ("chat", "kiwix_url"), ("chat", "public"), ("chat", "esp32_url"), ("chat", "esp32_repo"),
              ("chat", "mfa"), ("panel", "trusted_proxies"), ("panel", "allow_lan"), ("asr", "model"), ("asr", "aligner_model"),
              ("tts", "model"), ("tts", "voicedesign_model")]
 

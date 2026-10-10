@@ -431,6 +431,7 @@ NEED_TOOLS = [  # tool that has to be offered, words in the question: one place 
     ("transit", re.compile(r"(?i)\b(bus|busse|bahn|s-?bahn|zug|züge|tram|straßenbahn|abfahrt\w*|verbindung\w*|"
                            r"fahrplan|train|departures?)\b")),
     ("wikipedia", re.compile(r"(?i)\b(wikipedia|wiki|lexikon|enzyklopädie|encyclopedia)\b")),
+    ("archive_search", re.compile(r"(?i)\b(kiwix|offline-?archiv\w*|(in )?mein(em)? archiv|nachschlagewerk\w*)\b")),
     ("tasks_show", re.compile(r"(?i)(einkaufsliste|einkaufszettel|aufgabenliste|to-?do|\b(auf|von) (die|der|meine[rn]?) "
                               r"liste\b|shopping list)")),
 ]
@@ -848,6 +849,10 @@ class _SearxResults(html.parser.HTMLParser):
             self.cur[self.field] += data
 
 
+class SearchUnreachable(RuntimeError):
+    """SearXNG answered, but none of its search engines did."""
+
+
 async def web_search(c, ccfg, query):
     """Returns (text for the LLM, [{title, url}])."""
     url = ccfg["search_url"].rstrip("/")
@@ -867,7 +872,11 @@ async def web_search(c, ccfg, query):
         if r.status_code == 429:
             raise RuntimeError("SearXNG rate limiter blocks the Spark (429): allow its IP in limiter.toml (pass_ip)")
         r.raise_for_status()
-        raw = r.json().get("results", [])
+        data = r.json()
+        raw = data.get("results", [])
+        if not raw and data.get("unresponsive_engines") and not data.get("answers"):
+            # every engine failed: the internet is gone (or SearXNG cannot reach it), not "nothing found"
+            raise SearchUnreachable("no search engine answers (internet gone?)")
     results = [x for x in raw if str(x.get("url", "")).startswith(("http://", "https://"))]
     results = results[:int(ccfg.get("search_results") or 5)]
     if not results:

@@ -509,6 +509,28 @@ function vrRender(d){const s=d.today||{},r=d.result;
   if(!d.running&&vrPoll){clearInterval(vrPoll);vrPoll=null}}
 async function loadVorrang(){try{vrRender(await (await api('/api/vorrang')).json())}catch{}}
 $('vrgo').onclick=async()=>{try{vrRender(await (await api('/api/vorrang',{method:'POST'})).json())}catch(e){$('vrmsg').innerHTML=`<span class="err">${esc(e.message)}</span>`}};
+// own Kiwix (kiwix.py): check, and the book list to choose from (built with textContent only)
+async function kxCheck(){return await (await api('/api/admin/kiwix/check',{method:'POST'})).json()}
+function kxBooks(d){const box=$('kxbooks'),inp=$('chat.kiwix_books');box.textContent='';
+  const sel=()=>inp.value.split(/[\s,;]+/).filter(Boolean);
+  (d.books||[]).forEach(b=>{const btn=document.createElement('button');btn.type='button';btn.className='b';btn.style.margin='4px 6px 0 0';
+    const paint=()=>{const on=sel().includes(b.id);btn.classList.toggle('p',on);btn.textContent=(on?'✓ ':'')+b.title+(b.date?` (${b.date})`:'')};
+    btn.title=b.id;paint();
+    btn.onclick=()=>{let v=sel();v=v.includes(b.id)?v.filter(x=>x!==b.id):v.concat([b.id]).slice(0,10);inp.value=v.join(', ');
+      inp.dispatchEvent(new Event('input',{bubbles:true}));paint()};
+    box.appendChild(btn)})}
+$('kxload').onclick=async()=>{$('kxmsg').textContent=t('Lade …','Loading …');
+  try{const d=await kxCheck();kxBooks(d);$('kxmsg').textContent=d.ok?t(`${d.books.length} Bücher`,`${d.books.length} books`):(d.error||'')}
+  catch(e){$('kxmsg').textContent=e.message}};
+$('kxgo').onclick=async()=>{$('kxgomsg').textContent=t('Prüfe …','Checking …');$('kxout').textContent='';
+  try{const d=await kxCheck(),out=$('kxout');$('kxgomsg').textContent='';
+    const line=(txt,cls)=>{const x=document.createElement('div');if(cls)x.className=cls;x.textContent=txt;out.appendChild(x)};
+    if(!d.ok){line(d.error||t('Nicht erreichbar','Not reachable'),'err');return}
+    line(t(`Erreichbar in ${d.ms} ms, ${d.books.length} Bücher; durchsucht werden ${(d.chosen||[]).length}.`,`Reachable in ${d.ms} ms, ${d.books.length} books; ${(d.chosen||[]).length} are searched.`));
+    if(d.test)line(t(`Testsuche in „${d.test.book}“: ${d.test.hits} Treffer in ${d.test.ms} ms.`,`Test search in "${d.test.book}": ${d.test.hits} hits in ${d.test.ms} ms.`));
+    else line(t('Kein Wikipedia-Buch gewählt: Testsuche übersprungen.','No Wikipedia book chosen: test search skipped.'),'mut');
+    d.books.slice(0,30).forEach(b=>line(`${(d.chosen||[]).includes(b.id)?'✓':'·'} ${b.title}${b.date?' ('+b.date+')':''} – ${b.id}`,'mut'))}
+  catch(e){$('kxgomsg').textContent=e.message}};
 $('updstop').onclick=async()=>{if(!confirm(t('Update abbrechen? Was schon installiert ist, bleibt. Ein späteres Update holt den Rest nach.','Cancel the update? What is already installed stays. A later update installs the rest.')))return;
   try{await api('/api/update',{method:'DELETE'});$('updmsg').textContent=t('abgebrochen','cancelled');loadSys()}
   catch(e){$('updmsg').innerHTML=`<span class="err">${esc(e.message)}</span>`}};
