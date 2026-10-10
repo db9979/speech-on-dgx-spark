@@ -1561,11 +1561,30 @@ class JoinBrowser(unittest.TestCase):
                         await pg.fill("#joinpin2", "246810")
                         # the PIN hash and the new profile can take a while on a busy CI runner: wait for the page
                         # to load again after /api/join instead of a fixed 15 s for the card (red twice on GitHub)
-                        joined = []
+                        joined, asked = [], []
+                        pg.on("request", lambda r: r.url.endswith("/api/join") and asked.append(r.method))
                         pg.on("response", lambda r: r.url.endswith("/api/join") and joined.append(r.status))
-                        async with pg.expect_navigation(timeout=45000):   # join.js reloads the page after /api/join
-                            await pg.click("#joingo")
-                        self.assertEqual(joined, [200])
+                        await pg.evaluate("window.__beforeJoin=1")
+                        await pg.click("#joingo")
+                        for i in range(450):   # join.js reloads the page after /api/join (up to 45 s on a busy runner)
+                            await pg.wait_for_timeout(100)
+                            try:
+                                if joined and not await pg.evaluate("window.__beforeJoin===1"):
+                                    break
+                            except Exception:
+                                continue   # the page is just loading again
+                            if i in (80, 200) and not asked:
+                                # seen on GitHub: the click came before the button had its handler (the page was
+                                # drawn again); keep a trace and tap once more
+                                info = await pg.evaluate("""JSON.stringify({btn:!!$('joingo'),off:$('joingo')&&$('joingo').disabled,
+                                    msg:$('joinmsg')&&$('joinmsg').textContent,hash:location.hash})""")
+                                print(f"\nWARNUNG kein /api/join nach dem Tippen: {info} {errors}", file=sys.stderr)
+                                if not await pg.input_value("#joinpin"):
+                                    await pg.fill("#joinpin", "246810")
+                                    await pg.fill("#joinpin2", "246810")
+                                await pg.click("#joingo")
+                        self.assertEqual(joined, [200], f"asked {asked} errors {errors}")
+                        await pg.wait_for_load_state("load")
                         try:
                             await pg.wait_for_selector("#gobox .gocard", timeout=30000)
                         except Exception:
