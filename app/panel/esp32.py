@@ -69,6 +69,7 @@ import numpy as np
 import echo
 import logfilter
 import profiles
+import spkcode
 import vault
 import features
 from common import load_config
@@ -834,6 +835,11 @@ class Session:
                 text = ""
             logfilter.detail("esp32", f"recognition {(time.time() - ended) * 1000:.0f} ms for {len(pcm) / 32000:.1f} s "
                                       f"of sound, {len(text.split())} words")
+            if text and not self.testing and spkcode.waiting(self.dev["id"]):
+                # the answer to "Sag bitte dein Codewort": checked here, shown and kept nowhere
+                await self.send({"type": "stt", "text": "[Codewort]"})
+                await self.code_answer(text)
+                return
             if text and not self.testing and self.own_voice(text, pcm, ended):
                 text = ""
             self.note(f"Verstanden: „{text[:80]}“" if text else "Nichts verstanden")
@@ -853,7 +859,10 @@ class Session:
                 await self.room_start(source="voice")
                 return
             await self.send({"type": "llm", "emotion": "thinking", "text": "🤔"})
-            voice, why = await self.voice_result(vt)
+            voice, why, v = await self.voice_result(vt)
+            voice, why, asked = await self.code_gate(text, voice, why, v)
+            if asked:
+                return
             self.note("Stimme: Inhaber erkannt" if voice else "Stimme nicht als Inhaber erkannt: nur Allgemeines")
             await self.speak(text, voice, why)
             logfilter.detail("esp32", f"answer finished {(time.time() - ended) * 1000:.0f} ms after the question ended")
@@ -1032,6 +1041,8 @@ class Session:
                 voice = (who or "", best >= th)
             except Exception:
                 voice = ("", False)
+            if not voice[1]:
+                self.foreign_at = time.time()   # an unknown voice in the room: a code word is asked next (spkcode.py)
         if not text or self.room is None:
             return
         # one piece can hold several sentences: the rules look at each sentence on its own
@@ -1128,23 +1139,81 @@ class Session:
                                                      did=self.dev["id"]))
 
     async def voice_result(self, vt):
-        """(the profile's id or "", why not) for this question: personal things at a speaker in a room
-        only for the voice clearly recognized as the profile's own (chat_turn.shared_stranger). The
-        journal gets the numbers (match, needed, other profiles, seconds of speech), never a voiceprint."""
+        """(the profile's id or "", why not, the speakers.verify result or None) for this question: personal
+        things at a speaker in a room only for the voice clearly recognized as the profile's own
+        (chat_turn.shared_stranger). The journal gets the numbers (match, needed, other profiles, seconds
+        of speech), never a voiceprint."""
         import speakers
         if vt is None:
             cc = load_config().get("chat", {})
-            return "", ("speaker ID is off" if not cc.get("speaker_id", False) else "the profile has not taught its voice")
+            return "", ("speaker ID is off" if not cc.get("speaker_id", False) else "the profile has not taught its voice"), None
         try:
             v = await vt
         except Exception as e:
             print("esp32: voice check", type(e).__name__, flush=True)
-            return "", "voice check failed"
+            return "", "voice check failed", None
         if v["ok"]:
-            print("esp32: owner's voice recognized at", self.dev.get("name", "?")[:40], f"({speakers.numbers(v)})",
-                  "- personal data allowed", flush=True)
-            return self.dev["user"], ""
-        return "", (v["why"] + (f" ({speakers.numbers(v)})" if v["score"] or v["seconds"] else ""))[:160]
+            return self.dev["user"], "", v
+        return "", (v["why"] + (f" ({speakers.numbers(v)})" if v["score"] or v["seconds"] else ""))[:160], v
+
+    async def code_gate(self, text, voice, why, v):
+        """The speaker code word (spkcode.py): a sure voice in a plausible moment as before; a voice in the
+        grey zone, or a sure one in an implausible moment, asking for personal things is asked for the code
+        word (the question waits); a foreign voice never. (voice, why, asked)."""
+        import speakers
+        uid, did, name = self.dev["user"], self.dev["id"], self.dev.get("name", "?")[:40]
+        nums = f"({speakers.numbers(v)})" if v and (v["score"] or v["seconds"]) else ""
+        if not spkcode.on(uid):
+            if voice:
+                print("esp32: owner's voice recognized at", name, nums, "- personal data allowed", flush=True)
+            return voice, why, False
+        lvl, odd = spkcode.level(v, uid, did, getattr(self, "foreign_at", 0.0))
+        if lvl in ("sure", "grey") and spkcode.is_open(uid, did):
+            print("esp32: owner's voice at", name, "shortly after a right code word", nums, "- personal data allowed", flush=True)
+            return uid, "", False
+        if lvl == "sure":
+            print("esp32: owner's voice recognized at", name, nums, "- personal data allowed", flush=True)
+            return uid, "", False
+        if lvl == "grey" and spkcode.locked(uid, did):
+            return "", f"code word locked after {spkcode.FAILS} wrong ones {nums}".strip()[:160], False
+        if lvl == "grey" and spkcode.personal(text):
+            spkcode.ask(uid, did, text, odd)
+            print("esp32: code word asked at", name, "-", odd, nums, flush=True)
+            self.note("Codewort erfragt: " + odd)
+            await self.say("Sag bitte dein Codewort.", tone=True)
+            self.listen(self.mode)
+            return "", "", True
+        if lvl == "grey":
+            return "", f"voice not sure ({odd}), nothing personal asked {nums}".strip()[:160], False
+        return "", why, False
+
+    async def code_answer(self, text):
+        """The sentence after "Sag bitte dein Codewort": checked against the code word, never shown, kept,
+        logged or given to the model."""
+        import push
+        uid, did, name = self.dev["user"], self.dev["id"], self.dev.get("name", "?")[:40]
+        res, question = spkcode.attempt(uid, did, text)
+        if res == "right":
+            print("esp32: code word right at", name, "- the waiting question gets the profile's data", flush=True)
+            self.note("Codewort richtig")
+            await self.send({"type": "llm", "emotion": "thinking", "text": "🤔"})
+            await self.speak(question, uid, "")
+        elif res == "wrong":
+            n = spkcode.fail_count(uid, did)
+            print(f"esp32: code word wrong at {name} ({n} of {spkcode.FAILS}) - personal data withheld", flush=True)
+            self.note(f"Codewort falsch ({n} von {spkcode.FAILS})")
+            await self.say("Das Codewort stimmt nicht. Persönliches sage ich hier nur dem Inhaber.")
+        elif res == "locked":
+            print(f"esp32: code word locked at {name} for {spkcode.LOCK // 60} min after {spkcode.FAILS} wrong ones", flush=True)
+            self.note(f"Codewort {spkcode.FAILS}-mal falsch: {spkcode.LOCK // 60} Minuten gesperrt")
+            await self.say("Das Codewort stimmt nicht. Eine halbe Stunde lang frage ich hier nicht mehr danach.")
+            try:
+                await push.send(uid, "🔐 Spark", f"{spkcode.FAILS} falsche Codewörter am Lautsprecher „{name}“. Er fragt "
+                                f"{spkcode.LOCK // 60} Minuten lang nicht mehr danach.", tag="spkcode")
+            except Exception as e:
+                print("esp32: code word notification", type(e).__name__, flush=True)
+        else:
+            await self.say("Die Frage ist abgelaufen. Bitte stell sie noch einmal.")
 
     async def speak(self, text, voice="", why=""):
         import chat
@@ -1248,7 +1317,8 @@ from fastapi import APIRouter, Depends, HTTPException, Request, WebSocket, WebSo
 from fastapi.responses import FileResponse, JSONResponse  # noqa: E402
 
 from account import browser_profile  # noqa: E402
-from core import admin_code, assistant, auth, confirm_code, own_profile, secret_profile, speaker_on  # noqa: E402
+from core import admin_code, assistant, auth, confirm_code, own_profile, secret_profile  # noqa: E402
+from core import secret_profile_fresh, speaker_on  # noqa: E402
 
 router = APIRouter()
 
@@ -1540,7 +1610,26 @@ def profile_get(request: Request, prof=Depends(own_profile)):
     return {"enabled": admin_on(), "on": profile_on(prof["id"]), "firmware": _fw_public(), "base": base,
             "fixed_base": bool(load_config().get("chat", {}).get("esp32_url")), "devices": _list(prof["id"]),
             "room": bool(load_config().get("chat", {}).get("room", False)),
-            "speaker_id": bool(load_config().get("chat", {}).get("speaker_id", False))}
+            "speaker_id": bool(load_config().get("chat", {}).get("speaker_id", False)),
+            "code": dict(spkcode.public(prof["id"]), enabled=features.admin_on("spkcode"),
+                         on=features.profile_on("spkcode", prof["id"]))}
+
+
+@router.put("/api/profile/speaker-code", dependencies=[Depends(assistant)])
+async def profile_speaker_code(request: Request, prof=Depends(secret_profile_fresh)):
+    """The profile's own code word for its speakers (spkcode.py); an empty one removes it. Only in the
+    profile's own browser login with a fresh code, never sent back, never in a log."""
+    if not features.admin_on("spkcode"):
+        raise HTTPException(403, "Codewort am Lautsprecher ist ausgeschaltet.")
+    body = await _body(request)
+    try:
+        res = spkcode.set_code(prof["id"], str(body.get("code", ""))[:200])
+    except ValueError as e:
+        raise HTTPException(400, str(e))
+    import guard
+    guard.log("speaker_code_set" if res["has_code"] else "speaker_code_removed", ip=guard.client_ip(request),
+              name=prof["name"], uid=prof["id"])
+    return res
 
 
 def _check_base(base):

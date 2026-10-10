@@ -127,6 +127,8 @@ FEATURES = (
       parent="iphone", guide="iphoneupdate"),
     # security
     F("speaker", "Sprechererkennung", "Speaker recognition", "sec", ("speaker_id",), me="voicebox", guide="speaker"),
+    F("spkcode", "Codewort am Lautsprecher", "Code word at a speaker", "sec", ("speaker_code", "esp32"), "spk_code",
+      parent="speaker", me="espbox", guide="spkcode"),
     F("mfa", "Zweiter Anmeldeschritt", "Second sign-in step", "sec", ("mfa",), me="secbox", guide="mfa"),
 )
 BY_KEY = {f.key: f for f in FEATURES}

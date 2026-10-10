@@ -717,6 +717,7 @@ SETTINGS = {
     "tg_push": (False, lambda v: isinstance(v, bool)),
     "tg_images": (False, lambda v: isinstance(v, bool)),    # photos sent to the bot go to the model (images.py)
     "esp_on": (False, lambda v: isinstance(v, bool)),   # own ESP32 speakers (esp32.py)
+    "spk_code": (False, lambda v: isinstance(v, bool)),   # code word at an own speaker when the voice is not sure (spkcode.py)
     "pebble_on": (False, lambda v: isinstance(v, bool)),   # Pebble watch paired by code (pebblewatch.py)
     # iPhone app (iphone.py): pairing for this profile, and switching the smart home from it, both off
     "app_on": (False, lambda v: isinstance(v, bool)),

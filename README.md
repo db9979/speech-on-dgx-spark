@@ -31,6 +31,7 @@ All options for running without questions (`--mode api --asr 1.7b --tts 0.6b --y
 
 <!-- New version: add one line at the top here and in CHANGELOG.md, drop the oldest line here (keep 10). Details go to docs/de and docs/en, not into this README. -->
 
+- **V01.0.297** Code word at a speaker (off): if a speaker recognises your voice only narrowly or something is unusual, it asks for your own code word before personal things; never a foreign voice; after 3 wrong ones a 30-minute pause and a notification
 - **V01.0.296** Phone looks like the iPhone app (always below 760 px, can be turned off under Appearance → "Show the computer layout"): tabs Spark · Today · Documents · Me · Manage by role, chat with face, big mic and an always visible text field, Today with the same cards as Me → Today, history as a sheet from below, iOS-style lists and switches, sub-pages slide in from the right, the Android and Safari back gesture goes one level back; same on iPhone and Android, no new endpoints
 - **V01.0.295** Passkeys instead of the code (Face ID, Touch ID, Windows Hello): add one under Security (with a fresh code), then „With passkey“ at sign-in, for the admin mode and important changes; only over the address with a name, the app code stays as the way back, python-fido2 pinned with hash
 - **V01.0.294** Face shows what it does (Settings → Defaults, admin, off): robot and comic show a small sign while working (magnifier for searches, calendar sheet, letter, light bulb for Home Assistant, note pad for memory, thought bubbles), wink after something was done, look puzzled on errors and fall asleep after 5 quiet minutes; only from the panel's own chat events
@@ -40,7 +41,6 @@ All options for running without questions (`--mode api --asr 1.7b --tts 0.6b --y
 - **V01.0.290** reMarkable sending: errors now say which file the cloud refused and what it answered (no token, also in the journal "remarkable: sending failed"), any 2xx answer counts, and a root line the Spark does not understand stops the write before anything could vanish
 - **V01.0.289** Fewer codes: trusted browsers for 60 days (7–90, a code again after 30 days without use) with a list to remove them one by one and a push note, a right code counts 10 minutes in the same login (bar with „End“; password, second step, roles, backups, code word and admin mode always ask), admin mode in a trusted browser 60 instead of 15 minutes; calendar, mail and Home Assistant now ask for the code instead of showing „code required“
 - **V01.0.288** Self-test "rmscene does not downgrade packaging" fits the hash lock (fallback line indented, lock checked for --no-deps and packaging ≥ 24); main green again
-- **V01.0.287** Priority for people: the TTS/ASR queue reliably frees the place of a waiting request that gives up (Python 3.11 too)
 
 All versions: [CHANGELOG.md](CHANGELOG.md)
 

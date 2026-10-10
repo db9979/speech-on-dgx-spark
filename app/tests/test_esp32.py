@@ -861,14 +861,14 @@ class SharedSpeaker(unittest.TestCase):
             async def run():
                 vt = asyncio.get_running_loop().create_future()
                 vt.set_result(v)
-                return await s.voice_result(vt)
+                return (await s.voice_result(vt))[:2]
             return asyncio.run(run())
         base = {"ok": False, "why": "", "score": 0.0, "other": -1.0, "need": 0.75, "seconds": 0.0, "here": 0}
         # speaker ID off or no voice taught: nobody counts as the owner
         self.assertEqual(asyncio.run(s.voice_result(s.voice_check(b"\0" * 32000)))[0], "")
         helpers.set_config(speaker_id=True)
         self.assertEqual(asyncio.run(s.voice_result(s.voice_check(b"\0" * 32000))),
-                         ("", "the profile has not taught its voice"))
+                         ("", "the profile has not taught its voice", None))
         self.assertEqual(found(dict(base, ok=True, score=0.9, seconds=2.0))[0], uid)
         voice, why = found(dict(base, why="voice not recognized", score=0.68, other=0.4, seconds=1.4, here=5))
         self.assertEqual(voice, "")
@@ -905,6 +905,158 @@ class SharedSpeaker(unittest.TestCase):
         _, token, _ = self.speaker("Esp Yvonne")
         t = self.turn(token, "Mails?", "", why="too little speech to check the voice")
         self.assertIn(chat.SHARED_SHORT_HINT, t.messages[0]["content"])
+
+
+class SpeakerCode(unittest.TestCase):
+    """Code word at a speaker (spkcode.py, plan plaene/lautsprecher-codewort.md): sure voice as before,
+    grey zone or an implausible moment asks for the code word, a foreign voice never; the code word
+    reaches no model, history or journal; three wrong ones lock asking for half an hour."""
+    CODE = "Blaue Giraffe Sieben"
+
+    @classmethod
+    def setUpClass(cls):
+        helpers.set_config(esp32=True)
+        release("2.5.1.2")
+        assert ADMIN.post("/api/admin/esp32/fetch").status_code == 200
+
+    def setUp(self):
+        helpers.set_config(esp32=True, speaker_id=True, speaker_code=True)
+
+    def tearDown(self):
+        helpers.set_config(speaker_id=False, speaker_code=False)
+
+    def owner(self, name):
+        a = profile(name)
+        a.put("/api/profile/settings", json={"esp_on": True, "spk_code": True})
+        s = a.post("/api/profile/esp32/setup", json={"name": "Wohnzimmer", "variant": "bread-compact-wifi",
+                                                     "base": "https://speech.example.de"}).json()
+        uid = a.get("/api/whoami").json()["profile"]["id"]
+        return a, s, uid
+
+    @staticmethod
+    def v(score, other=0.3, seconds=3.0, need=0.75):
+        ok = score >= need and score - other >= 0.05
+        return {"ok": ok, "why": "" if ok else "voice not recognized", "score": score, "other": other, "need": need,
+                "seconds": seconds, "here": 5}
+
+    def session(self, uid, did):
+        s = esp32.Session.__new__(esp32.Session)
+        s.dev, s.mode, s.said, s.spoken = {"id": did, "user": uid, "name": "Wohnzimmer"}, "auto", [], []
+
+        async def say(text, tone=False):
+            s.said.append(text)
+
+        async def speak(text, voice="", why=""):
+            s.spoken.append((text, voice))
+
+        async def send(m):
+            pass
+        s.say, s.speak, s.send, s.listen, s.note = say, speak, send, (lambda m: None), (lambda x: None)
+        return s
+
+    def test_levels_are_fixed_rules(self):
+        import spkcode
+        _, s, uid = self.owner("Code Anke")
+        did, now = s["device"], 1000.0
+        self.assertEqual(spkcode.level(self.v(0.80), uid, did, now=now)[0], "sure")
+        self.assertEqual(spkcode.level(self.v(0.70), uid, did, now=now)[0], "grey")
+        self.assertEqual(spkcode.level(self.v(0.60), uid, did, now=now)[0], "foreign")       # too far below
+        self.assertEqual(spkcode.level(self.v(0.70, other=0.72), uid, did, now=now)[0], "foreign")   # another profile fits better
+        self.assertEqual(spkcode.level(None, uid, did, now=now)[0], "foreign")
+        # a sure match in an implausible moment: grey
+        self.assertEqual(spkcode.level(self.v(0.80, other=0.77), uid, did, now=now), ("grey", "another profile close behind"))
+        self.assertEqual(spkcode.level(self.v(0.80, seconds=1.0), uid, did, now=now), ("grey", "short question"))
+        self.assertEqual(spkcode.level(self.v(0.80), uid, did, foreign_at=now - 30, now=now),
+                         ("grey", "unknown voice in the room just now"))
+        self.assertEqual(spkcode.level(self.v(0.80), uid, did, foreign_at=now - 300, now=now)[0], "sure")
+        self.assertTrue(spkcode.personal("Was steht in meinen Mails?"))
+        self.assertTrue(spkcode.personal("Habe ich heute Termine im Kalender?"))
+        self.assertFalse(spkcode.personal("Wie wird das Wetter morgen?"))
+
+    def test_code_word_flow(self):
+        import contextlib
+        import io
+        import spkcode
+        a, s, uid = self.owner("Code Bernd")
+        did = s["device"]
+        # set only from the own browser, never with the speaker's key; weak ones refused; never sent back
+        k = TestClient(panel.app).put("/api/profile/speaker-code", headers={"X-Speech-Device": s["token"]}, json={"code": self.CODE})
+        self.assertEqual(k.status_code, 403)
+        self.assertEqual(a.put("/api/profile/speaker-code", json={"code": "Giraffe"}).status_code, 400)
+        r = a.put("/api/profile/speaker-code", json={"code": self.CODE})
+        self.assertEqual(r.status_code, 200, r.text)
+        self.assertNotIn("Giraffe", r.text + a.get("/api/profile/esp32").text)
+        self.assertTrue(a.get("/api/profile/esp32").json()["code"]["has_code"])
+        with open(spkcode._file(uid)) as f:
+            self.assertNotIn("giraffe", f.read().lower())      # sealed in the vault
+        se = self.session(uid, did)
+        out = io.StringIO()
+        with contextlib.redirect_stdout(out):
+            # a foreign voice is never asked
+            voice, why, asked = asyncio.run(se.code_gate("Was steht in meinen Mails?", "", "x", self.v(0.55)))
+            self.assertEqual((voice, asked), ("", False))
+            self.assertIsNone(spkcode.waiting(did))
+            # the grey zone and something personal: asked, the question waits
+            voice, why, asked = asyncio.run(se.code_gate("Was steht in meinen Mails?", "", "x", self.v(0.70)))
+            self.assertTrue(asked)
+            self.assertEqual(se.said[-1], "Sag bitte dein Codewort.")
+            self.assertTrue(spkcode.waiting(did))
+            # the grey zone and nothing personal: no code word, nothing personal either
+            voice, _, asked = asyncio.run(se.code_gate("Wie wird das Wetter?", "", "x", self.v(0.70)))
+            self.assertEqual((voice, asked), ("", False))
+            # the right code word (as speech recognition writes it): the waiting question with the profile's data
+            asyncio.run(se.code_answer("blaue giraffe 7"))
+            self.assertEqual(se.spoken[-1], ("Was steht in meinen Mails?", uid))
+            # follow-ups at this speaker stay open for a while, for a voice that is at least close
+            self.assertEqual(asyncio.run(se.code_gate("Und die nächste Mail?", "", "x", self.v(0.70)))[0], uid)
+            self.assertEqual(asyncio.run(se.code_gate("Und die nächste Mail?", "", "x", self.v(0.50)))[0], "")
+            spkcode.forget(did)
+            # wrong code words: told, nothing answered; after three asking stops and the owner is told
+            for i in range(3):
+                asyncio.run(se.code_gate("Was steht in meinen Mails?", "", "x", self.v(0.70)))
+                asyncio.run(se.code_answer("rote Katze acht"))
+            self.assertIn("halbe Stunde", se.said[-1])
+            self.assertTrue(spkcode.locked(uid, did))
+            voice, why, asked = asyncio.run(se.code_gate("Was steht in meinen Mails?", "", "x", self.v(0.70)))
+            self.assertEqual((voice, asked), ("", False))
+            self.assertIn("locked", why)
+        log = out.getvalue()
+        self.assertIn("code word asked at Wohnzimmer", log)
+        self.assertIn("code word right", log)
+        self.assertIn("code word wrong at Wohnzimmer (1 of 3)", log)
+        self.assertIn("code word locked", log)
+        for word in ("giraffe", "katze", "blaue"):
+            self.assertNotIn(word, log.lower())
+
+    def test_waits_only_here_and_briefly(self):
+        import spkcode
+        _, s, uid = self.owner("Code Carla")
+        spkcode.set_code(uid, self.CODE)
+        did = s["device"]
+        spkcode.ask(uid, did, "Meine Termine?", "short question", now=1000.0)
+        self.assertIsNone(spkcode.waiting("other-speaker", now=1001.0))
+        self.assertIsNone(spkcode.waiting(did, now=1000.0 + spkcode.WAIT))
+        self.assertEqual(spkcode.attempt(uid, did, self.CODE, now=1000.0 + spkcode.WAIT), ("none", None))
+        spkcode.ask(uid, did, "Meine Termine?", "short question", now=2000.0)
+        self.assertEqual(spkcode.attempt(uid, did, "Blaue Giraffe Sieben", now=2010.0), ("right", "Meine Termine?"))
+        self.assertTrue(spkcode.is_open(uid, did, now=2010.0 + spkcode.OPEN - 1))
+        self.assertFalse(spkcode.is_open(uid, did, now=2010.0 + spkcode.OPEN))
+        spkcode.forget(did)
+
+    def test_off_means_as_before(self):
+        import spkcode
+        a, s, uid = self.owner("Code Dirk")
+        spkcode.set_code(uid, self.CODE)
+        se = self.session(uid, s["device"])
+        for cfg, prof in (({"speaker_code": False}, {"spk_code": True}), ({"speaker_code": True}, {"spk_code": False})):
+            helpers.set_config(**cfg)
+            a.put("/api/profile/settings", json=prof)
+            self.assertFalse(spkcode.on(uid))
+            # grey zone: guest rights as before, never asked
+            self.assertEqual(asyncio.run(se.code_gate("Meine Mails?", "", "x", self.v(0.70))), ("", "x", False))
+            # sure: as before
+            self.assertEqual(asyncio.run(se.code_gate("Meine Mails?", uid, "", self.v(0.80)))[0], uid)
+        self.assertIsNone(spkcode.waiting(s["device"]))
 
 
 def profiles_devices():

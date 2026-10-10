@@ -31,6 +31,7 @@ Alle Optionen ohne Rückfragen (`--mode api --asr 1.7b --tts 0.6b --yes` …) st
 
 <!-- New version: add one line at the top here and in CHANGELOG.md, drop the oldest line here (keep 10). Details go to docs/de and docs/en, not into this README. -->
 
+- **V01.0.297** Codewort am Lautsprecher (aus): Erkennt der Lautsprecher deine Stimme nur knapp oder ist etwas ungewöhnlich, fragt er vor Persönlichem nach deinem eigenen Codewort; eine fremde Stimme nie; nach 3 falschen 30 Minuten Pause und eine Mitteilung
 - **V01.0.296** Handy wie die iPhone-App (immer unter 760 px, abschaltbar unter Darstellung → „Am Rechner-Layout zeigen“): Tabs Spark · Heute · Dokumente · Ich · Verwalten je nach Rolle, Chat mit Gesicht, großem Mikrofon und immer sichtbarem Tippfeld, Heute mit denselben Karten wie Ich → Heute, Verlauf als Blatt von unten, Listen und Schalter wie in iOS, Unterseiten schieben von rechts rein, Zurück-Geste von Android und Safari geht eine Ebene zurück; gleich auf iPhone und Android, keine neuen Endpunkte
 - **V01.0.295** Passkeys statt Code (Face ID, Touch ID, Windows Hello): unter Sicherheit anlegen (mit frischem Code), dann bei Anmeldung, Admin-Modus und wichtigen Änderungen „Mit Passkey“; nur über die Adresse mit Namen, App-Code bleibt als Rückfall, python-fido2 fest mit Hash
 - **V01.0.294** Gesicht zeigt, was es tut (Einstellungen → Vorgaben, Admin, aus): Roboter und Comic zeigen beim Arbeiten ein kleines Zeichen (Lupe beim Suchen, Kalenderblatt, Brief, Glühbirne bei Home Assistant, Notizblock beim Merken, Denkblasen), zwinkern nach Erledigtem, schauen bei Fehlern ratlos und schlafen nach 5 Minuten Ruhe ein; nur aus den eigenen Chat-Ereignissen des Panels
@@ -40,7 +41,6 @@ Alle Optionen ohne Rückfragen (`--mode api --asr 1.7b --tts 0.6b --yes` …) st
 - **V01.0.290** reMarkable senden: Fehler sagen jetzt, welche Datei die Cloud abgelehnt hat und was sie antwortet (ohne Token, auch im Journal „remarkable: sending failed“), jede 2xx-Antwort zählt, und eine nicht verstandene Zeile im Wurzelverzeichnis stoppt das Schreiben, bevor etwas verschwinden könnte
 - **V01.0.289** Seltener Code eingeben: vertraute Browser 60 Tage (einstellbar 7–90, nach 30 Tagen ohne Nutzung wieder Code) mit Liste zum einzelnen Entfernen und Push-Meldung, ein richtiger Code gilt 10 Minuten in derselben Anmeldung (Balken mit „Beenden“; Passwort, zweiter Schritt, Rollen, Sicherungen, Codewort und Admin-Modus fragen immer), Admin-Modus im vertrauten Browser 60 statt 15 Minuten; Kalender, Mail und Home Assistant fragen den Code jetzt richtig ab statt „code required“
 - **V01.0.288** Selbsttest „rmscene senkt packaging nicht“ passt zum Hash-Lock (Ersatzzeile eingerückt, Lock mit --no-deps und packaging ≥ 24 geprüft); main wieder grün
-- **V01.0.287** Vorrang für Personen: Warteschlange von TTS/ASR gibt beim Abbruch eines Wartenden seinen Platz zuverlässig frei (auch unter Python 3.11)
 
 Alle Versionen: [CHANGELOG.md](CHANGELOG.md)
 

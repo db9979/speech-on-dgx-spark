@@ -92,6 +92,9 @@ async function showEsp(){const box=$('espbox');if(!box)return;if(!PROFILE||!ESP_
   if($('espback'))$('espback').onclick=()=>espGo(null);
   xbind(box,showEsp);
   box.querySelectorAll('[data-ego]').forEach(b=>b.onclick=()=>espGo(b.dataset.ego));
+  if($('spkcodesave'))$('spkcodesave').onclick=async()=>{const {r,d:x}=await apiTry('/api/profile/speaker-code',{method:'PUT',headers:{'Content-Type':'application/json'},body:JSON.stringify({code:$('spkcode').value})});
+    const m=$('spkcodemsg');if(!r.ok){m.textContent=String(x.detail||r.status);m.classList.add('err');return}
+    m.classList.remove('err');m.textContent=x.has_code?t('Codewort gespeichert.','Code word saved.'):t('Codewort entfernt.','Code word removed.');$('spkcode').value=''};
   if(ESP_VIEW==='usb')espUsbBind(d);else if(ESP_VIEW==='code')espCodeBind();else if(x)espOneBind(d,x)}
 // the list: the switch, my speakers, the ways to add one
 function espList(d){
@@ -102,6 +105,8 @@ function espList(d){
   h+=espGrp(t('Lautsprecher hinzufügen','Add a speaker'))+`<div class="overlist esplist">
     <button type="button" class="overrow" data-ego="usb"><b>${t('Neues Board per USB einrichten','Set up a new board over USB')}</b><span>${t('Chrome oder Edge am PC','Chrome or Edge on a PC')}</span></button>
     <button type="button" class="overrow" data-ego="code"><b>${t('Board zeigt einen Code','Board shows a code')}</b><span>${t('hat schon die Spark-Firmware','already has the Spark firmware')}</span></button></div>`;
+  if(d.code&&d.code.enabled){h+=espGrp(t('Codewort','Code word'))+xsw('spk_code',t('Codewort am Lautsprecher','Code word at a speaker'),t('Erkennt ein Lautsprecher deine Stimme nur knapp oder ist etwas ungewöhnlich, fragt er vor Persönlichem nach diesem Codewort. Eine fremde Stimme fragt er nie.','If a speaker recognises your voice only narrowly or something is unusual, it asks for this code word before personal things. It never asks a foreign voice.'));
+    h+=`<div class="two2"><div><label>${t('Codewort','Code word')}</label><input id="spkcode" type="password" autocomplete="new-password" placeholder="${d.code.has_code?t('gesetzt, leer speichern zum Entfernen','set, save empty to remove'):d.code.unreadable?t('bitte neu eingeben und speichern','please enter and save again'):t('kein Codewort','no code word')}"></div><div><label>&nbsp;</label><button class="b" type="button" id="spkcodesave">${t('Speichern','Save')}</button></div></div><div class="fh" id="spkcodemsg">${t('Mindestens 2 Wörter und 8 Buchstaben, nicht das Smart-Home-Codewort. Es wird nie angezeigt, nie ans Sprachmodell gegeben und nie ins Log geschrieben.','At least 2 words and 8 letters, not the smart home code word. It is never shown, never given to the language model and never written to the log.')}</div>`}
   if(!d.firmware)h+=`<div class="fh err">${t('Auf dem Spark liegt noch keine Firmware. Der Admin holt sie unter Funktionen → Eigene Lautsprecher.','There is no firmware on the Spark yet. The admin fetches it under Features → Own speakers.')}</div>`;
   return h+espFoot()}
 const espVars=d=>d.firmware?Object.entries(d.firmware.variants).map(([k,v])=>[k,v.label]):[];

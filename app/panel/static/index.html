@@ -185,6 +185,7 @@
         <div class="fh">So lange halten neue Anfragen anderer ans Sprachmodell an, bis die Antwort mit Vorrang ihren ersten Satz hat. Laufende Antworten werden nie abgebrochen.</div></div>
       <div class="setrow"><div class="lbl"><b>Sprechererkennung</b><span>Erkennt Profile an der Stimme, auch an fremden Geräten. Eine Stimme ist kein Passwort.</span></div><label class="tgl"><input type="checkbox" id="chat.speaker_id"><i></i></label></div>
       <div data-show="chat.speaker_id"><label>Strenge der Sprechererkennung</label><select id="chat.speaker_strictness"><option value="low">locker (erkennt öfter, verwechselt eher)</option><option value="normal">normal</option><option value="high">streng (verwechselt kaum, erkennt seltener)</option></select></div>
+      <div class="setrow" data-show="chat.speaker_id" style="margin-left:18px"><div class="lbl"><b>Codewort am Lautsprecher</b><span>Stimme am Lautsprecher nur knapp erkannt oder etwas ungewöhnlich: vor Persönlichem fragt er nach dem Codewort. Fremde Stimmen nie.</span></div><label class="tgl"><input type="checkbox" id="chat.speaker_code"><i></i></label></div>
       <div class="savebar"><button class="b p savebtn" data-p="feat">Speichern</button><span class="savemsg"></span></div>
     </div>
     <div class="card pane" id="pane-ai"><h2 class="pt">Sprachmodell</h2><div class="pintro">Welches Modell antwortet und wie genau.</div>
