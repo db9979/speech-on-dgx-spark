@@ -5,7 +5,7 @@ name: Android app
 # SHA-256). The Spark fetches the newest android-v… release, checks the SHA-256 and offers it to its profiles
 # (app/panel/android.py). No store.
 #
-# Signing key (once, see docs/de/android-app.md): repository secrets ANDROID_KEYSTORE (the .jks file as
+# Signing key (once, see docs/de/android-app.md): repository secrets ANDROID_KEYSTORE (the keystore, .p12 from tools/android-schluessel.sh, as
 # base64) and ANDROID_KEYSTORE_PASSWORD. Without them the build only checks that the app compiles.
 on:
   workflow_dispatch:

@@ -13,11 +13,11 @@ since V01.0.296) and adds only what a page cannot do:
 
 ## Setup
 
-1. **Signing key (once, admin):** on a computer with Java:
-   `keytool -genkeypair -v -keystore spark.jks -alias spark -keyalg RSA -keysize 4096 -validity 10000`
-   (one password for key and file). In the GitHub repo under Settings → Secrets and variables → Actions add
-   `ANDROID_KEYSTORE` = output of `base64 -w0 spark.jks` and `ANDROID_KEYSTORE_PASSWORD` = the password. Keep
-   `spark.jks` safe: later versions only install over the old one with the same key.
+1. **Signing key (once, admin):** on the Spark (or a Mac) run `bash /opt/speech-spark/src/tools/android-schluessel.sh`
+   in a terminal (no sudo, needs only openssl). It creates `~/spark-android.p12` and `~/spark-android.pass` and shows
+   two values. In the GitHub repo under Settings → Secrets and variables → Actions → "New repository secret" add
+   both: `ANDROID_KEYSTORE_PASSWORD` and `ANDROID_KEYSTORE` (the long line). Keep both files safe: later versions
+   only install over the old one with the same key.
 2. **Build the app:** Actions → "Android app" → Run workflow. It appears as release `android-v1.0.0` with
    `spark.apk`, `spark.apk.sha256` and `android.json`.
 3. **Spark:** Settings → Features → Android app on, save, "Fetch the app now" (otherwise it fetches once a day).

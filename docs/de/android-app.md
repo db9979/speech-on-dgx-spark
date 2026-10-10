@@ -13,12 +13,12 @@ Die App ist eine schlanke Hülle um die Spark-Seite: Sie zeigt den Spark so, wie
 
 ## Einrichten
 
-1. **Signierschlüssel (einmal, Admin):** Auf einem Rechner mit Java:
-   `keytool -genkeypair -v -keystore spark.jks -alias spark -keyalg RSA -keysize 4096 -validity 10000`
-   (ein Passwort wählen, für Schlüssel und Datei dasselbe). Dann im GitHub-Repo unter Settings → Secrets and
-   variables → Actions zwei Secrets anlegen: `ANDROID_KEYSTORE` = Inhalt von `base64 -w0 spark.jks`,
-   `ANDROID_KEYSTORE_PASSWORD` = das Passwort. Die Datei `spark.jks` gut aufheben: Ohne denselben Schlüssel lassen
-   sich spätere Versionen nicht über die alte installieren.
+1. **Signierschlüssel (einmal, Admin):** Auf dem Spark (oder einem Mac) im Terminal
+   `bash /opt/speech-spark/src/tools/android-schluessel.sh` ausführen (ohne sudo, braucht nur openssl). Es legt
+   `~/spark-android.p12` und `~/spark-android.pass` an und zeigt zwei Werte. Im GitHub-Repo unter Settings → Secrets
+   and variables → Actions → „New repository secret“ beide anlegen: `ANDROID_KEYSTORE_PASSWORD` und
+   `ANDROID_KEYSTORE` (die lange Zeile). Die beiden Dateien gut aufheben: Ohne denselben Schlüssel lassen sich
+   spätere Versionen nicht über die alte installieren.
 2. **App bauen:** Actions → „Android app“ → Run workflow. Sie erscheint als Release `android-v1.0.0` mit
    `spark.apk`, `spark.apk.sha256` und `android.json`.
 3. **Spark:** Einstellungen → Funktionen → Android-App an, speichern, „App jetzt holen“ (sonst holt er sie einmal am Tag).

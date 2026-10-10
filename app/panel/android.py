@@ -127,7 +127,7 @@ async def fetch_apk(c=None):
         rel = next((x for x in r.json() if str(x.get("tag_name", "")).startswith("android-v")
                     and not x.get("draft") and not x.get("prerelease")), None)
         if not rel:
-            raise ValueError("Im Repo gibt es noch keine Android-App (android-v…).")
+            raise ValueError("Im Repo gibt es noch keine Android-App (android-v…): einmal den Signierschlüssel anlegen und die Aktion „Android app“ starten, siehe Anleitung.")
         assets = {a.get("name"): a.get("browser_download_url", "") for a in rel.get("assets", [])}
         if "android.json" not in assets or "spark.apk" not in assets:
             raise ValueError("Die Version hat kein android.json oder spark.apk.")
