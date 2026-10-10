@@ -789,3 +789,29 @@ body.adm .notausbtn{flex:1 1 100%}
 .znrow{display:flex;gap:10px;align-items:center;padding:7px 0;border-top:1px solid var(--line)}.znrow:first-child{border-top:0}
 .znrow>span:first-child{flex:1;min-width:0}.znrow .n{min-width:3ch;text-align:right;font-variant-numeric:tabular-nums}
 @media (max-width:760px){.nastages{grid-template-columns:1fr}.notausband{font-size:13px;padding:8px 12px}.notausband span{flex-basis:100%}}
+/* Spark-Hilfe (hilfe.js, V01.0.326): the suggestion card under an answer and the "Frag Spark" window */
+.hcard{white-space:normal;margin-top:10px;padding:10px 12px;border:1px solid var(--line);border-radius:14px;background:color-mix(in srgb,var(--acc) 6%,transparent)}
+.hcard h4{margin:0 0 6px;font-size:14px}
+.hcard .hrow{display:flex;justify-content:space-between;align-items:center;gap:8px;padding:4px 0;border-top:1px dashed var(--line);font-size:13px;min-width:0}
+.hcard .hrow>span:first-child{display:flex;flex-direction:column;min-width:0;overflow-wrap:anywhere}
+.hcard .hrow small{color:var(--mut);font-size:11px}
+.hcard .hval{white-space:nowrap}.hcard .hval s{color:var(--mut)}.hcard .hval em{font-style:normal;font-weight:600;color:var(--acc)}
+.hcard .hno b{font-weight:500;color:var(--mut)}
+.hcard .hwhy{font-size:12px;color:var(--mut);margin:6px 0}
+.hcard .row{display:flex;gap:6px;flex-wrap:wrap;margin-top:6px}
+.hcard .hmsg{font-size:12px;margin-top:4px}
+.hilfefab{position:fixed;right:20px;bottom:20px;z-index:60;border-radius:999px;box-shadow:var(--shadow)}
+.hilfedraw{position:fixed;right:16px;top:16px;bottom:16px;width:min(380px,calc(100vw - 32px));z-index:61;display:flex;flex-direction:column;gap:8px;box-shadow:var(--shadow);overflow:hidden;box-sizing:border-box}
+.hilfefab[hidden],.hilfedraw[hidden]{display:none}
+.hilfedraw .hhead{display:flex;justify-content:space-between;align-items:center}
+.hilfedraw .hpage{font-size:12px}
+.hilfedraw .hlog{flex:1;overflow:auto;display:flex;flex-direction:column;gap:8px;min-height:0}
+.hilfedraw .hq{align-self:flex-end;max-width:85%;background:var(--acc);color:#fff;border-radius:14px;padding:8px 12px;overflow-wrap:anywhere}
+.hilfedraw .ha{line-height:1.45;font-size:14px;white-space:pre-wrap;overflow-wrap:anywhere}
+.hilfedraw .ha.typing{color:var(--mut)}
+.hilfedraw .hask{display:flex;gap:6px}.hilfedraw .hask input{flex:1;min-width:0}
+body.inchat .hilfefab{display:none}
+@media (max-width:759px){
+  .hilfefab{bottom:calc(84px + env(safe-area-inset-bottom));right:12px}
+  .hilfedraw{left:0;right:0;bottom:0;top:auto;width:auto;max-height:80vh;height:70vh;border-radius:16px 16px 0 0;padding-bottom:calc(12px + env(safe-area-inset-bottom))}
+}

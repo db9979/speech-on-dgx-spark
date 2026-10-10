@@ -59,6 +59,11 @@ WEATHER_WORDS = re.compile(dict(chat.NEED_TOOLS)["weather"].pattern + r"|(?i:\b(
                            r"(warm|kalt|heiß) wird es|wird es (warm|kalt|heiß)|forecast)\b)")
 SWITCH_VERBS = re.compile(r"(?i)\b((aus|ein|an|ab|um)(schalten|machen)|schalt\w*|turn (on|off)|switch (on|off))\b")
 MINE = re.compile(r"(?i)\b(habe|hab|hat|für mich|an mich|mir|meine?)\b")
+SPARK_WORDS = re.compile(r"(?i)\b(einstellung\w*|schalter\b|funktion(en)?\b|panel\b|settings?\b|"
+                         r"best practice\w*|empfiehlst du|was empfiehlst|was (soll|sollte|kann) ich (hier )?(noch )?(einstellen|einschalten|ändern)|"
+                         r"wie stelle ich|wo stelle ich|wo schalte ich|wo finde ich (die|den|das) (einstellung|schalter)|"
+                         r"(beim|im|am|vom|den|dem|der) spark\b|spark-\w+|zweiten? anmeldeschritt\w*|weiche\b|"
+                         r"ich-seite|funktionen-seite|zustand-seite|live-übersicht)")
 PHONE_WORDS = re.compile(r"(?i)\b(iphone|auf meinem handy|am handy|shortcut|kurzbefehl\w*)\b")
 
 GROUPS = {
@@ -79,6 +84,8 @@ GROUPS = {
     "nachricht": ({"message_send", "message_read", "message_announce"}, MESSAGE_WORDS),
     "agent": ({"agent_list", "agent_task", "agent_schedule", "routine_save"}, AGENT_WORDS),
     "iphone": ({"iphone_action"}, PHONE_WORDS),
+    # questions about the Spark itself (hilfe.py): its settings, switches, functions, guides and recommendations
+    "spark": ({"spark_hilfe", "spark_vorschlag"}, SPARK_WORDS),
     # only when the person names it ("Schau in Wikipedia ..."); other knowledge questions stay "unklar"
     "wikipedia": ({"wikipedia", "article_more"}, dict(chat.NEED_TOOLS)["wikipedia"]),
     # the own offline archive (Kiwix, V01.0.258): only when the person names it
@@ -392,7 +399,8 @@ def own_route_words(text):
 LABELS = {"smarthome": "Smart Home", "kalender": "Kalender und Briefing", "mail": "E-Mail", "websuche": "Websuche",
           "erinnerung": "Erinnerungen und Timer", "liste": "Listen", "wetter": "Wetter", "bahn": "Bus und Bahn",
           "paket": "Pakete", "kontakt": "Kontakte", "gedaechtnis": "Gedächtnis und frühere Gespräche",
-          "dokument": "Dokumente", "nachricht": "Nachrichten an andere", "agent": "Agenten", "iphone": "iPhone"}
+          "dokument": "Dokumente", "nachricht": "Nachrichten an andere", "agent": "Agenten", "iphone": "iPhone",
+          "spark": "Fragen zum Spark"}
 MAX_TEST = 500
 # "Erklären statt Schweigen" (plan „Bedienung gesamt“ B4, V01.0.286): the function behind each group (features.py)
 FEATURE = {"smarthome": "ha", "kalender": "calendar", "mail": "mail", "websuche": "search", "erinnerung": "reminders",

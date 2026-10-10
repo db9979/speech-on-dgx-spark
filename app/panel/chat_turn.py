@@ -119,6 +119,13 @@ async def prepare(request):
     route = intent.classify(ask0, ccfg.get("tool_words", ""), ccfg.get("route_words", ""))
     me0 = profiles.current(request)
     route_on = bool(me0 and features.allowed("routing", me0["id"], ccfg))
+    # "Frag Spark" (hilfe.py): asked from a page of the panel, the question is about the Spark itself (a fixed
+    # rule on where it was asked, never the model); the admin's own login only counts for the Spark's switches
+    import hilfe
+    hilfe_page = hilfe.page_of(body, me0["id"], ccfg) if me0 else None
+    hilfe_admin = hilfe.admin_here(request) if me0 else "profile"
+    if hilfe_page and route_on:
+        route = intent.Route(["spark"], {"spark": "Seite"})
     # chat.route_model "on": the model's pick for a question no rule recognizes starts right here and runs while
     # the panel prepares the rest of the turn (plan „Anfrage aufteilen“ 2); it is waited for further down
     pick_state = None   # Logs → Anfragen: what became of the model's pick
@@ -622,7 +629,7 @@ async def prepare(request):
         if recent_ask is not None:
             force, need = "document_search", ["document_search"]
     # the words that matched, only as far as they are still in the message (a code word is gone by now)
-    why = ", ".join(f"{k}: „{v if v.lower() in ask_text.lower() or v in ('Modell', 'Sende-Bitte') else '…'}“"
+    why = ", ".join(f"{k}: „{v if v.lower() in ask_text.lower() or v in ('Modell', 'Sende-Bitte', 'Seite') else '…'}“"
                     for k, v in route.why.items())[:200]
     print("weiche: Absicht", route.label(), "| Grund", why or "-",
           "| Werkzeuge", f"{len(tools)} von {all_tools}" if len(tools) != all_tools else len(tools),

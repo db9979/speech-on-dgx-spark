@@ -61,6 +61,7 @@ TOOLS = {
     "memory_forget": "mem", "memory_save": "mem", "reminder_cancel": "mem", "reminder_list": "mem", "reminder_set": "mem",
     "message_announce": "mem", "message_read": "mem", "message_send": "mem", "agent_list": "mem",
     "agent_schedule": "mem", "agent_task": "mem", "routine_save": "mem",
+    "spark_hilfe": "hilfe", "spark_vorschlag": "hilfe",
     # steps the panel runs itself (tracelog "… (Panel)")
     "Erst lokal": "mem", "remarkable": "rm", "Ablauf": "mem",
 }
@@ -82,10 +83,12 @@ TARGETS = {
     "parcels": ("Pakete", "HTTPS · Internet", "net", False),
     "rm": ("reMarkable", "Cloud · Internet", "net", True),
     "push": ("Apple Push", "APNs · Internet", "net", True),
+    "hilfe": ("Spark-Hilfe", "Anleitungen · auf dem Spark", "spark", False),
 }
 RETURNS = {"cal": "Termine oder Aufgaben", "ha": "Zustände oder Schaltung", "web": "Suchergebnisse", "pages": "Seitentext", "kiwix": "Archiv-Treffer",
            "wiki": "Artikel", "mail": "Mails (nur Anzahl und Größe)", "contacts": "Kontakte", "rm": "Ablage", "push": "Zustellung",
-           "weather": "Wetterwerte", "parcels": "Sendungen", "transit": "Verbindungen", "mem": "eigene Daten"}
+           "weather": "Wetterwerte", "parcels": "Sendungen", "transit": "Verbindungen", "mem": "eigene Daten",
+           "hilfe": "Anleitungen oder Vorschlagskarte"}
 CLIENT = {"web": "Browser", "speaker": "Lautsprecher", "watch": "Uhr", "siri": "Siri", "telegram": "Telegram",
           "app": "iPhone-App", "car": "CarPlay", "mcp": "MCP-Client", "other": "Gerät"}
 VOICE = ("speaker", "watch", "siri", "app", "car")

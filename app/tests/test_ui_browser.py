@@ -127,6 +127,45 @@ class Browser(unittest.TestCase):
                     await br.close()
         self.run_async(go())
 
+    def test_frag_spark_window_and_card(self):
+        """Spark-Hilfe (hilfe.js): "Frag Spark" on a page, the card under the answer, "Übernehmen" switches only
+        after the tap; no sideways scrolling on a phone, with the strict CSP on."""
+        import hilfe
+        import profiles
+        helpers.set_config(spark_help=True, spark_suggest=True, spark_drawer=True, routing=True)
+        uid = next(u["id"] for u in profiles._load()["users"] if u["name"] == "Uitest")
+        profiles.save_settings(uid, {"spark_help": True, "route": False})
+
+        async def go():
+            async with async_playwright() as p:
+                for w, h in ((1280, 900), (390, 844)):
+                    profiles.save_settings(uid, {"route": False})
+                    br, pg, errors = await self.page(p, w, h, csp=True)
+                    try:
+                        await pg.evaluate("goSec('mon')")
+                        await pg.wait_for_selector("#hilfefab:not([hidden])", timeout=5000)
+                        await pg.click("#hilfefab")
+                        await pg.wait_for_selector("#hilfedraw:not([hidden])", timeout=3000)
+                        self.assertIn("Zustand", await pg.text_content("#hilfepg"))
+                        await pg.fill("#hilfeq", 'TOOL spark_vorschlag {"functions": ["routing"]}')
+                        await pg.click("#hilfeform button[type=submit]")
+                        await pg.wait_for_selector("#hilfelog .hcard [data-hdo=apply]", timeout=8000)
+                        self.assertFalse(profiles.settings(uid).get("route"))   # nothing before the tap
+                        over = await pg.evaluate("document.documentElement.scrollWidth-window.innerWidth")
+                        self.assertLessEqual(over, 1, f"{w}: {over}px zu breit")
+                        await pg.click("#hilfelog .hcard [data-hdo=apply]")
+                        await pg.wait_for_selector("#hilfelog .hcard [data-hdo=undo]", timeout=5000)
+                        self.assertTrue(profiles.settings(uid).get("route"))
+                        self.assertEqual(errors, [], w)
+                    finally:
+                        await br.close()
+        try:
+            self.run_async(go())
+        finally:
+            hilfe._cards.clear()
+            helpers.set_config(spark_help=False, spark_suggest=False, spark_drawer=False, routing=False)
+            profiles.save_settings(uid, {"spark_help": False, "route": False})
+
     def test_notaus_button_band_and_lifting(self):
         """Notaus (notaus.py): the red button opens the stages, triggering shows the band and Zustand's card on every
         page, lifting asks for the password (no second step here) and everything is back."""
@@ -476,7 +515,7 @@ class Browser(unittest.TestCase):
                     self.assertFalse(await pg.is_visible("#chat\\.search_url"))
                     tall = await pg.evaluate("$('pane-feat').getBoundingClientRect().height")
                     # about 45 px per closed line on a computer (limit grows with new rows); open boxes would be several times that
-                    self.assertLess(tall, 3510 if w < 760 else 2710, f"{w}: {tall}px")   # V01.0.300: +1 line "Android-App", V01.0.303: +1 line "Spark als MCP-Server", V01.0.304: +1 line "Eindeutiges direkt abrufen", V01.0.307: +1 sub-switch "Vorab holen bei Rückfrage"
+                    self.assertLess(tall, 3580 if w < 760 else 2760, f"{w}: {tall}px")   # V01.0.326: +1 line "Hilfe zum Spark", V01.0.300: +1 line "Android-App", V01.0.303: +1 line "Spark als MCP-Server", V01.0.304: +1 line "Eindeutiges direkt abrufen", V01.0.307: +1 sub-switch "Vorab holen bei Rückfrage"
                     await pg.evaluate("$('chat.search').closest('.fitem').querySelector('.fexp').click()")
                     self.assertTrue(await pg.evaluate("$('chat.search').closest('.fitem').classList.contains('open')"))
                     await pg.evaluate("$('chat.search').closest('.fitem').querySelector('.fexp').click()")

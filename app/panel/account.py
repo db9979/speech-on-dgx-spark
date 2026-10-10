@@ -111,6 +111,10 @@ def whoami(request: Request, creds: HTTPBasicCredentials | None = Depends(securi
             # which pages the panel shows: the Spark's switches from features.py (one place for "on")
             **{name: features.admin_on(key, chat) for name, key in WHO.items()},
             "agent": bool(features.admin_on("agent", chat) and prof and agent.granted(prof["id"])),
+            # Spark-Hilfe (hilfe.py): the card in the answer and "Frag Spark" on every page, only for this profile
+            "hilfe": {"suggest": features.allowed("hilfevorschlag", prof["id"], chat),
+                      "page": features.allowed("hilfeseite", prof["id"], chat)}
+            if prof and features.allowed("hilfe", prof["id"], chat) and not request.headers.get(profiles.DEVICE_HEADER) else None,
             # "Los geht's" / "Einrichten x von y" (onboard.py): only for the profile's own login
             "setup": _setup(prof, request),
             # Logs → Anfragen: main admin and co-admins (tracelog.py), not the Verwalter role
@@ -1066,7 +1070,7 @@ def profile_settings(request: Request):
 # which conversation switches the admin allows (features.py), only for a signed-in profile
 ALLOW = {"tool_think": "toolthink", "route": "routing", "direct_read": "direct", "fix_learn": "fixes", "style": "style", "roles": "roles",
          "wiki": "wiki", "kiwix": "kiwix", "local": "lokal", "follow": "follow", "echo": "selfecho", "images": "images",
-         "prefetch": "vorab"}
+         "prefetch": "vorab", "spark_help": "hilfe"}
 
 
 def _allow(prof, chat):

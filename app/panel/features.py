@@ -66,6 +66,11 @@ FEATURES = (
       me="setbox", guide="direct"),
     F("vorab", "Vorab holen bei Rückfrage", "Fetch ahead on a question back", "talk", ("prefetch",), "prefetch",
       parent="routing", me="setbox", guide="vorab"),
+    F("hilfe", "Hilfe zum Spark", "Help with the Spark", "talk", ("spark_help",), "spark_help", me="setbox", guide="hilfe"),
+    F("hilfevorschlag", "Einstellungen vorschlagen", "Suggesting settings", "talk", ("spark_suggest",), "spark_help",
+      parent="hilfe", me="setbox", guide="hilfevorschlag"),
+    F("hilfeseite", "Frag Spark auf jeder Seite", "Ask Spark on every page", "talk", ("spark_drawer",), "spark_help",
+      parent="hilfe", me="setbox", guide="hilfeseite"),
     F("vorrang", "Vorrang für Personen", "Priority for people", "talk", ("person_priority",), guide="vorrang"),
     # knowledge and memory
     F("memory", "Gedächtnis", "Memory", "data", ("memory",), me="factbox", guide="memory"),

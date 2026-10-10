@@ -49,7 +49,11 @@ async def run(t, name, args, st):
         elif name in t.ex["outside"]:
             st["outside"] = True
         return await t.ex["run"][name].tool(name, args, {"who": t.who, "own": t.own_browser, "tz": t.body.get("tz"), "src": t.src,
-                                                         "private": t.private_ok, "client": t.body.get("client")})
+                                                         "private": t.private_ok, "client": t.body.get("client"),
+                                                         # Spark-Hilfe (hilfe.py): the page asked from, the admin's
+                                                         # login (only for its Spark switches), the card's way out
+                                                         "page": t.hilfe_page, "admin": t.hilfe_admin, "out": t.out,
+                                                         "text": t.ask_text, "request": t.request})
     if name.startswith("mail_tidy_") and t.tidy_on:
         return await tidy_tool(t, name, args, st)
     if name == "mail_draft" and t.drafts_on:

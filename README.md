@@ -33,6 +33,7 @@ All options for running without questions (`--mode api --asr 1.7b --tts 0.6b --y
 
 <!-- New version: add one line at the top here and in CHANGELOG.md, drop the oldest line here (keep 10). Details go to docs/de and docs/en, not into this README. -->
 
+- **V01.0.326** Help with the Spark (off): the assistant answers questions about settings from its own guides, suggests switches as a card (only "Apply" changes something) and "Ask Spark" is on every page
 - **V01.0.325** Live overview: kill switch in the picture, cut-off targets red with a lock
 - **V01.0.324** Self-test invitation: waits up to 45 s for the reload, taps a second time if the first tap sent no /api/join, and writes a trace to the log (red on GitHub again)
 - **V01.0.323** iPhone app: the face shows what it does, like the panel (with the admin switch "Face shows what it does")
@@ -42,7 +43,6 @@ All options for running without questions (`--mode api --asr 1.7b --tts 0.6b --y
 - **V01.0.319** Smart home rules can be edited, not only deleted
 - **V01.0.318** Live overview: full-screen button for the picture "Where the requests go right now"
 - **V01.0.317** Smart home rules: pick devices from a list instead of typing, "Zuletzt geändert" and "Gerät erkennen" (trigger the sensor, tap the device)
-- **V01.0.316** Kill switch: a red button stops the Spark in three stages (outside closed, hands off, all quiet); only the admin at home with a code lifts it; shown as a red band, under Status and in the live overview
 
 All versions: [CHANGELOG.md](CHANGELOG.md)
 

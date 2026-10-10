@@ -20,8 +20,9 @@ import transit
 import weather
 import remarkable
 import wiki
+import hilfe
 
-SERVICES = [roomfar, weather, contacts, parcels, tasks, transit, wiki, agent, messages, remarkable, hamelden]
+SERVICES = [roomfar, weather, contacts, parcels, tasks, transit, wiki, agent, messages, remarkable, hamelden, hilfe]
 
 
 def offer(ctx):
