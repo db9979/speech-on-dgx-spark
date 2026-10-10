@@ -2,6 +2,7 @@
 
 Every version in one line, newest first (taken from the commit messages, so some lines are German, some English). Older entries have no version number.
 
+- **V01.0.301** · 2026-10-10 · Selbsttest „Handy wie die App“ wartet, bis der Schritt in der Browser-Historie steht, bevor er zurückgeht (lief auf GitHub einmal aus der Seite heraus)
 - **V01.0.300** · 2026-10-10 · Android-App „Spark“ als APK ohne Store (Funktionen → Android-App, aus; Ich → Android-App): Hülle um die Spark-Seite mit Mitteilungen bei geschlossener App (fragt alle 15 Minuten selbst nach, kein Google), Assistenten-Taste, Teilen an Spark und Hinweis auf neue Versionen; GitHub baut und signiert sie als android-v…, der Spark holt sie mit SHA-256-Prüfung und gibt sie per Download-Link mit Einmal-Token (QR, 30 Minuten) aus
 - **V01.0.299** · 2026-10-10 · reMarkable „Neueste zuerst“ (Admin-Unterschalter + Ich → reMarkable, aus): Änderungszeit pro Seite, bei ähnlich guten Treffern rückt die neuere Notiz bis zu zwei Plätze vor (auch für „Erst lokal“), Treffer mit „geändert am“, „Was habe ich zuletzt/heute/gestern/diese Woche notiert?“ als feste Regel; neue Notizen kommen schneller: alle 3 Minuten ein kurzer Blick aufs Konto, bei Änderung sofort abgleichen
 - **V01.0.298** · 2026-10-10 · Buy me a coffee: Badge und Abschnitt „Unterstützen“ in README.md/README.de.md, .github/FUNDING.yml (Sponsor-Knopf) mit https://buymeacoffee.com/zquu1xu570 wie bei U-Jagd; nur Doku
