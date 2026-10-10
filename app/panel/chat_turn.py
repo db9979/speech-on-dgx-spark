@@ -127,9 +127,13 @@ async def prepare(request):
     # rule on where it was asked, never the model); the admin's own login only counts for the Spark's switches
     import hilfe
     hilfe_page = hilfe.page_of(body, me0["id"], ccfg) if me0 else None
+    hilfe_focus = hilfe.focus_of(body, me0["id"], ccfg) if me0 else None
     hilfe_admin = hilfe.admin_here(request) if me0 else "profile"
-    if hilfe_page and route_on:
-        route = intent.Route(["spark"], {"spark": "Seite"})
+    # where the question came from (plan hilfe-besser 10): only what the panel knows itself, never the question
+    hilfe_origin = hilfe.origin(body, request)
+    hilfe_app = hilfe.app_view(body)
+    if (hilfe_focus or hilfe.page_rule(hilfe_page, ask0, route.names)) and route_on and hilfe_origin != "mcp":
+        route = intent.Route(["spark"], {"spark": "Schalter" if hilfe_focus else "Seite"})
     # chat.route_model "on": the model's pick for a question no rule recognizes starts right here and runs while
     # the panel prepares the rest of the turn (plan „Anfrage aufteilen“ 2); it is waited for further down
     pick_state = None   # Logs → Anfragen: what became of the model's pick
@@ -662,6 +666,10 @@ async def prepare(request):
     direct = intent.direct(ask_text, {t["function"]["name"] for t in tools}) \
         if who and own_browser and features.allowed("direct", who["id"], ccfg) and not pics and not role_cmd \
         and not room_far and not ha_direct and not ha_wait and not local_task and not recent_ask else None
+    # a question about the Spark itself (hilfe.py): the panel looks it up itself, the model only says it (plan 4)
+    if not direct and route.names == ["spark"] and who and own_browser and "spark_hilfe" in {t["function"]["name"] for t in tools} \
+            and not pics and not role_cmd and not room_far and not ha_direct and not ha_wait and not local_task:
+        direct = "spark_hilfe"
     if direct:
         print("weiche: direkt abgerufen", direct, flush=True)
     check_on = bool(ccfg.get("answer_check", True))

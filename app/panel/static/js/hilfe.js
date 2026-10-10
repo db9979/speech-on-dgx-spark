@@ -48,7 +48,20 @@ function hilfePageName(p){if(p.startsWith('me/')){const n=typeof ME_NAME!=='unde
 // the page a question goes with: only through the face (not in the chat itself), only when switched on
 function hilfeNow(){if(!(HILFE&&HILFE.page))return undefined;const p=hilfePage();return p==='chat'?undefined:p}
 const hilfeFabOn=()=>!!(HILFE&&HILFE.page)&&!!hilfeNow();
-function hilfeFab(){const on=hilfeFabOn(),b=document.body;b.classList.toggle('hilfeon',on);
+// "?" at every switch row (plan hilfe-besser 2): asks the face about exactly this switch; the panel checks the id
+let HFOCUS=null;
+function hilfeFocusTake(){const f=HFOCUS;HFOCUS=null;return f||undefined}
+function hilfeRowId(row){const i=row.querySelector('input[id],select[id]');if(!i)return null;
+  const m=/^set_setform_(\w{1,40})$/.exec(i.id);if(m)return 'me:'+m[1];return /^[\w.]{1,40}$/.test(i.id)&&!i.id.startsWith('set_')?'sw:'+i.id:null}
+function hilfeMarks(){document.querySelectorAll('main section.on .setrow .lbl b, #profmodal .setrow .lbl b').forEach(b=>{
+  if(b.querySelector('.hqbtn'))return;const row=b.closest('.setrow'),id=row&&hilfeRowId(row);if(!id)return;
+  const q=document.createElement('button');q.type='button';q.className='hqbtn';q.dataset.hq=id;q.textContent='?';
+  q.setAttribute('aria-label',t('Frag Spark zu diesem Schalter','Ask Spark about this switch'));b.appendChild(q)})}
+document.addEventListener('click',e=>{const q=e.target.closest('.hqbtn');if(!q||!hilfeFabOn())return;e.preventDefault();e.stopPropagation();
+  const b=q.closest('b'),name=b?[...b.childNodes].filter(n=>n.nodeType===3).map(n=>n.nodeValue).join('').trim():'';
+  HFOCUS=q.dataset.hq;$('fab').classList.add('open');if(typeof stopListening==='function')stopListening(true);
+  ask(t(`Was macht „${name}“ und wie steht es bei mir?`,`What does "${name}" do and how is it set for me?`))},true);
+function hilfeFab(){const on=hilfeFabOn(),b=document.body;b.classList.toggle('hilfeon',on);if(on)hilfeMarks();
   const box=$('fabask');if(!box)return;box.hidden=!on;if(on)$('fabpage').textContent=t('Du bist auf: ','You are on: ')+hilfePageName(hilfeNow());
   else if(!(HILFE&&HILFE.page))$('fabcards').textContent=''}
 function hilfeFabCards(cards){const el=$('fabcards');if(!el)return;el.textContent='';
@@ -57,8 +70,8 @@ function hilfeFabCards(cards){const el=$('fabcards');if(!el)return;el.textConten
     if(typeof stopListening==='function')stopListening(true);$('fab').classList.add('open');ask(q)});
   $('fabq').addEventListener('focus',()=>{if(typeof stopListening==='function')stopListening(true)})}
  // the page changes without a call into this file (menu, Ich, Funktionen): follow the body, Ich and the menus
- const mo=new MutationObserver(()=>hilfeFab());
+ const mo=new MutationObserver(ms=>{if(ms.every(m=>m.type==='childList'&&[...m.addedNodes].every(n=>n.classList&&n.classList.contains('hqbtn'))))return;hilfeFab()});
  mo.observe(document.body,{attributes:true,attributeFilter:['class']});
- const pm=$('profmodal');if(pm)mo.observe(pm,{attributes:true,attributeFilter:['style','class'],subtree:true});
+ const pm=$('profmodal');if(pm)mo.observe(pm,{attributes:true,attributeFilter:['style','class'],subtree:true,childList:true});
  for(const id of['cfgnav']){const n=$(id);if(n)mo.observe(n,{attributes:true,subtree:true,attributeFilter:['class']})}
  document.querySelectorAll('main section').forEach(x=>mo.observe(x,{attributes:true,attributeFilter:['class']}))}

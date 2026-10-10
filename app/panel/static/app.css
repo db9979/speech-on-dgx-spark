@@ -857,3 +857,5 @@ body.inchat .hilfefab{display:none}
 .setrow:has(+.protail){border-bottom:0;padding-bottom:4px}.protail{padding:0 0 12px 14px;border-bottom:1px solid var(--line);min-width:0}
 .protail .setrow:last-child{border-bottom:1px solid var(--line)}.protail .facts li{min-width:0;display:flex;justify-content:space-between;align-items:center;gap:10px}.protail .facts li>span:last-child:not(:first-child){display:flex;gap:6px;flex:none}.protail .facts li>span:first-child{min-width:0;overflow-wrap:anywhere}
 @media (max-width:760px){.protail{padding-left:8px}.protail .facts li{flex-wrap:wrap}.protail .facts li>span:first-child{flex:1 1 100%}}
+.hqbtn{margin-left:6px;width:20px;height:20px;padding:0;border-radius:50%;border:1px solid var(--line);background:var(--card);color:var(--mut);font-size:12px;font-weight:600;line-height:18px;cursor:pointer;vertical-align:1px}
+.hqbtn:hover{color:var(--acc);border-color:var(--acc)}body:not(.hilfeon) .hqbtn{display:none}

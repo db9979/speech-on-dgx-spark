@@ -204,6 +204,17 @@ class Browser(unittest.TestCase):
                         await pg.wait_for_function("[...document.querySelectorAll('#setform .setrow')].some(r=>"
                                                    "r.textContent.includes('Vorab holen')&&!r.textContent.includes('Vom Admin ausgeschaltet'))",
                                                    timeout=5000)
+                        # the "?" at a switch (V01.0.343): asks about exactly that switch, the focus goes along
+                        sent = []
+                        pg.on("request", lambda r: sent.append(r.post_data or "") if r.url.endswith("/api/chat") else None)
+                        await pg.wait_for_selector("#setform .setrow .hqbtn", timeout=5000)
+                        await pg.locator("#setform .setrow .hqbtn").first.click()
+                        await pg.wait_for_function("$('fab').classList.contains('open')", timeout=5000)
+                        for _ in range(50):
+                            if any('"focus":"me:' in x for x in sent):
+                                break
+                            await pg.wait_for_timeout(100)
+                        self.assertTrue(any('"focus":"me:' in x and "Was macht" in x for x in sent), sent)
                         self.assertEqual(errors, [], w)
                     finally:
                         await br.close()

@@ -150,6 +150,16 @@ def classify(text, extra_words="", group_words=""):
         return Route([], {})
     if chat.SMALLTALK.fullmatch(text):
         return Route(["plaudern"], {})
+    # a question about the Spark itself (hilfe.py, plan hilfe-besser 1): "Wie verbinde ich Home Assistant?" is about
+    # setting it up, not about switching; it goes to the Spark-Hilfe only, before any other rule or the model's pick
+    try:
+        import hilfe
+        h = hilfe.help_question(text)
+    except Exception as e:
+        print("weiche: Hilfe-Erkennung", type(e).__name__, flush=True)
+        h = None
+    if h:
+        return Route(["spark"], {"spark": h[:40]})
     own = chat.own_words(extra_words)
     why = {}
     for name, (_, words) in GROUPS.items():

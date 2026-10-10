@@ -54,6 +54,7 @@ async def run(t, name, args, st):
                                                          # Spark-Hilfe (hilfe.py): the page asked from, the admin's
                                                          # login (only for its Spark switches), the card's way out
                                                          "page": t.hilfe_page, "admin": t.hilfe_admin, "out": t.out,
+                                                         "origin": t.hilfe_origin, "app": t.hilfe_app, "focus": t.hilfe_focus,
                                                          "text": t.ask_text, "request": t.request})
     if name.startswith("mail_tidy_") and t.tidy_on:
         return await tidy_tool(t, name, args, st)

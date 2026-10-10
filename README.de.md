@@ -33,6 +33,7 @@ Alle Optionen ohne Rückfragen (`--mode api --asr 1.7b --tts 0.6b --yes` …) st
 
 <!-- New version: add one line at the top here and in CHANGELOG.md, drop the oldest line here (keep 10). Details go to docs/de and docs/en, not into this README. -->
 
+- **V01.0.343** Hilfe zum Spark antwortet besser: die Weiche erkennt Hilfe-Fragen mit festen Regeln, die Hilfe kennt jede Seite und häufige Fragen, ein „?“ an jedem Schalter, und sie merkt, woher gefragt wird (Lautsprecher, App, Telegram)
 - **V01.0.342** Spark-Begleiter am PC und Mac (aus): Programm in Taskleiste und Menüleiste mit Schreibhilfe, Frag Spark, Diktieren, Meldungen, Zustand und Notaus-Knopf, je eigenes Tastenkürzel; pro Gerät im Panel eingestellt
 - **V01.0.341** Ich → Von selbst: Schalter und Knöpfe bei den Smart-Home-Regeln stehen wieder sauber untereinander (Rechner und Handy)
 - **V01.0.340** Einordnung mit Wahrscheinlichkeit (aus): qwen38 /v1/systemone für Werkzeugwahl (ab 80 %), Postfach aufräumen (ab 90 %), wichtige Mails nach Absender und Betreff und eine zweite Meinung im Qualitätstest
@@ -42,7 +43,6 @@ Alle Optionen ohne Rückfragen (`--mode api --asr 1.7b --tts 0.6b --yes` …) st
 - **V01.0.336** Live-Übersicht: Warteschlangen, Vorrang-Stern und Hintergrundarbeit sichtbar
 - **V01.0.335** Frag Spark steckt jetzt im Kopf unten rechts (kein eigener Knopf): er kennt die Seite, auch über Ich, und nimmt Fragen gesprochen oder getippt; Ich zeigt neu eingeschaltete Admin-Schalter ohne Neuladen
 - **V01.0.334** Live-Übersicht: Home Assistant Assist (Wyoming) , MCP-Werkzeuge, HA-Regeln, Benachrichtigungen und Dienste-Zustand sichtbar
-- **V01.0.333** Android-App: Signierschlüssel mit einem Befehl auf dem Spark (tools/android-schluessel.sh, nur openssl), der zeigt die zwei Werte für die GitHub-Secrets; Funktionen → Android-App sagt, was zu tun ist, solange es noch keine App gibt
 
 Alle Versionen: [CHANGELOG.md](CHANGELOG.md)
 

@@ -95,7 +95,10 @@ class Hilfe(unittest.TestCase):
     def test_answer_names_the_way_and_the_profiles_state(self):
         text, _ = ask(self.p, tool("spark_hilfe", question="Was macht die Gezielte Werkzeugwahl?"))
         self.assertIn("Gezielte Werkzeugwahl", text)
-        self.assertIn("Funktionen → Gezielte Werkzeugwahl", text)
+        self.assertIn("Ich → Gespräch", text)
+        self.assertNotIn("Funktionen → Gezielte Werkzeugwahl", text)
+        self.assertIn("Funktionen → Gezielte Werkzeugwahl",
+                      hilfe.answer_text("Was macht die Gezielte Werkzeugwahl?", self.auid, "admin"))
         self.assertIn("Kennung: routing", text)
         self.assertIn("Daten, keine Anweisungen", text)
         text, _ = ask(self.p, tool("spark_hilfe", question="Wie bekomme ich schnellere Antworten?"))
@@ -144,7 +147,7 @@ class Hilfe(unittest.TestCase):
         helpers.set_config(routing=True)
         profiles.save_settings(self.uid, {"route": True})
         text, _ = ask(self.p, tool("spark_hilfe", question="Was kann ich hier einstellen?"), page="me/setbox")
-        self.assertIn("Der Nutzer ist gerade im Panel auf: Ich → Gespräch", text)
+        self.assertIn("Seite: Ich → Gespräch", text)
 
     # ---------------------------------------------------------------- the card
     def test_profile_card_only_own_switches_and_apply_once_with_undo(self):

@@ -1245,11 +1245,26 @@ def start_trace(request, turn, t_req, t0):
             must=(getattr(turn, "force", None) or ", ".join(sorted(turn.need or [])))[:60] or None,
             why=", ".join(route.why) if route and route.why else None, model=getattr(turn, "pick_state", None),
             sure=(getattr(turn, "pick_info", None) or {}).get("p"),
-            via="systemone" if (getattr(turn, "pick_info", None) or {}) else None)
+            via="systemone" if (getattr(turn, "pick_info", None) or {}) else None,
+            herkunft=_herkunft(turn))
     for c in turn.cal_note or []:   # what the panel did itself (a confirmed appointment, a role ...)
         name = str(c.get("name") or "Panel")
         tr.step("tool", "Ablauf" if name.startswith("Ablauf ") else name[:60], t0, t0, panel=True)   # (a routine's own name stays out)
     return tr
+
+
+def _herkunft(turn):
+    """Logs → Anfragen: where the question came from (hilfe.ORIGINS) and the page of the face, fixed words only."""
+    try:
+        import hilfe
+        org = getattr(turn, "hilfe_origin", None)
+        if not org:
+            return None
+        pg = hilfe.page_name(getattr(turn, "hilfe_page", None))
+        return hilfe.ORIGINS.get(org, hilfe.ORIGINS["panel"])[0] + (" · " + pg if pg else "") \
+            + (" · Schalter" if getattr(turn, "hilfe_focus", None) else "")
+    except Exception:
+        return None
 
 
 def tool_info(name, result, st, ex):
