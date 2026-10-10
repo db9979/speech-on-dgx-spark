@@ -2,6 +2,8 @@
 
 **English** | [Deutsch](README.de.md) · Idea: Dominik Bornhäußer
 
+[![Buy me a coffee](https://img.shields.io/badge/Buy%20me%20a%20coffee-support-FFDD00?logo=buymeacoffee&logoColor=black)](https://buymeacoffee.com/zquu1xu570)
+
 Speech recognition (**Qwen3-ASR**) and text to speech (**Qwen3-TTS**) as services on an NVIDIA DGX Spark (GB10), plus a web panel with a voice assistant, profiles and monitoring. Runs natively with systemd, without Docker, next to [dgx-spark-qwen38](https://github.com/hasso5703/dgx-spark-qwen38), which provides the language model.
 
 ## Installation
@@ -31,6 +33,7 @@ All options for running without questions (`--mode api --asr 1.7b --tts 0.6b --y
 
 <!-- New version: add one line at the top here and in CHANGELOG.md, drop the oldest line here (keep 10). Details go to docs/de and docs/en, not into this README. -->
 
+- **V01.0.298** Buy me a coffee: link in the README and on GitHub (Sponsor button), same as in U-Jagd; nothing changes in the app
 - **V01.0.297** Code word at a speaker (off): if a speaker recognises your voice only narrowly or something is unusual, it asks for your own code word before personal things; never a foreign voice; after 3 wrong ones a 30-minute pause and a notification
 - **V01.0.296** Phone looks like the iPhone app (always below 760 px, can be turned off under Appearance → "Show the computer layout"): tabs Spark · Today · Documents · Me · Manage by role, chat with face, big mic and an always visible text field, Today with the same cards as Me → Today, history as a sheet from below, iOS-style lists and switches, sub-pages slide in from the right, the Android and Safari back gesture goes one level back; same on iPhone and Android, no new endpoints
 - **V01.0.295** Passkeys instead of the code (Face ID, Touch ID, Windows Hello): add one under Security (with a fresh code), then „With passkey“ at sign-in, for the admin mode and important changes; only over the address with a name, the app code stays as the way back, python-fido2 pinned with hash
@@ -40,7 +43,6 @@ All options for running without questions (`--mode api --asr 1.7b --tts 0.6b --y
 - **V01.0.291** reMarkable "Put into" (Me → reMarkable): choose an own folder for new documents, default "Spark"; the Spark only adds new documents, and if the folder is gone later it takes "Spark" again and says so
 - **V01.0.290** reMarkable sending: errors now say which file the cloud refused and what it answered (no token, also in the journal "remarkable: sending failed"), any 2xx answer counts, and a root line the Spark does not understand stops the write before anything could vanish
 - **V01.0.289** Fewer codes: trusted browsers for 60 days (7–90, a code again after 30 days without use) with a list to remove them one by one and a push note, a right code counts 10 minutes in the same login (bar with „End“; password, second step, roles, backups, code word and admin mode always ask), admin mode in a trusted browser 60 instead of 15 minutes; calendar, mail and Home Assistant now ask for the code instead of showing „code required“
-- **V01.0.288** Self-test "rmscene does not downgrade packaging" fits the hash lock (fallback line indented, lock checked for --no-deps and packaging ≥ 24); main green again
 
 All versions: [CHANGELOG.md](CHANGELOG.md)
 
@@ -87,6 +89,10 @@ Every feature can be switched on per profile and is off by default. Updates only
 - [Technical details and troubleshooting](docs/en/technical.md): services and ports, benchmarks, next to qwen38, troubleshooting
 
 The panel has its own guide for every feature under *Einbinden → Anleitungen* (Integrate → Guides).
+
+## Support
+
+The project is free. If you like it, you can support it at [buymeacoffee.com/zquu1xu570](https://buymeacoffee.com/zquu1xu570).
 
 ## License
 

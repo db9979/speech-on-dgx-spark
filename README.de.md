@@ -2,6 +2,8 @@
 
 [English](README.md) | **Deutsch** · Idee: Dominik Bornhäußer
 
+[![Buy me a coffee](https://img.shields.io/badge/Buy%20me%20a%20coffee-support-FFDD00?logo=buymeacoffee&logoColor=black)](https://buymeacoffee.com/zquu1xu570)
+
 Spracherkennung (**Qwen3-ASR**) und Sprachausgabe (**Qwen3-TTS**) als Dienste auf einer NVIDIA DGX Spark (GB10), dazu ein Webportal mit Sprach-Assistent, Profilen und Monitoring. Läuft nativ mit systemd, ohne Docker, neben [dgx-spark-qwen38](https://github.com/hasso5703/dgx-spark-qwen38), das das Sprachmodell liefert.
 
 ## Installation
@@ -31,6 +33,7 @@ Alle Optionen ohne Rückfragen (`--mode api --asr 1.7b --tts 0.6b --yes` …) st
 
 <!-- New version: add one line at the top here and in CHANGELOG.md, drop the oldest line here (keep 10). Details go to docs/de and docs/en, not into this README. -->
 
+- **V01.0.298** Buy me a coffee: Link in der README und auf GitHub (Sponsor-Knopf), wie bei U-Jagd; an der App ändert sich nichts
 - **V01.0.297** Codewort am Lautsprecher (aus): Erkennt der Lautsprecher deine Stimme nur knapp oder ist etwas ungewöhnlich, fragt er vor Persönlichem nach deinem eigenen Codewort; eine fremde Stimme nie; nach 3 falschen 30 Minuten Pause und eine Mitteilung
 - **V01.0.296** Handy wie die iPhone-App (immer unter 760 px, abschaltbar unter Darstellung → „Am Rechner-Layout zeigen“): Tabs Spark · Heute · Dokumente · Ich · Verwalten je nach Rolle, Chat mit Gesicht, großem Mikrofon und immer sichtbarem Tippfeld, Heute mit denselben Karten wie Ich → Heute, Verlauf als Blatt von unten, Listen und Schalter wie in iOS, Unterseiten schieben von rechts rein, Zurück-Geste von Android und Safari geht eine Ebene zurück; gleich auf iPhone und Android, keine neuen Endpunkte
 - **V01.0.295** Passkeys statt Code (Face ID, Touch ID, Windows Hello): unter Sicherheit anlegen (mit frischem Code), dann bei Anmeldung, Admin-Modus und wichtigen Änderungen „Mit Passkey“; nur über die Adresse mit Namen, App-Code bleibt als Rückfall, python-fido2 fest mit Hash
@@ -40,7 +43,6 @@ Alle Optionen ohne Rückfragen (`--mode api --asr 1.7b --tts 0.6b --yes` …) st
 - **V01.0.291** reMarkable „Ablegen in“ (Ich → reMarkable): eigener Zielordner für neue Dokumente wählbar, Standard „Spark“; der Spark legt nur neue Dokumente an, fehlt der Ordner später, nimmt er wieder „Spark“ und sagt es
 - **V01.0.290** reMarkable senden: Fehler sagen jetzt, welche Datei die Cloud abgelehnt hat und was sie antwortet (ohne Token, auch im Journal „remarkable: sending failed“), jede 2xx-Antwort zählt, und eine nicht verstandene Zeile im Wurzelverzeichnis stoppt das Schreiben, bevor etwas verschwinden könnte
 - **V01.0.289** Seltener Code eingeben: vertraute Browser 60 Tage (einstellbar 7–90, nach 30 Tagen ohne Nutzung wieder Code) mit Liste zum einzelnen Entfernen und Push-Meldung, ein richtiger Code gilt 10 Minuten in derselben Anmeldung (Balken mit „Beenden“; Passwort, zweiter Schritt, Rollen, Sicherungen, Codewort und Admin-Modus fragen immer), Admin-Modus im vertrauten Browser 60 statt 15 Minuten; Kalender, Mail und Home Assistant fragen den Code jetzt richtig ab statt „code required“
-- **V01.0.288** Selbsttest „rmscene senkt packaging nicht“ passt zum Hash-Lock (Ersatzzeile eingerückt, Lock mit --no-deps und packaging ≥ 24 geprüft); main wieder grün
 
 Alle Versionen: [CHANGELOG.md](CHANGELOG.md)
 
@@ -87,6 +89,10 @@ Jede Funktion ist pro Profil einzeln schaltbar und ab Werk aus. Updates laufen e
 - [Technik und Fehlersuche](docs/de/technik.md): Dienste und Ports, Leistung messen, neben qwen38, Fehlersuche
 
 Im Portal steht zu jeder Funktion eine eigene Anleitung unter *Einbinden → Anleitungen*.
+
+## Unterstützen
+
+Das Projekt ist kostenlos. Wenn es dir gefällt, kannst du es über [buymeacoffee.com/zquu1xu570](https://buymeacoffee.com/zquu1xu570) unterstützen.
 
 ## Lizenz
 
