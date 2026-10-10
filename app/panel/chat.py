@@ -1264,7 +1264,8 @@ async def _answer(request, turn):
     # Logs → Anfragen (tracelog.py, admin switch logs.trace): only ways, tool names and numbers, never text
     tr = turn.tr = start_trace(request, turn, tm["req"], t0)
     known = {t["function"]["name"] for t in tools or []}
-    turn.c, turn.out, turn.sentences, turn.trace = c, out, sentences, trace  # the tools (chat_tools.py) use them too
+    turn.c, turn.out, turn.sentences, turn.trace = c, out, sentences, trace
+    vip = stufe.begin(turn)   # None unless this is the own turn of a profile with Vorrang  # the tools (chat_tools.py) use them too
 
     async def llm():
         try:
@@ -1523,6 +1524,7 @@ async def _answer(request, turn):
                 await sentences.put(note)
             await out.put({"type": "error", "code": code, "message": f"LLM: {type(e).__name__}: {e}"[:400]})
         finally:
+            stufe.first(vip)
             if who:  # the person can look this up in "Ich" → Protokoll (a few days only)
                 try:
                     profiles.tool_log_add(who["id"], messages[-1]["content"], trace["calls"], trace["said"])
@@ -1569,6 +1571,7 @@ async def _answer(request, turn):
             await out.put({"type": "text", "delta": piece_shown})
             trace["said"] += piece_shown
             st["shown"] += len(piece_shown)
+        stufe.first(vip)   # the first sentence of a Vorrang answer is there: the others go on
         await sentences.put(piece)
 
     async def llm_round(payload, st):
@@ -1576,7 +1579,9 @@ async def _answer(request, turn):
         Returns (finish_reason, tool calls)."""
         finish, calls = None, {}
         st["xml"], st["lead"], st["ws"], st["head"] = False, True, "", ""
-        rec = {"start": time.time(), "first": None, "end": None, "usage": None, "think": 0, "tools": []}
+        # priority for people (stufe.py): another person's answer with Vorrang gets its first sentence first
+        held = await stufe.wait_turn(turn.stufe, ccfg)
+        rec = {"start": time.time(), "first": None, "end": None, "usage": None, "think": 0, "tools": [], "held": held}
         tm["rounds"].append(rec)
         async with c.stream("POST", ccfg["llm_url"].rstrip("/") + "/chat/completions",
                             json=payload, headers=lheaders) as r:
@@ -1681,7 +1686,7 @@ async def _answer(request, turn):
             tr.step("llm", f"Runde {len(tm['rounds'])}", rec["start"], rec["end"],
                     first=tr.ms(rec["first"]) - tr.ms(rec["start"]) if rec["first"] else None,
                     tokens=use.get("prompt_tokens") if isinstance(use.get("prompt_tokens"), int) else None,
-                    tools=len(payload.get("tools") or []),
+                    tools=len(payload.get("tools") or []), held_ms=int(rec["held"] * 1000) or None,
                     calls=", ".join(x["name"] if x["name"] in known else "unbekannt" for x in out_calls)[:60] or None,
                     think=rec["think"] or None)
         return finish, out_calls

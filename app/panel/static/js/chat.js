@@ -114,6 +114,9 @@ function startVad(o={}){const ctx=audioCtx(),src=ctx.createMediaStreamSource(cha
   chat.vad={iv,src}}
 function stopVad(){chat.micLevel=0;chat.micPaused=false;if(chat.vad){clearInterval(chat.vad.iv);try{chat.vad.src.disconnect()}catch{}chat.vad=null}}
 
+// priority for people (stufe.py): a profile with Vorrang says "recording starts" before it is sent
+let VOR_ON=false;
+function vorSpricht(){if(PROFILE&&VOR_ON)api('/api/vorrang/spricht',{method:'POST'}).catch(()=>{})}
 async function startListening(o={}){stopBarge();stopAnswer();chat.turnWait=null;chat.stopWhy=null;chat.resumeMic=false;
   if(!window.isSecureContext||!navigator.mediaDevices){showSecure();chatSay(t('Mikrofon braucht https, siehe Hinweis oben.','The microphone needs https, see the note above.'));return}
   try{await getMic()}
@@ -125,7 +128,7 @@ async function startListening(o={}){stopBarge();stopAnswer();chat.turnWait=null;
     const why=chat.stopWhy;chat.stopWhy=null;
     if(cancel){clearLive();if(why!=='lost')chatSay(why==='quiet'&&S.hands?t('Nichts gehört, Mikrofon aus. Tippe „Sprechen“ oder sag „Hey Spark“.','Heard nothing, microphone off. Tap "Speak" or say "Hey Spark".'):t('Bereit.','Ready.'));return}
     transcribe(new Blob(parts,{type:rec.mimeType||'audio/webm'}),performance.now(),rec)};
-  if(rec.state==='inactive')rec.start();chat.rec=rec;setTalk();chatSay(o.speaking?t('Unterbrochen, ich höre zu …','Interrupted, listening …'):o.follow?t('Noch eine Frage? Ich höre kurz zu …','Anything else? Listening briefly …'):t('Ich höre zu …','Listening …'));startVad(o)}
+  if(rec.state==='inactive')rec.start();chat.rec=rec;setTalk();vorSpricht();chatSay(o.speaking?t('Unterbrochen, ich höre zu …','Interrupted, listening …'):o.follow?t('Noch eine Frage? Ich höre kurz zu …','Anything else? Listening briefly …'):t('Ich höre zu …','Listening …'));startVad(o)}
 // Barge-in: while the answer plays, the microphone keeps listening (the browser's echo
 // cancellation removes most of the assistant's own voice). A recorder starts at the first sign of
 // speech so the beginning is not lost; if the speech holds for 250 ms the answer stops and that

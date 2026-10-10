@@ -340,6 +340,9 @@ final class Conversation: ObservableObject {
             return
         }
         if preroll == 0 && !fromWake { audio.chime() }
+        // priority for people: the Spark frees itself for a profile with Vorrang before the question arrives
+        // (it answers the same for every profile, so nothing to check here)
+        if let api = SparkAPI.current { Task { _ = try? await api.post("api/vorrang/spricht", [:]) } }
         pcm = preroll > 0 ? Array(ring.suffix(Int(AudioEngine.rate * preroll))) : []
         heard = preroll > 0
         self.fromWake = fromWake

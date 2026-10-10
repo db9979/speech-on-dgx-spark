@@ -261,5 +261,84 @@ class Admin(unittest.TestCase):
         self.assertIn("personen-vorrang.json", backup.STATE_FILES)
 
 
+class LanguageModelGate(unittest.TestCase):
+    """Step B (V01.0.284): other people's rounds wait while a Vorrang answer has no first sentence yet."""
+    def setUp(self):
+        stufe._active.clear()
+        stufe._hints.clear()
+
+    def tearDown(self):
+        helpers.set_config(person_priority=False, person_priority_wait=2)
+        stufe._active.clear()
+        stufe._hints.clear()
+        stufe._save({})
+
+    def run_wait(self, lv):
+        clock = Clock()
+
+        async def sleep(s):
+            clock.t += s
+        return asyncio.run(stufe.wait_turn(lv, sleep=sleep, clock=clock))
+
+    def turn(self, name):
+        c, uid = profile(name)
+
+        class T:
+            who, own_browser, ccfg = profiles.by_id(uid), True, None
+        return c, uid, T()
+
+    def test_others_wait_at_most_the_set_time(self):
+        c, uid, t = self.turn("GateAnna")
+        helpers.set_config(person_priority=True, person_priority_wait=2)
+        ADMIN.put(f"/api/admin/vorrang/{uid}", json={"level": "vorrang"})
+        tok = stufe.begin(t)
+        self.assertIsNotNone(tok)
+        waited = self.run_wait("")
+        self.assertGreaterEqual(waited, 2)
+        self.assertLess(waited, 2.2)
+        self.assertEqual(self.run_wait("vorrang"), 0)        # Vorrang never waits for Vorrang
+        stufe.first(tok)
+        self.assertEqual(self.run_wait(""), 0)               # first sentence there: nobody waits
+        stufe.first(tok)                                     # twice is harmless
+
+    def test_no_wait_when_off_or_nobody_has_priority(self):
+        c, uid, t = self.turn("GateBen")
+        self.assertIsNone(stufe.begin(t))                    # normal profile
+        ADMIN.put(f"/api/admin/vorrang/{uid}", json={"level": "vorrang"})
+        self.assertIsNone(stufe.begin(t))                    # switch off
+        helpers.set_config(person_priority=True, person_priority_wait=0)
+        tok = stufe.begin(t)
+        self.assertEqual(self.run_wait(""), 0)               # 0 s: only speech output and recognition
+        stufe.first(tok)
+
+    def test_a_stuck_answer_holds_nobody_for_long(self):
+        stufe._active[object()] = ("u_000000000000", 0.0)   # began long ago, no first sentence
+        self.assertFalse(stufe.holding(now=stufe.FIRST_MAX + 1))
+        stufe.hint("u_000000000000", now=100)
+        self.assertTrue(stufe.holding(now=100 + stufe.HINT_S - 1))
+        self.assertFalse(stufe.holding(now=100 + stufe.HINT_S + 1))
+
+    def test_recording_starts(self):
+        import vorrang
+        self.assertEqual(TestClient(panel.app).post("/api/vorrang/spricht").status_code, 401)   # guests
+        c, uid, t = self.turn("GateCid")
+        helpers.set_config(person_priority=True)
+        saved = vorrang._local[0]
+        vorrang._local[0] = 0.0
+        try:
+            self.assertEqual(c.post("/api/vorrang/spricht").json(), {"ok": True})
+            self.assertNotIn(uid, stufe._hints)              # normal: the same answer, nothing happens
+            ADMIN.put(f"/api/admin/vorrang/{uid}", json={"level": "vorrang"})
+            self.assertEqual(c.post("/api/vorrang/spricht").json(), {"ok": True})
+            self.assertIn(uid, stufe._hints)
+            self.assertGreater(vorrang._local[0], 0)        # marked as speech: background work stops at once
+            self.assertTrue(c.get("/api/whoami").json()["person_priority"])
+        finally:
+            vorrang._local[0] = saved
+
+    def test_the_app_may_say_it(self):
+        self.assertIn("/api/vorrang/spricht", profiles.APP_PATHS)
+
+
 if __name__ == "__main__":
     unittest.main()
