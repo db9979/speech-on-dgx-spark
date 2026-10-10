@@ -4,7 +4,7 @@ Eine eigene App fürs iPhone (Quellcode in `ios/`): Knopf drücken, fragen, die 
 
 ## Im Panel einschalten
 
-1. Admin: **Einstellungen → Funktionen → iPhone-App** an, speichern.
+1. Admin: **Funktionen → iPhone-App** an, speichern.
 2. Profil: **Ich → iPhone-App → „iPhone-App für mich“** an.
 3. Wer aus der App Licht und Geräte schalten will: **„Smart Home aus der App“** an. Das Codewort gilt wie überall.
 4. Wer das Weckwort und den Ständer-Modus will: **„Dauerhaft zuhören erlauben“** an.
@@ -82,7 +82,7 @@ Die App übernimmt das Panel Stück für Stück (Plan „iPhone-App übernimmt d
 
 - **Im Panel öffnen** (Einstellungen): Alles, was die App noch nicht selbst zeigt, öffnet das Panel in Safari an der richtigen Stelle (Gedächtnis, E-Mail, Sicherheit …). Mit „Spark verwalten“ auch Monitoring, Logs, Funktionen und Profile.
 - **Mein Alltag** (Schalter „Mein Alltag in der App“): die nächsten Termine aus deinen Kalendern, die Erinnerungen des Spark (wischen zum Löschen) und das Gedächtnis (ansehen, einzeln löschen, Aufräumen vorschlagen lassen und übernehmen). Unter Mein Profil kommen die Gesprächsschalter dazu: aus Gesprächen lernen, jeden Tag neues Gespräch und, wenn der Admin sie erlaubt, aus Korrekturen lernen, bei Werkzeugen nachdenken und gezielte Werkzeugwahl. Alles auf einmal vergessen geht weiter nur im Browser.
-- **Spark verwalten** (Schalter „Spark verwalten in der App“): Nach Face ID meldest du dich mit dem Admin-Passwort und dem Code des Admins an, wie im Browser. Ohne zweiten Anmeldeschritt des Admins lässt der Spark diese Anmeldung vom iPhone nicht zu. Die Anmeldung gilt nur, solange die App offen ist. Darin: **Monitoring** („Braucht dich“, Speicher, CPU/GPU, Dienste), **Logs** (Diagnose wie im Panel mit Bereichen und Zeitraum, „Kopieren für Thread“ und Teilen) und **Prüfen** (Funktionsprüfung, Qualitätstest, Vorrang prüfen). Unter **Ändern** (V01.0.250): **Funktionen** (die einfachen Ein/Aus-Schalter; heikle wie „Port“, zweiter Anmeldeschritt für Profile und die iPhone-Schalter selbst bleiben im Browser), **Profile und Geräte** (Profil anlegen, Geräte entfernen, neue PIN, zweiten Schritt zurücksetzen, Profil löschen; die letzten drei mit Code) und **Sicherungen** (jetzt sichern, alte löschen; Zurückspielen und Herunterladen im Browser). Hat dein Profil eine Admin-Rolle (Mit-Admin oder Verwalter, V01.0.256), steht dort auch **„Mit meinem Profil anmelden“**: mit dem Code deines Profils statt Admin-Passwort, endet nach 15 Minuten ohne Bedienung. Ein Verwalter sieht nur Monitoring, Logs, Funktionen und Profile und Geräte; ein Mit-Admin löscht keine Sicherungen.
+- **Spark verwalten** (Schalter „Spark verwalten in der App“): Nach Face ID meldest du dich mit dem Admin-Passwort und dem Code des Admins an, wie im Browser. Ohne zweiten Anmeldeschritt des Admins lässt der Spark diese Anmeldung vom iPhone nicht zu. Die Anmeldung gilt nur, solange die App offen ist. Darin: **Monitoring** („Braucht dich“, Speicher, CPU/GPU, Dienste), **Logs** (Diagnose wie im Panel mit Bereichen und Zeitraum, „Kopieren für Thread“ und Teilen) und **Prüfen** (Funktionsprüfung, Qualitätstest, Vorrang prüfen). Unter **Ändern** (V01.0.250): **Funktionen** (die einfachen Ein/Aus-Schalter; heikle wie „Port“, zweiter Anmeldeschritt für Profile und die iPhone-Schalter selbst bleiben im Browser), **Personen und Geräte** (Profil anlegen, Geräte entfernen, neue PIN, zweiten Schritt zurücksetzen, Profil löschen; die letzten drei mit Code) und **Sicherungen** (jetzt sichern, alte löschen; Zurückspielen und Herunterladen im Browser). Hat dein Profil eine Admin-Rolle (Mit-Admin oder Verwalter, V01.0.256), steht dort auch **„Mit meinem Profil anmelden“**: mit dem Code deines Profils statt Admin-Passwort, endet nach 15 Minuten ohne Bedienung. Ein Verwalter sieht nur Monitoring, Logs, Funktionen und Personen und Geräte; ein Mit-Admin löscht keine Sicherungen.
 - **Dokumente verwalten** (Schalter „Dokumente verwalten in der App“, V01.0.250): In „Meine Dokumente“ wischen zum Löschen, lange drücken für „Für alle“, Durchsuchen an/aus, Tags, Neu einlesen und „An die Frist erinnern“. Unten „Schalter für Dokumente“ mit den Schaltern von Ich → Dokumente, soweit der Admin sie erlaubt.
 - **Stimme einlernen** (Schalter „Stimme einlernen in der App“): Die App zeigt drei Sätze, du liest sie vor, gespeichert wird mit dem Code aus der Authenticator-App. Darunter „Anlernen“ für jeden deiner Lautsprecher (der Lautsprecher fragt dann nach fünf Sätzen). Braucht die Sprechererkennung vom Admin und den zweiten Anmeldeschritt deines Profils.
 - **Von selbst** (Schalter „Von selbst in der App“): Wetter-Ort, Pakete aus E-Mails, Bus und Bahn (Haltestelle suchen und setzen), deine Aufträge ansehen und stoppen, Raum-Modus „+30 Min.“ (höchstens vier Stunden ab jetzt). Die Schalter Wetter, Pakete, Bus und Bahn, Aufträge gibt es hier auch.
@@ -103,7 +103,7 @@ Ab V01.0.209 zeigt die App, wenn ein Gerät deines Profils im Raum-Modus zuhört
 
 ## Spark-Update aus der App
 
-Für ausgewählte Profile, standardmäßig aus. Einschalten als Admin: **Einstellungen → Funktionen → Spark-Update über die iPhone-App**, darunter pro Profil:
+Für ausgewählte Profile, standardmäßig aus. Einschalten als Admin: **Funktionen → Spark-Update über die iPhone-App**, darunter pro Profil:
 
 - **Hinweise:** Liegt eine neue Version mit grünen GitHub-Tests bereit, kommt eine Mitteilung aufs iPhone („V… ist geprüft und bereit (3 Änderungen)“), pro Version einmal und nicht in der Ruhezeit des Profils. Braucht „Push an die iPhone-App“.
 - **Starten:** In der App unter **Einstellungen → Spark-Version** steht „Jetzt aktualisieren“. Bestätigt wird mit Face ID (oder dem iPhone-Code) und einem frischen Code aus der Authenticator-App des Profils. Darum lässt sich „Starten“ nur für Profile mit zweitem Anmeldeschritt anhaken.
@@ -115,7 +115,7 @@ Die Seite zeigt die installierte und die neue Version mit der Liste der Änderun
 Braucht das Apple Developer Program. Einmalig:
 
 1. developer.apple.com → **Certificates, IDs & Profiles → Keys → +** → Name z. B. „Spark Push“, **Apple Push Notifications service (APNs)** anhaken → **Continue → Register → Download**. Die `.p8`-Datei gibt es nur dieses eine Mal; gut aufheben. Die **Key ID** steht daneben, die **Team ID** unter **Membership**.
-2. Panel als Admin: **Einstellungen → Funktionen → Push an die iPhone-App** an. Darunter `.p8`, Key ID, Team ID und die Bundle-ID der App eintragen. **Art der App**: „Entwicklung“, solange du die App direkt aus Xcode aufspielst, „Produktion“ für TestFlight und App Store. Speichern.
+2. Panel als Admin: **Funktionen → Push an die iPhone-App** an. Darunter `.p8`, Key ID, Team ID und die Bundle-ID der App eintragen. **Art der App**: „Entwicklung“, solange du die App direkt aus Xcode aufspielst, „Produktion“ für TestFlight und App Store. Speichern.
 3. Profil: **Ich → iPhone-App → „Meldungen aufs iPhone“** an.
 4. App einmal öffnen und Mitteilungen erlauben. Dann im Panel **„Test-Meldung schicken“**.
 

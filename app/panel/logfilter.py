@@ -49,10 +49,10 @@ HINTS = (
     ("esp32", r"(?i)connect", "Lautsprecher nicht erreichbar: Strom und WLAN prüfen.",
      "Speaker not reachable: check power and Wi-Fi."),
     ("telegram", r"(?i)conflict", "Ein anderes Programm nutzt denselben Bot-Token: Token nur an einer Stelle nutzen "
-     "oder bei @BotFather einen neuen holen und unter Einbinden → Telegram eintragen.",
+     "oder bei @BotFather einen neuen holen und unter Funktionen → Telegram eintragen.",
      "Another program uses the same bot token: use it in one place only or get a new one from @BotFather "
      "and enter it under Integrate → Telegram."),
-    ("telegram", r".", "Telegram klappt nicht: Bot unter Einbinden → Telegram prüfen.",
+    ("telegram", r".", "Telegram klappt nicht: Bot unter Funktionen → Telegram prüfen.",
      "Telegram fails: check the bot under Integrate → Telegram."),
 )
 _HINTS = [(a, re.compile(rx), de, en) for a, rx, de, en in HINTS]

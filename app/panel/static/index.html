@@ -3,7 +3,7 @@
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover, interactive-widget=resizes-content">
-<title>Speech Spark</title>
+<title>Spark</title>
 <link rel="manifest" href="/manifest.webmanifest">
 <link rel="icon" href="/static/icon.svg" type="image/svg+xml">
 <link rel="apple-touch-icon" href="/apple-touch-icon.png">
@@ -27,14 +27,14 @@
 <div id="updtoast" class="updtoast" style="display:none"></div>
 <div id="roomlive" class="roomlive" hidden><i></i><span></span><button class="b" type="button" id="roomlivego">Ansehen</button></div>
 <div id="updbanner" class="updbanner" style="display:none"><span id="updbtext"></span><button class="b p" id="updbgo" type="button">Zum Update</button><button class="ib" id="updbx" type="button" title="Später">✕</button></div>
-<header><button class="ib" id="mback" type="button" title="Zurück zum Gesicht" aria-label="Zurück zum Gesicht"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"><path d="M15 5l-7 7 7 7"/></svg></button><div id="mslot"></div><h1><span class="logo"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="#fff" stroke-width="2.4" stroke-linecap="round"><path d="M4 10v4M8 6v12M12 9v6M16 4v16M20 10v4"/></svg></span>Speech auf DGX Spark</h1><span id="hdr" class="mut"></span>
+<header><button class="ib" id="mback" type="button" title="Zurück zum Gesicht" aria-label="Zurück zum Gesicht"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"><path d="M15 5l-7 7 7 7"/></svg></button><div id="mslot"></div><h1><span class="logo"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="#fff" stroke-width="2.4" stroke-linecap="round"><path d="M4 10v4M8 6v12M12 9v6M16 4v16M20 10v4"/></svg></span>Spark</h1><span id="hdr" class="mut"></span>
 <div class="hfoot"><button class="b" id="themebtn" type="button" style="order:3;display:inline-flex;align-items:center;padding:7px 9px" title="Hell / Dunkel / System"><svg class="ti-sun" viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round"><circle cx="12" cy="12" r="4"/><path d="M12 2v2M12 20v2M4.9 4.9l1.4 1.4M17.7 17.7l1.4 1.4M2 12h2M20 12h2M4.9 19.1l1.4-1.4M17.7 6.3l1.4-1.4"/></svg><svg class="ti-moon" viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 12.8A9 9 0 1 1 11.2 3a7 7 0 0 0 9.8 9.8z"/></svg><svg class="ti-auto" viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" stroke-width="2.2"><circle cx="12" cy="12" r="9"/><path d="M12 3a9 9 0 0 1 0 18z" fill="currentColor"/></svg></button>
 <button class="b" id="langbtn" type="button" style="order:3">English</button>
 <button class="b" id="loginbtn" type="button" style="order:4;display:none;align-items:center;gap:6px"><svg viewBox="0 0 24 24" width="14" height="14" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round"><rect x="5" y="11" width="14" height="10" rx="2"/><path d="M8 11V7a4 4 0 0 1 8 0v4"/></svg><span>Einstellungen</span></button>
 <button class="b" id="logoutbtn" type="button" style="order:4;display:none">Abmelden</button>
 </div>
 <button class="ib" id="mmenu" type="button" title="Menü" aria-label="Menü"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round"><path d="M4 7h16M4 12h16M4 17h16"/></svg></button>
-<nav><button data-s="chat"><i class="ni" data-ni="chat"></i>Assistent</button><button type="button" class="navme" id="navme"><i class="ni" data-ni="me"></i>Ich</button><span class="navgrp">Spark verwalten</span><button data-s="mon" class="on"><i class="ni" data-ni="mon"></i>Zustand <span class="hdot" id="hdot"></span></button><button data-s="cfg"><i class="ni" data-ni="cfg"></i>Einstellungen <span class="ncnt" id="dirtycnt" hidden></span><span id="updbadge" class="pill warn" style="display:none">Update</span></button><button data-s="prof"><i class="ni" data-ni="prof"></i>Profile und Geräte</button><button data-s="int"><i class="ni" data-ni="int"></i>Einbinden</button></nav></header>
+<nav><button type="button" class="navfind" id="findbtn" aria-label="Suchen"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><circle cx="11" cy="11" r="7"/><path d="M20 20l-3.5-3.5"/></svg><span>Suchen …</span><kbd>Strg K</kbd></button><button data-s="chat"><i class="ni" data-ni="chat"></i>Assistent</button><button type="button" class="navme" id="navme"><i class="ni" data-ni="me"></i>Ich</button><span class="navgrp">Spark verwalten</span><button data-s="mon" class="on"><i class="ni" data-ni="mon"></i>Zustand <span class="hdot" id="hdot"></span></button><button data-s="feat"><i class="ni" data-ni="feat"></i>Funktionen</button><button data-s="prof"><i class="ni" data-ni="prof"></i>Personen und Geräte</button><button data-s="cfg"><i class="ni" data-ni="cfg"></i>Einstellungen <span class="ncnt" id="dirtycnt" hidden></span><span id="updbadge" class="pill warn" style="display:none">Update</span></button></nav></header>
 <main>
 <div class="ptabs subnav" id="subnav" hidden></div>
 <button class="b cfgback" id="subback" type="button"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"><path d="M15 5l-7 7 7 7"/></svg><span>Zustand</span></button>
@@ -336,7 +336,7 @@
       <div class="setrow"><div class="lbl"><b>Überall abmelden</b><span>Beendet die Admin-Anmeldung in allen Browsern, auch hier (z. B. nach einem verlorenen Gerät).</span></div><button class="b" id="adminout" type="button">Abmelden</button></div>
       <h3 class="sec">Benutzer als Admin <span>wirkt sofort, mit Code</span></h3>
       <div class="setrow"><div class="lbl"><b>Benutzer als Admin erlauben</b><span>Ausgewählte Profile verwalten den Spark mit eigener Anmeldung und eigenem Code.<button class="mlink" type="button">Mehr</button></span></div><label class="tgl"><input type="checkbox" id="coadmon"><i></i></label></div>
-      <div class="fh more" hidden>Mit-Admin: alles wie der Admin, außer Admin-Passwort und zweitem Schritt des Admins, Rollen, Sicherungen einspielen oder herunterladen und Profile mit Admin-Rolle ändern. Verwalter: nur Zustand, Logs, Profile und Geräte, Funktionen ein und aus. Eine Rolle allein gibt nichts: Das Profil braucht seinen zweiten Anmeldeschritt und öffnet unter Ich → Sicherheit den Admin-Modus mit einem frischen Code; er endet nach 15 Minuten ohne Bedienung, spätestens nach 8 Stunden. Über Sprache, Lautsprecher, Uhr, Telegram und Siri wirkt die Rolle nie. Schalter aus oder Rolle entziehen beendet jeden offenen Admin-Modus sofort. Was ein Profil als Admin tut, steht unter Zustand → Logs → Admin-Protokoll.</div>
+      <div class="fh more" hidden>Mit-Admin: alles wie der Admin, außer Admin-Passwort und zweitem Schritt des Admins, Rollen, Sicherungen einspielen oder herunterladen und Profile mit Admin-Rolle ändern. Verwalter: nur Zustand, Logs, Personen und Geräte, Funktionen ein und aus. Eine Rolle allein gibt nichts: Das Profil braucht seinen zweiten Anmeldeschritt und öffnet unter Ich → Sicherheit den Admin-Modus mit einem frischen Code; er endet nach 15 Minuten ohne Bedienung, spätestens nach 8 Stunden. Über Sprache, Lautsprecher, Uhr, Telegram und Siri wirkt die Rolle nie. Schalter aus oder Rolle entziehen beendet jeden offenen Admin-Modus sofort. Was ein Profil als Admin tut, steht unter Zustand → Logs → Admin-Protokoll.</div>
       <div id="coadmlist" class="full"></div>
       </div>
       <div class="savebar"><button class="b p savebtn" data-p="sec">Speichern</button><span class="savemsg"></span></div>
@@ -400,7 +400,7 @@
         <label class="tgl" title="Dauerhaft lauschen, das Wort startet das Gespräch (Bildschirm bleibt an)"><input type="checkbox" id="chatwake"><i></i><span>„Hey Spark“</span></label>
         <label class="tgl" id="roomtgl" style="display:none" title="Raum-Modus: hört dem Gespräch im Raum zu und hilft in Pausen; endet von selbst"><input type="checkbox" id="chatroom"><i></i><span>Raum</span></label>
         <label class="tgl" title="Nach der Antwort automatisch wieder zuhören"><input type="checkbox" id="chathands"><i></i><span>Freihändig</span></label>
-        <button class="ib" id="chatset" type="button" title="Gesprächs-Einstellungen"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M4 6h10M18 6h2M4 12h4M12 12h8M4 18h12M20 18h0"/><circle cx="16" cy="6" r="2"/><circle cx="10" cy="12" r="2"/><circle cx="18" cy="18" r="2"/></svg><span>Einstellungen</span></button>
+        <button class="ib" id="chatset" type="button" title="Gespräch einstellen"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M4 6h10M18 6h2M4 12h4M12 12h8M4 18h12M20 18h0"/><circle cx="16" cy="6" r="2"/><circle cx="10" cy="12" r="2"/><circle cx="18" cy="18" r="2"/></svg><span>Gespräch einstellen</span></button>
       </div>
       <div class="mbar"><button class="b" id="mset" type="button"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round"><path d="M4 6h10M18 6h2M4 12h4M12 12h8M4 18h12"/><circle cx="16" cy="6" r="2"/><circle cx="10" cy="12" r="2"/><circle cx="18" cy="18" r="2"/></svg><span>Einstellungen</span></button><button class="b" id="mlog" type="button"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 12a8 8 0 0 1-11.6 7.1L4 20l1-4.6A8 8 0 1 1 21 12z"/></svg><span>Verlauf</span></button><button class="b" id="mpic" type="button" hidden><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="5" width="18" height="14" rx="2"/><circle cx="9" cy="10" r="1.8"/><path d="M21 16l-5-5-8 8"/></svg><span>Bild</span></button><button class="b" id="mmsg" type="button" hidden><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="5" width="18" height="14" rx="2"/><path d="M3 7l9 6 9-6"/></svg><span>Nachricht</span></button></div>
       <div class="mut hint">Leertaste, „Sprechen“ oder ein Klick aufs Gesicht: zuhören bzw. die laufende Antwort unterbrechen.</div>
@@ -446,11 +446,11 @@
     <div id="vrtoday" class="mut" style="margin-top:8px"></div>
     <div id="vrout"></div></div>
   <div class="card"><h2>Kiwix-Archiv</h2>
-    <div class="intro sm">Prüft, ob der Spark dein Kiwix erreicht, welche Bücher es hat und wie schnell eine Testsuche antwortet. Adresse und Schalter unter Einstellungen → Funktionen → Websuche.</div>
+    <div class="intro sm">Prüft, ob der Spark dein Kiwix erreicht, welche Bücher es hat und wie schnell eine Testsuche antwortet. Adresse und Schalter unter Funktionen → Websuche.</div>
     <div class="row" style="margin-top:12px"><button class="b" id="kxgo">Kiwix prüfen</button><span id="kxgomsg" class="mut"></span></div>
     <div id="kxout"></div></div>
   <div class="card"><h2>Erst lokal testen</h2>
-    <div class="intro sm">Zeigt für einen Satz, ob er erst lokal gesucht wird, und was Dokumente, Kiwix-Archiv und frühere Gespräche finden, mit Zeiten. Gesucht wird in den Unterlagen des Profils, das in diesem Browser angemeldet ist. Schalter unter Einstellungen → Funktionen → Websuche.</div>
+    <div class="intro sm">Zeigt für einen Satz, ob er erst lokal gesucht wird, und was Dokumente, Kiwix-Archiv und frühere Gespräche finden, mit Zeiten. Gesucht wird in den Unterlagen des Profils, das in diesem Browser angemeldet ist. Schalter unter Funktionen → Websuche.</div>
     <div class="row" style="margin-top:12px"><input id="lktext" maxlength="500" placeholder="z. B. Wer war Albert Einstein?" autocomplete="off"><button class="b" id="lkgo">Testen</button></div>
     <div id="lkout"></div></div>
   <div class="two">
@@ -500,7 +500,7 @@
 
 <section id="int">
   <div class="card"><h2>Alle Anleitungen</h2>
-    <div class="mut">Zu jedem Dienst, den man einschalten kann: was er kann, was du brauchst, wie du ihn einrichtest und benutzt, was das Haus verlässt und wie du ihn wieder ausschaltest. Dieselbe Anleitung steht auch neben dem Schalter unter Einstellungen → Funktionen und im Ich.</div>
+    <div class="mut">Zu jedem Dienst, den man einschalten kann: was er kann, was du brauchst, wie du ihn einrichtest und benutzt, was das Haus verlässt und wie du ihn wieder ausschaltest. Dieselbe Anleitung steht auch neben dem Schalter unter Funktionen und im Ich.</div>
     <div id="guidelist" style="margin-top:6px"></div>
   </div>
 </section>
@@ -591,6 +591,7 @@
     <div class="mrow" id="mconvo"><span class="intro sm">Frühere Gespräche</span></div>
     <button class="mi" id="miset" type="button">Gesprächs-Einstellungen</button>
   </div>
+  <button class="mi" id="mifind" type="button">Suchen …</button>
   <div id="madmin"></div>
   <div class="mrow2"><button class="mi" id="milang" type="button"></button><button class="mi" id="mitheme" type="button">Hell / Dunkel</button></div>
   <button class="mi" id="milogin" type="button">Admin-Anmeldung</button>
@@ -737,6 +738,7 @@
 <script src="/static/js/wizard.js"></script>
 <script src="/static/js/coadmin.js"></script>
 <script src="/static/js/secglance.js"></script>
+<script src="/static/js/find.js"></script>
 <script src="/static/js/start.js"></script>
 </body>
 </html>

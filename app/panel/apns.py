@@ -258,7 +258,7 @@ async def test(uid, now=None):
     """A test message to the profile's iPhones, with Apple's reason when it is refused."""
     now = time.time() if now is None else now
     if not ready():
-        return {"ok": False, "why": "Apple-Push ist nicht eingerichtet (Admin: Einstellungen → Funktionen → iPhone-App)."}
+        return {"ok": False, "why": "Apple-Push ist nicht eingerichtet (Admin: Funktionen → iPhone-App)."}
     if not profile_tokens(uid):
         return {"ok": False, "why": "Noch kein iPhone hat sich für Meldungen angemeldet. App einmal öffnen."}
     s = settings()

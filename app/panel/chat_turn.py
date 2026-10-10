@@ -141,7 +141,7 @@ async def prepare(request):
         else:
             system = (system + "\n\n" + chat.now_line(body.get("tz"))).strip()
     # why the search is (not) offered, for the journal and for the model (never silently missing)
-    print("chat: web search", "NOT offered: switched off (Einstellungen → Funktionen → Websuche)" if not ccfg.get("search")
+    print("chat: web search", "NOT offered: switched off (Funktionen → Websuche)" if not ccfg.get("search")
           else "NOT offered: no SearXNG address" if not search
           else "locked: the answer before came from e-mail" if carry == "mail" else "offered", flush=True)
     system = (system + "\n\n" + (chat.SEARCH_LOCKED_HINT if search and carry == "mail" else chat.SEARCH_HINT if search

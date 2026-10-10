@@ -150,7 +150,7 @@ struct AdminView: View {
                 } header: { Text("Zustand") }
                 Section {
                     NavigationLink("Funktionen") { FeaturesView() }
-                    NavigationLink("Profile und Geräte") { AdminProfilesView() }
+                    NavigationLink("Personen und Geräte") { AdminProfilesView() }
                     if s.role != "manager" { NavigationLink("Sicherungen") { BackupsView() } }
                 } header: { Text("Ändern") } footer: {
                     Text("Was einen Code braucht (neue PIN, Profil löschen), fragt danach. Sprachmodell, Engines und Ports bleiben im Browser.")
@@ -174,7 +174,7 @@ struct AdminView: View {
             }
             if let e = error { Text(verbatim: e).foregroundStyle(.red) }
         } footer: {
-            Text(profileRole == "manager" ? String(localized: "Als Verwalter: Monitoring, Logs, Funktionen, Profile und Geräte. Mit dem Code deines Profils.")
+            Text(profileRole == "manager" ? String(localized: "Als Verwalter: Monitoring, Logs, Funktionen, Personen und Geräte. Mit dem Code deines Profils.")
                                           : String(localized: "Als Mit-Admin, mit dem Code deines Profils. Nach 15 Minuten ohne Bedienung endet die Anmeldung."))
         }
     }
@@ -444,9 +444,9 @@ struct ChecksView: View {
 }
 
 
-// MARK: - Ändern (Funktionen, Profile und Geräte, Sicherungen)
+// MARK: - Ändern (Funktionen, Personen und Geräte, Sicherungen)
 
-/// Einstellungen → Funktionen: the plain on/off switches (the Spark names them; the sensitive ones stay in
+/// Funktionen: the plain on/off switches (the Spark names them; the sensitive ones stay in
 /// the browser, where they want the admin's code).
 struct FeaturesView: View {
     @ObservedObject private var s = AdminSession.shared
@@ -519,7 +519,7 @@ struct AdminProfile: Identifiable, Hashable {
     let last: Date?
 }
 
-/// Profile und Geräte: the profiles, a new one, a profile's devices; a new PIN, the second step reset and
+/// Personen und Geräte: the profiles, a new one, a profile's devices; a new PIN, the second step reset and
 /// deleting need the admin's code.
 struct AdminProfilesView: View {
     @ObservedObject private var s = AdminSession.shared
@@ -556,7 +556,7 @@ struct AdminProfilesView: View {
                 Text("Ein neues iPhone koppelt das Profil danach selbst unter Ich → iPhone-App.")
             }
         }
-        .navigationTitle("Profile und Geräte")
+        .navigationTitle("Personen und Geräte")
         .refreshable { await load() }
         .task { await load() }
     }

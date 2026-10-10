@@ -102,7 +102,7 @@ function espList(d){
   h+=espGrp(t('Lautsprecher hinzufügen','Add a speaker'))+`<div class="overlist esplist">
     <button type="button" class="overrow" data-ego="usb"><b>${t('Neues Board per USB einrichten','Set up a new board over USB')}</b><span>${t('Chrome oder Edge am PC','Chrome or Edge on a PC')}</span></button>
     <button type="button" class="overrow" data-ego="code"><b>${t('Board zeigt einen Code','Board shows a code')}</b><span>${t('hat schon die Spark-Firmware','already has the Spark firmware')}</span></button></div>`;
-  if(!d.firmware)h+=`<div class="fh err">${t('Auf dem Spark liegt noch keine Firmware. Der Admin holt sie unter Einstellungen → Funktionen → Eigene Lautsprecher.','There is no firmware on the Spark yet. The admin fetches it under Settings → Features → Own speakers.')}</div>`;
+  if(!d.firmware)h+=`<div class="fh err">${t('Auf dem Spark liegt noch keine Firmware. Der Admin holt sie unter Funktionen → Eigene Lautsprecher.','There is no firmware on the Spark yet. The admin fetches it under Features → Own speakers.')}</div>`;
   return h+espFoot()}
 const espVars=d=>d.firmware?Object.entries(d.firmware.variants).map(([k,v])=>[k,v.label]):[];
 const espUsbOk=()=>'serial' in navigator&&window.isSecureContext;

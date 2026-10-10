@@ -31,6 +31,7 @@ All options for running without questions (`--mode api --asr 1.7b --tts 0.6b --y
 
 <!-- New version: add one line at the top here and in CHANGELOG.md, drop the oldest line here (keep 10). Details go to docs/de and docs/en, not into this README. -->
 
+- **V01.0.265** Menu: Funktionen is its own entry (with guides), "Personen und Geräte" (with apps and interfaces), "Einbinden" is gone; Ctrl K/⌘ K search across pages, switches, settings, Ich, checks, logs and guides
 - **V01.0.264** Look locally first (Features → Web search, off; profile switch): knowledge questions first look in documents, the Kiwix archive and earlier conversations (at most 400 ms, hits as data with their source), current things go straight out, "in my documents" stays local; web search after documents only with the words of the question; Status → Checks → "Test looking locally first", log line "lokal:"
 - **V01.0.263** Logs → Requests (switch under Settings → Operation, off): the way of every request as a list with a bead chain and a time line (switch, model rounds, tools, check, speech output, first sound), without question or answer text; names only with the profile's consent
 - **V01.0.262** Security: protection headers on every answer (no embedding in other pages, nosniff, referrer policy, microphone/camera only for the panel, HSTS on https), list of signed-in browsers with single sign-out (Me → Security, admin in the profile details), profile sign-in ends after 30 days without use (7–90 adjustable), "Security at a glance" as a traffic light at the top of Settings → Security
@@ -40,7 +41,6 @@ All options for running without questions (`--mode api --asr 1.7b --tts 0.6b --y
 - **V01.0.258** Own Kiwix archive (Features → Web search, off; profile switch): Wikipedia questions first from your own kiwix-serve, full-text search in chosen books, "Tell me more" reads on, the offline archive answers when the web search fails; Status → Checks → "Check Kiwix", Logs area "Knowledge"
 - **V01.0.257** Profiles and devices: a device's profile is picked from a list instead of typed; iPhone app, speakers, Pebble watch and Home Assistant show "🔒 fixed" with where they are managed (server refuses moving them), rows aligned
 - **V01.0.256** iPhone app: "Sign in with my profile" in Manage the Spark for co-admins and managers (profile code, ends after 15 min without use)
-- **V01.0.255** Users as admins (switch under Settings → Security, off; only with the main admin's second step): co-admin and manager roles for profiles, admin mode under Me → Security with the profile's own code (15 min without use, 8 h at most), the main admin keeps password, roles, backups and admin profiles, Logs → Admin log shows who, app sign-in with the profile code (server)
 
 All versions: [CHANGELOG.md](CHANGELOG.md)
 

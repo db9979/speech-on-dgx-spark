@@ -72,9 +72,9 @@ def why_not(who, own=True):
     if not own:
         return "die Stimme wurde nicht als Inhaber dieses Geräts erkannt"
     if ccfg().get("kiwix", False) is not True:
-        return "der Admin-Schalter ist aus (Einstellungen → Funktionen → Websuche → Eigenes Kiwix-Archiv)"
+        return "der Admin-Schalter ist aus (Funktionen → Websuche → Eigenes Kiwix-Archiv)"
     if not base():
-        return "keine Kiwix-Adresse eingetragen (Einstellungen → Funktionen → Eigenes Kiwix-Archiv)"
+        return "keine Kiwix-Adresse eingetragen (Funktionen → Eigenes Kiwix-Archiv)"
     if not profiles.settings(who["id"]).get("kiwix_on"):
         return "der Profil-Schalter ist aus (Ich → Gespräch → Antwort → Eigenes Archiv (Kiwix))"
     return ""

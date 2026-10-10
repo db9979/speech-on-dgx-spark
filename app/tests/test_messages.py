@@ -515,7 +515,7 @@ class Simple(Base):
         a, ua = profile("Zenobia")
         helpers.set_config(messages=False)
         ask(a, "Schreib Zacharias, dass ich später komme")
-        self.assertIn("Admin: Einstellungen → Funktionen", json.dumps(helpers.LLM_CALLS[-1], ensure_ascii=False))
+        self.assertIn("Admin: Funktionen → Nachrichten", json.dumps(helpers.LLM_CALLS[-1], ensure_ascii=False))
         ask(a, "Schreib mir ein Gedicht")
         self.assertNotIn("Nachrichten an andere", json.dumps(helpers.LLM_CALLS[-1], ensure_ascii=False))
         self.assertFalse(a.get("/api/messages/ready").json()["enabled"])

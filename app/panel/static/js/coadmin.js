@@ -8,7 +8,7 @@ const hm=s=>new Date(s*1000).toLocaleTimeString([],{hour:'2-digit',minute:'2-dig
 function coadmStart(who){ADMIN_BY=who.admin_by||'';ADMIN_UNTIL=who.admin_until||0;ADMIN_ROLE=who.admin_role||null;
   if(!elevated())return;document.body.classList.add('coadm');if(LG.tab==='audit')LG.tab='adm';
   if(ADMIN_BY==='manager'){document.body.classList.add('mgr');
-    document.querySelectorAll('nav button[data-s=cfg],nav button[data-s=int]').forEach(b=>b.hidden=true);GROUPS.mon=GROUPS.mon.filter(x=>x[0]!=='test')}
+    document.querySelectorAll('nav button[data-s=cfg],nav button[data-s=feat]').forEach(b=>b.hidden=true);GROUPS.mon=GROUPS.mon.filter(x=>x[0]!=='test')}
   const b=$('logoutbtn');b.textContent=t('Admin-Modus beenden','End admin mode');b.onclick=coadmEnd;
   const bar=document.createElement('div');bar.id='coadmbar';bar.className='updbanner';
   const sp=document.createElement('span');sp.id='coadmtext';const end=document.createElement('button');end.type='button';end.className='b';
@@ -27,7 +27,7 @@ async function coadmEnd(){try{await fetch('/api/admin/elevate/end',{method:'POST
 function coadmMe(){const box=$('coadmbox');if(!box)return;box.replaceChildren();if(!ADMIN_ROLE)return;
   const r=ADMIN_ROLE,lbl=document.createElement('label');lbl.textContent=t('Admin-Rolle','Admin role');
   const p=document.createElement('div');p.className='fh';const row=document.createElement('div');row.className='row';const msg=document.createElement('span');msg.className='fh';
-  const what=r.role==='manager'?t('Verwalter: Zustand, Logs, Profile und Geräte, Funktionen ein und aus.','Manager: status, logs, profiles and devices, functions on and off.')
+  const what=r.role==='manager'?t('Verwalter: Zustand, Logs, Personen und Geräte, Funktionen ein und aus.','Manager: status, logs, profiles and devices, functions on and off.')
     :t('Mit-Admin: alles wie der Admin, außer Admin-Passwort, Rollen, Sicherungen einspielen und Admin-Profile ändern.','Co-admin: everything like the admin, except the admin password, roles, restoring backups and changing admin profiles.');
   p.textContent=what;box.append(lbl,p);
   if(elevated()){const b=document.createElement('button');b.type='button';b.className='b';b.textContent=t('Admin-Modus beenden','End admin mode');b.onclick=coadmEnd;

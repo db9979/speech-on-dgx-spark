@@ -4,7 +4,7 @@ An own app for the iPhone (source in `ios/`): press the button, ask, the answer 
 
 ## Switch it on in the panel
 
-1. Admin: **Settings → Features → iPhone app** on, save.
+1. Admin: **Features → iPhone app** on, save.
 2. Profile: **Me → iPhone app → "iPhone app for me"** on.
 3. To switch lights and devices from the app: **"Smart home from the app"** on. The code word applies as everywhere.
 4. For the wake word and stand mode: **"Allow listening all the time"** on.
@@ -81,7 +81,7 @@ The app takes over the panel bit by bit (plan "iPhone app takes over the panel")
 
 - **Open in the panel** (Settings): whatever the app does not show itself opens the panel in Safari at the right place (memory, e-mail, security …). With "Manage the Spark" also monitoring, logs, features and profiles.
 - **My day** (switch "My day in the app"): the next appointments of your calendars, the Spark's reminders (swipe to delete) and the memory (look at it, delete single entries, ask for a tidy-up and apply it). Under My profile the conversation switches join: learn from conversations, a new conversation every day and, when the admin allows them, learn from corrections, think when choosing tools and targeted tool choice. Forgetting everything at once stays in the browser.
-- **Manage the Spark** (switch "Manage the Spark in the app"): after Face ID you sign in with the admin password and the admin's code, as in the browser. Without the admin's second login step the Spark refuses this sign-in from an iPhone. The sign-in lasts only while the app is open. Inside: **Monitoring** ("Needs you", memory, CPU/GPU, services), **Logs** (diagnosis as in the panel with areas and time span, "Copy for thread" and share) and **Checks** (function check, quality test, priority check). Under **Change** (V01.0.250): **Features** (the plain on/off switches; sensitive ones like "Port", the second login step for profiles and the iPhone switches themselves stay in the browser), **Profiles and devices** (create a profile, remove devices, new PIN, reset the second step, delete a profile; the last three with a code) and **Backups** (back up now, delete old ones; restoring and downloading in the browser). If your profile has an admin role (co-admin or manager, V01.0.256), there is also **"Sign in with my profile"**: with your profile's code instead of the admin password, ending after 15 minutes without use. A manager sees only monitoring, logs, features and profiles and devices; a co-admin does not delete backups.
+- **Manage the Spark** (switch "Manage the Spark in the app"): after Face ID you sign in with the admin password and the admin's code, as in the browser. Without the admin's second login step the Spark refuses this sign-in from an iPhone. The sign-in lasts only while the app is open. Inside: **Monitoring** ("Needs you", memory, CPU/GPU, services), **Logs** (diagnosis as in the panel with areas and time span, "Copy for thread" and share) and **Checks** (function check, quality test, priority check). Under **Change** (V01.0.250): **Features** (the plain on/off switches; sensitive ones like "Port", the second login step for profiles and the iPhone switches themselves stay in the browser), **People and devices** (create a profile, remove devices, new PIN, reset the second step, delete a profile; the last three with a code) and **Backups** (back up now, delete old ones; restoring and downloading in the browser). If your profile has an admin role (co-admin or manager, V01.0.256), there is also **"Sign in with my profile"**: with your profile's code instead of the admin password, ending after 15 minutes without use. A manager sees only monitoring, logs, features and profiles and devices; a co-admin does not delete backups.
 - **Manage documents** (switch "Manage documents in the app", V01.0.250): in "My documents" swipe to delete, long-press for "For everyone", searching on/off, tags, read again and "Remind me of the deadline". At the bottom "Document switches" with the switches of Me → Documents, as far as the admin allows them.
 - **Teach your voice** (switch "Teach your voice in the app"): the app shows three sentences, you read them aloud, saving needs the code from the authenticator app. Below, "Teach" for each of your speakers (the speaker then asks for five sentences). Needs speaker recognition from the admin and your profile's second login step.
 - **Proactive** (switch "Proactive in the app"): weather place, parcels from e-mails, bus and train (search and set a stop), look at and stop your jobs, room mode "+30 min" (at most four hours from now). The switches weather, parcels, bus and train and jobs are here too.
@@ -102,7 +102,7 @@ Since V01.0.209 the app shows when a device of your profile listens in room mode
 
 ## Spark update from the app
 
-For chosen profiles, off by default. The admin switches on **Settings → Features → Spark update from the iPhone app** and ticks per profile:
+For chosen profiles, off by default. The admin switches on **Features → Spark update from the iPhone app** and ticks per profile:
 
 - **Notices:** when a new version with green GitHub tests is ready, a notification arrives on the iPhone, once per version and not during the profile's quiet time. Needs "Push to the iPhone app".
 - **Start:** the app shows "Update now" under **Settings → Spark version**, confirmed with Face ID (or the iPhone passcode) and a fresh code from the profile's authenticator app, so "Start" can only be ticked for profiles with the second login step.
@@ -114,7 +114,7 @@ The page shows the installed and the new version with its changes. The update ru
 Needs the Apple Developer Program. Once:
 
 1. developer.apple.com → **Certificates, IDs & Profiles → Keys → +** → tick **Apple Push Notifications service (APNs)** → **Continue → Register → Download**. The `.p8` file can be downloaded only once. The **Key ID** is shown next to it, the **Team ID** under **Membership**.
-2. Panel as admin: **Settings → Features → Push to the iPhone app** on, enter `.p8`, Key ID, Team ID and the app's bundle ID. **Kind of app**: "Development" while you install from Xcode, "Production" for TestFlight and the App Store. Save.
+2. Panel as admin: **Features → Push to the iPhone app** on, enter `.p8`, Key ID, Team ID and the app's bundle ID. **Kind of app**: "Development" while you install from Xcode, "Production" for TestFlight and the App Store. Save.
 3. Profile: **Me → iPhone app → "Notifications to the iPhone"** on.
 4. Open the app once and allow notifications, then **"Send a test message"** in the panel.
 

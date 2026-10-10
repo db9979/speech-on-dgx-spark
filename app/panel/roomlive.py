@@ -11,7 +11,7 @@ Who sees it:
     the profile itself     a strip on every page, Ich → Raum-Modus "Gerade aktiv" (+15/+30 min, Beenden)
     its iPhone app         with the profile's switch app_room: a line in the chat, the widget, Live Activity
     Home Assistant         with a room key of the profile (scope "room", only when the admin allows chat.room_ha)
-    the admin              Zustand → "Hört gerade zu" with "Alle beenden", a mark in Profile und Geräte
+    the admin              Zustand → "Hört gerade zu" with "Alle beenden", a mark in Personen und Geräte
 
 Ending is allowed to all of them, because it only means less listening. Extending only in the profile's own
 browser login (a lost phone or a Home Assistant key can never make it listen longer). Starting stays where it

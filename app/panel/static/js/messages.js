@@ -62,7 +62,7 @@ async function msgComposeSend(){const v=$('mctext').value.trim();if(!v)return;
   catch(e){xmsg('mcmsg',e.message,true)}}
 if($('chatmsg')){$('chatmsg').onclick=$('mmsg').onclick=()=>msgCompose();$('mcclose').onclick=()=>$('msgcompose').hidden=true;
   $('mcsend').onclick=msgComposeSend;$('mctext').addEventListener('keydown',e=>{if(e.key==='Enter'){e.preventDefault();msgComposeSend()}})}
-// the admin's "für alle Profile einschalten" (Einstellungen → Funktionen)
+// the admin's "für alle Profile einschalten" (Funktionen)
 if($('msgallon'))$('msgallon').onclick=async()=>{if(!confirm(t('Nachrichten für alle Profile einschalten?','Switch messages on for every profile?')))return;
   try{const r=await (await api('/api/admin/messages/enable_all',xjson('POST',{}))).json();xmsg('msgallmsg',t('Für ','Switched on for ')+r.switched+t(' Profil(e) eingeschaltet.',' profile(s).'))}
   catch(e){xmsg('msgallmsg',e.message==='messages are turned off'?t('Erst „Nachrichten an andere“ einschalten und speichern.','First switch on "Messages to others" and save.'):e.message,true)}};

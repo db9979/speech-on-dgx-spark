@@ -157,7 +157,7 @@ $('pwopen').onclick=()=>{const x=$('pwbox');x.hidden=!x.hidden;if(!x.hidden)$('p
 $('vfilebtn').onclick=()=>$('vfile').click();
 $('vfile').addEventListener('change',()=>{const f=$('vfile').files[0];$('vfilename').textContent=f?f.name:t('wav, mp3, m4a, …','wav, mp3, m4a, …')});
 try{const p=localStorage.getItem('cfgpane');if(p&&$('pane-'+p))cfgPane(p)}catch{}
-window.goCfg=p=>{goSec('cfg');const b=document.querySelector(`#cfgnav button[data-p="${p}"]`);if(b)b.click()};
+window.goCfg=p=>{if(p==='feat'){goSec('feat');return}goSec('cfg');const b=document.querySelector(`#cfgnav button[data-p="${p}"]`);if(b)b.click()};
 // „Auf einen Blick“ (V01.0.207): every settings page with its state in one line, on top what a switched-on feature
 // still needs. Phones show the same lines right in the settings menu. Built only from what the page already has
 // (the loaded settings, the status, the update check) plus the voice list, the backup list and the admin's second step.

@@ -626,7 +626,7 @@ def _read(name, data, text=None, pictures=False, cleaned=False):
         pages = [(None, text[:MAX_CHARS])]
     elif ext in PICTURES:
         if not pictures:
-            raise ValueError("pictures in documents are off (Einstellungen → Funktionen → Bilder und Scans lesen)")
+            raise ValueError("pictures in documents are off (Funktionen → Bilder und Scans lesen)")
         todo, kind = {1: data if cleaned else picture_jpeg(data)}, "picture"
     elif ext == ".pdf":
         pages, scans, reader = _pdf(data, pictures)
@@ -641,7 +641,7 @@ def _read(name, data, text=None, pictures=False, cleaned=False):
                 notes.append(f"{lost} Seite{'n' if lost > 1 else ''} ohne lesbares Bild übersprungen")
         elif scans and not "".join(t for _, t in pages).strip():
             raise ValueError("this PDF has no text layer (scanned pages are read only with "
-                             "Einstellungen → Funktionen → Bilder und Scans lesen)")
+                             "Funktionen → Bilder und Scans lesen)")
         elif scans:
             notes.append(f"{len(scans)} Seite{'n' if len(scans) > 1 else ''} ohne Text nicht gelesen "
                          "(„Bilder und Scans lesen“ ist aus)")

@@ -222,7 +222,7 @@ def for_turn(request, body, who):
         return []
     where = channel(request)
     if not who or not allowed(who["id"], where):
-        raise HTTPException(403, "pictures are off (Einstellungen → Funktionen → Bilder erkennen, Ich → Gespräch)")
+        raise HTTPException(403, "pictures are off (Funktionen → Bilder erkennen, Ich → Gespräch)")
     try:
         pics = take(ids, who["id"], where)
     except KeyError:
@@ -263,7 +263,7 @@ def image_info(request: Request):
 async def image_add(request: Request, prof=Depends(own_profile)):
     where = channel(request)
     if not allowed(prof["id"], where):
-        raise HTTPException(403, "pictures are off (Einstellungen → Funktionen → Bilder erkennen, Ich → Gespräch)")
+        raise HTTPException(403, "pictures are off (Funktionen → Bilder erkennen, Ich → Gespräch)")
     guard.limit(request, "image", prof["id"], False)
     data = await _read(request, MAX_BYTES)
     try:

@@ -22,7 +22,7 @@ Drei Wege, vom einfachsten zum aufwendigsten. Alle brauchen das Apple Developer 
 5. **Distribute App → App Store Connect → Distribute**. Xcode signiert und lädt hoch.
 6. Nach 5–30 Minuten erscheint der Build in App Store Connect unter **TestFlight**. Die Frage nach Verschlüsselung beantwortet die App selbst (nur https, `ITSAppUsesNonExemptEncryption = NO`).
 
-Danach im Panel unter **Einstellungen → Funktionen → Push an die iPhone-App** die Art auf **„Produktion“** stellen: TestFlight- und App-Store-Builds nutzen Apples Produktions-Push. Direkt aus Xcode aufgespielt heißt es wieder „Entwicklung“.
+Danach im Panel unter **Funktionen → Push an die iPhone-App** die Art auf **„Produktion“** stellen: TestFlight- und App-Store-Builds nutzen Apples Produktions-Push. Direkt aus Xcode aufgespielt heißt es wieder „Entwicklung“.
 
 ### Hochladen per GitHub-Knopf „TestFlight“
 

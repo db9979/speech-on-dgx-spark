@@ -344,7 +344,7 @@ def ready(uid, admin=False):
     me = bool(profiles.settings(uid).get("msg_on"))
     out = {"enabled": admin_on(), "on": me, "admin": bool(admin), "reach": [], "off": [], "off_count": 0}
     if not admin_on():
-        out["why"] = "Nachrichten an andere sind ausgeschaltet (Admin: Einstellungen → Funktionen)."
+        out["why"] = "Nachrichten an andere sind ausgeschaltet (Admin: Funktionen)."
         return out
     if not me:
         out["why"] = "Für dich sind Nachrichten aus."
@@ -984,7 +984,7 @@ def why_not(ctx):
     """Why the message tools are not offered to this request (said to the model and the journal), or ""."""
     who = ctx.get("who")
     if not admin_on():
-        return "Nachrichten an andere sind ausgeschaltet (Admin: Einstellungen → Funktionen → Nachrichten an andere)."
+        return "Nachrichten an andere sind ausgeschaltet (Admin: Funktionen → Nachrichten an andere)."
     if not who:
         return "Nachrichten gibt es nur für angemeldete Profile, nicht für Gäste."
     if not ctx.get("own"):

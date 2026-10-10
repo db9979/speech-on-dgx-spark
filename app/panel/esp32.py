@@ -1684,7 +1684,7 @@ async def _room_switch(did, cid, prof, on):
     next wake word."""
     import room
     if on and (not room.enabled() or not admin_on() or not profile_on(prof["id"])):
-        raise HTTPException(403, "Der Raum-Modus ist ausgeschaltet (Einstellungen → Funktionen).")
+        raise HTTPException(403, "Der Raum-Modus ist ausgeschaltet (Funktionen).")
     s = _live.get(did)
     if on:
         if s and s.room is None:

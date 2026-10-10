@@ -140,9 +140,9 @@ def why_not(ctx):
     import room
     who = ctx.get("who")
     if not room.enabled():
-        return "Der Raum-Modus ist ausgeschaltet (Admin: Einstellungen → Funktionen)."
+        return "Der Raum-Modus ist ausgeschaltet (Admin: Funktionen)."
     if not admin_on():
-        return ("Den Raum-Modus eines anderen Geräts zu starten ist ausgeschaltet (Admin: Einstellungen → Funktionen → "
+        return ("Den Raum-Modus eines anderen Geräts zu starten ist ausgeschaltet (Admin: Funktionen → "
                 "„Raum-Modus aus der Ferne starten“). Am Gerät selbst geht „Raummodus an“.")
     if not who:
         return "Den Raum-Modus aus der Ferne starten geht nur für angemeldete Profile."

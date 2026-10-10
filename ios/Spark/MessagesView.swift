@@ -279,7 +279,7 @@ struct ReadyView: View {
                     offList
                 }
                 if !r.on || !r.enabled {
-                    Text("Einschalten im Panel unter Ich → Nachrichten. Den Schalter für alle setzt der Admin unter Einstellungen → Funktionen.")
+                    Text("Einschalten im Panel unter Ich → Nachrichten. Den Schalter für alle setzt der Admin unter Funktionen.")
                         .font(.footnote).foregroundStyle(.secondary)
                 }
             } label: {

@@ -189,7 +189,7 @@ SEARCH_TOOL = {"type": "function", "function": {
                    "required": ["query"]}}}
 # why web_search is missing, said to the model so it tells the person instead of "I cannot find the tool"
 SEARCH_OFF_HINT = ("Eine Websuche hast du gerade nicht: Sie ist im Panel nicht eingeschaltet oder es fehlt die "
-                   "SearXNG-Adresse (Einstellungen → Funktionen → Websuche). Will der Nutzer etwas im Internet "
+                   "SearXNG-Adresse (Funktionen → Websuche). Will der Nutzer etwas im Internet "
                    "nachsehen, sag ihm genau das und antworte nicht aus Vermutungen.")
 SEARCH_LOCKED_HINT = ("Die Websuche ist in dieser Antwort gesperrt, weil die Antwort davor aus E-Mails stammt (eine Mail "
                       "könnte sonst Inhalte ins Internet tragen). Will der Nutzer etwas im Internet nachsehen, sag ihm "

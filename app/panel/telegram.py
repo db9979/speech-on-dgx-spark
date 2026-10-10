@@ -500,7 +500,7 @@ def on_conflict(now):
     wait = conflict_wait(n)
     if n == 2 or n % 20 == 0:
         print(f"telegram: conflict: another program polls with the same bot token ({n} times), "
-              f"retry in {wait} s; use the token in one place only (Einbinden → Telegram)", flush=True)
+              f"retry in {wait} s; use the token in one place only (Funktionen → Telegram)", flush=True)
     return wait
 
 
@@ -517,7 +517,7 @@ def alert():
     return [{"kind": "telegram", "level": "warn",
              "text": "Telegram: Ein anderes Programm fragt mit demselben Bot-Token nach Nachrichten, deshalb "
                      "kommen Nachrichten nicht sicher an. Den Token nur an einer Stelle nutzen oder bei @BotFather "
-                     "einen neuen holen (/revoke) und unter Einbinden → Telegram eintragen."}]
+                     "einen neuen holen (/revoke) und unter Funktionen → Telegram eintragen."}]
 
 
 async def loop():

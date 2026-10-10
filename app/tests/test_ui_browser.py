@@ -778,3 +778,61 @@ class Browser(unittest.TestCase):
             self.run_async(go())
         finally:
             helpers.set_config(kiwix=False, kiwix_url="", kiwix_books=[])
+
+    def test_menu_search_and_features_page(self):
+        """Plan „Bedienung gesamt“ (V01.0.265): Funktionen is its own menu entry (without the settings menu),
+        Anleitungen sit under it, Apps und Schnittstellen under Personen und Geräte, and Strg K finds pages,
+        switches, Ich settings and guides and opens them."""
+        async def go():
+            async with async_playwright() as p:
+                for name, w, h in VIEWS:
+                    br, pg, errors = await self.page(p, w, h)
+                    await pg.evaluate("goSec('feat')")
+                    await pg.wait_for_timeout(300)
+                    self.assertTrue(await pg.evaluate("$('pane-feat').classList.contains('on')&&$('cfg').classList.contains('on')"), name)
+                    self.assertFalse(await pg.evaluate("$('cfgnav').offsetParent!==null"), name)       # no settings menu here
+                    self.assertTrue(await pg.evaluate("document.querySelector('nav button[data-s=feat]').classList.contains('on')"), name)
+                    await pg.evaluate("goSec('cfg')")
+                    await pg.wait_for_timeout(200)
+                    self.assertFalse(await pg.evaluate("$('pane-feat').classList.contains('on')"), name)
+                    self.assertFalse(await pg.evaluate("document.querySelector('#cfgnav button[data-p=feat]').offsetParent!==null"), name)
+                    await pg.evaluate("goSec('int')")
+                    self.assertTrue(await pg.evaluate("document.querySelector('nav button[data-s=feat]').classList.contains('on')"), name)
+                    await pg.evaluate("goSec('apps')")
+                    self.assertTrue(await pg.evaluate("document.querySelector('nav button[data-s=prof]').classList.contains('on')"), name)
+                    # Strg K: a switch opens Funktionen and marks its row
+                    await pg.keyboard.press("Control+k")
+                    self.assertTrue(await pg.is_visible("#fpal"), name)
+                    await pg.fill("#palq", "websuche")
+                    groups = await pg.evaluate("[...document.querySelectorAll('#palres .fgrp')].map(x=>x.textContent)")
+                    self.assertIn("Funktionen", groups, name)
+                    self.assertIn("Anleitungen", groups, name)
+                    await pg.evaluate("PAL.hits.findIndex(h=>h.grp==='Funktionen'&&h.label==='Websuche')>=0&&document.querySelectorAll('#palres .fit')[PAL.hits.findIndex(h=>h.grp==='Funktionen'&&h.label==='Websuche')].click()")
+                    await pg.wait_for_timeout(400)
+                    self.assertFalse(await pg.is_visible("#fpal"), name)
+                    self.assertTrue(await pg.evaluate("$('pane-feat').classList.contains('on')"), name)
+                    # a page, and an Ich setting
+                    await pg.keyboard.press("Control+k")
+                    await pg.fill("#palq", "logs")
+                    await pg.keyboard.press("Enter")
+                    await pg.wait_for_timeout(300)
+                    self.assertTrue(await pg.evaluate("$('logs').classList.contains('on')"), name)
+                    await pg.keyboard.press("Control+k")
+                    await pg.fill("#palq", "freihändig")
+                    self.assertIn("Für dich", await pg.evaluate("$('palres').textContent"), name)
+                    await pg.keyboard.press("Escape")
+                    self.assertFalse(await pg.is_visible("#fpal"), name)
+                    over = await pg.evaluate("document.documentElement.scrollWidth-window.innerWidth")
+                    self.assertLessEqual(over, 1, name)
+                    # no id twice on the page (the conversation search has its own box)
+                    dup = await pg.evaluate("(()=>{const s=new Set(),d=[];document.querySelectorAll('[id]').forEach(e=>{if(s.has(e.id))d.push(e.id);s.add(e.id)});return d})()")
+                    self.assertEqual(dup, [], name)
+                    self.assertTrue(await pg.evaluate("!!$('findq').closest('#findmodal')"), name)
+                    if name == "handy":
+                        await pg.evaluate("document.querySelector('#mbar button[data-m=more]').click()")
+                        self.assertTrue(await pg.is_visible("#mifind"))
+                        await pg.click("#mifind")
+                        self.assertTrue(await pg.is_visible("#fpal"))
+                    self.assertEqual(errors, [], name)
+                    await br.close()
+        self.run_async(go())

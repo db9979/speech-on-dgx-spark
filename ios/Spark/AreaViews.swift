@@ -170,7 +170,7 @@ struct VoiceView: View {
     var body: some View {
         Form {
             if !m.enabled {
-                Text("Die Sprechererkennung ist aus (Admin: Einstellungen → Funktionen).").foregroundStyle(.secondary)
+                Text("Die Sprechererkennung ist aus (Admin: Funktionen).").foregroundStyle(.secondary)
             }
             Section {
                 LabeledContent("Aufnahmen", value: "\(m.samples)")

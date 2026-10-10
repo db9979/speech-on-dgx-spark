@@ -1,7 +1,7 @@
 """Spark updates from the iPhone app: a notice when a new tested version is ready, and starting it.
 
 Off until the admin switches on chat.iphone_update. Who may get the notice ("notify") or start the update
-("start") is set per profile by the admin only (Profile und Geräte, with the admin's code when the second
+("start") is set per profile by the admin only (Personen und Geräte, with the admin's code when the second
 step is on); a profile cannot give itself these rights, and "start" needs the profile's own second login
 step. Starting from the app needs the app's own key, a fresh 6-digit code from the profile's authenticator
 app (each code once) and at most one start per START_GAP. The update is the same as in the panel:

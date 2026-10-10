@@ -80,7 +80,7 @@ class MenuPlaces(unittest.TestCase):
         self.assertIn('data-p="voices"', cfg)
         self.assertIn('id="pane-voices"', cfg)
         self.assertIn('id="vlist"', cfg)
-        self.assertIn('<i class="ni" data-ni="prof"></i>Profile und Geräte</button>', html)
+        self.assertIn('<i class="ni" data-ni="prof"></i>Personen und Geräte</button>', html)
         self.assertNotIn("'voices'", read("js", "base.js"))
 
     def test_voice_list_has_no_inline_handlers(self):
@@ -154,7 +154,10 @@ class DesignKlar(unittest.TestCase):
     def test_menu_order(self):
         html = read("index.html")
         nav = html[html.index("<nav>"):html.index("</nav>")]
-        self.assertEqual(re.findall(r'data-s="(\w+)"', nav), ["chat", "mon", "cfg", "prof", "int"])
+        # V01.0.265 plan „Bedienung gesamt“: Funktionen is its own entry, Einbinden is gone (guides under
+        # Funktionen, apps under Personen und Geräte), the search comes first
+        self.assertEqual(re.findall(r'data-s="(\w+)"', nav), ["chat", "mon", "feat", "prof", "cfg"])
+        self.assertLess(nav.index('id="findbtn"'), nav.index('data-s="chat"'))
         self.assertLess(nav.index('id="navme"'), nav.index("Spark verwalten"))
         self.assertLess(nav.index("Spark verwalten"), nav.index('data-s="mon"'))
         self.assertEqual(re.findall(r'data-m="(\w+)"', html), ["chat", "me", "mon", "more"])

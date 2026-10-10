@@ -1,7 +1,7 @@
 """Knowledge from one's own uploads (V01.0.223, plan plaene/wissen-aus-uploads.md).
 
 Builds on documents.py (one SQLite file per profile) with three switches, each off until the admin
-(Einstellungen → Funktionen) and the profile (Ich → Dokumente) switch it on; guests never:
+(Funktionen) and the profile (Ich → Dokumente) switch it on; guests never:
 
 - doc_pictures  "Bilder und Scans lesen": photos and PDF pages without a text layer wait as cleaned
                 JPEGs until the language model has read them, one page at a time, only while nobody
@@ -491,13 +491,13 @@ async def set_use(doc_id: str, request: Request, prof=Depends(browser_profile)):
         if body["tags"] is not None and not isinstance(body["tags"], list):
             raise HTTPException(400, "tags: a list of words or null")
         if not on(prof["id"], "brief"):
-            raise HTTPException(403, "tags are off (Einstellungen → Funktionen, Ich → Dokumente)")
+            raise HTTPException(403, "tags are off (Funktionen, Ich → Dokumente)")
         if not documents.set_tags(prof["id"], doc_id, body["tags"]):
             raise HTTPException(404, "no such document")
         return {"ok": True}
     if isinstance(body.get("shared"), bool):     # only in the owner's own database: nobody else can set it
         if body["shared"] and not on(prof["id"], "shared"):
-            raise HTTPException(403, "shared documents are off (Einstellungen → Funktionen, Ich → Dokumente)")
+            raise HTTPException(403, "shared documents are off (Funktionen, Ich → Dokumente)")
         if not documents.set_shared(prof["id"], doc_id, body["shared"]):
             raise HTTPException(404, "no such document")
         return {"ok": True}
@@ -640,7 +640,7 @@ async def from_chat(request: Request, prof=Depends(browser_profile)):
     import iphone
     uid = prof["id"]
     if not on(uid, "pictures"):
-        raise HTTPException(403, "pictures in documents are off (Einstellungen → Funktionen, Ich → Dokumente)")
+        raise HTTPException(403, "pictures in documents are off (Funktionen, Ich → Dokumente)")
     guard.limit(request, "doc", uid, False)
     body = await iphone._json(request, 1024)
     iid = str(body.get("id") or "")

@@ -1,5 +1,5 @@
-// Guides: one openable how-to per service, the same text next to its switch (Einstellungen → Funktionen),
-// on its page in the "Ich" window and collected under Einbinden → Anleitungen. Services are sorted into
+// Guides: one openable how-to per service, the same text next to its switch (Funktionen),
+// on its page in the "Ich" window and collected under Funktionen → Anleitungen. Services are sorted into
 // fixed groups everywhere. Each guide: sw = admin switch id, me = page in the "Ich" window. Texts are [German, English]; every section is a list of such pairs.
 // A self-test checks that every switch in Funktionen and every "Ich" page has a guide and a group.
 const GGROUPS=[['talk','Gespräch','Conversation'],['data','Meine Daten','My data'],['day','Mein Tag','My day'],['post','Post und Kontakte','Mail and contacts'],
@@ -21,7 +21,7 @@ const GUIDES=[
 {id:'search',grp:'talk',sw:'chat.search',t:['Websuche','Web search'],
  what:[['Braucht eine Frage aktuelle Informationen (Nachrichten, Öffnungszeiten, Preise), sucht der Assistent selbst im Netz und antwortet aus den Treffern.','When a question needs current information (news, opening hours, prices), the assistant searches the web itself and answers from the results.']],
  need:[['Deine eigene SearXNG-Instanz. Am besten mit JSON-Format (settings.yml: search.formats: [html, json]).','Your own SearXNG instance, ideally with the JSON format (settings.yml: search.formats: [html, json]).']],
- setup:[['Admin: Funktionen → Websuche, darunter die Adresse der SearXNG eintragen und speichern.','Admin: Features → Web search, enter the SearXNG address below it and save.'],['Admin: Einstellungen → Funktionen → Websuche einschalten.','Admin: Settings → Features → switch on Web search.']],
+ setup:[['Admin: Funktionen → Websuche, darunter die Adresse der SearXNG eintragen und speichern.','Admin: Features → Web search, enter the SearXNG address below it and save.'],['Admin: Funktionen → Websuche einschalten.','Admin: Features → switch on Web search.']],
  say:[['„Was gibt es Neues zur Bahn-Streik?“','"Any news about the rail strike?"'],['„Wann hat der Baumarkt in Ulm heute offen?“','"When is the hardware store in Ulm open today?"']],
  out:[['Die Suchwörter gehen an deine SearXNG und von dort an die Suchmaschinen. Die Treffer-Seiten liest der Spark direkt.','The search words go to your SearXNG and from there to the search engines. The Spark reads the result pages directly.']],
  off:[['Schalter in Funktionen aus. Es wird nichts gespeichert außer der Antwort im Verlauf.','Switch it off under Features. Nothing is stored except the answer in the history.']],
@@ -108,7 +108,7 @@ const GUIDES=[
  fix:[['Nichts zum Merken: Weltwissen (Ergebnisse, Preise), Codewörter, PINs, Sicherheitsregeln und das Schalten von Geräten lernt er nie. Aus Mails oder Webseiten lernt er auch nicht.','Nothing to remember: it never learns world knowledge (scores, prices), code words, PINs, security rules or switching devices. It does not learn from mail or web pages either.']]},
 {id:'images',grp:'talk',sw:'chat.images',ng:1,mep:'setbox',t:['Bilder erkennen','Picture recognition'],
  what:[['Du hängst ein Foto an und fragst dazu: „Was ist das für eine Pflanze?“, „Was steht auf dem Schild?“, „Was bedeutet die Fehlermeldung?“. Das Sprachmodell auf dem Spark (qwen38, Qwen3.8) sieht sich das Bild selbst an, nicht nur die Schrift darin. Rückfragen zum selben Bild gehen, bis du es entfernst; bis zu drei Bilder pro Frage.','You attach a photo and ask about it: "What plant is this?", "What does the sign say?", "What does the error message mean?". The language model on the Spark (qwen38, Qwen3.8) looks at the picture itself, not only the writing in it. Follow-up questions about the same picture work until you remove it; up to three pictures per question.']],
- need:[['Ein Sprachmodell, das Bilder kann. Unter Einstellungen → Funktionen → Bilder erkennen einmal „Bilderkennung prüfen“ drücken.','A language model that can see pictures. Press "Check picture recognition" once under Settings → Features → Picture recognition.'],['Ein angemeldetes Profil. Gäste, Lautsprecher und andere Geräteschlüssel nie.','A signed-in profile. Never guests, speakers or other device keys.']],
+ need:[['Ein Sprachmodell, das Bilder kann. Unter Funktionen → Bilder erkennen einmal „Bilderkennung prüfen“ drücken.','A language model that can see pictures. Press "Check picture recognition" once under Features → Picture recognition.'],['Ein angemeldetes Profil. Gäste, Lautsprecher und andere Geräteschlüssel nie.','A signed-in profile. Never guests, speakers or other device keys.']],
  setup:[['Admin: Funktionen → Bilder erkennen an, dann „Bilderkennung prüfen“.','Admin: Features → Picture recognition on, then "Check picture recognition".'],['Profil: Ich → Gespräch → „Bilder an den Assistenten“ an. Für die iPhone-App zusätzlich Ich → iPhone-App → „Fotos aus der App ansehen lassen“, für Telegram Ich → Telegram → „Fotos über Telegram“.','Profile: Me → Conversation → "Pictures to the assistant" on. For the iPhone app also Me → iPhone app → "Let the model look at photos from the app", for Telegram Me → Telegram → "Photos over Telegram".']],
  say:[['Im Assistenten auf das Bild-Symbol neben dem Eingabefeld tippen (oder ein Bild einfügen oder hineinziehen), dann fragen, getippt oder gesprochen.','In the assistant tap the picture icon next to the text field (or paste or drop a picture), then ask, typed or spoken.'],['Unter der Antwort speichert „In Meine Dokumente speichern“ die Antwort als Text, nicht das Bild.','Below the answer, "Store under My documents" keeps the answer as text, not the picture.'],['In einer Antwort mit Bild schaltet, merkt und plant der Assistent nichts, auch wenn im Bild etwas anderes steht. Danach einfach neu fragen.','In an answer with a picture the assistant switches, remembers and schedules nothing, whatever the picture says. Just ask again afterwards.']],
  out:[['Im Panel und in der App nichts: Das Bild bleibt auf dem Spark. Über Telegram läuft das Foto über die Server von Telegram.','In the panel and the app nothing: the picture stays on the Spark. Over Telegram the photo passes Telegram\'s servers.']],
@@ -465,7 +465,7 @@ const GUIDES=[
 {id:'apps',grp:'go',t:['Open WebUI und eigene Programme','Open WebUI and own programs'],
  what:[['Spracherkennung und Sprachausgabe sprechen die OpenAI-Audio-API. Jede App mit eigener „Base URL“ kann sie nutzen.','Speech recognition and speech output speak the OpenAI audio API. Any app with its own "Base URL" can use them.']],
  need:[['Die Adressen und, falls gesetzt, den API-Schlüssel (Einstellungen → Sicherheit).','The addresses and, if set, the API key (Settings → Security).']],
- setup:[['Adressen und Beispiele stehen unter Einbinden (Open WebUI, Andere Apps, curl, Python).','Addresses and examples are under Integrate (Open WebUI, Other apps, curl, Python).']],
+ setup:[['Adressen und Beispiele stehen unter Personen und Geräte → Apps und Schnittstellen (Open WebUI, Andere Apps, curl, Python).','Addresses and examples are under People and devices → Apps and interfaces (Open WebUI, Other apps, curl, Python).']],
  say:[['Je nach App.','Depends on the app.']],
  out:NOTHING_OUT,
  off:[['API-Schlüssel ändern sperrt alle Apps mit dem alten Schlüssel aus.','Changing the API key locks out all apps using the old key.']],
@@ -480,7 +480,7 @@ const GUIDES=[
  off:[['Ich → Sicherheit → ausschalten (braucht einen Code). Der Admin kann ihn für ein Profil zurücksetzen.','Me → Security → switch off (needs a code). The admin can reset it for a profile.']],
  fix:[['Handy weg: einen Wiederherstellungscode statt des Codes eingeben.','Phone gone: enter a recovery code instead of the code.']]},
 {id:'public',grp:'sec',sw:'chat.public',t:['Assistent ohne Passwort','Assistant without password'],
- what:[['An: Die Startseite ist für alle im Netz offen, auch für Gäste. Aus: nur angemeldete Profile und Geräte mit Schlüssel.','On: the start page is open to everyone on the network, guests included. Off: only signed-in profiles and devices with a key.']],
+ what:[['An: Die Startseite ist für alle im Netz offen, auch für Gäste. Aus: nur angemeldete Personen und Geräte mit Schlüssel.','On: the start page is open to everyone on the network, guests included. Off: only signed-in profiles and devices with a key.']],
  need:[['Nichts.','Nothing.']],
  setup:[['Admin: Einstellungen → Sicherheit → Zugang zum Assistenten.','Admin: Settings → Security → Access to the assistant.']],
  say:[['Gäste können fragen, bekommen aber nie persönliche Daten, Smart Home oder Einstellungen.','Guests can ask but never get personal data, smart home or settings.']],
@@ -512,7 +512,7 @@ function guideHTML(g){return GSECT.filter(([k])=>g[k]&&g[k].length).map(([k,de,e
     return `<div class="gsec"><b>${esc(t(de,en))}</b>${k==='setup'?`<ol>${items}</ol>`:g[k].length>1?`<ul>${items}</ul>`:`<p>${esc(gT(g[k][0]))}</p>`}</div>`}).join('')}
 function guideBox(g,open,plain){const d=document.createElement('details');d.className='guide';d.dataset.guide=g.id;d.open=!!open;
   d.innerHTML=`<summary>${plain?'':esc(t('Anleitung','Guide'))+': '}${esc(gT(g.t))}</summary><div class="gbody">${guideHTML(g)}</div>`;return d}
-// Einstellungen → Funktionen: rows sorted into the groups, each feature one short line (name, mark, switch).
+// Funktionen: rows sorted into the groups, each feature one short line (name, mark, switch).
 // A tap on the name opens its sentence, marks, guide and settings below; switching it on opens it too.
 function guidesFeat(){const pane=$('pane-feat');if(!pane||pane.dataset.grouped)return;pane.dataset.grouped='1';
   GGROUPS.forEach(([gid,de,en])=>{const rows=GUIDES.filter(g=>g.grp===gid&&g.sw).map(g=>{const el=$(g.sw);return el&&pane.contains(el)?[g,el.closest('.setrow')]:null}).filter(Boolean);
@@ -585,7 +585,7 @@ function guidesMe(id){const page=$(id);if(!page)return;const list=GUIDES.filter(
   list.slice().reverse().forEach(g=>{if(!page.querySelector(`details.guide[data-guide="${g.id}"]`))page.prepend(guideBox(g,false))})}
 // Group of an "Ich" page, for the headers in its menu.
 const meGroup=id=>{const g=GUIDES.find(x=>x.me===id&&x.id!=='hands');return g?g.grp:null};
-// Einbinden → Anleitungen: all guides, grouped.
+// Funktionen → Anleitungen: all guides, grouped.
 function guidesAll(){const el=$('guidelist');if(!el)return;
   el.innerHTML=GGROUPS.map(([gid,de,en])=>`<div class="ggrp"><h3>${esc(t(de,en))}</h3><div data-g="${gid}"></div></div>`).join('');
   GUIDES.forEach(g=>el.querySelector(`[data-g="${g.grp}"]`).appendChild(guideBox(g,false,true)))}

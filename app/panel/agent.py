@@ -1,7 +1,7 @@
 """Agent functions: the assistant works on a task in the background and reports later, runs tasks on a
 schedule, keeps routines of smart home steps, and uses outside tools over MCP (mcp.py).
 
-Who may use it is decided per profile by the admin (Einstellungen → Funktionen → Agent-Funktionen):
+Who may use it is decided per profile by the admin (Funktionen → Agent-Funktionen):
 
     ""      nothing (default, and always for guests)
     "read"  "nur lesen und berichten": background jobs, scheduled jobs, MCP tools that only read

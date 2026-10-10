@@ -96,7 +96,7 @@ Ein iPhone-Kurzbefehl schickt die diktierte Frage an `POST /api/siri/ask` (Heade
 einem Geräteschlüssel deines Profils, Inhalt `{"text": "..."}`) und lässt Siri das Feld `answer`
 vorlesen. Geht ohne geöffnete Seite, auch auf der Apple Watch, mit AirPods und mit CarPlay; Nachfragen
 innerhalb von 10 Minuten kennen den Zusammenhang, die Fragen eines Tages stehen als Gespräch im Profil.
-Schritt für Schritt unter Einbinden → Anleitungen.
+Schritt für Schritt unter Funktionen → Anleitungen.
 
 ### iPhone-App „Spark“
 
