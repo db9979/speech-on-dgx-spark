@@ -214,6 +214,23 @@ class Rules(unittest.TestCase):
         self.assertNotIn("geheim", out)
         self.assertEqual(vorab._ready.get(self.uid), None)
 
+    def test_steps_name_the_tools(self):
+        class Tr:
+            steps = []
+
+            def step(self, kind, name, start, end=None, **info):
+                self.steps.append((kind, name, info.get("vorab")))
+        tr = Tr()
+        with Fake():
+            async def go():
+                vorab.after(Turn(self.uid, "Wie wird das Wetter?"), "Wo genau?", {}, [], tr)
+                await vorab._running[self.uid]
+            with contextlib.redirect_stdout(io.StringIO()):
+                asyncio.run(go())
+        self.assertEqual(tr.steps, [("tool", "weather (Panel)", True)])
+        import live
+        self.assertEqual(live.TOOLS.get("weather"), "weather")   # the Live picture finds the service by that name
+
     def test_log_area(self):
         self.assertEqual(logfilter.parse("vorab: geholt Kalender | 0.2 s")["area"], "chat")
 

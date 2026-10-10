@@ -128,8 +128,9 @@ def after(turn, said, st, calls, tr=None):
         if len(_running) >= MAX_RUNNING:
             print("vorab: zu viele gleichzeitig, ausgelassen", flush=True)
             return None
-        if tr:
-            tr.step("tool", "Vorab geholt (Panel)", time.time(), time.time(), panel=True, n=len(todo))
+        if tr:   # Logs → Anfragen and Zustand → Live: one step per service, under the tool's own name
+            for g in todo:
+                tr.step("tool", JOBS[g][0] + " (Panel)", time.time(), time.time(), panel=True, vorab=True)
         _running[who["id"]] = asyncio.get_running_loop().create_task(_run(turn, todo))
         return todo
     except Exception as e:   # a prefetch must never break an answer
