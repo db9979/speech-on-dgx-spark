@@ -18,6 +18,7 @@ sys.path.insert(0, os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
 import echo  # noqa: E402
 import guard  # noqa: E402
 import health  # noqa: E402
+import coadmin  # noqa: E402
 import mfa  # noqa: E402
 import speakers  # noqa: E402
 import wyoming  # noqa: E402
@@ -41,10 +42,12 @@ from core import (  # noqa: E402
     _hash,
     _session_token,
     admin_cookie_ok,
+    acting_profile,
     admin_code,
     api_headers,
     assistant,
     auth,
+    main_auth,
     check_password,
     password_set,
     run,
@@ -56,7 +59,7 @@ from chat import web_search  # noqa: E402
 router = APIRouter()
 
 
-@router.get("/api/audit", dependencies=[Depends(auth)])
+@router.get("/api/audit", dependencies=[Depends(main_auth)])
 def audit(limit: int = 300):
     """The change log: logins, failed logins, lockouts and every change, newest first."""
     names = {u: (profiles.by_id(u) or {}).get("name") for u in profiles.user_ids()}
@@ -103,8 +106,20 @@ async def admin_add_profile(request: Request):
         raise HTTPException(409, str(e))
 
 
+def _no_admin_profile(request, *uids):
+    """A profile in its admin mode (coadmin.py) never changes an admin profile, another one or its own: PIN,
+    second step, devices, deleting. That stays with the main admin, so nobody locks another admin out."""
+    if acting_profile(request) and any(u and coadmin.role(u) for u in uids):
+        raise HTTPException(403, "Profile mit Admin-Rolle ändert nur der Hauptadmin.")
+
+
+def _device_owner(did):
+    return next((x.get("user") for x in profiles._load()["devices"] if x["id"] == did), None)
+
+
 @router.put("/api/admin/profiles/{uid}", dependencies=[Depends(auth), Depends(admin_code)])
 async def admin_set_pin(uid: str, request: Request):
+    _no_admin_profile(request, uid)
     pin = (await request.json()).get("pin", "")
     if not profiles.valid_pin(pin):
         raise HTTPException(400, "PIN: 4 to 64 characters without spaces")
@@ -116,6 +131,7 @@ async def admin_set_pin(uid: str, request: Request):
 @router.delete("/api/admin/profiles/{uid}/mfa", dependencies=[Depends(auth), Depends(admin_code)])
 def admin_reset_mfa(uid: str, request: Request):
     """For a profile that lost its phone and its recovery codes: the second step is off again."""
+    _no_admin_profile(request, uid)
     if uid not in profiles.user_ids():
         raise HTTPException(404, "no such profile")
     mfa.disable(uid)
@@ -158,15 +174,18 @@ async def admin_set_call(uid: str, request: Request):
 
 
 @router.delete("/api/admin/profiles/{uid}", dependencies=[Depends(auth), Depends(admin_code)])
-def admin_delete_profile(uid: str):
+def admin_delete_profile(uid: str, request: Request):
     """Deleting cannot be undone (memory, conversations, devices): a fresh code, like a new PIN."""
+    _no_admin_profile(request, uid)
     profiles.delete_user(uid)
+    coadmin.forget(uid)
     return {"ok": True}
 
 
 @router.post("/api/admin/devices", dependencies=[Depends(auth), Depends(admin_code)])
 async def admin_add_device(request: Request):
     body = await request.json()
+    _no_admin_profile(request, str(body.get("user", "")))
     if not profiles.valid_name(body.get("name", "")):
         raise HTTPException(400, "name: 1 to 40 characters")
     try:
@@ -177,6 +196,8 @@ async def admin_add_device(request: Request):
 
 @router.put("/api/admin/devices/{did}", dependencies=[Depends(auth), Depends(admin_code)])
 async def admin_set_device(did: str, request: Request):
+    body = await request.json()
+    _no_admin_profile(request, _device_owner(did), str(body.get("user", "")))
     import esp32
     if did in esp32.speaker_ids():
         # a speaker stays with the profile that set it up (its board, voice print and room settings are kept there)
@@ -184,18 +205,19 @@ async def admin_set_device(did: str, request: Request):
     if any(x["id"] == did and x.get("app") for x in profiles.admin_list()["devices"]):
         # an iPhone was paired by the profile itself (with its login and second step): it stays there
         raise HTTPException(400, "Ein iPhone gehört zum Profil, das es gekoppelt hat. Dort entfernen und neu koppeln.")
-    if not profiles.set_device_user(did, str((await request.json()).get("user", ""))):
+    if not profiles.set_device_user(did, str(body.get("user", ""))):
         raise HTTPException(404, "no such device or profile")
     return {"ok": True}
 
 
 @router.delete("/api/admin/devices/{did}", dependencies=[Depends(auth)])
-def admin_delete_device(did: str):
+def admin_delete_device(did: str, request: Request):
+    _no_admin_profile(request, _device_owner(did))
     profiles.delete_device(did)
     return {"ok": True}
 
 
-@router.post("/api/password", dependencies=[Depends(auth), Depends(admin_code)])
+@router.post("/api/password", dependencies=[Depends(main_auth), Depends(admin_code)])
 async def change_password(request: Request):
     body = await request.json()
     new = str(body.get("new", ""))

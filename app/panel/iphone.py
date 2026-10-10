@@ -260,6 +260,11 @@ async def app_pair(request: Request):
     return {"token": token, "profile": prof["name"], "version": app_version(), "language": _language()}
 
 
+def _admin_role(uid):
+    import coadmin
+    return coadmin.role(uid) if coadmin.on() and area_on(uid, "app_admin") else ""
+
+
 @router.get("/api/iphone/hello", dependencies=[Depends(assistant)])
 def app_hello(prof=Depends(own_profile)):
     """The app checks its key: whose it is and which Spark."""
@@ -278,6 +283,8 @@ def app_hello(prof=Depends(own_profile)):
             "push": apns.on_for(prof["id"]),
             # CarPlay: the smart home only with its own switch
             "car_ha": bool(s.get("app_car_ha")),
+            # "Spark verwalten" with the profile's own role (coadmin.py): "coadmin", "manager" or "" (none, or the switch off)
+            "admin_role": _admin_role(prof["id"]),
             # documents from the app into "Meine Dokumente"
             "docs": docs_on(prof["id"]),
             # Apple Reminders: Spark reminders and list entries may be written into the iPhone's Reminders

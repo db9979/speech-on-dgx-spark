@@ -316,6 +316,7 @@
       <div class="setrow"><div class="lbl"><b>Reverse Proxy</b><span>Nur diesen Adressen wird die weitergereichte Absender-Adresse geglaubt.<button class="mlink" type="button">Mehr</button></span></div><input class="wide" id="panel.trusted_proxies" data-list="1" placeholder="192.168.1.10" autocomplete="off"></div>
       <div class="fh more" hidden>Gemeint ist X-Forwarded-For. Leer = nur ein Proxy auf dem Spark selbst. Eintragen, wenn das Panel hinter einem Proxy im Heimnetz hängt: sonst teilen sich alle, die über den Proxy kommen, eine Adresse für die Sperre nach falschen Passwörtern.</div>
       <div class="setrow"><div class="lbl"><b>API-Schlüssel</b><span>Gesetzt = Apps senden „Authorization: Bearer &lt;Schlüssel&gt;“; leer = ohne Schlüssel.</span></div><div class="ctl full"><input class="wide" id="api.key" autocomplete="off"><button class="b" id="genkey" type="button">Erzeugen</button></div></div>
+      <div class="mainonly" data-nodirty="1">
       <h3 class="sec">Admin-Anmeldung <span>wirkt sofort, ohne Speichern</span></h3>
       <div class="setrow"><div class="lbl"><b>Panel-Passwort</b><span>Mindestens 10 Zeichen.</span></div><button class="b" id="pwopen" type="button">Ändern …</button></div>
       <div class="full rowtail" id="pwbox" hidden><label for="pwold">Aktuelles Passwort</label><input type="password" id="pwold" autocomplete="current-password">
@@ -325,6 +326,11 @@
       <div class="fh more" hidden>Solange er an ist, geht die Anmeldung per HTTP-Basic (Skripte) nicht mehr, und Passwort ändern, Sicherung wiederherstellen, Geräteschlüssel anlegen oder umhängen und PINs ändern fragen jedes Mal nach einem Code. Notausgang ohne Handy und Codes: auf dem Spark sudo rm /var/lib/speech-spark/state/mfa-admin.json</div>
       <div id="admmfa" class="full rowtail"></div>
       <div class="setrow"><div class="lbl"><b>Überall abmelden</b><span>Beendet die Admin-Anmeldung in allen Browsern, auch hier (z. B. nach einem verlorenen Gerät).</span></div><button class="b" id="adminout" type="button">Abmelden</button></div>
+      <h3 class="sec">Benutzer als Admin <span>wirkt sofort, mit Code</span></h3>
+      <div class="setrow"><div class="lbl"><b>Benutzer als Admin erlauben</b><span>Ausgewählte Profile verwalten den Spark mit eigener Anmeldung und eigenem Code.<button class="mlink" type="button">Mehr</button></span></div><label class="tgl"><input type="checkbox" id="coadmon"><i></i></label></div>
+      <div class="fh more" hidden>Mit-Admin: alles wie der Admin, außer Admin-Passwort und zweitem Schritt des Admins, Rollen, Sicherungen einspielen oder herunterladen und Profile mit Admin-Rolle ändern. Verwalter: nur Zustand, Logs, Profile und Geräte, Funktionen ein und aus. Eine Rolle allein gibt nichts: Das Profil braucht seinen zweiten Anmeldeschritt und öffnet unter Ich → Sicherheit den Admin-Modus mit einem frischen Code; er endet nach 15 Minuten ohne Bedienung, spätestens nach 8 Stunden. Über Sprache, Lautsprecher, Uhr, Telegram und Siri wirkt die Rolle nie. Schalter aus oder Rolle entziehen beendet jeden offenen Admin-Modus sofort. Was ein Profil als Admin tut, steht unter Zustand → Logs → Admin-Protokoll.</div>
+      <div id="coadmlist" class="full"></div>
+      </div>
       <div class="savebar"><button class="b p savebtn" data-p="sec">Speichern</button><span class="savemsg"></span></div>
     </div>
     <div class="card pane" id="pane-sysc"><h2 class="pt">Betrieb</h2><div class="pintro">Wie der Spark mit Speicher, hängenden Diensten, Logs und Ports umgeht.</div>
@@ -356,9 +362,9 @@
       <div class="fh more" hidden>Profile (Gedächtnis, Gespräche, Dokumente, Kalender, E-Mail-Konten, Smart Home, Stimmerkennung), geklonte Stimmen, Einstellungen, Panel-Passwort und was der Spark für alle hält (zweiter Anmeldeschritt des Admins, iPhone-Push, Telegram-Bot, Browser-Push, ESP32-Lautsprecher, Agent-Dienste, eigene Testfragen). Jeden Tag automatisch, die letzten sieben bleiben; dazu vor jedem Update, jeder Rückkehr zur vorigen Version und jedem Wiederherstellen, davon bleiben die letzten fünf.</div>
       <table><tbody id="baklist"></tbody></table>
       <div class="setrow"><div class="lbl"><b>Jetzt sichern</b><span>Legt sofort eine Sicherung auf dem Spark an.</span></div><button class="b" id="bakgo" type="button">Sichern</button></div>
-      <div class="setrow"><div class="lbl"><b>Aus Datei wiederherstellen</b><span>Eine heruntergeladene Sicherung (.tar.gz) einspielen.</span></div><button class="b" id="bakup" type="button">Datei wählen …</button><input type="file" id="bakfile" accept=".gz,.tgz,application/gzip" hidden></div>
+      <div class="setrow mainonly"><div class="lbl"><b>Aus Datei wiederherstellen</b><span>Eine heruntergeladene Sicherung (.tar.gz) einspielen.</span></div><button class="b" id="bakup" type="button">Datei wählen …</button><input type="file" id="bakfile" accept=".gz,.tgz,application/gzip" hidden></div>
       <div class="fh" id="bakmsg"></div>
-      <div class="setrow"><div class="lbl"><b>Umzugs-Sicherung</b><span>Für einen anderen Spark: bringt den Schlüssel für Passwörter und Tokens mit.<button class="mlink" type="button">Mehr</button></span></div><div class="ctl full"><input type="password" class="wide" id="bakpw" autocomplete="new-password" maxlength="200" placeholder="Umzugs-Passwort (mind. 12 Zeichen)" aria-label="Umzugs-Passwort"><button class="b" id="bakmove" type="button">Anlegen</button></div></div>
+      <div class="setrow mainonly"><div class="lbl"><b>Umzugs-Sicherung</b><span>Für einen anderen Spark: bringt den Schlüssel für Passwörter und Tokens mit.<button class="mlink" type="button">Mehr</button></span></div><div class="ctl full"><input type="password" class="wide" id="bakpw" autocomplete="new-password" maxlength="200" placeholder="Umzugs-Passwort (mind. 12 Zeichen)" aria-label="Umzugs-Passwort"><button class="b" id="bakmove" type="button">Anlegen</button></div></div>
       <div class="fh more" hidden>Gespeicherte Passwörter, Tokens und Schlüssel lassen sich mit einer normalen Sicherung nur auf diesem Spark lesen; auf einem anderen müssen sie neu eingegeben werden. Eine Umzugs-Sicherung bringt den Schlüssel dafür mit, verschlüsselt mit deinem Passwort: Auf dem neuen Spark dasselbe Passwort ins Feld eintragen, dann wiederherstellen. Anmelden muss sich danach jeder neu. Beim Wiederherstellen werden die Einstellungen wie auf der Einstellungsseite geprüft, und es wird alles getauscht oder nichts.</div>
       <details class="adv"><summary>Update-Protokoll <span class="mut">· was beim letzten Update passiert ist</span></summary>
         <div class="row" style="margin-top:8px"><button class="b" type="button" onclick="copyEl('updlog',this)">Kopieren</button></div><pre id="updlog" style="margin-top:8px">–</pre></details>
@@ -537,7 +543,7 @@
 
 <section id="logs">
   <div class="card lcard">
-    <div class="lbar"><div class="ltabs" id="logtabs" role="tablist"><button type="button" data-lt="diag" class="on">Diagnose</button><button type="button" data-lt="svc">Dienste</button><button type="button" data-lt="update">Update</button><button type="button" data-lt="audit">Änderungen</button></div>
+    <div class="lbar"><div class="ltabs" id="logtabs" role="tablist"><button type="button" data-lt="diag" class="on">Diagnose</button><button type="button" data-lt="svc">Dienste</button><button type="button" data-lt="update">Update</button><button type="button" data-lt="audit" class="mainonly">Änderungen</button><button type="button" data-lt="adm">Admin-Protokoll</button></div>
       <span class="sp"></span><div class="lseg" id="logmin"><button type="button" data-v="10">10 min</button><button type="button" data-v="60" class="on">1 h</button><button type="button" data-v="120">2 h</button><button type="button" data-v="720">12 h</button><button type="button" data-v="1440">24 h</button></div></div>
     <div class="lsum" id="logsum"></div>
     <div class="lasterr" id="lasterr" hidden></div>
@@ -673,6 +679,7 @@
     <div id="parbox" class="ptab"></div>
     <div id="roombox" class="ptab"></div>
     <div id="secbox" class="ptab"><div class="intro">Wo dein Profil angemeldet ist. Ein Gerät, das du nicht mehr nutzt oder verloren hast, kannst du hier sperren.</div>
+      <div id="coadmbox"></div>
       <label>Zweiter Anmeldeschritt</label><div id="profmfa"></div>
       <label>Geräte mit Schlüssel</label><ul class="facts" id="secdev"></ul>
       <label>Letzte Anmeldungen</label><ul class="facts small" id="secev"></ul>
@@ -708,6 +715,7 @@
 <script src="/static/js/users.js"></script>
 <script src="/static/js/face.js"></script>
 <script src="/static/js/wizard.js"></script>
+<script src="/static/js/coadmin.js"></script>
 <script src="/static/js/start.js"></script>
 </body>
 </html>

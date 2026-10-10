@@ -35,7 +35,7 @@ $('chattext').addEventListener('keydown',e=>{if(e.key==='Enter')setTimeout(()=>d
 const closeSheet=()=>{$('msheet').style.display='none'};
 $('msheet').onclick=e=>{if(e.target===$('msheet'))closeSheet()};
 $('mmenu').onclick=()=>{const inchat=document.body.classList.contains('inchat');$('mchatitems').style.display=inchat?'':'none';
-  $('madmin').innerHTML=ADMIN?[...document.querySelectorAll('nav button[data-s]')].map(b=>`<button class="mi${b.classList.contains('on')?' on':''}" data-s="${b.dataset.s}">${esc([...b.childNodes].filter(n=>n.nodeType===3).map(n=>n.textContent).join('').trim())}</button>`).join(''):'';
+  $('madmin').innerHTML=ADMIN?[...document.querySelectorAll('nav button[data-s]:not([hidden])')].map(b=>`<button class="mi${b.classList.contains('on')?' on':''}" data-s="${b.dataset.s}">${esc([...b.childNodes].filter(n=>n.nodeType===3).map(n=>n.textContent).join('').trim())}</button>`).join(''):'';
   $('madmin').querySelectorAll('button').forEach(x=>x.onclick=()=>{closeSheet();document.querySelector(`nav button[data-s=${x.dataset.s}]`).click();window.scrollTo(0,0)});
   $('milang').textContent=$('langbtn').textContent;$('milogin').style.display=ADMIN?'none':'';$('milogout').style.display=ADMIN&&$('logoutbtn').style.display!=='none'?'':'none';
   $('msheet').style.display='grid'};

@@ -548,3 +548,74 @@ class Browser(unittest.TestCase):
                 self.assertEqual(errors, [])
                 await br.close()
         self.run_async(go())
+
+    def test_profile_as_admin(self):
+        """V01.0.255 (coadmin.py): the main admin gives a role under Einstellungen → Sicherheit; the profile opens
+        its admin mode under Ich → Sicherheit; then a bar says so, the main admin's own things are hidden, and a
+        Verwalter does not see Einstellungen and Einbinden."""
+        import coadmin
+        import mfa
+        import profiles
+        real = (mfa.enabled, mfa.verify)
+        uid = next(u["id"] for u in profiles.names() if u["name"] == "Uitest")
+        base = f"http://127.0.0.1:{self.port}"
+
+        async def go():
+            async with async_playwright() as p:
+                br, pg, errors = await self.page(p, 1280, 900)   # the main admin signs in before his second step is "on"
+                mfa.enabled = lambda who: who in (mfa.ADMIN, uid)
+                mfa.verify = lambda who, code: code == "123456"
+                await pg.reload()
+                await pg.wait_for_timeout(600)
+                await pg.evaluate("goCfg('sec')")
+                await pg.wait_for_timeout(600)
+                await pg.screenshot(path=os.path.join(os.environ.get("SPEECH_SPARK_SHOTS", helpers.TMP), "coadmin-main.png"), full_page=True)
+                self.assertEqual(errors, [])
+                self.assertTrue(await pg.is_visible("#coadmuser"))
+                await br.close()
+                for role in ("coadmin", "manager"):
+                    coadmin.set_on(True)
+                    coadmin.set_role(uid, role)
+                    exe = chromium()
+                    br = await p.chromium.launch(**({"executable_path": exe} if exe else {}))
+                    pg = await (await br.new_context(viewport={"width": 1280, "height": 900}, locale="de-DE")).new_page()
+                    errs = []
+                    pg.on("pageerror", lambda e: errs.append(str(e)))
+                    await pg.goto(base + "/")
+                    r = await pg.request.post(base + "/api/profile/login", data={"name": "Uitest", "pin": "4711", "code": "123456"})
+                    self.assertEqual(r.status, 200)
+                    await pg.goto(base + "/")
+                    await pg.wait_for_timeout(600)
+                    self.assertFalse(await pg.evaluate("ADMIN"))
+                    await pg.evaluate("openMe('secbox')")
+                    await pg.wait_for_timeout(500)
+                    self.assertTrue(await pg.is_visible("#coadmbox button"))
+                    r = await pg.request.post(base + "/api/admin/elevate", headers={"X-Speech-Code": "123456"})
+                    self.assertEqual(r.status, 200)
+                    await pg.goto(base + "/")
+                    await pg.wait_for_timeout(800)
+                    self.assertTrue(await pg.evaluate("ADMIN&&elevated()"))
+                    self.assertTrue(await pg.is_visible("#coadmbar"))
+                    self.assertEqual(await pg.is_visible("nav button[data-s=cfg]"), role == "coadmin")
+                    if role == "coadmin":
+                        await pg.evaluate("goCfg('sec')")
+                        await pg.wait_for_timeout(500)
+                        self.assertFalse(await pg.is_visible("#pwopen"))
+                        self.assertFalse(await pg.is_visible("#coadmlist"))
+                    await pg.evaluate("goSec('logs')")
+                    await pg.wait_for_timeout(300)
+                    self.assertFalse(await pg.is_visible("#logtabs button[data-lt=audit]"))
+                    await pg.click("#logtabs button[data-lt=adm]")
+                    await pg.wait_for_timeout(500)
+                    self.assertIn("Admin-Modus geöffnet", await pg.inner_text("#logout"))
+                    await pg.screenshot(path=os.path.join(os.environ.get("SPEECH_SPARK_SHOTS", helpers.TMP), f"coadmin-{role}.png"))
+                    self.assertEqual(errs, [])
+                    await br.close()
+        try:
+            self.run_async(go())
+        finally:
+            mfa.enabled, mfa.verify = real
+            try:
+                os.remove(coadmin.FILE)
+            except OSError:
+                pass

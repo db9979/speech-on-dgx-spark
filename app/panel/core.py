@@ -13,6 +13,7 @@ from fastapi import Depends, HTTPException, Request
 from fastapi.security import HTTPBasic, HTTPBasicCredentials
 
 sys.path.insert(0, os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
+import coadmin  # noqa: E402
 import guard  # noqa: E402
 import mfa  # noqa: E402
 import profiles  # noqa: E402
@@ -142,7 +143,8 @@ def end_admin_sessions():
         pass
 
 
-def is_admin(request: Request, creds: HTTPBasicCredentials | None):
+def is_main_admin(request: Request, creds: HTTPBasicCredentials | None):
+    """The main admin (the panel password): browser login or HTTP Basic."""
     if not password_set():
         return True
     # HTTP Basic (scripts) knows no second step, so it is off while the admin has one
@@ -154,6 +156,19 @@ def is_admin(request: Request, creds: HTTPBasicCredentials | None):
         guard.failed(request, guard.BASIC, what="admin_basic")
         guard.failed(request, guard.ADMIN, what="admin_basic")
     return _admin_cookie_age(request) is not None
+
+
+def is_admin(request: Request, creds: HTTPBasicCredentials | None):
+    """The main admin, or a profile in its admin mode whose role reaches this request (coadmin.py)."""
+    if is_main_admin(request, creds):
+        request.scope["speech_main_admin"] = True
+        return True
+    return coadmin.allows(request)
+
+
+def acting_profile(request: Request):
+    """The profile in its admin mode behind this admin request ({"id", "name", "role", ...}), None for the main admin."""
+    return None if request.scope.get("speech_main_admin") else request.scope.get("speech_coadmin")
 
 
 def admin_cookie_ok(request: Request):
@@ -168,7 +183,17 @@ def renewed_admin_cookie(request: Request):
 
 def auth(request: Request, creds: HTTPBasicCredentials | None = Depends(security)):
     if not is_admin(request, creds):
-        raise HTTPException(401, "login required")
+        raise HTTPException(403 if coadmin.session(request) else 401, "login required")
+
+
+def main_auth(request: Request, creds: HTTPBasicCredentials | None = Depends(security)):
+    """Only the main admin: admin roles, his password and second step, restoring and downloading backups."""
+    if is_main_admin(request, creds):
+        request.scope["speech_main_admin"] = True
+        return
+    if coadmin.session(request):
+        raise HTTPException(403, "Das darf nur der Hauptadmin (Panel-Passwort).")
+    raise HTTPException(401, "login required")
 
 
 # Changes that matter most (password, restore, device keys, the second step itself) need a fresh code
@@ -191,7 +216,12 @@ async def confirm_code(request: Request, who, name):
 
 
 async def admin_code(request: Request):
-    await confirm_code(request, mfa.ADMIN, guard.ADMIN)
+    """A fresh code for the most important changes: the main admin's, or the code of the profile in its admin mode."""
+    prof = acting_profile(request)
+    if prof:
+        await confirm_code(request, prof["id"], prof["name"])
+    else:
+        await confirm_code(request, mfa.ADMIN, guard.ADMIN)
 
 
 def assistant(request: Request, creds: HTTPBasicCredentials | None = Depends(security)):

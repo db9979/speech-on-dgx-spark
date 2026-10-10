@@ -31,6 +31,7 @@ All options for running without questions (`--mode api --asr 1.7b --tts 0.6b --y
 
 <!-- New version: add one line at the top here and in CHANGELOG.md, drop the oldest line here (keep 10). Details go to docs/de and docs/en, not into this README. -->
 
+- **V01.0.255** Users as admins (switch under Settings → Security, off; only with the main admin's second step): co-admin and manager roles for profiles, admin mode under Me → Security with the profile's own code (15 min without use, 8 h at most), the main admin keeps password, roles, backups and admin profiles, Logs → Admin log shows who, app sign-in with the profile code (server)
 - **V01.0.254** Settings: Speech recognition and Security no longer jump to the right on wide screens (scrollbar space always kept), second login step inside one frame, speech recognition model list no longer cut off; browser test checks it
 - **V01.0.253** Features: "Wikipedia straight away" sits below Web search, "Roles by voice" below Own conversation style (page stays short, browser test green again)
 - **V01.0.252** Settings → Speech output: default voice is a list that fits the model (CustomVoice built-in speakers, Base own voices, VoiceDesign locked); a saved name outside the list is kept
@@ -40,7 +41,6 @@ All options for running without questions (`--mode api --asr 1.7b --tts 0.6b --y
 - **V01.0.248** Features: "Panel areas in the iPhone app" sits below the iPhone app switch (page stays short)
 - **V01.0.247** iPhone app takes over the panel, step 3: "Manage the Spark" with admin password and code, monitoring, logs with "Copy for thread", checks
 - **V01.0.246** iPhone app takes over the panel, steps 1–2: "Open in the panel", panel areas with their own switch, "My day" (appointments, reminders, memory, conversation switches)
-- **V01.0.245** Document card and tags (admin and profile switch, off): in quiet minutes the language model notes title, kind, sender, deadline, number and keywords of each document; the assistant sees these lines instead of file names and searches by tag or kind, tags filter Ich → Dokumente (own ones win), "Belongs with", "Remind" before deadlines only on click; document search always stays in a narrowed tool set, more rule words (insurance, manual, findings …)
 
 All versions: [CHANGELOG.md](CHANGELOG.md)
 

@@ -2,6 +2,7 @@
 
 Every version in one line, newest first (taken from the commit messages, so some lines are German, some English). Older entries have no version number.
 
+- **V01.0.255** · 2026-10-10 · Benutzer als Admin (Schalter unter Einstellungen → Sicherheit, aus; nur mit zweitem Schritt des Hauptadmins): Rollen Mit-Admin und Verwalter für Profile, Admin-Modus unter Ich → Sicherheit mit eigenem Code (15 min ohne Bedienung, höchstens 8 h), Hauptadmin behält Passwort, Rollen, Sicherungen und Admin-Profile, Logs → Admin-Protokoll zeigt wer, App-Anmeldung mit Profil-Code (Server)
 - **V01.0.254** · 2026-10-10 · Einstellungen: Spracherkennung und Sicherheit springen auf breiten Bildschirmen nicht mehr nach rechts (Platz für die Scrollleiste immer frei), Zweiter Anmeldeschritt in einem Rahmen, Modell-Auswahl der Spracherkennung nicht mehr abgeschnitten; Browsertest prüft das
 - **V01.0.253** · 2026-10-10 · Funktionen: „Wikipedia direkt“ steht unter der Websuche, „Rollen per Sprache“ unter dem eigenen Gesprächsstil (Seite bleibt kurz, Browsertest wieder grün)
 - **V01.0.252** · 2026-10-10 · Einstellungen → Sprachausgabe: Standardstimme ist eine Auswahlliste passend zum Modell (CustomVoice feste Sprecher, Base eigene Stimmen, VoiceDesign gesperrt); ein gespeicherter Name außerhalb der Liste bleibt erhalten

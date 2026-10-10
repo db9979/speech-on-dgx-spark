@@ -57,6 +57,7 @@ body.guest #themebtn{margin-left:auto}
 /* login */
 body.guest nav,body.guest #hdr,body.guest #fab,body.guest #logoutbtn{display:none!important}
 body.guest #loginbtn{display:inline-flex!important}
+body.coadm .mainonly,nav button[hidden]{display:none!important}   /* a profile in its admin mode (coadmin.js): what only the main admin may do */
 .modal{position:fixed;inset:0;z-index:50;display:grid;place-items:center;align-items:safe center;overflow-y:auto;background:rgba(10,12,20,.45);backdrop-filter:blur(4px);padding:16px}
 .updlock{z-index:1000;backdrop-filter:blur(3px)}.updlock .modalcard{width:min(440px,100%)}
 .ulbar{height:10px;border-radius:99px;background:var(--line);overflow:hidden;margin:6px 0 8px}.ulbar i{display:block;height:100%;width:3%;border-radius:99px;background:linear-gradient(90deg,var(--acc),var(--acc2));transition:width .8s ease}

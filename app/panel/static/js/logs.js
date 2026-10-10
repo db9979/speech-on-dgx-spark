@@ -27,6 +27,7 @@ async function loadLogs(){
     if(tab!==LG.tab)return;LDATA=tab==='diag'?d:null;rows=d.rows;head=d.head}
   else if(tab==='svc'){const txt=await (await api(`/api/logs/${encodeURIComponent(LG.svc)}?lines=${LG.lines}`)).text();
     if(tab!==LG.tab)return;rows=txt.split('\n').filter(x=>x.trim()&&!x.startsWith('-- ')).map(lparse);LDATA=null;head=`# ${LG.svc} · ${rows.length} Zeilen`}
+  else if(tab==='adm'){rows=(await adminRows()).slice(-LG.lines);if(tab!==LG.tab)return;LDATA=null;head=`# ${t('Admin-Protokoll','Admin log')} · ${rows.length}`}
   else{rows=(await auditRows()).slice(-LG.lines);if(tab!==LG.tab)return;LDATA=null;head=`# ${t('Änderungsprotokoll','Change log')} · ${rows.length}`}
   LROWS=rows;LROWS.head=head;lrender()}
 function lshow(){
@@ -70,7 +71,7 @@ function lrender(){
     else m.textContent=text;
     if(n>1)m.append(' ',el('span','lrep','×'+n));row.append(m);row.title=r.raw;out.append(row);prev=r}
   if(!rows.length)out.append(el('div','lempty',q?t('Nichts gefunden.','Nothing found.'):t('Keine Zeilen in diesem Zeitraum.','No lines in this time range.')));
-  const name={diag:LG.f.length?LG.f.map(k=>k==='errors'?t('Fehler','errors'):(LAREA[k]||[k])[0]).join(' + '):t('Alles','Everything'),svc:LG.svc,update:'Update',audit:t('Änderungen','Changes')}[LG.tab];
+  const name={diag:LG.f.length?LG.f.map(k=>k==='errors'?t('Fehler','errors'):(LAREA[k]||[k])[0]).join(' + '):t('Alles','Everything'),svc:LG.svc,update:'Update',audit:t('Änderungen','Changes'),adm:t('Admin-Protokoll','Admin log')}[LG.tab];
   const span={10:t('letzte 10 min','last 10 min'),60:t('letzte Stunde','last hour'),120:t('letzte 2 Stunden','last 2 hours'),720:t('letzte 12 Stunden','last 12 hours'),1440:t('letzte 24 Stunden','last 24 hours')}[LG.min];
   $('loghead').textContent=name+(LG.tab==='diag'||LG.tab==='update'?' · '+span:'');
   $('logcount').textContent=q?t(`${rows.length} Treffer`,`${rows.length} hits`):(d?t(`${rows.length} von ${d.found} Zeilen`,`${rows.length} of ${d.found} lines`):t(`${rows.length} Zeilen`,`${rows.length} lines`));

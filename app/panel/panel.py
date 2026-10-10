@@ -22,6 +22,7 @@ from chat import LEARN_EVERY, learn_once  # noqa: E402
 from update import update_lock  # noqa: E402
 import account  # noqa: E402
 import calendars  # noqa: E402
+import coadmin  # noqa: E402
 import guard  # noqa: E402
 import homeassistant  # noqa: E402
 import profiles  # noqa: E402
@@ -69,7 +70,7 @@ app.middleware("http")(update_lock)
 def _may_upload(scope):
     """Big uploads only from someone who could be allowed (the real check comes after)."""
     req = Request(scope)
-    if req.headers.get("authorization") or admin_cookie_ok(req) or profiles.current(req):
+    if req.headers.get("authorization") or admin_cookie_ok(req) or profiles.current(req) or coadmin.session(req):
         return True
     return scope.get("path") == "/api/test/asr" and bool(load_config().get("chat", {}).get("public", False))
 
@@ -88,7 +89,7 @@ app.add_middleware(BodyLimit, default=2 * 1024**2, gate=_may_upload, limits=[
 @app.middleware("http")
 async def sessions(request: Request, call_next):
     """Refuses changes from foreign pages, writes the change log and renews logins in use."""
-    if not guard.same_origin(request, (COOKIE, profiles.COOKIE)):
+    if not guard.same_origin(request, (COOKIE, profiles.COOKIE, coadmin.COOKIE)):
         guard.log("foreign_page_refused", ip=guard.client_ip(request), path=request.url.path,
                   origin=request.headers.get("origin", ""))
         return guard.foreign_page()
@@ -97,8 +98,12 @@ async def sessions(request: Request, call_next):
     if guard.logged(path, request.method):
         prof = profiles.current(request)
         basic = request.headers.get("authorization", "").startswith("Basic ") and response.status_code < 400
-        who = "admin" if admin_cookie_ok(request) or basic else (prof or {}).get("name", "guest")
-        guard.log("change", ip=guard.client_ip(request), who=who, uid=(prof or {}).get("id"),
+        elev = None if request.scope.get("speech_main_admin") else request.scope.get("speech_coadmin")
+        main = bool(request.scope.get("speech_main_admin")) or ((admin_cookie_ok(request) or basic) and not elev)
+        who = "admin" if main else elev["name"] if elev else (prof or {}).get("name", "guest")
+        # by: an admin action, by the main admin or a profile in its admin mode (Logs → Admin-Protokoll)
+        by = "main" if request.scope.get("speech_main_admin") else elev["id"] if elev else None
+        guard.log("change", ip=guard.client_ip(request), who=who, uid=(prof or {}).get("id"), by=by,
                   method=request.method, path=path, status=response.status_code)
     if path.startswith("/api/") and "cache-control" not in response.headers:
         response.headers["Cache-Control"] = "no-store"   # switches and states: never from a browser or proxy cache
@@ -106,6 +111,10 @@ async def sessions(request: Request, call_next):
         admin_value, user_value = renewed_admin_cookie(request), profiles.renewed_cookie(request)
         if admin_value:
             response.set_cookie(COOKIE, admin_value, max_age=ADMIN_IDLE, httponly=True, samesite="strict")
+        # the admin mode of a profile: renewed only by changing requests (using the page, not a page polling the state)
+        elev_value = coadmin.renewed(request) if request.cookies.get(coadmin.COOKIE) and request.method in guard.CHANGING else None
+        if elev_value:
+            response.set_cookie(coadmin.COOKIE, elev_value, max_age=coadmin.LONGEST, httponly=True, samesite="strict")
         if user_value:
             response.set_cookie(profiles.COOKIE, user_value, max_age=profiles.SESSION_DAYS * 86400,
                                 httponly=True, samesite="lax")
