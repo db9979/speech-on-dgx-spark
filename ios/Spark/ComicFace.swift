@@ -24,7 +24,7 @@ final class ComicFace: FaceStyle {
     // life (C in face.js)
     private var gx = 0.0, gy = 0.0, tx = 0.0, ty = 0.0, look = 0.0, lid = 0.36
     private var bL = 0.0, bR = 0.0, aL = 0.0, aR = 0.0, tilt = 0.0, nod = 0.0, open = 0.0, wide = 0.0, last = 0.0
-    private var blinkAt = -1.0, nextBlink = 2.5
+    private var blinkAt = -1.0, nextBlink = 2.5, smile = 0.0
 
     private var m: Double { eyeY + noseLen + 6 }
     private var mcy: Double { m + 15 * stacheS }
@@ -33,23 +33,16 @@ final class ComicFace: FaceStyle {
     private func lerp(_ a: Double, _ b: Double, _ k: Double) -> Double { a + (b - a) * k }
 
     // ---------------------------------------------------------------- life
-    private enum Mode { case idle, listen, think, speak, sad }
+    /// the mood as the comic face knows it ("waiting" looks like idle)
+    private func mode(_ m: FaceMood) -> FaceMood { m == .waiting ? .idle : m }
 
-    private func mode(_ m: FaceMood) -> Mode {
-        switch m {
-        case .idle, .waiting: return .idle
-        case .listen: return .listen
-        case .think: return .think
-        case .speak: return .speak
-        case .sad: return .sad
-        }
-    }
-
-    private func step(_ mode: Mode, out: Double, mic: Double, now: Double) -> (lid: Double, ix: Double, iy: Double) {
+    private func step(_ mode: FaceMood, out: Double, mic: Double, now: Double) -> (lid: Double, ix: Double, iy: Double) {
         let dt = min(0.05, last == 0 ? 0 : now - last)
         last = now
         func k(_ n: Double) -> Double { min(1, dt * n) }
-        if now > look {
+        let P = FaceLook.pose(mode)
+        if let g = FaceLook.gaze(mode, now) { tx = g.0; ty = g.1 }
+        else if now > look {
             var x = (Double.random(in: 0...1) - 0.5) * 0.4, y = (Double.random(in: 0...1) - 0.5) * 0.25
             if mode == .think { x = 0.55 + Double.random(in: 0...0.3); y = -0.75 + Double.random(in: 0...0.2) }
             else if mode == .speak && Double.random(in: 0...1) < 0.45 {
@@ -61,19 +54,19 @@ final class ComicFace: FaceStyle {
             tx = max(-1, min(1, x)); ty = max(-1, min(1, y))
             look = now + 0.5 + Double.random(in: 0...(mode == .idle ? 2.6 : 1.8))
         }
-        gx = lerp(gx, tx, k(22)); gy = lerp(gy, ty, k(22))
+        gx = lerp(gx, tx, k(mode == .search ? 40 : 22)); gy = lerp(gy, ty, k(22))
         if now > nextBlink { blinkAt = now; nextBlink = now + 2.2 + Double.random(in: 0...3.8) }
         let bt = (now - blinkAt) / 0.17
-        let blink = bt >= 0 && bt < 1 ? sin(bt * .pi) : 0
+        let blink = mode != .sleep && bt >= 0 && bt < 1 ? sin(bt * .pi) : 0
         let lidT: Double
         switch mode {
         case .listen: lidT = -0.14
         case .think: lidT = 0.06
         case .speak: lidT = -0.06
-        case .idle: lidT = 0.1
         case .sad: lidT = 0.18
+        default: lidT = P?.lid ?? 0.1
         }
-        lid = lerp(lid, lidBase + lidT, k(6))
+        lid = lerp(lid, min(1, lidBase + lidT), k(6))
         let l = min(1, max(0, lid + (1 - lid) * blink))
         let o = mode == .speak ? min(1, out * 1.3) : 0, emph = o > 0.8 ? 1.0 : 0
         open = lerp(open, o, k(30)); wide = lerp(wide, mode == .speak ? out : 0, k(14))
@@ -83,7 +76,7 @@ final class ComicFace: FaceStyle {
         case .think: tL = -4.5; tR = 1; a1 = -6; a2 = 4
         case .speak: tL = -1 - emph * 2.2 - open * 1.2; tR = tL
         case .sad: tL = -1; tR = -1; a1 = -9; a2 = -9
-        case .idle: break
+        default: if let P { (tL, tR, a1, a2) = P.b }
         }
         bL = lerp(bL, tL, k(9)); bR = lerp(bR, tR, k(9)); aL = lerp(aL, a1, k(8)); aR = lerp(aR, a2, k(8))
         var ti = 0.0, n = sin(now / 0.65) * 0.5
@@ -91,8 +84,9 @@ final class ComicFace: FaceStyle {
         case .listen: ti = 5
         case .think: ti = -4 + sin(now / 1.25) * 1.5
         case .speak: ti = sin(now / 0.83) * 1.6; n += emph * 1.6 + open * 0.8
-        default: break
+        default: if let P { ti = P.tilt; n = P.nod + (mode == .sleep ? sin(now / 0.83) * 1.4 : n) }
         }
+        smile = lerp(smile, P?.smile ?? 0, k(6))
         tilt = lerp(tilt, ti, k(4)); nod = lerp(nod, n, k(8))
         return (l, gx * eRx * 0.45, gy * eRy * 0.38)
     }
@@ -159,10 +153,10 @@ final class ComicFace: FaceStyle {
             inEye.fill(Path(ellipseIn: CGRect(x: cx - 5.53, y: cy - 5.53, width: 11.06, height: 11.06)), with: .color(irisC))
             inEye.fill(Path(ellipseIn: CGRect(x: cx - 2.76, y: cy - 2.76, width: 5.52, height: 5.52)), with: .color(pupil))
             inEye.fill(Path(ellipseIn: CGRect(x: cx + 1.6 - 1.1, y: cy - 1.8 - 1.1, width: 2.2, height: 2.2)), with: .color(.white))
-            let y0 = y - eRy - 1, h = (2 * eRy + 2) * l, ly = y0 + h
+            let y0 = y - eRy - 1, h = left && p.wink ? 2 * eRy + 2 : (2 * eRy + 2) * l, ly = y0 + h
             inEye.fill(Path(CGRect(x: x - eRx - 1, y: y0, width: 2 * eRx + 2, height: h)), with: .color(lidC))
             head.stroke(eye, with: .color(line), lineWidth: lw * 0.7)
-            var lidLine = Path(); lidLine.move(to: P(x - eRx - 0.5, ly)); lidLine.addQuadCurve(to: P(x + eRx + 0.5, ly), control: P(x, ly + 1.6))
+            var lidLine = Path(); lidLine.move(to: P(x - eRx - 0.5, ly)); lidLine.addQuadCurve(to: P(x + eRx + 0.5, ly), control: P(x, ly + (md == .happy ? -2.4 : 1.6)))
             head.stroke(lidLine, with: .color(line), style: StrokeStyle(lineWidth: lw * 0.95, lineCap: .round))
             var brow = head
             brow.translateBy(x: 0, y: left ? bL : bR)
@@ -189,29 +183,38 @@ final class ComicFace: FaceStyle {
         head.stroke(nose, with: .color(line), style: st)
 
         // mouth under the mustache
-        let o = open * 7 * stacheS, w = mouthW * (1 + wide * 0.35 - open * 0.15), my = mcy
+        // thinking with the new states on: the mouth small and to the side, like the panel
+        let thinkL = p.life && md == .think, mx = thinkL ? 105.0 : 100
+        let o = open * 7 * stacheS, my = mcy
+        let w = mouthW * (1 + wide * 0.35 - open * 0.15 + (md == .happy ? 0.3 : 0)) * (thinkL ? 0.7 : 1)
         if o > 0.4 {
             var mo = Path()
-            mo.move(to: P(100 - w, my))
-            mo.addQuadCurve(to: P(100 + w, my), control: P(100, my - o * 0.35))
-            mo.addQuadCurve(to: P(100 - w, my), control: P(100, my + o * 2))
+            mo.move(to: P(mx - w, my))
+            mo.addQuadCurve(to: P(mx + w, my), control: P(mx, my - o * 0.35))
+            mo.addQuadCurve(to: P(mx - w, my), control: P(mx, my + o * 2))
             mo.closeSubpath()
             head.fill(mo, with: .color(mouthC))
             head.stroke(mo, with: .color(line), style: StrokeStyle(lineWidth: lw * 0.7, lineJoin: .round))
         }
         let sad = md == .sad
         var ml = Path()
-        ml.move(to: P(100 - w, my + (sad ? 1.5 : 0)))
-        ml.addQuadCurve(to: P(100 + w, my + (sad ? 1.5 : 0)), control: P(100, my + (sad ? -1.6 : 0.6)))
+        if FaceLook.pose(md) != nil {
+            let sm = smile * 3.2
+            ml.move(to: P(mx - w, my - sm * 0.5))
+            ml.addQuadCurve(to: P(mx + w, my - sm * 0.5), control: P(mx, my + sm))
+        } else {
+            ml.move(to: P(mx - w, my + (sad ? 1.5 : 0)))
+            ml.addQuadCurve(to: P(mx + w, my + (sad ? 1.5 : 0)), control: P(mx, my + (sad ? -1.6 : 0.6)))
+        }
         head.stroke(ml, with: .color(line), style: StrokeStyle(lineWidth: lw * 0.9, lineCap: .round))
         let lipY = my + o * 1.7 + 4
-        var lip = Path(); lip.move(to: P(100 - w * 0.55, lipY)); lip.addQuadCurve(to: P(100 + w * 0.55, lipY), control: P(100, lipY + 2.4))
+        var lip = Path(); lip.move(to: P(mx - w * 0.55, lipY)); lip.addQuadCurve(to: P(mx + w * 0.55, lipY), control: P(mx, lipY + 2.4))
         var lipC = head; lipC.opacity = 0.7
         lipC.stroke(lip, with: .color(shade), style: StrokeStyle(lineWidth: 1.4, lineCap: .round))
 
         // mustache (lifts a little when the mouth opens)
         var mu = head
-        mu.translateBy(x: 0, y: -open * 1.3)
+        mu.translateBy(x: 0, y: -open * 1.3 - max(0, smile) * 0.8)
         mu.translateBy(x: 100, y: m); mu.scaleBy(x: stacheS, y: stacheS); mu.translateBy(x: -100, y: -m)
         outline(&mu, stachePath(), stache)
         var strands = Path()
@@ -232,7 +235,10 @@ final class ComicFace: FaceStyle {
         case .listen: ring = Self.hex(0x3b82f6)
         case .think: ring = Self.hex(0xf59e0b)
         case .speak: ring = Self.hex(0x22c55e)
-        case .sad: ring = Self.hex(0xef4444)
+        case .sad, .error: ring = Self.hex(0xef4444)
+        case .search, .calendar, .mail, .home, .memory: ring = Self.hex(0xf59e0b)
+        case .happy: ring = Self.hex(0x22c55e)
+        case .waiting, .sleep: ring = Self.hex(0x94a3b8)
         }
         ctx.stroke(Path(ellipseIn: CGRect(x: 4, y: 4, width: 192, height: 192)), with: .color(ring),
                    lineWidth: md == .listen ? 5 + p.mic * 4 : 5)

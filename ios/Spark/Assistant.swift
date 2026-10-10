@@ -70,6 +70,8 @@ final class Conversation: ObservableObject {
     private var last = Date.distantPast
     private var lastActivity = Date()
     private var errorAt = Date.distantPast
+    /// what the answer is doing, for the face ("Gesicht zeigt, was es tut")
+    let faceActs = FaceActs()
     private var notes: [Note] = []
     private var noteSince = Int(Date().timeIntervalSince1970 * 1000)
     private var timer: Timer?
@@ -467,7 +469,8 @@ final class Conversation: ObservableObject {
                 got = true
                 unreachable = false
                 switch ev {
-                case .text(let t): edit { $0.text += t }
+                case .text(let t): edit { $0.text += t }; faceActs.text()
+                case .face(let name): faceActs.event(name)
                 case .drop(let n): edit { $0.text = String($0.text.dropLast(n)) }
                 case .audio(let pcm):
                     audio.play(pcm)

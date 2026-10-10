@@ -33,6 +33,7 @@ Alle Optionen ohne Rückfragen (`--mode api --asr 1.7b --tts 0.6b --yes` …) st
 
 <!-- New version: add one line at the top here and in CHANGELOG.md, drop the oldest line here (keep 10). Details go to docs/de and docs/en, not into this README. -->
 
+- **V01.0.323** iPhone-App: Das Gesicht zeigt, was es tut, wie im Panel (mit dem Admin-Schalter „Gesicht zeigt, was es tut“)
 - **V01.0.322** Live-Übersicht: Websuche und Webseiten stehen unter Internet
 - **V01.0.321** iPhone-App kommt wieder bei TestFlight an: Wurden die Tests eines iOS-Stands von einem neueren Push abgebrochen, geht der neueste grüne main-Stand hoch, der ihn enthält
 - **V01.0.320** MCP „Schlüssel erzeugen“: meldete „Bitte zuerst einen Namen eingeben“, obwohl einer drinstand; das Namensfeld hatte dieselbe Kennung wie ein Feld der Admin-Seite Agenten, die Seite las das leere; eigene Kennungen plus Selbsttest
@@ -42,7 +43,6 @@ Alle Optionen ohne Rückfragen (`--mode api --asr 1.7b --tts 0.6b --yes` …) st
 - **V01.0.316** Notaus: roter Knopf hält den Spark in drei Stufen an (Außen zu, Hände weg, Alles still); aufheben nur der Admin zu Hause mit Code; sichtbar als rotes Band, in Zustand und in der Live-Übersicht
 - **V01.0.315** Live-Übersicht: die letzte Anfrage bleibt stehen, bis eine neue kommt
 - **V01.0.314** Home Assistant meldet an Spark (alles aus): Smart-Home-Regeln mit Pause, bei an/aus und „nur wenn …“, Sofort-Meldungen statt minütlich, Haus-Meldungen auf Lautsprechern, Ereignisse aus Home Assistant mit eigenem Schlüssel, Regel per Sprache („Sag mir Bescheid, wenn …“) und Kamerabild in Worten
-- **V01.0.313** Vorab holen bei Rückfrage erscheint in der Live-Übersicht beim jeweiligen Dienst (Kalender, Mail, Wetter, Pakete)
 
 Alle Versionen: [CHANGELOG.md](CHANGELOG.md)
 

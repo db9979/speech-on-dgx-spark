@@ -35,7 +35,7 @@ Der Link gilt 10 Minuten und nur einmal. Die Adresse muss https mit echtem Zerti
 
 ## Benutzen
 
-- Oben das Gesicht des Assistenten, dasselbe wie im Panel (Roboter oder Comic, der Admin wählt es unter Einstellungen → Vorgaben; die App übernimmt es beim Öffnen): es blinzelt, schaut umher, hört mit roter Antenne zu, denkt mit kreisendem Bogen und bewegt beim Sprechen den Mund. Antippen ist wie der Knopf.
+- Oben das Gesicht des Assistenten, dasselbe wie im Panel (Roboter oder Comic, der Admin wählt es unter Einstellungen → Vorgaben; die App übernimmt es beim Öffnen): es blinzelt, schaut umher, hört mit roter Antenne zu, denkt mit kreisendem Bogen und bewegt beim Sprechen den Mund. Antippen ist wie der Knopf. Ist im Panel „Gesicht zeigt, was es tut“ an (V01.0.323), zeigt das Gesicht in der App dasselbe wie im Panel: Lupe beim Suchen, Kalenderblatt, Brief, Glühbirne beim Smart Home, Notizblock beim Merken, Denkblasen, Haken mit Zwinkern nach einer erledigten Aktion, Fragezeichen bei einem Fehler und „zzz“ nach 5 Minuten Ruhe. Ausgelöst nur von den Ereignissen des Spark, nie vom Text der Antwort.
 - Großer Knopf: tippen, sprechen, die App merkt selbst, wann du fertig bist (oder nochmal tippen). Während der Spark spricht, hält Tippen ihn an.
 - Unten kann man die Frage auch schreiben. Oben links beginnt ein neues Gespräch; nach 10 Minuten Pause beginnt es von selbst neu.
 - „Hey Siri, Frag Spark“ (oder „Hey Siri, Spark fragen“): Siri fragt nach der Frage und liest die Antwort vor.

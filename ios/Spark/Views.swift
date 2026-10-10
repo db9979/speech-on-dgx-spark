@@ -242,7 +242,7 @@ struct ChatView: View {
         VStack(spacing: 0) {
             if talk.unreachable { OfflineBanner() }
             if !talk.rooms.isEmpty { RoomBanner() }
-            FaceView(mood: talk.mood, mic: talk.level, out: { Demo.out ?? talk.audio.outLevel }, kind: talk.allowed.face)
+            FaceView(mood: talk.mood, mic: talk.level, out: { Demo.out ?? talk.audio.outLevel }, kind: talk.allowed.face, acts: talk.allowed.faceLife ? talk.faceActs : nil)
                 .frame(maxHeight: talk.messages.isEmpty ? 260 : 130)
                 .padding(.top, 8)
                 .onTapGesture { talk.tap() }
@@ -514,7 +514,7 @@ struct StandView: View {
                     .monospacedDigit()
                 Text(tl.date, format: .dateTime.weekday(.wide).day().month(.wide))
                     .foregroundStyle(.secondary)
-                FaceView(mood: talk.mood, mic: talk.level, out: { talk.audio.outLevel }, kind: talk.allowed.face)
+                FaceView(mood: talk.mood, mic: talk.level, out: { talk.audio.outLevel }, kind: talk.allowed.face, acts: talk.allowed.faceLife ? talk.faceActs : nil)
                     .frame(maxWidth: 320)
                     .onTapGesture { talk.tap() }
                 if let last = talk.messages.last(where: { $0.role == "assistant" }), !last.text.isEmpty {

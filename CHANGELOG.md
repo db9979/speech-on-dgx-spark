@@ -2,6 +2,7 @@
 
 Every version in one line, newest first (taken from the commit messages, so some lines are German, some English). Older entries have no version number.
 
+- **V01.0.323** · 2026-10-10 · iPhone-App: „Gesicht zeigt, was es tut“ wie im Panel (.294): Zeichen, Blick und Haltung für Suche, Kalender, Mail, Smart Home, Merken, erledigt, Fehler, Schlaf; nur aus festen Chat-Ereignisnamen, nur mit Admin-Schalter chat.face_life
 - **V01.0.322** · 2026-10-10 · Zustand → Live: Websuche steht unter Internet („SearXNG (Heimnetz) → Internet“, die Suchbegriffe gehen an Suchmaschinen draußen), Seiten aus Treffern (read_page) als eigenes Ziel „Webseiten“ unter Internet
 - **V01.0.321** · 2026-10-10 · TestFlight: Tests eines iOS-Stands von neuerem Push abgebrochen → neuester grüner main-Stand, der ihn enthält, geht hoch (vorher seit .272 kein Upload); Selbsttest test_testflight_gate
 - **V01.0.320** · 2026-10-10 · mcp.js: #mcpname/#mcpmsg gab es auch in agent.js (MCP-Client des Admins), $('mcpname') las dort das leere Feld; jetzt #mcsname/#mcsmsg, Selbsttest test_mcpserver.PageIds prüft, dass keine Kennung von mcp.js anderswo vorkommt

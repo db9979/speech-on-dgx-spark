@@ -16,6 +16,7 @@ enum ChatEvent {
     case reminderSet(Reminder)
     case reminderCancel([String])
     case action(kind: String, target: String)   // iphone_action: "navigate" or "call"
+    case face(String)       // what the answer is doing, for the face: search, calendar, mail, home, memory, happy, error
 }
 
 struct Reminder {
@@ -84,6 +85,8 @@ struct Allowed {
     var proactive = false
     var reminders = true
     var face = "robot"
+    /// "Gesicht zeigt, was es tut" (admin switch chat.face_life, V01.0.294)
+    var faceLife = false
     var push = false
     var carHa = false
     var docs = false
@@ -294,6 +297,7 @@ struct SparkAPI {
                        listen: d["listen"] as? Bool ?? false, act: d["act"] as? Bool ?? false,
                        proactive: d["proactive"] as? Bool ?? false, reminders: d["reminders"] as? Bool ?? true,
                        face: d["face"] as? String == "comic" ? "comic" : "robot",
+                       faceLife: d["face_life"] as? Bool ?? false,
                        push: d["push"] as? Bool ?? false, carHa: d["car_ha"] as? Bool ?? false,
                        docs: d["docs"] as? Bool ?? false, ios: d["ios"] as? Bool ?? false,
                        images: d["images"] as? Bool ?? false,
@@ -761,10 +765,17 @@ struct SparkAPI {
                         case "retract", "truncated": cont.yield(.drop((ev["drop"] as? NSNumber)?.intValue ?? 0))
                         case "audio":
                             if let s = ev["audio"] as? String, let pcm = Data(base64Encoded: s) { cont.yield(.audio(pcm)) }
-                        case "mail": cont.yield(.mark("mail"))
+                        case "mail": cont.yield(.mark("mail")); cont.yield(.face("mail"))
+                        // only these fixed names reach the face, never text from the event
+                        case "search", "docsearch", "historysearch": cont.yield(.face("search"))
+                        case "calendar", "briefing": cont.yield(.face("calendar"))
+                        case "home": cont.yield(.face("home"))
+                        case "home_done": cont.yield(.face(ev["ok"] as? Bool == true ? "happy" : "error"))
+                        case "memory" where ev["action"] as? String == "saved": cont.yield(.face("memory"))
                         case "outside": cont.yield(.mark("outside"))
                         case "error": cont.yield(.error(ev["message"] as? String ?? String(localized: "Fehler beim Spark.")))
                         case "reminder" where ev["foreign"] as? Bool != true:
+                            if ev["action"] as? String == "set" { cont.yield(.face("memory")) }
                             if ev["action"] as? String == "set", let item = ev["item"] as? [String: Any], let r = Self.reminder(item) {
                                 cont.yield(.reminderSet(r))
                             } else if ev["action"] as? String == "cancel" {

@@ -35,7 +35,7 @@ The link is valid for 10 minutes and once. The address must be https with a real
 
 ## Using it
 
-- The assistant's face at the top is the same as in the panel (robot or comic, picked by the admin under Settings → Defaults; the app takes it over when it opens). It blinks, looks around, listens with a red antenna, thinks with a turning arc and moves its mouth while speaking. Tapping it works like the button.
+- The assistant's face at the top is the same as in the panel (robot or comic, picked by the admin under Settings → Defaults; the app takes it over when it opens). It blinks, looks around, listens with a red antenna, thinks with a turning arc and moves its mouth while speaking. Tapping it works like the button. With "Face shows what it does" on in the panel (V01.0.323), the app's face shows the same as the panel: a magnifier while searching, a calendar sheet, a letter, a light bulb for the smart home, a note pad when remembering, think bubbles, a tick with a wink after something was done, a question mark on an error and "zzz" after 5 quiet minutes. Driven only by the Spark's events, never by the answer's text.
 - Big button: tap, speak; the app notices when you are done (or tap again). Tapping while the Spark speaks stops it.
 - Questions can also be typed. Top left starts a new conversation; after 10 minutes of quiet it starts anew by itself.
 
