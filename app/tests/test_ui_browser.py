@@ -435,6 +435,40 @@ class Browser(unittest.TestCase):
                     await br.close()
         self.run_async(go())
 
+    def test_schreibhilfe_page(self):
+        """Ich → Schreibhilfe (schreib.js, V01.0.332): correct a text, the changes show marked, the reply mode shows
+        the mail field; on a computer and a phone, with the strict CSP, without sideways scrolling."""
+        import profiles
+        helpers.set_config(write_help=True)
+        me = next(u for u in profiles._load()["users"] if u["name"] == "Uitest")["id"]
+        profiles.save_settings(me, {"write_on": True})
+
+        async def go():
+            async with async_playwright() as p:
+                for name, w, h in VIEWS:
+                    br, pg, errors = await self.page(p, w, h, csp=True)
+                    try:
+                        await pg.evaluate("openMe('writebox')")
+                        await pg.wait_for_selector("#wrgo", state="visible", timeout=8000)
+                        await pg.fill("#wrtext", "Das ist ein Feler.")
+                        await pg.click("#wrgo")
+                        await pg.wait_for_selector("#wrdiff ins", timeout=8000)
+                        self.assertEqual(await pg.input_value("#wrres"), "Das ist ein Fehler.")
+                        self.assertIn("Feler", await pg.inner_text("#wrdiff del"))
+                        self.assertFalse(await pg.is_visible("#wrmail"))
+                        await pg.select_option("#wrart", "antwort")
+                        self.assertTrue(await pg.is_visible("#wrmail"))
+                        over = await pg.evaluate("document.documentElement.scrollWidth-window.innerWidth")
+                        self.assertLessEqual(over, 1, f"{name}: {over}px zu breit")
+                        self.assertEqual(errors, [], name)
+                    finally:
+                        await br.close()
+        try:
+            self.run_async(go())
+        finally:
+            helpers.set_config(write_help=False)
+            profiles.save_settings(me, {"write_on": False})
+
     def test_messages_page_sends(self):
         """Ich → Nachrichten (V01.0.192): switch on, write to another profile, it lands in that mailbox; on a
         computer and a phone, without script errors or sideways scrolling."""
@@ -547,7 +581,7 @@ class Browser(unittest.TestCase):
                     self.assertFalse(await pg.is_visible("#chat\\.search_url"))
                     tall = await pg.evaluate("$('pane-feat').getBoundingClientRect().height")
                     # about 45 px per closed line on a computer (limit grows with new rows); open boxes would be several times that
-                    self.assertLess(tall, 3580 if w < 760 else 2760, f"{w}: {tall}px")   # V01.0.326: +1 line "Hilfe zum Spark", V01.0.300: +1 line "Android-App", V01.0.303: +1 line "Spark als MCP-Server", V01.0.304: +1 line "Eindeutiges direkt abrufen", V01.0.307: +1 sub-switch "Vorab holen bei Rückfrage"
+                    self.assertLess(tall, 3650 if w < 760 else 2810, f"{w}: {tall}px")   # V01.0.332: +1 line "Schreibhilfe", V01.0.326: +1 line "Hilfe zum Spark", V01.0.300: +1 line "Android-App", V01.0.303: +1 line "Spark als MCP-Server", V01.0.304: +1 line "Eindeutiges direkt abrufen", V01.0.307: +1 sub-switch "Vorab holen bei Rückfrage"
                     await pg.evaluate("$('chat.search').closest('.fitem').querySelector('.fexp').click()")
                     self.assertTrue(await pg.evaluate("$('chat.search').closest('.fitem').classList.contains('open')"))
                     await pg.evaluate("$('chat.search').closest('.fitem').querySelector('.fexp').click()")

@@ -2,6 +2,7 @@
 
 Every version in one line, newest first (taken from the commit messages, so some lines are German, some English). Older entries have no version number.
 
+- **V01.0.332** · 2026-10-10 · Schreibhilfe Stufe 1 (schreib.py, Admin chat.write_help + Profil write_on, alles aus): Ich → Schreibhilfe korrigiert, glättet, kürzt, macht freundlicher/förmlicher, übersetzt oder entwirft eine Antwort; Änderungen farbig (Panel-Wortvergleich), Text aus Bild, Entwurf ins Postfach (nie senden), MCP-Werkzeug write_text; ein Modellaufruf ohne Werkzeuge, Text zwischen entschärften Marken, nichts gespeichert, Logs/Live nur Art und Länge
 - **V01.0.331** · 2026-10-10 · Assistent: kein waagrechter Rollbalken mehr unter dem Gesicht (der Leuchtschein ragte seit .327 seitlich aus der Karte); Browsertest prüft die Karten auf seitliches Rollen
 - **V01.0.330** · 2026-10-10 · TestFlight: Zertifikate, die ein Lauf für sich anlegt (Schlüssel im Wegwerf-Schlüsselbund), am Ende per App-Store-Connect-API widerrufen; nur Seriennummern aus diesem Schlüsselbund (ios/ci/asc_certs.py, Selbsttest)
 - **V01.0.329** · 2026-10-10 · Zustand → Live und Live-Monitor: der Weg endet mit dem Rückweg zum Gerät („↩ gesprochen am Lautsprecher“ bzw. „↩ Antwort an …“), während des Sprechens wandert der Punkt von Sprechen zum Gerät; „Weg der Anfrage“ hat den letzten Schritt „Zurück“

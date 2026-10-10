@@ -116,6 +116,13 @@ TOOLS = {
     "today": ("read", None, "Heute (Überblick)",
               "Today at a glance: next appointments, the next reminder, unread messages (only numbers and titles).",
               _schema({})),
+    "write_text": ("read", "schreib", "Text verbessern (Schreibhilfe)",
+                   "Correct, smooth, shorten, make friendlier or more formal, or translate a text (e.g. a mail) with "
+                   "the Spark's writing help. Only the improved text comes back; nothing is stored or sent.",
+                   _schema({"text": {"type": "string", "maxLength": 20000},
+                            "art": {"type": "string", "enum": ["korrigieren", "glaetten", "kuerzer", "freundlicher",
+                                                               "foermlicher", "uebersetzen"]},
+                            "sprache": {"type": "string", "enum": ["de", "en", "fr", "es", "it", "nl"]}}, ["text"])),
     "ask_spark": ("ask", None, "Spark fragen (nur lesend)",
                   "Ask the Spark's assistant a question in natural language. It answers as the profile's assistant "
                   "but can only read (with the read tools of this connection); it switches, saves and sends nothing.",
@@ -584,6 +591,13 @@ async def read(name, args, uid):
         q = _text(args, "query", 300)
         hits = await wissen.search(uid, q)
         return "\n\n".join(f"[{wissen.where(h)}]\n{h['text']}" for h in hits) or "Keine passende Stelle in den Dokumenten."
+    if name == "write_text":
+        import schreib
+        try:
+            r = await schreib.assist(uid, {k: args.get(k) for k in ("text", "art", "sprache") if args.get(k)}, client="mcp")
+        except (RuntimeError, asyncio.TimeoutError, HTTPException) as e:
+            return "Die Schreibhilfe konnte den Text gerade nicht bearbeiten: " + str(getattr(e, "detail", "") or e)[:160]
+        return r["text"]
     zone = _zone(uid)
     if name == "calendar_events":
         import calendars

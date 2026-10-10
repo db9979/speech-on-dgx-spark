@@ -33,6 +33,7 @@ All options for running without questions (`--mode api --asr 1.7b --tts 0.6b --y
 
 <!-- New version: add one line at the top here and in CHANGELOG.md, drop the oldest line here (keep 10). Details go to docs/de and docs/en, not into this README. -->
 
+- **V01.0.332** Writing help (off): correct, smooth, shorten, translate mails and other texts or draft a reply, with the changes marked in colour
 - **V01.0.331** Assistant: no more sideways scroll bar under the face
 - **V01.0.330** TestFlight: each run revokes the signing certificates it made, so Apple's certificate limit no longer stops uploads
 - **V01.0.329** Live overview: the way back from speaking to the device shows
@@ -42,7 +43,6 @@ All options for running without questions (`--mode api --asr 1.7b --tts 0.6b --y
 - **V01.0.325** Live overview: kill switch in the picture, cut-off targets red with a lock
 - **V01.0.324** Self-test invitation: waits up to 45 s for the reload, taps a second time if the first tap sent no /api/join, and writes a trace to the log (red on GitHub again)
 - **V01.0.323** iPhone app: the face shows what it does, like the panel (with the admin switch "Face shows what it does")
-- **V01.0.322** Live overview: web search and web pages show under internet
 
 All versions: [CHANGELOG.md](CHANGELOG.md)
 

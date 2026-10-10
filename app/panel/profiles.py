@@ -697,6 +697,7 @@ SETTINGS = {
     "local_first": (False, lambda v: isinstance(v, bool)),  # own sources before the web (lokal.py, admin chat.local_first)
     "prefetch": (False, lambda v: isinstance(v, bool)),     # fetch ahead on a question back (vorab.py, admin chat.prefetch)
     "spark_help": (False, lambda v: isinstance(v, bool)),   # questions about the Spark itself (hilfe.py, admin chat.spark_help)
+    "write_on": (False, lambda v: isinstance(v, bool)),     # Schreibhilfe (schreib.py, admin chat.write_help)
     # daily briefing as a push notification at this local time ("" = off), in the device's time zone
     "briefing_at": ("", lambda v: isinstance(v, str) and re.fullmatch(r"(?:[01]\d|2[0-3]):[0-5]\d|", v)),
     "tz": ("", lambda v: isinstance(v, str) and re.fullmatch(r"(?:[A-Za-z_]+(?:/[A-Za-z0-9_+\-]+){0,2})?", v)),

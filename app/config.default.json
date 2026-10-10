@@ -83,6 +83,7 @@
     "route_model": "off",
     "prefetch": false,
     "spark_help": false,
+    "write_help": false,
     "spark_suggest": false,
     "spark_drawer": false,
     "route_words": "",

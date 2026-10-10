@@ -78,6 +78,11 @@ def fake_llm():
         if not b.get("stream"):
             if pics:   # images.vision_test: the model "reads" the number
                 return {"choices": [{"message": {"content": "Die Zahl ist 42."}}]}
+            if (b["messages"][0].get("content") or "").startswith("Du bist eine Schreibhilfe"):   # schreib.py
+                said = last.get("content") or ""
+                text = said.split("<<<TEXT\n", 1)[1].rsplit("\nTEXT>>>", 1)[0] if "<<<TEXT\n" in said else ""
+                return {"choices": [{"message": {"content": "<think>\n</think>\n" + (text.replace("Feler", "Fehler")
+                                                                                     or "Hallo Anna, [Antwort].")}}]}
             if (b["messages"][0].get("content") or "").startswith("Ordne die Nachricht"):   # intent.ask_model
                 said = last.get("content") or ""
                 return {"choices": [{"message": {"content": json.dumps(

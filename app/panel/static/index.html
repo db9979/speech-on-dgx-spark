@@ -158,6 +158,7 @@
       <div class="setrow"><div class="lbl"><b>E-Mail lesen</b><span>Neue Mails nennen und vorlesen; der Assistent sendet, löscht und markiert nie.</span></div><label class="tgl"><input type="checkbox" id="chat.mail"><i></i></label></div>
       <div class="setrow" data-show="chat.mail" style="margin-left:18px"><div class="lbl"><b>Postfach aufräumen</b><span>Werbung und Newsletter in eigene Ordner sortieren; nie löschen, nie senden, alles umkehrbar.</span></div><label class="tgl"><input type="checkbox" id="chat.mail_tidy"><i></i></label></div>
       <div class="setrow" data-show="chat.mail" style="margin-left:18px"><div class="lbl"><b>Pakete</b><span>Was heute kommt, aus den Versandmails im eigenen Postfach.</span></div><label class="tgl"><input type="checkbox" id="chat.parcels"><i></i></label></div>
+      <div class="setrow"><div class="lbl"><b>Schreibhilfe</b><span>Mails und andere Texte korrigieren, kürzen, übersetzen oder eine Antwort entwerfen; nichts wird gespeichert oder gesendet.</span></div><label class="tgl"><input type="checkbox" id="chat.write_help"><i></i></label></div>
       <div class="setrow"><div class="lbl"><b>Von selbst melden</b><span>Der Assistent meldet sich, wenn wirklich etwas ist: Termine, Smart-Home-Regeln, wichtige Mails, Wetter.</span></div><label class="tgl"><input type="checkbox" id="chat.proactive"><i></i></label></div>
       <div class="setrow" data-show="chat.proactive" style="margin-left:18px"><div class="lbl"><b>Sofort-Meldungen aus Home Assistant</b><span>Regeln hören direkt auf Home Assistant statt jede Minute nachzusehen; kurze Bewegungen gehen nicht verloren. Bleibt im Heimnetz.</span></div><label class="tgl"><input type="checkbox" id="chat.ha_live"><i></i></label></div>
       <div class="setrow" data-show="chat.proactive" style="margin-left:18px"><div class="lbl"><b>Haus-Meldungen über Lautsprecher</b><span>Eine Regel darf ihren eigenen Satz ohne Namen auch laut sagen, z. B. „Es hat geklingelt“, auf Lautsprechern, die Durchsagen annehmen.</span></div><label class="tgl"><input type="checkbox" id="chat.ha_loud"><i></i></label></div>
@@ -788,6 +789,7 @@
     <div id="conbox" class="ptab"></div>
     <div id="trbox" class="ptab"></div>
     <div id="parbox" class="ptab"></div>
+    <div id="writebox" class="ptab"></div>
     <div id="roombox" class="ptab"></div>
     <div id="secbox" class="ptab"><div class="intro">Wo dein Profil angemeldet ist. Ein Gerät, das du nicht mehr nutzt oder verloren hast, kannst du hier sperren.</div>
       <div id="coadmbox"></div>
@@ -841,6 +843,7 @@
 <script src="/static/js/appview.js"></script>
 <script src="/static/js/notaus.js"></script>
 <script src="/static/js/hilfe.js"></script>
+<script src="/static/js/schreib.js"></script>
 <script src="/static/js/start.js"></script>
 </body>
 </html>

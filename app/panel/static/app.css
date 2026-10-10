@@ -839,3 +839,7 @@ body.inchat .hilfefab{display:none}
   .hilfefab{bottom:calc(84px + env(safe-area-inset-bottom));right:12px}
   .hilfedraw{left:0;right:0;bottom:0;top:auto;width:auto;max-height:80vh;height:70vh;border-radius:16px 16px 0 0;padding-bottom:calc(12px + env(safe-area-inset-bottom))}
 }
+/* Schreibhilfe (schreib.js): the changes the panel worked out */
+.wrdiff{white-space:pre-wrap;overflow-wrap:anywhere;border:1px solid var(--line);border-radius:10px;padding:10px 12px;margin:4px 0 8px;line-height:1.5;max-height:340px;overflow:auto}
+.wrdiff del{color:var(--bad);text-decoration:line-through}
+.wrdiff ins{color:var(--ok);text-decoration:none;background:color-mix(in srgb,var(--ok) 14%,transparent);border-radius:3px}
