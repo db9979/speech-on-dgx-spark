@@ -165,7 +165,7 @@ def admin_list(q="", show="", sort="name", page=0, per=None, now=None, extra=Non
         r.update(extra(r["id"]))
     shown = {r["id"] for r in users}
     devices = [dict({k: v[k] for k in ("id", "name", "user", "created") if k in v}, last=last.get(v["id"]),
-                    app=v.get("scope") == "app") for v in devs
+                    app=v.get("scope") == "app", kind=v.get("scope") or "") for v in devs
                if v.get("user") in shown or (want and want in v["name"].lower())]
     return {"users": users, "devices": devices, "total": total, "page": page if per is not None else 0,
             "per": per or total, "all": len(d["users"]), "names": [{"id": u["id"], "name": u["name"]} for u in d["users"]]}

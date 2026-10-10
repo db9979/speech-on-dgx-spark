@@ -619,3 +619,38 @@ class Browser(unittest.TestCase):
                 os.remove(coadmin.FILE)
             except OSError:
                 pass
+
+    def test_device_profiles_are_a_list_or_fixed(self):
+        """Profile und Geräte: own keys pick their profile from a list, keys a profile set up itself
+        (iPhone app, Pebble watch, Home Assistant) show the owner fixed; the three columns line up."""
+        import profiles
+        uid = next(u["id"] for u in profiles._load()["users"] if u["name"] == "Uitest")
+        made = [profiles.add_device("Uiskript", uid), profiles.add_device("Uiphone", uid, scope="app"),
+                profiles.add_device("Uiuhr", uid, scope="watch")]
+        ids = {x["name"]: x["id"] for x in profiles._load()["devices"] if x["name"] in ("Uiskript", "Uiphone", "Uiuhr")}
+
+        async def go():
+            async with async_playwright() as p:
+                for name, w, h in VIEWS:
+                    br, pg, errors = await self.page(p, w, h)
+                    await pg.evaluate("goSec('prof')")
+                    await pg.wait_for_function("!!document.querySelector('#devlist [data-ddel]')", timeout=5000)
+                    self.assertEqual(await pg.evaluate("document.querySelector('#duser').tagName"), "SELECT", name)
+                    self.assertTrue(await pg.evaluate(f"!!document.querySelector('#devlist select[data-dmove=\"{ids['Uiskript']}\"]')"), name)
+                    for fixed in ("Uiphone", "Uiuhr"):
+                        self.assertFalse(await pg.evaluate(f"!!document.querySelector('[data-dmove=\"{ids[fixed]}\"]')"), name)
+                    rows = await pg.evaluate("""[...document.querySelectorAll('#devlist tr')].filter(r=>/Uiskript|Uiphone|Uiuhr/.test(r.textContent)).map(r=>r.textContent)""")
+                    self.assertTrue(any("Pebble-Uhr" in r and "fest" in r for r in rows), rows)
+                    self.assertTrue(any("iPhone-App" in r and "fest" in r for r in rows), rows)
+                    # the profile and the button sit in the middle of their row, like in every other row
+                    off = await pg.evaluate("""[...document.querySelectorAll('#devlist tr')].map(r=>{const c=[...r.children].slice(1).map(td=>{const e=td.firstElementChild;if(!e)return null;const b=e.getBoundingClientRect(),t=td.getBoundingClientRect();return Math.abs((b.top+b.bottom)/2-(t.top+t.bottom)/2)}).filter(x=>x!==null);return Math.max(0,...c)})""")
+                    self.assertLess(max(off), 4, (name, off))
+                    await pg.screenshot(path=os.path.join(os.environ.get("SPEECH_SPARK_SHOTS", helpers.TMP), f"geraete-{name}.png"), full_page=False)
+                    self.assertEqual(errors, [])
+                    await br.close()
+        try:
+            self.run_async(go())
+        finally:
+            for did in ids.values():
+                profiles.delete_device(did)
+        self.assertEqual(len(made), 3)

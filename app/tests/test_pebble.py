@@ -67,6 +67,24 @@ class Pebble(unittest.TestCase):
         self.assertNotIn(token, json.dumps(profiles._load()))   # only the hash is kept
         self.assertEqual(len(a.get("/api/profile/pebble").json()["watches"]), 1)
 
+    def test_admin_sees_it_fixed_and_cannot_move_it(self):
+        a, _ = profile("Pius"), profile("Pia")
+        a.put("/api/profile/settings", json={"pebble_on": True})
+        code = code_of(a.post("/api/profile/pebble/pair", json={"base": BASE}).json()["setup"])
+        self.assertEqual(TestClient(panel.app).post("/api/pebble/pair", json={"code": code}).status_code, 200)
+        uid = next(u["id"] for u in profiles.names() if u["name"] == "Pius")
+        other = next(u["id"] for u in profiles.names() if u["name"] == "Pia")
+        dev = next(x for x in ADMIN.get("/api/admin/profiles").json()["devices"] if x["user"] == uid)
+        self.assertEqual(dev["kind"], "watch")   # the panel shows it with the owner fixed, not as a choice
+        r = ADMIN.put(f"/api/admin/devices/{dev['id']}", json={"user": other})
+        self.assertEqual(r.status_code, 400)
+        self.assertIn("Pebble", r.text)
+        key = ADMIN.post("/api/admin/devices", json={"name": "Skript", "user": uid}).json()["token"]
+        self.assertTrue(key)
+        own = next(x for x in ADMIN.get("/api/admin/profiles").json()["devices"] if x["name"] == "Skript")
+        self.assertEqual(own["kind"], "")   # an own key the admin may move
+        self.assertEqual(ADMIN.put(f"/api/admin/devices/{own['id']}", json={"user": other}).status_code, 200)
+
     def test_code_expires(self):
         profile("Pia")
         uid = next(u["id"] for u in ADMIN.get("/api/admin/profiles").json()["users"] if u["name"] == "Pia")

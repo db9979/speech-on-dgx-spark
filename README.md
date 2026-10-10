@@ -31,6 +31,7 @@ All options for running without questions (`--mode api --asr 1.7b --tts 0.6b --y
 
 <!-- New version: add one line at the top here and in CHANGELOG.md, drop the oldest line here (keep 10). Details go to docs/de and docs/en, not into this README. -->
 
+- **V01.0.257** Profiles and devices: a device's profile is picked from a list instead of typed; iPhone app, speakers, Pebble watch and Home Assistant show "🔒 fixed" with where they are managed (server refuses moving them), rows aligned
 - **V01.0.256** iPhone app: "Sign in with my profile" in Manage the Spark for co-admins and managers (profile code, ends after 15 min without use)
 - **V01.0.255** Users as admins (switch under Settings → Security, off; only with the main admin's second step): co-admin and manager roles for profiles, admin mode under Me → Security with the profile's own code (15 min without use, 8 h at most), the main admin keeps password, roles, backups and admin profiles, Logs → Admin log shows who, app sign-in with the profile code (server)
 - **V01.0.254** Settings: Speech recognition and Security no longer jump to the right on wide screens (scrollbar space always kept), second login step inside one frame, speech recognition model list no longer cut off; browser test checks it
@@ -40,7 +41,6 @@ All options for running without questions (`--mode api --asr 1.7b --tts 0.6b --y
 - **V01.0.250** iPhone app takes over the panel, steps 4–9: manage documents, teach your voice, proactive, security, connect accounts (with a code), features, profiles and backups for admins
 - **V01.0.249** Roles by voice and Wikipedia straight away (admin and profile switch each, off): own roles under Me → Conversation, "Sei jetzt der Butler" / "Sei wieder normal" switched by the panel with fixed rules; knowledge questions from the Wikipedia intro instead of a web search, 24-hour cache
 - **V01.0.248** Features: "Panel areas in the iPhone app" sits below the iPhone app switch (page stays short)
-- **V01.0.247** iPhone app takes over the panel, step 3: "Manage the Spark" with admin password and code, monitoring, logs with "Copy for thread", checks
 
 All versions: [CHANGELOG.md](CHANGELOG.md)
 

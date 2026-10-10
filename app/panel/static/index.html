@@ -465,16 +465,16 @@
       <div class="intro">Jedes Profil hat ein eigenes Gedächtnis und eigene Gespräche. Ein Browser meldet sich im Gespräch-Reiter mit Name und PIN an; was ein Profil weiß, sieht kein anderes und kein Gast.</div>
       <div class="row" id="pfilter" style="margin-top:10px;flex-wrap:wrap;gap:6px"></div>
       <table style="margin-top:10px"><tbody id="proflist"></tbody></table>
-      <div class="row" id="ppager" style="gap:6px;align-items:center"></div><datalist id="pnames"></datalist>
+      <div class="row" id="ppager" style="gap:6px;align-items:center"></div>
       <h2>Neues Profil</h2>
       <div class="row"><input id="pname" placeholder="Name" style="flex:1;min-width:120px"><input id="ppin" type="password" placeholder="PIN (mind. 4 Zeichen)" autocomplete="new-password" style="flex:1;min-width:120px"><button class="b p" id="padd">Anlegen</button></div>
       <div id="pmsg" style="margin-top:8px"></div>
     </div>
     <div class="card"><h2>Geräte</h2>
-      <div class="intro">Lautsprecher oder eigene Programme bekommen einen Geräteschlüssel und gehören fest zu einem Profil. Sie senden ihn im Header <code>X-Speech-Device</code> an <code>/api/chat</code>.</div>
+      <div class="intro">Eigene Programme und Kurzbefehle bekommen hier einen Geräteschlüssel, das Profil wählst du in der Liste. iPhone-App, Lautsprecher, Pebble-Uhr und Home Assistant richtet jedes Profil selbst unter Ich ein: Sie bleiben fest bei diesem Profil und lassen sich hier nur löschen. Der Schlüssel geht im Header <code>X-Speech-Device</code> an <code>/api/chat</code>.</div>
       <table style="margin-top:10px"><tbody id="devlist"></tbody></table>
       <h2>Neues Gerät</h2>
-      <div class="row"><input id="dname" placeholder="z. B. Lautsprecher Küche" style="flex:1;min-width:140px"><input id="duser" list="pnames" maxlength="40" style="flex:1;min-width:120px"><button class="b p" id="dadd">Anlegen</button></div>
+      <div class="row"><input id="dname" placeholder="z. B. Lautsprecher Küche" style="flex:1;min-width:140px"><select id="duser" style="flex:1;min-width:120px" aria-label="Profil"></select><button class="b p" id="dadd">Anlegen</button></div>
       <div id="dmsg" style="margin-top:8px"></div>
     </div>
   </div>

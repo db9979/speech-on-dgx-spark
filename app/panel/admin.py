@@ -194,6 +194,14 @@ async def admin_add_device(request: Request):
         raise HTTPException(400, str(e))
 
 
+# Device keys a profile paired itself (scope): the admin cannot move them to another profile, only delete them.
+FIXED_KINDS = {
+    "app": "Ein iPhone gehört zum Profil, das es gekoppelt hat. Dort entfernen und neu koppeln.",
+    "watch": "Eine Pebble-Uhr gehört zum Profil, das sie gekoppelt hat. Dort entfernen und neu koppeln.",
+    "room": "Der Home-Assistant-Schlüssel gehört zum Profil, das ihn erzeugt hat. Dort einen neuen erzeugen.",
+}
+
+
 @router.put("/api/admin/devices/{did}", dependencies=[Depends(auth), Depends(admin_code)])
 async def admin_set_device(did: str, request: Request):
     body = await request.json()
@@ -202,9 +210,10 @@ async def admin_set_device(did: str, request: Request):
     if did in esp32.speaker_ids():
         # a speaker stays with the profile that set it up (its board, voice print and room settings are kept there)
         raise HTTPException(400, "Ein Lautsprecher gehört zum Profil, das ihn eingerichtet hat. Dort entfernen und neu einrichten.")
-    if any(x["id"] == did and x.get("app") for x in profiles.admin_list()["devices"]):
-        # an iPhone was paired by the profile itself (with its login and second step): it stays there
-        raise HTTPException(400, "Ein iPhone gehört zum Profil, das es gekoppelt hat. Dort entfernen und neu koppeln.")
+    kind = next((x.get("kind") for x in profiles.admin_list()["devices"] if x["id"] == did), "")
+    if kind in FIXED_KINDS:
+        # iPhone app, Pebble watch and Home Assistant room key were paired by the profile itself: they stay there
+        raise HTTPException(400, FIXED_KINDS[kind])
     if not profiles.set_device_user(did, str(body.get("user", ""))):
         raise HTTPException(404, "no such device or profile")
     return {"ok": True}
