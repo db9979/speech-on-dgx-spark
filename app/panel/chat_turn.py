@@ -503,6 +503,14 @@ async def prepare(request):
                                                        body.get("convo") if isinstance(body.get("convo"), str) else None))
         else:
             print(lokal.log_line(lk_kind, lk_why, lk_src), flush=True)
+    # "... und leg es aufs reMarkable" (remarkable.py): the panel puts this answer there afterwards, by a fixed rule
+    # on the person's own words; the model only writes the answer
+    import remarkable
+    rm_after = bool(messages[-1]["role"] == "user" and not pics and not role_cmd and not room_far
+                    and remarkable.answer_wanted(messages[-1]["content"])
+                    and remarkable.answer_ok(who, own_browser, private_ok))
+    if rm_after:
+        system = (system + "\n\n" + remarkable.ANSWER_HINT).strip()
     if ex["hints"] and not pics:
         system = (system + "\n\n" + " ".join(ex["hints"])).strip()
     # once mail or other outside text was read in this answer, nothing in it may change the home or

@@ -31,6 +31,7 @@ All options for running without questions (`--mode api --asr 1.7b --tts 0.6b --y
 
 <!-- New version: add one line at the top here and in CHANGELOG.md, drop the oldest line here (keep 10). Details go to docs/de and docs/en, not into this README. -->
 
+- **V01.0.279** reMarkable: "… and put it on my reMarkable" stores the whole answer, also after a web search; a fixed rule on the person's own words decides, the panel sends it after the answer and says so (before, the switch cut the tool)
 - **V01.0.278** Update log without the pip error "dependency conflicts": rmscene (reMarkable) is installed without its dependencies, packaging stays current (was downgraded to 23.2, breaking wheel); existing installs are repaired on update
 - **V01.0.277** iPhone app: first answer with sound (waits out the route switch after start, replays dropped pieces), "Copy sound log" in settings
 - **V01.0.276** New people by invitation (Personen und Geräte → Neue Personen, off): link, QR code or printed card, valid once, starter packs "Familie"/"Gast plus", second sign-in step required for e-mail, documents and jobs; then Me → "Los geht's" walks through devices and services (the Spark ticks off itself), "Continue on the phone" by QR code with number matching, PIN link and Remind in the profile details, the iPhone app takes invitations
@@ -40,7 +41,6 @@ All options for running without questions (`--mode api --asr 1.7b --tts 0.6b --y
 - **V01.0.272** iPhone app reads function names, groups and locks from the Spark instead of its own lists; profile in the app with functions "n of m on", role and browsers; hands-free and barge-in belong to the profile
 - **V01.0.271** People and devices: one profile in one place with access, functions "n of m on", rights (jobs, app update, upload space), signing browsers out, a guests row and "+ New"
 - **V01.0.270** Unify phase 4: one row building block (setRow) for all settings, what the admin switched off stays visible under Ich with the reason, Ich names functions not switched on, column "Neue Profile" under Wer darf was, presets never turn on a function switch
-- **V01.0.269** Unify phase 3: Funktionen → "Wer darf was" (Spark, each profile, guests; filters new/needs you; phone with profile chips), the admin switches profile switches with an admin log entry, also for managers
 
 All versions: [CHANGELOG.md](CHANGELOG.md)
 

@@ -432,6 +432,60 @@ class Writing(Base):
         self.assertIn("Einkauf", out)
 
 
+class AnswerToRemarkable(Base):
+    """V01.0.279: "... und leg es aufs reMarkable" puts the whole answer there, by a fixed panel rule on the
+    person's own words (the tool was cut by the switch and locked after the web search)."""
+    ASK = "Fass die politische Lage zusammen und leg es auf dem reMarkable ab"
+
+    def test_rule_on_own_words(self):
+        for text in (self.ASK, "Such nach dem Wetter und schick mir das aufs reMarkable",
+                     "Speichere die Zusammenfassung auf meinem reMarkable", "Fasse die Nachrichten zusammen und schreib es aufs Remarkable",
+                     "Summarize the news and put it on my reMarkable"):
+            self.assertTrue(remarkable.answer_wanted(text), text)
+        for text in ("Schreib aufs reMarkable: Milch kaufen", "Was steht auf meinem reMarkable?",
+                     "Notier auf dem reMarkable Brot", "Wie funktioniert ein reMarkable?", "Leg das Licht aufs Sofa", ""):
+            self.assertFalse(remarkable.answer_wanted(text), text)
+        self.assertEqual(remarkable.answer_title(self.ASK), "Fass die politische Lage zusammen")
+
+    def test_panel_sends_the_answer_never_the_model(self):
+        c, uid = self.paired("Rmanswer")
+        helpers.set_config(remarkable_send=True)
+        helpers.LLM_CALLS.clear()
+        r = c.post("/api/chat", json={"messages": [{"role": "user", "content": self.ASK}], "convo": "neu"})
+        said = "".join(e.get("delta", "") for e in helpers.events(r) if e["type"] == "text")
+        self.assertNotIn("liegt jetzt", said)                                  # profile switch rm_send off: nothing
+        self.assertNotIn(remarkable.ANSWER_HINT, json.dumps(helpers.LLM_CALLS, ensure_ascii=False))
+        c.put("/api/profile/settings", json={"rm_send": True})
+        helpers.LLM_CALLS.clear()
+        r = c.post("/api/chat", json={"messages": [{"role": "user", "content": self.ASK}], "convo": "neu"})
+        said = "".join(e.get("delta", "") for e in helpers.events(r) if e["type"] == "text")
+        self.assertIn("liegt jetzt auf deinem reMarkable", said)
+        call = helpers.LLM_CALLS[0]
+        self.assertIn(remarkable.ANSWER_HINT, call["messages"][0]["content"])
+        self.assertNotIn("remarkable_note", [t["function"]["name"] for t in call.get("tools") or []])
+        sent = [m for m in CLOUD[0].listed().values() if m["visibleName"] == "Fass die politische Lage zusammen"]
+        self.assertEqual(len(sent), 1)
+        book = next(d for h, d in CLOUD[0].files.items() if d[:2] == b"PK")
+        with zipfile.ZipFile(io.BytesIO(book)) as z:
+            self.assertIn("Hallo.", z.read("text.xhtml").decode())             # the answer itself
+        self.assertIsNone(remarkable.offer({"who": {"id": uid}, "own": True, "text": self.ASK}))   # no tool as well
+        # a guest never: the same words send nothing
+        before = len(CLOUD[0].files)
+        g = TestClient(panel.app)
+        g.post("/api/chat", json={"messages": [{"role": "user", "content": self.ASK}], "convo": "neu"})
+        self.assertEqual(len(CLOUD[0].files), before)
+
+    def test_failure_is_said(self):
+        c, uid = self.paired("Rmanswerfail")
+        helpers.set_config(remarkable_send=True)
+        c.put("/api/profile/settings", json={"rm_send": True})
+        d = remarkable.load(uid)
+        d["sent"] = {"day": __import__("time").strftime("%Y-%m-%d"), "n": remarkable.SEND_DAY}
+        remarkable.save(uid, d)
+        ok, note = run(remarkable.send_answer(uid, self.ASK, "Text"))
+        self.assertFalse(ok)
+        self.assertIn("ging es nicht", note)
+
 class Guards(unittest.TestCase):
     def test_hosts_and_index_lines(self):
         for url in (remarkable.ROOT_URL, remarkable.DEVICE_URL, "https://storage.googleapis.com/x"):

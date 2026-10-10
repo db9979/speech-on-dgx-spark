@@ -2,6 +2,7 @@
 
 Every version in one line, newest first (taken from the commit messages, so some lines are German, some English). Older entries have no version number.
 
+- **V01.0.279** · 2026-10-10 · reMarkable: „… und leg es aufs reMarkable“ legt die ganze Antwort ab, auch nach einer Websuche; eine feste Regel auf den eigenen Worten entscheidet, das Panel schickt nach der Antwort und sagt Bescheid (vorher schnitt die Weiche das Werkzeug weg)
 - **V01.0.278** · 2026-10-10 · Update-Log ohne pip-Fehler „dependency conflicts“: rmscene (reMarkable) kommt ohne seine Abhängigkeiten, packaging bleibt aktuell (vorher auf 23.2 herabgestuft, wheel kaputt); bestehende Installationen werden beim Update repariert
 - **V01.0.277** · 2026-10-10 · iPhone-App: erste Antwort mit Ton (Tonweg-Wechsel nach dem Start abgewartet, verworfene Stücke nachgespielt), „Ton-Protokoll kopieren“ in den Einstellungen
 - **V01.0.276** · 2026-10-10 · Neue Personen per Einladung (Personen und Geräte → Neue Personen, aus): Link, QR-Code oder Karte, einmal gültig, Startpakete „Familie“/„Gast plus“, zweiter Anmeldeschritt Pflicht für E-Mail, Dokumente und Aufträge; danach führt Ich → „Los geht's“ durch Geräte und Dienste (Spark hakt selbst ab), „Am Handy weitermachen“ per QR-Code mit Zahlenabgleich, PIN-Link und Erinnern in den Profil-Details, iPhone-App nimmt Einladungen an

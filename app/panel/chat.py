@@ -1489,6 +1489,18 @@ async def _answer(request, turn):
                     await out.put({"type": "text", "delta": (" " if st["shown"] else "") + ask_it})
                     trace["said"] += " " + ask_it
                     await sentences.put(ask_it)
+            if getattr(turn, "rm_after", False) and trace["said"].strip():
+                # "... aufs reMarkable": the panel puts the answer there (remarkable.answer_wanted), never the model
+                import remarkable
+                t_rm = time.time()
+                ok, note = await remarkable.send_answer(who["id"], turn.ask_text, trace["said"].strip())
+                print("remarkable: answer", "sent" if ok else "not sent", flush=True)
+                if tr:
+                    tr.step("tool", "remarkable (Panel)", t_rm, time.time(), ok=ok, panel=True)
+                trace["calls"].append({"name": "remarkable (Panel)", "args": "", "result": note})
+                await out.put({"type": "text", "delta": (" " if st["shown"] else "") + note})
+                trace["said"] += " " + note
+                await sentences.put(note)
         except Exception as e:
             status = getattr(getattr(e, "response", None), "status_code", None)
             m = re.match(r"LLM HTTP (\d+)", str(e))

@@ -23,6 +23,8 @@ BENCH = [
     # the own Kiwix archive (V01.0.264): mein, dein, im Archiv, never the uploaded documents
     ("Schaue in deinem Archiv nach, was du über Albert Einstein", "archiv"),
     ("Schau in meinem Archiv nach Sauerteig", "archiv"),
+    # research, then the answer onto the reMarkable (V01.0.279): the switch stays web search, the panel sends it
+    ("Fass die politische Lage zusammen und leg es auf dem reMarkable ab", "websuche"),
     ("Was steht im Archiv über Quasare?", "archiv"),
     ("Durchsuche unser Archiv nach Rom", "archiv"),
     ("Mach das Licht im Wohnzimmer aus", "smarthome"),

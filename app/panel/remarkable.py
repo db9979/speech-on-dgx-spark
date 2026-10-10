@@ -762,6 +762,54 @@ NOTE_HINT = ("remarkable_note puts a note the user dictates onto the user's reMa
 WORDS = re.compile(r"re\s?markable|remarkabel|e-?ink[- ]?tablet", re.I)
 
 
+# "Fass die Lage zusammen und leg es aufs reMarkable": the answer itself goes there. A fixed panel rule on the
+# person's own words decides it, never the model: the tool would be cut by the switch (intent.narrow) and locked
+# after the web search (outside text), and the destination is fixed anyway (a new document in "Spark").
+ANSWER_ASK = re.compile(r"\b(?:aufs|auf(?:\s+(?:das|dem|mein(?:em|en)?|dein(?:em)?))?|ins|an(?:s|\s+(?:das|mein(?:en)?))?|on(?:to)?|to)"
+                        r"\s+(?:(?:my|the)\s+)?re\s?markable\b", re.I)
+ANSWER_VERB = re.compile(r"\b(?:leg|ableg|abzuleg|speicher|schick|send|pack|tu|stell|kopier|übertrag|bring|put|sav|stor)\w*"
+                         r"|\bschreib\w*\s+(?:es|das|sie|die\s+\w+)\b", re.I)
+DICTATE = re.compile(r"re\s?markable\W{0,3}:|notier|diktier|\bdass\b", re.I)
+
+
+def answer_wanted(text):
+    """The person asks for the answer of this message on the reMarkable (not a dictated note)."""
+    text = str(text or "")[:2000]
+    return bool(ANSWER_ASK.search(text) and ANSWER_VERB.search(text) and not DICTATE.search(text))
+
+
+def answer_title(text):
+    """A title from the question without the reMarkable part: "Politische Lage zusammenfassen"."""
+    t = ANSWER_ASK.sub(" ", str(text or "")[:300])
+    t = re.sub(r"\b(?:und|and)?\s*(?:leg|schick|speicher|pack|send|put|save)\w*\s+(?:es|das|sie|it|mir|ihn)?\s*(?:ab|bitte)?\b", " ", t, flags=re.I)
+    t = re.sub(r"\s+", " ", re.sub(r"[^\w\s,.\-äöüÄÖÜß]", " ", t)).strip(" ,.-")
+    t = " ".join(t.split()[:8])
+    return (t[:1].upper() + t[1:]) if t else "Vom Spark"
+
+
+def answer_ok(who, own, private):
+    """May this answer go to the reMarkable at all (same rule as the tool)."""
+    return bool(who and own and private is not False and send_allowed(who["id"]) and load(who["id"]).get("token"))
+
+
+async def send_answer(uid, question, answer):
+    """After the answer: the panel puts it on the reMarkable. Returns (ok, sentence to say)."""
+    if not send_allowed(uid):
+        return False, "Aufs reMarkable schicken ist aus."
+    if not str(answer or "").strip():
+        return False, "Es gab keine Antwort zum Ablegen."
+    try:
+        t = await send(uid, answer_title(question), answer)
+        return True, f"Die Antwort liegt jetzt auf deinem reMarkable im Ordner Spark („{t}“)."
+    except (CloudError, ValueError, httpx.HTTPError, netguard.Blocked) as e:
+        return False, "Aufs reMarkable ging es nicht: " + _redact(e if isinstance(e, ValueError) else type(e).__name__)
+
+
+ANSWER_HINT = ("Der Nutzer will diese Antwort auf seinem reMarkable haben. Das erledigt der Spark nach deiner Antwort "
+               "selbst: schreib einfach die vollständige Antwort, ruf dafür kein Werkzeug auf und sag nicht, dass sie "
+               "schon dort liegt.")
+
+
 def offer(ctx):
     """Only in the profile's own session, only when the person's own words name the reMarkable."""
     who = ctx.get("who")
@@ -769,8 +817,8 @@ def offer(ctx):
         return None
     if not send_allowed(who["id"]) or not load(who["id"]).get("token"):
         return None
-    if not WORDS.search(str(ctx.get("text") or "")):
-        return None
+    if not WORDS.search(str(ctx.get("text") or "")) or answer_wanted(ctx.get("text")):
+        return None   # the whole answer: the panel sends it afterwards (answer_wanted), no tool
     return {"tools": [NOTE_TOOL], "hint": NOTE_HINT, "changes": {"remarkable_note"},
             "filler": {"remarkable_note": ("Ich schicke es aufs reMarkable.", "Sending it to the reMarkable.")}}
 
