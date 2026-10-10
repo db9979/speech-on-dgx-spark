@@ -634,9 +634,11 @@ class Browser(unittest.TestCase):
                 for name, w, h in VIEWS:
                     br, pg, errors = await self.page(p, w, h)
                     await pg.evaluate("goSec('prof')")
-                    # with many profiles from other tests Uitest may sit on a later page: search it
-                    await pg.evaluate("PL.q='Uitest';PL.page=0;loadProf()")
-                    await pg.wait_for_function(f"!!document.querySelector('#devlist [data-ddel=\"{ids['Uiskript']}\"]')", timeout=5000)
+                    # with many profiles from other tests Uitest may sit on a later page: after the first
+                    # load, search its device the way a person would (no race with that first load)
+                    await pg.wait_for_function("!!document.querySelector('#pq') && /\\d/.test(document.querySelector('#ppager').textContent)", timeout=5000)
+                    await pg.fill("#pq", "Uiskript")
+                    await pg.wait_for_function(f"!!document.querySelector('#devlist [data-ddel=\"{ids['Uiskript']}\"]')", timeout=8000)
                     self.assertEqual(await pg.evaluate("document.querySelector('#duser').tagName"), "SELECT", name)
                     self.assertTrue(await pg.evaluate(f"!!document.querySelector('#devlist select[data-dmove=\"{ids['Uiskript']}\"]')"), name)
                     for fixed in ("Uiphone", "Uiuhr"):

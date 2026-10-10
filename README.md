@@ -31,6 +31,7 @@ All options for running without questions (`--mode api --asr 1.7b --tts 0.6b --y
 
 <!-- New version: add one line at the top here and in CHANGELOG.md, drop the oldest line here (keep 10). Details go to docs/de and docs/en, not into this README. -->
 
+- **V01.0.259** Self-test "Profiles and devices" searches the test device instead of waiting on page 1 (GitHub tests green again)
 - **V01.0.258** Own Kiwix archive (Features → Web search, off; profile switch): Wikipedia questions first from your own kiwix-serve, full-text search in chosen books, "Tell me more" reads on, the offline archive answers when the web search fails; Status → Checks → "Check Kiwix", Logs area "Knowledge"
 - **V01.0.257** Profiles and devices: a device's profile is picked from a list instead of typed; iPhone app, speakers, Pebble watch and Home Assistant show "🔒 fixed" with where they are managed (server refuses moving them), rows aligned
 - **V01.0.256** iPhone app: "Sign in with my profile" in Manage the Spark for co-admins and managers (profile code, ends after 15 min without use)
@@ -40,7 +41,6 @@ All options for running without questions (`--mode api --asr 1.7b --tts 0.6b --y
 - **V01.0.252** Settings → Speech output: default voice is a list that fits the model (CustomVoice built-in speakers, Base own voices, VoiceDesign locked); a saved name outside the list is kept
 - **V01.0.251** Docs: iPhone app panel areas with the right version number (V01.0.250)
 - **V01.0.250** iPhone app takes over the panel, steps 4–9: manage documents, teach your voice, proactive, security, connect accounts (with a code), features, profiles and backups for admins
-- **V01.0.249** Roles by voice and Wikipedia straight away (admin and profile switch each, off): own roles under Me → Conversation, "Sei jetzt der Butler" / "Sei wieder normal" switched by the panel with fixed rules; knowledge questions from the Wikipedia intro instead of a web search, 24-hour cache
 
 All versions: [CHANGELOG.md](CHANGELOG.md)
 
