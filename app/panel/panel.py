@@ -65,6 +65,7 @@ import tracelog  # noqa: E402
 import lokal  # noqa: E402
 import features  # noqa: E402
 import remarkable  # noqa: E402
+import rmplus  # noqa: E402
 import join  # noqa: E402
 import onboard  # noqa: E402
 import hintergrund  # noqa: E402
@@ -81,7 +82,7 @@ import begleiter  # noqa: E402
 import systemone  # noqa: E402
 
 app = FastAPI(title="Speech on DGX Spark")
-for _module in (account, admin, chat, update, system, proactive, room, roomlive, tidy, weather, contacts, parcels, telegram, tasks, esp32, iphone, pebblewatch, android, appupdate, apns, transit, logfilter, agent, images, messages, intent, wissen, tracelog, lokal, features, remarkable, join, onboard, hintergrund, stufe, today, offsite, mcpserver, live, hamelden, notaus, hilfe, schreib, begleiter, systemone):
+for _module in (account, admin, chat, update, system, proactive, room, roomlive, tidy, weather, contacts, parcels, telegram, tasks, esp32, iphone, pebblewatch, android, appupdate, apns, transit, logfilter, agent, images, messages, intent, wissen, tracelog, lokal, features, remarkable, rmplus, join, onboard, hintergrund, stufe, today, offsite, mcpserver, live, hamelden, notaus, hilfe, schreib, begleiter, systemone):
     app.include_router(_module.router)
 app.middleware("http")(update_lock)
 
@@ -346,6 +347,7 @@ async def remarkable_sync():
                 continue
             try:
                 await remarkable.due_once(idle=not vorrang.speaking())
+                await rmplus.due_once(idle=not vorrang.speaking())    # Morgenblatt, @Spark, guide ... (rmplus.py)
             except Exception as e:
                 print("remarkable:", type(e).__name__, flush=True)
     asyncio.create_task(loop())

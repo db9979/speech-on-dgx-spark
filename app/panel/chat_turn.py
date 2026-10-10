@@ -596,7 +596,7 @@ async def prepare(request):
     # on the person's own words; the model only writes the answer
     import remarkable
     rm_after = bool(messages[-1]["role"] == "user" and not pics and not role_cmd and not room_far and not mcp
-                    and remarkable.answer_wanted(messages[-1]["content"])
+                    and remarkable.answer_wanted(messages[-1]["content"], (who or {}).get("id"))
                     and remarkable.answer_ok(who, own_browser, private_ok))
     if rm_after:
         system = per_turn(system, remarkable.ANSWER_HINT)

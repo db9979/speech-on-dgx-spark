@@ -33,6 +33,7 @@ All options for running without questions (`--mode api --asr 1.7b --tts 0.6b --y
 
 <!-- New version: add one line at the top here and in CHANGELOG.md, drop the oldest line here (keep 10). Details go to docs/de and docs/en, not into this README. -->
 
+- **V01.0.344** More with the reMarkable (admin sub-switch + one per function under Me → reMarkable, all off): morning sheet as PDF with note lines, "@Spark" questions on paper get an answer next to them, tasks from handwriting (reminder only after a click), meeting summaries, week in review on Fridays, web pages and mail attachments to the reMarkable, one inbox per day, a Spark guide to the reMarkable functions and the service that keeps itself up to date
 - **V01.0.343** Better Spark help: the switch spots help questions by fixed rules, the help knows every page and frequent questions, a "?" at every switch, and it notes where a question came from (speaker, app, Telegram)
 - **V01.0.342** Spark companion on PC and Mac (off): taskbar and menu-bar program with writing help, Ask Spark, dictation, notes, state and kill-switch button, each with its own hotkey; set per device in the panel
 - **V01.0.341** Me → Von selbst: switches and buttons of the smart home rules line up again (computer and phone)
@@ -42,7 +43,6 @@ All options for running without questions (`--mode api --asr 1.7b --tts 0.6b --y
 - **V01.0.337** Live overview: the Spark's warnings (slower answers, quality test, memory …) show at their place in the picture
 - **V01.0.336** Live overview: queues at hearing and speaking, a star for priority requests, background work under "Running now"
 - **V01.0.335** Ask Spark now lives in the face at the bottom right (no button of its own): it knows the page, also over Me, and takes spoken or typed questions; Me shows admin switches turned on meanwhile without reloading
-- **V01.0.334** Live overview: Home Assistant Assist over Wyoming shows as device "Home Assistant" (hearing, speaking), refused Wyoming senders under Entrance, every MCP tool call of a program, Home Assistant rules and everything the Spark says by itself with its note target (Web Push, Telegram, Android), a state dot on hearing, speaking and the language model
 
 All versions: [CHANGELOG.md](CHANGELOG.md)
 

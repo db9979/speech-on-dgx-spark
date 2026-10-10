@@ -89,6 +89,8 @@ TIMEOUT = httpx.Timeout(60, connect=10)
 CONCURRENT = 6
 SEND_DAY = 20               # uploads per profile and day
 MAX_SEND = 60_000           # characters of one upload
+MAX_FILE = 30 * 1024**2     # one EPUB or PDF (a web page, a mail attachment)
+AUTO_DAY = 30               # documents the Spark makes itself per profile and day (rmplus.py)
 SIDE = documents.SIDE
 _user = {}                  # uid -> (user token, until)
 _busy = set()               # profiles being compared right now
@@ -738,9 +740,11 @@ async def _new_doc(uid, name, files):
     return {"hash": dh, "id": name, "subfiles": len(entries), "size": sum(e["size"] for e in entries)}
 
 
-async def _add_to_root(uid, new):
+async def _add_to_root(uid, new, swap=None):
     """Adds documents to the root index (generation-checked, a few tries when another device was faster).
-    Only appends lines; the existing ones are written back unchanged."""
+    Only appends lines; the existing ones are written back unchanged, except the Spark's own documents in
+    swap ({doc id: new root line}: the guide, the day's inbox), which must still be there."""
+    swap = swap or {}
     for attempt in range(4):
         rh, gen = await root(uid)
         raw = await blob(uid, rh, "root.docSchema")
@@ -750,6 +754,9 @@ async def _add_to_root(uid, new):
         if len(entries) != len(lines):
             raise CloudError(f"root index has {len(lines) - len(entries)} lines the Spark does not understand; nothing written")
         have = {e["id"] for e in entries}
+        if set(swap) - have:
+            raise CloudError("the document to renew is gone; nothing written")
+        entries = [swap.get(e["id"], e) for e in entries]
         entries += [e for e in new if e["id"] not in have]
         entries.sort(key=lambda e: e["id"])
         body = ("4\n" + f"0:.:{len(entries)}:{sum(e['size'] for e in entries)}\n" +
@@ -786,45 +793,90 @@ def where(uid, items=None):
 async def send(uid, title, text):
     """A new EPUB with this text in the chosen folder (default "Spark", created when missing). Only adds a new
     document; nothing existing is changed. Returns {"title", "where", "lost"} (lost: the chosen folder is gone)."""
-    notaus.stop("aktion", uid)   # the Notaus (or the profile's own) holds every action off (notaus.py)
-    title = _clean(title, 80) or "Vom Spark"
     text = re.sub(r"[\x00-\x08\x0b\x0c\x0e-\x1f\x7f]", "", str(text or ""))[:MAX_SEND].strip()
     if not text:
         raise ValueError("nothing to send")
-    d = load(uid)
+    title = _clean(title, 80) or "Vom Spark"
+    return await place(uid, title, epub(title, text))
+
+
+def _count(d, key, most):
+    """Today's uploads of one kind ("sent": asked for, "auto": made by the Spark itself); over the limit: ValueError."""
     day = time.strftime("%Y-%m-%d")
-    s = d.get("sent") if isinstance(d.get("sent"), dict) and d["sent"].get("day") == day else {"day": day, "n": 0}
-    if s["n"] >= SEND_DAY:
-        raise ValueError(f"heute schon {SEND_DAY} Mal geschickt; morgen wieder")
+    s = d.get(key) if isinstance(d.get(key), dict) and d[key].get("day") == day else {"day": day, "n": 0}
+    if s["n"] >= most:
+        raise ValueError(f"heute schon {most} Mal geschickt; morgen wieder")
+    return s
+
+
+def _content(kind, title):
+    if kind == "pdf":
+        return json.dumps({"coverPageNumber": 0, "documentMetadata": {"title": title}, "dummyDocument": False,
+                           "extraMetadata": {}, "fileType": "pdf", "fontName": "", "formatVersion": 1, "lineHeight": -1,
+                           "margins": 125, "orientation": "portrait", "pageCount": 0, "pages": [], "tags": [],
+                           "textScale": 1}, sort_keys=True).encode()
+    return json.dumps({"coverPageNumber": -1, "documentMetadata": {"title": title}, "dummyDocument": False,
+                       "extraMetadata": {}, "fileType": "epub", "fontName": "", "formatVersion": 1, "lineHeight": -1,
+                       "margins": 100, "orientation": "portrait", "pageCount": 0, "pages": [], "tags": [],
+                       "textScale": 1}, sort_keys=True).encode()
+
+
+async def place(uid, title, data, kind="epub", own="", auto=False):
+    """Puts one EPUB or PDF into the chosen folder (default "Spark", created when missing).
+    own: a name for one of the Spark's OWN documents (the guide, the day's inbox): when the Spark made it before
+    and it is still there, that document gets the new text (its other files, e.g. the person's marks, stay);
+    else a new one. Nothing the person made is ever changed. auto: made by the Spark itself (rmplus.py), its own
+    daily limit. Returns {"title", "where", "lost", "id", "renewed"}."""
+    notaus.stop("aktion", uid)   # the Notaus (or the profile's own) holds every action off (notaus.py)
+    if kind not in ("epub", "pdf") or not data:
+        raise ValueError("nothing to send")
+    if len(data) > MAX_FILE:
+        raise ValueError(f"zu groß (höchstens {MAX_FILE // 1024**2} MB)")
+    title = _clean(title, 80) or "Vom Spark"
+    key = "auto" if auto else "sent"
+    s = _count(load(uid), key, AUTO_DAY if auto else SEND_DAY)
     try:
         items = await refresh_library(uid)
     except CloudError as e:     # a few unreadable entries must not stop a new document: the last listing
         print("remarkable: listing before sending:", _redact(e), "- using the last listing", flush=True)
         items = library(uid)
-    folder, path = where(uid, items)
-    lost = bool(load(uid).get("target")) and not folder
-    if not folder:
-        folder = next((i for i, it in items.items() if it.get("folder") and it["name"] == "Spark" and not it["parent"]), None)
-    new = []
-    if not folder:
-        folder = str(uuid.uuid4())
-        new.append(await _new_doc(uid, folder, [(folder + ".metadata", _meta("Spark", "", "CollectionType"))]))
-    did = str(uuid.uuid4())
-    book = epub(title, text)
-    content = json.dumps({"coverPageNumber": -1, "documentMetadata": {"title": title}, "dummyDocument": False,
-                          "extraMetadata": {}, "fileType": "epub", "fontName": "", "formatVersion": 1, "lineHeight": -1,
-                          "margins": 100, "orientation": "portrait", "pageCount": 0, "pages": [], "tags": [],
-                          "textScale": 1}, sort_keys=True).encode()
-    new.append(await _new_doc(uid, did, [(did + ".content", content), (did + ".metadata", _meta(title, folder, "DocumentType")),
-                                        (did + ".pagedata", b"\n"), (did + ".epub", book)]))
-    await _add_to_root(uid, new)
+    mine = (load(uid).get("own") or {}).get(own) if own else None
+    renew = mine if mine and ID.fullmatch(str(mine)) and mine in items and not items[mine].get("folder") else None
+    swap, new, lost, path = {}, [], False, ""
+    if renew:
+        old = parse_index(await blob(uid, items[renew]["h"], renew + ".docSchema"))
+        keep = [(e["id"], e) for e in old if not e["id"].endswith((".epub", ".pdf", ".content", ".metadata"))]
+        meta = _meta(title, items[renew].get("parent") or "", "DocumentType")
+        fresh = [await _put(uid, x, n) for n, x in ((renew + "." + kind, data), (renew + ".content", _content(kind, title)),
+                                                    (renew + ".metadata", meta))]
+        entries = sorted([e for _, e in keep] + fresh, key=lambda e: e["id"])
+        body = ("3\n" + "".join(f"{e['hash']}:0:{e['id']}:0:{e['size']}\n" for e in entries)).encode()
+        dh = hashlib.sha256(b"".join(bytes.fromhex(e["hash"]) for e in entries)).hexdigest()
+        await _put(uid, body, renew + ".docSchema", h=dh)
+        swap[renew] = {"hash": dh, "id": renew, "subfiles": len(entries), "size": sum(e["size"] for e in entries)}
+        did, path = renew, path_of(items, items[renew].get("parent")) if items[renew].get("parent") else ""
+    else:
+        folder, path = where(uid, items)
+        lost = bool(load(uid).get("target")) and not folder
+        if not folder:
+            folder = next((i for i, it in items.items() if it.get("folder") and it["name"] == "Spark" and not it["parent"]), None)
+        if not folder:
+            folder = str(uuid.uuid4())
+            new.append(await _new_doc(uid, folder, [(folder + ".metadata", _meta("Spark", "", "CollectionType"))]))
+        did = str(uuid.uuid4())
+        new.append(await _new_doc(uid, did, [(did + ".content", _content(kind, title)),
+                                            (did + ".metadata", _meta(title, folder, "DocumentType")),
+                                            (did + ".pagedata", b"\n"), (did + "." + kind, data)]))
+    await _add_to_root(uid, new, swap)
     d = load(uid)
     s["n"] += 1
-    d["sent"] = s
+    d[key] = s
+    if own:
+        d.setdefault("own", {})[own] = did
     if lost:
         d.pop("target", None)    # the chosen folder is gone: from now on "Spark" again, and the person is told
     save(uid, d)
-    return {"title": title, "where": path, "lost": lost}
+    return {"title": title, "where": path or "Spark", "lost": lost, "id": did, "renewed": bool(renew)}
 
 
 def _told(r):
@@ -857,10 +909,14 @@ ANSWER_VERB = re.compile(r"\b(?:leg|ableg|abzuleg|speicher|schick|send|pack|tu|s
 DICTATE = re.compile(r"re\s?markable\W{0,3}:|notier|diktier|\bdass\b", re.I)
 
 
-def answer_wanted(text):
-    """The person asks for the answer of this message on the reMarkable (not a dictated note)."""
+def answer_wanted(text, uid=None):
+    """The person asks for the answer of this message on the reMarkable (not a dictated note, and not a web page
+    or a mail attachment the profile can put there itself, rmplus.py)."""
     text = str(text or "")[:2000]
-    return bool(ANSWER_ASK.search(text) and ANSWER_VERB.search(text) and not DICTATE.search(text))
+    if not (ANSWER_ASK.search(text) and ANSWER_VERB.search(text) and not DICTATE.search(text)):
+        return False
+    import rmplus
+    return not (uid and rmplus.tools_for(uid, text))
 
 
 def answer_title(text):
@@ -904,17 +960,30 @@ def offer(ctx):
         return None
     if not send_allowed(who["id"]) or not load(who["id"]).get("token"):
         return None
-    if not WORDS.search(str(ctx.get("text") or "")) or answer_wanted(ctx.get("text")):
+    if not WORDS.search(str(ctx.get("text") or "")) or answer_wanted(ctx.get("text"), who["id"]):
         return None   # the whole answer: the panel sends it afterwards (answer_wanted), no tool
-    return {"tools": [NOTE_TOOL], "hint": NOTE_HINT, "changes": {"remarkable_note"},
-            "filler": {"remarkable_note": ("Ich schicke es aufs reMarkable.", "Sending it to the reMarkable.")}}
+    import rmplus     # a web page or a mail attachment (rmplus.py, rm_web), only with an address / attachment named
+    more = rmplus.tools_for(who["id"], ctx.get("text"))
+    return {"tools": [NOTE_TOOL] + more, "hint": NOTE_HINT + (" " + rmplus.HINT if more else ""),
+            "changes": {"remarkable_note", "remarkable_page", "remarkable_attachment"},
+            "filler": {"remarkable_note": ("Ich schicke es aufs reMarkable.", "Sending it to the reMarkable."),
+                       "remarkable_page": ("Ich hole die Seite.", "Fetching the page."),
+                       "remarkable_attachment": ("Ich suche den Anhang.", "Looking for the attachment.")}}
 
 
 async def tool(name, args, ctx):
     uid = (ctx.get("who") or {}).get("id")
-    if name != "remarkable_note" or not send_allowed(uid):
+    if name not in ("remarkable_note", "remarkable_page", "remarkable_attachment") or not send_allowed(uid):
         return "Aufs reMarkable schicken ist aus."
+    import rmplus
     try:
+        if name != "remarkable_note":
+            if not rmplus.on("rmweb", uid):
+                return "Webseiten und Anhänge aufs reMarkable sind aus."
+            return await rmplus.tool(name, args, uid)
+        if rmplus.on("rminbox", uid):       # one inbox document per day (rmplus.py)
+            r = await rmplus.inbox_add(uid, args.get("title"), args.get("text"))
+            return "Steht jetzt im Eingang des Tages auf dem reMarkable " + _told(r)
         r = await send(uid, args.get("title"), args.get("text"))
         return "Liegt jetzt auf dem reMarkable " + _told(r)
     except (CloudError, ValueError, httpx.HTTPError, netguard.Blocked, netguard.TooLarge) as e:
@@ -935,6 +1004,7 @@ def _on(prof=Depends(browser_profile)):
 
 
 def public(uid):
+    import rmplus
     d, items = load(uid), library(uid)
     want = wanted(uid, items, d)
     lib = []
@@ -950,7 +1020,8 @@ def public(uid):
             "pictures": _pictures(uid), "send": send_allowed(uid), "connect_url": CONNECT_URL,
             "target": where(uid, items)[0], "target_path": where(uid, items)[1],
             "sent_today": (d.get("sent") or {}).get("n", 0) if (d.get("sent") or {}).get("day") == time.strftime("%Y-%m-%d") else 0,
-            "send_day": SEND_DAY, "busy": uid in _busy, "progress": list(_progress.get(uid) or [])}
+            "send_day": SEND_DAY, "busy": uid in _busy, "progress": list(_progress.get(uid) or []),
+            "plus": rmplus.public(uid)}
 
 
 @router.get("/api/profile/remarkable", dependencies=[Depends(assistant)])

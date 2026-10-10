@@ -204,8 +204,8 @@ class _Session:
                 last["unread"] = b"\\Seen" not in f.group(1)
         return out
 
-    def body(self, uid):
-        typ, data = self.c.uid("FETCH", str(uid), f"(BODY.PEEK[]<0.{MAX_FETCH}>)")
+    def body(self, uid, most=MAX_FETCH):
+        typ, data = self.c.uid("FETCH", str(uid), f"(BODY.PEEK[]<0.{int(most)}>)")
         raw = next((p[1] for p in data if isinstance(p, tuple) and p[1]), None) if typ == "OK" else None
         return email.message_from_bytes(raw, policy=email.policy.default) if raw else None
 
@@ -402,6 +402,27 @@ def read(uid, ref):
             f"Date: {_date(msg.get('Date')):%d.%m.%Y %H:%M}\nSubject: {_hdr(msg.get('Subject', ''))}")
     return _wrap(head + ("\nAttachments: " + ", ".join(files[:10]) if files else "")
                  + "\n\n" + (text or "(no text)"))
+
+
+def attachment(uid, query="", days=30, most=30 * 1024 * 1024):
+    """(file name, bytes, "pdf" | "epub") of the newest PDF or EPUB attached to a message of the last days that
+    fits the words, or None (rmplus.py: "Leg den Anhang ... aufs reMarkable"). Only these two kinds, checked by
+    their first bytes, at most `most` bytes (and what one fetch brings, MAX_FETCH)."""
+    found, _, _ = find(uid, query, days, False, 10)
+    accts = {a["id"]: a for a in get(uid)["accounts"]}
+    for aid, u, _ in found:
+        with _Session(accts[aid]) as s:
+            msg = s.body(int(u), most * 4 // 3 + 256 * 1024)     # base64 is a third bigger
+        for part in (msg.walk() if msg is not None else ()):
+            name = _hdr(part.get_filename() or "")
+            if part.is_multipart() or not name:
+                continue
+            data = part.get_payload(decode=True) or b""
+            kind = "pdf" if data[:5] == b"%PDF-" else "epub" if data[:2] == b"PK" and name.lower().endswith(".epub") else ""
+            whole = b"%%EOF" in data[-2048:] if kind == "pdf" else b"PK\x05\x06" in data[-65536:]   # not cut off
+            if kind and whole and 0 < len(data) <= most:
+                return re.sub(r"[\x00-\x1f\x7f/\\<>\"]", "", name)[:120] or "Anhang", data, kind
+    return None
 
 
 def briefing(uid):

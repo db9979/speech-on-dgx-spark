@@ -33,6 +33,7 @@ Alle Optionen ohne Rückfragen (`--mode api --asr 1.7b --tts 0.6b --yes` …) st
 
 <!-- New version: add one line at the top here and in CHANGELOG.md, drop the oldest line here (keep 10). Details go to docs/de and docs/en, not into this README. -->
 
+- **V01.0.344** Mehr mit dem reMarkable (Admin-Unterschalter + je Funktion unter Ich → reMarkable, alles aus): Morgenblatt als PDF mit Notizlinien, „@Spark“-Fragen auf Papier bekommen eine Antwort daneben, Aufgaben aus der Handschrift (Erinnerung erst nach Klick), Besprechungen zusammengefasst, Wochenrückblick freitags, Webseiten und Mail-Anhänge aufs reMarkable, Eingang pro Tag, Spark-Anleitung zu den reMarkable-Funktionen und dem Dienst, die sich selbst aktuell hält
 - **V01.0.343** Hilfe zum Spark antwortet besser: die Weiche erkennt Hilfe-Fragen mit festen Regeln, die Hilfe kennt jede Seite und häufige Fragen, ein „?“ an jedem Schalter, und sie merkt, woher gefragt wird (Lautsprecher, App, Telegram)
 - **V01.0.342** Spark-Begleiter am PC und Mac (aus): Programm in Taskleiste und Menüleiste mit Schreibhilfe, Frag Spark, Diktieren, Meldungen, Zustand und Notaus-Knopf, je eigenes Tastenkürzel; pro Gerät im Panel eingestellt
 - **V01.0.341** Ich → Von selbst: Schalter und Knöpfe bei den Smart-Home-Regeln stehen wieder sauber untereinander (Rechner und Handy)
@@ -42,7 +43,6 @@ Alle Optionen ohne Rückfragen (`--mode api --asr 1.7b --tts 0.6b --yes` …) st
 - **V01.0.337** Live-Übersicht: Hinweise wie „Antworten langsamer“ an der passenden Stelle im Bild
 - **V01.0.336** Live-Übersicht: Warteschlangen, Vorrang-Stern und Hintergrundarbeit sichtbar
 - **V01.0.335** Frag Spark steckt jetzt im Kopf unten rechts (kein eigener Knopf): er kennt die Seite, auch über Ich, und nimmt Fragen gesprochen oder getippt; Ich zeigt neu eingeschaltete Admin-Schalter ohne Neuladen
-- **V01.0.334** Live-Übersicht: Home Assistant Assist (Wyoming) , MCP-Werkzeuge, HA-Regeln, Benachrichtigungen und Dienste-Zustand sichtbar
 
 Alle Versionen: [CHANGELOG.md](CHANGELOG.md)
 

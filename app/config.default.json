@@ -104,6 +104,7 @@
     "remarkable": false,
     "remarkable_send": false,
     "remarkable_fresh": false,
+    "remarkable_plus": false,
     "my_status": false,
     "person_priority": false,
     "person_priority_wait": 2,

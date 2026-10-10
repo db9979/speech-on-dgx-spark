@@ -1,7 +1,7 @@
 // Ich → reMarkable (remarkable.py): connect the own my.remarkable account with a one-time code, pick
 // notebooks or folders, compare now, disconnect; "Aufs reMarkable" under answers (rm_send).
 // Names from the cloud are put in with esc()/textContent only.
-let RM_ON=false,RMSEND_ON=false,RMFRESH_ON=false,RM=null,rmTimer=null,rmFind='',RMPICK=null,RMALL=null;
+let RM_ON=false,RMSEND_ON=false,RMFRESH_ON=false,RMPLUS_ON=false,RM=null,rmTimer=null,rmFind='',RMPICK=null,RMALL=null;
 const rmWhen=x=>x?new Date(x*1000).toLocaleString([], {dateStyle:'short',timeStyle:'short'}):t('noch nie','never');
 const RMKIND={folder:['Ordner','folder'],notebook:['Notizbuch','notebook'],pdf:['PDF','PDF'],epub:['E-Book','e-book']};
 async function showRm(){const box=$('rmbox');if(!box)return;clearTimeout(rmTimer);if(!PROFILE||!RM_ON){box.innerHTML='';return}
@@ -32,7 +32,8 @@ async function showRm(){const box=$('rmbox');if(!box)return;clearTimeout(rmTimer
       ${d.send?`<h3>${t('Ablegen in','Put into')}</h3>
       <select id="rmtarget"><option value="">${t('Spark (Standard)','Spark (default)')}</option>${lib.filter(x=>x.folder).map(x=>`<option value="${esc(x.id)}"${x.id===d.target?' selected':''}>${esc(x.path)}</option>`).join('')}</select>
       <div class="fh">${t('Dorthin legt der Spark neue Dokumente; Bestehendes ändert er nie. Fehlt der Ordner später, nimmt er wieder „Spark“ und sagt es dir.','New documents go there; the Spark never changes anything that exists. If the folder is gone later, it takes "Spark" again and tells you.')}</div>
-      <div class="fh">${t('Heute aufs reMarkable geschickt: ','Sent to the reMarkable today: ')}${d.sent_today} / ${d.send_day}</div>`:''}`}
+      <div class="fh">${t('Heute aufs reMarkable geschickt: ','Sent to the reMarkable today: ')}${d.sent_today} / ${d.send_day}</div>`:''}
+      ${d.send&&RMPLUS_ON&&d.plus?rmPlus(d.plus):''}`}
   box.innerHTML=head+body+`<div class="fh" id="rmmsg"></div>`;
   xbind(box,showRm);
   if(!conn)RMALL=null;if($('rmall'))$('rmall').onchange=e=>{RMALL=e.target.checked};
@@ -49,9 +50,32 @@ async function showRm(){const box=$('rmbox');if(!box)return;clearTimeout(rmTimer
   if($('rmdel'))$('rmdel').onclick=async()=>{if(!confirm(t('reMarkable trennen? Alle gelesenen Notizbücher verschwinden vom Spark (auf dem reMarkable bleibt alles).','Disconnect the reMarkable? All notebooks read disappear from the Spark (everything stays on the reMarkable).')))return;
     try{const r=await (await api('/api/profile/remarkable',{method:'DELETE'})).json();xmsg('rmmsg',t('Getrennt. Entferne das Gerät „desktop-linux“ auch auf my.remarkable.com.','Disconnected. Also remove the device "desktop-linux" on my.remarkable.com.'));RM=null;showRm().then(()=>xmsg('rmmsg',r.hint||''))}
     catch(e){xmsg('rmmsg',e.message,true)}};
+  if($('rmat'))$('rmat').onchange=e=>{if(e.target.value)saveSet('rm_morning_at',e.target.value)};
+  box.querySelectorAll('[data-rmtodo]').forEach(b=>b.onclick=async()=>{const id=b.dataset.rmtodo,remind=b.dataset.do==='remind',w=$('rmdue-'+id);
+    const due=remind&&w&&w.value?new Date(w.value).getTime():0;if(remind&&!due)return;
+    try{await api('/api/profile/remarkable/todo',xjson('POST',remind?{id,do:'remind',due}:{id,do:'drop'}));showRm().then(()=>xmsg('rmmsg',remind?t('Erinnerung eingetragen.','Reminder set.'):t('Weg.','Removed.')))}
+    catch(e){xmsg('rmmsg',e.message,true)}});
+  if($('rmguide'))$('rmguide').onclick=async()=>{xmsg('rmmsg',t('Lege die Anleitung ab …','Putting the guide there …'));
+    try{const r=await (await api('/api/profile/remarkable/guide',{method:'POST'})).json();xmsg('rmmsg',(r.renewed?t('Anleitung erneuert in „','Guide renewed in "'):t('Anleitung liegt in „','Guide is in "'))+r.where+(L==='en'?'"':'“'))}
+    catch(e){xmsg('rmmsg',e.message,true)}};
   if(d.busy)rmTimer=setTimeout(()=>{if(box.offsetParent===null||document.hidden)return;const a=document.activeElement,id=a&&box.contains(a)?a.id:'',c=id&&a.selectionStart!=null?a.selectionStart:null;
     showRm().then(()=>{const f=id&&$(id);if(f){f.focus();if(c!=null)f.setSelectionRange(c,c)}})},5e3)}
 // an answer onto the reMarkable, only on the person's click (chat.js adds the button)
 async function rmSend(text,b){b.disabled=true;const first=(text.split('\n').find(x=>x.trim())||'').replace(/[#*_`>]/g,'').trim();
   try{const r=await (await api('/api/profile/remarkable/send',xjson('POST',{title:first.slice(0,60)||t('Vom Spark','From the Spark'),text}))).json();b.textContent=t('Auf dem reMarkable: ','On the reMarkable: ')+r.where+' / '+r.title+(r.lost?t(' (gewählter Ordner fehlt)',' (chosen folder is gone)'):'')}
   catch(e){b.disabled=false;b.textContent=e.message}}
+// more with the reMarkable (rmplus.py): one switch per part, the Morgenblatt's time, the tasks found on paper
+const RMPARTS=[['rmmorning','rm_morning',['Morgenblatt','Morning sheet'],['Jeden Morgen ein Blatt mit Terminen, Erinnerungen, Wetter und Nachrichten, darunter Linien für Notizen.','Every morning a sheet with appointments, reminders, weather and news, with lines for notes below.']],
+  ['rmask','rm_ask',['@Spark auf Papier','@Spark on paper'],['Schreib „@Spark“ und eine Frage in ein gelesenes Notizbuch; die Antwort liegt nach dem nächsten Abgleich daneben.','Write "@Spark" and a question in a notebook that is read; the answer lies next to it after the next comparison.']],
+  ['rmtodo','rm_todo',['Aufgaben vom reMarkable','Tasks from the reMarkable'],['Zeilen mit ☐, [ ], „TODO“ oder „Aufgabe:“ erscheinen hier; eine Erinnerung erst auf deinen Klick.','Lines with ☐, [ ], "TODO" or "Aufgabe:" show up here; a reminder only on your click.']],
+  ['rmmeet','rm_meet',['Besprechungen zusammenfassen','Meeting summaries'],['Notizbuch oder erste Zeile „Besprechung“, „Meeting“ oder „Protokoll“: eine halbe Stunde nach der letzten Änderung Zusammenfassung mit Aufgaben, dazu eine Mitteilung.','Notebook or first line "Besprechung", "Meeting" or "Protokoll": half an hour after the last change a summary with tasks, plus a note.']],
+  ['rmweek','rm_week',['Wochenrückblick','Week in review'],['Freitags ab 17 Uhr ein Blatt mit dem Wichtigsten der Woche und dem, was offen ist.','On Fridays from 5 pm a sheet with the week’s main points and what is open.']],
+  ['rmweb','rm_web',['Webseiten und Anhänge','Web pages and attachments'],['„Leg die Seite https://… aufs reMarkable“ und „Leg den Anhang der Mail von … aufs reMarkable“ (PDF oder EPUB, letzte 30 Tage).','"Put the page https://… on the reMarkable" and "Put the attachment of the mail from … on the reMarkable" (PDF or EPUB, last 30 days).']],
+  ['rminbox','rm_inbox',['Eingang pro Tag','Daily inbox'],['Diktierte Notizen sammeln sich in einem Dokument „Eingang“ pro Tag statt einzeln.','Dictated notes gather in one "Eingang" document per day instead of one each.']],
+  ['rmguide','rm_guide',['Spark-Anleitung','Spark guide'],['Eine Anleitung zu allen reMarkable-Funktionen und zum Dienst; der Spark hält sie selbst aktuell.','A guide to all reMarkable functions and the service; the Spark keeps it up to date itself.']]];
+function rmPlus(p){const at=new Date(Date.now()+864e5);at.setHours(9,0,0,0);const dflt=new Date(at-at.getTimezoneOffset()*6e4).toISOString().slice(0,16);
+  return `<h3>${t('Mehr mit dem reMarkable','More with the reMarkable')}</h3>
+  ${RMPARTS.filter(x=>p.spark[x[0]]).map(x=>xsw(x[1],t(...x[2]),t(...x[3]))).join('')}
+  ${p.on.rmmorning?`<div class="rowin"><span>${t('Morgenblatt um','Morning sheet at')}</span><input type="time" id="rmat" value="${esc(p.morning_at)}"></div>`:''}
+  ${p.on.rmguide?`<div class="row"><button class="b" type="button" id="rmguide">${t('Anleitung jetzt ablegen','Put the guide there now')}</button></div>`:''}
+  ${p.on.rmtodo?`<h3>${t('Aufgaben vom Papier','Tasks from paper')}</h3>${p.todos.length?`<ul class="facts small">${p.todos.map(x=>`<li><span style="flex:1"><b>${esc(x.text)}</b><br><small class="mut">${esc(x.doc)}${x.page?', '+t('Seite ','page ')+x.page:''}</small><br><input type="datetime-local" id="rmdue-${esc(x.id)}" value="${dflt}"></span><button class="b p" type="button" data-rmtodo="${esc(x.id)}" data-do="remind">${t('Erinnern','Remind')}</button><button class="b" type="button" data-rmtodo="${esc(x.id)}" data-do="drop">${t('Weg','Remove')}</button></li>`).join('')}</ul>`:`<div class="fh">${t('Noch keine gefunden.','None found yet.')}</div>`}`:''}`}

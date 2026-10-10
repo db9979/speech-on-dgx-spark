@@ -1136,6 +1136,22 @@ def recent(uid, since=0, until=None, k=8, shared_only=False):
              "source": r["source"], "changed": int(r["w"] or 0)} for r in rows]
 
 
+def notebook_pages(uid, since=0, doc=None, most=400):
+    """The reMarkable pages changed since then (rmplus.py: @Spark, tasks, meetings, the week), newest first:
+    [{"doc", "name", "page", "text", "done", "changed"}]; done False while the handwriting is not read yet.
+    doc: only that notebook's pages, whenever they changed."""
+    if not os.path.exists(db_path(uid)):
+        return []
+    t = "COALESCE(NULLIF(p.changed, 0), NULLIF(d.changed, 0), d.created, 0)"
+    cond, args = ("p.doc=?", [doc]) if doc else (f"{t} >= ?", [int(since or 0)])
+    with _Db(uid) as con:
+        rows = con.execute(f"SELECT p.doc, d.name, p.page, p.text, p.done, {t} AS w FROM pagetext p JOIN docs d ON d.id=p.doc "
+                           f"WHERE d.source='remarkable' AND d.use=1 AND {cond} ORDER BY w DESC, p.page LIMIT ?",
+                           args + [int(most)]).fetchall()
+    return [{"doc": r["doc"], "name": r["name"], "page": r["page"], "text": r["text"] or "", "done": bool(r["done"]),
+             "changed": int(r["w"] or 0)} for r in rows]
+
+
 def sqlite_copy(src, dst):
     """A consistent copy of a database file, also while it is written (for the backup)."""
     a = sqlite3.connect(f"file:{src}?mode=ro", uri=True, timeout=15)
