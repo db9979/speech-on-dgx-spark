@@ -453,6 +453,8 @@ else
   [ -x "$PREFIX/venv-panel/bin/pip" ] && "$PREFIX/venv-panel/bin/pip" install -q --no-deps "packaging>=24"
   make_venv panel fastapi "uvicorn[standard]" python-multipart "httpx[http2]" psutil num2words numpy pypdf icalendar recurring-ical-events cryptography segno sherpa-onnx huggingface_hub "packaging>=24" "pillow==11.3.0" "onnxruntime==1.22.1" "tokenizers==0.22.1" "pypdfium2==4.30.0"   # pictures (images.py), meaning search (docembed.py), scanned pages (documents.py): fixed versions
   "$PREFIX/venv-panel/bin/pip" install -q --no-deps "rmscene==0.8.0"   # reMarkable pages (remarkable.py)
+  # passkeys (passkey.py): python-fido2 only needs cryptography (above); alone, so its cap on cryptography moves nothing
+  "$PREFIX/venv-panel/bin/pip" install -q --no-deps "fido2==2.2.1"
 fi
 
 # ---------------------------------------------------------------- engines (vLLM + vllm-omni, native)

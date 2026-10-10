@@ -330,7 +330,10 @@ $('profuser').onkeydown=e=>{if(e.key==='Enter')$('profpin').focus()};
 $('profpin').onkeydown=e=>{if(e.key==='Enter')$('proflogin').click()};
 $('profcode').onkeydown=e=>{if(e.key==='Enter')$('proflogin').click()};
 $('proflogin').onclick=async()=>{try{const r=await (await api('/api/profile/login',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({name:$('profuser').value,pin:$('profpin').value,code:$('profcode').value,trust:$('proftrust').checked})})).json();
-    if(r.code){$('profcodebox').style.display='';$('profmsg').textContent='';$('profcode').focus();return}  // second step: code next
+    if(r.code){$('profcodebox').style.display='';$('profmsg').textContent='';$('profcode').focus();  // second step: code next (or a passkey)
+      if(window.pkLoginOffer)pkLoginOffer($('profcodebox'),r.passkey,async(pk)=>{if(!pk){$('profmsg').textContent=t('Passkey abgebrochen. Der Code geht auch.','Passkey cancelled. The code works too.');return}
+        try{await api('/api/profile/login',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({name:$('profuser').value,pin:$('profpin').value,passkey:pk,trust:$('proftrust').checked})});location.reload()}
+        catch(e){$('profmsg').textContent=t('Passkey nicht angenommen.','Passkey not accepted.')}});return}
     $('profcode').value='';$('profcodebox').style.display='none';
     if(GATE){location.reload();return}
     const who=await (await fetch('/api/whoami')).json();SETUP=who.setup||null;setProfile(who.profile);closeProf()}

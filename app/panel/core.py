@@ -17,6 +17,7 @@ sys.path.insert(0, os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
 import coadmin  # noqa: E402
 import guard  # noqa: E402
 import mfa  # noqa: E402
+import passkey  # noqa: E402
 import profiles  # noqa: E402
 from common import load_config  # noqa: E402
 
@@ -241,6 +242,11 @@ def _login_key(request: Request, who):
     return "p:" + raw.split(".")[2] if u and u["id"] == who and raw.count(".") == 3 else None
 
 
+def confirm_login(request: Request, who):
+    """The login a confirmation (code, passkey) of `who` in this request belongs to (see _login_key)."""
+    return _login_key(request, who)
+
+
 def window_until(who, login, now=None):
     now = now if now is not None else time.time()
     with _wlock:
@@ -294,19 +300,23 @@ def confirmed_until(request: Request):
 
 
 async def confirm_code(request: Request, who, name, fresh=False):
+    """A code from the authenticator app (or a recovery code) in X-Speech-Code, or a passkey's signature in
+    X-Speech-Passkey (passkey.py); the 428 answer carries the passkey challenge when the person has one here."""
     if not mfa.enabled(who):
         return
     login = _login_key(request, who)
     if not fresh and window_until(who, login):
         return
+    answer = passkey.header_answer(request)
     code = request.headers.get(CODE_HEADER, "")
-    if not code:
-        raise HTTPException(428, "code required")
+    if answer is None and not code:
+        raise HTTPException(428, "code required", headers=passkey.options_header(who, request, login))
     guard.check(request, name)
-    if not mfa.verify(who, code):
+    ok = passkey.finish_auth(who, answer, request, login) if answer is not None else mfa.verify(who, code)
+    if not ok:
         guard.failed(request, name, what="code")
         await asyncio.sleep(1)
-        raise HTTPException(428, "wrong code")
+        raise HTTPException(428, "wrong code", headers=passkey.options_header(who, request, login))
     guard.succeeded(request, name)
     _open_window(who, login)
 

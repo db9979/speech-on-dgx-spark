@@ -45,10 +45,13 @@ $('themebtn').onclick=()=>{const cur=document.documentElement.dataset.theme||'au
   try{localStorage.setItem('theme',nx)}catch{}
   $('themebtn').title={auto:t('Farbschema: wie das System','Theme: follow the system'),light:t('Farbschema: hell','Theme: light'),dark:t('Farbschema: dunkel','Theme: dark')}[nx]};
 // 428: the change needs a current code from the authenticator app (second login step); asked here, then sent again.
-const api=async(p,o={},code)=>{const r=await fetch(p,code?Object.assign({},o,{headers:Object.assign({},o.headers||{},{'X-Speech-Code':code})}):o);
-  if(r.status===428){const wrong=/wrong/.test(await r.text());
-    const c=prompt((wrong?t('Code falsch. ','Wrong code. '):'')+t('Bitte den aktuellen Code aus deiner Authenticator-App eingeben (oder einen Wiederherstellungscode):','Please enter the current code from your authenticator app (or a recovery code):'));
-    if(c&&c.trim()){const r2=await api(p,o,c.trim());if(window.confirmRefresh)confirmRefresh();return r2}throw new Error(t('Abgebrochen: ohne Code keine Änderung.','Cancelled: no change without a code.'))}
+// With a passkey (passkey.py) the 428 answer carries its challenge; confirmAsk (mfa.js) offers it next to the code.
+const api=async(p,o={},code)=>{const hd=!code?null:typeof code==='string'?{'X-Speech-Code':code}:{'X-Speech-Passkey':code.pk};
+  const r=await fetch(p,hd?Object.assign({},o,{headers:Object.assign({},o.headers||{},hd)}):o);
+  if(r.status===428){const wrong=/wrong/.test(await r.text());let opt=null;
+    try{const h=r.headers.get('X-Speech-Passkey-Options');if(h)opt=JSON.parse(atob(h.replace(/-/g,'+').replace(/_/g,'/')+'==='.slice((h.length+3)%4)))}catch{}
+    const a=window.confirmAsk?await confirmAsk(wrong,opt):null;
+    if(a){const r2=await api(p,o,a.code||{pk:a.pk});if(window.confirmRefresh)confirmRefresh();return r2}throw new Error(t('Abgebrochen: ohne Code keine Änderung.','Cancelled: no change without a code.'))}
   if(r.status===401&&!/^\/api\/(login|password|profile)/.test(p)&&window.showLogin){if(typeof elevated==='function'&&elevated()){location.reload();return r}showLogin()}if(!r.ok){let t=await r.text();try{t=JSON.parse(t).detail||t}catch{}throw new Error(t)}
   if(o.method&&o.method!=='GET'&&/^\/api\/(config|admin\/|profile\/)/.test(p)&&!/^\/api\/profile\/(setup|handoff)/.test(p))whoSoon();   // a switch may have changed
   return r};

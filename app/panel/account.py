@@ -25,6 +25,7 @@ import echo  # noqa: E402
 import mail  # noqa: E402
 import memtidy  # noqa: E402
 import mfa  # noqa: E402
+import passkey  # noqa: E402
 import profiles  # noqa: E402
 import homeassistant  # noqa: E402
 import features  # noqa: E402
@@ -42,6 +43,7 @@ from core import (  # noqa: E402
     admin_code,
     admin_code_fresh,
     confirmed_until,
+    confirm_login,
     end_window,
     browser_profile,
     secret_profile,
@@ -117,13 +119,21 @@ def whoami(request: Request, creds: HTTPBasicCredentials | None = Depends(securi
 
 
 async def second_step(request: Request, body, who, name, what):
-    """After the right password or PIN: the app's code, unless the second step is off or this
-    browser is trusted. Returns None to go on, or the answer asking for the code."""
+    """After the right password or PIN: the app's code or a passkey (passkey.py), unless the second step is off
+    or this browser is trusted. Returns None to go on, or the answer asking for the code."""
     if not mfa.enabled(who) or mfa.trusted(who, request):
         return None
+    if isinstance(body.get("passkey"), dict):
+        if passkey.finish_auth(who, body["passkey"], request, "login"):
+            return None
+        guard.failed(request, name, what=what)
+        await asyncio.sleep(1)
+        raise HTTPException(401, "wrong code")
     code = str(body.get("code", "")).strip()
     if not code:
-        return Response('{"code": true}', media_type="application/json")  # the code field comes next
+        # the code field comes next; with a passkey for this host also its challenge
+        opt = passkey.begin_auth(who, request, "login") if passkey.available(who, request) else None
+        return Response(json.dumps({"code": True, **({"passkey": opt} if opt else {})}), media_type="application/json")
     if not mfa.verify(who, code):
         guard.failed(request, name, what=what)
         await asyncio.sleep(1)
@@ -575,6 +585,100 @@ def profile_untrust(tid: str, request: Request, prof=Depends(browser_profile)):
         raise HTTPException(404, "no such browser")
     guard.log("trusted_browser_removed", ip=guard.client_ip(request), name=prof["name"], uid=prof["id"])
     return {"ok": True}
+
+
+# Passkeys (passkey.py): listed and removed freely, added only with a fresh code (a new way in).
+_KID = re.compile(r"[0-9a-f]{16}")
+
+
+async def _passkey_body(request):
+    raw = await request.body()
+    if len(raw) > 16384:
+        raise HTTPException(413, "too large")
+    try:
+        body = json.loads(raw or b"{}")
+    except ValueError:
+        raise HTTPException(400, "invalid JSON")
+    if not isinstance(body, dict):
+        raise HTTPException(400, "invalid JSON")
+    return body
+
+
+def _passkeys(who, request):
+    return {"items": passkey.listing(who, passkey.rp_id(request)), "host": passkey.rp_id(request) or "",
+            "ready": passkey._lib() is not None, "max": passkey.MAX_KEYS}
+
+
+async def _passkey_begin(request, who, label):
+    guard.limit(request, "trust", uid=who)
+    opt = passkey.begin_add(who, label, request, confirm_login(request, who))
+    if not opt:
+        raise HTTPException(409, "Passkeys gehen nur über die Adresse mit Namen (https), nicht über eine IP-Adresse, "
+                                 f"und höchstens {passkey.MAX_KEYS} pro Person.")
+    return opt
+
+
+async def _passkey_finish(request, who):
+    guard.limit(request, "trust", uid=who)
+    body = await _passkey_body(request)
+    kid = passkey.finish_add(who, body.get("sid"), body.get("response"), str(body.get("name", ""))[:60], request,
+                             confirm_login(request, who))
+    if not kid:
+        raise HTTPException(400, "Passkey nicht angenommen. Bitte noch einmal von vorn.")
+    guard.log("passkey_added", ip=guard.client_ip(request), uid=None if who == mfa.ADMIN else who)
+    return _passkeys(who, request)
+
+
+def _passkey_remove(request, who, kid):
+    guard.limit(request, "trust", uid=who)
+    if not _KID.fullmatch(kid) or not passkey.remove(who, kid):
+        raise HTTPException(404, "no such passkey")
+    guard.log("passkey_removed", ip=guard.client_ip(request), uid=None if who == mfa.ADMIN else who)
+    return _passkeys(who, request)
+
+
+@router.get("/api/mfa/passkeys", dependencies=[Depends(main_auth)])
+def admin_passkeys(request: Request):
+    return _passkeys(mfa.ADMIN, request)
+
+
+@router.post("/api/mfa/passkeys/begin", dependencies=[Depends(main_auth), Depends(admin_code_fresh)])
+async def admin_passkey_begin(request: Request):
+    return await _passkey_begin(request, mfa.ADMIN, "Admin")
+
+
+@router.post("/api/mfa/passkeys/finish", dependencies=[Depends(main_auth)])
+async def admin_passkey_finish(request: Request):
+    return await _passkey_finish(request, mfa.ADMIN)
+
+
+@router.delete("/api/mfa/passkeys/{kid}", dependencies=[Depends(main_auth)])
+def admin_passkey_remove(kid: str, request: Request):
+    return _passkey_remove(request, mfa.ADMIN, kid)
+
+
+@router.get("/api/profile/mfa/passkeys", dependencies=[Depends(assistant)])
+def profile_passkeys(request: Request, prof=Depends(browser_profile)):
+    return _passkeys(prof["id"], request)
+
+
+@router.post("/api/profile/mfa/passkeys/begin", dependencies=[Depends(assistant)])
+async def profile_passkey_begin(request: Request, prof=Depends(secret_profile_fresh)):
+    if request.scope.get("speech_app_area"):
+        raise HTTPException(403, "only in the browser")
+    return await _passkey_begin(request, prof["id"], prof["name"])
+
+
+@router.post("/api/profile/mfa/passkeys/finish", dependencies=[Depends(assistant)])
+async def profile_passkey_finish(request: Request, prof=Depends(browser_profile)):
+    if request.scope.get("speech_app_area"):
+        raise HTTPException(403, "only in the browser")
+    return await _passkey_finish(request, prof["id"])
+
+
+@router.delete("/api/profile/mfa/passkeys/{kid}", dependencies=[Depends(assistant)])
+def profile_passkey_remove(kid: str, request: Request, prof=Depends(browser_profile)):
+    return _passkey_remove(request, prof["id"], kid)
 
 
 @router.post("/api/confirm/end")  # open: ends only the confirmation window of the logins this request carries

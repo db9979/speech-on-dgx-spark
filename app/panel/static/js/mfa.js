@@ -13,7 +13,7 @@ async function mfaShow(id,base){const box=$(id);if(!box)return;let s;
   else box.innerHTML=`<div class="fh">${t('An','On')}${s.since?' '+t('seit','since')+' '+new Date(s.since*1000).toLocaleDateString():''}. ${t('Wiederherstellungscodes übrig:','Recovery codes left:')} <b>${s.codes_left}</b>${s.codes_left<3?' – '+t('bitte neue erzeugen.','please make new ones.'):''}</div>
       <div class="row" style="margin-top:6px;flex-wrap:wrap"><button class="b" type="button" data-a="recovery">${t('Neue Wiederherstellungscodes','New recovery codes')}</button>${admin?`<button class="b" type="button" data-a="forget">${t('Allen Browsern das Vertrauen entziehen','Forget trusted browsers')}</button>`:''}<button class="b" type="button" data-a="setup">${t('Neu einrichten','Set up again')}</button><button class="b" type="button" data-a="disable">${t('Ausschalten','Switch off')}</button><span class="mfamsg"></span></div>`;
   box.querySelectorAll('button[data-a]').forEach(b=>b.onclick=()=>mfaAct(box,base,b.dataset.a));
-  if(s.on)mfaTrusted(box,base)}
+  if(s.on)mfaTrusted(box,base).then(()=>pkShow(box,base))}
 // the trusted browsers one by one: short name, since when, last use, until when; "Entfernen" makes that one ask again
 async function mfaTrusted(box,base){let d;try{d=await (await api(base+'/trusted')).json()}catch{return}
   const wrap=document.createElement('div');wrap.className='mfatrust';const lbl=document.createElement('label');lbl.textContent=t('Vertraute Browser','Trusted browsers');
@@ -68,3 +68,68 @@ function confirmShow(until){CONF_UNTIL=until||0;let bar=$('confbar');
   tick();clearInterval(CONF_T);CONF_T=setInterval(tick,20e3)}
 async function confirmRefresh(){try{const w=await (await fetch('/api/whoami',{cache:'no-store'})).json();confirmShow(w.confirm_until||0)}catch{}}
 window.trustUi=trustUi;window.confirmShow=confirmShow;window.confirmRefresh=confirmRefresh;
+// Passkeys (Face ID, Touch ID, Windows Hello; passkey.py, V01.0.295): wherever a code is asked, the browser may sign
+// the panel's challenge instead. Only over the address with a name (https), never over an IP address.
+const PK=window.PublicKeyCredential&&navigator.credentials?{}:null;
+const b64d=s=>Uint8Array.from(atob(String(s).replace(/-/g,'+').replace(/_/g,'/')+'==='.slice((String(s).length+3)%4)),c=>c.charCodeAt(0));
+const b64e=b=>{const u=new Uint8Array(b);let s='';for(let i=0;i<u.length;i++)s+=String.fromCharCode(u[i]);return btoa(s).replace(/\+/g,'-').replace(/\//g,'_').replace(/=+$/,'')};
+async function pkGet(o){const pk=o.publicKey;
+  const c=await navigator.credentials.get({publicKey:{challenge:b64d(pk.challenge),rpId:pk.rpId,userVerification:pk.userVerification,timeout:pk.timeout,
+    allowCredentials:(pk.allowCredentials||[]).map(x=>({type:x.type,id:b64d(x.id),transports:x.transports}))}});
+  const r=c.response,out={clientDataJSON:b64e(r.clientDataJSON),authenticatorData:b64e(r.authenticatorData),signature:b64e(r.signature)};
+  if(r.userHandle)out.userHandle=b64e(r.userHandle);
+  return {id:c.id,rawId:b64e(c.rawId),type:c.type,response:out,clientExtensionResults:{}}}
+async function pkCreate(o){const pk=o.publicKey;
+  const c=await navigator.credentials.create({publicKey:{rp:pk.rp,user:Object.assign({},pk.user,{id:b64d(pk.user.id)}),challenge:b64d(pk.challenge),
+    pubKeyCredParams:pk.pubKeyCredParams,timeout:pk.timeout,attestation:pk.attestation||'none',authenticatorSelection:pk.authenticatorSelection,
+    excludeCredentials:(pk.excludeCredentials||[]).map(x=>({type:x.type,id:b64d(x.id),transports:x.transports}))}});
+  const r=c.response;
+  return {id:c.id,rawId:b64e(c.rawId),type:c.type,clientExtensionResults:{},
+    response:{clientDataJSON:b64e(r.clientDataJSON),attestationObject:b64e(r.attestationObject),transports:r.getTransports?r.getTransports():[]}}}
+// "428 code required" with a passkey challenge: a small window with "Mit Passkey" (a tap, which the browser needs),
+// "Code eingeben" (the authenticator app or a recovery code) and "Abbrechen". Resolves {pk} / {code} / null.
+function confirmAsk(wrong,opt){
+  const ask=()=>{const c=prompt((wrong?t('Code falsch. ','Wrong code. '):'')+t('Bitte den aktuellen Code aus deiner Authenticator-App eingeben (oder einen Wiederherstellungscode):','Please enter the current code from your authenticator app (or a recovery code):'));return c&&c.trim()?{code:c.trim()}:null};
+  if(!opt||!PK)return Promise.resolve(ask());
+  return new Promise(done=>{const m=document.createElement('div');m.className='modal';m.id='pkmodal';const card=document.createElement('div');card.className='card modalcard';
+    const h=document.createElement('h3');h.textContent=t('Bestätigen','Confirm');const p=document.createElement('div');p.className='fh';
+    p.textContent=(wrong?t('Das hat nicht geklappt. ','That did not work. '):'')+t('Mit deinem Passkey (Face ID, Touch ID, Windows Hello) oder dem Code aus der Authenticator-App.','With your passkey (Face ID, Touch ID, Windows Hello) or the code from the authenticator app.');
+    const row=document.createElement('div');row.className='row';row.style.marginTop='10px';row.style.flexWrap='wrap';const msg=document.createElement('div');msg.className='fh';
+    const mk=(txt,cls,fn)=>{const b=document.createElement('button');b.type='button';b.className='b'+(cls?' '+cls:'');b.textContent=txt;b.onclick=fn;row.appendChild(b);return b};
+    const close=v=>{m.remove();done(v)};
+    mk(t('Mit Passkey','With passkey'),'p',async()=>{try{const a=await pkGet(opt.options);close({pk:b64e(new TextEncoder().encode(JSON.stringify({sid:opt.sid,response:a})))})}
+      catch(e){msg.textContent=t('Passkey abgebrochen oder nicht gefunden. Code geht auch.','Passkey cancelled or not found. A code works too.')}});
+    mk(t('Code eingeben','Enter code'),'',()=>{m.remove();done(ask())});mk(t('Abbrechen','Cancel'),'',()=>close(null));
+    card.append(h,p,row,msg);m.appendChild(card);document.body.appendChild(m);row.firstChild.focus()})}
+// the login forms: after the right password or PIN the answer may carry a passkey challenge
+function pkLoginOffer(box,opt,send){let b=box.querySelector('.pklogin');if(!opt||!PK){if(b)b.remove();return}
+  if(!b){b=document.createElement('button');b.type='button';b.className='b p pklogin';b.style.marginTop='8px';b.textContent=t('Mit Passkey anmelden','Sign in with passkey');box.appendChild(b)}
+  b.onclick=async()=>{try{const a=await pkGet(opt.options);await send({sid:opt.sid,response:a})}catch(e){send(null,e)}}}
+// Einstellungen → Sicherheit and Ich → Sicherheit: the person's passkeys, add one (fresh code), remove one
+async function pkShow(box,base){let d;try{d=await (await api(base+'/passkeys')).json()}catch{return}
+  const wrap=document.createElement('div');wrap.className='pkwrap';const lbl=document.createElement('label');lbl.textContent=t('Passkeys','Passkeys');
+  const ul=document.createElement('ul');ul.className='facts';const day=x=>x?new Date(x*1000).toLocaleDateString():t('noch nie','never');
+  for(const x of d.items){const li=document.createElement('li'),sp=document.createElement('span'),sm=document.createElement('small');
+    sp.textContent=x.name;sm.className='mut';sm.textContent=x.rp+' · '+t('seit ','since ')+day(x.added)+' · '+t('zuletzt ','last used ')+day(x.last);
+    sp.append(document.createElement('br'),sm);const b=document.createElement('button');b.type='button';b.className='b';b.textContent=t('Entfernen','Remove');
+    b.onclick=async()=>{if(!confirm(t('Passkey „','Remove passkey "')+x.name+t('“ entfernen?','"?')))return;try{await api(base+'/passkeys/'+encodeURIComponent(x.id),{method:'DELETE'})}catch(e){mfaMsg(box,e.message,true);return}mfaShow(box.id,base)};
+    li.append(sp,b);ul.appendChild(li)}
+  if(!d.items.length){const li=document.createElement('li');li.className='mut';li.textContent=t('Noch keiner.','None yet.');ul.appendChild(li)}
+  const fh=document.createElement('div');fh.className='fh';
+  fh.textContent=!d.ready?t('Auf dem Spark fehlt die Passkey-Bibliothek (kommt mit dem nächsten Update).','The passkey library is missing on the Spark (comes with the next update).')
+    :!d.host?t('Passkeys gehen nur über die Adresse mit Namen (https), nicht über eine IP-Adresse.','Passkeys only work over the address with a name (https), not over an IP address.')
+    :!PK?t('Dieser Browser kann keine Passkeys.','This browser cannot do passkeys.')
+    :t('Statt den Code abzutippen: Face ID, Touch ID oder Windows Hello. Sicherer als der Code, weil keine fremde Seite ihn abfangen kann. Der Code aus der App bleibt als Rückfall.','Instead of typing the code: Face ID, Touch ID or Windows Hello. Safer than the code, because no other page can catch it. The app code stays as the way back.');
+  wrap.append(lbl,ul,fh);
+  if(d.ready&&d.host&&PK&&d.items.length<d.max){const row=document.createElement('div');row.className='row';row.style.flexWrap='wrap';
+    const name=document.createElement('input');name.placeholder=t('Name, z. B. iPhone','Name, e.g. iPhone');name.maxLength=60;name.style.maxWidth='200px';
+    const add=document.createElement('button');add.type='button';add.className='b';add.textContent=t('Passkey hinzufügen','Add passkey');
+    add.onclick=async()=>{let o;try{o=await (await api(base+'/passkeys/begin',{method:'POST'})).json()}catch(e){mfaMsg(box,e.message,true);return}
+      // the browser needs a tap of its own for creating the passkey
+      add.textContent=t('Jetzt anlegen','Create now');add.className='b p';
+      add.onclick=async()=>{try{const a=await pkCreate(o.options);
+        await api(base+'/passkeys/finish',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({sid:o.sid,response:a,name:name.value.trim()})});mfaShow(box.id,base)}
+        catch(e){mfaMsg(box,/NotAllowed|abort/i.test(e.name+e.message)?t('Abgebrochen.','Cancelled.'):e.message,true)}}};
+    row.append(name,add);wrap.appendChild(row)}
+  box.appendChild(wrap)}
+window.pkLoginOffer=pkLoginOffer;window.confirmAsk=confirmAsk;

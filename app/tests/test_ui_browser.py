@@ -592,6 +592,43 @@ class Browser(unittest.TestCase):
                     self.assertEqual(errors, [], name)
                     await br.close()
         self.run_async(go())
+    def test_passkey_confirms_a_change(self):
+        """V01.0.295 (passkey.py): a change that needs a fresh code answers 428 with the passkey challenge; the page
+        offers "Mit Passkey", the browser signs (here a stand-in for Face ID, signing with tests.test_passkey's
+        software authenticator) and the same request goes through."""
+        import json as _json
+        import mfa
+        import passkey
+        import profiles
+        from tests.test_passkey import Authenticator
+        from tests.test_zweiter_schritt import Req, fake_second_step
+        uid = next(u["id"] for u in profiles.names() if u["name"] == "Uitest")
+        auth = Authenticator()
+        req = Req(headers={"host": "speech.example.de"})
+
+        async def go():
+            async with async_playwright() as p:
+                br, pg, errors = await self.page(p, 1280, 900)   # signed in before the second step is on
+                fake_second_step(uid)
+                o = passkey.begin_add(uid, "Uitest", req, "setup")
+                self.assertTrue(passkey.finish_add(uid, o["sid"], auth.create(o["options"]), "Test", req, "setup"))
+                await pg.context.set_extra_http_headers({"x-forwarded-host": "speech.example.de"})
+                await pg.expose_function("signForTest", lambda challenge: _json.dumps(auth.get({"publicKey": {"challenge": challenge}})))
+                await pg.evaluate("""()=>{navigator.credentials.get=async o=>{const enc=b=>btoa(String.fromCharCode(...new Uint8Array(b))).replace(/\\+/g,'-').replace(/\\//g,'_').replace(/=+$/,'');
+                  const a=JSON.parse(await signForTest(enc(o.publicKey.challenge))),dec=s=>Uint8Array.from(atob(s.replace(/-/g,'+').replace(/_/g,'/')+'==='.slice((s.length+3)%4)),c=>c.charCodeAt(0)).buffer;
+                  return {id:a.id,rawId:dec(a.rawId),type:'public-key',response:{clientDataJSON:dec(a.response.clientDataJSON),authenticatorData:dec(a.response.authenticatorData),signature:dec(a.response.signature),userHandle:null}}}}""")
+                done = pg.evaluate("api('/api/profile/mfa/recovery',{method:'POST'}).then(r=>r.status,e=>'error: '+e.message)")
+                task = asyncio.ensure_future(done)
+                await pg.wait_for_selector("#pkmodal button.p", timeout=5000)
+                await pg.click("#pkmodal button.p")
+                self.assertEqual(await task, 200)
+                self.assertGreater(passkey.listing(uid)[0]["last"], 0)
+                self.assertEqual(errors, [])
+                await br.close()
+        try:
+            self.run_async(go())
+        finally:
+            mfa.disable(uid)
 
     def test_profile_as_admin(self):
         """V01.0.255 (coadmin.py): the main admin gives a role under Einstellungen → Sicherheit; the profile opens

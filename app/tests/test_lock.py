@@ -45,7 +45,7 @@ class Lock(unittest.TestCase):
         self.assertIn('install -q --no-deps --require-hashes -r "$PANEL_LOCK"', text)
         line = re.search(r"make_venv panel (.*?)(?:\s+#|$)", text, re.M).group(1)
         listed = [x.strip('"') for x in re.findall(r'"[^"]+"|\S+', line)]
-        listed += re.findall(r'install -q --no-deps "(rmscene==[^"]+)"', text)   # without its packaging<24 pin
+        listed += re.findall(r'install -q --no-deps "((?:rmscene|fido2)==[^"]+)"', text)   # alone: rmscene's packaging<24 pin, fido2's cryptography cap
         self.assertEqual(sorted(listed), sorted(wanted()))
         with open(os.path.join(ROOT, ".github", "workflows", "tests.yml")) as f:
             self.assertIn("--no-deps --require-hashes -r app/requirements-panel.lock", f.read())

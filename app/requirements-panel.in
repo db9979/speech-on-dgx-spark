@@ -22,4 +22,6 @@ onnxruntime==1.22.1
 tokenizers==0.22.1
 pypdfium2==4.30.0
 rmscene==0.8.0
+# fido2: passkeys for the second login step (passkey.py)
+fido2==2.2.1
 packaging>=24
