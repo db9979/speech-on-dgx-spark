@@ -49,7 +49,7 @@ const api=async(p,o={},code)=>{const r=await fetch(p,code?Object.assign({},o,{he
     const c=prompt((wrong?t('Code falsch. ','Wrong code. '):'')+t('Bitte den aktuellen Code aus deiner Authenticator-App eingeben (oder einen Wiederherstellungscode):','Please enter the current code from your authenticator app (or a recovery code):'));
     if(c&&c.trim())return api(p,o,c.trim());throw new Error(t('Abgebrochen: ohne Code keine Änderung.','Cancelled: no change without a code.'))}
   if(r.status===401&&!/^\/api\/(login|password|profile)/.test(p)&&window.showLogin){if(typeof elevated==='function'&&elevated()){location.reload();return r}showLogin()}if(!r.ok){let t=await r.text();try{t=JSON.parse(t).detail||t}catch{}throw new Error(t)}
-  if(o.method&&o.method!=='GET'&&/^\/api\/(config|admin\/|profile\/)/.test(p))whoSoon();   // a switch may have changed
+  if(o.method&&o.method!=='GET'&&/^\/api\/(config|admin\/|profile\/)/.test(p)&&!/^\/api\/profile\/(setup|handoff)/.test(p))whoSoon();   // a switch may have changed
   return r};
 // Main menu (design „Klar“, V01.0.145; plan „Bedienung gesamt“ V01.0.265): on a computer a sidebar with the search
 // (Strg K), Assistent and Ich for oneself, then "Spark verwalten" with Zustand, Funktionen, Personen und Geräte,

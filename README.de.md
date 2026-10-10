@@ -31,6 +31,7 @@ Alle Optionen ohne Rückfragen (`--mode api --asr 1.7b --tts 0.6b --yes` …) st
 
 <!-- New version: add one line at the top here and in CHANGELOG.md, drop the oldest line here (keep 10). Details go to docs/de and docs/en, not into this README. -->
 
+- **V01.0.280** „Los geht's“: Speichern des Einrichtungsstands lädt die Seite nicht mehr neu (Schalter-Prüfung übersprungen); Browsertest schreibt eine Diagnose statt zu hängen
 - **V01.0.279** reMarkable: „… und leg es aufs reMarkable“ legt die ganze Antwort ab, auch nach einer Websuche; eine feste Regel auf den eigenen Worten entscheidet, das Panel schickt nach der Antwort und sagt Bescheid (vorher schnitt die Weiche das Werkzeug weg)
 - **V01.0.278** Update-Log ohne pip-Fehler „dependency conflicts“: rmscene (reMarkable) kommt ohne seine Abhängigkeiten, packaging bleibt aktuell (vorher auf 23.2 herabgestuft, wheel kaputt); bestehende Installationen werden beim Update repariert
 - **V01.0.277** iPhone-App: erste Antwort mit Ton (Tonweg-Wechsel nach dem Start abgewartet, verworfene Stücke nachgespielt), „Ton-Protokoll kopieren“ in den Einstellungen
@@ -40,7 +41,6 @@ Alle Optionen ohne Rückfragen (`--mode api --asr 1.7b --tts 0.6b --yes` …) st
 - **V01.0.273** reMarkable-Notizen (Funktionen → Bilder und Scans lesen, aus; Ich → reMarkable): my.remarkable-Konto per Einmalcode verbinden, ausgewählte Notizbücher kommen in die Dokumentensuche (getippter Text und Markierungen direkt, Handschrift liest das Sprachmodell in Pausen, nur geänderte Seiten neu); „Aufs reMarkable schicken“ (aus) legt Antworten und diktierte Notizen als EPUB in den Ordner „Spark“
 - **V01.0.272** iPhone-App liest Funktionsnamen, Gruppen und Sperren vom Spark statt eigener Listen; Profil in der App mit Funktionen „n von m an“, Rolle und Browsern; Freihändig und Ins Wort fallen gelten fürs Profil
 - **V01.0.271** Personen und Geräte: ein Profil an einer Stelle mit Zugang, Funktionen „n von m an“, Rechten (Aufträge, App-Update, Upload-Platz), Browser abmelden, Gäste-Zeile und „+ Neu“
-- **V01.0.270** Vereinheitlichen Phase 4: ein Zeilen-Baustein (setRow) für alle Einstellungen, vom Admin Ausgeschaltetes bleibt unter Ich sichtbar mit Grund, Ich nennt nicht eingeschaltete Funktionen, Spalte „Neue Profile“ unter Wer darf was, Vorgaben nehmen nie einen Funktionsschalter ein
 
 Alle Versionen: [CHANGELOG.md](CHANGELOG.md)
 
