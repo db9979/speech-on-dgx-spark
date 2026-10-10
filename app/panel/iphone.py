@@ -280,6 +280,8 @@ def app_hello(prof=Depends(own_profile)):
             "reminders": bool(load_config().get("chat", {}).get("reminders", True)),
             # the face the admin picked for everybody (Einstellungen → Vorgaben), only names from the fixed list
             "face": face if face in FACES else "robot",
+            # the face shows what it does (signs, wink, puzzled, asleep), admin switch next to the face
+            "face_life": load_config().get("chat", {}).get("face_life") is True,
             # Apple push is set up and on for this profile: reminders then come as push, not as local alarms
             "push": apns.on_for(prof["id"]),
             # CarPlay: the smart home only with its own switch

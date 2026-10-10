@@ -167,7 +167,8 @@
     "tool_words": "",
     "own_style": false,
     "new_profile_on": [],
-    "face": "robot"
+    "face": "robot",
+    "face_life": false
   },
   "logs": {
     "max_mb": 500,

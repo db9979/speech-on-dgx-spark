@@ -108,6 +108,8 @@ def whoami(request: Request, creds: HTTPBasicCredentials | None = Depends(securi
             # Logs → Anfragen: main admin and co-admins (tracelog.py), not the Verwalter role
             "trace": bool(main or elev and elev.get("role") != "manager") and cfg.get("logs", {}).get("trace", False) is True,
             "face": cfg.get("chat", {}).get("face") if cfg.get("chat", {}).get("face") in FACES else "robot",
+            # "Gesicht zeigt, was es tut" (face.js lifeMode): only a plain true switches it on
+            "face_life": cfg.get("chat", {}).get("face_life") is True,
             # what the assistant needs without the full configuration (which holds keys)
             "assistant": {"default_voice": cfg["tts"].get("default_voice"),
                           "asr_language": cfg["asr"].get("default_language"),

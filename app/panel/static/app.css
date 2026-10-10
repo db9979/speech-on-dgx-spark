@@ -86,7 +86,7 @@ body.inchat #fab{display:none}
 .fabstate{font-weight:600;font-size:13px}.fabtext{font-size:13px;color:var(--mut);margin-top:4px;max-height:140px;overflow:auto;white-space:pre-wrap}
 .fabtext:empty{display:none}.fabrow{display:flex;gap:8px;margin-top:10px}.fabrow .ib{padding:6px 12px;font-size:12px}
 .face .spin{transform-origin:100px 104px;animation:spin 2.2s linear infinite;opacity:0;transition:opacity .3s}
-.face[data-mode=think] .spin{opacity:1}
+.face[data-mode=think] .spin,.face[data-mode=search] .spin{opacity:1}
 
 .talkwrap{display:grid;grid-template-columns:minmax(300px,5fr) 6fr;gap:16px;align-items:start}
 @media (max-width:860px){.talkwrap{grid-template-columns:1fr}}

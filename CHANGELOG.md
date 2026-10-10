@@ -2,6 +2,7 @@
 
 Every version in one line, newest first (taken from the commit messages, so some lines are German, some English). Older entries have no version number.
 
+- **V01.0.294** · 2026-10-10 · Gesicht zeigt, was es tut (Einstellungen → Vorgaben, Admin, aus): Roboter und Comic zeigen beim Arbeiten ein kleines Zeichen (Lupe beim Suchen, Kalenderblatt, Brief, Glühbirne bei Home Assistant, Notizblock beim Merken, Denkblasen), zwinkern nach Erledigtem, schauen bei Fehlern ratlos und schlafen nach 5 Minuten Ruhe ein; nur aus den eigenen Chat-Ereignissen des Panels
 - **V01.0.293** · 2026-10-10 · Mein Zustand springt nicht mehr nach oben: die 10-Sekunden-Aktualisierung ersetzt nur noch die Karte (Scrollposition und offene Verläufe bleiben), statt die ganze Seite neu zu bauen
 - **V01.0.292** · 2026-10-10 · Sprachmodell: Auswahlliste der Modelle, die der eingestellte Server meldet (Einstellungen → Sprachmodell → Modell, „Automatisch“ = das erste, „Anderes eingeben …“ für freie Eingabe, „Neu laden“); nur Admin, Anfrage nur an die eingestellte Adresse, 5 s, 256 KB, 60 s Cache
 - **V01.0.291** · 2026-10-10 · reMarkable „Ablegen in“ (Ich → reMarkable): eigener Zielordner für neue Dokumente wählbar, Standard „Spark“; der Spark legt nur neue Dokumente an, fehlt der Ordner später, nimmt er wieder „Spark“ und sagt es

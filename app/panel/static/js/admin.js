@@ -295,7 +295,7 @@ document.querySelectorAll('.savebtn').forEach(btn=>btn.onclick=async()=>{const p
     $('wymsg').innerHTML=`<span class="err">${esc(m)}</span>`;msg.innerHTML=`<span class="err">${esc(m)}</span>`;$('chat.wyoming_allow').focus();return}
   msg.textContent=t('Speichere…','Saving…');
   try{const r=await (await api('/api/config',{method:'PUT',headers:{'Content-Type':'application/json'},body:JSON.stringify(n)})).json();
-    if(pane.contains($('chat.face')))setFaceKind(n.chat.face);
+    if(pane.contains($('chat.face'))){setFaceKind(n.chat.face);setFaceLife(n.chat.face_life===true)}
     msg.innerHTML=t('Gespeichert.','Saved.')+(r.restarted.length?t(' Neu gestartet: ',' Restarted: ')+r.restarted.join(', ').toUpperCase()+t(' (Modell lädt neu).',' (model reloads).'):'')+(r.stopped&&r.stopped.length?t(' Gestoppt: ',' Stopped: ')+r.stopped.join(', ').toUpperCase()+'.':'')+(r.errors&&r.errors.length?`<div class="err">${esc(r.errors.join('\n'))}</div>`:'')+(r.panel_restart_needed?t(' Panel-Port ändert sich nach: ',' Panel port changes after: ')+'sudo systemctl restart speech-spark-panel':'');CFG=n;markDirty(pane,false);glance()}
   catch(e){msg.innerHTML=`<span class="err">${esc(e.message)}</span>`}});
 

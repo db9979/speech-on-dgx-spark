@@ -236,7 +236,7 @@ const ub=chatLog('user',text);const um={role:'user',content:text};
     const rd=r.body.getReader(),dec=new TextDecoder();let buf='';
     for(;;){const{value,done}=await rd.read();if(done)break;buf+=dec.decode(value,{stream:true});let i;
       while((i=buf.indexOf('\n\n'))>=0){const line=buf.slice(0,i).split('\n').find(l=>l.startsWith('data:'));buf=buf.slice(i+2);if(!line)continue;
-        const ev=JSON.parse(line.slice(5));
+        const ev=JSON.parse(line.slice(5));faceEvent(ev);
         if(ev.type==='text'){full+=ev.delta;el.classList.remove('typing');el.textContent=full;$('fabtext').textContent=full;$('chatlog').scrollTop=1e9}
         else if(ev.type==='tts_request'){chat.pieceStart=true;chat.blocks.push('| '+ev.chars+t(' Zeichen:',' chars:'))}
         else if(ev.type==='audio'){playPcm(ev.audio);if(chat.pctx.state==='running')chatSay(t('Spricht …','Speaking …'));startBarge()}

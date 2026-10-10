@@ -72,3 +72,47 @@ class Face(unittest.TestCase):
         fn = js[js.index("function comicIcon()"):js.index("function faceIcon()")]
         self.assertIn("comicSvg('I')", fn)
         self.assertIn("encodeURIComponent(", fn)
+
+
+class FaceLife(unittest.TestCase):
+    """"Gesicht zeigt, was es tut" (chat.face_life): admin switch, off by default, only from the panel's own events."""
+    def tearDown(self):
+        helpers.set_config(face_life=False)
+
+    def test_off_by_default(self):
+        with open(os.path.join(os.path.dirname(__file__), "..", "config.default.json")) as f:
+            self.assertIs(json.load(f)["chat"]["face_life"], False)
+        self.assertIs(TestClient(panel.app).get("/api/whoami").json()["face_life"], False)
+
+    def test_admin_switch_takes_only_true_or_false(self):
+        cfg = ADMIN.get("/api/config").json()
+        for bad in ("true", 1, "yes", None, [True]):
+            new = json.loads(json.dumps(cfg))
+            new["chat"]["face_life"] = bad
+            self.assertEqual(ADMIN.put("/api/config", json=new).status_code, 400, bad)
+        new = json.loads(json.dumps(cfg))
+        new["chat"]["face_life"] = True
+        self.assertEqual(ADMIN.put("/api/config", json=new).status_code, 200)
+        self.assertIs(TestClient(panel.app).get("/api/whoami").json()["face_life"], True)
+
+    def test_odd_value_in_the_file_stays_off(self):
+        helpers.set_config(face_life="on")
+        self.assertIs(TestClient(panel.app).get("/api/whoami").json()["face_life"], False)
+
+    def test_switch_sits_next_to_the_face(self):
+        html = read("index.html")
+        row = html[html.index('id="faceliferow"'):]
+        self.assertIn('<input type="checkbox" id="chat.face_life">', row[:row.index("</div></div>") + 200])
+        self.assertIn("setFaceLife(who.face_life===true)", read("js", "start.js"))
+
+    def test_face_follows_only_fixed_event_names(self):
+        js, chat = read("js", "face.js"), read("js", "chat.js")
+        self.assertIn("const ev=JSON.parse(line.slice(5));faceEvent(ev);", chat)
+        fn = js[js.index("window.faceEvent="):js.index("function lifeMode(")]
+        self.assertIn("if(!FACE_LIFE||!ev)return;", fn)
+        # only type, action and ok are read; nothing from the event is drawn or put into the page
+        self.assertEqual(set(re.findall(r"ev\.(\w+)", fn)), {"type", "action", "ok"})
+        self.assertNotIn("innerHTML", fn)
+        self.assertIn("FACE_ACTS[ev.type]", fn)
+        self.assertIn("window.setFaceLife=on=>{on=on===true;", js)
+        self.assertIn("SLEEP_MS=5*60*1000", js)

@@ -142,11 +142,12 @@ GRANTED = {}
 DUTY = None
 
 # chat.* switches that are no function a profile uses (how the Spark itself works)
-SPARK_ONLY = {"public", "thinking", "prompt_cache", "answer_check", "datetime"}
+SPARK_ONLY = {"public", "thinking", "prompt_cache", "answer_check", "datetime", "face_life"}
 # names for the Spark-wide switches that are no function of their own (the app's Funktionen page shows them under "Spark")
 SPARK_NAMES = {"public": ("Gastzugang", "Guest access"), "thinking": ("Vorher nachdenken", "Think first"),
                "prompt_cache": ("Schneller Antwortbeginn", "Faster first words"),
-               "answer_check": ("Antworten prüfen", "Check answers"), "datetime": ("Datum und Uhrzeit mitgeben", "Pass date and time")}
+               "answer_check": ("Antworten prüfen", "Check answers"), "datetime": ("Datum und Uhrzeit mitgeben", "Pass date and time"),
+               "face_life": ("Gesicht zeigt, was es tut", "Face shows what it does")}
 
 
 def switch_names(keys):
