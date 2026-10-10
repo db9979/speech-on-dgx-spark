@@ -33,6 +33,7 @@ Alle Optionen ohne Rückfragen (`--mode api --asr 1.7b --tts 0.6b --yes` …) st
 
 <!-- New version: add one line at the top here and in CHANGELOG.md, drop the oldest line here (keep 10). Details go to docs/de and docs/en, not into this README. -->
 
+- **V01.0.331** Assistent: kein waagrechter Rollbalken mehr unter dem Gesicht
 - **V01.0.330** TestFlight: Jeder Lauf widerruft die Zertifikate, die er angelegt hat, damit Apples Höchstzahl die Uploads nicht mehr stoppt
 - **V01.0.329** Live-Übersicht: Rückweg vom Sprechen zum Gerät sichtbar
 - **V01.0.328** Selbsttest Einladung: Tages-Sicherung des Testservers vor dem Browsertest packen (sie bremste ihn auf GitHub beim Neuladen aus), auf den Start der neuen Seite statt auf „load“ warten
@@ -42,7 +43,6 @@ Alle Optionen ohne Rückfragen (`--mode api --asr 1.7b --tts 0.6b --yes` …) st
 - **V01.0.324** Selbsttest Einladung: wartet bis 45 s auf das Neuladen, tippt ein zweites Mal, falls das erste Tippen kein /api/join auslöste, und schreibt dann eine Spur ins Log (auf GitHub wieder rot)
 - **V01.0.323** iPhone-App: Das Gesicht zeigt, was es tut, wie im Panel (mit dem Admin-Schalter „Gesicht zeigt, was es tut“)
 - **V01.0.322** Live-Übersicht: Websuche und Webseiten stehen unter Internet
-- **V01.0.321** iPhone-App kommt wieder bei TestFlight an: Wurden die Tests eines iOS-Stands von einem neueren Push abgebrochen, geht der neueste grüne main-Stand hoch, der ihn enthält
 
 Alle Versionen: [CHANGELOG.md](CHANGELOG.md)
 

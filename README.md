@@ -33,6 +33,7 @@ All options for running without questions (`--mode api --asr 1.7b --tts 0.6b --y
 
 <!-- New version: add one line at the top here and in CHANGELOG.md, drop the oldest line here (keep 10). Details go to docs/de and docs/en, not into this README. -->
 
+- **V01.0.331** Assistant: no more sideways scroll bar under the face
 - **V01.0.330** TestFlight: each run revokes the signing certificates it made, so Apple's certificate limit no longer stops uploads
 - **V01.0.329** Live overview: the way back from speaking to the device shows
 - **V01.0.328** Invitation self-test: pack the test server's daily backup before the browser test (it slowed the server down on GitHub while the page reloaded), wait for the new page to start instead of "load"
@@ -42,7 +43,6 @@ All options for running without questions (`--mode api --asr 1.7b --tts 0.6b --y
 - **V01.0.324** Self-test invitation: waits up to 45 s for the reload, taps a second time if the first tap sent no /api/join, and writes a trace to the log (red on GitHub again)
 - **V01.0.323** iPhone app: the face shows what it does, like the panel (with the admin switch "Face shows what it does")
 - **V01.0.322** Live overview: web search and web pages show under internet
-- **V01.0.321** iPhone app reaches TestFlight again: when a newer push cancelled the Tests of an iOS commit, the newest green main commit that contains it goes up
 
 All versions: [CHANGELOG.md](CHANGELOG.md)
 

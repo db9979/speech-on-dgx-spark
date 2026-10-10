@@ -2,6 +2,7 @@
 
 Every version in one line, newest first (taken from the commit messages, so some lines are German, some English). Older entries have no version number.
 
+- **V01.0.331** · 2026-10-10 · Assistent: kein waagrechter Rollbalken mehr unter dem Gesicht (der Leuchtschein ragte seit .327 seitlich aus der Karte); Browsertest prüft die Karten auf seitliches Rollen
 - **V01.0.330** · 2026-10-10 · TestFlight: Zertifikate, die ein Lauf für sich anlegt (Schlüssel im Wegwerf-Schlüsselbund), am Ende per App-Store-Connect-API widerrufen; nur Seriennummern aus diesem Schlüsselbund (ios/ci/asc_certs.py, Selbsttest)
 - **V01.0.329** · 2026-10-10 · Zustand → Live und Live-Monitor: der Weg endet mit dem Rückweg zum Gerät („↩ gesprochen am Lautsprecher“ bzw. „↩ Antwort an …“), während des Sprechens wandert der Punkt von Sprechen zum Gerät; „Weg der Anfrage“ hat den letzten Schritt „Zurück“
 - **V01.0.328** · 2026-10-10 · Selbsttest Einladung: Tages-Sicherung des Testservers vor dem Browsertest packen (sie bremste ihn auf GitHub beim Neuladen aus), auf den Start der neuen Seite statt auf „load“ warten

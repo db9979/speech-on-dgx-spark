@@ -148,7 +148,7 @@ body.inchat #fab{display:none}
   body.inchat main{flex:1;min-height:0;width:100%;max-width:none;box-sizing:border-box;display:flex;flex-direction:column;padding:16px 20px 8px}
   body.inchat section#chat.on{flex:1;min-height:0;display:flex;flex-direction:column}
   body.inchat .talkwrap{flex:1;min-height:0;align-items:stretch;grid-template-columns:minmax(320px,420px) minmax(0,1fr)}
-  body.inchat .stage{justify-content:center;overflow:auto}
+  body.inchat .stage{justify-content:center;overflow-x:hidden;overflow-y:auto}
   body.inchat .convo{height:auto;min-height:0}
   body.inchat #chatlog{min-height:0}
   body.inchat .msg{max-width:min(88%,860px)}

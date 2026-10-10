@@ -129,7 +129,7 @@ class Browser(unittest.TestCase):
 
     def test_assistant_fills_the_window(self):
         """Assistent on computers (V01.0.327): face and history reach the bottom of the window, the page itself
-        does not scroll, only the history does; narrow windows put the face above the history."""
+        does not scroll, only the history does, and no card scrolls sideways; narrow windows put the face above the history."""
         async def go():
             async with async_playwright() as p:
                 for w, h in ((1440, 900), (1920, 1080), (900, 1000)):
@@ -142,11 +142,14 @@ class Browser(unittest.TestCase):
                         box = await pg.evaluate("""(()=>{const r=e=>document.querySelector(e).getBoundingClientRect(),
                             s=r('#chat .stage'),c=r('#chat .convo'),l=$('chatlog');
                             return {sb:s.bottom,st:s.top,cb:c.bottom,ct:c.top,page:document.documentElement.scrollHeight,
-                                    logs:l.scrollHeight>l.clientHeight}})()""")
+                                    logs:l.scrollHeight>l.clientHeight,
+                                    wide:['#chat .stage','#chat .convo','#chatlog','#chat .composer'].filter(e=>{const x=document.querySelector(e);
+                                        return x.scrollWidth>x.clientWidth+1&&!['hidden','clip'].includes(getComputedStyle(x).overflowX)})}})()""")
                         self.assertGreater(box["cb"], h - 50, f"{w}: Verlauf endet bei {box['cb']}")
                         self.assertLessEqual(box["cb"], h, f"{w}: Verlauf ragt unten heraus")
                         self.assertLessEqual(box["page"], h + 1, f"{w}: Seite rollt")
                         self.assertTrue(box["logs"], f"{w}: Verlauf rollt nicht in sich")
+                        self.assertEqual(box["wide"], [], f"{w}: waagrechter Rollbalken")   # V01.0.331: the face card's glow
                         if w > 1100:
                             self.assertAlmostEqual(box["sb"], box["cb"], delta=1)   # both cards equally tall
                         else:
