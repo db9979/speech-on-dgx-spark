@@ -66,7 +66,7 @@ SYNC_HOST = "https://internal.cloud.remarkable.com"
 ROOT_URL = SYNC_HOST + "/sync/v4/root"
 ROOT_PUT_URL = SYNC_HOST + "/sync/v3/root"
 FILES_URL = SYNC_HOST + "/sync/v3/files/"
-CONNECT_URL = "https://my.remarkable.com/device/desktop/connect"
+CONNECT_URL = "https://my.remarkable.com/pair"
 ALLOWED = (".remarkable.com", ".remarkable.engineering", "storage.googleapis.com")
 
 CODE = re.compile(r"[a-z]{8}")
@@ -89,6 +89,7 @@ MAX_SEND = 60_000           # characters of one upload
 SIDE = documents.SIDE
 _user = {}                  # uid -> (user token, until)
 _busy = set()               # profiles being compared right now
+_progress = {}              # uid -> [entries read, entries to read] while the list loads
 _auto_last = {}             # uid -> when the background comparison last ran (in memory)
 BACKGROUND = True           # tests run the listing and the comparison themselves
 
@@ -306,9 +307,11 @@ async def refresh_library(uid):
         else:
             todo.append(e)
     sem = asyncio.Semaphore(CONCURRENT)
+    _progress[uid] = [0, len(todo)]
 
     async def one(e):
         async with sem:
+            _progress[uid][0] += 1
             files = parse_index(await blob(uid, e["hash"], e["id"] + ".docSchema"))
             meta, content = {}, {}
             for f in files:
@@ -332,7 +335,11 @@ async def refresh_library(uid):
                              "folder": folder, "kind": kind, "n": 0 if folder else len(page_order(content)), "mod": mod}
 
     failed = 0
-    for e, got in zip(todo, await asyncio.gather(*(one(e) for e in todo), return_exceptions=True)):
+    try:
+        got_all = await asyncio.gather(*(one(e) for e in todo), return_exceptions=True)
+    finally:
+        _progress.pop(uid, None)
+    for e, got in zip(todo, got_all):
         if isinstance(got, tuple):
             out[got[0]] = got[1]
         elif isinstance(got, BaseException):
@@ -805,7 +812,7 @@ def public(uid):
             "error": d.get("error", ""), "count": len(d["docs"]), "all": bool(d.get("all")), "library": lib,
             "pictures": _pictures(uid), "send": send_allowed(uid), "connect_url": CONNECT_URL,
             "sent_today": (d.get("sent") or {}).get("n", 0) if (d.get("sent") or {}).get("day") == time.strftime("%Y-%m-%d") else 0,
-            "send_day": SEND_DAY, "busy": uid in _busy}
+            "send_day": SEND_DAY, "busy": uid in _busy, "progress": list(_progress.get(uid) or [])}
 
 
 @router.get("/api/profile/remarkable", dependencies=[Depends(assistant)])

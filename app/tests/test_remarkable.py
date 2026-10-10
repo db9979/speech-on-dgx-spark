@@ -206,6 +206,7 @@ class Base(unittest.TestCase):
         r = c.post("/api/profile/remarkable/pair", json={"code": "abcdefgh"})
         self.assertEqual(r.status_code, 200, r.text)
         run(remarkable.refresh_library(uid))        # after pairing it runs in the background
+        self.assertEqual(c.get("/api/profile/remarkable").json()["progress"], [])  # loading counter gone
         return c, uid
 
     def docs(self, uid):

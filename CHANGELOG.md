@@ -2,6 +2,7 @@
 
 Every version in one line, newest first (taken from the commit messages, so some lines are German, some English). Older entries have no version number.
 
+- **V01.0.274** · 2026-10-10 · reMarkable: Häkchen „Alle Notizbücher“ und einzelne Häkchen bleiben, während die Liste lädt (Zähler „x / y“), Suchfeld behält den Fokus; Verbinden-Link führt direkt zu my.remarkable.com/pair
 - **V01.0.273** · 2026-10-10 · reMarkable-Notizen (Funktionen → Bilder und Scans lesen, aus; Ich → reMarkable): my.remarkable-Konto per Einmalcode verbinden, ausgewählte Notizbücher kommen in die Dokumentensuche (getippter Text und Markierungen direkt, Handschrift liest das Sprachmodell in Pausen, nur geänderte Seiten neu); „Aufs reMarkable schicken“ (aus) legt Antworten und diktierte Notizen als EPUB in den Ordner „Spark“
 - **V01.0.272** · 2026-10-10 · iPhone-App liest Funktionsnamen, Gruppen und Sperren vom Spark statt eigener Listen; Profil in der App mit Funktionen „n von m an“, Rolle und Browsern; Freihändig und Ins Wort fallen gelten fürs Profil
 - **V01.0.271** · 2026-10-10 · Personen und Geräte: ein Profil an einer Stelle mit Zugang, Funktionen „n von m an“, Rechten (Aufträge, App-Update, Upload-Platz), Browser abmelden, Gäste-Zeile und „+ Neu“
