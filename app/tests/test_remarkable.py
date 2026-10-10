@@ -69,6 +69,7 @@ class Cloud:
     """A reMarkable cloud: content-addressed files, a root index with a generation."""
     def __init__(self):
         self.files, self.gen, self.calls, self.codes = {}, 1, [], {"abcdefgh"}
+        self.upload_answer, self.root_answer = 200, 200     # what writes are answered with (errors, 202 ...)
         self.entries = {}          # id -> (hash, subfiles, size)
         self.root = self.put(b"4\n0:.:0:0\n")
         self.commit()
@@ -144,8 +145,10 @@ class Cloud:
             else:
                 assert hashlib.sha256(data).hexdigest() == h
             assert headers.get("x-goog-hash", "").startswith("crc32c=")
+            if self.upload_answer >= 300:
+                return httpx.Response(self.upload_answer, text="Bad Request: x-goog-hash mismatch for " + USER_TOKEN)
             self.files[h] = data
-            return httpx.Response(200)
+            return httpx.Response(self.upload_answer)
         if url == remarkable.ROOT_PUT_URL and method == "PUT":
             body = kw["json"]
             if body["generation"] != self.gen:
@@ -153,7 +156,7 @@ class Cloud:
             self.gen += 1
             self.root = body["hash"]
             self.entries = {e["id"]: (e["hash"], e["subfiles"], e["size"]) for e in remarkable.parse_index(self.files[self.root])}
-            return httpx.Response(200, json={"hash": self.root, "generation": self.gen})
+            return httpx.Response(self.root_answer, json={"hash": self.root, "generation": self.gen})
         return httpx.Response(404)
 
 
@@ -431,6 +434,46 @@ class Writing(Base):
         out = run(remarkable.tool("remarkable_note", {"title": "Einkauf", "text": "Milch, Brot"}, {"who": who}))
         self.assertIn("Einkauf", out)
 
+
+class SendErrors(Base):
+    """V01.0.290: a refused upload says which file and what the cloud answered (never a token), any 2xx counts,
+    and a root line the Spark does not understand stops the write before anything could vanish."""
+    def ready_send(self, name):
+        c, uid = self.paired(name)
+        helpers.set_config(remarkable_send=True)
+        c.put("/api/profile/settings", json={"rm_send": True})
+        return c, uid
+
+    def test_refused_upload_is_explained(self):
+        c, uid = self.ready_send("Rmerr")
+        CLOUD[0].upload_answer = 400
+        r = c.post("/api/profile/remarkable/send", json={"title": "x", "text": "y"})
+        self.assertEqual(r.status_code, 502)
+        msg = r.json()["detail"]
+        self.assertIn("HTTP 400", msg)
+        self.assertIn("x-goog-hash mismatch", msg)
+        self.assertNotIn(USER_TOKEN, msg)
+        ok, note = run(remarkable.send_answer(uid, "Fass zusammen", "Text"))
+        self.assertFalse(ok)
+        self.assertIn("HTTP 400", note)
+
+    def test_accepted_counts(self):
+        c, uid = self.ready_send("Rm202")
+        CLOUD[0].upload_answer, CLOUD[0].root_answer = 201, 202
+        r = c.post("/api/profile/remarkable/send", json={"title": "Zwei", "text": "y"})
+        self.assertEqual(r.status_code, 200, r.text)
+        self.assertIn("Zwei", [m["visibleName"] for m in CLOUD[0].listed().values()])
+
+    def test_unknown_root_line_writes_nothing(self):
+        c, uid = self.ready_send("Rmodd")
+        CLOUD[0].doc(NB, "Bleibt", [(P1, page_file("x"))])
+        body = CLOUD[0].files[CLOUD[0].root] + b"zzz:0:seltsam:0:1\n"
+        CLOUD[0].root = CLOUD[0].put(body)
+        before = (CLOUD[0].root, CLOUD[0].gen)
+        r = c.post("/api/profile/remarkable/send", json={"title": "x", "text": "y"})
+        self.assertEqual(r.status_code, 502)
+        self.assertIn("nothing written", r.json()["detail"])
+        self.assertEqual((CLOUD[0].root, CLOUD[0].gen), before)          # the account stays as it was
 
 class AnswerToRemarkable(Base):
     """V01.0.279: "... und leg es aufs reMarkable" puts the whole answer there, by a fixed panel rule on the

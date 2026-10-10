@@ -99,6 +99,15 @@ class CloudError(RuntimeError):
     pass
 
 
+def _said(r):
+    """A short, token-free piece of what the cloud answered, for the error text and the journal."""
+    try:
+        t = r.text
+    except Exception:
+        return ""
+    return _redact(re.sub(r"\s+", " ", t or "").strip())[:120]
+
+
 # ---------------------------------------------------------------- switches and state
 def allowed(uid):
     return bool(uid) and features.allowed("remarkable", uid)
@@ -673,8 +682,8 @@ async def _put(uid, data, name, ctype="application/octet-stream", h=None):
     headers = {"rm-filename": name, "content-type": ctype,
                "x-goog-hash": "crc32c=" + base64.b64encode(struct.pack(">I", crc32c(data))).decode()}
     r = await _authed(uid, "PUT", FILES_URL + h, most=64 * 1024, headers=headers, content=data)
-    if r.status_code not in (200, 201, 204):
-        raise CloudError(f"upload HTTP {r.status_code}")
+    if not 200 <= r.status_code < 300:
+        raise CloudError(f"upload of {name.rsplit('.', 1)[-1]} HTTP {r.status_code} {_said(r)}".strip())
     return {"hash": h, "id": name, "size": len(data)}
 
 
@@ -693,20 +702,25 @@ async def _add_to_root(uid, new):
     Only appends lines; the existing ones are written back unchanged."""
     for attempt in range(4):
         rh, gen = await root(uid)
-        entries = parse_index(await blob(uid, rh, "root.docSchema"))
+        raw = await blob(uid, rh, "root.docSchema")
+        entries = parse_index(raw)
+        # every line must be understood: a line left out here would vanish from the account with the new root
+        lines = [x for x in raw.decode("utf-8", "replace").splitlines()[1:] if x.strip() and x.split(":")[1:2] != ["."]]
+        if len(entries) != len(lines):
+            raise CloudError(f"root index has {len(lines) - len(entries)} lines the Spark does not understand; nothing written")
         have = {e["id"] for e in entries}
         entries += [e for e in new if e["id"] not in have]
         entries.sort(key=lambda e: e["id"])
         body = ("4\n" + f"0:.:{len(entries)}:{sum(e['size'] for e in entries)}\n" +
-                "".join(f"{e['hash']}:0:{e['id']}:{e['subfiles']}:{e['size']}\n" for e in entries)).encode()
+                "".join(f"{e['hash']}:{e.get('type') or '0'}:{e['id']}:{e['subfiles']}:{e['size']}\n" for e in entries)).encode()
         nh = (await _put(uid, body, "root.docSchema", "text/plain; charset=UTF-8"))["hash"]
         r = await _authed(uid, "PUT", ROOT_PUT_URL, most=64 * 1024, headers={"rm-filename": "roothash"},
                           json={"broadcast": True, "hash": nh, "generation": gen})
         if r.status_code in (409, 412, 428):
             await asyncio.sleep(1 + attempt)
             continue
-        if r.status_code not in (200, 201):
-            raise CloudError(f"root HTTP {r.status_code}")
+        if not 200 <= r.status_code < 300:
+            raise CloudError(f"root commit HTTP {r.status_code} {_said(r)}".strip())
         return
     raise CloudError("another device kept writing; try again")
 
@@ -729,7 +743,11 @@ async def send(uid, title, text):
     s = d.get("sent") if isinstance(d.get("sent"), dict) and d["sent"].get("day") == day else {"day": day, "n": 0}
     if s["n"] >= SEND_DAY:
         raise ValueError(f"heute schon {SEND_DAY} Mal geschickt; morgen wieder")
-    items = await refresh_library(uid)
+    try:
+        items = await refresh_library(uid)
+    except CloudError as e:     # a few unreadable entries must not stop a new document: the last listing
+        print("remarkable: listing before sending:", _redact(e), "- using the last listing", flush=True)
+        items = library(uid)
     folder = next((i for i, it in items.items() if it.get("folder") and it["name"] == "Spark" and not it["parent"]), None)
     new = []
     if not folder:
@@ -804,8 +822,10 @@ async def send_answer(uid, question, answer):
     try:
         t = await send(uid, answer_title(question), answer)
         return True, f"Die Antwort liegt jetzt auf deinem reMarkable im Ordner Spark („{t}“)."
-    except (CloudError, ValueError, httpx.HTTPError, netguard.Blocked) as e:
-        return False, "Aufs reMarkable ging es nicht: " + _redact(e if isinstance(e, ValueError) else type(e).__name__)
+    except (CloudError, ValueError, httpx.HTTPError, netguard.Blocked, netguard.TooLarge) as e:
+        why = _redact(e if isinstance(e, (ValueError, CloudError)) else type(e).__name__)
+        print("remarkable: sending failed:", why, flush=True)
+        return False, "Aufs reMarkable ging es nicht: " + why
 
 
 ANSWER_HINT = ("Der Nutzer will diese Antwort auf seinem reMarkable haben. Das erledigt der Spark nach deiner Antwort "
@@ -833,8 +853,10 @@ async def tool(name, args, ctx):
     try:
         t = await send(uid, args.get("title"), args.get("text"))
         return f"Auf dem reMarkable liegt jetzt „{t}“ im Ordner Spark."
-    except (CloudError, ValueError, httpx.HTTPError) as e:
-        return "Nicht geschickt: " + _redact(e if isinstance(e, ValueError) else type(e).__name__)
+    except (CloudError, ValueError, httpx.HTTPError, netguard.Blocked, netguard.TooLarge) as e:
+        why = _redact(e if isinstance(e, (ValueError, CloudError)) else type(e).__name__)
+        print("remarkable: sending failed:", why, flush=True)
+        return "Nicht geschickt: " + why
 
 
 async def briefing(uid, zone=None):
@@ -988,6 +1010,8 @@ async def send_route(request: Request, prof=Depends(browser_profile)):
     except ValueError as e:
         raise HTTPException(400, str(e))
     except (CloudError, httpx.HTTPError, netguard.Blocked, netguard.TooLarge) as e:
-        raise HTTPException(502, "reMarkable: " + _redact(type(e).__name__))
+        why = _redact(e) if isinstance(e, CloudError) else type(e).__name__
+        print("remarkable: sending failed:", why, flush=True)
+        raise HTTPException(502, "reMarkable hat das Dokument nicht angenommen: " + why)
     guard.log("remarkable_send", ip=guard.client_ip(request), profile=uid)
     return {"ok": True, "title": t}
