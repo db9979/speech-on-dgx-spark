@@ -86,7 +86,7 @@ function lcopyText(){const q=$('logq').value.trim().toLowerCase();const rows=q?L
 // One request's way: a list with a bead chain per request, then where the time went and the steps as a time line.
 // Only ways, tool names and numbers come from the panel; names only for profiles that allowed it.
 const RK={in:['#64748b','↘'],prep:['#8b5cf6','⚙'],weiche:['#8b5cf6','⑂'],llm:['#5b5bf0','◆'],tool:['#0d9488','⚒'],check:['#16a34a','✓'],tts:['#e07a10','♪'],err:['#dc2626','✕']};
-const RCLIENT={web:t('Browser','Browser'),speaker:t('Lautsprecher','Speaker'),watch:t('Uhr','Watch'),siri:'Siri',telegram:'Telegram',app:t('iPhone-App','iPhone app'),car:'CarPlay',other:t('Gerät','Device')};
+const RCLIENT={web:t('Browser','Browser'),speaker:t('Lautsprecher','Speaker'),watch:t('Uhr','Watch'),siri:'Siri',telegram:'Telegram',app:t('iPhone-App','iPhone app'),car:'CarPlay',mcp:t('Programm (MCP)','Program (MCP)'),other:t('Gerät','Device')};
 const RQ={data:null,sel:null,filter:'',lines:null};
 const rsec=ms=>ms==null?'–':ms<1000?`${ms} ms`:(ms/1000).toFixed(1).replace('.',L==='en'?'.':',')+' s';
 const rsecs=ms=>(ms/1000).toFixed(1).replace('.',L==='en'?'.':',')+' s';

@@ -80,7 +80,7 @@ function showSec(s){const sec=s==='feat'?'cfg':s;document.querySelectorAll('sect
   const cw=document.querySelector('.cfgwrap');cw.classList.toggle('featmode',s==='feat');
   if(s==='feat'){cw.classList.add('sub');loadCfg();if(typeof cfgPane==='function')cfgPane('feat')}
   if(s==='cfg'&&$('pane-feat').classList.contains('on')&&typeof cfgPane==='function')cfgPane('start');
-  if(s==='cfg'){document.querySelector('.cfgwrap').classList.remove('sub');loadCfg();mfaShow('admmfa','/api/mfa');if($('pane-voices').classList.contains('on'))loadClone();if($('pane-upd').classList.contains('on'))loadSys()}if(s==='chat')chatTab();if(s==='test'){loadVoices();instrHint();loadLive();loadBench();loadVorrang()}if(s==='prof'){loadProf();if(typeof joinAdmin==='function')joinAdmin()}if(s==='logs')loadLogs();if(s==='apps')loadInt();if(s==='who'&&window.loadWho)loadWho();}
+  if(s==='cfg'){document.querySelector('.cfgwrap').classList.remove('sub');loadCfg();mfaShow('admmfa','/api/mfa');if($('pane-voices').classList.contains('on'))loadClone();if($('pane-upd').classList.contains('on'))loadSys()}if(s==='chat')chatTab();if(s==='test'){loadVoices();instrHint();loadLive();loadBench();loadVorrang()}if(s==='prof'){loadProf();if(typeof joinAdmin==='function')joinAdmin()}if(s==='logs')loadLogs();if(s==='apps'){loadInt();if(typeof loadMcpAdmin==='function')loadMcpAdmin()}if(s==='who'&&window.loadWho)loadWho();}
 // Zustand, Funktionen and Personen und Geräte have several pages: computers show them as a second column like Einstellungen, phones as a
 // list with one line of state that opens the page, with "back" on top (V01.0.207, same pattern everywhere)
 const NARROW=()=>matchMedia('(max-width:760px)').matches;

@@ -387,7 +387,7 @@ def browser_profile(request: Request):
     prof = own_profile(request)
     if request.scope.get("speech_app_area"):
         return prof   # a panel area the profile opened for its iPhone app (iphone.py AREAS, own switch per area)
-    if request.headers.get(profiles.DEVICE_HEADER) or request.scope.get("speech_profile"):
+    if request.headers.get(profiles.DEVICE_HEADER) or request.scope.get("speech_profile") or request.scope.get("speech_mcp"):
         raise HTTPException(403, "only in the profile's own browser login")
     return prof
 

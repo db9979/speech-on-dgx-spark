@@ -65,6 +65,13 @@ OPEN = {
     "/api/iphone/join": "the iPhone app with an invitation; 404 unless the admin allows invitations, one-time codes, lockout",
     "/api/handoff/claim": "a phone scanned the computer's code; 404 unless the admin allows it, two minutes, once, lockout",
     "/api/handoff/finish": "the phone signs in only after its number was picked on the computer; 404 unless allowed",
+    "/mcp": "the MCP endpoint checks the connection's own token itself (mcpserver.check_conn), 404 while switched off",
+    "/oauth/register": "OAuth programs say who they are; opens nothing, the person decides in the panel; 404 unless allowed",
+    "/oauth/authorize": "checks the program and hands over to the signed-in panel page; 404 unless allowed",
+    "/oauth/token": "trades a one-time code (PKCE) or refresh token for a token; 404 unless allowed",
+    "/.well-known/oauth-authorization-server": "public OAuth addresses, no data; 404 unless allowed",
+    "/.well-known/oauth-protected-resource": "public OAuth addresses, no data; 404 unless allowed",
+    "/.well-known/oauth-protected-resource/mcp": "public OAuth addresses, no data; 404 unless allowed",
 }
 LOGIN = re.compile(r"Depends\((auth|main_auth|owner_auth|assistant|own_profile|browser_profile|secret_profile|secret_profile_fresh|_on)\)")
 ROUTE = re.compile(r'@(?:router|app)\.(?:get|post|put|delete|patch|api_route)\("([^"]*)"[^\n]*\n((?:@[^\n]*\n)*)'

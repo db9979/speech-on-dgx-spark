@@ -155,6 +155,9 @@
       <div class="setrow"><div class="lbl"><b>Android-App</b><span>App „Spark“ als APK von dieser Seite: der Spark wie am Handy, dazu Mitteilungen und Teilen an Spark.</span></div><label class="tgl"><input type="checkbox" id="chat.android"><i></i></label></div>
       <div data-show="chat.android" style="margin-left:18px" id="andadmin"><div class="fh" id="andstate"></div><div class="row" style="margin-top:6px"><button class="b" type="button" id="andfetch">App jetzt holen</button></div></div>
       <div class="setrow"><div class="lbl"><b>Pebble-Uhr koppeln</b><span>Uhr-App „Spark“ per Einrichtungscode koppeln statt Adresse und Schlüssel abzutippen. Der Uhr-Schlüssel darf nur fragen.</span></div><label class="tgl"><input type="checkbox" id="chat.pebble"><i></i></label></div>
+      <div class="setrow"><div class="lbl"><b>Spark als MCP-Server</b><span>Andere Programme nutzen Sprache, Nachschlagen und den Assistenten über MCP; jedes Profil gibt jedem Programm eigene Werkzeuge.</span></div><label class="tgl"><input type="checkbox" id="chat.mcp_server"><i></i></label></div>
+      <div class="setrow" data-show="chat.mcp_server" style="margin-left:18px"><div class="lbl"><b>MCP-Server von außen (OAuth)</b><span>Auch über den Reverse-Proxy, etwa für claude.ai: nur mit zweitem Anmeldeschritt des Profils und Warnhinweis.</span></div><label class="tgl"><input type="checkbox" id="chat.mcp_server_extern"><i></i></label></div>
+      <div class="setrow" data-show="chat.mcp_server" style="margin-left:18px"><div class="lbl"><b>MCP: Handeln mit Bestätigung</b><span>Programme dürfen Schalten, Termine und Erinnerungen vorschlagen; ausgeführt wird erst nach dem Ja des Profils im Panel.</span></div><label class="tgl"><input type="checkbox" id="chat.mcp_server_act"><i></i></label></div>
       <div class="setrow"><div class="lbl"><b>Push an die iPhone-App</b><span>Meldungen kommen auch bei geschlossener App. Apple sieht nur „Neue Nachricht“, den Text holt die App vom Spark.</span></div><label class="tgl"><input type="checkbox" id="chat.iphone_push"><i></i></label></div>
       <div data-show="chat.iphone_push" style="margin-left:18px" id="apnsadmin"><div class="fh">Schlüssel von developer.apple.com → Certificates, IDs &amp; Profiles → Keys → „+“ → Apple Push Notifications service (APNs). Die .p8-Datei gibt es nur einmal zum Herunterladen.</div>
         <label>Schlüsseldatei (.p8)</label><input id="apnsfile" type="file" accept=".p8">
@@ -566,6 +569,10 @@
     </div>
     <div class="mut" style="margin-top:8px">Läuft der Agent auf einem anderen Rechner, die LAN-IP der Spark nehmen. Ohne API-Schlüssel (Einstellungen → Sicherheit) kann jeder im Heimnetz die Sprachdienste nutzen. Den Agenten nicht auf dieser Spark installieren: Er führt selbst Befehle aus und käme so an Einstellungen und Schlüssel.</div>
   </div>
+  <div class="card"><h2>Spark als MCP-Server</h2>
+    <div class="mut">Programme wie Open WebUI, n8n, Home Assistant oder Claude verbinden sich unter <b>Ich → Dienste per MCP</b> mit einem eigenen Zugang pro Profil (Adresse <code>/mcp</code>, Streamable HTTP). Hier siehst du alle Zugänge und kannst jeden sofort beenden.</div>
+    <div id="int-mcp" style="margin-top:8px"></div>
+  </div>
   <div class="card"><h2>Pebble-Uhr</h2>
     <div class="mut">App „Spark“ für Pebble Time 2 und Core 2 Duo (Antwort als Text und über den Lautsprecher der Uhr) sowie Pebble Round 2 (nur Text). Frage per Knopfdruck, die Pebble-Diktierfunktion macht Text daraus, die Antwort kommt von hier.</div>
     <ol class="mut" style="margin:8px 0 0 18px;padding:0;line-height:1.6">
@@ -733,6 +740,7 @@
     <div id="appbox" class="ptab"></div>
     <div id="andbox" class="ptab"></div>
     <div id="pebbox" class="ptab"></div>
+    <div id="mcpbox" class="ptab"></div>
     <div id="rmbox" class="ptab"></div>
     <div id="wxbox" class="ptab"></div>
     <div id="conbox" class="ptab"></div>
@@ -774,6 +782,7 @@
 <script src="/static/js/agent.js"></script>
 <script src="/static/js/messages.js"></script>
 <script src="/static/js/esp.js"></script>
+<script src="/static/js/mcp.js"></script>
 <script src="/static/js/guides.js"></script>
 <script src="/static/js/search.js"></script>
 <script src="/static/js/users.js"></script>

@@ -120,6 +120,15 @@ async def prepare(request):
     if gone:
         system = (system + "\n\n" + chat.LEFT_OUT_NOTE).strip()
         print("chat:", gone, "earlier answer(s) from outside text left out with their questions", flush=True)
+    # "Spark fragen" from another program over MCP (mcpserver.py; only the panel sets this in the scope): the
+    # question is outside text from the start, and the turn only reads, with the tools the connection was given.
+    # No memory, no earlier conversations, no smart home, no mail, no proposals and no "Ja" to waiting ones.
+    mcp = request.scope.get("speech_mcp")
+    if mcp:
+        import mcpserver
+        carry = "outside"
+        messages = [m for m in messages[-1:] if m["role"] == "user"]
+        system = (system + "\n\n" + mcpserver.MCP_HINT).strip()
     # an attached photo or document: outside text, so this answer is locked like one made from the web
     attach = chat.attachment(body) if messages[-1]["role"] == "user" else None
     if attach:
@@ -194,10 +203,10 @@ async def prepare(request):
     # name the profile saved, only from its own words and voice; the model just says the result
     import roles
     role_cmd = None
-    if roles.on(ccfg, who, pset, own_browser) and messages[-1]["role"] == "user":
+    if roles.on(ccfg, who, pset, own_browser) and messages[-1]["role"] == "user" and not mcp:
         role_cmd = roles.command(messages[-1]["content"], roles.parse(pset.get("roles")))
         if role_cmd:
-            note = role_note = roles.carry_out(who["id"], role_cmd, pset)
+            note = role_note = roles.carry_out(who["id"], role_cmd, pset) if not mcp else "nicht über MCP"
             print("rolle:", role_cmd[0], "-", role_cmd[1] or "-", "(fixed rule, no tools in this answer)", flush=True)
             system = (system + "\n\nRolle: " + note).strip()
     role = roles.prompt(pset) if roles.on(ccfg, who, pset, own_browser) else ""
@@ -211,7 +220,7 @@ async def prepare(request):
         system = (system + "\n\n" + chat.SPEAKER_HINT).strip()
     # a voice recognized at someone else's device gets no personal data at all (it could be a recording
     # of that person): no memory, history, documents, calendar, contacts, lists or reminders
-    prof = who if ccfg.get("memory", True) and own_browser else None
+    prof = who if ccfg.get("memory", True) and own_browser and not mcp else None
     if prof:  # guests get no memory at all
         system = (system + "\n\n" + chat.memory_hint(prof)).strip()
     past = bool(prof and ccfg.get("history", True))
@@ -220,14 +229,14 @@ async def prepare(request):
     # pictures (images.py): only with the admin's and the profile's switches, from its own login, app or
     # Telegram. The model sees them in this turn without any tools (no smart home either), and the
     # answer counts as outside text, so the next turn is locked as well.
-    pics = images.for_turn(request, body, who if own_browser else None) if messages[-1]["role"] == "user" else []
+    pics = images.for_turn(request, body, who if own_browser else None) if messages[-1]["role"] == "user" and not mcp else []
     if pics:
         carry = carry or "outside"
         system = (system + "\n\n" + images.hint(len(pics))).strip()
         print("chat:", len(pics), "picture(s) attached, no tools in this answer, locked like outside text", flush=True)
     # Home Assistant only for the profile's own login or device key: a voice recognized at someone
     # else's device does not switch that profile's home
-    ha = homeassistant.get(who["id"]) if who and own_browser and ccfg.get("homeassistant", False) and not pics else None
+    ha = homeassistant.get(who["id"]) if who and own_browser and ccfg.get("homeassistant", False) and not pics and not mcp else None
     # over Telegram the profile decides: personal data only with tg_private, switching only with tg_ha
     # and a code word (the messages pass Telegram's servers)
     tg = body.get("client") == "telegram"
@@ -318,8 +327,9 @@ async def prepare(request):
             print("homeassistant: lookup failed:", type(e).__name__, flush=True)
     # own documents plus the ones other profiles offer to everyone; neither for guests or a voice the
     # shared speaker does not recognize (private_ok)
-    docs = documents.list_docs(who["id"], used_only=True) if who and private_ok and ccfg.get("documents", True) else []
-    shared_docs = wissen.shared_list(who["id"]) if who and private_ok and ccfg.get("documents", True) else []
+    docs_ok = bool(who and private_ok and ccfg.get("documents", True) and (not mcp or "document_search" in mcp["tools"]))
+    docs = documents.list_docs(who["id"], used_only=True) if docs_ok else []
+    shared_docs = wissen.shared_list(who["id"]) if docs_ok else []
     if docs or shared_docs:
         system = (system + "\n\n" + chat.docs_hint(who, docs, shared_docs, str(messages[-1].get("content") or ""),
                                                      wissen.on(who["id"], "brief"))).strip()
@@ -333,7 +343,7 @@ async def prepare(request):
                  if isinstance(x, dict) and isinstance(x.get("id"), str)
                  and isinstance(x.get("due"), (int, float))][:50] if not who else []
     # e-mail like Home Assistant: only for the profile's own login or device key
-    mailbox = bool(who and own_browser and private_ok and ccfg.get("mail", False) and mail.get(who["id"])["accounts"])
+    mailbox = bool(who and own_browser and private_ok and not mcp and ccfg.get("mail", False) and mail.get(who["id"])["accounts"])
     if mailbox:
         system = (system + "\n\n" + chat.MAIL_HINT).strip()
     # tidying and drafts (tidy.py): only for mailboxes the profile switched on; changes after a yes
@@ -350,9 +360,10 @@ async def prepare(request):
     cal_note = []
     if role_cmd:   # shown in the tool log like a tool the panel ran itself
         cal_note.append({"name": "Rolle (Panel)", "args": role_cmd[1], "result": role_note})
-    cal = calendars.get(who["id"]) if who and briefing and private_ok else {"calendars": [], "topics": []}
+    cal = calendars.get(who["id"]) if who and briefing and private_ok and (not mcp or "calendar_events" in mcp["tools"]) \
+        else {"calendars": [], "topics": []}
     # new appointments: only the profile's own login or device key, and only after a yes (see calendars.py)
-    cal_write = bool(cal["calendars"] and own_browser)
+    cal_write = bool(cal["calendars"] and own_browser and not mcp)
     prop = None
     src = f"{body.get('client') or 'web'}:{body.get('convo') if isinstance(body.get('convo'), str) else ''}"
     if cal_write:
@@ -377,7 +388,7 @@ async def prepare(request):
     # an answer to something the assistant said by itself (yes to its offer, "nicht jetzt", ...):
     # the panel does what it means and the model only says the checked result (see proactive.py)
     mprop = None
-    if (tidy_on or drafts_on) and not prop:
+    if (tidy_on or drafts_on) and not prop and not mcp:
         mprop = tidy.pending(who["id"])
         if mprop and mprop.get("src", src) != src:
             mprop = None
@@ -397,7 +408,7 @@ async def prepare(request):
                           "Nutzer nicht zugestimmt hat.").strip()
     # ticking off a list entry ... (extras.py): the module waiting for a yes in this conversation
     xprop = None
-    if who and messages[-1]["role"] == "user" and not prop and not mprop:
+    if who and messages[-1]["role"] == "user" and not prop and not mprop and not mcp:
         xprop = await extras.answer({"who": who, "own": own_browser, "src": src, "client": body.get("client"), "private": private_ok,
                                      "app": app_key, "device": (profiles.device_name(request) or "")[:40],
                                      "ha": ha, "ha_code": ha_code, "ha_code_ok": ha_code_ok}, messages[-1]["content"])
@@ -407,14 +418,14 @@ async def prepare(request):
             cal_note.append(xprop["call"])
             system = (system + "\n\n" + xprop["system"]).strip()
     pro = None
-    if who and own_browser and messages[-1]["role"] == "user" and not prop and not mprop and not xprop:  # one yes confirms one thing
+    if who and own_browser and messages[-1]["role"] == "user" and not prop and not mprop and not xprop and not mcp:  # one yes confirms one thing
         pro = proactive.reply(who["id"], messages[-1]["content"], said_before)
         if pro:
             cal_note.append(pro["call"])
             system = (system + "\n\n" + pro["system"]).strip()
     # learning from corrections (fixes.py): a yes saves the proposed sentence, a correction leads to one
     fix_ok = bool(who and own_browser and private_ok and ccfg.get("memory", True) and fixes.on(ccfg, pset)
-                  and messages[-1]["role"] == "user")
+                  and messages[-1]["role"] == "user" and not mcp)
     fix_fix, fix_prev = False, ""
     if fix_ok and not prop and not mprop and not xprop and not pro:
         fp = fixes.pending(who["id"])
@@ -431,7 +442,7 @@ async def prepare(request):
         elif fixes.is_correction(messages[-1]["content"], said_before):
             fix_fix = True
             fix_prev = next((m["content"] for m in reversed(messages[:-2]) if m["role"] == "user"), "")[:200]
-    if who and own_browser and messages[-1]["role"] == "user":
+    if who and own_browser and messages[-1]["role"] == "user" and not mcp:
         # one answer settles every proposal waiting in this conversation: a later "ja" meant for
         # something else never carries out an old one
         import agent
@@ -459,6 +470,8 @@ async def prepare(request):
                        "client": body.get("client"),
                        "text": messages[-1]["content"] if messages[-1]["role"] == "user" else ""})
     tools += ex["tools"]
+    if mcp:   # only what the connection was given (mcpserver.ASK_TOOLS), never more than the rights above left
+        tools = [t for t in tools if t["function"]["name"] in mcp["tools"]]
     if pics or role_cmd:
         tools = []
     if room_far:
@@ -506,7 +519,7 @@ async def prepare(request):
     # "... und leg es aufs reMarkable" (remarkable.py): the panel puts this answer there afterwards, by a fixed rule
     # on the person's own words; the model only writes the answer
     import remarkable
-    rm_after = bool(messages[-1]["role"] == "user" and not pics and not role_cmd and not room_far
+    rm_after = bool(messages[-1]["role"] == "user" and not pics and not role_cmd and not room_far and not mcp
                     and remarkable.answer_wanted(messages[-1]["content"])
                     and remarkable.answer_ok(who, own_browser, private_ok))
     if rm_after:

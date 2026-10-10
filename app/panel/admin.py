@@ -485,7 +485,7 @@ def validate(new):
             or not all(isinstance(b, str) and kiwix.BOOK.fullmatch(b) for b in books):
         raise HTTPException(400, f"kiwix_books: at most {kiwix.MAX_BOOKS} book names (letters, digits, . _ -)")
     for k in ("agent", "agent_mcp", "messages", "messages_all", "messages_announce", "messages_voice", "pebble",
-              "kiwix", "local_first"):
+              "kiwix", "local_first", "mcp_server", "mcp_server_extern", "mcp_server_act"):
         if not isinstance(ch.get(k, False), bool):
             raise HTTPException(400, f"{k} must be true or false")
     if ch.get("esp32_url") and not re.fullmatch(r"https?://[A-Za-z0-9.\-]+(?::\d{1,5})?/?", ch["esp32_url"]):
@@ -665,7 +665,8 @@ def validate(new):
 
 SENSITIVE = [("api", "key"), ("chat", "llm_url"), ("chat", "llm_key"), ("chat", "telegram_api"),
              ("chat", "search_url"), ("chat", "kiwix_url"), ("chat", "public"), ("chat", "esp32_url"), ("chat", "esp32_repo"),
-             ("chat", "mfa"), ("panel", "trusted_proxies"), ("panel", "allow_lan"), ("panel", "session_days"), ("panel", "trust_days"), ("asr", "model"), ("asr", "aligner_model"),
+             ("chat", "mfa"), ("chat", "mcp_server"), ("chat", "mcp_server_extern"), ("chat", "mcp_server_act"),
+             ("panel", "trusted_proxies"), ("panel", "allow_lan"), ("panel", "session_days"), ("panel", "trust_days"), ("asr", "model"), ("asr", "aligner_model"),
              ("tts", "model"), ("tts", "voicedesign_model")]
 
 

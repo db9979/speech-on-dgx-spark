@@ -71,9 +71,10 @@ import hintergrund  # noqa: E402
 import stufe  # noqa: E402
 import today  # noqa: E402
 import offsite  # noqa: E402
+import mcpserver  # noqa: E402
 
 app = FastAPI(title="Speech on DGX Spark")
-for _module in (account, admin, chat, update, system, proactive, room, roomlive, tidy, weather, contacts, parcels, telegram, tasks, esp32, iphone, pebblewatch, android, appupdate, apns, transit, logfilter, agent, images, messages, intent, wissen, tracelog, lokal, features, remarkable, join, onboard, hintergrund, stufe, today, offsite):
+for _module in (account, admin, chat, update, system, proactive, room, roomlive, tidy, weather, contacts, parcels, telegram, tasks, esp32, iphone, pebblewatch, android, appupdate, apns, transit, logfilter, agent, images, messages, intent, wissen, tracelog, lokal, features, remarkable, join, onboard, hintergrund, stufe, today, offsite, mcpserver):
     app.include_router(_module.router)
 app.middleware("http")(update_lock)
 
@@ -92,9 +93,9 @@ app.add_middleware(BodyLimit, default=2 * 1024**2, gate=_may_upload, limits=[
     ("/api/clone-voices", 60 * 1024**2), ("/api/test/asr", 51 * 1024**2), ("/api/logverbose", 4096), ("/api/profile/voice", 11 * 1024**2),
     ("/api/profile/docs", lambda: wissen.pdf_bytes() + 1024**2), ("/api/chat/image", images.MAX_BYTES + 64 * 1024),
     ("/api/chat", 4 * 1024**2), ("/api/login", 64 * 1024),
-    ("/api/profile/login", 64 * 1024)],
+    ("/api/profile/login", 64 * 1024), ("/mcp", mcpserver.MAX_BODY), ("/oauth/", mcpserver.MAX_JSON)],
     gated=("/api/backups-upload", "/api/clone-voices", "/api/test/asr", "/api/profile/voice", "/api/profile/docs",
-           "/api/chat/image"))
+           "/api/chat/image", "/mcp"))
 
 
 # Browser protection on every answer (V01.0.262): no other page may show the panel in a frame (clickjacking),

@@ -90,6 +90,31 @@ OpenClaw: `tts.provider: "openai"` mit `tts.providers.openai.baseUrl` = `http://
 
 Den Agenten nicht auf der Spark selbst installieren: Er führt Befehle aus und käme an Einstellungen und Schlüssel. Ohne API-Schlüssel kann jeder im Heimnetz die Sprachdienste nutzen.
 
+### Spark als MCP-Server
+
+Andere Programme nutzen den Spark über das [Model Context Protocol](https://modelcontextprotocol.io) (Streamable HTTP, Adresse `/mcp` des Panels, z. B. `http://SPARK:31080/mcp`). Standardmäßig aus.
+
+**Einschalten:** Admin: Funktionen → *Spark als MCP-Server*. Profil: Ich → *Dienste per MCP* → „Spark als MCP-Server für mich“, dann „Programm mit Schlüssel verbinden“: Name, Werkzeuge, „Schlüssel erzeugen“. Der Schlüssel ist nur einmal sichtbar; im Programm als Header `Authorization: Bearer <Schlüssel>` eintragen.
+
+| Gruppe | Werkzeuge |
+|---|---|
+| Sprache | `transcribe` (Audio als base64, höchstens 10 MB), `speak` (Text bis 2000 Zeichen, Antwort mp3), `voices` |
+| Lesen | `wikipedia`, `archive_search` (Kiwix), `document_search`, `calendar_events`, `reminder_list`, `today` |
+| Spark fragen | `ask_spark`: der Assistent des Profils, nur mit den Lesewerkzeugen dieses Zugangs |
+| Handeln mit Bestätigung | `home_assistant`, `reminder_set`, `calendar_add`, `action_status` (eigener Admin-Schalter) |
+
+**Regeln (fest, nicht abschaltbar):**
+- Jeder Zugang gehört zu einem Profil und kann nur die Werkzeuge, die das Profil ihm gegeben hat und gerade selbst nutzen darf. Nie nach außen: Mails, Gedächtnis, frühere Gespräche, Geheimnisse, Einstellungen.
+- „Nur im Heimnetz“ (Standard): Der Schlüssel gilt nur, wenn die Anfrage direkt aus dem LAN kommt, ohne Proxy-Kopfzeilen und nicht von einem eingetragenen Reverse-Proxy.
+- `ask_spark`: Die Frage gilt als Text von außen. Nichts wird geschaltet, gespeichert, gelernt, gesendet oder vorgeschlagen; nichts davon landet in den Gesprächen.
+- Handeln: Ein Programm legt nur einen Vorschlag an. Das Profil bekommt eine Mitteilung und entscheidet unter Ich → Dienste per MCP („Ja, ausführen“ mit Code-Fenster, oder „Nein“). Ein Vorschlag wartet 15 Minuten.
+- Grenzen: 60 Aufrufe pro Minute und Zugang (`ask_spark` 10), 2 gleichzeitig pro Zugang, 6 insgesamt; Sprache läuft mit der Stufe „hinten“, Menschen am Spark gehen vor. Ohne Nutzung endet ein Zugang nach 90 Tagen.
+- Das Journal zeigt jede Anfrage als `mcp-server:` mit Programm, Werkzeug und Dauer, nie den Inhalt.
+
+**Von außen (OAuth):** Admin: *MCP-Server von außen* unter dem Schalter. Ein Zugang „von außen“ braucht den zweiten Anmeldeschritt des Profils und einen frischen Code. Programme wie claude.ai melden sich per OAuth 2.1 an (dynamische Registrierung, PKCE S256, `/.well-known/oauth-authorization-server`): Im Programm einen eigenen MCP-Connector mit `https://dein-proxy/mcp` anlegen, das Programm schickt dich ins Panel, dort Warnhinweis, Werkzeuge wählen, mit Code bestätigen. Zugriffstoken gelten 1 Stunde, Erneuerungstoken 30 Tage und werden bei jeder Nutzung getauscht. Alles, was ein solches Programm liest, geht an dessen Anbieter.
+
+**Beispiele:** Open WebUI: Einstellungen → Externe Werkzeuge → „+“, Typ MCP (Streamable HTTP). n8n: Knoten „MCP Client Tool“. Programme ohne Header-Feld: `npx mcp-remote http://SPARK:31080/mcp --header "Authorization: Bearer <Schlüssel>"`.
+
 ### „Hey Siri, frag Spark“
 
 Ein iPhone-Kurzbefehl schickt die diktierte Frage an `POST /api/siri/ask` (Header `X-Speech-Device` mit

@@ -557,7 +557,7 @@ def _device(d, request):
 
 def device(request):
     """The device entry behind this request's key (id, user, scope), or None for logins."""
-    if request.scope.get("speech_profile"):
+    if request.scope.get("speech_profile") or request.scope.get("speech_mcp"):
         return None
     dev = _device(_load(), request)
     return {"id": dev["id"], "user": dev["user"], "scope": dev.get("scope") or ""} if dev else None
@@ -565,7 +565,7 @@ def device(request):
 
 def device_name(request):
     """The name of the device key behind this request ("" for logins and guests)."""
-    if request.scope.get("speech_profile"):
+    if request.scope.get("speech_profile") or request.scope.get("speech_mcp"):
         return ""
     dev = _device(_load(), request)
     return str(dev.get("name") or "") if dev else ""
@@ -573,7 +573,7 @@ def device_name(request):
 
 def key_scope(request):
     """The scope of the device key this request carries ("app"), "" for other keys and logins."""
-    if request.scope.get("speech_profile"):
+    if request.scope.get("speech_profile") or request.scope.get("speech_mcp"):
         return ""
     dev = _device(_load(), request)
     return str(dev.get("scope") or "") if dev else ""
@@ -593,6 +593,11 @@ def used(uid, kind, key=""):
 def current(request):
     """{"id", "name"} of the profile behind this request (device key first, then cookie), or None."""
     d = _load()
+    # "Spark fragen" over MCP (mcpserver.py): set only by the panel itself after checking the connection's token
+    mcp = request.scope.get("speech_mcp")
+    if mcp:
+        u = next((u for u in d["users"] if u["id"] == mcp.get("uid")), None)
+        return {"id": u["id"], "name": u["name"]} if u else None
     inner = request.scope.get("speech_profile")   # set only by the panel itself (Telegram, see telegram.py)
     if inner:
         used(inner, "tg")
@@ -721,6 +726,7 @@ SETTINGS = {
     "spk_code": (False, lambda v: isinstance(v, bool)),   # code word at an own speaker when the voice is not sure (spkcode.py)
     "pebble_on": (False, lambda v: isinstance(v, bool)),   # Pebble watch paired by code (pebblewatch.py)
     "android_on": (False, lambda v: isinstance(v, bool)),  # Android app (android.py)
+    "mcps_on": (False, lambda v: isinstance(v, bool)),     # the Spark as an MCP server for other programs (mcpserver.py)
     # iPhone app (iphone.py): pairing for this profile, and switching the smart home from it, both off
     "app_on": (False, lambda v: isinstance(v, bool)),
     "app_ha": (False, lambda v: isinstance(v, bool)),
