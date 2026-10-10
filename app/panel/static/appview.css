@@ -1,0 +1,149 @@
+/* Phones as the iPhone app (js/appview.js, plan handy-wie-app.md, V01.0.281): only below 760 px with body.appview;
+   computers and "Am Rechner-Layout zeigen" keep app.css alone. iOS look on iPhone and Android alike. */
+#apbar,#aptabs,.appg,#apface,#apmic,#apsheet,.apbl,.apx{display:none}
+body.appview{--apbg:#f2f2f7;--apcard:#fff;--apsep:rgba(60,60,67,.2);--aplab:#8a8a8e;--apgreen:#34c759;--apbarbg:rgba(249,249,251,.92);
+  --apuser:#6366f1;--apbot:#e9e9ef;--apred:#ff3b30;--apchev:#c4c4c7;
+  background:var(--apbg);overflow-x:clip;font-family:-apple-system,BlinkMacSystemFont,"SF Pro Text",Roboto,"Segoe UI",system-ui,sans-serif;-webkit-tap-highlight-color:transparent}
+@media (prefers-color-scheme:dark){:root:not([data-theme=light]) body.appview{--apbg:#000;--apcard:#1c1c1e;--apsep:rgba(84,84,88,.65);--aplab:#8d8d93;--apgreen:#30d158;
+  --apbarbg:rgba(24,24,26,.9);--apbot:#2a2a2e;--apred:#ff453a;--apchev:#5a5a5f}}
+:root[data-theme=dark] body.appview{--apbg:#000;--apcard:#1c1c1e;--apsep:rgba(84,84,88,.65);--aplab:#8d8d93;--apgreen:#30d158;
+  --apbarbg:rgba(24,24,26,.9);--apbot:#2a2a2e;--apred:#ff453a;--apchev:#5a5a5f}
+body.appview header,body.appview #mbar,body.appview #fab,body.appview #subback,body.appview .cfgwrap.sub .cfgback{display:none!important}
+body.appview:not(.inchat) main{padding:8px 16px calc(96px + env(safe-area-inset-bottom))}
+body.appview.appage main,body.appview:not(.inchat):not(.apsub) main{padding-top:calc(8px + env(safe-area-inset-top))}
+body.appview main{overflow-x:clip}
+body.appview .card{background:var(--apcard);border:0;box-shadow:none;border-radius:12px}
+body.appview.appage main>section,body.appview.appage #subnav,body.appview.appage #alerts{display:none!important}
+/* ---- top bar: "‹ back", the title in the middle, icons left and right */
+body.appview #apbar:not([hidden]){display:flex;align-items:center;gap:2px;position:sticky;top:0;z-index:30;min-height:calc(44px + env(safe-area-inset-top));
+  padding:env(safe-area-inset-top) 6px 0;background:var(--apbarbg);backdrop-filter:saturate(1.8) blur(20px);-webkit-backdrop-filter:saturate(1.8) blur(20px);border-bottom:.5px solid var(--apsep)}
+body.appview.inchat #apbar{flex:none;background:var(--apcard);border-bottom:0}
+#aptitle{position:absolute;left:50%;bottom:11px;transform:translateX(-50%);max-width:40%;font-size:17px;font-weight:600;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;pointer-events:none}
+.aplead,.aptrail{display:flex;gap:2px}.aptrail{margin-left:auto}
+.apib{width:42px;height:42px;display:grid;place-items:center;border:0;background:none;color:var(--acc);cursor:pointer;padding:0}.apib svg{width:24px;height:24px}
+.apnb{display:flex;align-items:center;border:0;background:none;color:var(--acc);font:inherit;font-size:17px;padding:8px 6px 8px 0;min-height:44px;cursor:pointer;max-width:32vw}
+.apnb span{white-space:nowrap;overflow:hidden;text-overflow:ellipsis}.apnb svg{width:26px;height:26px;flex:none}
+#apback[hidden]{display:none}
+/* ---- tab bar */
+body.appview.aptabs #aptabs{display:flex;position:fixed;left:0;right:0;bottom:0;z-index:40;background:var(--apbarbg);
+  backdrop-filter:saturate(1.8) blur(20px);-webkit-backdrop-filter:saturate(1.8) blur(20px);border-top:.5px solid var(--apsep);padding:5px 2px calc(3px + env(safe-area-inset-bottom))}
+body.appview.aptabs.inchat #aptabs{position:static;flex:none}
+#aptabs button{flex:1;display:flex;flex-direction:column;align-items:center;gap:1px;background:none;border:0;color:var(--aplab);font:inherit;font-size:10.5px;font-weight:500;
+  padding:2px 0;min-height:50px;position:relative;cursor:pointer;min-width:0}
+#aptabs button[hidden]{display:none}#aptabs svg{width:26px;height:26px}#aptabs button.on{color:var(--acc)}
+#aptabs span{white-space:nowrap;overflow:hidden;text-overflow:ellipsis;max-width:100%}
+#aptabs .apdot{position:absolute;top:3px;left:calc(50% + 8px);width:10px;height:10px;border-radius:50%;background:var(--apred);border:2px solid var(--apbarbg)}
+#aptabs .apdot[hidden]{display:none}
+body.appview.kbd #aptabs{display:none!important}
+/* ---- Spark: face, bubbles, the big microphone, the text field always there */
+body.appview.inchat{background:var(--apcard)}
+body.appview.inchat .stage,body.appview .mtoggles .opts,body.appview #chattiming,body.appview .msg .av{display:none!important}
+body.appview.inchat .convo{display:flex!important;flex-direction:column;flex:1;min-height:0}
+body.appview.inchat #apface{display:flex;flex-direction:column;align-items:center;flex:none;padding:4px 16px 0}
+body.appview #apface #face{width:min(200px,50vw);transition:width .3s ease}
+body.appview.apmsgs #apface #face{width:96px}
+body.appview.kbd.apmsgs #apface #face{width:64px}
+#aphint{color:var(--aplab);text-align:center;font-size:15px;margin:12px 20px 0;line-height:1.4}body.appview.apmsgs #aphint{display:none}
+body.appview #chatlog:empty::before{display:none}
+body.appview.inchat #chatlog{display:flex!important;flex:1;min-height:0;overflow-y:auto;padding:8px 14px 4px}
+body.appview .msg{max-width:80%}
+body.appview .bubble{font-size:16px;line-height:1.35;border-radius:19px;padding:9px 14px}
+body.appview .msg.user .bubble{background:var(--apuser);border-bottom-right-radius:19px}
+body.appview .msg.bot .bubble{background:var(--apbot);border-bottom-left-radius:19px}
+body.appview.inchat #apmic{display:flex;flex-direction:column;align-items:center;gap:4px;flex:none;padding:8px 16px 0}
+body.appview #apmic .mic{width:72px;height:72px;padding:0;border-radius:50%;justify-content:center;flex:none}
+body.appview #apmic .mic #talklbl{display:none}body.appview #apmic .mic svg{width:30px;height:30px}
+body.appview #apmic .mic.ans .i-mic{display:none}body.appview #apmic .mic.ans .i-stop{display:block}
+body.appview #apmic #chatstate{display:block!important;margin:0;font-size:13px;color:var(--aplab);text-align:center;min-height:18px}
+body.appview #apmic .wakeind{margin:0}
+body.appview.kbd #apmic .mic{display:none}
+body.appview.inchat .mtoggles{padding:0}
+body.appview.inchat .composer{gap:6px;padding:6px 12px 8px}
+body.appview.inchat:not(.aptabs) .composer{padding-bottom:calc(8px + env(safe-area-inset-bottom))}
+body.appview.inchat .composer input{border-radius:10px;min-height:40px;background:var(--apcard)}
+body.appview.inchat .composer .send{display:grid!important;width:40px;height:40px;place-items:center;flex:none}
+body.appview.inchat .composer .attach{flex:none}
+/* ---- pages: large titles, inset grouped lists like the iOS settings */
+body.appview .appg.on{display:block;animation:fade .18s ease}
+.aplt{font-size:34px;font-weight:700;letter-spacing:-.02em;line-height:1.15;margin:4px 0 10px}
+.apdate{color:var(--aplab);font-size:15px;margin:-6px 0 16px}
+.apgrp{margin:0 0 24px}
+.apgh{font-size:13px;color:var(--aplab);text-transform:uppercase;letter-spacing:.02em;padding:0 16px 7px}
+.apgb{background:var(--apcard);border-radius:11px;overflow:hidden}
+.aprow{display:flex;align-items:center;gap:8px;width:100%;min-height:46px;padding:10px 16px;border:0;background:none;color:var(--fg);font:inherit;font-size:17px;
+  text-align:left;position:relative;cursor:pointer;line-height:1.3}
+.aprow+.aprow::before{content:"";position:absolute;top:0;left:16px;right:0;border-top:.5px solid var(--apsep)}
+.aprow:active{background:var(--apsep)}
+.apl{flex:1;min-width:0}.apl small{display:block;font-size:13px;color:var(--aplab);margin-top:1px}
+.apv{color:var(--aplab);white-space:nowrap;overflow:hidden;text-overflow:ellipsis;max-width:45%}
+.apch{width:8px;height:8px;border:solid var(--apchev);border-width:2px 2px 0 0;transform:rotate(45deg);flex:none;margin:0 2px 0 4px}
+.apbadge{background:var(--apred);color:#fff;font-style:normal;font-size:13px;border-radius:10px;padding:0 7px}
+.apred{color:var(--apred)}.apacc{color:var(--acc)}.aprow.on .apl{font-weight:600}
+.apsearch{display:flex;align-items:center;gap:6px;width:100%;margin:0 0 18px;padding:8px 10px;border:0;border-radius:10px;background:rgba(118,118,128,.12);
+  color:var(--aplab);font:inherit;font-size:17px;text-align:left;cursor:pointer}.apsearch svg{width:18px;height:18px;flex:none}
+.apstat{display:block;width:100%;text-align:left;border:0;margin:0 0 24px;padding:12px 16px;border-radius:11px;color:var(--fg);font:inherit;cursor:pointer;
+  background:color-mix(in srgb,var(--ok) 14%,var(--apcard))}
+.apstat[data-lvl=warn]{background:color-mix(in srgb,var(--warn) 16%,var(--apcard))}.apstat[data-lvl=bad]{background:color-mix(in srgb,var(--bad) 14%,var(--apcard))}
+.apstat b{display:block;font-size:17px}.apstat span{display:block;font-size:14px;color:var(--aplab);margin-top:2px}
+.apfoot{font-size:13px;color:var(--aplab);padding:0 16px 20px}
+/* Heute: cards and "Probier mal" */
+.apcards{display:grid;grid-template-columns:1fr 1fr;gap:10px;margin-bottom:24px}
+.apcard{display:flex;flex-direction:column;align-items:flex-start;gap:2px;text-align:left;border:0;border-radius:14px;background:var(--apcard);padding:12px 14px;
+  color:var(--fg);font:inherit;min-height:86px;min-width:0;cursor:pointer}
+.apcard.wide{grid-column:span 2}.apcard.hot{background:color-mix(in srgb,#ff9f0a 15%,var(--apcard))}
+.apk{font-size:13px;color:var(--aplab)}.apcard b{font-size:17px;line-height:1.25}
+.aps{font-size:13px;color:var(--aplab);overflow:hidden;display:-webkit-box;-webkit-line-clamp:2;-webkit-box-orient:vertical;word-break:break-word}
+.aprog{display:block;width:100%;height:5px;border-radius:3px;background:var(--apsep);margin-top:8px}.aprog>i{display:block;height:100%;border-radius:3px;background:var(--acc)}
+.apchips{display:flex;flex-wrap:wrap;gap:8px;padding:0 2px 8px}
+.apchip{border:0;border-radius:16px;background:color-mix(in srgb,var(--acc) 12%,var(--apcard));color:var(--acc);font:inherit;font-size:15px;padding:7px 12px;cursor:pointer;text-align:left}
+/* ---- sheet from below (Verlauf) */
+body.appview #apsheet:not([hidden]){display:block;position:fixed;inset:0;z-index:70}
+.apshade{position:absolute;inset:0;background:rgba(0,0,0,.3);animation:fade .2s ease}
+.apscard{position:absolute;left:0;right:0;bottom:0;top:max(44px,calc(env(safe-area-inset-top) + 10px));background:var(--apbg);border-radius:12px 12px 0 0;
+  display:flex;flex-direction:column;padding:0 16px;animation:up .26s ease}
+.apscard .sheetgrip{margin:6px auto 2px;background:var(--apchev)}
+.apshead{display:grid;grid-template-columns:1fr auto 1fr;align-items:center;min-height:44px;margin-bottom:8px}.apshead b{font-size:17px}.apshead .apnb{justify-self:end;font-weight:600;padding-right:0}
+.apsbody{flex:1;overflow-y:auto;overscroll-behavior:contain;padding-bottom:calc(16px + env(safe-area-inset-bottom))}
+/* ---- Ich: a page above the content, its list grouped, a page with "‹ Ich" */
+body.appview #profmodal{background:var(--apbg);backdrop-filter:none;-webkit-backdrop-filter:none;z-index:35;bottom:0}
+body.appview.aptabs #profmodal{bottom:calc(59px + env(safe-area-inset-bottom))}
+body.appview .mecard{background:var(--apbg);animation:none;height:100%;padding:calc(4px + env(safe-area-inset-top)) 16px 8px}
+body.appview #profmodal:not(.sub) #profhead{font-size:34px;font-weight:700;letter-spacing:-.02em;line-height:1.15}
+body.appview #profmodal:not(.sub) .mehrow{min-height:48px}
+body.appview #setscope{font-size:13px;color:var(--aplab)}body.appview #profmodal.sub #setscope{display:none}
+body.appview #profmodal.sub .mehead{margin-bottom:6px}
+body.appview #profmodal.sub .mehrow{position:relative}
+body.appview #profmodal.sub #mepage{position:absolute;left:50%;top:50%;transform:translate(-50%,-50%);font-size:17px;font-weight:600;margin:0;max-width:56%;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+body.appview #profmodal.sub:not(.one) #meback{color:var(--acc);border:0;background:none;padding:8px 6px 8px 0;display:flex;align-items:center;gap:0;min-height:44px}
+body.appview #meback svg{width:26px;height:26px}body.appview #profmodal .apbl{display:inline;font-size:17px}
+body.appview.aptab-docs #meback{visibility:hidden}
+body.appview .menav{gap:0}
+body.appview .menav .mgrp{display:block;font-size:13px;color:var(--aplab);text-transform:uppercase;letter-spacing:.02em;padding:22px 16px 7px;font-weight:400;background:none;border:0}
+body.appview .menav>button{background:var(--apcard);border:0;border-radius:0;padding:11px 34px 11px 16px;font-size:17px;min-height:46px;color:var(--fg);position:relative;flex:none}
+body.appview .menav>button+button::before{content:"";position:absolute;top:0;left:16px;right:0;border-top:.5px solid var(--apsep)}
+body.appview .menav>button:first-child,body.appview .menav>:not(button)+button{border-top-left-radius:11px;border-top-right-radius:11px}
+body.appview .menav>button:last-child,body.appview .menav>button:has(+:not(button)){border-bottom-left-radius:11px;border-bottom-right-radius:11px}
+body.appview .menav>button::after{border-color:var(--apchev)}
+body.appview .menav .mst{display:block;font-size:13px;color:var(--aplab);font-weight:400}body.appview .menav .mst:empty{display:none}
+body.appview .menav .apx{display:block}body.appview .menav button.apx{display:block}
+body.appview .menav .apxv{display:block;font-size:13px;color:var(--aplab);font-weight:400}body.appview .menav .apxv:empty{display:none}
+body.appview .apon{display:none}
+body.appview .mebody .ptab{background:var(--apcard);border-radius:12px;padding:4px 16px 14px}
+body.appview .mebody .ptab:empty{display:none}
+body.appview .mefoot{border:0;margin-top:8px}body.appview #profclose{display:none}
+body.appview #proflogout{flex:1;margin:0;background:var(--apcard);color:var(--apred);border:0;border-radius:11px;min-height:46px;font-size:17px}
+body.appview #profmodal.sub .mefoot{display:none}
+/* ---- switches and lists everywhere */
+body.appview .tgl i{width:51px;height:31px;background:rgba(120,120,128,.18)}
+body.appview .tgl i::after{width:27px;height:27px;top:2px;left:2px;box-shadow:0 3px 8px rgba(0,0,0,.15),0 1px 1px rgba(0,0,0,.16)}
+body.appview .tgl input:checked+i{background:var(--apgreen)}body.appview .tgl input:checked+i::after{transform:translateX(20px)}
+body.appview .setrow{border-bottom:.5px solid var(--apsep)}
+body.appview .cfgnav{background:var(--apcard);border:0;box-shadow:none;border-radius:11px}
+body.appview .cfgnav button{font-size:17px;border-bottom:.5px solid var(--apsep)}
+body.appview main.sublist #subnav{background:var(--apcard);border-radius:11px;border:0;box-shadow:none}
+/* ---- pages slide in from the right, and back from the left */
+@keyframes apin{from{transform:translateX(28%);opacity:.35}to{transform:none;opacity:1}}
+@keyframes apout{from{transform:translateX(-16%);opacity:.5}to{transform:none;opacity:1}}
+body.appview .apin{animation:apin .3s cubic-bezier(.2,.8,.2,1)}body.appview .apout{animation:apout .26s ease-out}
+@media (prefers-reduced-motion:reduce){body.appview .apin,body.appview .apout,body.appview .appg.on{animation:none}}
+body.appview.appage #credit{display:none}

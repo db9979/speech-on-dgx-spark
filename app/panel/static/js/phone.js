@@ -13,7 +13,8 @@ const homes=new Map();
 let MVIEW='face';try{MVIEW=localStorage.getItem('mview')==='log'?'log':'face'}catch{}
 function setView(v){MVIEW=v;try{localStorage.setItem('mview',v)}catch{}placeFace();if(v==='log')$('chatlog').scrollTop=1e9}
 $('mlog').onclick=()=>setView('log');$('mback').onclick=()=>setView('face');$('mset').onclick=()=>openSet();
-function placeFace(){const big=!MOBILE.matches||MVIEW==='face';
+function placeFace(){if(window.apFace&&apFace())return;   // the app view (appview.js) has its own place for the face
+  const big=!MOBILE.matches||MVIEW==='face';
   document.body.classList.toggle('mempty',MOBILE.matches&&big);
   const f=$('face'),home=homes.get(f);
   if(MOBILE.matches&&!big){if(!home){const m=document.createComment('face');f.parentNode.insertBefore(m,f);homes.set(f,m)}$('mslot').appendChild(f)}

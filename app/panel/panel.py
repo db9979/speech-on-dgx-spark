@@ -374,7 +374,7 @@ PUBLIC_FILES = {"icon.svg": "image/svg+xml", "icon-192.png": "image/png", "icon-
 
 @app.get("/static/{name}")
 def static_file(name: str):
-    if name == "app.css":  # the page's style and scripts: revalidated, so an update shows at once
+    if name in ("app.css", "appview.css"):  # the page's style and scripts: revalidated, so an update shows at once
         return FileResponse(os.path.join(STATIC, name), media_type="text/css", headers={"Cache-Control": "no-cache"})
     if name not in PUBLIC_FILES:
         raise HTTPException(404, "not found")

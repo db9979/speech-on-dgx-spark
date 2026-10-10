@@ -108,8 +108,12 @@ class Browser(unittest.TestCase):
                         self.assertGreater(box[2], 600)
                         self.assertFalse(await pg.evaluate("getComputedStyle($('mbar')).display!=='none'"))
                     else:
-                        self.assertTrue(await pg.evaluate("getComputedStyle($('mbar')).display!=='none'"))
-                        await pg.evaluate("document.querySelector('#mbar button[data-m=mon]').click()")
+                        # phones look like the iPhone app (V01.0.296): its tab bar instead of the menu, Verwalten lists the pages
+                        self.assertTrue(await pg.evaluate("getComputedStyle($('aptabs')).display!=='none'"))
+                        self.assertFalse(await pg.evaluate("getComputedStyle($('mbar')).display!=='none'"))
+                        await pg.evaluate("document.querySelector('#aptabs [data-tab=manage]').click()")
+                        await pg.wait_for_selector("#apmanage [data-sec=mon]", state="attached", timeout=5000)
+                        await pg.evaluate("document.querySelector('#apmanage [data-sec=mon]').click()")
                         self.assertTrue(await pg.evaluate("document.querySelector('nav button[data-s=mon]').classList.contains('on')"))
                     self.assertEqual(errors, [], name)
                     await br.close()
@@ -213,15 +217,18 @@ class Browser(unittest.TestCase):
                 self.assertEqual(errors, [])
                 await br.close()
                 br, pg, errors = await self.page(p, 390, 844)
-                await pg.evaluate("document.querySelector('#mbar button[data-m=mon]').click()")
+                await pg.evaluate("document.querySelector('#aptabs [data-tab=manage]').click()")
+                await pg.evaluate("document.querySelector('#apmanage [data-sec=mon]').click()")
                 await pg.wait_for_timeout(300)
                 self.assertTrue(await pg.evaluate("document.querySelector('main').classList.contains('sublist')"))
                 self.assertFalse(await pg.evaluate("$('mon').offsetParent!==null"))
                 await pg.evaluate("document.querySelector('#subnav [data-sub=test]').click()")
                 await pg.wait_for_timeout(300)
                 self.assertTrue(await pg.evaluate("$('test').classList.contains('on')&&$('test').offsetParent!==null"))
-                self.assertTrue(await pg.evaluate("$('subback').offsetParent!==null"))
-                await pg.evaluate("$('subback').click()")
+                # "back" sits in the app's top bar and names the list it goes back to
+                self.assertTrue(await pg.evaluate("$('apback').offsetParent!==null"))
+                self.assertEqual(await pg.evaluate("$('apback').textContent.trim()"), "Zustand")
+                await pg.evaluate("$('apback').click()")
                 self.assertTrue(await pg.evaluate("document.querySelector('main').classList.contains('sublist')"))
                 await pg.evaluate("goSec('cfg')")
                 await pg.wait_for_function("[...document.querySelectorAll('#cfgnav small.gls')].some(x=>x.textContent.trim())", timeout=8000)
@@ -1018,11 +1025,13 @@ class Browser(unittest.TestCase):
                             self.assertFalse(await pg.is_visible(f"nav button[data-s={s}]"), s)
                         await pg.click("#navme")
                     else:
-                        shown = await pg.evaluate("[...document.querySelectorAll('#mbar button')].filter(b=>b.offsetParent).map(b=>b.dataset.m)")
-                        self.assertEqual(shown, ["chat", "me"])
-                        await pg.click("#mbar button[data-m=me]")
+                        # the app's tabs: Spark, Heute, Dokumente (documents are on here), Ich; Verwalten only with the admin login
+                        shown = await pg.evaluate("[...document.querySelectorAll('#aptabs button')].filter(b=>b.offsetParent).map(b=>b.dataset.tab)")
+                        self.assertEqual(shown, ["spark", "today", "docs", "me"])
+                        await pg.click("#aptabs button[data-tab=me]")
                     await pg.wait_for_selector("#profmodal", state="visible")
                     self.assertFalse(await pg.is_visible("#loginbtn"))   # a profile without an admin role
+                    self.assertFalse(await pg.is_visible("#ptabs [data-apx=login]"))
                     self.assertEqual(errors, [], name)
                     await br.close()
         self.run_async(go())
@@ -1034,6 +1043,17 @@ class Browser(unittest.TestCase):
             async with async_playwright() as p:
                 for name, w, h in VIEWS:
                     br, pg, errors = await self.page(p, w, h)
+                    if name == "handy":   # phones look like the app (V01.0.296): Heute is a tab of its own
+                        await pg.click("#aptabs [data-tab=today]")
+                        await pg.wait_for_selector("#aptoday #metoday .tcard")
+                        self.assertEqual(await pg.evaluate("document.querySelectorAll('#metoday').length"), 1)
+                        self.assertTrue(await pg.evaluate("document.querySelectorAll('#metoday .ttry .chip').length>0"))
+                        self.assertLessEqual(await pg.evaluate("document.documentElement.scrollWidth-window.innerWidth"), 1)
+                        await pg.click("#metoday .tcard")
+                        await pg.wait_for_function("document.getElementById('profmodal').classList.contains('sub')")
+                        self.assertEqual(errors, [], name)
+                        await br.close()
+                        continue
                     await pg.evaluate("openMe(PHONE.matches?'list':'overbox')")
                     await pg.wait_for_selector("#metoday .tcard")
                     self.assertTrue(await pg.is_visible("#metoday .tcard"))
@@ -1069,6 +1089,82 @@ class Browser(unittest.TestCase):
                 await pg.evaluate("$('findmodal').style.display='grid'")
                 await pg.click("#findmodal [data-on=findClose]")
                 self.assertEqual(await pg.evaluate("$('findmodal').style.display"), "none")
+                self.assertEqual(errors, [])
+                await br.close()
+        self.run_async(go())
+
+    def test_phone_looks_like_the_app(self):
+        """V01.0.296 (plan handy-wie-app.md): on a phone the page looks and works like the iPhone app: tab bar, the chat
+        with face, bubbles, big microphone and text field, Heute, Verwalten as a list, pages with "back" on top that the
+        phone's back gesture (the browser history) steps through, the Verlauf sheet, and "Am Rechner-Layout zeigen"
+        and back again."""
+        async def go():
+            async with async_playwright() as p:
+                br, pg, errors = await self.page(p, 390, 844, csp=True)
+                over = "document.documentElement.scrollWidth-window.innerWidth"
+                self.assertIn("appview", await pg.evaluate("document.body.className"))
+                self.assertFalse(await pg.evaluate("document.querySelector('header').offsetParent!==null"))
+                self.assertEqual(await pg.evaluate("$('aptitle').textContent"), "Spark")
+                self.assertTrue(await pg.evaluate("$('apface').contains($('face'))&&$('apmic').contains($('talk'))&&$('talk').offsetParent!==null"))
+                self.assertTrue(await pg.evaluate("$('chattext').offsetParent!==null&&$('chatsend').offsetParent!==null"))
+                await pg.fill("#chattext", "Hallo")
+                await pg.click("#chatsend")
+                await pg.wait_for_function("document.querySelectorAll('#chatlog .msg').length>=2", timeout=8000)
+                self.assertIn("apmsgs", await pg.evaluate("document.body.className"))
+                # Heute: own page, the chat is gone
+                await pg.click("#aptabs [data-tab=today]")
+                await pg.wait_for_selector("#aptoday h1")
+                self.assertFalse(await pg.evaluate("$('chat').offsetParent!==null"))
+                # Verwalten → Einstellungen → a page; the back gesture goes up one level at a time
+                await pg.click("#aptabs [data-tab=manage]")
+                await pg.click("#apmanage [data-sec=cfg]")
+                await pg.click("#cfgnav button[data-p=talk]")
+                await pg.wait_for_timeout(400)
+                self.assertTrue(await pg.evaluate("$('pane-talk').offsetParent!==null"))
+                self.assertEqual(await pg.evaluate("APV.depth()"), 2)
+                self.assertLessEqual(await pg.evaluate(over), 1)
+                await pg.evaluate("history.back()")
+                await pg.wait_for_timeout(500)
+                self.assertFalse(await pg.evaluate("document.querySelector('.cfgwrap').classList.contains('sub')"))
+                await pg.evaluate("history.back()")
+                await pg.wait_for_timeout(500)
+                self.assertTrue(await pg.evaluate("$('apmanage').offsetParent!==null"))
+                self.assertEqual(await pg.evaluate("APV.depth()"), 0)
+                # fast taps in and out never step back past the page (one step back at a time)
+                await pg.evaluate("""(async()=>{for(let i=0;i<6;i++){document.querySelector('#apmanage [data-sec=cfg]').click();
+                  document.querySelector('#cfgnav button[data-p=talk]').click();await new Promise(r=>setTimeout(r,5));$('cfgback').click();
+                  await new Promise(r=>setTimeout(r,5));document.querySelector('#aptabs [data-tab=manage]').click()}})()""")
+                await pg.wait_for_timeout(1200)
+                self.assertTrue(await pg.evaluate("typeof APV==='object'&&location.pathname==='/'"))
+                self.assertEqual(await pg.evaluate("APV.depth()"), 0)
+                self.assertEqual(await pg.evaluate("history.state&&history.state.ap"), 0)
+                # the Verlauf sheet closes with the back gesture too
+                await pg.click("#aptabs [data-tab=spark]")
+                await pg.click("#apbar [data-ap=hist]")
+                self.assertTrue(await pg.evaluate("!$('apsheet').hidden&&$('apsheet').querySelectorAll('[data-cid]').length>=1"))
+                await pg.evaluate("history.back()")
+                await pg.wait_for_timeout(500)
+                self.assertTrue(await pg.evaluate("$('apsheet').hidden"))
+                # Ich: the list, a page with "‹ Ich"
+                await pg.click("#aptabs [data-tab=me]")
+                await pg.wait_for_selector("#profmodal", state="visible")
+                await pg.click("#ptabs button[data-t=setbox]")
+                self.assertTrue(await pg.evaluate("$('profmodal').classList.contains('sub')&&$('meback').offsetParent!==null"))
+                await pg.evaluate("history.back()")
+                await pg.wait_for_timeout(500)
+                self.assertFalse(await pg.evaluate("$('profmodal').classList.contains('sub')"))
+                # the computer layout and back
+                await pg.click("#aptabs [data-tab=manage]")
+                await pg.click("#apmanage [data-ax=desk]")
+                await pg.wait_for_timeout(300)
+                self.assertNotIn("appview", await pg.evaluate("document.body.className"))
+                self.assertTrue(await pg.evaluate("getComputedStyle($('mbar')).display!=='none'&&!$('apmic').contains($('talk'))"))
+                await pg.click("#mbar button[data-m=more]")
+                await pg.click("#miapp")
+                await pg.wait_for_timeout(300)
+                self.assertIn("appview", await pg.evaluate("document.body.className"))
+                self.assertTrue(await pg.evaluate("$('apmic').contains($('talk'))&&$('apface').contains($('face'))"))
+                self.assertLessEqual(await pg.evaluate(over), 1)
                 self.assertEqual(errors, [])
                 await br.close()
         self.run_async(go())
