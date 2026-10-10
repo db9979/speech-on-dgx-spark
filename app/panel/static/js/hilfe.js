@@ -4,9 +4,11 @@
 // with the same checks as the forms (and the admin's code for Spark switches). Everything shown is text (esc).
 let HILFE=null;   // from /api/whoami: {suggest, page} for this profile, null = off
 function hilfeStart(h){HILFE=h&&typeof h==='object'?h:null;hilfeFab()}
+// after the admin saved or Ich opened: what /api/whoami says now (the switches can have changed meanwhile)
+async function hilfeRefresh(){try{const w=await (await fetch('/api/whoami')).json();if(PROFILE||w.profile)hilfeStart(w.hilfe)}catch{}}
 const HON=v=>v?t('an','on'):t('aus','off');
 function hilfeShow(x){   // "Zeig mir wo": the switch on its page
-  if(hilfeOpen.on)hilfeClose();
+  $('fab').classList.remove('open');
   if(x.kind==='admin'||(!x.kind&&x.sw&&ADMIN)){if(typeof goCfg!=='function')return;goCfg('feat');
     setTimeout(()=>{const el=$(x.kind==='admin'?'chat.'+x.switch:x.sw);if(!el)return;if(typeof featShow==='function')featShow(el);if(typeof sFlash==='function')sFlash(el.closest('.setrow')||el)},150);return}
   if(typeof openMe==='function')openMe(x.me||'setbox')}
@@ -31,8 +33,10 @@ function hilfeCard(c){const d=document.createElement('div');d.className='hcard';
     if(st==='applied'){after();row.innerHTML=`<button type="button" class="b" data-hdo="undo">${esc(t('Rückgängig','Undo'))}</button>`;msg.textContent=t('Übernommen.','Applied.');return}
     if(st==='undone'){after();row.remove();msg.textContent=t('Zurückgenommen, alles wie vorher.','Undone, everything as before.')}});
   return d}
-// ---------------------------------------------------------------- Frag Spark (chat.spark_drawer)
-const hilfeOpen={on:false,msgs:[],ctrl:null};
+// ---------------------------------------------------------------- Frag Spark (chat.spark_drawer): the face at the bottom right
+// The face is the same assistant on every page, so no button of its own: with "Frag Spark auf jeder Seite" on it
+// also shows over Ich and for profiles, names the page it is on, takes a typed question too, and every question
+// asked through it (spoken or typed, chat.js ask()) carries the page. Same conversation as the chat.
 function hilfePage(){const pm=$('profmodal');
   if(pm&&pm.style.display==='grid'){const tab=document.querySelector('#profmodal .ptab.on');return tab&&/^[a-z]{2,10}box$/.test(tab.id)?'me/'+tab.id:'me/setbox'}
   const sec=document.querySelector('main section.on'),id=sec?sec.id:'chat';
@@ -41,34 +45,20 @@ function hilfePage(){const pm=$('profmodal');
 function hilfePageName(p){if(p.startsWith('me/')){const n=typeof ME_NAME!=='undefined'&&ME_NAME[p.slice(3)];return t('Ich','Me')+(n?' → '+(L==='en'?n[1]:n[0]):'')}
   if(p.startsWith('cfg/')){const b=document.querySelector(`#cfgnav button[data-p="${p.slice(4)}"]`);return t('Einstellungen','Settings')+(b?' → '+visText(b):'')}
   if(p==='feat')return t('Funktionen','Features');const b=document.querySelector(`nav button[data-s="${p}"]`);return b?visText(b):p}
-function hilfeFab(){let f=$('hilfefab');const want=!!(HILFE&&HILFE.page);   // whoami gives it only to a signed-in profile
-  if(!want){if(f)f.hidden=true;if(hilfeOpen.on)hilfeClose();return}
-  if(!f){f=document.createElement('button');f.id='hilfefab';f.type='button';f.className='b p hilfefab';f.textContent=t('Frag Spark','Ask Spark');
-    f.addEventListener('click',()=>hilfeOpen.on?hilfeClose():hilfeShowDrawer());document.body.appendChild(f)}
-  f.hidden=false}
-function hilfeShowDrawer(){let d=$('hilfedraw');
-  if(!d){d=document.createElement('div');d.id='hilfedraw';d.className='card hilfedraw';d.setAttribute('role','dialog');d.setAttribute('aria-label',t('Frag Spark','Ask Spark'));
-    d.innerHTML=`<div class="hhead"><b>${esc(t('Frag Spark','Ask Spark'))}</b><button type="button" class="ib" id="hilfex" aria-label="${esc(t('Schließen','Close'))}">✕</button></div>
-      <div class="hpage mut" id="hilfepg"></div><div class="hlog" id="hilfelog"></div>
-      <form class="hask" id="hilfeform"><input id="hilfeq" maxlength="500" autocomplete="off" placeholder="${esc(t('Frage zu dieser Seite …','Question about this page …'))}"><button class="b p" type="submit">${esc(t('Fragen','Ask'))}</button></form>`;
-    document.body.appendChild(d);$('hilfex').addEventListener('click',hilfeClose);
-    $('hilfeform').addEventListener('submit',e=>{e.preventDefault();const q=$('hilfeq').value.trim();if(q){$('hilfeq').value='';hilfeAsk(q)}})}
-  hilfeOpen.page=hilfePage();$('hilfepg').textContent=t('Du bist auf: ','You are on: ')+hilfePageName(hilfeOpen.page);
-  d.hidden=false;hilfeOpen.on=true;setTimeout(()=>$('hilfeq').focus(),50)}
-function hilfeClose(){const d=$('hilfedraw');if(d)d.hidden=true;hilfeOpen.on=false;if(hilfeOpen.ctrl)hilfeOpen.ctrl.abort()}
-function hilfeLine(cls,text){const el=document.createElement('div');el.className=cls;el.textContent=text;$('hilfelog').appendChild(el);return el}
-async function hilfeAsk(q){if(hilfeOpen.ctrl)return;hilfeLine('hq',q);const a=hilfeLine('ha typing','…');hilfeOpen.msgs.push({role:'user',content:q});
-  const ctrl=new AbortController();hilfeOpen.ctrl=ctrl;let full='',err='';const cards=[];
-  try{const r=await api('/api/chat',{method:'POST',headers:{'Content-Type':'application/json'},signal:ctrl.signal,
-      body:JSON.stringify({messages:hilfeOpen.msgs.slice(-10),speak:false,page:hilfeOpen.page,tz:(()=>{try{return Intl.DateTimeFormat().resolvedOptions().timeZone}catch{return ''}})()})});
-    const rd=r.body.getReader(),dec=new TextDecoder();let buf='';
-    for(;;){const{value,done}=await rd.read();if(done)break;buf+=dec.decode(value,{stream:true});let i;
-      while((i=buf.indexOf('\n\n'))>=0){const line=buf.slice(0,i).split('\n').find(l=>l.startsWith('data:'));buf=buf.slice(i+2);if(!line)continue;let ev;try{ev=JSON.parse(line.slice(5))}catch{continue}
-        if(ev.type==='text'){full+=ev.delta;a.classList.remove('typing');a.textContent=full;$('hilfelog').scrollTop=1e9}
-        else if(ev.type==='retract'){full=full.slice(0,full.length-ev.drop);a.textContent=full}
-        else if(ev.type==='hilfe'&&ev.card)cards.push(ev.card);
-        else if(ev.type==='error'&&!err)err=typeof errText==='function'?errText(ev.code,ev.message):String(ev.message||'')}}}
-  catch(e){if(e.name!=='AbortError')err=e.message}
-  hilfeOpen.ctrl=null;a.classList.remove('typing');
-  if(full.trim())hilfeOpen.msgs.push({role:'assistant',content:full.trim()});else{hilfeOpen.msgs.pop();a.textContent=err||'–'}
-  for(const c of cards)a.appendChild(hilfeCard(c));$('hilfelog').scrollTop=1e9}
+// the page a question goes with: only through the face (not in the chat itself), only when switched on
+function hilfeNow(){if(!(HILFE&&HILFE.page))return undefined;const p=hilfePage();return p==='chat'?undefined:p}
+const hilfeFabOn=()=>!!(HILFE&&HILFE.page)&&!!hilfeNow();
+function hilfeFab(){const on=hilfeFabOn(),b=document.body;b.classList.toggle('hilfeon',on);
+  const box=$('fabask');if(!box)return;box.hidden=!on;if(on)$('fabpage').textContent=t('Du bist auf: ','You are on: ')+hilfePageName(hilfeNow());
+  else if(!(HILFE&&HILFE.page))$('fabcards').textContent=''}
+function hilfeFabCards(cards){const el=$('fabcards');if(!el)return;el.textContent='';
+  if($('fab').classList.contains('open'))for(const c of cards)el.appendChild(hilfeCard(c))}
+{const f=$('fabask');if(f){f.addEventListener('submit',e=>{e.preventDefault();const q=$('fabq').value.trim();if(!q||!hilfeFabOn())return;$('fabq').value='';
+    if(typeof stopListening==='function')stopListening(true);$('fab').classList.add('open');ask(q)});
+  $('fabq').addEventListener('focus',()=>{if(typeof stopListening==='function')stopListening(true)})}
+ // the page changes without a call into this file (menu, Ich, Funktionen): follow the body, Ich and the menus
+ const mo=new MutationObserver(()=>hilfeFab());
+ mo.observe(document.body,{attributes:true,attributeFilter:['class']});
+ const pm=$('profmodal');if(pm)mo.observe(pm,{attributes:true,attributeFilter:['style','class'],subtree:true});
+ for(const id of['cfgnav']){const n=$(id);if(n)mo.observe(n,{attributes:true,subtree:true,attributeFilter:['class']})}
+ document.querySelectorAll('main section').forEach(x=>mo.observe(x,{attributes:true,attributeFilter:['class']}))}

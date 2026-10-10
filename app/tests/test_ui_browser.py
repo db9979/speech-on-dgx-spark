@@ -159,12 +159,13 @@ class Browser(unittest.TestCase):
                         await br.close()
         self.run_async(go())
 
-    def test_frag_spark_window_and_card(self):
-        """Spark-Hilfe (hilfe.js): "Frag Spark" on a page, the card under the answer, "Übernehmen" switches only
-        after the tap; no sideways scrolling on a phone, with the strict CSP on."""
+    def test_frag_spark_in_the_face(self):
+        """Spark-Hilfe (hilfe.js): "Frag Spark" lives in the face at the bottom right, names the page (also over Ich),
+        a typed question there carries the page and gets the card, "Übernehmen" switches only after the tap; no
+        sideways scrolling on a phone, with the strict CSP on. Ich asks again what the admin allows (V01.0.335)."""
         import hilfe
         import profiles
-        helpers.set_config(spark_help=True, spark_suggest=True, spark_drawer=True, routing=True)
+        helpers.set_config(spark_help=True, spark_suggest=True, spark_drawer=True, routing=True, prefetch=False)
         uid = next(u["id"] for u in profiles._load()["users"] if u["name"] == "Uitest")
         profiles.save_settings(uid, {"spark_help": True, "route": False})
 
@@ -172,22 +173,37 @@ class Browser(unittest.TestCase):
             async with async_playwright() as p:
                 for w, h in ((1280, 900), (390, 844)):
                     profiles.save_settings(uid, {"route": False})
+                    helpers.set_config(prefetch=False)
                     br, pg, errors = await self.page(p, w, h, csp=True)
                     try:
+                        self.assertEqual(await pg.locator("#hilfefab").count(), 0)   # no button of its own
                         await pg.evaluate("goSec('mon')")
-                        await pg.wait_for_selector("#hilfefab:not([hidden])", timeout=5000)
-                        await pg.click("#hilfefab")
-                        await pg.wait_for_selector("#hilfedraw:not([hidden])", timeout=3000)
-                        self.assertIn("Zustand", await pg.text_content("#hilfepg"))
-                        await pg.fill("#hilfeq", 'TOOL spark_vorschlag {"functions": ["routing"]}')
-                        await pg.click("#hilfeform button[type=submit]")
-                        await pg.wait_for_selector("#hilfelog .hcard [data-hdo=apply]", timeout=8000)
+                        await pg.wait_for_function("document.body.classList.contains('hilfeon')", timeout=5000)
+                        self.assertIn("Zustand", await pg.text_content("#fabpage"))
+                        await pg.evaluate("$('fab').classList.add('open')")
+                        await pg.fill("#fabq", 'TOOL spark_vorschlag {"functions": ["routing"]}')
+                        await pg.click("#fabask button[type=submit]")
+                        await pg.wait_for_selector("#fabcards .hcard [data-hdo=apply]", timeout=8000)
                         self.assertFalse(profiles.settings(uid).get("route"))   # nothing before the tap
                         over = await pg.evaluate("document.documentElement.scrollWidth-window.innerWidth")
                         self.assertLessEqual(over, 1, f"{w}: {over}px zu breit")
-                        await pg.click("#hilfelog .hcard [data-hdo=apply]")
-                        await pg.wait_for_selector("#hilfelog .hcard [data-hdo=undo]", timeout=5000)
+                        await pg.click("#fabcards .hcard [data-hdo=apply]")
+                        await pg.wait_for_selector("#fabcards .hcard [data-hdo=undo]", timeout=5000)
                         self.assertTrue(profiles.settings(uid).get("route"))
+                        # Ich over the chat: the face shows above it and knows the page; the admin switches
+                        # "Vorab holen" on meanwhile: Ich shows it unlocked without reloading
+                        await pg.evaluate("goSec('chat')")
+                        await pg.evaluate("openMe('setbox')")
+                        await pg.wait_for_function("document.body.classList.contains('hilfeon')", timeout=5000)
+                        self.assertIn("Ich", await pg.text_content("#fabpage"))
+                        self.assertTrue(await pg.is_visible("#fabface"))
+                        await pg.evaluate("$('profclose').click()")
+                        helpers.set_config(prefetch=True)
+                        await pg.evaluate("openMe('setbox')")
+                        await pg.wait_for_function("ALLOW.prefetch===true", timeout=5000)
+                        await pg.wait_for_function("[...document.querySelectorAll('#setform .setrow')].some(r=>"
+                                                   "r.textContent.includes('Vorab holen')&&!r.textContent.includes('Vom Admin ausgeschaltet'))",
+                                                   timeout=5000)
                         self.assertEqual(errors, [], w)
                     finally:
                         await br.close()
@@ -195,7 +211,7 @@ class Browser(unittest.TestCase):
             self.run_async(go())
         finally:
             hilfe._cards.clear()
-            helpers.set_config(spark_help=False, spark_suggest=False, spark_drawer=False, routing=False)
+            helpers.set_config(spark_help=False, spark_suggest=False, spark_drawer=False, routing=False, prefetch=False)
             profiles.save_settings(uid, {"spark_help": False, "route": False})
 
     def test_notaus_button_band_and_lifting(self):

@@ -1333,7 +1333,7 @@
 "file": "Assistent und Oberfläche",
 "head": "Sprach-Chat",
 "title": "Hilfe zum Spark (V01.0.326, standardmäßig aus)",
-"text": "unter der Antwort eine Karte mit Schaltern, vorher und nachher. Das Modell schaltet nie: Das Panel prüft jeden Wunsch mit festen Regeln (nur Schalter, die ändern, wie der Assistent für dich arbeitet, nie Sicherheit, nichts nach außen; ein Profil nur seine eigenen Schalter, Spark-Schalter nur als Admin, ausschalten nie für alle), und erst der Tipp auf „Übernehmen“ ändert etwas, über POST /api/hilfe/karte/{id} (eigene Browser-Anmeldung, CSRF, Rate-Limit, für Spark-Schalter Admin-Anmeldung und Code, Admin-Protokoll mit Rückgängig). Eine Karte gilt zehn Minuten, einmal, nur für dieses Profil, „Rückgängig“ nimmt sie zehn Minuten lang zurück. Nach einer Mail, Webseite oder anderem Text von außen in derselben Antwort gibt es keine Karte, der Notaus ab Stufe 2 hält das Übernehmen an, außerhalb des Browsers (Telegram, Sprache am Lautsprecher) nennt der Assistent nur den Weg. „Frag Spark auf jeder Seite“ legt unten rechts einen Knopf auf jede Seite des Panels; das Fenster schickt die Seite mit, auf der man ist (nur eine Kennung aus einer festen Liste), und deren Anleitungen kommen zuerst. Schalter: Funktionen → „Hilfe zum Spark“ (darunter „Einstellungen vorschlagen“ und „Frag Spark auf jeder"
+"text": "unter der Antwort eine Karte mit Schaltern, vorher und nachher. Das Modell schaltet nie: Das Panel prüft jeden Wunsch mit festen Regeln (nur Schalter, die ändern, wie der Assistent für dich arbeitet, nie Sicherheit, nichts nach außen; ein Profil nur seine eigenen Schalter, Spark-Schalter nur als Admin, ausschalten nie für alle), und erst der Tipp auf „Übernehmen“ ändert etwas, über POST /api/hilfe/karte/{id} (eigene Browser-Anmeldung, CSRF, Rate-Limit, für Spark-Schalter Admin-Anmeldung und Code, Admin-Protokoll mit Rückgängig). Eine Karte gilt zehn Minuten, einmal, nur für dieses Profil, „Rückgängig“ nimmt sie zehn Minuten lang zurück. Nach einer Mail, Webseite oder anderem Text von außen in derselben Antwort gibt es keine Karte, der Notaus ab Stufe 2 hält das Übernehmen an, außerhalb des Browsers (Telegram, Sprache am Lautsprecher) nennt der Assistent nur den Weg. „Frag Spark auf jeder Seite“ steckt im Kopf unten rechts (seit V01.0.335 kein eigener Knopf mehr): Er erscheint dann auch über Ich und für Profile, zeigt die Seite, auf der man ist, nimmt eine Frage auch getippt, und jede Frage über ihn, gesprochen oder getippt, schickt diese Seite mit (nur eine Kennung aus einer festen"
 },
 {
 "lang": "de",
@@ -1341,7 +1341,7 @@
 "file": "Assistent und Oberfläche",
 "head": "Sprach-Chat",
 "title": "Hilfe zum Spark (V01.0.326, standardmäßig aus)",
-"text": " Seite“) und Ich → Gespräch → „Fragen zum Spark“. Protokoll: Zeilen hilfe:; Zustand → Live zeigt den Dienst „Spark-Hilfe“ und Ereignisse (gezeigt, übernommen, abgelehnt), nie Inhalte. Plan: plaene/panel-hilfe.md; Tests: app/tests/test_hilfe.py."
+"text": " Liste), deren Anleitungen kommen zuerst. Es ist dasselbe Gespräch wie im Chat. Schalter: Funktionen → „Hilfe zum Spark“ (darunter „Einstellungen vorschlagen“ und „Frag Spark auf jeder Seite“) und Ich → Gespräch → „Fragen zum Spark“. Protokoll: Zeilen hilfe:; Zustand → Live zeigt den Dienst „Spark-Hilfe“ und Ereignisse (gezeigt, übernommen, abgelehnt), nie Inhalte. Plan: plaene/panel-hilfe.md; Tests: app/tests/test_hilfe.py."
 },
 {
 "lang": "de",
@@ -3661,7 +3661,7 @@
 "file": "Assistant and panel",
 "head": "Voice chat",
 "title": "Help with the Spark (V01.0.326, off by default)",
-"text": " never switches: the panel checks every wish by fixed rules (only switches that change how the assistant works for you, never security, nothing to the outside; a profile only its own switches, Spark switches only as admin, switching off never for everybody), and only the tap on \"Apply\" changes something, through POST /api/hilfe/karte/{id} (own browser login, CSRF, rate limit, for Spark switches the admin login and code, admin log with undo). A card lasts ten minutes, once, only for this profile; \"Undo\" takes it back for ten minutes. After a mail, web page or other outside text in the same answer there is no card, the Notaus from stage 2 holds applying off, outside the browser (Telegram, voice at a speaker) the assistant only names the path. \"Ask Spark on every page\" puts a button at the bottom right of every panel page; the window sends the page it was opened on (only an id from a fixed list), and that page's guides come first. Switches: Features → \"Help with the Spark\" (below it \"Suggesting settings\" and \"Ask Spark on every page\") and Me → Conversation → \"Questions about the Spark\". Log: lines hilfe:; Status → Live shows the service \"Spark-Hilfe\" and events (shown, applied, declin"
+"text": " never switches: the panel checks every wish by fixed rules (only switches that change how the assistant works for you, never security, nothing to the outside; a profile only its own switches, Spark switches only as admin, switching off never for everybody), and only the tap on \"Apply\" changes something, through POST /api/hilfe/karte/{id} (own browser login, CSRF, rate limit, for Spark switches the admin login and code, admin log with undo). A card lasts ten minutes, once, only for this profile; \"Undo\" takes it back for ten minutes. After a mail, web page or other outside text in the same answer there is no card, the Notaus from stage 2 holds applying off, outside the browser (Telegram, voice at a speaker) the assistant only names the path. \"Ask Spark on every page\" lives in the face at the bottom right (no button of its own since V01.0.335): it then also shows over Me and for profiles, names the page you are on, takes a typed question too, and every question through it, spoken or typed, sends that page (only an id from a fixed list), whose guides come first. It is the same conversation as the chat. Switches: Features → \"Help with the Spark\" (below it \"Suggesting settings\" and \"Ask"
 },
 {
 "lang": "en",
@@ -3669,7 +3669,7 @@
 "file": "Assistant and panel",
 "head": "Voice chat",
 "title": "Help with the Spark (V01.0.326, off by default)",
-"text": "ed), never contents. Plan: plaene/panel-hilfe.md; tests: app/tests/test_hilfe.py."
+"text": " Spark on every page\") and Me → Conversation → \"Questions about the Spark\". Log: lines hilfe:; Status → Live shows the service \"Spark-Hilfe\" and events (shown, applied, declined), never contents. Plan: plaene/panel-hilfe.md; tests: app/tests/test_hilfe.py."
 },
 {
 "lang": "en",
