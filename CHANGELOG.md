@@ -2,6 +2,7 @@
 
 Every version in one line, newest first (taken from the commit messages, so some lines are German, some English). Older entries have no version number.
 
+- **V01.0.310** · 2026-10-10 · README: Schaubild „So funktioniert es“ auf den aktuellen Stand gebracht (Apps, MCP-Server, Weiche, Vorrang, eigenes Wissen, Wächter, qwen38 auf dem Spark, Dienste und Quellen), Text darunter angepasst, Anleitungen liegen unter Funktionen
 - **V01.0.309** · 2026-10-10 · MCP „Schlüssel erzeugen“: Meldungen direkt unter dem Knopf (#mcpmakemsg) statt am Seitenende, Name und mindestens ein Werkzeug werden vorher geprüft, Knopf während der Anfrage gesperrt, fehlender Code klar benannt; Browsertest test_mcp_key_is_made_and_shown
 - **V01.0.308** · 2026-10-10 · Logs → Anfragen: der Schritt „Weiche“ zeigt, was aus der Modell-Zuordnung wurde (gewählt, zu spät, keine)
 - **V01.0.307** · 2026-10-10 · Anfrage aufteilen: chat.prefetch + Profil prefetch (aus, unter Gezielte Werkzeugwahl): endet die Antwort mit einer Rückfrage, wärmt vorab.py nach festen Regeln die Zwischenspeicher von Kalender (8 Tage), Mail, Wetter und Paketen, während die Rückfrage gesprochen wird; Kalender nimmt kürzere Zeiträume aus einem längeren; die Modell-Zuordnung (route_model on) läuft neben der Vorbereitung, mit prompt_cache höchstens 0,3 s Wartezeit

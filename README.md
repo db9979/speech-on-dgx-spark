@@ -33,6 +33,7 @@ All options for running without questions (`--mode api --asr 1.7b --tts 0.6b --y
 
 <!-- New version: add one line at the top here and in CHANGELOG.md, drop the oldest line here (keep 10). Details go to docs/de and docs/en, not into this README. -->
 
+- **V01.0.310** Diagram "How it works" shows the current state: iPhone and Android app, speakers, MCP programs, router, priority, own knowledge, guard and the outside services
 - **V01.0.309** MCP "Create key" answers right under the button: a missing name or no ticked tool is said there (before at the very end of the page, it looked like nothing happened), plus "creating …" and a clear hint when the code is missing
 - **V01.0.308** Logs → Requests shows at the step "Weiche" whether the model routing came in time
 - **V01.0.307** Fetch ahead on a question back (off): when the assistant asks back, the panel already fetches calendar, mail, weather or parcels while the question is spoken; the model routing of unclear questions runs beside the preparation
@@ -42,7 +43,6 @@ All options for running without questions (`--mode api --asr 1.7b --tts 0.6b --y
 - **V01.0.303** Spark as an MCP server (Features → Spark as MCP server, profile Me → Services over MCP, all off): Open WebUI, n8n, Claude & co. use speech (transcribe, speak), look-ups (Wikipedia, archive, documents, calendar, reminders, today) and ask_spark; each program gets its own access with its own tools, "local" home network only or "external" via OAuth with a warning and the second sign-in step; acting (lights, appointments, reminders) only as a proposal with a yes in the panel; never mail, memory, history, secrets or settings
 - **V01.0.302** Phone: the buttons under the face (conversation settings, history, picture, message) wrap into rows instead of being cut off left and right; a new browser test checks at 320 and 390 px, in the app view and the computer layout, that nothing reaches over the edge on any page, settings page or Me page
 - **V01.0.301** Self-test "phone like the app" waits until the step is in the browser history before going back (once left the page on GitHub)
-- **V01.0.300** Android app "Spark" as APK without a store (Features → Android app, off; Me → Android app): a shell around the Spark page with notes while closed (asks itself every 15 minutes, no Google), assistant button, share to Spark and a hint on new versions; GitHub builds and signs it as android-v…, the Spark fetches it with a SHA-256 check and hands it out by download link with a one-time token (QR, 30 minutes) (docs/en/android-app.md)
 
 All versions: [CHANGELOG.md](CHANGELOG.md)
 
@@ -51,32 +51,55 @@ All versions: [CHANGELOG.md](CHANGELOG.md)
 ```mermaid
 flowchart LR
   subgraph Clients["Devices and apps"]
-    B["Browser / phone app"]
+    B["Browser and phone<br/>app view, notifications"]
+    APP["iPhone app with CarPlay,<br/>Android app"]
+    X["Pebble, Telegram, Siri,<br/>ESP32 room speakers"]
+    W["HA Assist<br/>Wyoming :31003"]
+    M["MCP programs<br/>Claude, n8n, Open WebUI"]
     A["Open WebUI, own apps"]
-    X["Siri, Pebble, Telegram, speakers,<br/>HA Assist (Wyoming :31003)"]
   end
   subgraph Spark["DGX Spark"]
-    P["Web panel :31443<br/>assistant, profiles, monitoring"]
+    subgraph P["Web panel :31443"]
+      G["Login, 2FA, passkeys<br/>profiles, roles, invitations"]
+      R["Router: tool choice<br/>by fixed rules"]
+      V["Priority for speech<br/>and people"]
+      K["Own knowledge: uploads,<br/>reMarkable, memory"]
+      LOG["Request log, backup,<br/>update after green test"]
+      S["Guard netguard<br/>allowed targets only"]
+    end
     ASR["ASR :31001<br/>Qwen3-ASR or Parakeet"]
-    TTS["TTS :31002<br/>Qwen3-TTS"]
-    LLM["qwen38 :30001<br/>language model"]
+    TTS["TTS :31002<br/>Qwen3-TTS, own voices"]
+    subgraph Q38["dgx-spark-qwen38"]
+      LLM["Language model :30001<br/>text and images"]
+    end
   end
-  E["Home Assistant, calendars,<br/>mail, SearXNG"]
-  B --> P
-  X --> P
+  subgraph Out["Services and sources"]
+    E["Home Assistant, calendars, mail,<br/>weather, parcels, transit"]
+    Q["SearXNG, Kiwix, Wikipedia,<br/>reMarkable cloud, MCP servers"]
+  end
+  B --> G
+  APP --> G
+  X --> G
+  W --> G
+  M -->|"MCP server /mcp"| G
   A --> ASR
   A --> TTS
-  P --> ASR
-  P --> LLM
-  P --> TTS
-  P --> E
+  G --> V
+  G --> R
+  V --> ASR
+  V --> TTS
+  R --> LLM
+  R --> K
+  R --> S
+  S --> E
+  S --> Q
 ```
 
-1. You speak into your phone or browser. The panel sends the audio to **speech recognition**, which turns it into text.
-2. The panel passes the text, with memory, conversation history and the allowed tools, to the **language model** from qwen38.
-3. When the answer needs calendars, mail, weather, web search or Home Assistant, the panel fetches the data itself; switching and adding entries only happen after you confirm.
-4. The answer goes sentence by sentence to **text to speech** and is played as a stream while the model is still writing.
-5. Other apps can use ASR and TTS directly through the OpenAI-style APIs, with an API key.
+1. You speak into your phone, browser, one of the apps or a speaker. The panel signs you in, sends the audio to **speech recognition** and gets text back.
+2. The **router** picks by fixed rules which tools the question needs. The panel passes the text, with memory, conversation history, your own knowledge and exactly those tools, to the **language model** from qwen38.
+3. When the answer needs calendars, mail, weather, Home Assistant, web search, Kiwix or Wikipedia, the panel fetches the data itself; switching and adding entries only happen after you confirm.
+4. The answer goes sentence by sentence to **text to speech** and is played as a stream while the model is still writing. Priority makes sure spoken answers and important people go first.
+5. Other apps use ASR and TTS directly through the OpenAI-style APIs with an API key, MCP programs use the Spark as an MCP server with their own access.
 
 Every feature can be switched on per profile and is off by default. Updates only go live after a green self-test and can be rolled back.
 
@@ -88,7 +111,7 @@ Every feature can be switched on per profile and is off by default. Updates only
 - [Security and operation](docs/en/security-and-operation.md): login, lockouts, backups, watchdog, self-test, logs
 - [Technical details and troubleshooting](docs/en/technical.md): services and ports, benchmarks, next to qwen38, troubleshooting
 
-The panel has its own guide for every feature under *Einbinden → Anleitungen* (Integrate → Guides).
+The panel has its own guide for every feature under *Funktionen → Anleitungen* (Features → Guides).
 
 ## Support
 

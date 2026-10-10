@@ -33,6 +33,7 @@ Alle Optionen ohne Rückfragen (`--mode api --asr 1.7b --tts 0.6b --yes` …) st
 
 <!-- New version: add one line at the top here and in CHANGELOG.md, drop the oldest line here (keep 10). Details go to docs/de and docs/en, not into this README. -->
 
+- **V01.0.310** Schaubild „So funktioniert es“ zeigt den aktuellen Stand: iPhone- und Android-App, Lautsprecher, MCP-Programme, Weiche, Vorrang, eigenes Wissen, Wächter und die Dienste draußen
 - **V01.0.309** MCP „Schlüssel erzeugen“ antwortet direkt unter dem Knopf: fehlt der Name oder ist kein Werkzeug angekreuzt, steht das dort (vorher ganz unten auf der Seite, wirkte wie „passiert nichts“), dazu „wird erzeugt …“ und ein klarer Hinweis, wenn der Code fehlt
 - **V01.0.308** Logs → Anfragen zeigt beim Schritt „Weiche“, ob die Modell-Zuordnung rechtzeitig kam
 - **V01.0.307** Vorab holen bei Rückfrage (aus): Fragt der Assistent zurück, holt das Panel schon Kalender, Mails, Wetter oder Pakete, während die Frage gesprochen wird; die Modell-Zuordnung unklarer Fragen läuft neben der Vorbereitung
@@ -42,7 +43,6 @@ Alle Optionen ohne Rückfragen (`--mode api --asr 1.7b --tts 0.6b --yes` …) st
 - **V01.0.303** Spark als MCP-Server (Funktionen → Spark als MCP-Server, Profil Ich → Dienste per MCP, alles aus): Open WebUI, n8n, Claude & Co. nutzen Sprache (transcribe, speak), Nachschlagen (Wikipedia, Archiv, Dokumente, Kalender, Erinnerungen, Heute) und ask_spark; pro Programm eigener Zugang mit eigenen Werkzeugen, „lokal“ nur im Heimnetz oder „extern“ per OAuth mit Warnhinweis und zweitem Anmeldeschritt; Handeln (Licht, Termine, Erinnerungen) nur als Vorschlag mit Ja im Panel; nie Mail, Gedächtnis, Verlauf, Geheimnisse oder Einstellungen
 - **V01.0.302** Handy: Die Knöpfe unter dem Gesicht (Gespräch einstellen, Verlauf, Bild, Nachricht) brechen in Zeilen um statt links und rechts abgeschnitten zu werden; neuer Browsertest prüft auf 320 und 390 px in App-Ansicht und Rechner-Layout jede Seite, Einstellungsseite und Ich-Seite, dass nichts über den Rand ragt
 - **V01.0.301** Selbsttest „Handy wie die App“ wartet, bis der Schritt in der Browser-Historie steht, bevor er zurückgeht (lief auf GitHub einmal aus der Seite heraus)
-- **V01.0.300** Android-App „Spark“ als APK ohne Store (Funktionen → Android-App, aus; Ich → Android-App): Hülle um die Spark-Seite mit Mitteilungen bei geschlossener App (fragt alle 15 Minuten selbst nach, kein Google), Assistenten-Taste, Teilen an Spark und Hinweis auf neue Versionen; GitHub baut und signiert sie als android-v…, der Spark holt sie mit SHA-256-Prüfung und gibt sie per Download-Link mit Einmal-Token (QR, 30 Minuten) aus (docs/de/android-app.md)
 
 Alle Versionen: [CHANGELOG.md](CHANGELOG.md)
 
@@ -51,32 +51,55 @@ Alle Versionen: [CHANGELOG.md](CHANGELOG.md)
 ```mermaid
 flowchart LR
   subgraph Clients["Geräte und Apps"]
-    B["Browser / Handy-App"]
+    B["Browser und Handy<br/>App-Ansicht, Mitteilungen"]
+    APP["iPhone-App mit CarPlay,<br/>Android-App"]
+    X["Pebble, Telegram, Siri,<br/>Raumlautsprecher ESP32"]
+    W["HA Assist<br/>Wyoming :31003"]
+    M["MCP-Programme<br/>Claude, n8n, Open WebUI"]
     A["Open WebUI, eigene Apps"]
-    X["Siri, Pebble, Telegram, Lautsprecher,<br/>HA Assist (Wyoming :31003)"]
   end
   subgraph Spark["DGX Spark"]
-    P["Webportal :31443<br/>Assistent, Profile, Monitoring"]
+    subgraph P["Webportal :31443"]
+      G["Anmeldung, 2FA, Passkeys,<br/>Profile, Rollen, Einladungen"]
+      R["Weiche: Werkzeugwahl<br/>nach festen Regeln"]
+      V["Vorrang für Sprache<br/>und Personen"]
+      K["Eigenes Wissen: Uploads,<br/>reMarkable, Gedächtnis"]
+      LOG["Anfragen-Log, Sicherung,<br/>Update nach grünem Test"]
+      S["Wächter netguard<br/>nur erlaubte Ziele"]
+    end
     ASR["ASR :31001<br/>Qwen3-ASR oder Parakeet"]
-    TTS["TTS :31002<br/>Qwen3-TTS"]
-    LLM["qwen38 :30001<br/>Sprachmodell"]
+    TTS["TTS :31002<br/>Qwen3-TTS, eigene Stimmen"]
+    subgraph Q38["dgx-spark-qwen38"]
+      LLM["Sprachmodell :30001<br/>Text und Bilder"]
+    end
   end
-  E["Home Assistant, Kalender,<br/>E-Mail, SearXNG"]
-  B --> P
-  X --> P
+  subgraph Out["Dienste und Quellen"]
+    E["Home Assistant, Kalender, Mail,<br/>Wetter, Pakete, Nahverkehr"]
+    Q["SearXNG, Kiwix, Wikipedia,<br/>reMarkable-Cloud, MCP-Server"]
+  end
+  B --> G
+  APP --> G
+  X --> G
+  W --> G
+  M -->|"MCP-Server /mcp"| G
   A --> ASR
   A --> TTS
-  P --> ASR
-  P --> LLM
-  P --> TTS
-  P --> E
+  G --> V
+  G --> R
+  V --> ASR
+  V --> TTS
+  R --> LLM
+  R --> K
+  R --> S
+  S --> E
+  S --> Q
 ```
 
-1. Du sprichst ins Handy oder in den Browser. Das Portal schickt den Ton an die **Spracherkennung**, die Text daraus macht.
-2. Das Portal gibt den Text mit Gedächtnis, Gesprächsverlauf und den erlaubten Werkzeugen an das **Sprachmodell** von qwen38.
-3. Braucht die Antwort Kalender, Mail, Wetter, Websuche oder Home Assistant, holt das Portal die Daten selbst; schalten und eintragen geht nur nach Bestätigung.
-4. Die Antwort geht Satz für Satz an die **Sprachausgabe** und wird gestreamt abgespielt, während das Modell noch schreibt.
-5. Andere Apps können ASR und TTS auch direkt über die OpenAI-ähnlichen APIs nutzen, mit API-Schlüssel.
+1. Du sprichst ins Handy, in den Browser, in eine der Apps oder einen Lautsprecher. Das Portal meldet dich an, schickt den Ton an die **Spracherkennung** und bekommt Text zurück.
+2. Die **Weiche** wählt nach festen Regeln, welche Werkzeuge die Frage braucht. Das Portal gibt den Text mit Gedächtnis, Gesprächsverlauf, eigenem Wissen und genau diesen Werkzeugen an das **Sprachmodell** von qwen38.
+3. Braucht die Antwort Kalender, Mail, Wetter, Home Assistant, Websuche, Kiwix oder Wikipedia, holt das Portal die Daten selbst; schalten und eintragen geht nur nach Bestätigung.
+4. Die Antwort geht Satz für Satz an die **Sprachausgabe** und wird gestreamt abgespielt, während das Modell noch schreibt. Der Vorrang sorgt dafür, dass gesprochene Antworten und wichtige Personen zuerst drankommen.
+5. Andere Apps nutzen ASR und TTS direkt über die OpenAI-ähnlichen APIs mit API-Schlüssel, MCP-Programme den Spark als MCP-Server mit eigenem Zugang.
 
 Jede Funktion ist pro Profil einzeln schaltbar und ab Werk aus. Updates laufen erst nach grünem Selbsttest und lassen sich zurücknehmen.
 
@@ -88,7 +111,7 @@ Jede Funktion ist pro Profil einzeln schaltbar und ab Werk aus. Updates laufen e
 - [Sicherheit und Betrieb](docs/de/sicherheit-und-betrieb.md): Anmeldung, Sperren, Sicherungen, Wächter, Selbsttest, Logs
 - [Technik und Fehlersuche](docs/de/technik.md): Dienste und Ports, Leistung messen, neben qwen38, Fehlersuche
 
-Im Portal steht zu jeder Funktion eine eigene Anleitung unter *Einbinden → Anleitungen*.
+Im Portal steht zu jeder Funktion eine eigene Anleitung unter *Funktionen → Anleitungen*.
 
 ## Unterstützen
 
