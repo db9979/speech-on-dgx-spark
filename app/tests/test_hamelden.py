@@ -155,6 +155,36 @@ class RuleOptions(Base):
                                                               "only": "sometimes"}).status_code, 400)
 
 
+class Edit(Base):
+    def test_rule_changes_in_place(self):
+        """Ich → Von selbst → Bearbeiten (PUT): the same checks as adding, the rule keeps its id and place and
+        forgets what it remembered; another profile cannot reach it."""
+        a, uid = profile("Edda")
+        st = a.post("/api/proactive/rules", json={"conds": [{"entity": "Flur Bewegung", "op": "is", "value": "an"}],
+                                                  "text": "Flur."}).json()
+        st = a.post("/api/proactive/rules", json={"conds": [{"entity": "Garten Licht", "op": "is", "value": "an"}]}).json()
+        first = st["rules"][0]["id"]
+        proactive._mut(uid, lambda m: m.setdefault("rules", {}).update({first: {"armed": True, "said": 1}}))
+        r = a.put(f"/api/proactive/rules/{first}", json={"conds": [{"entity": "Garten Bewegung", "op": "changes", "when": "on"}],
+                                                         "pause": 5, "text": "Garten <b>!"})
+        self.assertEqual(r.status_code, 200, r.text)
+        rules = r.json()["rules"]
+        self.assertEqual([x["id"] for x in rules][0], first)                     # same id, same place
+        self.assertEqual(len(rules), 2)
+        self.assertEqual(rules[0]["conds"][0]["entity"], "binary_sensor.garten_bewegung")
+        self.assertEqual((rules[0]["pause"], rules[0]["conds"][0]["when"]), (5, "on"))
+        self.assertNotIn("<", rules[0]["text"])
+        self.assertNotIn(first, proactive.state(uid).get("rules", {}))          # starts fresh
+        # checked like a new rule: a bad change leaves the old one as it was
+        self.assertEqual(a.put(f"/api/proactive/rules/{first}", json={"conds": []}).status_code, 400)
+        self.assertEqual(a.get("/api/proactive/status").json()["rules"][0]["conds"][0]["entity"], "binary_sensor.garten_bewegung")
+        self.assertEqual(a.put("/api/proactive/rules/deadbeef", json={"conds": [{"entity": "Flur Bewegung", "op": "is", "value": "an"}]}).status_code, 404)
+        self.assertEqual(a.put("/api/proactive/rules/..%2Fx", json={}).status_code, 404)
+        b, _ = profile("Eddi")
+        self.assertEqual(b.put(f"/api/proactive/rules/{first}", json={"conds": [{"entity": "Flur Bewegung", "op": "is", "value": "an"}]}).status_code, 404)
+        self.assertIn(TestClient(panel.app).put(f"/api/proactive/rules/{first}", json={}).status_code, (401, 403))
+
+
 class Devices(Base):
     def test_device_list_for_the_rule_form(self):
         """Ich → Von selbst → Regel hinzufügen: pick devices instead of typing; last changed first, only id,

@@ -71,7 +71,7 @@ const PROX={
   pro_events:()=>`<span style="display:block;margin-top:4px">${t('Wie lange vorher: ','How long before: ')}<select id="prolead" style="width:auto">${[5,10,15,20,30,45,60].map(n=>`<option value="${n}"${n===S.pro_lead?' selected':''}>${n} ${t('Minuten','minutes')}</option>`).join('')}</select></span>`,
   pro_mail:()=>`<input id="promailfrom" style="margin-top:4px" placeholder="${t('z. B. chef@firma.de, Schule, Anna','e.g. boss@company.com, school, Anna')}" value="${esc(S.pro_mail_from||'')}" autocomplete="off"><span style="display:block">${t('Absender, mit Komma getrennt; ein Teil der Adresse oder des Namens genügt.','Senders, separated by commas; part of the address or name is enough.')}</span>`,
   pro_weather:()=>`<span class="two2" style="margin-top:4px"><input id="proplace" placeholder="${t('Ort, z. B. Köln','Place, e.g. Cologne')}" value="${esc(S.pro_place||'')}" autocomplete="off"><input type="time" id="proweatherat" value="${esc(S.pro_weather_at||'18:00')}"></span>`,
-  pro_ha:st=>!st.has.ha?'':proHaSubs(st)+`<ul class="facts small" style="margin-top:6px">${st.rules.map(r=>`<li><span>${esc(r.line)}${r.text?`<br><small class="mut">„${esc(r.text)}“</small>`:''}${r.src==='voice'?` <small class="mut">${t('(per Sprache)','(by voice)')}</small>`:''}</span><button class="b" type="button" ${onAttr('proRuleDel',r.id)}>${t('Löschen','Delete')}</button></li>`).join('')||`<li class="mut">${t('Noch keine Regel.','No rule yet.')}</li>`}</ul>
+  pro_ha:st=>!st.has.ha?'':proHaSubs(st)+`<ul class="facts small" style="margin-top:6px">${st.rules.map(r=>`<li><span>${esc(r.line)}${r.text?`<br><small class="mut">„${esc(r.text)}“</small>`:''}${r.src==='voice'?` <small class="mut">${t('(per Sprache)','(by voice)')}</small>`:''}</span><span><button class="b" type="button" ${onAttr('proRuleEdit',r.id)}>${t('Bearbeiten','Edit')}</button><button class="b" type="button" ${onAttr('proRuleDel',r.id)}>${t('Löschen','Delete')}</button></span></li>`).join('')||`<li class="mut">${t('Noch keine Regel.','No rule yet.')}</li>`}</ul>
     ${proLive(st)}
     <details id="proruleadd"><summary>${t('Regel hinzufügen','Add a rule')}</summary>
       <datalist id="proents"></datalist>
@@ -84,7 +84,7 @@ const PROX={
       <div id="promebox" hidden><label>${t('Ich in Home Assistant (Person)','Me in Home Assistant (person)')}</label><input id="prome" placeholder="person.dominik" value="${esc(S.pro_ha_me||'')}" autocomplete="off"><span class="fh" style="display:block">${t('Leer: die Person mit deinem Profilnamen.','Empty: the person with your profile name.')}</span></div>
       ${HACAM_ON&&S.pro_ha_cam?`<label>${t('Kamerabild dazu (leer = keins)','Camera picture with it (empty = none)')}</label><input id="procam" list="proents" placeholder="${t('z. B. Kamera Haustür oder camera.haustuer','e.g. front door camera or camera.haustuer')}" autocomplete="off">`:''}
       ${HALOUD_ON&&S.pro_ha_loud?`<label class="chk" style="display:block;margin-top:6px"><input type="checkbox" id="proloud"> ${t('Auch laut auf Lautsprechern (nur der eigene Satz, ohne Namen)','Also aloud on speakers (own sentence only, no names)')}</label><span id="prospk" style="display:block">${(st.speakers||[]).map(x=>`<label class="chk" style="margin-right:10px"><input type="checkbox" data-spk="${esc(x.id)}"> ${esc(x.name)}</label>`).join('')||`<small class="mut">${t('Kein Lautsprecher nimmt gerade Durchsagen von dir an.','No speaker takes announcements from you right now.')}</small>`}</span>`:''}
-      <div class="row" style="margin-top:8px"><button class="b p" type="button" id="proruleok">${t('Prüfen und hinzufügen','Check and add')}</button><span id="prorulemsg" class="fh"></span></div>
+      <div class="row" style="margin-top:8px"><button class="b p" type="button" id="proruleok">${t('Prüfen und hinzufügen','Check and add')}</button><button class="b" type="button" id="proedno" hidden>${t('Abbrechen','Cancel')}</button><span id="prorulemsg" class="fh"></span></div>
       <span style="display:block">${t('Beispiele: „Whirlpool“ über 37,5 · „Bad Fenster“ ist offen und „Regen“ ist an · „Waschmaschine Leistung“ unter 5, mindestens 3 Minuten · „Bewegung Flur“ ändert sich, bei an, höchstens alle 10 Minuten. Eine Regel meldet sich erst, nachdem sie einmal nicht zugetroffen hat, und dann einmal, bis sie wieder nicht zutrifft.','Examples: "Whirlpool" above 37.5 · "Bathroom window" is open and "Rain" is on · "Washing machine power" below 5, at least 3 minutes · "Motion hallway" changes, on, at most every 10 minutes. A rule speaks only after it was false once, then once until it is false again.')}</span></details>
     ${HAEV_ON&&S.pro_ha_events?'<div id="haevbox" style="margin-top:8px"></div>':''}`};
 // the parts of "Home Assistant meldet an Spark" (hamelden.py) the admin allows, each with its own switch
@@ -100,7 +100,7 @@ const PROBIND={
   lead(){if($('prolead'))$('prolead').onchange=()=>saveSet('pro_lead',Number($('prolead').value))},
   mail(){if($('promailfrom'))$('promailfrom').onchange=()=>saveSet('pro_mail_from',$('promailfrom').value.trim().slice(0,300))},
   weather(){if($('proplace')){$('proplace').onchange=()=>saveSet('pro_place',$('proplace').value.trim().slice(0,60));$('proweatherat').onchange=()=>{if($('proweatherat').value)saveSet('pro_weather_at',$('proweatherat').value)}}},
-  rule(){if(!$('proruleok'))return;
+  rule(){if(!$('proruleok'))return;PRODEV.edit='';
     $('proruleadd').ontoggle=()=>{if($('proruleadd').open)proDevs()};
     for(const id of ['proent1','proent2','procam'])if($(id))$(id).onfocus=()=>{PRODEV.at=id};
     $('prorecent').onclick=async()=>{const d=await proDevs(true);if(d)proChips(d.slice(0,12),t('Zuletzt geändert – antippen übernimmt:','Recently changed – tap to take:'))};
@@ -113,13 +113,15 @@ const PROBIND={
     const body={conds,minutes:Number($('promin').value)||0,text:$('protext').value.trim(),pause:Number($('propause').value)||0,only:$('proonly').value};
     if($('procam')&&$('procam').value.trim())body.camera=$('procam').value.trim();
     if($('proloud')&&$('proloud').checked){body.loud=true;body.speakers=[...document.querySelectorAll('#prospk input[data-spk]:checked')].map(x=>x.dataset.spk)}
-    const r=await fetch('/api/proactive/rules',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify(body)});
-    const d=await r.json();if(!r.ok){m.className='fh err';m.textContent=d.detail||r.status;return}showPro()}},
+    const ed=PRODEV.edit;
+    const r=await fetch('/api/proactive/rules'+(ed?'/'+encodeURIComponent(ed):''),{method:ed?'PUT':'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify(body)});
+    const d=await r.json();if(!r.ok){m.className='fh err';m.textContent=d.detail||r.status;return}PRODEV.edit='';showPro()};
+    $('proedno').onclick=()=>{PRODEV.edit='';showPro()}},
   haev(){if($('haevbox'))haEvents()}};
 // Picking devices for a rule (GET /api/proactive/ha-devices): a list to choose from, the last changed ones,
 // and "Gerät erkennen": press, then trigger the sensor; whatever changes in the next 40 s shows up.
 // The browser compares HA's own last_changed values, so no clock has to agree.
-const PRODEV={items:null,at:'proent1',run:0};
+const PRODEV={items:null,at:'proent1',run:0,edit:''};
 async function proDevs(fresh){const m=$('prodevmsg');
   if(PRODEV.items&&!fresh)return PRODEV.items;
   try{const r=await api('/api/proactive/ha-devices');const d=await r.json();if(!r.ok){if(m){m.className='fh err';m.textContent=d.detail||r.status}return null}
@@ -165,3 +167,17 @@ ON.haevDel=async(b,name)=>{if(!HAEV)return;try{await api('/api/profile/ha-events
 ON.haevTry=async(b,name)=>{try{await api('/api/profile/ha-events/test',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({event:name})});setTimeout(()=>pro.poll(),300)}catch(e){alert(e.message)}};
 window.proRuleDel=async id=>{await api('/api/proactive/rules/'+encodeURIComponent(id),{method:'DELETE'});showPro()};
 ON.proRuleDel=(b,id)=>proRuleDel(id);
+// "Bearbeiten": the rule goes back into the form; "Speichern" changes it in place (PUT, the same checks as adding)
+ON.proRuleEdit=(b,id)=>{const r=(PROST&&PROST.rules||[]).find(x=>x.id===id);if(!r||!$('proruleadd'))return;
+  PRODEV.edit=id;const box=$('proruleadd');box.open=true;
+  ['1','2'].forEach((n,i)=>{const c=r.conds[i]||{};$('proent'+n).value=c.entity||'';$('proop'+n).value=c.op||'above';
+    $('proval'+n).value=c.value===undefined||c.value===''?'':String(c.value).replace('.',',');$('prowhen'+n).value=c.when||'';
+    $('proop'+n).dispatchEvent(new Event('change'))});
+  const second=box.querySelector('details');if(second)second.open=r.conds.length>1;
+  $('promin').value=r.minutes||0;$('protext').value=r.text||'';$('propause').value=r.pause||0;
+  $('proonly').value=r.only||'';$('proonly').dispatchEvent(new Event('change'));
+  if($('procam'))$('procam').value=r.camera||'';
+  if($('proloud')){$('proloud').checked=!!r.loud;document.querySelectorAll('#prospk input[data-spk]').forEach(x=>{x.checked=(r.speakers||[]).includes(x.dataset.spk)})}
+  $('proruleok').textContent=t('Prüfen und speichern','Check and save');$('proedno').hidden=false;
+  $('prorulemsg').className='fh';$('prorulemsg').textContent=t('Du änderst: ','You are changing: ')+r.line;
+  box.querySelector('summary').scrollIntoView({block:'center'})};

@@ -1066,6 +1066,31 @@ class Browser(unittest.TestCase):
                 await pg.click("#proent2")
                 await pg.click("#prodevs button[title='binary_sensor.ui_tuer']")
                 self.assertEqual(await pg.input_value("#proent2"), "binary_sensor.ui_tuer")
+                # "Bearbeiten": a rule goes back into the form and is saved in place
+                r = await pg.request.post(base + "/api/proactive/rules", data={
+                    "conds": [{"entity": "binary_sensor.ui_flur", "op": "changes", "when": "on"}], "pause": 10, "text": "Flur."})
+                self.assertEqual(r.status, 200, await r.text())
+                rid = (await r.json())["rules"][-1]["id"]
+                await pg.evaluate("openMe('probox')")
+                await pg.wait_for_selector(f"button[data-on=proRuleEdit][data-args*='{rid}']", timeout=5000)
+                await pg.click(f"button[data-on=proRuleEdit][data-args*='{rid}']")
+                self.assertEqual(await pg.input_value("#proent1"), "binary_sensor.ui_flur")
+                self.assertEqual(await pg.input_value("#proop1"), "changes")
+                self.assertEqual(await pg.input_value("#prowhen1"), "on")
+                self.assertEqual(await pg.input_value("#propause"), "10")
+                self.assertEqual(await pg.input_value("#protext"), "Flur.")
+                self.assertTrue(await pg.is_visible("#proedno"))
+                await pg.fill("#protext", "Bewegung im Flur.")
+                await pg.fill("#propause", "15")
+                await pg.click("#proruleok")
+                for _ in range(50):
+                    rules = (await (await pg.request.get(base + "/api/proactive/status")).json())["rules"]
+                    if rules[-1].get("text") == "Bewegung im Flur.":
+                        break
+                    await pg.wait_for_timeout(100)
+                self.assertEqual([(x["id"], x["text"], x.get("pause")) for x in rules if x["id"] == rid], [(rid, "Bewegung im Flur.", 15)])
+                self.assertEqual(len([x for x in rules if x["conds"][0]["entity"] == "binary_sensor.ui_flur"]), 1)
+                await pg.request.delete(base + f"/api/proactive/rules/{rid}")
                 self.assertEqual(errors, [])
                 await br.close()
         try:

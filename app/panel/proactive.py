@@ -381,17 +381,21 @@ def _me(all_states, uid):
     return hits[0] if len(hits) == 1 else ""
 
 
-async def add_rule(uid, body, src=""):
+async def add_rule(uid, body, src="", replace=""):
     """Checks a rule against what Home Assistant has and stores it. body: {"conds": [{entity, op, value,
     when}], "minutes", "text", "pause", "only", "loud", "speakers", "camera"}; src "voice" for a rule made by
-    voice (hamelden.py, after a yes)."""
+    voice (hamelden.py, after a yes). replace: the id of a rule to change in place (same checks, keeps its
+    id and place, forgets what it remembered so it starts fresh)."""
     import homeassistant
     import hamelden
     item = homeassistant.get(uid)
     if not item:
         raise ValueError("Home Assistant ist nicht verbunden.")
     have = rules(uid)
-    if len(have) >= MAX_RULES:
+    old = next((r for r in have if r.get("id") == replace), None) if replace else None
+    if replace and not old:
+        raise LookupError("Diese Regel gibt es nicht mehr.")
+    if not old and len(have) >= MAX_RULES:
         raise ValueError(f"Höchstens {MAX_RULES} Regeln.")
     conds = []
     for c in (body.get("conds") or [])[:2]:
@@ -452,6 +456,11 @@ async def add_rule(uid, body, src=""):
         rule["camera"] = await hamelden.check_camera(uid, item, str(body.get("camera"))[:80])
     if src == "voice":
         rule["src"] = "voice"
+    if old:
+        rule["id"] = old["id"]
+        _save_rules(uid, [rule if r.get("id") == old["id"] else r for r in have])
+        _mut(uid, lambda st: st.get("rules", {}).pop(old["id"], None))
+        return rules(uid)
     _save_rules(uid, have + [rule])
     return rules(uid)
 
@@ -1015,6 +1024,29 @@ async def api_devices(request: Request, prof=Depends(browser_profile)):
     except Exception as e:
         raise HTTPException(502, f"Home Assistant: {type(e).__name__}")
     return {"items": items}
+
+
+@router.put("/api/proactive/rules/{rid}", dependencies=[Depends(assistant), Depends(_on)])
+async def api_rule_change(rid: str, request: Request, prof=Depends(browser_profile)):
+    """Change a rule in place (Ich → Von selbst → Bearbeiten): the same checks as adding one."""
+    import guard
+    guard.limit(request, "hamelden", prof["id"])
+    if not re.fullmatch(r"[0-9a-f]{8}", rid):
+        raise HTTPException(404, "no such rule")
+    raw = await request.body()
+    if len(raw) > 8192:
+        raise HTTPException(413, "too large")
+    try:
+        body = json.loads(raw or b"{}")
+    except ValueError:
+        raise HTTPException(400, "invalid JSON")
+    try:
+        await add_rule(prof["id"], body if isinstance(body, dict) else {}, replace=rid)
+    except LookupError as e:
+        raise HTTPException(404, str(e))
+    except ValueError as e:
+        raise HTTPException(400, str(e))
+    return status(prof["id"])
 
 
 @router.delete("/api/proactive/rules/{rid}", dependencies=[Depends(assistant)])
