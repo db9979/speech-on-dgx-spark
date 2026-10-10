@@ -423,7 +423,7 @@ body.guest .navme{display:none}
 .bgdot.run{background:var(--acc2)}.bgdot.wait{background:var(--warn)}.bgdot.ok{background:var(--ok)}.bgdot.bad{background:var(--bad)}.bgdot.idle{background:var(--line)}
 .bgsum .bgdot{width:14px;height:14px;margin:0}
 .bgrow{display:grid;grid-template-columns:14px minmax(0,1fr) auto;gap:10px;align-items:start;padding:11px 2px;border-top:1px solid var(--line)}
-.bgrow:first-child{border-top:0}.bgrow b{font-weight:600}.bgrow .bgd{color:var(--mut);font-size:13px;margin-top:2px;overflow-wrap:anywhere}
+.bgrow:first-child{border-top:0}.bgrow b{font-weight:600}.bgrow .bgd{color:var(--mut);font-size:13px;margin-top:2px;overflow-wrap:break-word}
 .bgtag{display:inline-block;font-size:12px;padding:0 8px;border-radius:999px;margin-left:6px;font-weight:500;background:color-mix(in srgb,var(--line) 70%,transparent);color:var(--mut)}
 .bgtag.run{background:color-mix(in srgb,var(--acc2) 14%,transparent);color:var(--acc2)}.bgtag.wait{background:color-mix(in srgb,var(--warn) 14%,transparent);color:var(--warn)}
 .bgtag.ok{background:color-mix(in srgb,var(--ok) 14%,transparent);color:var(--ok)}.bgtag.bad{background:color-mix(in srgb,var(--bad) 14%,transparent);color:var(--bad)}
@@ -853,3 +853,7 @@ body.inchat .hilfefab{display:none}
 /* Mein Notaus (notaus.py) */
 #mynaoff input{max-width:140px;flex:none}
 #znmine .znrow button{margin-left:auto}
+/* Ich → Von selbst: a block under its switch row (Smart-Home-Regeln: sub-switches, rules, form, events) */
+.setrow:has(+.protail){border-bottom:0;padding-bottom:4px}.protail{padding:0 0 12px 14px;border-bottom:1px solid var(--line);min-width:0}
+.protail .setrow:last-child{border-bottom:1px solid var(--line)}.protail .facts li{min-width:0;display:flex;justify-content:space-between;align-items:center;gap:10px}.protail .facts li>span:last-child:not(:first-child){display:flex;gap:6px;flex:none}.protail .facts li>span:first-child{min-width:0;overflow-wrap:anywhere}
+@media (max-width:760px){.protail{padding-left:8px}.protail .facts li{flex-wrap:wrap}.protail .facts li>span:first-child{flex:1 1 100%}}

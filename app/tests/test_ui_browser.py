@@ -1483,6 +1483,63 @@ class Browser(unittest.TestCase):
                 await br.close()
         self.run_async(go())
 
+    # Dominik 2026-10-10 (Ich → Von selbst): a whole block sat inside one row's text column, so that row's switch
+    # floated in the middle beside the others and the nested rows were squeezed. Every visible row keeps its
+    # switch at its right edge, and no row sits inside another row's text column.
+    ROWS = """(()=>{const bad=[];for(const r of document.querySelectorAll('.setrow')){if(!r.offsetParent)continue;
+      if(r.closest('.lbl'))bad.push('row inside a row: '+(r.querySelector('.lbl b')||r).textContent.trim().slice(0,40));
+      const t=[...r.children].find(c=>c.classList.contains('tgl'));if(!t||!t.offsetParent)continue;
+      const a=r.getBoundingClientRect(),b=t.getBoundingClientRect();
+      if(Math.abs(a.right-b.right)>2)bad.push('switch not at the right: '+(r.querySelector('.lbl b')||r).textContent.trim().slice(0,40))}
+      return bad.slice(0,6)})()"""
+
+    def test_von_selbst_lines_up(self):
+        """Ich → Von selbst with every Home Assistant part on (Dominik's picture 2026-10-10): sub-switches, the
+        rule list, the form and the events sit below the "Smart-Home-Regeln" row, all switches in one column,
+        nothing reaches past the page, the events block has its own heading."""
+        helpers.set_config(proactive=True, ha_live=True, ha_loud=True, ha_events=True, ha_voice_rules=True, ha_camera=True,
+                           messages=True, messages_announce=True)
+        helpers.HA_STATES.append({"entity_id": "binary_sensor.ui_lineup", "state": "off", "last_changed": "2026-10-10T18:00:00+00:00",
+                                  "attributes": {"friendly_name": "Haustür Bewegungserkennung"}})
+
+        async def go():
+            async with async_playwright() as p:
+                for w, h in ((1280, 900), (390, 844)):
+                    br, pg, errors = await self.page(p, w, h, csp=True)
+                    base = f"http://127.0.0.1:{self.port}"
+                    await pg.request.put(base + "/api/profile/homeassistant",
+                                         data={"url": f"http://127.0.0.1:{helpers.HA_PORT}", "token": helpers.HA_TOKEN})
+                    await pg.request.put(base + "/api/profile/settings", data={
+                        "pro_on": True, "pro_ha": True, "pro_ha_live": True, "pro_ha_loud": True, "pro_ha_events": True,
+                        "pro_ha_voice": True, "pro_ha_cam": True})
+                    r = await pg.request.post(base + "/api/proactive/rules", data={
+                        "conds": [{"entity": "binary_sensor.ui_lineup", "op": "changes", "when": "on"}], "pause": 10,
+                        "text": "Besucher vor Haustür"})
+                    rid = (await r.json())["rules"][-1]["id"]
+                    await pg.goto(base + "/")
+                    await pg.wait_for_timeout(800)
+                    await pg.evaluate("document.getElementById('wizmodal')&&(document.getElementById('wizmodal').style.display='none')")
+                    await pg.evaluate("openMe('probox')")
+                    await pg.wait_for_selector("#haevbox b", timeout=5000)
+                    self.assertEqual(await pg.evaluate(self.ROWS), [], w)
+                    # the block is beside nothing: it starts below its row and stays inside the page
+                    edges = await pg.evaluate("""(()=>{const b=$('probox').getBoundingClientRect(),t=document.querySelector('#probox .protail');
+                      const r=t.getBoundingClientRect(),out=[...t.querySelectorAll('*')].filter(e=>{const x=e.getBoundingClientRect();
+                      return e.offsetParent&&x.width>1&&(x.left<b.left-1||x.right>b.right+1)}).map(e=>e.id||e.tagName).slice(0,5);
+                      return {inside:out,below:r.top>=t.previousElementSibling.getBoundingClientRect().bottom-1}})()""")
+                    self.assertEqual(edges, {"inside": [], "below": True}, w)
+                    heads = await pg.evaluate("[...document.querySelectorAll('#probox b')].map(b=>b.textContent.trim()).filter(x=>x)")
+                    self.assertEqual(len(heads), len(set(heads)), heads)
+                    self.assertEqual(errors, [])
+                    await pg.request.delete(base + f"/api/proactive/rules/{rid}")
+                    await br.close()
+        try:
+            self.run_async(go())
+        finally:
+            helpers.HA_STATES[:] = [x for x in helpers.HA_STATES if x["entity_id"] != "binary_sensor.ui_lineup"]
+            helpers.set_config(proactive=False, ha_live=False, ha_loud=False, ha_events=False, ha_voice_rules=False,
+                               ha_camera=False, messages=False, messages_announce=False)
+
     def test_nothing_sticks_out_on_phones(self):
         """V01.0.302 (Dominik: buttons under the face cut off left and right): on phone widths, in the app view and
         in the computer layout, no visible element reaches over the screen's edge on any page, settings page, tab
@@ -1510,7 +1567,7 @@ class Browser(unittest.TestCase):
 
                         async def check(where):
                             await pg.wait_for_timeout(150)
-                            bad = await pg.evaluate(out)
+                            bad = await pg.evaluate(out) + await pg.evaluate(self.ROWS)
                             if bad:
                                 found.append((w, mode, where, bad))
                         await check("start")

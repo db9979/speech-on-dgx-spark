@@ -51,7 +51,11 @@ async function showPro(){const box=$('probox');if(!PROFILE||!PRO_ON){box.innerHT
     <div class="fh">${t('In der Ruhezeit kommt nichts. Beide Felder leer: keine Ruhezeit.','Nothing arrives during quiet hours. Both empty: no quiet hours.')}</div>
     <label>${t('Höchstens Meldungen am Tag','At most notes a day')}</label><select id="promax" style="max-width:120px">${[1,2,3,4,6,8,10,15,20,30].map(n=>`<option${n===S.pro_max?' selected':''}>${n}</option>`).join('')}</select>
     <div class="fh">${t('Heute: ','Today: ')}${st.today} ${t('von','of')} ${S.pro_max}${st.paused_until?' · '+t('Pause bis ','paused until ')+new Date(st.paused_until*1000).toLocaleTimeString([], {hour:'2-digit',minute:'2-digit'})+` <button class="b" type="button" id="proresume">${t('Pause beenden','End pause')}</button>`:''}</div>`+
-    PROK.map(([k,need,l,h,miss])=>proRow(k,l,h,(need&&!st.has[need]&&!(k==='pro_weather'&&st.has.weather)?`<span class="err" style="display:block">${t('Noch nicht möglich: ','Not possible yet: ')}${esc(miss)}</span>`:'')+(PROX[k]?PROX[k](st):''))).join('')+
+    PROK.map(([k,need,l,h,miss])=>{const no=need&&!st.has[need]&&!(k==='pro_weather'&&st.has.weather)?`<span class="err" style="display:block">${t('Noch nicht möglich: ','Not possible yet: ')}${esc(miss)}</span>`:'';
+      // the smart home part is a whole block (sub-switches, rules, form, events): below the row, full width,
+      // never inside the row's text column (there the row's own switch floated in its middle)
+      if(PROWIDE.includes(k)){const x=PROX[k]?PROX[k](st):'';return proRow(k,l,h,no)+(x?`<div class="protail">${x}</div>`:'')}
+      return proRow(k,l,h,no+(PROX[k]?PROX[k](st):''))}).join('')+
     proRow('pro_learn',t('Mitlernen','Learn from feedback'),t('Sagst du nach einer Meldung „Nicht jetzt“, ist zwei Stunden Ruhe. Bei „Das interessiert mich nicht“ oder „Weniger davon“ meldet er sich zu dieser Art nur noch halb so oft.','After a note, "not now" means two hours of quiet. "Not interested" or "less of this" halves how often that kind may speak.'),
       lowered.length?`<span style="display:block;margin-top:4px">${lowered.map(x=>`${esc(x.label)}: ${x.cap?t('höchstens ','at most ')+x.cap+t(' am Tag',' a day'):t('aus','off')}`).join(' · ')} <button class="b" type="button" id="proreset">${t('Zurücksetzen','Reset')}</button></span>`:'')+
     `<div class="row" style="margin-top:10px"><button class="b" type="button" id="protest">${t('Ausprobieren','Try it')}</button><span id="protmsg" class="fh"></span></div>
@@ -88,7 +92,8 @@ const PROX={
       <span style="display:block">${t('Beispiele: „Whirlpool“ über 37,5 · „Bad Fenster“ ist offen und „Regen“ ist an · „Waschmaschine Leistung“ unter 5, mindestens 3 Minuten · „Bewegung Flur“ ändert sich, bei an, höchstens alle 10 Minuten. Eine Regel meldet sich erst, nachdem sie einmal nicht zugetroffen hat, und dann einmal, bis sie wieder nicht zutrifft.','Examples: "Whirlpool" above 37.5 · "Bathroom window" is open and "Rain" is on · "Washing machine power" below 5, at least 3 minutes · "Motion hallway" changes, on, at most every 10 minutes. A rule speaks only after it was false once, then once until it is false again.')}</span></details>
     ${HAEV_ON&&S.pro_ha_events?'<div id="haevbox" style="margin-top:8px"></div>':''}`};
 // the parts of "Home Assistant meldet an Spark" (hamelden.py) the admin allows, each with its own switch
-const proHaSub=(k,l,h)=>`<div style="margin-left:8px">${setRow(esc(l),esc(h),tglIn(`data-k="${k}"`,S[k]))}</div>`;
+const PROWIDE=['pro_ha'];
+const proHaSub=(k,l,h)=>setRow(esc(l),esc(h),tglIn(`data-k="${k}"`,S[k]));
 const proHaSubs=()=>(HALIVE_ON?proHaSub('pro_ha_live',t('Sofort statt minütlich','Instantly instead of every minute'),t('Hört direkt auf Home Assistant; kurze Bewegungen gehen nicht verloren. Bleibt im Heimnetz.','Listens to Home Assistant directly; short motion is not missed. Stays in the home network.')):'')
   +(HAVOICE_ON?proHaSub('pro_ha_voice',t('Regeln per Sprache anlegen','Add rules by voice'),t('„Sag mir Bescheid, wenn jemand an der Haustür ist“ legt nach deinem „Ja“ eine Regel an.','"Tell me when someone is at the front door" adds a rule after your "yes".')):'')
   +(HALOUD_ON?proHaSub('pro_ha_loud',t('Auch laut auf Lautsprechern','Also aloud on speakers'),t('Eine Regel darf ihren eigenen Satz ohne Namen auch auf Lautsprechern sagen, die Durchsagen von dir annehmen.','A rule may also say its own sentence without names on speakers that take announcements from you.')):'')
@@ -146,7 +151,7 @@ ON.proPick=(b,id)=>{PRODEV.run++;
 let HAEV=null;
 async function haEvents(){const box=$('haevbox');if(!box)return;try{HAEV=await (await api('/api/profile/ha-events')).json()}catch(e){box.innerHTML=`<div class="fh err">${esc(e.message)}</div>`;return}
   const d=HAEV,k=d.keys[0],loud=HALOUD_ON&&S.pro_ha_loud;
-  box.innerHTML=`<b>${t('Ereignisse aus Home Assistant','Events from Home Assistant')}</b>
+  box.innerHTML=`<b>${t('Deine Ereignisse','Your events')}</b>
     <ul class="facts small" style="margin-top:6px">${d.events.map(x=>`<li><span><code>${esc(x.name)}</code> → „${esc(x.text)}“${x.pause>1?` <small class="mut">${t('höchstens alle','at most every')} ${x.pause} min</small>`:''}${x.loud?` <small class="mut">${t('auch laut','also aloud')}</small>`:''}</span><span><button class="b" type="button" ${onAttr('haevTry',x.name)}>${t('Ausprobieren','Try it')}</button><button class="b" type="button" ${onAttr('haevDel',x.name)}>${t('Löschen','Delete')}</button></span></li>`).join('')||`<li class="mut">${t('Noch kein Ereignis.','No event yet.')}</li>`}</ul>
     <details><summary>${t('Ereignis hinzufügen','Add an event')}</summary>
       <div class="two2"><div><label>${t('Name (wie in Home Assistant)','Name (as in Home Assistant)')}</label><input id="haevname" placeholder="klingel" autocomplete="off"></div><div><label>${t('Satz, den der Spark sagt','Sentence the Spark says')}</label><input id="haevtext" placeholder="${t('Es hat geklingelt.','Someone rang the bell.')}" autocomplete="off"></div></div>
