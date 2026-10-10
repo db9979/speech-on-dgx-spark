@@ -194,6 +194,20 @@ def allowed(key, uid, c=None, s=None):
     return reason(key, uid, c, s) is None
 
 
+def count(uid, c=None):
+    """(on, of) for Personen und Geräte: of the functions with an own switch the Spark allows, how many are on for uid."""
+    c = chat_cfg() if c is None else c
+    s = profiles.settings(uid)
+    mine = [f for f in FEATURES if f.profile and admin_on(f.key, c)]
+    return sum(1 for f in mine if s.get(f.profile) is True), len(mine)
+
+
+def guests(c=None):
+    """What guests get: the guest access switch and how many functions they could use with it."""
+    c = chat_cfg() if c is None else c
+    return {"public": _switch(c, "public"), "features": sum(1 for f in FEATURES if f.guests and admin_on(f.key, c))}
+
+
 WHY = {"spark": ("Vom Admin ausgeschaltet", "Switched off by the admin"),
        "guest": ("Nur mit Profil", "Only with a profile"),
        "profile": ("Bei dir aus", "Off for you")}

@@ -692,3 +692,6 @@ table.who tr.sub td:first-child{padding-left:26px}
 .setrow.locked .lbl b{color:var(--mut)}.setrow.locked .tgl,.setrow.locked select,.setrow.locked textarea{opacity:.5}
 .setrow .lbl .why{display:block;font-style:normal;font-size:12px;color:#b45309;margin-top:2px}
 .melocked{margin-top:16px;padding-top:6px;border-top:1px solid var(--line)}.melocked .fh{margin:4px 0 8px}
+/* Personen und Geräte (plan „Vereinheitlichen“ Phase 5): "+ Neu" opens the fields, the profile detail in sections */
+.pnew{margin-top:12px}.pnew>summary{display:inline-block;list-style:none;cursor:pointer;padding:7px 13px;border-radius:10px;font-weight:500;color:#fff;background:linear-gradient(135deg,var(--acc),color-mix(in srgb,var(--acc) 55%,var(--acc2)))}.pnew>summary::-webkit-details-marker{display:none}
+.pnew[open]>summary{margin-bottom:8px}.pdet h3.sec{margin:14px 0 2px}.pdet .setrow:last-child{border-bottom:0}

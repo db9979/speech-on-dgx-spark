@@ -285,3 +285,50 @@ class Presets(unittest.TestCase):
 
 if __name__ == "__main__":
     unittest.main()
+
+
+class Detail(unittest.TestCase):
+    """Phase 5: Personen und Geräte has one profile detail with access, functions and rights."""
+    def test_detail_has_functions_and_rights(self):
+        c, uid = profile("DetaEva")
+        d = ADMIN.get(f"/api/admin/profiles/{uid}").json()
+        self.assertEqual(set(d["features"]), {"on", "of"})
+        self.assertEqual(d["features"]["on"], 0)            # everything off for a new profile
+        self.assertTrue(d["main"])
+        self.assertEqual(set(d["rights"]), {"agent", "update", "quota"})
+        self.assertEqual(d["rights"]["agent"]["level"], "")
+        self.assertIsInstance(d["sessions"], list)
+        self.assertEqual(len(d["sessions"]), 1)              # the login above
+        lst = ADMIN.get("/api/admin/profiles").json()
+        self.assertEqual(set(lst["guests"]), {"public", "features"})
+        self.assertIn("role", next(u for u in lst["users"] if u["id"] == uid))
+
+    def test_function_count_follows_the_switches(self):
+        c, uid = profile("DetaFin")
+        helpers.set_config(weather=True)
+        on, of = features.count(uid)
+        self.assertEqual(on, 0)
+        self.assertGreaterEqual(of, 1)
+        self.assertEqual(ADMIN.put(f"/api/admin/features/weather/profiles/{uid}", json={"on": True}).status_code, 200)
+        self.assertEqual(features.count(uid), (1, of))
+        helpers.set_config(weather=False)
+        self.assertEqual(features.count(uid), (0, of - 1))   # what the Spark switched off does not count
+
+    def test_agent_level_per_profile(self):
+        c, uid = profile("DetaGus")
+        for bad in ("root", 1, None):
+            self.assertEqual(ADMIN.put(f"/api/admin/agent/levels/{uid}", json={"level": bad}).status_code, 400)
+        self.assertEqual(ADMIN.put("/api/admin/agent/levels/u_000000000000", json={"level": "read"}).status_code, 404)
+        self.assertEqual(c.put(f"/api/admin/agent/levels/{uid}", json={"level": "act"}).status_code, 401)   # no admin
+        self.assertEqual(ADMIN.put(f"/api/admin/agent/levels/{uid}", json={"level": "read"}).json(), {"level": "read"})
+        self.assertEqual(ADMIN.get(f"/api/admin/profiles/{uid}").json()["rights"]["agent"]["level"], "read")
+        import guard
+        self.assertTrue(any(x.get("event") == "agent_level" and x.get("uid") == uid for x in guard.read(50)))
+        ADMIN.put(f"/api/admin/agent/levels/{uid}", json={"level": ""})
+        self.assertEqual(ADMIN.get(f"/api/admin/profiles/{uid}").json()["rights"]["agent"]["level"], "")
+
+    def test_admin_ends_a_browser(self):
+        c, uid = profile("DetaHil")
+        sid = ADMIN.get(f"/api/admin/profiles/{uid}").json()["sessions"][0]["id"]
+        self.assertEqual(ADMIN.delete(f"/api/admin/profiles/{uid}/sessions/{sid}").status_code, 200)
+        self.assertIsNone(c.get("/api/whoami").json()["profile"])

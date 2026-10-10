@@ -2,6 +2,7 @@
 
 Every version in one line, newest first (taken from the commit messages, so some lines are German, some English). Older entries have no version number.
 
+- **V01.0.271** · 2026-10-10 · Personen und Geräte: ein Profil an einer Stelle mit Zugang, Funktionen „n von m an“, Rechten (Aufträge, App-Update, Upload-Platz), Browser abmelden, Gäste-Zeile und „+ Neu“
 - **V01.0.270** · 2026-10-10 · Vereinheitlichen Phase 4: ein Zeilen-Baustein (setRow) für alle Einstellungen, vom Admin Ausgeschaltetes bleibt unter Ich sichtbar mit Grund, Ich nennt nicht eingeschaltete Funktionen, Spalte „Neue Profile“ unter Wer darf was, Vorgaben nehmen nie einen Funktionsschalter ein
 - **V01.0.269** · 2026-10-10 · Vereinheitlichen Phase 3: Funktionen → „Wer darf was“ (Spark, jedes Profil, Gäste; Filter Neu/Braucht dich; Handy mit Profil-Chips), Admin schaltet Profilschalter mit Eintrag im Admin-Protokoll, auch für Verwalter
 - **V01.0.268** · 2026-10-10 · Vereinheitlichen Phase 2: Standardwerte nur noch aus config.default.json (load_config füllt fehlende Schlüssel), Vorgaben und eigene Werte nur über profiles.effective; Selbsttest gegen zweite Standardwerte und Handmischungen

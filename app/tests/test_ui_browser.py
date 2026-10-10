@@ -875,6 +875,33 @@ class Browser(unittest.TestCase):
         finally:
             helpers.set_config(weather=True)
 
+    def test_one_profile_detail(self):
+        """Phase 5: Personen und Geräte – the Gäste row, role badges, "+ Neu" opens the fields, and one detail per
+        profile with Zugang, Geräte, Funktionen „n von m an“ (jumps to Wer darf was), Rechte and Daten."""
+        async def go():
+            async with async_playwright() as p:
+                for name, w, h in VIEWS:
+                    br, pg, errors = await self.page(p, w, h)
+                    await pg.evaluate("goSec('prof')")
+                    await pg.wait_for_selector("#proflist tr.pguest")
+                    self.assertFalse(await pg.is_visible("#pname"))
+                    await pg.click("#pnew summary")
+                    self.assertTrue(await pg.is_visible("#pname"))
+                    await pg.click("#proflist [data-popen]")
+                    await pg.wait_for_selector("#pdetail .pdet")
+                    heads = await pg.evaluate("[...document.querySelectorAll('#pdetail h3.sec')].map(x=>x.textContent)")
+                    self.assertEqual(heads, ["Zugang", "Rufname", "Geräte", "Funktionen", "Rechte", "Daten"])
+                    for sel in ("#ppinnew", "#prole", "#pagent", "#pupdn", "#pquota", "#pdel", "#psess"):
+                        self.assertTrue(await pg.query_selector(sel), (name, sel))
+                    self.assertRegex(await pg.text_content("#pdetail"), r"\d+ von \d+ an")
+                    over = await pg.evaluate("document.documentElement.scrollWidth-window.innerWidth")
+                    self.assertLessEqual(over, 1, name)
+                    await pg.click("#pfeat")
+                    await pg.wait_for_selector("#whobox .wfilt")
+                    self.assertEqual(errors, [], name)
+                    await br.close()
+        self.run_async(go())
+
     def test_locked_shows_why(self):
         """Phase 4 (V01.0.270): what the admin switched off stays visible under Ich, locked with the reason, and Ich
         names the functions the admin has not switched on."""

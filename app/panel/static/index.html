@@ -484,15 +484,16 @@
       <div class="row" id="pfilter" style="margin-top:10px;flex-wrap:wrap;gap:6px"></div>
       <table style="margin-top:10px"><tbody id="proflist"></tbody></table>
       <div class="row" id="ppager" style="gap:6px;align-items:center"></div>
-      <h2>Neues Profil</h2>
-      <div class="row"><input id="pname" placeholder="Name" style="flex:1;min-width:120px"><input id="ppin" type="password" placeholder="PIN (mind. 4 Zeichen)" autocomplete="new-password" style="flex:1;min-width:120px"><button class="b p" id="padd">Anlegen</button></div>
+      <details class="pnew" id="pnew"><summary class="b p">+ Neues Profil</summary>
+      <div class="row"><input id="pname" placeholder="Name" maxlength="40" style="flex:1;min-width:120px"><input id="ppin" type="password" placeholder="PIN (mind. 4 Zeichen)" autocomplete="new-password" style="flex:1;min-width:120px"><button class="b p" id="padd">Anlegen</button></div>
+      <div class="fh">Welche Funktionen ein neues Profil gleich bekommt, legst du unter Wer darf was → „Neue Profile“ fest.</div></details>
       <div id="pmsg" style="margin-top:8px"></div>
     </div>
     <div class="card"><h2>Geräte</h2>
       <div class="intro">Eigene Programme und Kurzbefehle bekommen hier einen Geräteschlüssel, das Profil wählst du in der Liste. iPhone-App, Lautsprecher, Pebble-Uhr und Home Assistant richtet jedes Profil selbst unter Ich ein: Sie bleiben fest bei diesem Profil und lassen sich hier nur löschen. Der Schlüssel geht im Header <code>X-Speech-Device</code> an <code>/api/chat</code>.</div>
       <table style="margin-top:10px"><tbody id="devlist"></tbody></table>
-      <h2>Neues Gerät</h2>
-      <div class="row"><input id="dname" placeholder="z. B. Lautsprecher Küche" style="flex:1;min-width:140px"><select id="duser" style="flex:1;min-width:120px" aria-label="Profil"></select><button class="b p" id="dadd">Anlegen</button></div>
+      <details class="pnew" id="dnew"><summary class="b p">+ Neues Gerät</summary>
+      <div class="row"><input id="dname" placeholder="z. B. Lautsprecher Küche" maxlength="40" style="flex:1;min-width:140px"><select id="duser" style="flex:1;min-width:120px" aria-label="Profil"></select><button class="b p" id="dadd">Anlegen</button></div></details>
       <div id="dmsg" style="margin-top:8px"></div>
     </div>
   </div>

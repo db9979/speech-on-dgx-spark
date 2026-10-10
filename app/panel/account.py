@@ -182,7 +182,7 @@ async def logout_everywhere(request: Request):
 # fresh code, in its browser login or from its iPhone app ("Spark verwalten").
 ADMIN_EVENTS = ("admin_login", "admin_login_failed", "admin_code_failed", "admin_mode_on", "admin_mode_off", "admin_mode_failed",
                 "admin_role", "admin_roles_switch", "admin_mfa_on", "admin_mfa_off", "admin_logout_everywhere",
-                "feature_profile")
+                "feature_profile", "agent_level", "iphone_update_rights")
 
 
 @router.get("/api/admin/roles", dependencies=[Depends(main_auth)])

@@ -21,6 +21,7 @@ import guard  # noqa: E402
 import kiwix  # noqa: E402
 import health  # noqa: E402
 import coadmin  # noqa: E402
+import features  # noqa: E402
 import mfa  # noqa: E402
 import speakers  # noqa: E402
 import wyoming  # noqa: E402
@@ -76,7 +77,8 @@ async def wyoming_suggest():
 
 def _profile_extra(uid):
     import roomlive
-    return {"mfa": mfa.enabled(uid), "msg": bool(profiles.settings(uid).get("msg_on")), "room": roomlive.count(uid)}
+    return {"mfa": mfa.enabled(uid), "msg": bool(profiles.settings(uid).get("msg_on")), "room": roomlive.count(uid),
+            "role": coadmin.role(uid) if coadmin.on() else ""}
 
 
 @router.get("/api/admin/profiles", dependencies=[Depends(auth)])
@@ -91,6 +93,7 @@ def admin_profiles(q: str = "", show: str = "", sort: str = "name", page: int = 
         x["room"] = x["id"] in listening   # in room mode right now (roomlive.py)
     for u in d["users"]:
         u.setdefault("room", roomlive.count(u["id"]))
+    d["guests"] = features.guests()   # the row "Gäste" above the profiles
     return d
 
 
@@ -106,7 +109,6 @@ async def admin_add_profile(request: Request):
         uid = profiles.add_user(name, pin)
     except ValueError as e:
         raise HTTPException(409, str(e))
-    import features
     features.new_profile(uid)   # the functions the admin switches on for every new profile (Wer darf was)
     return {"id": uid}
 
@@ -145,8 +147,10 @@ def admin_reset_mfa(uid: str, request: Request):
 
 
 @router.get("/api/admin/profiles/{uid}", dependencies=[Depends(auth)])
-def admin_profile(uid: str):
-    """One profile in detail: its devices, second step, messages, Rufname, last use."""
+def admin_profile(uid: str, request: Request):
+    """One profile in detail (Personen und Geräte, plan "Vereinheitlichen" Phase 5): access (PIN, second step,
+    role, browsers), devices, how many functions are on, and its rights (agent, Spark update, upload space).
+    A Verwalter sees no rights block: those pages are not his."""
     u = next((x for x in profiles.names() if x["id"] == uid), None)
     if not u:
         raise HTTPException(404, "no such profile")
@@ -156,8 +160,28 @@ def admin_profile(uid: str):
     import roomlive
     listening = roomlive.devices_listening()
     devs = [dict(x, speaker=x["id"] in spk, room=x["id"] in listening) for x in profiles.own_devices(uid)]
-    return dict(u, **_profile_extra(uid), last=profiles.last_use(uid, last), devices=devs,
-                facts=len(profiles.memory(uid)), sessions=profiles.sessions(uid))
+    on, of = features.count(uid)
+    me = acting_profile(request)
+    out = dict(u, **_profile_extra(uid), last=profiles.last_use(uid, last), devices=devs,
+               facts=len(profiles.memory(uid)), sessions=profiles.sessions(uid),
+               features={"on": on, "of": of}, main=not me, roles=coadmin.on())
+    if not me or coadmin.role(me["id"]) != "manager":
+        out["rights"] = _rights(uid)
+    return out
+
+
+def _rights(uid):
+    import agent
+    import appupdate
+    import wissen
+    import documents
+    lv = agent.admin_state().get("levels", {}).get(uid, "")
+    docs = features.chat_cfg().get("documents", True) is not False
+    return {"agent": {"spark": agent.admin_on(), "level": lv},
+            "update": dict(appupdate.rights(uid), spark=appupdate.admin_on()),
+            "quota": {"spark": docs, "mb": wissen.quota_bytes(uid) // 1024**2, "own": uid in wissen._quotas(),
+                      "default_mb": wissen.quota_bytes("") // 1024**2,
+                      "used": documents.usage_total(uid) if os.path.exists(documents.db_path(uid)) else 0}}
 
 
 @router.delete("/api/admin/profiles/{uid}/sessions/{sid}", dependencies=[Depends(auth)])
@@ -369,7 +393,6 @@ def validate(new):
         raise HTTPException(400, "esp32_url: http(s)://name or http(s)://name:port, without a path")
     if not re.fullmatch(r"[\w.\-]+/[\w.\-]+", ch.get("esp32_repo") or "x/x"):
         raise HTTPException(400, "esp32_repo: owner/name")
-    import features
     npo = ch.get("new_profile_on", [])
     if not (isinstance(npo, list) and len(npo) <= len(features.FEATURES) and len(set(npo)) == len(npo)
             and all(isinstance(k, str) and k in features.BY_KEY and features.BY_KEY[k].profile for k in npo)):

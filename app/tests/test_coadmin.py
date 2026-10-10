@@ -144,6 +144,20 @@ class CoAdmin(unittest.TestCase):
                              ("GET", "/api/clone-voices"), ("GET", "/api/admin/telegram")):
             self.assertEqual(c.request(method, path, json={}).status_code, 403, (method, path))
 
+    def test_manager_profile_detail_without_rights(self):
+        c, uid = self.give("KoVeit", role="manager")
+        self.elevate(c)
+        other = profile("KoVeitsKind")
+        oid = uid_of("KoVeitsKind")
+        d = c.get(f"/api/admin/profiles/{oid}").json()
+        self.assertNotIn("rights", d)                 # agent, update and upload space are not his pages
+        self.assertFalse(d["main"])
+        self.assertEqual(c.put(f"/api/admin/agent/levels/{oid}", json={"level": "read"}).status_code, 403)
+        sid = d["sessions"][0]["id"]
+        self.assertEqual(c.delete(f"/api/admin/profiles/{oid}/sessions/{sid}").status_code, 200)   # protective, his list
+        self.assertIsNone(other.get("/api/whoami").json()["profile"])
+        self.assertIn("rights", ADMIN.get(f"/api/admin/profiles/{oid}").json())
+
     def test_taking_away_ends_it_at_once(self):
         c, uid = self.give("KoWim")
         self.elevate(c)

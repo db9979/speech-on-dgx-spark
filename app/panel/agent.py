@@ -1215,6 +1215,26 @@ async def admin_levels(request: Request):
     return _admin_view()
 
 
+@router.put("/api/admin/agent/levels/{uid}", dependencies=[Depends(auth)])
+async def admin_level(uid: str, request: Request):
+    """{"level": "" | "read" | "act"}: what one profile may (Personen und Geräte → profile → Rechte)."""
+    body = await _body(request)
+    lv = body.get("level")
+    if uid not in profiles.user_ids():
+        raise HTTPException(404, "no such profile")
+    if lv not in ("",) + LEVELS:
+        raise HTTPException(400, "level: empty, read or act")
+    st = admin_state()
+    if lv:
+        st["levels"][uid] = lv
+    else:
+        st["levels"].pop(uid, None)
+    save_admin_state(st)
+    import guard
+    guard.log("agent_level", ip=guard.client_ip(request), uid=uid, detail=lv or "aus")
+    return {"level": lv}
+
+
 @router.post("/api/admin/agent/mcp", dependencies=[Depends(auth), Depends(admin_code)])
 async def admin_mcp_add(request: Request):
     body = await _body(request)
