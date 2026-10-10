@@ -117,7 +117,9 @@ class Gate(unittest.TestCase):
             w = asyncio.ensure_future(g.enter())
             await asyncio.sleep(0)
             w.cancel()
-            await asyncio.sleep(0)
+            for _ in range(5):
+                await asyncio.sleep(0)
+            self.assertTrue(w.cancelled())
             self.assertEqual(g.view()["waiting"], 0)
             g.leave(t)
             g.leave(t)                                   # twice is harmless

@@ -205,9 +205,9 @@ class PrioGate:
         self._grant()
         while not fut.done():   # a slot whose lease ran out frees itself: look again now and then
             try:
-                await asyncio.wait_for(asyncio.shield(fut), timeout=1.0)
-            except asyncio.TimeoutError:
-                self._grant()
+                await asyncio.wait({fut}, timeout=1.0)   # (never cancels fut itself)
+                if not fut.done():
+                    self._grant()
             except asyncio.CancelledError:
                 if fut.done():
                     self.leave(ticket)

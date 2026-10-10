@@ -31,6 +31,7 @@ All options for running without questions (`--mode api --asr 1.7b --tts 0.6b --y
 
 <!-- New version: add one line at the top here and in CHANGELOG.md, drop the oldest line here (keep 10). Details go to docs/de and docs/en, not into this README. -->
 
+- **V01.0.287** Priority for people: the TTS/ASR queue reliably frees the place of a waiting request that gives up (Python 3.11 too)
 - **V01.0.286** UI stages 4, 5 and 7: Me → Today with "Try saying", answers explain switched-off functions, status as cards, strict CSP without inline code, undo in the admin log, encrypted offsite backup (WebDAV, off), package versions with hashes, iPhone "Today"
 - **V01.0.285** Spark verwalten: the header button (and "Admin-Anmeldung" in the phone menu) only for profiles with an admin role, not for guests and ordinary profiles; panel-password login via the address with #admin at the end
 - **V01.0.284** Priority for people, part 2: while an answer with priority has no first sentence yet, others' new requests to the language model wait at most 2 s (0–5 adjustable, running ones never stopped); the browser and the iPhone app report the start of a recording, background work then stops at once; Logs → Requests shows the wait
@@ -40,7 +41,6 @@ All options for running without questions (`--mode api --asr 1.7b --tts 0.6b --y
 - **V01.0.280** "Los geht's": saving the setup state no longer reloads the page (switch check skipped); the browser test logs a diagnosis instead of hanging
 - **V01.0.279** reMarkable: "… and put it on my reMarkable" stores the whole answer, also after a web search; a fixed rule on the person's own words decides, the panel sends it after the answer and says so (before, the switch cut the tool)
 - **V01.0.278** Update log without the pip error "dependency conflicts": rmscene (reMarkable) is installed without its dependencies, packaging stays current (was downgraded to 23.2, breaking wheel); existing installs are repaired on update
-- **V01.0.277** iPhone app: first answer with sound (waits out the route switch after start, replays dropped pieces), "Copy sound log" in settings
 
 All versions: [CHANGELOG.md](CHANGELOG.md)
 
