@@ -81,7 +81,14 @@ class Browser(unittest.TestCase):
         pg.on("console", lambda m: errors.append(m.text) if "Content Security Policy" in m.text else None)
         base = f"http://127.0.0.1:{self.port}"
         await pg.goto(base + "/")
-        r = await pg.request.post(base + "/api/login", data={"password": "secret-admin"})
+        for i in range(3):   # seen once on GitHub (V01.0.411): ECONNRESET on this first POST of a busy runner
+            try:
+                r = await pg.request.post(base + "/api/login", data={"password": "secret-admin"})
+                break
+            except Exception:
+                if i == 2:
+                    raise
+                await pg.wait_for_timeout(500)
         self.assertEqual(r.status, 200)
         r = await pg.request.post(base + "/api/profile/login", data={"name": "Uitest", "pin": "4711"})
         self.assertEqual(r.status, 200)
@@ -444,7 +451,7 @@ class Browser(unittest.TestCase):
                     br, pg, errors = await self.page(p, width, 900)
                     for sw in keys:
                         await pg.evaluate("goSec('who')")
-                        await pg.wait_for_selector("#whobox .wname", timeout=8000)
+                        await pg.wait_for_selector("#whobox .wname", timeout=20000)   # 8 s was red on a busy runner
                         name = await pg.evaluate(f"(WHO.features.find(f=>f.switch==='{sw}')||{{name:['']}}).name[0]")
                         if not name:
                             continue
@@ -869,11 +876,13 @@ class Browser(unittest.TestCase):
                 for name, w, h in VIEWS:
                     br, pg, errors = await self.page(p, w, h)
                     await pg.evaluate("openMe('msgbox')")
-                    await pg.wait_for_timeout(800)
-                    self.assertTrue(await pg.evaluate("$('msgbox').classList.contains('on')"), name)
-                    self.assertTrue(await pg.evaluate("!!$('msgsend')"), name)
+                    # wait for the state, not 800 ms: Ich loads its boxes one after the other (slow on a busy runner)
+                    await self.until(pg, "$('msgbox').classList.contains('on')&&!!$('msgsend')", 20)
                     await pg.evaluate(f"$('msgto').value={other!r};$('msgtext').value='Test {name}';$('msgsend').click()")
-                    await pg.wait_for_timeout(800)
+                    for _ in range(150):
+                        if f"Test {name}" in [x["text"] for x in messages.box(other)]:
+                            break
+                        await pg.wait_for_timeout(100)
                     self.assertIn(f"Test {name}", [x["text"] for x in messages.box(other)])
                     self.assertTrue(await pg.evaluate("!!$('msgready')"), name)     # Bereit (V01.0.200)
                     # the envelope beside the chat input sends without the model
@@ -920,7 +929,7 @@ class Browser(unittest.TestCase):
                     await pg.evaluate("goSec('chat');$('profbtn').click()")
                     await pg.wait_for_timeout(600)
                     await pg.evaluate("ptab('espbox')")
-                    await pg.wait_for_function("!!document.querySelector('#espbox [data-ego]')", timeout=5000)
+                    await pg.wait_for_function("!!document.querySelector('#espbox [data-ego]')", timeout=20000)
                     rows = await pg.evaluate("[...document.querySelectorAll('#espbox [data-ego]')].map(b=>b.dataset.ego)")
                     self.assertEqual(rows, [did, "usb", "code"], name)
                     await pg.evaluate(f"document.querySelector('#espbox [data-ego=\"{did}\"]').click()")

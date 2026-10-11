@@ -2,6 +2,7 @@
 
 Every version in one line, newest first (taken from the commit messages, so some lines are German, some English). Older entries have no version number.
 
+- **V01.0.414** · 2026-10-11 · Selbsttests stabiler: Nachrichten, Lautsprecher und Wer darf was warten auf den Zustand statt fester Zeiten, Anmeldung im Testhelfer mit Wiederholung
 - **V01.0.413** · 2026-10-11 · Ich → Dokumente übersichtlich bei vielen Dateien: eine kompakte Zeile pro Dokument mit Abzeichen (Frist, wird gelesen, für alle, Suche aus), Liste scrollt mit der Seite, 50 Zeilen dann „Weitere zeigen“, nach Datum gegliedert; Suchfeld filtert sofort (Enter auch im Inhalt), Quelle, Sortierung, Schnellfilter, Tags als Auswahl; Detailbereich neben der Liste bzw. als eigene Seite mit allen Knöpfen und Tags direkt bearbeiten; „Auswählen“ für mehrere Dokumente (POST /api/profile/wissen/batch, ein Rate-Limit-Schritt, höchstens 200); Schalter eingeklappt; Aufbau „Liste mit Detailbereich“ (ld-…) wiederverwendbar
 - **V01.0.412** · 2026-10-11 · Testlauf stabiler: Hinweis „Vom Admin ausgeschaltet“ unter Ich erscheint sofort, Einladungstest füllt die PIN nach dem Neuzeichnen erneut
 - **V01.0.411** · 2026-10-11 · Live-Seite zum Bedienen: Ereignisse mit Bereichs-Knöpfen, Suche und Anhalten, Klick zeigt die Stelle im Bild; Kasten im Bild öffnet Zahlen der letzten Stunde, ⚠ mit Erklärung und Weg zur Abhilfe; letzte 15 Minuten zurückspulen; Weg kopieren oder in Anfragen öffnen; Selbst-Notaus-Zähler; Begleiter-Aufträge und Sofort-Satz als Weg im Bild; Monitor hält per Tippen an

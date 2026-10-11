@@ -33,6 +33,7 @@ Alle Optionen ohne Rückfragen (`--mode api --asr 1.7b --tts 0.6b --yes` …) st
 
 <!-- New version: add one line at the top here and in CHANGELOG.md, drop the oldest line here (keep 10). Details go to docs/de and docs/en, not into this README. -->
 
+- **V01.0.414** Selbsttests warten auf den Seitenzustand statt fester Zeiten (Nachrichten, Lautsprecher, Wer darf was)
 - **V01.0.413** Ich → Dokumente übersichtlich bei vielen Dateien: kompakte Zeilen, Suche, Filter, Detailbereich, Mehrfachauswahl
 - **V01.0.412** Ich zeigt den Hinweis „Vom Admin ausgeschaltet“ sofort; Einladungstest füllt die PIN nach Neuzeichnen erneut
 - **V01.0.411** Live-Seite zum Bedienen: Ereignisse mit Bereichs-Knöpfen, Suche und Anhalten, Klick zeigt die Stelle im Bild; Kasten im Bild öffnet Zahlen der letzten Stunde, ⚠ mit Erklärung und Weg zur Abhilfe; letzte 15 Minuten zurückspulen; Weg kopieren oder in Anfragen öffnen; Selbst-Notaus-Zähler; Begleiter-Aufträge und Sofort-Satz als Weg im Bild; Monitor hält per Tippen an
@@ -42,7 +43,6 @@ Alle Optionen ohne Rückfragen (`--mode api --asr 1.7b --tts 0.6b --yes` …) st
 - **V01.0.407** Unabhängige Prüfung, Paket 4: signierbare Geräte-Updates, Begleiter nur https, feste CI-Versionen, root-Lesewege, ffmpeg-Grenzen, iPhone-Kopplung, Telegram
 - **V01.0.406** Unabhängige Prüfung, Paket 6: Seiten-Dateien gepackt und gecacht, sichere JSON-Schreiber, schnellere Selbsttests, toter Code entfernt
 - **V01.0.405** Unabhängige Prüfung, Paket 3: schnellere Verbindungen, Panel blockiert nicht mehr, Sprachausgabe übersteht Neustart, Frist fürs erste Wort, keine verlorenen Nachrichten
-- **V01.0.404** Antwort kommt nicht mehr doppelt mit „</think>“ dazwischen: das Nachdenken wird nie gezeigt oder vorgelesen
 
 Alle Versionen: [CHANGELOG.md](CHANGELOG.md)
 
