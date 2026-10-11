@@ -37,18 +37,21 @@ struct BubbleView: View {
     let symbol: String
 
     var body: some View {
-        HStack(alignment: .top, spacing: 8) {
+        HStack(alignment: .top, spacing: 10) {
+            FaceView(size: 22)
             Image(systemName: symbol)
-                .foregroundColor(.accentColor)
+                .foregroundColor(Theme.accent)
+                .padding(.top, 2)
             Text(verbatim: text)
+                .foregroundColor(Theme.fg)
                 .fixedSize(horizontal: false, vertical: true)
                 .lineLimit(6)
         }
         .padding(.horizontal, 14)
         .padding(.vertical, 10)
         .frame(width: 380, alignment: .leading)
-        .background(RoundedRectangle(cornerRadius: 10).fill(Color(nsColor: .windowBackgroundColor)))
-        .overlay(RoundedRectangle(cornerRadius: 10).stroke(Color.secondary.opacity(0.3)))
+        .background(RoundedRectangle(cornerRadius: 12).fill(Theme.card))
+        .overlay(RoundedRectangle(cornerRadius: 12).stroke(Theme.line, lineWidth: 1))
     }
 }
 
@@ -75,32 +78,72 @@ enum HUD {
     }
 }
 
-/// Always visible while the microphone records.
+/// Always visible while the microphone records (design A): a dark pill with a red dot, "Ich höre zu", little
+/// level bars, the time and the hotkey that ends it.
 struct RecordingView: View {
     @ObservedObject var dictation: Dictation
     let hotkey: String
 
+    private static let shape: [Double] = [0.4, 0.8, 0.55, 0.95, 0.35]
+
     var body: some View {
         HStack(spacing: 10) {
             Circle()
-                .fill(Color.red)
-                .frame(width: 12, height: 12)
-            VStack(alignment: .leading, spacing: 2) {
-                Text(verbatim: "Aufnahme läuft · \(dictation.elapsed / 60):\(String(format: "%02d", dictation.elapsed % 60)) / 1:00")
-                    .font(.system(size: 13, weight: .semibold))
-                Text(verbatim: hotkey.isEmpty ? "Noch einmal das Kürzel zum Beenden" : "\(hotkey) beendet die Aufnahme")
-                    .font(.system(size: 11))
-                    .foregroundColor(.secondary)
+                .fill(Theme.bad)
+                .frame(width: 9, height: 9)
+            Text(verbatim: "Ich höre zu")
+                .font(.system(size: 13, weight: .semibold))
+            HStack(spacing: 3) {
+                ForEach(0..<Self.shape.count, id: \.self) { i in
+                    RoundedRectangle(cornerRadius: 1.5)
+                        .fill(Theme.accent2)
+                        .frame(width: 3, height: barHeight(i))
+                }
             }
-            Spacer(minLength: 8)
+            .frame(height: 18)
+            .animation(.easeOut(duration: 0.12), value: dictation.level)
+            .accessibilityHidden(true)
+            Text(verbatim: "\(dictation.elapsed / 60):\(String(format: "%02d", dictation.elapsed % 60)) / 1:00")
+                .font(.system(size: 11, design: .monospaced))
+                .foregroundColor(Theme.pillFg.opacity(0.7))
+            if !hotkey.isEmpty {
+                KeyChip(text: hotkey, dark: true)
+                    .help(Text(verbatim: "\(hotkey) beendet die Aufnahme"))
+            }
             Button("Fertig") { dictation.finish() }
+                .buttonStyle(PillButtonStyle(primary: true))
             Button("Verwerfen") { dictation.discard() }
+                .buttonStyle(PillButtonStyle(primary: false))
         }
+        .foregroundColor(Theme.pillFg)
         .padding(.horizontal, 14)
-        .padding(.vertical, 10)
-        .frame(width: 420)
-        .background(RoundedRectangle(cornerRadius: 10).fill(Color(nsColor: .windowBackgroundColor)))
-        .overlay(RoundedRectangle(cornerRadius: 10).stroke(Color.red.opacity(0.6), lineWidth: 1.5))
+        .padding(.vertical, 8)
+        .background(Capsule().fill(Theme.visor))
+        .overlay(Capsule().stroke(Color.white.opacity(0.08), lineWidth: 1))
+        .fixedSize()
+        .accessibilityElement(children: .contain)
+        .accessibilityLabel(Text(verbatim: "Aufnahme läuft"))
+    }
+
+    private func barHeight(_ i: Int) -> CGFloat {
+        let l = min(max(dictation.level, 0.12), 1)
+        return CGFloat(4 + 14 * Self.shape[i] * l)
+    }
+}
+
+/// Small buttons on the dark recording pill.
+struct PillButtonStyle: ButtonStyle {
+    let primary: Bool
+
+    func makeBody(configuration: Configuration) -> some View {
+        configuration.label
+            .font(.system(size: 12, weight: primary ? .semibold : .regular))
+            .foregroundColor(.white)
+            .padding(.horizontal, 10)
+            .padding(.vertical, 4)
+            .background(Capsule().fill(primary ? AnyShapeStyle(Theme.diagonal) : AnyShapeStyle(Color.white.opacity(0.12))))
+            .opacity(configuration.isPressed ? 0.8 : 1)
+            .contentShape(Capsule())
     }
 }
 
@@ -144,6 +187,8 @@ final class Windows: NSObject, NSWindowDelegate {
                          styleMask: [.titled, .closable, .miniaturizable, .resizable],
                          backing: .buffered, defer: false)
         w.title = title
+        w.titlebarAppearsTransparent = true
+        w.backgroundColor = Theme.nsCard
         w.isReleasedWhenClosed = false
         w.identifier = NSUserInterfaceItemIdentifier(id)
         w.contentViewController = NSHostingController(rootView: content())

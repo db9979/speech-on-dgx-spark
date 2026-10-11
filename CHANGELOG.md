@@ -2,6 +2,7 @@
 
 Every version in one line, newest first (taken from the commit messages, so some lines are German, some English). Older entries have no version number.
 
+- **V01.0.347** · 2026-10-11 · Spark-Begleiter: Aussehen A (Spark-Gesicht, hell/dunkel), Updates vom Spark (GitHub-Release + begleiter.json, Größe und SHA-256 doppelt geprüft, Installation nur nach Klick), Admin „Neue Version jetzt holen“, Kaffee-Link
 - **V01.0.346** · 2026-10-11 · reMarkable @Spark: Frage aus Handschrift ohne „Bild:“-Zeile und [unleserlich], Modell antwortet auch mit eigenem Wissen statt nur „keine Antwort“, Diagnose-Zeile „remarkable: @Spark answer …“ (Längen, Treffer, Websuche)
 - **V01.0.345** · 2026-10-10 · Hilfe-Doku-Kopie (app/panel/hilfe_docs.json) nach V01.0.344 neu geschrieben, Tests wieder grün
 - **V01.0.344** · 2026-10-10 · Mehr mit dem reMarkable (Admin-Unterschalter + je Funktion unter Ich → reMarkable, alles aus): Morgenblatt als PDF mit Notizlinien, „@Spark“-Fragen auf Papier bekommen eine Antwort daneben, Aufgaben aus der Handschrift (Erinnerung erst nach Klick), Besprechungen zusammengefasst, Wochenrückblick freitags, Webseiten und Mail-Anhänge aufs reMarkable, Eingang pro Tag, Spark-Anleitung zu den reMarkable-Funktionen und dem Dienst, die sich selbst aktuell hält

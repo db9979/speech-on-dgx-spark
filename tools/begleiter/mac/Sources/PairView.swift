@@ -29,7 +29,7 @@ final class PairController: ObservableObject {
         }
         busy = true
         show("Kopple …", error: false)
-        let name = SparkAddress.deviceName(Host.current().localizedName)
+        let name = AppModel.shared.deviceName
         Task { @MainActor [weak self] in
             let client = SparkClient(base: checked.base, key: nil)
             defer { client.close() }
@@ -71,7 +71,7 @@ extension Windows {
     static func showPairing(message: String = "") {
         let c = PairController.shared
         if !message.isEmpty { c.show(message, error: true) }
-        Windows.shared.show(PairController.windowID, title: "Spark-Begleiter koppeln", size: NSSize(width: 520, height: 330)) {
+        Windows.shared.show(PairController.windowID, title: "Spark-Begleiter koppeln", size: NSSize(width: 520, height: 370)) {
             PairView(c: c)
         }
     }
@@ -81,48 +81,58 @@ struct PairView: View {
     @ObservedObject var c: PairController
 
     var body: some View {
-        VStack(alignment: .leading, spacing: 10) {
-            Text(verbatim: "Mit dem eigenen Spark koppeln")
-                .font(.headline)
-            Text(verbatim: "Im Panel unter Ich → Begleiter → „Gerät koppeln“ eine Einrichtungszeile holen und hier einfügen. Sie gilt 10 Minuten und nur einmal.")
-                .fixedSize(horizontal: false, vertical: true)
-                .foregroundColor(.secondary)
-
-            if c.separate {
-                TextField("Adresse, z. B. https://spark.example.de", text: $c.base)
-                    .textFieldStyle(.roundedBorder)
-                TextField("Code, z. B. ABCD-EFGH", text: $c.code)
-                    .textFieldStyle(.roundedBorder)
-                    .onSubmit { c.pair() }
-            } else {
-                TextField("https://spark.example.de#begleiter=ABCD-EFGH", text: $c.line)
-                    .textFieldStyle(.roundedBorder)
-                    .onSubmit { c.pair() }
-            }
-            Toggle("Adresse und Code einzeln eingeben", isOn: $c.separate)
-
-            Text(verbatim: "Unverschlüsselt (http) geht nur im Heimnetz; sonst die https-Adresse des Spark.")
-                .font(.caption)
-                .foregroundColor(.secondary)
-
-            if !c.status.isEmpty {
-                Text(verbatim: c.status)
-                    .foregroundColor(c.isError ? .red : .secondary)
+        VStack(spacing: 0) {
+            GradientBar()
+            VStack(alignment: .leading, spacing: 10) {
+                HStack(spacing: 12) {
+                    FaceView(size: 40)
+                    Text(verbatim: "Mit dem eigenen Spark koppeln")
+                        .font(.system(size: 15, weight: .semibold))
+                }
+                Text(verbatim: "Im Panel unter Ich → Begleiter → „Gerät koppeln“ eine Einrichtungszeile holen und hier einfügen. Sie gilt 10 Minuten und nur einmal.")
                     .fixedSize(horizontal: false, vertical: true)
-                    .textSelection(.enabled)
+                    .foregroundColor(Theme.muted)
+
+                if c.separate {
+                    TextField("Adresse, z. B. https://spark.example.de", text: $c.base)
+                        .textFieldStyle(.roundedBorder)
+                    TextField("Code, z. B. ABCD-EFGH", text: $c.code)
+                        .textFieldStyle(.roundedBorder)
+                        .onSubmit { c.pair() }
+                } else {
+                    TextField("https://spark.example.de#begleiter=ABCD-EFGH", text: $c.line)
+                        .textFieldStyle(.roundedBorder)
+                        .onSubmit { c.pair() }
+                }
+                Toggle("Adresse und Code einzeln eingeben", isOn: $c.separate)
+
+                Text(verbatim: "Unverschlüsselt (http) geht nur im Heimnetz; sonst die https-Adresse des Spark.")
+                    .font(.caption)
+                    .foregroundColor(Theme.muted)
+
+                if !c.status.isEmpty {
+                    Text(verbatim: c.status)
+                        .foregroundColor(c.isError ? Theme.bad : Theme.muted)
+                        .fixedSize(horizontal: false, vertical: true)
+                        .textSelection(.enabled)
+                }
+                Spacer(minLength: 0)
+                HStack {
+                    if c.busy { ProgressView().controlSize(.small) }
+                    Spacer()
+                    Button("Abbrechen") { Windows.shared.close(PairController.windowID) }
+                        .buttonStyle(SoftButtonStyle())
+                        .keyboardShortcut(.cancelAction)
+                    Button("Koppeln") { c.pair() }
+                        .buttonStyle(PrimaryButtonStyle())
+                        .keyboardShortcut(.defaultAction)
+                        .disabled(c.busy)
+                }
             }
-            Spacer(minLength: 0)
-            HStack {
-                if c.busy { ProgressView().controlSize(.small) }
-                Spacer()
-                Button("Abbrechen") { Windows.shared.close(PairController.windowID) }
-                    .keyboardShortcut(.cancelAction)
-                Button("Koppeln") { c.pair() }
-                    .keyboardShortcut(.defaultAction)
-                    .disabled(c.busy)
-            }
+            .padding(16)
         }
-        .padding(16)
-        .frame(minWidth: 460, minHeight: 300)
+        .background(Theme.card)
+        .foregroundColor(Theme.fg)
+        .frame(minWidth: 460, minHeight: 330)
     }
 }

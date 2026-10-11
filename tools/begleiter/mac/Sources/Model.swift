@@ -1,5 +1,6 @@
 import AppKit
 import ServiceManagement
+import SwiftUI
 import UserNotifications
 
 struct ArtInfo: Identifiable, Equatable {
@@ -43,6 +44,12 @@ struct DeskConfig: Equatable {
     var arts: [ArtInfo] = DeskConfig.fallbackArts
     var langs: [LangInfo] = DeskConfig.fallbackLangs
     var poll = 30
+    /// config.update, checked (nil = none or not usable)
+    var update: UpdateInfo?
+    /// the version config.update named, even if the rest was odd (to compare with what the poll says)
+    var updateVersion: String?
+    /// config.coffee if it is a buymeacoffee.com link, else the fixed one
+    var coffee: URL = CoffeeLink.fallback
 
     init() {}
 
@@ -78,6 +85,9 @@ struct DeskConfig: Equatable {
         }
         if !langList.isEmpty { langs = langList }
         poll = min(max((d["poll"] as? NSNumber)?.intValue ?? 30, 10), 600)
+        update = UpdateInfo(json: d["update"])
+        updateVersion = (d["update"] as? [String: Any])?["version"] as? String
+        coffee = CoffeeLink.accept(d["coffee"])
     }
 
     /// the arts this device offers, in the Spark's order
@@ -115,8 +125,20 @@ final class AppModel: ObservableObject {
 
     var paired: Bool { client != nil }
 
+    /// "1.0.342", or "Entwicklungsversion"
     var version: String {
-        (Bundle.main.object(forInfoDictionaryKey: "CFBundleShortVersionString") as? String) ?? "?"
+        Updater.currentVersion ?? "Entwicklungsversion"
+    }
+
+    /// this Mac's name as sent when pairing (asked once: Host can be slow)
+    private(set) lazy var deviceName: String = SparkAddress.deviceName(Host.current().localizedName)
+
+    /// the coffee link (from the Spark when it sent a valid one)
+    var coffee: URL { config?.coffee ?? CoffeeLink.fallback }
+
+    /// version and arch on every config and poll call
+    private var versionQuery: String {
+        "version=\(Updater.versionParam)&arch=mac"
     }
 
     static func offHint(_ name: String) -> String {
@@ -135,6 +157,7 @@ final class AppModel: ObservableObject {
         HotkeyCenter.shared.install()
         HotkeyCenter.shared.onPress = { [weak self] a in self?.hotkey(a) }
         Notifier.setup()
+        Updater.cleanOnStart()
         if let saved = Keychain.load(), let base = try? SparkAddress.checkBase(saved.base) {
             connect(base: base, key: saved.key)
         } else {
@@ -149,6 +172,7 @@ final class AppModel: ObservableObject {
         self.base = base
         config = nil
         lastNote = nil
+        Updater.shared.reset()
         reach = .unknown
         reachText = "Verbinde …"
         applyHotkeys()
@@ -162,6 +186,7 @@ final class AppModel: ObservableObject {
         client?.close()
         client = nil
         Keychain.delete()
+        Updater.shared.reset()
         base = nil
         config = nil
         reach = .unknown
@@ -197,9 +222,12 @@ final class AppModel: ObservableObject {
             if config == nil {
                 try await loadConfig(client)
             }
-            let d = try await client.get("api/desk/poll?after=\(lastNote ?? 0)")
+            let d = try await client.get("api/desk/poll?after=\(lastNote ?? 0)&\(versionQuery)")
             guard client === self.client else { return 1 }
+            let pollUpdate = d["update"] as? String          // null or "1.0.350"
             if let rev = (d["rev"] as? NSNumber)?.intValue, rev != config?.rev {
+                try await loadConfig(client)
+            } else if pollUpdate != config?.updateVersion {
                 try await loadConfig(client)
             }
             takePoll(d)
@@ -215,10 +243,11 @@ final class AppModel: ObservableObject {
     }
 
     private func loadConfig(_ client: SparkClient) async throws {
-        let d = try await client.get("api/desk/config")
+        let d = try await client.get("api/desk/config?\(versionQuery)")
         guard client === self.client else { return }
         let c = DeskConfig(d)
         config = c
+        Updater.shared.take(c.update)
         applyHotkeys()
         if let want = c.autostart { applyAutostart(want) }
         if c.parts["notes"] == true { Notifier.ask() }
@@ -475,28 +504,29 @@ final class AppModel: ObservableObject {
         }
     }
 
+    /// The face in the menu bar: a template silhouette when all is well, with a coloured dot otherwise
+    /// (grey not reachable, red Notaus, accent when an update is there).
     var menuIcon: NSImage {
-        let showState = part("status") || !paired || reach == .notaus
-        if paired && showState && reach == .notaus {
-            return Self.symbol("exclamationmark.octagon.fill", color: .systemRed)
-        }
-        if !paired || (showState && reach == .offline) {
-            return Self.symbol("sparkles", color: .systemGray)
-        }
-        return Self.symbol("sparkles", color: nil)
+        MenuIcon.image(dot: menuDot)
     }
 
-    private static func symbol(_ name: String, color: NSColor?) -> NSImage {
-        let base = NSImage(systemSymbolName: name, accessibilityDescription: "Spark-Begleiter")
-            ?? NSImage(systemSymbolName: "circle", accessibilityDescription: "Spark-Begleiter")
-            ?? NSImage()
-        guard let color else {
-            base.isTemplate = true
-            return base
+    var menuDot: MenuIcon.Dot {
+        if !paired { return .grey }
+        if reach == .notaus { return .red }                      // always, whether "status" is on or not
+        if part("status") && reach == .offline { return .grey }
+        if Updater.shared.dot { return .accent }
+        return .plain
+    }
+
+    /// the pill in the panel's header
+    var reachPill: (text: String, color: Color) {
+        guard paired else { return ("nicht gekoppelt", Theme.muted) }
+        switch reach {
+        case .unknown: return ("verbinde …", Theme.muted)
+        case .ok: return ("verbunden", Theme.ok)
+        case .offline: return ("nicht erreichbar", Theme.muted)
+        case .notaus: return ("Notaus", Theme.bad)
         }
-        let configured = base.withSymbolConfiguration(NSImage.SymbolConfiguration(paletteColors: [color])) ?? base
-        configured.isTemplate = false
-        return configured
     }
 }
 

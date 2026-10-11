@@ -30,6 +30,7 @@ internal sealed class Recorder : IDisposable
     private readonly object _lock = new();
     private bool _limitRaised;
     private bool _closed;
+    private volatile float _level;
 
     private Recorder(IntPtr device)
     {
@@ -68,6 +69,9 @@ internal sealed class Recorder : IDisposable
             }
         }
     }
+
+    /// <summary>Lautstärke der letzten 100 ms, 0…1 (für die Pegel-Balken im Hinweis).</summary>
+    public float Level => _level;
 
     /// <summary>Startet die Aufnahme. Bei Fehlern steht in <paramref name="error"/> ein deutscher Hinweis.</summary>
     public static Recorder? TryStart(out string error)
@@ -205,6 +209,7 @@ internal sealed class Recorder : IDisposable
                     byte[] chunk = new byte[take];
                     Marshal.Copy(header.lpData, chunk, 0, take);
                     _pcm.Write(chunk, 0, take);
+                    _level = MeasureLevel(chunk);
                 }
 
                 if (_pcm.Length >= MaxBytes)
@@ -271,6 +276,27 @@ internal sealed class Recorder : IDisposable
 
         _ = waveInClose(_device);
         Volatile.Write(ref _active, 0);
+    }
+
+    /// <summary>RMS-Pegel in dB, auf 0…1 abgebildet (-60 dB … 0 dB).</summary>
+    private static float MeasureLevel(byte[] pcm)
+    {
+        int samples = pcm.Length / 2;
+        if (samples == 0)
+        {
+            return 0f;
+        }
+
+        double sum = 0;
+        for (int i = 0; i < samples; i++)
+        {
+            double v = BinaryPrimitives.ReadInt16LittleEndian(pcm.AsSpan(i * 2, 2)) / 32768.0;
+            sum += v * v;
+        }
+
+        double rms = Math.Sqrt(sum / samples);
+        double db = rms > 0 ? 20 * Math.Log10(rms) : -60;
+        return (float)Math.Clamp((db + 60) / 60, 0, 1);
     }
 
     /// <summary>PCM in eine WAV-Datei packen (44 Byte Kopf).</summary>

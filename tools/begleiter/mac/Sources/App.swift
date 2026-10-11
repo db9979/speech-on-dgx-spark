@@ -8,18 +8,27 @@ struct SparkBegleiterApp: App {
     @NSApplicationDelegateAdaptor(AppDelegate.self) private var delegate
     @ObservedObject private var model: AppModel
     @ObservedObject private var dictation: Dictation
+    @ObservedObject private var updater: Updater
 
     init() {
         _model = ObservedObject(wrappedValue: AppModel.shared)
         _dictation = ObservedObject(wrappedValue: Dictation.shared)
+        _updater = ObservedObject(wrappedValue: Updater.shared)
     }
 
     var body: some Scene {
         MenuBarExtra {
-            MenuContent(model: model, dictation: dictation)
+            TrayPanel(model: model, dictation: dictation, updater: updater)
         } label: {
-            Image(nsImage: dictation.recording ? AppModel.recordingIcon : model.menuIcon)
+            Image(nsImage: dictation.recording ? AppModel.recordingIcon : menuIcon)
         }
+        .menuBarExtraStyle(.window)
+    }
+
+    /// read here so the label follows the model and the updater
+    private var menuIcon: NSImage {
+        _ = updater.phase
+        return model.menuIcon
     }
 }
 
@@ -44,53 +53,6 @@ extension AppModel {
         let colored = img.withSymbolConfiguration(NSImage.SymbolConfiguration(paletteColors: [.systemRed])) ?? img
         colored.isTemplate = false
         return colored
-    }
-}
-
-/// The menu of the menu-bar icon. A part that is off but allowed shows greyed with the hint; one that is not
-/// allowed at all does not show.
-struct MenuContent: View {
-    @ObservedObject var model: AppModel
-    @ObservedObject var dictation: Dictation
-
-    var body: some View {
-        Text(verbatim: model.statusLine)
-        Divider()
-        if model.paired {
-            item("write", "Text verbessern", .write) {
-                Task { await model.startWrite(fromMenu: true) }
-            }
-            item("ask", "Frag Spark …", .ask) {
-                model.openAsk()
-            }
-            item("dictate", dictation.recording ? "Diktat beenden" : "Diktieren", .dictate) {
-                dictation.toggle(.cursor(nil))
-            }
-            if model.part("notaus") {
-                Divider()
-                Button("Mein Notaus auslösen …") { model.confirmNotaus() }
-            }
-            Divider()
-            Button("Panel öffnen") { model.openPanel() }
-        } else {
-            Button("Koppeln …") { Windows.showPairing() }
-        }
-        Button("Einstellungen …") { Windows.showSettings() }
-        Divider()
-        Button("Spark-Begleiter beenden") { NSApp.terminate(nil) }
-    }
-
-    @ViewBuilder
-    private func item(_ part: String, _ title: String, _ action: HotAction, run: @escaping () -> Void) -> some View {
-        if model.part(part) {
-            let key = model.hotkeyLabel(action)
-            let label: String = key.isEmpty ? title : title + "  (" + key + ")"
-            Button(label) { run() }
-        } else if model.allowedPart(part) {
-            let label: String = title + " – im Panel unter Ich → Begleiter einschalten"
-            Button(label) {}
-                .disabled(true)
-        }
     }
 }
 

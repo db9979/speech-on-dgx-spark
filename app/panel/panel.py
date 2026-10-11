@@ -297,6 +297,7 @@ async def stability():
     asyncio.create_task(wyoming.loop())
     asyncio.create_task(esp32.fetch_loop())
     asyncio.create_task(android.fetch_loop())
+    asyncio.create_task(begleiter.fetch_loop())
     asyncio.create_task(every_minute())
     asyncio.create_task(watchdog())
     asyncio.create_task(backups())

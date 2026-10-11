@@ -19,6 +19,8 @@ final class AskController: ObservableObject {
     @Published private(set) var entries: [Entry] = []
     @Published private(set) var busy = false
     @Published private(set) var status = ""
+    /// the question on its way (shown as a bubble until the answer is there)
+    @Published private(set) var pending: String?
 
     private var task: Task<Void, Never>?
 
@@ -48,7 +50,8 @@ final class AskController: ObservableObject {
             return
         }
         busy = true
-        status = "Spark denkt nach …"
+        pending = q
+        status = ""
         task = Task { @MainActor [weak self] in
             do {
                 let a = try await client.ask(q)
@@ -62,6 +65,7 @@ final class AskController: ObservableObject {
                 let msg = AppModel.shared.absorb(error)
                 self?.status = msg
             }
+            self?.pending = nil
             self?.busy = false
         }
     }
@@ -75,6 +79,7 @@ final class AskController: ObservableObject {
     func clear() {
         task?.cancel()
         entries = []
+        pending = nil
         status = ""
     }
 }
@@ -84,74 +89,152 @@ struct AskView: View {
     @ObservedObject var dictation: Dictation
     @ObservedObject var model: AppModel
 
+    private static let bottomID = "unten"
+
     var body: some View {
-        VStack(alignment: .leading, spacing: 8) {
-            ScrollViewReader { proxy in
-                ScrollView {
-                    VStack(alignment: .leading, spacing: 14) {
-                        if c.entries.isEmpty {
-                            Text(verbatim: "Frag den Spark etwas. Folgefragen kennen den Zusammenhang.")
-                                .foregroundColor(.secondary)
-                        }
-                        ForEach(c.entries) { e in
-                            VStack(alignment: .leading, spacing: 4) {
-                                Text(verbatim: e.question)
-                                    .font(.body.weight(.semibold))
-                                    .textSelection(.enabled)
-                                Text(verbatim: e.answer)
-                                    .textSelection(.enabled)
-                                    .fixedSize(horizontal: false, vertical: true)
+        VStack(spacing: 0) {
+            GradientBar()
+            VStack(alignment: .leading, spacing: 10) {
+                ScrollViewReader { proxy in
+                    ScrollView {
+                        VStack(alignment: .leading, spacing: 10) {
+                            if c.entries.isEmpty && c.pending == nil {
+                                HStack(spacing: 10) {
+                                    FaceView(size: 30)
+                                    Text(verbatim: "Frag den Spark etwas. Folgefragen kennen den Zusammenhang.")
+                                        .foregroundColor(Theme.muted)
+                                }
+                                .padding(.top, 4)
                             }
-                            .id(e.id)
+                            ForEach(c.entries) { e in
+                                own(e.question)
+                                answer(e.answer)
+                            }
+                            if let q = c.pending {
+                                own(q)
+                                HStack(alignment: .top, spacing: 8) {
+                                    FaceView(size: 30)
+                                    HStack(spacing: 8) {
+                                        ProgressView().controlSize(.small)
+                                        Text(verbatim: "Spark denkt nach …")
+                                            .foregroundColor(Theme.muted)
+                                    }
+                                    .padding(.horizontal, 12)
+                                    .padding(.vertical, 8)
+                                    .background(BubbleShape(topLeft: 14, topRight: 14, bottomRight: 14, bottomLeft: 4)
+                                        .fill(Theme.soft))
+                                    .overlay(BubbleShape(topLeft: 14, topRight: 14, bottomRight: 14, bottomLeft: 4)
+                                        .stroke(Theme.line, lineWidth: 1))
+                                }
+                            }
+                            Color.clear.frame(height: 1).id(Self.bottomID)
                         }
+                        .frame(maxWidth: .infinity, alignment: .leading)
+                        .padding(.vertical, 4)
                     }
-                    .frame(maxWidth: .infinity, alignment: .leading)
-                    .padding(8)
-                }
-                .background(Color(nsColor: .textBackgroundColor))
-                .overlay(RoundedRectangle(cornerRadius: 4).stroke(Color.secondary.opacity(0.3)))
-                .onChange(of: c.entries.count) { _ in
-                    if let last = c.entries.last { proxy.scrollTo(last.id, anchor: .bottom) }
-                }
-            }
-
-            HStack(alignment: .bottom, spacing: 8) {
-                TextField("Frage", text: $c.input, axis: .vertical)
-                    .lineLimit(1...5)
-                    .textFieldStyle(.roundedBorder)
-                    .onSubmit { c.send() }
-                    .disabled(c.busy)
-                if model.part("dictate") {
-                    Button {
-                        Dictation.shared.toggle(.ask)
-                    } label: {
-                        Image(systemName: dictation.recording && dictation.forAsk ? "stop.circle.fill" : "mic")
-                            .foregroundColor(dictation.recording && dictation.forAsk ? .red : .primary)
+                    .onChange(of: c.entries.count) { _ in
+                        withAnimation { proxy.scrollTo(Self.bottomID, anchor: .bottom) }
                     }
-                    .help(Text(verbatim: dictation.recording ? "Aufnahme beenden" : "Frage sprechen"))
-                    .disabled(c.busy || dictation.working || (dictation.recording && !dictation.forAsk))
+                    .onChange(of: c.pending) { _ in
+                        withAnimation { proxy.scrollTo(Self.bottomID, anchor: .bottom) }
+                    }
                 }
-                Button("Senden") { c.send() }
-                    .keyboardShortcut(.return, modifiers: .command)
-                    .disabled(c.busy || c.input.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty)
-            }
 
-            HStack(spacing: 8) {
-                if c.busy || dictation.working {
-                    ProgressView().controlSize(.small)
+                HStack(alignment: .bottom, spacing: 8) {
+                    TextField(c.entries.isEmpty ? "Frag den Spark …" : "Frag weiter …", text: $c.input, axis: .vertical)
+                        .textFieldStyle(.plain)
+                        .font(.system(size: 13))
+                        .lineLimit(1...5)
+                        .onSubmit { c.send() }
+                        .disabled(c.busy)
+                        .padding(.vertical, 8)
+                    if model.part("dictate") {
+                        Button {
+                            Dictation.shared.toggle(.ask)
+                        } label: {
+                            Image(systemName: micActive ? "stop.fill" : "mic")
+                                .font(.system(size: 13, weight: .medium))
+                                .foregroundColor(micActive ? Theme.bad : Theme.accent)
+                                .frame(width: 32, height: 32)
+                                .background(Circle().fill(Theme.soft))
+                                .overlay(Circle().stroke(Theme.line, lineWidth: 1))
+                                .contentShape(Circle())
+                        }
+                        .buttonStyle(.plain)
+                        .help(Text(verbatim: dictation.recording ? "Aufnahme beenden" : "Frage sprechen"))
+                        .accessibilityLabel(Text(verbatim: dictation.recording ? "Aufnahme beenden" : "Frage sprechen"))
+                        .disabled(c.busy || dictation.working || (dictation.recording && !dictation.forAsk))
+                    }
+                    Button("Senden") { c.send() }
+                        .buttonStyle(PrimaryButtonStyle())
+                        .keyboardShortcut(.return, modifiers: .command)
+                        .disabled(c.busy || c.input.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty)
+                        .padding(.bottom, 2)
                 }
-                Text(verbatim: c.status)
-                    .foregroundColor(.secondary)
-                    .lineLimit(3)
-                    .textSelection(.enabled)
-                Spacer()
-                Button("Neu") { c.clear() }
-                    .disabled(c.entries.isEmpty)
-                Button("Kopieren") { c.copyLast() }
-                    .disabled(c.entries.isEmpty)
+                .padding(.leading, 12)
+                .padding(.trailing, 6)
+                .padding(.vertical, 4)
+                .background(RoundedRectangle(cornerRadius: 12).fill(Theme.card))
+                .overlay(RoundedRectangle(cornerRadius: 12).stroke(Theme.line, lineWidth: 1))
+
+                HStack(spacing: 8) {
+                    if dictation.working {
+                        ProgressView().controlSize(.small)
+                    }
+                    Text(verbatim: c.status)
+                        .font(.system(size: 12))
+                        .foregroundColor(Theme.muted)
+                        .lineLimit(3)
+                        .textSelection(.enabled)
+                    Spacer()
+                    Button("Neu") { c.clear() }
+                        .buttonStyle(SoftButtonStyle())
+                        .disabled(c.entries.isEmpty && c.pending == nil)
+                    Button("Kopieren") { c.copyLast() }
+                        .buttonStyle(SoftButtonStyle())
+                        .disabled(c.entries.isEmpty)
+                }
             }
+            .padding(14)
         }
-        .padding(12)
-        .frame(minWidth: 420, minHeight: 360)
+        .background(Theme.card)
+        .frame(minWidth: 420, minHeight: 380)
+    }
+
+    private var micActive: Bool {
+        dictation.recording && dictation.forAsk
+    }
+
+    /// the person's question: right, gradient
+    private func own(_ q: String) -> some View {
+        HStack {
+            Spacer(minLength: 60)
+            Text(verbatim: q)
+                .font(.system(size: 13))
+                .foregroundColor(.white)
+                .textSelection(.enabled)
+                .fixedSize(horizontal: false, vertical: true)
+                .padding(.horizontal, 12)
+                .padding(.vertical, 8)
+                .background(BubbleShape(topLeft: 14, topRight: 14, bottomRight: 4, bottomLeft: 14).fill(Theme.diagonal))
+        }
+    }
+
+    /// the Spark's answer: left, soft card with the face
+    private func answer(_ a: String) -> some View {
+        HStack(alignment: .top, spacing: 8) {
+            FaceView(size: 30)
+            Text(verbatim: a)
+                .font(.system(size: 13))
+                .foregroundColor(Theme.fg)
+                .textSelection(.enabled)
+                .fixedSize(horizontal: false, vertical: true)
+                .padding(.horizontal, 12)
+                .padding(.vertical, 8)
+                .background(BubbleShape(topLeft: 14, topRight: 14, bottomRight: 14, bottomLeft: 4).fill(Theme.soft))
+                .overlay(BubbleShape(topLeft: 14, topRight: 14, bottomRight: 14, bottomLeft: 4)
+                    .stroke(Theme.line, lineWidth: 1))
+            Spacer(minLength: 30)
+        }
     }
 }

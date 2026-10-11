@@ -948,6 +948,22 @@
 "src": "assistent",
 "file": "Assistent und Oberfläche",
 "head": "Sprach-Chat",
+"title": "Begleiter: Updates, Aussehen, Kaffee (V01.0.347)",
+"text": "Begleiter: Updates, Aussehen, Kaffee (V01.0.347): Die Programme sehen jetzt aus wie das Panel: Spark-Gesicht als Symbol in Taskleiste und Menüleiste (Punkt unten rechts: grün erreichbar, grau nicht erreichbar, rot Notaus, Akzentfarbe bei neuer Version), ein Fenster beim Klick aufs Symbol mit allen eingeschalteten Teilen und ihren Tastenkürzeln, helles und dunkles Aussehen nach dem System. Updates: Der Spark holt neue Versionen selbst von den GitHub-Releases begleiter-windows und begleiter-mac (einmal am Tag und nur, wenn ein Gerät dieser Art gekoppelt ist; Funktionen → Spark-Begleiter → „Neue Version jetzt holen“ sofort) und prüft Größe und SHA-256 gegen die Datei begleiter.json der Version. Das Programm erfährt beim Abruf, dass es eine neue Version gibt, lädt sie nur vom gekoppelten Spark, prüft Größe und SHA-256 noch einmal und installiert erst nach deinem Klick auf „Aktualisieren“; eine beschädigte Datei wird gelöscht und die alte Version läuft weiter. Einstellungen → Über zeigt Version, „Nach Updates suchen“ und den Schalter „Updates automatisch laden, vor dem Installieren fragen“. Die erste Version mit Updates muss man einmal von Hand installieren. Im Programm und unter Ich → "
+},
+{
+"lang": "de",
+"src": "assistent",
+"file": "Assistent und Oberfläche",
+"head": "Sprach-Chat",
+"title": "Begleiter: Updates, Aussehen, Kaffee (V01.0.347)",
+"text": "Begleiter steht der Link „☕ Spark unterstützen“ (buymeacoffee.com)."
+},
+{
+"lang": "de",
+"src": "assistent",
+"file": "Assistent und Oberfläche",
+"head": "Sprach-Chat",
 "title": "Raum-Modus",
 "text": "Raum-Modus (Funktionen → „Raum-Modus“, standardmäßig aus; nur Profile): Der Schalter „Raum“ unter dem Gesicht lässt den Assistenten an diesem Gerät für eine gewählte Zeit (15 Minuten bis 4 Stunden, endet von selbst) dem Gespräch im Raum zuhören; ein oranger Punkt zeigt es an. In einer Pause hilft er, wenn ein fester Auslöser fiel: eine offene Frage („Wann wurde eigentlich …?“, mit Websuche, im Zweifel nichts), ein Termin („Freitag um 10 zum Zahnarzt“ → „Soll ich das eintragen?“), „kalt“, „zu warm“ oder „zu dunkel“ (die echte Temperatur des Raums aus Home Assistant und das Angebot, die Heizung um ein Grad zu ändern oder das Licht anzumachen) und Einkäufe („Wir brauchen noch Milch“ → Einkaufsliste in Home Assistant). Geändert wird nur nach einem „Ja“, bei Smart Home mit Codewort, wenn eines gesetzt ist. Im Fenster „Ich“ unter „Raum-Modus“ stellt jedes Gerät ein: Dauer, wie viel er sagen darf (nur Fragen, auch Hinweise, auch Kommentare), jede Art einzeln, den Raum des Geräts in Home Assistant und „Nur als Text“ (still im Verlauf statt gesprochen). Das Gehörte bleibt nur fünf Minuten im Arbeitsspeicher des Panels und wird nie gespeichert; Gedächtnis, Mails und frühere Gespräche nutzt d"
 },
@@ -3414,6 +3430,14 @@
 "head": "Voice chat",
 "title": "Spark companion on PC and Mac (V01.0.342, `begleiter.py`, `tools/begleiter`)",
 "text": "stions are a conversation \"Begleiter\" in the history. - Dictation: Ctrl+Alt+D (⌥⌘D) starts and ends the recording (at most 60 seconds, visible indicator), the recognised text lands at the cursor. Language per device. - Notes: the Spark's notes as system notifications when the companion is the device used last (like the Android app, the program fetches them every 30 seconds). - State dot: icon normal, grey (Spark not reachable) or red (Notaus or my kill switch). - My kill switch: menu item with a confirmation, stops the own profile (as Me → Security). Lifting only in the browser with the PIN. Hotkeys are set in the program under Settings. Changes in the panel reach the program with its next check. Removing a device under Me → Companion stops its key at once. Windows: not signed, SmartScreen on first start (\"More info\" → \"Run anyway\"), key encrypted with DPAPI. Mac: not notarized yet, first start right-click → Open; for the writing-help hotkey and pasting macOS asks once for \"Accessibility\", for dictation for the microphone; key in the keychain. Status → Live shows pairing, questions, dictations (character count only) and notes to \"Spark-Begleiter\"."
+},
+{
+"lang": "en",
+"src": "assistant",
+"file": "Assistant and panel",
+"head": "Voice chat",
+"title": "Companion: updates, look, coffee (V01.0.347)",
+"text": "Companion: updates, look, coffee (V01.0.347): The programs now look like the panel: the Spark face as icon in taskbar and menu bar (dot bottom right: green reachable, grey not reachable, red kill switch, accent colour when a new version is there), a window on clicking the icon with all parts that are on and their hotkeys, light and dark look following the system. Updates: the Spark fetches new versions itself from the GitHub releases begleiter-windows and begleiter-mac (once a day and only when a device of that kind is paired; Features → Spark companion → \"Fetch new version now\" at once) and checks size and SHA-256 against the version's begleiter.json. The program learns from its check that a new version is there, downloads it only from the paired Spark, checks size and SHA-256 again and installs only after your click on \"Update\"; a damaged file is deleted and the old version keeps running. Settings → About shows the version, \"Check for updates\" and the switch \"Download updates automatically, ask before installing\". The first version with updates has to be installed by hand once. The program and Me → Companion carry the link \"☕ Support Spark\" (buymeacoffee.com)."
 },
 {
 "lang": "en",

@@ -71,6 +71,15 @@ internal sealed class DeskConfig
     /// <summary>Sekunden zwischen zwei Abfragen.</summary>
     public int Poll { get; set; } = 30;
 
+    /// <summary>Neue Version für dieses Gerät (nur gültige Angaben), sonst <c>null</c>.</summary>
+    public UpdateInfo? Update { get; set; }
+
+    /// <summary>Versionsnummer, wie der Spark sie in "update" genannt hat (zum Vergleich mit poll).</summary>
+    public string? UpdateAnnounced { get; set; }
+
+    /// <summary>Kaffee-Link aus dem Panel (nur https://buymeacoffee.com/…), sonst <c>null</c>.</summary>
+    public string? Coffee { get; set; }
+
     public bool IsOn(string part) => Parts.TryGetValue(part, out bool on) && on;
 
     public bool IsAllowed(string part) => Allowed.TryGetValue(part, out bool on) && on;
@@ -129,6 +138,21 @@ internal sealed class DeskConfig
                 config.WriteArts = arts.Select(Json.Str).OfType<string>().ToList();
             }
         }
+
+        if (json["update"] is JsonObject update)
+        {
+            string? version = Json.Str(update["version"]);
+            long? size = Json.Long(update["size"]);
+            string? sha = Json.Str(update["sha256"]);
+            config.UpdateAnnounced = version;
+            if (Updater.TryParseVersion(version, out _) && size is > 0 and <= Updater.MaxSize &&
+                sha is { Length: 64 } && sha.All(char.IsAsciiHexDigit))
+            {
+                config.Update = new UpdateInfo { Version = version!, Size = size.Value, Sha256 = sha };
+            }
+        }
+
+        config.Coffee = CoffeeLink.Accept(Json.Str(json["coffee"]));
 
         if (json["dictate"] is JsonObject dictate)
         {
@@ -203,6 +227,21 @@ internal static class Json
         }
 
         return value.TryGetValue(out double d) && d is >= int.MinValue and <= int.MaxValue ? (int)d : null;
+    }
+
+    public static long? Long(JsonNode? node)
+    {
+        if (node is not JsonValue value)
+        {
+            return null;
+        }
+
+        if (value.TryGetValue(out long l))
+        {
+            return l;
+        }
+
+        return value.TryGetValue(out double d) && d is >= 0 and <= long.MaxValue && Math.Floor(d) == d ? (long)d : null;
     }
 
     public static bool? Bool(JsonNode? node) =>

@@ -1,77 +1,141 @@
+using System.Globalization;
+
 namespace SparkBegleiter;
 
 /// <summary>
-/// Schreibhilfe mit Vorschau: das kleine Fenster am Mauszeiger – Art wählen, Text schicken, Änderungen
-/// ansehen, übernehmen. Voreinstellungen (Art, Sprache, Wunsch, angebotene Arten) kommen aus dem Panel.
-/// Das Einfügen selbst macht <see cref="TrayContext"/> nach dem Schließen (siehe <see cref="TextToApply"/>).
+/// Schreibhilfe mit Vorschau (Entwurf A): Farbverlauf, Gesicht mit Titel und Quellprogramm, Arten als Chips
+/// (gewählt = Akzent), Textfeld mit Änderungen (entfernt rot durchgestrichen, neu grün), Zähler,
+/// „Kopieren“ und „Übernehmen“. Voreinstellungen (Art, Sprache, Wunsch, angebotene Arten) kommen aus dem
+/// Panel. Das Einfügen selbst macht <see cref="TrayContext"/> nach dem Schließen (siehe <see cref="TextToApply"/>).
 /// </summary>
-internal sealed class AssistForm : Form
+internal sealed class AssistForm : ThemedForm
 {
     private const int MaxTextLength = 20000;
 
-    private static readonly Color RemovedColor = Color.FromArgb(0xB9, 0x1C, 0x1C);
-    private static readonly Color RemovedBack = Color.FromArgb(0xFE, 0xE2, 0xE2);
-    private static readonly Color AddedColor = Color.FromArgb(0x15, 0x80, 0x3D);
-    private static readonly Color AddedBack = Color.FromArgb(0xDC, 0xFC, 0xE7);
+    private enum View
+    {
+        Diff,
+        Result,
+        Source,
+    }
 
     private readonly AppConfig _config;
     private readonly Action<SparkException> _report;
     private readonly ArtInfo[] _arts;
     private readonly LangInfo[] _languages;
+    private readonly string? _sourceApp;
 
-    private readonly ComboBox _art = new() { DropDownStyle = ComboBoxStyle.DropDownList, Width = 130 };
-    private readonly ComboBox _language = new() { DropDownStyle = ComboBoxStyle.DropDownList, Width = 120 };
-    private readonly TextBox _wish = new() { Width = 200, MaxLength = 300, PlaceholderText = "Wunsch (optional)" };
-    private readonly Button _run = new() { Text = "Neu", AutoSize = true };
-    private readonly TextBox _source = NewTextBox(readOnly: false);
+    private readonly List<SparkButton> _artChips = new();
+    private readonly List<SparkButton> _langChips = new();
+    private readonly TLabel _langLabel = new(TextRole.SmallMuted, "Sprache:");
+    private readonly TextBox _wish = new() { MaxLength = 300, PlaceholderText = "Wunsch (optional), z. B. „etwas lockerer“", AccessibleName = "Wunsch" };
+    private readonly RoundedHost _wishHost;
+    private readonly SparkButton _run = new(ButtonKind.Secondary, "Neu");
+
+    private readonly SparkButton _viewDiff = new(ButtonKind.Chip, "Änderungen") { FontSize = 9f };
+    private readonly SparkButton _viewResult = new(ButtonKind.Chip, "Ergebnis bearbeiten") { FontSize = 9f };
+    private readonly SparkButton _viewSource = new(ButtonKind.Chip, "Ausgangstext") { FontSize = 9f };
+
+    private readonly TextBox _source = NewTextBox("Ausgangstext");
+    private readonly TextBox _result = NewTextBox("Ergebnis");
     private readonly RichTextBox _diff = new()
     {
-        Dock = DockStyle.Fill,
         ReadOnly = true,
-        BackColor = SystemColors.Window,
         DetectUrls = false,
         ScrollBars = RichTextBoxScrollBars.Vertical,
+        AccessibleName = "Änderungen",
     };
 
-    private readonly TextBox _result = NewTextBox(readOnly: false);
-    private readonly Label _status = new() { AutoSize = true, MaximumSize = new Size(500, 0), Anchor = AnchorStyles.Left, Padding = new Padding(0, 4, 0, 0) };
-    private readonly ProgressBar _progress = new() { Style = ProgressBarStyle.Marquee, Width = 90, Height = 12, Visible = false, Anchor = AnchorStyles.Left };
-    private readonly Button _apply = new() { Text = "Übernehmen", AutoSize = true, Enabled = false };
-    private readonly Button _copy = new() { Text = "Kopieren", AutoSize = true, Enabled = false };
-    private readonly Button _cancel = new() { Text = "Abbrechen", AutoSize = true };
+    private readonly RoundedHost _sourceHost;
+    private readonly RoundedHost _resultHost;
+    private readonly RoundedHost _diffHost;
 
+    private readonly TLabel _status = new(TextRole.SmallMuted);
+    private readonly SparkButton _apply = new(ButtonKind.Primary, "Übernehmen") { Enabled = false };
+    private readonly SparkButton _copy = new(ButtonKind.Secondary, "Kopieren") { Enabled = false };
+
+    private string _art;
+    private string _language;
+    private View _view = View.Source;
+    private AssistResult? _last;
     private CancellationTokenSource? _cts;
     private bool _busy;
+
+    private Rectangle _face;
+    private Rectangle _title;
+    private Rectangle _from;
 
     // Leerraum am Anfang/Ende der Markierung (z. B. Absatzende in Word) bleibt beim Einfügen erhalten.
     private string _lead = "";
     private string _trail = "";
 
-    public AssistForm(AppConfig config, DeskConfig desk, string text, IntPtr target, Action<SparkException> report)
+    public AssistForm(AppConfig config, DeskConfig desk, string text, IntPtr target, string? sourceApp, Action<SparkException> report)
     {
         _config = config;
         _report = report;
+        _sourceApp = sourceApp;
         _arts = desk.OfferedArts().ToArray();
         _languages = desk.Languages().ToArray();
+        _art = (_arts.FirstOrDefault(a => a.Id == desk.WriteArt) ?? _arts[0]).Id;
+        _language = (_languages.FirstOrDefault(l => l.Id == desk.WriteSprache) ?? _languages[0]).Id;
         Target = target;
 
-        BuildLayout();
+        _wishHost = new RoundedHost(_wish);
+        _sourceHost = new RoundedHost(_source);
+        _resultHost = new RoundedHost(_result);
+        _diffHost = new RoundedHost(_diff);
 
-        _art.Items.AddRange(_arts);
-        _language.Items.AddRange(_languages);
-        _art.SelectedItem = _arts.FirstOrDefault(a => a.Id == desk.WriteArt) ?? _arts[0];
-        _language.SelectedItem = _languages.FirstOrDefault(l => l.Id == desk.WriteSprache) ?? _languages[0];
+        Text = "Spark-Begleiter – Text verbessern";
+        TopMost = true;
+        ShowInTaskbar = true;
+        StartPosition = FormStartPosition.Manual;
+        MinimizeBox = false;
+        MaximizeBox = false;
+        KeyPreview = true;
+
+        int tab = 0;
+        foreach (ArtInfo art in _arts)
+        {
+            var chip = new SparkButton(ButtonKind.Chip, art.Label) { TabIndex = tab++ };
+            string id = art.Id;
+            chip.Click += (_, _) => SelectArt(id, run: _last is not null || _source.Text.Trim().Length > 0);
+            _artChips.Add(chip);
+            Controls.Add(chip);
+        }
+
+        Controls.Add(_langLabel);
+        foreach (LangInfo lang in _languages)
+        {
+            var chip = new SparkButton(ButtonKind.Chip, lang.Label) { TabIndex = tab++, FontSize = 9f };
+            string id = lang.Id;
+            chip.Click += (_, _) => SelectLanguage(id);
+            _langChips.Add(chip);
+            Controls.Add(chip);
+        }
+
+        _wishHost.TabIndex = tab++;
+        _run.TabIndex = tab++;
+        _viewDiff.TabIndex = tab++;
+        _viewResult.TabIndex = tab++;
+        _viewSource.TabIndex = tab++;
+        _sourceHost.TabIndex = tab;
+        _resultHost.TabIndex = tab;
+        _diffHost.TabIndex = tab++;
+        _copy.TabIndex = tab++;
+        _apply.TabIndex = tab;
+
+        Controls.AddRange(new Control[] { _wishHost, _run, _viewDiff, _viewResult, _viewSource, _sourceHost, _resultHost, _diffHost, _status, _copy, _apply });
+
         _wish.Text = desk.WriteWunsch;
-        _language.Visible = SelectedArt == DeskConfig.TranslateArt;
-        _art.SelectedIndexChanged += (_, _) => _language.Visible = SelectedArt == DeskConfig.TranslateArt;
-
         _source.Text = text;
-        _source.PlaceholderText = "Kein markierter Text – Text hier einfügen";
+        _source.PlaceholderText = "Kein markierter Text – Text hier einfügen, dann „Neu“";
 
         _run.Click += async (_, _) => await RunAsync();
         _apply.Click += (_, _) => Apply();
         _copy.Click += (_, _) => CopyResult();
-        _cancel.Click += (_, _) => Close();
+        _viewDiff.Click += (_, _) => SetView(View.Diff);
+        _viewResult.Click += (_, _) => SetView(View.Result);
+        _viewSource.Click += (_, _) => SetView(View.Source);
         _wish.KeyDown += async (_, e) =>
         {
             if (e.KeyCode == Keys.Enter)
@@ -84,8 +148,13 @@ internal sealed class AssistForm : Form
         if (Target == IntPtr.Zero)
         {
             // Aus dem Menü geöffnet: es gibt kein Fenster zum Einfügen.
-            _apply.Text = "Übernehmen (Zwischenablage)";
+            _apply.Text = "In die Zwischenablage";
+            _copy.Visible = false;
         }
+
+        UpdateChips();
+        SetView(View.Source);
+        PlaceNearCursor();
     }
 
     /// <summary>Text, der nach dem Schließen eingefügt werden soll (nur bei "Übernehmen").</summary>
@@ -94,87 +163,203 @@ internal sealed class AssistForm : Form
     /// <summary>Fenster, aus dem der Text stammt und in das eingefügt wird.</summary>
     public IntPtr Target { get; }
 
-    private string SelectedArt => (_art.SelectedItem as ArtInfo)?.Id ?? _arts[0].Id;
-
-    private string SelectedLanguage => (_language.SelectedItem as LangInfo)?.Id ?? _languages[0].Id;
-
-    private static TextBox NewTextBox(bool readOnly) => new()
+    private static TextBox NewTextBox(string name) => new()
     {
-        Dock = DockStyle.Fill,
         Multiline = true,
         AcceptsReturn = true,
-        ReadOnly = readOnly,
         ScrollBars = ScrollBars.Vertical,
         WordWrap = true,
+        AccessibleName = name,
     };
 
-    private void BuildLayout()
+    private bool Translating => _art == DeskConfig.TranslateArt;
+
+    private void SelectArt(string id, bool run)
     {
-        SuspendLayout();
-        AutoScaleDimensions = new SizeF(96F, 96F);
-        AutoScaleMode = AutoScaleMode.Dpi;
-        Font = SystemFonts.MessageBoxFont ?? Font;
-        Text = "Spark-Begleiter – Schreibhilfe";
-        Icon = AppIcon.Icon;
-        TopMost = true;
-        ShowInTaskbar = true;
-        StartPosition = FormStartPosition.Manual;
-        MinimizeBox = false;
-        MaximizeBox = false;
-        ClientSize = new Size(620, 600);
-        MinimumSize = new Size(460, 420);
-        Padding = new Padding(10);
+        if (_busy)
+        {
+            return;
+        }
 
-        var options = new FlowLayoutPanel { AutoSize = true, Dock = DockStyle.Fill, WrapContents = true, Margin = Padding.Empty };
-        options.Controls.Add(_art);
-        options.Controls.Add(_language);
-        options.Controls.Add(_wish);
-        options.Controls.Add(_run);
-
-        var statusRow = new FlowLayoutPanel { AutoSize = true, Dock = DockStyle.Fill, WrapContents = false, Margin = Padding.Empty };
-        statusRow.Controls.Add(_progress);
-        statusRow.Controls.Add(_status);
-
-        var buttons = new FlowLayoutPanel { AutoSize = true, Dock = DockStyle.Fill, FlowDirection = FlowDirection.RightToLeft, Margin = Padding.Empty };
-        buttons.Controls.Add(_cancel);
-        buttons.Controls.Add(_copy);
-        buttons.Controls.Add(_apply);
-
-        var root = new TableLayoutPanel { Dock = DockStyle.Fill, ColumnCount = 1 };
-        root.ColumnStyles.Add(new ColumnStyle(SizeType.Percent, 100));
-        AddRow(root, options, SizeType.AutoSize);
-        AddRow(root, Caption("Text:"), SizeType.AutoSize);
-        AddRow(root, _source, SizeType.Percent, 25);
-        AddRow(root, Caption("Änderungen:"), SizeType.AutoSize);
-        AddRow(root, _diff, SizeType.Percent, 40);
-        AddRow(root, Caption("Ergebnis (änderbar):"), SizeType.AutoSize);
-        AddRow(root, _result, SizeType.Percent, 35);
-        AddRow(root, statusRow, SizeType.AutoSize);
-        AddRow(root, buttons, SizeType.AutoSize);
-        Controls.Add(root);
-
-        AcceptButton = null; // Enter gehört den Textfeldern; Strg+Enter = Übernehmen.
-        CancelButton = _cancel;
-        ResumeLayout(performLayout: true);
+        _art = id;
+        UpdateChips();
+        LayoutContent();
+        Invalidate();
+        if (run)
+        {
+            _ = RunAsync();
+        }
     }
 
-    private static void AddRow(TableLayoutPanel table, Control control, SizeType sizeType, float size = 0)
+    private void SelectLanguage(string id)
     {
-        table.RowStyles.Add(new RowStyle(sizeType, size));
-        table.Controls.Add(control, 0, table.RowStyles.Count - 1);
+        if (_busy)
+        {
+            return;
+        }
+
+        _language = id;
+        UpdateChips();
+        if (_last is not null || _source.Text.Trim().Length > 0)
+        {
+            _ = RunAsync();
+        }
     }
 
-    private static Label Caption(string text) =>
-        new() { Text = text, AutoSize = true, Padding = new Padding(0, 6, 0, 2) };
+    private void UpdateChips()
+    {
+        for (int i = 0; i < _arts.Length; i++)
+        {
+            _artChips[i].Checked = _arts[i].Id == _art;
+            _artChips[i].Enabled = !_busy;
+        }
+
+        for (int i = 0; i < _languages.Length; i++)
+        {
+            _langChips[i].Checked = _languages[i].Id == _language;
+            _langChips[i].Enabled = !_busy;
+            _langChips[i].Visible = Translating;
+        }
+
+        _langLabel.Visible = Translating;
+        _viewDiff.Checked = _view == View.Diff;
+        _viewResult.Checked = _view == View.Result;
+        _viewSource.Checked = _view == View.Source;
+        bool hasResult = _last is not null;
+        _viewDiff.Visible = hasResult;
+        _viewResult.Visible = hasResult;
+        _viewSource.Visible = hasResult;
+    }
+
+    private void SetView(View view)
+    {
+        _view = view;
+        _sourceHost.Visible = view == View.Source;
+        _resultHost.Visible = view == View.Result;
+        _diffHost.Visible = view == View.Diff;
+        UpdateChips();
+        if (IsHandleCreated)
+        {
+            (view switch { View.Result => (Control)_result, View.Source => _source, _ => _diff }).Focus();
+        }
+    }
+
+    protected override void OnThemeApplied()
+    {
+        if (_last is not null)
+        {
+            RenderDiff(_last.Diff, _last.Text.Trim());
+        }
+    }
+
+    protected override void LayoutContent()
+    {
+        int pad = S(14);
+        int w = ClientSize.Width;
+        int h = ClientSize.Height;
+        int inner = w - (2 * pad);
+        int y = BarHeight + pad;
+
+        int face = S(28);
+        _face = new Rectangle(pad, y, face, face);
+        Size title = Draw.Measure("Text verbessern", F(10.5f, FontStyle.Bold));
+        _title = new Rectangle(pad + face + S(8), y, title.Width + S(4), face);
+        _from = new Rectangle(_title.Right + S(8), y, Math.Max(0, w - pad - _title.Right - S(8)), face);
+        y += face + S(12);
+
+        y = Flow(_artChips, pad, y, inner) + S(8);
+        if (Translating)
+        {
+            Size label = Draw.Measure(_langLabel.Text, _langLabel.Font);
+            int chipH = _langChips.Count > 0 ? _langChips[0].Preferred().Height : S(28);
+            _langLabel.Bounds = new Rectangle(pad, y + ((chipH - label.Height) / 2), label.Width + S(2), label.Height);
+            y = Flow(_langChips, pad + label.Width + S(8), y, inner - label.Width - S(8)) + S(8);
+        }
+
+        Size run = _run.Preferred();
+        int rowH = Math.Max(S(36), run.Height);
+        _wishHost.Bounds = new Rectangle(pad, y, inner - run.Width - S(8), rowH);
+        _run.Bounds = new Rectangle(w - pad - run.Width, y + ((rowH - run.Height) / 2), run.Width, run.Height);
+        y += rowH + S(10);
+
+        if (_last is not null)
+        {
+            int x = pad;
+            foreach (SparkButton chip in new[] { _viewDiff, _viewResult, _viewSource })
+            {
+                Size size = chip.Preferred();
+                size.Height = S(26);
+                chip.Bounds = new Rectangle(x, y, size.Width, size.Height);
+                x += size.Width + S(6);
+            }
+
+            y += S(26) + S(8);
+        }
+
+        // Fuß: Zustand links, Knöpfe rechts.
+        Size apply = _apply.Preferred();
+        Size copy = _copy.Preferred();
+        int footY = h - pad - apply.Height;
+        _apply.Bounds = new Rectangle(w - pad - apply.Width, footY, apply.Width, apply.Height);
+        int left = _apply.Left - S(8);
+        if (Target != IntPtr.Zero)
+        {
+            _copy.Bounds = new Rectangle(left - copy.Width, footY, copy.Width, copy.Height);
+            left = _copy.Left - S(8);
+        }
+
+        int statusW = Math.Max(S(40), left - S(4) - pad);
+        int statusH = Math.Min(Draw.TextHeight(_status.Text, _status.Font, statusW), apply.Height + S(8));
+        _status.Bounds = new Rectangle(pad, footY + ((apply.Height - statusH) / 2), statusW, statusH);
+        _status.Visible = _status.Text.Length > 0;
+
+        var area = new Rectangle(pad, y, inner, Math.Max(S(60), footY - S(12) - y));
+        _sourceHost.Bounds = area;
+        _resultHost.Bounds = area;
+        _diffHost.Bounds = area;
+    }
+
+    /// <summary>Chips nebeneinander, bei Bedarf umbrechen; gibt das untere Ende zurück.</summary>
+    private int Flow(List<SparkButton> chips, int left, int top, int width)
+    {
+        int x = left;
+        int y = top;
+        int rowH = 0;
+        foreach (SparkButton chip in chips)
+        {
+            Size size = chip.Preferred();
+            if (x > left && x + size.Width > left + width)
+            {
+                x = left;
+                y += rowH + S(6);
+                rowH = 0;
+            }
+
+            chip.Bounds = new Rectangle(x, y, Math.Min(size.Width, width), size.Height);
+            x += size.Width + S(6);
+            rowH = Math.Max(rowH, size.Height);
+        }
+
+        return y + rowH;
+    }
+
+    protected override void PaintContent(Graphics g)
+    {
+        Face.Draw(g, _face, P);
+        Draw.Text(g, "Text verbessern", F(10.5f, FontStyle.Bold), _title, P.Fg);
+        if (!string.IsNullOrEmpty(_sourceApp))
+        {
+            Draw.Text(g, "aus " + _sourceApp, F(8.5f), _from, P.Muted, Draw.Line | TextFormatFlags.Right);
+        }
+    }
 
     protected override void OnLoad(EventArgs e)
     {
         base.OnLoad(e);
-        PlaceNearCursor();
 
         if (_source.Text.Trim().Length > 0)
         {
-            ActiveControl = _result;
+            ActiveControl = _source;
             BeginInvoke(new Action(async () => await RunAsync()));
         }
         else
@@ -184,13 +369,21 @@ internal sealed class AssistForm : Form
         }
     }
 
+    protected override void OnDpiChanged(DpiChangedEventArgs e)
+    {
+        base.OnDpiChanged(e);
+        MinimumSize = new Size(S(460), S(420));
+    }
+
     /// <summary>Rechts unterhalb des Mauszeigers, aber immer ganz auf dem Bildschirm.</summary>
     private void PlaceNearCursor()
     {
         Point cursor = Cursor.Position;
         Rectangle area = Screen.FromPoint(cursor).WorkingArea;
-        int width = Math.Min(Width, area.Width);
-        int height = Math.Min(Height, area.Height);
+        int dpi = Dwm.DpiAt(cursor);
+        int width = Math.Min(Draw.Scale(620, dpi), area.Width);
+        int height = Math.Min(Draw.Scale(540, dpi), area.Height);
+        MinimumSize = new Size(Math.Min(Draw.Scale(460, dpi), width), Math.Min(Draw.Scale(420, dpi), height));
         int x = Math.Clamp(cursor.X + 16, area.Left, area.Right - width);
         int y = Math.Clamp(cursor.Y + 16, area.Top, area.Bottom - height);
         Bounds = new Rectangle(x, y, width, height);
@@ -227,14 +420,14 @@ internal sealed class AssistForm : Form
         string core = full.Trim();
         if (core.Length == 0)
         {
+            SetView(View.Source);
             SetStatus("Bitte zuerst Text eingeben.", error: true);
-            _source.Focus();
             return;
         }
 
         if (core.Length > MaxTextLength)
         {
-            SetStatus($"Der Text ist zu lang (höchstens {MaxTextLength:N0} Zeichen).", error: true);
+            SetStatus(string.Create(CultureInfo.GetCultureInfo("de-DE"), $"Der Text ist zu lang (höchstens {MaxTextLength:N0} Zeichen)."), error: true);
             return;
         }
 
@@ -249,8 +442,8 @@ internal sealed class AssistForm : Form
         _lead = full[..start];
         _trail = full[(start + core.Length)..];
 
-        string art = SelectedArt;
-        string? language = art == DeskConfig.TranslateArt ? SelectedLanguage : null;
+        string art = _art;
+        string? language = Translating ? _language : null;
 
         SetBusy(true);
         _cts = new CancellationTokenSource();
@@ -278,11 +471,6 @@ internal sealed class AssistForm : Form
             SetStatus(ex.Message, error: true);
             _report(ex);
         }
-        catch (Exception ex) when (!IsDisposed)
-        {
-            // Unerwartetes (z. B. kaputte Antwort) – anzeigen statt das Programm zu beenden.
-            SetStatus("Unerwarteter Fehler: " + ex.Message, error: true);
-        }
         finally
         {
             _cts?.Dispose();
@@ -296,42 +484,51 @@ internal sealed class AssistForm : Form
 
     private void ShowResult(AssistResult result)
     {
+        _last = result;
         string text = result.Text.Trim();
         _result.Text = text;
         RenderDiff(result.Diff, text);
 
+        CultureInfo de = CultureInfo.GetCultureInfo("de-DE");
         string status = result.Diff is null
-            ? "Fertig."
+            ? "Fertig"
             : result.Changes switch
             {
-                0 => "Keine Änderungen nötig.",
-                1 => "1 Änderung.",
-                { } n => $"{n} Änderungen.",
-                null => "Fertig.",
+                0 => "Keine Änderungen nötig",
+                1 => "1 Änderung",
+                { } n => string.Create(de, $"{n} Änderungen"),
+                null => "Fertig",
             };
         if (result.Ms is { } ms)
         {
-            status += $" ({ms / 1000.0:0.0} s)";
+            status += string.Create(de, $" · {ms / 1000.0:0.0} s");
         }
 
         SetStatus(status, error: false);
         _apply.Enabled = true;
         _copy.Enabled = true;
+        SetView(View.Diff);
+        LayoutContent();
+        Invalidate();
         _apply.Focus();
     }
 
     /// <summary>Entferntes rot und durchgestrichen, Hinzugefügtes grün; ohne Diff (Übersetzung) nur der Text.</summary>
     private void RenderDiff(IReadOnlyList<DiffPart>? diff, string fallback)
     {
+        Palette p = P;
         _diff.Clear();
-        Font normal = _diff.Font;
-        using var struck = new Font(normal, FontStyle.Strikeout);
-        using var italic = new Font(normal, FontStyle.Italic);
+        _diff.BackColor = p.Soft;
+        Font normal = Theme.UiFont(DeviceDpi, 10f);
+        _diff.Font = normal;
+        Font struck = Theme.UiFont(DeviceDpi, 10f, FontStyle.Strikeout);
+        Font added = p.HighContrast ? Theme.UiFont(DeviceDpi, 10f, FontStyle.Underline) : normal;
+        Font italic = Theme.UiFont(DeviceDpi, 9f, FontStyle.Italic);
 
         if (diff is null)
         {
-            Append("(Bei dieser Art gibt es keine Markierung der Änderungen.)\n\n", italic, SystemColors.GrayText, _diff.BackColor);
-            Append(fallback, normal, SystemColors.WindowText, _diff.BackColor);
+            Append("(Bei dieser Art gibt es keine Markierung der Änderungen.)\n\n", italic, p.Muted, p.Soft);
+            Append(fallback, normal, p.Fg, p.Soft);
         }
         else
         {
@@ -340,13 +537,13 @@ internal sealed class AssistForm : Form
                 switch (part.Op)
                 {
                     case '-':
-                        Append(part.Text, struck, RemovedColor, RemovedBack);
+                        Append(part.Text, struck, p.DelFg, p.DelBg);
                         break;
                     case '+':
-                        Append(part.Text, normal, AddedColor, AddedBack);
+                        Append(part.Text, added, p.InsFg, p.InsBg);
                         break;
                     default:
-                        Append(part.Text, normal, SystemColors.WindowText, _diff.BackColor);
+                        Append(part.Text, normal, p.Fg, p.Soft);
                         break;
                 }
             }
@@ -376,6 +573,12 @@ internal sealed class AssistForm : Form
             return;
         }
 
+        if (Target == IntPtr.Zero)
+        {
+            CopyResult();
+            return;
+        }
+
         TextToApply = _lead + text + _trail;
         Close();
     }
@@ -396,9 +599,7 @@ internal sealed class AssistForm : Form
     {
         _busy = busy;
         _run.Enabled = !busy;
-        _art.Enabled = !busy;
-        _language.Enabled = !busy;
-        _progress.Visible = busy;
+        UpdateChips();
         if (busy)
         {
             _apply.Enabled = false;
@@ -415,7 +616,12 @@ internal sealed class AssistForm : Form
     private void SetStatus(string text, bool error)
     {
         _status.Text = text;
-        _status.ForeColor = error ? Color.Firebrick : SystemColors.ControlText;
+        _status.Role = error ? TextRole.Error : TextRole.SmallMuted;
+        _status.ApplyTheme(DeviceDpi);
+        if (IsHandleCreated)
+        {
+            LayoutContent();
+        }
     }
 
     protected override void OnFormClosing(FormClosingEventArgs e)

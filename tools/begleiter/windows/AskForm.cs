@@ -1,11 +1,14 @@
+using System.Globalization;
+
 namespace SparkBegleiter;
 
 /// <summary>
-/// "Frag Spark": Frage eintippen (oder mit dem Mikrofon-Knopf sprechen, wenn Diktieren an ist), Senden,
-/// die Antwort erscheint als reiner Text (nie als HTML). Folgefragen behalten den Zusammenhang
-/// (den hält der Spark). Antworten vom Spark sind Daten: nur angezeigt, nie ausgeführt.
+/// "Frag Spark": Frage eintippen (oder mit dem Mikrofon-Knopf sprechen, wenn Diktieren an ist), Senden.
+/// Fragen und Antworten erscheinen als Sprechblasen (eigene mit Farbverlauf, Spark als weiche Karte mit
+/// Gesicht). Antworten sind reiner Text (nie HTML), nur angezeigt, nie ausgeführt. Folgefragen behalten den
+/// Zusammenhang (den hält der Spark).
 /// </summary>
-internal sealed class AskForm : Form
+internal sealed class AskForm : ThemedForm
 {
     private const int MaxQuestion = 2000;
 
@@ -13,52 +16,64 @@ internal sealed class AskForm : Form
     private readonly Action<SparkException> _report;
     private readonly Func<DeskConfig?> _desk;
 
-    private readonly TextBox _answer = new()
-    {
-        Dock = DockStyle.Fill,
-        Multiline = true,
-        ReadOnly = true,
-        ScrollBars = ScrollBars.Vertical,
-        WordWrap = true,
-        BackColor = SystemColors.Window,
-    };
+    private readonly ChatView _chat = new();
 
     private readonly TextBox _question = new()
     {
-        Dock = DockStyle.Fill,
         Multiline = true,
         AcceptsReturn = false,
-        ScrollBars = ScrollBars.Vertical,
+        ScrollBars = ScrollBars.None,
         WordWrap = true,
         MaxLength = MaxQuestion,
-        PlaceholderText = "Frage an den Spark … (Enter = Senden, Umschalt+Enter = neue Zeile)",
+        PlaceholderText = "Frag den Spark …",
+        AccessibleName = "Frage",
     };
 
-    private readonly Button _send = new() { Text = "Senden", AutoSize = true };
-    private readonly Button _mic = new() { Text = "Sprechen", AutoSize = true, Visible = false };
-    private readonly Button _copy = new() { Text = "Kopieren", AutoSize = true, Enabled = false };
-    private readonly Button _close = new() { Text = "Schließen", AutoSize = true };
-    private readonly Label _status = new() { AutoSize = true, MaximumSize = new Size(520, 0), Anchor = AnchorStyles.Left, Padding = new Padding(0, 4, 0, 0) };
-    private readonly ProgressBar _progress = new() { Style = ProgressBarStyle.Marquee, Width = 90, Height = 12, Visible = false, Anchor = AnchorStyles.Left };
+    private readonly RoundedHost _input;
+    private readonly SparkButton _send = new(ButtonKind.Primary, "Senden");
+    private readonly SparkButton _mic = new(ButtonKind.Round) { Glyph = Glyph.Mic, Visible = false, AccessibleName = "Sprechen" };
+    private readonly TLabel _status = new(TextRole.SmallMuted);
     private readonly System.Windows.Forms.Timer _micTimer = new() { Interval = 250 };
+
+    private Rectangle _face;
+    private Rectangle _title;
+    private Rectangle _hint;
 
     private CancellationTokenSource? _cts;
     private Recorder? _recorder;
-    private string _lastAnswer = "";
     private bool _busy;
+    private bool _micShown;
 
     public AskForm(AppConfig config, Func<DeskConfig?> desk, Action<SparkException> report)
     {
         _config = config;
         _desk = desk;
         _report = report;
+        _input = new RoundedHost(_question) { SoftBack = false };
 
-        BuildLayout();
+        Text = "Frag Spark";
+        TopMost = true;
+        ShowInTaskbar = true;
+        StartPosition = FormStartPosition.Manual;
+        MinimizeBox = true;
+        MaximizeBox = true;
+        KeyPreview = true;
+
+        Controls.Add(_chat);
+        Controls.Add(_status);
+        Controls.Add(_send);
+        Controls.Add(_mic);
+        Controls.Add(_input);
+        _send.BringToFront();
+        _mic.BringToFront();
+        _input.TabIndex = 0;
+        _mic.TabIndex = 1;
+        _send.TabIndex = 2;
+
         _send.Click += async (_, _) => await SendAsync();
-        _copy.Click += (_, _) => CopyAnswer();
-        _close.Click += (_, _) => Close();
         _mic.Click += async (_, _) => await ToggleMicAsync();
         _micTimer.Tick += (_, _) => UpdateMicStatus();
+        _chat.Copied += (_, text) => CopyText(text);
         _question.KeyDown += async (_, e) =>
         {
             if (e.KeyCode == Keys.Enter && !e.Shift)
@@ -75,71 +90,92 @@ internal sealed class AskForm : Form
         };
 
         RefreshParts();
+        PlaceCentered();
     }
 
     /// <summary>Mikrofon-Knopf nur, wenn Diktieren im Panel an ist.</summary>
     public void RefreshParts()
     {
         bool dictate = _desk()?.IsOn(Parts.Dictate) == true;
-        _mic.Visible = dictate || _recorder is not null;
+        bool visible = dictate || _recorder is not null;
+        if (_micShown != visible)
+        {
+            _micShown = visible;
+            _mic.Visible = visible;
+            if (IsHandleCreated)
+            {
+                LayoutContent();
+            }
+        }
     }
 
-    private void BuildLayout()
+    private int ButtonsWidth() => _send.Preferred().Width + S(8) + (_micShown ? S(34) + S(8) : 0);
+
+    protected override void LayoutContent()
     {
-        SuspendLayout();
-        AutoScaleDimensions = new SizeF(96F, 96F);
-        AutoScaleMode = AutoScaleMode.Dpi;
-        Font = SystemFonts.MessageBoxFont ?? Font;
-        Text = "Frag Spark";
-        Icon = AppIcon.Icon;
-        TopMost = true;
-        ShowInTaskbar = true;
-        StartPosition = FormStartPosition.Manual;
-        MinimizeBox = true;
-        MaximizeBox = true;
-        ClientSize = new Size(560, 520);
-        MinimumSize = new Size(400, 360);
-        Padding = new Padding(10);
+        int pad = S(14);
+        int w = ClientSize.Width;
+        int h = ClientSize.Height;
+        int y = BarHeight + pad;
 
-        var statusRow = new FlowLayoutPanel { AutoSize = true, Dock = DockStyle.Fill, WrapContents = false, Margin = Padding.Empty };
-        statusRow.Controls.Add(_progress);
-        statusRow.Controls.Add(_status);
+        int face = S(28);
+        _face = new Rectangle(pad, y, face, face);
+        Size title = Draw.Measure("Frag Spark", F(10.5f, FontStyle.Bold));
+        _title = new Rectangle(pad + face + S(8), y, title.Width + S(4), face);
+        _hint = new Rectangle(_title.Right + S(8), y, Math.Max(0, w - pad - _title.Right - S(8)), face);
+        y += face + S(10);
 
-        var buttons = new FlowLayoutPanel { AutoSize = true, Dock = DockStyle.Fill, FlowDirection = FlowDirection.RightToLeft, Margin = Padding.Empty };
-        buttons.Controls.Add(_close);
-        buttons.Controls.Add(_copy);
-        buttons.Controls.Add(_send);
-        buttons.Controls.Add(_mic);
+        // Eingabezeile unten: Feld mit Mikrofon und Senden darin.
+        int inputH = S(58);
+        int inputY = h - pad - inputH;
+        _input.Padding = new Padding(S(12), S(8), S(6) + ButtonsWidth(), S(8));
+        _input.Bounds = new Rectangle(pad, inputY, w - (2 * pad), inputH);
+        Size send = _send.Preferred();
+        _send.Bounds = new Rectangle(_input.Right - S(8) - send.Width, inputY + ((inputH - send.Height) / 2), send.Width, send.Height);
+        _send.Surface = P.Card;
+        if (_micShown)
+        {
+            int m = S(34);
+            _mic.Bounds = new Rectangle(_send.Left - S(8) - m, inputY + ((inputH - m) / 2), m, m);
+            _mic.Surface = P.Card;
+        }
 
-        var root = new TableLayoutPanel { Dock = DockStyle.Fill, ColumnCount = 1 };
-        root.ColumnStyles.Add(new ColumnStyle(SizeType.Percent, 100));
-        AddRow(root, new Label { Text = "Antwort:", AutoSize = true, Padding = new Padding(0, 0, 0, 2) }, SizeType.AutoSize);
-        AddRow(root, _answer, SizeType.Percent, 72);
-        AddRow(root, new Label { Text = "Frage:", AutoSize = true, Padding = new Padding(0, 6, 0, 2) }, SizeType.AutoSize);
-        AddRow(root, _question, SizeType.Percent, 28);
-        AddRow(root, statusRow, SizeType.AutoSize);
-        AddRow(root, buttons, SizeType.AutoSize);
-        Controls.Add(root);
+        int statusH = _status.Text.Length > 0 ? Draw.TextHeight(_status.Text, _status.Font, w - (2 * pad)) : 0;
+        int statusY = inputY - S(6) - statusH;
+        _status.Fit(pad, statusY, w - (2 * pad));
 
-        CancelButton = _close;
-        ResumeLayout(performLayout: true);
+        int chatBottom = (statusH > 0 ? statusY : inputY) - S(8);
+        _chat.Bounds = new Rectangle(pad - S(4), y, w - (2 * pad) + S(8), Math.Max(S(40), chatBottom - y));
     }
 
-    private static void AddRow(TableLayoutPanel table, Control control, SizeType sizeType, float size = 0)
+    protected override void PaintContent(Graphics g)
     {
-        table.RowStyles.Add(new RowStyle(sizeType, size));
-        table.Controls.Add(control, 0, table.RowStyles.Count - 1);
+        Face.Draw(g, _face, P);
+        Draw.Text(g, "Frag Spark", F(10.5f, FontStyle.Bold), _title, P.Fg);
+        Draw.Text(g, "Enter = Senden · Umschalt+Enter = neue Zeile", F(8.5f), _hint, P.Muted, Draw.Line | TextFormatFlags.Right);
+    }
+
+    /// <summary>Mitte des Bildschirms mit dem Mauszeiger – vor dem Erzeugen, damit die Fenster-DPI gleich stimmt.</summary>
+    private void PlaceCentered()
+    {
+        Rectangle area = Screen.FromPoint(Cursor.Position).WorkingArea;
+        int dpi = Dwm.DpiAt(Cursor.Position);
+        int width = Math.Min(Draw.Scale(520, dpi), area.Width);
+        int height = Math.Min(Draw.Scale(560, dpi), area.Height);
+        MinimumSize = new Size(Math.Min(Draw.Scale(380, dpi), width), Math.Min(Draw.Scale(340, dpi), height));
+        Bounds = new Rectangle(area.Left + ((area.Width - width) / 2), area.Top + ((area.Height - height) / 2), width, height);
     }
 
     protected override void OnLoad(EventArgs e)
     {
         base.OnLoad(e);
-        Rectangle area = Screen.FromPoint(Cursor.Position).WorkingArea;
-        int width = Math.Min(Width, area.Width);
-        int height = Math.Min(Height, area.Height);
-        Bounds = new Rectangle(area.Left + ((area.Width - width) / 2), area.Top + ((area.Height - height) / 2), width, height);
         ActiveControl = _question;
-        SetStatus("", error: false);
+    }
+
+    protected override void OnDpiChanged(DpiChangedEventArgs e)
+    {
+        base.OnDpiChanged(e);
+        MinimumSize = new Size(S(380), S(340));
     }
 
     /// <summary>Nach vorn holen und den Cursor ins Fragefeld setzen.</summary>
@@ -176,7 +212,10 @@ internal sealed class AskForm : Form
             return;
         }
 
-        SetBusy(true, "Der Spark denkt nach …");
+        _chat.Add(mine: true, question);
+        _question.Clear();
+        _chat.Pending = true;
+        SetBusy(true, "");
         _cts = new CancellationTokenSource();
         try
         {
@@ -186,8 +225,9 @@ internal sealed class AskForm : Form
                 return;
             }
 
-            AppendExchange(question, answer.Trim());
-            _question.Clear();
+            _chat.Pending = false;
+            _chat.Add(mine: false, answer.Trim());
+            _question.PlaceholderText = "Frag weiter …";
             SetStatus("", error: false);
         }
         catch (OperationCanceledException)
@@ -198,7 +238,13 @@ internal sealed class AskForm : Form
         {
             if (!IsDisposed)
             {
+                _chat.Pending = false;
                 SetStatus(ex.Message, error: true);
+                if (_question.TextLength == 0)
+                {
+                    _question.Text = question; // Frage nicht verlieren
+                    _question.SelectionStart = _question.TextLength;
+                }
             }
 
             _report(ex);
@@ -215,29 +261,10 @@ internal sealed class AskForm : Form
         }
     }
 
-    /// <summary>Frage und Antwort als reinen Text unten anhängen.</summary>
-    private void AppendExchange(string question, string answer)
+    private void CopyText(string text)
     {
-        _lastAnswer = answer;
-        string block = "Du: " + question + Environment.NewLine + Environment.NewLine
-                       + "Spark: " + NormalizeNewlines(answer) + Environment.NewLine;
-        if (_answer.TextLength > 0)
-        {
-            block = Environment.NewLine + "────────" + Environment.NewLine + Environment.NewLine + block;
-        }
-
-        _answer.AppendText(block);
-        _answer.SelectionStart = _answer.TextLength;
-        _answer.ScrollToCaret();
-        _copy.Enabled = true;
-    }
-
-    private static string NormalizeNewlines(string text) =>
-        text.Replace("\r\n", "\n", StringComparison.Ordinal).Replace("\n", Environment.NewLine, StringComparison.Ordinal);
-
-    private void CopyAnswer()
-    {
-        SetStatus(ClipboardHelper.TrySetText(NormalizeNewlines(_lastAnswer), keepOutOfHistory: false)
+        string normalized = text.Replace("\r\n", "\n", StringComparison.Ordinal).Replace("\n", Environment.NewLine, StringComparison.Ordinal);
+        SetStatus(ClipboardHelper.TrySetText(normalized, keepOutOfHistory: false)
             ? "Antwort kopiert."
             : "Die Zwischenablage ist gerade gesperrt. Bitte noch einmal versuchen.", error: false);
     }
@@ -262,7 +289,8 @@ internal sealed class AskForm : Form
                     await ToggleMicAsync();
                 }
             };
-            _mic.Text = "■ Stopp";
+            _mic.Checked = true;
+            _mic.AccessibleName = "Aufnahme beenden";
             _send.Enabled = false;
             _micTimer.Start();
             UpdateMicStatus();
@@ -272,7 +300,8 @@ internal sealed class AskForm : Form
         Recorder current = _recorder;
         _recorder = null;
         _micTimer.Stop();
-        _mic.Text = "Sprechen";
+        _mic.Checked = false;
+        _mic.AccessibleName = "Sprechen";
         byte[]? wav;
         try
         {
@@ -352,7 +381,7 @@ internal sealed class AskForm : Form
         if (_recorder is { } r)
         {
             TimeSpan t = r.Elapsed;
-            SetStatus($"Aufnahme {(int)t.TotalMinutes}:{t.Seconds:00} … (höchstens {Recorder.MaxSeconds} s; „Stopp“ zum Beenden)", error: false);
+            SetStatus(string.Create(CultureInfo.InvariantCulture, $"Ich höre zu {(int)t.TotalMinutes}:{t.Seconds:00} … (höchstens {Recorder.MaxSeconds} s; ■ zum Beenden)"), error: false);
         }
     }
 
@@ -361,7 +390,6 @@ internal sealed class AskForm : Form
         _busy = busy;
         _send.Enabled = !busy;
         _mic.Enabled = !busy;
-        _progress.Visible = busy;
         if (text is not null)
         {
             SetStatus(text, error: false);
@@ -371,7 +399,12 @@ internal sealed class AskForm : Form
     private void SetStatus(string text, bool error)
     {
         _status.Text = text;
-        _status.ForeColor = error ? Color.Firebrick : SystemColors.ControlText;
+        _status.Role = error ? TextRole.Error : TextRole.SmallMuted;
+        _status.ApplyTheme(DeviceDpi);
+        if (IsHandleCreated)
+        {
+            LayoutContent();
+        }
     }
 
     protected override bool ProcessCmdKey(ref Message msg, Keys keyData)
@@ -379,6 +412,12 @@ internal sealed class AskForm : Form
         if (keyData == Keys.Escape)
         {
             Close();
+            return true;
+        }
+
+        if (keyData == (Keys.Control | Keys.C) && _question.SelectionLength == 0 && _chat.LastAnswer is { } last)
+        {
+            CopyText(last);
             return true;
         }
 
@@ -400,6 +439,299 @@ internal sealed class AskForm : Form
         {
             _micTimer.Dispose();
             _recorder?.Dispose();
+        }
+
+        base.Dispose(disposing);
+    }
+}
+
+/// <summary>
+/// Verlauf als Sprechblasen, selbst gezeichnet: eigene Fragen rechts mit Akzent-Verlauf, Antworten links als
+/// weiche Karte mit dem Gesicht daneben und „Kopieren“ darunter. Rechtsklick auf eine Blase: Kopieren.
+/// </summary>
+internal sealed class ChatView : Panel, IThemed
+{
+    private readonly List<(bool Mine, string Text)> _messages = new();
+    private readonly List<Block> _blocks = new();
+    private readonly System.Windows.Forms.Timer _dots = new() { Interval = 400 };
+    private readonly ContextMenuStrip _menu = new();
+    private int _dpi = 96;
+    private int _dotCount;
+    private bool _pending;
+    private int _hoverCopy = -1;
+    private int _menuIndex = -1;
+
+    public ChatView()
+    {
+        SetStyle(ControlStyles.OptimizedDoubleBuffer | ControlStyles.AllPaintingInWmPaint | ControlStyles.ResizeRedraw | ControlStyles.UserPaint, true);
+        AutoScroll = true;
+        TabStop = false;
+        AccessibleRole = AccessibleRole.List;
+        AccessibleName = "Unterhaltung";
+        _dots.Tick += (_, _) =>
+        {
+            _dotCount = (_dotCount + 1) % 4;
+            Invalidate();
+        };
+        _menu.Items.Add(new ToolStripMenuItem("Kopieren", null, (_, _) =>
+        {
+            if (_menuIndex >= 0 && _menuIndex < _messages.Count)
+            {
+                Copied?.Invoke(this, _messages[_menuIndex].Text);
+            }
+        }));
+        HandleCreated += (_, _) => Dwm.ScrollbarTheme(this, Theme.Current.Dark);
+    }
+
+    /// <summary>„Kopieren“ wurde gewählt (Text der Blase).</summary>
+    public event EventHandler<string>? Copied;
+
+    public string? LastAnswer => _messages.LastOrDefault(m => !m.Mine).Text;
+
+    /// <summary>„Der Spark denkt nach …“ als Blase zeigen.</summary>
+    public bool Pending
+    {
+        get => _pending;
+        set
+        {
+            _pending = value;
+            if (value)
+            {
+                _dots.Start();
+            }
+            else
+            {
+                _dots.Stop();
+            }
+
+            Relayout(scrollToEnd: true);
+        }
+    }
+
+    public void Add(bool mine, string text)
+    {
+        _messages.Add((mine, text));
+        AccessibleDescription = (mine ? "Du: " : "Spark: ") + text;
+        Relayout(scrollToEnd: true);
+    }
+
+    public void ApplyTheme(int dpi)
+    {
+        _dpi = dpi;
+        BackColor = Theme.Current.Card;
+        Font = Theme.UiFont(dpi, 10f);
+        Dwm.ScrollbarTheme(this, Theme.Current.Dark);
+        Relayout(scrollToEnd: false);
+    }
+
+    private int S(float v) => Draw.Scale(v, _dpi);
+
+    private sealed record Block(int Index, bool Mine, string Text, Rectangle Bubble, Rectangle TextRect, Rectangle Avatar, Rectangle Copy);
+
+    private const TextFormatFlags TextFlags = TextFormatFlags.WordBreak | TextFormatFlags.TextBoxControl | TextFormatFlags.NoPrefix;
+
+    private void Relayout(bool scrollToEnd)
+    {
+        _blocks.Clear();
+        int avail = Math.Max(S(120), ClientSize.Width - S(8));
+        int x0 = S(4);
+        int y = S(4);
+        int padX = S(12);
+        int padY = S(9);
+        int avatar = S(30);
+
+        IEnumerable<(int Index, bool Mine, string Text)> items = _messages.Select((m, i) => (i, m.Mine, m.Text));
+        if (_pending)
+        {
+            items = items.Append((-1, false, "Der Spark denkt nach"));
+        }
+
+        foreach (var (index, mine, text) in items)
+        {
+            if (mine)
+            {
+                int maxText = (int)(avail * 0.85) - (2 * padX);
+                Size size = TextRenderer.MeasureText(text, Font, new Size(Math.Max(1, maxText), 100000), TextFlags);
+                var bubble = new Rectangle(x0 + avail - size.Width - (2 * padX), y, size.Width + (2 * padX), size.Height + (2 * padY));
+                _blocks.Add(new Block(index, true, text, bubble, Rectangle.Inflate(bubble, -padX, -padY), Rectangle.Empty, Rectangle.Empty));
+                y = bubble.Bottom + S(10);
+            }
+            else
+            {
+                int bx = x0 + avatar + S(8);
+                int maxText = Math.Max(1, (int)((avail - avatar - S(8)) * 0.92) - (2 * padX));
+                Size size = TextRenderer.MeasureText(index < 0 ? text + " ..." : text, Font, new Size(maxText, 100000), TextFlags);
+                var bubble = new Rectangle(bx, y, size.Width + (2 * padX), size.Height + (2 * padY));
+                Rectangle copy = Rectangle.Empty;
+                int bottom = bubble.Bottom;
+                if (index >= 0)
+                {
+                    Font small = Theme.UiFont(_dpi, 8.5f);
+                    Size c = Draw.Measure("Kopieren", small);
+                    copy = new Rectangle(bx + S(4), bubble.Bottom + S(3), c.Width, c.Height);
+                    bottom = copy.Bottom;
+                }
+
+                _blocks.Add(new Block(index, false, text, bubble, Rectangle.Inflate(bubble, -padX, -padY), new Rectangle(x0, y, avatar, avatar), copy));
+                y = bottom + S(12);
+            }
+        }
+
+        AutoScrollMinSize = new Size(0, y);
+        if (scrollToEnd)
+        {
+            AutoScrollPosition = new Point(0, y);
+        }
+
+        Invalidate();
+    }
+
+    protected override void OnResize(EventArgs eventargs)
+    {
+        base.OnResize(eventargs);
+        Relayout(scrollToEnd: false);
+    }
+
+    protected override void OnScroll(ScrollEventArgs se)
+    {
+        base.OnScroll(se);
+        Invalidate();
+    }
+
+    protected override void OnMouseWheel(MouseEventArgs e)
+    {
+        base.OnMouseWheel(e);
+        Invalidate();
+    }
+
+    protected override void OnPaint(PaintEventArgs e)
+    {
+        Graphics g = e.Graphics;
+        Palette p = Theme.Current;
+        g.Clear(p.Card);
+        Draw.HighQuality(g);
+        Point offset = AutoScrollPosition;
+
+        if (_blocks.Count == 0)
+        {
+            var empty = new Rectangle(S(24), S(24), Math.Max(1, ClientSize.Width - S(48)), Math.Max(1, ClientSize.Height - S(48)));
+            TextRenderer.DrawText(g, "Frag den Spark etwas – zum Beispiel nach deinen Terminen. Folgefragen behalten den Zusammenhang.",
+                Theme.UiFont(_dpi, 9.5f), empty, p.Muted, TextFlags | TextFormatFlags.HorizontalCenter | TextFormatFlags.VerticalCenter);
+            return;
+        }
+
+        foreach (Block b in _blocks)
+        {
+            Rectangle bubble = b.Bubble;
+            bubble.Offset(offset);
+            if (bubble.Bottom < -S(40) || bubble.Top > ClientSize.Height + S(40))
+            {
+                continue;
+            }
+
+            Rectangle text = b.TextRect;
+            text.Offset(offset);
+            float r = S(14);
+            float small = S(4);
+            if (b.Mine)
+            {
+                using System.Drawing.Drawing2D.GraphicsPath path = Draw.Round(bubble, r, r, small, r);
+                using Brush brush = Draw.AccentBrush(bubble, p, 45f);
+                g.FillPath(brush, path);
+                TextRenderer.DrawText(g, b.Text, Font, text, p.OnAccent, TextFlags);
+            }
+            else
+            {
+                Rectangle avatar = b.Avatar;
+                avatar.Offset(offset);
+                Face.Draw(g, avatar, p);
+                using (System.Drawing.Drawing2D.GraphicsPath path = Draw.Round(bubble, r, r, r, small))
+                {
+                    using var fill = new SolidBrush(p.Soft);
+                    g.FillPath(fill, path);
+                    using var pen = new Pen(p.Line);
+                    g.DrawPath(pen, path);
+                }
+
+                string shown = b.Index < 0 ? b.Text + " " + new string('.', _dotCount) : b.Text;
+                TextRenderer.DrawText(g, shown, Font, text, b.Index < 0 ? p.Muted : p.Fg, TextFlags);
+                if (!b.Copy.IsEmpty)
+                {
+                    Rectangle copy = b.Copy;
+                    copy.Offset(offset);
+                    Font f = Theme.UiFont(_dpi, 8.5f, b.Index == _hoverCopy ? FontStyle.Underline : FontStyle.Regular);
+                    TextRenderer.DrawText(g, "Kopieren", f, copy, b.Index == _hoverCopy ? p.Accent : p.Muted, TextFormatFlags.NoPrefix);
+                }
+            }
+        }
+    }
+
+    private Block? HitBlock(Point location, bool copyOnly)
+    {
+        Point offset = AutoScrollPosition;
+        foreach (Block b in _blocks)
+        {
+            Rectangle copy = b.Copy;
+            copy.Offset(offset);
+            Rectangle bubble = b.Bubble;
+            bubble.Offset(offset);
+            if (!copy.IsEmpty && Rectangle.Inflate(copy, S(3), S(2)).Contains(location))
+            {
+                return b;
+            }
+
+            if (!copyOnly && b.Index >= 0 && bubble.Contains(location))
+            {
+                return b;
+            }
+        }
+
+        return null;
+    }
+
+    protected override void OnMouseMove(MouseEventArgs e)
+    {
+        base.OnMouseMove(e);
+        int hover = HitBlock(e.Location, copyOnly: true)?.Index ?? -1;
+        if (hover != _hoverCopy)
+        {
+            _hoverCopy = hover;
+            Cursor = hover >= 0 ? Cursors.Hand : Cursors.Default;
+            Invalidate();
+        }
+    }
+
+    protected override void OnMouseLeave(EventArgs e)
+    {
+        base.OnMouseLeave(e);
+        if (_hoverCopy >= 0)
+        {
+            _hoverCopy = -1;
+            Cursor = Cursors.Default;
+            Invalidate();
+        }
+    }
+
+    protected override void OnMouseClick(MouseEventArgs e)
+    {
+        base.OnMouseClick(e);
+        if (e.Button == MouseButtons.Left && HitBlock(e.Location, copyOnly: true) is { } copy && copy.Index >= 0)
+        {
+            Copied?.Invoke(this, _messages[copy.Index].Text);
+        }
+        else if (e.Button == MouseButtons.Right && HitBlock(e.Location, copyOnly: false) is { } block && block.Index >= 0)
+        {
+            _menuIndex = block.Index;
+            _menu.Show(this, e.Location);
+        }
+    }
+
+    protected override void Dispose(bool disposing)
+    {
+        if (disposing)
+        {
+            _dots.Dispose();
+            _menu.Dispose();
         }
 
         base.Dispose(disposing);

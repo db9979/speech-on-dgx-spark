@@ -2,6 +2,7 @@ using System.Net;
 using System.Net.Http.Headers;
 using System.Reflection;
 using System.Security.Authentication;
+using System.Security.Cryptography;
 using System.Text;
 using System.Text.Json;
 using System.Text.Json.Nodes;
@@ -40,7 +41,7 @@ internal sealed record PairResult(string Key, string? Profile);
 
 internal sealed record Note(int N, string Title, string Body, string? Tag);
 
-internal sealed record PollResult(int Rev, IReadOnlyList<Note> Notes, int Last, int NotausLevel);
+internal sealed record PollResult(int Rev, IReadOnlyList<Note> Notes, int Last, int NotausLevel, string? Update);
 
 /// <summary>
 /// Die Schnittstelle des Spark (/api/desk/… und /api/write/assist). Es wird nur mit der eingerichteten
@@ -58,6 +59,10 @@ internal static class SparkClient
     private static readonly TimeSpan ShortTimeout = TimeSpan.FromSeconds(20);
 
     private static readonly HttpClient Http = CreateClient();
+
+    /// <summary>Bei jeder Abfrage von Einstellungen und Herzschlag: eigene Version und Bauart (für Updates).</summary>
+    private static string VersionQuery =>
+        "version=" + Uri.EscapeDataString(Updater.CurrentText) + "&arch=" + Uri.EscapeDataString(Updater.Arch);
 
     private static HttpClient CreateClient()
     {
@@ -94,7 +99,7 @@ internal static class SparkClient
     /// <summary>GET /api/desk/config – welche Teile an sind und die Voreinstellungen.</summary>
     public static async Task<DeskConfig> GetConfigAsync(string baseUrl, string key, CancellationToken ct)
     {
-        using var request = new HttpRequestMessage(HttpMethod.Get, baseUrl + "/api/desk/config");
+        using var request = new HttpRequestMessage(HttpMethod.Get, baseUrl + "/api/desk/config?" + VersionQuery);
         JsonNode json = await SendAsync(request, key, pairing: false, ShortTimeout, ct).ConfigureAwait(true);
         return DeskConfig.Parse(json);
     }
@@ -102,7 +107,8 @@ internal static class SparkClient
     /// <summary>GET /api/desk/poll – Herzschlag, neue Meldungen, Notaus-Stufe.</summary>
     public static async Task<PollResult> PollAsync(string baseUrl, string key, int after, CancellationToken ct)
     {
-        string url = baseUrl + "/api/desk/poll?after=" + Math.Max(0, after).ToString(System.Globalization.CultureInfo.InvariantCulture);
+        string url = baseUrl + "/api/desk/poll?after=" + Math.Max(0, after).ToString(System.Globalization.CultureInfo.InvariantCulture)
+                     + "&" + VersionQuery;
         using var request = new HttpRequestMessage(HttpMethod.Get, url);
         JsonNode json = await SendAsync(request, key, pairing: false, ShortTimeout, ct).ConfigureAwait(true);
 
@@ -119,7 +125,7 @@ internal static class SparkClient
         }
 
         int level = json["notaus"] is JsonObject notaus ? Json.Int(notaus["level"]) ?? 0 : 0;
-        return new PollResult(Json.Int(json["rev"]) ?? 0, notes, Json.Int(json["last"]) ?? after, level);
+        return new PollResult(Json.Int(json["rev"]) ?? 0, notes, Json.Int(json["last"]) ?? after, level, Json.Str(json["update"]));
     }
 
     /// <summary>POST /api/desk/ask – Frage an den Spark (bis zu 3 Minuten).</summary>
@@ -182,6 +188,110 @@ internal static class SparkClient
         }
 
         return new AssistResult(result, ParseDiff(json["diff"]), Json.Int(json["changes"]), Json.Int(json["ms"]));
+    }
+
+    /// <summary>
+    /// GET /api/desk/update?arch=… – lädt die neue Version (nur vom eigenen Spark, keine Umleitungen) in
+    /// <paramref name="target"/> und gibt Größe und SHA-256 (Hex) der geladenen Bytes zurück. Bricht ab,
+    /// sobald mehr kommt als angekündigt.
+    /// </summary>
+    public static async Task<(long Size, string Sha256)> DownloadUpdateAsync(
+        string baseUrl, string key, string arch, long expectedSize, Stream target, IProgress<long>? progress, CancellationToken ct)
+    {
+        using var request = new HttpRequestMessage(HttpMethod.Get, baseUrl + "/api/desk/update?arch=" + Uri.EscapeDataString(arch));
+        request.Headers.Add(DeviceHeader, key);
+
+        // Zeitlimit ohne Fortschritt (die Datei selbst darf länger brauchen).
+        using var idle = CancellationTokenSource.CreateLinkedTokenSource(ct);
+        TimeSpan stall = TimeSpan.FromSeconds(60);
+        idle.CancelAfter(stall);
+
+        HttpResponseMessage response;
+        try
+        {
+            response = await Http.SendAsync(request, HttpCompletionOption.ResponseHeadersRead, idle.Token).ConfigureAwait(true);
+        }
+        catch (OperationCanceledException) when (!ct.IsCancellationRequested)
+        {
+            throw new SparkException(null, "Der Spark antwortet nicht.");
+        }
+        catch (HttpRequestException ex)
+        {
+            throw new SparkException(null, DescribeConnectionError(ex));
+        }
+
+        using (response)
+        {
+            int status = (int)response.StatusCode;
+            if (!response.IsSuccessStatusCode)
+            {
+                string? detail = null;
+                try
+                {
+                    string content = await response.Content.ReadAsStringAsync(idle.Token).ConfigureAwait(true);
+                    detail = Detail(content.Length is > 0 and < 20000 ? JsonNode.Parse(content) : null);
+                }
+                catch (Exception ex) when (ex is JsonException or HttpRequestException or OperationCanceledException)
+                {
+                    // ohne Text
+                }
+
+                string message = status == 404 && detail is null
+                    ? "Der Spark hat die neue Version (noch) nicht bereit."
+                    : ErrorText(status, detail, pairing: false);
+                throw new SparkException(status, message, detail);
+            }
+
+            if (response.Content.Headers.ContentEncoding.Count == 0 &&
+                response.Content.Headers.ContentLength is long length && length != expectedSize)
+            {
+                throw new SparkException(null, Updater.Corrupt);
+            }
+
+            using var hash = IncrementalHash.CreateHash(HashAlgorithmName.SHA256);
+            byte[] buffer = new byte[81920];
+            long total = 0;
+            try
+            {
+                Stream body = await response.Content.ReadAsStreamAsync(idle.Token).ConfigureAwait(true);
+                await using (body.ConfigureAwait(true))
+                {
+                    while (true)
+                    {
+                        idle.CancelAfter(stall);
+                        int read = await body.ReadAsync(buffer, idle.Token).ConfigureAwait(true);
+                        if (read == 0)
+                        {
+                            break;
+                        }
+
+                        total += read;
+                        if (total > expectedSize)
+                        {
+                            throw new SparkException(null, Updater.Corrupt);
+                        }
+
+                        hash.AppendData(buffer, 0, read);
+                        await target.WriteAsync(buffer.AsMemory(0, read), ct).ConfigureAwait(true);
+                        progress?.Report(total);
+                    }
+                }
+            }
+            catch (OperationCanceledException) when (!ct.IsCancellationRequested)
+            {
+                throw new SparkException(null, "Das Laden ist hängen geblieben. Später noch einmal versuchen.");
+            }
+            catch (HttpRequestException ex)
+            {
+                throw new SparkException(null, DescribeConnectionError(ex));
+            }
+            catch (IOException ex) when (ex.InnerException is System.Net.Sockets.SocketException or HttpRequestException)
+            {
+                throw new SparkException(null, "Die Verbindung zum Spark ist beim Laden abgebrochen.");
+            }
+
+            return (total, Convert.ToHexString(hash.GetHashAndReset()));
+        }
     }
 
     /// <summary>Die Windows-Zeitzone als IANA-Name (z. B. Europe/Berlin), wenn sie sich umrechnen lässt.</summary>

@@ -35,6 +35,9 @@ internal sealed class AppConfig
     /// <summary>Lokale Tastenkürzel je Teil (write/ask/dictate), siehe <see cref="Hotkey.Serialize"/>.</summary>
     public Dictionary<string, string> Hotkeys { get; set; } = new();
 
+    /// <summary>Updates im Hintergrund laden (installiert wird erst nach Klick). Lokal, Standard an.</summary>
+    public bool AutoDownloadUpdates { get; set; } = true;
+
     /// <summary>Zuletzt vom Spark geholte Einstellungen (enthält keine Geheimnisse).</summary>
     public DeskConfig? Desk { get; set; }
 

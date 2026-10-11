@@ -41,11 +41,18 @@ internal sealed class TrayContext : ApplicationContext, IBegleiterHost
     private bool _hotkeysSuspended;
     private bool _slowPoll;
 
+    private readonly Updater _updater;
+
     private AssistForm? _assist;
     private AskForm? _ask;
     private SettingsForm? _settings;
+    private TrayPanel? _panel;
+    private long _panelClosedAt;
     private bool _writing;
     private bool _pairOpen;
+    private bool _checking;
+    private string? _readyNotified;
+    private int _traySize;
 
     // Diktieren
     private Recorder? _recorder;
@@ -53,11 +60,18 @@ internal sealed class TrayContext : ApplicationContext, IBegleiterHost
     private IntPtr _dictateTarget;
     private bool _dictateBusy;
 
-    public TrayContext()
+    /// <param name="startup">Wie gestartet wurde: normal, nach einem Update oder nach einem fehlgeschlagenen.</param>
+    public TrayContext(string? startup = null)
     {
         _invoker.CreateControl();
         _desk = _config.IsPaired ? _config.Desk : null;
         _connection = _config.IsPaired ? Connection.Unknown : Connection.Unpaired;
+        _updater = new Updater(Credentials);
+        _updater.Changed += (_, _) => OnUpdaterChanged();
+        _updater.Ready += (_, _) => NotifyReady();
+        _updater.InstallStarted += (_, _) => ExitThread();
+        Theme.Watch();
+        Theme.Changed += OnThemeChanged;
 
         _tray = new NotifyIcon
         {
@@ -71,6 +85,13 @@ internal sealed class TrayContext : ApplicationContext, IBegleiterHost
             if (e.Button == MouseButtons.Left)
             {
                 OnLeftClick();
+            }
+        };
+        _tray.BalloonTipClicked += (_, _) =>
+        {
+            if (_updater.Phase is UpdatePhase.Ready or UpdatePhase.Available)
+            {
+                ShowPanel();
             }
         };
         _menu.Opening += (_, _) => BuildMenu();
@@ -89,6 +110,16 @@ internal sealed class TrayContext : ApplicationContext, IBegleiterHost
         {
             Application.Idle -= OnFirstIdle;
             NotifyConflicts(_conflicts);
+            if (startup == UpdateInstaller.UpdatedArgument)
+            {
+                Notify(Updater.IsDevelopment ? "Aktualisiert." : $"Aktualisiert auf Version {Updater.CurrentText}.", ToolTipIcon.Info);
+                _ = Updater.CleanupAfterUpdateAsync();
+            }
+            else if (startup == UpdateInstaller.FailedArgument)
+            {
+                Notify("Das Update hat nicht geklappt. Die bisherige Version läuft weiter.", ToolTipIcon.Warning);
+            }
+
             if (!_config.IsPaired)
             {
                 Pair(null);
@@ -107,6 +138,12 @@ internal sealed class TrayContext : ApplicationContext, IBegleiterHost
     public DeskConfig? Desk => _desk;
 
     public IReadOnlyCollection<string> HotkeyConflicts => _conflicts;
+
+    public Connection Connection => _connection;
+
+    public Updater Updates => _updater;
+
+    public bool CheckingForUpdates => _checking;
 
     private bool IsOn(string part) => _config.IsPaired && _desk?.IsOn(part) == true;
 
@@ -146,7 +183,7 @@ internal sealed class TrayContext : ApplicationContext, IBegleiterHost
                 return; // inzwischen entkoppelt oder neu gekoppelt
             }
 
-            if (_desk is null || poll.Rev != _desk.Rev)
+            if (_desk is null || poll.Rev != _desk.Rev || poll.Update != _desk.UpdateAnnounced)
             {
                 await RefreshConfigAsync(baseUrl, key);
             }
@@ -178,6 +215,17 @@ internal sealed class TrayContext : ApplicationContext, IBegleiterHost
         {
             _polling = false;
             ScheduleNextPoll();
+            if (AppIcon.TrayIconSize() != _traySize)
+            {
+                UpdateIcon(); // Taskleiste hat die DPI gewechselt
+            }
+
+            if (_checking)
+            {
+                _checking = false;
+                BuildMenu();
+                Changed?.Invoke(this, EventArgs.Empty);
+            }
         }
     }
 
@@ -280,6 +328,7 @@ internal sealed class TrayContext : ApplicationContext, IBegleiterHost
 
         _ask?.RefreshParts();
         ApplyAutostart(desk.Autostart);
+        _updater.OnConfig(desk.Update, _config.AutoDownloadUpdates);
         UpdateIcon();
         BuildMenu();
         Changed?.Invoke(this, EventArgs.Empty);
@@ -367,14 +416,22 @@ internal sealed class TrayContext : ApplicationContext, IBegleiterHost
         _ => "",
     };
 
+    /// <summary>Gibt es eine neue Version, die die Person installieren kann?</summary>
+    private bool UpdateWaiting => _config.IsPaired && _updater.Phase is UpdatePhase.Available or UpdatePhase.Downloading
+                                  or UpdatePhase.Ready or UpdatePhase.Failed && _updater.Info is not null;
+
     private void UpdateIcon()
     {
-        StatusDot dot = !IsOn(Parts.Status) ? StatusDot.None : _connection switch
-        {
-            Connection.Online => StatusDot.Green,
-            Connection.Notaus => StatusDot.Red,
-            _ => StatusDot.Grey,
-        };
+        StatusDot dot = _connection == Connection.Notaus && IsOn(Parts.Status) ? StatusDot.Red
+            : UpdateWaiting ? StatusDot.Update
+            : !IsOn(Parts.Status) ? StatusDot.None
+            : _connection switch
+            {
+                Connection.Online => StatusDot.Green,
+                Connection.Notaus => StatusDot.Red,
+                _ => StatusDot.Grey,
+            };
+        _traySize = AppIcon.TrayIconSize();
         _tray.Icon = AppIcon.ForTray(dot);
         _tray.Text = Clip(Title + " – " + StatusLine().ReplaceLineEndings(" "), 127);
     }
@@ -452,29 +509,237 @@ internal sealed class TrayContext : ApplicationContext, IBegleiterHost
             }
         }
 
+        if (UpdateWaiting && _updater.Info is { } info)
+        {
+            _menu.Items.Add(new ToolStripSeparator());
+            _menu.Items.Add(new ToolStripMenuItem($"Aktualisieren auf {info.Version} …", null, (_, _) => RequestUpdate())
+            {
+                Enabled = _updater.Phase != UpdatePhase.Downloading || !_updater.InstallRequested,
+            });
+        }
+
         _menu.Items.Add(new ToolStripSeparator());
         _menu.Items.Add(new ToolStripMenuItem("Einstellungen …", null, (_, _) => OpenSettings()));
         _menu.Items.Add(new ToolStripMenuItem("Beenden", null, (_, _) => ExitThread()));
+        RefreshPanel();
     }
+
+    // ------------------------------------------------------------------ Tray-Fenster (Entwurf A)
 
     private void OnLeftClick()
     {
-        if (!_config.IsPaired)
+        if (_panel is { IsDisposed: false })
         {
-            Pair(null);
+            _panel.Close();
+            return;
         }
-        else if (IsOn(Parts.Write))
+
+        // Der Klick aufs Symbol hat das Fenster eben erst geschlossen (Fokusverlust): nicht gleich wieder öffnen.
+        if (Environment.TickCount64 - _panelClosedAt < 300)
         {
-            OpenWriteWindow();
+            return;
         }
-        else if (IsOn(Parts.Ask))
+
+        ShowPanel();
+    }
+
+    private void ShowPanel()
+    {
+        if (_panel is { IsDisposed: false } open)
         {
-            OpenAsk();
+            open.Activate();
+            return;
+        }
+
+        var panel = new TrayPanel(BuildPanelModel(), action => _invoker.BeginInvoke(action));
+        panel.FormClosed += (_, _) =>
+        {
+            if (ReferenceEquals(_panel, panel))
+            {
+                _panel = null;
+                _panelClosedAt = Environment.TickCount64;
+            }
+
+            panel.Dispose();
+        };
+        _panel = panel;
+        panel.ShowAtTray();
+    }
+
+    private void RefreshPanel()
+    {
+        if (_panel is { IsDisposed: false, Visible: true } panel)
+        {
+            panel.SetModel(BuildPanelModel());
+        }
+    }
+
+    private PanelModel BuildPanelModel()
+    {
+        bool paired = _config.IsPaired;
+        string profile = _desk?.Profile ?? _config.Profile ?? "";
+        string device = _config.Device ?? "";
+        string subtitle = !paired ? "Nicht gekoppelt"
+            : profile.Length > 0 && device.Length > 0 ? $"{profile} · {device}"
+            : profile.Length > 0 ? profile : device;
+
+        (string statusText, StatusKind status) = _connection switch
+        {
+            Connection.Unpaired => ("nicht gekoppelt", StatusKind.Off),
+            Connection.Unknown => ("verbinde …", StatusKind.Off),
+            Connection.Online => ("verbunden", StatusKind.Ok),
+            Connection.Notaus => ("Notaus", StatusKind.Bad),
+            _ => ("nicht erreichbar", StatusKind.Off),
+        };
+
+        var items = new List<PanelItem>();
+        string? hint = null;
+        if (!paired)
+        {
+            items.Add(new PanelItem("Koppeln …", Glyph.Plus, null, () => Pair(null)));
         }
         else
         {
-            OpenSettings();
+            if (IsOn(Parts.Write))
+            {
+                items.Add(new PanelItem("Text verbessern", Glyph.Pencil, _config.GetHotkey(Parts.Write).ToString(), OpenWriteWindow));
+            }
+
+            if (IsOn(Parts.Ask))
+            {
+                items.Add(new PanelItem("Frag Spark", Glyph.Chat, _config.GetHotkey(Parts.Ask).ToString(), OpenAsk));
+            }
+
+            if (IsOn(Parts.Dictate))
+            {
+                items.Add(new PanelItem(_recorder is not null ? "Diktat beenden" : "Diktieren (in die Zwischenablage)", Glyph.Mic,
+                    _config.GetHotkey(Parts.Dictate).ToString(), () => _ = ToggleDictationAsync(IntPtr.Zero), Enabled: !_dictateBusy));
+            }
+
+            if (IsOn(Parts.Notaus))
+            {
+                items.Add(new PanelItem("Mein Notaus …", Glyph.Octagon, null, () => _ = TriggerNotausAsync(), Danger: true));
+            }
+
+            if (_desk is not null && Parts.All.Any(p => !_desk.IsOn(p)))
+            {
+                hint = items.Count > 0 ? "Weitere Teile im Panel unter Ich → Begleiter." : "Teile im Panel unter Ich → Begleiter einschalten.";
+            }
+            else if (_desk is null)
+            {
+                hint = "Noch keine Einstellungen vom Spark.";
+            }
         }
+
+        return new PanelModel
+        {
+            Subtitle = subtitle,
+            StatusText = statusText,
+            Status = status,
+            Notice = _connection == Connection.Notaus
+                ? StatusLine() + " – aufheben nur im Panel im Browser mit der PIN."
+                : null,
+            Update = BuildBanner(),
+            Items = items,
+            Hint = hint,
+            Settings = () => OpenSettings(),
+            OpenPanel = string.IsNullOrEmpty(_config.Base) ? null : OpenPanel,
+            Coffee = OpenCoffee,
+        };
+    }
+
+    /// <summary>Der Update-Hinweis im Tray-Fenster (nur, wenn eine neue Version da ist).</summary>
+    private UpdateBanner? BuildBanner()
+    {
+        if (!UpdateWaiting && _updater.Phase != UpdatePhase.Installing || _updater.Info is not { } info)
+        {
+            return null;
+        }
+
+        string title = $"Neue Version {info.Version}";
+        string size = Updater.SizeText(info.Size);
+        return _updater.Phase switch
+        {
+            UpdatePhase.Downloading => new UpdateBanner(title,
+                $"Wird geladen … {(int)(_updater.Progress * 100)} % · {size}",
+                _updater.InstallRequested ? null : "Aktualisieren", true, _updater.Progress, false, RequestUpdate),
+            UpdatePhase.Ready => new UpdateBanner(title, $"Bereit zum Installieren · Geprüft vom Spark · {size}", "Aktualisieren", true, null, false, RequestUpdate),
+            UpdatePhase.Installing => new UpdateBanner(title, "Wird installiert, der Begleiter startet gleich neu …", null, false, null, false, null),
+            UpdatePhase.Failed => new UpdateBanner(title, _updater.Error ?? Updater.Corrupt, "Erneut versuchen", true, null, true, RequestUpdate),
+            _ => new UpdateBanner(title, $"Geprüft vom Spark · {size}", "Aktualisieren", true, null, false, RequestUpdate),
+        };
+    }
+
+    private void OnUpdaterChanged()
+    {
+        UpdateIcon();
+        BuildMenu();
+        Changed?.Invoke(this, EventArgs.Empty);
+    }
+
+    /// <summary>Einmal je Version Bescheid sagen, wenn die neue Version geprüft bereitliegt.</summary>
+    private void NotifyReady()
+    {
+        if (_updater.Info is { } info && _readyNotified != info.Version)
+        {
+            _readyNotified = info.Version;
+            Notify($"Version {info.Version} ist bereit. Klick aufs Symbol → „Aktualisieren“.", ToolTipIcon.Info);
+        }
+    }
+
+    public void RequestUpdate()
+    {
+        if (_recorder is not null || _dictateBusy || _writing)
+        {
+            Notify("Erst das Diktat bzw. die Schreibhilfe abschließen, dann aktualisieren.", ToolTipIcon.Info);
+            return;
+        }
+
+        _updater.Request();
+    }
+
+    public void CheckForUpdates()
+    {
+        if (!_config.IsPaired || Updater.IsDevelopment)
+        {
+            return;
+        }
+
+        _checking = true;
+        Changed?.Invoke(this, EventArgs.Empty);
+        PollSoon(refetchConfig: true);
+    }
+
+    public void SetAutoDownload(bool on)
+    {
+        _config.AutoDownloadUpdates = on;
+        TrySave();
+        if (on && _desk is not null)
+        {
+            _updater.OnConfig(_desk.Update, on);
+        }
+
+        Changed?.Invoke(this, EventArgs.Empty);
+    }
+
+    public void OpenCoffee()
+    {
+        if (!CoffeeLink.Open(_desk?.Coffee))
+        {
+            Notify("Der Browser ließ sich nicht öffnen.", ToolTipIcon.Error);
+        }
+    }
+
+    private void OnThemeChanged(object? sender, EventArgs e)
+    {
+        UpdateIcon();
+        RefreshPanel();
+    }
+
+    private (string Base, string Key)? Credentials()
+    {
+        string? key = _config.GetKey();
+        return key is null || string.IsNullOrEmpty(_config.Base) ? null : (_config.Base, key);
     }
 
     // ------------------------------------------------------------------ Tastenkürzel
@@ -717,7 +982,7 @@ internal sealed class TrayContext : ApplicationContext, IBegleiterHost
             existing.Close();
         }
 
-        var form = new AssistForm(_config, _desk, text ?? "", target, ReportFromWindow);
+        var form = new AssistForm(_config, _desk, text ?? "", target, WindowInfo.AppName(target), ReportFromWindow);
         form.FormClosed += async (_, _) =>
         {
             if (ReferenceEquals(_assist, form))
@@ -829,7 +1094,7 @@ internal sealed class TrayContext : ApplicationContext, IBegleiterHost
             }
         };
 
-        _indicator = new RecordingIndicator(_config.GetHotkey(Parts.Dictate).ToString(), () => recorder.Elapsed);
+        _indicator = new RecordingIndicator(_config.GetHotkey(Parts.Dictate).ToString(), () => recorder.Elapsed, () => recorder.Level);
         _indicator.StopRequested += async (_, _) =>
         {
             if (ReferenceEquals(_recorder, recorder))
@@ -980,15 +1245,20 @@ internal sealed class TrayContext : ApplicationContext, IBegleiterHost
         }
     }
 
-    private void OpenSettings()
+    private void OpenSettings(string? tab = null)
     {
         if (_settings is { IsDisposed: false } open)
         {
+            if (tab is not null)
+            {
+                open.ShowTab(tab);
+            }
+
             open.Activate();
             return;
         }
 
-        var form = new SettingsForm(this);
+        var form = new SettingsForm(this, tab);
         form.FormClosed += (_, _) =>
         {
             if (ReferenceEquals(_settings, form))
@@ -1073,6 +1343,7 @@ internal sealed class TrayContext : ApplicationContext, IBegleiterHost
         _desk = null;
         _lastNote = -1;
         _needConfig = true;
+        _updater.Reset();
         _hotkeys.UnregisterAll();
         _conflicts.Clear();
         SetConnection(Connection.Unpaired, "");
@@ -1107,6 +1378,7 @@ internal sealed class TrayContext : ApplicationContext, IBegleiterHost
         _assist?.Close();
         _ask?.Close();
         _settings?.Close();
+        _panel?.Close();
         _tray.Visible = false;
         base.ExitThreadCore();
     }
@@ -1116,6 +1388,9 @@ internal sealed class TrayContext : ApplicationContext, IBegleiterHost
         if (disposing)
         {
             _pollTimer.Dispose();
+            _updater.Dispose();
+            Theme.Changed -= OnThemeChanged;
+            Theme.Unwatch();
             _hotkeys.Dispose();
             _menu.Dispose();
             _tray.Dispose();

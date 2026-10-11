@@ -15,6 +15,8 @@ final class Dictation: ObservableObject {
     @Published private(set) var working = false
     @Published private(set) var elapsed = 0
     @Published private(set) var forAsk = false
+    /// 0…1, the microphone's loudness for the level bars
+    @Published private(set) var level = 0.0
 
     /// where text for "Frag Spark" goes
     var onAskText: ((String) -> Void)?
@@ -66,10 +68,11 @@ final class Dictation: ObservableObject {
         ticker?.cancel()
         ticker = Task { @MainActor [weak self] in
             while !Task.isCancelled {
-                try? await Task.sleep(nanoseconds: 250_000_000)
+                try? await Task.sleep(nanoseconds: 120_000_000)
                 guard let self, self.recording else { return }
                 let s = Date().timeIntervalSince(self.started)
-                self.elapsed = Int(s)
+                if self.elapsed != Int(s) { self.elapsed = Int(s) }
+                self.level = self.recorder.level
                 if s >= Recorder.maxSeconds {
                     self.finish()
                     return
@@ -95,6 +98,7 @@ final class Dictation: ObservableObject {
         ticker = nil
         let pcm = recorder.stop()
         recording = false
+        level = 0
         RecordingIndicator.hide()
         return pcm
     }

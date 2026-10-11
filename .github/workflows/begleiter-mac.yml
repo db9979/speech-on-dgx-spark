@@ -88,12 +88,26 @@ jobs:
           mkdir -p dist
           cd tools/begleiter/mac/build
           ditto -c -k --keepParent Spark-Begleiter.app "$GITHUB_WORKSPACE/dist/Spark-Begleiter-mac.zip"
-          ls -l "$GITHUB_WORKSPACE/dist"
+          cd "$GITHUB_WORKSPACE"
+          # begleiter.json: what the Spark checks before it hands an update to a paired Mac (begleiter.py)
+          python3 - <<'PY'
+          import hashlib, json, os
+          raw = open("app/VERSION").read().strip().lstrip("V")
+          version = ".".join(str(int(x)) for x in raw.split("."))
+          f = "dist/Spark-Begleiter-mac.zip"
+          files = {"mac": {"name": os.path.basename(f), "size": os.path.getsize(f),
+                           "sha256": hashlib.sha256(open(f, "rb").read()).hexdigest()}}
+          json.dump({"version": version, "files": files}, open("dist/begleiter.json", "w"), indent=1)
+          PY
+          cat dist/begleiter.json
+          ls -l dist
 
       - uses: actions/upload-artifact@v4
         with:
           name: Spark-Begleiter-mac
-          path: dist/Spark-Begleiter-mac.zip
+          path: |
+            dist/Spark-Begleiter-mac.zip
+            dist/begleiter.json
           if-no-files-found: error
 
       - name: Publish release begleiter-mac
@@ -104,7 +118,7 @@ jobs:
           tag=begleiter-mac
           file=dist/Spark-Begleiter-mac.zip
           if gh release view "$tag" >/dev/null 2>&1; then
-            gh release upload "$tag" "$file" --clobber
+            gh release upload "$tag" "$file" dist/begleiter.json --clobber
           else
             notes=$(cat <<'NOTES'
           Spark-Begleiter für den Mac (macOS 13 oder neuer, Apple-Chip und Intel): ein kleines Programm in der Menüleiste für den eigenen Spark – Schreibhilfe (⌥⌘S und „Mit Spark verbessern“ im Dienste-Menü), Frag Spark (⌥⌘A), Diktieren (⌥⌘D), Meldungen, Zustandspunkt und Mein-Notaus-Knopf.
@@ -116,5 +130,5 @@ jobs:
           Anleitung: tools/begleiter/mac/README.md
           NOTES
           )
-            gh release create "$tag" "$file" --title "Spark-Begleiter für den Mac" --notes "$notes" --target "$GITHUB_SHA"
+            gh release create "$tag" "$file" dist/begleiter.json --title "Spark-Begleiter für den Mac" --notes "$notes" --target "$GITHUB_SHA"
           fi

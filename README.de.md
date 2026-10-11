@@ -33,6 +33,7 @@ Alle Optionen ohne Rückfragen (`--mode api --asr 1.7b --tts 0.6b --yes` …) st
 
 <!-- New version: add one line at the top here and in CHANGELOG.md, drop the oldest line here (keep 10). Details go to docs/de and docs/en, not into this README. -->
 
+- **V01.0.347** Spark-Begleiter im Spark-Look (Gesicht als Symbol, Fenster wie das Panel, hell und dunkel), zeigt neue Versionen an und aktualisiert sich nach einem Klick (der Spark holt und prüft sie), Link „☕ Spark unterstützen“
 - **V01.0.346** reMarkable @Spark: Frage aus Handschrift ohne „Bild:“-Zeile und [unleserlich], Modell antwortet auch mit eigenem Wissen statt nur „keine Antwort“, Diagnose-Zeile „remarkable: @Spark answer …“ (Längen, Treffer, Websuche)
 - **V01.0.344** Mehr mit dem reMarkable (Admin-Unterschalter + je Funktion unter Ich → reMarkable, alles aus): Morgenblatt als PDF mit Notizlinien, „@Spark“-Fragen auf Papier bekommen eine Antwort daneben, Aufgaben aus der Handschrift (Erinnerung erst nach Klick), Besprechungen zusammengefasst, Wochenrückblick freitags, Webseiten und Mail-Anhänge aufs reMarkable, Eingang pro Tag, Spark-Anleitung zu den reMarkable-Funktionen und dem Dienst, die sich selbst aktuell hält
 - **V01.0.343** Hilfe zum Spark antwortet besser: die Weiche erkennt Hilfe-Fragen mit festen Regeln, die Hilfe kennt jede Seite und häufige Fragen, ein „?“ an jedem Schalter, und sie merkt, woher gefragt wird (Lautsprecher, App, Telegram)
@@ -42,7 +43,6 @@ Alle Optionen ohne Rückfragen (`--mode api --asr 1.7b --tts 0.6b --yes` …) st
 - **V01.0.339** Schreibhilfe in anderen Programmen (aus): Mac-Schnellaktion, Windows-Programm (x64 und ARM, Strg+Alt+S), Add-in für Outlook, Word und Excel, Browser-Erweiterung und iPhone-Teilen, jedes mit eigenem Schlüssel gekoppelt
 - **V01.0.338** Notaus nur noch für Admins; dazu „Mein Notaus“ für jedes Profil (Ich → Sicherheit): legt nur das eigene Profil still, Zugänge zu und keine Aktionen, Lesen bleibt; aufheben mit PIN
 - **V01.0.337** Live-Übersicht: Hinweise wie „Antworten langsamer“ an der passenden Stelle im Bild
-- **V01.0.336** Live-Übersicht: Warteschlangen, Vorrang-Stern und Hintergrundarbeit sichtbar
 
 Alle Versionen: [CHANGELOG.md](CHANGELOG.md)
 

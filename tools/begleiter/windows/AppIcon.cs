@@ -1,154 +1,210 @@
-using System.Drawing.Drawing2D;
 using System.Drawing.Imaging;
-using System.Drawing.Text;
+using System.Runtime.InteropServices;
 
 namespace SparkBegleiter;
 
-/// <summary>Zustand für den Punkt im Symbol (Teil "status").</summary>
+/// <summary>Zustand für den Punkt im Symbol.</summary>
 internal enum StatusDot
 {
     None,
     Green,
     Grey,
     Red,
+
+    /// <summary>Akzentfarbe: eine neue Version ist da.</summary>
+    Update,
 }
 
 /// <summary>
-/// Das Programmsymbol wird im Code gezeichnet (blaues Quadrat mit weißem "S", optional mit farbigem
-/// Zustandspunkt unten rechts), damit keine Binärdatei im Repository liegt. Es entsteht ein .ico mit
-/// mehreren Größen (PNG-Einträge).
+/// Das Programmsymbol ist das Spark-Gesicht, im Code gezeichnet (keine Binärdatei im Repository).
+/// Im Infobereich bekommt es unten rechts den Zustandspunkt (grün, grau, rot, Akzent bei Update) mit
+/// einem ausgesparten Ring, damit er auf heller und dunkler Taskleiste sichtbar ist. Das Symbol für den
+/// Infobereich wird genau in der Pixelgröße gezeichnet, die die Taskleiste bei ihrer DPI verlangt.
 /// </summary>
 internal static class AppIcon
 {
-    private static readonly int[] Sizes = { 16, 20, 24, 32, 40, 48, 64 };
+    private static readonly int[] WindowSizes = { 16, 20, 24, 32, 40, 48, 64, 256 };
 
-    private static readonly Dictionary<StatusDot, Icon> Cache = new();
+    private static readonly Dictionary<(StatusDot Dot, int Size, bool Dark), Icon> TrayCache = new();
+    private static Icon? _windowIcon;
 
-    /// <summary>Das Symbol ohne Punkt mit allen Größen; Windows wählt für Infobereich und Fenster die passende.</summary>
-    public static Icon Icon => For(StatusDot.None);
+    /// <summary>Fenster-Symbol mit allen Größen; Windows wählt die passende.</summary>
+    public static Icon Icon => _windowIcon ??= BuildMulti();
 
-    /// <summary>Das Symbol mit Zustandspunkt.</summary>
-    public static Icon For(StatusDot dot)
-    {
-        if (!Cache.TryGetValue(dot, out Icon? icon))
-        {
-            icon = Build(dot);
-            Cache[dot] = icon;
-        }
-
-        return icon;
-    }
-
-    private static readonly Dictionary<StatusDot, Icon> TrayCache = new();
-
-    /// <summary>Das Symbol in der kleinen Größe für den Infobereich (sonst skaliert Windows unschön).</summary>
+    /// <summary>Das Symbol für den Infobereich in der Größe und den Farben der Taskleiste.</summary>
     public static Icon ForTray(StatusDot dot)
     {
-        if (!TrayCache.TryGetValue(dot, out Icon? icon))
+        int size = TrayIconSize();
+        Palette palette = Theme.Taskbar;
+        var key = (dot, size, palette.Dark);
+        if (!TrayCache.TryGetValue(key, out Icon? icon))
         {
-            icon = new Icon(For(dot), SystemInformation.SmallIconSize);
-            TrayCache[dot] = icon;
+            using Bitmap bitmap = Render(size, palette, dot);
+            icon = FromImages(new[] { bitmap });
+            TrayCache[key] = icon;
         }
 
         return icon;
     }
 
-    private static Color? DotColor(StatusDot dot) => dot switch
+    /// <summary>SM_CXSMICON bei der DPI der Taskleiste (bei mehreren Bildschirmen kann sie von der System-DPI abweichen).</summary>
+    public static int TrayIconSize()
     {
-        StatusDot.Green => Color.FromArgb(0x22, 0xC5, 0x5E),
-        StatusDot.Grey => Color.FromArgb(0x9C, 0xA3, 0xAF),
-        StatusDot.Red => Color.FromArgb(0xEF, 0x44, 0x44),
+        try
+        {
+            IntPtr tray = NativeMethods.FindWindow("Shell_TrayWnd", null);
+            uint dpi = tray != IntPtr.Zero ? NativeMethods.GetDpiForWindow(tray) : 0;
+            if (dpi > 0)
+            {
+                int size = NativeMethods.GetSystemMetricsForDpi(NativeMethods.SM_CXSMICON, dpi);
+                if (size > 0)
+                {
+                    return size;
+                }
+            }
+        }
+        catch (Exception ex) when (ex is EntryPointNotFoundException or DllNotFoundException)
+        {
+            // Windows vor 10 1607: Systemgröße.
+        }
+
+        return SystemInformation.SmallIconSize.Width;
+    }
+
+    private static Color? DotColor(StatusDot dot, Palette p) => dot switch
+    {
+        StatusDot.Green => p.HighContrast ? Palette.Light.Ok : p.Ok,
+        StatusDot.Grey => p.HighContrast ? Palette.Light.Muted : p.Muted,
+        StatusDot.Red => p.HighContrast ? Palette.Light.Bad : p.Bad,
+        StatusDot.Update => p.HighContrast ? Palette.Light.Accent : p.Accent,
         _ => null,
     };
 
-    private static Icon Build(StatusDot dot)
+    /// <summary>Bild in einer Größe: Gesicht, darüber optional der Punkt mit ausgespartem Ring.</summary>
+    public static Bitmap Render(int size, Palette p, StatusDot dot)
     {
-        var images = Sizes.Select(size => (size, Png: RenderPng(size, DotColor(dot)))).ToList();
+        var bitmap = new Bitmap(size, size, PixelFormat.Format32bppArgb);
+        using Graphics g = Graphics.FromImage(bitmap);
+        Draw.HighQuality(g);
+        g.Clear(Color.Transparent);
+        Face.Draw(g, new RectangleF(0, 0, size, size), p, tight: true);
+
+        if (DotColor(dot, p) is { } color)
+        {
+            float d = Math.Max(5f, size * 0.42f);
+            float ring = Math.Max(1f, size / 16f);
+            var dotRect = new RectangleF(size - d, size - d, d, d);
+            g.CompositingMode = System.Drawing.Drawing2D.CompositingMode.SourceCopy;
+            using (var clear = new SolidBrush(Color.Transparent))
+            {
+                g.FillEllipse(clear, RectangleF.Inflate(dotRect, ring, ring));
+            }
+
+            g.CompositingMode = System.Drawing.Drawing2D.CompositingMode.SourceOver;
+            using var fill = new SolidBrush(color);
+            g.FillEllipse(fill, dotRect);
+        }
+
+        return bitmap;
+    }
+
+    private static Icon BuildMulti()
+    {
+        var bitmaps = WindowSizes.Select(size => Render(size, Palette.Light, StatusDot.None)).ToList();
+        try
+        {
+            return FromImages(bitmaps);
+        }
+        finally
+        {
+            foreach (Bitmap b in bitmaps)
+            {
+                b.Dispose();
+            }
+        }
+    }
+
+    /// <summary>Baut eine .ico im Speicher: 32-Bit-DIB je Größe (256 px als PNG).</summary>
+    private static Icon FromImages(IReadOnlyList<Bitmap> images)
+    {
+        var entries = images.Select(b => (b.Width, Data: b.Width >= 256 ? Png(b) : Dib(b))).ToList();
 
         using var ico = new MemoryStream();
         using (var w = new BinaryWriter(ico, System.Text.Encoding.UTF8, leaveOpen: true))
         {
-            // ICONDIR
             w.Write((ushort)0);
             w.Write((ushort)1);
-            w.Write((ushort)images.Count);
+            w.Write((ushort)entries.Count);
 
-            // ICONDIRENTRY je Größe; Daten folgen hinter allen Einträgen.
-            int offset = 6 + (16 * images.Count);
-            foreach (var (size, png) in images)
+            int offset = 6 + (16 * entries.Count);
+            foreach (var (size, data) in entries)
             {
                 w.Write((byte)(size >= 256 ? 0 : size));
                 w.Write((byte)(size >= 256 ? 0 : size));
-                w.Write((byte)0);   // keine Palette
-                w.Write((byte)0);   // reserviert
-                w.Write((ushort)1); // Farbebenen
-                w.Write((ushort)32); // Bit pro Pixel
-                w.Write(png.Length);
+                w.Write((byte)0);
+                w.Write((byte)0);
+                w.Write((ushort)1);
+                w.Write((ushort)32);
+                w.Write(data.Length);
                 w.Write(offset);
-                offset += png.Length;
+                offset += data.Length;
             }
 
-            foreach (var (_, png) in images)
+            foreach (var (_, data) in entries)
             {
-                w.Write(png);
+                w.Write(data);
             }
         }
 
         ico.Position = 0;
-        return new Icon(ico);
+        return entries.Count == 1 ? new Icon(ico, entries[0].Width, entries[0].Width) : new Icon(ico);
     }
 
-    private static byte[] RenderPng(int size, Color? dot)
+    private static byte[] Png(Bitmap bitmap)
     {
-        using var bitmap = new Bitmap(size, size, PixelFormat.Format32bppArgb);
-        using (Graphics g = Graphics.FromImage(bitmap))
-        {
-            g.SmoothingMode = SmoothingMode.AntiAlias;
-            g.TextRenderingHint = TextRenderingHint.AntiAliasGridFit;
-            g.Clear(Color.Transparent);
-
-            float inset = Math.Max(0.5f, size / 32f);
-            var box = new RectangleF(inset, inset, size - (2 * inset), size - (2 * inset));
-            using (GraphicsPath path = RoundedRect(box, size * 0.22f))
-            using (var fill = new LinearGradientBrush(box, Color.FromArgb(0x3B, 0x82, 0xF6), Color.FromArgb(0x1D, 0x4E, 0xD8), 90f))
-            {
-                g.FillPath(fill, path);
-            }
-
-            // Weißes "S" mittig.
-            using var font = new Font("Segoe UI", size * 0.58f, FontStyle.Bold, GraphicsUnit.Pixel);
-            using var format = new StringFormat { Alignment = StringAlignment.Center, LineAlignment = StringAlignment.Center };
-            var textBox = new RectangleF(0, -size * 0.04f, size * 0.92f, size);
-            g.DrawString("S", font, Brushes.White, textBox, format);
-
-            // Zustandspunkt unten rechts mit weißem Rand, damit er auf hellen und dunklen Leisten sichtbar ist.
-            if (dot is { } color)
-            {
-                float d = size * 0.46f;
-                var circle = new RectangleF(size - d, size - d, d, d);
-                using var ring = new SolidBrush(Color.White);
-                using var fillDot = new SolidBrush(color);
-                g.FillEllipse(ring, circle);
-                float border = Math.Max(1f, size / 16f);
-                circle.Inflate(-border, -border);
-                g.FillEllipse(fillDot, circle);
-            }
-        }
-
         using var png = new MemoryStream();
         bitmap.Save(png, ImageFormat.Png);
         return png.ToArray();
     }
 
-    private static GraphicsPath RoundedRect(RectangleF r, float radius)
+    /// <summary>BITMAPINFOHEADER + BGRA-Pixel (von unten nach oben) + leere UND-Maske.</summary>
+    private static byte[] Dib(Bitmap bitmap)
     {
-        float d = radius * 2;
-        var path = new GraphicsPath();
-        path.AddArc(r.X, r.Y, d, d, 180, 90);
-        path.AddArc(r.Right - d, r.Y, d, d, 270, 90);
-        path.AddArc(r.Right - d, r.Bottom - d, d, d, 0, 90);
-        path.AddArc(r.X, r.Bottom - d, d, d, 90, 90);
-        path.CloseFigure();
-        return path;
+        int w = bitmap.Width;
+        int h = bitmap.Height;
+        byte[] pixels = new byte[w * h * 4];
+        BitmapData data = bitmap.LockBits(new Rectangle(0, 0, w, h), ImageLockMode.ReadOnly, PixelFormat.Format32bppArgb);
+        try
+        {
+            for (int y = 0; y < h; y++)
+            {
+                Marshal.Copy(data.Scan0 + (y * data.Stride), pixels, (h - 1 - y) * w * 4, w * 4);
+            }
+        }
+        finally
+        {
+            bitmap.UnlockBits(data);
+        }
+
+        int maskStride = (w + 31) / 32 * 4;
+        using var ms = new MemoryStream();
+        using (var bw = new BinaryWriter(ms, System.Text.Encoding.UTF8, leaveOpen: true))
+        {
+            bw.Write(40);
+            bw.Write(w);
+            bw.Write(h * 2);
+            bw.Write((ushort)1);
+            bw.Write((ushort)32);
+            bw.Write(0);
+            bw.Write(pixels.Length + (maskStride * h));
+            bw.Write(0);
+            bw.Write(0);
+            bw.Write(0);
+            bw.Write(0);
+            bw.Write(pixels);
+            bw.Write(new byte[maskStride * h]);
+        }
+
+        return ms.ToArray();
     }
 }

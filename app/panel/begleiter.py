@@ -28,22 +28,34 @@ data: nothing here acts on them; the answers come from the normal assistant with
     POST   /api/desk/ask {text, tz?}            -> {"answer"}
     POST   /api/desk/dictate (multipart file)   -> {"text"}
     POST   /api/desk/notaus {}                  -> {"on": true}
+    GET    /api/desk/update?arch=x64|arm64|mac  -> the newer program file the Spark keeps (see below)
+
+Updates: GitHub Actions publish each build with begleiter.json (version, and per arch name, size, SHA-256) in
+the releases begleiter-windows and begleiter-mac. The Spark fetches the newest one once a day for the kinds
+that are paired (only GitHub's download addresses, size and SHA-256 checked, else nothing is kept) and keeps
+it in STATE/begleiter. A program tells its version and arch on every config and poll; when the Spark keeps a
+newer one, config names it (version, size, SHA-256) and /api/desk/update hands out the file. The program
+installs only after a click and only when size and SHA-256 match. Nothing comes from anywhere else.
 """
 import hashlib
+import asyncio
 import json
 import os
 import re
 import threading
 import time
 
+import httpx
 from fastapi import APIRouter, Depends, File, Form, HTTPException, Request, UploadFile
+from fastapi.responses import FileResponse
 
 import features
 import guard
 import notaus
 import profiles
 import schreib
-from core import assistant, browser_profile, confirm_code
+from common import load_config
+from core import assistant, auth, browser_profile, confirm_code
 
 router = APIRouter()
 PARTS = ("write", "ask", "dictate", "notes", "status", "notaus")
@@ -65,7 +77,21 @@ DEFAULT = {"parts": {"write": True, "ask": True, "dictate": False, "notes": True
            "write": {"art": "korrigieren", "sprache": "en", "wunsch": "", "arts": list(schreib.ARTS), "preview": True},
            "dictate": {"sprache": "auto"}, "autostart": True}
 
+COFFEE = "https://buymeacoffee.com/zquu1xu570"
+# updates: arch -> (platform, file key in begleiter.json); platform -> release tag
+ARCHS = {"x64": ("windows", "x64"), "arm64": ("windows", "arm64"), "mac": ("mac", "mac")}
+TAGS = {"windows": "begleiter-windows", "mac": "begleiter-mac"}
+STATE = os.environ.get("SPEECH_SPARK_STATE", "/var/lib/speech-spark/state")
+UPD_DIR = os.path.join(STATE, "begleiter")
+MAX_FILE = 150 * 1024 * 1024
+MAX_META = 4096
+FETCH_EVERY = 24 * 3600
+VERSION_RE = re.compile(r"\d{1,3}\.\d{1,3}\.\d{1,5}")
+FILE_RE = re.compile(r"[\w.\-]{1,80}")
+
 _lock = threading.Lock()
+_info = {}                 # device id -> {"version", "arch"} as the program last said
+_upd = {"checked": {}, "error": {}}
 _seen = {}                 # device id -> last poll
 _notes = {}                # uid -> [{"n", "t", "title", "body", "tag"}]
 _seq = {}
@@ -220,7 +246,8 @@ def profile_get(prof=Depends(browser_profile)):
     for x in devices(uid):
         cfg, rev = device_cfg(x["id"])
         out.append({"id": x["id"], "name": x["name"], "created": x.get("created"),
-                    "online": now - _seen.get(x["id"], -1e12) < ONLINE, "cfg": cfg})
+                    "online": now - _seen.get(x["id"], -1e12) < ONLINE, "cfg": cfg,
+                    "version": (_info.get(x["id"]) or {}).get("version", "")})
     return {"on": allowed(uid), "allowed": may(uid), "devices": out, "minutes": schreib.CODE_SECONDS // 60,
             "downloads": RELEASES, "arts": [{"id": k, "de": v[0], "en": v[1]} for k, v in schreib.ARTS.items()
                                             if k != "antwort"],
@@ -312,12 +339,13 @@ def _part(prof, dev, part):
 
 
 @router.get("/api/desk/config", dependencies=[Depends(assistant)])
-def program_config(request: Request):
+def program_config(request: Request, version: str = "", arch: str = ""):
     prof, dev = _program(request)
     guard.limit(request, "desk", prof["id"])
     cfg, rev = device_cfg(dev["id"])
     ok = may(prof["id"])
-    return {"rev": rev, "profile": prof["name"], "poll": POLL,
+    _tell(dev["id"], version, arch)
+    return {"rev": rev, "profile": prof["name"], "poll": POLL, "coffee": COFFEE, "update": newer(arch, version),
             "parts": {p: bool(cfg["parts"][p] and ok[p]) for p in PARTS}, "allowed": ok,
             "write": cfg["write"], "dictate": cfg["dictate"], "autostart": cfg["autostart"],
             "arts": [{"id": k, "de": v[0], "en": v[1], "changes": v[4]} for k, v in schreib.ARTS.items() if k != "antwort"],
@@ -325,7 +353,7 @@ def program_config(request: Request):
 
 
 @router.get("/api/desk/poll", dependencies=[Depends(assistant)])
-def program_poll(request: Request, after: int = 0):
+def program_poll(request: Request, after: int = 0, version: str = "", arch: str = ""):
     prof, dev = _program(request)
     guard.limit(request, "desk", prof["id"])
     _seen[dev["id"]] = time.time()
@@ -334,7 +362,10 @@ def program_poll(request: Request, after: int = 0):
     cfg, rev = device_cfg(dev["id"])
     items, last = notes(prof["id"], max(0, min(after, 10 ** 9))) if part_on(prof["id"], dev["id"], "notes") \
         else ([], _seq.get(prof["id"], 0))
-    return {"rev": rev, "notes": items, "last": last, "notaus": {"level": notaus.level()}}
+    _tell(dev["id"], version, arch)
+    up = newer(arch, version)
+    return {"rev": rev, "notes": items, "last": last, "notaus": {"level": notaus.level()},
+            "update": up["version"] if up else None}
 
 
 @router.post("/api/desk/ask", dependencies=[Depends(assistant)])
@@ -379,3 +410,199 @@ async def program_notaus(request: Request):
     _live("Mein Notaus vom Begleiter")
     r = await notaus.post_mine(request)
     return {"on": bool(json.loads(r.body or b"{}").get("mine", {}).get("on"))} if hasattr(r, "body") else {"on": True}
+
+
+# ---------------------------------------------------------------- updates (begleiter.json from GitHub Actions)
+def _vt(v):
+    return tuple(int(x) for x in v.split("."))
+
+
+def _tell(did, version, arch):
+    """What the program said about itself (memory only; the panel shows the version)."""
+    if VERSION_RE.fullmatch(str(version or "")) and arch in ARCHS:
+        if len(_info) > 1000:
+            _info.clear()
+        _info[did] = {"version": version, "arch": arch}
+
+
+def kept(platform):
+    """{"version", "files": {key: {"name", "size", "sha256"}}} the Spark keeps for this platform, or None."""
+    try:
+        with open(os.path.join(UPD_DIR, platform, "begleiter.json")) as f:
+            m = json.load(f)
+        if not VERSION_RE.fullmatch(str(m.get("version", ""))) or not isinstance(m.get("files"), dict):
+            return None
+        files = {}
+        for k, v in m["files"].items():
+            path = os.path.join(UPD_DIR, platform, str(v.get("name", "")))
+            if FILE_RE.fullmatch(str(v.get("name", ""))) and os.path.isfile(path) \
+                    and os.path.getsize(path) == v.get("size") and re.fullmatch(r"[0-9a-f]{64}", str(v.get("sha256", ""))):
+                files[k] = {"name": v["name"], "size": v["size"], "sha256": v["sha256"]}
+        return {"version": m["version"], "files": files}
+    except (OSError, ValueError, AttributeError, TypeError):
+        return None
+
+
+def newer(arch, version):
+    """{"version", "size", "sha256"} when the Spark keeps a newer program for this arch than `version`, else None.
+    A program without a proper version (a development build) never gets one."""
+    if arch not in ARCHS or not VERSION_RE.fullmatch(str(version or "")):
+        return None
+    platform, key = ARCHS[arch]
+    m = kept(platform)
+    f = m and m["files"].get(key)
+    if not f or _vt(m["version"]) <= _vt(version):
+        return None
+    return {"version": m["version"], "size": f["size"], "sha256": f["sha256"]}
+
+
+def _allowed_download(url):
+    test = os.environ.get("SPEECH_SPARK_GITHUB_API")
+    if test and url.startswith(test.rstrip("/") + "/"):
+        return True
+    return bool(re.fullmatch(r"https://github\.com/[\w.\-]+/[\w.\-]+/releases/download/[^\s?#]+", url))
+
+
+async def _download(c, url, limit, path=None):
+    """GitHub download with a byte limit; into `path` when given (big files), else returned."""
+    if not _allowed_download(url):
+        raise ValueError("Download-Adresse ist nicht von GitHub.")
+    out, n, h = bytearray(), 0, hashlib.sha256()
+    f = open(path, "wb") if path else None
+    try:
+        async with c.stream("GET", url) as r:
+            r.raise_for_status()
+            async for chunk in r.aiter_bytes():
+                n += len(chunk)
+                if n > limit:
+                    raise ValueError("Datei ist größer als angegeben, nichts übernommen.")
+                h.update(chunk)
+                if f:
+                    f.write(chunk)
+                else:
+                    out += chunk
+    finally:
+        if f:
+            f.close()
+    return (n, h.hexdigest()) if path else bytes(out)
+
+
+def platforms():
+    """The platforms with at least one paired Begleiter (only those are fetched)."""
+    names = [str(x.get("name") or "") for x in profiles._load()["devices"] if x.get("scope") == "desk"]
+    return [p for p, k in (("windows", "Windows"), ("mac", "Mac")) if any(n.startswith(f"Begleiter {k} ") for n in names)]
+
+
+async def fetch(platform, c=None):
+    """Takes the newest build of this platform when it is newer than the kept one; every file must match size
+    and SHA-256 of its begleiter.json. Returns the version the Spark keeps now."""
+    repo = load_config().get("chat", {}).get("esp32_repo") or "db9979/speech-on-dgx-spark"
+    own = c is None
+    c = c or httpx.AsyncClient(timeout=300, follow_redirects=True)
+    folder = os.path.join(UPD_DIR, platform)
+    try:
+        api = os.environ.get("SPEECH_SPARK_GITHUB_API", "https://api.github.com")
+        r = await c.get(f"{api}/repos/{repo}/releases/tags/{TAGS[platform]}")
+        if r.status_code == 404:
+            raise ValueError("Im Repo gibt es diese Version noch nicht.")
+        r.raise_for_status()
+        assets = {a.get("name"): a.get("browser_download_url", "") for a in r.json().get("assets", [])}
+        if "begleiter.json" not in assets:
+            raise ValueError("Die Version hat kein begleiter.json.")
+        m = json.loads(await _download(c, assets["begleiter.json"], MAX_META))
+        ver, files = str(m.get("version", "")), m.get("files")
+        if not VERSION_RE.fullmatch(ver) or not isinstance(files, dict) or not files:
+            raise ValueError("begleiter.json ist ungültig.")
+        want = {k for p, k in ARCHS.values() if p == platform}
+        clean = {}
+        for k, v in files.items():
+            if k not in want or not isinstance(v, dict):
+                continue
+            name, size, sha = str(v.get("name", "")), v.get("size"), str(v.get("sha256", ""))
+            if not (FILE_RE.fullmatch(name) and name in assets and isinstance(size, int) and 0 < size <= MAX_FILE
+                    and re.fullmatch(r"[0-9a-f]{64}", sha)):
+                raise ValueError("begleiter.json ist ungültig.")
+            clean[k] = {"name": name, "size": size, "sha256": sha}
+        cur = kept(platform)
+        if cur and _vt(cur["version"]) >= _vt(ver) and set(cur["files"]) >= set(clean):
+            return cur["version"]
+        os.makedirs(folder, exist_ok=True)
+        for k, v in clean.items():
+            part = os.path.join(folder, v["name"] + ".part")
+            n, h = await _download(c, assets[v["name"]], v["size"], part)
+            if n != v["size"] or h != v["sha256"]:
+                os.remove(part)
+                raise ValueError(f"{v['name']}: Prüfsumme passt nicht, nichts übernommen.")
+        old = {f["name"] for f in (cur or {}).get("files", {}).values()}
+        for v in clean.values():
+            os.replace(os.path.join(folder, v["name"] + ".part"), os.path.join(folder, v["name"]))
+        with open(os.path.join(folder, "begleiter.json.part"), "w") as f:
+            json.dump({"version": ver, "files": clean}, f)
+        os.replace(os.path.join(folder, "begleiter.json.part"), os.path.join(folder, "begleiter.json"))
+        for name in old - {v["name"] for v in clean.values()}:
+            try:
+                os.remove(os.path.join(folder, name))
+            except OSError:
+                pass
+        _live(f"Neue Version geholt ({'Windows' if platform == 'windows' else 'Mac'} {ver})")
+        print(f"begleiter: {platform} {ver} geholt", flush=True)
+        return ver
+    finally:
+        if own:
+            await c.aclose()
+
+
+async def check(platform):
+    err = ""
+    try:
+        await fetch(platform)
+    except Exception as e:
+        err = str(e)[:200]
+        print("begleiter: update check", platform, type(e).__name__, err, flush=True)
+    _upd["checked"][platform] = time.time()
+    _upd["error"][platform] = err
+    return err
+
+
+async def fetch_loop():
+    while True:
+        await asyncio.sleep(90)
+        try:
+            if admin_on() and not notaus.blocks("internet"):
+                for p in platforms():
+                    if time.time() - _upd["checked"].get(p, 0) > FETCH_EVERY:
+                        await check(p)
+        except Exception as e:
+            print("begleiter: loop", type(e).__name__, e, flush=True)
+
+
+@router.get("/api/desk/update", dependencies=[Depends(assistant)])
+def program_update(request: Request, arch: str = ""):
+    prof, dev = _program(request)
+    guard.limit(request, "deskupd", prof["id"])
+    if arch not in ARCHS:
+        raise HTTPException(400, "arch: " + ", ".join(ARCHS))
+    platform, key = ARCHS[arch]
+    m = kept(platform)
+    f = m and m["files"].get(key)
+    if not f:
+        raise HTTPException(404, "Der Spark hat keine neue Version.")
+    _live(f"Update geladen ({'Windows' if platform == 'windows' else 'Mac'} {m['version']})")
+    return FileResponse(os.path.join(UPD_DIR, platform, f["name"]), media_type="application/octet-stream",
+                        filename=f["name"], headers={"Cache-Control": "no-store"})
+
+
+@router.get("/api/admin/desk", dependencies=[Depends(auth)])
+def admin_get():
+    return {p: {"version": (kept(p) or {}).get("version"), "checked": _upd["checked"].get(p),
+                "error": _upd["error"].get(p, "")} for p in TAGS} | {"paired": platforms()}
+
+
+@router.post("/api/admin/desk/fetch", dependencies=[Depends(auth)])
+async def admin_fetch(request: Request):
+    guard.limit(request, "deskupd", admin=True)
+    if notaus.blocks("internet"):
+        raise HTTPException(503, "Notaus: kein Internet.")
+    for p in platforms() or list(TAGS):
+        await check(p)
+    return admin_get()

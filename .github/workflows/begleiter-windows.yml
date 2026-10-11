@@ -37,20 +37,32 @@ jobs:
           DOTNET_NOLOGO: '1'
         run: |
           $project = 'tools/begleiter/windows/SparkBegleiter.csproj'
+          # version from app/VERSION ("V01.0.342" -> "1.0.342"), the same number the Spark compares for updates
+          $raw = (Get-Content app/VERSION -Raw).Trim().TrimStart('V')
+          $version = ($raw.Split('.') | ForEach-Object { [int]$_ }) -join '.'
           New-Item -ItemType Directory -Force -Path dist | Out-Null
+          $files = [ordered]@{}
           foreach ($arch in 'x64', 'arm64') {
             dotnet publish $project -c Release -r "win-$arch" --self-contained true `
               -p:PublishSingleFile=true -p:IncludeNativeLibrariesForSelfExtract=true `
-              -o "publish/$arch"
+              -p:Version=$version -o "publish/$arch"
             if ($LASTEXITCODE -ne 0) { exit $LASTEXITCODE }
-            Copy-Item "publish/$arch/SparkBegleiter.exe" "dist/SparkBegleiter-$arch.exe"
+            $name = "SparkBegleiter-$arch.exe"
+            Copy-Item "publish/$arch/SparkBegleiter.exe" "dist/$name"
+            $files[$arch] = [ordered]@{ name = $name; size = (Get-Item "dist/$name").Length;
+                                        sha256 = (Get-FileHash -Algorithm SHA256 "dist/$name").Hash.ToLower() }
           }
+          # begleiter.json: what the Spark checks before it hands an update to a paired PC (begleiter.py)
+          [ordered]@{ version = $version; files = $files } | ConvertTo-Json -Depth 4 | Set-Content dist/begleiter.json -Encoding utf8NoBOM
+          Get-Content dist/begleiter.json
           Get-ChildItem dist | Format-Table Name, Length
 
       - uses: actions/upload-artifact@v4
         with:
           name: SparkBegleiter-windows
-          path: dist/*.exe
+          path: |
+            dist/*.exe
+            dist/begleiter.json
           if-no-files-found: error
 
       - name: Publish release begleiter-windows
@@ -58,7 +70,7 @@ jobs:
           GH_TOKEN: ${{ github.token }}
         run: |
           $tag = 'begleiter-windows'
-          $files = @('dist/SparkBegleiter-x64.exe', 'dist/SparkBegleiter-arm64.exe')
+          $files = @('dist/SparkBegleiter-x64.exe', 'dist/SparkBegleiter-arm64.exe', 'dist/begleiter.json')
           gh release view $tag 2>$null | Out-Null
           if ($LASTEXITCODE -eq 0) {
             gh release upload $tag @files --clobber

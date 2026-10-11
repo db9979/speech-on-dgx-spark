@@ -23,6 +23,8 @@ final class SparkClient: NSObject, URLSessionTaskDelegate, @unchecked Sendable {
     let base: String
     private let key: String?
     private var session: URLSession!
+    /// for the update file only: same rules, more time
+    private var fileSession: URLSession!
 
     init(base: String, key: String?) {
         self.base = base
@@ -38,11 +40,22 @@ final class SparkClient: NSObject, URLSessionTaskDelegate, @unchecked Sendable {
         c.timeoutIntervalForRequest = 200
         c.timeoutIntervalForResource = 240
         session = URLSession(configuration: c, delegate: self, delegateQueue: nil)
+        let f = URLSessionConfiguration.ephemeral
+        f.httpCookieAcceptPolicy = .never
+        f.httpShouldSetCookies = false
+        f.httpCookieStorage = nil
+        f.urlCache = nil
+        f.urlCredentialStorage = nil
+        f.requestCachePolicy = .reloadIgnoringLocalCacheData
+        f.timeoutIntervalForRequest = 60
+        f.timeoutIntervalForResource = 1800
+        fileSession = URLSession(configuration: f, delegate: self, delegateQueue: nil)
     }
 
     /// Stops everything still running; the client is not used again afterwards.
     func close() {
         session.invalidateAndCancel()
+        fileSession.invalidateAndCancel()
     }
 
     // The Spark answers itself: a redirect (perhaps to another host) is never followed.
@@ -93,41 +106,88 @@ final class SparkClient: NSObject, URLSessionTaskDelegate, @unchecked Sendable {
         let response: URLResponse
         do {
             (data, response) = try await session.data(for: r)
-        } catch let e as URLError {
-            if e.code == .cancelled { throw CancellationError() }
-            if e.code == .timedOut { throw SparkProblem.offline("Der Spark hat nicht rechtzeitig geantwortet.") }
-            if e.code == .appTransportSecurityRequiresSecureConnection {
-                throw SparkProblem.offline("Unverschlüsselt (http) nur im Heimnetz.")
-            }
-            throw SparkProblem.offline("Der Spark ist nicht erreichbar.")
-        } catch is CancellationError {
-            throw CancellationError()
         } catch {
-            throw SparkProblem.offline("Der Spark ist nicht erreichbar.")
+            throw Self.transportProblem(error)
         }
         let status = (response as? HTTPURLResponse)?.statusCode ?? 0
         let obj = ((try? JSONSerialization.jsonObject(with: data)) as? [String: Any]) ?? [:]
         if (200..<300).contains(status) {
             return obj
         }
+        throw Self.problem(status: status, obj)
+    }
+
+    /// GET of a file (the update): the bytes go to `destination` (replaced if there); nothing else is kept.
+    /// At most `maxBytes`; an error answer of the Spark becomes a SparkProblem as everywhere.
+    func download(_ path: String, to destination: URL, maxBytes: Int) async throws {
+        var r = try request(path, method: "GET", timeout: 60)
+        r.setValue("application/octet-stream", forHTTPHeaderField: "Accept")
+        let tmp: URL
+        let response: URLResponse
+        do {
+            (tmp, response) = try await fileSession.download(for: r)
+        } catch {
+            throw Self.transportProblem(error)
+        }
+        let fm = FileManager.default
+        defer { try? fm.removeItem(at: tmp) }
+        let status = (response as? HTTPURLResponse)?.statusCode ?? 0
+        guard (200..<300).contains(status) else {
+            let small = ((try? fm.attributesOfItem(atPath: tmp.path)[.size]) as? NSNumber)?.intValue ?? 0
+            var obj: [String: Any] = [:]
+            if small > 0 && small < 64 * 1024, let data = try? Data(contentsOf: tmp) {
+                obj = ((try? JSONSerialization.jsonObject(with: data)) as? [String: Any]) ?? [:]
+            }
+            if status == 404 {
+                throw SparkProblem.failed(Self.detail(obj) ?? "Der Spark hat gerade keine neue Version für den Mac.")
+            }
+            throw Self.problem(status: status, obj)
+        }
+        let size = ((try? fm.attributesOfItem(atPath: tmp.path)[.size]) as? NSNumber)?.intValue ?? 0
+        guard size > 0, size <= maxBytes else {
+            throw SparkProblem.failed("Update beschädigt, nichts geändert.")
+        }
+        try? fm.removeItem(at: destination)
+        do {
+            try fm.moveItem(at: tmp, to: destination)
+        } catch {
+            throw SparkProblem.failed("Das Update ließ sich nicht speichern.")
+        }
+    }
+
+    private static func transportProblem(_ error: Error) -> Error {
+        if let e = error as? URLError {
+            if e.code == .cancelled { return CancellationError() }
+            if e.code == .timedOut { return SparkProblem.offline("Der Spark hat nicht rechtzeitig geantwortet.") }
+            if e.code == .appTransportSecurityRequiresSecureConnection {
+                return SparkProblem.offline("Unverschlüsselt (http) nur im Heimnetz.")
+            }
+            return SparkProblem.offline("Der Spark ist nicht erreichbar.")
+        }
+        if error is CancellationError { return CancellationError() }
+        return SparkProblem.offline("Der Spark ist nicht erreichbar.")
+    }
+
+    /// What a non-2xx answer means (contract, "Errors").
+    private static func problem(status: Int, _ obj: [String: Any]) -> SparkProblem {
         let detail = Self.detail(obj)
         switch status {
         case 401:
-            throw SparkProblem.unknownDevice
+            return .unknownDevice
         case 403:
-            throw SparkProblem.off(detail ?? "Dieser Teil ist im Panel aus (Ich → Begleiter).")
+            return .off(detail ?? "Dieser Teil ist im Panel aus (Ich → Begleiter).")
         case 429:
-            throw SparkProblem.busy(detail ?? "Der Spark arbeitet noch. Bitte gleich noch einmal.")
+            return .busy(detail ?? "Der Spark arbeitet noch. Bitte gleich noch einmal.")
         case 503:
             if let d = detail, d.hasPrefix("Notaus") || d.hasPrefix("Mein Notaus") {
-                throw SparkProblem.notaus(d)
+                return .notaus(d)
             }
-            throw SparkProblem.offline(detail ?? "Der Spark ist gerade nicht bereit.")
+            return .offline(detail ?? "Der Spark ist gerade nicht bereit.")
         default:
             if (300..<400).contains(status) {
-                throw SparkProblem.failed("Der Spark hat auf eine andere Adresse verwiesen. Bitte neu koppeln.")
+                return .failed("Der Spark hat auf eine andere Adresse verwiesen. Bitte neu koppeln.")
             }
-            throw SparkProblem.failed(detail ?? "Der Spark hat mit Fehler \(status) geantwortet.")
+            return .failed(detail ?? "Der Spark hat mit Fehler \(status) geantwortet.")
         }
     }
 

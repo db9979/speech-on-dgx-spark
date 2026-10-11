@@ -1,6 +1,9 @@
 """Spark-Begleiter (begleiter.py): switches, pairing, the key's narrow paths, parts per device, notes, Notaus."""
+import asyncio
+import hashlib
 import json
 import os
+import shutil
 import unittest
 
 from tests import helpers
@@ -15,6 +18,7 @@ import push  # noqa: E402
 import schreib  # noqa: E402
 from fastapi import FastAPI, Request  # noqa: E402
 from fastapi.testclient import TestClient  # noqa: E402
+import httpx  # noqa: E402
 
 ADMIN = TestClient(panel.app)
 ADMIN.post("/api/login", json={"password": "secret-admin"})
@@ -231,6 +235,97 @@ class Begleiter(unittest.TestCase):
         bare = TestClient(panel.app, client=HOME)
         self.assertEqual(bare.post("/api/desk/pair", json={"code": "x", "kind": "toaster"}).status_code, 400)
         self.assertEqual(begleiter.clean({"parts": "x", "write": None}), begleiter.clean({}))
+
+
+GH = "http://gh.test"
+EXE = b"MZ fake exe " * 300
+
+
+def github(meta, files, tag="begleiter-windows"):
+    """A fake GitHub: the release `tag` with begleiter.json and the files."""
+    def handle(req):
+        p = req.url.path
+        if p.endswith("/releases/tags/" + tag):
+            return httpx.Response(200, json={"tag_name": tag, "assets": [
+                {"name": n, "browser_download_url": GH + "/dl/" + n} for n in ["begleiter.json", *files]]})
+        if p == "/dl/begleiter.json":
+            return httpx.Response(200, content=json.dumps(meta).encode())
+        if p.startswith("/dl/") and p[4:] in files:
+            return httpx.Response(200, content=files[p[4:]])
+        return httpx.Response(404)
+    return httpx.AsyncClient(transport=httpx.MockTransport(handle))
+
+
+def win_meta(version, x64=EXE, arm=EXE):
+    f = lambda n, b: {"name": n, "size": len(b), "sha256": hashlib.sha256(b).hexdigest()}
+    return {"version": version, "files": {"x64": f("SparkBegleiter-x64.exe", x64), "arm64": f("SparkBegleiter-arm64.exe", arm)}}
+
+
+class Updates(unittest.TestCase):
+    def setUp(self):
+        helpers.set_config(desk=True)
+        for k in [k for k in guard._rate if k[0] in ("desk", "deskupd", "pair")]:
+            guard._rate.pop(k, None)
+        shutil.rmtree(begleiter.UPD_DIR, ignore_errors=True)
+        self.gh = os.environ.get("SPEECH_SPARK_GITHUB_API")
+        os.environ["SPEECH_SPARK_GITHUB_API"] = GH
+
+    def tearDown(self):
+        helpers.set_config(desk=False)
+        shutil.rmtree(begleiter.UPD_DIR, ignore_errors=True)
+        if self.gh is None:
+            os.environ.pop("SPEECH_SPARK_GITHUB_API", None)
+        else:
+            os.environ["SPEECH_SPARK_GITHUB_API"] = self.gh
+
+    def test_only_checked_files_are_kept_and_offered_to_older_programs(self):
+        files = {"SparkBegleiter-x64.exe": EXE, "SparkBegleiter-arm64.exe": EXE}
+        bad = dict(win_meta("1.0.350"))
+        bad["files"] = dict(bad["files"], x64=dict(bad["files"]["x64"], sha256="0" * 64))
+        with self.assertRaises(ValueError):                     # a wrong checksum keeps nothing
+            asyncio.run(begleiter.fetch("windows", github(bad, files)))
+        self.assertIsNone(begleiter.kept("windows"))
+        with self.assertRaises(ValueError):                     # names outside the release or odd names: nothing
+            asyncio.run(begleiter.fetch("windows", github(dict(win_meta("1.0.350"), files={"x64": {
+                "name": "../evil.exe", "size": 3, "sha256": "0" * 64}}), files)))
+        self.assertEqual(asyncio.run(begleiter.fetch("windows", github(win_meta("1.0.350"), files))), "1.0.350")
+        self.assertEqual(begleiter.kept("windows")["version"], "1.0.350")
+        up = begleiter.newer("x64", "1.0.342")
+        self.assertEqual((up["version"], up["size"], up["sha256"]), ("1.0.350", len(EXE), hashlib.sha256(EXE).hexdigest()))
+        self.assertIsNone(begleiter.newer("x64", "1.0.350"))      # same version
+        self.assertIsNone(begleiter.newer("x64", "1.0.9999"))     # newer program
+        self.assertIsNone(begleiter.newer("x64", "1.0.0-dev"))    # development build
+        self.assertIsNone(begleiter.newer("mac", "1.0.1"))        # nothing kept for the Mac
+        # an older release does not replace the kept one
+        self.assertEqual(asyncio.run(begleiter.fetch("windows", github(win_meta("1.0.349"), files))), "1.0.350")
+
+    def test_program_sees_and_loads_the_update_only_with_its_key(self):
+        files = {"SparkBegleiter-x64.exe": EXE, "SparkBegleiter-arm64.exe": EXE}
+        asyncio.run(begleiter.fetch("windows", github(win_meta("1.0.350"), files)))
+        c = profile("DkUwe")
+        c.put("/api/profile/settings", json={"desk_on": True})
+        r = c.post("/api/profile/desk/pair", json={"base": "http://192.168.178.171:31080"})
+        prog = TestClient(panel.app, client=HOME)
+        key = prog.post("/api/desk/pair", json={"code": r.json()["code"], "kind": "windows", "name": "PC"}).json()["key"]
+        prog.headers[profiles.DEVICE_HEADER] = key
+        cfg = prog.get("/api/desk/config?version=1.0.342&arch=x64").json()
+        self.assertEqual(cfg["update"]["version"], "1.0.350")
+        self.assertTrue(cfg["coffee"].startswith("https://buymeacoffee.com/"))
+        self.assertEqual(prog.get("/api/desk/poll?version=1.0.342&arch=x64").json()["update"], "1.0.350")
+        self.assertIsNone(prog.get("/api/desk/poll?version=1.0.350&arch=x64").json()["update"])
+        r = prog.get("/api/desk/update?arch=x64")
+        self.assertEqual((r.status_code, hashlib.sha256(r.content).hexdigest()), (200, hashlib.sha256(EXE).hexdigest()))
+        self.assertEqual(prog.get("/api/desk/update?arch=mac").status_code, 404)
+        self.assertEqual(prog.get("/api/desk/update?arch=../x").status_code, 400)
+        self.assertIn(TestClient(panel.app, client=HOME).get("/api/desk/update?arch=x64").status_code, (401, 403))
+        self.assertEqual(c.get("/api/profile/desk").json()["devices"][0]["version"], "1.0.350")
+        self.assertEqual(begleiter.platforms(), ["windows"])
+
+    def test_only_github_download_addresses(self):
+        os.environ.pop("SPEECH_SPARK_GITHUB_API", None)
+        self.assertTrue(begleiter._allowed_download("https://github.com/db9979/speech-on-dgx-spark/releases/download/begleiter-windows/begleiter.json"))
+        self.assertFalse(begleiter._allowed_download("https://evil.example/releases/download/x"))
+        self.assertFalse(begleiter._allowed_download("http://github.com/a/b/releases/download/x"))
 
 
 if __name__ == "__main__":

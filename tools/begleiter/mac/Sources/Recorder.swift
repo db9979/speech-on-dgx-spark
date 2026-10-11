@@ -5,6 +5,7 @@ import AppKit
 final class PCMSink: @unchecked Sendable {
     private let lock = NSLock()
     private var data = Data()
+    private var lastLevel: Double = 0
     let limit: Int
 
     init(limit: Int) {
@@ -14,6 +15,20 @@ final class PCMSink: @unchecked Sendable {
     func reset() {
         lock.lock()
         data = Data()
+        lastLevel = 0
+        lock.unlock()
+    }
+
+    /// loudness of the last buffer, 0…1 (only for the little bars on screen)
+    var level: Double {
+        lock.lock()
+        defer { lock.unlock() }
+        return lastLevel
+    }
+
+    func setLevel(_ l: Double) {
+        lock.lock()
+        lastLevel = l
         lock.unlock()
     }
 
@@ -63,6 +78,9 @@ final class Recorder {
 
     /// seconds recorded so far
     var seconds: Double { Double(sink.count) / (Self.sampleRate * 2) }
+
+    /// 0…1, for the level bars
+    var level: Double { sink.level }
 
     static func micAllowed() async -> Bool {
         switch AVCaptureDevice.authorizationStatus(for: .audio) {
@@ -135,7 +153,17 @@ final class Recorder {
                 return buffer
             }
             guard status != .error, out.frameLength > 0, let ch = out.int16ChannelData else { return }
-            sink.append(Data(bytes: ch[0], count: Int(out.frameLength) * 2))
+            let n = Int(out.frameLength)
+            sink.append(Data(bytes: ch[0], count: n * 2))
+            var sum = 0.0
+            for i in 0..<n {
+                let v = Double(ch[0][i]) / 32768
+                sum += v * v
+            }
+            // RMS on a rough dB scale: about -50 dB -> 0, 0 dB -> 1
+            let rms = (sum / Double(n)).squareRoot()
+            let db = 20 * log10(max(rms, 1e-6))
+            sink.setLevel(min(max((db + 50) / 50, 0), 1))
         }
     }
 }

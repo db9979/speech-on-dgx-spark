@@ -51,6 +51,17 @@ final class WriteController: ObservableObject {
         self.wunsch = config.writeWunsch
     }
 
+    /// "aus Outlook" (where the text came from)
+    var sourceLabel: String {
+        switch target {
+        case .menu: return ""
+        case .service: return "aus dem Dienste-Menü"
+        case .hotkey(let app):
+            let name = DeskConfig.plain(app?.localizedName ?? "", max: 40)
+            return name.isEmpty ? "" : "aus " + name
+        }
+    }
+
     var applyTitle: String {
         switch target {
         case .menu: return "In die Zwischenablage"
@@ -170,7 +181,10 @@ final class WriteController: ObservableObject {
             noDiff = true
         }
         var s = Self.changesText(r)
-        if let ms = r.ms { s += String(format: " (%.1f s)", Double(ms) / 1000) }
+        if let ms = r.ms {
+            if s.hasSuffix(".") { s.removeLast() }
+            s += " · " + String(format: "%.1f s", Double(ms) / 1000).replacingOccurrences(of: ".", with: ",")
+        }
         setStatus(s, error: false)
         ready = true
         if !preview, case .service = target {
@@ -228,10 +242,10 @@ final class WriteController: ObservableObject {
 
     // ------------------------------------------------------------------ the changes, as plain text with colours
 
-    static let removedColor = Color(red: 0.73, green: 0.11, blue: 0.11)
-    static let removedBack = Color(red: 0.99, green: 0.89, blue: 0.89)
-    static let addedColor = Color(red: 0.08, green: 0.50, blue: 0.24)
-    static let addedBack = Color(red: 0.86, green: 0.99, blue: 0.91)
+    static let removedColor = Theme.delFg
+    static let removedBack = Theme.del
+    static let addedColor = Theme.insFg
+    static let addedBack = Theme.ins
 
     static func render(_ diff: [(op: String, text: String)]) -> AttributedString {
         var out = AttributedString()
@@ -259,88 +273,128 @@ struct WriteView: View {
     @ObservedObject var c: WriteController
 
     var body: some View {
-        VStack(alignment: .leading, spacing: 8) {
-            HStack(spacing: 8) {
-                Picker("Art", selection: $c.art) {
-                    ForEach(c.arts) { a in
-                        Text(verbatim: a.de).tag(a.id)
+        VStack(spacing: 0) {
+            GradientBar()
+            VStack(alignment: .leading, spacing: 10) {
+                HStack(spacing: 8) {
+                    FaceView(size: 28)
+                    Text(verbatim: "Text verbessern")
+                        .font(.system(size: 14, weight: .semibold))
+                    Spacer()
+                    if !c.sourceLabel.isEmpty {
+                        Text(verbatim: c.sourceLabel)
+                            .font(.system(size: 12))
+                            .foregroundColor(Theme.muted)
+                            .lineLimit(1)
                     }
                 }
-                .labelsHidden()
-                .frame(width: 150)
-                if c.art == WriteController.translate {
-                    Picker("Sprache", selection: $c.sprache) {
-                        ForEach(c.langs) { l in
-                            Text(verbatim: l.de).tag(l.id)
+
+                FlowLayout(spacing: 6) {
+                    ForEach(c.arts) { a in
+                        ChipButton(title: a.de, selected: c.art == a.id) {
+                            guard c.art != a.id else { return }
+                            c.art = a.id
+                            if !c.busy && !c.source.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty { c.run() }
+                        }
+                        .disabled(c.busy)
+                    }
+                }
+
+                HStack(spacing: 8) {
+                    if c.art == WriteController.translate {
+                        Picker("Sprache", selection: $c.sprache) {
+                            ForEach(c.langs) { l in
+                                Text(verbatim: l.de).tag(l.id)
+                            }
+                        }
+                        .labelsHidden()
+                        .frame(width: 140)
+                    }
+                    TextField("Wunsch (optional)", text: $c.wunsch)
+                        .textFieldStyle(.roundedBorder)
+                        .onSubmit { c.run() }
+                    Button("Neu") { c.run() }
+                        .buttonStyle(SoftButtonStyle())
+                        .disabled(c.busy)
+                }
+
+                caption("Dein Text")
+                editor($c.source, minHeight: 64)
+
+                caption("Änderungen")
+                ScrollView {
+                    Group {
+                        if let d = c.diff {
+                            Text(d)
+                                .foregroundColor(Theme.fg)
+                        } else if c.noDiff {
+                            Text(verbatim: "(Bei dieser Art gibt es keine Markierung der Änderungen.)")
+                                .italic()
+                                .foregroundColor(Theme.muted)
+                        } else if c.busy {
+                            HStack(spacing: 8) {
+                                ProgressView().controlSize(.small)
+                                Text(verbatim: "Spark arbeitet …").foregroundColor(Theme.muted)
+                            }
+                        } else {
+                            Text(verbatim: "")
                         }
                     }
-                    .labelsHidden()
-                    .frame(width: 140)
-                }
-                TextField("Wunsch (optional)", text: $c.wunsch)
-                    .onSubmit { c.run() }
-                Button("Neu") { c.run() }
-                    .disabled(c.busy)
-            }
-
-            caption("Text:")
-            TextEditor(text: $c.source)
-                .font(.body)
-                .frame(minHeight: 70)
-                .overlay(RoundedRectangle(cornerRadius: 4).stroke(Color.secondary.opacity(0.3)))
-
-            caption("Änderungen:")
-            ScrollView {
-                Group {
-                    if let d = c.diff {
-                        Text(d)
-                    } else if c.noDiff {
-                        Text(verbatim: "(Bei dieser Art gibt es keine Markierung der Änderungen.)")
-                            .italic()
-                            .foregroundColor(.secondary)
-                    } else {
-                        Text(verbatim: "")
-                    }
-                }
-                .textSelection(.enabled)
-                .frame(maxWidth: .infinity, alignment: .leading)
-                .padding(6)
-            }
-            .frame(minHeight: 90)
-            .background(Color(nsColor: .textBackgroundColor))
-            .overlay(RoundedRectangle(cornerRadius: 4).stroke(Color.secondary.opacity(0.3)))
-
-            caption("Ergebnis (änderbar):")
-            TextEditor(text: $c.result)
-                .font(.body)
-                .frame(minHeight: 70)
-                .overlay(RoundedRectangle(cornerRadius: 4).stroke(Color.secondary.opacity(0.3)))
-
-            HStack(spacing: 8) {
-                if c.busy {
-                    ProgressView().controlSize(.small)
-                }
-                Text(verbatim: c.status)
-                    .foregroundColor(c.isError ? .red : .secondary)
-                    .lineLimit(3)
+                    .font(.system(size: 13))
+                    .lineSpacing(3)
                     .textSelection(.enabled)
-                Spacer()
-                Button("Abbrechen") { c.cancel() }
-                    .keyboardShortcut(.cancelAction)
-                Button("Kopieren") { c.copy() }
-                    .disabled(!c.ready)
-                Button(c.applyTitle) { c.apply() }
-                    .keyboardShortcut(.return, modifiers: .command)
-                    .disabled(!c.ready)
+                    .frame(maxWidth: .infinity, alignment: .leading)
+                    .padding(.horizontal, 12)
+                    .padding(.vertical, 10)
+                }
+                .frame(minHeight: 90)
+                .background(RoundedRectangle(cornerRadius: 10).fill(Theme.soft))
+                .overlay(RoundedRectangle(cornerRadius: 10).stroke(Theme.line, lineWidth: 1))
+
+                caption("Ergebnis (änderbar)")
+                editor($c.result, minHeight: 64)
+
+                HStack(spacing: 8) {
+                    if c.busy {
+                        ProgressView().controlSize(.small)
+                    }
+                    Text(verbatim: c.status)
+                        .font(.system(size: 12))
+                        .foregroundColor(c.isError ? Theme.bad : Theme.muted)
+                        .lineLimit(3)
+                        .textSelection(.enabled)
+                    Spacer()
+                    Button("Abbrechen") { c.cancel() }
+                        .buttonStyle(SoftButtonStyle())
+                        .keyboardShortcut(.cancelAction)
+                    Button("Kopieren") { c.copy() }
+                        .buttonStyle(SoftButtonStyle())
+                        .disabled(!c.ready)
+                    Button(c.applyTitle) { c.apply() }
+                        .buttonStyle(PrimaryButtonStyle())
+                        .keyboardShortcut(.return, modifiers: .command)
+                        .disabled(!c.ready)
+                }
             }
+            .padding(14)
         }
-        .padding(12)
-        .frame(minWidth: 520, minHeight: 480)
+        .background(Theme.card)
+        .frame(minWidth: 520, minHeight: 500)
     }
 
     private func caption(_ s: String) -> some View {
         Text(verbatim: s)
-            .font(.caption)
-            .foregroundColor(.secondary)
+            .font(.system(size: 11, weight: .semibold))
+            .foregroundColor(Theme.muted)
+    }
+
+    private func editor(_ text: Binding<String>, minHeight: CGFloat) -> some View {
+        TextEditor(text: text)
+            .font(.system(size: 13))
+            .scrollContentBackground(.hidden)
+            .padding(6)
+            .frame(minHeight: minHeight)
+            .background(RoundedRectangle(cornerRadius: 10).fill(Theme.card))
+            .overlay(RoundedRectangle(cornerRadius: 10).stroke(Theme.line, lineWidth: 1))
     }
 }

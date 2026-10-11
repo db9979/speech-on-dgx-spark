@@ -3,6 +3,7 @@
 // device which parts it has (writing help, questions, dictation, notes, state, Notaus button) plus the writing
 // help's defaults. A change reaches the program with its next poll. Hotkeys are set in the program itself.
 let DESK_ON=false;
+const DESK_COFFEE='https://buymeacoffee.com/zquu1xu570';
 const DESK_PARTS=[['write',['Schreibhilfe','Writing help'],['Markierten Text verbessern (Tastenkürzel).','Improve marked text (hotkey).']],
   ['ask',['Frag Spark','Ask Spark'],['Fenster für Fragen, per Tastenkürzel.','A window for questions, by hotkey.']],
   ['dictate',['Diktieren','Dictation'],['Sprechen, der Text landet an der Schreibmarke. Nimmt nur auf, solange du es willst.','Speak, the text lands at the cursor. Records only while you want it to.']],
@@ -17,7 +18,7 @@ async function showDesk(){const box=$('deskbox');if(!box)return;if(!PROFILE||!DE
     const parts=DESK_PARTS.map(([k,n,h])=>`<div class="setrow"><div class="lbl"><b>${esc(tt(n))}</b><span>${esc(d.allowed[k]?tt(h):k==='write'?t('Erst die Schreibhilfe einschalten (Funktionen und Ich → Schreibhilfe).','Turn on the writing help first (Features and Me → Writing help).'):'')}</span></div><label class="tgl"><input type="checkbox" data-dk="${esc(k)}"${c.parts[k]?' checked':''}${d.allowed[k]?'':' disabled'}><i></i></label></div>`).join('');
     const arts=d.arts.map(a=>`<label class="chk"><input type="checkbox" data-dart="${esc(a.id)}"${c.write.arts.includes(a.id)?' checked':''}> ${esc(L==='en'?a.en:a.de)}</label>`).join(' ');
     const opt=(list,sel)=>list.map(a=>`<option value="${esc(a.id)}"${a.id===sel?' selected':''}>${esc(L==='en'?a.en:a.de)}</option>`).join('');
-    return `<div class="card" data-desk="${esc(x.id)}"><div class="rowin"><b>${esc(x.name.replace(/^Begleiter /,''))}</b><span class="mut">${esc(x.online?t('verbunden','connected'):t('nicht verbunden','not connected'))} · ${esc(t('seit ','since ')+(x.created?deskTime(x.created):'–'))}</span></div>
+    return `<div class="card" data-desk="${esc(x.id)}"><div class="rowin"><b>${esc(x.name.replace(/^Begleiter /,''))}</b><span class="mut">${esc(x.online?t('verbunden','connected'):t('nicht verbunden','not connected'))}${x.version?' · '+esc(t('Version ','version ')+x.version):''} · ${esc(t('seit ','since ')+(x.created?deskTime(x.created):'–'))}</span></div>
       ${parts}
       <details><summary>${esc(t('Schreibhilfe: Voreinstellungen','Writing help: defaults'))}</summary>
         <div class="two2"><div><label>${esc(t('Art','Kind'))}</label><select data-dw="art">${opt(d.arts,c.write.art)}</select></div>
@@ -39,7 +40,8 @@ async function showDesk(){const box=$('deskbox');if(!box)return;if(!PROFILE||!DE
     <div id="dksetupbox" hidden><label>${esc(t('Einrichtungszeile','Setup line'))}</label><div class="rowin"><code id="dksetup" style="overflow-wrap:anywhere"></code><button class="b" type="button" id="dksetupcopy">${esc(t('Kopieren','Copy'))}</button></div></div>
     <div class="fh" id="dkmsg"></div>
     <label>${esc(t('Gekoppelte Geräte','Paired devices'))}</label>
-    ${d.devices.map(dev).join('')||`<div class="fh mut">${esc(t('Noch keins.','None yet.'))}</div>`}`:''}`;
+    ${d.devices.map(dev).join('')||`<div class="fh mut">${esc(t('Noch keins.','None yet.'))}</div>`}
+    <div class="fh">${esc(t('Neue Versionen holt der Spark selbst; das Programm zeigt sie an und installiert erst nach deinem Klick. Der Spark ist kostenlos: ','The Spark fetches new versions itself; the program shows them and installs only after your click. The Spark is free: '))}<a href="${DESK_COFFEE}" target="_blank" rel="noopener">☕ ${esc(t('Spark unterstützen','Support Spark'))}</a></div>`:''}`;
   xbind(box,showDesk);
   if(!d.on)return;
   $('dkpair').onclick=async()=>{xmsg('dkmsg','…');
@@ -58,3 +60,10 @@ async function showDesk(){const box=$('deskbox');if(!box)return;if(!PROFILE||!DE
     catch(e){xmsg('dkmsg',e.message,true)}});
   box.querySelectorAll('[data-ddel]').forEach(b=>b.onclick=async()=>{if(!confirm(t('Gerät entfernen? Sein Schlüssel gilt dann nicht mehr.','Remove the device? Its key stops working.')))return;
     try{await api('/api/profile/desk/devices/'+encodeURIComponent(b.dataset.ddel),{method:'DELETE'});showDesk()}catch(e){xmsg('dkmsg',e.message,true)}})}
+// Admin: Funktionen → Spark-Begleiter shows which program versions the Spark keeps for updates and fetches them now.
+async function deskAdmin(){if(!$('deskadmin'))return;let d={};try{d=await (await api('/api/admin/desk')).json()}catch{return}
+  const st=$('deskstate'),part=(n,x)=>n+' '+(x&&x.version?x.version:t('noch keine','none yet'))+(x&&x.error?' ('+x.error+')':'');
+  st.textContent=t('Für Updates auf dem Spark: ','Kept on the Spark for updates: ')+part('Windows',d.windows)+' · '+part('Mac',d.mac)+
+    (d.paired&&d.paired.length?'':t(' · geholt wird, sobald ein Gerät gekoppelt ist.',' · fetched once a device is paired.'));
+  $('deskfetch').onclick=async()=>{st.textContent=t('Hole die Programme von GitHub …','Fetching the programs from GitHub …');
+    try{await api('/api/admin/desk/fetch',xjson('POST'));deskAdmin()}catch(e){st.textContent=e.message}}}
