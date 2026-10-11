@@ -2,6 +2,7 @@
 
 Every version in one line, newest first (taken from the commit messages, so some lines are German, some English). Older entries have no version number.
 
+- **V01.0.422** · 2026-10-11 · Zweiter Versuch für gescheiterte Tests (GitHub und Selbsttest auf dem Spark, app/selftest.py): zweimal rot bleibt rot, erst im zweiten Versuch grün steht als Warnung im Lauf; Telegram-Schleife stört die Tests nicht mehr; ADMIN früher angelegt (Fehler beim langsamen Laden)
 - **V01.0.421** · 2026-10-11 · Einladungstest: zweiter Testserver darf 120 s statt 60 s brauchen, bei Fehler steht im Log, wo es hängt
 - **V01.0.420** · 2026-10-11 · Testläufe auf GitHub stabil: Tests schreiben die Einstellungen in einem Schritt, warten auf den fertigen Seitenaufbau statt fester Zeiten, Minuten-Schleife stört Mail- und reMarkable-Tests nicht mehr; Sprung aus Wer darf was bleibt bei vielen Profilen an der Zeile; Job-Grenze 30 min
 - **V01.0.419** · 2026-10-11 · Begleiter: „Öffne heise.de auf meinem Mac“ vom Lautsprecher oder Handy geht sicher an den Rechner (Rückfrage dort); geht es nicht, sagt der Spark warum

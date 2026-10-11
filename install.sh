@@ -592,9 +592,15 @@ else
   say "Self-test of the panel (fake LLM and TTS, nothing real is touched)"
   SELFTEST_ARGS=(-m unittest discover -s tests -t .)
 fi
+# selftest.py: a failed test gets one second try; red twice stays red, green the second time is a WARNUNG line
+# (same rule as GitHub's "Tests", Dominik 2026-10-11)
+if [ -f "$INSTALL_FROM/app/selftest.py" ]; then
+  SELFTEST_ARGS=(selftest.py "${SELFTEST_ARGS[@]:2}")
+fi
 work=$(mktemp -d); cp -r "$INSTALL_FROM/app" "$work/app"
 if (cd "$work/app" && nice -n 19 ionice -c 2 -n 7 timeout 900 "$PREFIX/venv-panel/bin/python" -W ignore "${SELFTEST_ARGS[@]}" >"$SELFTEST_LOG" 2>&1); then
-  echo "   $(grep -E '^Ran ' "$SELFTEST_LOG") - all passed"
+  echo "   $(grep -E '^Ran ' "$SELFTEST_LOG" | head -1) - all passed"
+  grep -E '^WARNUNG erst im zweiten Versuch' "$SELFTEST_LOG" | sed 's/^/   /' || true
 else
   tail -n 25 "$SELFTEST_LOG"
   rm -rf "$work"

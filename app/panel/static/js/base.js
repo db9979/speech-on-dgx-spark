@@ -26,6 +26,9 @@ function verTry(){const now=Date.now(),calm=!sparkBusy()&&now-verWatch.edit>600e
 // "rights" (features.stamp) changes with every switch under Wer darf was that touches this profile.
 const whoFlags=w=>JSON.stringify(Object.keys(w||{}).sort().filter(k=>typeof w[k]==='boolean'||k==='face'||k==='rights').map(k=>[k,w[k]]));
 let WHO_FLAGS=null,whoT=null;
+// who is signed in, set by start.js; declared here, before the other scripts: a timer or answer of an earlier script
+// could run before start.js on a slow machine ("ADMIN is not defined", GitHub V01.0.421)
+let ADMIN=false,PUBLIC=true,GATE=false;
 async function whoCheck(){if(WHO_FLAGS===null)return;
   try{const r=await fetch('/api/whoami',{cache:'no-store'});if(!r.ok)return;const w=await r.json();
     if(window.confirmShow)confirmShow(w.confirm_until||0);

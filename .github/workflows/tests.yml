@@ -39,4 +39,5 @@ jobs:
           sudo apt-get install -y -q ffmpeg
       - name: Self-tests
         working-directory: app
-        run: python -m unittest discover -s tests
+        # a failed test gets one second try (selftest.py); green only then is a warning in the summary
+        run: python selftest.py discover -s tests

@@ -1,7 +1,7 @@
 // Admin login and start-up.
 // ---------------------------------------------------------------- login
 // Guests see only the assistant; everything else needs the panel password (cookie login).
-let ADMIN=false,PUBLIC=true,GATE=false;
+// ADMIN, PUBLIC and GATE are declared in base.js (V01.0.422)
 window.showLogin=()=>{if($('login').style.display==='none'){$('login').style.display='grid';$('loginmsg').textContent='';$('loginpw').value=$('logincode').value='';$('logincodebox').style.display='none';setTimeout(()=>$('loginpw').focus(),50)}};
 ON.adminLogin=()=>{$('profmodal').style.display='none';showLogin()};
 $('loginbtn').onclick=showLogin;$('logincancel').onclick=()=>{$('login').style.display='none';if(GATE)openMe('loginbox')};

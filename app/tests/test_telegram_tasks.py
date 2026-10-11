@@ -143,6 +143,15 @@ def tg_message(chat, text, kind="private", update=[1000]):
                                                         "from": {"id": chat, "username": "anna_tg"}, "text": text}})
 
 
+REAL_POLL = [None]
+
+
+async def _quiet_poll(c, wait=25):
+    """The panel's own Telegram loop (telegram.loop, started with the test server) gets this while the tests run:
+    it fetched the same /start as the test on a slow GitHub runner ("Der Code passt nicht" first, V01.0.421)."""
+    await asyncio.sleep(1)
+
+
 def poll():
     """Lets the bot handle what is waiting; returns the texts it sent."""
     import telegram
@@ -150,7 +159,7 @@ def poll():
 
     async def go():
         async with httpx.AsyncClient(timeout=30) as c:
-            await telegram.poll_once(c, wait=0)
+            await (REAL_POLL[0] or telegram.poll_once)(c, wait=0)
     asyncio.run(go())
     return [p.get("text", "") for m, p in SENT[n:] if m == "sendMessage"]
 
@@ -158,6 +167,9 @@ def poll():
 class Telegram(unittest.TestCase):
     @classmethod
     def setUpClass(cls):
+        import telegram
+        REAL_POLL[0] = telegram.poll_once
+        telegram.poll_once = _quiet_poll
         helpers.set_config(telegram=True, telegram_api=f"http://127.0.0.1:{TG_PORT}")
         bad = ADMIN.put("/api/admin/telegram", json={"token": "nonsense"})
         assert bad.status_code == 400, bad.text
@@ -166,6 +178,9 @@ class Telegram(unittest.TestCase):
 
     @classmethod
     def tearDownClass(cls):
+        import telegram
+        telegram.poll_once = REAL_POLL[0]
+        REAL_POLL[0] = None
         ADMIN.delete("/api/admin/telegram")
         helpers.set_config(telegram=False, telegram_api="")
 
