@@ -1812,6 +1812,9 @@ class Browser(unittest.TestCase):
 
                         async def check(where):
                             await pg.wait_for_timeout(150)
+                            # V01.0.393: a page sliding in (apin/apout, 0.3 s) is not sticking out; wait until it stands
+                            await pg.wait_for_function("document.getAnimations().every(a=>a.playState!=='running'"
+                                                       "||a.effect.getTiming().iterations===Infinity)", timeout=3000)
                             bad = await pg.evaluate(out) + await pg.evaluate(self.ROWS)
                             if bad:
                                 found.append((w, mode, where, bad))

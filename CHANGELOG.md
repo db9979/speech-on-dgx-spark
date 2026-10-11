@@ -2,6 +2,7 @@
 
 Every version in one line, newest first (taken from the commit messages, so some lines are German, some English). Older entries have no version number.
 
+- **V01.0.393** · 2026-10-11 · Selbsttest Handy-Breiten: misst erst, wenn die Seiten-Animation (apin/apout, 0,3 s) steht; vorher war die hereingleitende Einstellungsseite bei 390 px zufällig „über den Rand“ (roter Lauf bei .390)
 - **V01.0.392** · 2026-10-11 · Hilfe zum Spark: Kopie der Anleitungen nach V01.0.390 neu erzeugt (Selbsttest test_docs_copy_is_current).
 - **V01.0.391** · 2026-10-11 · Update-Prüfung: findet die letzte grüne Version auch, wenn die neuesten 30 Testläufe abgebrochen wurden; Testläufe brechen sich nicht mehr gegenseitig ab; ehrliche Meldung statt „nicht abrufbar“
 - **V01.0.390** · 2026-10-11 · Repo abgesichert: alle GitHub-Actions auf feste Commits, Schreibrecht nur im Job, der Releases schreibt, Checkout ohne Token, Signierschlüssel nur aus der Umgebung `release` (nur main), einmaliger Workflow „Schlüssel in Umgebung verschieben“, Dependabot für Actions, Selbsttest `test_workflows`
