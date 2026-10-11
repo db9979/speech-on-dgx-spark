@@ -935,6 +935,17 @@ MONTHS = ["Januar", "Februar", "März", "April", "Mai", "Juni", "Juli", "August"
           "Oktober", "November", "Dezember"]
 
 
+def local_now(tz=None):
+    """Now in the browser's time zone (an IANA name), else in the Spark's."""
+    if isinstance(tz, str) and re.fullmatch(r"[A-Za-z_]+(/[A-Za-z0-9_+\-]+){0,2}", tz):
+        try:
+            from zoneinfo import ZoneInfo
+            return datetime.datetime.now(ZoneInfo(tz))
+        except Exception:
+            pass
+    return datetime.datetime.now().astimezone()
+
+
 def now_line(tz=None):
     """The LLM does not know the date; the browser's time zone is used, else the Spark's."""
     now = None
@@ -1427,12 +1438,13 @@ async def _answer(request, turn):
                 if filler and st["first"]:
                     st["first"] = False
                     await sentences.put(filler[1] if guess_language(messages[-1]["content"]) == "English" else filler[0])
-                result = await run_tool(direct, {}, st)
+                dargs = getattr(turn, "direct_args", None) or {}   # only a date the panel worked out (intent.direct_args)
+                result = await run_tool(direct, dict(dargs), st)
                 if tr:
                     tr.step("tool", f"{direct} (Panel)", t_dr, time.time(), panel=True)
-                trace["calls"].append({"name": direct + " (Panel)", "args": "{}", "result": result})
+                trace["calls"].append({"name": direct + " (Panel)", "args": json.dumps(dargs), "result": result})
                 msgs += [{"role": "assistant", "content": None, "tool_calls": [{"id": "dr0", "type": "function",
-                          "function": {"name": direct, "arguments": "{}"}}]},
+                          "function": {"name": direct, "arguments": json.dumps(dargs)}}]},
                          {"role": "tool", "tool_call_id": "dr0", "content": result}]
                 used = True
                 st["check"] = check_on   # an answer from a tool result: its figures are checked

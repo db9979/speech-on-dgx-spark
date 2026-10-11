@@ -164,20 +164,38 @@ class Direct(unittest.TestCase):
         for text, want in (("Habe ich neue Mails?", "mail_list"), ("Hab ich ungelesene E-Mails", "mail_list"),
                            ("Welche Erinnerungen habe ich?", "reminder_list"), ("Wie ist das Wetter?", "weather"),
                            ("Wie wird das Wetter heute?", "weather"), ("Wo ist mein Paket?", "parcels"),
-                           ("Wie wird das Wetter morgen?", None), ("Wie ist das Wetter in Berlin?", None),
+                           ("Wie wird das Wetter nächste Woche?", None), ("Wie ist das Wetter in Berlin?", None),
                            ("Habe ich neue Mails von Tom?", None), ("Welche Erinnerungen habe ich morgen?", None),
                            ("Lösch alle Erinnerungen", None), ("Hallo", None)):
             self.assertEqual(intent.direct(text, offered), want, text)
         self.assertIsNone(intent.direct("Habe ich neue Mails?", {"weather"}))   # only what the turn offers
         self.assertIsNone(intent.direct("Wie ist das Wetter?" + " " * 100, offered))
 
+    def test_tomorrow_with_the_panels_date(self):
+        """V01.0.362: „Wie wird das Wetter morgen?“ and tomorrow's appointments are fetched directly with the date the
+        panel works out from the local day it is given (no clock in the rule); other places or persons stay with the model."""
+        import datetime
+        offered = {"weather", "calendar_events"}
+        day = datetime.date(2026, 10, 11)
+        for text, want, date in (("Wie wird das Wetter morgen?", "weather", "2026-10-12"),
+                                 ("Und das Wetter übermorgen?", "weather", "2026-10-13"),
+                                 ("Welche Termine habe ich morgen?", "calendar_events", "2026-10-12"),
+                                 ("Hab ich übermorgen Termine?", "calendar_events", "2026-10-13"),
+                                 ("Wie wird das Wetter morgen in Berlin?", None, None),
+                                 ("Welche Termine hat Anna morgen?", None, None)):
+            self.assertEqual(intent.direct(text, offered), want, text)
+            if want:
+                self.assertEqual(intent.direct_args(text, day), {"date": date}, text)
+        self.assertEqual(intent.direct_args("Wie ist das Wetter?", day), {})
+        self.assertEqual(intent.direct_args("Was ist mit Morgenrot?", day), {})
+
     def test_calendar_today_only(self):
-        """V01.0.358: today's appointments are fetched directly (no arguments = today); another day, another person
+        """V01.0.358: today's appointments are fetched directly (no arguments = today); other ranges, another person
         or "was steht heute an" (daily_briefing) stay with the model."""
         offered = {"calendar_events", "daily_briefing"}
         for text, want in (("Welche Termine habe ich heute?", "calendar_events"), ("Hab ich heute noch Termine?", "calendar_events"),
                            ("Was steht heute im Kalender?", "calendar_events"), ("Meine Termine heute", "calendar_events"),
-                           ("Welche Termine habe ich morgen?", None), ("Welche Termine hat Anna heute?", None),
+                           ("Welche Termine habe ich nächste Woche?", None), ("Welche Termine hat Anna heute?", None),
                            ("Was steht heute an?", None), ("Trag einen Termin ein", None)):
             self.assertEqual(intent.direct(text, offered), want, text)
         self.assertIsNone(intent.direct("Welche Termine habe ich heute?", {"daily_briefing"}))

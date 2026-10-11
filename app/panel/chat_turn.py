@@ -682,8 +682,10 @@ async def prepare(request):
     if not direct and route.names == ["spark"] and who and own_browser and "spark_hilfe" in {t["function"]["name"] for t in tools} \
             and not pics and not role_cmd and not room_far and not ha_direct and not ha_wait and not local_task:
         direct = "spark_hilfe"
+    direct_args = intent.direct_args(ask_text, chat.local_now(body.get("tz")).date()) \
+        if direct in ("weather", "calendar_events") else {}
     if direct:
-        print("weiche: direkt abgerufen", direct, flush=True)
+        print("weiche: direkt abgerufen", direct, direct_args.get("date", ""), flush=True)
     check_on = bool(ccfg.get("answer_check", True))
     tool_temp = float(ccfg.get("tool_temperature", 0.1))
     # thinking only while choosing the tool: the admin allows it, the profile switches it on (never guests)

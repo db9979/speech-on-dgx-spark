@@ -250,13 +250,33 @@ DIRECT = (
 )
 
 
+# V01.0.362: tomorrow / the day after: the same tools with the date the panel works out (direct_args), nothing else
+_LATER = r"(übermorgen|morgen)"
+DIRECT_LATER = (
+    ("weather", re.compile(r"(?i)\s*((wie|was) (ist|wird) das wetter|(und )?das wetter) " + _LATER + _END)),
+    ("calendar_events", re.compile(r"(?i)\s*((welche|was für) termine (hab(e)? ich|stehen an|gibt es) " + _LATER + r"|"
+                                   r"hab(e)? ich " + _LATER + r" (einen |irgendwelche )?termine?|(meine|die) termine "
+                                   + _LATER + r"|was steht " + _LATER + r" (in |im )?(meinem )?kalender)" + _END)),
+)
+
+
+def direct_args(text, today):
+    """The arguments for a DIRECT_LATER question: {"date": "YYYY-MM-DD"} for morgen/übermorgen, else {}.
+    `today` is the local date (chat.local_now), passed in so the rule never reads the clock itself."""
+    import datetime
+    m = re.search(r"(?i)(?<!\w)(übermorgen|morgen)(?!\w)", str(text or ""))
+    if not m:
+        return {}
+    return {"date": (today + datetime.timedelta(days=2 if m.group(1).lower() == "übermorgen" else 1)).isoformat()}
+
+
 def direct(text, offered):
     """The tool the panel calls itself for this question (DIRECT), or None: only a whole-sentence match, only a
     tool this turn offers anyway (rights and locks stay where they are)."""
     text = str(text or "")
     if len(text) > 80:
         return None
-    for name, rx in DIRECT:
+    for name, rx in DIRECT + DIRECT_LATER:
         if name in offered and rx.fullmatch(text):
             return name
     return None

@@ -33,6 +33,7 @@ All options for running without questions (`--mode api --asr 1.7b --tts 0.6b --y
 
 <!-- New version: add one line at the top here and in CHANGELOG.md, drop the oldest line here (keep 10). Details go to docs/de and docs/en, not into this README. -->
 
+- **V01.0.362** Fetch clear questions directly: weather and appointments for tomorrow and the day after too
 - **V01.0.361** Search locally first: a long Kiwix article no longer slows the answer (only its start is read), Logs → Requests shows hits per source
 - **V01.0.360** Emergency stop on more ways: Telegram /notaus and /meinnotaus, fixed sentence "Spark, Mein Notaus" / "Spark, Notaus" (the big one admins only), a Home Assistant key that can only trigger (with a ready snippet), Android quick settings tile (app 1.1.0)
 - **V01.0.359** Face at the bottom right: one tap starts the assistant on every page, over Me and on a phone (its window closed at once), a double tap no longer marks text, typing a question always works
@@ -42,7 +43,6 @@ All options for running without questions (`--mode api --asr 1.7b --tts 0.6b --y
 - **V01.0.355** What's new: view the changelog in the panel, from "Was ist neu" at the bottom next to the version or Settings → Update und Sicherung, with search
 - **V01.0.354** Quieter log: a companion release without update file is no error any more (retry after 1 hour), an unreadable recording leaves no "Task exception was never retrieved"
 - **V01.0.353** Spark companion deeper in the computer (per device, all off): right-click on files, ask about the screen, know the app, draft a reply in Outlook and Apple Mail, "Spark-Wissen" folder, buttons in notes, Spark acts on the PC with a question first, wake word on the PC
-- **V01.0.352** Live overview full review: update check, NAS backup, reMarkable sheets, Spark-Begleiter, room mode, logins, speaker recognition and more in the picture
 
 All versions: [CHANGELOG.md](CHANGELOG.md)
 
