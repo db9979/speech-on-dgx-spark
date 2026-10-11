@@ -27,8 +27,8 @@ STATE = os.environ.get("SPEECH_SPARK_STATE", "/var/lib/speech-spark/state")
 KEEP_S, MAX_TRACES, MAX_STEPS, MAX_INFO = 48 * 3600, 500, 40, 12
 SLOW_S = 5.0          # first sound later than this (or no sound and longer than this): "langsam"
 CLIENTS = ("web", "speaker", "watch", "siri", "telegram", "app", "car", "mcp", "ha", "auto", "desk", "other")
-KINDS = ("in", "prep", "asr", "weiche", "llm", "tool", "check", "tts", "err")
-MARKS = ("first", "sound", "end")
+KINDS = ("in", "prep", "asr", "weiche", "llm", "tool", "check", "tts", "ack", "err")
+MARKS = ("first", "sound", "ack", "end")   # ack: the ready-made sentence (ack.py), never the answer
 SAFE = re.compile(r"[A-Za-z0-9_][A-Za-z0-9_ .,:+()/äöüÄÖÜß-]{0,59}")
 ID = re.compile(r"[0-9a-f]{6}")
 MINUTES = (10, 60, 120, 720, 1440, 2880)
@@ -134,6 +134,7 @@ def line(d):
                       for s in d["steps"] if s["k"] == "tool")[:200]
     m = d["marks"]
     return (f"anfrage: {d['id']} | {d['client']} | {d['intent'] or '-'} | {tools or 'keine Werkzeuge'} | "
+            + (f"Rückmeldung {m['ack'] / 1000:.1f} s | " if "ack" in m else "")
             + (f"erster Ton {m['sound'] / 1000:.1f} s | " if "sound" in m else "")
             + f"fertig {m.get('end', 0) / 1000:.1f} s | " + (", ".join(d["errors"]) if d["errors"] else d["status"]))
 

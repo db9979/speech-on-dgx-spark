@@ -48,6 +48,21 @@ def add(seconds, client="web", now=None):
         os.replace(tmp, _file())
 
 
+def add_ack(seconds, now=None):
+    """Notes when the ready-made sentence (ack.py) sounded: kept apart, it never counts as the answer's first sound."""
+    now = time.time() if now is None else now
+    if not isinstance(seconds, (int, float)) or not 0 <= seconds < 3600:
+        return
+    with _lock:
+        items = [x for x in _load() if x["t"] > now - KEEP_DAYS * DAY]
+        items = (items + [{"t": round(now), "a": round(seconds, 2), "c": "web", "k": "ack"}])[-MAX_ENTRIES:]
+        os.makedirs(STATE, exist_ok=True)
+        tmp = _file() + ".tmp"
+        with open(os.open(tmp, os.O_WRONLY | os.O_CREAT | os.O_TRUNC | os.O_NOFOLLOW, 0o600), "w") as f:
+            json.dump(items, f)
+        os.replace(tmp, _file())
+
+
 def _stats(values):
     if not values:
         return None
@@ -59,10 +74,12 @@ def _stats(values):
 def summary(now=None):
     """The last 24 hours, the six days before, and a warning sentence when answers got slower."""
     now = time.time() if now is None else now
-    items = _load()
+    loaded = _load()
+    items = [x for x in loaded if x.get("k") != "ack"]   # the answer's first sound only
     day = [x["a"] for x in items if x["t"] > now - DAY]
     week = [x["a"] for x in items if now - 7 * DAY < x["t"] <= now - DAY]
-    res = {"day": _stats(day), "week": _stats(week), "warn": None}
+    acks = [x["a"] for x in loaded if x.get("k") == "ack" and x["t"] > now - DAY]
+    res = {"day": _stats(day), "week": _stats(week), "ack": _stats(acks), "warn": None}
     d, w = res["day"], res["week"]
     # clearly slower: at least 10 answers today, median more than 1.5 times and 1.5 s above the week's
     if d and w and d["n"] >= 10 and w["n"] >= 10 and d["median"] > 1.5 * w["median"] and d["median"] > w["median"] + 1.5:

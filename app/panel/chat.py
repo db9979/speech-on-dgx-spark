@@ -43,6 +43,7 @@ import stufe  # noqa: E402  (priority for people)
 import tracelog  # noqa: E402  (Logs → Anfragen: the way of each request)
 import features  # noqa: E402
 import vorab  # noqa: E402  (fetching ahead when the answer asks back)
+import ack  # noqa: E402  (the instant ready-made sentence)
 from common import load_config  # noqa: E402
 from core import DEFAULTS, FACES, admin_cookie_ok, api_headers, assistant  # noqa: E402
 
@@ -1343,6 +1344,25 @@ async def _answer(request, turn):
     # where the time goes, for Zustand → Logs → Diagnose "Gespräch" (only while that detail switch is on)
     tm = {"req": getattr(turn, "t_req", None) or t0, "rounds": [], "audio": None, "on": logfilter.verbose("chat")}
 
+    # "Sofortige Rückmeldung" (ack.py): right away a ready-made sentence of what the Spark does now, chosen by fixed
+    # rules (Weiche group, "Erst lokal", a direct fetch) and played from a recording (no GPU); never small talk
+    ack_lang, acked = None, False
+    if who and own_browser and body.get("speak") is not False and body.get("client") not in ("watch", "siri") \
+            and messages and messages[-1]["role"] == "user" and not turn.pics and features.allowed("ack", who["id"], ccfg):
+        ack_lang = tts_body.get("language") if tts_body.get("language") in ("German", "English") else \
+            ack.lang_of(guess_language(messages[-1]["content"]) == "English")
+        route = getattr(turn, "route", None)
+        names = route.names if route else []
+        grp = ack.group_of(names, getattr(turn, "direct", None), bool(getattr(turn, "local_task", None)))
+        if grp:
+            text = ack.phrase(grp, who["id"], ack_lang == "English")
+            if ack.clip(ack.key(tts_body, text, ack_lang)):
+                sentences.put_nowait(("clip", text, "ack"))
+                acked = True
+        if names != ["plaudern"] and not (set(names) & {"smarthome"}):
+            ack.count(grp or (route.label() if route else "unklar"), acked)
+        if not ack.missing_ok(tts_body, ack_lang):   # recorded once per voice, in a pause of the TTS
+            ack.later(ack.record_missing(tts_url, api_headers(), tts_body, ack_lang))
     trace = {"calls": list(cal_note), "said": ""}  # for the profile's tool log
     # Logs → Anfragen (tracelog.py, admin switch logs.trace): only ways, tool names and numbers, never text
     tr = turn.tr = start_trace(request, turn, tm["req"], t0)
@@ -1361,7 +1381,7 @@ async def _answer(request, turn):
                 base["chat_template_kwargs"] = {"enable_thinking": False}
             if tm["on"] or tr:   # the server says how much it read and how much came from its cache
                 base["stream_options"] = {"include_usage": True}
-            st = {"buf": "", "first": True, "think": False, "n": 0, "mail": carry == "mail", "outside": carry == "outside",
+            st = {"buf": "", "first": not acked, "think": False, "n": 0, "mail": carry == "mail", "outside": carry == "outside",
                   "offered": set(), "saves": 0, "shown": 0, "check": bool(need) and check_on, "hold": None, "dropped": [], "msgs": None,
                   "cal": bool(set(need or []) & CAL_READS)}
             if carry:
@@ -1826,6 +1846,37 @@ async def _answer(request, turn):
                     think=rec["think"] or None)
         return finish, out_calls
 
+    async def play_clip(text, kind, played_until):
+        """A ready-made sentence from its recording: to the browser like the answer's sound. Returns until when it
+        plays. "erste Rückmeldung" (timing first_ack, Logs → Anfragen) is kept apart from "erster Ton"."""
+        pcm = ack.clip(ack.key(tts_body, text, ack_lang)) if ack_lang else None
+        if not pcm:
+            return played_until
+        now = time.time()
+        mine = echo.said(text, device_owner and device_owner["id"], echo.device_of(request), start=max(now, played_until))
+        for piece in ack.chunks(pcm):
+            await out.put({"type": "audio", "audio": piece})
+        until = max(played_until, now) + len(pcm) / 48000
+        echo.played(mine, until)
+        if kind == "ack":
+            await out.put({"type": "timing", "first_ack": round(now - t0, 3)})
+            try:   # Zustand → Prüfen shows it beside "Bis zum ersten Ton", never in it
+                await asyncio.to_thread(latency.add_ack, now - t0)
+            except (OSError, ValueError) as e:
+                print("latency:", type(e).__name__, flush=True)
+        if tr:
+            tr.mark("ack", now)
+            tr.step("ack", "Brücke" if kind == "bridge" else "Rückmeldung", now, until, bridge=kind == "bridge" or None)
+        return until
+
+    async def bridge():
+        """One more short sentence when the answer has not made a sound after ack.BRIDGE_S seconds (once)."""
+        await asyncio.sleep(max(0.0, ack.BRIDGE_S - (time.time() - t0)))
+        if tm["audio"] is None:
+            text = ack.phrase("bridge", who["id"], ack_lang == "English")
+            if ack.clip(ack.key(tts_body, text, ack_lang)):
+                await sentences.put(("clip", text, "bridge"))
+
     async def tts():
         first, played_until, ttfa = True, 0.0, 0.5
         mute = body.get("speak") is False  # text only (Siri) or speech output failed: no TTS
@@ -1836,6 +1887,10 @@ async def _answer(request, turn):
                 text = await sentences.get()
                 if text is None:
                     break
+                if isinstance(text, tuple):   # a ready-made sentence (ack.py): from its recording, no TTS request
+                    if not mute and not (text[2] == "bridge" and said["pieces"]):
+                        played_until = await play_clip(text[1], text[2], played_until)
+                    continue
                 if mute:
                     continue
                 # Every TTS request starts its own intonation, so sentence-by-sentence speech
@@ -1855,6 +1910,8 @@ async def _answer(request, turn):
                     if nxt is None:
                         done = True
                         break
+                    if isinstance(nxt, tuple):   # a bridge sentence that came too late: the answer runs already
+                        continue
                     # a new line only before list items (clean_text strips their markers); plain
                     # sentences stay one paragraph, so the voice does not reset at each line
                     text += ("\n" if re.match(r"\s*(?:[-*+•]|\d+\.)\s", nxt) else " ") + nxt
@@ -1903,7 +1960,7 @@ async def _answer(request, turn):
                                                          start=max(now, played_until))
                                     if first:
                                         first = False
-                                        played_until = now
+                                        played_until = max(played_until, now)   # (after a ready-made sentence)
                                         tm["audio"] = now
                                         if tr:
                                             tr.mark("sound", now)
@@ -1952,7 +2009,7 @@ async def _answer(request, turn):
                         behind=said["behind"] or None, waited_ms=said["waited"] or None, overtook=said["overtook"] or None)
             await out.put(None)
 
-    tasks = [asyncio.create_task(llm()), asyncio.create_task(tts())]
+    tasks = [asyncio.create_task(llm()), asyncio.create_task(tts())] + ([asyncio.create_task(bridge())] if ack_lang else [])
 
     # guests get the kind of an error, not its text (which can name internal addresses)
     guest = not device_owner and not admin_cookie_ok(request)

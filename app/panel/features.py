@@ -64,6 +64,8 @@ FEATURES = (
     F("routing", "Gezielte Werkzeugwahl", "Targeted tool choice", "talk", ("routing",), "route", me="setbox", guide="routing"),
     F("direct", "Eindeutiges direkt abrufen", "Fetch clear questions directly", "talk", ("direct_read",), "direct_read",
       me="setbox", guide="direct"),
+    F("ack", "Sofortige Rückmeldung", "Instant acknowledgement", "talk", ("instant_ack",), "instant_ack",
+      parent="routing", me="setbox", guide="ack"),
     F("vorab", "Vorab holen bei Rückfrage", "Fetch ahead on a question back", "talk", ("prefetch",), "prefetch",
       parent="routing", me="setbox", guide="vorab"),
     F("hilfe", "Hilfe zum Spark", "Help with the Spark", "talk", ("spark_help",), "spark_help", me="setbox", guide="hilfe"),

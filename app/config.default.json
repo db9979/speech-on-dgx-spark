@@ -87,6 +87,7 @@
     "systemone_mail": false,
     "systemone_quality": false,
     "prefetch": false,
+    "instant_ack": false,
     "spark_help": false,
     "write_help": false,
     "write_apps": false,

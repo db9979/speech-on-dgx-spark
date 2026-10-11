@@ -2,6 +2,7 @@
 
 Every version in one line, newest first (taken from the commit messages, so some lines are German, some English). Older entries have no version number.
 
+- **V01.0.373** · 2026-10-11 · Sofortige Rückmeldung (Admin unter Gezielte Werkzeugwahl + Profil, aus): gleich nach der Frage ein fertig aufgenommener Satz, was der Spark tut („Ich schau in deinen Kalender.“), nach festen Regeln der Weiche, nie ein Ergebnis, nie beim Plaudern; Aufnahme einmal pro Stimme in einer Pause (keine Grafikkarte beim Abspielen), zweite Brücke nach 6 s; „erste Rückmeldung“ getrennt vom „ersten Ton“ in Chat, Logs → Anfragen und Zustand → Prüfen (dort auch: häufigste Fragen ohne Satz)
 - **V01.0.372** · 2026-10-11 · Doku Sicherheit und Betrieb: iPhone-Knopf und Siri „Spark Notaus“ (V01.0.370) bei den anderen Notaus-Wegen eingetragen
 - **V01.0.371** · 2026-10-11 · Releases aufräumen: neuer Workflow „Releases aufräumen“ (nach jedem erfolgreichen Release-Lauf und von Hand, mit „Nur anzeigen“) lässt pro Reihe nur das neueste Release stehen (fw-…, android-v…), ältere und ihre Tags gehen, ebenso die abgelöste Reihe schreibhilfe-windows; Entwürfe und Vorabversionen bleiben; Selbsttest
 - **V01.0.370** · 2026-10-11 · Notaus in der iPhone-App (Paket 3): roter Knopf unter Einstellungen mit Rückfrage (Mein Notaus; im Admin-Modus auch ganzer Spark Stufe 2), Siri „Spark Notaus“ mit requestConfirmation, 503 mit Notaus klar angezeigt; Panel: /api/notaus/mine für den App-Schlüssel, GET /api/notaus sagt einem gesperrten App-Schlüssel, dass sein Notaus an ist (test_app_notaus)

@@ -693,7 +693,9 @@ function liveRender(r){if(!r||!r.steps){$('livesteps').innerHTML=`<tr><td class=
   $('livemsg').textContent=new Date(r.t*1000).toLocaleString()+' · '+(r.version||'')+(r.reason==='after update'?t(' · nach dem Update',' · after the update'):'')}
 // how long people wait for the first sound of an answer (latency.py)
 function latRender(l){const f=s=>s?`<b>${s.median} s</b> <span class="mut">(${s.n} ${t('Antworten','answers')}, ${t('9 von 10 unter','9 of 10 below')} ${s.p90} s)</span>`:`<span class="mut">${t('noch keine','none yet')}</span>`;
-  $('latsum').innerHTML=!l?'':`${t('Bis zum ersten Ton','Until the first sound')}: ${t('letzte 24 Stunden','last 24 hours')} ${f(l.day)} · ${t('Tage davor','days before')} ${f(l.week)}`+(l.warn?`<div class="err">${esc(l.warn)}</div>`:'')}
+  $('latsum').innerHTML=!l?'':`${t('Bis zum ersten Ton','Until the first sound')}: ${t('letzte 24 Stunden','last 24 hours')} ${f(l.day)} · ${t('Tage davor','days before')} ${f(l.week)}`+(l.warn?`<div class="err">${esc(l.warn)}</div>`:'')+
+    (l.ack?`<div>${t('Erste Rückmeldung (fertiger Satz)','First acknowledgement (ready-made sentence)')}: ${f(l.ack)}</div>`:'')+
+    (l.ack_today&&(l.ack_today.with||l.ack_today.without)?`<div class="mut">${t(`Heute ${l.ack_today.with} Antworten mit sofortigem Satz, ${l.ack_today.without} ohne`,`Today ${l.ack_today.with} answers with an instant sentence, ${l.ack_today.without} without`)}${l.ack_today.top.length?t(', am häufigsten ohne: ',', most often without: ')+l.ack_today.top.map(x=>`${esc(x.group)} (${x.n})`).join(', '):''}</div>`:'')}
 async function loadLive(){try{const r=await (await api('/api/livecheck')).json();liveRender(r);latRender(r.latency)}catch{}loadQuality()}
 // quality test of the language model (sandbox questions, see quality.py)
 let qTimer=null;

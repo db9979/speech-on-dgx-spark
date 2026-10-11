@@ -229,7 +229,7 @@ async function ask(text,asrS,spk){const spoken=!!chat.nextSpoken;chat.nextSpoken
 const pids=typeof picIds==='function'?picIds():[],thumbs=pids.length?picThumbs():[];   // attached pictures (pics.js)
 const ub=chatLog('user',text);const um={role:'user',content:text};
   if(thumbs.length){const w=document.createElement('div');w.className='picrow';w.innerHTML=thumbs.map(u=>`<img alt="" src="${esc(u)}">`).join('');ub.appendChild(w)}chat.msgs.push(um);deletable(ub,um);let foreign=false,ttsErr=false,mailUsed=false,outsideUsed=false,why=null;
-  const el=chatLog('assistant','');$('fabtext').textContent='';let full='',llmS=null,audioS=null,err='';const searches=[],sources=[],mems=[],docs=[],drefs=[],hcards=[];
+  const el=chatLog('assistant','');$('fabtext').textContent='';let full='',llmS=null,audioS=null,ackS=null,err='';const searches=[],sources=[],mems=[],docs=[],drefs=[],hcards=[];
   const ctrl=new AbortController();chat.ctrl=ctrl;chat.firstPlay=null;chat.gaps=[];chat.blocks=[];chat.t0b=null;chat.stalls=0;chat.pieceStart=true;setTalk();chatSay(t('Antwort kommt …','Answer coming …'));
   try{const r=await api('/api/chat',{method:'POST',headers:{'Content-Type':'application/json'},signal:ctrl.signal,
       body:JSON.stringify({messages:chat.msgs.slice(-20),tz:(()=>{try{return Intl.DateTimeFormat().resolvedOptions().timeZone}catch{return ''}})(),voice:PROFILE&&S.voice||undefined,speed:S.speed,length:S.length,reminders:PROFILE?undefined:rem.list,convo:chat.cid||undefined,speaker:spk&&spk.token||undefined,images:pids.length?pids:undefined,page:typeof hilfeNow==='function'?hilfeNow():undefined,focus:typeof hilfeFocusTake==='function'?hilfeFocusTake():undefined,view:document.body.classList.contains('appview')?'app':undefined})});
@@ -261,7 +261,7 @@ const ub=chatLog('user',text);const um={role:'user',content:text};
         else if(ev.type==='reminder'){rem.event(ev);mems.push(ev.action==='set'?t('Erinnerung: ','Reminder: ')+rem.when(ev.item.due)+' '+ev.item.text:t('Erinnerung gelöscht','Reminder cancelled'))}
         else if(ev.type==='memory'){mems.push((ev.action==='saved'?t('Gemerkt: ','Remembered: '):t('Vergessen: ','Forgotten: '))+ev.text)}
         else if(ev.type==='search_error'){chatSay(t('Websuche fehlgeschlagen: ','Web search failed: ')+ev.message)}
-        else if(ev.type==='timing'){if(ev.llm_first_token!=null)llmS=ev.llm_first_token;if(ev.first_audio!=null)audioS=ev.first_audio}
+        else if(ev.type==='timing'){if(ev.llm_first_token!=null)llmS=ev.llm_first_token;if(ev.first_audio!=null)audioS=ev.first_audio;if(ev.first_ack!=null)ackS=ev.first_ack}
         else if(ev.type==='error'){if(!err)err=errText(ev.code,ev.message);if(/^tts/.test(ev.code||''))ttsErr=true}}}}
   catch(e){if(e.name!=='AbortError')err=errText(e instanceof TypeError?'net':'',e.message);if(pids.length&&/picture is gone/.test(e.message||''))picsGone()}
   const aborted=ctrl.signal.aborted;if(chat.ctrl===ctrl)chat.ctrl=null;
@@ -288,7 +288,7 @@ const ub=chatLog('user',text);const um={role:'user',content:text};
     b.textContent=t('Aufs reMarkable','To the reMarkable');const said=full.trim();b.onclick=()=>rmSend(said,b);el.appendChild(b)}
   const f=v=>v==null?'–':v.toFixed(2)+' s';
   const chip=(k,v,hi)=>`<span class="chip${hi?' hi':''}">${k} <b>${f(v)}</b></span>`;
-  $('chattiming').innerHTML=(asrS!=null?chip(t('Spracherkennung','Recognition'),asrS):'')+chip(t('LLM erstes Wort','LLM first word'),llmS)+chip(t('erster Ton','first audio'),audioS)+
+  $('chattiming').innerHTML=(asrS!=null?chip(t('Spracherkennung','Recognition'),asrS):'')+chip(t('LLM erstes Wort','LLM first word'),llmS)+(ackS!=null?chip(t('erste Rückmeldung','first acknowledgement'),ackS):'')+chip(t('erster Ton','first audio'),audioS)+
     (asrS!=null&&audioS!=null?chip(t('hörbar nach','audible after'),asrS+audioS,true):'')+
     (chat.gaps.length?`<span class="chip" title="${t('Die Sprachausgabe kam nicht schnell genug nach','Speech output fell behind')}">${t('Aussetzer bei','stalls at')} <b>${chat.gaps.map(x=>x.toFixed(1)+' s').join(', ')}</b></span>`+
       `<div class="blocks">${t('Tonblöcke (Länge@Ankunft, ! = Aussetzer)','Audio blocks (length@arrival, ! = stall)')}: ${esc(chat.blocks.join(' '))}</div>`:'');

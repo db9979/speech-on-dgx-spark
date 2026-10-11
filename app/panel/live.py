@@ -474,7 +474,7 @@ def _now_at(rec, now):
         return k, ""
     if k in ("in", "prep"):
         return "weiche", ""
-    if k in ("weiche", "tool"):
+    if k in ("weiche", "tool", "ack"):   # (the instant sentence plays while the model reads)
         return "llm", ""
     if k in ("llm", "check"):
         return ("tts", "") if "first" in rec.marks else ("llm", "")

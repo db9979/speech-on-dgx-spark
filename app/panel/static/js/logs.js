@@ -85,7 +85,7 @@ function lcopyText(){const q=$('logq').value.trim().toLowerCase();const rows=q?L
 // ---------------------------------------------------------------- Anfragen (V01.0.262, tracelog.py)
 // One request's way: a list with a bead chain per request, then where the time went and the steps as a time line.
 // Only ways, tool names and numbers come from the panel; names only for profiles that allowed it.
-const RK={in:['#64748b','↘'],prep:['#8b5cf6','⚙'],weiche:['#8b5cf6','⑂'],llm:['#5b5bf0','◆'],tool:['#0d9488','⚒'],check:['#16a34a','✓'],asr:['#0ea5c6','◉'],tts:['#e07a10','♪'],err:['#dc2626','✕']};
+const RK={in:['#64748b','↘'],prep:['#8b5cf6','⚙'],weiche:['#8b5cf6','⑂'],llm:['#5b5bf0','◆'],tool:['#0d9488','⚒'],check:['#16a34a','✓'],asr:['#0ea5c6','◉'],tts:['#e07a10','♪'],ack:['#f59e0b','♫'],err:['#dc2626','✕']};
 const RCLIENT={web:t('Browser','Browser'),speaker:t('Lautsprecher','Speaker'),watch:t('Uhr','Watch'),siri:'Siri',telegram:'Telegram',app:t('iPhone-App','iPhone app'),car:'CarPlay',mcp:t('Programm (MCP)','Program (MCP)'),ha:'Home Assistant',auto:t('Von selbst','By itself'),desk:'Spark-Begleiter',other:t('Gerät','Device')};
 const RQ={data:null,sel:null,filter:'',lines:null};
 const rsec=ms=>ms==null?'–':ms<1000?`${ms} ms`:(ms/1000).toFixed(1).replace('.',L==='en'?'.':',')+' s';
@@ -114,9 +114,10 @@ function rdesc(s){const x=s.x||{},p=[];
   else if(s.k==='tool'){p.push(x.ok===false?t('nicht ok','not ok'):'ok');if(x.chars)p.push(t(`${x.chars} Zeichen Ergebnis`,`${x.chars} chars result`));if(x.outside)p.push(t('Text von außen, nur als Daten','outside text, as data only'));if(x.panel)p.push(t('vom Panel ausgeführt','run by the panel'));if(x.hits!=null)p.push(t(`${x.hits} Treffer`,`${x.hits} hits`)+[['docs',t('Dokumente','documents')],['archive',t('Archiv','archive')],['history',t('Verlauf','history')]].filter(([k])=>x[k]!=null).map(([k,l])=>` · ${l} ${x[k]}`).join('')+(x.late?t(` · ${x.late} zu langsam`,` · ${x.late} too slow`):''));if(x.many)p.push(t('zu viele Aufrufe in einer Runde','too many calls in one round'));if(x.locked)p.push(t('war nicht angeboten','was not offered'))}
   else if(s.k==='check'){p.push(x.again?t('ohne Werkzeug geantwortet, neu gefragt','answered without a tool, asked again'):x.held?t(`${x.held} Angabe(n) ohne Quelle zurückgehalten`,`${x.held} claim(s) without a source held back`):t('alles belegt','everything backed'))}
   else if(s.k==='tts'){p.push(t(`${x.pieces||0} Stück(e) · ${x.chars||0} Zeichen`,`${x.pieces||0} piece(s) · ${x.chars||0} chars`));if(x.behind)p.push(t(`${x.behind}× Ton gestockt`,`sound stalled ${x.behind}×`));if(x.waited_ms)p.push(t('wartete ','waited ')+rsec(x.waited_ms));if(x.overtook)p.push(t(`überholte ${x.overtook} wartende`,`overtook ${x.overtook} waiting`))}
+  else if(s.k==='ack')p.push(x.bridge?t('zweiter fertiger Satz, die Antwort dauerte','second ready-made sentence, the answer took longer'):t('fertiger Satz aus der Aufnahme, ohne Grafikkarte','ready-made sentence from its recording, no GPU'));
   else if(s.k==='err')p.push(t('vorzeitig beendet, z. B. ins Wort gefallen oder Seite geschlossen','ended early, e.g. barge-in or page closed'));
   return p.join(' · ')}
-function rtitle(s){return s.k==='prep'?t('Panel-Vorbereitung','Panel preparation'):s.k==='weiche'?t('Weiche: ','Switch: ')+s.n.replace(/^Weiche: /,''):s.k==='llm'?s.n.replace(/^Runde/,t('Sprachmodell, Runde','Language model, round')):s.k==='check'?t('Antwort-Prüfung','Answer check'):s.k==='tts'?t('Sprachausgabe','Speech output'):s.k==='err'?t('abgebrochen','aborted'):s.k==='in'?t('Eingang · ','Arrival · ')+s.n:s.n}
+function rtitle(s){return s.k==='prep'?t('Panel-Vorbereitung','Panel preparation'):s.k==='weiche'?t('Weiche: ','Switch: ')+s.n.replace(/^Weiche: /,''):s.k==='llm'?s.n.replace(/^Runde/,t('Sprachmodell, Runde','Language model, round')):s.k==='check'?t('Antwort-Prüfung','Answer check'):s.k==='tts'?t('Sprachausgabe','Speech output'):s.k==='ack'?(s.n==='Brücke'?t('Brücke','Bridge'):t('Sofortige Rückmeldung','Instant acknowledgement')):s.k==='err'?t('abgebrochen','aborted'):s.k==='in'?t('Eingang · ','Arrival · ')+s.n:s.n}
 function rshares(x){const sum={prep:0,llm:0,tool:0,tts:0};(x.steps||[]).forEach(s=>{const k=s.k==='weiche'?'prep':s.k;if(k in sum)sum[k]+=s.d||0});
   const tot=Object.values(sum).reduce((a,b)=>a+b,0)||1,bar=el('div','rbar'),leg=el('div','rleg');
   [['prep',t('Panel','Panel')],['llm',t('Sprachmodell','Language model')],['tool',t('Werkzeuge','Tools')],['tts',t('Sprachausgabe','Speech output')]].forEach(([k,label])=>{
@@ -125,6 +126,7 @@ function rshares(x){const sum={prep:0,llm:0,tool:0,tts:0};(x.steps||[]).forEach(
   const box=el('div','rshare');box.append(el('div','rsub',t('Wohin die Zeit ging','Where the time went')),bar,leg);return box}
 function rsteps(x){const list=[...(x.steps||[])].map(s=>({...s}));const m=x.marks||{};
   if(m.first!=null)list.push({k:'mark',c:RK.llm[0],n:t('erstes Wort','first word'),a:m.first});
+  if(m.ack!=null)list.push({k:'mark',c:RK.ack[0],n:t('erste Rückmeldung beim Gerät','first acknowledgement at the device'),a:m.ack});
   if(m.sound!=null)list.push({k:'mark',c:RK.tts[0],n:t('erster Ton beim Gerät','first sound at the device'),a:m.sound});
   list.sort((a,b)=>a.a-b.a||(a.k==='mark')-(b.k==='mark'));if(m.end!=null)list.push({k:'mark',c:x.status==='err'?'#dc2626':'#16a34a',n:t('fertig','done'),a:m.end});
   const tl=el('div','rtl');
@@ -166,7 +168,7 @@ function rrender(){lshow();const d=RQ.data,box=$('logreq'),chips=$('logchips');i
   $('loghead').textContent=t('Anfragen','Requests')+(d.on?'':' · '+t('Aufzeichnung aus','recording off'));
   $('logcount').textContent=t(`${items.length} von ${d.items.length} · höchstens ${d.keep_hours} h`,`${items.length} of ${d.items.length} · at most ${d.keep_hours} h`)}
 function rcopyText(){const x=RQ.data&&RQ.data.items.find(y=>y.id===RQ.sel);if(!x)return '';const m=x.marks||{};
-  const head=`${$('ver').textContent} · Anfrage ${x.id} · ${rtime(x)} · ${RCLIENT[x.client]||x.client} · ${x.intent||'-'}`+(m.sound!=null?` · erster Ton ${rsecs(m.sound)}`:'')+` · fertig ${rsecs(m.end||0)} · ${x.errors.length?x.errors.join(', '):x.status}`;
+  const head=`${$('ver').textContent} · Anfrage ${x.id} · ${rtime(x)} · ${RCLIENT[x.client]||x.client} · ${x.intent||'-'}`+(m.ack!=null?` · Rückmeldung ${rsecs(m.ack)}`:'')+(m.sound!=null?` · erster Ton ${rsecs(m.sound)}`:'')+` · fertig ${rsecs(m.end||0)} · ${x.errors.length?x.errors.join(', '):x.status}`;
   const rows=[...(x.steps||[])].sort((a,b)=>a.a-b.a).map(s=>`+${(s.a/1000).toFixed(2)} ${rtitle(s)} ${s.d?rsec(s.d):''} (${rdesc(s)})`.replace(' ()',''));
   return `${head}\n\`\`\`\n${rows.join('\n')}\n\`\`\``}
 // detail switches (Ausführlich): admin only, off by default, switch themselves off

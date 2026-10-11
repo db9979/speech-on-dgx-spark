@@ -186,8 +186,9 @@ async def _restore(f, name, password=""):
 
 @router.get("/api/livecheck", dependencies=[Depends(auth)])
 def livecheck_result():
+    import ack
     import latency
-    return dict(health.last_live() or {}, latency=latency.summary())
+    return dict(health.last_live() or {}, latency=dict(latency.summary(), ack_today=ack.today()))
 
 
 @router.post("/api/livecheck", dependencies=[Depends(auth)])

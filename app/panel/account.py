@@ -1070,7 +1070,7 @@ def profile_settings(request: Request):
 # which conversation switches the admin allows (features.py), only for a signed-in profile
 ALLOW = {"tool_think": "toolthink", "route": "routing", "direct_read": "direct", "fix_learn": "fixes", "style": "style", "roles": "roles",
          "wiki": "wiki", "kiwix": "kiwix", "local": "lokal", "follow": "follow", "echo": "selfecho", "images": "images",
-         "prefetch": "vorab", "spark_help": "hilfe", "systemone_on": "einordnung"}
+         "prefetch": "vorab", "instant_ack": "ack", "spark_help": "hilfe", "systemone_on": "einordnung"}
 
 
 def _allow(prof, chat):

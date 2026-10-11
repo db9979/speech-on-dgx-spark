@@ -732,6 +732,7 @@ SETTINGS = {
     "kiwix_on": (False, lambda v: isinstance(v, bool)),     # own Kiwix archive (kiwix.py, admin chat.kiwix)
     "local_first": (False, lambda v: isinstance(v, bool)),  # own sources before the web (lokal.py, admin chat.local_first)
     "prefetch": (False, lambda v: isinstance(v, bool)),     # fetch ahead on a question back (vorab.py, admin chat.prefetch)
+    "instant_ack": (False, lambda v: isinstance(v, bool)),  # a ready-made sentence right away (ack.py, admin chat.instant_ack)
     "spark_help": (False, lambda v: isinstance(v, bool)),   # questions about the Spark itself (hilfe.py, admin chat.spark_help)
     "write_on": (False, lambda v: isinstance(v, bool)),     # Schreibhilfe (schreib.py, admin chat.write_help)
     "write_apps": (False, lambda v: isinstance(v, bool)),   # ... also from paired programs and the iPhone app (chat.write_apps)
