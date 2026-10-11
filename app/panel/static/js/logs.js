@@ -163,8 +163,12 @@ function rrender(){lshow();const d=RQ.data,box=$('logreq'),chips=$('logchips');i
   [['',t('Alle','All'),'',d.items.length],['err',t('Fehler','Errors'),'#ef4444',n('err')],['slow',t('Langsam','Slow'),'#f59e0b',n('slow')]].forEach(([k,label,c,cnt])=>{
     const b=el('button','lchip'+(RQ.filter===k?' on':''));b.type='button';if(c){b.style.setProperty('--c',c);b.append(el('i'))}b.append(document.createTextNode(label));b.append(el('b','',String(cnt)));
     b.setAttribute('aria-pressed',RQ.filter===k?'true':'false');b.onclick=()=>{RQ.filter=k;rrender()};chips.append(b)});
+  // the live refresh (every 10 s) builds the list anew: it keeps where the person had scrolled to (V01.0.387, Dominik
+  // 2026-10-11: the list jumped back to the top while picking a request)
+  const old=box.querySelector('.rlist'),keep=old?old.scrollTop:0,keepY=window.scrollY;
   const items=rfiltered(),sel=d.items.find(x=>x.id===RQ.sel);box.replaceChildren();box.classList.toggle('one',!!(PHONE.matches&&sel));
   if(!(PHONE.matches&&sel))box.append(rlist(items));if(sel)box.append(rdetail(sel));
+  const now=box.querySelector('.rlist');if(now&&keep)now.scrollTop=keep;if(window.scrollY!==keepY)window.scrollTo(0,keepY);
   $('loghead').textContent=t('Anfragen','Requests')+(d.on?'':' · '+t('Aufzeichnung aus','recording off'));
   $('logcount').textContent=t(`${items.length} von ${d.items.length} · höchstens ${d.keep_hours} h`,`${items.length} of ${d.items.length} · at most ${d.keep_hours} h`)}
 function rcopyText(){const x=RQ.data&&RQ.data.items.find(y=>y.id===RQ.sel);if(!x)return '';const m=x.marks||{};

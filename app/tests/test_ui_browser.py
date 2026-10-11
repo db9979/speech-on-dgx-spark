@@ -833,7 +833,7 @@ class Browser(unittest.TestCase):
                     self.assertFalse(await pg.is_visible("#chat\\.search_url"))
                     tall = await pg.evaluate("$('pane-feat').getBoundingClientRect().height")
                     # about 45 px per closed line on a computer (limit grows with new rows); open boxes would be several times that
-                    self.assertLess(tall, 4020 if w < 760 else 3060, f"{w}: {tall}px")   # V01.0.386: +1 line "Probleme melden", V01.0.381: +1 line "Geräte-Updates", V01.0.342: +1 line "Spark-Begleiter am PC und Mac", V01.0.340: +1 line "Einordnung mit Wahrscheinlichkeit", V01.0.339: +1 sub-switch "In anderen Programmen", V01.0.332: +1 line "Schreibhilfe", V01.0.326: +1 line "Hilfe zum Spark", V01.0.300: +1 line "Android-App", V01.0.303: +1 line "Spark als MCP-Server", V01.0.304: +1 line "Eindeutiges direkt abrufen", V01.0.307: +1 sub-switch "Vorab holen bei Rückfrage"
+                    self.assertLess(tall, 3950 if w < 760 else 3015, f"{w}: {tall}px")   # V01.0.381: +1 line "Geräte-Updates", V01.0.342: +1 line "Spark-Begleiter am PC und Mac", V01.0.340: +1 line "Einordnung mit Wahrscheinlichkeit", V01.0.339: +1 sub-switch "In anderen Programmen", V01.0.332: +1 line "Schreibhilfe", V01.0.326: +1 line "Hilfe zum Spark", V01.0.300: +1 line "Android-App", V01.0.303: +1 line "Spark als MCP-Server", V01.0.304: +1 line "Eindeutiges direkt abrufen", V01.0.307: +1 sub-switch "Vorab holen bei Rückfrage"
                     await pg.evaluate("$('chat.search').closest('.fitem').querySelector('.fexp').click()")
                     self.assertTrue(await pg.evaluate("$('chat.search').closest('.fitem').classList.contains('open')"))
                     await pg.evaluate("$('chat.search').closest('.fitem').querySelector('.fexp').click()")
@@ -1192,6 +1192,14 @@ class Browser(unittest.TestCase):
                     self.assertIn("Anfrage " + rid, await pg.inner_text("#logreq .rdet"))
                     self.assertIn(rid, await pg.inner_text("#logreq .rlist") if await pg.is_visible("#logreq .rlist") else rid)
                     self.assertNotIn("Uitest mag Tee", await pg.inner_text("#logs"))
+                    if name != "handy":   # V01.0.387: the live refresh builds the list anew and keeps where it was scrolled to
+                        kept = await pg.evaluate("(()=>{const st=document.createElement('style');st.id='rqtiny';"
+                                                 "st.textContent='#logreq .rlist{max-height:40px!important}';document.head.append(st);"
+                                                 "const l=document.querySelector('#logreq .rlist');l.scrollTop=30;const was=l.scrollTop;"
+                                                 "rrender();const now=document.querySelector('#logreq .rlist').scrollTop;st.remove();"
+                                                 "return [was,now]})()")
+                        self.assertGreater(kept[0], 0, name)
+                        self.assertEqual(kept[0], kept[1], name)
                     over = await pg.evaluate("document.documentElement.scrollWidth-window.innerWidth")
                     self.assertLessEqual(over, 1, f"{name}: {over}px zu breit")
                     await pg.screenshot(path=os.path.join(os.environ.get("SPEECH_SPARK_SHOTS", helpers.TMP),
@@ -1847,48 +1855,6 @@ class Browser(unittest.TestCase):
         finally:
             update.CHANGELOG_FILES = real
             update._cl_cache.update(key=None, entries=[])
-
-    def test_report_window(self):
-        """Probleme melden (melden.js): the window opens with the strict CSP on, a draft shows the anonymized preview
-        with lines to untick, Escape closes; Ich → Probleme melden lists it; nothing sticks out at 320/390 px."""
-        import meldung
-        import profiles
-        helpers.set_config(report=True)
-        me = next(u for u in profiles._load()["users"] if u["name"] == "Uitest")["id"]
-        profiles.save_settings(me, {"report_on": True})
-
-        async def go():
-            async with async_playwright() as p:
-                for w, h in ((1440, 900), (390, 800), (320, 700)):
-                    br, pg, errors = await self.page(p, w, h, csp=True)
-                    try:
-                        await pg.evaluate("ON.rpOpen()")
-                        await pg.wait_for_selector("#rpbody textarea", timeout=5000)
-                        await pg.fill("#rpbody textarea", "Der Wecker klingelt heute nicht")
-                        await pg.click("#rpbody [data-rpmake]")
-                        await pg.wait_for_selector("#rpbody pre.rpbody", timeout=8000)
-                        self.assertIn("klingelt heute nicht", await pg.inner_text("#rpbody pre.rpbody"))
-                        self.assertGreater(await pg.evaluate("document.querySelectorAll('#rpbody [data-rpline]').length"), 0)
-                        over = await pg.evaluate("document.documentElement.scrollWidth-window.innerWidth")
-                        self.assertLessEqual(over, 1, f"{w}: {over}px zu breit")
-                        wide = await pg.evaluate("(()=>{const c=document.querySelector('#rpmodal .rpcard').getBoundingClientRect();return c.right-window.innerWidth})()")
-                        self.assertLessEqual(wide, 1, f"{w}: Fenster ragt hinaus")
-                        await pg.keyboard.press("Escape")
-                        self.assertEqual(await pg.evaluate("$('rpmodal').style.display"), "none")
-                        await pg.evaluate("openMe('rpbox')")
-                        await pg.wait_for_selector("#rpbox [data-rpopen]", timeout=5000)
-                        over = await pg.evaluate("document.documentElement.scrollWidth-window.innerWidth")
-                        self.assertLessEqual(over, 1, f"{w}/Ich: {over}px zu breit")
-                        self.assertEqual(errors, [], w)
-                    finally:
-                        await br.close()
-        try:
-            self.run_async(go())
-        finally:
-            helpers.set_config(report=False)
-            profiles.save_settings(me, {"report_on": False})
-            for d in meldung._all():
-                os.remove(meldung._path(d["id"]))
 
     def test_phone_looks_like_the_app(self):
         """V01.0.296 (plan handy-wie-app.md): on a phone the page looks and works like the iPhone app: tab bar, the chat

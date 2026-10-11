@@ -33,6 +33,7 @@ All options for running without questions (`--mode api --asr 1.7b --tts 0.6b --y
 
 <!-- New version: add one line at the top here and in CHANGELOG.md, drop the oldest line here (keep 10). Details go to docs/de and docs/en, not into this README. -->
 
+- **V01.0.387** Logs → Requests: the list no longer jumps to the top on refresh
 - **V01.0.386** Reporting problems (off): anonymized report as a GitHub issue from the panel, apps, companion, Telegram and by voice, with a preview; admins see all with answers and hear of new ones through the assistant
 - **V01.0.385** Speaking up by itself: follow-up only on own plans, in your words; asked "where from?" it tells the real basis instead of making one up
 - **V01.0.384** The emergency stop button no longer disappears when many pages from one address poll the stage (rate limit per login instead of per address)
@@ -42,7 +43,6 @@ All options for running without questions (`--mode api --asr 1.7b --tts 0.6b --y
 - **V01.0.380** Suggesting functions (off): a hint with "Set up" when you ask for something that is off or half set up, guided setup in the face, at most 3 a week
 - **V01.0.379** Gentler updates: speech services restart only when something of theirs changed, a short smoke test instead of the minutes-long self-test when GitHub's run passed; "Install overnight" (off), a warning while somebody is talking, the update on the live page; fewer repeated log lines
 - **V01.0.378** Companion: "Fetch new version now" takes Windows and Mac, also with no computer of that kind paired
-- **V01.0.377** Companion: "Check for updates" now really looks right away; the Mac says why an update was refused
 
 All versions: [CHANGELOG.md](CHANGELOG.md)
 

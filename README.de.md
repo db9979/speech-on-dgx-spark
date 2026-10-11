@@ -33,6 +33,7 @@ Alle Optionen ohne Rückfragen (`--mode api --asr 1.7b --tts 0.6b --yes` …) st
 
 <!-- New version: add one line at the top here and in CHANGELOG.md, drop the oldest line here (keep 10). Details go to docs/de and docs/en, not into this README. -->
 
+- **V01.0.387** Logs → Anfragen: Liste springt beim Aktualisieren nicht mehr nach oben
 - **V01.0.386** Probleme melden (aus): anonymisierte Meldung als GitHub-Issue aus Panel, Apps, Begleiter, Telegram und per Satz, mit Vorschau; Admins sehen alle samt Antworten und hören per Assistent von neuen
 - **V01.0.385** Von selbst: Nachfrage nur zu eigenen Vorhaben, mit deinen Worten; auf „woher?“ die echte Grundlage statt erfundener Herkunft
 - **V01.0.384** Notaus-Knopf verschwindet nicht mehr, wenn viele Seiten von einer Adresse den Stand abfragen (Rate-Limit je Anmeldung statt je Adresse)
@@ -42,7 +43,6 @@ Alle Optionen ohne Rückfragen (`--mode api --asr 1.7b --tts 0.6b --yes` …) st
 - **V01.0.380** Funktionen vorschlagen (aus): Hinweis mit „Einrichten“, wenn man nach etwas fragt, das aus oder halb eingerichtet ist, geführtes Einrichten im Kopf, höchstens 3 pro Woche
 - **V01.0.379** Schonendere Updates: Sprachdienste starten nur neu, wenn sich bei ihnen etwas geändert hat, kurzer Rauchtest statt minutenlangem Selbsttest bei grünem GitHub-Lauf; „Heute Nacht einspielen“ (aus), Warnung bei laufendem Gespräch, Update in der Live-Übersicht; weniger Wiederholungen im Log
 - **V01.0.378** Begleiter: „Neue Version jetzt holen“ holt Windows und Mac, auch ohne gekoppelten Rechner
-- **V01.0.377** Begleiter: „Nach Updates suchen“ fragt jetzt wirklich frisch nach, der Mac sagt bei einem kaputten Update, woran es lag
 
 Alle Versionen: [CHANGELOG.md](CHANGELOG.md)
 
