@@ -53,7 +53,7 @@ function mkCard(c){const d=document.createElement('div');d.className='hcard mkca
   d.addEventListener('click',async e=>{const rm=e.target.closest('[data-mkrm]');if(rm){secs.splice(+rm.dataset.mkrm,1);const b=body();draw();restore(b);return}
     const b=e.target.closest('[data-mkdo]');if(!b||b.disabled)return;const what=b.dataset.mkdo;
     if(what==='add'){const k=body();secs.push({heading:t('Neuer Teil','New part'),note:''});draw();restore(k);const l=d.querySelector(`[data-mksec="${secs.length-1}"]`);if(l){l.focus();l.select()}return}
-    if(what==='show'){if(typeof openMe==='function')openMe('docbox');setTimeout(()=>mkOpen(b.dataset.doc),400);return}
+    if(what==='show'){MKOPEN={id:b.dataset.doc,v:0};if(typeof openMe==='function')openMe('docbox');return}
     if(what==='cancel'){b.disabled=true;await apiTry('/api/make/job/'+encodeURIComponent(b.dataset.job)+'/cancel',{method:'POST'});return}
     if(what==='drop'){b.disabled=true;await apiTry('/api/make/plan/'+encodeURIComponent(c.id),{method:'DELETE'});clearTimeout(watch);
       d.querySelectorAll('.row button,select,input').forEach(x=>x.disabled=true);msg().textContent=t('Verworfen, nichts erstellt.','Discarded, nothing made.');return}
@@ -92,7 +92,7 @@ async function mkShow(I){const box=$('mkbox');if(!box)return;clearTimeout(mkTime
 const mkSay=(x,err)=>{const m=$('mkmsg');if(m){m.className=err?'err':'mut';m.textContent=String(x||'').slice(0,300)}};
 const mkJSON=(p,method,b)=>apiTry(p,{method,headers:{'Content-Type':'application/json'},body:JSON.stringify(b||{})});
 // one document: preview of the stored content (the same JSON the file is built from), versions, changes, sending
-async function mkOpen(id,v){const box=$('mkview');if(!box)return;MKOPEN={id,v:v||0};box.hidden=false;
+async function mkOpen(id,v){MKOPEN={id,v:v||0};const box=$('mkview');if(!box)return;box.hidden=false;
   const r=await apiTry('/api/make/doc/'+encodeURIComponent(id)+(v?'?v='+v:''));if(!r.r.ok){box.textContent=String(r.d.detail||'');return}
   const d=r.d,c=d.content||{},last=d.history.length?d.history[d.history.length-1].n:d.v,old=d.v!==last,M=MK||{};
   const fm=(d.formats||[d.format]).map(f=>[f,MKFMT[f]||f]),tg=(M.targets||[]).map(x=>[x,t(...MKTO[x])]);

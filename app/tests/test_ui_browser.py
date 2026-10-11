@@ -710,7 +710,8 @@ class Browser(unittest.TestCase):
         helpers.set_config(doc_make=True)
         me = next(u for u in profiles._load()["users"] if u["name"] == "Uitest")["id"]
         profiles.save_settings(me, {"doc_make": True})
-        real_part, real_push = docmake.write_part, push.send
+        real_part, real_push, real_bg = docmake.write_part, push.send, docmake.BACKGROUND
+        docmake.BACKGROUND = True      # test_docmake runs its jobs itself; here the panel runs them
 
         async def fake_part(plan, i, sources, done=None, wish="", old=None):
             return docmake.check_section({"heading": plan["sections"][i]["heading"], "paras": ["Ein Absatz mit etwas Text."],
@@ -728,6 +729,7 @@ class Browser(unittest.TestCase):
                     for d in docmake.all_docs(me):
                         docmake.delete(me, d["id"])
                     docmake._pending.clear()
+                    docmake._jobs.clear()
                     docmake._day.update(day="", n={})
                     ctx = {"who": {"id": me, "name": "Uitest"}, "own": True, "private": True, "client": "web",
                            "src": "web:x", "text": "Erstell eine Präsentation über die Pool-Saison", "out": None}
@@ -762,7 +764,7 @@ class Browser(unittest.TestCase):
         try:
             self.run_async(go())
         finally:
-            docmake.write_part, push.send = real_part, real_push
+            docmake.write_part, push.send, docmake.BACKGROUND = real_part, real_push, real_bg
             for d in docmake.all_docs(me):
                 docmake.delete(me, d["id"])
             helpers.set_config(doc_make=False)

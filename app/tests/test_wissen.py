@@ -112,7 +112,7 @@ class Defaults(Base):
         c = profile("Wwanda")
         info = c.get("/api/profile/wissen").json()
         self.assertEqual(info["allow"], {"pictures": False, "semantic": False, "originals": False, "shared": False,
-                                         "brief": False})
+                                         "brief": False, "make": False, "make_templates": False})
         self.assertIs(profiles.SETTINGS["doc_due"][0], False)
         self.assertEqual(info["others"], [])
         self.assertEqual(upload(c, "foto.jpg", jpeg()).status_code, 400)          # pictures off
