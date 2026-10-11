@@ -33,6 +33,7 @@ All options for running without questions (`--mode api --asr 1.7b --tts 0.6b --y
 
 <!-- New version: add one line at the top here and in CHANGELOG.md, drop the oldest line here (keep 10). Details go to docs/de and docs/en, not into this README. -->
 
+- **V01.0.418** Tests green again: jump from Who may do what on phones, height budget
 - **V01.0.417** Self-test for weekly plans now holds across the switch to winter time (update on tars failed)
 - **V01.0.416** Settings pages rearranged: boxes, symbols, functions with detail, Me as a page, apps as tiles
 - **V01.0.415** Creating documents: letters, reports, presentations and spreadsheets as Word, PDF, PowerPoint or Excel, with outline, versions and sending
@@ -42,7 +43,6 @@ All options for running without questions (`--mode api --asr 1.7b --tts 0.6b --y
 - **V01.0.411** Live page you can use: events with area chips, search and pause, a click shows the place in the picture; a box opens numbers of the last hour, ⚠ with explanation and the way to fix it; rewind the last 15 minutes; copy the way or open it in Requests; self emergency stop counters; Begleiter jobs and the instant sentence as ways in the picture; the monitor holds on a tap
 - **V01.0.410** Companion: "open Safari with Google" at the Mac is now really done (with a question there), not only announced
 - **V01.0.409** Speech output can be switched off: "Read answers aloud" per profile and "Vorlesen" per device, off = text only (speakers and CarPlay keep speaking)
-- **V01.0.408** Independent review, package 5: more complete English UI, plain error sentences, "?" only where help exists, current page names, labels for screen readers, quiet Live-off state, no 429 on quick jumps
 
 All versions: [CHANGELOG.md](CHANGELOG.md)
 
