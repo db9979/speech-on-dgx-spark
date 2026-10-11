@@ -419,7 +419,7 @@ internal sealed class AskForm : ThemedForm
             _chat.Pending = false;
             _chat.Add(mine: false, answer.Trim());
             string mode = AskSpeakModes.Normalize(_config.AskSpeak);
-            if (answer.Trim().Length > 0 && _desk()?.IsOn(Parts.Speak) == true &&
+            if (answer.Trim().Length > 0 && _desk()?.IsOn(Parts.Speak) == true && _desk()?.Aloud != false &&
                 (mode == AskSpeakModes.Always || (mode == AskSpeakModes.Spoken && spoken)))
             {
                 string text = answer.Trim();

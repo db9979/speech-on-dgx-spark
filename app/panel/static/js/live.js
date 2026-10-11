@@ -100,7 +100,7 @@ function hops(r){const H=[],at=['r'+r.id];const go=(n,t,st,what)=>{const a=at[at
     else if(s.k==='tts')go('tts',secs(s.d),'d')});
   // the way back: where the answer is heard or shown (Dominik 2026-10-10)
   const so=speechOnly(r),heard=so&&(r.steps.some(s=>s.k==='asr')||r.stage==='asr');
-  const back=heard?tt('↩ Text an ','↩ text to ')+r.dev:r.voice?tt('↩ gesprochen am ','↩ spoken at ')+r.dev:tt('↩ Antwort an ','↩ answer to ')+r.dev;
+  const back=heard||r.quiet?tt('↩ Text an ','↩ text to ')+r.dev:r.voice?tt('↩ gesprochen am ','↩ spoken at ')+r.dev:tt('↩ Antwort an ','↩ answer to ')+r.dev;
   if(r.done){if(!r.auto)go('r'+r.id,back,'d');return H}
   const last=r.steps.length?r.steps[r.steps.length-1]:null,since=Math.max(0,r.age*1000-(last?last.a+last.d:0));
   const now=secs(since);
@@ -110,7 +110,7 @@ function hops(r){const H=[],at=['r'+r.id];const go=(n,t,st,what)=>{const a=at[at
   else if(r.stage==='tts'&&r.auto){go('tts',now,'c',tt('sagt es an','announcing'));return H}
   else if(r.stage==='tts'){go('tts','','d');go('r'+r.id,now,'c',(r.voice?tt('spricht am ','speaking at '):tt('schickt die Antwort an ','sending the answer to '))+r.dev);return H}
   else if(r.stage==='weiche')go('weiche',now,'c',tt('wählt Werkzeuge','picks tools'));
-  if(r.stage!=='tts'&&!direct(r)){go('llm','','p');go('tts','','p')}
+  if(r.stage!=='tts'&&!direct(r)){go('llm','','p');if(!r.quiet)go('tts','','p')}
   if(!r.auto)go('r'+r.id,back,'p');return H}
 function route(r,pos,W,H,ph){const c=col(r.id);let o='',lab='',call='';const ctr=p=>({x:p.x+p.w/2,y:p.y+p.h/2});
   hops(r).forEach(([a,b,t,st,what],i)=>{const A=pos[a],B=pos[b];if(!A||!B)return;const ca=ctr(A),cb=ctr(B);let d,mx,my;
@@ -187,12 +187,12 @@ function way(){const r=LV.data.reqs.find(x=>x.id===LV.sel),box=el('lvway');
     return {k:KIND[s.k]||s.k,n:name,d:`${secs(s.d)}${s.k==='tool'?' · '+(s.ok?'ok':tt('nicht ok','not ok'))+(s.to&&tgt(s.to)?' · '+tgt(s.to).name:''):''}`,z,ms:s.d,cur:false}});
   if(!r.done){const last=r.steps[r.steps.length-1],since=Math.max(0,r.age*1000-(last?last.a+last.d:0));
     items.push({k:KIND[r.stage]||r.stage,n:r.stage==='tool'?(r.tool||KIND.tool):SNAME[r.stage]||r.stage,d:tt('läuft seit ','running for ')+secs(since)+(r.to&&tgt(r.to)?' · '+tgt(r.to).name:''),z:r.to?zoneOf(r.to):'spark',ms:since,cur:true});
-    if(r.stage!=='tts'&&!direct(r))items.push({k:KIND.tts,n:SNAME.tts,d:tt('kommt noch','still to come'),z:'spark',ms:0,todo:true})}
+    if(r.stage!=='tts'&&!direct(r)&&!r.quiet)items.push({k:KIND.tts,n:SNAME.tts,d:tt('kommt noch','still to come'),z:'spark',ms:0,todo:true})}
   // the way back to the device (zone of the device: internet when it came through the proxy)
-  if(!r.auto)items.push({k:tt('Zurück','Back'),n:r.dev,d:r.voice?tt('↩ gesprochen','↩ spoken'):tt('↩ Antwort','↩ answer'),z:r.net?'net':'lan',ms:0,todo:!r.done&&r.stage!=='tts',cur:!r.done&&r.stage==='tts'});
+  if(!r.auto)items.push({k:tt('Zurück','Back'),n:r.dev,d:r.quiet?tt('↩ nur Text','↩ text only'):r.voice?tt('↩ gesprochen','↩ spoken'):tt('↩ Antwort','↩ answer'),z:r.net?'net':'lan',ms:0,todo:!r.done&&r.stage!=='tts',cur:!r.done&&r.stage==='tts'});
   const usesNet=r.net||r.steps.some(s=>zoneOf(s.to)==='net'),tot=items.reduce((a,x)=>a+x.ms,0)||1;
   let h=`<div class="hd"><span class="lvc" style="background:${col(r.id)}"></span><span class="who">${lvE(r.who)}</span><span class="mut">${lvE(r.dev)}${r.voice?' · '+tt('Stimme','voice'):''}</span>
-    ${r.prio?`<span class="pill warn">★ ${tt('Vorrang','priority')}</span>`:''}${r.intent?`<span class="pill">${lvE(r.intent)}</span>`:''}<span class="pill ${usesNet?'net':'lan'}">${usesNet?tt('nutzt Internet','uses the internet'):tt('bleibt im Heimnetz','stays at home')}</span>${r.err?`<span class="pill bad">${tt('Fehler','error')}</span>`:''}
+    ${r.prio?`<span class="pill warn">★ ${tt('Vorrang','priority')}</span>`:''}${r.quiet?`<span class="pill">${tt('nur Text','text only')}</span>`:''}${r.intent?`<span class="pill">${lvE(r.intent)}</span>`:''}<span class="pill ${usesNet?'net':'lan'}">${usesNet?tt('nutzt Internet','uses the internet'):tt('bleibt im Heimnetz','stays at home')}</span>${r.err?`<span class="pill bad">${tt('Fehler','error')}</span>`:''}
     <span class="mono mut" style="margin-left:auto">${lvE(r.id)} · ${secs(r.age*1000)}${r.done?' · '+tt('fertig','done'):''}</span></div><div class="hops">`;
   items.forEach((x,i)=>{h+=`${i?'<div class="arrow">›</div>':''}<div class="hop${x.cur?' cur':''}${x.z==='net'?' net':''}${x.todo?' todo':''}"><span class="pill ${ZONE[x.z][1]}">${ZONE[x.z][0]}</span><div class="k">${lvE(x.k)}</div><div class="nn">${lvE(x.n)}</div><div class="d">${lvE(x.d)}</div></div>`});
   h+='</div><div class="gantt">';let o=0;items.forEach((x,i)=>{if(!x.ms)return;const w=x.ms/tot*100;h+=`<i style="left:${o}%;width:${w}%;background:${x.z==='net'?'var(--c4)':COLS[i%COLS.length]}">${w>9?`<span>${lvE(x.k)} ${secs(x.ms)}</span>`:''}</i>`;o+=w});

@@ -1308,6 +1308,14 @@
 "src": "assistent",
 "file": "Assistent und Oberfläche",
 "head": "Sprach-Chat",
+"title": "Antworten vorlesen (seit V01.0.409)",
+"text": "Antworten vorlesen (seit V01.0.409): Wer keine Sprachausgabe möchte, schaltet sie aus. Für ein Gerät reicht der Schalter „Vorlesen“ unter dem Gesicht (am Handy das Lautsprecher-Symbol oben rechts im Chat); er gilt nur in diesem Browser bzw. in der Android-App. Für alle Geräte des Profils: Gespräch einstellen → Antwort → „Antworten vorlesen“. Dann antwortet der Spark nur als Text, ruft die Sprachausgabe gar nicht erst auf (spart die GPU) und spielt auch keine Sofortige Rückmeldung; Hinweise von selbst, Nachrichten und Erinnerungen kommen mit Ton-Signal und Text, aber ohne Vorlesen. Lautsprecher ohne Bildschirm und CarPlay sprechen weiter, dort gibt es nichts zu lesen. „Nochmal vorlesen“ an einer Antwort geht weiterhin. Der Spark-Begleiter liest Antworten von „Frag Spark“ bei ausgeschaltetem Profil-Schalter ebenfalls nicht vor."
+},
+{
+"lang": "de",
+"src": "assistent",
+"file": "Assistent und Oberfläche",
+"head": "Sprach-Chat",
 "title": "Eigene Stimme",
 "text": "Eigene Stimme: Unter Einstellungen → Stimmen lässt sich eine Referenz direkt mit dem Mikrofon aufnehmen (den vorgeschlagenen Text vorlesen, etwa 10 Sekunden); das Transkript füllt die Spracherkennung aus. Klonen braucht ein Base-Modell (Einstellungen → Sprachausgabe → Modell …-Base), danach die neue Stimme als Standardstimme auswählen. Die Standardstimme ist eine Liste, die zum gewählten Modell passt: CustomVoice zeigt die festen Sprecher, Base die eigenen Stimmen, bei VoiceDesign ist sie gesperrt (die Stimme kommt aus dem Sprechstil); ein gespeicherter Name, der nicht in der Liste steht, bleibt als „(nicht in der Liste)“ erhalten. Eine deutsche Referenz klingt im Deutschen deutlich gleichmäßiger als die festen Sprecher, die keine deutschen Muttersprachler sind. Unter Einstellungen → Stimmen lassen sich einzelne oder alle eigenen Stimmen als ZIP exportieren (Referenz-Audio und Transkript) und auf diesem oder einem anderen Spark wieder importieren; bei gleichem Namen wird umbenannt, ersetzt oder übersprungen."
 },
@@ -4142,6 +4150,14 @@
 "head": "Voice chat",
 "title": "Barge-in",
 "text": "Barge-in: while the assistant speaks, the microphone keeps listening. Talking for about a quarter of a second interrupts the answer, and what you said becomes the next question. This relies on the browser's echo cancellation; if the assistant interrupts itself on loud speakers, use headphones or untick \"barge in\" below the chat."
+},
+{
+"lang": "en",
+"src": "assistant",
+"file": "Assistant and panel",
+"head": "Voice chat",
+"title": "Read answers aloud (since V01.0.409)",
+"text": "Read answers aloud (since V01.0.409): if you do not want speech output, switch it off. For one device, the \"Vorlesen\" switch below the face (on a phone the speaker icon at the top right of the chat) is enough; it applies to this browser or the Android app only. For all devices of the profile: conversation settings → answer → \"Read answers aloud\". The Spark then answers as text only, does not call the speech output at all (saves the GPU) and plays no instant acknowledgement either; notes, messages and reminders come with a chime and text but are not read aloud. Speakers without a screen and CarPlay keep speaking, there is nothing to read there. \"Read again\" on an answer still works. The Spark-Begleiter does not read \"Frag Spark\" answers aloud either while the profile switch is off."
 },
 {
 "lang": "en",

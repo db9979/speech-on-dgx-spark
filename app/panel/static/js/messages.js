@@ -17,6 +17,7 @@ const msg={since:Date.now()-10*60e3,seen:new Set(),busy:false,
     if(document.hidden)try{if(window.Notification&&Notification.permission==='granted')new Notification('✉️ '+head,{body:x.text||'',tag:'msg-'+x.id})}catch{}
     if($('msgbox')&&$('msgbox').classList.contains('on'))showMsg().catch(()=>{});
     if(chat.rec||chat.ctrl||playing())return;   // a conversation is running: the bubble and the chime suffice
+    if(typeof voiceOn==='function'&&!voiceOn())return;   // Vorlesen off: the bubble and the chime suffice
     if(x.voice){msgPlay(x.id);return}
     sayText(text)}};
 setInterval(()=>{msg.poll();msgBar()},20000);

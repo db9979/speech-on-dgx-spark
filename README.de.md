@@ -33,6 +33,7 @@ Alle Optionen ohne Rückfragen (`--mode api --asr 1.7b --tts 0.6b --yes` …) st
 
 <!-- New version: add one line at the top here and in CHANGELOG.md, drop the oldest line here (keep 10). Details go to docs/de and docs/en, not into this README. -->
 
+- **V01.0.409** Sprachausgabe abschaltbar: „Antworten vorlesen“ pro Profil und „Vorlesen“ je Gerät, aus = nur Text (Lautsprecher und CarPlay sprechen weiter)
 - **V01.0.408** Unabhängige Prüfung, Paket 5: Englisch vollständiger, verständliche Fehlersätze, „?“ nur mit Hilfe, aktuelle Seitennamen, Labels, Live aus ohne Fehler
 - **V01.0.407** Unabhängige Prüfung, Paket 4: signierbare Geräte-Updates, Begleiter nur https, feste CI-Versionen, root-Lesewege, ffmpeg-Grenzen, iPhone-Kopplung, Telegram
 - **V01.0.406** Unabhängige Prüfung, Paket 6: Seiten-Dateien gepackt und gecacht, sichere JSON-Schreiber, schnellere Selbsttests, toter Code entfernt
@@ -42,7 +43,6 @@ Alle Optionen ohne Rückfragen (`--mode api --asr 1.7b --tts 0.6b --yes` …) st
 - **V01.0.402** Unabhängige Prüfung, Paket 1: lange Nachrichten bremsen nicht mehr, Abtastrate geprüft, Aufträge behalten Privates, Sperre, ESP32-Flashen, Zeitumstellung
 - **V01.0.401** Mein Notaus: Seite lädt nach Auslösen oder Aufheben nicht mehr von selbst neu (Browser-Selbsttest wieder stabil).
 - **V01.0.400** Selbsttests warten auf langsamen Rechnern zuverlässiger
-- **V01.0.399** Weniger Runden: Nachschlagen höchstens 2× pro Frage, letzte Runde ohne Werkzeugliste (spart eine Runde).
 
 Alle Versionen: [CHANGELOG.md](CHANGELOG.md)
 

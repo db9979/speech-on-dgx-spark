@@ -361,7 +361,8 @@ const SETF=[
   {k:'live',type:'bool',l:t('Live-Transkript','Live transcript'),h:t('Text schon beim Sprechen zeigen; die Antwort kommt etwas früher.','Show the text while you speak; the answer comes a little sooner.')},
   {k:'barge',type:'bool',l:t('Ins Wort fallen','Barge in'),h:t('Losreden unterbricht die Antwort (am besten mit Kopfhörer).','Start talking to interrupt the answer (best with headphones).')},
   {k:'barge_level',type:'sel',l:t('Empfindlichkeit','Sensitivity'),h:t('Wie leicht Geräusche die Antwort unterbrechen.','How easily sounds interrupt the answer.'),o:[['low',t('gering','low')],['mid',t('mittel','medium')],['high',t('hoch','high')]]},
-  {g:t('Antwort','Answer'),k:'voice',type:'voice',l:t('Stimme','Voice'),h:t('Leer = Standardstimme des Servers.','Empty = the server\'s default voice.')},
+  {g:t('Antwort','Answer'),k:'speak',type:'bool',l:t('Antworten vorlesen','Read answers aloud'),h:t('Aus: Antworten nur als Text, auf all deinen Geräten. Lautsprecher ohne Bildschirm und CarPlay sprechen weiter.','Off: answers as text only, on all your devices. Speakers without a screen and CarPlay keep speaking.')},
+  {k:'voice',type:'voice',l:t('Stimme','Voice'),h:t('Leer = Standardstimme des Servers.','Empty = the server\'s default voice.')},
   {k:'speed',type:'range',l:t('Sprechtempo','Speaking rate'),h:t('Schneller oder langsamer, ohne die Stimmlage zu ändern.','Faster or slower without changing the pitch.'),min:0.7,max:1.4,step:0.05},
   {k:'length',type:'sel',l:t('Antwortlänge','Answer length'),h:t('Wie ausführlich der Assistent antwortet.','How detailed the assistant answers.'),o:[['short',t('kurz','short')],['normal',t('normal','normal')],['long',t('ausführlich','detailed')]]},
   {k:'learn',type:'bool',prof:1,l:t('Aus Gesprächen lernen','Learn from conversations'),h:t('Nach einem Gespräch merkt sich der Assistent wenige dauerhafte Dinge über dich. Du siehst und löschst sie unter Ich.','After a conversation the assistant remembers a few lasting things about you. You can see and delete them under the Me.')},
@@ -418,7 +419,7 @@ async function renderSet(el,vals,onchange){const admin=!onchange,voices=await vo
     if(f.type==='range')$(e.id+'_o').textContent=val.toFixed(2)+'×';
     if(v[f.k]===val||(f.type==='range'&&ev.type==='input'))return;v[f.k]=val;onchange&&onchange(f.k,val)}});
   return()=>({...v})}
-function applySet(){$('chathands').checked=!!S.hands;$('chattiming').style.display=S.timing?'':'none';if(typeof picsShow==='function')picsShow();if(typeof msgBar==='function')msgBar()}
+function applySet(){$('chathands').checked=!!S.hands;if(typeof voiceShow==='function')voiceShow();$('chattiming').style.display=S.timing?'':'none';if(typeof picsShow==='function')picsShow();if(typeof msgBar==='function')msgBar()}
 async function refreshAllow(){const d=await (await fetch('/api/profile/settings')).json();
   const a=d&&d.allow||{};if(JSON.stringify(a)===JSON.stringify(ALLOW))return;ALLOW=a;
   if($('profmodal').style.display==='grid')renderSet($('setform'),S,saveSet)}

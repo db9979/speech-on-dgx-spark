@@ -604,6 +604,9 @@ struct SettingsView: View {
     @EnvironmentObject var talk: Conversation
     @AppStorage("handsFree") private var handsFree = false
     @AppStorage("bargeIn") private var bargeIn = true
+    /// Antworten vorlesen: the profile's switch (speak), like Freihändig; "Auf diesem iPhone" only here (Prefs.speakHere)
+    @AppStorage("speakAnswers") private var speakAnswers = true
+    @AppStorage("speakHere") private var speakHere = true
     @AppStorage("wake") private var wake = false
     @AppStorage("wakeWord") private var wakeWord: WakeWord.Word = .spark
     @AppStorage("stand") private var stand = false
@@ -676,6 +679,13 @@ struct SettingsView: View {
                 .onChange(of: handsFree) { _, v in if synced { Task { await saveTalk("hands", v) } } }
                 .onChange(of: bargeIn) { _, v in if synced { Task { await saveTalk("barge", v) } } }
                 Section {
+                    Toggle("Antworten vorlesen", isOn: $speakAnswers)
+                    Toggle("Auf diesem iPhone vorlesen", isOn: $speakHere).disabled(!speakAnswers)
+                } header: { Text("Sprachausgabe") } footer: {
+                    Text("Aus: Antworten kommen nur als Text. Der erste Schalter gilt für dein Profil auf allen Geräten, der zweite nur hier. In CarPlay spricht die App immer.")
+                }
+                .onChange(of: speakAnswers) { _, v in if synced { Task { await saveTalk("speak", v) } } }
+                Section {
                     Toggle("Weckwort", isOn: $wake).disabled(!talk.allowed.listen)
                     Picker("Wort", selection: $wakeWord) {
                         ForEach(WakeWord.Word.allCases) { Text($0.rawValue).tag($0) }
@@ -746,6 +756,7 @@ struct SettingsView: View {
               let p = d["settings"] as? [String: Any] else { synced = true; return }
         if let h = p["hands"] as? Bool, h != handsFree { handsFree = h }
         if let b = p["barge"] as? Bool, b != bargeIn { bargeIn = b }
+        if let v = p["speak"] as? Bool, v != speakAnswers { speakAnswers = v }
         // the onChange calls for the values just read run before this (at worst they save the same value back)
         await Task.yield()
         synced = true

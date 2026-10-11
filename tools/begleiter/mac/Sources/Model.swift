@@ -60,6 +60,8 @@ struct DeskConfig: Equatable {
     var v4 = V4Config()
     /// config.face: the face the admin picked in the panel (kept for the next start)
     var face = FaceKind.saved
+    /// Antworten vorlesen of the profile (panel: Gespräch einstellen): off = Frag Spark never reads answers aloud
+    var aloud = true
 
     init() {}
 
@@ -102,6 +104,7 @@ struct DeskConfig: Equatable {
         wakeWord = WakeWord.parse(d["wake"])
         v4 = V4Config(d)
         face = FaceKind(d["face"])
+        aloud = d["aloud"] as? Bool ?? true
         FaceKind.saved = face
     }
 

@@ -103,7 +103,7 @@ final class AskController: ObservableObject {
     static func speakIfWanted(_ answer: String, spoken: Bool) {
         let model = AppModel.shared
         guard AskSpeak.wanted(mode: UserDefaults.standard.string(forKey: AskSpeak.key), spoken: spoken,
-                              speakOn: model.part("speak")), !answer.isEmpty else { return }
+                              speakOn: model.part("speak") && model.config?.aloud != false), !answer.isEmpty else { return }
         Speaker.shared.read(answer)
     }
 

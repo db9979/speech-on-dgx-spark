@@ -37,6 +37,7 @@ const rem={list:[],rung:new Set(),
     chime();setTimeout(chime,350);const b=chatLog('assistant','⏰ '+line);b.classList.add('alarm');
     if(document.hidden)try{if(window.Notification&&Notification.permission==='granted')new Notification('⏰ '+x.text,{body:t('Erinnerung','Reminder'),tag:x.id})}catch{}
     if(chat.rec||chat.ctrl||playing())return;   // a conversation is running: the bubble and the chime suffice
+    if(typeof voiceOn==='function'&&!voiceOn())return;   // Vorlesen off: the bubble and the chime suffice
     sayText(line)},
   // this browser's push subscription, short (push.sub_id): notes go to the device used last, once
   async pushId(){try{const r=await navigator.serviceWorker.getRegistration();const s=r&&await r.pushManager.getSubscription();

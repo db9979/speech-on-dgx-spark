@@ -242,12 +242,18 @@ def device_cfg(did):
     return clean(e.get("cfg")), int(e.get("rev") or 1)
 
 
+def aloud(uid):
+    """Antworten vorlesen of the profile (Gespräch einstellen, chat_turn.quiet): off = Frag Spark answers stay text."""
+    return profiles.effective(uid).get("speak") is not False
+
+
 def program_rev(did, uid):
     """(settings, rev) for the program itself: rev also goes up when what the switches allow changes (the
     admin under Wer darf was, the profile under Ich), so the program fetches its config with the next poll and
     stops the parts that are no longer allowed, not only after a restart (V01.0.388)."""
     mask = "".join("1" if v else "0" for v in may(uid).values())
     mask += ":" + str(load_config().get("chat", {}).get("face") or "")   # another face: the program draws it now
+    mask += ":" + ("1" if aloud(uid) else "0")   # Antworten vorlesen switched: the program hears of it now
     with _lock:
         d = _load()
         e = d.get(did) or {"uid": uid, "cfg": clean(DEFAULT), "rev": 1}
@@ -509,6 +515,8 @@ async def program_config(request: Request, version: str = "", arch: str = ""):
     face = load_config().get("chat", {}).get("face")
     return {"rev": rev, "profile": prof["name"], "poll": POLL_ACT if parts["act"] else POLL, "coffee": COFFEE,
             "face": face if face in FACES else "robot",   # the face the admin picked (Einstellungen → Vorgaben)
+            # Antworten vorlesen (profile switch speak): off = Frag Spark answers as text only, never spoken by itself
+            "aloud": aloud(prof["id"]),
             "update": newer(arch, version), "parts": parts, "allowed": ok,
             "write": cfg["write"], "dictate": cfg["dictate"], "autostart": cfg["autostart"],
             "act": {"apps": cfg["act"]["apps"] if parts["act"] else []}, "wake": {"word": WAKE_WORD},

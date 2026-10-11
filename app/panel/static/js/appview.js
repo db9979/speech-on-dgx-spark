@@ -19,6 +19,8 @@ const IC={spark:'<path d="M21 12a8 8 0 0 1-11.6 7.1L4 20l1-4.6A8 8 0 1 1 21 12z"
   hist:'<path d="M3 12a9 9 0 1 0 3-6.7M3 4v5h5"/><path d="M12 7.5V12l3 2"/>',
   set:'<path d="M4 6h10M18 6h2M4 12h4M12 12h8M4 18h12"/><circle cx="16" cy="6" r="2"/><circle cx="10" cy="12" r="2"/><circle cx="18" cy="18" r="2"/>',
   more:'<circle cx="5" cy="12" r="1.6"/><circle cx="12" cy="12" r="1.6"/><circle cx="19" cy="12" r="1.6"/>',
+  vol:'<path d="M11 5L6 9H3v6h3l5 4z"/><path d="M15.5 8.5a5 5 0 0 1 0 7M18.5 5.5a9 9 0 0 1 0 13"/>',
+  mute:'<path d="M11 5L6 9H3v6h3l5 4z"/><path d="M16 9l5 6M21 9l-5 6"/>',
   back:'<path d="M15 5l-7 7 7 7"/>',find:'<circle cx="11" cy="11" r="7"/><path d="M20 20l-3.5-3.5"/>'};
 const TABS=[['spark',t('Spark','Spark')],['today',t('Heute','Today')],['docs',t('Dokumente','Documents')],['me',t('Ich','Me')],['manage',t('Verwalten','Manage')]];
 const mk=(tag,id,cls,html)=>{const e=document.createElement(tag);if(id)e.id=id;if(cls)e.className=cls;if(html!=null)e.innerHTML=html;return e};
@@ -44,6 +46,7 @@ function moveIn(el,target,prepend){if(!el||marks.has(el))return;const m=document
   if(prepend)target.prepend(el);else target.appendChild(el)}
 function moveOut(back){for(const [el,m] of marks){if(back&&m.parentNode)m.parentNode.insertBefore(el,m);m.remove()}marks.clear()}
 // phone.js asks first where the face goes (see placeFace there)
+window.apRender=()=>render();   // chat.js: the Vorlesen switch changed
 window.apFace=()=>{if(!ON)return false;B.classList.remove('mempty');B.classList.toggle('apmsgs',$('chatlog').children.length>0);return true};
 function enter(){ON=true;B.classList.add('appview');
   if(typeof MVIEW!=='undefined'){MVIEW='face';B.classList.remove('mempty')}
@@ -99,8 +102,10 @@ function render(){if(!ON)return;if(manage.classList.contains('on')&&manageSig()!
   const back=$('apback'),lead=$('aplead'),trail=$('aptrail');let show=false,title='',bl='',lh='',th='';
   if(TAB==='spark'&&!pm&&!page){show=true;title='Spark';
     lh=`<button type="button" class="apib" data-ap="new" aria-label="${esc(t('Neues Gespräch','New conversation'))}">${SV(IC.new)}</button><button type="button" class="apib" data-ap="hist" aria-label="${esc(t('Verlauf','History'))}">${SV(IC.hist)}</button>`;
-    th=isGuest()?`<button type="button" class="apib" data-ap="menu" aria-label="${esc(t('Menü','Menu'))}">${SV(IC.more)}</button>`
-      :`<button type="button" class="apib" data-ap="set" aria-label="${esc(t('Gespräch einstellen','Conversation settings'))}">${SV(IC.set)}</button>`}
+    // "Vorlesen" on this device (chat.js voiceShow): the speaker in the top bar; locked while the profile has it off
+    const vc=$('chatvoice'),von=!!(vc&&vc.checked);
+    th=(vc?`<button type="button" class="apib" data-ap="voice" aria-pressed="${von}"${vc.disabled?' disabled':''} aria-label="${esc(vc.closest('label').title||t('Vorlesen','Read aloud'))}">${SV(von?IC.vol:IC.mute)}</button>`:'')+(isGuest()?`<button type="button" class="apib" data-ap="menu" aria-label="${esc(t('Menü','Menu'))}">${SV(IC.more)}</button>`
+      :`<button type="button" class="apib" data-ap="set" aria-label="${esc(t('Gespräch einstellen','Conversation settings'))}">${SV(IC.set)}</button>`)}
   else if(TAB==='manage'&&!page&&!pm){show=true;const n=manageNav();title=n.title;bl=n.back}
   bar.hidden=!show;$('aptitle').textContent=title;back.hidden=!bl;back.querySelector('span').textContent=bl;
   if(lead.dataset.h!==lh){lead.innerHTML=lh;lead.dataset.h=lh}if(trail.dataset.h!==th){trail.innerHTML=th;trail.dataset.h=th}
@@ -108,7 +113,7 @@ function render(){if(!ON)return;if(manage.classList.contains('on')&&manageSig()!
   sync()}
 bar.addEventListener('click',e=>{const b=e.target.closest('button');if(!b)return;
   if(b.id==='apback'){back();return}
-  const a=b.dataset.ap;if(a==='new')$('chatnew').click();else if(a==='hist')openHist();else if(a==='set')openSet();else if(a==='menu')$('mmenu').click()});
+  const a=b.dataset.ap;if(a==='new')$('chatnew').click();else if(a==='hist')openHist();else if(a==='set')openSet();else if(a==='voice'){const c=$('chatvoice');if(c&&!c.disabled){c.checked=!c.checked;c.onchange()}}else if(a==='menu')$('mmenu').click()});
 // ---------------------------------------------------------------- one level back (top left, edge swipe, back gesture)
 function depth(){if(!ON)return 0;let d=sheet.hidden&&$('msheet').style.display!=='grid'?0:1;const pm=$('profmodal');
   if(pm.style.display==='grid'&&TAB==='me'&&pm.classList.contains('sub')&&!pm.classList.contains('one'))d++;

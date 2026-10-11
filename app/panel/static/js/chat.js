@@ -2,7 +2,7 @@
 // ---------------------------------------------------------------- voice chat
 // Record -> /api/test/asr -> /api/chat (LLM text and streamed TTS audio as one SSE stream) -> play.
 // Conversation settings (see renderSet). Profiles keep them on the Spark, guests in this browser.
-let S={hands:false,auto:true,turn:true,daily:true,live:true,barge:true,barge_level:'mid',voice:'',speed:1,length:'normal',timing:true},SDEF={...S};
+let S={hands:false,speak:true,auto:true,turn:true,daily:true,live:true,barge:true,barge_level:'mid',voice:'',speed:1,length:'normal',timing:true},SDEF={...S};
 const BARGE={low:[0.05,6,0.8],mid:[0.03,4,0.5],high:[0.02,3,0.35]};   // min level, x noise floor, x own output
 const chat={live:{busy:false,want:false,last:null},msgs:[],rec:null,stream:null,ctrl:null,ctx:null,sources:[],playEnd:0,vad:null,cancelRec:false,busy:false};
 const chatSay=x=>{$('chatstate').textContent=x;$('fabstate').textContent=x};
@@ -232,7 +232,7 @@ const ub=chatLog('user',text);const um={role:'user',content:text};
   const el=chatLog('assistant','');$('fabtext').textContent='';let full='',llmS=null,audioS=null,ackS=null,err='';const searches=[],sources=[],mems=[],docs=[],drefs=[],hcards=[];
   const ctrl=new AbortController();chat.ctrl=ctrl;chat.firstPlay=null;chat.gaps=[];chat.blocks=[];chat.t0b=null;chat.stalls=0;chat.pieceStart=true;setTalk();chatSay(t('Antwort kommt …','Answer coming …'));
   try{const r=await api('/api/chat',{method:'POST',headers:{'Content-Type':'application/json'},signal:ctrl.signal,
-      body:JSON.stringify({messages:chat.msgs.slice(-20),tz:(()=>{try{return Intl.DateTimeFormat().resolvedOptions().timeZone}catch{return ''}})(),voice:PROFILE&&S.voice||undefined,speed:S.speed,length:S.length,reminders:PROFILE?undefined:rem.list,convo:chat.cid||undefined,speaker:spk&&spk.token||undefined,images:pids.length?pids:undefined,page:typeof hilfeNow==='function'?hilfeNow():undefined,focus:typeof hilfeFocusTake==='function'?hilfeFocusTake():undefined,view:document.body.classList.contains('appview')?'app':undefined})});
+      body:JSON.stringify({speak:voiceOn()?undefined:false,messages:chat.msgs.slice(-20),tz:(()=>{try{return Intl.DateTimeFormat().resolvedOptions().timeZone}catch{return ''}})(),voice:PROFILE&&S.voice||undefined,speed:S.speed,length:S.length,reminders:PROFILE?undefined:rem.list,convo:chat.cid||undefined,speaker:spk&&spk.token||undefined,images:pids.length?pids:undefined,page:typeof hilfeNow==='function'?hilfeNow():undefined,focus:typeof hilfeFocusTake==='function'?hilfeFocusTake():undefined,view:document.body.classList.contains('appview')?'app':undefined})});
     const rd=r.body.getReader(),dec=new TextDecoder();let buf='';
     for(;;){const{value,done}=await rd.read();if(done)break;buf+=dec.decode(value,{stream:true});let i;
       while((i=buf.indexOf('\n\n'))>=0){const line=buf.slice(0,i).split('\n').find(l=>l.startsWith('data:'));buf=buf.slice(i+2);if(!line)continue;
@@ -377,6 +377,17 @@ function stopWake(){wake.on=false;if(wake.node){wake.node.onaudioprocess=null;tr
 async function keepAwake(){if(wake.on&&'wakeLock' in navigator&&!document.hidden)try{wake.lock=await navigator.wakeLock.request('screen')}catch{}}
 document.addEventListener('visibilitychange',()=>{if(!document.hidden)keepAwake()});
 setInterval(()=>{$('wakeind').classList.toggle('paused',!wakeIdle())},300);
+// "Vorlesen": answers aloud on this device (switch below the face, kept in this browser) and for the profile
+// (Gespräch einstellen → Antworten vorlesen, S.speak, also checked by the Spark itself). Off = text only:
+// the Spark makes no sound for the answer, notes, messages and reminders only chime.
+function voiceHere(){try{return localStorage.getItem('voice')!=='0'}catch{return true}}
+function voiceOn(){return S.speak!==false&&voiceHere()}
+function voiceShow(){const c=$('chatvoice'),off=S.speak===false;c.checked=voiceOn();c.disabled=off;
+  c.closest('label').title=off?t('Für dein Profil aus: Gespräch einstellen → Antworten vorlesen','Off for your profile: Conversation settings → Read answers aloud'):t('Antworten auf diesem Gerät vorlesen','Read answers aloud on this device');
+  if(typeof apRender==='function')apRender()}
+$('chatvoice').onchange=()=>{try{localStorage.setItem('voice',$('chatvoice').checked?'1':'0')}catch{}
+  if(!voiceOn()&&!chat.ctrl&&playing())stopAnswer();voiceShow()};
+voiceShow();
 try{$('chatwake').checked=localStorage.getItem('wake')==='1'}catch{}
 $('chatwake').onchange=()=>{try{localStorage.setItem('wake',$('chatwake').checked?'1':'0')}catch{}if($('chatwake').checked)startWake();else if(!(window.room&&room.on))stopWake()};
 // started once it is known who uses this page (see guestLock)

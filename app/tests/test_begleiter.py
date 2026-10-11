@@ -103,6 +103,17 @@ class Begleiter(unittest.TestCase):
         prog.headers[profiles.DEVICE_HEADER] = r2.json()["key"]
         return r.json()["code"], prog
 
+    def test_aloud_follows_the_profile(self):
+        """Antworten vorlesen off (Gespräch einstellen): the program hears of it with the next poll (rev goes up)."""
+        c = self.on("DkVorlesen")
+        _, prog = self.pair(c)
+        d = prog.get("/api/desk/config").json()
+        self.assertIs(d["aloud"], True)
+        self.assertEqual(c.put("/api/profile/settings", json={"speak": False}).status_code, 200)
+        d2 = prog.get("/api/desk/config").json()
+        self.assertIs(d2["aloud"], False)
+        self.assertGreater(d2["rev"], d["rev"])
+
     def test_off_by_default_both_switches_and_never_guests(self):
         with open(helpers.APP + "/config.default.json") as f:
             self.assertIs(json.load(f)["chat"]["desk"], False)
