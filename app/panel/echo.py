@@ -130,6 +130,11 @@ def check(uid, device, text, duration=None, now=None):
 def note(reason, client):
     """The journal line for a dropped recording: the reason and the kind of device, never the text."""
     print(f"chat: ignored ({reason}) from {re.sub(r'[^a-z0-9]', '', str(client))[:12] or 'device'}", flush=True)
+    try:
+        import live
+        live.mark("Echo", "eigene Stimme überhört" if "own" in str(reason) else "Aufnahme überhört, ein anderes Gerät spricht")
+    except Exception:
+        pass
 
 
 def clear():

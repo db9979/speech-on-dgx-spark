@@ -68,6 +68,9 @@ TOOLS = {
     # tools only programs use over MCP (mcpserver.py; transcribe/speak/voices show as Hören/Sprechen)
     "today": "cal", "action_status": "mem", "Vorschlag": "mem",
     # notes the Spark sends (push.py) and what it says by itself (proactive.py, live.note)
+    "remarkable_page": "rm", "remarkable_attachment": "rm", "reMarkable": "rm",
+    # what the Spark does by itself with services (live.job): update check, backup to the NAS
+    "GitHub": "github", "NAS-Sicherung": "nas",
     "Web Push": "webpush", "Apple Push": "push", "Android-App": "android", "Spark-Begleiter": "desk", "Telegram": "tg", "Panel-Seite": "page",
     # steps the panel runs itself (tracelog "… (Panel)")
     "Erst lokal": "mem", "remarkable": "rm", "Ablauf": "mem",
@@ -96,14 +99,17 @@ TARGETS = {
     "android": ("Android-App", "wartet, bis die App abholt", "spark", False),
     "desk": ("Spark-Begleiter", "wartet, bis PC oder Mac abholt", "spark", False),
     "page": ("Panel-Seite", "beim nächsten Abruf der offenen Seite", "spark", False),
+    "github": ("GitHub (Updates)", "neuester Stand und Tests · Internet", "net", False),
+    "nas": ("NAS (Sicherung)", "WebDAV · verschlüsselt", "lan", False),
 }
 RETURNS = {"cal": "Termine oder Aufgaben", "ha": "Zustände oder Schaltung", "web": "Suchergebnisse", "pages": "Seitentext", "kiwix": "Archiv-Treffer",
            "wiki": "Artikel", "mail": "Mails (nur Anzahl und Größe)", "contacts": "Kontakte", "rm": "Ablage", "push": "Zustellung",
            "weather": "Wetterwerte", "parcels": "Sendungen", "transit": "Verbindungen", "mem": "eigene Daten",
            "hilfe": "Anleitungen oder Vorschlagskarte", "webpush": "Zustellung", "tg": "Zustellung",
-           "android": "liegt bereit", "desk": "liegt bereit", "page": "liegt bereit"}
+           "android": "liegt bereit", "desk": "liegt bereit", "page": "liegt bereit",
+           "github": "Stand und Testergebnis", "nas": "Ablage bestätigt"}
 CLIENT = {"web": "Browser", "speaker": "Lautsprecher", "watch": "Uhr", "siri": "Siri", "telegram": "Telegram",
-          "app": "iPhone-App", "car": "CarPlay", "mcp": "MCP-Client", "ha": "Home Assistant", "auto": "Von selbst",
+          "app": "iPhone-App", "car": "CarPlay", "mcp": "MCP-Client", "ha": "Home Assistant", "auto": "Von selbst", "desk": "Spark-Begleiter",
           "other": "Gerät"}
 VOICE = ("speaker", "watch", "siri", "app", "car", "ha")
 LEVEL = {"public": "Öffentlich (Seiten aus Suchergebnissen)", "user": "Nutzer-Dienst", "home": "Heimnetz"}
@@ -331,6 +337,46 @@ def begin(client, device, t=None, uid=None, auto=False, why=""):
         return None
 
 
+def mark(area, text, now=None):
+    """One line under "Ereignisse" from anywhere (fixed words and numbers only); nothing while Live is off,
+    never raises."""
+    try:
+        if on():
+            event(area, text, now)
+    except Exception:
+        pass
+
+
+def job(why, tool, t0, ok=True, uid=None, now=None):
+    """Something the Spark did by itself with a service (update check, NAS backup, reMarkable sheet): a request
+    of "Von selbst" with one step to the tool's target, shown like the others. never raises."""
+    try:
+        rec = begin("auto", "", t=t0, uid=uid, auto=True, why=why)
+        if rec is not None:
+            rec.step("in", "Von selbst", t0)
+            rec.step("tool", tool, t0, now or time.time(), ok=bool(ok))
+            end(rec, bool(ok))
+    except Exception:
+        pass
+
+
+def update_checked(data, t0):
+    """update.remote_state asked GitHub (not from its cache): the way and the outcome in fixed words."""
+    try:
+        if not on():
+            return
+        err, behind, head = data.get("error"), data.get("behind"), data.get("head_state")
+        job("Update-Prüfung", "GitHub", t0, ok=not err)
+        word = ("GitHub nicht erreichbar, nichts wird installiert" if err else
+                "aktuell" if behind == 0 else
+                f"neuere getestete Version {data.get('version') or ''}".strip() + (f" ({behind} Änderungen)" if isinstance(behind, int) and behind > 0 else ""))
+        if not err and head in ("running", "red"):
+            word += " · neuester Stand: " + ("Tests laufen" if head == "running" else "Tests rot oder abgebrochen")
+        event("Update", "Prüfung: " + word)
+    except Exception:
+        pass
+
+
 _cur = contextvars.ContextVar("live_rec", default=None)
 
 
@@ -479,6 +525,20 @@ def _conns(now):
     except Exception:
         pass
     try:
+        import begleiter
+        n = sum(1 for t in list(getattr(begleiter, "_seen", {}).values()) if now - t < 3 * getattr(begleiter, "POLL", 30))
+        if n:
+            out.append({"name": "Spark-Begleiter (PC/Mac)", "proto": "fragt alle 30 s nach", "dir": "ein", "n": n})
+    except Exception:
+        pass
+    try:
+        import roomlive
+        n = len(roomlive.everybody())
+        if n:
+            out.append({"name": "Raum-Modus hört zu", "proto": "Mikrofon · Gerät im Raum", "dir": "ein", "n": n})
+    except Exception:
+        pass
+    try:
         import telegram
         if (getattr(telegram, "_poller", {}) or {}).get("on"):
             out.append({"name": "Telegram", "proto": "Long-Poll · Internet", "dir": "aus", "n": 1})
@@ -561,7 +621,14 @@ def _bg_now(now):
     with _lock:
         for k in [k for k, v in _bg.items() if now - v[1] > 6 * 3600]:    # a job that never said it ended
             _bg.pop(k, None)
-        return [{"job": k, "st": v[0], "secs": int(now - v[1])} for k, v in sorted(_bg.items(), key=lambda x: x[1][1])]
+        out = [{"job": k, "st": v[0], "secs": int(now - v[1])} for k, v in sorted(_bg.items(), key=lambda x: x[1][1])]
+    try:   # the meaning search model (docembed.py) while it works on documents or a question
+        import docembed
+        if docembed._busy():
+            out.append({"job": "Bedeutungssuche", "st": "run", "secs": 0})
+    except Exception:
+        pass
+    return out
 
 
 def llm_seen(ok, code="", now=None):

@@ -215,6 +215,8 @@ async def run(reason="daily"):
                 "why": reason}
         _update(last=last, sent=sent[-KEEP:])
         guard.log("offsite_backup", detail=f"{name} {size // 1048576} MB")
+        import live
+        live.job("Sicherung nach außen", "NAS-Sicherung", t0)
         print("offsite:", name, size // 1048576, "MB sent", flush=True)
         return last
     except Exception as e:   # noqa: BLE001 - every failure is shown on the page and in the log
@@ -222,6 +224,8 @@ async def run(reason="daily"):
         last = {"t": int(time.time()), "ok": False, "error": msg, "why": reason}
         _update(last=last)
         guard.log("offsite_failed", detail=msg)
+        import live
+        live.job("Sicherung nach außen", "NAS-Sicherung", t0, ok=False)
         print("offsite: failed -", msg, flush=True)
         return last
     finally:

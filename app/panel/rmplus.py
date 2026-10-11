@@ -35,6 +35,7 @@ from fastapi import APIRouter, Depends, HTTPException, Request
 
 import documents
 import features
+import live
 import guard
 import hintergrund
 import profiles
@@ -518,6 +519,7 @@ async def guide(uid, force=False):
 
 # ---------------------------------------------------------------- background
 _last = {}
+LIVE_WHY = {"guide": "reMarkable-Anleitung", "morning": "Morgenblatt", "week": "Wochenrückblick", "pages": "reMarkable-Seiten"}
 # Zustand → Live (live.py): each job on the list of background work while it runs, its end as an event; fixed words
 SHOWN = {"guide": "Anleitung", "morning": "Morgenblatt", "week": "Wochenrückblick", "pages": "Seiten prüfen",
          "ask": "@Spark-Antwort", "meet": "Besprechung"}
@@ -572,12 +574,14 @@ async def due_once(idle=True, now=None, uids=None):
                 print(f"remarkable: {what} failed:", why, flush=True)
                 hintergrund.note(uid, "remarkable", False)
                 _shown(what, None, False, why="Fehler")
+                live.job(LIVE_WHY[what], "reMarkable", t0, ok=False, uid=uid)   # the way to the reMarkable
                 continue
             except BaseException:
                 _shown(what, None, False, why="Fehler")
                 raise
             _shown(what if not isinstance(r, str) else r, None, True, time.time() - t0, quiet=not r)
             if r:
+                live.job(LIVE_WHY[what], "reMarkable", t0, uid=uid)   # Zustand → Live: a request of "Von selbst"
                 return what
     return None
 

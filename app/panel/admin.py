@@ -955,6 +955,8 @@ async def _test_asr(request, file, language, wake, room):
     except Exception:  # unreadable audio etc.: just no speaker
         uid, score = None, 0.0
     who = uid and profiles.by_id(uid)
+    import live
+    live.mark("Sprechererkennung", "Stimme erkannt" if who else "Stimme nicht erkannt")   # never whose
     if who:
         out["speaker"] = {"name": who["name"], "token": speakers.token(uid, me["id"]), "score": round(score, 3)}
     return out

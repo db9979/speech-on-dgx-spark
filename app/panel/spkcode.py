@@ -161,6 +161,16 @@ def ask(uid, did, text, why, now=None):
     if len(_pending) > 100:
         _pending.clear()
     _pending[did] = {"uid": uid, "text": str(text)[:2000], "t": now, "why": why}
+    _live("Codewort gefragt")
+
+
+def _live(text):
+    """Zustand → Live: only that a code word was asked and how it went, never the word or whose."""
+    try:
+        import live
+        live.mark("Sprechererkennung", text)
+    except Exception:
+        pass
 
 
 def waiting(did, now=None):
@@ -172,6 +182,13 @@ def waiting(did, now=None):
 def attempt(uid, did, text, now=None):
     """The answer to "Sag bitte dein Codewort": ("right", question) / ("wrong", None) / ("locked", None).
     The waiting question is taken off either way."""
+    res = _attempt(uid, did, text, now)
+    if res[0] != "none":
+        _live({"right": "Codewort richtig", "wrong": "Codewort falsch", "locked": "Codewort gesperrt"}[res[0]])
+    return res
+
+
+def _attempt(uid, did, text, now=None):
     now = time.time() if now is None else now
     p = _pending.pop(did, None)
     if not p or p["uid"] != uid or now - p["t"] >= WAIT:

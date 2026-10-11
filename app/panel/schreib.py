@@ -259,6 +259,7 @@ def _trace(uid, client, label, chars, where):
         tr = tracelog.start(time.time(), client, uid, "profile", "")
         if tr:
             tr.intent = "Schreibhilfe"
+            tr.direct = True      # Zustand → Live: straight to the language model, no Weiche
             tr.step("in", f"Schreibhilfe ({where})", tr.t0, chars=chars)
             tr.step("prep", "Panel-Vorbereitung", tr.t0, time.time(), art=label)
             tr.now("llm", "Sprachmodell")
@@ -412,7 +413,7 @@ def writer(request):
         import begleiter
         if not allowed(prof["id"]) or not begleiter.part_on(prof["id"], dev["id"], "write"):
             raise HTTPException(403, "Die Schreibhilfe ist für dieses Gerät aus (Ich → Begleiter).")
-        return prof, "other", begleiter.kind_of(profiles.device_name(request))
+        return prof, "desk", begleiter.kind_of(profiles.device_name(request))
     if dev["scope"] not in ("write", "app"):
         raise HTTPException(403, "only in the profile's own browser login or from a paired program")
     if not apps_ok(prof["id"]):

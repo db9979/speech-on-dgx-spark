@@ -10,6 +10,7 @@ import json
 import os
 import re
 import unittest
+import unittest.mock
 
 from tests import helpers
 
@@ -159,6 +160,12 @@ class Live(unittest.TestCase):
             with open(m.__file__, encoding="utf-8") as f:
                 names |= set(re.findall(r'"name": "([a-z_]+)"', f.read()))
         names -= {"parameters"}
+        # function tools defined anywhere in the panel (rmplus.py, …), except the live check's own test tool
+        import glob
+        for path in glob.glob(os.path.join(os.path.dirname(live.__file__), "*.py")):
+            with open(path, encoding="utf-8") as f:
+                names |= set(re.findall(r'"function":\s*\{\s*"name":\s*"([a-z_]+)"', f.read()))
+        names -= {"get_time"}
         self.assertEqual(sorted(n for n in names if n not in live.TOOLS), [],
                          "a new tool: add it to live.TOOLS (and a target to live.TARGETS if it goes somewhere new)")
         import mcpserver   # tools programs call over MCP show as their own requests
@@ -270,6 +277,55 @@ class Live(unittest.TestCase):
             self.assertEqual(sorted(ev), sorted(["erster Ton 5,03 s statt 3,23 s", "Qualitätstest: 1 neu kaputt"]))
         finally:
             live._hint_cache[:] = [0.0, []]
+            set_logs(live=False)
+
+    def test_everything_else_that_happens(self):
+        """Gesamtprüfung 2026-10-11 (Dominik: everything that can be shown): audit events in fixed words, the update
+        check and the NAS backup as ways of "Von selbst", the Spark-Begleiter and room mode as open channels.
+        Never a name, address or detail."""
+        import guard
+        import update
+        reset()
+        set_logs(live=True)
+        try:
+            guard.log("profile_login", who="Geheimname", ip="192.168.1.77")
+            guard.log("invite_used", detail="Einladung für Oma")
+            guard.log("change", path="/api/x")                     # the generic one stays out
+            update._remote_cache.update(time=0, data=None)
+            real = update._remote_state
+
+            async def fake(force=False):
+                return {"checked": __import__("time").time(), "latest": "a" * 40, "behind": 3, "version": "V9.9.9",
+                        "head_state": "running", "error": None}
+            update._remote_state = fake
+            try:
+                import asyncio
+                asyncio.run(update.remote_state(force=True))
+            finally:
+                update._remote_state = real
+            live.job("Sicherung nach außen", "NAS-Sicherung", __import__("time").time() - 2)
+            d = live.snapshot()
+            texts = [(e["area"], e["text"]) for e in d["events"]]
+            self.assertIn(("Eingang", "Anmeldung eines Profils"), texts)
+            self.assertIn(("Eingang", "Einladung benutzt"), texts)
+            self.assertIn(("Update", "Prüfung: neuere getestete Version V9.9.9 (3 Änderungen) · neuester Stand: Tests laufen"), texts)
+            self.assertFalse(any("api/x" in t for _, t in texts))
+            ways = sorted((r["intent"], r["steps"][-1]["to"]) for r in d["reqs"] if r["auto"])
+            self.assertEqual(ways, [("Sicherung nach außen", "nas"), ("Update-Prüfung", "github")])
+            self.assertEqual({t["zone"] for t in d["targets"] if t["id"] == "github"}, {"net"})
+            for secret in ("Geheimname", "192.168.1.77", "Oma"):
+                self.assertNotIn(secret, json.dumps(d))
+            # the Spark-Begleiter asking for notes, room mode listening: open channels
+            import begleiter
+            import roomlive
+            with unittest.mock.patch.object(roomlive, "everybody", lambda: [{}, {}]), \
+                    unittest.mock.patch.object(begleiter, "_seen", {"dX": __import__("time").time(), "old": 0}):
+                names = {c["name"]: c["n"] for c in live.snapshot()["conns"]}
+            self.assertEqual((names.get("Spark-Begleiter (PC/Mac)"), names.get("Raum-Modus hört zu")), (1, 2))
+            # every audit word is a fixed word
+            for k, (area, word) in guard.LIVE_WORDS.items():
+                self.assertRegex(word, r"^[\wÄÖÜäöüß ().,-]+$", k)
+        finally:
             set_logs(live=False)
 
     def test_waechter_decisions_with_reasons(self):

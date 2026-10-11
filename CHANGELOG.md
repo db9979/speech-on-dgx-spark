@@ -2,6 +2,7 @@
 
 Every version in one line, newest first (taken from the commit messages, so some lines are German, some English). Older entries have no version number.
 
+- **V01.0.352** · 2026-10-11 · Zustand → Live, Gesamtprüfung: Update-Prüfung (GitHub), Sicherung nach außen (NAS), reMarkable-Blätter, Spark-Begleiter als Gerät und Kanal, Raum-Modus, Bedeutungssuche, Anmeldungen/Einladungen/Passkeys, Sprechererkennung und Codewort, Qualitätstest-Ergebnis, Echo, Panel-Start; nur feste Wörter
 - **V01.0.351** · 2026-10-11 · reMarkable im Live-Monitor: @Spark-Antwort, Anleitung, Morgenblatt, Wochenrückblick, Besprechung und Seitenprüfung erscheinen als Hintergrundarbeit mit „fertig“-Meldung, Abgleich als Ereignis, Webseite/Anhang als Werkzeuge
 - **V01.0.350** · 2026-10-11 · Tagesbriefing: keine Fehlerzeile „roomfar: briefing AttributeError“ mehr bei jedem Briefing (Dienste ohne Briefing-Teil werden übersprungen)
 - **V01.0.349** · 2026-10-11 · Schneller Antwortbeginn: Züge ganz ohne Werkzeug (Plaudern) bekommen wieder die kurze Anfrage ohne Werkzeugliste; nur Antwortrunden nach einem Werkzeug behalten die Liste mit tool_choice none (seit V01.0.304 las jede kurze Antwort einige tausend Tokens mehr, wenn qwen38 den Anfang nicht aus dem Zwischenspeicher nimmt)

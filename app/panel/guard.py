@@ -357,6 +357,49 @@ def log(event, **detail):
                 f.write(json.dumps(item, ensure_ascii=False) + "\n")
     except OSError as e:
         print("audit:", e, flush=True)
+    _to_live(event)
+
+
+# What the audit log notes shows on Zustand → Live under "Ereignisse" (live.py), in fixed words: never who,
+# which device, which address or any detail. Kinds that report there themselves (Notaus, watchdog, monitors)
+# and the generic "change" are left out.
+LIVE_WORDS = {
+    "profile_login": ("Eingang", "Anmeldung eines Profils"), "admin_login": ("Eingang", "Admin-Anmeldung"),
+    "handoff_login": ("Eingang", "Anmeldung per Übergabe"), "trusted_browser": ("Eingang", "neuer vertrauter Browser"),
+    "trusted_browser_removed": ("Eingang", "vertrauter Browser entfernt"),
+    "admin_mode_on": ("Eingang", "Admin-Modus geöffnet"), "admin_mode_off": ("Eingang", "Admin-Modus beendet"),
+    "admin_mode_failed": ("Eingang", "Admin-Modus abgewiesen"), "passkey_added": ("Eingang", "Passkey angelegt"),
+    "passkey_removed": ("Eingang", "Passkey entfernt"), "invite_used": ("Eingang", "Einladung benutzt"),
+    "invite_made": ("Eingang", "Einladung erstellt"), "invite_revoked": ("Eingang", "Einladung zurückgezogen"),
+    "invite_app": ("Eingang", "Einladung in der App angenommen"), "profile_device_removed": ("Eingang", "Gerät entfernt"),
+    "profile_logout_all": ("Eingang", "Profil überall abgemeldet"), "profile_session_end": ("Eingang", "Sitzung beendet"),
+    "mcp_connect": ("Eingang", "Programm per MCP verbunden"), "mcp_remove": ("Eingang", "MCP-Zugang entfernt"),
+    "mcp_action": ("MCP", "Aktion entschieden"), "remarkable_pair": ("Geräte", "reMarkable gekoppelt"),
+    "remarkable_unpair": ("Geräte", "reMarkable entkoppelt"), "speaker_code_set": ("Sprechererkennung", "Codewort gesetzt"),
+    "profile_mfa_on": ("Sicherheit", "zweiter Schritt an (Profil)"), "profile_mfa_off": ("Sicherheit", "zweiter Schritt aus (Profil)"),
+    "admin_mfa_on": ("Sicherheit", "zweiter Schritt an (Admin)"), "admin_mfa_off": ("Sicherheit", "zweiter Schritt aus (Admin)"),
+    "admin_password_changed": ("Sicherheit", "Admin-Passwort geändert"),
+    "admin_logout_everywhere": ("Sicherheit", "Admin überall abgemeldet"), "admin_role": ("Sicherheit", "Rolle geändert"),
+    "config_switch": ("Einstellungen", "Schalter geändert"), "config_sensitive": ("Einstellungen", "Sicherheitseinstellung geändert"),
+    "config_undo": ("Einstellungen", "Änderung zurückgenommen"), "feature_profile": ("Einstellungen", "Funktion für ein Profil geändert"),
+    "backup": ("Sicherung", "Sicherung erstellt"), "backup_failed": ("Sicherung", "Sicherung fehlgeschlagen"),
+    "backup_download": ("Sicherung", "Sicherung heruntergeladen"), "restore": ("Sicherung", "Sicherung eingespielt"),
+    "offsite_backup": ("Sicherung", "Sicherung nach außen übertragen"), "offsite_failed": ("Sicherung", "Sicherung nach außen fehlgeschlagen"),
+    "rollback": ("Update", "Rückkehr zur vorigen Version gestartet"), "update_from_app": ("Update", "Update aus der App gestartet"),
+    "livecheck_failed": ("Dienste", "Funktionsprüfung fehlgeschlagen"), "memory_low": ("Dienste", "Speicher knapp"),
+    "room_end": ("Raum-Modus", "Zuhören beendet"), "foreign_page_refused": ("Wächter", "fremde Seite abgewiesen"),
+    "profile_memory_tidied": ("Hintergrund", "Gedächtnis aufgeräumt"), "person_priority": ("Vorrang", "Vorrang eines Profils geändert"),
+}
+
+
+def _to_live(event):
+    w = LIVE_WORDS.get(event)
+    if w:
+        try:
+            import live
+            live.mark(*w)
+        except Exception:
+            pass
 
 
 def read(limit=300, user=None):

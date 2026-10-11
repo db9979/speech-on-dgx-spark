@@ -1052,6 +1052,8 @@ class Session:
                 voice = (who or "", best >= th)
             except Exception:
                 voice = ("", False)
+            import live
+            live.mark("Sprechererkennung", "Lautsprecher: " + ("Stimme erkannt" if voice[1] else "fremde Stimme"))
             if not voice[1]:
                 self.foreign_at = time.time()   # an unknown voice in the room: a code word is asked next (spkcode.py)
         if not text or self.room is None:

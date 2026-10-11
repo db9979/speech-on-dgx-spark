@@ -381,6 +381,8 @@ async def run(reason="manual"):
         _history(res)
         _save(res)
         print(f"quality test ({reason}): {res['passed']}/{res['total']}", flush=True)
+        import live
+        live.mark("Qualitätstest", f"{res['passed']} von {res['total']} richtig, {res['seconds']} s")
         return res
 
 

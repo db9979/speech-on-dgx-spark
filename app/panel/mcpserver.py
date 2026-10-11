@@ -519,7 +519,7 @@ SHOW = {"transcribe": ("asr", "Spracherkennung"), "speak": ("tts", "Sprachausgab
 def _watch(c, name):
     """A request of this program on the live page (ask_spark shows as the assistant's own request).
     The program's name shows like a device name: only with the profile's consent."""
-    if name == "ask_spark":
+    if name in ("ask_spark", "write_text"):     # both show as their own request (chat, schreib.py)
         return None
     import live
     rec = live.begin("mcp", c["name"][:30], uid=c["uid"])

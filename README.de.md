@@ -33,6 +33,7 @@ Alle Optionen ohne Rückfragen (`--mode api --asr 1.7b --tts 0.6b --yes` …) st
 
 <!-- New version: add one line at the top here and in CHANGELOG.md, drop the oldest line here (keep 10). Details go to docs/de and docs/en, not into this README. -->
 
+- **V01.0.352** Live-Übersicht Gesamtprüfung: Update, NAS-Sicherung, reMarkable, Begleiter, Raum-Modus, Anmeldungen, Sprechererkennung im Bild
 - **V01.0.351** reMarkable im Live-Monitor: @Spark-Antwort, Anleitung, Morgenblatt, Wochenrückblick, Besprechung und Seitenprüfung erscheinen als Hintergrundarbeit mit „fertig“-Meldung, Abgleich als Ereignis, Webseite/Anhang als Werkzeuge
 - **V01.0.350** Tagesbriefing: keine Fehlerzeile „roomfar: briefing AttributeError“ mehr bei jedem Briefing (Dienste ohne Briefing-Teil werden übersprungen)
 - **V01.0.349** Schneller Antwortbeginn: Züge ohne Werkzeug (Plaudern) bekommen wieder die kurze Anfrage ohne Werkzeugliste
@@ -42,7 +43,6 @@ Alle Optionen ohne Rückfragen (`--mode api --asr 1.7b --tts 0.6b --yes` …) st
 - **V01.0.344** Mehr mit dem reMarkable (Admin-Unterschalter + je Funktion unter Ich → reMarkable, alles aus): Morgenblatt als PDF mit Notizlinien, „@Spark“-Fragen auf Papier bekommen eine Antwort daneben, Aufgaben aus der Handschrift (Erinnerung erst nach Klick), Besprechungen zusammengefasst, Wochenrückblick freitags, Webseiten und Mail-Anhänge aufs reMarkable, Eingang pro Tag, Spark-Anleitung zu den reMarkable-Funktionen und dem Dienst, die sich selbst aktuell hält
 - **V01.0.343** Hilfe zum Spark antwortet besser: die Weiche erkennt Hilfe-Fragen mit festen Regeln, die Hilfe kennt jede Seite und häufige Fragen, ein „?“ an jedem Schalter, und sie merkt, woher gefragt wird (Lautsprecher, App, Telegram)
 - **V01.0.342** Spark-Begleiter am PC und Mac (aus): Programm in Taskleiste und Menüleiste mit Schreibhilfe, Frag Spark, Diktieren, Meldungen, Zustand und Notaus-Knopf, je eigenes Tastenkürzel; pro Gerät im Panel eingestellt
-- **V01.0.341** Ich → Von selbst: Schalter und Knöpfe bei den Smart-Home-Regeln stehen wieder sauber untereinander (Rechner und Handy)
 
 Alle Versionen: [CHANGELOG.md](CHANGELOG.md)
 

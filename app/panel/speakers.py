@@ -221,6 +221,11 @@ def enroll(uid, data):
         d = _read(uid)
         s = (d.get("samples", []) + [[round(float(v), 5) for v in e]])[-MAX_SAMPLES:]
         profiles._write(_file(uid), dict(d, samples=s, updated=int(time.time())))
+    try:
+        import live
+        live.mark("Sprechererkennung", f"Stimme eingelernt ({len(s)}. Aufnahme)")   # never whose
+    except Exception:
+        pass
     return len(s)
 
 

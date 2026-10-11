@@ -199,6 +199,8 @@ async def held_off(request: Request, exc: notaus.NotausAktiv):
 
 @app.on_event("startup")
 async def sampler():
+    live.mark("Spark", "Panel gestartet · " + (re.sub(r"[^A-Za-z0-9.\-]", "", app_version())[:32] or "?"))
+
     async def loop():
         psutil.cpu_percent()
         while True:

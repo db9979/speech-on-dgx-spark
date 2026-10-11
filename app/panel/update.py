@@ -116,7 +116,17 @@ def _remember_failure(data, until, limited):
 
 
 async def remote_state(force=False):
-    """Newest commit on the remote branch and the commits since the installed one."""
+    """Newest commit on the remote branch and the commits since the installed one (and, when GitHub was really
+    asked, the way and its outcome on Zustand → Live)."""
+    t0 = time.time()
+    data = await _remote_state(force)
+    if isinstance(data, dict) and (data.get("checked") or 0) >= t0:
+        import live
+        live.update_checked(data, t0)
+    return data
+
+
+async def _remote_state(force=False):
     now = time.time()
     if not force and _remote_cache["data"] and now - _remote_cache["time"] < 600:
         return _remote_cache["data"]
@@ -284,6 +294,8 @@ def _backup_first(why):
 
 @router.post("/api/update", dependencies=[Depends(auth)])
 def start_update():
+    import live
+    live.mark("Update", "Update gestartet")
     _backup_first("before-update")
     return _start()
 

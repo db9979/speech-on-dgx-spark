@@ -2028,7 +2028,7 @@ async def siri_ask(request: Request):
 
 
 # who asks with a plain text and reads the answer: (trace client, conversation id start, its title)
-ASKERS = {"siri": ("siri", "siri-", "Siri"), "desk": ("other", "desk-", "Begleiter")}
+ASKERS = {"siri": ("siri", "siri-", "Siri"), "desk": ("desk", "desk-", "Begleiter")}
 
 
 async def text_ask(request, prof, body, who="siri"):
