@@ -45,6 +45,12 @@ internal interface IBegleiterHost
     /// <summary>Anderen Ordner wählen. <c>null</c> = übernommen, sonst ein deutscher Hinweis.</summary>
     string? SetWissenFolder(string path);
 
+    /// <summary>„Antworten vorlesen“ im Fenster Frag Spark (always/spoken/never).</summary>
+    void SetAskSpeak(string mode);
+
+    /// <summary>Teil "daily": lokale Zeiten und an/aus. <c>null</c> = gespeichert, sonst ein deutscher Hinweis.</summary>
+    string? SetDaily(bool morningOn, string morningTime, bool eveningOn, string eveningTime);
+
     /// <summary>Kopplung, Einstellungen vom Spark, Zustand oder Update haben sich geändert.</summary>
     event EventHandler? Changed;
 }
@@ -85,6 +91,24 @@ internal sealed class SettingsForm : ThemedForm
     private readonly SparkButton _folderPick = new(ButtonKind.Secondary, "Ordner wählen …");
     private readonly TLabel _folderNote = new(TextRole.SmallMuted);
 
+    // Antworten vorlesen (nur mit Teil "speak")
+    private readonly TLabel _speakHeading = new(TextRole.Heading, "Frag Spark: Antworten vorlesen");
+    private readonly Dictionary<string, SparkButton> _speakChips = AskSpeakModes.All.ToDictionary(m => m, m => new SparkButton(ButtonKind.Chip, AskSpeakModes.Label(m)));
+    private readonly TLabel _speakNote = new(TextRole.SmallMuted, "Gesprochene Fragen: Mikrofon-Knopf im Fenster Frag Spark oder das Weckwort. Stop in der Pille oder eine neue Frage beendet das Vorlesen.");
+    private bool _speakShown;
+
+    // Tagesstart und Feierabend (nur wenn der Teil an ist)
+    private readonly TLabel _dailyHeading = new(TextRole.Heading, "Tagesstart und Feierabend");
+    private readonly ToggleSwitch _morningOn = new("Tagesstart beim ersten Entsperren oder Start ab");
+    private readonly TextBox _morningTime = new() { MaxLength = 5, TextAlign = HorizontalAlignment.Center, AccessibleName = "Uhrzeit Tagesstart" };
+    private readonly RoundedHost _morningHost;
+    private readonly ToggleSwitch _eveningOn = new("Feierabend beim Sperren des PCs ab");
+    private readonly TextBox _eveningTime = new() { MaxLength = 5, TextAlign = HorizontalAlignment.Center, AccessibleName = "Uhrzeit Feierabend" };
+    private readonly RoundedHost _eveningHost;
+    private readonly TLabel _dailyNote = new(TextRole.SmallMuted);
+    private bool _updatingDaily;
+    private bool _dailyShown;
+
     // Über
     private readonly FaceBox _face = new();
     private readonly TLabel _aboutTitle = new(TextRole.Title);
@@ -107,6 +131,8 @@ internal sealed class SettingsForm : ThemedForm
     {
         _host = host;
         _page = _pageHotkeys;
+        _morningHost = new RoundedHost(_morningTime);
+        _eveningHost = new RoundedHost(_eveningTime);
 
         Text = "Spark-Begleiter – Einstellungen";
         FormBorderStyle = FormBorderStyle.FixedSingle;
@@ -150,6 +176,21 @@ internal sealed class SettingsForm : ThemedForm
         // Kopplung
         _pagePairing.Controls.AddRange(new Control[] { _pairing, _panel, _repair, _unpair, _partsHeading, _parts, _partsHint, _folderHeading, _folderPath, _folderPick, _folderNote });
         _folderPick.Click += (_, _) => PickFolder();
+        _pagePairing.Controls.Add(_speakHeading);
+        _pagePairing.Controls.Add(_speakNote);
+        foreach (var (mode, chip) in _speakChips)
+        {
+            chip.AccessibleName = "Antworten vorlesen: " + AskSpeakModes.Label(mode);
+            _pagePairing.Controls.Add(chip);
+            string m = mode;
+            chip.Click += (_, _) => _host.SetAskSpeak(m);
+        }
+
+        _pagePairing.Controls.AddRange(new Control[] { _dailyHeading, _morningOn, _morningHost, _eveningOn, _eveningHost, _dailyNote });
+        _morningOn.CheckedChanged += (_, _) => SaveDaily();
+        _eveningOn.CheckedChanged += (_, _) => SaveDaily();
+        _morningTime.Leave += (_, _) => SaveDaily();
+        _eveningTime.Leave += (_, _) => SaveDaily();
 
         // Über
         _pageAbout.Controls.AddRange(new Control[] { _face, _aboutTitle, _aboutSub, _updatePill, _check, _update, _updateError, _auto, _coffeeText, _coffee });
@@ -301,6 +342,53 @@ internal sealed class SettingsForm : ThemedForm
         _folderPick.Bounds = new Rectangle(width - pick.Width, y, pick.Width, pick.Height);
         y += Math.Max(pick.Height, pathH) + S(6);
         y += _folderNote.Fit(0, y, width);
+
+        _speakHeading.Visible = _speakNote.Visible = _speakShown;
+        foreach (SparkButton chip in _speakChips.Values)
+        {
+            chip.Visible = _speakShown;
+        }
+
+        if (_speakShown)
+        {
+            y += S(20);
+            y += _speakHeading.Fit(0, y, width) + S(8);
+            int cx = 0;
+            int rowH = 0;
+            foreach (SparkButton chip in _speakChips.Values)
+            {
+                Size size = chip.Preferred();
+                chip.Bounds = new Rectangle(cx, y, size.Width, size.Height);
+                cx += size.Width + S(6);
+                rowH = Math.Max(rowH, size.Height);
+            }
+
+            y += rowH + S(6);
+            y += _speakNote.Fit(0, y, width);
+        }
+
+        foreach (Control c in new Control[] { _dailyHeading, _morningOn, _morningHost, _eveningOn, _eveningHost, _dailyNote })
+        {
+            c.Visible = _dailyShown;
+        }
+
+        if (_dailyShown)
+        {
+            y += S(20);
+            y += _dailyHeading.Fit(0, y, width) + S(8);
+            int boxW = S(76);
+            int rowH = S(34);
+            foreach (var (toggle, host) in new[] { (_morningOn, _morningHost), (_eveningOn, _eveningHost) })
+            {
+                int th = toggle.Fit(0, y, width - boxW - S(10));
+                toggle.Top = y + Math.Max(0, (rowH - th) / 2);
+                host.Bounds = new Rectangle(width - boxW, y, boxW, rowH);
+                y += Math.Max(rowH, th) + S(8);
+            }
+
+            y += _dailyNote.Fit(0, y, width);
+        }
+
         return y;
     }
 
@@ -418,7 +506,48 @@ internal sealed class SettingsForm : ThemedForm
                 : "Teil ist aus (im Panel unter Ich → Begleiter einschalten).";
         }
 
+        _speakShown = desk?.IsOn(Parts.Speak) == true;
+        string speakMode = AskSpeakModes.Normalize(config.AskSpeak);
+        foreach (var (mode, chip) in _speakChips)
+        {
+            chip.Checked = mode == speakMode;
+        }
+
+        _dailyShown = desk?.IsOn(Parts.Daily) == true;
+        if (!_morningTime.Focused && !_eveningTime.Focused)
+        {
+            _updatingDaily = true;
+            _morningOn.Checked = config.DailyMorningOn;
+            _eveningOn.Checked = config.DailyEveningOn;
+            _morningTime.Text = config.DailyMorningTime;
+            _eveningTime.Text = config.DailyEveningTime;
+            _updatingDaily = false;
+        }
+
+        if (_dailyNote.Role != TextRole.Error)
+        {
+            _dailyNote.Text = "Einmal am Tag als Hinweis und im Fenster „Frag Spark“. Feierabend: die ersten Termine von morgen und offene Aufgaben.";
+        }
+
         RefreshAbout(config);
+    }
+
+    private void SaveDaily()
+    {
+        if (_updatingDaily)
+        {
+            return;
+        }
+
+        string? error = _host.SetDaily(_morningOn.Checked, _morningTime.Text, _eveningOn.Checked, _eveningTime.Text);
+        _dailyNote.Role = error is null ? TextRole.SmallMuted : TextRole.Error;
+        _dailyNote.Text = error ?? "Gespeichert.";
+        _dailyNote.ApplyTheme(DeviceDpi);
+        if (IsHandleCreated)
+        {
+            LayoutContent();
+            Invalidate(true);
+        }
     }
 
     private void PickFolder()

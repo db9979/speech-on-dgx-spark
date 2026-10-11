@@ -546,7 +546,11 @@ def _app_area(request, uid):
 # bar) only reaches its own paths, only while the admin and the profile allow it (DESK_GATE, set by begleiter.py);
 # each part (writing help, questions, dictation, notes, Notaus button) is checked again per device there.
 DESK_PATHS = ("/api/write", "/api/write/assist", "/api/desk/config", "/api/desk/poll", "/api/desk/ask",
-              "/api/desk/dictate", "/api/desk/notaus", "/api/desk/update", "/api/desk/file", "/api/desk/screen", "/api/desk/hear", "/api/desk/act")
+              "/api/desk/dictate", "/api/desk/notaus", "/api/desk/update", "/api/desk/file", "/api/desk/screen", "/api/desk/hear", "/api/desk/act",
+              # Version 4 (exact paths; the ids go in the query or the body)
+              "/api/desk/speak", "/api/desk/inbox/file", "/api/desk/inbox/done", "/api/desk/agenda", "/api/desk/remind",
+              "/api/desk/busy", "/api/desk/meeting/start", "/api/desk/meeting/chunk", "/api/desk/meeting/end",
+              "/api/desk/meeting/keep", "/api/desk/home", "/api/desk/daily", "/api/desk/apps")
 DESK_GATE = [lambda uid: False]
 ROOM_PATHS = ("/api/room/active", "/api/room/end")
 ROOM_GATE = [lambda uid: False]

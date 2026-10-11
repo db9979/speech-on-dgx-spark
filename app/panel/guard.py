@@ -439,6 +439,8 @@ RATE = {"chat": (30, 120), "asr": (60, 240), "logs": (1, 60), "pair": (10, 10), 
         "rmpair": (0, 3), "rm": (0, 30), "rmsync": (0, 2), "rmsend": (0, 6), "handoff": (60, 60), "bg": (0, 30), "vorrang": (0, 60), "undo": (0, 20), "llmmodels": (0, 30), "offsite": (0, 10), "trust": (10, 30), "android": (0, 20),
         "mcp": (0, 60), "mcpask": (0, 10), "mcpreg": (10, 10), "mcptoken": (20, 20),
         "live": (0, 150), "livemon": (90, 90), "hilfe": (0, 30), "write": (0, 20), "desk": (0, 20), "deskask": (0, 10), "deskupd": (0, 6), "deskfile": (0, 10), "deskhear": (0, 40), "deskact": (0, 20),
+        "deskspeak": (0, 20), "deskinbox": (0, 60), "desksend": (0, 20), "deskagenda": (0, 30), "deskbusy": (0, 30),
+        "deskmeet": (0, 20), "deskhome": (0, 30), "deskdaily": (0, 10), "deskapps": (0, 6),
         "haev": (0, 30), "hamelden": (0, 30), "hament": (0, 40), "notaus": (30, 60), "notausset": (0, 10), "notausoff": (0, 10), "notausha": (10, 10),
         "systemone": (0, 10), "changelog": (0, 30), "mymcp": (0, 30)}  # per minute: (guest, profile or admin)
 BUSY = {"chat": 4, "asr": 3}  # at once, guests together

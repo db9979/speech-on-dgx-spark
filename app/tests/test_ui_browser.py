@@ -597,6 +597,10 @@ class Browser(unittest.TestCase):
                         await pg.click("#dkpair")
                         await pg.wait_for_selector("#dksetup:has-text('#begleiter=')", timeout=8000)
                         box = f'[data-desk="{did}"]'
+                        # one device: its row shows a summary and its settings are open at once, the parts in groups
+                        await pg.wait_for_selector(box + ' .dkbody', state="visible", timeout=8000)
+                        self.assertRegex(await pg.inner_text(box + ' .dkhead'), r"\d+ (von|of) \d+ (Teilen|parts) an|on")
+                        self.assertEqual(await pg.locator(box + ' .dkgrp h4').count(), 5)
                         await pg.locator(box + ' [data-dk="dictate"]').evaluate("e=>e.click()")
                         await pg.click(f'[data-dsave="{did}"]')
                         await pg.wait_for_selector(f'[data-dmsg="{did}"]:has-text("Gespeichert")', timeout=8000)
@@ -613,6 +617,52 @@ class Browser(unittest.TestCase):
             helpers.set_config(desk=False)
             profiles.save_settings(me, {"desk_on": False})
             profiles.delete_device(did)
+
+    def test_begleiter_two_devices(self):
+        """Ich → Begleiter with several devices (Dominik 2026-10-11): compact rows, one open at a time, settings of
+        another device taken into the open form without saving; no sideways scrolling on a phone."""
+        import begleiter
+        import profiles
+        helpers.set_config(desk=True)
+        me = next(u for u in profiles._load()["users"] if u["name"] == "Uitest")["id"]
+        profiles.save_settings(me, {"desk_on": True})
+        ids = []
+        for n in ("Begleiter Windows · Büro-PC", "Begleiter Mac · MacBook"):
+            profiles.add_device(n, me, scope="desk")
+            ids.append(next(x["id"] for x in profiles._load()["devices"] if x["name"] == n))
+        begleiter._save_cfg(ids[0], me, dict(begleiter.DEFAULT, parts=dict(begleiter.DEFAULT["parts"], dictate=True)))
+        begleiter._save_cfg(ids[1], me, begleiter.DEFAULT)
+
+        async def go():
+            async with async_playwright() as p:
+                for name, w, h in VIEWS:
+                    br, pg, errors = await self.page(p, w, h, csp=True)
+                    try:
+                        await pg.evaluate("try{localStorage.removeItem('deskOpen')}catch{}")
+                        await pg.evaluate("openMe('deskbox')")
+                        a, b = (f'[data-desk="{i}"]' for i in ids)
+                        await pg.wait_for_selector(a + " .dkhead", state="visible", timeout=8000)
+                        self.assertFalse(await pg.is_visible(a + " .dkbody"))          # collapsed at first
+                        await pg.click(a + " .dkhead")
+                        self.assertTrue(await pg.is_visible(a + " .dkbody"))
+                        await pg.click(b + " .dkhead")
+                        self.assertTrue(await pg.is_visible(b + " .dkbody"))
+                        self.assertFalse(await pg.is_visible(a + " .dkbody"))          # only one open
+                        await pg.select_option(b + " [data-dcopy]", ids[0])
+                        self.assertTrue(await pg.locator(b + ' [data-dk="dictate"]').is_checked())
+                        self.assertFalse(begleiter.device_cfg(ids[1])[0]["parts"]["dictate"])   # nothing saved yet
+                        over = await pg.evaluate("document.documentElement.scrollWidth-window.innerWidth")
+                        self.assertLessEqual(over, 1, f"{name}: {over}px zu breit")
+                        self.assertEqual(errors, [], name)
+                    finally:
+                        await br.close()
+        try:
+            self.run_async(go())
+        finally:
+            helpers.set_config(desk=False)
+            profiles.save_settings(me, {"desk_on": False})
+            for i in ids:
+                profiles.delete_device(i)
 
     def test_messages_page_sends(self):
         """Ich → Nachrichten (V01.0.192): switch on, write to another profile, it lands in that mailbox; on a

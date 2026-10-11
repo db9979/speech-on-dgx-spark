@@ -77,7 +77,7 @@ WHO = {"documents": "documents", "reminders": "reminders", "speaker_id": "speake
        "room_voices": "roomtv", "room_ha": "roomha", "room_remote": "roomfar", "weather": "weather", "contacts": "contacts",
        "parcels": "parcels", "telegram": "telegram", "tasks": "tasks", "transit": "transit", "messages": "messages",
        "esp32": "esp32", "iphone": "iphone", "iphone_panel": "iphonepanel", "pebble": "pebble",
-       "android": "android", "mcp_server": "mcpserver", "my_mcp": "mymcp", "write_help": "schreib", "write_apps": "schreibapps", "desk": "begleiter", "desk_act": "begleitertun",
+       "android": "android", "mcp_server": "mcpserver", "my_mcp": "mymcp", "write_help": "schreib", "write_apps": "schreibapps", "desk": "begleiter", "desk_act": "begleitertun", "desk_meeting": "begleitermeeting",
        "remarkable": "remarkable", "remarkable_send": "rmsend", "remarkable_fresh": "rmfresh", "remarkable_plus": "rmguide", "my_status": "mystatus", "person_priority": "vorrang",
        "ha_live": "halive", "ha_loud": "haloud", "ha_events": "haevent", "ha_voice_rules": "havoice", "ha_camera": "hacam",
        "systemone_mail": "mailwichtig"}

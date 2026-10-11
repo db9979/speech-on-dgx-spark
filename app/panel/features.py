@@ -173,6 +173,8 @@ FEATURES = (
       me="deskbox", guide="begleiter"),
     F("begleitertun", "Begleiter darf am PC handeln", "Companion may act on the PC", "go", ("desk_act",),
       parent="begleiter", me="deskbox", guide="begleitertun"),
+    F("begleitermeeting", "Besprechungen mitschreiben", "Write along in meetings", "go", ("desk_meeting",),
+      parent="begleiter", me="deskbox", guide="begleitermeeting"),
     F("pebble", "Pebble-Uhr", "Pebble watch", "go", ("pebble",), "pebble_on", me="pebbox", guide="pebblepair"),
     F("mcpserver", "Spark als MCP-Server", "Spark as MCP server", "go", ("mcp_server",), "mcps_on", me="mcpbox", guide="mcpserver"),
     F("mcpextern", "MCP-Server von außen (OAuth)", "MCP server from outside (OAuth)", "go", ("mcp_server_extern",),

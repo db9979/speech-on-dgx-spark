@@ -64,7 +64,7 @@ TOOLS = {
     "memory_forget": "mem", "memory_save": "mem", "reminder_cancel": "mem", "reminder_list": "mem", "reminder_set": "mem",
     "message_announce": "mem", "message_read": "mem", "message_send": "mem", "agent_list": "mem",
     "agent_schedule": "mem", "agent_task": "mem", "routine_save": "mem",
-    "spark_hilfe": "hilfe", "spark_vorschlag": "hilfe", "pc_action": "desk",
+    "spark_hilfe": "hilfe", "spark_vorschlag": "hilfe", "pc_action": "desk", "pc_send": "desk",
     # tools only programs use over MCP (mcpserver.py; transcribe/speak/voices show as Hören/Sprechen)
     "today": "cal", "action_status": "mem", "Vorschlag": "mem",
     # notes the Spark sends (push.py) and what it says by itself (proactive.py, live.note)

@@ -4,7 +4,9 @@
     Spark-Begleiter für Windows: Tray-Programm für den eigenen Spark – Schreibhilfe (Strg+Alt+S),
     Frag Spark (Strg+Alt+A), Diktieren (Strg+Alt+D), Meldungen, Zustandspunkt und Mein-Notaus-Knopf;
     dazu Rechtsklick auf Dateien, Bildschirm fragen (Strg+Alt+B), App erkennen, Antwort entwerfen in Outlook
-    (Strg+Alt+M), Ordner Spark-Wissen, Knöpfe in Meldungen, Spark darf am PC handeln und Weckwort.
+    (Strg+Alt+M), Ordner Spark-Wissen, Knöpfe in Meldungen, Spark darf am PC handeln und Weckwort;
+    dazu Vorlesen (Strg+Alt+L), Vom Handy auf den PC, Termine, Nicht stören erkennen, Besprechung mitschreiben
+    (Strg+Alt+R), Smart-Home-Knöpfe sowie Tagesstart und Feierabend.
     Welche Teile an sind, legt das Panel fest (Ich → Begleiter); die Tastenkürzel werden lokal eingestellt.
     Gebaut von .github/workflows/begleiter-windows.yml für win-x64 und win-arm64.
   -->

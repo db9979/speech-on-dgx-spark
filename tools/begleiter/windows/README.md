@@ -19,6 +19,13 @@ eigenen Spark. Es kann:
 | **Knöpfe in Meldungen** | Meldungen mit **Antworten**, **Später**, **Panel öffnen** | – |
 | **Spark darf am PC handeln** | der Spark darf um wenige, fest umrissene Handlungen bitten – jede einzeln mit Rückfrage | – |
 | **Weckwort** | auf „Hey Spark“ (Wort aus dem Panel) hören und die Frage beantworten | – |
+| **Vorlesen** | markierten Text in der eigenen Stimme des Profils vorlesen | **Strg+Alt+L** |
+| **Vom Handy auf den PC** | Text, Links und Dateien, die man am Handy „an den PC“ schickt | – |
+| **Termine im Begleiter** | „Als Nächstes“ im Begleiter-Fenster, Hinweis 10 Minuten vor jedem Termin | – |
+| **Nicht stören erkennen** | bei Telefonat/Videokonferenz oder Präsentation hält der Spark Meldungen zurück | – |
+| **Besprechung mitschreiben** | Mikrofon und Systemton mitschreiben, danach Zusammenfassung und Aufgaben | **Strg+Alt+R** |
+| **Smart-Home-Knöpfe** | Knöpfe „Zuhause“ im Begleiter-Fenster (Licht, Szenen, Skripte) | – |
+| **Tagesstart und Feierabend** | morgens beim ersten Entsperren ein Überblick, abends beim Sperren der Ausblick auf morgen | – |
 
 Die Teile ab „Rechtsklick auf Dateien“ sind für jedes Gerät **aus**, bis sie im Panel eingeschaltet werden.
 
@@ -155,7 +162,9 @@ einem Fenster im Vordergrund: „Spark möchte: … Erlauben?“ mit der genauen
 http-/https-Adresse im Browser öffnen, ein Programm aus der Liste dieses Geräts im Panel starten, die
 Medientasten (Wiedergabe/Pause, nächster, vorheriger Titel), Lautstärke (lauter, leiser, stumm), den PC
 sperren und eine Nachricht als reinen Text anzeigen. Alles andere lehnt der Begleiter ab. Jede Bitte wird
-höchstens einmal ausgeführt.
+höchstens einmal ausgeführt. Damit man die Programme im Panel nur auswählen muss, schickt der Begleiter – nur
+solange der Teil an ist – beim Start, beim Einschalten und einmal am Tag die Liste der Startmenü-Einträge
+(Name und Pfad der Verknüpfung, ohne Deinstallieren-/Hilfe-Einträge, höchstens 600) an den Spark.
 
 **Weckwort:** Ist der Teil an, hört der Begleiter am Standard-Mikrofon mit – sichtbar am **Ring um das
 Symbol**. Erst wenn es lauter als das Grundrauschen wird, nimmt er den Satz auf (bis zu einer kurzen Pause,
@@ -164,6 +173,56 @@ oder gespeichert. „Hey Spark, wie wird das Wetter?“ → die Antwort erschein
 → kurzer Ton und die Pille „Ich höre zu“, dann die Frage sprechen (bis zur Pause, höchstens 15 Sekunden).
 Im Begleiter-Fenster **Weckwort pausieren** schaltet das Zuhören ab (Ring verschwindet), bis
 **Weckwort fortsetzen**. Während eines Diktats hört das Weckwort nicht mit.
+
+**Vorlesen:** Text markieren, **Strg+Alt+L**. Der Spark liest ihn in der Stimme des Profils vor (höchstens 5000
+Zeichen); unten rechts erscheint die Pille „Spark liest vor“ mit **Stop**. **Strg+Alt+L** noch einmal stoppt ebenfalls.
+Im Begleiter-Fenster bzw. Menü liest **Zwischenablage vorlesen** den kopierten Text vor. Der Ton wird nur im
+Speicher gehalten.
+
+**Antworten vorlesen (Frag Spark):** Ist Vorlesen an, steht oben im Fenster „Frag Spark“ der Knopf **Antworten
+vorlesen: …** (Klick schaltet weiter; ebenso unter Einstellungen → **Kopplung**): **nur bei gesprochenen Fragen**
+(Standard), **immer** oder **nie**. Gesprochen ist eine Frage, die mit dem Mikrofon-Knopf im Fenster (braucht
+Diktieren) oder mit dem Weckwort gestellt wurde; getippte Fragen bleiben still, außer bei „immer“. Die Antwort
+läuft über dieselbe Pille „Spark liest vor“ mit **Stop**; eine neue Frage (oder der Mikrofon-Knopf) beendet das
+Vorlesen.
+
+**Vom Handy auf den PC:** Was am Handy „an den PC“ geschickt wird, kommt mit der nächsten Abfrage an:
+*Text* liegt danach in der Zwischenablage (Hinweis „Vom Spark: Text liegt in der Zwischenablage“); bei einem *Link*
+fragt der Begleiter „Link öffnen?“ mit **Öffnen**, **Kopieren** und **Nein** (geöffnet werden nur http- und
+https-Links); eine *Datei* (höchstens 20 MB) landet in `Downloads\Vom Spark` – nie wird etwas überschrieben,
+gleiche Namen bekommen „(2)“, „(3)“ … Ein Klick auf den Hinweis öffnet den Ordner. Jedes Stück kommt nur einmal
+(gemerkt in `%LOCALAPPDATA%\Spark Begleiter\inbox-erledigt.json`).
+
+**Termine im Begleiter:** Im Begleiter-Fenster steht unter **Als Nächstes**, was in den nächsten 24 Stunden
+ansteht (Termine mit Ort, Erinnerungen), alle 5 Minuten aufgefrischt. 10 Minuten vor jedem Termin kommt ein
+Hinweis mit Titel und Uhrzeit. Meldungen im Begleiter-Fenster bekommen den Knopf **In 20 Min erinnern**.
+
+**Nicht stören erkennen:** Benutzt ein anderes Programm Mikrofon oder Kamera (Teams, Zoom, Telefon …) oder läuft
+eine PowerPoint-Bildschirmpräsentation bzw. ein Vollbildprogramm/der Präsentationsmodus, sagt der Begleiter dem
+Spark bei jeder Abfrage „beschäftigt“. Der Spark hält Meldungen so lange zurück und schickt danach eine
+Zusammenfassung. Am Symbol erscheint ein kleiner **Mond**. Der Begleiter liest dafür nur, *dass* Mikrofon/Kamera
+benutzt werden (Windows-Datenschutzliste), nie *was*; die eigene Aufnahme (Diktieren, Weckwort, Besprechung)
+zählt nicht.
+
+**Besprechung mitschreiben:** Im Begleiter-Fenster **Besprechung mitschreiben** oder **Strg+Alt+R**. Beim ersten
+Mal fragt der Begleiter: „Alle Beteiligten müssen einverstanden sein, dass mitgeschrieben wird.“ –
+**Verstanden, starten**. Solange aufgenommen wird, steht oben auf dem Bildschirm eine rote Pille „Besprechung wird
+mitgeschrieben · mm:ss · **Beenden**“, die sich nicht verdecken lässt. Aufgenommen werden das Mikrofon und der
+Systemton (was die Lautsprecher/das Headset abspielen, also auch die anderen in Teams/Zoom); geht der Systemton
+nicht, sagt der Begleiter Bescheid und schreibt nur das Mikrofon mit. Alle 30 Sekunden geht ein Stück an den
+eigenen Spark, auf dem PC bleibt nichts. Höchstens 3 Stunden. Nach **Beenden** (oder Strg+Alt+R) erscheint ein
+Fenster mit der Zusammenfassung (**Kopieren**) und den erkannten Aufgaben zum Ankreuzen (keine vorausgewählt):
+**Ausgewählte als Erinnerung**, **Aufs reMarkable** (wenn im Panel eingerichtet) und **Schließen**. Während der
+Besprechung hört das Weckwort nicht mit und Diktieren geht nicht.
+
+**Smart-Home-Knöpfe:** Im Begleiter-Fenster unter **Zuhause** stehen die Knöpfe, die im Panel für dieses Gerät
+festgelegt sind: Schalter zeigen „an“/„aus“ (an = farbig), Szenen und Skripte lösen beim Klick aus. Verlangt der
+Spark ein **Codewort**, fragt der Begleiter danach (verdeckte Eingabe, wird nicht gespeichert).
+
+**Tagesstart und Feierabend:** Beim ersten Entsperren (oder Start des Begleiters) ab 06:00 kommt einmal am Tag
+der Tagesstart, beim Sperren des PCs ab 17:30 einmal der Feierabend (die ersten Termine von morgen und offene
+Aufgaben) – als Hinweis und als Text im Fenster „Frag Spark“. Beides lässt sich unter Einstellungen →
+**Kopplung** → „Tagesstart und Feierabend“ einzeln ausschalten, die Uhrzeiten sind dort änderbar.
 
 **Mein Notaus:** Menü → **Mein Notaus auslösen …** → bestätigen. Danach ist das ganze Profil am
 Spark gesperrt, der Punkt wird rot. Aufheben geht nur im Panel im Browser mit der PIN
@@ -212,7 +271,7 @@ Spark vorgeben; angenommen werden nur Adressen der Form `https://buymeacoffee.co
 
 Klick aufs Symbol → **Einstellungen** → Reiter **Tastenkürzel** → in das Feld des Teils klicken und die neue
 Kombination drücken. Sie muss Strg oder Alt enthalten. Ist sie schon von einem anderen Programm
-belegt, steht das daneben und die alte bleibt. **Standard** stellt Strg+Alt+S / A / D / B / M wieder her.
+belegt, steht das daneben und die alte bleibt. **Standard** stellt Strg+Alt+S / A / D / B / M / L / R wieder her.
 Ausgeschaltete Teile haben kein aktives Tastenkürzel.
 
 Im Reiter **Kopplung** gibt es außerdem **Panel öffnen**, **Neu koppeln …** und **Entkoppeln …**

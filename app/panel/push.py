@@ -211,7 +211,16 @@ async def send(uid, title, body, tag="", private=True, why=""):
     "hello" goes to the browsers only. Drops subscriptions the push service no longer knows.
     Returns the number of devices reached."""
     import apns
+    import begleiter
     import telegram
+    # "Nicht stören" (Spark-Begleiter part quiet): while the profile is in a call or presenting, notes wait and one
+    # summary follows; alarms, reminders and safety notes always go (begleiter.urgent)
+    if tag != "quiet":
+        held = begleiter.lapsed(uid)
+        if held:
+            await begleiter.release(uid, held)
+        if begleiter.hold(uid, title, tag, why):
+            return 1
     kind, targets = ("web", subs(uid)) if tag == "hello" else pick(uid, private)
     t0 = time.time()
     # the iPhone app: Apple only carries "new message", the text waits on the Spark (apns.py)

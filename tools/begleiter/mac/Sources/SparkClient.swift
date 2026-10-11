@@ -118,6 +118,30 @@ final class SparkClient: NSObject, URLSessionTaskDelegate, @unchecked Sendable {
         throw Self.problem(status: status, obj)
     }
 
+    /// POST with a JSON body whose answer is bytes (the voice for "Vorlesen"); error answers as everywhere.
+    func postJSONForData(_ path: String, _ body: [String: Any], timeout: TimeInterval, maxBytes: Int) async throws -> Data {
+        var r = try request(path, method: "POST", timeout: timeout)
+        r.setValue("application/json; charset=utf-8", forHTTPHeaderField: "Content-Type")
+        r.setValue("audio/wav, application/octet-stream, application/json", forHTTPHeaderField: "Accept")
+        r.httpBody = try JSONSerialization.data(withJSONObject: body)
+        let data: Data
+        let response: URLResponse
+        do {
+            (data, response) = try await session.data(for: r)
+        } catch {
+            throw Self.transportProblem(error)
+        }
+        let status = (response as? HTTPURLResponse)?.statusCode ?? 0
+        guard (200..<300).contains(status) else {
+            let obj = ((try? JSONSerialization.jsonObject(with: data)) as? [String: Any]) ?? [:]
+            throw Self.problem(status: status, obj)
+        }
+        guard !data.isEmpty, data.count <= maxBytes else {
+            throw SparkProblem.failed("Der Spark hat keine brauchbare Antwort geschickt.")
+        }
+        return data
+    }
+
     /// GET of a file (the update): the bytes go to `destination` (replaced if there); nothing else is kept.
     /// At most `maxBytes`; an error answer of the Spark becomes a SparkProblem as everywhere.
     func download(_ path: String, to destination: URL, maxBytes: Int) async throws {
@@ -307,5 +331,98 @@ extension SparkClient {
             throw SparkProblem.failed("Der Spark hat keinen gültigen Schlüssel geschickt.")
         }
         return (key, (d["profile"] as? String) ?? "")
+    }
+}
+
+// ------------------------------------------------------------------ Version 4 calls
+
+extension SparkClient {
+    /// POST /api/desk/speak: the text in the profile's own voice (WAV, whole file).
+    func speak(_ text: String) async throws -> Data {
+        try await postJSONForData("api/desk/speak", ["text": String(text.prefix(SpeakText.max))], timeout: 180,
+                                  maxBytes: 80 * 1024 * 1024)
+    }
+
+    /// GET /api/desk/inbox/file?id=… into `destination` (≤ 20 MB).
+    func inboxFile(id: String, to destination: URL) async throws {
+        guard ActAsk.validID(id) else { throw SparkProblem.failed("Ungültige Kennung.") }
+        try await download("api/desk/inbox/file?id=\(id)", to: destination, maxBytes: InboxItem.maxFile)
+    }
+
+    /// POST /api/desk/inbox/done
+    func inboxDone(id: String) async throws {
+        _ = try await postJSON("api/desk/inbox/done", ["id": id], timeout: 30)
+    }
+
+    /// GET /api/desk/agenda
+    func agenda() async throws -> Agenda {
+        Agenda(try await get("api/desk/agenda", timeout: 30))
+    }
+
+    /// POST /api/desk/remind for a note (or a text): when it will come.
+    func remind(note: Int? = nil, text: String? = nil, minutes: Int) async throws -> Date? {
+        var body: [String: Any] = ["minutes": Remind.minutes(minutes)]
+        if let note { body["note"] = note }
+        if let text { body["text"] = String(text.prefix(300)) }
+        let d = try await postJSON("api/desk/remind", body, timeout: 30)
+        return IsoDate.parse(d["due"])
+    }
+
+    /// POST /api/desk/busy
+    func busy(_ on: Bool, why: String?) async throws {
+        var body: [String: Any] = ["busy": on]
+        if on, let why { body["why"] = why }
+        _ = try await postJSON("api/desk/busy", body, timeout: 20)
+    }
+
+    /// POST /api/desk/meeting/start -> id
+    func meetingStart() async throws -> String {
+        let d = try await postJSON("api/desk/meeting/start", [:], timeout: 30)
+        let id: String
+        if let s = d["id"] as? String { id = s } else if let n = d["id"] as? NSNumber { id = n.stringValue } else { id = "" }
+        guard !id.isEmpty, id.count <= 200 else { throw SparkProblem.failed("Der Spark hat keine Besprechung angelegt.") }
+        return id
+    }
+
+    /// POST /api/desk/meeting/chunk (WAV 16 kHz mono ≤ 60 s) -> chars so far
+    func meetingChunk(id: String, wav: Data) async throws -> Int {
+        var form = Multipart()
+        form.field("id", id)
+        form.file("file", filename: "besprechung.wav", type: "audio/wav", data: wav)
+        let d = try await postMultipart("api/desk/meeting/chunk", form, timeout: 120)
+        return (d["chars"] as? NSNumber)?.intValue ?? 0
+    }
+
+    /// POST /api/desk/meeting/end -> summary and tasks
+    func meetingEnd(id: String) async throws -> MeetingResult {
+        MeetingResult(try await postJSON("api/desk/meeting/end", ["id": id], timeout: 300))
+    }
+
+    /// POST /api/desk/meeting/keep -> (reminders, remarkable)
+    func meetingKeep(id: String, tasks: [Int], remarkable: Bool) async throws -> (reminders: Int, remarkable: Bool) {
+        let d = try await postJSON("api/desk/meeting/keep", ["id": id, "tasks": tasks, "remarkable": remarkable],
+                                   timeout: 120)
+        return ((d["reminders"] as? NSNumber)?.intValue ?? 0, (d["remarkable"] as? Bool) ?? false)
+    }
+
+    /// GET /api/desk/home
+    func homeButtons() async throws -> [HomeButton] {
+        HomeButton.list(try await get("api/desk/home", timeout: 30)["buttons"])
+    }
+
+    /// POST /api/desk/home (the code word only in the body, only when asked for)
+    func homePress(id: String, code: String?) async throws -> String? {
+        var body: [String: Any] = ["id": id]
+        if let code, !code.isEmpty { body["code"] = code }
+        let d = try await postJSON("api/desk/home", body, timeout: 30)
+        return HomeButton.state(d["state"])
+    }
+
+    /// GET /api/desk/daily?kind=morning|evening
+    func daily(_ kind: String) async throws -> String {
+        let k = kind == "evening" ? "evening" : "morning"
+        let d = try await get("api/desk/daily?kind=\(k)", timeout: 120)
+        guard let t = d["text"] as? String else { throw SparkProblem.failed("Keine Antwort vom Spark.") }
+        return t
     }
 }

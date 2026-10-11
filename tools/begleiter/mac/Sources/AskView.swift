@@ -27,12 +27,15 @@ final class AskController: ObservableObject {
 
     private var task: Task<Void, Never>?
     private var generation = 0
+    /// the text in the field came (at least partly) from the mic button: the question counts as spoken
+    private var inputSpoken = false
 
     static func open() {
         let c = shared
         Dictation.shared.onAskText = { [weak c] text in
             guard let c else { return }
             c.input = c.input.isEmpty ? text : c.input + " " + text
+            c.inputSpoken = true
         }
         Windows.shared.show(windowID, title: "Frag Spark", size: NSSize(width: 520, height: 520)) {
             AskView(c: c, dictation: Dictation.shared, model: AppModel.shared)
@@ -54,6 +57,9 @@ final class AskController: ObservableObject {
             return
         }
         let note = noteContext?.n
+        let spoken = inputSpoken
+        inputSpoken = false
+        Speaker.shared.stop()                 // a new question ends the reading aloud
         generation += 1
         let mine = generation
         busy = true
@@ -64,7 +70,9 @@ final class AskController: ObservableObject {
                 let a = try await client.ask(q, note: note)
                 guard let self else { return }
                 self.noteContext = nil
-                self.entries.append(Entry(question: q, answer: a.trimmingCharacters(in: .whitespacesAndNewlines), failed: false))
+                let clean = a.trimmingCharacters(in: .whitespacesAndNewlines)
+                self.entries.append(Entry(question: q, answer: clean, failed: false))
+                Self.speakIfWanted(clean, spoken: spoken)
                 if self.generation == mine {
                     self.input = ""
                     self.status = ""
@@ -83,16 +91,27 @@ final class AskController: ObservableObject {
 
     /// Work of another part (a file, the screen, the wake word, a reply to a note) whose answer belongs in this
     /// window: the label as own bubble, the answer as the Spark's. `notify`: also as a notification.
-    func run(question label: String, notify: Bool = false, work: @escaping (SparkClient) async throws -> String) {
+    func run(question label: String, notify: Bool = false, spoken: Bool = false,
+             work: @escaping (SparkClient) async throws -> String) {
         if busy { task?.cancel() }
         task = Task { @MainActor [weak self] in
-            await self?.perform(question: label, notify: notify, work: work)
+            await self?.perform(question: label, notify: notify, spoken: spoken, work: work)
         }
     }
 
+    /// "Antworten vorlesen" (part speak): immer | nur bei gesprochenen Fragen | nie
+    static func speakIfWanted(_ answer: String, spoken: Bool) {
+        let model = AppModel.shared
+        guard AskSpeak.wanted(mode: UserDefaults.standard.string(forKey: AskSpeak.key), spoken: spoken,
+                              speakOn: model.part("speak")), !answer.isEmpty else { return }
+        Speaker.shared.read(answer)
+    }
+
     /// The same, awaited (several files one after the other).
-    func perform(question label: String, notify: Bool = false, work: (SparkClient) async throws -> String) async {
+    func perform(question label: String, notify: Bool = false, spoken: Bool = false,
+                 work: (SparkClient) async throws -> String) async {
         Self.open()
+        Speaker.shared.stop()                 // a new question ends the reading aloud
         guard let client = AppModel.shared.client else {
             status = "Nicht gekoppelt."
             return
@@ -113,6 +132,7 @@ final class AskController: ObservableObject {
         }
         if let answer {
             entries.append(Entry(question: label, answer: answer, failed: false))
+            Self.speakIfWanted(answer, spoken: spoken)
             if notify { Notifier.plain(title: "Spark", body: answer) }
         } else if notify && !problem.isEmpty {
             Notifier.plain(title: "Spark", body: problem)
@@ -142,6 +162,8 @@ final class AskController: ObservableObject {
 
     func clear() {
         task?.cancel()
+        inputSpoken = false
+        Speaker.shared.stop()
         noteContext = nil
         entries = []
         pending = nil
@@ -153,6 +175,8 @@ struct AskView: View {
     @ObservedObject var c: AskController
     @ObservedObject var dictation: Dictation
     @ObservedObject var model: AppModel
+    @ObservedObject var speaker = Speaker.shared
+    @AppStorage(AskSpeak.key) private var speakMode = "voice"
 
     private static let bottomID = "unten"
 
@@ -252,6 +276,26 @@ struct AskView: View {
                         .lineLimit(3)
                         .textSelection(.enabled)
                     Spacer()
+                    if model.part("speak") {
+                        if speaker.active {
+                            Button("Stopp") { speaker.stop() }
+                                .buttonStyle(SoftButtonStyle())
+                        }
+                        Menu {
+                            Picker("Antworten vorlesen", selection: $speakMode) {
+                                ForEach(AskSpeak.ids, id: \.self) { m in
+                                    Text(verbatim: AskSpeak.title(m)).tag(m)
+                                }
+                            }
+                            .pickerStyle(.inline)
+                        } label: {
+                            Image(systemName: AskSpeak.mode(speakMode) == "never" ? "speaker.slash" : "speaker.wave.2")
+                        }
+                        .menuStyle(.borderlessButton)
+                        .fixedSize()
+                        .help(Text(verbatim: "Antworten vorlesen: " + AskSpeak.title(speakMode)))
+                        .accessibilityLabel(Text(verbatim: "Antworten vorlesen"))
+                    }
                     Button("Neu") { c.clear() }
                         .buttonStyle(SoftButtonStyle())
                         .disabled(c.entries.isEmpty && c.pending == nil)

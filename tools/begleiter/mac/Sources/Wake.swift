@@ -197,7 +197,7 @@ final class Wake: ObservableObject {
                 guard r.wake, self.listening else { return }
                 if !r.rest.isEmpty {
                     let q = String(r.rest.prefix(SparkClient.askMax))
-                    AskController.shared.run(question: q) { c in try await c.ask(q) }
+                    AskController.shared.run(question: q, spoken: true) { c in try await c.ask(q) }
                 } else {
                     self.beginQuestion()
                 }
@@ -238,7 +238,7 @@ final class Wake: ObservableObject {
                     return
                 }
                 let q = String(text.prefix(SparkClient.askMax))
-                AskController.shared.run(question: q) { c in try await c.ask(q) }
+                AskController.shared.run(question: q, spoken: true) { c in try await c.ask(q) }
             } catch is CancellationError {
                 HUD.hide()
             } catch {

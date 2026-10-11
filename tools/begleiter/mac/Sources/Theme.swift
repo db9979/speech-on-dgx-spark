@@ -374,15 +374,40 @@ enum MenuIcon {
 
     /// The face as menu-bar icon (18 pt). Without a dot it is a template silhouette (macOS colours it like the
     /// other icons); with a dot it is drawn in colour, the dot bottom right.
-    static func image(dot: Dot) -> NSImage {
+    /// `moon`: part "quiet" found the person busy (a call, a presentation): a small crescent top left.
+    static func image(dot: Dot, moon: Bool = false) -> NSImage {
         let size = NSSize(width: 18, height: 18)
         let img = NSImage(size: size, flipped: true) { rect in
             draw(in: rect, coloured: dot != .plain, dot: dot)
+            if moon { drawMoon(in: rect, coloured: dot != .plain) }
             return true
         }
         img.isTemplate = dot == .plain
         img.accessibilityDescription = "Spark-Begleiter"
         return img
+    }
+
+    /// a crescent in the top-left corner, with a clear ring so it stands apart from the face
+    private static func drawMoon(in rect: NSRect, coloured: Bool) {
+        let d: CGFloat = 8
+        let disc = NSRect(x: rect.minX, y: rect.minY, width: d, height: d)
+        let cut = disc.offsetBy(dx: 2.6, dy: -1.4)
+        if let ctx = NSGraphicsContext.current {
+            ctx.saveGraphicsState()
+            ctx.compositingOperation = .clear
+            NSBezierPath(ovalIn: disc.insetBy(dx: -1.2, dy: -1.2)).fill()
+            ctx.restoreGraphicsState()
+            ctx.saveGraphicsState()
+            let crescent = NSBezierPath(ovalIn: disc)
+            crescent.append(NSBezierPath(ovalIn: cut))
+            crescent.windingRule = .evenOdd
+            // only the part of the disc outside the cut
+            let clip = NSBezierPath(ovalIn: disc)
+            clip.addClip()
+            (coloured ? NSColor(hex: 0xc27803) : NSColor.black).setFill()
+            crescent.fill()
+            ctx.restoreGraphicsState()
+        }
     }
 
     private static func draw(in rect: NSRect, coloured: Bool, dot: Dot) {

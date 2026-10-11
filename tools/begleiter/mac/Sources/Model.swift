@@ -17,7 +17,8 @@ struct LangInfo: Identifiable, Equatable {
 /// GET /api/desk/config, every value checked; anything missing or odd falls back to a safe default.
 struct DeskConfig: Equatable {
     static let partNames = ["write", "ask", "dictate", "notes", "status", "notaus",
-                            "files", "screen", "context", "mail", "folder", "actions", "act", "wake"]
+                            "files", "screen", "context", "mail", "folder", "actions", "act", "wake",
+                            "speak", "inbox", "agenda", "quiet", "meeting", "home", "daily"]
     static let fallbackArts = [
         ArtInfo(id: "korrigieren", de: "Korrigieren", changes: true),
         ArtInfo(id: "glaetten", de: "Glätten", changes: true),
@@ -55,6 +56,8 @@ struct DeskConfig: Equatable {
     var actApps: [ActApp] = []
     /// config.wake.word
     var wakeWord = "Hey Spark"
+    /// Version 4: config.meeting, config.home
+    var v4 = V4Config()
 
     init() {}
 
@@ -95,6 +98,7 @@ struct DeskConfig: Equatable {
         coffee = CoffeeLink.accept(d["coffee"])
         actApps = ActApp.list((d["act"] as? [String: Any])?["apps"])
         wakeWord = WakeWord.parse(d["wake"])
+        v4 = V4Config(d)
     }
 
     /// the arts this device offers, in the Spark's order
@@ -260,7 +264,9 @@ final class AppModel: ObservableObject {
         applyHotkeys()
         applyParts()
         if let want = c.autostart { applyAutostart(want) }
-        if c.parts["notes"] == true || c.parts["actions"] == true || c.parts["folder"] == true { Notifier.ask() }
+        if ["notes", "actions", "folder", "inbox", "agenda", "daily"].contains(where: { c.parts[$0] == true }) {
+            Notifier.ask()
+        }
         if reach == .unknown || reach == .offline {
             reach = .ok
             reachText = ""
@@ -279,6 +285,12 @@ final class AppModel: ObservableObject {
     private func takePoll(_ d: [String: Any]) {
         if part("act") {
             ActCenter.shared.take(ActAsk.list(d["asks"]))
+        }
+        if part("inbox") {
+            InboxCenter.shared.take(InboxItem.list(d["inbox"]))
+        }
+        if part("quiet") {
+            Quiet.shared.pollTick()
         }
         let level = ((d["notaus"] as? [String: Any])?["level"] as? NSNumber)?.intValue ?? 0
         if level > 0 {
@@ -302,8 +314,10 @@ final class AppModel: ObservableObject {
                         NoteActions.parse(x["actions"]))
             }
             for note in notes.sorted(by: { $0.n < $1.n }).suffix(5) {
+                var buttons = part("actions") ? note.actions : []
+                if part("agenda") { buttons.append("remind") }
                 Notifier.show(title: note.title, body: note.body, tag: note.tag, id: "note-\(note.n)",
-                              note: note.n, actions: part("actions") ? note.actions : [])
+                              note: note.n, actions: buttons)
             }
         }
         // last smaller than before: the Spark started anew
@@ -393,6 +407,10 @@ final class AppModel: ObservableObject {
             ScreenAsk.start()
         case .mail:
             MailDraft.start(front: frontApp())
+        case .speak:
+            Speaker.shared.toggle()
+        case .meeting:
+            Meeting.shared.toggle()
         case .dictate:
             if NSApp.isActive, let key = NSApp.keyWindow, key === Windows.shared.window("ask") {
                 Dictation.shared.toggle(.ask)
@@ -480,6 +498,14 @@ final class AppModel: ObservableObject {
         FolderWatch.shared.apply(on: on && part("folder"))
         Wake.shared.apply(on: on && part("wake"))
         if !(on && part("act")) { ActCenter.shared.clear() }
+        InstalledApps.shared.apply(on: on && part("act"))
+        if !(on && part("inbox")) { InboxCenter.shared.clear() }
+        Speaker.shared.apply(on: on && part("speak"))
+        AgendaCenter.shared.apply(on: on && part("agenda"))
+        Quiet.shared.apply(on: on && part("quiet"))
+        Meeting.shared.apply(on: on && part("meeting"))
+        HomeCenter.shared.apply(on: on && part("home"), configured: config?.v4.homeButtons ?? [])
+        Daily.shared.apply(on: on && part("daily"))
         Notifier.registerCategories()
     }
 
@@ -546,7 +572,7 @@ final class AppModel: ObservableObject {
     /// The face in the menu bar: a template silhouette when all is well, with a coloured dot otherwise
     /// (grey not reachable, red Notaus, accent when an update is there).
     var menuIcon: NSImage {
-        MenuIcon.image(dot: menuDot)
+        MenuIcon.image(dot: menuDot, moon: paired && part("quiet") && Quiet.shared.busy)
     }
 
     var menuDot: MenuIcon.Dot {
@@ -617,8 +643,8 @@ enum Notifier {
     /// One category per combination of buttons, so each note shows exactly the buttons the Spark gave it.
     static func registerCategories() {
         var set = Set<UNNotificationCategory>()
-        for combo in NoteActions.allCombinations {
-            guard let id = NoteActions.category(combo) else { continue }
+        for combo in NoteActions.allCombinations4 {
+            guard let id = NoteActions.category4(combo) else { continue }
             let actions: [UNNotificationAction] = combo.map { a in
                 switch a {
                 case "reply":
@@ -627,12 +653,18 @@ enum Notifier {
                                                          textInputPlaceholder: "Antwort an den Spark …")
                 case "later":
                     return UNNotificationAction(identifier: "later", title: "Später", options: [])
+                case "remind":
+                    return UNNotificationAction(identifier: "remind", title: "In 20 Min erinnern", options: [])
                 default:
                     return UNNotificationAction(identifier: "open", title: "Panel öffnen", options: [.foreground])
                 }
             }
             set.insert(UNNotificationCategory(identifier: id, actions: actions, intentIdentifiers: [], options: []))
         }
+        set.insert(UNNotificationCategory(identifier: inboxFileCategory,
+                                          actions: [UNNotificationAction(identifier: "openFolder", title: "Ordner öffnen",
+                                                                         options: [.foreground])],
+                                          intentIdentifiers: [], options: []))
         UNUserNotificationCenter.current().setNotificationCategories(set)
     }
 
@@ -644,7 +676,7 @@ enum Notifier {
         c.sound = .default
         if !tag.isEmpty { c.threadIdentifier = String(tag.prefix(20)) }
         if let note { c.userInfo = ["note": note] }
-        if let cat = NoteActions.category(actions) { c.categoryIdentifier = cat }
+        if let cat = NoteActions.category4(actions) { c.categoryIdentifier = cat }
         let r = UNNotificationRequest(identifier: id, content: c, trigger: nil)
         UNUserNotificationCenter.current().add(r) { _ in }
     }
@@ -677,9 +709,28 @@ enum Notifier {
             UNUserNotificationCenter.current().add(r) { _ in }
         case "open":
             model.openPanel()
+        case "remind":
+            AgendaCenter.shared.remind(note: note, text: note == nil ? DeskConfig.plain(title, max: 300) : nil)
+        case "openFolder":
+            InboxCenter.revealFolder()
         default:
-            break
+            if category == inboxFileCategory && action == UNNotificationDefaultActionIdentifier {
+                InboxCenter.revealFolder()
+            }
         }
+    }
+
+    static let inboxFileCategory = "inbox.file"
+
+    /// "Vom Spark: <name>" with the button "Ordner öffnen"
+    static func inboxFile(name: String) {
+        let c = UNMutableNotificationContent()
+        c.title = "Vom Spark"
+        c.body = "Datei gespeichert: Downloads/\(InboxCenter.folderName)/\(name)"
+        c.sound = .default
+        c.categoryIdentifier = inboxFileCategory
+        let r = UNNotificationRequest(identifier: "inbox-\(UUID().uuidString)", content: c, trigger: nil)
+        UNUserNotificationCenter.current().add(r) { _ in }
     }
 
     /// A short message of the program itself ("3 Dateien ins Wissen übernommen", the Spark's answer).

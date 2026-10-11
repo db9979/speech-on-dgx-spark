@@ -106,7 +106,7 @@ internal sealed partial class TrayContext
 
             if (_wake is not null)
             {
-                _wake.Paused = _wakePaused;
+                _wake.Paused = _wakePaused || _meeting is not null;
             }
         }
         else
@@ -114,12 +114,13 @@ internal sealed partial class TrayContext
             StopWake();
         }
 
-        // actions: ohne den Teil keine Meldungen mit Knöpfen
-        if (!IsOn(Parts.Actions) || !IsOn(Parts.Notes))
+        // actions/agenda: ohne die Teile keine Meldungen im Tray-Fenster
+        if ((!IsOn(Parts.Actions) && !IsOn(Parts.Agenda)) || !IsOn(Parts.Notes))
         {
             _panelNotes.Clear();
         }
 
+        SyncParts4();
         UpdateIcon();
     }
 
@@ -139,6 +140,7 @@ internal sealed partial class TrayContext
         _fileQueue.Clear();
         _actQueue.Clear();
         _mailForm?.Close();
+        StopParts4();
         if (removeFileMenu)
         {
             FileMenu.Unregister();
@@ -188,6 +190,7 @@ internal sealed partial class TrayContext
             any = true;
         }
 
+        any |= AddPartMenuItems4();
         return any;
     }
 
@@ -212,6 +215,8 @@ internal sealed partial class TrayContext
         {
             items.Add(new PanelItem(WakeItemText(), Glyph.Wave, null, ToggleWakePause, Enabled: _wake is not null));
         }
+
+        AddPanelItems4(items);
     }
 
     private string WakeItemText()
@@ -230,7 +235,7 @@ internal sealed partial class TrayContext
         _wakePaused = !_wakePaused;
         if (_wake is not null)
         {
-            _wake.Paused = _wakePaused;
+            _wake.Paused = _wakePaused || _meeting is not null;
         }
 
         if (_wakePaused)
@@ -537,7 +542,9 @@ internal sealed partial class TrayContext
 
     private IReadOnlyList<PanelNote> BuildPanelNotes()
     {
-        if (!IsOn(Parts.Notes) || !IsOn(Parts.Actions))
+        bool actions = IsOn(Parts.Actions);
+        bool agenda = IsOn(Parts.Agenda);
+        if (!IsOn(Parts.Notes) || (!actions && !agenda))
         {
             return Array.Empty<PanelNote>();
         }
@@ -546,13 +553,14 @@ internal sealed partial class TrayContext
             n.N,
             Clip((n.Title.Length > 0 ? n.Title : "Meldung vom Spark").ReplaceLineEndings(" "), 80),
             Clip(n.Body.ReplaceLineEndings(" "), 200),
-            n.Actions.Contains("reply") ? () => ReplyToNote(n) : null,
-            n.Actions.Contains("later") ? () => NoteLater(n) : null,
-            n.Actions.Contains("open") && !string.IsNullOrEmpty(_config.Base) ? () =>
+            actions && n.Actions.Contains("reply") ? () => ReplyToNote(n) : null,
+            actions && n.Actions.Contains("later") ? () => NoteLater(n) : null,
+            actions && n.Actions.Contains("open") && !string.IsNullOrEmpty(_config.Base) ? () =>
             {
                 DismissNote(n);
                 OpenPanel();
-            } : null)).ToList();
+            } : null,
+            agenda ? () => _ = RemindNoteAsync(n) : null)).ToList();
     }
 
     private void ReplyToNote(Note note)
@@ -573,7 +581,7 @@ internal sealed partial class TrayContext
             timer.Dispose();
             if (IsOn(Parts.Notes))
             {
-                if (IsOn(Parts.Actions))
+                if (IsOn(Parts.Actions) || IsOn(Parts.Agenda))
                 {
                     AddPanelNote(note);
                 }

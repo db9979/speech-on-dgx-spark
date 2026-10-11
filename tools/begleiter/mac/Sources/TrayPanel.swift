@@ -34,6 +34,11 @@ struct TrayPanel: View {
     @ObservedObject var updater: Updater
     @ObservedObject var wake: Wake
     @ObservedObject var folder: FolderWatch
+    @ObservedObject var speaker = Speaker.shared
+    @ObservedObject var meeting = Meeting.shared
+    @ObservedObject var quiet = Quiet.shared
+    @ObservedObject var agenda = AgendaCenter.shared
+    @ObservedObject var home = HomeCenter.shared
     @State private var holder = PanelWindow()
 
     var body: some View {
@@ -53,6 +58,8 @@ struct TrayPanel: View {
                 }
                 if model.paired {
                     items
+                    if model.part("agenda") { agendaSection }
+                    if model.part("home") { homeSection }
                 } else {
                     HStack {
                         Text(verbatim: "Noch nicht mit einem Spark gekoppelt.")
@@ -72,6 +79,10 @@ struct TrayPanel: View {
         .foregroundColor(Theme.fg)
         .background(WindowGrabber { w in holder.window = w })
         .onExitCommand { holder.close() }
+        .onAppear {
+            agenda.refreshSoon()
+            home.refreshSoon()
+        }
     }
 
     // ------------------------------------------------------------------ parts of the panel
@@ -140,6 +151,23 @@ struct TrayPanel: View {
                     note: folder.lastText.isEmpty ? folder.path.lastPathComponent : folder.lastText) {
                 folder.reveal()
             }
+            partRow("speak", speaker.active ? "Vorlesen stoppen" : "Zwischenablage vorlesen",
+                    symbol: speaker.active ? "stop.circle" : "speaker.wave.2", hotkey: .speak,
+                    note: speaker.active ? "" : "Markierten Text: \(model.hotkeyLabel(.speak))") {
+                if speaker.active { speaker.stop() } else { speaker.readClipboard() }
+            }
+            partRow("meeting", meeting.running ? "Besprechung beenden" : "Besprechung mitschreiben",
+                    symbol: meeting.running ? "stop.circle" : "record.circle", hotkey: .meeting) {
+                meeting.toggle()
+            }
+            partRow("inbox", "Vom Spark", symbol: "tray.and.arrow.down", hotkey: nil,
+                    note: "Text, Links und Dateien vom Handy · Downloads/\(InboxCenter.folderName)") {
+                InboxCenter.revealFolder()
+            }
+            partRow("quiet", "Nicht stören erkennen", symbol: quiet.busy ? "moon.fill" : "moon", hotkey: nil,
+                    note: quiet.text) {
+                quiet.check()
+            }
             partRow("wake", wake.paused ? "Weckwort fortsetzen" : "Weckwort pausieren",
                     symbol: wake.paused ? "ear" : "pause.circle", hotkey: nil, note: wakeNote) {
                 wake.togglePause()
@@ -159,6 +187,121 @@ struct TrayPanel: View {
                 .buttonStyle(RowButtonStyle())
             }
         }
+    }
+
+    // ------------------------------------------------------------------ Version 4 sections
+
+    private func sectionTitle(_ t: String) -> some View {
+        Text(verbatim: t)
+            .font(.system(size: 11, weight: .semibold))
+            .foregroundColor(Theme.muted)
+            .padding(.horizontal, 10)
+    }
+
+    /// "Als Nächstes": the next events and reminders (part agenda)
+    private var agendaSection: some View {
+        VStack(alignment: .leading, spacing: 4) {
+            sectionTitle("Als Nächstes")
+            let now = Date()
+            let lines = agenda.agenda.upcoming(now: now)
+            if !agenda.problem.isEmpty && lines.isEmpty {
+                Text(verbatim: agenda.problem)
+                    .font(.system(size: 12))
+                    .foregroundColor(Theme.muted)
+                    .padding(.horizontal, 10)
+                    .fixedSize(horizontal: false, vertical: true)
+            } else if lines.isEmpty {
+                Text(verbatim: agenda.loaded ? "Nichts in den nächsten 24 Stunden." : "Lädt …")
+                    .font(.system(size: 12))
+                    .foregroundColor(Theme.muted)
+                    .padding(.horizontal, 10)
+            } else {
+                ForEach(lines) { l in
+                    HStack(alignment: .top, spacing: 10) {
+                        IconTile(symbol: l.isReminder ? "bell" : "calendar")
+                        VStack(alignment: .leading, spacing: 1) {
+                            Text(verbatim: l.title)
+                                .font(.system(size: 13))
+                                .lineLimit(2)
+                            Text(verbatim: IsoDate.short(l.when, now: now) + (l.detail.isEmpty ? "" : " · " + l.detail))
+                                .font(.system(size: 11))
+                                .foregroundColor(Theme.muted)
+                                .lineLimit(1)
+                        }
+                        Spacer(minLength: 0)
+                    }
+                    .padding(.horizontal, 10)
+                    .padding(.vertical, 3)
+                }
+            }
+        }
+    }
+
+    /// "Zuhause": the Smart-Home buttons with their state (part home); the panel stays open
+    private var homeSection: some View {
+        VStack(alignment: .leading, spacing: 4) {
+            sectionTitle("Zuhause")
+            if home.buttons.isEmpty {
+                Text(verbatim: home.problem.isEmpty ? "Keine Knöpfe – im Panel unter Ich → Begleiter festlegen." : home.problem)
+                    .font(.system(size: 12))
+                    .foregroundColor(Theme.muted)
+                    .padding(.horizontal, 10)
+                    .fixedSize(horizontal: false, vertical: true)
+            } else {
+                FlowLayout(spacing: 6) {
+                    ForEach(home.buttons) { b in
+                        homeButton(b)
+                    }
+                }
+                .padding(.horizontal, 10)
+                if !home.problem.isEmpty {
+                    Text(verbatim: home.problem)
+                        .font(.system(size: 11))
+                        .foregroundColor(Theme.bad)
+                        .padding(.horizontal, 10)
+                        .fixedSize(horizontal: false, vertical: true)
+                }
+            }
+        }
+    }
+
+    private func homeButton(_ b: HomeButton) -> some View {
+        let on = b.state == "on"
+        let symbol: String
+        switch b.kind {
+        case "scene": symbol = "sparkles"
+        case "script": symbol = "play.fill"
+        default: symbol = on ? "lightbulb.fill" : "lightbulb"
+        }
+        return Button {
+            home.press(b)
+        } label: {
+            HStack(spacing: 6) {
+                if home.pressing == b.id {
+                    ProgressView().controlSize(.mini)
+                } else {
+                    Image(systemName: symbol)
+                        .font(.system(size: 11, weight: .medium))
+                }
+                Text(verbatim: b.name)
+                    .font(.system(size: 12))
+                    .lineLimit(1)
+                if b.kind == "toggle", let st = b.state {
+                    Text(verbatim: st == "on" ? "an" : "aus")
+                        .font(.system(size: 10, weight: .semibold))
+                        .opacity(0.8)
+                }
+            }
+            .foregroundColor(on ? .white : Theme.fg)
+            .padding(.horizontal, 10)
+            .padding(.vertical, 5)
+            .background(Capsule().fill(on ? Theme.accent : Theme.soft))
+            .overlay(Capsule().stroke(on ? Theme.accent : Theme.line, lineWidth: 1))
+            .contentShape(Capsule())
+        }
+        .buttonStyle(.plain)
+        .disabled(home.pressing != nil)
+        .accessibilityLabel(Text(verbatim: b.name + (b.state.map { $0 == "on" ? ", an" : ", aus" } ?? "")))
     }
 
     private var wakeNote: String {

@@ -33,6 +33,8 @@ struct SettingsView: View {
     @State private var mic: AVAuthorizationStatus = .notDetermined
     @State private var screenOK = false
     @ObservedObject private var folder = FolderWatch.shared
+    @ObservedObject private var daily = Daily.shared
+    @AppStorage(AskSpeak.key) private var speakMode = "voice"
     @State private var tab: Tab = .allgemein
 
     var body: some View {
@@ -145,6 +147,8 @@ struct SettingsView: View {
     private var generalRest: some View {
         permissions
         if model.part("folder") { folderSettings }
+        if model.part("daily") { dailySettings }
+        if model.part("speak") { speakSettings }
         panelSettings
     }
 
@@ -171,6 +175,68 @@ struct SettingsView: View {
                 .foregroundColor(Theme.muted)
                 .fixedSize(horizontal: false, vertical: true)
         }
+    }
+
+    /// part daily: on/off and the times, only on this Mac
+    @ViewBuilder
+    private var dailySettings: some View {
+        section("Tagesstart und Feierabend") {
+            HStack {
+                Toggle(isOn: $daily.morningOn) { Text(verbatim: "Tagesstart ab") }
+                    .toggleStyle(.checkbox)
+                DatePicker("", selection: timeBinding(\.morningMinutes), displayedComponents: .hourAndMinute)
+                    .labelsHidden()
+                    .frame(width: 90)
+                    .disabled(!daily.morningOn)
+                Spacer()
+                Button("Jetzt zeigen") { daily.run("morning", manual: true) }
+            }
+            HStack {
+                Toggle(isOn: $daily.eveningOn) { Text(verbatim: "Feierabend ab") }
+                    .toggleStyle(.checkbox)
+                DatePicker("", selection: timeBinding(\.eveningMinutes), displayedComponents: .hourAndMinute)
+                    .labelsHidden()
+                    .frame(width: 90)
+                    .disabled(!daily.eveningOn)
+                Spacer()
+                Button("Jetzt zeigen") { daily.run("evening", manual: true) }
+            }
+            Text(verbatim: "Tagesstart: beim ersten Aufwachen oder Entsperren des Macs ab dieser Uhrzeit. Feierabend: beim Sperren des Bildschirms ab dieser Uhrzeit (die ersten Termine von morgen und offene Aufgaben). Je einmal am Tag, als Mitteilung und im Fenster von „Frag Spark“.")
+                .font(.caption)
+                .foregroundColor(Theme.muted)
+                .fixedSize(horizontal: false, vertical: true)
+        }
+    }
+
+    /// part speak: whether the ask window reads its answers aloud (only on this Mac)
+    @ViewBuilder
+    private var speakSettings: some View {
+        section("Vorlesen") {
+            Picker(selection: $speakMode) {
+                ForEach(AskSpeak.ids, id: \.self) { m in
+                    Text(verbatim: AskSpeak.title(m)).tag(m)
+                }
+            } label: {
+                Text(verbatim: "Antworten in „Frag Spark“ vorlesen")
+            }
+            .frame(maxWidth: 420)
+            Text(verbatim: "Gesprochen heißt: mit dem Mikrofon im Fenster oder mit dem Weckwort gefragt. Eine neue Frage oder „Stopp“ beendet das Vorlesen. Markierten Text liest \(model.hotkeyLabel(.speak).isEmpty ? "das Kürzel" : model.hotkeyLabel(.speak)) vor.")
+                .font(.caption)
+                .foregroundColor(Theme.muted)
+                .fixedSize(horizontal: false, vertical: true)
+        }
+    }
+
+    /// minutes of the day <-> a Date today, for the DatePicker
+    private func timeBinding(_ key: ReferenceWritableKeyPath<Daily, Int>) -> Binding<Date> {
+        Binding(
+            get: {
+                let m = daily[keyPath: key]
+                return Calendar.current.date(bySettingHour: m / 60, minute: m % 60, second: 0, of: Date()) ?? Date()
+            },
+            set: { d in
+                daily[keyPath: key] = Daily.clamp(DailyPlan.minuteOfDay(d))
+            })
     }
 
     @ViewBuilder
@@ -206,12 +272,12 @@ struct SettingsView: View {
                     }
                 }
             }
-            if model.part("dictate") || model.part("wake") {
-                Text(verbatim: "Nötig fürs Diktieren und das Weckwort.")
+            if model.part("dictate") || model.part("wake") || model.part("meeting") {
+                Text(verbatim: "Nötig fürs Diktieren, das Weckwort und das Mitschreiben von Besprechungen.")
                     .font(.caption)
                     .foregroundColor(Theme.muted)
             }
-            if model.part("screen") {
+            if model.part("screen") || model.part("meeting") {
                 HStack {
                     Text(verbatim: screenOK ? "Bildschirmaufnahme: erlaubt" : "Bildschirmaufnahme: nicht erlaubt")
                     Spacer()
@@ -219,7 +285,9 @@ struct SettingsView: View {
                         Button("Erlauben …") { ScreenAsk.explainPermission() }
                     }
                 }
-                Text(verbatim: "Nötig für „Bildschirm fragen“ (⌥⌘B). Nach dem Erlauben den Begleiter neu starten.")
+                Text(verbatim: model.part("meeting")
+                     ? "Nötig für „Bildschirm fragen“ und für den Ton des Macs beim Mitschreiben einer Besprechung (ohne: nur Mikrofon). Nach dem Erlauben den Begleiter neu starten."
+                     : "Nötig für „Bildschirm fragen“ (⌥⌘B). Nach dem Erlauben den Begleiter neu starten.")
                     .font(.caption)
                     .foregroundColor(Theme.muted)
             }
@@ -381,6 +449,13 @@ struct SettingsView: View {
         case "actions": return "Knöpfe in Meldungen"
         case "act": return "Spark darf am Mac handeln"
         case "wake": return "Weckwort"
+        case "speak": return "Vorlesen"
+        case "inbox": return "Vom Handy auf den Mac"
+        case "agenda": return "Termine im Begleiter"
+        case "quiet": return "Nicht stören erkennen"
+        case "meeting": return "Besprechung mitschreiben"
+        case "home": return "Smart-Home-Knöpfe"
+        case "daily": return "Tagesstart und Feierabend"
         default: return p
         }
     }

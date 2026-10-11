@@ -45,7 +45,27 @@ internal sealed record Note(int N, string Title, string Body, string? Tag, IRead
 /// <summary>Eine Bitte des Spark, am PC etwas zu tun (Teil "act").</summary>
 internal sealed record ActAsk(string Id, string Action, string Arg, string Text);
 
-internal sealed record PollResult(int Rev, IReadOnlyList<Note> Notes, int Last, int NotausLevel, string? Update, IReadOnlyList<ActAsk> Asks);
+internal sealed record PollResult(int Rev, IReadOnlyList<Note> Notes, int Last, int NotausLevel, string? Update, IReadOnlyList<ActAsk> Asks,
+    IReadOnlyList<InboxItem> Inbox);
+
+/// <summary>Teil "inbox": etwas vom Handy für diesen PC (Text, Link oder Datei).</summary>
+internal sealed record InboxItem(string Id, string Kind, string? Text, string? Name, long? Size);
+
+/// <summary>Teil "agenda": ein Termin der nächsten 24 Stunden.</summary>
+internal sealed record AgendaEvent(DateTimeOffset Start, DateTimeOffset? End, string Title, string Where);
+
+/// <summary>Teil "agenda": eine fällige Erinnerung der nächsten 24 Stunden.</summary>
+internal sealed record AgendaReminder(DateTimeOffset Due, string Text);
+
+internal sealed record AgendaResult(IReadOnlyList<AgendaEvent> Events, IReadOnlyList<AgendaReminder> Reminders);
+
+/// <summary>Teil "meeting": eine Aufgabe aus der Besprechung.</summary>
+internal sealed record MeetingTask(string Text, DateTimeOffset? Due);
+
+internal sealed record MeetingResult(string Summary, IReadOnlyList<MeetingTask> Tasks, int Chars);
+
+/// <summary>Teil "home": ein Knopf mit Zustand ("on"/"off" oder unbekannt).</summary>
+internal sealed record HomeState(string Id, string Name, string Kind, bool? On);
 
 /// <summary>Antwort von /api/desk/file: Text (zusammenfassen/übersetzen/erklären) oder neuer Wissens-Eintrag.</summary>
 internal sealed record FileResult(string? Text, string? Id, string? Name);
@@ -158,8 +178,339 @@ internal static class SparkClient
             }
         }
 
+        var inbox = new List<InboxItem>();
+        if (json["inbox"] is JsonArray inboxList)
+        {
+            foreach (JsonNode? item in inboxList.Take(20))
+            {
+                string? id = Json.Str(item?["id"]) ?? Json.Long(item?["id"])?.ToString(System.Globalization.CultureInfo.InvariantCulture);
+                if (item is JsonObject o && IsSafeId(id) && Json.Str(o["kind"]) is "text" or "link" or "file")
+                {
+                    inbox.Add(new InboxItem(id!, Json.Str(o["kind"])!, Json.Str(o["text"]), Json.Str(o["name"]), Json.Long(o["size"])));
+                }
+            }
+        }
+
         int level = json["notaus"] is JsonObject notaus ? Json.Int(notaus["level"]) ?? 0 : 0;
-        return new PollResult(Json.Int(json["rev"]) ?? 0, notes, Json.Int(json["last"]) ?? after, level, Json.Str(json["update"]), asks);
+        return new PollResult(Json.Int(json["rev"]) ?? 0, notes, Json.Int(json["last"]) ?? after, level, Json.Str(json["update"]), asks, inbox);
+    }
+
+    /// <summary>Kennungen, die in eine Adresse oder JSON zurückgehen: nur Buchstaben, Ziffern, '-' und '_'.</summary>
+    public static bool IsSafeId(string? id) =>
+        id is { Length: > 0 and <= 64 } && id.All(c => char.IsAsciiLetterOrDigit(c) || c is '-' or '_');
+
+    // ------------------------------------------------------------------ Version 4
+
+    /// <summary>Höchstgröße einer Datei aus dem Posteingang (laut Vertrag 20 MB).</summary>
+    public const long MaxInboxBytes = 20L * 1024 * 1024;
+
+    /// <summary>Höchstgröße der Vorlese-Datei (5000 Zeichen sind wenige Minuten Sprache).</summary>
+    private const long MaxSpeakBytes = 64L * 1024 * 1024;
+
+    /// <summary>POST /api/desk/speak – Text (≤ 5000 Zeichen) in der Stimme des Profils, Antwort: WAV.</summary>
+    public static async Task<byte[]> SpeakAsync(string baseUrl, string key, string text, CancellationToken ct)
+    {
+        var body = new JsonObject { ["text"] = text.Length > 5000 ? text[..5000] : text };
+        using var request = new HttpRequestMessage(HttpMethod.Post, baseUrl + "/api/desk/speak") { Content = JsonContent(body) };
+        return await SendForBytesAsync(request, key, LongTimeout, MaxSpeakBytes, ct).ConfigureAwait(true);
+    }
+
+    /// <summary>GET /api/desk/inbox/file?id=… – die Datei selbst (≤ 20 MB).</summary>
+    public static async Task<byte[]> InboxFileAsync(string baseUrl, string key, string id, CancellationToken ct)
+    {
+        using var request = new HttpRequestMessage(HttpMethod.Get, baseUrl + "/api/desk/inbox/file?id=" + Uri.EscapeDataString(id));
+        return await SendForBytesAsync(request, key, LongTimeout, MaxInboxBytes, ct).ConfigureAwait(true);
+    }
+
+    /// <summary>POST /api/desk/inbox/done {"id"} – erledigt (auch bei abgelehnten Links).</summary>
+    public static async Task InboxDoneAsync(string baseUrl, string key, string id, CancellationToken ct)
+    {
+        using var request = new HttpRequestMessage(HttpMethod.Post, baseUrl + "/api/desk/inbox/done") { Content = JsonContent(new JsonObject { ["id"] = id }) };
+        _ = await SendAsync(request, key, pairing: false, ShortTimeout, ct).ConfigureAwait(true);
+    }
+
+    /// <summary>GET /api/desk/agenda – Termine und Erinnerungen der nächsten 24 Stunden (je höchstens 10).</summary>
+    public static async Task<AgendaResult> AgendaAsync(string baseUrl, string key, CancellationToken ct)
+    {
+        using var request = new HttpRequestMessage(HttpMethod.Get, baseUrl + "/api/desk/agenda");
+        JsonNode json = await SendAsync(request, key, pairing: false, ShortTimeout, ct).ConfigureAwait(true);
+        var events = new List<AgendaEvent>();
+        if (json["events"] is JsonArray eventList)
+        {
+            foreach (JsonNode? item in eventList.Take(10))
+            {
+                if (item is JsonObject o && ParseTime(Json.Str(o["start"])) is { } start)
+                {
+                    events.Add(new AgendaEvent(start, ParseTime(Json.Str(o["end"])), Clean(Json.Str(o["title"]), 120), Clean(Json.Str(o["where"]), 120)));
+                }
+            }
+        }
+
+        var reminders = new List<AgendaReminder>();
+        if (json["reminders"] is JsonArray reminderList)
+        {
+            foreach (JsonNode? item in reminderList.Take(10))
+            {
+                if (item is JsonObject o && ParseTime(Json.Str(o["due"])) is { } due)
+                {
+                    reminders.Add(new AgendaReminder(due, Clean(Json.Str(o["text"]), 300)));
+                }
+            }
+        }
+
+        return new AgendaResult(events, reminders);
+    }
+
+    /// <summary>POST /api/desk/remind – Text oder Meldung in <paramref name="minutes"/> Minuten erinnern. Gibt die Fälligkeit zurück.</summary>
+    public static async Task<DateTimeOffset?> RemindAsync(string baseUrl, string key, string? text, int? note, int minutes, CancellationToken ct)
+    {
+        var body = new JsonObject { ["minutes"] = Math.Clamp(minutes, 1, 1440) };
+        if (note is { } n)
+        {
+            body["note"] = n;
+        }
+        else
+        {
+            string t = (text ?? "").Trim();
+            body["text"] = t.Length > 300 ? t[..300] : t;
+        }
+
+        using var request = new HttpRequestMessage(HttpMethod.Post, baseUrl + "/api/desk/remind") { Content = JsonContent(body) };
+        JsonNode json = await SendAsync(request, key, pairing: false, ShortTimeout, ct).ConfigureAwait(true);
+        return ParseTime(Json.Str(json["due"]));
+    }
+
+    /// <summary>POST /api/desk/busy – „Nicht stören“ (Telefonat/Präsentation) melden oder beenden.</summary>
+    public static async Task BusyAsync(string baseUrl, string key, bool busy, string? why, CancellationToken ct)
+    {
+        var body = new JsonObject { ["busy"] = busy };
+        if (busy && why is not null)
+        {
+            body["why"] = why;
+        }
+
+        using var request = new HttpRequestMessage(HttpMethod.Post, baseUrl + "/api/desk/busy") { Content = JsonContent(body) };
+        _ = await SendAsync(request, key, pairing: false, ShortTimeout, ct).ConfigureAwait(true);
+    }
+
+    /// <summary>POST /api/desk/meeting/start {} – neue Besprechung, gibt die Kennung zurück.</summary>
+    public static async Task<string> MeetingStartAsync(string baseUrl, string key, CancellationToken ct)
+    {
+        using var request = new HttpRequestMessage(HttpMethod.Post, baseUrl + "/api/desk/meeting/start") { Content = JsonContent(new JsonObject()) };
+        JsonNode json = await SendAsync(request, key, pairing: false, ShortTimeout, ct).ConfigureAwait(true);
+        string? id = Json.Str(json["id"]) ?? Json.Long(json["id"])?.ToString(System.Globalization.CultureInfo.InvariantCulture);
+        return IsSafeId(id) ? id! : throw new SparkException(null, "Der Spark hat keine Kennung für die Besprechung geschickt.");
+    }
+
+    /// <summary>POST /api/desk/meeting/chunk – ein Stück Aufnahme (WAV 16 kHz mono, ≤ 60 s).</summary>
+    public static async Task MeetingChunkAsync(string baseUrl, string key, string id, byte[] wav, CancellationToken ct)
+    {
+        using var form = new MultipartFormDataContent();
+        form.Add(new StringContent(id, Encoding.UTF8), "id");
+        var file = new ByteArrayContent(wav);
+        file.Headers.ContentType = new MediaTypeHeaderValue("audio/wav");
+        form.Add(file, "file", "stueck.wav");
+        using var request = new HttpRequestMessage(HttpMethod.Post, baseUrl + "/api/desk/meeting/chunk") { Content = form };
+        _ = await SendAsync(request, key, pairing: false, LongTimeout, ct).ConfigureAwait(true);
+    }
+
+    /// <summary>POST /api/desk/meeting/end {"id"} – Zusammenfassung und Aufgaben.</summary>
+    public static async Task<MeetingResult> MeetingEndAsync(string baseUrl, string key, string id, CancellationToken ct)
+    {
+        using var request = new HttpRequestMessage(HttpMethod.Post, baseUrl + "/api/desk/meeting/end") { Content = JsonContent(new JsonObject { ["id"] = id }) };
+        JsonNode json = await SendAsync(request, key, pairing: false, TimeSpan.FromMinutes(6), ct).ConfigureAwait(true);
+        var tasks = new List<MeetingTask>();
+        if (json["tasks"] is JsonArray list)
+        {
+            foreach (JsonNode? item in list.Take(50))
+            {
+                if (item is JsonObject o && Json.Str(o["text"]) is { } text && text.Trim().Length > 0)
+                {
+                    tasks.Add(new MeetingTask(Clean(text, 300), ParseTime(Json.Str(o["due"]))));
+                }
+            }
+        }
+
+        return new MeetingResult(Json.Str(json["summary"]) ?? "", tasks, Json.Int(json["chars"]) ?? 0);
+    }
+
+    /// <summary>POST /api/desk/meeting/keep – gewählte Aufgaben als Erinnerung und/oder aufs reMarkable.</summary>
+    public static async Task<(int Reminders, bool Remarkable)> MeetingKeepAsync(
+        string baseUrl, string key, string id, IEnumerable<int> tasks, bool remarkable, CancellationToken ct)
+    {
+        var list = new JsonArray();
+        foreach (int i in tasks)
+        {
+            list.Add(i);
+        }
+
+        var body = new JsonObject { ["id"] = id, ["tasks"] = list, ["remarkable"] = remarkable };
+        using var request = new HttpRequestMessage(HttpMethod.Post, baseUrl + "/api/desk/meeting/keep") { Content = JsonContent(body) };
+        JsonNode json = await SendAsync(request, key, pairing: false, MediumTimeout, ct).ConfigureAwait(true);
+        return (Json.Int(json["reminders"]) ?? 0, Json.Bool(json["remarkable"]) ?? false);
+    }
+
+    /// <summary>GET /api/desk/home – die Knöpfe mit Zustand.</summary>
+    public static async Task<IReadOnlyList<HomeState>> HomeAsync(string baseUrl, string key, CancellationToken ct)
+    {
+        using var request = new HttpRequestMessage(HttpMethod.Get, baseUrl + "/api/desk/home");
+        JsonNode json = await SendAsync(request, key, pairing: false, ShortTimeout, ct).ConfigureAwait(true);
+        var states = new List<HomeState>();
+        if (json["buttons"] is JsonArray list)
+        {
+            foreach (JsonNode? item in list.Take(24))
+            {
+                string? id = Json.Str(item?["id"]) ?? Json.Long(item?["id"])?.ToString(System.Globalization.CultureInfo.InvariantCulture);
+                if (item is JsonObject o && HomeButton.IsValidId(id))
+                {
+                    states.Add(new HomeState(id!, Clean(Json.Str(o["name"]), 40), HomeButton.NormalizeKind(Json.Str(o["kind"])), OnOff(Json.Str(o["state"]))));
+                }
+            }
+        }
+
+        return states;
+    }
+
+    /// <summary>POST /api/desk/home {"id","code"?} – Knopf drücken; gibt den neuen Zustand zurück.</summary>
+    public static async Task<bool?> HomePressAsync(string baseUrl, string key, string id, string? code, CancellationToken ct)
+    {
+        var body = new JsonObject { ["id"] = id };
+        if (!string.IsNullOrEmpty(code))
+        {
+            body["code"] = code;
+        }
+
+        using var request = new HttpRequestMessage(HttpMethod.Post, baseUrl + "/api/desk/home") { Content = JsonContent(body) };
+        JsonNode json = await SendAsync(request, key, pairing: false, MediumTimeout, ct).ConfigureAwait(true);
+        return OnOff(Json.Str(json["state"]));
+    }
+
+    /// <summary>POST /api/desk/apps – installierte Programme (Teil "act"), damit das Panel sie zur Auswahl anbietet.</summary>
+    public static async Task AppsAsync(string baseUrl, string key, IEnumerable<(string Name, string Path)> apps, CancellationToken ct)
+    {
+        var list = new JsonArray();
+        foreach (var (name, path) in apps)
+        {
+            list.Add(new JsonObject { ["name"] = name, ["path"] = path });
+        }
+
+        using var request = new HttpRequestMessage(HttpMethod.Post, baseUrl + "/api/desk/apps") { Content = JsonContent(new JsonObject { ["apps"] = list }) };
+        _ = await SendAsync(request, key, pairing: false, MediumTimeout, ct).ConfigureAwait(true);
+    }
+
+    /// <summary>GET /api/desk/daily?kind=morning|evening – Tagesstart bzw. Feierabend als Text.</summary>
+    public static async Task<string> DailyAsync(string baseUrl, string key, bool morning, CancellationToken ct)
+    {
+        using var request = new HttpRequestMessage(HttpMethod.Get, baseUrl + "/api/desk/daily?kind=" + (morning ? "morning" : "evening"));
+        JsonNode json = await SendAsync(request, key, pairing: false, LongTimeout, ct).ConfigureAwait(true);
+        return Json.Str(json["text"]) ?? throw new SparkException(null, "Der Spark hat keinen Text zurückgeschickt.");
+    }
+
+    private static bool? OnOff(string? state) => state switch
+    {
+        "on" => true,
+        "off" => false,
+        _ => null,
+    };
+
+    /// <summary>Text vom Spark für eine Zeile: ohne Zeilenumbrüche, gekürzt.</summary>
+    private static string Clean(string? text, int max)
+    {
+        string t = (text ?? "").Trim().ReplaceLineEndings(" ");
+        return t.Length > max ? t[..(max - 1)] + "…" : t;
+    }
+
+    /// <summary>ISO-Zeit; ohne Zeitzone gilt die Ortszeit dieses PCs.</summary>
+    private static DateTimeOffset? ParseTime(string? text) =>
+        !string.IsNullOrWhiteSpace(text) && DateTimeOffset.TryParse(text.Trim(), System.Globalization.CultureInfo.InvariantCulture,
+            System.Globalization.DateTimeStyles.AssumeLocal, out DateTimeOffset t)
+            ? t
+            : null;
+
+    /// <summary>Anfrage, deren Antwort Bytes sind (WAV, Datei); Fehler wie bei <see cref="SendAsync"/>.</summary>
+    private static async Task<byte[]> SendForBytesAsync(HttpRequestMessage request, string key, TimeSpan timeout, long maxBytes, CancellationToken ct)
+    {
+        request.Headers.Add(DeviceHeader, key);
+        using var timeoutCts = CancellationTokenSource.CreateLinkedTokenSource(ct);
+        timeoutCts.CancelAfter(timeout);
+
+        HttpResponseMessage response;
+        try
+        {
+            response = await Http.SendAsync(request, HttpCompletionOption.ResponseHeadersRead, timeoutCts.Token).ConfigureAwait(true);
+        }
+        catch (OperationCanceledException) when (!ct.IsCancellationRequested)
+        {
+            throw new SparkException(null, "Der Spark hat nicht rechtzeitig geantwortet. Bitte später noch einmal versuchen.");
+        }
+        catch (HttpRequestException ex)
+        {
+            throw new SparkException(null, DescribeConnectionError(ex));
+        }
+
+        using (response)
+        {
+            int status = (int)response.StatusCode;
+            try
+            {
+                if (!response.IsSuccessStatusCode)
+                {
+                    string? detail = null;
+                    try
+                    {
+                        string content = await response.Content.ReadAsStringAsync(timeoutCts.Token).ConfigureAwait(true);
+                        detail = Detail(content.Length is > 0 and < 20000 ? JsonNode.Parse(content) : null);
+                    }
+                    catch (JsonException)
+                    {
+                        // ohne Text
+                    }
+
+                    throw new SparkException(status, ErrorText(status, detail, pairing: false), detail);
+                }
+
+                if (response.Content.Headers.ContentLength is long length && length > maxBytes)
+                {
+                    throw new SparkException(null, "Die Antwort des Spark ist zu groß.");
+                }
+
+                using var buffer = new MemoryStream();
+                Stream body = await response.Content.ReadAsStreamAsync(timeoutCts.Token).ConfigureAwait(true);
+                await using (body.ConfigureAwait(true))
+                {
+                    byte[] chunk = new byte[81920];
+                    while (true)
+                    {
+                        int read = await body.ReadAsync(chunk, timeoutCts.Token).ConfigureAwait(true);
+                        if (read == 0)
+                        {
+                            break;
+                        }
+
+                        if (buffer.Length + read > maxBytes)
+                        {
+                            throw new SparkException(null, "Die Antwort des Spark ist zu groß.");
+                        }
+
+                        buffer.Write(chunk, 0, read);
+                    }
+                }
+
+                return buffer.ToArray();
+            }
+            catch (OperationCanceledException) when (!ct.IsCancellationRequested)
+            {
+                throw new SparkException(null, "Der Spark antwortet nicht.");
+            }
+            catch (HttpRequestException ex)
+            {
+                throw new SparkException(null, DescribeConnectionError(ex));
+            }
+            catch (IOException)
+            {
+                throw new SparkException(null, "Die Verbindung zum Spark ist abgebrochen.");
+            }
+        }
     }
 
     /// <summary>POST /api/desk/ask – Frage an den Spark (bis zu 3 Minuten).</summary>

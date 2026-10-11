@@ -868,3 +868,13 @@ body.inchat .hilfefab{display:none}
 .hqbtn:hover{color:var(--acc);border-color:var(--acc)}body:not(.hilfeon) .hqbtn{display:none}
 .nayaml{white-space:pre-wrap;overflow-wrap:anywhere;font-size:12px;background:var(--bg2,#0001);padding:8px;border-radius:8px;max-width:100%}
 #nakeys li{display:flex;gap:8px;align-items:center;flex-wrap:wrap}#nakeys li button{margin-left:auto}
+
+/* Ich → Begleiter: one compact row per device, one open at a time (begleiter.js) */
+.dkdev{padding:0;overflow:hidden}.dkdev .dkbody{padding:0 14px 12px}
+.dkhead{display:flex;align-items:center;gap:10px;width:100%;padding:12px 14px;background:none;border:0;color:inherit;font:inherit;text-align:left;cursor:pointer}
+.dkhead .dkname{flex:1;min-width:0;display:flex;flex-direction:column;gap:2px}.dkhead .dkname b{overflow-wrap:anywhere}
+.dkkind{flex:none;font-size:11px;font-weight:600;padding:2px 7px;border-radius:9px;background:var(--line)}
+.dkdot{display:inline-block;width:8px;height:8px;border-radius:50%;background:var(--mut);margin-right:6px;vertical-align:0}.dkdot.on{background:#16a34a}
+.dkupd{color:var(--acc,#5b5bf0);font-weight:600}.dkchev{flex:none;transition:transform .15s}.dkdev.open .dkchev{transform:rotate(90deg)}
+.dkgrp h4{margin:12px 0 2px;font-size:12px;text-transform:uppercase;letter-spacing:.04em;color:var(--mut)}
+.dkcopy{margin:8px 0}.dkcopy select{max-width:100%}

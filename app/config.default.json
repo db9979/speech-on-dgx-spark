@@ -167,6 +167,7 @@
     "android": false,
     "desk": false,
     "desk_act": false,
+    "desk_meeting": false,
     "mcp_server": false,
     "mcp_server_extern": false,
     "mcp_server_act": false,

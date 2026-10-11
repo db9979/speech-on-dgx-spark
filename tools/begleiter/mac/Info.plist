@@ -33,7 +33,11 @@
 	<key>NSHumanReadableCopyright</key>
 	<string>Spark-Begleiter für den eigenen Spark</string>
 	<key>NSMicrophoneUsageDescription</key>
-	<string>Zum Diktieren: Der Spark-Begleiter nimmt nur auf, nachdem du das Diktat-Kürzel gedrückt hast, bis zum nächsten Druck (höchstens 60 Sekunden). Ist im Panel das Weckwort an, hört er zu, bis du es dort ausschaltest oder im Begleiter pausierst. Die Aufnahmen gehen nur an deinen eigenen Spark.</string>
+	<string>Zum Diktieren: Der Spark-Begleiter nimmt nur auf, nachdem du das Diktat-Kürzel gedrückt hast, bis zum nächsten Druck (höchstens 60 Sekunden). Ist im Panel das Weckwort an, hört er zu, bis du es dort ausschaltest oder im Begleiter pausierst. Ist „Besprechung mitschreiben“ an, nimmt er nur nach deinem Klick (oder ⌥⌘R) auf, bis du „Beenden“ wählst, höchstens 3 Stunden, mit sichtbarer roter Leiste. Die Aufnahmen gehen nur an deinen eigenen Spark.</string>
+	<key>NSCameraUsageDescription</key>
+	<string>Für „Nicht stören erkennen“ schaut der Spark-Begleiter nur nach, ob ein anderes Programm die Kamera gerade benutzt. Er schaltet die Kamera nie selbst ein.</string>
+	<key>NSDownloadsFolderUsageDescription</key>
+	<string>Für „Vom Handy auf den Mac“: Dateien, die du im Panel an diesen Mac schickst, legt der Spark-Begleiter in Downloads/Vom Spark ab.</string>
 	<key>NSAppleEventsUsageDescription</key>
 	<string>Für „Antwort entwerfen“: Der Spark-Begleiter liest die ausgewählte Mail in Mail (Absender, Betreff, Text) und öffnet einen Antwortentwurf mit dem Vorschlag des Spark. Er sendet nie etwas.</string>
 	<key>NSAppTransportSecurity</key>

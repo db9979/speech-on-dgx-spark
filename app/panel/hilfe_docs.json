@@ -1028,6 +1028,22 @@
 "src": "assistent",
 "file": "Assistent und Oberfläche",
 "head": "Sprach-Chat",
+"title": "Begleiter: sieben weitere Teile (V01.0.375)",
+"text": "Begleiter: sieben weitere Teile (V01.0.375): alle aus, pro Gerät unter Ich → Begleiter einzuschalten. Vorlesen (Strg+Alt+L, ⌥⌘L): markierter Text in deiner Spark-Stimme, höchstens 5000 Zeichen. Vom Handy auf den PC: Text (in die Zwischenablage), Link (öffnet erst nach Rückfrage, nur http/https) oder Datei (höchstens 20 MB, nach „Downloads/Vom Spark“) aus dem Panel („An PC schicken“ beim Gerät) oder per Sprache („Schick den Link an meinen PC“); wartet bis zu 24 Stunden. Termine im Begleiter: die nächsten 24 Stunden mit Hinweis 10 Minuten vorher, „In 20 Min erinnern“ an Meldungen. Nicht stören erkennen: Während Mikrofon oder Kamera von einem anderen Programm benutzt werden oder eine Präsentation läuft, warten Meldungen und Durchsagen auf den eigenen Lautsprechern; danach kommt eine Zusammenfassung „Während du beschäftigt warst“. Notaus, Sicherheitshinweise und Erinnerungen kommen immer. Besprechung mitschreiben (eigener Admin-Schalter „Besprechungen mitschreiben“, aus): nur auf Klick, mit roter Leiste; Mikrofon und Ton des Rechners gehen an die Spracherkennung, die Mitschrift bleibt nur im Arbeitsspeicher (höchstens 3 Stunden). Danach Zusammenfassung und Aufgaben; ausgewählte Aufgabe"
+},
+{
+"lang": "de",
+"src": "assistent",
+"file": "Assistent und Oberfläche",
+"head": "Sprach-Chat",
+"title": "Begleiter: sieben weitere Teile (V01.0.375)",
+"text": "n werden Erinnerungen, die Zusammenfassung auf Wunsch ein Dokument auf dem reMarkable, und sie steht im Verlauf. Alle Beteiligten müssen einverstanden sein. Smart-Home-Knöpfe: bis zu 12 Knöpfe (Licht, Schalter, Lüfter, Klima, Szenen) deines Home Assistant, unter Ich → Begleiter eingerichtet; mit Codewort fragt der Begleiter danach. Tagesstart und Feierabend: morgens der Tagesüberblick, abends die Termine von morgen und was offen ist. Für „Am PC handeln“ schickt der Begleiter die Liste der installierten Programme; unter Ich → Begleiter wählst du daraus, statt Name und Pfad abzutippen."
+},
+{
+"lang": "de",
+"src": "assistent",
+"file": "Assistent und Oberfläche",
+"head": "Sprach-Chat",
 "title": "Raum-Modus",
 "text": "Raum-Modus (Funktionen → „Raum-Modus“, standardmäßig aus; nur Profile): Der Schalter „Raum“ unter dem Gesicht lässt den Assistenten an diesem Gerät für eine gewählte Zeit (15 Minuten bis 4 Stunden, endet von selbst) dem Gespräch im Raum zuhören; ein oranger Punkt zeigt es an. In einer Pause hilft er, wenn ein fester Auslöser fiel: eine offene Frage („Wann wurde eigentlich …?“, mit Websuche, im Zweifel nichts), ein Termin („Freitag um 10 zum Zahnarzt“ → „Soll ich das eintragen?“), „kalt“, „zu warm“ oder „zu dunkel“ (die echte Temperatur des Raums aus Home Assistant und das Angebot, die Heizung um ein Grad zu ändern oder das Licht anzumachen) und Einkäufe („Wir brauchen noch Milch“ → Einkaufsliste in Home Assistant). Geändert wird nur nach einem „Ja“, bei Smart Home mit Codewort, wenn eines gesetzt ist. Im Fenster „Ich“ unter „Raum-Modus“ stellt jedes Gerät ein: Dauer, wie viel er sagen darf (nur Fragen, auch Hinweise, auch Kommentare), jede Art einzeln, den Raum des Geräts in Home Assistant und „Nur als Text“ (still im Verlauf statt gesprochen). Das Gehörte bleibt nur fünf Minuten im Arbeitsspeicher des Panels und wird nie gespeichert; Gedächtnis, Mails und frühere Gespräche nutzt d"
 },
@@ -3630,6 +3646,22 @@
 "head": "Voice chat",
 "title": "Companion deeper in the computer (V01.0.353)",
 "text": "the Spark with the note as context; the note counts as outside text (nothing switches). - Act on the PC (own admin switch \"May act on the PC\", off): for a request like \"Open tagesschau.de on the PC\" the computer asks in a window whether it may (60 s, else no). Allowed only: open a page (http/https), a program released under Me → Companion, music (play, pause, next, previous), volume, lock the screen, show a text. Locked after mail, web pages or other outside text. - Wake word on the PC: \"Hey Spark\" through the computer's microphone, as in the browser (short pieces to speech recognition, a hit starts the question). Listens only while the part is on; the icon shows it, \"Pause wake word\" in the window."
+},
+{
+"lang": "en",
+"src": "assistant",
+"file": "Assistant and panel",
+"head": "Voice chat",
+"title": "Companion: seven more parts (V01.0.375)",
+"text": "Companion: seven more parts (V01.0.375): all off, turned on per device under Me → Companion. Read aloud (Ctrl+Alt+L, ⌥⌘L): marked text in your Spark voice, at most 5000 characters. From the phone to the PC: text (into the clipboard), a link (opened only after asking, only http/https) or a file (at most 20 MB, into \"Downloads/Vom Spark\") from the panel (\"Send to the PC\" at the device) or by voice (\"Send the link to my PC\"); waits up to 24 hours. Appointments in the companion: the next 24 hours with a note 10 minutes before, \"Remind me in 20 min\" on notes. Recognise do not disturb: while another program uses the microphone or camera or a presentation runs, notes and announcements on your own speakers wait; a summary \"Während du beschäftigt warst\" follows. Notaus, security notes and reminders always come. Write along in meetings (own admin switch \"Write along in meetings\", off): only on a click, with a red bar; the microphone and the computer's sound go to speech recognition, the transcript stays in memory only (at most 3 hours). Afterwards a summary and tasks; chosen tasks become reminders, the summary on request a document on the reMarkable, and it is in the history. Everybody takin"
+},
+{
+"lang": "en",
+"src": "assistant",
+"file": "Assistant and panel",
+"head": "Voice chat",
+"title": "Companion: seven more parts (V01.0.375)",
+"text": "g part must agree. Smart home buttons: up to 12 buttons (lights, switches, fans, climate, scenes) of your Home Assistant, set up under Me → Companion; with a code word the companion asks for it. Start and end of the day: in the morning the daily overview, in the evening tomorrow's appointments and what is open. For \"Act on the PC\" the companion sends the list of installed programs; under Me → Companion you pick from it instead of typing name and path."
 },
 {
 "lang": "en",

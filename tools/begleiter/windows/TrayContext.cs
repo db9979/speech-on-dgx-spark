@@ -92,6 +92,13 @@ internal sealed partial class TrayContext : ApplicationContext, IBegleiterHost
         };
         _tray.BalloonTipClicked += (_, _) =>
         {
+            if (_balloonAction is { } act)
+            {
+                _balloonAction = null;
+                act();
+                return;
+            }
+
             if (_updater.Phase is UpdatePhase.Ready or UpdatePhase.Available || _balloonIsNote)
             {
                 ShowPanel();
@@ -102,6 +109,8 @@ internal sealed partial class TrayContext : ApplicationContext, IBegleiterHost
 
         _hotkeys.Pressed += async (_, part) => await OnHotkeyAsync(part);
         _pollTimer.Tick += async (_, _) => await PollAsync();
+        _agendaTimer.Tick += async (_, _) => await RefreshAgendaAsync();
+        _alertTimer.Tick += (_, _) => CheckAgendaAlerts();
 
         RegisterHotkeys(notify: false);
         UpdateIcon();
@@ -201,6 +210,8 @@ internal sealed partial class TrayContext : ApplicationContext, IBegleiterHost
             _slowPoll = false;
             HandleNotes(poll);
             HandleAsks(poll.Asks);
+            HandleInbox(poll.Inbox);
+            await QuietTickAsync(baseUrl, key);
             if (poll.NotausLevel > 0)
             {
                 SetConnection(Connection.Notaus, $"Notaus Stufe {poll.NotausLevel} am Spark");
@@ -209,6 +220,8 @@ internal sealed partial class TrayContext : ApplicationContext, IBegleiterHost
             {
                 SetConnection(Connection.Online, "");
             }
+
+            OnPolledOk();
         }
         catch (SparkException ex)
         {
@@ -293,9 +306,10 @@ internal sealed partial class TrayContext : ApplicationContext, IBegleiterHost
             return;
         }
 
-        if (IsOn(Parts.Actions))
+        if (IsOn(Parts.Actions) || IsOn(Parts.Agenda))
         {
-            foreach (Note n in fresh.Where(n => n.Actions.Count > 0))
+            // Mit Knöpfen (actions) bzw. „In 20 Min erinnern“ (agenda) auch im Tray-Fenster.
+            foreach (Note n in fresh.Where(n => (IsOn(Parts.Actions) && n.Actions.Count > 0) || IsOn(Parts.Agenda)))
             {
                 AddPanelNote(n);
             }
@@ -319,7 +333,8 @@ internal sealed partial class TrayContext : ApplicationContext, IBegleiterHost
         title = Clip(title.ReplaceLineEndings(" "), 63);
         body = Clip(body, 255);
         _tray.ShowBalloonTip(10000, title, body.Length == 0 ? " " : body, ToolTipIcon.Info);
-        _balloonIsNote = IsOn(Parts.Actions) && _panelNotes.Count > 0;
+        _balloonIsNote = (IsOn(Parts.Actions) || IsOn(Parts.Agenda)) && _panelNotes.Count > 0;
+        _balloonAction = null;
     }
 
     private static string Clip(string text, int max) =>
@@ -453,8 +468,8 @@ internal sealed partial class TrayContext : ApplicationContext, IBegleiterHost
                 _ => StatusDot.Grey,
             };
         _traySize = AppIcon.TrayIconSize();
-        _tray.Icon = AppIcon.ForTray(dot, listening: _wake is not null && !_wake.Paused);
-        _tray.Text = Clip(Title + " – " + StatusLine().ReplaceLineEndings(" "), 127);
+        _tray.Icon = AppIcon.ForTray(dot, listening: _wake is not null && !_wake.Paused, moon: IsOn(Parts.Quiet) && _quietWhy is not null);
+        _tray.Text = Clip(Title + " – " + StatusLine().ReplaceLineEndings(" ") + (QuietHint() is not null ? " · Nicht stören" : ""), 127);
     }
 
     // ------------------------------------------------------------------ Menü
@@ -575,6 +590,7 @@ internal sealed partial class TrayContext : ApplicationContext, IBegleiterHost
         }
 
         var panel = new TrayPanel(BuildPanelModel(), action => _invoker.BeginInvoke(action));
+        OnPanelOpened();
         panel.FormClosed += (_, _) =>
         {
             if (ReferenceEquals(_panel, panel))
@@ -646,7 +662,11 @@ internal sealed partial class TrayContext : ApplicationContext, IBegleiterHost
                 items.Add(new PanelItem("Mein Notaus …", Glyph.Octagon, null, () => _ = TriggerNotausAsync(), Danger: true));
             }
 
-            if (_desk is not null && Parts.All.Any(p => !_desk.IsOn(p)))
+            if (QuietHint() is { } quiet)
+            {
+                hint = quiet;
+            }
+            else if (_desk is not null && Parts.All.Any(p => !_desk.IsOn(p)))
             {
                 hint = items.Count > 0 ? "Weitere Teile im Panel unter Ich → Begleiter." : "Teile im Panel unter Ich → Begleiter einschalten.";
             }
@@ -667,6 +687,10 @@ internal sealed partial class TrayContext : ApplicationContext, IBegleiterHost
             Update = BuildBanner(),
             Items = items,
             Notes = BuildPanelNotes(),
+            Agenda = BuildAgendaLines(),
+            AgendaEmpty = AgendaEmptyText(),
+            Home = BuildHomeButtons(),
+            HomeNote = HomeNoteText(),
             Hint = hint,
             Settings = () => OpenSettings(),
             OpenPanel = string.IsNullOrEmpty(_config.Base) ? null : OpenPanel,
@@ -715,9 +739,9 @@ internal sealed partial class TrayContext : ApplicationContext, IBegleiterHost
 
     public void RequestUpdate()
     {
-        if (_recorder is not null || _dictateBusy || _writing)
+        if (_recorder is not null || _dictateBusy || _writing || _meeting is not null)
         {
-            Notify("Erst das Diktat bzw. die Schreibhilfe abschließen, dann aktualisieren.", ToolTipIcon.Info);
+            Notify("Erst das Diktat, die Schreibhilfe bzw. die Besprechung abschließen, dann aktualisieren.", ToolTipIcon.Info);
             return;
         }
 
@@ -886,6 +910,12 @@ internal sealed partial class TrayContext : ApplicationContext, IBegleiterHost
                     break;
                 case Parts.Mail:
                     await DraftReplyAsync(fromHotkey: true);
+                    break;
+                case Parts.Speak:
+                    await SpeakAsync(fromHotkey: true);
+                    break;
+                case Parts.Meeting:
+                    await ToggleMeetingAsync();
                     break;
             }
         }
@@ -1074,7 +1104,8 @@ internal sealed partial class TrayContext : ApplicationContext, IBegleiterHost
             return open;
         }
 
-        var form = new AskForm(_config, () => _desk, ReportFromWindow);
+        var form = new AskForm(_config, () => _desk, ReportFromWindow,
+            text => _ = SpeakTextAsync(text), StopSpeakingAndMenu, mode => SetAskSpeak(mode));
         form.FormClosed += (_, _) =>
         {
             if (ReferenceEquals(_ask, form))
@@ -1116,6 +1147,12 @@ internal sealed partial class TrayContext : ApplicationContext, IBegleiterHost
 
     private void StartDictation(IntPtr target)
     {
+        if (_meeting is not null)
+        {
+            Notify("Während eine Besprechung mitgeschrieben wird, geht Diktieren nicht.", ToolTipIcon.Info);
+            return;
+        }
+
         Recorder? recorder = Recorder.TryStart(out string error);
         if (recorder is null)
         {
@@ -1409,6 +1446,7 @@ internal sealed partial class TrayContext : ApplicationContext, IBegleiterHost
     private void Notify(string text, ToolTipIcon icon)
     {
         _balloonIsNote = false;
+        _balloonAction = null;
         _tray.ShowBalloonTip(5000, Title, Clip(text, 255), icon);
     }
 
@@ -1434,6 +1472,7 @@ internal sealed partial class TrayContext : ApplicationContext, IBegleiterHost
         {
             _pollTimer.Dispose();
             _updater.Dispose();
+            DisposeParts4();
             Theme.Changed -= OnThemeChanged;
             Theme.Unwatch();
             _hotkeys.Dispose();
