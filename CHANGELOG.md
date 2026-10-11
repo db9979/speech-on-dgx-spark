@@ -2,6 +2,7 @@
 
 Every version in one line, newest first (taken from the commit messages, so some lines are German, some English). Older entries have no version number.
 
+- **V01.0.400** · 2026-10-11 · Selbsttests: „Wer darf was springt zum Schalter“ und „Logs → Anfragen“ warten auf den Zustand statt fester Zeit (auf GitHub zu langsam)
 - **V01.0.399** · 2026-10-11 · Weniger Runden: Nachschlagen (Archiv, Wikipedia, Dokumente, Verlauf, Kontakte, Mail-Suche) höchstens so oft wie Suchen pro Frage (2), letzte Runde ohne Werkzeugliste (qwen38 schrieb sonst einen Aufruf als Text, eine Runde mehr).
 - **V01.0.398** · 2026-10-11 · Wer darf was: Klick auf eine Funktion springt jetzt zu ihrem Schalter unter Funktionen, auch bei Unterschaltern (vorher 55 von 100 ohne Ziel); ist ihr Schalter versteckt, weil die Grundfunktion aus ist, zu dieser; wartet auf geladene Einstellungen, klappt auf und markiert die Zeile (Rechner und Handy)
 - **V01.0.397** · 2026-10-11 · Frag Spark am Begleiter: „Öffne Safari mit Google“ bietet jetzt „Am PC handeln“ an, auch ohne „am PC/Mac“ im Satz (der Rechner ist der, an dem gefragt wird; dazu reicht ein Tun-Wort wie öffnen, starten, lauter, sperren); im Browser und am Handy muss der Rechner weiter genannt werden

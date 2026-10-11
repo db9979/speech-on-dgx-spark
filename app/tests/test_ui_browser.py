@@ -448,8 +448,14 @@ class Browser(unittest.TestCase):
                         name = await pg.evaluate(f"(WHO.features.find(f=>f.switch==='{sw}')||{{name:['']}}).name[0]")
                         if not name:
                             continue
+                        await pg.evaluate("WHO_LAST=null")
                         await pg.locator("#whobox .wname", has_text=name).first.click()
-                        await pg.wait_for_timeout(1300)
+                        # the smooth scroll to a far row takes longer on GitHub's runners: wait until it is in view
+                        try:
+                            await pg.wait_for_function("(()=>{const r=WHO_LAST&&WHO_LAST.getBoundingClientRect();"
+                                                       "return !!(r&&r.top>=0&&r.bottom<=innerHeight&&r.height>0)})()", timeout=8000)
+                        except Exception:
+                            pass                       # the assertion below says what is wrong
                         st = await pg.evaluate("""(sw=>{const row=WHO_LAST;if(!row)return {row:false};const r=row.getBoundingClientRect();
                           // its own switch, or (folded away behind a switch that is off) the first switch up the chain that shows
                           let el=document.getElementById('chat.'+sw),own=row.contains(el);
@@ -1233,8 +1239,8 @@ class Browser(unittest.TestCase):
                 for name, w, h in VIEWS:
                     br, pg, errors = await self.page(p, w, h)
                     await pg.evaluate("goSec('logs')")
-                    await pg.wait_for_timeout(300)
-                    self.assertTrue(await pg.is_visible("#logtabs button[data-lt=req]"))
+                    # the tab shows once the page has asked the Spark (slower on GitHub's runners): wait for it
+                    await pg.wait_for_selector("#logtabs button[data-lt=req]", state="visible", timeout=8000)
                     await pg.click("#logtabs button[data-lt=req]")
                     await pg.wait_for_selector("#logreq .rq")
                     self.assertGreaterEqual(await pg.evaluate("document.querySelectorAll('#logreq .rq').length"), 2)
