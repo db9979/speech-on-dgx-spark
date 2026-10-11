@@ -2365,7 +2365,7 @@
 "file": "Sicherheit und Betrieb",
 "head": "Probleme melden",
 "title": "Probleme melden",
-"text": "Ab V01.0.382. Etwas klappt nicht? Jedes Profil mit eigenem Schalter (Ich → Probleme melden) beschreibt es kurz und bekommt einen Entwurf; Gäste nie. Admin-Schalter: Funktionen → Sicherheit → „Probleme melden“, dazu das Ziel-Repo (ab Werk db9979/spark-meldungen, privat). Öffnen lässt es sich überall: unten im Panel „Problem melden“, Zustand → Logs, Strg/⌘ K, Ich → Probleme melden, in der Android-App (Panel), in der iPhone-App unter Einstellungen, im Spark-Begleiter (Windows: Menü des Symbols; Mac: Einstellungen), per Telegram /melden Text und per Sprache (auch Uhr und Lautsprecher) mit dem festen Satz „Spark, Problem melden: …“. Telegram und Sprache legen nur einen Entwurf an; gesendet wird immer erst nach dem Blick auf die Vorschau."
+"text": "Ab V01.0.383. Etwas klappt nicht? Jedes Profil mit eigenem Schalter (Ich → Probleme melden) beschreibt es kurz und bekommt einen Entwurf; Gäste nie. Admin-Schalter: Funktionen → Sicherheit → „Probleme melden“, dazu das Ziel-Repo (ab Werk db9979/spark-meldungen, privat). Öffnen lässt es sich überall: unten im Panel „Problem melden“, Zustand → Logs, Strg/⌘ K, Ich → Probleme melden, in der Android-App (Panel), in der iPhone-App unter Einstellungen, im Spark-Begleiter (Windows: Menü des Symbols; Mac: Einstellungen), per Telegram /melden Text und per Sprache (auch Uhr und Lautsprecher) mit dem festen Satz „Spark, Problem melden: …“. Telegram und Sprache legen nur einen Entwurf an; gesendet wird immer erst nach dem Blick auf die Vorschau."
 },
 {
 "lang": "de",
@@ -2413,7 +2413,7 @@
 "file": "Sicherheit und Betrieb",
 "head": "Probleme melden",
 "title": "Admin per Assistent informieren",
-"text": "Admin per Assistent informieren (ab V01.0.382, Unterschalter, aus): Sendet ein Profil eine Meldung oder legt sie ab, sagt der Assistent es den Admin-Profilen (das für Admin-Hinweise gewählte, Haupt-Admin, Mit-Admins), bei offener Seite im Assistenten, sonst als Mitteilung. Nur Profilname, Bereich, Weg und Nummer, nie der Text; das meldende Profil selbst bekommt nichts. Jedes Admin-Profil schaltet es unter Ich → Probleme melden für sich aus; im Notaus bleibt es still."
+"text": "Admin per Assistent informieren (ab V01.0.383, Unterschalter, aus): Sendet ein Profil eine Meldung oder legt sie ab, sagt der Assistent es den Admin-Profilen (das für Admin-Hinweise gewählte, Haupt-Admin, Mit-Admins), bei offener Seite im Assistenten, sonst als Mitteilung. Nur Profilname, Bereich, Weg und Nummer, nie der Text; das meldende Profil selbst bekommt nichts. Jedes Admin-Profil schaltet es unter Ich → Probleme melden für sich aus; im Notaus bleibt es still."
 },
 {
 "lang": "de",
@@ -4949,7 +4949,7 @@
 "file": "Security and operation",
 "head": "Reporting problems",
 "title": "Reporting problems",
-"text": "Since V01.0.382. Something does not work? Every profile with its own switch (Me → Reporting problems) describes it briefly and gets a draft; guests never. Admin switch: Features → Security → \"Reporting problems\", plus the target repository (default db9979/spark-meldungen, private). It opens everywhere: \"Report a problem\" at the bottom of the panel, Status → Logs, Ctrl/⌘ K, Me → Reporting problems, in the Android app (panel), in the iPhone app under Settings, in the Spark companion (Windows: the icon's menu; Mac: settings), by Telegram /melden text and by voice (also watch and speakers) with the fixed sentence \"Spark, Problem melden: …\". Telegram and voice only make a draft; sending always comes after a look at the preview."
+"text": "Since V01.0.383. Something does not work? Every profile with its own switch (Me → Reporting problems) describes it briefly and gets a draft; guests never. Admin switch: Features → Security → \"Reporting problems\", plus the target repository (default db9979/spark-meldungen, private). It opens everywhere: \"Report a problem\" at the bottom of the panel, Status → Logs, Ctrl/⌘ K, Me → Reporting problems, in the Android app (panel), in the iPhone app under Settings, in the Spark companion (Windows: the icon's menu; Mac: settings), by Telegram /melden text and by voice (also watch and speakers) with the fixed sentence \"Spark, Problem melden: …\". Telegram and voice only make a draft; sending always comes after a look at the preview."
 },
 {
 "lang": "en",
@@ -4997,7 +4997,7 @@
 "file": "Security and operation",
 "head": "Reporting problems",
 "title": "Tell the admin through the assistant",
-"text": "Tell the admin through the assistant (since V01.0.382, sub-switch, off): when a profile sends or keeps a report, the assistant tells the admin profiles (the one chosen for admin notes, the main admin, co-admins), in the assistant when the page is open, else as a note. Only profile name, area, way and number, never the text; the reporting profile itself gets nothing. Every admin profile turns it off for itself under Me → Reporting problems; during the Notaus it stays silent."
+"text": "Tell the admin through the assistant (since V01.0.383, sub-switch, off): when a profile sends or keeps a report, the assistant tells the admin profiles (the one chosen for admin notes, the main admin, co-admins), in the assistant when the page is open, else as a note. Only profile name, area, way and number, never the text; the reporting profile itself gets nothing. Every admin profile turns it off for itself under Me → Reporting problems; during the Notaus it stays silent."
 },
 {
 "lang": "en",

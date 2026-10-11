@@ -99,7 +99,7 @@ Seit V01.0.338 hat jedes angemeldete Profil unter *Ich → Sicherheit → Mein N
 
 ## Probleme melden
 
-Ab V01.0.382. Etwas klappt nicht? Jedes Profil mit eigenem Schalter (Ich → Probleme melden) beschreibt es kurz und bekommt einen Entwurf; Gäste nie. Admin-Schalter: Funktionen → Sicherheit → „Probleme melden“, dazu das Ziel-Repo (ab Werk `db9979/spark-meldungen`, privat). Öffnen lässt es sich überall: unten im Panel „Problem melden“, Zustand → Logs, Strg/⌘ K, Ich → Probleme melden, in der Android-App (Panel), in der iPhone-App unter Einstellungen, im Spark-Begleiter (Windows: Menü des Symbols; Mac: Einstellungen), per Telegram `/melden Text` und per Sprache (auch Uhr und Lautsprecher) mit dem festen Satz „Spark, Problem melden: …“. Telegram und Sprache legen nur einen Entwurf an; gesendet wird immer erst nach dem Blick auf die Vorschau.
+Ab V01.0.383. Etwas klappt nicht? Jedes Profil mit eigenem Schalter (Ich → Probleme melden) beschreibt es kurz und bekommt einen Entwurf; Gäste nie. Admin-Schalter: Funktionen → Sicherheit → „Probleme melden“, dazu das Ziel-Repo (ab Werk `db9979/spark-meldungen`, privat). Öffnen lässt es sich überall: unten im Panel „Problem melden“, Zustand → Logs, Strg/⌘ K, Ich → Probleme melden, in der Android-App (Panel), in der iPhone-App unter Einstellungen, im Spark-Begleiter (Windows: Menü des Symbols; Mac: Einstellungen), per Telegram `/melden Text` und per Sprache (auch Uhr und Lautsprecher) mit dem festen Satz „Spark, Problem melden: …“. Telegram und Sprache legen nur einen Entwurf an; gesendet wird immer erst nach dem Blick auf die Vorschau.
 
 **Was mitgeht:** die Beschreibung, auf Wunsch die eigenen letzten Anfragen (nur Wege, Werkzeuge, Zeiten aus Logs → Anfragen), der Systemzustand (Version, Dienste, Speicher), aus der iPhone-App das Ton-Protokoll und nur für Admins Diagnose-Logzeilen des Bereichs (10, 30 oder 60 min).
 
@@ -111,7 +111,7 @@ Ab V01.0.382. Etwas klappt nicht? Jedes Profil mit eigenem Schalter (Ich → Pro
 
 **Admin-Sicht:** Admins sehen alle Meldungen aller Profile, bei gesendeten den Stand auf GitHub (offen oder erledigt), die Zahl der Antworten und die Antworten selbst als reinen Text mit Link; ein Profil sieht nur seine eigenen. Antworten von GitHub gehen nie an das Sprachmodell.
 
-**Admin per Assistent informieren** (ab V01.0.382, Unterschalter, aus): Sendet ein Profil eine Meldung oder legt sie ab, sagt der Assistent es den Admin-Profilen (das für Admin-Hinweise gewählte, Haupt-Admin, Mit-Admins), bei offener Seite im Assistenten, sonst als Mitteilung. Nur Profilname, Bereich, Weg und Nummer, nie der Text; das meldende Profil selbst bekommt nichts. Jedes Admin-Profil schaltet es unter Ich → Probleme melden für sich aus; im Notaus bleibt es still.
+**Admin per Assistent informieren** (ab V01.0.383, Unterschalter, aus): Sendet ein Profil eine Meldung oder legt sie ab, sagt der Assistent es den Admin-Profilen (das für Admin-Hinweise gewählte, Haupt-Admin, Mit-Admins), bei offener Seite im Assistenten, sonst als Mitteilung. Nur Profilname, Bereich, Weg und Nummer, nie der Text; das meldende Profil selbst bekommt nichts. Jedes Admin-Profil schaltet es unter Ich → Probleme melden für sich aus; im Notaus bleibt es still.
 
 **Live:** Zustand → Live zeigt GitHub (Meldungen) mit Zahl der Entwürfe und der heute gesendeten, nie Inhalte.
 
