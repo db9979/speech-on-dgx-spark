@@ -185,3 +185,25 @@ class Record(unittest.TestCase):
 
 if __name__ == "__main__":
     unittest.main()
+
+
+class InternalCallsCarryTheKey(unittest.TestCase):
+    """The speech front ends' size gate answers keyless /v1/ calls with 401, also from 127.0.0.1 (seen on
+    tars: ~900 refused voice lists a day). Every direct call from the panel brings the API key."""
+
+    def test_every_direct_speech_call_sends_headers(self):
+        import glob
+        import re
+        here = os.path.join(os.path.dirname(__file__), "..", "panel")
+        bad = []
+        for path in glob.glob(os.path.join(here, "*.py")):
+            lines = open(path, encoding="utf-8").read().splitlines()
+            for i, line in enumerate(lines):
+                if re.search(r"127\.0\.0\.1:\{[^}]*(tts|asr)[^}]*\}/v1/", line) and "url =" not in line:
+                    if "headers" not in " ".join(lines[i:i + 4]):
+                        bad.append(f"{os.path.basename(path)}:{i + 1}")
+        self.assertEqual(bad, [])
+
+    def test_the_tts_engine_does_not_log_a_table_per_sentence(self):
+        engine = open(os.path.join(os.path.dirname(__file__), "..", "engine.sh"), encoding="utf-8").read()
+        self.assertIn("--disable-log-stats", engine.split("--omni", 1)[1])

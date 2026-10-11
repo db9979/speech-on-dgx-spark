@@ -1043,7 +1043,8 @@ async def tts_voices():
     model = str(cfg.get("tts", {}).get("model", ""))
     try:
         async with httpx.AsyncClient(timeout=5) as c:
-            v = (await c.get(f"http://127.0.0.1:{cfg['tts']['port']}/v1/voices")).json()
+            # with the key: the front end's size gate turns away keyless /v1/ calls even from here (401)
+            v = (await c.get(f"http://127.0.0.1:{cfg['tts']['port']}/v1/voices", headers=api_headers())).json()
         if not isinstance(v, dict):
             raise ValueError("not a JSON object")
     except Exception:

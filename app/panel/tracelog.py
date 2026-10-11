@@ -64,7 +64,7 @@ class Rec:
         self.t0 = float(t0)
         self.client = client if client in CLIENTS else "other"
         self.who = who if isinstance(who, str) and re.fullmatch(r"[A-Za-z0-9_-]{1,64}", who) else None
-        self.kind = kind if kind in ("profile", "guest", "admin") else "guest"
+        self.kind = kind if kind in ("profile", "guest", "admin", "spark") else "guest"
         self.device = safe(str(device or "")[:40]) or ""
         self.intent, self.steps, self.marks, self.errors, self.done = "", [], {}, [], False
 
@@ -202,6 +202,8 @@ def shown(x):
     who, name, device = x.get("who"), "Gast", ""
     if x.get("kind") == "admin":
         name, device = "Admin", x.get("device") or ""
+    elif x.get("kind") == "spark":
+        name = "Spark"            # the Spark started it itself (update check, backup, rules): nobody asked
     elif x.get("kind") == "profile":
         p = profiles.by_id(who) if who else None
         if p and profiles.settings(p["id"]).get("trace_name") is True:

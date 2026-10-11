@@ -336,7 +336,8 @@ def begin(client, device, t=None, uid=None, auto=False, why=""):
     to a device); why: a fixed word shown like the Weiche's intent. None while both are off; never raises."""
     try:
         import tracelog
-        rec = tracelog.start(time.time() if t is None else t, client, uid, "profile" if uid else "guest", device)
+        kind = "profile" if uid else "spark" if auto else "guest"
+        rec = tracelog.start(time.time() if t is None else t, client, uid, kind, device)
         if rec is not None:
             rec.auto, rec.direct = bool(auto), True
             if why:
@@ -485,6 +486,8 @@ def _who(rec, view):
     import profiles
     if rec.kind == "admin":
         return "Admin", rec.device if view == "admin" else ""
+    if rec.kind == "spark":
+        return "Spark", ""
     if rec.kind != "profile" or not rec.who:
         return "Gast", ""
     p = profiles.by_id(rec.who)

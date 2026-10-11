@@ -2,6 +2,7 @@
 
 Every version in one line, newest first (taken from the commit messages, so some lines are German, some English). Older entries have no version number.
 
+- **V01.0.368** · 2026-10-11 · Anfragen, die der Spark selbst anstößt (Update-Prüfung, Sicherung, Regeln), heißen in Logs → Anfragen und auf der Live-Seite „Spark“ statt „Gast“; die Stimmenliste im Panel holt der Spark wieder mit Schlüssel (vorher ~900 abgelehnte Abrufe am Tag, Liste kam nur aus dem Zwischenspeicher); die Sprachausgabe schreibt keine Statistiktabelle pro Satz mehr ins Journal
 - **V01.0.367** · 2026-10-11 · app/pebble/speech-spark.pbw 1.6.0 aus dem Workflow-Bau (Zweig pebble-build, SDK-Minor 0x5e geprüft): Notaus mit SELECT 3 s; die Handy-App meldet „Neue Uhr-App“
 - **V01.0.366** · 2026-10-11 · Workflow „Pebble watch app“: SDK-Header wird überall gefunden und auf Minor 0x5e gesetzt (vorher fand die Suche ihn nicht und die App kam mit 0x6a heraus), der Bau prüft den Kopf jeder pebble-app.bin
 - **V01.0.365** · 2026-10-11 · Workflow „Pebble watch app“ legt speech-spark.pbw zusätzlich auf den Zweig pebble-build (Artefakte sind von außen nicht immer abrufbar); übernommen wird sie mit einem normalen Commit nach app/pebble/

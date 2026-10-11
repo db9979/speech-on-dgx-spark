@@ -33,6 +33,7 @@ All options for running without questions (`--mode api --asr 1.7b --tts 0.6b --y
 
 <!-- New version: add one line at the top here and in CHANGELOG.md, drop the oldest line here (keep 10). Details go to docs/de and docs/en, not into this README. -->
 
+- **V01.0.368** Requests the Spark starts itself (update check, backup, rules) are called "Spark" instead of "Gast" in Logs → Requests and on the live page; the panel fetches the voice list with the key again (before ~900 refused calls a day, list only from cache); speech output no longer writes a statistics table per sentence to the journal
 - **V01.0.367** Pebble watch app 1.6.0 in the panel: holding SELECT 3 s triggers the emergency stop (the big one admin profiles only)
 - **V01.0.366** Pebble watch app: the build checks that the app also runs on older watch firmware (SDK 5.94)
 - **V01.0.365** Pebble watch app: GitHub puts the built file on the branch pebble-build so it can be taken into the panel
@@ -42,7 +43,6 @@ All options for running without questions (`--mode api --asr 1.7b --tts 0.6b --y
 - **V01.0.361** Search locally first: a long Kiwix article no longer slows the answer (only its start is read), Logs → Requests shows hits per source
 - **V01.0.360** Emergency stop on more ways: Telegram /notaus and /meinnotaus, fixed sentence "Spark, Mein Notaus" / "Spark, Notaus" (the big one admins only), a Home Assistant key that can only trigger (with a ready snippet), Android quick settings tile (app 1.1.0)
 - **V01.0.359** Face at the bottom right: one tap starts the assistant on every page, over Me and on a phone (its window closed at once), a double tap no longer marks text, typing a question always works
-- **V01.0.358** Fetch clear questions directly: "Which appointments do I have today?" is fetched by the panel itself
 
 All versions: [CHANGELOG.md](CHANGELOG.md)
 

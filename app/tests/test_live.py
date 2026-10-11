@@ -313,6 +313,12 @@ class Live(unittest.TestCase):
             ways = sorted((r["intent"], r["steps"][-1]["to"]) for r in d["reqs"] if r["auto"])
             self.assertEqual(ways, [("Sicherung nach außen", "nas"), ("Update-Prüfung", "github")])
             self.assertEqual({t["zone"] for t in d["targets"] if t["id"] == "github"}, {"net"})
+            # what the Spark starts itself is labelled "Spark", never "Gast" (live page and Logs → Anfragen)
+            self.assertEqual({r["who"] for r in d["reqs"] if r["auto"]}, {"Spark"})
+            import tracelog
+            mine = [tracelog.shown(r.data()) for r in live._run.values() if getattr(r, "auto", False)]
+            self.assertEqual({x["name"] for x in mine}, {"Spark"})
+            self.assertEqual(tracelog.shown({"kind": "guest"})["name"], "Gast")
             for secret in ("Geheimname", "192.168.1.77", "Oma"):
                 self.assertNotIn(secret, json.dumps(d))
             # the Spark-Begleiter asking for notes, room mode listening: open channels

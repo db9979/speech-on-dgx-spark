@@ -33,6 +33,7 @@ Alle Optionen ohne Rückfragen (`--mode api --asr 1.7b --tts 0.6b --yes` …) st
 
 <!-- New version: add one line at the top here and in CHANGELOG.md, drop the oldest line here (keep 10). Details go to docs/de and docs/en, not into this README. -->
 
+- **V01.0.368** Anfragen, die der Spark selbst anstößt (Update-Prüfung, Sicherung, Regeln), heißen in Logs → Anfragen und auf der Live-Seite „Spark“ statt „Gast“; die Stimmenliste im Panel holt der Spark wieder mit Schlüssel (vorher ~900 abgelehnte Abrufe am Tag, Liste kam nur aus dem Zwischenspeicher); die Sprachausgabe schreibt keine Statistiktabelle pro Satz mehr ins Journal
 - **V01.0.367** Pebble-Uhr-App 1.6.0 im Panel: SELECT 3 s halten löst den Notaus aus (groß nur für Admin-Profile)
 - **V01.0.366** Pebble-Uhr-App: der Bau prüft, dass die App auch auf älterer Uhr-Firmware läuft (SDK 5.94)
 - **V01.0.365** Pebble-Uhr-App: GitHub legt die gebaute Datei auf den Zweig pebble-build, damit sie ins Panel übernommen werden kann
@@ -42,7 +43,6 @@ Alle Optionen ohne Rückfragen (`--mode api --asr 1.7b --tts 0.6b --yes` …) st
 - **V01.0.361** Erst lokal suchen: ein langer Kiwix-Artikel bremst die Antwort nicht mehr (nur der Anfang wird gelesen), Logs → Anfragen zeigt Treffer je Quelle
 - **V01.0.360** Notaus auf mehr Wegen: Telegram /notaus und /meinnotaus, fester Satz „Spark, Mein Notaus“ / „Spark, Notaus“ (großer nur für Admins), Home-Assistant-Schlüssel, der nur auslöst (mit fertiger Vorlage), Android-Kachel (App 1.1.0)
 - **V01.0.359** Kopf unten rechts: ein Tipp startet den Assistenten auf jeder Seite, über Ich und am Handy (das Fenster ging sofort wieder zu), Doppeltipp markiert keinen Text mehr, Frage tippen geht immer
-- **V01.0.358** Eindeutiges direkt abrufen: „Welche Termine habe ich heute?“ holt das Panel selbst
 
 Alle Versionen: [CHANGELOG.md](CHANGELOG.md)
 
