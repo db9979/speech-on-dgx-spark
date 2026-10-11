@@ -57,7 +57,7 @@ class Guides(unittest.TestCase):
 
     def test_guides_complete_and_grouped(self):
         groups, gs = guides()
-        self.assertEqual(len(groups), 7)
+        self.assertEqual(len(groups), 8)
         ids = [g["id"] for g in gs]
         self.assertEqual(len(ids), len(set(ids)))
         for g in gs:
@@ -189,14 +189,14 @@ class MenuStructure(unittest.TestCase):
         nav = html[html.index('id="cfgnav"'):html.index('</div>\n    <div>', html.index('id="cfgnav"'))]
         # V01.0.207: Assistent, Sprache (the way of a sentence: hear, speak, own voices), Spark; first "Auf einen Blick"
         self.assertEqual(re.findall(r'class="cgrp">([^<]+)<', nav), ["Assistent", "Sprache", "Spark"])
-        self.assertEqual(re.findall(r'data-p="(\w+)"', nav), ["start", "feat", "talk", "ai", "asr", "tts", "voices", "sec", "sysc", "upd"])
+        self.assertEqual(re.findall(r'data-p="(\w+)"', nav), ["start", "feat", "talk", "ai", "asr", "tts", "voices", "sec", "sysc", "upd", "bak"])
 
     def test_checks_in_one_place(self):
         html = read("index.html")
         sec = lambda s: html[html.index(f'<section id="{s}">'):html.index("</section>", html.index(f'<section id="{s}">'))]
         for el in ("livesteps", "qlist", "benchout", "asrfile", "ttstext"):
             self.assertIn(f'id="{el}"', sec("test"), el)
-        upd = html[html.index('id="pane-upd"'):html.index('<section id="chat">')]   # V01.0.207: Einstellungen → Update und Sicherung
+        upd = html[html.index('id="pane-upd"'):html.index('<section id="chat">')]   # Einstellungen → Update, Sicherung (V01.0.207, split later)
         for el in ("baklist", "updlog", "sysver", "updgo", "bakmove"):
             self.assertIn(f'id="{el}"', upd, el)
         self.assertNotIn('<section id="sys">', html)
@@ -237,7 +237,7 @@ class BuildingBlocks(unittest.TestCase):
 
     def test_every_page_has_title_and_one_sentence(self):
         _, panes = self.panes()
-        self.assertEqual(set(panes), {"start", "feat", "ai", "talk", "tts", "voices", "asr", "sec", "sysc", "upd"})
+        self.assertEqual(set(panes), {"start", "feat", "ai", "talk", "tts", "voices", "asr", "sec", "sysc", "upd", "bak"})
         for name, p in panes.items():
             self.assertRegex(p, r'^<div class="card pane[^"]*" id="pane-\w+"><h2 class="pt">[^<]+</h2><div class="pintro">', name)
 

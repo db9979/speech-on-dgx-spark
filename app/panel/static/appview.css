@@ -150,3 +150,12 @@ body.appview.appage #credit{display:none}
 
 /* the QR code of the Android app download (android.js), on white like the other QR codes */
 .andqr{background:#fff;display:inline-block;padding:4px;border-radius:6px;margin:6px 0}
+/* Seitengerüst (plaene/einstellungen-neu.md): away from the conversation the face sits small at the top right of the
+   bar, not over the switches at the right edge; its bubble opens below it */
+body.appview:not(.inchat) #fab,body.appview:has(#profmodal[style*="grid"]) #fab{top:calc(env(safe-area-inset-top) + 3px);bottom:auto!important;right:8px;flex-direction:column-reverse}
+body.appview:not(.inchat) #fab .fabface,body.appview:has(#profmodal[style*="grid"]) #fab .fabface{width:38px;height:38px;padding:2px;box-shadow:0 1px 4px rgba(0,0,0,.12)}
+/* the back label never runs into the title: at most a quarter of the width */
+.apnb{max-width:calc(30vw - 8px)}
+/* Ich (Paket 4): the page on the background like the settings, the rows in their boxes */
+body.appview .mebody #setbox.ptab{background:none;padding:0}
+@media (max-width:760px){#setform .sgrp{padding:2px 12px;border-radius:12px}}

@@ -107,6 +107,7 @@ function render(){if(!ON)return;if(manage.classList.contains('on')&&manageSig()!
     th=(vc?`<button type="button" class="apib" data-ap="voice" aria-pressed="${von}"${vc.disabled?' disabled':''} aria-label="${esc(vc.closest('label').title||t('Vorlesen','Read aloud'))}">${SV(von?IC.vol:IC.mute)}</button>`:'')+(isGuest()?`<button type="button" class="apib" data-ap="menu" aria-label="${esc(t('Menü','Menu'))}">${SV(IC.more)}</button>`
       :`<button type="button" class="apib" data-ap="set" aria-label="${esc(t('Gespräch einstellen','Conversation settings'))}">${SV(IC.set)}</button>`)}
   else if(TAB==='manage'&&!page&&!pm){show=true;const n=manageNav();title=n.title;bl=n.back}
+  if(bl&&bl.trim()===title.trim())bl=t('Zurück','Back');   // „Funktionen ‹ Funktionen“
   bar.hidden=!show;$('aptitle').textContent=title;back.hidden=!bl;back.querySelector('span').textContent=bl;
   if(lead.dataset.h!==lh){lead.innerHTML=lh;lead.dataset.h=lh}if(trail.dataset.h!==th){trail.innerHTML=th;trail.dataset.h=th}
   B.classList.toggle('apsub',show&&!!bl);
@@ -199,7 +200,7 @@ function renderManage(){mSig=manageSig();const z=$('zhead'),lvl=(z&&z.dataset.lv
   const pages=[['mon',t('Zustand','Status')],['feat',t('Funktionen','Features')],['prof',t('Personen und Geräte','People and devices')],['cfg',t('Einstellungen','Settings')]]
     .filter(([s])=>can(s)).map(([s,l])=>row(`data-sec="${s}"`,esc(l),'')).join('')+
     (can('mon')?row('data-go="logs"',esc(t('Logs','Logs'))):'')+
-    (can('cfg')?row('data-cfg="upd"',esc(t('Update und Sicherungen','Update and backups')),esc(ver)):'');
+    (can('cfg')?row('data-cfg="upd"',esc(t('Update','Update')),esc(ver))+row('data-cfg="bak"',esc(t('Sicherung','Backup')),''):'');
   manage.innerHTML=`<h1 class="aplt">${esc(t('Verwalten','Manage'))}</h1>`+
     `<button type="button" class="apsearch" data-ax="find">${SV(IC.find)}<span>${esc(t('Seite, Schalter oder Anleitung','Page, switch or guide'))}</span></button>`+
     (zt?`<button type="button" class="apstat" data-sec="mon" data-lvl="${esc(lvl)}"><b>${esc(zt)}</b>${zx?`<span>${esc(zx)}</span>`:''}</button>`:'')+

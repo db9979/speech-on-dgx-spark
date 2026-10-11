@@ -169,7 +169,7 @@ async function loadCfg(){CFG=await (await api('/api/config')).json();
   $('asrengine').style.display=av?'block':'none';$('asrtf').style.display=av?'none':'block';
   for(const[sec,o]of Object.entries(CFG))for(const[k,v]of Object.entries(o)){const el=$(sec+'.'+k);if(!el)continue;
     if(el.type==='checkbox')el.checked=v;else{if(el.tagName==='SELECT'&&![...el.options].some(o=>o.value==v))el.add(new Option(v));el.value=Array.isArray(v)?v.join(', '):v}};instrHint();ttsVoiceOpts();try{kxChips()}catch{};
-  getDefaults=await renderSet($('chatdefaults'),{...SDEF,...(CFG.chat.defaults||{})},null);
+  getDefaults=await renderSet($('chatdefaults'),{...SDEF,...(CFG.chat.defaults||{})},null);if(typeof presetMove==='function')presetMove();
   asrRec();cfgDeps();if(typeof guidesCount==='function')guidesCount();if(typeof tgAdmin==='function')tgAdmin();visionLoad();if(typeof apnsAdmin==='function')apnsAdmin();if(typeof iupdAdmin==='function')iupdAdmin();if(typeof coadmAdmin==='function')coadmAdmin();if(typeof espAdmin==='function')espAdmin();if(typeof andAdmin==='function')andAdmin();if(typeof deskAdmin==='function')deskAdmin();if(typeof agentAdmin==='function')agentAdmin();document.querySelectorAll('.pane').forEach(p=>markDirty(p,false));document.querySelectorAll('.savemsg').forEach(m=>m.textContent='');glance();glanceLoad();llmModels()}
 let getDefaults=null;
 // Sprachmodell (V01.0.292): a choice of the models the configured server reports (/api/admin/llm-models). The text
@@ -197,7 +197,7 @@ $('asr.recognizer').addEventListener('change',asrRec);
 const cfgPane=p=>{document.querySelectorAll('#cfgnav button').forEach(b=>b.classList.toggle('on',b.dataset.p===p));
   document.querySelectorAll('.pane').forEach(x=>x.classList.toggle('on',x.id==='pane-'+p));try{localStorage.setItem('cfgpane',p)}catch{}};
 // phones: the settings open as a list of pages; a tapped page fills the screen with "back" on top
-document.querySelectorAll('#cfgnav button').forEach(b=>b.onclick=()=>{cfgPane(b.dataset.p);if(b.dataset.p==='voices')loadClone();if(b.dataset.p==='upd')loadSys();if(b.dataset.p==='start')glance();if(b.dataset.p==='sec')loadSecGlance(true);if(b.dataset.p==='sysc'&&window.liveMons)liveMons();document.querySelector('.cfgwrap').classList.add('sub');window.scrollTo(0,0)});
+document.querySelectorAll('#cfgnav button').forEach(b=>b.onclick=()=>{cfgPane(b.dataset.p);if(b.dataset.p==='voices')loadClone();if(b.dataset.p==='upd'||b.dataset.p==='bak')loadSys();if(b.dataset.p==='start'){glance();loadSecGlance(true)}if(b.dataset.p==='sysc'&&window.liveMons)liveMons();document.querySelector('.cfgwrap').classList.add('sub');window.scrollTo(0,0)});
 $('cfgback').onclick=()=>{document.querySelector('.cfgwrap').classList.remove('sub');window.scrollTo(0,0)};
 // building blocks (V01.0.207): „Mehr“ unfolds the longer help right below its row; the password fields open on
 // „Ändern …“; the audio file for a new voice is picked with a normal button that shows the chosen name
@@ -231,8 +231,10 @@ function glanceText(p){const c=CFG||{},ch=c.chat||{},svc=((ZLAST||{}).services)|
   if(p==='sec'){const m=GL.mfa;return {txt:(ch.public?t('Assistent ohne Passwort','assistant without password'):t('Assistent nur mit Anmeldung','assistant only after sign-in'))+(m?t(' · Zweiter Schritt ',' · second step ')+(m.on?t('an','on'):t('aus','off')):''),
     pill:m&&!m.on?pill('warn',t('Zweiter Schritt aus','second step off')):null}}
   if(p==='sysc'){const m=c.memory||{},w=c.watch||{};return {txt:t('Speicherschutz ','Memory guard ')+(m.guard?t('an','on'):t('aus','off'))+t(' · Reserve ',' · reserve ')+m.reserve_gib+' GiB'+t(' · Wächter ',' · watchdog ')+(w.watchdog?t('an','on'):t('aus','off'))}}
-  if(p==='upd'){const u=window.UPD||{},b=((GL.bak||{}).backups||[])[0];const ready=u.behind&&u.behind!==0;
-    return {txt:[SPARK_VER,(ready?t('Update bereit','update ready'):u.behind===0?t('aktuell','up to date'):t('Stand unbekannt','state unknown')),b&&b.created?t('letzte Sicherung ','last backup ')+new Date(b.created*1000).toLocaleString([], {day:'numeric',month:'numeric',hour:'2-digit',minute:'2-digit'}):''].filter(Boolean).join(' · '),
+  if(p==='bak'){const b=((GL.bak||{}).backups||[])[0];
+    return {txt:b&&b.created?t('letzte Sicherung ','last backup ')+new Date(b.created*1000).toLocaleString([], {day:'numeric',month:'numeric',hour:'2-digit',minute:'2-digit'}):GL.bak?t('noch keine Sicherung','no backup yet'):'…'}}
+  if(p==='upd'){const u=window.UPD||{};const ready=u.behind&&u.behind!==0;
+    return {txt:[SPARK_VER,(ready?t('Update bereit','update ready'):u.behind===0?t('aktuell','up to date'):t('Stand unbekannt','state unknown'))].join(' · '),
       pill:ready?pill('warn',t('Update bereit','update ready')):u.behind===0?pill('ok',t('aktuell','up to date')):null}}
   return {txt:''}}
 function glanceNeed(){return [...document.querySelectorAll('#pane-feat .fitem')].filter(featNeed).map(it=>{
@@ -287,7 +289,9 @@ document.addEventListener('click',e=>{const b=e.target.closest&&e.target.closest
   if(b&&b.dataset.s!=='cfg'&&document.getElementById('cfg').classList.contains('on')&&!leaveOk()){e.stopImmediatePropagation();e.preventDefault()}},true);
 document.querySelectorAll('.pane').forEach(pane=>{if(!pane.querySelector('.savebtn'))return;const f=e=>{if(/^pw/.test(e.target.id)||e.target.closest('[data-nodirty]'))return;markDirty(pane,true)};pane.addEventListener('input',f);pane.addEventListener('change',f)});
 document.querySelectorAll('.savebtn').forEach(btn=>btn.onclick=async()=>{const pane=$('pane-'+btn.dataset.p),msg=btn.nextElementSibling;
-  const n=JSON.parse(JSON.stringify(CFG));if(getDefaults&&pane.contains($('chatdefaults')))n.chat.defaults=getDefaults();
+  const n=JSON.parse(JSON.stringify(CFG));// the presets: only those whose row is on this page (two of them sit under Funktionen, fdetail.js presetMove)
+  if(getDefaults){const d=getDefaults(),o={...SDEF,...(CFG.chat.defaults||{})};let any=false;
+    for(const k of Object.keys(d)){const e=$('set_chatdefaults_'+k);if(e&&pane.contains(e)){o[k]=d[k];any=true}}if(any)n.chat.defaults=o}
   for(const[sec,o]of Object.entries(n))for(const k of Object.keys(o)){const el=$(sec+'.'+k);if(!el||!pane.contains(el))continue;
     o[k]=el.type==='checkbox'?el.checked:el.dataset.list?el.value.split(/[\s,;]+/).filter(Boolean):el.type==='number'||el.dataset.num?Number(el.value):el.value}
   if(pane.contains($('chat.wyoming'))&&$('chat.wyoming').checked&&!$('chat.wyoming_allow').value.trim()){

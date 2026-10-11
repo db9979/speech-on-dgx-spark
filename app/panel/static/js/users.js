@@ -23,8 +23,9 @@ async function loadProf(){profFilter();let d;
   try{d=await (await api('/api/admin/profiles?'+new URLSearchParams({q:PL.q,show:PL.show,sort:PL.sort,page:PL.page,per:25}))).json()}catch(e){perr('pmsg',e);return}
   PL.page=d.page;PL.names=d.names;const name=id=>(d.names.find(u=>u.id===id)||{}).name||'?';
   $('duser').innerHTML=popts($('duser').value,t('Profil wählen …','Pick a profile …'));
-  $('proflist').innerHTML=d.users.map(u=>`<tr><td><b>${esc(u.name)}</b>${u.call?` <span class="mut">(${esc(u.call)})</span>`:''}${u.role?` <span class="pill">${esc(PROLE()[u.role]||u.role)}</span>`:''}${u.room?` <span class="pill ok">${t('hört zu','listening')}</span>`:''}<div class="intro sm">${t('zuletzt','last used')}: ${esc(pwhen(u.last))} · ${u.devices} ${t('Gerät(e)','device(s)')} · ${u.facts} ${t('gemerkte Fakten','remembered facts')}${u.mfa?' · '+t('mit zweitem Anmeldeschritt','with second login step'):''}${u.msg?' · '+t('Nachrichten an','messages on'):''}${typeof joinSetupLine==='function'&&u.setup&&u.setup.total?' · '+joinSetupLine(u.setup):''}</div></td>
-    <td style="text-align:right;white-space:nowrap"><button class="b" type="button" data-popen="${esc(u.id)}">${PL.open===u.id?t('Schließen','Close'):t('Details','Details')}</button></td></tr>${PL.open===u.id?`<tr><td colspan="2"><div id="pdetail" class="mut">…</div></td></tr>`:''}`).join('')
+  const side=pSide();
+  $('proflist').innerHTML=d.users.map(u=>`<tr data-prow="${esc(u.id)}"${PL.open===u.id?' class="pon"':''}><td><b>${esc(u.name)}</b>${u.call?` <span class="mut">(${esc(u.call)})</span>`:''}${u.role?` <span class="pill">${esc(PROLE()[u.role]||u.role)}</span>`:''}${u.room?` <span class="pill ok">${t('hört zu','listening')}</span>`:''}<div class="intro sm">${t('zuletzt','last used')}: ${esc(pwhen(u.last))} · ${u.devices} ${t('Gerät(e)','device(s)')} · ${u.facts} ${t('gemerkte Fakten','remembered facts')}${u.mfa?' · '+t('mit zweitem Anmeldeschritt','with second login step'):''}${u.msg?' · '+t('Nachrichten an','messages on'):''}${typeof joinSetupLine==='function'&&u.setup&&u.setup.total?' · '+joinSetupLine(u.setup):''}</div></td>
+    <td style="text-align:right;white-space:nowrap"><button class="b" type="button" data-popen="${esc(u.id)}">${PL.open===u.id?t('Schließen','Close'):t('Details','Details')}</button></td></tr>${PL.open===u.id&&!side?`<tr><td colspan="2"><div id="pdetail" class="mut">…</div></td></tr>`:''}`).join('')
     ||`<tr><td class="mut">${d.all?t('Kein Profil passt.','No profile matches.'):t('Noch keine.','None yet.')}</td></tr>`;
   // Gäste as the first row: who talks without a profile, and what they get (Wer darf was has the details)
   if(d.guests&&!PL.q&&!PL.show&&!d.page)$('proflist').insertAdjacentHTML('afterbegin',`<tr class="pguest"><td><b>${t('Gäste','Guests')}</b> <span class="pill${d.guests.public?' ok':''}">${d.guests.public?t('Gastzugang an','guest access on'):t('Gastzugang aus','guest access off')}</span><div class="intro sm">${d.guests.public
@@ -35,6 +36,14 @@ async function loadProf(){profFilter();let d;
   $('ppager').innerHTML=`<span class="mut">${d.total===d.all?d.all+' '+t('Profile','profiles'):d.total+' '+t('von','of')+' '+d.all+' '+t('Profilen','profiles')}${pages>1?' · '+t('Seite','page')+' '+(d.page+1)+'/'+pages:''}</span>${pages>1?`<button class="b" type="button" data-ppage="${d.page-1}"${d.page?'':' disabled'}>‹</button><button class="b" type="button" data-ppage="${d.page+1}"${d.page+1<pages?'':' disabled'}>›</button>`:''}`;
   $('ppager').querySelectorAll('[data-ppage]').forEach(b=>b.onclick=()=>{PL.page=+b.dataset.ppage;loadProf()});
   $('proflist').querySelectorAll('[data-popen]').forEach(b=>b.onclick=()=>{PL.open=PL.open===b.dataset.popen?'':b.dataset.popen;loadProf()});
+  // wide: the open profile on the right (Paket 5), the whole line opens it; narrow it opens below its line
+  if(side){$('proflist').querySelectorAll('[data-prow]').forEach(r=>r.onclick=e=>{if(e.target.closest('button,a,input,select'))return;PL.open=r.dataset.prow;loadProf()});
+    const ps=$('pside');ps.textContent='';const u=d.users.find(x=>x.id===PL.open);
+    if(u){const h=document.createElement('div');h.className='pdhead';const b=document.createElement('b');b.textContent=u.name;
+      const x=document.createElement('button');x.type='button';x.className='fdx';x.textContent='×';x.setAttribute('aria-label',t('Schließen','Close'));x.onclick=()=>{PL.open='';loadProf()};
+      h.append(b,x);const det=document.createElement('div');det.id='pdetail';det.className='mut';det.textContent='…';ps.append(h,det)}
+    else{const e=document.createElement('div');e.className='fdempty';const b=document.createElement('b');b.textContent=t('Person antippen','Tap a person');
+      const sp=document.createElement('span');sp.textContent=t('Hier stehen dann Zugang, Geräte, Funktionen, Rechte mit dem Platz für Uploads und Löschen.','Access, devices, functions, rights with the space for uploads, and delete then show here.');e.append(b,sp);ps.appendChild(e)}}
   $('dadd').disabled=!d.all;
   const mid='style="vertical-align:middle"';
   $('devlist').innerHTML=d.devices.map(x=>{const k=dkind(x);return `<tr><td ${mid}>${esc(x.name)}${x.room?` <span class="pill ok">${t('hört zu','listening')}</span>`:''}<div class="intro sm">${k?esc(k)+' · ':''}${t('zuletzt','last used')}: ${x.last?esc(pwhen(x.last.t))+' · '+esc(x.last.ip||''):t('noch nie','never')}</div></td>
@@ -45,6 +54,12 @@ async function loadProf(){profFilter();let d;
   $('devlist').querySelectorAll('[data-dmove]').forEach(i=>i.onchange=()=>devUser(i.dataset.dmove,i.value));
   $('devlist').querySelectorAll('[data-ddel]').forEach(b=>b.onclick=()=>delDev(b.dataset.ddel,b.dataset.dname,b.dataset.dspk));
   if(PL.open&&$('pdetail'))profDetail(PL.open)}
+// Personen als Liste + Detail (plaene/einstellungen-neu.md, Paket 5): from about 740 px card width the details sit beside
+// the list; switching between wide and narrow draws the list again
+function pSide(){const c=document.querySelector('#prof .pcard');if(!c)return false;const w=c.getBoundingClientRect().width;
+  const on=w>=740&&!document.body.classList.contains('appview');c.classList.toggle('split',on);return on}
+{const c=document.querySelector('#prof .pcard');let was=null;if(c)new ResizeObserver(()=>{const w=c.getBoundingClientRect().width;if(!w)return;
+  const on=w>=740&&!document.body.classList.contains('appview');if(was!==null&&on!==was&&$('prof').classList.contains('on'))loadProf();was=on}).observe(c)}
 // One profile in detail (plan „Vereinheitlichen“ Phase 5): Zugang (PIN, zweiter Schritt, Rolle, Browser), Rufname,
 // Geräte, Funktionen „n von m an“ (springt zu Wer darf was), Rechte (Aufträge, Spark-Update aus der App, Platz für
 // Uploads) and Löschen. Everything that used to sit on other pages per profile is here; the pages stay for the overview.

@@ -27,7 +27,8 @@ from core import assistant, auth
 DEFAULTS = os.path.join(os.path.dirname(os.path.abspath(__file__)), "..", "config.default.json")
 
 # groups as on the Funktionen page (guides.js GGROUPS)
-GROUPS = (("talk", "Gespräch", "Conversation"), ("data", "Wissen und Gedächtnis", "Knowledge and memory"),
+GROUPS = (("talk", "Gespräch", "Conversation"), ("speed", "Tempo und Genauigkeit", "Speed and accuracy"),
+          ("data", "Wissen und Gedächtnis", "Knowledge and memory"),
           ("day", "Alltag", "Everyday"), ("post", "Post und Kontakte", "Mail and contacts"),
           ("home", "Zuhause", "Home"), ("go", "Unterwegs und Geräte", "On the go and devices"),
           ("sec", "Sicherheit", "Security"))
@@ -60,14 +61,14 @@ FEATURES = (
     F("fixes", "Aus Korrekturen lernen", "Learning from corrections", "talk", ("learn_fixes",), "fix_learn",
       parent="memory", me="setbox", guide="fixes"),
     F("images", "Bilder erkennen", "Picture recognition", "talk", ("images",), "images_on", me="setbox", guide="images"),
-    F("toolthink", "Bei der Werkzeugwahl nachdenken", "Thinking while choosing tools", "talk", ("tool_thinking",), "tool_think",
+    F("toolthink", "Bei der Werkzeugwahl nachdenken", "Thinking while choosing tools", "speed", ("tool_thinking",), "tool_think",
       me="setbox", guide="toolthink"),
-    F("routing", "Gezielte Werkzeugwahl", "Targeted tool choice", "talk", ("routing",), "route", me="setbox", guide="routing"),
-    F("direct", "Eindeutiges direkt abrufen", "Fetch clear questions directly", "talk", ("direct_read",), "direct_read",
+    F("routing", "Gezielte Werkzeugwahl", "Targeted tool choice", "speed", ("routing",), "route", me="setbox", guide="routing"),
+    F("direct", "Eindeutiges direkt abrufen", "Fetch clear questions directly", "speed", ("direct_read",), "direct_read",
       me="setbox", guide="direct"),
-    F("ack", "Sofortige Rückmeldung", "Instant acknowledgement", "talk", ("instant_ack",), "instant_ack",
+    F("ack", "Sofortige Rückmeldung", "Instant acknowledgement", "speed", ("instant_ack",), "instant_ack",
       parent="routing", me="setbox", guide="ack"),
-    F("vorab", "Vorab holen bei Rückfrage", "Fetch ahead on a question back", "talk", ("prefetch",), "prefetch",
+    F("vorab", "Vorab holen bei Rückfrage", "Fetch ahead on a question back", "speed", ("prefetch",), "prefetch",
       parent="routing", me="setbox", guide="vorab"),
     F("hilfe", "Hilfe zum Spark", "Help with the Spark", "talk", ("spark_help",), "spark_help", me="setbox", guide="hilfe"),
     F("hilfevorschlag", "Einstellungen vorschlagen", "Suggesting settings", "talk", ("spark_suggest",), "spark_help",
@@ -80,11 +81,11 @@ FEATURES = (
     F("tippspush", "Funktionen vorschlagen von selbst", "Suggesting functions by itself", "day",
       ("feature_tips_push", "feature_tips"), "pro_tips", parent="proactive", me="probox", guide="tippspush"),
     # qwen38's /v1/systemone (systemone.py): probabilities instead of words, the panel decides with fixed thresholds
-    F("einordnung", "Einordnung mit Wahrscheinlichkeit", "Classification with probabilities", "talk", ("systemone",),
+    F("einordnung", "Einordnung mit Wahrscheinlichkeit", "Classification with probabilities", "speed", ("systemone",),
       "systemone_on", me="setbox", guide="einordnung"),
-    F("einordnungpost", "Einordnung beim Postfach aufräumen", "Classification when tidying the inbox", "talk",
+    F("einordnungpost", "Einordnung beim Postfach aufräumen", "Classification when tidying the inbox", "speed",
       ("systemone_tidy", "mail_tidy", "mail"), "systemone_on", parent="einordnung", me="setbox", guide="einordnungpost"),
-    F("einordnungtest", "Einordnung im Qualitätstest", "Classification in the quality test", "talk", ("systemone_quality",),
+    F("einordnungtest", "Einordnung im Qualitätstest", "Classification in the quality test", "speed", ("systemone_quality",),
       parent="einordnung", guide="einordnungtest"),
     F("vorrang", "Vorrang für Personen", "Priority for people", "talk", ("person_priority",), guide="vorrang"),
     # knowledge and memory

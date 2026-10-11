@@ -100,12 +100,15 @@
       <button data-p="start" class="on">Auf einen Blick</button>
       <div class="cgrp">Assistent</div><button data-p="feat">Funktionen</button><button data-p="talk">Vorgaben</button><button data-p="ai">Sprachmodell</button>
       <div class="cgrp">Sprache</div><button data-p="asr">Spracherkennung</button><button data-p="tts">Sprachausgabe</button><button data-p="voices">Stimmen</button>
-      <div class="cgrp">Spark</div><button data-p="sec">Sicherheit</button><button data-p="sysc">Betrieb</button><button data-p="upd">Update und Sicherung<span class="pill warn subbadge" style="display:none">Update</span></button>
+      <div class="cgrp">Spark</div><button data-p="sec">Sicherheit</button><button data-p="sysc">Betrieb</button><button data-p="upd">Update<span class="pill warn subbadge" style="display:none">Update</span></button><button data-p="bak">Sicherung</button>
     </div>
     <div>
     <button class="b cfgback" id="cfgback" type="button"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"><path d="M15 5l-7 7 7 7"/></svg><span>Alle Einstellungen</span></button>
-    <div class="card pane on" id="pane-start"><h2 class="pt">Auf einen Blick</h2><div class="pintro">Alle Einstellungen des Spark mit ihrem Stand. Antippen öffnet die Seite.</div><div id="glance"></div></div>
-    <div class="card pane" id="pane-feat"><h2 class="pt">Funktionen</h2><div class="pintro">Was der Assistent können soll. Tippe auf eine Funktion für Erklärung und Einstellungen. <button type="button" class="wlink" id="featwho">Wer darf was</button></div>
+    <div class="card pane on" id="pane-start"><h2 class="pt">Auf einen Blick</h2><div class="pintro">Alle Einstellungen des Spark mit ihrem Stand. Antippen öffnet die Seite.</div><div id="glance"></div>
+      <h3 class="sec">Sicherheit <span>rot = offen, gelb = empfohlen, grün = gut</span></h3>
+      <div id="secglance" class="sglance" data-nodirty="1"></div>
+    </div>
+    <div class="card pane" id="pane-feat"><h2 class="pt">Funktionen</h2><div class="pintro">Was der Assistent können soll. Tippe auf eine Funktion für Erklärung und Einstellungen. <button type="button" class="wlink" id="featwho">Alles als Tabelle</button></div>
       <div class="setrow"><div class="lbl"><b>Gedächtnis</b><span>Merkt sich Dinge, die man ihm sagt, getrennt pro Profil.</span></div><label class="tgl"><input type="checkbox" id="chat.memory"><i></i></label></div>
       <div class="setrow"><div class="lbl"><b>Frühere Gespräche</b><span>Profile können nach früheren Gesprächen fragen; aus ruhigen Gesprächen merkt er sich wenige Fakten.</span></div><label class="tgl"><input type="checkbox" id="chat.history"><i></i></label></div>
       <div class="setrow"><div class="lbl"><b>Eigene Dokumente</b><span>Profile laden eigene Dokumente hoch, der Assistent sucht darin.</span></div><label class="tgl"><input type="checkbox" id="chat.documents"><i></i></label></div>
@@ -119,7 +122,7 @@
       <div class="setrow" data-show="chat.documents" style="margin-left:18px"><div class="lbl"><b>Bedeutungssuche</b><span>Ein kleines Modell auf dem Prozessor findet auch Stellen mit anderen Worten („Auto“ findet „Kfz“); etwa 300 MB, nur bei Bedarf.</span></div><label class="tgl"><input type="checkbox" id="chat.doc_semantic"><i></i></label></div>
       <div class="setrow" data-show="chat.documents" style="margin-left:18px"><div class="lbl"><b>Originale aufbewahren</b><span>Die hochgeladene Datei bleibt auf dem Spark, lässt sich wieder öffnen und kommt in die Sicherung.</span></div><label class="tgl"><input type="checkbox" id="chat.doc_originals"><i></i></label></div>
       <div data-show="chat.documents" style="margin-left:18px"><label>Größte PDF-Datei (MB)</label><input class="num" id="chat.doc_max_mb" type="number" min="20" max="300"><div class="fh">20 bis 300, Standard 100. Andere Dateiarten bis 20 MB. Große Scans brauchen beim Hochladen kurz etwa das Dreifache an Arbeitsspeicher.</div></div>
-      <div data-show="chat.documents" style="margin-left:18px"><label>Speicher pro Profil (MB)</label><input class="num" id="chat.doc_quota_mb" type="number" min="50" max="5000"><div class="fh">50 bis 5000, für alle Uploads eines Profils zusammen. Einzelnen Profilen gibst du unter Zustand → Monitoring mehr oder weniger. Ist er voll, nimmt der Spark nichts Neues an; Originale nur, solange Platz ist.</div></div>
+      <div data-show="chat.documents" style="margin-left:18px"><label>Speicher pro Profil (MB)</label><input class="num" id="chat.doc_quota_mb" type="number" min="50" max="5000"><div class="fh">50 bis 5000, für alle Uploads eines Profils zusammen. Einzelnen Profilen gibst du unter Personen und Geräte → Details → Platz für Uploads mehr oder weniger. Ist er voll, nimmt der Spark nichts Neues an; Originale nur, solange Platz ist.</div></div>
       <div class="setrow" data-show="chat.documents" style="margin-left:18px"><div class="lbl"><b>Gemeinsame Dokumente</b><span>Ein Profil gibt einzelne Dokumente „Für alle“ frei, die anderen Profile finden und öffnen sie. Gäste und unbekannte Stimmen nie.</span></div><label class="tgl"><input type="checkbox" id="chat.doc_shared"><i></i></label></div>
       <div class="setrow" data-show="chat.documents" style="margin-left:18px"><div class="lbl"><b>Steckbrief und Tags</b><span>Das Sprachmodell notiert in Pausen Titel, Art, Absender, Frist und Schlagwörter jedes Dokuments; der Assistent sucht damit gezielter.</span></div><label class="tgl"><input type="checkbox" id="chat.doc_brief"><i></i></label></div>
       <div class="setrow" data-show="chat.documents" style="margin-left:18px"><div class="lbl"><b>Dokumente erstellen</b><span>Der Spark schreibt auf Bitte Briefe, Präsentationen und Tabellen als Word, PDF, PowerPoint oder Excel; erst die Gliederung, nach deinem Ja.</span></div><label class="tgl"><input type="checkbox" id="chat.doc_make"><i></i></label></div>
@@ -396,25 +399,23 @@
       <div class="savebar"><button class="b p savebtn" data-p="asr">Speichern</button><span class="savemsg"></span></div>
     </div>
     <div class="card pane" id="pane-sec"><h2 class="pt">Sicherheit</h2><div class="pintro">Wer den Spark erreicht und wie du dich als Admin anmeldest.</div>
-      <h3 class="sec">Auf einen Blick <span>rot = offen, gelb = empfohlen, grün = gut</span></h3>
-      <div id="secglance" class="sglance" data-nodirty="1"></div>
       <h3 class="sec">Wer den Spark erreicht <span>wirkt mit Speichern</span></h3>
       <div class="setrow"><div class="lbl"><b>Assistent ohne Passwort</b><span>An: Startseite für alle im Netz, auch Gäste.<button class="mlink" type="button">Mehr</button></span></div><label class="tgl"><input type="checkbox" id="chat.public"><i></i></label></div>
       <div class="fh more" hidden>Aus: nur angemeldete Profile (Name und PIN) und Geräte mit Schlüssel, keine Gäste. Einstellungen bleiben immer geschützt.</div>
       <div class="setrow"><div class="lbl"><b>Heimnetz-Adressen erlauben</b><span>Kalender, Kontakte und Mail der Profile dürfen auch auf Servern im Heimnetz liegen.<button class="mlink" type="button">Mehr</button></span></div><label class="tgl"><input type="checkbox" id="panel.allow_lan"><i></i></label></div>
       <div class="fh more" hidden>Aus: Kalender, Adressbücher, Aufgaben und Postfächer der Profile dürfen nur auf Adressen im Internet liegen (z. B. iCloud, GMX). An: auch Server im Heimnetz (z. B. ein NAS). Home Assistant darf immer im Heimnetz liegen. Die Dienste des Sparks selbst und Adressen wie 169.254.x sind nie erreichbar.</div>
-      <div class="setrow"><div class="lbl"><b>Lautsprecher-Updates auch über http</b><span>An: wie bisher, auch über http. Aus: über WLAN nur mit https (Proxy-Adresse), sonst per USB, sicherer im Heimnetz.</span></div><label class="tgl"><input type="checkbox" id="chat.esp32_ota_http"><i></i></label></div>
-      <div class="setrow"><div class="lbl"><b>Notaus von selbst</b><span>Der Wächter schaltet Stufe 1 „Außen zu“ ein, wenn von außen jemand angreift.<button class="mlink" type="button">Mehr</button></span></div><label class="tgl"><input type="checkbox" id="panel.notaus_auto"><i></i></label></div>
-      <div class="fh more" hidden>Feste Regeln, nie das Sprachmodell: 20 falsche Anmeldungen von außen in 10 Minuten, eine MCP-Flut von außen (30 abgewiesene Anfragen in 10 Minuten) oder 15 gesperrte Verbindungen nach außen in 10 Minuten. Nur Stufe 1, nie höher; die Admins bekommen einen Push, aufheben wie immer nur als Admin im Browser im Heimnetz.</div>
       <div class="setrow"><div class="lbl"><b>Reverse Proxy</b><span>Nur diesen Adressen wird die weitergereichte Absender-Adresse geglaubt.<button class="mlink" type="button">Mehr</button></span></div><input class="wide" id="panel.trusted_proxies" data-list="1" placeholder="192.168.1.10" autocomplete="off"></div>
       <div class="fh more" hidden>Gemeint ist X-Forwarded-For. Leer = nur ein Proxy auf dem Spark selbst. Eintragen, wenn das Panel hinter einem Proxy im Heimnetz hängt: sonst teilen sich alle, die über den Proxy kommen, eine Adresse für die Sperre nach falschen Passwörtern.</div>
       <div class="setrow"><div class="lbl"><b>Anmeldung im Browser</b><span>Ein Profil bleibt so viele Tage ohne Nutzung angemeldet (7 bis 90).</span></div><div class="ctl"><input class="num" id="panel.session_days" type="number" min="7" max="90"><span class="unit">Tage</span></div></div>
       <div class="setrow"><div class="lbl"><b>Vertraute Browser</b><span>So lange fragt ein Browser, dem man bei der Anmeldung vertraut, keinen Code (7 bis 90). Nach 30 Tagen ohne Nutzung fragt er wieder.</span></div><div class="ctl"><input class="num" id="panel.trust_days" type="number" min="7" max="90"><span class="unit">Tage</span></div></div>
       <div class="setrow"><div class="lbl"><b>API-Schlüssel</b><span>Gesetzt = Apps senden „Authorization: Bearer &lt;Schlüssel&gt;“; leer = ohne Schlüssel.</span></div><div class="ctl full"><input class="wide" id="api.key" autocomplete="off"><button class="b" id="genkey" type="button">Erzeugen</button></div></div>
+      <div class="setrow"><div class="lbl"><b>Lautsprecher-Updates auch über http</b><span>An: wie bisher, auch über http. Aus: über WLAN nur mit https (Proxy-Adresse), sonst per USB, sicherer im Heimnetz.</span></div><label class="tgl"><input type="checkbox" id="chat.esp32_ota_http"><i></i></label></div>
+      <h3 class="sec">Notaus</h3>
+      <div class="setrow"><div class="lbl"><b>Notaus von selbst</b><span>Der Wächter schaltet Stufe 1 „Außen zu“ ein, wenn von außen jemand angreift.<button class="mlink" type="button">Mehr</button></span></div><label class="tgl"><input type="checkbox" id="panel.notaus_auto"><i></i></label></div>
+      <div class="fh more" hidden>Feste Regeln, nie das Sprachmodell: 20 falsche Anmeldungen von außen in 10 Minuten, eine MCP-Flut von außen (30 abgewiesene Anfragen in 10 Minuten) oder 15 gesperrte Verbindungen nach außen in 10 Minuten. Nur Stufe 1, nie höher; die Admins bekommen einen Push, aufheben wie immer nur als Admin im Browser im Heimnetz.</div>
       <div data-nodirty="1" id="nakeysec">
-      <h3 class="sec">Notaus von außen <span>wirkt sofort, ohne Speichern</span></h3>
       <div class="setrow"><div class="lbl"><b>Schlüssel für Home Assistant</b><span>Ein Schlüssel kann nur den Notaus auslösen, nichts lesen und nichts aufheben. Nur aus dem Heimnetz.</span></div>
-        <div class="ctl"><input id="nakeyname" maxlength="40" placeholder="Name, z. B. Home Assistant" aria-label="Name des Schlüssels"><button class="b" id="nakeymake" type="button">Schlüssel erzeugen</button></div></div>
+        <div class="ctl full"><input class="wide" id="nakeyname" maxlength="40" placeholder="Name, z. B. Home Assistant" aria-label="Name des Schlüssels"><button class="b" id="nakeymake" type="button">Schlüssel erzeugen</button></div></div>
       <ul class="facts" id="nakeys"></ul><span id="nakeymsg" class="fh"></span>
       <div class="full rowtail" id="nakeynew" hidden><div class="fh">Nur jetzt sichtbar. In Home Assistant in configuration.yaml einfügen, dann neu laden; „rest_command.spark_notaus“ löst Stufe 2 aus, der Sensor zeigt die Stufe.</div><pre class="nayaml" id="nakeyyaml"></pre></div>
       </div>
@@ -449,6 +450,7 @@
       <div class="setrow"><div class="lbl"><b>Aufbewahren</b><span>Wirkt nach dem nächsten Update oder sudo ./install.sh.</span></div><div class="ctl"><input class="num" id="logs.keep_days" type="number"><span class="unit">Tage</span></div></div>
       <div class="setrow"><div class="lbl"><b>Anfragen verfolgen</b><span>Zeigt unter Zustand → Logs → Anfragen den Weg jeder Anfrage mit Werkzeugen und Zeiten.<button class="mlink" type="button">Mehr</button></span></div><label class="tgl"><input type="checkbox" id="logs.trace"><i></i></label></div>
       <div class="fh more" hidden>Aufgezeichnet werden nur Wege, Werkzeugnamen und Zahlen, nie Frage, Antwort, Suchbegriffe oder Ergebnisse. Höchstens 48 Stunden und 500 Anfragen. Den Namen eines Profils zeigt die Liste nur, wenn das Profil es unter Ich → Gespräch erlaubt; sonst steht dort „Profil“. Sehen können es der Admin und Mit-Admins.</div>
+      <h3 class="sec">Live-Übersicht</h3>
       <div class="setrow"><div class="lbl"><b>Live-Seite</b><span>Zeigt unter Zustand → Live, wer gerade fragt, welchen Weg die Anfrage nimmt und was der Wächter entscheidet.<button class="mlink" type="button">Mehr</button></span></div><label class="tgl"><input type="checkbox" id="logs.live"><i></i></label></div>
       <div class="fh more" hidden>Nur Wege, Werkzeugnamen, Zeiten und Zahlen, nie Frage, Antwort, Suchbegriffe oder Inhalte. Alles bleibt im Speicher und ist nach einem Neustart weg. Namen nur, wenn das Profil es unter Ich → Gespräch erlaubt. Sehen können es der Admin und Mit-Admins.</div>
       <div class="setrow" data-show="logs.live" style="margin-left:18px"><div class="lbl"><b>Live-Monitor im Heimnetz</b><span>Ein Bildschirm zeigt die Live-Seite ohne Anmeldung unter /live, nach einmaligem Koppeln mit einem Code.<button class="mlink" type="button">Mehr</button></span></div><label class="tgl"><input type="checkbox" id="logs.live_monitor"><i></i></label></div>
@@ -461,19 +463,23 @@
       <div class="setrow"><div class="lbl"><b>HTTPS-Port</b><span>Das Mikrofon braucht https; 0 = aus.</span></div><input class="num" id="panel.https_port" type="number"></div>
       <div class="savebar"><button class="b p savebtn" data-p="sysc">Speichern</button><span class="savemsg"></span></div>
     </div>
-    <div class="card pane" id="pane-upd"><h2 class="pt">Update und Sicherung</h2><div class="pintro">Neue geprüfte Versionen holen und sichern, was der Spark weiß.<button class="mlink" type="button">Mehr</button></div>
+    <div class="card pane" id="pane-upd"><h2 class="pt">Update</h2><div class="pintro">Neue geprüfte Versionen holen und einspielen.<button class="mlink" type="button">Mehr</button></div>
       <div class="fh more" hidden>Ein Update holt den neuesten Stand von GitHub und installiert ihn. Einstellungen, Modelle und Stimmen bleiben. Vor dem Umschalten prüft ein Selbsttest die neue Version; schlägt er oder ein Schritt davor fehl, läuft die bisherige Version unverändert weiter. Geht nach dem Umschalten etwas schief, wird die bisherige Version wieder eingespielt. Während des Updates starten die Dienste kurz neu.</div>
       <h3 class="sec">Update <span>wirkt sofort</span></h3>
       <div class="setrow"><div class="lbl"><b>Stand</b><span id="updstate">–</span></div><div class="ctl full"><button class="b" id="updcheck" type="button">Jetzt prüfen</button><button class="b p" id="updgo" type="button" disabled>Update installieren</button><button class="b" id="updstop" type="button" style="display:none">Update abbrechen</button></div></div>
       <div class="fh" id="updmsg"></div><div id="updcommits"></div>
       <div class="setrow"><div class="lbl"><b>Heute Nacht einspielen</b><span>Eine neue geprüfte Version kommt nachts zwischen 3 und 5 Uhr, wenn gerade niemand spricht.<button class="mlink" type="button">Mehr</button></span></div><label class="tgl"><input type="checkbox" id="panel.update_night"><i></i></label></div>
       <div class="fh more" hidden>Höchstens einmal pro Nacht und nur eine Version, deren Tests auf GitHub durchgelaufen sind. Vorher wird gesichert, wie beim Knopf. Spricht gerade jemand mit dem Spark, wartet das Update bis zur nächsten Pause in diesem Zeitraum. Beim Notaus startet nichts. Einschalten braucht den zweiten Anmeldeschritt, wenn er an ist.</div>
-      <div class="savebar"><button class="b p savebtn" data-p="upd">Speichern</button><span class="savemsg"></span></div>
       <div class="setrow"><div class="lbl"><b>Was ist neu (Changelog)</b><span>Alle Änderungen bis zur installierten Version, eine Zeile pro Version, neueste oben.</span></div><button class="b" type="button" data-on="clOpen">Ansehen</button></div>
       <div class="setrow" id="updprevrow" style="display:none"><div class="lbl"><b>Zurück zur vorigen Version</b><span id="updprevtxt"></span></div><button class="b" id="updprev" type="button">Zurück</button></div>
       <h3 class="sec">Version</h3>
       <table><tbody id="sysver"></tbody></table>
-      <h3 class="sec">Sicherung <span>jeden Tag automatisch</span></h3>
+      <details class="adv"><summary>Update-Protokoll <span class="mut">· was beim letzten Update passiert ist</span></summary>
+        <div class="row" style="margin-top:8px"><button class="b" type="button" data-on="copyEl" data-args='["updlog"]'>Kopieren</button></div><pre id="updlog" style="margin-top:8px">–</pre></details>
+      <div class="savebar"><button class="b p savebtn" data-p="upd">Speichern</button><span class="savemsg"></span></div>
+    </div>
+    <div class="card pane" id="pane-bak"><h2 class="pt">Sicherung</h2><div class="pintro">Sichert jeden Tag, was der Spark weiß, auf Wunsch auch verschlüsselt auf einen NAS.</div>
+      <h3 class="sec">Auf dem Spark <span>jeden Tag automatisch</span></h3>
       <div class="setrow"><div class="lbl"><b>Was gesichert wird</b><span>Profile, geklonte Stimmen, Einstellungen und was der Spark für alle hält.<button class="mlink" type="button">Mehr</button></span></div></div>
       <div class="fh more" hidden>Profile (Gedächtnis, Gespräche, Dokumente, Kalender, E-Mail-Konten, Smart Home, Stimmerkennung), geklonte Stimmen, Einstellungen, Panel-Passwort und was der Spark für alle hält (zweiter Anmeldeschritt des Admins, iPhone-Push, Telegram-Bot, Browser-Push, ESP32-Lautsprecher, Agent-Dienste, eigene Testfragen). Jeden Tag automatisch, die letzten sieben bleiben; dazu vor jedem Update, jeder Rückkehr zur vorigen Version und jedem Wiederherstellen, davon bleiben die letzten fünf.</div>
       <table><tbody id="baklist"></tbody></table>
@@ -491,8 +497,6 @@
         <input type="password" class="wide" id="offkey" autocomplete="new-password" maxlength="200" placeholder="Sicherungs-Passwort (mind. 12 Zeichen, aufschreiben)" aria-label="Sicherungs-Passwort">
         <div class="row"><button class="b p" id="offsave" type="button">Speichern</button><button class="b" id="offnow" type="button">Jetzt senden</button><span class="fh" id="offmsg"></span></div>
       </div>
-      <details class="adv"><summary>Update-Protokoll <span class="mut">· was beim letzten Update passiert ist</span></summary>
-        <div class="row" style="margin-top:8px"><button class="b" type="button" data-on="copyEl" data-args='["updlog"]'>Kopieren</button></div><pre id="updlog" style="margin-top:8px">–</pre></details>
     </div>
     </div>
   </div>
@@ -595,16 +599,18 @@
 
 <section id="prof">
   <div class="card" id="joinadmin"></div>
-  <div class="two">
-    <div class="card"><h2>Profile</h2>
+  <div class="pstack">
+    <div class="card pcard"><h2>Profile</h2>
       <div class="intro">Jedes Profil hat ein eigenes Gedächtnis und eigene Gespräche. Ein Browser meldet sich im Gespräch-Reiter mit Name und PIN an; was ein Profil weiß, sieht kein anderes und kein Gast.</div>
       <div class="row" id="pfilter" style="margin-top:10px;flex-wrap:wrap;gap:6px"></div>
+      <div class="psplit"><div class="plist">
       <table style="margin-top:10px"><tbody id="proflist"></tbody></table>
       <div class="row" id="ppager" style="gap:6px;align-items:center"></div>
       <details class="pnew" id="pnew"><summary class="b p">+ Neues Profil</summary>
       <div class="row"><input id="pname" placeholder="Name" maxlength="40" style="flex:1;min-width:120px"><input id="ppin" type="password" placeholder="PIN (mind. 4 Zeichen)" autocomplete="new-password" style="flex:1;min-width:120px"><button class="b p" id="padd">Anlegen</button></div>
       <div class="fh">Welche Funktionen ein neues Profil gleich bekommt, legst du unter Wer darf was → „Neue Profile“ fest.</div></details>
       <div id="pmsg" style="margin-top:8px"></div>
+      </div><aside class="pside" id="pside" aria-live="polite"></aside></div>
     </div>
     <div class="card"><h2>Geräte</h2>
       <div class="intro">Eigene Programme und Kurzbefehle bekommen hier einen Geräteschlüssel, das Profil wählst du in der Liste. iPhone-App, Lautsprecher, Pebble-Uhr und Home Assistant richtet jedes Profil selbst unter Ich ein: Sie bleiben fest bei diesem Profil und lassen sich hier nur löschen. Der Schlüssel geht im Header <code>X-Speech-Device</code> an <code>/api/chat</code>.</div>
@@ -654,15 +660,15 @@
     </div>
     <div class="mut" style="margin-top:8px">Läuft der Agent auf einem anderen Rechner, die LAN-IP der Spark nehmen. Ohne API-Schlüssel (Einstellungen → Sicherheit) kann jeder im Heimnetz die Sprachdienste nutzen. Den Agenten nicht auf dieser Spark installieren: Er führt selbst Befehle aus und käme so an Einstellungen und Schlüssel.</div>
   </div>
-  <div class="card"><h2>Spark als MCP-Server</h2>
+  <div class="card" data-sw="mcp_server"><h2>Spark als MCP-Server</h2>
     <div class="mut">Programme wie Open WebUI, n8n, Home Assistant oder Claude verbinden sich unter <b>Ich → Dienste per MCP</b> mit einem eigenen Zugang pro Profil (Adresse <code>/mcp</code>, Streamable HTTP). Hier siehst du alle Zugänge und kannst jeden sofort beenden.</div>
     <div id="int-mcp" style="margin-top:8px"></div>
   </div>
-  <div class="card"><h2>Eigene MCP-Dienste der Profile</h2>
+  <div class="card" data-sw="mcp_own"><h2>Eigene MCP-Dienste der Profile</h2>
     <div class="mut" data-tr>Dienste, die Profile unter <b>Ich → Meine MCP-Dienste</b> selbst angebunden haben, ohne Schlüssel. Sperren gilt sofort, auch wenn das Profil den Dienst neu anbindet.</div>
     <div id="int-mymcp" style="margin-top:8px"></div>
   </div>
-  <div class="card"><h2>Pebble-Uhr</h2>
+  <div class="card" data-sw="pebble"><h2>Pebble-Uhr</h2>
     <div class="mut">App „Spark“ für Pebble Time 2 und Core 2 Duo (Antwort als Text und über den Lautsprecher der Uhr) sowie Pebble Round 2 (nur Text). Frage per Knopfdruck, die Pebble-Diktierfunktion macht Text daraus, die Antwort kommt von hier.</div>
     <ol class="mut" style="margin:8px 0 0 18px;padding:0;line-height:1.6">
       <li data-tr>Unter <b>Ich → Pebble-Uhr</b> „Pebble koppeln“ tippen und den Einrichtungscode kopieren (Admin: Funktionen → Pebble-Uhr koppeln an). Ohne das: unter Personen und Geräte beim eigenen Profil ein Gerät „Pebble“ anlegen und den Schlüssel kopieren.</li>
@@ -906,6 +912,8 @@
 <script src="/static/js/secglance.js"></script>
 <script src="/static/js/find.js"></script>
 <script src="/static/js/who.js"></script>
+<script src="/static/js/fdetail.js"></script>
+<script src="/static/js/kacheln.js"></script>
 <script src="/static/js/join.js"></script>
 <script src="/static/js/today.js"></script>
 <script src="/static/js/android.js"></script>
@@ -918,6 +926,7 @@
 <script src="/static/js/begleiter.js"></script>
 <script src="/static/js/changelog.js"></script>
 <script src="/static/js/melden.js"></script>
+<script src="/static/js/seite.js"></script>
 <script src="/static/js/start.js"></script>
 </body>
 </html>

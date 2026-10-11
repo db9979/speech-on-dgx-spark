@@ -33,6 +33,7 @@ All options for running without questions (`--mode api --asr 1.7b --tts 0.6b --y
 
 <!-- New version: add one line at the top here and in CHANGELOG.md, drop the oldest line here (keep 10). Details go to docs/de and docs/en, not into this README. -->
 
+- **V01.0.416** Settings pages rearranged: boxes, symbols, functions with detail, Me as a page, apps as tiles
 - **V01.0.415** Creating documents: letters, reports, presentations and spreadsheets as Word, PDF, PowerPoint or Excel, with outline, versions and sending
 - **V01.0.414** Self-tests wait for page state instead of fixed times (messages, speakers, who may what)
 - **V01.0.413** Me → Documents clear with many files: compact rows, search, filters, details, select several
@@ -42,7 +43,6 @@ All options for running without questions (`--mode api --asr 1.7b --tts 0.6b --y
 - **V01.0.409** Speech output can be switched off: "Read answers aloud" per profile and "Vorlesen" per device, off = text only (speakers and CarPlay keep speaking)
 - **V01.0.408** Independent review, package 5: more complete English UI, plain error sentences, "?" only where help exists, current page names, labels for screen readers, quiet Live-off state, no 429 on quick jumps
 - **V01.0.407** Independent review, package 4: signed device updates prepared, https-only companion updates with Mac team check, pinned CI tools, root reads config only as the service user, ffmpeg/Parakeet limits, safer iPhone pairing and Telegram voice download
-- **V01.0.406** Independent review, package 6: compressed page files cached a day, atomic JSON writes, faster self-tests, dead code removed
 
 All versions: [CHANGELOG.md](CHANGELOG.md)
 

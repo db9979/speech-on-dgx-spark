@@ -215,7 +215,10 @@ class Browser(unittest.TestCase):
                         sent = []
                         pg.on("request", lambda r: sent.append(r.post_data or "") if r.url.endswith("/api/chat") else None)
                         await pg.wait_for_selector("#setform .setrow .hqbtn", timeout=5000)
-                        await pg.locator("#setform .setrow .hqbtn").first.click()
+                        # (the first visible one: "Tempo und Genauigkeit" is folded since V01.0.416; the bubble from
+                        # above is closed first, the "?" opens it again)
+                        await pg.evaluate("$('fab').classList.remove('open')")
+                        await pg.locator("#setform .setrow .hqbtn >> visible=true").first.click()
                         await pg.wait_for_function("$('fab').classList.contains('open')", timeout=5000)
                         for _ in range(50):
                             if any('"focus":"me:' in x for x in sent):
@@ -1041,7 +1044,7 @@ class Browser(unittest.TestCase):
                     self.assertFalse(await pg.is_visible("#chat\\.search_url"))
                     tall = await pg.evaluate("$('pane-feat').getBoundingClientRect().height")
                     # about 45 px per closed line on a computer (limit grows with new rows); open boxes would be several times that
-                    self.assertLess(tall, 4020 if w < 760 else 3060, f"{w}: {tall}px")   # V01.0.386: +1 line "Probleme melden", V01.0.381: +1 line "Geräte-Updates", V01.0.342: +1 line "Spark-Begleiter am PC und Mac", V01.0.340: +1 line "Einordnung mit Wahrscheinlichkeit", V01.0.339: +1 sub-switch "In anderen Programmen", V01.0.332: +1 line "Schreibhilfe", V01.0.326: +1 line "Hilfe zum Spark", V01.0.300: +1 line "Android-App", V01.0.303: +1 line "Spark als MCP-Server", V01.0.304: +1 line "Eindeutiges direkt abrufen", V01.0.307: +1 sub-switch "Vorab holen bei Rückfrage"
+                    self.assertLess(tall, 4080 if w < 760 else 3120, f"{w}: {tall}px")   # V01.0.416: +1 group heading "Tempo und Genauigkeit" (no new line), V01.0.386: +1 line "Probleme melden", V01.0.381: +1 line "Geräte-Updates", V01.0.342: +1 line "Spark-Begleiter am PC und Mac", V01.0.340: +1 line "Einordnung mit Wahrscheinlichkeit", V01.0.339: +1 sub-switch "In anderen Programmen", V01.0.332: +1 line "Schreibhilfe", V01.0.326: +1 line "Hilfe zum Spark", V01.0.300: +1 line "Android-App", V01.0.303: +1 line "Spark als MCP-Server", V01.0.304: +1 line "Eindeutiges direkt abrufen", V01.0.307: +1 sub-switch "Vorab holen bei Rückfrage"
                     await pg.evaluate("$('chat.search').closest('.fitem').querySelector('.fexp').click()")
                     self.assertTrue(await pg.evaluate("$('chat.search').closest('.fitem').classList.contains('open')"))
                     await pg.evaluate("$('chat.search').closest('.fitem').querySelector('.fexp').click()")
@@ -1229,7 +1232,7 @@ class Browser(unittest.TestCase):
                 for name, w, h in VIEWS:
                     br, pg, errors = await self.page(p, w, h, csp=True)
                     await pg.evaluate("goCfg('ai')")
-                    await pg.wait_for_selector("#llmmodelsel", state="visible", timeout=8000)
+                    await pg.wait_for_selector("#llmmodelsel", state="visible", timeout=20000)  # the model list comes from a fake server; slow on a busy CI runner
                     await pg.screenshot(path=os.path.join(os.environ.get("SPEECH_SPARK_SHOTS", helpers.TMP), f"llm-models-{name}.png"))
                     opts = await pg.evaluate("[...$('llmmodelsel').options].map(o=>o.value)")
                     self.assertIn("fake", opts, name)

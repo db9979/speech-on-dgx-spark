@@ -170,7 +170,7 @@ RECIPES = {
 }
 # "Sicherheit auf einen Blick" for admins: fixed lines, counts only (admin.security_glance)
 GLANCE = {"admin_mfa": ("Zweiter Anmeldeschritt für den Admin ist aus", "Einstellungen → Sicherheit"),
-          "backup": ("Sicherung fehlt, ist alt oder liegt nur auf dem Spark", "Einstellungen → Update und Sicherung"),
+          "backup": ("Sicherung fehlt, ist alt oder liegt nur auf dem Spark", "Einstellungen → Sicherung"),
           "short_pins": ("{count} Profil(e) mit PIN unter 6 Zeichen", "Personen und Geräte"),
           "role_mfa": ("Profile mit Admin-Rechten ohne zweiten Anmeldeschritt", "Einstellungen → Sicherheit → Rollen"),
           "https": ("Diese Seite läuft über http statt https", "Reverse Proxy oder Port 31443"),
@@ -207,10 +207,10 @@ TIPS = (
       "instead of \"auto\" (admin: Settings → Speech recognition).")),
     ("sicher", "admin", ("mfa",),
      ("Tipp: Den Spark sicherer machen (Admin)", "Zuerst den zweiten Anmeldeschritt für den Admin einrichten (Einstellungen → "
-      "Sicherheit), dann eine Sicherung nach außen legen (Einstellungen → Update und Sicherung), neue Personen nur mit Einladung "
+      "Sicherheit), dann eine Sicherung nach außen legen (Einstellungen → Sicherung), neue Personen nur mit Einladung "
       "zulassen, PINs mit mindestens 6 Zeichen, das Panel nur über https öffnen. „Sicherheit auf einen Blick“ zeigt, was noch offen ist."),
      ("Tip: Making the Spark safer (admin)", "First set up the second sign-in step for the admin (Settings → Security), then store "
-      "a backup elsewhere (Settings → Update and backup), let new people in only by invitation, PINs of at least 6 characters, "
+      "a backup elsewhere (Settings → Backup), let new people in only by invitation, PINs of at least 6 characters, "
       "open the panel over https only. \"Security at a glance\" shows what is still open.")),
 )
 # Frequent questions without a guide of their own (plan 3): fixed answers from the docs, with their page and level
@@ -231,11 +231,11 @@ FAQ = (
      ("Inviting someone (new person)", "Under People and devices → New people the admin creates an invitation (suggested name, "
       "starter pack, valid 1, 7 or 30 days) and gets a link, a QR code and a card to print; the link needs the panel's https "
       "address. Recommended: \"New people\" set to \"Only by invitation\". Then Me → Getting started guides the new person.")),
-    ("sicherung", "admin", "cfg/upd", ("Sicherung (Backup)", "Einstellungen → Update und Sicherung: „Jetzt sichern“ legt eine "
+    ("sicherung", "admin", "cfg/bak", ("Sicherung (Backup)", "Einstellungen → Sicherung: „Jetzt sichern“ legt eine "
      "Sicherung an; „Sicherung nach außen“ schickt einmal am Tag eine verschlüsselte Sicherung per WebDAV auf ein NAS oder eine "
      "Nextcloud (nur Haupt-Admin, mit Sicherungs-Passwort). „Sicherheit auf einen Blick“ unter Einstellungen → Sicherheit warnt, "
      "wenn die Sicherung fehlt oder alt ist."),
-     ("Backup", "Settings → Update and backup: \"Back up now\" makes a backup; \"Backup elsewhere\" sends an encrypted backup "
+     ("Backup", "Settings → Backup: \"Back up now\" makes a backup; \"Backup elsewhere\" sends an encrypted backup "
       "once a day over WebDAV to a NAS or Nextcloud (main admin only, with the backup password). \"Security at a glance\" under "
       "Settings → Security warns when the backup is missing or old.")),
     ("logs", "admin", "logs", ("Logs ansehen", "Zustand → Logs zeigt das Protokoll des Spark. Die Filter-Knöpfe grenzen ein "

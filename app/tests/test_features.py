@@ -130,7 +130,7 @@ class Api(unittest.TestCase):
         self.assertEqual(f["transit"]["why"], "spark")
         self.assertIs(f["weather"]["mine"], False)
         self.assertEqual(d["why"]["spark"][0], "Vom Admin ausgeschaltet")
-        self.assertEqual(len(d["groups"]), 7)
+        self.assertEqual(len(d["groups"]), 8)
         helpers.set_config(weather=False)
 
     def test_guests_see_only_guest_functions(self):

@@ -368,7 +368,7 @@ def talking(now=None):
 
 
 def night_on():
-    """Admin switch panel.update_night (Einstellungen → Update und Sicherung), off by default."""
+    """Admin switch panel.update_night (Einstellungen → Update), off by default."""
     from common import load_config
     return load_config().get("panel", {}).get("update_night", False) is True
 

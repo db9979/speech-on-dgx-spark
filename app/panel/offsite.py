@@ -4,7 +4,7 @@ a WebDAV folder (NAS, Nextcloud, Synology), off unless the main admin switches i
 The copy is a move backup (backup.create with the backup password: it carries the vault key, sealed with that
 password) and is encrypted as a whole with the same password before it leaves the Spark (scrypt, AES-256-GCM in
 1 MiB pieces, each numbered and the last one marked, so nothing can be cut off, swapped or changed unnoticed). The
-NAS only ever sees noise. Restoring: download the file there and upload it under Update und Sicherung with the
+NAS only ever sees noise. Restoring: download the file there and upload it under Einstellungen → Sicherung with the
 backup password; it then works on a new Spark without entering anything again. Without that password the copy is
 lost for good, so the panel says to write it down.
 
