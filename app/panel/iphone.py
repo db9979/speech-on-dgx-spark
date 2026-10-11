@@ -20,6 +20,7 @@ import time
 import urllib.parse
 
 from fastapi import APIRouter, Depends, HTTPException, Request
+from fastapi.responses import JSONResponse
 
 import appupdate
 import guard
@@ -243,6 +244,28 @@ def profile_remove(did: str, prof=Depends(browser_profile)):
     profiles.delete_device(did)
     print("iphone: removed for", prof["name"], flush=True)
     return profile_get(prof)
+
+
+def app_ids():
+    """The app's ID for Apple ("TEAMID.bundle"), from the push settings (Funktionen → Push an die iPhone-App), or []."""
+    import apns
+    s = apns.settings()
+    team, bundle = str(s.get("team", "")), str(s.get("bundle", ""))
+    if not re.fullmatch(r"[A-Z0-9]{10}", team) or not re.fullmatch(r"[A-Za-z0-9\-]+(\.[A-Za-z0-9\-]+){1,8}", bundle):
+        return []
+    return [team + "." + bundle]
+
+
+@router.get("/.well-known/apple-app-site-association")  # open: Apple asks for it; only the app's public ID
+def apple_site(request: Request):
+    """Passkeys in the iPhone app (V01.0.357): Apple fetches this file from the panel's host name and lets
+    the app (entitlement webcredentials:<host>) use the passkeys of this host. Says nothing but the app's ID,
+    which is public anyway; 404 while the iPhone app is off or push has no Team ID and bundle."""
+    guard.limit(request, "trust")
+    ids = app_ids() if admin_on() else []
+    if not ids:
+        raise HTTPException(404, "not found")
+    return JSONResponse({"webcredentials": {"apps": ids}}, headers={"Cache-Control": "max-age=3600"})
 
 
 @router.post("/api/iphone/pair")

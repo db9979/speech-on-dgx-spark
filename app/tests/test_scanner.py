@@ -78,6 +78,7 @@ OPEN = {
     "/.well-known/oauth-authorization-server": "public OAuth addresses, no data; 404 unless allowed",
     "/.well-known/oauth-protected-resource": "public OAuth addresses, no data; 404 unless allowed",
     "/.well-known/oauth-protected-resource/mcp": "public OAuth addresses, no data; 404 unless allowed",
+    "/.well-known/apple-app-site-association": "Apple asks which app may use this host's passkeys: only the app's public ID; 404 unless the iPhone app is on",
     "/api/notaus": "the kill switch: strangers see only the stage; triggering checks the caller itself (notaus._caller), only up, rate limit",
     "/api/admin/notaus/off": "lifting checks the admin itself (notaus._lift_how): browser at home, fresh code or password, rate limit",
     "/api/notaus/mine": "Mein Notaus: checks the profile itself (notaus._caller), only on, rate limit",

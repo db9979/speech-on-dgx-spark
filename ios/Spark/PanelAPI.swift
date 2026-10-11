@@ -18,8 +18,7 @@ extension SparkAPI {
             r.setValue("application/json", forHTTPHeaderField: "Content-Type")
             r.httpBody = try JSONSerialization.data(withJSONObject: body)
         }
-        if let code { r.setValue(code, forHTTPHeaderField: "X-Speech-Code") }
-        let (data, response) = try await URLSession.shared.data(for: r)
+        let (data, response) = try await Self.confirmed(r, code: code)
         try Self.check(data, response)
         return (try? JSONSerialization.jsonObject(with: data)) ?? [:]
     }
@@ -122,14 +121,13 @@ extension SparkAPI {
         let boundary = "spark-" + UUID().uuidString
         var r = request("api/profile/voice", method: "POST")
         r.setValue("multipart/form-data; boundary=\(boundary)", forHTTPHeaderField: "Content-Type")
-        r.setValue(code, forHTTPHeaderField: "X-Speech-Code")
         r.timeoutInterval = 90
         var body = Data()
         body.append(Data("--\(boundary)\r\nContent-Disposition: form-data; name=\"file\"; filename=\"stimme.wav\"\r\nContent-Type: audio/wav\r\n\r\n".utf8))
         body.append(wav)
         body.append(Data("\r\n--\(boundary)--\r\n".utf8))
         r.httpBody = body
-        let (data, response) = try await URLSession.shared.data(for: r)
+        let (data, response) = try await Self.confirmed(r, code: code)
         try Self.check(data, response)
         return (Self.object(data)["samples"] as? NSNumber)?.intValue ?? 0
     }

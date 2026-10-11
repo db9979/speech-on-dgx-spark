@@ -2,6 +2,7 @@
 
 Every version in one line, newest first (taken from the commit messages, so some lines are German, some English). Older entries have no version number.
 
+- **V01.0.357** · 2026-10-11 · Passkeys in der iPhone-App: „Mit Passkey“ beim Bestätigen, Spark-Update und Admin-Anmeldung (Face ID mit dem in Safari angelegten Passkey, über iCloud-Schlüsselbund); der Spark liefert Apple dafür /.well-known/apple-app-site-association (nur die App-ID, aus den Push-Angaben)
 - **V01.0.356** · 2026-10-11 · Logs → Anfragen zeigt die Nummer jeder Anfrage (wie in der Journalzeile „anfrage: …“) in Liste und Detail; die Suche findet sie
 - **V01.0.355** · 2026-10-11 · Was ist neu: Changelog im Panel ansehen (Link „Was ist neu“ unten neben der Version und Einstellungen → Update und Sicherung), eine Zeile pro Version mit Suche und „neu“ seit dem letzten Öffnen; für Admin und Profile in eigener Browser-Anmeldung, GET /api/changelog mit Rate-Limit, install.sh legt CHANGELOG.md neben die App
 - **V01.0.354** · 2026-10-11 · begleiter: Release ohne begleiter.json = NotYet (Info, Wiederholung nach 1 h statt 24 h); admin._test_asr: Sprechererkennungs-Nebenaufgaben nehmen ihren Fehler selbst ab (_quiet)

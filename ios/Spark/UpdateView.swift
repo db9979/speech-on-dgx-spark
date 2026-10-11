@@ -157,6 +157,9 @@ struct UpdateView: View {
             TextField("123456", text: $code)
                 .keyboardType(.numberPad)
                 .textContentType(.oneTimeCode)
+            if SparkAPI.passkeyPossible {
+                Button("Mit Passkey") { Task { await m.start(code: SparkAPI.passkey) } }
+            }
             Button("Update starten") {
                 let c = code.filter(\.isNumber)
                 Task { await m.start(code: String(c.prefix(6))) }

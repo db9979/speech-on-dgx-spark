@@ -6250,6 +6250,106 @@
           }
         }
       }
+    },
+    "Mit Passkey": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "With passkey"
+          }
+        }
+      }
+    },
+    "Mit Passkey anmelden": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Sign in with passkey"
+          }
+        }
+      }
+    },
+    "Hier gibt es keinen Passkey. Lege ihn in Safari über die Adresse mit Namen unter Ich → Sicherheit an, oder nimm den Code.": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "No passkey here. Add one in Safari over the address with a name under Me → Security, or use the code."
+          }
+        }
+      }
+    },
+    "Die Passkey-Anfrage des Spark passt nicht zu dieser Adresse.": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "The Spark's passkey request does not match this address."
+          }
+        }
+      }
+    },
+    "Passkey geht nur, solange die App offen ist.": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "A passkey only works while the app is open."
+          }
+        }
+      }
+    },
+    "Kein Passkey bekommen.": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "No passkey received."
+          }
+        }
+      }
+    },
+    "Passkey abgebrochen. Du kannst auch den Code eingeben.": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Passkey cancelled. You can also enter the code."
+          }
+        }
+      }
+    },
+    "Kein passender Passkey auf diesem iPhone. Lege ihn in Safari über die Adresse mit Namen unter Ich → Sicherheit an, oder nimm den Code.": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "No matching passkey on this iPhone. Add one in Safari over the address with a name under Me → Security, or use the code."
+          }
+        }
+      }
+    },
+    "Bitte zuerst das Passwort, dann „Mit Passkey anmelden“.": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "First the password, then “Sign in with passkey”."
+          }
+        }
+      }
+    },
+    "Passkey nicht angenommen. Bitte den Code eingeben.": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Passkey not accepted. Please enter the code."
+          }
+        }
+      }
     }
   },
   "version": "1.0"

@@ -675,9 +675,8 @@ struct SparkAPI {
     /// Starts the update: only with a fresh 6-digit code from the profile's authenticator app.
     func startUpdate(code: String) async throws -> String {
         var r = request("api/iphone/update", method: "POST")
-        r.setValue(code, forHTTPHeaderField: "X-Speech-Code")
         r.timeoutInterval = 60
-        let (data, response) = try await URLSession.shared.data(for: r)
+        let (data, response) = try await Self.confirmed(r, code: code)
         try Self.check(data, response)
         return Self.object(data)["version"] as? String ?? ""
     }
@@ -793,5 +792,51 @@ struct SparkAPI {
             }
             cont.onTermination = { _ in task.cancel() }
         }
+    }
+}
+
+// MARK: - Passkey instead of the code
+
+/// Everywhere the Spark wants a fresh code, the app may sign with a passkey instead (V01.0.357): the code is then
+/// `SparkAPI.passkey`. The request goes out without a code; the Spark answers "428" with its challenge
+/// (X-Speech-Passkey-Options, only over the host name the passkey belongs to), Face ID signs it, and the same
+/// request goes out again with the signature (X-Speech-Passkey). Only the app itself signs (Passkey.swift);
+/// the extensions have no signer and keep to the code.
+extension SparkAPI {
+    static let passkey = "passkey"
+    /// the app's signer: (challenge from the Spark {"sid", "options"}, host name) -> the answer {"sid", "response"}
+    static var passkeySigner: (([String: Any], String) async throws -> [String: Any])?
+
+    static func base64url(_ d: Data) -> String {
+        d.base64EncodedString().replacingOccurrences(of: "+", with: "-").replacingOccurrences(of: "/", with: "_")
+            .replacingOccurrences(of: "=", with: "")
+    }
+
+    static func unbase64url(_ s: String) -> Data? {
+        var b = s.replacingOccurrences(of: "-", with: "+").replacingOccurrences(of: "_", with: "/")
+        b += String(repeating: "=", count: (4 - b.count % 4) % 4)
+        return Data(base64Encoded: b)
+    }
+
+    /// A passkey can work here: the app can sign and the Spark is reached by a host name, not an IP address.
+    static var passkeyPossible: Bool {
+        guard passkeySigner != nil, let host = Store.baseURL?.host, host.contains(".") else { return false }
+        return host.range(of: #"^[0-9.]+$"#, options: .regularExpression) == nil && !host.contains(":")
+    }
+
+    /// Sends a request that may need a code: six digits, `SparkAPI.passkey`, or nil.
+    static func confirmed(_ request: URLRequest, code: String?, session: URLSession = .shared) async throws -> (Data, URLResponse) {
+        var r = request
+        if let code, code != passkey { r.setValue(code, forHTTPHeaderField: "X-Speech-Code") }
+        let (data, response) = try await session.data(for: r)
+        guard code == passkey, let http = response as? HTTPURLResponse, http.statusCode == 428 else { return (data, response) }
+        guard let raw = http.value(forHTTPHeaderField: "X-Speech-Passkey-Options"), raw.count < 8192,
+              let json = unbase64url(raw), let options = object(json) as [String: Any]?, !options.isEmpty,
+              let sign = passkeySigner, let host = r.url?.host else {
+            throw SparkError(message: String(localized: "Hier gibt es keinen Passkey. Lege ihn in Safari über die Adresse mit Namen unter Ich → Sicherheit an, oder nimm den Code."))
+        }
+        let answer = try JSONSerialization.data(withJSONObject: try await sign(options, host))
+        r.setValue(base64url(answer), forHTTPHeaderField: "X-Speech-Passkey")
+        return try await session.data(for: r)
     }
 }

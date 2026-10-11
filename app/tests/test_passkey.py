@@ -184,6 +184,59 @@ class Passkeys(unittest.TestCase):
         # the wrong PIN never reveals a passkey challenge
         self.assertEqual(TestClient(panel.app, base_url=BASE).post("/api/profile/login", json={"name": "PassPia", "pin": "9999"}).status_code, 401)
 
+    def test_app_confirms_with_passkey(self):
+        # V01.0.357: a passkey made in Safari over the host name reaches the app through iCloud Keychain; the
+        # app gets the same challenge with "428 code required" and answers with the same header
+        import iphone
+        import profiles
+        from tests.test_iphone import pair
+        helpers.set_config(iphone=True, iphone_panel=True)
+        try:
+            a, _ = self.add()
+            self.c.put("/api/profile/settings", json={"app_on": True, "app_security": True})
+            iphone._pending.clear()
+            r = pair(self.c, "PassPias iPhone")
+            self.assertEqual(r.status_code, 200, r.text)
+            h = {profiles.DEVICE_HEADER: r.json()["token"]}
+            core._windows.clear()
+            app = TestClient(panel.app, base_url=BASE)
+            r = app.post("/api/profile/mfa/recovery", headers=h)
+            self.assertEqual(r.status_code, 428)
+            opt = json.loads(passkey._unb64(r.headers[passkey.OPTIONS_HEADER]))
+            answer = b64(json.dumps({"sid": opt["sid"], "response": a.get(opt["options"])}).encode())
+            r = app.post("/api/profile/mfa/recovery", headers=dict(h, **{passkey.HEADER: answer}))
+            self.assertEqual(r.status_code, 200, r.text)
+            # the same app over the IP address: no challenge, only the code
+            core._windows.clear()
+            r = TestClient(panel.app, base_url="https://192.168.178.171").post("/api/profile/mfa/recovery", headers=h)
+            self.assertEqual(r.status_code, 428)
+            self.assertNotIn(passkey.OPTIONS_HEADER, r.headers)
+        finally:
+            helpers.set_config(iphone=False, iphone_panel=False)
+
+    def test_apple_site_file(self):
+        # Apple's file for the app's passkeys: only the app's public ID, 404 while the app is off or not set up
+        import apns
+        import iphone
+        real = apns.settings
+        path = "/.well-known/apple-app-site-association"
+        try:
+            apns.settings = lambda: {"team": "ABCDE12345", "bundle": "io.github.db9979.speechspark", "key": "sealed"}
+            self.assertEqual(self.c.get(path).status_code, 404)              # the iPhone app is off
+            helpers.set_config(iphone=True)
+            r = TestClient(panel.app).get(path)
+            self.assertEqual(r.status_code, 200)
+            self.assertEqual(r.json(), {"webcredentials": {"apps": ["ABCDE12345.io.github.db9979.speechspark"]}})
+            self.assertTrue(r.headers["content-type"].startswith("application/json"))
+            self.assertNotIn("sealed", r.text)
+            for bad in ({}, {"team": "abc", "bundle": "x.y"}, {"team": "ABCDE12345", "bundle": "x y.z"}):
+                apns.settings = lambda bad=bad: bad
+                self.assertEqual(self.c.get(path).status_code, 404, bad)
+            self.assertEqual(iphone.app_ids(), [])
+        finally:
+            apns.settings = real
+            helpers.set_config(iphone=False)
+
     def test_states_are_capped_and_short(self):
         self.assertEqual(passkey.STATE_SECS, 120)
         for i in range(passkey.MAX_STATES + 5):

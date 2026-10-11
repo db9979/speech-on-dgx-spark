@@ -16,6 +16,13 @@ struct CodeAlert: ViewModifier {
             TextField("123456", text: $code)
                 .keyboardType(.numberPad)
                 .textContentType(.oneTimeCode)
+            if SparkAPI.passkeyPossible {   // Face ID with a passkey of the Spark's address (Passkey.swift)
+                Button("Mit Passkey") {
+                    let r = request
+                    code = ""
+                    Task { await r?.run(SparkAPI.passkey) }
+                }
+            }
             Button("Bestätigen") {
                 let r = request
                 let c = String(code.filter(\.isNumber).prefix(6))

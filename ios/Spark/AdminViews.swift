@@ -16,6 +16,9 @@ final class AdminSession: ObservableObject {
     @Published private(set) var role = "main"
     private var session = AdminSession.fresh()
     private var kept = Date.distantPast
+    /// the Spark's passkey challenge after the right password, when the admin has a passkey for this address
+    @Published private(set) var loginPasskey = false
+    private var loginChallenge: [String: Any]?
 
     private static func fresh() -> URLSession {
         let c = URLSessionConfiguration.ephemeral
@@ -24,7 +27,7 @@ final class AdminSession: ObservableObject {
         return URLSession(configuration: c)
     }
 
-    /// true: signed in; false: the Spark wants the code next
+    /// true: signed in; false: the Spark wants the code next. code: six digits, or SparkAPI.passkey for Face ID.
     func login(password: String, code: String?) async throws -> Bool {
         guard let base = Store.baseURL, let key = Store.key else { throw SparkError(message: String(localized: "Nicht gekoppelt.")) }
         var r = URLRequest(url: base.appendingPathComponent("api/login"))
@@ -33,15 +36,28 @@ final class AdminSession: ObservableObject {
         // the app's own key goes along only here: the Spark checks the profile's switch for this login
         r.setValue(key, forHTTPHeaderField: "X-Speech-Device")
         var body: [String: Any] = ["password": password]
-        if let code { body["code"] = code }
+        if code == SparkAPI.passkey {
+            guard let challenge = loginChallenge, let sign = SparkAPI.passkeySigner, let host = base.host else {
+                throw SparkError(message: String(localized: "Bitte zuerst das Passwort, dann „Mit Passkey anmelden“."))
+            }
+            loginChallenge = nil   // each challenge once
+            loginPasskey = false
+            body["passkey"] = try await sign(challenge, host)
+        } else if let code {
+            body["code"] = code
+        }
         r.httpBody = try JSONSerialization.data(withJSONObject: body)
         let (data, response) = try await session.data(for: r)
         let statusCode = (response as? HTTPURLResponse)?.statusCode ?? 0
         let d = SparkAPI.object(data)
-        if statusCode == 200 && d["code"] as? Bool == true { return false }
+        if statusCode == 200 && d["code"] as? Bool == true {
+            loginChallenge = d["passkey"] as? [String: Any]
+            loginPasskey = loginChallenge != nil && SparkAPI.passkeyPossible
+            return false
+        }
         guard statusCode == 200 else {
             switch statusCode {
-            case 401: throw SparkError(message: code == nil ? String(localized: "Falsches Passwort.") : String(localized: "Code falsch."))
+            case 401: throw SparkError(message: code == nil ? String(localized: "Falsches Passwort.") : code == SparkAPI.passkey ? String(localized: "Passkey nicht angenommen. Bitte den Code eingeben.") : String(localized: "Code falsch."))
             case 429: throw SparkError(message: String(localized: "Zu viele falsche Versuche, bitte später noch einmal."))
             default: throw SparkError(message: d["detail"] as? String ?? String(localized: "Fehler \(statusCode) vom Spark."))
             }
@@ -67,8 +83,7 @@ final class AdminSession: ObservableObject {
         r.httpMethod = "POST"
         // the app's own key goes along only here: the Spark checks the profile's role and switches for it
         r.setValue(key, forHTTPHeaderField: "X-Speech-Device")
-        r.setValue(code, forHTTPHeaderField: "X-Speech-Code")
-        let (data, response) = try await session.data(for: r)
+        let (data, response) = try await SparkAPI.confirmed(r, code: code, session: session)
         try SparkAPI.check(data, response)
         await signedInNow()
     }
@@ -93,8 +108,7 @@ final class AdminSession: ObservableObject {
             r.setValue("application/json", forHTTPHeaderField: "Content-Type")
             r.httpBody = try JSONSerialization.data(withJSONObject: body)
         }
-        if let code { r.setValue(code, forHTTPHeaderField: "X-Speech-Code") }
-        let (data, response) = try await session.data(for: r)
+        let (data, response) = try await SparkAPI.confirmed(r, code: code, session: session)
         // a profile's admin mode ends after 15 minutes without use: while used, renew it at most every 2 minutes
         if role != "main" && signedIn && path != "api/admin/elevate/keep" && Date().timeIntervalSince(kept) > 120 {
             kept = Date()
@@ -185,6 +199,9 @@ struct AdminView: View {
             SecureField("Admin-Passwort", text: $password).textContentType(.password)
             if askCode {
                 TextField("Code aus der Authenticator-App", text: $code).keyboardType(.numberPad).textContentType(.oneTimeCode)
+                if s.loginPasskey {
+                    Button("Mit Passkey anmelden") { Task { await signIn(passkey: true) } }.disabled(busy)
+                }
             }
             Button {
                 Task { await signIn() }
@@ -196,11 +213,11 @@ struct AdminView: View {
         }
     }
 
-    private func signIn() async {
+    private func signIn(passkey: Bool = false) async {
         busy = true
         defer { busy = false }
         do {
-            let done = try await s.login(password: password, code: askCode ? code : nil)
+            let done = try await s.login(password: password, code: passkey ? SparkAPI.passkey : askCode ? code : nil)
             if done { password = ""; code = ""; askCode = false; error = nil } else { askCode = true; error = nil }
         } catch { self.error = error.localizedDescription; code = "" }
     }

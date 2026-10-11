@@ -23,6 +23,7 @@ final class AppDelegate: NSObject, UIApplicationDelegate {
         UNUserNotificationCenter.current().delegate = Relay.shared
         Relay.registerCategories()
         Store.share()
+        Passkey.install()
         return true
     }
 
