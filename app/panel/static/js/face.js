@@ -217,4 +217,5 @@ $('fabface').onclick=e=>{e.stopPropagation();if(e.detail>1)return;if(!CFG)api('/
 $('fabface').addEventListener('keydown',e=>{if(e.key==='Enter'||e.key===' '){e.preventDefault();$('fabface').click()}});
 $('fabopen').onclick=()=>{$('fab').classList.remove('open');document.querySelector('nav button[data-s=chat]').click()};
 $('fabstop').onclick=()=>$('chatstop').click();
-document.addEventListener('click',e=>{if(!$('fab').contains(e.target)&&faceMode()==='idle')$('fab').classList.remove('open')});
+// open stays open while the guided setup of "Funktionen vorschlagen" is in it (tipps.js): its steps are done on the page
+document.addEventListener('click',e=>{if(!$('fab').contains(e.target)&&faceMode()==='idle'&&!$('tipsetup'))$('fab').classList.remove('open')});

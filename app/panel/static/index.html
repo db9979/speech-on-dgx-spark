@@ -236,6 +236,8 @@
       <div class="setrow"><div class="lbl"><b>Hilfe zum Spark</b><span>Fragen zum Spark beantwortet der Assistent aus Anleitungen, Schaltern und Doku, mit dem Weg im Panel. Jedes Profil schaltet es selbst ein.</span></div><label class="tgl"><input type="checkbox" id="chat.spark_help"><i></i></label></div>
       <div class="setrow" data-show="chat.spark_help" style="margin-left:18px"><div class="lbl"><b>Einstellungen vorschlagen</b><span>Unter der Antwort eine Karte mit passenden Schaltern; erst der Tipp auf „Übernehmen“ ändert etwas. Nie Sicherheit.</span></div><label class="tgl"><input type="checkbox" id="chat.spark_suggest"><i></i></label></div>
       <div class="setrow" data-show="chat.spark_help" style="margin-left:18px"><div class="lbl"><b>Frag Spark auf jeder Seite</b><span>Der Kopf unten rechts weiß, auf welcher Seite man ist, auch unter Ich; Fragen per Sprache oder Text.</span></div><label class="tgl"><input type="checkbox" id="chat.spark_drawer"><i></i></label></div>
+      <div class="setrow" data-show="chat.spark_help" style="margin-left:18px"><div class="lbl"><b>Funktionen vorschlagen</b><span>Passt eine Funktion, die noch aus ist: ein Hinweis mit „Einrichten“. Höchstens 1 pro Gespräch, 3 pro Woche; schaltet nie selbst.</span></div><label class="tgl"><input type="checkbox" id="chat.feature_tips"><i></i></label></div>
+      <div class="setrow" data-show="chat.feature_tips" style="margin-left:36px"><div class="lbl"><b>… auch von selbst</b><span>Höchstens ein Vorschlag pro Woche als Mitteilung unter „Von selbst“ (braucht „Von selbst melden“).</span></div><label class="tgl"><input type="checkbox" id="chat.feature_tips_push"><i></i></label></div>
       <div class="setrow"><div class="lbl"><b>Vorrang für Personen</b><span>Reden mehrere gleichzeitig, bekommen ausgewählte Profile ihre Antwort zuerst. Wer Vorrang hat, legst du unter Personen und Geräte fest.</span></div><label class="tgl"><input type="checkbox" id="chat.person_priority"><i></i></label></div>
       <div data-show="chat.person_priority"><label>Andere warten höchstens</label><select id="chat.person_priority_wait" data-num="1"><option value="0">gar nicht (nur Sprachausgabe und Erkennung)</option><option value="1">1 Sekunde</option><option value="2">2 Sekunden (empfohlen)</option><option value="3">3 Sekunden</option><option value="5">5 Sekunden</option></select>
         <div class="fh">So lange halten neue Anfragen anderer ans Sprachmodell an, bis die Antwort mit Vorrang ihren ersten Satz hat. Laufende Antworten werden nie abgebrochen.</div></div>
@@ -891,6 +893,7 @@
 <script src="/static/js/appview.js"></script>
 <script src="/static/js/notaus.js"></script>
 <script src="/static/js/hilfe.js"></script>
+<script src="/static/js/tipps.js"></script>
 <script src="/static/js/schreib.js"></script>
 <script src="/static/js/begleiter.js"></script>
 <script src="/static/js/changelog.js"></script>

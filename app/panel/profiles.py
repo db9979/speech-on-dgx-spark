@@ -738,6 +738,7 @@ SETTINGS = {
     "prefetch": (False, lambda v: isinstance(v, bool)),     # fetch ahead on a question back (vorab.py, admin chat.prefetch)
     "instant_ack": (False, lambda v: isinstance(v, bool)),  # a ready-made sentence right away (ack.py, admin chat.instant_ack)
     "spark_help": (False, lambda v: isinstance(v, bool)),   # questions about the Spark itself (hilfe.py, admin chat.spark_help)
+    "tips_on": (False, lambda v: isinstance(v, bool)),      # hints on functions that would help (tipps.py, chat.feature_tips)
     "write_on": (False, lambda v: isinstance(v, bool)),     # Schreibhilfe (schreib.py, admin chat.write_help)
     "write_apps": (False, lambda v: isinstance(v, bool)),   # ... also from paired programs and the iPhone app (chat.write_apps)
     "desk_on": (False, lambda v: isinstance(v, bool)),      # the Spark-Begleiter on PC and Mac (chat.desk, begleiter.py)
@@ -777,7 +778,8 @@ SETTINGS = {
     "pro_parcel": (True, lambda v: isinstance(v, bool)),
     "tasks_on": (False, lambda v: isinstance(v, bool)),
     "transit_on": (False, lambda v: isinstance(v, bool)),   # Bus und Bahn (transit.py)
-    "pro_transit": (True, lambda v: isinstance(v, bool)),   # shopping and to-do list (tasks.py)
+    "pro_transit": (True, lambda v: isinstance(v, bool)),
+    "pro_tips": (False, lambda v: isinstance(v, bool)),     # one hint on a function a week (tipps.py, chat.feature_tips_push)   # shopping and to-do list (tasks.py)
     # Telegram (see telegram.py): what this profile allows over Telegram, all off until it says so
     "tg_voice": (False, lambda v: isinstance(v, bool)),
     "tg_private": (False, lambda v: isinstance(v, bool)),

@@ -237,6 +237,8 @@ def admin_delete_profile(uid: str, request: Request):
     coadmin.forget(uid)
     import join
     join.forget(uid)
+    import tipps
+    tipps.forget(uid)   # its hints and counts (tipps.json)
     return {"ok": True}
 
 
@@ -486,7 +488,7 @@ def validate(new):
         raise HTTPException(400, f"kiwix_books: at most {kiwix.MAX_BOOKS} book names (letters, digits, . _ -)")
     for k in ("agent", "agent_mcp", "mcp_own", "mcp_own_jobs", "mcp_own_oauth", "messages", "messages_all", "messages_announce", "messages_voice", "pebble",
               "kiwix", "local_first", "mcp_server", "mcp_server_extern", "mcp_server_act", "prefetch", "instant_ack",
-              "spark_help", "spark_suggest", "spark_drawer", "write_help", "write_apps", "desk", "desk_act", "desk_meeting"):
+              "spark_help", "spark_suggest", "spark_drawer", "feature_tips", "feature_tips_push", "write_help", "write_apps", "desk", "desk_act", "desk_meeting"):
         if not isinstance(ch.get(k, False), bool):
             raise HTTPException(400, f"{k} must be true or false")
     if ch.get("esp32_url") and not re.fullmatch(r"https?://[A-Za-z0-9.\-]+(?::\d{1,5})?/?", ch["esp32_url"]):

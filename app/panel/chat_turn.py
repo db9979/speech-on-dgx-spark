@@ -674,6 +674,17 @@ async def prepare(request):
         if messages[-1]["role"] == "user" and not pics and not role_cmd and not room_far else None
     if explain:
         print("weiche: erklärt", explain["key"], "-", explain["why"], flush=True)
+    # "Funktionen vorschlagen" (tipps.py): fixed rules decide whether the hint above gets a card; only the kind of
+    # question is counted, never its words; only for the profile's own login or device, never another voice
+    tip_kind = None
+    if who and own_browser and messages[-1]["role"] == "user":
+        import tipps
+        tipps.record(who["id"], route.names, body.get("spoken") is True or hilfe_origin in ("speaker", "watch", "siri"))
+        if explain:
+            convo = body.get("convo") if isinstance(body.get("convo"), str) else ""
+            explain["tip"] = tipps.wish(who["id"], explain, convo[:80], hilfe_origin, outside=bool(carry),
+                                        admin=hilfe_admin != "profile")
+            tip_kind = explain["tip"] and explain["tip"]["kind"]
     # "Eindeutiges direkt abrufen" (intent.DIRECT): a short, plain reading question; the panel calls the tool itself
     # in chat._answer and the model only says the result. Admin and profile switch, never guests or another voice.
     direct = intent.direct(ask_text, {t["function"]["name"] for t in tools}) \

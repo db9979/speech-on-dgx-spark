@@ -1328,7 +1328,8 @@ async def card_action(cid: str, request: Request, prof=Depends(browser_profile))
             _bump("declined")
             _live("Vorschlag abgelehnt")
         return {"state": card["state"]}
-    if not suggest_on(prof["id"]):
+    import tipps   # a card from "Funktionen vorschlagen" (tipps.py) is its own: only the profile's own switch, one tap
+    if not (suggest_on(prof["id"]) or (card.get("src") == "tipp" and tipps.on(prof["id"]))):
         raise HTTPException(403, "Einstellungen vorschlagen ist aus")
     if notaus.refuse("aktion"):
         raise HTTPException(423, f"Notaus Stufe {notaus.level()}: Änderungen sind angehalten")
@@ -1350,6 +1351,8 @@ async def card_action(cid: str, request: Request, prof=Depends(browser_profile))
     card["state"] = "applied" if do == "apply" else "undone"
     if do == "apply":
         card["applied"] = now
+        if card.get("src") == "tipp":
+            tipps._event("apply")
     _bump("applied" if do == "apply" else "undone")
     _live(("Vorschlag übernommen" if do == "apply" else "Vorschlag zurückgenommen") + f" ({len(card['items'])} Schalter)")
     guard.log("hilfe_" + card["state"], uid=prof["id"], detail=", ".join(x["key"] for x in card["items"])[:200])

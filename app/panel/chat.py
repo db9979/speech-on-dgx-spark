@@ -1270,7 +1270,7 @@ def start_trace(request, turn, t_req, t0):
             why=", ".join(route.why) if route and route.why else None, model=getattr(turn, "pick_state", None),
             sure=(getattr(turn, "pick_info", None) or {}).get("p"),
             via="systemone" if (getattr(turn, "pick_info", None) or {}) else None,
-            herkunft=_herkunft(turn))
+            herkunft=_herkunft(turn), hinweis=getattr(turn, "tip_kind", None))
     for c in turn.cal_note or []:   # what the panel did itself (a confirmed appointment, a role ...)
         name = str(c.get("name") or "Panel")
         tr.step("tool", "Ablauf" if name.startswith("Ablauf ") else name[:60], t0, t0, panel=True)   # (a routine's own name stays out)

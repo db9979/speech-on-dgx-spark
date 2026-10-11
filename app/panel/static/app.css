@@ -878,3 +878,13 @@ body.inchat .hilfefab{display:none}
 .dkupd{color:var(--acc,#5b5bf0);font-weight:600}.dkchev{flex:none;transition:transform .15s}.dkdev.open .dkchev{transform:rotate(90deg)}
 .dkgrp h4{margin:12px 0 2px;font-size:12px;text-transform:uppercase;letter-spacing:.04em;color:var(--mut)}
 .dkcopy{margin:8px 0}.dkcopy select{max-width:100%}
+/* "Funktionen vorschlagen" (tipps.js): the hint under an answer, the guided setup in the face's window, Ich → Überblick */
+.tipnote{display:flex;flex-direction:column;gap:6px;margin-top:6px;padding-top:6px;border-top:1px dashed var(--line);white-space:normal}
+.tiprow{display:flex;flex-wrap:wrap;gap:6px}.tiprow .b{font-size:13px;padding:5px 10px}
+.tipsetup{white-space:normal;margin-top:10px;padding:10px 12px;border:1px solid var(--line);border-radius:14px;background:color-mix(in srgb,var(--acc) 6%,transparent);max-height:52vh;overflow:auto}
+.tipsetup h4{margin:0 0 6px;font-size:14px}.tipsetup ol{margin:6px 0;padding-left:20px;font-size:13px}.tipsetup li{margin:3px 0;overflow-wrap:anywhere}
+.tipsetup .row{display:flex;flex-wrap:wrap;gap:6px}
+.tipover{margin:4px 0 8px}.tipover .mgrp{padding:10px 0 4px}
+.tipitem{display:flex;flex-direction:column;gap:4px;padding:8px 2px;border-bottom:1px solid var(--line);font-size:14px;min-width:0}
+.tipitem>span{color:var(--mut);font-size:13px;overflow-wrap:anywhere}
+#profmodal.sub .mewrap>.tipover,#profmodal.one .mewrap>.tipover{display:none}.mewrap>.tipover{padding:0 4px}

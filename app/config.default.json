@@ -94,6 +94,8 @@
     "write_apps": false,
     "spark_suggest": false,
     "spark_drawer": false,
+    "feature_tips": false,
+    "feature_tips_push": false,
     "route_words": "",
     "learn_fixes": false,
     "follow_up": false,

@@ -59,6 +59,7 @@ CASES = (
     ("Wie spiele ich ein Update ein?", None, "Update", "spark"),
     ("Wie mache ich den Spark sicherer?", None, "sicherer", "spark"),
     ("Wie verbinde ich Wyoming?", None, "Wyoming", "spark"),
+    ("Wie schalte ich Funktionen vorschlagen ein?", None, "Funktionen vorschlagen", "spark"),
     ("Was kannst du alles?", None, None, "spark"),
     # asked through the face on a page: the page itself first
     ("Was macht dieser Schalter hier?", "feat", "Funktionen", "spark"),

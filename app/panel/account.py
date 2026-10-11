@@ -115,6 +115,8 @@ def whoami(request: Request, creds: HTTPBasicCredentials | None = Depends(securi
             "hilfe": {"suggest": features.allowed("hilfevorschlag", prof["id"], chat),
                       "page": features.allowed("hilfeseite", prof["id"], chat)}
             if prof and features.allowed("hilfe", prof["id"], chat) and not request.headers.get(profiles.DEVICE_HEADER) else None,
+            # "Funktionen vorschlagen" (tipps.py): the hint under an answer and the list under Ich → Überblick
+            "tipps": bool(prof and features.allowed("tipps", prof["id"], chat) and not request.headers.get(profiles.DEVICE_HEADER)),
             # "Los geht's" / "Einrichten x von y" (onboard.py): only for the profile's own login
             "setup": _setup(prof, request),
             # Logs → Anfragen: main admin and co-admins (tracelog.py), not the Verwalter role
@@ -1070,7 +1072,7 @@ def profile_settings(request: Request):
 # which conversation switches the admin allows (features.py), only for a signed-in profile
 ALLOW = {"tool_think": "toolthink", "route": "routing", "direct_read": "direct", "fix_learn": "fixes", "style": "style", "roles": "roles",
          "wiki": "wiki", "kiwix": "kiwix", "local": "lokal", "follow": "follow", "echo": "selfecho", "images": "images",
-         "prefetch": "vorab", "instant_ack": "ack", "spark_help": "hilfe", "systemone_on": "einordnung"}
+         "prefetch": "vorab", "instant_ack": "ack", "spark_help": "hilfe", "tips_on": "tipps", "pro_tips": "tippspush", "systemone_on": "einordnung"}
 
 
 def _allow(prof, chat):

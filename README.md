@@ -33,6 +33,7 @@ All options for running without questions (`--mode api --asr 1.7b --tts 0.6b --y
 
 <!-- New version: add one line at the top here and in CHANGELOG.md, drop the oldest line here (keep 10). Details go to docs/de and docs/en, not into this README. -->
 
+- **V01.0.380** Suggesting functions (off): a hint with "Set up" when you ask for something that is off or half set up, guided setup in the face, at most 3 a week
 - **V01.0.379** Gentler updates: speech services restart only when something of theirs changed, a short smoke test instead of the minutes-long self-test when GitHub's run passed; "Install overnight" (off), a warning while somebody is talking, the update on the live page; fewer repeated log lines
 - **V01.0.378** Companion: "Fetch new version now" takes Windows and Mac, also with no computer of that kind paired
 - **V01.0.377** Companion: "Check for updates" now really looks right away; the Mac says why an update was refused
@@ -42,7 +43,6 @@ All options for running without questions (`--mode api --asr 1.7b --tts 0.6b --y
 - **V01.0.373** Instant acknowledgement (off): right after the question a pre-recorded sentence of what the Spark is doing, measured apart from the answer's first sound
 - **V01.0.372** Emergency stop docs: every way in one place (Telegram, sentence, Home Assistant, Android, iPhone, speakers, Pebble, guard)
 - **V01.0.371** Releases on GitHub tidy: after every new release only the newest of each series stays, older ones are deleted
-- **V01.0.370** iPhone app: emergency stop button and Siri "Spark Notaus" (always with a question; lifting only in the browser)
 
 All versions: [CHANGELOG.md](CHANGELOG.md)
 
