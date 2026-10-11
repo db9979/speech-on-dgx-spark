@@ -110,6 +110,10 @@ class Sheet(Plus):
         self.assertEqual(rmplus.asks("@ spark: Wann ist Ostern 2027? @Spark Was kostet ein Brenner?"),
                          ["Wann ist Ostern 2027?", "Was kostet ein Brenner?"])
         self.assertEqual(rmplus.asks("Mail an spark@example.com"), [])
+        # read handwriting: the reader's picture line and unreadable parts are not part of the question
+        self.assertEqual(rmplus.asks("@Spark Wie [unleserlich] lange hält Sauerteig? Danke\nBild: Handschrift auf Linien."),
+                         ["Wie lange hält Sauerteig?"])
+        self.assertEqual(rmplus.asks("@Spark [unleserlich]\nBild: eine Skizze"), [])
         self.assertEqual(rmplus.todos("☐ Steuer abgeben\n[ ] Reifen wechseln\nTODO: Oma anrufen\nAufgabe: Rasen\nNotiz ohne"),
                          ["Steuer abgeben", "Reifen wechseln", "Oma anrufen", "Rasen"])
 
@@ -123,6 +127,8 @@ class FromPaper(Plus):
         self.assertEqual(run(rmplus.from_pages(uid, T)), "ask")
         call = next(x for x in helpers.LLM_CALLS if x["messages"][0]["content"] == rmplus.ASK_SYSTEM)
         self.assertIn("<<<", call["messages"][1]["content"])                # the page goes in as data
+        self.assertIn("Die Frage der Person: Wie lange hält Sauerteig im Kühlschrank?", call["messages"][1]["content"])
+        self.assertIn("eigenen Wissen", call["messages"][0]["content"])     # not only from the notes
         self.assertNotIn("tools", call)
         got = books("Antwort:")
         self.assertEqual(list(got), ["Antwort: Wie lange hält Sauerteig im Kühlschrank"])
