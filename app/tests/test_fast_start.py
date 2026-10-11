@@ -242,5 +242,33 @@ class Sizes(unittest.TestCase):
         self.assertEqual(size["tools"], len(json.dumps([{"type": "function", "function": {"name": "a"}}])))
 
 
+class Rounds(unittest.TestCase):
+    """Trace 68bf48: archive_search four times in a row, then an answer round with the list and tool_choice "none"
+    in which qwen38 wrote a call as text, and one more round: first sound after 20.7 s."""
+    def setUp(self):
+        helpers.LLM_CALLS.clear()
+
+    def tearDown(self):
+        helpers.set_config(prompt_cache=False)
+
+    def test_a_look_up_at_most_twice(self):
+        p = profile("Runden1")
+        evs = ask(p, [{"role": "user", "content": 'LOOP history_search {"query": "Urlaub"}'}])
+        calls = streamed()
+        self.assertEqual(sum(1 for c in calls if "history_search" in names(c)), 2)     # max_searches (2)
+        self.assertEqual(len(calls), 3)                                                 # then the answer
+        self.assertIn("Fertig.", text_of(evs))
+
+    def test_last_round_without_any_list(self):
+        helpers.set_config(prompt_cache=True)
+        p = profile("Runden2")
+        ask(p, [{"role": "user", "content": "LOOP reminder_list {}"}])
+        calls = streamed()
+        self.assertEqual(len(calls), 5)                                                 # never a sixth
+        self.assertNotIn("tools", calls[-1])
+        self.assertNotIn("tool_choice", calls[-1])
+        self.assertEqual(calls[-1]["messages"][-1]["content"], chat.LAST_NOTE)
+
+
 if __name__ == "__main__":
     unittest.main()

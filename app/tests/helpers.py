@@ -132,6 +132,18 @@ def fake_llm():
                 yield _sse({"choices": [{"delta": {}, "finish_reason": "tool_calls"}]})
                 yield "data: [DONE]\n\n"
                 return
+            loop = next((m.get("content") or "" for m in b["messages"] if m["role"] == "user"
+                         and str(m.get("content") or "").startswith("LOOP ")), "")
+            if loop:  # a model that calls the same tool again every round while it is offered
+                name, _, args = loop[5:].partition(" ")
+                if name in names:
+                    yield _sse({"choices": [{"delta": {"tool_calls": [{"index": 0, "id": f"l{len(b['messages'])}",
+                                "type": "function", "function": {"name": name, "arguments": args or "{}"}}]},
+                                "finish_reason": None}]})
+                    yield _sse({"choices": [{"delta": {}, "finish_reason": "tool_calls"}]})
+                    yield "data: [DONE]\n\n"
+                    return
+                c, role = "NO TOOL | | Fertig.", "user"
             if role == "user" and c.startswith("SAY "):  # a model that answers without a tool, whatever is asked
                 c = "NO TOOL" + c[3:]
             if role == "user" and c.startswith("TOOL "):
