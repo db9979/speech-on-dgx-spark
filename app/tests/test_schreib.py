@@ -255,7 +255,7 @@ class Schreib(unittest.TestCase):
         self.assertEqual([d["name"] for d in devs], ["Schreibhilfe Windows · Laptop"])
         # switching "In anderen Programmen" off stops the key, the browser goes on
         c.put("/api/profile/settings", json={"write_apps": False})
-        self.assertEqual(prog.post("/api/write/assist", json={"text": "x"}, headers=k).status_code, 401)
+        self.assertEqual(prog.post("/api/write/assist", json={"text": "x"}, headers=k).status_code, 503)   # pairing stays (V01.0.388)
         self.assertEqual(c.post("/api/write/assist", json={"text": "x"}).status_code, 200)
         c.put("/api/profile/settings", json={"write_apps": True})
         # removing it in the panel cuts it off at once

@@ -345,6 +345,10 @@ def assistant(request: Request, creds: HTTPBasicCredentials | None = Depends(sec
     device key) and the admin, so guests are locked out but profiles can still sign in."""
     if load_config().get("chat", {}).get("public", False) or profiles.current(request):
         return
+    closed = request.scope.get("speech_gate_closed")
+    if closed and not creds:   # a known device, its function off right now: keep the pairing (profiles._gate_closed)
+        raise HTTPException(503, "Mein Notaus hält dieses Gerät an." if closed == "notaus"
+                            else "Für dieses Gerät gerade ausgeschaltet (Funktionen → Wer darf was).")
     auth(request, creds)
 
 

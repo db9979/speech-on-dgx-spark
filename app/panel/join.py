@@ -317,7 +317,10 @@ def create_profile(code, name, pin, now=None):
         _unuse(iid)
         raise HTTPException(409, "Diesen Namen gibt es schon. Bitte einen anderen wählen.")
     _joined(uid, iid, now)
+    # the functions the admin switches on for every new profile (Wer darf was → Neue Profile), then the invitation's pack
+    first = [k for k in features.new_profile(uid) if features.admin_on(k)]
     on = apply_pack(uid, v.get("pack", ""))
+    on = first + [k for k in on if k not in first]
     import onboard
     onboard.save_state(uid, fresh=True)   # "Los geht's" opens at the first sign-in in a browser
     guard.log("invite_used", uid=uid, name=name, invite=iid, pack=v.get("pack") or None)

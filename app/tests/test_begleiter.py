@@ -116,10 +116,31 @@ class Begleiter(unittest.TestCase):
         code, prog = self.pair(c)
         self.assertEqual(prog.get("/api/desk/config").status_code, 200)
         helpers.set_config(desk=False)                       # the admin switch stops every key at once
-        self.assertEqual(prog.get("/api/desk/config").status_code, 401)
+        self.assertEqual(prog.get("/api/desk/config").status_code, 503)   # "not now": the program keeps its key (V01.0.388)
         helpers.set_config(desk=True)
+        self.assertEqual(prog.get("/api/desk/config").status_code, 200)   # and works again as soon as it is back on
         c.put("/api/profile/settings", json={"desk_on": False})   # so does the profile's own
-        self.assertEqual(prog.get("/api/desk/poll").status_code, 401)
+        self.assertEqual(prog.get("/api/desk/poll").status_code, 503)
+        c.put("/api/profile/settings", json={"desk_on": True})
+        self.assertEqual(prog.get("/api/desk/poll").status_code, 200)
+        bad = TestClient(panel.app, client=HOME, headers={profiles.DEVICE_HEADER: "sd_unknown"})
+        self.assertEqual(bad.get("/api/desk/poll").status_code, 401)   # an unknown key still means: pair again
+
+    def test_rights_changed_under_wer_darf_was_reach_the_program_with_its_next_poll(self):
+        """V01.0.388: rev also follows what the switches allow, so the program fetches its config again and
+        stops a part the admin turned off, without a restart."""
+        c = self.on("DkRolf")
+        _, prog = self.pair(c)
+        cfg = prog.get("/api/desk/config").json()
+        self.assertTrue(cfg["allowed"]["write"])
+        rev = prog.get("/api/desk/poll").json()["rev"]
+        self.assertEqual(prog.get("/api/desk/poll").json()["rev"], rev)          # nothing changed: same rev
+        r = ADMIN.put(f"/api/admin/features/schreib/profiles/{uid_of('DkRolf')}", json={"on": False})
+        self.assertEqual(r.status_code, 200, r.text)
+        new = prog.get("/api/desk/poll").json()["rev"]
+        self.assertGreater(new, rev)                                             # the program sees the change
+        cfg = prog.get("/api/desk/config").json()
+        self.assertEqual((cfg["rev"], cfg["allowed"]["write"], cfg["parts"]["write"]), (new, False, False))
 
     def test_pair_once_and_the_key_reaches_only_its_paths(self):
         c = self.on("DkBert")

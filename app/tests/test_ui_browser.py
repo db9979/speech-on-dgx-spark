@@ -432,6 +432,36 @@ class Browser(unittest.TestCase):
         finally:
             helpers.set_config(transit=False)
 
+    def test_rights_changed_elsewhere_arrive_without_f5(self):
+        """V01.0.388: the admin switches a function for this profile under Wer darf was (another browser): the
+        open page sees the new fingerprint at its next look (every minute, on coming back) and reloads when calm,
+        with a note; in a conversation only a bar."""
+        import profiles
+        async def go():
+            async with async_playwright() as p:
+                br, pg, errors = await self.page(p, 1280, 900)
+                uid = next(u["id"] for u in profiles._load()["users"] if u["name"] == "Uitest")
+                was = profiles.settings(uid).get("wx_on") is True
+                helpers.set_config(weather=True)
+                try:
+                    # busy (a conversation): no reload, a bar instead
+                    profiles.save_settings(uid, {"wx_on": not was})
+                    await pg.evaluate("window.sparkBusyWas=sparkBusy;sparkBusy=()=>true;verWatch.back=Date.now();verCheck()")
+                    await pg.wait_for_selector("#verbanner", timeout=5000)
+                    self.assertIn("Funktionen wurden geändert", await pg.text_content("#verbanner"))
+                    await pg.evaluate("sparkBusy=window.sparkBusyWas;$('verbanner').remove()")
+                    # calm: the page loads itself again and says why
+                    async with pg.expect_navigation():
+                        await pg.evaluate("verWatch.back=Date.now();verCheck()")
+                    await pg.wait_for_timeout(800)
+                    self.assertIn("Funktionen wurden geändert", await pg.evaluate("$('updtoast').textContent"))
+                    self.assertEqual(errors, [])
+                finally:
+                    profiles.save_settings(uid, {"wx_on": was})
+                    helpers.set_config(weather=False)
+                    await br.close()
+        self.run_async(go())
+
     def test_zustand_says_how_it_is_and_what_needs_you(self):
         """V01.0.146: Zustand starts with one sentence and lists unsaved settings pages under "Braucht dich"
         with a button that opens the page; the dot in the menu follows the sentence. (Services may also be

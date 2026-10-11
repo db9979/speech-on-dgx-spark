@@ -166,7 +166,7 @@ class RoomLive(unittest.TestCase):
         token2 = a.post("/api/profile/room/ha").json()["token"]
         self.assertEqual(keyed(token).get("/api/room/active").status_code, 401)
         helpers.set_config(room_ha=False)
-        self.assertEqual(keyed(token2).get("/api/room/active").status_code, 401)
+        self.assertEqual(keyed(token2).get("/api/room/active").status_code, 503)   # "not now", the key stays (V01.0.388)
 
     def test_admin_sees_all_and_ends_all(self):
         a, _ = profile("Rl Hanna")

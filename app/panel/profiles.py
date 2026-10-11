@@ -614,6 +614,14 @@ def used(uid, kind, key=""):
     LAST_USED[uid] = (kind, key, time.time())
 
 
+def _gate_closed(request, why="off"):
+    """A known device key whose function is switched off right now (Wer darf was, Ich, Mein Notaus): no profile
+    for this request, but core.assistant answers 503 ("not now", like the Notaus) instead of 401, so the apps keep
+    their pairing, do not ask again in a loop, and work again as soon as the switch is back on (V01.0.388)."""
+    request.scope["speech_gate_closed"] = why
+    return None
+
+
 def current(request):
     """{"id", "name"} of the profile behind this request (device key first, then cookie), or None."""
     d = _load()
@@ -639,25 +647,36 @@ def current(request):
             return None
         if dev.get("scope") == "app":
             area = None if _app_path(request) else _app_area(request, dev["user"])
-            if (not area and not _app_path(request)) or not APP_GATE[0](dev["user"]):
+            if not area and not _app_path(request):
                 return None
+            if not APP_GATE[0](dev["user"]):
+                return _gate_closed(request)
             # core.browser_profile lets the app into the area's paths like the profile's own browser login
             request.scope["speech_app_area"] = area
-        if dev.get("scope") == "room" and (request.scope.get("path") not in ROOM_PATHS or not ROOM_GATE[0](dev["user"])):
+        if dev.get("scope") == "room" and request.scope.get("path") not in ROOM_PATHS:
             return None
-        if dev.get("scope") == "watch" and (not str(request.scope.get("path") or "").startswith(WATCH_PREFIX)
-                                            or not WATCH_GATE[0](dev["user"])):
+        if dev.get("scope") == "room" and not ROOM_GATE[0](dev["user"]):
+            return _gate_closed(request)
+        if dev.get("scope") == "watch" and not str(request.scope.get("path") or "").startswith(WATCH_PREFIX):
             return None
-        if dev.get("scope") == "haev" and (request.scope.get("path") not in HAEV_PATHS or not HAEV_GATE[0](dev["user"])):
+        if dev.get("scope") == "watch" and not WATCH_GATE[0](dev["user"]):
+            return _gate_closed(request)
+        if dev.get("scope") == "haev" and request.scope.get("path") not in HAEV_PATHS:
             return None
-        if dev.get("scope") == "write" and (request.scope.get("path") not in WRITE_PATHS or not WRITE_GATE[0](dev["user"])):
+        if dev.get("scope") == "haev" and not HAEV_GATE[0](dev["user"]):
+            return _gate_closed(request)
+        if dev.get("scope") == "write" and request.scope.get("path") not in WRITE_PATHS:
             return None
-        if dev.get("scope") == "desk" and (request.scope.get("path") not in DESK_PATHS or not DESK_GATE[0](dev["user"])):
+        if dev.get("scope") == "write" and not WRITE_GATE[0](dev["user"]):
+            return _gate_closed(request)
+        if dev.get("scope") == "desk" and request.scope.get("path") not in DESK_PATHS:
             return None
+        if dev.get("scope") == "desk" and not DESK_GATE[0](dev["user"]):
+            return _gate_closed(request)
         if dev.get("scope") not in (None, "", "app", "room", "watch", "haev", "write", "desk"):
             return None
         if notaus.own(dev["user"]):
-            return None
+            return _gate_closed(request, "notaus")
         _note_device(dev["id"], request)
         uid = dev["user"]
         if dev.get("scope") == "app":

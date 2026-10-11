@@ -1373,6 +1373,18 @@ def remember(dev, history, text, answer, from_mail):
         print("esp32: convo", type(e).__name__, e, flush=True)
 
 
+RECHECK = 2.0              # an open speaker connection looks at its rights again after this many seconds
+
+
+def still_allowed(dev):
+    """While a speaker is connected: the Spark's switch, the profile's own switch (also when the admin turns
+    it off under Wer darf was) and the device itself (deleted, or moved to another profile) still hold."""
+    if not admin_on() or not profile_on(dev["user"]):
+        return False
+    now = next((x for x in profiles._load()["devices"] if x["id"] == dev["id"]), None)
+    return bool(now and now.get("user") == dev["user"] and now.get("token") == dev.get("token"))
+
+
 def device_for_token(token):
     if not token:
         return None
@@ -1562,6 +1574,7 @@ async def speaker_ws(ws: WebSocket):
     profiles._note_device(dev["id"], ws)
     print("esp32: connected", dev["name"], flush=True)
     diag(dev["id"], "Verbunden")
+    checked = time.monotonic()
     try:
         while True:
             msg = await ws.receive()
@@ -1569,6 +1582,15 @@ async def speaker_ws(ws: WebSocket):
                 break
             if notaus.blocks("gespraech"):
                 break
+            if time.monotonic() - checked >= RECHECK:
+                checked = time.monotonic()
+                if not still_allowed(dev):   # switched off or removed meanwhile: the connection ends now
+                    diag(dev["id"], "Verbindung beendet: Lautsprecher oder Profil-Schalter ausgeschaltet")
+                    print("esp32: connection ended, no longer allowed:", dev["name"], flush=True)
+                    import live
+                    live.mark("Rechte", "Lautsprecher getrennt: nicht mehr erlaubt")
+                    await ws.close(code=4403)
+                    break
             if msg.get("bytes") is not None:
                 await s.on_audio(msg["bytes"])
             elif msg.get("text") is not None:

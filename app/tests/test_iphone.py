@@ -115,13 +115,13 @@ class IPhone(unittest.TestCase):
         self.assertIn(app.get("/api/tasks/inbox?list=einkauf", headers=h).status_code, (401, 403))   # only with app_ios
         # switched off: the key stops at once (profile switch, then admin switch)
         a.put("/api/profile/settings", json={"app_on": False})
-        self.assertEqual(app.get("/api/iphone/hello", headers=h).status_code, 401)
+        self.assertEqual(app.get("/api/iphone/hello", headers=h).status_code, 503)   # "not now", pairing stays (V01.0.388)
         a.put("/api/profile/settings", json={"app_on": True})
         self.assertEqual(app.get("/api/iphone/hello", headers=h).status_code, 200)
         helpers.set_config(iphone=False)
-        self.assertEqual(app.get("/api/iphone/hello", headers=h).status_code, 401)
+        self.assertEqual(app.get("/api/iphone/hello", headers=h).status_code, 503)
         self.assertEqual(app.post("/api/chat", json={"messages": [{"role": "user", "content": "Hallo"}]},
-                                  headers=h).status_code, 401)
+                                  headers=h).status_code, 503)
 
     def test_remove_and_admin_cannot_move_it(self):
         a, b = profile("Ilse"), profile("Ivo")

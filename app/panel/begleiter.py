@@ -241,6 +241,24 @@ def device_cfg(did):
     return clean(e.get("cfg")), int(e.get("rev") or 1)
 
 
+def program_rev(did, uid):
+    """(settings, rev) for the program itself: rev also goes up when what the switches allow changes (the
+    admin under Wer darf was, the profile under Ich), so the program fetches its config with the next poll and
+    stops the parts that are no longer allowed, not only after a restart (V01.0.388)."""
+    mask = "".join("1" if v else "0" for v in may(uid).values())
+    with _lock:
+        d = _load()
+        e = d.get(did) or {"uid": uid, "cfg": clean(DEFAULT), "rev": 1}
+        if e.get("may") != mask:
+            if "may" in e:
+                e["rev"] = int(e.get("rev") or 1) + 1
+            e["may"] = mask
+            d[did] = e
+            mine = {x["id"] for x in profiles._load()["devices"]}
+            profiles._write(_file(), {k: v for k, v in d.items() if k in mine})
+    return clean(e.get("cfg")), int(e.get("rev") or 1)
+
+
 def _save_cfg(did, uid, cfg):
     with _lock:
         d = _load()
@@ -444,6 +462,10 @@ def _program(request):
     """(profile, device) of a request from a paired program; 401 for anything else."""
     prof = profiles.current(request)
     dev = profiles.device(request) if prof else None
+    closed = None if prof else request.scope.get("speech_gate_closed")
+    if closed:   # switched off (Wer darf was, Mein Notaus): "not now", the program keeps its pairing
+        raise HTTPException(503, "Mein Notaus hält den Begleiter an." if closed == "notaus"
+                            else "Der Begleiter ist für dich gerade ausgeschaltet (Funktionen → Wer darf was).")
     if not prof or not dev or dev["scope"] != "desk":
         raise HTTPException(401, "Der Spark kennt dieses Gerät nicht mehr. Neu koppeln.")
     return prof, dev
@@ -478,7 +500,7 @@ async def program_config(request: Request, version: str = "", arch: str = ""):
     prof, dev = _program(request)
     guard.limit(request, "desk", prof["id"])
     await asked(arch)
-    cfg, rev = device_cfg(dev["id"])
+    cfg, rev = program_rev(dev["id"], prof["id"])
     ok = may(prof["id"])
     _tell(dev["id"], version, arch)
     parts = {p: bool(cfg["parts"][p] and ok[p]) for p in PARTS}
@@ -504,7 +526,7 @@ async def program_poll(request: Request, after: int = 0, version: str = "", arch
     _seen[dev["id"]] = time.time()
     if len(_seen) > 1000:
         _seen.clear()
-    cfg, rev = device_cfg(dev["id"])
+    cfg, rev = program_rev(dev["id"], prof["id"])
     items, last = notes(prof["id"], max(0, min(after, 10 ** 9))) if part_on(prof["id"], dev["id"], "notes") \
         else ([], _seq.get(prof["id"], 0))
     _tell(dev["id"], version, arch)

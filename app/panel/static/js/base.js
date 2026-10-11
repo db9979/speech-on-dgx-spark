@@ -23,19 +23,28 @@ function verTry(){const now=Date.now(),calm=!sparkBusy()&&now-verWatch.edit>600e
   verBar(t('Neue Version ist da: ','A new version is here: ')+verWatch.newer)}
 // Switched a function on or off in the settings: the page reads the switches once at start (start.js), so
 // after a saved change it compares them with the Spark and loads itself again when one differs (no F5).
-const whoFlags=w=>JSON.stringify(Object.keys(w||{}).sort().filter(k=>typeof w[k]==='boolean'||k==='face').map(k=>[k,w[k]]));
+// "rights" (features.stamp) changes with every switch under Wer darf was that touches this profile.
+const whoFlags=w=>JSON.stringify(Object.keys(w||{}).sort().filter(k=>typeof w[k]==='boolean'||k==='face'||k==='rights').map(k=>[k,w[k]]));
 let WHO_FLAGS=null,whoT=null;
 async function whoCheck(){if(WHO_FLAGS===null)return;
   try{const r=await fetch('/api/whoami',{cache:'no-store'});if(!r.ok)return;const w=await r.json();
     if(window.confirmShow)confirmShow(w.confirm_until||0);
     if(whoFlags(w)===WHO_FLAGS)return;
+    // only this profile's own switches moved (it switched them here): the page already shows them, no reload
+    if(whoFlags(Object.assign({},w,{rights:0}))===whoFlags(Object.assign(JSON.parse(WHO_FLAGS).reduce((o,[k,v])=>(o[k]=v,o),{}),{rights:0}))){WHO_FLAGS=whoFlags(w);return}
     if(!sparkBusy()){try{sessionStorage.setItem('flagsreload','1')}catch{}return verReload()}
     verBar(t('Funktionen geändert, neu laden zeigt sie: ','Functions changed, reload shows them: '))}catch{}}
 const whoSoon=()=>{clearTimeout(whoT);whoT=setTimeout(whoCheck,300)};
+// Changed elsewhere (the admin under Wer darf was, the profile on another device): checked every minute, on
+// coming back and on focus, with the same calm rules as a new version (never mid-conversation or while typing).
+function flagsAway(w){if(WHO_FLAGS===null||whoFlags(w)===WHO_FLAGS)return;
+  const now=Date.now(),calm=!sparkBusy()&&now-verWatch.edit>600e3;
+  if(calm&&(document.visibilityState==='hidden'||now-verWatch.back<5000||now-verWatch.seen>120e3)){try{sessionStorage.setItem('flagsreload','away')}catch{}return verReload()}
+  verBar(t('Deine Funktionen wurden geändert, neu laden zeigt sie: ','Your functions were changed, reload shows them: '))}
 async function verCheck(){if(!SPARK_VER)return;if(verWatch.newer)return verTry();
-  try{const r=await fetch('/api/whoami',{cache:'no-store'});if(!r.ok)return;const v=(await r.json()).version;
-    if(v&&v!==SPARK_VER){verWatch.newer=v;verTry()}}catch{}}
-setInterval(verCheck,300e3);
+  try{const r=await fetch('/api/whoami',{cache:'no-store'});if(!r.ok)return;const w=await r.json(),v=w.version;
+    if(v&&v!==SPARK_VER){verWatch.newer=v;verTry()}else flagsAway(w)}catch{}}
+setInterval(verCheck,60e3);
 document.addEventListener('visibilitychange',()=>{if(document.visibilityState==='visible'){verWatch.back=Date.now();verCheck()}});
 window.addEventListener('pageshow',e=>{if(e.persisted){verWatch.back=Date.now();verCheck()}});
 window.addEventListener('focus',()=>{verWatch.back=Date.now();verCheck()});

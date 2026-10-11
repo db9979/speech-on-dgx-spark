@@ -10,6 +10,7 @@ The stored names stay as they are (config.json chat.*, users/<id>/settings.json)
 move: this table only knows both. The fixed protection rules (secrets never spoken, voice priority,
 the owner's voice at a shared speaker) are not switches and stay where they are.
 """
+import hashlib
 import json
 import os
 import re
@@ -343,6 +344,15 @@ def state(uid, c=None):
     return out
 
 
+def stamp(uid, c=None):
+    """A short fingerprint of what this profile (or a guest) may use right now and of its own switches. The
+    pages and apps compare it with the one they started with (/api/whoami, /api/features), so a change under
+    Wer darf was or on another device arrives without reloading by hand. Says nothing about the content."""
+    st = state(uid, c)
+    raw = json.dumps([(x["key"], x["why"], x["mine"]) for x in st], separators=(",", ":"))
+    return hashlib.sha256(raw.encode()).hexdigest()[:16]
+
+
 router = APIRouter()
 
 
@@ -352,7 +362,7 @@ def features_list(request: Request):
     prof = profiles.current(request)
     guard.limit(request, "features", prof and prof["id"])
     return {"groups": [{"key": k, "name": [de, en]} for k, de, en in GROUPS],
-            "features": state(prof["id"] if prof else None), "why": WHY}
+            "features": state(prof["id"] if prof else None), "why": WHY, "stamp": stamp(prof["id"] if prof else None)}
 
 
 # ---------------------------------------------------------------- Funktionen → "Wer darf was" (admin)
@@ -387,6 +397,7 @@ def new_profile(uid):
     keys = [k for k in chat_cfg().get("new_profile_on", []) if k in BY_KEY and BY_KEY[k].profile]
     if keys:
         profiles.save_settings(uid, {BY_KEY[k].profile: True for k in keys})
+    return keys
 
 
 def matrix():

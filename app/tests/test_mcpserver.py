@@ -292,6 +292,22 @@ class Acting(Base):
         self.assertNotIn("reminder_set", {t["name"] for t in rpc(self.lan, token, "tools/list").json()["result"]["tools"]})
         self.assertTrue(cid)
 
+    def test_waiting_action_not_run_after_the_admin_switched_the_profile_off(self):
+        """Rights arrive at once (V01.0.388): a proposal made earlier is not carried out once the admin turned
+        the profile's MCP switch off under Wer darf was."""
+        c, uid = profile("McpRolf")
+        c.put("/api/profile/settings", json={"mcps_on": True})
+        helpers.set_config(mcp_server_act=True)
+        token = self.key(c, ["reminder_set"], name="n8n")
+        before = len(profiles.reminders(uid))
+        call(self.lan, token, "reminder_set", {"text": "Licht aus", "minutes": 30})
+        aid = c.get("/api/profile/mcp").json()["actions"][0]["id"]
+        self.assertEqual(ADMIN.put(f"/api/admin/features/mcpserver/profiles/{uid}", json={"on": False}).status_code, 200)
+        r = c.post(f"/api/profile/mcp/actions/{aid}", json={"yes": True})
+        self.assertEqual(r.json()["state"], "no", r.text)
+        self.assertEqual(len(profiles.reminders(uid)), before)
+        helpers.set_config(mcp_server_act=False)
+
 
 class Outside(Base):
     def test_extern_needs_switch_second_step_and_fresh_code(self):

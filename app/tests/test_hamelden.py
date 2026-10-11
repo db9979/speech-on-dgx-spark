@@ -449,7 +449,7 @@ class Events(Base):
         h = {profiles.DEVICE_HEADER: token}
         # the profile switches it off: the key reaches nothing
         a.put("/api/profile/settings", json={"pro_ha_events": False})
-        self.assertIn(ha.post("/api/ha/event", json={"event": "klingel"}, headers=h).status_code, (401, 403))
+        self.assertIn(ha.post("/api/ha/event", json={"event": "klingel"}, headers=h).status_code, (401, 403, 503))
         a.put("/api/profile/settings", json={"pro_ha_events": True})
         r = ha.post("/api/ha/event", json={"event": "klingel"}, headers=h)
         self.assertEqual(r.status_code, 200, r.text)
@@ -472,7 +472,7 @@ class Events(Base):
         self.assertEqual(a.post("/api/ha/event", json={"event": "klingel"}).status_code, 403)
         # the admin switch off: closed
         helpers.set_config(ha_events=False)
-        self.assertIn(ha.post("/api/ha/event", json={"event": "klingel"}, headers=h).status_code, (401, 403))
+        self.assertIn(ha.post("/api/ha/event", json={"event": "klingel"}, headers=h).status_code, (401, 403, 503))
         helpers.set_config(ha_events=True)
         # a new key ends the old one
         a.post("/api/profile/ha-events/key", json={})

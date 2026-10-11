@@ -221,6 +221,40 @@ class Speakers(unittest.TestCase):
         self.assertIn("activation", ota(cid).json())
 
     @unittest.skipUnless(_has_opus(), "libopus missing")
+    def test_open_connection_ends_when_switched_off_under_wer_darf_was(self):
+        """Rights arrive at once (V01.0.388): an open speaker connection looks at the switches again and ends
+        when the admin turns the profile's speakers off, not only at the next connect."""
+        a = profile("Esp Rita")
+        a.put("/api/profile/settings", json={"esp_on": True})
+        uid = next(u["id"] for u in esp32.profiles._load()["users"] if u["name"] == "Esp Rita")
+        s = a.post("/api/profile/esp32/setup", json={"name": "Keller", "variant": "bread-compact-wifi",
+                                                     "base": "https://speech.example.de"}).json()
+        dev = esp32.device_for_token(s["token"])
+        self.assertTrue(esp32.still_allowed(dev))
+        old = esp32.RECHECK
+        esp32.RECHECK = 0
+        try:
+            with TestClient(panel.app).websocket_connect("/api/esp32/ws", headers={
+                    "Authorization": "Bearer " + s["token"], "Protocol-Version": "1", "Client-Id": s["uuid"]}) as ws:
+                ws.send_text(json.dumps({"type": "hello", "version": 1, "transport": "websocket",
+                                         "audio_params": {"format": "opus", "sample_rate": 16000, "channels": 1, "frame_duration": 60}}))
+                self.assertEqual(json.loads(ws.receive_text())["type"], "hello")
+                r = ADMIN.put(f"/api/admin/features/esp32/profiles/{uid}", json={"on": False})
+                self.assertEqual(r.status_code, 200, r.text)
+                self.assertFalse(esp32.still_allowed(dev))
+                ws.send_text(json.dumps({"type": "ping"}))
+                with self.assertRaises(WebSocketDisconnect):
+                    while True:
+                        ws.receive_text()
+        finally:
+            esp32.RECHECK = old
+        # on again, but the device is gone: not allowed either
+        ADMIN.put(f"/api/admin/features/esp32/profiles/{uid}", json={"on": True})
+        self.assertTrue(esp32.still_allowed(dev))
+        a.delete(f"/api/profile/esp32/{s['device']}")
+        self.assertFalse(esp32.still_allowed(dev))
+
+    @unittest.skipUnless(_has_opus(), "libopus missing")
     def test_setup_over_usb_and_talk(self):
         a = profile("Esp Carla")
         a.put("/api/profile/settings", json={"esp_on": True})

@@ -110,10 +110,10 @@ class Pebble(unittest.TestCase):
             self.assertEqual(app.post("/api/profile/pebble/pair", json={"base": BASE}, headers=h).status_code, 401)
             # switched off: the key stops at once (profile switch, then admin switch)
             a.put("/api/profile/settings", json={"pebble_on": False})
-            self.assertEqual(app.get("/api/watch/poll?id=nope", headers=h).status_code, 401)
+            self.assertEqual(app.get("/api/watch/poll?id=nope", headers=h).status_code, 503)   # "not now", pairing stays (V01.0.388)
             a.put("/api/profile/settings", json={"pebble_on": True})
             helpers.set_config(pebble=False)
-            self.assertEqual(app.get("/api/watch/poll?id=nope", headers=h).status_code, 401)
+            self.assertEqual(app.get("/api/watch/poll?id=nope", headers=h).status_code, 503)
         finally:
             helpers.set_config(public=True)
 

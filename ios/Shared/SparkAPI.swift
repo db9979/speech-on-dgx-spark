@@ -77,7 +77,7 @@ struct Note {
 }
 
 /// What the profile allows the app (from /api/iphone/hello; the panel decides).
-struct Allowed {
+struct Allowed: Equatable {
     var profile = ""
     var language = "auto"
     var listen = false
@@ -252,6 +252,9 @@ struct SparkAPI {
             }
             let level = (json?["notaus"] as? NSNumber)?.intValue ?? 0
             throw SparkError(message: String(localized: "Der Notaus ist an (Stufe \(level)). Aufheben kann nur ein Admin im Browser."))
+        case 503 where (detail ?? "").hasPrefix("Für dieses Gerät") || (detail ?? "").hasPrefix("Mein Notaus"):
+            // switched off for this profile right now (Wer darf was) or Mein Notaus: the pairing stays (V01.0.388)
+            throw SparkError(message: detail ?? "")
         case 503:
             throw SparkError(message: String(localized: "Die Spracherkennung oder das Sprachmodell läuft gerade nicht."))
         default:

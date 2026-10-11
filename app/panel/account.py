@@ -111,6 +111,8 @@ def whoami(request: Request, creds: HTTPBasicCredentials | None = Depends(securi
             # which pages the panel shows: the Spark's switches from features.py (one place for "on")
             **{name: features.admin_on(key, chat) for name, key in WHO.items()},
             "agent": bool(features.admin_on("agent", chat) and prof and agent.granted(prof["id"])),
+            # what this profile may use now (features.stamp): a page or app that started with another one reloads its switches
+            "rights": features.stamp(prof["id"] if prof else None, chat),
             # Spark-Hilfe (hilfe.py): the card in the answer and "Frag Spark" on every page, only for this profile
             "hilfe": {"suggest": features.allowed("hilfevorschlag", prof["id"], chat),
                       "page": features.allowed("hilfeseite", prof["id"], chat)}

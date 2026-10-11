@@ -192,7 +192,8 @@ final class Conversation: ObservableObject {
         foreground = p == .active
         if foreground {
             lastActivity = Date()
-            if unreachable { Task { await check() } }
+            // what the profile may has possibly changed meanwhile (Wer darf was in the panel): ask the Spark again
+            if started { Task { await rightsCheck() } } else if unreachable { Task { await check() } }
             if allowed.ios && started { Task { await AppleReminders.syncLists() } }
             Task { await refreshRooms(now: true) }
             if phase == .idle || phase == .waiting { base() }
@@ -213,7 +214,21 @@ final class Conversation: ObservableObject {
         }
     }
 
+    /// Rights arrive at once (V01.0.388): the app asks the Spark what the profile may on coming to the front and
+    /// every minute in front; when something changed the wake word, push and the rest follow right away.
+    private func rightsCheck() async {
+        let before = allowed
+        guard await check(), allowed != before else { return }
+        if allowed.push && !before.push, await Alarms.allow() { UIApplication.shared.registerForRemoteNotifications() }
+        if allowed.ios && !before.ios { await AppleReminders.syncLists() }
+        if phase == .idle || phase == .waiting { base() }
+    }
+
+    private var ticks = 0
+
     private func tick() {
+        ticks += 1
+        if foreground && !unreachable && ticks % 3 == 0 { Task { await rightsCheck() } }
         if phase == .waiting && !canWake {
             base()
             notice = String(localized: "Weckwort pausiert, um Akku zu sparen. Tippen startet es wieder.")
