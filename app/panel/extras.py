@@ -22,8 +22,9 @@ import weather
 import remarkable
 import wiki
 import hilfe
+import meinmcp
 
-SERVICES = [roomfar, weather, contacts, parcels, tasks, transit, wiki, agent, messages, remarkable, hamelden, hilfe, begleiter]
+SERVICES = [roomfar, weather, contacts, parcels, tasks, transit, wiki, agent, messages, remarkable, hamelden, hilfe, begleiter, meinmcp]
 
 
 def offer(ctx):

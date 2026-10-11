@@ -116,6 +116,26 @@ Other programs use the Spark over the [Model Context Protocol](https://modelcont
 
 **Examples:** Open WebUI: Settings → External tools → "+", type MCP (Streamable HTTP). n8n: node "MCP Client Tool". Programs without a header field: `npx mcp-remote http://SPARK:31080/mcp --header "Authorization: Bearer <key>"`.
 
+### Own MCP services per profile
+
+Since V01.0.363 (plan `plaene/eigene-mcp-dienste.md`) every profile can connect its own MCP services (Streamable HTTP), besides the ones the admin connects for everybody. Only that profile sees and uses them.
+
+**Switching on:** Admin: Features → Agent functions → Services over MCP → *Own MCP services for profiles* (`chat.mcp_own`), below it *… also in background jobs* (`chat.mcp_own_jobs`) and *… with sign-in (OAuth)* (`chat.mcp_own_oauth`); all off. Profile: Me → *My MCP services* → "Own MCP services for me" (`mymcp_on`), then enter name, address and key and "Connect service". The profile needs no agent level for this.
+
+**Rules (fixed):**
+- At most 5 services per profile, each with at most 30 tools. Every tool is "Off" until the profile sets it to "Read" or "Act after yes". If the service changes a tool's description or inputs, it is "Off" again after "Fetch tools again".
+- Never for guests, never for other profiles, never for a foreign voice at a speaker (only when speech recognition surely heard the profile's own voice), over Telegram only with "private data".
+- Connecting a service, a new address, a new key: only in the profile's own browser login with a fresh code (second sign-in step, when set up). A new address always needs a new key; all tools are "Off" again then. Keys and sign-in data are kept encrypted (vault), never sent back, never logged.
+- Connections through the guard (`netguard.USER`): public addresses with https; home network addresses (also http) only when the admin allows them under Security; the Spark's own services (ports 30000–31099) never.
+- "Read": the answer is outside text (framed, the assistant switches and saves nothing more in that answer, never learned). "Act after yes": only a proposal; carried out after a plain "Yes" in the next message from the same device and conversation, for 15 minutes, never after outside text, never in background jobs, not during Notaus stage 2 or "Mein Notaus".
+- Limits: 30 seconds per call, at most 2 MB read, 8000 characters to the model, arguments at most 4000 characters, 10 calls per minute and 2 at once per profile.
+- Background jobs (with the admin switch and the box ticked at the service): reading tools only, only in jobs with private data.
+- Sign-in (OAuth): if the service wants a sign-in, leave the key empty and tap "Sign in at the service". The Spark reads the service's sign-in addresses (protected resource metadata, authorization server metadata), registers there as a program (dynamic registration, PKCE S256, `resource`), the browser signs in at the service and comes back through `/api/mymcp/back` (this address changes nothing, it hands code and state to the signed-in page, 10 minutes, once). Access and refresh token are kept encrypted; the Spark renews the access before it ends.
+
+**Admin:** People and devices → Apps and interfaces → *Profiles' own MCP services*: profile, name, address (host only), number of released tools, last fetched, never a key. "Block" applies at once and also when the profile connects the service again; "Remove" deletes it with its key. Optionally a list of allowed hosts (empty: every public one; an entry also allows its subdomains).
+
+**Visible:** Status → Live shows each call as a step to the target "MCP-Dienste" and under events "MCP: service · host · ok or error · duration", plus connected, removed, signed in, blocked; never question, arguments or answer, never the profile's name. Me → My status shows one row per service (answers, sign-in needed, blocked). The guard's decisions show under Live as always.
+
 ### "Hey Siri, ask Spark"
 
 An iPhone shortcut sends the dictated question to `POST /api/siri/ask` (header `X-Speech-Device` with a

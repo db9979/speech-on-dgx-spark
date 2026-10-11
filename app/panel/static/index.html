@@ -134,6 +134,9 @@
       <div data-show="chat.agent" style="margin-left:18px" id="agentadmin"></div>
       <div class="setrow" data-show="chat.agent" style="margin-left:18px"><div class="lbl"><b>Dienste per MCP</b><span>Werkzeuge fremder Dienste (Paperless, Nextcloud …), jedes einzeln freigegeben.</span></div><label class="tgl"><input type="checkbox" id="chat.agent_mcp"><i></i></label></div>
       <div data-show="chat.agent_mcp" style="margin-left:18px" id="mcpadmin"></div>
+      <div class="setrow" data-show="chat.agent_mcp" style="margin-left:18px"><div class="lbl"><b>Eigene MCP-Dienste für Profile</b><span>Jedes Profil bindet unter Ich eigene MCP-Dienste an; nur es selbst nutzt sie, jedes Werkzeug einzeln freigegeben.</span></div><label class="tgl"><input type="checkbox" id="chat.mcp_own"><i></i></label></div>
+      <div class="setrow" data-show="chat.mcp_own" style="margin-left:36px"><div class="lbl"><b>… auch in Hintergrundaufträgen</b><span>Lesende Werkzeuge eigener Dienste in Aufträgen des Profils, nie handelnde.</span></div><label class="tgl"><input type="checkbox" id="chat.mcp_own_jobs"><i></i></label></div>
+      <div class="setrow" data-show="chat.mcp_own" style="margin-left:36px"><div class="lbl"><b>… mit Anmeldung (OAuth)</b><span>Dienste, die eine Anmeldung statt eines Schlüssels wollen; der Spark meldet sich selbst als Programm an.</span></div><label class="tgl"><input type="checkbox" id="chat.mcp_own_oauth"><i></i></label></div>
       <div class="setrow"><div class="lbl"><b>Nachrichten an andere</b><span>„Sag Anna, das Essen ist fertig“: kurze Nachrichten zwischen den Profilen dieses Sparks, gesendet erst nach „Ja“.</span></div><label class="tgl"><input type="checkbox" id="chat.messages"><i></i></label></div>
       <div class="setrow" data-show="chat.messages" style="margin-left:18px"><div class="lbl"><b>Nachricht an alle</b><span>„Sag allen, wir fahren um acht“ an jedes Profil, das solche Nachrichten annimmt.</span></div><label class="tgl"><input type="checkbox" id="chat.messages_all"><i></i></label></div>
       <div class="setrow" data-show="chat.messages" style="margin-left:18px"><div class="lbl"><b>Durchsagen auf Lautsprechern</b><span>„Durchsage im Wohnzimmer: Essen ist fertig“, nur auf Lautsprechern, deren Profil Durchsagen erlaubt.</span></div><label class="tgl"><input type="checkbox" id="chat.messages_announce"><i></i></label></div>
@@ -633,6 +636,10 @@
     <div class="mut">Programme wie Open WebUI, n8n, Home Assistant oder Claude verbinden sich unter <b>Ich → Dienste per MCP</b> mit einem eigenen Zugang pro Profil (Adresse <code>/mcp</code>, Streamable HTTP). Hier siehst du alle Zugänge und kannst jeden sofort beenden.</div>
     <div id="int-mcp" style="margin-top:8px"></div>
   </div>
+  <div class="card"><h2>Eigene MCP-Dienste der Profile</h2>
+    <div class="mut">Dienste, die Profile unter <b>Ich → Meine MCP-Dienste</b> selbst angebunden haben, ohne Schlüssel. Sperren gilt sofort, auch wenn das Profil den Dienst neu anbindet.</div>
+    <div id="int-mymcp" style="margin-top:8px"></div>
+  </div>
   <div class="card"><h2>Pebble-Uhr</h2>
     <div class="mut">App „Spark“ für Pebble Time 2 und Core 2 Duo (Antwort als Text und über den Lautsprecher der Uhr) sowie Pebble Round 2 (nur Text). Frage per Knopfdruck, die Pebble-Diktierfunktion macht Text daraus, die Antwort kommt von hier.</div>
     <ol class="mut" style="margin:8px 0 0 18px;padding:0;line-height:1.6">
@@ -810,6 +817,7 @@
     <div id="deskbox" class="ptab"></div>
     <div id="pebbox" class="ptab"></div>
     <div id="mcpbox" class="ptab"></div>
+    <div id="mymcpbox" class="ptab"></div>
     <div id="rmbox" class="ptab"></div>
     <div id="wxbox" class="ptab"></div>
     <div id="conbox" class="ptab"></div>
@@ -860,6 +868,7 @@
 <script src="/static/js/messages.js"></script>
 <script src="/static/js/esp.js"></script>
 <script src="/static/js/mcp.js"></script>
+<script src="/static/js/mymcp.js"></script>
 <script src="/static/js/guides.js"></script>
 <script src="/static/js/search.js"></script>
 <script src="/static/js/users.js"></script>

@@ -227,6 +227,54 @@
 "lang": "de",
 "src": "apis-und-einbinden",
 "file": "APIs und Einbinden",
+"head": "Eigene MCP-Dienste pro Profil",
+"title": "Eigene MCP-Dienste pro Profil",
+"text": "Seit V01.0.363 (Plan plaene/eigene-mcp-dienste.md) bindet jedes Profil eigene MCP-Dienste an (Streamable HTTP), zusätzlich zu denen, die der Admin für alle anbindet. Nur dieses Profil sieht und nutzt sie."
+},
+{
+"lang": "de",
+"src": "apis-und-einbinden",
+"file": "APIs und Einbinden",
+"head": "Eigene MCP-Dienste pro Profil",
+"title": "Einschalten",
+"text": "Einschalten: Admin: Funktionen → Agent-Funktionen → Dienste per MCP → *Eigene MCP-Dienste für Profile* (chat.mcp_own), darunter *… auch in Hintergrundaufträgen* (chat.mcp_own_jobs) und *… mit Anmeldung (OAuth)* (chat.mcp_own_oauth); alle aus. Profil: Ich → *Meine MCP-Dienste* → „Eigene MCP-Dienste für mich“ (mymcp_on), dann Name, Adresse und Schlüssel eintragen und „Dienst anbinden“. Eine Agent-Stufe braucht das Profil dafür nicht."
+},
+{
+"lang": "de",
+"src": "apis-und-einbinden",
+"file": "APIs und Einbinden",
+"head": "Eigene MCP-Dienste pro Profil",
+"title": "Regeln (fest)",
+"text": "Regeln (fest): - Höchstens 5 Dienste pro Profil, je höchstens 30 Werkzeuge. Jedes Werkzeug steht auf „Aus“, bis das Profil es auf „Lesen“ oder „Handeln mit Ja“ stellt. Ändert der Dienst Beschreibung oder Eingaben eines Werkzeugs, steht es nach „Werkzeuge neu abrufen“ wieder auf „Aus“. - Nie für Gäste, nie für andere Profile, nie für eine fremde Stimme am Lautsprecher (nur wenn die Spracherkennung sicher die eigene Stimme gehört hat), über Telegram nur mit „private Daten“. - Dienst anbinden, neue Adresse, neuer Schlüssel: nur im eigenen Browser-Login mit frischem Code (zweiter Anmeldeschritt, wenn eingerichtet). Eine neue Adresse braucht immer einen neuen Schlüssel; alle Werkzeuge stehen dann wieder auf „Aus“. Schlüssel und Anmeldedaten liegen verschlüsselt (vault), werden nie zurückgegeben und nie ins Log geschrieben. - Verbindungen über den Wächter (netguard.USER): öffentliche Adressen mit https; Heimnetz-Adressen (auch http) nur, wenn der Admin sie unter Sicherheit erlaubt; die Dienste des Spark selbst (Ports 30000–31099) nie. - „Lesen“: Die Antwort ist fremder Text (eingerahmt, danach schaltet und speichert der Assistent in dieser Antwort nichts, nie gelernt). „Handeln mit Ja“: "
+},
+{
+"lang": "de",
+"src": "apis-und-einbinden",
+"file": "APIs und Einbinden",
+"head": "Eigene MCP-Dienste pro Profil",
+"title": "Regeln (fest)",
+"text": "nur ein Vorschlag; ausgeführt nach einem schlichten „Ja“ in der nächsten Nachricht vom selben Gerät und Gespräch, 15 Minuten lang, nie nach fremdem Text, nie in Hintergrundaufträgen, nicht bei Notaus Stufe 2 oder Mein Notaus. - Grenzen: 30 Sekunden pro Aufruf, höchstens 2 MB lesen, 8000 Zeichen ans Modell, Angaben höchstens 4000 Zeichen, 10 Aufrufe pro Minute und 2 gleichzeitig pro Profil. - Hintergrundaufträge (mit Admin-Schalter und Haken am Dienst): nur lesende Werkzeuge, nur in Aufträgen mit privaten Daten. - Anmeldung (OAuth): Will der Dienst eine Anmeldung, den Schlüssel leer lassen und „Beim Dienst anmelden“ tippen. Der Spark liest die Anmelde-Adressen des Dienstes (Protected Resource Metadata, Authorization Server Metadata), meldet sich dort als Programm an (dynamische Registrierung, PKCE S256, resource), der Browser meldet sich beim Dienst an und kommt über /api/mymcp/back zurück (diese Adresse ändert nichts, sie reicht Code und Kennung an die angemeldete Seite weiter, 10 Minuten, einmal). Zugang und Erneuerungs-Token liegen verschlüsselt; vor dem Ablauf erneuert der Spark den Zugang selbst."
+},
+{
+"lang": "de",
+"src": "apis-und-einbinden",
+"file": "APIs und Einbinden",
+"head": "Eigene MCP-Dienste pro Profil",
+"title": "Admin",
+"text": "Admin: Personen und Geräte → Apps und Schnittstellen → *Eigene MCP-Dienste der Profile*: Profil, Name, Adresse (nur der Host), Zahl der freigegebenen Werkzeuge, zuletzt abgerufen, nie ein Schlüssel. „Sperren“ gilt sofort und auch, wenn das Profil den Dienst neu anbindet; „Entfernen“ löscht ihn samt Schlüssel. Optional eine Liste erlaubter Adressen (leer: alle öffentlichen; ein Eintrag erlaubt auch seine Unteradressen)."
+},
+{
+"lang": "de",
+"src": "apis-und-einbinden",
+"file": "APIs und Einbinden",
+"head": "Eigene MCP-Dienste pro Profil",
+"title": "Sichtbar",
+"text": "Sichtbar: Zustand → Live zeigt jeden Aufruf als Schritt zum Ziel „MCP-Dienste“ und unter Ereignisse „MCP: Dienst · Host · ok oder Fehler · Dauer“, dazu angebunden, entfernt, angemeldet, gesperrt; nie Frage, Angaben oder Antwort, nie den Profilnamen. Ich → Mein Zustand zeigt eine Zeile pro Dienst (antwortet, Anmeldung nötig, gesperrt). Die Entscheidungen des Wächters stehen wie immer unter Live."
+},
+{
+"lang": "de",
+"src": "apis-und-einbinden",
+"file": "APIs und Einbinden",
 "head": "„Hey Siri, frag Spark“",
 "title": "„Hey Siri, frag Spark“",
 "text": "Ein iPhone-Kurzbefehl schickt die diktierte Frage an POST /api/siri/ask (Header X-Speech-Device mit einem Geräteschlüssel deines Profils, Inhalt {\"text\": \"...\"}) und lässt Siri das Feld answer vorlesen. Geht ohne geöffnete Seite, auch auf der Apple Watch, mit AirPods und mit CarPlay; Nachfragen innerhalb von 10 Minuten kennen den Zusammenhang, die Fragen eines Tages stehen als Gespräch im Profil. Schritt für Schritt unter Funktionen → Anleitungen."
@@ -557,7 +605,7 @@
 "file": "Assistent und Oberfläche",
 "head": "Sprach-Chat",
 "title": "Agent-Funktionen (V01.0.175)",
-"text": "r auf aus. Der Spark startet nie selbst ein Programm; Heimnetz-Adressen nur mit der Freigabe unter Sicherheit."
+"text": "r auf aus. Der Spark startet nie selbst ein Programm; Heimnetz-Adressen nur mit der Freigabe unter Sicherheit. - *Eigene MCP-Dienste (V01.0.363):* Unter „Dienste per MCP“ der Schalter „Eigene MCP-Dienste für Profile“. Jedes Profil bindet unter Ich → Meine MCP-Dienste bis zu fünf eigene Dienste an (frischer Code, Schlüssel verschlüsselt) und gibt jedes Werkzeug selbst frei („Lesen“ oder „Handeln mit Ja“). Optional in Hintergrundaufträgen (nur lesend) und mit Anmeldung (OAuth). Der Admin sieht alle unter Apps und Schnittstellen und kann jeden sofort sperren. Details: APIs und Einbinden."
 },
 {
 "lang": "de",
@@ -2851,6 +2899,54 @@
 "lang": "en",
 "src": "apis-and-integration",
 "file": "APIs and integration",
+"head": "Own MCP services per profile",
+"title": "Own MCP services per profile",
+"text": "Since V01.0.363 (plan plaene/eigene-mcp-dienste.md) every profile can connect its own MCP services (Streamable HTTP), besides the ones the admin connects for everybody. Only that profile sees and uses them."
+},
+{
+"lang": "en",
+"src": "apis-and-integration",
+"file": "APIs and integration",
+"head": "Own MCP services per profile",
+"title": "Switching on",
+"text": "Switching on: Admin: Features → Agent functions → Services over MCP → *Own MCP services for profiles* (chat.mcp_own), below it *… also in background jobs* (chat.mcp_own_jobs) and *… with sign-in (OAuth)* (chat.mcp_own_oauth); all off. Profile: Me → *My MCP services* → \"Own MCP services for me\" (mymcp_on), then enter name, address and key and \"Connect service\". The profile needs no agent level for this."
+},
+{
+"lang": "en",
+"src": "apis-and-integration",
+"file": "APIs and integration",
+"head": "Own MCP services per profile",
+"title": "Rules (fixed)",
+"text": "Rules (fixed): - At most 5 services per profile, each with at most 30 tools. Every tool is \"Off\" until the profile sets it to \"Read\" or \"Act after yes\". If the service changes a tool's description or inputs, it is \"Off\" again after \"Fetch tools again\". - Never for guests, never for other profiles, never for a foreign voice at a speaker (only when speech recognition surely heard the profile's own voice), over Telegram only with \"private data\". - Connecting a service, a new address, a new key: only in the profile's own browser login with a fresh code (second sign-in step, when set up). A new address always needs a new key; all tools are \"Off\" again then. Keys and sign-in data are kept encrypted (vault), never sent back, never logged. - Connections through the guard (netguard.USER): public addresses with https; home network addresses (also http) only when the admin allows them under Security; the Spark's own services (ports 30000–31099) never. - \"Read\": the answer is outside text (framed, the assistant switches and saves nothing more in that answer, never learned). \"Act after yes\": only a proposal; carried out after a plain \"Yes\" in the next message from the same device and conversati"
+},
+{
+"lang": "en",
+"src": "apis-and-integration",
+"file": "APIs and integration",
+"head": "Own MCP services per profile",
+"title": "Rules (fixed)",
+"text": "on, for 15 minutes, never after outside text, never in background jobs, not during Notaus stage 2 or \"Mein Notaus\". - Limits: 30 seconds per call, at most 2 MB read, 8000 characters to the model, arguments at most 4000 characters, 10 calls per minute and 2 at once per profile. - Background jobs (with the admin switch and the box ticked at the service): reading tools only, only in jobs with private data. - Sign-in (OAuth): if the service wants a sign-in, leave the key empty and tap \"Sign in at the service\". The Spark reads the service's sign-in addresses (protected resource metadata, authorization server metadata), registers there as a program (dynamic registration, PKCE S256, resource), the browser signs in at the service and comes back through /api/mymcp/back (this address changes nothing, it hands code and state to the signed-in page, 10 minutes, once). Access and refresh token are kept encrypted; the Spark renews the access before it ends."
+},
+{
+"lang": "en",
+"src": "apis-and-integration",
+"file": "APIs and integration",
+"head": "Own MCP services per profile",
+"title": "Admin",
+"text": "Admin: People and devices → Apps and interfaces → *Profiles' own MCP services*: profile, name, address (host only), number of released tools, last fetched, never a key. \"Block\" applies at once and also when the profile connects the service again; \"Remove\" deletes it with its key. Optionally a list of allowed hosts (empty: every public one; an entry also allows its subdomains)."
+},
+{
+"lang": "en",
+"src": "apis-and-integration",
+"file": "APIs and integration",
+"head": "Own MCP services per profile",
+"title": "Visible",
+"text": "Visible: Status → Live shows each call as a step to the target \"MCP-Dienste\" and under events \"MCP: service · host · ok or error · duration\", plus connected, removed, signed in, blocked; never question, arguments or answer, never the profile's name. Me → My status shows one row per service (answers, sign-in needed, blocked). The guard's decisions show under Live as always."
+},
+{
+"lang": "en",
+"src": "apis-and-integration",
+"file": "APIs and integration",
 "head": "\"Hey Siri, ask Spark\"",
 "title": "\"Hey Siri, ask Spark\"",
 "text": "An iPhone shortcut sends the dictated question to POST /api/siri/ask (header X-Speech-Device with a device key of your profile, body {\"text\": \"...\"}) and lets Siri speak the answer field. Works without the page open, also on Apple Watch, AirPods and CarPlay; follow-ups within 10 minutes keep the context, and each day's questions are kept as a conversation of the profile. Step by step under Einbinden → Guides."
@@ -3157,7 +3253,15 @@
 "file": "Assistant and panel",
 "head": "Voice chat",
 "title": "Agent functions (V01.0.175)",
-"text": "only after your \"Yes\". Once, daily, weekdays, weekly or monthly, at most 10, pause and delete under Me → Jobs. If the Spark was off for more than 3 hours at the planned time, that run is skipped. - *Routines (level \"also act\" only):* \"Remember as routine Evening: terrace light on, pool to 36 degrees.\" After \"Yes\", later \"Evening\" is enough. Every step is a Home Assistant sentence and runs like a spoken command (same allowlist, same code word); at most 8 steps and 20 routines. - *Services over MCP:* below \"Agent functions\" the switch \"Services over MCP\". The admin enters name, address (Streamable HTTP) and token (login plus a fresh code; token in the vault, never sent back). Every tool is off until the admin sets it to \"read\" or \"act\", and the profiles are ticked per service. Reading answers count as outside text; acting tools only propose and run after the \"Yes\". If a service changes a tool's description or inputs, it is off again after \"Fetch tools again\". The Spark never starts a program itself; home network addresses only with the permission under Security."
+"text": "only after your \"Yes\". Once, daily, weekdays, weekly or monthly, at most 10, pause and delete under Me → Jobs. If the Spark was off for more than 3 hours at the planned time, that run is skipped. - *Routines (level \"also act\" only):* \"Remember as routine Evening: terrace light on, pool to 36 degrees.\" After \"Yes\", later \"Evening\" is enough. Every step is a Home Assistant sentence and runs like a spoken command (same allowlist, same code word); at most 8 steps and 20 routines. - *Services over MCP:* below \"Agent functions\" the switch \"Services over MCP\". The admin enters name, address (Streamable HTTP) and token (login plus a fresh code; token in the vault, never sent back). Every tool is off until the admin sets it to \"read\" or \"act\", and the profiles are ticked per service. Reading answers count as outside text; acting tools only propose and run after the \"Yes\". If a service changes a tool's description or inputs, it is off again after \"Fetch tools again\". The Spark never starts a program itself; home network addresses only with the permission under Security. - *Own MCP services (V01.0.363):* below \"Services over MCP\" the switch \"Own MCP services for profiles\". Every profile conne"
+},
+{
+"lang": "en",
+"src": "assistant",
+"file": "Assistant and panel",
+"head": "Voice chat",
+"title": "Agent functions (V01.0.175)",
+"text": "cts up to five services of its own under Me → My MCP services (fresh code, key encrypted) and releases every tool itself (\"Read\" or \"Act after yes\"). Optionally in background jobs (read only) and with sign-in (OAuth). The admin sees all of them under Apps and interfaces and can block each at once. Details: APIs and integration."
 },
 {
 "lang": "en",

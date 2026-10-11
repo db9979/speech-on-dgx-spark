@@ -116,6 +116,26 @@ Andere Programme nutzen den Spark über das [Model Context Protocol](https://mod
 
 **Beispiele:** Open WebUI: Einstellungen → Externe Werkzeuge → „+“, Typ MCP (Streamable HTTP). n8n: Knoten „MCP Client Tool“. Programme ohne Header-Feld: `npx mcp-remote http://SPARK:31080/mcp --header "Authorization: Bearer <Schlüssel>"`.
 
+### Eigene MCP-Dienste pro Profil
+
+Seit V01.0.363 (Plan `plaene/eigene-mcp-dienste.md`) bindet jedes Profil eigene MCP-Dienste an (Streamable HTTP), zusätzlich zu denen, die der Admin für alle anbindet. Nur dieses Profil sieht und nutzt sie.
+
+**Einschalten:** Admin: Funktionen → Agent-Funktionen → Dienste per MCP → *Eigene MCP-Dienste für Profile* (`chat.mcp_own`), darunter *… auch in Hintergrundaufträgen* (`chat.mcp_own_jobs`) und *… mit Anmeldung (OAuth)* (`chat.mcp_own_oauth`); alle aus. Profil: Ich → *Meine MCP-Dienste* → „Eigene MCP-Dienste für mich“ (`mymcp_on`), dann Name, Adresse und Schlüssel eintragen und „Dienst anbinden“. Eine Agent-Stufe braucht das Profil dafür nicht.
+
+**Regeln (fest):**
+- Höchstens 5 Dienste pro Profil, je höchstens 30 Werkzeuge. Jedes Werkzeug steht auf „Aus“, bis das Profil es auf „Lesen“ oder „Handeln mit Ja“ stellt. Ändert der Dienst Beschreibung oder Eingaben eines Werkzeugs, steht es nach „Werkzeuge neu abrufen“ wieder auf „Aus“.
+- Nie für Gäste, nie für andere Profile, nie für eine fremde Stimme am Lautsprecher (nur wenn die Spracherkennung sicher die eigene Stimme gehört hat), über Telegram nur mit „private Daten“.
+- Dienst anbinden, neue Adresse, neuer Schlüssel: nur im eigenen Browser-Login mit frischem Code (zweiter Anmeldeschritt, wenn eingerichtet). Eine neue Adresse braucht immer einen neuen Schlüssel; alle Werkzeuge stehen dann wieder auf „Aus“. Schlüssel und Anmeldedaten liegen verschlüsselt (vault), werden nie zurückgegeben und nie ins Log geschrieben.
+- Verbindungen über den Wächter (`netguard.USER`): öffentliche Adressen mit https; Heimnetz-Adressen (auch http) nur, wenn der Admin sie unter Sicherheit erlaubt; die Dienste des Spark selbst (Ports 30000–31099) nie.
+- „Lesen“: Die Antwort ist fremder Text (eingerahmt, danach schaltet und speichert der Assistent in dieser Antwort nichts, nie gelernt). „Handeln mit Ja“: nur ein Vorschlag; ausgeführt nach einem schlichten „Ja“ in der nächsten Nachricht vom selben Gerät und Gespräch, 15 Minuten lang, nie nach fremdem Text, nie in Hintergrundaufträgen, nicht bei Notaus Stufe 2 oder Mein Notaus.
+- Grenzen: 30 Sekunden pro Aufruf, höchstens 2 MB lesen, 8000 Zeichen ans Modell, Angaben höchstens 4000 Zeichen, 10 Aufrufe pro Minute und 2 gleichzeitig pro Profil.
+- Hintergrundaufträge (mit Admin-Schalter und Haken am Dienst): nur lesende Werkzeuge, nur in Aufträgen mit privaten Daten.
+- Anmeldung (OAuth): Will der Dienst eine Anmeldung, den Schlüssel leer lassen und „Beim Dienst anmelden“ tippen. Der Spark liest die Anmelde-Adressen des Dienstes (Protected Resource Metadata, Authorization Server Metadata), meldet sich dort als Programm an (dynamische Registrierung, PKCE S256, `resource`), der Browser meldet sich beim Dienst an und kommt über `/api/mymcp/back` zurück (diese Adresse ändert nichts, sie reicht Code und Kennung an die angemeldete Seite weiter, 10 Minuten, einmal). Zugang und Erneuerungs-Token liegen verschlüsselt; vor dem Ablauf erneuert der Spark den Zugang selbst.
+
+**Admin:** Personen und Geräte → Apps und Schnittstellen → *Eigene MCP-Dienste der Profile*: Profil, Name, Adresse (nur der Host), Zahl der freigegebenen Werkzeuge, zuletzt abgerufen, nie ein Schlüssel. „Sperren“ gilt sofort und auch, wenn das Profil den Dienst neu anbindet; „Entfernen“ löscht ihn samt Schlüssel. Optional eine Liste erlaubter Adressen (leer: alle öffentlichen; ein Eintrag erlaubt auch seine Unteradressen).
+
+**Sichtbar:** Zustand → Live zeigt jeden Aufruf als Schritt zum Ziel „MCP-Dienste“ und unter Ereignisse „MCP: Dienst · Host · ok oder Fehler · Dauer“, dazu angebunden, entfernt, angemeldet, gesperrt; nie Frage, Angaben oder Antwort, nie den Profilnamen. Ich → Mein Zustand zeigt eine Zeile pro Dienst (antwortet, Anmeldung nötig, gesperrt). Die Entscheidungen des Wächters stehen wie immer unter Live.
+
 ### „Hey Siri, frag Spark“
 
 Ein iPhone-Kurzbefehl schickt die diktierte Frage an `POST /api/siri/ask` (Header `X-Speech-Device` mit

@@ -129,6 +129,13 @@ FEATURES = (
     F("mystatus", "Mein Zustand", "My status", "day", ("my_status",), "my_status", me="bgbox", guide="mystatus"),
     F("agent", "Agent-Funktionen", "Agent functions", "day", ("agent",), "agent_on", me="agentbox", guide="agent"),
     F("mcp", "Dienste per MCP", "Services over MCP", "day", ("agent_mcp",), parent="agent", guide="mcp"),
+    # each profile its own MCP services (meinmcp.py); needs no agent level, only the switches
+    F("mymcp", "Eigene MCP-Dienste", "Own MCP services", "day", ("mcp_own",), "mymcp_on", parent="mcp", me="mymcpbox",
+      guide="mymcp"),
+    F("mymcpjobs", "Eigene MCP-Dienste in Aufträgen", "Own MCP services in jobs", "day", ("mcp_own_jobs",), "mymcp_on",
+      parent="mymcp", me="mymcpbox", guide="mymcpjobs"),
+    F("mymcpoauth", "Eigene MCP-Dienste mit Anmeldung", "Own MCP services with sign-in", "day", ("mcp_own_oauth",), "mymcp_on",
+      parent="mymcp", me="mymcpbox", guide="mymcpoauth"),
     F("messages", "Nachrichten an andere", "Messages to others", "day", ("messages",), "msg_on", me="msgbox", guide="messages"),
     F("messages_all", "Nachricht an alle", "Message to everybody", "day", ("messages_all",), parent="messages",
       me="msgbox", guide="messages_all"),

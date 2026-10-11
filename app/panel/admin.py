@@ -484,7 +484,7 @@ def validate(new):
     if not isinstance(books, list) or len(books) > kiwix.MAX_BOOKS \
             or not all(isinstance(b, str) and kiwix.BOOK.fullmatch(b) for b in books):
         raise HTTPException(400, f"kiwix_books: at most {kiwix.MAX_BOOKS} book names (letters, digits, . _ -)")
-    for k in ("agent", "agent_mcp", "messages", "messages_all", "messages_announce", "messages_voice", "pebble",
+    for k in ("agent", "agent_mcp", "mcp_own", "mcp_own_jobs", "mcp_own_oauth", "messages", "messages_all", "messages_announce", "messages_voice", "pebble",
               "kiwix", "local_first", "mcp_server", "mcp_server_extern", "mcp_server_act", "prefetch",
               "spark_help", "spark_suggest", "spark_drawer", "write_help", "write_apps", "desk", "desk_act"):
         if not isinstance(ch.get(k, False), bool):
@@ -676,6 +676,7 @@ def validate(new):
 SENSITIVE = [("api", "key"), ("chat", "llm_url"), ("chat", "llm_key"), ("chat", "telegram_api"),
              ("chat", "search_url"), ("chat", "kiwix_url"), ("chat", "public"), ("chat", "esp32_url"), ("chat", "esp32_repo"),
              ("chat", "mfa"), ("chat", "mcp_server"), ("chat", "mcp_server_extern"), ("chat", "mcp_server_act"),
+             ("chat", "mcp_own"), ("chat", "mcp_own_oauth"),
              ("panel", "trusted_proxies"), ("panel", "allow_lan"), ("panel", "session_days"), ("panel", "trust_days"), ("asr", "model"), ("asr", "aligner_model"),
              ("tts", "model"), ("tts", "voicedesign_model")]
 

@@ -19,6 +19,7 @@ import documents  # noqa: E402
 import extras  # noqa: E402
 import fixes  # noqa: E402
 import hamelden  # noqa: E402
+import meinmcp  # noqa: E402
 import homeassistant  # noqa: E402
 import images  # noqa: E402
 from common import load_config  # noqa: E402
@@ -432,7 +433,7 @@ async def prepare(request):
         import messages as inbox   # (messages is the conversation here)
         import tasks
         import roomfar
-        for mod in (calendars, tidy, tasks, fixes, agent, inbox, roomfar):
+        for mod in (calendars, tidy, tasks, fixes, agent, inbox, roomfar, meinmcp):
             if mod.pending(who["id"]):
                 mod.drop_pending(who["id"])
         print(f"notaus: {'Stufe ' + str(held) if held >= 2 else 'Mein Notaus'} - keine Aktion, kein Ja, nur lesen", flush=True)
@@ -521,7 +522,7 @@ async def prepare(request):
         import agent
         import messages as inbox   # (messages is the conversation here)
         import tasks
-        for mod in (calendars, tidy, tasks, fixes, agent, inbox, roomfar, hamelden):
+        for mod in (calendars, tidy, tasks, fixes, agent, inbox, roomfar, hamelden, meinmcp):
             p = mod.pending(who["id"])
             if p and p.get("src", src) == src:
                 mod.drop_pending(who["id"])

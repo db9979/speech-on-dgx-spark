@@ -783,6 +783,7 @@ SETTINGS = {
     "pebble_on": (False, lambda v: isinstance(v, bool)),   # Pebble watch paired by code (pebblewatch.py)
     "android_on": (False, lambda v: isinstance(v, bool)),  # Android app (android.py)
     "mcps_on": (False, lambda v: isinstance(v, bool)),     # the Spark as an MCP server for other programs (mcpserver.py)
+    "mymcp_on": (False, lambda v: isinstance(v, bool)),    # own MCP services of this profile (meinmcp.py)
     # iPhone app (iphone.py): pairing for this profile, and switching the smart home from it, both off
     "app_on": (False, lambda v: isinstance(v, bool)),
     "app_ha": (False, lambda v: isinstance(v, bool)),

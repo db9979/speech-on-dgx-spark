@@ -2,6 +2,7 @@
 
 Every version in one line, newest first (taken from the commit messages, so some lines are German, some English). Older entries have no version number.
 
+- **V01.0.363** · 2026-10-11 · Eigene MCP-Dienste pro Profil (Admin-Unterschalter + Ich → Meine MCP-Dienste, alles aus): jedes Werkzeug einzeln frei, Lesen als fremder Text, Handeln nach „Ja“, OAuth-Anmeldung, Hintergrundaufträge nur lesend, Admin sperrt sofort, Live zeigt jeden Aufruf ohne Inhalte
 - **V01.0.362** · 2026-10-11 · Eindeutiges direkt abrufen: Wetter und Termine auch für morgen und übermorgen („Wie wird das Wetter morgen?“), das Panel setzt nur das Datum aus dem lokalen Tag; andere Orte und Personen bleiben beim Modell
 - **V01.0.361** · 2026-10-11 · Erst lokal: langer Kiwix-Artikel (z. B. Einstein) hält den Vorlauf nicht mehr auf (nur der Anfang wird gelesen, im Hintergrund, 1,4 s → 0,01 s; Katalog ebenso); Logs → Anfragen zeigt Treffer je Quelle
 - **V01.0.360** · 2026-10-11 · Notaus Paket 1: Telegram /notaus [1-3] (nur Admin-Profile, weitergeleitete Nachrichten nie) und /meinnotaus; fester Satz „Spark, Mein Notaus“ / „Spark, Notaus [Stufe eins|zwei|drei]“ entscheidet das Panel (nie MCP, nie fremde Stimme am Lautsprecher); Home-Assistant-Schlüssel (nur Hash, höchstens 5, frischer Admin-Code, nur Heimnetz, löst nur aus, POST /api/notaus/ha) mit Vorlage für configuration.yaml; Android-App 1.1.0 mit Schnelleinstellungs-Kachel (Kanal android); Selbsttests Channels

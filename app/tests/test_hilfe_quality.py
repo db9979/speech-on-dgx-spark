@@ -38,6 +38,7 @@ CASES = (
     ("Wie benutze ich den reMarkable?", None, "reMarkable", "spark"),
     ("Wie richte ich Telegram ein?", None, "Telegram", "spark"),
     ("Was ist der Raummodus?", None, "Raum-Modus", "spark"),
+    ("Wie richte ich eigene MCP-Dienste ein?", None, "Eigene MCP-Dienste", "spark"),
     ("Wie verbinde ich die Pebble?", None, "Pebble", "spark"),
     ("Wie richte ich einen ESP32-Lautsprecher ein?", None, "ESP32", "spark"),
     ("Was ist Von selbst?", None, "Von selbst", "spark"),

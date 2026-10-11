@@ -101,13 +101,15 @@ TARGETS = {
     "page": ("Panel-Seite", "beim nächsten Abruf der offenen Seite", "spark", False),
     "github": ("GitHub (Updates)", "neuester Stand und Tests · Internet", "net", False),
     "nas": ("NAS (Sicherung)", "WebDAV · verschlüsselt", "lan", False),
+    # tools of MCP services (mcp_… of the admin, mcpu_… a profile's own, meinmcp.py); the line under Ereignisse names the service
+    "mcp": ("MCP-Dienste", "eigene und angebundene Dienste · Netz", "net", False),
 }
 RETURNS = {"cal": "Termine oder Aufgaben", "ha": "Zustände oder Schaltung", "web": "Suchergebnisse", "pages": "Seitentext", "kiwix": "Archiv-Treffer",
            "wiki": "Artikel", "mail": "Mails (nur Anzahl und Größe)", "contacts": "Kontakte", "rm": "Ablage", "push": "Zustellung",
            "weather": "Wetterwerte", "parcels": "Sendungen", "transit": "Verbindungen", "mem": "eigene Daten",
            "hilfe": "Anleitungen oder Vorschlagskarte", "webpush": "Zustellung", "tg": "Zustellung",
            "android": "liegt bereit", "desk": "liegt bereit", "page": "liegt bereit",
-           "github": "Stand und Testergebnis", "nas": "Ablage bestätigt"}
+           "github": "Stand und Testergebnis", "nas": "Ablage bestätigt", "mcp": "Antwort des Dienstes"}
 CLIENT = {"web": "Browser", "speaker": "Lautsprecher", "watch": "Uhr", "siri": "Siri", "telegram": "Telegram",
           "app": "iPhone-App", "car": "CarPlay", "mcp": "MCP-Client", "ha": "Home Assistant", "auto": "Von selbst", "desk": "Spark-Begleiter",
           "other": "Gerät"}
@@ -123,6 +125,13 @@ _count = {}                       # per day: guard_ok, guard_bad, guard_cut, doo
 _codes = {}                       # hash of a pairing code -> (until, name)
 _seen = {}                        # monitor id -> (last time, address)
 _saved = [0.0]                    # last time live-monitors.json was written for "last seen"
+
+
+def target(name):
+    """The target of a tool: from TOOLS, MCP tools (named per service) by their beginning."""
+    if name.startswith(("mcp_", "mcpu_")):
+        return "mcp"
+    return TOOLS.get(name, "")
 
 
 def cfg():
@@ -229,7 +238,7 @@ def step(rec, s):
         if s["k"] != "tool":
             return
         name = s["n"][:-8] if s["n"].endswith(" (Panel)") else s["n"]
-        tgt = TOOLS.get(name, "")
+        tgt = target(name)
         x = s.get("x") or {}
         ok = x.get("ok", True) is not False
         chars = x.get("chars")
@@ -502,14 +511,14 @@ def _req(rec, view, now):
         n = s["n"][:-8] if s["n"].endswith(" (Panel)") else s["n"]
         x = s.get("x") or {}
         steps.append({"k": s["k"], "n": n, "a": s["a"], "d": s["d"], "ok": x.get("ok", True) is not False,
-                      "to": TOOLS.get(n, "") if s["k"] == "tool" else ("qwen" if s["k"] == "llm" else "")})
+                      "to": target(n) if s["k"] == "tool" else ("qwen" if s["k"] == "llm" else "")})
     end, gone = getattr(rec, "t_end", None), _gone_from(rec)
     return {"id": rec.id, "client": rec.client, "dev": device or CLIENT.get(rec.client, "Gerät"), "who": person,
             "voice": not getattr(rec, "auto", False) and (rec.client in VOICE or any((s.get("x") or {}).get("voice") for s in rec.steps[:1])),
             "auto": bool(getattr(rec, "auto", False)), "direct": bool(getattr(rec, "direct", False)),
             "prio": bool(getattr(rec, "prio", False)),
             "net": bool(getattr(rec, "net", False)), "intent": rec.intent, "stage": stage, "tool": tool,
-            "to": TOOLS.get(tool, "") if stage == "tool" else ("qwen" if stage == "llm" else ""),
+            "to": target(tool) if stage == "tool" else ("qwen" if stage == "llm" else ""),
             "steps": steps, "marks": dict(rec.marks), "age": round((end or now) - rec.t0, 2),
             "done": bool(end), "left": max(0, int(FADE - (now - gone))) if gone else None, "last": bool(end and not gone),
             "ago": int(now - end) if end else None, "err": bool(rec.errors)}

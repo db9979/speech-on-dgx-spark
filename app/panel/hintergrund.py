@@ -63,7 +63,7 @@ WHY = {"sprache": ("pausiert, solange gesprochen wird", "paused while someone sp
 NEEDS_YOU = {"anmeldung", "adresse", "gesperrt", "voll", "angehalten", "antwort"}
 STATES = ("run", "wait", "ok", "bad", "idle")
 JOBS = ("docs", "meaning", "brief", "remarkable", "tidy", "contacts", "agent", "briefing", "memtidy")
-KINDS = ("mail", "cal", "contacts", "ha")
+KINDS = ("mail", "cal", "contacts", "ha", "mcp")
 SERVICES_FILE = os.path.join(STATE, "dienste-zustand.json")
 
 _lock = threading.Lock()
@@ -381,6 +381,21 @@ def _svc_row(kind, key, name, label, go):
     return _row(f"{kind}:{key}", "services", name, "ok", label=label, last=st.get("ok"), go=go)
 
 
+def _mymcp(uid):
+    import meinmcp
+    st = meinmcp.admin_state()
+    out = []
+    for s in meinmcp.load(uid):
+        why = meinmcp.why_not(uid, s, st)
+        name = ("MCP-Dienst", "MCP service")
+        if why:   # blocked by the admin, host not allowed, or the sign-in at the service is needed
+            out.append(_row(f"mcp:{meinmcp._key(uid, s['id'])}", "services", name, "bad",
+                            "anmeldung" if why == "anmeldung" else "gesperrt", label=s["name"], go="mymcpbox"))
+        else:
+            out.append(_svc_row("mcp", meinmcp._key(uid, s["id"]), name, s["name"], "mymcpbox"))
+    return out
+
+
 def _devices(uid, now):
     out = []
     devs = profiles.own_devices(uid)
@@ -441,6 +456,8 @@ def rows(uid, now=None):
             if telegram.link(uid):
                 bad = telegram.conflict["count"] >= 2
                 svcs.append(_row("telegram", "services", ("Telegram", "Telegram"), "bad" if bad else "ok", "dienst" if bad else "", go="tgbox"))
+        if features.allowed("mymcp", uid):   # the profile's own MCP services (meinmcp.py), one row each
+            svcs += _mymcp(uid)
         svcs += _devices(uid, now)
     except Exception as e:
         print("hintergrund: services:", type(e).__name__, flush=True)

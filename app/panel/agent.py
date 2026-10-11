@@ -378,6 +378,11 @@ def job_tools(uid, private):
     for name, server, t in mcp.tools_for(servers_for(uid), uid, ("read",)):
         out[name] = mcp.as_tool(name, server, t)
         extra[name] = (server, t)
+    if private:   # the profile's own MCP services it allowed for jobs (meinmcp.py): only tools that read
+        import meinmcp
+        for name, s, t in meinmcp.job_tools(uid):
+            out[name] = meinmcp.as_tool(name, s, t)
+            extra[name] = (s, t)
     return out, extra
 
 
@@ -473,6 +478,9 @@ async def _job_tool(uid, name, args, extra, counts, steps):
         steps.append({"t": int(time.time()), "what": "Dokumente: " + q})
         hits = await asyncio.to_thread(documents.search, uid, q)
         return chat.wrap_outside("\n\n".join(f"[{h['name']}]\n{h['text']}" for h in hits) or "No matching passages.")
+    if name in extra and name.startswith("mcpu_"):
+        import meinmcp
+        return await meinmcp.job_call(uid, name, args, steps)
     if name in extra:
         server, t = extra[name]
         steps.append({"t": int(time.time()), "what": f"{server['name']}: {t['name']}"})
@@ -827,9 +835,10 @@ def drop_pending(uid):
 
 def propose(uid, item, src):
     """One proposal at a time: the next yes is for this one (the other modules' proposals are dropped)."""
+    import meinmcp
     import tasks
     import tidy
-    for mod in (calendars, tidy, tasks):
+    for mod in (calendars, tidy, tasks, meinmcp):
         mod.drop_pending(uid)
     profiles._write(_pending_file(uid), dict(item, t=int(time.time()), src=str(src)[:120]))
 

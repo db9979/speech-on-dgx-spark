@@ -33,6 +33,7 @@ Alle Optionen ohne Rückfragen (`--mode api --asr 1.7b --tts 0.6b --yes` …) st
 
 <!-- New version: add one line at the top here and in CHANGELOG.md, drop the oldest line here (keep 10). Details go to docs/de and docs/en, not into this README. -->
 
+- **V01.0.363** Eigene MCP-Dienste pro Profil (Admin-Unterschalter + Ich → Meine MCP-Dienste, alles aus): jedes Werkzeug einzeln frei, Lesen als fremder Text, Handeln nach „Ja“, OAuth-Anmeldung, Hintergrundaufträge nur lesend, Admin sperrt sofort, Live zeigt jeden Aufruf ohne Inhalte
 - **V01.0.362** Eindeutiges direkt abrufen: Wetter und Termine auch für morgen und übermorgen
 - **V01.0.361** Erst lokal suchen: ein langer Kiwix-Artikel bremst die Antwort nicht mehr (nur der Anfang wird gelesen), Logs → Anfragen zeigt Treffer je Quelle
 - **V01.0.360** Notaus auf mehr Wegen: Telegram /notaus und /meinnotaus, fester Satz „Spark, Mein Notaus“ / „Spark, Notaus“ (großer nur für Admins), Home-Assistant-Schlüssel, der nur auslöst (mit fertiger Vorlage), Android-Kachel (App 1.1.0)
@@ -42,7 +43,6 @@ Alle Optionen ohne Rückfragen (`--mode api --asr 1.7b --tts 0.6b --yes` …) st
 - **V01.0.356** Logs → Anfragen zeigt die Anfrage-Nummer aus dem Journal in Liste und Detail, die Suche findet sie
 - **V01.0.355** Was ist neu: das Changelog im Panel ansehen, über „Was ist neu“ unten neben der Version oder Einstellungen → Update und Sicherung, mit Suche
 - **V01.0.354** Log ruhiger: eine Begleiter-Version ohne Update-Datei ist kein Fehler mehr (neuer Versuch nach 1 Stunde), eine unlesbare Aufnahme hinterlässt kein „Task exception was never retrieved“
-- **V01.0.353** Spark-Begleiter tiefer im Rechner (je Gerät, alles aus): Rechtsklick auf Dateien, Bildschirm fragen, App erkennen, Antwort entwerfen in Outlook und Apple Mail, Ordner „Spark-Wissen“, Knöpfe in Meldungen, Spark handelt am PC mit Rückfrage, Weckwort am PC
 
 Alle Versionen: [CHANGELOG.md](CHANGELOG.md)
 

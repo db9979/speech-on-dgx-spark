@@ -65,12 +65,20 @@ def valid_url(url):
     return bool(re.fullmatch(r"https?://[^\s/?#@]+(/[^\s#]*)?", str(url or ""))) and len(url) <= 300
 
 
-def _client(url, token):
+class NeedsLogin(ValueError):
+    """The server wants a sign-in (401): www is its WWW-Authenticate header (for the OAuth way, meinmcp.py)."""
+
+    def __init__(self, www, had_token=False):
+        super().__init__("the server refuses the token (401)" if had_token else "the server wants a sign-in (401)")
+        self.www = str(www or "")[:2000]
+
+
+def _client(url, token, seen=None):
     head = {"Accept": "application/json, text/event-stream", "Content-Type": "application/json",
             "User-Agent": "speech-on-dgx-spark"}
     if token:
         head["Authorization"] = f"Bearer {token}"
-    return netguard.client(netguard.USER, origin=url, max_bytes=MAX_BYTES,
+    return netguard.client(netguard.USER, origin=url, max_bytes=MAX_BYTES, seen=seen,
                            timeout=httpx.Timeout(TIMEOUT, connect=8), headers=head, follow_redirects=False)
 
 
@@ -97,11 +105,11 @@ def _messages(r):
 class Session:
     """One short conversation with a server: initialize, then requests (each call opens its own)."""
 
-    def __init__(self, url, token):
-        self.url, self.token, self.sid, self.n = url, token, None, 0
+    def __init__(self, url, token, seen=None):
+        self.url, self.token, self.sid, self.n, self.seen = url, token, None, 0, seen
 
     async def __aenter__(self):
-        self.c = _client(self.url, self.token)
+        self.c = _client(self.url, self.token, self.seen)
         await self.c.__aenter__()
         res = await self.request("initialize", {"protocolVersion": PROTOCOL, "capabilities": {},
                                                 "clientInfo": {"name": "speech-on-dgx-spark", "version": "1"}})
@@ -118,7 +126,9 @@ class Session:
         if self.sid:
             head["Mcp-Session-Id"] = self.sid
         r = await self.c.post(self.url, content=json.dumps(msg), headers=head)
-        if r.status_code == 401 or r.status_code == 403:
+        if r.status_code == 401:
+            raise NeedsLogin(r.headers.get("www-authenticate"), bool(self.token))
+        if r.status_code == 403:
             raise ValueError(f"the server refuses the token ({r.status_code})")
         if r.is_redirect:
             raise ValueError("the server redirects; enter the final address")
@@ -141,10 +151,10 @@ class Session:
         raise ValueError("no answer from the server")
 
 
-async def list_tools(url, token):
-    """[{"name", "desc", "schema"}] the server offers (at most MAX_TOOLS)."""
+async def list_tools(url, token, most=MAX_TOOLS, seen=None):
+    """[{"name", "desc", "schema"}] the server offers (at most `most`)."""
     out, cursor = [], None
-    async with Session(url, token) as s:
+    async with Session(url, token, seen) as s:
         for _ in range(4):
             res = await s.request("tools/list", {"cursor": cursor} if cursor else {})
             res = res if isinstance(res, dict) else {}
@@ -155,7 +165,7 @@ async def list_tools(url, token):
                     continue
                 out.append({"name": t["name"], "desc": clean_text(t.get("description"), 300),
                             "schema": clean_schema(t.get("inputSchema"))})
-                if len(out) >= MAX_TOOLS:
+                if len(out) >= most:
                     return out
             cursor = res.get("nextCursor")
             if not isinstance(cursor, str) or not cursor or len(cursor) > 500:
@@ -181,13 +191,14 @@ def result_text(res):
     return ("The tool reports an error: " if res.get("isError") else "") + (text or "(no text)")
 
 
-async def call(server, tool, args):
+async def call(server, tool, args, bearer=None, seen=None):
+    """bearer: the token to send instead of the server's stored one (an own service's OAuth token)."""
     if not isinstance(args, dict):
         args = {}
     raw = json.dumps(args, ensure_ascii=False)
     if len(raw) > MAX_ARGS:
         raise ValueError("the arguments are too long")
-    async with Session(server["url"], token(server)) as s:
+    async with Session(server["url"], token(server) if bearer is None else bearer, seen) as s:
         return result_text(await s.request("tools/call", {"name": tool, "arguments": args}))
 
 
