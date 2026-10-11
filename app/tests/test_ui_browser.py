@@ -960,6 +960,10 @@ class Browser(unittest.TestCase):
                 self.assertTrue(await pg.evaluate("pics.list.length===1"))      # kept for a follow-up
                 await pg.click(".picsave")
                 await pg.wait_for_function("document.querySelector('.picsave').textContent.includes('Gespeichert')", timeout=5000)
+                copied = await pg.evaluate("(()=>{const r=document.createRange();r.selectNodeContents(document.querySelector('.picsave').parentNode);"
+                                           "const s=getSelection();s.removeAllRanges();s.addRange(r);const x=s.toString();s.removeAllRanges();return x})()")
+                self.assertIn("Ich sehe 1 Bild.", copied)
+                self.assertNotIn("Gespeichert", copied)        # the buttons under an answer are not copied with it
                 await pg.click("#chatpics .picx")
                 self.assertTrue(await pg.evaluate("pics.list.length===0&&$('chatpics').hidden"))
                 self.assertEqual(errors, [])

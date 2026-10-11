@@ -2,6 +2,7 @@
 
 Every version in one line, newest first (taken from the commit messages, so some lines are German, some English). Older entries have no version number.
 
+- **V01.0.383** · 2026-10-11 · Antwort kopieren ohne Knöpfe: „Aufs reMarkable“ und „In Meine Dokumente speichern“ unter einer Antwort werden beim Markieren und Kopieren nicht mehr mitkopiert
 - **V01.0.382** · 2026-10-11 · Lautsprecher-Firmware holen: nie zwei Abrufe gleichzeitig (Sperre, eigener Temp-Ordner pro Lauf; Fehler „No such file … .part“), Fehlermeldung ohne Pfade oder Servertexte
 - **V01.0.381** · 2026-10-11 · Geräte-Updates (alles aus): Überblick in Zustand und Mein Zustand, alle 6 h nach neuer Firmware/App suchen, ein Hinweis pro neuer Version (Lautsprecher, Android, Pebble), Lautsprecher nachts einzeln neu starten (05:15, erst einer, Stopp bei Problem), Hinweis auf neue XiaoZhi-Version nur an Admin, Live-Ziel Geräte-Updates
 - **V01.0.380** · 2026-10-11 · Funktionen vorschlagen (Admin unter Hilfe zum Spark + Profil, aus): Hinweis mit „Einrichten“, wenn man nach etwas fragt, das aus ist, oder etwas halb eingerichtet ist, oft von Hand gemacht wird oder neu ist; Karte zum Übernehmen, geführtes Einrichten im Kopf-Fenster, „Admin fragen“, Ich → Überblick „Für dich vorgeschlagen“, von selbst höchstens 1 pro Woche; feste Regeln, schaltet nie selbst, 1 pro Gespräch, 3 pro Woche

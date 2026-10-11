@@ -545,7 +545,7 @@ details.qhow{margin-top:6px}details.qhow>summary{cursor:pointer;font-size:13px;f
 .mrdy{display:inline}.mrdy summary{display:inline;cursor:pointer;color:var(--acc)}.mrdy input{margin:6px 0 0}
 .attach{flex:none;padding:9px 11px}.attach svg{width:18px;height:18px}
 .picrow{display:flex;gap:6px;flex-wrap:wrap;margin-top:6px}.picrow img{width:72px;height:72px;object-fit:cover;border-radius:8px;display:block}
-.picsave{margin-top:8px;font-size:12px;padding:6px 12px}
+.picsave{margin-top:8px;font-size:12px;padding:6px 12px;-webkit-user-select:none;user-select:none}   /* buttons under an answer: never part of copied answer text */
 #visionmsg .ok{color:var(--ok)}
 @media (max-width:760px){body.inchat .composer.haspic .send{display:grid}}
 #msgbox li.unread{border-left:3px solid var(--acc);padding-left:8px}

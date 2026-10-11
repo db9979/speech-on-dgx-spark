@@ -33,6 +33,7 @@ Alle Optionen ohne Rückfragen (`--mode api --asr 1.7b --tts 0.6b --yes` …) st
 
 <!-- New version: add one line at the top here and in CHANGELOG.md, drop the oldest line here (keep 10). Details go to docs/de and docs/en, not into this README. -->
 
+- **V01.0.383** Antwort kopieren ohne Knöpfe: „Aufs reMarkable“ und „In Meine Dokumente speichern“ unter einer Antwort werden beim Markieren und Kopieren nicht mehr mitkopiert
 - **V01.0.382** Lautsprecher-Firmware: nie zwei Abrufe gleichzeitig, Fehlermeldung ohne Pfade
 - **V01.0.381** Geräte-Updates (aus): Überblick, ein Hinweis pro neuer Firmware oder App-Version, Lautsprecher nachts einzeln aktualisiert, XiaoZhi-Hinweis an den Admin
 - **V01.0.380** Funktionen vorschlagen (aus): Hinweis mit „Einrichten“, wenn man nach etwas fragt, das aus oder halb eingerichtet ist, geführtes Einrichten im Kopf, höchstens 3 pro Woche
@@ -42,7 +43,6 @@ Alle Optionen ohne Rückfragen (`--mode api --asr 1.7b --tts 0.6b --yes` …) st
 - **V01.0.376** Selbsttest repariert: der Begleiter-Test stellt die Test-Adresse für GitHub wieder her (Tests waren rot)
 - **V01.0.375** Spark-Begleiter: Vorlesen (auch Antworten von Frag Spark), Vom Handy auf den PC, Termine, Nicht stören, Besprechungen mitschreiben, Smart-Home-Knöpfe, Tagesstart und Feierabend (alles aus), Programme zum Auswählen, Ich → Begleiter übersichtlich bei mehreren Geräten
 - **V01.0.374** Selbsttests: ESP32-Tests holen die Firmware wieder nur vom Test-GitHub (ein anderer Test hatte die Umgebungsvariable entfernt, sie fragten das echte GitHub mit neuerer Firmware, Tests rot)
-- **V01.0.373** Sofortige Rückmeldung (aus): gleich nach der Frage ein fertig aufgenommener Satz, was der Spark tut, getrennt gemessen vom ersten Ton der Antwort
 
 Alle Versionen: [CHANGELOG.md](CHANGELOG.md)
 
