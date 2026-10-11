@@ -1009,3 +1009,16 @@ class LogQuiet(unittest.TestCase):
 
 if __name__ == "__main__":
     unittest.main()
+
+
+class MacSources(unittest.TestCase):
+    """V01.0.396: on macOS FileHandle.read(upToCount:) answers nil at the end of a file; `try?` made that a
+    read error, so every update was refused ("beschädigt" / "ließ sich nicht lesen")."""
+    SRC = os.path.join(os.path.dirname(__file__), "..", "..", "tools", "begleiter", "mac", "Sources")
+
+    def test_end_of_file_is_not_a_read_error(self):
+        if not os.path.isdir(self.SRC):
+            self.skipTest("only app/ copied")
+        for name in os.listdir(self.SRC):
+            with open(os.path.join(self.SRC, name), encoding="utf-8") as f:
+                self.assertNotIn("try? h.read(upToCount", f.read(), name)

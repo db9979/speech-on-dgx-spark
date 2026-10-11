@@ -155,8 +155,11 @@ final class FolderWatch: ObservableObject {
         defer { try? h.close() }
         var hasher = SHA256()
         while true {
-            guard let chunk = try? h.read(upToCount: 1 << 20) else { return nil }
-            if chunk.isEmpty { break }
+            // read(upToCount:) answers nil at the end of the file (not empty Data): that is the end, only
+            // a thrown error is a failure
+            let piece: Data?
+            do { piece = try h.read(upToCount: 1 << 20) } catch { return nil }
+            guard let chunk = piece, !chunk.isEmpty else { break }
             hasher.update(data: chunk)
         }
         return UpdateCheck.hex(Array(hasher.finalize()))
