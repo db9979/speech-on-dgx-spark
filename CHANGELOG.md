@@ -2,6 +2,7 @@
 
 Every version in one line, newest first (taken from the commit messages, so some lines are German, some English). Older entries have no version number.
 
+- **V01.0.424** · 2026-10-11 · Ich-Seiten aufgeräumt: Unterreiter mit Zahlen statt Aufklapp-Pfeilen, keine Scrollkästen; E-Mail-Fragen mit einem Tipp, reMarkable mit Ordnerbaum, Gedächtnis mit Suchen, Ändern und Auswählen
 - **V01.0.423** · 2026-10-11 · Dokumente erstellen: die Antwort auf die Rückfrage des Spark („Worum soll es gehen?“ – „den Mauerfall, 3 Folien“) bleibt beim Datei-Wunsch (Weiche „erstellen“, Gliederung ist Pflicht) statt Folien als Text; „3 Folien“ zählt als Wunsch; ist die Funktion aus, sagt der Spark in einem Satz, wo man sie einschaltet; Ich → Dokumente zeigt bei „aus“ den Block mit Einschalt-Knopf; „Brief wegen der Heizung“ schaltet nichts; „Ich brauche eine Präsentation“ zählt als Wunsch
 - **V01.0.422** · 2026-10-11 · Zweiter Versuch für gescheiterte Tests (GitHub und Selbsttest auf dem Spark, app/selftest.py): zweimal rot bleibt rot, erst im zweiten Versuch grün steht als Warnung im Lauf; Telegram-Schleife stört die Tests nicht mehr; ADMIN früher angelegt (Fehler beim langsamen Laden)
 - **V01.0.421** · 2026-10-11 · Einladungstest: zweiter Testserver darf 120 s statt 60 s brauchen, bei Fehler steht im Log, wo es hängt

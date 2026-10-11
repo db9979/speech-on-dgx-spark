@@ -1138,3 +1138,99 @@ select.segsel{display:none!important}
 .atile.open{grid-column:1/-1}
 .atstate{display:inline-block;margin-top:8px;border:1px solid var(--line);background:var(--card);color:var(--mut);border-radius:999px;padding:3px 10px;font:inherit;font-size:12px;cursor:pointer}
 .atstate.on{background:color-mix(in srgb,var(--ok) 14%,transparent);border-color:color-mix(in srgb,var(--ok) 40%,transparent);color:var(--ok)}
+/* Ich-Seiten aufräumen (ich-aufraeumen/plan.md, js/ichteile.js): one look for every "Ich" page. No list scrolls
+   inside the page (the page scrolls, long lists show "Weitere … zeigen"), long addresses and paths wrap or end with
+   "…" instead of pushing the buttons out, sub-tabs with counts instead of small arrows. */
+#profmodal .facts,#profmodal .tidy ul{max-height:none;overflow:visible}
+#profmodal .mebody{overflow-x:hidden}
+#profmodal .facts li>span,#profmodal .facts li>label,#profmodal .facts li>div{min-width:0;overflow-wrap:anywhere}
+#profmodal .facts li .rowin{flex-wrap:wrap}#profmodal .rowin select{min-width:0}
+#profmodal li.ic-more{display:block;border-bottom:0;padding:6px 0 0;text-align:center}
+.ic-lnk{border:0;background:none;color:var(--acc);font:inherit;font-weight:600;font-size:13px;cursor:pointer;padding:6px 8px;border-radius:8px}.ic-lnk:hover{background:color-mix(in srgb,var(--acc) 10%,transparent)}
+/* guides: a small "?" button at the top instead of a wide box; open it is the card it was */
+#profmodal .mebody details.guide:not([open]){display:inline-flex;margin:0 6px 12px 0;padding:4px 11px;border-radius:99px;font-size:12.5px}
+#profmodal .mebody details.guide:not([open])>summary{font-size:12.5px;list-style:none;display:flex;gap:6px;align-items:center}
+#profmodal .mebody details.guide:not([open])>summary::-webkit-details-marker{display:none}
+#profmodal .mebody details.guide:not([open])>summary::before{content:"?";display:inline-grid;place-items:center;width:16px;height:16px;border-radius:50%;border:1.5px solid currentColor;font-size:10.5px;font-weight:700}
+/* every other arrow under Ich: a card with a big header and a chevron; "add" forms open from a button */
+#profmodal details.ic-d{margin:12px 0;border:1px solid var(--line);border-radius:14px;background:var(--card);padding:0 14px}
+#profmodal details.ic-d>summary{list-style:none;cursor:pointer;display:flex;align-items:center;gap:8px;padding:12px 0;font-weight:600;font-size:14px}
+#profmodal details.ic-d>summary::-webkit-details-marker{display:none}
+#profmodal details.ic-d>summary::after{content:"";margin-left:auto;width:8px;height:8px;border-right:2px solid var(--mut);border-bottom:2px solid var(--mut);transform:rotate(-45deg);transition:transform .15s}
+#profmodal details.ic-d[open]>summary::after{transform:rotate(45deg)}#profmodal details.ic-d[open]{padding-bottom:12px}
+#profmodal details.ic-d[open]>summary{border-bottom:1px solid var(--line);margin-bottom:8px}
+#profmodal details.ic-d.ic-add:not([open]){display:inline-block;border-style:dashed;background:none;padding:0 14px}
+#profmodal details.ic-d.ic-add:not([open])>summary{padding:8px 0;color:var(--acc)}#profmodal details.ic-d.ic-add:not([open])>summary::before{content:"＋"}
+#profmodal details.ic-d.ic-add:not([open])>summary::after{display:none}
+#profmodal details.ic-d details.ic-d{background:none}
+/* sub-tabs with counts */
+.ic-tabs{display:flex;gap:2px;border-bottom:1px solid var(--line);margin:6px 0 14px;overflow-x:auto;scrollbar-width:none}.ic-tabs::-webkit-scrollbar{display:none}
+.ic-tabs button{flex:none;display:flex;gap:7px;align-items:center;border:0;background:none;font:inherit;font-weight:600;font-size:14px;color:var(--mut);padding:9px 11px;border-bottom:2px solid transparent;margin-bottom:-1px;cursor:pointer;white-space:nowrap}
+.ic-tabs button.on{color:var(--fg);border-bottom-color:var(--acc)}
+.ic-tabs i{font-style:normal;font-size:11.5px;padding:1px 7px;border-radius:99px;background:color-mix(in srgb,var(--mut) 18%,transparent);color:var(--fg)}
+.ic-tabs i.hot{background:color-mix(in srgb,var(--warn) 24%,transparent);color:var(--warn)}
+/* status card, note, danger zone, numbers */
+.ic-card,.ic-note,.ic-danger{display:flex;gap:12px;align-items:center;background:var(--card);border:1px solid var(--line);border-radius:14px;padding:11px 14px;margin:0 0 12px;flex-wrap:wrap}
+.ic-mid{flex:1 1 200px;min-width:0}.ic-mid b{display:block;overflow-wrap:anywhere}.ic-mid span{display:block;color:var(--mut);font-size:12.5px;overflow-wrap:anywhere}
+.ic-cico{width:34px;height:34px;flex:none;border-radius:10px;display:grid;place-items:center;color:#fff;background:linear-gradient(135deg,var(--acc),var(--acc2))}
+.ic-note{border-color:color-mix(in srgb,var(--acc) 40%,var(--line));background:color-mix(in srgb,var(--acc) 8%,var(--card))}.ic-note>svg{color:var(--acc);flex:none}
+.ic-danger{margin-top:22px;background:none;border:1px dashed color-mix(in srgb,var(--bad) 45%,var(--line))}
+.b.ic-red{color:var(--bad);border-color:color-mix(in srgb,var(--bad) 45%,var(--line))}
+.ic-stats{display:grid;grid-template-columns:repeat(auto-fit,minmax(130px,1fr));gap:8px;margin:0 0 12px}
+.ic-stat{background:var(--card);border:1px solid var(--line);border-radius:12px;padding:9px 12px;min-width:0}.ic-stat b{display:block;font-size:19px;line-height:1.2;overflow-wrap:anywhere}.ic-stat span{color:var(--mut);font-size:12px}
+.ic-stat.hot{border-color:color-mix(in srgb,var(--warn) 45%,var(--line))}.ic-stat.hot b{color:var(--warn)}
+/* list rows */
+.ic-list{background:var(--card);border:1px solid var(--line);border-radius:14px;overflow:hidden}
+.ic-row{display:flex;gap:10px;align-items:center;padding:10px 12px;border-top:1px solid var(--line);min-width:0}.ic-row:first-child{border-top:0}
+.ic-row.on{background:color-mix(in srgb,var(--acc) 10%,transparent)}.ic-row.click{cursor:pointer}.ic-row.click:hover{background:color-mix(in srgb,var(--line) 60%,transparent)}
+.ic-rmid{flex:1;min-width:0}.ic-t{display:block;overflow-wrap:anywhere}.ic-one{display:block;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;font-weight:600}
+.ic-meta{display:block;color:var(--mut);font-size:12.5px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.ic-ib{width:32px;height:32px;flex:none;display:grid;place-items:center;border-radius:9px;border:1px solid transparent;background:none;color:var(--mut);cursor:pointer;padding:0}
+.ic-ib:hover,.ic-ib.v{border-color:var(--line);color:var(--fg)}.ic-ib.ok{color:var(--ok);border-color:color-mix(in srgb,var(--ok) 40%,transparent)}
+.ic-ib.no{color:var(--bad);border-color:color-mix(in srgb,var(--bad) 35%,transparent)}.ic-ib:disabled{opacity:.4;cursor:default}
+.ic-gl{display:flex;justify-content:space-between;align-items:center;gap:8px;margin:16px 2px 6px}.ic-gl h4{margin:0;font-size:12px;letter-spacing:.05em;text-transform:uppercase;color:var(--mut);min-width:0;overflow-wrap:anywhere}
+.ic-empty{color:var(--mut);padding:14px;text-align:center;font-size:13.5px}
+.ic-list>.ic-more2{display:block;width:100%;border:0;border-top:1px solid var(--line);background:none;color:var(--acc);font:inherit;font-weight:600;font-size:13px;padding:10px;cursor:pointer}
+.ic-badge{font-size:11px;padding:1px 8px;border-radius:99px;border:1px solid var(--line);color:var(--mut);white-space:nowrap;flex:none}.ic-badge.ok{color:var(--ok);border-color:color-mix(in srgb,var(--ok) 40%,transparent)}
+/* tools: search, chips */
+.ic-tools{display:flex;gap:8px;align-items:center;flex-wrap:wrap;margin:0 0 10px}
+.ic-search{flex:1 1 200px;display:flex;gap:8px;align-items:center;border:1px solid var(--line);border-radius:10px;padding:0 10px;background:var(--card);color:var(--mut);min-width:0}
+.ic-search input{border:0;background:none;padding:8px 0;margin:0;flex:1;min-width:0;outline:none;box-shadow:none}
+.ic-chip{border:1px solid var(--line);background:var(--card);color:var(--fg);font:inherit;font-size:12.5px;padding:6px 11px;border-radius:99px;cursor:pointer;white-space:nowrap}
+.ic-chip.on{background:color-mix(in srgb,var(--acc) 18%,transparent);border-color:color-mix(in srgb,var(--acc) 55%,transparent)}
+.ic-chip.guess{border-style:dashed;border-color:var(--acc)}.ic-chip em{font-style:normal;color:var(--mut);margin-left:4px}
+.ic-chips{display:flex;gap:6px;flex-wrap:wrap}
+.ic-cb{width:20px;height:20px;flex:none;border-radius:6px;border:1.6px solid var(--mut);background:none;display:grid;place-items:center;padding:0;cursor:pointer;color:#fff}
+.ic-cb.on{background:var(--acc);border-color:var(--acc)}.ic-cb.half{border-color:var(--acc)}.ic-cb.half::after{content:"";width:9px;height:2px;background:var(--acc)}
+.ic-kind{width:30px;height:30px;flex:none;border-radius:8px;display:grid;place-items:center;color:var(--mut);background:color-mix(in srgb,var(--mut) 12%,transparent)}
+/* "⋯" menu */
+.ic-menu{position:relative;flex:none}.ic-pop{position:absolute;right:0;top:36px;z-index:20;min-width:190px;background:var(--card);border:1px solid var(--line);border-radius:12px;box-shadow:var(--shadow);padding:4px}
+.ic-pop button{display:block;width:100%;text-align:left;border:0;background:none;color:var(--fg);font:inherit;font-size:13.5px;padding:8px 10px;border-radius:8px;cursor:pointer}
+.ic-pop button:hover{background:var(--line)}.ic-pop button.danger{color:var(--bad)}
+/* question cards (E-Mail) */
+.ic-q{background:var(--card);border:1px solid var(--line);border-radius:14px;padding:12px 14px;margin:0 0 10px;min-width:0}
+.ic-qh{display:flex;gap:8px;align-items:baseline;min-width:0}.ic-qh b{flex:none;font-size:15px}.ic-qh small{flex:1;min-width:0;color:var(--mut);white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.ic-q q{display:block;margin:5px 0 9px;font-size:13.5px;overflow-wrap:anywhere}
+.ic-qf{display:flex;gap:8px;align-items:center;margin-top:9px;color:var(--mut);font-size:12.5px}
+/* tree + content (reMarkable) */
+.ic-two{display:grid;grid-template-columns:minmax(0,1fr);gap:12px}
+@container (min-width:700px){.ic-two{grid-template-columns:250px minmax(0,1fr);align-items:start}}
+#profmodal .mebody{container-type:inline-size}
+.ic-tree{background:var(--card);border:1px solid var(--line);border-radius:14px;padding:5px}
+.ic-tn{display:flex;gap:6px;align-items:center;padding:6px 6px;border-radius:9px;min-width:0;cursor:pointer}.ic-tn:hover{background:color-mix(in srgb,var(--line) 60%,transparent)}
+.ic-tn.on{background:color-mix(in srgb,var(--acc) 14%,transparent)}.ic-tn .nm{flex:1;min-width:0;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}.ic-tn small{color:var(--mut)}
+.ic-crumb{display:flex;gap:4px;flex-wrap:wrap;align-items:center;color:var(--mut);font-size:13px;margin:0 0 8px}.ic-crumb button{border:0;background:none;color:var(--acc);font:inherit;cursor:pointer;padding:2px}.ic-crumb b{color:var(--fg)}
+/* save bar for a choice (reMarkable) */
+.ic-save{position:sticky;bottom:0;z-index:5;display:flex;gap:10px;align-items:center;flex-wrap:wrap;background:var(--card);border:1px solid var(--line);border-radius:14px;padding:9px 12px;margin-top:12px;box-shadow:var(--shadow)}
+.ic-save .ic-mid{flex:1 1 160px}
+@container (max-width:700px){.ic-tree.wide{display:none}}
+.ic-seg{display:inline-flex;gap:2px;padding:3px;border-radius:10px;background:color-mix(in srgb,var(--line) 70%,transparent);flex:none}
+.ic-seg button{border:0;background:none;color:var(--mut);font:inherit;font-size:12.5px;font-weight:600;padding:5px 10px;border-radius:7px;cursor:pointer}
+.ic-seg button.on{background:var(--card);color:var(--fg);box-shadow:var(--shadow)}
+.ic-form h4{margin:16px 0 6px;font-size:12px;letter-spacing:.05em;text-transform:uppercase;color:var(--mut)}.ic-form h4:first-child{margin-top:4px}
+#tidybox.tidy{border:0;padding:0;margin:0 0 12px}#tidybox .ic-note{margin:0 0 6px}#tidybox ul{margin:4px 0 8px}
+.ic-card .b svg,.ic-note .b svg{margin-right:6px;vertical-align:-2px}
+.ic-h4{margin:16px 0 6px;font-size:12px;letter-spacing:.05em;text-transform:uppercase;color:var(--mut)}
+textarea.factedit{width:100%;margin:0 0 6px}
+@container (max-width:520px){.ic-row .ic-badge{display:none}.ic-row .ic-meta{white-space:normal}}
+#profmodal .ic-tabend{border-top:1px solid var(--line);margin:22px 0 12px}

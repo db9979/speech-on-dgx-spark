@@ -1024,11 +1024,34 @@ def remember(uid, text, auto=False):
     return text
 
 
+def change_fact(uid, fact_id, text):
+    """The person's own wording for a fact (Ich → Gedächtnis → Ändern); the fact counts as told, no longer as
+    learned. Returns the new text, or None when the fact is gone or the text is empty."""
+    text = re.sub(r"\s+", " ", str(text)).strip()[:MAX_FACT_LEN]
+    if not text:
+        return None
+    with _lock:
+        facts = memory(uid)
+        item = next((x for x in facts if x["id"] == fact_id), None)
+        if not item:
+            return None
+        item["text"] = text
+        item.pop("auto", None)
+        item["changed"] = int(time.time())
+        # the same sentence twice would be noise: an older twin goes
+        facts = [x for x in facts if x is item or x["text"].lower() != text.lower()]
+        _write(_path(uid, "memory.json"), facts)
+    return text
+
+
 def forget(uid, fact_id=None, text=None):
     """Removes one fact by id, or the facts containing text; returns how many went."""
     with _lock:
         facts = memory(uid)
-        if fact_id:
+        if isinstance(fact_id, (list, tuple, set)):
+            ids = set(fact_id)
+            keep = [x for x in facts if x["id"] not in ids]
+        elif fact_id:
             keep = [x for x in facts if x["id"] != fact_id]
         elif text:
             t = str(text).lower().strip()

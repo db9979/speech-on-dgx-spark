@@ -794,6 +794,44 @@ def profile_forget(fact_id: str, prof=Depends(browser_profile)):
     return {"removed": profiles.forget(prof["id"], fact_id=fact_id)}
 
 
+async def _capped_body(request, most):
+    """A small JSON object, read with a size limit (also without Content-Length)."""
+    if int(request.headers.get("content-length") or 0) > most:
+        raise HTTPException(413, "too large")
+    raw = bytearray()
+    async for chunk in request.stream():
+        raw += chunk
+        if len(raw) > most:
+            raise HTTPException(413, "too large")
+    try:
+        body = json.loads(bytes(raw) or b"{}")
+    except ValueError:
+        raise HTTPException(400, "invalid JSON")
+    if not isinstance(body, dict):
+        raise HTTPException(400, "invalid JSON")
+    return body
+
+
+@router.put("/api/profile/memory/{fact_id}", dependencies=[Depends(assistant)])
+async def profile_change_fact(fact_id: str, request: Request, prof=Depends(browser_profile)):
+    """Ich → Gedächtnis → Ändern: the person's own wording replaces the fact (no model involved)."""
+    b = await _capped_body(request, 4096)
+    text = profiles.change_fact(prof["id"], str(fact_id)[:40], str((b or {}).get("text", ""))[:4000])
+    if text is None:
+        raise HTTPException(404, "Eintrag nicht gefunden oder leer")
+    return {"text": text, "facts": profiles.memory(prof["id"])}
+
+
+@router.post("/api/profile/memory/forget", dependencies=[Depends(assistant)])
+async def profile_forget_some(request: Request, prof=Depends(browser_profile)):
+    """Ich → Gedächtnis → Auswählen: several facts at once (at most 500)."""
+    b = await _capped_body(request, 32768)
+    ids = [str(x)[:40] for x in (b or {}).get("ids", []) if isinstance(x, str)][:500] if isinstance((b or {}).get("ids"), list) else []
+    if not ids:
+        raise HTTPException(400, "ids fehlen")
+    return {"removed": profiles.forget(prof["id"], fact_id=ids)}
+
+
 @router.delete("/api/profile/memory", dependencies=[Depends(assistant)])
 def profile_forget_all(prof=Depends(browser_profile)):
     return {"removed": profiles.forget(prof["id"])}

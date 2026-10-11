@@ -111,6 +111,7 @@ async function showMsg(){const box=$('msgbox');if(!box)return;if(!PROFILE||!MSG_
     <div class="fh">${t('Wenn keine Seite offen ist und der Lautsprecher verbunden ist, sonst beim nächsten Weckwort. In deinen Ruhezeiten nie.','When no page is open and the speaker is connected, else at its next wake word. Never in your quiet hours.')}</div>
     ${d.announce?xsw('msg_announce',t('Durchsagen auf meinen Lautsprechern erlauben','Allow announcements on my speakers'),t('Von dir und von Profilen, die dir schreiben dürfen.','From you and from profiles that may write to you.')):''}`:''}
     <div class="fh" id="msgmsg"></div>`;
+  if(window.icAutoTabs)icAutoTabs(box,'msg','li.unread');
   xbind(box,showMsg);
   const pk=$('msgpick')?msgPicker($('msgpick'),'msgto',d):null;
   if($('msgcallsave'))$('msgcallsave').onclick=()=>call('/api/messages/call',xjson('PUT',{call:$('msgcall').value}),r=>r.call?t('Rufname gespeichert: ','Call name saved: ')+r.call:t('Rufname entfernt.','Call name removed.'));

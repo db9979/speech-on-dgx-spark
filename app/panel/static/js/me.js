@@ -11,9 +11,40 @@ function guestLock(){const g=isGuest();['chathands','chatwake'].forEach(id=>{con
   if(g)stopWake();else if($('chatwake').checked&&!wake.on)startWake()}   // "Hey Spark" only for profiles (and the admin)
 window.closeProf=()=>{$('profmodal').style.display='none';endEnroll()};
 ON.closeProf=()=>closeProf();
+// Ich → Gedächtnis (ich-aufraeumen/plan.md, Paket 4a): search and filters above, one row per fact with its date,
+// "Ändern" (own wording, no model) and "Löschen"; "Auswählen" removes several at once; "Alles vergessen" sits in the
+// danger zone below. The page scrolls, the list shows the first entries and "Weitere … zeigen".
+let FACTS=[],FQ='',FF='all',FSEL=null,FMORE=false,FEDIT=null;
 async function showFacts(){const r=await api('/api/profile/memory');const d=await r.json();
-  $('profhead').textContent=d.profile.name;showTidy(d.tidy);
-  $('factlist').innerHTML=d.facts.slice().reverse().map(f=>`<li><span>${esc(f.text)}${f.auto?` <em class="auto">${t('automatisch','automatic')}</em>`:''}</span><button class="b" ${onAttr('forgetFact',f.id)}>${t('Löschen','Delete')}</button></li>`).join('')||`<li class="mut">${t('Noch nichts gemerkt.','Nothing remembered yet.')}</li>`}
+  $('profhead').textContent=d.profile.name;showTidy(d.tidy);FACTS=d.facts||[];factDraw()}
+const fdate=x=>x?new Date(x*1000).toLocaleDateString(L==='en'?'en-GB':'de-DE',{day:'2-digit',month:'2-digit',year:'2-digit'}):'';
+function factDraw(){const E=icEl,tools=$('facttools'),box=$('factlist');if(!tools||!box)return;
+  const nAuto=FACTS.filter(f=>f.auto).length;tools.textContent='';
+  const s=icSearch(t(`In ${FACTS.length} Einträgen suchen …`,`Search ${FACTS.length} entries …`),FQ,v=>{FQ=v;FMORE=false;list()},'factfind');
+  tools.append(s,...[['all',t(`Alle ${FACTS.length}`,`All ${FACTS.length}`)],['own',t(`Von dir ${FACTS.length-nAuto}`,`From you ${FACTS.length-nAuto}`)],['auto',t(`Automatisch ${nAuto}`,`Automatic ${nAuto}`)]]
+    .map(([k,l])=>icChip(l,FF===k,()=>{FF=k;FMORE=false;factDraw()})));
+  if(FACTS.length){const pick=E('button','b',FSEL?t('Fertig','Done'):t('Auswählen','Select'));pick.type='button';pick.id='factpick';pick.onclick=()=>{FSEL=FSEL?null:new Set();factDraw()};tools.appendChild(pick)}
+  list();
+  function list(){box.textContent='';const q=FQ.trim().toLowerCase();
+    const fs=FACTS.slice().reverse().filter(f=>(FF==='all'||(FF==='auto')===!!f.auto)&&(!q||f.text.toLowerCase().includes(q)));
+    if(!fs.length){box.appendChild(icList([icEmpty(FACTS.length?t('Nichts gefunden.','Nothing found.'):t('Noch nichts gemerkt. Sag „Merk dir …“.','Nothing remembered yet. Say "Remember …".'))]));return}
+    const rows=fs.map(f=>{
+      if(FEDIT===f.id){const r=E('div','ic-row');const ta=document.createElement('textarea');ta.value=f.text;ta.maxLength=300;ta.rows=2;ta.className='factedit';ta.setAttribute('aria-label',t('Eintrag ändern','Change entry'));
+        const ok=E('button','b p',t('Speichern','Save')),no=E('button','b',t('Abbrechen','Cancel'));ok.type=no.type='button';
+        ok.onclick=async()=>{ok.disabled=true;try{const x=await (await api('/api/profile/memory/'+encodeURIComponent(f.id),xjson('PUT',{text:ta.value}))).json();FACTS=x.facts;FEDIT=null;factDraw()}catch(e){ok.disabled=false;$('factmsg').textContent=e.message}};
+        no.onclick=()=>{FEDIT=null;factDraw()};const m=E('div','ic-rmid');m.appendChild(ta);const a=E('div','row');a.append(ok,no);m.appendChild(a);r.appendChild(m);setTimeout(()=>ta.focus(),0);return r}
+      const meta=(f.auto?t('automatisch','automatic'):t('von dir','from you'))+(f.created||f.changed?' · '+fdate(f.changed||f.created):'');
+      const lead=FSEL?icCheck(FSEL.has(f.id),f.text,()=>{FSEL.has(f.id)?FSEL.delete(f.id):FSEL.add(f.id);factDraw()}):null;
+      const acts=FSEL?[]:[icBtn('pen',t('Ändern','Change'),()=>{FEDIT=f.id;factDraw()}),icBtn('trash',t('Löschen','Delete'),()=>forgetFact(f.id))];
+      const r=icRow(f.text,meta,acts,lead);r.dataset.fact=f.id;if(FSEL&&FSEL.has(f.id))r.classList.add('on');return r});
+    const l=icList([]);const n=FMORE||q?rows.length:15;rows.slice(0,n).forEach(r=>l.appendChild(r));
+    if(rows.length>n){const b=E('button','ic-more2',t(`Weitere ${rows.length-n} Einträge zeigen`,`Show ${rows.length-n} more entries`));b.type='button';b.onclick=()=>{FMORE=true;list()};l.appendChild(b)}
+    box.appendChild(l);
+    if(FSEL){const bar=E('div','ic-save');const m=E('div','ic-mid');m.appendChild(E('b','',t(`${FSEL.size} ausgewählt`,`${FSEL.size} selected`)));
+      const all=E('button','b',t('Alle gezeigten','All shown'));all.type='button';all.onclick=()=>{fs.forEach(f=>FSEL.add(f.id));factDraw()};
+      const del=E('button','b ic-red',t('Löschen','Delete'));del.type='button';del.disabled=!FSEL.size;
+      del.onclick=async()=>{if(!confirm(t(`${FSEL.size} Einträge löschen?`,`Delete ${FSEL.size} entries?`)))return;await api('/api/profile/memory/forget',xjson('POST',{ids:[...FSEL]}));FSEL=null;showFacts()};
+      bar.append(m,all,del);box.appendChild(bar)}}}
 // Documents (documents.py, wissen.py). Since V01.0.413 one compact row per document with a search field that
 // filters at once, source, sort order, quick filters and tags; a click opens the details (beside the list on wide
 // screens, as its own page on narrow ones) with all buttons; "Auswählen" acts on several documents in one request.
@@ -268,7 +299,13 @@ let DOCS_ON=true,SPK_ON=false,CAL_ON=true,HA_ON=false,MAIL_ON=false;
 // On phones the window opens as a list of its pages (like the iPhone settings); a page then fills the
 // screen with a back arrow. Wider screens keep the side bar.
 const PHONE=matchMedia('(max-width:760px)');
-function ptab(id,page=true){document.querySelectorAll('#ptabs button').forEach(b=>{b.classList.toggle('on',b.dataset.t===id);if(b.dataset.t===id)$('mepage').textContent=b.firstChild.textContent});
+// the line under the page title says what this page is about (ich-aufraeumen/plan.md, 1a); the device sentence only
+// where it matters, under Gespräch and Geräte
+const ME_SUB={setbox:['Einstellungen gelten auf jedem Gerät dieses Profils; „Hey Spark“ stellt jedes Gerät selbst ein.','Settings apply on every device of this profile; "Hey Spark" is set per device.'],
+  factbox:['Das weiß der Assistent über dich. Sag „Merk dir …“ oder „Vergiss …“, oder ändere es hier.','What the assistant knows about you. Say "Remember …" or "Forget …", or change it here.'],
+  rmbox:['Notizbücher, die der Assistent lesen darf, und was er dir aufs reMarkable schickt.','Notebooks the assistant may read, and what it sends to your reMarkable.'],
+  mailbox:['Postfächer, die der Assistent lesen darf, und das Aufräumen deines Posteingangs.','Mailboxes the assistant may read, and tidying your inbox.']};
+function ptab(id,page=true){if(PROFILE&&!GATE&&$('setscope'))$('setscope').textContent=ME_SUB[id]?t(...ME_SUB[id]):'';document.querySelectorAll('#ptabs button').forEach(b=>{b.classList.toggle('on',b.dataset.t===id);if(b.dataset.t===id)$('mepage').textContent=b.firstChild.textContent});
   document.querySelectorAll('#profmodal .ptab').forEach(x=>x.classList.toggle('on',x.id===id));
   if(typeof guidesMe==='function')guidesMe(id);if(id==='gobox'&&typeof goBar==='function')goBar(false);
   $('profmodal').classList.toggle('sub',page);if(page)document.querySelector('#profmodal .mebody').scrollTop=0}
@@ -288,7 +325,7 @@ function meTabs(){const items=[['overbox',t('Überblick','Overview'),!!PROFILE&&
   $('profmodal').classList.toggle('one',items.length<2);if(typeof meSearchMount==='function')meSearchMount();return items.map(x=>x[0])}
 let meLast='overbox',ME_ITEMS=[];
 // "Überblick": one line per page with its state, read from the pages just loaded (no extra requests)
-function meState(){const n=id=>[...document.querySelectorAll('#'+id+'>li')].filter(x=>!x.classList.contains('mut')).length;
+function meState(){const n=id=>id==='factlist'?FACTS.length:[...document.querySelectorAll('#'+id+'>li')].filter(x=>!x.classList.contains('mut')&&!x.classList.contains('ic-more')).length;
   const cnt=(k,de1,deN,en1,enN)=>k?t(k+' '+(k===1?de1:deN),k+' '+(k===1?en1:enN)):t('noch nichts','nothing yet');
   const txt=id=>{const e=$(id);return e?e.textContent.trim():''};
   return {factbox:cnt(n('factlist'),'Eintrag','Einträge','entry','entries'),docbox:cnt(n('doclist'),'Dokument','Dokumente','document','documents'),
@@ -410,7 +447,7 @@ $('docfile').onchange=async()=>{const files=[...$('docfile').files];$('docfile')
   showDocs()};
 function showTidy(p){const b=$('tidybox');if(!p||!(p.merge.length+p.drop.length)){b.style.display='none';b.innerHTML='';return}
   b.style.display='';
-  b.innerHTML=`<b>${t('Vorschlag zum Aufräumen','Cleanup proposal')}</b><ul>`+
+  b.innerHTML=`<div class="ic-note tidyhead"><div class="ic-mid"><b>${t('Aufräum-Vorschlag bereit','Cleanup proposal ready')}</b><span>${p.merge.length?t(`${p.merge.length}× zusammenfassen`,`merge ${p.merge.length}×`):''}${p.merge.length&&p.drop.length?' · ':''}${p.drop.length?t(`${p.drop.length} überholt`,`${p.drop.length} outdated`):''}. ${t('Es ändert sich erst etwas, wenn du übernimmst.','Nothing changes until you apply it.')}</span></div></div><ul>`+
     p.merge.map(m=>`<li>${t('Zusammenfassen','Merge')}: ${m.old.map(x=>'„'+esc(x)+'“').join(' + ')}<br>→ „${esc(m.text)}“</li>`).join('')+
     p.drop.map(x=>`<li>${t('Entfernen','Remove')}: „${esc(x.old)}“${x.why?` <small class="mut">(${esc(x.why)})</small>`:''}</li>`).join('')+
     `</ul><div class="row"><button class="b p" ${onAttr('tidyDo','accept')}>${t('Übernehmen','Apply')}</button><button class="b" ${onAttr('tidyDo','reject')}>${t('Verwerfen','Discard')}</button></div>`}
@@ -426,7 +463,7 @@ ON.forgetFact=(b,id)=>forgetFact(id);ON.tidyDo=(b,w)=>tidyDo(w);ON.calRemove=(b,
 async function openMe(tab){$('profmsg').textContent='';$('profmodal').style.display='grid';
   const tabs=meTabs(),list=tab==='list'&&PHONE.matches&&tabs.length>1;ptab(tabs.includes(tab)?tab:tabs.includes(meLast)?meLast:tabs[0],!list);
   $('profhead').textContent=PROFILE?PROFILE.name:GATE?t('Anmelden','Sign in'):t('Gast','Guest');
-  $('setscope').textContent=GATE?'':PROFILE?t('Einstellungen gelten auf jedem Gerät dieses Profils; „Hey Spark“ stellt jedes Gerät selbst ein.','Settings apply on every device of this profile; "Hey Spark" is set per device.'):isGuest()?t('Als Gast gelten die Vorgaben des Admins. Mit einem Profil kannst du Einstellungen ändern, und der Assistent merkt sich Dinge nur für dich.','As a guest the admin\'s defaults apply. With a profile you can change settings, and the assistant remembers things just for you.'):t('Als Gast gelten die Einstellungen nur in diesem Browser. Mit einem Profil merkt sich der Assistent Dinge nur für dich.','As a guest the settings apply only in this browser. With a profile the assistant remembers things just for you.');
+  $('setscope').textContent=GATE?'':PROFILE?((k=>ME_SUB[k]?t(...ME_SUB[k]):'')((document.querySelector('#ptabs button.on')||{dataset:{}}).dataset.t)):isGuest()?t('Als Gast gelten die Vorgaben des Admins. Mit einem Profil kannst du Einstellungen ändern, und der Assistent merkt sich Dinge nur für dich.','As a guest the admin\'s defaults apply. With a profile you can change settings, and the assistant remembers things just for you.'):t('Als Gast gelten die Einstellungen nur in diesem Browser. Mit einem Profil merkt sich der Assistent Dinge nur für dich.','As a guest the settings apply only in this browser. With a profile the assistant remembers things just for you.');
   $('proflogout').style.display=PROFILE?'':'none';$('profclose').style.display=GATE?'none':'';
   if(!GATE&&!isGuest())renderSet($('setform'),S,saveSet);
   // what the admin allows can have changed since the login (Funktionen in this browser or another): ask again

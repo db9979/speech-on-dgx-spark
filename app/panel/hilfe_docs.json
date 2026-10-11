@@ -861,31 +861,47 @@
 "file": "Assistent und Oberfläche",
 "head": "Sprach-Chat",
 "title": "Sprach-Chat",
-"text": "eiten, Schalter „Der Assistent sucht darin“ und „Für alle“, Original öffnen, Text lesen (mit „Dazu gehören“), Erinnern, Neu einlesen, Löschen. Die freigegebenen Dokumente der anderen stehen in derselben Liste (Quelle „Von anderen“). „Auswählen“ setzt Häkchen und wirkt auf alle markierten eigenen Dokumente: Suche an/aus, Für alle an/aus, Tag geben, Neu einlesen (höchstens 20), Löschen (mit Rückfrage). Dafür gibt es POST /api/profile/wissen/batch ({\"do\", \"ids\"}, nur Browser-Anmeldung des Profils, CSRF, ein Schritt des Rate-Limits „doc“ pro Anfrage, höchstens 200 IDs, Body 8 KB, nur Dokumente der eigenen Datenbank, „Für alle“ und Tags nur mit ihren Schaltern). Die sechs Schalter und der Hinweis zu Dateiarten stehen eingeklappt unter „Einstellungen für Dokumente“. Der Aufbau „Liste mit Detailbereich“ (CSS-Bausteine ld-… in app.css) ist für weitere Seiten gedacht. Die iPhone-App bleibt unverändert. Dokumente erstellen (V01.0.415): Der Spark schreibt auf Bitte Briefe, Berichte, Protokolle, Notizen, Zusammenfassungen, Einladungen, Präsentationen und Tabellen als Datei: Word (.docx), PDF, PowerPoint (.pptx), Excel (.xlsx), Markdown, Text oder CSV. Schalter: *Funktionen → Eigene Dokumente →"
+"text": "eiten, Schalter „Der Assistent sucht darin“ und „Für alle“, Original öffnen, Text lesen (mit „Dazu gehören“), Erinnern, Neu einlesen, Löschen. Die freigegebenen Dokumente der anderen stehen in derselben Liste (Quelle „Von anderen“). „Auswählen“ setzt Häkchen und wirkt auf alle markierten eigenen Dokumente: Suche an/aus, Für alle an/aus, Tag geben, Neu einlesen (höchstens 20), Löschen (mit Rückfrage). Dafür gibt es POST /api/profile/wissen/batch ({\"do\", \"ids\"}, nur Browser-Anmeldung des Profils, CSRF, ein Schritt des Rate-Limits „doc“ pro Anfrage, höchstens 200 IDs, Body 8 KB, nur Dokumente der eigenen Datenbank, „Für alle“ und Tags nur mit ihren Schaltern). Die sechs Schalter und der Hinweis zu Dateiarten stehen eingeklappt unter „Einstellungen für Dokumente“. Der Aufbau „Liste mit Detailbereich“ (CSS-Bausteine ld-… in app.css) ist für weitere Seiten gedacht. Die iPhone-App bleibt unverändert."
 },
 {
 "lang": "de",
 "src": "assistent",
 "file": "Assistent und Oberfläche",
 "head": "Sprach-Chat",
-"title": "Sprach-Chat",
-"text": " Dokumente erstellen* (chat.doc_make, aus) und darunter *Eigene Vorlagen* (chat.doc_make_templates, aus); Profil: *Ich → Dokumente → Dokumente erstellen* (doc_make) und *Eigene Vorlagen* (doc_make_templates), beide aus; Gäste und unbekannte Stimmen nie, nie über MCP. Ablauf: Die Weiche-Gruppe „erstellen“ bietet document_plan, document_change, document_status (und zum Schicken document_send). Das Modell legt nur eine Gliederung vor (Art, Format, Stil, Titel, höchstens 30 Teile, Fakten aus diesem Gespräch, bis 3 eigene Dokumente als Quelle); im Chat erscheint sie als Karte zum Ändern (Titel, Teile, Format, Aussehen). Erst ein schlichtes „Ja“ im selben Gespräch oder „Passt, erstellen“ startet einen Auftrag im Hintergrund (Gliederung wartet 30 Minuten). Pro Teil ein eigener Modell-Aufruf mit festem JSON-Schema, ohne Werkzeuge; Fakten und Dokumenttexte stehen eingepackt als Daten (<<<DATEN … DATEN>>>), nie als Befehl. Vorrang für Sprache gilt (der Auftrag wartet, solange gesprochen wird); ein Auftrag läuft, höchstens 3 warten, 10 pro Profil und Tag, 20 Minuten pro Auftrag; Notaus hält neue Aufträge und das Schicken an. Die Datei baut der Spark selbst (docrender.py: python-docx, python-p"
+"title": "Ich-Seiten aufgeräumt (V01.0.424)",
+"text": "Ich-Seiten aufgeräumt (V01.0.424): Gedächtnis, E-Mail, reMarkable und die übrigen Ich-Seiten folgen einem Muster: Unterreiter mit Zahlen statt Aufklapp-Pfeilen (eine orange Zahl braucht dich), Statuskarte mit „⋯“ für Seltenes, kompakte Zeilen mit kleinen Knöpfen, keine Scrollkästen in der Seite (die ersten 10, dann „Weitere zeigen“), „hinzufügen“ als Knopf, Unumkehrbares unten in der Gefahrenzone. E-Mail-Fragen beantwortet ein Tipp, „Immer so für diesen Absender“ macht eine Regel; die Vorschau ist nach Zielordner gruppiert. reMarkable: Ordnerbaum mit Häkchen und Inhalt daneben, gespeichert über die Leiste unten. Gedächtnis: suchen, filtern (von dir / automatisch), Einträge direkt ändern und mehrere auf einmal löschen."
 },
 {
 "lang": "de",
 "src": "assistent",
 "file": "Assistent und Oberfläche",
 "head": "Sprach-Chat",
-"title": "Sprach-Chat",
-"text": "ptx, XlsxWriter, fpdf2, fest mit Prüfsummen in requirements-panel.lock und requirements-docmake.lock): keine Makros, keine Verweise nach außen, in Tabellen nur SUMME/SUM-Formeln, CSV-Zellen beginnen nie mit = + - @, Diagramme als Balken, Linie oder Torte. Jeder Inhalt wird vor dem Bau geprüft (Längen, Zeichen, Teile, Zellen, Bilder nur aus eigenen Dokumenten). Ergebnis: unter *Ich → Dokumente → Vom Spark erstellt* mit Vorschau, Download in jedem passenden Format, bis 20 Versionen („Zurückholen“), Teile „Bearbeiten“ (von Hand, ohne Modell), „Neu schreiben“ mit Wunsch, „Weglassen“, „Teil dazuschreiben lassen“, Format und Aussehen dauerhaft umstellen; zusätzlich als Dokument mit Quelle „spark“ in der Liste (für die Suche erst nach eigenem Schalter). Per Satz: „Folie 4 kürzer“, „mach daraus ein PDF“, „schick es an meinen PC“ (zwei Stunden nach dem letzten Auftrag ohne Dokument-Wort verstanden). Schicken nur an eigene Ziele: PC (Spark-Begleiter, Eingang), reMarkable (PDF), Telegram, Mail-Entwurf mit Anhang (nie gesendet). Absender für Briefe unter *Ich → Dokumente → Absender für Briefe*. Eigene Vorlagen (.docx/.dotx/.pptx/.potx, höchstens 10 MB, 10 Stück) werden beim Hochladen geprüft: "
+"title": "Dokumente erstellen (V01.0.415)",
+"text": "Dokumente erstellen (V01.0.415): Der Spark schreibt auf Bitte Briefe, Berichte, Protokolle, Notizen, Zusammenfassungen, Einladungen, Präsentationen und Tabellen als Datei: Word (.docx), PDF, PowerPoint (.pptx), Excel (.xlsx), Markdown, Text oder CSV. Schalter: *Funktionen → Eigene Dokumente → Dokumente erstellen* (chat.doc_make, aus) und darunter *Eigene Vorlagen* (chat.doc_make_templates, aus); Profil: *Ich → Dokumente → Dokumente erstellen* (doc_make) und *Eigene Vorlagen* (doc_make_templates), beide aus; Gäste und unbekannte Stimmen nie, nie über MCP. Ablauf: Die Weiche-Gruppe „erstellen“ bietet document_plan, document_change, document_status (und zum Schicken document_send). Das Modell legt nur eine Gliederung vor (Art, Format, Stil, Titel, höchstens 30 Teile, Fakten aus diesem Gespräch, bis 3 eigene Dokumente als Quelle); im Chat erscheint sie als Karte zum Ändern (Titel, Teile, Format, Aussehen). Erst ein schlichtes „Ja“ im selben Gespräch oder „Passt, erstellen“ startet einen Auftrag im Hintergrund (Gliederung wartet 30 Minuten). Pro Teil ein eigener Modell-Aufruf mit festem JSON-Schema, ohne Werkzeuge; Fakten und Dokumenttexte stehen eingepackt als Daten (<<<DATEN … DATEN>>"
 },
 {
 "lang": "de",
 "src": "assistent",
 "file": "Assistent und Oberfläche",
 "head": "Sprach-Chat",
-"title": "Sprach-Chat",
-"text": "keine Makros, ActiveX, eingebetteten Objekte oder externen Verknüpfungen, kein Zip-Trick. Speicher: users/<p>/erstellt/ (höchstens 100 Dokumente). Ende eines Auftrags: Push „Dokument fertig“. Zustand → Live zeigt das Ziel „Dokumente erstellen“ mit Anzahlen (läuft, wartet, heute fertig), nie Inhalte. Logs: docmake: Auftrag praesentation pptx 6 Teile (neu), docmake: fertig … Version 1 in 84 s. API (Profil): GET /api/make, POST|DELETE /api/make/plan/{id}, GET /api/make/job/{id}, GET /api/make/doc/{id}[/file], POST /api/make/doc/{id}/edit|change|restore|send, /api/make/templates. Plan: plaene/dokumente-erstellen.md. Fragt der Spark nach („Worum soll es gehen?“), bleibt die Antwort darauf 15 Minuten lang im selben Gespräch beim Datei-Wunsch (Weiche „erstellen“, V01.0.423). Ist die Funktion aus, bekommt das Modell statt der Werkzeuge einen festen Satz, wo man sie einschaltet, und schreibt den Inhalt nicht als Text; Ich → Dokumente zeigt dann „Vom Spark erstellt“ mit dem Knopf „Einschalten“."
+"title": "Dokumente erstellen (V01.0.415)",
+"text": ">), nie als Befehl. Vorrang für Sprache gilt (der Auftrag wartet, solange gesprochen wird); ein Auftrag läuft, höchstens 3 warten, 10 pro Profil und Tag, 20 Minuten pro Auftrag; Notaus hält neue Aufträge und das Schicken an. Die Datei baut der Spark selbst (docrender.py: python-docx, python-pptx, XlsxWriter, fpdf2, fest mit Prüfsummen in requirements-panel.lock und requirements-docmake.lock): keine Makros, keine Verweise nach außen, in Tabellen nur SUMME/SUM-Formeln, CSV-Zellen beginnen nie mit = + - @, Diagramme als Balken, Linie oder Torte. Jeder Inhalt wird vor dem Bau geprüft (Längen, Zeichen, Teile, Zellen, Bilder nur aus eigenen Dokumenten). Ergebnis: unter *Ich → Dokumente → Vom Spark erstellt* mit Vorschau, Download in jedem passenden Format, bis 20 Versionen („Zurückholen“), Teile „Bearbeiten“ (von Hand, ohne Modell), „Neu schreiben“ mit Wunsch, „Weglassen“, „Teil dazuschreiben lassen“, Format und Aussehen dauerhaft umstellen; zusätzlich als Dokument mit Quelle „spark“ in der Liste (für die Suche erst nach eigenem Schalter). Per Satz: „Folie 4 kürzer“, „mach daraus ein PDF“, „schick es an meinen PC“ (zwei Stunden nach dem letzten Auftrag ohne Dokument-Wort verstanden). Sch"
+},
+{
+"lang": "de",
+"src": "assistent",
+"file": "Assistent und Oberfläche",
+"head": "Sprach-Chat",
+"title": "Dokumente erstellen (V01.0.415)",
+"text": "icken nur an eigene Ziele: PC (Spark-Begleiter, Eingang), reMarkable (PDF), Telegram, Mail-Entwurf mit Anhang (nie gesendet). Absender für Briefe unter *Ich → Dokumente → Absender für Briefe*. Eigene Vorlagen (.docx/.dotx/.pptx/.potx, höchstens 10 MB, 10 Stück) werden beim Hochladen geprüft: keine Makros, ActiveX, eingebetteten Objekte oder externen Verknüpfungen, kein Zip-Trick. Speicher: users/<p>/erstellt/ (höchstens 100 Dokumente). Ende eines Auftrags: Push „Dokument fertig“. Zustand → Live zeigt das Ziel „Dokumente erstellen“ mit Anzahlen (läuft, wartet, heute fertig), nie Inhalte. Logs: docmake: Auftrag praesentation pptx 6 Teile (neu), docmake: fertig … Version 1 in 84 s. API (Profil): GET /api/make, POST|DELETE /api/make/plan/{id}, GET /api/make/job/{id}, GET /api/make/doc/{id}[/file], POST /api/make/doc/{id}/edit|change|restore|send, /api/make/templates. Plan: plaene/dokumente-erstellen.md. Fragt der Spark nach („Worum soll es gehen?“), bleibt die Antwort darauf 15 Minuten lang im selben Gespräch beim Datei-Wunsch (Weiche „erstellen“, V01.0.423). Ist die Funktion aus, bekommt das Modell statt der Werkzeuge einen festen Satz, wo man sie einschaltet, und schreibt den Inhalt "
+},
+{
+"lang": "de",
+"src": "assistent",
+"file": "Assistent und Oberfläche",
+"head": "Sprach-Chat",
+"title": "Dokumente erstellen (V01.0.415)",
+"text": "nicht als Text; Ich → Dokumente zeigt dann „Vom Spark erstellt“ mit dem Knopf „Einschalten“."
 },
 {
 "lang": "de",
@@ -2925,7 +2941,15 @@
 "file": "Technik und Fehlersuche",
 "head": "Bausteine der Einstellungsseiten",
 "title": "Bausteine der Einstellungsseiten",
-"text": "über die volle Breite); Kacheln mit data-sw zeigen den Schalter aus /api/admin/features und springen mit whoOpen dorthin."
+"text": "über die volle Breite); Kacheln mit data-sw zeigen den Schalter aus /api/admin/features und springen mit whoOpen dorthin. - Ich-Seiten aufgeräumt (seit V01.0.424, js/ichteile.js, Plan ich-aufraeumen/plan.md): gemeinsame Bausteine icTabs (Unterreiter mit Zahl, eine orange Zahl braucht dich und öffnet zuerst), icCard (Statuskarte, Seltenes im „⋯“-Menü icMenu), icRow/icList (Titel, graue Zeile, kleine Symbolknöpfe), icCheck (Häkchen, auch halb), icSearch, icChip, icDanger, icStats; alles mit textContent gebaut. icAutoTabs(box,key) macht aus den h3 einer Seite Reiter (Sicherheit, Aufträge, Nachrichten); was nach .ic-tabend steht, bleibt darunter (Mein Notaus). Ein MutationObserver auf #profmodal kürzt jede ul.facts auf 10 Einträge mit „Weitere … zeigen“ und gestaltet die übrigen <details> als Karten, „hinzufügen“-Formulare als Knopf. In Ich gibt es keine Listen mit eigener Höhe mehr, lange Adressen brechen um. E-Mail-Aufräumen (tidy.js): Karte je Postfach mit Modus als Segmente, Reiter Fragen, Vorschau (nach Ordnern), Verlauf, Regeln, Ordner und Ausnahmen; eine Frage beantwortet ein Tipp auf einen Chip, „Immer so“ (vorangehakt) macht eine Regel. reMarkable (remarkable.js rmDraw): Statu"
+},
+{
+"lang": "de",
+"src": "technik",
+"file": "Technik und Fehlersuche",
+"head": "Bausteine der Einstellungsseiten",
+"title": "Bausteine der Einstellungsseiten",
+"text": "skarte, Kennzahlen, Reiter Lesen (Ordnerbaum links ab 700 px, Inhalt rechts mit Pfad oben, Suche über alles), Schicken, Mehr, Einstellungen; Änderungen der Auswahl sammelt die Speichern-Leiste unten. Gedächtnis (me.js factDraw): Suche, Chips Alle/Von dir/Automatisch, Datum, ✎ Ändern direkt (PUT /api/profile/memory/{id}, nur Browser-Anmeldung, höchstens 300 Zeichen, gilt danach als „von dir“), Auswählen und mehrere löschen (POST /api/profile/memory/forget, höchstens 500 IDs), „Alles vergessen“ in der Gefahrenzone. Keine neuen Schalter. tests/test_ich_aufraeumen.py prüft Breite (320/390/1280 px), Scrollboxen, Reiter, Antwort per Chip, Ordnerbaum und Gedächtnis."
 },
 {
 "lang": "de",
@@ -3829,31 +3853,39 @@
 "file": "Assistant and panel",
 "head": "Voice chat",
 "title": "Document list for many files (V01.0.413)",
-"text": "with\"), remind, read again, delete. Documents others share are in the same list (source \"From others\"). \"Select\" ticks documents and acts on all ticked own ones: search on/off, for everyone on/off, add a tag, read again (at most 20), delete (with a question first), via POST /api/profile/wissen/batch ({\"do\", \"ids\"}, the profile's browser login only, CSRF, one step of the \"doc\" rate limit per request, at most 200 ids, 8 KB body, only documents of the own database, \"for everyone\" and tags only with their switches). The six switches and the note on file kinds sit folded under \"Settings for documents\". The layout \"list with details\" (CSS building blocks ld-… in app.css) is meant for more pages. The iPhone app is unchanged. Creating documents (V01.0.415): On request the Spark writes letters, reports, minutes, notes, summaries, invitations, presentations and spreadsheets as a file: Word (.docx), PDF, PowerPoint (.pptx), Excel (.xlsx), Markdown, text or CSV. Switches: *Features → Own documents → Creating documents* (chat.doc_make, off) and below it *Own templates* (chat.doc_make_templates, off); profile: *Me → Documents → Create documents* (doc_make) and *Own templates* (doc_make_templates"
+"text": "with\"), remind, read again, delete. Documents others share are in the same list (source \"From others\"). \"Select\" ticks documents and acts on all ticked own ones: search on/off, for everyone on/off, add a tag, read again (at most 20), delete (with a question first), via POST /api/profile/wissen/batch ({\"do\", \"ids\"}, the profile's browser login only, CSRF, one step of the \"doc\" rate limit per request, at most 200 ids, 8 KB body, only documents of the own database, \"for everyone\" and tags only with their switches). The six switches and the note on file kinds sit folded under \"Settings for documents\". The layout \"list with details\" (CSS building blocks ld-… in app.css) is meant for more pages. The iPhone app is unchanged."
 },
 {
 "lang": "en",
 "src": "assistant",
 "file": "Assistant and panel",
 "head": "Voice chat",
-"title": "Document list for many files (V01.0.413)",
-"text": "), both off; never guests or unknown voices, never over MCP. Flow: the Weiche group \"erstellen\" offers document_plan, document_change, document_status (and document_send for sending). The model only proposes an outline (kind, format, style, title, at most 30 parts, facts from this conversation, up to 3 own documents as sources); in the chat it shows as a card to change (title, parts, format, look). Only a plain \"yes\" in the same conversation or \"Looks good, create\" starts a background job (the outline waits 30 minutes). One model call per part with a fixed JSON schema and no tools; facts and document texts are wrapped as data (<<<DATEN … DATEN>>>), never as a command. Speech priority applies (the job waits while someone talks); one job runs, at most 3 wait, 10 per profile and day, 20 minutes per job; the emergency stop halts new jobs and sending. The Spark builds the file itself (docrender.py: python-docx, python-pptx, XlsxWriter, fpdf2, pinned with hashes in requirements-panel.lock and requirements-docmake.lock): no macros, no links to the outside, in spreadsheets only SUM formulas, CSV cells never start with = + - @, charts as bar, line or pie. Every content is checked before bui"
+"title": "Me pages tidied (V01.0.424)",
+"text": "Me pages tidied (V01.0.424): memory, mail, reMarkable and the other Me pages follow one pattern: sub-tabs with counts instead of fold-out arrows (an orange count needs you), a status card with \"⋯\" for rare actions, compact rows with small buttons, no scroll boxes inside the page (the first 10, then \"Show more\"), \"add\" as a button, anything irreversible at the bottom in the danger zone. One tap answers a mail question, \"Always for this sender\" makes a rule; the preview is grouped by target folder. reMarkable: folder tree with ticks and its content beside it, saved with the bar at the bottom. Memory: search, filter (from you / automatic), change entries in place and delete several at once."
 },
 {
 "lang": "en",
 "src": "assistant",
 "file": "Assistant and panel",
 "head": "Voice chat",
-"title": "Document list for many files (V01.0.413)",
-"text": "lding (lengths, characters, parts, cells, pictures only from own documents). Result: under *Me → Documents → Made by the Spark* with preview, download in every fitting format, up to 20 versions (\"Bring back\"), parts \"Edit\" (by hand, no model), \"Rewrite\" with a wish, \"Leave out\", \"Have a part added\", switch format and look for good; also listed as a document with source \"spark\" (searched only after its own switch). By a sentence: \"slide 4 shorter\", \"make a PDF of it\", \"send it to my PC\" (understood without a document word for two hours after the last job). Sending only to own targets: PC (Spark companion, inbox), reMarkable (PDF), Telegram, mail draft with attachment (never sent). Sender for letters under *Me → Documents → Sender for letters*. Own templates (.docx/.dotx/.pptx/.potx, at most 10 MB, 10 of them) are checked on upload: no macros, ActiveX, embedded objects or external links, no zip trick. Storage: users/<p>/erstellt/ (at most 100 documents). End of a job: push \"document ready\". Status → Live shows the target \"Dokumente erstellen\" with counts (running, waiting, done today), never contents. Logs: docmake: Auftrag praesentation pptx 6 Teile (neu), docmake: fertig … Version "
+"title": "Creating documents (V01.0.415)",
+"text": "Creating documents (V01.0.415): On request the Spark writes letters, reports, minutes, notes, summaries, invitations, presentations and spreadsheets as a file: Word (.docx), PDF, PowerPoint (.pptx), Excel (.xlsx), Markdown, text or CSV. Switches: *Features → Own documents → Creating documents* (chat.doc_make, off) and below it *Own templates* (chat.doc_make_templates, off); profile: *Me → Documents → Create documents* (doc_make) and *Own templates* (doc_make_templates), both off; never guests or unknown voices, never over MCP. Flow: the Weiche group \"erstellen\" offers document_plan, document_change, document_status (and document_send for sending). The model only proposes an outline (kind, format, style, title, at most 30 parts, facts from this conversation, up to 3 own documents as sources); in the chat it shows as a card to change (title, parts, format, look). Only a plain \"yes\" in the same conversation or \"Looks good, create\" starts a background job (the outline waits 30 minutes). One model call per part with a fixed JSON schema and no tools; facts and document texts are wrapped as data (<<<DATEN … DATEN>>>), never as a command. Speech priority applies (the job waits while someon"
 },
 {
 "lang": "en",
 "src": "assistant",
 "file": "Assistant and panel",
 "head": "Voice chat",
-"title": "Document list for many files (V01.0.413)",
-"text": "1 in 84 s. API (profile): GET /api/make, POST|DELETE /api/make/plan/{id}, GET /api/make/job/{id}, GET /api/make/doc/{id}[/file], POST /api/make/doc/{id}/edit|change|restore|send, /api/make/templates. Plan: plaene/dokumente-erstellen.md. When the Spark asks back (\"What should it be about?\"), the answer stays with the file wish for 15 minutes in the same conversation (Weiche group \"erstellen\", V01.0.423). When the function is off, the model gets a fixed sentence on where to switch it on instead of the tools and does not write the content as text; Me → Documents then shows \"Made by the Spark\" with a \"Switch on\" button."
+"title": "Creating documents (V01.0.415)",
+"text": "e talks); one job runs, at most 3 wait, 10 per profile and day, 20 minutes per job; the emergency stop halts new jobs and sending. The Spark builds the file itself (docrender.py: python-docx, python-pptx, XlsxWriter, fpdf2, pinned with hashes in requirements-panel.lock and requirements-docmake.lock): no macros, no links to the outside, in spreadsheets only SUM formulas, CSV cells never start with = + - @, charts as bar, line or pie. Every content is checked before building (lengths, characters, parts, cells, pictures only from own documents). Result: under *Me → Documents → Made by the Spark* with preview, download in every fitting format, up to 20 versions (\"Bring back\"), parts \"Edit\" (by hand, no model), \"Rewrite\" with a wish, \"Leave out\", \"Have a part added\", switch format and look for good; also listed as a document with source \"spark\" (searched only after its own switch). By a sentence: \"slide 4 shorter\", \"make a PDF of it\", \"send it to my PC\" (understood without a document word for two hours after the last job). Sending only to own targets: PC (Spark companion, inbox), reMarkable (PDF), Telegram, mail draft with attachment (never sent). Sender for letters under *Me → Document"
+},
+{
+"lang": "en",
+"src": "assistant",
+"file": "Assistant and panel",
+"head": "Voice chat",
+"title": "Creating documents (V01.0.415)",
+"text": "s → Sender for letters*. Own templates (.docx/.dotx/.pptx/.potx, at most 10 MB, 10 of them) are checked on upload: no macros, ActiveX, embedded objects or external links, no zip trick. Storage: users/<p>/erstellt/ (at most 100 documents). End of a job: push \"document ready\". Status → Live shows the target \"Dokumente erstellen\" with counts (running, waiting, done today), never contents. Logs: docmake: Auftrag praesentation pptx 6 Teile (neu), docmake: fertig … Version 1 in 84 s. API (profile): GET /api/make, POST|DELETE /api/make/plan/{id}, GET /api/make/job/{id}, GET /api/make/doc/{id}[/file], POST /api/make/doc/{id}/edit|change|restore|send, /api/make/templates. Plan: plaene/dokumente-erstellen.md. When the Spark asks back (\"What should it be about?\"), the answer stays with the file wish for 15 minutes in the same conversation (Weiche group \"erstellen\", V01.0.423). When the function is off, the model gets a fixed sentence on where to switch it on instead of the tools and does not write the content as text; Me → Documents then shows \"Made by the Spark\" with a \"Switch on\" button."
 },
 {
 "lang": "en",
@@ -5749,7 +5781,23 @@
 "file": "Technical details and troubleshooting",
 "head": "Settings page building blocks",
 "title": "Settings page building blocks",
-"text": " darf es\" (.fwho, data-nodirty) reads /api/admin/features and switches over the same endpoints as the table. presetMove() (after renderSet in loadCfg) puts the presets follow and echo into the feature detail; saving takes only the presets whose row is on that page. Groups: features.GROUPS and GGROUPS match (test test_einstellungen_neu). - Me as a page, people, apps (since V01.0.416, packages 4 and 5): Me keeps #profmodal (many places check display==='grid') but on computers looks like the settings: page title #mepage, symbols in #ptabs (seite.js meIcons), no \"Schließen\". renderSet for profiles draws no tabs any more: meLayout puts the groups one below the other in boxes (pageGroup, pageSeg), \"Tempo und Genauigkeit\" as details.mefold, locked rows in details.melockrows at the bottom. SETF groups: listening, answer, knowledge and style, speed and accuracy, devices, display, privacy. People: from 740 px card width .pcard.split, the open profile in #pside (pSide() in users.js). Apps: js/kacheln.js turns the cards under #apps into tiles (.atile, open over the full width); tiles with data-sw show the switch from /api/admin/features and jump there with whoOpen."
+"text": " darf es\" (.fwho, data-nodirty) reads /api/admin/features and switches over the same endpoints as the table. presetMove() (after renderSet in loadCfg) puts the presets follow and echo into the feature detail; saving takes only the presets whose row is on that page. Groups: features.GROUPS and GGROUPS match (test test_einstellungen_neu). - Me as a page, people, apps (since V01.0.416, packages 4 and 5): Me keeps #profmodal (many places check display==='grid') but on computers looks like the settings: page title #mepage, symbols in #ptabs (seite.js meIcons), no \"Schließen\". renderSet for profiles draws no tabs any more: meLayout puts the groups one below the other in boxes (pageGroup, pageSeg), \"Tempo und Genauigkeit\" as details.mefold, locked rows in details.melockrows at the bottom. SETF groups: listening, answer, knowledge and style, speed and accuracy, devices, display, privacy. People: from 740 px card width .pcard.split, the open profile in #pside (pSide() in users.js). Apps: js/kacheln.js turns the cards under #apps into tiles (.atile, open over the full width); tiles with data-sw show the switch from /api/admin/features and jump there with whoOpen. - Me pages tidied (since V01"
+},
+{
+"lang": "en",
+"src": "technical",
+"file": "Technical details and troubleshooting",
+"head": "Settings page building blocks",
+"title": "Settings page building blocks",
+"text": ".0.424, js/ichteile.js, plan ich-aufraeumen/plan.md): shared building blocks icTabs (sub-tabs with a count; an orange count needs you and opens first), icCard (status card, rare actions in the \"⋯\" menu icMenu), icRow/icList (title, grey line, small icon buttons), icCheck (tick, also half), icSearch, icChip, icDanger, icStats; all built with textContent. icAutoTabs(box,key) turns the h3 of a page into tabs (security, jobs, messages); what follows .ic-tabend stays below (my emergency stop). A MutationObserver on #profmodal cuts every ul.facts to 10 entries with \"Show … more\" and styles the remaining <details> as cards, \"add\" forms as a button. Me has no lists with their own height any more, long addresses wrap. Mail tidying (tidy.js): a card per mailbox with the mode as segments, tabs questions, preview (by folder), history, rules, folders and exceptions; one tap on a chip answers a question, \"Always\" (ticked) makes a rule. reMarkable (remarkable.js rmDraw): status card, figures, tabs read (folder tree on the left from 700 px, content on the right with the path on top, search across everything), send, more, settings; changes to the choice are collected by the save bar at the bottom. "
+},
+{
+"lang": "en",
+"src": "technical",
+"file": "Technical details and troubleshooting",
+"head": "Settings page building blocks",
+"title": "Settings page building blocks",
+"text": "Memory (me.js factDraw): search, chips all/from you/automatic, date, ✎ change in place (PUT /api/profile/memory/{id}, browser login only, at most 300 characters, counts as \"from you\" afterwards), select and delete several (POST /api/profile/memory/forget, at most 500 ids), \"Forget everything\" in the danger zone. No new switches. tests/test_ich_aufraeumen.py checks width (320/390/1280 px), scroll boxes, tabs, answer by chip, folder tree and memory."
 },
 {
 "lang": "en",

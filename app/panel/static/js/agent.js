@@ -48,6 +48,7 @@ async function showAgent(){const box=$('agentbox');if(!box)return;clearTimeout(a
       <div class="fh">${t('Starten: nur den Namen sagen („Feierabend“). Jeder Schritt läuft wie ein gesprochener Befehl, mit deinem Codewort, falls du eins hast. Per Sprache anlegen: „Merk dir als Feierabend: Licht im Flur aus, Rollläden runter.“','Start: just say the name ("Evening"). Each step runs like a spoken command, with your code word if you have one. By voice: "Remember as Evening: hall light off, blinds down."')}</div></details>`:''}
     ${d.servers.length?`<h3 style="margin:14px 0 4px">${t('Freigegebene Dienste','Allowed services')}</h3><ul class="facts">${d.servers.map(s=>`<li><span><b>${esc(s.name)}</b><br><small class="mut">${esc(s.tools.join(', ')||t('keine Werkzeuge','no tools'))}</small></span></li>`).join('')}</ul>`:''}`:''}
     <div class="fh" id="agmsg"></div>`;
+  if(window.icAutoTabs)icAutoTabs(box,'agent');
   xbind(box,showAgent);
   const call=async(p,o)=>{try{await api(p,o);await showAgent()}catch(e){xmsg('agmsg',e.message,true)}};
   if($('aggo'))$('aggo').onclick=()=>{const v=$('agtask').value.trim();if(!v)return;call('/api/profile/agent/jobs',xjson('POST',{task:v,doc:$('agdoc').checked}))};

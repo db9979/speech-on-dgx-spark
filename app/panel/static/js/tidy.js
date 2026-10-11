@@ -9,56 +9,93 @@ async function tidyCall(path,body,method='POST'){const r=await fetch('/api/profi
 function catSel(id,val,keep=true){return `<select id="${id}">${Object.entries(TIDY.cats).map(([k,v])=>`<option value="${k}"${k===val?' selected':''}>${esc(TIDY.folders[k]||v)}</option>`).join('')}${keep?`<option value="keep"${val==='keep'?' selected':''}>${t('Posteingang','Inbox')}</option>`:''}</select>`}
 async function showMailTidy(){const box=$('mailtidy');if(!box)return;if(!PROFILE||!TIDY_ON){box.innerHTML='';return}
   try{TIDY=await (await api('/api/profile/tidy')).json()}catch{box.innerHTML='';return}tidyRender()}
-function tidyRender(){const d=TIDY,box=$('mailtidy');
+// Since the Ich pages were tidied up (ich-aufraeumen/plan.md, Paket 2): a card per mailbox (mode as segments, "Jetzt
+// prüfen", rare things in "⋯"), then tabs with counts instead of six arrows. A question is answered with one tap on a
+// folder, "Immer so" makes it a rule; the preview is grouped by the folder it would go to.
+const tcat=k=>k==='keep'?t('Posteingang','Inbox'):(TIDY.folders[k]||TIDY.cats[k]||k);
+const TSHOW=new Set();let TQ='';
+function tidyMore(list,key,rows,n){const shown=TSHOW.has(key)?rows:rows.slice(0,n);shown.forEach(r=>list.appendChild(r));
+  if(rows.length>shown.length){const b=icEl('button','ic-more2',t(`Weitere ${rows.length-shown.length} zeigen`,`Show ${rows.length-shown.length} more`));b.type='button';
+    b.onclick=()=>{TSHOW.add(key);b.remove();rows.slice(n).forEach(r=>list.appendChild(r))};list.appendChild(b)}return list}
+function tidyRender(){const d=TIDY,box=$('mailtidy'),E=icEl;
   if(!d.accounts.length){box.innerHTML='';return}
-  const fpath=n=>(d.root?d.root+'/':'')+n;
-  const acc=d.accounts.map(a=>`<div class="setrow"><div class="lbl"><b>${esc(a.name)}</b><span>${a.mode==='preview'&&a.since?t('Vorschau seit ','Preview since ')+tdate(a.since)+(Date.now()/1000-a.since>7*86400?t(' – eine Woche ist um, passt es? Dann „Sicher automatisch“.',' – a week is over; if it fits, switch to "safe automatic".'):''):''}${a.last_run?' · '+t('zuletzt ','last ')+tdate(a.last_run):''}${a.error?' · ⚠ '+esc(a.error):''}${a.stopped?' · ⚠ '+t('angehalten: ','stopped: ')+esc(a.stopped):''}</span>
-      <label class="chk" style="margin-top:4px"><input type="checkbox" data-drafts="${esc(a.id)}"${a.drafts?' checked':''}> ${t('Antwort-Entwürfe erlauben (nie senden)','Allow reply drafts (never sent)')}</label>
-      <div class="row" style="margin-top:4px"><button class="b" type="button" data-run="${esc(a.id)}">${t('Jetzt prüfen','Check now')}</button><button class="b" type="button" data-backlog="${esc(a.id)}">${t('Altlasten (90 Tage)','Old mail (90 days)')}</button></div></div>
-    <select data-mode="${esc(a.id)}">${TMODES.map(([k,l])=>`<option value="${k}"${k===a.mode?' selected':''}>${esc(l)}</option>`).join('')}</select></div>`).join('');
-  const bl=d.backlog?`<div class="intro" style="margin-top:8px"><b>${t('Altlasten-Vorschlag','Old mail proposal')}</b><br>${t('Von ','Of ')}${d.backlog.total}${t(' Mails der letzten ',' mails of the last ')}${d.backlog.days}${t(' Tage würde ich ',' days I would move ')}${d.backlog.moves}${t(' verschieben: ',': ')}${Object.entries(d.backlog.by).map(([k,n])=>esc(d.folders[k])+' '+n).join(', ')}.${d.backlog.top.length?'<br><small>'+d.backlog.top.map(([s,n])=>esc(s)+' ('+n+')').join(', ')+'</small>':''}
-      <div class="row" style="margin-top:6px"><button class="b p" type="button" id="blgo"${d.backlog.moves?'':' disabled'}>${t('Verschieben','Move')}</button><button class="b" type="button" id="bldrop">${t('Verwerfen','Discard')}</button></div></div>`:'';
-  const qs=d.questions.map(q=>`<li><span><b>${esc(q.name||q.sender)}</b> <small class="mut">${esc(q.sender)} · ${q.uids.length} ${t('Mail(s)','mail(s)')}${q.guess?' · '+t('Vermutung: ','guess: ')+esc(q.guess==='keep'?t('Posteingang','Inbox'):(d.folders[q.guess]||q.guess)):''}</small><br><small class="mut">${esc((q.subjects||[]).slice(-2).join(' · '))}</small></span>
-    <span class="rowin">${catSel('qa'+q.id,q.guess||'keep')}<button class="b" type="button" data-answer="${esc(q.id)}">OK</button></span></li>`).join('')||`<li class="mut">${t('Keine offenen Fragen.','No open questions.')}</li>`;
-  const pv=d.preview.map(p=>`<li><span><b>${esc(p.name||p.sender)}</b>: ${esc(p.subject)}<br><small class="mut">→ ${esc(p.folder)} · ${esc(p.why)}</small></span><span class="rowin"><button class="b" type="button" data-pok="${esc(p.id)}">OK</button><button class="b" type="button" data-pno="${esc(p.id)}">${t('Nein','No')}</button></span></li>`).join('')||`<li class="mut">${t('Nichts in der Vorschau.','Nothing in the preview.')}</li>`;
-  const rules=d.rules.slice().reverse().map(r=>`<li><span>${esc(r.match)} → ${esc(r.cat==='keep'?t('Posteingang','Inbox'):(d.folders[r.cat]||r.cat))}</span><button class="b" type="button" data-rdel="${esc(r.id)}">${t('Löschen','Delete')}</button></li>`).join('')||`<li class="mut">${t('Noch keine Regeln.','No rules yet.')}</li>`;
-  const log=d.log.slice(0,60).map(x=>`<li><span>${esc(x.name||x.sender)}: ${esc(x.subject)}<br><small class="mut">${tdate(x.t)} → ${esc(x.folder)} · ${esc(x.why)}${x.undone?' · '+t('zurückgeholt','brought back'):''}${x.returned?' · '+t('von dir zurückgelegt','moved back by you'):''}</small></span>${x.undone?'':`<button class="b" type="button" data-undo="${esc(x.id)}">${t('Zurück','Back')}</button>`}</li>`).join('')||`<li class="mut">${t('Noch nichts verschoben.','Nothing moved yet.')}</li>`;
-  const acts=Object.entries(d.cats).map(([k,v])=>`<div class="setrow"><div class="lbl"><input data-fname="${k}" value="${esc(d.folders[k]||v)}" style="max-width:180px"><span>${esc(fpath(d.folders[k]||v))}</span></div>
-    <select data-act="${k}">${[['move',t('verschieben','move')],['ask',t('erst nachfragen','ask first')],['keep',t('im Posteingang lassen','keep in inbox')]].map(([a,l])=>`<option value="${a}"${d.actions[k]===a?' selected':''}>${l}</option>`).join('')}</select></div>`).join('');
-  box.innerHTML=`<h4 style="margin:18px 0 4px">${t('Postfach aufräumen','Inbox tidying')}</h4><div class="intro">${d.root?t('Der Spark sortiert Werbung, Newsletter und Ähnliches in Ordner unter „','The Spark sorts advertising, newsletters and the like into folders under "')+esc(d.root)+t('/“.','/".'):t('Der Spark sortiert Werbung, Newsletter und Ähnliches in eigene Ordner.','The Spark sorts advertising, newsletters and the like into folders of their own.')} ${t('Er verschiebt nur, er löscht nie. Leute, denen du geschrieben hast, und Anmelde- oder Sicherheitsmails bleiben immer im Posteingang. Unklares fragt er nach. Jede Verschiebung lässt sich 30 Tage lang zurückholen.','It only moves, never deletes. People you wrote to and sign-in or security mails always stay in the inbox. It asks about unclear mail. Every move can be undone for 30 days.')}</div>
-    ${acc}
-    <label style="margin-top:12px">${t('Hauptordner','Main folder')}</label><div class="rowin"><input id="tidyroot" value="${esc(d.root)}" maxlength="40" autocapitalize="off" autocomplete="off"><button class="b" type="button" id="tidyrootsave">${t('Umbenennen','Rename')}</button></div>
-    <div class="fh">${t('Darunter liegen die Ordner. Umbenennen benennt den Ordner auch im Postfach um, die Mails darin wandern mit. Leer = Ordner direkt oben.','The folders sit below it. Renaming also renames the folder in the mailbox; the mail in it moves along. Empty = folders at the top.')}</div>
-    <div class="setrow"><div class="lbl"><b>${t('Wie oft prüfen','How often to check')}</b><span>${t('Nur neue Mails seit dem letzten Mal.','Only new mail since the last time.')}</span></div><select id="tidyevery">${[5,15,60].map(m=>`<option value="${m}"${d.every===m?' selected':''}>${m} ${t('Minuten','minutes')}</option>`).join('')}</select></div>
-    <div id="tidymsg" class="fh"></div>${bl}
-    <details${d.questions.length?' open':''}><summary>${t('Offene Fragen','Open questions')} (${d.questions.length})</summary><ul class="facts small">${qs}</ul></details>
-    <details${d.preview.length?' open':''}><summary>${t('Vorschau: würde verschieben','Preview: would move')} (${d.preview.length})</summary>${d.preview.length?`<div class="row"><button class="b" type="button" id="pokall">${t('Alle verschieben','Move all')}</button></div>`:''}<ul class="facts small">${pv}</ul></details>
-    <details><summary>${t('Regeln','Rules')} (${d.rules.length})</summary><ul class="facts small">${rules}</ul>
-      <div class="rowin"><input id="rmatch" placeholder="${t('absender@firma.de oder firma.de','sender@company.com or company.com')}" autocapitalize="off" autocomplete="off">${catSel('rcat','werbung')}<button class="b" type="button" id="radd">${t('Hinzufügen','Add')}</button></div></details>
-    <details><summary>${t('Immer im Posteingang lassen','Always keep in inbox')}</summary><textarea id="tprot" rows="3" placeholder="${t('Eine Adresse oder Domain pro Zeile','One address or domain per line')}">${esc(d.protected.join('\n'))}</textarea>
-      <div class="row"><button class="b" type="button" id="tprotsave">${t('Speichern','Save')}</button></div></details>
-    <details><summary>${t('Ordner und was verschoben wird','Folders and what is moved')}</summary>${acts}<div class="row"><button class="b" type="button" id="tactsave">${t('Speichern','Save')}</button></div></details>
-    <details><summary>${t('Verlauf (30 Tage)','History (30 days)')}</summary><ul class="facts small">${log}</ul></details>`;
-  box.querySelectorAll('[data-mode]').forEach(s=>s.onchange=()=>tidyCall('',{accounts:{[s.dataset.mode]:{mode:s.value}}},'PUT'));
-  box.querySelectorAll('[data-drafts]').forEach(c=>c.onchange=()=>tidyCall('',{accounts:{[c.dataset.drafts]:{drafts:c.checked}}},'PUT'));
-  box.querySelectorAll('[data-run]').forEach(b=>b.onclick=async()=>{tidyMsg(t('Prüfe …','Checking …'));const d=await tidyCall('/run',{aid:b.dataset.run});
-    if(d&&d.report){const r=d.report;tidyMsg(r.first?t('Gestartet: ab jetzt werden neue Mails sortiert.','Started: new mail is sorted from now on.'):r.error?'⚠ '+r.error:`${r.new||0} ${t('neu','new')}, ${r.moved||0} ${t('verschoben','moved')}, ${r.preview||0} ${t('in der Vorschau','in the preview')}, ${r.asked||0} ${t('Fragen','questions')}`+(r.waiting?`, ${r.waiting} ${t('warten aufs Modell','wait for the model')}`:''),!!r.error)}});
-  box.querySelectorAll('[data-backlog]').forEach(b=>b.onclick=async()=>{tidyMsg(t('Sehe mir die letzten 90 Tage an …','Looking at the last 90 days …'));if(await tidyCall('/backlog',{aid:b.dataset.backlog}))tidyMsg('')});
-  if($('blgo'))$('blgo').onclick=async()=>{if(!confirm(t('Jetzt verschieben? Es wird nichts gelöscht, und alles lässt sich zurückholen.','Move now? Nothing is deleted, and everything can be brought back.')))return;tidyMsg(t('Verschiebe …','Moving …'));const d=await tidyCall('/backlog',{apply:true});if(d)tidyMsg(d.report.moved+t(' Mails verschoben.',' mails moved.'))};
-  if($('bldrop'))$('bldrop').onclick=()=>tidyCall('/backlog',{drop:true});
-  box.querySelectorAll('[data-answer]').forEach(b=>b.onclick=async()=>{const d=await tidyCall('/answer',{id:b.dataset.answer,cat:$('qa'+b.dataset.answer).value});if(d)tidyMsg(t('Gemerkt.','Noted.')+(d.report.moved?' '+d.report.moved+t(' verschoben.',' moved.'):''))});
-  box.querySelectorAll('[data-pok]').forEach(b=>b.onclick=()=>tidyCall('/preview',{ok:[b.dataset.pok]}));
-  box.querySelectorAll('[data-pno]').forEach(b=>b.onclick=()=>tidyCall('/preview',{no:b.dataset.pno,protect:confirm(t('Diesen Absender künftig immer im Posteingang lassen?','Always keep this sender in the inbox from now on?'))}));
-  if($('pokall'))$('pokall').onclick=()=>{if(confirm(t('Alle Vorschläge der Vorschau verschieben?','Move every proposal of the preview?')))tidyCall('/preview',{ok:d.preview.map(p=>p.id)})};
-  box.querySelectorAll('[data-rdel]').forEach(b=>b.onclick=()=>tidyCall('/rules/'+encodeURIComponent(b.dataset.rdel),{},'DELETE'));
-  $('radd').onclick=()=>tidyCall('/rules',{match:$('rmatch').value,cat:$('rcat').value});
-  box.querySelectorAll('[data-undo]').forEach(b=>b.onclick=()=>tidyCall('/undo',{ids:[b.dataset.undo],protect:confirm(t('Diesen Absender künftig immer im Posteingang lassen?','Always keep this sender in the inbox from now on?'))}));
-  $('tidyrootsave').onclick=async()=>{const v=$('tidyroot').value.trim();if(v===d.root)return;
+  box.textContent='';box.appendChild(E('h3','sec',t('Postfach aufräumen','Inbox tidying')));
+  box.appendChild(E('div','intro',(d.root?t('Der Spark sortiert Werbung, Newsletter und Ähnliches in Ordner unter „','The Spark sorts advertising, newsletters and the like into folders under "')+d.root+t('/“.','/".'):t('Der Spark sortiert Werbung, Newsletter und Ähnliches in eigene Ordner.','The Spark sorts advertising, newsletters and the like into folders of their own.'))+' '+t('Er verschiebt nur, er löscht nie. Leute, denen du geschrieben hast, und Anmelde- oder Sicherheitsmails bleiben immer im Posteingang. Unklares fragt er nach. Jede Verschiebung lässt sich 30 Tage lang zurückholen.','It only moves, never deletes. People you wrote to and sign-in or security mails always stay in the inbox. It asks about unclear mail. Every move can be undone for 30 days.')));
+  for(const a of d.accounts){const parts=[];
+    if(a.mode==='preview'&&a.since)parts.push(t('Vorschau seit ','Preview since ')+tdate(a.since)+(Date.now()/1000-a.since>7*86400?t(' – eine Woche ist um, passt es? Dann „Sicher“.',' – a week is over; if it fits, switch to "Safe".'):''));
+    if(a.last_run)parts.push(t('zuletzt ','last ')+tdate(a.last_run));if(a.mode!=='off')parts.push(t(`prüft alle ${d.every} Minuten`,`checks every ${d.every} minutes`));
+    if(a.error)parts.push('⚠ '+a.error);if(a.stopped)parts.push('⚠ '+t('angehalten: ','stopped: ')+a.stopped);
+    const seg=E('div','ic-seg');seg.setAttribute('role','group');seg.setAttribute('aria-label',t('Aufräumen für ','Tidying for ')+a.name);
+    for(const [k,l] of TMODES){const b=E('button',k===a.mode?'on':'',{off:t('Aus','Off'),preview:t('Vorschau','Preview'),safe:t('Sicher','Safe'),auto:t('Voll','Full')}[k]);
+      b.type='button';b.title=l;b.dataset.mode=a.id;b.dataset.v=k;b.setAttribute('aria-pressed',k===a.mode?'true':'false');
+      b.onclick=()=>{if(k!==a.mode)tidyCall('',{accounts:{[a.id]:{mode:k}}},'PUT')};seg.appendChild(b)}
+    const run=E('button','b',t('Jetzt prüfen','Check now'));run.type='button';run.dataset.run=a.id;
+    run.onclick=async()=>{tidyMsg(t('Prüfe …','Checking …'));const r0=await tidyCall('/run',{aid:a.id});
+      if(r0&&r0.report){const r=r0.report;tidyMsg(r.first?t('Gestartet: ab jetzt werden neue Mails sortiert.','Started: new mail is sorted from now on.'):r.error?'⚠ '+r.error:`${r.new||0} ${t('neu','new')}, ${r.moved||0} ${t('verschoben','moved')}, ${r.preview||0} ${t('in der Vorschau','in the preview')}, ${r.asked||0} ${t('Fragen','questions')}`+(r.waiting?`, ${r.waiting} ${t('warten aufs Modell','wait for the model')}`:''),!!r.error)}};
+    box.appendChild(icCard('mail',a.name,parts.join(' · '),[seg,run],[
+      {label:t('Altlasten der letzten 90 Tage ansehen','Look at old mail of the last 90 days'),act:async()=>{tidyMsg(t('Sehe mir die letzten 90 Tage an …','Looking at the last 90 days …'));if(await tidyCall('/backlog',{aid:a.id}))tidyMsg('')}},
+      {label:a.drafts?t('Antwort-Entwürfe nicht mehr erlauben','Stop allowing reply drafts'):t('Antwort-Entwürfe erlauben (nie senden)','Allow reply drafts (never sent)'),act:()=>tidyCall('',{accounts:{[a.id]:{drafts:!a.drafts}}},'PUT')}]))}
+  const msg=E('div','fh');msg.id='tidymsg';box.appendChild(msg);
+  if(d.backlog){const bl=d.backlog,go=E('button','b p',t('Verschieben','Move')),drop=E('button','b',t('Verwerfen','Discard'));go.type=drop.type='button';go.disabled=!bl.moves;
+    go.onclick=async()=>{if(!confirm(t('Jetzt verschieben? Es wird nichts gelöscht, und alles lässt sich zurückholen.','Move now? Nothing is deleted, and everything can be brought back.')))return;tidyMsg(t('Verschiebe …','Moving …'));const r=await tidyCall('/backlog',{apply:true});if(r)tidyMsg(r.report.moved+t(' Mails verschoben.',' mails moved.'))};
+    drop.onclick=()=>tidyCall('/backlog',{drop:true});
+    box.appendChild(icNote(t('Altlasten-Vorschlag','Old mail proposal'),t('Von ','Of ')+bl.total+t(' Mails der letzten ',' mails of the last ')+bl.days+t(' Tage würde ich ',' days I would move ')+bl.moves+t(' verschieben: ',': ')+Object.entries(bl.by).map(([k,n])=>(d.folders[k]||k)+' '+n).join(', ')+(bl.top.length?' · '+bl.top.map(([s,n])=>s+' ('+n+')').join(', '):''),[go,drop]))}
+  box.appendChild(icTabs('tidy',[
+    {k:'q',label:t('Fragen','Questions'),n:d.questions.length,hot:d.questions.length>0,body:tidyQuestions},
+    {k:'p',label:t('Vorschau','Preview'),n:d.preview.length,hot:d.preview.length>0,body:tidyPreview},
+    {k:'log',label:t('Verlauf','History'),n:'',body:tidyLog},
+    {k:'r',label:t('Regeln','Rules'),n:d.rules.length,body:tidyRules},
+    {k:'f',label:t('Ordner und Ausnahmen','Folders and exceptions'),n:'',body:tidyFolders}]))}
+function tidyQuestions(){const d=TIDY,E=icEl,w=E('div');
+  if(!d.questions.length){w.appendChild(icEmpty(t('Keine offenen Fragen.','No open questions.')));return w}
+  w.appendChild(E('div','fh',t('Ein Tipp ordnet zu. Bei „Immer so“ merkt sich der Spark den Absender als Regel.','One tap files it. With "Always like this" the Spark keeps the sender as a rule.')));
+  for(const q of d.questions){const c=E('div','ic-q');c.dataset.q=q.id;const h=E('div','ic-qh');h.append(E('b','',q.name||q.sender),E('small','',`${q.sender} · ${q.uids.length} ${t('Mail(s)','mail(s)')}`));
+    h.lastChild.title=q.sender;c.appendChild(h);const subj=(q.subjects||[]).slice(-2).join(' · ');if(subj)c.appendChild(E('q','',subj));
+    let always=true;const chips=E('div','ic-chips');
+    for(const k of [...Object.keys(d.cats),'keep']){const ch=icChip(tcat(k),false,async()=>{chips.querySelectorAll('button').forEach(b=>b.disabled=true);
+        const r=await tidyCall('/answer',{id:q.id,cat:k,always});if(r)tidyMsg(t('Gemerkt.','Noted.')+(r.report.moved?' '+r.report.moved+t(' verschoben.',' moved.'):''));else chips.querySelectorAll('button').forEach(b=>b.disabled=false)},k===q.guess?'guess':'');
+      ch.dataset.cat=k;if(k===q.guess)ch.appendChild(E('em','',t('vermutet','guessed')));chips.appendChild(ch)}
+    c.appendChild(chips);const f=E('div','ic-qf');const cb=icCheck(true,t('Immer so für diesen Absender','Always like this for this sender'),b=>{always=!always;
+      b.classList.toggle('on',always);b.setAttribute('aria-checked',always?'true':'false');b.textContent='';if(always)b.appendChild(icSvg('check',12))});
+    f.append(cb,E('span','',t('Immer so für diesen Absender (wird eine Regel)','Always like this for this sender (becomes a rule)')));c.appendChild(f);w.appendChild(c)}
+  return w}
+function tidyPreview(){const d=TIDY,E=icEl,w=E('div');
+  if(!d.preview.length){w.appendChild(icEmpty(t('Nichts in der Vorschau.','Nothing in the preview.')));return w}
+  const tools=E('div','ic-tools'),all=E('button','b p',t(`Alle ${d.preview.length} verschieben`,`Move all ${d.preview.length}`));all.type='button';all.id='pokall';
+  all.onclick=()=>{if(confirm(t('Alle Vorschläge der Vorschau verschieben?','Move every proposal of the preview?')))tidyCall('/preview',{ok:d.preview.map(p=>p.id)})};
+  const out=E('div');tools.append(icSearch(t('In der Vorschau suchen …','Search the preview …'),TQ,v=>{TQ=v;draw()}),all);w.append(tools,out);
+  const no=p=>tidyCall('/preview',{no:p.id,protect:confirm(t('Diesen Absender künftig immer im Posteingang lassen?','Always keep this sender in the inbox from now on?'))});
+  function draw(){out.textContent='';const q=TQ.toLowerCase(),by={};
+    for(const p of d.preview)if(!q||(p.name+' '+p.sender+' '+p.subject+' '+p.folder).toLowerCase().includes(q))(by[p.folder]=by[p.folder]||[]).push(p);
+    const keys=Object.keys(by);if(!keys.length){out.appendChild(icEmpty(t('Nichts gefunden.','Nothing found.')));return}
+    for(const f of keys){const ps=by[f];out.appendChild(icGroup('→ '+f,ps.length,icLink(t(`Alle ${ps.length} verschieben`,`Move all ${ps.length}`),()=>tidyCall('/preview',{ok:ps.map(p=>p.id)}))));
+      out.appendChild(tidyMore(icList([]),'p:'+f,ps.map(p=>{const r=icRow(`${p.name||p.sender}: ${p.subject}`,p.why,[icBtn('check',t('Verschieben','Move'),()=>tidyCall('/preview',{ok:[p.id]}),'ok'),icBtn('x',t('Nicht verschieben','Do not move'),()=>no(p),'no')],null,true);r.dataset.pv=p.id;return r}),5))}}
+  draw();return w}
+function tidyLog(){const d=TIDY,E=icEl;if(!d.log.length)return icEmpty(t('Noch nichts verschoben.','Nothing moved yet.'));
+  const rows=d.log.slice(0,60).map(x=>icRow(`${x.name||x.sender}: ${x.subject}`,`${tdate(x.t)} → ${x.folder} · ${x.why}`+(x.undone?' · '+t('zurückgeholt','brought back'):'')+(x.returned?' · '+t('von dir zurückgelegt','moved back by you'):''),
+    x.undone?[]:[icBtn('back',t('Zurückholen','Bring back'),()=>tidyCall('/undo',{ids:[x.id],protect:confirm(t('Diesen Absender künftig immer im Posteingang lassen?','Always keep this sender in the inbox from now on?'))}))],null,true));
+  const w=E('div');w.appendChild(E('div','fh',t('Was der Spark in den letzten 30 Tagen verschoben hat; ↩ holt eine Mail zurück.','What the Spark moved in the last 30 days; ↩ brings a mail back.')));w.appendChild(tidyMore(icList([]),'log',rows,10));return w}
+function tidyRules(){const d=TIDY,E=icEl,w=E('div');
+  w.appendChild(d.rules.length?icList(d.rules.slice().reverse().map(r=>icRow(`${r.match} → ${tcat(r.cat)}`,'',[icBtn('trash',t('Regel löschen','Delete rule'),()=>tidyCall('/rules/'+encodeURIComponent(r.id),{},'DELETE'))]))):icEmpty(t('Noch keine Regeln.','No rules yet.')));
+  const add=E('div','rowin');add.style.marginTop='10px';add.innerHTML=`<input id="rmatch" placeholder="${esc(t('absender@firma.de oder firma.de','sender@company.com or company.com'))}" autocapitalize="off" autocomplete="off" aria-label="${esc(t('Absender oder Domain','Sender or domain'))}">${catSel('rcat','werbung')}<button class="b" type="button" id="radd">${esc(t('Hinzufügen','Add'))}</button>`;
+  add.querySelector('#radd').onclick=()=>tidyCall('/rules',{match:add.querySelector('#rmatch').value,cat:add.querySelector('#rcat').value});w.appendChild(add);return w}
+function tidyFolders(){const d=TIDY,E=icEl,w=E('div','ic-form');const fpath=n=>(d.root?d.root+'/':'')+n;
+  w.innerHTML=`<h4>${esc(t('Hauptordner','Main folder'))}</h4><div class="rowin"><input id="tidyroot" value="${esc(d.root)}" maxlength="40" autocapitalize="off" autocomplete="off" aria-label="${esc(t('Hauptordner','Main folder'))}"><button class="b" type="button" id="tidyrootsave">${esc(t('Umbenennen','Rename'))}</button></div>
+    <div class="fh">${esc(t('Darunter liegen die Ordner. Umbenennen benennt den Ordner auch im Postfach um, die Mails darin wandern mit. Leer = Ordner direkt oben.','The folders sit below it. Renaming also renames the folder in the mailbox; the mail in it moves along. Empty = folders at the top.'))}</div>
+    <div class="setrow"><div class="lbl"><b>${esc(t('Wie oft prüfen','How often to check'))}</b><span>${esc(t('Nur neue Mails seit dem letzten Mal.','Only new mail since the last time.'))}</span></div><select id="tidyevery">${[5,15,60].map(m=>`<option value="${m}"${d.every===m?' selected':''}>${m} ${esc(t('Minuten','minutes'))}</option>`).join('')}</select></div>
+    <h4>${esc(t('Ordner und was verschoben wird','Folders and what is moved'))}</h4>
+    ${Object.entries(d.cats).map(([k,v])=>`<div class="setrow"><div class="lbl"><input data-fname="${k}" value="${esc(d.folders[k]||v)}" style="max-width:180px" aria-label="${esc(v)}"><span>${esc(fpath(d.folders[k]||v))}</span></div>
+      <select data-act="${k}">${[['move',t('verschieben','move')],['ask',t('erst nachfragen','ask first')],['keep',t('im Posteingang lassen','keep in inbox')]].map(([a,l])=>`<option value="${a}"${d.actions[k]===a?' selected':''}>${esc(l)}</option>`).join('')}</select></div>`).join('')}
+    <div class="row"><button class="b" type="button" id="tactsave">${esc(t('Speichern','Save'))}</button></div>
+    <h4>${esc(t('Immer im Posteingang lassen','Always keep in inbox'))}</h4><textarea id="tprot" rows="3" placeholder="${esc(t('Eine Adresse oder Domain pro Zeile','One address or domain per line'))}">${esc(d.protected.join('\n'))}</textarea>
+    <div class="row"><button class="b" type="button" id="tprotsave">${esc(t('Speichern','Save'))}</button></div>`;
+  const q=s=>w.querySelector(s);
+  q('#tidyrootsave').onclick=async()=>{const v=q('#tidyroot').value.trim();if(v===d.root)return;
     if(!confirm(t('Den Hauptordner in allen Postfächern umbenennen? Die Mails darin wandern mit, es wird nichts gelöscht.','Rename the main folder in every mailbox? The mail in it moves along; nothing is deleted.')))return;
     tidyMsg(t('Benenne um …','Renaming …'));const r=await tidyCall('',{root:v},'PUT');if(r)tidyRenamed(r)};
-  $('tidyevery').onchange=()=>tidyCall('',{every:+$('tidyevery').value},'PUT');
-  $('tprotsave').onclick=()=>tidyCall('',{protected:$('tprot').value.split(/[\n,]/).map(x=>x.trim()).filter(Boolean)},'PUT');
-  $('tactsave').onclick=async()=>{const actions={},folders={};box.querySelectorAll('[data-act]').forEach(s=>actions[s.dataset.act]=s.value);box.querySelectorAll('[data-fname]').forEach(i=>folders[i.dataset.fname]=i.value);const r=await tidyCall('',{actions,folders},'PUT');if(r)tidyRenamed(r)};
-}
+  q('#tidyevery').onchange=()=>tidyCall('',{every:+q('#tidyevery').value},'PUT');
+  q('#tprotsave').onclick=()=>tidyCall('',{protected:q('#tprot').value.split(/[\n,]/).map(x=>x.trim()).filter(Boolean)},'PUT');
+  q('#tactsave').onclick=async()=>{const actions={},folders={};w.querySelectorAll('[data-act]').forEach(s=>actions[s.dataset.act]=s.value);w.querySelectorAll('[data-fname]').forEach(i=>folders[i.dataset.fname]=i.value);const r=await tidyCall('',{actions,folders},'PUT');if(r)tidyRenamed(r)};
+  return w}
 function tidyRenamed(r){const bad=(r.renamed||[]).filter(x=>!x.ok);
   tidyMsg(bad.length?bad.map(x=>'⚠ '+x.account+': '+x.error).join(' · ')+t(' – dort bleibt der alte Ordner; neue Mails gehen in den neuen.',' – the old folder stays there; new mail goes to the new one.'):(r.renamed?t('Umbenannt.','Renamed.'):t('Gespeichert.','Saved.')),!!bad.length)}

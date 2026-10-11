@@ -158,4 +158,5 @@ body.appview:not(.inchat) #fab .fabface,body.appview:has(#profmodal[style*="grid
 .apnb{max-width:calc(30vw - 8px)}
 /* Ich (Paket 4): the page on the background like the settings, the rows in their boxes */
 body.appview .mebody #setbox.ptab{background:none;padding:0}
+body.appview .mebody .ptab:has(.ic-tabwrap,.ic-list,.ic-card){background:none;padding:0}
 @media (max-width:760px){#setform .sgrp{padding:2px 12px;border-radius:12px}}

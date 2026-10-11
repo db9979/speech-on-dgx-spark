@@ -781,11 +781,13 @@
     <div id="profcodebox" style="display:none"><label>Code aus der Authenticator-App</label><input id="profcode" inputmode="numeric" autocomplete="one-time-code" autocapitalize="off">
       <label class="chk"><input type="checkbox" id="proftrust"> <span class="trusttxt">Diesem Browser 60 Tage vertrauen</span></label><div class="fh">Handy nicht da? Ein Wiederherstellungscode geht auch.</div></div>
     <div class="row" style="margin-top:14px"><button class="b p" id="proflogin">Anmelden</button><button class="b" type="button" id="profadmin" style="display:none" data-on="adminLogin">Admin</button><span id="profmsg" class="err"></span></div></div>
-    <div id="factbox" class="ptab"><div class="intro">Das weiß der Assistent über dich. Sag ihm „Merk dir …“ oder „Vergiss …“, oder lösche hier.</div>
+    <div id="factbox" class="ptab">
     <div id="tidybox" class="tidy" style="display:none"></div>
-    <ul class="facts" id="factlist"></ul>
-    <div class="row" style="margin-top:8px"><button class="b" id="facttidy">Aufräumen vorschlagen</button><button class="b" id="factclear">Alles vergessen</button><span id="factmsg"></span></div>
-    <div class="mut" style="margin-top:6px"><small>Einmal pro Woche schlägt der Assistent vor, doppelte oder überholte Einträge zusammenzufassen. Es ändert sich erst etwas, wenn du hier bestätigst.</small></div></div>
+    <div id="facttools" class="ic-tools"></div>
+    <div id="factlist" class="factlist"></div>
+    <div class="row" style="margin-top:8px"><button class="b" id="facttidy">Aufräumen vorschlagen</button><span id="factmsg"></span></div>
+    <div class="fh">Einmal pro Woche schlägt der Assistent vor, doppelte oder überholte Einträge zusammenzufassen. Es ändert sich erst etwas, wenn du hier bestätigst.</div>
+    <div class="ic-danger"><div class="ic-mid"><b>Alles vergessen</b><span>Löscht alles, was sich der Assistent über dich gemerkt hat. Lässt sich nicht rückgängig machen.</span></div><button class="b ic-red" id="factclear" type="button">Alles vergessen …</button></div></div>
     <div id="docbox" class="ptab ld-box">
       <div class="ld-head"><span class="dcount"><span id="doccount"></span><span id="docspace" class="docspace" hidden><span id="docspacet"></span><span class="qbar docbar"><i></i></span></span></span><button class="b p" id="docadd" type="button">＋ Hinzufügen</button></div>
       <div class="ld-tools" id="doctools"><input id="docfind" type="search" maxlength="300" placeholder="Suchen: Name, Absender, Tag; Enter auch im Inhalt" aria-label="Dokumente durchsuchen" autocomplete="off"><select id="docsrc" aria-label="Quelle"></select><select id="docsort" aria-label="Sortierung"></select><button class="b" id="docpick" type="button">Auswählen</button><input type="file" id="docfile" multiple accept=".pdf,.txt,.md,.docx,.html,.htm,.csv,.xlsx,.pptx,.odt,.ods,.odp,.eml" style="display:none"></div>
@@ -860,12 +862,13 @@
     <div id="roombox" class="ptab"></div>
     <div id="secbox" class="ptab"><div class="intro">Wo dein Profil angemeldet ist. Ein Gerät, das du nicht mehr nutzt oder verloren hast, kannst du hier sperren.</div>
       <div id="coadmbox"></div>
-      <label>Zweiter Anmeldeschritt</label><div id="profmfa"></div>
-      <label>Geräte mit Schlüssel</label><ul class="facts" id="secdev"></ul>
-      <label>Angemeldete Browser</label><ul class="facts" id="secsess"></ul>
-      <label>Letzte Anmeldungen</label><ul class="facts small" id="secev"></ul>
+      <h3>Anmeldung</h3><div class="ic-sub">Zweiter Anmeldeschritt</div><div id="profmfa"></div>
+      <h3>Geräte</h3><div class="fh">Geräte mit Schlüssel: Lautsprecher, Uhr, Handy-App.</div><ul class="facts" id="secdev"></ul>
+      <h3>Browser</h3><ul class="facts" id="secsess"></ul>
       <div class="row" style="margin-top:8px"><button class="b" id="seclogoutall" type="button">Überall abmelden</button><span id="secmsg" class="fh"></span></div>
       <div class="fh">Meldet dein Profil in allen anderen Browsern ab; dieser bleibt angemeldet. Geräte mit Schlüssel (Lautsprecher, Uhr) sperrst du oben einzeln. Einzelne Browser meldest du in der Liste darüber ab. Eine Anmeldung endet außerdem nach <span id="secdays">30</span> Tagen ohne Nutzung. Mit zweitem Anmeldeschritt müssen auch vertraute Browser danach wieder einen Code eingeben.</div>
+      <h3>Verlauf</h3><ul class="facts small" id="secev"></ul>
+      <div class="ic-tabend"></div>
       <label>Mein Notaus</label><div class="mynabox" id="mynabox">
         <div class="fh" id="mynatext">Legt nur dein Profil still: alle anderen Anmeldungen und Geräte-Schlüssel, MCP und Telegram sind zu, und in deinem Namen passiert nichts mehr (Smart Home, Mail, Termine, Nachrichten, Aufträge, Von selbst). Lesen und Fragen gehen in diesem Browser weiter. Die anderen Profile merken nichts.</div>
         <div class="row" style="margin-top:6px"><button class="b nared" id="mynaon" type="button">Mein Notaus auslösen</button></div>
@@ -882,6 +885,7 @@
   <div class="face fabface" id="fabface" data-mode="idle" role="button" tabindex="0" aria-label="Sprechen"></div></div>
 <script src="/static/js/i18n.js"></script>
 <script src="/static/js/base.js"></script>
+<script src="/static/js/ichteile.js"></script>
 <script src="/static/js/mfa.js"></script>
 <script src="/static/js/admin.js"></script>
 <script src="/static/js/logs.js"></script>
