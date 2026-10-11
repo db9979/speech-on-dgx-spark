@@ -85,12 +85,14 @@ class StableStart(unittest.TestCase):
         self.assertIn("history_search", names(streamed()[0]))      # visible to the model ...
         self.assertIn("Not done: this tool is not available", text_of(evs))   # ... but not run
 
-    def test_smalltalk_sees_the_list_but_calls_nothing(self):
+    def test_smalltalk_gets_the_short_request(self):
+        """V01.0.349: a turn without any tool sends no tool list (the full list only pays off when qwen38 takes
+        it from its cache; a miss made every short answer slower after V01.0.304)."""
         p = profile("Anfang3", route=True)
         ask(p, [{"role": "user", "content": "Hallo"}])
         call = streamed()[0]
-        self.assertTrue(names(call))
-        self.assertEqual(call.get("tool_choice"), "none")
+        self.assertFalse(names(call))
+        self.assertNotIn("tool_choice", call)
 
     def test_lock_line_goes_with_the_question(self):
         p = profile("Anfang4", route=True)

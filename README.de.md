@@ -33,6 +33,7 @@ Alle Optionen ohne Rückfragen (`--mode api --asr 1.7b --tts 0.6b --yes` …) st
 
 <!-- New version: add one line at the top here and in CHANGELOG.md, drop the oldest line here (keep 10). Details go to docs/de and docs/en, not into this README. -->
 
+- **V01.0.349** Schneller Antwortbeginn: Züge ohne Werkzeug (Plaudern) bekommen wieder die kurze Anfrage ohne Werkzeugliste
 - **V01.0.348** Morgenbegrüßung nennt Termine nur frisch aus dem Kalender: „Guten Morgen“ liest immer das Briefing, vorbei markierte Termine gelten nicht als anstehend, und die Antwort-Prüfung lässt keine Termine aus früheren Antworten als heutige durch
 - **V01.0.347** Spark-Begleiter im Spark-Look (Gesicht als Symbol, Fenster wie das Panel, hell und dunkel), zeigt neue Versionen an und aktualisiert sich nach einem Klick (der Spark holt und prüft sie), Link „☕ Spark unterstützen“
 - **V01.0.346** reMarkable @Spark: Frage aus Handschrift ohne „Bild:“-Zeile und [unleserlich], Modell antwortet auch mit eigenem Wissen statt nur „keine Antwort“, Diagnose-Zeile „remarkable: @Spark answer …“ (Längen, Treffer, Websuche)
@@ -42,7 +43,6 @@ Alle Optionen ohne Rückfragen (`--mode api --asr 1.7b --tts 0.6b --yes` …) st
 - **V01.0.341** Ich → Von selbst: Schalter und Knöpfe bei den Smart-Home-Regeln stehen wieder sauber untereinander (Rechner und Handy)
 - **V01.0.340** Einordnung mit Wahrscheinlichkeit (aus): qwen38 /v1/systemone für Werkzeugwahl (ab 80 %), Postfach aufräumen (ab 90 %), wichtige Mails nach Absender und Betreff und eine zweite Meinung im Qualitätstest
 - **V01.0.339** Schreibhilfe in anderen Programmen (aus): Mac-Schnellaktion, Windows-Programm (x64 und ARM, Strg+Alt+S), Add-in für Outlook, Word und Excel, Browser-Erweiterung und iPhone-Teilen, jedes mit eigenem Schlüssel gekoppelt
-- **V01.0.338** Notaus nur noch für Admins; dazu „Mein Notaus“ für jedes Profil (Ich → Sicherheit): legt nur das eigene Profil still, Zugänge zu und keine Aktionen, Lesen bleibt; aufheben mit PIN
 
 Alle Versionen: [CHANGELOG.md](CHANGELOG.md)
 

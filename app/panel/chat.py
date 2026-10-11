@@ -1443,8 +1443,11 @@ async def _answer(request, turn):
                          and not (st["mail"] and t is HA_TODO_TOOL)] if rnd < 4 and not small else []
                 st["offered"] = {t["function"]["name"] for t in offer}
                 stable = getattr(turn, "tools_stable", None)
-                if stable and not offer:
-                    # "Schneller Antwortbeginn": the same list as always, but no call in this round
+                if stable and not offer and used:
+                    # "Schneller Antwortbeginn": after a tool round the same list as before (the start of this
+                    # request is the one just read), but no call in this round. A turn without any tool (plaudern,
+                    # nothing left to offer) gets the short request: the full list only pays off when qwen38
+                    # really takes it from its cache, and a miss costs every short answer thousands of tokens
                     payload["tools"], payload["tool_choice"] = stable, "none"
                 if offer:
                     payload["tools"] = stable or offer
