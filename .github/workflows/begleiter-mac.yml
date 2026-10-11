@@ -15,7 +15,7 @@ on:
       - .github/workflows/begleiter-mac.yml
 
 permissions:
-  contents: write
+  contents: read
 
 concurrency:
   group: begleiter-mac
@@ -23,11 +23,16 @@ concurrency:
 
 jobs:
   build:
+    environment: release   # signing keys live there, usable from main only
+    permissions:
+      contents: write   # only for the release upload
     runs-on: macos-15
     env:
       HAS_DEVID: ${{ secrets.MAC_DEVID_P12 != '' && secrets.MAC_DEVID_P12_PASSWORD != '' }}
     steps:
-      - uses: actions/checkout@v5
+      - uses: actions/checkout@fbc6f3992d24b796d5a048ff273f7fcc4a7b6c09 # v5
+        with:
+          persist-credentials: false
 
       - name: Build (universal, ad-hoc signed)
         run: |
@@ -102,7 +107,7 @@ jobs:
           cat dist/begleiter.json
           ls -l dist
 
-      - uses: actions/upload-artifact@v4
+      - uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02 # v4
         with:
           name: Spark-Begleiter-mac
           path: |

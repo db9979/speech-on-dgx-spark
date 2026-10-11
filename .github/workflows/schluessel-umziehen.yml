@@ -1,0 +1,72 @@
+name: Schlüssel in Umgebung verschieben
+
+# One-time move of the signing keys from repository secrets into the environment "release", which only
+# workflows on main may use (android, testflight, appstore, begleiter-mac declare it). Repository secrets are
+# readable by any workflow on any branch; environment secrets only by jobs on the allowed branches.
+#
+# Needs a short-lived fine-grained token as repository secret MIGRATE_TOKEN, only for this repository, with
+# Administration, Environments and Secrets: read and write. The run creates the environment (main only, no
+# review, so automatic builds keep running), copies every key that is set, then deletes the repository copies
+# and MIGRATE_TOKEN. Values never reach the log: they go to gh through stdin and GitHub masks secrets.
+
+on:
+  workflow_dispatch:
+    inputs:
+      delete_repo_secrets:
+        description: "Danach die Repo-Secrets löschen (empfohlen)"
+        type: boolean
+        default: true
+
+permissions:
+  contents: read
+
+concurrency:
+  group: schluessel-umziehen
+  cancel-in-progress: false
+
+jobs:
+  move:
+    if: github.ref == 'refs/heads/main'
+    runs-on: ubuntu-24.04
+    timeout-minutes: 10
+    env:
+      GH_TOKEN: ${{ secrets.MIGRATE_TOKEN }}
+      REPO: ${{ github.repository }}
+      ANDROID_KEYSTORE: ${{ secrets.ANDROID_KEYSTORE }}
+      ANDROID_KEYSTORE_PASSWORD: ${{ secrets.ANDROID_KEYSTORE_PASSWORD }}
+      ASC_KEY_ID: ${{ secrets.ASC_KEY_ID }}
+      ASC_ISSUER_ID: ${{ secrets.ASC_ISSUER_ID }}
+      ASC_KEY: ${{ secrets.ASC_KEY }}
+      ASC_TEAM_ID: ${{ secrets.ASC_TEAM_ID }}
+      MAC_DEVID_P12: ${{ secrets.MAC_DEVID_P12 }}
+      MAC_DEVID_P12_PASSWORD: ${{ secrets.MAC_DEVID_P12_PASSWORD }}
+      DELETE: ${{ inputs.delete_repo_secrets }}
+    steps:
+      - name: Move keys
+        run: |
+          set -euo pipefail
+          if [ -z "$GH_TOKEN" ]; then
+            echo "::error::Secret MIGRATE_TOKEN fehlt (feingranularer Token nur für dieses Repo: Administration, Environments, Secrets read/write)"
+            exit 1
+          fi
+          # environment "release": deployments only from main, no reviewers (builds stay automatic)
+          echo '{"deployment_branch_policy":{"protected_branches":false,"custom_branch_policies":true}}' \
+            | gh api -X PUT "repos/$REPO/environments/release" --input - > /dev/null
+          have=$(gh api "repos/$REPO/environments/release/deployment-branch-policies" --jq '.branch_policies[].name')
+          if ! grep -qx main <<< "$have"; then
+            gh api -X POST "repos/$REPO/environments/release/deployment-branch-policies" -f name=main -f type=branch > /dev/null
+          fi
+          moved=()
+          for n in ANDROID_KEYSTORE ANDROID_KEYSTORE_PASSWORD ASC_KEY_ID ASC_ISSUER_ID ASC_KEY ASC_TEAM_ID \
+                   MAC_DEVID_P12 MAC_DEVID_P12_PASSWORD; do
+            if [ -z "${!n}" ]; then echo "$n: nicht gesetzt, übersprungen"; continue; fi
+            printf '%s' "${!n}" | gh secret set "$n" --env release --repo "$REPO"
+            echo "$n: in Umgebung release eingetragen"
+            moved+=("$n")
+          done
+          # only after every copy succeeded (set -e): drop the repository copies
+          if [ "$DELETE" = true ]; then
+            for n in "${moved[@]}"; do gh secret delete "$n" --repo "$REPO"; echo "$n: Repo-Secret gelöscht"; done
+          fi
+          gh secret delete MIGRATE_TOKEN --repo "$REPO" && echo "MIGRATE_TOKEN gelöscht"
+          echo "Fertig. Den Token selbst unter github.com/settings/personal-access-tokens löschen."

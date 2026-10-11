@@ -104,6 +104,7 @@ jobs:
           echo "sha=$SHA" >> "$GITHUB_OUTPUT"
 
   upload:
+    environment: release   # signing keys live there, usable from main only
     needs: gate
     if: needs.gate.outputs.go == 'true'
     runs-on: macos-15
@@ -114,8 +115,9 @@ jobs:
     env:
       BUNDLE_ID: ${{ inputs.bundle_id || vars.APP_BUNDLE_ID || 'io.github.db9979.speechspark' }}
     steps:
-      - uses: actions/checkout@v5
+      - uses: actions/checkout@fbc6f3992d24b796d5a048ff273f7fcc4a7b6c09 # v5
         with:
+          persist-credentials: false
           ref: ${{ needs.gate.outputs.sha }}
           fetch-depth: 0          # the build number counts all commits
       - name: Xcode

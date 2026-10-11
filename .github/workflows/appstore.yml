@@ -29,17 +29,20 @@ permissions:
 
 jobs:
   texts:
+    environment: release   # signing keys live there, usable from main only
     runs-on: ubuntu-24.04
     timeout-minutes: 20
     steps:
-      - uses: actions/checkout@v5
+      - uses: actions/checkout@fbc6f3992d24b796d5a048ff273f7fcc4a7b6c09 # v5
+        with:
+          persist-credentials: false
       - name: Pictures
         if: inputs.screenshots
         run: |
           git fetch -q --depth 1 origin app-store-screenshots
           git checkout FETCH_HEAD -- ios/fastlane/screenshots
           ls -R ios/fastlane/screenshots
-      - uses: ruby/setup-ruby@v1
+      - uses: ruby/setup-ruby@e81a8fa391b11a595c1b7ed84177cc0fe02faf83 # v1
         with:
           ruby-version: "3.3"
       - name: fastlane

@@ -33,6 +33,7 @@ Alle Optionen ohne Rückfragen (`--mode api --asr 1.7b --tts 0.6b --yes` …) st
 
 <!-- New version: add one line at the top here and in CHANGELOG.md, drop the oldest line here (keep 10). Details go to docs/de and docs/en, not into this README. -->
 
+- **V01.0.390** Repo abgesichert: GitHub-Actions auf feste Commits, Signierschlüssel nur für Builds von main
 - **V01.0.389** Selbsttest: Höhengrenze der Funktionen-Seite zählt die Zeile „Probleme melden“ wieder (ging beim Zusammenführen in V01.0.387 verloren).
 - **V01.0.388** Rechte wirken sofort: Änderungen unter Wer darf was kommen ohne Neuladen bei Seiten, iPhone-App, Begleiter, Lautsprechern und MCP an; ausgeschaltete Geräte bleiben gekoppelt
 - **V01.0.387** Logs → Anfragen: Liste springt beim Aktualisieren nicht mehr nach oben
@@ -42,7 +43,6 @@ Alle Optionen ohne Rückfragen (`--mode api --asr 1.7b --tts 0.6b --yes` …) st
 - **V01.0.383** Antwort kopieren ohne Knöpfe: „Aufs reMarkable“ und „In Meine Dokumente speichern“ unter einer Antwort werden beim Markieren und Kopieren nicht mehr mitkopiert
 - **V01.0.382** Lautsprecher-Firmware: nie zwei Abrufe gleichzeitig, Fehlermeldung ohne Pfade
 - **V01.0.381** Geräte-Updates (aus): Überblick, ein Hinweis pro neuer Firmware oder App-Version, Lautsprecher nachts einzeln aktualisiert, XiaoZhi-Hinweis an den Admin
-- **V01.0.380** Funktionen vorschlagen (aus): Hinweis mit „Einrichten“, wenn man nach etwas fragt, das aus oder halb eingerichtet ist, geführtes Einrichten im Kopf, höchstens 3 pro Woche
 
 Alle Versionen: [CHANGELOG.md](CHANGELOG.md)
 
