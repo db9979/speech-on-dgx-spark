@@ -199,3 +199,6 @@ setInterval(()=>{if(!LG.live||!$('logs').classList.contains('on')||document.hidd
   const out=$('logout');if(out.scrollTop+out.clientHeight<out.scrollHeight-30||String(window.getSelection()||''))return;
   if(Date.now()-LAT<(LG.tab==='svc'?3000:10000))return;_ll().catch(()=>{})},1000);
 lshow();
+
+// Zustand → Live: "Anfrage öffnen" jumps here with the request selected (empty id: just the list)
+window.openTrace=id=>{LG.tab='req';lsave();RQ.sel=id||null;RQ.lines=null;const q=$('logq');if(q)q.value=id||'';if(typeof goSec==='function')goSec('logs')};

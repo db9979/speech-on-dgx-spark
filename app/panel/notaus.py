@@ -1071,6 +1071,20 @@ def _soon(coro):
         threading.Thread(target=asyncio.run, args=(coro,), daemon=True).start()
 
 
+AUTO_WORDS = {"login": ("Falsche Anmeldungen von außen", "Wrong sign-ins from outside"),
+              "mcp": ("MCP von außen abgewiesen", "MCP from outside turned away"),
+              "netguard": ("Gesperrte Verbindungen nach außen", "Blocked connections out")}
+
+
+def auto_for_live(now=None):
+    """Zustand → Live, card Eingang: how close each Selbst-Notaus rule is to its threshold (numbers only)."""
+    now = time.time() if now is None else now
+    with _auto_lock:
+        rows = [{"k": k, "de": AUTO_WORDS[k][0], "en": AUTO_WORDS[k][1], "n": len([t for t in _auto_seen[k] if now - win < t <= now]),
+                 "of": most, "min": win // 60} for k, (most, win, _) in AUTO.items()]
+    return {"on": auto_on(), "rows": rows}
+
+
 def watch(kind, now=None):
     """Counts one suspicious event; at a rule's threshold (and with the switch on) the Wächter raises stage 1.
     True when it did. Never raises: the callers are guard and netguard."""

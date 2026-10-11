@@ -49,7 +49,9 @@ newer one, config names it (version, size, SHA-256) and /api/desk/update hands o
 installs only after a click and only when size and SHA-256 match. Nothing comes from anywhere else.
 """
 import asyncio
+import contextlib
 import datetime
+import functools
 import hashlib
 import json
 import os
@@ -320,6 +322,71 @@ def _live(text):
         pass
 
 
+def shown(why):
+    """Zustand → Live: a Begleiter job as a request of its own with its way through the Spark (Hören, Sprachmodell,
+    Sprechen, Home Assistant), not only a line under Ereignisse. Fixed words only; the profile's name and the
+    device show only with its consent (live._who). Jobs the program asks for every few seconds stay out."""
+    def wrap(fn):
+        @functools.wraps(fn)
+        async def run(*a, **kw):
+            rec = None
+            try:
+                import live
+                request = kw.get("request") or next((x for x in a if isinstance(x, Request)), None)
+                prof = profiles.current(request) if request is not None else None
+                dev = profiles.device(request) if prof else None
+                if prof and dev:
+                    rec = live.begin("desk", kind_of(dev.get("name")), uid=prof["id"], why=why)
+                    if rec is not None:
+                        rec.step("in", why, rec.t0)
+            except Exception:
+                rec = None
+            if rec is None:
+                return await fn(*a, **kw)
+            import live
+            ok = False
+            try:
+                with live.within(rec):
+                    out = await fn(*a, **kw)
+                ok = True
+                return out
+            finally:
+                live.end(rec, ok)
+        return run
+    return wrap
+
+
+@contextlib.contextmanager
+def _step(kind, name):
+    """One step (asr, llm, tts, tool) on the Begleiter job this code runs for; nothing without one."""
+    try:
+        import live
+        rec = live.current()
+    except Exception:
+        rec = None
+    t0, ok = time.time(), False
+    if rec is not None:
+        try:
+            rec.now(kind, name, t0)
+        except Exception:
+            pass
+    try:
+        yield
+        ok = True
+    finally:
+        if rec is not None:
+            try:
+                rec.step(kind, name, t0, time.time(), ok=ok)
+            except Exception:
+                pass
+
+
+async def _asr(*a):
+    with _step("asr", "Spracherkennung"):
+        import admin
+        return await admin.test_asr(*a)
+
+
 # ---------------------------------------------------------------- notes (push.py, kind "desk")
 def reachable(uid, now=None):
     """A device of the profile with "Meldungen" polled lately."""
@@ -570,6 +637,7 @@ async def program_ask(request: Request):
 
 
 @router.post("/api/desk/dictate", dependencies=[Depends(assistant)])
+@shown("Diktat")
 async def program_dictate(request: Request, file: UploadFile = File(...), sprache: str = Form("auto")):
     prof, dev = _program(request)
     _part(prof, dev, "dictate")
@@ -577,7 +645,7 @@ async def program_dictate(request: Request, file: UploadFile = File(...), sprach
     if sprache not in DICT_LANGS:
         sprache = "auto"
     profiles.used(prof["id"], "desk")
-    out = await admin.test_asr(request, file, sprache, "", "")
+    out = await _asr(request, file, sprache, "", "")
     if not isinstance(out, dict):     # the recognition's own answer, passed on as it came
         try:
             out = json.loads(out.body) if out.status_code == 200 else None
@@ -631,7 +699,7 @@ def _lang(v, default="de"):
 
 
 async def _ask_model(uid, system, user, max_tokens=2500, job="Begleiter"):
-    with schreib.Slot(uid):
+    with schreib.Slot(uid), _step("llm", job):
         raw = await asyncio.wait_for(schreib._model([{"role": "system", "content": system}, user], 0.2, max_tokens, job),
                                      schreib.SECONDS)
     text = schreib.tidy_answer(raw, "x" * 20000).strip()
@@ -677,6 +745,7 @@ def _to_wissen(uid, name, data):
 
 
 @router.post("/api/desk/file", dependencies=[Depends(assistant)])
+@shown("Datei fragen")
 async def program_file(request: Request, file: UploadFile = File(...), what: str = Form("zusammenfassen"),
                        sprache: str = Form("")):
     """Right-click on a file (part files) or the watched folder (part folder, only what=wissen)."""
@@ -731,6 +800,7 @@ async def program_file(request: Request, file: UploadFile = File(...), what: str
 
 
 @router.post("/api/desk/screen", dependencies=[Depends(assistant)])
+@shown("Bildschirm fragen")
 async def program_screen(request: Request, image: UploadFile = File(...), question: str = Form(""),
                          what: str = Form("erklaeren"), sprache: str = Form("")):
     """Bildschirm fragen (part screen): a region the person drew; the picture is read and forgotten."""
@@ -1002,6 +1072,25 @@ SEND_HINT = ("pc_send puts a text (into the clipboard) or a link (offered to ope
              "Use it only when the user asks for that in this message.")
 
 
+OPEN_WORDS = re.compile(r"\b(öffne\w*|oeffne\w*|start\w*|open|launch)\b|\bmach\w*\s+(\w+\s+){0,4}auf\b|"
+                        r"\bruf\w*\s+(\w+\s+){0,4}auf\b", re.I)
+SITE_WORDS = re.compile(r"\b(seite|webseite|website|homepage|internetseite|google|youtube|wikipedia)\b|"
+                        r"\b[\w-]+\.(de|com|org|net|io|eu|at|ch)\b", re.I)
+MEDIA_WORDS = re.compile(r"\b(lauter|leiser|stumm\w*|pausier\w*|nächst\w*\s+(titel|lied|song)|vorig\w*\s+(titel|lied|song)|"
+                         r"sperr\w*\s+(den\s+)?bildschirm|bildschirm\s+sperr\w*)\b", re.I)
+
+
+def must_act(devs, text):
+    """A clear order for the computer: open a released program (by its name) or a page, music, volume, lock."""
+    if MEDIA_WORDS.search(text):
+        return True
+    if not OPEN_WORDS.search(text):
+        return False
+    low = text.lower()
+    names = {a["name"].lower() for d in devs for a in device_cfg(d["id"])[0]["act"]["apps"]}
+    return bool(SITE_WORDS.search(text) or any(n and n in low for n in names))
+
+
 def offer(ctx):
     """The tools only in the profile's own session, only when its own words name the computer, only when a
     device with "Am PC handeln" (pc_action) or "Vom Handy auf den PC" (pc_send) is paired."""
@@ -1010,14 +1099,19 @@ def offer(ctx):
         return None
     text = str(ctx.get("text") or "")
     here = ctx.get("client") == "desk"     # the question came from the Begleiter: "the computer" is this one
-    act = bool((ACT_WORDS.search(text) or (here and DO_WORDS.search(text))) and act_devices(who["id"]))
+    devs = act_devices(who["id"])
+    act = bool((ACT_WORDS.search(text) or (here and DO_WORDS.search(text))) and devs)
     send = bool(PC_WORDS.search(text) and SEND_WORDS.search(text) and inbox_devices(who["id"]))
     if not act and not send:
         return None
     tools = ([ACT_TOOL] if act else []) + ([SEND_TOOL] if send else [])
     filler = {"pc_action": ("Ich frage am Rechner nach.", "Asking at the computer."),
               "pc_send": ("Ich lege es auf den Rechner.", "Putting it on the computer.")}
+    # at the computer itself, a clear order (open a released program or a page, music, volume, lock): the model
+    # must really call the tool; otherwise it may only announce it ("Ich schicke es an deinen Mac") (V01.0.410)
+    must = "pc_action" if act and here and must_act(devs, text) else None
     return {"tools": tools, "hint": " ".join(([ACT_HINT] if act else []) + ([SEND_HINT] if send else [])),
+            "must": must,
             "changes": {"pc_action"} if act else set(),
             "filler": {t["function"]["name"]: filler[t["function"]["name"]] for t in tools}}
 
@@ -1118,8 +1212,6 @@ def wav_of(pcm, rate=24000):
 
 async def speak(uid, text):
     """The text as WAV in the profile's voice and speed (the same TTS service and settings as its chat)."""
-    from core import api_headers
-    import stufe
     cfg = load_config()
     pset = profiles.effective(uid, cfg.get("chat", {}))
     body = {"input": text, "response_format": "pcm"}
@@ -1128,6 +1220,13 @@ async def speak(uid, text):
     if pset.get("speed") not in (None, 1.0):
         body["speed"] = pset["speed"]
     out = bytearray()
+    with _step("tts", "Vorlesen"):
+        return await _speak(cfg, body, uid, out)
+
+
+async def _speak(cfg, body, uid, out):
+    from core import api_headers
+    import stufe
     async with httpx.AsyncClient(timeout=httpx.Timeout(600, connect=5)) as c:
         async with c.stream("POST", f"http://127.0.0.1:{cfg['tts']['port']}/v1/audio/speech", json=body,
                             headers=dict(api_headers(), **stufe.headers(stufe.level(uid)))) as r:
@@ -1143,6 +1242,7 @@ async def speak(uid, text):
 
 
 @router.post("/api/desk/speak", dependencies=[Depends(assistant)])
+@shown("Vorlesen")
 async def program_speak(request: Request):
     prof, dev = _program(request)
     _part(prof, dev, "speak")
@@ -1387,6 +1487,7 @@ async def program_agenda(request: Request):
 
 
 @router.post("/api/desk/remind", dependencies=[Depends(assistant)])
+@shown("Erinnerung")
 async def program_remind(request: Request):
     """{"text", "minutes"} or {"note": n, "minutes"}: a reminder of the profile (also "In 20 Min erinnern")."""
     prof, dev = _program(request)
@@ -1411,7 +1512,8 @@ async def program_remind(request: Request):
     if not text:
         raise HTTPException(400, "Woran soll ich erinnern?")
     due = (time.time() + m * 60) * 1000
-    profiles.add_reminder(uid, text, due)
+    with _step("tool", "reminder_set"):
+        profiles.add_reminder(uid, text, due)
     _live(f"Erinnerung in {m} Min")
     return {"due": _iso(due / 1000, _zone(uid))}
 
@@ -1625,6 +1727,7 @@ async def program_meet_start(request: Request):
 
 
 @router.post("/api/desk/meeting/chunk", dependencies=[Depends(assistant)])
+@shown("Besprechung mitschreiben")
 async def program_meet_chunk(request: Request, id: str = Form(""), file: UploadFile = File(...)):
     prof, dev = _program(request)
     _part(prof, dev, "meeting")
@@ -1635,7 +1738,7 @@ async def program_meet_chunk(request: Request, id: str = Form(""), file: UploadF
     if len(m["parts"]) >= MEET_CHUNKS:
         raise HTTPException(409, "Höchstens 3 Stunden; bitte beenden.")
     import admin
-    out = await admin.test_asr(request, file, "auto", "", "")
+    out = await _asr(request, file, "auto", "", "")
     if not isinstance(out, dict):
         try:
             out = json.loads(out.body) if out.status_code == 200 else None
@@ -1652,6 +1755,7 @@ async def program_meet_chunk(request: Request, id: str = Form(""), file: UploadF
 
 
 @router.post("/api/desk/meeting/end", dependencies=[Depends(assistant)])
+@shown("Besprechung zusammenfassen")
 async def program_meet_end(request: Request):
     prof, dev = _program(request)
     uid = prof["id"]
@@ -1856,6 +1960,7 @@ async def program_home(request: Request):
 
 
 @router.post("/api/desk/home", dependencies=[Depends(assistant)])
+@shown("Smart-Home-Knopf")
 async def program_home_press(request: Request):
     """{"id", "code"?}: one button; with a code word set, nothing switches without it (403 "Codewort …")."""
     import homeassistant
@@ -1893,7 +1998,8 @@ async def program_home_press(request: Request):
     else:
         service = "turn_on"
     try:
-        ok, _ = await homeassistant.action(ha, b["entity"], service)
+        with _step("tool", "home_assistant_action"):
+            ok, _ = await homeassistant.action(ha, b["entity"], service)
     except (httpx.HTTPError, ValueError) as e:
         raise HTTPException(502, "Home Assistant antwortet nicht: " + type(e).__name__)
     if not ok:
@@ -1937,6 +2043,7 @@ async def evening(uid, now=None):
 
 
 @router.get("/api/desk/daily", dependencies=[Depends(assistant)])
+@shown("Tagesstart oder Feierabend")
 async def program_daily(request: Request, kind: str = "morning"):
     prof, dev = _program(request)
     uid = prof["id"]
@@ -1947,11 +2054,13 @@ async def program_daily(request: Request, kind: str = "morning"):
     notaus.stop("gespraech")
     profiles.used(uid, "desk")
     if kind == "evening":
-        text = await evening(uid)
+        with _step("tool", "daily_briefing"):
+            text = await evening(uid)
     else:
         import chat
         try:
-            text = await asyncio.wait_for(chat.morning_briefing(uid, profiles.settings(uid).get("tz", "")), 200)
+            with _step("tool", "daily_briefing"):
+                text = await asyncio.wait_for(chat.morning_briefing(uid, profiles.settings(uid).get("tz", "")), 200)
         except notaus.NotausAktiv:
             raise
         except Exception as e:

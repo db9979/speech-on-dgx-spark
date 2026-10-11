@@ -14,7 +14,7 @@ ON.closeProf=()=>closeProf();
 async function showFacts(){const r=await api('/api/profile/memory');const d=await r.json();
   $('profhead').textContent=d.profile.name;showTidy(d.tidy);
   $('factlist').innerHTML=d.facts.slice().reverse().map(f=>`<li><span>${esc(f.text)}${f.auto?` <em class="auto">${t('automatisch','automatic')}</em>`:''}</span><button class="b" ${onAttr('forgetFact',f.id)}>${t('Löschen','Delete')}</button></li>`).join('')||`<li class="mut">${t('Noch nichts gemerkt.','Nothing remembered yet.')}</li>`}
-// Documents (documents.py, wissen.py). Since V01.0.410 one compact row per document with a search field that
+// Documents (documents.py, wissen.py). Since V01.0.412 one compact row per document with a search field that
 // filters at once, source, sort order, quick filters and tags; a click opens the details (beside the list on wide
 // screens, as its own page on narrow ones) with all buttons; "Auswählen" acts on several documents in one request.
 // The profile's own switches (only those the admin allows) sit folded under the list.

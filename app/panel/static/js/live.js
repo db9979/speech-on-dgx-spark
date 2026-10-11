@@ -5,7 +5,8 @@
 // the tab is open; the monitor (body.kiosk) asks /api/live/state and pairs once with a 6-digit code.
 (()=>{
 const KIOSK=document.body.classList.contains('kiosk');
-const LV={fit:false,sel:'',data:null,timer:0,gsel:0,dsel:0,rot:0,lastSel:0,lastKey:'',fail:0};
+const LV={fit:false,sel:'',data:null,timer:0,gsel:0,dsel:0,rot:0,lastSel:0,lastKey:'',fail:0,
+  evArea:'',evQ:'',evPause:null,evSel:'',hl:null,node:'',rew:null,past:null,play:0,hold:false};
 const lvE=s=>String(s??'').replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
 const tt=(de,en)=>typeof t==='function'?t(de,en):de;
 const num=(v,d=1)=>v==null?'–':Number(v).toFixed(d).replace('.',',');
@@ -18,7 +19,7 @@ const STAGES=[['asr',tt('Hören','Listening'),'ASR · 31001'],['weiche',tt('Weic
   ['tool',tt('Werkzeuge','Tools'),'chat_tools'],['tts',tt('Sprechen','Speaking'),'TTS · 31002']];
 const SNAME=Object.fromEntries(STAGES.map(s=>[s[0],s[1]]));
 const SVC={ok:'var(--ok)',load:'var(--warn)',down:'var(--bad)',off:'var(--mut)'};
-const KIND={in:tt('Eingang','Arrival'),asr:tt('Hören','Listening'),prep:tt('Vorbereitung','Preparation'),weiche:tt('Weiche','Switch'),llm:tt('Modell','Model'),tool:tt('Werkzeug','Tool'),check:tt('Prüfung','Check'),tts:tt('Sprechen','Speaking'),err:tt('Abbruch','Stopped'),done:tt('fertig','done')};
+const KIND={in:tt('Eingang','Arrival'),asr:tt('Hören','Listening'),prep:tt('Vorbereitung','Preparation'),weiche:tt('Weiche','Switch'),llm:tt('Modell','Model'),tool:tt('Werkzeug','Tool'),check:tt('Prüfung','Check'),tts:tt('Sprechen','Speaking'),ack:tt('Sofort-Satz','Instant sentence'),err:tt('Abbruch','Stopped'),done:tt('fertig','done')};
 const ZONE={spark:[tt('im Spark','on the Spark'),'loc'],lan:[tt('Heimnetz','Home network'),'lan'],net:['Internet','net']};
 const PH=()=>matchMedia('(max-width:760px)').matches;
 let tip=null;
@@ -43,9 +44,9 @@ function skeleton(root){
   const dr=`<div class="card" id="lvdoorc"><h3>${tt('Eingang: wer von außen hereinkommt und warum','Entrance: who comes in from outside and why')}<span class="kdots"></span></h3><div id="lvdoor"></div></div>`;
   const rt=`<div class="card" id="lvretc"><h3>${tt('Was die Dienste zurückgeben','What the services return')} <small class="mut">${tt('neueste oben','newest first')}</small><span class="kdots"></span></h3><div id="lvret"></div></div>`;
   const run=`<div class="card"><h3>${tt('Läuft gerade','Running now')} <span class="n" id="lvnrq"></span></h3><div id="lvrq"></div></div>`;
-  const ev=`<div class="card"><h3>${tt('Ereignisse','Events')}</h3><div class="mono ev" id="lvev"></div></div>`;
+  const ev=`<div class="card"><h3>${tt('Ereignisse','Events')}</h3>${KIOSK?'':'<div class="evbar" id="lvevbar"></div>'}<div class="mono ev" id="lvev"></div></div>`;
   const cn=`<div class="card" id="lvcnc"><h3>${tt('Offene Verbindungen','Open connections')} <span class="n" id="lvncn"></span><span class="kdots"></span></h3><table id="lvcn"></table></div>`;
-  const flow=`<div class="card flow"><h3 style="padding:4px 10px 0">${tt('Wohin die Anfragen gerade gehen','Where the requests go right now')} <small class="mut hideph">${tt('Geräte erscheinen bei einer Anfrage; die letzte bleibt stehen, bis eine neue kommt, dann blendet sie in 10 s aus · oben Heimnetz, unten Internet','devices show while they ask; the last one stays until a new one comes, then fades in 10 s · home network above, internet below')}</small><button type="button" class="lvfs hideph" data-lvfs="1" title="${tt('Bild bildschirmfüllend (Esc zurück)','Picture full screen (Esc back)')}" aria-label="${tt('Vollbild','Full screen')}">⛶</button></h3><div id="lvflow"></div></div>`;
+  const flow=`<div class="card flow"><h3 style="padding:4px 10px 0">${tt('Wohin die Anfragen gerade gehen','Where the requests go right now')} <small class="mut hideph">${tt('Geräte erscheinen bei einer Anfrage; die letzte bleibt stehen, bis eine neue kommt, dann blendet sie in 10 s aus · oben Heimnetz, unten Internet','devices show while they ask; the last one stays until a new one comes, then fades in 10 s · home network above, internet below')}</small><button type="button" class="lvfs hideph" data-lvfs="1" title="${tt('Bild bildschirmfüllend (Esc zurück)','Picture full screen (Esc back)')}" aria-label="${tt('Vollbild','Full screen')}">⛶</button></h3>${KIOSK?'':'<div class="rew" id="lvrew"></div>'}<div id="lvflow"></div>${KIOSK?'':'<div class="lvsheet" id="lvsheet" hidden></div>'}</div>`;
   if(KIOSK)root.innerHTML=`<div class="lvna" id="lvna" hidden></div><div class="kpis" id="lvkpi"></div>${flow}<div class="kside">${run}${ev}</div><div class="kbot">${way}<div class="krot">${gd}${dr}${rt}${cn}</div></div>`;
   else root.innerHTML=`<div class="lvna" id="lvna" hidden></div><div class="kpis" id="lvkpi"></div>${flow}${way}<div class="gates">${gd}${dr}</div><div style="margin-bottom:14px">${rt}</div><div class="grid2">${run}<div class="split">${cn}${ev}</div></div>`;
   if(!tip){tip=document.createElement('div');tip.id='lvtip';document.body.appendChild(tip)}
@@ -53,7 +54,8 @@ function skeleton(root){
   fl.addEventListener('mousemove',e=>{const x=e.target.closest('[data-tip]');if(!x){tip.style.display='none';return}
     tip.textContent=x.dataset.tip;tip.style.display='block';tip.style.left=Math.min(e.clientX+14,innerWidth-tip.offsetWidth-8)+'px';tip.style.top=(e.clientY+16)+'px'});
   fl.addEventListener('mouseleave',()=>tip.style.display='none');
-  root.addEventListener('click',e=>{if(e.target.closest('[data-lvfs]')){full(!document.querySelector('.lv .flow.full'));return}const d=e.target.closest('[data-req]');if(d){LV.sel=d.dataset.req;LV.lastSel=Date.now();LV.lastKey='';draw();return}
+  root.addEventListener('click',e=>{if(e.target.closest('[data-lvfs]')){full(!document.querySelector('.lv .flow.full'));return}
+    if(KIOSK){if(e.target.closest('.krot')){LV.hold=!LV.hold;rotate()}}else if(clickMore(e))return;const d=e.target.closest('[data-req]');if(d){LV.sel=d.dataset.req;LV.lastSel=Date.now();LV.lastKey='';draw();return}
     const g=e.target.closest('[data-gd]');if(g){LV.gsel=+g.dataset.gd;guardList();return}
     const o=e.target.closest('[data-dr]');if(o){LV.dsel=+o.dataset.dr;doorList();return}
     if(!KIOSK&&e.target.closest('[data-gate=guard]'))el('lvguardc').scrollIntoView({behavior:'smooth',block:'start'});
@@ -97,7 +99,9 @@ function hops(r){const H=[],at=['r'+r.id];const go=(n,t,st,what)=>{const a=at[at
   r.steps.forEach(s=>{if(s.k==='asr')go('asr',secs(s.d),'d');else if(s.k==='weiche')go('weiche',secs(s.d),'d');else if(s.k==='llm'){go('llm',secs(s.d),'d')}
     else if(s.k==='tool'){go('tool','','d');if(s.to&&tgt(s.to)){if(zoneOf(s.to)==='net')go('guard','','d');go(s.to,secs(s.d),'d');
       const ret=((LV.data||{}).rets||[]).find(x=>x.req===r.id&&x.tool===s.n);go('tool','↩ '+(s.ok?'ok':tt('nicht ok','not ok'))+(ret&&ret.size!=null?' · '+kb(ret.size):''),'d')}}
-    else if(s.k==='tts')go('tts',secs(s.d),'d')});
+    else if(s.k==='tts')go('tts',secs(s.d),'d');
+    // the ready-made sentence (ack.py): played from its recording, no GPU; shown with when it came
+    else if(s.k==='ack')go('tts','⚡ '+(s.n==='Brücke'?tt('Brücke nach ','bridge after '):tt('Sofort-Satz nach ','instant sentence after '))+secs(s.a),'d')});
   // the way back: where the answer is heard or shown (Dominik 2026-10-10)
   const so=speechOnly(r),heard=so&&(r.steps.some(s=>s.k==='asr')||r.stage==='asr');
   const back=heard||r.quiet?tt('↩ Text an ','↩ text to ')+r.dev:r.voice?tt('↩ gesprochen am ','↩ spoken at ')+r.dev:tt('↩ Antwort an ','↩ answer to ')+r.dev;
@@ -129,7 +133,7 @@ function route(r,pos,W,H,ph){const c=col(r.id);let o='',lab='',call='';const ctr
 function nm(id){if(id==='door')return tt('Eingang','Entrance');if(id==='guard')return tt('Wächter','Wächter');if(SNAME[id])return SNAME[id];if(tgt(id))return tgt(id).name;
   const r=((LV.data||{}).reqs||[]).find(x=>'r'+x.id===id);return r?r.dev:id}
 function flow(){const d=LV.data,ph=PH(),{pos,W,H,reqs,order}=layout(d,ph);
-  const NL=(d.notaus||{}).level||0,key=[LV.sel,ph,NL,(d.sys1||{}).n||0,(d.sys1||{}).busy||0,...reqs.map(r=>r.id+r.stage+r.steps.length+(r.done?'d':'')),...order.map(x=>x.id),...Object.entries(d.svc||{}).map(([k,v])=>k+v.st+(v.wait||0)),...(d.hints||[]).map(h=>h.at+h.word)].join('|');
+  const NL=(d.notaus||{}).level||0,key=[LV.sel,ph,NL,glowKey(),LV.node,LV.rew!=null?Math.round(LV.rew):'',(d.sys1||{}).n||0,(d.sys1||{}).busy||0,...reqs.map(r=>r.id+r.stage+r.steps.length+(r.done?'d':'')),...order.map(x=>x.id),...Object.entries(d.svc||{}).map(([k,v])=>k+v.st+(v.wait||0)),...(d.hints||[]).map(h=>h.at+h.word)].join('|');
   if(key===LV.lastKey){reqs.filter(r=>r.done).forEach(r=>{const g=el('lvd'+r.id);if(g){g.style.opacity=op(r,d);const b=g.querySelector('.cd');if(b)b.textContent=(r.prio?'★ ':'')+doneTxt(r)}});return}
   LV.lastKey=key;
   // Notaus (notaus.py STAGE): from stage 1 the internet and the door are cut off, from 2 Home Assistant only reads, at 3 the conversation stands still
@@ -151,7 +155,7 @@ function flow(){const d=LV.data,ph=PH(),{pos,W,H,reqs,order}=layout(d,ph);
     if(on)for(let k=0;k<3;k++)s+=`<circle r="${ph?3.5:4.5}" fill="${on}"><animateMotion dur="1.8s" begin="${-k*.6}s" repeatCount="indefinite"><mpath href="#lvp${i}"/></animateMotion></circle>`});s+='</g>';
   const node=(id,a,b,on,o={})=>{const p=pos[id];if(!p)return '';const k=cnt[id];
     const hd=o.dev?'':held(id);if(hd){b=hd;o.stroke='var(--bad)'}
-    return `<g class="node${on?' act':''}${hd?' held':''}${o.cls||''}" ${o.attrs||''} data-tip="${lvE((o.tip||a)+(hd?' · '+hd:''))}"><rect x="${p.x}" y="${p.y}" width="${p.w}" height="${p.h}" rx="10" ${o.stroke?`style="stroke:${o.stroke}${hd?';stroke-dasharray:5 4':''}"`:''}/>${hd?`<text x="${p.x+p.w-12}" y="${p.y+p.h/2+5}" text-anchor="end" style="font-size:${ph?11:14}px">🔒</text>`:''}${o.dot?`<circle cx="${p.x+p.w-14}" cy="${p.y+14}" r="4" fill="${o.dot}"/>`:''}
+    return `<g class="node${on?' act':''}${hd?' held':''}${o.cls||''}${glow(id)?' glow':''}${LV.node===id?' picked':''}" ${o.dev?'':`data-node="${lvE(id)}"`} ${o.attrs||''} data-tip="${lvE((o.tip||a)+(hd?' · '+hd:''))}"><rect x="${p.x}" y="${p.y}" width="${p.w}" height="${p.h}" rx="10" ${o.stroke?`style="stroke:${o.stroke}${hd?';stroke-dasharray:5 4':''}"`:''}/>${hd?`<text x="${p.x+p.w-12}" y="${p.y+p.h/2+5}" text-anchor="end" style="font-size:${ph?11:14}px">🔒</text>`:''}${o.dot?`<circle cx="${p.x+p.w-14}" cy="${p.y+14}" r="4" fill="${o.dot}"/>`:''}
       <text class="a" x="${p.x+10}" y="${p.y+(ph?20:Math.min(p.h/2-1,24))}">${lvE(a)}</text><text class="b${o.cd?' cd':''}" x="${p.x+10}" y="${p.y+(ph?36:Math.min(p.h/2+13,38))}">${lvE(b)}</text>
       ${k&&!ph&&!o.dev?`<circle class="badge" cx="${p.x+p.w-16}" cy="${p.y+p.h/2}" r="10"/><text class="bt" text-anchor="middle" x="${p.x+p.w-16}" y="${p.y+p.h/2+3.5}">${k}</text>`:''}</g>`};
   reqs.forEach(r=>{const sub=(r.prio?'★ ':'')+(r.done?doneTxt(r):(ph?(r.net?'Internet':r.who):`${r.who}${r.intent?' · '+r.intent:''}${r.net?' · Internet':''}`));
@@ -169,11 +173,11 @@ function flow(){const d=LV.data,ph=PH(),{pos,W,H,reqs,order}=layout(d,ph);
   // Einordnung mit Wahrscheinlichkeit (systemone.py): how often today, per use, at the language model; numbers only
   const S1=d.sys1||{},s1=S1.n?' · ⚖ '+S1.n:'',s1tip=S1.n||S1.busy||S1.fail?` · ${tt('Einordnung heute','classification today')}: ${Object.entries(S1.uses||{}).filter(([,n])=>n).map(([k,n])=>({weiche:tt('Werkzeugwahl','tool choice'),mail:tt('Aufräumen','tidying'),wichtig:tt('wichtige Mail','important mail'),qualitaet:tt('Qualitätstest','quality test')}[k]||k)+' '+n).join(', ')||'–'}${S1.ms?' · Ø '+S1.ms+' ms':''}${S1.busy?' · '+S1.busy+' '+tt('ausgelastet','busy'):''}${S1.fail?' · '+S1.fail+' '+tt('ohne Antwort','no answer'):''}`:'';
   order.forEach(x=>{const v=x.id==='qwen'?sv('qwen'):null,o=Object.assign({tip:`${x.name} · ${x.sub}${x.id==='qwen'?s1tip:''}`},svo(v,x.name));if(x.id==='qwen'&&o.tip.indexOf(s1tip)<0)o.tip+=s1tip;const b=hb(x.id,ph?ZONE[x.zone][0]:v&&v.st!=='ok'?v.word:x.sub+(x.id==='qwen'?s1:''),o);s+=node(x.id,ph?x.name.split(' ')[0]:x.name,b,act.has(x.id),o)});
-  if(!ph&&pos.guard){const G=pos.guard,gx=G.x+15,gy=G.y+17;s+=`<g class="gate" data-gate="guard" data-tip="${lvE(tt(`Wächter (netguard) · prüft jede Verbindung nach außen · heute ${d.guard.ok} erlaubt, ${d.guard.bad} geblockt · antippen für die Gründe`,`Wächter · checks every outgoing connection · today ${d.guard.ok} allowed, ${d.guard.bad} blocked`))}"><path d="M${gx} ${gy-17} l15 6 v10 c0 11 -8 18 -15 21 c-7 -3 -15 -10 -15 -21 v-10z" fill="var(--card)" stroke="${NL>=1?'var(--bad)':netOn?'var(--ok)':'var(--mut)'}" stroke-width="2"/><text x="${gx}" y="${gy+5}" text-anchor="middle" style="font-size:12px;font-weight:700;fill:var(--ok)">✓</text>
+  if(!ph&&pos.guard){const G=pos.guard,gx=G.x+15,gy=G.y+17;s+=`<g class="gate${glow('guard')?' glow':''}" data-gate="guard" data-tip="${lvE(tt(`Wächter (netguard) · prüft jede Verbindung nach außen · heute ${d.guard.ok} erlaubt, ${d.guard.bad} geblockt · antippen für die Gründe`,`Wächter · checks every outgoing connection · today ${d.guard.ok} allowed, ${d.guard.bad} blocked`))}"><path d="M${gx} ${gy-17} l15 6 v10 c0 11 -8 18 -15 21 c-7 -3 -15 -10 -15 -21 v-10z" fill="var(--card)" stroke="${NL>=1?'var(--bad)':netOn?'var(--ok)':'var(--mut)'}" stroke-width="2"/><text x="${gx}" y="${gy+5}" text-anchor="middle" style="font-size:12px;font-weight:700;fill:var(--ok)">✓</text>
     <text x="${gx}" y="${gy+34}" text-anchor="middle" style="font-size:10px;font-weight:600;fill:var(--fg)">${tt('Wächter','Wächter')}</text><text x="${gx}" y="${gy+46}" text-anchor="middle" style="font-size:10px;fill:var(--bad)">${NL>=1?tt('Internet zu','internet closed'):d.guard.bad+' '+tt('geblockt','blocked')}</text></g>`;
     s+=`<line class="netline" x1="925" x2="1135" y1="${pos._net1}" y2="${pos._net1}"/><text x="920" y="${pos._net1+4}" text-anchor="end" style="font-size:10px;fill:var(--c4);font-weight:700;letter-spacing:.08em">INTERNET ↓</text>`}
   if(!ph){const D=pos.door,dx=D.x+15,dy=D.y+17,on=reqs.find(r=>!r.done&&r.net);
-    s+=`<g class="gate" data-gate="door" data-tip="${lvE(tt(`Eingang aus dem Internet · prüft Anmeldung, Schlüssel und Versuche · heute ${d.door.in} herein, ${d.door.out} abgewiesen`,`Entrance from the internet · today ${d.door.in} in, ${d.door.out} refused`))}"><rect x="${D.x}" y="${D.y}" width="30" height="34" rx="6" fill="var(--card)" stroke="${NL>=1?'var(--bad)':on?col(on.id):'var(--mut)'}" stroke-width="2"/><path d="M${dx-6} ${dy+2} h12 v8 h-12z M${dx-4} ${dy+2} v-4 a4 4 0 0 1 8 0 v4" fill="none" stroke="var(--ok)" stroke-width="1.8"/>
+    s+=`<g class="gate${glow('door')?' glow':''}" data-gate="door" data-tip="${lvE(tt(`Eingang aus dem Internet · prüft Anmeldung, Schlüssel und Versuche · heute ${d.door.in} herein, ${d.door.out} abgewiesen`,`Entrance from the internet · today ${d.door.in} in, ${d.door.out} refused`))}"><rect x="${D.x}" y="${D.y}" width="30" height="34" rx="6" fill="var(--card)" stroke="${NL>=1?'var(--bad)':on?col(on.id):'var(--mut)'}" stroke-width="2"/><path d="M${dx-6} ${dy+2} h12 v8 h-12z M${dx-4} ${dy+2} v-4 a4 4 0 0 1 8 0 v4" fill="none" stroke="var(--ok)" stroke-width="1.8"/>
     <text x="${dx}" y="${D.y+48}" text-anchor="middle" style="font-size:10px;font-weight:600;fill:var(--fg)">${tt('Eingang','Entrance')}</text><text x="${dx}" y="${D.y+60}" text-anchor="middle" style="font-size:10px;fill:var(--bad)">${NL>=1?tt('zu · Notaus','closed · kill switch'):d.door.out+' '+tt('abgewiesen','refused')}</text></g>`}
   if(!ph&&d.speaking){const q=pos.tts;s+=`<text x="${q.x+10}" y="${q.y-7}" style="font-size:10.5px;fill:var(--warn)">${tt('spricht gerade · Sprache hat Vorrang','speaking · speech goes first')}</text>`}
   if(sel)s+=route(sel,pos,W,H,ph);
@@ -184,7 +188,7 @@ function way(){const r=LV.data.reqs.find(x=>x.id===LV.sel),box=el('lvway');
   if(!r){box.innerHTML=`<div class="mut">${tt('Gerade läuft keine Anfrage. Sobald ein Gerät fragt, steht hier ihr Weg Schritt für Schritt.','No request is running. As soon as a device asks, its way shows here step by step.')}</div>`;return}
   const items=r.steps.filter(s=>s.k!=='prep').map(s=>{const z=s.k==='tool'&&s.to?zoneOf(s.to):s.k==='in'&&r.net?'net':s.k==='llm'?'spark':'spark';
     const name=s.k==='in'?r.dev:s.k==='tool'?s.n:s.k==='weiche'?(r.intent||s.n.replace(/^Weiche: ?/,'')):s.n;
-    return {k:KIND[s.k]||s.k,n:name,d:`${secs(s.d)}${s.k==='tool'?' · '+(s.ok?'ok':tt('nicht ok','not ok'))+(s.to&&tgt(s.to)?' · '+tgt(s.to).name:''):''}`,z,ms:s.d,cur:false}});
+    return {k:KIND[s.k]||s.k,n:name,d:s.k==='ack'?tt('nach ','after ')+secs(s.a):`${secs(s.d)}${s.k==='tool'?' · '+(s.ok?'ok':tt('nicht ok','not ok'))+(s.to&&tgt(s.to)?' · '+tgt(s.to).name:''):''}`,z,ms:s.d,cur:false}});
   if(!r.done){const last=r.steps[r.steps.length-1],since=Math.max(0,r.age*1000-(last?last.a+last.d:0));
     items.push({k:KIND[r.stage]||r.stage,n:r.stage==='tool'?(r.tool||KIND.tool):SNAME[r.stage]||r.stage,d:tt('läuft seit ','running for ')+secs(since)+(r.to&&tgt(r.to)?' · '+tgt(r.to).name:''),z:r.to?zoneOf(r.to):'spark',ms:since,cur:true});
     if(r.stage!=='tts'&&!direct(r)&&!r.quiet)items.push({k:KIND.tts,n:SNAME.tts,d:tt('kommt noch','still to come'),z:'spark',ms:0,todo:true})}
@@ -196,7 +200,8 @@ function way(){const r=LV.data.reqs.find(x=>x.id===LV.sel),box=el('lvway');
     <span class="mono mut" style="margin-left:auto">${lvE(r.id)} · ${secs(r.age*1000)}${r.done?' · '+tt('fertig','done'):''}</span></div><div class="hops">`;
   items.forEach((x,i)=>{h+=`${i?'<div class="arrow">›</div>':''}<div class="hop${x.cur?' cur':''}${x.z==='net'?' net':''}${x.todo?' todo':''}"><span class="pill ${ZONE[x.z][1]}">${ZONE[x.z][0]}</span><div class="k">${lvE(x.k)}</div><div class="nn">${lvE(x.n)}</div><div class="d">${lvE(x.d)}</div></div>`});
   h+='</div><div class="gantt">';let o=0;items.forEach((x,i)=>{if(!x.ms)return;const w=x.ms/tot*100;h+=`<i style="left:${o}%;width:${w}%;background:${x.z==='net'?'var(--c4)':COLS[i%COLS.length]}">${w>9?`<span>${lvE(x.k)} ${secs(x.ms)}</span>`:''}</i>`;o+=w});
-  box.innerHTML=h+`</div><div class="mut" style="font-size:11.5px;margin-top:6px">${tt('Wohin die Zeit ging · gelb = Internet. Inhalte werden nie gezeigt, nur Schritte, Zahlen und Ziele.','Where the time went · yellow = internet. Contents never show, only steps, numbers and targets.')}</div>`}
+  box.innerHTML=h+`</div><div class="mut" style="font-size:11.5px;margin-top:6px">${tt('Wohin die Zeit ging · gelb = Internet. Inhalte werden nie gezeigt, nur Schritte, Zahlen und Ziele.','Where the time went · yellow = internet. Contents never show, only steps, numbers and targets.')}</div>`+
+    (KIOSK?'':`<div class="wayact">${LV.rew!=null?`<span class="pill warn">⏪ ${tt('Rückblick','replay')} ${hm(LV.rew)}</span>`:''}<button type="button" class="lk" data-waycopy="1">${tt('Kopieren für Thread','Copy for thread')}</button>${window.openTrace?`<button type="button" class="lk" data-evopen="${lvE(r.id)}">${tt('In Logs → Anfragen öffnen','Open in Logs → Requests')} ↗</button>`:''}</div>`)}
 function guardList(){const g=LV.data.guard;el('lvguard').innerHTML=`<div class="gsum"><span><b>${g.ok}</b> ${tt('erlaubt','allowed')}</span><span style="color:var(--bad)"><b>${g.bad}</b> ${tt('geblockt','blocked')}</span><span style="color:var(--warn)"><b>${g.cut}</b> ${tt('gekappt','cut')}</span><span class="mut">${tt('heute','today')}</span></div>`+
   (g.items.length?g.items.map((x,i)=>`<div class="gd${i===LV.gsel?' sel':''}" data-gd="${i}"><span class="t mono">${hm(x.t)}</span><span class="pill ${x.ok?'ok':x.ok===false?'bad':'warn'}">${x.ok?tt('erlaubt','allowed'):x.ok===false?tt('geblockt','blocked'):tt('gekappt','cut')}</span>
     <span class="mono"><b>${lvE(x.to)}</b></span><span class="mut gw">${lvE(x.level)}</span><span class="why">${tt('Warum','Why')}: ${lvE(x.why)}</span>${i===LV.gsel?`<ol>${x.steps.map(s=>`<li>${lvE(s)}</li>`).join('')}</ol>`:''}</div>`).join('')
@@ -204,7 +209,11 @@ function guardList(){const g=LV.data.guard;el('lvguard').innerHTML=`<div class="
 function doorList(){const g=LV.data.door;el('lvdoor').innerHTML=`<div class="gsum"><span><b>${g.in}</b> ${tt('herein','in')}</span><span style="color:var(--bad)"><b>${g.out}</b> ${tt('abgewiesen','refused')}</span><span class="mut">${tt('heute · Absender gekürzt','today · senders shortened')}</span></div>`+
   (g.items.length?g.items.map((x,i)=>`<div class="gd${i===LV.dsel?' sel':''}" data-dr="${i}"><span class="t mono">${hm(x.t)}</span><span class="pill ${x.ok?'ok':'bad'}">${x.ok?tt('herein','in'):tt('abgewiesen','refused')}</span>
     <b>${lvE(x.who)}</b><span class="mut gw mono">${lvE(x.from)}</span><span class="why">${tt('Warum','Why')}: ${lvE(x.why)}</span>${i===LV.dsel?`<ol>${x.steps.map(s=>`<li>${lvE(s)}</li>`).join('')}</ol>`:''}</div>`).join('')
-  :`<div class="mut">${tt('Seit dem Start kam niemand von außen und niemand wurde abgewiesen.','Since the start nobody came from outside and nobody was refused.')}</div>`)}
+  :`<div class="mut">${tt('Seit dem Start kam niemand von außen und niemand wurde abgewiesen.','Since the start nobody came from outside and nobody was refused.')}</div>`)+autoCounts()}
+// L3: how close each Selbst-Notaus rule is to its threshold (numbers only; the switch under Einstellungen → Sicherheit)
+function autoCounts(){const a=((LV.data||{}).notaus||{}).auto;if(!a||!a.rows)return '';
+  return `<div class="acnt"><b>${a.on?tt('Wächter zählt · Selbst-Notaus ab Schwelle','Wächter counts · self emergency stop at threshold'):tt('Wächter zählt · Selbst-Notaus ist aus','Wächter counts · self emergency stop is off')}</b>`+
+    a.rows.map(x=>{const p=Math.min(100,Math.round(x.n/x.of*100));return `<div class="l"><span>${lvE(tt(x.de,x.en))}</span><div class="g"><i class="${p>=80?'bad':p>=50?'warn':''}" style="width:${p}%"></i></div><span class="num">${x.n}/${x.of} · ${x.min} min</span></div>`}).join('')+'</div>'}
 function rets(){const R=LV.data.rets;el('lvret').innerHTML=(R.length?R.map(x=>`<div class="rt${x.req===LV.sel?' sel':''}" data-req="${lvE(x.req)}"><span class="mut mono">${hm(x.t)}</span><b>${lvE(tgt(x.to)?tgt(x.to).name:x.to?x.to:'Spark')}</b><span class="mono mut">${lvE(x.req)}</span>
     <span class="pill ${x.ok?'ok':'bad'}">${x.ok?'ok':tt('Fehler','error')}</span><span>↩ ${lvE(x.tool)} · ${lvE(x.what)}</span><span class="num mut">${kb(x.size)}</span><span class="num">${secs(x.ms)}</span></div>`).join('')
   :`<div class="mut">${tt('Noch kein Werkzeug seit dem Start.','No tool since the start.')}</div>`)+`<div class="mut" style="font-size:11.5px;margin-top:8px">${tt('Nur Art, Größe, Status und Dauer. Termintitel, Mailtexte und Texte aus Treffern erscheinen hier nie.','Only kind, size, status and time. Appointment titles, mail texts and hit texts never show here.')}</div>`}
@@ -223,8 +232,81 @@ function running(){const R=LV.data.reqs;el('lvnrq').textContent=R.filter(r=>!r.d
 function conns(){const C=LV.data.conns;el('lvncn').textContent=C.reduce((a,c)=>a+c.n,0);
   el('lvcn').innerHTML=C.length?C.map(c=>`<tr><td><span class="pill ${c.dir==='ein'?'':'ok'}">${c.dir==='ein'?'↘ '+tt('ein','in'):'↗ '+tt('aus','out')}</span></td><td><b>${lvE(c.name)}</b></td><td class="mut">${lvE(c.proto)}</td><td class="num">${c.n}</td></tr>`).join('')
    :`<tr><td class="mut">${tt('Keine offene Verbindung.','No open connection.')}</td></tr>`}
-function events(){el('lvev').innerHTML=LV.data.events.length?LV.data.events.map(x=>`<div><span class="t">${hm(x.t)}</span><b>${lvE(x.area)}</b> <span class="mut">${lvE(x.text)}</span></div>`).join('')
-  :`<div class="mut">${tt('Noch nichts seit dem Start.','Nothing since the start.')}</div>`}
+// 1 + 2: Ereignisse with a chip per area, search and pause; a click shows where it belongs in the picture
+const EVNODE={'Wächter':'guard','Eingang':'door','Update':'github','Begleiter':'desk','Geräte-Updates':'geraete','Meldung':'issues',
+  'Telegram':'tg','Hinweis':'','Dienste':'','Lautsprecher':'','Sicherung':'nas'};
+const evKey=x=>x.t+'|'+x.text;
+const evReq=x=>{const m=String(x.text).match(/\b([0-9a-f]{6})\b/);return m?m[1]:''};
+function evNode(x){const id=evReq(x);if(id&&LV.data.reqs.some(r=>r.id===id))return 'r'+id;const n=EVNODE[x.area];return n&&(n==='guard'||n==='door'||tgt(n))?n:''}
+function events(){const all=LV.data.events,list=LV.evPause||all,bar=el('lvevbar');
+  if(bar){const areas=[...new Set(all.map(x=>x.area))].sort(),k=areas.join('|')+'|'+LV.evArea;
+    if(bar.dataset.k!==k){bar.dataset.k=k;const q=bar.querySelector('input');
+      bar.innerHTML=[['',tt('Alle','All')],...areas.map(a=>[a,a])].map(([a,n])=>`<button type="button" class="chip${a===LV.evArea?' on':''}" data-evarea="${lvE(a)}">${lvE(n)}</button>`).join('')
+        +`<input type="search" placeholder="${tt('Suchen …','Search …')}" aria-label="${tt('Ereignisse durchsuchen','Search events')}"><button type="button" class="chip pause" data-evpause="1"></button>`;
+      const ni=bar.querySelector('input');ni.value=q?q.value:LV.evQ;ni.addEventListener('input',()=>{LV.evQ=ni.value.trim().toLowerCase();events()})}
+    const nw=LV.evPause?all.filter(x=>x.t>(LV.evPause[0]||{t:0}).t).length:0;
+    bar.querySelector('[data-evpause]').textContent=LV.evPause?'▶ '+tt('Weiter','Resume')+(nw?` · ${nw} ${tt('neu','new')}`:''):'⏸ '+tt('Anhalten','Pause')}
+  const show=list.filter(x=>(!LV.evArea||x.area===LV.evArea)&&(!LV.evQ||(x.area+' '+x.text).toLowerCase().includes(LV.evQ)));
+  el('lvev').innerHTML=show.length?show.map(x=>{const k=evKey(x),on=!KIOSK&&k===LV.evSel,rq=evReq(x),nd=evNode(x);
+    return `<div class="${KIOSK?'':'evr'}${on?' sel':''}" ${KIOSK?'':`data-ev="${lvE(k)}"`}><span class="t">${hm(x.t)}</span><b>${lvE(x.area)}</b> <span class="mut">${lvE(x.text)}</span>${on?`<span class="evgo">${nd?`<button type="button" class="lk" data-evshow="${lvE(nd)}">↗ ${tt('im Bild zeigen','show in the picture')}</button>`:''}${rq&&window.openTrace?`<button type="button" class="lk" data-evopen="${lvE(rq)}">${tt('Anfrage öffnen','open request')}</button>`:''}</span>`:''}</div>`}).join('')
+  :`<div class="mut">${all.length?tt('Nichts passt zum Filter.','Nothing matches the filter.'):tt('Noch nichts seit dem Start.','Nothing since the start.')}</div>`}
+const glow=id=>!!(LV.hl&&LV.hl.id===id&&Date.now()<LV.hl.until);
+const glowKey=()=>LV.hl&&Date.now()<LV.hl.until?LV.hl.id:'';
+function light(id){LV.hl={id,until:Date.now()+6000};if(id[0]==='r'&&LV.data.reqs.some(r=>'r'+r.id===id)){LV.sel=id.slice(1);LV.lastSel=Date.now()}
+  LV.lastKey='';draw();const f=document.querySelector('.lv .flow');if(f&&f.getBoundingClientRect().bottom<0)f.scrollIntoView({behavior:'smooth',block:'start'});
+  setTimeout(()=>{LV.lastKey='';if(LV.data)draw()},6100)}
+
+// 3 + 4: a node of the picture opens a sheet: its state, the warning with what it means and where it helps, numbers of the last hour
+function sheet(){const box=el('lvsheet');if(!box)return;const id=LV.node,d=LV.data;if(!id){box.hidden=true;return}
+  const st=STAGES.find(x=>x[0]===id),t=tgt(id),name=st?st[1]:t?t.name:nm(id),sub=st?st[2]:t?t.sub:'';
+  const v=(d.svc||{})[id==='llm'?'qwen':id],h=(d.hints||[]).find(x=>x.at===id||(id==='qwen'&&x.at==='llm')),S=(d.stats||{})[id==='qwen'?'llm':id];
+  const now=d.reqs.filter(r=>!r.done&&(r.stage===id||r.to===id||(id==='qwen'&&r.stage==='llm')));
+  let x=`<button type="button" class="x" data-sheetx="1" aria-label="${tt('Schließen','Close')}">×</button><h4>${lvE(name)}</h4><div class="mut">${lvE(sub)}</div>`;
+  if(v)x+=`<div class="row"><span>${tt('Zustand','State')}</span><b style="color:${SVC[v.st]}">${lvE(v.word)}</b></div>`;
+  if(h)x+=`<div class="warnbox ${h.level==='bad'?'bad':''}"><b>⚠ ${lvE(h.word)}</b><div>${lvE(h.why||'')}</div>${h.go&&!KIOSK?`<button type="button" class="btn sm" data-go="${lvE(h.go)}">${lvE(GO[h.go]||tt('Öffnen','Open'))}</button>`:''}</div>`;
+  x+=S?`<div class="row"><span>${tt('Schritte letzte Stunde','Steps last hour')}</span><b>${S.n}</b></div><div class="row"><span>${tt('Ø Dauer','mean time')}</span><b>${secs(S.ms)}</b></div>
+    <div class="row"><span>${tt('nicht ok','not ok')}</span><b style="color:${S.bad?'var(--bad)':'inherit'}">${S.bad}</b></div><div class="row"><span>${tt('letzte 10','last 10')}</span><b class="dots">${S.last.map(o=>`<i class="${o?'ok':'bad'}"></i>`).join('')}</b></div>`
+    :`<div class="mut" style="margin-top:6px">${tt('In der letzten Stunde kein Schritt hier.','No step here in the last hour.')}</div>`;
+  if(now.length)x+=`<div class="row"><span>${tt('gerade dran','right now')}</span><b>${now.map(r=>lvE(r.dev)).join(', ')}</b></div>`;
+  if(window.openTrace)x+=`<button type="button" class="lk" data-evopen="">${tt('Alle Anfragen in Logs → Anfragen','All requests in Logs → Requests')} ↗</button>`;
+  box.innerHTML=x;box.hidden=false}
+const GO={mon:tt('Monitoring öffnen','Open monitoring'),logs:tt('Logs öffnen','Open logs'),test:tt('Prüfen öffnen','Open checks'),apps:tt('Apps und Schnittstellen','Apps and interfaces'),
+  prof:tt('Personen und Geräte','People and devices'),feat:tt('Funktionen öffnen','Open features')};
+
+// 5: Zurückspulen: the finished requests of the last 15 minutes played again in the picture (admin page only)
+function rewBar(){const b=el('lvrew');if(!b)return;
+  if(LV.rew==null){if(b.dataset.m!=='live'){b.dataset.m='live';b.innerHTML=`<button type="button" class="chip" data-rew="open">⏪ ${tt('Zurückspulen','Rewind')}</button><span class="mut">${tt('die letzten 15 Minuten noch einmal ansehen','watch the last 15 minutes again')}</span>`}return}
+  const now=LV.data.t,min=now-((LV.past&&LV.past.rewind)||900);
+  if(b.dataset.m!=='rew'){b.dataset.m='rew';b.innerHTML=`<button type="button" class="chip on" data-rew="live">● Live</button><button type="button" class="chip" data-rew="play"></button><input type="range" step="1" aria-label="${tt('Zeitpunkt','Point in time')}"><span class="mono" id="lvrewt"></span>`;
+    b.querySelector('input').addEventListener('input',e=>{LV.rew=+e.target.value;stopPlay();LV.lastKey='';draw()})}
+  const r=b.querySelector('input');r.min=Math.floor(min);r.max=Math.ceil(now);r.value=LV.rew;
+  b.querySelector('[data-rew=play]').textContent=LV.play?'⏸ '+tt('Anhalten','Pause'):'▶ '+tt('Zeitraffer','Time-lapse');
+  el('lvrewt').textContent=hm(LV.rew)+' · −'+ago(Math.max(0,Math.round(now-LV.rew)))}
+function stopPlay(){clearInterval(LV.play);LV.play=0}
+function replay(T){const P=(LV.past&&LV.past.past)||[];
+  return P.filter(p=>p.t0<=T&&T<=p.te+10).map(p=>{const age=T-p.t0,done=T>p.te,steps=p.steps.filter(s=>s.a<=age*1000).map(s=>Object.assign({},s,{d:Math.min(s.d,Math.max(0,age*1000-s.a))}));
+    const last=steps[steps.length-1],stage=done?'done':last?(last.a+last.d>=age*1000&&last.k!=='in'?last.k:(last.k==='in'||last.k==='prep')&&!p.direct?'weiche':last.k):'in';
+    return Object.assign({},p,{steps,done,stage,age:done?p.te-p.t0:age,to:stage==='tool'&&last?last.to:stage==='llm'?'qwen':'',tool:stage==='tool'&&last?last.n:'',left:done?Math.max(0,Math.round(10-(T-p.te))):null,last:false})})}
+async function rewOpen(){try{const r=await fetch('/api/admin/live?past=1',{cache:'no-store',credentials:'same-origin'});if(!r.ok)return;LV.past=await r.json();
+  LV.rew=LV.data.t-60;LV.lastKey='';draw()}catch(e){}}
+
+// 6: the way of the selected request: copy it for a thread or open it in Logs → Anfragen
+function wayText(r){return `Anfrage ${r.id} · ${r.dev} · ${r.who}${r.intent?' · '+r.intent:''} · ${secs(r.age*1000)}${r.done?' · fertig':''}\n`+
+  r.steps.filter(s=>s.k!=='prep').map(s=>`+${secs(s.a)} ${KIND[s.k]||s.k}: ${s.n}${s.d?' ('+secs(s.d)+')':''}${s.k==='tool'?(s.ok?' ok':' nicht ok'):''}`).join('\n')}
+
+function clickMore(e){const t=e.target;
+  const ev=t.closest('[data-evshow]');if(ev){light(ev.dataset.evshow);return true}
+  const eo=t.closest('[data-evopen]');if(eo){window.openTrace(eo.dataset.evopen);return true}
+  const ea=t.closest('[data-evarea]');if(ea){LV.evArea=ea.dataset.evarea;events();return true}
+  if(t.closest('[data-evpause]')){LV.evPause=LV.evPause?null:LV.data.events.slice();events();return true}
+  const er=t.closest('[data-ev]');if(er){LV.evSel=LV.evSel===er.dataset.ev?'':er.dataset.ev;const x=LV.data.events.find(y=>evKey(y)===LV.evSel);events();if(x&&evNode(x))light(evNode(x));return true}
+  if(t.closest('[data-sheetx]')){LV.node='';LV.lastKey='';draw();return true}
+  const g=t.closest('[data-go]');if(g&&typeof goSec==='function'){goSec(g.dataset.go);return true}
+  const rw=t.closest('[data-rew]');if(rw){const m=rw.dataset.rew;if(m==='open')rewOpen();else if(m==='live'){stopPlay();LV.rew=null;LV.past=null;LV.lastKey='';draw()}
+    else if(m==='play'){if(LV.play)stopPlay();else LV.play=setInterval(()=>{if(LV.rew==null||LV.rew>=LV.data.t){stopPlay();rewBar();return}LV.rew=Math.min(LV.data.t,LV.rew+2);LV.lastKey='';draw()},100);rewBar()}return true}
+  const cp=t.closest('[data-waycopy]');if(cp){const r=LV.data.reqs.find(x=>x.id===LV.sel);if(r&&typeof copyString==='function')copyString(wayText(r),cp);return true}
+  const nd=t.closest('[data-node]');if(nd&&!t.closest('[data-req]')){LV.node=LV.node===nd.dataset.node?'':nd.dataset.node;LV.lastKey='';draw();return true}
+  return false}
 
 // ------------------------------------------------------------------ loop
 function pickSel(){const R=LV.data.reqs,run=R.filter(r=>!r.done);
@@ -237,8 +319,13 @@ function notaus(){const n=LV.data.notaus||{},box=el('lvna');if(!box)return;const
   const nm={1:tt('Außen zu','Outside closed'),2:tt('Hände weg','Hands off'),3:tt('Alles still','All quiet')}[n.level]||'';
   box.innerHTML=`<div class="lvnah"><b>${tt('NOTAUS · STUFE ','KILL SWITCH · STAGE ')}${lvE(n.level)} · ${lvE(nm.toUpperCase())}</b><span class="mut">${n.since?tt('seit ','since ')+hm(n.since):''}${n.channel?' · '+lvE(n.channel):''}</span></div>`
     +`<div class="lvnak">${(n.kinds||[]).map(k=>{const held=n.level>=k.from;return `<span class="${held?'held':'run'}">${lvE(tt(k.de,k.en))} <b>${held?lvE(k.n):'–'}</b></span>`}).join('')}</div>`+ml}
-function draw(){if(!LV.data)return;pickSel();notaus();kpis(LV.data);flow();way();guardList();doorList();rets();running();conns();events();if(KIOSK)rotate()}
-function rotate(){const cards=['lvguardc','lvdoorc','lvretc','lvcnc'],i=Math.floor(Date.now()/10000)%cards.length;
+function draw(){if(!LV.data)return;
+  if(LV.rew!=null&&LV.past){const live=LV.data;LV.data=Object.assign({},live,{reqs:replay(LV.rew)});pickSel();flow();way();LV.data=live}
+  else{pickSel();flow();way()}
+  notaus();kpis(LV.data);guardList();doorList();rets();running();conns();events();sheet();rewBar();if(KIOSK)rotate()}
+// 7: on the monitor a tap on the rotating cards holds the one shown, a second tap lets them turn again
+function rotate(){const cards=['lvguardc','lvdoorc','lvretc','lvcnc'];if(!LV.hold)LV.rot=Math.floor(Date.now()/10000)%cards.length;const i=LV.rot;
+  const kr=document.querySelector('.krot');if(kr)kr.classList.toggle('held',LV.hold);
   cards.forEach((c,k)=>{const x=el(c);if(x)x.classList.toggle('on',k===i)});document.querySelectorAll('.kdots').forEach(d=>d.innerHTML=cards.map((_,k)=>`<i class="${k===i?'on':''}"></i>`).join(''));
   const s=el('lvshow');if(s)s.textContent=LV.sel?tt('zeigt gerade: ','showing: ')+LV.sel:''}
 function visible(){return KIOSK||(el('live')&&el('live').classList.contains('on'))}
