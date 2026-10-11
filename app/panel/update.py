@@ -8,11 +8,12 @@ import time
 
 import httpx
 from fastapi import APIRouter, Depends, HTTPException, Request
+from fastapi.security import HTTPBasicCredentials
 from fastapi.responses import Response
 
 sys.path.insert(0, os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
 from common import journal  # noqa: E402
-from core import PREFIX, admin_code, auth, run  # noqa: E402
+from core import PREFIX, admin_code, app_version, auth, browser_profile, is_admin, run, security  # noqa: E402
 import backup  # noqa: E402
 import guard  # noqa: E402
 
@@ -332,3 +333,60 @@ def stop_update():
         raise HTTPException(500, out or "could not stop the update")
     _remote_cache["data"] = None
     return {"stopped": True}
+
+
+# ---------------------------------------------------------------- changelog
+# "Was ist neu": CHANGELOG.md of the installed version (install.sh puts a copy into app/; in a checkout it is
+# the one at the repository root). One line per version; read only, plain text to the page (never HTML).
+APP_DIR = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
+CHANGELOG_FILES = (os.path.join(APP_DIR, "CHANGELOG.md"), os.path.join(APP_DIR, "..", "CHANGELOG.md"))
+CHANGELOG_MAX_BYTES = 2_000_000
+CHANGELOG_MAX_ENTRIES = 3000
+CHANGELOG_MAX_TEXT = 2000
+_CL_LINE = re.compile(r"- (?:\*\*(V\d{1,3}\.\d{1,4}\.\d{1,6})\*\* · )?(\d{4}-\d{2}-\d{2}) · (.+)")
+_cl_cache = {"key": None, "entries": []}
+
+
+def parse_changelog(text):
+    """[{version, date, text}] newest first, from the lines "- **V01.0.351** · 2026-10-11 · text" (older ones
+    without a version); every other line is skipped, the text loses its ** marks and is cut to a fixed length."""
+    out = []
+    for line in str(text or "").splitlines():
+        m = _CL_LINE.fullmatch(line.strip())
+        if not m:
+            continue
+        txt = m.group(3).replace("**", "").strip()
+        if len(txt) > CHANGELOG_MAX_TEXT:
+            txt = txt[:CHANGELOG_MAX_TEXT - 1].rstrip() + "…"
+        out.append({"version": m.group(1), "date": m.group(2), "text": txt})
+        if len(out) >= CHANGELOG_MAX_ENTRIES:
+            break
+    return out
+
+
+def changelog():
+    """The parsed changelog (cached until the file changes), [] when there is none."""
+    for path in CHANGELOG_FILES:
+        try:
+            st = os.stat(path, follow_symlinks=False)
+        except OSError:
+            continue
+        if not os.path.isfile(path) or os.path.islink(path):
+            continue
+        key = (path, st.st_mtime_ns, st.st_size)
+        if _cl_cache["key"] != key:
+            with open(path, "rb") as f:
+                raw = f.read(CHANGELOG_MAX_BYTES)
+            _cl_cache.update(key=key, entries=parse_changelog(raw.decode("utf-8", "replace")))
+        return _cl_cache["entries"]
+    return []
+
+
+@router.get("/api/changelog")
+def changelog_api(request: Request, creds: HTTPBasicCredentials | None = Depends(security)):
+    """For the admin and every profile in its own browser login (no guests, no device keys)."""
+    if is_admin(request, creds):
+        guard.limit(request, "changelog", admin=True)
+    else:
+        guard.limit(request, "changelog", browser_profile(request)["id"])
+    return {"version": app_version(), "entries": changelog()}

@@ -439,7 +439,7 @@ RATE = {"chat": (30, 120), "asr": (60, 240), "logs": (1, 60), "pair": (10, 10), 
         "mcp": (0, 60), "mcpask": (0, 10), "mcpreg": (10, 10), "mcptoken": (20, 20),
         "live": (0, 150), "livemon": (90, 90), "hilfe": (0, 30), "write": (0, 20), "desk": (0, 20), "deskask": (0, 10), "deskupd": (0, 6), "deskfile": (0, 10), "deskhear": (0, 40), "deskact": (0, 20),
         "haev": (0, 30), "hamelden": (0, 30), "hament": (0, 40), "notaus": (30, 60), "notausset": (0, 10), "notausoff": (0, 10),
-        "systemone": (0, 10)}  # per minute: (guest, profile or admin)
+        "systemone": (0, 10), "changelog": (0, 30)}  # per minute: (guest, profile or admin)
 BUSY = {"chat": 4, "asr": 3}  # at once, guests together
 
 

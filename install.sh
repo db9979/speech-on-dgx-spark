@@ -533,6 +533,10 @@ fi
 say "Installing application files"
 rm -rf "$PREFIX/app.new"
 cp -r "$INSTALL_FROM/app" "$PREFIX/app.new"
+# "Was ist neu" in the panel shows the changelog of exactly this version
+if [ -f "$INSTALL_FROM/CHANGELOG.md" ] && [ ! -L "$INSTALL_FROM/CHANGELOG.md" ]; then
+  cp -- "$INSTALL_FROM/CHANGELOG.md" "$PREFIX/app.new/CHANGELOG.md"
+fi
 chmod -R a+rX "$PREFIX/app.new"
 chmod 755 "$PREFIX/app.new/engine.sh"
 rm -rf "$PREFIX/app.old"

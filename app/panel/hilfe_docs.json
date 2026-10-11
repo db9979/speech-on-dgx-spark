@@ -1612,6 +1612,14 @@
 "src": "installation",
 "file": "Installation im Detail",
 "head": "Aktualisieren",
+"title": "Was ist neu (Changelog)",
+"text": "Was ist neu (Changelog): Alle Änderungen bis zur installierten Version, eine Zeile pro Version, neueste oben, mit Suche. Zu öffnen über „Was ist neu“ unten neben der Versionsnummer oder unter *Einstellungen → Update und Sicherung → Was ist neu (Changelog) → Ansehen*. Sehen kann es der Admin und jedes Profil in seiner eigenen Anmeldung im Browser (nicht Gäste, nicht Geräteschlüssel). Versionen, die neuer sind als beim letzten Öffnen in diesem Browser, tragen „neu“. Die Liste kommt aus CHANGELOG.md der installierten Version (das Update legt eine Kopie nach app/)."
+},
+{
+"lang": "de",
+"src": "installation",
+"file": "Installation im Detail",
+"head": "Aktualisieren",
 "title": "Aktualisieren",
 "text": "Der Installer legt dafür eine eigene Git-Kopie unter /opt/speech-spark/src an. Wo du das Repo ursprünglich geklont hast, spielt danach keine Rolle mehr."
 },
@@ -4078,6 +4086,14 @@
 "head": "Updating",
 "title": "Updating",
 "text": "In the panel under System you see the installed version and, when GitHub has a newer one, the list of changes. Update installieren (install update) fetches and installs it. Settings, models and voices are kept, and the log streams live. Update abbrechen cancels a running update. Packages that are already installed are not upgraded; only what the new version needs is added. The self-test runs before the new version goes live. If it or an earlier step (download, packages) fails, the update stops and the services keep running the old version unchanged. If something fails after the switch, update.sh installs the previous version again and says so in the log. While the update runs, a progress window locks the panel (other tabs and phones too: the server refuses changes, the assistant keeps answering); the page reconnects across the panel restart and reloads when done. After 20 minutes without finishing it offers Reload and Cancel."
+},
+{
+"lang": "en",
+"src": "installation",
+"file": "Installation in detail",
+"head": "Updating",
+"title": "What's new (changelog)",
+"text": "What's new (changelog): every change up to the installed version, one line per version, newest first, with a search. Open it with \"Was ist neu\" (What's new) at the bottom next to the version number or under *Settings → Update und Sicherung (update and backup) → Was ist neu (Changelog) → View*. The admin and every profile in its own browser login can see it (not guests, not device keys). Versions newer than at the last opening in this browser carry \"new\". The list comes from CHANGELOG.md of the installed version (the update puts a copy into app/)."
 },
 {
 "lang": "en",

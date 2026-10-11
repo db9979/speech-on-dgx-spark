@@ -1647,6 +1647,50 @@ class Browser(unittest.TestCase):
         finally:
             helpers.set_config(images=False, messages=False)
 
+    def test_changelog_window(self):
+        """Was ist neu (V01.0.355): the line at the bottom and Einstellungen → Update open the changelog with the strict
+        CSP on; it lists versions, the search narrows them, Escape closes, nothing sticks out at 320/390 px."""
+        import tempfile
+        import update
+        d = tempfile.mkdtemp()
+        with open(os.path.join(d, "CHANGELOG.md"), "w") as f:      # the self-test on the Spark has only app/
+            f.write("# Changelog\n\n" + "".join(f"- **V01.0.{300 - i}** · 2026-10-{1 + i // 20:02d} · Zeile {i} "
+                                                  + ("reMarkable " if i % 3 == 0 else "") + "x" * 120 + "\n" for i in range(90)))
+        real = update.CHANGELOG_FILES
+        update.CHANGELOG_FILES = (os.path.join(d, "CHANGELOG.md"),)
+        update._cl_cache.update(key=None, entries=[])
+
+        async def go():
+            async with async_playwright() as p:
+                for w, h in ((1440, 900), (390, 800), (320, 700)):
+                    br, pg, errors = await self.page(p, w, h, csp=True)
+                    await pg.evaluate("ON.clOpen()")
+                    await pg.wait_for_selector("#cllist li b", timeout=5000)
+                    self.assertGreater(await pg.evaluate("document.querySelectorAll('#cllist li b').length"), 10)
+                    self.assertIn("Installiert", await pg.evaluate("$('clinfo').textContent"))
+                    over = await pg.evaluate("document.documentElement.scrollWidth-window.innerWidth")
+                    self.assertLessEqual(over, 1, f"{w}: {over}px zu breit")
+                    wide = await pg.evaluate("(()=>{const c=document.querySelector('.clcard').getBoundingClientRect();return c.right-window.innerWidth})()")
+                    self.assertLessEqual(wide, 1, f"{w}: Fenster ragt hinaus")
+                    await pg.fill("#clq", "reMarkable")
+                    await pg.wait_for_timeout(150)
+                    self.assertTrue(await pg.evaluate("[...document.querySelectorAll('#cllist li:not(.cld)')].every(li=>/remarkable/i.test(li.textContent))"))
+                    await pg.keyboard.press("Escape")
+                    self.assertEqual(await pg.evaluate("$('clmodal').style.display"), "none")
+                    if w == 1440:   # the link at the bottom, then Einstellungen → Update
+                        await pg.click("#clopen")
+                        await pg.wait_for_selector("#clmodal[style*=grid]", timeout=3000)
+                        await pg.click("#clmodal [data-on=clClose]")
+                        await pg.evaluate("goSec('cfg')")
+                        self.assertEqual(await pg.evaluate("document.querySelectorAll('#pane-upd [data-on=clOpen]').length"), 1)
+                    self.assertEqual(errors, [], w)
+                    await br.close()
+        try:
+            self.run_async(go())
+        finally:
+            update.CHANGELOG_FILES = real
+            update._cl_cache.update(key=None, entries=[])
+
     def test_phone_looks_like_the_app(self):
         """V01.0.296 (plan handy-wie-app.md): on a phone the page looks and works like the iPhone app: tab bar, the chat
         with face, bubbles, big microphone and text field, Heute, Verwalten as a list, pages with "back" on top that the

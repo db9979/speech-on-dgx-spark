@@ -83,6 +83,7 @@ OPEN = {
     "/api/notaus/mine": "Mein Notaus: checks the profile itself (notaus._caller), only on, rate limit",
     "/api/notaus/mine/off": "Mein Notaus off: the profile's browser login only, PIN with lockout and its fresh code, rate limit",
     "/api/admin/notaus/mine/off": "an admin lifts a profile's own Notaus: notaus._lift_how (browser at home), fresh code or password",
+    "/api/changelog": "Was ist neu: is_admin, else browser_profile (no guests, no device keys), rate limit; read only",
 }
 LOGIN = re.compile(r"Depends\((auth|main_auth|owner_auth|assistant|own_profile|browser_profile|secret_profile|secret_profile_fresh|_on)\)")
 ROUTE = re.compile(r'@(?:router|app)\.(?:get|post|put|delete|patch|api_route)\("([^"]*)"[^\n]*\n((?:@[^\n]*\n)*)'

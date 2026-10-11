@@ -438,6 +438,7 @@
       <h3 class="sec">Update <span>wirkt sofort</span></h3>
       <div class="setrow"><div class="lbl"><b>Stand</b><span id="updstate">–</span></div><div class="ctl full"><button class="b" id="updcheck" type="button">Jetzt prüfen</button><button class="b p" id="updgo" type="button" disabled>Update installieren</button><button class="b" id="updstop" type="button" style="display:none">Update abbrechen</button></div></div>
       <div class="fh" id="updmsg"></div><div id="updcommits"></div>
+      <div class="setrow"><div class="lbl"><b>Was ist neu (Changelog)</b><span>Alle Änderungen bis zur installierten Version, eine Zeile pro Version, neueste oben.</span></div><button class="b" type="button" data-on="clOpen">Ansehen</button></div>
       <div class="setrow" id="updprevrow" style="display:none"><div class="lbl"><b>Zurück zur vorigen Version</b><span id="updprevtxt"></span></div><button class="b" id="updprev" type="button">Zurück</button></div>
       <h3 class="sec">Version</h3>
       <table><tbody id="sysver"></tbody></table>
@@ -673,7 +674,7 @@
   <div class="card" id="logverbose"></div>
 </section>
 </main>
-<footer id="credit"><span id="ver"></span> · <span>Idee: Dominik Bornhäußer</span></footer>
+<footer id="credit"><span id="ver"></span> · <button type="button" class="clink" id="clopen" data-on="clOpen">Was ist neu</button> · <span>Idee: Dominik Bornhäußer</span></footer>
 <div id="login" class="modal" style="display:none"><form class="card modalcard" id="loginform">
   <h2>Anmelden</h2><div class="intro">Für Einstellungen, Monitoring und Stimmen braucht es das Panel-Passwort.</div>
   <label>Passwort</label><input type="password" id="loginpw" autocomplete="current-password">
@@ -704,6 +705,13 @@
   <div class="rowin"><input id="findq" placeholder="z. B. Rosen schneiden" autocomplete="off"><button class="b" type="button" data-on="findClose">Schließen</button></div>
   <div class="fh" id="findinfo"></div>
   <ul class="facts finds" id="findlist"></ul>
+</div></div>
+<div id="clmodal" class="modal" style="display:none" role="dialog" aria-modal="true" aria-labelledby="clhead"><div class="card modalcard findcard clcard">
+  <div class="rowin"><h2 id="clhead">Was ist neu</h2><button class="b" type="button" data-on="clClose">Schließen</button></div>
+  <div class="fh" id="clinfo"></div>
+  <input id="clq" type="search" placeholder="Suchen, z. B. reMarkable" autocomplete="off" aria-label="Im Changelog suchen">
+  <ul class="facts finds cllist" id="cllist"></ul>
+  <div class="row"><button class="b" id="clmore" type="button" data-on="clMore" hidden>Ältere zeigen</button></div>
 </div></div>
 <div id="profmodal" class="modal" style="display:none"><div class="card modalcard mecard">
   <div class="mehead"><div class="mehrow"><button class="ib meback" id="meback" type="button" title="Zurück" aria-label="Zurück"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"><path d="M15 5l-7 7 7 7"/></svg></button><h2 id="profhead">Gast</h2><h2 id="mepage"></h2></div><div class="mut" id="setscope"></div></div>
@@ -862,6 +870,7 @@
 <script src="/static/js/hilfe.js"></script>
 <script src="/static/js/schreib.js"></script>
 <script src="/static/js/begleiter.js"></script>
+<script src="/static/js/changelog.js"></script>
 <script src="/static/js/start.js"></script>
 </body>
 </html>

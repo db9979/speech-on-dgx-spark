@@ -269,6 +269,11 @@ details.adv{margin-top:18px;border-top:1px solid var(--line);padding-top:10px}de
 body.guest #alerts,body.inchat #alerts{display:none}
 a.b{text-decoration:none;color:inherit;display:inline-flex;align-items:center}
 .findcard{width:min(640px,94vw);max-height:86vh;display:flex;flex-direction:column}.finds{overflow:auto;margin-top:6px}
+/* "Was ist neu" (changelog.js): the version line at the bottom opens it; one line per version, a date line per day */
+.clink{background:none;border:0;padding:0;font:inherit;color:inherit;text-decoration:underline;text-underline-offset:2px;cursor:pointer}.clink:hover{color:var(--acc)}
+.clcard .rowin h2{flex:1;margin:0}.clcard #clq{margin-top:8px;width:100%}.cllist{max-height:none;flex:1;min-height:0}
+.cllist li{cursor:default;overflow-wrap:anywhere}.cllist li:hover{background:none}.cllist li.cld{font-size:12px;font-weight:600;color:var(--mut);padding:10px 0 2px;border-bottom:0}
+.cllist em.pill{font-style:normal}
 .finds li{cursor:pointer}.finds li:hover{background:color-mix(in srgb,var(--acc) 7%,transparent)}.finds mark{background:color-mix(in srgb,var(--acc) 25%,transparent);color:inherit;border-radius:3px}
 .msg.found .bubble{outline:2px solid var(--acc);outline-offset:2px;transition:outline .3s}
 .wizcard{width:min(560px,94vw);min-height:min(520px,90vh);max-height:92vh;display:flex;flex-direction:column}.wizbody{flex:1;overflow:auto;padding:4px 2px}
@@ -339,7 +344,7 @@ a.b{text-decoration:none;color:inherit;display:inline-flex;align-items:center}
   .modal{overscroll-behavior:contain}
   #login{place-items:end stretch;padding:0}
   #login .modalcard{width:100%;border-radius:20px 20px 0 0;border:0;padding:20px 16px calc(16px + env(safe-area-inset-bottom));animation:up .22s ease}
-  #profmodal,#wizmodal,#findmodal{padding:0;place-items:stretch}
+  #profmodal,#wizmodal,#findmodal,#clmodal{padding:0;place-items:stretch}
   .mecard,.wizcard,.findcard{width:100%;height:100dvh;max-height:none;min-height:0;border:0;border-radius:0;box-shadow:none;animation:up .22s ease;
     padding:calc(10px + env(safe-area-inset-top)) 16px calc(10px + env(safe-area-inset-bottom))}
   .wizcard .mefoot,.mecard .mefoot{margin-top:10px;padding-top:10px}.mefoot .b{flex:1}
