@@ -33,6 +33,7 @@ Alle Optionen ohne Rückfragen (`--mode api --asr 1.7b --tts 0.6b --yes` …) st
 
 <!-- New version: add one line at the top here and in CHANGELOG.md, drop the oldest line here (keep 10). Details go to docs/de and docs/en, not into this README. -->
 
+- **V01.0.411** Live-Seite zum Bedienen: Ereignisse mit Bereichs-Knöpfen, Suche und Anhalten, Klick zeigt die Stelle im Bild; Kasten im Bild öffnet Zahlen der letzten Stunde, ⚠ mit Erklärung und Weg zur Abhilfe; letzte 15 Minuten zurückspulen; Weg kopieren oder in Anfragen öffnen; Selbst-Notaus-Zähler; Begleiter-Aufträge und Sofort-Satz als Weg im Bild; Monitor hält per Tippen an
 - **V01.0.410** Begleiter: „Öffne Safari mit Google“ am Mac wird jetzt wirklich ausgeführt (mit Rückfrage), nicht nur angekündigt
 - **V01.0.409** Sprachausgabe abschaltbar: „Antworten vorlesen“ pro Profil und „Vorlesen“ je Gerät, aus = nur Text (Lautsprecher und CarPlay sprechen weiter)
 - **V01.0.408** Unabhängige Prüfung, Paket 5: Englisch vollständiger, verständliche Fehlersätze, „?“ nur mit Hilfe, aktuelle Seitennamen, Labels, Live aus ohne Fehler
@@ -42,7 +43,6 @@ Alle Optionen ohne Rückfragen (`--mode api --asr 1.7b --tts 0.6b --yes` …) st
 - **V01.0.404** Antwort kommt nicht mehr doppelt mit „</think>“ dazwischen: das Nachdenken wird nie gezeigt oder vorgelesen
 - **V01.0.403** Unabhängige Prüfung, Paket 2: Zugriffslücken geschlossen (Codes für Sicherung und Geräte, fremde Stimmen als „von außen“, Wiederherstellen behält Admin-Passwort, API-Doku aus, Gast-Grenzen, MCP)
 - **V01.0.402** Unabhängige Prüfung, Paket 1: lange Nachrichten bremsen nicht mehr, Abtastrate geprüft, Aufträge behalten Privates, Sperre, ESP32-Flashen, Zeitumstellung
-- **V01.0.401** Mein Notaus: Seite lädt nach Auslösen oder Aufheben nicht mehr von selbst neu (Browser-Selbsttest wieder stabil).
 
 Alle Versionen: [CHANGELOG.md](CHANGELOG.md)
 

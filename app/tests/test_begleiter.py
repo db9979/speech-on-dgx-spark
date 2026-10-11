@@ -712,6 +712,33 @@ class Seven(unittest.TestCase):
         helpers.set_config(desk_meeting=True)
         self.assertTrue(prog.get("/api/desk/config").json()["parts"]["meeting"])
 
+    def test_jobs_show_their_way_on_the_live_page(self):
+        """Zustand → Live (Dominik 2026-10-11): a Begleiter job is a request with its way (Bildschirm → Sprachmodell,
+        Vorlesen → Sprechen), not only a line under Ereignisse; fixed words only, never the question."""
+        import live
+        from tests.test_live import set_logs
+        c = self.on("DlLive")
+        _, prog = self.pair(c)
+        self.parts(c, prog, screen=True, speak=True)
+        set_logs(live=True)
+        try:
+            with live._lock:
+                live._run.clear()
+            self.assertEqual(prog.post("/api/desk/screen", files={"image": ("s.png", png(), "image/png")},
+                                       data={"question": "Geheime Frage", "what": "erklaeren"}).status_code, 200)
+            self.assertEqual(prog.post("/api/desk/speak", json={"text": "Geheimer Text"}).status_code, 200)
+            d = live.snapshot()
+            ways = {r["intent"]: [(s["k"], s["n"]) for s in r["steps"]] for r in d["reqs"] if r["client"] == "desk"}
+            self.assertEqual(ways["Bildschirm fragen"], [("in", "Bildschirm fragen"), ("llm", "Begleiter Bildschirm")])
+            self.assertEqual(ways["Vorlesen"], [("in", "Vorlesen"), ("tts", "Vorlesen")])
+            self.assertTrue(all(r["done"] for r in d["reqs"] if r["client"] == "desk"))
+            self.assertNotIn("Geheim", json.dumps(d))
+            self.assertGreaterEqual(d["stats"]["llm"]["n"], 1)
+        finally:
+            set_logs(live=False)
+            with live._lock:
+                live._run.clear()
+
     def test_speak_returns_the_whole_wav(self):
         c = self.on("DqBert")
         _, prog = self.pair(c)

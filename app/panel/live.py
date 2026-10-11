@@ -126,6 +126,9 @@ LEVEL = {"public": "Öffentlich (Seiten aus Suchergebnissen)", "user": "Nutzer-D
 
 _run = {}                         # request id -> tracelog.Rec while it runs and FADE seconds after
 _events = deque(maxlen=100)       # (t, area, text)
+_hits = deque(maxlen=3000)        # (t, node, ok, ms) per finished step: the sheet of a node in the picture
+_past = deque(maxlen=400)         # finished requests of the last REWIND seconds: Zurückspulen on the admin page
+REWIND = 15 * 60
 _guard = deque(maxlen=60)         # Wächter decisions
 _door = deque(maxlen=60)          # who came in from the internet or was turned away
 _rets = deque(maxlen=40)          # what tools gave back
@@ -243,12 +246,20 @@ def key_call(request, who, why):
 def step(rec, s):
     """A step was added to a watched request: tool steps also go to "Was die Dienste zurückgeben"."""
     try:
+        x = s.get("x") or {}
+        ok = x.get("ok", True) is not False
+        node = {"asr": "asr", "weiche": "weiche", "llm": "llm", "tts": "tts", "ack": "tts"}.get(s["k"])
+        if s["k"] == "tool":
+            node = target(s["n"][:-8] if s["n"].endswith(" (Panel)") else s["n"]) or "tool"
+        if node:
+            with _lock:
+                _hits.append((rec.t0 + (s["a"] + s["d"]) / 1000, node, ok, s["d"]))
+                if s["k"] == "tool" and node != "tool":
+                    _hits.append((rec.t0 + (s["a"] + s["d"]) / 1000, "tool", ok, s["d"]))
         if s["k"] != "tool":
             return
         name = s["n"][:-8] if s["n"].endswith(" (Panel)") else s["n"]
         tgt = target(name)
-        x = s.get("x") or {}
-        ok = x.get("ok", True) is not False
         chars = x.get("chars")
         with _lock:
             _rets.append({"t": rec.t0 + (s["a"] + s["d"]) / 1000, "req": rec.id, "tool": name, "to": tgt, "ok": ok,
@@ -263,6 +274,8 @@ def ended(rec, now=None):
     try:
         now = now or time.time()
         rec.t_end = now
+        with _lock:
+            _past.append(rec)
         status = rec.status()
         bad = next((e for e in rec.errors if str(e).startswith("llm_")), "")
         if bad or any(s["k"] == "llm" and s["n"].startswith("Runde") for s in rec.steps):
@@ -771,6 +784,59 @@ def _sys():
             "power": num(last.get("power")), "hist": {k: [num(x.get(k)) for x in h] for k in ("gpu", "cpu", "avail")}}
 
 
+def node_stats(now=None):
+    """Per node of the picture in the last hour: steps, failures, mean time and the last ten (ok or not).
+    Numbers only, for the sheet that opens when the admin clicks a node."""
+    now = time.time() if now is None else now
+    out = {}
+    with _lock:
+        hits = [h for h in _hits if now - h[0] < 3600]
+    for t, node, ok, ms in hits:
+        x = out.setdefault(node, {"n": 0, "bad": 0, "ms": 0, "last": []})
+        x["n"] += 1
+        x["bad"] += 0 if ok else 1
+        x["ms"] += ms
+        x["last"] = (x["last"] + [ok])[-10:]
+    for x in out.values():
+        x["ms"] = int(x["ms"] / x["n"]) if x["n"] else 0
+    return out
+
+
+def past_reqs(view="admin", now=None):
+    """Finished requests of the last REWIND seconds for Zurückspulen: the same fixed words and numbers as
+    the picture, with their start and end time so the page can play them again."""
+    now = time.time() if now is None else now
+    with _lock:
+        recs = [r for r in _past if now - (getattr(r, "t_end", None) or now) < REWIND]
+    out = []
+    for r in recs:
+        x = _req(r, view, r.t_end)
+        x.update(t0=round(r.t0, 2), te=round(r.t_end, 2), left=None, last=False, ago=None)
+        out.append(x)
+    return out
+
+
+# the warnings at a node (hints): one sentence what it means and which page helps (goSec name)
+EXPLAIN = (("Speicher knapp", "Weniger freier Speicher als die Reserve: Dienste können abstürzen. Läuft qwen38 oder "
+            "ein anderer großer Dienst gerade?", "mon"),
+           ("vom Wächter neu gestartet", "Der Dienst hat nicht mehr geantwortet, der Wächter hat ihn neu gestartet. "
+            "Die Logs zeigen, was davor passierte.", "logs"),
+           ("hängt", "Der Dienst antwortet nicht und der Wächter darf ihn diese Stunde nicht mehr neu starten.", "logs"),
+           ("Funktionsprüfung", "Die regelmäßige Prüfung von Hören, Weiche, Modell und Sprechen ist hier gescheitert.", "test"),
+           ("Qualitätstest", "Fragen, die früher richtig beantwortet wurden, gehen jetzt schief.", "test"),
+           ("erster Ton", "Bis zum ersten Ton dauert es heute länger als sonst. Meist läuft qwen38 gerade viel oder "
+            "der Speicher ist knapp.", "test"),
+           ("Bot-Token", "Ein zweites Programm benutzt denselben Telegram-Bot: Nachrichten gehen verloren.", "apps"))
+
+
+def _explain(h):
+    w = h.get("word", "")
+    for key, why, go in EXPLAIN:
+        if key in w:
+            return dict(h, why=why, go=go)
+    return dict(h, why=h.get("why") or "", go=h.get("go") or ("prof" if h.get("at") == "geraete" else "feat" if h.get("at") == "issues" else "mon"))
+
+
 def snapshot(view="admin", now=None):
     now = now or time.time()
     with _lock:
@@ -779,7 +845,7 @@ def snapshot(view="admin", now=None):
         reqs = [_req(r, view, now) for r in sorted(_run.values(), key=lambda r: r.t0)]
         cnt = dict(_count) if _count.get("day") == time.strftime("%Y-%m-%d", time.localtime(now)) else {}
         guard_items, door_items = list(_guard)[-12:][::-1], list(_door)[-12:][::-1]
-        rets, events = list(_rets)[-12:][::-1], list(_events)[-14:][::-1]
+        rets, events = list(_rets)[-12:][::-1], list(_events)[-(60 if view == "admin" else 14):][::-1]
     try:
         import vorrang
         speaking = bool(vorrang.speaking(now))
@@ -788,6 +854,7 @@ def snapshot(view="admin", now=None):
     try:
         import notaus
         held = notaus.for_live()
+        held["auto"] = notaus.auto_for_live(now)     # Selbst-Notaus: how close each rule is to its threshold
     except Exception:
         held = {"level": 0}
     try:
@@ -795,7 +862,7 @@ def snapshot(view="admin", now=None):
         sys1 = systemone.for_live(now)
     except Exception:
         sys1 = {"n": 0}
-    hs = hints(now)
+    hs = [_explain(h) for h in hints(now)]
     upd = _upd(now)
     used = {h["at"] for h in hs} | {s["to"] for r in reqs for s in r["steps"] if s["to"]} | {r["to"] for r in reqs if r["to"]} | {x["to"] for x in rets if now - x["t"] < 60 and x["to"]}
     try:
@@ -823,7 +890,8 @@ def snapshot(view="admin", now=None):
             "door": {"in": cnt.get("door_in", 0), "out": cnt.get("door_out", 0), "items": door_items},
             "rets": rets, "events": [{"t": t, "area": a, "text": x} for t, a, x in events], "conns": _conns(now), "sys": _sys(), "notaus": held,
             "svc": _svc_now(now), "bg": _bg_now(now), "hints": hs, "sys1": sys1, "upd": upd, "devup": devup,
-            "meld": {k: meld.get(k) for k in ("on", "drafts", "sent_today", "last", "token")}}
+            "meld": {k: meld.get(k) for k in ("on", "drafts", "sent_today", "last", "token")},
+            "stats": node_stats(now)}
 
 
 def _devup_sub(d):
@@ -838,10 +906,12 @@ def _devup_sub(d):
 
 # ------------------------------------------------------------------ admin view
 @router.get("/api/admin/live", dependencies=[Depends(auth)])
-def admin_live(request: Request):
+def admin_live(request: Request, past: int = 0):
     guard.limit(request, "live", admin=True)
     if not on():
         return {"on": False}   # off: the page says so, without an error in the console of every admin page (B8)
+    if past:                   # Zurückspulen: the finished requests of the last 15 minutes (admin only, not the monitor)
+        return {"past": past_reqs("admin"), "rewind": REWIND}
     return snapshot("admin")
 
 
