@@ -92,9 +92,36 @@ def unsupported(sentence, have):
 
 
 def label(f):
-    return {"t": "{1}:{2:02d} Uhr", "d": "{1}.{2}.", "s": "{1}:{2}", "m": "{1},{2:02d} €"}[f[0]].format(*f)
+    return {"t": "{1}:{2:02d} Uhr", "d": "{1}.{2}.", "s": "{1}:{2}", "m": "{1},{2:02d} €",
+            "n": "Termin aus früherer Antwort"}[f[0]].format(*f)
 
 
 FALLBACK = {"de": "Genauere Angaben dazu habe ich nicht.", "en": "I have no more precise details on that."}
 RETRY_NOTE = ("(Für diese Frage brauchst du zuerst das passende Werkzeug. Rufe es jetzt auf und antworte nicht aus "
               "dem Gedächtnis.)")
+
+
+def fresh(msgs, have):
+    """For an answer that read the calendar: times and dates count only when they are in the instructions,
+    the question of this turn (with the panel's time note) or what came after it (the tool results).
+    An appointment from an earlier answer in the conversation is not today's (Dominik, 2026-10-11:
+    yesterday's appointments read out as today's). Other figures stay as known() found them."""
+    return {f for f in have if f[0] not in ("t", "d")} | known(fresh_texts(msgs))
+
+
+def fresh_texts(msgs):
+    """The instructions, the question of this turn and everything after it (the tool results)."""
+    msgs = [m for m in msgs if isinstance(m, dict)]
+    last = max((i for i, m in enumerate(msgs) if m.get("role") == "user" and m.get("content") != RETRY_NOTE), default=0)
+    return [m.get("content") for m in msgs if m.get("role") == "system"] + [m.get("content") for m in msgs[last:]]
+
+
+OLD = ("n", 0, 0)   # held back: a quoted name not read in this answer (unquoted)
+QUOTED = re.compile(r"[„“\"»«]([^„“”\"»«\n]{2,80})[“”\"«»]")
+
+
+def unquoted(sentence, texts):
+    """The quoted names in sentence („deBug & Coffee“) that are in none of texts: in an answer that read the
+    calendar, an appointment title the model quotes must come from this answer's results."""
+    low = " ".join(t for t in texts if isinstance(t, str)).lower()
+    return [m.group(1).strip() for m in QUOTED.finditer(sentence or "") if m.group(1).strip().lower() not in low]

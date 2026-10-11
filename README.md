@@ -33,6 +33,7 @@ All options for running without questions (`--mode api --asr 1.7b --tts 0.6b --y
 
 <!-- New version: add one line at the top here and in CHANGELOG.md, drop the oldest line here (keep 10). Details go to docs/de and docs/en, not into this README. -->
 
+- **V01.0.348** Morning greeting names appointments only fresh from the calendar: "Guten Morgen" always reads the briefing, appointments marked as over are not named as coming up, and the answer check lets no appointment from an earlier answer through as today's
 - **V01.0.347** Spark companion in the Spark look (face as icon, windows like the panel, light and dark), shows new versions and updates itself after a click (the Spark fetches and checks them), link "☕ Support Spark"
 - **V01.0.346** reMarkable @Spark: question from handwriting without the reader's "Bild:" line and [unleserlich], the model also answers from its own knowledge instead of just "no answer", diagnosis line "remarkable: @Spark answer …"
 - **V01.0.344** More with the reMarkable (admin sub-switch + one per function under Me → reMarkable, all off): morning sheet as PDF with note lines, "@Spark" questions on paper get an answer next to them, tasks from handwriting (reminder only after a click), meeting summaries, week in review on Fridays, web pages and mail attachments to the reMarkable, one inbox per day, a Spark guide to the reMarkable functions and the service that keeps itself up to date
@@ -42,7 +43,6 @@ All options for running without questions (`--mode api --asr 1.7b --tts 0.6b --y
 - **V01.0.340** Classification with probabilities (off): qwen38 /v1/systemone for tool choice (from 80 %), inbox tidying (from 90 %), important mail by sender and subject and a second opinion in the quality test
 - **V01.0.339** Writing help in other programs (off): Mac quick action, Windows program (x64 and ARM, Ctrl+Alt+S), add-in for Outlook, Word and Excel, browser extension and iPhone share, each paired with its own key
 - **V01.0.338** Kill switch for admins only; plus "my kill switch" for every profile (Me → Security): stops only that profile, ways in closed and no actions, reading stays; lifted with the PIN
-- **V01.0.337** Live overview: the Spark's warnings (slower answers, quality test, memory …) show at their place in the picture
 
 All versions: [CHANGELOG.md](CHANGELOG.md)
 

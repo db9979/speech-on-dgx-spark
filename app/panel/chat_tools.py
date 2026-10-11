@@ -256,7 +256,8 @@ async def run(t, name, args, st):
             evs, errors = await calendars.events(t.who["id"], start, start + datetime.timedelta(days=days), zone)
         except (ValueError, httpx.HTTPError) as e:
             return f"Calendar not reachable: {e}"
-        return ("\n".join(calendars.line(x) for x in evs) or "No appointments in this period. Say so; do not guess any.") \
+        now = datetime.datetime.now(zone)
+        return ("\n".join(calendars.line(x, now) for x in evs) or "No appointments in this period. Say so; do not guess any.") \
             + "".join(f"\nCalendar '{n}' could not be read: {e}" for n, e in errors)
     if name == "calendar_add" and t.cal_write:
         try:
@@ -396,9 +397,7 @@ async def briefing_text(t, st):
         tomorrow = today + datetime.timedelta(days=1)
         for label, a, b in (("Today", today, tomorrow), ("Tomorrow", tomorrow, tomorrow + datetime.timedelta(days=1))):
             evs = [x for x in res[0] if x["start"] < b and (x["end"] > a or x["start"] >= a)]
-            parts.append(f"{label}'s appointments:\n" + ("\n".join(
-                calendars.line(x) + (" (already over)" if not x["allday"] and x["end"] <= now else "")
-                for x in evs) or "none"))
+            parts.append(f"{label}'s appointments:\n" + ("\n".join(calendars.line(x, now) for x in evs) or "none"))
     if t.timers:
         end = (today + datetime.timedelta(days=1)).timestamp() * 1000
         pend = [x for x in (profiles.reminders(t.who["id"]) if t.who else t.guest_rem) if x["due"] < end]

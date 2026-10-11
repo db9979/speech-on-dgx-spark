@@ -633,6 +633,8 @@ async def prepare(request):
     need = chat.needed(ask_text, {t["function"]["name"] for t in tools}, ccfg.get("tool_words", ""))
     # one clear intent with one needed tool: the first round must call exactly that one
     force = intent.forced(route, need, {t["function"]["name"] for t in tools}) if route_on else None
+    if "daily_briefing" in need and set(route.names) <= {"kalender"}:
+        force = "daily_briefing"   # "Guten Morgen": the day read fresh, never from an earlier answer (chat.MORNING)
     if not force and need == ["archive_search"]:
         force = "archive_search"   # "Schau in meinem Archiv": the archive, never the uploaded documents (V01.0.264)
     # "Was habe ich zuletzt / heute notiert?" ("Neueste zuerst", wissen.recent_window): a fixed rule on the person's

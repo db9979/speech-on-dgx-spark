@@ -39,7 +39,7 @@ HOME_WORDS = re.compile(r"(?i)\b(licht\w*|lampe\w*|leuchte\w*|heizung\w*|thermos
                         r"staubsauger\w*|saugroboter\w*|klima\w*|lüftung\w*|ventilator\w*|garage\w*|"
                         r"wohnzimmer|küche|schlafzimmer|kinderzimmer|badezimmer|bad\b|flur|keller|garten|terrasse|"
                         r"smart ?home|home assistant|lights?|heating)\b")
-CALENDAR_WORDS = re.compile(chat.NEED_CALENDAR.pattern + r"|(?i:\b(briefing|was steht (heute|morgen) an|"
+CALENDAR_WORDS = re.compile(chat.NEED_CALENDAR.pattern + "|" + chat.MORNING.pattern + r"|(?i:\b(briefing|was steht (heute|morgen) an|"
                             r"mein(en)? tag|was habe ich (heute|morgen)( vor)?)\b)")
 LIST_WORDS = re.compile(r"(?i)(einkaufsliste|einkaufszettel|aufgabenliste|to-?do|\b(auf|von) (die|der|meine[rn]?) "
                         r"liste\b|\bliste\b|shopping list)")

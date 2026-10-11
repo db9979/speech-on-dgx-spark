@@ -1204,6 +1204,14 @@
 "src": "assistent",
 "file": "Assistent und Oberfläche",
 "head": "Sprach-Chat",
+"title": "Termine nur frisch aus dem Kalender (V01.0.348)",
+"text": "Termine nur frisch aus dem Kalender (V01.0.348): „Guten Morgen“ allein (auch mit „Spark“, „wie geht’s“) zählt als Bitte um den Tag: Die Weiche ordnet es dem Kalender zu, und die erste Runde muss daily_briefing aufrufen (ohne Briefing: calendar_events). Vor einer anderen Bitte („Guten Morgen, mach das Licht an“) gilt das nicht. Jedes Kalender-Ergebnis markiert Termine, die schon zu Ende sind, mit „(already over)“; Briefing und Tagesüberblick nennen sie nicht als anstehend. Hat eine Antwort den Kalender gelesen, nimmt die Antwort-Prüfung Uhrzeiten, Daten und in Anführungszeichen genannte Termintitel nur noch aus der Frage, den Anweisungen und den Ergebnissen dieser Antwort, nicht mehr aus früheren Antworten im Gespräch; so kommen gestrige Termine nie als heutige zurück (im Protokoll „Termin aus früherer Antwort“)."
+},
+{
+"lang": "de",
+"src": "assistent",
+"file": "Assistent und Oberfläche",
+"head": "Sprach-Chat",
 "title": "Aus Korrekturen lernen (V01.0.118)",
 "text": "Aus Korrekturen lernen (V01.0.118): Admin-Schalter Funktionen → „Aus Korrekturen lernen“ und Schalter pro Profil (Ich → Gespräch), beide aus, nie Gäste oder eine fremde Stimme. Beginnt eine Nachricht direkt nach einer Antwort wie eine Korrektur („Nein, …“, „Das stimmt nicht“, „Du sollst …“, mindestens drei Wörter), formuliert das Modell nebenher einen kurzen Satz (fixes.py), und der Assistent fragt am Ende „Soll ich mir merken: …?“. Gespeichert wird nur nach einem schlichten „Ja“ aus demselben Gespräch innerhalb von 15 Minuten. Nie vorgeschlagen werden Sätze zu Codewort, PIN, Passwort, Regeln, Sicherheit, Bestätigungen, Schlössern oder Alarm, Weltwissen (Spielstände, Beträge) und Links; nach Mail oder fremdem Text gibt es keinen Vorschlag, und die frühere Antwort geht dann nicht mit. Im Protokoll steht der Eintrag „Korrektur“; mit „Frage als Testfall an den Admin“ landet die korrigierte Frage in quality-cases.json (höchstens 30) und läuft im Qualitätstest mit: alle Werkzeuge angeboten, jedes findet nichts, erfundene Angaben zählen als Fehler. Der Admin löscht sie unter Zustand → Prüfen → Qualitätstest."
 },
@@ -3662,6 +3670,14 @@
 "head": "Voice chat",
 "title": "Required tools and answer check (V01.0.117)",
 "text": "Required tools and answer check (V01.0.117): questions about appointments, mail, reminders, timers, weather, parcels, transit, lists, match results and news have to go through the matching tool (one table NEED_TOOLS in chat.py, also used by the quality test). While the model chooses the tool, the \"tool choice\" temperature (0.1) applies, the normal one afterwards. The answer check (Settings → Language model, on by default) lets no sentence through for such questions that names a time, date, score or amount that is in no tool result, the question or the conversation so far; instead the assistant says once \"Genauere Angaben dazu habe ich nicht.\" If the model answers without looking anything up, the answer is dropped and the model is asked once more. Both show up in the tool log as \"Antwort-Prüfung\". General questions without a tool are not checked. Optional: the admin allows \"think while choosing tools\", each profile switches it on under Me → Conversation (off, never guests)."
+},
+{
+"lang": "en",
+"src": "assistant",
+"file": "Assistant and panel",
+"head": "Voice chat",
+"title": "Appointments only fresh from the calendar (V01.0.348)",
+"text": "Appointments only fresh from the calendar (V01.0.348): \"Guten Morgen\" on its own (also with \"Spark\", \"wie geht's\") counts as asking for the day: the switch files it under the calendar and the first round has to call daily_briefing (without the briefing: calendar_events). Before another request (\"Guten Morgen, turn on the light\") it does not. Every calendar result marks appointments that have already ended with \"(already over)\"; briefing and daily overview do not name them as coming up. Once an answer has read the calendar, the answer check takes times, dates and quoted appointment titles only from the question, the instructions and this answer's results, no longer from earlier answers in the conversation, so yesterday's appointments never come back as today's (tool log: \"Termin aus früherer Antwort\")."
 },
 {
 "lang": "en",

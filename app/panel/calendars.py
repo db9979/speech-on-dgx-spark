@@ -382,7 +382,9 @@ async def test(uid, zone):
     return {"events": [line(x) for x in evs[:6]], "errors": [f"{n}: {e}" for n, e in errors]}
 
 
-def line(x):
+def line(x, now=None):
+    """One appointment for the model; with now, one that has ended is marked, so it is never read out as
+    still to come (Dominik, 2026-10-11)."""
     s = x["start"]
     day = f"{WEEKDAYS[s.weekday()]} {s:%d.%m.}"
     if x["allday"]:
@@ -391,7 +393,8 @@ def line(x):
     else:
         when = f"{day} {s:%H:%M}" + (f"–{x['end']:%H:%M}" if x["end"] > s else "")
     return f"{when}: {x['title']}" + (f" (Ort: {x['location']})" if x["location"] else "") \
-        + (f" [{x['calendar']}]" if x.get("many") and x.get("calendar") else "")
+        + (f" [{x['calendar']}]" if x.get("many") and x.get("calendar") else "") \
+        + (" (already over)" if now is not None and not x["allday"] and x["end"] <= now else "")
 
 
 # ---------------------------------------------------------------- new appointments
