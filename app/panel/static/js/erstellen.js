@@ -70,12 +70,15 @@ function mkCard(c){const d=document.createElement('div');d.className='hcard mkca
 // ---------------------------------------------------------------- Ich → Dokumente: "Vom Spark erstellt"
 let mkTimer=null,MKOPEN=null;
 async function mkShow(I){const box=$('mkbox');if(!box)return;clearTimeout(mkTimer);
-  if(!(I&&I.allow&&I.allow.make&&I.on&&I.on.make)){box.hidden=true;box.textContent='';return}
+  if(!(I&&I.allow&&I.allow.make)){box.hidden=true;box.textContent='';return}
+  // allowed but off for this profile: say so right here, with the switch (the same as under "Einstellungen für Dokumente")
+  if(!(I.on&&I.on.make)){box.hidden=false;
+    box.innerHTML=`<h3>${esc(t('Vom Spark erstellt','Made by the Spark'))}</h3><div class="mkjob"><span class="mut">${esc(t('Aus. Eingeschaltet schreibt der Spark auf Bitte Briefe, Präsentationen und Tabellen als Datei.','Off. Switched on, the Spark writes letters, presentations and spreadsheets as files on request.'))}</span><button type="button" class="b p" data-mkdo="on">${esc(t('Einschalten','Switch on'))}</button></div><div id="mkmsg" class="mut" role="status"></div>`;return}
   const M=await mkInfo();if(!M){box.hidden=true;return}box.hidden=false;
   const jobs=(M.jobs||[]).filter(j=>j.state==='wait'||j.state==='run'||j.state==='error');
   const sty=Object.fromEntries((M.styles||[]).map(s=>[s.id,s.name])),kn=k=>(M.kinds[k]||{}).name||k;
   box.innerHTML=`<h3>${esc(t('Vom Spark erstellt','Made by the Spark'))}</h3>
-    <div class="mut">${esc(t('Sag zum Beispiel „Schreib mir einen Brief an die Hausverwaltung“ oder „Mach eine Präsentation über unseren Urlaub“.','Say for example "Write me a letter to the landlord" or "Make a presentation about our holiday".'))}</div>
+    <div class="mut">${esc(t('An (Schalter unter „Einstellungen für Dokumente“). ','On (switch under "Settings for documents"). '))}${esc(t('Sag zum Beispiel „Schreib mir einen Brief an die Hausverwaltung“ oder „Mach eine Präsentation über unseren Urlaub“.','Say for example "Write me a letter to the landlord" or "Make a presentation about our holiday".'))}</div>
     ${M.plan&&M.plan.state==='new'?`<div class="mkjob">${esc(t(`Gliederung „${M.plan.title}“ wartet im Gespräch auf dein Ja.`,`Outline "${M.plan.title}" waits for your yes in the conversation.`))}</div>`:''}
     ${jobs.map(j=>`<div class="mkjob"><span>${esc(kn(j.kind)+' „'+j.title+'“')} · ${mkJobLine(j)}${j.state!=='error'?mkBar(j.step,j.steps):''}</span>${j.state!=='error'?`<button type="button" class="b" data-mkcancel="${esc(j.id)}">${esc(t('Abbrechen','Cancel'))}</button>`:''}</div>`).join('')}
     <ul class="facts" id="mklist">${(M.docs||[]).map(d=>`<li><span>${esc(d.title)}<br><small class="mut">${esc(kn(d.kind))} · ${esc(MKFMT[d.format]||d.format)} · ${esc(t('Version ','version ')+d.version)} · ${esc(mkWhen(d.updated))}${d.template?'':' · '+esc(sty[d.style]||'')}</small></span>
@@ -160,6 +163,7 @@ function mkWait(jid){const box=$('mkview');mkFollow(jid,box,j=>{mkVSay(mkJobLine
    const w=D.mkdo;
    if(w==='close'){v.hidden=true;v.textContent='';MKOPEN=null;return}
    if(w==='x'){(+D.i?ed(+D.i):v.querySelector('.mknew')).textContent='';return}
+   if(w==='on'){const r=await mkJSON('/api/profile/settings','PUT',{doc_make:true});if(!r.r.ok){mkSay(r.d.detail,true);return}showDocs();return}
    if(w==='sender'){const r=await mkJSON('/api/profile/settings','PUT',{doc_sender:$('mksender').value});mkSay(r.r.ok?t('Gespeichert.','Saved.'):r.d.detail,!r.r.ok);return}
    if(w==='tadd'){const f=$('mktfile');f.value='';f.onchange=async()=>{const file=f.files[0];if(!file)return;const fd=new FormData();fd.append('file',file);
        const r=await apiTry('/api/make/templates',{method:'POST',body:fd});if(!r.r.ok){mkSay(r.d.detail,true);return}mkShow(DOCINFO)};f.click();return}

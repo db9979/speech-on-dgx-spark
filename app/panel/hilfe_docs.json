@@ -885,7 +885,7 @@
 "file": "Assistent und Oberfläche",
 "head": "Sprach-Chat",
 "title": "Sprach-Chat",
-"text": "keine Makros, ActiveX, eingebetteten Objekte oder externen Verknüpfungen, kein Zip-Trick. Speicher: users/<p>/erstellt/ (höchstens 100 Dokumente). Ende eines Auftrags: Push „Dokument fertig“. Zustand → Live zeigt das Ziel „Dokumente erstellen“ mit Anzahlen (läuft, wartet, heute fertig), nie Inhalte. Logs: docmake: Auftrag praesentation pptx 6 Teile (neu), docmake: fertig … Version 1 in 84 s. API (Profil): GET /api/make, POST|DELETE /api/make/plan/{id}, GET /api/make/job/{id}, GET /api/make/doc/{id}[/file], POST /api/make/doc/{id}/edit|change|restore|send, /api/make/templates. Plan: plaene/dokumente-erstellen.md."
+"text": "keine Makros, ActiveX, eingebetteten Objekte oder externen Verknüpfungen, kein Zip-Trick. Speicher: users/<p>/erstellt/ (höchstens 100 Dokumente). Ende eines Auftrags: Push „Dokument fertig“. Zustand → Live zeigt das Ziel „Dokumente erstellen“ mit Anzahlen (läuft, wartet, heute fertig), nie Inhalte. Logs: docmake: Auftrag praesentation pptx 6 Teile (neu), docmake: fertig … Version 1 in 84 s. API (Profil): GET /api/make, POST|DELETE /api/make/plan/{id}, GET /api/make/job/{id}, GET /api/make/doc/{id}[/file], POST /api/make/doc/{id}/edit|change|restore|send, /api/make/templates. Plan: plaene/dokumente-erstellen.md. Fragt der Spark nach („Worum soll es gehen?“), bleibt die Antwort darauf 15 Minuten lang im selben Gespräch beim Datei-Wunsch (Weiche „erstellen“, V01.0.423). Ist die Funktion aus, bekommt das Modell statt der Werkzeuge einen festen Satz, wo man sie einschaltet, und schreibt den Inhalt nicht als Text; Ich → Dokumente zeigt dann „Vom Spark erstellt“ mit dem Knopf „Einschalten“."
 },
 {
 "lang": "de",
@@ -3853,7 +3853,7 @@
 "file": "Assistant and panel",
 "head": "Voice chat",
 "title": "Document list for many files (V01.0.413)",
-"text": "1 in 84 s. API (profile): GET /api/make, POST|DELETE /api/make/plan/{id}, GET /api/make/job/{id}, GET /api/make/doc/{id}[/file], POST /api/make/doc/{id}/edit|change|restore|send, /api/make/templates. Plan: plaene/dokumente-erstellen.md."
+"text": "1 in 84 s. API (profile): GET /api/make, POST|DELETE /api/make/plan/{id}, GET /api/make/job/{id}, GET /api/make/doc/{id}[/file], POST /api/make/doc/{id}/edit|change|restore|send, /api/make/templates. Plan: plaene/dokumente-erstellen.md. When the Spark asks back (\"What should it be about?\"), the answer stays with the file wish for 15 minutes in the same conversation (Weiche group \"erstellen\", V01.0.423). When the function is off, the model gets a fixed sentence on where to switch it on instead of the tools and does not write the content as text; Me → Documents then shows \"Made by the Spark\" with a \"Switch on\" button."
 },
 {
 "lang": "en",

@@ -579,7 +579,9 @@ async def prepare(request):
         + ([chat.IPHONE_TOOL] if phone_act else [])
     # weather, contacts, parcels ... (extras.py): each offers its tools only when the profile switched it on
     ex = extras.offer({"who": who, "own": own_browser, "tz": body.get("tz"), "private": private_ok,
-                       "client": body.get("client"),
+                       "client": body.get("client"), "src": src,
+                       "before": messages[-2]["content"] if len(messages) > 1 and messages[-2]["role"] == "assistant"
+                       and isinstance(messages[-2].get("content"), str) else "",
                        "text": messages[-1]["content"] if messages[-1]["role"] == "user" else ""})
     tools += ex["tools"]
     if held or mine:
@@ -605,7 +607,12 @@ async def prepare(request):
     tools_stable = list(tools) if cache_on else None
     offered_all = {t["function"]["name"] for t in tools}
     if route_on and tools and not pics and not ha_direct and not ha_wait:
-        if pick_task:
+        # the answer to the assistant's own question about a wish just before ("Worum soll es gehen?" - "Den
+        # Mauerfall, 3 Folien"): the group of that wish, by the module's fixed rule (extras "route")
+        if not route.names and ex.get("route"):
+            route = intent.Route([ex["route"][0]], {ex["route"][0]: ex["route"][1]})
+            print("weiche: Antwort auf die Rückfrage davor -", ex["route"][0], flush=True)
+        if pick_task and not route.names:
             # the message as the model would see it anyway (code words already replaced); with the stable start
             # (chat.prompt_cache) the model sees every tool anyway, so a pick that is late is left out
             pick = await intent.pick_in_time(pick_task, intent.CACHED_WAIT if cache_on else intent.ASK_TIMEOUT + 1)

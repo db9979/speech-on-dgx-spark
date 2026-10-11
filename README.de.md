@@ -33,6 +33,7 @@ Alle Optionen ohne Rückfragen (`--mode api --asr 1.7b --tts 0.6b --yes` …) st
 
 <!-- New version: add one line at the top here and in CHANGELOG.md, drop the oldest line here (keep 10). Details go to docs/de and docs/en, not into this README. -->
 
+- **V01.0.423** Dokumente erstellen: Antwort auf die Rückfrage bleibt beim Datei-Wunsch, bei „aus“ sagt der Spark, wo man es einschaltet
 - **V01.0.422** Gescheiterte Tests bekommen einen zweiten Versuch (GitHub und Selbsttest auf dem Spark); erst dann grün steht als Warnung im Lauf
 - **V01.0.421** Einladungstest wartet bis 120 s auf langsamen Rechnern und schreibt, wo es hängt
 - **V01.0.420** Stabile GitHub-Testläufe (Einstellungen in einem Schritt, Warten auf Seitenzustand); Sprung aus Wer darf was bleibt bei vielen Profilen an der Zeile
@@ -42,7 +43,6 @@ Alle Optionen ohne Rückfragen (`--mode api --asr 1.7b --tts 0.6b --yes` …) st
 - **V01.0.416** Einstellungsseiten neu geordnet: Kästen, Symbole, Funktionen mit Detail, Ich als Seite, Apps als Kacheln
 - **V01.0.415** Dokumente erstellen: Briefe, Berichte, Präsentationen und Tabellen als Word, PDF, PowerPoint oder Excel, mit Gliederung, Versionen und Senden
 - **V01.0.414** Selbsttests warten auf den Seitenzustand statt fester Zeiten (Nachrichten, Lautsprecher, Wer darf was)
-- **V01.0.413** Ich → Dokumente übersichtlich bei vielen Dateien: kompakte Zeilen, Suche, Filter, Detailbereich, Mehrfachauswahl
 
 Alle Versionen: [CHANGELOG.md](CHANGELOG.md)
 

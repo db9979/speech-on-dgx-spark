@@ -212,6 +212,9 @@ def classify(text, extra_words="", group_words=""):
     # a parcel question is about parcels, not about the mail it is read from
     if "paket" in why:
         why.pop("mail", None)
+    # "Schreib einen Brief wegen der Heizung" is a file about the heating, not switching it
+    if "erstellen" in why and "smarthome" in why and not homeassistant.is_command(text):
+        why.pop("smarthome")
     # "Wie warm wird es morgen?" is weather, not the thermostat
     if "wetter" in why and "smarthome" in why and not homeassistant.is_command(text):
         why.pop("smarthome")

@@ -82,6 +82,7 @@ class Base(unittest.TestCase):
         docmake._pending.clear()
         docmake._jobs.clear()
         docmake._recent.clear()
+        docmake._wish.clear()
         docmake._day.update(day="", n={})
         self.real_part = docmake.write_part
         docmake.write_part = fake_part
@@ -137,7 +138,10 @@ class Switches(Base):
         self.assertIs(profiles.SETTINGS["doc_make"][0], False)
         c, uid = profile("DmOff", on=False)
         self.assertEqual(c.get("/api/make").status_code, 403)
-        self.assertIsNone(docmake.offer(ctx(uid, "Schreib einen Brief an die Hausverwaltung")))
+        o = docmake.offer(ctx(uid, "Schreib einen Brief an die Hausverwaltung"))   # off: no tools, only where to switch
+        self.assertEqual(o["tools"], [])
+        self.assertIn("Ich → Dokumente → Dokumente erstellen", o["hint"])
+        self.assertIsNone(docmake.offer(ctx(uid, "Wie wird das Wetter?")))
         profiles.save_settings(uid, {"doc_make": True})
         helpers.set_config(doc_make=False)
         self.assertEqual(c.get("/api/make").status_code, 403)
@@ -158,6 +162,52 @@ class Switches(Base):
         self.assertIsNone(docmake.offer(ctx(uid, "Folie 4 kürzer")))          # nothing made lately
         docmake._recent[uid] = docmake.time.time()
         self.assertIsNotNone(docmake.offer(ctx(uid, "Folie 4 kürzer")))
+
+    def test_answer_to_its_own_question(self):
+        """Dominik 11.10. (V01.0.422): "Mach eine Präsentation über ..." - the assistant asked back - "den Mauerfall,
+        gerne auch 3 Folien" came back as slides in text. The answer to that question offers the tools again and the
+        Weiche takes the group; not in another conversation, not without a question, not after the outline."""
+        _, uid = profile("DmFollow")
+        ask = "Worum soll es in der Präsentation gehen? Und meinst du genau eine Folie?"
+        self.assertIsNotNone(docmake.offer(ctx(uid, "Mach eine Präsentation über die der eine Folie.")))
+        o = docmake.offer(dict(ctx(uid, "den mauer fall, gerne kurz"), before=ask))
+        self.assertIn("document_plan", {t["function"]["name"] for t in o["tools"]})
+        self.assertEqual(o["route"][0], "erstellen")
+        self.assertEqual(o["must"], "document_plan")
+        self.assertIn("Rückfrage", o["hint"])
+        self.assertIsNone(docmake.offer(dict(ctx(uid, "den mauer fall"), before="Hier sind drei Folien.")))
+        self.assertIsNone(docmake.offer(dict(ctx(uid, "den mauer fall", src="web:anderes"), before=ask)))
+        asyncio.run(docmake.tool("document_plan", {"kind": "praesentation", "title": "Mauerfall",
+                                                   "sections": ["Vorher", "9. November", "Folgen"]}, ctx(uid, "x")))
+        docmake._pending.clear()
+        self.assertIsNone(docmake.offer(dict(ctx(uid, "Danke"), before="Passt das so?")))
+        # switched off: the answer gets the sentence where to switch it on, not slides
+        profiles.save_settings(uid, {"doc_make": False})
+        docmake.offer(ctx(uid, "Mach eine Präsentation über die der eine Folie."))
+        o = docmake.offer(dict(ctx(uid, "den mauer fall, gerne kurz"), before=ask))
+        self.assertEqual(o["tools"], [])
+        self.assertIn("Ich → Dokumente → Dokumente erstellen", o["hint"])
+
+    def test_answer_in_the_chat_offers_the_tools(self):
+        """The same through /api/chat: the second turn's model call carries document_plan and the hint."""
+        import extras
+        c, uid = profile("DmFollowChat")
+        c.put("/api/profile/settings", json={"route": True})
+        helpers.set_config(routing=True, route_model="off")
+        try:
+            msgs = [{"role": "user", "content": "Mach eine Präsentation über die der eine Folie."}]
+            assert c.post("/api/chat", json={"messages": msgs, "convo": "c9"}).status_code == 200
+            msgs += [{"role": "assistant", "content": "Worum soll es gehen?"},
+                     {"role": "user", "content": "den mauer fall, gerne kurz"}]
+            helpers.LLM_CALLS.clear()
+            assert c.post("/api/chat", json={"messages": msgs, "convo": "c9"}).status_code == 200
+            call = next(x for x in helpers.LLM_CALLS if x.get("tools"))
+            self.assertIn("document_plan", {t["function"]["name"] for t in call["tools"]})
+            self.assertIn("Rückfrage", json.dumps(call["messages"], ensure_ascii=False))
+            self.assertEqual(json.dumps(call.get("tool_choice"), ensure_ascii=False).count("document_plan"), 1, call.get("tool_choice"))
+        finally:
+            helpers.set_config(routing=False, route_model="off")
+        self.assertTrue(extras)
 
     def test_weiche_group(self):
         import intent

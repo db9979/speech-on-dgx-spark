@@ -20,6 +20,12 @@ ADMIN.post("/api/login", json={"password": "secret-admin"})
 # the test bench: sentence -> expected intent ("" = no rule fits, "+" = two at once).
 # Every reported wrong turn becomes a line here.
 BENCH = [
+    # Dokumente erstellen (V01.0.415, Dominik 11.10.: only text came back): a file wish is the group "erstellen"
+    ("Mach eine Präsentation über die der eine Folie.", "erstellen"),
+    ("den mauer fall. gerne auch 3 folien", "erstellen"),
+    ("Mach eine Präsentation über den Mauerfall mit 3 Folien", "erstellen"),
+    ("Ich brauche eine Präsentation über unseren Urlaub", "erstellen"),
+    ("Schreib mir einen Brief an die Hausverwaltung wegen der Heizung", "erstellen"),
     # the own Kiwix archive (V01.0.264): mein, dein, im Archiv, never the uploaded documents
     ("Schaue in deinem Archiv nach, was du über Albert Einstein", "archiv"),
     ("Schau in meinem Archiv nach Sauerteig", "archiv"),

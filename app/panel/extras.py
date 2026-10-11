@@ -46,7 +46,8 @@ def offer(ctx):
         res["mail"] |= o.get("mail", set())
         res["changes"] |= o.get("changes", set())
         res["filler"].update(o.get("filler", {}))
-        res["must"] = res["must"] or o.get("must")   # a fixed rule of the module: the first round calls this tool
+        res["must"] = res["must"] or o.get("must")
+        res["route"] = res.get("route") or o.get("route")   # (group, why): this turn answers a question about a wish   # a fixed rule of the module: the first round calls this tool
         res["run"].update({t["function"]["name"]: m for t in o["tools"]})
     return res
 

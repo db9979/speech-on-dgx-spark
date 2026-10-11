@@ -757,6 +757,13 @@ class Browser(unittest.TestCase):
                     card = _json.dumps(docmake.plan_public(docmake._pending[me]))
                     br, pg, errors = await self.page(p, w, h, csp=True)
                     try:
+                        if name == "pc":   # off for the profile: the block says so and switches it on itself
+                            profiles.save_settings(me, {"doc_make": False})
+                            await pg.evaluate("openMe('docbox')")
+                            await pg.wait_for_selector("#mkbox [data-mkdo=on]", state="visible", timeout=8000)
+                            await pg.click("#mkbox [data-mkdo=on]")
+                            await pg.wait_for_selector("#mklist", state="visible", timeout=8000)
+                            self.assertIs(profiles.settings(me).get("doc_make"), True)
                         await pg.evaluate(f"goSec('chat');$('chatlog').appendChild(mkCard({card}))")
                         await pg.wait_for_selector(".mkcard [data-mkdo=go]", state="visible", timeout=20000)
                         await self.until(pg, "document.querySelectorAll('.mkcard [data-mk=style] option').length>2")

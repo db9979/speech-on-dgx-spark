@@ -114,6 +114,8 @@ _lock = threading.RLock()
 _pending = {}              # uid -> {"id", "plan", "src", "t", "state", "job"}
 _jobs = {}                 # job id -> job (memory only; a restart ends running jobs, the outline stays answerable)
 _recent = {}               # uid -> time of the last plan or job
+_wish = {}                 # uid -> (time, conversation) of the last message asking for a file (WORDS)
+WISH_SECONDS = 15 * 60
 _day = {"day": "", "n": {}}
 _count = {}                # today: planned, started, done, failed, sent
 _tasks = set()
@@ -869,12 +871,13 @@ def change_now(uid, d, action, sections=(), fmt=None, style=None):
 # ---------------------------------------------------------------- the assistant's tools
 # the person asks for a file (the Weiche's group "erstellen", intent.py): a verb of making and a kind of document,
 # or "als Word/PDF/…"
-MAKE_WORDS = re.compile(r"(?i)\b(erstell\w*|schreib\w*|mach\w*|bau\w*|entwirf|entwerf\w*|verfass\w*|"
+MAKE_WORDS = re.compile(r"(?i)\b(erstell\w*|schreib\w*|mach\w*|bau\w*|entwirf|entwerf\w*|verfass\w*|brauch\w*|"
                         r"create|write|make|draft)\b.{0,120}\b(\w*brief\b|briefe?s?|\w*präsentation\w*|präsi|folien|slides|"
                         r"\w*bericht\w*|\w*protokoll\w*|\w*tabelle\w*|excel|word|powerpoint|pdf|\w*dokument\w*|"
                         r"zusammenfassung|einladung\w*|handout|docx|pptx|xlsx|csv|markdown|letter|presentation|report|"
                         r"spreadsheet|document|minutes)\b"
-                        r"|\b(als|in|zu einer?|to a|as an?) (word|excel|powerpoint|pdf|präsentation|tabelle)(-?datei|-?dokument)?\b")
+                        r"|\b(als|in|zu einer?|to a|as an?) (word|excel|powerpoint|pdf|präsentation|tabelle)(-?datei|-?dokument)?\b"
+                        r"|\b(\d{1,2}|zwei|drei|vier|fünf|sechs|sieben|acht|neun|zehn|zwölf) (folien|slides)\b")
 WORDS = MAKE_WORDS
 # after making something (RECENT_SECONDS): a change of it, also by its part ("Folie 4 kürzer")
 CHANGE_WORDS = re.compile(r"(?i)\b(folie|abschnitt|teil|seite|slide|präsentation|dokument|brief|tabelle|bericht|"
@@ -940,23 +943,52 @@ HINT = ("Soll der Spark ein Dokument, einen Brief, eine Präsentation oder Tabel
         "Fakten mit deinen anderen Werkzeugen und schlage dann mit document_plan eine Gliederung vor. Du schreibst "
         "das Dokument nie selbst in die Antwort und sagst nie, dass es fertig ist: Nach document_plan nenne kurz die "
         "Teile und frag, ob es so passt. Änderungen an einem fertigen Dokument mit document_change.")
+FOLLOW_HINT = (" Beantwortet diese Nachricht deine Rückfrage zum Datei-Wunsch kurz davor, schlag jetzt mit "
+               "document_plan die Gliederung vor, statt den Inhalt als Text zu schreiben.")
 
 
 def _send_ok(uid):
     return bool(send_targets(uid))
 
 
+def off_hint(uid):
+    """The fixed sentence for a wish to make a file while the function is off: where to switch it on."""
+    where = ("Der Admin muss es zuerst unter Funktionen → Eigene Dokumente → Dokumente erstellen einschalten, danach du "
+             "unter Ich → Dokumente → Dokumente erstellen.") if not admin_on() else \
+        "Du kannst es unter Ich → Dokumente → Dokumente erstellen einschalten."
+    return ("Der Nutzer möchte, dass der Spark eine Datei erstellt (Dokument, Brief, Präsentation oder Tabelle), aber "
+            "„Dokumente erstellen“ ist für ihn aus. Sag ihm das in einem Satz und genau wo: " + where + " Schreib den "
+            "Inhalt nicht stattdessen als Text ins Gespräch und such nichts dafür; nur wenn er danach ausdrücklich "
+            "den Text im Chat will.")
+
+
 def offer(ctx):
     who = ctx.get("who")
-    if not who or not ctx.get("own") or ctx.get("private") is False or ctx.get("client") == "mcp" or not on(who["id"]):
+    if not who or not ctx.get("own") or ctx.get("private") is False or ctx.get("client") == "mcp":
         return None
     uid = who["id"]
     words = str(ctx.get("text") or "")
+    src = ctx.get("src") or ""
+    asked = WORDS.search(words)
+    # the answer to the assistant's question about a wish in the turn before ("Worum soll es gehen?" - "Den
+    # Mauerfall, gerne 3 Folien"): the same conversation, a few minutes, nothing planned since
+    w = _wish.get(uid)
+    follow = not asked and bool(w) and w[1] == src and time.time() - w[0] < WISH_SECONDS and uid not in _pending \
+        and str(ctx.get("before") or "").rstrip().endswith("?")
+    if asked:
+        _wish[uid] = (time.time(), src)
+    if not on(uid):
+        # switched off: no tools, but the model says where to switch it on instead of writing slides as text
+        if asked or follow:
+            return {"tools": [], "hint": off_hint(uid), "route": ("erstellen", "aus") if follow else None}
+        return None
     recent = time.time() - _recent.get(uid, 0) < RECENT_SECONDS
-    if not WORDS.search(words) and not (recent and CHANGE_WORDS.search(words)) and uid not in _pending:
+    if not asked and not follow and not (recent and CHANGE_WORDS.search(words)) and uid not in _pending:
         return None
     tools = [PLAN_TOOL, CHANGE_TOOL, STATUS_TOOL] + ([SEND_TOOL] if _send_ok(uid) else [])
-    return {"tools": tools, "hint": HINT, "changes": {"document_send"},
+    return {"tools": tools, "hint": HINT + (FOLLOW_HINT if follow else ""), "changes": {"document_send"},
+            "route": ("erstellen", "Antwort auf die Rückfrage") if follow else None,
+            "must": "document_plan" if follow else None,   # the answer to its own question: the outline now
             "filler": {"document_plan": ("Ich plane das Dokument.", "Planning the document."),
                        "document_change": ("Ich ändere das Dokument.", "Changing the document."),
                        "document_status": ("Ich schaue nach.", "Let me check."),
@@ -988,6 +1020,7 @@ async def tool(name, args, ctx):
         except ValueError as e:
             return f"Gliederung nicht angenommen: {e}"
         pid = secrets.token_hex(6)
+        _wish.pop(uid, None)
         with _lock:
             _pending[uid] = {"id": pid, "plan": plan, "src": ctx.get("src"), "t": time.time(), "state": "new",
                              "client": ctx.get("client") or "web"}
