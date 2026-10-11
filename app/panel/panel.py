@@ -117,7 +117,7 @@ SECURITY_HEADERS = {
     "X-Frame-Options": "SAMEORIGIN",
     "X-Content-Type-Options": "nosniff",
     "Referrer-Policy": "same-origin",
-    "Permissions-Policy": "microphone=(self), camera=(self), geolocation=(), payment=(), usb=(), serial=(), bluetooth=()",
+    "Permissions-Policy": "microphone=(self), camera=(self), geolocation=(), payment=(), usb=(), serial=(self)",
     "Cross-Origin-Opener-Policy": "same-origin",
     # strict since V01.0.286 (plan „Bedienung gesamt“ D1 Stufe 2): scripts only as files from the panel, no inline
     # script, no inline handler, no eval; styles may stay inline (style attributes run no code, older Safari in the

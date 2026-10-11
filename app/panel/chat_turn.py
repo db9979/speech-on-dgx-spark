@@ -74,7 +74,9 @@ async def prepare(request):
     ccfg = cfg.get("chat", {})   # with the shipped defaults (common.load_config)
     # text only (no image links or other parts); an answer the browser marked as made from mail or
     # other outside text keeps that mark (the browser is the person's own and has no reason to lie)
-    messages = [dict({"role": m["role"], "content": m["content"]},
+    # every message (the latest too, which the trimming always keeps) is cut at chat.MAX_TURN_CHARS:
+    # the word rules below run over it on the event loop
+    messages = [dict({"role": m["role"], "content": m["content"][:chat.MAX_TURN_CHARS]},
                      **({"mark": "mail" if m.get("mail") else "outside"} if m.get("mail") or m.get("outside") else {}))
                 for m in (body.get("messages") if isinstance(body.get("messages"), list) else [])
                 if isinstance(m, dict) and m.get("role") in ("user", "assistant") and isinstance(m.get("content"), str)

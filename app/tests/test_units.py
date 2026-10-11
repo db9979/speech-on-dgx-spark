@@ -191,10 +191,15 @@ class AsrFrontEnd(unittest.TestCase):
                 return "hallo welt", 1.0
         asr_proxy.local, old = Fake(), asr_proxy.local
         try:
-            r = TestClient(asr_proxy.app).post("/v1/audio/transcriptions", files={"file": ("a.wav", b"RIFF" + b"x" * 100)},
+            import io, wave
+            buf = io.BytesIO()
+            with wave.open(buf, "wb") as w:
+                w.setnchannels(1); w.setsampwidth(2); w.setframerate(16000); w.writeframes(b"\0\0" * 50)
+            wav = buf.getvalue()
+            r = TestClient(asr_proxy.app).post("/v1/audio/transcriptions", files={"file": ("a.wav", wav)},
                                                headers={"Authorization": "Bearer " + (asr_proxy.load_config().get("api", {}).get("key") or "")})
             self.assertEqual(r.status_code, 200, r.text)
-            self.assertEqual(seen, [b"RIFF" + b"x" * 100])
+            self.assertEqual(seen, [wav])
             self.assertIn("hallo welt", r.text)
         finally:
             asr_proxy.local = old

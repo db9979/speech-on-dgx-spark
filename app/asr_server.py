@@ -9,7 +9,7 @@ import uvicorn
 from fastapi import Depends, FastAPI, File, Form, HTTPException, Request, UploadFile
 from fastapi.responses import PlainTextResponse
 
-from common import ASR_ISO as ISO, BodyLimit, KeyedCORS, inside, outside_view, ServiceState, api_key_dependency, api_key_ok, check_memory, estimate_gib, load_config, quiet_access_log, SpeechMark, torch_dtype
+from common import ASR_ISO as ISO, RATE_MAX, RATE_MIN, BodyLimit, KeyedCORS, inside, outside_view, ServiceState, api_key_dependency, api_key_ok, check_memory, estimate_gib, load_config, quiet_access_log, SpeechMark, torch_dtype
 
 cfg = load_config("asr")
 state = ServiceState("asr", cfg)
@@ -97,9 +97,13 @@ def as_wav(path):
     WAV first. Returns (path to read, seconds of audio, path to delete or None)."""
     try:
         info = sf.info(path)
-        return path, info.frames / info.samplerate, None
     except Exception:
-        pass
+        info = None
+    if info is not None:
+        # a made-up rate ("1 Hz") would be resampled 16000-fold (common.RATE_MIN)
+        if not RATE_MIN <= info.samplerate <= RATE_MAX:
+            raise HTTPException(415, f"unsupported sample rate {info.samplerate} Hz")
+        return path, info.frames / info.samplerate, None
     wav = path + ".wav"
     run = subprocess.run(["ffmpeg", "-nostdin", "-loglevel", "error", "-y", "-i", path, "-t", "7200",
                           "-ac", "1", "-ar", "16000", "-f", "wav", wav],

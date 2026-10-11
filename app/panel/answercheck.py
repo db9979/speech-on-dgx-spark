@@ -55,13 +55,31 @@ def facts(text):
             out.add(("s", int(m.group(1)), int(m.group(2))))
         else:
             out.add(("s", WORDS[m.group(3)], WORDS[m.group(4)]))
-    for m in MONEY.finditer(low):
+    for m in _money(low):
         if m.group(1):
             whole, cents = re.sub(r"[.\s]", "", m.group(1)), m.group(2) or m.group(3) or "0"
         else:
             whole, cents = m.group(4), m.group(5) or "0"
         out.add(("m", int(whole), int(cents.ljust(2, "0"))))
     return out
+
+
+CURRENCY = re.compile(r"€|eur")
+NUMBERISH = set("0123456789., \t\n")
+
+
+def _money(low):
+    """MONEY matches, looked for only in a short window around each currency sign: run over a
+    whole long text the pattern backtracks for every digit (a page of digits took seconds)."""
+    seen = set()
+    for c in CURRENCY.finditer(low):
+        start, end = max(0, c.start() - 60), min(len(low), c.end() + 25)
+        while start > 0 and start < c.start() and low[start - 1] in NUMBERISH:
+            start += 1   # never start inside a number: a cut "12 345" would read as "345"
+        for m in MONEY.finditer(low, start, end):
+            if m.span() not in seen:
+                seen.add(m.span())
+                yield m
 
 
 def known(texts):

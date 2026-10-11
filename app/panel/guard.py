@@ -201,11 +201,12 @@ def _browser(request):
 
 
 def _applies(k, ip, browser=None):
-    """A name's lock does not hold for addresses or browsers that logged in to that name before."""
+    """A name's lock does not hold for a browser that logged in to that name before. Only the browser
+    counts, not the address: a housemate behind the same address (or with a profile of their own,
+    whose browser is known for that other name) must not guess this name's PIN without any limit."""
     if browser and k[0] == "ip" and any(browser in v for v in _known.values()):
         return False  # a browser that logged in here before (e.g. all users behind one proxy address)
-    known = _known.get(k, ())
-    return k[0] != "name" or (ip not in known and (not browser or browser not in known))
+    return k[0] != "name" or not browser or browser not in _known.get(k, ())
 
 
 def wait_left(request, name=None):

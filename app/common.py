@@ -408,6 +408,80 @@ def engine_crash_reason(unit):
     return hits[-1][:300] if hits else None
 
 
+# ---------------------------------------------------------------- audio sample rate
+# The engines resample every recording to 16 kHz. A header that claims "1 Hz" turns a 2 MB file into
+# tens of GB on the way (and the DGX OS then stops the LLM lanes), so the rate is checked before
+# anything is decoded. Up to 192 kHz is fine: resampling down never grows the audio.
+RATE_MIN, RATE_MAX = 8000, 192000
+
+
+def _wav_rate(data):
+    pos = 12
+    while pos + 8 <= min(len(data), 1 << 16):
+        cid, size = data[pos:pos + 4], int.from_bytes(data[pos + 4:pos + 8], "little")
+        if cid == b"fmt " and pos + 16 <= len(data):
+            return int.from_bytes(data[pos + 12:pos + 16], "little")
+        pos += 8 + size + (size & 1)
+    return None
+
+
+def _ogg_rate(head):
+    if b"OpusHead" in head:
+        return 48000   # Opus always decodes at 48 kHz, whatever the header says it was recorded at
+    i = head.find(b"\x01vorbis")
+    if i >= 0 and i + 16 <= len(head):
+        return int.from_bytes(head[i + 12:i + 16], "little")
+    return None
+
+
+def _probe_rate(data):
+    """Sample rate of any other container (mp4/m4a from Safari, mp3, webm with another codec) by
+    ffprobe on a temporary file (an m4a keeps its index at the end, so a pipe would not do)."""
+    import shutil
+    import subprocess
+    import tempfile
+    if not shutil.which("ffprobe"):
+        print("audio: ffprobe is missing, the sample rate of this file is not checked", flush=True)
+        return RATE_MIN
+    with tempfile.NamedTemporaryFile(suffix=".audio") as f:
+        f.write(data)
+        f.flush()
+        try:
+            p = subprocess.run(["ffprobe", "-v", "error", "-select_streams", "a", "-show_entries", "stream=sample_rate",
+                                "-of", "csv=p=0", f.name], capture_output=True, text=True, timeout=20)
+        except (OSError, subprocess.TimeoutExpired):
+            return None
+    rates = [int(x) for x in p.stdout.split() if x.strip().isdigit()]
+    return min(rates) if rates and p.returncode == 0 else None
+
+
+def audio_rate(data):
+    """The sample rate an audio file will be decoded at, or None when it cannot be found out.
+    Reads only the header for WAV, FLAC, Ogg and WebM/Opus; anything else asks ffprobe."""
+    head = bytes(data[:1 << 16])
+    if head[:4] == b"RIFF" and head[8:12] == b"WAVE":
+        return _wav_rate(head)
+    if head[:4] == b"fLaC" and len(head) >= 21:
+        return (head[18] << 12) | (head[19] << 4) | (head[20] >> 4)
+    if head[:4] == b"OggS":
+        rate = _ogg_rate(head)
+        if rate:
+            return rate
+    if head[:4] == b"\x1a\x45\xdf\xa3" and b"A_OPUS" in head:
+        return 48000   # WebM with Opus (what browsers record)
+    return _probe_rate(data)
+
+
+def audio_rate_ok(data):
+    """"" when the recording may go to an engine, else why not (for a 415)."""
+    rate = audio_rate(data)
+    if rate is None:
+        return "cannot read this audio"
+    if not RATE_MIN <= rate <= RATE_MAX:
+        return f"unsupported sample rate {rate} Hz (allowed {RATE_MIN}-{RATE_MAX})"
+    return ""
+
+
 def api_key_dependency():
     """FastAPI dependency: if config api.key is set, require 'Authorization: Bearer <key>'.
     Read per request, so a key changed in the panel applies without a model reload."""

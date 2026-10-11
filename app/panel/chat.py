@@ -717,7 +717,38 @@ def user_zone(tz):
             return ZoneInfo(tz)
         except Exception:
             pass
-    return datetime.datetime.now().astimezone().tzinfo
+    return system_zone()
+
+
+_system_zone = []
+
+
+def system_zone():
+    """The Spark's own time zone as a real zone (Europe/Berlin), not today's fixed offset: with +02:00
+    from October a reminder for a day after the clock change would ring an hour early."""
+    if not _system_zone:
+        from zoneinfo import ZoneInfo
+        names = [os.environ.get("TZ", "").lstrip(":")]
+        try:
+            link = os.path.realpath("/etc/localtime")
+            names.append(link.split("/zoneinfo/", 1)[1] if "/zoneinfo/" in link else "")
+        except OSError:
+            pass
+        try:
+            with open("/etc/timezone") as f:
+                names.append(f.read().strip())
+        except OSError:
+            pass
+        zone = None
+        for name in names + ["Europe/Berlin"]:
+            if name and re.fullmatch(r"[A-Za-z_]+(/[A-Za-z0-9_+\-]+){0,2}", name):
+                try:
+                    zone = ZoneInfo(name)
+                    break
+                except Exception:
+                    continue
+        _system_zone.append(zone or datetime.datetime.now().astimezone().tzinfo)
+    return _system_zone[0]
 
 
 def reminder_due(args, tz):
@@ -948,7 +979,7 @@ def local_now(tz=None):
             return datetime.datetime.now(ZoneInfo(tz))
         except Exception:
             pass
-    return datetime.datetime.now().astimezone()
+    return datetime.datetime.now(system_zone())
 
 
 def now_line(tz=None):
@@ -1002,9 +1033,12 @@ FILLERS = {"calendar_events": ("Ich schaue in deinen Kalender.", "Let me check y
            "history_search": ("Ich schaue in unseren früheren Gesprächen nach.", "Let me look at our earlier conversations."),
            "document_search": ("Ich schaue in deinen Dokumenten nach.", "Let me check your documents.")}
 # Thanks, greetings and goodbyes need no tool round
-SMALLTALK = re.compile(r"(?i)\s*(danke\w*( schön| sehr)?|vielen dank|hallo|hi|hey|servus|moin|guten (abend|tag)|"
+# longest single message the panel takes into a turn (a pasted page fits; 4 MB of spaces does not)
+MAX_TURN_CHARS = 20000
+# (possessive *+: the two runs of signs side by side made a long message backtrack for seconds)
+SMALLTALK = re.compile(r"(?i)\s*+(danke\w*( schön| sehr)?|vielen dank|hallo|hi|hey|servus|moin|guten (abend|tag)|"
                        r"tschüss|ciao|bis (später|dann|morgen)|gute nacht|ok(ay)?|alles klar|super|prima|passt|"
-                       r"thanks?( you)?|hello|bye|good night)[\s,.!?]*(spark)?[\s,.!?]*")
+                       r"thanks?( you)?|hello|bye|good night)[\s,.!?]*+(spark)?[\s,.!?]*+")
 
 
 # ---------------------------------------------------------------- daily briefing by itself
@@ -1716,7 +1750,12 @@ async def _answer(request, turn):
         """One finished sentence to the browser (if not shown yet) and to TTS. With the answer check
         on, a sentence naming figures that are in nothing the model was given is not said."""
         if st["check"]:
-            have = answercheck.known([m.get("content") for m in st["msgs"] or messages])
+            src = st["msgs"] or messages
+            key = (id(src), len(src))   # the figures change only when a round or tool result is added
+            if st.get("known_key") != key:
+                st["known"] = answercheck.known([m.get("content") for m in src])
+                st["known_key"] = key
+            have = set(st["known"])
             if st.get("cal"):   # appointments: times, dates and titles only from this answer's question and results
                 have = answercheck.fresh(st["msgs"] or messages, have)
                 old = answercheck.unquoted(piece, answercheck.fresh_texts(st["msgs"] or messages))

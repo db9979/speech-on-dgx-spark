@@ -18,7 +18,7 @@ import uvicorn
 from fastapi import Depends, FastAPI, HTTPException, Request
 from fastapi.responses import JSONResponse, PlainTextResponse, Response, StreamingResponse
 
-from common import (ASR_ISO, BodyLimit, GateFull, KeyedCORS, PrioGate, inside, outside_view, api_key_dependency, api_key_ok,
+from common import (ASR_ISO, audio_rate_ok, BodyLimit, GateFull, KeyedCORS, PrioGate, inside, outside_view, api_key_dependency, api_key_ok,
                     engine_crash_reason, load_config, quiet_access_log, SpeechMark, stage_of)
 
 STATE_DIR = os.environ.get("SPEECH_SPARK_STATE", "/var/lib/speech-spark/state")
@@ -219,6 +219,9 @@ async def transcriptions(request: Request):
     if not opts.get("prompt") and cfg.get("context"):
         data.append(("prompt", cfg["context"]))  # names and terms the model should expect
     audio = await read_upload(upload)
+    bad = await asyncio.to_thread(audio_rate_ok, audio)
+    if bad:
+        raise HTTPException(415, bad)
     files = {"file": (upload.filename or "audio", audio, upload.content_type)}
     # httpx takes form fields as a dict of lists
     form_data = {}

@@ -29,6 +29,10 @@ import live
 import notaus
 
 MAX_AUDIO = 16000 * 2 * 120      # two minutes of 16 kHz mono 16 bit
+MAX_DATA = 64 * 1024             # JSON part of one event
+MAX_CHUNK = 1 << 20              # one audio chunk (Home Assistant sends a few KB)
+MAX_CONNS = 8                    # open connections at once (a satellite or two per room)
+_conns = [0]
 CHUNK = 2048                     # bytes of audio per chunk sent to HA
 _server = {"srv": None, "key": None}
 _knocked = collections.deque(maxlen=5)   # addresses refused lately, shown to the admin as a hint
@@ -96,10 +100,16 @@ async def read_event(reader):
     if not line:
         return None
     head = json.loads(line)
+    if not isinstance(head, dict):
+        raise ValueError("bad event")
     data = head.get("data") or {}
-    if head.get("data_length"):
-        data = dict(data, **json.loads(await reader.readexactly(int(head["data_length"]))))
-    payload = await reader.readexactly(int(head["payload_length"])) if head.get("payload_length") else b""
+    # lengths are checked before anything is read: a peer saying "3 GB follow" must not get them in
+    dlen, plen = int(head.get("data_length") or 0), int(head.get("payload_length") or 0)
+    if not 0 <= dlen <= MAX_DATA or not 0 <= plen <= MAX_CHUNK:
+        raise ValueError("event too large")
+    if dlen:
+        data = dict(data, **json.loads(await reader.readexactly(dlen)))
+    payload = await reader.readexactly(plen) if plen else b""
     return head.get("type", ""), data, payload
 
 
@@ -206,6 +216,20 @@ async def handle(reader, writer):
             _knocked.append(shown)
         writer.close()
         return
+    if _conns[0] >= MAX_CONNS:
+        print("wyoming: too many connections, refused", peer, flush=True)
+        live.door("Home Assistant (Wyoming)", str(peer).removeprefix("::ffff:"), False, "zu viele Verbindungen",
+                  ["Wyoming-Port 31003", f"schon {MAX_CONNS} Verbindungen offen", "→ Verbindung geschlossen"])
+        writer.close()
+        return
+    _conns[0] += 1
+    try:
+        await _session(reader, writer, peer, s)
+    finally:
+        _conns[0] -= 1
+
+
+async def _session(reader, writer, peer, s):
     audio, fmt, language = bytearray(), (16000, 2, 1), ""
     rec = None   # Zustand → Live: each transcription and each spoken answer shows as a request of Home Assistant
     try:
@@ -228,6 +252,9 @@ async def handle(reader, writer):
                     rec.step("in", "Eingang", time.time())
                     rec.now("asr", "Spracherkennung")
                 fmt = (int(data.get("rate", 16000)), int(data.get("width", 2)), int(data.get("channels", 1)))
+                # only what a microphone sends: a made-up rate would be resampled up to GBs by the engine
+                if not 8000 <= fmt[0] <= 48000 or fmt[1] != 2 or fmt[2] not in (1, 2):
+                    raise ValueError("unsupported audio format")
             elif kind == "audio-chunk":
                 if len(audio) + len(payload) > MAX_AUDIO:
                     raise ValueError("audio too long")

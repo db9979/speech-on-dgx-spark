@@ -84,7 +84,7 @@ class Pages(unittest.TestCase):
         self.assertIn("setInterval(verCheck,60e3)", base)
         self.assertRegex(base, r"async function verCheck\(\)\{[^\n]*\n[^\n]*\n[^\n]*flagsAway\(w\)")
         # never mid-conversation or while typing: the same calm rules as a new version
-        self.assertRegex(base, r"function flagsAway\(w\)\{[^\n]*\n[^\n]*sparkBusy\(\)&&now-verWatch\.edit>600e3")
+        self.assertRegex(base, r"function flagsAway\(w\)\{[^\n]*\n(?:[^\n]*\n)?[^\n]*sparkBusy\(\)&&now-verWatch\.edit>600e3")
         self.assertIn("'away'", read(JS, "start.js"))
 
     def test_iphone_app_asks_again_in_front(self):

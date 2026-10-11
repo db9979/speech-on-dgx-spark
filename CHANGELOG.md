@@ -2,6 +2,7 @@
 
 Every version in one line, newest first (taken from the commit messages, so some lines are German, some English). Older entries have no version number.
 
+- **V01.0.402** · 2026-10-11 · Unabhängige Prüfung, Paket 1: sehr lange Nachrichten legen das Panel nicht mehr lahm (Smalltalk- und Geldbetrag-Muster linear, Chat-Nachricht max. 20 000 Zeichen); Spracherkennung und Wyoming prüfen Abtastrate und Größe jeder Aufnahme; Hintergrundaufträge tragen Privates nicht mehr per Suche, Seitenaufruf oder anderen MCP-Dienst nach außen; Anmeldesperre pro Name hebt nur ein bekannter Browser auf (nicht mehr die Adresse); ESP32 flashen im Browser wieder erlaubt (serial); Erinnerungen nach der Zeitumstellung am 25.10. ohne Profil-Zeitzone nicht mehr 1 h daneben
 - **V01.0.401** · 2026-10-11 · Mein Notaus: Seite lädt nach dem Auslösen oder Aufheben nicht mehr von selbst neu (seit V01.0.388 hielt sie die eigene Änderung für eine von woanders); Browser-Selbsttest wieder stabil.
 - **V01.0.400** · 2026-10-11 · Selbsttests: „Wer darf was springt zum Schalter“ und „Logs → Anfragen“ warten auf den Zustand statt fester Zeit (auf GitHub zu langsam)
 - **V01.0.399** · 2026-10-11 · Weniger Runden: Nachschlagen (Archiv, Wikipedia, Dokumente, Verlauf, Kontakte, Mail-Suche) höchstens so oft wie Suchen pro Frage (2), letzte Runde ohne Werkzeugliste (qwen38 schrieb sonst einen Aufruf als Text, eine Runde mehr).
