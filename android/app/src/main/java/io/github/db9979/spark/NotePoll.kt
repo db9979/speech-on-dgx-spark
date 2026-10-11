@@ -61,7 +61,7 @@ class NotePoll : JobService() {
             ctx.getSystemService(JobScheduler::class.java)?.cancel(JOB)
         }
 
-        private fun cookie(base: String): String? {
+        internal fun cookie(base: String): String? {
             // CookieManager belongs to the main thread
             var c: String? = null
             val done = CountDownLatch(1)
@@ -117,7 +117,7 @@ class NotePoll : JobService() {
         }
 
         /** At most MAX_ANSWER bytes of the answer. */
-        private fun readSome(s: java.io.InputStream): String {
+        internal fun readSome(s: java.io.InputStream): String {
             val out = java.io.ByteArrayOutputStream()
             val buf = ByteArray(8192)
             while (out.size() < MAX_ANSWER) {

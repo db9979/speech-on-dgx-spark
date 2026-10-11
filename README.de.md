@@ -33,6 +33,7 @@ Alle Optionen ohne Rückfragen (`--mode api --asr 1.7b --tts 0.6b --yes` …) st
 
 <!-- New version: add one line at the top here and in CHANGELOG.md, drop the oldest line here (keep 10). Details go to docs/de and docs/en, not into this README. -->
 
+- **V01.0.360** Notaus auf mehr Wegen: Telegram /notaus und /meinnotaus, fester Satz „Spark, Mein Notaus“ / „Spark, Notaus“ (großer nur für Admins), Home-Assistant-Schlüssel, der nur auslöst (mit fertiger Vorlage), Android-Kachel (App 1.1.0)
 - **V01.0.359** Kopf unten rechts: ein Tipp startet den Assistenten auf jeder Seite, über Ich und am Handy (das Fenster ging sofort wieder zu), Doppeltipp markiert keinen Text mehr, Frage tippen geht immer
 - **V01.0.358** Eindeutiges direkt abrufen: „Welche Termine habe ich heute?“ holt das Panel selbst
 - **V01.0.357** Passkeys in der iPhone-App: „Mit Passkey“ beim Bestätigen, Spark-Update und Admin-Anmeldung (Face ID mit dem in Safari angelegten Passkey, über iCloud-Schlüsselbund); der Spark liefert Apple dafür /.well-known/apple-app-site-association (nur die App-ID, aus den Push-Angaben)
@@ -42,7 +43,6 @@ Alle Optionen ohne Rückfragen (`--mode api --asr 1.7b --tts 0.6b --yes` …) st
 - **V01.0.353** Spark-Begleiter tiefer im Rechner (je Gerät, alles aus): Rechtsklick auf Dateien, Bildschirm fragen, App erkennen, Antwort entwerfen in Outlook und Apple Mail, Ordner „Spark-Wissen“, Knöpfe in Meldungen, Spark handelt am PC mit Rückfrage, Weckwort am PC
 - **V01.0.352** Live-Übersicht Gesamtprüfung: Update, NAS-Sicherung, reMarkable, Begleiter, Raum-Modus, Anmeldungen, Sprechererkennung im Bild
 - **V01.0.351** reMarkable im Live-Monitor: @Spark-Antwort, Anleitung, Morgenblatt, Wochenrückblick, Besprechung und Seitenprüfung erscheinen als Hintergrundarbeit mit „fertig“-Meldung, Abgleich als Ereignis, Webseite/Anhang als Werkzeuge
-- **V01.0.350** Tagesbriefing: keine Fehlerzeile „roomfar: briefing AttributeError“ mehr bei jedem Briefing (Dienste ohne Briefing-Teil werden übersprungen)
 
 Alle Versionen: [CHANGELOG.md](CHANGELOG.md)
 

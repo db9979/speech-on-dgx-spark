@@ -253,6 +253,16 @@ async def prepare(request):
             note = role_note = roles.carry_out(who["id"], role_cmd, pset) if not mcp else "nicht über MCP"
             print("rolle:", role_cmd[0], "-", role_cmd[1] or "-", "(fixed rule, no tools in this answer)", flush=True)
             system = per_turn(system, "Rolle: " + note)
+    # the Notaus by a fixed sentence (notaus.phrase): the panel decides from the person's own whole sentence, the
+    # model only says the result; never over MCP, never for a stranger's voice at a shared speaker (who is then None)
+    if not role_cmd and who and not mcp and messages[-1]["role"] == "user":
+        import notaus
+        na = notaus.phrase(messages[-1]["content"])
+        if na:
+            note = role_note = await notaus.by_phrase(na, who["name"], who["id"], notaus.phrase_channel(body.get("client")))
+            role_cmd = ("notaus", na[0])
+            print("notaus: fester Satz", na[0], "(fixed rule, no tools in this answer)", flush=True)
+            system = per_turn(system, "Notaus: " + note + " Sag genau das in einem Satz.")
     role = roles.prompt(pset) if roles.on(ccfg, who, pset, own_browser) else ""
     if role:
         system = (system + "\n\n" + role).strip()
@@ -403,7 +413,7 @@ async def prepare(request):
     briefing = bool(ccfg.get("calendar", True))
     cal_note = []
     if role_cmd:   # shown in the tool log like a tool the panel ran itself
-        cal_note.append({"name": "Rolle (Panel)", "args": role_cmd[1], "result": role_note})
+        cal_note.append({"name": "Notaus (Panel)" if role_cmd[0] == "notaus" else "Rolle (Panel)", "args": role_cmd[1], "result": role_note})
     cal = calendars.get(who["id"]) if who and briefing and private_ok and (not mcp or "calendar_events" in mcp["tools"]) \
         else {"calendars": [], "topics": []}
     # new appointments: only the profile's own login or device key, and only after a yes (see calendars.py)

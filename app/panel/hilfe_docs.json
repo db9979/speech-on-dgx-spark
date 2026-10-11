@@ -13,7 +13,7 @@
 "file": "Android-App „Spark“ (APK, ohne Store)",
 "head": "Android-App „Spark“ (APK, ohne Store)",
 "title": "Android-App „Spark“ (APK, ohne Store)",
-"text": "- Mitteilungen bei geschlossener App: Die App fragt alle 15 Minuten selbst beim Spark nach (/api/android/notes), ohne Google-Dienst. Erinnerungen, Morgenrunde und Hinweise kommen dorthin, wenn die App das zuletzt benutzte Gerät ist oder kein anderer Weg (iPhone-App) eingerichtet ist. - Assistenten-Taste: Unter Einstellungen → Apps → Standard-Apps → Digitaler Assistent „Spark“ wählen; langes Drücken öffnet die App und sie hört zu. - Teilen an Spark: Text in einer anderen App teilen → Spark. Der Text steht im Tippfeld, abschicken tust du selbst. - Neue Version: Die App meldet sich mit einer Mitteilung, wenn der Spark eine neuere APK hat."
+"text": "- Mitteilungen bei geschlossener App: Die App fragt alle 15 Minuten selbst beim Spark nach (/api/android/notes), ohne Google-Dienst. Erinnerungen, Morgenrunde und Hinweise kommen dorthin, wenn die App das zuletzt benutzte Gerät ist oder kein anderer Weg (iPhone-App) eingerichtet ist. - Assistenten-Taste: Unter Einstellungen → Apps → Standard-Apps → Digitaler Assistent „Spark“ wählen; langes Drücken öffnet die App und sie hört zu. - Teilen an Spark: Text in einer anderen App teilen → Spark. Der Text steht im Tippfeld, abschicken tust du selbst. - Notaus-Kachel (ab 1.1.0): Schnelleinstellungen bearbeiten → „Notaus“ hinzufügen. Admins wählen „Ganzer Spark“ (Stufe 2) oder „Mein Notaus“, alle anderen „Mein Notaus“, immer mit Rückfrage; aufheben nur im Browser (siehe Sicherheit und Betrieb). - Neue Version: Die App meldet sich mit einer Mitteilung, wenn der Spark eine neuere APK hat."
 },
 {
 "lang": "de",
@@ -2181,7 +2181,7 @@
 "file": "Sicherheit und Betrieb",
 "head": "Sicherheit",
 "title": "Sicherheit",
-"text": "- Wer auslöst: nur Admins (Haupt-Admin, Mit-Admin, Verwalter im Admin-Modus), auch aus der iPhone-App im Admin-Modus und von unterwegs (seit V01.0.338; vorher konnte ein Schalter es allen Profilen erlauben). Normale Profile sehen weder Knopf noch Band noch Zustand-Karte, nur bei Stufe 3 oder von außen eine Seite „Der Spark ist gerade angehalten“ ohne Namen oder Grund. Gäste, Lautsprecher-, Siri- und Uhren-Schlüssel, Telegram, MCP und das Sprachmodell nie. - Aufheben: nur Hauptadmin oder Profil im Admin-Modus (Haupt-Admin, Mit-Admin), nur im Browser (kein App-Schlüssel, kein HTTP-Basic), nur im Heimnetz, mit frischem Code (ohne zweiten Schritt: Panel-Passwort neu eingeben). Wahl: zurück auf Stufe 1 oder ganz aus; angehaltene Aufträge laufen danach weiter oder werden abgebrochen (Standard). - Heimnetz heißt: direkte Verbindung aus einem privaten Netz. Über einen Reverse Proxy zählt nur, was ein eingetragener Proxy (Einstellungen → Sicherheit → Reverse Proxy) als Heimnetz-Adresse weiterreicht; ein eingetragener Proxy ohne solche Angabe gilt als „von außen“. Den Proxy deshalb dort eintragen. - Bleibt erhalten über Neustart und Update (state/notaus.json). Eine beschädigte Datei zählt al"
+"text": "- Wer auslöst: nur Admins (Haupt-Admin, Mit-Admin, Verwalter im Admin-Modus), auch aus der iPhone-App im Admin-Modus und von unterwegs (seit V01.0.338; vorher konnte ein Schalter es allen Profilen erlauben). Normale Profile sehen weder Knopf noch Band noch Zustand-Karte, nur bei Stufe 3 oder von außen eine Seite „Der Spark ist gerade angehalten“ ohne Namen oder Grund. Gäste, MCP und das Sprachmodell nie; Telegram, Sprache, Home Assistant und die Android-Kachel nur wie unten unter *Andere Wege* (seit V01.0.360). - Aufheben: nur Hauptadmin oder Profil im Admin-Modus (Haupt-Admin, Mit-Admin), nur im Browser (kein App-Schlüssel, kein HTTP-Basic), nur im Heimnetz, mit frischem Code (ohne zweiten Schritt: Panel-Passwort neu eingeben). Wahl: zurück auf Stufe 1 oder ganz aus; angehaltene Aufträge laufen danach weiter oder werden abgebrochen (Standard). - Heimnetz heißt: direkte Verbindung aus einem privaten Netz. Über einen Reverse Proxy zählt nur, was ein eingetragener Proxy (Einstellungen → Sicherheit → Reverse Proxy) als Heimnetz-Adresse weiterreicht; ein eingetragener Proxy ohne solche Angabe gilt als „von außen“. Den Proxy deshalb dort eintragen. - Bleibt erhalten über Neustart und Up"
 },
 {
 "lang": "de",
@@ -2189,7 +2189,31 @@
 "file": "Sicherheit und Betrieb",
 "head": "Sicherheit",
 "title": "Sicherheit",
-"text": "s Stufe 3, nie als aus. Notausgang ohne Panel: sudo rm /var/lib/speech-spark/state/notaus.json. - Sichtbar: rotes Band auf jeder Seite, Karte unter Zustand („Was der Notaus gerade abhält“: nur Art und Anzahl seit dem Auslösen, nie Inhalte), Push an die Admin-Profile beim Auslösen und Aufheben, Eintrag im Admin-Protokoll. Zustand → Live und der Live-Monitor /live zeigen oben ein rotes Band mit Stufe, Uhrzeit, Kanal und je Art „gesperrt“ mit Anzahl (nie Grund oder Name) und laufen in Stufe 3 weiter (nur lesen; neu koppeln geht dann nicht). - Noch nicht: Auslösen per Telegram, Sprache, Home Assistant, ESP32-Taste, Pebble und Wächter-Regeln (folgen)."
+"text": "date (state/notaus.json). Eine beschädigte Datei zählt als Stufe 3, nie als aus. Notausgang ohne Panel: sudo rm /var/lib/speech-spark/state/notaus.json. - Sichtbar: rotes Band auf jeder Seite, Karte unter Zustand („Was der Notaus gerade abhält“: nur Art und Anzahl seit dem Auslösen, nie Inhalte), Push an die Admin-Profile beim Auslösen und Aufheben, Eintrag im Admin-Protokoll. Zustand → Live und der Live-Monitor /live zeigen oben ein rotes Band mit Stufe, Uhrzeit, Kanal und je Art „gesperrt“ mit Anzahl (nie Grund oder Name) und laufen in Stufe 3 weiter (nur lesen; neu koppeln geht dann nicht). - Noch nicht: ESP32-Taste, Pebble, iPhone-Knopf und Wächter-Regeln (folgen)."
+},
+{
+"lang": "de",
+"src": "sicherheit-und-betrieb",
+"file": "Sicherheit und Betrieb",
+"head": "Andere Wege zum Notaus (seit V01.0.360)",
+"title": "Andere Wege zum Notaus (seit V01.0.360)",
+"text": "Alle diese Wege schalten nur ein, nie aus; aufheben bleibt im Browser. Es entscheidet immer das Panel mit festen Regeln, nie das Sprachmodell und nie ein Text von außen."
+},
+{
+"lang": "de",
+"src": "sicherheit-und-betrieb",
+"file": "Sicherheit und Betrieb",
+"head": "Andere Wege zum Notaus (seit V01.0.360)",
+"title": "Andere Wege zum Notaus (seit V01.0.360)",
+"text": "- Telegram: /meinnotaus legt das eigene Profil still (wie *Mein Notaus*, danach antwortet Telegram nur noch „Mein Notaus ist an“). /notaus (Stufe 2) bzw. /notaus 1–/notaus 3 nur für Profile mit Admin-Rolle; weitergeleitete Nachrichten zählen nie als Befehl. Ab Stufe 1 ruht Telegram selbst. - Fester Satz im Chat, per Sprache am Handy, in der App oder am erkannten Lautsprecher: „Spark, Mein Notaus“ für jedes Profil, „Spark, Notaus“ (Stufe 2) bzw. „Spark, Notaus Stufe eins/zwei/drei“ nur für Admin-Profile. Nur der ganze Satz, keine Frage danach („Was ist der Notaus?“ löst nichts aus). Nie über MCP, nie für eine Stimme, die der Lautsprecher nicht als das Profil erkennt. - Home Assistant: *Einstellungen → Sicherheit → Notaus von außen* erzeugt einen Schlüssel (frischer Admin-Code, höchstens 5, nur der Hash in state/notaus-keys.json, Klartext nur einmal sichtbar) samt fertigem Text für configuration.yaml: rest_command.spark_notaus (POST /api/notaus/ha, Authorization: Bearer …, {\"level\": 1–3}, Standard 2) und ein REST-Sensor auf /api/notaus mit der Stufe. Nur aus dem Heimnetz; der Schlüssel liest nichts, hebt nichts auf und ist kein Geräteschlüssel. Falsche Schlüssel sperren wie falsche A"
+},
+{
+"lang": "de",
+"src": "sicherheit-und-betrieb",
+"file": "Sicherheit und Betrieb",
+"head": "Andere Wege zum Notaus (seit V01.0.360)",
+"title": "Andere Wege zum Notaus (seit V01.0.360)",
+"text": "nmeldungen, Rate-Limit notausha. - Android-Kachel (Android-App ab 1.1.0): in den Schnelleinstellungen „Notaus“ hinzufügen. Sie nutzt die Anmeldung der App-Seite; Admins wählen „Ganzer Spark“ (Stufe 2) oder „Mein Notaus“, alle anderen nur „Mein Notaus“, immer mit Rückfrage. Die Kachel zeigt die Stufe. - Kanal steht im Admin-Protokoll, im Push und auf Zustand → Live (telegram, sprache, ha, android)."
 },
 {
 "lang": "de",
@@ -2613,7 +2637,7 @@
 "file": "Android app \"Spark\" (APK, no store)",
 "head": "Android app \"Spark\" (APK, no store)",
 "title": "Android app \"Spark\" (APK, no store)",
-"text": "- Notes while the app is closed: the app asks the Spark itself every 15 minutes (/api/android/notes), no Google service. Reminders, the morning briefing and notes go there when the app is the device used last or no other way (iPhone app) is set up. - Assistant button: Settings → Apps → Default apps → Digital assistant → \"Spark\"; holding the button opens the app and it listens. - Share to Spark: share text in another app → Spark. The text is put into the text field, you send it yourself. - New version: the app shows a notification when the Spark has a newer APK."
+"text": "- Notes while the app is closed: the app asks the Spark itself every 15 minutes (/api/android/notes), no Google service. Reminders, the morning briefing and notes go there when the app is the device used last or no other way (iPhone app) is set up. - Assistant button: Settings → Apps → Default apps → Digital assistant → \"Spark\"; holding the button opens the app and it listens. - Share to Spark: share text in another app → Spark. The text is put into the text field, you send it yourself. - Emergency stop tile (1.1.0 and later): edit quick settings → add \"Notaus\". Admins choose \"Ganzer Spark\" (stage 2) or \"Mein Notaus\", everyone else \"Mein Notaus\", always behind a question; lifting only in the browser (see Security and operation). - New version: the app shows a notification when the Spark has a newer APK."
 },
 {
 "lang": "en",
@@ -4541,7 +4565,7 @@
 "file": "Security and operation",
 "head": "Security",
 "title": "Security",
-"text": "- Who triggers: only admins (main admin, co-admin, manager in admin mode), also from the iPhone app in admin mode and on the way (since V01.0.338; before, a switch could allow it for every profile). Ordinary profiles see neither the button nor the band nor the Status card; only in stage 3 or from outside a page \"The Spark is stopped right now\" without a name or reason. Never guests, speaker, Siri or watch keys, Telegram, MCP or the language model. - Lifting: only the main admin or a profile in its admin mode (owner, co-admin), only in a browser (no app key, no HTTP Basic), only in the home network, with a fresh code (without a second step: the panel password again). Choice: back to stage 1 or off; held jobs then run on or are cancelled (default). - Home network means a direct connection from a private network. Through a reverse proxy only what a listed proxy (Settings → Security → Reverse proxy) passes on as a home address counts; a listed proxy without that counts as outside. So list the proxy there. - Kept across restart and update (state/notaus.json). A damaged file counts as stage 3, never as off. Way out without the panel: sudo rm /var/lib/speech-spark/state/notaus.json. - Vis"
+"text": "- Who triggers: only admins (main admin, co-admin, manager in admin mode), also from the iPhone app in admin mode and on the way (since V01.0.338; before, a switch could allow it for every profile). Ordinary profiles see neither the button nor the band nor the Status card; only in stage 3 or from outside a page \"The Spark is stopped right now\" without a name or reason. Never guests, MCP or the language model; Telegram, voice, Home Assistant and the Android tile only as described under *Other ways* below (since V01.0.360). - Lifting: only the main admin or a profile in its admin mode (owner, co-admin), only in a browser (no app key, no HTTP Basic), only in the home network, with a fresh code (without a second step: the panel password again). Choice: back to stage 1 or off; held jobs then run on or are cancelled (default). - Home network means a direct connection from a private network. Through a reverse proxy only what a listed proxy (Settings → Security → Reverse proxy) passes on as a home address counts; a listed proxy without that counts as outside. So list the proxy there. - Kept across restart and update (state/notaus.json). A damaged file counts as stage 3, never as off. Way o"
 },
 {
 "lang": "en",
@@ -4549,7 +4573,31 @@
 "file": "Security and operation",
 "head": "Security",
 "title": "Security",
-"text": "ible: red band on every page, a card under Status (kinds and counts since it was triggered, never contents), a push to the admin profiles when triggered and lifted, an entry in the admin log. Status → Live and the live monitor /live show a red band with stage, time, channel and per kind \"held\" with a count (never the reason or a name) and keep running in stage 3 (reading only; pairing a new monitor waits). - Not yet: triggering by Telegram, voice, Home Assistant, ESP32 button, Pebble and guard rules (coming)."
+"text": "ut without the panel: sudo rm /var/lib/speech-spark/state/notaus.json. - Visible: red band on every page, a card under Status (kinds and counts since it was triggered, never contents), a push to the admin profiles when triggered and lifted, an entry in the admin log. Status → Live and the live monitor /live show a red band with stage, time, channel and per kind \"held\" with a count (never the reason or a name) and keep running in stage 3 (reading only; pairing a new monitor waits). - Not yet: ESP32 button, Pebble, iPhone button and guard rules (coming)."
+},
+{
+"lang": "en",
+"src": "security-and-operation",
+"file": "Security and operation",
+"head": "Other ways to the emergency stop (since V01.0.360)",
+"title": "Other ways to the emergency stop (since V01.0.360)",
+"text": "All of these only switch on, never off; lifting stays in the browser. The panel always decides by fixed rules, never the language model and never text from outside."
+},
+{
+"lang": "en",
+"src": "security-and-operation",
+"file": "Security and operation",
+"head": "Other ways to the emergency stop (since V01.0.360)",
+"title": "Other ways to the emergency stop (since V01.0.360)",
+"text": "- Telegram: /meinnotaus stops the own profile (like *My kill switch*; afterwards Telegram only answers \"Mein Notaus ist an\"). /notaus (stage 2) or /notaus 1–/notaus 3 only for profiles with an admin role; forwarded messages never count as a command. From stage 1 on Telegram itself rests. - Fixed sentence in the chat, by voice on the phone, in the app or at a speaker that recognised the voice: \"Spark, Mein Notaus\" for every profile, \"Spark, Notaus\" (stage 2) or \"Spark, Notaus Stufe eins/zwei/drei\" only for admin profiles. Only the whole sentence, no question about it (\"Was ist der Notaus?\" triggers nothing). Never over MCP, never for a voice the speaker does not recognise as the profile. - Home Assistant: *Settings → Security → Emergency stop from outside* creates a key (fresh admin code, at most 5, only the hash in state/notaus-keys.json, plain text shown once) with ready text for configuration.yaml: rest_command.spark_notaus (POST /api/notaus/ha, Authorization: Bearer …, {\"level\": 1–3}, default 2) and a REST sensor on /api/notaus with the stage. Home network only; the key reads nothing, lifts nothing and is no device key. Wrong keys lock like wrong logins, rate limit notausha. - A"
+},
+{
+"lang": "en",
+"src": "security-and-operation",
+"file": "Security and operation",
+"head": "Other ways to the emergency stop (since V01.0.360)",
+"title": "Other ways to the emergency stop (since V01.0.360)",
+"text": "ndroid tile (Android app 1.1.0 and later): add \"Notaus\" in quick settings. It uses the login of the app's page; admins choose \"Ganzer Spark\" (stage 2) or \"Mein Notaus\", everyone else only \"Mein Notaus\", always behind a question. The tile shows the stage. - The channel shows in the admin log, the push and on Status → Live (telegram, sprache, ha, android)."
 },
 {
 "lang": "en",

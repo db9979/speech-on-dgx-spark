@@ -399,5 +399,150 @@ class Mine(Base):
             a.delete("/api/profile/homeassistant")
 
 
+class Channels(Base):
+    """Paket 1: Telegram, a fixed sentence, Home Assistant. Only switching on; the big one only for admin profiles."""
+
+    def setUp(self):
+        super().setUp()
+        import coadmin
+        import guard
+        self.real = (coadmin.on, coadmin.role)
+        self.admins = set()
+        coadmin.on = lambda: True
+        coadmin.role = lambda uid: "coadmin" if uid in self.admins else None
+        guard.reset()
+        try:
+            os.remove(notaus.KEYS_FILE)
+        except FileNotFoundError:
+            pass
+
+    def tearDown(self):
+        import coadmin
+        import guard
+        coadmin.on, coadmin.role = self.real
+        guard.reset()
+        try:
+            os.remove(notaus.KEYS_FILE)
+        except FileNotFoundError:
+            pass
+        super().tearDown()
+
+    def test_the_fixed_sentence_and_nothing_else(self):
+        P = notaus.phrase
+        self.assertEqual(P("Spark, Mein Notaus"), ("mine",))
+        self.assertEqual(P("spark mein not-aus!"), ("mine",))
+        self.assertEqual(P("Hey Spark, Notaus."), ("big", 2))
+        self.assertEqual(P("Spark Not aus Stufe drei"), ("big", 3))
+        self.assertEqual(P("Spark, Notaus Stufe 1"), ("big", 1))
+        for no in ("Was ist der Notaus?", "Spark, wie geht der Notaus", "Notaus", "Spark, Notaus Stufe vier",
+                   "Bitte sag: Spark, Notaus", "Spark Notaus aufheben", "", None, "Spark, Mein Notaus " * 20):
+            self.assertIsNone(P(no), no)
+        self.assertEqual(notaus.phrase_channel("speaker"), "esp32")
+        self.assertEqual(notaus.phrase_channel("<script>"), "sprache")
+
+    def test_by_sentence_in_the_chat(self):
+        p, uid = profile("NxSaga")
+        r = p.post("/api/chat", json={"messages": [{"role": "user", "content": "Spark, Notaus"}]})
+        self.assertEqual(r.status_code, 200)
+        list(helpers.events(r))
+        self.assertEqual(notaus.level(), 0)                     # not an admin: the big one stays off
+        self.admins.add(uid)
+        r = p.post("/api/chat", json={"messages": [{"role": "user", "content": "Spark, Notaus Stufe eins"}]})
+        list(helpers.events(r))
+        self.assertEqual((notaus.level(), notaus.state()["channel"]), (1, "sprache"))
+        off()
+        q, uid2 = profile("NxSven")
+        r = q.post("/api/chat", json={"messages": [{"role": "user", "content": "Spark, Mein Notaus"}], "client": "speaker"})
+        list(helpers.events(r))
+        self.assertFalse(notaus.own(uid2))                       # a voice the speaker did not recognise: a guest, nothing
+        r = q.post("/api/chat", json={"messages": [{"role": "user", "content": "Spark, Mein Notaus"}]})
+        list(helpers.events(r))
+        self.assertTrue(notaus.own(uid2))
+        self.assertEqual(notaus.mine()[uid2]["channel"], "sprache")
+        self.assertEqual(notaus.level(), 0)
+
+    def test_by_telegram(self):
+        import telegram
+        _, uid = profile("NxTill")
+        sent = []
+
+        async def call(c, method, **kw):
+            sent.append(kw.get("text", ""))
+        real = (telegram.call, telegram.owner)
+        telegram.call = call
+        telegram.owner = lambda cid: uid if cid == 77 else None
+        try:
+            def say(text, **extra):
+                m = {"chat": {"type": "private", "id": 77}, "text": text, **extra}
+                asyncio.run(telegram.handle(None, {"message": m}))
+                return sent[-1] if sent else ""
+            self.assertIn("nur Admins", say("/notaus 3"))
+            self.assertEqual(notaus.level(), 0)
+            self.admins.add(uid)
+            self.assertIn("Stufe", say("/notaus 9"))                      # wrong stage: nothing
+            self.assertEqual(notaus.level(), 0)
+            n = len(sent)
+            say("/notaus", forward_origin={"type": "user"})                 # forwarded: someone else's words
+            self.assertEqual(notaus.level(), 0)
+            self.assertIn("Stufe 2", say("/notaus"))
+            self.assertEqual((notaus.level(), notaus.state()["channel"]), (2, "telegram"))
+            self.assertGreater(len(sent), n)
+            off()
+            self.assertIn("Mein Notaus ist an", say("/meinnotaus"))
+            self.assertTrue(notaus.own(uid))
+            self.assertIn("Browser", say("Hallo"))                          # Telegram is closed for it now
+        finally:
+            telegram.call, telegram.owner = real
+
+    def test_android_tile(self):
+        # the tile sends the page's login without Origin, named by the app's user agent; it gets a fresh login back
+        p, uid = profile("NxAnja")
+        ua = {"user-agent": "SparkAndroid/1.1.0"}
+        s = p.get("/api/notaus", headers=ua).json()
+        self.assertEqual((s["level"], s["mine"]["on"], s.get("may")), (0, False, None))
+        self.assertEqual(p.post("/api/notaus", json={"level": 2}, headers=ua).status_code, 403)
+        r = p.post("/api/notaus/mine", content="{}", headers={**ua, "content-type": "application/json"})
+        self.assertEqual(r.status_code, 200)
+        self.assertIn(profiles.COOKIE, r.headers.get("set-cookie", ""))
+        self.assertEqual(notaus.mine()[uid]["channel"], "android")
+        a = admin()
+        r = a.post("/api/notaus", json={"level": 2}, headers=ua)
+        self.assertEqual((r.status_code, notaus.state()["channel"]), (200, "android"))
+
+    def test_home_assistant_key_only_raises(self):
+        a = admin()
+        self.assertEqual(client().post("/api/admin/notaus/keys", json={"name": "HA"}).status_code, 401)
+        self.assertEqual(a.post("/api/admin/notaus/keys", json={"name": "<b>"}).status_code, 400)
+        token = a.post("/api/admin/notaus/keys", json={"name": "HA Wohnzimmer"}).json()["token"]
+        self.assertTrue(token.startswith("na_"))
+        self.assertNotIn(token, open(notaus.KEYS_FILE).read())                    # only the hash
+        self.assertEqual([k["name"] for k in a.get("/api/admin/notaus/keys").json()["keys"]], ["HA Wohnzimmer"])
+        self.assertEqual(client().get("/api/admin/notaus/keys").status_code, 401)
+        h = {"Authorization": "Bearer " + token}
+        self.assertEqual(client(OUTSIDE).post("/api/notaus/ha", json={}, headers=h).status_code, 403)
+        self.assertEqual(client().post("/api/notaus/ha", json={}, headers={"Authorization": "Bearer na_falsch"}).status_code, 401)
+        self.assertEqual(client().post("/api/notaus/ha", json={"level": "3"}, headers=h).status_code, 400)
+        self.assertEqual(notaus.level(), 0)
+        r = client().post("/api/notaus/ha", json={}, headers=h)
+        self.assertEqual((r.status_code, r.json()["level"], notaus.state()["channel"]), (200, 2, "ha"))
+        # it never lifts and is no login: it opens nothing else
+        ha = client()
+        ha.headers.update(h)
+        self.assertNotEqual(ha.post("/api/notaus/lift", json={"level": 0}).status_code, 200)
+        self.assertNotEqual(ha.get("/api/admin/notaus/keys").status_code, 200)
+        self.assertEqual(notaus.level(), 2)
+        kid = notaus._keys()[0]["id"]
+        self.assertEqual(a.delete("/api/admin/notaus/keys/" + kid).status_code, 200)
+        self.assertEqual(a.delete("/api/admin/notaus/keys/../x").status_code, 404)
+        self.assertIsNone(notaus.key_find(token))
+        for i in range(notaus.MAX_KEYS):
+            notaus.key_new(f"k{i}")
+        with self.assertRaises(ValueError):
+            notaus.key_new("zu viel")
+        with self.assertRaises(ValueError):
+            os.remove(notaus.KEYS_FILE)
+            notaus.key_new("<b>")
+
+
 if __name__ == "__main__":
     unittest.main()

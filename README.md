@@ -33,6 +33,7 @@ All options for running without questions (`--mode api --asr 1.7b --tts 0.6b --y
 
 <!-- New version: add one line at the top here and in CHANGELOG.md, drop the oldest line here (keep 10). Details go to docs/de and docs/en, not into this README. -->
 
+- **V01.0.360** Emergency stop on more ways: Telegram /notaus and /meinnotaus, fixed sentence "Spark, Mein Notaus" / "Spark, Notaus" (the big one admins only), a Home Assistant key that can only trigger (with a ready snippet), Android quick settings tile (app 1.1.0)
 - **V01.0.359** Face at the bottom right: one tap starts the assistant on every page, over Me and on a phone (its window closed at once), a double tap no longer marks text, typing a question always works
 - **V01.0.358** Fetch clear questions directly: "Which appointments do I have today?" is fetched by the panel itself
 - **V01.0.357** Passkeys in the iPhone app: „With passkey“ when confirming, for the Spark update and the admin sign-in (Face ID with the passkey made in Safari, via iCloud Keychain); for that the Spark serves Apple /.well-known/apple-app-site-association (only the app ID, from the push settings)
@@ -42,7 +43,6 @@ All options for running without questions (`--mode api --asr 1.7b --tts 0.6b --y
 - **V01.0.353** Spark companion deeper in the computer (per device, all off): right-click on files, ask about the screen, know the app, draft a reply in Outlook and Apple Mail, "Spark-Wissen" folder, buttons in notes, Spark acts on the PC with a question first, wake word on the PC
 - **V01.0.352** Live overview full review: update check, NAS backup, reMarkable sheets, Spark-Begleiter, room mode, logins, speaker recognition and more in the picture
 - **V01.0.351** reMarkable in the Live monitor: @Spark answer, guide, morning sheet, weekly review, meeting and page check show as background work with a done event, sync as event, web page/attachment as tools
-- **V01.0.350** Daily briefing: no more "roomfar: briefing AttributeError" line on every briefing (services without a briefing part are skipped)
 
 All versions: [CHANGELOG.md](CHANGELOG.md)
 

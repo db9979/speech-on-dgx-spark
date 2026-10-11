@@ -390,6 +390,13 @@
       <div class="setrow"><div class="lbl"><b>Anmeldung im Browser</b><span>Ein Profil bleibt so viele Tage ohne Nutzung angemeldet (7 bis 90).</span></div><div class="ctl"><input class="num" id="panel.session_days" type="number" min="7" max="90"><span class="unit">Tage</span></div></div>
       <div class="setrow"><div class="lbl"><b>Vertraute Browser</b><span>So lange fragt ein Browser, dem man bei der Anmeldung vertraut, keinen Code (7 bis 90). Nach 30 Tagen ohne Nutzung fragt er wieder.</span></div><div class="ctl"><input class="num" id="panel.trust_days" type="number" min="7" max="90"><span class="unit">Tage</span></div></div>
       <div class="setrow"><div class="lbl"><b>API-Schlüssel</b><span>Gesetzt = Apps senden „Authorization: Bearer &lt;Schlüssel&gt;“; leer = ohne Schlüssel.</span></div><div class="ctl full"><input class="wide" id="api.key" autocomplete="off"><button class="b" id="genkey" type="button">Erzeugen</button></div></div>
+      <div data-nodirty="1" id="nakeysec">
+      <h3 class="sec">Notaus von außen <span>wirkt sofort, ohne Speichern</span></h3>
+      <div class="setrow"><div class="lbl"><b>Schlüssel für Home Assistant</b><span>Ein Schlüssel kann nur den Notaus auslösen, nichts lesen und nichts aufheben. Nur aus dem Heimnetz.</span></div>
+        <div class="ctl"><input id="nakeyname" maxlength="40" placeholder="Name, z. B. Home Assistant" aria-label="Name des Schlüssels"><button class="b" id="nakeymake" type="button">Schlüssel erzeugen</button></div></div>
+      <ul class="facts" id="nakeys"></ul><span id="nakeymsg" class="fh"></span>
+      <div class="full rowtail" id="nakeynew" hidden><div class="fh">Nur jetzt sichtbar. In Home Assistant in configuration.yaml einfügen, dann neu laden; „rest_command.spark_notaus“ löst Stufe 2 aus, der Sensor zeigt die Stufe.</div><pre class="nayaml" id="nakeyyaml"></pre></div>
+      </div>
       <div class="pwonly" data-nodirty="1">
       <h3 class="sec">Admin-Anmeldung <span>wirkt sofort, ohne Speichern</span></h3>
       <div class="setrow"><div class="lbl"><b>Panel-Passwort</b><span>Mindestens 10 Zeichen.</span></div><button class="b" id="pwopen" type="button">Ändern …</button></div>

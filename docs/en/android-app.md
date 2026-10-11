@@ -9,6 +9,7 @@ since V01.0.296) and adds only what a page cannot do:
 - **Assistant button:** Settings → Apps → Default apps → Digital assistant → "Spark"; holding the button opens the
   app and it listens.
 - **Share to Spark:** share text in another app → Spark. The text is put into the text field, you send it yourself.
+- **Emergency stop tile** (1.1.0 and later): edit quick settings → add "Notaus". Admins choose "Ganzer Spark" (stage 2) or "Mein Notaus", everyone else "Mein Notaus", always behind a question; lifting only in the browser (see [Security and operation](security-and-operation.md)).
 - **New version:** the app shows a notification when the Spark has a newer APK.
 
 ## Setup

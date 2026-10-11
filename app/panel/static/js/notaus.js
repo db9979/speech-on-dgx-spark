@@ -92,3 +92,20 @@ $('nalogin').addEventListener('click',()=>{if(window.showLogin)showLogin()});
 // the stage of other devices: looked at every 15 seconds and when the page comes back
 notausLoad();NA.timer=setInterval(notausLoad,15000);
 document.addEventListener('visibilitychange',()=>{if(document.visibilityState==='visible')notausLoad()});
+
+// Home Assistant keys (notaus.py key_new): only the admin, made with a fresh code, shown once with a ready snippet
+async function naKeys(){const box=$('nakeys');if(!box||!NA.s.may)return;
+  try{const r=await fetch('/api/admin/notaus/keys',{cache:'no-store'});if(!r.ok){$('nakeysec').hidden=true;return}const d=await r.json();
+    $('nakeysec').hidden=false;
+    box.innerHTML=d.keys.length?d.keys.map(k=>`<li><span>${esc(k.name)}</span><span class="mut">${esc(t('angelegt ','made ')+naWhen(k.created))}${k.used?esc(' · '+t('zuletzt ','last ')+naWhen(k.used)):''}</span><button class="b" type="button" data-nakeydel="${esc(k.id)}">${esc(t('Löschen','Delete'))}</button></li>`).join('')
+      :`<li class="mut">${esc(t('Noch kein Schlüssel.','No key yet.'))}</li>`;
+    $('nakeymake').disabled=d.keys.length>=d.max}catch{}}
+function naYaml(key){const o=location.origin;
+  return `rest_command:\n  spark_notaus:\n    url: "${o}/api/notaus/ha"\n    method: POST\n    headers:\n      Authorization: "Bearer ${key}"\n    content_type: "application/json"\n    payload: '{"level": 2}'\n\nsensor:\n  - platform: rest\n    name: Spark Notaus\n    resource: "${o}/api/notaus"\n    value_template: "{{ value_json.level }}"\n    scan_interval: 30\n`}
+$('nakeymake').addEventListener('click',async()=>{$('nakeymake').disabled=true;$('nakeymsg').textContent='';
+  try{const r=await api('/api/admin/notaus/keys',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({name:$('nakeyname').value})});
+    const d=await r.json();$('nakeyyaml').textContent=naYaml(d.token);$('nakeynew').hidden=false;$('nakeyname').value='';naKeys()}
+  catch(e){$('nakeymsg').textContent=e.message}finally{$('nakeymake').disabled=false}});
+$('nakeys').addEventListener('click',async e=>{const b=e.target.closest('[data-nakeydel]');if(!b)return;b.disabled=true;
+  try{await api('/api/admin/notaus/keys/'+encodeURIComponent(b.dataset.nakeydel),{method:'DELETE'});$('nakeynew').hidden=true;naKeys()}catch(e2){$('nakeymsg').textContent=e2.message;b.disabled=false}});
+setTimeout(naKeys,1500);

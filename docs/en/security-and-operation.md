@@ -66,12 +66,22 @@ The red "Notaus" button (bottom of the sidebar, on phones at the top of Manage) 
 | 2 | Hands off | Plus every action: smart home, mail drafts and tidying, messages and announcements, appointments, lists, new reminders, reMarkable, MCP actions, memory. No "yes" carries anything out, waiting proposals are dropped. Running jobs are held, new ones refused; "on its own", Home Assistant notes (and their live connection), briefings, mail tidying and learning pause. The assistant still answers from what it knows and may read. |
 | 3 | All quiet | Plus no conversation, no speech recognition; speakers, Wyoming, room mode and reminders are silent. The panel shows only the Notaus page; login, status, logs and lifting work. |
 
-- **Who triggers:** only admins (main admin, co-admin, manager in admin mode), also from the iPhone app in admin mode and on the way (since V01.0.338; before, a switch could allow it for every profile). Ordinary profiles see neither the button nor the band nor the Status card; only in stage 3 or from outside a page "The Spark is stopped right now" without a name or reason. Never guests, speaker, Siri or watch keys, Telegram, MCP or the language model.
+- **Who triggers:** only admins (main admin, co-admin, manager in admin mode), also from the iPhone app in admin mode and on the way (since V01.0.338; before, a switch could allow it for every profile). Ordinary profiles see neither the button nor the band nor the Status card; only in stage 3 or from outside a page "The Spark is stopped right now" without a name or reason. Never guests, MCP or the language model; Telegram, voice, Home Assistant and the Android tile only as described under *Other ways* below (since V01.0.360).
 - **Lifting:** only the main admin or a profile in its admin mode (owner, co-admin), only in a browser (no app key, no HTTP Basic), only in the home network, with a fresh code (without a second step: the panel password again). Choice: back to stage 1 or off; held jobs then run on or are cancelled (default).
 - **Home network** means a direct connection from a private network. Through a reverse proxy only what a listed proxy (Settings → Security → Reverse proxy) passes on as a home address counts; a listed proxy without that counts as outside. So list the proxy there.
 - **Kept** across restart and update (`state/notaus.json`). A damaged file counts as stage 3, never as off. Way out without the panel: `sudo rm /var/lib/speech-spark/state/notaus.json`.
 - **Visible:** red band on every page, a card under Status (kinds and counts since it was triggered, never contents), a push to the admin profiles when triggered and lifted, an entry in the admin log. Status → Live and the live monitor /live show a red band with stage, time, channel and per kind "held" with a count (never the reason or a name) and keep running in stage 3 (reading only; pairing a new monitor waits).
-- **Not yet:** triggering by Telegram, voice, Home Assistant, ESP32 button, Pebble and guard rules (coming).
+- **Not yet:** ESP32 button, Pebble, iPhone button and guard rules (coming).
+
+### Other ways to the emergency stop (since V01.0.360)
+
+All of these only switch on, never off; lifting stays in the browser. The panel always decides by fixed rules, never the language model and never text from outside.
+
+- **Telegram:** `/meinnotaus` stops the own profile (like *My kill switch*; afterwards Telegram only answers "Mein Notaus ist an"). `/notaus` (stage 2) or `/notaus 1`–`/notaus 3` only for profiles with an admin role; forwarded messages never count as a command. From stage 1 on Telegram itself rests.
+- **Fixed sentence** in the chat, by voice on the phone, in the app or at a speaker that recognised the voice: "Spark, Mein Notaus" for every profile, "Spark, Notaus" (stage 2) or "Spark, Notaus Stufe eins/zwei/drei" only for admin profiles. Only the whole sentence, no question about it ("Was ist der Notaus?" triggers nothing). Never over MCP, never for a voice the speaker does not recognise as the profile.
+- **Home Assistant:** *Settings → Security → Emergency stop from outside* creates a key (fresh admin code, at most 5, only the hash in `state/notaus-keys.json`, plain text shown once) with ready text for `configuration.yaml`: `rest_command.spark_notaus` (POST `/api/notaus/ha`, `Authorization: Bearer …`, `{"level": 1–3}`, default 2) and a REST sensor on `/api/notaus` with the stage. Home network only; the key reads nothing, lifts nothing and is no device key. Wrong keys lock like wrong logins, rate limit `notausha`.
+- **Android tile** (Android app 1.1.0 and later): add "Notaus" in quick settings. It uses the login of the app's page; admins choose "Ganzer Spark" (stage 2) or "Mein Notaus", everyone else only "Mein Notaus", always behind a question. The tile shows the stage.
+- The channel shows in the admin log, the push and on Status → Live (telegram, sprache, ha, android).
 
 ### My kill switch (own profile only)
 

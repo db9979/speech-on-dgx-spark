@@ -41,7 +41,7 @@ MAX_VOICE = 5 * 1024 * 1024
 STRANGER = "Dieser Spark-Assistent ist privat. Wer ein Profil hat, verbindet Telegram im Panel unter Profil → Telegram."
 HELP = ("Schreib mir oder schick eine Sprachnachricht. /neu beginnt ein neues Gespräch, /stimme schaltet die "
         "Antwort als Sprachnachricht an oder aus, /merken als Antwort auf ein Foto legt es in deine Dokumente, "
-        "/trennen löst die Verbindung.")
+        "/trennen löst die Verbindung, /meinnotaus legt dein Profil still (aufheben im Browser).")
 _lock = threading.Lock()
 _codes = {}                  # code -> (uid, expiry)
 _strangers = {}              # chat id -> last time it got STRANGER
@@ -303,6 +303,27 @@ async def handle(c, upd):
         if time.time() - _strangers.get(cid, 0) > 24 * 3600:
             _strangers[cid] = time.time()
             await call(c, "sendMessage", chat_id=cid, text=STRANGER)
+        return
+    import notaus
+    if notaus.own(uid):   # Mein Notaus: Telegram is closed for this profile (notaus.py)
+        await call(c, "sendMessage", chat_id=cid, text="Mein Notaus ist an. Aufheben geht nur im Browser unter Ich → Sicherheit.")
+        return
+    # a forwarded message is someone else's words: it never switches anything (see FORWARDED below)
+    fwd = any(k in m for k in ("forward_origin", "forward_from", "forward_from_chat", "forward_sender_name", "forward_date"))
+    cmd = [] if fwd else text.split()
+    if cmd and cmd[0] in ("/meinnotaus", "/mynotaus"):
+        who = profiles.by_id(uid)
+        await call(c, "sendMessage", chat_id=cid, text=await notaus.mine_by(who["name"] if who else "", uid, "telegram"))
+        return
+    if cmd and cmd[0] == "/notaus":
+        # the big one: only a profile with an admin role, stage 1..3 (default 2); Telegram itself rests from stage 1 on
+        if not notaus.admin_profile(uid):
+            await call(c, "sendMessage", chat_id=cid, text="Den Notaus für den ganzen Spark dürfen nur Admins auslösen. Für dein Profil: /meinnotaus")
+            return
+        lvl = int(cmd[1]) if len(cmd) == 2 and cmd[1] in ("1", "2", "3") else 2 if len(cmd) == 1 else 0
+        who = profiles.by_id(uid)
+        await call(c, "sendMessage", chat_id=cid, text=await notaus.raise_by(who["name"] if who else "", uid, lvl, "telegram")
+                   + " Telegram ruht jetzt.")
         return
     s = profiles.settings(uid)
     if text in ("/start", "/hilfe", "/help"):

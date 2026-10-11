@@ -83,6 +83,7 @@ OPEN = {
     "/api/admin/notaus/off": "lifting checks the admin itself (notaus._lift_how): browser at home, fresh code or password, rate limit",
     "/api/notaus/mine": "Mein Notaus: checks the profile itself (notaus._caller), only on, rate limit",
     "/api/notaus/mine/off": "Mein Notaus off: the profile's browser login only, PIN with lockout and its fresh code, rate limit",
+    "/api/notaus/ha": "Home Assistant raises the Notaus with its own key (notaus.key_find, hash, compare_digest), home network only, lockout, rate limit",
     "/api/admin/notaus/mine/off": "an admin lifts a profile's own Notaus: notaus._lift_how (browser at home), fresh code or password",
     "/api/changelog": "Was ist neu: is_admin, else browser_profile (no guests, no device keys), rate limit; read only",
 }

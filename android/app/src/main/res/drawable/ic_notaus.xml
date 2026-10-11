@@ -1,0 +1,7 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- quick settings tile of the Notaus: a stop sign (octagon with a bar), white (Android tints it) -->
+<vector xmlns:android="http://schemas.android.com/apk/res/android"
+    android:width="24dp" android:height="24dp" android:viewportWidth="24" android:viewportHeight="24">
+    <path android:fillColor="#ffffff" android:fillType="evenOdd"
+        android:pathData="M8,2h8l6,6v8l-6,6h-8l-6,-6v-8z M7,10.5v3h10v-3z" />
+</vector>

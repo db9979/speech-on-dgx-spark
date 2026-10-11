@@ -31,9 +31,12 @@ with its PIN (and its code when its second step is on), or an admin. STATE/notau
 holds every profile (a Notaus must never go away by a damaged file).
 """
 import contextvars
+import hashlib
+import hmac
 import ipaddress
 import json
 import os
+import re
 import threading
 import time
 
@@ -42,6 +45,8 @@ import guard
 STATE = os.environ.get("SPEECH_SPARK_STATE", "/var/lib/speech-spark/state")
 FILE = os.path.join(STATE, "notaus.json")
 MINE_FILE = os.path.join(STATE, "notaus-mine.json")
+KEYS_FILE = os.path.join(STATE, "notaus-keys.json")   # Home Assistant keys that can only trigger
+MAX_KEYS = 5
 LEVELS = (0, 1, 2, 3)
 NAMES = {1: "Außen zu", 2: "Hände weg", 3: "Alles still"}
 NAMES_EN = {1: "Outside closed", 2: "Hands off", 3: "All quiet"}
@@ -522,6 +527,8 @@ async def tell_admins(old, new, by, channel):
 # ---------------------------------------------------------------- API
 from fastapi import APIRouter, Depends, HTTPException, Request  # noqa: E402
 from fastapi.responses import JSONResponse  # noqa: E402
+
+from core import admin_code_fresh, auth  # noqa: E402
 from fastapi.security import HTTPBasicCredentials  # noqa: E402
 
 router = APIRouter()
@@ -545,15 +552,18 @@ def _caller(request, creds=None):
     # the Spark-Begleiter's key only for its own "Mein Notaus" button (begleiter.py), never for anything else
     if dev is not None and dev["scope"] != "app" and not (dev["scope"] == "desk" and request.url.path == "/api/desk/notaus"):
         return None
+    import android
+    # the Android app (its page or its quick settings tile, both with the page's login) is named as such
+    where = "app" if dev else "android" if android.from_app(request) else "panel"
     if not dev and core.is_main_admin(request, creds) and core.password_set():
-        return "Admin", "", True, None, "panel"
+        return "Admin", "", True, None, where
     elev = coadmin.session(request)
     if elev:          # a profile in its admin mode, in the browser or in the phone app (coadmin holds it there)
-        return elev["name"], elev["id"], True, None, ("app" if dev else "panel")
+        return elev["name"], elev["id"], True, None, where
     prof = profiles.current(request)
     if not prof:
         return None
-    return prof["name"], prof["id"], False, prof, ("app" if dev else "panel")
+    return prof["name"], prof["id"], False, prof, where
 
 
 def _lift_how(request, creds=None):
@@ -826,3 +836,198 @@ async def tell_admins_mine(name, on):
             await push.send(uid, title, body, tag="notaus", private=False)
         except Exception as e:
             print("notaus: push to an admin", type(e).__name__, flush=True)
+
+
+# ---------------------------------------------------------------- other channels (Telegram, voice, Home Assistant, apps)
+# Only the panel's own fixed rules decide here: a command or a fixed sentence the person typed or said, never text the
+# model wrote or read. They only switch on; lifting stays in the browser (above).
+def admin_profile(uid):
+    """A profile the main admin made an admin (owner, Mit-Admin, Verwalter) may trigger the big Notaus by itself."""
+    import coadmin
+    try:
+        return bool(uid) and coadmin.on() and coadmin.role(uid) in ("owner", "coadmin", "manager")
+    except Exception:
+        return False
+
+
+async def raise_by(name, uid, lvl, channel):
+    """The big Notaus from another channel: raises to lvl (1..3). Returns a German sentence for the person."""
+    if lvl not in (1, 2, 3):
+        return "Stufe 1, 2 oder 3."
+    old, _ = trigger(lvl, name, uid, channel)
+    if old >= lvl:
+        return f"Der Notaus steht schon auf Stufe {old}."
+    await after_change(old, lvl, name, channel)
+    return f"Notaus Stufe {lvl} „{NAMES[lvl]}“ ist an. Aufheben geht nur als Admin im Browser im Heimnetz."
+
+
+async def mine_by(name, uid, channel):
+    """Mein Notaus from another channel (every browser login ends, no browser stays). Returns a German sentence."""
+    import agent
+    import profiles
+    if not mine_on(uid, name, channel):
+        return "Mein Notaus ist schon an."
+    agent.notaus_hold(only=uid)
+    try:
+        import hamelden
+        hamelden.stop(uid)
+    except Exception as e:
+        print("notaus: ha rules", type(e).__name__, flush=True)
+    profiles.end_sessions(uid)
+    try:
+        await tell_admins_mine(name, True)
+    except Exception as e:
+        print("notaus: push", type(e).__name__, flush=True)
+    return ("Mein Notaus ist an: alle Anmeldungen und Geräte deines Profils sind gesperrt, in deinem Namen passiert nichts. "
+            "Aufheben im Browser unter Ich → Sicherheit mit deiner PIN.")
+
+
+# A fixed sentence said or typed by the profile itself, the whole utterance and nothing else (never a question about
+# it, never text the model wrote): "Spark, Mein Notaus" / "Spark, Notaus" (stage 2) / "Spark, Notaus Stufe drei".
+_WORD = {"eins": 1, "zwei": 2, "drei": 3, "1": 1, "2": 2, "3": 3}
+_PHRASE = re.compile(r"(?:hey |hallo |ok )?spark (?:(mein notaus)|notaus(?: stufe (eins|zwei|drei|1|2|3))?)")
+
+
+def phrase(text):
+    """("mine",) or ("big", stage) for the fixed sentence, else None."""
+    t = str(text or "").lower()[:80]
+    t = re.sub(r"not[\s-]+aus", "notaus", t)
+    t = " ".join(re.sub(r"[^a-zäöüß0-9 ]", " ", t).split())
+    m = _PHRASE.fullmatch(t)
+    if not m:
+        return None
+    if m.group(1):
+        return ("mine",)
+    return ("big", _WORD.get(m.group(2) or "", 2))
+
+
+def phrase_channel(client):
+    """The channel a fixed sentence came through, from the chat request's client."""
+    return {"telegram": "telegram", "speaker": "esp32", "watch": "pebble", "app": "app", "car": "app",
+            "siri": "app", "android": "android"}.get(str(client or ""), "sprache")
+
+
+async def by_phrase(cmd, name, uid, channel="sprache"):
+    """Carries out phrase()'s result for this profile; returns the sentence the assistant says."""
+    if channel not in CHANNELS:
+        channel = "sprache"
+    if cmd[0] == "mine":
+        return await mine_by(name, uid, channel)
+    if not admin_profile(uid):
+        return "Den Notaus für den ganzen Spark dürfen nur Admins auslösen. Für dich: „Spark, Mein Notaus“."
+    return await raise_by(name, uid, cmd[1], channel)
+
+
+# ---------------------------------------------------------------- Home Assistant: a key that can only trigger
+# The admin makes a key (Einstellungen → Sicherheit, fresh admin code); Home Assistant sends it as "Authorization:
+# Bearer …" to POST /api/notaus/ha from the home network. It raises the big Notaus and nothing else: it reads
+# nothing, lifts nothing, and is no device key of a profile. Only its hash is stored.
+def _keys():
+    try:
+        with open(KEYS_FILE, encoding="utf-8") as f:
+            d = json.load(f)
+        items = d.get("keys") if isinstance(d, dict) else None
+        return [k for k in items if isinstance(k, dict) and isinstance(k.get("hash"), str)][:MAX_KEYS] if isinstance(items, list) else []
+    except (OSError, ValueError):
+        return []
+
+
+def _keys_write(items):
+    os.makedirs(STATE, exist_ok=True)
+    tmp = KEYS_FILE + ".tmp"
+    with open(os.open(tmp, os.O_WRONLY | os.O_CREAT | os.O_TRUNC | os.O_NOFOLLOW, 0o600), "w", encoding="utf-8") as f:
+        json.dump({"keys": items}, f, ensure_ascii=False)
+    os.replace(tmp, KEYS_FILE)
+
+
+def _hash(token):
+    return hashlib.sha256(token.encode()).hexdigest()
+
+
+def key_new(name, now=None):
+    import secrets
+    name = " ".join(str(name or "").split())[:40] or "Home Assistant"
+    if not re.fullmatch(r"[\w .,:()+-]{1,40}", name):
+        raise ValueError("Name: nur Buchstaben, Ziffern und . , : ( ) + -")
+    with _lock:
+        items = _keys()
+        if len(items) >= MAX_KEYS:
+            raise ValueError(f"Höchstens {MAX_KEYS} Notaus-Schlüssel.")
+        token = "na_" + secrets.token_urlsafe(24)
+        items.append({"id": secrets.token_hex(5), "name": name, "hash": _hash(token),
+                      "created": int(time.time() if now is None else now), "used": None})
+        _keys_write(items)
+    return token
+
+
+def key_delete(kid):
+    with _lock:
+        items = _keys()
+        rest = [k for k in items if k.get("id") != kid]
+        if len(rest) == len(items):
+            return False
+        _keys_write(rest)
+        return True
+
+
+def key_find(token):
+    if not isinstance(token, str) or not token.startswith("na_") or len(token) > 80:
+        return None
+    h = _hash(token)
+    return next((k for k in _keys() if hmac.compare_digest(k["hash"], h)), None)
+
+
+def key_used(kid, now=None):
+    with _lock:
+        items = _keys()
+        for k in items:
+            if k.get("id") == kid:
+                k["used"] = int(time.time() if now is None else now)
+        _keys_write(items)
+
+
+@router.post("/api/notaus/ha")
+async def post_ha(request: Request):
+    """Home Assistant raises the big Notaus with its key (home network only); {"level": 1..3}, default 2."""
+    guard.limit(request, "notausha")
+    guard.check(request, "notaus-ha")
+    if not at_home(request):
+        raise HTTPException(403, "nur im Heimnetz")
+    head = request.headers.get("authorization", "")
+    k = key_find(head[7:].strip() if head[:7].lower() == "bearer " else "")
+    if not k:
+        guard.failed(request, "notaus-ha", what="notaus_key")
+        raise HTTPException(401, "Schlüssel fehlt oder ist unbekannt")
+    body = await _body(request)
+    lvl = body.get("level", 2)
+    if not isinstance(lvl, int) or isinstance(lvl, bool) or lvl not in (1, 2, 3):
+        raise HTTPException(400, "level: 1, 2 oder 3")
+    key_used(k["id"])
+    text = await raise_by(f"Home Assistant ({k['name']})", "", lvl, "ha")
+    return {"level": level(), "text": text}
+
+
+@router.get("/api/admin/notaus/keys", dependencies=[Depends(auth)])
+def get_keys():
+    return {"keys": [{"id": k.get("id"), "name": k.get("name"), "created": k.get("created"), "used": k.get("used")} for k in _keys()],
+            "max": MAX_KEYS}
+
+
+@router.post("/api/admin/notaus/keys", dependencies=[Depends(auth), Depends(admin_code_fresh)])
+async def post_key(request: Request):
+    guard.limit(request, "notausoff", admin=True)
+    body = await _body(request)
+    try:
+        token = key_new(body.get("name"))
+    except ValueError as e:
+        raise HTTPException(400, str(e))
+    guard.log("notaus_key_new", who="Admin", detail=" ".join(str(body.get("name") or "").split())[:40])
+    return {"token": token}   # shown once
+
+
+@router.delete("/api/admin/notaus/keys/{kid}", dependencies=[Depends(auth)])
+def delete_key(kid: str):
+    if not re.fullmatch(r"[0-9a-f]{10}", kid) or not key_delete(kid):
+        raise HTTPException(404, "kein solcher Schlüssel")
+    guard.log("notaus_key_delete", who="Admin", detail=kid)
+    return {"ok": True}
