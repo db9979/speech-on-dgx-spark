@@ -207,6 +207,9 @@ class Browser(unittest.TestCase):
                 for w, h in ((1280, 900), (390, 844), (320, 640)):
                     br, pg, errors, uid = await self.page(p, w, h)
                     try:
+                        if w == 320:
+                            # wider letters than the container's fonts, like on some systems (GitHub runner, V01.0.424)
+                            await pg.add_style_tag(content="#profmodal{letter-spacing:.12em}")
                         await self.show(pg, "factbox", "showFacts()")
                         await pg.wait_for_selector("#factlist [data-fact]")
                         await self.check_layout(pg, f"{w} Gedächtnis")

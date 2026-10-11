@@ -2,6 +2,7 @@
 
 Every version in one line, newest first (taken from the commit messages, so some lines are German, some English). Older entries have no version number.
 
+- **V01.0.426** · 2026-10-11 · Ich → E-Mail: Modus-Knöpfe passen auch bei 320 px und breiter Schrift (GitHub-Lauf von V01.0.424 rot)
 - **V01.0.425** · 2026-10-11 · Live-Bild aufgeräumt und erweitert: Internet als bernsteinfarbene Fläche mit Abstand zu den Heimnetz-Zielen (keine Linie mehr durch einen Kasten), Wächter als Wand mittig zwischen Werkzeugen und Zielen, Geblocktes 10 s als rote Linie mit ✕, ruhige Internet-Ziele als „+ N ruhig“ zum Aufklappen, Legende der Farben, zu lange Texte mit „…“, Wege ins Internet bernsteinfarben und Anfragen nie gleichfarbig; am Handy zeigt „ist jetzt“ auch Wege über den Wächter
 - **V01.0.424** · 2026-10-11 · Ich-Seiten aufgeräumt: Unterreiter mit Zahlen statt Aufklapp-Pfeilen, keine Scrollkästen; E-Mail-Fragen mit einem Tipp, reMarkable mit Ordnerbaum, Gedächtnis mit Suchen, Ändern und Auswählen
 - **V01.0.423** · 2026-10-11 · Dokumente erstellen: die Antwort auf die Rückfrage des Spark („Worum soll es gehen?“ – „den Mauerfall, 3 Folien“) bleibt beim Datei-Wunsch (Weiche „erstellen“, Gliederung ist Pflicht) statt Folien als Text; „3 Folien“ zählt als Wunsch; ist die Funktion aus, sagt der Spark in einem Satz, wo man sie einschaltet; Ich → Dokumente zeigt bei „aus“ den Block mit Einschalt-Knopf; „Brief wegen der Heizung“ schaltet nichts; „Ich brauche eine Präsentation“ zählt als Wunsch

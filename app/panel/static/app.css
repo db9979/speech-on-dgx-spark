@@ -1234,3 +1234,6 @@ select.segsel{display:none!important}
 textarea.factedit{width:100%;margin:0 0 6px}
 @container (max-width:520px){.ic-row .ic-badge{display:none}.ic-row .ic-meta{white-space:normal}}
 #profmodal .ic-tabend{border-top:1px solid var(--line);margin:22px 0 12px}
+/* the mode buttons of a mailbox never push a narrow page sideways (wider fonts on some systems) */
+.ic-seg{max-width:100%;min-width:0}.ic-seg button{min-width:0;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+@container (max-width:420px){.ic-seg{display:flex;flex:1 1 100%}.ic-seg button{flex:1 1 0;padding:5px 4px}}

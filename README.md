@@ -33,6 +33,7 @@ All options for running without questions (`--mode api --asr 1.7b --tts 0.6b --y
 
 <!-- New version: add one line at the top here and in CHANGELOG.md, drop the oldest line here (keep 10). Details go to docs/de and docs/en, not into this README. -->
 
+- **V01.0.426** Mail mode buttons fit narrow phones too
 - **V01.0.425** Live picture: internet as an amber area, Wächter as a wall with blocked lines, quiet targets folded, colour key, no overlaps or cut texts
 - **V01.0.424** Me pages tidied: tabs with counts, mail questions in one tap, reMarkable folder tree, memory search and edit
 - **V01.0.423** Creating documents: the answer to Spark's question stays with the file wish; when off, Spark says where to switch it on
@@ -42,7 +43,6 @@ All options for running without questions (`--mode api --asr 1.7b --tts 0.6b --y
 - **V01.0.419** Companion: "open heise.de on my Mac" from a speaker or the phone reliably reaches the computer (question there); if it cannot, the Spark says why
 - **V01.0.418** Tests green again: jump from Who may do what on phones, height budget
 - **V01.0.417** Self-test for weekly plans now holds across the switch to winter time (update on tars failed)
-- **V01.0.416** Settings pages rearranged: boxes, symbols, functions with detail, Me as a page, apps as tiles
 
 All versions: [CHANGELOG.md](CHANGELOG.md)
 
