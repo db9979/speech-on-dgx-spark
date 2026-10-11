@@ -114,12 +114,14 @@ MAX_FILE = 150 * 1024 * 1024
 MAX_META = 4096
 FETCH_EVERY = 24 * 3600
 RETRY = 3600               # after a failed or empty check: again within the hour, not only tomorrow
+ASKED_EVERY = 300          # the program asked ("Nach Updates suchen", start): GitHub at most every 5 min
+ASKED_WAIT = 20            # that long the answer waits for a running check; the poll tells a later result
 VERSION_RE = re.compile(r"\d{1,3}\.\d{1,3}\.\d{1,5}")
 FILE_RE = re.compile(r"[\w.\-]{1,80}")
 
 _lock = threading.Lock()
 _info = {}                 # device id -> {"version", "arch"} as the program last said
-_upd = {"checked": {}, "error": {}}
+_upd = {"checked": {}, "error": {}, "running": {}}
 _seen = {}                 # device id -> last poll
 _notes = {}                # uid -> [{"n", "t", "title", "body", "tag"}]
 _seq = {}
@@ -452,10 +454,30 @@ def _part(prof, dev, part):
         raise HTTPException(403, f"{PART_NAMES[part]} ist für dieses Gerät aus (Ich → Begleiter).")
 
 
+async def asked(arch):
+    """The program fetches its settings on start and on "Nach Updates suchen": then the Spark looks at GitHub
+    itself instead of answering from yesterday's check (at most every ASKED_EVERY per platform, one at a time).
+    A slow download keeps running; the next poll names the new version."""
+    if arch not in ARCHS or not admin_on() or notaus.blocks("internet"):
+        return
+    platform = ARCHS[arch][0]
+    task = _upd["running"].get(platform)
+    if not task or task.done():
+        if time.time() - _upd["checked"].get(platform, 0) < ASKED_EVERY:
+            return
+        _upd["checked"][platform] = time.time()     # a second click right after does not start a second one
+        task = _upd["running"][platform] = asyncio.create_task(check(platform))
+    try:
+        await asyncio.wait_for(asyncio.shield(task), ASKED_WAIT)
+    except Exception:
+        pass
+
+
 @router.get("/api/desk/config", dependencies=[Depends(assistant)])
-def program_config(request: Request, version: str = "", arch: str = ""):
+async def program_config(request: Request, version: str = "", arch: str = ""):
     prof, dev = _program(request)
     guard.limit(request, "desk", prof["id"])
+    await asked(arch)
     cfg, rev = device_cfg(dev["id"])
     ok = may(prof["id"])
     _tell(dev["id"], version, arch)
@@ -1994,6 +2016,8 @@ async def fetch(platform, c=None):
                     and re.fullmatch(r"[0-9a-f]{64}", sha)):
                 raise ValueError("begleiter.json ist ungültig.")
             clean[k] = {"name": name, "size": size, "sha256": sha}
+        if not clean:
+            raise ValueError("begleiter.json nennt keine Datei für diesen Rechner.")
         cur = kept(platform)
         if cur and _vt(cur["version"]) >= _vt(ver) and set(cur["files"]) >= set(clean):
             return cur["version"]

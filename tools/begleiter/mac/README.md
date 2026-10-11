@@ -374,7 +374,7 @@ Neue Versionen holt sich der Begleiter **nur von deinem eigenen Spark**, nie dir
    angekündigt hat, das ausgepackte Programm muss „de.db9979.spark.begleiter“ heißen, die angekündigte Version
    haben und gültig signiert sein. Dann beendet sich der Begleiter, ein kleines Hilfsskript tauscht das Programm
    aus und startet die neue Version.
-5. Passt etwas nicht, kommt **„Update beschädigt, nichts geändert.“**, die Datei wird gelöscht, und die alte Version
+5. Passt etwas nicht, kommt **„Update beschädigt (…), nichts geändert.“** mit dem Schritt in Klammern (Größe, Prüfsumme, Auspacken, Kennung oder Version, Signatur), die Datei wird gelöscht, und die alte Version
    läuft einfach weiter. Geht beim Austausch etwas schief, legt das Hilfsskript die alte Version zurück und startet
    sie wieder.
 

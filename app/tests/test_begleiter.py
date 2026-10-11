@@ -323,6 +323,36 @@ class Updates(unittest.TestCase):
         self.assertEqual(c.get("/api/profile/desk").json()["devices"][0]["version"], "1.0.350")
         self.assertEqual(begleiter.platforms(), ["windows"])
 
+    def test_looking_for_updates_asks_github_now(self):
+        """V01.0.377: "Nach Updates suchen" (the program fetches its config) looks at GitHub itself, not only the
+        daily check; at most every 5 minutes per platform, and not with the internet Notaus."""
+        files = {"SparkBegleiter-x64.exe": EXE, "SparkBegleiter-arm64.exe": EXE}
+        calls = []
+
+        async def fake(platform, c=None):
+            calls.append(platform)
+            return await real(platform, github(win_meta("1.0.351"), files))
+        real = begleiter.fetch
+        asyncio.run(real("windows", github(win_meta("1.0.350"), files)))
+        begleiter._upd["checked"]["windows"] = time.time() - 3600       # the daily check ran an hour ago
+        begleiter._upd["running"].pop("windows", None)
+        c = profile("DkLook")
+        c.put("/api/profile/settings", json={"desk_on": True})
+        r = c.post("/api/profile/desk/pair", json={"base": "http://192.168.178.171:31080"})
+        prog = TestClient(panel.app, client=HOME)
+        prog.headers[profiles.DEVICE_HEADER] = prog.post("/api/desk/pair", json={
+            "code": r.json()["code"], "kind": "windows", "name": "PC"}).json()["key"]
+        with unittest.mock.patch.object(begleiter, "fetch", fake):
+            self.assertEqual(prog.get("/api/desk/config?version=1.0.342&arch=x64").json()["update"]["version"], "1.0.351")
+            self.assertEqual(calls, ["windows"])
+            prog.get("/api/desk/config?version=1.0.342&arch=x64")          # right again: no second look
+            prog.get("/api/desk/config?version=1.0.342&arch=mac")          # no Mac paired: kept nothing, but asked
+            self.assertEqual(calls, ["windows", "mac"])
+            begleiter._upd["checked"]["windows"] = time.time() - 600
+            with unittest.mock.patch.object(notaus, "blocks", lambda what: what == "internet"):
+                prog.get("/api/desk/config?version=1.0.342&arch=x64")
+            self.assertEqual(calls, ["windows", "mac"])
+
     @unittest.mock.patch.dict(os.environ)          # other test modules keep their fake GitHub
     def test_only_github_download_addresses(self):
         os.environ.pop("SPEECH_SPARK_GITHUB_API", None)

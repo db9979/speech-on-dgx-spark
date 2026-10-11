@@ -2,6 +2,7 @@
 
 Every version in one line, newest first (taken from the commit messages, so some lines are German, some English). Older entries have no version number.
 
+- **V01.0.377** · 2026-10-11 · Begleiter-Update: „Nach Updates suchen“ (und jeder Start des Programms) lässt den Spark selbst bei GitHub nachsehen statt nur einmal am Tag (höchstens alle 5 Min pro Rechner, nicht bei Notaus Internet); Mac-Programm nennt bei „Update beschädigt“ den Schritt (Größe, Prüfsumme, Auspacken, Kennung/Version, Signatur); Release ohne Datei für den Rechner wird nicht übernommen
 - **V01.0.376** · 2026-10-11 · Selbsttest Begleiter: stellt die Test-Adresse für GitHub wieder her (danach fragte test_esp32 das echte GitHub und fand fw-2.5.1.6, Tests waren rot)
 - **V01.0.375** · 2026-10-11 · Spark-Begleiter Teile speak/inbox/agenda/quiet/meeting/home/daily (alle aus; Besprechung mit Admin-Schalter chat.desk_meeting), Werkzeug pc_send, /api/desk/apps (installierte Programme), Frag Spark liest Antworten vor, Ich → Begleiter mit Geräteliste und Gruppen
 - **V01.0.374** · 2026-10-11 · Selbsttests: ESP32-Tests holen die Firmware wieder nur vom Test-GitHub (ein anderer Test hatte die Umgebungsvariable entfernt, sie fragten das echte GitHub mit neuerer Firmware, Tests rot)

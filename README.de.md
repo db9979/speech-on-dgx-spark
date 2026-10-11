@@ -33,6 +33,7 @@ Alle Optionen ohne Rückfragen (`--mode api --asr 1.7b --tts 0.6b --yes` …) st
 
 <!-- New version: add one line at the top here and in CHANGELOG.md, drop the oldest line here (keep 10). Details go to docs/de and docs/en, not into this README. -->
 
+- **V01.0.377** Begleiter: „Nach Updates suchen“ fragt jetzt wirklich frisch nach, der Mac sagt bei einem kaputten Update, woran es lag
 - **V01.0.376** Selbsttest repariert: der Begleiter-Test stellt die Test-Adresse für GitHub wieder her (Tests waren rot)
 - **V01.0.375** Spark-Begleiter: Vorlesen (auch Antworten von Frag Spark), Vom Handy auf den PC, Termine, Nicht stören, Besprechungen mitschreiben, Smart-Home-Knöpfe, Tagesstart und Feierabend (alles aus), Programme zum Auswählen, Ich → Begleiter übersichtlich bei mehreren Geräten
 - **V01.0.374** Selbsttests: ESP32-Tests holen die Firmware wieder nur vom Test-GitHub (ein anderer Test hatte die Umgebungsvariable entfernt, sie fragten das echte GitHub mit neuerer Firmware, Tests rot)
@@ -42,7 +43,6 @@ Alle Optionen ohne Rückfragen (`--mode api --asr 1.7b --tts 0.6b --yes` …) st
 - **V01.0.370** iPhone-App: Notaus-Knopf und Siri „Spark Notaus“ (immer mit Rückfrage; aufheben nur im Browser)
 - **V01.0.369** reMarkable-Abgleich ruhiger: eigene Schreibvorgänge des Spark lösen keinen Abgleich mehr aus („account changed“), 502/503/504 der Cloud bekommt einen zweiten Versuch, Hinweise des Seitenlesers als eine gezählte Zeile pro Abgleich
 - **V01.0.368** Anfragen, die der Spark selbst anstößt (Update-Prüfung, Sicherung, Regeln), heißen in Logs → Anfragen und auf der Live-Seite „Spark“ statt „Gast“; die Stimmenliste im Panel holt der Spark wieder mit Schlüssel (vorher ~900 abgelehnte Abrufe am Tag, Liste kam nur aus dem Zwischenspeicher); die Sprachausgabe schreibt keine Statistiktabelle pro Satz mehr ins Journal
-- **V01.0.367** Pebble-Uhr-App 1.6.0 im Panel: SELECT 3 s halten löst den Notaus aus (groß nur für Admin-Profile)
 
 Alle Versionen: [CHANGELOG.md](CHANGELOG.md)
 
