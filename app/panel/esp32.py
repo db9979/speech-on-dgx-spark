@@ -58,6 +58,7 @@ import re
 import secrets
 import shutil
 import ssl
+import tempfile
 import threading
 import time
 import wave
@@ -253,7 +254,7 @@ def _allowed_download(url):
 async def _download(c, url, size):
     """A release file, streamed and cut off at its announced size (at most MAX_FILE)."""
     if not _allowed_download(url):
-        raise ValueError("Download-Adresse ist nicht von GitHub.")
+        raise FetchError("Download-Adresse ist nicht von GitHub.")
     limit = min(size or MAX_FILE, MAX_FILE)
     out = bytearray()
     async with c.stream("GET", url) as r:
@@ -261,13 +262,32 @@ async def _download(c, url, size):
         async for chunk in r.aiter_bytes():
             out += chunk
             if len(out) > limit:
-                raise ValueError("Datei ist größer als angekündigt, nichts übernommen.")
+                raise FetchError("Datei ist größer als angekündigt, nichts übernommen.")
     return bytes(out)
+
+
+_fetch_lock = asyncio.Lock()   # the daily check, Geräte-Updates and the admin's button never write at once
+
+
+class FetchError(ValueError):
+    """A reason the panel may show as it is (fixed words, versions, file names from the checked manifest)."""
+
+
+def public_error(e):
+    """What Zustand and Funktionen show for a failed check: our own reasons as they are, anything else
+    (paths, server texts) only as a fixed sentence; the details stay in the log."""
+    return str(e)[:200] if isinstance(e, FetchError) else "Firmware nicht geholt (Netz, GitHub oder Speicher), Einzelheiten im Log."
 
 
 async def fetch_firmware(c=None):
     """Takes the newest firmware release (tag fw-…) of the repo, checks every file's SHA-256 against its
-    manifest and keeps it with the one before. Returns the version."""
+    manifest and keeps it with the one before. Returns the version. One at a time (_fetch_lock), each run
+    in its own temporary folder."""
+    async with _fetch_lock:
+        return await _fetch_firmware(c)
+
+
+async def _fetch_firmware(c=None):
     repo = load_config().get("chat", {}).get("esp32_repo") or "db9979/speech-on-dgx-spark"
     own = c is None
     c = c or httpx.AsyncClient(timeout=120, follow_redirects=True)
@@ -278,35 +298,38 @@ async def fetch_firmware(c=None):
         rel = next((x for x in r.json() if str(x.get("tag_name", "")).startswith("fw-")
                     and not x.get("draft") and not x.get("prerelease")), None)
         if not rel:
-            raise ValueError("Im Repo gibt es noch keine Firmware-Version (fw-…).")
+            raise FetchError("Im Repo gibt es noch keine Firmware-Version (fw-…).")
         assets = {a["name"]: a["browser_download_url"] for a in rel.get("assets", [])}
         if "manifest.json" not in assets:
-            raise ValueError("Die Firmware-Version hat kein manifest.json.")
+            raise FetchError("Die Firmware-Version hat kein manifest.json.")
         m = json.loads(await _download(c, assets["manifest.json"], MAX_BODY * 8))
         ver = str(m.get("version", ""))
         if not version_tuple(ver) or not isinstance(m.get("variants"), dict):
-            raise ValueError("manifest.json ist ungültig.")
+            raise FetchError("manifest.json ist ungültig.")
         cur = manifest()
         if cur and cur["version"] == ver:
             return ver
-        tmp = os.path.join(FW_DIR, ver + ".part")
-        shutil.rmtree(tmp, ignore_errors=True)
-        os.makedirs(tmp)
-        for name, var in m["variants"].items():
-            for p in var.get("parts", []) + [var.get("app", {})]:
-                fn = str(p.get("file", ""))
-                if not SAFE_NAME.fullmatch(fn) or fn not in assets:
-                    raise ValueError(f"{name}: Datei {fn!r} fehlt in der Version.")
-                dst = os.path.join(tmp, fn)
-                if os.path.exists(dst):
-                    continue
-                data = await _download(c, assets[fn], int(p.get("size") or 0))
-                if hashlib.sha256(data).hexdigest() != p.get("sha256"):
-                    raise ValueError(f"{fn}: Prüfsumme passt nicht, nichts übernommen.")
-                with open(dst, "wb") as f:
-                    f.write(data)
-        with open(os.path.join(tmp, "manifest.json"), "w") as f:
-            json.dump(m, f)
+        os.makedirs(FW_DIR, exist_ok=True)
+        tmp = tempfile.mkdtemp(prefix=ver + ".part-", dir=FW_DIR)
+        try:
+            for name, var in m["variants"].items():
+                for p in var.get("parts", []) + [var.get("app", {})]:
+                    fn = str(p.get("file", ""))
+                    if not SAFE_NAME.fullmatch(fn) or fn not in assets:
+                        raise FetchError(f"{name}: Datei {fn!r} fehlt in der Version.")
+                    dst = os.path.join(tmp, fn)
+                    if os.path.exists(dst):
+                        continue
+                    data = await _download(c, assets[fn], int(p.get("size") or 0))
+                    if hashlib.sha256(data).hexdigest() != p.get("sha256"):
+                        raise FetchError(f"{fn}: Prüfsumme passt nicht, nichts übernommen.")
+                    with open(dst, "wb") as f:
+                        f.write(data)
+            with open(os.path.join(tmp, "manifest.json"), "w") as f:
+                json.dump(m, f)
+        except BaseException:
+            shutil.rmtree(tmp, ignore_errors=True)
+            raise
         final = os.path.join(FW_DIR, ver)
         shutil.rmtree(final, ignore_errors=True)
         os.replace(tmp, final)
@@ -340,8 +363,8 @@ async def check():
     try:
         await fetch_firmware()
     except Exception as e:
-        err = str(e)[:200]
-        print("esp32: firmware check", type(e).__name__, err, flush=True)
+        err = public_error(e)
+        print("esp32: firmware check", type(e).__name__, str(e)[:200], flush=True)
     _update(lambda d: d.update(checked=time.time(), error=err))
     return err
 
@@ -2107,7 +2130,8 @@ async def admin_fetch(request: Request):
     try:
         await fetch_firmware()
     except Exception as e:
-        err = str(e)[:200] or type(e).__name__
+        err = public_error(e)
+        print("esp32: firmware fetch", type(e).__name__, str(e)[:200], flush=True)
     _update(lambda d: d.update(checked=time.time(), error=err))
     if err:
         raise HTTPException(400, "Firmware nicht geholt: " + err)

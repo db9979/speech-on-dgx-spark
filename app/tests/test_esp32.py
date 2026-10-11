@@ -146,6 +146,38 @@ class Speakers(unittest.TestCase):
         self.assertEqual(TestClient(panel.app).get("/api/esp32/fw/2.5.1.2/manifest.json").status_code, 404)
         self.assertEqual(TestClient(panel.app).get("/api/esp32/fw/2.5.1.2/..%2Fcurrent.json").status_code, 404)
 
+    def test_firmware_two_checks_at_once(self):
+        """The daily check, Geräte-Updates and the admin's button at the same moment: one after the other, each in
+        its own temporary folder, nothing half written left behind (Dominik 2026-10-11: "No such file … .part/…")."""
+        release("2.5.1.4")
+
+        async def both():
+            return await asyncio.gather(esp32.fetch_firmware(), esp32.fetch_firmware())
+        self.assertEqual(asyncio.run(both()), ["2.5.1.4", "2.5.1.4"])
+        self.assertEqual(esp32.manifest()["version"], "2.5.1.4")
+        self.assertEqual([x for x in os.listdir(esp32.FW_DIR) if ".part" in x], [])
+        release("2.5.1.2")
+        self.assertEqual(asyncio.run(esp32.fetch_firmware()), "2.5.1.2")
+
+    def test_failed_check_shows_no_path_or_server_text(self):
+        async def broken(c, url, size):
+            raise OSError("[Errno 2] No such file or directory: '/var/lib/speech-spark/firmware/x.part/y.bin'")
+        release("2.5.1.4")
+        orig = esp32._download
+        esp32._download = broken
+        try:
+            err = asyncio.run(esp32.check())
+            r = ADMIN.post("/api/admin/esp32/fetch")
+        finally:
+            esp32._download = orig
+            release("2.5.1.2")
+        self.assertNotIn("/var/lib", err)
+        self.assertIn("Einzelheiten im Log", err)
+        self.assertEqual(r.status_code, 400)
+        self.assertNotIn("/var/lib", r.text)
+        self.assertEqual(esp32.manifest()["version"], "2.5.1.2")
+        self.assertEqual([x for x in os.listdir(esp32.FW_DIR) if ".part" in x], [])
+
     def test_pair_by_code(self):
         cid = "11111111-2222-4333-8444-555555555555"
         r = ota(cid, fw="2.5.1.1")
