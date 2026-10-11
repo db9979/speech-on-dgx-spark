@@ -59,8 +59,14 @@ WHY = {"sprache": ("pausiert, solange gesprochen wird", "paused while someone sp
        "offline": ("gerade nicht verbunden", "not connected right now"),
        "ungeprueft": ("noch nicht abgefragt", "not asked yet"),
        "auswahl": ("noch nichts ausgewählt", "nothing picked yet"),
-       "fehler": ("Fehler", "error")}
-NEEDS_YOU = {"anmeldung", "adresse", "gesperrt", "voll", "angehalten", "antwort"}
+       "fehler": ("Fehler", "error"),
+       # Geräte-Updates (geraeteupdate.py)
+       "update_nacht": ("Update kommt heute Nacht", "update comes tonight"),
+       "update_start": ("Update beim nächsten Neustart", "update at the next restart"),
+       "update_hand": ("Update bereit, Jetzt aktualisieren tippen", "update ready, tap Update now"),
+       "update_klick": ("neue Version, Installation per Klick", "new version, install with a click"),
+       "update_halt": ("Update angehalten, bitte prüfen", "update stopped, please check")}
+NEEDS_YOU = {"anmeldung", "adresse", "gesperrt", "voll", "angehalten", "antwort", "update_hand", "update_klick", "update_halt"}
 STATES = ("run", "wait", "ok", "bad", "idle")
 JOBS = ("docs", "meaning", "brief", "remarkable", "tidy", "contacts", "agent", "briefing", "memtidy")
 KINDS = ("mail", "cal", "contacts", "ha", "mcp")
@@ -418,6 +424,39 @@ def _devices(uid, now):
     return out
 
 
+def _updates(uid):
+    import geraeteupdate as gu
+    o = gu.overview(uid)
+    night = gu.night_on() and features.allowed("geraetenacht", uid)
+    out = []
+    for k in o["kinds"]:
+        devs, v = k["devices"], k["version"]
+        if k["kind"] == "android":
+            if not k["profiles"] or not v:
+                continue
+            out.append(_row("devup:android", "services", k["name"], "ok", detail=(f"Version {v} liegt bereit", f"version {v} is ready"),
+                            go=k["go"]))
+            continue
+        if not devs:
+            continue
+        if k["kind"] == "pebble":
+            out.append(_row("devup:pebble", "services", k["name"], "ok", detail=(f"Uhr-App {v} liegt bereit", f"watch app {v} is ready")
+                            if v else ("", ""), go=k["go"]))
+            continue
+        why = ""
+        if k["waiting"]:
+            if k["kind"] == "esp":
+                auto = any(d["newer"] and d.get("auto") for d in devs)
+                why = "update_halt" if night and o["night"]["stopped"] else \
+                    ("update_nacht" if night else "update_start") if auto else "update_hand"
+            else:
+                why = "update_klick"
+        detail = (f"{v or '?'} · {k['current']} von {len(devs)} aktuell", f"{v or '?'} · {k['current']} of {len(devs)} up to date")
+        out.append(_row(f"devup:{k['kind']}", "services", k["name"], "bad" if why == "update_halt" else "wait" if why else "ok", why,
+                        detail=detail, go=k["go"]))
+    return out
+
+
 def rows(uid, now=None):
     """Every row for uid: background jobs first, then connected services."""
     now = now or time.time()
@@ -459,6 +498,8 @@ def rows(uid, now=None):
         if features.allowed("mymcp", uid):   # the profile's own MCP services (meinmcp.py), one row each
             svcs += _mymcp(uid)
         svcs += _devices(uid, now)
+        if features.allowed("geraeteupdate", uid):   # Geräte-Updates: one row per kind of device the profile has
+            svcs += _updates(uid)
     except Exception as e:
         print("hintergrund: services:", type(e).__name__, flush=True)
     for r in jobs:

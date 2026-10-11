@@ -198,7 +198,7 @@ def pick(uid, private=True):
 
 # what a note is for on Zustand → Live (live.note), by its tag; fixed words only
 WHY = {"agent": "Auftrag", "briefing": "Tagesüberblick", "msg-": "Nachricht", "notaus": "Notaus", "setup": "Einrichtung",
-       "pro-": "Von selbst", "mcp": "MCP-Bestätigung", "admin": "Hinweis", "hello": "Test"}
+       "pro-": "Von selbst", "mcp": "MCP-Bestätigung", "admin": "Hinweis", "hello": "Test", "devup": "Geräte-Update"}
 
 
 def _why(tag):

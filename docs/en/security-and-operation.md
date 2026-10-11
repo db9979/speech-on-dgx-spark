@@ -99,7 +99,7 @@ Since V01.0.338 every signed-in profile has its own, weaker kill switch under *M
 
 ## Reporting problems
 
-Since V01.0.381. Something does not work? Every profile with its own switch (Me → Reporting problems) describes it briefly and gets a draft; guests never. Admin switch: Features → Security → "Reporting problems", plus the target repository (default `db9979/spark-meldungen`, private). It opens everywhere: "Report a problem" at the bottom of the panel, Status → Logs, Ctrl/⌘ K, Me → Reporting problems, in the Android app (panel), in the iPhone app under Settings, in the Spark companion (Windows: the icon's menu; Mac: settings), by Telegram `/melden text` and by voice (also watch and speakers) with the fixed sentence "Spark, Problem melden: …". Telegram and voice only make a draft; sending always comes after a look at the preview.
+Since V01.0.382. Something does not work? Every profile with its own switch (Me → Reporting problems) describes it briefly and gets a draft; guests never. Admin switch: Features → Security → "Reporting problems", plus the target repository (default `db9979/spark-meldungen`, private). It opens everywhere: "Report a problem" at the bottom of the panel, Status → Logs, Ctrl/⌘ K, Me → Reporting problems, in the Android app (panel), in the iPhone app under Settings, in the Spark companion (Windows: the icon's menu; Mac: settings), by Telegram `/melden text` and by voice (also watch and speakers) with the fixed sentence "Spark, Problem melden: …". Telegram and voice only make a draft; sending always comes after a look at the preview.
 
 **What goes along:** the description, if wanted the own last requests (only ways, tools, times from Logs → Requests), the system state (version, services, memory), from the iPhone app the sound log, and for admins only diagnose log lines of the area (10, 30 or 60 min).
 
@@ -111,7 +111,7 @@ Since V01.0.381. Something does not work? Every profile with its own switch (Me 
 
 **Admin view:** admins see every report of every profile, for sent ones the state on GitHub (open or done), the number of answers and the answers themselves as plain text with a link; a profile sees only its own. Answers from GitHub never go to the language model.
 
-**Tell the admin through the assistant** (since V01.0.381, sub-switch, off): when a profile sends or keeps a report, the assistant tells the admin profiles (the one chosen for admin notes, the main admin, co-admins), in the assistant when the page is open, else as a note. Only profile name, area, way and number, never the text; the reporting profile itself gets nothing. Every admin profile turns it off for itself under Me → Reporting problems; during the Notaus it stays silent.
+**Tell the admin through the assistant** (since V01.0.382, sub-switch, off): when a profile sends or keeps a report, the assistant tells the admin profiles (the one chosen for admin notes, the main admin, co-admins), in the assistant when the page is open, else as a note. Only profile name, area, way and number, never the text; the reporting profile itself gets nothing. Every admin profile turns it off for itself under Me → Reporting problems; during the Notaus it stays silent.
 
 **Live:** Status → Live shows GitHub (reports) with the number of drafts and of those sent today, never contents.
 

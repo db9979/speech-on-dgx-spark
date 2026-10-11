@@ -33,7 +33,8 @@ All options for running without questions (`--mode api --asr 1.7b --tts 0.6b --y
 
 <!-- New version: add one line at the top here and in CHANGELOG.md, drop the oldest line here (keep 10). Details go to docs/de and docs/en, not into this README. -->
 
-- **V01.0.381** Reporting problems (off): anonymized report as a GitHub issue from the panel, apps, companion, Telegram and by voice, with a preview; admins see all with answers and hear of new ones through the assistant
+- **V01.0.382** Reporting problems (off): anonymized report as a GitHub issue from the panel, apps, companion, Telegram and by voice, with a preview; admins see all with answers and hear of new ones through the assistant
+- **V01.0.381** Device updates (off): overview, one note per new firmware or app version, speakers updated one by one at night, XiaoZhi note to the admin
 - **V01.0.380** Suggesting functions (off): a hint with "Set up" when you ask for something that is off or half set up, guided setup in the face, at most 3 a week
 - **V01.0.379** Gentler updates: speech services restart only when something of theirs changed, a short smoke test instead of the minutes-long self-test when GitHub's run passed; "Install overnight" (off), a warning while somebody is talking, the update on the live page; fewer repeated log lines
 - **V01.0.378** Companion: "Fetch new version now" takes Windows and Mac, also with no computer of that kind paired
@@ -42,7 +43,6 @@ All options for running without questions (`--mode api --asr 1.7b --tts 0.6b --y
 - **V01.0.375** Spark companion: read aloud (also Ask Spark answers), from phone to PC, appointments, do not disturb, meeting notes, smart home buttons, day start and evening (all off), programs to pick, Me → Companion clear with several devices
 - **V01.0.374** Self-tests: the ESP32 tests fetch firmware from the fake GitHub again (another test had removed the variable, they asked the real GitHub with newer firmware, tests red)
 - **V01.0.373** Instant acknowledgement (off): right after the question a pre-recorded sentence of what the Spark is doing, measured apart from the answer's first sound
-- **V01.0.372** Emergency stop docs: every way in one place (Telegram, sentence, Home Assistant, Android, iPhone, speakers, Pebble, guard)
 
 All versions: [CHANGELOG.md](CHANGELOG.md)
 
