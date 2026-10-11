@@ -33,6 +33,7 @@ All options for running without questions (`--mode api --asr 1.7b --tts 0.6b --y
 
 <!-- New version: add one line at the top here and in CHANGELOG.md, drop the oldest line here (keep 10). Details go to docs/de and docs/en, not into this README. -->
 
+- **V01.0.421** Invitation test waits up to 120 s on a busy runner and logs where it hangs
 - **V01.0.420** Stable GitHub test runs (atomic config writes in tests, wait for page state); jump from Who may do what stays on its row with many profiles
 - **V01.0.419** Companion: "open heise.de on my Mac" from a speaker or the phone reliably reaches the computer (question there); if it cannot, the Spark says why
 - **V01.0.418** Tests green again: jump from Who may do what on phones, height budget
@@ -42,7 +43,6 @@ All options for running without questions (`--mode api --asr 1.7b --tts 0.6b --y
 - **V01.0.414** Self-tests wait for page state instead of fixed times (messages, speakers, who may what)
 - **V01.0.413** Me → Documents clear with many files: compact rows, search, filters, details, select several
 - **V01.0.412** Ich shows the admin-off notice right away; invitation test refills the PIN after a redraw
-- **V01.0.411** Live page you can use: events with area chips, search and pause, a click shows the place in the picture; a box opens numbers of the last hour, ⚠ with explanation and the way to fix it; rewind the last 15 minutes; copy the way or open it in Requests; self emergency stop counters; Begleiter jobs and the instant sentence as ways in the picture; the monitor holds on a tap
 
 All versions: [CHANGELOG.md](CHANGELOG.md)
 

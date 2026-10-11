@@ -33,6 +33,7 @@ Alle Optionen ohne Rückfragen (`--mode api --asr 1.7b --tts 0.6b --yes` …) st
 
 <!-- New version: add one line at the top here and in CHANGELOG.md, drop the oldest line here (keep 10). Details go to docs/de and docs/en, not into this README. -->
 
+- **V01.0.421** Einladungstest wartet bis 120 s auf langsamen Rechnern und schreibt, wo es hängt
 - **V01.0.420** Stabile GitHub-Testläufe (Einstellungen in einem Schritt, Warten auf Seitenzustand); Sprung aus Wer darf was bleibt bei vielen Profilen an der Zeile
 - **V01.0.419** Begleiter: „Öffne heise.de auf meinem Mac“ vom Lautsprecher oder Handy kommt sicher am Rechner an (Rückfrage dort); sonst sagt der Spark warum
 - **V01.0.418** Testlauf grün: Sprung aus Wer darf was auf dem Handy, Höhen-Budget
@@ -42,7 +43,6 @@ Alle Optionen ohne Rückfragen (`--mode api --asr 1.7b --tts 0.6b --yes` …) st
 - **V01.0.414** Selbsttests warten auf den Seitenzustand statt fester Zeiten (Nachrichten, Lautsprecher, Wer darf was)
 - **V01.0.413** Ich → Dokumente übersichtlich bei vielen Dateien: kompakte Zeilen, Suche, Filter, Detailbereich, Mehrfachauswahl
 - **V01.0.412** Ich zeigt den Hinweis „Vom Admin ausgeschaltet“ sofort; Einladungstest füllt die PIN nach Neuzeichnen erneut
-- **V01.0.411** Live-Seite zum Bedienen: Ereignisse mit Bereichs-Knöpfen, Suche und Anhalten, Klick zeigt die Stelle im Bild; Kasten im Bild öffnet Zahlen der letzten Stunde, ⚠ mit Erklärung und Weg zur Abhilfe; letzte 15 Minuten zurückspulen; Weg kopieren oder in Anfragen öffnen; Selbst-Notaus-Zähler; Begleiter-Aufträge und Sofort-Satz als Weg im Bild; Monitor hält per Tippen an
 
 Alle Versionen: [CHANGELOG.md](CHANGELOG.md)
 

@@ -2321,7 +2321,17 @@ class JoinBrowser(unittest.TestCase):
                                 await pg.click("#joingo")
                         self.assertEqual(joined, [200], f"asked {asked} errors {errors}")
                         # not "load": on a busy runner every script of the new page can take long; the profile is what counts
-                        await pg.wait_for_function("typeof PROFILE!=='undefined'&&PROFILE&&PROFILE.name==='Wilma'", timeout=60000)
+                        # 120 s: this second server starts its own minute jobs over the run's 600 profiles on a 2-core
+                        # runner (red at 60 s on GitHub, V01.0.420); if it still fails, the trace says where it hangs
+                        try:
+                            await pg.wait_for_function("typeof PROFILE!=='undefined'&&PROFILE&&PROFILE.name==='Wilma'", timeout=120000)
+                        except Exception:
+                            state = await pg.evaluate("""JSON.stringify({p:typeof PROFILE!=='undefined'&&PROFILE&&PROFILE.name,
+                                ver:($('ver')||{}).textContent,ready:document.readyState,hash:location.hash,url:location.pathname})""")
+                            who = await pg.request.get(base + "/api/whoami")
+                            print(f"\nWARNUNG Wilma nicht angemeldet: {state} whoami {who.status} {(await who.text())[:300]} "
+                                  f"{bad[-8:]} {errors}", file=sys.stderr)
+                            raise
                         try:
                             await pg.wait_for_selector("#gobox .gocard", timeout=30000)
                         except Exception:
