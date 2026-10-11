@@ -114,7 +114,11 @@ apt_wait() {
 }
 PKGS="python3 python3-venv python3-dev build-essential ninja-build git openssl ffmpeg libopus0 sox libsox-fmt-all libsndfile1 curl jq iproute2"
 # ninja-build + build-essential: vLLM / FlashInfer compile kernels at first start (JIT)
-if ! { apt_wait update -q && apt_wait install -y -q $PKGS; }; then
+# An update leaves apt alone when every package is there already (security updates come from the
+# system's own unattended-upgrades): apt update costs CPU and time while somebody may be talking.
+if [ "$FROM_UPDATE" = 1 ] && dpkg -s $PKGS >/dev/null 2>&1; then
+  echo "   all packages are installed, apt skipped"
+elif ! { apt_wait update -q && apt_wait install -y -q $PKGS; }; then
   # an update only needs packages that the first install already put there
   if [ "$FROM_UPDATE" = 1 ] && dpkg -s $PKGS >/dev/null 2>&1; then
     warn "apt is still busy; all needed packages are already installed, going on without apt"
@@ -397,8 +401,15 @@ done
 # version needs, so the running services keep the libraries they were started with, and a new
 # release somewhere on PyPI cannot break a working install. A version the code needs is written
 # here as "name>=x.y"; pip then upgrades just that package.
+# An update asks pip only when the package list of an environment changed: $v/.pkgs keeps the list
+# the last successful run installed (root's file in root's folder).
+same_pkgs() {  # $1 = venv folder, $2 = package list; true when an update finds nothing new to install
+  [ "$FROM_UPDATE" = 1 ] && [ -x "$1/bin/python" ] && [ -f "$1/.pkgs" ] && [ ! -L "$1/.pkgs" ] \
+    && [ "$(cat "$1/.pkgs")" = "$2" ]
+}
 make_venv() {  # $1 = name, rest = pip packages
-  local v="$PREFIX/venv-$1"; shift
+  local v="$PREFIX/venv-$1" sig="pkgs-r1 $*"; shift
+  if same_pkgs "$v" "$sig"; then echo "   venv-${v##*/venv-}: packages unchanged, pip skipped"; return 0; fi
   [ -x "$v/bin/python" ] || "$PY" -m venv "$v"
   "$v/bin/pip" install -q pip wheel setuptools
   if [ "$1" = "--torch" ]; then
@@ -409,6 +420,7 @@ make_venv() {  # $1 = name, rest = pip packages
   else
     "$v/bin/pip" install -q "$@"   # only PyPI: a second index could hand out a package of the same name
   fi
+  rm -f -- "$v/.pkgs"; printf '%s\n' "$sig" >"$v/.pkgs"
 }
 
 check_cuda() {
@@ -425,13 +437,15 @@ USE_ENGINE=0
 
 if [ "$WITH_ASR" = 1 ] && [ "$ASR_BACKEND" = transformers ]; then
   say "Python env for Qwen3-ASR (transformers backend, several GB of wheels)"
+  same_pkgs "$PREFIX/venv-asr" "pkgs-r1 asr --torch qwen-asr fastapi uvicorn[standard] python-multipart sherpa-onnx" && asr_same=1 || asr_same=0
   make_venv asr --torch qwen-asr fastapi "uvicorn[standard]" python-multipart sherpa-onnx
-  check_cuda asr
+  [ "$asr_same" = 1 ] || check_cuda asr
 fi
 if [ "$WITH_TTS" = 1 ] && [ "$BACKEND" = transformers ]; then
   say "Python env for Qwen3-TTS (transformers backend)"
+  same_pkgs "$PREFIX/venv-tts" "pkgs-r1 tts --torch qwen-tts fastapi uvicorn[standard] python-multipart num2words" && tts_same=1 || tts_same=0
   make_venv tts --torch qwen-tts fastapi "uvicorn[standard]" python-multipart num2words
-  check_cuda tts
+  [ "$tts_same" = 1 ] || check_cuda tts
 fi
 say "Python env for the panel and the ASR / TTS front ends"
 # sherpa-onnx + huggingface_hub: the Parakeet recognizer (CPU) that asr_proxy.py runs when chosen
@@ -442,25 +456,41 @@ say "Python env for the panel and the ASR / TTS front ends"
 # packages as they are (see below) until it is built again (remove $PREFIX/venv-panel, run install.sh).
 PANEL_LOCK="$INSTALL_FROM/app/requirements-panel.lock"
 if [ -f "$PANEL_LOCK" ] && { [ ! -x "$PREFIX/venv-panel/bin/python" ] || [ -f "$PREFIX/venv-panel/.locked" ]; }; then
-  [ -x "$PREFIX/venv-panel/bin/python" ] || "$PY" -m venv "$PREFIX/venv-panel"
-  "$PREFIX/venv-panel/bin/pip" install -q --no-deps --require-hashes -r "$PANEL_LOCK"
-  touch "$PREFIX/venv-panel/.locked"
+  # .locked holds the SHA-256 of the lock file it was built from: an update with the same lock skips pip
+  lock_sum=$(sha256sum "$PANEL_LOCK" | cut -c1-64)
+  if [ "$FROM_UPDATE" = 1 ] && [ -x "$PREFIX/venv-panel/bin/python" ] && [ ! -L "$PREFIX/venv-panel/.locked" ] \
+     && [ "$(cat "$PREFIX/venv-panel/.locked" 2>/dev/null)" = "$lock_sum" ]; then
+    echo "   venv-panel: lock file unchanged, pip skipped"
+  else
+    [ -x "$PREFIX/venv-panel/bin/python" ] || "$PY" -m venv "$PREFIX/venv-panel"
+    "$PREFIX/venv-panel/bin/pip" install -q --no-deps --require-hashes -r "$PANEL_LOCK"
+  fi
+  rm -f -- "$PREFIX/venv-panel/.locked"; printf '%s\n' "$lock_sum" >"$PREFIX/venv-panel/.locked"
 else
   # rmscene pins packaging<24 although it only uses packaging.version.Version; resolved together
   # with the rest, pip downgraded packaging to 23.2 and broke wheel (packaging>=24), which showed up
   # as "pip's dependency resolver ... dependency conflicts" in every update log. So packaging stays
   # current and rmscene comes in without its dependencies; the first line repairs venvs from .273-.276.
+  if same_pkgs "$PREFIX/venv-panel" "pkgs-r1 legacy-r1"; then
+    echo "   venv-panel: packages unchanged, pip skipped"
+  else
   [ -x "$PREFIX/venv-panel/bin/pip" ] && "$PREFIX/venv-panel/bin/pip" install -q --no-deps "packaging>=24"
   make_venv panel fastapi "uvicorn[standard]" python-multipart "httpx[http2]" psutil num2words numpy pypdf icalendar recurring-ical-events cryptography segno sherpa-onnx huggingface_hub "packaging>=24" "pillow==11.3.0" "onnxruntime==1.22.1" "tokenizers==0.22.1" "pypdfium2==4.30.0"   # pictures (images.py), meaning search (docembed.py), scanned pages (documents.py): fixed versions
   "$PREFIX/venv-panel/bin/pip" install -q --no-deps "rmscene==0.8.0"   # reMarkable pages (remarkable.py)
   # passkeys (passkey.py): python-fido2 only needs cryptography (above); alone, so its cap on cryptography moves nothing
   "$PREFIX/venv-panel/bin/pip" install -q --no-deps "fido2==2.2.1"
+  # bump legacy-r1 when a package in this branch changes
+  rm -f -- "$PREFIX/venv-panel/.pkgs"; printf '%s\n' "pkgs-r1 legacy-r1" >"$PREFIX/venv-panel/.pkgs"
+  fi
 fi
 
 # ---------------------------------------------------------------- engines (vLLM + vllm-omni, native)
 if [ "$USE_ENGINE" = 1 ]; then
   say "Python env for the engines: vllm $VLLM_VERSION + vllm-omni $VLLM_OMNI_VERSION (large, takes a while the first time)"
   v="$PREFIX/venv-engine"
+  if same_pkgs "$v" "engine $VLLM_VERSION $VLLM_OMNI_VERSION"; then
+    echo "   venv-engine: same versions, nothing to install"
+  else
   [ -x "$v/bin/python" ] || "$PY" -m venv "$v"
   "$v/bin/pip" install -q -U pip uv
   # uv resolves this large dependency set much faster than pip; torch comes from PyPI,
@@ -469,9 +499,20 @@ if [ "$USE_ENGINE" = 1 ]; then
   "$v/bin/uv" pip install -q --python "$v/bin/python" "vllm[audio]==$VLLM_VERSION" "vllm-omni==$VLLM_OMNI_VERSION"
   check_cuda engine
   "$v/bin/vllm" --help >/dev/null 2>&1 || die "vllm in venv-engine does not start; see the output above"
+  rm -f -- "$v/.pkgs"; printf '%s\n' "engine $VLLM_VERSION $VLLM_OMNI_VERSION" >"$v/.pkgs"
+  fi
 fi
 
 # ---------------------------------------------------------------- models (ASR / transformers TTS)
+# An update downloads only when the chosen models changed since the last complete download
+# ($PREFIX/.models, root's file); the services fetch a model that went missing themselves.
+MODELS_SIG="models-r1 $WITH_ASR $WITH_TTS $ASR_BACKEND $BACKEND $(jq -c '{a: .asr.model, b: .asr.aligner_model, c: .asr.timestamps, d: .asr.recognizer, e: .tts.model, f: .tts.voicedesign_enabled, g: .tts.voicedesign_model}' "$ETC/config.json")"
+if [ "$DOWNLOAD" = 1 ] && [ "$FROM_UPDATE" = 1 ] && [ -f "$PREFIX/.models" ] && [ ! -L "$PREFIX/.models" ] \
+   && [ "$(cat "$PREFIX/.models")" = "$MODELS_SIG" ]; then
+  say "Downloading skipped: the models are the same as before"
+  DOWNLOAD=0
+fi
+MODELS_OK=1
 if [ "$DOWNLOAD" = 1 ]; then
   dl() {
     sudo -u "$SVC_USER" HF_HOME="$VAR/hf" "$PREFIX/venv-$1/bin/python" -c \
@@ -487,7 +528,7 @@ if [ "$DOWNLOAD" = 1 ]; then
     asr_venv=panel; [ "$ASR_BACKEND" = transformers ] && asr_venv=asr
     { cat "$INSTALL_FROM/app/parakeet.py"; echo 'download()'; } \
       | sudo -u "$SVC_USER" HF_HOME="$VAR/hf" "$PREFIX/venv-$asr_venv/bin/python" - \
-      || warn "Parakeet download failed; the ASR service retries when it starts"
+      || { warn "Parakeet download failed; the ASR service retries when it starts"; MODELS_OK=0; }
   fi
   # (with Parakeet the engine stays off; it fetches its model itself if Qwen3-ASR is chosen later)
   if [ "$WITH_ASR" = 1 ] && [ "$ASR_BACKEND" = vllm ] && [ "$(cfg '.asr.recognizer // "qwen"')" != parakeet ]; then
@@ -503,6 +544,7 @@ if [ "$DOWNLOAD" = 1 ]; then
     dl engine "$(cfg .tts.model)"
     [ "$(cfg .tts.voicedesign_enabled)" = true ] && dl engine "$(cfg .tts.voicedesign_model)"
   fi
+  if [ "$MODELS_OK" = 1 ]; then rm -f -- "$PREFIX/.models"; printf '%s\n' "$MODELS_SIG" >"$PREFIX/.models"; fi
 fi
 
 # ---------------------------------------------------------------- self-test (before anything goes live)
@@ -511,10 +553,21 @@ fi
 if [ "${SPEECH_SPARK_NO_SELFTEST:-0}" = 1 ]; then
   say "Self-test skipped (putting the previous version back)"
 else
-say "Self-test of the panel (fake LLM and TTS, nothing real is touched)"
+# The whole self-test takes minutes of CPU. When update.sh installs exactly the version GitHub's
+# test run passed (SPEECH_SPARK_TESTED=1), a short smoke test here is enough: it loads every module
+# with the packages of this Spark and starts the panel once. Otherwise (first install, --newest, a
+# chosen version, a clone from elsewhere) the whole self-test runs. Both run with the lowest CPU and
+# disk priority, so an answer that is being spoken right now keeps its speed.
 SELFTEST_LOG="$PREFIX/selftest.log"
+if [ "$FROM_UPDATE" = 1 ] && [ "${SPEECH_SPARK_TESTED:-0}" = 1 ] && [ -f "$INSTALL_FROM/app/tests/test_rauchtest.py" ]; then
+  say "Self-test of the panel: smoke test (this version passed GitHub's tests)"
+  SELFTEST_ARGS=(-m unittest tests.test_rauchtest)
+else
+  say "Self-test of the panel (fake LLM and TTS, nothing real is touched)"
+  SELFTEST_ARGS=(-m unittest discover -s tests -t .)
+fi
 work=$(mktemp -d); cp -r "$INSTALL_FROM/app" "$work/app"
-if (cd "$work/app" && timeout 600 "$PREFIX/venv-panel/bin/python" -W ignore -m unittest discover -s tests -t . >"$SELFTEST_LOG" 2>&1); then
+if (cd "$work/app" && nice -n 19 ionice -c 2 -n 7 timeout 900 "$PREFIX/venv-panel/bin/python" -W ignore "${SELFTEST_ARGS[@]}" >"$SELFTEST_LOG" 2>&1); then
   echo "   $(grep -E '^Ran ' "$SELFTEST_LOG") - all passed"
 else
   tail -n 25 "$SELFTEST_LOG"
@@ -823,7 +876,9 @@ systemctl daemon-reload
 # an update only restarts an engine when its settings changed: a restart costs a model load
 restart_engine() {  # $1 = unit suffix, $2 = settings signature
   local sigfile="$VAR/state/$1.sig"
-  set -- "$1" "$2 units-r2"  # bump when the unit files change in a way a running engine must pick up
+  # bump units-r… when the unit files change in a way a running engine must pick up; a changed engine.sh
+  # (its start options) restarts the engines by itself
+  set -- "$1" "$2 units-r2 engine.sh=$(sha256sum "$PREFIX/app/engine.sh" | cut -c1-16)"
   systemctl enable "speech-spark-$1.service" >/dev/null 2>&1
   if [ "$FROM_UPDATE" = 0 ] || [ "$(cat "$sigfile" 2>/dev/null)" != "$2" ] \
      || ! systemctl is-active -q "speech-spark-$1.service"; then
@@ -841,8 +896,36 @@ if [ "$WITH_ASR" = 1 ] && [ "$ASR_BACKEND" = vllm ]; then
 else
   systemctl disable --now speech-spark-asr-engine.service 2>/dev/null || true
 fi
+# The ASR and TTS front ends: an update restarts one only when something it runs from changed (its
+# files from app/restart-map, its unit, the settings, its Python packages). A service the map does not
+# know, or a missing file, always restarts. tests/test_rauchtest.py checks the map against the imports.
+svc_print() {  # $1 = service: everything it runs from, as one stream (only hashed, never shown)
+  local files f
+  files=$(sed -n "s/^$1: *//p" "$PREFIX/app/restart-map" 2>/dev/null | head -1)
+  [ -n "$files" ] || { echo "unknown $(date +%s%N)"; return; }
+  echo "restart-r1"
+  cat "/etc/systemd/system/speech-spark-$1.service" "$ETC/config.json" 2>/dev/null
+  for f in $files; do
+    case "$f" in *..*|/*|*[!A-Za-z0-9_./-]*) echo "bad $(date +%s%N)"; continue ;; esac
+    printf '== %s\n' "$f"; cat -- "$PREFIX/app/$f" 2>/dev/null || echo "missing $(date +%s%N)"
+  done
+  cat -- "$PREFIX"/venv-*/.pkgs "$PREFIX/venv-panel/.locked" 2>/dev/null || true
+}
+restart_front() {  # $1 = service (asr or tts)
+  local fp mark="$PREFIX/.restart-$1"
+  fp=$(svc_print "$1" | sha256sum | cut -c1-64)
+  systemctl enable "speech-spark-$1.service" >/dev/null 2>&1
+  if [ "$FROM_UPDATE" = 0 ] || [ ! -f "$mark" ] || [ -L "$mark" ] || [ "$(cat "$mark")" != "$fp" ] \
+     || ! systemctl is-active -q "speech-spark-$1.service"; then
+    systemctl restart "speech-spark-$1.service"
+    echo "   $1 restarted"
+  else
+    echo "   $1 unchanged, keeps running"
+  fi
+  rm -f -- "$mark"; printf '%s\n' "$fp" >"$mark"
+}
 if [ "$WITH_ASR" = 1 ]; then
-  systemctl enable speech-spark-asr.service >/dev/null 2>&1; systemctl restart speech-spark-asr.service
+  restart_front asr
 else
   systemctl disable --now speech-spark-asr.service 2>/dev/null || true
 fi
@@ -850,7 +933,8 @@ fi
 if [ "$WITH_TTS" = 1 ] && [ "$BACKEND" = vllm-omni ]; then
   restart_engine tts-engine "$VLLM_OMNI_VERSION $(jq -c '.tts | {model, engine_mem_talker, engine_mem_code2wav, engine_max_seqs, engine_max_model_len, engine_port}' "$ETC/config.json")"
   if [ "$(cfg .tts.voicedesign_enabled)" = true ]; then
-    systemctl enable speech-spark-tts-design.service >/dev/null 2>&1; systemctl restart speech-spark-tts-design.service
+    # like the engines above: only when its settings changed (a restart loads the VoiceDesign model again)
+    restart_engine tts-design "$VLLM_OMNI_VERSION $(jq -c '.tts' "$ETC/config.json")"
   else
     systemctl disable --now speech-spark-tts-design.service 2>/dev/null || true
   fi
@@ -858,7 +942,7 @@ else
   systemctl disable --now speech-spark-tts-engine.service speech-spark-tts-design.service 2>/dev/null || true
 fi
 if [ "$WITH_TTS" = 1 ]; then
-  systemctl enable speech-spark-tts.service >/dev/null 2>&1; systemctl restart speech-spark-tts.service
+  restart_front tts
 else
   systemctl disable --now speech-spark-tts.service 2>/dev/null || true
 fi

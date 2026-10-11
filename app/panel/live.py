@@ -724,6 +724,23 @@ def hints(now=None):
     return out
 
 
+def _upd(now):
+    """The Spark's own update (update.py): running with its step and share, the last one's outcome within the
+    hour, and whether "Heute Nacht einspielen" is on. Fixed words from the update steps and numbers only."""
+    try:
+        import update
+        p = update.update_progress() or {}
+        run = bool(update.update_running())
+        out = {"run": run, "night": update.night_on()}
+        if run or (p.get("done") and isinstance(p.get("updated"), (int, float)) and 0 <= now - p["updated"] < 3600):
+            out.update(pct=int(p.get("percent") or 0), step=str(p.get("text") or "")[:60],
+                       ver=str(p.get("version") or "")[:20], ok=p.get("ok") if p.get("done") else None,
+                       secs=int(now - p["started"]) if isinstance(p.get("started"), (int, float)) else None)
+        return out
+    except Exception:
+        return {"run": False}
+
+
 def _sys():
     try:
         import monitor
@@ -761,13 +778,14 @@ def snapshot(view="admin", now=None):
     except Exception:
         sys1 = {"n": 0}
     hs = hints(now)
+    upd = _upd(now)
     used = {h["at"] for h in hs} | {s["to"] for r in reqs for s in r["steps"] if s["to"]} | {r["to"] for r in reqs if r["to"]} | {x["to"] for x in rets if now - x["t"] < 60 and x["to"]}
     targets = [{"id": k, "name": v[0], "sub": v[1], "zone": v[2]} for k, v in TARGETS.items() if v[3] or k in used]
     return {"t": round(now, 1), "view": view, "fade": FADE, "reqs": reqs, "targets": targets, "speaking": speaking,
             "guard": {"ok": cnt.get("guard_ok", 0), "bad": cnt.get("guard_bad", 0), "cut": cnt.get("guard_cut", 0), "items": guard_items},
             "door": {"in": cnt.get("door_in", 0), "out": cnt.get("door_out", 0), "items": door_items},
             "rets": rets, "events": [{"t": t, "area": a, "text": x} for t, a, x in events], "conns": _conns(now), "sys": _sys(), "notaus": held,
-            "svc": _svc_now(now), "bg": _bg_now(now), "hints": hs, "sys1": sys1}
+            "svc": _svc_now(now), "bg": _bg_now(now), "hints": hs, "sys1": sys1, "upd": upd}
 
 
 # ------------------------------------------------------------------ admin view

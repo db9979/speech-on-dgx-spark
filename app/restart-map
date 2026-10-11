@@ -1,0 +1,6 @@
+# Which files of app/ each service runs from. install.sh restarts a service during an update only when
+# one of these files, its systemd unit, the settings or its Python packages changed; a service that is
+# not listed here always restarts (the panel, the watchdog and the engines have their own rules).
+# tests/test_rauchtest.py checks this list against the imports, so a new module cannot be forgotten.
+asr: asr_proxy.py asr_server.py common.py parakeet.py config.default.json
+tts: tts_proxy.py tts_server.py common.py textnorm.py tempo.py config.default.json

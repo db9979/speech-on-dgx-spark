@@ -2,6 +2,7 @@
 
 Every version in one line, newest first (taken from the commit messages, so some lines are German, some English). Older entries have no version number.
 
+- **V01.0.379** · 2026-10-11 · Schonendere Updates: ASR/TTS starten nur neu, wenn sich ihre Dateien, Unit, Einstellungen oder Pakete ändern (app/restart-map), apt/pip/Modelle nur bei Änderung, bei grünem GitHub-Lauf nur Rauchtest, Selbsttest mit nice/ionice, geändertes engine.sh startet die Engines neu; „Heute Nacht einspielen“ (aus), Update-Knopf warnt bei laufendem Gespräch, Live zeigt das Update; Android „noch keine App“ ohne 502, Aufgaben/Update-Sperre mit Retry-After (iPhone-App wartet), Proxy-Hinweis einmal am Tag
 - **V01.0.378** · 2026-10-11 · Funktionen → Spark-Begleiter: „Neue Version jetzt holen“ holt Windows und Mac, auch bevor ein Rechner dieser Art gekoppelt ist; „noch keine (kein Rechner gekoppelt)“ statt nur „noch keine“
 - **V01.0.377** · 2026-10-11 · Begleiter-Update: „Nach Updates suchen“ (und jeder Start des Programms) lässt den Spark selbst bei GitHub nachsehen statt nur einmal am Tag (höchstens alle 5 Min pro Rechner, nicht bei Notaus Internet); Mac-Programm nennt bei „Update beschädigt“ den Schritt (Größe, Prüfsumme, Auspacken, Kennung/Version, Signatur); Release ohne Datei für den Rechner wird nicht übernommen
 - **V01.0.376** · 2026-10-11 · Selbsttest Begleiter: stellt die Test-Adresse für GitHub wieder her (danach fragte test_esp32 das echte GitHub und fand fw-2.5.1.6, Tests waren rot)

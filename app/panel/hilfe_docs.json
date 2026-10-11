@@ -2371,6 +2371,22 @@
 "lang": "de",
 "src": "sicherheit-und-betrieb",
 "file": "Sicherheit und Betrieb",
+"head": "Selbsttest",
+"title": "Schonende Updates",
+"text": "Schonende Updates (ab V01.0.379): Installiert das Update genau die Version, deren Testlauf auf GitHub grün war, läuft auf dem Spark nur ein Rauchtest (tests/test_rauchtest.py, wenige Sekunden: jedes Modul lädt mit den Paketen dieses Spark, das Panel startet und antwortet). Der ganze Selbsttest läuft weiter bei der Erstinstallation, mit --newest, --to und beim Zurück zur vorigen Version. Beide laufen mit niedrigster CPU- und Platten-Priorität (nice 19, ionice Klasse 2/7), damit eine laufende Antwort ihr Tempo behält. Ein Update fragt apt nur, wenn ein Paket fehlt, pip nur, wenn sich die Paketliste oder die Lock-Datei geändert hat (.pkgs bzw. .locked in der Umgebung), und lädt Modelle nur, wenn andere gewählt sind (/opt/speech-spark/.models). Die ASR- und TTS-Dienste starten nur neu, wenn sich etwas geändert hat, woraus sie laufen: ihre Dateien laut app/restart-map, ihre systemd-Unit, die Einstellungen oder ihre Python-Pakete; ein Dienst, den die Liste nicht kennt, startet immer neu, und der Rauchtest prüft die Liste gegen die Imports. VoiceDesign startet wie die Engines nur bei geänderten Einstellungen neu. Das Panel startet bei jedem Update neu (etwa 8 s)."
+},
+{
+"lang": "de",
+"src": "sicherheit-und-betrieb",
+"file": "Sicherheit und Betrieb",
+"head": "Selbsttest",
+"title": "Heute Nacht einspielen",
+"text": "Heute Nacht einspielen (Einstellungen → Update und Sicherung, aus): Eine neue geprüfte Version wird nachts zwischen 3 und 5 Uhr eingespielt, höchstens einmal pro Nacht, mit Sicherung vorher. Spricht gerade jemand mit dem Spark (in den letzten zwei Minuten), wartet es bis zur nächsten Pause; ist GitHub nicht erreichbar, fragt es nach 15 Minuten wieder. Beim Notaus startet nichts. Einschalten braucht den zweiten Anmeldeschritt, wenn er an ist. Der Knopf „Update installieren“ fragt eigens nach, wenn gerade ein Gespräch läuft. Die Live-Übersicht zeigt unter „Läuft gerade“ ein laufendes Update mit Schritt und Anteil, eine Stunde lang das Ergebnis und ob „nachts“ an ist."
+},
+{
+"lang": "de",
+"src": "sicherheit-und-betrieb",
+"file": "Sicherheit und Betrieb",
 "head": "Logs",
 "title": "Logs",
 "text": "Alle Speech-Dienste schreiben in ein eigenes Journal (journalctl --namespace=speech-spark -u 'speech-spark-*'), das auf 500 MB und 14 Tage begrenzt ist; ältere Einträge löscht journald automatisch. Einstellbar unter Einstellungen → Betrieb, wirksam nach dem nächsten Update. Die ständigen Statusabfragen des Panels landen gar nicht erst im Log."
@@ -4838,6 +4854,22 @@
 "head": "Self-test",
 "title": "Self-test",
 "text": "Every install and update runs the panel's self-test (app/tests) against fake LLM, TTS and Home Assistant servers in a throw-away directory: login and access, that profiles never see each other's memory, documents, conversations, mailboxes or Home Assistant, the chat tools, learning from conversations, calendar and text cleaning. It runs before the new version goes live. In an update a failure stops the update and the old version keeps running; on a first install it is only reported. The result is in the update log. It includes the security checks (test_hardening.py, one test per guard) and a scanner (test_scanner.py) that refuses new code using shell=True, eval or the like, a route without a login, an upload read without a size limit, values in onclick not escaped for JavaScript, or an assistant tool not sorted as \"reads outside text / changes something / own data only\". By hand: cd /opt/speech-spark/app && sudo /opt/speech-spark/venv-panel/bin/python -m unittest discover -s tests -t ."
+},
+{
+"lang": "en",
+"src": "security-and-operation",
+"file": "Security and operation",
+"head": "Self-test",
+"title": "Gentle updates",
+"text": "Gentle updates (from V01.0.379): when the update installs exactly the version whose GitHub test run passed, the Spark only runs a smoke test (tests/test_rauchtest.py, a few seconds: every module loads with this Spark's packages, the panel starts and answers). The whole self-test still runs on a first install, with --newest, --to and when going back to the previous version. Both run with the lowest CPU and disk priority (nice 19, ionice class 2/7), so an answer being spoken keeps its speed. An update asks apt only when a package is missing, pip only when the package list or the lock file changed (.pkgs or .locked in the environment), and downloads models only when other ones are chosen (/opt/speech-spark/.models). The ASR and TTS services restart only when something they run from changed: their files per app/restart-map, their systemd unit, the settings or their Python packages; a service the list does not know always restarts, and the smoke test checks the list against the imports. VoiceDesign, like the engines, restarts only when its settings changed. The panel restarts on every update (about 8 s)."
+},
+{
+"lang": "en",
+"src": "security-and-operation",
+"file": "Security and operation",
+"head": "Self-test",
+"title": "Install overnight",
+"text": "Install overnight (Settings → Update and backup, off): a new tested version is installed at night between 3 and 5 am, at most once a night, with a backup first. If somebody is talking with the Spark (within the last two minutes) it waits for the next pause; if GitHub cannot be reached it asks again after 15 minutes. Nothing starts during the kill switch. Turning it on needs the second sign-in step when that is on. The \"Install update\" button asks once more when a conversation is going on. The live view shows a running update under \"Running now\" with its step and share, its outcome for an hour, and whether \"overnight\" is on."
 },
 {
 "lang": "en",

@@ -130,11 +130,42 @@ def forward_trusted(request):
             return True
     except ValueError:
         return False
-    if peer not in _hinted and len(_hinted) < 20:
-        _hinted.add(peer)
+    if _first_hint(peer):
         print(f"guard: X-Forwarded-For from {peer} ignored; enter the reverse proxy under "
               "Einstellungen -> Sicherheit (panel.trusted_proxies)", flush=True)
     return False
+
+
+HINTED = os.path.join(STATE, "guard-xff-hinted.json")
+
+
+def _first_hint(peer, now=None):
+    """The hint above once per day and address, also across panel restarts (every update restarts the
+    panel; the log on tars had it 39 times a day for the same proxy)."""
+    day = time.strftime("%Y-%m-%d", time.localtime(time.time() if now is None else now))
+    if not _hinted:
+        try:
+            with open(HINTED) as f:
+                d = json.load(f)
+            if isinstance(d, dict) and d.get("day") == day and isinstance(d.get("peers"), list):
+                _hinted.update(str(x)[:64] for x in d["peers"][:20])
+            _hinted.add("day:" + str(d.get("day") if isinstance(d, dict) else ""))
+        except (OSError, ValueError):
+            pass
+    if "day:" + day not in _hinted:
+        _hinted.clear()
+        _hinted.add("day:" + day)
+    if peer in _hinted or len(_hinted) > 20:
+        return False
+    _hinted.add(peer)
+    try:
+        os.makedirs(STATE, exist_ok=True)
+        with open(HINTED + ".part", "w") as f:
+            json.dump({"day": day, "peers": sorted(x for x in _hinted if not x.startswith("day:"))}, f)
+        os.replace(HINTED + ".part", HINTED)
+    except OSError:
+        pass
+    return True
 
 
 def from_lan(request):

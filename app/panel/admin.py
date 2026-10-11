@@ -551,6 +551,8 @@ def validate(new):
         raise HTTPException(400, "notaus_profiles must be true or false")
     if not isinstance(new["panel"].get("notaus_auto", False), bool):
         raise HTTPException(400, "notaus_auto must be true or false")
+    if not isinstance(new["panel"].get("update_night", False), bool):
+        raise HTTPException(400, "update_night must be true or false")
     sd = new["panel"].get("session_days", 30)
     if not isinstance(sd, int) or isinstance(sd, bool) or not 7 <= sd <= 90:
         raise HTTPException(400, "session_days must be 7..90")
@@ -679,7 +681,7 @@ SENSITIVE = [("api", "key"), ("chat", "llm_url"), ("chat", "llm_key"), ("chat", 
              ("chat", "search_url"), ("chat", "kiwix_url"), ("chat", "public"), ("chat", "esp32_url"), ("chat", "esp32_repo"),
              ("chat", "mfa"), ("chat", "mcp_server"), ("chat", "mcp_server_extern"), ("chat", "mcp_server_act"),
              ("chat", "mcp_own"), ("chat", "mcp_own_oauth"),
-             ("panel", "trusted_proxies"), ("panel", "allow_lan"), ("panel", "notaus_auto"), ("panel", "session_days"), ("panel", "trust_days"), ("asr", "model"), ("asr", "aligner_model"),
+             ("panel", "trusted_proxies"), ("panel", "allow_lan"), ("panel", "notaus_auto"), ("panel", "update_night"), ("panel", "session_days"), ("panel", "trust_days"), ("asr", "model"), ("asr", "aligner_model"),
              ("tts", "model"), ("tts", "voicedesign_model")]
 
 

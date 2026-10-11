@@ -55,6 +55,7 @@
     "allow_lan": false,
     "notaus_profiles": false,
     "notaus_auto": false,
+    "update_night": false,
     "session_days": 30,
     "trust_days": 60
   },

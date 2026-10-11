@@ -680,7 +680,11 @@ setInterval(()=>{if(ADMIN)ulWatch()},8000);   // an update started from another 
 async function ulCheck(){await ulWatch();
   let v=null;try{v=sessionStorage.getItem('upddone');sessionStorage.removeItem('upddone')}catch{}
   if(v){const e=$('updtoast');e.textContent=t('Update fertig','Update finished')+(v!=='1'?': '+v:'')+'.';e.style.display='block';setTimeout(()=>e.style.display='none',6000)}}
-$('updgo').onclick=async()=>{if(!confirm(t('Update jetzt installieren? Die Dienste starten dabei kurz neu.','Install the update now? The services restart briefly.')))return;
+$('updgo').onclick=async()=>{let tk={};try{tk=(await (await api('/api/update')).json()).talking||{}}catch{}
+  // somebody talks with the Spark right now (vorrang.py): the restart would cut that conversation off
+  const ask=tk.now?t(`Gerade läuft ein Gespräch mit dem Spark (zuletzt vor ${tk.ago} s gesprochen). Das Update startet die Dienste kurz neu und unterbricht es. Trotzdem jetzt installieren?`,`Somebody is talking with the Spark right now (last speech ${tk.ago} s ago). The update restarts the services briefly and cuts that off. Install anyway?`)
+    :t('Update jetzt installieren? Die Dienste starten dabei kurz neu.','Install the update now? The services restart briefly.');
+  if(!confirm(ask))return;
   try{ul.clicked=Date.now();await api('/api/update',{method:'POST'});ulShow()}
   catch(e){$('updmsg').innerHTML=`<span class="err">${esc(e.message)}</span>`}};
 setInterval(()=>{if(ADMIN)api('/api/update').then(r=>r.json()).then(u=>updBadge(u.remote)).catch(()=>{})},600000);

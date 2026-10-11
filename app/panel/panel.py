@@ -294,6 +294,10 @@ async def stability():
                     await appupdate.due_once()
                 except Exception as e:
                     print("iphone update notice:", type(e).__name__, flush=True)
+                try:
+                    await update.night_once()      # "Heute Nacht einspielen" (update.py), off by default
+                except Exception as e:
+                    print("update overnight:", type(e).__name__, flush=True)
             await asyncio.sleep(5)
     asyncio.create_task(reminders())
     asyncio.create_task(telegram.loop())
