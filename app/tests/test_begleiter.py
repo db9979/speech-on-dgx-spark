@@ -552,7 +552,7 @@ class Deeper(unittest.TestCase):
         c = self.on("DpHans")
         _, prog = self.pair(c)
         uid = uid_of("DpHans")
-        did = self.parts(c, prog, act=True, apps=[{"name": "Editor", "path": "C:\\Windows\\notepad.exe"},
+        did = self.parts(c, prog, act=True, ask=True, apps=[{"name": "Editor", "path": "C:\\Windows\\notepad.exe"},
                                                   {"name": "bad\nname", "path": "x"}, {"name": "Quote", "path": 'a"b'}])
         self.assertEqual(prog.get("/api/desk/config").json()["act"]["apps"],
                          [{"name": "Editor", "path": "C:\\Windows\\notepad.exe"}])
@@ -567,7 +567,17 @@ class Deeper(unittest.TestCase):
         self.assertIsNone(begleiter.offer(dict(ctx, text="Wie wird das Wetter?")))
         self.assertIsNone(begleiter.offer(dict(ctx, own=False)))
         self.assertEqual(begleiter.offer(ctx)["changes"], {"pc_action"})
+        # V01.0.397: asked at the Begleiter itself, a verb of doing is enough ("the computer" is this one);
+        # elsewhere (browser, phone) the computer must still be named
+        safari = dict(ctx, text="Kannst du mir den Safari mit Google öffnen?")
+        self.assertIsNone(begleiter.offer(safari))
+        self.assertEqual(begleiter.offer(dict(safari, client="desk"))["changes"], {"pc_action"})
+        self.assertIsNone(begleiter.offer(dict(ctx, client="desk", text="Wie wird das Wetter?")))
         prog.get("/api/desk/poll")                                  # online
+        helpers.LLM_CALLS.clear()                                   # the whole way: Frag Spark at the Begleiter
+        self.assertEqual(prog.post("/api/desk/ask", json={"text": safari["text"]}).status_code, 200)
+        offered = {f["function"]["name"] for b in helpers.LLM_CALLS if b.get("stream") for f in b.get("tools") or []}
+        self.assertIn("pc_action", offered)
 
         async def run(ok):
             task = asyncio.create_task(begleiter.tool("pc_action", {"action": "lock"}, ctx))

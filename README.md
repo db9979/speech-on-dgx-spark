@@ -33,6 +33,7 @@ All options for running without questions (`--mode api --asr 1.7b --tts 0.6b --y
 
 <!-- New version: add one line at the top here and in CHANGELOG.md, drop the oldest line here (keep 10). Details go to docs/de and docs/en, not into this README. -->
 
+- **V01.0.397** Companion: "open Safari with Google" asked at the computer itself now does it (with a question there), no need to say "on the PC"
 - **V01.0.396** Mac companion: self-update and the Spark knowledge folder read files to the end again (the update always failed)
 - **V01.0.395** Companion shows the face picked in the panel (also the comic face), in every window and the icon
 - **V01.0.394** Update on the Spark no longer fails its self-test (priority of background threads)
@@ -42,7 +43,6 @@ All options for running without questions (`--mode api --asr 1.7b --tts 0.6b --y
 - **V01.0.390** Repository hardened: GitHub actions pinned to commits, signing keys only for builds from main
 - **V01.0.389** Self-test: Funktionen page height limit counts the "Probleme melden" line again (lost in a merge in V01.0.387).
 - **V01.0.388** Rights arrive at once: changes under Wer darf was reach open pages, the iPhone app, the Begleiter, speakers and MCP without reloading; switched-off devices stay paired
-- **V01.0.387** Logs → Requests: the list no longer jumps to the top on refresh
 
 All versions: [CHANGELOG.md](CHANGELOG.md)
 

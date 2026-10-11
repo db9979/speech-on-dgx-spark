@@ -983,6 +983,11 @@ SEND_TOOL = {"type": "function", "function": {
         "content": {"type": "string", "description": "text: the text itself; link: the http or https address"},
         "device": {"type": "string", "description": "Which computer, only if the user has several and names one"}},
         "required": ["kind", "content"]}}}
+# asked at the Begleiter itself ("Öffne Safari mit Google"): the computer is meant without being named, so a
+# verb of doing is enough there (V01.0.397)
+DO_WORDS = re.compile(r"\b(öffne\w*|oeffne\w*|mach\w*\s+(\w+\s+){0,4}auf|start\w*|ruf\w*\s+(\w+\s+){0,4}auf|"
+                      r"spiel\w*|pausier\w*|stopp\w*|lauter|leiser|stumm\w*|sperr\w*|nächst\w*|vorig\w*|zeig\w*|"
+                      r"open|launch|play|pause|mute|lock)\b", re.I)
 SEND_HINT = ("pc_send puts a text (into the clipboard) or a link (offered to open) onto the user's paired computer. "
              "Use it only when the user asks for that in this message.")
 
@@ -994,7 +999,8 @@ def offer(ctx):
     if not who or not ctx.get("own") or ctx.get("private") is False:
         return None
     text = str(ctx.get("text") or "")
-    act = bool(ACT_WORDS.search(text) and act_devices(who["id"]))
+    here = ctx.get("client") == "desk"     # the question came from the Begleiter: "the computer" is this one
+    act = bool((ACT_WORDS.search(text) or (here and DO_WORDS.search(text))) and act_devices(who["id"]))
     send = bool(PC_WORDS.search(text) and SEND_WORDS.search(text) and inbox_devices(who["id"]))
     if not act and not send:
         return None

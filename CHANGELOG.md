@@ -2,6 +2,7 @@
 
 Every version in one line, newest first (taken from the commit messages, so some lines are German, some English). Older entries have no version number.
 
+- **V01.0.397** · 2026-10-11 · Frag Spark am Begleiter: „Öffne Safari mit Google“ bietet jetzt „Am PC handeln“ an, auch ohne „am PC/Mac“ im Satz (der Rechner ist der, an dem gefragt wird; dazu reicht ein Tun-Wort wie öffnen, starten, lauter, sperren); im Browser und am Handy muss der Rechner weiter genannt werden
 - **V01.0.396** · 2026-10-11 · Mac-Begleiter: Selbst-Update scheiterte immer („Update beschädigt“ / „ließ sich nicht lesen“), weil FileHandle.read(upToCount:) am Dateiende nil liefert und `try?` das als Lesefehler nahm; ebenso der Abgleich des Spark-Wissen-Ordners; Selbsttest verbietet das Muster
 - **V01.0.395** · 2026-10-11 · Spark-Begleiter zeigt das im Panel gewählte Gesicht: config.face (robot/comic, Unbekanntes bleibt Roboter), ein Wechsel erhöht rev und kommt mit dem nächsten Abruf; Comic-Gesicht als ruhendes Bild für Mac (Core Graphics, auch in der Menüleiste farbig) und Windows (GDI+), dieselben Formen wie Panel und iPhone-App
 - **V01.0.394** · 2026-10-11 · Selbsttest auf tars: Hintergrund-Threads heben die CPU-Priorität nie über die des Prozesses (Update-Selbsttest unter nice 19 scheiterte an test_vorrang)
