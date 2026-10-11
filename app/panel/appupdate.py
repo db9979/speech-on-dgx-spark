@@ -25,6 +25,7 @@ import guard
 import mfa
 import profiles
 import features
+from common import write_json
 from core import CODE_HEADER, admin_code, assistant, auth, confirm_code, own_profile
 
 router = APIRouter()
@@ -51,11 +52,7 @@ def _read():
 
 
 def _write(d):
-    os.makedirs(STATE, exist_ok=True)
-    tmp = _file() + ".tmp"
-    with open(tmp, "w") as f:
-        json.dump(d, f)
-    os.replace(tmp, _file())
+    write_json(_file(), d)
 
 
 def admin_on():

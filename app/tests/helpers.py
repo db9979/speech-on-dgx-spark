@@ -45,6 +45,11 @@ for p in (APP, os.path.join(APP, "panel")):
 
 import vorrang  # noqa: E402
 vorrang.GRACE = 0   # other features' tests never wait for speech; test_vorrang.py sets its own value
+import core  # noqa: E402
+import profiles  # noqa: E402
+# ~600 logins in the self-tests: 200 000 PBKDF2 rounds each cost minutes; the strength itself is checked in
+# test_tempo.py (Rounds) against the shipped values
+core.ROUNDS = profiles.PIN_ROUNDS = 1000
 import uvicorn  # noqa: E402
 from fastapi import FastAPI, HTTPException, Request, WebSocket  # noqa: E402
 from fastapi.responses import PlainTextResponse, Response, StreamingResponse  # noqa: E402

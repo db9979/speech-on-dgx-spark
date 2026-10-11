@@ -80,6 +80,31 @@ def load_config(section=None):
     return cfg[section] if section else cfg
 
 
+def write_json(path, data, indent=None, mode=None):
+    """Writes JSON atomically: a fresh temporary file next to it (never a fixed .tmp name two writers would share,
+    never through a link), then rename. Keeps the file's mode, a new one gets 0600 (or mode)."""
+    import tempfile
+    folder = os.path.dirname(os.path.abspath(path))
+    os.makedirs(folder, exist_ok=True)
+    if mode is None:
+        try:
+            mode = os.stat(path).st_mode & 0o777
+        except FileNotFoundError:
+            mode = 0o600
+    fd, tmp = tempfile.mkstemp(prefix="." + os.path.basename(path) + ".", suffix=".tmp", dir=folder)
+    try:
+        with os.fdopen(fd, "w") as f:
+            json.dump(data, f, indent=indent)
+        os.chmod(tmp, mode)
+        os.replace(tmp, path)
+    except BaseException:
+        try:
+            os.unlink(tmp)
+        except OSError:
+            pass
+        raise
+
+
 # Speech first (panel vorrang.py): every STT/TTS request touches this file, the panel holds its
 # background work (and cancels its background requests to the language model) while it is fresh.
 SPEECH_MARK = os.path.join(os.environ.get("SPEECH_SPARK_STATE", "/var/lib/speech-spark/state"), "speech-active")

@@ -28,7 +28,7 @@ import mfa  # noqa: E402
 import speakers  # noqa: E402
 import wyoming  # noqa: E402
 import profiles  # noqa: E402
-from common import CONFIG_PATH, estimate_gib, journal, load_config  # noqa: E402
+from common import CONFIG_PATH, estimate_gib, journal, load_config, write_json  # noqa: E402
 from core import (  # noqa: E402
     spawn,
     ASR_ENGINE_KEYS,
@@ -745,10 +745,7 @@ def _save(new, old, by):
 
 
 def _save_locked(new, old, by):
-    tmp = CONFIG_PATH + ".tmp"
-    with open(tmp, "w") as f:
-        json.dump(new, f, indent=2)
-    os.replace(tmp, CONFIG_PATH)
+    write_json(CONFIG_PATH, new, indent=2)
     undo.record(old, new, by, SENSITIVE)
     # the API key is read per request, so changing it needs no restart
     mem_changed = new["memory"] != old.get("memory")
@@ -822,13 +819,11 @@ async def admin_switch(request: Request):
     key, on = (body.get("key"), body.get("on")) if isinstance(body, dict) else (None, None)
     if key not in app_switches() or not isinstance(on, bool):
         raise HTTPException(400, "not a switch the app may change")
-    new = get_config()
-    new["chat"][key] = on
-    old = validate(new)
-    tmp = CONFIG_PATH + ".tmp"
-    with open(tmp, "w") as f:
-        json.dump(new, f, indent=2)
-    os.replace(tmp, CONFIG_PATH)
+    with _save_lock:   # one config write at a time (_save)
+        new = get_config()
+        new["chat"][key] = on
+        old = validate(new)
+        write_json(CONFIG_PATH, new, indent=2)
     undo.record(old, new, _by(request), SENSITIVE)
     guard.log("config_switch", detail=f"chat.{key}={'on' if on else 'off'}")
     return {"key": key, "on": on}

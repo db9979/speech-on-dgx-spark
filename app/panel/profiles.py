@@ -62,9 +62,12 @@ def _secret():
         return s
 
 
+PIN_ROUNDS = 200_000   # PBKDF2 rounds of a PIN (self-tests lower it for speed only, test_tempo checks this)
+
+
 def _pin_hash(pin, salt=None):
     salt = salt or secrets.token_hex(16)
-    return salt + "$" + hashlib.pbkdf2_hmac("sha256", pin.encode(), bytes.fromhex(salt), 200_000).hex()
+    return salt + "$" + hashlib.pbkdf2_hmac("sha256", pin.encode(), bytes.fromhex(salt), PIN_ROUNDS).hex()
 
 
 def _pin_ok(pin, stored):

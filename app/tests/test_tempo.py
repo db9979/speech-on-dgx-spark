@@ -124,6 +124,62 @@ class OffTheLoop(unittest.TestCase):
         self.assertIn("background task probe ended: ValueError: kaputt", out.getvalue())
 
 
+class Rounds(unittest.TestCase):
+    def test_shipped_rounds_stay_strong(self):
+        """The self-tests run with fewer rounds (helpers.py); what ships is 200 000."""
+        import os
+        import re
+        here = os.path.join(os.path.dirname(os.path.dirname(os.path.abspath(__file__))), "panel")
+        for name, const in (("core.py", "ROUNDS"), ("profiles.py", "PIN_ROUNDS")):
+            with open(os.path.join(here, name)) as f:
+                m = re.search(rf"^{const} = ([0-9_]+)", f.read(), re.M)
+            self.assertIsNotNone(m, name)
+            self.assertGreaterEqual(int(m.group(1).replace("_", "")), 200_000, name)
+        with open(os.path.join(here, "profiles.py")) as f:
+            self.assertIn("PIN_ROUNDS).hex()", f.read())
+
+
+class JsonStore(unittest.TestCase):
+    def test_write_json_is_atomic_and_keeps_the_mode(self):
+        import os
+        import stat
+        import tempfile
+        d = tempfile.mkdtemp()
+        p = os.path.join(d, "x.json")
+        common.write_json(p, {"a": 1})
+        self.assertEqual(stat.S_IMODE(os.stat(p).st_mode), 0o600)   # new: owner only
+        os.chmod(p, 0o640)
+        common.write_json(p, {"a": 2}, indent=2)
+        self.assertEqual(stat.S_IMODE(os.stat(p).st_mode), 0o640)   # kept
+        with open(p) as f:
+            self.assertEqual(json.load(f), {"a": 2})
+        os.symlink(os.path.join(d, "elsewhere"), p + ".tmp")   # the old fixed name: never written through
+        common.write_json(p, {"a": 3})
+        self.assertFalse(os.path.exists(os.path.join(d, "elsewhere")))
+        self.assertEqual(sorted(os.listdir(d)), ["x.json", "x.json.tmp"])
+        with self.assertRaises(TypeError):
+            common.write_json(p, {"a": object()})
+        with open(p) as f:
+            self.assertEqual(json.load(f), {"a": 3})   # a failed write leaves the old file and no leftovers
+        self.assertEqual(sorted(os.listdir(d)), ["x.json", "x.json.tmp"])
+
+
+class PageFiles(unittest.TestCase):
+    def test_scripts_and_styles_go_gzipped(self):
+        import gzip
+        from core import app_version
+        c = TestClient(panel.app)
+        for path in ("/static/js/base.js", "/static/app.css"):
+            raw = c.get(path + "?v=" + app_version(), headers={"Accept-Encoding": "identity"})
+            z = c.get(path + "?v=" + app_version(), headers={"Accept-Encoding": "gzip"})
+            self.assertEqual(z.headers.get("content-encoding"), "gzip", path)
+            self.assertEqual(z.content, raw.content)   # the client unpacks it: same file
+            self.assertLess(len(gzip.compress(raw.content)), len(raw.content) * 0.6)
+            self.assertIn("Accept-Encoding", z.headers.get("vary", ""))
+        self.assertEqual(c.get("/static/js/nope.js").status_code, 404)
+        self.assertEqual(c.get("/static/js/..%2Fpanel.py").status_code, 404)
+
+
 class SpeechRestart(unittest.TestCase):
     def test_tts_restart_is_waited_for(self):
         """During an update the speech service is gone for ~8 s: a 503 is tried again, the answer still speaks."""

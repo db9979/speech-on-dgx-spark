@@ -66,8 +66,11 @@ def _stored_hash():
         return None
 
 
+ROUNDS = 200_000   # PBKDF2 rounds of the admin password (self-tests lower it for speed only, test_tempo checks this)
+
+
 def _hash(password, salt):
-    return hashlib.pbkdf2_hmac("sha256", password.encode(), salt, 200_000).hex()
+    return hashlib.pbkdf2_hmac("sha256", password.encode(), salt, ROUNDS).hex()
 
 
 def password_set():

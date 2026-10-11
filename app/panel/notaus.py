@@ -536,10 +536,6 @@ router = APIRouter()
 MAX_BODY = 2048
 
 
-def _settings():
-    from common import load_config
-    return load_config().get("panel", {})
-
 
 def _caller(request, creds=None):
     """(name, uid, admin, profile, channel) of who sends this request, or None. Only logins and the phone apps'

@@ -21,7 +21,7 @@ from fastapi import APIRouter, Depends, HTTPException, Request
 
 import guard
 import profiles
-from common import load_config
+from common import load_config, write_json
 from core import assistant, auth
 
 DEFAULTS = os.path.join(os.path.dirname(os.path.abspath(__file__)), "..", "config.default.json")
@@ -382,11 +382,7 @@ def _seen(c):
     if new:
         d.update(new)
         try:
-            os.makedirs(os.path.dirname(SEEN), exist_ok=True)
-            tmp = SEEN + ".tmp"
-            with open(tmp, "w") as f:
-                json.dump(d, f)
-            os.replace(tmp, SEEN)
+            write_json(SEEN, d)
         except OSError:
             pass
     return d
@@ -470,14 +466,12 @@ async def admin_feature_new(key: str, request: Request):
     if not isinstance(on, bool):
         raise HTTPException(400, "on: true or false")
     import admin
-    new = admin.get_config()
-    keys = [k for k in new["chat"].get("new_profile_on", []) if k != key] + ([key] if on else [])
-    new["chat"]["new_profile_on"] = [k for k in BY_KEY if k in keys]
-    admin.validate(new)
-    tmp = admin.CONFIG_PATH + ".tmp"
-    with open(tmp, "w") as fh:
-        json.dump(new, fh, indent=2)
-    os.replace(tmp, admin.CONFIG_PATH)
+    with admin._save_lock:   # one config write at a time (admin._save)
+        new = admin.get_config()
+        keys = [k for k in new["chat"].get("new_profile_on", []) if k != key] + ([key] if on else [])
+        new["chat"]["new_profile_on"] = [k for k in BY_KEY if k in keys]
+        admin.validate(new)
+        write_json(admin.CONFIG_PATH, new, indent=2)
     elev = None if request.scope.get("speech_main_admin") else request.scope.get("speech_coadmin")
     guard.log("feature_profile", by="main" if not elev else elev["id"], detail=f"{f.de} für neue Profile {'an' if on else 'aus'}")
     return {"key": key, "on": on}

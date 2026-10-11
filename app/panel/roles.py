@@ -68,9 +68,6 @@ def parse(text):
     return out
 
 
-def valid_text(v):
-    return isinstance(v, str) and len(v) <= 1500 and not re.search(r"[\x00-\x09\x0b-\x1f\x7f]|<<<|>>>", v)
-
 
 def _clean_ask(text):
     s = re.sub(r"\s+", " ", str(text or "")).strip().lower()

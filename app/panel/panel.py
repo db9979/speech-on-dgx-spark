@@ -4,6 +4,7 @@ This file starts the app and serves the page; the API lives in modules next to i
 core (paths, logins), monitor (samples), account (login and the profile's own data),
 chat (assistant, tools, learning, watch), admin (settings, services, voices), update."""
 import asyncio
+import gzip
 import os
 import re
 import sys
@@ -12,7 +13,7 @@ import time
 import psutil
 import uvicorn
 from fastapi import FastAPI, HTTPException, Request
-from fastapi.responses import FileResponse, HTMLResponse, JSONResponse
+from fastapi.responses import FileResponse, HTMLResponse, JSONResponse, Response
 
 sys.path.insert(0, os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
 from common import BodyLimit, load_config, quiet_access_log  # noqa: E402
@@ -440,10 +441,31 @@ PUBLIC_FILES = {"icon.svg": "image/svg+xml", "icon-192.png": "image/png", "icon-
                 "manifest.webmanifest": "application/manifest+json"}
 
 
+_GZ = {}   # path -> (mtime, size, gzipped bytes)
+
+
+def _asset(request: Request, path, media):
+    """A style or script of the page. Gzipped when the browser takes it (a third of the size; kept in memory per
+    file version). With ?v= of the running version the browser keeps it a day without asking (an update changes
+    ?v=, page_html; a day, not longer, in case a file was fetched mid-update). Without, or with an older ?v=, it is
+    revalidated (no-cache)."""
+    ver = re.sub(r"[^A-Za-z0-9.\-]", "", app_version())[:32] or "0"
+    cache = "public, max-age=86400" if request.query_params.get("v") == ver else "no-cache"
+    if "gzip" not in request.headers.get("accept-encoding", "").lower():
+        return FileResponse(path, media_type=media, headers={"Cache-Control": cache, "Vary": "Accept-Encoding"})
+    st = os.stat(path)
+    hit = _GZ.get(path)
+    if not hit or hit[:2] != (st.st_mtime, st.st_size):
+        with open(path, "rb") as f:
+            hit = _GZ[path] = (st.st_mtime, st.st_size, gzip.compress(f.read(), 6, mtime=0))
+    return Response(hit[2], media_type=media, headers={"Cache-Control": cache, "Content-Encoding": "gzip",
+                                                       "Vary": "Accept-Encoding"})
+
+
 @app.get("/static/{name}")
-def static_file(name: str):
+def static_file(name: str, request: Request):
     if name in ("app.css", "appview.css", "live.css"):  # the page's style and scripts: revalidated, so an update shows at once
-        return FileResponse(os.path.join(STATIC, name), media_type="text/css", headers={"Cache-Control": "no-cache"})
+        return _asset(request, os.path.join(STATIC, name), "text/css")
     if name not in PUBLIC_FILES:
         raise HTTPException(404, "not found")
     return FileResponse(os.path.join(STATIC, name), media_type=PUBLIC_FILES[name],
@@ -451,11 +473,10 @@ def static_file(name: str):
 
 
 @app.get("/static/js/{name}")
-def script_file(name: str):
+def script_file(name: str, request: Request):
     if not re.fullmatch(r"[a-z0-9\-]+\.js", name) or not os.path.isfile(os.path.join(STATIC, "js", name)):
         raise HTTPException(404, "not found")
-    return FileResponse(os.path.join(STATIC, "js", name), media_type="text/javascript",
-                        headers={"Cache-Control": "no-cache"})
+    return _asset(request, os.path.join(STATIC, "js", name), "text/javascript")
 
 
 @app.get("/manifest.webmanifest")

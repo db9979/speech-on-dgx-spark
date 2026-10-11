@@ -997,11 +997,6 @@ def set_vectors(uid, pairs):
         con.executemany("UPDATE chunks SET vec=? WHERE id=?", [(v, i) for i, v in pairs])
 
 
-def drop_vectors(uid):
-    if os.path.exists(db_path(uid)):
-        with _Db(uid) as con:
-            con.execute("UPDATE chunks SET vec=NULL")
-
 
 def vector_state(uid):
     """(pieces with a vector, all pieces)."""

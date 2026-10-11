@@ -95,7 +95,9 @@ class Page(unittest.TestCase):
         self.assertGreater(len(links), 10)
         for f in links:
             self.assertTrue(f.endswith("?v=" + ver), f)
-            self.assertEqual(g.get(f).headers["cache-control"], "no-cache", f)
+            # V01.0.406: the running version's files are kept a day (an update changes ?v=), others revalidated
+            self.assertEqual(g.get(f).headers["cache-control"], "public, max-age=86400", f)
+            self.assertEqual(g.get(f.replace("?v=" + ver, "?v=V0")).headers["cache-control"], "no-cache", f)
         self.assertEqual(g.get("/sw.js?v=" + ver).headers["cache-control"], "no-cache")
         # every script and stylesheet tag, whatever its name, goes through the version (new files too)
         tags = re.findall(r'<script[^>]*\ssrc="([^"]+)"|<link[^>]*rel="stylesheet"[^>]*href="([^"]+)"', r.text)
