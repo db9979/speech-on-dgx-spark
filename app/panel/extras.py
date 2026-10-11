@@ -28,8 +28,9 @@ SERVICES = [roomfar, weather, contacts, parcels, tasks, transit, wiki, agent, me
 
 
 def offer(ctx):
-    """{"tools", "hints", "outside", "mail", "filler", "run": {name: module}} for this request."""
-    res = {"tools": [], "hints": [], "outside": set(), "mail": set(), "changes": set(), "filler": {}, "run": {}}
+    """{"tools", "hints", "outside", "mail", "filler", "must", "run": {name: module}} for this request."""
+    res = {"tools": [], "hints": [], "outside": set(), "mail": set(), "changes": set(), "filler": {}, "run": {},
+           "must": None}
     for m in SERVICES:
         try:
             o = m.offer(ctx)
@@ -44,6 +45,7 @@ def offer(ctx):
         res["mail"] |= o.get("mail", set())
         res["changes"] |= o.get("changes", set())
         res["filler"].update(o.get("filler", {}))
+        res["must"] = res["must"] or o.get("must")   # a fixed rule of the module: the first round calls this tool
         res["run"].update({t["function"]["name"]: m for t in o["tools"]})
     return res
 

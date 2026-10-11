@@ -615,6 +615,13 @@ class Deeper(unittest.TestCase):
         self.assertEqual(prog.post("/api/desk/ask", json={"text": safari["text"]}).status_code, 200)
         offered = {f["function"]["name"] for b in helpers.LLM_CALLS if b.get("stream") for f in b.get("tools") or []}
         self.assertIn("pc_action", offered)
+        # V01.0.410: a clear order at the computer must really call the tool (it only announced it before)
+        first = next(b for b in helpers.LLM_CALLS if b.get("stream") and b.get("tools"))
+        self.assertEqual(first.get("tool_choice"), {"type": "function", "function": {"name": "pc_action"}})
+        self.assertEqual(begleiter.offer(dict(ctx, client="desk", text="Öffne den Editor"))["must"], "pc_action")
+        self.assertEqual(begleiter.offer(dict(ctx, client="desk", text="Mach mal leiser"))["must"], "pc_action")
+        self.assertIsNone(begleiter.offer(dict(ctx, client="desk", text="Zeig mir, wie man Safari einrichtet"))["must"])
+        self.assertIsNone(begleiter.offer(dict(ctx, text="Öffne Google am PC"))["must"])   # not asked at the computer
 
         async def run(ok):
             task = asyncio.create_task(begleiter.tool("pc_action", {"action": "lock"}, ctx))

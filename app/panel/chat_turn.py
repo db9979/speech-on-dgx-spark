@@ -694,6 +694,9 @@ async def prepare(request):
         recent_ask = wissen.recent_window(ask_text, chat.user_zone(body.get("tz")))
         if recent_ask is not None:
             force, need = "document_search", ["document_search"]
+    # a module's own fixed rule (begleiter.py: "Öffne Safari" asked at the computer itself): that tool first
+    if not force and ex.get("must") and ex["must"] in {t["function"]["name"] for t in tools}:
+        force, need = ex["must"], [ex["must"]]
     # the words that matched, only as far as they are still in the message (a code word is gone by now)
     why = ", ".join(f"{k}: „{v if v.lower() in ask_text.lower() or v in ('Modell', 'Sende-Bitte', 'Seite') else '…'}“"
                     for k, v in route.why.items())[:200]

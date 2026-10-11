@@ -1002,6 +1002,25 @@ SEND_HINT = ("pc_send puts a text (into the clipboard) or a link (offered to ope
              "Use it only when the user asks for that in this message.")
 
 
+OPEN_WORDS = re.compile(r"\b(öffne\w*|oeffne\w*|start\w*|open|launch)\b|\bmach\w*\s+(\w+\s+){0,4}auf\b|"
+                        r"\bruf\w*\s+(\w+\s+){0,4}auf\b", re.I)
+SITE_WORDS = re.compile(r"\b(seite|webseite|website|homepage|internetseite|google|youtube|wikipedia)\b|"
+                        r"\b[\w-]+\.(de|com|org|net|io|eu|at|ch)\b", re.I)
+MEDIA_WORDS = re.compile(r"\b(lauter|leiser|stumm\w*|pausier\w*|nächst\w*\s+(titel|lied|song)|vorig\w*\s+(titel|lied|song)|"
+                         r"sperr\w*\s+(den\s+)?bildschirm|bildschirm\s+sperr\w*)\b", re.I)
+
+
+def must_act(devs, text):
+    """A clear order for the computer: open a released program (by its name) or a page, music, volume, lock."""
+    if MEDIA_WORDS.search(text):
+        return True
+    if not OPEN_WORDS.search(text):
+        return False
+    low = text.lower()
+    names = {a["name"].lower() for d in devs for a in device_cfg(d["id"])[0]["act"]["apps"]}
+    return bool(SITE_WORDS.search(text) or any(n and n in low for n in names))
+
+
 def offer(ctx):
     """The tools only in the profile's own session, only when its own words name the computer, only when a
     device with "Am PC handeln" (pc_action) or "Vom Handy auf den PC" (pc_send) is paired."""
@@ -1010,14 +1029,19 @@ def offer(ctx):
         return None
     text = str(ctx.get("text") or "")
     here = ctx.get("client") == "desk"     # the question came from the Begleiter: "the computer" is this one
-    act = bool((ACT_WORDS.search(text) or (here and DO_WORDS.search(text))) and act_devices(who["id"]))
+    devs = act_devices(who["id"])
+    act = bool((ACT_WORDS.search(text) or (here and DO_WORDS.search(text))) and devs)
     send = bool(PC_WORDS.search(text) and SEND_WORDS.search(text) and inbox_devices(who["id"]))
     if not act and not send:
         return None
     tools = ([ACT_TOOL] if act else []) + ([SEND_TOOL] if send else [])
     filler = {"pc_action": ("Ich frage am Rechner nach.", "Asking at the computer."),
               "pc_send": ("Ich lege es auf den Rechner.", "Putting it on the computer.")}
+    # at the computer itself, a clear order (open a released program or a page, music, volume, lock): the model
+    # must really call the tool; otherwise it may only announce it ("Ich schicke es an deinen Mac") (V01.0.410)
+    must = "pc_action" if act and here and must_act(devs, text) else None
     return {"tools": tools, "hint": " ".join(([ACT_HINT] if act else []) + ([SEND_HINT] if send else [])),
+            "must": must,
             "changes": {"pc_action"} if act else set(),
             "filler": {t["function"]["name"]: filler[t["function"]["name"]] for t in tools}}
 
