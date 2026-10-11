@@ -700,7 +700,7 @@ class Browser(unittest.TestCase):
             profiles.save_settings(me, {"write_on": False})
 
     def test_documents_list_search_details_and_select(self):
-        """Ich → Dokumente with many documents (V01.0.412): compact rows, 50 at a time, the search field filters at
+        """Ich → Dokumente with many documents (V01.0.413): compact rows, 50 at a time, the search field filters at
         once, a source filter, the details beside the list (computer) or as a page (phone), and "Auswählen" switches
         several documents off in one request; with the strict CSP, without sideways scrolling, also at 320 px."""
         import documents
@@ -2201,8 +2201,12 @@ class JoinBrowser(unittest.TestCase):
                     over = await pg.evaluate("document.documentElement.scrollWidth-window.innerWidth")
                     self.assertLessEqual(over, 1, f"{w}: {over}px zu breit")
                     if w == 1280:
-                        await pg.fill("#joinpin", "246810")
-                        await pg.fill("#joinpin2", "246810")
+                        for _ in range(20):   # the page can draw the welcome form again right after the first fill
+                            await pg.fill("#joinpin", "246810")
+                            await pg.fill("#joinpin2", "246810")
+                            await pg.wait_for_timeout(200)
+                            if await pg.input_value("#joinpin") == "246810" and await pg.input_value("#joinpin2") == "246810":
+                                break
                         # the PIN hash and the new profile can take a while on a busy CI runner: wait for the page
                         # to load again after /api/join instead of a fixed 15 s for the card (red twice on GitHub)
                         joined, asked = [], []
@@ -2223,9 +2227,9 @@ class JoinBrowser(unittest.TestCase):
                                 info = await pg.evaluate("""JSON.stringify({btn:!!$('joingo'),off:$('joingo')&&$('joingo').disabled,
                                     msg:$('joinmsg')&&$('joinmsg').textContent,hash:location.hash})""")
                                 print(f"\nWARNUNG kein /api/join nach dem Tippen: {info} {errors}", file=sys.stderr)
-                                if not await pg.input_value("#joinpin"):
-                                    await pg.fill("#joinpin", "246810")
-                                    await pg.fill("#joinpin2", "246810")
+                                # seen locally: "Die PIN braucht mindestens 6 Zeichen." because the redraw emptied the fields
+                                await pg.fill("#joinpin", "246810")
+                                await pg.fill("#joinpin2", "246810")
                                 await pg.click("#joingo")
                         self.assertEqual(joined, [200], f"asked {asked} errors {errors}")
                         # not "load": on a busy runner every script of the new page can take long; the profile is what counts

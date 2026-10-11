@@ -699,7 +699,7 @@ async def reread(doc_id: str, request: Request, prof=Depends(browser_profile)):
     return got
 
 
-# Ich → Dokumente "Auswählen" (V01.0.412): one action for several of the profile's own documents in one
+# Ich → Dokumente "Auswählen" (V01.0.413): one action for several of the profile's own documents in one
 # request (one rate-limit step instead of one per document). Only in the owner's own database, never for
 # documents other profiles share; ids are checked one by one like the single routes do.
 BATCH_MOST = 200        # = documents.MAX_DOCS

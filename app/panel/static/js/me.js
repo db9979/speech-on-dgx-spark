@@ -14,7 +14,7 @@ ON.closeProf=()=>closeProf();
 async function showFacts(){const r=await api('/api/profile/memory');const d=await r.json();
   $('profhead').textContent=d.profile.name;showTidy(d.tidy);
   $('factlist').innerHTML=d.facts.slice().reverse().map(f=>`<li><span>${esc(f.text)}${f.auto?` <em class="auto">${t('automatisch','automatic')}</em>`:''}</span><button class="b" ${onAttr('forgetFact',f.id)}>${t('Löschen','Delete')}</button></li>`).join('')||`<li class="mut">${t('Noch nichts gemerkt.','Nothing remembered yet.')}</li>`}
-// Documents (documents.py, wissen.py). Since V01.0.412 one compact row per document with a search field that
+// Documents (documents.py, wissen.py). Since V01.0.413 one compact row per document with a search field that
 // filters at once, source, sort order, quick filters and tags; a click opens the details (beside the list on wide
 // screens, as its own page on narrow ones) with all buttons; "Auswählen" acts on several documents in one request.
 // The profile's own switches (only those the admin allows) sit folded under the list.
@@ -428,6 +428,8 @@ async function openMe(tab){$('profmsg').textContent='';$('profmodal').style.disp
   if(!GATE&&!isGuest())renderSet($('setform'),S,saveSet);
   // what the admin allows can have changed since the login (Funktionen in this browser or another): ask again
   if(PROFILE){refreshAllow().catch(()=>{});if(typeof hilfeRefresh==='function')hilfeRefresh()}
+  // the locked notice needs only /api/features: draw it now, not after a queued load of all boxes (slow on a busy runner)
+  if(PROFILE)loadFeats().then(()=>{meLocked($('overbox'));meLocked($('setbox'))}).catch(()=>{});
   if(PROFILE){   // B8: jumps while the boxes load ("Zeig mir wo", cards) share one load and at most one after it (no 429)
     if(ME_LOAD.p){if(!ME_LOAD.next)ME_LOAD.next=ME_LOAD.p.then(()=>{ME_LOAD.next=null;return meLoadOnce()});return ME_LOAD.next}
     return meLoadOnce()}

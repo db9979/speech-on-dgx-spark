@@ -33,7 +33,8 @@ All options for running without questions (`--mode api --asr 1.7b --tts 0.6b --y
 
 <!-- New version: add one line at the top here and in CHANGELOG.md, drop the oldest line here (keep 10). Details go to docs/de and docs/en, not into this README. -->
 
-- **V01.0.412** Me → Documents clear with many files: compact rows, search, filters, details, select several
+- **V01.0.413** Me → Documents clear with many files: compact rows, search, filters, details, select several
+- **V01.0.412** Ich shows the admin-off notice right away; invitation test refills the PIN after a redraw
 - **V01.0.411** Live page you can use: events with area chips, search and pause, a click shows the place in the picture; a box opens numbers of the last hour, ⚠ with explanation and the way to fix it; rewind the last 15 minutes; copy the way or open it in Requests; self emergency stop counters; Begleiter jobs and the instant sentence as ways in the picture; the monitor holds on a tap
 - **V01.0.410** Companion: "open Safari with Google" at the Mac is now really done (with a question there), not only announced
 - **V01.0.409** Speech output can be switched off: "Read answers aloud" per profile and "Vorlesen" per device, off = text only (speakers and CarPlay keep speaking)
@@ -42,7 +43,6 @@ All options for running without questions (`--mode api --asr 1.7b --tts 0.6b --y
 - **V01.0.406** Independent review, package 6: compressed page files cached a day, atomic JSON writes, faster self-tests, dead code removed
 - **V01.0.405** Independent review, package 3: faster connections, nothing slow on the panel's event loop, speech output retried during a restart, a silent language model ends the turn after 90 s, no lost messages from parallel turns
 - **V01.0.404** Answer no longer comes twice with "</think>" between: the thinking is never shown or read aloud
-- **V01.0.403** Independent review, package 2: access gaps closed (off-site backup codes, unrecognised speaker voices count as outside text, restore keeps the admin password, API docs off, guest limits, codes for device removal in the iPhone app, MCP limits)
 
 All versions: [CHANGELOG.md](CHANGELOG.md)
 
