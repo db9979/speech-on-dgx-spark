@@ -33,6 +33,7 @@ Alle Optionen ohne Rückfragen (`--mode api --asr 1.7b --tts 0.6b --yes` …) st
 
 <!-- New version: add one line at the top here and in CHANGELOG.md, drop the oldest line here (keep 10). Details go to docs/de and docs/en, not into this README. -->
 
+- **V01.0.358** Eindeutiges direkt abrufen: „Welche Termine habe ich heute?“ holt das Panel selbst
 - **V01.0.357** Passkeys in der iPhone-App: „Mit Passkey“ beim Bestätigen, Spark-Update und Admin-Anmeldung (Face ID mit dem in Safari angelegten Passkey, über iCloud-Schlüsselbund); der Spark liefert Apple dafür /.well-known/apple-app-site-association (nur die App-ID, aus den Push-Angaben)
 - **V01.0.356** Logs → Anfragen zeigt die Anfrage-Nummer aus dem Journal in Liste und Detail, die Suche findet sie
 - **V01.0.355** Was ist neu: das Changelog im Panel ansehen, über „Was ist neu“ unten neben der Version oder Einstellungen → Update und Sicherung, mit Suche
@@ -42,7 +43,6 @@ Alle Optionen ohne Rückfragen (`--mode api --asr 1.7b --tts 0.6b --yes` …) st
 - **V01.0.351** reMarkable im Live-Monitor: @Spark-Antwort, Anleitung, Morgenblatt, Wochenrückblick, Besprechung und Seitenprüfung erscheinen als Hintergrundarbeit mit „fertig“-Meldung, Abgleich als Ereignis, Webseite/Anhang als Werkzeuge
 - **V01.0.350** Tagesbriefing: keine Fehlerzeile „roomfar: briefing AttributeError“ mehr bei jedem Briefing (Dienste ohne Briefing-Teil werden übersprungen)
 - **V01.0.349** Schneller Antwortbeginn: Züge ohne Werkzeug (Plaudern) bekommen wieder die kurze Anfrage ohne Werkzeugliste
-- **V01.0.348** Morgenbegrüßung nennt Termine nur frisch aus dem Kalender: „Guten Morgen“ liest immer das Briefing, vorbei markierte Termine gelten nicht als anstehend, und die Antwort-Prüfung lässt keine Termine aus früheren Antworten als heutige durch
 
 Alle Versionen: [CHANGELOG.md](CHANGELOG.md)
 

@@ -242,6 +242,11 @@ DIRECT = (
                            r"(und )?das wetter( heute)?)" + _END)),
     ("parcels", re.compile(r"(?i)\s*(wo (ist|sind|bleibt|bleiben) meine? pakete?|kommt heute (ein|mein) paket|"
                            r"(hab(e)? ich|kommen) (heute )?pakete?( unterwegs)?|meine pakete)" + _END)),
+    # V01.0.358: only today's appointments (calendar_events without arguments = today, one day); "was steht heute
+    # an" stays with daily_briefing (BRIEFING_HINT)
+    ("calendar_events", re.compile(r"(?i)\s*((welche|was für) termine (hab(e)? ich|stehen( heute)? an|gibt es)( heute)?|"
+                                   r"hab(e)? ich heute (noch )?(einen |irgendwelche )?termine?|(meine|die) termine heute|"
+                                   r"was steht heute (in |im )?(meinem )?kalender)" + _END)),
 )
 
 

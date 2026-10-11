@@ -171,6 +171,17 @@ class Direct(unittest.TestCase):
         self.assertIsNone(intent.direct("Habe ich neue Mails?", {"weather"}))   # only what the turn offers
         self.assertIsNone(intent.direct("Wie ist das Wetter?" + " " * 100, offered))
 
+    def test_calendar_today_only(self):
+        """V01.0.358: today's appointments are fetched directly (no arguments = today); another day, another person
+        or "was steht heute an" (daily_briefing) stay with the model."""
+        offered = {"calendar_events", "daily_briefing"}
+        for text, want in (("Welche Termine habe ich heute?", "calendar_events"), ("Hab ich heute noch Termine?", "calendar_events"),
+                           ("Was steht heute im Kalender?", "calendar_events"), ("Meine Termine heute", "calendar_events"),
+                           ("Welche Termine habe ich morgen?", None), ("Welche Termine hat Anna heute?", None),
+                           ("Was steht heute an?", None), ("Trag einen Termin ein", None)):
+            self.assertEqual(intent.direct(text, offered), want, text)
+        self.assertIsNone(intent.direct("Welche Termine habe ich heute?", {"daily_briefing"}))
+
     def test_panel_calls_the_tool_and_saves_a_round(self):
         p = profile("Direkt1", direct_read=True)
         evs = ask(p, [{"role": "user", "content": "Welche Erinnerungen habe ich?"}])

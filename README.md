@@ -33,6 +33,7 @@ All options for running without questions (`--mode api --asr 1.7b --tts 0.6b --y
 
 <!-- New version: add one line at the top here and in CHANGELOG.md, drop the oldest line here (keep 10). Details go to docs/de and docs/en, not into this README. -->
 
+- **V01.0.358** Fetch clear questions directly: "Which appointments do I have today?" is fetched by the panel itself
 - **V01.0.357** Passkeys in the iPhone app: „With passkey“ when confirming, for the Spark update and the admin sign-in (Face ID with the passkey made in Safari, via iCloud Keychain); for that the Spark serves Apple /.well-known/apple-app-site-association (only the app ID, from the push settings)
 - **V01.0.356** Logs → Requests shows the request number from the journal in list and detail, search finds it
 - **V01.0.355** What's new: view the changelog in the panel, from "Was ist neu" at the bottom next to the version or Settings → Update und Sicherung, with search
@@ -42,7 +43,6 @@ All options for running without questions (`--mode api --asr 1.7b --tts 0.6b --y
 - **V01.0.351** reMarkable in the Live monitor: @Spark answer, guide, morning sheet, weekly review, meeting and page check show as background work with a done event, sync as event, web page/attachment as tools
 - **V01.0.350** Daily briefing: no more "roomfar: briefing AttributeError" line on every briefing (services without a briefing part are skipped)
 - **V01.0.349** Faster answer start: turns without any tool (small talk) get the short request without the tool list again
-- **V01.0.348** Morning greeting names appointments only fresh from the calendar: "Guten Morgen" always reads the briefing, appointments marked as over are not named as coming up, and the answer check lets no appointment from an earlier answer through as today's
 
 All versions: [CHANGELOG.md](CHANGELOG.md)
 
