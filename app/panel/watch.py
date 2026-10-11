@@ -134,6 +134,31 @@ class Job:
         self.t = self.start = time.time()
         self.first_text = self.first_audio = 0.0   # when the Spark had them (for the watch's report)
         self.reported = False
+        self.mark = None   # "mail" / "outside": the answer was made from outside text
+
+
+# Answers made from outside text, by a hash of their text: the watch app sends its history back without
+# marks, so the panel finds them here and the next turn starts locked (chat_turn.prepare)
+MARKED = {}
+MARK_TTL = 3600
+
+
+def _key(text):
+    import hashlib
+    return hashlib.sha256(str(text).strip().encode()).hexdigest()
+
+
+def remember_mark(job):
+    now = time.time()
+    for k in [k for k, (until, _) in MARKED.items() if until < now]:
+        MARKED.pop(k, None)
+    if job.mark and job.text.strip() and len(MARKED) < 500:
+        MARKED[_key(job.text)] = (now + MARK_TTL, job.mark)
+
+
+def mark_of(text):
+    hit = MARKED.get(_key(text))
+    return hit[1] if hit and hit[0] >= time.time() else None
 
     def ping(self):
         self.changed.set()
@@ -172,6 +197,9 @@ async def run(job: Job, response):
                 elif kind == "audio" and job.speak:
                     job.audio += await asyncio.to_thread(job.enc.feed, base64.b64decode(ev["audio"]))
                     job.first_audio = job.first_audio or time.time()
+                elif kind in ("mail", "outside"):
+                    job.mark = "mail" if kind == "mail" or job.mark == "mail" else "outside"
+                    continue
                 elif kind == "error" and not job.error:
                     job.error = str(ev.get("message", "Fehler"))[:200]
                 else:
@@ -185,6 +213,7 @@ async def run(job: Job, response):
         if hasattr(response.body_iterator, "aclose"):
             await response.body_iterator.aclose()  # stops LLM and TTS when cancelled
         job.audio += job.enc.flush()
+        remember_mark(job)
         job.done = True
         job.t = time.time()
         job.ping()

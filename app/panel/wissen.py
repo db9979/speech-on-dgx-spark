@@ -209,16 +209,28 @@ def cards(uid, tags=None, art=None):
     return out
 
 
+CARD_DATE = re.compile(r"[\d.\-/ ]{4,12}")
+
+
 def card_line(d):
-    """One line about a document for the model: its own words, quoted and short (outside text)."""
-    q = lambda v: re.sub(r"<<<|>>>|[„“\n]", "", str(v or ""))  # noqa: E731
-    bits = [b for b in (q(d.get("art")), q(d.get("sender")), q(d.get("date")) and "vom " + q(d.get("date")),
-                        q(d.get("due")) and "Frist " + q(d.get("due")), q(d.get("ref")) and "Nr. " + q(d.get("ref")))
+    """One line about a document for the model: its own words, quoted and short (outside text). These lines
+    stand in the system prompt of every turn, unlocked, so each field is cut hard: a letter whose subject is
+    an instruction gets a few words in, never a paragraph. Documents another profile shared show only file
+    name, kind and tags (their sender, subject and numbers are that profile's business)."""
+    q = lambda v, n: re.sub(r"\s+", " ", re.sub(r"<<<|>>>|[„“\n\r\t]", "", str(v or ""))).strip()[:n]  # noqa: E731
+    day = lambda v: q(v, 12) if CARD_DATE.fullmatch(q(v, 12)) else ""  # noqa: E731
+    shared = bool(d.get("owner"))
+    bits = [b for b in (q(d.get("art"), 30),
+                        "" if shared else q(d.get("sender"), 40),
+                        "" if shared else day(d.get("date")) and "vom " + day(d.get("date")),
+                        day(d.get("due")) and "Frist " + day(d.get("due")),
+                        "" if shared else re.sub(r"[^\w./-]", "", q(d.get("ref"), 30)) and "Nr. " + re.sub(r"[^\w./-]", "", q(d.get("ref"), 30)))
             if b]
-    tags = ", ".join(q(t) for t in d.get("tags") or [])
-    return ("„" + q(d.get("title") or d["name"])[:80] + "“" + (f" (Datei „{q(d['name'])[:60]}“)" if d.get("title") else "")
+    tags = ", ".join(t for t in (q(t, 24) for t in (d.get("tags") or [])[:8]) if t)
+    title = d["name"] if shared else d.get("title") or d["name"]
+    return ("„" + q(title, 60) + "“" + (f" (Datei „{q(d['name'], 60)}“)" if title != d["name"] else "")
             + (" – " + ", ".join(bits) if bits else "") + (f"; Tags: {tags}" if tags else "")
-            + (f"; geteilt von {q(d['owner'])}" if d.get("owner") else ""))
+            + (f"; geteilt von {q(d['owner'], 40)}" if shared else ""))
 
 
 # "Was habe ich zuletzt / heute / diese Woche notiert?": a fixed rule on the person's own words (chat_turn), never the model

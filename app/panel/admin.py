@@ -12,7 +12,7 @@ import zipfile
 import httpx
 import psutil
 from fastapi import APIRouter, Depends, File, Form, HTTPException, Request, UploadFile
-from fastapi.responses import FileResponse, Response, StreamingResponse
+from fastapi.responses import FileResponse, JSONResponse, Response, StreamingResponse
 
 sys.path.insert(0, os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
 import backup  # noqa: E402
@@ -214,6 +214,7 @@ def admin_untrust(uid: str, tid: str, request: Request):
 @router.put("/api/admin/profiles/{uid}/call", dependencies=[Depends(auth)])
 async def admin_set_call(uid: str, request: Request):
     """The Rufname others use in messages ("Thomas M."): unique among every name and Rufname."""
+    _no_admin_profile(request, uid)
     raw = await request.body()
     if len(raw) > 1024:
         raise HTTPException(413, "too large")
@@ -967,6 +968,10 @@ async def _test_asr(request, file, language, wake, room):
             room_mode.set_voice(me["id"], room, who or "", said, known=best >= th)
         except Exception:
             room_mode.set_voice(me["id"], room, "", said)
+    if r.status_code != 200 and not me and not admin_cookie_ok(request):
+        # guests get the code only: the service's text can name temporary files or internal addresses
+        detail = {413: "audio_too_large", 415: "audio_unsupported", 503: "asr_busy"}.get(r.status_code, "asr_failed")
+        return JSONResponse({"detail": detail}, status_code=r.status_code if r.status_code in (413, 415, 503) else 502)
     if spk is None or r.status_code != 200:
         return Response(r.content, status_code=r.status_code, media_type="application/json")
     out = r.json()

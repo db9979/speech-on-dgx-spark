@@ -255,12 +255,17 @@ def _check(tar):
     return members
 
 
-def restore(fileobj, check_config=None, password=None):
+ADMIN_OWN = ("panel-password", "mfa-admin.json")   # the panel password and its second step
+
+
+def restore(fileobj, check_config=None, password=None, keep_admin=False):
     """Restores a backup (file object of a .tar.gz); returns what was restored.
 
     check_config(dict) -> dict: checks the backup's settings (and may fill newer keys); it raises
     ValueError when they are not acceptable, and nothing is changed then. A move backup needs its
-    password; a wrong one changes nothing."""
+    password; a wrong one changes nothing. keep_admin (a restore by the owner profile, not with the panel
+    password): the panel password and its second step stay as they are here, so a made-up backup cannot
+    hand the owner the main password (core.owner_auth: those stay with main_auth)."""
     with tarfile.open(fileobj=fileobj, mode="r:gz") as tar:
         members = _check(tar)
         work = tempfile.mkdtemp(prefix="restore-", dir=BASE if os.path.isdir(BASE) else None)
@@ -286,6 +291,13 @@ def restore(fileobj, check_config=None, password=None):
                     key = _open_keys(f.read(4096), password)
                 os.remove(moved)
             notes = _check_state(work, key)
+            if keep_admin:
+                for name in ADMIN_OWN:
+                    full = os.path.join(work, "state", name)
+                    if os.path.exists(full):
+                        os.remove(full)
+                        if "admin-password-kept" not in notes:
+                            notes.append("admin-password-kept")
             create("before-restore")
             with _lock:
                 return _swap(work, new_cfg, key) + notes
@@ -339,7 +351,10 @@ def _check_state(work, key):
                 # a second step whose secret cannot be read here would only leave the recovery codes:
                 # then the admin keeps the second step of this Spark
                 k = _active_key(key)
-                if not isinstance(d, dict) or not k or not _opens(d.get("secret"), k):
+                import vault
+                # only a sealed secret (a plain one would be taken as it is: a second step somebody made up)
+                if not isinstance(d, dict) or not k or not str(d.get("secret") or "").startswith(vault.PREFIX) \
+                        or not _opens(d.get("secret"), k):
                     os.remove(full)
                     notes.append("admin-mfa-kept")
         else:

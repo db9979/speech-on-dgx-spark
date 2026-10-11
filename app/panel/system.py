@@ -102,16 +102,16 @@ def backup_delete(name: str):
 
 
 @router.post("/api/backups/{name}/restore", dependencies=[Depends(owner_auth), Depends(admin_code_fresh)])
-async def backup_restore(name: str, password: str = Body("", embed=True)):
+async def backup_restore(request: Request, name: str, password: str = Body("", embed=True)):
     try:
         path = backup.path_of(name)
     except FileNotFoundError:
         raise HTTPException(404, "no such backup")
-    return await _restore(open(path, "rb"), name, password[:backup.MOVE_MAX])
+    return await _restore(open(path, "rb"), name, password[:backup.MOVE_MAX], _keep_admin(request))
 
 
 @router.post("/api/backups-upload", dependencies=[Depends(owner_auth), Depends(admin_code_fresh)])
-async def backup_upload(file: UploadFile = File(...), password: str = Form("")):
+async def backup_upload(request: Request, file: UploadFile = File(...), password: str = Form("")):
     """Restores a backup file from this computer (e.g. one downloaded earlier or from another Spark)."""
     tmp = tempfile.TemporaryFile()
     size = 0
@@ -121,7 +121,12 @@ async def backup_upload(file: UploadFile = File(...), password: str = Form("")):
             raise HTTPException(413, "backup too large")
         tmp.write(chunk)
     tmp.seek(0)
-    return await _restore(tmp, file.filename or "upload", password[:backup.MOVE_MAX])
+    return await _restore(tmp, file.filename or "upload", password[:backup.MOVE_MAX], _keep_admin(request))
+
+
+def _keep_admin(request):
+    """The owner profile restores without touching the panel password and its second step (main admin only)."""
+    return not request.scope.get("speech_main_admin")
 
 
 def _check_config(new):
@@ -150,7 +155,7 @@ _move_tries = []  # times of wrong move passwords (scrypt is slow on purpose; gu
 MOVE_TRIES = 5
 
 
-async def _restore(f, name, password=""):
+async def _restore(f, name, password="", keep_admin=False):
     now = time.time()
     _move_tries[:] = [x for x in _move_tries if now - x < 3600]
     if password and len(_move_tries) >= MOVE_TRIES:
@@ -173,7 +178,7 @@ async def _restore(f, name, password=""):
             plain.seek(0)
             f = plain
         with f:
-            done = await asyncio.to_thread(backup.restore, f, _check_config, password or None)
+            done = await asyncio.to_thread(backup.restore, f, _check_config, password or None, keep_admin)
     except (ValueError, OSError, EOFError) as e:
         if "wrong password" in str(e):
             _move_tries.append(now)

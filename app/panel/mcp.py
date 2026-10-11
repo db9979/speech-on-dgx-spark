@@ -33,6 +33,7 @@ MAX_BYTES = 2 * 1024 * 1024
 MAX_SERVERS = 8
 MAX_TOOLS = 60           # per server
 MAX_ARGS = 4000          # characters of JSON a call may send
+SHOWN_ARGS = 300         # an action is only proposed with arguments the person hears in full before the "Ja"
 MAX_RESULT = 8000        # characters of an answer handed to the model
 MAX_SCHEMA = 4000
 TIMEOUT = 30

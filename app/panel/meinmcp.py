@@ -432,10 +432,10 @@ async def tool(name, args, ctx):
         except (httpx.HTTPError, ValueError) as e:
             return f"Der Dienst {s['name']} ist nicht erreichbar: {type(e).__name__}. Sag das dem Nutzer."
     raw = json.dumps(args, ensure_ascii=False)
-    if len(raw) > mcp.MAX_ARGS:
-        return "Nicht vorgeschlagen: die Angaben sind zu lang."
+    if len(raw) > mcp.SHOWN_ARGS:
+        return "Nicht vorgeschlagen: die Angaben sind zu lang, um sie vor dem Ja ganz vorzulesen."
     p = {"kind": "mymcp", "name": name, "service": s["id"], "service_name": s["name"], "tool": t["name"],
-         "desc": t["desc"], "args": args, "args_text": _clip(raw, 300)}
+         "desc": t["desc"], "args": args, "args_text": _clip(raw, mcp.SHOWN_ARGS)}
     propose(uid, p, ctx.get("src", ""))
     return ("Noch NICHT ausgeführt. Frag den Nutzer: „Soll ich " + describe(p) + "?“ Erst sein Ja in der nächsten "
             "Nachricht führt es aus.")

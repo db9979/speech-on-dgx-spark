@@ -141,7 +141,9 @@ def learn_messages(prof, convo):
     part = msgs[max(0, start - 2):]           # a little context before the new part
     # answers made from e-mails, web pages, calendars ... are other people's words, not facts about this
     # person; the assistant's own answers only as short context (facts come from what the person said)
-    text = "\n".join(("Nutzer: " + m["content"][:1500]) if m["role"] == "user" else
+    # a user line marked outside is a voice at a shared speaker that was not clearly this person's (esp32.py)
+    text = "\n".join(("Jemand anderes: (nicht sicher die Stimme dieser Person, ausgelassen)" if m.get("outside")
+                      else "Nutzer: " + m["content"][:1500]) if m["role"] == "user" else
                      ("Assistent: (Antwort aus E-Mails oder anderen Texten von außen, ausgelassen)"
                       if m.get("mail") or m.get("outside") else "Assistent: " + m["content"][:300]) for m in part)
     known = "\n".join("- " + x["text"] for x in profiles.memory(prof["id"])[-60:]) or "(nichts)"

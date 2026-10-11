@@ -828,6 +828,10 @@ async def carry_out(uid, x):
         ha = homeassistant.get(uid)
         if not ha or not features.allowed("ha", uid):
             return False, "Home Assistant ist nicht verbunden oder aus."
+        if homeassistant.needs_code(ha):
+            # the Smart-Home-Codewort is said by the person, never typed into another program: with one set,
+            # a MCP client switches nothing (the browser's "Ja" is no code word)
+            return False, "Mit Smart-Home-Codewort schaltet ein MCP-Dienst nichts; sag es dem Spark selbst."
         ok, answer, _ = await homeassistant.command(ha, item["command"], "de")
         return bool(ok), _clean(answer, 300)
     if x["tool"] == "reminder_set":

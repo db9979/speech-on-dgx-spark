@@ -494,9 +494,17 @@ def profile_end_session(sid: str, request: Request, prof=Depends(browser_profile
     return {"ok": True}
 
 
+async def _app_code(request, prof):
+    """From the iPhone app (its key, area "Sicherheit"): a current code of the profile's second step, as the
+    area promises (iphone.py); in the profile's own browser the PIN login is that proof already."""
+    if request.headers.get(profiles.DEVICE_HEADER):
+        await confirm_code(request, prof["id"], prof["name"])
+
+
 @router.post("/api/profile/logout-all", dependencies=[Depends(assistant)])
-def profile_logout_all(request: Request, prof=Depends(browser_profile)):
+async def profile_logout_all(request: Request, prof=Depends(browser_profile)):
     """Ends the login in every browser; this one gets a fresh login and stays signed in."""
+    await _app_code(request, prof)
     profiles.end_sessions(prof["id"])
     mfa.forget_trust(prof["id"])  # trusted browsers have to enter a code again
     guard.log("profile_logout_all", ip=guard.client_ip(request), name=prof["name"], uid=prof["id"])
@@ -509,9 +517,10 @@ def profile_logout_all(request: Request, prof=Depends(browser_profile)):
 
 
 @router.delete("/api/profile/devices/{did}", dependencies=[Depends(assistant)])
-def profile_remove_device(did: str, request: Request, prof=Depends(browser_profile)):
+async def profile_remove_device(did: str, request: Request, prof=Depends(browser_profile)):
     if not any(x["id"] == did for x in profiles.own_devices(prof["id"])):
         raise HTTPException(404, "no such device")
+    await _app_code(request, prof)
     profiles.delete_device(did)
     guard.log("profile_device_removed", ip=guard.client_ip(request), name=prof["name"], uid=prof["id"], device=did)
     return {"devices": profiles.own_devices(prof["id"])}
@@ -1021,11 +1030,14 @@ def profile_voice_delete(prof=Depends(browser_profile)):
 async def assistant_say(request: Request):
     """Speaks a short text (a due reminder) as streamed PCM events, like the chat's audio."""
     me = profiles.current(request)
-    guard.limit(request, "chat", me and me["id"], not me and admin_cookie_ok(request))
+    admin = not me and admin_cookie_ok(request)
+    guard.limit(request, "chat", me and me["id"], admin)
     body = await request.json()
-    text = str(body.get("text", "")).strip()[:6000]   # a reminder, or an answer read out again
+    # a reminder, or an answer read out again; guests (with "Assistent ohne Anmeldung") a short one
+    text = str(body.get("text", "")).strip()[:6000 if me or admin else 1000]
     if not text:
         raise HTTPException(400, "text is required")
+    slot = None if me or admin else guard.Slot("chat")   # guests share the few places of the chat
     cfg = load_config()
     who = profiles.current(request)
     pset = profiles.effective(who and who["id"], cfg.get("chat", {}))
@@ -1038,27 +1050,37 @@ async def assistant_say(request: Request):
     device = echo.device_of(request)
 
     async def gen():
-        mine, until = None, 0.0   # another device of the house does not take this for a question (echo.py)
-        async with httpx.AsyncClient(timeout=httpx.Timeout(120, connect=5)) as c:
-            async with c.stream("POST", f"http://127.0.0.1:{cfg['tts']['port']}/v1/audio/speech",
-                                json=req, headers=api_headers()) as r:
-                async for line in r.aiter_lines():
-                    if line.startswith("data:") and "speech.audio.delta" in line:
-                        try:
-                            audio = json.loads(line[5:])['audio']
-                        except (ValueError, KeyError, TypeError):
-                            continue
-                        if not isinstance(audio, str):
-                            continue
-                        if mine is None:
-                            mine = echo.said(text, who and who["id"], device)
-                            until = time.time()
-                        # 16-bit mono PCM at 24 kHz: 48000 bytes per second, 4 base64 characters per 3 bytes
-                        until = max(until, time.time()) + len(audio) * 3 / 4 / 48000
-                        echo.played(mine, until)
-                        yield f"data: {json.dumps({'type': 'audio', 'audio': audio})}\n\n"
-        yield f"data: {json.dumps({'type': 'done'})}\n\n"
+        try:
+            async for part in _say(cfg, req, text, who, device):
+                yield part
+        finally:
+            if slot:
+                slot.release()
     return StreamingResponse(gen(), media_type="text/event-stream", headers={"Cache-Control": "no-cache"})
+
+
+async def _say(cfg, req, text, who, device):
+    """The TTS stream of /api/assistant/say as server-sent events."""
+    mine, until = None, 0.0   # another device of the house does not take this for a question (echo.py)
+    async with httpx.AsyncClient(timeout=httpx.Timeout(120, connect=5)) as c:
+        async with c.stream("POST", f"http://127.0.0.1:{cfg['tts']['port']}/v1/audio/speech",
+                            json=req, headers=api_headers()) as r:
+            async for line in r.aiter_lines():
+                if line.startswith("data:") and "speech.audio.delta" in line:
+                    try:
+                        audio = json.loads(line[5:])['audio']
+                    except (ValueError, KeyError, TypeError):
+                        continue
+                    if not isinstance(audio, str):
+                        continue
+                    if mine is None:
+                        mine = echo.said(text, who and who["id"], device)
+                        until = time.time()
+                    # 16-bit mono PCM at 24 kHz: 48000 bytes per second, 4 base64 characters per 3 bytes
+                    until = max(until, time.time()) + len(audio) * 3 / 4 / 48000
+                    echo.played(mine, until)
+                    yield f"data: {json.dumps({'type': 'audio', 'audio': audio})}\n\n"
+    yield f"data: {json.dumps({'type': 'done'})}\n\n"
 
 
 @router.get("/api/profile/settings", dependencies=[Depends(assistant)])

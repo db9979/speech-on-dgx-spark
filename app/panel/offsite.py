@@ -32,7 +32,7 @@ import guard
 import netguard
 import vault
 import vorrang
-from core import admin_code, owner_auth
+from core import admin_code, admin_code_fresh, owner_auth
 
 router = APIRouter()
 STATE = os.environ.get("SPEECH_SPARK_STATE", "/var/lib/speech-spark/state")
@@ -251,7 +251,9 @@ def offsite_get():
     return view()
 
 
-@router.put("/api/admin/offsite", dependencies=[Depends(owner_auth), Depends(admin_code)])
+# the address and password decide where a backup with every secret goes: a fresh code every time,
+# like downloading a backup (core.admin_code_fresh)
+@router.put("/api/admin/offsite", dependencies=[Depends(owner_auth), Depends(admin_code_fresh)])
 async def offsite_put(request: Request):
     guard.limit(request, "offsite", admin=True)
     raw = await request.body()
@@ -299,7 +301,7 @@ async def offsite_put(request: Request):
     return view()
 
 
-@router.post("/api/admin/offsite/now", dependencies=[Depends(owner_auth)])
+@router.post("/api/admin/offsite/now", dependencies=[Depends(owner_auth), Depends(admin_code)])
 async def offsite_now(request: Request):
     guard.limit(request, "offsite", admin=True)
     if _running["on"]:

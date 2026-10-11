@@ -20,6 +20,7 @@ icloud.com), never over plain http when the address was https.
 import asyncio
 import imaplib
 import ipaddress
+import re
 import socket
 import zlib
 from urllib.parse import urlsplit
@@ -28,7 +29,37 @@ import httpcore
 import httpx
 
 PUBLIC, USER, HOME = "public", "user", "home"
-OWN_PORTS = range(30000, 31100)
+OWN_PORTS = set(range(30000, 31100)) | {31443}   # the services' ports and the panel's https port
+_own = {"t": 0.0, "ips": set()}
+
+
+def own_addresses():
+    """Every address of this machine (its LAN and VPN addresses too), from /proc, cached for a minute: the
+    services' ports are refused there as on loopback (a MCP service "in the home network" could be the Spark)."""
+    import time
+    if time.time() - _own["t"] < 60:
+        return _own["ips"]
+    ips = set()
+    try:
+        with open("/proc/net/fib_trie") as f:
+            last = None
+            for line in f:
+                m = re.search(r"\|--\s+(\d+\.\d+\.\d+\.\d+)", line)
+                if m:
+                    last = m.group(1)
+                elif "/32 host LOCAL" in line and last:
+                    ips.add(ipaddress.ip_address(last))
+    except OSError:
+        pass
+    try:
+        with open("/proc/net/if_inet6") as f:
+            for line in f:
+                h = line.split()[0]
+                ips.add(ipaddress.ip_address(":".join(h[i:i + 4] for i in range(0, 32, 4))))
+    except (OSError, ValueError, IndexError):
+        pass
+    _own.update(t=time.time(), ips=ips)
+    return ips
 MAX_BYTES = 20 * 1024 * 1024
 
 
@@ -53,7 +84,7 @@ def allowed(ip, port, level):
     ip = ipaddress.ip_address(str(ip).split("%")[0])
     if ip.version == 6 and ip.ipv4_mapped:
         ip = ip.ipv4_mapped
-    if ip.is_loopback and int(port or 0) in OWN_PORTS:
+    if int(port or 0) in OWN_PORTS and (ip.is_loopback or ip.is_unspecified or ip in own_addresses()):
         return "the Spark's own services are not reachable this way"
     if ip.is_global:
         import notaus   # Notaus stage 1 and up: nothing to the internet (notaus.py)

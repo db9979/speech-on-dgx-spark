@@ -969,8 +969,9 @@ ACT_HINT = ("pc_action asks the user's paired computer to open a page or a relea
 
 
 # Vom Handy auf den PC (part inbox): the assistant puts a text or a link into the computer's inbox. Not locked
-# after outside text (sending a link it found to the own computer is the point); the program asks before it opens
-# a link, and only http/https. It changes nothing on the Spark: INSIDE (tests/test_scanner.py).
+# after outside text (sending a link it found to the own computer is the point), but then only plain links and no
+# clipboard text (_after_outside); the program asks before it opens a link, and only http/https. It changes
+# nothing on the Spark: INSIDE (tests/test_scanner.py).
 INSIDE = {"pc_send"}
 PC_WORDS = re.compile(r"\b(pc|rechner|computer|laptop|notebook|mac|macbook|desktop)\b", re.I)
 SEND_WORDS = re.compile(r"\b(schick\w*|send\w*|leg\w*|übertrag\w*|pack\w*|put|gib)\b", re.I)
@@ -1018,7 +1019,24 @@ def _pick_device(devs, want):
             sorted(devs, key=lambda d: -_seen.get(d["id"], 0))[:1])[0]
 
 
-async def _send_tool(uid, args):
+def _after_outside(kind, content):
+    """After outside text (mail, web, documents) in this answer: no text silently into the clipboard (a mail could
+    plant a command to paste), and a link only as a plain address (no ?query or #part, short path) so no read
+    data rides along to a stranger's server. "" when it may go."""
+    if kind == "text":
+        return "Nach einem Text von außen lege ich nichts in die Zwischenablage. Sag es mir noch einmal ohne ihn."
+    from urllib.parse import urlsplit
+    try:
+        u = urlsplit(str(content or "").strip())
+    except ValueError:
+        return "Geht nicht: das ist keine Adresse."
+    if u.query or u.fragment or len(u.path) > 100 or u.username or u.password:
+        return ("Nach einem Text von außen schicke ich nur schlichte Adressen ohne Zusätze an den Rechner. "
+                f"Öffne dort {u.scheme}://{u.hostname or ''} selbst.")
+    return ""
+
+
+async def _send_tool(uid, args, outside=False):
     devs = inbox_devices(uid)
     if not devs:
         return "Kein gekoppelter Rechner nimmt etwas an (Ich → Begleiter → Vom Handy auf den PC)."
@@ -1028,6 +1046,8 @@ async def _send_tool(uid, args):
     kind = args.get("kind")
     if kind not in ("text", "link"):
         return "Geht nicht: kind ist text oder link."
+    if outside and (why := _after_outside(kind, args.get("content"))):
+        return why
     try:
         inbox_add(uid, d["id"], kind, text=args.get("content"))
     except ValueError as e:
@@ -1040,7 +1060,7 @@ async def _send_tool(uid, args):
 async def tool(name, args, ctx):
     uid = (ctx.get("who") or {}).get("id")
     if name == "pc_send" and uid:
-        return await _send_tool(uid, args if isinstance(args, dict) else {})
+        return await _send_tool(uid, args if isinstance(args, dict) else {}, bool(ctx.get("outside")))
     if name != "pc_action" or not uid:
         return "Am PC handeln ist aus."
     devs = act_devices(uid)

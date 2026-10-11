@@ -1305,7 +1305,7 @@ class Session:
             return {"type": "http.request", "body": data, "more_body": False}
         response = await chat.chat(Request(scope, receive))
         enc = Encoder()
-        answer, said, from_mail = "", 0, False
+        answer, said, from_mail, from_outside = "", 0, False, False
         pace = Pacer(self.send_audio)
         await self.send({"type": "tts", "state": "start"})
         try:
@@ -1330,6 +1330,8 @@ class Session:
                         said = min(said, len(answer))
                     elif k == "mail":
                         from_mail = True
+                    elif k == "outside":   # made from web, calendar, documents, HA: the next turn starts locked
+                        from_outside = True
                     elif k == "audio":
                         import base64
                         await pace.push(await asyncio.to_thread(enc.feed, base64.b64decode(ev["audio"])))
@@ -1348,20 +1350,23 @@ class Session:
             self.note(f"Ton stockte {pace.stalls}-mal: die Sprachausgabe kam nicht schnell genug nach")
         answer = answer.strip()
         if answer:
-            remember(self.dev, history, text, answer, from_mail)
+            remember(self.dev, history, text, answer, from_mail, from_outside, owner=voice == uid)
 
 
-def remember(dev, history, text, answer, from_mail):
+def remember(dev, history, text, answer, from_mail, from_outside=False, owner=True):
     """Keeps the turn for follow-ups and as the day's conversation "<speaker> dd.mm." of the profile
-    (the code word blacked out, like everywhere)."""
+    (the code word blacked out, like everywhere). A turn of a voice that was not clearly the owner's
+    (a visitor, the TV) is marked as outside text: the next turn starts locked, and the assistant never
+    learns facts about the owner from it (recall.learn_messages leaves it out)."""
     import chat
     import homeassistant
     uid = dev["user"]
     ha = homeassistant.get(uid)
     if ha and homeassistant.needs_code(ha):
         text = homeassistant.redact(ha, text)
-    msgs = history + [{"role": "user", "content": text},
-                      dict({"role": "assistant", "content": answer}, **({"mail": True} if from_mail else {}))]
+    mark = {"mail": True} if from_mail else {"outside": True} if from_outside or not owner else {}
+    msgs = history + [dict({"role": "user", "content": text}, **({} if owner else {"outside": True})),
+                      dict({"role": "assistant", "content": answer}, **mark)]
     _history[dev["id"]] = (time.time(), msgs)
     local = datetime.datetime.now(chat.user_zone(profiles.settings(uid).get("tz", "")))
     cid = f"esp-{dev['id']}-{local:%Y%m%d}"
@@ -1550,7 +1555,14 @@ async def speaker_ws(ws: WebSocket):
     token = token[7:].strip() if token.lower().startswith("bearer ") else token.strip()
     dev = device_for_token(token)
     cid = ws.headers.get("client-id", "")[:64]
-    why = ("speakers are switched off in Funktionen" if not admin_on() else "unknown device key" if not dev
+    # only a speaker's own key (no scope, listed as a speaker): a watch's, a desk's or a room key would get
+    # the profile's voice and the model here without the checks of their own paths
+    if dev and (dev.get("scope") or dev["id"] not in speaker_ids()):
+        dev, foreign = None, True
+    else:
+        foreign = False
+    why = ("speakers are switched off in Funktionen" if not admin_on() else "not a speaker's key" if foreign
+           else "unknown device key" if not dev
            else "speakers are switched off in the profile" if not profile_on(dev["user"]) else "")
     if why:
         await ws.close(code=4403)
@@ -1559,6 +1571,7 @@ async def speaker_ws(ws: WebSocket):
         name = (_devices().get(did) or {}).get("name", "") if did else ""
         print(f"esp32: connection refused ({why})" + (f" from {name}" if name else ""), flush=True)
         diag(did, "Verbindung abgelehnt: " + {"unknown device key": "Schlüssel unbekannt (Lautsprecher neu einrichten)",
+                                               "not a speaker's key": "Schlüssel gehört zu keinem Lautsprecher",
                                                "speakers are switched off in Funktionen": "Lautsprecher in Funktionen ausgeschaltet",
                                                "speakers are switched off in the profile": "„Eigene Lautsprecher für mich“ ist aus"}[why])
         return

@@ -2105,6 +2105,10 @@ async def watch_ask(request: Request):
                     **{k: True for k in ("mail", "outside") if m.get(k)})
                for m in (body.get("history") if isinstance(body.get("history"), list) else [])[-10:]
                if isinstance(m, dict) and m.get("role") in ("user", "assistant") and m.get("content")]
+    for m in history:   # the watch sends its answers back without marks: the panel remembers them (watch.MARKED)
+        mark = watch.mark_of(m["content"]) if m["role"] == "assistant" and not (m.get("mail") or m.get("outside")) else None
+        if mark:
+            m[mark] = True
     inner = {"messages": history + [{"role": "user", "content": text}], "client": "watch"}
     if isinstance(body.get("tz"), str):
         inner["tz"] = body["tz"]

@@ -32,7 +32,7 @@ import guard
 import join
 import mfa
 import profiles
-from core import assistant, auth, browser_profile, own_profile
+from core import assistant, auth, browser_profile, confirm_code, own_profile
 
 router = APIRouter()
 _lock = threading.Lock()
@@ -351,6 +351,8 @@ def hand_finish(code, wait, now=None):
 @router.post("/api/profile/handoff", dependencies=[Depends(assistant)])
 async def handoff_new(request: Request, prof=Depends(browser_profile)):
     _hand_on()
+    # the phone gets a login of its own: with the second step on, a current code first (like a new device)
+    await confirm_code(request, prof["id"], prof["name"])
     body = await join._json(request)
     base = _hbase(body)
     guard.limit(request, "pair")

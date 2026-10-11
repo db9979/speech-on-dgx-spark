@@ -492,15 +492,16 @@ final class SecurityModel: ObservableObject {
         } catch { self.error = error.localizedDescription }
     }
 
-    func remove(_ id: String) async {
+    // with the second step on, the Spark wants a current code for both (also from this app)
+    func remove(_ id: String, code: String? = nil) async {
         guard SparkAPI.devId(id) else { return }
-        do { _ = try await SparkAPI.current?.call("DELETE", "api/profile/devices/\(id)"); await load() }
+        do { _ = try await SparkAPI.current?.call("DELETE", "api/profile/devices/\(id)", code: code); await load() }
         catch { self.error = error.localizedDescription }
     }
 
-    func logoutAll() async {
+    func logoutAll(code: String? = nil) async {
         do {
-            _ = try await SparkAPI.current?.call("POST", "api/profile/logout-all")
+            _ = try await SparkAPI.current?.call("POST", "api/profile/logout-all", code: code)
             note = String(localized: "In allen Browsern abgemeldet. Gekoppelte Geräte bleiben.")
             await load()
         } catch { self.error = error.localizedDescription }
@@ -584,10 +585,14 @@ struct SecurityView: View {
         .codeAlert($ask)
         .confirmationDialog("Gerät entfernen?", isPresented: Binding(get: { removing != nil }, set: { if !$0 { removing = nil } }),
                             titleVisibility: .visible, presenting: removing) { id in
-            Button("Entfernen", role: .destructive) { Task { await m.remove(id) } }
+            Button("Entfernen", role: .destructive) {
+                if m.mfaOn { ask = CodeRequest { c in await m.remove(id, code: c) } } else { Task { await m.remove(id) } }
+            }
         } message: { _ in Text("Ist es dieses iPhone, musst du es danach neu koppeln.") }
         .confirmationDialog("In allen Browsern abmelden?", isPresented: $confirmAll, titleVisibility: .visible) {
-            Button("Überall abmelden", role: .destructive) { Task { await m.logoutAll() } }
+            Button("Überall abmelden", role: .destructive) {
+                if m.mfaOn { ask = CodeRequest { c in await m.logoutAll(code: c) } } else { Task { await m.logoutAll() } }
+            }
         }
     }
 

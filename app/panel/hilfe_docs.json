@@ -2293,7 +2293,7 @@
 "file": "Sicherheit und Betrieb",
 "head": "Sicherheit",
 "title": "Sicherheit",
-"text": "n bekommt eine Push-Meldung bei jeder neuen Person. In den Profil-Details gibt es PIN-Link (neue PIN per Link statt PIN weitersagen; mit zweitem Schritt nur mit Code) und Erinnern (Push an die Person, höchstens einmal pro Stunde). Änderungsprotokoll: invite_made, invite_used, invite_pin, invite_app, handoff_login. - „Los geht's“ (seit V01.0.276): Nach der Einladung führt *Ich → Los geht's* in fünf Schritten (Willkommen, Absichern, Geräte, Dienste, Fertig) durch alles, was das Profil nutzen darf, mit direkten Links auf die Seiten unter Ich und QR-Codes für iPhone-App und Kopplung. Erledigt hakt der Spark selbst ab (zweiter Schritt eingerichtet, iPhone gekoppelt, Kalender da …), der Browser kann nur „Später“ setzen. Der Admin sieht in der Profilliste „Einrichten x von y“. - Am Handy weitermachen (seit V01.0.276, Schalter unter *Neue Personen*): Am Rechner zeigt „Los geht's“ einen QR-Code (2 Minuten, einmal). Das Handy zeigt danach eine Zahl, am Rechner tippt man unter drei Zahlen die richtige an; erst dann ist das Handy im selben Profil angemeldet. Eine falsche Zahl beendet den Versuch. Geräteschlüssel können keine Übergabe starten. ## Repo und Releases absichern"
+"text": "n bekommt eine Push-Meldung bei jeder neuen Person. In den Profil-Details gibt es PIN-Link (neue PIN per Link statt PIN weitersagen; mit zweitem Schritt nur mit Code) und Erinnern (Push an die Person, höchstens einmal pro Stunde). Änderungsprotokoll: invite_made, invite_used, invite_pin, invite_app, handoff_login. - „Los geht's“ (seit V01.0.276): Nach der Einladung führt *Ich → Los geht's* in fünf Schritten (Willkommen, Absichern, Geräte, Dienste, Fertig) durch alles, was das Profil nutzen darf, mit direkten Links auf die Seiten unter Ich und QR-Codes für iPhone-App und Kopplung. Erledigt hakt der Spark selbst ab (zweiter Schritt eingerichtet, iPhone gekoppelt, Kalender da …), der Browser kann nur „Später“ setzen. Der Admin sieht in der Profilliste „Einrichten x von y“. - Am Handy weitermachen (seit V01.0.276, Schalter unter *Neue Personen*): Am Rechner zeigt „Los geht's“ einen QR-Code (2 Minuten, einmal). Das Handy zeigt danach eine Zahl, am Rechner tippt man unter drei Zahlen die richtige an; erst dann ist das Handy im selben Profil angemeldet. Eine falsche Zahl beendet den Versuch. Geräteschlüssel können keine Übergabe starten. - Unabhängige Prüfung vom 11.10.2026 (Plan pruefung"
 },
 {
 "lang": "de",
@@ -2301,22 +2301,38 @@
 "file": "Sicherheit und Betrieb",
 "head": "Sicherheit",
 "title": "Sicherheit",
+"text": "/unabhaengige-pruefung-2026-10-11.md, V01.0.403): Sicherung nach außen ändern braucht jedes Mal einen frischen Code, „Jetzt sichern“ einen Code. Was eine nicht sicher erkannte Stimme am Lautsprecher sagt, steht als „von außen“ im Verlauf: der nächste Zug beginnt gesperrt, und der Assistent lernt daraus nichts über den Inhaber. Antworten aus fremdem Text behalten diese Markierung auch an der Pebble-Uhr. Dokument-Steckbriefe im Systemprompt sind hart gekürzt; von anderen Profilen geteilte Dokumente zeigen nur Dateiname, Art und Tags. Den Lautsprecher-Zugang öffnet nur der Schlüssel eines Lautsprechers. Ein Wiederherstellen durch das Haupt-Admin-Profil lässt Panel-Passwort und dessen zweiten Schritt unverändert. /docs, /redoc und /openapi.json gibt es nicht mehr. Gäste bekommen von der Spracherkennung nur Fehlercodes, und Vorlesen hat für Gäste eigene Grenzen. Geräte entfernen und „Überall abmelden“ aus der iPhone-App sowie „Am Handy weitermachen“ brauchen mit zweitem Schritt einen Code. Nach fremdem Text legt „Vom Handy auf den PC“ keinen Text in die Zwischenablage und schickt nur schlichte Links. Eigene MCP-Dienste erreichen die Dienst-Ports des Spark auch über seine LAN-Adresse nic"
+},
+{
+"lang": "de",
+"src": "sicherheit-und-betrieb",
+"file": "Sicherheit und Betrieb",
+"head": "Sicherheit",
+"title": "Sicherheit",
+"text": "ht. Ein MCP-Client schaltet mit Smart-Home-Codewort nichts, und MCP-Aktionen werden nur mit Angaben vorgeschlagen, die vor dem „Ja“ ganz vorgelesen werden."
+},
+{
+"lang": "de",
+"src": "sicherheit-und-betrieb",
+"file": "Sicherheit und Betrieb",
+"head": "Repo und Releases absichern",
+"title": "Repo und Releases absichern",
 "text": "Seit V01.0.390. Die GitHub-Workflows hängen alle Actions an einen festen Commit (Dependabot schlägt monatlich neue vor), Schreibrecht hat nur der Job, der ein Release oder einen Build-Branch schreibt, und actions/checkout behält keinen Token. Die Signierschlüssel (Android-Keystore, App-Store-Connect-Schlüssel, Developer-ID) liegen in der Umgebung release, die nur Workflows auf main nutzen dürfen; Workflows auf anderen Branches sehen sie nicht. Der Selbsttest test_workflows hält das fest."
 },
 {
 "lang": "de",
 "src": "sicherheit-und-betrieb",
 "file": "Sicherheit und Betrieb",
-"head": "Sicherheit",
-"title": "Sicherheit",
+"head": "Repo und Releases absichern",
+"title": "Repo und Releases absichern",
 "text": "Einmaliger Umzug der Schlüssel: einen feingranularen Token nur für dieses Repo anlegen (Administration, Environments, Secrets: Lesen und Schreiben, 1 Tag gültig), als Repo-Secret MIGRATE_TOKEN speichern und den Workflow „Schlüssel in Umgebung verschieben“ starten. Er legt release an (nur main, ohne Freigabe), trägt jeden gesetzten Schlüssel dort ein, löscht danach die Repo-Kopien und MIGRATE_TOKEN. Werte erscheinen nie im Log."
 },
 {
 "lang": "de",
 "src": "sicherheit-und-betrieb",
 "file": "Sicherheit und Betrieb",
-"head": "Sicherheit",
-"title": "Sicherheit",
+"head": "Repo und Releases absichern",
+"title": "Repo und Releases absichern",
 "text": "Auf GitHub empfohlen: 2FA mit Passkey, Ruleset auf main gegen Löschen und Force-Push, Workflow-Rechte nur lesen, Secret Scanning mit Push Protection. tars installiert weiterhin nur grün getestete Commits und nimmt keine umgeschriebene Historie."
 },
 {
@@ -4925,7 +4941,7 @@
 "file": "Security and operation",
 "head": "Security",
 "title": "Security",
-"text": "ead of passing a PIN on; with the second step only with a code) and Remind (push to the person, at most once per hour). Audit log: invite_made, invite_used, invite_pin, invite_app, handoff_login. - \"Los geht's\" (since V01.0.276): after the invitation, *Me → Los geht's* walks in five steps (welcome, secure, devices, services, done) through everything the profile may use, with direct links to the pages under Me and QR codes for the iPhone app and pairing. The Spark ticks off what is done itself (second step set up, iPhone paired, calendar there …); the browser can only set \"later\". The admin sees \"Einrichten x von y\" in the profile list. - Continue on the phone (since V01.0.276, switch under *Neue Personen*): on the computer \"Los geht's\" shows a QR code (2 minutes, once). The phone then shows a number; on the computer you tap the right one of three numbers, only then is the phone signed in to the same profile. A wrong number ends the attempt. Device keys cannot start a handoff. ## Securing the repository and releases"
+"text": "ead of passing a PIN on; with the second step only with a code) and Remind (push to the person, at most once per hour). Audit log: invite_made, invite_used, invite_pin, invite_app, handoff_login. - \"Los geht's\" (since V01.0.276): after the invitation, *Me → Los geht's* walks in five steps (welcome, secure, devices, services, done) through everything the profile may use, with direct links to the pages under Me and QR codes for the iPhone app and pairing. The Spark ticks off what is done itself (second step set up, iPhone paired, calendar there …); the browser can only set \"later\". The admin sees \"Einrichten x von y\" in the profile list. - Continue on the phone (since V01.0.276, switch under *Neue Personen*): on the computer \"Los geht's\" shows a QR code (2 minutes, once). The phone then shows a number; on the computer you tap the right one of three numbers, only then is the phone signed in to the same profile. A wrong number ends the attempt. Device keys cannot start a handoff. - Independent review of 11.10.2026 (plan pruefung/unabhaengige-pruefung-2026-10-11.md, V01.0.403): changing the off-site backup needs a fresh code every time, \"Back up now\" a code. What a voice at a speaker th"
 },
 {
 "lang": "en",
@@ -4933,22 +4949,30 @@
 "file": "Security and operation",
 "head": "Security",
 "title": "Security",
+"text": "at was not clearly recognised says is kept as \"from outside\" in the history: the next turn starts locked, and the assistant learns nothing about the owner from it. Answers made from outside text keep that mark at the Pebble watch too. Document cards in the system prompt are cut short; documents shared by other profiles show only file name, kind and tags. Only a speaker's own key opens the speaker connection. A restore by the owner profile leaves the panel password and its second step unchanged. /docs, /redoc and /openapi.json are gone. Guests get only error codes from speech recognition, and reading aloud has its own limits for guests. Removing devices and \"Sign out everywhere\" from the iPhone app, and \"Continue on the phone\", need a code when the second step is on. After outside text, \"From phone to PC\" puts no text into the clipboard and sends only plain links. Own MCP services cannot reach the Spark's service ports via its LAN address either. An MCP client switches nothing when a smart-home code word is set, and MCP actions are only proposed with arguments that are read out in full before the \"yes\"."
+},
+{
+"lang": "en",
+"src": "security-and-operation",
+"file": "Security and operation",
+"head": "Securing the repository and releases",
+"title": "Securing the repository and releases",
 "text": "Since V01.0.390. The GitHub workflows pin every action to a commit (Dependabot proposes updates monthly), only the job that writes a release or build branch may write, and actions/checkout keeps no token. The signing keys (Android keystore, App Store Connect key, Developer ID) live in the environment release, usable only by workflows on main; workflows on other branches cannot see them. The self-test test_workflows keeps it that way."
 },
 {
 "lang": "en",
 "src": "security-and-operation",
 "file": "Security and operation",
-"head": "Security",
-"title": "Security",
+"head": "Securing the repository and releases",
+"title": "Securing the repository and releases",
 "text": "One-time move of the keys: create a fine-grained token for this repository only (Administration, Environments, Secrets: read and write, valid 1 day), store it as repository secret MIGRATE_TOKEN and run the workflow \"Schlüssel in Umgebung verschieben\". It creates release (main only, no review), copies every key that is set, then deletes the repository copies and MIGRATE_TOKEN. Values never appear in the log."
 },
 {
 "lang": "en",
 "src": "security-and-operation",
 "file": "Security and operation",
-"head": "Security",
-"title": "Security",
+"head": "Securing the repository and releases",
+"title": "Securing the repository and releases",
 "text": "Recommended on GitHub: 2FA with a passkey, a ruleset on main against deletion and force push, read-only workflow permissions, secret scanning with push protection. tars still installs only commits whose tests passed and refuses rewritten history."
 },
 {

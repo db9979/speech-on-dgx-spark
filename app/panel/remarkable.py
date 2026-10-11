@@ -1023,6 +1023,8 @@ def offer(ctx):
     more = rmplus.tools_for(who["id"], ctx.get("text"))
     return {"tools": [NOTE_TOOL] + more, "hint": NOTE_HINT + (" " + rmplus.HINT if more else ""),
             "changes": {"remarkable_note", "remarkable_page", "remarkable_attachment"},
+            # what comes back names the page's title or the mail's file name: outside text, the rest of the answer locked
+            "mail": {"remarkable_attachment"}, "outside": {"remarkable_page"},
             "filler": {"remarkable_note": ("Ich schicke es aufs reMarkable.", "Sending it to the reMarkable."),
                        "remarkable_page": ("Ich hole die Seite.", "Fetching the page."),
                        "remarkable_attachment": ("Ich suche den Anhang.", "Looking for the attachment.")}}

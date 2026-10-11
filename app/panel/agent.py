@@ -1120,10 +1120,10 @@ async def tool(name, args, ctx):
             if lv != "act":
                 break
             raw = json.dumps(args if isinstance(args, dict) else {}, ensure_ascii=False)
-            if len(raw) > mcp.MAX_ARGS:
-                return "Nicht vorgeschlagen: die Angaben sind zu lang."
+            if len(raw) > mcp.SHOWN_ARGS:
+                return "Nicht vorgeschlagen: die Angaben sind zu lang, um sie vor dem Ja ganz vorzulesen."
             p = {"kind": "mcp", "name": n, "server": server["id"], "server_name": server["name"], "tool": t["name"],
-                 "args": args if isinstance(args, dict) else {}, "args_text": clean(raw, 300)}
+                 "args": args if isinstance(args, dict) else {}, "args_text": clean(raw, mcp.SHOWN_ARGS)}
             propose(uid, p, ctx.get("src", ""))
             return ("Noch NICHT ausgeführt. Frag den Nutzer: „Soll ich " + describe_pending(p) + "?“ Erst sein Ja in "
                     "der nächsten Nachricht führt es aus.")
