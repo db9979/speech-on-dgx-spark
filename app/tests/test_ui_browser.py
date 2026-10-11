@@ -1737,6 +1737,48 @@ class Browser(unittest.TestCase):
             update.CHANGELOG_FILES = real
             update._cl_cache.update(key=None, entries=[])
 
+    def test_report_window(self):
+        """Probleme melden (melden.js): the window opens with the strict CSP on, a draft shows the anonymized preview
+        with lines to untick, Escape closes; Ich → Probleme melden lists it; nothing sticks out at 320/390 px."""
+        import meldung
+        import profiles
+        helpers.set_config(report=True)
+        me = next(u for u in profiles._load()["users"] if u["name"] == "Uitest")["id"]
+        profiles.save_settings(me, {"report_on": True})
+
+        async def go():
+            async with async_playwright() as p:
+                for w, h in ((1440, 900), (390, 800), (320, 700)):
+                    br, pg, errors = await self.page(p, w, h, csp=True)
+                    try:
+                        await pg.evaluate("ON.rpOpen()")
+                        await pg.wait_for_selector("#rpbody textarea", timeout=5000)
+                        await pg.fill("#rpbody textarea", "Der Lautsprecher in der Küche schweigt")
+                        await pg.click("#rpbody [data-rpmake]")
+                        await pg.wait_for_selector("#rpbody pre.rpbody", timeout=8000)
+                        self.assertIn("Lautsprecher", await pg.inner_text("#rpbody pre.rpbody"))
+                        self.assertGreater(await pg.evaluate("document.querySelectorAll('#rpbody [data-rpline]').length"), 0)
+                        over = await pg.evaluate("document.documentElement.scrollWidth-window.innerWidth")
+                        self.assertLessEqual(over, 1, f"{w}: {over}px zu breit")
+                        wide = await pg.evaluate("(()=>{const c=document.querySelector('#rpmodal .rpcard').getBoundingClientRect();return c.right-window.innerWidth})()")
+                        self.assertLessEqual(wide, 1, f"{w}: Fenster ragt hinaus")
+                        await pg.keyboard.press("Escape")
+                        self.assertEqual(await pg.evaluate("$('rpmodal').style.display"), "none")
+                        await pg.evaluate("openMe('rpbox')")
+                        await pg.wait_for_selector("#rpbox [data-rpopen]", timeout=5000)
+                        over = await pg.evaluate("document.documentElement.scrollWidth-window.innerWidth")
+                        self.assertLessEqual(over, 1, f"{w}/Ich: {over}px zu breit")
+                        self.assertEqual(errors, [], w)
+                    finally:
+                        await br.close()
+        try:
+            self.run_async(go())
+        finally:
+            helpers.set_config(report=False)
+            profiles.save_settings(me, {"report_on": False})
+            for d in meldung._all():
+                os.remove(meldung._path(d["id"]))
+
     def test_phone_looks_like_the_app(self):
         """V01.0.296 (plan handy-wie-app.md): on a phone the page looks and works like the iPhone app: tab bar, the chat
         with face, bubbles, big microphone and text field, Heute, Verwalten as a list, pages with "back" on top that the

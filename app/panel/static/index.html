@@ -128,6 +128,10 @@
       <div class="row" style="margin-top:8px"><button class="b" id="searchtest" type="button">Verbindung testen</button><span id="searchmsg" class="mut"></span></div><div class="fh">Über deine eigene SearXNG-Instanz. Am besten erlaubt sie das JSON-Format (settings.yml: search.formats: [html, json]); sonst liest das Panel die normale Ergebnisseite.</div></div>
       <div class="setrow"><div class="lbl"><b>Timer und Erinnerungen</b><span>„Erinnere mich in 10 Minuten an den Ofen“: Das Gerät klingelt und sagt es an.</span></div><label class="tgl"><input type="checkbox" id="chat.reminders"><i></i></label></div>
       <div class="setrow"><div class="lbl"><b>Mein Zustand</b><span>Jedes Profil sieht unter Ich, was der Spark im Hintergrund für es erledigt und ob seine verbundenen Dienste antworten.</span></div><label class="tgl"><input type="checkbox" id="chat.my_status"><i></i></label></div>
+      <div class="setrow"><div class="lbl"><b>Probleme melden</b><span>Profile melden Probleme als Issue an GitHub, mit anonymisierten Logs; was rausgeht, sehen sie vorher.</span></div><label class="tgl"><input type="checkbox" id="chat.report"><i></i></label></div>
+      <div class="setrow" data-show="chat.report" style="margin-left:18px"><div class="lbl"><b>Admin per Assistent informieren</b><span>Neue Meldung eines Profils: der Assistent sagt es den Admin-Profilen, nur wer, Bereich und Weg, nie der Text.</span></div><label class="tgl"><input type="checkbox" id="chat.report_notify"><i></i></label></div>
+      <div data-show="chat.report" style="margin-left:18px"><label>GitHub-Repo für Meldungen</label><input id="chat.report_repo" data-req placeholder="db9979/spark-meldungen" autocomplete="off"><div class="fh">besitzer/name, am besten privat. Meldungen gehen nur dorthin.</div>
+        <div id="rpadmin" data-nodirty="1"></div></div>
       <div class="setrow"><div class="lbl"><b>Kalender und Tagesbriefing</b><span>Termine vorlesen, nach „Ja“ eintragen, und auf „Guten Morgen“ das Tagesbriefing.</span></div><label class="tgl"><input type="checkbox" id="chat.calendar"><i></i></label></div>
       <div class="setrow"><div class="lbl"><b>Aufgaben und Einkaufsliste</b><span>„Setz Milch auf die Einkaufsliste“: Liste auf dem Spark oder in einer CalDAV-Aufgabenliste.</span></div><label class="tgl"><input type="checkbox" id="chat.tasks"><i></i></label></div>
       <div class="setrow"><div class="lbl"><b>Agent-Funktionen</b><span>„Recherchiere …, sag mir Bescheid“: Aufträge im Hintergrund, geplante Aufträge und eigene Abläufe, nur für freigeschaltete Profile.</span></div><label class="tgl"><input type="checkbox" id="chat.agent"><i></i></label></div>
@@ -682,7 +686,7 @@
     <div class="lchips" id="logchips"></div>
     <div class="lbar" id="logsvcbar" hidden><select id="logsvc" class="lsel"><option value="asr">ASR</option><option value="tts">TTS</option><option value="asr-engine">ASR-Engine</option><option value="tts-engine">TTS-Engine</option><option value="tts-design">VoiceDesign-Engine</option><option value="panel">Panel</option></select></div>
     <div class="lbar"><input id="logq" class="lsearch" type="search" placeholder="In der Ausgabe suchen …" autocomplete="off"><select id="loglines" class="lsel"><option value="30">30 Zeilen</option><option value="100" selected>100 Zeilen</option><option value="300">300 Zeilen</option><option value="1000">1000 Zeilen</option></select>
-      <span class="sp"></span><button type="button" class="llive on" id="loglive" title="Alle paar Sekunden neu laden; pausiert, solange du hochscrollst oder etwas markierst"><i></i>Live</button><button type="button" class="b" id="logcopy">Kopieren für Thread</button></div>
+      <span class="sp"></span><button type="button" class="llive on" id="loglive" title="Alle paar Sekunden neu laden; pausiert, solange du hochscrollst oder etwas markierst"><i></i>Live</button><button type="button" class="b" id="logrp" data-on="rpOpen" hidden>Meldungen</button><button type="button" class="b" id="logcopy">Kopieren für Thread</button></div>
     <div class="lhead"><span id="loghead"></span><span id="logcount"></span></div>
     <div class="lundo" id="logundo" hidden></div>
     <div class="lout" id="logout" role="log" aria-live="off"></div>
@@ -691,7 +695,7 @@
   <div class="card" id="logverbose"></div>
 </section>
 </main>
-<footer id="credit"><span id="ver"></span> · <button type="button" class="clink" id="clopen" data-on="clOpen">Was ist neu</button> · <span>Idee: Dominik Bornhäußer</span></footer>
+<footer id="credit"><span id="ver"></span> · <button type="button" class="clink" id="clopen" data-on="clOpen">Was ist neu</button><span id="rpfoot" hidden> · <button type="button" class="clink" id="rpopen" data-on="rpOpen">Problem melden</button></span> · <span>Idee: Dominik Bornhäußer</span></footer>
 <div id="login" class="modal" style="display:none"><form class="card modalcard" id="loginform">
   <h2>Anmelden</h2><div class="intro">Für Einstellungen, Monitoring und Stimmen braucht es das Panel-Passwort.</div>
   <label>Passwort</label><input type="password" id="loginpw" autocomplete="current-password">
@@ -729,6 +733,10 @@
   <input id="clq" type="search" placeholder="Suchen, z. B. reMarkable" autocomplete="off" aria-label="Im Changelog suchen">
   <ul class="facts finds cllist" id="cllist"></ul>
   <div class="row"><button class="b" id="clmore" type="button" data-on="clMore" hidden>Ältere zeigen</button></div>
+</div></div>
+<div id="rpmodal" class="modal" style="display:none" role="dialog" aria-modal="true" aria-labelledby="rphead"><div class="card modalcard findcard rpcard">
+  <div class="rowin"><h2 id="rphead">Problem melden</h2><button class="b" type="button" data-on="rpClose">Schließen</button></div>
+  <div id="rpbody"></div>
 </div></div>
 <div id="profmodal" class="modal" style="display:none"><div class="card modalcard mecard">
   <div class="mehead"><div class="mehrow"><button class="ib meback" id="meback" type="button" title="Zurück" aria-label="Zurück"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"><path d="M15 5l-7 7 7 7"/></svg></button><h2 id="profhead">Gast</h2><h2 id="mepage"></h2></div><div class="mut" id="setscope"></div></div>
@@ -821,6 +829,7 @@
     <div id="pebbox" class="ptab"></div>
     <div id="mcpbox" class="ptab"></div>
     <div id="mymcpbox" class="ptab"></div>
+    <div id="rpbox" class="ptab"></div>
     <div id="rmbox" class="ptab"></div>
     <div id="wxbox" class="ptab"></div>
     <div id="conbox" class="ptab"></div>
@@ -890,6 +899,7 @@
 <script src="/static/js/schreib.js"></script>
 <script src="/static/js/begleiter.js"></script>
 <script src="/static/js/changelog.js"></script>
+<script src="/static/js/melden.js"></script>
 <script src="/static/js/start.js"></script>
 </body>
 </html>

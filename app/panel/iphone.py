@@ -322,7 +322,9 @@ def app_hello(prof=Depends(own_profile)):
             # where room mode listens right now (roomlive.py): the line in the chat, the widget and the Live Activity
             "rooms": bool(load_config().get("chat", {}).get("room", False) and s.get("app_room")),
             # panel areas in the app (plaene/iphone-uebernimmt-panel.md); panel: the bridge "Im Panel öffnen"
-            "panel": panel_on(), "areas": panel_rights(prof["id"])}
+            "panel": panel_on(), "areas": panel_rights(prof["id"]),
+            # "Problem melden" in the settings (meldung.py): admin switch and the profile's own
+            "report": features.allowed("melden", prof["id"])}
 
 
 DOC_BODY = 3 * 1024 * 1024     # the text of one document as JSON (the iPhone reads PDFs and scans itself)

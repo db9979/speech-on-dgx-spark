@@ -2299,6 +2299,70 @@
 "lang": "de",
 "src": "sicherheit-und-betrieb",
 "file": "Sicherheit und Betrieb",
+"head": "Probleme melden",
+"title": "Probleme melden",
+"text": "Ab V01.0.374. Etwas klappt nicht? Jedes Profil mit eigenem Schalter (Ich → Probleme melden) beschreibt es kurz und bekommt einen Entwurf; Gäste nie. Admin-Schalter: Funktionen → Sicherheit → „Probleme melden“, dazu das Ziel-Repo (ab Werk db9979/spark-meldungen, privat). Öffnen lässt es sich überall: unten im Panel „Problem melden“, Zustand → Logs, Strg/⌘ K, Ich → Probleme melden, in der Android-App (Panel), in der iPhone-App unter Einstellungen, im Spark-Begleiter (Windows: Menü des Symbols; Mac: Einstellungen), per Telegram /melden Text und per Sprache (auch Uhr und Lautsprecher) mit dem festen Satz „Spark, Problem melden: …“. Telegram und Sprache legen nur einen Entwurf an; gesendet wird immer erst nach dem Blick auf die Vorschau."
+},
+{
+"lang": "de",
+"src": "sicherheit-und-betrieb",
+"file": "Sicherheit und Betrieb",
+"head": "Probleme melden",
+"title": "Was mitgeht",
+"text": "Was mitgeht: die Beschreibung, auf Wunsch die eigenen letzten Anfragen (nur Wege, Werkzeuge, Zeiten aus Logs → Anfragen), der Systemzustand (Version, Dienste, Speicher), aus der iPhone-App das Ton-Protokoll und nur für Admins Diagnose-Logzeilen des Bereichs (10, 30 oder 60 min)."
+},
+{
+"lang": "de",
+"src": "sicherheit-und-betrieb",
+"file": "Sicherheit und Betrieb",
+"head": "Probleme melden",
+"title": "Anonymisieren",
+"text": "Anonymisieren: Feste Regeln im Spark, kein Sprachmodell. Erst die Schwärzung der Logs, dann werden Geheimnisse (alle im vault, Tokens, Passwörter) zu [GEHEIM], Inhalte in Logzeilen (Zitate, Betreff, Frage, Suche, Termin, Dateiname …) zu [INHALT], Adressen zu [URL], [MAIL], [IP-LAN], [IP], [HOST], Orte zu [ORT], Telefonnummern zu [TELEFON], lange Kennungen zu [ID], Profil-, Geräte- und Kontonamen zu [PERSON-1], [GERÄT-1], [KONTO-1] (gleiche Nummer für denselben Namen). Code-Blöcke und @ können nichts auslösen. Gespeichert wird nur die anonymisierte Fassung, 14 Tage."
+},
+{
+"lang": "de",
+"src": "sicherheit-und-betrieb",
+"file": "Sicherheit und Betrieb",
+"head": "Probleme melden",
+"title": "Vorschau und Senden",
+"text": "Vorschau und Senden: Der Spark zeigt Titel und Text genau so, wie sie rausgehen; Zeilen lassen sich abwählen. Gesendet wird nur, was zur Vorschau passt (Signatur über den Text); eine Leck-Prüfung sperrt das Senden, solange noch ein bekannter Name, eine Mail-Adresse, eine Adresse oder ein Geheimnis darin steht. Drei Wege: „An GitHub senden“ (Issue über api.github.com), „Im Browser öffnen“ (GitHub mit ausgefülltem Text, geht ohne Token) und „Nur lokal behalten“. Grenzen: pro Profil 20 offene Entwürfe und 10 neue am Tag, 3 gesendete pro Profil und 10 pro Tag, eine Minute Abstand."
+},
+{
+"lang": "de",
+"src": "sicherheit-und-betrieb",
+"file": "Sicherheit und Betrieb",
+"head": "Probleme melden",
+"title": "Token",
+"text": "Token: ein fine-grained Token nur für das Meldungs-Repo mit „Issues: Read and write“, 90 Tage. Speichern nur der Haupt-Admin mit frischem Code (Funktionen → Probleme melden), verschlüsselt im vault, nie angezeigt, nie im Log; klassische ghp_-Tokens nimmt der Spark nicht. „Prüfen“ zeigt Ablaufdatum und warnt, wenn das Repo öffentlich ist; 14 Tage vor Ablauf steht ein Hinweis auf Zustand → Live."
+},
+{
+"lang": "de",
+"src": "sicherheit-und-betrieb",
+"file": "Sicherheit und Betrieb",
+"head": "Probleme melden",
+"title": "Admin-Sicht",
+"text": "Admin-Sicht: Admins sehen alle Meldungen aller Profile, bei gesendeten den Stand auf GitHub (offen oder erledigt), die Zahl der Antworten und die Antworten selbst als reinen Text mit Link; ein Profil sieht nur seine eigenen. Antworten von GitHub gehen nie an das Sprachmodell."
+},
+{
+"lang": "de",
+"src": "sicherheit-und-betrieb",
+"file": "Sicherheit und Betrieb",
+"head": "Probleme melden",
+"title": "Admin per Assistent informieren",
+"text": "Admin per Assistent informieren (ab V01.0.374, Unterschalter, aus): Sendet ein Profil eine Meldung oder legt sie ab, sagt der Assistent es den Admin-Profilen (das für Admin-Hinweise gewählte, Haupt-Admin, Mit-Admins), bei offener Seite im Assistenten, sonst als Mitteilung. Nur Profilname, Bereich, Weg und Nummer, nie der Text; das meldende Profil selbst bekommt nichts. Jedes Admin-Profil schaltet es unter Ich → Probleme melden für sich aus; im Notaus bleibt es still."
+},
+{
+"lang": "de",
+"src": "sicherheit-und-betrieb",
+"file": "Sicherheit und Betrieb",
+"head": "Probleme melden",
+"title": "Live",
+"text": "Live: Zustand → Live zeigt GitHub (Meldungen) mit Zahl der Entwürfe und der heute gesendeten, nie Inhalte."
+},
+{
+"lang": "de",
+"src": "sicherheit-und-betrieb",
+"file": "Sicherheit und Betrieb",
 "head": "Stabilität",
 "title": "Stabilität",
 "text": "- Sicherung: Jeden Tag, vor jedem Update, vor jeder Rückkehr zur vorigen Version und vor jedem Wiederherstellen sichert das Panel Profile (Gedächtnis, Gespräche, Dokumente, Kalender, E-Mail-Konten, Smart Home, Stimmerkennung), geklonte Stimmen, Einstellungen, Panel-Passwort und den gemeinsamen Zustand des Sparks (zweiter Anmeldeschritt des Admins, iPhone-Push-Schlüssel und Geräte, Telegram-Bot, Browser-Push-Schlüssel, ESP32-Lautsprecher, Agent-Dienste, eigene Testfragen) nach /var/lib/speech-spark/backups. Getrennt gezählt bleiben die letzten sieben täglichen oder von Hand angelegten und die letzten fünf vor Update, Rückkehr oder Wiederherstellen. Unter *Einstellungen → Update und Sicherung → Sicherung* lässt sich jede Sicherung laden, wiederherstellen oder löschen, und eine heruntergeladene Datei wiederherstellen. Beim Wiederherstellen prüft das Panel die Einstellungen wie die Einstellungsseite, begrenzt die Größe und tauscht alle Teile oder keinen; vorher wird der jetzige Stand gesichert. Passwörter und Tokens liegen verschlüsselt in der Sicherung, der Schlüssel nicht: Auf einem anderen Spark müssen sie neu eingegeben werden. Ein zweiter Anmeldeschritt des Admins, den der Spark n"
@@ -4742,6 +4806,70 @@
 "head": "My kill switch (own profile only)",
 "title": "My kill switch (own profile only)",
 "text": "- Ways in closed: every other browser login ends (the browser that triggered it stays signed in); the profile's device keys (iPhone and Android app, Siri, watch, speakers, Home Assistant events) only get \"locked\", as do MCP keys, OAuth access and Telegram. - Nothing in its name: smart home, mail drafts and tidying, messages and announcements, appointments, lists, reMarkable, MCP actions; no \"yes\" carries anything out; jobs wait in the queue; \"on its own\", Home Assistant notes and briefings of the profile stay silent. - Reading stays (Dominik's choice 3b): in its own browser the profile still asks and may read mail, calendar, memory and documents. - Lifting: the profile itself, only in the browser (no app key), with its PIN (wrong tries lock like at sign-in) and a fresh code when its second step is on; or an admin under *Status → Profiles' own kill switch* (same rules as the big one). The admin profiles get a push with the name, never a reason. - File: state/notaus-mine.json. A damaged file holds every profile, and only an admin lifts that. Status → Live shows only how many profiles, never which."
+},
+{
+"lang": "en",
+"src": "security-and-operation",
+"file": "Security and operation",
+"head": "Reporting problems",
+"title": "Reporting problems",
+"text": "Since V01.0.374. Something does not work? Every profile with its own switch (Me → Reporting problems) describes it briefly and gets a draft; guests never. Admin switch: Features → Security → \"Reporting problems\", plus the target repository (default db9979/spark-meldungen, private). It opens everywhere: \"Report a problem\" at the bottom of the panel, Status → Logs, Ctrl/⌘ K, Me → Reporting problems, in the Android app (panel), in the iPhone app under Settings, in the Spark companion (Windows: the icon's menu; Mac: settings), by Telegram /melden text and by voice (also watch and speakers) with the fixed sentence \"Spark, Problem melden: …\". Telegram and voice only make a draft; sending always comes after a look at the preview."
+},
+{
+"lang": "en",
+"src": "security-and-operation",
+"file": "Security and operation",
+"head": "Reporting problems",
+"title": "What goes along",
+"text": "What goes along: the description, if wanted the own last requests (only ways, tools, times from Logs → Requests), the system state (version, services, memory), from the iPhone app the sound log, and for admins only diagnose log lines of the area (10, 30 or 60 min)."
+},
+{
+"lang": "en",
+"src": "security-and-operation",
+"file": "Security and operation",
+"head": "Reporting problems",
+"title": "Anonymizing",
+"text": "Anonymizing: fixed rules on the Spark, no language model. First the log redaction, then secrets (everything in the vault, tokens, passwords) become [GEHEIM], contents in log lines (quotes, subject, question, search, appointment, file name …) [INHALT], addresses [URL], [MAIL], [IP-LAN], [IP], [HOST], places [ORT], phone numbers [TELEFON], long identifiers [ID], profile, device and account names [PERSON-1], [GERÄT-1], [KONTO-1] (same number for the same name). Code blocks and @ cannot trigger anything. Only the anonymized version is stored, 14 days."
+},
+{
+"lang": "en",
+"src": "security-and-operation",
+"file": "Security and operation",
+"head": "Reporting problems",
+"title": "Preview and sending",
+"text": "Preview and sending: the Spark shows title and text exactly as they go out; lines can be unticked. Only what matches the preview is sent (a signature over the text); a leak check blocks sending while a known name, a mail address, an address or a secret is still in it. Three ways: \"Send to GitHub\" (issue via api.github.com), \"Open in the browser\" (GitHub with the text filled in, works without a token) and \"Keep locally only\". Limits: per profile 20 open drafts and 10 new a day, 3 sent per profile and 10 per day, one minute apart."
+},
+{
+"lang": "en",
+"src": "security-and-operation",
+"file": "Security and operation",
+"head": "Reporting problems",
+"title": "Token",
+"text": "Token: a fine-grained token for the report repository only with \"Issues: Read and write\", 90 days. Only the main admin saves it with a fresh code (Features → Reporting problems), sealed in the vault, never shown, never logged; classic ghp_ tokens are refused. \"Check\" shows the expiry date and warns when the repository is public; 14 days before expiry a hint shows on Status → Live."
+},
+{
+"lang": "en",
+"src": "security-and-operation",
+"file": "Security and operation",
+"head": "Reporting problems",
+"title": "Admin view",
+"text": "Admin view: admins see every report of every profile, for sent ones the state on GitHub (open or done), the number of answers and the answers themselves as plain text with a link; a profile sees only its own. Answers from GitHub never go to the language model."
+},
+{
+"lang": "en",
+"src": "security-and-operation",
+"file": "Security and operation",
+"head": "Reporting problems",
+"title": "Tell the admin through the assistant",
+"text": "Tell the admin through the assistant (since V01.0.374, sub-switch, off): when a profile sends or keeps a report, the assistant tells the admin profiles (the one chosen for admin notes, the main admin, co-admins), in the assistant when the page is open, else as a note. Only profile name, area, way and number, never the text; the reporting profile itself gets nothing. Every admin profile turns it off for itself under Me → Reporting problems; during the Notaus it stays silent."
+},
+{
+"lang": "en",
+"src": "security-and-operation",
+"file": "Security and operation",
+"head": "Reporting problems",
+"title": "Live",
+"text": "Live: Status → Live shows GitHub (reports) with the number of drafts and of those sent today, never contents."
 },
 {
 "lang": "en",

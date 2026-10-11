@@ -514,6 +514,8 @@ APP_PATHS = ("/api/chat", "/api/test/asr", "/api/siri/ask", "/api/iphone/hello",
              "/api/profile/today",    # Heute: numbers and short titles of today (today.py, read only)
              "/api/notaus",           # the Notaus: its stage, and raising it when the admin allows profiles (notaus.py)
              "/api/notaus/mine",      # Mein Notaus from the app's button and Siri (switching on only; lifting stays in the browser)
+             # Probleme melden (meldung.py): draft, preview, send exactly the previewed text, answers, delete
+             "/api/report", "/api/report/draft", "/api/report/preview", "/api/report/send", "/api/report/thread", "/api/report/delete",
              "/api/write", "/api/write/assist")   # Schreibhilfe (schreib.py, only with "In anderen Programmen")
 # looking at an own document again (wissen.reader: only with app_docs); reading only, never changing
 APP_PATTERNS = (re.compile(r"/api/profile/wissen/[0-9a-f]{12}/(?:text|file)"),)
@@ -786,6 +788,8 @@ SETTINGS = {
     "android_on": (False, lambda v: isinstance(v, bool)),  # Android app (android.py)
     "mcps_on": (False, lambda v: isinstance(v, bool)),     # the Spark as an MCP server for other programs (mcpserver.py)
     "mymcp_on": (False, lambda v: isinstance(v, bool)),    # own MCP services of this profile (meinmcp.py)
+    "report_on": (False, lambda v: isinstance(v, bool)),   # Probleme melden: reports as GitHub issues (meldung.py)
+    "report_notify": (True, lambda v: isinstance(v, bool)),   # an admin profile hears of a new report (meldung.tell_admins)
     # iPhone app (iphone.py): pairing for this profile, and switching the smart home from it, both off
     "app_on": (False, lambda v: isinstance(v, bool)),
     "app_ha": (False, lambda v: isinstance(v, bool)),

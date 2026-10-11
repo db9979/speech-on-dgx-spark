@@ -81,9 +81,10 @@ import hilfe  # noqa: E402
 import schreib  # noqa: E402
 import begleiter  # noqa: E402
 import systemone  # noqa: E402
+import meldung  # noqa: E402
 
 app = FastAPI(title="Speech on DGX Spark")
-for _module in (account, admin, chat, update, system, proactive, room, roomlive, tidy, weather, contacts, parcels, telegram, tasks, esp32, iphone, pebblewatch, android, appupdate, apns, transit, logfilter, agent, images, messages, intent, wissen, tracelog, lokal, features, remarkable, rmplus, join, onboard, hintergrund, stufe, today, offsite, mcpserver, meinmcp, live, hamelden, notaus, hilfe, schreib, begleiter, systemone):
+for _module in (account, admin, chat, update, system, proactive, room, roomlive, tidy, weather, contacts, parcels, telegram, tasks, esp32, iphone, pebblewatch, android, appupdate, apns, transit, logfilter, agent, images, messages, intent, wissen, tracelog, lokal, features, remarkable, rmplus, join, onboard, hintergrund, stufe, today, offsite, mcpserver, meinmcp, live, hamelden, notaus, hilfe, schreib, begleiter, systemone, meldung):
     app.include_router(_module.router)
 app.middleware("http")(update_lock)
 

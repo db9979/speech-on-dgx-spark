@@ -41,7 +41,8 @@ KINDS = {"events": ("Termin-Vorlauf", 10, "pro_events"), "ha": ("Smart Home", 10
          "greet": ("Begrüßung", 3, "pro_greet"), "follow": ("Nachfrage", 1, "pro_follow"),
          "mail": ("Wichtige Mail", 10, "pro_mail"), "weather": ("Wetter", 1, "pro_weather"),
          "tidy": ("Postfach aufräumen", 2, "pro_tidy"), "bday": ("Geburtstag", 1, "pro_bday"),
-         "parcel": ("Paket kommt heute", 3, "pro_parcel"), "transit": ("Bus und Bahn", 1, "pro_transit")}
+         "parcel": ("Paket kommt heute", 3, "pro_parcel"), "transit": ("Bus und Bahn", 1, "pro_transit"),
+         "meldung": ("Neue Problem-Meldung", 10, "pro_meldung")}   # only forced (meldung.tell_admins), own switches
 PAGE_ACTIVE = 75            # seconds since the page last asked: it is open, no push needed
 QUEUE_KEEP = 2 * 3600
 OFFER_SECONDS = 15 * 60     # an answer to a note counts this long after it

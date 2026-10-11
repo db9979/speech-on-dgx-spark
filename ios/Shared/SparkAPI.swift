@@ -103,6 +103,8 @@ struct Allowed {
     var areas: Set<String> = []
     /// the profile's own admin role ("coadmin" or "manager", V01.0.255): "Mit meinem Profil anmelden" in Spark verwalten
     var adminRole = ""
+    /// "Problem melden" (meldung.py): admin switch chat.report and the profile's switch report_on
+    var report = false
 }
 
 /// A device of the profile in room mode (from /api/room/active): only where and until when, never what was heard.
@@ -314,7 +316,8 @@ struct SparkAPI {
                        rooms: d["rooms"] as? Bool ?? false,
                        panel: d["panel"] as? Bool ?? false,
                        areas: Set(((d["areas"] as? [String: Any]) ?? [:]).compactMap { $0.value as? Bool == true ? $0.key : nil }),
-                       adminRole: ["coadmin", "manager"].contains(d["admin_role"] as? String ?? "") ? d["admin_role"] as? String ?? "" : "")
+                       adminRole: ["coadmin", "manager"].contains(d["admin_role"] as? String ?? "") ? d["admin_role"] as? String ?? "" : "",
+                       report: d["report"] as? Bool ?? false)
     }
 
     /// Where the profile's devices listen in room mode right now (names and end times only).

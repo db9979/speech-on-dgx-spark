@@ -48,4 +48,5 @@ $('pwset').onclick=async()=>{try{await api('/api/password',{method:'POST',header
   if(typeof goStart==='function')goStart(who);
   if(typeof mcpAuthStart==='function')mcpAuthStart();
   if(typeof mymBackStart==='function')mymBackStart();
+  if(typeof rpStart==='function')rpStart(who);   // Probleme melden (melden.js): footer, Logs, #melden
   if(ADMIN){ulCheck();if(!elevated())wizCheck();loadLangs();refresh();setInterval(refresh,3000);zRooms();setInterval(zRooms,30e3);zDocs();setInterval(zDocs,30e3);zBg();setInterval(zBg,60e3);api('/api/update').then(r=>r.json()).then(u=>updBadge(u.remote)).catch(()=>{})}})();

@@ -542,6 +542,12 @@ internal sealed partial class TrayContext : ApplicationContext, IBegleiterHost
         }
 
         _menu.Items.Add(new ToolStripSeparator());
+        if (!string.IsNullOrEmpty(_config.Base))
+        {
+            // Probleme melden (meldung.py): das Panel öffnet sich gleich im Fenster „Problem melden“
+            _menu.Items.Add(new ToolStripMenuItem("Problem melden …", null, (_, _) => OpenPanelAt("#melden")));
+        }
+
         _menu.Items.Add(new ToolStripMenuItem("Einstellungen …", null, (_, _) => OpenSettings()));
         _menu.Items.Add(new ToolStripMenuItem("Beenden", null, (_, _) => ExitThread()));
         RefreshPanel();
@@ -1266,7 +1272,10 @@ internal sealed partial class TrayContext : ApplicationContext, IBegleiterHost
 
     // ------------------------------------------------------------------ Kopplung und Einstellungen
 
-    public void OpenPanel()
+    public void OpenPanel() => OpenPanelAt("");
+
+    /// <summary>Öffnet das Panel im Browser; <paramref name="hash"/> nur fest aus dem Code (z. B. „#melden“).</summary>
+    public void OpenPanelAt(string hash)
     {
         if (string.IsNullOrEmpty(_config.Base) ||
             !SparkAddress.TryParse(_config.Base, out SparkAddress.Parsed parsed, out _))
@@ -1276,7 +1285,7 @@ internal sealed partial class TrayContext : ApplicationContext, IBegleiterHost
 
         try
         {
-            using Process? browser = Process.Start(new ProcessStartInfo(parsed.Base + "/") { UseShellExecute = true });
+            using Process? browser = Process.Start(new ProcessStartInfo(parsed.Base + "/" + hash) { UseShellExecute = true });
         }
         catch (System.ComponentModel.Win32Exception ex)
         {

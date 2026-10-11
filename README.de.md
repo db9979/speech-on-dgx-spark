@@ -33,6 +33,7 @@ Alle Optionen ohne Rückfragen (`--mode api --asr 1.7b --tts 0.6b --yes` …) st
 
 <!-- New version: add one line at the top here and in CHANGELOG.md, drop the oldest line here (keep 10). Details go to docs/de and docs/en, not into this README. -->
 
+- **V01.0.374** Probleme melden (aus): anonymisierte Meldung als GitHub-Issue aus Panel, Apps, Begleiter, Telegram und per Satz, mit Vorschau; Admins sehen alle samt Antworten und hören per Assistent von neuen
 - **V01.0.373** Sofortige Rückmeldung (aus): gleich nach der Frage ein fertig aufgenommener Satz, was der Spark tut, getrennt gemessen vom ersten Ton der Antwort
 - **V01.0.372** Doku Notaus: alle Wege an einer Stelle (Telegram, Satz, Home Assistant, Android, iPhone, Lautsprecher, Pebble, Wächter)
 - **V01.0.371** Releases auf GitHub aufgeräumt: nach jedem neuen Release bleibt pro Reihe nur das neueste stehen, ältere werden gelöscht
@@ -42,7 +43,6 @@ Alle Optionen ohne Rückfragen (`--mode api --asr 1.7b --tts 0.6b --yes` …) st
 - **V01.0.367** Pebble-Uhr-App 1.6.0 im Panel: SELECT 3 s halten löst den Notaus aus (groß nur für Admin-Profile)
 - **V01.0.366** Pebble-Uhr-App: der Bau prüft, dass die App auch auf älterer Uhr-Firmware läuft (SDK 5.94)
 - **V01.0.365** Pebble-Uhr-App: GitHub legt die gebaute Datei auf den Zweig pebble-build, damit sie ins Panel übernommen werden kann
-- **V01.0.364** Notaus von selbst (Wächter, Schalter unter Sicherheit, aus): Stufe 1 bei 20 falschen Anmeldungen von außen, MCP-Flut oder vielen gesperrten Verbindungen; Notaus-Taste am ESP32-Lautsprecher (5 s, Firmware Build 6) und an der Pebble (SELECT 3 s, Uhr-App 1.6.0)
 
 Alle Versionen: [CHANGELOG.md](CHANGELOG.md)
 

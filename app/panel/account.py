@@ -80,7 +80,7 @@ WHO = {"documents": "documents", "reminders": "reminders", "speaker_id": "speake
        "android": "android", "mcp_server": "mcpserver", "my_mcp": "mymcp", "write_help": "schreib", "write_apps": "schreibapps", "desk": "begleiter", "desk_act": "begleitertun",
        "remarkable": "remarkable", "remarkable_send": "rmsend", "remarkable_fresh": "rmfresh", "remarkable_plus": "rmguide", "my_status": "mystatus", "person_priority": "vorrang",
        "ha_live": "halive", "ha_loud": "haloud", "ha_events": "haevent", "ha_voice_rules": "havoice", "ha_camera": "hacam",
-       "systemone_mail": "mailwichtig"}
+       "systemone_mail": "mailwichtig", "report": "melden"}
 
 
 def _setup(prof, request):
@@ -1070,7 +1070,7 @@ def profile_settings(request: Request):
 # which conversation switches the admin allows (features.py), only for a signed-in profile
 ALLOW = {"tool_think": "toolthink", "route": "routing", "direct_read": "direct", "fix_learn": "fixes", "style": "style", "roles": "roles",
          "wiki": "wiki", "kiwix": "kiwix", "local": "lokal", "follow": "follow", "echo": "selfecho", "images": "images",
-         "prefetch": "vorab", "instant_ack": "ack", "spark_help": "hilfe", "systemone_on": "einordnung"}
+         "prefetch": "vorab", "instant_ack": "ack", "spark_help": "hilfe", "systemone_on": "einordnung", "report": "melden"}
 
 
 def _allow(prof, chat):

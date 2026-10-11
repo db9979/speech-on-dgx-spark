@@ -74,6 +74,8 @@ TOOLS = {
     "Web Push": "webpush", "Apple Push": "push", "Android-App": "android", "Spark-Begleiter": "desk", "Telegram": "tg", "Panel-Seite": "page",
     # steps the panel runs itself (tracelog "… (Panel)")
     "Erst lokal": "mem", "remarkable": "rm", "Ablauf": "mem",
+    # Probleme melden (meldung.py): a draft stays on the Spark, sending goes to GitHub
+    "Meldung": "mem", "GitHub-Meldung": "issues",
 }
 # The targets: name, short line, zone (spark = on this machine, lan = home network, net = internet), fixed = always shown
 TARGETS = {
@@ -103,13 +105,16 @@ TARGETS = {
     "nas": ("NAS (Sicherung)", "WebDAV · verschlüsselt", "lan", False),
     # tools of MCP services (mcp_… of the admin, mcpu_… a profile's own, meinmcp.py); the line under Ereignisse names the service
     "mcp": ("MCP-Dienste", "eigene und angebundene Dienste · Netz", "net", False),
+    # Probleme melden (meldung.py): only after the person looked at the preview; the line shows counts, never text
+    "issues": ("GitHub (Meldungen)", "Issues · Internet", "net", False),
 }
 RETURNS = {"cal": "Termine oder Aufgaben", "ha": "Zustände oder Schaltung", "web": "Suchergebnisse", "pages": "Seitentext", "kiwix": "Archiv-Treffer",
            "wiki": "Artikel", "mail": "Mails (nur Anzahl und Größe)", "contacts": "Kontakte", "rm": "Ablage", "push": "Zustellung",
            "weather": "Wetterwerte", "parcels": "Sendungen", "transit": "Verbindungen", "mem": "eigene Daten",
            "hilfe": "Anleitungen oder Vorschlagskarte", "webpush": "Zustellung", "tg": "Zustellung",
            "android": "liegt bereit", "desk": "liegt bereit", "page": "liegt bereit",
-           "github": "Stand und Testergebnis", "nas": "Ablage bestätigt", "mcp": "Antwort des Dienstes"}
+           "github": "Stand und Testergebnis", "nas": "Ablage bestätigt", "mcp": "Antwort des Dienstes",
+           "issues": "Nummer der Meldung"}
 CLIENT = {"web": "Browser", "speaker": "Lautsprecher", "watch": "Uhr", "siri": "Siri", "telegram": "Telegram",
           "app": "iPhone-App", "car": "CarPlay", "mcp": "MCP-Client", "ha": "Home Assistant", "auto": "Von selbst", "desk": "Spark-Begleiter",
           "other": "Gerät"}
@@ -710,6 +715,10 @@ def hints(now=None):
         import telegram
         if telegram.alert():
             out.append({"at": "tg", "level": "warn", "word": "Bot-Token wird woanders auch benutzt"})
+        import meldung
+        mh = meldung.live_hint(now)
+        if mh:
+            out.append({"at": "issues", "level": "warn", "word": mh})
     except Exception:
         pass
     for h in out:          # a warning that is new: one line under "Ereignisse"
@@ -762,12 +771,24 @@ def snapshot(view="admin", now=None):
         sys1 = {"n": 0}
     hs = hints(now)
     used = {h["at"] for h in hs} | {s["to"] for r in reqs for s in r["steps"] if s["to"]} | {r["to"] for r in reqs if r["to"]} | {x["to"] for x in rets if now - x["t"] < 60 and x["to"]}
+    try:
+        import meldung
+        meld = meldung.for_live(now)
+    except Exception:
+        meld = {"on": False}
+    if meld.get("on"):
+        used.add("issues")
     targets = [{"id": k, "name": v[0], "sub": v[1], "zone": v[2]} for k, v in TARGETS.items() if v[3] or k in used]
+    for x in targets:      # Probleme melden: open drafts and sent today, in numbers (no titles, no text)
+        if x["id"] == "issues":
+            x["sub"] = (f"{meld.get('drafts', 0)} Entwürfe · {meld.get('sent_today', 0)} heute gesendet"
+                        + ("" if meld.get("token") else " · kein Token"))
     return {"t": round(now, 1), "view": view, "fade": FADE, "reqs": reqs, "targets": targets, "speaking": speaking,
             "guard": {"ok": cnt.get("guard_ok", 0), "bad": cnt.get("guard_bad", 0), "cut": cnt.get("guard_cut", 0), "items": guard_items},
             "door": {"in": cnt.get("door_in", 0), "out": cnt.get("door_out", 0), "items": door_items},
             "rets": rets, "events": [{"t": t, "area": a, "text": x} for t, a, x in events], "conns": _conns(now), "sys": _sys(), "notaus": held,
-            "svc": _svc_now(now), "bg": _bg_now(now), "hints": hs, "sys1": sys1}
+            "svc": _svc_now(now), "bg": _bg_now(now), "hints": hs, "sys1": sys1,
+            "meld": {k: meld.get(k) for k in ("on", "drafts", "sent_today", "last", "token")}}
 
 
 # ------------------------------------------------------------------ admin view

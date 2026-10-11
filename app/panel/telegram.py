@@ -41,7 +41,7 @@ MAX_VOICE = 5 * 1024 * 1024
 STRANGER = "Dieser Spark-Assistent ist privat. Wer ein Profil hat, verbindet Telegram im Panel unter Profil → Telegram."
 HELP = ("Schreib mir oder schick eine Sprachnachricht. /neu beginnt ein neues Gespräch, /stimme schaltet die "
         "Antwort als Sprachnachricht an oder aus, /merken als Antwort auf ein Foto legt es in deine Dokumente, "
-        "/trennen löst die Verbindung, /meinnotaus legt dein Profil still (aufheben im Browser).")
+        "/trennen löst die Verbindung, /meinnotaus legt dein Profil still (aufheben im Browser), /melden … legt einen Problem-Entwurf an.")
 _lock = threading.Lock()
 _codes = {}                  # code -> (uid, expiry)
 _strangers = {}              # chat id -> last time it got STRANGER
@@ -324,6 +324,16 @@ async def handle(c, upd):
         who = profiles.by_id(uid)
         await call(c, "sendMessage", chat_id=cid, text=await notaus.raise_by(who["name"] if who else "", uid, lvl, "telegram")
                    + " Telegram ruht jetzt.")
+        return
+    if cmd and cmd[0] in ("/melden", "/problem"):
+        # Probleme melden (meldung.py): only a draft; it goes out after the person looked at it in the panel or app
+        import meldung
+        who = profiles.by_id(uid)
+        desc = text.split(None, 1)[1] if len(cmd) > 1 else ""
+        if len(desc.strip()) < 3:
+            await call(c, "sendMessage", chat_id=cid, text="Schreib dazu, was passiert ist, z. B. /melden Die Antwort kam nicht.")
+            return
+        await call(c, "sendMessage", chat_id=cid, text=await meldung.by_phrase(uid, who["name"] if who else "", desc, "telegram"))
         return
     s = profiles.settings(uid)
     if text in ("/start", "/hilfe", "/help"):

@@ -650,6 +650,7 @@ struct SettingsView: View {
                     Text("Stimme, Antworten und „Von selbst“ wie im Panel.")
                 }
                 NotausSection()
+                if talk.allowed.report { ReportSection() }
                 Section {
                     Button("Ton-Protokoll kopieren") {
                         let v = Bundle.main.infoDictionary?["CFBundleShortVersionString"] as? String ?? ""

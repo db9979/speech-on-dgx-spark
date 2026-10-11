@@ -480,11 +480,14 @@ def validate(new):
             raise HTTPException(400, f"{k}: the address must start with http:// or https://")
     if ch.get("kiwix_url") and not kiwix.URL.fullmatch(str(ch["kiwix_url"]).strip().rstrip("/")):
         raise HTTPException(400, "kiwix_url: http(s)://name or http(s)://name:port, optionally a path, nothing else")
+    import meldung
+    if not isinstance(ch.get("report_repo", meldung.DEFAULT_REPO), str) or not meldung.REPO.fullmatch(ch.get("report_repo", meldung.DEFAULT_REPO)):
+        raise HTTPException(400, "report_repo: owner/name of a GitHub repository")
     books = ch.get("kiwix_books", [])
     if not isinstance(books, list) or len(books) > kiwix.MAX_BOOKS \
             or not all(isinstance(b, str) and kiwix.BOOK.fullmatch(b) for b in books):
         raise HTTPException(400, f"kiwix_books: at most {kiwix.MAX_BOOKS} book names (letters, digits, . _ -)")
-    for k in ("agent", "agent_mcp", "mcp_own", "mcp_own_jobs", "mcp_own_oauth", "messages", "messages_all", "messages_announce", "messages_voice", "pebble",
+    for k in ("agent", "agent_mcp", "mcp_own", "mcp_own_jobs", "mcp_own_oauth", "report", "report_notify", "messages", "messages_all", "messages_announce", "messages_voice", "pebble",
               "kiwix", "local_first", "mcp_server", "mcp_server_extern", "mcp_server_act", "prefetch", "instant_ack",
               "spark_help", "spark_suggest", "spark_drawer", "write_help", "write_apps", "desk", "desk_act"):
         if not isinstance(ch.get(k, False), bool):
@@ -678,7 +681,7 @@ def validate(new):
 SENSITIVE = [("api", "key"), ("chat", "llm_url"), ("chat", "llm_key"), ("chat", "telegram_api"),
              ("chat", "search_url"), ("chat", "kiwix_url"), ("chat", "public"), ("chat", "esp32_url"), ("chat", "esp32_repo"),
              ("chat", "mfa"), ("chat", "mcp_server"), ("chat", "mcp_server_extern"), ("chat", "mcp_server_act"),
-             ("chat", "mcp_own"), ("chat", "mcp_own_oauth"),
+             ("chat", "mcp_own"), ("chat", "mcp_own_oauth"), ("chat", "report"), ("chat", "report_repo"),
              ("panel", "trusted_proxies"), ("panel", "allow_lan"), ("panel", "notaus_auto"), ("panel", "session_days"), ("panel", "trust_days"), ("asr", "model"), ("asr", "aligner_model"),
              ("tts", "model"), ("tts", "voicedesign_model")]
 

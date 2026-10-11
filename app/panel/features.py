@@ -191,6 +191,10 @@ FEATURES = (
     F("spkcode", "Codewort am Lautsprecher", "Code word at a speaker", "sec", ("speaker_code", "esp32"), "spk_code",
       parent="speaker", me="espbox", guide="spkcode"),
     F("mfa", "Zweiter Anmeldeschritt", "Second sign-in step", "sec", ("mfa",), me="secbox", guide="mfa"),
+    # reports as GitHub issues with anonymized log lines (meldung.py); what goes out is shown before
+    F("melden", "Probleme melden", "Reporting problems", "sec", ("report",), "report_on", me="rpbox", guide="melden"),
+    F("meldenadmin", "Admin über Meldungen informieren", "Tell admins about reports", "sec", ("report_notify",),
+      parent="melden", me="rpbox", guide="meldenadmin"),
 )
 BY_KEY = {f.key: f for f in FEATURES}
 profiles.NO_PRESET.update(f.profile for f in FEATURES if f.profile)

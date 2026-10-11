@@ -20,6 +20,8 @@ function palItems(){const out=[],seen=new Set(),add=(grp,label,where,go)=>{const
   if(PROFILE&&typeof meIndex==='function'){
     if(!ME_ITEMS.length&&typeof meTabs==='function')try{meTabs()}catch{}
     for(const h of meIndex())add(M,h.label,h.el?t('Ich → ','Me → ')+h.page:t('Ich','Me'),()=>{openMe(h.id);setTimeout(()=>meGo(h),120)})}
+  // Probleme melden (melden.js): the window, for admins and profiles alike
+  if(typeof RP_ON!=='undefined'&&RP_ON&&(ADMIN||PROFILE))add(P,t('Problem melden','Report a problem'),t('Fenster','Window'),()=>rpOpen());
   return out}
 function palRun(q){const w=norm(q).split(' ').filter(Boolean);if(!w.length)return [];
   const all=palItems().filter(x=>{const k=norm(x.label+' '+x.where+' '+x.grp);return w.every(p=>k.includes(p))});

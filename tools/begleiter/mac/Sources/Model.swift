@@ -209,8 +209,9 @@ final class AppModel: ObservableObject {
         Windows.showPairing(message: SparkProblem.unknownDevice.message)
     }
 
-    func openPanel() {
-        guard let base, let url = URL(string: base + "/") else { return }
+    /// `hash` only fixed from the code, e.g. "#melden" (Probleme melden opens its window)
+    func openPanel(_ hash: String = "") {
+        guard let base, let url = URL(string: base + "/" + hash) else { return }
         NSWorkspace.shared.open(url)
     }
 

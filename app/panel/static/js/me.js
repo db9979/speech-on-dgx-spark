@@ -158,7 +158,7 @@ function meTabs(){const items=[['overbox',t('Überblick','Overview'),!!PROFILE&&
     ['mailbox',t('E-Mail','E-mail'),PROFILE&&MAIL_ON],['parbox',t('Pakete','Parcels'),PROFILE&&PAR_ON],['writebox',t('Schreibhilfe','Writing help'),PROFILE&&typeof WRITE_ON!=='undefined'&&WRITE_ON],['conbox',t('Kontakte','Contacts'),PROFILE&&CON_ON],
     ['habox',t('Smart Home','Smart home'),PROFILE&&HA_ON],['roombox',t('Raum-Modus','Room mode'),PROFILE&&ROOM_ON],['espbox',t('Lautsprecher','Speakers'),PROFILE&&ESP_ON],
     ['trbox',t('Bus und Bahn','Bus and train'),PROFILE&&TR_ON],['tgbox',t('Telegram','Telegram'),PROFILE&&TG_ON],['appbox',t('iPhone-App','iPhone app'),PROFILE&&APP_ON],['andbox',t('Android-App','Android app'),PROFILE&&typeof AND_ON!=='undefined'&&AND_ON],['deskbox',t('Begleiter','Companion'),PROFILE&&typeof DESK_ON!=='undefined'&&DESK_ON],['pebbox',t('Pebble-Uhr','Pebble watch'),PROFILE&&PEB_ON],['mcpbox',t('Dienste per MCP','Services over MCP'),PROFILE&&MCPS_ON],
-    ['secbox',t('Sicherheit','Security'),!!PROFILE],['voicebox',t('Sprechererkennung','Speaker identification'),PROFILE&&SPK_ON]].filter(x=>x[2]);
+    ['secbox',t('Sicherheit','Security'),!!PROFILE],['rpbox',t('Probleme melden','Reporting problems'),PROFILE&&typeof RP_ON!=='undefined'&&RP_ON],['voicebox',t('Sprechererkennung','Speaker identification'),PROFILE&&SPK_ON]].filter(x=>x[2]);
   // pages in the same groups as everywhere else (guides.js), with a small header per group
   let grp=null;$('ptabs').innerHTML=items.map(([id,l])=>{const g=typeof meGroup==='function'?meGroup(id):null,gg=g&&GGROUPS.find(x=>x[0]===g);
     const head=g&&g!==grp?`<div class="mgrp">${esc(t(gg[1],gg[2]))}</div>`:'';if(g)grp=g;

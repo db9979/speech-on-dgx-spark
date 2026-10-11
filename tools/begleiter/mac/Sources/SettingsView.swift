@@ -90,6 +90,8 @@ struct SettingsView: View {
             HStack {
                 Button("Panel öffnen") { model.openPanel() }
                     .disabled(model.base == nil)
+                Button("Problem melden …") { model.openPanel("#melden") }
+                    .disabled(model.base == nil)
                 Button("Neu koppeln …") { Windows.showPairing() }
                 Button("Entkoppeln …") { confirmUnpair() }
                     .disabled(!model.paired)

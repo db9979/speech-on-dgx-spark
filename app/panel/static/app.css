@@ -868,3 +868,14 @@ body.inchat .hilfefab{display:none}
 .hqbtn:hover{color:var(--acc);border-color:var(--acc)}body:not(.hilfeon) .hqbtn{display:none}
 .nayaml{white-space:pre-wrap;overflow-wrap:anywhere;font-size:12px;background:var(--bg2,#0001);padding:8px;border-radius:8px;max-width:100%}
 #nakeys li{display:flex;gap:8px;align-items:center;flex-wrap:wrap}#nakeys li button{margin-left:auto}
+/* Probleme melden (melden.js): the preview wraps on every screen; log lines and GitHub's answers are text only */
+.rpcard{max-width:760px;width:calc(100vw - 32px);max-height:88vh;overflow:auto}
+.rpcard .rowin h2{flex:1;min-width:0}
+pre.rpbody{white-space:pre-wrap;overflow-wrap:anywhere;font-size:12px;max-height:40vh;overflow:auto;background:var(--bg2,rgba(127,127,127,.08));padding:8px;border-radius:8px;margin:6px 0 0}
+.rplines code{white-space:pre-wrap;overflow-wrap:anywhere;font-size:12px}
+.rplines li label{align-items:flex-start;min-width:0}
+.rplist li>span:first-child{min-width:0;overflow-wrap:anywhere}
+.rpbtns{display:flex;flex-wrap:wrap;gap:6px;justify-content:flex-end}
+.rpanswer{white-space:pre-wrap;overflow-wrap:anywhere;margin-top:4px}
+.rptext{width:100%}
+.rpsel select{min-width:0;flex:1}
