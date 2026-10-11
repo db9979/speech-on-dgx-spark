@@ -513,6 +513,7 @@ APP_PATHS = ("/api/chat", "/api/test/asr", "/api/siri/ask", "/api/iphone/hello",
              "/api/vorrang/spricht",       # "recording starts" for a profile with Vorrang (stufe.py)
              "/api/profile/today",    # Heute: numbers and short titles of today (today.py, read only)
              "/api/notaus",           # the Notaus: its stage, and raising it when the admin allows profiles (notaus.py)
+             "/api/notaus/mine",      # Mein Notaus from the app's button and Siri (switching on only; lifting stays in the browser)
              "/api/write", "/api/write/assist")   # Schreibhilfe (schreib.py, only with "In anderen Programmen")
 # looking at an own document again (wissen.reader: only with app_docs); reading only, never changing
 APP_PATTERNS = (re.compile(r"/api/profile/wissen/[0-9a-f]{12}/(?:text|file)"),)

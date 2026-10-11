@@ -6350,6 +6350,186 @@
           }
         }
       }
+    },
+    "Als Admin: der ganze Spark (Stufe 2 „Hände weg“) oder nur dein Profil. Aufheben geht nie in der App.": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "As admin: the whole Spark (stage 2 “Hands off”) or only your profile. Lifting is never possible in the app."
+          }
+        }
+      }
+    },
+    "Dein Profil anhalten? Aufheben nur im Browser mit deiner PIN.": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Stop your profile? Lifting only in the browser with your PIN."
+          }
+        }
+      }
+    },
+    "Dein Profil stilllegen? Anmeldungen und Geräte werden gesperrt, auch diese App. Aufheben im Browser mit deiner PIN.": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Stop your profile? Logins and devices are blocked, this app too. Lift it in the browser with your PIN."
+          }
+        }
+      }
+    },
+    "Den ganzen Spark auf Stufe 2 „Hände weg“ stellen? Aufheben nur als Admin im Browser im Heimnetz.": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Put the whole Spark on stage 2 “Hands off”? Lifting only as admin in the browser at home."
+          }
+        }
+      }
+    },
+    "Den ganzen Spark hält nur ein Admin an. Erst unter Spark verwalten anmelden.": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Only an admin stops the whole Spark. Sign in under Manage Spark first."
+          }
+        }
+      }
+    },
+    "Der Notaus ist an (Stufe %lld). Aufheben kann nur ein Admin im Browser.": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "The emergency stop is on (stage %lld). Only an admin can lift it in the browser."
+          }
+        }
+      }
+    },
+    "Der Notaus steht auf Stufe %lld.": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "The emergency stop is on stage %lld."
+          }
+        }
+      }
+    },
+    "Ganzer Spark (Stufe 2)": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Whole Spark (stage 2)"
+          }
+        }
+      }
+    },
+    "Ganzer Spark oder nur dein Profil?": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "The whole Spark or only your profile?"
+          }
+        }
+      }
+    },
+    "Ganzer Spark: nichts geht mehr nach außen, keine Aktionen. Aufheben nur als Admin im Browser im Heimnetz.": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Whole Spark: nothing goes out any more, no actions. Lifting only as admin in the browser at home."
+          }
+        }
+      }
+    },
+    "Hält nach einer Rückfrage dein Profil an, als Admin auf Wunsch den ganzen Spark. Aufheben nur im Browser.": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "After a question, stops your profile; as admin, the whole Spark if you want. Lifting only in the browser."
+          }
+        }
+      }
+    },
+    "Legt dein Profil still: Anmeldungen und Geräte gesperrt, in deinem Namen passiert nichts. Aufheben nur im Browser unter Ich → Sicherheit mit deiner PIN.": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Stops your profile: logins and devices blocked, nothing happens in your name. Lifting only in the browser under Me → Security with your PIN."
+          }
+        }
+      }
+    },
+    "Mein Notaus": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "My emergency stop"
+          }
+        }
+      }
+    },
+    "Mein Notaus ist an.": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "My emergency stop is on."
+          }
+        }
+      }
+    },
+    "Mein Notaus ist an. Aufheben im Browser unter Ich → Sicherheit mit der PIN.": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "My emergency stop is on. Lift it in the browser under Me → Security with the PIN."
+          }
+        }
+      }
+    },
+    "Notaus": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Emergency stop"
+          }
+        }
+      }
+    },
+    "Notaus Stufe 2 ist an.": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Emergency stop stage 2 is on."
+          }
+        }
+      }
+    },
+    "Spark Notaus": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Spark emergency stop"
+          }
+        }
+      }
     }
   },
   "version": "1.0"

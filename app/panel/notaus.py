@@ -588,6 +588,11 @@ def view(request, creds=None):
     out = {"level": s["level"], "outside": not at_home(request)}
     who = _caller(request, creds)
     if not who:
+        # a phone app's key of a held profile: it may still learn that its own Notaus is on (the app says so)
+        import profiles
+        dev = profiles.device(request) if request.headers.get(profiles.DEVICE_HEADER) else None
+        if dev and dev.get("scope") == "app" and own(dev["user"]):
+            out["mine"] = {"on": True, "since": (mine().get(dev["user"]) or {}).get("since"), "lift": False}
         return out
     me = _mine_uid(request, who)
     if me:           # Mein Notaus of this profile (the admin mode's profile, or the profile beside the main admin)

@@ -230,7 +230,8 @@ struct SparkAPI {
     static func check(_ data: Data, _ response: URLResponse) throws {
         guard let http = response as? HTTPURLResponse else { throw SparkError(message: String(localized: "Keine Antwort vom Spark.")) }
         guard !(200..<300).contains(http.statusCode) else { return }
-        let detail = (try? JSONSerialization.jsonObject(with: data) as? [String: Any])?["detail"] as? String
+        let json = try? JSONSerialization.jsonObject(with: data) as? [String: Any]
+        let detail = json?["detail"] as? String
         switch http.statusCode {
         case 401:
             throw SparkError(message: String(localized: "Der Spark nimmt dieses iPhone nicht an. Im Panel unter Ich → iPhone-App prüfen, ob die App an ist, sonst neu koppeln."))
@@ -242,6 +243,13 @@ struct SparkAPI {
             throw SparkError(message: detail ?? "")
         case 429:
             throw SparkError(message: String(localized: "Der Spark ist gerade ausgelastet. Bitte gleich noch einmal."))
+        case 503 where json?["notaus"] != nil:
+            // the Notaus holds the Spark or this profile off (notaus.py); lifting is never possible from the app
+            if (detail ?? "").hasPrefix("Mein Notaus") {
+                throw SparkError(message: String(localized: "Mein Notaus ist an. Aufheben im Browser unter Ich → Sicherheit mit der PIN."))
+            }
+            let level = (json?["notaus"] as? NSNumber)?.intValue ?? 0
+            throw SparkError(message: String(localized: "Der Notaus ist an (Stufe \(level)). Aufheben kann nur ein Admin im Browser."))
         case 503:
             throw SparkError(message: String(localized: "Die Spracherkennung oder das Sprachmodell läuft gerade nicht."))
         default:

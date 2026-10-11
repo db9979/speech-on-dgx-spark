@@ -258,9 +258,55 @@ struct SparkShortcuts: AppShortcutsProvider {
                     phrases: ["\(.applicationName) zuhören", "Mit \(.applicationName) sprechen"],
                     shortTitle: "Spark zuhören",
                     systemImageName: "waveform")
+        AppShortcut(intent: NotausIntent(),
+                    phrases: ["\(.applicationName) Notaus", "Notaus mit \(.applicationName)"],
+                    shortTitle: "Spark Notaus",
+                    systemImageName: "exclamationmark.octagon")
         AppShortcut(intent: EndRoomsIntent(),
                     phrases: ["Raummodus beenden mit \(.applicationName)", "\(.applicationName) Raummodus beenden"],
                     shortTitle: "Raum-Modus beenden",
                     systemImageName: "ear")
+    }
+}
+
+enum NotausScope: String, AppEnum {
+    case mine, whole
+    static var typeDisplayRepresentation: TypeDisplayRepresentation = "Notaus"
+    static var caseDisplayRepresentations: [NotausScope: DisplayRepresentation] = [
+        .mine: "Mein Notaus", .whole: "Ganzer Spark"]
+}
+
+/// "Spark Notaus": after a question Siri stops the own profile ("Mein Notaus"); in the app's admin mode it
+/// asks first whether the whole Spark should stop (stage 2). Lifting is never possible here.
+struct NotausIntent: AppIntent {
+    static var title: LocalizedStringResource = "Spark Notaus"
+    static var description = IntentDescription("Hält nach einer Rückfrage dein Profil an, als Admin auf Wunsch den ganzen Spark. Aufheben nur im Browser.")
+    static var openAppWhenRun = false
+
+    @Parameter(title: "Was")
+    var scope: NotausScope?
+
+    @MainActor
+    func perform() async throws -> some IntentResult & ProvidesDialog {
+        guard SparkAPI.current != nil else {
+            throw SparkError(message: String(localized: "Die App ist noch nicht mit dem Spark gekoppelt."))
+        }
+        let admin = AdminSession.shared.signedIn
+        var what = scope ?? .mine
+        if admin && scope == nil {
+            let picked = try await $scope.requestValue(IntentDialog("Ganzer Spark oder nur dein Profil?"))
+            what = picked ?? .mine
+        }
+        if what == .whole && !admin {
+            throw SparkError(message: String(localized: "Den ganzen Spark hält nur ein Admin an. Erst unter Spark verwalten anmelden."))
+        }
+        if what == .whole {
+            try await requestConfirmation(result: .result(dialog: "Den ganzen Spark auf Stufe 2 „Hände weg“ stellen? Aufheben nur als Admin im Browser im Heimnetz."))
+            try await Notaus.whole()
+            return .result(dialog: "Notaus Stufe 2 ist an.")
+        }
+        try await requestConfirmation(result: .result(dialog: "Dein Profil anhalten? Aufheben nur im Browser mit deiner PIN."))
+        try await Notaus.mine()
+        return .result(dialog: "Mein Notaus ist an.")
     }
 }

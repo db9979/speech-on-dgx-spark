@@ -33,6 +33,7 @@ All options for running without questions (`--mode api --asr 1.7b --tts 0.6b --y
 
 <!-- New version: add one line at the top here and in CHANGELOG.md, drop the oldest line here (keep 10). Details go to docs/de and docs/en, not into this README. -->
 
+- **V01.0.370** iPhone app: emergency stop button and Siri "Spark Notaus" (always with a question; lifting only in the browser)
 - **V01.0.369** reMarkable comparison quieter: the Spark's own writes no longer start a comparison ("account changed"), a cloud 502/503/504 gets one more try, page reader hints as one counted line per comparison
 - **V01.0.368** Requests the Spark starts itself (update check, backup, rules) are called "Spark" instead of "Gast" in Logs → Requests and on the live page; the panel fetches the voice list with the key again (before ~900 refused calls a day, list only from cache); speech output no longer writes a statistics table per sentence to the journal
 - **V01.0.367** Pebble watch app 1.6.0 in the panel: holding SELECT 3 s triggers the emergency stop (the big one admin profiles only)
@@ -42,7 +43,6 @@ All options for running without questions (`--mode api --asr 1.7b --tts 0.6b --y
 - **V01.0.363** Own MCP services per profile (admin sub-switch + Me → My MCP services, all off): every tool released one by one, reading as outside text, acting after "Yes", OAuth sign-in, background jobs read only, the admin blocks at once, Live shows every call without contents
 - **V01.0.362** Fetch clear questions directly: weather and appointments for tomorrow and the day after too
 - **V01.0.361** Search locally first: a long Kiwix article no longer slows the answer (only its start is read), Logs → Requests shows hits per source
-- **V01.0.360** Emergency stop on more ways: Telegram /notaus and /meinnotaus, fixed sentence "Spark, Mein Notaus" / "Spark, Notaus" (the big one admins only), a Home Assistant key that can only trigger (with a ready snippet), Android quick settings tile (app 1.1.0)
 
 All versions: [CHANGELOG.md](CHANGELOG.md)
 

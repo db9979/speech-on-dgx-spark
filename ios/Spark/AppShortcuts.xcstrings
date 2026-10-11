@@ -120,6 +120,26 @@
           }
         }
       }
+    },
+    "${applicationName} Notaus": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "${applicationName} emergency stop"
+          }
+        }
+      }
+    },
+    "Notaus mit ${applicationName}": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Emergency stop with ${applicationName}"
+          }
+        }
+      }
     }
   },
   "version": "1.0"

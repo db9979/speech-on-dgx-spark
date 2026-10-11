@@ -490,6 +490,26 @@
           }
         }
       }
+    },
+    "Der Notaus ist an (Stufe %lld). Aufheben kann nur ein Admin im Browser.": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "The emergency stop is on (stage %lld). Only an admin can lift it in the browser."
+          }
+        }
+      }
+    },
+    "Mein Notaus ist an. Aufheben im Browser unter Ich → Sicherheit mit der PIN.": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "My emergency stop is on. Lift it in the browser under Me → Security with the PIN."
+          }
+        }
+      }
     }
   },
   "version": "1.0"

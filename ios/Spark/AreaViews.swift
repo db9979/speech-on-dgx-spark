@@ -815,3 +815,103 @@ struct AccountForm: View {
         }
     }
 }
+
+// ---------------------------------------------------------------- Notaus (thread „Notaus für den Spark“, Paket 3)
+/// The Notaus from the app: only switching on, always after a question; lifting is never possible here
+/// (the admin in the browser at home, Mein Notaus in the browser with the PIN). Every profile may stop its
+/// own part ("Mein Notaus", with the app's key); the whole Spark (stage 2 "Hände weg") only in the admin mode
+/// ("Spark verwalten"), where the Spark itself checks the admin login. The same as the Android tile.
+@MainActor
+enum Notaus {
+    struct State { var level = 0; var mine = false; var may = false }
+
+    static func state() async throws -> State {
+        guard let api = SparkAPI.current else { throw SparkError(message: String(localized: "Die App ist noch nicht mit dem Spark gekoppelt.")) }
+        let (data, response) = try await URLSession.shared.data(for: api.request("api/notaus"))
+        try SparkAPI.check(data, response)
+        let d = SparkAPI.object(data)
+        var s = State(level: (d["level"] as? NSNumber)?.intValue ?? 0, mine: (d["mine"] as? [String: Any])?["on"] as? Bool == true)
+        if AdminSession.shared.signedIn, let a = try? await AdminSession.shared.object("GET", "api/notaus") {
+            s.may = a["may"] as? Bool == true
+            s.level = (a["level"] as? NSNumber)?.intValue ?? s.level
+        }
+        return s
+    }
+
+    /// Mein Notaus: the profile's logins and devices stop, this key included (only the state stays readable)
+    static func mine() async throws {
+        guard let api = SparkAPI.current else { throw SparkError(message: String(localized: "Die App ist noch nicht mit dem Spark gekoppelt.")) }
+        _ = try await api.post("api/notaus/mine", [:])
+    }
+
+    /// the whole Spark on stage 2 "Hände weg": only with the admin login of "Spark verwalten"
+    static func whole() async throws {
+        guard AdminSession.shared.signedIn else {
+            throw SparkError(message: String(localized: "Den ganzen Spark hält nur ein Admin an. Erst unter Spark verwalten anmelden."))
+        }
+        _ = try await AdminSession.shared.object("POST", "api/notaus", body: ["level": 2])
+    }
+}
+
+/// The red button in the settings: shows the state and asks before anything happens.
+struct NotausSection: View {
+    @ObservedObject private var admin = AdminSession.shared
+    @State private var state: Notaus.State?
+    @State private var ask = false
+    @State private var busy = false
+    @State private var note: String?
+
+    private var whole: Bool { admin.signedIn && state?.may == true && (state?.level ?? 0) < 2 }
+    private var mineOff: Bool { state?.mine != true }
+
+    var body: some View {
+        Section {
+            Button(role: .destructive) {
+                Task { await refresh(); ask = whole || mineOff; if !ask { note = said } }
+            } label: {
+                Label("Notaus", systemImage: "exclamationmark.octagon.fill").foregroundStyle(.red)
+            }
+            .disabled(busy)
+            if let note { Text(verbatim: note) }
+        } header: { Text("Notaus") } footer: {
+            Text(admin.signedIn ? String(localized: "Als Admin: der ganze Spark (Stufe 2 „Hände weg“) oder nur dein Profil. Aufheben geht nie in der App.")
+                 : String(localized: "Legt dein Profil still: Anmeldungen und Geräte gesperrt, in deinem Namen passiert nichts. Aufheben nur im Browser unter Ich → Sicherheit mit deiner PIN."))
+        }
+        .confirmationDialog("Notaus", isPresented: $ask, titleVisibility: .visible) {
+            if whole { Button("Ganzer Spark (Stufe 2)", role: .destructive) { run(true) } }
+            if mineOff { Button("Mein Notaus", role: .destructive) { run(false) } }
+            Button("Abbrechen", role: .cancel) {}
+        } message: {
+            Text(whole ? String(localized: "Ganzer Spark: nichts geht mehr nach außen, keine Aktionen. Aufheben nur als Admin im Browser im Heimnetz.")
+                 : String(localized: "Dein Profil stilllegen? Anmeldungen und Geräte werden gesperrt, auch diese App. Aufheben im Browser mit deiner PIN."))
+        }
+        .task { await refresh(); note = said }
+    }
+
+    /// what is on right now, in a line (nil when nothing is)
+    private var said: String? {
+        guard let s = state else { return nil }
+        if s.level > 0 { return String(localized: "Der Notaus steht auf Stufe \(s.level).") }
+        if s.mine { return String(localized: "Mein Notaus ist an. Aufheben im Browser unter Ich → Sicherheit mit der PIN.") }
+        return nil
+    }
+
+    private func refresh() async {
+        do { state = try await Notaus.state() } catch { note = error.localizedDescription }
+    }
+
+    private func run(_ all: Bool) {
+        busy = true
+        Task {
+            do {
+                if all { try await Notaus.whole() } else { try await Notaus.mine() }
+                note = all ? String(localized: "Notaus Stufe 2 ist an.") : String(localized: "Mein Notaus ist an.")
+                await refresh()
+                if let s = said { note = s }
+            } catch {
+                note = error.localizedDescription
+            }
+            busy = false
+        }
+    }
+}
