@@ -101,7 +101,7 @@ function rchain(x){const c=el('span','rchain');let n=0;
 function rlist(items){const box=el('div','rlist');
   for(const x of items){const b=el('button','rq'+(x.id===RQ.sel?' on':'')+(x.status==='err'?' err':x.status==='slow'?' slow':''));b.type='button';
     const top=el('div','rtop');top.append(el('span','rt',rtime(x)),el('b','',x.name));top.append(el('span','rdev',' · '+(x.device||RCLIENT[x.client]||x.client)));
-    top.append(el('span','rdur',rsec(rfirst(x))));b.append(top);
+    top.append(el('span','rid',' · '+x.id),el('span','rdur',rsec(rfirst(x))));b.append(top);
     const row=el('div','rrow');if(x.intent)row.append(rpill(x.intent,'int'));row.append(rchain(x));b.append(row);
     b.onclick=()=>{RQ.sel=x.id;RQ.lines=null;rrender();if(PHONE.matches)window.scrollTo(0,0)};box.append(b)}
   if(!items.length)box.append(el('div','lempty',RQ.data&&!RQ.data.on?t('Die Aufzeichnung ist aus: Einstellungen → Spark → Betrieb → Anfragen verfolgen.','Recording is off: Settings → Spark → Operation → Trace requests.'):t('Keine Anfragen in diesem Zeitraum.','No requests in this time range.')));
@@ -145,7 +145,7 @@ function rlinesShow(box){box.replaceChildren();
     box.append(el('div','rsub',t('Logzeilen aus dieser Zeit (gleichzeitige Anfragen können dazwischen stehen)','Log lines from this time (requests at the same moment may show too)')),out)}
 function rdetail(x){const box=el('div','rdet');
   if(PHONE.matches){const back=el('button','rback',t('‹ Anfragen','‹ Requests'));back.type='button';back.onclick=()=>{RQ.sel=null;RQ.lines=null;rrender()};box.append(back)}
-  box.append(el('h3','',t(`Anfrage von ${x.name} · ${rtime(x)}`,`Request from ${x.name} · ${rtime(x)}`)));
+  box.append(el('h3','',t(`Anfrage ${x.id} von ${x.name} · ${rtime(x)}`,`Request ${x.id} from ${x.name} · ${rtime(x)}`)));
   const rounds=(x.steps||[]).filter(s=>s.k==='llm').length,tools=(x.steps||[]).filter(s=>s.k==='tool').length,m=x.marks||{};
   const sub=el('div','rsub');sub.append(document.createTextNode((x.device?x.device+' · ':'')+(RCLIENT[x.client]||x.client)+' · '+t('Absicht ','intent ')));sub.append(rpill(x.intent||'–','int'));
   sub.append(document.createTextNode(' · '+t(`${rounds} Runde(n) · ${tools} Werkzeug(e)`,`${rounds} round(s) · ${tools} tool(s)`)+(m.sound!=null?' · '+t('erster Ton ','first sound ')+rsecs(m.sound):'')+' · '+t('fertig ','done ')+rsecs(m.end||0)));box.append(sub);
@@ -155,7 +155,7 @@ function rdetail(x){const box=el('div','rdet');
   box.append(el('div','rnote',t('🔒 Ohne Frage- und Antworttext: nur Wege, Werkzeugnamen, Zahlen und Zeiten.','🔒 Without question or answer text: only ways, tool names, numbers and times.')+(x.named?'':' '+t('Name nur, wenn das Profil es erlaubt.','Name only when the profile allows it.'))));
   box.append(rshares(x),rsteps(x));const lines=el('div','rlinesbox');box.append(lines);lb.onclick=()=>rshowLines(x,lines);if(RQ.lines&&RQ.linesFor===x.id)rlinesShow(lines);return box}
 function rfiltered(){const d=RQ.data;if(!d)return [];const q=$('logq').value.trim().toLowerCase();
-  return d.items.filter(x=>(!RQ.filter||x.status===RQ.filter)&&(!q||[x.name,x.device,x.client,x.intent,...(x.steps||[]).map(s=>s.n)].join(' ').toLowerCase().includes(q)))}
+  return d.items.filter(x=>(!RQ.filter||x.status===RQ.filter)&&(!q||[x.id,x.name,x.device,x.client,x.intent,...(x.steps||[]).map(s=>s.n)].join(' ').toLowerCase().includes(q)))}
 function rrender(){lshow();const d=RQ.data,box=$('logreq'),chips=$('logchips');if(!d)return;
   chips.replaceChildren();const n=k=>d.items.filter(x=>x.status===k).length;
   [['',t('Alle','All'),'',d.items.length],['err',t('Fehler','Errors'),'#ef4444',n('err')],['slow',t('Langsam','Slow'),'#f59e0b',n('slow')]].forEach(([k,label,c,cnt])=>{

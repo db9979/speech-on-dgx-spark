@@ -33,6 +33,7 @@ All options for running without questions (`--mode api --asr 1.7b --tts 0.6b --y
 
 <!-- New version: add one line at the top here and in CHANGELOG.md, drop the oldest line here (keep 10). Details go to docs/de and docs/en, not into this README. -->
 
+- **V01.0.356** Logs → Requests shows the request number from the journal in list and detail, search finds it
 - **V01.0.355** What's new: view the changelog in the panel, from "Was ist neu" at the bottom next to the version or Settings → Update und Sicherung, with search
 - **V01.0.354** Quieter log: a companion release without update file is no error any more (retry after 1 hour), an unreadable recording leaves no "Task exception was never retrieved"
 - **V01.0.353** Spark companion deeper in the computer (per device, all off): right-click on files, ask about the screen, know the app, draft a reply in Outlook and Apple Mail, "Spark-Wissen" folder, buttons in notes, Spark acts on the PC with a question first, wake word on the PC
@@ -42,7 +43,6 @@ All options for running without questions (`--mode api --asr 1.7b --tts 0.6b --y
 - **V01.0.349** Faster answer start: turns without any tool (small talk) get the short request without the tool list again
 - **V01.0.348** Morning greeting names appointments only fresh from the calendar: "Guten Morgen" always reads the briefing, appointments marked as over are not named as coming up, and the answer check lets no appointment from an earlier answer through as today's
 - **V01.0.347** Spark companion in the Spark look (face as icon, windows like the panel, light and dark), shows new versions and updates itself after a click (the Spark fetches and checks them), link "☕ Support Spark"
-- **V01.0.346** reMarkable @Spark: question from handwriting without the reader's "Bild:" line and [unleserlich], the model also answers from its own knowledge instead of just "no answer", diagnosis line "remarkable: @Spark answer …"
 
 All versions: [CHANGELOG.md](CHANGELOG.md)
 
