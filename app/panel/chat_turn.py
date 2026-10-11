@@ -85,6 +85,9 @@ async def prepare(request):
     # conversation, which the trimming below drops)
     said_before = next((str(m["content"]) for m in reversed(messages[:-1]) if m["role"] == "assistant"), None) \
         if messages[-1]["role"] == "user" else None
+    # everything the assistant said in this conversation, before trimming: notes it sent by itself are looked up
+    # by their text further down (proactive.basis_note), also when the trimming drops them
+    said_all = [str(m["content"]) for m in messages if m["role"] == "assistant"][-20:]
     # with chat.prompt_cache the kept part starts at a fixed question for several turns (chat.trim_history)
     messages = chat.trim_history(messages, chat.history_chars(ccfg), anchor=ccfg.get("prompt_cache") is True)
     # Outside text from earlier turns: the latest such answer still counts as read in this turn (it
@@ -507,6 +510,13 @@ async def prepare(request):
         if pro:
             cal_note.append(pro["call"])
             system = per_turn(system, pro["system"])
+    # a note the Spark said by itself is in this conversation: what it rested on, so the model does not make up a
+    # source when the person asks about it (proactive.basis_note, V01.0.385)
+    if who and messages[-1]["role"] == "user" and not mcp:
+        basis = proactive.basis_note(who["id"], said_all)
+        if basis:
+            cal_note.append(basis[1])
+            system = per_turn(system, basis[0])
     # learning from corrections (fixes.py): a yes saves the proposed sentence, a correction leads to one
     fix_ok = bool(who and own_browser and private_ok and ccfg.get("memory", True) and fixes.on(ccfg, pset)
                   and messages[-1]["role"] == "user" and not mcp and not act_held)

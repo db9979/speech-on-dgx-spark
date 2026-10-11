@@ -1753,13 +1753,64 @@ class Proactive(unittest.TestCase):
         lines = ["Ich muss morgen unbedingt das Angebot an Müller schicken.", "Wie wird das Wetter?"]
         good = json.dumps({"quote": "das Angebot an Müller schicken", "question": "Hast du das Angebot an Müller geschickt?"})
         made_up = json.dumps({"quote": "den Keller aufräumen", "question": "Hast du den Keller aufgeräumt?"})
-        self.assertEqual(proactive.parse_follow("<think>x</think>" + good, lines)["question"],
-                         "Hast du das Angebot an Müller geschickt?")
+        self.assertEqual(proactive.parse_follow("<think>x</think>" + good, lines)["question"],   # fixed sentence, own words
+                         "Gestern hast du zu mir gesagt: „das Angebot an Müller schicken“. Hat das geklappt?")
         self.assertIsNone(proactive.parse_follow(made_up, lines))
         self.assertIsNone(proactive.parse_follow("{}", lines))
         src = "Köln morgen: Regenschauer am Nachmittag, 14 Grad."
         self.assertEqual(proactive.parse_weather(json.dumps({"rain": True, "evidence": "Regenschauer am Nachmittag"}), src), ["rain"])
         self.assertEqual(proactive.parse_weather(json.dumps({"rain": True, "frost": True, "evidence": "Frost in der Nacht"}), src), [])
+
+    def test_follow_up_only_from_own_plans_and_its_source_is_told(self):
+        """V01.0.385 (Dominik 2026-10-11): "Hast du den Test für deine letzte E-Mail schon erledigt?" came from a
+        request to the assistant, and asked about it the model made up that he had written it in a mail."""
+        import proactive
+        # a request to the assistant, a question, pasted text: never a plan, whatever the model picks
+        for line in ("Mach einen Test mit meiner letzten E-Mail", "Kannst du den Test für meine letzte E-Mail machen",
+                     "Teste bitte, ob ich die letzte E-Mail lesen kann", "Lies mir die letzte E-Mail vor, ich will sie testen",
+                     "Muss ich den Test für die letzte E-Mail noch machen?", "Ich schicke dir gleich den Text\nzweite Zeile",
+                     "ich " + "x" * 250):
+            self.assertFalse(proactive.own_plan(line), line)
+            pick = json.dumps({"quote": line.split("\n")[0][:60]})
+            self.assertIsNone(proactive.parse_follow(pick, [line]), line)
+        self.assertTrue(proactive.own_plan("Ich muss morgen noch das Paket zur Post bringen."))
+        self.assertIsNone(proactive.parse_follow(json.dumps({"quote": "Paket zur Post bringen" + "!" * 120}),
+                                                 ["Ich muss das Paket zur Post bringen" + "!" * 120]))
+        # lines: none from the Spark's own conversations, none a mail or outside answer followed
+        convos = [{"id": "c1", "updated": 50, "msgs": [
+                      {"role": "user", "content": "Ich muss die Steuer abschicken."}, {"role": "assistant", "content": "Gut."},
+                      {"role": "user", "content": "Ich will wissen, was in der letzten Mail steht"},
+                      {"role": "assistant", "content": "Sie schreibt ...", "mail": True},
+                      {"role": "user", "content": "Ich will den Artikel lesen"},
+                      {"role": "assistant", "content": "Der Artikel ...", "outside": True}]},
+                  {"id": "meet-1", "updated": 50, "msgs": [{"role": "user", "content": "Ich muss das Protokoll schreiben"}]},
+                  {"id": "c2", "updated": 500, "msgs": [{"role": "user", "content": "Ich muss heute noch einkaufen"}]}]
+        self.assertEqual(proactive.follow_lines(convos, 0, 100), ["Ich muss die Steuer abschicken."])
+        # what a note rested on goes with the next chat turn, so the model never makes up a source
+        a, uid = self.on("Mira", pro_follow=True, pro_mail=True)
+        item = self.say(uid, "follow", "Gestern hast du zu mir gesagt: „das Paket zur Post bringen“. Hat das geklappt?",
+                        why="Vorhaben von gestern", data="am 10.10. hast du gesagt: „das Paket zur Post bringen“")
+        self.assertTrue(item)
+        self.say(uid, "mail", "Neue Mail von Chef: Termin morgen.", why="Absender auf deiner Liste",
+                 data="Chef: Termin morgen geheim", mail=True)
+        said = proactive.state(uid)["said"]
+        self.assertNotIn("geheim", json.dumps(said))                     # no word of a mail beyond the note
+        self.assertIsNone(proactive.basis_note(uid, ["Hallo."]))         # no note in this conversation
+        n = proactive.basis_note(uid, [item["text"], "Ich meinte den Test."])
+        self.assertIn("das Paket zur Post bringen", n[0])
+        self.assertIn("Erfinde keine andere Herkunft", n[0])
+        self.assertEqual(n[1]["name"], "von selbst: Grundlage")
+        msgs = [{"role": "assistant", "content": item["text"], "outside": True},
+                {"role": "user", "content": "wie meinst du das?"}, {"role": "assistant", "content": "Ich meinte das Paket."},
+                {"role": "user", "content": "mmh wo habe ich dir das geschrieben?"}]
+        r = a.post("/api/chat", json={"messages": msgs, "tz": "Europe/Berlin"})
+        self.assertEqual(r.status_code, 200)
+        sent = json.dumps(helpers.LLM_CALLS[-1]["messages"], ensure_ascii=False)
+        self.assertIn("Grundlage laut Panel", sent)
+        self.assertIn("das Paket zur Post bringen", sent)
+        # another profile's notes never show up in this one's conversation
+        b, uid_b = self.on("Nora")
+        self.assertIsNone(proactive.basis_note(uid_b, [item["text"]]))
 
     def test_settings_are_checked(self):
         a = profile("Rico")

@@ -833,7 +833,7 @@ class Browser(unittest.TestCase):
                     self.assertFalse(await pg.is_visible("#chat\\.search_url"))
                     tall = await pg.evaluate("$('pane-feat').getBoundingClientRect().height")
                     # about 45 px per closed line on a computer (limit grows with new rows); open boxes would be several times that
-                    self.assertLess(tall, 4020 if w < 760 else 3060, f"{w}: {tall}px")   # V01.0.383: +1 line "Probleme melden", V01.0.381: +1 line "Geräte-Updates", V01.0.342: +1 line "Spark-Begleiter am PC und Mac", V01.0.340: +1 line "Einordnung mit Wahrscheinlichkeit", V01.0.339: +1 sub-switch "In anderen Programmen", V01.0.332: +1 line "Schreibhilfe", V01.0.326: +1 line "Hilfe zum Spark", V01.0.300: +1 line "Android-App", V01.0.303: +1 line "Spark als MCP-Server", V01.0.304: +1 line "Eindeutiges direkt abrufen", V01.0.307: +1 sub-switch "Vorab holen bei Rückfrage"
+                    self.assertLess(tall, 4020 if w < 760 else 3060, f"{w}: {tall}px")   # V01.0.386: +1 line "Probleme melden", V01.0.381: +1 line "Geräte-Updates", V01.0.342: +1 line "Spark-Begleiter am PC und Mac", V01.0.340: +1 line "Einordnung mit Wahrscheinlichkeit", V01.0.339: +1 sub-switch "In anderen Programmen", V01.0.332: +1 line "Schreibhilfe", V01.0.326: +1 line "Hilfe zum Spark", V01.0.300: +1 line "Android-App", V01.0.303: +1 line "Spark als MCP-Server", V01.0.304: +1 line "Eindeutiges direkt abrufen", V01.0.307: +1 sub-switch "Vorab holen bei Rückfrage"
                     await pg.evaluate("$('chat.search').closest('.fitem').querySelector('.fexp').click()")
                     self.assertTrue(await pg.evaluate("$('chat.search').closest('.fitem').classList.contains('open')"))
                     await pg.evaluate("$('chat.search').closest('.fitem').querySelector('.fexp').click()")
@@ -960,6 +960,10 @@ class Browser(unittest.TestCase):
                 self.assertTrue(await pg.evaluate("pics.list.length===1"))      # kept for a follow-up
                 await pg.click(".picsave")
                 await pg.wait_for_function("document.querySelector('.picsave').textContent.includes('Gespeichert')", timeout=5000)
+                copied = await pg.evaluate("(()=>{const r=document.createRange();r.selectNodeContents(document.querySelector('.picsave').parentNode);"
+                                           "const s=getSelection();s.removeAllRanges();s.addRange(r);const x=s.toString();s.removeAllRanges();return x})()")
+                self.assertIn("Ich sehe 1 Bild.", copied)
+                self.assertNotIn("Gespeichert", copied)        # the buttons under an answer are not copied with it
                 await pg.click("#chatpics .picx")
                 self.assertTrue(await pg.evaluate("pics.list.length===0&&$('chatpics').hidden"))
                 self.assertEqual(errors, [])

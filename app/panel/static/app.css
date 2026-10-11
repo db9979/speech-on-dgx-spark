@@ -285,7 +285,7 @@ a.b{text-decoration:none;color:inherit;display:inline-flex;align-items:center}
 @media(max-width:760px){.roomlive{font-size:13px;padding:6px 12px}}
 #zrooms .zrow b{font-weight:600}
 @media(max-width:760px){.updbanner{font-size:13px;padding:6px 12px}.updbanner .b{padding:6px 12px}}
-.prorow{display:flex;gap:6px;margin-top:8px;flex-wrap:wrap}.prorow .ib{padding:4px 10px;font-size:12px}
+.prorow{display:flex;gap:6px;margin-top:8px;flex-wrap:wrap;user-select:none;-webkit-user-select:none}.prorow .ib{padding:4px 10px;font-size:12px}
 .wakeind.room i{background:#f59e0b}
 /* ---------------------------------------------------------------- phones: every page and window
    Inputs at 16 px (smaller ones make iOS zoom in and stay zoomed), finger-sized buttons, windows as
@@ -545,7 +545,7 @@ details.qhow{margin-top:6px}details.qhow>summary{cursor:pointer;font-size:13px;f
 .mrdy{display:inline}.mrdy summary{display:inline;cursor:pointer;color:var(--acc)}.mrdy input{margin:6px 0 0}
 .attach{flex:none;padding:9px 11px}.attach svg{width:18px;height:18px}
 .picrow{display:flex;gap:6px;flex-wrap:wrap;margin-top:6px}.picrow img{width:72px;height:72px;object-fit:cover;border-radius:8px;display:block}
-.picsave{margin-top:8px;font-size:12px;padding:6px 12px}
+.picsave{margin-top:8px;font-size:12px;padding:6px 12px;-webkit-user-select:none;user-select:none}   /* buttons under an answer: never part of copied answer text */
 #visionmsg .ok{color:var(--ok)}
 @media (max-width:760px){body.inchat .composer.haspic .send{display:grid}}
 #msgbox li.unread{border-left:3px solid var(--acc);padding-left:8px}

@@ -1173,7 +1173,7 @@
 "file": "Assistent und Oberfläche",
 "head": "Sprach-Chat",
 "title": "Von selbst melden",
-"text": " Daten zitiert. Ist das Gespräch offen, spricht er die Meldung, sonst kommt sie als Push-Mitteilung. Seit V01.0.179 sagt nur das erste Gerät des Profils die Meldung (Seite oder iPhone-App), die anderen bleiben still, genau wie bei Erinnerungen (V01.0.176). Jede Meldung steht mit Grund im Protokoll."
+"text": " Daten zitiert. Ist das Gespräch offen, spricht er die Meldung, sonst kommt sie als Push-Mitteilung. Seit V01.0.179 sagt nur das erste Gerät des Profils die Meldung (Seite oder iPhone-App), die anderen bleiben still, genau wie bei Erinnerungen (V01.0.176). Jede Meldung steht mit Grund im Protokoll. Seit V01.0.385 ist die Nachfrage ein fester Satz mit den eigenen Worten („Gestern hast du zu mir gesagt: „…“. Hat das geklappt?“); das Modell zeigt nur auf einen Satz, und das Panel nimmt ihn nur, wenn er ein eigenes Vorhaben in der Ich-Form ist (keine Frage, kein Auftrag an den Assistenten, kein eingefügter Text, keine Frage zu einer Mail oder Webseite, nichts aus Briefing, Aufträgen oder Besprechungen). Fragt man nach einer Meldung („wie meinst du das?“, „woher weißt du das?“), bekommt das Modell vom Panel die Grundlage dazu und darf keine andere Herkunft erfinden; bei Mail-Meldungen nur „Absender und Betreff gelesen“, nie Mailtext. Logs → Anfragen zeigt das als „von selbst: Grundlage“, Live ein verworfenes Zitat als Ereignis."
 },
 {
 "lang": "de",
@@ -2365,7 +2365,7 @@
 "file": "Sicherheit und Betrieb",
 "head": "Probleme melden",
 "title": "Probleme melden",
-"text": "Ab V01.0.383. Etwas klappt nicht? Jedes Profil mit eigenem Schalter (Ich → Probleme melden) beschreibt es kurz und bekommt einen Entwurf; Gäste nie. Admin-Schalter: Funktionen → Sicherheit → „Probleme melden“, dazu das Ziel-Repo (ab Werk db9979/spark-meldungen, privat). Öffnen lässt es sich überall: unten im Panel „Problem melden“, Zustand → Logs, Strg/⌘ K, Ich → Probleme melden, in der Android-App (Panel), in der iPhone-App unter Einstellungen, im Spark-Begleiter (Windows: Menü des Symbols; Mac: Einstellungen), per Telegram /melden Text und per Sprache (auch Uhr und Lautsprecher) mit dem festen Satz „Spark, Problem melden: …“. Telegram und Sprache legen nur einen Entwurf an; gesendet wird immer erst nach dem Blick auf die Vorschau."
+"text": "Ab V01.0.386. Etwas klappt nicht? Jedes Profil mit eigenem Schalter (Ich → Probleme melden) beschreibt es kurz und bekommt einen Entwurf; Gäste nie. Admin-Schalter: Funktionen → Sicherheit → „Probleme melden“, dazu das Ziel-Repo (ab Werk db9979/spark-meldungen, privat). Öffnen lässt es sich überall: unten im Panel „Problem melden“, Zustand → Logs, Strg/⌘ K, Ich → Probleme melden, in der Android-App (Panel), in der iPhone-App unter Einstellungen, im Spark-Begleiter (Windows: Menü des Symbols; Mac: Einstellungen), per Telegram /melden Text und per Sprache (auch Uhr und Lautsprecher) mit dem festen Satz „Spark, Problem melden: …“. Telegram und Sprache legen nur einen Entwurf an; gesendet wird immer erst nach dem Blick auf die Vorschau."
 },
 {
 "lang": "de",
@@ -2413,7 +2413,7 @@
 "file": "Sicherheit und Betrieb",
 "head": "Probleme melden",
 "title": "Admin per Assistent informieren",
-"text": "Admin per Assistent informieren (ab V01.0.383, Unterschalter, aus): Sendet ein Profil eine Meldung oder legt sie ab, sagt der Assistent es den Admin-Profilen (das für Admin-Hinweise gewählte, Haupt-Admin, Mit-Admins), bei offener Seite im Assistenten, sonst als Mitteilung. Nur Profilname, Bereich, Weg und Nummer, nie der Text; das meldende Profil selbst bekommt nichts. Jedes Admin-Profil schaltet es unter Ich → Probleme melden für sich aus; im Notaus bleibt es still."
+"text": "Admin per Assistent informieren (ab V01.0.386, Unterschalter, aus): Sendet ein Profil eine Meldung oder legt sie ab, sagt der Assistent es den Admin-Profilen (das für Admin-Hinweise gewählte, Haupt-Admin, Mit-Admins), bei offener Seite im Assistenten, sonst als Mitteilung. Nur Profilname, Bereich, Weg und Nummer, nie der Text; das meldende Profil selbst bekommt nichts. Jedes Admin-Profil schaltet es unter Ich → Probleme melden für sich aus; im Notaus bleibt es still."
 },
 {
 "lang": "de",
@@ -3917,7 +3917,7 @@
 "file": "Assistant and panel",
 "head": "Voice chat",
 "title": "Speaking up by itself",
-"text": "Since V01.0.179 only the first device of the profile says it (page or iPhone app), the others stay silent, just like reminders (V01.0.176). Every note is in the log with its reason."
+"text": "Since V01.0.179 only the first device of the profile says it (page or iPhone app), the others stay silent, just like reminders (V01.0.176). Every note is in the log with its reason. Since V01.0.385 the follow-up is a fixed sentence with the person's own words (\"Gestern hast du zu mir gesagt: „…“. Hat das geklappt?\"); the model only points at a sentence, and the panel takes it only when it is an own plan in the first person (no question, no request to the assistant, no pasted text, no question about a mail or web page, nothing from briefing, jobs or meetings). Asked about a note (\"what do you mean?\", \"where is that from?\"), the model gets its basis from the panel and must not make up another source; for mail notes only \"sender and subject read\", never mail text. Logs → Requests show it as \"von selbst: Grundlage\", Live shows a refused pick as an event."
 },
 {
 "lang": "en",
@@ -4949,7 +4949,7 @@
 "file": "Security and operation",
 "head": "Reporting problems",
 "title": "Reporting problems",
-"text": "Since V01.0.383. Something does not work? Every profile with its own switch (Me → Reporting problems) describes it briefly and gets a draft; guests never. Admin switch: Features → Security → \"Reporting problems\", plus the target repository (default db9979/spark-meldungen, private). It opens everywhere: \"Report a problem\" at the bottom of the panel, Status → Logs, Ctrl/⌘ K, Me → Reporting problems, in the Android app (panel), in the iPhone app under Settings, in the Spark companion (Windows: the icon's menu; Mac: settings), by Telegram /melden text and by voice (also watch and speakers) with the fixed sentence \"Spark, Problem melden: …\". Telegram and voice only make a draft; sending always comes after a look at the preview."
+"text": "Since V01.0.386. Something does not work? Every profile with its own switch (Me → Reporting problems) describes it briefly and gets a draft; guests never. Admin switch: Features → Security → \"Reporting problems\", plus the target repository (default db9979/spark-meldungen, private). It opens everywhere: \"Report a problem\" at the bottom of the panel, Status → Logs, Ctrl/⌘ K, Me → Reporting problems, in the Android app (panel), in the iPhone app under Settings, in the Spark companion (Windows: the icon's menu; Mac: settings), by Telegram /melden text and by voice (also watch and speakers) with the fixed sentence \"Spark, Problem melden: …\". Telegram and voice only make a draft; sending always comes after a look at the preview."
 },
 {
 "lang": "en",
@@ -4997,7 +4997,7 @@
 "file": "Security and operation",
 "head": "Reporting problems",
 "title": "Tell the admin through the assistant",
-"text": "Tell the admin through the assistant (since V01.0.383, sub-switch, off): when a profile sends or keeps a report, the assistant tells the admin profiles (the one chosen for admin notes, the main admin, co-admins), in the assistant when the page is open, else as a note. Only profile name, area, way and number, never the text; the reporting profile itself gets nothing. Every admin profile turns it off for itself under Me → Reporting problems; during the Notaus it stays silent."
+"text": "Tell the admin through the assistant (since V01.0.386, sub-switch, off): when a profile sends or keeps a report, the assistant tells the admin profiles (the one chosen for admin notes, the main admin, co-admins), in the assistant when the page is open, else as a note. Only profile name, area, way and number, never the text; the reporting profile itself gets nothing. Every admin profile turns it off for itself under Me → Reporting problems; during the Notaus it stays silent."
 },
 {
 "lang": "en",

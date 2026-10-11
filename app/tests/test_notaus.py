@@ -208,6 +208,20 @@ class Api(Base):
         self.assertEqual(out.post("/api/notaus", json={"level": 2}).json()["level"], 2)
         self.assertEqual(out.post("/api/admin/notaus/off", json={"to": 0}).status_code, 503)
 
+    def test_many_pages_never_hide_the_admins_button(self):
+        # every page polls the stage; guests from the same address used to share one bucket with the admin, and a
+        # 429 hid the Notaus button (browser test red on GitHub, V01.0.380)
+        import guard
+        guard.reset()
+        where = ("192.168.178.77", 1)
+        g = client(where)
+        codes = [g.get("/api/notaus").status_code for _ in range(35)]
+        self.assertIn(429, codes)                                  # guests are still limited
+        a = admin(where)
+        self.assertEqual({a.get("/api/notaus").status_code for _ in range(35)}, {200})
+        self.assertTrue(a.get("/api/notaus").json()["may"])
+        guard.reset()
+
     def test_strangers_see_only_the_stage(self):
         notaus.trigger(1, "Anna", "u_x", "panel", "geheim")
         d = client(OUTSIDE).get("/api/notaus").json()

@@ -659,7 +659,10 @@ def _creds(request):
 
 @router.get("/api/notaus")
 def get_state(request: Request):
-    guard.limit(request, "notaus")
+    # per caller: signed-in pages poll this every 15 s and on every 503; one shared bucket per address (all browsers
+    # behind one proxy, or many pages at once) could hide the admins' button
+    who = _caller(request, _creds(request))
+    guard.limit(request, "notaus", uid=(who[1] or None) if who else None, admin=bool(who and who[2]))
     return view(request, _creds(request))
 
 

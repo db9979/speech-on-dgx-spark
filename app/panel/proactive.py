@@ -166,6 +166,8 @@ async def deliver(uid, kind, text, why="", data="", offer=None, until=None, forc
         st.setdefault("per", {})[kind] = st["per"].get(kind, 0) + (0 if force else 1)
         st["last"] = {"t": now, "kind": kind, "offer": offer, "text": text}
         st["queue"] = [x for x in st.get("queue", []) if x.get("until", 0) > now][-19:] + [item]
+        st["said"] = [x for x in st.get("said", []) if x.get("t", 0) > now - SAID_KEEP][-(SAID_MAX - 1):] + [
+            {"t": now, "kind": kind, "text": text, "basis": basis_of(kind, why, data, mail)}]
     _mut(uid, put)
     # Zustand → Live: what it says by itself shows as a request of "Von selbst" (or on the rule's own way,
     # hamelden.said), with the push or the open page as target; never the text
@@ -191,6 +193,47 @@ async def deliver(uid, kind, text, why="", data="", offer=None, until=None, forc
                           [{"name": "von selbst: " + kind, "args": why, "result": data or text}], text)
     print(f"proactive: {kind} said ({'push' if item.get('pushed') else 'page'})", flush=True)
     return item
+
+
+# Where a note came from (V01.0.385): kept two days, so the chat can say it when the person asks "wie meinst du
+# das?" or "woher weißt du das?". Before, the model saw the note only as an answer from outside text and made
+# up a source ("Du hast mir den Test in einer E-Mail geschrieben"). Only words the panel made or the person's
+# own words go in; for a note from the mailbox no word of the mail.
+SAID_KEEP = 2 * 86400
+SAID_MAX = 20
+OWN_DATA = {"follow"}       # the data of these kinds are the person's own words
+
+
+def basis_of(kind, why, data, mail=False):
+    why = re.sub(r"\s+", " ", str(why or "")).strip()[:120]
+    if mail:
+        return (why + " (nur Absender und Betreff gelesen)").strip()
+    if kind in OWN_DATA and data:
+        return (why + ": " + re.sub(r"\s+", " ", str(data)).strip()[:200]).strip(": ")
+    return why or KINDS.get(kind, (kind,))[0]
+
+
+def basis_note(uid, said):
+    """A note for this chat turn when the conversation holds notes the Spark said by itself: what each rested on,
+    so the model never makes up a source. said: the assistant's messages in the conversation. Returns
+    (system line, log entry) or None."""
+    if not said:
+        return None
+    heads = {_norm(x)[:60] for x in said if x}
+    found = [x for x in state(uid).get("said", []) if _norm(x.get("text"))[:60] in heads][-3:]
+    if not found:
+        return None
+    parts = []
+    for x in found:
+        local = datetime.datetime.fromtimestamp(x["t"], _zone(prefs(uid)))
+        parts.append(f"um {local:%H:%M} am {local:%d.%m.} ({KINDS.get(x['kind'], (x['kind'],))[0]}), "
+                     f"Grundlage laut Panel: {x.get('basis') or 'keine Angabe'}")
+    line = ("Von selbst: Mindestens eine Nachricht des Assistenten in diesem Gespräch hat der Spark von sich aus "
+            "geschickt, nicht auf eine Frage hin: " + "; ".join(parts) + ". Fragt der Nutzer, wie sie gemeint ist "
+            "oder woher sie kommt, sag genau diese Grundlage. Erfinde keine andere Herkunft (keine E-Mail, kein "
+            "Dokument, kein Gespräch, das hier nicht steht). Passt die Grundlage nicht zu dem, was der Nutzer "
+            "meint, sag ehrlich, dass die Nachfrage danebenlag.")
+    return line, {"name": "von selbst: Grundlage", "args": str(len(found)), "result": "; ".join(parts)[:400]}
 
 
 def poll(uid, since=0):
@@ -682,17 +725,54 @@ async def greet(uid, now=None):
 
 
 # ---------------------------------------------------------------- 5: follow-up on a plan
+# The model only points at a sentence; the panel checks it and says a fixed sentence with the person's own
+# words (V01.0.385, Dominik 2026-10-11: "Hast du den Test für deine letzte E-Mail schon erledigt?" came from a
+# request to the assistant, and the model's own question did not say where it came from).
 FOLLOW_SYSTEM = (
     "Unten stehen Sätze, die eine Person gestern zu ihrem Sprachassistenten gesagt hat. Finde höchstens "
     "EIN konkretes Vorhaben, das die Person selbst erledigen wollte (etwas verschicken, anrufen, kaufen, "
     "reparieren, erledigen), bei dem eine freundliche Nachfrage heute passt. Keine Fragen oder Aufträge an "
     "den Assistenten, nichts zu Gesundheit, Gefühlen oder anderen Menschen Privates. Antworte nur mit "
-    "JSON: {\"quote\": \"wörtlicher Ausschnitt aus genau einem der Sätze\", \"question\": \"eine kurze "
-    "Nachfrage in Du-Form, ein Satz mit Fragezeichen\"}. Gibt es nichts Passendes: {}.")
+    "JSON: {\"quote\": \"wörtlicher Ausschnitt aus genau einem der Sätze\"}. Gibt es nichts Passendes: {}.")
+FOLLOW_SAY = "Gestern hast du zu mir gesagt: „{}“. Hat das geklappt?"
+FOLLOW_LINE = 200      # a longer message is pasted or dictated text, not a plan said in passing
+FOLLOW_QUOTE = 120
+# the person's own plan: said in the first person ...
+_OWN = re.compile(r"\b(ich|wir)\b")
+# ... and not a request to the assistant: no question, no "du", no command at the start
+_TO_YOU = re.compile(r"\b(du|dir|dich|dein|deine|deinen|deinem|deiner|deines|kannst|könntest|würdest|bitte)\b")
+_ORDER = re.compile(r"^(sag|zeig|schreib|lies|such|mach|teste|test|prüf|pruef|schau|erinner|erzähl|nenn|gib|hol|leg|"
+                    r"setz|trag|schick|ruf|öffne|starte|stell|spiel|lösch|merk|übersetz|fass|erklär|hilf|finde|check)\w*\b")
+
+
+def own_plan(line):
+    """True when a sentence of the person reads like their own plan, not like a request to the assistant
+    (fixed rule; the model's pick alone is not enough)."""
+    n = _norm(line)
+    if not n or len(line) > FOLLOW_LINE or "\n" in line.strip() or n.rstrip(" .!").endswith("?"):
+        return False
+    return bool(_OWN.search(n)) and not _TO_YOU.search(n) and not _ORDER.match(n)
+
+
+def follow_lines(convos, a, b):
+    """The person's own short sentences from [a, b) (ms). Left out: questions an answer from mail or other
+    outside text followed (those are about that text), and the Spark's own conversations (briefing, jobs,
+    meetings: the user turn there is no sentence of the person)."""
+    out = []
+    for c in convos:
+        if not a <= c.get("updated", 0) < b or str(c.get("id", "")).startswith(("brief-", "agent-", "meet-")):
+            continue
+        msgs = c.get("msgs", [])
+        for i, m in enumerate(msgs):
+            nxt = msgs[i + 1] if i + 1 < len(msgs) else {}
+            if m.get("role") == "user" and not m.get("mail") and not nxt.get("mail") and not nxt.get("outside"):
+                out.append(str(m.get("content") or "")[:FOLLOW_LINE + 1])
+    return out[-40:]
 
 
 def parse_follow(text, lines):
-    """The model's proposal, only when its quote really is in one of the person's sentences."""
+    """The model's pick, only when its quote really is in one of the person's sentences and that sentence is
+    the person's own plan. Returns {"quote", "line", "question"} (question: the fixed sentence), or None."""
     text = re.sub(r"(?s)<think>.*?</think>", "", text or "")
     m = re.search(r"(?s)\{.*\}", text)
     try:
@@ -701,12 +781,14 @@ def parse_follow(text, lines):
         return None
     if not isinstance(d, dict):
         return None
-    quote, question = _norm(d.get("quote")), re.sub(r"\s+", " ", str(d.get("question") or "")).strip()
-    if len(quote) < 10 or not question.endswith("?") or len(question) > 200:
+    raw = re.sub(r"\s+", " ", str(d.get("quote") or "")).strip().strip("„“\"'").strip()
+    quote = _norm(raw)
+    if len(quote) < 10 or len(raw) > FOLLOW_QUOTE:
         return None
-    if not any(quote in _norm(x) for x in lines):
+    line = next((x for x in lines if quote in _norm(x)), None)
+    if line is None or not own_plan(line):
         return None
-    return {"quote": d["quote"].strip(), "question": question}
+    return {"quote": raw, "line": line, "question": FOLLOW_SAY.format(raw.rstrip(" .!"))}
 
 
 async def _llm(system, user, max_tokens=300):
@@ -732,13 +814,18 @@ async def check_follow(uid, p, now):
     _mut(uid, lambda st: st.update(follow_day=day))   # first: one try a day
     start = now.replace(hour=0, minute=0, second=0, microsecond=0) - datetime.timedelta(days=1)
     a, b = start.timestamp() * 1000, (start + datetime.timedelta(days=1)).timestamp() * 1000
-    lines = [m["content"][:300] for c in profiles.convos(uid) if a <= c.get("updated", 0) < b
-             for m in c.get("msgs", []) if m["role"] == "user" and not m.get("mail")][-40:]
+    lines = [x for x in follow_lines(profiles.convos(uid), a, b) if own_plan(x)]
     if not lines:
         return
-    found = parse_follow(await _llm(FOLLOW_SYSTEM, "\n".join("- " + x for x in lines)), lines)
+    picked = await _llm(FOLLOW_SYSTEM, "\n".join("- " + x for x in lines))
+    found = parse_follow(picked, lines)
+    if not found and '"quote"' in picked:
+        import live      # Zustand → Live: the panel's rule turned the model's pick down (no words of it)
+        live.event("Von selbst", "Nachfrage verworfen: Zitat kein eigenes Vorhaben")
+        print("proactive: follow pick refused (not an own plan in the person's words)", flush=True)
     if found:
-        await deliver(uid, "follow", found["question"], why="Vorhaben von gestern", data=f"gestern gesagt: „{found['quote']}“")
+        await deliver(uid, "follow", found["question"], why="Vorhaben von gestern",
+                      data=f"am {start:%d.%m.} hast du gesagt: „{found['quote']}“")
 
 
 # ---------------------------------------------------------------- 6: mail from chosen senders
