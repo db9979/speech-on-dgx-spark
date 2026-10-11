@@ -33,6 +33,7 @@ Alle Optionen ohne Rückfragen (`--mode api --asr 1.7b --tts 0.6b --yes` …) st
 
 <!-- New version: add one line at the top here and in CHANGELOG.md, drop the oldest line here (keep 10). Details go to docs/de and docs/en, not into this README. -->
 
+- **V01.0.394** Update auf dem Spark scheitert nicht mehr am Selbsttest (Priorität der Hintergrund-Threads)
 - **V01.0.393** Selbsttest: Handy-Breiten-Prüfung wartet die Seiten-Animation ab
 - **V01.0.392** Hilfe zum Spark: Kopie der Anleitungen nach V01.0.390 neu erzeugt (Selbsttest).
 - **V01.0.391** Update-Prüfung findet die letzte getestete Version wieder (Testläufe brachen sich gegenseitig ab)
@@ -42,7 +43,6 @@ Alle Optionen ohne Rückfragen (`--mode api --asr 1.7b --tts 0.6b --yes` …) st
 - **V01.0.387** Logs → Anfragen: Liste springt beim Aktualisieren nicht mehr nach oben
 - **V01.0.386** Probleme melden (aus): anonymisierte Meldung als GitHub-Issue aus Panel, Apps, Begleiter, Telegram und per Satz, mit Vorschau; Admins sehen alle samt Antworten und hören per Assistent von neuen
 - **V01.0.385** Von selbst: Nachfrage nur zu eigenen Vorhaben, mit deinen Worten; auf „woher?“ die echte Grundlage statt erfundener Herkunft
-- **V01.0.384** Notaus-Knopf verschwindet nicht mehr, wenn viele Seiten von einer Adresse den Stand abfragen (Rate-Limit je Anmeldung statt je Adresse)
 
 Alle Versionen: [CHANGELOG.md](CHANGELOG.md)
 

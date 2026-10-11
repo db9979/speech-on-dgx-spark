@@ -195,7 +195,9 @@ async def in_thread(job, fn, *args):
 
     def work():
         try:   # only this thread: a raised nice value cannot be taken back without root
-            os.setpriority(os.PRIO_PROCESS, threading.get_native_id(), LOW_NICE)
+            # never higher than the process already runs (the self-test runs under nice 19, as root)
+            tid = threading.get_native_id()
+            os.setpriority(os.PRIO_PROCESS, tid, max(LOW_NICE, os.getpriority(os.PRIO_PROCESS, tid)))
         except (OSError, AttributeError):
             pass
         try:
