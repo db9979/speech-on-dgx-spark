@@ -33,6 +33,7 @@ All options for running without questions (`--mode api --asr 1.7b --tts 0.6b --y
 
 <!-- New version: add one line at the top here and in CHANGELOG.md, drop the oldest line here (keep 10). Details go to docs/de and docs/en, not into this README. -->
 
+- **V01.0.376** Self-test fix: the companion test restores the fake GitHub address (GitHub tests were red)
 - **V01.0.375** Spark companion: read aloud (also Ask Spark answers), from phone to PC, appointments, do not disturb, meeting notes, smart home buttons, day start and evening (all off), programs to pick, Me → Companion clear with several devices
 - **V01.0.374** Self-tests: the ESP32 tests fetch firmware from the fake GitHub again (another test had removed the variable, they asked the real GitHub with newer firmware, tests red)
 - **V01.0.373** Instant acknowledgement (off): right after the question a pre-recorded sentence of what the Spark is doing, measured apart from the answer's first sound
@@ -42,7 +43,6 @@ All options for running without questions (`--mode api --asr 1.7b --tts 0.6b --y
 - **V01.0.369** reMarkable comparison quieter: the Spark's own writes no longer start a comparison ("account changed"), a cloud 502/503/504 gets one more try, page reader hints as one counted line per comparison
 - **V01.0.368** Requests the Spark starts itself (update check, backup, rules) are called "Spark" instead of "Gast" in Logs → Requests and on the live page; the panel fetches the voice list with the key again (before ~900 refused calls a day, list only from cache); speech output no longer writes a statistics table per sentence to the journal
 - **V01.0.367** Pebble watch app 1.6.0 in the panel: holding SELECT 3 s triggers the emergency stop (the big one admin profiles only)
-- **V01.0.366** Pebble watch app: the build checks that the app also runs on older watch firmware (SDK 5.94)
 
 All versions: [CHANGELOG.md](CHANGELOG.md)
 

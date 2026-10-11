@@ -911,12 +911,16 @@ class LogQuiet(unittest.TestCase):
         async def run():
             async with httpx.AsyncClient(transport=httpx.MockTransport(handle)) as c:
                 await begleiter.fetch("windows", c)
+        gh = os.environ.get("SPEECH_SPARK_GITHUB_API")   # test_esp32 runs its own fake GitHub after this
         os.environ["SPEECH_SPARK_GITHUB_API"] = GH
         try:
             with self.assertRaises(begleiter.NotYet):
                 asyncio.run(run())
         finally:
-            os.environ.pop("SPEECH_SPARK_GITHUB_API", None)
+            if gh is None:
+                os.environ.pop("SPEECH_SPARK_GITHUB_API", None)
+            else:
+                os.environ["SPEECH_SPARK_GITHUB_API"] = gh
 
     def test_side_task_error_is_taken(self):
         import admin
