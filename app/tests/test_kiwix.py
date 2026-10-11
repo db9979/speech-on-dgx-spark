@@ -177,6 +177,13 @@ class Parsing(unittest.TestCase):
         parts = kiwix.parts(kiwix.page_text(LONG))
         self.assertEqual(len(parts), kiwix.MAX_PARTS)
         self.assertTrue(all(len(p) <= kiwix.PART_CHARS + 2 for p in parts))
+        # a huge article (Einstein): parsing stops early, the parts the model gets stay the same
+        huge = "<p>Satz über Physik und Relativität, noch ein Satz dazu.</p>" * 40_000
+        limit = 2 * kiwix.MAX_PARTS * kiwix.PART_CHARS
+        short = kiwix.page_text(huge, limit)
+        self.assertLess(len(short), limit + 40_000)
+        self.assertLess(len(short), len(kiwix.page_text(huge)) // 2)
+        self.assertEqual(kiwix.parts(short), kiwix.parts(kiwix.page_text(huge)))
 
     def test_admin_validation(self):
         cfg = ADMIN.get("/api/config").json()

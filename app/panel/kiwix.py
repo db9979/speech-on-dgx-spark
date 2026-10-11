@@ -253,10 +253,10 @@ async def catalog(fresh=False):
         return _catalog[1]
     root_path = urlsplit(base()).path.rstrip("/")
     text, _ = await _get("/catalog/v2/entries", {"count": str(MAX_CATALOG)}, most=CATALOG_BYTES)
-    books = parse_catalog(text, root_path)
+    books = await asyncio.to_thread(parse_catalog, text, root_path)
     if not books:   # kiwix-serve before 3.1: the first catalog
         text, _ = await _get("/catalog/root.xml", most=CATALOG_BYTES)
-        books = parse_catalog(text, root_path)
+        books = await asyncio.to_thread(parse_catalog, text, root_path)
     _catalog[:] = [time.monotonic(), books]
     return books
 
@@ -340,10 +340,16 @@ class _Text(HTMLParser):
             self.cur.append(data)
 
 
-def page_text(page):
+def page_text(page, most=None):
+    """The readable text of an article page. most: stop once about this many characters are read (the
+    model gets at most MAX_PARTS parts anyway; a long article is then parsed in a few milliseconds)."""
     p = _Text()
+    page = page or ""
     try:
-        p.feed(page or "")
+        for i in range(0, len(page), 32_768):
+            p.feed(page[i:i + 32_768])
+            if most and sum(len(x) for x in p.parts) > most:
+                break
         p.close()
     except Exception:
         pass
@@ -415,7 +421,9 @@ async def article(book, path):
                          most=ARTICLE_BYTES, under=f"{root_path}/content/{book}/")
     if page is None:
         stale()
-    out = parts(page_text(page)) if page else []
+    # a long article (Wikipedia "Albert Einstein": several MB of HTML) takes about a second to parse: in a
+    # thread, so the event loop (other requests, lokal.py's time limit) does not wait for it
+    out = await asyncio.to_thread(lambda: parts(page_text(page, 2 * MAX_PARTS * PART_CHARS))) if page else []
     keep(key, out)
     return out
 
