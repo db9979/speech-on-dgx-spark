@@ -33,6 +33,7 @@ All options for running without questions (`--mode api --asr 1.7b --tts 0.6b --y
 
 <!-- New version: add one line at the top here and in CHANGELOG.md, drop the oldest line here (keep 10). Details go to docs/de and docs/en, not into this README. -->
 
+- **V01.0.374** Self-tests: the ESP32 tests fetch firmware from the fake GitHub again (another test had removed the variable, they asked the real GitHub with newer firmware, tests red)
 - **V01.0.373** Instant acknowledgement (off): right after the question a pre-recorded sentence of what the Spark is doing, measured apart from the answer's first sound
 - **V01.0.372** Emergency stop docs: every way in one place (Telegram, sentence, Home Assistant, Android, iPhone, speakers, Pebble, guard)
 - **V01.0.371** Releases on GitHub tidy: after every new release only the newest of each series stays, older ones are deleted
@@ -42,7 +43,6 @@ All options for running without questions (`--mode api --asr 1.7b --tts 0.6b --y
 - **V01.0.367** Pebble watch app 1.6.0 in the panel: holding SELECT 3 s triggers the emergency stop (the big one admin profiles only)
 - **V01.0.366** Pebble watch app: the build checks that the app also runs on older watch firmware (SDK 5.94)
 - **V01.0.365** Pebble watch app: GitHub puts the built file on the branch pebble-build so it can be taken into the panel
-- **V01.0.364** Emergency stop by itself (guard, switch under Security, off): stage 1 on 20 wrong sign-ins from outside, an MCP flood or many refused connections; emergency stop button on ESP32 speakers (5 s, firmware build 6) and on the Pebble (SELECT 3 s, watch app 1.6.0)
 
 All versions: [CHANGELOG.md](CHANGELOG.md)
 

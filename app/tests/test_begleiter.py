@@ -5,6 +5,7 @@ import json
 import os
 import shutil
 import unittest
+import unittest.mock
 
 from tests import helpers
 
@@ -321,6 +322,7 @@ class Updates(unittest.TestCase):
         self.assertEqual(c.get("/api/profile/desk").json()["devices"][0]["version"], "1.0.350")
         self.assertEqual(begleiter.platforms(), ["windows"])
 
+    @unittest.mock.patch.dict(os.environ)          # other test modules keep their fake GitHub
     def test_only_github_download_addresses(self):
         os.environ.pop("SPEECH_SPARK_GITHUB_API", None)
         self.assertTrue(begleiter._allowed_download("https://github.com/db9979/speech-on-dgx-spark/releases/download/begleiter-windows/begleiter.json"))
@@ -530,6 +532,7 @@ class LogQuiet(unittest.TestCase):
     """Dominik's log 2026-10-11: an old release without begleiter.json is no error, and an unreadable recording
     no "Task exception was never retrieved"."""
 
+    @unittest.mock.patch.dict(os.environ)          # other test modules keep their fake GitHub
     def test_release_without_manifest_is_not_yet(self):
         def handle(req):   # the release lists only the exe, as before V01.0.347
             if req.url.path.endswith("/releases/tags/begleiter-windows"):
