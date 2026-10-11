@@ -524,15 +524,15 @@
 "src": "assistent",
 "file": "Assistent und Oberfläche",
 "head": "Sprach-Chat",
-"title": "Geräte-Updates (V01.0.374)",
-"text": "Geräte-Updates (V01.0.374): Funktionen → „Geräte-Updates“ (Admin, standardmäßig aus) lässt den Spark alle 6 Stunden statt einmal am Tag nach neuer Firmware für die Lautsprecher, der Android-App und dem Spark-Begleiter fragen, jeweils wie bisher nur von GitHubs Download-Adressen und mit Größe und Prüfsumme aus dem Manifest; *Jetzt suchen* in Zustand → Geräte-Updates fragt sofort. Die Karte zeigt pro Geräteart die Version auf dem Spark, die letzte Prüfung und jedes Gerät mit seiner Version. Mit dem eigenen Schalter (Ich → Gespräch → Geräte → „Hinweis bei neuen Geräte-Versionen“) bekommt ein Profil mit so einem Gerät einmal pro neuer Version eine Mitteilung, das Profil für Admin-Hinweise ebenso; die Version, die der Spark beim Einschalten schon hat, meldet er nicht. Der Begleiter zeigt seine Updates weiter selbst. Mein Zustand hat eine Zeile pro Geräteart („Update kommt heute Nacht“, „1 von 2 aktuell“), die Live-Übersicht das Ziel „Geräte-Updates“ mit Anzahlen. Lautsprecher nachts aktualisieren (Unterschalter, dazu der Profil-Schalter „Meine Lautsprecher nachts aktualisieren“ und beim Lautsprecher „Updates von selbst“): Die Boards holen Firmware nur beim Start. Im Nachtfenster (Standa"
+"title": "Geräte-Updates (V01.0.381)",
+"text": "Geräte-Updates (V01.0.381): Funktionen → „Geräte-Updates“ (Admin, standardmäßig aus) lässt den Spark alle 6 Stunden statt einmal am Tag nach neuer Firmware für die Lautsprecher, der Android-App und dem Spark-Begleiter fragen, jeweils wie bisher nur von GitHubs Download-Adressen und mit Größe und Prüfsumme aus dem Manifest; *Jetzt suchen* in Zustand → Geräte-Updates fragt sofort. Die Karte zeigt pro Geräteart die Version auf dem Spark, die letzte Prüfung und jedes Gerät mit seiner Version. Mit dem eigenen Schalter (Ich → Gespräch → Geräte → „Hinweis bei neuen Geräte-Versionen“) bekommt ein Profil mit so einem Gerät einmal pro neuer Version eine Mitteilung, das Profil für Admin-Hinweise ebenso; die Version, die der Spark beim Einschalten schon hat, meldet er nicht. Der Begleiter zeigt seine Updates weiter selbst. Mein Zustand hat eine Zeile pro Geräteart („Update kommt heute Nacht“, „1 von 2 aktuell“), die Live-Übersicht das Ziel „Geräte-Updates“ mit Anzahlen. Lautsprecher nachts aktualisieren (Unterschalter, dazu der Profil-Schalter „Meine Lautsprecher nachts aktualisieren“ und beim Lautsprecher „Updates von selbst“): Die Boards holen Firmware nur beim Start. Im Nachtfenster (Standa"
 },
 {
 "lang": "de",
 "src": "assistent",
 "file": "Assistent und Oberfläche",
 "head": "Sprach-Chat",
-"title": "Geräte-Updates (V01.0.374)",
+"title": "Geräte-Updates (V01.0.381)",
 "text": "rd ab 05:15 für 60 Minuten, nach dem Fenster des nächtlichen Spark-Updates) startet der Spark erst einen verbundenen, unbenutzten Lautsprecher neu. Kommt er innerhalb von 10 Minuten mit der neuen Version zurück, folgen die übrigen einzeln, der nächste frühestens 30 Minuten später. Kommt er nicht zurück, hält die Runde für diese Version an: Besitzer und Admin bekommen eine Mitteilung, weiter geht es erst mit *Weiter verteilen* in Zustand. Nie während eines Gesprächs, im Raum-Modus, bei einem Test, bei einem Notaus oder eigenen Notaus und nie während eines Spark-Updates. Hinweis auf neue XiaoZhi-Version (Unterschalter): Der Spark vergleicht das neueste Release von github.com/78/xiaozhi-esp32 mit dem Stand, auf dem unsere Firmware baut, und schickt dem Admin einmal pro neuer Version einen Hinweis. Gebaut wird nichts von selbst; vom Release kommt nur die Versionsnummer, nie sein Text."
 },
 {
@@ -1173,7 +1173,7 @@
 "file": "Assistent und Oberfläche",
 "head": "Sprach-Chat",
 "title": "Von selbst melden",
-"text": " Daten zitiert. Ist das Gespräch offen, spricht er die Meldung, sonst kommt sie als Push-Mitteilung. Seit V01.0.179 sagt nur das erste Gerät des Profils die Meldung (Seite oder iPhone-App), die anderen bleiben still, genau wie bei Erinnerungen (V01.0.176). Jede Meldung steht mit Grund im Protokoll."
+"text": " Daten zitiert. Ist das Gespräch offen, spricht er die Meldung, sonst kommt sie als Push-Mitteilung. Seit V01.0.179 sagt nur das erste Gerät des Profils die Meldung (Seite oder iPhone-App), die anderen bleiben still, genau wie bei Erinnerungen (V01.0.176). Jede Meldung steht mit Grund im Protokoll. Seit V01.0.385 ist die Nachfrage ein fester Satz mit den eigenen Worten („Gestern hast du zu mir gesagt: „…“. Hat das geklappt?“); das Modell zeigt nur auf einen Satz, und das Panel nimmt ihn nur, wenn er ein eigenes Vorhaben in der Ich-Form ist (keine Frage, kein Auftrag an den Assistenten, kein eingefügter Text, keine Frage zu einer Mail oder Webseite, nichts aus Briefing, Aufträgen oder Besprechungen). Fragt man nach einer Meldung („wie meinst du das?“, „woher weißt du das?“), bekommt das Modell vom Panel die Grundlage dazu und darf keine andere Herkunft erfinden; bei Mail-Meldungen nur „Absender und Betreff gelesen“, nie Mailtext. Logs → Anfragen zeigt das als „von selbst: Grundlage“, Live ein verworfenes Zitat als Ereignis."
 },
 {
 "lang": "de",
@@ -3268,15 +3268,15 @@
 "src": "assistant",
 "file": "Assistant and panel",
 "head": "Voice chat",
-"title": "Device updates (V01.0.374)",
-"text": "Device updates (V01.0.374): Features → \"Device updates\" (admin, off by default) makes the Spark look for new firmware for the speakers, the Android app and the Spark companion every 6 hours instead of once a day, as before only from GitHub's download addresses and with size and checksum from the manifest; *Look now* in Status → Device updates asks at once. The card shows per kind of device the version on the Spark, the last check and every device with its version. With its own switch (Me → Conversation → Devices → \"Note on new device versions\") a profile with such a device gets one notification per new version, and so does the profile for admin notes; the version the Spark already has when this is switched on is not announced. The companion keeps showing its own updates. My status has one row per kind of device (\"update comes tonight\", \"1 of 2 up to date\"), the live view the target \"Geräte-Updates\" with counts. Update speakers at night (sub-switch, plus the profile switch \"Update my speakers at night\" and \"Updates by themselves\" at the speaker): the boards fetch firmware only when they start. In the night window (default from 05:15 for 60 minutes, after the window of the nightly Sp"
+"title": "Device updates (V01.0.381)",
+"text": "Device updates (V01.0.381): Features → \"Device updates\" (admin, off by default) makes the Spark look for new firmware for the speakers, the Android app and the Spark companion every 6 hours instead of once a day, as before only from GitHub's download addresses and with size and checksum from the manifest; *Look now* in Status → Device updates asks at once. The card shows per kind of device the version on the Spark, the last check and every device with its version. With its own switch (Me → Conversation → Devices → \"Note on new device versions\") a profile with such a device gets one notification per new version, and so does the profile for admin notes; the version the Spark already has when this is switched on is not announced. The companion keeps showing its own updates. My status has one row per kind of device (\"update comes tonight\", \"1 of 2 up to date\"), the live view the target \"Geräte-Updates\" with counts. Update speakers at night (sub-switch, plus the profile switch \"Update my speakers at night\" and \"Updates by themselves\" at the speaker): the boards fetch firmware only when they start. In the night window (default from 05:15 for 60 minutes, after the window of the nightly Sp"
 },
 {
 "lang": "en",
 "src": "assistant",
 "file": "Assistant and panel",
 "head": "Voice chat",
-"title": "Device updates (V01.0.374)",
+"title": "Device updates (V01.0.381)",
 "text": "ark update) the Spark first restarts one connected, unused speaker. When it comes back with the new version within 10 minutes, the others follow one by one, the next one 30 minutes later at the earliest. When it does not come back, the round stops for this version: owner and admin get a notification, and it goes on only after *Go on distributing* in Status. Never during a conversation, in room mode, during a test, a Notaus or own Notaus, and never during a Spark update. Note on a new XiaoZhi version (sub-switch): the Spark compares the newest release of github.com/78/xiaozhi-esp32 with the point our firmware builds on and sends the admin one note per new version. Nothing is built by itself; only the release's version number is used, never its text."
 },
 {
@@ -3853,7 +3853,7 @@
 "file": "Assistant and panel",
 "head": "Voice chat",
 "title": "Speaking up by itself",
-"text": "Since V01.0.179 only the first device of the profile says it (page or iPhone app), the others stay silent, just like reminders (V01.0.176). Every note is in the log with its reason."
+"text": "Since V01.0.179 only the first device of the profile says it (page or iPhone app), the others stay silent, just like reminders (V01.0.176). Every note is in the log with its reason. Since V01.0.385 the follow-up is a fixed sentence with the person's own words (\"Gestern hast du zu mir gesagt: „…“. Hat das geklappt?\"); the model only points at a sentence, and the panel takes it only when it is an own plan in the first person (no question, no request to the assistant, no pasted text, no question about a mail or web page, nothing from briefing, jobs or meetings). Asked about a note (\"what do you mean?\", \"where is that from?\"), the model gets its basis from the panel and must not make up another source; for mail notes only \"sender and subject read\", never mail text. Logs → Requests show it as \"von selbst: Grundlage\", Live shows a refused pick as an event."
 },
 {
 "lang": "en",

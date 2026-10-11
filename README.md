@@ -33,6 +33,7 @@ All options for running without questions (`--mode api --asr 1.7b --tts 0.6b --y
 
 <!-- New version: add one line at the top here and in CHANGELOG.md, drop the oldest line here (keep 10). Details go to docs/de and docs/en, not into this README. -->
 
+- **V01.0.385** Speaking up by itself: follow-up only on own plans, in your words; asked "where from?" it tells the real basis instead of making one up
 - **V01.0.384** The emergency stop button no longer disappears when many pages from one address poll the stage (rate limit per login instead of per address)
 - **V01.0.383** Copying an answer without its buttons: "To the reMarkable" and "Store under My documents" below an answer are no longer copied with it
 - **V01.0.382** Speaker firmware: never two fetches at once, error message without paths
@@ -42,7 +43,6 @@ All options for running without questions (`--mode api --asr 1.7b --tts 0.6b --y
 - **V01.0.378** Companion: "Fetch new version now" takes Windows and Mac, also with no computer of that kind paired
 - **V01.0.377** Companion: "Check for updates" now really looks right away; the Mac says why an update was refused
 - **V01.0.376** Self-test fix: the companion test restores the fake GitHub address (GitHub tests were red)
-- **V01.0.375** Spark companion: read aloud (also Ask Spark answers), from phone to PC, appointments, do not disturb, meeting notes, smart home buttons, day start and evening (all off), programs to pick, Me → Companion clear with several devices
 
 All versions: [CHANGELOG.md](CHANGELOG.md)
 

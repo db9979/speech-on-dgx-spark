@@ -33,6 +33,7 @@ Alle Optionen ohne Rückfragen (`--mode api --asr 1.7b --tts 0.6b --yes` …) st
 
 <!-- New version: add one line at the top here and in CHANGELOG.md, drop the oldest line here (keep 10). Details go to docs/de and docs/en, not into this README. -->
 
+- **V01.0.385** Von selbst: Nachfrage nur zu eigenen Vorhaben, mit deinen Worten; auf „woher?“ die echte Grundlage statt erfundener Herkunft
 - **V01.0.384** Notaus-Knopf verschwindet nicht mehr, wenn viele Seiten von einer Adresse den Stand abfragen (Rate-Limit je Anmeldung statt je Adresse)
 - **V01.0.383** Antwort kopieren ohne Knöpfe: „Aufs reMarkable“ und „In Meine Dokumente speichern“ unter einer Antwort werden beim Markieren und Kopieren nicht mehr mitkopiert
 - **V01.0.382** Lautsprecher-Firmware: nie zwei Abrufe gleichzeitig, Fehlermeldung ohne Pfade
@@ -42,7 +43,6 @@ Alle Optionen ohne Rückfragen (`--mode api --asr 1.7b --tts 0.6b --yes` …) st
 - **V01.0.378** Begleiter: „Neue Version jetzt holen“ holt Windows und Mac, auch ohne gekoppelten Rechner
 - **V01.0.377** Begleiter: „Nach Updates suchen“ fragt jetzt wirklich frisch nach, der Mac sagt bei einem kaputten Update, woran es lag
 - **V01.0.376** Selbsttest repariert: der Begleiter-Test stellt die Test-Adresse für GitHub wieder her (Tests waren rot)
-- **V01.0.375** Spark-Begleiter: Vorlesen (auch Antworten von Frag Spark), Vom Handy auf den PC, Termine, Nicht stören, Besprechungen mitschreiben, Smart-Home-Knöpfe, Tagesstart und Feierabend (alles aus), Programme zum Auswählen, Ich → Begleiter übersichtlich bei mehreren Geräten
 
 Alle Versionen: [CHANGELOG.md](CHANGELOG.md)
 

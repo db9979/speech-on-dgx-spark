@@ -2,6 +2,7 @@
 
 Every version in one line, newest first (taken from the commit messages, so some lines are German, some English). Older entries have no version number.
 
+- **V01.0.385** · 2026-10-11 · Von selbst – Nachfrage: fester Satz mit den eigenen Worten statt Modellfrage, nur eigene Vorhaben in Ich-Form (keine Aufträge an den Assistenten, keine Fragen, keine Zeilen zu Mail/Web, nichts aus Briefing/Aufträgen/Besprechungen); fragt man nach einer Meldung, sagt der Chat die echte Grundlage statt eine Herkunft zu erfinden (vorher „Du hast mir den Test in einer E-Mail geschrieben“); 👍/Weniger davon/Nicht jetzt werden beim Kopieren nicht mehr mitkopiert
 - **V01.0.384** · 2026-10-11 · GET /api/notaus: Rate-Limit je Profil bzw. Admin statt gemeinsam je Adresse (30/min für Gäste teilte sich der Admin mit allen Seiten derselben Adresse; ein 429 versteckte den Notaus-Knopf, Browsertest auf GitHub rot); notaus.js fragt nach einem 429 nach 5 s neu; Selbsttest test_many_pages_never_hide_the_admins_button
 - **V01.0.383** · 2026-10-11 · Antwort kopieren ohne Knöpfe: „Aufs reMarkable“ und „In Meine Dokumente speichern“ unter einer Antwort werden beim Markieren und Kopieren nicht mehr mitkopiert
 - **V01.0.382** · 2026-10-11 · Lautsprecher-Firmware holen: nie zwei Abrufe gleichzeitig (Sperre, eigener Temp-Ordner pro Lauf; Fehler „No such file … .part“), Fehlermeldung ohne Pfade oder Servertexte
