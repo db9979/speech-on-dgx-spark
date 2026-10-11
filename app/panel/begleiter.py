@@ -1029,7 +1029,9 @@ async def wait_act(uid, xid, seconds=ACT_SECONDS, step=0.5):
 
 
 ACT_WORDS = re.compile(r"\b(pc|rechner|computer|laptop|notebook|mac|macbook|desktop|bildschirm\s+sperr\w*|"
-                       r"(sperr\w*)\s+(den\s+)?bildschirm)\b", re.I)
+                       r"(sperr\w*)\s+(den\s+)?bildschirm)\b|"
+                       # spoken at a speaker, the recognition may write "Mac" as it sounds (V01.0.419)
+                       r"\b(auf|an|am|im)\s+(meinem|meinen|dem|den)\s+(mäc|mäck|mack|meck|mäk)\b", re.I)
 ACT_TOOL = {"type": "function", "function": {
     "name": "pc_action",
     "description": "Asks the user's own paired computer (Spark-Begleiter) to do ONE thing; the user must allow it "
@@ -1100,20 +1102,41 @@ def offer(ctx):
     text = str(ctx.get("text") or "")
     here = ctx.get("client") == "desk"     # the question came from the Begleiter: "the computer" is this one
     devs = act_devices(who["id"])
-    act = bool((ACT_WORDS.search(text) or (here and DO_WORDS.search(text))) and devs)
+    named = bool(ACT_WORDS.search(text))
+    act = bool((named or (here and DO_WORDS.search(text))) and devs)
     send = bool(PC_WORDS.search(text) and SEND_WORDS.search(text) and inbox_devices(who["id"]))
     if not act and not send:
-        return None
+        why = why_no_act(who["id"]) if named and DO_WORDS.search(text) and not here else ""
+        if not why:
+            return None
+        # an order for the computer from elsewhere (speaker, phone) that cannot go there: the model says why
+        # instead of trying other tools (V01.0.419); the log names only the reason, never what was asked
+        print("begleiter: am Rechner handeln nicht angeboten -", why, flush=True)
+        return {"tools": [], "hint": "Der Nutzer möchte etwas an seinem Rechner tun lassen. Das geht hier nicht: "
+                + why + " Sag ihm genau das in einem Satz und versuche es nicht mit anderen Werkzeugen."}
     tools = ([ACT_TOOL] if act else []) + ([SEND_TOOL] if send else [])
     filler = {"pc_action": ("Ich frage am Rechner nach.", "Asking at the computer."),
               "pc_send": ("Ich lege es auf den Rechner.", "Putting it on the computer.")}
-    # at the computer itself, a clear order (open a released program or a page, music, volume, lock): the model
-    # must really call the tool; otherwise it may only announce it ("Ich schicke es an deinen Mac") (V01.0.410)
-    must = "pc_action" if act and here and must_act(devs, text) else None
+    # a clear order (open a released program or a page, music, volume, lock) at the computer itself or naming
+    # it (speaker, phone): the model must really call the tool; otherwise it may only announce it ("Ich schicke
+    # es an deinen Mac") (V01.0.410, from elsewhere V01.0.419). The yes is still given at the computer.
+    must = "pc_action" if act and (here or named) and must_act(devs, text) else None
     return {"tools": tools, "hint": " ".join(([ACT_HINT] if act else []) + ([SEND_HINT] if send else [])),
             "must": must,
             "changes": {"pc_action"} if act else set(),
             "filler": {t["function"]["name"]: filler[t["function"]["name"]] for t in tools}}
+
+
+def why_no_act(uid):
+    """Why no paired computer of this profile may act now, in one sentence ("" when one may)."""
+    if not allowed(uid) or not may(uid).get("act"):
+        return "Am Rechner handeln ist für dein Profil nicht eingeschaltet (Funktionen, Darf am PC handeln)."
+    devs = devices(uid)
+    if not devs:
+        return "Mit deinem Profil ist kein Rechner mit dem Spark-Begleiter gekoppelt."
+    if not act_devices(uid):
+        return "Am gekoppelten Rechner ist „Am PC handeln“ nicht eingeschaltet (Personen und Geräte)."
+    return ""
 
 
 def _pick_device(devs, want):

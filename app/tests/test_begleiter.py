@@ -12,6 +12,7 @@ from tests import helpers
 
 helpers.start()
 import begleiter  # noqa: E402
+import extras  # noqa: E402
 import guard  # noqa: E402
 import notaus  # noqa: E402
 import panel  # noqa: E402
@@ -621,7 +622,27 @@ class Deeper(unittest.TestCase):
         self.assertEqual(begleiter.offer(dict(ctx, client="desk", text="Öffne den Editor"))["must"], "pc_action")
         self.assertEqual(begleiter.offer(dict(ctx, client="desk", text="Mach mal leiser"))["must"], "pc_action")
         self.assertIsNone(begleiter.offer(dict(ctx, client="desk", text="Zeig mir, wie man Safari einrichtet"))["must"])
-        self.assertIsNone(begleiter.offer(dict(ctx, text="Öffne Google am PC"))["must"])   # not asked at the computer
+        self.assertIsNone(begleiter.offer(dict(ctx, text="Öffne Google bitte"))) # elsewhere without naming the computer
+        # V01.0.419: from the speaker (or the phone) naming the computer, a clear order must call the tool too
+        # (the yes still comes at the computer); the speech recognition may write "Mac" as it sounds
+        for said in ("öffne safari mit der website heise.de auf meinem mac", "Öffne Google am PC",
+                     "Öffne die Seite heise.de auf meinem Mäc"):
+            self.assertEqual(begleiter.offer(dict(ctx, client="esp32", text=said))["must"], "pc_action", said)
+        self.assertIsNone(begleiter.offer(dict(ctx, client="esp32", text="Was ist ein Mac?"))["must"])
+        self.assertIsNone(begleiter.offer(dict(ctx, client="esp32", text="Wie warm ist es am PC?"))["must"])
+        ex = extras.offer(dict(ctx, client="esp32", text="öffne safari mit der website heise.de auf meinem mac"))
+        self.assertEqual(ex["must"], "pc_action")
+        self.assertIn("pc_action", {t["function"]["name"] for t in ex["tools"]})
+        # a profile whose computer may not act: no tool, but the model is told why (no detour over other tools)
+        self.on("DpNoAct")
+        none = begleiter.offer({"who": {"id": uid_of("DpNoAct")}, "own": True, "client": "esp32",
+                                "text": "öffne heise.de auf meinem Mac"})
+        self.assertEqual(none["tools"], [])
+        self.assertIn("kein Rechner", none["hint"])
+        self.assertIsNone(begleiter.offer({"who": {"id": uid_of("DpNoAct")}, "own": True, "client": "esp32",
+                                           "text": "Was kostet ein Mac?"}))
+        self.assertIsNone(begleiter.offer({"who": {"id": uid_of("DpNoAct")}, "own": False, "client": "esp32",
+                                           "text": "öffne heise.de auf meinem Mac"}))
 
         async def run(ok):
             task = asyncio.create_task(begleiter.tool("pc_action", {"action": "lock"}, ctx))

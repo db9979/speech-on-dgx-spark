@@ -33,6 +33,7 @@ All options for running without questions (`--mode api --asr 1.7b --tts 0.6b --y
 
 <!-- New version: add one line at the top here and in CHANGELOG.md, drop the oldest line here (keep 10). Details go to docs/de and docs/en, not into this README. -->
 
+- **V01.0.419** Companion: "open heise.de on my Mac" from a speaker or the phone reliably reaches the computer (question there); if it cannot, the Spark says why
 - **V01.0.418** Tests green again: jump from Who may do what on phones, height budget
 - **V01.0.417** Self-test for weekly plans now holds across the switch to winter time (update on tars failed)
 - **V01.0.416** Settings pages rearranged: boxes, symbols, functions with detail, Me as a page, apps as tiles
@@ -42,7 +43,6 @@ All options for running without questions (`--mode api --asr 1.7b --tts 0.6b --y
 - **V01.0.412** Ich shows the admin-off notice right away; invitation test refills the PIN after a redraw
 - **V01.0.411** Live page you can use: events with area chips, search and pause, a click shows the place in the picture; a box opens numbers of the last hour, ⚠ with explanation and the way to fix it; rewind the last 15 minutes; copy the way or open it in Requests; self emergency stop counters; Begleiter jobs and the instant sentence as ways in the picture; the monitor holds on a tap
 - **V01.0.410** Companion: "open Safari with Google" at the Mac is now really done (with a question there), not only announced
-- **V01.0.409** Speech output can be switched off: "Read answers aloud" per profile and "Vorlesen" per device, off = text only (speakers and CarPlay keep speaking)
 
 All versions: [CHANGELOG.md](CHANGELOG.md)
 
