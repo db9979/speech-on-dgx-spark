@@ -699,6 +699,67 @@ class Browser(unittest.TestCase):
             helpers.set_config(write_help=False)
             profiles.save_settings(me, {"write_on": False})
 
+    def test_documents_list_search_details_and_select(self):
+        """Ich → Dokumente with many documents (V01.0.409): compact rows, 50 at a time, the search field filters at
+        once, a source filter, the details beside the list (computer) or as a page (phone), and "Auswählen" switches
+        several documents off in one request; with the strict CSP, without sideways scrolling, also at 320 px."""
+        import documents
+        import profiles
+        me = next(u for u in profiles._load()["users"] if u["name"] == "Uitest")["id"]
+        ids = []
+        for i in range(60):
+            src = ("upload", "begleiter", "app")[i % 3]
+            d = documents.add(me, f"Liste{i:02d}.txt", b"x", text=f"Listentext Nummer {i} fuer den Test. " * 3, source=src)
+            ids.append(d["id"])
+
+        async def go():
+            async with async_playwright() as p:
+                for name, w, h in VIEWS + (("klein", 320, 640),):
+                    br, pg, errors = await self.page(p, w, h, csp=True)
+                    try:
+                        await pg.evaluate("openMe('docbox')")
+                        await pg.wait_for_selector("#doclist .ld-row", timeout=8000)
+                        rows = "document.querySelectorAll('#doclist .ld-row').length"
+                        self.assertEqual(await pg.evaluate(rows), 50, name)
+                        self.assertTrue(await pg.is_visible("#doclist [data-more]"))
+                        await pg.fill("#docfind", "liste0")
+                        self.assertEqual(await pg.evaluate(rows), 10, name)
+                        await pg.fill("#docfind", "liste")
+                        await pg.select_option("#docsrc", "begleiter")
+                        self.assertEqual(await pg.evaluate(rows), 20, name)
+                        await pg.select_option("#docsrc", "")
+                        await pg.fill("#docfind", "")
+                        await pg.click("#doclist .ld-row >> nth=0")
+                        await pg.wait_for_selector("#docdetail [data-dact=view]", state="visible", timeout=5000)
+                        if name == "pc":       # beside the list
+                            self.assertTrue(await pg.is_visible("#doclist"))
+                        else:                  # its own page with a way back
+                            self.assertFalse(await pg.is_visible("#doclist"))
+                            await pg.click("#docdetail [data-dact=back]")
+                            await pg.wait_for_selector("#doclist .ld-row", state="visible", timeout=5000)
+                        over = await pg.evaluate("document.documentElement.scrollWidth-window.innerWidth")
+                        self.assertLessEqual(over, 1, f"{name}: {over}px zu breit")
+                        await pg.evaluate("DOCV.sel='';docRender()")
+                        await pg.click("#docpick")
+                        await pg.click("#doclist .ld-row >> nth=0")
+                        await pg.click("#doclist .ld-row >> nth=1")
+                        self.assertIn("2", await pg.inner_text("#docbulk b"))
+                        over = await pg.evaluate("document.documentElement.scrollWidth-window.innerWidth")
+                        self.assertLessEqual(over, 1, f"{name} Auswahl: {over}px zu breit")
+                        await pg.click("#docbulk [data-bulk=unuse]")
+                        await self.until(pg, "document.querySelectorAll('#doclist .ld-badge.off').length===2", 5)
+                        await pg.click("#docbulk [data-bulk=use]")
+                        await self.until(pg, "document.querySelectorAll('#doclist .ld-badge.off').length===0", 5)
+                        self.assertEqual(len(documents.list_docs(me, used_only=True)), 60)
+                        self.assertEqual(errors, [], name)
+                    finally:
+                        await br.close()
+        try:
+            self.run_async(go())
+        finally:
+            for i in ids:
+                documents.delete(me, i)
+
     def test_begleiter_page(self):
         """Ich → Begleiter (begleiter.js): a setup line, and the parts of a paired device saved centrally; on a
         computer and a phone, with the strict CSP, without sideways scrolling."""

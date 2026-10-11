@@ -946,6 +946,61 @@ class Steckbrief(Base):
         self.assertIn("document_search", kept)
 
 
+class Batch(Base):
+    """Ich → Dokumente "Auswählen" (V01.0.409): one request for several own documents, never other profiles'."""
+    def test_several_own_documents_at_once_and_only_own(self):
+        own, other = profile("Wbatcha"), profile("Wbatchb")
+        ids = [upload(own, f"b{i}.txt", f"Batchtext Nummer {i} mit Inhalt. ".encode() * 3).json()["id"] for i in range(3)]
+        theirs = upload(other, "fremd.txt", b"Fremder Batchtext bleibt unberuehrt. " * 3).json()["id"]
+        uid, ouid = uid_of("Wbatcha"), uid_of("Wbatchb")
+        r = own.post("/api/profile/wissen/batch", json={"do": "unuse", "ids": ids[:2] + [theirs, "../x"]})
+        self.assertEqual(r.json(), {"ok": True, "done": 2, "failed": 2})
+        self.assertEqual({d["id"] for d in documents.list_docs(uid, used_only=True)}, {ids[2]})
+        self.assertEqual(len(documents.list_docs(ouid, used_only=True)), 1)            # the other profile's stays
+        # "Für alle" and tags only with their switches
+        self.assertEqual(own.post("/api/profile/wissen/batch", json={"do": "share", "ids": ids}).status_code, 403)
+        self.assertEqual(own.post("/api/profile/wissen/batch", json={"do": "tag", "ids": ids, "tag": "Haus"}).status_code, 403)
+        self.switch(own, shared=True, brief=True)
+        self.assertEqual(own.post("/api/profile/wissen/batch", json={"do": "share", "ids": ids}).json()["done"], 3)
+        self.assertTrue(all(d["shared"] for d in documents.list_docs(uid)))
+        self.assertEqual(own.post("/api/profile/wissen/batch", json={"do": "tag", "ids": ids[:2], "tag": "#Haus"}).json()["done"], 2)
+        self.assertEqual(own.post("/api/profile/wissen/batch", json={"do": "tag", "ids": ids[:1], "tag": "haus"}).json()["done"], 1)
+        tags = {d["id"]: d["tags"] for d in documents.list_docs(uid)}
+        self.assertEqual((tags[ids[0]], tags[ids[2]]), (["Haus"], []))
+        self.assertEqual(own.post("/api/profile/wissen/batch", json={"do": "tag", "ids": ids, "tag": "<b>"}).status_code, 400)
+        # wrong input, limits, other logins
+        for body in ({"do": "rm", "ids": ids}, {"do": "delete", "ids": []}, {"do": "delete", "ids": "x"},
+                     {"do": "delete", "ids": [1, 2]}, {"do": "delete", "ids": [f"{i:012x}" for i in range(wissen.BATCH_MOST + 1)]},
+                     {"do": "reread", "ids": [f"{i:012x}" for i in range(wissen.BATCH_REREAD + 1)]}):
+            for k in [k for k in guard._rate if k[0] == "doc"]:
+                guard._rate.pop(k, None)
+            self.assertEqual(own.post("/api/profile/wissen/batch", json=body).status_code, 400, body)
+        for k in [k for k in guard._rate if k[0] == "doc"]:
+            guard._rate.pop(k, None)
+        self.assertEqual(TestClient(panel.app).post("/api/profile/wissen/batch", json={"do": "delete", "ids": ids}).status_code, 401)
+        self.assertEqual(own.post("/api/profile/wissen/batch", content=b"x" * 9000,
+                                  headers={"Content-Type": "application/json"}).status_code, 413)
+        r = own.post("/api/profile/wissen/batch", json={"do": "delete", "ids": ids + [theirs]})
+        self.assertEqual(r.json(), {"ok": True, "done": 3, "failed": 1})
+        self.assertEqual(documents.list_docs(uid), [])
+        self.assertEqual([d["id"] for d in documents.list_docs(ouid)], [theirs])
+
+    def test_one_rate_limit_step_per_request_and_only_in_the_browser(self):
+        c = profile("Wbatchc")
+        doc = upload(c, "x.txt", b"Ein kurzer Text fuer den Batch. " * 3).json()["id"]
+        for k in [k for k in guard._rate if k[0] == "doc"]:
+            guard._rate.pop(k, None)
+        codes = [c.post("/api/profile/wissen/batch", json={"do": "use", "ids": [doc]}).status_code for _ in range(guard.RATE["doc"][1] + 1)]
+        self.assertEqual(codes[-1], 429)
+        self.assertTrue(all(x == 200 for x in codes[:-1]))
+        for k in [k for k in guard._rate if k[0] == "doc"]:
+            guard._rate.pop(k, None)
+        # a device key (speaker, app) never: the list is changed in the profile's own browser login only
+        r = c.post("/api/profile/wissen/batch", json={"do": "delete", "ids": [doc]}, headers={profiles.DEVICE_HEADER: "abc"})
+        self.assertIn(r.status_code, (401, 403))
+        self.assertEqual(len(documents.list_docs(uid_of("Wbatchc"))), 1)
+
+
 class Chat(Base):
     def test_sources_with_page_and_no_web_search_after_documents(self):
         c = profile("Wquentin")

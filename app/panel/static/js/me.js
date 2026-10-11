@@ -13,8 +13,10 @@ ON.closeProf=()=>closeProf();
 async function showFacts(){const r=await api('/api/profile/memory');const d=await r.json();
   $('profhead').textContent=d.profile.name;showTidy(d.tidy);
   $('factlist').innerHTML=d.facts.slice().reverse().map(f=>`<li><span>${esc(f.text)}${f.auto?` <em class="auto">${t('automatisch','automatic')}</em>`:''}</span><button class="b" ${onAttr('forgetFact',f.id)}>${t('Löschen','Delete')}</button></li>`).join('')||`<li class="mut">${t('Noch nichts gemerkt.','Nothing remembered yet.')}</li>`}
-// Documents (documents.py, wissen.py): the list with its state, the profile's own switches (only those
-// the admin allows), a search to try without the language model, and the kept originals.
+// Documents (documents.py, wissen.py). Since V01.0.409 one compact row per document with a search field that
+// filters at once, source, sort order, quick filters and tags; a click opens the details (beside the list on wide
+// screens, as its own page on narrow ones) with all buttons; "Auswählen" acts on several documents in one request.
+// The profile's own switches (only those the admin allows) sit folded under the list.
 const docSize=n=>n<1048576?Math.max(1,Math.round(n/1024))+' KB':(n/1048576).toFixed(1)+' MB';
 const DOCSW=[['pictures',t('Bilder und Scans lesen lassen','Let pictures and scans be read'),t('Fotos und Seiten ohne Text liest das Sprachmodell in Gesprächspausen ab.','The language model reads photos and pages without text in quiet moments.')],
   ['semantic',t('Bedeutungssuche','Meaning search'),t('Findet auch Stellen mit anderen Worten.','Also finds passages in other words.')],
@@ -22,13 +24,30 @@ const DOCSW=[['pictures',t('Bilder und Scans lesen lassen','Let pictures and sca
   ['shared',t('Gemeinsame Dokumente','Shared documents'),t('Eigene Dokumente mit „Für alle“ freigeben und die freigegebenen der anderen nutzen.','Share own documents with "For everyone" and use the ones the others share.')],
   ['brief',t('Steckbrief und Tags','Document card and tags'),t('Das Sprachmodell notiert in Pausen Titel, Art, Absender, Frist und Schlagwörter; der Assistent sucht damit gezielter.','In quiet minutes the language model notes title, kind, sender, deadline and keywords; the assistant searches more precisely with them.')],
   ['due',t('Fristen anbieten','Offer deadlines'),t('Hat ein Dokument eine Frist, gibt es den Knopf „Erinnern“. Eine Erinnerung entsteht nur auf deinen Klick.','When a document has a deadline there is a "Remind" button. A reminder is only set on your click.')]];
-let DOCTAG='';
-// the "Steckbrief" of a document (V01.0.244): kind, sender, deadline and the tags as chips (filter on click)
-const docCard=(d,chips=true)=>{const bits=[d.art,d.sender,d.date&&t('vom ','of ')+d.date,d.due&&t('Frist ','deadline ')+d.due].filter(Boolean).map(esc).join(' · ');
-  const tg=(d.tags||[]).map(x=>chips?`<button type="button" class="dtag${x.toLowerCase()===DOCTAG.toLowerCase()?' on':''}" data-doctag="${esc(x)}">${esc(x)}</button>`:`<span class="dtag">${esc(x)}</span>`).join('');
-  return (bits?`<br><small class="mut">${bits}</small>`:'')+(tg?`<br><span class="dtags">${tg}</span>`:'')};
+const DOCSRC={upload:t('Hochgeladen','Uploaded'),app:t('iPhone-App','iPhone app'),begleiter:t('Begleiter','Companion'),remarkable:'reMarkable',agent:t('Aufträge','Jobs'),other:t('Von anderen','From others')};
+const DOCSORT=[['new',t('Neueste zuerst','Newest first')],['name',t('Name A–Z','Name A–Z')],['due',t('Frist zuerst','Deadline first')],['size',t('Größte zuerst','Largest first')]];
+const DOCCHIP=[['',t('Alle','All')],['due',t('Frist offen','Deadline open')],['reading',t('Wird gelesen','Being read')],['error',t('Nicht lesbar','Not readable')],['shared',t('Für alle','For everyone')],['off',t('Suche aus','Search off')]];
+const DOCPAGE=50;
+// what the list shows; source and sort order stay in this browser (a convenience, works without storage too)
+const DOCV={find:'',src:'',sort:'new',chip:'',tag:'',pick:null,sel:'',max:DOCPAGE};
+try{const s=JSON.parse(localStorage.getItem('docview')||'{}');if(DOCSORT.some(([k])=>k===s.sort))DOCV.sort=s.sort;if(DOCSRC[s.src])DOCV.src=s.src}catch{}
+const docKeep=()=>{try{localStorage.setItem('docview',JSON.stringify({sort:DOCV.sort,src:DOCV.src}))}catch{}};
+let DOCINFO=null,DOCL=[],DOCO=[];
+const docAll=()=>DOCL.concat(DOCO);
+const docFind=id=>docAll().find(d=>d.id===id);
+const docBrief=()=>!!(DOCINFO&&DOCINFO.allow.brief&&DOCINFO.on.brief);
+const docShareOn=()=>!!(DOCINFO&&DOCINFO.allow.shared&&DOCINFO.on.shared);
+const docSrc=d=>d.owner?'other':DOCSRC[d.source]?d.source:'upload';
+const docTitle=d=>docBrief()&&d.title||d.name;
 const docHas=(d,tag)=>!tag||(d.tags||[]).some(x=>x.toLowerCase()===tag.toLowerCase());
-let DOCINFO=null;
+const docToday=()=>new Date().toISOString().slice(0,10);
+const docDue=(d,today)=>!!(d.due&&(d.due.length===7?d.due>=today.slice(0,7):d.due>=today));
+const docDay=s=>s?(s.length===7?s.slice(5,7)+'/'+s.slice(0,4):L==='en'?s.slice(8,10)+'/'+s.slice(5,7)+'/'+s.slice(0,4):s.slice(8,10)+'.'+s.slice(5,7)+'.'+s.slice(0,4)):'';
+// short form for the badge: day and month in this year, else with a two-digit year
+const docDayS=s=>!s||s.length===7?docDay(s):s.slice(0,4)===docToday().slice(0,4)?(L==='en'?s.slice(8,10)+'/'+s.slice(5,7):s.slice(8,10)+'.'+s.slice(5,7)+'.'):(L==='en'?s.slice(8,10)+'/'+s.slice(5,7)+'/'+s.slice(2,4):s.slice(8,10)+'.'+s.slice(5,7)+'.'+s.slice(2,4));
+const docAdded=d=>d.created?new Date(d.created*1000).toLocaleDateString(L==='en'?'en-GB':'de-DE',{day:'2-digit',month:'2-digit',year:'numeric'}):'';
+const docIco=d=>d.kind==='notebook'?['nb','NB']:d.kind==='picture'||/\.(jpe?g|png|webp)$/i.test(d.name)?['img',t('BILD','IMG')]:/\.pdf$/i.test(d.name)?['pdf','PDF']:
+  /\.(docx|odt)$/i.test(d.name)?['doc','DOC']:/\.(xlsx|ods|csv)$/i.test(d.name)?['tab',t('TAB','TAB')]:['txt','TXT'];
 // progress of one document (V01.0.232): pages read of all pages, then pieces with a meaning, and why it
 // waits (switch off, daily limit, someone is talking, the model waits for memory). [text, percent or null]
 function docState(d){const I=DOCINFO,pics=I&&I.allow.pictures&&I.on.pictures,mean=I&&I.vectors&&I.on.semantic;
@@ -54,94 +73,192 @@ function docAgain(l){clearTimeout(docTimer);const I=DOCINFO;
 async function showDocs(){if(!DOCS_ON){$('docbox').style.display='none';return}$('docbox').style.display='';
   const l=await (await api('/api/profile/docs')).json();
   try{DOCINFO=await (await api('/api/profile/wissen')).json()}catch{DOCINFO=null}
-  const I=DOCINFO;
+  const I=DOCINFO;DOCL=l;DOCO=I&&I.others||[];
   $('docsw').innerHTML=I?DOCSW.filter(([k])=>k==='due'?I.allow.brief&&I.on.brief:I.allow[k]).map(([k,l,h])=>`<div class="setrow"><div class="lbl"><b>${esc(l)}</b><span>${esc(h)}</span></div><label class="tgl"><input type="checkbox" data-docsw="${k}"${I.on[k]?' checked':''}><i></i></label></div>`).join(''):'';
-  const brief=!!(I&&I.allow.brief&&I.on.brief),due=brief&&I.on.due,today=new Date().toISOString().slice(0,10);
-  const o=I&&I.others||[];
-  // all tags of the own and the shared documents, to filter the lists
-  const all={};if(brief)for(const d of l.concat(o))for(const x of d.tags||[]){const k=x.toLowerCase();all[k]=all[k]||[x,0];all[k][1]++}
-  if(DOCTAG&&!all[DOCTAG.toLowerCase()])DOCTAG='';
-  const tags=Object.values(all).sort((a,b)=>b[1]-a[1]||a[0].localeCompare(b[0]));$('doctagbar').hidden=!tags.length;
-  $('doctagbar').innerHTML=tags.length?`<button type="button" class="dtag${DOCTAG?'':' on'}" data-doctag="">${t('Alle','All')}</button>`+tags.map(([x,n])=>`<button type="button" class="dtag${x.toLowerCase()===DOCTAG.toLowerCase()?' on':''}" data-doctag="${esc(x)}">${esc(x)} <small>${n}</small></button>`).join(''):'';
-  $('doclist').innerHTML=l.filter(d=>!brief||docHas(d,DOCTAG)).map(d=>{const [st,pct]=docState(d);return `<li><span>${esc(brief&&d.title||d.name)}<br><small class="mut">${brief&&d.title?esc(d.name)+' · ':''}${docSize(d.size)} · ${esc(st)}${d.note?' · '+esc(d.note):''}</small>`+(brief?docCard(d):'')+
-    (pct===null?'':`<span class="qbar docbar" role="progressbar" aria-valuemin="0" aria-valuemax="100" aria-valuenow="${pct}"><i style="width:${pct}%"></i></span>`)+`</span>`+
-    (I&&I.allow.shared&&I.on.shared&&d.state==='ready'?`<label class="docshare" title="${esc(t('Alle Profile mit „Gemeinsame Dokumente“ finden und öffnen es','Every profile with "Shared documents" finds and opens it'))}"><input type="checkbox" data-docshare="${esc(d.id)}"${d.shared?' checked':''}> ${t('Für alle','For everyone')}</label>`:'')+
-    `<label class="tgl" title="${esc(t('Der Assistent sucht darin','The assistant searches it'))}"><input type="checkbox" data-docuse="${esc(d.id)}"${d.use?' checked':''}><i></i></label>`+
-    `<button class="b" type="button" data-docview="${esc(d.id)}">${t('Ansehen','View')}</button>`+
-    (brief&&d.state==='ready'?`<button class="b" type="button" data-doctags="${esc(d.id)}" data-tags="${esc((d.tags||[]).join(', '))}" title="${esc(t('Eigene Schlagwörter; leer = die automatischen','Own keywords; empty = the automatic ones'))}">${t('Tags','Tags')}</button>`:'')+
-    (due&&d.due&&(d.due.length===7?d.due>=today.slice(0,7):d.due>=today)?`<button class="b" type="button" data-docremind="${esc(d.id)}" title="${esc(t('Erinnerung sechs Wochen vor der Frist (oder am Tag davor)','Reminder six weeks before the deadline (or the day before)'))}">${t('Erinnern','Remind')}</button>`:'')+
-    (d.file&&d.state!=='reading'?`<button class="b" type="button" data-docreread="${esc(d.id)}" title="${esc(t('Aus dem aufbewahrten Original neu einlesen','Read again from the kept original'))}">${t('Neu einlesen','Read again')}</button>`:'')+
-    `<button class="b" type="button" data-docdel="${esc(d.id)}" data-name="${esc(d.name)}">${t('Löschen','Delete')}</button></li>`}).join('')||`<li class="mut">${t('Noch keine Dokumente.','No documents yet.')}</li>`;
-  const bits=[];
   if(I&&I.space){const pct=Math.min(100,Math.round(100*I.used/I.space));$('docspace').hidden=false;
-    $('docspacet').textContent=t(`Belegt: ${docSize(I.used)} von ${docSize(I.space)} (${pct} %)`,`Used: ${docSize(I.used)} of ${docSize(I.space)} (${pct} %)`)+(I.quota?t(`, davon Originale ${docSize(I.usage)}`,`, originals ${docSize(I.usage)}`):'');
+    $('docspacet').textContent=t(`${docSize(I.used)} von ${docSize(I.space)} belegt`,`${docSize(I.used)} of ${docSize(I.space)} used`);
+    $('docspace').title=t(`Belegt: ${pct} %`,`Used: ${pct} %`)+(I.quota?t(`, davon Originale ${docSize(I.usage)}`,`, originals ${docSize(I.usage)}`):'');
     const bar=$('docspace').querySelector('i');bar.style.width=pct+'%';$('docspace').classList.toggle('full',pct>=90)}
+  const bits=[];
   if(I&&I.allow.pictures&&I.on.pictures)bits.push(t(`heute ${I.today} von ${I.day_pages} Seiten gelesen`,`${I.today} of ${I.day_pages} pages read today`));
   if(I&&I.vectors&&I.on.semantic)bits.push(t(`Bedeutungssuche: ${I.vectors[0]} von ${I.vectors[1]} Abschnitten vorbereitet`,`Meaning search: ${I.vectors[0]} of ${I.vectors[1]} sections prepared`));
   $('docuse').textContent=bits.join(' · ');docAgain(l);
-  $('docothers').hidden=!o.length;
-  $('docotherlist').innerHTML=o.filter(d=>!brief||docHas(d,DOCTAG)).map(d=>`<li><span>${esc(brief&&d.title||d.name)}<br><small class="mut">${t('von ','from ')}${esc(d.owner)}</small>${brief?docCard(d,false):''}</span><button class="b" type="button" data-docview="${esc(d.id)}">${t('Ansehen','View')}</button></li>`).join('');
   const pics=I&&I.allow.pictures&&I.on.pictures;
-  $('docfile').accept='.pdf,.txt,.md,.docx,.html,.htm,.csv,.xlsx,.pptx,.odt,.ods,.odp,.eml'+(pics?',.jpg,.jpeg,.png,.webp':'')}
+  $('docfile').accept='.pdf,.txt,.md,.docx,.html,.htm,.csv,.xlsx,.pptx,.odt,.ods,.odp,.eml'+(pics?',.jpg,.jpeg,.png,.webp':'');
+  docRender()}
+// a quick filter: does document d belong to it
+function docChipOk(d,c,today){return !c||(c==='due'?docDue(d,today):c==='reading'?d.state==='reading':c==='error'?d.state==='error':c==='shared'?!d.owner&&d.shared:c==='off'?!d.owner&&d.use===false:true)}
+function docMatch(d,q){return !q||[d.title,d.name,d.sender,d.art,d.ref,d.owner,...(d.tags||[])].some(x=>x&&String(x).toLowerCase().includes(q))}
+function docSorted(l,today){const by=DOCV.sort,n=(a,b)=>docTitle(a).localeCompare(docTitle(b),L==='en'?'en':'de',{sensitivity:'base'});
+  return l.slice().sort(by==='name'?n:by==='size'?(a,b)=>(b.size||0)-(a.size||0)||n(a,b):
+    by==='due'?(a,b)=>{const x=docDue(a,today)?a.due:'9',y=docDue(b,today)?b.due:'9';return x<y?-1:x>y?1:n(a,b)}:
+    (a,b)=>(!!a.owner-!!b.owner)||(b.created||0)-(a.created||0))}
+// the headings while sorted by date: today, the last 7 days, the months of this year, then the years
+function docGroup(d,now){if(d.owner)return t('Von anderen freigegeben','Shared by others');if(!d.created)return t('Älter','Older');
+  const c=new Date(d.created*1000),n=new Date(now);if(c.toDateString()===n.toDateString())return t('Heute','Today');
+  if(now-c<7*864e5)return t('Letzte 7 Tage','Last 7 days');
+  return c.getFullYear()===n.getFullYear()?c.toLocaleDateString(L==='en'?'en-GB':'de-DE',{month:'long'}):String(c.getFullYear())}
+function docBadges(d,today){const b=[];
+  if(d.state==='reading')b.push(`<span class="ld-badge read">${esc(t('liest ','reading ')+(d.pages-d.todo)+'/'+d.pages)}</span>`);
+  if(d.state==='error')b.push(`<span class="ld-badge err">${esc(t('nicht lesbar','not readable'))}</span>`);
+  if(docDue(d,today))b.push(`<span class="ld-badge due">${esc(t('Frist ','due ')+docDayS(d.due))}</span>`);
+  if(!d.owner&&d.shared)b.push(`<span class="ld-badge sh">${esc(t('für alle','for everyone'))}</span>`);
+  if(!d.owner&&d.use===false)b.push(`<span class="ld-badge off">${esc(t('Suche aus','search off'))}</span>`);
+  return b.join('')}
+function docRow(d,today){const [c,l]=docIco(d),pk=DOCV.pick,brief=docBrief();
+  const sub=[brief&&d.art,brief&&d.sender,d.owner?t('von ','from ')+d.owner:DOCSRC[docSrc(d)],brief&&d.title?d.name:''].filter(Boolean).join(' · ');
+  const when=d.owner?'':[docAdded(d),d.size?docSize(d.size):''].filter(Boolean).join(' · ');
+  return `<div class="ld-row${DOCV.sel===d.id&&!pk?' on':''}" data-doc="${esc(d.id)}" role="button" tabindex="0">`+
+    (pk?d.owner?'<span class="ld-pick"></span>':`<input type="checkbox" class="ld-pick" data-pick="${esc(d.id)}"${pk.has(d.id)?' checked':''} aria-label="${esc(t('auswählen','select'))}">`:'')+
+    `<span class="ld-ico ${c}" aria-hidden="true">${l}</span><span class="ld-mid"><b>${esc(docTitle(d))}</b><small>${esc(sub)}</small></span>`+
+    `<span class="ld-right">${docBadges(d,today)}${when?`<span class="ld-when">${esc(when)}</span>`:''}</span></div>`}
+function docRender(){const I=DOCINFO,brief=docBrief(),today=docToday(),q=DOCV.find.trim().toLowerCase(),all=docAll();
+  // sources, tags and quick filters offer only what is there; a choice that went away falls back to "all"
+  const srcs={};for(const d of all){const s=docSrc(d);srcs[s]=(srcs[s]||0)+1}
+  if(DOCV.src&&!srcs[DOCV.src])DOCV.src='';
+  const sel=$('docsrc');sel.hidden=Object.keys(srcs).length<2;
+  sel.innerHTML=`<option value="">${esc(t(`Alle Quellen (${all.length})`,`All sources (${all.length})`))}</option>`+Object.keys(DOCSRC).filter(k=>srcs[k]).map(k=>`<option value="${k}"${DOCV.src===k?' selected':''}>${esc(DOCSRC[k])} (${srcs[k]})</option>`).join('');
+  $('docsort').innerHTML=DOCSORT.filter(([k])=>k!=='due'||brief).map(([k,l])=>`<option value="${k}"${DOCV.sort===k?' selected':''}>${esc(l)}</option>`).join('');
+  if(DOCV.sort==='due'&&!brief)DOCV.sort='new';
+  const base=all.filter(d=>(!DOCV.src||docSrc(d)===DOCV.src)&&docMatch(d,q));
+  const tags={};if(brief)for(const d of base)for(const x of d.tags||[]){const k=x.toLowerCase();tags[k]=tags[k]||[x,0];tags[k][1]++}
+  if(DOCV.tag&&!tags[DOCV.tag.toLowerCase()])DOCV.tag='';
+  const counts=DOCCHIP.map(([k])=>base.filter(d=>docHas(d,DOCV.tag)&&docChipOk(d,k,today)).length);
+  if(DOCV.chip&&!counts[DOCCHIP.findIndex(([k])=>k===DOCV.chip)])DOCV.chip='';
+  const tl=Object.values(tags).sort((a,b)=>b[1]-a[1]||a[0].localeCompare(b[0]));
+  $('docchips').innerHTML=DOCCHIP.map(([k,l],i)=>!k||counts[i]?`<button type="button" class="ld-chip${DOCV.chip===k?' on':''}" data-chip="${k}">${esc(l)} <b>${counts[i]}</b></button>`:'').join('')+
+    (tl.length?`<select id="doctagsel" class="ld-chip${DOCV.tag?' on':''}" aria-label="${esc(t('Tag','Tag'))}"><option value="">${esc(t('Alle Tags','All tags'))}</option>${tl.map(([x,n])=>`<option value="${esc(x)}"${x.toLowerCase()===DOCV.tag.toLowerCase()?' selected':''}>${esc(x)} (${n})</option>`).join('')}</select>`:'');
+  $('docchips').hidden=!all.length;$('doctools').classList.toggle('few',!all.length);
+  const l=docSorted(base.filter(d=>docHas(d,DOCV.tag)&&docChipOk(d,DOCV.chip,today)),today);
+  if(DOCV.pick)for(const id of [...DOCV.pick])if(!DOCL.some(d=>d.id===id))DOCV.pick.delete(id);
+  const now=Date.now();let html='',last=null;
+  for(const d of l.slice(0,DOCV.max)){if(DOCV.sort==='new'){const g=docGroup(d,now);
+      if(g!==last){last=g;const n=l.filter(x=>docGroup(x,now)===g).length;html+=`<div class="ld-grp"><span>${esc(g)}</span><span>${n}</span></div>`}}
+    html+=docRow(d,today)}
+  if(l.length>DOCV.max)html+=`<div class="ld-more"><button class="b" type="button" data-more="1">${esc(t(`Weitere ${Math.min(DOCPAGE,l.length-DOCV.max)} von ${l.length-DOCV.max} zeigen`,`Show ${Math.min(DOCPAGE,l.length-DOCV.max)} more of ${l.length-DOCV.max}`))}</button></div>`;
+  $('doclist').innerHTML=html||`<div class="mut ld-empty">${esc(all.length?t('Nichts passt zu Suche und Filter.','Nothing fits the search and filter.'):t('Noch keine Dokumente. Mit „Hinzufügen“ legst du PDFs, Office-Dateien, Texte oder E-Mails ab; der Assistent sucht dann darin.','No documents yet. With "Add" you store PDFs, office files, texts or e-mails; the assistant then searches them.'))}</div>`;
+  $('doccount').textContent=all.length?(l.length===all.length?t(`${all.length} Dokumente`,`${all.length} documents`):t(`${l.length} von ${all.length} Dokumenten`,`${l.length} of ${all.length} documents`)):'';
+  $('docpick').hidden=!DOCL.length;$('docpick').textContent=DOCV.pick?t('Fertig','Done'):t('Auswählen','Select');
+  docBulk();docDetail()}
+// "Auswählen": the bar with what can be done to the selected own documents (one request, wissen.py batch)
+function docBulk(){const box=$('docbulk'),pk=DOCV.pick;box.hidden=!pk;if(!pk){box.innerHTML='';return}
+  const n=pk.size,dis=n?'':' disabled',typing=box.contains(document.activeElement)&&document.activeElement.id==='docbulktag';
+  if(typing){box.querySelector('b').textContent=t(`${n} ausgewählt`,`${n} selected`);return}
+  box.innerHTML=`<b>${esc(t(`${n} ausgewählt`,`${n} selected`))}</b><button class="b" type="button" data-bulk="all">${esc(t('Alle gezeigten','All shown'))}</button>`+
+    `<button class="b" type="button" data-bulk="use"${dis}>${esc(t('Suche an','Search on'))}</button><button class="b" type="button" data-bulk="unuse"${dis}>${esc(t('Suche aus','Search off'))}</button>`+
+    (docShareOn()?`<button class="b" type="button" data-bulk="share"${dis}>${esc(t('Für alle','For everyone'))}</button><button class="b" type="button" data-bulk="unshare"${dis}>${esc(t('Nicht mehr für alle','No longer for everyone'))}</button>`:'')+
+    (docBrief()?`<span class="dbtag"><input id="docbulktag" maxlength="24" placeholder="${esc(t('Tag','Tag'))}" aria-label="${esc(t('Tag für die Auswahl','Tag for the selection'))}"><button class="b" type="button" data-bulk="tag"${dis}>${esc(t('Tag geben','Add tag'))}</button></span>`:'')+
+    `<button class="b" type="button" data-bulk="reread"${n&&n<=20?'':' disabled'} title="${esc(t('Aus den aufbewahrten Originalen neu einlesen, höchstens 20 auf einmal','Read again from the kept originals, at most 20 at once'))}">${esc(t('Neu einlesen','Read again'))}</button>`+
+    `<button class="b danger" type="button" data-bulk="delete"${dis}>${esc(t('Löschen','Delete'))}</button><button class="b" type="button" data-bulk="done">${esc(t('Fertig','Done'))}</button>`}
+// the details of the selected document: its card, switches and buttons. #docdinfo is drawn again with
+// every refresh (not while someone types the tags); the text view below it stays
+function docDetail(){const box=$('docdetail'),d=DOCV.pick?null:docFind(DOCV.sel);
+  $('docbox').classList.toggle('ld-sel',!!d);box.hidden=!d;
+  if(!d){$('docdinfo').innerHTML='';$('docview').hidden=true;$('docview').textContent='';return}
+  const info=$('docdinfo'),a=document.activeElement;
+  if(info.dataset.id===d.id&&info.contains(a)&&a.id==='doctagin')return;
+  info.dataset.id=d.id;
+  const brief=docBrief(),own=!d.owner,today=docToday(),[st,pct]=own?docState(d):['',null];
+  const meta=[[t('Datei','File'),d.name],brief&&[t('Art','Kind'),d.art],brief&&[t('Absender','Sender'),d.sender],brief&&[t('Datum','Date'),docDay(d.date)],
+    brief&&[t('Frist','Deadline'),docDay(d.due)],brief&&[t('Nummer','Number'),d.ref],[t('Quelle','Source'),d.owner?t('von ','from ')+d.owner:DOCSRC[docSrc(d)]],
+    own&&[t('Hinzugefügt','Added'),docAdded(d)],own&&[t('Größe','Size'),docSize(d.size||0)],own&&[t('Zustand','State'),st]].filter(x=>x&&x[1]);
+  const pdf=/\.pdf$/i.test(d.name),pic=d.kind==='picture',href='/api/profile/wissen/'+encodeURIComponent(d.id)+'/file'+(pdf||pic?'?view=1':'');
+  info.innerHTML=`<button class="b ld-back" type="button" data-dact="back">‹ ${esc(t('Zurück zur Liste','Back to the list'))}</button>`+
+    `<h3>${esc(docTitle(d))}</h3><dl class="ld-facts">${meta.map(([k,v])=>`<dt>${esc(k)}</dt><dd${k===t('Frist','Deadline')&&docDue(d,today)?' class="due"':''}>${esc(v)}</dd>`).join('')}</dl>`+
+    (pct===null?'':`<span class="qbar docbar" role="progressbar" aria-valuemin="0" aria-valuemax="100" aria-valuenow="${pct}"><i style="width:${pct}%"></i></span>`)+
+    (d.note?`<p class="mut ld-note">${esc(d.note)}</p>`:'')+
+    ((d.tags||[]).length?`<div class="dtags">${d.tags.map(x=>`<button type="button" class="dtag${x.toLowerCase()===DOCV.tag.toLowerCase()?' on':''}" data-doctag="${esc(x)}" title="${esc(t('Liste nach diesem Tag filtern','Filter the list by this tag'))}">${esc(x)}</button>`).join('')}</div>`:'')+
+    (own&&brief&&d.state==='ready'?`<div class="dtagedit"><input id="doctagin" maxlength="250" value="${esc((d.tags||[]).join(', '))}" placeholder="${esc(t('Tags mit Komma; leer = die automatischen','Tags with commas; empty = the automatic ones'))}" aria-label="${esc(t('Eigene Tags','Own tags'))}"><button class="b" type="button" data-dact="tags">${esc(t('Speichern','Save'))}</button></div>`:'')+
+    (own?`<div class="ld-sw"><span>${esc(t('Der Assistent sucht darin','The assistant searches it'))}</span><label class="tgl"><input type="checkbox" data-docuse="${esc(d.id)}"${d.use?' checked':''}><i></i></label></div>`:'')+
+    (own&&docShareOn()&&d.state==='ready'?`<div class="ld-sw"><span>${esc(t('Für alle','For everyone'))}<small class="mut"> · ${esc(t('alle Profile mit „Gemeinsame Dokumente“ finden und öffnen es','every profile with "Shared documents" finds and opens it'))}</small></span><label class="tgl"><input type="checkbox" data-docshare="${esc(d.id)}"${d.shared?' checked':''}><i></i></label></div>`:'')+
+    `<div class="ld-acts">`+(d.file?`<a class="b p" href="${esc(href)}"${pdf?' target="_blank"':''} rel="noopener">${esc(pdf?t('PDF öffnen','Open PDF'):pic?t('Bild öffnen','Open picture'):t('Original herunterladen','Download original'))}</a>`:'')+
+    `<button class="b" type="button" data-dact="view">${esc(t('Text lesen','Read text'))}</button>`+
+    (own&&brief&&DOCINFO.on.due&&docDue(d,today)?`<button class="b" type="button" data-docremind="${esc(d.id)}" title="${esc(t('Erinnerung sechs Wochen vor der Frist (oder am Tag davor)','Reminder six weeks before the deadline (or the day before)'))}">${esc(t('Erinnern','Remind'))}</button>`:'')+
+    (own&&d.file&&d.state!=='reading'?`<button class="b" type="button" data-docreread="${esc(d.id)}" title="${esc(t('Aus dem aufbewahrten Original neu einlesen','Read again from the kept original'))}">${esc(t('Neu einlesen','Read again'))}</button>`:'')+
+    (own?`<button class="b danger" type="button" data-docdel="${esc(d.id)}" data-name="${esc(d.name)}">${esc(t('Löschen','Delete'))}</button>`:'')+`</div>`+
+    (own&&!d.file?`<p class="mut ld-note">${esc(t('Original nicht aufbewahrt: Zum Neu-Einlesen die Datei neu hochladen.','Original not kept: to read it again, upload the file again.'))}</p>`:'')}
+function docOpen(id){DOCV.sel=id;const v=$('docview');if(v.dataset.id!==id){v.hidden=true;v.textContent=''}docRender();
+  if($('docbox').classList.contains('ld-sel'))$('docdetail').scrollIntoView({block:'nearest'})}
+const docErr=x=>{$('docmsg').innerHTML=`<span class="err">${esc(x.message)}</span>`};
 $('docsw').onchange=async e=>{const k=e.target.dataset.docsw;if(!k)return;
   try{await api('/api/profile/settings',{method:'PUT',headers:{'Content-Type':'application/json'},body:JSON.stringify({['doc_'+k]:e.target.checked})})}
-  catch(x){$('docmsg').innerHTML=`<span class="err">${esc(x.message)}</span>`}showDocs()};
-$('doctagbar').onclick=e=>{const c=e.target.closest('[data-doctag]');if(c){DOCTAG=c.dataset.doctag;showDocs()}};
-$('docotherlist').onclick=e=>{const v=e.target.closest('[data-docview]');if(v)docView(v.dataset.docview)};
-$('doclist').onchange=async e=>{const sh=e.target.dataset.docshare;
-  if(sh){try{await api('/api/profile/wissen/'+encodeURIComponent(sh),{method:'PUT',headers:{'Content-Type':'application/json'},body:JSON.stringify({shared:e.target.checked})})}
-    catch(x){$('docmsg').innerHTML=`<span class="err">${esc(x.message)}</span>`;showDocs()}return}
-  const id=e.target.dataset.docuse;if(!id)return;
-  try{await api('/api/profile/wissen/'+encodeURIComponent(id),{method:'PUT',headers:{'Content-Type':'application/json'},body:JSON.stringify({use:e.target.checked})})}
-  catch(x){$('docmsg').innerHTML=`<span class="err">${esc(x.message)}</span>`;showDocs()}};
-// a document read again: the kept original (pictures and PDFs in the browser, the rest as a download)
-// and its stored text, built with textContent only
-async function docView(id){const box=$('docview');box.hidden=false;box.textContent=t('Lade …','Loading …');
+  catch(x){docErr(x)}showDocs()};
+$('docfind').oninput=()=>{DOCV.find=$('docfind').value;DOCV.max=DOCPAGE;docRender()};
+$('docfind').onkeydown=e=>{if(e.key==='Enter'){e.preventDefault();docTry()}else if(e.key==='Escape'){$('docfind').value='';DOCV.find='';$('dochits').innerHTML='';docRender()}};
+$('docsrc').onchange=()=>{DOCV.src=$('docsrc').value;DOCV.max=DOCPAGE;docKeep();docRender()};
+$('docsort').onchange=()=>{DOCV.sort=$('docsort').value;DOCV.max=DOCPAGE;docKeep();docRender()};
+$('docchips').onclick=e=>{const c=e.target.closest('[data-chip]');if(c){DOCV.chip=c.dataset.chip;DOCV.max=DOCPAGE;docRender()}};
+$('docchips').onchange=e=>{if(e.target.id==='doctagsel'){DOCV.tag=e.target.value;DOCV.max=DOCPAGE;docRender()}};
+$('docpick').onclick=()=>{DOCV.pick=DOCV.pick?null:new Set();docRender()};
+$('doclist').onclick=e=>{if(e.target.closest('[data-more]')){DOCV.max+=DOCPAGE;docRender();return}
+  const r=e.target.closest('.ld-row');if(!r)return;const id=r.dataset.doc;
+  if(DOCV.pick){if(!DOCL.some(d=>d.id===id))return;DOCV.pick.has(id)?DOCV.pick.delete(id):DOCV.pick.add(id);docRender();return}
+  docOpen(id)};
+$('doclist').onkeydown=e=>{const r=e.target.closest('.ld-row');if(r&&(e.key==='Enter'||e.key===' ')&&e.target===r){e.preventDefault();r.click()}};
+$('docbulk').onclick=async e=>{const b=e.target.closest('[data-bulk]');if(!b||b.disabled)return;const k=b.dataset.bulk,pk=DOCV.pick;
+  if(k==='done'){DOCV.pick=null;docRender();return}
+  if(k==='all'){for(const el of document.querySelectorAll('#doclist [data-pick]'))pk.add(el.dataset.pick);docRender();return}
+  const ids=[...pk],body={do:k,ids};
+  if(k==='tag'){body.tag=$('docbulktag').value.trim();if(!body.tag){$('docbulktag').focus();return}}
+  if(k==='delete'&&!confirm(t(`${ids.length} Dokumente löschen? Das lässt sich nicht rückgängig machen.`,`Delete ${ids.length} documents? This cannot be undone.`)))return;
+  b.disabled=true;
+  try{const r=await (await api('/api/profile/wissen/batch',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify(body)})).json();
+    $('docmsg').textContent=t(`Erledigt für ${r.done} von ${ids.length}`,`Done for ${r.done} of ${ids.length}`)+(r.failed?t(` (${r.failed} gingen nicht)`,` (${r.failed} did not work)`):'');
+    if(k==='delete'){pk.clear();if(ids.includes(DOCV.sel))DOCV.sel=''}}
+  catch(x){docErr(x)}showDocs()};
+// a document read again: the kept original (pictures in the browser) and its stored text, built with
+// textContent only; it opens in the details, so chat sources ("Aus deinen Dokumenten") land there too
+async function docView(id){if(!docFind(id))await showDocs();if(DOCV.pick)DOCV.pick=null;docOpen(id);
+  const box=$('docview');box.hidden=false;box.dataset.id=id;box.textContent=t('Lade …','Loading …');
   try{const d=await (await api('/api/profile/wissen/'+encodeURIComponent(id)+'/text')).json();box.textContent='';
-    const head=document.createElement('div');head.className='dvhead';const nm=document.createElement('b');nm.textContent=d.name+(d.owner?' · '+t('von ','from ')+d.owner:'');head.appendChild(nm);
-    const right=document.createElement('span');
-    if(d.file){const a=document.createElement('a');a.className='b';const pdf=/\.pdf$/i.test(d.name),pic=d.kind==='picture';
-      a.href='/api/profile/wissen/'+encodeURIComponent(id)+'/file'+(pdf||pic?'?view=1':'');if(pdf)a.target='_blank';a.rel='noopener';
-      a.textContent=pdf?t('PDF öffnen','Open PDF'):pic?t('Bild öffnen','Open picture'):t('Original herunterladen','Download original');right.appendChild(a);
-      if(pic){const img=document.createElement('img');img.alt='';img.src=a.href;box.appendChild(img)}}
-    const x=document.createElement('button');x.type='button';x.className='b';x.textContent='✕';x.onclick=()=>{box.hidden=true;box.textContent=''};right.appendChild(x);
-    head.appendChild(right);box.prepend(head);
+    const head=document.createElement('div');head.className='dvhead';const nm=document.createElement('b');nm.textContent=t('Text','Text')+(d.owner?' · '+t('von ','from ')+d.owner:'');head.appendChild(nm);
+    const x=document.createElement('button');x.type='button';x.className='b';x.textContent='✕';x.setAttribute('aria-label',t('Text schließen','Close text'));x.onclick=()=>{box.hidden=true;box.textContent=''};
+    head.appendChild(x);box.appendChild(head);
+    if(d.file&&d.kind==='picture'){const img=document.createElement('img');img.alt='';img.src='/api/profile/wissen/'+encodeURIComponent(id)+'/file?view=1';box.appendChild(img)}
     let page;const show=parts=>{for(const p of parts){if(p.page&&p.page!==page){page=p.page;const h=document.createElement('div');h.className='dvpage';h.textContent=t('Seite ','Page ')+p.page;box.appendChild(h)}
       const tx=document.createElement('p');tx.className='dvtext';tx.textContent=p.text;box.appendChild(tx)}};show(d.parts);
     if(d.related&&d.related.length){const r=document.createElement('div');r.className='dvrel';const h=document.createElement('small');h.className='mut';h.textContent=t('Dazu gehören: ','Belongs with: ');r.appendChild(h);
       for(const x of d.related){const b=document.createElement('button');b.type='button';b.className='dtag';b.textContent=x.title||x.name;
-        b.title={Nummer:t('gleiche Nummer','same number'),Absender:t('gleicher Absender','same sender'),Tags:t('gleiche Schlagwörter','same keywords')}[x.why]||'';b.onclick=()=>docView(x.id);r.appendChild(b)}
+        b.title={Nummer:t('gleiche Nummer','same number'),Absender:t('gleicher Absender','same sender'),Tags:t('gleiche Schlagwörter','same keywords')}[x.why]||'';b.onclick=()=>docOpen(x.id);r.appendChild(b)}
       box.appendChild(r)}
     if(!d.parts.length){const m=document.createElement('p');m.className='mut';m.textContent=d.state==='reading'?t('Wird noch gelesen.','Still being read.'):t('Kein Text.','No text.');box.appendChild(m)}
-    if(!d.file&&!d.owner){const m=document.createElement('p');m.className='mut';m.textContent=t('Original nicht aufbewahrt: Zum Neu-Einlesen die Datei neu hochladen.','Original not kept: to read it again, upload the file again.');box.appendChild(m)}
     // long documents come a part at a time; the assistant always searches the whole text
     const more=next=>{if(next==null)return;const b=document.createElement('button');b.type='button';b.className='b';b.textContent=t('Weiterlesen','Read on');
       b.onclick=async()=>{b.disabled=true;try{const n=await (await api('/api/profile/wissen/'+encodeURIComponent(id)+'/text?start='+next)).json();b.remove();show(n.parts);more(n.next)}
         catch(x){b.disabled=false;b.textContent=x.message}};box.appendChild(b)};more(d.next);
     box.scrollIntoView({block:'nearest'})}
   catch(x){box.textContent=x.message}}
-$('doclist').onclick=async e=>{const v=e.target.closest('[data-docview]');if(v){docView(v.dataset.docview);return}
-  const c=e.target.closest('[data-doctag]');if(c){DOCTAG=c.dataset.doctag;showDocs();return}
-  const tg=e.target.closest('[data-doctags]');
-  if(tg){const s=prompt(t('Schlagwörter, mit Komma getrennt (leer = die automatischen):','Keywords separated by commas (empty = the automatic ones):'),tg.dataset.tags);if(s===null)return;
-    const list=s.split(',').map(x=>x.trim()).filter(Boolean);
-    try{await api('/api/profile/wissen/'+encodeURIComponent(tg.dataset.doctags),{method:'PUT',headers:{'Content-Type':'application/json'},body:JSON.stringify({tags:list.length?list:null})})}
-    catch(x){$('docmsg').innerHTML=`<span class="err">${esc(x.message)}</span>`}showDocs();return}
+$('docdetail').onchange=async e=>{const sh=e.target.dataset.docshare,id=e.target.dataset.docuse;if(!sh&&!id)return;
+  try{await api('/api/profile/wissen/'+encodeURIComponent(sh||id),{method:'PUT',headers:{'Content-Type':'application/json'},body:JSON.stringify(sh?{shared:e.target.checked}:{use:e.target.checked})})}
+  catch(x){docErr(x)}showDocs()};
+async function docTagsSave(){const id=DOCV.sel,list=$('doctagin').value.split(',').map(x=>x.trim()).filter(Boolean);
+  try{await api('/api/profile/wissen/'+encodeURIComponent(id),{method:'PUT',headers:{'Content-Type':'application/json'},body:JSON.stringify({tags:list.length?list:null})});
+    $('docmsg').textContent=t('Tags gespeichert.','Tags saved.')}
+  catch(x){docErr(x)}$('doctagin').blur();showDocs()}
+$('docdetail').onkeydown=e=>{if(e.target.id==='doctagin'&&e.key==='Enter'){e.preventDefault();docTagsSave()}};
+$('docdetail').onclick=async e=>{const a=e.target.closest('[data-dact]');
+  if(a){const k=a.dataset.dact;if(k==='back'){DOCV.sel='';docRender();$('doclist').scrollIntoView({block:'nearest'})}else if(k==='view')docView(DOCV.sel);else if(k==='tags')docTagsSave();return}
+  const c=e.target.closest('[data-doctag]');if(c){DOCV.tag=DOCV.tag.toLowerCase()===c.dataset.doctag.toLowerCase()?'':c.dataset.doctag;DOCV.max=DOCPAGE;docRender();return}
   const rm=e.target.closest('[data-docremind]');
   if(rm){rm.disabled=true;try{const r=await (await api('/api/profile/wissen/'+encodeURIComponent(rm.dataset.docremind)+'/remind',{method:'POST'})).json();
       $('docmsg').textContent=t('Erinnerung angelegt für ','Reminder set for ')+new Date(r.due).toLocaleString(L==='en'?'en-GB':'de-DE',{dateStyle:'medium',timeStyle:'short'})}
-    catch(x){$('docmsg').innerHTML=`<span class="err">${esc(x.message)}</span>`;rm.disabled=false}return}
+    catch(x){docErr(x);rm.disabled=false}return}
   const rr=e.target.closest('[data-docreread]');
   if(rr){rr.disabled=true;try{const r=await (await api('/api/profile/wissen/'+encodeURIComponent(rr.dataset.docreread)+'/reread',{method:'POST'})).json();
       $('docmsg').textContent=r.todo?t(`Wird neu gelesen: ${r.todo} Seiten warten.`,`Being read again: ${r.todo} pages waiting.`):t(`Neu eingelesen: ${r.chunks} Abschnitte.`,`Read again: ${r.chunks} sections.`)}
-    catch(x){$('docmsg').innerHTML=`<span class="err">${esc(x.message)}</span>`}showDocs();return}
+    catch(x){docErr(x)}showDocs();return}
   const b=e.target.closest('[data-docdel]');if(!b)return;
-  if(!confirm(t('Dokument „','Delete document "')+b.dataset.name+t('“ löschen?','"?')))return;await api('/api/profile/docs/'+encodeURIComponent(b.dataset.docdel),{method:'DELETE'});showDocs()};
-async function docTry(){const q=$('docq').value.trim();if(!q)return;$('dochits').innerHTML=`<li class="mut">${t('Suche …','Searching …')}</li>`;
+  if(!confirm(t('Dokument „','Delete document "')+b.dataset.name+t('“ löschen?','"?')))return;
+  try{await api('/api/profile/docs/'+encodeURIComponent(b.dataset.docdel),{method:'DELETE'});DOCV.sel=''}catch(x){docErr(x)}showDocs()};
+// Enter in the search field also looks inside the documents (the same search the assistant uses, without the language model)
+async function docTry(){const q=$('docfind').value.trim();if(!q){$('dochits').innerHTML='';return}
+  $('dochits').innerHTML=`<li class="mut">${t('Suche im Inhalt …','Searching the content …')}</li>`;
   try{const r=await (await api('/api/profile/wissen/search',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({q})})).json();
-    $('dochits').innerHTML=r.hits.map(h=>`<li><span><b>${esc(h.name)}${h.page?' · '+t('Seite ','page ')+h.page:''}</b><br><small>${esc(h.text)}</small></span></li>`).join('')||`<li class="mut">${t('Nichts gefunden.','Nothing found.')}</li>`}
+    $('dochits').innerHTML=`<li class="dhhead"><b>${esc(t('Im Inhalt gefunden','Found in the content'))}</b><button class="b" type="button" data-hitclose="1" aria-label="${esc(t('Treffer schließen','Close hits'))}">✕</button></li>`+
+      (r.hits.map(h=>`<li class="dhit" data-docview="${esc(h.id)}" role="button" tabindex="0"><span><b>${esc(h.name)}${h.page?' · '+t('Seite ','page ')+h.page:''}</b><br><small>${esc(h.text)}</small></span></li>`).join('')||`<li class="mut">${t('Nichts gefunden.','Nothing found.')}</li>`)}
   catch(x){$('dochits').innerHTML=`<li class="err">${esc(x.message)}</li>`}}
-$('docqgo').onclick=docTry;$('docq').onkeydown=e=>{if(e.key==='Enter')docTry()};
+$('dochits').onclick=e=>{if(e.target.closest('[data-hitclose]')){$('dochits').innerHTML='';return}const h=e.target.closest('[data-docview]');if(h)docView(h.dataset.docview)};
+$('dochits').onkeydown=e=>{const h=e.target.closest('[data-docview]');if(h&&e.key==='Enter')docView(h.dataset.docview)};
 let DOCS_ON=true,SPK_ON=false,CAL_ON=true,HA_ON=false,MAIL_ON=false;
 // The "Ich" window: conversation settings for everyone, plus the profile's own pages once logged in.
 // On phones the window opens as a list of its pages (like the iPhone settings); a page then fills the
