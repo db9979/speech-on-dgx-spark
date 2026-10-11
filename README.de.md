@@ -33,6 +33,7 @@ Alle Optionen ohne Rückfragen (`--mode api --asr 1.7b --tts 0.6b --yes` …) st
 
 <!-- New version: add one line at the top here and in CHANGELOG.md, drop the oldest line here (keep 10). Details go to docs/de and docs/en, not into this README. -->
 
+- **V01.0.425** Live-Bild: Internet als Fläche, Wächter als Wand mit Geblocktem, ruhige Ziele zusammengefasst, Legende, keine Überlappungen mehr
 - **V01.0.424** Ich-Seiten aufgeräumt: Reiter mit Zahlen, E-Mail-Fragen mit einem Tipp, reMarkable-Ordnerbaum, Gedächtnis ändern und suchen
 - **V01.0.423** Dokumente erstellen: Antwort auf die Rückfrage bleibt beim Datei-Wunsch, bei „aus“ sagt der Spark, wo man es einschaltet
 - **V01.0.422** Gescheiterte Tests bekommen einen zweiten Versuch (GitHub und Selbsttest auf dem Spark); erst dann grün steht als Warnung im Lauf
@@ -42,7 +43,6 @@ Alle Optionen ohne Rückfragen (`--mode api --asr 1.7b --tts 0.6b --yes` …) st
 - **V01.0.418** Testlauf grün: Sprung aus Wer darf was auf dem Handy, Höhen-Budget
 - **V01.0.417** Selbsttest für Wochenpläne hält über die Zeitumstellung (Update auf tars scheiterte)
 - **V01.0.416** Einstellungsseiten neu geordnet: Kästen, Symbole, Funktionen mit Detail, Ich als Seite, Apps als Kacheln
-- **V01.0.415** Dokumente erstellen: Briefe, Berichte, Präsentationen und Tabellen als Word, PDF, PowerPoint oder Excel, mit Gliederung, Versionen und Senden
 
 Alle Versionen: [CHANGELOG.md](CHANGELOG.md)
 

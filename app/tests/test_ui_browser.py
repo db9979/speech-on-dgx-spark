@@ -1472,6 +1472,31 @@ class Browser(unittest.TestCase):
                     self.assertNotIn("Kakao", text)
                     over = await pg.evaluate("document.documentElement.scrollWidth-window.innerWidth")
                     self.assertLessEqual(over, 1, f"{name}: {over}px zu breit")
+                    # Dominik 2026-10-11: no text sticks out of its box, the INTERNET line crosses no box,
+                    # the Wächter stands free between Werkzeuge and the targets
+                    out = await pg.evaluate("""()=>[...document.querySelectorAll('#lvflow .node')].flatMap(g=>{const r=g.querySelector('rect').getBBox();
+                        return [...g.querySelectorAll('text.a,text.b')].filter(t=>t.getBBox().x+t.getBBox().width>r.x+r.width-2).map(t=>t.textContent)})""")
+                    self.assertEqual(out, [], name)
+                    if name == "pc":
+                        cross = await pg.evaluate("""()=>{const rs=[...document.querySelectorAll('#lvflow .node rect')].map(r=>r.getBBox());
+                            return [...document.querySelectorAll('#lvflow line.netline')].filter(l=>rs.some(b=>{const y=+l.getAttribute('y1'),x1=+l.getAttribute('x1'),x2=+l.getAttribute('x2');
+                            return y>b.y-2&&y<b.y+b.height+2&&x2>b.x&&x1<b.x+b.width})).length}""")
+                        self.assertEqual(cross, 0)
+                        gap = await pg.evaluate("""()=>{const g=document.querySelector('#lvflow [data-gate=guard] path').getBBox(),
+                            t=document.querySelector('#lvflow [data-node=tool] rect').getBBox(),q=document.querySelector('#lvflow [data-node=qwen] rect').getBBox();
+                            return [g.x-(t.x+t.width),q.x-(g.x+g.width)]}""")
+                        self.assertGreater(min(gap), 60, gap)
+                        # internet as a tinted area with the Wächter as a wall, a key to the colours, quiet targets folded
+                        self.assertEqual(await pg.locator("#lvflow .netband").count(), 2)
+                        self.assertEqual(await pg.locator("#lvflow .netwall").count(), 1)
+                        self.assertIn("ins Internet", await pg.text_content("#lvflow .legend"))
+                        self.assertIn("ruhig", await pg.text_content("#lvflow [data-fold]"))
+                        self.assertEqual(await pg.locator("#lvflow [data-node='mail']").count(), 0)
+                        await pg.click("#lvflow [data-fold]")
+                        await pg.wait_for_selector("#lvflow [data-node='mail']", timeout=20000)
+                        self.assertIn("zuklappen", await pg.text_content("#lvflow [data-fold]"))
+                        await pg.click("#lvflow [data-fold]")
+                        await pg.wait_for_selector("#lvflow [data-node='mail']", state="detached", timeout=20000)
                     await pg.screenshot(path=os.path.join(os.environ.get("SPEECH_SPARK_SHOTS", helpers.TMP),
                                                           f"live-{name}.png"), full_page=True)
                     if name == "pc":   # the picture alone, filling the screen; Esc goes back
