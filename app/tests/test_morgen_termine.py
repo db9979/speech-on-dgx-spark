@@ -83,6 +83,20 @@ class EndedAppointments(unittest.TestCase):
         self.assertIn("already over", chat.BRIEF_SYSTEM)
 
 
+class BriefingParts(unittest.TestCase):
+    def test_module_without_briefing_is_skipped(self):
+        # roomfar has no briefing(): every briefing wrote "roomfar: briefing AttributeError" (Dominik, 2026-10-11)
+        import asyncio
+        import contextlib
+        import io
+        import extras
+        out = io.StringIO()
+        with contextlib.redirect_stdout(out):
+            asyncio.run(extras.briefing("nobody", ZONE))
+        self.assertNotIn("AttributeError", out.getvalue())
+        self.assertFalse(hasattr(extras.roomfar, "briefing"))
+
+
 class AnswerCheckCalendar(unittest.TestCase):
     MSGS = [{"role": "system", "content": "Aktuelles Datum und Uhrzeit: Sonntag, 11. Oktober 2026, 07:05 Uhr."},
             {"role": "user", "content": "Was steht heute an?"},

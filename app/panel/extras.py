@@ -64,6 +64,8 @@ async def briefing(uid, zone=None, private=True):
     """[(service name, text)] for the daily briefing (without private=False only the weather)."""
     out = []
     for m in SERVICES if private else [weather]:
+        if not hasattr(m, "briefing"):   # optional, like answer(): roomfar has none (journal "roomfar: briefing AttributeError")
+            continue
         try:
             part = await m.briefing(uid, zone)
         except Exception as e:
