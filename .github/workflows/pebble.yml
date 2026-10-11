@@ -34,10 +34,15 @@ jobs:
           uv tool install pebble-tool
           yes | pebble sdk install latest
           # keep the app runnable on watch firmware with SDK minor 0x5e (see pebble/README.md)
-          for h in $(find "$HOME/.pebble-sdk" -name pebble_process_info.h); do
-            sed -i 's/#define PROCESS_INFO_CURRENT_SDK_VERSION_MINOR 0x[0-9a-fA-F]*/#define PROCESS_INFO_CURRENT_SDK_VERSION_MINOR 0x5e/' "$h"
-            grep -q 'PROCESS_INFO_CURRENT_SDK_VERSION_MINOR 0x5e' "$h"
+          n=0
+          for h in $(find "$HOME" -name pebble_process_info.h -path '*sdk*' 2>/dev/null); do
+            grep -n 'PROCESS_INFO_CURRENT_SDK_VERSION_MINOR' "$h" | head -2
+            sed -i -E 's/(#define[[:space:]]+PROCESS_INFO_CURRENT_SDK_VERSION_MINOR[[:space:]]+)0x[0-9a-fA-F]+/\10x5e/' "$h"
+            grep -Eq 'PROCESS_INFO_CURRENT_SDK_VERSION_MINOR[[:space:]]+0x5e' "$h"
+            n=$((n+1))
           done
+          echo "patched $n headers"
+          test "$n" -gt 0
       - name: Build
         working-directory: pebble
         run: |
@@ -50,6 +55,9 @@ jobs:
           label = json.loads(z.read("appinfo.json"))["versionLabel"]
           js = z.read("pebble-js-app.js").decode()
           assert label == sys.argv[1], (label, sys.argv[1])
+          for p in ("emery", "flint", "gabbro"):
+              head = z.read(p + "/pebble-app.bin")[:12]
+              assert head[:6] == b"PBLAPP" and head[10:12] == bytes([5, 0x5e]), (p, list(head[8:12]))
           assert f"var APP_VERSION = '{label}';" in js, "APP_VERSION in src/pkjs/index.js differs from package.json"
           print("built", label)
           PY
