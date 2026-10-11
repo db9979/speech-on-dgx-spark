@@ -1183,6 +1183,24 @@ class AnswerCheck(unittest.TestCase):
         st = {"ws": "", "lead": True, "shown": 5}
         self.assertEqual([chat.trim_piece(x, st) for x in ("\n\n", "Weiter", " ", "so.\n")], ["", " Weiter", "", " so."])
 
+    def test_thinking_never_shown_or_spoken(self):
+        # Qwen with thinking on and a server that sends the thinking as text up to a lone "</think>": all of it
+        # stays out of what is shown, spoken and kept (Dominik 2026-10-11: answer twice with "</think>" between)
+        a = profile("Denker")
+        helpers.set_config(thinking=True)
+        try:
+            for q in ("THINK Zeitstempel?", "REASON Zeitstempel?", "NOEND Zeitstempel?"):
+                evs = ask(a, q)
+                self.assertEqual(answer(evs), "Zeitstempel ist aus.", q)
+            helpers.set_config(thinking=False)
+            self.assertEqual(answer(ask(a, "LONE Zeitstempel?")), "Zeitstempel ist aus.")   # the tag alone goes
+        finally:
+            helpers.set_config(thinking=False)
+        from common import no_think
+        self.assertEqual(no_think("Entwurf.\n</think>\n\nAntwort."), "Antwort.")
+        self.assertEqual(no_think("<think>x</think>\nAntwort."), "Antwort.")
+        self.assertEqual(no_think(None), "")
+
     def test_chat_asks_again_and_holds_back(self):
         a = profile("Prüfer")
         helpers.set_config(answer_check=True, tool_temperature=0.1)

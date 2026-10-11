@@ -1317,7 +1317,15 @@
 "file": "Assistent und Oberfläche",
 "head": "Sprach-Chat",
 "title": "Werkzeugpflicht und Antwort-Prüfung (V01.0.117)",
-"text": "Werkzeugpflicht und Antwort-Prüfung (V01.0.117): Fragen nach Terminen, Mails, Erinnerungen, Timern, Wetter, Paketen, Bus und Bahn, Listen, Spielergebnissen und Nachrichten muss das Modell über das passende Werkzeug beantworten (eine Tabelle NEED_TOOLS in chat.py, die auch der Qualitätstest nutzt). Solange es das Werkzeug wählt, gilt die Temperatur „bei der Werkzeugwahl“ (0.1), danach die normale. Die Antwort-Prüfung (Einstellungen → Sprachmodell, Standard an) lässt bei solchen Fragen keinen Satz durch, der eine Uhrzeit, ein Datum, einen Spielstand oder einen Betrag nennt, der in keinem Werkzeug-Ergebnis, der Frage oder dem bisherigen Gespräch steht; stattdessen kommt einmal „Genauere Angaben dazu habe ich nicht.“ Antwortet das Modell ohne nachzusehen, wird die Antwort verworfen und das Modell einmal neu gefragt. Beides steht im Protokoll unter „Antwort-Prüfung“. Allgemeine Fragen ohne Werkzeug werden nicht geprüft. Optional: Der Admin erlaubt „bei der Werkzeugwahl nachdenken“, jedes Profil schaltet es unter Ich → Gespräch selbst ein (aus, nie Gäste)."
+"text": "Werkzeugpflicht und Antwort-Prüfung (V01.0.117): Fragen nach Terminen, Mails, Erinnerungen, Timern, Wetter, Paketen, Bus und Bahn, Listen, Spielergebnissen und Nachrichten muss das Modell über das passende Werkzeug beantworten (eine Tabelle NEED_TOOLS in chat.py, die auch der Qualitätstest nutzt). Solange es das Werkzeug wählt, gilt die Temperatur „bei der Werkzeugwahl“ (0.1), danach die normale. Die Antwort-Prüfung (Einstellungen → Sprachmodell, Standard an) lässt bei solchen Fragen keinen Satz durch, der eine Uhrzeit, ein Datum, einen Spielstand oder einen Betrag nennt, der in keinem Werkzeug-Ergebnis, der Frage oder dem bisherigen Gespräch steht; stattdessen kommt einmal „Genauere Angaben dazu habe ich nicht.“ Antwortet das Modell ohne nachzusehen, wird die Antwort verworfen und das Modell einmal neu gefragt. Beides steht im Protokoll unter „Antwort-Prüfung“. Allgemeine Fragen ohne Werkzeug werden nicht geprüft. Optional: Der Admin erlaubt „bei der Werkzeugwahl nachdenken“, jedes Profil schaltet es unter Ich → Gespräch selbst ein (aus, nie Gäste). Seit V01.0.404 hält eine Runde mit Nachdenken ihren Text zurück, bis das Denken zu Ende ist: Liefert der Server das Denken nicht getr"
+},
+{
+"lang": "de",
+"src": "assistent",
+"file": "Assistent und Oberfläche",
+"head": "Sprach-Chat",
+"title": "Werkzeugpflicht und Antwort-Prüfung (V01.0.117)",
+"text": "ennt (reasoning_content), sondern als Text bis zu einem einzelnen </think> (das öffnende <think> steht bei Qwen schon in der Anfrage), wird alles davor weder gezeigt noch gesprochen noch gespeichert; ein einzelnes </think> wird nie gezeigt (vorher kam die Antwort doppelt, mit </think> dazwischen)."
 },
 {
 "lang": "de",
@@ -4109,7 +4117,15 @@
 "file": "Assistant and panel",
 "head": "Voice chat",
 "title": "Required tools and answer check (V01.0.117)",
-"text": "Required tools and answer check (V01.0.117): questions about appointments, mail, reminders, timers, weather, parcels, transit, lists, match results and news have to go through the matching tool (one table NEED_TOOLS in chat.py, also used by the quality test). While the model chooses the tool, the \"tool choice\" temperature (0.1) applies, the normal one afterwards. The answer check (Settings → Language model, on by default) lets no sentence through for such questions that names a time, date, score or amount that is in no tool result, the question or the conversation so far; instead the assistant says once \"Genauere Angaben dazu habe ich nicht.\" If the model answers without looking anything up, the answer is dropped and the model is asked once more. Both show up in the tool log as \"Antwort-Prüfung\". General questions without a tool are not checked. Optional: the admin allows \"think while choosing tools\", each profile switches it on under Me → Conversation (off, never guests)."
+"text": "Required tools and answer check (V01.0.117): questions about appointments, mail, reminders, timers, weather, parcels, transit, lists, match results and news have to go through the matching tool (one table NEED_TOOLS in chat.py, also used by the quality test). While the model chooses the tool, the \"tool choice\" temperature (0.1) applies, the normal one afterwards. The answer check (Settings → Language model, on by default) lets no sentence through for such questions that names a time, date, score or amount that is in no tool result, the question or the conversation so far; instead the assistant says once \"Genauere Angaben dazu habe ich nicht.\" If the model answers without looking anything up, the answer is dropped and the model is asked once more. Both show up in the tool log as \"Antwort-Prüfung\". General questions without a tool are not checked. Optional: the admin allows \"think while choosing tools\", each profile switches it on under Me → Conversation (off, never guests). Since V01.0.404 a round with thinking holds its text until the thinking is over: when the server does not hand the thinking over apart (reasoning_content) but as text up to a lone </think> (Qwen gets the opening "
+},
+{
+"lang": "en",
+"src": "assistant",
+"file": "Assistant and panel",
+"head": "Voice chat",
+"title": "Required tools and answer check (V01.0.117)",
+"text": "<think> in the prompt), everything before it is never shown, spoken or kept; a lone </think> is never shown (before, the answer came twice with </think> between)."
 },
 {
 "lang": "en",

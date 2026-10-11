@@ -1,6 +1,7 @@
 """Shared helpers for the ASR and TTS services: config, model state, request stats."""
 import json
 import os
+import re
 import threading
 import time
 import traceback
@@ -31,6 +32,14 @@ def shipped():
     except (OSError, ValueError):
         pass
     return _shipped["cfg"]
+
+
+def no_think(text):
+    """An answer without the model's thinking. Qwen with thinking on gets "<think>" in the prompt, so a
+    server that does not hand the thinking over apart sends it as text up to a lone "</think>": all of that
+    goes, as does every "<think>...</think>" block."""
+    text = re.sub(r"(?s)<think>.*?</think>", "", str(text or ""))
+    return text.rsplit("</think>", 1)[-1].replace("<think>", "").strip()
 
 
 def load_config(section=None):

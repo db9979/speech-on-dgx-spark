@@ -18,7 +18,7 @@ import time
 import httpx
 
 import vorrang
-from common import load_config
+from common import load_config, no_think
 
 STATE = os.environ.get("SPEECH_SPARK_STATE", "/var/lib/speech-spark/state")
 RESULT = os.path.join(STATE, "quality.json")
@@ -235,7 +235,7 @@ async def _run_case(c, ccfg, headers, model, case):
         r.raise_for_status()
         m = r.json()["choices"][0]["message"]
         calls = m.get("tool_calls") or []
-        answer = re.sub(r"(?s)<think>.*?</think>", "", m.get("content") or "").strip()
+        answer = no_think(m.get("content"))
         if not calls and need and check_on and not called and not retried:
             retried = True  # a data question answered without a tool: never said, asked once more
             msgs.append({"role": "user", "content": answercheck.RETRY_NOTE})

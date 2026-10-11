@@ -45,7 +45,7 @@ import notaus
 import profiles
 import vorrang
 import features
-from common import load_config
+from common import load_config, no_think
 
 STATE = os.environ.get("SPEECH_SPARK_STATE", "/var/lib/speech-spark/state")
 LEVELS = ("read", "act")
@@ -573,7 +573,7 @@ async def run_job(uid, jid):
             msg = await _llm(messages, [] if last else list(tools.values()))
             calls = [] if last else (msg.get("tool_calls") or [])[:MAX_CALLS]
             if not calls:
-                return re.sub(r"(?s)<think>.*?</think>", "", msg.get("content") or "").strip()
+                return no_think(msg.get("content"))
             messages.append({"role": "assistant", "content": msg.get("content") or "", "tool_calls": calls})
             for c in calls:
                 fn = c.get("function") or {}

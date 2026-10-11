@@ -44,7 +44,7 @@ import tracelog  # noqa: E402  (Logs → Anfragen: the way of each request)
 import features  # noqa: E402
 import vorab  # noqa: E402  (fetching ahead when the answer asks back)
 import ack  # noqa: E402  (the instant ready-made sentence)
-from common import load_config  # noqa: E402
+from common import load_config, no_think  # noqa: E402
 from core import DEFAULTS, FACES, admin_cookie_ok, api_headers, assistant  # noqa: E402
 
 router = APIRouter()
@@ -1096,7 +1096,7 @@ async def morning_briefing(uid, tz=""):
                                json=payload, headers=headers)
         r.raise_for_status()
         text = r.json()["choices"][0]["message"]["content"] or ""
-    return re.sub(r"(?s)<think>.*?</think>", "", text).strip()
+    return no_think(text)
 
 
 async def due_briefings(now=None):
@@ -1775,11 +1775,84 @@ async def _answer(request, turn):
         stufe.first(vip)   # the first sentence of a Vorrang answer is there: the others go on
         await sentences.put(piece)
 
+    async def take(text, st, rec):
+        """One streamed piece of the answer (no thinking held back any more): shown, and spoken sentence by
+        sentence."""
+        # models that think inline: drop <think>...</think> from what is spoken
+        # (both tags may come in one piece: "<think>\n\n</think>")
+        raw_len, kept = len(text), ""
+        while text:
+            if st["think"]:
+                if "</think>" not in text:
+                    break
+                st["think"], text = False, text.split("</think>", 1)[1]
+            else:
+                before, tag, text = text.partition("<think>")
+                # a lone "</think>" (the opening one was in the prompt) is never shown or spoken
+                kept, st["think"] = kept + before.replace("</think>", ""), bool(tag)
+        rec["think"] += raw_len - len(kept)
+        text = trim_piece(kept, st)
+        if not text:
+            return
+        # the start of each round waits until it cannot be the former note any more (DROPPED_HEAD):
+        # that note is never shown or spoken, the rest of such a round neither
+        if st["head"] is not None:
+            head = st["head"] + text
+            bare = head.lstrip("( ")
+            if bare.startswith(DROPPED_HEAD):
+                st["xml"], st["head"] = True, None
+                print("chat: the model wrote the note for a left-out answer - not shown, not spoken", flush=True)
+                return
+            if DROPPED_HEAD.startswith(bare):
+                st["head"] = head
+                return
+            text, st["head"] = head, None
+        if st["n"] == 0:
+            await out.put({"type": "timing", "llm_first_token": round(time.time() - t0, 3)})
+            if tr:
+                tr.mark("first", time.time())
+        st["n"] += 1
+        if not st["check"]:
+            await out.put({"type": "text", "delta": text})
+            trace["said"] += text
+            st["shown"] += len(text)
+        st["buf"] += text
+        done, st["buf"] = split_sentences(st["buf"], st["first"])
+        for x in done:
+            st["first"] = False
+            if st["hold"] is not None:
+                st["hold"].append(x)
+            else:
+                await speak(x, st)
+
+    def unpend(text, st, rec):
+        """With thinking on, Qwen gets "<think>" in the prompt: a server that does not hand the thinking over
+        apart (reasoning_content) sends it as text, ended by a lone "</think>". Such a round holds its text until
+        that tag (all before it is thinking: never shown, never spoken), until the server hands thinking over
+        apart, or until the round ends without the tag (then it was all answer). Returns what may go on."""
+        if st["sep"]:   # the server hands the thinking over apart: the text is the answer
+            text, st["pend"] = st["pend"] + text, None
+            return text
+        st["pend"] += text
+        pend = st["pend"]
+        end, start = pend.find("</think>"), pend.find("<think>")
+        if end >= 0 and (start < 0 or end < start):
+            rec["think"] += end + len("</think>")
+            st["pend"] = None
+            return pend[end + len("</think>"):]
+        if start >= 0:   # the model opens its thinking itself: take() drops it
+            st["pend"] = None
+            return pend
+        return ""
+
     async def llm_round(payload, st):
         """Streams one LLM call: text goes to the browser and, sentence by sentence, to TTS.
         Returns (finish_reason, tool calls)."""
         finish, calls = None, {}
         st["xml"], st["lead"], st["ws"], st["head"] = False, True, "", ""
+        # thinking on in this round (chat_template_kwargs): its text waits for the end of the thinking (unpend)
+        st["sep"] = False
+        st["pend"] = None if (payload.get("chat_template_kwargs") or {}).get("enable_thinking") is False else ""
         # priority for people (stufe.py): another person's answer with Vorrang gets its first sentence first
         held = await stufe.wait_turn(turn.stufe, ccfg)
         rec = {"start": time.time(), "first": None, "end": None, "usage": None, "think": 0, "tools": [], "held": held}
@@ -1812,6 +1885,7 @@ async def _answer(request, turn):
                 for k in ("reasoning_content", "reasoning"):   # thinking a server hands over separately
                     if isinstance(delta.get(k), str):
                         rec["think"] += len(delta[k])
+                        st["sep"] = st["sep"] or bool(delta[k])
                 for tc in delta.get("tool_calls") or []:  # arrives in pieces, keyed by index
                     x = calls.setdefault(tc.get("index", 0), {"id": "", "name": "", "arguments": ""})
                     x["id"] = tc.get("id") or x["id"]
@@ -1828,51 +1902,14 @@ async def _answer(request, turn):
                         st["xml"], text = True, text.split(tag)[0]
                 if not text:
                     continue
-                # models that think inline: drop <think>...</think> from what is spoken
-                # (both tags may come in one piece: "<think>\n\n</think>")
-                raw_len, kept = len(text), ""
-                while text:
-                    if st["think"]:
-                        if "</think>" not in text:
-                            break
-                        st["think"], text = False, text.split("</think>", 1)[1]
-                    else:
-                        before, tag, text = text.partition("<think>")
-                        kept, st["think"] = kept + before, bool(tag)
-                rec["think"] += raw_len - len(kept)
-                text = trim_piece(kept, st)
-                if not text:
-                    continue
-                # the start of each round waits until it cannot be the former note any more (DROPPED_HEAD):
-                # that note is never shown or spoken, the rest of such a round neither
-                if st["head"] is not None:
-                    head = st["head"] + text
-                    bare = head.lstrip("( ")
-                    if bare.startswith(DROPPED_HEAD):
-                        st["xml"], st["head"] = True, None
-                        print("chat: the model wrote the note for a left-out answer - not shown, not spoken", flush=True)
+                if st["pend"] is not None:
+                    text = unpend(text, st, rec)
+                    if not text:
                         continue
-                    if DROPPED_HEAD.startswith(bare):
-                        st["head"] = head
-                        continue
-                    text, st["head"] = head, None
-                if st["n"] == 0:
-                    await out.put({"type": "timing", "llm_first_token": round(time.time() - t0, 3)})
-                    if tr:
-                        tr.mark("first", time.time())
-                st["n"] += 1
-                if not st["check"]:
-                    await out.put({"type": "text", "delta": text})
-                    trace["said"] += text
-                    st["shown"] += len(text)
-                st["buf"] += text
-                done, st["buf"] = split_sentences(st["buf"], st["first"])
-                for x in done:
-                    st["first"] = False
-                    if st["hold"] is not None:
-                        st["hold"].append(x)
-                    else:
-                        await speak(x, st)
+                await take(text, st, rec)
+        if st["pend"]:   # thinking was on, but no "</think>" came: it was all answer
+            text, st["pend"] = st["pend"], None
+            await take(text, st, rec)
         if st["head"]:   # a short answer that only looked like the start of the note
             text, st["head"] = st["head"], None
             if not st["check"]:

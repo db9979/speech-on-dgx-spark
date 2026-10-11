@@ -116,6 +116,22 @@ def fake_llm():
                 yield _sse({"choices": [{"delta": {}, "finish_reason": "stop"}]})
                 yield "data: [DONE]\n\n"
                 return
+            # Qwen thinking without a reasoning parser: "<think>" was in the prompt, the thinking comes as text
+            # up to a lone "</think>" (THINK), or the server hands it over apart (REASON), or the model wrote no
+            # end of thinking at all (NOEND); LONE: a lone tag in a round without thinking
+            modes = {"THINK ": [{"content": "Entwurf: zwei Gigabyte. "}, {"content": "Nochmal.</th"},
+                                {"content": "ink>\n\nZeitstempel"}, {"content": " ist aus."}],
+                     "REASON ": [{"reasoning_content": "Ich überlege."}, {"content": "Zeitstempel"},
+                                 {"content": " ist aus."}],
+                     "NOEND ": [{"content": "Zeitstempel"}, {"content": " ist aus."}],
+                     "LONE ": [{"content": "Zeitstempel</think>"}, {"content": " ist aus."}]}
+            mode = next((k for k in modes if last["role"] == "user" and c.startswith(k)), None)
+            if mode:
+                for d in modes[mode]:
+                    yield _sse({"choices": [{"delta": d, "finish_reason": None}]})
+                yield _sse({"choices": [{"delta": {}, "finish_reason": "stop"}]})
+                yield "data: [DONE]\n\n"
+                return
             if last["role"] == "user" and c.startswith("PRE "):  # words before the tool call
                 yield _sse({"choices": [{"delta": {"content": "Der Fernseher im"}, "finish_reason": None}]})
                 c = c[4:]

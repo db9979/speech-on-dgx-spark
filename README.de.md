@@ -33,6 +33,7 @@ Alle Optionen ohne Rückfragen (`--mode api --asr 1.7b --tts 0.6b --yes` …) st
 
 <!-- New version: add one line at the top here and in CHANGELOG.md, drop the oldest line here (keep 10). Details go to docs/de and docs/en, not into this README. -->
 
+- **V01.0.404** Antwort kommt nicht mehr doppelt mit „</think>“ dazwischen: das Nachdenken wird nie gezeigt oder vorgelesen
 - **V01.0.403** Unabhängige Prüfung, Paket 2: Zugriffslücken geschlossen (Codes für Sicherung und Geräte, fremde Stimmen als „von außen“, Wiederherstellen behält Admin-Passwort, API-Doku aus, Gast-Grenzen, MCP)
 - **V01.0.402** Unabhängige Prüfung, Paket 1: lange Nachrichten bremsen nicht mehr, Abtastrate geprüft, Aufträge behalten Privates, Sperre, ESP32-Flashen, Zeitumstellung
 - **V01.0.401** Mein Notaus: Seite lädt nach Auslösen oder Aufheben nicht mehr von selbst neu (Browser-Selbsttest wieder stabil).
@@ -42,7 +43,6 @@ Alle Optionen ohne Rückfragen (`--mode api --asr 1.7b --tts 0.6b --yes` …) st
 - **V01.0.397** Begleiter: „Öffne Safari mit Google“ direkt am Rechner gefragt öffnet es (mit Rückfrage), ohne „am PC“ dazuzusagen
 - **V01.0.396** Mac-Begleiter: Selbst-Update und Spark-Wissen-Ordner lesen Dateien wieder bis zum Ende (Update scheiterte immer)
 - **V01.0.395** Begleiter zeigt das im Panel gewählte Gesicht (auch das Comic-Gesicht), in allen Fenstern und im Symbol
-- **V01.0.394** Update auf dem Spark scheitert nicht mehr am Selbsttest (Priorität der Hintergrund-Threads)
 
 Alle Versionen: [CHANGELOG.md](CHANGELOG.md)
 
