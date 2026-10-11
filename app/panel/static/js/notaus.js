@@ -13,7 +13,7 @@ function naWhen(ts){if(!ts)return '';const d=new Date(ts*1000),now=new Date();
   return d.toDateString()===now.toDateString()?hm:d.toLocaleDateString(L==='en'?'en-GB':'de-DE',{day:'numeric',month:'numeric'})+' '+hm}
 function naLine(s){return [t('seit ','since ')+naWhen(s.since),s.by?t('von ','by ')+s.by:'',s.channel?t('über ','via ')+naChan(s.channel):''].filter(Boolean).join(' · ')
   +(s.reason?' · „'+s.reason+'“':'')}
-async function notausLoad(){try{const r=await fetch('/api/notaus',{cache:'no-store'});if(!r.ok)return;NA.s=await r.json();naRender()}catch{}}
+async function notausLoad(){try{const r=await fetch('/api/notaus',{cache:'no-store'});if(r.status===429)setTimeout(notausLoad,5000);if(!r.ok)return;NA.s=await r.json();naRender()}catch{}}
 window.notausLoad=notausLoad;
 function naRender(){const s=NA.s,l=s.level||0,may=!!s.may,lift=s.lift||'';
   const btn=$('notausbtn');btn.hidden=!may;btn.querySelector('span').textContent=l?t('Stufe ändern','Change stage'):t('Notaus','Kill switch');
