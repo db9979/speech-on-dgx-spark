@@ -334,18 +334,30 @@ async def notaus_close():
     return len(_live)
 
 
+async def check():
+    """One firmware check with its outcome kept (also from Geräte-Updates, geraeteupdate.py). Returns the error or ""."""
+    err = ""
+    try:
+        await fetch_firmware()
+    except Exception as e:
+        err = str(e)[:200]
+        print("esp32: firmware check", type(e).__name__, err, flush=True)
+    _update(lambda d: d.update(checked=time.time(), error=err))
+    return err
+
+
+def checked():
+    """(time of the last firmware check, its error or "")."""
+    d = _state()
+    return float(d.get("checked") or 0), str(d.get("error") or "")
+
+
 async def fetch_loop():
     while True:
         await asyncio.sleep(60)
         try:
             if admin_on() and not notaus.blocks("internet") and time.time() - float(_state().get("checked") or 0) > FETCH_EVERY:
-                err = ""
-                try:
-                    await fetch_firmware()
-                except Exception as e:
-                    err = str(e)[:200]
-                    print("esp32: firmware check", type(e).__name__, err, flush=True)
-                _update(lambda d: d.update(checked=time.time(), error=err))
+                await check()
         except Exception as e:
             print("esp32: loop", type(e).__name__, e, flush=True)
 

@@ -473,7 +473,7 @@ RATE = {"chat": (30, 120), "asr": (60, 240), "logs": (1, 60), "pair": (10, 10), 
         "deskspeak": (0, 20), "deskinbox": (0, 60), "desksend": (0, 20), "deskagenda": (0, 30), "deskbusy": (0, 30),
         "deskmeet": (0, 20), "deskhome": (0, 30), "deskdaily": (0, 10), "deskapps": (0, 6),
         "haev": (0, 30), "hamelden": (0, 30), "hament": (0, 40), "notaus": (30, 60), "notausset": (0, 10), "notausoff": (0, 10), "notausha": (10, 10),
-        "systemone": (0, 10), "changelog": (0, 30), "mymcp": (0, 30)}  # per minute: (guest, profile or admin)
+        "systemone": (0, 10), "changelog": (0, 30), "mymcp": (0, 30), "devup": (0, 20)}  # per minute: (guest, profile or admin)
 BUSY = {"chat": 4, "asr": 3}  # at once, guests together
 
 

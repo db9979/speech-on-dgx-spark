@@ -789,6 +789,8 @@ SETTINGS = {
     "esp_on": (False, lambda v: isinstance(v, bool)),   # own ESP32 speakers (esp32.py)
     "spk_code": (False, lambda v: isinstance(v, bool)),   # code word at an own speaker when the voice is not sure (spkcode.py)
     "pebble_on": (False, lambda v: isinstance(v, bool)),   # Pebble watch paired by code (pebblewatch.py)
+    "devup_on": (False, lambda v: isinstance(v, bool)),    # notes on new firmware and app versions (geraeteupdate.py)
+    "devup_night": (False, lambda v: isinstance(v, bool)), # own speakers updated at night (geraeteupdate.py)
     "android_on": (False, lambda v: isinstance(v, bool)),  # Android app (android.py)
     "mcps_on": (False, lambda v: isinstance(v, bool)),     # the Spark as an MCP server for other programs (mcpserver.py)
     "mymcp_on": (False, lambda v: isinstance(v, bool)),    # own MCP services of this profile (meinmcp.py)

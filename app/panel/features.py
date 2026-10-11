@@ -181,6 +181,12 @@ FEATURES = (
     F("begleitermeeting", "Besprechungen mitschreiben", "Write along in meetings", "go", ("desk_meeting",),
       parent="begleiter", me="deskbox", guide="begleitermeeting"),
     F("pebble", "Pebble-Uhr", "Pebble watch", "go", ("pebble",), "pebble_on", me="pebbox", guide="pebblepair"),
+    # new firmware and app versions for the devices (geraeteupdate.py): overview, notes, speakers at night, XiaoZhi
+    F("geraeteupdate", "Geräte-Updates", "Device updates", "go", ("dev_updates",), "devup_on", me="setbox", guide="geraeteupdate"),
+    F("geraetenacht", "Lautsprecher nachts aktualisieren", "Update speakers at night", "go", ("dev_updates_night", "esp32"),
+      "devup_night", parent="geraeteupdate", me="setbox", guide="geraetenacht"),
+    F("xiaozhihinweis", "Hinweis auf neue XiaoZhi-Version", "Note on a new XiaoZhi version", "go", ("dev_updates_upstream",),
+      parent="geraeteupdate", guide="xiaozhihinweis"),
     F("mcpserver", "Spark als MCP-Server", "Spark as MCP server", "go", ("mcp_server",), "mcps_on", me="mcpbox", guide="mcpserver"),
     F("mcpextern", "MCP-Server von außen (OAuth)", "MCP server from outside (OAuth)", "go", ("mcp_server_extern",),
       parent="mcpserver", me="mcpbox", guide="mcpextern"),

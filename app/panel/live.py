@@ -70,7 +70,7 @@ TOOLS = {
     # notes the Spark sends (push.py) and what it says by itself (proactive.py, live.note)
     "remarkable_page": "rm", "remarkable_attachment": "rm", "reMarkable": "rm",
     # what the Spark does by itself with services (live.job): update check, backup to the NAS
-    "GitHub": "github", "NAS-Sicherung": "nas",
+    "GitHub": "github", "NAS-Sicherung": "nas", "Geräte-Updates": "geraete",
     "Web Push": "webpush", "Apple Push": "push", "Android-App": "android", "Spark-Begleiter": "desk", "Telegram": "tg", "Panel-Seite": "page",
     # steps the panel runs itself (tracelog "… (Panel)")
     "Erst lokal": "mem", "remarkable": "rm", "Ablauf": "mem",
@@ -101,6 +101,8 @@ TARGETS = {
     "page": ("Panel-Seite", "beim nächsten Abruf der offenen Seite", "spark", False),
     "github": ("GitHub (Updates)", "neuester Stand und Tests · Internet", "net", False),
     "nas": ("NAS (Sicherung)", "WebDAV · verschlüsselt", "lan", False),
+    # firmware and apps for the devices (geraeteupdate.py): shown while that function is on, its line with the counts
+    "geraete": ("Geräte-Updates", "Firmware und Apps · GitHub · Internet", "net", False),
     # tools of MCP services (mcp_… of the admin, mcpu_… a profile's own, meinmcp.py); the line under Ereignisse names the service
     "mcp": ("MCP-Dienste", "eigene und angebundene Dienste · Netz", "net", False),
 }
@@ -109,7 +111,8 @@ RETURNS = {"cal": "Termine oder Aufgaben", "ha": "Zustände oder Schaltung", "we
            "weather": "Wetterwerte", "parcels": "Sendungen", "transit": "Verbindungen", "mem": "eigene Daten",
            "hilfe": "Anleitungen oder Vorschlagskarte", "webpush": "Zustellung", "tg": "Zustellung",
            "android": "liegt bereit", "desk": "liegt bereit", "page": "liegt bereit",
-           "github": "Stand und Testergebnis", "nas": "Ablage bestätigt", "mcp": "Antwort des Dienstes"}
+           "github": "Stand und Testergebnis", "nas": "Ablage bestätigt", "mcp": "Antwort des Dienstes",
+           "geraete": "Versionsnummern und geprüfte Dateien"}
 CLIENT = {"web": "Browser", "speaker": "Lautsprecher", "watch": "Uhr", "siri": "Siri", "telegram": "Telegram",
           "app": "iPhone-App", "car": "CarPlay", "mcp": "MCP-Client", "ha": "Home Assistant", "auto": "Von selbst", "desk": "Spark-Begleiter",
           "other": "Gerät"}
@@ -707,6 +710,10 @@ def hints(now=None):
         if sm.get("warn"):
             out.append({"at": "tts", "level": "warn", "word": f"erster Ton {_num(sm['day']['median'])} s statt "
                                                                f"{_num(sm['week']['median'])} s"})
+        import geraeteupdate
+        h = geraeteupdate.hint()
+        if h:
+            out.append(h)
         import telegram
         if telegram.alert():
             out.append({"at": "tg", "level": "warn", "word": "Bot-Token wird woanders auch benutzt"})
@@ -780,12 +787,30 @@ def snapshot(view="admin", now=None):
     hs = hints(now)
     upd = _upd(now)
     used = {h["at"] for h in hs} | {s["to"] for r in reqs for s in r["steps"] if s["to"]} | {r["to"] for r in reqs if r["to"]} | {x["to"] for x in rets if now - x["t"] < 60 and x["to"]}
-    targets = [{"id": k, "name": v[0], "sub": v[1], "zone": v[2]} for k, v in TARGETS.items() if v[3] or k in used]
+    try:
+        import geraeteupdate
+        devup = geraeteupdate.for_live()
+    except Exception:
+        devup = None
+    if devup:
+        used.add("geraete")
+    targets = [{"id": k, "name": v[0], "sub": _devup_sub(devup) if k == "geraete" and devup else v[1], "zone": v[2]}
+               for k, v in TARGETS.items() if v[3] or k in used]
     return {"t": round(now, 1), "view": view, "fade": FADE, "reqs": reqs, "targets": targets, "speaking": speaking,
             "guard": {"ok": cnt.get("guard_ok", 0), "bad": cnt.get("guard_bad", 0), "cut": cnt.get("guard_cut", 0), "items": guard_items},
             "door": {"in": cnt.get("door_in", 0), "out": cnt.get("door_out", 0), "items": door_items},
             "rets": rets, "events": [{"t": t, "area": a, "text": x} for t, a, x in events], "conns": _conns(now), "sys": _sys(), "notaus": held,
-            "svc": _svc_now(now), "bg": _bg_now(now), "hints": hs, "sys1": sys1, "upd": upd}
+            "svc": _svc_now(now), "bg": _bg_now(now), "hints": hs, "sys1": sys1, "upd": upd, "devup": devup}
+
+
+def _devup_sub(d):
+    """The line under Geräte-Updates: per kind the devices that are current, else the version kept."""
+    parts = []
+    for k in d["kinds"][:5]:
+        parts.append(f"{k['short']} {k['current']}/{k['n']} aktuell" if k["n"] and k["counted"] else f"{k['short']} {k['version'] or '–'}")
+    if d["night"]["pending"]:
+        parts.append("Neustart läuft")
+    return " · ".join(parts)[:90] or TARGETS["geraete"][1]
 
 
 # ------------------------------------------------------------------ admin view

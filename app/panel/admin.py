@@ -488,7 +488,8 @@ def validate(new):
         raise HTTPException(400, f"kiwix_books: at most {kiwix.MAX_BOOKS} book names (letters, digits, . _ -)")
     for k in ("agent", "agent_mcp", "mcp_own", "mcp_own_jobs", "mcp_own_oauth", "messages", "messages_all", "messages_announce", "messages_voice", "pebble",
               "kiwix", "local_first", "mcp_server", "mcp_server_extern", "mcp_server_act", "prefetch", "instant_ack",
-              "spark_help", "spark_suggest", "spark_drawer", "feature_tips", "feature_tips_push", "write_help", "write_apps", "desk", "desk_act", "desk_meeting"):
+              "spark_help", "spark_suggest", "spark_drawer", "feature_tips", "feature_tips_push", "write_help", "write_apps", "desk", "desk_act", "desk_meeting",
+              "dev_updates", "dev_updates_night", "dev_updates_upstream"):
         if not isinstance(ch.get(k, False), bool):
             raise HTTPException(400, f"{k} must be true or false")
     if ch.get("esp32_url") and not re.fullmatch(r"https?://[A-Za-z0-9.\-]+(?::\d{1,5})?/?", ch["esp32_url"]):
@@ -650,7 +651,7 @@ def validate(new):
               "systemone", "systemone_tidy", "systemone_mail", "systemone_quality"):
         if not isinstance(ch.get(k, False), bool):
             raise HTTPException(400, f"chat {k} must be true or false")
-    for k in ("doc_night_from", "doc_night_to"):
+    for k in ("doc_night_from", "doc_night_to", "dev_updates_night_at"):
         if not re.fullmatch(r"([01]\d|2[0-3]):[0-5]\d", str(ch.get(k, "01:00"))):
             raise HTTPException(400, f"{k}: HH:MM")
     if not isinstance(ch.get("doc_night", False), bool):
