@@ -33,6 +33,7 @@ All options for running without questions (`--mode api --asr 1.7b --tts 0.6b --y
 
 <!-- New version: add one line at the top here and in CHANGELOG.md, drop the oldest line here (keep 10). Details go to docs/de and docs/en, not into this README. -->
 
+- **V01.0.371** Releases on GitHub tidy: after every new release only the newest of each series stays, older ones are deleted
 - **V01.0.370** iPhone app: emergency stop button and Siri "Spark Notaus" (always with a question; lifting only in the browser)
 - **V01.0.369** reMarkable comparison quieter: the Spark's own writes no longer start a comparison ("account changed"), a cloud 502/503/504 gets one more try, page reader hints as one counted line per comparison
 - **V01.0.368** Requests the Spark starts itself (update check, backup, rules) are called "Spark" instead of "Gast" in Logs → Requests and on the live page; the panel fetches the voice list with the key again (before ~900 refused calls a day, list only from cache); speech output no longer writes a statistics table per sentence to the journal
@@ -42,7 +43,6 @@ All options for running without questions (`--mode api --asr 1.7b --tts 0.6b --y
 - **V01.0.364** Emergency stop by itself (guard, switch under Security, off): stage 1 on 20 wrong sign-ins from outside, an MCP flood or many refused connections; emergency stop button on ESP32 speakers (5 s, firmware build 6) and on the Pebble (SELECT 3 s, watch app 1.6.0)
 - **V01.0.363** Own MCP services per profile (admin sub-switch + Me → My MCP services, all off): every tool released one by one, reading as outside text, acting after "Yes", OAuth sign-in, background jobs read only, the admin blocks at once, Live shows every call without contents
 - **V01.0.362** Fetch clear questions directly: weather and appointments for tomorrow and the day after too
-- **V01.0.361** Search locally first: a long Kiwix article no longer slows the answer (only its start is read), Logs → Requests shows hits per source
 
 All versions: [CHANGELOG.md](CHANGELOG.md)
 

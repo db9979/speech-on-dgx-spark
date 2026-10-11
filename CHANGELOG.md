@@ -2,6 +2,7 @@
 
 Every version in one line, newest first (taken from the commit messages, so some lines are German, some English). Older entries have no version number.
 
+- **V01.0.371** · 2026-10-11 · Releases aufräumen: neuer Workflow „Releases aufräumen“ (nach jedem erfolgreichen Release-Lauf und von Hand, mit „Nur anzeigen“) lässt pro Reihe nur das neueste Release stehen (fw-…, android-v…), ältere und ihre Tags gehen, ebenso die abgelöste Reihe schreibhilfe-windows; Entwürfe und Vorabversionen bleiben; Selbsttest
 - **V01.0.370** · 2026-10-11 · Notaus in der iPhone-App (Paket 3): roter Knopf unter Einstellungen mit Rückfrage (Mein Notaus; im Admin-Modus auch ganzer Spark Stufe 2), Siri „Spark Notaus“ mit requestConfirmation, 503 mit Notaus klar angezeigt; Panel: /api/notaus/mine für den App-Schlüssel, GET /api/notaus sagt einem gesperrten App-Schlüssel, dass sein Notaus an ist (test_app_notaus)
 - **V01.0.369** · 2026-10-11 · reMarkable-Abgleich ruhiger: eigene Schreibvorgänge des Spark lösen keinen Abgleich mehr aus („account changed“), 502/503/504 der Cloud bekommt einen zweiten Versuch, Hinweise des Seitenlesers als eine gezählte Zeile pro Abgleich
 - **V01.0.368** · 2026-10-11 · Anfragen, die der Spark selbst anstößt (Update-Prüfung, Sicherung, Regeln), heißen in Logs → Anfragen und auf der Live-Seite „Spark“ statt „Gast“; die Stimmenliste im Panel holt der Spark wieder mit Schlüssel (vorher ~900 abgelehnte Abrufe am Tag, Liste kam nur aus dem Zwischenspeicher); die Sprachausgabe schreibt keine Statistiktabelle pro Satz mehr ins Journal

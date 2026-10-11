@@ -33,6 +33,7 @@ Alle Optionen ohne Rückfragen (`--mode api --asr 1.7b --tts 0.6b --yes` …) st
 
 <!-- New version: add one line at the top here and in CHANGELOG.md, drop the oldest line here (keep 10). Details go to docs/de and docs/en, not into this README. -->
 
+- **V01.0.371** Releases auf GitHub aufgeräumt: nach jedem neuen Release bleibt pro Reihe nur das neueste stehen, ältere werden gelöscht
 - **V01.0.370** iPhone-App: Notaus-Knopf und Siri „Spark Notaus“ (immer mit Rückfrage; aufheben nur im Browser)
 - **V01.0.369** reMarkable-Abgleich ruhiger: eigene Schreibvorgänge des Spark lösen keinen Abgleich mehr aus („account changed“), 502/503/504 der Cloud bekommt einen zweiten Versuch, Hinweise des Seitenlesers als eine gezählte Zeile pro Abgleich
 - **V01.0.368** Anfragen, die der Spark selbst anstößt (Update-Prüfung, Sicherung, Regeln), heißen in Logs → Anfragen und auf der Live-Seite „Spark“ statt „Gast“; die Stimmenliste im Panel holt der Spark wieder mit Schlüssel (vorher ~900 abgelehnte Abrufe am Tag, Liste kam nur aus dem Zwischenspeicher); die Sprachausgabe schreibt keine Statistiktabelle pro Satz mehr ins Journal
@@ -42,7 +43,6 @@ Alle Optionen ohne Rückfragen (`--mode api --asr 1.7b --tts 0.6b --yes` …) st
 - **V01.0.364** Notaus von selbst (Wächter, Schalter unter Sicherheit, aus): Stufe 1 bei 20 falschen Anmeldungen von außen, MCP-Flut oder vielen gesperrten Verbindungen; Notaus-Taste am ESP32-Lautsprecher (5 s, Firmware Build 6) und an der Pebble (SELECT 3 s, Uhr-App 1.6.0)
 - **V01.0.363** Eigene MCP-Dienste pro Profil (Admin-Unterschalter + Ich → Meine MCP-Dienste, alles aus): jedes Werkzeug einzeln frei, Lesen als fremder Text, Handeln nach „Ja“, OAuth-Anmeldung, Hintergrundaufträge nur lesend, Admin sperrt sofort, Live zeigt jeden Aufruf ohne Inhalte
 - **V01.0.362** Eindeutiges direkt abrufen: Wetter und Termine auch für morgen und übermorgen
-- **V01.0.361** Erst lokal suchen: ein langer Kiwix-Artikel bremst die Antwort nicht mehr (nur der Anfang wird gelesen), Logs → Anfragen zeigt Treffer je Quelle
 
 Alle Versionen: [CHANGELOG.md](CHANGELOG.md)
 

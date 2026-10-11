@@ -1,0 +1,42 @@
+name: Releases aufräumen
+
+# Keeps the releases tidy (V01.0.371): after every successful release run only the newest release of each
+# series stays (fw-…, android-v…; begleiter-windows/-mac are replaced in place), older ones and their
+# tags go, as do retired series. Logic and the reasons nothing needs an old release:
+# .github/scripts/releases_aufraeumen.py. By hand: Actions → "Releases aufräumen" → Run workflow
+# (with "Nur anzeigen" it only lists what would go).
+on:
+  workflow_dispatch:
+    inputs:
+      dry_run:
+        description: "Nur anzeigen, nichts löschen"
+        type: boolean
+        default: false
+  workflow_run:
+    workflows: ["Android app", "Speaker firmware", "Spark-Begleiter Windows", "Spark-Begleiter Mac"]
+    types: [completed]
+    branches: [main]
+
+permissions:
+  contents: read
+
+concurrency:
+  group: releases-aufraeumen
+  cancel-in-progress: false
+
+jobs:
+  cleanup:
+    if: github.event_name == 'workflow_dispatch' || github.event.workflow_run.conclusion == 'success'
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    permissions:
+      contents: write
+    steps:
+      - uses: actions/checkout@v5
+        with:
+          sparse-checkout: .github/scripts
+      - name: Delete older releases
+        env:
+          GH_TOKEN: ${{ github.token }}
+          DRY: ${{ inputs.dry_run && '--dry-run' || '' }}
+        run: python3 .github/scripts/releases_aufraeumen.py $DRY
