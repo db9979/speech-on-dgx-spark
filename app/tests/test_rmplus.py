@@ -9,7 +9,7 @@ import time
 import zipfile
 
 from tests import helpers
-from tests.test_remarkable import ADMIN, CLOUD, NB, NB2, P1, P2, Base, page_file, run, profile  # noqa: F401
+from tests.test_remarkable import ADMIN, CLOUD, NB, NB2, P1, P2, Base, page_file, quiet_due, run, profile  # noqa: F401
 
 import chat  # noqa: E402
 import features  # noqa: E402
@@ -18,6 +18,8 @@ import panel  # noqa: E402
 import profiles  # noqa: E402
 import remarkable  # noqa: E402
 import rmplus  # noqa: E402
+
+PLUS_DUE = rmplus.due_once   # the tests call the real one; the panel's minute loop gets a quiet one (Plus)
 from fastapi.testclient import TestClient  # noqa: E402
 
 T = 1_760_000_000            # a fixed "now"
@@ -46,9 +48,11 @@ class Plus(Base):
     def setUp(self):
         super().setUp()
         rmplus._last.clear()
+        rmplus.due_once = quiet_due
         helpers.set_config(remarkable_send=True, remarkable_plus=True)
 
     def tearDown(self):
+        rmplus.due_once = PLUS_DUE
         super().tearDown()
         helpers.set_config(remarkable_plus=False)
 
@@ -79,7 +83,7 @@ class Switches(Plus):
         self.assertFalse(any(rmplus.on(k, uid) for k in rmplus.PARTS))
         helpers.set_config(remarkable_send=True, remarkable_plus=False)
         self.assertFalse(any(rmplus.on(k, uid) for k in rmplus.PARTS))
-        self.assertIsNone(run(rmplus.due_once(idle=True, now=T)))
+        self.assertIsNone(run(PLUS_DUE(idle=True, now=T)))
         self.assertEqual(c.post("/api/profile/remarkable/guide").status_code, 403)
         g = TestClient(panel.app)
         for path in ("/api/profile/remarkable/todo", "/api/profile/remarkable/guide"):
@@ -88,7 +92,7 @@ class Switches(Plus):
 
     def test_never_while_someone_talks(self):
         self.on("Rpbusy")
-        self.assertIsNone(run(rmplus.due_once(idle=False, now=T)))
+        self.assertIsNone(run(PLUS_DUE(idle=False, now=T)))
 
 
 class Sheet(Plus):
@@ -143,21 +147,19 @@ class FromPaper(Plus):
         with open(helpers.os.environ["SPEECH_SPARK_CONFIG"]) as f:
             cfg = json.load(f)
         cfg.setdefault("logs", {})["live"] = True
-        with open(helpers.os.environ["SPEECH_SPARK_CONFIG"], "w") as f:
-            json.dump(cfg, f)
+        helpers.write_config(cfg)
         try:
             c, uid = self.on("Rplive", rm_ask=True)
             self.notebook(c, uid, [(P1, page_file("@Spark Wie lange hält Sauerteig im Kühlschrank?"))],
                           times={P1: (T - 60) * 1000})
-            self.assertEqual(run(rmplus.due_once(idle=True, now=T, uids=[uid])), "pages")
+            self.assertEqual(run(PLUS_DUE(idle=True, now=T, uids=[uid])), "pages")
             ev = [e for e in live.snapshot()["events"] if "reMarkable" in e["area"] + e["text"]]
             self.assertTrue(any("@Spark-Antwort fertig" in e["text"] for e in ev), ev)
             self.assertFalse(any("Sauerteig" in e["text"] for e in live.snapshot()["events"]))
             self.assertEqual([b for b in live.snapshot()["bg"] if b["job"].startswith("reMarkable")], [])
         finally:
             cfg["logs"]["live"] = False
-            with open(helpers.os.environ["SPEECH_SPARK_CONFIG"], "w") as f:
-                json.dump(cfg, f)
+            helpers.write_config(cfg)
 
     def test_tasks_become_reminders_only_on_click(self):
         c, uid = self.on("Rptodo")
@@ -254,7 +256,7 @@ class Guide(Plus):
 
     def test_guide_is_renewed_in_place_when_its_text_changes(self):
         c, uid = self.on("Rpguide", rm_guide=True)
-        self.assertEqual(run(rmplus.due_once(idle=True, now=T, uids=[uid])), "guide")
+        self.assertEqual(run(PLUS_DUE(idle=True, now=T, uids=[uid])), "guide")
         first = remarkable.load(uid)["own"]["guide"]
         self.assertIn("Spark-Anleitung", books("Spark-Anleitung"))
         # the person writes into it on the tablet: an extra page file in that document

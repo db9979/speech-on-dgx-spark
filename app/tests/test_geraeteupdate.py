@@ -368,6 +368,15 @@ class Views(Base):
         async def check():
             calls.append("esp")
             return ""
+        # a check of an earlier test (or the panel's own after its start) can still run on a slow runner or have
+        # set "checked" just now: that was a 429 on the first tap on GitHub (V01.0.419); start from a quiet state
+        for _ in range(300):
+            if not gu._busy.locked():
+                break
+            time.sleep(0.1)
+        gu._write(dict(gu._read(), checked=0))
+        for k in [k for k in guard._rate if k[0] == "devup"]:
+            guard._rate.pop(k, None)
         with mock.patch.object(esp32, "check", check):
             r = ADMIN.post("/api/admin/devup/check")
             self.assertEqual(r.status_code, 200, r.text)

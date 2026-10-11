@@ -71,8 +71,7 @@ def asr_port(port):
         c = json.load(f)
     old = c["asr"]["port"]
     c["asr"]["port"] = port
-    with open(os.environ["SPEECH_SPARK_CONFIG"], "w") as f:
-        json.dump(c, f)
+    helpers.write_config(c)
     return old
 
 

@@ -114,8 +114,7 @@ class RuleOptions(Base):
         with open(os.environ["SPEECH_SPARK_CONFIG"]) as f:
             c = json.load(f)
         c.setdefault("logs", {})["live"] = True
-        with open(os.environ["SPEECH_SPARK_CONFIG"], "w") as f:
-            json.dump(c, f)
+        helpers.write_config(c)
         try:
             a, uid = profile("Hlive")
             a.post("/api/proactive/rules", json={"conds": [{"entity": "Flur Bewegung", "op": "changes"}],
@@ -143,8 +142,7 @@ class RuleOptions(Base):
             self.assertEqual((r["client"], r["intent"], r["steps"][-1]["to"]), ("auto", "Erinnerung", "tg"))
         finally:
             c["logs"]["live"] = False
-            with open(os.environ["SPEECH_SPARK_CONFIG"], "w") as f:
-                json.dump(c, f)
+            helpers.write_config(c)
 
     def test_only_when(self):
         local = datetime.datetime(2026, 10, 10, 14, 0)

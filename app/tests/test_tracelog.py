@@ -35,8 +35,7 @@ def set_trace(on):
     with open(os.environ["SPEECH_SPARK_CONFIG"]) as f:
         c = json.load(f)
     c.setdefault("logs", {})["trace"] = on
-    with open(os.environ["SPEECH_SPARK_CONFIG"], "w") as f:
-        json.dump(c, f)
+    helpers.write_config(c)
 
 
 def ask(client, text):

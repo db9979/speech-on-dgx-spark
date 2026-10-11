@@ -53,8 +53,9 @@ async function who(it){let box=[...it.children].find(x=>x.classList.contains('fw
   if(fs.some(f=>f.profile&&!f.spark)){const n=document.createElement('div');n.className='mut fwg';
     n.textContent=t('Profile wählen geht, sobald der Schalter der Funktion an und gespeichert ist.','Choosing profiles works once the function\'s switch is on and saved.');box.appendChild(n)}
   // a jump from Wer darf was scrolled to its row before this box was filled and pushed the row down: scroll again
-  // (only while the row still flashes, so a later refresh by a chip does not move the page)
-  const j=typeof WHO_LAST!=='undefined'&&WHO_LAST;if(j&&j.isConnected&&j.classList.contains('sflash')&&inItem(it,j))j.scrollIntoView({block:'center'})
+  // (until the user moves himself, so a later refresh by a chip does not move the page; the flash alone was too
+  // short on a slow device with many profiles)
+  const j=typeof WHO_LAST!=='undefined'&&WHO_LAST;if(j&&typeof whoKeepJump==='function'&&whoKeepJump()&&inItem(it,j))j.scrollIntoView({block:'center'})
   function chip(label,on,can,aria,act,cls){const b=document.createElement('button');b.type='button';b.className='fwc'+(on?' on':'')+(cls?' '+cls:'');
     b.textContent=label;b.disabled=!can;b.setAttribute('aria-pressed',on?'true':'false');b.setAttribute('aria-label',`${aria}: ${on?t('an','on'):t('aus','off')}`);
     b.onclick=async()=>{b.disabled=true;try{await act();who(it)}catch(e){alert(e.message);b.disabled=false}};return b}}

@@ -31,8 +31,7 @@ def set_panel(**kw):
     with open(os.environ["SPEECH_SPARK_CONFIG"]) as f:
         cfg = json.load(f)
     cfg["panel"].update(kw)
-    with open(os.environ["SPEECH_SPARK_CONFIG"], "w") as f:
-        json.dump(cfg, f)
+    helpers.write_config(cfg)
 
 
 class Night(unittest.TestCase):

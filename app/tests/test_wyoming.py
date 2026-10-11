@@ -98,8 +98,7 @@ class Wyoming(unittest.TestCase):
         with open(os.environ["SPEECH_SPARK_CONFIG"]) as f:
             c = json.load(f)
         c.setdefault("logs", {})["live"] = True
-        with open(os.environ["SPEECH_SPARK_CONFIG"], "w") as f:
-            json.dump(c, f)
+        helpers.write_config(c)
         try:
             with live._lock:
                 live._run.clear()
@@ -117,8 +116,7 @@ class Wyoming(unittest.TestCase):
             self.assertNotIn("Licht", json.dumps(d))
         finally:
             c["logs"]["live"] = False
-            with open(os.environ["SPEECH_SPARK_CONFIG"], "w") as f:
-                json.dump(c, f)
+            helpers.write_config(c)
 
     def test_only_listed_addresses(self):
         self.assertEqual(run([("describe", {}, b"")], allow="192.168.1.20"), [])

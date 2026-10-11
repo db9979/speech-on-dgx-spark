@@ -53,8 +53,7 @@ def set_panel(**kw):
     with open(os.environ["SPEECH_SPARK_CONFIG"]) as f:
         c = json.load(f)
     c["panel"].update(kw)
-    with open(os.environ["SPEECH_SPARK_CONFIG"], "w") as f:
-        json.dump(c, f)
+    helpers.write_config(c)
 
 
 def off():

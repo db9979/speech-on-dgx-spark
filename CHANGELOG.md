@@ -2,6 +2,7 @@
 
 Every version in one line, newest first (taken from the commit messages, so some lines are German, some English). Older entries have no version number.
 
+- **V01.0.420** · 2026-10-11 · Testläufe auf GitHub stabil: Tests schreiben die Einstellungen in einem Schritt, warten auf den fertigen Seitenaufbau statt fester Zeiten, Minuten-Schleife stört Mail- und reMarkable-Tests nicht mehr; Sprung aus Wer darf was bleibt bei vielen Profilen an der Zeile; Job-Grenze 30 min
 - **V01.0.419** · 2026-10-11 · Begleiter: „Öffne heise.de auf meinem Mac“ vom Lautsprecher oder Handy geht sicher an den Rechner (Rückfrage dort); geht es nicht, sagt der Spark warum
 - **V01.0.418** · 2026-10-11 · Testlauf wieder grün: Sprung aus Wer darf was landet auch auf dem Handy bei der Zeile, Höhen-Budget Funktionen +1 Unterschalter
 - **V01.0.417** · 2026-10-11 · Selbsttest Pläne zeitzonenfest: „jede Woche“ rechnet über die Zeitumstellung mit derselben Uhrzeit (Update auf tars scheiterte in Europe/Berlin)

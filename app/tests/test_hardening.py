@@ -512,8 +512,7 @@ def _set_panel(**kw):
         c = json.load(f)
     old = {k: c["panel"].get(k) for k in kw}
     c["panel"].update(kw)
-    with open(os.environ["SPEECH_SPARK_CONFIG"], "w") as f:
-        json.dump(c, f)
+    helpers.write_config(c)
     return old
 
 
@@ -626,8 +625,7 @@ class Stage3(unittest.TestCase):
             cfg = json.load(f)
         key = cfg["api"]["key"]
         cfg["api"]["key"] = ""
-        with open(os.environ["SPEECH_SPARK_CONFIG"], "w") as f:
-            json.dump(cfg, f)
+        helpers.write_config(cfg)
         try:
             self.assertNotIn("access-control-allow-origin", c.options("/v1/x", headers=pre).headers)
             # and the panel refuses an empty key while the services listen in the network
@@ -636,8 +634,7 @@ class Stage3(unittest.TestCase):
             self.assertEqual(ADMIN.put("/api/config", json=new).status_code, 400)
         finally:
             cfg["api"]["key"] = key
-            with open(os.environ["SPEECH_SPARK_CONFIG"], "w") as f:
-                json.dump(cfg, f)
+            helpers.write_config(cfg)
 
     def test_load_limits(self):
         import guard

@@ -78,8 +78,7 @@ class Echo(unittest.TestCase):
         with open(os.environ["SPEECH_SPARK_CONFIG"]) as f:
             c = json.load(f)
         c["asr"]["port"] = port
-        with open(os.environ["SPEECH_SPARK_CONFIG"], "w") as f:
-            json.dump(c, f)
+        helpers.write_config(c)
 
     def test_off_by_default_and_only_for_profiles(self):
         with open(os.path.join(os.path.dirname(__file__), "..", "config.default.json")) as f:

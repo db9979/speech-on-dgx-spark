@@ -114,14 +114,12 @@ class OffAndKeys(Base):
         with open(helpers.os.environ["SPEECH_SPARK_CONFIG"]) as f:
             cfg = json.load(f)
         cfg["panel"]["trusted_proxies"] = [LAN[0]]
-        with open(helpers.os.environ["SPEECH_SPARK_CONFIG"], "w") as f:
-            json.dump(cfg, f)
+        helpers.write_config(cfg)
         try:
             self.assertEqual(rpc(self.lan, token, "ping").status_code, 403)
         finally:
             cfg["panel"]["trusted_proxies"] = []
-            with open(helpers.os.environ["SPEECH_SPARK_CONFIG"], "w") as f:
-                json.dump(cfg, f)
+            helpers.write_config(cfg)
 
     def test_token_origin_and_switches(self):
         c, _ = profile("McpTom")
@@ -174,8 +172,7 @@ def _live(on):
     with open(os.environ["SPEECH_SPARK_CONFIG"]) as f:
         c = json.load(f)
     c.setdefault("logs", {})["live"] = on
-    with open(os.environ["SPEECH_SPARK_CONFIG"], "w") as f:
-        json.dump(c, f)
+    helpers.write_config(c)
 
 
 class OnTheLivePage(Base):

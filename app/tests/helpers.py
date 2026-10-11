@@ -668,7 +668,7 @@ def _serve(app, port):
     server = uvicorn.Server(uvicorn.Config(app, host="127.0.0.1", port=port, log_level="error"))
     server.install_signal_handlers = lambda: None
     threading.Thread(target=lambda: asyncio.run(server.serve()), daemon=True).start()
-    for _ in range(100):
+    for _ in range(1200):   # 60 s: late in the run (600 profiles) the panel's start took over 5 s on a busy machine
         if server.started:
             return
         time.sleep(0.05)
@@ -691,12 +691,21 @@ def start():
         _started = True
 
 
+def write_config(c):
+    """config.json in one step (a temporary file, then rename): the panel reads it in its own thread while a test
+    writes, and a half-written file was a 500 "Expecting value" on a slow GitHub runner (V01.0.418)."""
+    with open(os.environ["SPEECH_SPARK_CONFIG"] + ".part", "w") as f:
+        json.dump(c, f)
+    if os.path.exists(os.environ["SPEECH_SPARK_CONFIG"]):
+        shutil.copymode(os.environ["SPEECH_SPARK_CONFIG"], os.environ["SPEECH_SPARK_CONFIG"] + ".part")
+    os.replace(os.environ["SPEECH_SPARK_CONFIG"] + ".part", os.environ["SPEECH_SPARK_CONFIG"])
+
+
 def set_config(**chat):
     with open(os.environ["SPEECH_SPARK_CONFIG"]) as f:
         c = json.load(f)
     c["chat"].update(chat)
-    with open(os.environ["SPEECH_SPARK_CONFIG"], "w") as f:
-        json.dump(c, f)
+    write_config(c)
 
 
 def events(response):

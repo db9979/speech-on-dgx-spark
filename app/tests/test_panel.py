@@ -160,7 +160,7 @@ class Isolation(unittest.TestCase):
             model = cfg["tts"]["model"]
             try:
                 cfg["tts"]["model"] = "Qwen/Qwen3-TTS-12Hz-1.7B-Base"
-                json.dump(cfg, open(os.environ["SPEECH_SPARK_CONFIG"], "w"))
+                helpers.write_config(cfg)
                 os.makedirs(admin.VOICES_DIR, exist_ok=True)
                 open(os.path.join(admin.VOICES_DIR, "Oma.wav"), "wb").close()
                 # a Base model speaks the cloned voices, which the panel lists itself
@@ -168,7 +168,7 @@ class Isolation(unittest.TestCase):
             finally:
                 os.remove(os.path.join(admin.VOICES_DIR, "Oma.wav"))
                 cfg["tts"]["model"] = model
-                json.dump(cfg, open(os.environ["SPEECH_SPARK_CONFIG"], "w"))
+                helpers.write_config(cfg)
         self.assertEqual(TestClient(panel.app).get("/api/assistant/voices").status_code, 401)
 
 
@@ -558,8 +558,7 @@ class Security(unittest.TestCase):
         with open(os.environ["SPEECH_SPARK_CONFIG"]) as f:
             c = json.load(f)
         c["panel"]["trusted_proxies"] = ["192.168.1.5"]
-        with open(os.environ["SPEECH_SPARK_CONFIG"], "w") as f:
-            json.dump(c, f)
+        helpers.write_config(c)
         self.addCleanup(self._no_proxies)
         for i in range(5):  # another internet address behind the same proxy is not locked out
             g.post("/api/login", json={"password": "x"}, headers={"x-forwarded-for": "203.0.113.9"})
@@ -573,8 +572,7 @@ class Security(unittest.TestCase):
         with open(os.environ["SPEECH_SPARK_CONFIG"]) as f:
             c = json.load(f)
         c["panel"]["trusted_proxies"] = []
-        with open(os.environ["SPEECH_SPARK_CONFIG"], "w") as f:
-            json.dump(c, f)
+        helpers.write_config(c)
 
     def test_forwarded_for_only_from_listed_proxy(self):
         """Without trusted_proxies, a LAN device cannot dodge the lockout by inventing addresses."""
@@ -663,8 +661,7 @@ class Errors(unittest.TestCase):
             c = json.load(f)
         old = dict(c[sec])
         c[sec].update(kw)
-        with open(helpers.os.environ["SPEECH_SPARK_CONFIG"], "w") as f:
-            json.dump(c, f)
+        helpers.write_config(c)
         return old
 
     def test_tts_down_still_gives_the_text(self):

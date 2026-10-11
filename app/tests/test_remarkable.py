@@ -30,6 +30,15 @@ import extras  # noqa: E402
 import guard  # noqa: E402
 import profiles  # noqa: E402
 import remarkable  # noqa: E402
+
+# the panel's minute loop calls remarkable.due_once (and rmplus.due_once) with the real clock; a fresh test profile
+# is due at once, and on a slow GitHub runner a tick inside a test compared first (None != uid, V01.0.418):
+# the tests call the real ones by these names, the loop gets a quiet one while a test runs (Base)
+DUE = remarkable.due_once
+
+
+async def quiet_due(idle=True, now=None):
+    return None
 import wissen  # noqa: E402
 from fastapi.testclient import TestClient  # noqa: E402
 
@@ -191,6 +200,7 @@ class Base(unittest.TestCase):
         remarkable._auto_last.clear()
         remarkable._peek_last.clear()
         remarkable.BACKGROUND = False
+        remarkable.due_once = quiet_due
         if si is None:
             remarkable.parse_page = lambda data, draw=True: (json.loads(data)["text"], [], b"jpeg" if draw and json.loads(data)["strokes"] else None,
                                                               bool(json.loads(data)["strokes"]))
@@ -199,6 +209,7 @@ class Base(unittest.TestCase):
             guard._rate.pop(k, None)
 
     def tearDown(self):
+        remarkable.due_once = DUE
         remarkable._request = REAL_REQUEST
         helpers.set_config(doc_pictures=False, remarkable=False, remarkable_send=False, remarkable_fresh=False)
 
@@ -380,13 +391,13 @@ class Reading(Base):
         c, uid = self.paired("Rmbg")
         CLOUD[0].doc(NB, "Ideen", [(P1, page_file("Gartenhaus planen"))])
         c.put("/api/profile/remarkable/pick", json={"ids": [NB], "all": False})
-        self.assertIsNone(run(remarkable.due_once(idle=False)))
+        self.assertIsNone(run(DUE(idle=False)))
         for other in profiles.user_ids():          # other tests' profiles are not due
             if other != uid:
                 remarkable._auto_last[other] = remarkable._peek_last[other] = 1e12
-        self.assertEqual(run(remarkable.due_once(idle=True)), uid)
+        self.assertEqual(run(DUE(idle=True)), uid)
         self.assertEqual(len(self.docs(uid)), 1)
-        self.assertIsNone(run(remarkable.due_once(idle=True)))       # not due again yet
+        self.assertIsNone(run(DUE(idle=True)))       # not due again yet
 
 
 class Writing(Base):
@@ -684,23 +695,24 @@ class Fresh(Base):
     def test_quick_look_brings_new_notes_soon(self):
         c, uid = self.paired("Rmpeek")
         CLOUD[0].doc(NB, "Ideen", [(P1, page_file("Gartenhaus planen"))])
-        c.put("/api/profile/remarkable/pick", json={"ids": [NB], "all": False})
+        r = c.put("/api/profile/remarkable/pick", json={"ids": [NB], "all": False})
+        self.assertEqual(r.status_code, 200, r.text)   # red once on GitHub without a word: say why next time
         for other in profiles.user_ids():          # other tests' profiles are not due
             if other != uid:
                 remarkable._auto_last[other] = remarkable._peek_last[other] = 1e12
-        self.assertEqual(run(remarkable.due_once(idle=True)), uid)
+        self.assertEqual(run(DUE(idle=True)), uid)
         d = remarkable.load(uid)
         self.assertEqual(d["root"], CLOUD[0].root)
         t = max(d["last"], remarkable._auto_last[uid])
         CLOUD[0].calls.clear()
-        self.assertIsNone(run(remarkable.due_once(idle=True, now=t + 60)))       # not yet: no request at all
+        self.assertIsNone(run(DUE(idle=True, now=t + 60)))       # not yet: no request at all
         self.assertEqual(CLOUD[0].calls, [])
-        self.assertIsNone(run(remarkable.due_once(idle=True, now=t + remarkable.PEEK + 1)))
+        self.assertIsNone(run(DUE(idle=True, now=t + remarkable.PEEK + 1)))
         self.assertEqual([x[1] for x in CLOUD[0].calls], ["v4/root"])         # one small look, nothing changed
         CLOUD[0].doc(NB, "Ideen", [(P1, page_file("Gartenhaus planen")), (P2, page_file("Teich anlegen"))])
-        self.assertIsNone(run(remarkable.due_once(idle=True, now=t + remarkable.PEEK + 60)))   # the next look waits
-        self.assertIsNone(run(remarkable.due_once(idle=False, now=t + 2 * remarkable.PEEK + 2)))   # never while busy
-        self.assertEqual(run(remarkable.due_once(idle=True, now=t + 2 * remarkable.PEEK + 2)), uid)
+        self.assertIsNone(run(DUE(idle=True, now=t + remarkable.PEEK + 60)))   # the next look waits
+        self.assertIsNone(run(DUE(idle=False, now=t + 2 * remarkable.PEEK + 2)))   # never while busy
+        self.assertEqual(run(DUE(idle=True, now=t + 2 * remarkable.PEEK + 2)), uid)
         self.assertTrue(documents.search(uid, "Teich anlegen"))
         self.assertEqual(remarkable.load(uid)["root"], CLOUD[0].root)
 
@@ -711,15 +723,15 @@ class Fresh(Base):
         for other in profiles.user_ids():
             if other != uid:
                 remarkable._auto_last[other] = remarkable._peek_last[other] = 1e12
-        self.assertEqual(run(remarkable.due_once(idle=True)), uid)
+        self.assertEqual(run(DUE(idle=True)), uid)
         t = max(remarkable.load(uid)["last"], remarkable._auto_last[uid])
         run(remarkable.place(uid, "Antwort", remarkable.epub("Antwort", "Text")))      # the Spark writes itself
         self.assertEqual(remarkable.load(uid)["root"], CLOUD[0].root)
         CLOUD[0].calls.clear()
-        self.assertIsNone(run(remarkable.due_once(idle=True, now=t + remarkable.PEEK + 1)))
+        self.assertIsNone(run(DUE(idle=True, now=t + remarkable.PEEK + 1)))
         self.assertEqual([x[1] for x in CLOUD[0].calls], ["v4/root"])         # no comparison for its own write
         CLOUD[0].doc(NB, "Ideen", [(P1, page_file("Gartenhaus planen")), (P2, page_file("Teich anlegen"))])
-        self.assertEqual(run(remarkable.due_once(idle=True, now=t + 2 * remarkable.PEEK + 2)), uid)   # the device's change still counts
+        self.assertEqual(run(DUE(idle=True, now=t + 2 * remarkable.PEEK + 2)), uid)   # the device's change still counts
 
     def test_a_busy_gateway_gets_one_more_try(self):
         c, uid = self.paired("Rmbusy")

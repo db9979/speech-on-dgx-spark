@@ -126,8 +126,7 @@ def set_panel(**kw):
         c = json.load(f)
     for sec, vals in kw.items():
         c.setdefault(sec, {}).update(vals)
-    with open(os.environ["SPEECH_SPARK_CONFIG"], "w") as f:
-        json.dump(c, f)
+    helpers.write_config(c)
 
 
 class Base(unittest.TestCase):

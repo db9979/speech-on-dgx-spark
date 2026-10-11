@@ -3,7 +3,7 @@
 // cannot be used (Spark off, or no own switch). Filter: Alle / An / Neu, noch nie an / Braucht dich. Phones get a
 // list with the Spark switch and one chip per profile. Data from /api/admin/features (features.py), switching
 // the Spark over /api/admin/switches and a profile over /api/admin/features/<key>/profiles/<id>.
-let WHO=null,whoF='all',WHO_LAST=null;   // WHO_LAST: the row the last name jumped to
+let WHO=null,whoF='all',WHO_LAST=null,WHO_JUMP=0;   // WHO_LAST: the row the last name jumped to; WHO_JUMP: when, until the user moves
 try{whoF=localStorage.getItem('whofilter')||'all'}catch{}
 const WHOF=[['all',t('Alle','All')],['on',t('An','On')],['new',t('Neu, noch nie an','New, never on')],['need',t('Braucht dich','Needs you')]];
 const whoName=f=>f.name[L==='en'?1:0];
@@ -33,10 +33,20 @@ function whoRow(f){const el=$('chat.'+f.switch);if(!el)return null;let row=el.cl
     const sw=$(dep.dataset.show);if(!sw)break;row=sw.closest('.setrow')||sw.closest('.fitem')||sw}
   return row}
 async function whoOpen(f){goSec('feat');if(typeof loadCfg==='function')try{await loadCfg()}catch{}
-  const row=whoRow(f);WHO_LAST=row;if(!row)return;const it=row.closest('#pane-feat .fitem');
+  const row=whoRow(f);WHO_LAST=row;if(!row)return;whoJumped();const it=row.closest('#pane-feat .fitem');
   if(it&&typeof featShow==='function')featShow(it);
   for(let d=row.parentElement;d&&d!==document.body;d=d.parentElement)if(d.tagName==='DETAILS'&&!d.open)d.open=true;
   requestAnimationFrame(()=>{if(typeof sFlash==='function')sFlash(row);else row.scrollIntoView({block:'center'})})}
+// boxes that fill in later (the profile chips of a function, slow with many profiles) push the row away: they scroll
+// back to it until the user scrolls, taps or types himself, at most 15 s
+function whoJumped(){WHO_JUMP=Date.now();clearInterval(whoJumped.t);
+  const stop=()=>{WHO_JUMP=0;clearInterval(whoJumped.t);for(const e of WHO_STOP)removeEventListener(e,stop,true)};
+  for(const e of WHO_STOP)addEventListener(e,stop,{capture:true,passive:true});
+  // anything drawn later above the row (not only the chips) moves it: bring it back while it is out of view
+  whoJumped.t=setInterval(()=>{if(!whoKeepJump()){clearInterval(whoJumped.t);return}
+    const r=WHO_LAST.getBoundingClientRect();if(r.height&&(r.top<0||r.bottom>innerHeight))WHO_LAST.scrollIntoView({block:'center'})},400)}
+const WHO_STOP=['wheel','touchstart','keydown','pointerdown'];
+function whoKeepJump(){return !!(WHO_JUMP&&Date.now()-WHO_JUMP<15000&&WHO_LAST&&WHO_LAST.isConnected)}
 function whoCell(f,p){const n=p.name;
   if(!f.profile){const s=document.createElement('span');s.className='wdash';s.textContent=f.spark?'✓':'–';
     s.title=f.spark?t('Kein eigener Schalter: gilt für alle Profile','No own switch: applies to every profile'):t('Spark aus','Spark off');return s}

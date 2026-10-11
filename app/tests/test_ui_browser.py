@@ -38,6 +38,11 @@ SECTIONS = ("chat", "mon", "live", "sys", "test", "logs", "cfg", "prof", "who", 
 VIEWS = (("pc", 1280, 900), ("handy", 390, 844))
 
 
+# the page asked /api/whoami and drew itself (start.js writes the version last); a fixed 600-800 ms after loading
+# was red on GitHub late in the run, with 600 profiles
+PAGE_READY = "!!document.getElementById('ver')&&document.getElementById('ver').textContent.length>0"
+
+
 @unittest.skipUnless(browser_ok(), "no Playwright/Chromium here")
 class Browser(unittest.TestCase):
     @classmethod
@@ -57,11 +62,15 @@ class Browser(unittest.TestCase):
     def run_async(self, coro):
         return asyncio.run(coro)
 
-    async def until(self, pg, expr, seconds=10):
-        """wait_for_function evaluates a string, which the strict CSP forbids (pages with csp=True): poll instead."""
+    async def until(self, pg, expr, seconds=20):
+        """wait_for_function evaluates a string, which the strict CSP forbids (pages with csp=True): poll instead.
+        20 s by default: a GitHub runner with the whole test run's 600 profiles is much slower than a laptop."""
         for _ in range(int(seconds * 10)):
-            if await pg.evaluate(expr):
-                return
+            try:
+                if await pg.evaluate(expr):
+                    return
+            except Exception:
+                pass   # the page is just loading again
             await pg.wait_for_timeout(100)
         self.fail(f"never true: {expr}")
 
@@ -93,7 +102,9 @@ class Browser(unittest.TestCase):
         r = await pg.request.post(base + "/api/profile/login", data={"name": "Uitest", "pin": "4711"})
         self.assertEqual(r.status, 200)
         await pg.goto(base + "/")
-        await pg.wait_for_timeout(800)
+        # the page knows who is signed in (not a fixed 800 ms: a GitHub runner with the run's 600 profiles is slow)
+        await self.until(pg, "typeof PROFILE!=='undefined'&&!!PROFILE&&PROFILE.name==='Uitest'&&ADMIN===true")
+        await pg.wait_for_timeout(300)
         await pg.evaluate("document.getElementById('wizmodal')&&(document.getElementById('wizmodal').style.display='none')")
         return br, pg, errors
 
@@ -127,7 +138,7 @@ class Browser(unittest.TestCase):
                         self.assertTrue(await pg.evaluate("getComputedStyle($('aptabs')).display!=='none'"))
                         self.assertFalse(await pg.evaluate("getComputedStyle($('mbar')).display!=='none'"))
                         await pg.evaluate("document.querySelector('#aptabs [data-tab=manage]').click()")
-                        await pg.wait_for_selector("#apmanage [data-sec=mon]", state="attached", timeout=5000)
+                        await pg.wait_for_selector("#apmanage [data-sec=mon]", state="attached", timeout=20000)
                         await pg.evaluate("document.querySelector('#apmanage [data-sec=mon]').click()")
                         self.assertTrue(await pg.evaluate("document.querySelector('nav button[data-s=mon]').classList.contains('on')"))
                     self.assertEqual(errors, [], name)
@@ -185,41 +196,41 @@ class Browser(unittest.TestCase):
                     try:
                         self.assertEqual(await pg.locator("#hilfefab").count(), 0)   # no button of its own
                         await pg.evaluate("goSec('mon')")
-                        await pg.wait_for_function("document.body.classList.contains('hilfeon')", timeout=5000)
+                        await pg.wait_for_function("document.body.classList.contains('hilfeon')", timeout=20000)
                         self.assertIn("Zustand", await pg.text_content("#fabpage"))
                         await pg.evaluate("$('fab').classList.add('open')")
                         await pg.fill("#fabq", 'TOOL spark_vorschlag {"functions": ["routing"]}')
                         await pg.click("#fabask button[type=submit]")
-                        await pg.wait_for_selector("#fabcards .hcard [data-hdo=apply]", timeout=8000)
+                        await pg.wait_for_selector("#fabcards .hcard [data-hdo=apply]", timeout=20000)
                         self.assertFalse(profiles.settings(uid).get("route"))   # nothing before the tap
                         over = await pg.evaluate("document.documentElement.scrollWidth-window.innerWidth")
                         self.assertLessEqual(over, 1, f"{w}: {over}px zu breit")
                         await pg.click("#fabcards .hcard [data-hdo=apply]")
-                        await pg.wait_for_selector("#fabcards .hcard [data-hdo=undo]", timeout=5000)
+                        await pg.wait_for_selector("#fabcards .hcard [data-hdo=undo]", timeout=20000)
                         self.assertTrue(profiles.settings(uid).get("route"))
                         # Ich over the chat: the face shows above it and knows the page; the admin switches
                         # "Vorab holen" on meanwhile: Ich shows it unlocked without reloading
                         await pg.evaluate("goSec('chat')")
                         await pg.evaluate("openMe('setbox')")
-                        await pg.wait_for_function("document.body.classList.contains('hilfeon')", timeout=5000)
+                        await pg.wait_for_function("document.body.classList.contains('hilfeon')", timeout=20000)
                         self.assertIn("Ich", await pg.text_content("#fabpage"))
                         self.assertTrue(await pg.is_visible("#fabface"))
                         await pg.evaluate("$('profclose').click()")
                         helpers.set_config(prefetch=True)
                         await pg.evaluate("openMe('setbox')")
-                        await pg.wait_for_function("ALLOW.prefetch===true", timeout=5000)
+                        await pg.wait_for_function("ALLOW.prefetch===true", timeout=20000)
                         await pg.wait_for_function("[...document.querySelectorAll('#setform .setrow')].some(r=>"
                                                    "r.textContent.includes('Vorab holen')&&!r.textContent.includes('Vom Admin ausgeschaltet'))",
-                                                   timeout=5000)
+                                                   timeout=20000)
                         # the "?" at a switch (V01.0.343): asks about exactly that switch, the focus goes along
                         sent = []
                         pg.on("request", lambda r: sent.append(r.post_data or "") if r.url.endswith("/api/chat") else None)
-                        await pg.wait_for_selector("#setform .setrow .hqbtn", timeout=5000)
+                        await pg.wait_for_selector("#setform .setrow .hqbtn", timeout=20000)
                         # (the first visible one: "Tempo und Genauigkeit" is folded since V01.0.416; the bubble from
                         # above is closed first, the "?" opens it again)
                         await pg.evaluate("$('fab').classList.remove('open')")
                         await pg.locator("#setform .setrow .hqbtn >> visible=true").first.click()
-                        await pg.wait_for_function("$('fab').classList.contains('open')", timeout=5000)
+                        await pg.wait_for_function("$('fab').classList.contains('open')", timeout=20000)
                         for _ in range(50):
                             if any('"focus":"me:' in x for x in sent):
                                 break
@@ -255,13 +266,13 @@ class Browser(unittest.TestCase):
                                 await pg.evaluate("openMe('docbox')")
                             else:
                                 await pg.evaluate(f"goSec('{where}')")
-                            await pg.wait_for_selector("#fabface", state="visible", timeout=5000)
+                            await pg.wait_for_selector("#fabface", state="visible", timeout=20000)
                             hit = await pg.evaluate("(()=>{const r=$('fabface').getBoundingClientRect();"
                                                     "const e=document.elementFromPoint(r.left+r.width/2,r.top+r.height/2);"
                                                     "return !!(e&&e.closest('#fabface'))})()")
                             self.assertTrue(hit, f"{w} {where}: the face is covered")
                             await pg.click("#fabface")
-                            await self.until(pg, "$('fab').classList.contains('open')&&!!chat.rec", 5)
+                            await self.until(pg, "$('fab').classList.contains('open')&&!!chat.rec", 20)
                             self.assertTrue(await pg.is_visible("#fabq"), f"{w} {where}")
                             await pg.evaluate("stopListening(true)")
                             await pg.dblclick("#fabface")
@@ -294,32 +305,32 @@ class Browser(unittest.TestCase):
                     profiles.save_settings(uid, {"tips_on": True, "tasks_on": False, "spark_help": True})
                     br, pg, errors = await self.page(p, w, h, csp=True)
                     try:
-                        await self.until(pg, "TIPS_ON===true", 5)
+                        await self.until(pg, "TIPS_ON===true", 20)
                         await pg.evaluate("ask('Setz Milch auf die Einkaufsliste')")
-                        await pg.wait_for_selector(".whynote .tipnote .tiprow .b.p", timeout=8000)
+                        await pg.wait_for_selector(".whynote .tipnote .tiprow .b.p", timeout=20000)
                         await pg.click(".whynote .tipnote .tiprow .b.p")
-                        await pg.wait_for_selector("#tipsetup .hcard [data-hdo=apply]", timeout=5000)
-                        await self.until(pg, "$('profmodal').style.display==='grid'&&$('fab').classList.contains('open')", 5)
+                        await pg.wait_for_selector("#tipsetup .hcard [data-hdo=apply]", timeout=20000)
+                        await self.until(pg, "$('profmodal').style.display==='grid'&&$('fab').classList.contains('open')", 20)
                         self.assertFalse(profiles.settings(uid).get("tasks_on"))   # nothing before the tap
                         over = await pg.evaluate("document.documentElement.scrollWidth-window.innerWidth")
                         self.assertLessEqual(over, 1, f"{w}: {over}px zu breit")
                         await pg.click("#tipsetup .hcard [data-hdo=apply]")
-                        await pg.wait_for_selector("#tipsetup .hcard [data-hdo=undo]", timeout=5000)
+                        await pg.wait_for_selector("#tipsetup .hcard [data-hdo=undo]", timeout=20000)
                         self.assertTrue(profiles.settings(uid).get("tasks_on"))
                         await pg.mouse.click(5, h // 2)    # a click on the page keeps the setup open
                         await pg.wait_for_timeout(200)
                         self.assertTrue(await pg.evaluate("$('fab').classList.contains('open')&&!!$('tipsetup')"))
                         await pg.locator("#tipsetup .row .b.p").click()   # Prüfen
-                        await self.until(pg, "$('tipsetup').querySelector(':scope>.tipmsg').textContent.length>0", 5)
+                        await self.until(pg, "$('tipsetup').querySelector(':scope>.tipmsg').textContent.length>0", 20)
                         self.assertIn("Eingerichtet", await pg.text_content("#tipsetup>.tipmsg"))
                         await pg.locator("#tipsetup .row .b").last.click()   # Fertig
-                        await self.until(pg, "!$('tipsetup')", 3)
+                        await self.until(pg, "!$('tipsetup')", 20)
                         # Ich → Überblick
                         item = tipps._tip("gap", "g:passkey", None, uid, False, ["weil es hilft", "because it helps"],
                                           name=["Passkeys", "Passkeys"], me="secbox", guide="mfa")
                         with mock.patch.object(tipps, "candidates", return_value=[item]):
                             await pg.evaluate("openMe('overbox')" if w > 760 else "openMe('list')")   # a phone: above the list
-                            await pg.wait_for_selector("#tipover .tipitem", timeout=5000)
+                            await pg.wait_for_selector("#tipover .tipitem", timeout=20000)
                         self.assertIn("weil es hilft", await pg.text_content("#tipover"))
                         over = await pg.evaluate("document.documentElement.scrollWidth-window.innerWidth")
                         self.assertLessEqual(over, 1, f"{w}: {over}px zu breit")
@@ -342,17 +353,17 @@ class Browser(unittest.TestCase):
             async with async_playwright() as p:
                 br, pg, errors = await self.page(p, 1280, 900, csp=True)
                 try:
-                    await pg.wait_for_selector("#notausbtn:not([hidden])", timeout=5000)
+                    await pg.wait_for_selector("#notausbtn:not([hidden])", timeout=20000)
                     await pg.click("#notausbtn")
-                    await pg.wait_for_selector("#notausmodal .nastage.on", timeout=3000)
+                    await pg.wait_for_selector("#notausmodal .nastage.on", timeout=20000)
                     await pg.click("#nmstages .nastage[data-n='1']")
                     await pg.fill("#nmreason", "Browsertest")
                     await pg.click("#nmgo")
-                    await pg.wait_for_selector("#notausband:not([hidden])", timeout=5000)
+                    await pg.wait_for_selector("#notausband:not([hidden])", timeout=20000)
                     self.assertIn("STUFE 1", await pg.text_content("#nbtitle"))
                     self.assertEqual(notaus.level(), 1)
                     await pg.evaluate("goSec('mon')")
-                    await pg.wait_for_selector("#znotaus:not([hidden]) .znrow", timeout=3000)
+                    await pg.wait_for_selector("#znotaus:not([hidden]) .znrow", timeout=20000)
                     await pg.click("#nblift")
                     await pg.fill("#nopw", "secret-admin")
                     await pg.click("#nogo")
@@ -383,13 +394,13 @@ class Browser(unittest.TestCase):
                 pg.on("dialog", lambda d: asyncio.ensure_future(d.accept()))
                 try:
                     await pg.evaluate("openMe('secbox')")
-                    await pg.wait_for_selector("#mynaon:not([hidden])", state="visible", timeout=5000)
+                    await pg.wait_for_selector("#mynaon:not([hidden])", state="visible", timeout=20000)
                     await pg.click("#mynaon")
-                    await pg.wait_for_selector("#notausband:not([hidden])", timeout=5000)
+                    await pg.wait_for_selector("#notausband:not([hidden])", timeout=20000)
                     self.assertIn("MEIN NOTAUS", await pg.text_content("#nbtitle"))
                     self.assertTrue(notaus.own(uid))
                     self.assertEqual(notaus.level(), 0)
-                    await pg.wait_for_selector("#mynaoff:not([hidden])", timeout=3000)
+                    await pg.wait_for_selector("#mynaoff:not([hidden])", timeout=20000)
                     await pg.fill("#mynapin", "4711")
                     await pg.click("#mynago")
                     for _ in range(50):
@@ -397,7 +408,7 @@ class Browser(unittest.TestCase):
                             break
                         await pg.wait_for_timeout(100)
                     self.assertFalse(notaus.own(uid))
-                    await pg.wait_for_selector("#notausband", state="hidden", timeout=3000)
+                    await pg.wait_for_selector("#notausband", state="hidden", timeout=20000)
                     self.assertEqual(errors, [])
                 finally:
                     try:
@@ -421,16 +432,14 @@ class Browser(unittest.TestCase):
                     await pg.evaluate("""(async()=>{const c=await (await api('/api/config')).json();c.chat.transit=true;
                       const r=await api('/api/config',{method:'PUT',headers:{'Content-Type':'application/json'},body:JSON.stringify(c)});
                       window.putOk=!!(r&&r.ok)})()""")
-                await pg.wait_for_timeout(800)
-                self.assertTrue(await pg.evaluate("TR_ON"))
+                await self.until(pg, "typeof TR_ON!=='undefined'&&TR_ON", 20)   # was a fixed 800 ms (red on GitHub)
                 self.assertIn("Gespeichert", await pg.evaluate("$('updtoast').textContent"))
                 old_p, old_a = panel.app_version, account.app_version
                 panel.app_version = account.app_version = lambda: "V99.0.1"
                 try:
                     async with pg.expect_navigation():
                         await pg.evaluate("verWatch.back=Date.now();verCheck()")
-                    await pg.wait_for_timeout(500)
-                    self.assertEqual(await pg.evaluate("SPARK_VER"), "V99.0.1")
+                    await self.until(pg, "typeof SPARK_VER!=='undefined'&&SPARK_VER==='V99.0.1'", 20)
                     self.assertIn("/static/js/base.js?v=V99.0.1",
                                   await pg.evaluate("[...document.scripts].map(s=>s.src).join(' ')"))
                 finally:
@@ -463,7 +472,7 @@ class Browser(unittest.TestCase):
                         # the smooth scroll to a far row takes longer on GitHub's runners: wait until it is in view
                         try:
                             await pg.wait_for_function("(()=>{const r=WHO_LAST&&WHO_LAST.getBoundingClientRect();"
-                                                       "return !!(r&&r.top>=0&&r.bottom<=innerHeight&&r.height>0)})()", timeout=8000)
+                                                       "return !!(r&&r.top>=0&&r.bottom<=innerHeight&&r.height>0)})()", timeout=20000)
                         except Exception:
                             pass                       # the assertion below says what is wrong
                         st = await pg.evaluate("""(sw=>{const row=WHO_LAST;if(!row)return {row:false};const r=row.getBoundingClientRect();
@@ -494,7 +503,7 @@ class Browser(unittest.TestCase):
                     # busy (a conversation): no reload, a bar instead
                     profiles.save_settings(uid, {"wx_on": not was})
                     await pg.evaluate("window.sparkBusyWas=sparkBusy;sparkBusy=()=>true;verWatch.back=Date.now();verCheck()")
-                    await pg.wait_for_selector("#verbanner", timeout=5000)
+                    await pg.wait_for_selector("#verbanner", timeout=20000)
                     self.assertIn("Funktionen wurden geändert", await pg.text_content("#verbanner"))
                     await pg.evaluate("sparkBusy=window.sparkBusyWas;$('verbanner').remove()")
                     # calm: the page loads itself again and says why
@@ -517,7 +526,7 @@ class Browser(unittest.TestCase):
             async with async_playwright() as p:
                 br, pg, errors = await self.page(p, 1280, 900)
                 await pg.evaluate("goSec('mon')")
-                await pg.wait_for_function("$('zhead').dataset.lvl", timeout=8000)
+                await pg.wait_for_function("$('zhead').dataset.lvl", timeout=20000)
                 self.assertTrue((await pg.inner_text("#ztitle")).strip())
                 lvl = await pg.evaluate("$('zhead').dataset.lvl")
                 self.assertEqual(await pg.evaluate("$('hdot').className"), "hdot " + lvl)
@@ -555,7 +564,7 @@ class Browser(unittest.TestCase):
             async with async_playwright() as p:
                 br, pg, errors = await self.page(p, 1280, 900)
                 await pg.evaluate("goSec('cfg');document.querySelector('#cfgnav button[data-p=start]').click()")
-                await pg.wait_for_function("document.querySelectorAll('#glance .glrow').length>=9", timeout=8000)
+                await pg.wait_for_function("document.querySelectorAll('#glance .glrow').length>=9", timeout=20000)
                 self.assertEqual(await pg.evaluate("[...document.querySelectorAll('#glance h3.sec')].map(h=>h.textContent)"),
                                  ["Assistent", "Sprache", "Spark"])
                 await pg.evaluate("document.querySelector('#cfgnav button[data-p=ai]').click()")
@@ -587,7 +596,7 @@ class Browser(unittest.TestCase):
                 await pg.evaluate("$('apback').click()")
                 self.assertTrue(await pg.evaluate("document.querySelector('main').classList.contains('sublist')"))
                 await pg.evaluate("goSec('cfg')")
-                await pg.wait_for_function("[...document.querySelectorAll('#cfgnav small.gls')].some(x=>x.textContent.trim())", timeout=8000)
+                await pg.wait_for_function("[...document.querySelectorAll('#cfgnav small.gls')].some(x=>x.textContent.trim())", timeout=20000)
                 self.assertFalse(await pg.evaluate("document.querySelector('#cfgnav button[data-p=start]').offsetParent!==null"))
                 self.assertEqual(errors, [])
                 await br.close()
@@ -611,7 +620,7 @@ class Browser(unittest.TestCase):
                 await pg.goto(base + "/")
                 self.assertEqual((await pg.request.post(base + "/api/login", data={"password": "secret-admin"})).status, 200)
                 await pg.goto(base + "/")
-                await pg.wait_for_timeout(800)
+                await self.until(pg, PAGE_READY)
                 await pg.evaluate("document.getElementById('wizmodal')&&(document.getElementById('wizmodal').style.display='none')")
                 await pg.evaluate("goSec('cfg')")
                 lefts, tall, short = {}, [], []
@@ -659,7 +668,7 @@ class Browser(unittest.TestCase):
                 for name, w, h in VIEWS:
                     br, pg, errors = await self.page(p, w, h, csp=True)
                     await pg.evaluate("openMe('mcpbox')")
-                    await pg.wait_for_selector("#mcpmake", state="attached", timeout=8000)
+                    await pg.wait_for_selector("#mcpmake", state="attached", timeout=20000)
                     await pg.evaluate("$('mcpmake').closest('details').open=true")
                     await pg.click("#mcpmake")      # no name, no tool: says so right under the button
                     self.assertIn("Namen", await pg.inner_text("#mcpmakemsg"))
@@ -668,7 +677,7 @@ class Browser(unittest.TestCase):
                     self.assertIn("Werkzeug", await pg.inner_text("#mcpmakemsg"))
                     await pg.evaluate("document.querySelector('#mcpbox [data-mcn=transcribe]').checked=true")
                     await pg.click("#mcpmake")
-                    await pg.wait_for_selector("#mcpkey code", timeout=8000)
+                    await pg.wait_for_selector("#mcpkey code", timeout=20000)
                     self.assertIn("spk_mcp_", await pg.inner_text("#mcpkey"))
                     self.assertIn(f"Test {name}", [c["name"] for c in mcpserver.conns(me)])
                     self.assertEqual(errors, [], name)
@@ -689,10 +698,10 @@ class Browser(unittest.TestCase):
                     br, pg, errors = await self.page(p, w, h, csp=True)
                     try:
                         await pg.evaluate("openMe('writebox')")
-                        await pg.wait_for_selector("#wrgo", state="visible", timeout=8000)
+                        await pg.wait_for_selector("#wrgo", state="visible", timeout=20000)
                         await pg.fill("#wrtext", "Das ist ein Feler.")
                         await pg.click("#wrgo")
-                        await pg.wait_for_selector("#wrdiff ins", timeout=8000)
+                        await pg.wait_for_selector("#wrdiff ins", timeout=20000)
                         self.assertEqual(await pg.input_value("#wrres"), "Das ist ein Fehler.")
                         self.assertIn("Feler", await pg.inner_text("#wrdiff del"))
                         self.assertFalse(await pg.is_visible("#wrmail"))
@@ -749,14 +758,14 @@ class Browser(unittest.TestCase):
                     br, pg, errors = await self.page(p, w, h, csp=True)
                     try:
                         await pg.evaluate(f"goSec('chat');$('chatlog').appendChild(mkCard({card}))")
-                        await pg.wait_for_selector(".mkcard [data-mkdo=go]", state="visible", timeout=8000)
+                        await pg.wait_for_selector(".mkcard [data-mkdo=go]", state="visible", timeout=20000)
                         await self.until(pg, "document.querySelectorAll('.mkcard [data-mk=style] option').length>2")
                         over = await pg.evaluate("document.documentElement.scrollWidth-window.innerWidth")
                         self.assertLessEqual(over, 1, f"{name}: Karte {over}px zu breit")
                         await pg.click(".mkcard [data-mkdo=go]")
                         await pg.wait_for_selector(".mkcard a[href*='/api/make/doc/']", timeout=15000)
                         await pg.click(".mkcard [data-mkdo=show]")
-                        await pg.wait_for_selector("#mklist [data-mkopen]", state="visible", timeout=8000)
+                        await pg.wait_for_selector("#mklist [data-mkopen]", state="visible", timeout=20000)
                         await self.until(pg, "!!document.querySelector('#mkview .mksec')")
                         self.assertIn("Zweiter Punkt", await pg.inner_text("#mkview"))
                         over = await pg.evaluate("document.documentElement.scrollWidth-window.innerWidth")
@@ -799,7 +808,7 @@ class Browser(unittest.TestCase):
                     br, pg, errors = await self.page(p, w, h, csp=True)
                     try:
                         await pg.evaluate("openMe('docbox')")
-                        await pg.wait_for_selector("#doclist .ld-row", timeout=8000)
+                        await pg.wait_for_selector("#doclist .ld-row", timeout=20000)
                         rows = "document.querySelectorAll('#doclist .ld-row').length"
                         self.assertEqual(await pg.evaluate(rows), 50, name)
                         self.assertTrue(await pg.is_visible("#doclist [data-more]"))
@@ -811,13 +820,13 @@ class Browser(unittest.TestCase):
                         await pg.select_option("#docsrc", "")
                         await pg.fill("#docfind", "")
                         await pg.click("#doclist .ld-row >> nth=0")
-                        await pg.wait_for_selector("#docdetail [data-dact=view]", state="visible", timeout=5000)
+                        await pg.wait_for_selector("#docdetail [data-dact=view]", state="visible", timeout=20000)
                         if name == "pc":       # beside the list
                             self.assertTrue(await pg.is_visible("#doclist"))
                         else:                  # its own page with a way back
                             self.assertFalse(await pg.is_visible("#doclist"))
                             await pg.click("#docdetail [data-dact=back]")
-                            await pg.wait_for_selector("#doclist .ld-row", state="visible", timeout=5000)
+                            await pg.wait_for_selector("#doclist .ld-row", state="visible", timeout=20000)
                         over = await pg.evaluate("document.documentElement.scrollWidth-window.innerWidth")
                         self.assertLessEqual(over, 1, f"{name}: {over}px zu breit")
                         await pg.evaluate("DOCV.sel='';docRender()")
@@ -828,9 +837,9 @@ class Browser(unittest.TestCase):
                         over = await pg.evaluate("document.documentElement.scrollWidth-window.innerWidth")
                         self.assertLessEqual(over, 1, f"{name} Auswahl: {over}px zu breit")
                         await pg.click("#docbulk [data-bulk=unuse]")
-                        await self.until(pg, "document.querySelectorAll('#doclist .ld-badge.off').length===2", 5)
+                        await self.until(pg, "document.querySelectorAll('#doclist .ld-badge.off').length===2", 20)
                         await pg.click("#docbulk [data-bulk=use]")
-                        await self.until(pg, "document.querySelectorAll('#doclist .ld-badge.off').length===0", 5)
+                        await self.until(pg, "document.querySelectorAll('#doclist .ld-badge.off').length===0", 20)
                         self.assertEqual(len(documents.list_docs(me, used_only=True)), 60)
                         self.assertEqual(errors, [], name)
                     finally:
@@ -859,17 +868,17 @@ class Browser(unittest.TestCase):
                     br, pg, errors = await self.page(p, w, h, csp=True)
                     try:
                         await pg.evaluate("openMe('deskbox')")
-                        await pg.wait_for_selector("#dkpair", state="visible", timeout=8000)
+                        await pg.wait_for_selector("#dkpair", state="visible", timeout=20000)
                         await pg.click("#dkpair")
-                        await pg.wait_for_selector("#dksetup:has-text('#begleiter=')", timeout=8000)
+                        await pg.wait_for_selector("#dksetup:has-text('#begleiter=')", timeout=20000)
                         box = f'[data-desk="{did}"]'
                         # one device: its row shows a summary and its settings are open at once, the parts in groups
-                        await pg.wait_for_selector(box + ' .dkbody', state="visible", timeout=8000)
+                        await pg.wait_for_selector(box + ' .dkbody', state="visible", timeout=20000)
                         self.assertRegex(await pg.inner_text(box + ' .dkhead'), r"\d+ (von|of) \d+ (Teilen|parts) an|on")
                         self.assertEqual(await pg.locator(box + ' .dkgrp h4').count(), 5)
                         await pg.locator(box + ' [data-dk="dictate"]').evaluate("e=>e.click()")
                         await pg.click(f'[data-dsave="{did}"]')
-                        await pg.wait_for_selector(f'[data-dmsg="{did}"]:has-text("Gespeichert")', timeout=8000)
+                        await pg.wait_for_selector(f'[data-dmsg="{did}"]:has-text("Gespeichert")', timeout=20000)
                         self.assertTrue(begleiter.device_cfg(did)[0]["parts"]["dictate"])
                         over = await pg.evaluate("document.documentElement.scrollWidth-window.innerWidth")
                         self.assertLessEqual(over, 1, f"{name}: {over}px zu breit")
@@ -907,7 +916,7 @@ class Browser(unittest.TestCase):
                         await pg.evaluate("try{localStorage.removeItem('deskOpen')}catch{}")
                         await pg.evaluate("openMe('deskbox')")
                         a, b = (f'[data-desk="{i}"]' for i in ids)
-                        await pg.wait_for_selector(a + " .dkhead", state="visible", timeout=8000)
+                        await pg.wait_for_selector(a + " .dkhead", state="visible", timeout=20000)
                         self.assertFalse(await pg.is_visible(a + " .dkbody"))          # collapsed at first
                         await pg.click(a + " .dkhead")
                         self.assertTrue(await pg.is_visible(a + " .dkbody"))
@@ -1007,7 +1016,7 @@ class Browser(unittest.TestCase):
                     rows = await pg.evaluate("[...document.querySelectorAll('#espbox [data-ego]')].map(b=>b.dataset.ego)")
                     self.assertEqual(rows, [did, "usb", "code"], name)
                     await pg.evaluate(f"document.querySelector('#espbox [data-ego=\"{did}\"]').click()")
-                    await pg.wait_for_function("!!$('espdiag')&&!!$('espdiag').firstElementChild", timeout=5000)
+                    await pg.wait_for_function("!!$('espdiag')&&!!$('espdiag').firstElementChild", timeout=20000)
                     heads = await pg.evaluate("[...document.querySelectorAll('#espbox .espgrp')].map(e=>e.textContent)")
                     self.assertEqual(heads, ["Klang", "Raum-Modus", "Stimme", "Firmware", "Prüfen"], name)
                     self.assertTrue(await pg.evaluate("!!$('espup')&&!!$('esproom')&&!!$('espvoices')&&!!$('espdel')"))
@@ -1015,9 +1024,9 @@ class Browser(unittest.TestCase):
                     over = await pg.evaluate("document.documentElement.scrollWidth-window.innerWidth")
                     self.assertLessEqual(over, 1, f"{name}: {over}px zu breit")
                     await pg.evaluate("$('espback').click()")
-                    await pg.wait_for_function("!!document.querySelector('#espbox [data-ego=usb]')", timeout=5000)
+                    await pg.wait_for_function("!!document.querySelector('#espbox [data-ego=usb]')", timeout=20000)
                     await pg.evaluate("document.querySelector('#espbox [data-ego=usb]').click()")
-                    await pg.wait_for_function("!!$('espflash')", timeout=5000)
+                    await pg.wait_for_function("!!$('espflash')", timeout=20000)
                     over = await pg.evaluate("document.documentElement.scrollWidth-window.innerWidth")
                     self.assertLessEqual(over, 1, f"{name}/usb: {over}px zu breit")
                     self.assertEqual(errors, [], name)
@@ -1102,18 +1111,18 @@ class Browser(unittest.TestCase):
             async with async_playwright() as p:
                 br, pg, errors = await self.page(p, 1280, 900)
                 await pg.evaluate("goSec('cfg');document.querySelector('#cfgnav button[data-p=tts]').click()")
-                await pg.wait_for_function("[...$('tts.default_voice').options].some(o=>o.value==='serena')", timeout=8000)
+                await pg.wait_for_function("[...$('tts.default_voice').options].some(o=>o.value==='serena')", timeout=20000)
                 self.assertEqual(await pg.evaluate("$('tts.default_voice').tagName"), "SELECT")
                 self.assertEqual(await pg.evaluate("$('tts.default_voice').value"), "ryan")
                 await pg.evaluate("$('tts.default_voice').innerHTML='<option>Jarvis</option>';$('tts.default_voice').value='Jarvis';"
                                   "$('tts.model').value='Qwen/Qwen3-TTS-12Hz-1.7B-Base';$('tts.model').dispatchEvent(new Event('change'))")
-                await pg.wait_for_function("$('tts.default_voice').options[0].textContent.includes('nicht in der Liste')", timeout=8000)
+                await pg.wait_for_function("$('tts.default_voice').options[0].textContent.includes('nicht in der Liste')", timeout=20000)
                 self.assertEqual(await pg.evaluate("$('tts.default_voice').value"), "Jarvis")
                 await pg.evaluate("$('tts.model').value='Qwen/Qwen3-TTS-12Hz-1.7B-VoiceDesign';$('tts.model').dispatchEvent(new Event('change'))")
-                await pg.wait_for_function("$('tts.default_voice').disabled", timeout=8000)
+                await pg.wait_for_function("$('tts.default_voice').disabled", timeout=20000)
                 self.assertEqual(await pg.evaluate("$('tts.default_voice').value"), "Jarvis")
                 await pg.evaluate("$('tts.model').value='Qwen/Qwen3-TTS-12Hz-1.7B-CustomVoice';$('tts.model').dispatchEvent(new Event('change'))")
-                await pg.wait_for_function("[...$('tts.default_voice').options].some(o=>o.value==='vivian')", timeout=8000)
+                await pg.wait_for_function("[...$('tts.default_voice').options].some(o=>o.value==='vivian')", timeout=20000)
                 self.assertFalse(await pg.evaluate("$('tts.default_voice').disabled"))
                 self.assertEqual(errors, [])
                 await br.close()
@@ -1155,10 +1164,10 @@ class Browser(unittest.TestCase):
             async with async_playwright() as p:
                 br, pg, errors = await self.page(p, 390, 844)
                 await pg.evaluate("goSec('chat')")
-                await pg.wait_for_function("!$('chatpic').hidden", timeout=5000)
+                await pg.wait_for_function("!$('chatpic').hidden", timeout=20000)
                 await pg.set_input_files("#chatpicfile", files=[{"name": "a.jpg", "mimeType": "image/jpeg",
                                                                  "buffer": out.getvalue()}])
-                await pg.wait_for_function("pics.list.length===1", timeout=5000)
+                await pg.wait_for_function("pics.list.length===1", timeout=20000)
                 self.assertTrue(await pg.is_visible("#chatpics img"), await pg.evaluate(
                     "JSON.stringify({h:$('chatpics').hidden,r:$('chatpics').getBoundingClientRect(),p:$('chatpics').parentNode.className,"
                     "i:$('chatpics').querySelector('img')&&$('chatpics').querySelector('img').getBoundingClientRect(),d:getComputedStyle($('chatpics')).display,"
@@ -1166,11 +1175,11 @@ class Browser(unittest.TestCase):
                 self.assertTrue(await pg.is_visible("#chatsend"))
                 await pg.click("#chatsend")
                 await pg.wait_for_function("[...document.querySelectorAll('.msg.bot .bubble')].some(b=>b.textContent.includes('Ich sehe 1 Bild.'))",
-                                           timeout=10000)
+                                           timeout=20000)
                 self.assertEqual(await pg.evaluate("document.querySelectorAll('.msg.user .picrow img').length"), 1)
                 self.assertTrue(await pg.evaluate("pics.list.length===1"))      # kept for a follow-up
                 await pg.click(".picsave")
-                await pg.wait_for_function("document.querySelector('.picsave').textContent.includes('Gespeichert')", timeout=5000)
+                await pg.wait_for_function("document.querySelector('.picsave').textContent.includes('Gespeichert')", timeout=20000)
                 copied = await pg.evaluate("(()=>{const r=document.createRange();r.selectNodeContents(document.querySelector('.picsave').parentNode);"
                                            "const s=getSelection();s.removeAllRanges();s.addRange(r);const x=s.toString();s.removeAllRanges();return x})()")
                 self.assertIn("Ich sehe 1 Bild.", copied)
@@ -1193,28 +1202,28 @@ class Browser(unittest.TestCase):
                 br, pg, errors = await self.page(p, 390, 844, mic=True)
                 await pg.evaluate("goSec('chat');S.hands=true;S.live=false;S.turn=false")
                 await pg.evaluate("startListening()")
-                await pg.wait_for_function("!!chat.rec&&micLive()", timeout=5000)
+                await pg.wait_for_function("!!chat.rec&&micLive()", timeout=20000)
                 first = await pg.evaluate("chat.stream.id")
                 # the system takes the microphone away
                 await pg.evaluate("chat.stream.getAudioTracks().forEach(x=>{x.stop();x.dispatchEvent(new Event('ended'))})")
-                await pg.wait_for_function("!chat.rec", timeout=5000)
+                await pg.wait_for_function("!chat.rec", timeout=20000)
                 self.assertIn("System hat das Mikrofon beendet", await pg.inner_text("#chatstate"))
                 self.assertTrue(await pg.evaluate("chat.resumeMic&&!chat.stream"))
                 # the page is visible again: hands-free listens again on a new stream
                 await pg.evaluate("micBack()")
                 try:
-                    await pg.wait_for_function("!!chat.rec&&micLive()", timeout=5000)
+                    await pg.wait_for_function("!!chat.rec&&micLive()", timeout=20000)
                 except Exception:
                     self.fail(await pg.evaluate(STATE))
                 self.assertNotEqual(first, await pg.evaluate("chat.stream.id"))
                 self.assertFalse(await pg.evaluate("chat.resumeMic"))
                 # a stream whose track ended without telling us is not reused
                 await pg.evaluate("stopListening(true)")
-                await pg.wait_for_function("!chat.rec", timeout=5000)
+                await pg.wait_for_function("!chat.rec", timeout=20000)
                 second = await pg.evaluate("chat.stream.id")
                 await pg.evaluate("chat.stream.getAudioTracks().forEach(x=>{x.onended=null;x.stop()})")
                 await pg.evaluate("startListening()")
-                await pg.wait_for_function("!!chat.rec&&micLive()", timeout=5000)
+                await pg.wait_for_function("!!chat.rec&&micLive()", timeout=20000)
                 self.assertNotEqual(second, await pg.evaluate("chat.stream.id"))
                 await pg.evaluate("stopListening(true)")
                 self.assertEqual(errors, [])
@@ -1273,7 +1282,7 @@ class Browser(unittest.TestCase):
                   return {id:a.id,rawId:dec(a.rawId),type:'public-key',response:{clientDataJSON:dec(a.response.clientDataJSON),authenticatorData:dec(a.response.authenticatorData),signature:dec(a.response.signature),userHandle:null}}}}""")
                 done = pg.evaluate("api('/api/profile/mfa/recovery',{method:'POST'}).then(r=>r.status,e=>'error: '+e.message)")
                 task = asyncio.ensure_future(done)
-                await pg.wait_for_selector("#pkmodal button.p", timeout=5000)
+                await pg.wait_for_selector("#pkmodal button.p", timeout=20000)
                 await pg.click("#pkmodal button.p")
                 self.assertEqual(await task, 200)
                 self.assertGreater(passkey.listing(uid)[0]["last"], 0)
@@ -1307,7 +1316,7 @@ class Browser(unittest.TestCase):
                 await pg.screenshot(path=os.path.join(os.environ.get("SPEECH_SPARK_SHOTS", helpers.TMP), "coadmin-main.png"), full_page=True)
                 self.assertEqual(errors, [])
                 # the list of profiles may take a moment when many profiles exist (the whole test run)
-                await pg.wait_for_selector("#coadmuser", state="visible", timeout=8000)
+                await pg.wait_for_selector("#coadmuser", state="visible", timeout=20000)
                 await br.close()
                 for role in ("coadmin", "manager"):
                     coadmin.set_on(True)
@@ -1321,17 +1330,16 @@ class Browser(unittest.TestCase):
                     r = await pg.request.post(base + "/api/profile/login", data={"name": "Uitest", "pin": "4711", "code": "123456"})
                     self.assertEqual(r.status, 200)
                     await pg.goto(base + "/")
-                    await pg.wait_for_timeout(600)
+                    await self.until(pg, "typeof PROFILE!=='undefined'&&!!PROFILE&&PROFILE.name==='Uitest'")
                     self.assertFalse(await pg.evaluate("ADMIN"))
                     await pg.evaluate("openMe('secbox')")
-                    await pg.wait_for_timeout(500)
-                    self.assertTrue(await pg.is_visible("#coadmbox button"))
+                    await pg.wait_for_selector("#coadmbox button", state="visible", timeout=20000)
                     r = await pg.request.post(base + "/api/admin/elevate", headers={"X-Speech-Code": "123456"})
                     self.assertEqual(r.status, 200)
                     await pg.goto(base + "/")
-                    await pg.wait_for_timeout(800)
-                    self.assertTrue(await pg.evaluate("ADMIN&&elevated()"))
-                    self.assertTrue(await pg.is_visible("#coadmbar"))
+                    # wait for the state, not a fixed 800 ms (red on a slow GitHub runner, V01.0.419)
+                    await self.until(pg, "typeof ADMIN!=='undefined'&&ADMIN&&elevated()", 20)
+                    await pg.wait_for_selector("#coadmbar", state="visible", timeout=20000)
                     self.assertEqual(await pg.is_visible("nav button[data-s=cfg]"), role == "coadmin")
                     if role == "coadmin":
                         await pg.evaluate("goCfg('sec')")
@@ -1342,8 +1350,7 @@ class Browser(unittest.TestCase):
                     await pg.wait_for_timeout(300)
                     self.assertFalse(await pg.is_visible("#logtabs button[data-lt=audit]"))
                     await pg.click("#logtabs button[data-lt=adm]")
-                    await pg.wait_for_timeout(500)
-                    self.assertIn("Admin-Modus geöffnet", await pg.inner_text("#logout"))
+                    await self.until(pg, "$('logout').innerText.includes('Admin-Modus geöffnet')", 20)
                     await pg.screenshot(path=os.path.join(os.environ.get("SPEECH_SPARK_SHOTS", helpers.TMP), f"coadmin-{role}.png"))
                     self.assertEqual(errs, [])
                     await br.close()
@@ -1368,8 +1375,7 @@ class Browser(unittest.TestCase):
             with open(os.environ["SPEECH_SPARK_CONFIG"]) as f:
                 c = _json.load(f)
             c.setdefault("logs", {})["trace"] = on
-            with open(os.environ["SPEECH_SPARK_CONFIG"], "w") as f:
-                _json.dump(c, f)
+            helpers.write_config(c)
         tracelog.clear()
         trace(True)
         c = TestClient(panel.app)
@@ -1384,7 +1390,7 @@ class Browser(unittest.TestCase):
                     br, pg, errors = await self.page(p, w, h)
                     await pg.evaluate("goSec('logs')")
                     # the tab shows once the page has asked the Spark (slower on GitHub's runners): wait for it
-                    await pg.wait_for_selector("#logtabs button[data-lt=req]", state="visible", timeout=8000)
+                    await pg.wait_for_selector("#logtabs button[data-lt=req]", state="visible", timeout=20000)
                     await pg.click("#logtabs button[data-lt=req]")
                     await pg.wait_for_selector("#logreq .rq")
                     self.assertGreaterEqual(await pg.evaluate("document.querySelectorAll('#logreq .rq').length"), 2)
@@ -1437,8 +1443,7 @@ class Browser(unittest.TestCase):
             with open(os.environ["SPEECH_SPARK_CONFIG"]) as f:
                 c = _json.load(f)
             c.setdefault("logs", {}).update(kw)
-            with open(os.environ["SPEECH_SPARK_CONFIG"], "w") as f:
-                _json.dump(c, f)
+            helpers.write_config(c)
         logs(live=True, live_monitor=True)
         c = TestClient(panel.app)
         c.post("/api/profile/login", json={"name": "Uitest", "pin": "4711"})
@@ -1452,7 +1457,7 @@ class Browser(unittest.TestCase):
                 for name, w, h in VIEWS:
                     br, pg, errors = await self.page(p, w, h, csp=True)
                     await pg.evaluate("goSec('live')")
-                    await pg.wait_for_selector("#lvflow svg .node", timeout=8000)
+                    await pg.wait_for_selector("#lvflow svg .node", timeout=20000)
                     await pg.wait_for_timeout(600)
                     text = await pg.inner_text("#live")
                     self.assertIn("memory_save", text)
@@ -1483,19 +1488,19 @@ class Browser(unittest.TestCase):
                         self.assertNotIn("geblockt", await pg.inner_text("#lvev"))
                         await pg.fill("#lvevbar input", "")
                         await pg.click("#lvev [data-ev]:has-text('geblockt')")
-                        await pg.wait_for_selector(".lv .gate.glow", timeout=3000)
+                        await pg.wait_for_selector(".lv .gate.glow", timeout=20000)
                         await pg.click("[data-evpause]")
                         self.assertIn("Weiter", await pg.inner_text("[data-evpause]"))
                         await pg.click("[data-evpause]")
                         await pg.click("#lvflow [data-node='weiche']")
-                        await pg.wait_for_selector("#lvsheet:not([hidden])", timeout=3000)
+                        await pg.wait_for_selector("#lvsheet:not([hidden])", timeout=20000)
                         self.assertIn("Weiche", await pg.inner_text("#lvsheet"))
                         await pg.click("[data-sheetx]")
-                        await pg.wait_for_selector("#lvsheet[hidden]", state="attached", timeout=3000)
+                        await pg.wait_for_selector("#lvsheet[hidden]", state="attached", timeout=20000)
                         await pg.click("[data-rew=open]")
-                        await pg.wait_for_selector("#lvrew input[type=range]", timeout=3000)
+                        await pg.wait_for_selector("#lvrew input[type=range]", timeout=20000)
                         await pg.click("[data-rew=live]")
-                        await pg.wait_for_selector("[data-rew=open]", timeout=3000)
+                        await pg.wait_for_selector("[data-rew=open]", timeout=20000)
                         self.assertEqual(await pg.locator("[data-waycopy]").count(), 1)
                     self.assertEqual(errors, [], name)
                     await br.close()
@@ -1508,10 +1513,10 @@ class Browser(unittest.TestCase):
                 pg.on("pageerror", lambda e: errors.append(str(e)))
                 pg.on("console", lambda m: errors.append(m.text) if m.type == "error" and "401" not in m.text else None)
                 await pg.goto(f"http://127.0.0.1:{self.port}/live")
-                await pg.wait_for_selector("#lvcode", timeout=8000)
+                await pg.wait_for_selector("#lvcode", timeout=20000)
                 await pg.fill("#lvcode", code)
                 await pg.click("#lvpair")
-                await pg.wait_for_selector("#lvflow svg .node", timeout=8000)
+                await pg.wait_for_selector("#lvflow svg .node", timeout=20000)
                 await pg.wait_for_timeout(800)
                 self.assertEqual(await pg.inner_text("#lvname"), "Flur")
                 self.assertNotIn("Kakao", await pg.inner_text("body"))
@@ -1552,9 +1557,9 @@ class Browser(unittest.TestCase):
                     await pg.evaluate("goSec('prof')")
                     # with many profiles from other tests Uitest may sit on a later page: after the first
                     # load, search its device the way a person would (no race with that first load)
-                    await pg.wait_for_function("!!document.querySelector('#pq') && /\\d/.test(document.querySelector('#ppager').textContent)", timeout=5000)
+                    await pg.wait_for_function("!!document.querySelector('#pq') && /\\d/.test(document.querySelector('#ppager').textContent)", timeout=20000)
                     await pg.fill("#pq", "Uiskript")
-                    await pg.wait_for_function(f"!!document.querySelector('#devlist [data-ddel=\"{ids['Uiskript']}\"]')", timeout=8000)
+                    await pg.wait_for_function(f"!!document.querySelector('#devlist [data-ddel=\"{ids['Uiskript']}\"]')", timeout=20000)
                     self.assertEqual(await pg.evaluate("document.querySelector('#duser').tagName"), "SELECT", name)
                     self.assertTrue(await pg.evaluate(f"!!document.querySelector('#devlist select[data-dmove=\"{ids['Uiskript']}\"]')"), name)
                     for fixed in ("Uiphone", "Uiuhr"):
@@ -1605,11 +1610,10 @@ class Browser(unittest.TestCase):
                     await pg.evaluate("goSec('cfg');document.querySelector('#cfgnav button[data-p=feat]').click()")
                     await pg.wait_for_timeout(300)
                     await pg.evaluate("const f=$('chat.kiwix').closest('.fitem');if(!f.classList.contains('open'))f.querySelector('.fexp').click()")
-                    await pg.wait_for_timeout(200)
+                    await self.until(pg, "!!$('kxsel')&&$('kxsel').innerText.includes('deutsche und englische Wikipedia')")
                     self.assertTrue(await pg.is_hidden("#kxpick"), name)
-                    self.assertIn("deutsche und englische Wikipedia", await pg.inner_text("#kxsel"))
                     await pg.click("#kxload")
-                    await pg.wait_for_selector("#kxlist .kxrow", timeout=5000)
+                    await pg.wait_for_selector("#kxlist .kxrow", timeout=20000)
                     langs_shown = await pg.evaluate("[...document.querySelectorAll('#kxlist .kxm')].map(x=>x.textContent.split(' · ')[0])")
                     self.assertEqual(set(langs_shown), {"Deutsch", "Englisch"}, name)          # German and English first
                     self.assertIn("Wikipedia (", await pg.inner_text("#kxlist .kxgrp"))        # grouped, Wikipedia on top
@@ -1661,14 +1665,14 @@ class Browser(unittest.TestCase):
                 r = await pg.request.put(base + "/api/profile/settings", data={"pro_on": True, "pro_ha": True})
                 self.assertEqual(r.status, 200)
                 await pg.goto(base + "/")
-                await pg.wait_for_timeout(800)
+                await self.until(pg, PAGE_READY)
                 await pg.evaluate("document.getElementById('wizmodal')&&(document.getElementById('wizmodal').style.display='none')")
                 await pg.evaluate("openMe('probox')")
-                await pg.wait_for_selector("#proruleadd", state="attached", timeout=5000)
+                await pg.wait_for_selector("#proruleadd", state="attached", timeout=20000)
                 await pg.click("#proruleadd > summary")
-                await pg.wait_for_selector("#proents option[value='binary_sensor.ui_flur']", state="attached", timeout=5000)
+                await pg.wait_for_selector("#proents option[value='binary_sensor.ui_flur']", state="attached", timeout=20000)
                 await pg.click("#prorecent")
-                await pg.wait_for_selector("#prodevs button[title='binary_sensor.ui_flur']", timeout=5000)
+                await pg.wait_for_selector("#prodevs button[title='binary_sensor.ui_flur']", timeout=20000)
                 await pg.click("#prodevs button[title='binary_sensor.ui_flur']")
                 self.assertEqual(await pg.input_value("#proent1"), "binary_sensor.ui_flur")
                 # detect: the door changes while the panel listens
@@ -1676,7 +1680,7 @@ class Browser(unittest.TestCase):
                 await pg.wait_for_timeout(500)
                 next(x for x in helpers.HA_STATES if x["entity_id"] == "binary_sensor.ui_tuer").update(
                     state="on", last_changed="2026-10-10T18:30:00+00:00")
-                await pg.wait_for_selector("#prodevs button[title='binary_sensor.ui_tuer']", timeout=8000)
+                await pg.wait_for_selector("#prodevs button[title='binary_sensor.ui_tuer']", timeout=20000)
                 self.assertEqual(await pg.evaluate("document.querySelectorAll('#prodevs button').length"), 1)
                 await pg.click("#proruleadd details > summary")      # "und eine zweite Bedingung"
                 await pg.click("#proent2")
@@ -1688,7 +1692,7 @@ class Browser(unittest.TestCase):
                 self.assertEqual(r.status, 200, await r.text())
                 rid = (await r.json())["rules"][-1]["id"]
                 await pg.evaluate("openMe('probox')")
-                await pg.wait_for_selector(f"button[data-on=proRuleEdit][data-args*='{rid}']", timeout=5000)
+                await pg.wait_for_selector(f"button[data-on=proRuleEdit][data-args*='{rid}']", timeout=20000)
                 await pg.click(f"button[data-on=proRuleEdit][data-args*='{rid}']")
                 self.assertEqual(await pg.input_value("#proent1"), "binary_sensor.ui_flur")
                 self.assertEqual(await pg.input_value("#proop1"), "changes")
@@ -1755,7 +1759,7 @@ class Browser(unittest.TestCase):
                     self.assertTrue(await pg.evaluate("$('logs').classList.contains('on')"), name)
                     await pg.keyboard.press("Control+k")
                     await pg.fill("#palq", "freihändig")
-                    await self.until(pg, "$('palres').textContent.includes('Für dich')", 5)
+                    await self.until(pg, "$('palres').textContent.includes('Für dich')", 20)
                     await pg.keyboard.press("Escape")
                     self.assertFalse(await pg.is_visible("#fpal"), name)
                     over = await pg.evaluate("document.documentElement.scrollWidth-window.innerWidth")
@@ -1851,7 +1855,7 @@ class Browser(unittest.TestCase):
                     pg.on("pageerror", lambda e: errors.append(str(e)))
                     base = f"http://127.0.0.1:{self.port}"
                     await pg.goto(base + "/")
-                    await pg.wait_for_timeout(500)
+                    await self.until(pg, PAGE_READY)
                     self.assertIn("guest", await pg.evaluate("document.body.className"))
                     # V01.0.285: "Spark verwalten" is not for guests; the admin opens the page with #admin
                     self.assertFalse(await pg.is_visible("#loginbtn"))
@@ -1861,7 +1865,7 @@ class Browser(unittest.TestCase):
                     self.assertFalse(await pg.is_visible("#profmodal"))  # the password dialog is not covered
                     await pg.request.post(base + "/api/profile/login", data={"name": "Uitest", "pin": "4711"})
                     await pg.goto(base + "/")
-                    await pg.wait_for_timeout(800)
+                    await self.until(pg, PAGE_READY)
                     cls = await pg.evaluate("document.body.className")
                     self.assertIn("prof", cls)
                     self.assertNotIn("guest", cls)
@@ -1974,10 +1978,10 @@ class Browser(unittest.TestCase):
                         "text": "Besucher vor Haustür"})
                     rid = (await r.json())["rules"][-1]["id"]
                     await pg.goto(base + "/")
-                    await pg.wait_for_timeout(800)
+                    await self.until(pg, PAGE_READY)
                     await pg.evaluate("document.getElementById('wizmodal')&&(document.getElementById('wizmodal').style.display='none')")
                     await pg.evaluate("openMe('probox')")
-                    await pg.wait_for_selector("#haevbox b", timeout=5000)
+                    await pg.wait_for_selector("#haevbox b", timeout=20000)
                     self.assertEqual(await pg.evaluate(self.ROWS), [], w)
                     # the block is beside nothing: it starts below its row and stays inside the page
                     edges = await pg.evaluate("""(()=>{const b=$('probox').getBoundingClientRect(),t=document.querySelector('#probox .protail');
@@ -2026,7 +2030,7 @@ class Browser(unittest.TestCase):
                             await pg.wait_for_timeout(150)
                             # V01.0.393: a page sliding in (apin/apout, 0.3 s) is not sticking out; wait until it stands
                             await pg.wait_for_function("document.getAnimations().every(a=>a.playState!=='running'"
-                                                       "||a.effect.getTiming().iterations===Infinity)", timeout=3000)
+                                                       "||a.effect.getTiming().iterations===Infinity)", timeout=20000)
                             bad = await pg.evaluate(out) + await pg.evaluate(self.ROWS)
                             if bad:
                                 found.append((w, mode, where, bad))
@@ -2075,7 +2079,7 @@ class Browser(unittest.TestCase):
                 for w, h in ((1440, 900), (390, 800), (320, 700)):
                     br, pg, errors = await self.page(p, w, h, csp=True)
                     await pg.evaluate("ON.clOpen()")
-                    await pg.wait_for_selector("#cllist li b", timeout=5000)
+                    await pg.wait_for_selector("#cllist li b", timeout=20000)
                     self.assertGreater(await pg.evaluate("document.querySelectorAll('#cllist li b').length"), 10)
                     self.assertIn("Installiert", await pg.evaluate("$('clinfo').textContent"))
                     over = await pg.evaluate("document.documentElement.scrollWidth-window.innerWidth")
@@ -2089,7 +2093,7 @@ class Browser(unittest.TestCase):
                     self.assertEqual(await pg.evaluate("$('clmodal').style.display"), "none")
                     if w == 1440:   # the link at the bottom, then Einstellungen → Update
                         await pg.click("#clopen")
-                        await pg.wait_for_selector("#clmodal[style*=grid]", timeout=3000)
+                        await pg.wait_for_selector("#clmodal[style*=grid]", timeout=20000)
                         await pg.click("#clmodal [data-on=clClose]")
                         await pg.evaluate("goSec('cfg')")
                         self.assertEqual(await pg.evaluate("document.querySelectorAll('#pane-upd [data-on=clOpen]').length"), 1)
@@ -2117,7 +2121,7 @@ class Browser(unittest.TestCase):
                 self.assertTrue(await pg.evaluate("$('chattext').offsetParent!==null&&$('chatsend').offsetParent!==null"))
                 await pg.fill("#chattext", "Hallo")
                 await pg.click("#chatsend")
-                await pg.wait_for_function("document.querySelectorAll('#chatlog .msg').length>=2", timeout=8000)
+                await pg.wait_for_function("document.querySelectorAll('#chatlog .msg').length>=2", timeout=20000)
                 self.assertIn("apmsgs", await pg.evaluate("document.body.className"))
                 # Heute: own page, the chat is gone
                 await pg.click("#aptabs [data-tab=today]")
@@ -2231,6 +2235,7 @@ class JoinBrowser(unittest.TestCase):
     """V01.0.276: an invitation link opens the welcome page, the new profile lands on "Los geht's", the
     admin card "Neue Personen" draws, and "Am Handy weitermachen" signs a second browser in after the
     right number is tapped."""
+    until = Browser.until
 
     @classmethod
     def setUpClass(cls):
@@ -2358,7 +2363,7 @@ class JoinBrowser(unittest.TestCase):
                             return (await (await api('/api/profile/handoff/'+hid+'/confirm',xjson('POST',{num:+num}))).json()).state}""",
                                                [hid2, num])
                         self.assertEqual(ok, "ok")
-                        await ph.wait_for_function("typeof PROFILE!=='undefined'&&PROFILE&&PROFILE.name==='Wilma'", timeout=10000)
+                        await ph.wait_for_function("typeof PROFILE!=='undefined'&&PROFILE&&PROFILE.name==='Wilma'", timeout=20000)
                         await phone.close()
                     else:
                         await pg.evaluate("location.hash=''")
@@ -2372,7 +2377,7 @@ class JoinBrowser(unittest.TestCase):
                 await pg.goto(base + "/")
                 await pg.request.post(base + "/api/login", data={"password": "secret-admin"})
                 await pg.goto(base + "/")
-                await pg.wait_for_timeout(600)
+                await self.until(pg, PAGE_READY)
                 await pg.evaluate("document.getElementById('wizmodal')&&(document.getElementById('wizmodal').style.display='none')")
                 await pg.evaluate("goSec('prof')")
                 await pg.wait_for_selector("#joinadmin .jlist")

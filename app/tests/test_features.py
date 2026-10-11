@@ -162,15 +162,13 @@ class Values(unittest.TestCase):
             c = json.loads(saved)
             c["chat"].pop("weather", None)
             c["chat"].setdefault("defaults", {}).pop("length", None)
-            with open(os.environ["SPEECH_SPARK_CONFIG"], "w") as f:
-                json.dump(c, f)
+            helpers.write_config(c)
             got = common.load_config()
             self.assertIs(got["chat"]["weather"], False)
             self.assertEqual(got["chat"]["defaults"]["length"], common.shipped()["chat"]["defaults"]["length"])
             self.assertEqual(got["chat"]["defaults"].get("hands"), c["chat"]["defaults"].get("hands", False))
         finally:
-            with open(os.environ["SPEECH_SPARK_CONFIG"], "w") as f:
-                f.write(saved)
+            helpers.write_config(json.loads(saved))
 
     def test_effective_mixes_presets_and_own(self):
         _, uid = profile("FeaZora")

@@ -31,16 +31,14 @@ def set_logs(**kw):
     with open(os.environ["SPEECH_SPARK_CONFIG"]) as f:
         c = json.load(f)
     c.setdefault("logs", {}).update(kw)
-    with open(os.environ["SPEECH_SPARK_CONFIG"], "w") as f:
-        json.dump(c, f)
+    helpers.write_config(c)
 
 
 def set_proxies(p):
     with open(os.environ["SPEECH_SPARK_CONFIG"]) as f:
         c = json.load(f)
     c["panel"]["trusted_proxies"] = p
-    with open(os.environ["SPEECH_SPARK_CONFIG"], "w") as f:
-        json.dump(c, f)
+    helpers.write_config(c)
 
 
 def reset():

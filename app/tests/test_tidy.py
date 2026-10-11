@@ -27,8 +27,16 @@ class Tidy(unittest.TestCase):
             b"To: anna@example.de", b"To: Freund <freund@example.org>")])
         helpers.set_config(mail=True, mail_tidy=True, public=True)
         self.classify = tidy.classify
+        # the panel's minute loop runs tidy.due_once too: with _last cleared a new mailbox is due at once, and on a
+        # slow GitHub runner its tick landed inside a test and sorted the mail first (moved 0 != 3, V01.0.418)
+        self.due_once = tidy.due_once
+
+        async def quiet(idle=True):
+            return None
+        tidy.due_once = quiet
 
     def tearDown(self):
+        tidy.due_once = self.due_once
         tidy.classify = self.classify
         mail.IMAP = helpers.FakeIMAP
         helpers.set_config(mail=False, mail_tidy=False)
