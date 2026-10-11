@@ -526,5 +526,44 @@ class Deeper(unittest.TestCase):
         self.assertNotIn("pc_action", chat.INSIDE)
 
 
+class LogQuiet(unittest.TestCase):
+    """Dominik's log 2026-10-11: an old release without begleiter.json is no error, and an unreadable recording
+    no "Task exception was never retrieved"."""
+
+    def test_release_without_manifest_is_not_yet(self):
+        def handle(req):   # the release lists only the exe, as before V01.0.347
+            if req.url.path.endswith("/releases/tags/begleiter-windows"):
+                return httpx.Response(200, json={"assets": [{"name": "SparkBegleiter-x64.exe",
+                                                             "browser_download_url": GH + "/dl/SparkBegleiter-x64.exe"}]})
+            return httpx.Response(404)
+
+        async def run():
+            async with httpx.AsyncClient(transport=httpx.MockTransport(handle)) as c:
+                await begleiter.fetch("windows", c)
+        os.environ["SPEECH_SPARK_GITHUB_API"] = GH
+        try:
+            with self.assertRaises(begleiter.NotYet):
+                asyncio.run(run())
+        finally:
+            os.environ.pop("SPEECH_SPARK_GITHUB_API", None)
+
+    def test_side_task_error_is_taken(self):
+        import admin
+        seen = []
+
+        async def run():
+            asyncio.get_running_loop().set_exception_handler(lambda loop, ctx: seen.append(ctx.get("message")))
+
+            def bad():
+                raise ValueError("cannot read this audio")
+            t = admin._quiet(asyncio.create_task(asyncio.to_thread(bad)))
+            await asyncio.sleep(0.2)
+            del t
+            import gc
+            gc.collect()
+        asyncio.run(run())
+        self.assertEqual(seen, [])
+
+
 if __name__ == "__main__":
     unittest.main()

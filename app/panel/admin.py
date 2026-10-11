@@ -883,6 +883,14 @@ def wav_seconds(data):
     return (len(data) - 44) / rate if rate > 0 else None
 
 
+def _quiet(task):
+    """A side task whose answer may never be asked for (the recognition failed, the voice was not needed): its
+    error (e.g. "cannot read this audio") is taken here instead of ending up as "Task exception was never
+    retrieved" in the log."""
+    task.add_done_callback(lambda t: t.cancelled() or t.exception())
+    return task
+
+
 async def _test_asr(request, file, language, wake, room):
     cfg = load_config()
     data = await read_audio(file)
@@ -899,7 +907,7 @@ async def _test_asr(request, file, language, wake, room):
     spk = None
     th = speakers.STRICTNESS.get(cfg.get("chat", {}).get("speaker_strictness"), 0.75)
     if cfg.get("chat", {}).get("speaker_id", False) and not wake and me:
-        spk = asyncio.create_task(asyncio.to_thread(speakers.identify, data, th))
+        spk = _quiet(asyncio.create_task(asyncio.to_thread(speakers.identify, data, th)))
     # room mode: whose voice this is, while a proposal waits for a yes (only the profile may say yes) and when
     # the room listens only to known voices (TV)
     import room as room_mode
@@ -907,7 +915,7 @@ async def _test_asr(request, file, language, wake, room):
     if room and me:
         room_mode.set_voice(me["id"], room, None)
         if room_mode.needs_voice(me["id"], room):
-            rv = asyncio.create_task(asyncio.to_thread(speakers.identify, data, th))
+            rv = _quiet(asyncio.create_task(asyncio.to_thread(speakers.identify, data, th)))
     try:
         async with httpx.AsyncClient(timeout=600) as c:
             import stufe   # priority for people: the profile's own recording goes first (not at shared speakers)
@@ -915,8 +923,9 @@ async def _test_asr(request, file, language, wake, room):
                              files={"file": (file.filename or "audio.wav", data)},
                              data=form, headers=dict(api_headers(), **stufe.headers(stufe.asr_level(request))))
     except (httpx.ConnectError, httpx.ConnectTimeout):
-        if spk:
-            spk.cancel()
+        for task in (spk, rv):
+            if task is not None:
+                task.cancel()
         raise HTTPException(503, "asr_down: the speech recognition service does not answer")
     # the Spark's own voice from another device (or leaking through this one) is no question: the
     # recording counts as silence (echo.py; profiles only)

@@ -96,6 +96,7 @@ UPD_DIR = os.path.join(STATE, "begleiter")
 MAX_FILE = 150 * 1024 * 1024
 MAX_META = 4096
 FETCH_EVERY = 24 * 3600
+RETRY = 3600               # after a failed or empty check: again within the hour, not only tomorrow
 VERSION_RE = re.compile(r"\d{1,3}\.\d{1,3}\.\d{1,5}")
 FILE_RE = re.compile(r"[\w.\-]{1,80}")
 
@@ -860,6 +861,10 @@ def _tell(did, version, arch):
         _info[did] = {"version": version, "arch": arch}
 
 
+class NotYet(ValueError):
+    """The release has nothing to take yet (no release, or one built before begleiter.json existed)."""
+
+
 def kept(platform):
     """{"version", "files": {key: {"name", "size", "sha256"}}} the Spark keeps for this platform, or None."""
     try:
@@ -939,11 +944,11 @@ async def fetch(platform, c=None):
         api = os.environ.get("SPEECH_SPARK_GITHUB_API", "https://api.github.com")
         r = await c.get(f"{api}/repos/{repo}/releases/tags/{TAGS[platform]}")
         if r.status_code == 404:
-            raise ValueError("Im Repo gibt es diese Version noch nicht.")
+            raise NotYet("Im Repo gibt es noch keine Version.")
         r.raise_for_status()
         assets = {a.get("name"): a.get("browser_download_url", "") for a in r.json().get("assets", [])}
-        if "begleiter.json" not in assets:
-            raise ValueError("Die Version hat kein begleiter.json.")
+        if "begleiter.json" not in assets:   # built before V01.0.347: the next build brings it
+            raise NotYet("Noch keine Version mit Update-Datei; kommt mit dem nächsten Bau.")
         m = json.loads(await _download(c, assets["begleiter.json"], MAX_META))
         ver, files = str(m.get("version", "")), m.get("files")
         if not VERSION_RE.fullmatch(ver) or not isinstance(files, dict) or not files:
@@ -991,6 +996,9 @@ async def check(platform):
     err = ""
     try:
         await fetch(platform)
+    except NotYet as e:      # nothing wrong, just nothing to take yet
+        err = str(e)[:200]
+        print("begleiter: Update-Prüfung", platform + ":", err, flush=True)
     except Exception as e:
         err = str(e)[:200]
         print("begleiter: update check", platform, type(e).__name__, err, flush=True)
@@ -1005,7 +1013,8 @@ async def fetch_loop():
         try:
             if admin_on() and not notaus.blocks("internet"):
                 for p in platforms():
-                    if time.time() - _upd["checked"].get(p, 0) > FETCH_EVERY:
+                    every = RETRY if _upd["error"].get(p) else FETCH_EVERY
+                    if time.time() - _upd["checked"].get(p, 0) > every:
                         await check(p)
         except Exception as e:
             print("begleiter: loop", type(e).__name__, e, flush=True)

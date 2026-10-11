@@ -2,6 +2,7 @@
 
 Every version in one line, newest first (taken from the commit messages, so some lines are German, some English). Older entries have no version number.
 
+- **V01.0.354** · 2026-10-11 · begleiter: Release ohne begleiter.json = NotYet (Info, Wiederholung nach 1 h statt 24 h); admin._test_asr: Sprechererkennungs-Nebenaufgaben nehmen ihren Fehler selbst ab (_quiet)
 - **V01.0.353** · 2026-10-11 · Spark-Begleiter tiefer im Rechner: Teile files/screen/context/mail/folder/actions/act/wake (alle aus), /api/desk/file|screen|hear|act, Werkzeug pc_action (nur eigene Worte, Bestätigung am Rechner, Admin-Schalter chat.desk_act), Mac-Bau repariert
 - **V01.0.352** · 2026-10-11 · Zustand → Live, Gesamtprüfung: Update-Prüfung (GitHub), Sicherung nach außen (NAS), reMarkable-Blätter, Spark-Begleiter als Gerät und Kanal, Raum-Modus, Bedeutungssuche, Anmeldungen/Einladungen/Passkeys, Sprechererkennung und Codewort, Qualitätstest-Ergebnis, Echo, Panel-Start; nur feste Wörter
 - **V01.0.351** · 2026-10-11 · reMarkable im Live-Monitor: @Spark-Antwort, Anleitung, Morgenblatt, Wochenrückblick, Besprechung und Seitenprüfung erscheinen als Hintergrundarbeit mit „fertig“-Meldung, Abgleich als Ereignis, Webseite/Anhang als Werkzeuge
