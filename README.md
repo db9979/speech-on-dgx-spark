@@ -33,6 +33,7 @@ All options for running without questions (`--mode api --asr 1.7b --tts 0.6b --y
 
 <!-- New version: add one line at the top here and in CHANGELOG.md, drop the oldest line here (keep 10). Details go to docs/de and docs/en, not into this README. -->
 
+- **V01.0.389** Self-test: Funktionen page height limit counts the "Probleme melden" line again (lost in a merge in V01.0.387).
 - **V01.0.388** Rights arrive at once: changes under Wer darf was reach open pages, the iPhone app, the Begleiter, speakers and MCP without reloading; switched-off devices stay paired
 - **V01.0.387** Logs → Requests: the list no longer jumps to the top on refresh
 - **V01.0.386** Reporting problems (off): anonymized report as a GitHub issue from the panel, apps, companion, Telegram and by voice, with a preview; admins see all with answers and hear of new ones through the assistant
@@ -42,7 +43,6 @@ All options for running without questions (`--mode api --asr 1.7b --tts 0.6b --y
 - **V01.0.382** Speaker firmware: never two fetches at once, error message without paths
 - **V01.0.381** Device updates (off): overview, one note per new firmware or app version, speakers updated one by one at night, XiaoZhi note to the admin
 - **V01.0.380** Suggesting functions (off): a hint with "Set up" when you ask for something that is off or half set up, guided setup in the face, at most 3 a week
-- **V01.0.379** Gentler updates: speech services restart only when something of theirs changed, a short smoke test instead of the minutes-long self-test when GitHub's run passed; "Install overnight" (off), a warning while somebody is talking, the update on the live page; fewer repeated log lines
 
 All versions: [CHANGELOG.md](CHANGELOG.md)
 
