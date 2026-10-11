@@ -33,6 +33,7 @@ Alle Optionen ohne Rückfragen (`--mode api --asr 1.7b --tts 0.6b --yes` …) st
 
 <!-- New version: add one line at the top here and in CHANGELOG.md, drop the oldest line here (keep 10). Details go to docs/de and docs/en, not into this README. -->
 
+- **V01.0.364** reMarkable-Abgleich ruhiger: eigene Schreibvorgänge des Spark lösen keinen Abgleich mehr aus („account changed“), 502/503/504 der Cloud bekommt einen zweiten Versuch, Hinweise des Seitenlesers als eine gezählte Zeile pro Abgleich
 - **V01.0.363** Eigene MCP-Dienste pro Profil (Admin-Unterschalter + Ich → Meine MCP-Dienste, alles aus): jedes Werkzeug einzeln frei, Lesen als fremder Text, Handeln nach „Ja“, OAuth-Anmeldung, Hintergrundaufträge nur lesend, Admin sperrt sofort, Live zeigt jeden Aufruf ohne Inhalte
 - **V01.0.362** Eindeutiges direkt abrufen: Wetter und Termine auch für morgen und übermorgen
 - **V01.0.361** Erst lokal suchen: ein langer Kiwix-Artikel bremst die Antwort nicht mehr (nur der Anfang wird gelesen), Logs → Anfragen zeigt Treffer je Quelle
@@ -42,7 +43,6 @@ Alle Optionen ohne Rückfragen (`--mode api --asr 1.7b --tts 0.6b --yes` …) st
 - **V01.0.357** Passkeys in der iPhone-App: „Mit Passkey“ beim Bestätigen, Spark-Update und Admin-Anmeldung (Face ID mit dem in Safari angelegten Passkey, über iCloud-Schlüsselbund); der Spark liefert Apple dafür /.well-known/apple-app-site-association (nur die App-ID, aus den Push-Angaben)
 - **V01.0.356** Logs → Anfragen zeigt die Anfrage-Nummer aus dem Journal in Liste und Detail, die Suche findet sie
 - **V01.0.355** Was ist neu: das Changelog im Panel ansehen, über „Was ist neu“ unten neben der Version oder Einstellungen → Update und Sicherung, mit Suche
-- **V01.0.354** Log ruhiger: eine Begleiter-Version ohne Update-Datei ist kein Fehler mehr (neuer Versuch nach 1 Stunde), eine unlesbare Aufnahme hinterlässt kein „Task exception was never retrieved“
 
 Alle Versionen: [CHANGELOG.md](CHANGELOG.md)
 

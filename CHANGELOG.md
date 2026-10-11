@@ -2,6 +2,7 @@
 
 Every version in one line, newest first (taken from the commit messages, so some lines are German, some English). Older entries have no version number.
 
+- **V01.0.364** · 2026-10-11 · reMarkable-Abgleich ruhiger: eigene Schreibvorgänge des Spark lösen keinen Abgleich mehr aus („account changed“), 502/503/504 der Cloud bekommt einen zweiten Versuch, Hinweise des Seitenlesers als eine gezählte Zeile pro Abgleich
 - **V01.0.363** · 2026-10-11 · Eigene MCP-Dienste pro Profil (Admin-Unterschalter + Ich → Meine MCP-Dienste, alles aus): jedes Werkzeug einzeln frei, Lesen als fremder Text, Handeln nach „Ja“, OAuth-Anmeldung, Hintergrundaufträge nur lesend, Admin sperrt sofort, Live zeigt jeden Aufruf ohne Inhalte
 - **V01.0.362** · 2026-10-11 · Eindeutiges direkt abrufen: Wetter und Termine auch für morgen und übermorgen („Wie wird das Wetter morgen?“), das Panel setzt nur das Datum aus dem lokalen Tag; andere Orte und Personen bleiben beim Modell
 - **V01.0.361** · 2026-10-11 · Erst lokal: langer Kiwix-Artikel (z. B. Einstein) hält den Vorlauf nicht mehr auf (nur der Anfang wird gelesen, im Hintergrund, 1,4 s → 0,01 s; Katalog ebenso); Logs → Anfragen zeigt Treffer je Quelle

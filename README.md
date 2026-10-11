@@ -33,6 +33,7 @@ All options for running without questions (`--mode api --asr 1.7b --tts 0.6b --y
 
 <!-- New version: add one line at the top here and in CHANGELOG.md, drop the oldest line here (keep 10). Details go to docs/de and docs/en, not into this README. -->
 
+- **V01.0.364** reMarkable comparison quieter: the Spark's own writes no longer start a comparison ("account changed"), a cloud 502/503/504 gets one more try, page reader hints as one counted line per comparison
 - **V01.0.363** Own MCP services per profile (admin sub-switch + Me → My MCP services, all off): every tool released one by one, reading as outside text, acting after "Yes", OAuth sign-in, background jobs read only, the admin blocks at once, Live shows every call without contents
 - **V01.0.362** Fetch clear questions directly: weather and appointments for tomorrow and the day after too
 - **V01.0.361** Search locally first: a long Kiwix article no longer slows the answer (only its start is read), Logs → Requests shows hits per source
@@ -42,7 +43,6 @@ All options for running without questions (`--mode api --asr 1.7b --tts 0.6b --y
 - **V01.0.357** Passkeys in the iPhone app: „With passkey“ when confirming, for the Spark update and the admin sign-in (Face ID with the passkey made in Safari, via iCloud Keychain); for that the Spark serves Apple /.well-known/apple-app-site-association (only the app ID, from the push settings)
 - **V01.0.356** Logs → Requests shows the request number from the journal in list and detail, search finds it
 - **V01.0.355** What's new: view the changelog in the panel, from "Was ist neu" at the bottom next to the version or Settings → Update und Sicherung, with search
-- **V01.0.354** Quieter log: a companion release without update file is no error any more (retry after 1 hour), an unreadable recording leaves no "Task exception was never retrieved"
 
 All versions: [CHANGELOG.md](CHANGELOG.md)
 

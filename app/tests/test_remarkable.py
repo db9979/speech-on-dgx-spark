@@ -704,6 +704,53 @@ class Fresh(Base):
         self.assertTrue(documents.search(uid, "Teich anlegen"))
         self.assertEqual(remarkable.load(uid)["root"], CLOUD[0].root)
 
+    def test_own_writes_are_no_change_for_the_quick_look(self):
+        c, uid = self.paired("Rmownroot")
+        CLOUD[0].doc(NB, "Ideen", [(P1, page_file("Gartenhaus planen"))])
+        c.put("/api/profile/remarkable/pick", json={"ids": [NB], "all": False})
+        for other in profiles.user_ids():
+            if other != uid:
+                remarkable._auto_last[other] = remarkable._peek_last[other] = 1e12
+        self.assertEqual(run(remarkable.due_once(idle=True)), uid)
+        t = max(remarkable.load(uid)["last"], remarkable._auto_last[uid])
+        run(remarkable.place(uid, "Antwort", remarkable.epub("Antwort", "Text")))      # the Spark writes itself
+        self.assertEqual(remarkable.load(uid)["root"], CLOUD[0].root)
+        CLOUD[0].calls.clear()
+        self.assertIsNone(run(remarkable.due_once(idle=True, now=t + remarkable.PEEK + 1)))
+        self.assertEqual([x[1] for x in CLOUD[0].calls], ["v4/root"])         # no comparison for its own write
+        CLOUD[0].doc(NB, "Ideen", [(P1, page_file("Gartenhaus planen")), (P2, page_file("Teich anlegen"))])
+        self.assertEqual(run(remarkable.due_once(idle=True, now=t + 2 * remarkable.PEEK + 2)), uid)   # the device's change still counts
+
+    def test_a_busy_gateway_gets_one_more_try(self):
+        c, uid = self.paired("Rmbusy")
+        real, answers = CLOUD[0].request, [502]
+
+        async def flaky(method, url, *a, **kw):
+            if url == remarkable.ROOT_URL and answers:
+                CLOUD[0].calls.append((method, "busy", ""))
+                return httpx.Response(answers.pop())
+            return await real(method, url, *a, **kw)
+        remarkable._request = flaky
+        old = remarkable.BUSY_WAIT
+        remarkable.BUSY_WAIT = 0
+        try:
+            self.assertEqual(run(remarkable.root(uid))[0], CLOUD[0].root)
+            answers[:] = [503, 503]
+            with self.assertRaises(remarkable.CloudError):            # twice busy: an error, no endless trying
+                run(remarkable.root(uid))
+        finally:
+            remarkable.BUSY_WAIT = old
+
+    @unittest.skipIf(si is None, "rmscene not installed")
+    def test_reader_hints_are_counted_not_logged(self):
+        import logging
+        remarkable.parse_page(page_file("x"))
+        remarkable._Hints.n = 0
+        with self.assertNoLogs("rmscene", level="WARNING"):
+            logging.getLogger("rmscene.scene_stream").warning("Some data has not been read")
+        self.assertEqual(remarkable._Hints.n, 1)
+        remarkable._Hints.n = 0
+
 
 class Guards(unittest.TestCase):
     def test_hosts_and_index_lines(self):

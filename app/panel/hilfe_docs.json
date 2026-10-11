@@ -1405,7 +1405,7 @@
 "file": "Assistent und Oberfläche",
 "head": "Sprach-Chat",
 "title": "Neueste zuerst (V01.0.299)",
-"text": "mparing now“)."
+"text": "mparing now“). Eigene Schreibvorgänge des Spark (Antworten, Anleitung, Eingang) zählen dabei seit V01.0.364 nicht als Änderung; antwortet die reMarkable-Cloud kurz mit 502/503/504, versucht der Spark es nach 2 Sekunden einmal erneut. Hinweise des Seitenlesers zu neueren Seitenteilen stehen gezählt als eine Zeile pro Abgleich im Journal."
 },
 {
 "lang": "de",
@@ -3981,7 +3981,15 @@
 "file": "Assistant and panel",
 "head": "Voice chat",
 "title": "Newest first (V01.0.299)",
-"text": "Newest first (V01.0.299): sub-switch under \"reMarkable notes\" (Functions, admin) plus a switch under Me → reMarkable, both off. The Spark keeps when each page last changed (newer reMarkable software names the time per page, else the notebook's; uploaded documents count with their upload). With similar hits the newer passage moves up at most two places, the gain halves every two weeks, a clearly better old hit stays first; this applies to the document search and to \"Search locally first\". Each hit then carries \"changed on …\", and the model is told to follow the newer passage where they disagree and say its date. \"What did I note last / today / yesterday / this week / last month?\" is a fixed rule on the person's own words: the first round must search the documents and gets the pages changed last, newest first; if nothing is in that span, the assistant says so. New notes arrive sooner: between comparisons the Spark looks every 3 minutes with one small request whether anything changed in the account, and only then compares at once (journal \"remarkable: account changed, comparing now\")."
+"text": "Newest first (V01.0.299): sub-switch under \"reMarkable notes\" (Functions, admin) plus a switch under Me → reMarkable, both off. The Spark keeps when each page last changed (newer reMarkable software names the time per page, else the notebook's; uploaded documents count with their upload). With similar hits the newer passage moves up at most two places, the gain halves every two weeks, a clearly better old hit stays first; this applies to the document search and to \"Search locally first\". Each hit then carries \"changed on …\", and the model is told to follow the newer passage where they disagree and say its date. \"What did I note last / today / yesterday / this week / last month?\" is a fixed rule on the person's own words: the first round must search the documents and gets the pages changed last, newest first; if nothing is in that span, the assistant says so. New notes arrive sooner: between comparisons the Spark looks every 3 minutes with one small request whether anything changed in the account, and only then compares at once (journal \"remarkable: account changed, comparing now\"). Since V01.0.364 the Spark's own writes (answers, guide, inbox) do not count as a change; when the reM"
+},
+{
+"lang": "en",
+"src": "assistant",
+"file": "Assistant and panel",
+"head": "Voice chat",
+"title": "Newest first (V01.0.299)",
+"text": "arkable cloud briefly answers 502/503/504, the Spark tries once more after 2 seconds. The page reader's hints about newer page parts are counted into one journal line per comparison."
 },
 {
 "lang": "en",

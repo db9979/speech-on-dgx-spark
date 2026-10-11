@@ -37,6 +37,7 @@ import hashlib
 import html
 import io
 import json
+import logging
 import os
 import re
 import struct
@@ -229,10 +230,18 @@ async def user_token(uid, fresh=False):
     return tok
 
 
+BUSY = (502, 503, 504)          # the cloud's gateway was briefly busy: one more try (uploads go by hash, the root by generation)
+BUSY_WAIT = 2
+
+
 async def _authed(uid, method, url, most=MAX_INDEX, headers=None, **kw):
     r = await _request(method, url, await user_token(uid), most, headers, **kw)
     if r.status_code == 401:
         r = await _request(method, url, await user_token(uid, fresh=True), most, headers, **kw)
+    if r.status_code in BUSY:
+        print(f"remarkable: cloud answered HTTP {r.status_code}, trying once more", flush=True)
+        await asyncio.sleep(BUSY_WAIT)
+        r = await _request(method, url, await user_token(uid), most, headers, **kw)
     return r
 
 
@@ -429,6 +438,30 @@ def wanted(uid, items=None, d=None):
 
 
 # ---------------------------------------------------------------- one page
+class _Hints(logging.Filter):
+    """rmscene warns about every block of a newer page format it skips (hundreds a day in the journal);
+    they are counted instead and named once per comparison (run)."""
+    n = 0
+
+    def filter(self, rec):
+        if rec.levelno <= logging.WARNING:
+            _Hints.n += 1
+            return False
+        return True
+
+
+_HINTS = _Hints()
+
+
+def _quiet_rmscene():
+    """A filter on a logger only sees its own records, so each rmscene module's logger gets it."""
+    for name in list(logging.Logger.manager.loggerDict):
+        if name == "rmscene" or name.startswith("rmscene."):
+            lg = logging.getLogger(name)
+            if _HINTS not in lg.filters:
+                lg.addFilter(_HINTS)
+
+
 def parse_page(data, draw=True):
     """(typed text, [highlighted texts], JPEG of the handwriting or None, has ink) of one v6 page file.
     Raises ValueError for other formats (old firmware) or broken files."""
@@ -437,6 +470,7 @@ def parse_page(data, draw=True):
     from rmscene import scene_items as si
     from rmscene import scene_stream as ss
     from rmscene.text import TextDocument
+    _quiet_rmscene()
     typed, marks, lines, points = [], [], [], 0
     for b in ss.read_blocks(io.BytesIO(data)):
         v = getattr(b, "value", None)
@@ -666,6 +700,9 @@ async def run(uid):
         hintergrund.note(uid, "remarkable", False)
         print("remarkable: comparison failed:", type(e).__name__, flush=True)
         return None
+    if _Hints.n:
+        print(f"remarkable: {_Hints.n} reader hint(s) about newer page parts it skips (usual with newer reMarkable software)", flush=True)
+        _Hints.n = 0
     d = load(uid)
     d["more"] = res["more"]
     if uid in _roots:
@@ -776,8 +813,21 @@ async def _add_to_root(uid, new, swap=None):
             continue
         if not 200 <= r.status_code < 300:
             raise CloudError(f"root commit HTTP {r.status_code} {_said(r)}".strip())
+        _own_root(uid, rh, nh)
         return
     raise CloudError("another device kept writing; try again")
+
+
+def _own_root(uid, before, after):
+    """The Spark's own write changed the root: the quick look (due_once) should not take it for a change
+    on the reMarkable. Only when the root it knew was the one this write started from; else the next look
+    still sees the other device's change."""
+    if _roots.get(uid) == before:
+        _roots[uid] = after
+    d = load(uid)
+    if d.get("root") == before:
+        d["root"] = after
+        save(uid, d)
 
 
 def _meta(name, parent, kind):
