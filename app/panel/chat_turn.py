@@ -33,17 +33,30 @@ import chat  # noqa: E402  (constants and helpers; imported fully before any cal
 import features  # noqa: E402
 
 
+def at_speaker(request, body):
+    """The request comes from an own speaker (its key, or it says so: that only makes it stricter)."""
+    if body.get("client") == "speaker" or "speech_voice" in request.scope:
+        return True
+    dev = profiles.device(request)
+    if dev and not dev["scope"]:
+        import esp32
+        return esp32.by_device(dev["id"])[0] is not None
+    return False
+
+
+def quiet(request, body, pset, car):
+    """"Antworten vorlesen" switched off (profile setting speak): the answer comes as text only, without TTS and
+    without the ready-made sentence (ack.py). A speaker without a screen and CarPlay keep speaking: there is
+    nothing to read there. The request may always ask for text only itself (speak false), never for sound."""
+    return pset.get("speak") is False and not car and not at_speaker(request, body)
+
+
 def shared_stranger(request, body, who):
     """Why this turn at a shared device gets no personal things ("" when it may): the request comes
     from an own speaker (its key, or it says so: that only makes it stricter) and the voice of this
     recording was not clearly the profile's own. Whose voice it was comes only from the panel itself
     (esp32.py sets it in the request scope), never from what a request says."""
-    dev = profiles.device(request)
-    shared = body.get("client") == "speaker" or "speech_voice" in request.scope
-    if not shared and dev and not dev["scope"]:
-        import esp32
-        shared = esp32.by_device(dev["id"])[0] is not None
-    if not shared or not who:
+    if not at_speaker(request, body) or not who:
         return ""
     voice = request.scope.get("speech_voice")
     if voice and voice == who["id"]:
@@ -320,6 +333,9 @@ async def prepare(request):
     # CarPlay: what the request says only makes it stricter (shorter answers, no smart home without
     # the profile's own car switch); it never unlocks anything
     car = bool(app_key and body.get("car") is True)
+    if quiet(request, body, pset, car):
+        body["speak"] = False
+        print("chat: Antworten vorlesen aus, nur Text", flush=True)
     app_blocked = bool(ha and who and app_key and (not profiles.settings(who["id"]).get("app_ha")
                                                    or car and not profiles.settings(who["id"]).get("app_car_ha")))
     # actions on the iPhone itself: only from the app's own key, only when the profile allowed them

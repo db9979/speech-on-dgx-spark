@@ -947,7 +947,7 @@ class Steckbrief(Base):
 
 
 class Batch(Base):
-    """Ich → Dokumente "Auswählen" (V01.0.409): one request for several own documents, never other profiles'."""
+    """Ich → Dokumente "Auswählen" (V01.0.410): one request for several own documents, never other profiles'."""
     def test_several_own_documents_at_once_and_only_own(self):
         own, other = profile("Wbatcha"), profile("Wbatchb")
         ids = [upload(own, f"b{i}.txt", f"Batchtext Nummer {i} mit Inhalt. ".encode() * 3).json()["id"] for i in range(3)]

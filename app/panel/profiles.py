@@ -720,6 +720,8 @@ SETTINGS = {
     "voice": ("", lambda v: isinstance(v, str) and len(v) <= 64 and re.fullmatch(r"[\w .\-]*", v)),
     "speed": (1.0, lambda v: isinstance(v, (int, float)) and not isinstance(v, bool) and 0.7 <= v <= 1.4),
     "length": ("normal", lambda v: v in ("short", "normal", "long")),
+    # "Antworten vorlesen": off = answers as text only on every own screen (chat_turn.quiet), speakers keep speaking
+    "speak": (True, lambda v: isinstance(v, bool)),
     "timing": (True, lambda v: isinstance(v, bool)),
     "learn": (True, lambda v: isinstance(v, bool)),
     "tool_think": (False, lambda v: isinstance(v, bool)),   # think while choosing a tool (admin chat.tool_thinking)

@@ -700,7 +700,7 @@ class Browser(unittest.TestCase):
             profiles.save_settings(me, {"write_on": False})
 
     def test_documents_list_search_details_and_select(self):
-        """Ich → Dokumente with many documents (V01.0.409): compact rows, 50 at a time, the search field filters at
+        """Ich → Dokumente with many documents (V01.0.410): compact rows, 50 at a time, the search field filters at
         once, a source filter, the details beside the list (computer) or as a page (phone), and "Auswählen" switches
         several documents off in one request; with the strict CSP, without sideways scrolling, also at 320 px."""
         import documents

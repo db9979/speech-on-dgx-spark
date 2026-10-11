@@ -529,6 +529,7 @@ def _req(rec, view, now):
             "voice": not getattr(rec, "auto", False) and (rec.client in VOICE or any((s.get("x") or {}).get("voice") for s in rec.steps[:1])),
             "auto": bool(getattr(rec, "auto", False)), "direct": bool(getattr(rec, "direct", False)),
             "prio": bool(getattr(rec, "prio", False)),
+            "quiet": bool(getattr(rec, "quiet", False)),   # text only, no speech (Antworten vorlesen aus)
             "net": bool(getattr(rec, "net", False)), "intent": rec.intent, "stage": stage, "tool": tool,
             "to": target(tool) if stage == "tool" else ("qwen" if stage == "llm" else ""),
             "steps": steps, "marks": dict(rec.marks), "age": round((end or now) - rec.t0, 2),

@@ -853,7 +853,7 @@
 "file": "Assistent und Oberfläche",
 "head": "Sprach-Chat",
 "title": "Sprach-Chat",
-"text": "Dokumentliste für viele Dateien (V01.0.409, Plan /mnt/project-files/dateiliste/plan.md): Ich → Dokumente zeigt jedes Dokument als eine kompakte Zeile (Symbol, Titel, Art · Absender · Quelle, Datum und Größe) statt als Karte mit allen Knöpfen; Abzeichen nur, wenn etwas wichtig ist („Frist 20.12.“, „liest 3/12“, „nicht lesbar“, „für alle“, „Suche aus“). Die Liste scrollt mit der Seite (vorher ein Kasten mit 28 % Bildschirmhöhe), zeigt 50 Zeilen und dann „Weitere zeigen“ und ist beim Sortieren nach Datum in Heute, Letzte 7 Tage, Monate und Jahre gegliedert. Oben: ein Suchfeld filtert sofort nach Titel, Dateiname, Absender, Art, Nummer und Tags, Enter sucht zusätzlich im Inhalt (ersetzt „Suche ausprobieren“, Treffer öffnen das Dokument); Quelle (Hochgeladen, iPhone-App, Begleiter, reMarkable, Aufträge, Von anderen), Sortierung (Neueste, Name, Frist, Größe; Quelle und Sortierung merkt sich der Browser) und Schnellfilter mit Anzahl (Frist offen, Wird gelesen, Nicht lesbar, Für alle, Suche aus) plus Tags als Auswahlliste. Ein Klick öffnet den Detailbereich, auf breiten Seiten neben der Liste, schmal als eigene Seite mit „Zurück zur Liste“: Steckbrief, Zustand mit Balken, Tags direkt bearb"
+"text": "Dokumentliste für viele Dateien (V01.0.410, Plan /mnt/project-files/dateiliste/plan.md): Ich → Dokumente zeigt jedes Dokument als eine kompakte Zeile (Symbol, Titel, Art · Absender · Quelle, Datum und Größe) statt als Karte mit allen Knöpfen; Abzeichen nur, wenn etwas wichtig ist („Frist 20.12.“, „liest 3/12“, „nicht lesbar“, „für alle“, „Suche aus“). Die Liste scrollt mit der Seite (vorher ein Kasten mit 28 % Bildschirmhöhe), zeigt 50 Zeilen und dann „Weitere zeigen“ und ist beim Sortieren nach Datum in Heute, Letzte 7 Tage, Monate und Jahre gegliedert. Oben: ein Suchfeld filtert sofort nach Titel, Dateiname, Absender, Art, Nummer und Tags, Enter sucht zusätzlich im Inhalt (ersetzt „Suche ausprobieren“, Treffer öffnen das Dokument); Quelle (Hochgeladen, iPhone-App, Begleiter, reMarkable, Aufträge, Von anderen), Sortierung (Neueste, Name, Frist, Größe; Quelle und Sortierung merkt sich der Browser) und Schnellfilter mit Anzahl (Frist offen, Wird gelesen, Nicht lesbar, Für alle, Suche aus) plus Tags als Auswahlliste. Ein Klick öffnet den Detailbereich, auf breiten Seiten neben der Liste, schmal als eigene Seite mit „Zurück zur Liste“: Steckbrief, Zustand mit Balken, Tags direkt bearb"
 },
 {
 "lang": "de",
@@ -1318,6 +1318,14 @@
 "head": "Sprach-Chat",
 "title": "Ins Wort fallen",
 "text": "Ins Wort fallen: Während der Assistent spricht, hört das Mikrofon weiter zu. Wer etwa eine Viertelsekunde lang redet, unterbricht die Antwort, und das Gesagte wird gleich die nächste Frage. Das hängt an der Echounterdrückung des Browsers; unterbricht sich der Assistent mit lautem Lautsprecher selbst, hilft ein Kopfhörer oder der Haken „Ins Wort fallen“ unter dem Gespräch."
+},
+{
+"lang": "de",
+"src": "assistent",
+"file": "Assistent und Oberfläche",
+"head": "Sprach-Chat",
+"title": "Antworten vorlesen (seit V01.0.409)",
+"text": "Antworten vorlesen (seit V01.0.409): Wer keine Sprachausgabe möchte, schaltet sie aus. Für ein Gerät reicht der Schalter „Vorlesen“ unter dem Gesicht (am Handy das Lautsprecher-Symbol oben rechts im Chat); er gilt nur in diesem Browser bzw. in der Android-App. Für alle Geräte des Profils: Gespräch einstellen → Antwort → „Antworten vorlesen“. Dann antwortet der Spark nur als Text, ruft die Sprachausgabe gar nicht erst auf (spart die GPU) und spielt auch keine Sofortige Rückmeldung; Hinweise von selbst, Nachrichten und Erinnerungen kommen mit Ton-Signal und Text, aber ohne Vorlesen. Lautsprecher ohne Bildschirm und CarPlay sprechen weiter, dort gibt es nichts zu lesen. „Nochmal vorlesen“ an einer Antwort geht weiterhin. Der Spark-Begleiter liest Antworten von „Frag Spark“ bei ausgeschaltetem Profil-Schalter ebenfalls nicht vor."
 },
 {
 "lang": "de",
@@ -3756,15 +3764,15 @@
 "src": "assistant",
 "file": "Assistant and panel",
 "head": "Voice chat",
-"title": "Document list for many files (V01.0.409)",
-"text": "Document list for many files (V01.0.409): Me → Documents shows every document as one compact row (icon, title, kind · sender · source, date and size) instead of a card with all buttons; badges only when something matters (\"due 20/12\", \"reading 3/12\", \"not readable\", \"for everyone\", \"search off\"). The list scrolls with the page (before, a box of 28 % of the screen height), shows 50 rows and then \"Show more\", and is grouped into Today, Last 7 days, months and years when sorted by date. At the top a search field filters at once by title, file name, sender, kind, number and tags, Enter also searches the content (replaces \"Try a search\", hits open the document); source (uploaded, iPhone app, companion, reMarkable, jobs, from others), sort order (newest, name, deadline, size; source and sort order stay in the browser) and quick filters with counts (deadline open, being read, not readable, for everyone, search off) plus tags as a list. A click opens the details, beside the list on wide pages, as their own page with \"Back to the list\" on narrow ones: card, state with bar, tags edited in place, switches \"The assistant searches it\" and \"For everyone\", open original, read text (with \"Belongs "
+"title": "Document list for many files (V01.0.410)",
+"text": "Document list for many files (V01.0.410): Me → Documents shows every document as one compact row (icon, title, kind · sender · source, date and size) instead of a card with all buttons; badges only when something matters (\"due 20/12\", \"reading 3/12\", \"not readable\", \"for everyone\", \"search off\"). The list scrolls with the page (before, a box of 28 % of the screen height), shows 50 rows and then \"Show more\", and is grouped into Today, Last 7 days, months and years when sorted by date. At the top a search field filters at once by title, file name, sender, kind, number and tags, Enter also searches the content (replaces \"Try a search\", hits open the document); source (uploaded, iPhone app, companion, reMarkable, jobs, from others), sort order (newest, name, deadline, size; source and sort order stay in the browser) and quick filters with counts (deadline open, being read, not readable, for everyone, search off) plus tags as a list. A click opens the details, beside the list on wide pages, as their own page with \"Back to the list\" on narrow ones: card, state with bar, tags edited in place, switches \"The assistant searches it\" and \"For everyone\", open original, read text (with \"Belongs "
 },
 {
 "lang": "en",
 "src": "assistant",
 "file": "Assistant and panel",
 "head": "Voice chat",
-"title": "Document list for many files (V01.0.409)",
+"title": "Document list for many files (V01.0.410)",
 "text": "with\"), remind, read again, delete. Documents others share are in the same list (source \"From others\"). \"Select\" ticks documents and acts on all ticked own ones: search on/off, for everyone on/off, add a tag, read again (at most 20), delete (with a question first), via POST /api/profile/wissen/batch ({\"do\", \"ids\"}, the profile's browser login only, CSRF, one step of the \"doc\" rate limit per request, at most 200 ids, 8 KB body, only documents of the own database, \"for everyone\" and tags only with their switches). The six switches and the note on file kinds sit folded under \"Settings for documents\". The layout \"list with details\" (CSS building blocks ld-… in app.css) is meant for more pages. The iPhone app is unchanged."
 },
 {
@@ -4174,6 +4182,14 @@
 "head": "Voice chat",
 "title": "Barge-in",
 "text": "Barge-in: while the assistant speaks, the microphone keeps listening. Talking for about a quarter of a second interrupts the answer, and what you said becomes the next question. This relies on the browser's echo cancellation; if the assistant interrupts itself on loud speakers, use headphones or untick \"barge in\" below the chat."
+},
+{
+"lang": "en",
+"src": "assistant",
+"file": "Assistant and panel",
+"head": "Voice chat",
+"title": "Read answers aloud (since V01.0.409)",
+"text": "Read answers aloud (since V01.0.409): if you do not want speech output, switch it off. For one device, the \"Vorlesen\" switch below the face (on a phone the speaker icon at the top right of the chat) is enough; it applies to this browser or the Android app only. For all devices of the profile: conversation settings → answer → \"Read answers aloud\". The Spark then answers as text only, does not call the speech output at all (saves the GPU) and plays no instant acknowledgement either; notes, messages and reminders come with a chime and text but are not read aloud. Speakers without a screen and CarPlay keep speaking, there is nothing to read there. \"Read again\" on an answer still works. The Spark-Begleiter does not read \"Frag Spark\" answers aloud either while the profile switch is off."
 },
 {
 "lang": "en",

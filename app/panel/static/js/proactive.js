@@ -22,6 +22,7 @@ const pro={since:Date.now()-10*60e3,seen:new Set(),busy:false,greeted:0,
     b.appendChild(row);chime();
     if(document.hidden)try{if(window.Notification&&Notification.permission==='granted')new Notification('💬 Spark',{body:x.text,tag:x.id})}catch{}
     if(chat.rec||chat.ctrl||playing())return;   // a conversation is running: the bubble and the chime suffice
+    if(typeof voiceOn==='function'&&!voiceOn())return;   // Vorlesen off: the bubble and the chime suffice
     sayText(x.text)}};
 setInterval(()=>pro.poll(),20000);
 setTimeout(()=>{pro.greet();pro.poll()},4000);

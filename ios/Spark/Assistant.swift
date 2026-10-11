@@ -480,7 +480,7 @@ final class Conversation: ObservableObject {
         }
         var got = false
         do {
-            for try await ev in api.chat(history, car: inCar, attachment: attachment) {
+            for try await ev in api.chat(history, car: inCar, attachment: attachment, speak: inCar || Prefs.speakAnswers) {
                 got = true
                 unreachable = false
                 switch ev {

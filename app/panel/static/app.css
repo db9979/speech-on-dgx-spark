@@ -899,7 +899,7 @@ pre.rpbody{white-space:pre-wrap;overflow-wrap:anywhere;font-size:12px;max-height
 .rptext{width:100%}
 .rpsel select{min-width:0;flex:1}
 
-/* "Liste mit Detailbereich" (ld-…, V01.0.409, first used by Ich → Dokumente): a box (.ld-box, container) with .ld-head,
+/* "Liste mit Detailbereich" (ld-…, V01.0.410, first used by Ich → Dokumente): a box (.ld-box, container) with .ld-head,
    .ld-tools (search, selects, buttons), .ld-chips (quick filters with counts), .ld-split holding .ld-list (.ld-grp headings,
    .ld-row rows: .ld-pick?, .ld-ico, .ld-mid with b + small, .ld-right with .ld-badge and .ld-when) and .ld-detail
    (.ld-back, h3, .ld-facts dl, .ld-sw switch rows, .ld-acts buttons), .ld-bulk (sticky bar for a selection).

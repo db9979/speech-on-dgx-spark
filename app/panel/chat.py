@@ -1319,10 +1319,12 @@ def start_trace(request, turn, t_req, t0):
     route = getattr(turn, "route", None)
     tr.intent = route.label() if route else ""
     ask_text = getattr(turn, "ask_text", "") or ""
+    tr.quiet = body.get("speak") is False   # text only: asked so, or "Antworten vorlesen" off (chat_turn.quiet)
     tr.step("in", {"web": "Browser", "speaker": "Lautsprecher", "watch": "Uhr", "siri": "Siri", "telegram": "Telegram",
                    "app": "iPhone-App", "car": "CarPlay"}.get(client, "Gerät"), t_req,
             chars=len(ask_text), voice=bool(turn.heard) or None, pictures=len(getattr(turn, "pics", None) or []) or None,
-            attachment=bool(getattr(turn, "attach", None)) or None, stufe=getattr(turn, "stufe", "") or None)
+            attachment=bool(getattr(turn, "attach", None)) or None, stufe=getattr(turn, "stufe", "") or None,
+            text_only=tr.quiet or None)
     rights = "fremde Stimme am Lautsprecher" if getattr(turn, "stranger", "") else "Stimme eines anderen Profils" \
         if not turn.own_browser else "eigenes Profil" if who else "Admin" if kind == "admin" else "Gast"
     tr.step("prep", "Panel-Vorbereitung", t_req, t0, rights=rights, allowed=getattr(turn, "all_tools", None),
