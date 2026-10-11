@@ -338,6 +338,32 @@ class Updates(unittest.TestCase):
         # an older release does not replace the kept one
         self.assertEqual(asyncio.run(begleiter.fetch("windows", github(win_meta("1.0.349"), files))), "1.0.350")
 
+    def test_signed_manifest_once_a_key_exists(self):
+        """Paket 4 (M8): with a public key in signatur.KEYS begleiter.json needs a valid begleiter.json.sig from the
+        same release; without one, or signed by another key, nothing is kept."""
+        import base64
+        import signatur
+        from cryptography.hazmat.primitives import serialization
+        from cryptography.hazmat.primitives.asymmetric.ed25519 import Ed25519PrivateKey
+        key, other = Ed25519PrivateKey.generate(), Ed25519PrivateKey.generate()
+        pub = base64.b64encode(key.public_key().public_bytes(serialization.Encoding.Raw, serialization.PublicFormat.Raw)).decode()
+        meta = win_meta("1.0.350")
+        body = json.dumps(meta).encode()
+        files = {"SparkBegleiter-x64.exe": EXE, "SparkBegleiter-arm64.exe": EXE}
+        old = signatur.KEYS
+        signatur.KEYS = (pub,)
+        try:
+            with self.assertRaisesRegex(ValueError, "nicht signiert"):
+                asyncio.run(begleiter.fetch("windows", github(meta, files)))
+            with self.assertRaisesRegex(ValueError, "passt nicht"):
+                asyncio.run(begleiter.fetch("windows", github(meta, dict(files, **{
+                    "begleiter.json.sig": base64.b64encode(other.sign(body))}))))
+            self.assertIsNone(begleiter.kept("windows"))
+            self.assertEqual(asyncio.run(begleiter.fetch("windows", github(meta, dict(files, **{
+                "begleiter.json.sig": base64.b64encode(key.sign(body))})))), "1.0.350")
+        finally:
+            signatur.KEYS = old
+
     def test_program_sees_and_loads_the_update_only_with_its_key(self):
         files = {"SparkBegleiter-x64.exe": EXE, "SparkBegleiter-arm64.exe": EXE}
         asyncio.run(begleiter.fetch("windows", github(win_meta("1.0.350"), files)))
@@ -1032,3 +1058,33 @@ class MacSources(unittest.TestCase):
         for name in os.listdir(self.SRC):
             with open(os.path.join(self.SRC, name), encoding="utf-8") as f:
                 self.assertNotIn("try? h.read(upToCount", f.read(), name)
+
+    def test_update_only_from_the_same_team_and_over_https(self):
+        """Paket 4 (M8): a program signed by a team takes only an update from the same team (codesign -R with the
+        Team ID, not just any valid signature), and updates load only over https."""
+        if not os.path.isdir(self.SRC):
+            self.skipTest("only app/ copied")
+        up = open(os.path.join(self.SRC, "Updater.swift"), encoding="utf-8").read()
+        logic = open(os.path.join(self.SRC, "UpdateLogic.swift"), encoding="utf-8").read()
+        self.assertIn('verify += ["-R", req]', up)
+        self.assertIn("UpdateCheck.signerAccepted(running: running, new: teamID(of: app))", up)
+        self.assertIn("kSecCodeInfoTeamIdentifier", up)
+        self.assertIn("guard UpdateCheck.secureBase(client.base) else", up)
+        self.assertIn('"=anchor apple generic and certificate leaf[subject.OU] = \\"\\(t)\\""', logic)
+        self.assertIn("t.count == 10", logic)
+        self.assertNotIn('run("/usr/bin/codesign", ["--verify", "--deep", "--strict", app.path])', up)
+
+
+class WindowsSources(unittest.TestCase):
+    """Paket 4 (M8): the Windows companion loads an update only over https (over http someone in the network
+    could swap the file and its checksum at once)."""
+    SRC = os.path.join(os.path.dirname(__file__), "..", "..", "tools", "begleiter", "windows", "Updater.cs")
+
+    def test_update_only_over_https(self):
+        if not os.path.exists(self.SRC):
+            self.skipTest("only app/ copied")
+        src = open(self.SRC, encoding="utf-8").read()
+        body = src[src.index("private async Task DownloadAsync()"):src.index("private void OnProgress")]
+        self.assertLess(body.index("if (!IsSecureBase(creds.Base))"), body.index("SparkClient.DownloadUpdateAsync"))
+        self.assertIn("uri.Scheme == Uri.UriSchemeHttps", src)
+

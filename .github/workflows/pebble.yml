@@ -35,7 +35,7 @@ jobs:
       - name: Pebble SDK
         run: |
           set -e
-          uv tool install pebble-tool
+          uv tool install pebble-tool==5.0.40
           yes | pebble sdk install latest
           # keep the app runnable on watch firmware with SDK minor 0x5e (see pebble/README.md)
           n=0
@@ -72,6 +72,8 @@ jobs:
           path: pebble/speech-spark.pbw
           if-no-files-found: error
       - name: Branch pebble-build
+        env:
+          GH_TOKEN: ${{ github.token }}
         run: |
           set -e
           mkdir out && cp pebble/speech-spark.pbw out/
@@ -81,4 +83,7 @@ jobs:
           git config user.email "github-actions@users.noreply.github.com"
           git add speech-spark.pbw
           git commit -q -m "speech-spark.pbw from ${GITHUB_SHA}"
-          git push -q -f "https://x-access-token:${{ github.token }}@github.com/${GITHUB_REPOSITORY}.git" pebble-build
+          # the token comes from the environment through a credential helper: never in the URL, the
+          # command line or .git/config
+          git -c credential.helper= -c 'credential.helper=!f() { echo username=x-access-token; echo "password=$GH_TOKEN"; }; f' \
+            push -q -f "https://github.com/${GITHUB_REPOSITORY}.git" pebble-build

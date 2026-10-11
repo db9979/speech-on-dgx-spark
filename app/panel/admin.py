@@ -514,7 +514,7 @@ def validate(new):
     for k in ("agent", "agent_mcp", "mcp_own", "mcp_own_jobs", "mcp_own_oauth", "report", "report_notify", "messages", "messages_all", "messages_announce", "messages_voice", "pebble",
               "kiwix", "local_first", "mcp_server", "mcp_server_extern", "mcp_server_act", "prefetch", "instant_ack",
               "spark_help", "spark_suggest", "spark_drawer", "feature_tips", "feature_tips_push", "write_help", "write_apps", "desk", "desk_act", "desk_meeting",
-              "dev_updates", "dev_updates_night", "dev_updates_upstream"):
+              "dev_updates", "dev_updates_night", "dev_updates_upstream", "esp32_ota_http"):
         if not isinstance(ch.get(k, False), bool):
             raise HTTPException(400, f"{k} must be true or false")
     if ch.get("esp32_url") and not re.fullmatch(r"https?://[A-Za-z0-9.\-]+(?::\d{1,5})?/?", ch["esp32_url"]):
@@ -706,7 +706,7 @@ def validate(new):
 
 
 SENSITIVE = [("api", "key"), ("chat", "llm_url"), ("chat", "llm_key"), ("chat", "telegram_api"),
-             ("chat", "search_url"), ("chat", "kiwix_url"), ("chat", "public"), ("chat", "esp32_url"), ("chat", "esp32_repo"),
+             ("chat", "search_url"), ("chat", "kiwix_url"), ("chat", "public"), ("chat", "esp32_url"), ("chat", "esp32_ota_http"), ("chat", "esp32_repo"),
              ("chat", "mfa"), ("chat", "mcp_server"), ("chat", "mcp_server_extern"), ("chat", "mcp_server_act"),
              ("chat", "mcp_own"), ("chat", "mcp_own_oauth"), ("chat", "report"), ("chat", "report_repo"),
              ("panel", "trusted_proxies"), ("panel", "allow_lan"), ("panel", "notaus_auto"), ("panel", "update_night"), ("panel", "session_days"), ("panel", "trust_days"), ("asr", "model"), ("asr", "aligner_model"),
@@ -1115,7 +1115,7 @@ async def add_clone_voice(name: str = Form(...), text: str = Form(""), file: Upl
         raise HTTPException(413, "the recording is larger than 60 MB")
     if not data.startswith(b"RIFF"):  # mp3, m4a, webm, ...: the engine expects WAV
         p = await asyncio.create_subprocess_exec(
-            "ffmpeg", "-nostdin", "-loglevel", "error", "-i", "pipe:0", "-t", "120", "-ac", "1", "-ar", "24000",
+            "ffmpeg", "-nostdin", "-loglevel", "error", "-protocol_whitelist", "file,pipe", "-i", "pipe:0", "-t", "120", "-ac", "1", "-ar", "24000",
             "-f", "wav", "pipe:1",
             stdin=asyncio.subprocess.PIPE, stdout=asyncio.subprocess.PIPE, stderr=asyncio.subprocess.PIPE)
         data, err = await p.communicate(data)

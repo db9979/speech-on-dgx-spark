@@ -47,6 +47,10 @@ internal sealed class Updater : IDisposable
 {
     public const string Corrupt = "Update beschädigt, nichts geändert.";
 
+    /// <summary>Über http könnte jemand im Heimnetz Datei und Prüfsumme zugleich austauschen.</summary>
+    public const string Insecure = "Updates nur über https: in den Einstellungen die https-Adresse des Spark eintragen "
+                                   + "oder die neue Version selbst von GitHub laden.";
+
     /// <summary>Obergrenze für die Datei (Schutz vor Unsinn vom Server).</summary>
     public const long MaxSize = 512L * 1024 * 1024;
 
@@ -225,6 +229,12 @@ internal sealed class Updater : IDisposable
     {
         if (Info is not { } info || Phase == UpdatePhase.Downloading || _credentials() is not { } creds)
         {
+            return;
+        }
+
+        if (!IsSecureBase(creds.Base))
+        {
+            Fail(info, Insecure);
             return;
         }
 
@@ -426,6 +436,10 @@ internal sealed class Updater : IDisposable
 
         _cts = null;
     }
+
+    /// <summary>Updates kommen nur über https (Größe und SHA-256 kommen über denselben Weg wie die Datei).</summary>
+    public static bool IsSecureBase(string? baseUrl) =>
+        Uri.TryCreate(baseUrl, UriKind.Absolute, out Uri? uri) && uri.Scheme == Uri.UriSchemeHttps;
 
     /// <summary>Größe und SHA-256 der Datei stimmen mit den Angaben des Spark überein.</summary>
     public static bool FileMatches(string path, UpdateInfo info)

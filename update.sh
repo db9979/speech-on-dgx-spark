@@ -31,13 +31,16 @@ NEWEST=0
 [ "${1:-}" = --newest ] && NEWEST=1
 [ "${1:-}" = --to ] && TARGET=${2:-}
 STATE=${SPEECH_SPARK_STATE:-/var/lib/speech-spark/state}
+[ "$(id -u)" = 0 ] || { echo "run with sudo" >&2; exit 1; }
+# the state folder belongs to the service user: root reads and writes there only as that user, so a link
+# planted there never makes root read (or write) a file of its own
+as_svc() { runuser -u speech -- "$@"; }
 FROM_PANEL=0
 if [ -z "$TARGET" ] && [ -s "$STATE/update-target" ] && [ ! -L "$STATE/update-target" ]; then
-  TARGET=$(head -c 64 "$STATE/update-target" | tr -dc '0-9a-f')
+  TARGET=$(as_svc head -c 64 -- "$STATE/update-target" 2>/dev/null | tr -dc '0-9a-f' || true)
   FROM_PANEL=1
 fi
 rm -f "$STATE/update-target"
-[ "$(id -u)" = 0 ] || { echo "run with sudo" >&2; exit 1; }
 [ -d "$SRC/.git" ] || { echo "$SRC is not a git clone; run install.sh from a git checkout first" >&2; exit 1; }
 
 cd "$SRC"
@@ -109,13 +112,22 @@ fi
 
 # Optional: only signed versions. With $SIGNERS (root's own file in the format of ssh-keygen's
 # allowed signers) the version must be a commit signed with one of those keys.
+# A signer file that is there but not root's own plain file (a link, another owner, writable by others) stops
+# the update instead of quietly switching the check off.
 SIGNERS=/etc/speech-spark-signers
-if [ -f "$SIGNERS" ] && [ ! -L "$SIGNERS" ] && [ "$(stat -c %u "$SIGNERS")" = 0 ]; then
+if [ -e "$SIGNERS" ] || [ -L "$SIGNERS" ]; then
+  if [ -L "$SIGNERS" ] || [ ! -f "$SIGNERS" ] || [ "$(stat -c %u "$SIGNERS")" != 0 ] \
+      || [ -n "$(find "$SIGNERS" -maxdepth 0 -perm /022 2>/dev/null)" ]; then
+    echo "$SIGNERS is not a plain file of root (writable only by root); nothing changed." >&2
+    exit 1
+  fi
   if ! git -c gpg.format=ssh -c gpg.ssh.allowedSignersFile="$SIGNERS" verify-commit "$new" >/dev/null 2>&1; then
     echo "Version $(git rev-parse --short "$new") is not signed with a key from $SIGNERS; nothing changed." >&2
     exit 1
   fi
   echo "Signature checked ($SIGNERS)."
+else
+  echo "Signature check off (no $SIGNERS): only GitHub's https and the green test run vouch for this version."
 fi
 
 if [ "$old" = "$new" ]; then
@@ -137,17 +149,15 @@ fi
 export SPEECH_SPARK_PROGRESS=${SPEECH_SPARK_PROGRESS:-/var/lib/speech-spark/state/update-progress.json}
 mkdir -p "$(dirname "$SPEECH_SPARK_PROGRESS")"
 newver=$(git show "$new:app/VERSION" 2>/dev/null | head -1 || true)
-# the state folder belongs to the service user: the file is written as that user (root never writes
-# through a link planted there)
-as_svc() { runuser -u speech -- "$@"; }
+# the state folder belongs to the service user: the file is written and read as that user (as_svc above)
 rm -rf -- "$SPEECH_SPARK_PROGRESS" "$SPEECH_SPARK_PROGRESS.tmp"
 jq -nc --argjson now "$(date +%s)" --arg v "$newver" \
   '{step: 1, text: "Neue Version geladen", started: $now, updated: $now, done: false, ok: null, version: $v}' \
   | as_svc tee -- "$SPEECH_SPARK_PROGRESS" >/dev/null
 finish() {  # ok message
   local j
-  j=$(jq -c --argjson ok "$1" --arg t "$2" --argjson now "$(date +%s)" \
-    '.done=true | .ok=$ok | .text=$t | .updated=$now' "$SPEECH_SPARK_PROGRESS") \
+  j=$(as_svc cat -- "$SPEECH_SPARK_PROGRESS" | jq -c --argjson ok "$1" --arg t "$2" --argjson now "$(date +%s)" \
+    '.done=true | .ok=$ok | .text=$t | .updated=$now') \
     && printf '%s\n' "$j" | as_svc tee -- "$SPEECH_SPARK_PROGRESS" >/dev/null
 }
 trap 'finish false "Update abgebrochen"' TERM INT

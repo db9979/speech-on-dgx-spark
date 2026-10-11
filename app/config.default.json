@@ -184,6 +184,7 @@
     "iphone_push": false,
     "iphone_update": false,
     "esp32_url": "",
+    "esp32_ota_http": true,
     "esp32_repo": "db9979/speech-on-dgx-spark",
     "proactive": false,
     "ha_live": false,

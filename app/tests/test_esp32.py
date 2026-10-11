@@ -92,9 +92,12 @@ def board_hello(client_id, fw="2.5.1.1", variant="bread-compact-wifi"):
                      "board": {"type": "bread-compact-wifi", "name": variant}}}
 
 
-def ota(client_id, **kw):
+def ota(client_id, base="https://testserver", client=("testclient", 50000), mac=None, **kw):
+    """The board's start check; over https by default (firmware goes out over Wi-Fi only there, Paket 4 M8)."""
     b = board_hello(client_id, **kw)
-    return TestClient(panel.app).post("/api/esp32/ota/", headers=b["headers"], json=b["json"])
+    if mac is not None:
+        b["headers"]["Device-Id"] = mac
+    return TestClient(panel.app, base_url=base, client=client).post("/api/esp32/ota/", headers=b["headers"], json=b["json"])
 
 
 def opus16k_frames(pcm):
@@ -145,6 +148,91 @@ class Speakers(unittest.TestCase):
         self.assertEqual(f.content, FILES["bread-compact-wifi__xiaozhi.bin"])
         self.assertEqual(TestClient(panel.app).get("/api/esp32/fw/2.5.1.2/manifest.json").status_code, 404)
         self.assertEqual(TestClient(panel.app).get("/api/esp32/fw/2.5.1.2/..%2Fcurrent.json").status_code, 404)
+
+    def test_signed_manifest_once_a_key_exists(self):
+        """Paket 4 (M8): with a public key in signatur.KEYS a firmware release needs a valid manifest.json.sig;
+        unsigned or signed by another key it is refused and the kept firmware stays. Without a key nothing changes."""
+        import base64
+        import signatur
+        from cryptography.hazmat.primitives import serialization
+        from cryptography.hazmat.primitives.asymmetric.ed25519 import Ed25519PrivateKey
+        key, other = Ed25519PrivateKey.generate(), Ed25519PrivateKey.generate()
+        pub = base64.b64encode(key.public_key().public_bytes(serialization.Encoding.Raw, serialization.PublicFormat.Raw)).decode()
+        old = signatur.KEYS
+        signatur.KEYS = (pub,)
+        try:
+            release("2.5.1.5")
+            r = ADMIN.post("/api/admin/esp32/fetch")
+            self.assertEqual(r.status_code, 400)
+            self.assertIn("nicht signiert", r.json()["detail"])
+            FILES["manifest.json.sig"] = base64.b64encode(other.sign(FILES["manifest.json"]))
+            self.assertIn("passt nicht", ADMIN.post("/api/admin/esp32/fetch").json()["detail"])
+            FILES["manifest.json.sig"] = b"%%%" * 40
+            self.assertIn("ungültig", ADMIN.post("/api/admin/esp32/fetch").json()["detail"])
+            self.assertEqual(esp32.manifest()["version"], "2.5.1.2")
+            FILES["manifest.json.sig"] = base64.b64encode(key.sign(FILES["manifest.json"]))
+            self.assertEqual(ADMIN.post("/api/admin/esp32/fetch").status_code, 200)
+            self.assertEqual(esp32.manifest()["version"], "2.5.1.5")
+        finally:
+            signatur.KEYS = old
+            release("2.5.1.2")
+            self.assertEqual(asyncio.run(esp32.fetch_firmware()), "2.5.1.2")
+
+    def test_board_id_bound_to_its_board_and_address(self):
+        """Paket 4 (N20): a known board id from another board (MAC) gets nothing and changes nothing; the key
+        after the code goes only to the address that showed the code; a wrong challenge is refused."""
+        cid = "21111111-2222-4333-8444-555555555555"
+        act = ota(cid, fw="2.5.1.1").json()["activation"]
+        h = {"Client-Id": cid}
+        c = TestClient(panel.app)
+        self.assertEqual(c.post("/api/esp32/ota/activate", headers=h, json={"challenge": "0" * 32}).status_code, 403)
+        self.assertEqual(c.post("/api/esp32/ota/activate", headers=h, json={"challenge": 5}).status_code, 403)
+        self.assertEqual(c.post("/api/esp32/ota/activate", headers=h, json={"challenge": act["challenge"]}).status_code, 202)
+        a = profile("Esp Nora")
+        a.put("/api/profile/settings", json={"esp_on": True})
+        self.assertEqual(a.post("/api/profile/esp32/pair", json={"code": act["code"], "name": "Flur"}).status_code, 200)
+        self.assertEqual(c.post("/api/esp32/ota/activate", headers=h, json={"algorithm": "hmac-sha256",
+                                                                            "challenge": act["challenge"]}).status_code, 200)
+        # another address asks first: no key for it, and the key stays for the board
+        far = ota(cid, fw="2.5.1.1", client=("10.9.9.9", 50000)).json()
+        self.assertNotIn("token", far["websocket"])
+        # another board with the same id: refused, the record keeps the first board's firmware
+        self.assertEqual(ota(cid, fw="0.0.1", mac="11:22:33:44:55:66").status_code, 403)
+        mine = ota(cid, fw="2.5.1.1").json()
+        self.assertTrue(mine["websocket"]["token"].startswith("sd_"))
+        self.assertNotIn("token", ota(cid, fw="2.5.1.2").json()["websocket"])
+        self.assertEqual(ota(cid, fw="2.5.1.2", mac="AA:BB:CC:DD:EE:FF").status_code, 200)   # same MAC, other case
+        did = a.get("/api/profile/esp32").json()["devices"][0]["id"]
+        self.assertEqual(a.delete(f"/api/profile/esp32/{did}").status_code, 200)
+
+    def test_firmware_over_wifi_only_with_https(self):
+        """Paket 4 (M8): over http anyone in the network could hand the board another file, so the start check
+        offers no update there unless the admin allows it (chat.esp32_ota_http); the night round skips such boards."""
+        import geraeteupdate
+        cid = "31111111-2222-4333-8444-555555555555"
+        act = ota(cid, fw="2.5.1.1").json()["activation"]
+        helpers.set_config(esp32_ota_http=False)   # on by default (speakers on http keep updating)
+        a = profile("Esp Paul")
+        a.put("/api/profile/settings", json={"esp_on": True})
+        self.assertEqual(a.post("/api/profile/esp32/pair", json={"code": act["code"], "name": "Bad"}).status_code, 200)
+        plain = ota(cid, fw="2.5.1.1", base="http://192.168.1.5:31080").json()
+        self.assertTrue(plain["websocket"]["token"].startswith("sd_"))
+        self.assertEqual(plain["firmware"]["url"], "")
+        s = next(x for x in a.get("/api/profile/esp32").json()["devices"] if x["name"] == "Bad")
+        self.assertTrue(s["plain"])
+        self.assertFalse(esp32.ota_allowed(True))
+        self.assertTrue(esp32.ota_allowed(False))
+        try:
+            helpers.set_config(esp32_ota_http=True)
+            self.assertTrue(esp32.ota_allowed(True))
+            self.assertTrue(ota(cid, fw="2.5.1.1", base="http://192.168.1.5:31080").json()["firmware"]["url"]
+                            .startswith("http://192.168.1.5:31080/api/esp32/fw/2.5.1.2/"))
+        finally:
+            helpers.set_config(esp32_ota_http=True)
+        self.assertIn("esp32_ota_http", " ".join(f"{a}.{b}" for a, b in __import__("admin").SENSITIVE))
+        self.assertIn("esp32.ota_allowed(s.get(\"plain\"))", open(geraeteupdate.__file__).read())
+        self.assertNotEqual(ota(cid, fw="2.5.1.1").json()["firmware"]["url"], "")   # https: offered
+        self.assertEqual(a.delete(f"/api/profile/esp32/{s['id']}").status_code, 200)
 
     def test_firmware_two_checks_at_once(self):
         """The daily check, Geräte-Updates and the admin's button at the same moment: one after the other, each in

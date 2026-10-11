@@ -2347,6 +2347,38 @@
 "lang": "de",
 "src": "sicherheit-und-betrieb",
 "file": "Sicherheit und Betrieb",
+"head": "Geräte-Updates und Lieferkette (seit V01.0.407)",
+"title": "Geräte-Updates und Lieferkette (seit V01.0.407)",
+"text": "- Releases nur aus der Umgebung release: Auch die Jobs, die Lautsprecher-Firmware und den Windows-Begleiter veröffentlichen, laufen in der Umgebung release (nur main); neue Firmware rollt nachts auf alle Lautsprecher. Das ESP-IDF-Image ist an seinen Digest gebunden, pebble-tool und Playwright an eine feste Version; das Pebble-SDK selbst kommt weiter als „latest“ (die SDK-Liste war beim Bau dieser Version nicht erreichbar). Der Token für den Branch pebble-build geht über eine Umgebungsvariable, nie in der Git-Adresse. - Signierte Manifeste (vorbereitet, aus): Die Workflows signieren manifest.json (Firmware) und begleiter.json (Windows, Mac) mit Ed25519, sobald das Secret UPDATE_SIGNING_KEY in der Umgebung release liegt, und legen <Datei>.sig ins Release. Der Spark prüft die Signatur, sobald in app/panel/signatur.py ein öffentlicher Schlüssel steht; dann nimmt er nichts Unsigniertes mehr. Ohne Schlüssel ändert sich nichts: GitHub über https plus SHA-256 und Größe aus dem Manifest. Einrichten: openssl genpkey -algorithm ed25519 -out update-key.pem, den Inhalt als Secret UPDATE_SIGNING_KEY in *Settings → Environments → release* speichern, einen Bau laufen lassen und den im Log gezeigte"
+},
+{
+"lang": "de",
+"src": "sicherheit-und-betrieb",
+"file": "Sicherheit und Betrieb",
+"head": "Geräte-Updates und Lieferkette (seit V01.0.407)",
+"title": "Geräte-Updates und Lieferkette (seit V01.0.407)",
+"text": "n öffentlichen Schlüssel in signatur.KEYS eintragen (erst wenn alle drei Releases eine .sig haben). Die Datei update-key.pem danach offline aufbewahren. - Lautsprecher-Updates über https: Über http könnte jemand im Heimnetz dem Board eine fremde Firmware geben. Wer *Einstellungen → Sicherheit → Lautsprecher-Updates auch über http* ausschaltet (Standard an, damit bestehende Lautsprecher weiter aktualisieren; Ändern mit Code), dem bekommt ein Lautsprecher, der den Spark über http erreicht, kein Update über WLAN mehr (Diagnose: „nicht über http angeboten“), die nächtliche Runde lässt ihn aus; per USB im Browser geht es immer. Eine bekannte Board-Kennung von einem anderen Board (andere MAC) bekommt nichts, der Schlüssel nach dem Code geht nur an die Adresse, die den Code gezeigt hat, und eine falsche challenge bei der Aktivierung wird abgelehnt. - Begleiter: Windows- und Mac-Begleiter laden Updates nur noch über https. Ein mit Developer ID signierter Mac-Begleiter nimmt nur ein Update desselben Teams (codesign -R mit der Team-ID aus der eigenen Signatur); ein ad hoc signierter prüft wie bisher Größe, SHA-256, Bundle-ID und gültige Signatur. - iPhone-App: Ein Kopplungs-Link zu einem and"
+},
+{
+"lang": "de",
+"src": "sicherheit-und-betrieb",
+"file": "Sicherheit und Betrieb",
+"head": "Geräte-Updates und Lieferkette (seit V01.0.407)",
+"title": "Geräte-Updates und Lieferkette (seit V01.0.407)",
+"text": "eren Spark fragt ausdrücklich „Zu einem anderen Spark wechseln?“ mit beiden Adressen; beim Wechsel gehen ungesendete Nachrichten nicht mit. - root und Units: install.sh und update.sh lesen config.json, den Update-Fortschritt, die Engine-Signaturen und update-target nur als Dienstnutzer (as_svc cat). Der API-Wächter (speech-spark-watch) hat MemoryMax=1G und PrivateTmp=yes; die vLLM-Engines bewusst kein MemoryMax (geteilter GPU-Speicher). - Sprachdienste ohne API-Schlüssel: Ist api.key leer, antworten ASR und TTS nur noch dem Spark selbst. Eine alte Konfiguration, die im Netz lauscht und keinen Schlüssel hat, bekommt beim Update einen neuen. - ffmpeg und Spracherkennung: Jeder ffmpeg-Aufruf liest nur Dateien und Pipes (-protocol_whitelist file,pipe), eine Wiedergabeliste holt nichts aus dem Netz. Der ASR-Dienst wartet am Einlass, bevor er eine Aufnahme (bis 200 MB) in den Speicher liest; Parakeet entpackt nur eine Aufnahme zugleich, mit zwei Threads und Zeitgrenze. - Telegram-Sprachnachrichten werden wie Fotos geladen: gestreamt, nach 5 MB abgebrochen, der Dateipfad von Telegram geprüft. - Spark-Update: Liegt /etc/speech-spark-signers vor, aber nicht als reine Datei von root (Link, a"
+},
+{
+"lang": "de",
+"src": "sicherheit-und-betrieb",
+"file": "Sicherheit und Betrieb",
+"head": "Geräte-Updates und Lieferkette (seit V01.0.407)",
+"title": "Geräte-Updates und Lieferkette (seit V01.0.407)",
+"text": "nderer Eigentümer, für andere schreibbar), bricht das Update ab, statt die Prüfung still auszulassen. Ohne die Datei sagt das Update-Protokoll „Signature check off“. Einschalten: Commits mit einem SSH-Schlüssel signieren (git config gpg.format ssh, user.signingkey, commit.gpgsign true) und auf dem Spark /etc/speech-spark-signers (root, 644) mit <E-Mail> <öffentlicher Schlüssel> anlegen; danach installiert tars nur noch signierte Commits."
+},
+{
+"lang": "de",
+"src": "sicherheit-und-betrieb",
+"file": "Sicherheit und Betrieb",
 "head": "Notaus",
 "title": "Notaus",
 "text": "Der rote Knopf „Notaus“ (unten in der Seitenleiste, auf dem Handy oben unter Verwalten) hält den Spark in drei Stufen an. Auslösen geht ohne Code und nur nach oben, aufheben nur als Admin."
@@ -4990,6 +5022,38 @@
 "head": "Securing the repository and releases",
 "title": "Securing the repository and releases",
 "text": "Recommended on GitHub: 2FA with a passkey, a ruleset on main against deletion and force push, read-only workflow permissions, secret scanning with push protection. tars still installs only commits whose tests passed and refuses rewritten history."
+},
+{
+"lang": "en",
+"src": "security-and-operation",
+"file": "Security and operation",
+"head": "Device updates and supply chain (since V01.0.407)",
+"title": "Device updates and supply chain (since V01.0.407)",
+"text": "- Releases only from the environment release: the jobs that publish the speaker firmware and the Windows companion run in the environment release (main only) too; new firmware rolls out to every speaker at night. The ESP-IDF image is pinned to its digest, pebble-tool and Playwright to a fixed version; the Pebble SDK itself still comes as \"latest\" (its list could not be reached when this version was built). The token for the branch pebble-build goes through an environment variable, never into the Git URL. - Signed manifests (prepared, off): the workflows sign manifest.json (firmware) and begleiter.json (Windows, Mac) with Ed25519 once the secret UPDATE_SIGNING_KEY exists in the environment release, and put <file>.sig into the release. The Spark checks the signature once a public key is listed in app/panel/signatur.py; then it takes nothing unsigned. Without a key nothing changes: GitHub over https plus SHA-256 and size from the manifest. Setting it up: openssl genpkey -algorithm ed25519 -out update-key.pem, store the content as secret UPDATE_SIGNING_KEY under *Settings → Environments → release*, run a build and put the public key shown in its log into signatur.KEYS (only once all th"
+},
+{
+"lang": "en",
+"src": "security-and-operation",
+"file": "Security and operation",
+"head": "Device updates and supply chain (since V01.0.407)",
+"title": "Device updates and supply chain (since V01.0.407)",
+"text": "ree releases carry a .sig). Keep update-key.pem offline afterwards. - Speaker updates over https: over http someone in the home network could hand the board a foreign firmware. With *Settings → Security → Lautsprecher-Updates auch über http* switched off (on by default so existing speakers keep updating; changing it needs a code), a speaker that reaches the Spark over http gets no update over Wi-Fi (diagnosis: \"nicht über http angeboten\"), and the night round skips it; updating over USB in the browser always works. A known board id from another board (different MAC) gets nothing, the key after the code goes only to the address that showed the code, and a wrong challenge at activation is refused. - Companion: the Windows and Mac companions load updates only over https. A Mac companion signed with a Developer ID takes only an update from the same team (codesign -R with the Team ID from its own signature); an ad-hoc signed one checks size, SHA-256, bundle id and a valid signature as before. - iPhone app: a pairing link to another Spark asks explicitly \"Switch to another Spark?\" with both addresses; unsent messages do not go along when switching. - root and units: install.sh and update"
+},
+{
+"lang": "en",
+"src": "security-and-operation",
+"file": "Security and operation",
+"head": "Device updates and supply chain (since V01.0.407)",
+"title": "Device updates and supply chain (since V01.0.407)",
+"text": ".sh read config.json, the update progress, the engine signatures and update-target only as the service user (as_svc cat). The API watchdog (speech-spark-watch) has MemoryMax=1G and PrivateTmp=yes; the vLLM engines deliberately have no MemoryMax (shared GPU memory). - Speech services without an API key: with an empty api.key, ASR and TTS answer only the Spark itself. An old configuration that listens in the network without a key gets a new one at the update. - ffmpeg and speech recognition: every ffmpeg call reads only files and pipes (-protocol_whitelist file,pipe); a playlist fetches nothing from the network. The ASR service waits at its gate before it reads a recording (up to 200 MB) into memory; Parakeet decodes one recording at a time, with two threads and a time limit. - Telegram voice messages are downloaded like photos: streamed, cut off after 5 MB, the file path from Telegram checked. - Spark update: if /etc/speech-spark-signers exists but is not a plain file of root (a link, another owner, writable by others), the update stops instead of quietly skipping the check. Without the file the update log says \"Signature check off\". To switch it on: sign commits with an SSH key (gi"
+},
+{
+"lang": "en",
+"src": "security-and-operation",
+"file": "Security and operation",
+"head": "Device updates and supply chain (since V01.0.407)",
+"title": "Device updates and supply chain (since V01.0.407)",
+"text": "t config gpg.format ssh, user.signingkey, commit.gpgsign true) and create /etc/speech-spark-signers (root, 644) on the Spark with <e-mail> <public key>; from then on tars installs only signed commits."
 },
 {
 "lang": "en",

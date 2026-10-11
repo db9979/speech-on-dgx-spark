@@ -122,6 +122,32 @@ enum UpdateCheck {
         return AppVersion.isNewer(info.version, than: current) ? info : nil
     }
 
+    /// Updates only through https: over http someone in the home network could swap the file and its checksum.
+    static func secureBase(_ base: String) -> Bool {
+        base.lowercased().hasPrefix("https://")
+    }
+
+    /// "ABCDE12345": an Apple Team ID (10 upper-case letters or digits), else nil (ad hoc or unsigned).
+    static func teamID(_ raw: String?) -> String? {
+        guard let t = raw, t.count == 10,
+              t.unicodeScalars.allSatisfy({ ("A"..."Z").contains($0) || ("0"..."9").contains($0) }) else { return nil }
+        return t
+    }
+
+    /// Whose signature a new app may carry: a program signed by a team (Developer ID) takes only an update signed
+    /// by the same team; an ad-hoc signed program (no team) proves no origin, so its update is checked by size,
+    /// SHA-256, bundle id and a valid signature only.
+    static func signerAccepted(running: String?, new: String?) -> Bool {
+        guard let running = teamID(running) else { return true }
+        return teamID(new) == running
+    }
+
+    /// codesign's requirement text (-R=…) for an app of this team: Apple's chain and the team in the leaf.
+    static func requirement(team: String) -> String? {
+        guard let t = teamID(team) else { return nil }
+        return "=anchor apple generic and certificate leaf[subject.OU] = \"\(t)\""
+    }
+
     /// The helper that swaps the app after it quit: waits for the old process (at most 60 s), moves the old app
     /// aside, the new one in place, removes the old one and starts the app again. If the move fails the old app is
     /// put back. All paths come as arguments, never as part of the text.

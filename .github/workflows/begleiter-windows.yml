@@ -20,9 +20,12 @@ concurrency:
 
 jobs:
   build:
+    environment: release   # releases and the update signing key only from main
     permissions:
       contents: write   # only for the release upload
     runs-on: windows-latest
+    env:
+      HAS_UPDKEY: ${{ secrets.UPDATE_SIGNING_KEY != '' }}
     defaults:
       run:
         shell: pwsh
@@ -61,12 +64,23 @@ jobs:
           Get-Content dist/begleiter.json
           Get-ChildItem dist | Format-Table Name, Length
 
+      # OPTIONAL: begleiter.json.sig (Ed25519, app/panel/signatur.py); skipped until the secret exists.
+      # Git for Windows brings OpenSSL 3.
+      - name: OPTIONAL sign begleiter.json
+        if: env.HAS_UPDKEY == 'true'
+        shell: bash
+        env:
+          UPDATE_SIGNING_KEY: ${{ secrets.UPDATE_SIGNING_KEY }}
+        # (the checkout may have turned the script's line ends into CRLF)
+        run: tr -d '\r' < tools/sign-manifest.sh | bash -s -- dist/begleiter.json
+
       - uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02 # v4
         with:
           name: SparkBegleiter-windows
           path: |
             dist/*.exe
             dist/begleiter.json
+            dist/begleiter.json.sig
           if-no-files-found: error
 
       - name: Publish release begleiter-windows
@@ -75,6 +89,7 @@ jobs:
         run: |
           $tag = 'begleiter-windows'
           $files = @('dist/SparkBegleiter-x64.exe', 'dist/SparkBegleiter-arm64.exe', 'dist/begleiter.json')
+          if (Test-Path dist/begleiter.json.sig) { $files += 'dist/begleiter.json.sig' }
           gh release view $tag 2>$null | Out-Null
           if ($LASTEXITCODE -eq 0) {
             gh release upload $tag @files --clobber

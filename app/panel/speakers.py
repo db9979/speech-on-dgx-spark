@@ -64,7 +64,7 @@ def decode(data):
         except (wave.Error, EOFError):
             pass
     # at most MAX_SECONDS of audio, however small and well compressed the file is
-    p = subprocess.run(["ffmpeg", "-nostdin", "-loglevel", "error", "-i", "pipe:0", "-t", str(MAX_SECONDS),
+    p = subprocess.run(["ffmpeg", "-nostdin", "-loglevel", "error", "-protocol_whitelist", "file,pipe", "-i", "pipe:0", "-t", str(MAX_SECONDS),
                         "-ac", "1", "-ar", str(SR), "-f", "s16le", "pipe:1"], input=data, capture_output=True, timeout=60)
     if p.returncode or not p.stdout:
         raise ValueError("cannot read this audio")

@@ -223,20 +223,26 @@ async def transcriptions(request: Request):
         data.append(("language", lang))
     if not opts.get("prompt") and cfg.get("context"):
         data.append(("prompt", cfg["context"]))  # names and terms the model should expect
-    audio = await read_upload(upload)
-    bad = await asyncio.to_thread(audio_rate_ok, audio)
+    # the gate first: a waiting upload stays in the spooled form file, only the few that run are read into
+    # memory (up to 200 MB each)
+    try:
+        ticket = await gate.enter(stage_of(request))
+    except GateFull:
+        raise HTTPException(503, "ASR busy: too many recordings waiting")
+    try:
+        audio = await read_upload(upload)
+        bad = await asyncio.to_thread(audio_rate_ok, audio)
+    except BaseException:
+        gate.leave(ticket)
+        raise
     if bad:
+        gate.leave(ticket)
         raise HTTPException(415, bad)
     files = {"file": (upload.filename or "audio", audio, upload.content_type)}
     # httpx takes form fields as a dict of lists
     form_data = {}
     for k, v in data:
         form_data.setdefault(k, []).append(v)
-
-    try:
-        ticket = await gate.enter(stage_of(request))
-    except GateFull:
-        raise HTTPException(503, "ASR busy: too many recordings waiting")
     stats["requests"] += 1
     t0 = time.time()
     if local:

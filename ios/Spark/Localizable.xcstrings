@@ -6530,6 +6530,36 @@
           }
         }
       }
+    },
+    "Zu einem anderen Spark wechseln?": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Switch to another Spark?"
+          }
+        }
+      }
+    },
+    "Diese App ist mit %@ gekoppelt. Der Link führt zu %@.\n\nNur wechseln, wenn das dein eigener Spark ist. Danach gehen alle Fragen dorthin.": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "This app is paired with %1$@. The link leads to %2$@.\n\nOnly switch if this is your own Spark. From then on every question goes there."
+          }
+        }
+      }
+    },
+    "Wechseln": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Switch"
+          }
+        }
+      }
     }
   },
   "version": "1.0"
