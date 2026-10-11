@@ -80,6 +80,11 @@ async def engine_status():
             return "ready", None
     except httpx.HTTPError:
         pass
+    # systemctl and journalctl block for a moment: in a worker thread (only while the engine is not up)
+    return await asyncio.to_thread(_not_ready)
+
+
+def _not_ready():
     try:
         with open(os.path.join(STATE_DIR, "speech-spark-asr-engine.json")) as f:
             st = json.load(f)

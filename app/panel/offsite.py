@@ -32,7 +32,7 @@ import guard
 import netguard
 import vault
 import vorrang
-from core import admin_code, admin_code_fresh, owner_auth
+from core import spawn, admin_code, admin_code_fresh, owner_auth
 
 router = APIRouter()
 STATE = os.environ.get("SPEECH_SPARK_STATE", "/var/lib/speech-spark/state")
@@ -309,6 +309,6 @@ async def offsite_now(request: Request):
     d = _read()
     if not d.get("url") or not d.get("key"):
         raise HTTPException(400, "address and backup password first")
-    asyncio.create_task(run("manual"))
+    spawn(run("manual"))
     await asyncio.sleep(0.05)
     return view()

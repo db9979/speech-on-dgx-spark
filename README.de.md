@@ -33,6 +33,7 @@ Alle Optionen ohne Rückfragen (`--mode api --asr 1.7b --tts 0.6b --yes` …) st
 
 <!-- New version: add one line at the top here and in CHANGELOG.md, drop the oldest line here (keep 10). Details go to docs/de and docs/en, not into this README. -->
 
+- **V01.0.405** Unabhängige Prüfung, Paket 3: schnellere Verbindungen, Panel blockiert nicht mehr, Sprachausgabe übersteht Neustart, Frist fürs erste Wort, keine verlorenen Nachrichten
 - **V01.0.404** Antwort kommt nicht mehr doppelt mit „</think>“ dazwischen: das Nachdenken wird nie gezeigt oder vorgelesen
 - **V01.0.403** Unabhängige Prüfung, Paket 2: Zugriffslücken geschlossen (Codes für Sicherung und Geräte, fremde Stimmen als „von außen“, Wiederherstellen behält Admin-Passwort, API-Doku aus, Gast-Grenzen, MCP)
 - **V01.0.402** Unabhängige Prüfung, Paket 1: lange Nachrichten bremsen nicht mehr, Abtastrate geprüft, Aufträge behalten Privates, Sperre, ESP32-Flashen, Zeitumstellung
@@ -42,7 +43,6 @@ Alle Optionen ohne Rückfragen (`--mode api --asr 1.7b --tts 0.6b --yes` …) st
 - **V01.0.398** Wer darf was: Klick auf eine Funktion springt zuverlässig zu ihrem Schalter unter Funktionen, auch bei Unterschaltern
 - **V01.0.397** Begleiter: „Öffne Safari mit Google“ direkt am Rechner gefragt öffnet es (mit Rückfrage), ohne „am PC“ dazuzusagen
 - **V01.0.396** Mac-Begleiter: Selbst-Update und Spark-Wissen-Ordner lesen Dateien wieder bis zum Ende (Update scheiterte immer)
-- **V01.0.395** Begleiter zeigt das im Panel gewählte Gesicht (auch das Comic-Gesicht), in allen Fenstern und im Symbol
 
 Alle Versionen: [CHANGELOG.md](CHANGELOG.md)
 

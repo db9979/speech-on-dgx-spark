@@ -32,6 +32,7 @@ import homeassistant  # noqa: E402
 import features  # noqa: E402
 from common import load_config  # noqa: E402
 from core import (  # noqa: E402
+    spawn,
     ADMIN_IDLE,
     admin_cookie_ok,
     COOKIE,
@@ -179,7 +180,7 @@ def _trust(r, body, who, request):
         name = profiles.agent_label(request.headers.get("user-agent", ""))
         if mfa.set_trust(r, who, name):
             guard.log("trusted_browser", ip=guard.client_ip(request), uid=None if who == mfa.ADMIN else who, detail=name)
-            asyncio.create_task(_tell_trusted(who, name))
+            spawn(_tell_trusted(who, name))
 
 
 async def _tell_trusted(who, name):
@@ -201,7 +202,8 @@ async def login(request: Request):
     body = await request.json()
     guard.check(request, guard.ADMIN)
     _app_admin(request)
-    if not check_password(str(body.get("password", ""))):
+    # PBKDF2 with 200 000 rounds takes about 0.2 s on the Spark: in a worker thread, not on the event loop
+    if not await asyncio.to_thread(check_password, str(body.get("password", ""))):
         guard.failed(request, guard.ADMIN, what="admin_login")
         await asyncio.sleep(1)  # slows down guessing
         raise HTTPException(401, "wrong password")
@@ -345,7 +347,7 @@ async def admin_elevate(request: Request):
         raise HTTPException(403, "Dein Profil hat keine Admin-Rolle.")
     where = "iPhone-App" if via not in ("b", "t") else "vertrauter Browser" if via == "t" else "Browser"
     guard.log("admin_mode_on", ip=guard.client_ip(request), uid=prof["id"], name=prof["name"], detail=f"{coadmin.NAMES[role]}, {where}")
-    asyncio.create_task(coadmin.tell_main(prof["name"], coadmin.NAMES[role], via))
+    spawn(coadmin.tell_main(prof["name"], coadmin.NAMES[role], via))
     r = Response(json.dumps({"ok": True, "role": role, "until": int(time.time()) + coadmin.limits(via)[0]}), media_type="application/json")
     r.set_cookie(coadmin.COOKIE, value, max_age=coadmin.LONGEST, httponly=True, samesite="strict")
     return r
@@ -399,7 +401,7 @@ async def profile_login(request: Request):
     body = await request.json()
     name = str(body.get("name", ""))[:60]
     guard.check(request, name)
-    value = profiles.login(name, str(body.get("pin", "")), request.headers.get("user-agent", ""))
+    value = await asyncio.to_thread(profiles.login, name, str(body.get("pin", "")), request.headers.get("user-agent", ""))
     if not value:
         guard.failed(request, name, what="profile_login")
         await asyncio.sleep(1)  # slows down guessing

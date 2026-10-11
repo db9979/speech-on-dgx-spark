@@ -33,7 +33,7 @@ from fastapi import APIRouter, Depends, HTTPException, Request
 import guard
 import profiles
 import features
-from core import assistant, auth, browser_profile, own_profile, secret_profile
+from core import spawn, assistant, auth, browser_profile, own_profile, secret_profile
 
 router = APIRouter()
 
@@ -128,7 +128,7 @@ def add(uid, rid, kind, name, until, device="", voices="all", probe=False, ctl=N
         print(f"room: listed {kind} {e['name']}", flush=True)
         if source == "voice" and kind == "speaker":
             try:
-                asyncio.get_running_loop().create_task(tell(uid, device, e["name"], int(round((e["until"] - now) / 60))))
+                spawn(tell(uid, device, e["name"], int(round((e["until"] - now) / 60))))
             except RuntimeError:
                 pass
     return e

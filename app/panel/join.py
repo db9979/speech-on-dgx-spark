@@ -37,7 +37,7 @@ import features
 import guard
 import mfa
 import profiles
-from core import acting_profile, admin_code, auth
+from core import spawn, acting_profile, admin_code, auth
 
 router = APIRouter()
 _lock = threading.Lock()
@@ -558,8 +558,7 @@ def _tell_admin(name):
         import push
         uid = coadmin._read().get("notify")
         if uid and uid in profiles.user_ids():
-            loop = asyncio.get_running_loop()
-            loop.create_task(push.send(uid, "👋 Spark", f"{name} ist mit einer Einladung dazugekommen.", tag="admin", private=False))
+            spawn(push.send(uid, "👋 Spark", f"{name} ist mit einer Einladung dazugekommen.", tag="admin", private=False))
     except Exception as e:
         print("join: note failed:", type(e).__name__, flush=True)
 

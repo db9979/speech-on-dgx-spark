@@ -1371,9 +1371,7 @@ def remember(dev, history, text, answer, from_mail, from_outside=False, owner=Tr
     local = datetime.datetime.now(chat.user_zone(profiles.settings(uid).get("tz", "")))
     cid = f"esp-{dev['id']}-{local:%Y%m%d}"
     try:
-        old = next((c for c in profiles.convos(uid) if c.get("id") == cid), None)
-        profiles.save_convo(uid, {"id": cid, "title": f"{dev['name']} {local:%d.%m.}", "updated": int(time.time() * 1000),
-                                  "msgs": (old["msgs"] if old else []) + msgs[-2:]})
+        profiles.append_convo(uid, cid, f"{dev['name']} {local:%d.%m.}", msgs[-2:])
     except Exception as e:
         print("esp32: convo", type(e).__name__, e, flush=True)
 

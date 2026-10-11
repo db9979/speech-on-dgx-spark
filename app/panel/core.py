@@ -360,6 +360,26 @@ def run(cmd, timeout=10, env=None):
         return 1, str(e)
 
 
+# Tasks started with spawn(): asyncio keeps only a weak reference, so a running task could be collected
+# mid-way; and a background loop that ends with an error would vanish without a word in the log.
+_tasks = set()
+
+
+def spawn(coro, name=None):
+    """asyncio.create_task that keeps the task until it is done and logs an error it ends with."""
+    task = asyncio.get_running_loop().create_task(coro, name=name)
+    _tasks.add(task)
+    task.add_done_callback(_done)
+    return task
+
+
+def _done(task):
+    _tasks.discard(task)
+    if not task.cancelled() and task.exception() is not None:
+        e = task.exception()
+        print(f"background task {task.get_name()} ended: {type(e).__name__}: {str(e)[:200]}", flush=True)
+
+
 def unit_state(unit):
     out = run(["systemctl", "is-active", unit])[1].split("\n")[0].strip()
     return out if re.fullmatch(r"[a-z\-]+", out) else "unknown"

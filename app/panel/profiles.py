@@ -906,6 +906,14 @@ def convos(uid):
 
 def save_convo(uid, c):
     """Adds or replaces one conversation (newest first); returns it, or None if invalid."""
+    item = _clean_convo(c)
+    if item:
+        with _lock:
+            _store_convo(uid, item)
+    return item
+
+
+def _clean_convo(c):
     cid = str(c.get("id", ""))
     if not re.fullmatch(r"[\w\-]{1,40}", cid) or not isinstance(c.get("msgs"), list):
         return None
@@ -916,9 +924,23 @@ def save_convo(uid, c):
             if isinstance(m, dict) and m.get("role") in ("user", "assistant") and m.get("content")]
     item = {"id": cid, "title": str(c.get("title", ""))[:80], "msgs": msgs,
             "updated": int(c["updated"]) if isinstance(c.get("updated"), (int, float)) else int(time.time() * 1000)}
+    return item
+
+
+def _store_convo(uid, item):
+    rest = [x for x in convos(uid) if x["id"] != item["id"]]
+    _write(_path(uid, "convos.json"), sorted([item] + rest, key=lambda x: -x["updated"])[:MAX_CONVOS])
+
+
+def append_convo(uid, cid, title, msgs):
+    """Adds messages to the end of one conversation (made if new), read and written under the lock: two turns at
+    the same time (Telegram, a speaker, Siri) each keep their messages (V01.0.405; read, add, save lost one)."""
     with _lock:
-        rest = [x for x in convos(uid) if x["id"] != cid]
-        _write(_path(uid, "convos.json"), sorted([item] + rest, key=lambda x: -x["updated"])[:MAX_CONVOS])
+        old = next((x for x in convos(uid) if x.get("id") == cid), None)
+        c = {"id": cid, "title": title, "updated": int(time.time() * 1000), "msgs": (old["msgs"] if old else []) + list(msgs)}
+        item = _clean_convo(c)
+        if item:
+            _store_convo(uid, item)
     return item
 
 

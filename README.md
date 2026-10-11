@@ -33,6 +33,7 @@ All options for running without questions (`--mode api --asr 1.7b --tts 0.6b --y
 
 <!-- New version: add one line at the top here and in CHANGELOG.md, drop the oldest line here (keep 10). Details go to docs/de and docs/en, not into this README. -->
 
+- **V01.0.405** Independent review, package 3: faster connections, nothing slow on the panel's event loop, speech output retried during a restart, a silent language model ends the turn after 90 s, no lost messages from parallel turns
 - **V01.0.404** Answer no longer comes twice with "</think>" between: the thinking is never shown or read aloud
 - **V01.0.403** Independent review, package 2: access gaps closed (off-site backup codes, unrecognised speaker voices count as outside text, restore keeps the admin password, API docs off, guest limits, codes for device removal in the iPhone app, MCP limits)
 - **V01.0.402** Independent review, package 1: very long messages no longer stall the panel, speech recognition checks sample rates, background jobs keep private data in, lockout fix, ESP32 flashing allowed again, reminders right after the clock change
@@ -42,7 +43,6 @@ All options for running without questions (`--mode api --asr 1.7b --tts 0.6b --y
 - **V01.0.398** Who may do what: clicking a function reliably jumps to its switch under Funktionen, sub-switches included
 - **V01.0.397** Companion: "open Safari with Google" asked at the computer itself now does it (with a question there), no need to say "on the PC"
 - **V01.0.396** Mac companion: self-update and the Spark knowledge folder read files to the end again (the update always failed)
-- **V01.0.395** Companion shows the face picked in the panel (also the comic face), in every window and the icon
 
 All versions: [CHANGELOG.md](CHANGELOG.md)
 

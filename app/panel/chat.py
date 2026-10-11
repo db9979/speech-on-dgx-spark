@@ -999,6 +999,31 @@ def now_line(tz=None):
 
 _last_chat = [0.0]
 
+# The first line of an LLM answer comes after its prompt is read (a few seconds, ~20 s for the longest); one that
+# stays silent longer hangs: the turn ends with "llm_slow" instead of up to llm_timeout (600 s) of silence.
+FIRST_WAIT = 90
+
+
+async def first_within(lines, seconds):
+    """Passes the lines of a stream on; the first must come within seconds (else httpx.ReadTimeout)."""
+    it = lines.__aiter__()
+    try:
+        first = await asyncio.wait_for(it.__anext__(), seconds)
+    except StopAsyncIteration:
+        return
+    except asyncio.TimeoutError:
+        raise httpx.ReadTimeout(f"no answer within {seconds} s") from None
+    yield first
+    async for line in it:
+        yield line
+
+
+TTS_WAITS = (0.5, 1, 2, 4)   # waits for a speech service that is restarting, per answer (see tts() in _answer)
+
+
+class TtsAgain(Exception):
+    """The speech service answered 502/503: worth one more try after a short wait."""
+
 
 def llm_error_code(e, status=None):
     """A short reason the page turns into a plain sentence (see chat.js errText)."""
@@ -1864,7 +1889,7 @@ async def _answer(request, turn):
                 if r.status_code == 400 and re.search(r"context|too long|longer than|maximum.*length", detail, re.I):
                     raise ContextFull(f"LLM HTTP 400: {detail}")
                 raise RuntimeError(f"LLM HTTP {r.status_code}: {detail}")
-            async for line in r.aiter_lines():
+            async for line in first_within(r.aiter_lines(), min(FIRST_WAIT, llm_wait)):
                 if not line.startswith("data:"):
                     continue  # SSE comments and keep-alives
                 data = line[5:].strip()
@@ -1970,6 +1995,7 @@ async def _answer(request, turn):
         mute = body.get("speak") is False  # text only (Siri) or speech output failed: no TTS
         done = False
         said = {"start": None, "pieces": 0, "chars": 0, "behind": 0, "waited": 0, "overtook": 0}   # for Logs → Anfragen
+        waits = list(TTS_WAITS)   # this answer's patience with a speech service that restarts
         try:
             while not done:
                 text = await sentences.get()
@@ -2014,7 +2040,11 @@ async def _answer(request, turn):
                 await out.put({"type": "tts_request", "chars": len(text)})  # for the stall details in the chat
                 # A broken stream (engine restarted, ReadError) costs this piece, never the rest of the
                 # answer: a piece that brought no audio yet is tried once more, then the next one goes on.
-                for attempt in (1, 2):
+                # Not reachable or 502/503 (restarting, e.g. ~8 s during an update): tried again after 0.5/1/2/4 s
+                # (TTS_WAITS, at most once per answer in all), before the answer goes on as text only.
+                attempt = 0
+                while True:
+                    attempt += 1
                     sent, got, mine = time.time(), False, None
                     try:
                         async with c.stream("POST", tts_url, json=req, headers=tts_headers) as r:
@@ -2023,6 +2053,8 @@ async def _answer(request, turn):
                                 said[k] += int(v) if v.isdigit() and len(v) < 7 else 0
                             if r.status_code != 200:
                                 detail = (await r.aread()).decode(errors='replace')[:300]
+                                if r.status_code in (502, 503) and waits:
+                                    raise TtsAgain(f"HTTP {r.status_code}")
                                 print(f"chat: tts HTTP {r.status_code}, this answer stays text only", flush=True)
                                 if tr:
                                     tr.fail(f"tts_http_{r.status_code}")
@@ -2074,17 +2106,23 @@ async def _answer(request, turn):
                                 elif ev.get("type") == "speech.audio.error":
                                     await out.put({"type": "error", "message": f"TTS: {ev.get('error')}"})
                         break
+                    except (TtsAgain, httpx.ConnectError, httpx.ConnectTimeout) as e:
+                        if not waits:
+                            raise
+                        wait = waits.pop(0)
+                        print(f"chat: tts not ready ({type(e).__name__} {e}"[:120] + f"), again in {wait} s", flush=True)
+                        await asyncio.sleep(wait)
                     except (httpx.ReadError, httpx.RemoteProtocolError, httpx.ReadTimeout) as e:
                         print(f"chat: tts stream broke ({type(e).__name__}, {len(text)} chars, "
                               f"{'with' if got else 'no'} audio, try {attempt})", flush=True)
-                        if got or attempt == 2:
+                        if got or attempt >= 2:
                             if tr:
                                 tr.fail("tts_error")
                             await out.put({"type": "error", "code": "tts_error", "message": f"TTS: {type(e).__name__}"})
                             break
                         await asyncio.sleep(0.5)
         except Exception as e:
-            code = "tts_down" if isinstance(e, (httpx.ConnectError, httpx.ConnectTimeout)) else "tts_error"
+            code = "tts_down" if isinstance(e, (httpx.ConnectError, httpx.ConnectTimeout, TtsAgain)) else "tts_error"
             print(f"chat: tts failed ({type(e).__name__}), the rest of this answer stays text only", flush=True)
             if tr:
                 tr.fail(code)
@@ -2246,10 +2284,7 @@ async def text_ask(request, prof, body, who="siri"):
     local = datetime.datetime.now(user_zone(body.get("tz") or profiles.settings(prof["id"]).get("tz", "")))
     day = local.strftime("%Y%m%d")
     try:
-        old = next((c for c in profiles.convos(prof["id"]) if c.get("id") == conv + day), None)
-        keep = (old["msgs"] if old else []) + msgs[-2:]
-        profiles.save_convo(prof["id"], {"id": conv + day, "title": title + " " + local.strftime("%d.%m."),
-                                         "updated": int(time.time() * 1000), "msgs": keep})
+        await asyncio.to_thread(profiles.append_convo, prof["id"], conv + day, title + " " + local.strftime("%d.%m."), msgs[-2:])
     except Exception as e:
         print("siri convo:", type(e).__name__, e, flush=True)
     # Siri reads the answer aloud: no passwords or codes in it (the app's history keeps them)

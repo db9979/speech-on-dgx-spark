@@ -6,6 +6,7 @@ import re
 import io
 import secrets
 import sys
+import threading
 import time
 import zipfile
 
@@ -29,6 +30,7 @@ import wyoming  # noqa: E402
 import profiles  # noqa: E402
 from common import CONFIG_PATH, estimate_gib, journal, load_config  # noqa: E402
 from core import (  # noqa: E402
+    spawn,
     ASR_ENGINE_KEYS,
     ADMIN_IDLE,
     COOKIE,
@@ -294,7 +296,7 @@ async def change_password(request: Request):
     if len(new) < 10:
         raise HTTPException(400, "the new password needs at least 10 characters")
     guard.check(request, guard.ADMIN)
-    if password_set() and not check_password(str(body.get("old", ""))):
+    if password_set() and not await asyncio.to_thread(check_password, str(body.get("old", ""))):
         guard.failed(request, guard.ADMIN, what="admin_password")
         await asyncio.sleep(1)
         raise HTTPException(401, "current password is wrong")
@@ -312,12 +314,32 @@ async def change_password(request: Request):
 
 @router.get("/api/status", dependencies=[Depends(auth)])
 async def status():
+    """Zustand. The health checks run together, everything that calls systemctl, nvidia-smi or reads /proc
+    in a worker thread (V01.0.405: these calls held the event loop, every 3 seconds per open Zustand tab)."""
     cfg = load_config()
+    healths = await asyncio.gather(*(service_health(name, cfg) for name in SERVICES))
+    return await asyncio.to_thread(_status, cfg, dict(zip(SERVICES, healths)))
+
+
+# Which qwen38 lanes exist (and their pool share) changes only when qwen38 is reinstalled: looked up once in 5 minutes
+LANES_EVERY = 300
+_lanes = {"t": None, "units": []}
+
+
+def _qwen38_lanes():
+    now = time.monotonic()
+    if _lanes["t"] is None or now - _lanes["t"] > LANES_EVERY:
+        _lanes["units"] = [(u, lane_fraction(u)) for u in QWEN38_UNITS if unit_exists(u)]
+        _lanes["t"] = now
+    return _lanes["units"]
+
+
+def _status(cfg, healths):
     services = {}
     for name, unit in SERVICES.items():
         services[name] = {"unit": unit, "state": unit_state(unit), "enabled": cfg[name]["enabled"],
                           "port": cfg[name]["port"], "estimate_gib": estimate_gib(cfg[name]["model"]),
-                          "health": await service_health(name, cfg)}
+                          "health": healths.get(name)}
     total_gib = psutil.virtual_memory().total / 2**30
     a = cfg["asr"]
     if a.get("recognizer") == "parakeet":
@@ -341,8 +363,7 @@ async def status():
             services["tts"]["engines"].append(
                 {"name": "tts-design", "kind": "vllm-omni", "unit": UNITS["tts-design"], "state": unit_state(UNITS["tts-design"]),
                  "model": t["voicedesign_model"], "port": t["voicedesign_port"], "estimate_gib": per_engine})
-    qwen38 = [{"unit": u, "state": unit_state(u), "mem_fraction": lane_fraction(u)}
-              for u in QWEN38_UNITS if unit_exists(u)]
+    qwen38 = [{"unit": u, "state": unit_state(u), "mem_fraction": frac} for u, frac in _qwen38_lanes()]
     return {"time": time.time(), "system": system_stats(), "gpu": gpu_stats(),
             "services": services, "qwen38": qwen38, "history": list(history),
             "alerts": health.alerts(), "watchdog": health.events[-10:], "glance": glance(cfg)}
@@ -704,7 +725,8 @@ async def put_config(request: Request):
         guard.log("config_sensitive", detail=", ".join(touched))
     if new.get("chat", {}).get("llm_key") != old.get("chat", {}).get("llm_key"):
         new["chat"].pop("llm_key_from", None)  # typed by hand: updates keep it as is
-    return _save(new, old, _by(request))
+    # systemctl restarts take up to a minute: in a worker thread, the panel keeps answering meanwhile
+    return await asyncio.to_thread(_save, new, old, _by(request))
 
 
 def _by(request):
@@ -712,8 +734,17 @@ def _by(request):
     return me["id"] if me else "main"
 
 
+_save_lock = threading.Lock()
+
+
 def _save(new, old, by):
-    """Writes a checked config, keeps what may be undone (undo.py) and starts or stops the services it touches."""
+    """Writes a checked config, keeps what may be undone (undo.py) and starts or stops the services it touches.
+    Runs in worker threads (saving and undoing): one at a time."""
+    with _save_lock:
+        return _save_locked(new, old, by)
+
+
+def _save_locked(new, old, by):
     tmp = CONFIG_PATH + ".tmp"
     with open(tmp, "w") as f:
         json.dump(new, f, indent=2)
@@ -1246,7 +1277,7 @@ async def bench_start():
             bench_state["log"].append(f"failed: {type(e).__name__}: {e}")
         finally:
             bench_state["running"] = False
-    asyncio.create_task(go())
+    spawn(go())
     return {"started": True}
 
 

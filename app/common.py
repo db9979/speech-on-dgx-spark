@@ -14,6 +14,36 @@ DEFAULTS_PATH = os.path.join(os.path.dirname(os.path.abspath(__file__)), "config
 _shipped = {"mtime": None, "cfg": {}}
 
 
+def _share_tls():
+    """httpx builds a new TLS context for every client, loading the whole CA bundle each time: about 40 ms of
+    CPU on the event loop per request to a sibling service, the LLM or the web (measured, review 11.10.2026).
+    Every client of this process that verifies with the default CAs now shares one context; a client with its
+    own verify (False for a self-signed Home Assistant, a file, a context) or a client certificate is unchanged.
+    tests/test_pruefung.py checks it still holds with the pinned httpx (requirements-panel.lock)."""
+    try:
+        import httpx._transports.default as transport
+    except ImportError:
+        return
+    make = transport.create_ssl_context
+    if getattr(make, "shared", False):
+        return
+    cache = {}
+    lock = threading.Lock()
+
+    def create_ssl_context(verify=True, cert=None, trust_env=True):
+        if verify is not True or cert is not None:
+            return make(verify=verify, cert=cert, trust_env=trust_env)
+        with lock:
+            if trust_env not in cache:
+                cache[trust_env] = make(verify=True, cert=None, trust_env=trust_env)
+            return cache[trust_env]
+    create_ssl_context.shared = True
+    transport.create_ssl_context = create_ssl_context
+
+
+_share_tls()
+
+
 def _merge(base, over):
     """Like jq's `*` in install.sh: objects merged key by key, everything else taken from `over`."""
     out = dict(base)

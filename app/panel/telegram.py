@@ -209,9 +209,7 @@ async def ask(uid, text, pictures=None):
     local = datetime.datetime.now(chat.user_zone(s.get("tz", "")))
     day = local.strftime("%Y%m%d")
     try:
-        old = next((c for c in profiles.convos(uid) if c.get("id") == "tg-" + day), None)
-        profiles.save_convo(uid, {"id": "tg-" + day, "title": "Telegram " + local.strftime("%d.%m."),
-                                  "updated": int(now * 1000), "msgs": (old["msgs"] if old else []) + msgs[-2:]})
+        await asyncio.to_thread(profiles.append_convo, uid, "tg-" + day, "Telegram " + local.strftime("%d.%m."), msgs[-2:])
     except Exception as e:
         print("telegram: convo", type(e).__name__, flush=True)
     return answer

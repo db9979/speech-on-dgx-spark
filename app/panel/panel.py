@@ -16,7 +16,7 @@ from fastapi.responses import FileResponse, HTMLResponse, JSONResponse
 
 sys.path.insert(0, os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
 from common import BodyLimit, load_config, quiet_access_log  # noqa: E402
-from core import ADMIN_IDLE, COOKIE, SERVICES, STATIC, admin_cookie_ok, app_version, renewed_admin_cookie  # noqa: E402
+from core import spawn, ADMIN_IDLE, COOKIE, SERVICES, STATIC, admin_cookie_ok, app_version, renewed_admin_cookie  # noqa: E402
 from monitor import gpu_stats, history, service_health, system_stats  # noqa: E402
 from chat import LEARN_EVERY, learn_once  # noqa: E402
 from update import update_lock  # noqa: E402
@@ -211,9 +211,9 @@ async def sampler():
         while True:
             try:
                 cfg = load_config()
-                g = gpu_stats() or {}
-                s = system_stats()
-                h = {n: await service_health(n, cfg) for n in SERVICES}
+                # nvidia-smi and psutil block for a moment: off the event loop; both health checks at once
+                g, s = await asyncio.to_thread(lambda: (gpu_stats() or {}, system_stats()))
+                h = dict(zip(SERVICES, await asyncio.gather(*(service_health(n, cfg) for n in SERVICES))))
                 health.check_memory(s["mem_avail_gib"], cfg)
                 live.services(h, cfg)
                 history.append({"t": time.time(), "gpu": g.get("util"), "cpu": s["cpu"],
@@ -223,7 +223,7 @@ async def sampler():
             except Exception as e:
                 print("sampler:", e, flush=True)
             await asyncio.sleep(3)
-    asyncio.create_task(loop())
+    spawn(loop())
 
 
 @app.on_event("startup")
@@ -260,9 +260,9 @@ async def stability():
         # due reminders on their own: a slow briefing or proactive check never holds them up
         while True:
             await asyncio.sleep(15)
-            if notaus.blocks("gespraech"):   # Notaus stage 3: not even reminders ring
-                continue
             try:
+                if notaus.blocks("gespraech"):   # Notaus stage 3: not even reminders ring
+                    continue
                 await push.due_reminders()
             except Exception as e:
                 print("push reminders:", type(e).__name__, e, flush=True)
@@ -274,8 +274,17 @@ async def stability():
             minute = int(time.time()) // 60
             if minute != last:
                 last = minute
-                room.sweep()
-                if notaus.blocks("auto"):   # Notaus stage 2: nothing happens by itself (notaus.py)
+                # an error here must not end the loop (briefings, Von selbst, jobs and the night update with it)
+                try:
+                    room.sweep()
+                except Exception as e:
+                    print("room sweep:", type(e).__name__, flush=True)
+                try:
+                    held = notaus.blocks("auto")   # Notaus stage 2: nothing happens by itself (notaus.py)
+                except Exception as e:
+                    print("notaus:", type(e).__name__, flush=True)
+                    held = True
+                if held:
                     await asyncio.sleep(5)
                     continue
                 try:
@@ -303,17 +312,17 @@ async def stability():
                 except Exception as e:
                     print("update overnight:", type(e).__name__, flush=True)
             await asyncio.sleep(5)
-    asyncio.create_task(reminders())
-    asyncio.create_task(telegram.loop())
-    asyncio.create_task(wyoming.loop())
-    asyncio.create_task(esp32.fetch_loop())
-    asyncio.create_task(android.fetch_loop())
-    asyncio.create_task(begleiter.fetch_loop())
-    asyncio.create_task(geraeteupdate.loop())
-    asyncio.create_task(every_minute())
-    asyncio.create_task(watchdog())
-    asyncio.create_task(backups())
-    asyncio.create_task(after_update())
+    spawn(reminders())
+    spawn(telegram.loop())
+    spawn(wyoming.loop())
+    spawn(esp32.fetch_loop())
+    spawn(android.fetch_loop())
+    spawn(begleiter.fetch_loop())
+    spawn(geraeteupdate.loop())
+    spawn(every_minute())
+    spawn(watchdog())
+    spawn(backups())
+    spawn(after_update())
 
 
 @app.on_event("startup")
@@ -329,7 +338,7 @@ async def mail_tidy():
                 await tidy.due_once(idle=not vorrang.speaking())
             except Exception as e:
                 print("mail tidy:", type(e).__name__, e, flush=True)
-    asyncio.create_task(loop())
+    spawn(loop())
 
 
 @app.on_event("startup")
@@ -346,7 +355,7 @@ async def doc_reader():
                     await asyncio.sleep(1)
             except Exception as e:
                 print("documents:", type(e).__name__, e, flush=True)
-    asyncio.create_task(loop())
+    spawn(loop())
 
 
 @app.on_event("startup")
@@ -363,7 +372,7 @@ async def remarkable_sync():
                 await rmplus.due_once(idle=not vorrang.speaking())    # Morgenblatt, @Spark, guide ... (rmplus.py)
             except Exception as e:
                 print("remarkable:", type(e).__name__, flush=True)
-    asyncio.create_task(loop())
+    spawn(loop())
 
 
 @app.on_event("startup")
@@ -397,7 +406,7 @@ async def learner():
                         print("memory tidy: checked a profile", flush=True)
             except Exception as e:
                 print("memory tidy:", type(e).__name__, e, flush=True)
-    asyncio.create_task(loop())
+    spawn(loop())
 
 
 _PAGE = {}

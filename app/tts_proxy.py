@@ -85,6 +85,11 @@ async def engine_status(role):
     except httpx.HTTPError:
         pass
     unit = f"speech-spark-tts-{'engine' if role == 'main' else 'design'}"
+    # systemctl and journalctl block for a moment: in a worker thread (only while the engine is not up)
+    return await asyncio.to_thread(_not_ready, role, unit)
+
+
+def _not_ready(role, unit):
     try:
         with open(os.path.join(STATE_DIR, f"speech-spark-tts-{role}.json")) as f:
             st = json.load(f)

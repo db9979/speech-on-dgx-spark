@@ -30,6 +30,7 @@ still talks with the Spark and may read its mail, calendar and memory. Lifting: 
 with its PIN (and its code when its second step is on), or an admin. STATE/notaus-mine.json; a damaged file
 holds every profile (a Notaus must never go away by a damaged file).
 """
+import asyncio
 import contextvars
 import hashlib
 import hmac
@@ -703,7 +704,7 @@ async def post_lift(request: Request):
     main = core.password_set() and core._admin_cookie_age(request) is not None
     if how == "password":
         guard.check(request, guard.ADMIN)
-        if not core.check_password(str(body.get("password") or "")[:200]):
+        if not await asyncio.to_thread(core.check_password, str(body.get("password") or "")[:200]):
             guard.failed(request, guard.ADMIN, what="notaus_password")
             raise HTTPException(401, "Falsches Passwort.")
     elif main:
@@ -818,7 +819,7 @@ async def post_mine_off_admin(request: Request):
     main = core.password_set() and core._admin_cookie_age(request) is not None
     if how == "password":
         guard.check(request, guard.ADMIN)
-        if not core.check_password(str(body.get("password") or "")[:200]):
+        if not await asyncio.to_thread(core.check_password, str(body.get("password") or "")[:200]):
             guard.failed(request, guard.ADMIN, what="notaus_password")
             raise HTTPException(401, "Falsches Passwort.")
     elif main:

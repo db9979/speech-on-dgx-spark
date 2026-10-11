@@ -499,7 +499,7 @@ class Security(unittest.TestCase):
         import guard
         import types
         real = account.asyncio
-        account.asyncio = types.SimpleNamespace(sleep=lambda s: real.sleep(0))  # no 1 s per wrong guess here
+        account.asyncio = types.SimpleNamespace(sleep=lambda s: real.sleep(0), to_thread=real.to_thread)  # no 1 s per wrong guess here
         self.addCleanup(setattr, account, "asyncio", real)
         profile("Olga", "2468")
         home = TestClient(panel.app, client=("203.0.113.5", 1))
@@ -668,7 +668,8 @@ class Errors(unittest.TestCase):
     def test_tts_down_still_gives_the_text(self):
         old = self._set("tts", port=helpers._port())
         try:
-            evs = ask(TestClient(panel.app), "Hallo")
+            with mock.patch.object(chat, "TTS_WAITS", (0.01, 0.01)):   # V01.0.405 waits for a restart first
+                evs = ask(TestClient(panel.app), "Hallo")
         finally:
             self._set("tts", **old)
         self.assertEqual(answer(evs), "Hallo.")

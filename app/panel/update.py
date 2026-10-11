@@ -147,7 +147,8 @@ async def _remote_state(force=False):
     # the service account has no usable home: no git config, no credential prompt, a safe HOME
     env = dict(os.environ, GIT_TERMINAL_PROMPT="0", HOME=os.environ.get("SPEECH_SPARK_STATE", "/tmp"),
                GIT_CONFIG_NOSYSTEM="1")
-    code, out = run(["git", "ls-remote", remote, f"refs/heads/{branch}"], timeout=30, env=env)
+    # up to 30 s over the network: in a worker thread, the panel keeps answering meanwhile
+    code, out = await asyncio.to_thread(run, ["git", "ls-remote", remote, f"refs/heads/{branch}"], timeout=30, env=env)
     sha = re.search(r"^([0-9a-f]{40})\s+refs/heads/", out or "", re.M)
     if code != 0 or not sha:
         print(f"update check: git ls-remote {remote} -> {code}: {out[-300:]}", flush=True)
@@ -290,7 +291,8 @@ def update_progress_api(log: bool = True):
 
 @router.get("/api/update", dependencies=[Depends(auth)])
 async def update_status(check: bool = False):
-    code, out = run(["systemctl", "show", "speech-spark-update", "-p", "ActiveState,Result,ExecMainExitTimestamp"])
+    code, out = await asyncio.to_thread(run, ["systemctl", "show", "speech-spark-update", "-p",
+                                              "ActiveState,Result,ExecMainExitTimestamp"])
     props = dict(line.split("=", 1) for line in out.splitlines() if "=" in line)
     return {"installed": installed_version(), "previous": previous_version(), "remote": await remote_state(force=check),
             "running": props.get("ActiveState") in ("activating", "active"),

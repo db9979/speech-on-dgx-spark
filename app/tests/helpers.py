@@ -197,6 +197,8 @@ def fake_tts():
         body = await req.json()
         TTS_SEEN.append({k: v for k, v in req.headers.items() if k.startswith("x-spark-")})   # priority for people
         del TTS_SEEN[:-20]
+        if TTS_FAIL:   # a speech service that is restarting (test_tempo.py)
+            return Response(b'{"detail": "restarting"}', status_code=TTS_FAIL.pop(0), media_type="application/json")
         if not body.get("stream") and body.get("response_format") == "pcm":   # whole answer at once (Wyoming)
             return Response(b"\1\0" * 2400, media_type="audio/pcm")
 
@@ -214,6 +216,7 @@ def fake_tts():
 
 TTS_VOICES = ["ryan", "serena"]
 TTS_SEEN = []   # the x-spark-* headers of the last speech requests
+TTS_FAIL = []   # status codes the fake TTS answers next, one per request
 TODO = {"Brot": "needs_action"}
 HA_STATES = [
     {"entity_id": "sensor.wz_temp", "state": "21.5", "attributes": {"friendly_name": "Temperatur",

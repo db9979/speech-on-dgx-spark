@@ -1,4 +1,5 @@
 """Qwen3-ASR as a small HTTP service (OpenAI-style /v1/audio/transcriptions)."""
+import asyncio
 import os
 import subprocess
 import tempfile
@@ -143,11 +144,15 @@ async def transcriptions(
         path = tmp.name
     converted = None
     try:
-        read, audio_s, converted = as_wav(path)
+        # decoding and the model run in a worker thread: /health and the next upload keep being answered
+        read, audio_s, converted = await asyncio.to_thread(as_wav, path)
+
+        def run():
+            with state.lock:
+                return state.model.transcribe(audio=read, context=prompt or cfg.get("context") or "",
+                                              language=lang, return_time_stamps=timestamps)[0]
         t0 = time.time()
-        with state.lock:
-            r = state.model.transcribe(audio=read, context=prompt or cfg.get("context") or "",
-                                       language=lang, return_time_stamps=timestamps)[0]
+        r = await asyncio.to_thread(run)
         dt = time.time() - t0
         state.record(dt, audio_s)
     except HTTPException as e:

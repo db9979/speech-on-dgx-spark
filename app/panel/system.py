@@ -21,7 +21,7 @@ import profiles  # noqa: E402
 import quality  # noqa: E402
 import vorrang  # noqa: E402
 from common import load_config  # noqa: E402
-from core import DEFAULTS, admin_code, admin_code_fresh, auth, owner_auth  # noqa: E402
+from core import spawn, DEFAULTS, admin_code, admin_code_fresh, auth, owner_auth  # noqa: E402
 
 router = APIRouter()
 
@@ -237,7 +237,7 @@ def quality_drop_case(cid: str):
 @router.post("/api/quality", dependencies=[Depends(auth)])
 async def quality_now():
     if not quality.running():
-        asyncio.create_task(quality.run("manual"))
+        spawn(quality.run("manual"))
         await asyncio.sleep(0.1)
     return {"running": True, "progress": quality.progress(), "last": quality.last()}
 

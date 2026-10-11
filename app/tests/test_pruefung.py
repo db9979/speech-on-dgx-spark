@@ -161,7 +161,7 @@ class HousemateLockout(unittest.TestCase):
     def test_own_profile_does_not_lift_another_names_lock(self):
         import account
         real = account.asyncio
-        account.asyncio = type("A", (), {"sleep": staticmethod(lambda s: real.sleep(0))})
+        account.asyncio = type("A", (), {"sleep": staticmethod(lambda s: real.sleep(0)), "to_thread": staticmethod(real.to_thread)})
         self.addCleanup(setattr, account, "asyncio", real)
         profiles.add_user("Opfer", "4711")
         profiles.add_user("Mitbewohner", "9999")
