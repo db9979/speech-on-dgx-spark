@@ -2,6 +2,7 @@
 
 Every version in one line, newest first (taken from the commit messages, so some lines are German, some English). Older entries have no version number.
 
+- **V01.0.392** · 2026-10-11 · Hilfe zum Spark: Kopie der Anleitungen nach V01.0.390 neu erzeugt (Selbsttest test_docs_copy_is_current).
 - **V01.0.391** · 2026-10-11 · Update-Prüfung: findet die letzte grüne Version auch, wenn die neuesten 30 Testläufe abgebrochen wurden; Testläufe brechen sich nicht mehr gegenseitig ab; ehrliche Meldung statt „nicht abrufbar“
 - **V01.0.390** · 2026-10-11 · Repo abgesichert: alle GitHub-Actions auf feste Commits, Schreibrecht nur im Job, der Releases schreibt, Checkout ohne Token, Signierschlüssel nur aus der Umgebung `release` (nur main), einmaliger Workflow „Schlüssel in Umgebung verschieben“, Dependabot für Actions, Selbsttest `test_workflows`
 - **V01.0.389** · 2026-10-11 · Selbsttest: Höhengrenze der Funktionen-Seite wieder mit der Zeile „Probleme melden“ (ging beim Zusammenführen in V01.0.387 verloren).

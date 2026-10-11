@@ -2277,7 +2277,7 @@
 "file": "Sicherheit und Betrieb",
 "head": "Sicherheit",
 "title": "Sicherheit",
-"text": "n bekommt eine Push-Meldung bei jeder neuen Person. In den Profil-Details gibt es PIN-Link (neue PIN per Link statt PIN weitersagen; mit zweitem Schritt nur mit Code) und Erinnern (Push an die Person, höchstens einmal pro Stunde). Änderungsprotokoll: invite_made, invite_used, invite_pin, invite_app, handoff_login. - „Los geht's“ (seit V01.0.276): Nach der Einladung führt *Ich → Los geht's* in fünf Schritten (Willkommen, Absichern, Geräte, Dienste, Fertig) durch alles, was das Profil nutzen darf, mit direkten Links auf die Seiten unter Ich und QR-Codes für iPhone-App und Kopplung. Erledigt hakt der Spark selbst ab (zweiter Schritt eingerichtet, iPhone gekoppelt, Kalender da …), der Browser kann nur „Später“ setzen. Der Admin sieht in der Profilliste „Einrichten x von y“. - Am Handy weitermachen (seit V01.0.276, Schalter unter *Neue Personen*): Am Rechner zeigt „Los geht's“ einen QR-Code (2 Minuten, einmal). Das Handy zeigt danach eine Zahl, am Rechner tippt man unter drei Zahlen die richtige an; erst dann ist das Handy im selben Profil angemeldet. Eine falsche Zahl beendet den Versuch. Geräteschlüssel können keine Übergabe starten. ## Notaus"
+"text": "n bekommt eine Push-Meldung bei jeder neuen Person. In den Profil-Details gibt es PIN-Link (neue PIN per Link statt PIN weitersagen; mit zweitem Schritt nur mit Code) und Erinnern (Push an die Person, höchstens einmal pro Stunde). Änderungsprotokoll: invite_made, invite_used, invite_pin, invite_app, handoff_login. - „Los geht's“ (seit V01.0.276): Nach der Einladung führt *Ich → Los geht's* in fünf Schritten (Willkommen, Absichern, Geräte, Dienste, Fertig) durch alles, was das Profil nutzen darf, mit direkten Links auf die Seiten unter Ich und QR-Codes für iPhone-App und Kopplung. Erledigt hakt der Spark selbst ab (zweiter Schritt eingerichtet, iPhone gekoppelt, Kalender da …), der Browser kann nur „Später“ setzen. Der Admin sieht in der Profilliste „Einrichten x von y“. - Am Handy weitermachen (seit V01.0.276, Schalter unter *Neue Personen*): Am Rechner zeigt „Los geht's“ einen QR-Code (2 Minuten, einmal). Das Handy zeigt danach eine Zahl, am Rechner tippt man unter drei Zahlen die richtige an; erst dann ist das Handy im selben Profil angemeldet. Eine falsche Zahl beendet den Versuch. Geräteschlüssel können keine Übergabe starten. ## Repo und Releases absichern"
 },
 {
 "lang": "de",
@@ -2285,30 +2285,54 @@
 "file": "Sicherheit und Betrieb",
 "head": "Sicherheit",
 "title": "Sicherheit",
+"text": "Seit V01.0.390. Die GitHub-Workflows hängen alle Actions an einen festen Commit (Dependabot schlägt monatlich neue vor), Schreibrecht hat nur der Job, der ein Release oder einen Build-Branch schreibt, und actions/checkout behält keinen Token. Die Signierschlüssel (Android-Keystore, App-Store-Connect-Schlüssel, Developer-ID) liegen in der Umgebung release, die nur Workflows auf main nutzen dürfen; Workflows auf anderen Branches sehen sie nicht. Der Selbsttest test_workflows hält das fest."
+},
+{
+"lang": "de",
+"src": "sicherheit-und-betrieb",
+"file": "Sicherheit und Betrieb",
+"head": "Sicherheit",
+"title": "Sicherheit",
+"text": "Einmaliger Umzug der Schlüssel: einen feingranularen Token nur für dieses Repo anlegen (Administration, Environments, Secrets: Lesen und Schreiben, 1 Tag gültig), als Repo-Secret MIGRATE_TOKEN speichern und den Workflow „Schlüssel in Umgebung verschieben“ starten. Er legt release an (nur main, ohne Freigabe), trägt jeden gesetzten Schlüssel dort ein, löscht danach die Repo-Kopien und MIGRATE_TOKEN. Werte erscheinen nie im Log."
+},
+{
+"lang": "de",
+"src": "sicherheit-und-betrieb",
+"file": "Sicherheit und Betrieb",
+"head": "Sicherheit",
+"title": "Sicherheit",
+"text": "Auf GitHub empfohlen: 2FA mit Passkey, Ruleset auf main gegen Löschen und Force-Push, Workflow-Rechte nur lesen, Secret Scanning mit Push Protection. tars installiert weiterhin nur grün getestete Commits und nimmt keine umgeschriebene Historie."
+},
+{
+"lang": "de",
+"src": "sicherheit-und-betrieb",
+"file": "Sicherheit und Betrieb",
+"head": "Notaus",
+"title": "Notaus",
 "text": "Der rote Knopf „Notaus“ (unten in der Seitenleiste, auf dem Handy oben unter Verwalten) hält den Spark in drei Stufen an. Auslösen geht ohne Code und nur nach oben, aufheben nur als Admin."
 },
 {
 "lang": "de",
 "src": "sicherheit-und-betrieb",
 "file": "Sicherheit und Betrieb",
-"head": "Sicherheit",
-"title": "Sicherheit",
+"head": "Notaus",
+"title": "Notaus",
 "text": "- Wer auslöst: nur Admins (Haupt-Admin, Mit-Admin, Verwalter im Admin-Modus), auch aus der iPhone-App im Admin-Modus und von unterwegs (seit V01.0.338; vorher konnte ein Schalter es allen Profilen erlauben). Normale Profile sehen weder Knopf noch Band noch Zustand-Karte, nur bei Stufe 3 oder von außen eine Seite „Der Spark ist gerade angehalten“ ohne Namen oder Grund. Gäste, MCP und das Sprachmodell nie; Telegram, Sprache, Home Assistant und die Android-Kachel nur wie unten unter *Andere Wege* (seit V01.0.360). - Aufheben: nur Hauptadmin oder Profil im Admin-Modus (Haupt-Admin, Mit-Admin), nur im Browser (kein App-Schlüssel, kein HTTP-Basic), nur im Heimnetz, mit frischem Code (ohne zweiten Schritt: Panel-Passwort neu eingeben). Wahl: zurück auf Stufe 1 oder ganz aus; angehaltene Aufträge laufen danach weiter oder werden abgebrochen (Standard). - Heimnetz heißt: direkte Verbindung aus einem privaten Netz. Über einen Reverse Proxy zählt nur, was ein eingetragener Proxy (Einstellungen → Sicherheit → Reverse Proxy) als Heimnetz-Adresse weiterreicht; ein eingetragener Proxy ohne solche Angabe gilt als „von außen“. Den Proxy deshalb dort eintragen. - Bleibt erhalten über Neustart und Up"
 },
 {
 "lang": "de",
 "src": "sicherheit-und-betrieb",
 "file": "Sicherheit und Betrieb",
-"head": "Sicherheit",
-"title": "Sicherheit",
+"head": "Notaus",
+"title": "Notaus",
 "text": "date (state/notaus.json). Eine beschädigte Datei zählt als Stufe 3, nie als aus. Notausgang ohne Panel: sudo rm /var/lib/speech-spark/state/notaus.json. - Sichtbar: rotes Band auf jeder Seite, Karte unter Zustand („Was der Notaus gerade abhält“: nur Art und Anzahl seit dem Auslösen, nie Inhalte), Push an die Admin-Profile beim Auslösen und Aufheben, Eintrag im Admin-Protokoll. Zustand → Live und der Live-Monitor /live zeigen oben ein rotes Band mit Stufe, Uhrzeit, Kanal und je Art „gesperrt“ mit Anzahl (nie Grund oder Name) und laufen in Stufe 3 weiter (nur lesen; neu koppeln geht dann nicht). - ESP32-Lautsprecher (Firmware ab Build 6, seit V01.0.364): BOOT-Taste 5 Sekunden halten. Die Firmware schickt dann das feste Weckwort „spark-notaus“ (kommt nur von der Taste, nie aus der Spracherkennung). Nur ein Lautsprecher eines Admin-Profils löst den großen Notaus Stufe 2 aus und sagt es an; sonst sagt er „nur für Lautsprecher eines Admins“. Nie *Mein Notaus*: ein Tastendruck sagt nicht, wer gedrückt hat. - Pebble-Uhr (Uhr-App ab 1.6.0, seit V01.0.364): SELECT 3 Sekunden halten, bis sie lang brummt, dann loslassen. Die Uhr schickt den festen Satz „Spark, Notaus“ (wie oben: groß nur für A"
 },
 {
 "lang": "de",
 "src": "sicherheit-und-betrieb",
 "file": "Sicherheit und Betrieb",
-"head": "Sicherheit",
-"title": "Sicherheit",
+"head": "Notaus",
+"title": "Notaus",
 "text": "dmin-Profile). „Spark, Mein Notaus“ geht per Diktat. - iPhone-App (seit V01.0.370, mit der nächsten TestFlight-Version): Notaus-Knopf mit Rückfrage und Siri-Kurzbefehl „Spark Notaus“; ohne Admin-Modus nur *Mein Notaus*, aufheben nie in der App. - Notaus von selbst (seit V01.0.364, Schalter unter *Einstellungen → Sicherheit*, aus; Ändern braucht den Admin-Code): Der Wächter schaltet nach festen Regeln Stufe 1 „Außen zu“ ein, nie höher: 20 falsche Anmeldungen, PINs, Codes oder Notaus-Schlüssel von außen in 10 Minuten; eine MCP-Flut von außen (30 vom Rate-Limit abgewiesene MCP-Anfragen in 10 Minuten); 15 von netguard gesperrte Verbindungen in 10 Minuten (etwa 169.254.x, Heimnetz-Adressen oder die eigenen Dienste, wohin fremder Text den Spark lenken will; Sperren durch den Notaus selbst zählen nicht). Gezählt wird nur im Speicher. Kanal „Wächter“ in Push, Admin-Protokoll und Zustand → Live; aufheben wie immer."
 },
 {
@@ -4869,7 +4893,7 @@
 "file": "Security and operation",
 "head": "Security",
 "title": "Security",
-"text": "ead of passing a PIN on; with the second step only with a code) and Remind (push to the person, at most once per hour). Audit log: invite_made, invite_used, invite_pin, invite_app, handoff_login. - \"Los geht's\" (since V01.0.276): after the invitation, *Me → Los geht's* walks in five steps (welcome, secure, devices, services, done) through everything the profile may use, with direct links to the pages under Me and QR codes for the iPhone app and pairing. The Spark ticks off what is done itself (second step set up, iPhone paired, calendar there …); the browser can only set \"later\". The admin sees \"Einrichten x von y\" in the profile list. - Continue on the phone (since V01.0.276, switch under *Neue Personen*): on the computer \"Los geht's\" shows a QR code (2 minutes, once). The phone then shows a number; on the computer you tap the right one of three numbers, only then is the phone signed in to the same profile. A wrong number ends the attempt. Device keys cannot start a handoff. ## Kill switch (Notaus)"
+"text": "ead of passing a PIN on; with the second step only with a code) and Remind (push to the person, at most once per hour). Audit log: invite_made, invite_used, invite_pin, invite_app, handoff_login. - \"Los geht's\" (since V01.0.276): after the invitation, *Me → Los geht's* walks in five steps (welcome, secure, devices, services, done) through everything the profile may use, with direct links to the pages under Me and QR codes for the iPhone app and pairing. The Spark ticks off what is done itself (second step set up, iPhone paired, calendar there …); the browser can only set \"later\". The admin sees \"Einrichten x von y\" in the profile list. - Continue on the phone (since V01.0.276, switch under *Neue Personen*): on the computer \"Los geht's\" shows a QR code (2 minutes, once). The phone then shows a number; on the computer you tap the right one of three numbers, only then is the phone signed in to the same profile. A wrong number ends the attempt. Device keys cannot start a handoff. ## Securing the repository and releases"
 },
 {
 "lang": "en",
@@ -4877,30 +4901,54 @@
 "file": "Security and operation",
 "head": "Security",
 "title": "Security",
+"text": "Since V01.0.390. The GitHub workflows pin every action to a commit (Dependabot proposes updates monthly), only the job that writes a release or build branch may write, and actions/checkout keeps no token. The signing keys (Android keystore, App Store Connect key, Developer ID) live in the environment release, usable only by workflows on main; workflows on other branches cannot see them. The self-test test_workflows keeps it that way."
+},
+{
+"lang": "en",
+"src": "security-and-operation",
+"file": "Security and operation",
+"head": "Security",
+"title": "Security",
+"text": "One-time move of the keys: create a fine-grained token for this repository only (Administration, Environments, Secrets: read and write, valid 1 day), store it as repository secret MIGRATE_TOKEN and run the workflow \"Schlüssel in Umgebung verschieben\". It creates release (main only, no review), copies every key that is set, then deletes the repository copies and MIGRATE_TOKEN. Values never appear in the log."
+},
+{
+"lang": "en",
+"src": "security-and-operation",
+"file": "Security and operation",
+"head": "Security",
+"title": "Security",
+"text": "Recommended on GitHub: 2FA with a passkey, a ruleset on main against deletion and force push, read-only workflow permissions, secret scanning with push protection. tars still installs only commits whose tests passed and refuses rewritten history."
+},
+{
+"lang": "en",
+"src": "security-and-operation",
+"file": "Security and operation",
+"head": "Kill switch (Notaus)",
+"title": "Kill switch (Notaus)",
 "text": "The red \"Notaus\" button (bottom of the sidebar, on phones at the top of Manage) stops the Spark in three stages. Triggering needs no code and only goes up; lifting is for admins only."
 },
 {
 "lang": "en",
 "src": "security-and-operation",
 "file": "Security and operation",
-"head": "Security",
-"title": "Security",
+"head": "Kill switch (Notaus)",
+"title": "Kill switch (Notaus)",
 "text": "- Who triggers: only admins (main admin, co-admin, manager in admin mode), also from the iPhone app in admin mode and on the way (since V01.0.338; before, a switch could allow it for every profile). Ordinary profiles see neither the button nor the band nor the Status card; only in stage 3 or from outside a page \"The Spark is stopped right now\" without a name or reason. Never guests, MCP or the language model; Telegram, voice, Home Assistant and the Android tile only as described under *Other ways* below (since V01.0.360). - Lifting: only the main admin or a profile in its admin mode (owner, co-admin), only in a browser (no app key, no HTTP Basic), only in the home network, with a fresh code (without a second step: the panel password again). Choice: back to stage 1 or off; held jobs then run on or are cancelled (default). - Home network means a direct connection from a private network. Through a reverse proxy only what a listed proxy (Settings → Security → Reverse proxy) passes on as a home address counts; a listed proxy without that counts as outside. So list the proxy there. - Kept across restart and update (state/notaus.json). A damaged file counts as stage 3, never as off. Way o"
 },
 {
 "lang": "en",
 "src": "security-and-operation",
 "file": "Security and operation",
-"head": "Security",
-"title": "Security",
+"head": "Kill switch (Notaus)",
+"title": "Kill switch (Notaus)",
 "text": "ut without the panel: sudo rm /var/lib/speech-spark/state/notaus.json. - Visible: red band on every page, a card under Status (kinds and counts since it was triggered, never contents), a push to the admin profiles when triggered and lifted, an entry in the admin log. Status → Live and the live monitor /live show a red band with stage, time, channel and per kind \"held\" with a count (never the reason or a name) and keep running in stage 3 (reading only; pairing a new monitor waits). - ESP32 speakers (firmware build 6 and later, since V01.0.368): hold the BOOT button for 5 seconds. The firmware then sends the fixed wake word \"spark-notaus\" (only the button sends it, never speech recognition). Only a speaker of an admin profile triggers the big emergency stop, stage 2, and announces it; otherwise it says \"only for an admin's speaker\". Never *My kill switch*: a button press does not say who pressed it. - Pebble watch (watch app 1.6.0 and later, since V01.0.368): hold SELECT for 3 seconds until it buzzes long, then let go. The watch sends the fixed sentence \"Spark, Notaus\" (as above: the big one only for admin profiles). \"Spark, Mein Notaus\" works by dictation. - iPhone app (since V01.0."
 },
 {
 "lang": "en",
 "src": "security-and-operation",
 "file": "Security and operation",
-"head": "Security",
-"title": "Security",
+"head": "Kill switch (Notaus)",
+"title": "Kill switch (Notaus)",
 "text": "370, with the next TestFlight build): emergency stop button behind a question and the Siri shortcut \"Spark Notaus\"; without admin mode only *My kill switch*, never lifting in the app. - Emergency stop by itself (since V01.0.368, switch under *Settings → Security*, off; changing it needs the admin code): the guard switches on stage 1 \"Outside closed\" by fixed rules, never higher: 20 wrong sign-ins, PINs, codes or emergency stop keys from outside in 10 minutes; an MCP flood from outside (30 MCP requests turned away by the rate limit in 10 minutes); 15 connections refused by netguard in 10 minutes (such as 169.254.x, home addresses or the Spark's own services, where outside text tries to steer the Spark; refusals by the emergency stop itself do not count). Counted in memory only. Channel \"Wächter\" in the push, the admin log and Status → Live; lifting as always."
 },
 {
