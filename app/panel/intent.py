@@ -27,6 +27,7 @@ import httpx
 from fastapi import APIRouter, Depends, HTTPException, Request
 
 import chat
+import docmake
 import fixes
 import guard
 import homeassistant
@@ -89,6 +90,8 @@ GROUPS = {
     "spark": ({"spark_hilfe", "spark_vorschlag"}, SPARK_WORDS),
     # only when the person names it ("Schau in Wikipedia ..."); other knowledge questions stay "unklar"
     "wikipedia": ({"wikipedia", "article_more"}, dict(chat.NEED_TOOLS)["wikipedia"]),
+    # Dokumente erstellen (docmake.py): a letter, presentation, table … as a file
+    "erstellen": ({"document_plan", "document_change", "document_status", "document_send"}, docmake.MAKE_WORDS),
     # the own offline archive (Kiwix, V01.0.258): only when the person names it
     "archiv": ({"archive_search", "article_more", "wikipedia"}, dict(chat.NEED_TOOLS)["archive_search"]),
 }
@@ -173,7 +176,7 @@ def classify(text, extra_words="", group_words=""):
             continue
         m = words.search(text)
         if m:
-            why[name] = m.group(0).strip()
+            why[name] = m.group(0).strip()[:40]
     for name, tool in (("websuche", "web_search"), ("kalender", "calendar_events"), ("mail", "mail_list"),
                        ("erinnerung", "reminder_list"), ("wetter", "weather"), ("bahn", "transit"),
                        ("paket", "parcels"), ("liste", "tasks_show")):
@@ -338,6 +341,7 @@ CACHED_WAIT = 0.3
 GROUP_SAYS = {
     "smarthome": "Licht, Heizung, Geräte oder Zustände im Haus schalten oder abfragen",
     "kalender": "Termine ansehen oder eintragen, Tagesüberblick",
+    "erstellen": "ein Dokument, einen Brief, eine Präsentation oder Tabelle als Datei erstellen oder ändern",
     "mail": "E-Mails lesen, suchen, aufräumen oder entwerfen",
     "websuche": "aktuelle Dinge im Internet nachsehen (Nachrichten, Preise, Öffnungszeiten, Ergebnisse)",
     "erinnerung": "Timer oder Erinnerung stellen, ansehen oder löschen",

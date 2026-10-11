@@ -76,6 +76,8 @@ TOOLS = {
     "Erst lokal": "mem", "remarkable": "rm", "Ablauf": "mem",
     # Probleme melden (meldung.py): a draft stays on the Spark, sending goes to GitHub
     "Meldung": "mem", "GitHub-Meldung": "issues",
+    # Dokumente erstellen (docmake.py): outline, change and status stay on the Spark; sending goes to its target
+    "document_plan": "make", "document_change": "make", "document_status": "make", "document_send": "make",
 }
 # The targets: name, short line, zone (spark = on this machine, lan = home network, net = internet), fixed = always shown
 TARGETS = {
@@ -109,6 +111,8 @@ TARGETS = {
     "mcp": ("MCP-Dienste", "eigene und angebundene Dienste · Netz", "net", False),
     # Probleme melden (meldung.py): only after the person looked at the preview; the line shows counts, never text
     "issues": ("GitHub (Meldungen)", "Issues · Internet", "net", False),
+    # Dokumente erstellen (docmake.py): the line shows jobs in numbers, never a title or text
+    "make": ("Dokumente erstellen", "Aufträge · auf dem Spark", "spark", False),
 }
 RETURNS = {"cal": "Termine oder Aufgaben", "ha": "Zustände oder Schaltung", "web": "Suchergebnisse", "pages": "Seitentext", "kiwix": "Archiv-Treffer",
            "wiki": "Artikel", "mail": "Mails (nur Anzahl und Größe)", "contacts": "Kontakte", "rm": "Ablage", "push": "Zustellung",
@@ -116,7 +120,7 @@ RETURNS = {"cal": "Termine oder Aufgaben", "ha": "Zustände oder Schaltung", "we
            "hilfe": "Anleitungen oder Vorschlagskarte", "webpush": "Zustellung", "tg": "Zustellung",
            "android": "liegt bereit", "desk": "liegt bereit", "page": "liegt bereit",
            "github": "Stand und Testergebnis", "nas": "Ablage bestätigt", "mcp": "Antwort des Dienstes",
-           "issues": "Nummer der Meldung",
+           "issues": "Nummer der Meldung", "make": "Gliederung, Auftrag oder Zustellung",
            "geraete": "Versionsnummern und geprüfte Dateien"}
 CLIENT = {"web": "Browser", "speaker": "Lautsprecher", "watch": "Uhr", "siri": "Siri", "telegram": "Telegram",
           "app": "iPhone-App", "car": "CarPlay", "mcp": "MCP-Client", "ha": "Home Assistant", "auto": "Von selbst", "desk": "Spark-Begleiter",
@@ -812,18 +816,29 @@ def snapshot(view="admin", now=None):
         meld = {"on": False}
     if meld.get("on"):
         used.add("issues")
+    try:
+        import docmake
+        make = docmake.for_live()
+    except Exception:
+        make = {"on": False}
+    if make.get("on"):
+        used.add("make")
     targets = [{"id": k, "name": v[0], "sub": _devup_sub(devup) if k == "geraete" and devup else v[1], "zone": v[2]}
                for k, v in TARGETS.items() if v[3] or k in used]
     for x in targets:      # Probleme melden: open drafts and sent today, in numbers (no titles, no text)
         if x["id"] == "issues":
             x["sub"] = (f"{meld.get('drafts', 0)} Entwürfe · {meld.get('sent_today', 0)} heute gesendet"
                         + ("" if meld.get("token") else " · kein Token"))
+        if x["id"] == "make":   # Dokumente erstellen: jobs in numbers (no titles, no text)
+            x["sub"] = (f"{make.get('run', 0)} läuft · {make.get('wait', 0)} wartet · {make.get('done', 0)} heute fertig"
+                        + (f" · {make['failed']} Fehler" if make.get("failed") else ""))
     return {"t": round(now, 1), "view": view, "fade": FADE, "reqs": reqs, "targets": targets, "speaking": speaking,
             "guard": {"ok": cnt.get("guard_ok", 0), "bad": cnt.get("guard_bad", 0), "cut": cnt.get("guard_cut", 0), "items": guard_items},
             "door": {"in": cnt.get("door_in", 0), "out": cnt.get("door_out", 0), "items": door_items},
             "rets": rets, "events": [{"t": t, "area": a, "text": x} for t, a, x in events], "conns": _conns(now), "sys": _sys(), "notaus": held,
             "svc": _svc_now(now), "bg": _bg_now(now), "hints": hs, "sys1": sys1, "upd": upd, "devup": devup,
-            "meld": {k: meld.get(k) for k in ("on", "drafts", "sent_today", "last", "token")}}
+            "meld": {k: meld.get(k) for k in ("on", "drafts", "sent_today", "last", "token")},
+            "make": {k: make.get(k) for k in ("on", "run", "wait", "done", "failed", "sent", "planned")}}
 
 
 def _devup_sub(d):

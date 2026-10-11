@@ -81,7 +81,7 @@ WHO = {"documents": "documents", "reminders": "reminders", "speaker_id": "speake
        "android": "android", "mcp_server": "mcpserver", "my_mcp": "mymcp", "write_help": "schreib", "write_apps": "schreibapps", "desk": "begleiter", "desk_act": "begleitertun", "desk_meeting": "begleitermeeting",
        "remarkable": "remarkable", "remarkable_send": "rmsend", "remarkable_fresh": "rmfresh", "remarkable_plus": "rmguide", "my_status": "mystatus", "person_priority": "vorrang",
        "ha_live": "halive", "ha_loud": "haloud", "ha_events": "haevent", "ha_voice_rules": "havoice", "ha_camera": "hacam",
-       "systemone_mail": "mailwichtig", "report": "melden"}
+       "systemone_mail": "mailwichtig", "report": "melden", "doc_make": "erstellen"}
 
 
 def _setup(prof, request):
@@ -851,7 +851,11 @@ async def profile_add_doc(file: UploadFile = File(...), prof=Depends(browser_pro
 
 @router.delete("/api/profile/docs/{doc_id}", dependencies=[Depends(assistant)])
 def profile_delete_doc(doc_id: str, prof=Depends(browser_profile)):
-    return {"removed": documents.delete(prof["id"], doc_id)}
+    removed = documents.delete(prof["id"], doc_id)
+    if removed:   # a document the Spark made (docmake.py) goes with its file
+        import docmake
+        docmake.forget(prof["id"], doc_id)
+    return {"removed": removed}
 
 
 @router.get("/api/profile/reminders", dependencies=[Depends(assistant)])
@@ -1102,7 +1106,8 @@ def profile_settings(request: Request):
 ALLOW = {"tool_think": "toolthink", "route": "routing", "direct_read": "direct", "fix_learn": "fixes", "style": "style", "roles": "roles",
          "wiki": "wiki", "kiwix": "kiwix", "local": "lokal", "follow": "follow", "echo": "selfecho", "images": "images",
          "prefetch": "vorab", "instant_ack": "ack", "spark_help": "hilfe", "tips_on": "tipps", "pro_tips": "tippspush", "systemone_on": "einordnung",
-         "devup": "geraeteupdate", "devup_night": "geraetenacht", "report": "melden"}
+         "devup": "geraeteupdate", "devup_night": "geraetenacht", "report": "melden", "doc_make": "erstellen",
+         "doc_make_templates": "erstellenvorlagen"}
 
 
 def _allow(prof, chat):

@@ -51,6 +51,8 @@ PHRASES = {
     "gedaechtnis": (("Okay, einen Moment.", "Okay, one moment."),),
     "dokument": (("Ich schau in deinen Dokumenten nach.", "Let me check your documents."),
                  ("Moment, ich schau in die Dokumente.", "One moment, looking at your documents.")),
+    "erstellen": (("Moment, ich kümmere mich um das Dokument.", "One moment, I'll see to the document."),
+                  ("Okay, einen Moment, ich bereite das vor.", "Okay, one moment, I'll prepare it.")),
     "nachricht": (("Moment.", "One moment."),),
     "agent": (("Moment, ich frag kurz nach.", "One moment, I'll ask."),),
     "iphone": (("Einen Moment.", "One moment."),),

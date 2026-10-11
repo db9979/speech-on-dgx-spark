@@ -33,6 +33,7 @@ Alle Optionen ohne Rückfragen (`--mode api --asr 1.7b --tts 0.6b --yes` …) st
 
 <!-- New version: add one line at the top here and in CHANGELOG.md, drop the oldest line here (keep 10). Details go to docs/de and docs/en, not into this README. -->
 
+- **V01.0.410** Dokumente erstellen: Briefe, Berichte, Präsentationen und Tabellen als Word, PDF, PowerPoint oder Excel, mit Gliederung, Versionen und Senden
 - **V01.0.409** Sprachausgabe abschaltbar: „Antworten vorlesen“ pro Profil und „Vorlesen“ je Gerät, aus = nur Text (Lautsprecher und CarPlay sprechen weiter)
 - **V01.0.408** Unabhängige Prüfung, Paket 5: Englisch vollständiger, verständliche Fehlersätze, „?“ nur mit Hilfe, aktuelle Seitennamen, Labels, Live aus ohne Fehler
 - **V01.0.407** Unabhängige Prüfung, Paket 4: signierbare Geräte-Updates, Begleiter nur https, feste CI-Versionen, root-Lesewege, ffmpeg-Grenzen, iPhone-Kopplung, Telegram
@@ -42,7 +43,6 @@ Alle Optionen ohne Rückfragen (`--mode api --asr 1.7b --tts 0.6b --yes` …) st
 - **V01.0.403** Unabhängige Prüfung, Paket 2: Zugriffslücken geschlossen (Codes für Sicherung und Geräte, fremde Stimmen als „von außen“, Wiederherstellen behält Admin-Passwort, API-Doku aus, Gast-Grenzen, MCP)
 - **V01.0.402** Unabhängige Prüfung, Paket 1: lange Nachrichten bremsen nicht mehr, Abtastrate geprüft, Aufträge behalten Privates, Sperre, ESP32-Flashen, Zeitumstellung
 - **V01.0.401** Mein Notaus: Seite lädt nach Auslösen oder Aufheben nicht mehr von selbst neu (Browser-Selbsttest wieder stabil).
-- **V01.0.400** Selbsttests warten auf langsamen Rechnern zuverlässiger
 
 Alle Versionen: [CHANGELOG.md](CHANGELOG.md)
 

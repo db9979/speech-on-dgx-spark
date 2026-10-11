@@ -46,6 +46,11 @@ class Lock(unittest.TestCase):
         line = re.search(r"make_venv panel (.*?)(?:\s+#|$)", text, re.M).group(1)
         listed = [x.strip('"') for x in re.findall(r'"[^"]+"|\S+', line)]
         listed += re.findall(r'install -q --no-deps "((?:rmscene|fido2)==[^"]+)"', text)   # alone: rmscene's packaging<24 pin, fido2's cryptography cap
+        # Dokumente erstellen: the packages of requirements-docmake.lock, installed with their hashes
+        self.assertIn('install -q --no-deps --require-hashes -r "$DOC_LOCK"', text)
+        with open(os.path.join(APP, "requirements-docmake.lock")) as f:
+            doc = dict(re.findall(r"^([a-z0-9_.\-]+)==([^\s\\]+)", f.read(), re.M))
+        listed += [f"{n}=={v}" for n, v in doc.items() if f"{n}=={v}" in wanted()]
         self.assertEqual(sorted(listed), sorted(wanted()))
         with open(os.path.join(ROOT, ".github", "workflows", "tests.yml")) as f:
             self.assertIn("--no-deps --require-hashes -r app/requirements-panel.lock", f.read())

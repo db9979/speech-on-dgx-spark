@@ -1201,8 +1201,9 @@ def backlog_apply(uid):
 
 
 # ---------------------------------------------------------------- drafts
-def make_draft(uid, aid, to, subject, text, reply_uid=None):
-    """Puts a draft into the mailbox's drafts folder; it is never sent from here."""
+def make_draft(uid, aid, to, subject, text, reply_uid=None, files=None):
+    """Puts a draft into the mailbox's drafts folder; it is never sent from here. files: [(name, bytes, type)]
+    built by the Spark itself (Dokumente erstellen), at most 3 and 25 MB together."""
     acct = _account(uid, aid)
     if not acct:
         raise ValueError("unknown mailbox")
@@ -1230,6 +1231,13 @@ def make_draft(uid, aid, to, subject, text, reply_uid=None):
         msg["To"] = to
         msg["Subject"] = (subject or "").strip()[:200]
         msg.set_content(str(text or "").strip()[:8000] + "\n")
+        files = list(files or [])[:3]
+        if sum(len(f[1]) for f in files) > 25 * 1024 * 1024:
+            raise ValueError("attachments larger than 25 MB")
+        for name, data, ctype in files:
+            main, _, sub = str(ctype).partition("/")
+            msg.add_attachment(bytes(data), maintype=main or "application", subtype=sub or "octet-stream",
+                               filename=re.sub(r"[\x00-\x1f\x7f\"\\/]", "", str(name))[:120] or "Dokument")
         folder = b.append_draft(msg.as_bytes())
     return {"folder": folder, "to": addr, "subject": msg["Subject"]}
 

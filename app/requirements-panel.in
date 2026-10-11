@@ -25,3 +25,8 @@ rmscene==0.8.0
 # fido2: passkeys for the second login step (passkey.py)
 fido2==2.2.1
 packaging>=24
+# Dokumente erstellen (docmake.py, docrender.py): Word, PowerPoint, Excel and PDF files built by fixed code
+python-docx==1.2.0
+python-pptx==1.0.2
+xlsxwriter==3.2.9
+fpdf2==2.8.9

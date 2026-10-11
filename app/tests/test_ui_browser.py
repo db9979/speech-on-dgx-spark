@@ -699,6 +699,75 @@ class Browser(unittest.TestCase):
             helpers.set_config(write_help=False)
             profiles.save_settings(me, {"write_on": False})
 
+    def test_dokumente_erstellen_card_and_list(self):
+        """Dokumente erstellen (erstellen.js): the outline card under an answer starts the job, which ends with a
+        download; Ich → Dokumente lists it, the preview opens and a part edited by hand becomes version 2.
+        On a computer and a phone, with the strict CSP, without sideways scrolling."""
+        import json as _json
+        import docmake
+        import profiles
+        import push
+        helpers.set_config(doc_make=True)
+        me = next(u for u in profiles._load()["users"] if u["name"] == "Uitest")["id"]
+        profiles.save_settings(me, {"doc_make": True})
+        real_part, real_push = docmake.write_part, push.send
+
+        async def fake_part(plan, i, sources, done=None, wish="", old=None):
+            return docmake.check_section({"heading": plan["sections"][i]["heading"], "paras": ["Ein Absatz mit etwas Text."],
+                                          "bullets": ["Erster Punkt", "Zweiter Punkt"],
+                                          "table": {"head": ["Monat", "Tage"], "rows": [["Mai", "12"], ["Juni", "28"]]}},
+                                         plan["kind"])
+
+        async def fake_push(*a, **k):
+            return 0
+        docmake.write_part, push.send = fake_part, fake_push
+
+        async def go():
+            async with async_playwright() as p:
+                for name, w, h in VIEWS:
+                    for d in docmake.all_docs(me):
+                        docmake.delete(me, d["id"])
+                    docmake._pending.clear()
+                    docmake._day.update(day="", n={})
+                    ctx = {"who": {"id": me, "name": "Uitest"}, "own": True, "private": True, "client": "web",
+                           "src": "web:x", "text": "Erstell eine Präsentation über die Pool-Saison", "out": None}
+                    await docmake.tool("document_plan", {"kind": "praesentation", "title": "Pool-Saison 2026 mit einem recht langen Titel",
+                                                         "sections": ["Rückblick", "Zahlen und Kosten", "Ausblick"]}, ctx)
+                    card = _json.dumps(docmake.plan_public(docmake._pending[me]))
+                    br, pg, errors = await self.page(p, w, h, csp=True)
+                    try:
+                        await pg.evaluate(f"goSec('chat');$('chatlog').appendChild(mkCard({card}))")
+                        await pg.wait_for_selector(".mkcard [data-mkdo=go]", state="visible", timeout=8000)
+                        await self.until(pg, "document.querySelectorAll('.mkcard [data-mk=style] option').length>2")
+                        over = await pg.evaluate("document.documentElement.scrollWidth-window.innerWidth")
+                        self.assertLessEqual(over, 1, f"{name}: Karte {over}px zu breit")
+                        await pg.click(".mkcard [data-mkdo=go]")
+                        await pg.wait_for_selector(".mkcard a[href*='/api/make/doc/']", timeout=15000)
+                        await pg.click(".mkcard [data-mkdo=show]")
+                        await pg.wait_for_selector("#mklist [data-mkopen]", state="visible", timeout=8000)
+                        await self.until(pg, "!!document.querySelector('#mkview .mksec')")
+                        self.assertIn("Zweiter Punkt", await pg.inner_text("#mkview"))
+                        over = await pg.evaluate("document.documentElement.scrollWidth-window.innerWidth")
+                        self.assertLessEqual(over, 1, f"{name}: Vorschau {over}px zu breit")
+                        await pg.click("#mkview [data-mkedit='2']")
+                        await pg.fill("#mkview .mksec[data-i='2'] [data-mkt]", "Neu von Hand.\n\n- Nur ein Punkt")
+                        await pg.click("#mkview [data-mkdo=save]")
+                        await self.until(pg, "!!document.querySelector('#mkview [data-mk=ver] option[value=\"2\"]')")
+                        self.assertIn("Neu von Hand.", await pg.inner_text("#mkview"))
+                        c, _ = docmake.content_of(docmake.all_docs(me)[0])
+                        self.assertEqual(c["sections"][1]["bullets"], ["Nur ein Punkt"])
+                        self.assertEqual(errors, [], name)
+                    finally:
+                        await br.close()
+        try:
+            self.run_async(go())
+        finally:
+            docmake.write_part, push.send = real_part, real_push
+            for d in docmake.all_docs(me):
+                docmake.delete(me, d["id"])
+            helpers.set_config(doc_make=False)
+            profiles.save_settings(me, {"doc_make": False})
+
     def test_begleiter_page(self):
         """Ich → Begleiter (begleiter.js): a setup line, and the parts of a paired device saved centrally; on a
         computer and a phone, with the strict CSP, without sideways scrolling."""

@@ -495,6 +495,19 @@ else
   # bump legacy-r1 when a package in this branch changes
   rm -f -- "$PREFIX/venv-panel/.pkgs"; printf '%s\n' "pkgs-r1 legacy-r1" >"$PREFIX/venv-panel/.pkgs"
   fi
+  # Dokumente erstellen (docmake.py): Word, PowerPoint, Excel and PDF packages for an environment made before the lock
+  # file, exactly the versions and hashes of requirements-docmake.lock (the same as in requirements-panel.lock),
+  # once per version of that file (.docmake holds its SHA-256)
+  DOC_LOCK="$INSTALL_FROM/app/requirements-docmake.lock"
+  if [ -f "$DOC_LOCK" ]; then
+    doc_sum=$(sha256sum "$DOC_LOCK" | cut -c1-64)
+    if [ ! -L "$PREFIX/venv-panel/.docmake" ] && [ "$(cat "$PREFIX/venv-panel/.docmake" 2>/dev/null)" = "$doc_sum" ]; then
+      echo "   venv-panel: document packages unchanged, pip skipped"
+    else
+      "$PREFIX/venv-panel/bin/pip" install -q --no-deps --require-hashes -r "$DOC_LOCK"
+      rm -f -- "$PREFIX/venv-panel/.docmake"; printf '%s\n' "$doc_sum" >"$PREFIX/venv-panel/.docmake"
+    fi
+  fi
 fi
 
 # ---------------------------------------------------------------- engines (vLLM + vllm-omni, native)

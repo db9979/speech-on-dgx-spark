@@ -829,6 +829,18 @@ body.adm .notausbtn{flex:1 1 100%}
 .hcard .hwhy{font-size:12px;color:var(--mut);margin:6px 0}
 .hcard .row{display:flex;gap:6px;flex-wrap:wrap;margin-top:6px}
 .hcard .hmsg{font-size:12px;margin-top:4px}
+/* Dokumente erstellen (erstellen.js): the outline card in the chat and "Vom Spark erstellt" under Ich → Dokumente */
+.mkcard .mklbl{display:flex;flex-direction:column;gap:2px;font-size:12px;color:var(--mut)}
+.mkcard .mktitle{width:100%;min-width:0}
+.mksecs{margin:6px 0;padding-left:22px}.mksecs li{display:flex;gap:6px;align-items:center;margin:3px 0}.mksecs input{flex:1;min-width:0}
+.mkpick{display:flex;flex-wrap:wrap;gap:8px;align-items:flex-end;margin:6px 0}.mkpick label{display:flex;flex-direction:column;gap:2px;font-size:12px;color:var(--mut);min-width:0;max-width:100%}
+.mkpick select,.mkpick input{max-width:100%}
+.mkjob{display:flex;flex-wrap:wrap;justify-content:space-between;align-items:center;gap:6px;margin:6px 0;font-size:13px;overflow-wrap:anywhere}.mkjob>span{min-width:0;flex:1}
+.mkbox{margin:12px 0}.mkbox h3{margin:8px 0 4px}.mkmore{margin:8px 0}.mkmore textarea{width:100%;box-sizing:border-box}
+.mkview .mksec{border-top:1px dashed var(--line);padding:6px 0;overflow-wrap:anywhere}.mkview .mksec p{margin:4px 0;white-space:pre-wrap}
+.mkview .mkedit textarea,.mkview .mkedit input{width:100%;box-sizing:border-box}.mkview .mkedit label{display:flex;flex-direction:column;gap:2px;font-size:12px;color:var(--mut)}
+.mktbl{overflow-x:auto;max-width:100%}.mktbl table{border-collapse:collapse;font-size:12px}.mktbl th,.mktbl td{border:1px solid var(--line);padding:2px 6px;text-align:left}
+
 /* Frag Spark lives in the face at the bottom right (hilfe.js): also over Ich and for profiles, not over the keyboard */
 body.hilfeon:not(.kbd) #fab,body.hilfeon #fab:focus-within{display:flex!important;z-index:62}
 /* the face on every page and over Ich for everybody signed in (V01.0.359): starting and asking work everywhere */
@@ -901,3 +913,9 @@ pre.rpbody{white-space:pre-wrap;overflow-wrap:anywhere;font-size:12px;max-height
 .rpsel select{min-width:0;flex:1}
 /* a name only for screen readers (B6): the field keeps its look */
 .srl{position:absolute;width:1px;height:1px;margin:-1px;padding:0;overflow:hidden;clip:rect(0 0 0 0);white-space:nowrap;border:0}
+.mkview{max-height:70vh}
+.mkbox a.b,.mkcard a.b{background:var(--card);border:1px solid var(--line);padding:7px 13px;border-radius:10px;font-weight:500}
+.mkbox a.b.p,.mkcard a.b.p{background:linear-gradient(135deg,var(--acc),color-mix(in srgb,var(--acc) 55%,var(--acc2)));border-color:transparent;color:#fff}
+#mklist li{flex-wrap:wrap}
+#mklist li>span{flex:1 1 220px;min-width:0;overflow-wrap:anywhere}
+.mkview .mksec .dvhead{flex-wrap:wrap}

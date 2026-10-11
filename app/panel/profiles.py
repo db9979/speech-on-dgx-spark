@@ -519,9 +519,12 @@ APP_PATHS = ("/api/chat", "/api/test/asr", "/api/siri/ask", "/api/iphone/hello",
              "/api/notaus/mine",      # Mein Notaus from the app's button and Siri (switching on only; lifting stays in the browser)
              # Probleme melden (meldung.py): draft, preview, send exactly the previewed text, answers, delete
              "/api/report", "/api/report/draft", "/api/report/preview", "/api/report/send", "/api/report/thread", "/api/report/delete",
+             "/api/make",             # Dokumente erstellen (docmake.py): the list of made documents, read only
              "/api/write", "/api/write/assist")   # Schreibhilfe (schreib.py, only with "In anderen Programmen")
 # looking at an own document again (wissen.reader: only with app_docs); reading only, never changing
-APP_PATTERNS = (re.compile(r"/api/profile/wissen/[0-9a-f]{12}/(?:text|file)"),)
+APP_PATTERNS = (re.compile(r"/api/profile/wissen/[0-9a-f]{12}/(?:text|file)"),
+                # a made document (docmake.py), its preview and its file: reading only, never changing or sending
+                re.compile(r"/api/make/doc/[0-9a-f]{12}(?:/file)?"), re.compile(r"/api/make/job/[0-9a-f]{12}"))
 APP_GATE = [lambda uid: False]
 # Panel areas in the app (iphone.py, V01.0.246): with the admin switch chat.iphone_panel and the profile's
 # own switch for an area, the app's key also reaches that area's panel paths. right -> ((methods, pattern), ...);
@@ -738,6 +741,11 @@ SETTINGS = {
     "doc_shared": (False, lambda v: isinstance(v, bool)),
     "doc_brief": (False, lambda v: isinstance(v, bool)),
     "doc_due": (False, lambda v: isinstance(v, bool)),
+    # Dokumente erstellen (docmake.py): the profile's own switch, own templates, the sender lines of a letter
+    "doc_make": (False, lambda v: isinstance(v, bool)),
+    "doc_make_templates": (False, lambda v: isinstance(v, bool)),
+    "doc_sender": ("", lambda v: isinstance(v, str) and len(v) <= 300 and v.count("\n") <= 5
+                   and not re.search(r"[\x00-\x09\x0b-\x1f\x7f]", v)),
     "rm_on": (False, lambda v: isinstance(v, bool)),        # reMarkable notebooks (remarkable.py, admin chat.remarkable)
     "rm_send": (False, lambda v: isinstance(v, bool)),
     "rm_fresh": (False, lambda v: isinstance(v, bool)),

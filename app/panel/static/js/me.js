@@ -22,7 +22,9 @@ const DOCSW=[['pictures',t('Bilder und Scans lesen lassen','Let pictures and sca
   ['originals',t('Originale aufbewahren','Keep originals'),t('Die Datei bleibt auf dem Spark und lässt sich wieder öffnen (neue Uploads).','The file stays on the Spark and can be opened again (new uploads).')],
   ['shared',t('Gemeinsame Dokumente','Shared documents'),t('Eigene Dokumente mit „Für alle“ freigeben und die freigegebenen der anderen nutzen.','Share own documents with "For everyone" and use the ones the others share.')],
   ['brief',t('Steckbrief und Tags','Document card and tags'),t('Das Sprachmodell notiert in Pausen Titel, Art, Absender, Frist und Schlagwörter; der Assistent sucht damit gezielter.','In quiet minutes the language model notes title, kind, sender, deadline and keywords; the assistant searches more precisely with them.')],
-  ['due',t('Fristen anbieten','Offer deadlines'),t('Hat ein Dokument eine Frist, gibt es den Knopf „Erinnern“. Eine Erinnerung entsteht nur auf deinen Klick.','When a document has a deadline there is a "Remind" button. A reminder is only set on your click.')]];
+  ['due',t('Fristen anbieten','Offer deadlines'),t('Hat ein Dokument eine Frist, gibt es den Knopf „Erinnern“. Eine Erinnerung entsteht nur auf deinen Klick.','When a document has a deadline there is a "Remind" button. A reminder is only set on your click.')],
+  ['make',t('Dokumente erstellen','Create documents'),t('Der Spark schreibt auf Bitte Briefe, Berichte, Präsentationen und Tabellen; erst die Gliederung, nach deinem Ja im Hintergrund.','On request the Spark writes letters, reports, presentations and spreadsheets; first the outline, after your yes in the background.')],
+  ['make_templates',t('Eigene Vorlagen','Own templates'),t('Eigene Word- oder PowerPoint-Vorlagen hochladen; der Spark füllt sie.','Upload own Word or PowerPoint templates; the Spark fills them.')]];
 let DOCTAG='';
 // the "Steckbrief" of a document (V01.0.244): kind, sender, deadline and the tags as chips (filter on click)
 const docCard=(d,chips=true)=>{const bits=[d.art,d.sender,d.date&&t('vom ','of ')+d.date,d.due&&t('Frist ','deadline ')+d.due].filter(Boolean).map(esc).join(' · ');
@@ -56,7 +58,7 @@ async function showDocs(){if(!DOCS_ON){$('docbox').style.display='none';return}$
   const l=await (await api('/api/profile/docs')).json();
   try{DOCINFO=await (await api('/api/profile/wissen')).json()}catch{DOCINFO=null}
   const I=DOCINFO;
-  $('docsw').innerHTML=I?DOCSW.filter(([k])=>k==='due'?I.allow.brief&&I.on.brief:I.allow[k]).map(([k,l,h])=>`<div class="setrow"><div class="lbl"><b>${esc(l)}</b><span>${esc(h)}</span></div><label class="tgl"><input type="checkbox" data-docsw="${k}"${I.on[k]?' checked':''}><i></i></label></div>`).join(''):'';
+  $('docsw').innerHTML=I?DOCSW.filter(([k])=>k==='due'?I.allow.brief&&I.on.brief:k==='make_templates'?I.allow.make_templates&&I.on.make:I.allow[k]).map(([k,l,h])=>`<div class="setrow"><div class="lbl"><b>${esc(l)}</b><span>${esc(h)}</span></div><label class="tgl"><input type="checkbox" data-docsw="${k}"${I.on[k]?' checked':''}><i></i></label></div>`).join(''):'';
   const brief=!!(I&&I.allow.brief&&I.on.brief),due=brief&&I.on.due,today=new Date().toISOString().slice(0,10);
   const o=I&&I.others||[];
   // all tags of the own and the shared documents, to filter the lists
@@ -64,7 +66,8 @@ async function showDocs(){if(!DOCS_ON){$('docbox').style.display='none';return}$
   if(DOCTAG&&!all[DOCTAG.toLowerCase()])DOCTAG='';
   const tags=Object.values(all).sort((a,b)=>b[1]-a[1]||a[0].localeCompare(b[0]));$('doctagbar').hidden=!tags.length;
   $('doctagbar').innerHTML=tags.length?`<button type="button" class="dtag${DOCTAG?'':' on'}" data-doctag="">${t('Alle','All')}</button>`+tags.map(([x,n])=>`<button type="button" class="dtag${x.toLowerCase()===DOCTAG.toLowerCase()?' on':''}" data-doctag="${esc(x)}">${esc(x)} <small>${n}</small></button>`).join(''):'';
-  $('doclist').innerHTML=l.filter(d=>!brief||docHas(d,DOCTAG)).map(d=>{const [st,pct]=docState(d);return `<li><span>${esc(brief&&d.title||d.name)}<br><small class="mut">${brief&&d.title?esc(d.name)+' · ':''}${docSize(d.size)} · ${esc(st)}${d.note?' · '+esc(d.note):''}</small>`+(brief?docCard(d):'')+
+  if(typeof mkShow==='function')mkShow(I);
+  $('doclist').innerHTML=l.filter(d=>!brief||docHas(d,DOCTAG)).map(d=>{const [st,pct]=docState(d);return `<li><span>${esc(brief&&d.title||d.name)}<br><small class="mut">${d.source==='spark'?esc(t('vom Spark erstellt','made by the Spark'))+' · ':''}${brief&&d.title?esc(d.name)+' · ':''}${docSize(d.size)} · ${esc(st)}${d.note?' · '+esc(d.note):''}</small>`+(brief?docCard(d):'')+
     (pct===null?'':`<span class="qbar docbar" role="progressbar" aria-valuemin="0" aria-valuemax="100" aria-valuenow="${pct}"><i style="width:${pct}%"></i></span>`)+`</span>`+
     (I&&I.allow.shared&&I.on.shared&&d.state==='ready'?`<label class="docshare" title="${esc(t('Alle Profile mit „Gemeinsame Dokumente“ finden und öffnen es','Every profile with "Shared documents" finds and opens it'))}"><input type="checkbox" data-docshare="${esc(d.id)}"${d.shared?' checked':''}> ${t('Für alle','For everyone')}</label>`:'')+
     `<label class="tgl" title="${esc(t('Der Assistent sucht darin','The assistant searches it'))}"><input type="checkbox" data-docuse="${esc(d.id)}"${d.use?' checked':''}><i></i></label>`+

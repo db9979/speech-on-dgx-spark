@@ -106,6 +106,8 @@
     "doc_originals": false,
     "doc_shared": false,
     "doc_brief": false,
+    "doc_make": false,
+    "doc_make_templates": false,
     "remarkable": false,
     "remarkable_send": false,
     "remarkable_fresh": false,

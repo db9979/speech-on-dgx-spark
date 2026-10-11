@@ -115,6 +115,11 @@ FEATURES = (
     F("rmweb", "Webseiten und Anhänge aufs reMarkable", "Web pages and attachments to the reMarkable", "data", ("remarkable_plus",), "rm_web", parent="rmsend", me="rmbox", guide="rmplus"),
     F("rminbox", "Eingang pro Tag", "Daily inbox", "data", ("remarkable_plus",), "rm_inbox", parent="rmsend", me="rmbox", guide="rmplus"),
     F("rmguide", "Spark-Anleitung auf dem reMarkable", "Spark guide on the reMarkable", "data", ("remarkable_plus",), "rm_guide", parent="rmsend", me="rmbox", guide="rmplus"),
+    # Dokumente erstellen (docmake.py, plan dokumente-erstellen): letters, presentations, tables ... as files
+    F("erstellen", "Dokumente erstellen", "Creating documents", "data", ("doc_make",), "doc_make",
+      parent="documents", me="docbox", guide="erstellen"),
+    F("erstellenvorlagen", "Eigene Vorlagen", "Own templates", "data", ("doc_make_templates",), "doc_make_templates",
+      parent="erstellen", me="docbox", guide="erstellenvorlagen"),
     F("docbrief", "Steckbrief und Tags", "Document card and tags", "data", ("doc_brief",), "doc_brief",
       parent="documents", me="docbox", guide="docbrief"),
     # everyday

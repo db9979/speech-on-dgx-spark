@@ -605,6 +605,24 @@ async def notify(uid, text, private=True):
         return 0
 
 
+async def send_file(uid, name, data, caption=""):
+    """A document the Spark made (docmake.py) to the profile's own Telegram chat; personal data, so only when the
+    profile allowed that there. Returns True when Telegram took it."""
+    if not push_on(uid, True) or not link(uid) or notaus.refuse("aussen") or len(data) > 45 * 1024 * 1024:
+        return False
+    try:
+        async with httpx.AsyncClient(timeout=60) as c:
+            r = await c.post(f"{base()}/sendDocument", data={"chat_id": str(link(uid)["chat"]), "caption": str(caption)[:900]},
+                             files={"document": (re.sub(r"[\x00-\x1f\x7f\"\\/]", "", str(name))[:120] or "Dokument", data)})
+        ok = bool(r.json().get("ok"))
+        if not ok:
+            print("telegram: send_file", safe(str(r.json().get("description")), 120), flush=True)
+        return ok
+    except (httpx.HTTPError, ValueError) as e:
+        print("telegram: send_file", type(e).__name__, safe(e, 120), flush=True)
+        return False
+
+
 # ---------------------------------------------------------------- API
 from fastapi import APIRouter, Depends, HTTPException, Request  # noqa: E402
 
