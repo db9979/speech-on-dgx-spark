@@ -79,7 +79,7 @@ body.coadm:not(.owner) .mainonly,body.coadm .pwonly,nav button[hidden]{display:n
 #fab{position:fixed;right:20px;bottom:20px;z-index:20;display:flex;flex-direction:column;align-items:flex-end;gap:10px}
 body.inchat #fab{display:none}
 .fabface{width:68px;height:68px;border-radius:50%;cursor:pointer;background:var(--card);border:1px solid var(--line);box-shadow:0 10px 30px rgba(16,24,40,.22);padding:4px;transition:transform .15s}
-.fabface:hover{transform:scale(1.06)}.fabface svg{width:100%;height:100%;overflow:visible}
+.fabface:hover{transform:scale(1.06)}#fab .fabface{user-select:none;-webkit-user-select:none;-webkit-tap-highlight-color:transparent;touch-action:manipulation}.fabface svg{width:100%;height:100%;overflow:visible}
 .fabface[data-mode=listen]{box-shadow:0 0 0 4px rgba(239,68,68,.35),0 10px 30px rgba(16,24,40,.22)}
 .fabpop{display:none;width:min(320px,calc(100vw - 40px));background:var(--card);border:1px solid var(--line);border-radius:16px;box-shadow:0 14px 40px rgba(16,24,40,.22);padding:12px 14px;animation:pop .2s ease}
 #fab.open .fabpop{display:block}
@@ -831,6 +831,8 @@ body.adm .notausbtn{flex:1 1 100%}
 .hcard .hmsg{font-size:12px;margin-top:4px}
 /* Frag Spark lives in the face at the bottom right (hilfe.js): also over Ich and for profiles, not over the keyboard */
 body.hilfeon:not(.kbd) #fab,body.hilfeon #fab:focus-within{display:flex!important;z-index:62}
+/* the face on every page and over Ich for everybody signed in (V01.0.359): starting and asking work everywhere */
+body:not(.guest):not(.kbd):not(.inchat) #fab,body:not(.guest):not(.kbd):has(#profmodal[style*="grid"]) #fab{display:flex!important;z-index:62}
 body.hilfeon .fabpop{max-height:min(70vh,560px);overflow:auto;box-sizing:border-box}
 .fabask{margin-top:10px}.fabask[hidden]{display:none}.fabask .mut{font-size:12px;margin-bottom:6px}
 .fabin{display:flex;gap:6px}.fabin input{flex:1;min-width:0}

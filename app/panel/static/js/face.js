@@ -210,7 +210,11 @@ function faceFrame(now){requestAnimationFrame(faceFrame);
 requestAnimationFrame(faceFrame);
 $('face').onclick=()=>$('talk').click();
 // floating button: talk from any tab, the conversation is the same as in the chat tab
-$('fabface').onclick=e=>{e.stopPropagation();$('fab').classList.add('open');if(!CFG)api('/api/config').then(r=>r.json()).then(c=>CFG=CFG||c).catch(()=>{});$('talk').click()};
+// one tap starts (or stops) listening; the second tap of a double tap is ignored (it stopped it again and marked
+// the text nearby). The window opens after the tap on #talk, whose click reaches the "outside" closer below.
+$('fabface').onclick=e=>{e.stopPropagation();if(e.detail>1)return;if(!CFG)api('/api/config').then(r=>r.json()).then(c=>CFG=CFG||c).catch(()=>{});
+  $('talk').click();$('fab').classList.add('open')};
+$('fabface').addEventListener('keydown',e=>{if(e.key==='Enter'||e.key===' '){e.preventDefault();$('fabface').click()}});
 $('fabopen').onclick=()=>{$('fab').classList.remove('open');document.querySelector('nav button[data-s=chat]').click()};
 $('fabstop').onclick=()=>$('chatstop').click();
 document.addEventListener('click',e=>{if(!$('fab').contains(e.target)&&faceMode()==='idle')$('fab').classList.remove('open')});

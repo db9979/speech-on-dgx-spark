@@ -225,6 +225,47 @@ class Browser(unittest.TestCase):
             helpers.set_config(spark_help=False, spark_suggest=False, spark_drawer=False, routing=False, prefetch=False)
             profiles.save_settings(uid, {"spark_help": False, "route": False})
 
+    def test_face_starts_everywhere_with_one_tap(self):
+        """The face at the bottom right (face.js, V01.0.359): on every page, over Ich and on a phone, also without
+        the Spark-Hilfe, one tap starts listening and opens its window (the tap on #talk used to close it at once),
+        the second tap of a double tap is ignored and marks no text, and a question can be typed."""
+        import profiles
+        uid = next(u["id"] for u in profiles._load()["users"] if u["name"] == "Uitest")
+        helpers.set_config(spark_help=False, spark_drawer=False)
+        profiles.save_settings(uid, {"spark_help": False})
+
+        async def go():
+            async with async_playwright() as p:
+                for w, h in ((1280, 900), (390, 844)):
+                    br, pg, errors = await self.page(p, w, h, mic=True, csp=True)
+                    try:
+                        for where in ("mon", "feat", "cfg", "me"):
+                            if where == "me":
+                                await pg.evaluate("goSec('chat')")
+                                await pg.evaluate("openMe('docbox')")
+                            else:
+                                await pg.evaluate(f"goSec('{where}')")
+                            await pg.wait_for_selector("#fabface", state="visible", timeout=5000)
+                            hit = await pg.evaluate("(()=>{const r=$('fabface').getBoundingClientRect();"
+                                                    "const e=document.elementFromPoint(r.left+r.width/2,r.top+r.height/2);"
+                                                    "return !!(e&&e.closest('#fabface'))})()")
+                            self.assertTrue(hit, f"{w} {where}: the face is covered")
+                            await pg.click("#fabface")
+                            await self.until(pg, "$('fab').classList.contains('open')&&!!chat.rec", 5)
+                            self.assertTrue(await pg.is_visible("#fabq"), f"{w} {where}")
+                            await pg.evaluate("stopListening(true)")
+                            await pg.dblclick("#fabface")
+                            await pg.wait_for_timeout(300)
+                            self.assertTrue(await pg.evaluate("!!chat.rec"), f"{w} {where}: double tap stopped it again")
+                            self.assertEqual(await pg.evaluate("String(getSelection())"), "", f"{w} {where}")
+                            await pg.evaluate("stopListening(true);$('fab').classList.remove('open')")
+                            if where == "me":
+                                await pg.evaluate("$('profclose').click()")
+                        self.assertEqual(errors, [], w)
+                    finally:
+                        await br.close()
+        self.run_async(go())
+
     def test_notaus_button_band_and_lifting(self):
         """Notaus (notaus.py): the red button opens the stages, triggering shows the band and Zustand's card on every
         page, lifting asks for the password (no second step here) and everything is back."""

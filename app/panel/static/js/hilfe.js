@@ -48,6 +48,8 @@ function hilfePageName(p){if(p.startsWith('me/')){const n=typeof ME_NAME!=='unde
 // the page a question goes with: only through the face (not in the chat itself), only when switched on
 function hilfeNow(){if(!(HILFE&&HILFE.page))return undefined;const p=hilfePage();return p==='chat'?undefined:p}
 const hilfeFabOn=()=>!!(HILFE&&HILFE.page)&&!!hilfeNow();
+// typing a question into the face works for everybody signed in; the page only goes along with "Frag Spark auf jeder Seite"
+const hilfeAsk=()=>!document.body.classList.contains('guest')&&!!((typeof PROFILE!=='undefined'&&PROFILE)||(typeof ADMIN!=='undefined'&&ADMIN));
 // "?" at every switch row (plan hilfe-besser 2): asks the face about exactly this switch; the panel checks the id
 let HFOCUS=null;
 function hilfeFocusTake(){const f=HFOCUS;HFOCUS=null;return f||undefined}
@@ -62,11 +64,11 @@ document.addEventListener('click',e=>{const q=e.target.closest('.hqbtn');if(!q||
   HFOCUS=q.dataset.hq;$('fab').classList.add('open');if(typeof stopListening==='function')stopListening(true);
   ask(t(`Was macht „${name}“ und wie steht es bei mir?`,`What does "${name}" do and how is it set for me?`))},true);
 function hilfeFab(){const on=hilfeFabOn(),b=document.body;b.classList.toggle('hilfeon',on);if(on)hilfeMarks();
-  const box=$('fabask');if(!box)return;box.hidden=!on;if(on)$('fabpage').textContent=t('Du bist auf: ','You are on: ')+hilfePageName(hilfeNow());
-  else if(!(HILFE&&HILFE.page))$('fabcards').textContent=''}
+  const box=$('fabask');if(!box)return;box.hidden=!(on||hilfeAsk());$('fabpage').textContent=on?t('Du bist auf: ','You are on: ')+hilfePageName(hilfeNow()):'';$('fabq').placeholder=on?t('Frag etwas zu dieser Seite …','Ask something about this page …'):t('Frag etwas …','Ask something …');
+  if(!on&&!(HILFE&&HILFE.page))$('fabcards').textContent=''}
 function hilfeFabCards(cards){const el=$('fabcards');if(!el)return;el.textContent='';
   if($('fab').classList.contains('open'))for(const c of cards)el.appendChild(hilfeCard(c))}
-{const f=$('fabask');if(f){f.addEventListener('submit',e=>{e.preventDefault();const q=$('fabq').value.trim();if(!q||!hilfeFabOn())return;$('fabq').value='';
+{const f=$('fabask');if(f){f.addEventListener('submit',e=>{e.preventDefault();const q=$('fabq').value.trim();if(!q||!(hilfeFabOn()||hilfeAsk()))return;$('fabq').value='';
     if(typeof stopListening==='function')stopListening(true);$('fab').classList.add('open');ask(q)});
   $('fabq').addEventListener('focus',()=>{if(typeof stopListening==='function')stopListening(true)})}
  // the page changes without a call into this file (menu, Ich, Funktionen): follow the body, Ich and the menus

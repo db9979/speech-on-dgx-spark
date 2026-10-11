@@ -1460,6 +1460,14 @@
 "src": "assistent",
 "file": "Assistent und Oberfläche",
 "head": "Sprach-Chat",
+"title": "Kopf unten rechts überall (V01.0.359)",
+"text": "Kopf unten rechts überall (V01.0.359): Der Kopf unten rechts ist für jede Anmeldung (nicht für Gäste) auf jeder Seite, über Ich und in der Handy-Ansicht da, auch ohne die Spark-Hilfe. Ein Tipp startet das Zuhören und öffnet sein Fenster mit „Gespräch öffnen“, „Stopp“ und einem Feld zum Tippen; ein zweiter Tipp beendet das Zuhören, der zweite Tipp eines Doppeltipps zählt nicht und markiert keinen Text. Mit der Tastatur: Tab bis zum Kopf, dann Enter oder Leertaste. Die Seite, auf der man ist, geht nur mit „Frag Spark auf jeder Seite“ mit. Der Live-Monitor an der Wand (/live) bleibt eine reine Anzeige ohne Kopf."
+},
+{
+"lang": "de",
+"src": "assistent",
+"file": "Assistent und Oberfläche",
+"head": "Sprach-Chat",
 "title": "Schlanke Liste für unklare Fragen (V01.0.220)",
 "text": "Schlanke Liste für unklare Fragen (V01.0.220): Unter Funktionen → Gezielte Werkzeugwahl → „Fragen, die keine Regel erkennt“ gibt es neben „alle Werkzeuge“ (Standard) und „ordnet das Sprachmodell zu“ die Wahl „nur Websuche und Gedächtnis“ (chat.route_model: lean). Erkennt keine Regel die Frage und verlangt sie kein Werkzeug, sieht das Modell dann nur web_search, history_search und memory_save (soweit sie ohnehin angeboten sind). Die Anfrage wird so etwa halb so lang (auf tars 2500 statt 6000 Tokens), und das erste Wort kommt rund eine Sekunde früher. Eine Frage, die eine Regel erkennt, bekommt weiter ihre Gruppe. Nur zusammen mit dem Profil-Schalter „Gezielte Werkzeugwahl“, nie für Gäste."
 },
@@ -3942,6 +3950,14 @@
 "head": "Voice chat",
 "title": "Better help answers (V01.0.343, plan `plaene/hilfe-besser.md`, package A)",
 "text": "follows from it: short and spoken at a speaker, \"Manage → …\" in the phone view, \"in the panel in the browser\" in the iPhone app and on Telegram; over MCP there is no help. On a settings page every question through the face goes to the help unless it asks for own data; on Status only \"What does that mean?\" and help questions. \"?\" at every switch: with \"Ask Spark on every page\" each switch (Features, Settings, Me) gets a small \"?\"; a tap asks about exactly that switch (only an id of a fixed form goes along). Logs → Requests shows \"Origin\" at the switch step. Quality test: app/tests/test_hilfe_quality.py (61 questions with expected answer and route)."
+},
+{
+"lang": "en",
+"src": "assistant",
+"file": "Assistant and panel",
+"head": "Voice chat",
+"title": "The face at the bottom right everywhere (V01.0.359)",
+"text": "The face at the bottom right everywhere (V01.0.359): the face at the bottom right is there for every login (not for guests) on every page, over Me and in the phone view, also without the Spark help. One tap starts listening and opens its window with \"Open conversation\", \"Stop\" and a field to type in; a second tap stops listening, the second tap of a double tap does not count and marks no text. With the keyboard: tab to the face, then Enter or Space. The page you are on only goes along with \"Ask Spark on every page\". The wall monitor (/live) stays a pure display without a face."
 },
 {
 "lang": "en",
