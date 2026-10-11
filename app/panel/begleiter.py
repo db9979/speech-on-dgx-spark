@@ -2102,6 +2102,6 @@ async def admin_fetch(request: Request):
     guard.limit(request, "deskupd", admin=True)
     if notaus.blocks("internet"):
         raise HTTPException(503, "Notaus: kein Internet.")
-    for p in platforms() or list(TAGS):
+    for p in TAGS:                   # the admin asked: both, also before a computer of that kind is paired
         await check(p)
     return admin_get()

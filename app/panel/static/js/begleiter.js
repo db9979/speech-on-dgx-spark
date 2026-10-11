@@ -153,8 +153,9 @@ async function showDesk(){const box=$('deskbox');if(!box)return;if(!PROFILE||!DE
     try{await api('/api/profile/desk/devices/'+encodeURIComponent(b.dataset.ddel),{method:'DELETE'});showDesk()}catch(e){xmsg('dkmsg',e.message,true)}})}
 // Admin: Funktionen → Spark-Begleiter shows which program versions the Spark keeps for updates and fetches them now.
 async function deskAdmin(){if(!$('deskadmin'))return;let d={};try{d=await (await api('/api/admin/desk')).json()}catch{return}
-  const st=$('deskstate'),part=(n,x)=>n+' '+(x&&x.version?x.version:t('noch keine','none yet'))+(x&&x.error?' ('+x.error+')':'');
-  st.textContent=t('Für Updates auf dem Spark: ','Kept on the Spark for updates: ')+part('Windows',d.windows)+' · '+part('Mac',d.mac)+
-    (d.paired&&d.paired.length?'':t(' · geholt wird, sobald ein Gerät gekoppelt ist.',' · fetched once a device is paired.'));
+  // a platform without a paired computer is not fetched on its own: say so instead of a bare "none yet"
+  const st=$('deskstate'),paired=d.paired||[],part=(n,p,x)=>n+' '+(x&&x.version?x.version:
+    paired.includes(p)?t('noch keine','none yet'):t('noch keine (kein Rechner gekoppelt)','none yet (no computer paired)'))+(x&&x.error?' ('+x.error+')':'');
+  st.textContent=t('Für Updates auf dem Spark: ','Kept on the Spark for updates: ')+part('Windows','windows',d.windows)+' · '+part('Mac','mac',d.mac);
   $('deskfetch').onclick=async()=>{st.textContent=t('Hole die Programme von GitHub …','Fetching the programs from GitHub …');
     try{await api('/api/admin/desk/fetch',xjson('POST'));deskAdmin()}catch(e){st.textContent=e.message}}}
