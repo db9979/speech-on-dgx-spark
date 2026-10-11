@@ -311,6 +311,8 @@ async function openMe(tab){$('profmsg').textContent='';$('profmodal').style.disp
   if(!GATE&&!isGuest())renderSet($('setform'),S,saveSet);
   // what the admin allows can have changed since the login (Funktionen in this browser or another): ask again
   if(PROFILE){refreshAllow().catch(()=>{});if(typeof hilfeRefresh==='function')hilfeRefresh()}
+  // the locked notice needs only /api/features: draw it now, not after a queued load of all boxes (slow on a busy runner)
+  if(PROFILE)loadFeats().then(()=>{meLocked($('overbox'));meLocked($('setbox'))}).catch(()=>{});
   if(PROFILE){   // B8: jumps while the boxes load ("Zeig mir wo", cards) share one load and at most one after it (no 429)
     if(ME_LOAD.p){if(!ME_LOAD.next)ME_LOAD.next=ME_LOAD.p.then(()=>{ME_LOAD.next=null;return meLoadOnce()});return ME_LOAD.next}
     return meLoadOnce()}
