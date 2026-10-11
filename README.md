@@ -33,6 +33,7 @@ All options for running without questions (`--mode api --asr 1.7b --tts 0.6b --y
 
 <!-- New version: add one line at the top here and in CHANGELOG.md, drop the oldest line here (keep 10). Details go to docs/de and docs/en, not into this README. -->
 
+- **V01.0.367** Pebble watch app 1.6.0 in the panel: holding SELECT 3 s triggers the emergency stop (the big one admin profiles only)
 - **V01.0.366** Pebble watch app: the build checks that the app also runs on older watch firmware (SDK 5.94)
 - **V01.0.365** Pebble watch app: GitHub puts the built file on the branch pebble-build so it can be taken into the panel
 - **V01.0.364** Emergency stop by itself (guard, switch under Security, off): stage 1 on 20 wrong sign-ins from outside, an MCP flood or many refused connections; emergency stop button on ESP32 speakers (5 s, firmware build 6) and on the Pebble (SELECT 3 s, watch app 1.6.0)
@@ -42,7 +43,6 @@ All options for running without questions (`--mode api --asr 1.7b --tts 0.6b --y
 - **V01.0.360** Emergency stop on more ways: Telegram /notaus and /meinnotaus, fixed sentence "Spark, Mein Notaus" / "Spark, Notaus" (the big one admins only), a Home Assistant key that can only trigger (with a ready snippet), Android quick settings tile (app 1.1.0)
 - **V01.0.359** Face at the bottom right: one tap starts the assistant on every page, over Me and on a phone (its window closed at once), a double tap no longer marks text, typing a question always works
 - **V01.0.358** Fetch clear questions directly: "Which appointments do I have today?" is fetched by the panel itself
-- **V01.0.357** Passkeys in the iPhone app: „With passkey“ when confirming, for the Spark update and the admin sign-in (Face ID with the passkey made in Safari, via iCloud Keychain); for that the Spark serves Apple /.well-known/apple-app-site-association (only the app ID, from the push settings)
 
 All versions: [CHANGELOG.md](CHANGELOG.md)
 

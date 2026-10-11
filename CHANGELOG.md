@@ -2,6 +2,7 @@
 
 Every version in one line, newest first (taken from the commit messages, so some lines are German, some English). Older entries have no version number.
 
+- **V01.0.367** · 2026-10-11 · app/pebble/speech-spark.pbw 1.6.0 aus dem Workflow-Bau (Zweig pebble-build, SDK-Minor 0x5e geprüft): Notaus mit SELECT 3 s; die Handy-App meldet „Neue Uhr-App“
 - **V01.0.366** · 2026-10-11 · Workflow „Pebble watch app“: SDK-Header wird überall gefunden und auf Minor 0x5e gesetzt (vorher fand die Suche ihn nicht und die App kam mit 0x6a heraus), der Bau prüft den Kopf jeder pebble-app.bin
 - **V01.0.365** · 2026-10-11 · Workflow „Pebble watch app“ legt speech-spark.pbw zusätzlich auf den Zweig pebble-build (Artefakte sind von außen nicht immer abrufbar); übernommen wird sie mit einem normalen Commit nach app/pebble/
 - **V01.0.364** · 2026-10-11 · Notaus Pakete 2 und 3: Selbst-Notaus (panel.notaus_auto, aus, sensibel): der Wächter hebt nach festen Regeln auf Stufe 1 (20 Fehlanmeldungen von außen, 30 abgewiesene MCP-Anfragen von außen, 15 netguard-Sperren je 10 Minuten; nur im Speicher gezählt); ESP32-Firmware Build 6 mit firmware/patch_notaus.py: BOOT 5 s schickt das feste Weckwort spark-notaus, nur Lautsprecher eines Admin-Profils lösen Stufe 2 aus; Pebble-Uhr-App 1.6.0 (Quelltext; neuer Workflow „Pebble watch app“ baut die .pbw): SELECT 3 s schickt „Spark, Notaus“; Selbsttests Auto und Channels
