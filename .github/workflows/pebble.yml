@@ -1,8 +1,9 @@
 name: Pebble watch app
 
-# Builds the watch app "Spark" (pebble/) with the Pebble SDK and keeps it as the artifact speech-spark-pbw.
-# The panel serves app/pebble/speech-spark.pbw from the repository: copy the built file there in a commit
-# (pebble/README.md). The app declares SDK minor 0x5e (the speaker API), so older watch firmware runs it too.
+# Builds the watch app "Spark" (pebble/) with the Pebble SDK, keeps it as the artifact speech-spark-pbw and puts
+# it on the branch pebble-build (only that file, replaced each time). The panel serves app/pebble/speech-spark.pbw
+# from main: copy the built file there in a normal commit (pebble/README.md), so the Tests run and tars' update gate
+# see it. The app declares SDK minor 0x5e (the speaker API), so older watch firmware runs it too.
 on:
   workflow_dispatch:
   push:
@@ -12,7 +13,7 @@ on:
       - .github/workflows/pebble.yml
 
 permissions:
-  contents: read
+  contents: write   # only for the branch pebble-build
 
 concurrency:
   group: pebble-app
@@ -58,3 +59,14 @@ jobs:
           name: speech-spark-pbw
           path: pebble/speech-spark.pbw
           if-no-files-found: error
+      - name: Branch pebble-build
+        run: |
+          set -e
+          mkdir out && cp pebble/speech-spark.pbw out/
+          cd out
+          git init -q -b pebble-build
+          git config user.name "github-actions"
+          git config user.email "github-actions@users.noreply.github.com"
+          git add speech-spark.pbw
+          git commit -q -m "speech-spark.pbw from ${GITHUB_SHA}"
+          git push -q -f "https://x-access-token:${{ github.token }}@github.com/${GITHUB_REPOSITORY}.git" pebble-build

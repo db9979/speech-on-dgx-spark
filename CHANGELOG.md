@@ -2,6 +2,7 @@
 
 Every version in one line, newest first (taken from the commit messages, so some lines are German, some English). Older entries have no version number.
 
+- **V01.0.365** · 2026-10-11 · Workflow „Pebble watch app“ legt speech-spark.pbw zusätzlich auf den Zweig pebble-build (Artefakte sind von außen nicht immer abrufbar); übernommen wird sie mit einem normalen Commit nach app/pebble/
 - **V01.0.364** · 2026-10-11 · Notaus Pakete 2 und 3: Selbst-Notaus (panel.notaus_auto, aus, sensibel): der Wächter hebt nach festen Regeln auf Stufe 1 (20 Fehlanmeldungen von außen, 30 abgewiesene MCP-Anfragen von außen, 15 netguard-Sperren je 10 Minuten; nur im Speicher gezählt); ESP32-Firmware Build 6 mit firmware/patch_notaus.py: BOOT 5 s schickt das feste Weckwort spark-notaus, nur Lautsprecher eines Admin-Profils lösen Stufe 2 aus; Pebble-Uhr-App 1.6.0 (Quelltext; neuer Workflow „Pebble watch app“ baut die .pbw): SELECT 3 s schickt „Spark, Notaus“; Selbsttests Auto und Channels
 - **V01.0.363** · 2026-10-11 · Eigene MCP-Dienste pro Profil (Admin-Unterschalter + Ich → Meine MCP-Dienste, alles aus): jedes Werkzeug einzeln frei, Lesen als fremder Text, Handeln nach „Ja“, OAuth-Anmeldung, Hintergrundaufträge nur lesend, Admin sperrt sofort, Live zeigt jeden Aufruf ohne Inhalte
 - **V01.0.362** · 2026-10-11 · Eindeutiges direkt abrufen: Wetter und Termine auch für morgen und übermorgen („Wie wird das Wetter morgen?“), das Panel setzt nur das Datum aus dem lokalen Tag; andere Orte und Personen bleiben beim Modell
