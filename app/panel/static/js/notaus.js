@@ -78,10 +78,11 @@ function naMine(){const s=NA.s,mi=s.mine||{};
   $('znmrows').innerHTML=L2.map(x=>`<div class="znrow"><span>${esc(x.name)}</span><span class="mut">${x.since?esc(t('seit ','since ')+naWhen(x.since)):''}</span>${s.lift?`<button class="b" type="button" data-mineoff="${esc(x.uid)}">${esc(t('Aufheben','Lift'))}</button>`:''}</div>`).join('')}
 $('mynaon').addEventListener('click',async()=>{
   if(!confirm(t('Mein Notaus auslösen? Alle anderen Anmeldungen und Geräte deines Profils werden gesperrt, und in deinem Namen passiert nichts mehr, bis du ihn hier mit deiner PIN aufhebst.','Trigger my kill switch? All other logins and devices of your profile are locked and nothing happens in your name until you lift it here with your PIN.')))return;
+  if(typeof whoLocal==='function')whoLocal();
   $('mynaon').disabled=true;$('mynamsg').textContent='';
   try{const r=await api('/api/notaus/mine',{method:'POST',headers:{'Content-Type':'application/json'},body:'{}'});NA.s=await r.json();naRender()}
   catch(e){$('mynamsg').textContent=e.message}finally{$('mynaon').disabled=false}});
-$('mynago').addEventListener('click',async()=>{$('mynago').disabled=true;$('mynamsg').textContent='';
+$('mynago').addEventListener('click',async()=>{if(typeof whoLocal==='function')whoLocal();$('mynago').disabled=true;$('mynamsg').textContent='';
   try{const r=await api('/api/notaus/mine/off',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({pin:$('mynapin').value})});
     $('mynapin').value='';NA.s=await r.json();naRender()}catch(e){$('mynamsg').textContent=e.message}finally{$('mynago').disabled=false}});
 $('znmrows').addEventListener('click',async e=>{const b=e.target.closest('[data-mineoff]');if(!b)return;b.disabled=true;$('znmmsg').textContent='';

@@ -33,6 +33,7 @@ Alle Optionen ohne Rückfragen (`--mode api --asr 1.7b --tts 0.6b --yes` …) st
 
 <!-- New version: add one line at the top here and in CHANGELOG.md, drop the oldest line here (keep 10). Details go to docs/de and docs/en, not into this README. -->
 
+- **V01.0.401** Mein Notaus: Seite lädt nach Auslösen oder Aufheben nicht mehr von selbst neu (Browser-Selbsttest wieder stabil).
 - **V01.0.400** Selbsttests warten auf langsamen Rechnern zuverlässiger
 - **V01.0.399** Weniger Runden: Nachschlagen höchstens 2× pro Frage, letzte Runde ohne Werkzeugliste (spart eine Runde).
 - **V01.0.398** Wer darf was: Klick auf eine Funktion springt zuverlässig zu ihrem Schalter unter Funktionen, auch bei Unterschaltern
@@ -42,7 +43,6 @@ Alle Optionen ohne Rückfragen (`--mode api --asr 1.7b --tts 0.6b --yes` …) st
 - **V01.0.394** Update auf dem Spark scheitert nicht mehr am Selbsttest (Priorität der Hintergrund-Threads)
 - **V01.0.393** Selbsttest: Handy-Breiten-Prüfung wartet die Seiten-Animation ab
 - **V01.0.392** Hilfe zum Spark: Kopie der Anleitungen nach V01.0.390 neu erzeugt (Selbsttest).
-- **V01.0.391** Update-Prüfung findet die letzte getestete Version wieder (Testläufe brachen sich gegenseitig ab)
 
 Alle Versionen: [CHANGELOG.md](CHANGELOG.md)
 

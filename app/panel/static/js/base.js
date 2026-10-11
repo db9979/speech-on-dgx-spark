@@ -37,7 +37,11 @@ async function whoCheck(){if(WHO_FLAGS===null)return;
 const whoSoon=()=>{clearTimeout(whoT);whoT=setTimeout(whoCheck,300)};
 // Changed elsewhere (the admin under Wer darf was, the profile on another device): checked every minute, on
 // coming back and on focus, with the same calm rules as a new version (never mid-conversation or while typing).
+// whoLocal(): this page itself just changed what /api/whoami says (Mein Notaus on or off): for 10 s such a change
+// is taken as seen, not as "changed elsewhere" (the confirm dialog's focus would otherwise reload the page)
+let WHO_LOCAL=0;function whoLocal(){WHO_LOCAL=Date.now()}
 function flagsAway(w){if(WHO_FLAGS===null||whoFlags(w)===WHO_FLAGS)return;
+  if(Date.now()-WHO_LOCAL<10e3){WHO_FLAGS=whoFlags(w);return}
   const now=Date.now(),calm=!sparkBusy()&&now-verWatch.edit>600e3;
   if(calm&&(document.visibilityState==='hidden'||now-verWatch.back<5000||now-verWatch.seen>120e3)){try{sessionStorage.setItem('flagsreload','away')}catch{}return verReload()}
   verBar(t('Deine Funktionen wurden geändert, neu laden zeigt sie: ','Your functions were changed, reload shows them: '))}

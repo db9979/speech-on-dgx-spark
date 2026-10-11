@@ -33,6 +33,7 @@ All options for running without questions (`--mode api --asr 1.7b --tts 0.6b --y
 
 <!-- New version: add one line at the top here and in CHANGELOG.md, drop the oldest line here (keep 10). Details go to docs/de and docs/en, not into this README. -->
 
+- **V01.0.401** Mein Notaus: the page no longer reloads itself after switching it on or off (browser self-test steady again).
 - **V01.0.400** Self-tests wait more reliably on slow machines
 - **V01.0.399** Fewer rounds: look-ups at most twice per question, last round without a tool list (saves one round).
 - **V01.0.398** Who may do what: clicking a function reliably jumps to its switch under Funktionen, sub-switches included
@@ -42,7 +43,6 @@ All options for running without questions (`--mode api --asr 1.7b --tts 0.6b --y
 - **V01.0.394** Update on the Spark no longer fails its self-test (priority of background threads)
 - **V01.0.393** Self-test: phone width check waits for the page slide animation
 - **V01.0.392** Hilfe zum Spark: guide copy rebuilt after V01.0.390 (self-test).
-- **V01.0.391** Update check finds the last tested version again (test runs cancelled each other)
 
 All versions: [CHANGELOG.md](CHANGELOG.md)
 
