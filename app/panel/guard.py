@@ -196,6 +196,7 @@ def check(request, name=None):
 
 def failed(request, name=None, what="login"):
     now = time.time()
+    _watch(request, "login")
     locked = 0
     with _lock:
         for k in _keys(request, name):
@@ -443,6 +444,16 @@ RATE = {"chat": (30, 120), "asr": (60, 240), "logs": (1, 60), "pair": (10, 10), 
 BUSY = {"chat": 4, "asr": 3}  # at once, guests together
 
 
+def _watch(request, kind):
+    """Selbst-Notaus (notaus.watch): only what comes from outside the home network counts; never raises."""
+    try:
+        import notaus
+        if not notaus.at_home(request):
+            notaus.watch(kind)
+    except Exception as e:
+        print("guard: watch", type(e).__name__, flush=True)
+
+
 def caller(request, uid=None):
     return ("u", uid) if uid else ("ip", client_ip(request))
 
@@ -459,9 +470,13 @@ def limit(request, what, uid=None, admin=False):
                 for k in [k for k, v in _rate.items() if not v or now - v[-1] > 60]:
                     _rate.pop(k, None)
             q = _rate[key] = deque(maxlen=most)
-        if len(q) >= most and now - q[0] < 60:
-            raise HTTPException(429, "too many requests, please wait a moment", headers={"Retry-After": "30"})
-        q.append(now)
+        flood = len(q) >= most and now - q[0] < 60
+        if not flood:
+            q.append(now)
+    if flood:
+        if what.startswith("mcp"):
+            _watch(request, "mcp")
+        raise HTTPException(429, "too many requests, please wait a moment", headers={"Retry-After": "30"})
 
 
 class Slot:

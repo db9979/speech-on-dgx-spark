@@ -81,6 +81,12 @@ def resolve(host, port, level):
         why = allowed(info[4][0], port, level)
         if why:
             _live(host, port, level, info[4][0], why)
+            if not why.startswith("Notaus"):
+                try:   # a series of refused targets may start the Selbst-Notaus (notaus.watch, switch off by default)
+                    import notaus
+                    notaus.watch("netguard")
+                except Exception:
+                    pass
             raise Blocked(f"{host}: {why}")
     _live(host, port, level, infos[0][4][0], None)
     return infos[0][4][0]

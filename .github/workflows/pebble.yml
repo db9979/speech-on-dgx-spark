@@ -1,0 +1,60 @@
+name: Pebble watch app
+
+# Builds the watch app "Spark" (pebble/) with the Pebble SDK and keeps it as the artifact speech-spark-pbw.
+# The panel serves app/pebble/speech-spark.pbw from the repository: copy the built file there in a commit
+# (pebble/README.md). The app declares SDK minor 0x5e (the speaker API), so older watch firmware runs it too.
+on:
+  workflow_dispatch:
+  push:
+    branches: [main]
+    paths:
+      - pebble/**
+      - .github/workflows/pebble.yml
+
+permissions:
+  contents: read
+
+concurrency:
+  group: pebble-app
+  cancel-in-progress: true
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v5
+      - uses: astral-sh/setup-uv@v6
+      - uses: actions/setup-node@v4
+        with:
+          node-version: "20"
+      - name: Pebble SDK
+        run: |
+          set -e
+          uv tool install pebble-tool
+          yes | pebble sdk install latest
+          # keep the app runnable on watch firmware with SDK minor 0x5e (see pebble/README.md)
+          for h in $(find "$HOME/.pebble-sdk" -name pebble_process_info.h); do
+            sed -i 's/#define PROCESS_INFO_CURRENT_SDK_VERSION_MINOR 0x[0-9a-fA-F]*/#define PROCESS_INFO_CURRENT_SDK_VERSION_MINOR 0x5e/' "$h"
+            grep -q 'PROCESS_INFO_CURRENT_SDK_VERSION_MINOR 0x5e' "$h"
+          done
+      - name: Build
+        working-directory: pebble
+        run: |
+          set -e
+          pebble build
+          ver=$(python3 -c "import json;print(json.load(open('package.json'))['version'])")
+          python3 - "$ver" <<'PY'
+          import json, sys, zipfile
+          z = zipfile.ZipFile("build/pebble.pbw")
+          label = json.loads(z.read("appinfo.json"))["versionLabel"]
+          js = z.read("pebble-js-app.js").decode()
+          assert label == sys.argv[1], (label, sys.argv[1])
+          assert f"var APP_VERSION = '{label}';" in js, "APP_VERSION in src/pkjs/index.js differs from package.json"
+          print("built", label)
+          PY
+          cp build/pebble.pbw speech-spark.pbw
+      - uses: actions/upload-artifact@v4
+        with:
+          name: speech-spark-pbw
+          path: pebble/speech-spark.pbw
+          if-no-files-found: error
