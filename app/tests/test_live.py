@@ -46,7 +46,7 @@ def set_proxies(p):
 def reset():
     with live._lock:
         live._run.clear(), live._events.clear(), live._guard.clear(), live._door.clear(), live._rets.clear()
-        live._count.clear(), live._codes.clear(), live._seen.clear()
+        live._count.clear(), live._codes.clear(), live._seen.clear(), live._past.clear(), live._hits.clear()
         live._saved[0] = 0.0
     try:
         os.remove(live._file())
@@ -184,6 +184,35 @@ class Live(unittest.TestCase):
         self.assertEqual(set(live.CLIENT) - {"other"}, set(tl.CLIENTS) - {"other"},
                          "a new kind of device: add a word to live.CLIENT")
 
+    def test_rewind_counters_and_node_numbers(self):
+        """Live-Log interaktiv (Dominik 2026-10-11): finished requests of the last 15 minutes for Zurückspulen
+        (admin only, never on the monitor), numbers per node for its sheet, the Selbst-Notaus counters."""
+        import notaus
+        rec = live.begin("auto", "", t=1000, auto=True, why="Update-Prüfung")
+        rec.step("in", "Von selbst", 1000)
+        rec.step("tool", "GitHub", 1000, 1001.5, ok=False)
+        live.ended(rec, now=1002)
+        P = live.past_reqs(now=1100)
+        self.assertEqual([(x["id"], x["te"], x["steps"][-1]["to"]) for x in P], [(rec.id, 1002, "github")])
+        self.assertEqual(live.past_reqs(now=1002 + live.REWIND + 1), [])
+        self.assertEqual(ADMIN.get("/api/admin/live?past=1").json()["rewind"], live.REWIND)
+        self.assertNotIn("past", live.snapshot("monitor"))
+        st = live.node_stats(now=1100)
+        self.assertEqual((st["github"]["n"], st["github"]["bad"], st["github"]["ms"], st["github"]["last"]), (1, 1, 1500, [False]))
+        self.assertEqual(live.node_stats(now=1001.5 + 3601), {})
+        with notaus._auto_lock:
+            before = {k: list(v) for k, v in notaus._auto_seen.items()}
+        try:
+            for i in range(3):
+                notaus.watch("login", now=5000 + i)
+            rows = {r["k"]: (r["n"], r["of"], r["min"]) for r in notaus.auto_for_live(now=5010)["rows"]}
+            self.assertEqual(rows["login"], (3, 20, 10))
+            self.assertEqual(notaus.auto_for_live(now=5010 + 601)["rows"][0]["n"], 0)
+            self.assertIn("auto", live.snapshot()["notaus"])
+        finally:
+            with notaus._auto_lock:
+                notaus._auto_seen.update(before)
+
     def test_services_state(self):
         """Hören, Sprechen and the language model carry a dot: running, loading, not answering, off; a change and a
         watchdog restart are events (point 10 of the list, Dominik 2026-10-10)."""
@@ -271,8 +300,14 @@ class Live(unittest.TestCase):
                     mock.patch.object(quality, "last", lambda: {"t": 1000, "cases": [{"q": "Geheime Testfrage", "new": True}]}):
                 d = live.snapshot(now=1000)
                 live.snapshot(now=1010)
-            self.assertIn({"at": "tts", "level": "warn", "word": "erster Ton 5,03 s statt 3,23 s"}, d["hints"])
-            self.assertIn({"at": "llm", "level": "warn", "word": "Qualitätstest: 1 neu kaputt"}, d["hints"])
+            hs = {h["word"]: h for h in d["hints"]}
+            self.assertEqual({k: hs["erster Ton 5,03 s statt 3,23 s"][k] for k in ("at", "level", "go")},
+                             {"at": "tts", "level": "warn", "go": "test"})
+            self.assertEqual({k: hs["Qualitätstest: 1 neu kaputt"][k] for k in ("at", "level", "go")},
+                             {"at": "llm", "level": "warn", "go": "test"})
+            # a click on ⚠ explains it in one fixed sentence and leads to a page (never the server's error text)
+            for h in d["hints"]:
+                self.assertIn(h["why"], [w for _, w, _ in live.EXPLAIN])
             self.assertNotIn("Geheime", json.dumps(d))
             ev = [e["text"] for e in live.snapshot(now=1020)["events"] if e["area"] == "Hinweis"]
             self.assertEqual(sorted(ev), sorted(["erster Ton 5,03 s statt 3,23 s", "Qualitätstest: 1 neu kaputt"]))

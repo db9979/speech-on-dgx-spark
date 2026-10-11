@@ -615,6 +615,13 @@ class Deeper(unittest.TestCase):
         self.assertEqual(prog.post("/api/desk/ask", json={"text": safari["text"]}).status_code, 200)
         offered = {f["function"]["name"] for b in helpers.LLM_CALLS if b.get("stream") for f in b.get("tools") or []}
         self.assertIn("pc_action", offered)
+        # V01.0.410: a clear order at the computer must really call the tool (it only announced it before)
+        first = next(b for b in helpers.LLM_CALLS if b.get("stream") and b.get("tools"))
+        self.assertEqual(first.get("tool_choice"), {"type": "function", "function": {"name": "pc_action"}})
+        self.assertEqual(begleiter.offer(dict(ctx, client="desk", text="Öffne den Editor"))["must"], "pc_action")
+        self.assertEqual(begleiter.offer(dict(ctx, client="desk", text="Mach mal leiser"))["must"], "pc_action")
+        self.assertIsNone(begleiter.offer(dict(ctx, client="desk", text="Zeig mir, wie man Safari einrichtet"))["must"])
+        self.assertIsNone(begleiter.offer(dict(ctx, text="Öffne Google am PC"))["must"])   # not asked at the computer
 
         async def run(ok):
             task = asyncio.create_task(begleiter.tool("pc_action", {"action": "lock"}, ctx))
@@ -704,6 +711,33 @@ class Seven(unittest.TestCase):
         self.assertFalse(prog.get("/api/desk/config").json()["parts"]["meeting"])
         helpers.set_config(desk_meeting=True)
         self.assertTrue(prog.get("/api/desk/config").json()["parts"]["meeting"])
+
+    def test_jobs_show_their_way_on_the_live_page(self):
+        """Zustand → Live (Dominik 2026-10-11): a Begleiter job is a request with its way (Bildschirm → Sprachmodell,
+        Vorlesen → Sprechen), not only a line under Ereignisse; fixed words only, never the question."""
+        import live
+        from tests.test_live import set_logs
+        c = self.on("DlLive")
+        _, prog = self.pair(c)
+        self.parts(c, prog, screen=True, speak=True)
+        set_logs(live=True)
+        try:
+            with live._lock:
+                live._run.clear()
+            self.assertEqual(prog.post("/api/desk/screen", files={"image": ("s.png", png(), "image/png")},
+                                       data={"question": "Geheime Frage", "what": "erklaeren"}).status_code, 200)
+            self.assertEqual(prog.post("/api/desk/speak", json={"text": "Geheimer Text"}).status_code, 200)
+            d = live.snapshot()
+            ways = {r["intent"]: [(s["k"], s["n"]) for s in r["steps"]] for r in d["reqs"] if r["client"] == "desk"}
+            self.assertEqual(ways["Bildschirm fragen"], [("in", "Bildschirm fragen"), ("llm", "Begleiter Bildschirm")])
+            self.assertEqual(ways["Vorlesen"], [("in", "Vorlesen"), ("tts", "Vorlesen")])
+            self.assertTrue(all(r["done"] for r in d["reqs"] if r["client"] == "desk"))
+            self.assertNotIn("Geheim", json.dumps(d))
+            self.assertGreaterEqual(d["stats"]["llm"]["n"], 1)
+        finally:
+            set_logs(live=False)
+            with live._lock:
+                live._run.clear()
 
     def test_speak_returns_the_whole_wav(self):
         c = self.on("DqBert")

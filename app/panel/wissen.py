@@ -699,6 +699,64 @@ async def reread(doc_id: str, request: Request, prof=Depends(browser_profile)):
     return got
 
 
+# Ich → Dokumente "Auswählen" (V01.0.413): one action for several of the profile's own documents in one
+# request (one rate-limit step instead of one per document). Only in the owner's own database, never for
+# documents other profiles share; ids are checked one by one like the single routes do.
+BATCH_MOST = 200        # = documents.MAX_DOCS
+BATCH_REREAD = 20       # reading again is heavy: at most this many per request
+BATCH_DO = ("delete", "use", "unuse", "share", "unshare", "tag", "reread")
+
+
+@router.post("/api/profile/wissen/batch", dependencies=[Depends(assistant)])
+async def batch(request: Request, prof=Depends(browser_profile)):
+    _docs_on()
+    guard.limit(request, "doc", prof["id"], False)
+    import iphone
+    body = await iphone._json(request, 8192)
+    do, ids = body.get("do"), body.get("ids")
+    if do not in BATCH_DO:
+        raise HTTPException(400, "do: " + ", ".join(BATCH_DO))
+    if not isinstance(ids, list) or not ids or not all(isinstance(x, str) for x in ids):
+        raise HTTPException(400, "ids: a list of document ids")
+    ids = list(dict.fromkeys(ids))
+    if len(ids) > (BATCH_REREAD if do == "reread" else BATCH_MOST):
+        raise HTTPException(400, f"at most {BATCH_REREAD if do == 'reread' else BATCH_MOST} documents at once")
+    uid = prof["id"]
+    if do == "share" and not on(uid, "shared"):
+        raise HTTPException(403, "shared documents are off (Funktionen, Ich → Dokumente)")
+    tag = None
+    if do == "tag":
+        if not on(uid, "brief"):
+            raise HTTPException(403, "tags are off (Funktionen, Ich → Dokumente)")
+        tag = documents.clean_tags([str(body.get("tag") or "")[:40]])
+        if not tag:
+            raise HTTPException(400, "tag: one keyword")
+        tag = tag[0]
+        have = {d["id"]: d["tags"] for d in documents.list_docs(uid)}
+    pictures = on(uid, "pictures")
+
+    def one(doc_id):
+        if do == "delete":
+            return documents.delete(uid, doc_id)
+        if do in ("use", "unuse"):
+            return documents.set_use(uid, doc_id, do == "use")
+        if do in ("share", "unshare"):
+            return documents.set_shared(uid, doc_id, do == "share")
+        if do == "tag":
+            old = have.get(doc_id)
+            return old is not None and (any(x.lower() == tag.lower() for x in old)
+                                        or (len(old) < documents.MAX_TAGS and documents.set_tags(uid, doc_id, old + [tag])))
+        try:
+            return bool(documents.reread(uid, doc_id, pictures))
+        except ValueError:
+            return False
+
+    # database and file work off the event loop (up to 200 documents, reading again is heavy)
+    done = await asyncio.to_thread(lambda: sum(bool(one(x)) for x in ids))
+    print(f"wissen: {do} for {done} of {len(ids)} documents", flush=True)
+    return {"ok": True, "done": done, "failed": len(ids) - done}
+
+
 @router.post("/api/profile/wissen/search", dependencies=[Depends(assistant)])
 async def try_search(request: Request, prof=Depends(browser_profile)):
     _docs_on()

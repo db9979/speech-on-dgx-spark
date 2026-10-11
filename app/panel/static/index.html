@@ -780,17 +780,16 @@
     <ul class="facts" id="factlist"></ul>
     <div class="row" style="margin-top:8px"><button class="b" id="facttidy">Aufräumen vorschlagen</button><button class="b" id="factclear">Alles vergessen</button><span id="factmsg"></span></div>
     <div class="mut" style="margin-top:6px"><small>Einmal pro Woche schlägt der Assistent vor, doppelte oder überholte Einträge zusammenzufassen. Es ändert sich erst etwas, wenn du hier bestätigst.</small></div></div>
-    <div id="docbox" class="ptab"><div class="intro">PDF bis 100 MB (der Admin kann mehr erlauben); Word, Excel, PowerPoint, OpenDocument, Text, Markdown, HTML, CSV oder E-Mail (.eml) je bis 20 MB. Der Assistent sucht darin, wenn eine Frage dazu passt. Nur du kannst sie nutzen, außer du gibst ein Dokument „Für alle“ frei.</div>
-      <div id="docsw"></div>
+    <div id="docbox" class="ptab ld-box">
+      <div class="ld-head"><span class="dcount"><span id="doccount"></span><span id="docspace" class="docspace" hidden><span id="docspacet"></span><span class="qbar docbar"><i></i></span></span></span><button class="b p" id="docadd" type="button">＋ Hinzufügen</button></div>
+      <div class="ld-tools" id="doctools"><input id="docfind" type="search" maxlength="300" placeholder="Suchen: Name, Absender, Tag; Enter auch im Inhalt" aria-label="Dokumente durchsuchen" autocomplete="off"><select id="docsrc" aria-label="Quelle"></select><select id="docsort" aria-label="Sortierung"></select><button class="b" id="docpick" type="button">Auswählen</button><input type="file" id="docfile" multiple accept=".pdf,.txt,.md,.docx,.html,.htm,.csv,.xlsx,.pptx,.odt,.ods,.odp,.eml" style="display:none"></div>
+      <div class="ld-chips" id="docchips" hidden></div>
+      <div id="docmsg" class="docmsg" aria-live="polite"></div>
+      <ul class="facts dochits" id="dochits"></ul>
+      <div class="ld-split"><div id="doclist" class="ld-list"></div><div id="docdetail" class="ld-detail" hidden><div id="docdinfo"></div><div id="docview" class="docview" hidden></div></div></div>
+      <div id="docbulk" class="ld-bulk" hidden></div>
       <div id="mkbox" class="mkbox" hidden></div>
-      <div id="docspace" class="docspace" hidden><span id="docspacet"></span><span class="qbar docbar"><i></i></span></div>
-      <div class="dtags" id="doctagbar" hidden></div>
-      <ul class="facts" id="doclist"></ul>
-      <div id="docothers" hidden><h3>Von anderen für alle freigegeben</h3><ul class="facts" id="docotherlist"></ul></div>
-      <div id="docview" class="docview" hidden></div>
-      <div class="row" style="margin-top:8px"><button class="b" id="docadd" type="button">Dokument hinzufügen …</button><input type="file" id="docfile" multiple accept=".pdf,.txt,.md,.docx,.html,.htm,.csv,.xlsx,.pptx,.odt,.ods,.odp,.eml" style="display:none"><span id="docmsg"></span></div>
-      <div class="row" style="margin-top:12px"><input id="docq" type="search" maxlength="300" placeholder="Suche ausprobieren, z. B. Kündigungsfrist" style="flex:1"><button class="b" id="docqgo" type="button">Suchen</button></div>
-      <ul class="facts" id="dochits"></ul><div class="mut" id="docuse"></div></div>
+      <details class="docopts" id="docopts"><summary>Einstellungen für Dokumente</summary><div class="intro">PDF bis 100 MB (der Admin kann mehr erlauben); Word, Excel, PowerPoint, OpenDocument, Text, Markdown, HTML, CSV oder E-Mail (.eml) je bis 20 MB. Der Assistent sucht darin, wenn eine Frage dazu passt. Nur du kannst sie nutzen, außer du gibst ein Dokument „Für alle“ frei.</div><div id="docsw"></div><div class="mut" id="docuse"></div></details></div>
     <div id="voicebox" class="ptab"><div class="intro">Lies drei kurze Sätze vor. Danach erkennt der Assistent dich an der Stimme, auch an anderen Geräten, und antwortet mit deinem Gedächtnis, deinen Dokumenten und Einstellungen.</div>
       <div id="voicestate" class="mut" style="margin-top:8px"></div><div id="voicesay" class="voicesay" style="display:none"></div>
       <div class="row" style="margin-top:8px"><button class="b p" id="voicego" type="button">Stimme einlernen</button><button class="b" id="voicedel" type="button">Stimme löschen</button><span id="voicemsg"></span></div></div>

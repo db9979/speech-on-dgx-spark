@@ -522,8 +522,7 @@ details.qhow{margin-top:6px}details.qhow>summary{cursor:pointer;font-size:13px;f
 .qbar{flex:1;min-width:80px;height:10px;border-radius:99px;background:var(--line);overflow:hidden}
 .qbar i{display:block;height:100%;width:0;border-radius:99px;background:linear-gradient(90deg,var(--acc),var(--acc2));transition:width .5s}
 .docshare{display:flex;align-items:center;gap:4px;font-size:13px;white-space:nowrap}
-#docothers h3{margin:14px 0 4px;font-size:14px}
-.docspace{margin:8px 0;font-size:13px}.docspace.full #docspacet{color:var(--warn)}
+.docspace{font-size:12.5px;color:var(--mut);display:flex;align-items:center;gap:8px}.docspace .qbar{width:110px;flex:none;min-width:0;height:8px}.docspace.full #docspacet{color:var(--warn)}
 .docbar{display:block;max-width:240px;height:6px;margin-top:5px}
 .qbar.wait i{width:30%;animation:qslide 1.3s ease-in-out infinite}@keyframes qslide{0%{margin-left:-30%}100%{margin-left:100%}}
 .qprog span{font-size:12.5px;white-space:nowrap;font-variant-numeric:tabular-nums}
@@ -911,6 +910,85 @@ pre.rpbody{white-space:pre-wrap;overflow-wrap:anywhere;font-size:12px;max-height
 .rpanswer{white-space:pre-wrap;overflow-wrap:anywhere;margin-top:4px}
 .rptext{width:100%}
 .rpsel select{min-width:0;flex:1}
+
+/* "Liste mit Detailbereich" (ld-…, V01.0.413, first used by Ich → Dokumente): a box (.ld-box, container) with .ld-head,
+   .ld-tools (search, selects, buttons), .ld-chips (quick filters with counts), .ld-split holding .ld-list (.ld-grp headings,
+   .ld-row rows: .ld-pick?, .ld-ico, .ld-mid with b + small, .ld-right with .ld-badge and .ld-when) and .ld-detail
+   (.ld-back, h3, .ld-facts dl, .ld-sw switch rows, .ld-acts buttons), .ld-bulk (sticky bar for a selection).
+   Wide (container >= 660 px) the details sit beside the list; narrow, .ld-sel on the box shows them as a page with .ld-back. */
+.ld-box{container-type:inline-size}
+.ld-box .ld-head{display:flex;justify-content:space-between;align-items:center;gap:10px}
+.ld-box .ld-head .b{flex:none}
+#docbox .dcount{display:flex;align-items:center;gap:2px 14px;flex-wrap:wrap;font-size:12.5px;color:var(--mut);min-width:0}
+.ld-box .ld-tools{display:flex;flex-wrap:wrap;gap:8px;align-items:center;margin:6px 0}
+.ld-box .ld-tools input[type=search]{flex:1 1 200px;width:auto;min-width:0}
+.ld-box .ld-tools select{width:auto;flex:0 1 auto;max-width:100%;min-width:0}
+.ld-box .ld-tools select[hidden],.ld-box .ld-tools button[hidden]{display:none}
+.ld-box .ld-tools.few{display:none}
+.ld-box .ld-chips{display:flex;gap:6px;flex-wrap:wrap;align-items:center;margin:2px 0 6px}
+.ld-box .ld-chips[hidden]{display:none}
+.ld-chip{font:inherit;font-size:12.5px;line-height:1.4;padding:3px 10px;border-radius:99px;border:1px solid var(--line);background:var(--card);color:var(--mut);cursor:pointer;white-space:nowrap}
+.ld-chip b{font-weight:600;opacity:.75;margin-left:2px}
+.ld-chip.on{background:color-mix(in srgb,var(--acc) 14%,transparent);border-color:transparent;color:var(--acc);font-weight:600}
+select.ld-chip{width:auto;max-width:180px;padding:3px 8px}
+#docbox .docmsg:empty{display:none}#docbox .docmsg{font-size:13px;margin:4px 0}
+#docbox .dochits{max-height:none;margin:4px 0 8px}#docbox .dochits:empty{display:none}
+#docbox .dochits .dhhead{align-items:center;justify-content:space-between}#docbox .dochits .dhhead .b{padding:2px 9px}
+#docbox .dochits .dhit{cursor:pointer}#docbox .dochits .dhit:hover{background:color-mix(in srgb,var(--line) 40%,transparent)}
+.ld-list{min-width:0}
+.ld-grp{display:flex;justify-content:space-between;font-size:11.5px;font-weight:700;color:var(--mut);text-transform:uppercase;letter-spacing:.04em;padding:12px 8px 4px}
+.ld-row{display:flex;align-items:center;gap:10px;padding:7px 8px;border-bottom:1px solid var(--line);border-radius:10px;cursor:pointer;min-width:0}
+.ld-row:hover{background:color-mix(in srgb,var(--line) 40%,transparent)}.ld-row.on{background:color-mix(in srgb,var(--acc) 11%,transparent)}
+.ld-row:focus-visible{outline:2px solid var(--acc);outline-offset:-2px}
+.ld-row .ld-pick{flex:none;width:18px;height:18px;margin:0}
+.ld-ico{width:30px;height:30px;border-radius:8px;display:grid;place-items:center;flex:none;font-size:10px;font-weight:700;color:#fff;letter-spacing:.02em}
+.ld-ico.pdf{background:#d93f45}.ld-ico.img{background:#2b9461}.ld-ico.nb{background:#3e63dd}.ld-ico.txt{background:#7b7a88}.ld-ico.doc{background:#1f7fd6}.ld-ico.tab{background:#1e8a5a}
+.ld-mid{flex:1;min-width:0}.ld-mid b{display:block;font-weight:600;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.ld-mid small{display:block;color:var(--mut);font-size:12px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.ld-right{display:flex;align-items:center;justify-content:flex-end;flex-wrap:wrap;gap:4px 6px;flex:0 1 auto;max-width:48%;font-size:12px;color:var(--mut)}
+.ld-when{white-space:nowrap;font-variant-numeric:tabular-nums}
+.ld-badge{font-size:11.5px;padding:1px 8px;border-radius:99px;white-space:nowrap}
+.ld-badge.due{background:color-mix(in srgb,var(--warn) 16%,transparent);color:var(--warn);font-weight:600}
+.ld-badge.read{background:color-mix(in srgb,var(--acc) 14%,transparent);color:var(--acc)}
+.ld-badge.err{background:color-mix(in srgb,var(--bad) 14%,transparent);color:var(--bad)}
+.ld-badge.sh{background:color-mix(in srgb,var(--acc2) 16%,transparent);color:var(--acc2)}
+.ld-badge.off{background:color-mix(in srgb,var(--line) 75%,transparent)}
+.ld-more{text-align:center;margin:10px 0}.ld-empty{padding:14px 8px}
+.ld-detail{border:1px solid var(--line);border-radius:14px;padding:14px;background:var(--card);min-width:0}
+.ld-detail[hidden]{display:none}
+.ld-detail h3{margin:0 0 4px;font-size:16px;overflow-wrap:anywhere}
+.ld-facts{display:grid;grid-template-columns:auto minmax(0,1fr);gap:3px 12px;font-size:13px;margin:8px 0}.ld-facts dt{color:var(--mut)}.ld-facts dd{margin:0;overflow-wrap:anywhere}.ld-facts dd.due{color:var(--warn);font-weight:600}
+.ld-detail .docbar{display:block;margin:4px 0 8px}
+.ld-note{font-size:12.5px;margin:6px 0}
+.dtagedit{display:flex;gap:6px;margin:6px 0 4px}.dtagedit input{flex:1;min-width:0;width:auto}
+.ld-sw{display:flex;justify-content:space-between;align-items:center;gap:10px;padding:8px 0;border-top:1px solid var(--line);font-size:13.5px}.ld-sw small{font-size:12px}
+.ld-acts{display:flex;flex-wrap:wrap;gap:6px;margin-top:10px}
+.ld-box .danger{color:var(--bad)}
+.ld-back{display:none;margin-bottom:10px}
+.ld-detail .docview{max-height:60vh}
+.ld-bulk{position:sticky;bottom:0;z-index:2;display:flex;flex-wrap:wrap;gap:6px;align-items:center;padding:8px 10px;border-radius:12px;background:var(--card);border:1px solid var(--line);box-shadow:var(--shadow);margin:8px 0}
+.ld-bulk[hidden]{display:none}.ld-bulk b{margin-right:4px}.ld-bulk .b{padding:5px 10px;font-size:13px}
+.dbtag{display:inline-flex;gap:4px}.dbtag input{width:110px;padding:5px 8px;font-size:13px}
+.docopts{border:1px solid var(--line);border-radius:12px;padding:8px 12px;margin:12px 0 4px}.docopts summary{cursor:pointer;font-weight:600;font-size:13.5px}
+.docopts .intro{margin-top:8px}
+@container (min-width:660px){
+  .ld-split:has(>.ld-detail:not([hidden])){display:grid;grid-template-columns:minmax(0,1fr) 300px;gap:12px;align-items:start}
+  .ld-detail{position:sticky;top:0;max-height:calc(100vh - 150px);overflow:auto}
+}
+@container (min-width:660px) and (max-width:879.98px){.ld-split:has(>.ld-detail:not([hidden])) .ld-when{display:none}}
+@container (max-width:659.98px){
+  .ld-box.ld-sel>:not(.ld-split),.ld-box.ld-sel .ld-list{display:none}
+  .ld-back{display:inline-flex}
+  .ld-when{display:none}
+  .ld-box .ld-tools select{flex:1 1 40%}
+  .ld-box .ld-tools input[type=search]{flex:1 1 100%}
+  .ld-box .ld-chips{flex-wrap:nowrap;overflow-x:auto;scrollbar-width:none;padding-bottom:2px}
+  .ld-row{padding:9px 4px}
+  .dbtag input{width:90px}
+  .ld-right{max-width:42%}
+  .docspace .qbar{display:none}#docspacet{white-space:nowrap}
+  .ld-bulk{flex-wrap:nowrap;overflow-x:auto;scrollbar-width:thin}.ld-bulk .b,.ld-bulk b{white-space:nowrap;flex:none}
+}
 /* a name only for screen readers (B6): the field keeps its look */
 .srl{position:absolute;width:1px;height:1px;margin:-1px;padding:0;overflow:hidden;clip:rect(0 0 0 0);white-space:nowrap;border:0}
 .mkview{max-height:70vh}

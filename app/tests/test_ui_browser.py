@@ -770,6 +770,67 @@ class Browser(unittest.TestCase):
             helpers.set_config(doc_make=False)
             profiles.save_settings(me, {"doc_make": False})
 
+    def test_documents_list_search_details_and_select(self):
+        """Ich → Dokumente with many documents (V01.0.413): compact rows, 50 at a time, the search field filters at
+        once, a source filter, the details beside the list (computer) or as a page (phone), and "Auswählen" switches
+        several documents off in one request; with the strict CSP, without sideways scrolling, also at 320 px."""
+        import documents
+        import profiles
+        me = next(u for u in profiles._load()["users"] if u["name"] == "Uitest")["id"]
+        ids = []
+        for i in range(60):
+            src = ("upload", "begleiter", "app")[i % 3]
+            d = documents.add(me, f"Liste{i:02d}.txt", b"x", text=f"Listentext Nummer {i} fuer den Test. " * 3, source=src)
+            ids.append(d["id"])
+
+        async def go():
+            async with async_playwright() as p:
+                for name, w, h in VIEWS + (("klein", 320, 640),):
+                    br, pg, errors = await self.page(p, w, h, csp=True)
+                    try:
+                        await pg.evaluate("openMe('docbox')")
+                        await pg.wait_for_selector("#doclist .ld-row", timeout=8000)
+                        rows = "document.querySelectorAll('#doclist .ld-row').length"
+                        self.assertEqual(await pg.evaluate(rows), 50, name)
+                        self.assertTrue(await pg.is_visible("#doclist [data-more]"))
+                        await pg.fill("#docfind", "liste0")
+                        self.assertEqual(await pg.evaluate(rows), 10, name)
+                        await pg.fill("#docfind", "liste")
+                        await pg.select_option("#docsrc", "begleiter")
+                        self.assertEqual(await pg.evaluate(rows), 20, name)
+                        await pg.select_option("#docsrc", "")
+                        await pg.fill("#docfind", "")
+                        await pg.click("#doclist .ld-row >> nth=0")
+                        await pg.wait_for_selector("#docdetail [data-dact=view]", state="visible", timeout=5000)
+                        if name == "pc":       # beside the list
+                            self.assertTrue(await pg.is_visible("#doclist"))
+                        else:                  # its own page with a way back
+                            self.assertFalse(await pg.is_visible("#doclist"))
+                            await pg.click("#docdetail [data-dact=back]")
+                            await pg.wait_for_selector("#doclist .ld-row", state="visible", timeout=5000)
+                        over = await pg.evaluate("document.documentElement.scrollWidth-window.innerWidth")
+                        self.assertLessEqual(over, 1, f"{name}: {over}px zu breit")
+                        await pg.evaluate("DOCV.sel='';docRender()")
+                        await pg.click("#docpick")
+                        await pg.click("#doclist .ld-row >> nth=0")
+                        await pg.click("#doclist .ld-row >> nth=1")
+                        self.assertIn("2", await pg.inner_text("#docbulk b"))
+                        over = await pg.evaluate("document.documentElement.scrollWidth-window.innerWidth")
+                        self.assertLessEqual(over, 1, f"{name} Auswahl: {over}px zu breit")
+                        await pg.click("#docbulk [data-bulk=unuse]")
+                        await self.until(pg, "document.querySelectorAll('#doclist .ld-badge.off').length===2", 5)
+                        await pg.click("#docbulk [data-bulk=use]")
+                        await self.until(pg, "document.querySelectorAll('#doclist .ld-badge.off').length===0", 5)
+                        self.assertEqual(len(documents.list_docs(me, used_only=True)), 60)
+                        self.assertEqual(errors, [], name)
+                    finally:
+                        await br.close()
+        try:
+            self.run_async(go())
+        finally:
+            for i in ids:
+                documents.delete(me, i)
+
     def test_begleiter_page(self):
         """Ich → Begleiter (begleiter.js): a setup line, and the parts of a paired device saved centrally; on a
         computer and a phone, with the strict CSP, without sideways scrolling."""
@@ -1398,6 +1459,32 @@ class Browser(unittest.TestCase):
                         await pg.keyboard.press("Escape")
                         await pg.wait_for_timeout(300)
                         self.assertFalse(await pg.evaluate("!!document.querySelector('.lv .flow.full')"))
+                        # Live-Log interaktiv (Dominik 2026-10-11 "alles umsetzen"): chips, search, pause, a click
+                        # on an event lights its place in the picture, a node opens its sheet, rewind, copy the way
+                        await pg.click("#lvevbar [data-evarea='Wächter']")
+                        rows = await pg.inner_text("#lvev")
+                        self.assertIn("geblockt", rows)
+                        self.assertNotIn("Werkzeug", rows)
+                        await pg.click("#lvevbar [data-evarea='']")
+                        await pg.fill("#lvevbar input", "memory_save")
+                        await pg.wait_for_timeout(200)
+                        self.assertNotIn("geblockt", await pg.inner_text("#lvev"))
+                        await pg.fill("#lvevbar input", "")
+                        await pg.click("#lvev [data-ev]:has-text('geblockt')")
+                        await pg.wait_for_selector(".lv .gate.glow", timeout=3000)
+                        await pg.click("[data-evpause]")
+                        self.assertIn("Weiter", await pg.inner_text("[data-evpause]"))
+                        await pg.click("[data-evpause]")
+                        await pg.click("#lvflow [data-node='weiche']")
+                        await pg.wait_for_selector("#lvsheet:not([hidden])", timeout=3000)
+                        self.assertIn("Weiche", await pg.inner_text("#lvsheet"))
+                        await pg.click("[data-sheetx]")
+                        await pg.wait_for_selector("#lvsheet[hidden]", state="attached", timeout=3000)
+                        await pg.click("[data-rew=open]")
+                        await pg.wait_for_selector("#lvrew input[type=range]", timeout=3000)
+                        await pg.click("[data-rew=live]")
+                        await pg.wait_for_selector("[data-rew=open]", timeout=3000)
+                        self.assertEqual(await pg.locator("[data-waycopy]").count(), 1)
                     self.assertEqual(errors, [], name)
                     await br.close()
                 # the monitor: a code from the admin, entered on the screen
@@ -1417,6 +1504,11 @@ class Browser(unittest.TestCase):
                 self.assertEqual(await pg.inner_text("#lvname"), "Flur")
                 self.assertNotIn("Kakao", await pg.inner_text("body"))
                 self.assertLessEqual(await pg.evaluate("document.documentElement.scrollHeight-window.innerHeight"), 1)
+                # a tap on the turning cards holds the one shown, a second tap lets them turn again
+                await pg.click(".krot")
+                self.assertTrue(await pg.evaluate("document.querySelector('.krot').classList.contains('held')"))
+                await pg.click(".krot")
+                self.assertFalse(await pg.evaluate("document.querySelector('.krot').classList.contains('held')"))
                 await pg.screenshot(path=os.path.join(os.environ.get("SPEECH_SPARK_SHOTS", helpers.TMP), "live-monitor.png"))
                 self.assertEqual(errors, [])
                 await br.close()
@@ -2180,8 +2272,12 @@ class JoinBrowser(unittest.TestCase):
                     over = await pg.evaluate("document.documentElement.scrollWidth-window.innerWidth")
                     self.assertLessEqual(over, 1, f"{w}: {over}px zu breit")
                     if w == 1280:
-                        await pg.fill("#joinpin", "246810")
-                        await pg.fill("#joinpin2", "246810")
+                        for _ in range(20):   # the page can draw the welcome form again right after the first fill
+                            await pg.fill("#joinpin", "246810")
+                            await pg.fill("#joinpin2", "246810")
+                            await pg.wait_for_timeout(200)
+                            if await pg.input_value("#joinpin") == "246810" and await pg.input_value("#joinpin2") == "246810":
+                                break
                         # the PIN hash and the new profile can take a while on a busy CI runner: wait for the page
                         # to load again after /api/join instead of a fixed 15 s for the card (red twice on GitHub)
                         joined, asked = [], []
@@ -2202,9 +2298,9 @@ class JoinBrowser(unittest.TestCase):
                                 info = await pg.evaluate("""JSON.stringify({btn:!!$('joingo'),off:$('joingo')&&$('joingo').disabled,
                                     msg:$('joinmsg')&&$('joinmsg').textContent,hash:location.hash})""")
                                 print(f"\nWARNUNG kein /api/join nach dem Tippen: {info} {errors}", file=sys.stderr)
-                                if not await pg.input_value("#joinpin"):
-                                    await pg.fill("#joinpin", "246810")
-                                    await pg.fill("#joinpin2", "246810")
+                                # seen locally: "Die PIN braucht mindestens 6 Zeichen." because the redraw emptied the fields
+                                await pg.fill("#joinpin", "246810")
+                                await pg.fill("#joinpin2", "246810")
                                 await pg.click("#joingo")
                         self.assertEqual(joined, [200], f"asked {asked} errors {errors}")
                         # not "load": on a busy runner every script of the new page can take long; the profile is what counts
