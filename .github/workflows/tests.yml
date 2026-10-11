@@ -15,7 +15,9 @@ permissions:
 
 concurrency:
   group: tests-${{ github.ref }}
-  cancel-in-progress: true
+  # a run that started finishes (only the newest waiting push is kept): with pushes every few minutes
+  # cancelling it meant no run ever passed, and update.sh installs only versions whose run passed
+  cancel-in-progress: false
 
 jobs:
   test:

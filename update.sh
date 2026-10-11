@@ -59,9 +59,12 @@ if [ -z "$TARGET" ] && [ "$NEWEST" = 0 ]; then
   url=$(git remote get-url origin)
   if [[ "$url" =~ ^(https://github\.com/|git@github\.com:)([A-Za-z0-9_.-]+/[A-Za-z0-9_.-]+)/?$ ]]; then
     repo=${BASH_REMATCH[2]%.git}
-    green=$(curl -fsS --max-time 20 -H "Accept: application/vnd.github+json" \
-      "https://api.github.com/repos/$repo/actions/workflows/tests.yml/runs?branch=$BRANCH&event=push&per_page=30" \
+    runs="https://api.github.com/repos/$repo/actions/workflows/tests.yml/runs?branch=$BRANCH&event=push"
+    green=$(curl -fsS --max-time 20 -H "Accept: application/vnd.github+json" "$runs&per_page=30" \
       | green_commit || true)
+    # many pushes in a row cancel each other's runs: then the newest 30 hold no green one, ask for those directly
+    [ -n "$green" ] || green=$(curl -fsS --max-time 20 -H "Accept: application/vnd.github+json" \
+      "$runs&status=success&per_page=5" | green_commit || true)
     if [ "${#green}" != 40 ] || ! git cat-file -e "$green^{commit}" 2>/dev/null \
         || ! git merge-base --is-ancestor "$green" "$new"; then
       echo "No version with passed GitHub tests found (GitHub not reachable?); nothing changed." >&2

@@ -93,12 +93,16 @@ def rate_limit_until(status, headers, now):
     return min(max(reset, now + 60), now + 3600)
 
 
-async def green_runs(repo, branch):
-    """The newest runs of the "Tests" workflow (update.sh asks the same before it installs anything)."""
+async def green_runs(repo, branch, passed=False):
+    """The newest runs of the "Tests" workflow (update.sh asks the same before it installs anything);
+    passed: only the ones that passed (when many pushes in a row cancelled each other's runs, the
+    newest 30 can hold no green one although an older commit passed)."""
+    params = {"branch": branch, "event": "push", "per_page": 30}
+    if passed:
+        params.update(status="success", per_page=5)
     async with httpx.AsyncClient(timeout=10) as c:
         r = await c.get(f"https://api.github.com/repos/{repo}/actions/workflows/tests.yml/runs",
-                        params={"branch": branch, "event": "push", "per_page": 30},
-                        headers={"Accept": "application/vnd.github+json"})
+                        params=params, headers={"Accept": "application/vnd.github+json"})
     if r.status_code != 200:
         raise GitHubRefused(r.status_code, rate_limit_until(r.status_code, r.headers, time.time()))
     return r.json().get("workflow_runs")
@@ -154,9 +158,12 @@ async def _remote_state(force=False):
     # newest commit of main can be red for a while when several changes land at once.
     repo = github_repo(remote)
     if repo:
-        until, limited = now + _FAIL_PAUSE, False
+        until, limited, answered = now + _FAIL_PAUSE, False, False
         try:
             green, data["head_state"] = pick_green(await green_runs(repo, branch), branch, data["head"])
+            if not green:
+                green = pick_green(await green_runs(repo, branch, passed=True), branch, None)[0]
+            answered = True
         except GitHubRefused as e:
             green, limited = None, e.until is not None
             until = e.until or until
@@ -173,6 +180,10 @@ async def _remote_state(force=False):
                 data["error"] = ("GitHub beantwortet gerade keine Abfragen mehr (Grenze von 60 pro Stunde erreicht). "
                                  f"Nächste Prüfung ab {time.strftime('%H:%M', time.localtime(until))}; "
                                  "solange wird nichts installiert.")
+            elif answered:
+                data["no_green"] = True
+                data["error"] = ("Auf GitHub hat noch keine Version die Tests bestanden; "
+                                 "ohne bestandene Tests wird nichts installiert")
             else:
                 data["error"] = "GitHub-Testergebnisse nicht abrufbar; ohne sie wird nichts installiert"
             data["latest"] = None

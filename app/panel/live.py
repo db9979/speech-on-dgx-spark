@@ -385,7 +385,8 @@ def update_checked(data, t0):
             return
         err, behind, head = data.get("error"), data.get("behind"), data.get("head_state")
         job("Update-Prüfung", "GitHub", t0, ok=not err)
-        word = ("GitHub nicht erreichbar, nichts wird installiert" if err else
+        word = ("keine Version mit bestandenen Tests, nichts wird installiert" if err and data.get("no_green") else
+                "GitHub nicht erreichbar, nichts wird installiert" if err else
                 "aktuell" if behind == 0 else
                 f"neuere getestete Version {data.get('version') or ''}".strip() + (f" ({behind} Änderungen)" if isinstance(behind, int) and behind > 0 else ""))
         if not err and head in ("running", "red"):

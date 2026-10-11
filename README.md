@@ -33,6 +33,7 @@ All options for running without questions (`--mode api --asr 1.7b --tts 0.6b --y
 
 <!-- New version: add one line at the top here and in CHANGELOG.md, drop the oldest line here (keep 10). Details go to docs/de and docs/en, not into this README. -->
 
+- **V01.0.391** Update check finds the last tested version again (test runs cancelled each other)
 - **V01.0.390** Repository hardened: GitHub actions pinned to commits, signing keys only for builds from main
 - **V01.0.389** Self-test: Funktionen page height limit counts the "Probleme melden" line again (lost in a merge in V01.0.387).
 - **V01.0.388** Rights arrive at once: changes under Wer darf was reach open pages, the iPhone app, the Begleiter, speakers and MCP without reloading; switched-off devices stay paired
@@ -42,7 +43,6 @@ All options for running without questions (`--mode api --asr 1.7b --tts 0.6b --y
 - **V01.0.384** The emergency stop button no longer disappears when many pages from one address poll the stage (rate limit per login instead of per address)
 - **V01.0.383** Copying an answer without its buttons: "To the reMarkable" and "Store under My documents" below an answer are no longer copied with it
 - **V01.0.382** Speaker firmware: never two fetches at once, error message without paths
-- **V01.0.381** Device updates (off): overview, one note per new firmware or app version, speakers updated one by one at night, XiaoZhi note to the admin
 
 All versions: [CHANGELOG.md](CHANGELOG.md)
 

@@ -1,6 +1,7 @@
 """Update check (update.py): GitHub's hourly limit for unauthenticated questions is recognised, the
 next question waits until it is lifted, and a refusal is not repeated on every page view."""
 import asyncio
+import os
 import unittest
 
 from tests import helpers
@@ -43,7 +44,7 @@ class Check(unittest.TestCase):
         update._failed.update(until=0.0, data=None, limited=False)
 
     def refuse(self, status, until):
-        async def runs(repo, branch):
+        async def runs(repo, branch, passed=False):
             self.asked += 1
             raise update.GitHubRefused(status, until)
         update.green_runs = runs
@@ -77,7 +78,7 @@ class Check(unittest.TestCase):
         self.refuse(502, None)
         asyncio.run(update.remote_state())
 
-        async def runs(repo, branch):
+        async def runs(repo, branch, passed=False):
             return [{"head_branch": "main", "conclusion": "success", "head_sha": "a" * 40}]
         update.green_runs = runs
         # the installed version is the newest one: nothing else is asked from GitHub
@@ -87,6 +88,50 @@ class Check(unittest.TestCase):
         self.assertIsNone(d["error"])
         self.assertEqual(d["behind"], 0)
         self.assertIsNone(update._failed["data"])
+
+    def answer(self, newest, green):
+        async def runs(repo, branch, passed=False):
+            self.asked += 1
+            return green if passed else newest
+        update.green_runs = runs
+
+    def test_cancelled_runs_fall_back_to_the_newest_green_one(self):
+        # pushes in a row cancel each other's runs: the newest 30 hold no green one
+        cancelled = [{"head_branch": "main", "conclusion": "cancelled", "head_sha": c * 40} for c in "abc"]
+        self.answer(cancelled, [{"head_branch": "main", "conclusion": "success", "head_sha": "e" * 40}])
+        d = asyncio.run(update.remote_state(force=True))
+        self.assertIsNone(d["error"])
+        self.assertEqual((d["latest"], d["behind"]), ("e" * 40, 0))
+        self.assertEqual(self.asked, 2)
+
+    def test_no_green_version_is_not_called_unreadable(self):
+        self.answer([{"head_branch": "main", "conclusion": "failure", "head_sha": "a" * 40}], [])
+        d = asyncio.run(update.remote_state(force=True))
+        self.assertIsNone(d["latest"])
+        self.assertIn("noch keine Version die Tests bestanden", d["error"])
+        self.assertNotIn("nicht abrufbar", d["error"])
+        self.assertTrue(d["no_green"])
+
+    def test_live_names_a_missing_green_version(self):
+        import live
+        seen, real = [], (live.on, live.job, live.event)
+        live.on, live.job, live.event = (lambda: True), (lambda *a, **k: None), (lambda kind, text: seen.append(text))
+        try:
+            live.update_checked({"error": "x", "no_green": True}, NOW)
+            live.update_checked({"error": "x"}, NOW)
+        finally:
+            live.on, live.job, live.event = real
+        self.assertIn("keine Version mit bestandenen Tests", seen[0])
+        self.assertIn("nicht erreichbar", seen[1])
+
+    def test_update_sh_asks_for_passed_runs_too(self):
+        root = os.path.dirname(os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
+        try:
+            with open(os.path.join(root, "update.sh")) as f:
+                sh = f.read()
+        except OSError:
+            self.skipTest("update.sh is not part of the app/ copy")
+        self.assertIn("&status=success&per_page=5", sh)
 
 
 if __name__ == "__main__":
