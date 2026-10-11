@@ -444,7 +444,34 @@ static void select_click(ClickRecognizerRef recognizer, void *context) {
   listen();
 }
 
+// Notaus: SELECT held 3 s in all (600 ms "Neues Gespräch", then 2.4 s more) arms it with a long buzz; letting go
+// then sends the fixed sentence "Spark, Notaus" as a question. The Spark decides (only an admin profile's watch
+// raises the big Notaus, stage 2; others hear how to say "Spark, Mein Notaus").
+static AppTimer *s_na_timer;
+static bool s_na_armed;
+
+static void na_arm(void *data) {
+  s_na_timer = NULL;
+  s_na_armed = true;
+  vibes_long_pulse();
+  set_status("Loslassen: Notaus");
+}
+
+static void select_long_up(ClickRecognizerRef recognizer, void *context) {
+  if (s_na_timer) {
+    app_timer_cancel(s_na_timer);
+    s_na_timer = NULL;
+  }
+  if (s_na_armed) {
+    s_na_armed = false;
+    ask("Spark, Notaus");
+  }
+}
+
 static void select_long(ClickRecognizerRef recognizer, void *context) {
+  if (s_na_timer) app_timer_cancel(s_na_timer);
+  s_na_armed = false;
+  s_na_timer = app_timer_register(2400, na_arm, NULL);
   audio_reset();
   cancel_answer();
   s_reset_pending = true;
@@ -459,7 +486,7 @@ static void select_long(ClickRecognizerRef recognizer, void *context) {
 
 static void click_config(void *context) {
   window_single_click_subscribe(BUTTON_ID_SELECT, select_click);
-  window_long_click_subscribe(BUTTON_ID_SELECT, 600, select_long, NULL);
+  window_long_click_subscribe(BUTTON_ID_SELECT, 600, select_long, select_long_up);
 }
 
 // ---------------------------------------------------------------- messages

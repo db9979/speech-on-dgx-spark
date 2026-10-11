@@ -86,6 +86,9 @@ jobs:
           # holds TCP, so the Spark simply sends slower
           sed -i 's/audio_service_.PushPacketToDecodeQueue(std::move(packet));/audio_service_.PushPacketToDecodeQueue(std::move(packet), true);/' xz/main/application.cc
           grep -q 'PushPacketToDecodeQueue(std::move(packet), true);' xz/main/application.cc
+          # the Spark's Notaus button: hold BOOT for 5 s (firmware/patch_notaus.py; the Spark decides in esp32.py)
+          python3 firmware/patch_notaus.py xz "${{ matrix.board }}"
+          grep -q 'SparkNotaus' xz/main/application.cc
           grep -q "PROJECT_VER \"$VERSION\"" xz/CMakeLists.txt
           cd xz
           python scripts/build.py "${{ matrix.board }}" --name "${{ matrix.name }}" --language "$lang" --wake-word "$wake"

@@ -438,6 +438,7 @@ class Channels(Base):
                    "Bitte sag: Spark, Notaus", "Spark Notaus aufheben", "", None, "Spark, Mein Notaus " * 20):
             self.assertIsNone(P(no), no)
         self.assertEqual(notaus.phrase_channel("speaker"), "esp32")
+        self.assertEqual(notaus.phrase_channel("watch"), "pebble")      # the watch's "Spark, Notaus" (hold SELECT 3 s)
         self.assertEqual(notaus.phrase_channel("<script>"), "sprache")
 
     def test_by_sentence_in_the_chat(self):
@@ -509,6 +510,31 @@ class Channels(Base):
         r = a.post("/api/notaus", json={"level": 2}, headers=ua)
         self.assertEqual((r.status_code, notaus.state()["channel"]), (200, "android"))
 
+    def test_esp32_button(self):
+        import esp32
+        _, uid = profile("NxEsra")
+        sess = esp32.Session.__new__(esp32.Session)
+        sess.dev, sess.answer, sess.said, sess.room = {"id": "d_nx1", "user": uid, "name": "Küche"}, None, [], None
+
+        async def say(text, tone=False):
+            sess.said.append(text)
+        sess.say, sess.note = say, (lambda x: None)
+
+        async def hold(text):
+            await sess.on_text({"type": "listen", "state": "detect", "text": text})
+            if sess.answer:
+                await sess.answer
+        asyncio.run(hold("spark-notaus"))
+        self.assertEqual(notaus.level(), 0)                      # not an admin's speaker
+        self.assertIn("nur für Lautsprecher eines Admins", sess.said[-1])
+        self.admins.add(uid)
+        sess.answer = None
+        asyncio.run(hold("Spark Notaus"))                         # anything else is an ordinary wake word
+        self.assertEqual(notaus.level(), 0)
+        asyncio.run(hold("spark-notaus"))
+        self.assertEqual((notaus.level(), notaus.state()["channel"]), (2, "esp32"))
+        self.assertFalse(notaus.own(uid))                         # never Mein Notaus: a button says nothing about who
+
     def test_home_assistant_key_only_raises(self):
         a = admin()
         self.assertEqual(client().post("/api/admin/notaus/keys", json={"name": "HA"}).status_code, 401)
@@ -542,6 +568,93 @@ class Channels(Base):
         with self.assertRaises(ValueError):
             os.remove(notaus.KEYS_FILE)
             notaus.key_new("<b>")
+
+
+class Auto(Base):
+    """Paket 2: the Wächter raises stage 1 by itself on fixed rules, only with the admin switch (off by default)."""
+
+    def setUp(self):
+        super().setUp()
+        notaus.auto_reset()
+        import guard
+        guard.reset()
+
+    def tearDown(self):
+        notaus.auto_reset()
+        set_panel(notaus_auto=False)
+        import guard
+        guard.reset()
+        super().tearDown()
+
+    def test_off_by_default_and_only_stage_one(self):
+        with open(os.path.join(os.path.dirname(notaus.__file__), "..", "config.default.json")) as f:
+            self.assertIs(json.load(f)["panel"]["notaus_auto"], False)
+        for i in range(40):
+            self.assertFalse(notaus.watch("login", now=1000 + i))
+        self.assertEqual(notaus.level(), 0)
+        set_panel(notaus_auto=True)
+        for i in range(19):
+            self.assertFalse(notaus.watch("login", now=2000 + i * 30))
+        self.assertTrue(notaus.watch("login", now=2000 + 19 * 30))
+        s = notaus.state()
+        self.assertEqual((s["level"], s["channel"], s["by"]), (1, "waechter", "Wächter"))
+        self.assertIn("Anmeldungen", s["reason"])
+        for i in range(40):
+            notaus.watch("netguard", now=3000 + i)
+        self.assertEqual(notaus.level(), 1)                       # never higher
+        self.assertFalse(notaus.watch("model"))                   # unknown kinds count nothing
+
+    def test_the_window_forgets_old_events(self):
+        set_panel(notaus_auto=True)
+        for i in range(29):
+            notaus.watch("mcp", now=1000 + i)
+        self.assertFalse(notaus.watch("mcp", now=1000 + 700))      # the first 29 are older than 10 minutes
+        self.assertEqual(notaus.level(), 0)
+
+    def test_wrong_sign_ins_count_from_outside_only(self):
+        set_panel(notaus_auto=True)
+        home, out = client(), client(OUTSIDE)
+        for i in range(25):
+            home.post("/api/login", json={"password": f"falsch{i}"})
+        self.assertEqual(notaus.level(), 0)
+        import guard
+        for i in range(20):
+            guard.failed(request(OUTSIDE[0]), "x")
+        self.assertEqual((notaus.level(), notaus.state()["channel"]), (1, "waechter"))
+        self.assertEqual(out.get("/api/whoami").status_code, 503)  # outside is closed now
+
+    def test_refused_outbound_connections(self):
+        set_panel(notaus_auto=True)
+        for i in range(15):
+            with self.assertRaises(netguard.Blocked):
+                netguard.resolve("169.254.169.254", 80, netguard.HOME)
+        self.assertEqual(notaus.level(), 1)
+        notaus.lift(0, "Admin")
+        notaus.auto_reset()
+        notaus.trigger(1, "x", "", "panel")
+        for i in range(30):                                        # the Notaus' own refusals never count
+            with self.assertRaises(netguard.Blocked):
+                netguard.resolve("93.184.216.34", 443, netguard.PUBLIC)
+        notaus.lift(0, "Admin")
+        self.assertEqual(notaus._auto_seen["netguard"], [])
+
+    def test_an_mcp_flood_from_outside(self):
+        import guard
+        from fastapi import HTTPException
+        set_panel(notaus_auto=True)
+        flooded = 0
+        for i in range(200):
+            try:
+                guard.limit(request(OUTSIDE[0]), "mcp", "mcp:c1")
+            except HTTPException:
+                flooded += 1
+            if notaus.level():
+                break
+        self.assertEqual((flooded, notaus.level()), (30, 1))
+
+    def test_the_switch_is_validated_and_sensitive(self):
+        import admin
+        self.assertIn(("panel", "notaus_auto"), admin.SENSITIVE)
 
 
 if __name__ == "__main__":

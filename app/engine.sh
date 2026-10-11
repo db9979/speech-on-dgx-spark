@@ -132,9 +132,12 @@ if [[ "$ic" =~ ^[0-9]+$ ]] && [ "$ic" -gt 0 ]; then
   fi
 fi
 
+# --disable-log-stats: vllm-omni otherwise logs a statistics table after every spoken sentence
+# (~12,000 journal lines a day on tars); nothing here reads them
 exec "$VENV/bin/vllm" serve "$MODEL" --omni \
   --host 127.0.0.1 --port "$PORT" \
   --disable-uvicorn-access-log \
+  --disable-log-stats \
   --trust-remote-code \
   --served-model-name "$MODEL" \
   --stage-overrides "$overrides" "${deploy[@]}"

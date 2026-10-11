@@ -33,16 +33,16 @@ All options for running without questions (`--mode api --asr 1.7b --tts 0.6b --y
 
 <!-- New version: add one line at the top here and in CHANGELOG.md, drop the oldest line here (keep 10). Details go to docs/de and docs/en, not into this README. -->
 
-- **V01.0.364** reMarkable comparison quieter: the Spark's own writes no longer start a comparison ("account changed"), a cloud 502/503/504 gets one more try, page reader hints as one counted line per comparison
+- **V01.0.369** reMarkable comparison quieter: the Spark's own writes no longer start a comparison ("account changed"), a cloud 502/503/504 gets one more try, page reader hints as one counted line per comparison
+- **V01.0.368** Requests the Spark starts itself (update check, backup, rules) are called "Spark" instead of "Gast" in Logs → Requests and on the live page; the panel fetches the voice list with the key again (before ~900 refused calls a day, list only from cache); speech output no longer writes a statistics table per sentence to the journal
+- **V01.0.367** Pebble watch app 1.6.0 in the panel: holding SELECT 3 s triggers the emergency stop (the big one admin profiles only)
+- **V01.0.366** Pebble watch app: the build checks that the app also runs on older watch firmware (SDK 5.94)
+- **V01.0.365** Pebble watch app: GitHub puts the built file on the branch pebble-build so it can be taken into the panel
+- **V01.0.364** Emergency stop by itself (guard, switch under Security, off): stage 1 on 20 wrong sign-ins from outside, an MCP flood or many refused connections; emergency stop button on ESP32 speakers (5 s, firmware build 6) and on the Pebble (SELECT 3 s, watch app 1.6.0)
 - **V01.0.363** Own MCP services per profile (admin sub-switch + Me → My MCP services, all off): every tool released one by one, reading as outside text, acting after "Yes", OAuth sign-in, background jobs read only, the admin blocks at once, Live shows every call without contents
 - **V01.0.362** Fetch clear questions directly: weather and appointments for tomorrow and the day after too
 - **V01.0.361** Search locally first: a long Kiwix article no longer slows the answer (only its start is read), Logs → Requests shows hits per source
 - **V01.0.360** Emergency stop on more ways: Telegram /notaus and /meinnotaus, fixed sentence "Spark, Mein Notaus" / "Spark, Notaus" (the big one admins only), a Home Assistant key that can only trigger (with a ready snippet), Android quick settings tile (app 1.1.0)
-- **V01.0.359** Face at the bottom right: one tap starts the assistant on every page, over Me and on a phone (its window closed at once), a double tap no longer marks text, typing a question always works
-- **V01.0.358** Fetch clear questions directly: "Which appointments do I have today?" is fetched by the panel itself
-- **V01.0.357** Passkeys in the iPhone app: „With passkey“ when confirming, for the Spark update and the admin sign-in (Face ID with the passkey made in Safari, via iCloud Keychain); for that the Spark serves Apple /.well-known/apple-app-site-association (only the app ID, from the push settings)
-- **V01.0.356** Logs → Requests shows the request number from the journal in list and detail, search finds it
-- **V01.0.355** What's new: view the changelog in the panel, from "Was ist neu" at the bottom next to the version or Settings → Update und Sicherung, with search
 
 All versions: [CHANGELOG.md](CHANGELOG.md)
 

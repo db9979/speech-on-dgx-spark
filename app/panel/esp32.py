@@ -75,6 +75,8 @@ import vault
 import features
 from common import load_config
 
+NOTAUS_WORD = "spark-notaus"   # the fixed wake word of the Notaus button (firmware/patch_notaus.py)
+
 STATE = os.environ.get("SPEECH_SPARK_STATE", "/var/lib/speech-spark/state")
 FW_DIR = os.path.join(os.path.dirname(STATE.rstrip("/")), "firmware")
 CODE_SECONDS = 600
@@ -761,6 +763,11 @@ class Session:
                 self.mic_report(ear.heard)
                 if ear.heard or len(ear.pcm) > 16000:
                     self.start_answer(bytes(ear.pcm))
+            elif st == "detect" and m.get("text") == NOTAUS_WORD:
+                # the BOOT button held for 5 s (firmware/patch_notaus.py): only the firmware sends this text
+                if self.answer and not self.answer.done():
+                    self.answer.cancel()
+                self.answer = asyncio.create_task(self.notaus_button())
             elif st == "detect":
                 print("esp32: wake word at", self.dev["name"], flush=True)
                 self.note("Weckwort erkannt" + (f": {str(m.get('text'))[:30]}" if m.get("text") else ""))
@@ -1100,6 +1107,19 @@ class Session:
         if self.answer and not self.answer.done():
             return
         self.answer = asyncio.create_task(self.say(text, tone=True))
+
+    async def notaus_button(self):
+        """The Notaus button: the big Notaus, stage 2, only for a speaker of an admin profile (a button press says
+        nothing about who pressed it, so never Mein Notaus of the owner); the speaker says what happened."""
+        uid = self.dev.get("user") or ""
+        self.note("Notaus-Taste gehalten")
+        if notaus.admin_profile(uid):
+            who = profiles.by_id(uid) or {}
+            text = await notaus.raise_by(f"{who.get('name', '')} (Lautsprecher {self.dev.get('name', '')})".strip(), uid, 2, "esp32")
+        else:
+            text = "Den Notaus am Lautsprecher gibt es nur für Lautsprecher eines Admins."
+        print("esp32: Notaus button at", self.dev["name"], "-", "admin" if notaus.admin_profile(uid) else "refused", flush=True)
+        await self.say(text.split(" Aufheben")[0], tone=True)
 
     async def say(self, text, tone=False):
         """Speaks a fixed text (no model): the tone first if asked, the text on boards with a display."""

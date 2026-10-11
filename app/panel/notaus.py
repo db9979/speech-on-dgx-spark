@@ -1031,3 +1031,67 @@ def delete_key(kid: str):
         raise HTTPException(404, "kein solcher Schlüssel")
     guard.log("notaus_key_delete", who="Admin", detail=kid)
     return {"ok": True}
+
+
+# ---------------------------------------------------------------- Selbst-Notaus: the Wächter raises stage 1 by itself
+# Admin switch panel.notaus_auto (Einstellungen → Sicherheit, off by default). Fixed rules only, counted in memory
+# (a restart starts counting again): many wrong sign-ins from outside, a flood of MCP requests from outside that
+# the rate limit turns away, or a series of outbound connections netguard refused (someone steering the Spark to
+# addresses it must not reach). Each rule raises stage 1 "Außen zu", never higher, never down; lifting stays
+# with the admin in the browser at home.
+AUTO = {"login": (20, 600, "Wächter: 20 falsche Anmeldungen von außen in 10 Minuten"),
+        "mcp": (30, 600, "Wächter: MCP-Flut von außen (30 abgewiesene Anfragen in 10 Minuten)"),
+        "netguard": (15, 600, "Wächter: 15 gesperrte Verbindungen nach außen in 10 Minuten")}
+_auto_lock = threading.Lock()
+_auto_seen = {k: [] for k in AUTO}
+_auto_tasks = set()
+
+
+def auto_on():
+    try:
+        from common import load_config
+        return load_config().get("panel", {}).get("notaus_auto", False) is True
+    except Exception:
+        return False
+
+
+def _soon(coro):
+    """Runs after_change without blocking the caller (an event loop task, or a short thread outside a loop)."""
+    import asyncio
+    try:
+        task = asyncio.get_running_loop().create_task(coro)
+        _auto_tasks.add(task)
+        task.add_done_callback(_auto_tasks.discard)
+    except RuntimeError:
+        threading.Thread(target=asyncio.run, args=(coro,), daemon=True).start()
+
+
+def watch(kind, now=None):
+    """Counts one suspicious event; at a rule's threshold (and with the switch on) the Wächter raises stage 1.
+    True when it did. Never raises: the callers are guard and netguard."""
+    try:
+        if kind not in AUTO:
+            return False
+        most, window, why = AUTO[kind]
+        now = time.time() if now is None else now
+        with _auto_lock:
+            seen = [t for t in _auto_seen[kind] if now - window < t <= now][-most + 1:] + [now]
+            hit = len(seen) >= most
+            _auto_seen[kind] = [] if hit else seen
+        if not hit or not auto_on() or level() >= 1:
+            return False
+        old, _ = trigger(1, "Wächter", "", "waechter", why, now=now)
+        if old >= 1:
+            return False
+        print("notaus: Wächter löst Stufe 1 aus -", kind, flush=True)   # trigger() writes the admin log entry
+        _soon(after_change(old, 1, "Wächter", "waechter"))
+        return True
+    except Exception as e:
+        print("notaus: watch", type(e).__name__, flush=True)
+        return False
+
+
+def auto_reset():
+    with _auto_lock:
+        for k in _auto_seen:
+            _auto_seen[k] = []

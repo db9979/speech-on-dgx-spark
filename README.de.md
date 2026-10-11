@@ -33,16 +33,16 @@ Alle Optionen ohne Rückfragen (`--mode api --asr 1.7b --tts 0.6b --yes` …) st
 
 <!-- New version: add one line at the top here and in CHANGELOG.md, drop the oldest line here (keep 10). Details go to docs/de and docs/en, not into this README. -->
 
-- **V01.0.364** reMarkable-Abgleich ruhiger: eigene Schreibvorgänge des Spark lösen keinen Abgleich mehr aus („account changed“), 502/503/504 der Cloud bekommt einen zweiten Versuch, Hinweise des Seitenlesers als eine gezählte Zeile pro Abgleich
+- **V01.0.369** reMarkable-Abgleich ruhiger: eigene Schreibvorgänge des Spark lösen keinen Abgleich mehr aus („account changed“), 502/503/504 der Cloud bekommt einen zweiten Versuch, Hinweise des Seitenlesers als eine gezählte Zeile pro Abgleich
+- **V01.0.368** Anfragen, die der Spark selbst anstößt (Update-Prüfung, Sicherung, Regeln), heißen in Logs → Anfragen und auf der Live-Seite „Spark“ statt „Gast“; die Stimmenliste im Panel holt der Spark wieder mit Schlüssel (vorher ~900 abgelehnte Abrufe am Tag, Liste kam nur aus dem Zwischenspeicher); die Sprachausgabe schreibt keine Statistiktabelle pro Satz mehr ins Journal
+- **V01.0.367** Pebble-Uhr-App 1.6.0 im Panel: SELECT 3 s halten löst den Notaus aus (groß nur für Admin-Profile)
+- **V01.0.366** Pebble-Uhr-App: der Bau prüft, dass die App auch auf älterer Uhr-Firmware läuft (SDK 5.94)
+- **V01.0.365** Pebble-Uhr-App: GitHub legt die gebaute Datei auf den Zweig pebble-build, damit sie ins Panel übernommen werden kann
+- **V01.0.364** Notaus von selbst (Wächter, Schalter unter Sicherheit, aus): Stufe 1 bei 20 falschen Anmeldungen von außen, MCP-Flut oder vielen gesperrten Verbindungen; Notaus-Taste am ESP32-Lautsprecher (5 s, Firmware Build 6) und an der Pebble (SELECT 3 s, Uhr-App 1.6.0)
 - **V01.0.363** Eigene MCP-Dienste pro Profil (Admin-Unterschalter + Ich → Meine MCP-Dienste, alles aus): jedes Werkzeug einzeln frei, Lesen als fremder Text, Handeln nach „Ja“, OAuth-Anmeldung, Hintergrundaufträge nur lesend, Admin sperrt sofort, Live zeigt jeden Aufruf ohne Inhalte
 - **V01.0.362** Eindeutiges direkt abrufen: Wetter und Termine auch für morgen und übermorgen
 - **V01.0.361** Erst lokal suchen: ein langer Kiwix-Artikel bremst die Antwort nicht mehr (nur der Anfang wird gelesen), Logs → Anfragen zeigt Treffer je Quelle
 - **V01.0.360** Notaus auf mehr Wegen: Telegram /notaus und /meinnotaus, fester Satz „Spark, Mein Notaus“ / „Spark, Notaus“ (großer nur für Admins), Home-Assistant-Schlüssel, der nur auslöst (mit fertiger Vorlage), Android-Kachel (App 1.1.0)
-- **V01.0.359** Kopf unten rechts: ein Tipp startet den Assistenten auf jeder Seite, über Ich und am Handy (das Fenster ging sofort wieder zu), Doppeltipp markiert keinen Text mehr, Frage tippen geht immer
-- **V01.0.358** Eindeutiges direkt abrufen: „Welche Termine habe ich heute?“ holt das Panel selbst
-- **V01.0.357** Passkeys in der iPhone-App: „Mit Passkey“ beim Bestätigen, Spark-Update und Admin-Anmeldung (Face ID mit dem in Safari angelegten Passkey, über iCloud-Schlüsselbund); der Spark liefert Apple dafür /.well-known/apple-app-site-association (nur die App-ID, aus den Push-Angaben)
-- **V01.0.356** Logs → Anfragen zeigt die Anfrage-Nummer aus dem Journal in Liste und Detail, die Suche findet sie
-- **V01.0.355** Was ist neu: das Changelog im Panel ansehen, über „Was ist neu“ unten neben der Version oder Einstellungen → Update und Sicherung, mit Suche
 
 Alle Versionen: [CHANGELOG.md](CHANGELOG.md)
 
