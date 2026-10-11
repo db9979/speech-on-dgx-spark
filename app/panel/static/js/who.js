@@ -3,7 +3,7 @@
 // cannot be used (Spark off, or no own switch). Filter: Alle / An / Neu, noch nie an / Braucht dich. Phones get a
 // list with the Spark switch and one chip per profile. Data from /api/admin/features (features.py), switching
 // the Spark over /api/admin/switches and a profile over /api/admin/features/<key>/profiles/<id>.
-let WHO=null,whoF='all';
+let WHO=null,whoF='all',WHO_LAST=null;   // WHO_LAST: the row the last name jumped to
 try{whoF=localStorage.getItem('whofilter')||'all'}catch{}
 const WHOF=[['all',t('Alle','All')],['on',t('An','On')],['new',t('Neu, noch nie an','New, never on')],['need',t('Braucht dich','Needs you')]];
 const whoName=f=>f.name[L==='en'?1:0];
@@ -25,7 +25,18 @@ async function whoNew(f,on){try{await api(`/api/admin/features/${encodeURICompon
 const whoNewBox=f=>f.profile?whoBox(!!f.new,true,`${whoName(f)} – ${t('neue Profile','new profiles')}: ${f.new?t('an','on'):t('aus','off')}`,()=>whoNew(f,!f.new)):(()=>{const s=document.createElement('span');s.className='wdash';s.textContent='–';return s})();
 async function whoSet(f,uid,on){try{await api(`/api/admin/features/${encodeURIComponent(f.key)}/profiles/${encodeURIComponent(uid)}`,xjson('PUT',{on}));
     f.cells[uid]=on;drawWho()}catch(e){alert(e.message)}}
-function whoOpen(f){goSec('feat');setTimeout(()=>{const it=whoItem(f);if(it&&typeof featShow==='function'){featShow(it);it.scrollIntoView({block:'center'})}},150)}
+// The name jumps to the function under Funktionen (V01.0.398): to its own switch row, also when it is a switch
+// inside another function's item; when its row is hidden because the switch it builds on is off, to that switch
+// (like the search). Waits for the settings to be loaded, opens what is folded and marks the row.
+function whoRow(f){const el=$('chat.'+f.switch);if(!el)return null;let row=el.closest('.setrow')||el.closest('.fitem')||el;
+  for(let i=0;i<5;i++){const dep=row.closest('[data-show]');if(!dep||dep.style.display!=='none')break;
+    const sw=$(dep.dataset.show);if(!sw)break;row=sw.closest('.setrow')||sw.closest('.fitem')||sw}
+  return row}
+async function whoOpen(f){goSec('feat');if(typeof loadCfg==='function')try{await loadCfg()}catch{}
+  const row=whoRow(f);WHO_LAST=row;if(!row)return;const it=row.closest('#pane-feat .fitem');
+  if(it&&typeof featShow==='function')featShow(it);
+  for(let d=row.parentElement;d&&d!==document.body;d=d.parentElement)if(d.tagName==='DETAILS'&&!d.open)d.open=true;
+  requestAnimationFrame(()=>{if(typeof sFlash==='function')sFlash(row);else row.scrollIntoView({block:'center'})})}
 function whoCell(f,p){const n=p.name;
   if(!f.profile){const s=document.createElement('span');s.className='wdash';s.textContent=f.spark?'✓':'–';
     s.title=f.spark?t('Kein eigener Schalter: gilt für alle Profile','No own switch: applies to every profile'):t('Spark aus','Spark off');return s}

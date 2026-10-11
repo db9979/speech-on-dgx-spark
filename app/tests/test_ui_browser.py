@@ -432,6 +432,37 @@ class Browser(unittest.TestCase):
         finally:
             helpers.set_config(transit=False)
 
+    def test_wer_darf_was_name_jumps_to_its_switch(self):
+        """V01.0.398 (Dominik: the click on a function did not load right): the name under Wer darf was opens
+        Funktionen at the function's own switch row, also a switch inside another function's item; when that
+        row is hidden because the switch it builds on is off, at that switch. Folded groups open, the row is in
+        view. Checked on a computer and a phone."""
+        keys = ("weather", "instant_ack", "doc_semantic", "remarkable_plus", "mcp_server_act", "report_notify", "own_style")
+        async def go():
+            async with async_playwright() as p:
+                for width in (1280, 390):
+                    br, pg, errors = await self.page(p, width, 900)
+                    for sw in keys:
+                        await pg.evaluate("goSec('who')")
+                        await pg.wait_for_selector("#whobox .wname", timeout=8000)
+                        name = await pg.evaluate(f"(WHO.features.find(f=>f.switch==='{sw}')||{{name:['']}}).name[0]")
+                        if not name:
+                            continue
+                        await pg.locator("#whobox .wname", has_text=name).first.click()
+                        await pg.wait_for_timeout(1300)
+                        st = await pg.evaluate("""(sw=>{const row=WHO_LAST;if(!row)return {row:false};const r=row.getBoundingClientRect();
+                          // its own switch, or (folded away behind a switch that is off) the first switch up the chain that shows
+                          let el=document.getElementById('chat.'+sw),own=row.contains(el);
+                          for(let i=0;i<5&&!own;i++){const dep=el.closest('[data-show]');if(!dep||dep.style.display!=='none')break;
+                            el=document.getElementById(dep.dataset.show);if(!el)break;own=row.contains(el)}
+                          return {row:true, feat:!!document.querySelector('.cfgwrap.featmode'), vis:!!row.offsetParent,
+                                  inview:r.top>=0&&r.bottom<=innerHeight&&r.height>0,
+                                  right:own}})(%r)""" % sw)
+                        self.assertEqual(st, {"row": True, "feat": True, "vis": True, "inview": True, "right": True}, (width, sw, st))
+                    self.assertEqual(errors, [])
+                    await br.close()
+        self.run_async(go())
+
     def test_rights_changed_elsewhere_arrive_without_f5(self):
         """V01.0.388: the admin switches a function for this profile under Wer darf was (another browser): the
         open page sees the new fingerprint at its next look (every minute, on coming back) and reloads when calm,

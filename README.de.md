@@ -33,6 +33,7 @@ Alle Optionen ohne Rückfragen (`--mode api --asr 1.7b --tts 0.6b --yes` …) st
 
 <!-- New version: add one line at the top here and in CHANGELOG.md, drop the oldest line here (keep 10). Details go to docs/de and docs/en, not into this README. -->
 
+- **V01.0.398** Wer darf was: Klick auf eine Funktion springt zuverlässig zu ihrem Schalter unter Funktionen, auch bei Unterschaltern
 - **V01.0.397** Begleiter: „Öffne Safari mit Google“ direkt am Rechner gefragt öffnet es (mit Rückfrage), ohne „am PC“ dazuzusagen
 - **V01.0.396** Mac-Begleiter: Selbst-Update und Spark-Wissen-Ordner lesen Dateien wieder bis zum Ende (Update scheiterte immer)
 - **V01.0.395** Begleiter zeigt das im Panel gewählte Gesicht (auch das Comic-Gesicht), in allen Fenstern und im Symbol
@@ -42,7 +43,6 @@ Alle Optionen ohne Rückfragen (`--mode api --asr 1.7b --tts 0.6b --yes` …) st
 - **V01.0.391** Update-Prüfung findet die letzte getestete Version wieder (Testläufe brachen sich gegenseitig ab)
 - **V01.0.390** Repo abgesichert: GitHub-Actions auf feste Commits, Signierschlüssel nur für Builds von main
 - **V01.0.389** Selbsttest: Höhengrenze der Funktionen-Seite zählt die Zeile „Probleme melden“ wieder (ging beim Zusammenführen in V01.0.387 verloren).
-- **V01.0.388** Rechte wirken sofort: Änderungen unter Wer darf was kommen ohne Neuladen bei Seiten, iPhone-App, Begleiter, Lautsprechern und MCP an; ausgeschaltete Geräte bleiben gekoppelt
 
 Alle Versionen: [CHANGELOG.md](CHANGELOG.md)
 
