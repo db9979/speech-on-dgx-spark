@@ -298,19 +298,25 @@ class Plans(Base):
         self.assertEqual(len(agent.load(uid)["plans"]), 1)
         # due: a job starts and the plan moves on by a week
         due = plans[0]["next"]
+        # same wall-clock time days later: a week can hold the switch to winter time (tars runs in Europe/Berlin,
+        # the 7 * 86400 of before was red there on 2026-10-11, two weeks before 2026-10-25)
+        import chat
+        zone = chat.user_zone(profiles.settings(uid).get("tz", ""))
+        start = datetime.datetime.fromtimestamp(due, zone).replace(tzinfo=None)
+        later = lambda days: int((start + datetime.timedelta(days=days)).replace(tzinfo=zone).timestamp())  # noqa: E731
         asyncio.run(agent.due_once(now=due + 30))
         jobs = agent.load(uid)["jobs"]
         self.assertEqual((jobs[-1]["origin"], jobs[-1]["plan"]), ("plan", plans[0]["id"]))
-        self.assertEqual(agent.load(uid)["plans"][0]["next"], due + 7 * 86400)
+        self.assertEqual(agent.load(uid)["plans"][0]["next"], later(7))
         # hours late (panel was off): skipped, moved on
         n = len(jobs)
-        asyncio.run(agent.due_once(now=due + 7 * 86400 + 4 * 3600))
+        asyncio.run(agent.due_once(now=later(7) + 4 * 3600))
         self.assertEqual(len(agent.load(uid)["jobs"]), n)
-        self.assertEqual(agent.load(uid)["plans"][0]["next"], due + 14 * 86400)
+        self.assertEqual(agent.load(uid)["plans"][0]["next"], later(14))
         # paused plans wait; deleting from the page
         pid = plans[0]["id"]
         a.post(f"/api/profile/agent/plans/{pid}/pause")
-        asyncio.run(agent.due_once(now=due + 14 * 86400 + 30))
+        asyncio.run(agent.due_once(now=later(14) + 30))
         self.assertEqual(len(agent.load(uid)["jobs"]), n)
         a.delete(f"/api/profile/agent/plans/{pid}")
         self.assertEqual(agent.load(uid)["plans"], [])

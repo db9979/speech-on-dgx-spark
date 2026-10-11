@@ -2,6 +2,7 @@
 
 Every version in one line, newest first (taken from the commit messages, so some lines are German, some English). Older entries have no version number.
 
+- **V01.0.417** · 2026-10-11 · Selbsttest Pläne zeitzonenfest: „jede Woche“ rechnet über die Zeitumstellung mit derselben Uhrzeit (Update auf tars scheiterte in Europe/Berlin)
 - **V01.0.416** · 2026-10-11 · Einstellungsseiten neu: ein Seitengerüst mit Kästen und Segmenten, Menü mit Symbolen, Update und Sicherung getrennt, Funktionen als Liste mit Detail und Gruppe Tempo und Genauigkeit, Ich als Seite ohne Reiter, Personen mit Detail, Apps als Kacheln
 - **V01.0.415** · 2026-10-11 · Dokumente erstellen (Admin unter Eigene Dokumente + Profil, aus): der Spark schreibt Briefe, Berichte, Protokolle, Notizen, Einladungen, Präsentationen und Tabellen als Word, PDF, PowerPoint, Excel, Markdown, Text oder CSV; erst Gliederung als Karte, nach „Ja“ im Hintergrund Teil für Teil (Vorrang für Sprache, Notaus), Datei baut der Spark mit festen Vorlagen (keine Makros, keine externen Verweise, nur Summen-Formeln, CSV ohne Formelanfang); Ich → Dokumente → Vom Spark erstellt mit Vorschau, Versionen, Ändern per Satz oder Knopf, Senden an PC, reMarkable, Telegram, Mail-Entwurf; eigene Vorlagen geprüft; Live-Ziel; Bibliotheken fest mit Prüfsummen
 - **V01.0.414** · 2026-10-11 · Selbsttests stabiler: Nachrichten, Lautsprecher und Wer darf was warten auf den Zustand statt fester Zeiten, Anmeldung im Testhelfer mit Wiederholung

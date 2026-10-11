@@ -33,6 +33,7 @@ Alle Optionen ohne Rückfragen (`--mode api --asr 1.7b --tts 0.6b --yes` …) st
 
 <!-- New version: add one line at the top here and in CHANGELOG.md, drop the oldest line here (keep 10). Details go to docs/de and docs/en, not into this README. -->
 
+- **V01.0.417** Selbsttest für Wochenpläne hält über die Zeitumstellung (Update auf tars scheiterte)
 - **V01.0.416** Einstellungsseiten neu geordnet: Kästen, Symbole, Funktionen mit Detail, Ich als Seite, Apps als Kacheln
 - **V01.0.415** Dokumente erstellen: Briefe, Berichte, Präsentationen und Tabellen als Word, PDF, PowerPoint oder Excel, mit Gliederung, Versionen und Senden
 - **V01.0.414** Selbsttests warten auf den Seitenzustand statt fester Zeiten (Nachrichten, Lautsprecher, Wer darf was)
@@ -42,7 +43,6 @@ Alle Optionen ohne Rückfragen (`--mode api --asr 1.7b --tts 0.6b --yes` …) st
 - **V01.0.410** Begleiter: „Öffne Safari mit Google“ am Mac wird jetzt wirklich ausgeführt (mit Rückfrage), nicht nur angekündigt
 - **V01.0.409** Sprachausgabe abschaltbar: „Antworten vorlesen“ pro Profil und „Vorlesen“ je Gerät, aus = nur Text (Lautsprecher und CarPlay sprechen weiter)
 - **V01.0.408** Unabhängige Prüfung, Paket 5: Englisch vollständiger, verständliche Fehlersätze, „?“ nur mit Hilfe, aktuelle Seitennamen, Labels, Live aus ohne Fehler
-- **V01.0.407** Unabhängige Prüfung, Paket 4: signierbare Geräte-Updates, Begleiter nur https, feste CI-Versionen, root-Lesewege, ffmpeg-Grenzen, iPhone-Kopplung, Telegram
 
 Alle Versionen: [CHANGELOG.md](CHANGELOG.md)
 
