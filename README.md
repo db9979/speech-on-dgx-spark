@@ -33,6 +33,7 @@ All options for running without questions (`--mode api --asr 1.7b --tts 0.6b --y
 
 <!-- New version: add one line at the top here and in CHANGELOG.md, drop the oldest line here (keep 10). Details go to docs/de and docs/en, not into this README. -->
 
+- **V01.0.353** Spark companion deeper in the computer (per device, all off): right-click on files, ask about the screen, know the app, draft a reply in Outlook and Apple Mail, "Spark-Wissen" folder, buttons in notes, Spark acts on the PC with a question first, wake word on the PC
 - **V01.0.352** Live overview full review: update check, NAS backup, reMarkable sheets, Spark-Begleiter, room mode, logins, speaker recognition and more in the picture
 - **V01.0.351** reMarkable in the Live monitor: @Spark answer, guide, morning sheet, weekly review, meeting and page check show as background work with a done event, sync as event, web page/attachment as tools
 - **V01.0.350** Daily briefing: no more "roomfar: briefing AttributeError" line on every briefing (services without a briefing part are skipped)
@@ -42,7 +43,6 @@ All options for running without questions (`--mode api --asr 1.7b --tts 0.6b --y
 - **V01.0.346** reMarkable @Spark: question from handwriting without the reader's "Bild:" line and [unleserlich], the model also answers from its own knowledge instead of just "no answer", diagnosis line "remarkable: @Spark answer …"
 - **V01.0.344** More with the reMarkable (admin sub-switch + one per function under Me → reMarkable, all off): morning sheet as PDF with note lines, "@Spark" questions on paper get an answer next to them, tasks from handwriting (reminder only after a click), meeting summaries, week in review on Fridays, web pages and mail attachments to the reMarkable, one inbox per day, a Spark guide to the reMarkable functions and the service that keeps itself up to date
 - **V01.0.343** Better Spark help: the switch spots help questions by fixed rules, the help knows every page and frequent questions, a "?" at every switch, and it notes where a question came from (speaker, app, Telegram)
-- **V01.0.342** Spark companion on PC and Mac (off): taskbar and menu-bar program with writing help, Ask Spark, dictation, notes, state and kill-switch button, each with its own hotkey; set per device in the panel
 
 All versions: [CHANGELOG.md](CHANGELOG.md)
 

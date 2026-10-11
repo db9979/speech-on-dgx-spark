@@ -192,8 +192,18 @@ def unmark(v):
     return v.replace("<<<", "‹‹‹").replace(">>>", "›››")
 
 
-def messages(art, text, mail, lang, wish):
+# Spark-Begleiter "App erkennen" (begleiter.py, part context): the kind of program the text came from, as a fixed
+# hint; the program sends only the kind, never the program's name or window title
+APP_HINT = {"outlook": "eine Mail in Outlook", "mail": "eine Mail", "word": "ein Dokument in Word",
+            "excel": "eine Tabelle in Excel (Zellentext, kurz halten)", "powerpoint": "eine Folie (knapp, Stichpunkte bleiben Stichpunkte)",
+            "pages": "ein Dokument in Pages", "browser": "ein Eingabefeld im Browser", "teams": "eine Nachricht in Teams",
+            "chat": "eine Chat-Nachricht (locker und kurz)", "code": "ein Kommentar oder Text in einem Code-Editor"}
+
+
+def messages(art, text, mail, lang, wish, app=""):
     task = ARTS[art][2].format(sprache=LANGS[lang][0])
+    if app in APP_HINT:
+        task += "\nDer Text ist " + APP_HINT[app] + "; passe Form und Ton daran an."
     if wish:
         task += "\nWunsch des Nutzers zur Form (nur Form und Ton, nichts anderes): " + wish
     user = (f"<<<MAIL\n{unmark(mail)}\nMAIL>>>\n\n" if mail else "") + f"<<<TEXT\n{unmark(text)}\nTEXT>>>"
@@ -308,6 +318,7 @@ async def assist(uid, body, client="web", where="Browser"):
     """The improved text for a checked profile; ValueError for a request that does not fit."""
     notaus.stop("gespraech")
     art, text, mail, lang, wish = request_of(body)
+    app = body.get("_app") if body.get("_app") in APP_HINT else ""
     label, _, _, temperature, show = ARTS[art]
     chars = len(text) + len(mail)
     max_tokens = max(300, min(8000, int(len(text) / 2.2) + (900 if art == "antwort" else 300)))
@@ -316,7 +327,7 @@ async def assist(uid, body, client="web", where="Browser"):
     ok = False
     try:
         with Slot(uid):
-            raw = await asyncio.wait_for(_model(messages(art, text, mail, lang, wish), temperature, max_tokens,
+            raw = await asyncio.wait_for(_model(messages(art, text, mail, lang, wish, app), temperature, max_tokens,
                                                 "Schreibhilfe"), SECONDS)
         new = tidy_answer(raw, text or mail)
         if not new:
@@ -448,6 +459,13 @@ async def write_assist(request: Request):
     prof, client, where = writer(request)
     _mine(request, prof)
     body = await _body(request)
+    app = body.pop("app", None)
+    body.pop("_app", None)
+    dev = profiles.device(request)
+    if app and dev and dev["scope"] == "desk":
+        import begleiter
+        if begleiter.part_on(prof["id"], dev["id"], "context"):
+            body["_app"] = app
     return await _run(prof, body, client, where)
 
 

@@ -1,6 +1,6 @@
 namespace SparkBegleiter;
 
-/// <summary>Unsichtbares Fenster, das die globalen Tastenkürzel der Teile (write/ask/dictate) empfängt.</summary>
+/// <summary>Unsichtbares Fenster, das die globalen Tastenkürzel der Teile (write/ask/dictate/screen/mail) empfängt.</summary>
 internal sealed class HotkeyManager : NativeWindow, IDisposable
 {
     private readonly Dictionary<int, string> _byId = new();

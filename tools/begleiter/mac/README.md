@@ -10,6 +10,17 @@ Ein kleines Programm in der Menüleiste (kein Symbol im Dock) für den eigenen S
 | **Meldungen** | Meldungen des Spark als Mitteilungen von macOS | – |
 | **Zustandspunkt** | das Symbol in der Menüleiste zeigt den Zustand (siehe unten) | – |
 | **Mein-Notaus-Knopf** | Eintrag „Mein Notaus …“ mit Rückfrage | – |
+| **Rechtsklick auf Dateien** | im Finder: Dienste → „Mit Spark zusammenfassen / übersetzen / erklären / ins Wissen übernehmen“ | – |
+| **Bildschirm fragen** | einen Bereich des Bildschirms aufziehen und den Spark dazu fragen | ⌥⌘B |
+| **App erkennen** | die Schreibhilfe erfährt die *Art* des Programms (Mail, Browser, Word …), nie Namen oder Fenstertitel | – |
+| **Antwort entwerfen** | zur ausgewählten Mail in Mail einen Antwortentwurf öffnen – gesendet wird nie | ⌥⌘M |
+| **Ordner „Spark-Wissen“** | neue oder geänderte Dateien in `~/Spark-Wissen` kommen ins Wissen des Spark | – |
+| **Knöpfe in Meldungen** | Meldungen mit „Antworten“, „Später“, „Panel öffnen“ | – |
+| **Spark darf am Mac handeln** | der Spark darf um wenige, fest umrissene Dinge bitten – jedes einzeln mit Rückfrage | – |
+| **Weckwort** | „Hey Spark, …“ sagen statt ein Kürzel zu drücken | – |
+
+Die Teile ab „Rechtsklick auf Dateien“ sind anfangs **für alle Geräte aus** und müssen im Panel einzeln eingeschaltet
+werden.
 
 Welche Teile an sind, wird **zentral im Panel** eingestellt (Ich → Begleiter, für jedes gekoppelte Gerät).
 Der Begleiter übernimmt Änderungen beim nächsten Abruf, spätestens nach etwa einer halben Minute.
@@ -110,6 +121,108 @@ nur zwischen den beiden Tastendrücken; die Aufnahme geht nur an den eigenen Spa
 Meldungen des Spark erscheinen als Mitteilungen von macOS. Beim ersten Mal fragt macOS, ob der Begleiter Mitteilungen
 zeigen darf. Meldungen, die schon vor dem Start des Begleiters da waren, zeigt er nicht.
 
+### Rechtsklick auf Dateien
+
+Im Finder eine oder mehrere Dateien auswählen (bis zu 10), Rechtsklick → **Dienste** → **„Mit Spark
+zusammenfassen“**, **„… übersetzen“** (ins Deutsche), **„… erklären“** oder **„… ins Wissen übernehmen“**. Die
+Antwort erscheint im Fenster von „Frag Spark“ und lässt sich dort kopieren; „ins Wissen übernehmen“ meldet nur kurz,
+wie viele Dateien übernommen wurden (oder schon da waren). Der Spark nimmt PDF, Word, Excel, PowerPoint, ODT, Text,
+Markdown, E-Mails (.eml), HTML und Bilder (JPG, PNG, HEIC) bis 20 MB. Ist der Teil im Panel aus, sagt der Begleiter
+das nur kurz und schickt nichts.
+
+Fehlen die Einträge: Systemeinstellungen → Tastatur → Tastaturkurzbefehle → Dienste → „Dateien und Ordner“ die
+„Mit Spark …“-Einträge einschalten; notfalls einmal ab- und wieder anmelden.
+
+### Bildschirm fragen
+
+⌥⌘B: Der Mauszeiger wird zum Fadenkreuz (das ist das eigene Bildschirmfoto-Werkzeug von macOS). Einen Bereich
+aufziehen – Leertaste wechselt zur Auswahl eines Fensters, Esc bricht ab. Dann öffnet sich ein kleines Fenster mit
+dem Ausschnitt, den Chips **Erklären**, **Text herauslesen**, **Übersetzen** und einem Feld für eine Frage (freiwillig).
+„Fragen“ schickt das Bild an den eigenen Spark, die Antwort steht im Fenster von „Frag Spark“. Das Bild wird auf
+höchstens 2000 Pixel Kantenlänge verkleinert; die kurz angelegte Datei liegt in einem privaten Zwischenordner und wird
+gleich nach dem Lesen gelöscht.
+
+Beim ersten Mal braucht der Begleiter die Freigabe **Bildschirmaufnahme** (siehe „Freigaben“).
+
+### App erkennen
+
+Ist der Teil an, schickt die Schreibhilfe mit, *welche Art* Programm vorne war, als das Kürzel kam – „mail“,
+„outlook“, „word“, „browser“, „chat“, „code“ … oder „other“. So schreibt der Spark in Mail eher wie eine Mail und in
+Slack eher wie im Chat. Bestimmt wird das am Mac aus der Kennung des Programms; **Namen, Fenstertitel oder Inhalte
+gehen nie mit**.
+
+### Antwort entwerfen (Mail)
+
+In **Mail** eine Mail auswählen, ⌥⌘M drücken (oder Klick aufs Gesicht → „Antwort entwerfen“). Ein kleines Fenster
+zeigt Absender und Betreff; dort kann man in Stichpunkten sagen, was drinstehen soll („zusagen, Dienstag 10 Uhr“) –
+oder es leer lassen. „Entwurf schreiben“ lässt den Spark antworten, dann öffnet Mail ein **neues Antwortfenster** mit
+dem Vorschlag über der zitierten Mail. **Der Begleiter sendet nie** – lesen, anpassen und selbst auf „Senden“ klicken.
+
+Gelesen werden nur Absender, Betreff und Text der ausgewählten Mail (höchstens 20000 Zeichen). Beim ersten Mal fragt
+macOS, ob der Begleiter Mail steuern darf (siehe „Freigaben“).
+
+**Outlook:** Das neue Outlook für Mac lässt sich nicht so steuern. Ist Outlook vorne, nimmt ⌥⌘M den markierten Text
+der Mail (mit Bedienungshilfen) oder man fügt ihn im Fenster ein; der Entwurf kommt in die Zwischenablage – im
+Antwortfenster von Outlook mit **⌘V** einfügen.
+
+### Ordner „Spark-Wissen“
+
+Ist der Teil an, legt der Begleiter den Ordner **`~/Spark-Wissen`** an (Einstellungen → Allgemein → „Anderen Ordner
+wählen …“ nimmt einen anderen). Alle 15 Sekunden schaut er hinein: Neue oder geänderte Dateien gehen ins Wissen des
+Spark, sobald sie 10 Sekunden lang nicht mehr verändert wurden. Versteckte, temporäre und halb geladene Dateien bleiben
+liegen, ebenso Dateiarten, die der Spark nicht nimmt. Höchstens **50 Dateien am Tag**; der Rest folgt am nächsten
+Tag. Danach kommt eine Mitteilung „3 Dateien ins Wissen übernommen“.
+
+Welche Dateien schon geschickt wurden, merkt sich der Begleiter in
+`~/Library/Application Support/Spark Begleiter/wissen-ordner.json` (Pfad, Größe, Änderungszeit, SHA-256). Eine
+Datei, die nur angefasst, aber nicht verändert wurde, geht nicht noch einmal; eine, die der Spark schon kennt, zählt
+als erledigt.
+
+### Knöpfe in Meldungen
+
+Mit diesem Teil haben Meldungen des Spark (sofern der Spark sie anbietet) Knöpfe – in der Mitteilung auf „Optionen“
+bzw. den Pfeil klicken:
+
+- **Antworten**: ein Textfeld direkt in der Mitteilung. Die Antwort geht mit Bezug auf die Meldung an den Spark; seine
+  Antwort kommt als Mitteilung und steht auch im Fenster von „Frag Spark“. Ohne Text öffnet sich „Frag Spark“ mit der
+  Meldung als Bezug.
+- **Später**: die Meldung kommt in einer Stunde noch einmal (merkt sich macOS).
+- **Panel öffnen**: öffnet das Panel im Browser.
+
+### Spark darf am Mac handeln
+
+Mit diesem Teil darf der Spark **bitten**, etwas am Mac zu tun. Jede einzelne Bitte erscheint als Dialog vorne auf dem
+Bildschirm: **„Spark möchte: … Erlauben?“** mit **Erlauben** und **Nein**. Ohne Antwort gilt nach 60 Sekunden „Nein“.
+Möglich ist nur:
+
+| Bitte | Was der Begleiter tut |
+|---|---|
+| Adresse öffnen | nur `http://`- und `https://`-Adressen, im Standardbrowser |
+| Programm starten | nur ein Programm aus der Liste, die im Panel für dieses Gerät eingetragen ist (Pfad wie `/Applications/Safari.app`, Kennung wie `com.apple.Safari` oder Name) |
+| Medien | Wiedergabe/Pause, nächster, voriger Titel (wie die Medientasten) |
+| Lautstärke | lauter, leiser, Ton aus/an (wie die Tasten) |
+| Bildschirm sperren | sofort sperren |
+| Text zeigen | ein Fenster mit einfachem Text |
+
+Alles andere lehnt der Begleiter ab, auch wenn es der Spark schickt; dieselbe Bitte läuft nie zweimal. Medien- und
+Lautstärketasten brauchen die Freigabe **Bedienungshilfen**.
+
+### Weckwort
+
+Ist der Teil an, hört der Begleiter über das Mikrofon auf das Weckwort des Spark (Standard **„Hey Spark“**, im Panel
+für den ganzen Spark eingestellt). Er schneidet dafür nur Sätze heraus, die lauter als das Grundrauschen sind (bis
+5 Sekunden), und schickt sie an den eigenen Spark, der prüft, ob das Weckwort darin war. Sonst bleibt nichts liegen.
+
+- **„Hey Spark, wie wird das Wetter morgen?“** – die Frage geht gleich an den Spark, die Antwort steht im Fenster von
+  „Frag Spark“.
+- **„Hey Spark“** allein – ein kurzer Ton („Tink“), dann die Frage sagen; nach einer kurzen Pause (höchstens 15 Sekunden)
+  geht sie an den Spark.
+
+Solange das Weckwort hört, zeigt macOS den **orangen Mikrofon-Punkt** in der Menüleiste, und das Gesicht hat unten
+rechts einen **türkisen Ring**. Klick aufs Gesicht → **„Weckwort pausieren“** schaltet das Mikrofon ab, bis man
+„Weckwort fortsetzen“ wählt (das merkt sich der Begleiter auch über einen Neustart). Ganz aus geht es im Panel.
+Während eines Diktats wird nichts ans Weckwort geschickt.
+
 ### Zustandspunkt
 
 | Symbol | Bedeutung |
@@ -118,6 +231,7 @@ zeigen darf. Meldungen, die schon vor dem Start des Begleiters da waren, zeigt e
 | farbiges Gesicht mit **grauem** Punkt | Spark nicht erreichbar (oder noch nicht gekoppelt) – der Begleiter versucht es beim nächsten Abruf wieder |
 | farbiges Gesicht mit **rotem** Punkt | Notaus oder Mein Notaus ist an |
 | farbiges Gesicht mit **blauviolettem** Punkt | eine neue Version ist da (siehe „Updates“) |
+| farbiges Gesicht mit **türkisem Ring** | das Weckwort hört zu |
 | rotes Mikrofon | Aufnahme läuft |
 
 Im Fenster hinter dem Gesicht steht der Zustand auch in Worten.
@@ -130,7 +244,8 @@ dafür gibt es „Panel öffnen“.
 
 ## Tastenkürzel
 
-Standard: **⌥⌘S** Schreibhilfe, **⌥⌘A** Frag Spark, **⌥⌘D** Diktieren. Ändern unter Einstellungen → „Tastenkürzel“:
+Standard: **⌥⌘S** Schreibhilfe, **⌥⌘A** Frag Spark, **⌥⌘D** Diktieren, **⌥⌘B** Bildschirm fragen, **⌥⌘M** Antwort
+entwerfen. Ändern unter Einstellungen → „Tastenkürzel“:
 auf das Kürzel klicken, die neue Kombination drücken (sie braucht ⌘, ⌥ oder ⌃; Esc bricht ab). „Standard“ stellt
 das ursprüngliche Kürzel wieder her. Ist eine Kombination schon von macOS oder einem anderen Programm belegt, steht
 das dort in Rot. Ein Teil, der im Panel aus ist, hat kein Kürzel. Die Kürzel selbst brauchen keine Freigabe.
@@ -145,9 +260,17 @@ das dort in Rot. Ein Teil, der im Panel aus ist, hat kein Kürzel. Die Kürzel s
   Freigabe nicht mehr zuordnen. Dann in der Liste „Spark-Begleiter“ mit „–“ entfernen und neu erlauben. Aus demselben
   Grund kann macOS nach einem Update einmal fragen, ob der Begleiter auf den Schlüsselbund-Eintrag zugreifen darf
   („Immer erlauben“).
-- **Mikrofon**: fragt macOS beim ersten Diktat. Später unter Systemeinstellungen → Datenschutz & Sicherheit →
-  Mikrofon.
-- **Mitteilungen**: fragt macOS, sobald „Meldungen“ an ist.
+- **Mikrofon**: fragt macOS beim ersten Diktat bzw. sobald das Weckwort an ist. Später unter Systemeinstellungen →
+  Datenschutz & Sicherheit → Mikrofon.
+- **Bildschirmaufnahme** (für „Bildschirm fragen“): Systemeinstellungen → Datenschutz & Sicherheit →
+  Bildschirm- & Systemaudioaufnahme (bei macOS 13: „Bildschirmaufnahme“) → „Spark-Begleiter“ einschalten. Der
+  Begleiter fragt beim ersten ⌥⌘B mit einer Erklärung; danach den Begleiter **einmal beenden und neu starten**.
+  Ohne Freigabe nimmt er nichts auf. Neuere macOS-Versionen fragen gelegentlich nach, ob die Freigabe bleiben soll.
+- **Automation für Mail** (für „Antwort entwerfen“): macOS fragt beim ersten ⌥⌘M „Spark-Begleiter möchte Mail
+  steuern“ → „OK“. Später unter Systemeinstellungen → Datenschutz & Sicherheit → Automation → Spark-Begleiter → Mail.
+- **Mitteilungen**: fragt macOS, sobald „Meldungen“, „Knöpfe in Meldungen“ oder der Ordner „Spark-Wissen“ an ist.
+- Auch Bildschirmaufnahme und Automation muss macOS nach einem **Update** eines nicht von Apple signierten Programms
+  eventuell neu zuordnen (siehe oben).
 
 ## Updates
 
@@ -203,10 +326,11 @@ Mitteilung.
 2. Im Panel unter **Ich → Begleiter** das Gerät entfernen – dann gilt der Schlüssel auch auf dem Spark nicht mehr.
 3. Klick aufs Gesicht → Ein/Aus-Knopf oben rechts (beendet den Begleiter), dann „Spark-Begleiter“ aus „Programme“
    in den Papierkorb legen.
-4. Falls gewünscht: Systemeinstellungen → Datenschutz & Sicherheit → Bedienungshilfen bzw. Mikrofon den Eintrag
+4. Falls gewünscht: Systemeinstellungen → Datenschutz & Sicherheit → Bedienungshilfen, Mikrofon, Bildschirmaufnahme und Automation den Eintrag
    „Spark-Begleiter“ entfernen, und unter Allgemein → Anmeldeobjekte ebenso. Die eigenen Einstellungen (die
-   Tastenkürzel und der Update-Schalter) liegen in `~/Library/Preferences/de.db9979.spark.begleiter.plist`, geladene
-   Updates in `~/Library/Application Support/Spark Begleiter/` – beides kann weg.
+   Tastenkürzel, der Update-Schalter, der Ordner und „Weckwort pausieren“) liegen in `~/Library/Preferences/de.db9979.spark.begleiter.plist`, geladene
+   Updates und die Liste des Ordners „Spark-Wissen“ in `~/Library/Application Support/Spark Begleiter/` – beides
+   kann weg. Der Ordner `~/Spark-Wissen` selbst bleibt, bis man ihn löscht.
 
 Wird das Gerät im Panel entfernt, während der Begleiter läuft, meldet er „Der Spark kennt dieses Gerät nicht mehr.
 Neu koppeln.“, vergisst den Schlüssel und öffnet das Koppel-Fenster.

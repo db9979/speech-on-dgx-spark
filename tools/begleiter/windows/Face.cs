@@ -122,6 +122,11 @@ internal enum Glyph
     Download,
     Stop,
     Plus,
+    Screen,
+    Mail,
+    Wave,
+    Folder,
+    Bell,
 }
 
 internal static class Glyphs
@@ -178,6 +183,36 @@ internal static class Glyphs
                 case Glyph.Plus:
                     g.DrawLine(pen, 8, 3, 8, 13);
                     g.DrawLine(pen, 3, 8, 13, 8);
+                    break;
+                case Glyph.Screen:
+                    // Auswahlrahmen: vier Ecken
+                    g.DrawLines(pen, new PointF[] { new(2, 6), new(2, 2), new(6, 2) });
+                    g.DrawLines(pen, new PointF[] { new(10, 2), new(14, 2), new(14, 6) });
+                    g.DrawLines(pen, new PointF[] { new(14, 10), new(14, 14), new(10, 14) });
+                    g.DrawLines(pen, new PointF[] { new(6, 14), new(2, 14), new(2, 10) });
+                    break;
+                case Glyph.Mail:
+                    using (GraphicsPath envelope = SparkBegleiter.Draw.Round(new RectangleF(2, 4, 12, 9), 1.5f))
+                    {
+                        g.DrawPath(pen, envelope);
+                    }
+
+                    g.DrawLines(pen, new PointF[] { new(2.5f, 5), new(8, 9), new(13.5f, 5) });
+                    break;
+                case Glyph.Wave:
+                    g.DrawLine(pen, 2, 7, 2, 9);
+                    g.DrawLine(pen, 5, 5, 5, 11);
+                    g.DrawLine(pen, 8, 2, 8, 14);
+                    g.DrawLine(pen, 11, 5, 11, 11);
+                    g.DrawLine(pen, 14, 7, 14, 9);
+                    break;
+                case Glyph.Folder:
+                    g.DrawPolygon(pen, new PointF[] { new(2, 4), new(6, 4), new(7.5f, 5.5f), new(14, 5.5f), new(14, 13), new(2, 13) });
+                    break;
+                case Glyph.Bell:
+                    g.DrawBezier(pen, 4, 11, 4, 4, 12, 4, 12, 11);
+                    g.DrawLine(pen, 3, 11, 13, 11);
+                    g.DrawLine(pen, 7, 13.5f, 9, 13.5f);
                     break;
             }
         }

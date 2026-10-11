@@ -11,6 +11,16 @@ eigenen Spark. Es kann:
 | **Meldungen** | Meldungen des Spark als Windows-Hinweis | – |
 | **Zustandspunkt** | Punkt im Symbol: grün = erreichbar, grau = nicht erreichbar, rot = Notaus (blau-violett = Update da, siehe unten) | – |
 | **Mein-Notaus-Knopf** | Menüpunkt „Mein Notaus auslösen …“ (mit Rückfrage) | – |
+| **Rechtsklick auf Dateien** | Explorer-Untermenü „Mit Spark“: Zusammenfassen, Übersetzen, Erklären, Ins Wissen übernehmen | – |
+| **Bildschirm fragen** | Bereich am Bildschirm aufziehen, dann erklären lassen, Text herauslesen oder übersetzen | **Strg+Alt+B** |
+| **App erkennen** | die Schreibhilfe erfährt, aus welcher *Art* Programm der Text kommt (z. B. Outlook, Browser) | – |
+| **Antwort entwerfen** | Antwort auf die offene/markierte Mail in Outlook als Entwurf – wird nie gesendet | **Strg+Alt+M** |
+| **Ordner Spark-Wissen** | neue und geänderte Dateien in einem Ordner gehen automatisch ins Wissen | – |
+| **Knöpfe in Meldungen** | Meldungen mit **Antworten**, **Später**, **Panel öffnen** | – |
+| **Spark darf am PC handeln** | der Spark darf um wenige, fest umrissene Handlungen bitten – jede einzeln mit Rückfrage | – |
+| **Weckwort** | auf „Hey Spark“ (Wort aus dem Panel) hören und die Frage beantworten | – |
+
+Die Teile ab „Rechtsklick auf Dateien“ sind für jedes Gerät **aus**, bis sie im Panel eingeschaltet werden.
 
 **Welche Teile an sind, wird im Panel eingestellt** (Ich → Begleiter, je gekoppeltem Gerät) und gilt
 nach spätestens einer Abfrage (normalerweise 30 Sekunden). Dort stehen auch die Voreinstellungen der
@@ -98,6 +108,63 @@ Mikrofon).
 **Meldungen** erscheinen als Windows-Hinweis. Beim Start werden ältere Meldungen nicht noch einmal
 gezeigt.
 
+**Rechtsklick auf Dateien:** Rechtsklick auf eine Datei (PDF, Word, Excel, PowerPoint, ODT, Text,
+Markdown, E-Mail .eml, HTML, JPG, PNG, HEIC; höchstens 20 MB) → **Mit Spark** → **Zusammenfassen**,
+**Übersetzen** (in die Sprache der Schreibhilfe aus dem Panel), **Erklären** oder **Ins Wissen übernehmen**.
+Das Ergebnis erscheint im Fenster „Frag Spark“ (mit **Kopieren**); „Ins Wissen übernehmen“ meldet sich mit
+einem Hinweis („… ist jetzt im Wissen“ bzw. „schon im Wissen“). Unter **Windows 11** steht „Mit Spark“ im
+klassischen Menü: Rechtsklick → **Weitere Optionen anzeigen** (oder Umschalt+F10 / Umschalt+Rechtsklick).
+Das Menü wird nur für das eigene Windows-Konto eingetragen (unter `HKCU\Software\Classes`, ohne
+Administratorrechte, ohne Shell-Erweiterung) und nur, solange der Teil an ist; wird er ausgeschaltet,
+verschwindet es wieder. Läuft der Begleiter noch nicht, startet ihn der Menüpunkt.
+
+**Bildschirm fragen:** **Strg+Alt+B** dunkelt alle Bildschirme ab; einen Bereich mit der Maus aufziehen
+(**Esc** oder Rechtsklick bricht ab). Danach erscheint ein kleines Fenster mit Vorschau, einem Feld für eine
+Frage (optional) und den Knöpfen **Erklären** (auch Enter), **Text herauslesen** und **Übersetzen**. Die
+Antwort kommt im Fenster „Frag Spark“. Der Ausschnitt wird nur im Speicher verkleinert (lange Seite höchstens
+2000 Pixel, höchstens 6 MB) und an den eigenen Spark geschickt – nie auf die Festplatte geschrieben.
+
+**App erkennen:** Ist der Teil an, schickt die Schreibhilfe nur die *Kategorie* des Programms mit, aus dem der
+markierte Text kommt: outlook, word, excel, powerpoint, browser (Edge, Chrome, Firefox, Brave, Opera,
+Vivaldi), teams, chat (Slack, Discord, WhatsApp, Telegram, Signal), code (VS Code, Visual Studio, IntelliJ,
+Notepad++) oder other. Fenstertitel, Dateinamen oder Inhalte anderer Programme gehen nie mit.
+
+**Antwort entwerfen:** Im **klassischen Outlook** eine Mail öffnen oder markieren, **Strg+Alt+M** (oder
+Begleiter-Fenster → **Antwort entwerfen**). Ein kleines Fenster zeigt, auf wen geantwortet wird; optional
+Stichpunkte eintippen (z. B. „Termin passt, Unterlagen Freitag“), **Entwurf öffnen**. Der Spark schreibt die
+Antwort, Outlook öffnet ein Antwortfenster mit dem Text über der Originalmail. **Gesendet wird nie** – das
+macht man selbst. Das **neue Outlook** (und andere Mailprogramme) lässt sich nicht steuern: dann vorher den
+Text der Mail markieren und Strg+Alt+M drücken (oder ihn im Fenster einfügen); die fertige Antwort liegt
+danach in der Zwischenablage – **in die Antwort einfügen (Strg+V)**.
+
+**Ordner Spark-Wissen:** Beim Einschalten legt der Begleiter `%USERPROFILE%\Spark-Wissen` an (anderer Ordner:
+Einstellungen → **Kopplung** → **Ordner wählen …**). Neue oder geänderte Dateien darin (auch in Unterordnern)
+gehen nach 10 Sekunden Ruhe ins Wissen des Spark – höchstens 50 am Tag; danach ein Hinweis „n Dateien ins
+Wissen übernommen“. Versteckte Dateien, Office-Sperrdateien (`~$…`) und halbe Downloads (`.tmp`, `.part`,
+`.crdownload`) werden übersprungen. Welche Dateien schon übernommen sind (Pfad, Größe, Zeit, SHA-256), steht
+in `%LOCALAPPDATA%\Spark Begleiter\wissen.json`.
+
+**Knöpfe in Meldungen:** Meldungen mit Knöpfen erscheinen zusätzlich im Begleiter-Fenster (Klick aufs Symbol
+oder auf den Hinweis) unter „Meldungen“: **Antworten** öffnet „Frag Spark“ mit der Meldung als Zitat – die
+Antwort bezieht sich dann auf diese Meldung; **Später** zeigt sie in einer Stunde noch einmal (solange der
+Begleiter läuft); **Panel öffnen** öffnet das Panel im Browser.
+
+**Spark darf am PC handeln:** Der Spark kann um eine Handlung bitten; der Begleiter fragt **jedes Mal** in
+einem Fenster im Vordergrund: „Spark möchte: … Erlauben?“ mit der genauen Beschreibung darunter.
+**Nein** ist vorausgewählt, ohne Antwort gilt nach 60 Sekunden „Nein“. Erlaubt sind nur: eine
+http-/https-Adresse im Browser öffnen, ein Programm aus der Liste dieses Geräts im Panel starten, die
+Medientasten (Wiedergabe/Pause, nächster, vorheriger Titel), Lautstärke (lauter, leiser, stumm), den PC
+sperren und eine Nachricht als reinen Text anzeigen. Alles andere lehnt der Begleiter ab. Jede Bitte wird
+höchstens einmal ausgeführt.
+
+**Weckwort:** Ist der Teil an, hört der Begleiter am Standard-Mikrofon mit – sichtbar am **Ring um das
+Symbol**. Erst wenn es lauter als das Grundrauschen wird, nimmt er den Satz auf (bis zu einer kurzen Pause,
+höchstens 5 Sekunden) und lässt den Spark prüfen, ob das Weckwort darin war; sonst wird nichts geschickt
+oder gespeichert. „Hey Spark, wie wird das Wetter?“ → die Antwort erscheint in „Frag Spark“. Nur „Hey Spark“
+→ kurzer Ton und die Pille „Ich höre zu“, dann die Frage sprechen (bis zur Pause, höchstens 15 Sekunden).
+Im Begleiter-Fenster **Weckwort pausieren** schaltet das Zuhören ab (Ring verschwindet), bis
+**Weckwort fortsetzen**. Während eines Diktats hört das Weckwort nicht mit.
+
 **Mein Notaus:** Menü → **Mein Notaus auslösen …** → bestätigen. Danach ist das ganze Profil am
 Spark gesperrt, der Punkt wird rot. Aufheben geht nur im Panel im Browser mit der PIN
 (Menü → **Panel öffnen (Notaus aufheben) …**).
@@ -145,7 +212,7 @@ Spark vorgeben; angenommen werden nur Adressen der Form `https://buymeacoffee.co
 
 Klick aufs Symbol → **Einstellungen** → Reiter **Tastenkürzel** → in das Feld des Teils klicken und die neue
 Kombination drücken. Sie muss Strg oder Alt enthalten. Ist sie schon von einem anderen Programm
-belegt, steht das daneben und die alte bleibt. **Standard** stellt Strg+Alt+S / A / D wieder her.
+belegt, steht das daneben und die alte bleibt. **Standard** stellt Strg+Alt+S / A / D / B / M wieder her.
 Ausgeschaltete Teile haben kein aktives Tastenkürzel.
 
 Im Reiter **Kopplung** gibt es außerdem **Panel öffnen**, **Neu koppeln …** und **Entkoppeln …**
@@ -153,11 +220,12 @@ sowie die Liste, welche Teile das Panel eingeschaltet hat.
 
 ## Entfernen
 
-1. Rechtsklick aufs Symbol → **Einstellungen …** → **Kopplung** → **Entkoppeln …** (löscht den Schlüssel und
-   schaltet „Mit Windows starten“ aus), dann **Beenden**.
+1. Rechtsklick aufs Symbol → **Einstellungen …** → **Kopplung** → **Entkoppeln …** (löscht den Schlüssel,
+   schaltet „Mit Windows starten“ aus und entfernt das Explorer-Menü „Mit Spark“), dann **Beenden**.
+   Wer das vergessen hat: `SparkBegleiter.exe --entfernen` trägt Explorer-Menü und Autostart ebenfalls aus.
 2. Im Panel unter Ich → Begleiter das Gerät entfernen.
-3. Die .exe löschen und die Ordner `%APPDATA%\Spark Begleiter` und `%LOCALAPPDATA%\Spark Begleiter\update`
-   löschen.
+3. Die .exe löschen und die Ordner `%APPDATA%\Spark Begleiter` und `%LOCALAPPDATA%\Spark Begleiter`
+   löschen. Der Ordner `Spark-Wissen` gehört dir und bleibt, bis du ihn selbst löschst.
 
 ## Bauen
 

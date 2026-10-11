@@ -24,6 +24,7 @@ internal sealed class AssistForm : ThemedForm
     private readonly ArtInfo[] _arts;
     private readonly LangInfo[] _languages;
     private readonly string? _sourceApp;
+    private readonly string? _appCategory;
 
     private readonly List<SparkButton> _artChips = new();
     private readonly List<SparkButton> _langChips = new();
@@ -69,9 +70,11 @@ internal sealed class AssistForm : ThemedForm
     private string _lead = "";
     private string _trail = "";
 
-    public AssistForm(AppConfig config, DeskConfig desk, string text, IntPtr target, string? sourceApp, Action<SparkException> report)
+    /// <param name="appCategory">Teil "context": Art des Quellprogramms (z. B. "outlook"), sonst <c>null</c>.</param>
+    public AssistForm(AppConfig config, DeskConfig desk, string text, IntPtr target, string? sourceApp, Action<SparkException> report, string? appCategory = null)
     {
         _config = config;
+        _appCategory = appCategory;
         _report = report;
         _sourceApp = sourceApp;
         _arts = desk.OfferedArts().ToArray();
@@ -449,7 +452,7 @@ internal sealed class AssistForm : ThemedForm
         _cts = new CancellationTokenSource();
         try
         {
-            AssistResult result = await SparkClient.AssistAsync(_config.Base, key, core, art, language, _wish.Text, _cts.Token);
+            AssistResult result = await SparkClient.AssistAsync(_config.Base, key, core, art, language, _wish.Text, _cts.Token, _appCategory);
             if (IsDisposed)
             {
                 return;

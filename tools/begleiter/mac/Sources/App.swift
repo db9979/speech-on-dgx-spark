@@ -9,16 +9,18 @@ struct SparkBegleiterApp: App {
     @ObservedObject private var model: AppModel
     @ObservedObject private var dictation: Dictation
     @ObservedObject private var updater: Updater
+    @ObservedObject private var wake: Wake
 
     init() {
         _model = ObservedObject(wrappedValue: AppModel.shared)
         _dictation = ObservedObject(wrappedValue: Dictation.shared)
         _updater = ObservedObject(wrappedValue: Updater.shared)
+        _wake = ObservedObject(wrappedValue: Wake.shared)
     }
 
     var body: some Scene {
         MenuBarExtra {
-            TrayPanel(model: model, dictation: dictation, updater: updater)
+            TrayPanel(model: model, dictation: dictation, updater: updater, wake: wake, folder: FolderWatch.shared)
         } label: {
             Image(nsImage: dictation.recording ? AppModel.recordingIcon : menuIcon)
         }
@@ -28,6 +30,7 @@ struct SparkBegleiterApp: App {
     /// read here so the label follows the model and the updater
     private var menuIcon: NSImage {
         _ = updater.phase
+        _ = wake.listening
         return model.menuIcon
     }
 }
@@ -80,7 +83,8 @@ final class ServiceProvider: NSObject {
             HUD.show(AppModel.offHint("Die Schreibhilfe"))
             return
         }
-        let result = WriteController.runForService(text: text, config: model.config ?? DeskConfig())
+        let category = previous == NSRunningApplication.current ? nil : model.appCategory(previous)
+        let result = WriteController.runForService(text: text, config: model.config ?? DeskConfig(), app: category)
         if let result {
             pboard.clearContents()
             pboard.setString(result, forType: .string)

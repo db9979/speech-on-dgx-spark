@@ -12,11 +12,24 @@ internal static class Parts
     public const string Status = "status";
     public const string Notaus = "notaus";
 
+    // Version 3 (tiefere Einbindung) – alle aus, bis das Panel sie einschaltet.
+    public const string Files = "files";
+    public const string Screen = "screen";
+    public const string Context = "context";
+    public const string Mail = "mail";
+    public const string Folder = "folder";
+    public const string Actions = "actions";
+    public const string Act = "act";
+    public const string Wake = "wake";
+
     /// <summary>Alle Teile in der Reihenfolge, in der sie angezeigt werden.</summary>
-    public static readonly string[] All = { Write, Ask, Dictate, Notes, Status, Notaus };
+    public static readonly string[] All =
+    {
+        Write, Ask, Dictate, Notes, Status, Notaus, Files, Screen, Context, Mail, Folder, Actions, Act, Wake,
+    };
 
     /// <summary>Teile mit eigenem Tastenkürzel.</summary>
-    public static readonly string[] WithHotkey = { Write, Ask, Dictate };
+    public static readonly string[] WithHotkey = { Write, Ask, Dictate, Screen, Mail };
 
     public static string Label(string part) => part switch
     {
@@ -26,6 +39,14 @@ internal static class Parts
         Notes => "Meldungen",
         Status => "Zustandspunkt",
         Notaus => "Mein-Notaus-Knopf",
+        Files => "Rechtsklick auf Dateien",
+        Screen => "Bildschirm fragen",
+        Context => "App erkennen",
+        Mail => "Antwort entwerfen (Outlook)",
+        Folder => "Ordner Spark-Wissen",
+        Actions => "Knöpfe in Meldungen",
+        Act => "Spark darf am PC handeln",
+        Wake => "Weckwort",
         _ => part,
     };
 }
@@ -40,6 +61,8 @@ internal readonly record struct Hotkey(Keys Modifiers, Keys Key)
     {
         Parts.Ask => new Hotkey(Keys.Control | Keys.Alt, Keys.A),
         Parts.Dictate => new Hotkey(Keys.Control | Keys.Alt, Keys.D),
+        Parts.Screen => new Hotkey(Keys.Control | Keys.Alt, Keys.B),
+        Parts.Mail => new Hotkey(Keys.Control | Keys.Alt, Keys.M),
         _ => new Hotkey(Keys.Control | Keys.Alt, Keys.S),
     };
 

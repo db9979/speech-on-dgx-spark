@@ -5,5 +5,8 @@
 	<!-- only used with the hardened runtime (Developer ID signing): the microphone for Diktieren -->
 	<key>com.apple.security.device.audio-input</key>
 	<true/>
+	<!-- "Antwort entwerfen": Mail through AppleScript (Apple Events) -->
+	<key>com.apple.security.automation.apple-events</key>
+	<true/>
 </dict>
 </plist>

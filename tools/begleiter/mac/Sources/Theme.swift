@@ -368,6 +368,8 @@ struct FlowLayout: Layout {
 enum MenuIcon {
     enum Dot {
         case plain, ok, grey, red, accent
+        /// the wake word listens: a ring instead of a full dot
+        case listening
     }
 
     /// The face as menu-bar icon (18 pt). Without a dot it is a template silhouette (macOS colours it like the
@@ -443,6 +445,7 @@ enum MenuIcon {
         case .grey: color = NSColor(hex: 0x8b95ab)
         case .red: color = NSColor(hex: 0xdc2626)
         case .accent: color = NSColor(hex: 0x5b5bf0)
+        case .listening: color = NSColor(hex: 0x0ea5c6)
         }
         if let color {
             let d: CGFloat = 8
@@ -454,8 +457,15 @@ enum MenuIcon {
                 NSBezierPath(ovalIn: dotRect.insetBy(dx: -1.5, dy: -1.5)).fill()
                 ctx.restoreGraphicsState()
             }
-            color.setFill()
-            NSBezierPath(ovalIn: dotRect).fill()
+            if dot == .listening {
+                color.setStroke()
+                let ring = NSBezierPath(ovalIn: dotRect.insetBy(dx: 1, dy: 1))
+                ring.lineWidth = 2
+                ring.stroke()
+            } else {
+                color.setFill()
+                NSBezierPath(ovalIn: dotRect).fill()
+            }
         }
     }
 }

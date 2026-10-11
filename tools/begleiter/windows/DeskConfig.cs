@@ -25,6 +25,14 @@ internal sealed class LangInfo
     public override string ToString() => Label;
 }
 
+/// <summary>Ein Programm, das der Spark starten darf (Teil "act"): Name aus dem Panel und was gestartet wird.</summary>
+internal sealed class ActApp
+{
+    public string Name { get; set; } = "";
+
+    public string Path { get; set; } = "";
+}
+
 /// <summary>
 /// Die zentralen Einstellungen aus GET /api/desk/config. Welche Teile an sind, legt das Panel fest
 /// (Ich → Begleiter). Die letzte Fassung wird (ohne Geheimnisse) in config.json zwischengespeichert,
@@ -79,6 +87,12 @@ internal sealed class DeskConfig
 
     /// <summary>Kaffee-Link aus dem Panel (nur https://buymeacoffee.com/…), sonst <c>null</c>.</summary>
     public string? Coffee { get; set; }
+
+    /// <summary>Programme, die der Spark (nach Rückfrage) starten darf – config.act.apps.</summary>
+    public List<ActApp> ActApps { get; set; } = new();
+
+    /// <summary>Das Weckwort des Spark (config.wake.word), nur zur Anzeige.</summary>
+    public string WakeWord { get; set; } = "Hey Spark";
 
     public bool IsOn(string part) => Parts.TryGetValue(part, out bool on) && on;
 
@@ -157,6 +171,23 @@ internal sealed class DeskConfig
         if (json["dictate"] is JsonObject dictate)
         {
             config.DictateSprache = Json.Str(dictate["sprache"]) ?? "auto";
+        }
+
+        if (json["act"] is JsonObject act && act["apps"] is JsonArray apps)
+        {
+            foreach (JsonNode? item in apps)
+            {
+                if (item is JsonObject o && Json.Str(o["name"]) is { Length: > 0 and <= 80 } name &&
+                    Json.Str(o["path"]) is { Length: > 0 and <= 400 } path)
+                {
+                    config.ActApps.Add(new ActApp { Name = name.Trim(), Path = path.Trim() });
+                }
+            }
+        }
+
+        if (json["wake"] is JsonObject wake && Json.Str(wake["word"]) is { } word && word.Trim().Length is > 0 and <= 40)
+        {
+            config.WakeWord = word.Trim();
         }
 
         if (json["arts"] is JsonArray artList)

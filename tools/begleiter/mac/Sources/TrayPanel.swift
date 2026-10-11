@@ -32,6 +32,8 @@ struct TrayPanel: View {
     @ObservedObject var model: AppModel
     @ObservedObject var dictation: Dictation
     @ObservedObject var updater: Updater
+    @ObservedObject var wake: Wake
+    @ObservedObject var folder: FolderWatch
     @State private var holder = PanelWindow()
 
     var body: some View {
@@ -128,6 +130,20 @@ struct TrayPanel: View {
                     symbol: dictation.recording ? "stop.circle" : "mic", hotkey: .dictate) {
                 dictation.toggle(.cursor(nil))
             }
+            partRow("screen", "Bildschirm fragen", symbol: "viewfinder", hotkey: .screen) {
+                ScreenAsk.start()
+            }
+            partRow("mail", "Antwort entwerfen", symbol: "envelope", hotkey: .mail) {
+                MailDraft.start(front: nil)
+            }
+            partRow("folder", "Spark-Wissen-Ordner", symbol: "folder", hotkey: nil,
+                    note: folder.lastText.isEmpty ? folder.path.lastPathComponent : folder.lastText) {
+                folder.reveal()
+            }
+            partRow("wake", wake.paused ? "Weckwort fortsetzen" : "Weckwort pausieren",
+                    symbol: wake.paused ? "ear" : "pause.circle", hotkey: nil, note: wakeNote) {
+                wake.togglePause()
+            }
             if model.part("notaus") {
                 Button {
                     go { model.confirmNotaus() }
@@ -145,8 +161,15 @@ struct TrayPanel: View {
         }
     }
 
+    private var wakeNote: String {
+        if !wake.problem.isEmpty { return wake.problem }
+        if wake.paused { return "pausiert" }
+        if wake.question { return "hört deine Frage …" }
+        return wake.listening ? "hört auf „\(wake.word)“" : "startet …"
+    }
+
     @ViewBuilder
-    private func partRow(_ part: String, _ title: String, symbol: String, hotkey: HotAction,
+    private func partRow(_ part: String, _ title: String, symbol: String, hotkey: HotAction?, note: String = "",
                          run: @escaping () -> Void) -> some View {
         if model.part(part) {
             Button {
@@ -154,10 +177,18 @@ struct TrayPanel: View {
             } label: {
                 HStack(spacing: 10) {
                     IconTile(symbol: symbol)
-                    Text(verbatim: title)
-                        .font(.system(size: 13))
+                    VStack(alignment: .leading, spacing: 1) {
+                        Text(verbatim: title)
+                            .font(.system(size: 13))
+                        if !note.isEmpty {
+                            Text(verbatim: note)
+                                .font(.system(size: 11))
+                                .foregroundColor(Theme.muted)
+                                .lineLimit(2)
+                        }
+                    }
                     Spacer()
-                    let key = model.hotkeyLabel(hotkey)
+                    let key = hotkey.map { model.hotkeyLabel($0) } ?? ""
                     if !key.isEmpty { KeyChip(text: key) }
                 }
             }

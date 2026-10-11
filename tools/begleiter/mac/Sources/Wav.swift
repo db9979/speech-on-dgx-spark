@@ -38,7 +38,7 @@ struct Multipart {
     }
 
     mutating func file(_ name: String, filename: String, type: String, data: Data) {
-        add("--\(boundary)\r\nContent-Disposition: form-data; name=\"\(name)\"; filename=\"\(filename)\"\r\n")
+        add("--\(boundary)\r\nContent-Disposition: form-data; name=\"\(name)\"; filename=\"\(FileKinds.safeName(filename))\"\r\n")
         add("Content-Type: \(type)\r\n\r\n")
         body.append(data)
         add("\r\n")

@@ -300,7 +300,7 @@ internal sealed class Recorder : IDisposable
     }
 
     /// <summary>PCM in eine WAV-Datei packen (44 Byte Kopf).</summary>
-    private static byte[] ToWav(byte[] pcm)
+    internal static byte[] ToWav(byte[] pcm)
     {
         byte[] wav = new byte[44 + pcm.Length];
         Span<byte> h = wav.AsSpan(0, 44);

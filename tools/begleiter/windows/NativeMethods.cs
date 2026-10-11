@@ -196,6 +196,35 @@ internal static class NativeMethods
         public byte AlphaFormat;
     }
 
+    // ---- Version 3: Medien-/Lautstärketasten, Sperren, Shell, COM ----
+
+    public const int WM_DPICHANGED = 0x02E0;
+
+    public const byte VK_VOLUME_MUTE = 0xAD;
+    public const byte VK_VOLUME_DOWN = 0xAE;
+    public const byte VK_VOLUME_UP = 0xAF;
+    public const byte VK_MEDIA_NEXT_TRACK = 0xB0;
+    public const byte VK_MEDIA_PREV_TRACK = 0xB1;
+    public const byte VK_MEDIA_PLAY_PAUSE = 0xB3;
+
+    public const int SHCNE_ASSOCCHANGED = 0x08000000;
+    public const uint SHCNF_IDLIST = 0x0000;
+
+    [DllImport("user32.dll")]
+    public static extern void keybd_event(byte bVk, byte bScan, uint dwFlags, UIntPtr dwExtraInfo);
+
+    [DllImport("user32.dll", SetLastError = true)]
+    public static extern bool LockWorkStation();
+
+    [DllImport("shell32.dll")]
+    public static extern void SHChangeNotify(int wEventId, uint uFlags, IntPtr dwItem1, IntPtr dwItem2);
+
+    [DllImport("ole32.dll", CharSet = CharSet.Unicode)]
+    public static extern int CLSIDFromProgID(string progId, out Guid clsid);
+
+    [DllImport("oleaut32.dll")]
+    public static extern int GetActiveObject(ref Guid rclsid, IntPtr reserved, [MarshalAs(UnmanagedType.IUnknown)] out object? ppunk);
+
     // ---- Aufnahme (winmm, waveIn) ----
 
     public const uint WAVE_MAPPER = 0xFFFFFFFF;

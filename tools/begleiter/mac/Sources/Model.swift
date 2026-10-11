@@ -16,7 +16,8 @@ struct LangInfo: Identifiable, Equatable {
 
 /// GET /api/desk/config, every value checked; anything missing or odd falls back to a safe default.
 struct DeskConfig: Equatable {
-    static let partNames = ["write", "ask", "dictate", "notes", "status", "notaus"]
+    static let partNames = ["write", "ask", "dictate", "notes", "status", "notaus",
+                            "files", "screen", "context", "mail", "folder", "actions", "act", "wake"]
     static let fallbackArts = [
         ArtInfo(id: "korrigieren", de: "Korrigieren", changes: true),
         ArtInfo(id: "glaetten", de: "Glätten", changes: true),
@@ -50,6 +51,10 @@ struct DeskConfig: Equatable {
     var updateVersion: String?
     /// config.coffee if it is a buymeacoffee.com link, else the fixed one
     var coffee: URL = CoffeeLink.fallback
+    /// config.act.apps: the programs the Spark may start on this Mac (set in the panel per device)
+    var actApps: [ActApp] = []
+    /// config.wake.word
+    var wakeWord = "Hey Spark"
 
     init() {}
 
@@ -88,6 +93,8 @@ struct DeskConfig: Equatable {
         update = UpdateInfo(json: d["update"])
         updateVersion = (d["update"] as? [String: Any])?["version"] as? String
         coffee = CoffeeLink.accept(d["coffee"])
+        actApps = ActApp.list((d["act"] as? [String: Any])?["apps"])
+        wakeWord = WakeWord.parse(d["wake"])
     }
 
     /// the arts this device offers, in the Spark's order
@@ -176,6 +183,7 @@ final class AppModel: ObservableObject {
         reach = .unknown
         reachText = "Verbinde …"
         applyHotkeys()
+        applyParts()
         loop = Task { [weak self] in await self?.run() }
     }
 
@@ -192,6 +200,7 @@ final class AppModel: ObservableObject {
         reach = .unknown
         reachText = ""
         applyHotkeys()
+        applyParts()
     }
 
     /// 401: the Spark no longer knows the key.
@@ -249,8 +258,9 @@ final class AppModel: ObservableObject {
         config = c
         Updater.shared.take(c.update)
         applyHotkeys()
+        applyParts()
         if let want = c.autostart { applyAutostart(want) }
-        if c.parts["notes"] == true { Notifier.ask() }
+        if c.parts["notes"] == true || c.parts["actions"] == true || c.parts["folder"] == true { Notifier.ask() }
         if reach == .unknown || reach == .offline {
             reach = .ok
             reachText = ""
@@ -267,6 +277,9 @@ final class AppModel: ObservableObject {
     }
 
     private func takePoll(_ d: [String: Any]) {
+        if part("act") {
+            ActCenter.shared.take(ActAsk.list(d["asks"]))
+        }
         let level = ((d["notaus"] as? [String: Any])?["level"] as? NSNumber)?.intValue ?? 0
         if level > 0 {
             reach = .notaus
@@ -282,12 +295,15 @@ final class AppModel: ObservableObject {
             return
         }
         if part("notes") {
-            let notes = (d["notes"] as? [[String: Any]] ?? []).compactMap { x -> (n: Int, title: String, body: String, tag: String)? in
+            let notes = (d["notes"] as? [[String: Any]] ?? []).compactMap {
+                x -> (n: Int, title: String, body: String, tag: String, actions: [String])? in
                 guard let n = (x["n"] as? NSNumber)?.intValue, n > prev else { return nil }
-                return (n, x["title"] as? String ?? "", x["body"] as? String ?? "", x["tag"] as? String ?? "")
+                return (n, x["title"] as? String ?? "", x["body"] as? String ?? "", x["tag"] as? String ?? "",
+                        NoteActions.parse(x["actions"]))
             }
             for note in notes.sorted(by: { $0.n < $1.n }).suffix(5) {
-                Notifier.show(title: note.title, body: note.body, tag: note.tag, id: "note-\(note.n)")
+                Notifier.show(title: note.title, body: note.body, tag: note.tag, id: "note-\(note.n)",
+                              note: note.n, actions: part("actions") ? note.actions : [])
             }
         }
         // last smaller than before: the Spark started anew
@@ -305,7 +321,7 @@ final class AppModel: ObservableObject {
             forgetDevice()
         case .off:
             Task { await self.refreshConfig() }
-        case .busy, .failed:
+        case .busy, .failed, .conflict:
             break
         case .notaus(let m):
             reach = .notaus
@@ -373,6 +389,10 @@ final class AppModel: ObservableObject {
             Task { await startWrite(fromMenu: false) }
         case .ask:
             openAsk()
+        case .screen:
+            ScreenAsk.start()
+        case .mail:
+            MailDraft.start(front: frontApp())
         case .dictate:
             if NSApp.isActive, let key = NSApp.keyWindow, key === Windows.shared.window("ask") {
                 Dictation.shared.toggle(.ask)
@@ -382,7 +402,7 @@ final class AppModel: ObservableObject {
         }
     }
 
-    private func frontApp() -> NSRunningApplication? {
+    func frontApp() -> NSRunningApplication? {
         let f = NSWorkspace.shared.frontmostApplication
         return f == NSRunningApplication.current ? nil : f
     }
@@ -401,6 +421,7 @@ final class AppModel: ObservableObject {
             return
         }
         let target = fromMenu ? nil : frontApp()
+        let category = fromMenu ? nil : appCategory(target)
         var text = ""
         if !fromMenu {
             if Access.trusted {
@@ -412,14 +433,15 @@ final class AppModel: ObservableObject {
         let cfg = config ?? DeskConfig()
         let core = text.trimmingCharacters(in: .whitespacesAndNewlines)
         if !fromMenu && Access.trusted && !cfg.preview && !core.isEmpty, let client {
-            await writeDirect(text, cfg: cfg, client: client, target: target)
+            await writeDirect(text, cfg: cfg, client: client, target: target, category: category)
             return
         }
-        WriteController.open(text: text, target: fromMenu ? .menu : .hotkey(target), config: cfg)
+        WriteController.open(text: text, target: fromMenu ? .menu : .hotkey(target), config: cfg, app: category)
     }
 
     /// Without preview (set in the panel): improve and paste right away.
-    private func writeDirect(_ text: String, cfg: DeskConfig, client: SparkClient, target: NSRunningApplication?) async {
+    private func writeDirect(_ text: String, cfg: DeskConfig, client: SparkClient, target: NSRunningApplication?,
+                             category: String?) async {
         let parts = WriteController.split(text)
         guard parts.core.count <= SparkClient.writeMax else {
             HUD.show("Der Text ist zu lang (höchstens \(SparkClient.writeMax) Zeichen).")
@@ -429,7 +451,8 @@ final class AppModel: ObservableObject {
         do {
             let art = cfg.writeArt
             let r = try await client.improve(text: parts.core, art: art,
-                                             sprache: art == "uebersetzen" ? cfg.writeSprache : nil, wunsch: cfg.writeWunsch)
+                                             sprache: art == "uebersetzen" ? cfg.writeSprache : nil, wunsch: cfg.writeWunsch,
+                                             app: category)
             HUD.hide()
             let out = parts.lead + r.text.trimmingCharacters(in: .whitespacesAndNewlines) + parts.trail
             if await Clip.paste(out, into: target) {
@@ -442,6 +465,22 @@ final class AppModel: ObservableObject {
         } catch {
             HUD.show(absorb(error), symbol: "exclamationmark.triangle")
         }
+    }
+
+    /// Part "context": the category of the app that was in front when the hotkey came (nil when the part is off).
+    /// Only the category ("mail", "browser", …) leaves the Mac, never a name or a title.
+    func appCategory(_ app: NSRunningApplication?) -> String? {
+        guard part("context"), let app else { return nil }
+        return AppCategory.of(bundleID: app.bundleIdentifier)
+    }
+
+    /// Starts or stops what runs on its own (folder, wake word) and the notification buttons, after the config.
+    func applyParts() {
+        let on = paired && config != nil
+        FolderWatch.shared.apply(on: on && part("folder"))
+        Wake.shared.apply(on: on && part("wake"))
+        if !(on && part("act")) { ActCenter.shared.clear() }
+        Notifier.registerCategories()
     }
 
     func openAsk() {
@@ -514,6 +553,7 @@ final class AppModel: ObservableObject {
         if !paired { return .grey }
         if reach == .notaus { return .red }                      // always, whether "status" is on or not
         if part("status") && reach == .offline { return .grey }
+        if Wake.shared.listening { return .listening }
         if Updater.shared.dot { return .accent }
         return .plain
     }
@@ -537,15 +577,35 @@ final class NotificationDelegate: NSObject, UNUserNotificationCenterDelegate {
                                 withCompletionHandler completionHandler: @escaping (UNNotificationPresentationOptions) -> Void) {
         completionHandler([.banner, .list, .sound])
     }
+
+    /// The buttons of a note (part "actions"): Antworten (with text), Später, Panel öffnen.
+    func userNotificationCenter(_ center: UNUserNotificationCenter, didReceive response: UNNotificationResponse,
+                                withCompletionHandler completionHandler: @escaping () -> Void) {
+        let action = response.actionIdentifier
+        let typed = (response as? UNTextInputNotificationResponse)?.userText ?? ""
+        let req = response.notification.request
+        let note = (req.content.userInfo["note"] as? NSNumber)?.intValue
+        let title = req.content.title
+        let body = req.content.body
+        let thread = req.content.threadIdentifier
+        let category = req.content.categoryIdentifier
+        Task { @MainActor in
+            Notifier.handle(action: action, typed: typed, note: note, title: title, body: body, thread: thread,
+                            category: category)
+        }
+        completionHandler()
+    }
 }
 
 @MainActor
 enum Notifier {
     private static let delegate = NotificationDelegate()
     private static var asked = false
+    static let laterSeconds: TimeInterval = 3600
 
     static func setup() {
         UNUserNotificationCenter.current().delegate = delegate
+        registerCategories()
     }
 
     static func ask() {
@@ -554,14 +614,81 @@ enum Notifier {
         UNUserNotificationCenter.current().requestAuthorization(options: [.alert, .sound]) { _, _ in }
     }
 
-    /// The Spark's note as plain text.
-    static func show(title: String, body: String, tag: String, id: String) {
+    /// One category per combination of buttons, so each note shows exactly the buttons the Spark gave it.
+    static func registerCategories() {
+        var set = Set<UNNotificationCategory>()
+        for combo in NoteActions.allCombinations {
+            guard let id = NoteActions.category(combo) else { continue }
+            let actions: [UNNotificationAction] = combo.map { a in
+                switch a {
+                case "reply":
+                    return UNTextInputNotificationAction(identifier: "reply", title: "Antworten", options: [],
+                                                         textInputButtonTitle: "Senden",
+                                                         textInputPlaceholder: "Antwort an den Spark …")
+                case "later":
+                    return UNNotificationAction(identifier: "later", title: "Später", options: [])
+                default:
+                    return UNNotificationAction(identifier: "open", title: "Panel öffnen", options: [.foreground])
+                }
+            }
+            set.insert(UNNotificationCategory(identifier: id, actions: actions, intentIdentifiers: [], options: []))
+        }
+        UNUserNotificationCenter.current().setNotificationCategories(set)
+    }
+
+    /// The Spark's note as plain text; with buttons when the part "actions" is on and the note has some.
+    static func show(title: String, body: String, tag: String, id: String, note: Int? = nil, actions: [String] = []) {
         let c = UNMutableNotificationContent()
         c.title = DeskConfig.plain(title, max: 200).isEmpty ? "Spark" : DeskConfig.plain(title, max: 200)
         c.body = String(body.prefix(1500))
         c.sound = .default
         if !tag.isEmpty { c.threadIdentifier = String(tag.prefix(20)) }
+        if let note { c.userInfo = ["note": note] }
+        if let cat = NoteActions.category(actions) { c.categoryIdentifier = cat }
         let r = UNNotificationRequest(identifier: id, content: c, trigger: nil)
+        UNUserNotificationCenter.current().add(r) { _ in }
+    }
+
+    static func handle(action: String, typed: String, note: Int?, title: String, body: String, thread: String,
+                       category: String) {
+        let model = AppModel.shared
+        switch action {
+        case "reply":
+            guard model.part("actions") else { return HUD.show(AppModel.offHint("Knöpfe in Meldungen")) }
+            let text = typed.trimmingCharacters(in: .whitespacesAndNewlines)
+            if text.isEmpty {
+                AskController.openForNote(note, title: title, body: body)
+            } else {
+                AskController.shared.run(question: "Antwort auf „\(DeskConfig.plain(title, max: 80))“: \(text)",
+                                         notify: true) { client in
+                    try await client.ask(text, note: note)
+                }
+            }
+        case "later":
+            let c = UNMutableNotificationContent()
+            c.title = title
+            c.body = body
+            c.sound = .default
+            if !thread.isEmpty { c.threadIdentifier = thread }
+            if let note { c.userInfo = ["note": note] }
+            if !category.isEmpty { c.categoryIdentifier = category }
+            let trigger = UNTimeIntervalNotificationTrigger(timeInterval: laterSeconds, repeats: false)
+            let r = UNNotificationRequest(identifier: "later-\(note ?? 0)-\(UUID().uuidString)", content: c, trigger: trigger)
+            UNUserNotificationCenter.current().add(r) { _ in }
+        case "open":
+            model.openPanel()
+        default:
+            break
+        }
+    }
+
+    /// A short message of the program itself ("3 Dateien ins Wissen übernommen", the Spark's answer).
+    static func plain(title: String, body: String) {
+        let c = UNMutableNotificationContent()
+        c.title = title
+        c.body = String(body.prefix(1500))
+        c.sound = .default
+        let r = UNNotificationRequest(identifier: "begleiter-\(UUID().uuidString)", content: c, trigger: nil)
         UNUserNotificationCenter.current().add(r) { _ in }
     }
 }

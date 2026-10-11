@@ -11,6 +11,9 @@ internal enum StatusKind
 /// <summary>Eine Zeile im Tray-Fenster (ein eingeschalteter Teil).</summary>
 internal sealed record PanelItem(string Text, Glyph Glyph, string? Hotkey, Action Action, bool Danger = false, bool Enabled = true);
 
+/// <summary>Teil "actions": eine Meldung im Tray-Fenster mit ihren Knöpfen (nur die angebotenen sind gesetzt).</summary>
+internal sealed record PanelNote(int N, string Title, string Body, Action? Reply, Action? Later, Action? Open);
+
 /// <summary>Der Update-Hinweis im Tray-Fenster.</summary>
 internal sealed record UpdateBanner(string Title, string Detail, string? Button, bool ButtonEnabled, double? Progress, bool Error, Action? Action);
 
@@ -29,6 +32,9 @@ internal sealed class PanelModel
     public UpdateBanner? Update { get; init; }
 
     public IReadOnlyList<PanelItem> Items { get; init; } = Array.Empty<PanelItem>();
+
+    /// <summary>Meldungen mit Knöpfen (Teil "actions").</summary>
+    public IReadOnlyList<PanelNote> Notes { get; init; } = Array.Empty<PanelNote>();
 
     /// <summary>Leiser Hinweis unter der Liste (z. B. weitere Teile im Panel einschalten).</summary>
     public string? Hint { get; init; }
@@ -61,6 +67,9 @@ internal sealed class TrayPanel : ThemedForm
     private readonly Action<Action> _post;
     private readonly List<SparkButton> _items = new();
     private readonly List<Action> _actions = new();
+    private readonly List<(PanelNote Note, List<SparkButton> Buttons)> _notes = new();
+    private readonly List<(Rectangle Card, Rectangle Title, Rectangle Body)> _noteRects = new();
+    private Rectangle _notesHeading;
     private readonly SparkButton _update = new(ButtonKind.Primary, "Aktualisieren");
     private readonly SparkButton _settings = new(ButtonKind.Secondary, "Einstellungen");
     private readonly SparkButton _panel = new(ButtonKind.Secondary, "Panel öffnen");
@@ -105,6 +114,7 @@ internal sealed class TrayPanel : ThemedForm
         Controls.Add(_panel);
         Controls.Add(_coffee);
         BuildItems();
+        BuildNotes();
     }
 
     protected override bool RoundCorners => true;
@@ -140,6 +150,7 @@ internal sealed class TrayPanel : ThemedForm
             BuildItems();
         }
 
+        BuildNotes();
         RefreshTheme();
         PlaceAtTray();
         if (focused >= 0 && focused < _items.Count)
@@ -212,6 +223,41 @@ internal sealed class TrayPanel : ThemedForm
         _settings.TabIndex = 101;
         _panel.TabIndex = 102;
         _coffee.TabIndex = 103;
+    }
+
+    private void BuildNotes()
+    {
+        foreach (var (_, buttons) in _notes)
+        {
+            foreach (SparkButton b in buttons)
+            {
+                Controls.Remove(b);
+                b.Dispose();
+            }
+        }
+
+        _notes.Clear();
+        int tab = 50;
+        foreach (PanelNote note in _model.Notes)
+        {
+            var buttons = new List<SparkButton>();
+            foreach (var (label, action) in new (string, Action?)[] { ("Antworten", note.Reply), ("Später", note.Later), ("Panel öffnen", note.Open) })
+            {
+                if (action is null)
+                {
+                    continue;
+                }
+
+                var button = new SparkButton(ButtonKind.Secondary, label) { FontSize = 8.5f, TabIndex = tab++ };
+                button.AccessibleDescription = "Meldung: " + note.Title;
+                Action run = action;
+                button.Click += (_, _) => Run(run);
+                buttons.Add(button);
+                Controls.Add(button);
+            }
+
+            _notes.Add((note, buttons));
+        }
     }
 
     private void Run(Action? action)
@@ -311,6 +357,46 @@ internal sealed class TrayPanel : ThemedForm
             y += S(4);
         }
 
+        // Meldungen mit Knöpfen
+        _noteRects.Clear();
+        if (_notes.Count > 0)
+        {
+            int headH = Draw.Measure("Ag", F(8.5f, FontStyle.Bold)).Height;
+            _notesHeading = new Rectangle(pad, y, inner, headH);
+            y += headH + S(6);
+            foreach (var (note, buttons) in _notes)
+            {
+                int cardPad = S(10);
+                int tw = inner - (2 * cardPad);
+                int th = Draw.Measure("Ag", F(9f, FontStyle.Bold)).Height;
+                int lineH = Draw.Measure("Ag", F(8.5f)).Height;
+                int bh = note.Body.Length > 0 ? Math.Min(Draw.TextHeight(note.Body, F(8.5f), tw), lineH * 2) : 0;
+                int by = y + cardPad + th + (bh > 0 ? S(2) + bh : 0) + S(8);
+                int bx = pad + cardPad;
+                int rowH = 0;
+                foreach (SparkButton b in buttons)
+                {
+                    Size size = b.Preferred();
+                    size.Height = Math.Min(size.Height, S(28));
+                    b.Bounds = new Rectangle(bx, by, size.Width, size.Height);
+                    b.Surface = P.Soft;
+                    bx += size.Width + S(6);
+                    rowH = Math.Max(rowH, size.Height);
+                }
+
+                int cardH = (by - y) + rowH + cardPad;
+                _noteRects.Add((new Rectangle(pad, y, inner, cardH), new Rectangle(pad + cardPad, y + cardPad, tw, th),
+                    new Rectangle(pad + cardPad, y + cardPad + th + S(2), tw, bh)));
+                y += cardH + S(8);
+            }
+
+            y += S(2);
+        }
+        else
+        {
+            _notesHeading = Rectangle.Empty;
+        }
+
         if (!string.IsNullOrEmpty(m.Hint))
         {
             int h = Draw.TextHeight(m.Hint, F(8.5f), inner);
@@ -397,6 +483,23 @@ internal sealed class TrayPanel : ThemedForm
                     using Brush brush = Draw.AccentBrush(bar, p, 0f);
                     using System.Drawing.Drawing2D.GraphicsPath path = Draw.Round(bar, bar.Height / 2f);
                     g.FillPath(brush, path);
+                }
+            }
+        }
+
+        if (!_notesHeading.IsEmpty)
+        {
+            Draw.Text(g, "Meldungen", F(8.5f, FontStyle.Bold), _notesHeading, p.Muted);
+            for (int i = 0; i < _noteRects.Count && i < _notes.Count; i++)
+            {
+                var (card, title, body) = _noteRects[i];
+                PanelNote note = _notes[i].Note;
+                Draw.FillRound(g, p.Soft, card, S(10));
+                Draw.StrokeRound(g, p.Line, card, S(10));
+                Draw.Text(g, note.Title, F(9f, FontStyle.Bold), title, p.Fg);
+                if (body.Height > 0)
+                {
+                    Draw.Text(g, note.Body, F(8.5f), body, p.Muted, Draw.Wrap | TextFormatFlags.EndEllipsis);
                 }
             }
         }

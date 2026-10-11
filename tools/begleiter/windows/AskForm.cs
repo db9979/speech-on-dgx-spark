@@ -43,6 +43,10 @@ internal sealed class AskForm : ThemedForm
     private Recorder? _recorder;
     private bool _busy;
     private bool _micShown;
+    private bool _canAsk = true;
+
+    /// <summary>Teil "actions": die nächste Frage antwortet auf diese Meldung (Nummer).</summary>
+    private int? _note;
 
     public AskForm(AppConfig config, Func<DeskConfig?> desk, Action<SparkException> report)
     {
@@ -93,10 +97,20 @@ internal sealed class AskForm : ThemedForm
         PlaceCentered();
     }
 
-    /// <summary>Mikrofon-Knopf nur, wenn Diktieren im Panel an ist.</summary>
+    /// <summary>Mikrofon-Knopf nur, wenn Diktieren im Panel an ist; Eingabe nur, wenn Frag Spark an ist.</summary>
     public void RefreshParts()
     {
-        bool dictate = _desk()?.IsOn(Parts.Dictate) == true;
+        // Das Fenster zeigt auch Ergebnisse anderer Teile (Dateien, Bildschirm, Weckwort); Nachfragen nur mit "ask".
+        bool canAsk = _desk()?.IsOn(Parts.Ask) == true || _note is not null;
+        if (canAsk != _canAsk)
+        {
+            _canAsk = canAsk;
+            _question.Enabled = canAsk;
+            _send.Enabled = canAsk && !_busy;
+            _question.PlaceholderText = canAsk ? "Frag den Spark …" : "Nachfragen: Frag Spark im Panel einschalten";
+        }
+
+        bool dictate = _canAsk && _desk()?.IsOn(Parts.Dictate) == true;
         bool visible = dictate || _recorder is not null;
         if (_micShown != visible)
         {
@@ -192,7 +206,7 @@ internal sealed class AskForm : ThemedForm
 
     private async Task SendAsync()
     {
-        if (_busy)
+        if (_busy || !_canAsk)
         {
             return;
         }
@@ -205,6 +219,106 @@ internal sealed class AskForm : ThemedForm
             return;
         }
 
+        await SendTextAsync(question);
+    }
+
+    /// <summary>Weckwort: die gehörte Frage stellen und die Antwort zeigen.</summary>
+    public async Task AskQuestionAsync(string question)
+    {
+        await WaitIdleAsync();
+        if (IsDisposed)
+        {
+            return;
+        }
+
+        question = question.Trim();
+        if (question.Length > MaxQuestion)
+        {
+            question = question[..MaxQuestion];
+        }
+
+        if (question.Length > 0)
+        {
+            await SendTextAsync(question);
+        }
+    }
+
+    /// <summary>
+    /// Ergebnis eines anderen Teils (Datei, Bildschirm) im Verlauf zeigen: eigene Blase mit <paramref name="mine"/>,
+    /// „denkt nach“, dann die Antwort (reiner Text, kopierbar) oder der Fehler.
+    /// </summary>
+    public async Task RunExternalAsync(string mine, Func<CancellationToken, Task<string>> work)
+    {
+        await WaitIdleAsync();
+        if (IsDisposed)
+        {
+            return;
+        }
+
+        _chat.Add(mine: true, mine);
+        _chat.Pending = true;
+        SetBusy(true, "");
+        _cts = new CancellationTokenSource();
+        try
+        {
+            string answer = await work(_cts.Token);
+            if (IsDisposed)
+            {
+                return;
+            }
+
+            _chat.Pending = false;
+            _chat.Add(mine: false, answer.Trim().Length > 0 ? answer.Trim() : "(Der Spark hat keinen Text geschickt.)");
+            SetStatus("", error: false);
+        }
+        catch (OperationCanceledException)
+        {
+            // Fenster wurde geschlossen.
+        }
+        catch (SparkException ex)
+        {
+            if (!IsDisposed)
+            {
+                _chat.Pending = false;
+                SetStatus(ex.Message, error: true);
+            }
+
+            _report(ex);
+        }
+        finally
+        {
+            _cts?.Dispose();
+            _cts = null;
+            if (!IsDisposed)
+            {
+                SetBusy(false, null);
+            }
+        }
+    }
+
+    /// <summary>Teil "actions" → Antworten: die Meldung als Zitat zeigen; die nächste Frage geht mit "note" an den Spark.</summary>
+    public void QuoteNote(Note note)
+    {
+        string title = note.Title.Trim();
+        string quote = "Meldung" + (title.Length > 0 ? ": " + title : "") + (note.Body.Trim().Length > 0 ? Environment.NewLine + note.Body.Trim() : "");
+        _chat.Add(mine: false, quote);
+        _note = note.N;
+        RefreshParts();
+        _question.PlaceholderText = "Antwort auf die Meldung …";
+        SetStatus("Deine Antwort bezieht sich auf diese Meldung.", error: false);
+        Bring();
+    }
+
+    private async Task WaitIdleAsync()
+    {
+        while (_busy && !IsDisposed)
+        {
+            await Task.Delay(150);
+        }
+    }
+
+    private async Task SendTextAsync(string question)
+    {
         string? key = _config.GetKey();
         if (key is null || string.IsNullOrEmpty(_config.Base))
         {
@@ -219,15 +333,26 @@ internal sealed class AskForm : ThemedForm
         _cts = new CancellationTokenSource();
         try
         {
-            string answer = await SparkClient.AskAsync(_config.Base, key, question, _cts.Token);
+            string answer = await SparkClient.AskAsync(_config.Base, key, question, _cts.Token, _note);
             if (IsDisposed)
             {
                 return;
             }
 
+            if (_note is not null)
+            {
+                _note = null;
+                RefreshParts();
+                _question.PlaceholderText = _canAsk ? "Frag weiter …" : _question.PlaceholderText;
+            }
+
             _chat.Pending = false;
             _chat.Add(mine: false, answer.Trim());
-            _question.PlaceholderText = "Frag weiter …";
+            if (_canAsk)
+            {
+                _question.PlaceholderText = "Frag weiter …";
+            }
+
             SetStatus("", error: false);
         }
         catch (OperationCanceledException)
@@ -388,7 +513,7 @@ internal sealed class AskForm : ThemedForm
     private void SetBusy(bool busy, string? text)
     {
         _busy = busy;
-        _send.Enabled = !busy;
+        _send.Enabled = !busy && _canAsk;
         _mic.Enabled = !busy;
         if (text is not null)
         {

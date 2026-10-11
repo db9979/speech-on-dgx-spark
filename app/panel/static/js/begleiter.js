@@ -9,13 +9,23 @@ const DESK_PARTS=[['write',['Schreibhilfe','Writing help'],['Markierten Text ver
   ['dictate',['Diktieren','Dictation'],['Sprechen, der Text landet an der Schreibmarke. Nimmt nur auf, solange du es willst.','Speak, the text lands at the cursor. Records only while you want it to.']],
   ['notes',['Meldungen','Notes'],['Hinweise des Spark als Systemmitteilung.','The Spark\'s notes as system notifications.']],
   ['status',['Zustandspunkt','State dot'],['Das Symbol zeigt, ob der Spark erreichbar ist oder ein Notaus gilt.','The icon shows whether the Spark answers or a Notaus holds.']],
-  ['notaus',['Mein Notaus','My kill switch'],['Knopf, der dein Profil sofort stilllegt. Aufheben nur hier im Browser.','A button that stops your profile at once. Lifting only here in the browser.']]];
+  ['notaus',['Mein Notaus','My kill switch'],['Knopf, der dein Profil sofort stilllegt. Aufheben nur hier im Browser.','A button that stops your profile at once. Lifting only here in the browser.']],
+  ['files',['Rechtsklick auf Dateien','Right-click on files'],['„Mit Spark“ im Explorer und Finder: zusammenfassen, übersetzen, erklären, ins Wissen übernehmen.','"With Spark" in Explorer and Finder: summarize, translate, explain, add to knowledge.']],
+  ['screen',['Bildschirm fragen','Ask about the screen'],['Tastenkürzel, Bereich aufziehen, fragen. Das Bild wird gelesen und nicht aufbewahrt.','Hotkey, drag a region, ask. The picture is read and not kept.']],
+  ['context',['App erkennen','Know the app'],['Die Schreibhilfe erfährt, aus welcher Art Programm der Text kommt (Mail, Word, Chat …), nie Namen oder Fenstertitel.','The writing help learns which kind of program the text comes from (mail, Word, chat …), never names or window titles.']],
+  ['mail',['Antwort entwerfen','Draft a reply'],['Zur offenen Mail in Outlook (Windows) oder Apple Mail eine Antwort als Entwurf. Gesendet wird nie.','A reply draft to the open mail in Outlook (Windows) or Apple Mail. Never sent.']],
+  ['folder',['Ordner Spark-Wissen','Spark knowledge folder'],['Was du in den Ordner „Spark-Wissen“ legst, kommt in deine Dokumente.','What you put into the folder "Spark-Wissen" goes into your documents.']],
+  ['actions',['Knöpfe in Meldungen','Buttons in notes'],['Antworten, Später oder Panel öffnen direkt in der Mitteilung.','Reply, Later or Open panel right in the notification.']],
+  ['act',['Am PC handeln','Act on the PC'],['Der Spark darf eine Seite oder ein freigegebenes Programm öffnen, Musik und Lautstärke steuern oder sperren. Jedes Mal fragt der Rechner vorher.','The Spark may open a page or a released program, control music and volume or lock. The computer asks every time.']],
+  ['wake',['Weckwort am PC','Wake word on the PC'],['„Hey Spark“ über das Mikrofon des Rechners. Hört nur, solange es an ist; das Symbol zeigt es.','"Hey Spark" through the computer\'s microphone. Listens only while on; the icon shows it.']]];
+const deskWhy=(k,d)=>k==='write'||k==='context'||k==='mail'?t('Erst die Schreibhilfe einschalten (Funktionen und Ich → Schreibhilfe).','Turn on the writing help first (Features and Me → Writing help).'):
+  k==='folder'?t('Erst eigene Dokumente einschalten.','Turn on own documents first.'):k==='act'?t('Erst unter Funktionen → Spark-Begleiter „Darf am PC handeln“ einschalten.','Turn on "May act on the PC" under Features → Spark companion first.'):'';
 function deskTime(s){return new Date(s*1000).toLocaleString(L==='en'?'en-GB':'de-DE',{day:'2-digit',month:'2-digit',year:'numeric'})}
 async function showDesk(){const box=$('deskbox');if(!box)return;if(!PROFILE||!DESK_ON){box.innerHTML='';return}
   let d={on:false,allowed:{},devices:[],minutes:10,downloads:{},arts:[],langs:[]};try{d=await (await api('/api/profile/desk')).json()}catch{}
   const tt=a=>t(a[0],a[1]);
   const dev=x=>{const c=x.cfg;
-    const parts=DESK_PARTS.map(([k,n,h])=>`<div class="setrow"><div class="lbl"><b>${esc(tt(n))}</b><span>${esc(d.allowed[k]?tt(h):k==='write'?t('Erst die Schreibhilfe einschalten (Funktionen und Ich → Schreibhilfe).','Turn on the writing help first (Features and Me → Writing help).'):'')}</span></div><label class="tgl"><input type="checkbox" data-dk="${esc(k)}"${c.parts[k]?' checked':''}${d.allowed[k]?'':' disabled'}><i></i></label></div>`).join('');
+    const parts=DESK_PARTS.map(([k,n,h])=>`<div class="setrow"><div class="lbl"><b>${esc(tt(n))}</b><span>${esc(d.allowed[k]?tt(h):deskWhy(k,d))}</span></div><label class="tgl"><input type="checkbox" data-dk="${esc(k)}"${c.parts[k]?' checked':''}${d.allowed[k]?'':' disabled'}><i></i></label></div>`).join('');
     const arts=d.arts.map(a=>`<label class="chk"><input type="checkbox" data-dart="${esc(a.id)}"${c.write.arts.includes(a.id)?' checked':''}> ${esc(L==='en'?a.en:a.de)}</label>`).join(' ');
     const opt=(list,sel)=>list.map(a=>`<option value="${esc(a.id)}"${a.id===sel?' selected':''}>${esc(L==='en'?a.en:a.de)}</option>`).join('');
     return `<div class="card" data-desk="${esc(x.id)}"><div class="rowin"><b>${esc(x.name.replace(/^Begleiter /,''))}</b><span class="mut">${esc(x.online?t('verbunden','connected'):t('nicht verbunden','not connected'))}${x.version?' · '+esc(t('Version ','version ')+x.version):''} · ${esc(t('seit ','since ')+(x.created?deskTime(x.created):'–'))}</span></div>
@@ -27,6 +37,10 @@ async function showDesk(){const box=$('deskbox');if(!box)return;if(!PROFILE||!DE
         <label>${esc(t('Im Menü','In the menu'))}</label><div>${arts}</div>
         <div class="setrow"><div class="lbl"><b>${esc(t('Vorschlag erst zeigen','Show the suggestion first'))}</b><span>${esc(t('Aus: der verbesserte Text ersetzt die Markierung sofort.','Off: the improved text replaces the selection at once.'))}</span></div><label class="tgl"><input type="checkbox" data-dw="preview"${c.write.preview?' checked':''}><i></i></label></div>
       </details>
+      ${d.allowed.act?`<details><summary>${esc(t('Am PC handeln: freigegebene Programme','Act on the PC: released programs'))}</summary>
+        <div class="fh">${esc(t('Nur diese Programme darf der Spark öffnen, je mit Rückfrage am Rechner. Name, wie du ihn sagst; Pfad, wie der Rechner das Programm startet (z. B. C:\\Windows\\notepad.exe oder /Applications/Safari.app).','Only these programs may the Spark open, each with a question at the computer. Name as you say it; path as the computer starts it (e.g. C:\\Windows\\notepad.exe or /Applications/Safari.app).'))}</div>
+        <div data-dapps>${(c.act.apps.length?c.act.apps:[{name:'',path:''}]).map(a=>`<div class="two2" data-dapp><div><input data-an maxlength="40" placeholder="${esc(t('Name','Name'))}" value="${esc(a.name)}"></div><div><input data-ap maxlength="300" placeholder="${esc(t('Pfad','Path'))}" value="${esc(a.path)}"></div></div>`).join('')}</div>
+        <button class="b" type="button" data-daddapp="${esc(x.id)}">${esc(t('Weiteres Programm','Another program'))}</button></details>`:''}
       <div class="two2"><div><label>${esc(t('Diktat-Sprache','Dictation language'))}</label><select data-dd="sprache"><option value="auto">${esc(t('Automatisch','Automatic'))}</option>${opt(d.langs,c.dictate.sprache)}</select></div>
       <div class="setrow"><div class="lbl"><b>${esc(t('Mit dem Rechner starten','Start with the computer'))}</b></div><label class="tgl"><input type="checkbox" data-da="1"${c.autostart?' checked':''}><i></i></label></div></div>
       <div class="row"><button class="b p" type="button" data-dsave="${esc(x.id)}">${esc(t('Speichern','Save'))}</button><button class="b" type="button" data-ddel="${esc(x.id)}">${esc(t('Entfernen','Remove'))}</button></div>
@@ -54,10 +68,13 @@ async function showDesk(){const box=$('deskbox');if(!box)return;if(!PROFILE||!DE
     const parts={};c.querySelectorAll('[data-dk]').forEach(i=>parts[i.dataset.dk]=i.checked);
     const w={};c.querySelectorAll('[data-dw]').forEach(i=>w[i.dataset.dw]=i.type==='checkbox'?i.checked:i.value);
     w.arts=[...c.querySelectorAll('[data-dart]')].filter(i=>i.checked).map(i=>i.dataset.dart);
-    const cfg={parts,write:w,dictate:{sprache:c.querySelector('[data-dd]').value},autostart:c.querySelector('[data-da]').checked};
+    const apps=[...c.querySelectorAll('[data-dapp]')].map(r=>({name:r.querySelector('[data-an]').value.trim(),path:r.querySelector('[data-ap]').value.trim()})).filter(a=>a.name&&a.path);
+    const cfg={parts,write:w,dictate:{sprache:c.querySelector('[data-dd]').value},autostart:c.querySelector('[data-da]').checked,act:{apps}};
     try{await api('/api/profile/desk/devices/'+encodeURIComponent(id),xjson('PUT',{cfg}));
       const m=c.querySelector(`[data-dmsg="${CSS.escape(id)}"]`);if(m)m.textContent=t('Gespeichert. Das Gerät übernimmt es beim nächsten Abruf.','Saved. The device takes it with its next check.')}
     catch(e){xmsg('dkmsg',e.message,true)}});
+  box.querySelectorAll('[data-daddapp]').forEach(b=>b.onclick=()=>{const l=b.parentNode.querySelector('[data-dapps]');if(l.children.length>=20)return;
+    const r=l.firstElementChild.cloneNode(true);r.querySelectorAll('input').forEach(i=>i.value='');l.appendChild(r)});
   box.querySelectorAll('[data-ddel]').forEach(b=>b.onclick=async()=>{if(!confirm(t('Gerät entfernen? Sein Schlüssel gilt dann nicht mehr.','Remove the device? Its key stops working.')))return;
     try{await api('/api/profile/desk/devices/'+encodeURIComponent(b.dataset.ddel),{method:'DELETE'});showDesk()}catch(e){xmsg('dkmsg',e.message,true)}})}
 // Admin: Funktionen → Spark-Begleiter shows which program versions the Spark keeps for updates and fetches them now.

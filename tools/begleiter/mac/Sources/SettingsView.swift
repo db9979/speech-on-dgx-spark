@@ -31,6 +31,8 @@ struct SettingsView: View {
     @ObservedObject var updater: Updater
     @State private var axTrusted = false
     @State private var mic: AVAuthorizationStatus = .notDetermined
+    @State private var screenOK = false
+    @ObservedObject private var folder = FolderWatch.shared
     @State private var tab: Tab = .allgemein
 
     var body: some View {
@@ -142,7 +144,33 @@ struct SettingsView: View {
     @ViewBuilder
     private var generalRest: some View {
         permissions
+        if model.part("folder") { folderSettings }
         panelSettings
+    }
+
+    @ViewBuilder
+    private var folderSettings: some View {
+        section("Ordner „Spark-Wissen“") {
+            Text(verbatim: folder.path.path)
+                .font(.system(size: 12, design: .monospaced))
+                .textSelection(.enabled)
+            HStack {
+                Button("Anderen Ordner wählen …") { folder.chooseFolder() }
+                Button("Im Finder zeigen") { folder.reveal() }
+                if folder.path != FolderWatch.defaultPath {
+                    Button("Standard") { folder.setPath(FolderWatch.defaultPath) }
+                }
+            }
+            if !folder.lastText.isEmpty {
+                Text(verbatim: folder.lastText)
+                    .font(.caption)
+                    .foregroundColor(Theme.muted)
+            }
+            Text(verbatim: "Neue oder geänderte Dateien (PDF, Word, Excel, PowerPoint, Text, Bilder …) kommen ins Wissen des Spark, sobald sie 10 Sekunden lang nicht mehr geändert wurden – höchstens 50 am Tag. Versteckte und halbfertige Dateien bleiben liegen.")
+                .font(.caption)
+                .foregroundColor(Theme.muted)
+                .fixedSize(horizontal: false, vertical: true)
+        }
     }
 
     @ViewBuilder
@@ -177,6 +205,38 @@ struct SettingsView: View {
                         }
                     }
                 }
+            }
+            if model.part("dictate") || model.part("wake") {
+                Text(verbatim: "Nötig fürs Diktieren und das Weckwort.")
+                    .font(.caption)
+                    .foregroundColor(Theme.muted)
+            }
+            if model.part("screen") {
+                HStack {
+                    Text(verbatim: screenOK ? "Bildschirmaufnahme: erlaubt" : "Bildschirmaufnahme: nicht erlaubt")
+                    Spacer()
+                    if !screenOK {
+                        Button("Erlauben …") { ScreenAsk.explainPermission() }
+                    }
+                }
+                Text(verbatim: "Nötig für „Bildschirm fragen“ (⌥⌘B). Nach dem Erlauben den Begleiter neu starten.")
+                    .font(.caption)
+                    .foregroundColor(Theme.muted)
+            }
+            if model.part("mail") {
+                HStack {
+                    Text(verbatim: "Automation → Mail")
+                    Spacer()
+                    Button("Einstellungen öffnen") {
+                        if let url = URL(string: "x-apple.systempreferences:com.apple.preference.security?Privacy_Automation") {
+                            NSWorkspace.shared.open(url)
+                        }
+                    }
+                }
+                Text(verbatim: "macOS fragt beim ersten „Antwort entwerfen“, ob der Begleiter Mail steuern darf. Er liest nur die ausgewählte Mail und öffnet einen Entwurf; er sendet nie.")
+                    .font(.caption)
+                    .foregroundColor(Theme.muted)
+                    .fixedSize(horizontal: false, vertical: true)
             }
         }
 
@@ -294,6 +354,7 @@ struct SettingsView: View {
     private func refreshPermissions() {
         axTrusted = Access.trusted
         mic = AVCaptureDevice.authorizationStatus(for: .audio)
+        screenOK = ScreenAsk.permitted
     }
 
     private var micText: String {
@@ -312,15 +373,24 @@ struct SettingsView: View {
         case "notes": return "Meldungen"
         case "status": return "Zustandspunkt"
         case "notaus": return "Mein-Notaus-Knopf"
+        case "files": return "Rechtsklick auf Dateien"
+        case "screen": return "Bildschirm fragen"
+        case "context": return "App erkennen"
+        case "mail": return "Antwort entwerfen (Mail)"
+        case "folder": return "Ordner „Spark-Wissen“ beobachten"
+        case "actions": return "Knöpfe in Meldungen"
+        case "act": return "Spark darf am Mac handeln"
+        case "wake": return "Weckwort"
         default: return p
         }
     }
 
     private func section<Content: View>(_ title: String, @ViewBuilder _ content: () -> Content) -> some View {
-        CardBox {
+        let inner = content()
+        return CardBox {
             Text(verbatim: title)
                 .font(.headline)
-            content()
+            inner
         }
     }
 

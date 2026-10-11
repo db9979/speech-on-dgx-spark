@@ -964,6 +964,22 @@
 "src": "assistent",
 "file": "Assistent und Oberfläche",
 "head": "Sprach-Chat",
+"title": "Begleiter tiefer im Rechner (V01.0.353)",
+"text": "Begleiter tiefer im Rechner (V01.0.353): acht weitere Teile, alle aus, pro Gerät unter Ich → Begleiter einzuschalten: - Rechtsklick auf Dateien: „Mit Spark“ im Explorer (Windows 11: „Weitere Optionen anzeigen“) und unter Dienste im Finder: zusammenfassen, übersetzen, erklären (PDF, Office, Text, Mail, Bilder; höchstens 20 MB, gelesen werden die ersten 40 000 Zeichen) oder ins Wissen übernehmen (braucht eigene Dokumente). - Bildschirm fragen: Strg+Alt+B (⌥⌘B), Bereich aufziehen, optional eine Frage, dann erklären, Text herauslesen oder übersetzen. Das Bild liest das Sprachmodell, aufbewahrt wird es nirgends. - App erkennen: Die Schreibhilfe erfährt die Art des Programms (Mail, Word, Excel, Chat, Browser …) und passt Ton und Form an; Programmnamen und Fenstertitel gehen nicht an den Spark. - Antwort entwerfen: Strg+Alt+M (⌥⌘M) zur offenen Mail in Outlook (klassisch, Windows) oder Apple Mail: die Antwort steht als Entwurf im Antwortfenster; gesendet wird nie. Im neuen Outlook liegt sie in der Zwischenablage. - Ordner Spark-Wissen: Was im Ordner landet (Standard: Spark-Wissen im Benutzerordner), kommt in die eigenen Dokumente; eine geänderte Datei ersetzt ihre ältere Fassung, höchstens"
+},
+{
+"lang": "de",
+"src": "assistent",
+"file": "Assistent und Oberfläche",
+"head": "Sprach-Chat",
+"title": "Begleiter tiefer im Rechner (V01.0.353)",
+"text": " 50 am Tag. - Knöpfe in Meldungen: Antworten, Später, Panel öffnen. Eine Antwort geht mit der Meldung als Zusammenhang an den Spark; die Meldung gilt dabei als fremder Text (nichts schaltet). - Am PC handeln (eigener Admin-Schalter „Darf am PC handeln“, aus): Auf eine Bitte wie „Öffne am PC tagesschau.de“ fragt der Rechner in einem Fenster, ob er darf (60 s, sonst nein). Erlaubt sind nur: Seite öffnen (http/https), ein unter Ich → Begleiter freigegebenes Programm, Musik (abspielen, anhalten, weiter, zurück), Lautstärke, Bildschirm sperren, Text zeigen. Nach Mails, Webseiten oder anderem fremden Text ist es gesperrt. - Weckwort am PC: „Hey Spark“ über das Mikrofon des Rechners, wie im Browser (kurze Stücke an die Spracherkennung, Treffer startet die Frage). Hört nur, solange der Teil an ist; das Symbol zeigt es, „Weckwort pausieren“ im Fenster."
+},
+{
+"lang": "de",
+"src": "assistent",
+"file": "Assistent und Oberfläche",
+"head": "Sprach-Chat",
 "title": "Raum-Modus",
 "text": "Raum-Modus (Funktionen → „Raum-Modus“, standardmäßig aus; nur Profile): Der Schalter „Raum“ unter dem Gesicht lässt den Assistenten an diesem Gerät für eine gewählte Zeit (15 Minuten bis 4 Stunden, endet von selbst) dem Gespräch im Raum zuhören; ein oranger Punkt zeigt es an. In einer Pause hilft er, wenn ein fester Auslöser fiel: eine offene Frage („Wann wurde eigentlich …?“, mit Websuche, im Zweifel nichts), ein Termin („Freitag um 10 zum Zahnarzt“ → „Soll ich das eintragen?“), „kalt“, „zu warm“ oder „zu dunkel“ (die echte Temperatur des Raums aus Home Assistant und das Angebot, die Heizung um ein Grad zu ändern oder das Licht anzumachen) und Einkäufe („Wir brauchen noch Milch“ → Einkaufsliste in Home Assistant). Geändert wird nur nach einem „Ja“, bei Smart Home mit Codewort, wenn eines gesetzt ist. Im Fenster „Ich“ unter „Raum-Modus“ stellt jedes Gerät ein: Dauer, wie viel er sagen darf (nur Fragen, auch Hinweise, auch Kommentare), jede Art einzeln, den Raum des Geräts in Home Assistant und „Nur als Text“ (still im Verlauf statt gesprochen). Das Gehörte bleibt nur fünf Minuten im Arbeitsspeicher des Panels und wird nie gespeichert; Gedächtnis, Mails und frühere Gespräche nutzt d"
 },
@@ -3446,6 +3462,22 @@
 "head": "Voice chat",
 "title": "Companion: updates, look, coffee (V01.0.347)",
 "text": "Companion: updates, look, coffee (V01.0.347): The programs now look like the panel: the Spark face as icon in taskbar and menu bar (dot bottom right: green reachable, grey not reachable, red kill switch, accent colour when a new version is there), a window on clicking the icon with all parts that are on and their hotkeys, light and dark look following the system. Updates: the Spark fetches new versions itself from the GitHub releases begleiter-windows and begleiter-mac (once a day and only when a device of that kind is paired; Features → Spark companion → \"Fetch new version now\" at once) and checks size and SHA-256 against the version's begleiter.json. The program learns from its check that a new version is there, downloads it only from the paired Spark, checks size and SHA-256 again and installs only after your click on \"Update\"; a damaged file is deleted and the old version keeps running. Settings → About shows the version, \"Check for updates\" and the switch \"Download updates automatically, ask before installing\". The first version with updates has to be installed by hand once. The program and Me → Companion carry the link \"☕ Support Spark\" (buymeacoffee.com)."
+},
+{
+"lang": "en",
+"src": "assistant",
+"file": "Assistant and panel",
+"head": "Voice chat",
+"title": "Companion deeper in the computer (V01.0.353)",
+"text": "Companion deeper in the computer (V01.0.353): eight more parts, all off, turned on per device under Me → Companion: - Right-click on files: \"With Spark\" in Explorer (Windows 11: \"Show more options\") and under Services in Finder: summarize, translate, explain (PDF, Office, text, mail, pictures; at most 20 MB, the first 40,000 characters are read) or add to knowledge (needs own documents). - Ask about the screen: Ctrl+Alt+B (⌥⌘B), drag a region, optionally a question, then explain, read out the text or translate. The language model reads the picture; it is kept nowhere. - Know the app: the writing help learns the kind of program (mail, Word, Excel, chat, browser …) and fits tone and form; program names and window titles do not go to the Spark. - Draft a reply: Ctrl+Alt+M (⌥⌘M) for the open mail in Outlook (classic, Windows) or Apple Mail: the answer is a draft in the reply window; nothing is ever sent. In the new Outlook it is on the clipboard. - Spark-Wissen folder: what lands in the folder (default: Spark-Wissen in the user folder) goes into the own documents; a changed file replaces its older version, at most 50 a day. - Buttons in notes: Reply, Later, Open panel. A reply goes to "
+},
+{
+"lang": "en",
+"src": "assistant",
+"file": "Assistant and panel",
+"head": "Voice chat",
+"title": "Companion deeper in the computer (V01.0.353)",
+"text": "the Spark with the note as context; the note counts as outside text (nothing switches). - Act on the PC (own admin switch \"May act on the PC\", off): for a request like \"Open tagesschau.de on the PC\" the computer asks in a window whether it may (60 s, else no). Allowed only: open a page (http/https), a program released under Me → Companion, music (play, pause, next, previous), volume, lock the screen, show a text. Locked after mail, web pages or other outside text. - Wake word on the PC: \"Hey Spark\" through the computer's microphone, as in the browser (short pieces to speech recognition, a hit starts the question). Listens only while the part is on; the icon shows it, \"Pause wake word\" in the window."
 },
 {
 "lang": "en",

@@ -10,6 +10,7 @@ also gets "text" (the person's latest message), answer() also "ha", "ha_code", "
 home this turn may switch, see chat_turn); "private" is False over Telegram unless the profile allowed it.
 """
 import agent
+import begleiter
 import contacts
 import hamelden
 import messages
@@ -22,7 +23,7 @@ import remarkable
 import wiki
 import hilfe
 
-SERVICES = [roomfar, weather, contacts, parcels, tasks, transit, wiki, agent, messages, remarkable, hamelden, hilfe]
+SERVICES = [roomfar, weather, contacts, parcels, tasks, transit, wiki, agent, messages, remarkable, hamelden, hilfe, begleiter]
 
 
 def offer(ctx):

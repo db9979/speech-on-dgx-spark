@@ -33,7 +33,9 @@
 	<key>NSHumanReadableCopyright</key>
 	<string>Spark-Begleiter für den eigenen Spark</string>
 	<key>NSMicrophoneUsageDescription</key>
-	<string>Zum Diktieren: Der Spark-Begleiter nimmt nur auf, nachdem du das Diktat-Kürzel gedrückt hast, bis zum nächsten Druck (höchstens 60 Sekunden). Die Aufnahme geht nur an deinen eigenen Spark.</string>
+	<string>Zum Diktieren: Der Spark-Begleiter nimmt nur auf, nachdem du das Diktat-Kürzel gedrückt hast, bis zum nächsten Druck (höchstens 60 Sekunden). Ist im Panel das Weckwort an, hört er zu, bis du es dort ausschaltest oder im Begleiter pausierst. Die Aufnahmen gehen nur an deinen eigenen Spark.</string>
+	<key>NSAppleEventsUsageDescription</key>
+	<string>Für „Antwort entwerfen“: Der Spark-Begleiter liest die ausgewählte Mail in Mail (Absender, Betreff, Text) und öffnet einen Antwortentwurf mit dem Vorschlag des Spark. Er sendet nie etwas.</string>
 	<key>NSAppTransportSecurity</key>
 	<dict>
 		<key>NSAllowsLocalNetworking</key>
@@ -65,6 +67,114 @@
 			<dict/>
 			<key>NSTimeout</key>
 			<string>600000</string>
+		</dict>
+		<dict>
+			<key>NSMenuItem</key>
+			<dict>
+				<key>default</key>
+				<string>Mit Spark zusammenfassen</string>
+			</dict>
+			<key>NSMessage</key>
+			<string>summarizeFiles</string>
+			<key>NSPortName</key>
+			<string>Spark-Begleiter</string>
+			<key>NSSendFileTypes</key>
+			<array>
+				<string>public.pdf</string>
+				<string>public.plain-text</string>
+				<string>public.image</string>
+				<string>public.html</string>
+				<string>org.openxmlformats.wordprocessingml.document</string>
+				<string>org.openxmlformats.spreadsheetml.sheet</string>
+				<string>org.openxmlformats.presentationml.presentation</string>
+				<string>org.oasis-open.opendocument.text</string>
+				<string>net.daringfireball.markdown</string>
+				<string>com.apple.mail.email</string>
+				<string>public.email-message</string>
+			</array>
+			<key>NSRequiredContext</key>
+			<dict/>
+		</dict>
+		<dict>
+			<key>NSMenuItem</key>
+			<dict>
+				<key>default</key>
+				<string>Mit Spark übersetzen</string>
+			</dict>
+			<key>NSMessage</key>
+			<string>translateFiles</string>
+			<key>NSPortName</key>
+			<string>Spark-Begleiter</string>
+			<key>NSSendFileTypes</key>
+			<array>
+				<string>public.pdf</string>
+				<string>public.plain-text</string>
+				<string>public.image</string>
+				<string>public.html</string>
+				<string>org.openxmlformats.wordprocessingml.document</string>
+				<string>org.openxmlformats.spreadsheetml.sheet</string>
+				<string>org.openxmlformats.presentationml.presentation</string>
+				<string>org.oasis-open.opendocument.text</string>
+				<string>net.daringfireball.markdown</string>
+				<string>com.apple.mail.email</string>
+				<string>public.email-message</string>
+			</array>
+			<key>NSRequiredContext</key>
+			<dict/>
+		</dict>
+		<dict>
+			<key>NSMenuItem</key>
+			<dict>
+				<key>default</key>
+				<string>Mit Spark erklären</string>
+			</dict>
+			<key>NSMessage</key>
+			<string>explainFiles</string>
+			<key>NSPortName</key>
+			<string>Spark-Begleiter</string>
+			<key>NSSendFileTypes</key>
+			<array>
+				<string>public.pdf</string>
+				<string>public.plain-text</string>
+				<string>public.image</string>
+				<string>public.html</string>
+				<string>org.openxmlformats.wordprocessingml.document</string>
+				<string>org.openxmlformats.spreadsheetml.sheet</string>
+				<string>org.openxmlformats.presentationml.presentation</string>
+				<string>org.oasis-open.opendocument.text</string>
+				<string>net.daringfireball.markdown</string>
+				<string>com.apple.mail.email</string>
+				<string>public.email-message</string>
+			</array>
+			<key>NSRequiredContext</key>
+			<dict/>
+		</dict>
+		<dict>
+			<key>NSMenuItem</key>
+			<dict>
+				<key>default</key>
+				<string>Mit Spark ins Wissen übernehmen</string>
+			</dict>
+			<key>NSMessage</key>
+			<string>learnFiles</string>
+			<key>NSPortName</key>
+			<string>Spark-Begleiter</string>
+			<key>NSSendFileTypes</key>
+			<array>
+				<string>public.pdf</string>
+				<string>public.plain-text</string>
+				<string>public.image</string>
+				<string>public.html</string>
+				<string>org.openxmlformats.wordprocessingml.document</string>
+				<string>org.openxmlformats.spreadsheetml.sheet</string>
+				<string>org.openxmlformats.presentationml.presentation</string>
+				<string>org.oasis-open.opendocument.text</string>
+				<string>net.daringfireball.markdown</string>
+				<string>com.apple.mail.email</string>
+				<string>public.email-message</string>
+			</array>
+			<key>NSRequiredContext</key>
+			<dict/>
 		</dict>
 	</array>
 </dict>

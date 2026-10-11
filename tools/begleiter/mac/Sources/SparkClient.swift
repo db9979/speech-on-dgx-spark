@@ -6,13 +6,14 @@ enum SparkProblem: Error {
     case off(String)            // 403: this part is switched off
     case busy(String)           // 429
     case notaus(String)         // 503 with "Notaus …" / "Mein Notaus …"
+    case conflict(String)       // 409 (e.g. the same file is already in the Wissen)
     case failed(String)         // any other answer of the Spark (400, 413, 500, …)
     case offline(String)        // no answer at all
 
     var message: String {
         switch self {
         case .unknownDevice: return "Der Spark kennt dieses Gerät nicht mehr. Neu koppeln."
-        case .off(let m), .busy(let m), .notaus(let m), .failed(let m), .offline(let m): return m
+        case .off(let m), .busy(let m), .notaus(let m), .conflict(let m), .failed(let m), .offline(let m): return m
         }
     }
 }
@@ -176,6 +177,8 @@ final class SparkClient: NSObject, URLSessionTaskDelegate, @unchecked Sendable {
             return .unknownDevice
         case 403:
             return .off(detail ?? "Dieser Teil ist im Panel aus (Ich → Begleiter).")
+        case 409:
+            return .conflict(detail ?? "Das ist schon da.")
         case 429:
             return .busy(detail ?? "Der Spark arbeitet noch. Bitte gleich noch einmal.")
         case 503:
@@ -218,11 +221,15 @@ extension SparkClient {
     static let askMax = 2000
 
     /// POST /api/write/assist; "sprache" only for translations, "wunsch" only when given.
-    func improve(text: String, art: String, sprache: String?, wunsch: String) async throws -> WriteOutcome {
+    /// `app`: the front app's category (only when part "context" is on), `mail`: the mail to answer (art "antwort").
+    func improve(text: String, art: String, sprache: String?, wunsch: String, app: String? = nil,
+                 mail: String? = nil) async throws -> WriteOutcome {
         var body: [String: Any] = ["text": text, "art": art]
         if let sprache, !sprache.isEmpty { body["sprache"] = sprache }
         let w = wunsch.trimmingCharacters(in: .whitespacesAndNewlines)
         if !w.isEmpty { body["wunsch"] = String(w.prefix(300)) }
+        if let app, AppCategory.all.contains(app) { body["app"] = app }
+        if let mail { body["mail"] = String(mail.prefix(SparkClient.writeMax)) }
         let d = try await postJSON("api/write/assist", body, timeout: 190)
         guard let out = d["text"] as? String else {
             throw SparkProblem.failed("Keine Antwort vom Spark.")
@@ -237,8 +244,10 @@ extension SparkClient {
     }
 
     /// POST /api/desk/ask (the Spark keeps follow-ups in context itself).
-    func ask(_ text: String) async throws -> String {
-        let d = try await postJSON("api/desk/ask", ["text": text, "tz": TimeZone.current.identifier], timeout: 190)
+    func ask(_ text: String, note: Int? = nil) async throws -> String {
+        var body: [String: Any] = ["text": String(text.prefix(SparkClient.askMax)), "tz": TimeZone.current.identifier]
+        if let note { body["note"] = note }
+        let d = try await postJSON("api/desk/ask", body, timeout: 190)
         guard let a = d["answer"] as? String else { throw SparkProblem.failed("Keine Antwort vom Spark.") }
         return a
     }
@@ -250,6 +259,44 @@ extension SparkClient {
         form.file("file", filename: "diktat.wav", type: "audio/wav", data: wav)
         let d = try await postMultipart("api/desk/dictate", form, timeout: 120)
         return (d["text"] as? String) ?? ""
+    }
+
+    /// POST /api/desk/file: "text" for zusammenfassen/uebersetzen/erklaeren; for wissen the stored name.
+    func file(_ data: Data, name: String, type: String, what: String, sprache: String?) async throws -> String {
+        var form = Multipart()
+        form.field("what", what)
+        if let sprache, what == "uebersetzen" { form.field("sprache", sprache) }
+        form.file("file", filename: FileKinds.safeName(name), type: type, data: data)
+        let d = try await postMultipart("api/desk/file", form, timeout: 300)
+        if what == "wissen" { return (d["name"] as? String) ?? name }
+        guard let t = d["text"] as? String else { throw SparkProblem.failed("Keine Antwort vom Spark.") }
+        return t
+    }
+
+    /// POST /api/desk/screen with the picture (PNG or JPEG).
+    func screen(_ image: Data, type: String, question: String, what: String) async throws -> String {
+        var form = Multipart()
+        form.field("what", what)
+        form.field("question", String(question.prefix(ScreenShot.maxQuestion)))
+        form.file("image", filename: type == "image/png" ? "bildschirm.png" : "bildschirm.jpg", type: type, data: image)
+        let d = try await postMultipart("api/desk/screen", form, timeout: 240)
+        guard let t = d["text"] as? String else { throw SparkProblem.failed("Keine Antwort vom Spark.") }
+        return t
+    }
+
+    /// POST /api/desk/hear: was the wake word in it, and what came after it.
+    func hear(wav: Data) async throws -> (wake: Bool, rest: String) {
+        var form = Multipart()
+        form.file("file", filename: "hoeren.wav", type: "audio/wav", data: wav)
+        let d = try await postMultipart("api/desk/hear", form, timeout: 30)
+        return ((d["wake"] as? Bool) ?? false, ((d["rest"] as? String) ?? "").trimmingCharacters(in: .whitespacesAndNewlines))
+    }
+
+    /// POST /api/desk/act: the answer to one of the Spark's wishes.
+    func act(id: String, ok: Bool, error: String?) async throws {
+        var body: [String: Any] = ["id": id, "ok": ok]
+        if let error, !error.isEmpty { body["error"] = String(error.prefix(300)) }
+        _ = try await postJSON("api/desk/act", body, timeout: 30)
     }
 
     /// POST /api/desk/pair (without key): the new key and the profile's name.

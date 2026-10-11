@@ -32,17 +32,30 @@ internal sealed class AppConfig
     /// <summary>Gerätename, unter dem dieses Programm im Panel erscheint.</summary>
     public string? Device { get; set; }
 
-    /// <summary>Lokale Tastenkürzel je Teil (write/ask/dictate), siehe <see cref="Hotkey.Serialize"/>.</summary>
+    /// <summary>Lokale Tastenkürzel je Teil (write/ask/dictate/screen/mail), siehe <see cref="Hotkey.Serialize"/>.</summary>
     public Dictionary<string, string> Hotkeys { get; set; } = new();
 
     /// <summary>Updates im Hintergrund laden (installiert wird erst nach Klick). Lokal, Standard an.</summary>
     public bool AutoDownloadUpdates { get; set; } = true;
+
+    /// <summary>Beobachteter Ordner für den Teil "folder" (lokal); <c>null</c> = %USERPROFILE%\Spark-Wissen.</summary>
+    public string? WissenFolder { get; set; }
+
+    /// <summary>Der beobachtete Ordner (gewählt oder Standard).</summary>
+    [JsonIgnore]
+    public string WissenPath => string.IsNullOrWhiteSpace(WissenFolder)
+        ? Path.Combine(Environment.GetFolderPath(Environment.SpecialFolder.UserProfile), "Spark-Wissen")
+        : WissenFolder;
 
     /// <summary>Zuletzt vom Spark geholte Einstellungen (enthält keine Geheimnisse).</summary>
     public DeskConfig? Desk { get; set; }
 
     public static string Folder =>
         Path.Combine(Environment.GetFolderPath(Environment.SpecialFolder.ApplicationData), "Spark Begleiter");
+
+    /// <summary>Lokale Arbeitsdaten (Ordner-Liste, erledigte Aktionen), nicht servergesteuert.</summary>
+    public static string LocalFolder =>
+        Path.Combine(Environment.GetFolderPath(Environment.SpecialFolder.LocalApplicationData), "Spark Begleiter");
 
     private static string FilePath => Path.Combine(Folder, "config.json");
 

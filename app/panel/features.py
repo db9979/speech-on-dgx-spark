@@ -162,6 +162,8 @@ FEATURES = (
     F("android", "Android-App", "Android app", "go", ("android",), "android_on", me="andbox", guide="android"),
     F("begleiter", "Spark-Begleiter am PC und Mac", "Spark companion on PC and Mac", "go", ("desk",), "desk_on",
       me="deskbox", guide="begleiter"),
+    F("begleitertun", "Begleiter darf am PC handeln", "Companion may act on the PC", "go", ("desk_act",),
+      parent="begleiter", me="deskbox", guide="begleitertun"),
     F("pebble", "Pebble-Uhr", "Pebble watch", "go", ("pebble",), "pebble_on", me="pebbox", guide="pebblepair"),
     F("mcpserver", "Spark als MCP-Server", "Spark as MCP server", "go", ("mcp_server",), "mcps_on", me="mcpbox", guide="mcpserver"),
     F("mcpextern", "MCP-Server von außen (OAuth)", "MCP server from outside (OAuth)", "go", ("mcp_server_extern",),

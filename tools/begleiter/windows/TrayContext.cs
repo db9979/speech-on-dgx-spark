@@ -15,9 +15,10 @@ internal enum Connection
 /// <summary>
 /// Das eigentliche Programm: Symbol im Infobereich mit Zustandspunkt, Menü, Tastenkürzel, regelmäßige
 /// Abfrage beim Spark (Herzschlag, Meldungen, Einstellungen) und die Abläufe der Teile:
-/// Schreibhilfe, Frag Spark, Diktieren, Meldungen, Zustandspunkt, Mein Notaus.
+/// Schreibhilfe, Frag Spark, Diktieren, Meldungen, Zustandspunkt, Mein Notaus. Die Teile von Version 3
+/// (Dateien, Bildschirm, App erkennen, Mail, Ordner, Knöpfe, Handeln, Weckwort) stehen in TrayContext.Parts.cs.
 /// </summary>
-internal sealed class TrayContext : ApplicationContext, IBegleiterHost
+internal sealed partial class TrayContext : ApplicationContext, IBegleiterHost
 {
     public const string Title = "Spark-Begleiter";
 
@@ -61,9 +62,11 @@ internal sealed class TrayContext : ApplicationContext, IBegleiterHost
     private bool _dictateBusy;
 
     /// <param name="startup">Wie gestartet wurde: normal, nach einem Update oder nach einem fehlgeschlagenen.</param>
-    public TrayContext(string? startup = null)
+    /// <param name="fileRequest">Vom Explorer-Menü "Mit Spark" gestartet: dieser Auftrag.</param>
+    public TrayContext(string? startup = null, FileRequest? fileRequest = null)
     {
         _invoker.CreateControl();
+        _fileBridge = FileBridge.Start(request => EnqueueFile(request));
         _desk = _config.IsPaired ? _config.Desk : null;
         _connection = _config.IsPaired ? Connection.Unknown : Connection.Unpaired;
         _updater = new Updater(Credentials);
@@ -89,11 +92,12 @@ internal sealed class TrayContext : ApplicationContext, IBegleiterHost
         };
         _tray.BalloonTipClicked += (_, _) =>
         {
-            if (_updater.Phase is UpdatePhase.Ready or UpdatePhase.Available)
+            if (_updater.Phase is UpdatePhase.Ready or UpdatePhase.Available || _balloonIsNote)
             {
                 ShowPanel();
             }
         };
+        _tray.BalloonTipClosed += (_, _) => _balloonIsNote = false;
         _menu.Opening += (_, _) => BuildMenu();
 
         _hotkeys.Pressed += async (_, part) => await OnHotkeyAsync(part);
@@ -126,7 +130,13 @@ internal sealed class TrayContext : ApplicationContext, IBegleiterHost
             }
             else
             {
+                SyncParts();
                 _ = PollAsync();
+            }
+
+            if (fileRequest is not null)
+            {
+                EnqueueFile(fileRequest);
             }
         }
     }
@@ -190,6 +200,7 @@ internal sealed class TrayContext : ApplicationContext, IBegleiterHost
 
             _slowPoll = false;
             HandleNotes(poll);
+            HandleAsks(poll.Asks);
             if (poll.NotausLevel > 0)
             {
                 SetConnection(Connection.Notaus, $"Notaus Stufe {poll.NotausLevel} am Spark");
@@ -282,6 +293,14 @@ internal sealed class TrayContext : ApplicationContext, IBegleiterHost
             return;
         }
 
+        if (IsOn(Parts.Actions))
+        {
+            foreach (Note n in fresh.Where(n => n.Actions.Count > 0))
+            {
+                AddPanelNote(n);
+            }
+        }
+
         if (fresh.Count == 1)
         {
             Note note = fresh[0];
@@ -300,6 +319,7 @@ internal sealed class TrayContext : ApplicationContext, IBegleiterHost
         title = Clip(title.ReplaceLineEndings(" "), 63);
         body = Clip(body, 255);
         _tray.ShowBalloonTip(10000, title, body.Length == 0 ? " " : body, ToolTipIcon.Info);
+        _balloonIsNote = IsOn(Parts.Actions) && _panelNotes.Count > 0;
     }
 
     private static string Clip(string text, int max) =>
@@ -327,6 +347,7 @@ internal sealed class TrayContext : ApplicationContext, IBegleiterHost
         }
 
         _ask?.RefreshParts();
+        SyncParts();
         ApplyAutostart(desk.Autostart);
         _updater.OnConfig(desk.Update, _config.AutoDownloadUpdates);
         UpdateIcon();
@@ -432,7 +453,7 @@ internal sealed class TrayContext : ApplicationContext, IBegleiterHost
                 _ => StatusDot.Grey,
             };
         _traySize = AppIcon.TrayIconSize();
-        _tray.Icon = AppIcon.ForTray(dot);
+        _tray.Icon = AppIcon.ForTray(dot, listening: _wake is not null && !_wake.Paused);
         _tray.Text = Clip(Title + " – " + StatusLine().ReplaceLineEndings(" "), 127);
     }
 
@@ -488,6 +509,8 @@ internal sealed class TrayContext : ApplicationContext, IBegleiterHost
                 });
                 any = true;
             }
+
+            any |= AddPartMenuItems();
 
             if (IsOn(Parts.Notaus))
             {
@@ -616,6 +639,8 @@ internal sealed class TrayContext : ApplicationContext, IBegleiterHost
                     _config.GetHotkey(Parts.Dictate).ToString(), () => _ = ToggleDictationAsync(IntPtr.Zero), Enabled: !_dictateBusy));
             }
 
+            AddPanelItems(items);
+
             if (IsOn(Parts.Notaus))
             {
                 items.Add(new PanelItem("Mein Notaus …", Glyph.Octagon, null, () => _ = TriggerNotausAsync(), Danger: true));
@@ -641,6 +666,7 @@ internal sealed class TrayContext : ApplicationContext, IBegleiterHost
                 : null,
             Update = BuildBanner(),
             Items = items,
+            Notes = BuildPanelNotes(),
             Hint = hint,
             Settings = () => OpenSettings(),
             OpenPanel = string.IsNullOrEmpty(_config.Base) ? null : OpenPanel,
@@ -855,6 +881,12 @@ internal sealed class TrayContext : ApplicationContext, IBegleiterHost
                 case Parts.Dictate:
                     await ToggleDictationAsync(NativeMethods.GetForegroundWindow());
                     break;
+                case Parts.Screen:
+                    await AskScreenAsync();
+                    break;
+                case Parts.Mail:
+                    await DraftReplyAsync(fromHotkey: true);
+                    break;
             }
         }
         catch (Exception ex) when (ex is InvalidOperationException or System.ComponentModel.Win32Exception or IOException or ObjectDisposedException)
@@ -936,7 +968,7 @@ internal sealed class TrayContext : ApplicationContext, IBegleiterHost
         _tray.Text = Clip(Title + " – Der Spark schreibt …", 127);
         try
         {
-            AssistResult result = await SparkClient.AssistAsync(_config.Base, key, core, art, sprache, desk.WriteWunsch, CancellationToken.None);
+            AssistResult result = await SparkClient.AssistAsync(_config.Base, key, core, art, sprache, desk.WriteWunsch, CancellationToken.None, ContextFor(target));
             string improved = result.Text.Trim();
             if (result.Changes == 0 || improved == core)
             {
@@ -982,7 +1014,7 @@ internal sealed class TrayContext : ApplicationContext, IBegleiterHost
             existing.Close();
         }
 
-        var form = new AssistForm(_config, _desk, text ?? "", target, WindowInfo.AppName(target), ReportFromWindow);
+        var form = new AssistForm(_config, _desk, text ?? "", target, WindowInfo.AppName(target), ReportFromWindow, ContextFor(target));
         form.FormClosed += async (_, _) =>
         {
             if (ReferenceEquals(_assist, form))
@@ -1030,10 +1062,16 @@ internal sealed class TrayContext : ApplicationContext, IBegleiterHost
             return;
         }
 
+        EnsureAsk();
+    }
+
+    /// <summary>Das Fenster „Frag Spark“ öffnen bzw. nach vorn holen – auch für Ergebnisse anderer Teile.</summary>
+    private AskForm EnsureAsk()
+    {
         if (_ask is { IsDisposed: false } open)
         {
             open.Bring();
-            return;
+            return open;
         }
 
         var form = new AskForm(_config, () => _desk, ReportFromWindow);
@@ -1049,6 +1087,7 @@ internal sealed class TrayContext : ApplicationContext, IBegleiterHost
         _ask = form;
         form.Show();
         form.Bring();
+        return form;
     }
 
     // ------------------------------------------------------------------ Diktieren
@@ -1312,8 +1351,8 @@ internal sealed class TrayContext : ApplicationContext, IBegleiterHost
     public void Unpair(IWin32Window? owner)
     {
         DialogResult answer = MessageBox.Show(owner,
-            "Den Begleiter vom Spark entkoppeln? Der Schlüssel wird auf diesem PC gelöscht und "
-            + "„Mit Windows starten“ ausgeschaltet.\n\n"
+            "Den Begleiter vom Spark entkoppeln? Der Schlüssel wird auf diesem PC gelöscht, "
+            + "„Mit Windows starten“ ausgeschaltet und das Explorer-Menü „Mit Spark“ entfernt.\n\n"
             + "Im Panel unter Ich → Begleiter lässt sich das Gerät danach auch dort entfernen.",
             Title, MessageBoxButtons.YesNo, MessageBoxIcon.Question, MessageBoxDefaultButton.Button2);
         if (answer != DialogResult.Yes)
@@ -1336,6 +1375,7 @@ internal sealed class TrayContext : ApplicationContext, IBegleiterHost
 
         _assist?.Close();
         _ask?.Close();
+        StopParts(removeFileMenu: true);
         _config.ForgetKey();
         _config.Desk = null;
         _config.Profile = null;
@@ -1366,12 +1406,17 @@ internal sealed class TrayContext : ApplicationContext, IBegleiterHost
         }
     }
 
-    private void Notify(string text, ToolTipIcon icon) =>
+    private void Notify(string text, ToolTipIcon icon)
+    {
+        _balloonIsNote = false;
         _tray.ShowBalloonTip(5000, Title, Clip(text, 255), icon);
+    }
 
     protected override void ExitThreadCore()
     {
         _pollTimer.Stop();
+        StopParts(removeFileMenu: false);
+        _fileBridge.Dispose();
         _recorder?.Dispose();
         _recorder = null;
         CloseIndicator();

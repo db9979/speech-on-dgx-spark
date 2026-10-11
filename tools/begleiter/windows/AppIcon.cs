@@ -25,21 +25,22 @@ internal static class AppIcon
 {
     private static readonly int[] WindowSizes = { 16, 20, 24, 32, 40, 48, 64, 256 };
 
-    private static readonly Dictionary<(StatusDot Dot, int Size, bool Dark), Icon> TrayCache = new();
+    private static readonly Dictionary<(StatusDot Dot, int Size, bool Dark, bool Listening), Icon> TrayCache = new();
     private static Icon? _windowIcon;
 
     /// <summary>Fenster-Symbol mit allen Größen; Windows wählt die passende.</summary>
     public static Icon Icon => _windowIcon ??= BuildMulti();
 
     /// <summary>Das Symbol für den Infobereich in der Größe und den Farben der Taskleiste.</summary>
-    public static Icon ForTray(StatusDot dot)
+    /// <param name="listening">Teil "wake" hört zu: Ring in der Akzentfarbe um das Gesicht.</param>
+    public static Icon ForTray(StatusDot dot, bool listening = false)
     {
         int size = TrayIconSize();
         Palette palette = Theme.Taskbar;
-        var key = (dot, size, palette.Dark);
+        var key = (dot, size, palette.Dark, listening);
         if (!TrayCache.TryGetValue(key, out Icon? icon))
         {
-            using Bitmap bitmap = Render(size, palette, dot);
+            using Bitmap bitmap = Render(size, palette, dot, listening);
             icon = FromImages(new[] { bitmap });
             TrayCache[key] = icon;
         }
@@ -81,13 +82,29 @@ internal static class AppIcon
     };
 
     /// <summary>Bild in einer Größe: Gesicht, darüber optional der Punkt mit ausgespartem Ring.</summary>
-    public static Bitmap Render(int size, Palette p, StatusDot dot)
+    public static Bitmap Render(int size, Palette p, StatusDot dot, bool listening = false)
     {
         var bitmap = new Bitmap(size, size, PixelFormat.Format32bppArgb);
         using Graphics g = Graphics.FromImage(bitmap);
         Draw.HighQuality(g);
         g.Clear(Color.Transparent);
-        Face.Draw(g, new RectangleF(0, 0, size, size), p, tight: true);
+        if (listening)
+        {
+            // „hört“: Gesicht etwas kleiner, darum ein Ring in Akzent 2.
+            float ringWidth = Math.Max(1.5f, size / 10f);
+            float inset = ringWidth / 2f;
+            using (var pen = new Pen(p.HighContrast ? Palette.Light.Accent2 : p.Accent2, ringWidth))
+            {
+                g.DrawEllipse(pen, inset, inset, size - (2 * inset), size - (2 * inset));
+            }
+
+            float pad = ringWidth * 1.8f;
+            Face.Draw(g, new RectangleF(pad, pad, size - (2 * pad), size - (2 * pad)), p, tight: true);
+        }
+        else
+        {
+            Face.Draw(g, new RectangleF(0, 0, size, size), p, tight: true);
+        }
 
         if (DotColor(dot, p) is { } color)
         {

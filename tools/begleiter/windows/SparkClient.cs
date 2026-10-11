@@ -39,9 +39,16 @@ internal sealed record AssistResult(string Text, IReadOnlyList<DiffPart>? Diff, 
 
 internal sealed record PairResult(string Key, string? Profile);
 
-internal sealed record Note(int N, string Title, string Body, string? Tag);
+/// <summary>Eine Meldung; <see cref="Actions"/> = angebotene Knöpfe ("reply", "later", "open").</summary>
+internal sealed record Note(int N, string Title, string Body, string? Tag, IReadOnlyList<string> Actions);
 
-internal sealed record PollResult(int Rev, IReadOnlyList<Note> Notes, int Last, int NotausLevel, string? Update);
+/// <summary>Eine Bitte des Spark, am PC etwas zu tun (Teil "act").</summary>
+internal sealed record ActAsk(string Id, string Action, string Arg, string Text);
+
+internal sealed record PollResult(int Rev, IReadOnlyList<Note> Notes, int Last, int NotausLevel, string? Update, IReadOnlyList<ActAsk> Asks);
+
+/// <summary>Antwort von /api/desk/file: Text (zusammenfassen/übersetzen/erklären) oder neuer Wissens-Eintrag.</summary>
+internal sealed record FileResult(string? Text, string? Id, string? Name);
 
 /// <summary>
 /// Die Schnittstelle des Spark (/api/desk/… und /api/write/assist). Es wird nur mit der eingerichteten
@@ -57,6 +64,13 @@ internal static class SparkClient
 
     private static readonly TimeSpan LongTimeout = TimeSpan.FromSeconds(180);
     private static readonly TimeSpan ShortTimeout = TimeSpan.FromSeconds(20);
+    private static readonly TimeSpan MediumTimeout = TimeSpan.FromSeconds(60);
+
+    /// <summary>Höchstgröße für /api/desk/file (laut Vertrag).</summary>
+    public const long MaxFileBytes = 20L * 1024 * 1024;
+
+    /// <summary>Höchstgröße für das Bild an /api/desk/screen.</summary>
+    public const int MaxImageBytes = 6 * 1024 * 1024;
 
     private static readonly HttpClient Http = CreateClient();
 
@@ -119,19 +133,44 @@ internal static class SparkClient
             {
                 if (item is JsonObject o && Json.Int(o["n"]) is { } n)
                 {
-                    notes.Add(new Note(n, Json.Str(o["title"]) ?? "", Json.Str(o["body"]) ?? "", Json.Str(o["tag"])));
+                    var actions = new List<string>();
+                    if (o["actions"] is JsonArray acts)
+                    {
+                        actions.AddRange(acts.Select(Json.Str).OfType<string>().Where(a => a is "reply" or "later" or "open").Distinct());
+                    }
+
+                    notes.Add(new Note(n, Json.Str(o["title"]) ?? "", Json.Str(o["body"]) ?? "", Json.Str(o["tag"]), actions));
+                }
+            }
+        }
+
+        var asks = new List<ActAsk>();
+        if (json["asks"] is JsonArray askList)
+        {
+            foreach (JsonNode? item in askList.Take(20))
+            {
+                // Kennung als Text oder Zahl; nur harmlose Zeichen, weil sie in die Adresse kommt.
+                string? id = Json.Str(item?["id"]) ?? Json.Long(item?["id"])?.ToString(System.Globalization.CultureInfo.InvariantCulture);
+                if (item is JsonObject o && id is { Length: > 0 and <= 64 } && id.All(c => char.IsAsciiLetterOrDigit(c) || c is '-' or '_'))
+                {
+                    asks.Add(new ActAsk(id, Json.Str(o["action"]) ?? "", Json.Str(o["arg"]) ?? "", Json.Str(o["text"]) ?? ""));
                 }
             }
         }
 
         int level = json["notaus"] is JsonObject notaus ? Json.Int(notaus["level"]) ?? 0 : 0;
-        return new PollResult(Json.Int(json["rev"]) ?? 0, notes, Json.Int(json["last"]) ?? after, level, Json.Str(json["update"]));
+        return new PollResult(Json.Int(json["rev"]) ?? 0, notes, Json.Int(json["last"]) ?? after, level, Json.Str(json["update"]), asks);
     }
 
     /// <summary>POST /api/desk/ask – Frage an den Spark (bis zu 3 Minuten).</summary>
-    public static async Task<string> AskAsync(string baseUrl, string key, string text, CancellationToken ct)
+    public static async Task<string> AskAsync(string baseUrl, string key, string text, CancellationToken ct, int? note = null)
     {
         var body = new JsonObject { ["text"] = text };
+        if (note is { } n)
+        {
+            body["note"] = n; // Antwort auf eine Meldung (Teil "actions")
+        }
+
         if (LocalIanaTimeZone() is { } tz)
         {
             body["tz"] = tz;
@@ -165,9 +204,20 @@ internal static class SparkClient
 
     /// <summary>POST /api/write/assist – lässt den Text verbessern.</summary>
     public static async Task<AssistResult> AssistAsync(
-        string baseUrl, string key, string text, string art, string? sprache, string? wunsch, CancellationToken ct)
+        string baseUrl, string key, string text, string art, string? sprache, string? wunsch, CancellationToken ct,
+        string? app = null, string? mail = null)
     {
         var body = new JsonObject { ["text"] = text, ["art"] = art };
+        if (app is not null)
+        {
+            body["app"] = app; // nur die Art des Programms (Teil "context"), nie Titel oder Inhalte
+        }
+
+        if (mail is not null)
+        {
+            body["mail"] = mail; // Teil "mail": die Mail, auf die geantwortet wird
+        }
+
         if (!string.IsNullOrEmpty(sprache))
         {
             body["sprache"] = sprache;
@@ -188,6 +238,67 @@ internal static class SparkClient
         }
 
         return new AssistResult(result, ParseDiff(json["diff"]), Json.Int(json["changes"]), Json.Int(json["ms"]));
+    }
+
+    /// <summary>POST /api/desk/file – Datei zusammenfassen/übersetzen/erklären lassen oder ins Wissen übernehmen.</summary>
+    public static async Task<FileResult> FileAsync(
+        string baseUrl, string key, byte[] data, string fileName, string contentType, string what, string? sprache, CancellationToken ct)
+    {
+        using var form = new MultipartFormDataContent();
+        var file = new ByteArrayContent(data);
+        file.Headers.ContentType = new MediaTypeHeaderValue(contentType);
+        form.Add(file, "file", fileName);
+        form.Add(new StringContent(what, Encoding.UTF8), "what");
+        if (!string.IsNullOrEmpty(sprache))
+        {
+            form.Add(new StringContent(sprache, Encoding.UTF8), "sprache");
+        }
+
+        using var request = new HttpRequestMessage(HttpMethod.Post, baseUrl + "/api/desk/file") { Content = form };
+        JsonNode json = await SendAsync(request, key, pairing: false, LongTimeout, ct).ConfigureAwait(true);
+        return new FileResult(Json.Str(json["text"]), Json.Str(json["id"]) ?? Json.Long(json["id"])?.ToString(System.Globalization.CultureInfo.InvariantCulture), Json.Str(json["name"]));
+    }
+
+    /// <summary>POST /api/desk/screen – Bildschirmausschnitt mit optionaler Frage.</summary>
+    public static async Task<string> ScreenAsync(
+        string baseUrl, string key, byte[] image, string contentType, string question, string what, CancellationToken ct)
+    {
+        using var form = new MultipartFormDataContent();
+        var file = new ByteArrayContent(image);
+        file.Headers.ContentType = new MediaTypeHeaderValue(contentType);
+        form.Add(file, "image", contentType == "image/png" ? "ausschnitt.png" : "ausschnitt.jpg");
+        form.Add(new StringContent(question, Encoding.UTF8), "question");
+        form.Add(new StringContent(what, Encoding.UTF8), "what");
+
+        using var request = new HttpRequestMessage(HttpMethod.Post, baseUrl + "/api/desk/screen") { Content = form };
+        JsonNode json = await SendAsync(request, key, pairing: false, LongTimeout, ct).ConfigureAwait(true);
+        return Json.Str(json["text"]) ?? throw new SparkException(null, "Der Spark hat keinen Text zurückgeschickt.");
+    }
+
+    /// <summary>POST /api/desk/hear – kurzer Satz (≤ 5 s): Weckwort gehört? Und was danach kam.</summary>
+    public static async Task<(bool Wake, string After)> HearAsync(string baseUrl, string key, byte[] wav, CancellationToken ct)
+    {
+        using var form = new MultipartFormDataContent();
+        var file = new ByteArrayContent(wav);
+        file.Headers.ContentType = new MediaTypeHeaderValue("audio/wav");
+        form.Add(file, "file", "satz.wav");
+
+        using var request = new HttpRequestMessage(HttpMethod.Post, baseUrl + "/api/desk/hear") { Content = form };
+        JsonNode json = await SendAsync(request, key, pairing: false, MediumTimeout, ct).ConfigureAwait(true);
+        return (Json.Bool(json["wake"]) ?? false, (Json.Str(json["rest"]) ?? "").Trim());
+    }
+
+    /// <summary>POST /api/desk/act {"id","ok","error"?} – Ergebnis einer Bitte (erlaubt und ausgeführt, abgelehnt oder Fehler).</summary>
+    public static async Task ActResultAsync(string baseUrl, string key, string id, bool ok, string? error, CancellationToken ct)
+    {
+        var body = new JsonObject { ["id"] = id, ["ok"] = ok };
+        if (!ok && !string.IsNullOrEmpty(error))
+        {
+            body["error"] = error.Length > 300 ? error[..300] : error;
+        }
+
+        using var request = new HttpRequestMessage(HttpMethod.Post, baseUrl + "/api/desk/act") { Content = JsonContent(body) };
+        _ = await SendAsync(request, key, pairing: false, ShortTimeout, ct).ConfigureAwait(true);
     }
 
     /// <summary>

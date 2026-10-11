@@ -40,3 +40,70 @@ internal static class WindowInfo
         }
     }
 }
+
+/// <summary>
+/// Teil "context": nur die ART des Programms, aus dem der Text kommt (outlook, word, browser …), ermittelt aus
+/// dem Prozessnamen des Fensters. Fenstertitel, Programmnamen oder Inhalte gehen nie an den Spark.
+/// </summary>
+internal static class AppCategory
+{
+    private static readonly Dictionary<string, string> ByProcess = new(StringComparer.OrdinalIgnoreCase)
+    {
+        ["outlook"] = "outlook",
+        ["olk"] = "outlook",
+        ["winword"] = "word",
+        ["excel"] = "excel",
+        ["powerpnt"] = "powerpoint",
+        ["msedge"] = "browser",
+        ["chrome"] = "browser",
+        ["firefox"] = "browser",
+        ["brave"] = "browser",
+        ["opera"] = "browser",
+        ["vivaldi"] = "browser",
+        ["ms-teams"] = "teams",
+        ["teams"] = "teams",
+        ["slack"] = "chat",
+        ["discord"] = "chat",
+        ["whatsapp"] = "chat",
+        ["whatsapp.root"] = "chat",
+        ["telegram"] = "chat",
+        ["signal"] = "chat",
+        ["code"] = "code",
+        ["devenv"] = "code",
+        ["idea"] = "code",
+        ["idea64"] = "code",
+        ["notepad++"] = "code",
+    };
+
+    /// <summary>Kategorie des Fensters, oder <c>null</c> ohne Fenster.</summary>
+    public static string? FromWindow(IntPtr hwnd)
+    {
+        if (hwnd == IntPtr.Zero)
+        {
+            return null;
+        }
+
+        string? name = ProcessName(hwnd);
+        return name is not null && ByProcess.TryGetValue(name, out string? category) ? category : "other";
+    }
+
+    /// <summary>Prozessname ohne ".exe" (z. B. "OUTLOOK"), oder <c>null</c>.</summary>
+    public static string? ProcessName(IntPtr hwnd)
+    {
+        try
+        {
+            _ = NativeMethods.GetWindowThreadProcessId(hwnd, out uint pid);
+            if (pid == 0)
+            {
+                return null;
+            }
+
+            using Process process = Process.GetProcessById((int)pid);
+            return process.ProcessName;
+        }
+        catch (Exception ex) when (ex is ArgumentException or InvalidOperationException or System.ComponentModel.Win32Exception)
+        {
+            return null;
+        }
+    }
+}

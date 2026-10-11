@@ -16,6 +16,8 @@ enum HotAction: UInt32, CaseIterable, Identifiable {
     case write = 1
     case ask = 2
     case dictate = 3
+    case screen = 4
+    case mail = 5
 
     var id: UInt32 { rawValue }
 
@@ -25,6 +27,8 @@ enum HotAction: UInt32, CaseIterable, Identifiable {
         case .write: return "write"
         case .ask: return "ask"
         case .dictate: return "dictate"
+        case .screen: return "screen"
+        case .mail: return "mail"
         }
     }
 
@@ -33,16 +37,20 @@ enum HotAction: UInt32, CaseIterable, Identifiable {
         case .write: return "Schreibhilfe"
         case .ask: return "Frag Spark"
         case .dictate: return "Diktieren"
+        case .screen: return "Bildschirm fragen"
+        case .mail: return "Antwort entwerfen"
         }
     }
 
-    /// ⌥⌘S, ⌥⌘A, ⌥⌘D
+    /// ⌥⌘S, ⌥⌘A, ⌥⌘D, ⌥⌘B, ⌥⌘M
     var standard: Hotkey {
         let mods = UInt32(cmdKey | optionKey)
         switch self {
         case .write: return Hotkey(keyCode: UInt32(kVK_ANSI_S), mods: mods, label: "⌥⌘S")
         case .ask: return Hotkey(keyCode: UInt32(kVK_ANSI_A), mods: mods, label: "⌥⌘A")
         case .dictate: return Hotkey(keyCode: UInt32(kVK_ANSI_D), mods: mods, label: "⌥⌘D")
+        case .screen: return Hotkey(keyCode: UInt32(kVK_ANSI_B), mods: mods, label: "⌥⌘B")
+        case .mail: return Hotkey(keyCode: UInt32(kVK_ANSI_M), mods: mods, label: "⌥⌘M")
         }
     }
 }

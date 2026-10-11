@@ -39,6 +39,12 @@ internal interface IBegleiterHost
 
     void OpenCoffee();
 
+    /// <summary>Teil "folder": der beobachtete Ordner (lokale Einstellung).</summary>
+    string WissenFolder { get; }
+
+    /// <summary>Anderen Ordner wählen. <c>null</c> = übernommen, sonst ein deutscher Hinweis.</summary>
+    string? SetWissenFolder(string path);
+
     /// <summary>Kopplung, Einstellungen vom Spark, Zustand oder Update haben sich geändert.</summary>
     event EventHandler? Changed;
 }
@@ -74,6 +80,10 @@ internal sealed class SettingsForm : ThemedForm
     private readonly TLabel _partsHeading = new(TextRole.Heading, "Teile");
     private readonly TLabel _parts = new(TextRole.Normal);
     private readonly TLabel _partsHint = new(TextRole.SmallMuted, "Ein- und ausschalten im Panel unter Ich → Begleiter.");
+    private readonly TLabel _folderHeading = new(TextRole.Heading, "Ordner Spark-Wissen");
+    private readonly TLabel _folderPath = new(TextRole.Normal);
+    private readonly SparkButton _folderPick = new(ButtonKind.Secondary, "Ordner wählen …");
+    private readonly TLabel _folderNote = new(TextRole.SmallMuted);
 
     // Über
     private readonly FaceBox _face = new();
@@ -138,7 +148,8 @@ internal sealed class SettingsForm : ThemedForm
         }
 
         // Kopplung
-        _pagePairing.Controls.AddRange(new Control[] { _pairing, _panel, _repair, _unpair, _partsHeading, _parts, _partsHint });
+        _pagePairing.Controls.AddRange(new Control[] { _pairing, _panel, _repair, _unpair, _partsHeading, _parts, _partsHint, _folderHeading, _folderPath, _folderPick, _folderNote });
+        _folderPick.Click += (_, _) => PickFolder();
 
         // Über
         _pageAbout.Controls.AddRange(new Control[] { _face, _aboutTitle, _aboutSub, _updatePill, _check, _update, _updateError, _auto, _coffeeText, _coffee });
@@ -283,7 +294,13 @@ internal sealed class SettingsForm : ThemedForm
         y += _panel.Height + S(20);
         y += _partsHeading.Fit(0, y, width) + S(6);
         y += _parts.Fit(0, y, width) + S(8);
-        y += _partsHint.Fit(0, y, width);
+        y += _partsHint.Fit(0, y, width) + S(20);
+        y += _folderHeading.Fit(0, y, width) + S(6);
+        Size pick = _folderPick.Preferred();
+        int pathH = _folderPath.Fit(0, y + Math.Max(0, (pick.Height - Draw.TextHeight(_folderPath.Text, _folderPath.Font, width - pick.Width - S(10))) / 2), width - pick.Width - S(10));
+        _folderPick.Bounds = new Rectangle(width - pick.Width, y, pick.Width, pick.Height);
+        y += Math.Max(pick.Height, pathH) + S(6);
+        y += _folderNote.Fit(0, y, width);
         return y;
     }
 
@@ -393,7 +410,45 @@ internal sealed class SettingsForm : ThemedForm
             _parts.Text = string.Join(Environment.NewLine, lines);
         }
 
+        _folderPath.Text = _host.WissenFolder;
+        if (_folderNote.Role != TextRole.Error || desk is null)
+        {
+            _folderNote.Text = desk?.IsOn(Parts.Folder) == true
+                ? "Neue und geänderte Dateien darin gehen nach 10 Sekunden Ruhe ins Wissen (höchstens 50 am Tag)."
+                : "Teil ist aus (im Panel unter Ich → Begleiter einschalten).";
+        }
+
         RefreshAbout(config);
+    }
+
+    private void PickFolder()
+    {
+        using var dialog = new FolderBrowserDialog
+        {
+            Description = "Ordner für Spark-Wissen wählen",
+            UseDescriptionForTitle = true,
+            ShowNewFolderButton = true,
+            InitialDirectory = Directory.Exists(_host.WissenFolder) ? _host.WissenFolder : "",
+        };
+        if (dialog.ShowDialog(this) != DialogResult.OK || string.IsNullOrEmpty(dialog.SelectedPath))
+        {
+            return;
+        }
+
+        string? error = _host.SetWissenFolder(dialog.SelectedPath);
+        _folderNote.Role = error is null ? TextRole.SmallMuted : TextRole.Error;
+        if (error is not null)
+        {
+            _folderNote.Text = error;
+        }
+
+        _folderNote.ApplyTheme(DeviceDpi);
+        RefreshAll();
+        if (IsHandleCreated)
+        {
+            LayoutContent();
+            Invalidate(true);
+        }
     }
 
     private void RefreshAbout(AppConfig config)

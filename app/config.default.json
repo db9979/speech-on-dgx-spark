@@ -161,6 +161,7 @@
     "pebble": false,
     "android": false,
     "desk": false,
+    "desk_act": false,
     "mcp_server": false,
     "mcp_server_extern": false,
     "mcp_server_act": false,

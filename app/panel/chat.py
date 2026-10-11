@@ -2040,6 +2040,10 @@ async def text_ask(request, prof, body, who="siri"):
         return {"answer": "Ich habe keine Frage gehört."}
     last = _SIRI.get((who, prof["id"]))
     history = last[1][-8:] if last and time.time() - last[0] < SIRI_FOLLOW_UP else []
+    note = str(body.get("note") or "")[:1700]
+    if note:   # an answer to one of the Spark's notes (Begleiter): the note is in front, marked as outside text
+        history = history[-6:] + [{"role": "user", "content": "(Meldung des Spark am Rechner)"},
+                                  {"role": "assistant", "content": note, "outside": True}]
     inner = {"messages": history + [{"role": "user", "content": text}], "client": client, "speak": False}
     if isinstance(body.get("tz"), str):
         inner["tz"] = body["tz"]

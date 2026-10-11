@@ -22,7 +22,11 @@ final class AskController: ObservableObject {
     /// the question on its way (shown as a bubble until the answer is there)
     @Published private(set) var pending: String?
 
+    /// the note the next question answers (button "Antworten" without text): sent as "note"
+    @Published private(set) var noteContext: (n: Int, title: String)?
+
     private var task: Task<Void, Never>?
+    private var generation = 0
 
     static func open() {
         let c = shared
@@ -49,24 +53,84 @@ final class AskController: ObservableObject {
             status = "Nicht gekoppelt."
             return
         }
+        let note = noteContext?.n
+        generation += 1
+        let mine = generation
         busy = true
         pending = q
         status = ""
         task = Task { @MainActor [weak self] in
             do {
-                let a = try await client.ask(q)
+                let a = try await client.ask(q, note: note)
                 guard let self else { return }
+                self.noteContext = nil
                 self.entries.append(Entry(question: q, answer: a.trimmingCharacters(in: .whitespacesAndNewlines), failed: false))
-                self.input = ""
-                self.status = ""
+                if self.generation == mine {
+                    self.input = ""
+                    self.status = ""
+                }
             } catch is CancellationError {
-                self?.status = ""
+                if self?.generation == mine { self?.status = "" }
             } catch {
                 let msg = AppModel.shared.absorb(error)
-                self?.status = msg
+                if self?.generation == mine { self?.status = msg }
             }
-            self?.pending = nil
-            self?.busy = false
+            guard let self, self.generation == mine else { return }
+            self.pending = nil
+            self.busy = false
+        }
+    }
+
+    /// Work of another part (a file, the screen, the wake word, a reply to a note) whose answer belongs in this
+    /// window: the label as own bubble, the answer as the Spark's. `notify`: also as a notification.
+    func run(question label: String, notify: Bool = false, work: @escaping (SparkClient) async throws -> String) {
+        if busy { task?.cancel() }
+        task = Task { @MainActor [weak self] in
+            await self?.perform(question: label, notify: notify, work: work)
+        }
+    }
+
+    /// The same, awaited (several files one after the other).
+    func perform(question label: String, notify: Bool = false, work: (SparkClient) async throws -> String) async {
+        Self.open()
+        guard let client = AppModel.shared.client else {
+            status = "Nicht gekoppelt."
+            return
+        }
+        generation += 1
+        let mine = generation
+        busy = true
+        pending = label
+        status = ""
+        var answer: String?
+        var problem = ""
+        do {
+            answer = try await work(client).trimmingCharacters(in: .whitespacesAndNewlines)
+        } catch is CancellationError {
+            problem = ""
+        } catch {
+            problem = AppModel.shared.absorb(error)
+        }
+        if let answer {
+            entries.append(Entry(question: label, answer: answer, failed: false))
+            if notify { Notifier.plain(title: "Spark", body: answer) }
+        } else if notify && !problem.isEmpty {
+            Notifier.plain(title: "Spark", body: problem)
+        }
+        guard generation == mine else { return }   // a newer piece of work took over
+        status = problem
+        pending = nil
+        busy = false
+    }
+
+    /// "Antworten" without text: the window with the note as quoted context; the next question carries it.
+    static func openForNote(_ n: Int?, title: String, body: String) {
+        let c = shared
+        open()
+        if let n {
+            c.noteContext = (n, DeskConfig.plain(title, max: 80))
+            let quote = DeskConfig.plain(body, max: 300)
+            c.status = "Antwort auf die Meldung „\(DeskConfig.plain(title, max: 80))“" + (quote.isEmpty ? "" : ": " + quote)
         }
     }
 
@@ -78,6 +142,7 @@ final class AskController: ObservableObject {
 
     func clear() {
         task?.cancel()
+        noteContext = nil
         entries = []
         pending = nil
         status = ""

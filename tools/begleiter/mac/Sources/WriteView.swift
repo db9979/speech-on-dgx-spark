@@ -30,6 +30,8 @@ final class WriteController: ObservableObject {
     let arts: [ArtInfo]
     let langs: [LangInfo]
     let preview: Bool
+    /// part "context": the front app's category ("mail", "browser", …), nil when off or unknown
+    let app: String?
     /// called once with the text to take over, or nil when cancelled
     var finish: ((String?) -> Void)?
 
@@ -38,9 +40,10 @@ final class WriteController: ObservableObject {
     private var task: Task<Void, Never>?
     private var finished = false
 
-    init(text: String, target: Target, config: DeskConfig) {
+    init(text: String, target: Target, config: DeskConfig, app: String? = nil) {
         self.source = text
         self.target = target
+        self.app = app
         self.arts = config.offeredArts
         self.langs = config.langs
         self.preview = config.preview
@@ -73,9 +76,9 @@ final class WriteController: ObservableObject {
     // ------------------------------------------------------------------ opening
 
     /// The window for the hotkey and the menu.
-    static func open(text: String, target: Target, config: DeskConfig) {
+    static func open(text: String, target: Target, config: DeskConfig, app: String? = nil) {
         Windows.shared.close(windowID)
-        let c = WriteController(text: text, target: target, config: config)
+        let c = WriteController(text: text, target: target, config: config, app: app)
         c.finish = { result in
             Windows.shared.close(windowID)
             guard let result else { return }
@@ -96,9 +99,9 @@ final class WriteController: ObservableObject {
     }
 
     /// For "Mit Spark verbessern": runs the window modally and gives the text to put back (nil = leave as is).
-    static func runForService(text: String, config: DeskConfig) -> String? {
+    static func runForService(text: String, config: DeskConfig, app: String? = nil) -> String? {
         let id = "service"
-        let c = WriteController(text: text, target: .service, config: config)
+        let c = WriteController(text: text, target: .service, config: config, app: app)
         var out: String?
         c.finish = { result in
             out = result
@@ -156,9 +159,10 @@ final class WriteController: ObservableObject {
         let art = self.art
         let sprache = art == Self.translate ? self.sprache : nil
         let wunsch = self.wunsch
+        let app = AppModel.shared.part("context") ? self.app : nil
         task = Task { @MainActor [weak self] in
             do {
-                let r = try await client.improve(text: parts.core, art: art, sprache: sprache, wunsch: wunsch)
+                let r = try await client.improve(text: parts.core, art: art, sprache: sprache, wunsch: wunsch, app: app)
                 self?.show(r)
             } catch is CancellationError {
                 self?.busy = false
