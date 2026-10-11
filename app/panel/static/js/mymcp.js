@@ -43,7 +43,7 @@ async function showMyMcp(){const box=$('mymcpbox');if(!box)return;if(!PROFILE||!
     <div class="fh" id="mymmsg"></div>`;
   xbind(box,showMyMcp);
   const say=(id,x,err)=>{xmsg(id,x,err);const m=$(id);if(m)m.scrollIntoView({block:'nearest'})};
-  const codeErr=e=>/code required|Code/i.test(e.message||'')?t('Ohne deinen Code geht es nicht: bitte noch einmal tippen und den Code eingeben.','Not without your code: tap again and enter your code.'):e.message;
+  const codeErr=e=>/code required|Code/i.test(errRaw(e))?t('Ohne deinen Code geht es nicht: bitte noch einmal tippen und den Code eingeben.','Not without your code: tap again and enter your code.'):e.message;
   if($('mymadd'))$('mymadd').onclick=async()=>{const b=$('mymadd'),name=$('mymname').value.trim(),url=$('mymurl').value.trim();
     if(!name){say('mymaddmsg',t('Bitte zuerst einen Namen eingeben.','Please enter a name first.'),true);$('mymname').focus();return}
     if(!/^https?:\/\//.test(url)){say('mymaddmsg',t('Bitte die Adresse mit https:// eingeben.','Please enter the address with https://.'),true);$('mymurl').focus();return}

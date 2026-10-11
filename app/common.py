@@ -511,7 +511,7 @@ def _probe_rate(data):
         f.write(data)
         f.flush()
         try:
-            p = subprocess.run(["ffprobe", "-v", "error", "-select_streams", "a", "-show_entries", "stream=sample_rate",
+            p = subprocess.run(["ffprobe", "-v", "error", "-protocol_whitelist", "file,pipe", "-select_streams", "a", "-show_entries", "stream=sample_rate",
                                 "-of", "csv=p=0", f.name], capture_output=True, text=True, timeout=20)
         except (OSError, subprocess.TimeoutExpired):
             return None
@@ -546,15 +546,29 @@ def audio_rate_ok(data):
     return ""
 
 
-def api_key_dependency():
-    """FastAPI dependency: if config api.key is set, require 'Authorization: Bearer <key>'.
-    Read per request, so a key changed in the panel applies without a model reload."""
-    from fastapi import Header, HTTPException
+def _loopback(host):
+    import ipaddress
+    try:
+        return ipaddress.ip_address(host or "").is_loopback
+    except ValueError:
+        return False
 
-    def dep(authorization: str = Header(None)):
+
+def api_key_dependency():
+    """FastAPI dependency: if config api.key is set, require 'Authorization: Bearer <key>'. Without a key only
+    this machine itself may call (an old configuration that never went through the panel's check would
+    otherwise leave the speech APIs open to the whole network). Read per request, so a key changed in the
+    panel applies without a model reload."""
+    from fastapi import Header, HTTPException, Request
+
+    def dep(request: Request, authorization: str = Header(None)):
         import hmac
         key = load_config().get("api", {}).get("key", "")
-        if key and not hmac.compare_digest(str(authorization or "").encode(), f"Bearer {key}".encode()):
+        if not key:
+            if not _loopback(request.client.host if request.client else ""):
+                raise HTTPException(401, "API key required: none is set, so only this machine may call")
+            return
+        if not hmac.compare_digest(str(authorization or "").encode(), f"Bearer {key}".encode()):
             raise HTTPException(401, "invalid or missing API key")
     return dep
 
@@ -649,8 +663,11 @@ def outside_view(out):
 
 
 def api_key_ok(scope):
-    """For BodyLimit's gate on the speech services: the right Bearer key, or no key configured."""
+    """For BodyLimit's gate on the speech services: the right Bearer key, or no key configured and a call
+    from this machine itself."""
     import hmac
     key = load_config().get("api", {}).get("key", "")
+    if not key:
+        return _loopback((scope.get("client") or ("",))[0])
     got = dict(scope.get("headers") or []).get(b"authorization", b"")
-    return not key or hmac.compare_digest(got, f"Bearer {key}".encode())
+    return hmac.compare_digest(got, f"Bearer {key}".encode())

@@ -42,7 +42,7 @@ async function mfaAct(box,base,a){try{
     await api(base+'/forget',jbody());mfaMsg(box,t('Erledigt.','Done.'));return}
   if(a==='disable'){if(!confirm(t('Zweiten Anmeldeschritt ausschalten? Dann reicht wieder das Passwort bzw. die PIN.','Switch off the second login step? Then the password or PIN alone is enough again.')))return;
     await api(base+'/disable',jbody());mfaShow(box.id,base)}
-  }catch(e){mfaMsg(box,/wrong code/.test(e.message)?t('Code falsch. Uhrzeit des Handys stimmt? Bitte den nächsten Code versuchen.','Wrong code. Is the phone\'s clock right? Please try the next code.'):e.message,true)}}
+  }catch(e){mfaMsg(box,/wrong code/.test(errRaw(e))?t('Code falsch. Uhrzeit des Handys stimmt? Bitte den nächsten Code versuchen.','Wrong code. Is the phone\'s clock right? Please try the next code.'):e.message,true)}}
 function mfaRecovery(box,base,codes,fresh){
   box.innerHTML=`<div class="fh"><b>${fresh?t('Eingerichtet.','Set up.')+' ':''}${t('Diese Wiederherstellungscodes jetzt aufschreiben oder im Passwort-Manager speichern.','Write these recovery codes down now or keep them in your password manager.')}</b> ${t('Jeder gilt einmal, falls das Handy weg ist, und wird nur jetzt angezeigt.','Each one works once if the phone is gone, and is shown only now.')}</div>${mfaCodes(codes)}
     <div class="row"><button class="b" type="button" data-a="copy">${t('Kopieren','Copy')}</button><button class="b p" type="button" data-a="done">${t('Aufgeschrieben','Written down')}</button></div>`;

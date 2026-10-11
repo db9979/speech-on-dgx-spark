@@ -679,6 +679,64 @@ class Stage4(unittest.TestCase):
         self.assertIn("allowedSignersFile", update)
         self.assertIn("history of $BRANCH was rewritten", update)
 
+    def test_root_reads_service_files_as_the_service_user(self):
+        """Paket 4 (N14): root reads config.json, the update progress, the engine signatures and update-target only
+        as the service user (as_svc cat), never by a path a link may have been planted at."""
+        install = repo_file("install.sh")
+        update = repo_file("update.sh")
+        for name, text in (("install.sh", install), ("update.sh", update)):
+            for line in text.splitlines():
+                code = line.split("#", 1)[0]
+                if "put_file" in code or "no_links" in code or "chown" in code:
+                    continue
+                self.assertNotRegex(code, r'(?<!as_svc )\b(jq|cat|head)\b[^|]*"\$(ETC/config\.json|SPEECH_SPARK_PROGRESS|sigfile|STATE/)',
+                                    (name, line))
+        self.assertIn('cfg_json() { as_svc cat -- "$ETC/config.json"; }', install)
+        self.assertIn('c=$(as_svc cat -- "$SPEECH_SPARK_PROGRESS" 2>/dev/null) || return 0', install)
+        self.assertIn('j=$(as_svc cat -- "$SPEECH_SPARK_PROGRESS" | jq -c', update)
+        self.assertIn('TARGET=$(as_svc head -c 64 -- "$STATE/update-target"', update)
+        self.assertLess(update.index('as_svc() { runuser -u speech -- "$@"; }'), update.index("as_svc head"))
+
+    def test_small_units_have_limits_engines_do_not(self):
+        """Paket 4 (N15): the API watchdog gets MemoryMax and PrivateTmp; the vLLM engines get no MemoryMax (the GPU
+        memory is the same unified memory: a cap could kill them)."""
+        sh = repo_file("install.sh")
+        watch = sh[sh.index("cat >/etc/systemd/system/speech-spark-watch.service"):]
+        watch = watch[:watch.index("\nEOF\n")]
+        self.assertIn("MemoryMax=1G", watch)
+        self.assertIn("PrivateTmp=yes", watch)
+        engine = sh[sh.index("engine_unit() {"):]
+        engine = engine[:engine.index("\nEOF\n")]
+        self.assertNotIn("MemoryMax", engine)
+
+    def test_signer_file_fails_closed(self):
+        """Paket 4 (N22): a signer file that is a link, not root's or writable by others stops the update instead of
+        switching the check off; without one the update says the check is off."""
+        import tempfile
+        update = repo_file("update.sh")
+        block = update[update.index("SIGNERS=/etc/speech-spark-signers"):]
+        block = block[:block.index('\nif [ "$old" = "$new" ]')]
+        with tempfile.TemporaryDirectory() as d:
+            path = os.path.join(d, "signers")
+            run = lambda: subprocess.run(["bash", "-c", "set -euo pipefail\nnew=HEAD\n" + block.replace("/etc/speech-spark-signers", path)],
+                                         capture_output=True, text=True, timeout=30, cwd=d)
+            out = run()
+            self.assertEqual(out.returncode, 0, out.stderr)
+            self.assertIn("Signature check off", out.stdout)
+            os.symlink("/etc/passwd", path)
+            self.assertEqual(run().returncode, 1)
+            os.remove(path)
+            with open(path, "w") as f:
+                f.write("dominik ssh-ed25519 AAAA\n")
+            os.chmod(path, 0o666)
+            out = run()
+            self.assertEqual(out.returncode, 1)
+            self.assertIn("not a plain file of root", out.stderr)
+            os.chmod(path, 0o644)
+            out = run()   # root's own file (or not root: refused as well); never "off"
+            self.assertEqual(out.returncode, 1)
+            self.assertNotIn("Signature check off", out.stdout)
+
     def test_qwen38_key_not_through_links(self):
         import re
         import subprocess

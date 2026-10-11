@@ -3,7 +3,10 @@
 // itself: only the tap on "Übernehmen" sends the card's id to the panel, which applies exactly what it holds,
 // with the same checks as the forms (and the admin's code for Spark switches). Everything shown is text (esc).
 let HILFE=null;   // from /api/whoami: {suggest, page} for this profile, null = off
-function hilfeStart(h){HILFE=h&&typeof h==='object'?h:null;hilfeFab()}
+function hilfeStart(h){HILFE=h&&typeof h==='object'?h:null;hilfeFab();if(HILFE&&HILFE.page&&!(HQIDS&&HQIDS.size))hilfeIds()}
+// the rows the help has an entry for (B3): a "?" stands only there, never one that would fall back to a general search
+let HQIDS=null,HQLOAD=null;
+function hilfeIds(){if(!HQLOAD)HQLOAD=fetch('/api/hilfe/ids').then(r=>r.ok?r.json():{ids:[]}).then(d=>{HQIDS=new Set(d.ids||[]);if(!HQIDS.size)HQLOAD=null;hilfeFab()}).catch(()=>{HQLOAD=null})}
 // after the admin saved or Ich opened: what /api/whoami says now (the switches can have changed meanwhile)
 async function hilfeRefresh(){try{const w=await (await fetch('/api/whoami')).json();if(PROFILE||w.profile)hilfeStart(w.hilfe)}catch{}}
 const HON=v=>v?t('an','on'):t('aus','off');
@@ -53,10 +56,10 @@ const hilfeAsk=()=>!document.body.classList.contains('guest')&&!!((typeof PROFIL
 // "?" at every switch row (plan hilfe-besser 2): asks the face about exactly this switch; the panel checks the id
 let HFOCUS=null;
 function hilfeFocusTake(){const f=HFOCUS;HFOCUS=null;return f||undefined}
-function hilfeRowId(row){const i=row.querySelector('input[id],select[id]');if(!i)return null;
+function hilfeRowId(row){const i=[...row.querySelectorAll('input[id],select[id]')].find(x=>!x.closest('.lbl'));if(!i)return null;   // a field in the sentence is not the row's
   const m=/^set_setform_(\w{1,40})$/.exec(i.id);if(m)return 'me:'+m[1];return /^[\w.]{1,40}$/.test(i.id)&&!i.id.startsWith('set_')?'sw:'+i.id:null}
 function hilfeMarks(){document.querySelectorAll('main section.on .setrow .lbl b, #profmodal .setrow .lbl b').forEach(b=>{
-  if(b.querySelector('.hqbtn'))return;const row=b.closest('.setrow'),id=row&&hilfeRowId(row);if(!id)return;
+  if(b.querySelector('.hqbtn'))return;const row=b.closest('.setrow'),id=row&&hilfeRowId(row);if(!id||!HQIDS||!HQIDS.has(id))return;
   const q=document.createElement('button');q.type='button';q.className='hqbtn';q.dataset.hq=id;q.textContent='?';
   q.setAttribute('aria-label',t('Frag Spark zu diesem Schalter','Ask Spark about this switch'));b.appendChild(q)})}
 document.addEventListener('click',e=>{const q=e.target.closest('.hqbtn');if(!q||!hilfeFabOn())return;e.preventDefault();e.stopPropagation();

@@ -67,6 +67,7 @@ import guard
 import notaus
 import profiles
 import schreib
+import signatur
 from common import load_config
 from core import FACES, assistant, auth, browser_profile, confirm_code
 
@@ -2053,7 +2054,12 @@ async def fetch(platform, c=None):
         assets = {a.get("name"): a.get("browser_download_url", "") for a in r.json().get("assets", [])}
         if "begleiter.json" not in assets:   # built before V01.0.347: the next build brings it
             raise NotYet("Noch keine Version mit Update-Datei; kommt mit dem nächsten Bau.")
-        m = json.loads(await _download(c, assets["begleiter.json"], MAX_META))
+        raw = await _download(c, assets["begleiter.json"], MAX_META)
+        if signatur.required():   # signed in the environment "release" once a key exists (signatur.py)
+            if "begleiter.json.sig" not in assets:
+                raise ValueError("Die Version ist nicht signiert, nichts übernommen.")
+            signatur.verify(raw, await _download(c, assets["begleiter.json.sig"], signatur.MAX_SIG))
+        m = json.loads(raw)
         ver, files = str(m.get("version", "")), m.get("files")
         if not VERSION_RE.fullmatch(ver) or not isinstance(files, dict) or not files:
             raise ValueError("begleiter.json ist ungültig.")

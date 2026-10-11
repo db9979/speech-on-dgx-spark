@@ -185,7 +185,7 @@ Schritt für Schritt (TestFlight für dich und die Familie, App Store): [iphone-
 | `GET/PUT /api/profile/convos` | App: Verlauf lesen und das laufende Gespräch speichern (Löschen nur im Panel) |
 | `GET/PUT /api/iphone/settings` | App: „Mein Profil“, nur die Felder aus `iphone.APP_FIELDS` |
 | `GET /api/assistant/voices` | App: Stimmen zur Auswahl |
-| `POST /api/tasks/inbox`, `POST /api/profile/tasks/einkauf|aufgaben` | App: neue Listeneinträge holen, Einträge aus Kurzbefehlen setzen (nur mit `app_ios`) |
+| `POST /api/tasks/inbox`, `POST /api/profile/tasks/einkauf\|aufgaben` | App: neue Listeneinträge holen, Einträge aus Kurzbefehlen setzen (nur mit `app_ios`) |
 | `POST /api/iphone/doc` | App: Text eines Dokuments in „Meine Dokumente“ (nur mit `app_docs`) |
 | `GET /api/iphone/update` | App: installierte und neue geprüfte Version, Änderungen, Fortschritt (nur mit Recht vom Admin) |
 | `POST /api/iphone/update` | App: Update starten, Header `X-Speech-Code` mit frischem Code (nur mit Recht „Starten“) |

@@ -71,10 +71,12 @@ say()  { printf '\n\033[1;34m==>\033[0m %s\n' "$*"; progress "$*"; }
 # During an update the panel shows a progress bar; each step also goes into this file.
 progress() {
   [ -n "${SPEECH_SPARK_PROGRESS:-}" ] || return 0
-  local n j; n=$(jq -r '.step // 0' "$SPEECH_SPARK_PROGRESS" 2>/dev/null || echo 0)
+  # the file lies in the service user's state folder: read as that user (never through a planted link)
+  local n j c; c=$(as_svc cat -- "$SPEECH_SPARK_PROGRESS" 2>/dev/null) || return 0
+  n=$(printf '%s\n' "$c" | jq -r '.step // 0' 2>/dev/null || echo 0)
   [[ "$n" =~ ^[0-9]{1,4}$ ]] || n=0
-  j=$(jq -c --arg t "$1" --argjson n "$((n + 1))" --argjson now "$(date +%s)" '.step=$n | .text=$t | .updated=$now' \
-    "$SPEECH_SPARK_PROGRESS" 2>/dev/null) || return 0
+  j=$(printf '%s\n' "$c" | jq -c --arg t "$1" --argjson n "$((n + 1))" --argjson now "$(date +%s)" \
+    '.step=$n | .text=$t | .updated=$now' 2>/dev/null) || return 0
   printf '%s\n' "$j" | as_svc tee -- "$SPEECH_SPARK_PROGRESS" >/dev/null 2>&1 || true
 }
 warn() { printf '\033[1;33mWARN:\033[0m %s\n' "$*"; }
@@ -90,7 +92,11 @@ put_file() {  # $1 = file in $ETC, $2 = mode, $3 = owner:group; the content come
   local tmp; tmp=$(mktemp "$(dirname "$ETC")/.speech-spark.XXXXXX")
   cat >"$tmp"; chmod "$2" "$tmp"; chown "$3" "$tmp"; mv -fT -- "$tmp" "$1"
 }
-jqi()  { local j; j=$(jq "$@" "$ETC/config.json") && printf '%s\n' "$j" | put_file "$ETC/config.json" 640 "$SVC_USER:$SVC_USER"; }
+# $ETC belongs to the service user too: root reads config.json only as that user, so a link planted there
+# never makes root read one of its own files (and write it back as config.json)
+cfg_json() { as_svc cat -- "$ETC/config.json"; }
+cfgq() { cfg_json | jq "$@"; }
+jqi()  { local j; j=$(cfg_json | jq "$@") && [ -n "$j" ] && printf '%s\n' "$j" | put_file "$ETC/config.json" 640 "$SVC_USER:$SVC_USER"; }
 
 [ "$(id -u)" = 0 ] || die "run with sudo"
 [ "$(uname -m)" = aarch64 ] || warn "this is $(uname -m), not aarch64; the script targets the DGX Spark"
@@ -201,13 +207,13 @@ MODE=${MODE:-${OLD_MODE:-full}}
 # current choice, as the defaults of the questions
 cur_asr() {
   if [ "$FIRST" = 1 ]; then { [ "$SMALL" = 1 ] || [ -n "$big_lane" ]; } && echo 0.6b || echo 1.7b; return; fi
-  jq -r 'if .asr.enabled != true then "none" elif .asr.recognizer == "parakeet" then "parakeet"
-         elif (.asr.model | test("0.6B")) then "0.6b" else "1.7b" end' "$ETC/config.json"
+  cfgq -r 'if .asr.enabled != true then "none" elif .asr.recognizer == "parakeet" then "parakeet"
+         elif (.asr.model | test("0.6B")) then "0.6b" else "1.7b" end'
 }
 cur_tts() {
   if [ "$FIRST" = 1 ]; then echo 0.6b; return; fi
-  jq -r 'if .tts.enabled != true then "none" elif .tts.model == "Qwen/Qwen3-TTS-12Hz-0.6B-CustomVoice" then "0.6b"
-         elif .tts.model == "Qwen/Qwen3-TTS-12Hz-1.7B-CustomVoice" then "1.7b" else "keep" end' "$ETC/config.json"
+  cfgq -r 'if .tts.enabled != true then "none" elif .tts.model == "Qwen/Qwen3-TTS-12Hz-0.6B-CustomVoice" then "0.6b"
+         elif .tts.model == "Qwen/Qwen3-TTS-12Hz-1.7B-CustomVoice" then "1.7b" else "keep" end'
 }
 if [ "$ASK" = 1 ] && { [ "$CHOOSE_MODELS" = 1 ] || { [ "$FIRST" = 1 ] && [ -z "$ASR_PICK$TTS_PICK" ] \
      && [ "$SMALL$WITH_ASR$WITH_TTS" = 011 ]; }; }; then
@@ -215,7 +221,7 @@ if [ "$ASK" = 1 ] && { [ "$CHOOSE_MODELS" = 1 ] || { [ "$FIRST" = 1 ] && [ -z "$
   echo "Which models? Memory figures are rough estimates; $(gib_free) GiB are free right now."
   [ -n "$big_lane" ] && echo "(found $big_lane: the 0.6B models are recommended next to it)"
   if [ -z "$ASR_PICK" ]; then
-    echo "Speech recognition (ASR, port $(jq -r '.asr.port // 31001' "$ETC/config.json" 2>/dev/null || echo 31001)):"
+    echo "Speech recognition (ASR, port $(cfgq -r '.asr.port // 31001' 2>/dev/null || echo 31001)):"
     echo "  1) Qwen3-ASR 1.7B      most accurate, ~6 GiB"
     echo "  2) Qwen3-ASR 0.6B      ~3 GiB"
     echo "  3) Parakeet            trained on German, runs on the CPU, ~1 GiB"
@@ -224,13 +230,13 @@ if [ "$ASK" = 1 ] && { [ "$CHOOSE_MODELS" = 1 ] || { [ "$FIRST" = 1 ] && [ -z "$
     case "$(ask "Choice" "$d" 1 2 3 4)" in 1) ASR_PICK=1.7b ;; 2) ASR_PICK=0.6b ;; 3) ASR_PICK=parakeet ;; 4) ASR_PICK=none ;; esac
   fi
   if [ -z "$TTS_PICK" ]; then
-    echo "Speech output (TTS, port $(jq -r '.tts.port // 31002' "$ETC/config.json" 2>/dev/null || echo 31002)):"
+    echo "Speech output (TTS, port $(cfgq -r '.tts.port // 31002' 2>/dev/null || echo 31002)):"
     echo "  1) Qwen3-TTS 0.6B      built-in voices, ~4 GiB"
     echo "  2) Qwen3-TTS 1.7B      also follows style instructions, ~7 GiB"
     echo "  3) none"
     d=$(cur_tts); opts="1 2 3"
     if [ "$d" = keep ]; then
-      echo "  4) keep $(jq -r .tts.model "$ETC/config.json")"; opts="1 2 3 4"; d=4
+      echo "  4) keep $(cfgq -r .tts.model)"; opts="1 2 3 4"; d=4
     else
       case "$d" in 0.6b) d=1 ;; 1.7b) d=2 ;; *) d=3 ;; esac
     fi
@@ -238,7 +244,7 @@ if [ "$ASK" = 1 ] && { [ "$CHOOSE_MODELS" = 1 ] || { [ "$FIRST" = 1 ] && [ -z "$
     case "$(ask "Choice" "$d" $opts)" in 1) TTS_PICK=0.6b ;; 2) TTS_PICK=1.7b ;; 3) TTS_PICK=none ;; 4) TTS_PICK=keep ;; esac
   fi
   if [ "$TTS_PICK" != none ] && [ -z "$VD_PICK" ]; then
-    d=n; [ "$FIRST" = 0 ] && [ "$(jq -r .tts.voicedesign_enabled "$ETC/config.json")" = true ] && d=y
+    d=n; [ "$FIRST" = 0 ] && [ "$(cfgq -r .tts.voicedesign_enabled)" = true ] && d=y
     echo "VoiceDesign: design new voices from a description (extra 1.7B model, ~7 GiB)."
     case "$(ask "Install it? (y/n)" "$d" y n j)" in y|j) VD_PICK=yes ;; n) VD_PICK=no ;; esac
   fi
@@ -265,7 +271,7 @@ if [ ! -f "$ETC/config.json" ]; then
   jqi --arg k "sk-$(head -c 24 /dev/urandom | od -An -tx1 | tr -d ' \n')" '.api.key=$k'
 else
   say "Keeping $ETC/config.json (adding settings introduced by this version)"
-  merged=$(jq -s '.[0] * .[1]' "$INSTALL_FROM/app/config.default.json" "$ETC/config.json") \
+  merged=$(cfg_json | jq -s '.[0] * .[1]' "$INSTALL_FROM/app/config.default.json" -) \
     && printf '%s\n' "$merged" | put_file "$ETC/config.json" 640 "$SVC_USER:$SVC_USER"
   [ "$SMALL" = 1 ] && jqi '.asr.model="Qwen/Qwen3-ASR-0.6B" | .tts.model="Qwen/Qwen3-TTS-12Hz-0.6B-CustomVoice"'
 fi
@@ -289,35 +295,42 @@ case "$NET_PICK" in
   local) jqi '.asr.host="127.0.0.1" | .tts.host="127.0.0.1"' ;;
   network) jqi '.asr.host="0.0.0.0" | .tts.host="0.0.0.0"' ;;
 esac
+# an old configuration that never went through the panel's check (admin.validate): speech APIs that listen in
+# the network get a key; without one the services answer only this machine itself (common.api_key_dependency)
+if [ -z "$(cfgq -r '.api.key // ""')" ] \
+   && [ "$(cfgq -r '[.asr.host, .tts.host] | all(. == "127.0.0.1" or . == "::1" or . == "localhost")')" != true ]; then
+  warn "the speech APIs listen in the network without an API key: a new key is set (Einstellungen -> API-Schlüssel)"
+  jqi --arg k "sk-$(head -c 24 /dev/urandom | od -An -tx1 | tr -d ' \n')" '.api.key=$k'
+fi
 # api: only the models with their APIs; full: with the web panel
 echo "$MODE" | put_file "$ETC/mode" 644 root:root
 # Earlier start values were too generous next to a qwen38 lane; move untouched ones down.
-case "$(jq -r .asr.engine_mem "$ETC/config.json")" in 0.08|0.05) jqi '.asr.engine_mem=0.045 | .asr.engine_max_seqs=4' ;; esac
+case "$(cfgq -r .asr.engine_mem)" in 0.08|0.05) jqi '.asr.engine_mem=0.045 | .asr.engine_max_seqs=4' ;; esac
 # (0.03 + 0.015 left no room for the KV cache on the Spark)
-case "$(jq -c '[.tts.engine_mem_talker, .tts.engine_mem_code2wav]' "$ETC/config.json")" in
+case "$(cfgq -c '[.tts.engine_mem_talker, .tts.engine_mem_code2wav]')" in
   "[0.05,0.05]"|"[0.03,0.015]") jqi '.tts.engine_mem_talker=0.04 | .tts.engine_mem_code2wav=0.025 | .tts.engine_max_seqs=2' ;;
 esac
 # A 2-frame first chunk (0.16 s of audio) ran out before the next 25-frame chunk was ready.
-[ "$(jq -r .tts.initial_chunk_frames "$ETC/config.json")" = 2 ] && jqi '.tts.initial_chunk_frames=8'
+[ "$(cfgq -r .tts.initial_chunk_frames)" = 2 ] && jqi '.tts.initial_chunk_frames=8'
 # 8 frames (the old default) stalled next to a busy qwen38 lane; move to 10 once.
 if [ ! -e "$VAR/state/migrated-chunk10" ]; then
-  [ "$(jq -r .tts.initial_chunk_frames "$ETC/config.json")" = 8 ] && jqi '.tts.initial_chunk_frames=10'
+  [ "$(cfgq -r .tts.initial_chunk_frames)" = 8 ] && jqi '.tts.initial_chunk_frames=10'
   as_svc touch "$VAR/state/migrated-chunk10"
 fi
-[ "$(jq -r .chat.max_tokens "$ETC/config.json")" = 600 ] && jqi '.chat.max_tokens=4096'   # old default cut long answers off
+[ "$(cfgq -r .chat.max_tokens)" = 600 ] && jqi '.chat.max_tokens=4096'   # old default cut long answers off
 # The first voice-chat prompt gave pompous, overexcited answers; replace it if untouched.
 OLD_PROMPT='Du bist ein freundlicher Sprachassistent. Deine Antworten werden vorgelesen: antworte kurz und natürlich in ganzen Sätzen, ohne Listen, Tabellen, Markdown, Code oder Emojis. Antworte in der Sprache, in der du angesprochen wirst.'
-if [ "$(jq -r .chat.system_prompt "$ETC/config.json")" = "$OLD_PROMPT" ]; then
+if [ "$(cfgq -r .chat.system_prompt)" = "$OLD_PROMPT" ]; then
   jqi --slurpfile d "$INSTALL_FROM/app/config.default.json" '.chat.system_prompt=$d[0].chat.system_prompt'
 fi
 # the 0.6B ASR model needs about half the engine share of the 1.7B one
 # (0.025 was too small: "No available memory for the cache blocks" on the Spark)
-if jq -e '.asr.model | test("0.6B")' "$ETC/config.json" >/dev/null; then
-  case "$(jq -r .asr.engine_mem "$ETC/config.json")" in 0.06|0.045|0.025) jqi '.asr.engine_mem=0.035' ;; esac
+if cfgq -e '.asr.model | test("0.6B")' >/dev/null; then
+  case "$(cfgq -r .asr.engine_mem)" in 0.06|0.045|0.025) jqi '.asr.engine_mem=0.035' ;; esac
 fi
 # ...and the 1.7B one needs more than the 0.045 first guessed: its ~4 GiB of weights plus vLLM's
 # working memory left nothing for the cache ("No available memory for the cache blocks").
-if jq -e '.asr.model | test("1.7B")' "$ETC/config.json" >/dev/null && [ "$(jq -r .asr.engine_mem "$ETC/config.json")" = 0.045 ]; then
+if cfgq -e '.asr.model | test("1.7B")' >/dev/null && [ "$(cfgq -r .asr.engine_mem)" = 0.045 ]; then
   jqi '.asr.engine_mem=0.06'
 fi
 # The voice chat in the panel talks to the qwen38 LLM: take its API key from the user who
@@ -335,8 +348,8 @@ for h in "$( [ -n "${SUDO_USER:-}" ] && getent passwd "$SUDO_USER" | cut -d: -f6
   [ -n "$h" ] && [ -d "$h" ] && qkey_ok "$h" && { qkey="$h/.config/qwen38/api-key"; break; }
 done
 if [ -n "$qkey" ]; then
-  cur="$(jq -r '.chat.llm_key // ""' "$ETC/config.json")"
-  from="$(jq -r '.chat.llm_key_from // ""' "$ETC/config.json")"
+  cur="$(cfgq -r '.chat.llm_key // ""')"
+  from="$(cfgq -r '.chat.llm_key_from // ""')"
   new="$(head -c 512 -- "$qkey" | tr -d ' \n\r')"
   [[ "$new" =~ ^[A-Za-z0-9._~+/=-]{8,300}$ ]] || new=""
   if [ -n "$new" ] && { [ -z "$cur" ] || { [ -n "$from" ] && [ "$cur" != "$new" ]; }; }; then
@@ -347,7 +360,7 @@ fi
 no_links "$ETC/config.json"
 chown -h "$SVC_USER:$SVC_USER" "$ETC/config.json"; as_svc chmod 640 "$ETC/config.json"
 
-cfg() { jq -r "$1" "$ETC/config.json"; }
+cfg() { cfgq -r "$1"; }
 # Numbers from the config only ever as plain digits: the file belongs to the service user, and bash
 # would run a command hidden in a value used in $(( )). Anything else falls back to the default.
 cfg_int() { local v; v=$(cfg "$1"); if [[ "$v" =~ ^[0-9]{1,6}$ ]]; then echo "$v"; else echo "$2"; fi; }
@@ -506,7 +519,7 @@ fi
 # ---------------------------------------------------------------- models (ASR / transformers TTS)
 # An update downloads only when the chosen models changed since the last complete download
 # ($PREFIX/.models, root's file); the services fetch a model that went missing themselves.
-MODELS_SIG="models-r1 $WITH_ASR $WITH_TTS $ASR_BACKEND $BACKEND $(jq -c '{a: .asr.model, b: .asr.aligner_model, c: .asr.timestamps, d: .asr.recognizer, e: .tts.model, f: .tts.voicedesign_enabled, g: .tts.voicedesign_model}' "$ETC/config.json")"
+MODELS_SIG="models-r1 $WITH_ASR $WITH_TTS $ASR_BACKEND $BACKEND $(cfgq -c '{a: .asr.model, b: .asr.aligner_model, c: .asr.timestamps, d: .asr.recognizer, e: .tts.model, f: .tts.voicedesign_enabled, g: .tts.voicedesign_model}')"
 if [ "$DOWNLOAD" = 1 ] && [ "$FROM_UPDATE" = 1 ] && [ -f "$PREFIX/.models" ] && [ ! -L "$PREFIX/.models" ] \
    && [ "$(cat "$PREFIX/.models")" = "$MODELS_SIG" ]; then
   say "Downloading skipped: the models are the same as before"
@@ -744,6 +757,8 @@ $tts_mem
 WantedBy=multi-user.target
 EOF
 
+# The vLLM engines get no MemoryMax= on purpose: on the GB10 the GPU memory is the same unified memory, so a
+# cap could count the model and kill the engine; vLLM's own gpu_memory_utilization and earlyoom bound them.
 engine_unit() {  # $1 = unit suffix, $2 = engine.sh role
   cat >"/etc/systemd/system/speech-spark-$1.service" <<EOF
 [Unit]
@@ -824,6 +839,9 @@ Environment=SPEECH_SPARK_PREFIX=$PREFIX
 ExecStart=$PREFIX/venv-panel/bin/python $PREFIX/app/api_watchdog.py
 Restart=always
 RestartSec=10
+# a small Python loop: a runaway restarts it instead of taking memory from the engines
+MemoryMax=1G
+PrivateTmp=yes
 
 [Install]
 WantedBy=multi-user.target
@@ -880,7 +898,7 @@ restart_engine() {  # $1 = unit suffix, $2 = settings signature
   # (its start options) restarts the engines by itself
   set -- "$1" "$2 units-r2 engine.sh=$(sha256sum "$PREFIX/app/engine.sh" | cut -c1-16)"
   systemctl enable "speech-spark-$1.service" >/dev/null 2>&1
-  if [ "$FROM_UPDATE" = 0 ] || [ "$(cat "$sigfile" 2>/dev/null)" != "$2" ] \
+  if [ "$FROM_UPDATE" = 0 ] || [ "$(as_svc cat -- "$sigfile" 2>/dev/null)" != "$2" ] \
      || ! systemctl is-active -q "speech-spark-$1.service"; then
     systemctl restart "speech-spark-$1.service"
   fi
@@ -892,7 +910,7 @@ if [ "$WITH_ASR" = 1 ] && [ "$ASR_BACKEND" = vllm ]; then
   # the old transformers ASR keeps its model in memory until it stops; free it before the
   # engine's memory guard looks at what is available
   systemctl stop speech-spark-asr.service 2>/dev/null || true
-  restart_engine asr-engine "$VLLM_VERSION $(jq -c '.asr | {model, engine_mem, engine_max_seqs, engine_port}' "$ETC/config.json")"
+  restart_engine asr-engine "$VLLM_VERSION $(cfgq -c '.asr | {model, engine_mem, engine_max_seqs, engine_port}')"
 else
   systemctl disable --now speech-spark-asr-engine.service 2>/dev/null || true
 fi
@@ -904,7 +922,7 @@ svc_print() {  # $1 = service: everything it runs from, as one stream (only hash
   files=$(sed -n "s/^$1: *//p" "$PREFIX/app/restart-map" 2>/dev/null | head -1)
   [ -n "$files" ] || { echo "unknown $(date +%s%N)"; return; }
   echo "restart-r1"
-  cat "/etc/systemd/system/speech-spark-$1.service" "$ETC/config.json" 2>/dev/null
+  { cat "/etc/systemd/system/speech-spark-$1.service"; cfg_json; } 2>/dev/null
   for f in $files; do
     case "$f" in *..*|/*|*[!A-Za-z0-9_./-]*) echo "bad $(date +%s%N)"; continue ;; esac
     printf '== %s\n' "$f"; cat -- "$PREFIX/app/$f" 2>/dev/null || echo "missing $(date +%s%N)"
@@ -931,10 +949,10 @@ else
 fi
 
 if [ "$WITH_TTS" = 1 ] && [ "$BACKEND" = vllm-omni ]; then
-  restart_engine tts-engine "$VLLM_OMNI_VERSION $(jq -c '.tts | {model, engine_mem_talker, engine_mem_code2wav, engine_max_seqs, engine_max_model_len, engine_port}' "$ETC/config.json")"
+  restart_engine tts-engine "$VLLM_OMNI_VERSION $(cfgq -c '.tts | {model, engine_mem_talker, engine_mem_code2wav, engine_max_seqs, engine_max_model_len, engine_port}')"
   if [ "$(cfg .tts.voicedesign_enabled)" = true ]; then
     # like the engines above: only when its settings changed (a restart loads the VoiceDesign model again)
-    restart_engine tts-design "$VLLM_OMNI_VERSION $(jq -c '.tts' "$ETC/config.json")"
+    restart_engine tts-design "$VLLM_OMNI_VERSION $(cfgq -c '.tts')"
   else
     systemctl disable --now speech-spark-tts-design.service 2>/dev/null || true
   fi

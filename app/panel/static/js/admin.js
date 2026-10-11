@@ -78,7 +78,7 @@ function zCards(s){const box=$('zcards');if(!box)return;const g=s.glance||{},sv=
   box.appendChild(zCard(pl,t('Sprechen','Speaking'),pt,[short(ph.model),ft!=null?t('erster Ton Ø ','first sound avg ')+fmt(ft,' s',1):''].filter(Boolean).join(' · '),()=>zTech('svc')));
   const c=g.check||{};
   box.appendChild(zCard(c.llm===true?'ok':c.llm===false?'bad':'',t('Sprachmodell','Language model'),c.llm===true?t('antwortet','answers'):c.llm===false?t('antwortet nicht','does not answer'):t('noch nicht geprüft','not checked yet'),
-    c.time?t('geprüft ','checked ')+zAgo(c.time)+(c.seconds!=null?' · '+fmt(c.seconds,' s',1):''):t('Prüfen startet die Funktionsprüfung','Prüfen runs the check'),()=>goSec('test')));
+    c.time?t('geprüft ','checked ')+zAgo(c.time)+(c.seconds!=null?' · '+fmt(c.seconds,' s',1):''):t('Prüfen startet die Funktionsprüfung','Checks runs the function check'),()=>goSec('test')));
   const free=sy.mem_avail_gib,tot=sy.mem_total_gib,ml=free==null?'':free<8?'bad':free<12?'warn':'ok';
   const mc=zCard(ml,t('Speicher','Memory'),free==null?'–':fmt(free,' GiB',1)+t(' frei',' free'),t('Grenze 8 GiB: darunter beendet DGX OS Prozesse','Limit 8 GiB: below it DGX OS ends processes'),()=>zTech('c-mem'));
   if(free!=null&&tot){const bar=document.createElement('span');bar.className='zbar';const f=document.createElement('i');f.style.width=Math.max(2,Math.min(100,Math.round(100*free/tot)))+'%';
@@ -425,9 +425,11 @@ async function loadInt(){const c=await (await api('/api/config')).json();const v
   $('int-owui-stt').innerHTML=kv([['Speech-to-Text Engine','OpenAI'],['API Base URL',asr],['API Key',key],['STT Model',c.asr.model]]);
   $('int-owui-tts').innerHTML=kv([['Text-to-Speech Engine','OpenAI'],['API Base URL',tts],['API Key',key],['TTS Model',c.tts.model],['TTS Voice',voice],[t('Zusätzliche TTS-Parameter (JSON, optional)','Additional TTS parameters (JSON, optional)'),JSON.stringify({temperature:c.tts.temperature,top_p:c.tts.top_p,seed:c.tts.seed})],[t('Antwort aufteilen','Response splitting'),t('Absätze (Paragraphs)','Paragraphs')]]);
   const panelUrl=`http://${host}:${(c.panel&&c.panel.port)||31080}`;
-  $('int-pebble').innerHTML=kv([[t('Spark-Adresse in der Uhr-App','Spark address in the watch app'),panelUrl],[t('App-Datei','App file'),panelUrl+'/pebble/speech-spark.pbw']]);
-  $('int-pbw').href=panelUrl+'/pebble/speech-spark.pbw';
+  // the download follows this page (B8): served over https, the link is https too (no blocked http link on an https page);
+  // the address in the watch app stays plain http, the Pebble app does not trust the self-signed certificate
   const siriBase=location.protocol==='https:'?location.origin:panelUrl;
+  $('int-pebble').innerHTML=kv([[t('Spark-Adresse in der Uhr-App','Spark address in the watch app'),panelUrl],[t('App-Datei','App file'),siriBase+'/pebble/speech-spark.pbw']]);
+  $('int-pbw').href=siriBase+'/pebble/speech-spark.pbw';
   $('int-siri').innerHTML=kv([['URL',siriBase+'/api/siri/ask'],[t('Methode','Method'),'POST'],['Header','X-Speech-Device: sd_…'],[t('Haupttext (JSON)','Request body (JSON)'),'{"text": "…"}'],[t('Antwort','Answer'),'{"answer": "…"}']]);
   $('int-voices').textContent=v.model_kind==='voice_design'?t('VoiceDesign-Modell: die Stimme wird über die Standard-Anweisung beschrieben.','VoiceDesign model: the voice is described by the default instruction.'):((v.voices||[]).join(', ')||t('(Dienst lädt noch)','(service still loading)'));
   const auth=c.api.key?` \\\n  -H "Authorization: Bearer ${c.api.key}"`:'';
@@ -751,7 +753,7 @@ async function loadBak(){loadOff();try{bakRender((await (await api('/api/backups
 const bakAsk=()=>confirm(t('Wiederherstellen? Profile, Stimmen und Einstellungen werden durch die Sicherung ersetzt (der jetzige Stand wird vorher gesichert). Geänderte Einstellungen der Dienste wirken nach deren Neustart.','Restore? Profiles, voices and settings are replaced by the backup (the current state is backed up first). Changed service settings take effect after their restart.'));
 const bakDone=r=>{$('bakpw').value='';$('bakmsg').textContent=t('Wiederhergestellt: ','Restored: ')+r.restored.join(', ')+(r.restored.includes('admin-mfa-kept')?t(' (der zweite Anmeldeschritt des Admins bleibt der von diesem Spark)',' (the admin\'s second login step stays the one of this Spark)'):'')+(r.restored.includes('admin-password-kept')?t(' (Panel-Passwort und sein zweiter Schritt bleiben unverändert: die stellt nur der Hauptadmin wieder her)',' (the panel password and its second step stay unchanged: only the main admin restores those)'):'')+(r.restored.includes('keys')?t(' – bitte überall neu anmelden.',' – please sign in again everywhere.'):'');loadBak()};
 // a move backup needs its password: taken from the field below the list
-const bakErr=e=>{const m=/move backup|wrong password/.test(e.message)?t('Das ist eine Umzugs-Sicherung: Passwort ins Feld unten eintragen und nochmal wiederherstellen. ','This is a move backup: enter its password in the field below and restore again. '):'';$('bakmsg').innerHTML=`<span class="err">${esc(m+e.message)}</span>`};
+const bakErr=e=>{const m=/move backup|wrong password/.test(errRaw(e))?t('Das ist eine Umzugs-Sicherung: Passwort ins Feld unten eintragen und nochmal wiederherstellen. ','This is a move backup: enter its password in the field below and restore again. '):'';$('bakmsg').innerHTML=`<span class="err">${esc(m+e.message)}</span>`};
 window.bakRestore=async n=>{if(!bakAsk())return;$('bakmsg').textContent=t('stelle wieder her …','restoring …');
   try{bakDone(await (await api('/api/backups/'+encodeURIComponent(n)+'/restore',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({password:$('bakpw').value})})).json())}catch(e){bakErr(e)}};
 window.bakLoad=async n=>{try{const r=await (await api('/api/backups/'+encodeURIComponent(n)+'/ticket',{method:'POST'})).json();

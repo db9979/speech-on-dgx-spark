@@ -21,7 +21,7 @@ since V01.0.296) and adds only what a page cannot do:
    only install over the old one with the same key.
 2. **Build the app:** Actions → "Android app" → Run workflow. It appears as release `android-v1.0.0` with
    `spark.apk`, `spark.apk.sha256` and `android.json`.
-3. **Spark:** Settings → Features → Android app on, save, "Fetch the app now" (otherwise it fetches once a day).
+3. **Spark:** Features → Android app on, save, "Fetch the app now" (otherwise it fetches once a day).
    It checks size and SHA-256 and keeps it under `STATE/android`.
 4. **Profile:** Me → Android app → "Android app for me" on, "Get a download link", scan the QR code with the
    Android phone's camera, install the APK (the phone asks once whether the browser may install apps). The link

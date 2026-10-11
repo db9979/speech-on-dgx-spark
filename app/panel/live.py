@@ -840,7 +840,7 @@ def _devup_sub(d):
 def admin_live(request: Request):
     guard.limit(request, "live", admin=True)
     if not on():
-        raise HTTPException(404, "live off")
+        return {"on": False}   # off: the page says so, without an error in the console of every admin page (B8)
     return snapshot("admin")
 
 

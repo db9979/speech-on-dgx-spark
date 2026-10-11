@@ -29,6 +29,7 @@ jobs:
     runs-on: macos-15
     env:
       HAS_DEVID: ${{ secrets.MAC_DEVID_P12 != '' && secrets.MAC_DEVID_P12_PASSWORD != '' }}
+      HAS_UPDKEY: ${{ secrets.UPDATE_SIGNING_KEY != '' }}
     steps:
       - uses: actions/checkout@fbc6f3992d24b796d5a048ff273f7fcc4a7b6c09 # v5
         with:
@@ -107,12 +108,21 @@ jobs:
           cat dist/begleiter.json
           ls -l dist
 
+      # OPTIONAL: begleiter.json.sig (Ed25519, app/panel/signatur.py); skipped until the secret exists.
+      # macOS' own openssl is LibreSSL: the runner's Homebrew OpenSSL 3 signs.
+      - name: OPTIONAL sign begleiter.json
+        if: env.HAS_UPDKEY == 'true'
+        env:
+          UPDATE_SIGNING_KEY: ${{ secrets.UPDATE_SIGNING_KEY }}
+        run: OPENSSL="$(brew --prefix openssl@3)/bin/openssl" tools/sign-manifest.sh dist/begleiter.json
+
       - uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02 # v4
         with:
           name: Spark-Begleiter-mac
           path: |
             dist/Spark-Begleiter-mac.zip
             dist/begleiter.json
+            dist/begleiter.json.sig
           if-no-files-found: error
 
       - name: Publish release begleiter-mac
@@ -122,8 +132,9 @@ jobs:
           set -euo pipefail
           tag=begleiter-mac
           file=dist/Spark-Begleiter-mac.zip
+          sig=(); [ -f dist/begleiter.json.sig ] && sig=(dist/begleiter.json.sig)
           if gh release view "$tag" >/dev/null 2>&1; then
-            gh release upload "$tag" "$file" dist/begleiter.json --clobber
+            gh release upload "$tag" "$file" dist/begleiter.json ${sig[@]+"${sig[@]}"} --clobber
           else
             notes=$(cat <<'NOTES'
           Spark-Begleiter für den Mac (macOS 13 oder neuer, Apple-Chip und Intel): ein kleines Programm in der Menüleiste für den eigenen Spark – Schreibhilfe (⌥⌘S und „Mit Spark verbessern“ im Dienste-Menü), Frag Spark (⌥⌘A), Diktieren (⌥⌘D), Meldungen, Zustandspunkt und Mein-Notaus-Knopf.
@@ -135,5 +146,5 @@ jobs:
           Anleitung: tools/begleiter/mac/README.md
           NOTES
           )
-            gh release create "$tag" "$file" dist/begleiter.json --title "Spark-Begleiter für den Mac" --notes "$notes" --target "$GITHUB_SHA"
+            gh release create "$tag" "$file" dist/begleiter.json ${sig[@]+"${sig[@]}"} --title "Spark-Begleiter für den Mac" --notes "$notes" --target "$GITHUB_SHA"
           fi

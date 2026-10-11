@@ -1,6 +1,7 @@
 import AppKit
 import Combine
 import CryptoKit
+import Security
 
 /// Updates (contract "Version 2"): the Spark says in config.update which version it has, with size and SHA-256.
 /// The file comes only from the paired Spark (GET /api/desk/update?arch=mac), is checked (size, SHA-256, bundle id,
@@ -138,6 +139,10 @@ final class Updater: ObservableObject {
     private func startDownload(thenInstall: Bool) {
         guard let info, let client = AppModel.shared.client else { return }
         if phase == .downloading { return }
+        guard UpdateCheck.secureBase(client.base) else {
+            phase = .failed("Updates nur über https: die https-Adresse des Spark eintragen oder die neue Version selbst von GitHub laden.")
+            return
+        }
         task?.cancel()
         phase = .downloading
         task = Task { @MainActor [weak self] in
@@ -270,11 +275,32 @@ final class Updater: ObservableObject {
               fm.isExecutableFile(atPath: app.appendingPathComponent("Contents/MacOS/" + exe).path) else {
             return fail("Programmdatei fehlt")
         }
-        let signed = run("/usr/bin/codesign", ["--verify", "--deep", "--strict", app.path])
+        // a program signed by a team (Developer ID) takes only an update from the same team: codesign checks the
+        // requirement (Apple's chain, the team in the leaf), not just that some valid signature is there
+        let running = teamID(of: Bundle.main.bundleURL)
+        guard UpdateCheck.signerAccepted(running: running, new: teamID(of: app)) else {
+            return fail("Signatur von einem anderen Entwickler")
+        }
+        var verify = ["--verify", "--deep", "--strict"]
+        if let team = running {
+            guard let req = UpdateCheck.requirement(team: team) else { return fail("Signatur") }
+            verify += ["-R", req]
+        }
+        let signed = run("/usr/bin/codesign", verify + [app.path])
         guard signed == 0 else {
             return fail("Signatur, codesign \(signed)")
         }
         return .success(app)
+    }
+
+    /// The Team ID in an app's signature, or nil (ad hoc, unsigned, unreadable).
+    nonisolated private static func teamID(of app: URL) -> String? {
+        var code: SecStaticCode?
+        guard SecStaticCodeCreateWithPath(app as CFURL, [], &code) == errSecSuccess, let code else { return nil }
+        var info: CFDictionary?
+        guard SecCodeCopySigningInformation(code, SecCSFlags(rawValue: kSecCSSigningInformation), &info) == errSecSuccess,
+              let dict = info as? [String: Any] else { return nil }
+        return UpdateCheck.teamID(dict[kSecCodeInfoTeamIdentifier as String] as? String)
     }
 
     /// Runs a system tool without a shell; its exit code (-1 if it could not start).

@@ -85,7 +85,8 @@ class Live(unittest.TestCase):
             logs = json.load(f)["logs"]
         self.assertEqual((logs["live"], logs["live_monitor"], logs["live_names"]), (False, False, False))
         set_logs(live=False, live_monitor=False)
-        self.assertEqual(ADMIN.get("/api/admin/live").status_code, 404)
+        r = ADMIN.get("/api/admin/live")   # off: a quiet answer, no 404 in the console of every admin page (B8)
+        self.assertEqual((r.status_code, r.json()), (200, {"on": False}))
         self.assertEqual(TestClient(panel.app, client=HOME).get("/live").status_code, 404)
         self.assertEqual(TestClient(panel.app, client=HOME).get("/api/live/state").status_code, 404)
         # live off: the monitor switch alone opens nothing

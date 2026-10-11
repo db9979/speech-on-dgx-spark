@@ -56,7 +56,7 @@ Routes and calls: "Navigiere zur Arbeit" or "Ruf Anna an". The app asks every ti
 
 - **Quick start:** "Talk to Spark" opens the app and it listens at once. On the Action button: iPhone Settings → Action Button → Shortcut → "Talk to Spark". In Control Center (iOS 18 and later) via "Add a Control", on the lock screen as a widget. With Siri: "Hey Siri, Start Spark".
 - **History:** The clock icon at the top left shows your earlier conversations, the same list as the panel's log. Tapping one continues it. Deleting stays in the panel.
-- **Today** (since V01.0.286): the sun at the top right shows what is due today, like *Ich → Heute* in the panel: next appointments of today and tomorrow, open reminders, unread messages, documents, remembered facts. Only cards of functions your profile may use; pull down to refresh.
+- **Today** (since V01.0.286): the sun at the top right shows what is due today, like *Me → Today* in the panel: next appointments of today and tomorrow, open reminders, unread messages, documents, remembered facts. Only cards of functions your profile may use; pull down to refresh.
 - **Ask about a photo or document:** The paper clip next to the input: take a photo, choose a photo, or a document (PDF, text, image). The iPhone reads the text itself, scanned pages too. Only the text goes to the Spark. The attachment stays for the conversation until you remove it with ✕. **Let the Spark look at photos:** with "Let the model look at photos from the app" on under Me → iPhone app (plus the admin and profile switches for pictures), a photo goes to the Spark as a picture, scaled to 1280 px, so it also recognises things, plants or an error display. Follow-up questions about the same photo work for 10 minutes. With it off, the iPhone reads only the text as before. PDFs and documents always stay text.
 - **Save to "My documents":** With "Store documents from the app" on under Me → iPhone app in the panel, the attachment shows a button for it. The Spark then finds the document later, like an upload in the panel.
 - **Offline:** When the Spark cannot be reached, the app says so at the top. Typed questions wait (at most 10, for one day) and go out once the Spark is back. Speaking does not work then, because the Spark recognises the speech.
@@ -102,7 +102,7 @@ The envelope next to the input opens the messages (a dot shows new ones), no lan
 
 ## Where the Spark is listening (room mode)
 
-Since V01.0.209 the app shows when a device of your profile listens in room mode (browser or speaker). Switch it on in the panel under Ich → iPhone-App → "Raum-Modus in der App zeigen" (off, needs room mode from the admin). The top of the chat then reads "● Küche hört zu bis 21:30" with "Beenden", with several devices one line that opens a list. The app asks when it opens, when it comes back and every 30 seconds. The lock screen and the Dynamic Island show a Live Activity with the time left and "Beenden" (turn off in the iPhone Settings → Spark → Live Activities). It is only updated while the app runs; after the end time it reads "vorbei" until the app looks again. The "Raum-Modus" widget (home and lock screen) shows "Küche hört zu bis 21:30" or "Niemand hört zu". With Siri: "End room mode with Spark". The app can only end room mode, never start it; it sees only where and until when, never what was heard.
+Since V01.0.209 the app shows when a device of your profile listens in room mode (browser or speaker). Switch it on in the panel under Me → iPhone app → "Raum-Modus in der App zeigen" (show room mode in the app) (off, needs room mode from the admin). The top of the chat then reads "● Küche hört zu bis 21:30" with "Beenden", with several devices one line that opens a list. The app asks when it opens, when it comes back and every 30 seconds. The lock screen and the Dynamic Island show a Live Activity with the time left and "Beenden" (turn off in the iPhone Settings → Spark → Live Activities). It is only updated while the app runs; after the end time it reads "vorbei" until the app looks again. The "Raum-Modus" widget (home and lock screen) shows "Küche hört zu bis 21:30" or "Niemand hört zu". With Siri: "End room mode with Spark". The app can only end room mode, never start it; it sees only where and until when, never what was heard.
 
 ## Spark update from the app
 
@@ -142,15 +142,40 @@ Step by step (TestFlight, App Store): [iphone-publishing.md](iphone-publishing.m
 - Smart home from the app only with its own switch and the code word. What the app claims to be does not count; the panel decides by the key.
 - Wake word, stand mode, routes and calls only with their own switch in the panel. The Spark only suggests a route or call; the tool exists only for the app key with the switch, and only your "yes" on the iPhone starts it. Outside text (mail, web page) cannot start a route or call.
 - No sound goes to the Spark before the wake word. In the background the app listens only with the wake word on.
-- Push: the Apple key (.p8) is stored encrypted, changed only by the admin with the second step, never shown again. Apple only gets a fixed sentence and a random number. Only the app with its own key signs up its push address; only the profile's own app gets a notification's text.
+- Push: the Apple key (.p8) is stored encrypted, changed only by the admin with the second step, never shown again. Apple only gets a fixed sentence and a random number. Only the app with its own key signs up its push address; a removed iPhone gets nothing from then on. Only the profile's own app gets a notification's text.
 - Photos and documents: the iPhone reads the text, only text goes to the Spark (at most 20,000 characters per question). Photos go as pictures only with the photo switch on; a round with a picture offers no tools, and the picture is not kept in the history. The Spark treats it as outside text: it sits as data in the prompt, not in the conversation, and locks actions as after a mail. The history keeps only the attachment's name.
 - Storing documents only with its own switch, only with the app key, at most 10 per minute and 3 MB. The app cannot list or delete the documents.
 - "My profile" changes only a fixed list (voice, speed, length, by itself, morning briefing). The app's rights, Telegram, the smart home and the tone cannot be changed through it; a request with any other field is refused as a whole.
 - Apple Reminders: only with its own switch, only after "yes" on the iPhone. The app reads nothing from Reminders for the Spark. Shortcuts may only add entries to the lists; list settings stay in the panel.
 - Sharing: shared content is outside text (locks actions), at most 20,000 characters per question; the iPhone loads web pages itself, at most 3 MB.
 - Waiting questions stay on the iPhone and are deleted when unpairing.
+- Spark update: only the admin gives the rights (with the admin's code when the second step is on); a profile cannot give them to itself. Starting needs the app's key, Face ID and a fresh 6-digit code of the profile (each code once, wrong codes count towards the lock), at most once in 10 minutes. The app cannot pick a version; only versions with passed GitHub tests are installed. Every start is in the security log, and the language model has no tool for it.
 - CarPlay never loosens anything: in the car the smart home is locked without its own car switch.
 - Pairing only from the profile's own browser login, with the second login step when the profile has it. At most 5 iPhones per profile.
 
-Every push that changes `ios/` builds the app on GitHub for the simulator (`.github/workflows/ios.yml`).
-- Spark update: only the admin gives the rights; starting needs the app's key, Face ID and a fresh 6-digit code of the profile (each code once), at most once in 10 minutes. The app cannot pick a version; only versions with passed GitHub tests are installed. Every start is in the security log, and the language model has no tool for it.
+## What the Spark offers for it
+
+| Way | What for |
+|---|---|
+| `POST /api/profile/iphone/pair` | Browser login: one-time pairing link (`spark-app://pair?url=…&code=…`) with QR code |
+| `POST /api/iphone/pair` | App: exchange the code for its own key (10 per minute and address) |
+| `GET /api/iphone/hello` | App: checks the key, names profile, language and what the profile allows |
+| `GET /api/profile/reminders` | App: the profile's reminders and timers, so they ring on the iPhone |
+| `GET /api/proactive`, `POST /api/proactive/greet` | App: notes on its own |
+| `POST /api/assistant/say` | App: speak notes with the Spark's voice |
+| `POST /api/test/asr`, `POST /api/chat`, `POST /api/siri/ask` | Questions and answers as in the browser and with Siri |
+| `DELETE /api/profile/iphone/{id}` | Browser login: remove an iPhone |
+| `POST /api/iphone/push-token` | App: sign up its push address (only with the app key) |
+| `GET /api/iphone/note?id=…` | App (notification extension): fetch the text of a push notification |
+| `POST /api/profile/iphone/push-test` | Browser login: test notification to the own iPhones |
+| `GET/PUT /api/profile/convos` | App: read the history and save the current conversation (deleting only in the panel) |
+| `GET/PUT /api/iphone/settings` | App: "My profile", only the fields from `iphone.APP_FIELDS` |
+| `GET /api/assistant/voices` | App: voices to choose from |
+| `POST /api/tasks/inbox`, `POST /api/profile/tasks/einkauf\|aufgaben` | App: fetch new list entries, set entries from Shortcuts (only with `app_ios`) |
+| `POST /api/iphone/doc` | App: text of a document into "My documents" (only with `app_docs`) |
+| `GET /api/iphone/update` | App: installed and new tested version, changes, progress (only with the admin's right) |
+| `POST /api/iphone/update` | App: start the update with a fresh code (only with the right "Start") |
+| `GET /api/admin/iphone-update`, `PUT /api/admin/iphone-update/{id}` | Admin: who gets notes and who may start |
+| `GET/PUT/DELETE /api/admin/apns` | Admin: Apple key (PUT and DELETE with the second step) |
+
+Every push that changes `ios/` builds the app on GitHub for the simulator (`.github/workflows/ios.yml`), so errors show there and not only in Xcode.

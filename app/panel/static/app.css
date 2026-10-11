@@ -977,3 +977,5 @@ select.ld-chip{width:auto;max-width:180px;padding:3px 8px}
   .docspace .qbar{display:none}#docspacet{white-space:nowrap}
   .ld-bulk{flex-wrap:nowrap;overflow-x:auto;scrollbar-width:thin}.ld-bulk .b,.ld-bulk b{white-space:nowrap;flex:none}
 }
+/* a name only for screen readers (B6): the field keeps its look */
+.srl{position:absolute;width:1px;height:1px;margin:-1px;padding:0;overflow:hidden;clip:rect(0 0 0 0);white-space:nowrap;border:0}

@@ -18,10 +18,17 @@ struct ContentView: View {
             if app.paired || Demo.scene != nil { ChatView() } else { PairView() }
         }
         .alert(item: $app.offered) { link in
-            Alert(title: Text("Mit diesem Spark koppeln?"),
-                  message: Text("\(link.base.host ?? "")\n\nNur koppeln, wenn das dein eigener Spark ist."),
-                  primaryButton: .default(Text("Koppeln")) { Task { await app.pair(link) } },
-                  secondaryButton: .cancel(Text("Abbrechen")))
+            if let old = link.replacing {
+                // already paired with another Spark: switching sends every question there from now on
+                return Alert(title: Text("Zu einem anderen Spark wechseln?"),
+                             message: Text("Diese App ist mit \(old) gekoppelt. Der Link führt zu \(AppState.label(link.base)).\n\nNur wechseln, wenn das dein eigener Spark ist. Danach gehen alle Fragen dorthin."),
+                             primaryButton: .destructive(Text("Wechseln")) { Task { await app.pair(link) } },
+                             secondaryButton: .cancel(Text("Abbrechen")))
+            }
+            return Alert(title: Text("Mit diesem Spark koppeln?"),
+                         message: Text("\(link.base.host ?? "")\n\nNur koppeln, wenn das dein eigener Spark ist."),
+                         primaryButton: .default(Text("Koppeln")) { Task { await app.pair(link) } },
+                         secondaryButton: .cancel(Text("Abbrechen")))
         }
         .sheet(item: $app.invited) { link in JoinView(link: link) }
     }

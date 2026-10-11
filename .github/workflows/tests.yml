@@ -34,7 +34,7 @@ jobs:
         run: |
           # the panel's packages exactly as install.sh builds them: versions and hashes from the lock (V01.0.286)
           python -m pip install -q --no-deps --require-hashes -r app/requirements-panel.lock
-          python -m pip install -q playwright
+          python -m pip install -q playwright==1.55.0
           python -m playwright install --with-deps chromium
           sudo apt-get install -y -q ffmpeg
       - name: Self-tests

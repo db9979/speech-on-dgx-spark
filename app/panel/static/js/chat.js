@@ -176,7 +176,7 @@ async function transcribe2(blob,tEnd,rec){chatSay(t('Erkenne Sprache …','Trans
   const last=chat.live.last;chat.live.last=null;let r=null;
   if(last&&last.rec===rec&&chat.lastVoice!=null&&last.at>chat.lastVoice+150)r=await last.p;
   clearLive();
-  if(!r)try{r=await asrText(blob)}catch(e){chatSay(errText(e instanceof TypeError?'net':/asr_down|unreachable/.test(e.message)?'asr_down':/loading/.test(e.message)?'asr_loading':'asr_error',e.message));return}
+  if(!r)try{r=await asrText(blob)}catch(e){chatSay(errText(e instanceof TypeError?'net':/asr_down|unreachable/.test(errRaw(e))?'asr_down':/loading/.test(errRaw(e))?'asr_loading':'asr_error',e.message));return}
   // the Spark's own voice (another device answering, echo.py) counts as silence
   if(!r.text){chatSay(r.ignored?t('Eigene Stimme überhört.','Ignored my own voice.'):t('Nichts verstanden.','Did not catch that.'));return}
   chat.asrBusy=false;chat.nextSpoken=true;ask(r.text,(performance.now()-tEnd)/1000,r.speaker)}
@@ -263,7 +263,7 @@ const ub=chatLog('user',text);const um={role:'user',content:text};
         else if(ev.type==='search_error'){chatSay(t('Websuche fehlgeschlagen: ','Web search failed: ')+ev.message)}
         else if(ev.type==='timing'){if(ev.llm_first_token!=null)llmS=ev.llm_first_token;if(ev.first_audio!=null)audioS=ev.first_audio;if(ev.first_ack!=null)ackS=ev.first_ack}
         else if(ev.type==='error'){if(!err)err=errText(ev.code,ev.message);if(/^tts/.test(ev.code||''))ttsErr=true}}}}
-  catch(e){if(e.name!=='AbortError')err=errText(e instanceof TypeError?'net':'',e.message);if(pids.length&&/picture is gone/.test(e.message||''))picsGone()}
+  catch(e){if(e.name!=='AbortError')err=errText(e instanceof TypeError?'net':'',e.message);if(pids.length&&/picture is gone/.test(errRaw(e)))picsGone()}
   const aborted=ctrl.signal.aborted;if(chat.ctrl===ctrl)chat.ctrl=null;
   // another person's voice: the exchange is theirs, so it stays out of this browser's history and context
   if(foreign){const i=chat.msgs.indexOf(um);if(i>=0)chat.msgs.splice(i,1)}
@@ -306,7 +306,7 @@ function whyNote(w){const d=document.createElement('div');d.className='mem whyno
     voice:t('Am geteilten Lautsprecher gibt es Persönliches nur, wenn er deine Stimme erkennt.','At a shared speaker personal things need your recognized voice.')}[w.why];
   if(!txt)return d;d.textContent='ℹ '+txt;const go=(l,f)=>{const b=document.createElement('button');b.type='button';b.className='mlink';b.textContent=l;b.onclick=f;d.append(' ',b)};
   if(w.why==='spark'&&document.body.classList.contains('adm')&&!document.body.classList.contains('prof')&&typeof goSec==='function')go(t('Wer darf was','Who may do what'),()=>goSec('who'));
-  else if(w.why==='profile'&&w.me&&typeof openMe==='function')go(t('Unter Ich einschalten','Switch on under Ich'),()=>openMe(w.me));
+  else if(w.why==='profile'&&w.me&&typeof openMe==='function')go(t('Unter Ich einschalten','Switch on under Me'),()=>openMe(w.me));
   else if(w.why==='guest'&&typeof openMe==='function')go(t('Anmelden','Sign in'),()=>openMe('loginbox'));
   else if(w.why==='mfa'&&typeof openMe==='function')go(t('Einrichten','Set up'),()=>openMe('secbox'));
   if(w.tip&&typeof tipNote==='function')tipNote(d,w.tip);

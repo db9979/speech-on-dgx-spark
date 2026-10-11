@@ -10,6 +10,9 @@ final class AppState: ObservableObject {
         let id = UUID()
         let base: URL
         let code: String
+        /// The host this app is paired with now, when the link leads to another Spark (then the alert asks
+        /// explicitly whether to switch; a link never re-points a paired app quietly).
+        var replacing: String? = nil
     }
 
     @Published var paired = Store.paired
@@ -46,11 +49,28 @@ final class AppState: ObservableObject {
             invited = link
             return
         }
-        guard url.scheme == "spark-app", url.host == "pair", let link = Self.link(url) else {
+        guard url.scheme == "spark-app", url.host == "pair", var link = Self.link(url) else {
             message = String(localized: "Das ist kein gültiger Kopplungs-Link vom Spark.")
             return
         }
+        // already paired with another Spark: the alert names both and asks to switch (N19)
+        if paired, let now = Store.baseURL, !Self.sameSpark(now, link.base) {
+            link.replacing = Self.label(now)
+        }
         offered = link
+    }
+
+    /// Same scheme, host and port (the panel's links carry no path).
+    static func sameSpark(_ a: URL, _ b: URL) -> Bool {
+        a.scheme?.lowercased() == b.scheme?.lowercased() && a.host?.lowercased() == b.host?.lowercased()
+            && (a.port ?? 443) == (b.port ?? 443)
+    }
+
+    /// "host" or "host:port" for the alert.
+    static func label(_ u: URL) -> String {
+        let host = u.host ?? ""
+        if let p = u.port, p != 443 { return "\(host):\(p)" }
+        return host
     }
 
     /// The Spark's address and the one-time code from a pair or join link.
@@ -76,6 +96,11 @@ final class AppState: ObservableObject {
         defer { busy = false }
         do {
             let r = try await SparkAPI.pair(base: link.base, code: link.code, name: UIDevice.current.name)
+            if link.replacing != nil {
+                // another Spark: nothing of the old one goes along (unsent messages, reminder links)
+                Outbox.clear()
+                AppleReminders.forget()
+            }
             Store.baseURL = link.base
             Store.key = r.key
             Store.profile = r.profile

@@ -106,7 +106,7 @@ def as_wav(path):
             raise HTTPException(415, f"unsupported sample rate {info.samplerate} Hz")
         return path, info.frames / info.samplerate, None
     wav = path + ".wav"
-    run = subprocess.run(["ffmpeg", "-nostdin", "-loglevel", "error", "-y", "-i", path, "-t", "7200",
+    run = subprocess.run(["ffmpeg", "-nostdin", "-loglevel", "error", "-protocol_whitelist", "file,pipe", "-y", "-i", path, "-t", "7200",
                           "-ac", "1", "-ar", "16000", "-f", "wav", wav],
                          capture_output=True, text=True, timeout=120)
     if run.returncode != 0:

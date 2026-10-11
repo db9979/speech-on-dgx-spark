@@ -777,7 +777,8 @@ async def profile_tidy(request: Request, prof=Depends(browser_profile)):
         try:
             return {"tidy": await memtidy.propose(prof["id"])}
         except Exception as e:
-            raise HTTPException(502, f"language model not reachable: {type(e).__name__}")
+            print(f"memtidy: language model not reachable ({type(e).__name__})", flush=True)
+            raise HTTPException(502, "Das Sprachmodell ist gerade nicht erreichbar. Bitte später noch einmal.")
     if do == "accept":
         n = memtidy.apply(prof["id"])
         guard.log("profile_memory_tidied", ip=guard.client_ip(request), name=prof["name"], uid=prof["id"], removed=n)
@@ -898,8 +899,8 @@ async def profile_calendar_add(request: Request, prof=Depends(secret_profile)):
         return dict(calendars.add(prof["id"], item), check=found)
     except ValueError as e:
         raise HTTPException(400, str(e))
-    except httpx.HTTPError as e:
-        raise HTTPException(400, f"calendar not reachable: {type(e).__name__}")
+    except httpx.HTTPError:
+        raise HTTPException(400, "Der Kalender ist nicht erreichbar. Bitte Adresse und Netz prüfen.")
 
 
 @router.delete("/api/profile/calendar/{cid}", dependencies=[Depends(assistant)])
@@ -940,8 +941,8 @@ async def profile_mail_add(request: Request, prof=Depends(secret_profile)):
         return dict(mail.add(prof["id"], item), check=found)
     except ValueError as e:
         raise HTTPException(400, str(e))
-    except Exception as e:
-        raise HTTPException(400, f"mail server not reachable: {type(e).__name__}")
+    except Exception:
+        raise HTTPException(400, "Der Mailserver ist nicht erreichbar. Bitte Server, Port und Netz prüfen.")
 
 
 @router.delete("/api/profile/mail/{aid}", dependencies=[Depends(assistant)])
@@ -1001,8 +1002,10 @@ async def profile_ha_test(request: Request, prof=Depends(browser_profile)):
             return await homeassistant.check(item)
         ok, answer, targets = await homeassistant.command(item, text)
         return {"ok": ok, "answer": answer, "targets": targets}
-    except (ValueError, httpx.HTTPError) as e:
-        raise HTTPException(400, str(e) or type(e).__name__)
+    except ValueError as e:
+        raise HTTPException(400, str(e) or "Home Assistant hat das nicht angenommen.")
+    except httpx.HTTPError:
+        raise HTTPException(400, "Home Assistant ist nicht erreichbar. Bitte Adresse und Netz prüfen.")
 
 
 @router.get("/api/profile/voice", dependencies=[Depends(assistant)])

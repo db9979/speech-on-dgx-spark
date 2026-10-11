@@ -65,9 +65,10 @@ class Recognizer:
         threading.Thread(target=self.load, daemon=True).start()
 
     def transcribe_file(self, path):
-        """Any audio ffmpeg reads -> (text, seconds of audio)."""
-        audio = read_audio(path)
+        """Any audio ffmpeg reads -> (text, seconds of audio). Decoding happens under the lock too: two hours of
+        audio are ~700 MB in memory, so only one recording is held at a time, never four."""
         with self.lock:
+            audio = read_audio(path)
             parts = []
             for piece in split(audio):
                 text = self._decode(piece)
@@ -88,12 +89,15 @@ class Recognizer:
 
 
 MAX_AUDIO_S = 2 * 3600  # a small compressed file can unpack to hours of samples in RAM
+FFMPEG_THREADS = 2      # decoding next to the engines: a few cores, not all of them
+FFMPEG_SECONDS = 300    # wall time for one decode (two hours of audio take well under a minute)
 
 
 def read_audio(path):
-    run = subprocess.run(["ffmpeg", "-nostdin", "-loglevel", "error", "-i", path, "-t", str(MAX_AUDIO_S),
-                          "-ac", "1", "-ar", str(RATE),
-                          "-f", "s16le", "-"], capture_output=True, timeout=300)
+    run = subprocess.run(["ffmpeg", "-nostdin", "-loglevel", "error", "-protocol_whitelist", "file,pipe",
+                          "-threads", str(FFMPEG_THREADS), "-i", path, "-t", str(MAX_AUDIO_S),
+                          "-ac", "1", "-ar", str(RATE), "-threads", str(FFMPEG_THREADS),
+                          "-f", "s16le", "-"], capture_output=True, timeout=FFMPEG_SECONDS)
     if run.returncode != 0:
         raise ValueError(f"unsupported audio: {run.stderr.decode(errors='replace').strip()[-200:] or 'ffmpeg failed'}")
     return np.frombuffer(run.stdout, dtype=np.int16).astype(np.float32) / 32768.0

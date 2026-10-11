@@ -1469,7 +1469,10 @@ async def _answer(request, turn):
                     ok, answer, targets = await homeassistant.command(
                         ha, ha_direct, "en" if guess_language(ha_direct) == "English" else "de")
                 except (httpx.HTTPError, ValueError) as e:  # also a proxy page instead of JSON
-                    ok, answer, targets = False, f"Home Assistant not reachable: {type(e).__name__}", []
+                    print(f"homeassistant: not reachable ({type(e).__name__})", flush=True)
+                    ok, targets = False, []   # said out loud: a sentence, never the name of the error (B2)
+                    answer = "Home Assistant cannot be reached right now." if guess_language(ha_direct) == "English" \
+                        else "Home Assistant ist gerade nicht erreichbar."
                 print("homeassistant: panel ran", repr(ha_direct[:80]), "->", "ok" if ok else "not ok", flush=True)
                 if tr:
                     tr.step("tool", "home_assistant (Panel)", t_ha, time.time(), ok=bool(ok), panel=True)
@@ -1732,7 +1735,9 @@ async def _answer(request, turn):
                 await out.put({"type": "text", "delta": note})
                 trace["said"] += note
                 await sentences.put(note)
-            await out.put({"type": "error", "code": code, "message": f"LLM: {type(e).__name__}: {e}"[:400]})
+            print(f"chat: language model failed ({type(e).__name__}: {str(e)[:300]})", flush=True)
+            # to the page only the kind (B2: guests see no addresses or texts from inside), the log keeps the rest
+            await out.put({"type": "error", "code": code, "message": f"LLM: {type(e).__name__}"})
         finally:
             stufe.first(vip)
             if who:  # the person can look this up in "Ich" → Protokoll (a few days only)
@@ -2126,7 +2131,7 @@ async def _answer(request, turn):
             print(f"chat: tts failed ({type(e).__name__}), the rest of this answer stays text only", flush=True)
             if tr:
                 tr.fail(code)
-            await out.put({"type": "error", "code": code, "message": f"TTS: {type(e).__name__}: {e}"[:400]})
+            await out.put({"type": "error", "code": code, "message": f"TTS: {type(e).__name__}"})
             while not done and await sentences.get() is not None:  # the text still comes to the end
                 pass
         finally:

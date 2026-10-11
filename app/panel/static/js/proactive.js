@@ -121,7 +121,7 @@ const PROBIND={
     if($('proloud')&&$('proloud').checked){body.loud=true;body.speakers=[...document.querySelectorAll('#prospk input[data-spk]:checked')].map(x=>x.dataset.spk)}
     const ed=PRODEV.edit;
     const r=await fetch('/api/proactive/rules'+(ed?'/'+encodeURIComponent(ed):''),{method:ed?'PUT':'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify(body)});
-    const d=await r.json();if(!r.ok){m.className='fh err';m.textContent=d.detail||r.status;return}PRODEV.edit='';showPro()};
+    const d=await r.json();if(!r.ok){m.className='fh err';m.textContent=errSay(r.status,d.detail,"");return}PRODEV.edit='';showPro()};
     $('proedno').onclick=()=>{PRODEV.edit='';showPro()}},
   haev(){if($('haevbox'))haEvents()}};
 // Picking devices for a rule (GET /api/proactive/ha-devices): a list to choose from, the last changed ones,
@@ -130,7 +130,7 @@ const PROBIND={
 const PRODEV={items:null,at:'proent1',run:0,edit:''};
 async function proDevs(fresh){const m=$('prodevmsg');
   if(PRODEV.items&&!fresh)return PRODEV.items;
-  try{const r=await api('/api/proactive/ha-devices');const d=await r.json();if(!r.ok){if(m){m.className='fh err';m.textContent=d.detail||r.status}return null}
+  try{const r=await api('/api/proactive/ha-devices');const d=await r.json();if(!r.ok){if(m){m.className='fh err';m.textContent=errSay(r.status,d.detail,"")}return null}
     PRODEV.items=d.items;const dl=$('proents');
     if(dl)dl.innerHTML=d.items.map(x=>`<option value="${esc(x.id)}" label="${esc(x.name)} · ${esc(x.state)}"></option>`).join('');
     return d.items}catch{if(m){m.className='fh err';m.textContent=t('Home Assistant nicht erreichbar.','Home Assistant not reachable.')}return null}}

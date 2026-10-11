@@ -657,7 +657,7 @@ def _ffmpeg(data, args):
         with open(src, "wb") as f:
             f.write(data)
         # -t: a small compressed file must not unpack to hours of sound
-        p = subprocess.run(["ffmpeg", "-nostdin", "-loglevel", "error", "-y", "-i", src, "-t", str(MAX_VOICE_SECS)]
+        p = subprocess.run(["ffmpeg", "-nostdin", "-loglevel", "error", "-protocol_whitelist", "file,pipe", "-y", "-i", src, "-t", str(MAX_VOICE_SECS)]
                            + args + [dst], capture_output=True, timeout=60)
         if p.returncode != 0:
             raise ValueError("this recording cannot be read")

@@ -65,7 +65,7 @@ async function profDetail(id){let u;try{u=await (await api('/api/admin/profiles/
   let rights='';
   if(r){const off=t('Auf dem Spark aus','Off on the Spark');
     rights=h3(t('Rechte','Rights'))
-    +setRow(esc(t('Aufträge im Hintergrund','Background jobs')),esc(t('Was der Assistent für dieses Profil allein erledigen darf. Das Profil schaltet es dann unter Ich ein.','What the assistant may do alone for this profile. The profile then switches it on under Ich.')),
+    +setRow(esc(t('Aufträge im Hintergrund','Background jobs')),esc(t('Was der Assistent für dieses Profil allein erledigen darf. Das Profil schaltet es dann unter Ich ein.','What the assistant may do alone for this profile. The profile then switches it on under Me.')),
       `<select id="pagent" aria-label="${esc(t('Aufträge','Jobs'))}">${sel('',r.agent.level,t('aus','off'))}${sel('read',r.agent.level,t('nur lesen und berichten','read and report only'))}${sel('act',r.agent.level,t('auch handeln mit „Ja“','also act after "Yes"'))}</select>`,{why:r.agent.spark?'':off})
     +(r.vorrang?setRow(esc(t('Vorrang','Priority')),esc(t('Reden mehrere gleichzeitig, kommt dieses Profil mit Sprachausgabe, Spracherkennung und Sprachmodell zuerst dran. Höchstens ','When several people talk at once, this profile goes first for speech output, recognition and the language model. At most ')+r.vorrang.max+t(' Profile.',' profiles.')),
       `<select id="pvor" aria-label="${esc(t('Vorrang','Priority'))}">${sel('',r.vorrang.level,t('normal','normal'))}${sel('vorrang',r.vorrang.level,t('Vorrang','priority'))}${sel('hinten',r.vorrang.level,t('hinten anstellen','last in line'))}</select>`,{why:r.vorrang.spark?'':off}):'')
@@ -78,7 +78,7 @@ async function profDetail(id){let u;try{u=await (await api('/api/admin/profiles/
     ${setRow(esc('PIN'),esc(t('Eine neue PIN meldet alle Browser dieses Profils ab.','A new PIN signs out every browser of this profile.')),pbtn('ppinnew',t('PIN ändern','Change PIN')))}
     ${setRow(esc(t('PIN-Link','PIN link')),esc(t('Ein Link, mit dem die Person ihre PIN selbst wählt (gilt einen Tag, einmal). Besser als eine PIN weiterzusagen.','A link with which the person picks the PIN themselves (one day, once). Better than passing a PIN on.')),pbtn('ppinlink',t('PIN-Link','PIN link')))}
     <div id="ppinout"></div>
-    ${setRow(esc(t('Zweiter Anmeldeschritt','Second login step')),esc(u.mfa?t('An. Zurücksetzen, falls Handy und Wiederherstellungscodes weg sind.','On. Reset it if phone and recovery codes are lost.'):t('Aus. Das Profil schaltet ihn unter Ich → Sicherheit ein.','Off. The profile switches it on under Ich → Security.')),
+    ${setRow(esc(t('Zweiter Anmeldeschritt','Second login step')),esc(u.mfa?t('An. Zurücksetzen, falls Handy und Wiederherstellungscodes weg sind.','On. Reset it if phone and recovery codes are lost.'):t('Aus. Das Profil schaltet ihn unter Ich → Sicherheit ein.','Off. The profile switches it on under Me → Security.')),
       u.mfa?pbtn('pmfa',t('Zurücksetzen','Reset')):`<span class="mut">${t('aus','off')}</span>`)}
     ${role}
     <b>${t('Angemeldete Browser','Signed-in browsers')}</b><ul class="facts" id="psess">${sess}</ul>${trust?`<b>${t('Vertraute Browser','Trusted browsers')}</b><ul class="facts" id="ptrust">${trust}</ul>`:''}
@@ -87,7 +87,7 @@ async function profDetail(id){let u;try{u=await (await api('/api/admin/profiles/
     <div class="fh">${t('So können andere ihn in Nachrichten nennen, wenn Namen sich ähneln. Muss eindeutig sein.','How others can name this profile in messages when names are alike. Must be unique.')}</div>
     ${h3(t('Geräte','Devices'))}<ul class="facts">${u.devices.map(x=>`<li><span>${esc(x.name)}${x.room?` <span class="pill ok">${t('hört zu','listening')}</span>`:''} <small class="mut">${x.speaker?t('Lautsprecher','speaker'):x.app?t('iPhone-App','iPhone app'):t('Schlüssel','key')} · ${t('zuletzt','last used')}: ${x.last?esc(pwhen(x.last.t)):t('noch nie','never')}</small></span></li>`).join('')||`<li class="mut">${t('Keine.','None.')}</li>`}</ul>
     ${h3(t('Funktionen','Functions'))}
-    ${setRow(esc(u.features.on+' '+t('von','of')+' '+u.features.of+' '+t('an','on')),esc(t('Funktionen mit eigenem Schalter, die der Spark erlaubt. Das Profil schaltet sie unter Ich, du unter Wer darf was.','Functions with an own switch the Spark allows. The profile switches them under Ich, you under Who may do what.')),pbtn('pfeat',t('Wer darf was','Who may do what')))}
+    ${setRow(esc(u.features.on+' '+t('von','of')+' '+u.features.of+' '+t('an','on')),esc(t('Funktionen mit eigenem Schalter, die der Spark erlaubt. Das Profil schaltet sie unter Ich, du unter Wer darf was.','Functions with an own switch the Spark allows. The profile switches them under Me, you under Who may do what.')),pbtn('pfeat',t('Wer darf was','Who may do what')))}
     ${u.setup&&u.setup.total?setRow(joinSetupLine(u.setup),esc(u.setup.open.length?t('Offen: ','Open: ')+u.setup.open.join(', '):t('Alles eingerichtet.','Everything set up.')),u.setup.open.length?pbtn('premind',t('Erinnern','Remind')):''):''}
     ${rights}
     ${h3(t('Daten','Data'))}

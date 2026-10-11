@@ -221,7 +221,7 @@ def _ffmpeg(args, data):
         with open(src, "wb") as f:
             f.write(data)
         # -t: a tiny compressed file must not unpack to hours of audio (voice messages are short)
-        p = subprocess.run(["ffmpeg", "-nostdin", "-loglevel", "error", "-y", "-i", src, "-t", "600"] + args + [dst],
+        p = subprocess.run(["ffmpeg", "-nostdin", "-loglevel", "error", "-protocol_whitelist", "file,pipe", "-y", "-i", src, "-t", "600"] + args + [dst],
                            capture_output=True, timeout=60)
         if p.returncode != 0:
             raise ValueError("ffmpeg: " + p.stderr.decode(errors="replace")[-200:])
@@ -368,12 +368,14 @@ async def handle(c, upd):
             await call(c, "sendMessage", chat_id=cid, text="Die Sprachnachricht ist zu lang.")
             return
         await call(c, "sendChatAction", chat_id=cid, action="typing")
-        f = await call(c, "getFile", file_id=voice["file_id"])
-        root = (load_config().get("chat", {}).get("telegram_api") or API).rstrip("/")
-        r = await c.get(f"{root}/file/bot{token()}/{f['file_path']}")
-        r.raise_for_status()
+        try:   # streamed with a byte limit, file_path checked like a photo's (N21)
+            audio = await file_bytes(c, voice.get("file_id"), MAX_VOICE)
+        except (ValueError, httpx.HTTPError) as e:
+            print("telegram: voice download", type(e).__name__, safe(e, 120), flush=True)
+            await call(c, "sendMessage", chat_id=cid, text="Die Sprachnachricht konnte ich nicht laden.")
+            return
         try:
-            text = await transcribe(r.content)
+            text = await transcribe(audio)
         except Exception as e:
             print("telegram: voice", type(e).__name__, safe(e, 120), flush=True)
             await call(c, "sendMessage", chat_id=cid, text="Ich konnte die Sprachnachricht nicht verstehen.")
@@ -406,16 +408,31 @@ async def photo_bytes(c, photo):
     if not sizes:
         raise ValueError("no photo of a usable size")
     best = max(sizes, key=lambda p: int(p.get("width") or 0) * int(p.get("height") or 0))
-    f = await call(c, "getFile", file_id=best["file_id"])
-    if int(f.get("file_size") or 0) > images.MAX_BYTES or not re.fullmatch(r"[\w/.\-]{1,200}", str(f.get("file_path"))):
+    return await file_bytes(c, best["file_id"], images.MAX_BYTES)
+
+
+FILE_PATH = re.compile(r"[\w\-]+(?:\.[\w\-]+)*(?:/[\w\-]+(?:\.[\w\-]+)*){0,4}")   # "voice/file_3.oga"; no "..", no "//"
+
+
+async def file_bytes(c, file_id, limit):
+    """A file someone sent the bot (photo, voice message): getFile, then the download streamed and cut off at
+    `limit` bytes. The file_path Telegram names must look like one (ValueError otherwise), so it cannot lead
+    the request with the bot token anywhere else."""
+    if not isinstance(file_id, str) or not 0 < len(file_id) <= 200:
+        raise ValueError("no file")
+    f = await call(c, "getFile", file_id=file_id)
+    if not isinstance(f, dict):
+        raise ValueError("unexpected file")
+    path = str(f.get("file_path") or "")
+    if int(f.get("file_size") or 0) > limit or len(path) > 200 or not FILE_PATH.fullmatch(path):
         raise ValueError("unexpected file")
     root = (load_config().get("chat", {}).get("telegram_api") or API).rstrip("/")
     data = bytearray()
-    async with c.stream("GET", f"{root}/file/bot{token()}/{f['file_path']}") as r:
+    async with c.stream("GET", f"{root}/file/bot{token()}/{path}") as r:
         r.raise_for_status()
         async for chunk in r.aiter_bytes():
             data += chunk
-            if len(data) > images.MAX_BYTES:
+            if len(data) > limit:
                 raise ValueError("too big")
     return bytes(data)
 

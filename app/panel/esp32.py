@@ -266,6 +266,20 @@ async def _download(c, url, size):
     return bytes(out)
 
 
+async def _signed(c, assets, name, raw):
+    """With a public key in signatur.KEYS the manifest must carry a valid <name>.sig from the same release
+    (signed in the environment "release"); without one nothing changes (signatur.py)."""
+    import signatur
+    if not signatur.required():
+        return
+    if name + ".sig" not in assets:
+        raise FetchError("Die Version ist nicht signiert, nichts übernommen.")
+    try:
+        signatur.verify(raw, await _download(c, assets[name + ".sig"], signatur.MAX_SIG))
+    except signatur.SignatureError as e:
+        raise FetchError(str(e))
+
+
 _fetch_lock = asyncio.Lock()   # the daily check, Geräte-Updates and the admin's button never write at once
 
 
@@ -302,7 +316,9 @@ async def _fetch_firmware(c=None):
         assets = {a["name"]: a["browser_download_url"] for a in rel.get("assets", [])}
         if "manifest.json" not in assets:
             raise FetchError("Die Firmware-Version hat kein manifest.json.")
-        m = json.loads(await _download(c, assets["manifest.json"], MAX_BODY * 8))
+        raw = await _download(c, assets["manifest.json"], MAX_BODY * 8)
+        await _signed(c, assets, "manifest.json", raw)
+        m = json.loads(raw)
         ver = str(m.get("version", ""))
         if not version_tuple(ver) or not isinstance(m.get("variants"), dict):
             raise FetchError("manifest.json ist ungültig.")
@@ -1456,17 +1472,27 @@ async def ota(request: Request):
     if not re.fullmatch(r"[0-9a-fA-F\-]{8,64}", cid):
         print("esp32: start check without a board id refused", flush=True)
         raise HTTPException(400, "Client-Id missing")
+    import guard
     base = _base(request)
     known = clients().get(cid)
     if not known:
-        import guard
         print(f"esp32: start check from an unknown board (firmware {info['fw'] or '?'}), it gets a pairing code", flush=True)
         return _activation(cid, info, guard.client_ip(request))
     dev = _devices()[known["device"]]
+    if not same_board(known, info):
+        # the board id is known but another board (MAC) sends it: no key, no firmware, nothing changed (N20)
+        print(f"esp32: start check for {dev['name']} from another board (MAC differs), refused", flush=True)
+        diag(dev["id"], "Start-Prüfung abgelehnt: die Board-Kennung gehört zu einem anderen Gerät (MAC-Adresse passt nicht).")
+        return JSONResponse({"error": "mismatch"}, status_code=403)
     off, _ = zone_offset(dev["user"])
     resp = {"server_time": {"timestamp": int(time.time() * 1000), "timezone_offset": off},
             "websocket": {"url": ws_url(base), "version": 1}}
     once = known.get("token_once")
+    ip = guard.client_ip(request)
+    if once and known.get("pair_ip") and not hmac.compare_digest(str(known["pair_ip"]).encode(), ip.encode()):
+        once = None   # the key goes only to the address that showed the code (N20); it stays for that one
+        diag(dev["id"], "Schlüssel nicht übergeben: die Start-Prüfung kam von einer anderen Adresse als der Code.")
+    plain = not base.startswith("https://")
     m = manifest()
     var = known.get("variant") or info["variant"]
     rep = info["variant"]
@@ -1474,6 +1500,11 @@ async def ota(request: Request):
         var = rep   # another board type was written over USB: updates follow what the board says it is
     fw = (m or {}).get("variants", {}).get(var)
     offer = bool(fw and newer(m["version"], info["fw"]) and (known.get("auto", True) or known.get("update")))
+    held = offer and not ota_allowed(plain)
+    if held:
+        # over http the board would take any file someone in the network hands it: no update there unless
+        # the admin allows it (chat.esp32_ota_http); updating over USB in the browser always works (M8)
+        offer = False
     if offer:
         resp["firmware"] = {"version": m["version"], "url": f"{base}/api/esp32/fw/{m['version']}/{fw['app']['file']}"}
     else:
@@ -1482,10 +1513,12 @@ async def ota(request: Request):
     def note(d):
         e = d["clients"][cid]
         e.update(fw=info["fw"] or e.get("fw", ""), mac=info["mac"] or e.get("mac", ""), seen=int(time.time()),
-                 ip=request.client.host if request.client else "", variant=var)
+                 ip=request.client.host if request.client else "", variant=var, plain=plain)
         if offer:
             e["update"] = False
-        e.pop("token_once", None)
+        if once:
+            e.pop("token_once", None)
+            e.pop("pair_ip", None)
     if once:
         tok = vault.open_(once)
         if tok:
@@ -1493,8 +1526,22 @@ async def ota(request: Request):
     _update(note)
     print(f"esp32: start check from {dev['name']} (firmware {info['fw'] or '?'})" + (", update offered" if offer else ""), flush=True)
     diag(dev["id"], f"Start-Prüfung vom Board: Firmware {info['fw'] or '?'}, aus {request.client.host if request.client else '?'}"
-         + (f", Update {m['version']} angeboten" if offer else "") + (", Schlüssel übergeben" if once else ""))
+         + (f", Update {m['version']} angeboten" if offer else "") + (", Schlüssel übergeben" if once else "")
+         + (f", Update {m['version']} nicht über http angeboten (Adresse mit https oder per USB aktualisieren)" if held else ""))
     return resp
+
+
+def same_board(known, info):
+    """A known board id comes from the board it was paired with: once a MAC is on record, the start check must
+    carry the same one (a copied id from another board gets nothing)."""
+    have = str(known.get("mac") or "").lower()
+    return not have or hmac.compare_digest(have.encode(), str(info.get("mac") or "").lower().encode())
+
+
+def ota_allowed(plain):
+    """Firmware over Wi-Fi only through https, unless the admin allows http too
+    (chat.esp32_ota_http; on by default so speakers on http keep updating, Dominik 2026-10-11)."""
+    return not plain or bool(load_config().get("chat", {}).get("esp32_ota_http"))
 
 
 def _activation(cid, info, ip):
@@ -1518,8 +1565,13 @@ def _activation(cid, info, ip):
 async def ota_activate(request: Request):
     if not admin_on():
         return JSONResponse({"error": "off"}, status_code=403)
-    await _body(request)
+    body = await _body(request)
     p = _pending.get(request.headers.get("client-id", ""))
+    got = body.get("challenge")
+    if p and got is not None and not (isinstance(got, str) and hmac.compare_digest(got.encode()[:64], p["challenge"].encode())):
+        # a board that sends the challenge must send the one it was given with its code (N20)
+        print("esp32: activation with a wrong challenge refused", flush=True)
+        return JSONResponse({"error": "challenge"}, status_code=403)
     if p and p.get("paired"):
         _pending.pop(request.headers.get("client-id", ""), None)
         return {"ok": True}
@@ -1653,7 +1705,7 @@ def _list(uid=None):
                     "newer": bool(m and newer(m["version"], c.get("fw", ""))), "online": d["id"] in _live,
                     "seen": max(int(c.get("seen") or 0), int((last.get(d["id"]) or {}).get("t") or 0)) or None,
                     "created": d.get("created"), "volume": c.get("volume"), "mic": c.get("mic") or "normal",
-                    "board": board_label(c.get("variant", ""), m),
+                    "board": board_label(c.get("variant", ""), m), "plain": bool(c.get("plain")),
                     **_room_info(d["id"], c)})
     return sorted(out, key=lambda x: x["name"].lower())
 
@@ -1803,7 +1855,7 @@ async def profile_pair(request: Request, prof=Depends(_on)):
     def put(d):
         d["clients"][cid] = {"device": did, "uid": prof["id"], "variant": p.get("variant", ""), "fw": p.get("fw", ""),
                              "mac": p.get("mac", ""), "auto": True, "update": False, "created": int(now), "how": "code",
-                             "token_once": vault.seal(token)}
+                             "token_once": vault.seal(token), "pair_ip": p.get("ip", "")}
     _update(put)
     p["paired"] = True
     print("esp32: speaker paired by code for", prof["name"], flush=True)
@@ -1930,7 +1982,9 @@ def _addr_hint(base):
     if host in ("localhost", "127.0.0.1", "::1") or host.startswith("127."):
         return "Die Adresse zeigt auf den Spark selbst (localhost). Das Board erreicht sie nie: die Adresse im Heimnetz oder die des Reverse Proxys nehmen."
     if base.startswith("https://") and (re.fullmatch(r"[\d.]+", host) or base.endswith(":31443")):
-        return "https mit IP-Adresse oder Port 31443 hat ein selbst signiertes Zertifikat. Das Board lehnt es ab: http://<Spark-IP>:31080 im Heimnetz oder die Adresse des Reverse Proxys nehmen."
+        return ("https mit IP-Adresse oder Port 31443 hat ein selbst signiertes Zertifikat. Das Board lehnt es ab: die Adresse des "
+                "Reverse Proxys mit echtem Zertifikat nehmen. Im Heimnetz geht auch http://<Spark-IP>:31080, dann aber unverschlüsselt "
+                "(Schlüssel und Ton) und Firmware-Updates nur per USB.")
     return None
 
 

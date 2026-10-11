@@ -548,7 +548,8 @@ async def night_step(now=None):
         return ""
     for s in sorted(fw.values(), key=lambda x: (x["name"].lower(), x["id"])):
         uid = s["user"]
-        if not (s.get("auto", True) and newer(v, s.get("fw", "")) and features.allowed("geraetenacht", uid)
+        if not (s.get("auto", True) and newer(v, s.get("fw", "")) and esp32.ota_allowed(s.get("plain"))
+                and features.allowed("geraetenacht", uid)
                 and features.allowed("esp32", uid) and not notaus.own(uid) and _idle(s["id"], now)):
             continue
         if not await _restart(s["id"]):
