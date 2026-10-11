@@ -673,6 +673,13 @@ async def run(uid):
     save(uid, d)
     hintergrund.note(uid, "remarkable", True, res["pages"])
     print(f"remarkable: {res['docs']} notebook(s), {res['pages']} page(s) new, {res['removed']} removed", flush=True)
+    if res["pages"] or res["removed"]:
+        try:      # Zustand → Live: numbers only
+            import live
+            if live.on():
+                live.event("reMarkable", f"Abgleich: {res['pages']} Seite(n) neu, {res['removed']} entfernt")
+        except Exception:
+            pass
     return res
 
 

@@ -171,7 +171,7 @@ def sheet(title, text, ruled=True):
 
 
 # ---------------------------------------------------------------- the language model (no tools)
-async def _llm(system, user, max_tokens=700):
+async def _llm(system, user, max_tokens=700, job="reMarkable"):
     from chat import llm_model
     cc = features.chat_cfg()
     headers = {"Authorization": f"Bearer {cc['llm_key']}"} if cc.get("llm_key") else {}
@@ -179,7 +179,7 @@ async def _llm(system, user, max_tokens=700):
         payload = {"model": await llm_model(c, cc, headers), "temperature": 0.2, "max_tokens": max_tokens,
                    "messages": [{"role": "system", "content": system}, {"role": "user", "content": user[:24000]}],
                    "chat_template_kwargs": {"enable_thinking": False}}
-        r = await vorrang.post(c, "reMarkable", cc["llm_url"].rstrip("/") + "/chat/completions", json=payload, headers=headers)
+        r = await vorrang.post(c, job, cc["llm_url"].rstrip("/") + "/chat/completions", json=payload, headers=headers)
         r.raise_for_status()
         text = r.json()["choices"][0]["message"].get("content") or ""
     return re.sub(r"(?s)<think>.*?</think>", "", text).strip()
@@ -275,7 +275,7 @@ async def answer(uid, q, page):
             web = True
         except Exception as e:
             print("remarkable: @Spark web search:", type(e).__name__, flush=True)
-    text = await _llm(ASK_SYSTEM, "\n\n".join(parts))
+    text = await _llm(ASK_SYSTEM, "\n\n".join(parts), job="reMarkable: Sprachmodell")
     # what went into it, never the words (Zustand → Logs → Diagnose)
     print(f"remarkable: @Spark answer {len(text)} chars, question {len(q)} chars, {len(found)} passages, "
           f"web search {'yes' if web else 'no'}", flush=True)
@@ -309,7 +309,7 @@ def scan_tasks(uid, pages):
 
 async def meeting(uid, doc, name, pages):
     text = "\n\n".join(f"Seite {p['page']}:\n{p['text']}" for p in pages)[:20000]
-    out = await _llm(MEET_SYSTEM, "Notizbuch: " + name + "\n\n" + _outside(text), 900)
+    out = await _llm(MEET_SYSTEM, "Notizbuch: " + name + "\n\n" + _outside(text), 900, job="reMarkable: Sprachmodell")
     if not out:
         return None
     r = await remarkable.place(uid, f"Zusammenfassung {name.rsplit('/', 1)[-1]}"[:80], remarkable.epub(
@@ -375,7 +375,7 @@ async def week(uid, local):
     if not pages:
         return None
     text = "\n\n".join(f"[{x['name']}, Seite {x['page']}]\n{x['text'][:1500]}" for x in pages[:60])[:20000]
-    out = await _llm(WEEK_SYSTEM, _outside(text), 900)
+    out = await _llm(WEEK_SYSTEM, _outside(text), 900, job="reMarkable: Sprachmodell")
     if not out:
         return None
     title = f"Wochenrückblick KW {local:%V}"
@@ -517,7 +517,27 @@ async def guide(uid, force=False):
 
 
 # ---------------------------------------------------------------- background
-_last = {}          # (uid, what) -> when it was last tried (in memory)
+_last = {}
+# Zustand → Live (live.py): each job on the list of background work while it runs, its end as an event; fixed words
+SHOWN = {"guide": "Anleitung", "morning": "Morgenblatt", "week": "Wochenrückblick", "pages": "Seiten prüfen",
+         "ask": "@Spark-Antwort", "meet": "Besprechung"}
+
+
+def _shown(what, state, ok=True, secs=None, why="", quiet=False):
+    """Never raises. quiet: the job found nothing to do (no event, it only leaves the list)."""
+    try:
+        import live
+        job = "reMarkable: " + SHOWN.get(what, "Arbeit")
+        if state:
+            live.bg(job, state)
+        elif quiet:
+            live.bg(job, None)
+            live.bg("reMarkable: " + SHOWN["pages"], None)
+        else:
+            live.bg("reMarkable: " + SHOWN["pages"], None)
+            live.bg_done(job, ok, secs, why)
+    except Exception:
+        pass          # (uid, what) -> when it was last tried (in memory)
 
 
 async def due_once(idle=True, now=None, uids=None):
@@ -542,6 +562,8 @@ async def due_once(idle=True, now=None, uids=None):
             jobs.append(("pages", lambda: from_pages(uid, now)))
         for what, job in jobs:
             _last[(uid, what)] = now
+            t0 = time.time()
+            _shown(what, "run")
             try:
                 r = await job()
             except (remarkable.CloudError, ValueError, httpx.HTTPError, remarkable.netguard.Blocked,
@@ -549,7 +571,12 @@ async def due_once(idle=True, now=None, uids=None):
                 why = remarkable._redact(e if isinstance(e, (ValueError, remarkable.CloudError)) else type(e).__name__)
                 print(f"remarkable: {what} failed:", why, flush=True)
                 hintergrund.note(uid, "remarkable", False)
+                _shown(what, None, False, why="Fehler")
                 continue
+            except BaseException:
+                _shown(what, None, False, why="Fehler")
+                raise
+            _shown(what if not isinstance(r, str) else r, None, True, time.time() - t0, quiet=not r)
             if r:
                 return what
     return None

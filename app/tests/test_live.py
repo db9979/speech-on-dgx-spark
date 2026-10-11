@@ -154,7 +154,8 @@ class Live(unittest.TestCase):
         import extras
         with open(chat.__file__, encoding="utf-8") as f:
             names = set(re.findall(r'"name": "([a-z_]+)"', f.read()))
-        for m in extras.SERVICES:
+        import rmplus      # tools another module offers through a service (remarkable.offer)
+        for m in list(extras.SERVICES) + [rmplus]:
             with open(m.__file__, encoding="utf-8") as f:
                 names |= set(re.findall(r'"name": "([a-z_]+)"', f.read()))
         names -= {"parameters"}

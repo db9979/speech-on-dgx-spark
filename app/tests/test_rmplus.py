@@ -137,6 +137,28 @@ class FromPaper(Plus):
         self.assertEqual(len(books("Antwort:")), 1)
         self.assertIsNone(run(rmplus.from_pages(uid, T + 5 * 86400)))      # old pages are not looked at
 
+    def test_shown_on_the_live_page(self):
+        """Zustand → Live: the job and its end as an event, fixed words only (never the question)."""
+        import live
+        with open(helpers.os.environ["SPEECH_SPARK_CONFIG"]) as f:
+            cfg = json.load(f)
+        cfg.setdefault("logs", {})["live"] = True
+        with open(helpers.os.environ["SPEECH_SPARK_CONFIG"], "w") as f:
+            json.dump(cfg, f)
+        try:
+            c, uid = self.on("Rplive", rm_ask=True)
+            self.notebook(c, uid, [(P1, page_file("@Spark Wie lange hält Sauerteig im Kühlschrank?"))],
+                          times={P1: (T - 60) * 1000})
+            self.assertEqual(run(rmplus.due_once(idle=True, now=T, uids=[uid])), "pages")
+            ev = [e for e in live.snapshot()["events"] if "reMarkable" in e["area"] + e["text"]]
+            self.assertTrue(any("@Spark-Antwort fertig" in e["text"] for e in ev), ev)
+            self.assertFalse(any("Sauerteig" in e["text"] for e in live.snapshot()["events"]))
+            self.assertEqual([b for b in live.snapshot()["bg"] if b["job"].startswith("reMarkable")], [])
+        finally:
+            cfg["logs"]["live"] = False
+            with open(helpers.os.environ["SPEECH_SPARK_CONFIG"], "w") as f:
+                json.dump(cfg, f)
+
     def test_tasks_become_reminders_only_on_click(self):
         c, uid = self.on("Rptodo")
         self.notebook(c, uid, [(P1, page_file("☐ Steuer abgeben\nTODO Reifen wechseln"))], times={P1: (T - 60) * 1000})

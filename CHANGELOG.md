@@ -2,6 +2,7 @@
 
 Every version in one line, newest first (taken from the commit messages, so some lines are German, some English). Older entries have no version number.
 
+- **V01.0.349** · 2026-10-11 · reMarkable im Live-Monitor: @Spark-Antwort, Anleitung, Morgenblatt, Wochenrückblick, Besprechung und Seitenprüfung erscheinen als Hintergrundarbeit mit „fertig“-Meldung, Abgleich als Ereignis, Webseite/Anhang als Werkzeuge
 - **V01.0.348** · 2026-10-11 · Morgenbegrüßung nennt Termine nur frisch aus dem Kalender: „Guten Morgen“ liest immer das Briefing, vorbei markierte Termine gelten nicht als anstehend, und die Antwort-Prüfung lässt keine Termine aus früheren Antworten als heutige durch
 - **V01.0.347** · 2026-10-11 · Spark-Begleiter: Aussehen A (Spark-Gesicht, hell/dunkel), Updates vom Spark (GitHub-Release + begleiter.json, Größe und SHA-256 doppelt geprüft, Installation nur nach Klick), Admin „Neue Version jetzt holen“, Kaffee-Link
 - **V01.0.346** · 2026-10-11 · reMarkable @Spark: Frage aus Handschrift ohne „Bild:“-Zeile und [unleserlich], Modell antwortet auch mit eigenem Wissen statt nur „keine Antwort“, Diagnose-Zeile „remarkable: @Spark answer …“ (Längen, Treffer, Websuche)
