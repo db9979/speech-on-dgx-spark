@@ -12,8 +12,17 @@ internal static class Face
     private static readonly RectangleF FullBox = new(0, 0, 200, 200);
     private static readonly RectangleF TightBox = new(16, 4, 168, 168);
 
+    /// <summary>Das Panel hat das Comic-Gesicht gewählt (config.face); gilt für alle Fenster und das Symbol.</summary>
+    public static bool Comic { get; set; }
+
     public static void Draw(Graphics g, RectangleF r, Palette p, bool tight = false)
     {
+        if (Comic)
+        {
+            ComicFace.Draw(g, r);
+            return;
+        }
+
         RectangleF vb = tight ? TightBox : FullBox;
         float s = Math.Min(r.Width / vb.Width, r.Height / vb.Height);
         if (s <= 0)

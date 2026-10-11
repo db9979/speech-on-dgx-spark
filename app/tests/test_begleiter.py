@@ -126,6 +126,22 @@ class Begleiter(unittest.TestCase):
         bad = TestClient(panel.app, client=HOME, headers={profiles.DEVICE_HEADER: "sd_unknown"})
         self.assertEqual(bad.get("/api/desk/poll").status_code, 401)   # an unknown key still means: pair again
 
+    def test_program_gets_the_face_the_admin_picked(self):
+        """V01.0.395: config names the face (robot or comic) like whoami; another face raises rev, so the
+        program draws it with its next poll. Unknown names stay the robot."""
+        c = self.on("DkFace")
+        _, prog = self.pair(c)
+        try:
+            self.assertEqual(prog.get("/api/desk/config").json()["face"], "robot")
+            rev = prog.get("/api/desk/poll").json()["rev"]
+            helpers.set_config(face="comic")
+            self.assertGreater(prog.get("/api/desk/poll").json()["rev"], rev)
+            self.assertEqual(prog.get("/api/desk/config").json()["face"], "comic")
+            helpers.set_config(face="<b>")
+            self.assertEqual(prog.get("/api/desk/config").json()["face"], "robot")
+        finally:
+            helpers.set_config(face="robot")
+
     def test_rights_changed_under_wer_darf_was_reach_the_program_with_its_next_poll(self):
         """V01.0.388: rev also follows what the switches allow, so the program fetches its config again and
         stops a part the admin turned off, without a restart."""

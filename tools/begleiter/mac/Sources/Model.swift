@@ -58,6 +58,8 @@ struct DeskConfig: Equatable {
     var wakeWord = "Hey Spark"
     /// Version 4: config.meeting, config.home
     var v4 = V4Config()
+    /// config.face: the face the admin picked in the panel (kept for the next start)
+    var face = FaceKind.saved
 
     init() {}
 
@@ -99,6 +101,8 @@ struct DeskConfig: Equatable {
         actApps = ActApp.list((d["act"] as? [String: Any])?["apps"])
         wakeWord = WakeWord.parse(d["wake"])
         v4 = V4Config(d)
+        face = FaceKind(d["face"])
+        FaceKind.saved = face
     }
 
     /// the arts this device offers, in the Spark's order
@@ -573,8 +577,11 @@ final class AppModel: ObservableObject {
     /// The face in the menu bar: a template silhouette when all is well, with a coloured dot otherwise
     /// (grey not reachable, red Notaus, accent when an update is there).
     var menuIcon: NSImage {
-        MenuIcon.image(dot: menuDot, moon: paired && part("quiet") && Quiet.shared.busy)
+        MenuIcon.image(dot: menuDot, moon: paired && part("quiet") && Quiet.shared.busy, face: face)
     }
+
+    /// the face for every window and the menu bar: the Spark's choice, before the first config the last one
+    var face: FaceKind { config?.face ?? FaceKind.saved }
 
     var menuDot: MenuIcon.Dot {
         if !paired { return .grey }

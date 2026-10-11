@@ -105,6 +105,9 @@ internal sealed class DeskConfig
     /// <summary>Kaffee-Link aus dem Panel (nur https://buymeacoffee.com/…), sonst <c>null</c>.</summary>
     public string? Coffee { get; set; }
 
+    /// <summary>Gesicht, das der Admin im Panel gewählt hat: "robot" oder "comic" (Unbekanntes bleibt Roboter).</summary>
+    public string Face { get; set; } = "robot";
+
     /// <summary>Programme, die der Spark (nach Rückfrage) starten darf – config.act.apps.</summary>
     public List<ActApp> ActApps { get; set; } = new();
 
@@ -190,6 +193,7 @@ internal sealed class DeskConfig
         }
 
         config.Coffee = CoffeeLink.Accept(Json.Str(json["coffee"]));
+        config.Face = Json.Str(json["face"]) == "comic" ? "comic" : "robot";
 
         if (json["dictate"] is JsonObject dictate)
         {

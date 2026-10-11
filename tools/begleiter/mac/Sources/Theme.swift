@@ -95,10 +95,19 @@ struct FacePart: Shape {
 /// The Spark's robot face: gradient head, dark visor, two light eyes and a smile.
 struct FaceView: View {
     var size: CGFloat = 24
+    @ObservedObject private var model = AppModel.shared
 
     var body: some View {
+        if model.face == .comic {
+            ComicFaceView(size: size)
+        } else {
+            robot
+        }
+    }
+
+    private var robot: some View {
         let s = size / 200
-        ZStack {
+        return ZStack {
             FacePart(kind: .antenna)
                 .stroke(Theme.diagonal, style: StrokeStyle(lineWidth: max(6 * s, 0.8), lineCap: .round))
             FacePart(kind: .ball).fill(Theme.accent2)
@@ -375,14 +384,21 @@ enum MenuIcon {
     /// The face as menu-bar icon (18 pt). Without a dot it is a template silhouette (macOS colours it like the
     /// other icons); with a dot it is drawn in colour, the dot bottom right.
     /// `moon`: part "quiet" found the person busy (a call, a presentation): a small crescent top left.
-    static func image(dot: Dot, moon: Bool = false) -> NSImage {
+    /// `face` "comic": the comic still in colour (a silhouette of it would only be a disc), dot and moon as usual.
+    static func image(dot: Dot, moon: Bool = false, face: FaceKind = .robot) -> NSImage {
         let size = NSSize(width: 18, height: 18)
+        let comic = face == .comic
         let img = NSImage(size: size, flipped: true) { rect in
-            draw(in: rect, coloured: dot != .plain, dot: dot)
-            if moon { drawMoon(in: rect, coloured: dot != .plain) }
+            if comic, let g = NSGraphicsContext.current?.cgContext {
+                ComicStill.draw(g, in: rect)
+                drawDot(in: rect, dot: dot)
+            } else {
+                draw(in: rect, coloured: dot != .plain, dot: dot)
+            }
+            if moon { drawMoon(in: rect, coloured: comic || dot != .plain) }
             return true
         }
-        img.isTemplate = dot == .plain
+        img.isTemplate = !comic && dot == .plain
         img.accessibilityDescription = "Spark-Begleiter"
         return img
     }
@@ -462,7 +478,10 @@ enum MenuIcon {
             eyeR.fill()
             smile.stroke()
         }
+        drawDot(in: rect, dot: dot)
+    }
 
+    private static func drawDot(in rect: NSRect, dot: Dot) {
         let color: NSColor?
         switch dot {
         case .plain: color = nil

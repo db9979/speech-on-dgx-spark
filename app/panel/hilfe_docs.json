@@ -1068,6 +1068,14 @@
 "src": "assistent",
 "file": "Assistent und Oberfläche",
 "head": "Sprach-Chat",
+"title": "Begleiter mit dem gewählten Gesicht (V01.0.395)",
+"text": "Begleiter mit dem gewählten Gesicht (V01.0.395): Der Begleiter zeigt das Gesicht, das unter Einstellungen → Vorgaben gewählt ist (Roboter oder Comic), in allen Fenstern und im Symbol; ein Wechsel kommt mit dem nächsten Abruf an. Das Comic-Gesicht ist im Begleiter ein ruhendes Bild."
+},
+{
+"lang": "de",
+"src": "assistent",
+"file": "Assistent und Oberfläche",
+"head": "Sprach-Chat",
 "title": "Raum-Modus",
 "text": "Raum-Modus (Funktionen → „Raum-Modus“, standardmäßig aus; nur Profile): Der Schalter „Raum“ unter dem Gesicht lässt den Assistenten an diesem Gerät für eine gewählte Zeit (15 Minuten bis 4 Stunden, endet von selbst) dem Gespräch im Raum zuhören; ein oranger Punkt zeigt es an. In einer Pause hilft er, wenn ein fester Auslöser fiel: eine offene Frage („Wann wurde eigentlich …?“, mit Websuche, im Zweifel nichts), ein Termin („Freitag um 10 zum Zahnarzt“ → „Soll ich das eintragen?“), „kalt“, „zu warm“ oder „zu dunkel“ (die echte Temperatur des Raums aus Home Assistant und das Angebot, die Heizung um ein Grad zu ändern oder das Licht anzumachen) und Einkäufe („Wir brauchen noch Milch“ → Einkaufsliste in Home Assistant). Geändert wird nur nach einem „Ja“, bei Smart Home mit Codewort, wenn eines gesetzt ist. Im Fenster „Ich“ unter „Raum-Modus“ stellt jedes Gerät ein: Dauer, wie viel er sagen darf (nur Fragen, auch Hinweise, auch Kommentare), jede Art einzeln, den Raum des Geräts in Home Assistant und „Nur als Text“ (still im Verlauf statt gesprochen). Das Gehörte bleibt nur fünf Minuten im Arbeitsspeicher des Panels und wird nie gespeichert; Gedächtnis, Mails und frühere Gespräche nutzt d"
 },
@@ -3838,6 +3846,14 @@
 "head": "Voice chat",
 "title": "Companion update looks right away (V01.0.377)",
 "text": "Companion update looks right away (V01.0.377): \"Check for updates\" in the program and every program start make the Spark look at GitHub at once (at most every 5 minutes per kind of computer); before, it looked once a day. The Mac names the failing step when it refuses an update."
+},
+{
+"lang": "en",
+"src": "assistant",
+"file": "Assistant and panel",
+"head": "Voice chat",
+"title": "Companion with the chosen face (V01.0.395)",
+"text": "Companion with the chosen face (V01.0.395): the companion shows the face picked under Settings → Defaults (robot or comic) in every window and the icon; a change arrives with the next check. In the companion the comic face is a still picture."
 },
 {
 "lang": "en",
