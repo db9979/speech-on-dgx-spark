@@ -57,6 +57,37 @@ $('themebtn').onclick=()=>{const cur=document.documentElement.dataset.theme||'au
   if(nx==='auto')delete document.documentElement.dataset.theme;else document.documentElement.dataset.theme=nx;
   try{localStorage.setItem('theme',nx)}catch{}
   $('themebtn').title={auto:t('Farbschema: wie das System','Theme: follow the system'),light:t('Farbschema: hell','Theme: light'),dark:t('Farbschema: dunkel','Theme: dark')}[nx]};
+// What went wrong, as a plain sentence in the page's language (B2 of the review of 11.10.2026): a FastAPI 422 list
+// names the fields (never "[object Object]"), short technical answers become sentences, the panel's German
+// sentences come out in English from the EN table, and a page that is no answer of the panel (a proxy, a crash)
+// says only what kind of error it was. The panel's own words stay in e.detail for the checks of the callers.
+const ERR_PLAIN=[[/^(too large|too big)$/i,'Das ist zu groß.','That is too large.'],
+  [/^(invalid JSON|not JSON|JSON (object )?expected)$/i,'Die Anfrage kam nicht vollständig an. Bitte die Seite neu laden und noch einmal versuchen.','The request did not arrive complete. Please reload the page and try again.'],
+  [/^(not found|no such [a-z ]+|unknown [a-z ]+)$/i,'Nicht gefunden, vielleicht schon gelöscht. Bitte die Seite neu laden.','Not found, maybe deleted already. Please reload the page.'],
+  [/^(login required|no profile)$/i,'Bitte zuerst anmelden.','Please sign in first.'],
+  [/^wrong code$/i,'Der Code stimmt nicht. Bitte den nächsten Code versuchen.','The code is wrong. Please try the next code.'],
+  [/^code required$/i,'Dafür braucht es deinen Code aus der Authenticator-App.','This needs your code from the authenticator app.'],
+  [/^too many requests/i,'Zu viele Anfragen in kurzer Zeit. Bitte einen Moment warten.','Too many requests in a short time. Please wait a moment.'],
+  [/^the assistant is busy/i,'Der Assistent ist gerade beschäftigt. Bitte gleich noch einmal.','The assistant is busy right now. Please try again in a moment.'],
+  [/not reachable/i,'Der Dienst ist gerade nicht erreichbar. Bitte Adresse und Netz prüfen.','The service cannot be reached right now. Please check the address and the network.'],
+  [/rejects? the (user name or password|token)|rejected the token/i,'Benutzername, Passwort oder Token werden abgelehnt.','The user name, password or token is refused.'],
+  [/^[a-z][\w ]* (are|is) turned off\b/i,'Diese Funktion ist ausgeschaltet (Funktionen bzw. Ich).','This function is switched off (Features or Me).']];
+function errSay(status,d,raw){
+  if(Array.isArray(d)){const f=[...new Set(d.map(x=>x&&Array.isArray(x.loc)?x.loc.filter(k=>typeof k==='string'&&k!=='body').pop():'').filter(Boolean))];
+    return f.length?t('Diese Angabe fehlt oder passt nicht: ','This entry is missing or does not fit: ')+f.join(', '):t('Die Eingabe passt nicht.','The input does not fit.')}
+  if(d&&typeof d==='object')d=d.message||d.why||d.detail||'';
+  d=typeof d==='string'?d.trim():'';
+  if(!d||d===raw&&/<|^\s*$/.test(raw)||d.length>400){
+    return status===413?t('Das ist zu groß.','That is too large.'):status===429?t('Zu viele Anfragen in kurzer Zeit. Bitte einen Moment warten.','Too many requests in a short time. Please wait a moment.')
+      :status>=502&&status<=504?t('Der Spark antwortet gerade nicht. Bitte gleich noch einmal.','The Spark is not answering right now. Please try again in a moment.')
+      :status>=500?t('Auf dem Spark ist ein Fehler passiert. Bitte später noch einmal.','An error happened on the Spark. Please try again later.'):t('Ging nicht (Fehler ','Did not work (error ')+status+').'}
+  let m=/^too many wrong attempts, try again in (.+)$/.exec(d);
+  if(m)return t('Zu viele falsche Versuche. Wieder möglich in ','Too many wrong attempts. Possible again in ')+m[1]+'.';
+  m=/^restore failed: (.+)$/.exec(d);
+  if(m)return t('Wiederherstellen ging nicht: ','Restore failed: ')+m[1];
+  for(const [re,de,en] of ERR_PLAIN)if(re.test(d))return t(de,en);
+  return L==='en'&&typeof EN!=='undefined'&&EN[d]||d}
+const errRaw=e=>String(e&&(e.detail!==undefined?e.detail:e.message)||'');
 // 428: the change needs a current code from the authenticator app (second login step); asked here, then sent again.
 // With a passkey (passkey.py) the 428 answer carries its challenge; confirmAsk (mfa.js) offers it next to the code.
 const api=async(p,o={},code)=>{const hd=!code?null:typeof code==='string'?{'X-Speech-Code':code}:{'X-Speech-Passkey':code.pk};
@@ -66,7 +97,8 @@ const api=async(p,o={},code)=>{const hd=!code?null:typeof code==='string'?{'X-Sp
     const a=window.confirmAsk?await confirmAsk(wrong,opt):null;
     if(a){const r2=await api(p,o,a.code||{pk:a.pk});if(window.confirmRefresh)confirmRefresh();return r2}throw new Error(t('Abgebrochen: ohne Code keine Änderung.','Cancelled: no change without a code.'))}
   if(r.status===503&&window.notausLoad)notausLoad();   // the Notaus holds this off: band and page show it (notaus.js)
-  if(r.status===401&&!/^\/api\/(login|password|profile)/.test(p)&&window.showLogin){if(typeof elevated==='function'&&elevated()){location.reload();return r}showLogin()}if(!r.ok){let t=await r.text();try{t=JSON.parse(t).detail||t}catch{}throw new Error(t)}
+  if(r.status===401&&!/^\/api\/(login|password|profile)/.test(p)&&window.showLogin){if(typeof elevated==='function'&&elevated()){location.reload();return r}showLogin()}if(!r.ok){const raw=await r.text();let d=raw;try{d=JSON.parse(raw).detail??raw}catch{}
+    const e=new Error(errSay(r.status,d,raw));e.detail=typeof d==='string'?d:JSON.stringify(d);e.status=r.status;throw e}
   if(o.method&&o.method!=='GET'&&/^\/api\/(config|admin\/|profile\/)/.test(p)&&!/^\/api\/profile\/(setup|handoff)/.test(p))whoSoon();   // a switch may have changed
   return r};
 // like fetch(...) plus .json(), but with api()'s code prompt (428): {r, d}; errors come back as d.detail
@@ -125,6 +157,15 @@ window.goSec=s=>{if(s==='sys'){goCfg('upd');return}   // update and backups move
 // rules in features.py, never from the model) and a disabled control; o.extra goes below the sentence.
 const setRow=(l,h,ctl,o={})=>{if(o.why)ctl=ctl.replace(/<(input|select|textarea)\b/g,'<$1 disabled');
   return `<div class="setrow${o.why?' locked':''}"><div class="lbl"><b>${l}</b>${h||o.why?`<span>${h||''}${o.why?`<em class="why">${esc(o.why)}</em>`:''}</span>`:''}${o.extra||''}</div>${ctl}</div>`};
+// Every field of a settings row has a name for screen readers (B6 of the review of 11.10.2026): a control after the
+// row's title without a label of its own (a switch's label.tgl has no text) gets the title's words as aria-label.
+// Rows come from index.html and from the scripts, so this follows the page (once per frame at most).
+function rowLabels(){document.querySelectorAll('.setrow').forEach(r=>{const b=r.querySelector(':scope>.lbl>b');if(!b)return;
+  const c=[...r.querySelectorAll('input:not([type=hidden]),select,textarea')].find(x=>!x.closest('.lbl'));
+  if(!c||c.hasAttribute('aria-label')||c.hasAttribute('aria-labelledby')||[...(c.labels||[])].some(x=>x.textContent.trim()))return;
+  const name=[...b.childNodes].filter(n=>n.nodeType===3).map(n=>n.nodeValue).join('').trim();if(name)c.setAttribute('aria-label',name)})}
+{let q=0;const later=()=>{if(!q)q=requestAnimationFrame(()=>{q=0;rowLabels()})};later();
+ new MutationObserver(later).observe(document.body,{childList:true,subtree:true})}
 const tglIn=(attrs,on)=>`<label class="tgl"><input type="checkbox" ${attrs}${on?' checked':''}><i></i></label>`;
 const esc=s=>String(s??'').replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
 // Strict CSP (plan „Bedienung gesamt“ D1 Stufe 2, V01.0.286): no inline handlers. A generated button names a function

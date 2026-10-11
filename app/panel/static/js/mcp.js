@@ -11,7 +11,7 @@ function mcpLan(port){const h=location.hostname;
   return `http://${lan?h:t('SPARK-IP','SPARK-IP')}:${port||31080}/mcp`}
 function mcpTools(list,have,pre){const by={};list.forEach(x=>(by[x.group]=by[x.group]||[]).push(x));
   return Object.keys(MCPGRP).filter(g=>by[g]).map(g=>`<div class="fh" style="margin-top:8px"><b>${esc(t(...MCPGRP[g]))}</b></div>`+
-    by[g].map(x=>`<label class="chk"${x.ok?'':' title="'+esc(t('Für dich gerade aus (Funktionen bzw. Ich)','Off for you right now (Features or Me)'))+'"'}><input type="checkbox" data-${pre}="${esc(x.name)}"${have.includes(x.name)?' checked':''}${x.ok?'':' disabled'}> ${esc(x.label)}</label>`).join('')).join('')}
+    by[g].map(x=>`<label class="chk"${x.ok?'':' title="'+esc(t('Für dich gerade aus (Funktionen bzw. Ich)','Off for you right now (Features or Me)'))+'"'}><input type="checkbox" data-${pre}="${esc(x.name)}"${have.includes(x.name)?' checked':''}${x.ok?'':' disabled'}> ${esc(L==='en'&&x.label_en||x.label)}</label>`).join('')).join('')}
 const mcpPicked=(box,pre)=>[...box.querySelectorAll(`[data-${pre}]`)].filter(x=>x.checked).map(x=>x.getAttribute('data-'+pre));
 const MCP_WARN=()=>t('Von außen: Alles, was dieses Programm über den Spark liest, geht an das Programm und dessen Anbieter (bei claude.ai oder ChatGPT in deren Cloud) und verlässt dein Heimnetz. Gib nur die Werkzeuge frei, die es wirklich braucht.',
   'From outside: everything this program reads through the Spark goes to the program and its provider (with claude.ai or ChatGPT into their cloud) and leaves your home network. Only give it the tools it really needs.');
@@ -57,7 +57,7 @@ async function showMcp(){const box=$('mcpbox');if(!box)return;if(!PROFILE||!MCPS
     try{const r=await (await api('/api/profile/mcp/keys',xjson('POST',{name,tools,where}))).json();
       MCP_NEW=Object.assign({},r,{url:where==='extern'?r.url:mcpLan(CFG&&CFG.panel&&CFG.panel.port)});await showMcp();
       const k=$('mcpkey');if(k)k.scrollIntoView({block:'nearest'})}
-    catch(e){b.disabled=false;say(/code required|Code/i.test(e.message||'')?t('Ohne deinen Code geht es nicht: bitte noch einmal tippen und den Code aus der Authenticator-App eingeben.','Not without your code: tap again and enter the code from your authenticator app.'):e.message,true)}};
+    catch(e){b.disabled=false;say(/code required|Code/i.test(errRaw(e))?t('Ohne deinen Code geht es nicht: bitte noch einmal tippen und den Code aus der Authenticator-App eingeben.','Not without your code: tap again and enter the code from your authenticator app.'):e.message,true)}};
   box.querySelectorAll('[data-mcdel]').forEach(b=>b.onclick=async()=>{if(!confirm(t('„','"')+b.dataset.mcname+t('“ entfernen? Sein Zugang gilt dann sofort nicht mehr.','" remove? Its access stops working at once.')))return;
     try{await api('/api/profile/mcp/conns/'+encodeURIComponent(b.dataset.mcdel),{method:'DELETE'});showMcp()}catch(e){xmsg('mcsmsg',e.message,true)}});
   box.querySelectorAll('[data-mcsave]').forEach(b=>b.onclick=async()=>{const id=b.dataset.mcsave,body={tools:mcpPicked(box,'mce-'+id)};

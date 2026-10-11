@@ -33,6 +33,7 @@ Alle Optionen ohne Rückfragen (`--mode api --asr 1.7b --tts 0.6b --yes` …) st
 
 <!-- New version: add one line at the top here and in CHANGELOG.md, drop the oldest line here (keep 10). Details go to docs/de and docs/en, not into this README. -->
 
+- **V01.0.408** Unabhängige Prüfung, Paket 5: Englisch vollständiger, verständliche Fehlersätze, „?“ nur mit Hilfe, aktuelle Seitennamen, Labels, Live aus ohne Fehler
 - **V01.0.407** Unabhängige Prüfung, Paket 4: signierbare Geräte-Updates, Begleiter nur https, feste CI-Versionen, root-Lesewege, ffmpeg-Grenzen, iPhone-Kopplung, Telegram
 - **V01.0.406** Unabhängige Prüfung, Paket 6: Seiten-Dateien gepackt und gecacht, sichere JSON-Schreiber, schnellere Selbsttests, toter Code entfernt
 - **V01.0.405** Unabhängige Prüfung, Paket 3: schnellere Verbindungen, Panel blockiert nicht mehr, Sprachausgabe übersteht Neustart, Frist fürs erste Wort, keine verlorenen Nachrichten
@@ -42,7 +43,6 @@ Alle Optionen ohne Rückfragen (`--mode api --asr 1.7b --tts 0.6b --yes` …) st
 - **V01.0.401** Mein Notaus: Seite lädt nach Auslösen oder Aufheben nicht mehr von selbst neu (Browser-Selbsttest wieder stabil).
 - **V01.0.400** Selbsttests warten auf langsamen Rechnern zuverlässiger
 - **V01.0.399** Weniger Runden: Nachschlagen höchstens 2× pro Frage, letzte Runde ohne Werkzeugliste (spart eine Runde).
-- **V01.0.398** Wer darf was: Klick auf eine Funktion springt zuverlässig zu ihrem Schalter unter Funktionen, auch bei Unterschaltern
 
 Alle Versionen: [CHANGELOG.md](CHANGELOG.md)
 

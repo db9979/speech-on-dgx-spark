@@ -284,7 +284,7 @@
         <div class="setrow"><div class="lbl"><b>Wiederholungen vermeiden (presence_penalty)</b><span>0 = Standard des Servers, bis 2; hilft, wenn das Modell sich wiederholt (Qwen: etwa 1).</span></div><input class="num" id="chat.presence_penalty" type="number" step="0.1" min="0" max="2"></div>
         <div class="setrow"><div class="lbl"><b>Eigene Stichwörter für die Werkzeugpflicht</b><span>Kommt eines dieser Wörter vor, muss das Modell zuerst das Werkzeug benutzen.<button class="mlink" type="button">Mehr</button></span></div></div>
         <div class="fh more" hidden>Eine Zeile pro Werkzeug: calendar_events, mail_list, reminder_list, web_search, weather, parcels, transit, wikipedia, tasks_show. Nur ganze Wörter, höchstens 20 pro Werkzeug. Die eingebauten Wörter bleiben immer.</div>
-        <textarea id="chat.tool_words" rows="3" placeholder="web_search: elfmeter, aufstellung" aria-label="Eigene Stichwörter für die Werkzeugpflicht"></textarea>
+        <textarea id="chat.tool_words" rows="3" maxlength="2000" placeholder="web_search: elfmeter, aufstellung" aria-label="Eigene Stichwörter für die Werkzeugpflicht"></textarea>
       </details>
       <div class="savebar"><button class="b p savebtn" data-p="ai">Speichern</button><span class="savemsg"></span></div>
     </div>
@@ -526,7 +526,7 @@
       <div id="chatlog"></div>
       <div id="chatpics" class="pics" hidden></div>
       <div id="msgcompose" class="msgc" hidden><span id="mcpick" class="mpick"></span><input id="mctext" maxlength="500" placeholder="Nachricht an andere"><button class="b p" type="button" id="mcsend">Senden</button><button class="b" type="button" id="mcclose" aria-label="Schließen">✕</button><div class="fh" id="mcmsg"></div></div>
-      <div class="composer"><button class="ib attach" id="chatpic" type="button" title="Bild anhängen" hidden><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="5" width="18" height="14" rx="2"/><circle cx="9" cy="10" r="1.8"/><path d="M21 16l-5-5-8 8"/></svg></button><button class="ib attach" id="chatmsg" type="button" title="Nachricht an andere" hidden><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="5" width="18" height="14" rx="2"/><path d="M3 7l9 6 9-6"/></svg></button><input type="file" id="chatpicfile" accept="image/*" multiple hidden><input id="chattext" placeholder="oder hier tippen und Enter drücken"><button class="send" id="chatsend" title="Senden"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"><path d="M12 19V5M5 12l7-7 7 7"/></svg></button></div>
+      <div class="composer"><button class="ib attach" id="chatpic" type="button" title="Bild anhängen" hidden><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="5" width="18" height="14" rx="2"/><circle cx="9" cy="10" r="1.8"/><path d="M21 16l-5-5-8 8"/></svg></button><button class="ib attach" id="chatmsg" type="button" title="Nachricht an andere" hidden><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="5" width="18" height="14" rx="2"/><path d="M3 7l9 6 9-6"/></svg></button><input type="file" id="chatpicfile" accept="image/*" multiple hidden><label for="chattext" class="srl">Frage an den Assistenten</label><input id="chattext" placeholder="oder hier tippen und Enter drücken"><button class="send" id="chatsend" title="Senden"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"><path d="M12 19V5M5 12l7-7 7 7"/></svg></button></div>
     </div>
   </div>
 </section>
@@ -656,14 +656,14 @@
     <div id="int-mcp" style="margin-top:8px"></div>
   </div>
   <div class="card"><h2>Eigene MCP-Dienste der Profile</h2>
-    <div class="mut">Dienste, die Profile unter <b>Ich → Meine MCP-Dienste</b> selbst angebunden haben, ohne Schlüssel. Sperren gilt sofort, auch wenn das Profil den Dienst neu anbindet.</div>
+    <div class="mut" data-tr>Dienste, die Profile unter <b>Ich → Meine MCP-Dienste</b> selbst angebunden haben, ohne Schlüssel. Sperren gilt sofort, auch wenn das Profil den Dienst neu anbindet.</div>
     <div id="int-mymcp" style="margin-top:8px"></div>
   </div>
   <div class="card"><h2>Pebble-Uhr</h2>
     <div class="mut">App „Spark“ für Pebble Time 2 und Core 2 Duo (Antwort als Text und über den Lautsprecher der Uhr) sowie Pebble Round 2 (nur Text). Frage per Knopfdruck, die Pebble-Diktierfunktion macht Text daraus, die Antwort kommt von hier.</div>
     <ol class="mut" style="margin:8px 0 0 18px;padding:0;line-height:1.6">
-      <li>Unter <b>Ich → Pebble-Uhr</b> „Pebble koppeln“ tippen und den Einrichtungscode kopieren (Admin: Funktionen → Pebble-Uhr koppeln an). Ohne das: unter Profile ein Gerät „Pebble“ anlegen und den Schlüssel kopieren.</li>
-      <li>Auf dem Handy, das mit der Uhr gekoppelt ist, die App-Datei laden und mit der Pebble-App öffnen: <a id="int-pbw" href="/pebble/speech-spark.pbw">speech-spark.pbw</a></li>
+      <li data-tr>Unter <b>Ich → Pebble-Uhr</b> „Pebble koppeln“ tippen und den Einrichtungscode kopieren (Admin: Funktionen → Pebble-Uhr koppeln an). Ohne das: unter Personen und Geräte beim eigenen Profil ein Gerät „Pebble“ anlegen und den Schlüssel kopieren.</li>
+      <li data-tr>Auf dem Handy, das mit der Uhr gekoppelt ist, die App-Datei laden und mit der Pebble-App öffnen: <a id="int-pbw" href="/pebble/speech-spark.pbw">speech-spark.pbw</a></li>
       <li>In der Pebble-App bei „Spark“ die Einstellungen öffnen und den Einrichtungscode einfügen (oder Spark-Adresse und Geräteschlüssel eintragen). Die Uhr muss dabei mit dem Handy verbunden sein.</li>
       <li>Auf der Uhr: SELECT fragt, nochmal SELECT stoppt die Sprache, lang SELECT beginnt ein neues Gespräch.</li>
     </ol>
@@ -673,12 +673,12 @@
   <div class="card"><h2>„Hey Siri, frag Spark“</h2>
     <div class="mut">Ein iPhone-Kurzbefehl schickt deine Frage an den Spark, Siri liest die Antwort vor. Geht ohne geöffnete Seite, auch auf der Apple Watch, mit AirPods und im Auto (CarPlay). Nachfragen innerhalb von 10 Minuten kennen den Zusammenhang; die Fragen eines Tages stehen im Verlauf deines Profils.</div>
     <ol class="mut" style="margin:8px 0 0 18px;padding:0;line-height:1.6">
-      <li>Unter <b>Profile</b> beim eigenen Profil ein Gerät „iPhone Siri“ anlegen und den Schlüssel kopieren.</li>
-      <li>In der App <b>Kurzbefehle</b> einen neuen Kurzbefehl mit dem Namen <b>Frag Spark</b> anlegen.</li>
-      <li>Aktion <b>Text diktieren</b> (Sprache Deutsch, Diktieren beenden: nach Pause).</li>
-      <li>Aktion <b>Inhalte von URL abrufen</b>: URL siehe unten, Methode <b>POST</b>, Header <code>X-Speech-Device</code> = dein Schlüssel, Haupttext <b>JSON</b> mit dem Feld <code>text</code> = <i>Diktierter Text</i>.</li>
-      <li>Aktion <b>Wörterbuchwert abrufen</b>: Schlüssel <code>answer</code>.</li>
-      <li>Aktion <b>Text sprechen</b> mit dem Wörterbuchwert.</li>
+      <li data-tr>Unter <b>Personen und Geräte</b> beim eigenen Profil ein Gerät „iPhone Siri“ anlegen und den Schlüssel kopieren.</li>
+      <li data-tr>In der App <b>Kurzbefehle</b> einen neuen Kurzbefehl mit dem Namen <b>Frag Spark</b> anlegen.</li>
+      <li data-tr>Aktion <b>Text diktieren</b> (Sprache Deutsch, Diktieren beenden: nach Pause).</li>
+      <li data-tr>Aktion <b>Inhalte von URL abrufen</b>: URL siehe unten, Methode <b>POST</b>, Header <code>X-Speech-Device</code> = dein Schlüssel, Haupttext <b>JSON</b> mit dem Feld <code>text</code> = <i>Diktierter Text</i>.</li>
+      <li data-tr>Aktion <b>Wörterbuchwert abrufen</b>: Schlüssel <code>answer</code>.</li>
+      <li data-tr>Aktion <b>Text sprechen</b> mit dem Wörterbuchwert.</li>
       <li>Fertig: „Hey Siri, Frag Spark“, dann die Frage sagen.</li>
     </ol>
     <table style="margin-top:8px"><tbody id="int-siri"></tbody></table>
@@ -826,7 +826,7 @@
       <div class="fh">Ist eines gesetzt, schaltet der Assistent erst, wenn du es in derselben Nachricht sagst, z. B. „Licht aus, Codewort Sonnenblume“. Abfragen gehen ohne. Nimm ein Wort, das die Spracherkennung sicher versteht. Leer speichern entfernt es.</div></div>
       <label>Ausprobieren</label><div class="rowin"><input id="hatry" placeholder="Wie warm ist es im Wohnzimmer?"><button class="b" id="hatrygo" type="button">Senden</button></div>
       <div id="hamsg" class="fh"></div></div>
-    <div id="logbox" class="ptab"><div class="intro">Was der Assistent bei deinen Fragen nachgeschlagen hat: welche Werkzeuge, mit welchen Angaben, was zurückkam und was er geantwortet hat. Steht bei einer Antwort „kein Werkzeug“, kam sie nur aus dem Modell. Einträge verschwinden nach <span id="logdays">7</span> Tagen.</div>
+    <div id="logbox" class="ptab"><div class="intro" data-tr>Was der Assistent bei deinen Fragen nachgeschlagen hat: welche Werkzeuge, mit welchen Angaben, was zurückkam und was er geantwortet hat. Steht bei einer Antwort „kein Werkzeug“, kam sie nur aus dem Modell. Einträge verschwinden nach <span id="logdays">7</span> Tagen.</div>
       <ul class="facts small" id="loglist"></ul>
       <div class="row" style="margin-top:8px"><button class="b" id="logreload" type="button">Neu laden</button><button class="b" id="logclear" type="button">Protokoll leeren</button></div></div>
     <div id="probox" class="ptab"></div>

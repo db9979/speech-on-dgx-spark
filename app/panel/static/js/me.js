@@ -1,5 +1,6 @@
 // The "Ich" window: profile login, the profile's own pages and the conversation settings.
 // ---------------------------------------------------------------- profile of this browser
+const ME_LOAD={p:null,next:null};   // Ich's boxes: the load running now and the one queued after it (openMe)
 function setProfile(p){const changed=(p&&p.id)!==(PROFILE&&PROFILE.id);PROFILE=p||null;
   $('profname').textContent=PROFILE?PROFILE.name:t('Gast','Guest');
   if(changed){stopListening(true);stopAnswer();convos.cache=[];openConvo(null);convos.sync().then(()=>{if(!chat.msgs.length)openConvo(latestConvo())})}
@@ -204,13 +205,13 @@ async function calRemove(id,name){if(!confirm(t('Kalender „','Remove calendar 
 const calMsg=(x,err,list)=>{const m=$('calmsg');m.className=err?'err':'';m.innerHTML=esc(x)+(list&&list.length?'<ul class="facts small">'+list.map(e=>`<li>${esc(e)}</li>`).join('')+'</ul>':'')};
 $('calsave').onclick=async()=>{calMsg(t('Prüfe den Kalender …','Checking the calendar …'));
   const {r,d}=await apiTry('/api/profile/calendar',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({name:$('calname').value,url:$('calurl').value.trim(),user:$('caluser').value.trim(),password:$('calpw').value,tz:TZ()})});
-  if(!r.ok){calMsg(t('Nicht hinzugefügt: ','Not added: ')+(d.detail||r.status),true);return}
+  if(!r.ok){calMsg(t('Nicht hinzugefügt: ','Not added: ')+errSay(r.status,d.detail,""),true);return}
   ['calname','calurl','caluser','calpw'].forEach(i=>$(i).value='');calRender(d);
   calMsg(t('Hinzugefügt. ','Added. ')+(d.check.events.length?t('Die nächsten Termine:','Next appointments:'):t('Keine Termine in den nächsten 14 Tagen.','No appointments in the next 14 days.')),false,d.check.events)};
 $('caltopsave').onclick=async()=>{const d=await (await api('/api/profile/calendar/topics',{method:'PUT',headers:{'Content-Type':'application/json'},body:JSON.stringify({topics:$('caltopics').value.split(',').map(x=>x.trim()).filter(Boolean)})})).json();calRender(d);calMsg(t('Themen gespeichert.','Topics saved.'))};
 $('caltest').onclick=async()=>{calMsg(t('Lese die Kalender …','Reading the calendars …'));
   const r=await fetch('/api/profile/calendar/test',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({tz:TZ()})});const d=await r.json();
-  if(!r.ok){calMsg(d.detail||r.status,true);return}
+  if(!r.ok){calMsg(errSay(r.status,d.detail,""),true);return}
   calMsg(d.events.length?t('Die nächsten Termine:','Next appointments:'):t('Keine Termine in den nächsten 14 Tagen.','No appointments in the next 14 days.'),d.errors.length>0,[...d.events,...d.errors.map(e=>'⚠ '+e)])};
 // E-mail per profile, read only; the password is never sent back.
 const MAILKIND={icloud:t('Benutzer: deine iCloud-Mailadresse. Passwort: ein neues app-spezifisches Passwort von appleid.apple.com.','User: your iCloud mail address. Password: a new app-specific password from appleid.apple.com.'),
@@ -227,11 +228,11 @@ async function showMail(){if(!MAIL_ON)return;mailRender(await (await api('/api/p
 async function mailRemove(id,name){if(!confirm(t('Postfach „','Remove mailbox "')+name+t('“ entfernen?','"?')))return;mailRender(await (await api('/api/profile/mail/'+encodeURIComponent(id),{method:'DELETE'})).json())}
 $('mailsave').onclick=async()=>{mailMsg(t('Prüfe das Postfach …','Checking the mailbox …'));
   const {r,d}=await apiTry('/api/profile/mail',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({kind:$('mailkind').value,name:$('mailname').value,host:$('mailhost').value.trim(),port:$('mailport').value.trim(),user:$('mailuser').value.trim(),password:$('mailpw').value})});
-  if(!r.ok){mailMsg(t('Nicht hinzugefügt: ','Not added: ')+(d.detail||r.status),true);return}
+  if(!r.ok){mailMsg(t('Nicht hinzugefügt: ','Not added: ')+errSay(r.status,d.detail,""),true);return}
   ['mailname','mailhost','mailuser','mailpw'].forEach(i=>$(i).value='');mailRender(d);
   mailMsg(t('Hinzugefügt. ','Added. ')+d.check.unread+t(' ungelesen, ',' unread, ')+d.check.total+t(' Mails in den letzten ',' mails in the last ')+d.check.days+t(' Tagen.',' days.'))};
 $('mailtest').onclick=async()=>{mailMsg(t('Lese die Postfächer …','Reading the mailboxes …'));
-  const r=await fetch('/api/profile/mail/test',{method:'POST'});const d=await r.json();if(!r.ok){mailMsg(d.detail||r.status,true);return}
+  const r=await fetch('/api/profile/mail/test',{method:'POST'});const d=await r.json();if(!r.ok){mailMsg(errSay(r.status,d.detail,""),true);return}
   mailMsg('',d.accounts.some(a=>!a.ok),d.accounts.map(a=>a.name+': '+(a.ok?a.unread+t(' ungelesen',' unread'):'⚠ '+a.error)))};
 // Home Assistant per profile; the token is never sent back, only whether one is stored.
 const haMsg=(x,err)=>{$('hamsg').textContent=x;$('hamsg').className='fh'+(err?' err':'')};
@@ -242,13 +243,13 @@ function haRender(d){$('haurl').value=d.url||'';$('hatoken').value='';$('hanover
 async function showHa(){if(!HA_ON)return;haRender(await (await api('/api/profile/homeassistant')).json());haMsg('')}
 $('hasave').onclick=async()=>{haMsg(t('Prüfe die Verbindung …','Checking the connection …'));
   const {r,d}=await apiTry('/api/profile/homeassistant',{method:'PUT',headers:{'Content-Type':'application/json'},body:JSON.stringify({url:$('haurl').value.trim(),token:$('hatoken').value.trim(),verify:!$('hanoverify').checked,agent:$('haagent').value.trim()})});
-  if(!r.ok){haMsg(t('Nicht gespeichert: ','Not saved: ')+(d.detail||r.status),true);return}haRender(d);haMsg(t('Verbunden und gespeichert.','Connected and saved.'))};
+  if(!r.ok){haMsg(t('Nicht gespeichert: ','Not saved: ')+errSay(r.status,d.detail,""),true);return}haRender(d);haMsg(t('Verbunden und gespeichert.','Connected and saved.'))};
 $('hadel').onclick=async()=>{if(!confirm(t('Home Assistant trennen?','Disconnect Home Assistant?')))return;haRender(await (await api('/api/profile/homeassistant',{method:'DELETE'})).json());haMsg(t('Getrennt.','Disconnected.'))};
 $('hacodesave').onclick=async()=>{const {r,d}=await apiTry('/api/profile/homeassistant/code',{method:'PUT',headers:{'Content-Type':'application/json'},body:JSON.stringify({code:$('hacode').value})});
-  if(!r.ok){haMsg(d.detail||r.status,true);return}haRender(d);haMsg(d.has_code?t('Codewort gespeichert.','Code word saved.'):t('Codewort entfernt.','Code word removed.'))};
+  if(!r.ok){haMsg(errSay(r.status,d.detail,""),true);return}haRender(d);haMsg(d.has_code?t('Codewort gespeichert.','Code word saved.'):t('Codewort entfernt.','Code word removed.'))};
 $('hatrygo').onclick=async()=>{const text=$('hatry').value.trim();if(!text)return;haMsg(t('Frage Home Assistant …','Asking Home Assistant …'));
   const r=await fetch('/api/profile/homeassistant/test',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({text})});const d=await r.json();
-  if(!r.ok){haMsg(d.detail||r.status,true);return}haMsg((d.targets&&d.targets.length?d.targets.join(', ')+': ':'')+d.answer,!d.ok)};
+  if(!r.ok){haMsg(errSay(r.status,d.detail,""),true);return}haMsg((d.targets&&d.targets.length?d.targets.join(', ')+': ':'')+d.answer,!d.ok)};
 // Voice enrollment for speaker identification: three sentences, each recorded and sent as WAV.
 const ENROLL=[['Der Herbstwind treibt bunte Blätter über die stille Straße, und irgendwo bellt ein Hund.','The autumn wind drives colourful leaves across the quiet street, and somewhere a dog barks.'],
   ['Kannst du mir bitte sagen, wie das Wetter morgen wird und ob ich einen Schirm brauche?','Could you please tell me what the weather will be like tomorrow and whether I need an umbrella?'],
@@ -310,8 +311,13 @@ async function openMe(tab){$('profmsg').textContent='';$('profmodal').style.disp
   if(!GATE&&!isGuest())renderSet($('setform'),S,saveSet);
   // what the admin allows can have changed since the login (Funktionen in this browser or another): ask again
   if(PROFILE){refreshAllow().catch(()=>{});if(typeof hilfeRefresh==='function')hilfeRefresh()}
-  if(PROFILE){try{await showFacts();await showDocs();await showVoice();await showCal();await showMail();await showMailTidy().catch(()=>{});await showHa();await showSecurity();await showToolLog();await showPro().catch(()=>{});await showExtras();showRoom();await showPush().catch(()=>{});showOver();if(typeof goShow==='function')goShow();loadFeats().then(()=>{meLocked($('overbox'));meLocked($('setbox'));if(window.meToday)meToday()})}catch{setProfile(null);openMe('loginbox')}return}
+  if(PROFILE){   // B8: jumps while the boxes load ("Zeig mir wo", cards) share one load and at most one after it (no 429)
+    if(ME_LOAD.p){if(!ME_LOAD.next)ME_LOAD.next=ME_LOAD.p.then(()=>{ME_LOAD.next=null;return meLoadOnce()});return ME_LOAD.next}
+    return meLoadOnce()}
   $('profpin').value='';if(tab==='loginbox')setTimeout(()=>$($('profuser').value?'profpin':'profuser').focus(),50)}
+// the ~30 boxes of Ich, one load at a time
+function meLoadOnce(){if(!PROFILE)return;return ME_LOAD.p=meLoad().finally(()=>{ME_LOAD.p=null})}
+async function meLoad(){{try{await showFacts();await showDocs();await showVoice();await showCal();await showMail();await showMailTidy().catch(()=>{});await showHa();await showSecurity();await showToolLog();await showPro().catch(()=>{});await showExtras();showRoom();await showPush().catch(()=>{});showOver();if(typeof goShow==='function')goShow();loadFeats().then(()=>{meLocked($('overbox'));meLocked($('setbox'));if(window.meToday)meToday()})}catch{setProfile(null);openMe('loginbox')}}}
 window.openMe=openMe;
 // Ich says what the admin has not switched on instead of hiding it without a word (plan „Vereinheitlichen“ Phase 4,
 // V01.0.270): the names with the reason, for an admin a jump to Funktionen → Wer darf was. From /api/features.
@@ -340,7 +346,7 @@ $('proflogin').onclick=async()=>{try{const r=await (await api('/api/profile/logi
     $('profcode').value='';$('profcodebox').style.display='none';
     if(GATE){location.reload();return}
     const who=await (await fetch('/api/whoami')).json();SETUP=who.setup||null;setProfile(who.profile);if(typeof hilfeStart==='function')hilfeStart(who.hilfe);closeProf()}
-  catch(e){$('profmsg').textContent=/too many/.test(e.message)?t('Zu viele falsche Versuche. Bitte später noch einmal (','Too many wrong attempts. Please try again later (')+(e.message.match(/in (.+)$/)||['',''])[1]+').':/wrong code/.test(e.message)?t('Code falsch.','Wrong code.'):t('Name oder PIN falsch.','Wrong name or PIN.')}};
+  catch(e){$('profmsg').textContent=/too many/.test(errRaw(e))?t('Zu viele falsche Versuche. Bitte später noch einmal (','Too many wrong attempts. Please try again later (')+(errRaw(e).match(/in (.+)$/)||['',''])[1]+').':/wrong code/.test(errRaw(e))?t('Code falsch.','Wrong code.'):t('Name oder PIN falsch.','Wrong name or PIN.')}};
 $('proflogout').onclick=async()=>{await fetch('/api/profile/logout',{method:'POST'});if(!PUBLIC&&!ADMIN){location.reload();return}setProfile(null);if(typeof hilfeStart==='function')hilfeStart(null);closeProf()};
 $('factclear').onclick=async()=>{if(!confirm(t('Alles vergessen, was sich der Assistent über dich gemerkt hat?','Forget everything the assistant remembered about you?')))return;
   await api('/api/profile/memory',{method:'DELETE'});showFacts()};

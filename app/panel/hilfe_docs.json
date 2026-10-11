@@ -21,7 +21,7 @@
 "file": "Android-App „Spark“ (APK, ohne Store)",
 "head": "Einrichten",
 "title": "Einrichten",
-"text": "1. Signierschlüssel (einmal, Admin): Auf dem Spark (oder einem Mac) im Terminal bash /opt/speech-spark/src/tools/android-schluessel.sh ausführen (ohne sudo, braucht nur openssl). Es legt ~/spark-android.p12 und ~/spark-android.pass an und zeigt zwei Werte. Im GitHub-Repo unter Settings → Secrets and variables → Actions → „New repository secret“ beide anlegen: ANDROID_KEYSTORE_PASSWORD und ANDROID_KEYSTORE (die lange Zeile). Die beiden Dateien gut aufheben: Ohne denselben Schlüssel lassen sich spätere Versionen nicht über die alte installieren. 2. App bauen: Actions → „Android app“ → Run workflow. Sie erscheint als Release android-v1.0.0 mit spark.apk, spark.apk.sha256 und android.json. 3. Spark: Einstellungen → Funktionen → Android-App an, speichern, „App jetzt holen“ (sonst holt er sie einmal am Tag). Er prüft Größe und SHA-256 und behält sie unter STATE/android. 4. Profil: Ich → Android-App → „Android-App für mich“ an, „Download-Link holen“, den QR-Code mit der Kamera des Android-Handys scannen, die APK installieren (das Handy fragt einmal, ob der Browser Apps installieren darf). Der Link gilt 30 Minuten. 5. In der App: Adresse des Spark eintragen (https mit echtem Zertifikat, z."
+"text": "1. Signierschlüssel (einmal, Admin): Auf dem Spark (oder einem Mac) im Terminal bash /opt/speech-spark/src/tools/android-schluessel.sh ausführen (ohne sudo, braucht nur openssl). Es legt ~/spark-android.p12 und ~/spark-android.pass an und zeigt zwei Werte. Im GitHub-Repo unter Settings → Secrets and variables → Actions → „New repository secret“ beide anlegen: ANDROID_KEYSTORE_PASSWORD und ANDROID_KEYSTORE (die lange Zeile). Die beiden Dateien gut aufheben: Ohne denselben Schlüssel lassen sich spätere Versionen nicht über die alte installieren. 2. App bauen: Actions → „Android app“ → Run workflow. Sie erscheint als Release android-v1.0.0 mit spark.apk, spark.apk.sha256 und android.json. 3. Spark: Funktionen → Android-App an, speichern, „App jetzt holen“ (sonst holt er sie einmal am Tag). Er prüft Größe und SHA-256 und behält sie unter STATE/android. 4. Profil: Ich → Android-App → „Android-App für mich“ an, „Download-Link holen“, den QR-Code mit der Kamera des Android-Handys scannen, die APK installieren (das Handy fragt einmal, ob der Browser Apps installieren darf). Der Link gilt 30 Minuten. 5. In der App: Adresse des Spark eintragen (https mit echtem Zertifikat, z. B. der Reverse "
 },
 {
 "lang": "de",
@@ -29,7 +29,7 @@
 "file": "Android-App „Spark“ (APK, ohne Store)",
 "head": "Einrichten",
 "title": "Einrichten",
-"text": " B. der Reverse Proxy), dann wie im Browser mit Name und PIN anmelden, Mitteilungen und Mikrofon erlauben. Für zuverlässige Mitteilungen die Akku-Optimierung für Spark ausschalten."
+"text": "Proxy), dann wie im Browser mit Name und PIN anmelden, Mitteilungen und Mikrofon erlauben. Für zuverlässige Mitteilungen die Akku-Optimierung für Spark ausschalten."
 },
 {
 "lang": "de",
@@ -149,7 +149,7 @@
 "file": "APIs und Einbinden",
 "head": "Open WebUI",
 "title": "Open WebUI",
-"text": "Läuft Open WebUI in Docker auf derselben Spark, statt SPARK entweder die LAN-IP oder host.docker.internal nehmen (Container mit --add-host=host.docker.internal:host-gateway). Das Panel zeigt diese Werte im Reiter „Einbinden“ zum Kopieren an."
+"text": "Läuft Open WebUI in Docker auf derselben Spark, statt SPARK entweder die LAN-IP oder host.docker.internal nehmen (Container mit --add-host=host.docker.internal:host-gateway). Das Panel zeigt diese Werte unter Personen und Geräte → Apps und Schnittstellen zum Kopieren an."
 },
 {
 "lang": "de",
@@ -157,7 +157,7 @@
 "file": "APIs und Einbinden",
 "head": "KI-Agenten: Hermes Agent und OpenClaw",
 "title": "KI-Agenten: Hermes Agent und OpenClaw",
-"text": "Ein Agent wie Hermes Agent (Nous Research) oder OpenClaw kann die Spracherkennung und Sprachausgabe der Spark nutzen. Der Agent läuft auf einem anderen Rechner und bekommt nur Audio und Vorlesetext, keinen Zugang zu Profilen, Gedächtnis oder Werkzeugen des Assistenten. Das Panel zeigt die fertigen Bausteine unter Einbinden zum Kopieren."
+"text": "Ein Agent wie Hermes Agent (Nous Research) oder OpenClaw kann die Spracherkennung und Sprachausgabe der Spark nutzen. Der Agent läuft auf einem anderen Rechner und bekommt nur Audio und Vorlesetext, keinen Zugang zu Profilen, Gedächtnis oder Werkzeugen des Assistenten. Das Panel zeigt die fertigen Bausteine unter Personen und Geräte → Apps und Schnittstellen zum Kopieren."
 },
 {
 "lang": "de",
@@ -317,7 +317,7 @@
 "file": "APIs und Einbinden",
 "head": "Pebble-Uhr",
 "title": "Pebble-Uhr",
-"text": "1. Kopplung per Einrichtungscode (neu in V01.0.230, aus): Admin schaltet *Funktionen → Pebble-Uhr koppeln* ein, das Profil unter *Ich → Pebble-Uhr* „Pebble-Uhr für mich“, dann „Pebble koppeln“ und die Zeile kopieren (gilt 10 Minuten, einmal). Die Uhr bekommt einen eigenen Schlüssel, der nur /api/watch/ erreicht und mit einem der beiden Schalter sofort gesperrt ist. Ohne Kopplung geht weiter: unter Profile ein Gerät „Pebble“ anlegen und den Schlüssel kopieren. 2. Auf dem gekoppelten Handy http://SPARK:31080/pebble/speech-spark.pbw laden und mit der Pebble-App öffnen. Einfacher: *Ich → Pebble-Uhr* zeigt dafür einen QR-Code, den man mit der Handy-Kamera scannt. Gibt es auf dem Spark eine neuere Uhr-App, steht höchstens einmal am Tag „Neue Uhr-App“ unter einer Antwort; die Kopplung bleibt beim Neuinstallieren erhalten. 3. In der Pebble-App bei „Spark“ die Einstellungen öffnen: den Einrichtungscode einfügen, oder Spark-Adresse (http://SPARK:31080) und Geräteschlüssel eintragen. Einstellungen und „Start App“ bleiben grau, solange die Pebble-App die Uhr nicht als verbunden sieht (Tab Devices). 4. Auf der Uhr: SELECT fragt (Diktat über das Handy), nochmal SELECT stoppt die Sprache, lang SE"
+"text": "1. Kopplung per Einrichtungscode (neu in V01.0.230, aus): Admin schaltet *Funktionen → Pebble-Uhr koppeln* ein, das Profil unter *Ich → Pebble-Uhr* „Pebble-Uhr für mich“, dann „Pebble koppeln“ und die Zeile kopieren (gilt 10 Minuten, einmal). Die Uhr bekommt einen eigenen Schlüssel, der nur /api/watch/ erreicht und mit einem der beiden Schalter sofort gesperrt ist. Ohne Kopplung geht weiter: unter Personen und Geräte ein Gerät „Pebble“ anlegen und den Schlüssel kopieren. 2. Auf dem gekoppelten Handy http://SPARK:31080/pebble/speech-spark.pbw laden und mit der Pebble-App öffnen. Einfacher: *Ich → Pebble-Uhr* zeigt dafür einen QR-Code, den man mit der Handy-Kamera scannt. Gibt es auf dem Spark eine neuere Uhr-App, steht höchstens einmal am Tag „Neue Uhr-App“ unter einer Antwort; die Kopplung bleibt beim Neuinstallieren erhalten. 3. In der Pebble-App bei „Spark“ die Einstellungen öffnen: den Einrichtungscode einfügen, oder Spark-Adresse (http://SPARK:31080) und Geräteschlüssel eintragen. Einstellungen und „Start App“ bleiben grau, solange die Pebble-App die Uhr nicht als verbunden sieht (Tab Devices). 4. Auf der Uhr: SELECT fragt (Diktat über das Handy), nochmal SELECT stoppt die Spra"
 },
 {
 "lang": "de",
@@ -325,7 +325,7 @@
 "file": "APIs und Einbinden",
 "head": "Pebble-Uhr",
 "title": "Pebble-Uhr",
-"text": "LECT beginnt ein neues Gespräch. Ein kleines Gesicht oben zeigt, ob Spark zuhört, nachdenkt oder spricht; der Mund folgt der Sprache. Es ist dasselbe Gesicht wie im Panel (Roboter oder Comic, *Einstellungen → Assistent*), die Uhr übernimmt es mit der nächsten Antwort. Die Uhr-Einstellung Settings → Sounds & Haptics → Volume begrenzt, wie laut die App werden kann."
+"text": "che, lang SELECT beginnt ein neues Gespräch. Ein kleines Gesicht oben zeigt, ob Spark zuhört, nachdenkt oder spricht; der Mund folgt der Sprache. Es ist dasselbe Gesicht wie im Panel (Roboter oder Comic, *Einstellungen → Assistent*), die Uhr übernimmt es mit der nächsten Antwort. Die Uhr-Einstellung Settings → Sounds & Haptics → Volume begrenzt, wie laut die App werden kann."
 },
 {
 "lang": "de",
@@ -1253,7 +1253,7 @@
 "file": "Assistent und Oberfläche",
 "head": "Sprach-Chat",
 "title": "Profile und Gedächtnis",
-"text": "Profile und Gedächtnis: Unter Profile legt der Admin Profile mit Name und PIN an. Im Gespräch meldet man sich über den Knopf „Gast“ oben im Verlauf mit Name und PIN an. Angemeldet merkt sich der Assistent Dinge dauerhaft, wenn man es ihm sagt („Merk dir, dass ich vegetarisch esse“) oder wenn sie später nützlich sind, und vergisst sie auf Zuruf; im Fenster „Ich“ steht, was er weiß, zum Löschen. Gedächtnis und Gespräche gehören fest zum Profil und liegen auf dem Spark, so erscheint derselbe Verlauf auf jedem Gerät, auf dem man angemeldet ist: Welches Profil fragt, entscheidet nur die Anmeldung (Cookie) oder der Geräteschlüssel, nie das Modell, und Gäste bekommen kein Gedächtnis. Lautsprecher und eigene Programme bekommen unter Profile einen Geräteschlüssel, der fest zu einem Profil gehört, und senden ihn als Header X-Speech-Device an /api/chat. Eine neue PIN meldet alle Browser des Profils ab; ein gelöschtes Profil nimmt sein Gedächtnis und seine Geräte mit. Die Daten liegen auf dem Spark unter /var/lib/speech-spark/users, je Profil ein eigener Ordner."
+"text": "Profile und Gedächtnis: Unter Personen und Geräte legt der Admin Profile mit Name und PIN an. Im Gespräch meldet man sich über den Knopf „Gast“ oben im Verlauf mit Name und PIN an. Angemeldet merkt sich der Assistent Dinge dauerhaft, wenn man es ihm sagt („Merk dir, dass ich vegetarisch esse“) oder wenn sie später nützlich sind, und vergisst sie auf Zuruf; im Fenster „Ich“ steht, was er weiß, zum Löschen. Gedächtnis und Gespräche gehören fest zum Profil und liegen auf dem Spark, so erscheint derselbe Verlauf auf jedem Gerät, auf dem man angemeldet ist: Welches Profil fragt, entscheidet nur die Anmeldung (Cookie) oder der Geräteschlüssel, nie das Modell, und Gäste bekommen kein Gedächtnis. Lautsprecher und eigene Programme bekommen unter Personen und Geräte einen Geräteschlüssel, der fest zu einem Profil gehört, und senden ihn als Header X-Speech-Device an /api/chat. Eine neue PIN meldet alle Browser des Profils ab; ein gelöschtes Profil nimmt sein Gedächtnis und seine Geräte mit. Die Daten liegen auf dem Spark unter /var/lib/speech-spark/users, je Profil ein eigener Ordner."
 },
 {
 "lang": "de",
@@ -2285,7 +2285,7 @@
 "file": "Sicherheit und Betrieb",
 "head": "Sicherheit",
 "title": "Sicherheit",
-"text": "stehen auch unter *Zustand → Braucht dich*. Von PINs merkt sich das Panel nur, ob sie kürzer als 6 Zeichen sind, beim Setzen und bei der Anmeldung. - Zweiter Anmeldeschritt (Authenticator-App): Für den Admin unter *Einstellungen → Sicherheit*, für Profile unter *Ich → Sicherheit*, wenn der Admin es unter *Funktionen* freigibt (aus bei neuen Installationen; jedes Profil entscheidet selbst). Einrichten per QR-Code, danach fragt die Anmeldung nach dem sechsstelligen Code; dazu 10 Wiederherstellungscodes für ein verlorenes Handy. „Diesem Browser vertrauen“ spart den Code am eigenen Gerät (seit V01.0.286 siehe unten); „Überall abmelden“ (Profil) bzw. „Allen Browsern das Vertrauen entziehen“ (Admin) beendet das. Solange der Admin ihn an hat, geht HTTP Basic nicht mehr, und Passwort ändern, Sicherung wiederherstellen, Geräteschlüssel anlegen oder umhängen und PINs ändern verlangen jedes Mal einen Code. Geräte mit Schlüssel (Lautsprecher, Siri, Pebble, Handy) brauchen keinen Code. Notausgang: Admin sudo rm /var/lib/speech-spark/state/mfa-admin.json; ein Profil setzt der Admin unter *Profile* zurück. - Seltener Code eingeben (seit V01.0.289, Plan plaene/zweiter-schritt-seltener.md): Drei Di"
+"text": "stehen auch unter *Zustand → Braucht dich*. Von PINs merkt sich das Panel nur, ob sie kürzer als 6 Zeichen sind, beim Setzen und bei der Anmeldung. - Zweiter Anmeldeschritt (Authenticator-App): Für den Admin unter *Einstellungen → Sicherheit*, für Profile unter *Ich → Sicherheit*, wenn der Admin es unter *Funktionen* freigibt (aus bei neuen Installationen; jedes Profil entscheidet selbst). Einrichten per QR-Code, danach fragt die Anmeldung nach dem sechsstelligen Code; dazu 10 Wiederherstellungscodes für ein verlorenes Handy. „Diesem Browser vertrauen“ spart den Code am eigenen Gerät (seit V01.0.286 siehe unten); „Überall abmelden“ (Profil) bzw. „Allen Browsern das Vertrauen entziehen“ (Admin) beendet das. Solange der Admin ihn an hat, geht HTTP Basic nicht mehr, und Passwort ändern, Sicherung wiederherstellen, Geräteschlüssel anlegen oder umhängen und PINs ändern verlangen jedes Mal einen Code. Geräte mit Schlüssel (Lautsprecher, Siri, Pebble, Handy) brauchen keinen Code. Notausgang: Admin sudo rm /var/lib/speech-spark/state/mfa-admin.json; ein Profil setzt der Admin unter *Personen und Geräte* zurück. - Seltener Code eingeben (seit V01.0.289, Plan plaene/zweiter-schritt-seltener."
 },
 {
 "lang": "de",
@@ -2613,7 +2613,7 @@
 "file": "Sicherheit und Betrieb",
 "head": "Logs",
 "title": "Telegram: nur ein Abruf",
-"text": "Telegram: nur ein Abruf (ab V01.0.214): Telegram gibt neue Nachrichten immer nur an einen Abruf (getUpdates) gleichzeitig. Bis V01.0.213 liefen die Startaufgaben des Panels doppelt (der https-Server führte sie ein zweites Mal aus), und die zwei Telegram-Abrufe warfen sich alle 15 s gegenseitig raus („Conflict: terminated by other getUpdates request“). Jetzt startet der https-Server ohne eigene Startaufgaben, und ein zweiter Abruf im selben Prozess wird nicht gestartet. Meldet Telegram trotzdem einen Konflikt, nutzt ein anderes Programm denselben Bot-Token: Der Spark wartet dann 5 s, 30 s, 1, 2, 5 und höchstens 10 min, schreibt nur die zweite und jede 20. Meldung ins Log (ohne Token) und zeigt unter Zustand und bei Einbinden → Telegram den Hinweis, den Token nur an einer Stelle zu nutzen oder bei @BotFather einen neuen zu holen. Ein einzelner Konflikt direkt nach einem Neustart ist normal (der alte Abruf läuft noch bis zu 25 s)."
+"text": "Telegram: nur ein Abruf (ab V01.0.214): Telegram gibt neue Nachrichten immer nur an einen Abruf (getUpdates) gleichzeitig. Bis V01.0.213 liefen die Startaufgaben des Panels doppelt (der https-Server führte sie ein zweites Mal aus), und die zwei Telegram-Abrufe warfen sich alle 15 s gegenseitig raus („Conflict: terminated by other getUpdates request“). Jetzt startet der https-Server ohne eigene Startaufgaben, und ein zweiter Abruf im selben Prozess wird nicht gestartet. Meldet Telegram trotzdem einen Konflikt, nutzt ein anderes Programm denselben Bot-Token: Der Spark wartet dann 5 s, 30 s, 1, 2, 5 und höchstens 10 min, schreibt nur die zweite und jede 20. Meldung ins Log (ohne Token) und zeigt unter Zustand und bei Funktionen → Telegram den Hinweis, den Token nur an einer Stelle zu nutzen oder bei @BotFather einen neuen zu holen. Ein einzelner Konflikt direkt nach einem Neustart ist normal (der alte Abruf läuft noch bis zu 25 s)."
 },
 {
 "lang": "de",
@@ -2821,7 +2821,7 @@
 "file": "Technik und Fehlersuche",
 "head": "Bausteine der Einstellungsseiten",
 "title": "Bausteine der Einstellungsseiten",
-"text": "- Kopf: <h2 class=\"pt\"> und darunter <div class=\"pintro\"> mit einem Satz, was die Seite regelt. - Abschnitt: <h3 class=\"sec\">Name <span>Hinweis</span></h3>. - Zeile: <div class=\"setrow\"><div class=\"lbl\"><b>Name</b><span>ein Satz</span></div>Bedienelement</div>, das Bedienelement rechts: Schalter .tgl (keine Häkchen label.chk), kurze Zahl input.num in .ctl mit .unit, Adresse input.wide, Auswahl select.wide; mehrere Felder in .ctl.full. Textfelder stehen nach der Zeile. - Hilfe: sichtbar höchstens ein Satz (≤ 140 Zeichen); der Rest in <div class=\"fh more\" hidden> direkt nach der Zeile, dazu im Satz <button class=\"mlink\" type=\"button\">Mehr</button>. - Erweitert: immer <details class=\"adv\"><summary>Erweitert <span class=\"mut\">· was drin ist</span></summary>. - Sofort-Aktionen (Passwort, Zweiter Schritt, Abmelden, Update, Sicherung): eigener Abschnitt „wirkt sofort, ohne Speichern“; alles andere sammelt die Speichern-Leiste .savebar der Seite. - Auf einen Blick: neue Seiten bekommen eine Zeile in glanceText() (admin.js), nur aus Daten, die das Panel schon hat. - Menü (seit V01.0.265): Zustand (Monitoring, Prüfen, Logs), Funktionen (Funktionen, Anleitungen), Personen und Geräte (Profile "
+"text": "- Kopf: <h2 class=\"pt\"> und darunter <div class=\"pintro\"> mit einem Satz, was die Seite regelt. - Abschnitt: <h3 class=\"sec\">Name <span>Hinweis</span></h3>. - Zeile: <div class=\"setrow\"><div class=\"lbl\"><b>Name</b><span>ein Satz</span></div>Bedienelement</div>, das Bedienelement rechts: Schalter .tgl (keine Häkchen label.chk), kurze Zahl input.num in .ctl mit .unit, Adresse input.wide, Auswahl select.wide; mehrere Felder in .ctl.full. Textfelder stehen nach der Zeile. - Hilfe: sichtbar höchstens ein Satz (≤ 140 Zeichen); der Rest in <div class=\"fh more\" hidden> direkt nach der Zeile, dazu im Satz <button class=\"mlink\" type=\"button\">Mehr</button>. - Erweitert: immer <details class=\"adv\"><summary>Erweitert <span class=\"mut\">· was drin ist</span></summary>. - Sofort-Aktionen (Passwort, Zweiter Schritt, Abmelden, Update, Sicherung): eigener Abschnitt „wirkt sofort, ohne Speichern“; alles andere sammelt die Speichern-Leiste .savebar der Seite. - Auf einen Blick: neue Seiten bekommen eine Zeile in glanceText() (admin.js), nur aus Daten, die das Panel schon hat. - Menü (seit V01.0.265): Assistent und Ich für einen selbst; dann Zustand (Monitoring, Prüfen, Logs, Live), Funktionen (mit Anle"
 },
 {
 "lang": "de",
@@ -2829,7 +2829,7 @@
 "file": "Technik und Fehlersuche",
 "head": "Bausteine der Einstellungsseiten",
 "title": "Bausteine der Einstellungsseiten",
-"text": "und Geräte, Apps und Schnittstellen), Einstellungen. Neue Seiten unter Zustand (z. B. ein Prüfen-Knopf oder ein Logs-Reiter) landen als Abschnitt in #test bzw. als Reiter in #logs; eine neue Unterseite bekommt eine Zeile in GROUPS (base.js) mit einem Satz in SUBDESC. Funktionen ist die Seite pane-feat des Einstellungsformulars, gezeigt ohne Einstellungsmenü (goSec('feat'), Klasse featmode); goCfg('feat') führt dorthin, goSec('sys') nach Einstellungen → Update und Sicherung. - Suche (find.js, Strg K): findet von selbst jede Seite aus GROUPS und #cfgnav, jede Zeile der Einstellungen (.setrow .lbl>b, h3.sec, summary), jede Ich-Seite (ME_ITEMS), Überschriften und Knöpfe unter Prüfen, Reiter unter Logs und jede Anleitung. Neue Teile brauchen dafür nichts Eigenes, wenn sie diese Bausteine benutzen. - Rahmen: Was unter einer Zeile weitergeht (Passwort ändern, Zweiter Anmeldeschritt), bekommt class=\"rowtail\"; die Linie steht dann unter dem Inhalt, nicht zwischen Zeile und Inhalt. html{scrollbar-gutter:stable} hält den Platz der Scrollleiste frei, damit kurze Seiten nicht seitlich springen (V01.0.254). - Knöpfe ohne Inline-Code (seit V01.0.286, strenge CSP): nie onclick=\"…\" oder <script> in"
+"text": "itungen und Wer darf was), Personen und Geräte (mit Apps und Schnittstellen), Einstellungen. Neue Seiten unter Zustand (z. B. ein Prüfen-Knopf oder ein Logs-Reiter) landen als Abschnitt in #test bzw. als Reiter in #logs; eine neue Unterseite bekommt eine Zeile in GROUPS (base.js) mit einem Satz in SUBDESC. Funktionen ist die Seite pane-feat des Einstellungsformulars, gezeigt ohne Einstellungsmenü (goSec('feat'), Klasse featmode); goCfg('feat') führt dorthin, goSec('sys') nach Einstellungen → Update und Sicherung. - Suche (find.js, Strg K): findet von selbst jede Seite aus GROUPS und #cfgnav, jede Zeile der Einstellungen (.setrow .lbl>b, h3.sec, summary), jede Ich-Seite (ME_ITEMS), Überschriften und Knöpfe unter Prüfen, Reiter unter Logs und jede Anleitung. Neue Teile brauchen dafür nichts Eigenes, wenn sie diese Bausteine benutzen. - Rahmen: Was unter einer Zeile weitergeht (Passwort ändern, Zweiter Anmeldeschritt), bekommt class=\"rowtail\"; die Linie steht dann unter dem Inhalt, nicht zwischen Zeile und Inhalt. html{scrollbar-gutter:stable} hält den Platz der Scrollleiste frei, damit kurze Seiten nicht seitlich springen (V01.0.254). - Knöpfe ohne Inline-Code (seit V01.0.286, streng"
 },
 {
 "lang": "de",
@@ -2837,7 +2837,15 @@
 "file": "Technik und Fehlersuche",
 "head": "Bausteine der Einstellungsseiten",
 "title": "Bausteine der Einstellungsseiten",
-"text": " der Seite. Statische Knöpfe bekommen eine ID und $('x').onclick=…; Knöpfe in erzeugtem HTML ${onAttr('name', arg1, …)} und eine Zeile ON.name=(button, arg1, …)=>… im selben Skript (Argumente als JSON, mit esc)."
+"text": "e CSP): nie onclick=\"…\" oder <script> in der Seite. Statische Knöpfe bekommen eine ID und $('x').onclick=…; Knöpfe in erzeugtem HTML ${onAttr('name', arg1, …)} und eine Zeile ON.name=(button, arg1, …)=>… im selben Skript (Argumente als JSON, mit esc)."
+},
+{
+"lang": "de",
+"src": "technik",
+"file": "Technik und Fehlersuche",
+"head": "Bausteine der Einstellungsseiten",
+"title": "Bausteine der Einstellungsseiten",
+"text": "- Englisch, Fehler, „?“, Namen (seit V01.0.408, Prüfung vom 11.10.2026, B1–B8): Jeder Text in index.html steht in EN (i18n.js), auch title und aria-label; ein Satz mit Tags darin bekommt data-tr und steht als Ganzes (inneres HTML) in EN. Fehler zeigt api() als Satz (errSay in base.js): eine 422-Liste nennt die Felder, kurze englische Antworten werden Sätze, deutsche Sätze des Panels kommen aus EN; die Rohwörter für Prüfungen stehen in e.detail (errRaw(e)). Ein „?“ steht nur an Zeilen, die die Spark-Hilfe kennt (/api/hilfe/ids); Zeilen aus Skripten mit eigenem Feld stehen in hilfe.JS_ROWS. Felder einer Zeile ohne eigenes Label bekommen den Zeilentitel als aria-label (rowLabels). tests/test_bedienung_hilfe.py prüft das."
 },
 {
 "lang": "de",
@@ -2941,7 +2949,7 @@
 "file": "Android app \"Spark\" (APK, no store)",
 "head": "Setup",
 "title": "Setup",
-"text": "1. Signing key (once, admin): on the Spark (or a Mac) run bash /opt/speech-spark/src/tools/android-schluessel.sh in a terminal (no sudo, needs only openssl). It creates ~/spark-android.p12 and ~/spark-android.pass and shows two values. In the GitHub repo under Settings → Secrets and variables → Actions → \"New repository secret\" add both: ANDROID_KEYSTORE_PASSWORD and ANDROID_KEYSTORE (the long line). Keep both files safe: later versions only install over the old one with the same key. 2. Build the app: Actions → \"Android app\" → Run workflow. It appears as release android-v1.0.0 with spark.apk, spark.apk.sha256 and android.json. 3. Spark: Settings → Features → Android app on, save, \"Fetch the app now\" (otherwise it fetches once a day). It checks size and SHA-256 and keeps it under STATE/android. 4. Profile: Me → Android app → \"Android app for me\" on, \"Get a download link\", scan the QR code with the Android phone's camera, install the APK (the phone asks once whether the browser may install apps). The link is valid for 30 minutes. 5. In the app: enter the Spark's address (https with a real certificate, e.g. the reverse proxy), sign in with name and PIN like in the browser, allow noti"
+"text": "1. Signing key (once, admin): on the Spark (or a Mac) run bash /opt/speech-spark/src/tools/android-schluessel.sh in a terminal (no sudo, needs only openssl). It creates ~/spark-android.p12 and ~/spark-android.pass and shows two values. In the GitHub repo under Settings → Secrets and variables → Actions → \"New repository secret\" add both: ANDROID_KEYSTORE_PASSWORD and ANDROID_KEYSTORE (the long line). Keep both files safe: later versions only install over the old one with the same key. 2. Build the app: Actions → \"Android app\" → Run workflow. It appears as release android-v1.0.0 with spark.apk, spark.apk.sha256 and android.json. 3. Spark: Features → Android app on, save, \"Fetch the app now\" (otherwise it fetches once a day). It checks size and SHA-256 and keeps it under STATE/android. 4. Profile: Me → Android app → \"Android app for me\" on, \"Get a download link\", scan the QR code with the Android phone's camera, install the APK (the phone asks once whether the browser may install apps). The link is valid for 30 minutes. 5. In the app: enter the Spark's address (https with a real certificate, e.g. the reverse proxy), sign in with name and PIN like in the browser, allow notifications a"
 },
 {
 "lang": "en",
@@ -2949,7 +2957,7 @@
 "file": "Android app \"Spark\" (APK, no store)",
 "head": "Setup",
 "title": "Setup",
-"text": "fications and the microphone. For reliable notes turn off battery optimisation for Spark."
+"text": "nd the microphone. For reliable notes turn off battery optimisation for Spark."
 },
 {
 "lang": "en",
@@ -3053,7 +3061,7 @@
 "file": "APIs and integration",
 "head": "Streaming speech",
 "title": "Streaming speech",
-"text": "In the panel under Zustand → Prüfen (Status → Checks), \"gestreamt\" (streamed) plays audio while it is generated and shows the time to first audio."
+"text": "In the panel under Status → Checks, \"streamed\" plays audio while it is generated and shows the time to first audio."
 },
 {
 "lang": "en",
@@ -3069,7 +3077,7 @@
 "file": "APIs and integration",
 "head": "Open WebUI",
 "title": "Open WebUI",
-"text": "If Open WebUI runs in Docker on the same Spark, use the LAN IP or host.docker.internal instead of SPARK (container started with --add-host=host.docker.internal:host-gateway). The panel shows these values ready to copy in the Einbinden tab."
+"text": "If Open WebUI runs in Docker on the same Spark, use the LAN IP or host.docker.internal instead of SPARK (container started with --add-host=host.docker.internal:host-gateway). The panel shows these values ready to copy under People and devices → Apps and interfaces."
 },
 {
 "lang": "en",
@@ -3077,7 +3085,7 @@
 "file": "APIs and integration",
 "head": "AI agents: Hermes Agent and OpenClaw",
 "title": "AI agents: Hermes Agent and OpenClaw",
-"text": "An agent such as Hermes Agent (Nous Research) or OpenClaw can use the Spark's speech recognition and speech output. The agent runs on another computer and only gets audio and text to read out, no access to the assistant's profiles, memory or tools. The panel shows ready-made snippets under Integrate."
+"text": "An agent such as Hermes Agent (Nous Research) or OpenClaw can use the Spark's speech recognition and speech output. The agent runs on another computer and only gets audio and text to read out, no access to the assistant's profiles, memory or tools. The panel shows ready-made snippets under People and devices → Apps and interfaces."
 },
 {
 "lang": "en",
@@ -3197,7 +3205,7 @@
 "file": "APIs and integration",
 "head": "\"Hey Siri, ask Spark\"",
 "title": "\"Hey Siri, ask Spark\"",
-"text": "An iPhone shortcut sends the dictated question to POST /api/siri/ask (header X-Speech-Device with a device key of your profile, body {\"text\": \"...\"}) and lets Siri speak the answer field. Works without the page open, also on Apple Watch, AirPods and CarPlay; follow-ups within 10 minutes keep the context, and each day's questions are kept as a conversation of the profile. Step by step under Einbinden → Guides."
+"text": "An iPhone shortcut sends the dictated question to POST /api/siri/ask (header X-Speech-Device with a device key of your profile, body {\"text\": \"...\"}) and lets Siri speak the answer field. Works without the page open, also on Apple Watch, AirPods and CarPlay; follow-ups within 10 minutes keep the context, and each day's questions are kept as a conversation of the profile. Step by step under People and devices → Apps and interfaces and in Features → Guides."
 },
 {
 "lang": "en",
@@ -3237,7 +3245,7 @@
 "file": "APIs and integration",
 "head": "Pebble watch",
 "title": "Pebble watch",
-"text": "1. Pairing with a setup code (new in V01.0.230, off): the admin switches on *Features → Pair the Pebble watch*, the profile \"Pebble watch for me\" under *Me → Pebble watch*, then \"Pair a Pebble\" and copy the line (valid 10 minutes, once). The watch gets its own key, which only reaches /api/watch/ and is locked at once by either switch. Without pairing it still works: add a device \"Pebble\" under Profiles and copy its key. 2. On the paired phone, download http://SPARK:31080/pebble/speech-spark.pbw and open it with the Pebble app. Easier: *Me → Pebble watch* shows a QR code for it to scan with the phone camera. When the Spark has a newer watch app, \"Neue Uhr-App\" shows under an answer at most once a day; reinstalling keeps the pairing. 3. In the Pebble app, open the settings of \"Spark\": paste the setup code, or enter the Spark address (http://SPARK:31080) and device key. Settings and \"Start App\" stay grey while the Pebble app does not see the watch as connected (tab Devices). 4. On the watch: SELECT asks (dictation through the phone), SELECT again stops the speech, long SELECT starts a new conversation. A small face at the top shows whether Spark listens, thinks or speaks; its mouth fo"
+"text": "1. Pairing with a setup code (new in V01.0.230, off): the admin switches on *Features → Pair the Pebble watch*, the profile \"Pebble watch for me\" under *Me → Pebble watch*, then \"Pair a Pebble\" and copy the line (valid 10 minutes, once). The watch gets its own key, which only reaches /api/watch/ and is locked at once by either switch. Without pairing it still works: add a device \"Pebble\" under People and devices and copy its key. 2. On the paired phone, download http://SPARK:31080/pebble/speech-spark.pbw and open it with the Pebble app. Easier: *Me → Pebble watch* shows a QR code for it to scan with the phone camera. When the Spark has a newer watch app, \"Neue Uhr-App\" shows under an answer at most once a day; reinstalling keeps the pairing. 3. In the Pebble app, open the settings of \"Spark\": paste the setup code, or enter the Spark address (http://SPARK:31080) and device key. Settings and \"Start App\" stay grey while the Pebble app does not see the watch as connected (tab Devices). 4. On the watch: SELECT asks (dictation through the phone), SELECT again stops the speech, long SELECT starts a new conversation. A small face at the top shows whether Spark listens, thinks or speaks; it"
 },
 {
 "lang": "en",
@@ -3245,7 +3253,7 @@
 "file": "APIs and integration",
 "head": "Pebble watch",
 "title": "Pebble watch",
-"text": "llows the speech. The watch setting Settings → Sounds & Haptics → Volume caps how loud the app can get."
+"text": "s mouth follows the speech. The watch setting Settings → Sounds & Haptics → Volume caps how loud the app can get."
 },
 {
 "lang": "en",
@@ -3317,7 +3325,7 @@
 "file": "Assistant and panel",
 "head": "Voice chat",
 "title": "Voice chat",
-"text": "The Gespräch tab needs the microphone, and browsers only allow it over https. The panel therefore also listens on https://SPARK:31443 with a self-signed certificate; the browser warns once. The LLM connection is under Settings → Language model (default: qwen38 at http://127.0.0.1:30001/v1). Since V01.0.292 \"Model\" there offers a choice of the models the server at this address reports (/v1/models, admin only, kept 60 seconds, \"Reload\" asks at once); \"Automatic\" takes the first, \"Type another …\" opens the text field. If the list cannot be read, the text field stays with the reason above it. The installer takes the qwen38 API key from ~/.config/qwen38/api-key of the user who runs sudo ./install.sh. Thinking is off for the chat so the answer starts right away. An animated assistant face shows whether it is listening, thinking or speaking; its mouth follows the voice. The same face sits in the bottom right corner of every tab, so you can talk from anywhere in the panel. Since V01.0.154 the admin picks under Settings → Defaults → \"Gesicht des Assistenten\" between *Robot* (as before, the default) and *Comic* (a caricature with spiky hair and a short mustache, since V01.0.187 only above th"
+"text": "The Assistant page needs the microphone, and browsers only allow it over https. The panel therefore also listens on https://SPARK:31443 with a self-signed certificate; the browser warns once. The LLM connection is under Settings → Language model (default: qwen38 at http://127.0.0.1:30001/v1). Since V01.0.292 \"Model\" there offers a choice of the models the server at this address reports (/v1/models, admin only, kept 60 seconds, \"Reload\" asks at once); \"Automatic\" takes the first, \"Type another …\" opens the text field. If the list cannot be read, the text field stays with the reason above it. The installer takes the qwen38 API key from ~/.config/qwen38/api-key of the user who runs sudo ./install.sh. Thinking is off for the chat so the answer starts right away. An animated assistant face shows whether it is listening, thinking or speaking; its mouth follows the voice. The same face sits in the bottom right corner of every tab, so you can talk from anywhere in the panel. Since V01.0.154 the admin picks under Settings → Defaults → \"Gesicht des Assistenten\" between *Robot* (as before, the default) and *Comic* (a caricature with spiky hair and a short mustache, since V01.0.187 only above "
 },
 {
 "lang": "en",
@@ -3325,7 +3333,7 @@
 "file": "Assistant and panel",
 "head": "Voice chat",
 "title": "Voice chat",
-"text": "e upper lip). The comic face looks around, blinks with heavy lids, raises its brows, tilts its head, moves mouth and mustache with the voice and shows the state with a coloured ring: grey idle, blue listening, yellow thinking, green speaking, red error. The choice applies to everybody, the iPhone app included; more faces can be added in static/js/face.js. Since V01.0.241 the small picture before each answer in the history shows the chosen face as well. Since V01.0.294 there is a switch \"Gesicht zeigt, was es tut\" next to it (off): the face then shows a small sign beside the head for what the answer is doing, taken only from the panel's events, never from the model's text: a magnifier for web, document or history searches, a calendar sheet for calendar and briefing, a letter for mail, a light bulb for Home Assistant, a note pad for memory and reminders, thought bubbles while thinking. After an action was done (device switched, something remembered, reminder set) it is pleased for a moment and winks, on an error it looks puzzled with a question mark, and after 5 minutes without conversation or use it falls asleep with \"zzz\"; a tap, a key or the mouse over the face wake it."
+"text": "the upper lip). The comic face looks around, blinks with heavy lids, raises its brows, tilts its head, moves mouth and mustache with the voice and shows the state with a coloured ring: grey idle, blue listening, yellow thinking, green speaking, red error. The choice applies to everybody, the iPhone app included; more faces can be added in static/js/face.js. Since V01.0.241 the small picture before each answer in the history shows the chosen face as well. Since V01.0.294 there is a switch \"Gesicht zeigt, was es tut\" next to it (off): the face then shows a small sign beside the head for what the answer is doing, taken only from the panel's events, never from the model's text: a magnifier for web, document or history searches, a calendar sheet for calendar and briefing, a letter for mail, a light bulb for Home Assistant, a note pad for memory and reminders, thought bubbles while thinking. After an action was done (device switched, something remembered, reminder set) it is pleased for a moment and winks, on an error it looks puzzled with a question mark, and after 5 minutes without conversation or use it falls asleep with \"zzz\"; a tap, a key or the mouse over the face wake it."
 },
 {
 "lang": "en",
@@ -3341,7 +3349,7 @@
 "file": "Assistant and panel",
 "head": "Voice chat",
 "title": "On the phone",
-"text": "On the phone: below 760 px the page opens with the big face (tap = talk) and two buttons below it: \"Settings\" opens the \"Ich\" window (\"Hey Spark\" at the top), \"History\" the messenger view. That view fits the screen exactly: a slim top bar with an arrow back to the face, a small face, state, profile and menu, the history in the middle, and at the bottom a text field and round mic button (a stop button during the answer). The browser remembers which of the two views was open last. The menu (☰) holds new conversation, earlier conversations, conversation settings, language, light/dark and, for admins, every tab."
+"text": "On the phone: below 760 px the page opens with the big face (tap = talk) and two buttons below it: \"Settings\" opens the \"Me\" window (\"Hey Spark\" at the top), \"History\" the messenger view. That view fits the screen exactly: a slim top bar with an arrow back to the face, a small face, state, profile and menu, the history in the middle, and at the bottom a text field and round mic button (a stop button during the answer). The browser remembers which of the two views was open last. The menu (☰) holds new conversation, earlier conversations, conversation settings, language, light/dark and, for admins, every tab."
 },
 {
 "lang": "en",
@@ -3389,7 +3397,7 @@
 "file": "Assistant and panel",
 "head": "Voice chat",
 "title": "Guides",
-"text": "Guides: every service that can be switched on has an openable guide (what it does, what you need, setup, example phrases, what leaves the house, switching off, troubleshooting): next to its switch under Features, at the top of its page in the \"Ich\" window and collected under Features → Guides. Services are sorted into the same groups everywhere: Conversation, My day, Mail and documents, Home, On the go and devices, Security and access. The texts live in app/panel/static/js/guides.js; a self-test checks that no switch is left without a guide and group."
+"text": "Guides: every service that can be switched on has an openable guide (what it does, what you need, setup, example phrases, what leaves the house, switching off, troubleshooting): next to its switch under Features, at the top of its page in the \"Me\" window and collected under Features → Guides. Services are sorted into the same groups everywhere: Conversation, My day, Mail and documents, Home, On the go and devices, Security and access. The texts live in app/panel/static/js/guides.js; a self-test checks that no switch is left without a guide and group."
 },
 {
 "lang": "en",
@@ -3397,7 +3405,7 @@
 "file": "Assistant and panel",
 "head": "Voice chat",
 "title": "Weather, contacts, parcels (V01.0.93)",
-"text": "Weather, contacts, parcels (V01.0.93): three small services, each off by default, allowed by the admin under Features and switched on by each profile itself in the \"Ich\" window; never guests. *Weather* comes straight from Open-Meteo (no key, only the place's coordinates leave, own address configurable); the Spark builds fixed sentences from the numbers, also for the daily briefing and the proactive weather note. *Contacts* reads an address book over CardDAV (iCloud: https://contacts.icloud.com with an app-specific password, Nextcloud, others) once a day and keeps it encrypted: phone numbers, e-mail addresses, birthdays (in the briefing and as a notice), names instead of addresses in mail. Contact text counts as outside text. *Parcels* recognises shipping mails of DHL, Hermes, DPD, GLS, UPS and Amazon in the profile's own mailbox (14 days) and says what comes today, is on its way, waits for pick-up or was delivered; no carrier is asked, parcel lines count as mail text."
+"text": "Weather, contacts, parcels (V01.0.93): three small services, each off by default, allowed by the admin under Features and switched on by each profile itself in the \"Me\" window; never guests. *Weather* comes straight from Open-Meteo (no key, only the place's coordinates leave, own address configurable); the Spark builds fixed sentences from the numbers, also for the daily briefing and the proactive weather note. *Contacts* reads an address book over CardDAV (iCloud: https://contacts.icloud.com with an app-specific password, Nextcloud, others) once a day and keeps it encrypted: phone numbers, e-mail addresses, birthdays (in the briefing and as a notice), names instead of addresses in mail. Contact text counts as outside text. *Parcels* recognises shipping mails of DHL, Hermes, DPD, GLS, UPS and Amazon in the profile's own mailbox (14 days) and says what comes today, is on its way, waits for pick-up or was delivered; no carrier is asked, parcel lines count as mail text."
 },
 {
 "lang": "en",
@@ -3405,7 +3413,7 @@
 "file": "Assistant and panel",
 "head": "Voice chat",
 "title": "Telegram (V01.0.96)",
-"text": "Telegram (V01.0.96): your own bot from @BotFather (guide in the panel). The admin switches it on under Features and enters the token (stored encrypted); the Spark asks Telegram for new messages itself, no open port needed. Each profile links its Telegram in the \"Ich\" window with a one-time code (10 minutes) and writes or sends voice messages (speech recognition on the Spark). Strangers get one fixed sentence, groups nothing. Per profile, all off at first: answers also as voice messages, notifications over Telegram, personal data (calendar, mail, contacts, parcels, documents; also appointments and mail in notifications) and switching the smart home, only with the code word. Commands: /neu, /stimme, /trennen."
+"text": "Telegram (V01.0.96): your own bot from @BotFather (guide in the panel). The admin switches it on under Features and enters the token (stored encrypted); the Spark asks Telegram for new messages itself, no open port needed. Each profile links its Telegram in the \"Me\" window with a one-time code (10 minutes) and writes or sends voice messages (speech recognition on the Spark). Strangers get one fixed sentence, groups nothing. Per profile, all off at first: answers also as voice messages, notifications over Telegram, personal data (calendar, mail, contacts, parcels, documents; also appointments and mail in notifications) and switching the smart home, only with the code word. Commands: /neu, /stimme, /trennen."
 },
 {
 "lang": "en",
@@ -3413,7 +3421,7 @@
 "file": "Assistant and panel",
 "head": "Voice chat",
 "title": "Own speakers (ESP32, V01.0.99, without display since V01.0.104)",
-"text": "Own speakers (ESP32, V01.0.99, without display since V01.0.104): small ESP32-S3 boards (16 MB flash, PSRAM, INMP441 microphone, MAX98357A amplifier, e.g. the XiaoZhi breadboard boards) become a voice assistant in the room. Firmware: the open XiaoZhi firmware at a fixed version, German, wake word \"Jarvis\", without a built-in cloud address; a GitHub Action (.github/workflows/firmware.yml, settings in firmware/xiaozhi.json) builds it as release fw-<version>. The Spark fetches the newest one daily (or on a button), checks every file against manifest.json and keeps it with the previous one. Set up in the \"Ich\" window → Speakers: over USB from Chrome or Edge (Web Serial, esptool-js 0.5.7 ships with the panel) the browser writes firmware and a settings block (Wi-Fi, Spark address, device key); the Wi-Fi password never reaches the Spark. Without a PC a board shows or says a 6-digit code. Each speaker is a device key of its profile (voice, memory, smart home with code word, room). Updates arrive over Wi-Fi when the board starts (per device \"auto\" can be switched off) or over USB. Admin switch chat.esp32 and profile switch, both off at first; the reverse proxy must pass WebSockets. Board var"
+"text": "Own speakers (ESP32, V01.0.99, without display since V01.0.104): small ESP32-S3 boards (16 MB flash, PSRAM, INMP441 microphone, MAX98357A amplifier, e.g. the XiaoZhi breadboard boards) become a voice assistant in the room. Firmware: the open XiaoZhi firmware at a fixed version, German, wake word \"Jarvis\", without a built-in cloud address; a GitHub Action (.github/workflows/firmware.yml, settings in firmware/xiaozhi.json) builds it as release fw-<version>. The Spark fetches the newest one daily (or on a button), checks every file against manifest.json and keeps it with the previous one. Set up in the \"Me\" window → Speakers: over USB from Chrome or Edge (Web Serial, esptool-js 0.5.7 ships with the panel) the browser writes firmware and a settings block (Wi-Fi, Spark address, device key); the Wi-Fi password never reaches the Spark. Without a PC a board shows or says a 6-digit code. Each speaker is a device key of its profile (voice, memory, smart home with code word, room). Updates arrive over Wi-Fi when the board starts (per device \"auto\" can be switched off) or over USB. Admin switch chat.esp32 and profile switch, both off at first; the reverse proxy must pass WebSockets. Board vari"
 },
 {
 "lang": "en",
@@ -3421,7 +3429,7 @@
 "file": "Assistant and panel",
 "head": "Voice chat",
 "title": "Own speakers (ESP32, V01.0.99, without display since V01.0.104)",
-"text": "iants: no display, OLED 128×32, OLED 128×64, colour display, since V01.0.133 the Waveshare ESP32-S3-AUDIO-Board (round board with ES8311 audio chip and two microphones; display and camera are optional there). When a board is rewritten over USB with another variant, updates follow the board type it reports at start; the no-display variant never touches the display pins and, since firmware 2.5.1.3 (V01.0.132), no longer loads font and emoji either, which made it crash right after joining the Wi-Fi. Start check only by POST of at most 16 KB, at most 3 open codes per address, firmware only from github.com downloads with a size limit."
+"text": "ants: no display, OLED 128×32, OLED 128×64, colour display, since V01.0.133 the Waveshare ESP32-S3-AUDIO-Board (round board with ES8311 audio chip and two microphones; display and camera are optional there). When a board is rewritten over USB with another variant, updates follow the board type it reports at start; the no-display variant never touches the display pins and, since firmware 2.5.1.3 (V01.0.132), no longer loads font and emoji either, which made it crash right after joining the Wi-Fi. Start check only by POST of at most 16 KB, at most 3 open codes per address, firmware only from github.com downloads with a size limit."
 },
 {
 "lang": "en",
@@ -3612,16 +3620,16 @@
 "src": "assistant",
 "file": "Assistant and panel",
 "head": "Voice chat",
-"title": "The \"Ich\" (me) window",
-"text": "The \"Ich\" (me) window: since V01.0.125 in the same groups as the Features page (conversation, my data, my day, mail and contacts, home, on the go and devices, access); on a computer it starts with an *Overview* (the state of each page, e.g. \"2 calendars connected\"), on a phone the state sits right below each entry of the list. Notifications and the daily briefing have their own page *Notifications*. the button with your name (or \"Guest\") at the top of the history and the settings icon below the face open the same window. On the left is a short list: Conversation and, logged in, Memory, Log and Security, plus, depending on the features switched on, Documents, Calendar, E-mail, Smart home, Voice, Von selbst (speaking up by itself) and Raum-Modus (room mode); as a guest it shows \"Sign in\". Conversation holds listening (stop on silence, live transcript, barge-in and its sensitivity), answer (voice, profiles only; speaking rate, answer length) and display. Guests always hear the default voice. Logged in, the settings live in the profile on the Spark and apply on every device, including speakers with a device key; as a guest only in the browser. \"Hey Spark\" is set per device because it k"
+"title": "The \"Me\" window",
+"text": "The \"Me\" window: since V01.0.125 in the same groups as the Features page (conversation, my data, my day, mail and contacts, home, on the go and devices, access); on a computer it starts with an *Overview* (the state of each page, e.g. \"2 calendars connected\"), on a phone the state sits right below each entry of the list. Notifications and the daily briefing have their own page *Notifications*. the button with your name (or \"Guest\") at the top of the history and the settings icon below the face open the same window. On the left is a short list: Conversation and, logged in, Memory, Log and Security, plus, depending on the features switched on, Documents, Calendar, E-mail, Smart home, Voice, Von selbst (speaking up by itself) and Raum-Modus (room mode); as a guest it shows \"Sign in\". Conversation holds listening (stop on silence, live transcript, barge-in and its sensitivity), answer (voice, profiles only; speaking rate, answer length) and display. Guests always hear the default voice. Logged in, the settings live in the profile on the Spark and apply on every device, including speakers with a device key; as a guest only in the browser. \"Hey Spark\" is set per device because it keeps t"
 },
 {
 "lang": "en",
 "src": "assistant",
 "file": "Assistant and panel",
 "head": "Voice chat",
-"title": "The \"Ich\" (me) window",
-"text": "eeps the microphone and screen awake. Defaults for guests and new profiles are under Settings → Defaults. The speaking rate keeps the pitch; it also works for other apps that send speed to the TTS API (vllm-omni backend)."
+"title": "The \"Me\" window",
+"text": "he microphone and screen awake. Defaults for guests and new profiles are under Settings → Defaults. The speaking rate keeps the pitch; it also works for other apps that send speed to the TTS API (vllm-omni backend)."
 },
 {
 "lang": "en",
@@ -3629,7 +3637,7 @@
 "file": "Assistant and panel",
 "head": "Voice chat",
 "title": "Own documents",
-"text": "Own documents: logged-in profiles upload their own files in the \"Ich\" window (PDF, Word, Excel, PowerPoint, OpenDocument, text, Markdown, HTML, CSV, e-mail as .eml; up to 20 MB each, at most 200 per profile). When asked about them, the assistant searches them and names the document with its page below the answer. Guests cannot upload anything, and no profile sees another's documents. Can be turned off under Features."
+"text": "Own documents: logged-in profiles upload their own files in the \"Me\" window (PDF, Word, Excel, PowerPoint, OpenDocument, text, Markdown, HTML, CSV, e-mail as .eml; up to 20 MB each, at most 200 per profile). When asked about them, the assistant searches them and names the document with its page below the answer. Guests cannot upload anything, and no profile sees another's documents. Can be turned off under Features."
 },
 {
 "lang": "en",
@@ -3661,7 +3669,7 @@
 "file": "Assistant and panel",
 "head": "Voice chat",
 "title": "Document status (V01.0.228)",
-"text": "Document status (V01.0.228): under Zustand → Monitoring the card “Own documents” appears once the admin switches on “Read pictures and scans” or “Meaning search” (GET /api/admin/wissen, admin login only). It shows the meaning model's state (off, starting, running with its memory in MiB, waiting for 8.5 GiB free memory, error with reason), how many pieces already have a meaning vector, how many pages still wait to be read, how many were read today and when last. These are sums over all profiles, never profile or document names or contents."
+"text": "Document status (V01.0.228): under Status → Monitoring the card “Own documents” appears once the admin switches on “Read pictures and scans” or “Meaning search” (GET /api/admin/wissen, admin login only). It shows the meaning model's state (off, starting, running with its memory in MiB, waiting for 8.5 GiB free memory, error with reason), how many pieces already have a meaning vector, how many pages still wait to be read, how many were read today and when last. These are sums over all profiles, never profile or document names or contents."
 },
 {
 "lang": "en",
@@ -3669,7 +3677,7 @@
 "file": "Assistant and panel",
 "head": "Voice chat",
 "title": "Progress (V01.0.232)",
-"text": "Progress (V01.0.232): under Ich → Dokumente every document still being read shows \"page 3 of 12 read\" with a bar and why it is not moving right now: \"reading page 4 now\", \"waits for a quiet minute\" (someone talks to the assistant), \"daily limit reached, continues tomorrow\" or \"Read pictures and scans is off\". With meaning search it then shows \"meaning 40 of 120\" (and whether the model waits for free memory). While something runs and the list is open, it refreshes every 10 seconds. Everyone sees only their own documents. The iPhone app shows \"page x of y read\"."
+"text": "Progress (V01.0.232): under Me → Documents every document still being read shows \"page 3 of 12 read\" with a bar and why it is not moving right now: \"reading page 4 now\", \"waits for a quiet minute\" (someone talks to the assistant), \"daily limit reached, continues tomorrow\" or \"Read pictures and scans is off\". With meaning search it then shows \"meaning 40 of 120\" (and whether the model waits for free memory). While something runs and the list is open, it refreshes every 10 seconds. Everyone sees only their own documents. The iPhone app shows \"page x of y read\"."
 },
 {
 "lang": "en",
@@ -3677,7 +3685,7 @@
 "file": "Assistant and panel",
 "head": "Voice chat",
 "title": "Shared documents (V01.0.236)",
-"text": "Shared documents (V01.0.236): with the admin switch *Funktionen → Eigene Dokumente → Gemeinsame Dokumente* and the profile switch *Ich → Dokumente → Gemeinsame Dokumente* (both off by default) every finished document gets \"For everyone\". A ticked document stays in its owner's database and is not read again; every other profile with the switch on finds it in its search (source \"…, geteilt von name\") and sees it under \"Shared for everyone by others\" with \"View\". Only the owner takes the sharing back, changes or deletes the document; the admin sees under Zustand → Monitoring what is shared and can take it back. Guests, Telegram without \"personal\" and voices a shared speaker does not recognize as its owner get no shared documents. Their text stays outside text like any document. Agents still search only their own documents."
+"text": "Shared documents (V01.0.236): with the admin switch *Features → Own documents → Shared documents* and the profile switch *Me → Documents → Gemeinsame Dokumente* (both off by default) every finished document gets \"For everyone\". A ticked document stays in its owner's database and is not read again; every other profile with the switch on finds it in its search (source \"…, geteilt von name\") and sees it under \"Shared for everyone by others\" with \"View\". Only the owner takes the sharing back, changes or deletes the document; the admin sees under Status → Monitoring what is shared and can take it back. Guests, Telegram without \"personal\" and voices a shared speaker does not recognize as its owner get no shared documents. Their text stays outside text like any document. Agents still search only their own documents."
 },
 {
 "lang": "en",
@@ -3685,7 +3693,7 @@
 "file": "Assistant and panel",
 "head": "Voice chat",
 "title": "Complete scans and reading again (V01.0.238)",
-"text": "Complete scans and reading again (V01.0.238): scanned PDF pages (less than 40 characters of text) are rendered as whole pages with pypdfium2 (fixed version 4.30.0, about 30 MB of memory for a moment per page) and handed to the language model. Up to V01.0.236 the Spark only took the biggest embedded picture; scanners storing a page as strips or JBIG2 lost pages that way. Up to 300 scanned pages per document are read (30 before), still at most 100 per profile and day; the rest follows on the next days, up to 600 pages may wait per profile. The document names any limit that applies (\"only the first 300 of 412 pages without text\", \"2 pages without a readable picture skipped\", \"pages without text not read (Read pictures and scans is off)\"). \"Read again\" under Ich → Dokumente reads a document once more from its kept original (owner only, only with \"Keep originals\"); place, \"For everyone\" and \"The assistant searches it\" stay. A document attached to a question in the iPhone app still takes along only its first 20,000 characters; the answer then says it is only the beginning and that under \"My documents\" the whole text is searched."
+"text": "Complete scans and reading again (V01.0.238): scanned PDF pages (less than 40 characters of text) are rendered as whole pages with pypdfium2 (fixed version 4.30.0, about 30 MB of memory for a moment per page) and handed to the language model. Up to V01.0.236 the Spark only took the biggest embedded picture; scanners storing a page as strips or JBIG2 lost pages that way. Up to 300 scanned pages per document are read (30 before), still at most 100 per profile and day; the rest follows on the next days, up to 600 pages may wait per profile. The document names any limit that applies (\"only the first 300 of 412 pages without text\", \"2 pages without a readable picture skipped\", \"pages without text not read (Read pictures and scans is off)\"). \"Read again\" under Me → Documents reads a document once more from its kept original (owner only, only with \"Keep originals\"); place, \"For everyone\" and \"The assistant searches it\" stay. A document attached to a question in the iPhone app still takes along only its first 20,000 characters; the answer then says it is only the beginning and that under \"My documents\" the whole text is searched."
 },
 {
 "lang": "en",
@@ -3693,7 +3701,7 @@
 "file": "Assistant and panel",
 "head": "Voice chat",
 "title": "Read long documents at night (V01.0.240)",
-"text": "Read long documents at night (V01.0.240): admin switch under *Funktionen → Eigene Dokumente → Bilder und Scans lesen* (chat.doc_night, off) with a night window (doc_night_from/doc_night_to, default 01:00 to 06:00, may cross midnight). By day the Spark reads in quiet moments only documents with at most 10 waiting pages; longer ones only after 30 minutes without a question, or in the night window. At night pages are counted apart, up to 400 per profile and night on top of the daily limit of 100. Speech still comes first (vorrang.py). Ich → Dokumente names the reason: \"long document, read at night from 01:00\" or \"daily limit reached, continues at night from 01:00\"."
+"text": "Read long documents at night (V01.0.240): admin switch under *Features → Own documents → Read pictures and scans* (chat.doc_night, off) with a night window (doc_night_from/doc_night_to, default 01:00 to 06:00, may cross midnight). By day the Spark reads in quiet moments only documents with at most 10 waiting pages; longer ones only after 30 minutes without a question, or in the night window. At night pages are counted apart, up to 400 per profile and night on top of the daily limit of 100. Speech still comes first (vorrang.py). Me → Documents names the reason: \"long document, read at night from 01:00\" or \"daily limit reached, continues at night from 01:00\"."
 },
 {
 "lang": "en",
@@ -3701,7 +3709,7 @@
 "file": "Assistant and panel",
 "head": "Voice chat",
 "title": "Size and space (V01.0.242)",
-"text": "Size and space (V01.0.242): PDFs may be up to 100 MB; the admin sets 20 to 300 MB under *Funktionen → Eigene Dokumente → Größte PDF-Datei* (chat.doc_max_mb); all other kinds of files stay at 20 MB. Uploads that are too big are refused before they are read; the page says so before uploading. The \"space per profile\" (chat.doc_quota_mb, default 500 MB) now counts all uploads of a profile together (database with text, meaning vectors and waiting pages plus originals). When it is full, the Spark takes nothing new; originals are kept only while there is room. Ich → Dokumente shows \"Used: 120 MB of 500 MB\" with a bar. Under Zustand → Monitoring the admin sees per profile how much is used and gives single profiles their own value (50 to 50,000 MB, state/doc-quotas.json, in the backup)."
+"text": "Size and space (V01.0.242): PDFs may be up to 100 MB; the admin sets 20 to 300 MB under *Features → Own documents → Largest PDF file* (chat.doc_max_mb); all other kinds of files stay at 20 MB. Uploads that are too big are refused before they are read; the page says so before uploading. The \"space per profile\" (chat.doc_quota_mb, default 500 MB) now counts all uploads of a profile together (database with text, meaning vectors and waiting pages plus originals). When it is full, the Spark takes nothing new; originals are kept only while there is room. Me → Documents shows \"Used: 120 MB of 500 MB\" with a bar. Under Status → Monitoring the admin sees per profile how much is used and gives single profiles their own value (50 to 50,000 MB, state/doc-quotas.json, in the backup)."
 },
 {
 "lang": "en",
@@ -3717,7 +3725,7 @@
 "file": "Assistant and panel",
 "head": "Voice chat",
 "title": "Document card and tags (V01.0.245)",
-"text": "Document card and tags (V01.0.245): admin switch *Funktionen → Eigene Dokumente → Steckbrief und Tags* (chat.doc_brief) and profile switch *Ich → Dokumente → Steckbrief und Tags* (both off). In quiet minutes (speech priority applies) the language model reads the beginning of each finished document once (up to 3,000 characters, wrapped as outside text) and notes title, kind (contract, invoice, insurance, manual …), sender, date, deadline, number and 3 to 6 tags; at most 200 a day, existing documents bit by bit without being read again. The fields are checked (length, characters, date YYYY-MM[-DD], kind from a fixed list). Instead of file names the assistant sees one line per document (with many, the 30 that fit the question best, plus all tags) and can narrow document_search with tags or art; when no passage matches it gets the fitting cards. Under *Ich → Dokumente* title, kind, deadline and tags show at the document; tags filter the list (also the ones others share), \"Tags\" sets own ones (empty = the automatic ones again; owner only). \"View\" shows \"Belongs with\": documents with the same number, the same sender or two tags in common. With the profile switch *Fristen anbieten* (doc_d"
+"text": "Document card and tags (V01.0.245): admin switch *Features → Own documents → Document card and tags* (chat.doc_brief) and profile switch *Me → Documents → Steckbrief und Tags* (both off). In quiet minutes (speech priority applies) the language model reads the beginning of each finished document once (up to 3,000 characters, wrapped as outside text) and notes title, kind (contract, invoice, insurance, manual …), sender, date, deadline, number and 3 to 6 tags; at most 200 a day, existing documents bit by bit without being read again. The fields are checked (length, characters, date YYYY-MM[-DD], kind from a fixed list). Instead of file names the assistant sees one line per document (with many, the 30 that fit the question best, plus all tags) and can narrow document_search with tags or art; when no passage matches it gets the fitting cards. Under *Me → Documents* title, kind, deadline and tags show at the document; tags filter the list (also the ones others share), \"Tags\" sets own ones (empty = the automatic ones again; owner only). \"View\" shows \"Belongs with\": documents with the same number, the same sender or two tags in common. With the profile switch *Fristen anbieten* (doc_due, "
 },
 {
 "lang": "en",
@@ -3725,7 +3733,7 @@
 "file": "Assistant and panel",
 "head": "Voice chat",
 "title": "Document card and tags (V01.0.245)",
-"text": "ue, off) a deadline gets a \"Remind\" button (six weeks before at 9:00, else the day before); the assistant never sets a reminder from a deadline in a document by itself. Also document_search now always stays offered in a narrowed tool set, and more words (insurance, policy, warranty, manual, notice, cancellation period, tax, doctor's letter, findings, receipt, certificate …) count as a question about documents."
+"text": "off) a deadline gets a \"Remind\" button (six weeks before at 9:00, else the day before); the assistant never sets a reminder from a deadline in a document by itself. Also document_search now always stays offered in a narrowed tool set, and more words (insurance, policy, warranty, manual, notice, cancellation period, tax, doctor's letter, findings, receipt, certificate …) count as a question about documents."
 },
 {
 "lang": "en",
@@ -3765,7 +3773,7 @@
 "file": "Assistant and panel",
 "head": "Voice chat",
 "title": "Reminders as notifications",
-"text": "Reminders as notifications (profiles only): in the \"Ich\" window under \"Conversation\", \"Reminders on this device → Switch on\" turns on push notifications. A reminder then arrives also when the page is closed, and only on the devices of that profile. This needs https with a valid certificate (e.g. behind a reverse proxy); on an iPhone first add the page to the home screen (\"Share → Add to Home Screen\"). The Spark only sends to the browsers' push services (Apple, Google, Mozilla, Microsoft), encrypted. Since V01.0.181 every notification (reminder, \"speaking up\" note, morning briefing, agent report) arrives once: on the device the profile used last (an open page, the iPhone app or Telegram, at most 12 hours back), else the iPhone app, else Telegram, else the browser set up last. Private notes go over Telegram only when the profile allowed personal data there."
+"text": "Reminders as notifications (profiles only): in the \"Me\" window under \"Conversation\", \"Reminders on this device → Switch on\" turns on push notifications. A reminder then arrives also when the page is closed, and only on the devices of that profile. This needs https with a valid certificate (e.g. behind a reverse proxy); on an iPhone first add the page to the home screen (\"Share → Add to Home Screen\"). The Spark only sends to the browsers' push services (Apple, Google, Mozilla, Microsoft), encrypted. Since V01.0.181 every notification (reminder, \"speaking up\" note, morning briefing, agent report) arrives once: on the device the profile used last (an open page, the iPhone app or Telegram, at most 12 hours back), else the iPhone app, else Telegram, else the browser set up last. Private notes go over Telegram only when the profile allowed personal data there."
 },
 {
 "lang": "en",
@@ -3781,7 +3789,7 @@
 "file": "Assistant and panel",
 "head": "Voice chat",
 "title": "Daily briefing and calendar",
-"text": "Daily briefing and calendar: say \"good morning\" or \"what's on today?\" and the assistant reads out today's and tomorrow's appointments, today's reminders and a few lines on your own topics (e.g. \"weather Berlin\", via your SearXNG). \"What do I have on Friday?\" works too. Each profile connects one or more calendars (up to 8) in the \"Ich\" window, tab Calendar; an appointment found in two calendars is read out once. Each one is a CalDAV address with user and app password (iCloud: https://caldav.icloud.com with the Apple ID and an app-specific password from appleid.apple.com; Nextcloud: …/remote.php/dav; Radicale …), or a subscription link with webcal://, webcals:// or https:// (Google: \"secret address in iCal format\", a public iCloud calendar). New appointments: \"put dentist on Tuesday 10 am in my calendar\" makes the assistant read out a proposal; only when you answer with a plain yes in the same conversation does the panel itself write it to the first CalDAV calendar (optionally with an alarm). Subscription links stay read only. The password stays on the Spark and is never shown again. Guests get no calendar. Can be turned off under Features."
+"text": "Daily briefing and calendar: say \"good morning\" or \"what's on today?\" and the assistant reads out today's and tomorrow's appointments, today's reminders and a few lines on your own topics (e.g. \"weather Berlin\", via your SearXNG). \"What do I have on Friday?\" works too. Each profile connects one or more calendars (up to 8) in the \"Me\" window, tab Calendar; an appointment found in two calendars is read out once. Each one is a CalDAV address with user and app password (iCloud: https://caldav.icloud.com with the Apple ID and an app-specific password from appleid.apple.com; Nextcloud: …/remote.php/dav; Radicale …), or a subscription link with webcal://, webcals:// or https:// (Google: \"secret address in iCal format\", a public iCloud calendar). New appointments: \"put dentist on Tuesday 10 am in my calendar\" makes the assistant read out a proposal; only when you answer with a plain yes in the same conversation does the panel itself write it to the first CalDAV calendar (optionally with an alarm). Subscription links stay read only. The password stays on the Spark and is never shown again. Guests get no calendar. Can be turned off under Features."
 },
 {
 "lang": "en",
@@ -3789,7 +3797,7 @@
 "file": "Assistant and panel",
 "head": "Voice chat",
 "title": "Reading e-mail",
-"text": "Reading e-mail: \"Any new mail?\", \"What does Anna write?\", \"Read me the mail from the bank\". Each profile connects up to 4 mailboxes over IMAP in the \"Ich\" window, tab E-mail: iCloud (imap.mail.me.com, your iCloud mail address and a new app-specific password from appleid.apple.com), Gmail (imap.gmail.com, app password, needs 2-step verification), GMX and web.de (allow IMAP in their settings first) or any other IMAP server with TLS. Outlook/Microsoft 365 is not supported yet (needs OAuth). The assistant only reads the inbox of the last 30 days and changes nothing: the mailbox is opened read only, no mail is sent, deleted, moved or marked as read. It summarizes mails and reads them out word for word only when asked; the daily briefing names the unread ones. Mail text is treated as someone else's words: once the assistant read a mail in an answer, in that answer it cannot switch smart home devices, change memory, cancel reminders, search the web or enter appointments, so a crafted mail cannot trigger anything; answers made from mails are not learned into memory. Guests and another person's voice at a different device get no access. The password is stored encrypted on the Spark and neve"
+"text": "Reading e-mail: \"Any new mail?\", \"What does Anna write?\", \"Read me the mail from the bank\". Each profile connects up to 4 mailboxes over IMAP in the \"Me\" window, tab E-mail: iCloud (imap.mail.me.com, your iCloud mail address and a new app-specific password from appleid.apple.com), Gmail (imap.gmail.com, app password, needs 2-step verification), GMX and web.de (allow IMAP in their settings first) or any other IMAP server with TLS. Outlook/Microsoft 365 is not supported yet (needs OAuth). The assistant only reads the inbox of the last 30 days and changes nothing: the mailbox is opened read only, no mail is sent, deleted, moved or marked as read. It summarizes mails and reads them out word for word only when asked; the daily briefing names the unread ones. Mail text is treated as someone else's words: once the assistant read a mail in an answer, in that answer it cannot switch smart home devices, change memory, cancel reminders, search the web or enter appointments, so a crafted mail cannot trigger anything; answers made from mails are not learned into memory. Guests and another person's voice at a different device get no access. The password is stored encrypted on the Spark and never"
 },
 {
 "lang": "en",
@@ -3797,7 +3805,7 @@
 "file": "Assistant and panel",
 "head": "Voice chat",
 "title": "Reading e-mail",
-"text": "r shown again. Off until turned on under Features."
+"text": " shown again. Off until turned on under Features."
 },
 {
 "lang": "en",
@@ -3805,7 +3813,7 @@
 "file": "Assistant and panel",
 "head": "Voice chat",
 "title": "Inbox tidying",
-"text": "Inbox tidying (Features → \"Postfach aufräumen\", off by default; needs reading e-mail; profiles only): the Spark sorts advertising, newsletters, invoices, notifications and social media mail into folders under a main folder (Spark/ unless renamed, e.g. Spark/Werbung; renamed in the \"Ich\" window under E-mail, empty puts the folders at the top. Renaming also renames them in the mailbox with IMAP RENAME, the mail moves along; if the new name exists already, the old folder stays) so the inbox keeps only what matters. It only moves; it never deletes, never sends and never marks mail as read. When the server has no IMAP MOVE (iCloud), it copies the mail into the target folder, checks that the copy arrived, and only then removes exactly that original from the inbox (UIDPLUS); no other mail is touched. Each profile picks per mailbox in the \"Ich\" window, tab E-mail, part \"Postfach aufräumen\": off, preview (only shows what it would move; a week is recommended to start), safe automatic (moves only what a rule or clear headers such as List-Unsubscribe prove) or fully automatic (also when the model is at least 85 % sure). Only new mail is checked, every 5, 15 (default) or 60 minutes. Who decides"
+"text": "Inbox tidying (Features → \"Postfach aufräumen\", off by default; needs reading e-mail; profiles only): the Spark sorts advertising, newsletters, invoices, notifications and social media mail into folders under a main folder (Spark/ unless renamed, e.g. Spark/Werbung; renamed in the \"Me\" window under E-mail, empty puts the folders at the top. Renaming also renames them in the mailbox with IMAP RENAME, the mail moves along; if the new name exists already, the old folder stays) so the inbox keeps only what matters. It only moves; it never deletes, never sends and never marks mail as read. When the server has no IMAP MOVE (iCloud), it copies the mail into the target folder, checks that the copy arrived, and only then removes exactly that original from the inbox (UIDPLUS); no other mail is touched. Each profile picks per mailbox in the \"Me\" window, tab E-mail, part \"Inbox tidying\": off, preview (only shows what it would move; a week is recommended to start), safe automatic (moves only what a rule or clear headers such as List-Unsubscribe prove) or fully automatic (also when the model is at least 85 % sure). Only new mail is checked, every 5, 15 (default) or 60 minutes. Who decides, in th"
 },
 {
 "lang": "en",
@@ -3813,7 +3821,7 @@
 "file": "Assistant and panel",
 "head": "Voice chat",
 "title": "Inbox tidying",
-"text": ", in this order: people you wrote to (sent folder), sign-in and security mails and your \"always keep\" list stay put; then your rules (sender or @domain); then fixed headers; only then the language model, which may only return a category from the fixed list and has no tools. It asks first for invoices and notifications and for unclear mail; your answer can become a rule. Move a mail back into the inbox and it is not moved again, and the Spark asks. Brakes: at most 200 mails per run, and a run that would move more than half of at least 10 new mails stops and puts everything into the preview. Every move stays in the history for 30 days and can be undone. \"Old mail\" proposes once where the last 90 days belong; nothing moves until you press \"Move\". By voice: \"Tidy my inbox\", \"Move everything from Lidl to advertising\", \"Undo that\"; the assistant reads out a proposal and the panel carries it out only after your plain \"yes\". Reply drafts (per mailbox): \"Write Anna that I'm coming\" saves a draft in the drafts folder after your \"yes\"; you send it yourself in your mail app. Guests and other people's voices get no access."
+"text": "is order: people you wrote to (sent folder), sign-in and security mails and your \"always keep\" list stay put; then your rules (sender or @domain); then fixed headers; only then the language model, which may only return a category from the fixed list and has no tools. It asks first for invoices and notifications and for unclear mail; your answer can become a rule. Move a mail back into the inbox and it is not moved again, and the Spark asks. Brakes: at most 200 mails per run, and a run that would move more than half of at least 10 new mails stops and puts everything into the preview. Every move stays in the history for 30 days and can be undone. \"Old mail\" proposes once where the last 90 days belong; nothing moves until you press \"Move\". By voice: \"Tidy my inbox\", \"Move everything from Lidl to advertising\", \"Undo that\"; the assistant reads out a proposal and the panel carries it out only after your plain \"yes\". Reply drafts (per mailbox): \"Write Anna that I'm coming\" saves a draft in the drafts folder after your \"yes\"; you send it yourself in your mail app. Guests and other people's voices get no access."
 },
 {
 "lang": "en",
@@ -3933,7 +3941,7 @@
 "file": "Assistant and panel",
 "head": "Voice chat",
 "title": "Room mode",
-"text": "Room mode (Features → \"Raum-Modus\", off by default; profiles only): the switch \"Raum\" below the face lets the assistant listen to the conversation in the room at this device for a chosen time (15 minutes to 4 hours, it ends by itself); an orange dot shows it. In a pause it helps when a fixed cue came up: an open question (with web search, nothing when in doubt), an appointment (\"Shall I enter it?\"), \"cold\", \"too warm\" or \"too dark\" (the room's real temperature from Home Assistant, offering to change the heating by one degree or switch on the light) and things to buy (Home Assistant shopping list). It changes something only after a \"yes\", for the smart home with the code word when one is set. In the \"Ich\" window under \"Raum-Modus\" each device sets the duration, how much it may say (questions only, also hints, also comments), each kind on its own, the device's room in Home Assistant and \"text only\" (silently in the conversation instead of spoken). What it hears stays in the panel's memory for five minutes and is never stored; room mode uses neither memory, mail nor earlier conversations. Everyone in the room should know it is listening. Since V01.0.95 it also offers a timer (\"The piz"
+"text": "Room mode (Features → \"Raum-Modus\", off by default; profiles only): the switch \"Raum\" below the face lets the assistant listen to the conversation in the room at this device for a chosen time (15 minutes to 4 hours, it ends by itself); an orange dot shows it. In a pause it helps when a fixed cue came up: an open question (with web search, nothing when in doubt), an appointment (\"Shall I enter it?\"), \"cold\", \"too warm\" or \"too dark\" (the room's real temperature from Home Assistant, offering to change the heating by one degree or switch on the light) and things to buy (Home Assistant shopping list). It changes something only after a \"yes\", for the smart home with the code word when one is set. In the \"Me\" window under \"Room mode\" each device sets the duration, how much it may say (questions only, also hints, also comments), each kind on its own, the device's room in Home Assistant and \"text only\" (silently in the conversation instead of spoken). What it hears stays in the panel's memory for five minutes and is never stored; room mode uses neither memory, mail nor earlier conversations. Everyone in the room should know it is listening. Since V01.0.95 it also offers a timer (\"The pizza"
 },
 {
 "lang": "en",
@@ -3941,7 +3949,7 @@
 "file": "Assistant and panel",
 "head": "Voice chat",
 "title": "Room mode",
-"text": "za needs 12 more minutes\") and a reminder (\"I must not forget to call grandma\"), both only after a \"yes\", and calculates unit questions (\"How much is 180 degrees in Fahrenheit?\"). A question that points back (\"When did he die?\") is completed from the last sentences, only with words that were said. With a taught voice and speaker identification on, only the profile's own voice can say \"yes\". A soft tone comes before it speaks; \"Stopp\" ends the sentence, \"Nicht jetzt\" keeps it quiet for 15 minutes, \"Raummodus aus\" (also \"Hör auf zuzuhören\") switches it off, from any voice. Since V01.0.126 the profile's quiet hours apply (Ich → Von selbst, 22 to 7 by default): then everything appears as text only, never spoken. When the page is in the background or the phone locked for more than two minutes (the microphone hears nothing there anyway), room mode ends with its summary; closing the tab ends it at once. Since V01.0.128 it also runs on the own ESP32 speakers, all board variants: \"Raummodus an\" after the wake word or the switch \"Room\" under Me → Speakers (when the speaker sleeps, it starts at its next wake word), where duration, how much it may say and the room in Home Assistant are set per"
+"text": " needs 12 more minutes\") and a reminder (\"I must not forget to call grandma\"), both only after a \"yes\", and calculates unit questions (\"How much is 180 degrees in Fahrenheit?\"). A question that points back (\"When did he die?\") is completed from the last sentences, only with words that were said. With a taught voice and speaker identification on, only the profile's own voice can say \"yes\". A soft tone comes before it speaks; \"Stopp\" ends the sentence, \"Nicht jetzt\" keeps it quiet for 15 minutes, \"Raummodus aus\" (also \"Hör auf zuzuhören\") switches it off, from any voice. Since V01.0.126 the profile's quiet hours apply (Me → Proactive, 22 to 7 by default): then everything appears as text only, never spoken. When the page is in the background or the phone locked for more than two minutes (the microphone hears nothing there anyway), room mode ends with its summary; closing the tab ends it at once. Since V01.0.128 it also runs on the own ESP32 speakers, all board variants: \"Raummodus an\" after the wake word or the switch \"Room\" under Me → Speakers (when the speaker sleeps, it starts at its next wake word), where duration, how much it may say and the room in Home Assistant are set per spe"
 },
 {
 "lang": "en",
@@ -3949,7 +3957,7 @@
 "file": "Assistant and panel",
 "head": "Voice chat",
 "title": "Room mode",
-"text": " speaker. The Spark keeps the connection open, cuts out every sentence, runs it through speech recognition and speaks in a pause after the soft tone; boards with a display show the sentence. It ends after its time, with \"Raummodus aus\", the switch, when the connection drops or when the admin or the profile switch it off; then the board waits for its wake word again. In quiet hours the speaker stays silent. Since V01.0.140 the speaker cuts long stretches of talk after at most 8 seconds and checks every sentence on its own, speaks after 1.5 seconds of quiet (counted from the last loud sound, not from the end of a piece), streams the speech, and each speaker has \"detect more\". Questions are now recognized without a question mark from the speech recognition (\"Wie hoch ist die Zugspitze\"), after \"Sag mal\" or \"Weißt du, wann …\" and with \"Stimmt es, dass …\"; questions about the people in the room (\"Wo ist meine Brille\") stay out. The answer is looked up while people still talk and is ready in the pause (in the browser too). \"Also comments\" is chattier: at most every two minutes, after three seconds of quiet, one casual sentence about the conversation. Since V01.0.142 Me → Speakers has \"St"
+"text": "aker. The Spark keeps the connection open, cuts out every sentence, runs it through speech recognition and speaks in a pause after the soft tone; boards with a display show the sentence. It ends after its time, with \"Raummodus aus\", the switch, when the connection drops or when the admin or the profile switch it off; then the board waits for its wake word again. In quiet hours the speaker stays silent. Since V01.0.140 the speaker cuts long stretches of talk after at most 8 seconds and checks every sentence on its own, speaks after 1.5 seconds of quiet (counted from the last loud sound, not from the end of a piece), streams the speech, and each speaker has \"detect more\". Questions are now recognized without a question mark from the speech recognition (\"Wie hoch ist die Zugspitze\"), after \"Sag mal\" or \"Weißt du, wann …\" and with \"Stimmt es, dass …\"; questions about the people in the room (\"Wo ist meine Brille\") stay out. The answer is looked up while people still talk and is ready in the pause (in the browser too). \"Also comments\" is chattier: at most every two minutes, after three seconds of quiet, one casual sentence about the conversation. Since V01.0.142 Me → Speakers has \"Stimme"
 },
 {
 "lang": "en",
@@ -3957,7 +3965,7 @@
 "file": "Assistant and panel",
 "head": "Voice chat",
 "title": "Room mode",
-"text": "imme hier anlernen\" (speaker identification on, browser login, with the second step when set up): the speaker asks for three sentences and keeps its own voiceprint for its microphone; a sentence counts for a profile when it fits any of its voiceprints (browser or speaker). Until somebody taught a voice through a speaker, it listens to everybody despite \"only known voices\" (log: \"listens to everybody (no voice taught through it yet)\"), because a voice taught in the browser is rarely recognized through the small board microphone. At most two speakers at once, because speech recognition runs all the time. While it speaks, the wake word interrupts it. Option \"Genauer erkennen\": the model looks for missed questions, appointments and shopping, counted only with a word-for-word quote. When room mode ends, the page shows what it said and did (not what it heard), not stored. Every decision writes a \"room:\" line to the log (why it spoke or stayed silent, never the heard text)."
+"text": " hier anlernen\" (speaker identification on, browser login, with the second step when set up): the speaker asks for three sentences and keeps its own voiceprint for its microphone; a sentence counts for a profile when it fits any of its voiceprints (browser or speaker). Until somebody taught a voice through a speaker, it listens to everybody despite \"only known voices\" (log: \"listens to everybody (no voice taught through it yet)\"), because a voice taught in the browser is rarely recognized through the small board microphone. At most two speakers at once, because speech recognition runs all the time. While it speaks, the wake word interrupts it. Option \"Genauer erkennen\": the model looks for missed questions, appointments and shopping, counted only with a word-for-word quote. When room mode ends, the page shows what it said and did (not what it heard), not stored. Every decision writes a \"room:\" line to the log (why it spoke or stayed silent, never the heard text)."
 },
 {
 "lang": "en",
@@ -4021,7 +4029,7 @@
 "file": "Assistant and panel",
 "head": "Voice chat",
 "title": "Speaking up by itself",
-"text": "Speaking up by itself (Features → \"Von selbst melden\", off by default; profiles only): each profile decides in the \"Ich\" window under \"Von selbst\" whether and why the assistant speaks unasked, each kind on its own: appointments ahead (\"In 20 minutes: dentist. Shall I remind you again at 9:55?\", a \"yes\" sets the reminder), its own smart home rules (\"Whirlpool above 37.5\", \"bathroom window is open and rain is on\", \"washing machine power below 5 for 3 minutes\"; read only, never switching), a short greeting with the next appointment or reminder when the conversation is opened after three hours or more, at most one follow-up a day on a plan mentioned yesterday, new mail from chosen senders (sender and subject only) and a weather note for tomorrow via web search. Plus quiet hours, a daily limit and learning from feedback: \"nicht jetzt\" means two hours of quiet, \"das interessiert mich nicht\" halves how often that kind may speak (can be reset). The panel decides when, by fixed rules from real data; where the model words something (follow-up, weather), its answer only counts when it quotes the data. With the conversation open the note is spoken, otherwise it arrives as a push notification. "
+"text": "Speaking up by itself (Features → \"Von selbst melden\", off by default; profiles only): each profile decides in the \"Me\" window under \"Proactive\" whether and why the assistant speaks unasked, each kind on its own: appointments ahead (\"In 20 minutes: dentist. Shall I remind you again at 9:55?\", a \"yes\" sets the reminder), its own smart home rules (\"Whirlpool above 37.5\", \"bathroom window is open and rain is on\", \"washing machine power below 5 for 3 minutes\"; read only, never switching), a short greeting with the next appointment or reminder when the conversation is opened after three hours or more, at most one follow-up a day on a plan mentioned yesterday, new mail from chosen senders (sender and subject only) and a weather note for tomorrow via web search. Plus quiet hours, a daily limit and learning from feedback: \"nicht jetzt\" means two hours of quiet, \"das interessiert mich nicht\" halves how often that kind may speak (can be reset). The panel decides when, by fixed rules from real data; where the model words something (follow-up, weather), its answer only counts when it quotes the data. With the conversation open the note is spoken, otherwise it arrives as a push notification. Si"
 },
 {
 "lang": "en",
@@ -4029,7 +4037,7 @@
 "file": "Assistant and panel",
 "head": "Voice chat",
 "title": "Speaking up by itself",
-"text": "Since V01.0.179 only the first device of the profile says it (page or iPhone app), the others stay silent, just like reminders (V01.0.176). Every note is in the log with its reason. Since V01.0.385 the follow-up is a fixed sentence with the person's own words (\"Gestern hast du zu mir gesagt: „…“. Hat das geklappt?\"); the model only points at a sentence, and the panel takes it only when it is an own plan in the first person (no question, no request to the assistant, no pasted text, no question about a mail or web page, nothing from briefing, jobs or meetings). Asked about a note (\"what do you mean?\", \"where is that from?\"), the model gets its basis from the panel and must not make up another source; for mail notes only \"sender and subject read\", never mail text. Logs → Requests show it as \"von selbst: Grundlage\", Live shows a refused pick as an event."
+"text": "nce V01.0.179 only the first device of the profile says it (page or iPhone app), the others stay silent, just like reminders (V01.0.176). Every note is in the log with its reason. Since V01.0.385 the follow-up is a fixed sentence with the person's own words (\"Gestern hast du zu mir gesagt: „…“. Hat das geklappt?\"); the model only points at a sentence, and the panel takes it only when it is an own plan in the first person (no question, no request to the assistant, no pasted text, no question about a mail or web page, nothing from briefing, jobs or meetings). Asked about a note (\"what do you mean?\", \"where is that from?\"), the model gets its basis from the panel and must not make up another source; for mail notes only \"sender and subject read\", never mail text. Logs → Requests show it as \"von selbst: Grundlage\", Live shows a refused pick as an event."
 },
 {
 "lang": "en",
@@ -4037,7 +4045,7 @@
 "file": "Assistant and panel",
 "head": "Voice chat",
 "title": "Home Assistant tells the Spark",
-"text": "Home Assistant tells the Spark (since V01.0.314, plan plaene/home-assistant-meldungen.md): the smart home rules under \"Von selbst\" can do more. Each rule can speak *at most every N minutes* (e.g. a motion sensor at most every 10 minutes), for \"changes\" *on*, *off* or both, and have an extra condition: *only when I am away* (the person in Home Assistant with your profile name or the one chosen under \"Me in Home Assistant\"), *only when nobody is home*, *only at night* or *only during the day* (by sun.sun, else 9 pm to 6 am). Plus five parts, each with its own admin switch under Features → Speaking up by itself and its own switch under Me → Proactive, all off at first, never for guests: *Instant notes from Home Assistant*: the Spark keeps a WebSocket connection to your Home Assistant (the same address and token, only the devices of your rules, subscribe_entities); a change arrives in about a second, also a motion sensor that triggers only briefly. If the connection drops, the Spark checks every minute again. *House notes on speakers*: a rule also says its own sentence on chosen speakers that take announcements from you, e.g. \"Someone rang the bell.\"; only its own sentence without name"
+"text": "Home Assistant tells the Spark (since V01.0.314, plan plaene/home-assistant-meldungen.md): the smart home rules under \"Proactive\" can do more. Each rule can speak *at most every N minutes* (e.g. a motion sensor at most every 10 minutes), for \"changes\" *on*, *off* or both, and have an extra condition: *only when I am away* (the person in Home Assistant with your profile name or the one chosen under \"Me in Home Assistant\"), *only when nobody is home*, *only at night* or *only during the day* (by sun.sun, else 9 pm to 6 am). Plus five parts, each with its own admin switch under Features → Speaking up by itself and its own switch under Me → Proactive, all off at first, never for guests: *Instant notes from Home Assistant*: the Spark keeps a WebSocket connection to your Home Assistant (the same address and token, only the devices of your rules, subscribe_entities); a change arrives in about a second, also a motion sensor that triggers only briefly. If the connection drops, the Spark checks every minute again. *House notes on speakers*: a rule also says its own sentence on chosen speakers that take announcements from you, e.g. \"Someone rang the bell.\"; only its own sentence without names"
 },
 {
 "lang": "en",
@@ -4045,7 +4053,7 @@
 "file": "Assistant and panel",
 "head": "Voice chat",
 "title": "Home Assistant tells the Spark",
-"text": "s, never for person devices and never with a camera picture, not in the speaker's quiet hours, at most 20 an hour. *Home Assistant tells the Spark*: a list of event names with a fixed sentence (e.g. klingel → \"Es hat geklingelt.\") and a key of its own; Home Assistant calls rest_command.spark_melden with event: klingel (POST /api/ha/event). Only names from the list count, nothing else from the request is read or said; at most 30 a minute, a pause per event (default 1 minute). *Smart home rule by voice*: \"Sag mir Bescheid, wenn jemand an der Haustür ist\", \"Melde dich, wenn Anna heimkommt\": the panel recognizes the sentence by fixed words, finds the device and asks \"Soll ich mich melden, wenn …?\"; only a \"yes\" in the same conversation adds the rule. *Describe a camera picture*: a rule can name a camera from Home Assistant; when it applies, the local language model describes the still in a few words. The picture is never stored, the description is outside text and goes to your devices only, at most 30 an hour. Log lines start with \"hamelden:\". Status → Live shows the live connection (under channels) and each note, event and described camera picture in fixed words, without device names,"
+"text": ", never for person devices and never with a camera picture, not in the speaker's quiet hours, at most 20 an hour. *Home Assistant tells the Spark*: a list of event names with a fixed sentence (e.g. klingel → \"Es hat geklingelt.\") and a key of its own; Home Assistant calls rest_command.spark_melden with event: klingel (POST /api/ha/event). Only names from the list count, nothing else from the request is read or said; at most 30 a minute, a pause per event (default 1 minute). *Smart home rule by voice*: \"Sag mir Bescheid, wenn jemand an der Haustür ist\", \"Melde dich, wenn Anna heimkommt\": the panel recognizes the sentence by fixed words, finds the device and asks \"Soll ich mich melden, wenn …?\"; only a \"yes\" in the same conversation adds the rule. *Describe a camera picture*: a rule can name a camera from Home Assistant; when it applies, the local language model describes the still in a few words. The picture is never stored, the description is outside text and goes to your devices only, at most 30 an hour. Log lines start with \"hamelden:\". Status → Live shows the live connection (under channels) and each note, event and described camera picture in fixed words, without device names, "
 },
 {
 "lang": "en",
@@ -4053,7 +4061,7 @@
 "file": "Assistant and panel",
 "head": "Voice chat",
 "title": "Home Assistant tells the Spark",
-"text": " sentences or camera words. You don't have to type devices for a rule (since V01.0.317): the field suggests all devices from Home Assistant, \"Zuletzt geändert\" shows the last changed ones, and with \"Gerät erkennen\" you trigger the sensor within 40 seconds (motion, door, bell); whatever changes shows up to tap. The panel only compares the change time Home Assistant reports itself. Rules can be edited (since V01.0.319): \"Bearbeiten\" brings a rule back into the form, \"Prüfen und speichern\" checks it like a new one and replaces it in the same place; it then starts fresh (speaks only after it was false once). Since V01.0.334 each fired rule and event shows on Status → Live as a request of \"Home Assistant\" (rule or event) with camera picture, note (Web Push, Apple Push, Android app, Telegram or the open page) and speaker announcement; everything else the Spark says by itself as a request of \"Von selbst\" (e.g. greeting, reminder, task). Never the sentence."
+"text": "sentences or camera words. You don't have to type devices for a rule (since V01.0.317): the field suggests all devices from Home Assistant, \"Zuletzt geändert\" shows the last changed ones, and with \"Gerät erkennen\" you trigger the sensor within 40 seconds (motion, door, bell); whatever changes shows up to tap. The panel only compares the change time Home Assistant reports itself. Rules can be edited (since V01.0.319): \"Edit\" brings a rule back into the form, \"Check and save\" checks it like a new one and replaces it in the same place; it then starts fresh (speaks only after it was false once). Since V01.0.334 each fired rule and event shows on Status → Live as a request of \"Home Assistant\" (rule or event) with camera picture, note (Web Push, Apple Push, Android app, Telegram or the open page) and speaker announcement; everything else the Spark says by itself as a request of \"Von selbst\" (e.g. greeting, reminder, task). Never the sentence."
 },
 {
 "lang": "en",
@@ -4077,7 +4085,7 @@
 "file": "Assistant and panel",
 "head": "Voice chat",
 "title": "Speaker identification",
-"text": "Speaker identification (off by default, Features): each profile reads three short sentences in the \"Ich\" window. When the assistant then clearly recognizes a voice, it answers for that profile, with its memory, documents, reminders and voice, even on a guest device. The conversation shows \"🎙 name\" below the question. When someone other than the logged-in profile speaks at a device, the assistant gets only that one question (not the device's conversation), and the exchange stays out of the logged-in profile's history and memory. When the voice is unclear, nothing changes. Recognition runs on the Spark's CPU (Resemblyzer model, Apache 2.0) and needs no GPU memory. Strictness is adjustable. A voice is not a password: someone who sounds very similar or plays a recording can get into a profile."
+"text": "Speaker identification (off by default, Features): each profile reads three short sentences in the \"Me\" window. When the assistant then clearly recognizes a voice, it answers for that profile, with its memory, documents, reminders and voice, even on a guest device. The conversation shows \"🎙 name\" below the question. When someone other than the logged-in profile speaks at a device, the assistant gets only that one question (not the device's conversation), and the exchange stays out of the logged-in profile's history and memory. When the voice is unclear, nothing changes. Recognition runs on the Spark's CPU (Resemblyzer model, Apache 2.0) and needs no GPU memory. Strictness is adjustable. A voice is not a password: someone who sounds very similar or plays a recording can get into a profile."
 },
 {
 "lang": "en",
@@ -4085,7 +4093,7 @@
 "file": "Assistant and panel",
 "head": "Voice chat",
 "title": "Profiles and memory",
-"text": "Profiles and memory: under Profiles the admin creates profiles with a name and PIN. In the chat you log in with the \"Guest\" button at the top of the conversation by typing name and PIN. Logged in, the assistant remembers things for good when you tell it to (\"remember that I'm vegetarian\") or when they will be useful later, and forgets them on request; the Me lists what it knows, for deleting. Memory and conversations belong to the profile and live on the Spark, so the same history shows on every device you are logged in on: which profile is asking is decided only by the login (cookie) or the device key, never by the model, and guests get no memory. Speakers and your own programs get a device key under Profiles that belongs to one profile, and send it as the header X-Speech-Device to /api/chat. A new PIN logs out every browser of that profile; deleting a profile removes its memory and devices. The data lives on the Spark under /var/lib/speech-spark/users, one folder per profile."
+"text": "Profiles and memory: under People and devices the admin creates profiles with a name and PIN. In the chat you log in with the \"Guest\" button at the top of the conversation by typing name and PIN. Logged in, the assistant remembers things for good when you tell it to (\"remember that I'm vegetarian\") or when they will be useful later, and forgets them on request; the Me lists what it knows, for deleting. Memory and conversations belong to the profile and live on the Spark, so the same history shows on every device you are logged in on: which profile is asking is decided only by the login (cookie) or the device key, never by the model, and guests get no memory. Speakers and your own programs get a device key under People and devices that belongs to one profile, and send it as the header X-Speech-Device to /api/chat. A new PIN logs out every browser of that profile; deleting a profile removes its memory and devices. The data lives on the Spark under /var/lib/speech-spark/users, one folder per profile."
 },
 {
 "lang": "en",
@@ -4093,7 +4101,7 @@
 "file": "Assistant and panel",
 "head": "Voice chat",
 "title": "Home Assistant",
-"text": "Home Assistant (Funktionen → \"Home Assistant\", off by default): each profile connects its own Home Assistant in the \"Ich\" window under \"Smart home\" with the address (e.g. http://homeassistant.local:8123) and a long-lived access token (Home Assistant: your profile → Security; best for a separate non-admin user). Then \"turn on the living room light\" or \"how warm is it in the bathroom?\" work in the conversation. Commands go to Home Assistant's own Assist (/api/conversation/process), so only entities exposed to Assist (Settings → Voice assistants → Expose) can be switched. Devices Assist does not know are switched directly through their service (e.g. switch.turn_on), except locks, alarm systems and updates. With a code word (\"Ich\" window → Smart home) the assistant switches only when the code word is in the same message (\"lights off, code word sunflower\"); without it, it asks. The panel checks this itself, not the language model; the model and the stored conversations see only \"[Codewort]\", it is stored encrypted and compared with some tolerance for speech recognition (a letter or two off, \"Apollo 13\" = \"Apollo dreizehn\"). Questions need no code word. Also (ideas from ha-mcp): history "
+"text": "Home Assistant (Funktionen → \"Home Assistant\", off by default): each profile connects its own Home Assistant in the \"Me\" window under \"Smart home\" with the address (e.g. http://homeassistant.local:8123) and a long-lived access token (Home Assistant: your profile → Security; best for a separate non-admin user). Then \"turn on the living room light\" or \"how warm is it in the bathroom?\" work in the conversation. Commands go to Home Assistant's own Assist (/api/conversation/process), so only entities exposed to Assist (Settings → Voice assistants → Expose) can be switched. Devices Assist does not know are switched directly through their service (e.g. switch.turn_on), except locks, alarm systems and updates. With a code word (\"Me\" window → Smart home) the assistant switches only when the code word is in the same message (\"lights off, code word sunflower\"); without it, it asks. The panel checks this itself, not the language model; the model and the stored conversations see only \"[Codewort]\", it is stored encrypted and compared with some tolerance for speech recognition (a letter or two off, \"Apollo 13\" = \"Apollo dreizehn\"). Questions need no code word. Also (ideas from ha-mcp): history (\""
 },
 {
 "lang": "en",
@@ -4101,7 +4109,7 @@
 "file": "Assistant and panel",
 "head": "Voice chat",
 "title": "Home Assistant",
-"text": "(\"how warm was it in the bathroom yesterday?\"), several devices at once (\"all lights in the living room off\", each checked; an unknown room never switches the whole home), typo-tolerant device search and to-do lists such as the shopping list (read, add, tick off; changes need the code word). Questions about values, states, zones and where someone is are read directly (/api/states) instead: the assistant sees every device, sensor, zone and person the token's user may see, exposed or not. Home Assistant tells rooms (areas) only to an admin token; without admin rights devices are found by their names only. Only that profile can use its Home Assistant: guests never, and a voice recognized by speaker identification at someone else's device neither. The token is checked before saving, stays on the Spark (users/<id>/homeassistant.json, mode 0600) and is never sent back to the browser."
+"text": "how warm was it in the bathroom yesterday?\"), several devices at once (\"all lights in the living room off\", each checked; an unknown room never switches the whole home), typo-tolerant device search and to-do lists such as the shopping list (read, add, tick off; changes need the code word). Questions about values, states, zones and where someone is are read directly (/api/states) instead: the assistant sees every device, sensor, zone and person the token's user may see, exposed or not. Home Assistant tells rooms (areas) only to an admin token; without admin rights devices are found by their names only. Only that profile can use its Home Assistant: guests never, and a voice recognized by speaker identification at someone else's device neither. The token is checked before saving, stays on the Spark (users/<id>/homeassistant.json, mode 0600) and is never sent back to the browser."
 },
 {
 "lang": "en",
@@ -4117,7 +4125,7 @@
 "file": "Assistant and panel",
 "head": "Voice chat",
 "title": "Earlier conversations",
-"text": "Earlier conversations (Funktionen → \"Frühere Gespräche\", on by default; profiles only): the assistant can look up what you talked about before (\"what did you tell me about the grill last week?\", \"what did we talk about yesterday?\"), searching only your own profile's saved conversations. Conversations that have been quiet for ten minutes are also read once in the background, while nobody is talking, and up to three lasting facts per conversation go into the profile's memory, marked \"automatic\" in the \"Ich\" window, where they can be deleted. Each profile can switch this learning off in the conversation settings (\"Learn from conversations\"). Once a week (or with \"Propose cleanup\") the assistant proposes merging duplicate entries and removing outdated ones; nothing changes until you accept the proposal under Ich → Memory. With notifications on, a note is sent."
+"text": "Earlier conversations (Funktionen → \"Frühere Gespräche\", on by default; profiles only): the assistant can look up what you talked about before (\"what did you tell me about the grill last week?\", \"what did we talk about yesterday?\"), searching only your own profile's saved conversations. Conversations that have been quiet for ten minutes are also read once in the background, while nobody is talking, and up to three lasting facts per conversation go into the profile's memory, marked \"automatic\" in the \"Me\" window, where they can be deleted. Each profile can switch this learning off in the conversation settings (\"Learn from conversations\"). Once a week (or with \"Propose cleanup\") the assistant proposes merging duplicate entries and removing outdated ones; nothing changes until you accept the proposal under Me → Memory. With notifications on, a note is sent."
 },
 {
 "lang": "en",
@@ -4253,7 +4261,7 @@
 "file": "Assistant and panel",
 "head": "Voice chat",
 "title": "reMarkable notes (V01.0.273)",
-"text": "reMarkable notes (V01.0.273): A profile connects its my.remarkable account (reMarkable 2, Paper Pro, Paper Pro Move); the assistant then finds the picked notebooks in the document search, also with meaning search, document card and \"Look locally first\". Switches: Features → Own documents → Read pictures and scans → \"reMarkable notes\" (admin, off) and Ich → reMarkable → \"reMarkable for me\" (profile, off); never guests. Pairing: get a one-time code for a desktop app on my.remarkable.com (eight letters) and enter it under Ich → reMarkable (own browser only, never with a device key; with the second sign-in step a fresh code). Like the desktop app the Spark signs in as device \"desktop-linux\"; the long-lived device token is sealed in the vault (users/<p>/remarkable.json), the short-lived user token lives in memory only, neither is ever logged. reMarkable has no official interface: this uses the same sync protocol (\"sync15\") as rmapi, the Obsidian plugin and remarkable-mcp (MIT, used as a model); if reMarkable changes it, the error shows under Ich → reMarkable, exporting a PDF and uploading it stays as a way. Without a Connect subscription reMarkable syncs to the cloud only in part. Only "
+"text": "reMarkable notes (V01.0.273): A profile connects its my.remarkable account (reMarkable 2, Paper Pro, Paper Pro Move); the assistant then finds the picked notebooks in the document search, also with meaning search, document card and \"Look locally first\". Switches: Features → Own documents → Read pictures and scans → \"reMarkable notes\" (admin, off) and Me → reMarkable → \"reMarkable for me\" (profile, off); never guests. Pairing: get a one-time code for a desktop app on my.remarkable.com (eight letters) and enter it under Me → reMarkable (own browser only, never with a device key; with the second sign-in step a fresh code). Like the desktop app the Spark signs in as device \"desktop-linux\"; the long-lived device token is sealed in the vault (users/<p>/remarkable.json), the short-lived user token lives in memory only, neither is ever logged. reMarkable has no official interface: this uses the same sync protocol (\"sync15\") as rmapi, the Obsidian plugin and remarkable-mcp (MIT, used as a model); if reMarkable changes it, the error shows under Me → reMarkable, exporting a PDF and uploading it stays as a way. Without a Connect subscription reMarkable syncs to the cloud only in part. Only wha"
 },
 {
 "lang": "en",
@@ -4261,7 +4269,7 @@
 "file": "Assistant and panel",
 "head": "Voice chat",
 "title": "reMarkable notes (V01.0.273)",
-"text": "what is ticked is read (notebooks, or folders with everything in them, or \"All notebooks\" without PDFs/books; nothing by default; never the trash). Per page (format v6, rmscene 0.8.0 pinned): typed text (Type Folio, keyboard, \"Convert to text\") and highlighted text come directly; handwriting is drawn from the strokes as a picture (Pillow, cut to what is written, at most 1600 pixels) and read like a scan by the language model in quiet minutes (same daily limit, night window). For PDFs and e-books only highlights and own notes. Each notebook becomes one document with source \"reMarkable\" (Folder/Name, cited as \"reMarkable: Folder/Name, Seite 4\"). Compared every 30 minutes, never while someone speaks (vorrang.py), \"Compare now\" at once: pages with the same hash are neither fetched nor read again, changed ones are; notebooks deleted in the cloud or no longer ticked disappear; one deleted under Ich → Dokumente does not come back until ticked again. \"Disconnect\" deletes the token and all notebooks on the Spark (then remove the device on my.remarkable.com). Limits: 5,000 entries, 500 pages per notebook, 300 pages per comparison (the rest follows two minutes later), page file 20 MB, index 2"
+"text": "t is ticked is read (notebooks, or folders with everything in them, or \"All notebooks\" without PDFs/books; nothing by default; never the trash). Per page (format v6, rmscene 0.8.0 pinned): typed text (Type Folio, keyboard, \"Convert to text\") and highlighted text come directly; handwriting is drawn from the strokes as a picture (Pillow, cut to what is written, at most 1600 pixels) and read like a scan by the language model in quiet minutes (same daily limit, night window). For PDFs and e-books only highlights and own notes. Each notebook becomes one document with source \"reMarkable\" (Folder/Name, cited as \"reMarkable: Folder/Name, Seite 4\"). Compared every 30 minutes, never while someone speaks (vorrang.py), \"Compare now\" at once: pages with the same hash are neither fetched nor read again, changed ones are; notebooks deleted in the cloud or no longer ticked disappear; one deleted under Me → Documents does not come back until ticked again. \"Disconnect\" deletes the token and all notebooks on the Spark (then remove the device on my.remarkable.com). Limits: 5,000 entries, 500 pages per notebook, 300 pages per comparison (the rest follows two minutes later), page file 20 MB, index 2 MB,"
 },
 {
 "lang": "en",
@@ -4269,7 +4277,7 @@
 "file": "Assistant and panel",
 "head": "Voice chat",
 "title": "reMarkable notes (V01.0.273)",
-"text": " MB, 2 million stroke points per page, the documents' space quota. Connections only through netguard to *.remarkable.com, *.remarkable.engineering (and storage.googleapis.com without login), https only, redirects only there. The content is outside text. Logs: remarkable: 2 notebook(s), 5 page(s) new, 0 removed."
+"text": " 2 million stroke points per page, the documents' space quota. Connections only through netguard to *.remarkable.com, *.remarkable.engineering (and storage.googleapis.com without login), https only, redirects only there. The content is outside text. Logs: remarkable: 2 notebook(s), 5 page(s) new, 0 removed."
 },
 {
 "lang": "en",
@@ -4277,7 +4285,7 @@
 "file": "Assistant and panel",
 "head": "Voice chat",
 "title": "Sending to the reMarkable (V01.0.273)",
-"text": "Sending to the reMarkable (V01.0.273): Below \"reMarkable notes\" the admin switch \"Sending to the reMarkable\" (off) and Ich → reMarkable → \"Send to the reMarkable\" (off). Then every answer has \"To the reMarkable\" (on a click only, own browser), and \"Write on the reMarkable: …\" makes a dictated note. The tool remarkable_note is only offered when the person's own message names \"reMarkable\" and is locked after outside text (web, mail, documents) in the same answer. It creates a new EPUB in the folder \"Spark\" (made when missing); existing documents are never changed, moved or deleted; the root index only gets lines added (generation checked). At most 20 a day and 60,000 characters."
+"text": "Sending to the reMarkable (V01.0.273): Below \"reMarkable notes\" the admin switch \"Sending to the reMarkable\" (off) and Me → reMarkable → \"Send to the reMarkable\" (off). Then every answer has \"To the reMarkable\" (on a click only, own browser), and \"Write on the reMarkable: …\" makes a dictated note. The tool remarkable_note is only offered when the person's own message names \"reMarkable\" and is locked after outside text (web, mail, documents) in the same answer. It creates a new EPUB in the folder \"Spark\" (made when missing); existing documents are never changed, moved or deleted; the root index only gets lines added (generation checked). At most 20 a day and 60,000 characters."
 },
 {
 "lang": "en",
@@ -4333,7 +4341,7 @@
 "file": "Assistant and panel",
 "head": "Voice chat",
 "title": "My status (V01.0.281)",
-"text": "My status (V01.0.281): Under Ich → Mein Zustand every profile sees what the Spark does for it in the background and whether its connected services answer. Switches: Features → Everyday → \"My status\" (admin, off) and Ich → Mein Zustand → \"Show my status\" (profile, off); never guests. Section In the background: reading documents (page x of y, n of 100 pages today), preparing meaning search, document cards, comparing the reMarkable, tidying the inbox (per mailbox), fetching contacts, jobs, morning briefing, tidying memory, each with its state (running, waiting, fine, needs you), the reason it waits (\"paused while someone speaks\", \"waits for a quiet minute\", \"waits for the night\", \"daily limit reached\"), last and next time, a progress bar and the history of the last 7 days (at most 50 entries per job, users/<p>/hintergrund.json, only for profiles with the switch on). Section Connected: mailboxes, calendars (task lists too), address books, Home Assistant, Telegram, iPhone app, Pebble, speakers. A service's state is the outcome of its last real request (netguard.client(seen=…), IMAP login); the page never asks a service itself; after a restart it says \"not asked yet\" until the service wa"
+"text": "My status (V01.0.281): Under Me → My status every profile sees what the Spark does for it in the background and whether its connected services answer. Switches: Features → Everyday → \"My status\" (admin, off) and Me → My status → \"Show my status\" (profile, off); never guests. Section In the background: reading documents (page x of y, n of 100 pages today), preparing meaning search, document cards, comparing the reMarkable, tidying the inbox (per mailbox), fetching contacts, jobs, morning briefing, tidying memory, each with its state (running, waiting, fine, needs you), the reason it waits (\"paused while someone speaks\", \"waits for a quiet minute\", \"waits for the night\", \"daily limit reached\"), last and next time, a progress bar and the history of the last 7 days (at most 50 entries per job, users/<p>/hintergrund.json, only for profiles with the switch on). Section Connected: mailboxes, calendars (task lists too), address books, Home Assistant, Telegram, iPhone app, Pebble, speakers. A service's state is the outcome of its last real request (netguard.client(seen=…), IMAP login); the page never asks a service itself; after a restart it says \"not asked yet\" until the service was needed"
 },
 {
 "lang": "en",
@@ -4341,7 +4349,7 @@
 "file": "Assistant and panel",
 "head": "Voice chat",
 "title": "My status (V01.0.281)",
-"text": "s needed (state/dienste-zustand.json). \"Compare now\" (reMarkable) and \"Fetch now\" (contacts) use the existing buttons. Only fixed words, numbers and the person's own names (document, mailbox, calendar, device names); never mail subjects, senders, events, document text or a server's error text (reduced to a fixed reason). When something needs the profile (sign-in refused, address not found, storage full, tidying stopped, a memory proposal waiting), a red dot shows at \"Ich\" (asked once a minute, ?brief=1). The page refreshes every 10 seconds while open. The iPhone app reads the same source (GET /api/profile/hintergrund, key \"app\", read only). Status → Monitoring \"My status of all profiles\" shows the admin counts only (GET /api/admin/hintergrund). Plan: plaene/hintergrund-status.md."
+"text": " (state/dienste-zustand.json). \"Compare now\" (reMarkable) and \"Fetch now\" (contacts) use the existing buttons. Only fixed words, numbers and the person's own names (document, mailbox, calendar, device names); never mail subjects, senders, events, document text or a server's error text (reduced to a fixed reason). When something needs the profile (sign-in refused, address not found, storage full, tidying stopped, a memory proposal waiting), a red dot shows at \"Me\" (asked once a minute, ?brief=1). The page refreshes every 10 seconds while open. The iPhone app reads the same source (GET /api/profile/hintergrund, key \"app\", read only). Status → Monitoring \"My status of all profiles\" shows the admin counts only (GET /api/admin/hintergrund). Plan: plaene/hintergrund-status.md."
 },
 {
 "lang": "en",
@@ -4421,7 +4429,7 @@
 "file": "Assistant and panel",
 "head": "Voice chat",
 "title": "Suggesting functions (V01.0.380, off by default)",
-"text": "sends the admins a notification with the function's name (at most once a day); an admin gets the way to Features. Me → Overview (on a phone above the list) shows at most three suggestions with a reason (6); under Proactive, with its own switch, at most one a week arrives as a notification (7, 10 am to 7 pm, never in quiet hours). Sparing: at most one hint per conversation and three a week, \"Do not show again\" is for good, none after text from mail or the web, under the emergency stop, at a speaker, watch or Siri, on Telegram and over MCP, never for guests or a device key. Per profile only which hints came and were declined is stored, and the number of questions per kind (tipps.json, 14 days). Switches: Features → below \"Help with the Spark\" \"Suggesting functions\" (below it \"… also by itself\"), Me → Conversation → \"Hints on functions\", Me → Proactive → \"Suggest a function\". Log: lines tipps:; Logs → Requests shows hinweis at the switch; Status → Live events \"Funktionen vorschlagen\" (shown, applied, do not show again, admin asked), never contents. Plan: plaene/funktionen-entdecken.md; tests: app/tests/test_tipps.py."
+"text": "sends the admins a notification with the function's name (at most once a day); an admin gets the way to Features. Me → Overview (on a phone above the list) shows at most three suggestions with a reason (6); under Proactive, with its own switch, at most one a week arrives as a notification (7, 10 am to 7 pm, never in quiet hours). Sparing: at most one hint per conversation and three a week, \"Do not show again\" is for good, none after text from mail or the web, under the emergency stop, at a speaker, watch or Siri, on Telegram and over MCP, never for guests or a device key. Per profile only which hints came and were declined is stored, and the number of questions per kind (tipps.json, 14 days). Switches: Features → below \"Help with the Spark\" \"Suggesting functions\" (below it \"… also by itself\"), Me → Conversation → \"Hints on functions\", Me → Proactive → \"Suggest a function\". Log: lines tipps:; Logs → Requests shows hinweis at the switch; Status → Live events \"Suggesting functions\" (shown, applied, do not show again, admin asked), never contents. Plan: plaene/funktionen-entdecken.md; tests: app/tests/test_tipps.py."
 },
 {
 "lang": "en",
@@ -4477,7 +4485,7 @@
 "file": "Assistant and panel",
 "head": "The panel",
 "title": "The panel",
-"text": "The menu (since V01.0.145, design \"Klar\") is a sidebar on the left on computers and a bar at the bottom on phones (Assistent, Ich, Zustand, Verwalten). At the very top Search (Ctrl K or ⌘ K, since V01.0.265) finds pages, switches, settings, Ich, checks, logs and guides; a hit opens the place and marks it. Below are Assistent and Ich for yourself, then under *Spark verwalten* (manage Spark) the admin pages Zustand (status), Funktionen (features), Personen und Geräte (people and devices) and Einstellungen (settings) (since V01.0.265; \"Einbinden\" is gone). Zustand, Funktionen and Personen und Geräte have sub-pages; a number next to \"Einstellungen\" counts unsaved pages. On a computer \"Ich\" opens as a page right of the sidebar since V01.0.147 instead of a window; another menu entry closes it."
+"text": "The menu (since V01.0.145, design \"Klar\") is a sidebar on the left on computers and a bar at the bottom on phones (Assistant, Me, Status, Manage). At the very top Search (Ctrl K or ⌘ K, since V01.0.265) finds pages, switches, settings, Me, checks, logs and guides; a hit opens the place and marks it. Below are Assistant and Me for yourself, then under *Manage Spark* the admin pages Status, Features (with *Guides*), People and devices (with *Apps and interfaces*) and Settings (since V01.0.265; \"Integrate\" is gone). Status, Features and People and devices have sub-pages; a number next to \"Settings\" counts unsaved pages. On a computer \"Me\" opens as a page right of the sidebar since V01.0.147 instead of a window; another menu entry closes it."
 },
 {
 "lang": "en",
@@ -4501,7 +4509,7 @@
 "file": "Assistant and panel",
 "head": "The panel",
 "title": "The panel",
-"text": "ark\", \"Jarvis\" or \"Computer\" always count. Only for signed-in profiles (login, iPhone app, speaker), never for guests, so nobody can test what the Spark just said to someone else. The log shows only chat: ignored (own voice) or (speaking pause), never the text. Home Assistant via Wyoming is not covered. - Zustand (status; \"Übersicht\" until V01.0.144): On top one sentence on whether everything runs, below it \"Braucht dich\" (needs you: update ready, unsaved settings, a service off or failing) with a button to each place; the dot next to \"Zustand\" in the menu shows the same in green, yellow or red. qwen38 and GPU processes are folded. *Monitoring* (GPU load, free unified memory, temperature, CPU with history; per service status, requests, latency, RTF, start/stop/restart; the running qwen38 lane), *Checks* (live check, quality test, benchmark, try speech recognition and speech output) and *Logs*. Since V01.0.286 (plan \"Bedienung gesamt\" C3) in plain words: under the sentence the version, last backup and last check; four cards *Zuhören* (listening), *Sprechen* (speaking) (running, off, no answer, error; model and average time), *Sprachmodell* (language model: answers according to the l"
+"text": "ark\", \"Jarvis\" or \"Computer\" always count. Only for signed-in profiles (login, iPhone app, speaker), never for guests, so nobody can test what the Spark just said to someone else. The log shows only chat: ignored (own voice) or (speaking pause), never the text. Home Assistant via Wyoming is not covered. - Zustand (status; \"Übersicht\" until V01.0.144): On top one sentence on whether everything runs, below it \"Braucht dich\" (needs you: update ready, unsaved settings, a service off or failing) with a button to each place; the dot next to \"Status\" in the menu shows the same in green, yellow or red. qwen38 and GPU processes are folded. *Monitoring* (GPU load, free unified memory, temperature, CPU with history; per service status, requests, latency, RTF, start/stop/restart; the running qwen38 lane), *Checks* (live check, quality test, benchmark, try speech recognition and speech output) and *Logs*. Since V01.0.286 (plan \"Bedienung gesamt\" C3) in plain words: under the sentence the version, last backup and last check; four cards *Zuhören* (listening), *Sprechen* (speaking) (running, off, no answer, error; model and average time), *Sprachmodell* (language model: answers according to the la"
 },
 {
 "lang": "en",
@@ -4509,7 +4517,7 @@
 "file": "Assistant and panel",
 "head": "The panel",
 "title": "The panel",
-"text": "ast check) and *Speicher* (memory: free, with the 8 GiB line below which DGX OS ends processes); below them the line *Heute (24 Std.)*: answers with median first sound, speakers online, how often background work waited for speech. GPU, CPU, the service table with start/stop and qwen38 are complete under *Technische Details* (folded; tapping a card opens it). - Einstellungen (settings): sub-pages on the left. Since V01.0.207 it starts with *At a glance* (each page with its state in one line, on top what a switched-on feature is missing; on the phone the state sits right in the menu), then three blocks: *Assistant* (Features, Defaults, Language model), *Speech* (Speech recognition, Speech output, Voices) and *Spark* (Security, Operation, Update and backup). All pages are built the same way: title with one sentence, sections, rows with the switch or value on the right, one sentence of help and the rest behind \"More\", \"Advanced\" folded, buttons that act at once in a section of their own; above them a field searches all settings and guides (a hit opens the page and marks the spot, even below a switch that is off). The Me window has the same search field. First *Features*: one switch per"
+"text": "st check) and *Speicher* (memory: free, with the 8 GiB line below which DGX OS ends processes); below them the line *Heute (24 Std.)*: answers with median first sound, speakers online, how often background work waited for speech. GPU, CPU, the service table with start/stop and qwen38 are complete under *Technische Details* (folded; tapping a card opens it). - Einstellungen (settings): sub-pages on the left. Since V01.0.207 it starts with *At a glance* (each page with its state in one line, on top what a switched-on feature is missing; on the phone the state sits right in the menu), then three blocks: *Assistant* (Features, Defaults, Language model), *Speech* (Speech recognition, Speech output, Voices) and *Spark* (Security, Operation, Update and backup). All pages are built the same way: title with one sentence, sections, rows with the switch or value on the right, one sentence of help and the rest behind \"More\", \"Advanced\" folded, buttons that act at once in a section of their own; above them a field searches all settings and guides (a hit opens the page and marks the spot, even below a switch that is off). The Me window has the same search field. First *Features*: one switch per "
 },
 {
 "lang": "en",
@@ -4517,7 +4525,7 @@
 "file": "Assistant and panel",
 "head": "The panel",
 "title": "The panel",
-"text": " capability, in groups (conversation, my day, mail and documents, home, on the go and devices, access). Each switch has one sentence, small marks (*set up under Me → …*, *never for guests*, *read only*, *leaves the house*) and a guide; its settings (e.g. the SearXNG address under web search, the Open-Meteo addresses under weather, the strictness under speaker identification) sit indented right below it and appear as soon as it is on. Since V01.0.171 each feature is first one short line (arrow, name, switch); tapping the arrow or name opens its sentence, marks, guide and settings, and switching it on or a search hit opens it by itself. On top, *All*, *On*, *Off* and *Needs you* filter the list (a feature that is on but misses something: SearXNG address, allowed addresses for Wyoming, Telegram token, Apple key, speaker firmware; its line then says \"needs you\"); the browser remembers the choice. Below, a bar jumps to the groups. Then *Defaults* (for guests and new profiles: listening, answer, display), *Language model* (connection, answers, tools, advanced), *Speech recognition* (Qwen3-ASR or Parakeet), *Speech output*, *Voices*, *Security* (who reaches the Spark; admin login), *Opera"
+"text": "capability, in groups (conversation, my day, mail and documents, home, on the go and devices, access). Each switch has one sentence, small marks (*set up under Me → …*, *never for guests*, *read only*, *leaves the house*) and a guide; its settings (e.g. the SearXNG address under web search, the Open-Meteo addresses under weather, the strictness under speaker identification) sit indented right below it and appear as soon as it is on. Since V01.0.171 each feature is first one short line (arrow, name, switch); tapping the arrow or name opens its sentence, marks, guide and settings, and switching it on or a search hit opens it by itself. On top, *All*, *On*, *Off* and *Needs you* filter the list (a feature that is on but misses something: SearXNG address, allowed addresses for Wyoming, Telegram token, Apple key, speaker firmware; its line then says \"needs you\"); the browser remembers the choice. Below, a bar jumps to the groups. Then *Defaults* (for guests and new profiles: listening, answer, display), *Language model* (connection, answers, tools, advanced), *Speech recognition* (Qwen3-ASR or Parakeet), *Speech output*, *Voices*, *Security* (who reaches the Spark; admin login), *Operat"
 },
 {
 "lang": "en",
@@ -4669,7 +4677,7 @@
 "file": "iPhone app \"Spark\"",
 "head": "Quick start, history, photos, offline",
 "title": "Quick start, history, photos, offline",
-"text": "- Quick start: \"Talk to Spark\" opens the app and it listens at once. On the Action button: iPhone Settings → Action Button → Shortcut → \"Talk to Spark\". In Control Center (iOS 18 and later) via \"Add a Control\", on the lock screen as a widget. With Siri: \"Hey Siri, Start Spark\". - History: The clock icon at the top left shows your earlier conversations, the same list as the panel's log. Tapping one continues it. Deleting stays in the panel. - Today (since V01.0.286): the sun at the top right shows what is due today, like *Ich → Heute* in the panel: next appointments of today and tomorrow, open reminders, unread messages, documents, remembered facts. Only cards of functions your profile may use; pull down to refresh. - Ask about a photo or document: The paper clip next to the input: take a photo, choose a photo, or a document (PDF, text, image). The iPhone reads the text itself, scanned pages too. Only the text goes to the Spark. The attachment stays for the conversation until you remove it with ✕. Let the Spark look at photos: with \"Let the model look at photos from the app\" on under Me → iPhone app (plus the admin and profile switches for pictures), a photo goes to the Spark as a p"
+"text": "- Quick start: \"Talk to Spark\" opens the app and it listens at once. On the Action button: iPhone Settings → Action Button → Shortcut → \"Talk to Spark\". In Control Center (iOS 18 and later) via \"Add a Control\", on the lock screen as a widget. With Siri: \"Hey Siri, Start Spark\". - History: The clock icon at the top left shows your earlier conversations, the same list as the panel's log. Tapping one continues it. Deleting stays in the panel. - Today (since V01.0.286): the sun at the top right shows what is due today, like *Me → Today* in the panel: next appointments of today and tomorrow, open reminders, unread messages, documents, remembered facts. Only cards of functions your profile may use; pull down to refresh. - Ask about a photo or document: The paper clip next to the input: take a photo, choose a photo, or a document (PDF, text, image). The iPhone reads the text itself, scanned pages too. Only the text goes to the Spark. The attachment stays for the conversation until you remove it with ✕. Let the Spark look at photos: with \"Let the model look at photos from the app\" on under Me → iPhone app (plus the admin and profile switches for pictures), a photo goes to the Spark as a pi"
 },
 {
 "lang": "en",
@@ -4677,7 +4685,7 @@
 "file": "iPhone app \"Spark\"",
 "head": "Quick start, history, photos, offline",
 "title": "Quick start, history, photos, offline",
-"text": "icture, scaled to 1280 px, so it also recognises things, plants or an error display. Follow-up questions about the same photo work for 10 minutes. With it off, the iPhone reads only the text as before. PDFs and documents always stay text. - Save to \"My documents\": With \"Store documents from the app\" on under Me → iPhone app in the panel, the attachment shows a button for it. The Spark then finds the document later, like an upload in the panel. - Offline: When the Spark cannot be reached, the app says so at the top. Typed questions wait (at most 10, for one day) and go out once the Spark is back. Speaking does not work then, because the Spark recognises the speech. - English: On an iPhone set to English the app is in English, including the wake word and Siri (\"Ask Spark\", \"Start Spark\")."
+"text": "cture, scaled to 1280 px, so it also recognises things, plants or an error display. Follow-up questions about the same photo work for 10 minutes. With it off, the iPhone reads only the text as before. PDFs and documents always stay text. - Save to \"My documents\": With \"Store documents from the app\" on under Me → iPhone app in the panel, the attachment shows a button for it. The Spark then finds the document later, like an upload in the panel. - Offline: When the Spark cannot be reached, the app says so at the top. Typed questions wait (at most 10, for one day) and go out once the Spark is back. Speaking does not work then, because the Spark recognises the speech. - English: On an iPhone set to English the app is in English, including the wake word and Siri (\"Ask Spark\", \"Start Spark\")."
 },
 {
 "lang": "en",
@@ -4765,7 +4773,7 @@
 "file": "iPhone app \"Spark\"",
 "head": "Where the Spark is listening (room mode)",
 "title": "Where the Spark is listening (room mode)",
-"text": "Since V01.0.209 the app shows when a device of your profile listens in room mode (browser or speaker). Switch it on in the panel under Ich → iPhone-App → \"Raum-Modus in der App zeigen\" (off, needs room mode from the admin). The top of the chat then reads \"● Küche hört zu bis 21:30\" with \"Beenden\", with several devices one line that opens a list. The app asks when it opens, when it comes back and every 30 seconds. The lock screen and the Dynamic Island show a Live Activity with the time left and \"Beenden\" (turn off in the iPhone Settings → Spark → Live Activities). It is only updated while the app runs; after the end time it reads \"vorbei\" until the app looks again. The \"Raum-Modus\" widget (home and lock screen) shows \"Küche hört zu bis 21:30\" or \"Niemand hört zu\". With Siri: \"End room mode with Spark\". The app can only end room mode, never start it; it sees only where and until when, never what was heard."
+"text": "Since V01.0.209 the app shows when a device of your profile listens in room mode (browser or speaker). Switch it on in the panel under Me → iPhone app → \"Raum-Modus in der App zeigen\" (show room mode in the app) (off, needs room mode from the admin). The top of the chat then reads \"● Küche hört zu bis 21:30\" with \"Beenden\", with several devices one line that opens a list. The app asks when it opens, when it comes back and every 30 seconds. The lock screen and the Dynamic Island show a Live Activity with the time left and \"Beenden\" (turn off in the iPhone Settings → Spark → Live Activities). It is only updated while the app runs; after the end time it reads \"vorbei\" until the app looks again. The \"Raum-Modus\" widget (home and lock screen) shows \"Küche hört zu bis 21:30\" or \"Niemand hört zu\". With Siri: \"End room mode with Spark\". The app can only end room mode, never start it; it sees only where and until when, never what was heard."
 },
 {
 "lang": "en",
@@ -4829,7 +4837,7 @@
 "file": "iPhone app \"Spark\"",
 "head": "Security",
 "title": "Security",
-"text": "- Each iPhone gets its own key when pairing, kept only in that iPhone's keychain and on the Spark only as a hash. - The key may only ask and listen (chat, speech recognition, Siri question). Settings, memory, devices, connections and further pairings are refused. - The profile's switch off locks all its iPhones at once, the admin switch all of them. Remove a lost iPhone under Me → iPhone app → Remove. - Smart home from the app only with its own switch and the code word. What the app claims to be does not count; the panel decides by the key. - Wake word, stand mode, routes and calls only with their own switch in the panel. The Spark only suggests a route or call; the tool exists only for the app key with the switch, and only your \"yes\" on the iPhone starts it. Outside text (mail, web page) cannot start a route or call. - No sound goes to the Spark before the wake word. In the background the app listens only with the wake word on. - Push: the Apple key (.p8) is stored encrypted, changed only by the admin with the second step, never shown again. Apple only gets a fixed sentence and a random number. Only the app with its own key signs up its push address; only the profile's own app get"
+"text": "- Each iPhone gets its own key when pairing, kept only in that iPhone's keychain and on the Spark only as a hash. - The key may only ask and listen (chat, speech recognition, Siri question). Settings, memory, devices, connections and further pairings are refused. - The profile's switch off locks all its iPhones at once, the admin switch all of them. Remove a lost iPhone under Me → iPhone app → Remove. - Smart home from the app only with its own switch and the code word. What the app claims to be does not count; the panel decides by the key. - Wake word, stand mode, routes and calls only with their own switch in the panel. The Spark only suggests a route or call; the tool exists only for the app key with the switch, and only your \"yes\" on the iPhone starts it. Outside text (mail, web page) cannot start a route or call. - No sound goes to the Spark before the wake word. In the background the app listens only with the wake word on. - Push: the Apple key (.p8) is stored encrypted, changed only by the admin with the second step, never shown again. Apple only gets a fixed sentence and a random number. Only the app with its own key signs up its push address; a removed iPhone gets nothing "
 },
 {
 "lang": "en",
@@ -4837,7 +4845,7 @@
 "file": "iPhone app \"Spark\"",
 "head": "Security",
 "title": "Security",
-"text": "s a notification's text. - Photos and documents: the iPhone reads the text, only text goes to the Spark (at most 20,000 characters per question). Photos go as pictures only with the photo switch on; a round with a picture offers no tools, and the picture is not kept in the history. The Spark treats it as outside text: it sits as data in the prompt, not in the conversation, and locks actions as after a mail. The history keeps only the attachment's name. - Storing documents only with its own switch, only with the app key, at most 10 per minute and 3 MB. The app cannot list or delete the documents. - \"My profile\" changes only a fixed list (voice, speed, length, by itself, morning briefing). The app's rights, Telegram, the smart home and the tone cannot be changed through it; a request with any other field is refused as a whole. - Apple Reminders: only with its own switch, only after \"yes\" on the iPhone. The app reads nothing from Reminders for the Spark. Shortcuts may only add entries to the lists; list settings stay in the panel. - Sharing: shared content is outside text (locks actions), at most 20,000 characters per question; the iPhone loads web pages itself, at most 3 MB. - Waitin"
+"text": "from then on. Only the profile's own app gets a notification's text. - Photos and documents: the iPhone reads the text, only text goes to the Spark (at most 20,000 characters per question). Photos go as pictures only with the photo switch on; a round with a picture offers no tools, and the picture is not kept in the history. The Spark treats it as outside text: it sits as data in the prompt, not in the conversation, and locks actions as after a mail. The history keeps only the attachment's name. - Storing documents only with its own switch, only with the app key, at most 10 per minute and 3 MB. The app cannot list or delete the documents. - \"My profile\" changes only a fixed list (voice, speed, length, by itself, morning briefing). The app's rights, Telegram, the smart home and the tone cannot be changed through it; a request with any other field is refused as a whole. - Apple Reminders: only with its own switch, only after \"yes\" on the iPhone. The app reads nothing from Reminders for the Spark. Shortcuts may only add entries to the lists; list settings stay in the panel. - Sharing: shared content is outside text (locks actions), at most 20,000 characters per question; the iPhone lo"
 },
 {
 "lang": "en",
@@ -4845,15 +4853,15 @@
 "file": "iPhone app \"Spark\"",
 "head": "Security",
 "title": "Security",
-"text": "g questions stay on the iPhone and are deleted when unpairing. - CarPlay never loosens anything: in the car the smart home is locked without its own car switch. - Pairing only from the profile's own browser login, with the second login step when the profile has it. At most 5 iPhones per profile."
+"text": "ads web pages itself, at most 3 MB. - Waiting questions stay on the iPhone and are deleted when unpairing. - Spark update: only the admin gives the rights (with the admin's code when the second step is on); a profile cannot give them to itself. Starting needs the app's key, Face ID and a fresh 6-digit code of the profile (each code once, wrong codes count towards the lock), at most once in 10 minutes. The app cannot pick a version; only versions with passed GitHub tests are installed. Every start is in the security log, and the language model has no tool for it. - CarPlay never loosens anything: in the car the smart home is locked without its own car switch. - Pairing only from the profile's own browser login, with the second login step when the profile has it. At most 5 iPhones per profile."
 },
 {
 "lang": "en",
 "src": "iphone-app",
 "file": "iPhone app \"Spark\"",
-"head": "Security",
-"title": "Security",
-"text": "Every push that changes ios/ builds the app on GitHub for the simulator (.github/workflows/ios.yml). - Spark update: only the admin gives the rights; starting needs the app's key, Face ID and a fresh 6-digit code of the profile (each code once), at most once in 10 minutes. The app cannot pick a version; only versions with passed GitHub tests are installed. Every start is in the security log, and the language model has no tool for it."
+"head": "What the Spark offers for it",
+"title": "What the Spark offers for it",
+"text": "Every push that changes ios/ builds the app on GitHub for the simulator (.github/workflows/ios.yml), so errors show there and not only in Xcode."
 },
 {
 "lang": "en",
@@ -4861,7 +4869,7 @@
 "file": "Publishing the iPhone app",
 "head": "Publishing the iPhone app",
 "title": "Publishing the iPhone app",
-"text": "Three ways; all need the Apple Developer Program (99 €/year)."
+"text": "Three ways, from the simplest to the most work. All need the Apple Developer Program (99 €/year)."
 },
 {
 "lang": "en",
@@ -4869,7 +4877,7 @@
 "file": "Publishing the iPhone app",
 "head": "1. Once: create the app at Apple",
 "title": "1. Once: create the app at Apple",
-"text": "1. In Xcode: project Spark → Build Settings → APP_BUNDLE_ID is your own bundle ID; both targets (Spark, SparkNotify) have your team under Signing & Capabilities. 2. appstoreconnect.apple.com → Apps → + → New App: iOS, a name that is free in the store, your bundle ID, any SKU."
+"text": "1. Check in Xcode: project Spark → Build Settings → APP_BUNDLE_ID is your own bundle ID (e.g. io.github.db9979.speechspark.dominik). Both targets (Spark and SparkNotify) have your team selected under Signing & Capabilities. 2. appstoreconnect.apple.com → Apps → + → New App: platform iOS, a name (it must be free in the App Store; \"Spark\" is surely taken, e.g. \"Spark voice assistant\"), primary language, the bundle ID from the list, any SKU (e.g. speechspark)."
 },
 {
 "lang": "en",
@@ -4877,7 +4885,7 @@
 "file": "Publishing the iPhone app",
 "head": "2. Upload every new version",
 "title": "2. Upload every new version",
-"text": "1. git pull in the repo. 2. Target Spark → General: raise Version for user-visible changes. The Build number counts up by itself: building sets it to the number of commits in the repo, the same for the app and its extensions, so it is larger after every git pull. The app shows both small at the bottom, e.g. \"1.0 (412)\". 3. Destination Any iOS Device (arm64), then Product → Archive. 4. Distribute App → App Store Connect → Distribute. 5. After 5–30 minutes the build shows under TestFlight. The encryption question is answered by the app itself (ITSAppUsesNonExemptEncryption = NO, https only)."
+"text": "1. git pull in the repo. 2. Xcode → target Spark → General: raise Version (e.g. 1.1) when something changes for users. The Build number counts up by itself: building sets it to the number of commits in the repo, the same for the app and all its extensions, so it is larger after every git pull. The app shows both small at the bottom, e.g. \"1.0 (412)\". 3. Choose Any iOS Device (arm64) as the destination at the top. 4. Product → Archive. After a few minutes the Organizer opens. 5. Distribute App → App Store Connect → Distribute. Xcode signs and uploads. 6. After 5–30 minutes the build shows in App Store Connect under TestFlight. The app answers the encryption question itself (https only, ITSAppUsesNonExemptEncryption = NO)."
 },
 {
 "lang": "en",
@@ -4885,7 +4893,7 @@
 "file": "Publishing the iPhone app",
 "head": "2. Upload every new version",
 "title": "2. Upload every new version",
-"text": "Then set the panel's Push to the iPhone app to \"Production\": TestFlight and App Store builds use Apple's production push."
+"text": "Then set the kind to \"Production\" in the panel under Features → Push to the iPhone app: TestFlight and App Store builds use Apple's production push. Installed straight from Xcode it is \"Development\" again."
 },
 {
 "lang": "en",
@@ -4893,7 +4901,23 @@
 "file": "Publishing the iPhone app",
 "head": "Upload with the GitHub button \"TestFlight\"",
 "title": "Upload with the GitHub button \"TestFlight\"",
-"text": "Instead of Archive and Distribute on the Mac, the workflow TestFlight (Actions → Run workflow, by hand) builds the app, lets Apple sign it with the App Store Connect API key and uploads it to TestFlight, only for a commit whose tests passed. Secrets: ASC_KEY_ID, ASC_ISSUER_ID, ASC_KEY (the whole .p8 of a team key with role Admin, needed to fetch signing certificates) and ASC_TEAM_ID. The build number counts up by itself."
+"text": "Instead of Archive and Distribute on the Mac this also works on GitHub. The button builds the app, lets Apple sign it and uploads it to TestFlight. It starts only for a commit whose tests passed. The build number counts up by itself."
+},
+{
+"lang": "en",
+"src": "iphone-publishing",
+"file": "Publishing the iPhone app",
+"head": "Upload with the GitHub button \"TestFlight\"",
+"title": "Upload with the GitHub button \"TestFlight\"",
+"text": "Once: 1. App Store Connect → Users and Access → Integrations → App Store Connect API → Team Keys: create a key with role Admin. Only Admin may fetch certificates for signing. If you already have an App Manager key for the texts, replace it with this one. 2. GitHub → Settings → Secrets and variables → Actions: ASC_KEY_ID, ASC_ISSUER_ID, ASC_KEY (the whole content of the .p8 file) and also ASC_TEAM_ID (developer.apple.com → Membership → Team ID)."
+},
+{
+"lang": "en",
+"src": "iphone-publishing",
+"file": "Publishing the iPhone app",
+"head": "Upload with the GitHub button \"TestFlight\"",
+"title": "Upload with the GitHub button \"TestFlight\"",
+"text": "Then: GitHub → Actions → TestFlight → Run workflow, enter the bundle ID, Run. After 15 to 30 minutes the build is in App Store Connect under TestFlight."
 },
 {
 "lang": "en",
@@ -4901,23 +4925,47 @@
 "file": "Publishing the iPhone app",
 "head": "Upload with the GitHub button \"TestFlight\"",
 "title": "Automatic",
-"text": "Automatic: when a commit on main changes ios/, TestFlight starts by itself once \"iPhone app\" and \"Tests\" passed, at most one upload per hour; a newer iOS commit in the waiting time replaces the older one. If a newer push cancelled the Tests of the iOS commit, the newest main commit with passed Tests that contains it goes up (V01.0.321). The certificates a run makes for itself are revoked at its end, otherwise Apple's limit is reached after some dozen runs (\"reached the maximum number of certificates\", V01.0.334). If that message still shows, revoke the old ones under developer.apple.com → Certificates. Turn it off with the repository variable TESTFLIGHT_AUTO = off; a different bundle ID goes into the variable APP_BUNDLE_ID. To start again use Run workflow, not \"Re-run\" (a re-run builds the old commit)."
+"text": "Automatic: when a commit on main changes something under ios/, TestFlight starts by itself as soon as \"iPhone app\" and \"Tests\" passed. At most one upload per hour. If a newer iOS commit comes in the waiting time, only that one is uploaded. If a newer push cancelled the tests of the iOS commit, the newest main commit with passed tests that contains the iOS commit goes up (V01.0.321). The certificates a run makes for itself are revoked again at its end, otherwise Apple's limit is reached after some dozen runs (\"reached the maximum number of certificates\", V01.0.334). If that message still shows in a run, revoke the old entries under developer.apple.com → Certificates. Turn it off: GitHub → Settings → Secrets and variables → Actions → Variables → TESTFLIGHT_AUTO = off. A bundle ID other than io.github.db9979.speechspark goes into the variable APP_BUNDLE_ID. To start again always use Run workflow, not \"Re-run\", because a re-run builds the old commit."
 },
 {
 "lang": "en",
 "src": "iphone-publishing",
 "file": "Publishing the iPhone app",
-"head": "3. TestFlight",
-"title": "3. TestFlight",
-"text": "App Store Connect → Users and Access: invite family members; app → TestFlight → Internal Testing → +: add them and the build. Each installs TestFlight from the App Store and accepts. A build runs 90 days."
+"head": "Upload with the GitHub button \"TestFlight\"",
+"title": "Upload with the GitHub button \"TestFlight\"",
+"text": "If it does not work the first time, send the red line from the run."
 },
 {
 "lang": "en",
 "src": "iphone-publishing",
 "file": "Publishing the iPhone app",
-"head": "4. App Store",
-"title": "4. App Store",
-"text": "Also needed: screenshots (6.9\" or 6.5\"), description, support URL, a privacy policy URL (ready: app-privacy.md, German app-datenschutz.md), App Privacy \"Data Not Collected\" (everything goes to the user's own Spark), age rating, and review notes: reviewers need a Spark, so offer a test profile and a short video. Unlisted distribution can be requested if the app should not show up in search. Review usually takes 1–3 days."
+"head": "3. TestFlight (recommended for you and the family)",
+"title": "3. TestFlight (recommended for you and the family)",
+"text": "1. App Store Connect → Users and Access: invite family members with their Apple ID (a role like \"Marketing\" is enough). 2. App → TestFlight → Internal Testing → + → create a group \"Family\", add the people, assign the build. 3. Everybody installs the TestFlight app from the App Store on the iPhone and accepts the invitation. New builds arrive there by themselves."
+},
+{
+"lang": "en",
+"src": "iphone-publishing",
+"file": "Publishing the iPhone app",
+"head": "3. TestFlight (recommended for you and the family)",
+"title": "3. TestFlight (recommended for you and the family)",
+"text": "A TestFlight build runs 90 days; then simply upload a new one."
+},
+{
+"lang": "en",
+"src": "iphone-publishing",
+"file": "Publishing the iPhone app",
+"head": "4. App Store (only when strangers should load the app)",
+"title": "4. App Store (only when strangers should load the app)",
+"text": "In addition to steps 1–2, in App Store Connect under the app:"
+},
+{
+"lang": "en",
+"src": "iphone-publishing",
+"file": "Publishing the iPhone app",
+"head": "4. App Store (only when strangers should load the app)",
+"title": "4. App Store (only when strangers should load the app)",
+"text": "- Screenshots: at least for 6.9\" (iPhone 16 Pro Max) or 6.5\", from the simulator with ⌘S. - Description, keywords, support URL (e.g. the GitHub page). - Privacy policy (URL): ready in app-privacy.md, German in app-datenschutz.md. Enter the GitHub link of the file as the URL. - App Privacy: \"Data Not Collected\" (everything goes to the user's own Spark, not to you). Notifications through Apple carry only a fixed sentence. - Age rating: fill in the questionnaire (no content of the categories → 4+; because of the free answers of a language model rather 12+). - Notes for the review: Apple's reviewers need a Spark. Create a test profile of its own, make a pairing link (it lasts only 10 minutes, so better add a short video of the app and offer to send a link on request) and name the address of your reverse proxy. - Availability: request \"Unlisted\" (by link only) at Apple when the app should not show up in the App Store search."
 },
 {
 "lang": "en",
@@ -4925,7 +4973,39 @@
 "file": "Publishing the iPhone app",
 "head": "Fill in the texts automatically",
 "title": "Fill in the texts automatically",
-"text": "Name, subtitle, promotional text, description, keywords, URLs and categories (German and English) are in ios/fastlane/metadata. The GitHub workflow App Store texts (Actions → Run workflow, by hand only) writes them into App Store Connect. It uploads no build or screenshots and never submits for review. It needs the app already created in App Store Connect and three repository secrets from an App Store Connect API team key with role App Manager: ASC_KEY_ID, ASC_ISSUER_ID and ASC_KEY (the whole .p8 file). Screenshots (German and English, 6.9\" and 6.3\") come from the workflow App Store screenshots, which runs the app in the simulator with example content (-SparkDemo, Debug builds only) and stores them on the branch app-store-screenshots; the texts workflow uploads them too when its \"screenshots\" box is ticked. App privacy, age rating, review notes and price stay manual."
+"text": "Name, subtitle, promotional text, description, keywords, URLs and categories (German and English) are in ios/fastlane/metadata. A button on GitHub writes them into App Store Connect. It uploads no build and no pictures and submits nothing for review."
+},
+{
+"lang": "en",
+"src": "iphone-publishing",
+"file": "Publishing the iPhone app",
+"head": "Fill in the texts automatically",
+"title": "Fill in the texts automatically",
+"text": "1. The app must already exist in App Store Connect (step 1), with German as the primary language. 2. App Store Connect → Users and Access → Integrations → App Store Connect API → Team Keys → +: name \"GitHub texts\", role App Manager. Download the .p8 file (works only once), note the Key ID and the Issuer ID. 3. GitHub → repo → Settings → Secrets and variables → Actions → New repository secret, three times: ASC_KEY_ID (Key ID), ASC_ISSUER_ID (Issuer ID), ASC_KEY (the whole content of the .p8 file). 4. GitHub → Actions → App Store texts → Run workflow: enter bundle ID, version (1.0) and copyright (e.g. 2026 First Last), Run. 5. After about 2 minutes the texts are in App Store Connect. You can revoke the key there afterwards."
+},
+{
+"lang": "en",
+"src": "iphone-publishing",
+"file": "Publishing the iPhone app",
+"head": "Fill in the texts automatically",
+"title": "Fill in the texts automatically",
+"text": "The screenshots (German and English, 6.9\" and 6.3\") are made by the workflow App Store screenshots in the iPhone simulator with example content. It puts them on the branch app-store-screenshots. With the box \"upload screenshots too\" ticked, App Store texts enters them as well. The demo mode (-SparkDemo) exists only in the test build, not in the app from the store."
+},
+{
+"lang": "en",
+"src": "iphone-publishing",
+"file": "Publishing the iPhone app",
+"head": "Fill in the texts automatically",
+"title": "Fill in the texts automatically",
+"text": "Left by hand: App Privacy, age rating, notes for the review and price. The answers for them are in the project's papers (\"App Store Connect: Angaben für Spark\")."
+},
+{
+"lang": "en",
+"src": "iphone-publishing",
+"file": "Publishing the iPhone app",
+"head": "Fill in the texts automatically",
+"title": "Fill in the texts automatically",
+"text": "Then Submit for Review. The review usually takes 1–3 days. A frequent rejection: the reviewer gets no further because they have no Spark (guideline 2.1), hence the video and the test access."
 },
 {
 "lang": "en",
@@ -4933,7 +5013,7 @@
 "file": "Publishing the iPhone app",
 "head": "CarPlay",
 "title": "CarPlay",
-"text": "Builds with CarPlay can only be uploaded once Apple granted the entitlement and it is in ios/Spark.entitlements (see iphone-app.md)."
+"text": "Builds with CarPlay can only be uploaded once Apple granted the CarPlay entitlement and it is entered in ios/Spark.entitlements (see iphone-app.md). Until then upload builds without that line; everything else works."
 },
 {
 "lang": "en",
@@ -4957,7 +5037,7 @@
 "file": "Security and operation",
 "head": "Security",
 "title": "Security",
-"text": " anything but the panel (Permissions-Policy); over https Strict-Transport-Security is added. - Strict Content-Security-Policy (since V01.0.286): scripts only run as files from the panel (script-src 'self'): no script in the page, no onclick=\"…\" handlers, no eval. So even injected HTML runs no code. Buttons in generated lists name their function with data-on (base.js ON); only what is registered there can be called. Pictures and sound also from data:/blob: (recordings, QR codes, the face), connections only to the panel itself, no foreign frames. Inline styles stay allowed (they run no code, older Safari versions in the iPhone app need them). The scanner in the self-test turns red on a new inline handler, inline <script>, javascript: link or eval; every browser test counts a CSP message as an error. - Undo (since V01.0.286, plan \"Bedienung gesamt\" C5): *Zustand → Logs → Admin-Protokoll* shows the latest settings changes above the log (when, who, \"Weather: off → on\") with *Rückgängig* (undo). Kept are the last 50 saved changes from Einstellungen, Funktionen and the iPhone app's switches (state/config-undo.json, only names and short values). Never in it: secrets and addresses that need"
+"text": " anything but the panel (Permissions-Policy); over https Strict-Transport-Security is added. - Strict Content-Security-Policy (since V01.0.286): scripts only run as files from the panel (script-src 'self'): no script in the page, no onclick=\"…\" handlers, no eval. So even injected HTML runs no code. Buttons in generated lists name their function with data-on (base.js ON); only what is registered there can be called. Pictures and sound also from data:/blob: (recordings, QR codes, the face), connections only to the panel itself, no foreign frames. Inline styles stay allowed (they run no code, older Safari versions in the iPhone app need them). The scanner in the self-test turns red on a new inline handler, inline <script>, javascript: link or eval; every browser test counts a CSP message as an error. - Undo (since V01.0.286, plan \"Bedienung gesamt\" C5): *Status → Logs → Admin log* shows the latest settings changes above the log (when, who, \"Weather: off → on\") with *Rückgängig* (undo). Kept are the last 50 saved changes from Settings, Features and the iPhone app's switches (state/config-undo.json, only names and short values). Never in it: secrets and addresses that need the admin cod"
 },
 {
 "lang": "en",
@@ -4965,7 +5045,7 @@
 "file": "Security and operation",
 "head": "Security",
 "title": "Security",
-"text": " the admin code (keys, tokens, passwords, the language model address …), the *panel* section (ports, proxies: a wrong value could shut the admin out), lists and long texts. Undo only puts back values still as that change left them (ones changed again since stay and are named), with the same checks and service restarts as saving, and becomes an entry itself. The main admin sees all, a profile in its admin mode its own; managers none. Log: config_undo. Not in the backup (after a restore the old values no longer fit). - Security at a glance (since V01.0.262): at the top of *Settings → Security* a traffic light of fixed checks (admin second step, age of the backup, short PINs, roles without second step, http instead of https, assistant without password, home network addresses, sign-in duration). Red points also show under *Status → Needs you*. Of PINs the panel only notes whether they are shorter than 6 characters, when set and at sign-in. - Second login step (authenticator app): for the admin under *Settings → Security*, for profiles under *Me → Security* once the admin allows it under *Features* (off on new installs; each profile decides for itself). Set up with a QR code; then the l"
+"text": "e (keys, tokens, passwords, the language model address …), the *panel* section (ports, proxies: a wrong value could shut the admin out), lists and long texts. Undo only puts back values still as that change left them (ones changed again since stay and are named), with the same checks and service restarts as saving, and becomes an entry itself. The main admin sees all, a profile in its admin mode its own; managers none. Log: config_undo. Not in the backup (after a restore the old values no longer fit). - Security at a glance (since V01.0.262): at the top of *Settings → Security* a traffic light of fixed checks (admin second step, age of the backup, short PINs, roles without second step, http instead of https, assistant without password, home network addresses, sign-in duration). Red points also show under *Status → Needs you*. Of PINs the panel only notes whether they are shorter than 6 characters, when set and at sign-in. - Second login step (authenticator app): for the admin under *Settings → Security*, for profiles under *Me → Security* once the admin allows it under *Features* (off on new installs; each profile decides for itself). Set up with a QR code; then the login asks for "
 },
 {
 "lang": "en",
@@ -4973,7 +5053,7 @@
 "file": "Security and operation",
 "head": "Security",
 "title": "Security",
-"text": "ogin asks for the six-digit code, plus 10 recovery codes for a lost phone. \"Trust this browser\" saves the code on your own device (since V01.0.286 see below); \"Log out everywhere\" (profile) or \"Forget trusted browsers\" (admin) ends that. While the admin has it on, HTTP Basic no longer works, and changing the password, restoring a backup, creating or moving device keys and changing PINs ask for a code every time. Devices with a key (speakers, Siri, Pebble, phone) need no code. Way back in: admin sudo rm /var/lib/speech-spark/state/mfa-admin.json; the admin resets a profile under *Profiles*. - Fewer codes (since V01.0.289, plan plaene/zweiter-schritt-seltener.md): three things, kept apart by risk. Trusted browsers: whoever ticks \"Trust this browser\" at sign-in (the browser remembers the tick) enters no code there for the days under *Settings → Security → Vertraute Browser* (7 to 90, default 60); after 30 days without use it asks again. Every trusted browser is listed with a short name, since when, last use and \"asks again from\" (admin: *Settings → Security → second login step*, profile: *Me → Security*, the admin also in the profile details) and can be removed on its own; at most 10 "
+"text": "the six-digit code, plus 10 recovery codes for a lost phone. \"Trust this browser\" saves the code on your own device (since V01.0.286 see below); \"Log out everywhere\" (profile) or \"Forget trusted browsers\" (admin) ends that. While the admin has it on, HTTP Basic no longer works, and changing the password, restoring a backup, creating or moving device keys and changing PINs ask for a code every time. Devices with a key (speakers, Siri, Pebble, phone) need no code. Way back in: admin sudo rm /var/lib/speech-spark/state/mfa-admin.json; the admin resets a profile under *People and devices*. - Fewer codes (since V01.0.289, plan plaene/zweiter-schritt-seltener.md): three things, kept apart by risk. Trusted browsers: whoever ticks \"Trust this browser\" at sign-in (the browser remembers the tick) enters no code there for the days under *Settings → Security → Vertraute Browser* (7 to 90, default 60); after 30 days without use it asks again. Every trusted browser is listed with a short name, since when, last use and \"asks again from\" (admin: *Settings → Security → second login step*, profile: *Me → Security*, the admin also in the profile details) and can be removed on its own; at most 10 per "
 },
 {
 "lang": "en",
@@ -4981,7 +5061,7 @@
 "file": "Security and operation",
 "head": "Security",
 "title": "Security",
-"text": "- New people by invitation (since V01.0.276, *Personen und Geräte → Neue Personen*, off): invitation only, there is no open sign-up. The admin creates an invitation (suggested name, starter pack, valid 1, 7 or 30 days) and gets a link, a QR code and a card to print; the link needs the panel's https address. Every link works once, the Spark keeps only its fingerprint (SHA-256), at most 50 are open, used ones disappear 7 days after acceptance or at once with the deleted profile (its PIN links too), expired ones after 30 days. Wrong codes count towards the lockout; whether a name is taken is only told to someone with a valid code. The PIN needs at least 6 characters. Starter packs (\"Familie\", \"Gast plus\", editable) only switch on profile switches of functions the admin has on, never areas of \"Spark verwalten\". Second step: by default \"required for e-mail, documents, jobs\"; a profile from an invitation gets these three only after setting up the second sign-in step and cannot switch it off itself afterwards (fixed check in the panel, reason \"mfa\" under Me and Wer darf was). The main admin gets a push message for every new person. The profile details have PIN link (a new PIN by link inst"
+"text": "- New people by invitation (since V01.0.276, *People and devices → New people*, off): invitation only, there is no open sign-up. The admin creates an invitation (suggested name, starter pack, valid 1, 7 or 30 days) and gets a link, a QR code and a card to print; the link needs the panel's https address. Every link works once, the Spark keeps only its fingerprint (SHA-256), at most 50 are open, used ones disappear 7 days after acceptance or at once with the deleted profile (its PIN links too), expired ones after 30 days. Wrong codes count towards the lockout; whether a name is taken is only told to someone with a valid code. The PIN needs at least 6 characters. Starter packs (\"Familie\", \"Gast plus\", editable) only switch on profile switches of functions the admin has on, never areas of \"Spark verwalten\". Second step: by default \"required for e-mail, documents, jobs\"; a profile from an invitation gets these three only after setting up the second sign-in step and cannot switch it off itself afterwards (fixed check in the panel, reason \"mfa\" under Me and Who may do what). The main admin gets a push message for every new person. The profile details have PIN link (a new PIN by link inste"
 },
 {
 "lang": "en",
@@ -4989,7 +5069,7 @@
 "file": "Security and operation",
 "head": "Security",
 "title": "Security",
-"text": "ead of passing a PIN on; with the second step only with a code) and Remind (push to the person, at most once per hour). Audit log: invite_made, invite_used, invite_pin, invite_app, handoff_login. - \"Los geht's\" (since V01.0.276): after the invitation, *Me → Los geht's* walks in five steps (welcome, secure, devices, services, done) through everything the profile may use, with direct links to the pages under Me and QR codes for the iPhone app and pairing. The Spark ticks off what is done itself (second step set up, iPhone paired, calendar there …); the browser can only set \"later\". The admin sees \"Einrichten x von y\" in the profile list. - Continue on the phone (since V01.0.276, switch under *Neue Personen*): on the computer \"Los geht's\" shows a QR code (2 minutes, once). The phone then shows a number; on the computer you tap the right one of three numbers, only then is the phone signed in to the same profile. A wrong number ends the attempt. Device keys cannot start a handoff. - Independent review of 11.10.2026 (plan pruefung/unabhaengige-pruefung-2026-10-11.md, V01.0.403): changing the off-site backup needs a fresh code every time, \"Back up now\" a code. What a voice at a speaker th"
+"text": "ad of passing a PIN on; with the second step only with a code) and Remind (push to the person, at most once per hour). Audit log: invite_made, invite_used, invite_pin, invite_app, handoff_login. - \"Los geht's\" (since V01.0.276): after the invitation, *Me → Los geht's* walks in five steps (welcome, secure, devices, services, done) through everything the profile may use, with direct links to the pages under Me and QR codes for the iPhone app and pairing. The Spark ticks off what is done itself (second step set up, iPhone paired, calendar there …); the browser can only set \"later\". The admin sees \"Einrichten x von y\" in the profile list. - Continue on the phone (since V01.0.276, switch under *Neue Personen*): on the computer \"Los geht's\" shows a QR code (2 minutes, once). The phone then shows a number; on the computer you tap the right one of three numbers, only then is the phone signed in to the same profile. A wrong number ends the attempt. Device keys cannot start a handoff. - Independent review of 11.10.2026 (plan pruefung/unabhaengige-pruefung-2026-10-11.md, V01.0.403): changing the off-site backup needs a fresh code every time, \"Back up now\" a code. What a voice at a speaker tha"
 },
 {
 "lang": "en",
@@ -4997,7 +5077,7 @@
 "file": "Security and operation",
 "head": "Security",
 "title": "Security",
-"text": "at was not clearly recognised says is kept as \"from outside\" in the history: the next turn starts locked, and the assistant learns nothing about the owner from it. Answers made from outside text keep that mark at the Pebble watch too. Document cards in the system prompt are cut short; documents shared by other profiles show only file name, kind and tags. Only a speaker's own key opens the speaker connection. A restore by the owner profile leaves the panel password and its second step unchanged. /docs, /redoc and /openapi.json are gone. Guests get only error codes from speech recognition, and reading aloud has its own limits for guests. Removing devices and \"Sign out everywhere\" from the iPhone app, and \"Continue on the phone\", need a code when the second step is on. After outside text, \"From phone to PC\" puts no text into the clipboard and sends only plain links. Own MCP services cannot reach the Spark's service ports via its LAN address either. An MCP client switches nothing when a smart-home code word is set, and MCP actions are only proposed with arguments that are read out in full before the \"yes\"."
+"text": "t was not clearly recognised says is kept as \"from outside\" in the history: the next turn starts locked, and the assistant learns nothing about the owner from it. Answers made from outside text keep that mark at the Pebble watch too. Document cards in the system prompt are cut short; documents shared by other profiles show only file name, kind and tags. Only a speaker's own key opens the speaker connection. A restore by the owner profile leaves the panel password and its second step unchanged. /docs, /redoc and /openapi.json are gone. Guests get only error codes from speech recognition, and reading aloud has its own limits for guests. Removing devices and \"Sign out everywhere\" from the iPhone app, and \"Continue on the phone\", need a code when the second step is on. After outside text, \"From phone to PC\" puts no text into the clipboard and sends only plain links. Own MCP services cannot reach the Spark's service ports via its LAN address either. An MCP client switches nothing when a smart-home code word is set, and MCP actions are only proposed with arguments that are read out in full before the \"yes\"."
 },
 {
 "lang": "en",
@@ -5285,7 +5365,7 @@
 "file": "Security and operation",
 "head": "Logs",
 "title": "Telegram: one poller only",
-"text": "Telegram: one poller only (since V01.0.214): Telegram hands new messages to one getUpdates at a time. Up to V01.0.213 the panel's startup tasks ran twice (the https server ran them again), and the two Telegram pollers kicked each other out every 15 s (\"Conflict: terminated by other getUpdates request\"). Now the https server starts without its own startup tasks, and a second poller in the same process is not started. If Telegram still reports a conflict, another program uses the same bot token: the Spark then waits 5 s, 30 s, 1, 2, 5 and at most 10 min, logs only the second and every 20th time (without the token) and shows a hint under State and Integrate → Telegram to use the token in one place only or get a new one from @BotFather. A single conflict right after a restart is normal (the old poll runs for up to 25 s)."
+"text": "Telegram: one poller only (since V01.0.214): Telegram hands new messages to one getUpdates at a time. Up to V01.0.213 the panel's startup tasks ran twice (the https server ran them again), and the two Telegram pollers kicked each other out every 15 s (\"Conflict: terminated by other getUpdates request\"). Now the https server starts without its own startup tasks, and a second poller in the same process is not started. If Telegram still reports a conflict, another program uses the same bot token: the Spark then waits 5 s, 30 s, 1, 2, 5 and at most 10 min, logs only the second and every 20th time (without the token) and shows a hint under Status and Features → Telegram to use the token in one place only or get a new one from @BotFather. A single conflict right after a restart is normal (the old poll runs for up to 25 s)."
 },
 {
 "lang": "en",
@@ -5325,7 +5405,7 @@
 "file": "Technical details and troubleshooting",
 "head": "Measuring performance",
 "title": "Measuring performance",
-"text": "In the panel under Status → Checks → Leistung messen, or on the console:"
+"text": "In the panel under Status → Checks → Measure performance, or on the console:"
 },
 {
 "lang": "en",
@@ -5333,7 +5413,7 @@
 "file": "Technical details and troubleshooting",
 "head": "Measuring performance",
 "title": "Measuring performance",
-"text": "Since V01.0.163 every value gets a level (very good, good, tight, too slow) and a sentence saying when it is good; an overall verdict sits on top, and the last run is shown next to each value. The borders are fixed rules in bench.rate(): first audio 0.5/1/2 s, voice speed 2×/1.3×/1× real time, several at once (total ÷ count) 1.5/1/0.7, latest first audio with several 1/1.5/3 s, test sentence recognised in 1.5/3/5 s, words understood 95/90/85 %, free memory 14 GiB good, 10 GiB tight, below critical. \"Words understood\" is missing with --audio (the text of your own recording is unknown). The last ten runs' key numbers are kept in bench-history.json."
+"text": "Since V01.0.163 every value gets a level (very good, good, tight, too slow) and a sentence saying when it is good; an overall verdict sits on top, and the last run is shown next to each value. The borders are fixed rules in bench.rate():"
 },
 {
 "lang": "en",
@@ -5341,7 +5421,15 @@
 "file": "Technical details and troubleshooting",
 "head": "Measuring performance",
 "title": "Measuring performance",
-"text": "The benchmark goes through the public ports, so it measures what apps see. The last result is stored in /var/lib/speech-spark/state/bench-latest.json."
+"text": "\"Words understood\" is missing with --audio (the text of your own recording is unknown). The last ten runs' key numbers are kept in bench-history.json."
+},
+{
+"lang": "en",
+"src": "technical",
+"file": "Technical details and troubleshooting",
+"head": "Measuring performance",
+"title": "Measuring performance",
+"text": "The benchmark goes through the public ports, so it measures what apps see. The last result is stored in /var/lib/speech-spark/state/bench-latest.json. The memory shares of the engines (configuration) are starting values: set them to fit after the measurement."
 },
 {
 "lang": "en",
@@ -5389,7 +5477,7 @@
 "file": "Technical details and troubleshooting",
 "head": "Speech first",
 "title": "Speech first",
-"text": " Checking: Zustand → Prüfen → \"Speech first\" speaks a sentence alone, under load without priority and under load with priority, and shows first audio, real-time factor and recognition time, above it today's counters. Zustand → Logs shows the lines in the area \"Priority\" (vorrang: … wartet, … abgebrochen, … wartete N s)."
+"text": " Checking: Status → Checks → \"Speech first\" speaks a sentence alone, under load without priority and under load with priority, and shows first audio, real-time factor and recognition time, above it today's counters. Status → Logs shows the lines in the area \"Priority\" (vorrang: … wartet, … abgebrochen, … wartete N s)."
 },
 {
 "lang": "en",
@@ -5405,7 +5493,7 @@
 "file": "Technical details and troubleshooting",
 "head": "Priority for people",
 "title": "Priority for people",
-"text": "- Switching on: Funktionen → Gespräch → \"Vorrang für Personen\" (chat.person_priority, feature register vorrang). Only the admin sets the stage per profile under Personen und Geräte → profile → Rechte → Vorrang: \"Vorrang\" (three profiles at most), \"normal\" or \"hinten anstellen\" (last in line). Stored in state/personen-vorrang.json (in the backup), changes in the admin log (person_priority). Under Ich the profile sees the function as on or \"off for you\". - Who asks: only from the sign-in (browser, app, device key), never from the text. Guests and programs without a profile (Open WebUI, Wyoming) are always normal. At a shared speaker the stage counts only when the speaker recognition heard the profile's voice; the recording itself goes to the recognition as normal there, because the voice is known only afterwards. - Speech output and recognition: both services let only as many requests go to the engine at once as it takes (tts.engine_max_seqs, asr.engine_max_seqs); the rest wait in the service (common.PrioGate) by stage, then by arrival. A running request is never stopped. Every 4 s of waiting move a request one stage up, so nobody starves. At most 64 wait, else 503. A slot comes back"
+"text": "- Switching on: Funktionen → Gespräch → \"Vorrang für Personen\" (chat.person_priority, feature register vorrang). Only the admin sets the stage per profile under People and devices → profile → Rights → Priority: \"Vorrang\" (three profiles at most), \"normal\" or \"hinten anstellen\" (last in line). Stored in state/personen-vorrang.json (in the backup), changes in the admin log (person_priority). Under Me the profile sees the function as on or \"off for you\". - Who asks: only from the sign-in (browser, app, device key), never from the text. Guests and programs without a profile (Open WebUI, Wyoming) are always normal. At a shared speaker the stage counts only when the speaker recognition heard the profile's voice; the recording itself goes to the recognition as normal there, because the voice is known only afterwards. - Speech output and recognition: both services let only as many requests go to the engine at once as it takes (tts.engine_max_seqs, asr.engine_max_seqs); the rest wait in the service (common.PrioGate) by stage, then by arrival. A running request is never stopped. Every 4 s of waiting move a request one stage up, so nobody starves. At most 64 wait, else 503. A slot comes back "
 },
 {
 "lang": "en",
@@ -5413,7 +5501,7 @@
 "file": "Technical details and troubleshooting",
 "head": "Priority for people",
 "title": "Priority for people",
-"text": " after 90 s at the latest, even when a device dropped the connection before its stream began. - Language model (since V01.0.284): while an answer with priority has no first sentence yet, new rounds of other people wait at most chat.person_priority_wait seconds (0–5, default 2) before they go to the language model (stufe.wait_turn). Running answers are never stopped; an answer without a first sentence holds others for 30 s at most. Logs → Anfragen shows \"waited … for an answer with priority\" at the round, journal vorrang: Antwort wartete N s auf eine Antwort mit Vorrang. - Early notice: the browser and the iPhone app send POST /api/vorrang/spricht when a recording starts (profile or device key, at most 60 per minute). If the profile has priority, background work stops at once and the language model gate closes for 15 s at most, until the question arrives. The answer is the same for everybody, so it does not tell who has priority. Shared speakers do not send it. - Who may say the stage: only the panel. It sends X-Spark-Stufe (0, 1, 2) together with the key from state/vorrang-key (made once by the panel, mode 0600, not in the backup). The services believe it only from 127.0.0.1 and on"
+"text": "after 90 s at the latest, even when a device dropped the connection before its stream began. - Language model (since V01.0.284): while an answer with priority has no first sentence yet, new rounds of other people wait at most chat.person_priority_wait seconds (0–5, default 2) before they go to the language model (stufe.wait_turn). Running answers are never stopped; an answer without a first sentence holds others for 30 s at most. Logs → Anfragen shows \"waited … for an answer with priority\" at the round, journal vorrang: Antwort wartete N s auf eine Antwort mit Vorrang. - Early notice: the browser and the iPhone app send POST /api/vorrang/spricht when a recording starts (profile or device key, at most 60 per minute). If the profile has priority, background work stops at once and the language model gate closes for 15 s at most, until the question arrives. The answer is the same for everybody, so it does not tell who has priority. Shared speakers do not send it. - Who may say the stage: only the panel. It sends X-Spark-Stufe (0, 1, 2) together with the key from state/vorrang-key (made once by the panel, mode 0600, not in the backup). The services believe it only from 127.0.0.1 and onl"
 },
 {
 "lang": "en",
@@ -5421,7 +5509,7 @@
 "file": "Technical details and troubleshooting",
 "head": "Priority for people",
 "title": "Priority for people",
-"text": "ly with that key; everybody else is normal, even with the API key. - Seeing it: Zustand → Logs → Anfragen shows \"with priority\" at the arrival and, at speech output, how long the sentences queued and how many they overtook. Journal: vorrang: Stufe 2 überholt N wartende Anfrage(n). The services' /health shows slots, waiting requests and counters under queue. - Measuring: Zustand → Prüfen → \"Speech first\" also measures the case \"two people at once\": the speech output is full with sentences of others (all slots plus two waiting), then one more sentence comes, once normal and once with priority. It shows the first audio of both. - Limits: the language model (qwen38) knows no order; Open WebUI and other programs that ask it directly are not held back. With one person talking nothing gets faster."
+"text": "y with that key; everybody else is normal, even with the API key. - Seeing it: Status → Logs → Anfragen shows \"with priority\" at the arrival and, at speech output, how long the sentences queued and how many they overtook. Journal: vorrang: Stufe 2 überholt N wartende Anfrage(n). The services' /health shows slots, waiting requests and counters under queue. - Measuring: Status → Checks → \"Speech first\" also measures the case \"two people at once\": the speech output is full with sentences of others (all slots plus two waiting), then one more sentence comes, once normal and once with priority. It shows the first audio of both. - Limits: the language model (qwen38) knows no order; Open WebUI and other programs that ask it directly are not held back. With one person talking nothing gets faster."
 },
 {
 "lang": "en",
@@ -5477,7 +5565,7 @@
 "file": "Technical details and troubleshooting",
 "head": "Settings page building blocks",
 "title": "Settings page building blocks",
-"text": "- Row from JavaScript (since V01.0.270): setRow(l, h, ctl, {why, extra}) and tglIn(attrs, on) in base.js build every row, whether Ich → Gespräch, presets, weather/contacts, speaking up or speakers. why locks the row visibly with a reason (\"Switched off by the admin\") instead of hiding it."
+"text": "- Row from JavaScript (since V01.0.270): setRow(l, h, ctl, {why, extra}) and tglIn(attrs, on) in base.js build every row, whether Me → Conversation, presets, weather/contacts, speaking up or speakers. why locks the row visibly with a reason (\"Switched off by the admin\") instead of hiding it."
 },
 {
 "lang": "en",
@@ -5485,7 +5573,7 @@
 "file": "Technical details and troubleshooting",
 "head": "Settings page building blocks",
 "title": "Settings page building blocks",
-"text": "- Header: <h2 class=\"pt\"> and below it <div class=\"pintro\"> with one sentence on what the page controls. - Section: <h3 class=\"sec\">Name <span>hint</span></h3>. - Row: <div class=\"setrow\"><div class=\"lbl\"><b>Name</b><span>one sentence</span></div>control</div>, the control on the right: switch .tgl (no label.chk check boxes), short number input.num in .ctl with .unit, address input.wide, choice select.wide; several fields in .ctl.full. Text areas come after the row. - Help: at most one visible sentence (≤ 140 characters); the rest in <div class=\"fh more\" hidden> right after the row, plus <button class=\"mlink\" type=\"button\">Mehr</button> in the sentence. - Advanced: always <details class=\"adv\"><summary>Erweitert <span class=\"mut\">· what is inside</span></summary>. - Instant actions (password, second step, sign out, update, backup): a section of their own, \"acts at once, without saving\"; everything else is collected by the page's save bar .savebar. - At a glance: new pages get a line in glanceText() (admin.js), only from data the panel already has. - Menu (since V01.0.265): Zustand (Monitoring, Prüfen, Logs), Funktionen (features, guides), Personen und Geräte (profiles and devices, a"
+"text": "- Header: <h2 class=\"pt\"> and below it <div class=\"pintro\"> with one sentence on what the page controls. - Section: <h3 class=\"sec\">Name <span>hint</span></h3>. - Row: <div class=\"setrow\"><div class=\"lbl\"><b>Name</b><span>one sentence</span></div>control</div>, the control on the right: switch .tgl (no label.chk check boxes), short number input.num in .ctl with .unit, address input.wide, choice select.wide; several fields in .ctl.full. Text areas come after the row. - Help: at most one visible sentence (≤ 140 characters); the rest in <div class=\"fh more\" hidden> right after the row, plus <button class=\"mlink\" type=\"button\">Mehr</button> in the sentence. - Advanced: always <details class=\"adv\"><summary>Erweitert <span class=\"mut\">· what is inside</span></summary>. - Instant actions (password, second step, sign out, update, backup): a section of their own, \"acts at once, without saving\"; everything else is collected by the page's save bar .savebar. - At a glance: new pages get a line in glanceText() (admin.js), only from data the panel already has. - Menu (since V01.0.265): Assistant and Me for oneself; then Status (Monitoring, Checks, Logs, Live), Features (with Guides and Who may d"
 },
 {
 "lang": "en",
@@ -5493,7 +5581,7 @@
 "file": "Technical details and troubleshooting",
 "head": "Settings page building blocks",
 "title": "Settings page building blocks",
-"text": "pps and interfaces), Einstellungen. New parts under Zustand (e.g. a check button or a logs tab) go as a section into #test or a tab into #logs; a new sub-page gets a line in GROUPS (base.js) with one sentence in SUBDESC. Funktionen is the page pane-feat of the settings form, shown without the settings menu (goSec('feat'), class featmode); goCfg('feat') leads there, goSec('sys') to Settings → Update and backup. - Search (find.js, Ctrl K): finds by itself every page from GROUPS and #cfgnav, every settings row (.setrow .lbl>b, h3.sec, summary), every Ich page (ME_ITEMS), headings and buttons under Prüfen, tabs under Logs and every guide. New parts need nothing of their own as long as they use these building blocks. - Frame: content that continues below a row (change password, second login step) gets class=\"rowtail\"; the line then sits below the content, not between row and content. html{scrollbar-gutter:stable} keeps the scrollbar's space, so short pages do not move sideways (V01.0.254). - Buttons without inline code (since V01.0.286, strict CSP): never onclick=\"…\" or <script> in the page. Static buttons get an id and $('x').onclick=…; buttons in generated HTML ${onAttr('name', arg1, "
+"text": "o what), People and devices (with Apps and interfaces), Settings. New parts under Status (e.g. a check button or a logs tab) go as a section into #test or a tab into #logs; a new sub-page gets a line in GROUPS (base.js) with one sentence in SUBDESC. Features is the page pane-feat of the settings form, shown without the settings menu (goSec('feat'), class featmode); goCfg('feat') leads there, goSec('sys') to Settings → Update and backup. - Search (find.js, Ctrl K): finds by itself every page from GROUPS and #cfgnav, every settings row (.setrow .lbl>b, h3.sec, summary), every Me page (ME_ITEMS), headings and buttons under Checks, tabs under Logs and every guide. New parts need nothing of their own as long as they use these building blocks. - Frame: content that continues below a row (change password, second login step) gets class=\"rowtail\"; the line then sits below the content, not between row and content. html{scrollbar-gutter:stable} keeps the scrollbar's space, so short pages do not move sideways (V01.0.254). - Buttons without inline code (since V01.0.286, strict CSP): never onclick=\"…\" or <script> in the page. Static buttons get an id and $('x').onclick=…; buttons in generated HT"
 },
 {
 "lang": "en",
@@ -5501,7 +5589,15 @@
 "file": "Technical details and troubleshooting",
 "head": "Settings page building blocks",
 "title": "Settings page building blocks",
-"text": "…)} and a line ON.name=(button, arg1, …)=>… in the same script (arguments as JSON, through esc)."
+"text": "ML ${onAttr('name', arg1, …)} and a line ON.name=(button, arg1, …)=>… in the same script (arguments as JSON, through esc)."
+},
+{
+"lang": "en",
+"src": "technical",
+"file": "Technical details and troubleshooting",
+"head": "Settings page building blocks",
+"title": "Settings page building blocks",
+"text": "- English, errors, \"?\", names (since V01.0.408, review of 11.10.2026, B1–B8): every text in index.html is in EN (i18n.js), title and aria-label too; a sentence with tags inside gets data-tr and is in EN as a whole (inner HTML). api() shows errors as a sentence (errSay in base.js): a 422 list names the fields, short English answers become sentences, the panel's German sentences come from EN; the raw words for checks are in e.detail (errRaw(e)). A \"?\" stands only at rows the Spark help knows (/api/hilfe/ids); rows from scripts with a field of their own are listed in hilfe.JS_ROWS. Fields of a row without a label of their own get the row's title as aria-label (rowLabels). tests/test_bedienung_hilfe.py checks this."
 },
 {
 "lang": "en",
@@ -5517,7 +5613,7 @@
 "file": "Technical details and troubleshooting",
 "head": "Features and rights (features.py)",
 "title": "Features and rights (features.py)",
-"text": "Since V01.0.267 every function the admin can switch is written once in app/panel/features.py: name (de/en), group, the admin switches (chat.*), the function it builds on (parent), the profile's own switch (profile), whether guests may ever use it, the Ich page and the guide. Values are still stored under the old names in config.json and settings.json; only this table knows both."
+"text": "Since V01.0.267 every function the admin can switch is written once in app/panel/features.py: name (de/en), group, the admin switches (chat.*), the function it builds on (parent), the profile's own switch (profile), whether guests may ever use it, the Me page and the guide. Values are still stored under the old names in config.json and settings.json; only this table knows both."
 },
 {
 "lang": "en",
@@ -5533,7 +5629,7 @@
 "file": "Technical details and troubleshooting",
 "head": "Features and rights (features.py)",
 "title": "Features and rights (features.py)",
-"text": "op; guests get the presets. - Heute (since V01.0.286): today.py builds GET /api/profile/today only from features.allowed; every card is its own block that is missing when the function is not allowed. Calendars with asyncio.wait_for (3 s) and a 5 minute cache per profile and time zone; what is still to set up comes from onboard.py (\"Los geht's\"). The sentences of \"Probier mal\" come from guides.js (say), filtered by /api/features (can). - Fixed protection rules (secrets never spoken, speech first, the owner's voice at a shared speaker) are no switches and stay rules of their own. - Main admin (since V01.0.275): core.owner_auth lets the panel password and the admin mode of a profile with role owner through (roles, /api/audit, backups); main_auth stays only for the password, its second step and *sign out everywhere*. Profile shell: body.prof (start.js) shows the admin menu with only Assistent and Ich; .mainonly is seen by the main admin profile, .pwonly only with the password. - App (since V01.0.272): GET /api/admin/switches returns names and groups for every switch from features.switch_names(); the app keeps no list of its own. The app key may read GET /api/features; hands and barge a"
+"text": "op; guests get the presets. - Heute (since V01.0.286): today.py builds GET /api/profile/today only from features.allowed; every card is its own block that is missing when the function is not allowed. Calendars with asyncio.wait_for (3 s) and a 5 minute cache per profile and time zone; what is still to set up comes from onboard.py (\"Los geht's\"). The sentences of \"Probier mal\" come from guides.js (say), filtered by /api/features (can). - Fixed protection rules (secrets never spoken, speech first, the owner's voice at a shared speaker) are no switches and stay rules of their own. - Main admin (since V01.0.275): core.owner_auth lets the panel password and the admin mode of a profile with role owner through (roles, /api/audit, backups); main_auth stays only for the password, its second step and *sign out everywhere*. Profile shell: body.prof (start.js) shows the admin menu with only Assistant and Me; .mainonly is seen by the main admin profile, .pwonly only with the password. - App (since V01.0.272): GET /api/admin/switches returns names and groups for every switch from features.switch_names(); the app keeps no list of its own. The app key may read GET /api/features; hands and barge ar"
 },
 {
 "lang": "en",
@@ -5541,7 +5637,7 @@
 "file": "Technical details and troubleshooting",
 "head": "Features and rights (features.py)",
 "title": "Features and rights (features.py)",
-"text": "re in iphone.APP_FIELDS. - Profile detail (since V01.0.271): GET /api/admin/profiles/{uid} also returns features (features.count(uid): on / allowed by the Spark), role, main (is the main admin asking?) and rights (agent level, update right, upload space; missing for managers). PUT /api/admin/agent/levels/{uid} ({\"level\": \"\" | \"read\" | \"act\"}, logged as agent_level) sets one profile's agent level. The profile list carries guests (features.guests())."
+"text": "e in iphone.APP_FIELDS. - Profile detail (since V01.0.271): GET /api/admin/profiles/{uid} also returns features (features.count(uid): on / allowed by the Spark), role, main (is the main admin asking?) and rights (agent level, update right, upload space; missing for managers). PUT /api/admin/agent/levels/{uid} ({\"level\": \"\" | \"read\" | \"act\"}, logged as agent_level) sets one profile's agent level. The profile list carries guests (features.guests())."
 },
 {
 "lang": "en",

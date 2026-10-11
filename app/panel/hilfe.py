@@ -372,7 +372,8 @@ def help_question(text):
         return m.group(0).strip()
     if DATA_ASK.search(text):
         return None
-    if PANEL_WORDS.search(text) or set(tokens(text)) & _topic_words():
+    # split verbs joined first ("Wie lade ich jemanden ein?" asks about "einladen")
+    if PANEL_WORDS.search(text) or (set(tokens(text)) | set(tokens(query_words(text)[0]))) & _topic_words():
         return m.group(0).strip()
     return None
 
@@ -559,16 +560,69 @@ def cfg_pages():
     return {p: _plain(n) for p, n in re.findall(r'<button[^>]*data-p="(\w+)"[^>]*>([^<]+)', nav)}
 
 
+def _rows(src):
+    """Every <div class="setrow …"> of a page or script, whole (its divs counted), as (start, text)."""
+    for m in re.finditer(r'<div class="setrow[^"]*"[^>]*>', src):
+        depth = 0
+        for d in re.finditer(r"<div\b|</div>", src[m.start():m.start() + 20000]):
+            depth += 1 if d.group() == "<div" else -1
+            if depth == 0:
+                yield m.start(), src[m.start():m.start() + d.end()]
+                break
+
+
+def _row_id(row):
+    """The field a "?" at this row asks about, as hilfe.js hilfeRowId sees it: the first input or select after the
+    label (fields inside the label belong to its sentence)."""
+    lbl = row.find('class="lbl"')
+    after = row[row.find("</div>", lbl) if lbl >= 0 else 0:]
+    m = re.search(r'<(?:input|select)\b[^>]*?\bid="([\w.]+)"', after)
+    return m.group(1) if m else ""
+
+
 def setting_rows():
     """Admin switches and settings with their sentence: [{pane, id, de, text}] (index.html)."""
     h = _read(STATIC, "index.html")
     out = []
     starts = [(m.start(), m.group(1)) for m in re.finditer(r'id="pane-(\w+)"', h)]
     for i, (at, pane) in enumerate(starts):
-        block = h[at:starts[i + 1][0] if i + 1 < len(starts) else len(h)]
-        for m in re.finditer(r'<div class="setrow"[^>]*><div class="lbl"><b>(.*?)</b><span>(.*?)</span></div>(.*?)</div>', block, re.S):
-            ident = re.search(r'id="([\w.]+)"', m.group(3))
-            out.append({"pane": pane, "id": ident.group(1) if ident else "", "de": _plain(m.group(1)), "text": _plain(m.group(2))})
+        end = starts[i + 1][0] if i + 1 < len(starts) else h.find("</section>", at)
+        for _, row in _rows(h[at:end]):
+            m = re.match(r'<div class="setrow[^"]*"[^>]*><div class="lbl"><b>(.*?)</b>(?:<span[^>]*>(.*?)</span>)?', row, re.S)
+            if m:
+                out.append({"pane": pane, "id": _row_id(row), "de": _plain(m.group(1)), "text": _plain(m.group(2) or "")})
+    return out
+
+
+# rows the scripts build with their own field (B3 of the review of 11.10.2026): script -> the element they are shown in
+JS_ROWS = {"room.js": "roombox", "tidy.js": "mailtidy", "coadmin.js": "coadmlist", "melden.js": "rpadmin", "live.js": "lvroot"}
+
+
+def _page_of_element(h, ident):
+    """The page an element of index.html sits on: an Ich page, a settings page or a menu page."""
+    at = h.find(f'id="{ident}"')
+    if at < 0:
+        return ""
+    if re.fullmatch(r"\w+box", ident) and h[at - 5:at] == "<div ":
+        return "me/" + ident
+    found = [(m.start(), "me/" + m.group(1)) for m in re.finditer(r'<div id="(\w+box)" class="ptab"', h[:at])]
+    found += [(m.start(), "feat" if m.group(1) == "feat" else "cfg/" + m.group(1)) for m in re.finditer(r'id="pane-(\w+)"', h[:at])]
+    found += [(m.start(), m.group(1)) for m in re.finditer(r'<section id="(\w+)"', h[:at])]
+    return max(found)[1] if found else ""
+
+
+def js_rows():
+    """The rows of JS_ROWS with a field and a fixed name: [{page, id, de, en, hde, hen}]."""
+    h = _read(STATIC, "index.html")
+    out = []
+    for f, ident in JS_ROWS.items():
+        page = _page_of_element(h, ident)
+        for _, row in _rows(_read(STATIC, "js", f)):
+            m = re.match(r'<div class="setrow[^"]*"[^>]*><div class="lbl"><b>\$\{(?:esc\()?t?' + _T + r'\)?\}</b>'
+                         r'(?:<span[^>]*>\$\{(?:esc\()?t?' + _T + r'\)?\})?', row)
+            if m and _row_id(row) and page:
+                a, b, c, d = (_js(x or "") for x in m.groups())
+                out.append({"page": page, "id": _row_id(row), "de": a, "en": b, "hde": c, "hen": d})
     return out
 
 
@@ -645,7 +699,8 @@ def tokens(s):
 
 
 def _files_key():
-    paths = [os.path.join(STATIC, "js", "guides.js"), os.path.join(STATIC, "js", "me.js"), os.path.join(STATIC, "index.html"), DOCS_FILE]
+    paths = [os.path.join(STATIC, "js", "guides.js"), os.path.join(STATIC, "js", "me.js"), os.path.join(STATIC, "index.html"), DOCS_FILE] \
+        + [os.path.join(STATIC, "js", f) for f in JS_ROWS]
     return tuple(os.path.getmtime(p) if os.path.exists(p) else 0 for p in paths)
 
 
@@ -679,6 +734,14 @@ def _entries():
         where = "Funktionen" if r["pane"] == "feat" else "Einstellungen → " + cp.get(r["pane"], r["pane"])
         out.append({"kind": "setting", "lang": "de", "title": r["de"], "where": where, "text": re.sub(r"\s*Mehr$", "", r["text"]),
                     "page": page, "feature": by_sw.get(r["id"]), "sid": "sw:" + r["id"] if r["id"] else ""})
+    me_feature = {g["me"]: by_guide.get(g["id"]) for g in guides() if g["me"]}
+    for r in js_rows():
+        for li, lang in enumerate(("de", "en")):
+            mine = r["page"].startswith("me/")
+            pn = mp.get(r["page"][3:], ("", ""))[li] if mine else page_name(r["page"], lang) or ""
+            out.append({"kind": "me" if mine else "setting", "lang": lang, "title": (r["de"], r["en"])[li],
+                        "text": (r["hde"], r["hen"])[li], "page": r["page"], "feature": me_feature.get(r["page"][3:]), "sid": "sw:" + r["id"],
+                        "where": (("Ich → ", "Me → ")[li] + pn) if mine else pn})
     import account
     for s in me_settings():
         fk = account.ALLOW.get(s["need"]) if s["need"] else None
@@ -1310,6 +1373,20 @@ def _apply_admin(request, items, to_new):
         new.setdefault("chat", {})[x["switch"]] = x["new"] if to_new else x["old"]
     old_checked = admin.validate(new)
     admin._save(new, old_checked, admin._by(request))
+
+
+def known_ids():
+    """The rows a "?" may stand at (B3 of the review of 11.10.2026): exactly those the help has an entry for."""
+    return sorted({it["sid"] for it in index()["items"] if it.get("sid") and it["kind"] in ("setting", "me", "guide")})
+
+
+@router.get("/api/hilfe/ids", dependencies=[Depends(assistant)])
+def ids(request: Request, prof=Depends(browser_profile)):
+    """Only names of switches and fields of the page itself, the same for everybody; only with the page help on."""
+    guard.limit(request, "hilfe", prof["id"])
+    if not page_on(prof["id"]):
+        return {"ids": []}
+    return {"ids": known_ids()}
 
 
 @router.post("/api/hilfe/karte/{cid}", dependencies=[Depends(assistant)])

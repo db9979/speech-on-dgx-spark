@@ -33,6 +33,7 @@ All options for running without questions (`--mode api --asr 1.7b --tts 0.6b --y
 
 <!-- New version: add one line at the top here and in CHANGELOG.md, drop the oldest line here (keep 10). Details go to docs/de and docs/en, not into this README. -->
 
+- **V01.0.408** Independent review, package 5: more complete English UI, plain error sentences, "?" only where help exists, current page names, labels for screen readers, quiet Live-off state, no 429 on quick jumps
 - **V01.0.407** Independent review, package 4: signed device updates prepared, https-only companion updates with Mac team check, pinned CI tools, root reads config only as the service user, ffmpeg/Parakeet limits, safer iPhone pairing and Telegram voice download
 - **V01.0.406** Independent review, package 6: compressed page files cached a day, atomic JSON writes, faster self-tests, dead code removed
 - **V01.0.405** Independent review, package 3: faster connections, nothing slow on the panel's event loop, speech output retried during a restart, a silent language model ends the turn after 90 s, no lost messages from parallel turns
@@ -42,7 +43,6 @@ All options for running without questions (`--mode api --asr 1.7b --tts 0.6b --y
 - **V01.0.401** Mein Notaus: the page no longer reloads itself after switching it on or off (browser self-test steady again).
 - **V01.0.400** Self-tests wait more reliably on slow machines
 - **V01.0.399** Fewer rounds: look-ups at most twice per question, last round without a tool list (saves one round).
-- **V01.0.398** Who may do what: clicking a function reliably jumps to its switch under Funktionen, sub-switches included
 
 All versions: [CHANGELOG.md](CHANGELOG.md)
 

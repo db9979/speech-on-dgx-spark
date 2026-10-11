@@ -244,7 +244,7 @@ function rotate(){const cards=['lvguardc','lvdoorc','lvretc','lvcnc'],i=Math.flo
 function visible(){return KIOSK||(el('live')&&el('live').classList.contains('on'))}
 async function tick(){clearTimeout(LV.timer);LV.timer=0;if(!visible())return;
   if(!document.hidden){try{const r=await fetch(KIOSK?'/api/live/state':'/api/admin/live',{cache:'no-store',credentials:'same-origin'});
-      if(r.ok){LV.data=await r.json();LV.fail=0;if(!el('lvkpi'))skeleton(el('lvroot'));draw();status(true,KIOSK?LV.data.monitor:'')}
+      if(r.ok){const d=await r.json();LV.fail=0;if(!KIOSK&&d.on===false){stopped(404);return}LV.data=d;if(!el('lvkpi'))skeleton(el('lvroot'));draw();status(true,KIOSK?LV.data.monitor:'')}
       else{LV.fail++;if(stopped(r.status))return}}
     catch(e){LV.fail++;status(false)}}
   LV.timer=setTimeout(tick,LV.fail>3?5000:1000)}

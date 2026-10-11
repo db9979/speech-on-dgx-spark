@@ -49,7 +49,7 @@ curl -N http://SPARK:31002/v1/audio/speech -H "Authorization: Bearer $KEY" -H 'C
 
 **VoiceDesign** (voice from a description): `"task_type": "VoiceDesign"` and `"instructions": "deep, calm male voice"`. This needs its own model: enable "VoiceDesign zusätzlich bereitstellen" in Settings → Speech output. It starts a second engine with the same memory footprint again.
 
-In the panel under **Zustand → Prüfen** (Status → Checks), "gestreamt" (streamed) plays audio while it is generated and shows the time to first audio.
+In the panel under **Status → Checks**, "streamed" plays audio while it is generated and shows the time to first audio.
 
 ### General
 
@@ -67,11 +67,11 @@ Admin Panel → Settings → Audio:
 | Model | anything | anything |
 | Voice | | e.g. `ryan` |
 
-If Open WebUI runs in Docker on the same Spark, use the LAN IP or `host.docker.internal` instead of `SPARK` (container started with `--add-host=host.docker.internal:host-gateway`). The panel shows these values ready to copy in the **Einbinden** tab.
+If Open WebUI runs in Docker on the same Spark, use the LAN IP or `host.docker.internal` instead of `SPARK` (container started with `--add-host=host.docker.internal:host-gateway`). The panel shows these values ready to copy under People and devices → Apps and interfaces.
 
 ### AI agents: Hermes Agent and OpenClaw
 
-An agent such as [Hermes Agent](https://hermes-agent.nousresearch.com) (Nous Research) or [OpenClaw](https://docs.openclaw.ai) can use the Spark's speech recognition and speech output. The agent runs on another computer and only gets audio and text to read out, no access to the assistant's profiles, memory or tools. The panel shows ready-made snippets under Integrate.
+An agent such as [Hermes Agent](https://hermes-agent.nousresearch.com) (Nous Research) or [OpenClaw](https://docs.openclaw.ai) can use the Spark's speech recognition and speech output. The agent runs on another computer and only gets audio and text to read out, no access to the assistant's profiles, memory or tools. The panel shows ready-made snippets under People and devices → Apps and interfaces.
 
 Hermes Agent, `~/.hermes/config.yaml`:
 
@@ -141,7 +141,7 @@ Since V01.0.363 (plan `plaene/eigene-mcp-dienste.md`) every profile can connect 
 An iPhone shortcut sends the dictated question to `POST /api/siri/ask` (header `X-Speech-Device` with a
 device key of your profile, body `{"text": "..."}`) and lets Siri speak the `answer` field. Works without
 the page open, also on Apple Watch, AirPods and CarPlay; follow-ups within 10 minutes keep the context,
-and each day's questions are kept as a conversation of the profile. Step by step under Einbinden → Guides.
+and each day's questions are kept as a conversation of the profile. Step by step under People and devices → Apps and interfaces and in Features → Guides.
 
 ### iPhone app "Spark"
 
@@ -164,7 +164,7 @@ With the profile's browser login or the iPhone app's key (header `X-Speech-Devic
 
 The watch app "Spark" (`app/pebble/speech-spark.pbw`, source in `pebble/`) brings the voice chat to Pebble Time 2 and Core 2 Duo, with the answer as text and through the watch speaker. On Pebble Round 2 the answer is text only. It needs a watch firmware with the speaker API (from about v4.9.170).
 
-1. Pairing with a setup code (new in V01.0.230, off): the admin switches on *Features → Pair the Pebble watch*, the profile "Pebble watch for me" under *Me → Pebble watch*, then "Pair a Pebble" and copy the line (valid 10 minutes, once). The watch gets its own key, which only reaches `/api/watch/` and is locked at once by either switch. Without pairing it still works: add a device "Pebble" under **Profiles** and copy its key.
+1. Pairing with a setup code (new in V01.0.230, off): the admin switches on *Features → Pair the Pebble watch*, the profile "Pebble watch for me" under *Me → Pebble watch*, then "Pair a Pebble" and copy the line (valid 10 minutes, once). The watch gets its own key, which only reaches `/api/watch/` and is locked at once by either switch. Without pairing it still works: add a device "Pebble" under **People and devices** and copy its key.
 2. On the paired phone, download `http://SPARK:31080/pebble/speech-spark.pbw` and open it with the Pebble app. Easier: *Me → Pebble watch* shows a QR code for it to scan with the phone camera. When the Spark has a newer watch app, "Neue Uhr-App" shows under an answer at most once a day; reinstalling keeps the pairing.
 3. In the Pebble app, open the settings of "Spark": paste the setup code, or enter the Spark address (`http://SPARK:31080`) and device key. Settings and "Start App" stay grey while the Pebble app does not see the watch as connected (tab Devices).
 4. On the watch: SELECT asks (dictation through the phone), SELECT again stops the speech, long SELECT starts a new conversation. A small face at the top shows whether Spark listens, thinks or speaks; its mouth follows the speech. The watch setting Settings → Sounds & Haptics → Volume caps how loud the app can get.

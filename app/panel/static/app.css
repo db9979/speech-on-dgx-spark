@@ -899,3 +899,5 @@ pre.rpbody{white-space:pre-wrap;overflow-wrap:anywhere;font-size:12px;max-height
 .rpanswer{white-space:pre-wrap;overflow-wrap:anywhere;margin-top:4px}
 .rptext{width:100%}
 .rpsel select{min-width:0;flex:1}
+/* a name only for screen readers (B6): the field keeps its look */
+.srl{position:absolute;width:1px;height:1px;margin:-1px;padding:0;overflow:hidden;clip:rect(0 0 0 0);white-space:nowrap;border:0}

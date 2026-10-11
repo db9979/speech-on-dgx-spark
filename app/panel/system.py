@@ -26,6 +26,17 @@ from core import spawn, DEFAULTS, admin_code, admin_code_fresh, auth, owner_auth
 router = APIRouter()
 
 
+def _backup_failed(e):
+    """A sentence for the page (B2 of the review of 11.10.2026): the kind of error, never the paths; the log keeps it."""
+    import errno
+    print(f"backup: failed ({type(e).__name__}: {e})", flush=True)
+    if e.errno == errno.ENOSPC:
+        return "Die Sicherung ging nicht: auf dem Spark ist kein Platz mehr frei."
+    if e.errno in (errno.EACCES, errno.EPERM, errno.EROFS):
+        return "Die Sicherung ging nicht: der Sicherungsordner ist nicht beschreibbar."
+    return "Die Sicherung ging nicht. Mehr steht unter Zustand → Logs (Panel)."
+
+
 @router.get("/api/backups", dependencies=[Depends(auth)])
 def backups():
     return {"backups": backup.listing(), "keep": backup.KEEP, "dir": backup.BACKUP_DIR}
@@ -36,7 +47,7 @@ async def backup_now():
     try:
         item = await asyncio.to_thread(backup.create, "manual")
     except OSError as e:
-        raise HTTPException(500, f"backup failed: {e}")
+        raise HTTPException(500, _backup_failed(e))
     guard.log("backup", detail=item["name"])
     return item
 
@@ -55,7 +66,7 @@ async def backup_move(password: str = Body("", embed=True)):
     try:
         item = await asyncio.to_thread(backup.create, "", password)
     except OSError as e:
-        raise HTTPException(500, f"backup failed: {e}")
+        raise HTTPException(500, _backup_failed(e))
     guard.log("backup_move", detail=item["name"])
     return item
 
@@ -182,9 +193,10 @@ async def _restore(f, name, password="", keep_admin=False):
     except (ValueError, OSError, EOFError) as e:
         if "wrong password" in str(e):
             _move_tries.append(now)
-        raise HTTPException(400, f"restore failed: {e}")
-    except Exception as e:  # broken archive
-        raise HTTPException(400, f"restore failed: {type(e).__name__}")
+        raise HTTPException(400, f"restore failed: {e}" if isinstance(e, ValueError)
+                            else "Wiederherstellen ging nicht: die Datei ist unvollständig oder nicht lesbar.")
+    except Exception:  # broken archive
+        raise HTTPException(400, "Wiederherstellen ging nicht: die Datei ist unvollständig oder nicht lesbar.")
     guard.log("restore", detail=f"{name}: {', '.join(done)}")
     return {"restored": done}
 

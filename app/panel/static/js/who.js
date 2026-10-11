@@ -82,7 +82,7 @@ function drawWho(){const box=$('whobox');if(!box||!WHO)return;box.textContent=''
   tb.appendChild(body);wrap.appendChild(tb);box.appendChild(wrap);
   const n=document.createElement('p');n.className='mut wnote';
   n.textContent=t('Ein Kästchen schaltet nur dort. Gestrichelt geht nicht: der Spark ist aus oder die Funktion hat keinen eigenen Schalter. Das Profil sieht seinen Schalter unter Ich und kann ihn selbst ändern. „Neue Profile“: gleich an für jedes Profil, das ab jetzt angelegt wird.',
-    'A box switches only there. Dashed cannot be used: the Spark is off or the function has no own switch. The profile sees its switch under Ich and can change it itself. "New profiles": on from the start for every profile created from now on.');
+    'A box switches only there. Dashed cannot be used: the Spark is off or the function has no own switch. The profile sees its switch under Me and can change it itself. "New profiles": on from the start for every profile created from now on.');
   box.appendChild(n)}
 window.loadWho=loadWho;
 if($('featwho'))$('featwho').onclick=()=>goSec('who');

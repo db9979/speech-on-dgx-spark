@@ -11,7 +11,7 @@ $('loginform').onsubmit=async e=>{e.preventDefault();
     if(r.code){$('logincodebox').style.display='';$('loginmsg').textContent='';$('logincode').focus();
       if(window.pkLoginOffer)pkLoginOffer($('logincodebox'),r.passkey,async(pk,err)=>{if(!pk){$('loginmsg').textContent=t('Passkey abgebrochen. Der Code geht auch.','Passkey cancelled. The code works too.');return}
         try{await api('/api/login',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({password:$('loginpw').value,passkey:pk,trust:$('logintrust').checked})});location.reload()}
-        catch(e){$('loginmsg').textContent=/too many/.test(e.message)?t('Zu viele falsche Versuche, bitte später noch einmal.','Too many wrong attempts, please try again later.'):t('Passkey nicht angenommen.','Passkey not accepted.')}});return}
+        catch(e){$('loginmsg').textContent=/too many/.test(errRaw(e))?t('Zu viele falsche Versuche, bitte später noch einmal.','Too many wrong attempts, please try again later.'):t('Passkey nicht angenommen.','Passkey not accepted.')}});return}
     location.reload()}
   catch(err){$('loginmsg').textContent=/too many/.test(err.message)?t('Zu viele falsche Versuche, bitte später noch einmal.','Too many wrong attempts, please try again later.'):/wrong code/.test(err.message)?t('Code falsch.','Wrong code.'):t('Falsches Passwort.','Wrong password.')}};
 $('logoutbtn').onclick=async()=>{await fetch('/api/logout',{method:'POST'});location.reload()};

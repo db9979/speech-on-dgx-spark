@@ -22,7 +22,7 @@ Die App ist eine schlanke Hülle um die Spark-Seite: Sie zeigt den Spark so, wie
    spätere Versionen nicht über die alte installieren.
 2. **App bauen:** Actions → „Android app“ → Run workflow. Sie erscheint als Release `android-v1.0.0` mit
    `spark.apk`, `spark.apk.sha256` und `android.json`.
-3. **Spark:** Einstellungen → Funktionen → Android-App an, speichern, „App jetzt holen“ (sonst holt er sie einmal am Tag).
+3. **Spark:** Funktionen → Android-App an, speichern, „App jetzt holen“ (sonst holt er sie einmal am Tag).
    Er prüft Größe und SHA-256 und behält sie unter `STATE/android`.
 4. **Profil:** Ich → Android-App → „Android-App für mich“ an, „Download-Link holen“, den QR-Code mit der Kamera des
    Android-Handys scannen, die APK installieren (das Handy fragt einmal, ob der Browser Apps installieren darf).

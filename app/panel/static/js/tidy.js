@@ -5,7 +5,7 @@ const TMODES=[['off',t('Aus','Off')],['preview',t('Vorschau (verschiebt nichts)'
 const tidyMsg=(x,err)=>{const m=$('tidymsg');if(m){m.textContent=x||'';m.className='fh'+(err?' err':'')}};
 const tdate=s=>new Date(s*1000).toLocaleString(L==='en'?'en-GB':'de-DE',{day:'2-digit',month:'2-digit',hour:'2-digit',minute:'2-digit'});
 async function tidyCall(path,body,method='POST'){const r=await fetch('/api/profile/tidy'+path,{method,headers:{'Content-Type':'application/json'},body:JSON.stringify(body||{})});
-  const d=await r.json().catch(()=>({}));if(!r.ok){tidyMsg(d.detail||String(r.status),true);return null}TIDY=d;tidyRender();return d}
+  const d=await r.json().catch(()=>({}));if(!r.ok){tidyMsg(errSay(r.status,d.detail,""),true);return null}TIDY=d;tidyRender();return d}
 function catSel(id,val,keep=true){return `<select id="${id}">${Object.entries(TIDY.cats).map(([k,v])=>`<option value="${k}"${k===val?' selected':''}>${esc(TIDY.folders[k]||v)}</option>`).join('')}${keep?`<option value="keep"${val==='keep'?' selected':''}>${t('Posteingang','Inbox')}</option>`:''}</select>`}
 async function showMailTidy(){const box=$('mailtidy');if(!box)return;if(!PROFILE||!TIDY_ON){box.innerHTML='';return}
   try{TIDY=await (await api('/api/profile/tidy')).json()}catch{box.innerHTML='';return}tidyRender()}

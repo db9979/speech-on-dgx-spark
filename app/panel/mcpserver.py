@@ -144,6 +144,14 @@ TOOLS = {
                       "Whether a proposed action was confirmed, declined or is still waiting.",
                       _schema({"id": STR}, ["id"])),
 }
+# the labels in English for the panel's English page (B1 of the review of 11.10.2026)
+LABEL_EN = {"transcribe": "Speech to text (speech recognition)", "speak": "Text to speech (speech output)",
+            "voices": "List voices", "wikipedia": "Look up Wikipedia", "archive_search": "Search the own Kiwix archive",
+            "document_search": "Search own documents", "calendar_events": "Read appointments",
+            "reminder_list": "Read reminders", "today": "Today (overview)", "write_text": "Improve a text (writing help)",
+            "ask_spark": "Ask the Spark (read only)", "home_assistant": "Switch the smart home (with confirmation)",
+            "reminder_set": "Set a reminder (with confirmation)", "calendar_add": "Add an appointment (with confirmation)",
+            "action_status": "State of a confirmation"}
 GROUPS = {"speech": ("Sprache", "Speech"), "read": ("Lesen", "Reading"), "ask": ("Spark fragen", "Ask Spark"),
           "act": ("Handeln mit Bestätigung", "Acting with confirmation")}
 # what "ask_spark" may use in the assistant's turn, per tool of the connection (chat tool names)
@@ -1123,7 +1131,7 @@ async def _where_ok(request, prof, where):
 
 
 def catalog(uid):
-    return [{"name": n, "group": TOOLS[n][0], "label": TOOLS[n][2], "ok": tool_ok(n, uid)}
+    return [{"name": n, "group": TOOLS[n][0], "label": TOOLS[n][2], "label_en": LABEL_EN.get(n, TOOLS[n][2]), "ok": tool_ok(n, uid)}
             for n in TOOLS if n != "action_status" and (TOOLS[n][0] != "act" or act_on())]
 
 

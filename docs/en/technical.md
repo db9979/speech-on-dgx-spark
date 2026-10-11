@@ -25,7 +25,7 @@ All services run as the system user `speech`. A sudoers rule lets the panel star
 
 ## Measuring performance
 
-In the panel under **Status → Checks → Leistung messen**, or on the console:
+In the panel under **Status → Checks → Measure performance**, or on the console:
 
 ```bash
 sudo speech-spark-bench                 # time to first audio, speed single and parallel, memory per service
@@ -33,9 +33,21 @@ sudo speech-spark-bench --parallel 8    # more concurrent requests
 sudo speech-spark-bench --audio a.wav   # speech recognition with your own recording
 ```
 
-Since V01.0.163 every value gets a level (very good, good, tight, too slow) and a sentence saying when it is good; an overall verdict sits on top, and the last run is shown next to each value. The borders are fixed rules in `bench.rate()`: first audio 0.5/1/2 s, voice speed 2×/1.3×/1× real time, several at once (total ÷ count) 1.5/1/0.7, latest first audio with several 1/1.5/3 s, test sentence recognised in 1.5/3/5 s, words understood 95/90/85 %, free memory 14 GiB good, 10 GiB tight, below critical. "Words understood" is missing with `--audio` (the text of your own recording is unknown). The last ten runs' key numbers are kept in `bench-history.json`.
+Since V01.0.163 every value gets a level (very good, good, tight, too slow) and a sentence saying when it is good; an overall verdict sits on top, and the last run is shown next to each value. The borders are fixed rules in `bench.rate()`:
 
-The benchmark goes through the public ports, so it measures what apps see. The last result is stored in `/var/lib/speech-spark/state/bench-latest.json`.
+| Value | very good | good | tight |
+|---|---|---|---|
+| First audio (one request) | up to 0.5 s | up to 1 s | up to 2 s |
+| Speed of the voice | from 2× real time | from 1.3× | from 1× (below it stutters) |
+| Several at once (total / count) | from 1.5 | from 1 | from 0.7 |
+| First audio with several (latest) | up to 1 s | up to 1.5 s | up to 3 s |
+| Test sentence recognised in | up to 1.5 s | up to 3 s | up to 5 s |
+| Understood correctly (words of the test sentence) | from 95 % | from 90 % | from 85 % |
+| Free on the Spark | | from 14 GiB | from 10 GiB (below it critical) |
+
+"Words understood" is missing with `--audio` (the text of your own recording is unknown). The last ten runs' key numbers are kept in `bench-history.json`.
+
+The benchmark goes through the public ports, so it measures what apps see. The last result is stored in `/var/lib/speech-spark/state/bench-latest.json`. The memory shares of the engines (configuration) are starting values: set them to fit after the measurement.
 
 ## Next to dgx-spark-qwen38
 
@@ -66,20 +78,20 @@ Speech recognition and speech output always come first (fixed rule without a swi
   - `vorrang.speaking()`: whether speech is running.
 - **Operating system**: the ASR and TTS services and their engines run with `Nice=-5`, `CPUWeight=1000`, `IOWeight=1000`. When memory runs out, the system ends the panel first (`OOMScoreAdjust=900`), then the speech services (500), not the LLM lane and not sshd.
 - **GPU**: the GB10 has no priorities between processes. The speech engines' memory is reserved from their start. The language model's own answer runs at the same time as the speech output and sometimes slows it down ("tts behind … inside the piece").
-- **Checking**: Zustand → Prüfen → "Speech first" speaks a sentence alone, under load without priority and under load with priority, and shows first audio, real-time factor and recognition time, above it today's counters. Zustand → Logs shows the lines in the area "Priority" (`vorrang: … wartet`, `… abgebrochen`, `… wartete N s`).
+- **Checking**: Status → Checks → "Speech first" speaks a sentence alone, under load without priority and under load with priority, and shows first audio, real-time factor and recognition time, above it today's counters. Status → Logs shows the lines in the area "Priority" (`vorrang: … wartet`, `… abgebrochen`, `… wartete N s`).
 
 ## Priority for people
 
 When several people talk at once, chosen profiles get their answer first (since V01.0.282, plan `plaene/vorrang-personen.md`). Off by default.
 
-- **Switching on**: Funktionen → Gespräch → "Vorrang für Personen" (`chat.person_priority`, feature register `vorrang`). Only the admin sets the stage per profile under Personen und Geräte → profile → Rechte → Vorrang: "Vorrang" (three profiles at most), "normal" or "hinten anstellen" (last in line). Stored in `state/personen-vorrang.json` (in the backup), changes in the admin log (`person_priority`). Under Ich the profile sees the function as on or "off for you".
+- **Switching on**: Funktionen → Gespräch → "Vorrang für Personen" (`chat.person_priority`, feature register `vorrang`). Only the admin sets the stage per profile under People and devices → profile → Rights → Priority: "Vorrang" (three profiles at most), "normal" or "hinten anstellen" (last in line). Stored in `state/personen-vorrang.json` (in the backup), changes in the admin log (`person_priority`). Under Me the profile sees the function as on or "off for you".
 - **Who asks**: only from the sign-in (browser, app, device key), never from the text. Guests and programs without a profile (Open WebUI, Wyoming) are always normal. At a shared speaker the stage counts only when the speaker recognition heard the profile's voice; the recording itself goes to the recognition as normal there, because the voice is known only afterwards.
 - **Speech output and recognition**: both services let only as many requests go to the engine at once as it takes (`tts.engine_max_seqs`, `asr.engine_max_seqs`); the rest wait in the service (`common.PrioGate`) by stage, then by arrival. A running request is never stopped. Every 4 s of waiting move a request one stage up, so nobody starves. At most 64 wait, else 503. A slot comes back after 90 s at the latest, even when a device dropped the connection before its stream began.
 - **Language model** (since V01.0.284): while an answer with priority has no first sentence yet, new rounds of other people wait at most `chat.person_priority_wait` seconds (0–5, default 2) before they go to the language model (`stufe.wait_turn`). Running answers are never stopped; an answer without a first sentence holds others for 30 s at most. Logs → Anfragen shows "waited … for an answer with priority" at the round, journal `vorrang: Antwort wartete N s auf eine Antwort mit Vorrang`.
 - **Early notice**: the browser and the iPhone app send `POST /api/vorrang/spricht` when a recording starts (profile or device key, at most 60 per minute). If the profile has priority, background work stops at once and the language model gate closes for 15 s at most, until the question arrives. The answer is the same for everybody, so it does not tell who has priority. Shared speakers do not send it.
 - **Who may say the stage**: only the panel. It sends `X-Spark-Stufe` (0, 1, 2) together with the key from `state/vorrang-key` (made once by the panel, mode 0600, not in the backup). The services believe it only from 127.0.0.1 and only with that key; everybody else is normal, even with the API key.
-- **Seeing it**: Zustand → Logs → Anfragen shows "with priority" at the arrival and, at speech output, how long the sentences queued and how many they overtook. Journal: `vorrang: Stufe 2 überholt N wartende Anfrage(n)`. The services' `/health` shows slots, waiting requests and counters under `queue`.
-- **Measuring**: Zustand → Prüfen → "Speech first" also measures the case "two people at once": the speech output is full with sentences of others (all slots plus two waiting), then one more sentence comes, once normal and once with priority. It shows the first audio of both.
+- **Seeing it**: Status → Logs → Anfragen shows "with priority" at the arrival and, at speech output, how long the sentences queued and how many they overtook. Journal: `vorrang: Stufe 2 überholt N wartende Anfrage(n)`. The services' `/health` shows slots, waiting requests and counters under `queue`.
+- **Measuring**: Status → Checks → "Speech first" also measures the case "two people at once": the speech output is full with sentences of others (all slots plus two waiting), then one more sentence comes, once normal and once with priority. It shows the first audio of both.
 - **Limits**: the language model (qwen38) knows no order; Open WebUI and other programs that ask it directly are not held back. With one person talking nothing gets faster.
 
 ## Why the installation looks like this
@@ -105,7 +117,7 @@ New rights or hints go into `chat_turn.py`, new tools into `chat_tools.py` (defi
 
 Since V01.0.207 all pages under Settings are built the same way (`index.html`, style in `app.css`). New settings use only these parts:
 
-- **Row from JavaScript** (since V01.0.270): `setRow(l, h, ctl, {why, extra})` and `tglIn(attrs, on)` in `base.js` build every row, whether Ich → Gespräch, presets, weather/contacts, speaking up or speakers. `why` locks the row visibly with a reason ("Switched off by the admin") instead of hiding it.
+- **Row from JavaScript** (since V01.0.270): `setRow(l, h, ctl, {why, extra})` and `tglIn(attrs, on)` in `base.js` build every row, whether Me → Conversation, presets, weather/contacts, speaking up or speakers. `why` locks the row visibly with a reason ("Switched off by the admin") instead of hiding it.
 
 - **Header**: `<h2 class="pt">` and below it `<div class="pintro">` with one sentence on what the page controls.
 - **Section**: `<h3 class="sec">Name <span>hint</span></h3>`.
@@ -114,16 +126,18 @@ Since V01.0.207 all pages under Settings are built the same way (`index.html`, s
 - **Advanced**: always `<details class="adv"><summary>Erweitert <span class="mut">· what is inside</span></summary>`.
 - **Instant actions** (password, second step, sign out, update, backup): a section of their own, "acts at once, without saving"; everything else is collected by the page's save bar `.savebar`.
 - **At a glance**: new pages get a line in `glanceText()` (`admin.js`), only from data the panel already has.
-- **Menu** (since V01.0.265): Zustand (Monitoring, Prüfen, Logs), Funktionen (features, guides), Personen und Geräte (profiles and devices, apps and interfaces), Einstellungen. New parts under Zustand (e.g. a check button or a logs tab) go as a section into `#test` or a tab into `#logs`; a new sub-page gets a line in `GROUPS` (`base.js`) with one sentence in `SUBDESC`. Funktionen is the page `pane-feat` of the settings form, shown without the settings menu (`goSec('feat')`, class `featmode`); `goCfg('feat')` leads there, `goSec('sys')` to Settings → Update and backup.
-- **Search** (`find.js`, Ctrl K): finds by itself every page from `GROUPS` and `#cfgnav`, every settings row (`.setrow .lbl>b`, `h3.sec`, `summary`), every Ich page (`ME_ITEMS`), headings and buttons under Prüfen, tabs under Logs and every guide. New parts need nothing of their own as long as they use these building blocks.
+- **Menu** (since V01.0.265): Assistant and Me for oneself; then Status (Monitoring, Checks, Logs, Live), Features (with Guides and Who may do what), People and devices (with Apps and interfaces), Settings. New parts under Status (e.g. a check button or a logs tab) go as a section into `#test` or a tab into `#logs`; a new sub-page gets a line in `GROUPS` (`base.js`) with one sentence in `SUBDESC`. Features is the page `pane-feat` of the settings form, shown without the settings menu (`goSec('feat')`, class `featmode`); `goCfg('feat')` leads there, `goSec('sys')` to Settings → Update and backup.
+- **Search** (`find.js`, Ctrl K): finds by itself every page from `GROUPS` and `#cfgnav`, every settings row (`.setrow .lbl>b`, `h3.sec`, `summary`), every Me page (`ME_ITEMS`), headings and buttons under Checks, tabs under Logs and every guide. New parts need nothing of their own as long as they use these building blocks.
 - **Frame**: content that continues below a row (change password, second login step) gets `class="rowtail"`; the line then sits below the content, not between row and content. `html{scrollbar-gutter:stable}` keeps the scrollbar's space, so short pages do not move sideways (V01.0.254).
 - **Buttons without inline code** (since V01.0.286, strict CSP): never `onclick="…"` or `<script>` in the page. Static buttons get an id and `$('x').onclick=…`; buttons in generated HTML `${onAttr('name', arg1, …)}` and a line `ON.name=(button, arg1, …)=>…` in the same script (arguments as JSON, through `esc`).
+
+- **English, errors, "?", names** (since V01.0.408, review of 11.10.2026, B1–B8): every text in `index.html` is in `EN` (`i18n.js`), `title` and `aria-label` too; a sentence with tags inside gets `data-tr` and is in `EN` as a whole (inner HTML). `api()` shows errors as a sentence (`errSay` in `base.js`): a 422 list names the fields, short English answers become sentences, the panel's German sentences come from `EN`; the raw words for checks are in `e.detail` (`errRaw(e)`). A "?" stands only at rows the Spark help knows (`/api/hilfe/ids`); rows from scripts with a field of their own are listed in `hilfe.JS_ROWS`. Fields of a row without a label of their own get the row's title as `aria-label` (`rowLabels`). `tests/test_bedienung_hilfe.py` checks this.
 
 `tests/test_guides.py` (class `BuildingBlocks`) checks this without a browser: title and intro on every page, no `label.chk`, "Erweitert" only as `details`, as many "More" buttons as more texts, short sentences and English translations.
 
 ## Features and rights (features.py)
 
-Since V01.0.267 every function the admin can switch is written once in `app/panel/features.py`: name (de/en), group, the admin switches (`chat.*`), the function it builds on (`parent`), the profile's own switch (`profile`), whether guests may ever use it, the Ich page and the guide. Values are still stored under the old names in `config.json` and `settings.json`; only this table knows both.
+Since V01.0.267 every function the admin can switch is written once in `app/panel/features.py`: name (de/en), group, the admin switches (`chat.*`), the function it builds on (`parent`), the profile's own switch (`profile`), whether guests may ever use it, the Me page and the guide. Values are still stored under the old names in `config.json` and `settings.json`; only this table knows both.
 
 - **One check:** `features.admin_on(key)`, `features.profile_on(key, uid)`, `features.allowed(key, uid)` and `features.reason(key, uid)` (reason: `spark`, `profile`, `guest`). Modules only ask here (`admin_on`, `usable`, `allowed` are one-liners); what must be set up besides (Kiwix address, agent level) the module registers in `features.READY` or `features.GRANTED`.
 - **One list for the pages:** `GET /api/features` (signed in, rate limited) returns every function with Spark on/off, own switch, "may" and reason; guests see only guest functions. The flags in `/api/whoami` and `allow` in `/api/profile/settings` and `/api/iphone/settings` come from the same table.
@@ -131,7 +145,7 @@ Since V01.0.267 every function the admin can switch is written once in `app/pane
 - **Values in one place** (since V01.0.268): `common.load_config()` fills every missing key from `config.default.json` (like `jq '.[0] * .[1]'` in install.sh); a second default in code (`.get(k, other)`) and hand merges fail the self-test. What applies to a profile comes only from `profiles.effective(uid)`: the admin's presets (`chat.defaults`) with the profile's own values on top; guests get the presets.
 - **Heute** (since V01.0.286): `today.py` builds `GET /api/profile/today` only from `features.allowed`; every card is its own block that is missing when the function is not allowed. Calendars with `asyncio.wait_for` (3 s) and a 5 minute cache per profile and time zone; what is still to set up comes from `onboard.py` ("Los geht's"). The sentences of "Probier mal" come from `guides.js` (`say`), filtered by `/api/features` (`can`).
 - Fixed protection rules (secrets never spoken, speech first, the owner's voice at a shared speaker) are no switches and stay rules of their own.
-- **Main admin** (since V01.0.275): `core.owner_auth` lets the panel password and the admin mode of a profile with role `owner` through (roles, `/api/audit`, backups); `main_auth` stays only for the password, its second step and *sign out everywhere*. Profile shell: `body.prof` (start.js) shows the admin menu with only Assistent and Ich; `.mainonly` is seen by the main admin profile, `.pwonly` only with the password.
+- **Main admin** (since V01.0.275): `core.owner_auth` lets the panel password and the admin mode of a profile with role `owner` through (roles, `/api/audit`, backups); `main_auth` stays only for the password, its second step and *sign out everywhere*. Profile shell: `body.prof` (start.js) shows the admin menu with only Assistant and Me; `.mainonly` is seen by the main admin profile, `.pwonly` only with the password.
 - **App** (since V01.0.272): `GET /api/admin/switches` returns `names` and `groups` for every switch from `features.switch_names()`; the app keeps no list of its own. The app key may read `GET /api/features`; `hands` and `barge` are in `iphone.APP_FIELDS`.
 - **Profile detail** (since V01.0.271): `GET /api/admin/profiles/{uid}` also returns `features` (`features.count(uid)`: on / allowed by the Spark), `role`, `main` (is the main admin asking?) and `rights` (agent level, update right, upload space; missing for managers). `PUT /api/admin/agent/levels/{uid}` (`{"level": "" | "read" | "act"}`, logged as `agent_level`) sets one profile's agent level. The profile list carries `guests` (`features.guests()`).
 
