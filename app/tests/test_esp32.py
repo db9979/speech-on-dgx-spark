@@ -59,7 +59,22 @@ def fake_github():
 
 
 helpers._serve(fake_github(), GH_PORT)
-os.environ["SPEECH_SPARK_GITHUB_API"] = f"http://127.0.0.1:{GH_PORT}"
+_GH_BEFORE = None
+
+
+def setUpModule():
+    # set when this module's tests run, not at import: unittest imports every test module first, and
+    # another module may change the variable in between (the real GitHub had newer firmware, CI red)
+    global _GH_BEFORE
+    _GH_BEFORE = os.environ.get("SPEECH_SPARK_GITHUB_API")
+    os.environ["SPEECH_SPARK_GITHUB_API"] = f"http://127.0.0.1:{GH_PORT}"
+
+
+def tearDownModule():
+    if _GH_BEFORE is None:
+        os.environ.pop("SPEECH_SPARK_GITHUB_API", None)
+    else:
+        os.environ["SPEECH_SPARK_GITHUB_API"] = _GH_BEFORE
 
 
 def profile(name, pin="1234"):

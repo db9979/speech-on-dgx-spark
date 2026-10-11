@@ -266,6 +266,63 @@ class Browser(unittest.TestCase):
                         await br.close()
         self.run_async(go())
 
+    def test_feature_hint_card_and_guided_setup(self):
+        """Funktionen vorschlagen (tipps.js): asked for something that is off for this profile, the answer carries the
+        hint with "Einrichten"; that opens the guided setup in the face's window and the Ich page, the card there
+        switches only on the tap, a click on the page keeps the window open, "Fertig" closes it; Ich → Überblick lists
+        "Für dich vorgeschlagen". No sideways scrolling on a phone, with the strict CSP on."""
+        from unittest import mock
+        import profiles
+        import tipps
+        uid = next(u["id"] for u in profiles._load()["users"] if u["name"] == "Uitest")
+        helpers.set_config(spark_help=True, feature_tips=True, tasks=True, routing=False, direct_read=False)
+
+        async def go():
+            async with async_playwright() as p:
+                for w, h in ((1280, 900), (390, 844)):
+                    tipps.forget(uid)
+                    profiles.save_settings(uid, {"tips_on": True, "tasks_on": False, "spark_help": True})
+                    br, pg, errors = await self.page(p, w, h, csp=True)
+                    try:
+                        await self.until(pg, "TIPS_ON===true", 5)
+                        await pg.evaluate("ask('Setz Milch auf die Einkaufsliste')")
+                        await pg.wait_for_selector(".whynote .tipnote .tiprow .b.p", timeout=8000)
+                        await pg.click(".whynote .tipnote .tiprow .b.p")
+                        await pg.wait_for_selector("#tipsetup .hcard [data-hdo=apply]", timeout=5000)
+                        await self.until(pg, "$('profmodal').style.display==='grid'&&$('fab').classList.contains('open')", 5)
+                        self.assertFalse(profiles.settings(uid).get("tasks_on"))   # nothing before the tap
+                        over = await pg.evaluate("document.documentElement.scrollWidth-window.innerWidth")
+                        self.assertLessEqual(over, 1, f"{w}: {over}px zu breit")
+                        await pg.click("#tipsetup .hcard [data-hdo=apply]")
+                        await pg.wait_for_selector("#tipsetup .hcard [data-hdo=undo]", timeout=5000)
+                        self.assertTrue(profiles.settings(uid).get("tasks_on"))
+                        await pg.mouse.click(5, h // 2)    # a click on the page keeps the setup open
+                        await pg.wait_for_timeout(200)
+                        self.assertTrue(await pg.evaluate("$('fab').classList.contains('open')&&!!$('tipsetup')"))
+                        await pg.locator("#tipsetup .row .b.p").click()   # Prüfen
+                        await self.until(pg, "$('tipsetup').querySelector(':scope>.tipmsg').textContent.length>0", 5)
+                        self.assertIn("Eingerichtet", await pg.text_content("#tipsetup>.tipmsg"))
+                        await pg.locator("#tipsetup .row .b").last.click()   # Fertig
+                        await self.until(pg, "!$('tipsetup')", 3)
+                        # Ich → Überblick
+                        item = tipps._tip("gap", "g:passkey", None, uid, False, ["weil es hilft", "because it helps"],
+                                          name=["Passkeys", "Passkeys"], me="secbox", guide="mfa")
+                        with mock.patch.object(tipps, "candidates", return_value=[item]):
+                            await pg.evaluate("openMe('overbox')" if w > 760 else "openMe('list')")   # a phone: above the list
+                            await pg.wait_for_selector("#tipover .tipitem", timeout=5000)
+                        self.assertIn("weil es hilft", await pg.text_content("#tipover"))
+                        over = await pg.evaluate("document.documentElement.scrollWidth-window.innerWidth")
+                        self.assertLessEqual(over, 1, f"{w}: {over}px zu breit")
+                        self.assertEqual(errors, [], w)
+                    finally:
+                        await br.close()
+        try:
+            self.run_async(go())
+        finally:
+            tipps.forget(uid)
+            helpers.set_config(spark_help=False, feature_tips=False, tasks=False)
+            profiles.save_settings(uid, {"tips_on": False, "tasks_on": False, "spark_help": False})
+
     def test_notaus_button_band_and_lifting(self):
         """Notaus (notaus.py): the red button opens the stages, triggering shows the band and Zustand's card on every
         page, lifting asks for the password (no second step here) and everything is back."""
@@ -597,6 +654,10 @@ class Browser(unittest.TestCase):
                         await pg.click("#dkpair")
                         await pg.wait_for_selector("#dksetup:has-text('#begleiter=')", timeout=8000)
                         box = f'[data-desk="{did}"]'
+                        # one device: its row shows a summary and its settings are open at once, the parts in groups
+                        await pg.wait_for_selector(box + ' .dkbody', state="visible", timeout=8000)
+                        self.assertRegex(await pg.inner_text(box + ' .dkhead'), r"\d+ (von|of) \d+ (Teilen|parts) an|on")
+                        self.assertEqual(await pg.locator(box + ' .dkgrp h4').count(), 5)
                         await pg.locator(box + ' [data-dk="dictate"]').evaluate("e=>e.click()")
                         await pg.click(f'[data-dsave="{did}"]')
                         await pg.wait_for_selector(f'[data-dmsg="{did}"]:has-text("Gespeichert")', timeout=8000)
@@ -613,6 +674,52 @@ class Browser(unittest.TestCase):
             helpers.set_config(desk=False)
             profiles.save_settings(me, {"desk_on": False})
             profiles.delete_device(did)
+
+    def test_begleiter_two_devices(self):
+        """Ich → Begleiter with several devices (Dominik 2026-10-11): compact rows, one open at a time, settings of
+        another device taken into the open form without saving; no sideways scrolling on a phone."""
+        import begleiter
+        import profiles
+        helpers.set_config(desk=True)
+        me = next(u for u in profiles._load()["users"] if u["name"] == "Uitest")["id"]
+        profiles.save_settings(me, {"desk_on": True})
+        ids = []
+        for n in ("Begleiter Windows · Büro-PC", "Begleiter Mac · MacBook"):
+            profiles.add_device(n, me, scope="desk")
+            ids.append(next(x["id"] for x in profiles._load()["devices"] if x["name"] == n))
+        begleiter._save_cfg(ids[0], me, dict(begleiter.DEFAULT, parts=dict(begleiter.DEFAULT["parts"], dictate=True)))
+        begleiter._save_cfg(ids[1], me, begleiter.DEFAULT)
+
+        async def go():
+            async with async_playwright() as p:
+                for name, w, h in VIEWS:
+                    br, pg, errors = await self.page(p, w, h, csp=True)
+                    try:
+                        await pg.evaluate("try{localStorage.removeItem('deskOpen')}catch{}")
+                        await pg.evaluate("openMe('deskbox')")
+                        a, b = (f'[data-desk="{i}"]' for i in ids)
+                        await pg.wait_for_selector(a + " .dkhead", state="visible", timeout=8000)
+                        self.assertFalse(await pg.is_visible(a + " .dkbody"))          # collapsed at first
+                        await pg.click(a + " .dkhead")
+                        self.assertTrue(await pg.is_visible(a + " .dkbody"))
+                        await pg.click(b + " .dkhead")
+                        self.assertTrue(await pg.is_visible(b + " .dkbody"))
+                        self.assertFalse(await pg.is_visible(a + " .dkbody"))          # only one open
+                        await pg.select_option(b + " [data-dcopy]", ids[0])
+                        self.assertTrue(await pg.locator(b + ' [data-dk="dictate"]').is_checked())
+                        self.assertFalse(begleiter.device_cfg(ids[1])[0]["parts"]["dictate"])   # nothing saved yet
+                        over = await pg.evaluate("document.documentElement.scrollWidth-window.innerWidth")
+                        self.assertLessEqual(over, 1, f"{name}: {over}px zu breit")
+                        self.assertEqual(errors, [], name)
+                    finally:
+                        await br.close()
+        try:
+            self.run_async(go())
+        finally:
+            helpers.set_config(desk=False)
+            profiles.save_settings(me, {"desk_on": False})
+            for i in ids:
+                profiles.delete_device(i)
 
     def test_messages_page_sends(self):
         """Ich → Nachrichten (V01.0.192): switch on, write to another profile, it lands in that mailbox; on a
@@ -1753,10 +1860,10 @@ class Browser(unittest.TestCase):
                     try:
                         await pg.evaluate("ON.rpOpen()")
                         await pg.wait_for_selector("#rpbody textarea", timeout=5000)
-                        await pg.fill("#rpbody textarea", "Der Lautsprecher in der Küche schweigt")
+                        await pg.fill("#rpbody textarea", "Der Wecker klingelt heute nicht")
                         await pg.click("#rpbody [data-rpmake]")
                         await pg.wait_for_selector("#rpbody pre.rpbody", timeout=8000)
-                        self.assertIn("Lautsprecher", await pg.inner_text("#rpbody pre.rpbody"))
+                        self.assertIn("klingelt heute nicht", await pg.inner_text("#rpbody pre.rpbody"))
                         self.assertGreater(await pg.evaluate("document.querySelectorAll('#rpbody [data-rpline]').length"), 0)
                         over = await pg.evaluate("document.documentElement.scrollWidth-window.innerWidth")
                         self.assertLessEqual(over, 1, f"{w}: {over}px zu breit")

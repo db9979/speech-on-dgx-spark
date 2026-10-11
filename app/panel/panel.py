@@ -78,13 +78,14 @@ import live  # noqa: E402
 import hamelden  # noqa: E402
 import notaus  # noqa: E402
 import hilfe  # noqa: E402
+import tipps  # noqa: E402
 import schreib  # noqa: E402
 import begleiter  # noqa: E402
 import systemone  # noqa: E402
 import meldung  # noqa: E402
 
 app = FastAPI(title="Speech on DGX Spark")
-for _module in (account, admin, chat, update, system, proactive, room, roomlive, tidy, weather, contacts, parcels, telegram, tasks, esp32, iphone, pebblewatch, android, appupdate, apns, transit, logfilter, agent, images, messages, intent, wissen, tracelog, lokal, features, remarkable, rmplus, join, onboard, hintergrund, stufe, today, offsite, mcpserver, meinmcp, live, hamelden, notaus, hilfe, schreib, begleiter, systemone, meldung):
+for _module in (account, admin, chat, update, system, proactive, room, roomlive, tidy, weather, contacts, parcels, telegram, tasks, esp32, iphone, pebblewatch, android, appupdate, apns, transit, logfilter, agent, images, messages, intent, wissen, tracelog, lokal, features, remarkable, rmplus, join, onboard, hintergrund, stufe, today, offsite, mcpserver, meinmcp, live, hamelden, notaus, hilfe, tipps, schreib, begleiter, systemone, meldung):
     app.include_router(_module.router)
 app.middleware("http")(update_lock)
 
@@ -100,11 +101,11 @@ def _may_upload(scope):
 # Request bodies: small by default; uploads only where they belong and only up to their limit.
 app.add_middleware(BodyLimit, default=2 * 1024**2, gate=_may_upload, limits=[
     ("/api/backups-upload", backup.MAX_UPLOAD + 1024**2), ("/api/clone-voices-import", 200 * 1024**2),
-    ("/api/clone-voices", 60 * 1024**2), ("/api/test/asr", 51 * 1024**2), ("/api/desk/dictate", begleiter.MAX_AUDIO), ("/api/desk/hear", begleiter.MAX_HEAR), ("/api/desk/file", begleiter.MAX_UPLOAD + 64 * 1024), ("/api/desk/screen", begleiter.MAX_SHOT + 64 * 1024), ("/api/logverbose", 4096), ("/api/profile/voice", 11 * 1024**2),
+    ("/api/clone-voices", 60 * 1024**2), ("/api/test/asr", 51 * 1024**2), ("/api/desk/dictate", begleiter.MAX_AUDIO), ("/api/desk/hear", begleiter.MAX_HEAR), ("/api/desk/file", begleiter.MAX_UPLOAD + 64 * 1024), ("/api/desk/screen", begleiter.MAX_SHOT + 64 * 1024), ("/api/desk/meeting/chunk", begleiter.MEET_CHUNK), ("/api/profile/desk/send", begleiter.INBOX_FILE + 64 * 1024), ("/api/logverbose", 4096), ("/api/profile/voice", 11 * 1024**2),
     ("/api/profile/docs", lambda: wissen.pdf_bytes() + 1024**2), ("/api/chat/image", images.MAX_BYTES + 64 * 1024),
     ("/api/chat", 4 * 1024**2), ("/api/login", 64 * 1024),
     ("/api/profile/login", 64 * 1024), ("/mcp", mcpserver.MAX_BODY), ("/oauth/", mcpserver.MAX_JSON)],
-    gated=("/api/backups-upload", "/api/clone-voices", "/api/test/asr", "/api/desk/dictate", "/api/desk/hear", "/api/desk/file", "/api/desk/screen", "/api/profile/voice", "/api/profile/docs",
+    gated=("/api/backups-upload", "/api/clone-voices", "/api/test/asr", "/api/desk/dictate", "/api/desk/hear", "/api/desk/file", "/api/desk/screen", "/api/desk/meeting/chunk", "/api/profile/desk/send", "/api/profile/voice", "/api/profile/docs",
            "/api/chat/image", "/mcp"))
 
 
@@ -295,6 +296,10 @@ async def stability():
                     await appupdate.due_once()
                 except Exception as e:
                     print("iphone update notice:", type(e).__name__, flush=True)
+                try:
+                    await update.night_once()      # "Heute Nacht einspielen" (update.py), off by default
+                except Exception as e:
+                    print("update overnight:", type(e).__name__, flush=True)
             await asyncio.sleep(5)
     asyncio.create_task(reminders())
     asyncio.create_task(telegram.loop())

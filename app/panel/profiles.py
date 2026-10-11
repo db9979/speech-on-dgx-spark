@@ -548,7 +548,11 @@ def _app_area(request, uid):
 # bar) only reaches its own paths, only while the admin and the profile allow it (DESK_GATE, set by begleiter.py);
 # each part (writing help, questions, dictation, notes, Notaus button) is checked again per device there.
 DESK_PATHS = ("/api/write", "/api/write/assist", "/api/desk/config", "/api/desk/poll", "/api/desk/ask",
-              "/api/desk/dictate", "/api/desk/notaus", "/api/desk/update", "/api/desk/file", "/api/desk/screen", "/api/desk/hear", "/api/desk/act")
+              "/api/desk/dictate", "/api/desk/notaus", "/api/desk/update", "/api/desk/file", "/api/desk/screen", "/api/desk/hear", "/api/desk/act",
+              # Version 4 (exact paths; the ids go in the query or the body)
+              "/api/desk/speak", "/api/desk/inbox/file", "/api/desk/inbox/done", "/api/desk/agenda", "/api/desk/remind",
+              "/api/desk/busy", "/api/desk/meeting/start", "/api/desk/meeting/chunk", "/api/desk/meeting/end",
+              "/api/desk/meeting/keep", "/api/desk/home", "/api/desk/daily", "/api/desk/apps")
 DESK_GATE = [lambda uid: False]
 ROOM_PATHS = ("/api/room/active", "/api/room/end")
 ROOM_GATE = [lambda uid: False]
@@ -736,6 +740,7 @@ SETTINGS = {
     "prefetch": (False, lambda v: isinstance(v, bool)),     # fetch ahead on a question back (vorab.py, admin chat.prefetch)
     "instant_ack": (False, lambda v: isinstance(v, bool)),  # a ready-made sentence right away (ack.py, admin chat.instant_ack)
     "spark_help": (False, lambda v: isinstance(v, bool)),   # questions about the Spark itself (hilfe.py, admin chat.spark_help)
+    "tips_on": (False, lambda v: isinstance(v, bool)),      # hints on functions that would help (tipps.py, chat.feature_tips)
     "write_on": (False, lambda v: isinstance(v, bool)),     # Schreibhilfe (schreib.py, admin chat.write_help)
     "write_apps": (False, lambda v: isinstance(v, bool)),   # ... also from paired programs and the iPhone app (chat.write_apps)
     "desk_on": (False, lambda v: isinstance(v, bool)),      # the Spark-Begleiter on PC and Mac (chat.desk, begleiter.py)
@@ -775,7 +780,8 @@ SETTINGS = {
     "pro_parcel": (True, lambda v: isinstance(v, bool)),
     "tasks_on": (False, lambda v: isinstance(v, bool)),
     "transit_on": (False, lambda v: isinstance(v, bool)),   # Bus und Bahn (transit.py)
-    "pro_transit": (True, lambda v: isinstance(v, bool)),   # shopping and to-do list (tasks.py)
+    "pro_transit": (True, lambda v: isinstance(v, bool)),
+    "pro_tips": (False, lambda v: isinstance(v, bool)),     # one hint on a function a week (tipps.py, chat.feature_tips_push)   # shopping and to-do list (tasks.py)
     # Telegram (see telegram.py): what this profile allows over Telegram, all off until it says so
     "tg_voice": (False, lambda v: isinstance(v, bool)),
     "tg_private": (False, lambda v: isinstance(v, bool)),

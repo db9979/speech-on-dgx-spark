@@ -42,6 +42,7 @@ KINDS = {"events": ("Termin-Vorlauf", 10, "pro_events"), "ha": ("Smart Home", 10
          "mail": ("Wichtige Mail", 10, "pro_mail"), "weather": ("Wetter", 1, "pro_weather"),
          "tidy": ("Postfach aufräumen", 2, "pro_tidy"), "bday": ("Geburtstag", 1, "pro_bday"),
          "parcel": ("Paket kommt heute", 3, "pro_parcel"), "transit": ("Bus und Bahn", 1, "pro_transit"),
+         "tipp": ("Funktion vorschlagen", 1, "pro_tips"),
          "meldung": ("Neue Problem-Meldung", 10, "pro_meldung")}   # only forced (meldung.tell_admins), own switches
 PAGE_ACTIVE = 75            # seconds since the page last asked: it is open, no push needed
 QUEUE_KEEP = 2 * 3600
@@ -913,6 +914,18 @@ async def check_parcel(uid, p, now):
         await deliver(uid, "parcel", line, why="Versandmail in deinem Postfach", data=line[:300], mail=True)
 
 
+async def check_tips(uid, p, now):
+    """One hint on a function that would help, at most once a week (tipps.py decides which), in the day only."""
+    import tipps
+    st = state(uid)
+    if not 10 <= now.hour < 19 or time.time() - st.get("tipp_checked", 0) < 3600 or blocked(uid, "tipp", p, now):
+        return
+    _mut(uid, lambda s: s.update(tipp_checked=time.time()))
+    text, _ = await asyncio.to_thread(tipps.weekly_text, uid)
+    if text:
+        await deliver(uid, "tipp", text, why="Vorschlag einer Funktion")
+
+
 async def check_transit(uid, p, now):
     """The commute train late or cancelled: checked every 5 minutes from 45 to 5 minutes before, once a day."""
     import transit
@@ -955,7 +968,8 @@ async def due_once(now=None):
                          ("weather", lambda: check_weather(uid, p, local) if p.get("pro_weather") else None),
                          ("bday", lambda: check_bday(uid, p, local) if p.get("pro_bday") else None),
                          ("parcel", lambda: check_parcel(uid, p, local) if p.get("pro_parcel") else None),
-                         ("transit", lambda: check_transit(uid, p, local) if p.get("pro_transit") else None)):
+                         ("transit", lambda: check_transit(uid, p, local) if p.get("pro_transit") else None),
+                         ("tipp", lambda: check_tips(uid, p, local) if p.get("pro_tips") else None)):
             try:
                 job = fn()
                 if job:

@@ -155,7 +155,7 @@ final class Updater: ObservableObject {
                 self.phase = .failed(AppModel.shared.absorb(p))
             } catch {
                 guard self.info == info else { return }
-                self.phase = .failed("Update beschädigt, nichts geändert.")
+                self.phase = .failed("Update nicht geladen (\(error.localizedDescription.prefix(80))), nichts geändert.")
             }
         }
     }
@@ -166,13 +166,16 @@ final class Updater: ObservableObject {
         try? fm.createDirectory(at: updateDir, withIntermediateDirectories: true)
         let zip = updateDir.appendingPathComponent("Spark-Begleiter-mac.zip")
         try await client.download("api/desk/update?arch=mac", to: zip, maxBytes: info.size)
-        let ok = await Task.detached(priority: .utility) { () -> Bool in
-            guard let got = Updater.sha256(of: zip) else { return false }
-            return UpdateCheck.matches(size: got.size, sha256: got.digest, info)
+        let got = await Task.detached(priority: .utility) { () -> (size: Int, digest: [UInt8])? in
+            Updater.sha256(of: zip)
         }.value
-        guard ok else {
+        guard let got, UpdateCheck.matches(size: got.size, sha256: got.digest, info) else {
             try? fm.removeItem(at: zip)
-            throw SparkProblem.failed("Update beschädigt, nichts geändert.")
+            // which check failed, so a screenshot says where to look
+            throw SparkProblem.failed(got.map { $0.size == info.size
+                ? "Update-Prüfsumme passt nicht, nichts geändert."
+                : "Update unvollständig (\($0.size) von \(info.size) Bytes), nichts geändert." }
+                ?? "Update ließ sich nicht lesen, nichts geändert.")
         }
         return zip
     }
@@ -235,28 +238,38 @@ final class Updater: ObservableObject {
     nonisolated private static func unpack(_ zip: URL, info: UpdateInfo) -> Result<URL, InstallError> {
         let fm = FileManager.default
         let dir = updateDir.appendingPathComponent("neu-" + UUID().uuidString, isDirectory: true)
-        let broken = InstallError(message: "Update beschädigt, nichts geändert.")
         do {
             try fm.createDirectory(at: dir, withIntermediateDirectories: true)
         } catch {
             return .failure(InstallError(message: "Das Update ließ sich nicht auspacken."))
         }
-        guard run("/usr/bin/ditto", ["-x", "-k", zip.path, dir.path]) == 0 else {
+        let unzipped = run("/usr/bin/ditto", ["-x", "-k", zip.path, dir.path])
+        guard unzipped == 0 else {
             try? fm.removeItem(at: dir)
-            return .failure(broken)
+            return .failure(InstallError(message: "Update ließ sich nicht auspacken (ditto \(unzipped)), nichts geändert."))
         }
         let apps = ((try? fm.contentsOfDirectory(at: dir, includingPropertiesForKeys: nil)) ?? [])
             .filter { $0.pathExtension == "app" }
+        func fail(_ why: String) -> Result<URL, InstallError> {
+            try? fm.removeItem(at: dir)
+            return .failure(InstallError(message: "Update beschädigt (\(why)), nichts geändert."))
+        }
         guard apps.count == 1, let app = apps.first,
               let data = try? Data(contentsOf: app.appendingPathComponent("Contents/Info.plist")),
-              let plist = (try? PropertyListSerialization.propertyList(from: data, format: nil)) as? [String: Any],
-              UpdateCheck.bundleMatches(id: plist["CFBundleIdentifier"] as? String,
-                                        version: plist["CFBundleShortVersionString"] as? String, info),
-              let exe = plist["CFBundleExecutable"] as? String, !exe.contains("/"),
-              fm.isExecutableFile(atPath: app.appendingPathComponent("Contents/MacOS/" + exe).path),
-              run("/usr/bin/codesign", ["--verify", "--deep", "--strict", app.path]) == 0 else {
-            try? fm.removeItem(at: dir)
-            return .failure(broken)
+              let plist = (try? PropertyListSerialization.propertyList(from: data, format: nil)) as? [String: Any] else {
+            return fail("kein Programm im Paket")
+        }
+        guard UpdateCheck.bundleMatches(id: plist["CFBundleIdentifier"] as? String,
+                                        version: plist["CFBundleShortVersionString"] as? String, info) else {
+            return fail("Kennung oder Version passt nicht")
+        }
+        guard let exe = plist["CFBundleExecutable"] as? String, !exe.contains("/"),
+              fm.isExecutableFile(atPath: app.appendingPathComponent("Contents/MacOS/" + exe).path) else {
+            return fail("Programmdatei fehlt")
+        }
+        let signed = run("/usr/bin/codesign", ["--verify", "--deep", "--strict", app.path])
+        guard signed == 0 else {
+            return fail("Signatur, codesign \(signed)")
         }
         return .success(app)
     }

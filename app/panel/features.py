@@ -73,6 +73,11 @@ FEATURES = (
       parent="hilfe", me="setbox", guide="hilfevorschlag"),
     F("hilfeseite", "Frag Spark auf jeder Seite", "Ask Spark on every page", "talk", ("spark_drawer",), "spark_help",
       parent="hilfe", me="setbox", guide="hilfeseite"),
+    # tipps.py: the assistant points out a function that would help and helps setting it up
+    F("tipps", "Funktionen vorschlagen", "Suggesting functions", "talk", ("feature_tips",), "tips_on",
+      parent="hilfe", me="setbox", guide="tipps"),
+    F("tippspush", "Funktionen vorschlagen von selbst", "Suggesting functions by itself", "day",
+      ("feature_tips_push", "feature_tips"), "pro_tips", parent="proactive", me="probox", guide="tippspush"),
     # qwen38's /v1/systemone (systemone.py): probabilities instead of words, the panel decides with fixed thresholds
     F("einordnung", "Einordnung mit Wahrscheinlichkeit", "Classification with probabilities", "talk", ("systemone",),
       "systemone_on", me="setbox", guide="einordnung"),
@@ -173,6 +178,8 @@ FEATURES = (
       me="deskbox", guide="begleiter"),
     F("begleitertun", "Begleiter darf am PC handeln", "Companion may act on the PC", "go", ("desk_act",),
       parent="begleiter", me="deskbox", guide="begleitertun"),
+    F("begleitermeeting", "Besprechungen mitschreiben", "Write along in meetings", "go", ("desk_meeting",),
+      parent="begleiter", me="deskbox", guide="begleitermeeting"),
     F("pebble", "Pebble-Uhr", "Pebble watch", "go", ("pebble",), "pebble_on", me="pebbox", guide="pebblepair"),
     F("mcpserver", "Spark als MCP-Server", "Spark as MCP server", "go", ("mcp_server",), "mcps_on", me="mcpbox", guide="mcpserver"),
     F("mcpextern", "MCP-Server von außen (OAuth)", "MCP server from outside (OAuth)", "go", ("mcp_server_extern",),

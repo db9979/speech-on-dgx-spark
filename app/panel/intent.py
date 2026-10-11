@@ -96,7 +96,7 @@ INTENT_NAMES = [n for n in GROUPS if n not in ("wikipedia", "archiv")]   # the m
 # always kept when the tools are narrowed: noting something the person says about themselves, and the
 # own documents (offered only when the profile has some; V01.0.244: "Wann läuft meine Versicherung ab?"
 # or a question the rules file under another group may well be answered from them)
-NARROW_KEEP = {"memory_save", "document_search", "pc_action"}
+NARROW_KEEP = {"memory_save", "document_search", "pc_action", "pc_send"}
 # chat.route_model "lean": a question no rule recognizes gets only these (of those offered). A short
 # tool list makes the model read far less before its first word; the rule groups keep everything else.
 LEAN = {"web_search", "wikipedia", "archive_search", "article_more", "history_search"} | NARROW_KEEP

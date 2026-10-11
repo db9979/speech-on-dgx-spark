@@ -18,8 +18,15 @@ Ein kleines Programm in der Menüleiste (kein Symbol im Dock) für den eigenen S
 | **Knöpfe in Meldungen** | Meldungen mit „Antworten“, „Später“, „Panel öffnen“ | – |
 | **Spark darf am Mac handeln** | der Spark darf um wenige, fest umrissene Dinge bitten – jedes einzeln mit Rückfrage | – |
 | **Weckwort** | „Hey Spark, …“ sagen statt ein Kürzel zu drücken | – |
+| **Vorlesen** | markierten Text liest der Spark mit der Stimme des Profils vor | ⌥⌘L |
+| **Vom Handy auf den Mac** | Text, Links und Dateien, die du im Panel an diesen Mac schickst, kommen hier an | – |
+| **Termine im Begleiter** | „Als Nächstes“ im Begleiter-Fenster, Mitteilung 10 Minuten vor jedem Termin | – |
+| **Nicht stören erkennen** | bei Anruf, Kamera oder Präsentation hält der Spark seine Meldungen zurück | – |
+| **Besprechung mitschreiben** | Mikrofon und Ton des Macs mitschreiben, danach Zusammenfassung und Aufgaben | ⌥⌘R |
+| **Smart-Home-Knöpfe** | Abschnitt „Zuhause“ mit den im Panel gewählten Knöpfen | – |
+| **Tagesstart und Feierabend** | morgens beim ersten Entsperren und abends beim Sperren ein kurzer Überblick | – |
 
-Die Teile ab „Rechtsklick auf Dateien“ sind anfangs **für alle Geräte aus** und müssen im Panel einzeln eingeschaltet
+Die Teile ab „Rechtsklick auf Dateien“ (auch die neuen ab „Vorlesen“) sind anfangs **für alle Geräte aus** und müssen im Panel einzeln eingeschaltet
 werden.
 
 Welche Teile an sind, wird **zentral im Panel** eingestellt (Ich → Begleiter, für jedes gekoppelte Gerät).
@@ -207,6 +214,12 @@ Möglich ist nur:
 Alles andere lehnt der Begleiter ab, auch wenn es der Spark schickt; dieselbe Bitte läuft nie zweimal. Medien- und
 Lautstärketasten brauchen die Freigabe **Bedienungshilfen**.
 
+Damit man die Programme im Panel **auswählen** kann statt Name und Pfad zu tippen, schickt der Begleiter, solange
+dieser Teil an ist, die Liste der installierten Programme an den Spark: beim Start, wenn der Teil eingeschaltet
+wird, und einmal am Tag. Darin stehen nur Name und Pfad der `.app`-Programme aus `/Applications`,
+`/Applications/Utilities`, `/System/Applications` (mit `Utilities`) und `~/Applications` (je zwei Ebenen tief),
+höchstens 600.
+
 ### Weckwort
 
 Ist der Teil an, hört der Begleiter über das Mikrofon auf das Weckwort des Spark (Standard **„Hey Spark“**, im Panel
@@ -223,6 +236,74 @@ rechts einen **türkisen Ring**. Klick aufs Gesicht → **„Weckwort pausieren�
 „Weckwort fortsetzen“ wählt (das merkt sich der Begleiter auch über einen Neustart). Ganz aus geht es im Panel.
 Während eines Diktats wird nichts ans Weckwort geschickt.
 
+### Vorlesen
+
+Text markieren, **⌥⌘L** drücken: Der Begleiter kopiert den markierten Text (wie die Schreibhilfe, dafür braucht er die
+Freigabe **Bedienungshilfen**; die Zwischenablage ist danach wie vorher) und schickt ihn an den Spark, der ihn mit der
+Stimme deines Profils spricht. Oben auf dem Bildschirm steht solange **„Spark liest vor“** mit **Stopp**; ⌥⌘L noch
+einmal hält ebenfalls an. Höchstens 5000 Zeichen. Im Begleiter-Fenster liest **„Zwischenablage vorlesen“** den
+kopierten Text. Die Sprachausgabe bleibt nur im Speicher.
+
+Auch **„Frag Spark“** kann seine Antworten vorlesen. Einstellbar im Fenster (Lautsprecher-Knopf unten) oder unter
+Einstellungen → „Vorlesen“: **immer**, **nur bei gesprochenen Fragen** (Standard: mit dem Mikrofon-Knopf im Fenster
+oder mit dem Weckwort gefragt) oder **nie**. Getippte Fragen bleiben still, außer bei „immer“. Eine neue Frage oder
+„Stopp“ beendet das Vorlesen. Ohne den Teil „Vorlesen“ wird nichts vorgelesen.
+
+### Vom Handy auf den Mac
+
+Was du im Panel (z. B. am Handy) an dieses Gerät schickst, kommt mit dem nächsten Abruf an:
+
+- **Text** liegt in der Zwischenablage, dazu die Mitteilung „Vom Spark: Text liegt in der Zwischenablage“.
+- **Link**: Rückfrage „Link öffnen?“ mit **Öffnen**, **Kopieren**, **Nein**. Geöffnet werden nur `http://`- und
+  `https://`-Adressen.
+- **Datei** (bis 20 MB): landet in **Downloads/Vom Spark** (macOS fragt beim ersten Mal nach dem Zugriff auf
+  „Downloads“). Eine vorhandene Datei wird nie überschrieben, sondern „Name (2).pdf“ angelegt. Die Mitteilung hat
+  den Knopf **Ordner öffnen**.
+
+Jedes Stück kommt genau einmal an; danach meldet der Begleiter dem Spark „erledigt“ (auch bei „Nein“).
+
+### Termine im Begleiter
+
+Alle 5 Minuten holt der Begleiter die Termine und Erinnerungen der nächsten 24 Stunden. Im Begleiter-Fenster steht
+der Abschnitt **„Als Nächstes“**; 10 Minuten vor jedem Termin kommt eine Mitteilung mit Titel und Uhrzeit (einmal je
+Termin). Meldungen des Spark bekommen zusätzlich den Knopf **„In 20 Min erinnern“**.
+
+### Nicht stören erkennen
+
+Alle 10 Sekunden schaut der Begleiter, ob ein **anderes** Programm das Mikrofon oder die Kamera benutzt (ein Anruf)
+oder ob das Programm vorne ein Fenster über den ganzen Bildschirm zeigt (Präsentation, Vollbild). Dann sagt er dem
+Spark nur „Anruf“ bzw. „Präsentation“ – keine Programmnamen. Der Spark hält seine Meldungen so lange zurück und
+schickt danach eine Zusammenfassung. In der Menüleiste hat das Gesicht oben links einen kleinen **Mond**.
+Das eigene Mikrofon (Diktat, Weckwort, Besprechung) zählt nicht; solange das Weckwort hört, erkennt der Begleiter
+Anrufe daher nur an der Kamera und am Vollbild.
+
+### Besprechung mitschreiben
+
+Nur auf Klick im Begleiter-Fenster („Besprechung mitschreiben“) oder mit **⌥⌘R**. Beim ersten Mal fragt der
+Begleiter: *„Alle Beteiligten müssen einverstanden sein, dass mitgeschrieben wird.“* → **Verstanden, starten**.
+Solange es läuft, steht oben rechts eine **rote Leiste** „Besprechung wird mitgeschrieben · mm:ss · Beenden“, die
+sich nicht ausblenden lässt (auch über Vollbild-Programmen). Aufgenommen werden das Mikrofon und – mit der Freigabe
+**Bildschirmaufnahme** – der Ton des Macs (die anderen im Anruf); ohne diese Freigabe nur das Mikrofon, und die
+Leiste sagt das. Alle 30 Sekunden geht ein Stück an den Spark; auf dem Mac wird nichts gespeichert. Höchstens
+3 Stunden.
+
+Nach **Beenden** öffnet sich ein Fenster mit der Zusammenfassung (markierbar, **Kopieren**) und den Aufgaben zum
+Ankreuzen (keine ist vorab angekreuzt): **Ausgewählte als Erinnerung**, **Aufs reMarkable** (nur wenn im Panel
+eingerichtet) und **Schließen**. Diesen Teil muss zusätzlich der Admin freigeben.
+
+### Smart-Home-Knöpfe
+
+Im Begleiter-Fenster gibt es den Abschnitt **„Zuhause“** mit den Knöpfen, die im Panel für dieses Gerät gewählt
+sind; Schalter zeigen „an“/„aus“. Verlangt der Spark für einen Knopf ein **Codewort**, fragt der Begleiter danach in
+einem Passwortfeld und schickt es nur für diesen einen Druck mit – gespeichert wird es nicht.
+
+### Tagesstart und Feierabend
+
+Morgens beim ersten Aufwachen oder Entsperren des Macs (bzw. beim Start des Begleiters) ab **06:00** kommt ein kurzer
+Überblick, abends beim **Sperren des Bildschirms** ab **17:30** die ersten Termine von morgen und offene Aufgaben –
+je einmal am Tag, als Mitteilung und im Fenster von „Frag Spark“. An/aus und die Uhrzeiten unter Einstellungen →
+„Tagesstart und Feierabend“ (nur auf diesem Mac); dort zeigt **„Jetzt zeigen“** den Text sofort.
+
 ### Zustandspunkt
 
 | Symbol | Bedeutung |
@@ -232,7 +313,8 @@ Während eines Diktats wird nichts ans Weckwort geschickt.
 | farbiges Gesicht mit **rotem** Punkt | Notaus oder Mein Notaus ist an |
 | farbiges Gesicht mit **blauviolettem** Punkt | eine neue Version ist da (siehe „Updates“) |
 | farbiges Gesicht mit **türkisem Ring** | das Weckwort hört zu |
-| rotes Mikrofon | Aufnahme läuft |
+| kleiner **Mond** oben links | „Nicht stören erkennen“: Anruf oder Präsentation erkannt, Meldungen warten |
+| rotes Mikrofon | Aufnahme läuft (Diktat oder Besprechung) |
 
 Im Fenster hinter dem Gesicht steht der Zustand auch in Worten.
 
@@ -245,7 +327,7 @@ dafür gibt es „Panel öffnen“.
 ## Tastenkürzel
 
 Standard: **⌥⌘S** Schreibhilfe, **⌥⌘A** Frag Spark, **⌥⌘D** Diktieren, **⌥⌘B** Bildschirm fragen, **⌥⌘M** Antwort
-entwerfen. Ändern unter Einstellungen → „Tastenkürzel“:
+entwerfen, **⌥⌘L** Vorlesen, **⌥⌘R** Besprechung mitschreiben. Ändern unter Einstellungen → „Tastenkürzel“:
 auf das Kürzel klicken, die neue Kombination drücken (sie braucht ⌘, ⌥ oder ⌃; Esc bricht ab). „Standard“ stellt
 das ursprüngliche Kürzel wieder her. Ist eine Kombination schon von macOS oder einem anderen Programm belegt, steht
 das dort in Rot. Ein Teil, der im Panel aus ist, hat kein Kürzel. Die Kürzel selbst brauchen keine Freigabe.
@@ -260,15 +342,20 @@ das dort in Rot. Ein Teil, der im Panel aus ist, hat kein Kürzel. Die Kürzel s
   Freigabe nicht mehr zuordnen. Dann in der Liste „Spark-Begleiter“ mit „–“ entfernen und neu erlauben. Aus demselben
   Grund kann macOS nach einem Update einmal fragen, ob der Begleiter auf den Schlüsselbund-Eintrag zugreifen darf
   („Immer erlauben“).
-- **Mikrofon**: fragt macOS beim ersten Diktat bzw. sobald das Weckwort an ist. Später unter Systemeinstellungen →
+- **Mikrofon**: fragt macOS beim ersten Diktat, beim ersten Mitschreiben einer Besprechung bzw. sobald das Weckwort an
+  ist. Später unter Systemeinstellungen →
   Datenschutz & Sicherheit → Mikrofon.
-- **Bildschirmaufnahme** (für „Bildschirm fragen“): Systemeinstellungen → Datenschutz & Sicherheit →
+- **Bildschirmaufnahme** (für „Bildschirm fragen“ und für den Ton des Macs beim Mitschreiben einer Besprechung): Systemeinstellungen → Datenschutz & Sicherheit →
   Bildschirm- & Systemaudioaufnahme (bei macOS 13: „Bildschirmaufnahme“) → „Spark-Begleiter“ einschalten. Der
   Begleiter fragt beim ersten ⌥⌘B mit einer Erklärung; danach den Begleiter **einmal beenden und neu starten**.
   Ohne Freigabe nimmt er nichts auf. Neuere macOS-Versionen fragen gelegentlich nach, ob die Freigabe bleiben soll.
 - **Automation für Mail** (für „Antwort entwerfen“): macOS fragt beim ersten ⌥⌘M „Spark-Begleiter möchte Mail
   steuern“ → „OK“. Später unter Systemeinstellungen → Datenschutz & Sicherheit → Automation → Spark-Begleiter → Mail.
-- **Mitteilungen**: fragt macOS, sobald „Meldungen“, „Knöpfe in Meldungen“ oder der Ordner „Spark-Wissen“ an ist.
+- **Mitteilungen**: fragt macOS, sobald „Meldungen“, „Knöpfe in Meldungen“, der Ordner „Spark-Wissen“, „Vom Handy
+  auf den Mac“, „Termine im Begleiter“ oder „Tagesstart und Feierabend“ an ist.
+- **Downloads-Ordner** (für „Vom Handy auf den Mac“): macOS fragt bei der ersten Datei.
+- **Kamera**: „Nicht stören erkennen“ schaut nur nach, ob ein anderes Programm die Kamera benutzt; der Begleiter
+  schaltet sie nie selbst ein.
 - Auch Bildschirmaufnahme und Automation muss macOS nach einem **Update** eines nicht von Apple signierten Programms
   eventuell neu zuordnen (siehe oben).
 
@@ -287,7 +374,7 @@ Neue Versionen holt sich der Begleiter **nur von deinem eigenen Spark**, nie dir
    angekündigt hat, das ausgepackte Programm muss „de.db9979.spark.begleiter“ heißen, die angekündigte Version
    haben und gültig signiert sein. Dann beendet sich der Begleiter, ein kleines Hilfsskript tauscht das Programm
    aus und startet die neue Version.
-5. Passt etwas nicht, kommt **„Update beschädigt, nichts geändert.“**, die Datei wird gelöscht, und die alte Version
+5. Passt etwas nicht, kommt **„Update beschädigt (…), nichts geändert.“** mit dem Schritt in Klammern (Größe, Prüfsumme, Auspacken, Kennung oder Version, Signatur), die Datei wird gelöscht, und die alte Version
    läuft einfach weiter. Geht beim Austausch etwas schief, legt das Hilfsskript die alte Version zurück und startet
    sie wieder.
 

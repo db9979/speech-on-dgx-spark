@@ -1028,6 +1028,30 @@
 "src": "assistent",
 "file": "Assistent und Oberfläche",
 "head": "Sprach-Chat",
+"title": "Begleiter: sieben weitere Teile (V01.0.375)",
+"text": "Begleiter: sieben weitere Teile (V01.0.375): alle aus, pro Gerät unter Ich → Begleiter einzuschalten. Vorlesen (Strg+Alt+L, ⌥⌘L): markierter Text in deiner Spark-Stimme, höchstens 5000 Zeichen. Vom Handy auf den PC: Text (in die Zwischenablage), Link (öffnet erst nach Rückfrage, nur http/https) oder Datei (höchstens 20 MB, nach „Downloads/Vom Spark“) aus dem Panel („An PC schicken“ beim Gerät) oder per Sprache („Schick den Link an meinen PC“); wartet bis zu 24 Stunden. Termine im Begleiter: die nächsten 24 Stunden mit Hinweis 10 Minuten vorher, „In 20 Min erinnern“ an Meldungen. Nicht stören erkennen: Während Mikrofon oder Kamera von einem anderen Programm benutzt werden oder eine Präsentation läuft, warten Meldungen und Durchsagen auf den eigenen Lautsprechern; danach kommt eine Zusammenfassung „Während du beschäftigt warst“. Notaus, Sicherheitshinweise und Erinnerungen kommen immer. Besprechung mitschreiben (eigener Admin-Schalter „Besprechungen mitschreiben“, aus): nur auf Klick, mit roter Leiste; Mikrofon und Ton des Rechners gehen an die Spracherkennung, die Mitschrift bleibt nur im Arbeitsspeicher (höchstens 3 Stunden). Danach Zusammenfassung und Aufgaben; ausgewählte Aufgabe"
+},
+{
+"lang": "de",
+"src": "assistent",
+"file": "Assistent und Oberfläche",
+"head": "Sprach-Chat",
+"title": "Begleiter: sieben weitere Teile (V01.0.375)",
+"text": "n werden Erinnerungen, die Zusammenfassung auf Wunsch ein Dokument auf dem reMarkable, und sie steht im Verlauf. Alle Beteiligten müssen einverstanden sein. Smart-Home-Knöpfe: bis zu 12 Knöpfe (Licht, Schalter, Lüfter, Klima, Szenen) deines Home Assistant, unter Ich → Begleiter eingerichtet; mit Codewort fragt der Begleiter danach. Tagesstart und Feierabend: morgens der Tagesüberblick, abends die Termine von morgen und was offen ist. Für „Am PC handeln“ schickt der Begleiter die Liste der installierten Programme; unter Ich → Begleiter wählst du daraus, statt Name und Pfad abzutippen."
+},
+{
+"lang": "de",
+"src": "assistent",
+"file": "Assistent und Oberfläche",
+"head": "Sprach-Chat",
+"title": "Begleiter-Update frisch nachsehen (V01.0.377)",
+"text": "Begleiter-Update frisch nachsehen (V01.0.377): „Nach Updates suchen“ im Programm und jeder Programmstart lassen den Spark sofort bei GitHub nachsehen (höchstens alle 5 Minuten pro Rechner-Art); vorher sah der Spark nur einmal am Tag nach. Der Mac nennt bei einem abgelehnten Update den Schritt in Klammern."
+},
+{
+"lang": "de",
+"src": "assistent",
+"file": "Assistent und Oberfläche",
+"head": "Sprach-Chat",
 "title": "Raum-Modus",
 "text": "Raum-Modus (Funktionen → „Raum-Modus“, standardmäßig aus; nur Profile): Der Schalter „Raum“ unter dem Gesicht lässt den Assistenten an diesem Gerät für eine gewählte Zeit (15 Minuten bis 4 Stunden, endet von selbst) dem Gespräch im Raum zuhören; ein oranger Punkt zeigt es an. In einer Pause hilft er, wenn ein fester Auslöser fiel: eine offene Frage („Wann wurde eigentlich …?“, mit Websuche, im Zweifel nichts), ein Termin („Freitag um 10 zum Zahnarzt“ → „Soll ich das eintragen?“), „kalt“, „zu warm“ oder „zu dunkel“ (die echte Temperatur des Raums aus Home Assistant und das Angebot, die Heizung um ein Grad zu ändern oder das Licht anzumachen) und Einkäufe („Wir brauchen noch Milch“ → Einkaufsliste in Home Assistant). Geändert wird nur nach einem „Ja“, bei Smart Home mit Codewort, wenn eines gesetzt ist. Im Fenster „Ich“ unter „Raum-Modus“ stellt jedes Gerät ein: Dauer, wie viel er sagen darf (nur Fragen, auch Hinweise, auch Kommentare), jede Art einzeln, den Raum des Geräts in Home Assistant und „Nur als Text“ (still im Verlauf statt gesprochen). Das Gehörte bleibt nur fünf Minuten im Arbeitsspeicher des Panels und wird nie gespeichert; Gedächtnis, Mails und frühere Gespräche nutzt d"
 },
@@ -1510,6 +1534,30 @@
 "head": "Sprach-Chat",
 "title": "Kopf unten rechts überall (V01.0.359)",
 "text": "Kopf unten rechts überall (V01.0.359): Der Kopf unten rechts ist für jede Anmeldung (nicht für Gäste) auf jeder Seite, über Ich und in der Handy-Ansicht da, auch ohne die Spark-Hilfe. Ein Tipp startet das Zuhören und öffnet sein Fenster mit „Gespräch öffnen“, „Stopp“ und einem Feld zum Tippen; ein zweiter Tipp beendet das Zuhören, der zweite Tipp eines Doppeltipps zählt nicht und markiert keinen Text. Mit der Tastatur: Tab bis zum Kopf, dann Enter oder Leertaste. Die Seite, auf der man ist, geht nur mit „Frag Spark auf jeder Seite“ mit. Der Live-Monitor an der Wand (/live) bleibt eine reine Anzeige ohne Kopf."
+},
+{
+"lang": "de",
+"src": "assistent",
+"file": "Assistent und Oberfläche",
+"head": "Sprach-Chat",
+"title": "Funktionen vorschlagen (V01.0.380, standardmäßig aus)",
+"text": "Funktionen vorschlagen (V01.0.380, standardmäßig aus): Der Assistent weist auf eine Funktion hin, die noch aus ist, wenn sie helfen würde, und hilft beim Einrichten. Ob ein Hinweis kommt, entscheiden feste Regeln im Panel (tipps.py), nie das Modell: (1) Wunsch ohne Werkzeug: die Weiche erkennt eine Gruppe (Kalender, Wetter, Einkaufsliste …), deren Funktion bei dir oder auf dem Spark aus ist; (2) halb eingerichtet: z. B. iPhone-App gekoppelt, aber keine Mitteilungen, Postfach verbunden, aber „Wichtige Mails“ aus, zweiter Anmeldeschritt an, aber kein Passkey, eigener Lautsprecher, aber keine Stimme angelernt; (3) Wiederholung: z. B. fünfmal in sieben Tagen im Web gesucht ohne „Erst lokal suchen“ (gezählt wird nur die Art der Frage pro Tag, nie die Worte); (4) neu für dich: der Admin hat etwas eingeschaltet, das du noch nie an hattest. Beim Einrichten (5): ist es nur dein eigener Schalter, zeigt das Kopf-Fenster die Karte „Übernehmen“ (dieselben Regeln und dieselbe Prüfung wie „Einstellungen vorschlagen“, zehn Minuten „Rückgängig“); braucht es Angaben, zeigt es die Schritte aus der Anleitung (für ein Profil ohne die Admin-Schritte) und öffnet die richtige Ich-Seite, Passwörter nur ins"
+},
+{
+"lang": "de",
+"src": "assistent",
+"file": "Assistent und Oberfläche",
+"head": "Sprach-Chat",
+"title": "Funktionen vorschlagen (V01.0.380, standardmäßig aus)",
+"text": " Formular; „Prüfen“ fragt das Panel, ob es jetzt geht. Ist es auf dem Spark aus, schickt „Admin fragen“ den Admins eine Mitteilung mit dem Namen der Funktion (höchstens einmal am Tag); ein Admin bekommt den Weg zu Funktionen. Unter Ich → Überblick (auf dem Handy über der Liste) stehen höchstens drei Vorschläge mit Grund (6); unter Von selbst kommt mit eigenem Schalter höchstens einmal pro Woche einer als Mitteilung (7, 10 bis 19 Uhr, nie in der Ruhezeit). Sparsam: höchstens ein Hinweis pro Gespräch und drei pro Woche, „Nicht mehr zeigen“ gilt für immer, keiner nach Text aus Mail oder Web, im Notaus, am Lautsprecher, an Uhr und Siri, auf Telegram und über MCP, nie für Gäste oder einen Geräteschlüssel. Gespeichert wird pro Profil nur, welche Hinweise kamen und abgelehnt wurden, und die Zahl der Fragen pro Art (tipps.json, 14 Tage). Schalter: Funktionen → unter „Hilfe zum Spark“ „Funktionen vorschlagen“ (darunter „… auch von selbst“), Ich → Gespräch → „Hinweise auf Funktionen“, Ich → Von selbst → „Funktion vorschlagen“. Protokoll: Zeilen tipps:; Logs → Anfragen zeigt bei der Weiche hinweis; Zustand → Live Ereignisse „Funktionen vorschlagen“ (gezeigt, übernommen, nicht mehr zeigen, Adm"
+},
+{
+"lang": "de",
+"src": "assistent",
+"file": "Assistent und Oberfläche",
+"head": "Sprach-Chat",
+"title": "Funktionen vorschlagen (V01.0.380, standardmäßig aus)",
+"text": "in gefragt), nie Inhalte. Plan: plaene/funktionen-entdecken.md; Tests: app/tests/test_tipps.py."
 },
 {
 "lang": "de",
@@ -2301,7 +2349,7 @@
 "file": "Sicherheit und Betrieb",
 "head": "Probleme melden",
 "title": "Probleme melden",
-"text": "Ab V01.0.374. Etwas klappt nicht? Jedes Profil mit eigenem Schalter (Ich → Probleme melden) beschreibt es kurz und bekommt einen Entwurf; Gäste nie. Admin-Schalter: Funktionen → Sicherheit → „Probleme melden“, dazu das Ziel-Repo (ab Werk db9979/spark-meldungen, privat). Öffnen lässt es sich überall: unten im Panel „Problem melden“, Zustand → Logs, Strg/⌘ K, Ich → Probleme melden, in der Android-App (Panel), in der iPhone-App unter Einstellungen, im Spark-Begleiter (Windows: Menü des Symbols; Mac: Einstellungen), per Telegram /melden Text und per Sprache (auch Uhr und Lautsprecher) mit dem festen Satz „Spark, Problem melden: …“. Telegram und Sprache legen nur einen Entwurf an; gesendet wird immer erst nach dem Blick auf die Vorschau."
+"text": "Ab V01.0.381. Etwas klappt nicht? Jedes Profil mit eigenem Schalter (Ich → Probleme melden) beschreibt es kurz und bekommt einen Entwurf; Gäste nie. Admin-Schalter: Funktionen → Sicherheit → „Probleme melden“, dazu das Ziel-Repo (ab Werk db9979/spark-meldungen, privat). Öffnen lässt es sich überall: unten im Panel „Problem melden“, Zustand → Logs, Strg/⌘ K, Ich → Probleme melden, in der Android-App (Panel), in der iPhone-App unter Einstellungen, im Spark-Begleiter (Windows: Menü des Symbols; Mac: Einstellungen), per Telegram /melden Text und per Sprache (auch Uhr und Lautsprecher) mit dem festen Satz „Spark, Problem melden: …“. Telegram und Sprache legen nur einen Entwurf an; gesendet wird immer erst nach dem Blick auf die Vorschau."
 },
 {
 "lang": "de",
@@ -2349,7 +2397,7 @@
 "file": "Sicherheit und Betrieb",
 "head": "Probleme melden",
 "title": "Admin per Assistent informieren",
-"text": "Admin per Assistent informieren (ab V01.0.374, Unterschalter, aus): Sendet ein Profil eine Meldung oder legt sie ab, sagt der Assistent es den Admin-Profilen (das für Admin-Hinweise gewählte, Haupt-Admin, Mit-Admins), bei offener Seite im Assistenten, sonst als Mitteilung. Nur Profilname, Bereich, Weg und Nummer, nie der Text; das meldende Profil selbst bekommt nichts. Jedes Admin-Profil schaltet es unter Ich → Probleme melden für sich aus; im Notaus bleibt es still."
+"text": "Admin per Assistent informieren (ab V01.0.381, Unterschalter, aus): Sendet ein Profil eine Meldung oder legt sie ab, sagt der Assistent es den Admin-Profilen (das für Admin-Hinweise gewählte, Haupt-Admin, Mit-Admins), bei offener Seite im Assistenten, sonst als Mitteilung. Nur Profilname, Bereich, Weg und Nummer, nie der Text; das meldende Profil selbst bekommt nichts. Jedes Admin-Profil schaltet es unter Ich → Probleme melden für sich aus; im Notaus bleibt es still."
 },
 {
 "lang": "de",
@@ -2406,6 +2454,22 @@
 "head": "Selbsttest",
 "title": "Selbsttest",
 "text": "Jede Installation und jedes Update führt den Selbsttest des Panels aus (app/tests), gegen nachgebaute LLM-, TTS- und Home-Assistant-Server in einem Wegwerf-Ordner: Anmeldung und Zugang, dass Profile nie Gedächtnis, Dokumente, Gespräche, Postfächer oder Home Assistant eines anderen sehen, die Werkzeuge im Gespräch, das Lernen aus Gesprächen, Kalender und Textbereinigung. Er läuft, bevor die neue Version live geht. Bei einem Update bricht ein Fehler das Update ab, und die alte Version läuft weiter; bei einer Erstinstallation wird er nur gemeldet. Das Ergebnis steht im Update-Protokoll. Dazu gehören die Sicherheitsprüfungen (test_hardening.py, ein Test pro Schutz) und ein Scanner (test_scanner.py), der neuen Code ablehnt, wenn er shell=True, eval oder ähnliches nutzt, eine Route ohne Anmeldung anlegt, einen Upload ohne Größengrenze liest, Werte in onclick nicht für JavaScript maskiert oder ein Werkzeug des Assistenten nicht als „liest fremden Text / ändert etwas / nur eigene Daten“ einordnet. Von Hand: cd /opt/speech-spark/app && sudo /opt/speech-spark/venv-panel/bin/python -m unittest discover -s tests -t ."
+},
+{
+"lang": "de",
+"src": "sicherheit-und-betrieb",
+"file": "Sicherheit und Betrieb",
+"head": "Selbsttest",
+"title": "Schonende Updates",
+"text": "Schonende Updates (ab V01.0.379): Installiert das Update genau die Version, deren Testlauf auf GitHub grün war, läuft auf dem Spark nur ein Rauchtest (tests/test_rauchtest.py, wenige Sekunden: jedes Modul lädt mit den Paketen dieses Spark, das Panel startet und antwortet). Der ganze Selbsttest läuft weiter bei der Erstinstallation, mit --newest, --to und beim Zurück zur vorigen Version. Beide laufen mit niedrigster CPU- und Platten-Priorität (nice 19, ionice Klasse 2/7), damit eine laufende Antwort ihr Tempo behält. Ein Update fragt apt nur, wenn ein Paket fehlt, pip nur, wenn sich die Paketliste oder die Lock-Datei geändert hat (.pkgs bzw. .locked in der Umgebung), und lädt Modelle nur, wenn andere gewählt sind (/opt/speech-spark/.models). Die ASR- und TTS-Dienste starten nur neu, wenn sich etwas geändert hat, woraus sie laufen: ihre Dateien laut app/restart-map, ihre systemd-Unit, die Einstellungen oder ihre Python-Pakete; ein Dienst, den die Liste nicht kennt, startet immer neu, und der Rauchtest prüft die Liste gegen die Imports. VoiceDesign startet wie die Engines nur bei geänderten Einstellungen neu. Das Panel startet bei jedem Update neu (etwa 8 s)."
+},
+{
+"lang": "de",
+"src": "sicherheit-und-betrieb",
+"file": "Sicherheit und Betrieb",
+"head": "Selbsttest",
+"title": "Heute Nacht einspielen",
+"text": "Heute Nacht einspielen (Einstellungen → Update und Sicherung, aus): Eine neue geprüfte Version wird nachts zwischen 3 und 5 Uhr eingespielt, höchstens einmal pro Nacht, mit Sicherung vorher. Spricht gerade jemand mit dem Spark (in den letzten zwei Minuten), wartet es bis zur nächsten Pause; ist GitHub nicht erreichbar, fragt es nach 15 Minuten wieder. Beim Notaus startet nichts. Einschalten braucht den zweiten Anmeldeschritt, wenn er an ist. Der Knopf „Update installieren“ fragt eigens nach, wenn gerade ein Gespräch läuft. Die Live-Übersicht zeigt unter „Läuft gerade“ ein laufendes Update mit Schritt und Anteil, eine Stunde lang das Ergebnis und ob „nachts“ an ist."
 },
 {
 "lang": "de",
@@ -3700,6 +3764,30 @@
 "src": "assistant",
 "file": "Assistant and panel",
 "head": "Voice chat",
+"title": "Companion: seven more parts (V01.0.375)",
+"text": "Companion: seven more parts (V01.0.375): all off, turned on per device under Me → Companion. Read aloud (Ctrl+Alt+L, ⌥⌘L): marked text in your Spark voice, at most 5000 characters. From the phone to the PC: text (into the clipboard), a link (opened only after asking, only http/https) or a file (at most 20 MB, into \"Downloads/Vom Spark\") from the panel (\"Send to the PC\" at the device) or by voice (\"Send the link to my PC\"); waits up to 24 hours. Appointments in the companion: the next 24 hours with a note 10 minutes before, \"Remind me in 20 min\" on notes. Recognise do not disturb: while another program uses the microphone or camera or a presentation runs, notes and announcements on your own speakers wait; a summary \"Während du beschäftigt warst\" follows. Notaus, security notes and reminders always come. Write along in meetings (own admin switch \"Write along in meetings\", off): only on a click, with a red bar; the microphone and the computer's sound go to speech recognition, the transcript stays in memory only (at most 3 hours). Afterwards a summary and tasks; chosen tasks become reminders, the summary on request a document on the reMarkable, and it is in the history. Everybody takin"
+},
+{
+"lang": "en",
+"src": "assistant",
+"file": "Assistant and panel",
+"head": "Voice chat",
+"title": "Companion: seven more parts (V01.0.375)",
+"text": "g part must agree. Smart home buttons: up to 12 buttons (lights, switches, fans, climate, scenes) of your Home Assistant, set up under Me → Companion; with a code word the companion asks for it. Start and end of the day: in the morning the daily overview, in the evening tomorrow's appointments and what is open. For \"Act on the PC\" the companion sends the list of installed programs; under Me → Companion you pick from it instead of typing name and path."
+},
+{
+"lang": "en",
+"src": "assistant",
+"file": "Assistant and panel",
+"head": "Voice chat",
+"title": "Companion update looks right away (V01.0.377)",
+"text": "Companion update looks right away (V01.0.377): \"Check for updates\" in the program and every program start make the Spark look at GitHub at once (at most every 5 minutes per kind of computer); before, it looked once a day. The Mac names the failing step when it refuses an update."
+},
+{
+"lang": "en",
+"src": "assistant",
+"file": "Assistant and panel",
+"head": "Voice chat",
 "title": "Room mode",
 "text": "Room mode (Features → \"Raum-Modus\", off by default; profiles only): the switch \"Raum\" below the face lets the assistant listen to the conversation in the room at this device for a chosen time (15 minutes to 4 hours, it ends by itself); an orange dot shows it. In a pause it helps when a fixed cue came up: an open question (with web search, nothing when in doubt), an appointment (\"Shall I enter it?\"), \"cold\", \"too warm\" or \"too dark\" (the room's real temperature from Home Assistant, offering to change the heating by one degree or switch on the light) and things to buy (Home Assistant shopping list). It changes something only after a \"yes\", for the smart home with the code word when one is set. In the \"Ich\" window under \"Raum-Modus\" each device sets the duration, how much it may say (questions only, also hints, also comments), each kind on its own, the device's room in Home Assistant and \"text only\" (silently in the conversation instead of spoken). What it hears stays in the panel's memory for five minutes and is never stored; room mode uses neither memory, mail nor earlier conversations. Everyone in the room should know it is listening. Since V01.0.95 it also offers a timer (\"The piz"
 },
@@ -4166,6 +4254,22 @@
 "head": "Voice chat",
 "title": "The face at the bottom right everywhere (V01.0.359)",
 "text": "The face at the bottom right everywhere (V01.0.359): the face at the bottom right is there for every login (not for guests) on every page, over Me and in the phone view, also without the Spark help. One tap starts listening and opens its window with \"Open conversation\", \"Stop\" and a field to type in; a second tap stops listening, the second tap of a double tap does not count and marks no text. With the keyboard: tab to the face, then Enter or Space. The page you are on only goes along with \"Ask Spark on every page\". The wall monitor (/live) stays a pure display without a face."
+},
+{
+"lang": "en",
+"src": "assistant",
+"file": "Assistant and panel",
+"head": "Voice chat",
+"title": "Suggesting functions (V01.0.380, off by default)",
+"text": "Suggesting functions (V01.0.380, off by default): the assistant points out a function that is still off when it would help, and helps setting it up. Whether a hint comes is decided by fixed rules in the panel (tipps.py), never by the model: (1) a wish without its tool: the switch recognises a group (calendar, weather, shopping list …) whose function is off for you or on the Spark; (2) half set up: e.g. the iPhone app paired but no notifications, a mailbox connected but \"Important mail\" off, the second sign-in step on but no passkey, an own speaker but no voice taught; (3) repetition: e.g. five web searches in seven days without \"Look locally first\" (only the kind of question per day is counted, never the words); (4) new for you: the admin switched something on that you never had on. Setting up (5): if it is only your own switch, the face's window shows the \"Apply\" card (the same rules and checks as \"Suggesting settings\", ten minutes \"Undo\"); if it needs details, it shows the steps from the guide (for a profile without the admin's steps) and opens the right Me page, passwords only into the form; \"Check\" asks the panel whether it works now. If it is off on the Spark, \"Ask the admin\" "
+},
+{
+"lang": "en",
+"src": "assistant",
+"file": "Assistant and panel",
+"head": "Voice chat",
+"title": "Suggesting functions (V01.0.380, off by default)",
+"text": "sends the admins a notification with the function's name (at most once a day); an admin gets the way to Features. Me → Overview (on a phone above the list) shows at most three suggestions with a reason (6); under Proactive, with its own switch, at most one a week arrives as a notification (7, 10 am to 7 pm, never in quiet hours). Sparing: at most one hint per conversation and three a week, \"Do not show again\" is for good, none after text from mail or the web, under the emergency stop, at a speaker, watch or Siri, on Telegram and over MCP, never for guests or a device key. Per profile only which hints came and were declined is stored, and the number of questions per kind (tipps.json, 14 days). Switches: Features → below \"Help with the Spark\" \"Suggesting functions\" (below it \"… also by itself\"), Me → Conversation → \"Hints on functions\", Me → Proactive → \"Suggest a function\". Log: lines tipps:; Logs → Requests shows hinweis at the switch; Status → Live events \"Funktionen vorschlagen\" (shown, applied, do not show again, admin asked), never contents. Plan: plaene/funktionen-entdecken.md; tests: app/tests/test_tipps.py."
 },
 {
 "lang": "en",
@@ -4813,7 +4917,7 @@
 "file": "Security and operation",
 "head": "Reporting problems",
 "title": "Reporting problems",
-"text": "Since V01.0.374. Something does not work? Every profile with its own switch (Me → Reporting problems) describes it briefly and gets a draft; guests never. Admin switch: Features → Security → \"Reporting problems\", plus the target repository (default db9979/spark-meldungen, private). It opens everywhere: \"Report a problem\" at the bottom of the panel, Status → Logs, Ctrl/⌘ K, Me → Reporting problems, in the Android app (panel), in the iPhone app under Settings, in the Spark companion (Windows: the icon's menu; Mac: settings), by Telegram /melden text and by voice (also watch and speakers) with the fixed sentence \"Spark, Problem melden: …\". Telegram and voice only make a draft; sending always comes after a look at the preview."
+"text": "Since V01.0.381. Something does not work? Every profile with its own switch (Me → Reporting problems) describes it briefly and gets a draft; guests never. Admin switch: Features → Security → \"Reporting problems\", plus the target repository (default db9979/spark-meldungen, private). It opens everywhere: \"Report a problem\" at the bottom of the panel, Status → Logs, Ctrl/⌘ K, Me → Reporting problems, in the Android app (panel), in the iPhone app under Settings, in the Spark companion (Windows: the icon's menu; Mac: settings), by Telegram /melden text and by voice (also watch and speakers) with the fixed sentence \"Spark, Problem melden: …\". Telegram and voice only make a draft; sending always comes after a look at the preview."
 },
 {
 "lang": "en",
@@ -4861,7 +4965,7 @@
 "file": "Security and operation",
 "head": "Reporting problems",
 "title": "Tell the admin through the assistant",
-"text": "Tell the admin through the assistant (since V01.0.374, sub-switch, off): when a profile sends or keeps a report, the assistant tells the admin profiles (the one chosen for admin notes, the main admin, co-admins), in the assistant when the page is open, else as a note. Only profile name, area, way and number, never the text; the reporting profile itself gets nothing. Every admin profile turns it off for itself under Me → Reporting problems; during the Notaus it stays silent."
+"text": "Tell the admin through the assistant (since V01.0.381, sub-switch, off): when a profile sends or keeps a report, the assistant tells the admin profiles (the one chosen for admin notes, the main admin, co-admins), in the assistant when the page is open, else as a note. Only profile name, area, way and number, never the text; the reporting profile itself gets nothing. Every admin profile turns it off for itself under Me → Reporting problems; during the Notaus it stays silent."
 },
 {
 "lang": "en",
@@ -4918,6 +5022,22 @@
 "head": "Self-test",
 "title": "Self-test",
 "text": "Every install and update runs the panel's self-test (app/tests) against fake LLM, TTS and Home Assistant servers in a throw-away directory: login and access, that profiles never see each other's memory, documents, conversations, mailboxes or Home Assistant, the chat tools, learning from conversations, calendar and text cleaning. It runs before the new version goes live. In an update a failure stops the update and the old version keeps running; on a first install it is only reported. The result is in the update log. It includes the security checks (test_hardening.py, one test per guard) and a scanner (test_scanner.py) that refuses new code using shell=True, eval or the like, a route without a login, an upload read without a size limit, values in onclick not escaped for JavaScript, or an assistant tool not sorted as \"reads outside text / changes something / own data only\". By hand: cd /opt/speech-spark/app && sudo /opt/speech-spark/venv-panel/bin/python -m unittest discover -s tests -t ."
+},
+{
+"lang": "en",
+"src": "security-and-operation",
+"file": "Security and operation",
+"head": "Self-test",
+"title": "Gentle updates",
+"text": "Gentle updates (from V01.0.379): when the update installs exactly the version whose GitHub test run passed, the Spark only runs a smoke test (tests/test_rauchtest.py, a few seconds: every module loads with this Spark's packages, the panel starts and answers). The whole self-test still runs on a first install, with --newest, --to and when going back to the previous version. Both run with the lowest CPU and disk priority (nice 19, ionice class 2/7), so an answer being spoken keeps its speed. An update asks apt only when a package is missing, pip only when the package list or the lock file changed (.pkgs or .locked in the environment), and downloads models only when other ones are chosen (/opt/speech-spark/.models). The ASR and TTS services restart only when something they run from changed: their files per app/restart-map, their systemd unit, the settings or their Python packages; a service the list does not know always restarts, and the smoke test checks the list against the imports. VoiceDesign, like the engines, restarts only when its settings changed. The panel restarts on every update (about 8 s)."
+},
+{
+"lang": "en",
+"src": "security-and-operation",
+"file": "Security and operation",
+"head": "Self-test",
+"title": "Install overnight",
+"text": "Install overnight (Settings → Update and backup, off): a new tested version is installed at night between 3 and 5 am, at most once a night, with a backup first. If somebody is talking with the Spark (within the last two minutes) it waits for the next pause; if GitHub cannot be reached it asks again after 15 minutes. Nothing starts during the kill switch. Turning it on needs the second sign-in step when that is on. The \"Install update\" button asks once more when a conversation is going on. The live view shows a running update under \"Running now\" with its step and share, its outcome for an hour, and whether \"overnight\" is on."
 },
 {
 "lang": "en",

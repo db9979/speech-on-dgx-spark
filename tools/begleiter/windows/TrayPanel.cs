@@ -12,7 +12,13 @@ internal enum StatusKind
 internal sealed record PanelItem(string Text, Glyph Glyph, string? Hotkey, Action Action, bool Danger = false, bool Enabled = true);
 
 /// <summary>Teil "actions": eine Meldung im Tray-Fenster mit ihren Knöpfen (nur die angebotenen sind gesetzt).</summary>
-internal sealed record PanelNote(int N, string Title, string Body, Action? Reply, Action? Later, Action? Open);
+internal sealed record PanelNote(int N, string Title, string Body, Action? Reply, Action? Later, Action? Open, Action? Remind = null);
+
+/// <summary>Teil "agenda": eine Zeile unter „Als Nächstes“ (Zeit, Text, Ort/Hinweis).</summary>
+internal sealed record PanelLine(string When, string Text, string Detail);
+
+/// <summary>Teil "home": ein Knopf unter „Zuhause“ (Schalter mit Zustand, Szene oder Skript).</summary>
+internal sealed record PanelHomeButton(string Name, bool Toggle, bool? On, bool Enabled, Action Action);
 
 /// <summary>Der Update-Hinweis im Tray-Fenster.</summary>
 internal sealed record UpdateBanner(string Title, string Detail, string? Button, bool ButtonEnabled, double? Progress, bool Error, Action? Action);
@@ -35,6 +41,18 @@ internal sealed class PanelModel
 
     /// <summary>Meldungen mit Knöpfen (Teil "actions").</summary>
     public IReadOnlyList<PanelNote> Notes { get; init; } = Array.Empty<PanelNote>();
+
+    /// <summary>Teil "agenda": Zeilen unter „Als Nächstes“; <c>null</c> = Abschnitt fehlt.</summary>
+    public IReadOnlyList<PanelLine>? Agenda { get; init; }
+
+    /// <summary>Text, wenn <see cref="Agenda"/> leer ist (z. B. „Nichts in den nächsten 24 Stunden.“).</summary>
+    public string? AgendaEmpty { get; init; }
+
+    /// <summary>Teil "home": Knöpfe unter „Zuhause“; <c>null</c> = Abschnitt fehlt.</summary>
+    public IReadOnlyList<PanelHomeButton>? Home { get; init; }
+
+    /// <summary>Zeile unter den Zuhause-Knöpfen (z. B. Fehler oder „lädt …“).</summary>
+    public string? HomeNote { get; init; }
 
     /// <summary>Leiser Hinweis unter der Liste (z. B. weitere Teile im Panel einschalten).</summary>
     public string? Hint { get; init; }
@@ -70,6 +88,13 @@ internal sealed class TrayPanel : ThemedForm
     private readonly List<(PanelNote Note, List<SparkButton> Buttons)> _notes = new();
     private readonly List<(Rectangle Card, Rectangle Title, Rectangle Body)> _noteRects = new();
     private Rectangle _notesHeading;
+    private readonly List<SparkButton> _home = new();
+    private readonly List<Action> _homeActions = new();
+    private Rectangle _agendaHeading;
+    private readonly List<(Rectangle When, Rectangle Text, Rectangle Detail)> _agendaRects = new();
+    private Rectangle _agendaEmpty;
+    private Rectangle _homeHeading;
+    private Rectangle _homeNote;
     private readonly SparkButton _update = new(ButtonKind.Primary, "Aktualisieren");
     private readonly SparkButton _settings = new(ButtonKind.Secondary, "Einstellungen");
     private readonly SparkButton _panel = new(ButtonKind.Secondary, "Panel öffnen");
@@ -115,6 +140,7 @@ internal sealed class TrayPanel : ThemedForm
         Controls.Add(_coffee);
         BuildItems();
         BuildNotes();
+        BuildHome();
     }
 
     protected override bool RoundCorners => true;
@@ -150,12 +176,18 @@ internal sealed class TrayPanel : ThemedForm
             BuildItems();
         }
 
+        int homeFocused = _home.FindIndex(b => b.Focused);
         BuildNotes();
+        BuildHome();
         RefreshTheme();
         PlaceAtTray();
         if (focused >= 0 && focused < _items.Count)
         {
             _items[focused].Focus();
+        }
+        else if (homeFocused >= 0 && homeFocused < _home.Count)
+        {
+            _home[homeFocused].Focus();
         }
     }
 
@@ -241,7 +273,7 @@ internal sealed class TrayPanel : ThemedForm
         foreach (PanelNote note in _model.Notes)
         {
             var buttons = new List<SparkButton>();
-            foreach (var (label, action) in new (string, Action?)[] { ("Antworten", note.Reply), ("Später", note.Later), ("Panel öffnen", note.Open) })
+            foreach (var (label, action) in new (string, Action?)[] { ("Antworten", note.Reply), ("Später", note.Later), ("In 20 Min erinnern", note.Remind), ("Panel öffnen", note.Open) })
             {
                 if (action is null)
                 {
@@ -257,6 +289,45 @@ internal sealed class TrayPanel : ThemedForm
             }
 
             _notes.Add((note, buttons));
+        }
+    }
+
+    /// <summary>Zuhause-Knöpfe: Schalter als Chip (an = Akzent), Szenen/Skripte als normale Knöpfe. Das Fenster bleibt offen.</summary>
+    private void BuildHome()
+    {
+        foreach (SparkButton b in _home)
+        {
+            Controls.Remove(b);
+            b.Dispose();
+        }
+
+        _home.Clear();
+        _homeActions.Clear();
+        int tab = 80;
+        foreach (PanelHomeButton item in _model.Home ?? Array.Empty<PanelHomeButton>())
+        {
+            string label = item.Toggle ? $"{item.Name} · {(item.On is true ? "an" : item.On is false ? "aus" : "?")}" : item.Name;
+            var button = new SparkButton(item.Toggle ? ButtonKind.Chip : ButtonKind.Secondary, label)
+            {
+                FontSize = 9f,
+                Enabled = item.Enabled,
+                TabIndex = tab++,
+            };
+            button.Checked = item.Toggle && item.On is true;
+            button.AccessibleName = item.Toggle
+                ? $"{item.Name}, {(item.On is true ? "an" : item.On is false ? "aus" : "Zustand unbekannt")}, umschalten"
+                : item.Name + " auslösen";
+            int slot = _homeActions.Count;
+            _homeActions.Add(item.Action);
+            button.Click += (_, _) =>
+            {
+                if (slot < _homeActions.Count)
+                {
+                    _post(_homeActions[slot]);
+                }
+            };
+            _home.Add(button);
+            Controls.Add(button);
         }
     }
 
@@ -357,6 +428,83 @@ internal sealed class TrayPanel : ThemedForm
             y += S(4);
         }
 
+        // Als Nächstes (Teil "agenda")
+        _agendaRects.Clear();
+        _agendaEmpty = Rectangle.Empty;
+        if (m.Agenda is { } agenda)
+        {
+            int headH = Draw.Measure("Ag", F(8.5f, FontStyle.Bold)).Height;
+            _agendaHeading = new Rectangle(pad, y, inner, headH);
+            y += headH + S(6);
+            int lineH = Draw.Measure("Ag", F(9f)).Height;
+            int smallH = Draw.Measure("Ag", F(8f)).Height;
+            int whenW = S(74);
+            foreach (PanelLine line in agenda)
+            {
+                int dh = line.Detail.Length > 0 ? smallH : 0;
+                _agendaRects.Add((new Rectangle(pad, y, whenW, lineH), new Rectangle(pad + whenW, y, inner - whenW, lineH),
+                    new Rectangle(pad + whenW, y + lineH, inner - whenW, dh)));
+                y += lineH + dh + S(6);
+            }
+
+            if (agenda.Count == 0 && !string.IsNullOrEmpty(m.AgendaEmpty))
+            {
+                int h = Draw.TextHeight(m.AgendaEmpty, F(8.5f), inner);
+                _agendaEmpty = new Rectangle(pad, y, inner, h);
+                y += h + S(6);
+            }
+
+            y += S(6);
+        }
+        else
+        {
+            _agendaHeading = Rectangle.Empty;
+        }
+
+        // Zuhause (Teil "home")
+        if (m.Home is not null)
+        {
+            int headH = Draw.Measure("Ag", F(8.5f, FontStyle.Bold)).Height;
+            _homeHeading = new Rectangle(pad, y, inner, headH);
+            y += headH + S(6);
+            int hx = pad;
+            int rowH = 0;
+            foreach (SparkButton b in _home)
+            {
+                Size size = b.Preferred();
+                size.Width = Math.Min(size.Width, inner);
+                if (hx > pad && hx + size.Width > pad + inner)
+                {
+                    hx = pad;
+                    y += rowH + S(6);
+                    rowH = 0;
+                }
+
+                b.Bounds = new Rectangle(hx, y, size.Width, size.Height);
+                hx += size.Width + S(6);
+                rowH = Math.Max(rowH, size.Height);
+            }
+
+            y += rowH + (rowH > 0 ? S(6) : 0);
+            if (!string.IsNullOrEmpty(m.HomeNote))
+            {
+                int h = Draw.TextHeight(m.HomeNote, F(8.5f), inner);
+                _homeNote = new Rectangle(pad, y, inner, h);
+                y += h + S(6);
+            }
+            else
+            {
+                _homeNote = Rectangle.Empty;
+            }
+
+            y += S(6);
+        }
+        else
+        {
+            _homeHeading = Rectangle.Empty;
+            _homeNote = Rectangle.Empty;
+        }
+
         // Meldungen mit Knöpfen
         _noteRects.Clear();
         if (_notes.Count > 0)
@@ -378,6 +526,13 @@ internal sealed class TrayPanel : ThemedForm
                 {
                     Size size = b.Preferred();
                     size.Height = Math.Min(size.Height, S(28));
+                    if (bx > pad + cardPad && bx + size.Width > pad + cardPad + tw)
+                    {
+                        bx = pad + cardPad;
+                        by += rowH + S(6);
+                        rowH = 0;
+                    }
+
                     b.Bounds = new Rectangle(bx, by, size.Width, size.Height);
                     b.Surface = P.Soft;
                     bx += size.Width + S(6);
@@ -484,6 +639,36 @@ internal sealed class TrayPanel : ThemedForm
                     using System.Drawing.Drawing2D.GraphicsPath path = Draw.Round(bar, bar.Height / 2f);
                     g.FillPath(brush, path);
                 }
+            }
+        }
+
+        if (!_agendaHeading.IsEmpty && m.Agenda is { } agenda)
+        {
+            Draw.Text(g, "Als Nächstes", F(8.5f, FontStyle.Bold), _agendaHeading, p.Muted);
+            Font mono = Theme.MonoFont(DeviceDpi, 8.5f);
+            for (int i = 0; i < _agendaRects.Count && i < agenda.Count; i++)
+            {
+                var (when, text, detail) = _agendaRects[i];
+                Draw.Text(g, agenda[i].When, mono, when, p.Accent);
+                Draw.Text(g, agenda[i].Text, F(9f), text, p.Fg);
+                if (detail.Height > 0)
+                {
+                    Draw.Text(g, agenda[i].Detail, F(8f), detail, p.Muted);
+                }
+            }
+
+            if (!_agendaEmpty.IsEmpty && m.AgendaEmpty is { } empty)
+            {
+                Draw.Text(g, empty, F(8.5f), _agendaEmpty, p.Muted, Draw.Wrap);
+            }
+        }
+
+        if (!_homeHeading.IsEmpty)
+        {
+            Draw.Text(g, "Zuhause", F(8.5f, FontStyle.Bold), _homeHeading, p.Muted);
+            if (!_homeNote.IsEmpty && m.HomeNote is { } homeNote)
+            {
+                Draw.Text(g, homeNote, F(8.5f), _homeNote, p.Muted, Draw.Wrap);
             }
         }
 

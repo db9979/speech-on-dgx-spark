@@ -507,16 +507,25 @@ def tasks_inbox_take(request: Request, list: str = "einkauf", format: str = "tex
     return _inbox(request, list, True, format)
 
 
+# A switch that is off stays off for a while: the iPhone app asks again only after this many seconds
+# (Retry-After), instead of on every sync (the log on tars showed 84 refused asks a day).
+OFF_RETRY = 3600
+
+
 def _inbox(request, list, take, format):
     prof = profiles.current(request)
     if not prof:
         raise HTTPException(401, "no profile")
+    wait = {"Retry-After": str(OFF_RETRY)}
     if not usable(prof["id"]):
-        raise HTTPException(403, "tasks are turned off")
-    _app_ios(request, prof["id"])
+        raise HTTPException(403, "tasks are turned off", headers=wait)
+    try:
+        _app_ios(request, prof["id"])
+    except HTTPException as e:
+        raise HTTPException(e.status_code, e.detail, headers=wait) from None
     lst = list if list in LISTS else which(list)
     if _load(prof["id"])["targets"].get(lst):
-        raise HTTPException(409, "this list lives in a CalDAV task list, not on the Spark")
+        raise HTTPException(409, "this list lives in a CalDAV task list, not on the Spark", headers=wait)
     got = inbox(prof["id"], lst, take)
     if format == "json":
         return {"items": got}

@@ -12,6 +12,8 @@ namespace SparkBegleiter;
 /// </summary>
 internal sealed class AppConfig
 {
+    private static readonly string[] TimeFormats = { @"h\:mm", @"hh\:mm" };
+
     private static readonly byte[] Entropy = Encoding.UTF8.GetBytes("SparkBegleiter.v1");
 
     private static readonly JsonSerializerOptions JsonOptions = new()
@@ -32,7 +34,7 @@ internal sealed class AppConfig
     /// <summary>Gerätename, unter dem dieses Programm im Panel erscheint.</summary>
     public string? Device { get; set; }
 
-    /// <summary>Lokale Tastenkürzel je Teil (write/ask/dictate/screen/mail), siehe <see cref="Hotkey.Serialize"/>.</summary>
+    /// <summary>Lokale Tastenkürzel je Teil (write/ask/dictate/screen/mail/speak/meeting), siehe <see cref="Hotkey.Serialize"/>.</summary>
     public Dictionary<string, string> Hotkeys { get; set; } = new();
 
     /// <summary>Updates im Hintergrund laden (installiert wird erst nach Klick). Lokal, Standard an.</summary>
@@ -46,6 +48,41 @@ internal sealed class AppConfig
     public string WissenPath => string.IsNullOrWhiteSpace(WissenFolder)
         ? Path.Combine(Environment.GetFolderPath(Environment.SpecialFolder.UserProfile), "Spark-Wissen")
         : WissenFolder;
+
+    /// <summary>
+    /// „Antworten vorlesen“ im Fenster Frag Spark (braucht Teil "speak"): "always" (immer), "spoken" (nur bei
+    /// gesprochenen Fragen, Standard) oder "never" (nie).
+    /// </summary>
+    public string AskSpeak { get; set; } = AskSpeakModes.Spoken;
+
+    /// <summary>Teil "meeting": der Hinweis „Alle Beteiligten müssen einverstanden sein“ wurde einmal bestätigt.</summary>
+    public bool MeetingConsent { get; set; }
+
+    /// <summary>Teil "daily": Tagesstart an (lokal).</summary>
+    public bool DailyMorningOn { get; set; } = true;
+
+    /// <summary>Teil "daily": Tagesstart frühestens ab dieser Uhrzeit (HH:mm).</summary>
+    public string DailyMorningTime { get; set; } = "06:00";
+
+    /// <summary>Teil "daily": Feierabend an (lokal).</summary>
+    public bool DailyEveningOn { get; set; } = true;
+
+    /// <summary>Teil "daily": Feierabend beim Sperren frühestens ab dieser Uhrzeit (HH:mm).</summary>
+    public string DailyEveningTime { get; set; } = "17:30";
+
+    /// <summary>Tag (yyyy-MM-dd), an dem der Tagesstart zuletzt gezeigt wurde.</summary>
+    public string? DailyMorningDone { get; set; }
+
+    /// <summary>Tag (yyyy-MM-dd), an dem der Feierabend zuletzt gezeigt wurde.</summary>
+    public string? DailyEveningDone { get; set; }
+
+    /// <summary>Uhrzeit "HH:mm" lesen; ungültig → <paramref name="fallback"/>.</summary>
+    public static TimeSpan ParseTime(string? text, TimeSpan fallback) =>
+        text is { Length: >= 4 and <= 5 } &&
+        TimeSpan.TryParseExact(text.Trim(), TimeFormats, System.Globalization.CultureInfo.InvariantCulture, out TimeSpan t) &&
+        t >= TimeSpan.Zero && t < TimeSpan.FromDays(1)
+            ? t
+            : fallback;
 
     /// <summary>Zuletzt vom Spark geholte Einstellungen (enthält keine Geheimnisse).</summary>
     public DeskConfig? Desk { get; set; }

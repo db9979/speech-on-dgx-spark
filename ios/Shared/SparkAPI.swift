@@ -616,15 +616,28 @@ struct SparkAPI {
     }
 
     /// New entries of a Spark list ("einkauf", "aufgaben"); the Spark hands each one over once.
+    /// When the Spark refused a list (switch off, list in CalDAV, update running), the app waits as long
+    /// as its Retry-After says (at most an hour) before it asks for that list again.
+    @MainActor private static var listPause: [String: Date] = [:]
+
     func takeList(_ list: String) async throws -> [String] {
+        if let until = await Self.pausedUntil(list), until > Date() { return [] }
         var c = URLComponents(url: base.appendingPathComponent("api/tasks/inbox"), resolvingAgainstBaseURL: false)!
         c.queryItems = [URLQueryItem(name: "list", value: list), URLQueryItem(name: "format", value: "json")]
         var r = request("api/tasks/inbox", method: "POST")
         r.url = c.url
         let (data, response) = try await URLSession.shared.data(for: r)
+        if let http = response as? HTTPURLResponse, [403, 409, 423].contains(http.statusCode) {
+            let secs = min(3600, max(30, Double(http.value(forHTTPHeaderField: "Retry-After") ?? "") ?? 300))
+            await Self.pause(list, until: Date().addingTimeInterval(secs))
+            return []
+        }
         try Self.check(data, response)
         return (Self.object(data)["items"] as? [String] ?? []).filter { !$0.isEmpty }
     }
+
+    @MainActor private static func pausedUntil(_ list: String) -> Date? { listPause[list] }
+    @MainActor private static func pause(_ list: String, until: Date) { listPause[list] = until }
 
     /// Puts entries on a Spark list (from Shortcuts; comma or line separated).
     func addToList(_ list: String, _ text: String) async throws {

@@ -33,6 +33,23 @@ internal sealed class ActApp
     public string Path { get; set; } = "";
 }
 
+/// <summary>Ein Smart-Home-Knopf (Teil "home"), im Panel je Gerät festgelegt: config.home.buttons.</summary>
+internal sealed class HomeButton
+{
+    public string Id { get; set; } = "";
+
+    public string Name { get; set; } = "";
+
+    /// <summary>"toggle", "scene" oder "script".</summary>
+    public string Kind { get; set; } = "toggle";
+
+    /// <summary>Kennung als Text oder Zahl; nur harmlose Zeichen (geht als JSON an den Spark zurück).</summary>
+    public static bool IsValidId(string? id) =>
+        id is { Length: > 0 and <= 120 } && id.All(c => char.IsAsciiLetterOrDigit(c) || c is '-' or '_' or '.' or ':');
+
+    public static string NormalizeKind(string? kind) => kind is "scene" or "script" ? kind : "toggle";
+}
+
 /// <summary>
 /// Die zentralen Einstellungen aus GET /api/desk/config. Welche Teile an sind, legt das Panel fest
 /// (Ich → Begleiter). Die letzte Fassung wird (ohne Geheimnisse) in config.json zwischengespeichert,
@@ -93,6 +110,12 @@ internal sealed class DeskConfig
 
     /// <summary>Das Weckwort des Spark (config.wake.word), nur zur Anzeige.</summary>
     public string WakeWord { get; set; } = "Hey Spark";
+
+    /// <summary>Smart-Home-Knöpfe dieses Geräts (config.home.buttons, höchstens 24).</summary>
+    public List<HomeButton> HomeButtons { get; set; } = new();
+
+    /// <summary>Besprechung: Knopf „Aufs reMarkable“ anbieten (config.meeting.remarkable).</summary>
+    public bool MeetingRemarkable { get; set; }
 
     public bool IsOn(string part) => Parts.TryGetValue(part, out bool on) && on;
 
@@ -188,6 +211,34 @@ internal sealed class DeskConfig
         if (json["wake"] is JsonObject wake && Json.Str(wake["word"]) is { } word && word.Trim().Length is > 0 and <= 40)
         {
             config.WakeWord = word.Trim();
+        }
+
+        if (json["home"] is JsonObject home && home["buttons"] is JsonArray buttons)
+        {
+            foreach (JsonNode? item in buttons)
+            {
+                if (config.HomeButtons.Count >= 24)
+                {
+                    break;
+                }
+
+                string? id = Json.Str(item?["id"]) ?? Json.Long(item?["id"])?.ToString(System.Globalization.CultureInfo.InvariantCulture);
+                if (item is JsonObject o && HomeButton.IsValidId(id) && config.HomeButtons.All(b => b.Id != id))
+                {
+                    string name = (Json.Str(o["name"]) ?? id!).Trim().ReplaceLineEndings(" ");
+                    config.HomeButtons.Add(new HomeButton
+                    {
+                        Id = id!,
+                        Name = name.Length > 40 ? name[..39] + "…" : name.Length == 0 ? id! : name,
+                        Kind = HomeButton.NormalizeKind(Json.Str(o["kind"])),
+                    });
+                }
+            }
+        }
+
+        if (json["meeting"] is JsonObject meeting)
+        {
+            config.MeetingRemarkable = Json.Bool(meeting["remarkable"]) ?? false;
         }
 
         if (json["arts"] is JsonArray artList)

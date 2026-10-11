@@ -264,7 +264,7 @@ async def update_lock(request: Request, call_next):
     if request.method in ("POST", "PUT", "PATCH", "DELETE") and request.url.path.startswith("/api/") \
             and not request.url.path.startswith(UNLOCKED) and await asyncio.to_thread(update_running):
         return Response('{"detail": "update running: changes are locked until it has finished"}',
-                        status_code=423, media_type="application/json")
+                        status_code=423, media_type="application/json", headers={"Retry-After": "60"})
     return await call_next(request)
 
 
@@ -283,7 +283,8 @@ async def update_status(check: bool = False):
     props = dict(line.split("=", 1) for line in out.splitlines() if "=" in line)
     return {"installed": installed_version(), "previous": previous_version(), "remote": await remote_state(force=check),
             "running": props.get("ActiveState") in ("activating", "active"),
-            "last_result": props.get("Result"), "last_finished": props.get("ExecMainExitTimestamp") or None}
+            "last_result": props.get("Result"), "last_finished": props.get("ExecMainExitTimestamp") or None,
+            "talking": talking(), "night": night_on()}
 
 
 def _backup_first(why):
@@ -333,6 +334,85 @@ def stop_update():
         raise HTTPException(500, out or "could not stop the update")
     _remote_cache["data"] = None
     return {"stopped": True}
+
+
+# ---------------------------------------------------------------- somebody is talking, overnight install
+BUSY_S = 120          # speech within this many seconds counts as "a conversation is going on"
+NIGHT = (3, 5)        # "Heute Nacht einspielen": from 03:00 to before 05:00 (the Spark's local time)
+NIGHT_RETRY = 900     # GitHub not reachable: ask again after this many seconds, within the same night
+NIGHT_FILE = os.path.join(os.path.dirname(UPDATE_PROGRESS), "update-night.json")
+_night = {"asked": 0.0}
+
+
+def talking(now=None):
+    """Whether somebody talked with the Spark lately (ASR, TTS or a streamed answer; vorrang.py), and how
+    many seconds ago. The update button asks before it interrupts that."""
+    import vorrang
+    now = time.time() if now is None else now
+    last = vorrang.last_speech()
+    ago = int(now - last) if last else None
+    return {"now": ago is not None and 0 <= ago < BUSY_S, "ago": ago}
+
+
+def night_on():
+    """Admin switch panel.update_night (Einstellungen → Update und Sicherung), off by default."""
+    from common import load_config
+    return load_config().get("panel", {}).get("update_night", False) is True
+
+
+def _night_day():
+    try:
+        with open(NIGHT_FILE) as f:
+            d = json.load(f)
+        return str(d.get("day", "")) if isinstance(d, dict) else ""
+    except (OSError, ValueError):
+        return ""
+
+
+def _night_done(day):
+    try:
+        with open(NIGHT_FILE + ".part", "w") as f:
+            json.dump({"day": day}, f)
+        os.replace(NIGHT_FILE + ".part", NIGHT_FILE)
+    except OSError:
+        pass
+
+
+async def night_once(now=None):
+    """Called every minute: with the switch on, between 03:00 and 05:00, once a night, while nobody talks,
+    a newer version that passed GitHub's tests is installed (backup first, like the button). Returns a fixed
+    word for the tests: "" (nothing to do), "talking", "running", "retry", "current" or "started"."""
+    now = time.time() if now is None else now
+    if not night_on():
+        return ""
+    t = time.localtime(now)
+    day = time.strftime("%Y-%m-%d", t)
+    if not NIGHT[0] <= t.tm_hour < NIGHT[1] or _night_day() == day:
+        return ""
+    import notaus
+    if notaus.blocks("auto") or notaus.blocks("internet"):   # Notaus: nothing by itself, nothing from outside
+        return ""
+    if talking(now)["now"]:
+        return "talking"
+    if await asyncio.to_thread(update_running):
+        return "running"
+    if 0 <= now - _night["asked"] < NIGHT_RETRY:
+        return "retry"
+    _night["asked"] = now
+    remote = await remote_state(force=True)
+    if remote.get("error"):
+        return "retry"
+    _night_done(day)
+    if not remote.get("latest") or remote.get("behind") in (0, None):
+        return "current"
+    version = remote.get("version") or str(remote["latest"])[:7]
+    import live
+    live.mark("Update", f"Update in der Nacht gestartet: {version}")
+    await asyncio.to_thread(_backup_first, "before-update")
+    _start()
+    guard.log("update_night", detail=str(version)[:40])
+    print("update: started overnight,", version, flush=True)
+    return "started"
 
 
 # ---------------------------------------------------------------- changelog

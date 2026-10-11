@@ -34,6 +34,14 @@ internal sealed class AskForm : ThemedForm
     private readonly SparkButton _mic = new(ButtonKind.Round) { Glyph = Glyph.Mic, Visible = false, AccessibleName = "Sprechen" };
     private readonly TLabel _status = new(TextRole.SmallMuted);
     private readonly System.Windows.Forms.Timer _micTimer = new() { Interval = 250 };
+    private readonly SparkButton _speakMode = new(ButtonKind.Chip) { FontSize = 8.5f, Visible = false };
+    private readonly Action<string> _speakAnswer;
+    private readonly Action _stopSpeaking;
+    private readonly Action<string> _setSpeakMode;
+    private bool _speakShown;
+
+    /// <summary>Der Text im Fragefeld kam (auch) vom Mikrofon-Knopf: die Frage gilt als gesprochen.</summary>
+    private bool _voiceInput;
 
     private Rectangle _face;
     private Rectangle _title;
@@ -48,9 +56,16 @@ internal sealed class AskForm : ThemedForm
     /// <summary>Teil "actions": die nächste Frage antwortet auf diese Meldung (Nummer).</summary>
     private int? _note;
 
-    public AskForm(AppConfig config, Func<DeskConfig?> desk, Action<SparkException> report)
+    /// <param name="speakAnswer">Antwort vorlesen (Teil "speak", gleiche Wiedergabe und Pille wie Strg+Alt+L).</param>
+    /// <param name="stopSpeaking">Laufendes Vorlesen beenden.</param>
+    /// <param name="setSpeakMode">Einstellung „Antworten vorlesen“ speichern.</param>
+    public AskForm(AppConfig config, Func<DeskConfig?> desk, Action<SparkException> report,
+        Action<string> speakAnswer, Action stopSpeaking, Action<string> setSpeakMode)
     {
         _config = config;
+        _speakAnswer = speakAnswer;
+        _stopSpeaking = stopSpeaking;
+        _setSpeakMode = setSpeakMode;
         _desk = desk;
         _report = report;
         _input = new RoundedHost(_question) { SoftBack = false };
@@ -68,6 +83,23 @@ internal sealed class AskForm : ThemedForm
         Controls.Add(_send);
         Controls.Add(_mic);
         Controls.Add(_input);
+        Controls.Add(_speakMode);
+        _speakMode.TabIndex = 3;
+        _speakMode.Click += (_, _) =>
+        {
+            // Durchschalten: nur bei gesprochenen Fragen → immer → nie → …
+            string next = AskSpeakModes.Normalize(_config.AskSpeak) switch
+            {
+                AskSpeakModes.Spoken => AskSpeakModes.Always,
+                AskSpeakModes.Always => AskSpeakModes.Never,
+                _ => AskSpeakModes.Spoken,
+            };
+            _setSpeakMode(next);
+            if (next == AskSpeakModes.Never)
+            {
+                _stopSpeaking();
+            }
+        };
         _send.BringToFront();
         _mic.BringToFront();
         _input.TabIndex = 0;
@@ -77,6 +109,13 @@ internal sealed class AskForm : ThemedForm
         _send.Click += async (_, _) => await SendAsync();
         _mic.Click += async (_, _) => await ToggleMicAsync();
         _micTimer.Tick += (_, _) => UpdateMicStatus();
+        _question.TextChanged += (_, _) =>
+        {
+            if (_question.TextLength == 0)
+            {
+                _voiceInput = false;
+            }
+        };
         _chat.Copied += (_, text) => CopyText(text);
         _question.KeyDown += async (_, e) =>
         {
@@ -110,6 +149,24 @@ internal sealed class AskForm : ThemedForm
             _question.PlaceholderText = canAsk ? "Frag den Spark …" : "Nachfragen: Frag Spark im Panel einschalten";
         }
 
+        // „Antworten vorlesen“ nur mit Teil "speak".
+        bool speak = _desk()?.IsOn(Parts.Speak) == true;
+        string mode = AskSpeakModes.Normalize(_config.AskSpeak);
+        _speakMode.Text = "Antworten vorlesen: " + AskSpeakModes.Label(mode);
+        _speakMode.Checked = mode != AskSpeakModes.Never;
+        _speakMode.AccessibleName = _speakMode.Text + " (klicken zum Ändern)";
+        if (_speakShown != speak)
+        {
+            _speakShown = speak;
+            _speakMode.Visible = speak;
+        }
+
+        if (IsHandleCreated)
+        {
+            LayoutContent();
+            Invalidate();
+        }
+
         bool dictate = _canAsk && _desk()?.IsOn(Parts.Dictate) == true;
         bool visible = dictate || _recorder is not null;
         if (_micShown != visible)
@@ -136,7 +193,17 @@ internal sealed class AskForm : ThemedForm
         _face = new Rectangle(pad, y, face, face);
         Size title = Draw.Measure("Frag Spark", F(10.5f, FontStyle.Bold));
         _title = new Rectangle(pad + face + S(8), y, title.Width + S(4), face);
-        _hint = new Rectangle(_title.Right + S(8), y, Math.Max(0, w - pad - _title.Right - S(8)), face);
+        int hintRight = w - pad;
+        if (_speakShown)
+        {
+            Size chip = _speakMode.Preferred();
+            chip.Height = Math.Min(chip.Height, S(26));
+            chip.Width = Math.Min(chip.Width, Math.Max(S(60), w - (2 * pad) - face - S(8) - title.Width));
+            _speakMode.Bounds = new Rectangle(w - pad - chip.Width, y + ((face - chip.Height) / 2), chip.Width, chip.Height);
+            hintRight = _speakMode.Left - S(8);
+        }
+
+        _hint = new Rectangle(_title.Right + S(8), y, Math.Max(0, hintRight - _title.Right - S(8)), face);
         y += face + S(10);
 
         // Eingabezeile unten: Feld mit Mikrofon und Senden darin.
@@ -219,7 +286,9 @@ internal sealed class AskForm : ThemedForm
             return;
         }
 
-        await SendTextAsync(question);
+        bool spoken = _voiceInput;
+        _voiceInput = false;
+        await SendTextAsync(question, spoken);
     }
 
     /// <summary>Weckwort: die gehörte Frage stellen und die Antwort zeigen.</summary>
@@ -239,7 +308,7 @@ internal sealed class AskForm : ThemedForm
 
         if (question.Length > 0)
         {
-            await SendTextAsync(question);
+            await SendTextAsync(question, spoken: true); // Weckwort: gesprochene Frage
         }
     }
 
@@ -317,8 +386,9 @@ internal sealed class AskForm : ThemedForm
         }
     }
 
-    private async Task SendTextAsync(string question)
+    private async Task SendTextAsync(string question, bool spoken)
     {
+        _stopSpeaking(); // neue Frage beendet das Vorlesen
         string? key = _config.GetKey();
         if (key is null || string.IsNullOrEmpty(_config.Base))
         {
@@ -348,6 +418,14 @@ internal sealed class AskForm : ThemedForm
 
             _chat.Pending = false;
             _chat.Add(mine: false, answer.Trim());
+            string mode = AskSpeakModes.Normalize(_config.AskSpeak);
+            if (answer.Trim().Length > 0 && _desk()?.IsOn(Parts.Speak) == true &&
+                (mode == AskSpeakModes.Always || (mode == AskSpeakModes.Spoken && spoken)))
+            {
+                string text = answer.Trim();
+                _speakAnswer(text.Length > 5000 ? text[..5000] : text);
+            }
+
             if (_canAsk)
             {
                 _question.PlaceholderText = "Frag weiter …";
@@ -399,6 +477,7 @@ internal sealed class AskForm : ThemedForm
     {
         if (_recorder is null)
         {
+            _stopSpeaking(); // sonst nimmt das Mikrofon die Vorlesestimme auf
             Recorder? recorder = Recorder.TryStart(out string error);
             if (recorder is null)
             {
@@ -472,6 +551,7 @@ internal sealed class AskForm : ThemedForm
                 string joined = _question.Text.Trim().Length > 0 ? _question.Text.TrimEnd() + " " + text : text;
                 _question.Text = joined.Length > MaxQuestion ? joined[..MaxQuestion] : joined;
                 _question.SelectionStart = _question.TextLength;
+                _voiceInput = true;
                 SetStatus("Erkannt – prüfen und Senden.", error: false);
             }
         }

@@ -83,6 +83,14 @@ def fake_llm():
                 text = said.split("<<<TEXT\n", 1)[1].rsplit("\nTEXT>>>", 1)[0] if "<<<TEXT\n" in said else ""
                 return {"choices": [{"message": {"content": "<think>\n</think>\n" + (text.replace("Feler", "Fehler")
                                                                                      or "Hallo Anna, [Antwort].")}}]}
+            if (b["messages"][0].get("content") or "").startswith("Du fasst eine Besprechung zusammen"):   # begleiter.py
+                said = last.get("content") or ""
+                heard = said.split("<<<GESPRAECH\n", 1)[1].rsplit("\nGESPRAECH>>>", 1)[0] if "<<<GESPRAECH\n" in said else ""
+                return {"choices": [{"message": {"content": "<think>\n</think>\nHier das JSON:\n" + json.dumps(
+                    {"summary": "Besprochen: " + heard[:60], "tasks": [{"text": "Angebot schicken", "due": "2026-10-20T10:00"},
+                                                                     {"text": "Protokoll lesen", "due": "kein Datum"},
+                                                                     {"text": "  "}, "Raum buchen\x07"] +
+                     [{"text": f"Aufgabe {i}"} for i in range(30)]})}}]}
             if (b["messages"][0].get("content") or "").startswith("Ordne die Nachricht"):   # intent.ask_model
                 said = last.get("content") or ""
                 return {"choices": [{"message": {"content": json.dumps(

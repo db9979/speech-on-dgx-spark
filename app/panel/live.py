@@ -64,7 +64,7 @@ TOOLS = {
     "memory_forget": "mem", "memory_save": "mem", "reminder_cancel": "mem", "reminder_list": "mem", "reminder_set": "mem",
     "message_announce": "mem", "message_read": "mem", "message_send": "mem", "agent_list": "mem",
     "agent_schedule": "mem", "agent_task": "mem", "routine_save": "mem",
-    "spark_hilfe": "hilfe", "spark_vorschlag": "hilfe", "pc_action": "desk",
+    "spark_hilfe": "hilfe", "spark_vorschlag": "hilfe", "pc_action": "desk", "pc_send": "desk",
     # tools only programs use over MCP (mcpserver.py; transcribe/speak/voices show as Hören/Sprechen)
     "today": "cal", "action_status": "mem", "Vorschlag": "mem",
     # notes the Spark sends (push.py) and what it says by itself (proactive.py, live.note)
@@ -733,6 +733,23 @@ def hints(now=None):
     return out
 
 
+def _upd(now):
+    """The Spark's own update (update.py): running with its step and share, the last one's outcome within the
+    hour, and whether "Heute Nacht einspielen" is on. Fixed words from the update steps and numbers only."""
+    try:
+        import update
+        p = update.update_progress() or {}
+        run = bool(update.update_running())
+        out = {"run": run, "night": update.night_on()}
+        if run or (p.get("done") and isinstance(p.get("updated"), (int, float)) and 0 <= now - p["updated"] < 3600):
+            out.update(pct=int(p.get("percent") or 0), step=str(p.get("text") or "")[:60],
+                       ver=str(p.get("version") or "")[:20], ok=p.get("ok") if p.get("done") else None,
+                       secs=int(now - p["started"]) if isinstance(p.get("started"), (int, float)) else None)
+        return out
+    except Exception:
+        return {"run": False}
+
+
 def _sys():
     try:
         import monitor
@@ -770,6 +787,7 @@ def snapshot(view="admin", now=None):
     except Exception:
         sys1 = {"n": 0}
     hs = hints(now)
+    upd = _upd(now)
     used = {h["at"] for h in hs} | {s["to"] for r in reqs for s in r["steps"] if s["to"]} | {r["to"] for r in reqs if r["to"]} | {x["to"] for x in rets if now - x["t"] < 60 and x["to"]}
     try:
         import meldung
@@ -787,7 +805,7 @@ def snapshot(view="admin", now=None):
             "guard": {"ok": cnt.get("guard_ok", 0), "bad": cnt.get("guard_bad", 0), "cut": cnt.get("guard_cut", 0), "items": guard_items},
             "door": {"in": cnt.get("door_in", 0), "out": cnt.get("door_out", 0), "items": door_items},
             "rets": rets, "events": [{"t": t, "area": a, "text": x} for t, a, x in events], "conns": _conns(now), "sys": _sys(), "notaus": held,
-            "svc": _svc_now(now), "bg": _bg_now(now), "hints": hs, "sys1": sys1,
+            "svc": _svc_now(now), "bg": _bg_now(now), "hints": hs, "sys1": sys1, "upd": upd,
             "meld": {k: meld.get(k) for k in ("on", "drafts", "sent_today", "last", "token")}}
 
 

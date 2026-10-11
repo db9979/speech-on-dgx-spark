@@ -130,11 +130,42 @@ def forward_trusted(request):
             return True
     except ValueError:
         return False
-    if peer not in _hinted and len(_hinted) < 20:
-        _hinted.add(peer)
+    if _first_hint(peer):
         print(f"guard: X-Forwarded-For from {peer} ignored; enter the reverse proxy under "
               "Einstellungen -> Sicherheit (panel.trusted_proxies)", flush=True)
     return False
+
+
+HINTED = os.path.join(STATE, "guard-xff-hinted.json")
+
+
+def _first_hint(peer, now=None):
+    """The hint above once per day and address, also across panel restarts (every update restarts the
+    panel; the log on tars had it 39 times a day for the same proxy)."""
+    day = time.strftime("%Y-%m-%d", time.localtime(time.time() if now is None else now))
+    if not _hinted:
+        try:
+            with open(HINTED) as f:
+                d = json.load(f)
+            if isinstance(d, dict) and d.get("day") == day and isinstance(d.get("peers"), list):
+                _hinted.update(str(x)[:64] for x in d["peers"][:20])
+            _hinted.add("day:" + str(d.get("day") if isinstance(d, dict) else ""))
+        except (OSError, ValueError):
+            pass
+    if "day:" + day not in _hinted:
+        _hinted.clear()
+        _hinted.add("day:" + day)
+    if peer in _hinted or len(_hinted) > 20:
+        return False
+    _hinted.add(peer)
+    try:
+        os.makedirs(STATE, exist_ok=True)
+        with open(HINTED + ".part", "w") as f:
+            json.dump({"day": day, "peers": sorted(x for x in _hinted if not x.startswith("day:"))}, f)
+        os.replace(HINTED + ".part", HINTED)
+    except OSError:
+        pass
+    return True
 
 
 def from_lan(request):
@@ -435,10 +466,12 @@ def logged(path, method):
 # the assistant is open without login), so one page or script cannot take the Spark for itself.
 _rate, _busy = {}, {}
 _rate_lock = threading.Lock()
-RATE = {"chat": (30, 120), "asr": (60, 240), "logs": (1, 60), "pair": (10, 10), "doc": (0, 10), "image": (0, 10), "msg": (0, 30), "route": (0, 60), "room": (0, 60), "kiwix": (0, 10), "lokal": (0, 20), "features": (30, 120),
+RATE = {"chat": (30, 120), "asr": (60, 240), "logs": (1, 60), "pair": (10, 10), "doc": (0, 10), "image": (0, 10), "msg": (0, 30), "route": (0, 60), "room": (0, 60), "kiwix": (0, 10), "lokal": (0, 20), "features": (30, 120), "tipps": (0, 30),
         "rmpair": (0, 3), "rm": (0, 30), "rmsync": (0, 2), "rmsend": (0, 6), "handoff": (60, 60), "bg": (0, 30), "vorrang": (0, 60), "undo": (0, 20), "llmmodels": (0, 30), "offsite": (0, 10), "trust": (10, 30), "android": (0, 20),
         "mcp": (0, 60), "mcpask": (0, 10), "mcpreg": (10, 10), "mcptoken": (20, 20),
         "live": (0, 150), "livemon": (90, 90), "hilfe": (0, 30), "write": (0, 20), "desk": (0, 20), "deskask": (0, 10), "deskupd": (0, 6), "deskfile": (0, 10), "deskhear": (0, 40), "deskact": (0, 20),
+        "deskspeak": (0, 20), "deskinbox": (0, 60), "desksend": (0, 20), "deskagenda": (0, 30), "deskbusy": (0, 30),
+        "deskmeet": (0, 20), "deskhome": (0, 30), "deskdaily": (0, 10), "deskapps": (0, 6),
         "haev": (0, 30), "hamelden": (0, 30), "hament": (0, 40), "notaus": (30, 60), "notausset": (0, 10), "notausoff": (0, 10), "notausha": (10, 10),
         "systemone": (0, 10), "changelog": (0, 30), "mymcp": (0, 30), "report": (0, 30)}  # per minute: (guest, profile or admin)
 BUSY = {"chat": 4, "asr": 3}  # at once, guests together

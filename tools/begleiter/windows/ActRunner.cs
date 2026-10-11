@@ -14,6 +14,7 @@ internal sealed record ActPlan(string Description, Action Run);
 internal static class ActRunner
 {
     private static readonly HashSet<string> Seen = LoadSeen();
+    private static readonly char[] BadPathChars = { '"', '\n', '\r', '\t', '|', '<', '>' };
 
     /// <summary>Kennung schon behandelt? Sonst als behandelt merken und <c>false</c>.</summary>
     public static bool AlreadySeen(string id)
@@ -125,10 +126,13 @@ internal static class ActRunner
         }
     }
 
-    /// <summary>Nur ein vollständiger Pfad zu einer vorhandenen Datei oder ein reiner Programmname wie "notepad.exe".</summary>
+    /// <summary>
+    /// Nur ein vollständiger Pfad zu einer vorhandenen Datei (z. B. .exe oder eine Startmenü-Verknüpfung .lnk aus der
+    /// Programmliste, gestartet über die Shell) oder ein reiner Programmname wie "notepad.exe".
+    /// </summary>
     private static bool IsStartablePath(string path)
     {
-        if (path.Length is 0 or > 400 || path.IndexOfAny(new[] { '"', '\n', '\r', '\t', '|', '<', '>' }) >= 0)
+        if (path.Length is 0 or > 400 || path.IndexOfAny(BadPathChars) >= 0)
         {
             return false;
         }

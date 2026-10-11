@@ -24,6 +24,7 @@ BRANCH=main
 # no way back to before this commit from the panel (V01.0.75: root no longer runs config values)
 SECURITY_FLOOR=7373d1a3bb8df864631ec1f722b839b86e445cdb
 CHECK=0
+TESTED=0
 TARGET=""
 NEWEST=0
 [ "${1:-}" = --check ] && CHECK=1
@@ -71,6 +72,7 @@ if [ -z "$TARGET" ] && [ "$NEWEST" = 0 ]; then
       echo "The newest version $(git rev-parse --short "$new") has not passed GitHub's tests (yet); taking the newest one that did."
       new=$green
     fi
+    TESTED=1  # exactly the commit GitHub's test run passed: install.sh only needs its short smoke test
   fi  # a clone from elsewhere has no GitHub test results to ask
 fi
 if [ -n "$TARGET" ]; then
@@ -154,7 +156,7 @@ echo "Updating ..."
 git reset --hard --quiet "$new"
 SWITCHED="$(dirname "$SRC")/.switched"
 rm -f "$SWITCHED"
-if ./install.sh --no-smoke --update; then
+if SPEECH_SPARK_TESTED=$TESTED ./install.sh --no-smoke --update; then
   rm -f "$SWITCHED"
   echo
   echo "Update finished: $(git log -1 --format='%h %s')"

@@ -237,6 +237,8 @@ def admin_delete_profile(uid: str, request: Request):
     coadmin.forget(uid)
     import join
     join.forget(uid)
+    import tipps
+    tipps.forget(uid)   # its hints and counts (tipps.json)
     return {"ok": True}
 
 
@@ -489,7 +491,7 @@ def validate(new):
         raise HTTPException(400, f"kiwix_books: at most {kiwix.MAX_BOOKS} book names (letters, digits, . _ -)")
     for k in ("agent", "agent_mcp", "mcp_own", "mcp_own_jobs", "mcp_own_oauth", "report", "report_notify", "messages", "messages_all", "messages_announce", "messages_voice", "pebble",
               "kiwix", "local_first", "mcp_server", "mcp_server_extern", "mcp_server_act", "prefetch", "instant_ack",
-              "spark_help", "spark_suggest", "spark_drawer", "write_help", "write_apps", "desk", "desk_act"):
+              "spark_help", "spark_suggest", "spark_drawer", "feature_tips", "feature_tips_push", "write_help", "write_apps", "desk", "desk_act", "desk_meeting"):
         if not isinstance(ch.get(k, False), bool):
             raise HTTPException(400, f"{k} must be true or false")
     if ch.get("esp32_url") and not re.fullmatch(r"https?://[A-Za-z0-9.\-]+(?::\d{1,5})?/?", ch["esp32_url"]):
@@ -554,6 +556,8 @@ def validate(new):
         raise HTTPException(400, "notaus_profiles must be true or false")
     if not isinstance(new["panel"].get("notaus_auto", False), bool):
         raise HTTPException(400, "notaus_auto must be true or false")
+    if not isinstance(new["panel"].get("update_night", False), bool):
+        raise HTTPException(400, "update_night must be true or false")
     sd = new["panel"].get("session_days", 30)
     if not isinstance(sd, int) or isinstance(sd, bool) or not 7 <= sd <= 90:
         raise HTTPException(400, "session_days must be 7..90")
@@ -682,7 +686,7 @@ SENSITIVE = [("api", "key"), ("chat", "llm_url"), ("chat", "llm_key"), ("chat", 
              ("chat", "search_url"), ("chat", "kiwix_url"), ("chat", "public"), ("chat", "esp32_url"), ("chat", "esp32_repo"),
              ("chat", "mfa"), ("chat", "mcp_server"), ("chat", "mcp_server_extern"), ("chat", "mcp_server_act"),
              ("chat", "mcp_own"), ("chat", "mcp_own_oauth"), ("chat", "report"), ("chat", "report_repo"),
-             ("panel", "trusted_proxies"), ("panel", "allow_lan"), ("panel", "notaus_auto"), ("panel", "session_days"), ("panel", "trust_days"), ("asr", "model"), ("asr", "aligner_model"),
+             ("panel", "trusted_proxies"), ("panel", "allow_lan"), ("panel", "notaus_auto"), ("panel", "update_night"), ("panel", "session_days"), ("panel", "trust_days"), ("asr", "model"), ("asr", "aligner_model"),
              ("tts", "model"), ("tts", "voicedesign_model")]
 
 

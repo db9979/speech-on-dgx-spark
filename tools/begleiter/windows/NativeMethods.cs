@@ -257,6 +257,31 @@ internal static class NativeMethods
     [DllImport("winmm.dll")]
     public static extern uint waveInClose(IntPtr hwi);
 
+    // ---- Version 4: Nicht stören, Downloads-Ordner, immer oben ----
+
+    public const int QUNS_BUSY = 2;
+    public const int QUNS_PRESENTATION_MODE = 4;
+
+    public static readonly IntPtr HWND_TOPMOST = new(-1);
+    public const uint SWP_NOSIZE = 0x0001;
+    public const uint SWP_NOMOVE = 0x0002;
+    public const uint SWP_NOACTIVATE = 0x0010;
+
+    /// <summary>FOLDERID_Downloads.</summary>
+    public static readonly Guid FolderDownloads = new("374DE290-123F-4565-9164-39C4925E467B");
+
+    [DllImport("shell32.dll")]
+    public static extern int SHQueryUserNotificationState(out int state);
+
+    [DllImport("shell32.dll")]
+    public static extern int SHGetKnownFolderPath(ref Guid rfid, uint flags, IntPtr token, out IntPtr path);
+
+    [DllImport("user32.dll", CharSet = CharSet.Unicode)]
+    public static extern int GetClassName(IntPtr hwnd, char[] className, int maxCount);
+
+    [DllImport("user32.dll", SetLastError = true)]
+    public static extern bool SetWindowPos(IntPtr hwnd, IntPtr insertAfter, int x, int y, int cx, int cy, uint flags);
+
 #pragma warning disable CS0649 // Felder werden von Windows bzw. per Initialisierer belegt.
     [StructLayout(LayoutKind.Sequential)]
     public struct INPUT

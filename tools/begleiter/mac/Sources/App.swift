@@ -10,19 +10,23 @@ struct SparkBegleiterApp: App {
     @ObservedObject private var dictation: Dictation
     @ObservedObject private var updater: Updater
     @ObservedObject private var wake: Wake
+    @ObservedObject private var quiet: Quiet
+    @ObservedObject private var meeting: Meeting
 
     init() {
         _model = ObservedObject(wrappedValue: AppModel.shared)
         _dictation = ObservedObject(wrappedValue: Dictation.shared)
         _updater = ObservedObject(wrappedValue: Updater.shared)
         _wake = ObservedObject(wrappedValue: Wake.shared)
+        _quiet = ObservedObject(wrappedValue: Quiet.shared)
+        _meeting = ObservedObject(wrappedValue: Meeting.shared)
     }
 
     var body: some Scene {
         MenuBarExtra {
             TrayPanel(model: model, dictation: dictation, updater: updater, wake: wake, folder: FolderWatch.shared)
         } label: {
-            Image(nsImage: dictation.recording ? AppModel.recordingIcon : menuIcon)
+            Image(nsImage: dictation.recording || meeting.running ? AppModel.recordingIcon : menuIcon)
         }
         .menuBarExtraStyle(.window)
     }
@@ -31,6 +35,7 @@ struct SparkBegleiterApp: App {
     private var menuIcon: NSImage {
         _ = updater.phase
         _ = wake.listening
+        _ = quiet.busy
         return model.menuIcon
     }
 }

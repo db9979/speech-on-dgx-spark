@@ -114,6 +114,10 @@ async def _download(c, url, limit):
     return bytes(out)
 
 
+class NoRelease(ValueError):
+    """The repo has no android-v… release yet: a state to show, not a failure of the Spark."""
+
+
 async def fetch_apk(c=None):
     """Takes the newest release android-v… of the repo when it is newer than the kept one; the APK must match
     the SHA-256 and size in its android.json. Returns the version the Spark keeps now."""
@@ -127,7 +131,7 @@ async def fetch_apk(c=None):
         rel = next((x for x in r.json() if str(x.get("tag_name", "")).startswith("android-v")
                     and not x.get("draft") and not x.get("prerelease")), None)
         if not rel:
-            raise ValueError("Im Repo gibt es noch keine Android-App (android-v…): einmal den Signierschlüssel anlegen und die Aktion „Android app“ starten, siehe Anleitung.")
+            raise NoRelease("Im Repo gibt es noch keine Android-App (android-v…): einmal den Signierschlüssel anlegen und die Aktion „Android app“ starten, siehe Anleitung.")
         assets = {a.get("name"): a.get("browser_download_url", "") for a in rel.get("assets", [])}
         if "android.json" not in assets or "spark.apk" not in assets:
             raise ValueError("Die Version hat kein android.json oder spark.apk.")
@@ -157,14 +161,17 @@ async def fetch_apk(c=None):
 
 
 async def _check():
-    err = ""
+    """Returns (error text, whether it is only "no release yet")."""
+    err, none = "", False
     try:
         await fetch_apk()
+    except NoRelease as e:
+        err, none = str(e)[:200], True
     except Exception as e:
         err = str(e)[:200]
         print("android: app check", type(e).__name__, err, flush=True)
     _state.update(checked=time.time(), error=err)
-    return err
+    return err, none
 
 
 async def fetch_loop():
@@ -316,8 +323,8 @@ def admin_get():
 @router.post("/api/admin/android/fetch", dependencies=[Depends(auth)])
 async def admin_fetch(request: Request):
     guard.limit(request, "android", admin=True)
-    err = await _check()
-    if err:
+    err, none = await _check()
+    if err and not none:   # "no app in the repo yet" is a state the page shows (with 200), not a failed request
         raise HTTPException(502, err)
     return admin_get()
 

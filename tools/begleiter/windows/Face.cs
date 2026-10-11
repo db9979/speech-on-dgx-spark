@@ -127,6 +127,8 @@ internal enum Glyph
     Wave,
     Folder,
     Bell,
+    Speaker,
+    Record,
 }
 
 internal static class Glyphs
@@ -208,6 +210,19 @@ internal static class Glyphs
                     break;
                 case Glyph.Folder:
                     g.DrawPolygon(pen, new PointF[] { new(2, 4), new(6, 4), new(7.5f, 5.5f), new(14, 5.5f), new(14, 13), new(2, 13) });
+                    break;
+                case Glyph.Speaker:
+                    g.DrawPolygon(pen, new PointF[] { new(2, 6), new(5, 6), new(9, 3), new(9, 13), new(5, 10), new(2, 10) });
+                    g.DrawArc(pen, 9, 5.5f, 4, 5, -60, 120);
+                    g.DrawArc(pen, 9, 3, 6.5f, 10, -60, 120);
+                    break;
+                case Glyph.Record:
+                    g.DrawEllipse(pen, 2, 2, 12, 12);
+                    using (var dot = new SolidBrush(color))
+                    {
+                        g.FillEllipse(dot, 5.5f, 5.5f, 5, 5);
+                    }
+
                     break;
                 case Glyph.Bell:
                     g.DrawBezier(pen, 4, 11, 4, 4, 12, 4, 12, 11);

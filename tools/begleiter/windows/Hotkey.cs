@@ -22,14 +22,24 @@ internal static class Parts
     public const string Act = "act";
     public const string Wake = "wake";
 
+    // Version 4 – ebenfalls aus, bis das Panel sie einschaltet.
+    public const string Speak = "speak";
+    public const string Inbox = "inbox";
+    public const string Agenda = "agenda";
+    public const string Quiet = "quiet";
+    public const string Meeting = "meeting";
+    public const string Home = "home";
+    public const string Daily = "daily";
+
     /// <summary>Alle Teile in der Reihenfolge, in der sie angezeigt werden.</summary>
     public static readonly string[] All =
     {
         Write, Ask, Dictate, Notes, Status, Notaus, Files, Screen, Context, Mail, Folder, Actions, Act, Wake,
+        Speak, Inbox, Agenda, Quiet, Meeting, Home, Daily,
     };
 
     /// <summary>Teile mit eigenem Tastenkürzel.</summary>
-    public static readonly string[] WithHotkey = { Write, Ask, Dictate, Screen, Mail };
+    public static readonly string[] WithHotkey = { Write, Ask, Dictate, Screen, Mail, Speak, Meeting };
 
     public static string Label(string part) => part switch
     {
@@ -47,7 +57,33 @@ internal static class Parts
         Actions => "Knöpfe in Meldungen",
         Act => "Spark darf am PC handeln",
         Wake => "Weckwort",
+        Speak => "Vorlesen",
+        Inbox => "Vom Handy auf den PC",
+        Agenda => "Termine im Begleiter",
+        Quiet => "Nicht stören erkennen",
+        Meeting => "Besprechung mitschreiben",
+        Home => "Smart-Home-Knöpfe",
+        Daily => "Tagesstart und Feierabend",
         _ => part,
+    };
+}
+
+/// <summary>Einstellung „Antworten vorlesen“ im Fenster Frag Spark.</summary>
+internal static class AskSpeakModes
+{
+    public const string Always = "always";
+    public const string Spoken = "spoken";
+    public const string Never = "never";
+
+    public static readonly string[] All = { Always, Spoken, Never };
+
+    public static string Normalize(string? mode) => mode is Always or Never ? mode : Spoken;
+
+    public static string Label(string mode) => Normalize(mode) switch
+    {
+        Always => "immer",
+        Never => "nie",
+        _ => "nur bei gesprochenen Fragen",
     };
 }
 
@@ -63,6 +99,8 @@ internal readonly record struct Hotkey(Keys Modifiers, Keys Key)
         Parts.Dictate => new Hotkey(Keys.Control | Keys.Alt, Keys.D),
         Parts.Screen => new Hotkey(Keys.Control | Keys.Alt, Keys.B),
         Parts.Mail => new Hotkey(Keys.Control | Keys.Alt, Keys.M),
+        Parts.Speak => new Hotkey(Keys.Control | Keys.Alt, Keys.L),
+        Parts.Meeting => new Hotkey(Keys.Control | Keys.Alt, Keys.R),
         _ => new Hotkey(Keys.Control | Keys.Alt, Keys.S),
     };
 
