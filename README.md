@@ -33,6 +33,7 @@ All options for running without questions (`--mode api --asr 1.7b --tts 0.6b --y
 
 <!-- New version: add one line at the top here and in CHANGELOG.md, drop the oldest line here (keep 10). Details go to docs/de and docs/en, not into this README. -->
 
+- **V01.0.466** Mail times right: a mail from 20:30 was read out as 18:30 (sender's offset instead of your time zone)
 - **V01.0.465** Presentations with ten slide types, icons, pictures from the Kiwix and checked numbers
 - **V01.0.464** Settings assistant: gaps closed, code word sentences never a case, ideas outside the catalog (off)
 - **V01.0.463** Browser tests wait until a page has loaded (fixes a flaky test)
@@ -42,7 +43,6 @@ All options for running without questions (`--mode api --asr 1.7b --tts 0.6b --y
 - **V01.0.459** Pages show that they load (bar, placeholders, errors with “Try again”); Me loads all boxes side by side
 - **V01.0.458** Read-only GitHub token for updates (5000 instead of 60 questions per hour)
 - **V01.0.457** History on every device: no more overwriting, new messages without reloading, sources stay under answers, the Pebble watch answers in full again; new (off, switched on under Me): instant sync, one conversation for all channels, offline reading on trusted browsers only.
-- **V01.0.456** Own storage: now also over SFTP and as an SMB share at home, the SFTP server's key is remembered
 
 All versions: [CHANGELOG.md](CHANGELOG.md)
 

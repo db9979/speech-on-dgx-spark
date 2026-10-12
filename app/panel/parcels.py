@@ -149,7 +149,7 @@ def _scan_account(acct, days):
             if msg is None or forged(msg):
                 continue
             text, _ = mail.plain(msg)
-            x = classify(heads[u]["from"], heads[u]["subject"], text[:3000], heads[u]["date"].date())
+            x = classify(heads[u]["from"], heads[u]["subject"], text[:3000], mail.local(heads[u]["date"]).date())
             if x:
                 x["at"] = heads[u]["date"].timestamp()
                 out.append(x)

@@ -323,7 +323,8 @@ async def mail_tool(t, name, args, st):
             return await asyncio.to_thread(mail.listing, t.who["id"], query, num("days", 30), bool(args.get("unread")),
                                            8, chat.user_zone(t.body.get("tz")))
         if name == "mail_read":
-            return await asyncio.to_thread(mail.read, t.who["id"], str(args.get("id", ""))[:40])
+            return await asyncio.to_thread(mail.read, t.who["id"], str(args.get("id", ""))[:40],
+                                           chat.user_zone(t.body.get("tz")))
     except ValueError as e:
         return f"E-mail not readable: {e}"
     except Exception as e:

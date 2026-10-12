@@ -1005,7 +1005,7 @@
 "file": "Assistent und Oberfläche",
 "head": "Sprach-Chat",
 "title": "E-Mail lesen",
-"text": "nis. Gäste und eine fremde Stimme an einem anderen Gerät haben keinen Zugriff. Das Passwort liegt verschlüsselt auf dem Spark und wird nie wieder angezeigt. Aus, bis es unter Funktionen eingeschaltet wird."
+"text": "nis. Gäste und eine fremde Stimme an einem anderen Gerät haben keinen Zugriff. Das Passwort liegt verschlüsselt auf dem Spark und wird nie wieder angezeigt. Uhrzeiten von Mails nennt er in deiner Zeitzone (sonst der des Sparks), nicht mit dem Versatz des Absenders (V01.0.466). Aus, bis es unter Funktionen eingeschaltet wird."
 },
 {
 "lang": "de",
@@ -1180,8 +1180,8 @@
 "src": "assistent",
 "file": "Assistent und Oberfläche",
 "head": "Sprach-Chat",
-"title": "Einsprechen in den Begleiter-Fenstern (V01.0.460)",
-"text": "Einsprechen in den Begleiter-Fenstern (V01.0.460): Ist der Teil „Diktieren“ an, hat jedes freie Textfeld der Begleiter-Fenster einen Mikrofon-Knopf: „Antwort entwerfen“ (Stichpunkte und Mail-Text), „Text verbessern“ (Wunsch, Ausgangstext, Ergebnis), „Bildschirm fragen“ (Frage) und wie bisher „Frag Spark“. Erster Klick startet, zweiter (■) beendet die Aufnahme (höchstens 60 Sekunden); der Spark erkennt den Text, er kommt an die Schreibmarke bzw. ans Ende und wird nie ausgeführt. Damit lassen sich auch die Outlook-classic-Knöpfe „Antwort entwerfen“ und „Text verbessern“ ganz einsprechen. Nie in Codewort- oder Passwortfeldern. Die Office-Add-ins in Word, Excel und neuem Outlook haben keinen Mikrofon-Knopf. Knopf-Beschriftungen brechen nie mitten im Wort um; ist das Mac-Fenster zu schmal, rutscht „Spark unterstützen“ in eine eigene Zeile."
+"title": "Einsprechen in den Begleiter-Fenstern (V01.0.466)",
+"text": "Einsprechen in den Begleiter-Fenstern (V01.0.466): Ist der Teil „Diktieren“ an, hat jedes freie Textfeld der Begleiter-Fenster einen Mikrofon-Knopf: „Antwort entwerfen“ (Stichpunkte und Mail-Text), „Text verbessern“ (Wunsch, Ausgangstext, Ergebnis), „Bildschirm fragen“ (Frage) und wie bisher „Frag Spark“. Erster Klick startet, zweiter (■) beendet die Aufnahme (höchstens 60 Sekunden); der Spark erkennt den Text, er kommt an die Schreibmarke bzw. ans Ende und wird nie ausgeführt. Damit lassen sich auch die Outlook-classic-Knöpfe „Antwort entwerfen“ und „Text verbessern“ ganz einsprechen. Nie in Codewort- oder Passwortfeldern. Die Office-Add-ins in Word, Excel und neuem Outlook haben keinen Mikrofon-Knopf. Knopf-Beschriftungen brechen nie mitten im Wort um; ist das Mac-Fenster zu schmal, rutscht „Spark unterstützen“ in eine eigene Zeile."
 },
 {
 "lang": "de",
@@ -4237,7 +4237,7 @@
 "file": "Assistant and panel",
 "head": "Voice chat",
 "title": "Reading e-mail",
-"text": " shown again. Off until turned on under Features."
+"text": " shown again. Mail times are given in your time zone (else the Spark's), not with the sender's offset (V01.0.466). Off until turned on under Features."
 },
 {
 "lang": "en",
@@ -4388,8 +4388,8 @@
 "src": "assistant",
 "file": "Assistant and panel",
 "head": "Voice chat",
-"title": "Speaking into the companion windows (V01.0.460)",
-"text": "Speaking into the companion windows (V01.0.460): with the part \"Dictation\" on, every free text field in the companion windows has a mic button: \"Draft a reply\" (notes and mail text), \"Improve text\" (wish, source text, result), \"Ask about the screen\" (question) and, as before, \"Ask Spark\". First click starts, the second (■) stops the recording (at most 60 seconds); the Spark recognizes the text, it goes to the cursor or the end and is never run. So the Outlook classic buttons \"Draft a reply\" and \"Improve text\" can be used by voice too. Never in code word or password fields. The Office add-ins in Word, Excel and new Outlook have no mic button. Button labels never break inside a word; if the Mac panel is too narrow, \"Spark unterstützen\" moves to its own line."
+"title": "Speaking into the companion windows (V01.0.466)",
+"text": "Speaking into the companion windows (V01.0.466): with the part \"Dictation\" on, every free text field in the companion windows has a mic button: \"Draft a reply\" (notes and mail text), \"Improve text\" (wish, source text, result), \"Ask about the screen\" (question) and, as before, \"Ask Spark\". First click starts, the second (■) stops the recording (at most 60 seconds); the Spark recognizes the text, it goes to the cursor or the end and is never run. So the Outlook classic buttons \"Draft a reply\" and \"Improve text\" can be used by voice too. Never in code word or password fields. The Office add-ins in Word, Excel and new Outlook have no mic button. Button labels never break inside a word; if the Mac panel is too narrow, \"Spark unterstützen\" moves to its own line."
 },
 {
 "lang": "en",

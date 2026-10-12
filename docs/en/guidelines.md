@@ -239,6 +239,7 @@ The complete list is the **[Security checklist](security-checklist.md)** (about 
 - **Fix model errors in the panel** (NEED_TOOLS, answer check), not only in the prompt. Always add a self-test. (M [[answer-check-and-fixes]])
 - **Texts for the model name only tools offered in this answer.** Otherwise it calls a tool it was not offered (Logs → Requests: "unbekannt"). (M [[ha-states-tool]]; 🧪 test_panel)
 - **Dates** in quality cases relative to today, never fixed. (M)
+- **Times from outside** (mail headers, calendars, trains, Home Assistant) are converted into the person's zone (`chat.user_zone`, else `chat.system_zone`, Europe/Berlin) before they are read out or shown, never given with the sender's offset. (Dominik 2026-10-12: a mail from 20:30 was read out as 18:30; 🧪 test_mail_zeit)
 - **Thinking text:** every new LLM call that can run with thinking uses `common.no_think`, not its own `<think>` regex. (M [[think-tag-doppelt]])
 - **Local first, then external:** documents, Kiwix, history. Data stays in the LAN as far as possible. No second model just for a sub-feature (GPU memory). Creating documents works offline. (P erst-lokal, hilfe-besser, praesentationen-professionell)
 - **Never change:** dgx-spark-qwen38 on ports 30000–30099. Own ports are at 31001–31443. (M)

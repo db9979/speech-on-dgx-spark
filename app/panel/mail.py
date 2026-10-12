@@ -230,6 +230,15 @@ def _date(v):
         return datetime.datetime.fromtimestamp(0, datetime.timezone.utc)
 
 
+def local(d, zone=None):
+    """A mail's time in the person's zone (else the Spark's, Europe/Berlin). The Date header keeps the
+    sender's offset, often +0000: read out as it is, a mail from 20:30 was said to come at 18:30."""
+    if zone is None:
+        import chat     # late: chat imports mail
+        zone = chat.system_zone()
+    return d.astimezone(zone)
+
+
 def _since(days):
     """IMAP date (English month names, whatever the locale)."""
     d = datetime.date.today() - datetime.timedelta(days=max(1, min(DAYS, days)))
@@ -359,7 +368,7 @@ def listing(uid, query="", days=7, unread=False, limit=8, zone=None):
     lines = []
     for aid, u, h in found:
         h = dict(h, **{"from": known(uid, h["from"])})
-        when = h["date"].astimezone(zone) if zone else h["date"]
+        when = local(h["date"], zone)
         lines.append(f"[{aid}:{u}] {when:%d.%m. %H:%M} from {h['from']}: {h['subject'] or '(no subject)'}"
                      + (" (unread)" if h["unread"] else "") + (f" [{names.get(aid, '')}]" if many else ""))
     what = ("unread " if unread else "") + "messages" + (f" matching '{query}'" if query else "") + f" in the last {days} days"
@@ -387,8 +396,8 @@ def _wrap(text):
     return UNTRUSTED + "\n<<<\n" + text + "\n>>>"
 
 
-def read(uid, ref):
-    """Text for the assistant: one message (id "<account>:<uid>" from a listing)."""
+def read(uid, ref, zone=None):
+    """Text for the assistant: one message (id "<account>:<uid>" from a listing), its time in `zone`."""
     m = re.fullmatch(r"\[?(m[0-9a-f]{8}):(\d{1,10})\]?", str(ref).strip())
     acct = next((a for a in get(uid)["accounts"] if m and a["id"] == m.group(1)), None)
     if not acct:
@@ -399,7 +408,7 @@ def read(uid, ref):
         return "This message no longer exists."
     text, files = plain(msg)
     head = (f"From: {_addr(msg.get('From', ''))}\nTo: {_hdr(msg.get('To', ''))[:200]}\n"
-            f"Date: {_date(msg.get('Date')):%d.%m.%Y %H:%M}\nSubject: {_hdr(msg.get('Subject', ''))}")
+            f"Date: {local(_date(msg.get('Date')), zone):%d.%m.%Y %H:%M}\nSubject: {_hdr(msg.get('Subject', ''))}")
     return _wrap(head + ("\nAttachments: " + ", ".join(files[:10]) if files else "")
                  + "\n\n" + (text or "(no text)"))
 
