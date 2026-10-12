@@ -100,6 +100,9 @@ def fake_llm():
                 said = last.get("content") or ""
                 return {"choices": [{"message": {"content": json.dumps(
                     {"absicht": said.split("ROUTE ", 1)[1].split()[0] if "ROUTE " in said else "unklar"})}}]}
+            if (b["messages"][0].get("content") or "").startswith("Du hilfst, den Sprachassistenten"):   # berater.pick
+                ids = [ln.split(":", 1)[0] for ln in (last.get("content") or "").split("Mögliche Änderungen:\n", 1)[-1].splitlines()]
+                return {"choices": [{"message": {"content": json.dumps({"wahl": ids[-1], "grund": "Der letzte passt am besten."})}}]}
             if "korrigiert gerade" in (b["messages"][0].get("content") or ""):  # fixes.py: "FACT ..." in the correction
                 said = last.get("content") or ""
                 fact = said.split("FACT ", 1)[1] if "FACT " in said else ""

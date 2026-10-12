@@ -61,6 +61,9 @@ STATE_FILES = {
     "esp32.json": "json",           # ESP32 speakers: board variant, firmware, automatic updates
     "agent.json": "json",           # agent levels and MCP services (tokens sealed)
     "geraete-updates.json": "json",    # Geräte-Updates: versions seen, notes due, the night round of the speakers
+    "berater.json": "json",          # Einstellungs-Assistent: proposals, what was there before, Nachkontrolle
+    "faelle.json": "json",           # its cases (fingerprints, counts, at most three examples with consent)
+    "gut-saetze.json": "json",       # questions confirmed with 👍 (with consent): protected in the Prüfstand
     "dienstwacht.json": "json",     # Dienst-Wächter: services taken off the list, their state, outages of 7 days, notes due
     "mcp-dienste-admin.json": "json",  # own MCP services of profiles: hosts the admin allows, blocked services
     "mcp-server.json": "json",      # programs connected to the Spark as an MCP server (only hashes of their tokens)

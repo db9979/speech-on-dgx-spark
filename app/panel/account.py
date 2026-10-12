@@ -1216,7 +1216,9 @@ ALLOW = {"tool_think": "toolthink", "route": "routing", "direct_read": "direct",
          "prefetch": "vorab", "instant_ack": "ack", "spark_help": "hilfe", "tips_on": "tipps", "pro_tips": "tippspush", "systemone_on": "einordnung",
          "devup": "geraeteupdate", "devup_night": "geraetenacht", "report": "melden", "doc_make": "erstellen",
          "doc_make_templates": "erstellenvorlagen", "svcwatch": "dienstwacht", "svchint": "dienstnutzer",
-         "sync_live": "verlaufsync", "sync_one": "eingespraech", "sync_offline": "offlinelesen"}
+         "sync_live": "verlaufsync", "sync_one": "eingespraech", "sync_offline": "offlinelesen",
+         "rate": "bewerten", "rateback": "bewertenzurueck", "beratnote": "beraterhinweis", "beratask": "beraterchat",
+         "beratme": "beratermich"}
 
 
 def _allow(prof, chat):
@@ -1227,6 +1229,8 @@ def _allow(prof, chat):
     # the Dienst-Wächter's notes are for admin profiles only: the others do not see those rows at all
     import notaus
     out["svcadmin"] = bool(out["svcwatch"] and prof["id"] in notaus.admin_uids())
+    # the Einstellungs-Assistent's notes and questions are for admin profiles only, like the Dienst-Wächter's
+    out["berateradmin"] = bool((out["beratnote"] or out["beratask"]) and prof["id"] in notaus.admin_uids())
     return out
 
 

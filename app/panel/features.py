@@ -226,13 +226,33 @@ FEATURES = (
       me="setbox", guide="eingespraech"),
     F("offlinelesen", "Verlauf offline lesen", "Read history offline", "talk", ("history_offline",), "sync_offline",
       me="setbox", guide="offlinelesen"),
+    # Einstellungs-Assistent (faelle.py, berater.py): problems become cases, cases proposals from a fixed catalog
+    F("berater", "Einstellungs-Assistent", "Settings assistant", "talk", ("berater",), guide="berater"),
+    F("beratererklaeren", "Anfragen erklären", "Explain requests", "talk", ("berater_explain",), parent="berater",
+      guide="beratererklaeren"),
+    F("beraterchat", "Den Assistenten nach Vorschlägen fragen", "Ask the assistant for proposals", "talk",
+      ("berater_chat",), "berater_ask", parent="berater", me="setbox", guide="beraterchat"),
+    F("beraterhinweis", "Hinweis bei neuem Vorschlag", "Note on a new proposal", "talk", ("berater_notify",),
+      "berater_note", parent="berater", me="setbox", guide="beraterhinweis"),
+    F("beraterissue", "Fälle als Meldung vorbereiten", "Prepare cases as reports", "talk", ("berater_issue",),
+      parent="berater", guide="beraterissue"),
+    F("beraterauto", "Autopilot für kleine Änderungen", "Autopilot for small changes", "talk", ("berater_auto",),
+      parent="berater", guide="beraterauto"),
+    F("berateru", "Schritte für die Umgebung", "Steps for the environment", "talk", ("berater_env",), parent="berater",
+      guide="berateru"),
+    F("beratermich", "Vorschläge für mein Profil", "Proposals for my profile", "talk", ("berater_me",), "berater_me",
+      parent="berater", me="setbox", guide="beratermich"),
+    F("bewerten", "👍/👎 unter Antworten", "👍/👎 under answers", "talk", ("bewerten",), "rate_on", parent="berater",
+      me="setbox", guide="bewerten"),
+    F("bewertenzurueck", "Rückmeldung, wenn es behoben ist", "Feedback when it is fixed", "talk", ("bewerten_back",),
+      "rate_back", parent="bewerten", me="setbox", guide="bewertenzurueck"),
 )
 BY_KEY = {f.key: f for f in FEATURES}
 profiles.NO_PRESET.update(f.profile for f in FEATURES if f.profile)
 
 # Spark-wide conditions besides the switches (an address that must be set), registered by the module
 # that knows them, so this file imports none of them: key -> function(chat config) -> bool
-READY = {}
+READY = {"beraterissue": lambda c: admin_on("melden", c)}   # a case as a report needs „Probleme melden“
 # extra per-profile conditions given by the admin (the agent level): key -> function(uid) -> bool
 GRANTED = {}
 # the second step a profile still owes before using a function (join.py, new profiles by invitation):

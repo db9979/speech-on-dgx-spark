@@ -119,6 +119,8 @@ TARGETS = {
     "issues": ("GitHub (Meldungen)", "Issues · Internet", "net", False),
     # Dokumente erstellen (docmake.py): the line shows jobs in numbers, never a title or text
     "make": ("Dokumente erstellen", "Aufträge · auf dem Spark", "spark", False),
+    # Einstellungs-Assistent (berater.py): shown while it is on, the line with 👍/👎, cases and proposals in numbers
+    "verb": ("Verbessern", "Fälle und Vorschläge · auf dem Spark", "spark", False),
 }
 RETURNS = {"cal": "Termine oder Aufgaben", "ha": "Zustände oder Schaltung", "web": "Suchergebnisse", "pages": "Seitentext", "kiwix": "Archiv-Treffer",
            "wiki": "Artikel", "mail": "Mails (nur Anzahl und Größe)", "contacts": "Kontakte", "rm": "Ablage", "push": "Zustellung",
@@ -997,6 +999,13 @@ def snapshot(view="admin", now=None):
         make = {"on": False}
     if make.get("on"):
         used.add("make")
+    try:
+        import berater
+        verb = berater.for_live(now)
+    except Exception:
+        verb = {"on": False}
+    if verb.get("on"):
+        used.add("verb")
     used |= set(watch_svc)
     off = unset(now)
     targets = [{"id": k, "name": v[0], "sub": _devup_sub(devup) if k == "geraete" and devup else v[1], "zone": v[2]}
@@ -1005,6 +1014,9 @@ def snapshot(view="admin", now=None):
         if x["id"] == "issues":
             x["sub"] = (f"{meld.get('drafts', 0)} Entwürfe · {meld.get('sent_today', 0)} heute gesendet"
                         + ("" if meld.get("token") else " · kein Token"))
+        if x["id"] == "verb":   # Einstellungs-Assistent: numbers only (never a question, a title or a word)
+            x["sub"] = (f"heute {verb.get('gut', 0)} 👍 · {verb.get('schlecht', 0)} 👎 · {verb.get('faelle', 0)} Fälle · "
+                        f"{verb.get('open', 0)} Vorschläge offen" + (f" · {verb['check']} in Nachkontrolle" if verb.get("check") else ""))
         if x["id"] == "make":   # Dokumente erstellen: jobs in numbers (no titles, no text)
             x["sub"] = (f"{make.get('run', 0)} läuft · {make.get('wait', 0)} wartet · {make.get('done', 0)} heute fertig"
                         + (f" · {make['failed']} Fehler" if make.get("failed") else ""))

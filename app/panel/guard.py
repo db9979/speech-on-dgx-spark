@@ -434,7 +434,7 @@ LIVE_WORDS = {
     "admin_roles_switch": ("Rechte", "Rollen geändert"), "iphone_update_rights": ("Rechte", "Update-Recht der App geändert"),
     "agent_level": ("Rechte", "Stufe der Aufträge geändert"),
     "backup_move": ("Sicherung", "Sicherungsort geändert"), "offsite_settings": ("Sicherung", "Sicherung nach außen eingestellt"),
-    "devup_resume": ("Geräte-Updates", "Geräte-Updates fortgesetzt"), "svcwatch": ("Dienste", "Dienst-Wächter, Dienst von der Liste genommen oder zurück"), "remarkable_send": ("Geräte", "aufs reMarkable geschickt"),
+    "devup_resume": ("Geräte-Updates", "Geräte-Updates fortgesetzt"), "svcwatch": ("Dienste", "Dienst-Wächter, Dienst von der Liste genommen oder zurück"), "berater_take": ("Verbessern", "Vorschlag übernommen"), "berater_undo": ("Verbessern", "Vorschlag zurückgenommen"), "berater_reject": ("Verbessern", "Vorschlag abgelehnt"), "berater_issue": ("Verbessern", "Fall als Meldung vorbereitet"), "berater_me": ("Verbessern", "Profil hat einen Vorschlag übernommen"), "remarkable_send": ("Geräte", "aufs reMarkable geschickt"),
     "doc_quota": ("Dokumente", "Platz für Dokumente geändert"), "doc_unshare": ("Dokumente", "Freigabe beendet"),
     "join_settings": ("Einstellungen", "Einladungen eingestellt"), "join_packs": ("Einstellungen", "Einladungspakete geändert"),
     "setup_remind": ("Einstellungen", "Erinnerung an die Einrichtung geschickt"), "quality_case": ("Hilfe", "Korrektur in den Qualitätstest"),
@@ -497,7 +497,8 @@ RATE = {"chat": (30, 120), "asr": (60, 240), "logs": (1, 60), "pair": (10, 10), 
         "haev": (0, 30), "hamelden": (0, 30), "hament": (0, 40), "notaus": (30, 60), "notausset": (0, 10), "notausoff": (0, 10), "notausha": (10, 10),
         "systemone": (0, 10), "changelog": (0, 30), "mymcp": (0, 30), "devup": (0, 20), "report": (0, 30),
         "make": (0, 60), "makejob": (0, 120), "makefile": (0, 30), "makesend": (0, 10), "maketmpl": (0, 10),
-        "makedl": (20, 30), "svcwatch": (0, 30), "svcwatchnow": (0, 4)}  # per minute: (guest, profile or admin)
+        "makedl": (20, 30), "svcwatch": (0, 30), "svcwatchnow": (0, 4),
+        "rate": (0, 30), "berater": (0, 60), "beraterset": (0, 30), "beraterrun": (0, 4)}  # per minute: (guest, profile or admin)
 BUSY = {"chat": 4, "asr": 3}  # at once, guests together
 
 

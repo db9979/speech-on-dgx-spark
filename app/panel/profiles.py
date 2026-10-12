@@ -837,6 +837,14 @@ SETTINGS = {
     "sync_live": (False, lambda v: isinstance(v, bool)),
     "sync_one": (False, lambda v: isinstance(v, bool)),
     "sync_offline": (False, lambda v: isinstance(v, bool)),
+    # Einstellungs-Assistent (faelle.py, berater.py): 👍/👎 under answers, hearing when a report helped, admin notes,
+    # asking it in the chat, proposals for the own settings (and the ones the profile put aside)
+    "rate_on": (False, lambda v: isinstance(v, bool)),
+    "rate_back": (False, lambda v: isinstance(v, bool)),
+    "berater_note": (False, lambda v: isinstance(v, bool)),
+    "berater_ask": (False, lambda v: isinstance(v, bool)),
+    "berater_me": (False, lambda v: isinstance(v, bool)),
+    "berater_skip": ([], lambda v: isinstance(v, list) and len(v) <= 20 and all(isinstance(x, str) and re.fullmatch(r"p[a-z]{1,6}", x) for x in v)),
     "android_on": (False, lambda v: isinstance(v, bool)),  # Android app (android.py)
     "mcps_on": (False, lambda v: isinstance(v, bool)),     # the Spark as an MCP server for other programs (mcpserver.py)
     "mymcp_on": (False, lambda v: isinstance(v, bool)),    # own MCP services of this profile (meinmcp.py)
