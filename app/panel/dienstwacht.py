@@ -69,7 +69,8 @@ RETRY_GAP = 300           # a note that did not get out is tried again after thi
 QUEUE_KEEP = 12 * 3600    # and given up after this long
 NIGHT = (22, 7)           # "nachts sammeln": from 22 to 7 o'clock Spark time
 # two fixed public addresses: the internet is gone only when neither answers
-INET = ("https://api.github.com/", "https://cloudflare.com/cdn-cgi/trace")
+# never api.github.com: every question there counts against GitHub's 60 per hour, which the update check needs
+INET = ("https://www.google.com/generate_204", "https://www.microsoft.com/", "https://cloudflare.com/cdn-cgi/trace")
 DEVICES = ("", "app", "and", "desk", "tg", "web", "all")
 
 # id: (name, name in English, what does not work while it is gone, pace, the Live page's node)
