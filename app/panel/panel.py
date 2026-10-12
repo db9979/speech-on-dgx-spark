@@ -484,18 +484,18 @@ def script_file(name: str, request: Request):
 
 
 @app.get("/manifest.webmanifest")
-def manifest():
-    return static_file("manifest.webmanifest")
+def manifest(request: Request):
+    return static_file("manifest.webmanifest", request)
 
 
 @app.get("/apple-touch-icon.png")
-def apple_icon():
-    return static_file("apple-touch-icon.png")
+def apple_icon(request: Request):
+    return static_file("apple-touch-icon.png", request)
 
 
 @app.get("/favicon.ico")
-def favicon():
-    return static_file("favicon-32.png")
+def favicon(request: Request):
+    return static_file("favicon-32.png", request)
 
 
 @app.get("/android/spark.apk")

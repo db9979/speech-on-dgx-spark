@@ -33,6 +33,7 @@ Alle Optionen ohne Rückfragen (`--mode api --asr 1.7b --tts 0.6b --yes` …) st
 
 <!-- New version: add one line at the top here and in CHANGELOG.md, drop the oldest line here (keep 10). Details go to docs/de and docs/en, not into this README. -->
 
+- **V01.0.442** App-Manifest und Home-Bildschirm-Symbol kommen wieder (seit .406 Fehler 500); „Zum Home-Bildschirm“ zeigt wieder das Spark-Symbol
 - **V01.0.441** Live-Übersicht: Blockt der Wächter wegen Notaus, steht dort jetzt „Notaus ist an“ statt „Adresse nie erlaubt“
 - **V01.0.440** Dienst-Wächter: Admins bekommen einen Hinweis, wenn Archiv, Internet, Websuche oder ein anderer Dienst weg ist, und eine Entwarnung, wenn er zurück ist.
 - **V01.0.439** Ausgesperrt? `sudo speech-spark notzugang` auf dem Spark gibt ein neues Panel-Passwort; /#admin öffnet die Anmeldung auch auf schon offener Seite
@@ -42,7 +43,6 @@ Alle Optionen ohne Rückfragen (`--mode api --asr 1.7b --tts 0.6b --yes` …) st
 - **V01.0.435** Hinweise mit Wegen („Einstellungen → … „Live-Seite““, „Ich → Dokumente“) sind jetzt Links, die direkt zur Stelle springen; Selbsttest prüft alle Wege
 - **V01.0.434** Selbsttest: Live-Prüfung „nur eingerichtete Dienste“ mit eigenem Profil (war je nach anderen Tests rot)
 - **V01.0.433** Begleiter richtet Office-Add-ins ein: Knopf „Spark“ in Outlook classic (auch iCloud/IMAP), Word und Excel direkt, neues Outlook mit Datei und Hinzufügen-Seite
-- **V01.0.432** PowerPoint-Dateien öffnen ohne „Reparieren“, Gültigkeitsprüfung für Office-Dateien
 
 Alle Versionen: [CHANGELOG.md](CHANGELOG.md)
 
