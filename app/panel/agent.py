@@ -437,6 +437,11 @@ async def _job_tool(uid, name, args, extra, counts, steps):
     refused = _carries_out(name, args, extra, counts)
     if refused:
         steps.append({"t": int(time.time()), "what": "Gesperrt: " + name})
+        try:
+            import live
+            live.mark("Wächter", "Auftrag: Werkzeug gesperrt (las vorher Privates)")
+        except Exception:
+            pass
         return refused
     result = await _job_tool_run(uid, name, args, extra, counts, steps, cfg, zone)
     src = _private_source(name, extra)
@@ -562,6 +567,14 @@ async def run_job(uid, jid):
     counts = {"all": 0, "search": 0, "page": 0, "task": item.get("task") or ""}
     steps = []
     used_private = False
+    rec = None
+    try:     # Zustand → Live: the job as a request of its own with every round and tool (never the task text)
+        import live
+        rec = live.begin("auto", "", uid=uid, auto=True, why="Auftrag")
+        if rec is not None:
+            rec.step("in", "Auftrag", rec.t0)
+    except Exception:
+        rec = None
 
     async def work():
         nonlocal used_private
@@ -570,7 +583,12 @@ async def run_job(uid, jid):
             last = n == MAX_ROUNDS
             if last:
                 messages.append({"role": "user", "content": WRAP_UP})
+            t0 = time.time()
+            if rec is not None:
+                rec.now("llm", "Auftrag")
             msg = await _llm(messages, [] if last else list(tools.values()))
+            if rec is not None:
+                rec.step("llm", "Auftrag", t0, time.time())
             calls = [] if last else (msg.get("tool_calls") or [])[:MAX_CALLS]
             if not calls:
                 return no_think(msg.get("content"))
@@ -583,10 +601,15 @@ async def run_job(uid, jid):
                 else:
                     if name in ("calendar_events", "reminder_list", "document_search") or name in extra:
                         used_private = True
+                    t0, ok = time.time(), True
+                    if rec is not None:
+                        rec.now("tool", name)
                     try:
                         result = await _job_tool(uid, name, _args(fn.get("arguments")), extra, counts, steps)
                     except Exception as e:
-                        result = f"The tool failed: {type(e).__name__}"
+                        result, ok = f"The tool failed: {type(e).__name__}", False
+                    if rec is not None:
+                        rec.step("tool", name, t0, time.time(), ok=ok and not result.startswith("Not done"))
                 messages.append({"role": "tool", "tool_call_id": str(c.get("id") or name), "content": result})
                 _set_job(uid, jid, steps=steps[-30:])
         return ""
@@ -598,8 +621,13 @@ async def run_job(uid, jid):
     except (httpx.HTTPError, KeyError, ValueError) as e:
         _set_job(uid, jid, state="failed", finished=int(time.time()), error="Sprachmodell: " + type(e).__name__,
                  steps=steps[-30:])
+        _live_end(rec, False)
         await deliver(uid, job(uid, jid), used_private)
         return
+    except BaseException:
+        _live_end(rec, False)
+        raise
+    _live_end(rec, bool(report))
     if (job(uid, jid) or {}).get("state") == "cancelled":
         return
     report = report[:MAX_REPORT]
@@ -622,6 +650,15 @@ async def run_job(uid, jid):
                               [{"name": "Auftrag", "args": x["what"], "result": ""} for x in steps[:12]], done["summary"])
     print(f"agent: job {state}, {len(steps)} steps", flush=True)
     await deliver(uid, job(uid, jid), used_private)
+
+
+def _live_end(rec, ok):
+    try:
+        if rec is not None:
+            import live
+            live.end(rec, ok)
+    except Exception:
+        pass
 
 
 def save_doc(uid, jid):

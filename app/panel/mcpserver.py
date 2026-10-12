@@ -533,6 +533,7 @@ def _watch(c, name):
     rec = live.begin("mcp", c["name"][:30], uid=c["uid"])
     if rec is not None:
         kind, label = SHOW.get(name, ("tool", name))
+        rec.net = c["where"] == "extern"      # under "Über das Internet" in the picture
         rec.step("in", "MCP · " + ("Internet" if c["where"] == "extern" else "Heimnetz"), time.time())
         rec.now(kind, label)
     return rec

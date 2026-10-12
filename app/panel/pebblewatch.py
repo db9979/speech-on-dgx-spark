@@ -196,6 +196,7 @@ def profile_remove(did: str, prof=Depends(browser_profile)):
         raise HTTPException(404, "no such watch")
     profiles.delete_device(did)
     print("pebble: watch removed for", prof["name"], flush=True)
+    _live_mark("Eingang", "Pebble-Uhr entfernt")
     return profile_get(prof)
 
 
@@ -212,5 +213,15 @@ async def watch_pair(request: Request):
         raise HTTPException(409, "Zu viele Uhren für dieses Profil.")
     token = profiles.add_device("Pebble", uid, scope="watch")
     print("pebble: watch paired for", prof["name"], flush=True)
+    _live_mark("Eingang", "Pebble-Uhr gekoppelt")
     face = load_config().get("chat", {}).get("face")
     return {"token": token, "profile": prof["name"], "face": face if face in FACES else "robot"}
+
+
+def _live_mark(area, text):
+    """Zustand → Live: a line under Ereignisse, fixed words only (never the profile's name)."""
+    try:
+        import live
+        live.mark(area, text)
+    except Exception:
+        pass

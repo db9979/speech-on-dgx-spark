@@ -1214,6 +1214,15 @@ async def sync_now(request: Request, prof=Depends(browser_profile)):
     return dict(public(uid), busy=True)
 
 
+def _live_job(uid, t0, ok):
+    """Zustand → Live: the button "Aufs reMarkable" as a way to the cloud (never the title)."""
+    try:
+        import live
+        live.job("Aufs reMarkable", "reMarkable", t0, ok=ok, uid=uid)
+    except Exception:
+        pass
+
+
 @router.post("/api/profile/remarkable/send", dependencies=[Depends(assistant)])
 async def send_route(request: Request, prof=Depends(browser_profile)):
     uid = prof["id"]
@@ -1224,6 +1233,7 @@ async def send_route(request: Request, prof=Depends(browser_profile)):
     body = await iphone._json(request, 4 * MAX_SEND + 4096)
     if not load(uid).get("token"):
         raise HTTPException(400, "nicht verbunden")
+    t0 = time.time()
     try:
         r = await send(uid, body.get("title"), body.get("text"))
     except ValueError as e:
@@ -1231,6 +1241,8 @@ async def send_route(request: Request, prof=Depends(browser_profile)):
     except (CloudError, httpx.HTTPError, netguard.Blocked, netguard.TooLarge) as e:
         why = _redact(e) if isinstance(e, CloudError) else type(e).__name__
         print("remarkable: sending failed:", why, flush=True)
+        _live_job(uid, t0, False)
         raise HTTPException(502, "reMarkable hat das Dokument nicht angenommen: " + why)
+    _live_job(uid, t0, True)
     guard.log("remarkable_send", ip=guard.client_ip(request), profile=uid)
     return {"ok": True, "title": r["title"], "where": r["where"], "lost": r["lost"]}

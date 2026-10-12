@@ -69,6 +69,8 @@ WHY = {"sprache": ("pausiert, solange gesprochen wird", "paused while someone sp
 NEEDS_YOU = {"anmeldung", "adresse", "gesperrt", "voll", "angehalten", "antwort", "update_hand", "update_klick", "update_halt"}
 STATES = ("run", "wait", "ok", "bad", "idle")
 JOBS = ("docs", "meaning", "brief", "remarkable", "tidy", "contacts", "agent", "briefing", "memtidy")
+LIVE = {"remarkable": "reMarkable abgeglichen", "contacts": "Kontakte abgeglichen", "agent": "Auftrag",
+        "briefing": "Tagesüberblick", "memtidy": "Gedächtnis-Vorschlag"}     # tidy has its own line (tidy._live)
 KINDS = ("mail", "cal", "contacts", "ha", "mcp")
 SERVICES_FILE = os.path.join(STATE, "dienste-zustand.json")
 
@@ -162,6 +164,12 @@ def _hist(uid):
 
 def note(uid, key, ok, n=0, now=None, per_day=False):
     """A background job of uid ran (ok or not, how much). per_day: one line per day (pages read)."""
+    if key in LIVE and not per_day:     # Zustand → Live: a line under Ereignisse, name and number only
+        try:
+            import live
+            live.mark("Hintergrund", f"{LIVE[key]} " + (f"fertig ({int(n)})" if ok and n else "fertig" if ok else "nicht geklappt"))
+        except Exception:
+            pass
     if key not in JOBS or not on(uid):
         return
     now = int(now or time.time())

@@ -711,6 +711,36 @@ class Live(Base):
         self.assertNotIn("Pool", json.dumps(snap, ensure_ascii=False))
         self.assertGreaterEqual(snap["make"]["done"], 1)
 
+    def test_a_running_job_stands_at_its_target(self):
+        """Dominik 2026-10-12: a job that writes a document shows in the live picture, at "Dokumente erstellen"
+        with its part in numbers (never the title), and its finished way goes there too."""
+        import live
+        import tracelog
+        _, uid = profile("DmLiveRun")
+        with open(os.environ["SPEECH_SPARK_CONFIG"]) as f:
+            cf = json.load(f)
+        cf.setdefault("logs", {})["live"] = True
+        helpers.write_config(cf)
+        self.addCleanup(lambda: helpers.write_config(dict(cf, logs=dict(cf["logs"], live=False))))
+        with live._lock:      # only this test's job in the picture
+            live._run.clear()
+        seen = []
+
+        def peek(plan, i, sources, done=None, wish="", old=None):
+            r = next(x for x in live.snapshot()["reqs"] if (x["intent"] or "").startswith("Dokument") and not x["done"])
+            seen.append((r["stage"], r["to"], r["intent"]))
+            return fake_part(plan, i, sources, done, wish, old)
+        docmake.write_part = peek
+        make_doc(uid)
+        self.assertEqual(seen, [("tool", "make", "Dokument · Teil 1/2"), ("tool", "make", "Dokument · Teil 2/2")])
+        snap = live.snapshot()
+        r = next(x for x in snap["reqs"] if (x["intent"] or "").startswith("Dokument"))
+        self.assertEqual([(s["n"], s["to"]) for s in r["steps"] if s["k"] == "tool"],
+                         [("document_write", "make")] * 2 + [("document_build", "make")])
+        self.assertTrue(r["done"])
+        self.assertNotIn("Pool", json.dumps(snap, ensure_ascii=False))
+        tracelog.clear()
+
 
 class Lock(unittest.TestCase):
     def test_extra_lock_matches_the_main_lock(self):

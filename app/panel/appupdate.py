@@ -186,7 +186,9 @@ async def _tell_others(uid, name, version):
     import apns
     for u, r in _read().get("rights", {}).items():
         if u != uid and r.get("notify") and apns.on_for(u):
-            await apns.send(u, "Spark-Update", f"{name} hat das Update auf {version} gestartet.", tag="update")
+            t0 = time.time()
+            n = await apns.send(u, "Spark-Update", f"{name} hat das Update auf {version} gestartet.", tag="update")
+            _live_note(u, t0, n)
 
 
 # ---------------------------------------------------------------- the notice
@@ -225,7 +227,10 @@ async def due_once(now=None):
     for u in who:
         if told.get(u) == version or not iphone.allowed(u) or not apns.on_for(u) or _quiet(u, now):
             continue
-        if await apns.send(u, "Neue Spark-Version", text, tag="update", now=now):
+        t0 = time.time()
+        ok = await apns.send(u, "Neue Spark-Version", text, tag="update", now=now)
+        _live_note(u, t0, ok)
+        if ok:
             told[u] = version
             sent += 1
     if sent:
@@ -234,3 +239,12 @@ async def due_once(now=None):
             fresh.setdefault("told", {}).update(told)
             _write(fresh)
     return sent
+
+
+def _live_note(uid, t0, n):
+    """Zustand → Live: the note went straight to Apple (not through push.py), shown like the others."""
+    try:
+        import live
+        live.note(uid, "app", t0, 1 if n else 0, "Spark-Update")
+    except Exception:
+        pass

@@ -375,6 +375,7 @@ async def record_missing(url, headers, tts_body, lang, texts=None, sleep=asyncio
     try:
         await vorrang.quiet("Sätze für die Rückmeldung", sleep)
         start = time.time()
+        _bg("run")
         async with httpx.AsyncClient(timeout=httpx.Timeout(60, connect=5)) as c:
             for k, t in todo:
                 if vorrang._local[0] > start:   # an answer streams again: the rest in the next pause
@@ -390,5 +391,20 @@ async def record_missing(url, headers, tts_body, lang, texts=None, sleep=asyncio
         with _lock:
             for k, _ in todo:
                 _making.discard(k)
+        _bg(None, made, len(todo), start if "start" in locals() else None)
     print(f"ack: {made} of {len(todo)} sentence(s) recorded for one voice ({lang})", flush=True)
     return made
+
+
+def _bg(state, made=0, n=0, start=None):
+    """Zustand → Live: recording the sentences shows as background work while it runs, then a line with the count."""
+    try:
+        import live
+        if state == "run":
+            live.bg("Sätze für die Rückmeldung", "run")
+        elif start is not None:
+            live.bg_done("Sätze für die Rückmeldung", made == n, time.time() - start, f"{made} von {n} aufgenommen")
+        else:
+            live.bg("Sätze für die Rückmeldung", None)
+    except Exception:
+        pass

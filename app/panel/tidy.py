@@ -857,6 +857,17 @@ def _question(d, aid, uidn, h, guess, why):
                            "t": int(time.time())})
 
 
+def _live(uid, t0, ok, moved):
+    """Zustand → Live: one sorting run as a way to the mailbox, a line with the number (never a subject or sender)."""
+    try:
+        import live
+        if live.on():
+            live.job("Postfach aufräumen", "mail_tidy_overview", t0, ok=ok, uid=uid)
+            live.event("Hintergrund", f"Postfach aufgeräumt: {int(moved or 0)} verschoben" if ok else "Postfach aufräumen angehalten")
+    except Exception:
+        pass
+
+
 def run_account(uid, aid, idle=True, now=None):
     """Looks at the new mail of one mailbox and does what its mode allows. Returns a short report."""
     acct = _account(uid, aid)
@@ -869,14 +880,17 @@ def run_account(uid, aid, idle=True, now=None):
     if key in _running:
         return {"skipped": True}
     _running.add(key)
+    t0 = time.time()
     try:
         r = _run(uid, aid, acct, d, a, mode, idle)
         hintergrund.note(uid, "tidy", not r.get("stopped"), r.get("moved", 0))
+        _live(uid, t0, not r.get("stopped"), r.get("moved", 0))
         return r
     except (ValueError, OSError, imaplib.IMAP4.error) as e:
         msg = str(e) if isinstance(e, ValueError) else f"{type(e).__name__}"
         _mut(uid, lambda dd: acct_state(dd, aid).update(error=msg[:200], last_run=int(time.time())))
         hintergrund.note(uid, "tidy", False)
+        _live(uid, t0, False, 0)
         return {"error": msg}
     finally:
         _running.discard(key)

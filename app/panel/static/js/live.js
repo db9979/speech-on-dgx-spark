@@ -278,7 +278,7 @@ function conns(){const C=LV.data.conns;el('lvncn').textContent=C.reduce((a,c)=>a
   el('lvcn').innerHTML=C.length?C.map(c=>`<tr><td><span class="pill ${c.dir==='ein'?'':'ok'}">${c.dir==='ein'?'↘ '+tt('ein','in'):'↗ '+tt('aus','out')}</span></td><td><b>${lvE(c.name)}</b></td><td class="mut">${lvE(c.proto)}</td><td class="num">${c.n}</td></tr>`).join('')
    :`<tr><td class="mut">${tt('Keine offene Verbindung.','No open connection.')}</td></tr>`}
 // 1 + 2: Ereignisse with a chip per area, search and pause; a click shows where it belongs in the picture
-const EVNODE={'Wächter':'guard','Eingang':'door','Update':'github','Begleiter':'desk','Geräte-Updates':'geraete','Meldung':'issues',
+const EVNODE={'Wächter':'guard','Dokumente':'make','Eingang':'door','Update':'github','Begleiter':'desk','Geräte-Updates':'geraete','Meldung':'issues',
   'Telegram':'tg','Hinweis':'','Dienste':'','Lautsprecher':'','Sicherung':'nas'};
 const evKey=x=>x.t+'|'+x.text;
 const evReq=x=>{const m=String(x.text).match(/\b([0-9a-f]{6})\b/);return m?m[1]:''};

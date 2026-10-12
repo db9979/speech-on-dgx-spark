@@ -623,6 +623,7 @@ async def announce(sender, dids, text, now=None, house=False):
             esp32._update(lambda d: d["clients"][cid].update(announce_next={"t": now, "text": vault.seal(said)}))
         out.append(sp["name"])
     print(f"messages: announcement from {sender} on {len(out)} speaker(s), {len(text)} chars", flush=True)
+    _live_mark(f"Durchsage auf {len(out)} Lautsprecher{'n' if len(out) != 1 else ''}" if out else "Durchsage: Ruhezeit")
     return out, ("" if out else "Bei den Lautsprechern ist gerade Ruhezeit.")
 
 
@@ -690,6 +691,7 @@ async def voice(sender, rcpt, data, now=None):
         text = await _transcribe(pcm)
     except Exception as e:
         print("messages: voice text", type(e).__name__, flush=True)
+    _live_mark(f"Sprachnachricht ({round(secs)} s)" + (", als Text" if text else ""))
     return await send(sender, [rcpt], text, kind="voice", audio=ogg, secs=round(secs), now=now)
 
 
@@ -1335,3 +1337,12 @@ async def api_call(request: Request, prof=Depends(browser_profile)):
     except ValueError as e:
         raise HTTPException(409 if "used" in str(e) else 400, str(e))
     return dict(_state(prof["id"]), call=call)
+
+
+def _live_mark(text):
+    """Zustand → Live: a line under Ereignisse, numbers only (never the text, sender or receiver)."""
+    try:
+        import live
+        live.mark("Nachrichten", text)
+    except Exception:
+        pass

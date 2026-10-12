@@ -179,7 +179,13 @@ async def fetch_loop():
         await asyncio.sleep(90)
         try:
             if admin_on() and not notaus.blocks("internet") and time.time() - _state["checked"] > FETCH_EVERY:
-                await _check()
+                t0 = time.time()
+                err, none = await _check()
+                try:
+                    import live
+                    live.job("Geräte-Updates prüfen", "Geräte-Updates", t0, ok=not err or none)
+                except Exception:
+                    pass
         except Exception as e:
             print("android: loop", type(e).__name__, e, flush=True)
 
@@ -300,6 +306,7 @@ async def profile_link(request: Request, prof=Depends(_on)):
     except Exception:
         svg = ""
     print("android: download link made for", prof["name"], flush=True)
+    _live_mark("Eingang", "Android-App: Download-Link erstellt")
     return {"url": url, "qr": svg, "minutes": TOKEN_SECONDS // 60}
 
 
@@ -339,3 +346,12 @@ def apk_response(request: Request, t: str = ""):
         raise HTTPException(404, "Der Download-Link passt nicht oder ist abgelaufen. Im Spark einen neuen holen.")
     return FileResponse(APK, media_type="application/vnd.android.package-archive",
                         filename=f"spark-{m['version']}.apk", headers={"Cache-Control": "no-store"})
+
+
+def _live_mark(area, text):
+    """Zustand → Live: a line under Ereignisse, fixed words only (never the profile's name)."""
+    try:
+        import live
+        live.mark(area, text)
+    except Exception:
+        pass

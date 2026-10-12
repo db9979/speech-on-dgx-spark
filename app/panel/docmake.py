@@ -726,12 +726,15 @@ async def _work(j, plan, todo=None, wish=""):
             notaus.stop("auftrag", uid)
             j["step"] = k + 1
             t0 = time.time()
+            if tr:    # Live-Bild: the job stands at "Dokumente erstellen" with its part in numbers (Dominik 2026-10-12)
+                tr.intent = f"Dokument · Teil {k + 1}/{len(idx)}"
+                tr.now("tool", "document_write", t0)
             done = [s["heading"] + ": " + "; ".join((s.get("bullets") or s.get("paras") or [])[:2])[:200]
                     for s in sections if s][:12]
             part = await write_part(plan, i, sources, done, wish if todo is not None else "",
                                     sections[i] if todo is not None and i < len(sections) else None)
             if tr:
-                tr.step("llm", f"Teil {i + 1}", t0, time.time(), ok=True)
+                tr.step("tool", "document_write", t0, time.time(), ok=True, part=i + 1)
             if plan["kind"] == "brief":
                 letter = part
             else:
@@ -753,7 +756,14 @@ async def _work(j, plan, todo=None, wish=""):
                  "lang": plan["lang"], "plan": {k: plan[k] for k in plan if k != "facts"},
                  "facts": plan.get("facts", "")[:MAX_FACTS], "sources": used}
         n = add_version(d, content, "erstellt" if todo is None else ("geändert: " + wish)[:120])
+        t0 = time.time()
+        if tr:
+            tr.intent = "Dokument · Datei bauen"
+            tr.now("tool", "document_build", t0)
         await asyncio.to_thread(publish, uid, d)
+        if tr:
+            tr.intent = "Dokument erstellen"
+            tr.step("tool", "document_build", t0, time.time(), ok=True)
         j.update(state="done", doc=d["id"], end=time.time(), version=n)
         _bump("done")
         secs = time.time() - j["t0"]
@@ -1254,7 +1264,29 @@ MAIL_HINT = ("Per Mail: unter Ich → E-Mail → Postfach aufräumen beim Postfa
              "(es wird nie gesendet).")
 
 
+SEND_LIVE = {"pc": "Dokument → Begleiter", "rm": "Dokument → reMarkable", "tg": "Dokument → Telegram",
+             "mail": "Dokument → Mail", "box": "Dokument → Mail"}
+
+
 async def send(uid, d, to, fmt, device="", account="", mail_to="", subject=""):
+    """send_file with its way on the live page: a request of its own to the real target (fixed words only)."""
+    t0, ok = time.time(), False
+    try:
+        r = await _send(uid, d, to, fmt, device, account, mail_to, subject)
+        ok = True
+        return r
+    finally:
+        try:
+            import live
+            if to in SEND_LIVE and live.on():
+                live.job("Dokument zustellen", SEND_LIVE[to], t0, ok=ok, uid=uid)
+                if not ok:
+                    live.event("Dokumente", f"Zustellung ging nicht ({TARGET_NAMES.get(to, to)})")
+        except Exception:
+            pass
+
+
+async def _send(uid, d, to, fmt, device="", account="", mail_to="", subject=""):
     """Sends one built file to an own target; returns a sentence. ValueError / NotausAktiv when it may not.
     mail: a draft with the file (to mail_to, else to the mailbox's own address), never sent; box: a mail from and
     to the own address filed into the mailbox's folder for made documents, nothing leaves the mailbox."""
@@ -1582,6 +1614,12 @@ async def doc_dl(request: Request, t: str = ""):
     guard.limit(request, "makedl")
     x = use_link(t)
     d = load(x["uid"], x["doc"]) if x and on(x["uid"]) and ID.fullmatch(x["doc"]) else None
+    try:      # Live-Bild: the link is an entry without a login (fixed words, never the title or the link)
+        import live
+        live.mark("Eingang", ("Download-Link benutzt" if d else "Download-Link abgewiesen")
+                  + (" · aus dem Internet" if live.shown_outside(request) else " · Heimnetz"))
+    except Exception:
+        pass
     if not d:
         raise HTTPException(404, "Der Download-Link passt nicht oder ist abgelaufen. Im Spark einen neuen holen.")
     return await _file_response(x["uid"], d, x["fmt"], x["v"])

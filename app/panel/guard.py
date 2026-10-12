@@ -422,7 +422,28 @@ LIVE_WORDS = {
     "livecheck_failed": ("Dienste", "Funktionsprüfung fehlgeschlagen"), "memory_low": ("Dienste", "Speicher knapp"),
     "room_end": ("Raum-Modus", "Zuhören beendet"), "foreign_page_refused": ("Wächter", "fremde Seite abgewiesen"),
     "profile_memory_tidied": ("Hintergrund", "Gedächtnis aufgeräumt"), "person_priority": ("Vorrang", "Vorrang eines Profils geändert"),
+    # added 2026-10-12 (Dominik: everything on the live page; test_live checks every kind here or in LIVE_SKIP)
+    "admin_mfa_recovery": ("Sicherheit", "neue Wiederherstellungscodes"), "admin_mfa_forget": ("Sicherheit", "vertraute Browser vergessen"),
+    "profile_mfa_reset": ("Sicherheit", "zweiter Schritt eines Profils zurückgesetzt"),
+    "notaus_key_new": ("Sicherheit", "Notaus-Schlüssel angelegt"), "notaus_key_delete": ("Sicherheit", "Notaus-Schlüssel gelöscht"),
+    "report_token": ("Sicherheit", "Token für Meldungen geändert"), "ha_code_set": ("Sicherheit", "Home-Assistant-Codewort geändert"),
+    "invite_pin": ("Eingang", "Einladung mit PIN geöffnet"), "handoff_ok": ("Eingang", "Übergabe-Code bestätigt"),
+    "handoff_wrong": ("Eingang", "Übergabe-Code falsch"), "live_monitor_code": ("Eingang", "Code für einen Live-Monitor"),
+    "live_monitor_paired": ("Eingang", "Live-Monitor gekoppelt"), "live_monitor_deleted": ("Eingang", "Live-Monitor gelöscht"),
+    "mcp_change": ("Eingang", "MCP-Zugang geändert"),
+    "admin_roles_switch": ("Rechte", "Rollen geändert"), "iphone_update_rights": ("Rechte", "Update-Recht der App geändert"),
+    "agent_level": ("Rechte", "Stufe der Aufträge geändert"),
+    "backup_move": ("Sicherung", "Sicherungsort geändert"), "offsite_settings": ("Sicherung", "Sicherung nach außen eingestellt"),
+    "devup_resume": ("Geräte-Updates", "Geräte-Updates fortgesetzt"), "remarkable_send": ("Geräte", "aufs reMarkable geschickt"),
+    "doc_quota": ("Dokumente", "Platz für Dokumente geändert"), "doc_unshare": ("Dokumente", "Freigabe beendet"),
+    "join_settings": ("Einstellungen", "Einladungen eingestellt"), "join_packs": ("Einstellungen", "Einladungspakete geändert"),
+    "setup_remind": ("Einstellungen", "Erinnerung an die Einrichtung geschickt"), "quality_case": ("Hilfe", "Korrektur in den Qualitätstest"),
+    "tipp_ask": ("Hilfe", "Tipp gefragt"),
 }
+# kinds the live page shows in its own way (so not as a line from here): the Notaus banner, Probleme melden,
+# the update card, the watchdog (live.watchdog), Hilfe cards (hilfe._live) and every changing request ("change")
+LIVE_SKIP = {"notaus_on", "notaus_off", "notaus_mine_on", "notaus_mine_off", "report_sent", "update_night", "watchdog",
+             "hilfe_applied", "hilfe_undone", "change"}
 
 
 def _to_live(event):

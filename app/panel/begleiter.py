@@ -352,7 +352,7 @@ def shown(why):
                 prof = profiles.current(request) if request is not None else None
                 dev = profiles.device(request) if prof else None
                 if prof and dev:
-                    rec = live.begin("desk", kind_of(dev.get("name")), uid=prof["id"], why=why)
+                    rec = live.begin("desk", kind_of(dev.get("name")), uid=prof["id"], why=why, request=request)
                     if rec is not None:
                         rec.step("in", why, rec.t0)
             except Exception:
@@ -2306,9 +2306,19 @@ async def fetch_loop():
                 for p in platforms():
                     every = RETRY if _upd["error"].get(p) else FETCH_EVERY
                     if time.time() - _upd["checked"].get(p, 0) > every:
-                        await check(p)
+                        t0 = time.time()
+                        _live_job(t0, await check(p))
         except Exception as e:
             print("begleiter: loop", type(e).__name__, e, flush=True)
+
+
+def _live_job(t0, err):
+    """Zustand → Live: the check on GitHub as a way of "Von selbst" (Geräte-Updates)."""
+    try:
+        import live
+        live.job("Geräte-Updates prüfen", "Geräte-Updates", t0, ok=not err)
+    except Exception:
+        pass
 
 
 @router.get("/api/desk/update", dependencies=[Depends(assistant)])

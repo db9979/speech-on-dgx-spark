@@ -314,7 +314,7 @@ class Slot:
         _all[0] = max(0, _all[0] - 1)
 
 
-async def assist(uid, body, client="web", where="Browser"):
+async def assist(uid, body, client="web", where="Browser", request=None):
     """The improved text for a checked profile; ValueError for a request that does not fit."""
     notaus.stop("gespraech")
     art, text, mail, lang, wish = request_of(body)
@@ -323,6 +323,9 @@ async def assist(uid, body, client="web", where="Browser"):
     chars = len(text) + len(mail)
     max_tokens = max(300, min(8000, int(len(text) / 2.2) + (900 if art == "antwort" else 300)))
     tr = _trace(uid, client, label, chars, where)
+    if tr is not None and request is not None and getattr(tr, "watched", False):   # over the proxy: "Über das Internet"
+        import live
+        live.came_in(request, tr)
     t0 = time.time()
     ok = False
     try:
@@ -466,12 +469,12 @@ async def write_assist(request: Request):
         import begleiter
         if begleiter.part_on(prof["id"], dev["id"], "context"):
             body["_app"] = app
-    return await _run(prof, body, client, where)
+    return await _run(prof, body, client, where, request)
 
 
-async def _run(prof, body, client, where):
+async def _run(prof, body, client, where, request=None):
     try:
-        return await assist(prof["id"], body, client, where)
+        return await assist(prof["id"], body, client, where, request)
     except ValueError as e:
         if isinstance(e, notaus.NotausAktiv):
             raise

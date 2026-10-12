@@ -166,6 +166,19 @@ class Live(unittest.TestCase):
             with open(path, encoding="utf-8") as f:
                 names |= set(re.findall(r'"function":\s*\{\s*"name":\s*"([a-z_]+)"', f.read()))
         names -= {"get_time"}
+        # tool steps the panel writes itself (a running job: .now("tool", …), its steps, live.job(why, tool, …)):
+        # each needs a target too, else a new job would stand nowhere in the picture (Dominik 2026-10-12)
+        own = set()
+        for path in glob.glob(os.path.join(os.path.dirname(live.__file__), "*.py")):
+            with open(path, encoding="utf-8") as f:
+                text = f.read()
+            own |= set(re.findall(r'\.(?:now|step)\("tool",\s*"([^"]+)"', text))
+            own |= set(re.findall(r'live\.job\(\s*[^,]+,\s*"([^"]+)"', text))
+        self.assertTrue({"document_write", "document_build", "NAS-Sicherung"} <= own, own)
+        import docmake
+        own |= set(docmake.SEND_LIVE.values())       # delivering a document goes to its real target
+        self.assertEqual(sorted(n for n in own if n.removesuffix(" (Panel)") not in live.TOOLS), [],
+                         "a job's own tool step: add it to live.TOOLS with a target")
         self.assertEqual(sorted(n for n in names if n not in live.TOOLS), [],
                          "a new tool: add it to live.TOOLS (and a target to live.TARGETS if it goes somewhere new)")
         import mcpserver   # tools programs call over MCP show as their own requests
@@ -179,6 +192,18 @@ class Live(unittest.TestCase):
             self.assertIn(v[2], ("spark", "lan", "net"), k)
         # Dominik 2026-10-10: the web search asks search engines outside, pages from hits come from outside
         self.assertEqual((live.TARGETS["web"][2], live.TARGETS[live.TOOLS["read_page"]][2]), ("net", "net"))
+        # every kind of the admin log reaches "Ereignisse" or is shown in its own way (Dominik 2026-10-12)
+        kinds = set()
+        for path in glob.glob(os.path.join(os.path.dirname(live.__file__), "*.py")):
+            with open(path, encoding="utf-8") as f:
+                text = f.read()
+            kinds |= set(re.findall(r'guard\.log\(\s*"([a-z_]+)"', text))
+            kinds |= {p + w for p, ws in re.findall(r'guard\.log\(\s*"([a-z_]+_)"\s*\+\s*\(([^,]+)', text)
+                      for w in re.findall(r'"([a-z]+)"', ws)}
+        kinds |= {"hilfe_applied", "hilfe_undone"}       # "hilfe_" + card["state"]
+        self.assertTrue({"handoff_ok", "handoff_wrong", "admin_login"} <= kinds, kinds)
+        self.assertEqual(sorted(k for k in kinds if k not in guard.LIVE_WORDS and k not in guard.LIVE_SKIP and not k.endswith("_")), [],
+                         "a new kind in the admin log: add it to guard.LIVE_WORDS (or LIVE_SKIP with the reason)")
         import tracelog as tl
         self.assertEqual(set(live.CLIENT) - {"other"}, set(tl.CLIENTS) - {"other"},
                          "a new kind of device: add a word to live.CLIENT")
@@ -565,3 +590,31 @@ class SetUp(unittest.TestCase):
         # within 30 s the answer is the one remembered (no file reads every second)
         live._unset[:] = [5000.0, frozenset({"qwen"})]
         self.assertEqual(live.unset(5010.0), frozenset({"qwen"}))
+
+
+class Proxy(unittest.TestCase):
+    """Dominik 2026-10-12: a device over the reverse proxy (speech.…) shows under "Über das Internet", also when
+    the proxy is not entered under panel.trusted_proxies; for decisions (the monitor) that header still does not count."""
+
+    def req(self, peer, fwd=""):
+        from starlette.requests import Request
+        h = [(b"x-forwarded-for", fwd.encode())] if fwd else []
+        return Request({"type": "http", "method": "GET", "path": "/", "headers": h, "client": (peer, 1), "query_string": b""})
+
+    def test_shown_outside_but_not_trusted(self):
+        set_proxies([])
+        self.addCleanup(set_proxies, [])
+        r = self.req("192.168.178.20", "89.204.1.2")
+        self.assertTrue(live.shown_outside(r))
+        self.assertFalse(live.from_internet(r))          # the decision keeps to the listed proxies
+        self.assertEqual(live.short_ip(live.sender(r)), "89.204.x.x")
+        self.assertFalse(live.shown_outside(self.req("192.168.178.20", "192.168.178.31")))
+        self.assertFalse(live.shown_outside(self.req("192.168.178.20")))
+        self.assertTrue(live.shown_outside(self.req("89.204.1.2")))
+        reset()
+        set_logs(live=True)
+        rec = live.begin("desk", "PC", t=1000.0, request=r)
+        self.assertTrue(rec.net)
+        self.assertEqual(live.snapshot("admin", now=1001.0)["door"]["items"][0]["from"], "89.204.x.x")
+        set_logs(live=False)
+        reset()

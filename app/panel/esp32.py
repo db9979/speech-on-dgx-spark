@@ -396,9 +396,19 @@ async def fetch_loop():
         await asyncio.sleep(60)
         try:
             if admin_on() and not notaus.blocks("internet") and time.time() - float(_state().get("checked") or 0) > FETCH_EVERY:
-                await check()
+                t0 = time.time()
+                _live_job(t0, await check())
         except Exception as e:
             print("esp32: loop", type(e).__name__, e, flush=True)
+
+
+def _live_job(t0, err):
+    """Zustand → Live: the check on GitHub as a way of "Von selbst" (Geräte-Updates)."""
+    try:
+        import live
+        live.job("Geräte-Updates prüfen", "Geräte-Updates", t0, ok=not err)
+    except Exception:
+        pass
 
 
 # ---------------------------------------------------------------- Opus (libopus, comes with ffmpeg)

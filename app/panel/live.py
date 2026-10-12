@@ -78,6 +78,10 @@ TOOLS = {
     "Meldung": "mem", "GitHub-Meldung": "issues",
     # Dokumente erstellen (docmake.py): outline, change and status stay on the Spark; sending goes to its target
     "document_plan": "make", "document_change": "make", "document_status": "make", "document_send": "make",
+    # the job itself (docmake._work): every part written by the language model, then the file built
+    "document_write": "make", "document_build": "make",
+    # a finished document delivered (docmake.send): to the real target
+    "Dokument → Begleiter": "desk", "Dokument → reMarkable": "rm", "Dokument → Telegram": "tg", "Dokument → Mail": "mail",
 }
 # The targets: name, short line, zone (spark = on this machine, lan = home network, net = internet), fixed = always shown
 TARGETS = {
@@ -194,10 +198,36 @@ def short_ip(ip):
     return ":".join(a.exploded.split(":")[:2]) + "::x"
 
 
+def sender(request):
+    """Who sent it, for the picture only: the address after the trusted reverse proxy; a proxy in the home
+    network that is not entered under panel.trusted_proxies still counts by its X-Forwarded-For here (Dominik
+    2026-10-12: devices over speech.… belong under "Über das Internet"). Never used for a decision."""
+    ip = guard.client_ip(request)
+    try:
+        a = ipaddress.ip_address(str(ip).split("%")[0])
+        fwd = request.headers.get("x-forwarded-for", "")
+        if fwd and not a.is_global and (a.is_private or a.is_loopback):
+            last = fwd.split(",")[-1].strip()[:64]
+            if ipaddress.ip_address(last.split("%")[0]).is_global:
+                return last
+    except (ValueError, AttributeError):
+        pass
+    return ip
+
+
 def from_internet(request):
-    """The sender (after the trusted reverse proxy) is a public address."""
+    """The sender (after the trusted reverse proxy) is a public address. For decisions (the monitor is refused):
+    an X-Forwarded-For only counts from a listed proxy."""
     try:
         return ipaddress.ip_address(guard.client_ip(request)).is_global
+    except ValueError:
+        return False
+
+
+def shown_outside(request):
+    """For the picture only: came over the internet, also through a proxy that is not listed (sender())."""
+    try:
+        return ipaddress.ip_address(str(sender(request)).split("%")[0]).is_global
     except ValueError:
         return False
 
@@ -218,14 +248,16 @@ def track(rec):
 def came_in(request, rec):
     """A request's sender: from the internet it shows under "Über das Internet" and in the Eingang list."""
     try:
-        if not from_internet(request):
+        if not shown_outside(request):
             return
         rec.net = True
         with _lock:
             _bump("door_in")
-            _door.append({"t": time.time(), "ok": True, "who": CLIENT.get(rec.client, "Gerät"), "from": short_ip(guard.client_ip(request)),
+            _door.append({"t": time.time(), "ok": True, "who": CLIENT.get(rec.client, "Gerät"), "from": short_ip(sender(request)),
                           "why": "Anmeldung gültig, kam über den Proxy",
-                          "steps": ["Absender aus X-Forwarded-For des eingetragenen Proxys (panel.trusted_proxies)",
+                          "steps": ["Absender aus X-Forwarded-For des eingetragenen Proxys (panel.trusted_proxies)"
+                                    if from_internet(request) else
+                                    "Absender aus X-Forwarded-For eines Proxys im Heimnetz, der nicht unter Einstellungen → Sicherheit „Reverse Proxy“ eingetragen ist",
                                     "Anmeldung oder Geräteschlüssel gültig", "Rate-Limit eingehalten"]})
     except Exception:
         pass
@@ -236,11 +268,11 @@ def key_call(request, who, why):
     "Ereignisse" and, from the internet, an entry in Eingang. Fixed words only."""
     try:
         event(who, why)
-        if not from_internet(request):
+        if not shown_outside(request):
             return
         with _lock:
             _bump("door_in")
-            _door.append({"t": time.time(), "ok": True, "who": who, "from": short_ip(guard.client_ip(request)), "why": why,
+            _door.append({"t": time.time(), "ok": True, "who": who, "from": short_ip(sender(request)), "why": why,
                           "steps": ["Absender aus X-Forwarded-For des eingetragenen Proxys (panel.trusted_proxies)",
                                     "Geräteschlüssel gültig (Bereich haev)", "Rate-Limit eingehalten"]})
     except Exception:
@@ -342,23 +374,24 @@ def refused(request, what, locked=0):
             return
         word = {"login": "Anmeldung", "handoff_code": "Übergabe-Code", "live_code": "Monitor-Code", "profile_login": "Profil-Anmeldung",
                 "mfa": "zweiter Schritt", "pin": "PIN"}.get(what, "Anmeldung")
-        steps = [("kam aus dem Internet" if from_internet(request) else "kam aus dem Heimnetz"), f"{word} falsch"]
+        steps = [("kam aus dem Internet" if shown_outside(request) else "kam aus dem Heimnetz"), f"{word} falsch"]
         if locked:
             steps.append(f"→ Absender {int(locked) // 60 or 1} min gesperrt, steht im Admin-Protokoll")
         with _lock:
             _bump("door_out")
-            _door.append({"t": time.time(), "ok": False, "who": word, "from": short_ip(guard.client_ip(request)),
+            _door.append({"t": time.time(), "ok": False, "who": word, "from": short_ip(sender(request)),
                           "why": f"{word} falsch" + (" · gesperrt" if locked else ""), "steps": steps})
-            _events.append((time.time(), "Eingang", f"{word} falsch von {short_ip(guard.client_ip(request))}"))
+            _events.append((time.time(), "Eingang", f"{word} falsch von {short_ip(sender(request))}"))
     except Exception:
         pass
 
 
-def begin(client, device, t=None, uid=None, auto=False, why=""):
+def begin(client, device, t=None, uid=None, auto=False, why="", request=None):
     """A request that does not go through the chat (Wyoming, MCP tools, rules that speak up): watched like
     one, written to Logs → Anfragen only when that switch is on. With uid it belongs to that profile (its
     name and the device name show only with its consent). auto: the Spark started it itself (no way back
-    to a device); why: a fixed word shown like the Weiche's intent. None while both are off; never raises."""
+    to a device); why: a fixed word shown like the Weiche's intent; request: where it came from. None while both
+    are off; never raises."""
     try:
         import tracelog
         kind = "profile" if uid else "spark" if auto else "guest"
@@ -367,6 +400,8 @@ def begin(client, device, t=None, uid=None, auto=False, why=""):
             rec.auto, rec.direct = bool(auto), True
             if why:
                 rec.intent = str(why)[:40]
+            if request is not None:     # from the internet: under "Über das Internet" and in Eingang
+                came_in(request, rec)
         return rec
     except Exception:
         return None
@@ -483,7 +518,7 @@ def door(who, ip, ok, why, steps):
 def _door_no(request, why, steps):
     with _lock:
         _bump("door_out")
-        _door.append({"t": time.time(), "ok": False, "who": "Monitor", "from": short_ip(guard.client_ip(request)), "why": why, "steps": steps})
+        _door.append({"t": time.time(), "ok": False, "who": "Monitor", "from": short_ip(sender(request)), "why": why, "steps": steps})
 
 
 # ------------------------------------------------------------------ the picture
@@ -1109,7 +1144,7 @@ async def pair(request: Request):
     with _lock:
         items = _load()
         items.append({"id": mid, "name": hit, "hash": _hash(token), "created": int(now), "last": int(now),
-                      "from": short_ip(guard.client_ip(request))})
+                      "from": short_ip(sender(request))})
         _store(items[-MAX_MONITORS:])
     guard.succeeded(request)
     guard.log("live_monitor_paired", name=hit, ip=guard.client_ip(request))
