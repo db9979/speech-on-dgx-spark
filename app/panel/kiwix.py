@@ -104,9 +104,9 @@ def _origin(url):
     return p.scheme, (p.hostname or "").lower(), p.port or (443 if p.scheme == "https" else 80)
 
 
-async def _get(path, params=None, most=SMALL_BYTES, under=None):
+async def _get(path, params=None, most=SMALL_BYTES, under=None, raw=False):
     """(text, final path) of base + path. Redirects (at most 3) only to the same host, and when under is
-    given only to paths below it."""
+    given only to paths below it. raw: the bytes instead of the text, only for an image/* answer."""
     root = base()
     if not root:
         raise Refused("no Kiwix address")
@@ -128,6 +128,10 @@ async def _get(path, params=None, most=SMALL_BYTES, under=None):
                 return None, urlsplit(url).path
             if r.status_code >= 400:
                 raise Refused(f"Kiwix answers {r.status_code}")
+            if raw:
+                if not r.headers.get("content-type", "").lower().startswith("image/"):
+                    raise Refused("Kiwix answers no picture")
+                return r.content, urlsplit(url).path
             return r.text, urlsplit(url).path
     raise Refused("too many Kiwix redirects")
 
@@ -426,6 +430,66 @@ async def article(book, path):
     out = await asyncio.to_thread(lambda: parts(page_text(page, 2 * MAX_PARTS * PART_CHARS))) if page else []
     keep(key, out)
     return out
+
+
+PICTURE_BYTES = 3_000_000  # one picture of an article (Dokumente erstellen, docmake.wiki_pictures)
+IMG = re.compile(r"<img\b[^>]*>", re.I)
+ATTR = re.compile(r'([a-zA-Z][\w-]*)\s*=\s*"([^"]*)"')
+NOT_A_PHOTO = re.compile(r"(?i)(flag|flagge|wappen|coat_of_arms|icon|logo|symbol|signature|unterschrift|"
+                         r"commons-logo|wiki|disambig|edit|\.svg)")
+
+
+async def picture(book, path):
+    """The first big picture of an article (bytes as the Kiwix sends them), or None. Only pictures inside the
+    same book (below /content/<book>/), no flags, coats of arms, icons or drawings in SVG, at most
+    PICTURE_BYTES; what comes back is only bytes, docmake checks and re-encodes them."""
+    if not BOOK.fullmatch(book or "") or not _path(path):
+        return None
+    root_path = urlsplit(base()).path.rstrip("/")
+    under = f"{root_path}/content/{book}/"
+    page, final = await _get(f"/content/{book}/" + quote(_path(path), safe="/:,()'!*-._~"),
+                             most=ARTICLE_BYTES, under=under)
+    if not page:
+        return None
+    for tag in IMG.findall(page[:600_000])[:40]:
+        a = dict(ATTR.findall(tag))
+        src = html.unescape(a.get("src", ""))
+        try:
+            w, h = int(a.get("width") or 0), int(a.get("height") or 0)
+        except ValueError:
+            w = h = 0
+        if not src or src.startswith(("data:", "//")) or "://" in src or NOT_A_PHOTO.search(src) or \
+                (w and w < 180) or (h and h < 120):
+            continue
+        p = urlsplit(urljoin(final, src))
+        if p.query or not p.path.startswith(under) or ".." in p.path.split("/"):
+            continue
+        try:
+            data, _ = await _get(p.path[len(root_path):], most=PICTURE_BYTES, under=under, raw=True)
+        except Refused:
+            continue
+        if data:
+            return data
+    return None
+
+
+async def picture_of(query):
+    """(bytes, article title) of the best Wikipedia article in the Kiwix for these words, or (None, "")."""
+    hit = await wiki_lookup(query)
+    if not hit:
+        return None, ""
+    book, path, title = _refs.get(hit["ref"], ("", "", ""))
+    return await picture(book, path), title
+
+
+async def facts(query, most=4500):
+    """(title, text) of the best Wikipedia article for these words, up to `most` characters, or ("", "")."""
+    hit = await wiki_lookup(query)
+    if not hit:
+        return "", ""
+    book, path, title = _refs.get(hit["ref"], ("", "", ""))
+    got = await article(book, path) if book else []
+    return title, " ".join(got)[:most]
 
 
 async def suggest(book, query):

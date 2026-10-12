@@ -916,6 +916,22 @@
 "src": "assistent",
 "file": "Assistent und Oberfläche",
 "head": "Sprach-Chat",
+"title": "Präsentationen professionell (seit V01.0.465)",
+"text": "Präsentationen professionell (seit V01.0.465): Für Folien wählt das Sprachmodell pro Folie einen von zehn Typen und füllt nur dessen Felder: Kapiteltrenner, Kernaussage (ein großer Satz), Symbol-Raster (3 bis 6 Punkte mit Symbol), große Zahlen, Zeitstrahl oder Ablauf, Vergleich in zwei Spalten, Bild und Text, Diagramm mit Aussage, Fazit und Stichpunkte. Feste Regeln im Spark (folien.py) sorgen für Abwechslung: nie zweimal derselbe Typ hintereinander, höchstens ein Drittel Listen. Pro Folie stehen höchstens 4 Punkte mit je höchstens 8 Wörtern; die Überschrift ist eine Aussage. Ist ein Teil zu lang, fragt der Spark das Modell einmal nach, danach kürzt er an einer natürlichen Stelle und legt den vollen Text in die Sprechernotizen. Diagramme gibt es nur mit mindestens 3 verschiedenen Werten, die alle belegt sind; die Quelle steht darunter und der wichtigste Wert ist hervorgehoben, sonst werden daraus große Zahlen. Die Symbole (161 aus Lucide, ISC-Lizenz) liegen fest im Repo. Mit dem Schalter *Bilder aus dem Kiwix* (Admin und Profil, aus) holt der Spark für die Titelfolie und „Bild und Text“-Folien ein Bild aus der Wikipedia im eigenen Kiwix, prüft es und speichert es neu (höchstens 3 M"
+},
+{
+"lang": "de",
+"src": "assistent",
+"file": "Assistent und Oberfläche",
+"head": "Sprach-Chat",
+"title": "Präsentationen professionell (seit V01.0.465)",
+"text": "B), mit Quelle und Lizenzhinweis auf der Folie. Vor dem Schreiben schlägt der Spark den Titel in deinem Kiwix und deinen Dokumenten nach; jede Zahl im Text muss dort, in deinen Worten oder in den Fakten des Gesprächs stehen, sonst lässt er sie weg (kleine Anzahlen bis 10 ohne Einheit ausgenommen). Die Fertig-Meldung sagt, wie viel er weggelassen hat. Word und PDF zeigen Symbole, Zeitstrahl und Vergleich als eigene Blöcke, Markdown und eigene Vorlagen als Stichpunkte. Alles läuft ohne Internet."
+},
+{
+"lang": "de",
+"src": "assistent",
+"file": "Assistent und Oberfläche",
+"head": "Sprach-Chat",
 "title": "Bilder erkennen (V01.0.190, standardmäßig aus)",
 "text": "Bilder erkennen (V01.0.190, standardmäßig aus): Ein Profil hängt im Assistenten ein Foto an (Bild-Knopf neben dem Eingabefeld, Einfügen oder Hineinziehen; bis zu drei pro Frage) und fragt dazu, getippt oder gesprochen. Das Sprachmodell von qwen38 (Qwen3.8 kann Bilder) sieht es sich selbst an. Schalter: Admin unter Funktionen → Bilder erkennen, dort prüft „Bilderkennung prüfen“ mit einem Testbild, ob die laufende Lane Bilder annimmt; jedes Profil unter Ich → Gespräch → „Bilder an den Assistenten“, für die iPhone-App zusätzlich „Fotos aus der App ansehen lassen“, für Telegram „Fotos über Telegram“ (Bildunterschrift = Frage, Antwort auf das Foto = Rückfrage). Gäste, Lautsprecher und andere Geräteschlüssel nie. Der Browser verkleinert das Bild; der Spark liest es erneut (Pillow, höchstens 8 MB und 40 Megapixel, nur JPEG/PNG/WebP, mit Zeitlimit), dreht es aufrecht, verkleinert auf 1280 Pixel und speichert es neu als JPEG, damit sind Ort (GPS) und Kameradaten weg. Es liegt nur im Arbeitsspeicher, gebunden an Profil und Gerät, 10 Minuten nach der letzten Frage (höchstens 30 Minuten, 3 pro Profil, 30 pro Stunde) und nie auf der Platte, in der Sicherung oder im Protokoll, außer die Person l"
 },
@@ -4134,6 +4150,22 @@
 "head": "Voice chat",
 "title": "Creating documents (V01.0.415)",
 "text": "ew, Apple's viewer for Word, PowerPoint, Excel and PDF and \"Share\" (save to Files, send on). Looks: without an own template the Spark builds presentations with a title slide, an overview slide (from 4 parts), numbered boxes, key-number cards (stats, up to 4), a quote box (quote), styled tables and charts; Word and PDF get a colored title block, numbered headings with a line, cards, quote box, zebra tables and page numbers; Excel a title band without gridlines, a colored head row, zebra rows, a set-off total row and a chart with values. New looks \"Frisch\" (fresh) and \"Warm\"; \"Spark dark\" prints light in Word, PDF and Excel. With an own template everything stays as before."
+},
+{
+"lang": "en",
+"src": "assistant",
+"file": "Assistant and panel",
+"head": "Voice chat",
+"title": "Professional presentations (since V01.0.465)",
+"text": "Professional presentations (since V01.0.465): For slides the language model picks one of ten types per slide and fills only its fields: section divider, key statement (one big sentence), icon grid (3 to 6 points with a symbol), big numbers, timeline or process, comparison in two columns, picture and text, chart with a message, conclusion and bullet points. Fixed rules in the Spark (folien.py) keep the variety: never the same type twice in a row, at most a third lists. A slide has at most 4 points of at most 8 words; the heading is a statement. When a part is too long the Spark asks the model once more, after that it shortens at a natural break and puts the full text into the speaker notes. Charts only with at least 3 different values that all have a source; the source stands below and the key value is highlighted, otherwise they become big numbers. The symbols (161 from Lucide, ISC license) are part of the repository. With the switch *Pictures from the Kiwix* (admin and profile, off) the Spark fetches a picture for the title slide and \"picture and text\" slides from the Wikipedia in the own Kiwix, checks it and saves it anew (at most 3 MB), with source and license note on the slide."
+},
+{
+"lang": "en",
+"src": "assistant",
+"file": "Assistant and panel",
+"head": "Voice chat",
+"title": "Professional presentations (since V01.0.465)",
+"text": " Before writing the Spark looks the title up in your Kiwix and your documents; every number in the text must be there, in your words or in the facts of the conversation, otherwise it is left out (small counts up to 10 without a unit excepted). The ready note says how much was left out. Word and PDF show icons, timeline and comparison as blocks of their own, Markdown and own templates as bullet points. Everything works without the internet."
 },
 {
 "lang": "en",

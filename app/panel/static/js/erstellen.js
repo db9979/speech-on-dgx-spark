@@ -32,7 +32,7 @@ const mkWhen=s=>s?new Date(s*1000).toLocaleString(L==='en'?'en-GB':'de-DE',{date
 const mkOpts=(list,sel)=>list.map(([v,n])=>`<option value="${esc(v)}"${v===sel?' selected':''}>${esc(n)}</option>`).join('');
 const mkStyles=()=>(MK&&MK.styles||[]).map(s=>[s.id,s.name]).concat((MK&&MK.templates||[]).map(x=>[x.id,t('Vorlage: ','Template: ')+x.name]));
 const mkBar=(step,steps)=>`<span class="qbar docbar" role="progressbar" aria-valuemin="0" aria-valuemax="100" aria-valuenow="${steps?Math.round(100*step/steps):0}"><i style="width:${steps?Math.round(100*step/steps):0}%"></i></span>`;
-const mkJobLine=j=>`${esc(t(...(MKSTATE[j.state]||MKSTATE.wait)))}${j.state==='run'||j.state==='wait'?' · '+esc(t(`Teil ${j.step} von ${j.steps}`,`part ${j.step} of ${j.steps}`)):''}${j.error?' · '+esc(j.error):''}`;
+const mkJobLine=j=>`${esc(t(...(MKSTATE[j.state]||MKSTATE.wait)))}${j.state==='run'||j.state==='wait'?' · '+esc(t(`Teil ${j.step} von ${j.steps}`,`part ${j.step} of ${j.steps}`)):''}${j.error?' · '+esc(j.error):''}${j.state==='done'&&j.checked?' · '+esc(t(j.checked,j.checked_en||j.checked)):''}`;
 // follows one job until it ends; tick(job) on every look, stops when the element left the page
 function mkFollow(jid,el,tick){const look=async()=>{if(!el.isConnected)return;const r=await apiTry('/api/make/job/'+encodeURIComponent(jid));
     if(!r.r.ok){tick({state:'error',error:String(r.d.detail||'').slice(0,200),step:0,steps:0});return}
@@ -128,10 +128,17 @@ async function mkOpen(id,v){MKOPEN={id,v:v||0};const box=$('mkview');if(!box)ret
   const d=r.d,c=d.content||{},last=d.history.length?d.history[d.history.length-1].n:d.v,old=d.v!==last,M=MK||{};
   const fm=(d.formats||[d.format]).map(f=>[f,MKFMT[f]||f]),tg=(M.targets||[]).map(x=>[x,t(...MKTO[x])]);
   const sec=(s,i)=>`<div class="mksec" data-i="${i+1}"><div class="dvhead"><b>${esc((i+1)+'. '+(s.heading||''))}</b>${old?'':`<span><button type="button" class="mlink" data-mkedit="${i+1}">${esc(t('Bearbeiten','Edit'))}</button> <button type="button" class="mlink" data-mkre="${i+1}">${esc(t('Neu schreiben','Rewrite'))}</button>${(c.sections||[]).length>1?` <button type="button" class="mlink" data-mkdrop="${i+1}">${esc(t('Weglassen','Leave out'))}</button>`:''}</span>`}</div>
+    ${s.layout&&MKLAY[s.layout]?`<small class="mut">${esc(t('Folientyp: ','Slide type: ')+t(...MKLAY[s.layout]))}</small>`:''}
     ${(s.paras||[]).map(p=>`<p>${esc(p)}</p>`).join('')}${(s.bullets||[]).length?`<ul>${s.bullets.map(b=>`<li>${esc(b)}</li>`).join('')}</ul>`:''}
+    ${s.quote?`<p><b>${esc('„'+s.quote+'“')}</b></p>`:''}${(s.stats||[]).length?`<p>${s.stats.map(x=>`<b>${esc(x.value)}</b> ${esc(x.label||'')}`).join(' · ')}</p>`:''}
+    ${(s.points||[]).length?`<ul>${s.points.map(p=>`<li><b>${esc(p.title)}</b>${p.text?' – '+esc(p.text):''}</li>`).join('')}</ul>`:''}
+    ${(s.steps||[]).length?`<ol>${s.steps.map(p=>`<li><b>${esc(p.label||'')}</b> ${esc(p.text||'')}</li>`).join('')}</ol>`:''}
+    ${s.compare?['left','right'].map(k=>{const x=s.compare[k]||{};return `<p><b>${esc(x.title||'')}</b>: ${esc((x.points||[]).join(' · '))}</p>`}).join(''):''}
     ${s.table?`<div class="mktbl"><table>${(s.table.head||[]).length?`<tr>${s.table.head.map(h=>`<th>${esc(h)}</th>`).join('')}</tr>`:''}${(s.table.rows||[]).slice(0,30).map(r=>`<tr>${r.map(x=>`<td>${esc(x)}</td>`).join('')}</tr>`).join('')}</table>${(s.table.rows||[]).length>30?`<small class="mut">${esc(t(`… und ${s.table.rows.length-30} weitere Zeilen in der Datei`,`… and ${s.table.rows.length-30} more rows in the file`))}</small>`:''}</div>`:''}
     ${s.chart?`<div class="mut">📊 ${esc(t('Diagramm','Chart'))}: ${esc(s.chart.title||'')} (${esc(s.chart.labels.length+' '+t('Werte','values'))})</div>`:''}
     ${(s.pictures||[]).length?`<div class="mut">🖼 ${esc(t(`${s.pictures.length} Bild(er)`,`${s.pictures.length} picture(s)`))}</div>`:''}
+    ${s.wikipic?`<div class="mut">🖼 ${esc(s.wikipic.credit||t('Bild aus dem Kiwix','Picture from the Kiwix'))}</div>`:''}
+    ${s.chart&&s.chart.source?`<small class="mut">${esc(t('Quelle: ','Source: ')+s.chart.source)}</small>`:''}
     ${s.notes?`<small class="mut">${esc(t('Notizen: ','Notes: ')+s.notes)}</small>`:''}<div class="mkedit"></div></div>`;
   const L_=c.letter;
   box.innerHTML=`<div class="dvhead"><b>${esc(d.title)}</b><span><button type="button" class="b" data-mkdo="close">✕</button></span></div>
@@ -152,6 +159,10 @@ async function mkOpen(id,v){MKOPEN={id,v:v||0};const box=$('mkview');if(!box)ret
   box.scrollIntoView({block:'nearest'})}
 const mkVSay=(x,err)=>{const m=document.querySelector('#mkview .mkvmsg');if(m){m.className='mkvmsg '+(err?'err':'mut');m.textContent=String(x||'').slice(0,300)}};
 // a part in plain text: paragraphs separated by an empty line, bullets with "- "
+// slide types (folien.py): their names in the preview
+const MKLAY={liste:['Stichpunkte','Bullet points'],kapitel:['Kapiteltrenner','Section divider'],kernaussage:['Kernaussage','Key statement'],
+  symbole:['Symbol-Raster','Icon grid'],zahlen:['Große Zahlen','Big numbers'],ablauf:['Zeitstrahl oder Ablauf','Timeline or process'],
+  vergleich:['Vergleich','Comparison'],bildtext:['Bild und Text','Picture and text'],diagramm:['Diagramm mit Aussage','Chart with a message'],fazit:['Fazit','Conclusion']};
 const mkPlain=s=>(s.paras||[]).join('\n\n')+((s.bullets||[]).length?(s.paras&&s.paras.length?'\n\n':'')+s.bullets.map(b=>'- '+b).join('\n'):'');
 function mkParse(txt,s){const out=Object.assign({},s,{paras:[],bullets:[]});
   for(const blk of txt.split(/\n\s*\n/)){const lines=blk.split('\n').map(x=>x.trim()).filter(Boolean);if(!lines.length)continue;
@@ -182,7 +193,7 @@ function mkWait(jid){const box=$('mkview');mkFollow(jid,box,j=>{mkVSay(mkJobLine
        <div class="row"><button type="button" class="b p" data-mkdo="lsave">${esc(t('Speichern','Save'))}</button><button type="button" class="b" data-mkdo="x" data-i="1">${esc(t('Abbrechen','Cancel'))}</button></div>`;return}
    if(D.mkedit){const i=+D.mkedit,s=doc.content.sections[i-1],box_=ed(i);
      box_.innerHTML=`<label>${esc(t('Überschrift','Heading'))}<input data-mkh maxlength="200" value="${esc(s.heading||'')}"></label><textarea data-mkt rows="8" maxlength="20000">${esc(mkPlain(s))}</textarea>
-       <div class="fh">${esc(t('Absätze mit einer Leerzeile trennen, Stichpunkte mit „- “ beginnen. Tabellen und Diagramme bleiben.','Separate paragraphs by an empty line, start bullets with "- ". Tables and charts stay.'))}</div>
+       <div class="fh">${esc(t('Absätze mit einer Leerzeile trennen, Stichpunkte mit „- “ beginnen. Tabellen und Diagramme bleiben.','Separate paragraphs by an empty line, start bullets with "- ". Tables and charts stay.'))}${s.points||s.steps||s.compare||s.quote||s.stats?' '+esc(t('Symbole, Schritte, Vergleich, Kernsatz und Zahlen bleiben; ändern über „Neu schreiben“.','Icons, steps, comparison, key sentence and numbers stay; change them with "Rewrite".')):''}</div>
        <div class="row"><button type="button" class="b p" data-mkdo="save" data-i="${i}">${esc(t('Speichern','Save'))}</button><button type="button" class="b" data-mkdo="x" data-i="${i}">${esc(t('Abbrechen','Cancel'))}</button></div>`;return}
    if(D.mkre||(D.mkdo==='new')){const i=D.mkre?+D.mkre:0,box_=i?ed(i):v.querySelector('.mknew');
      box_.innerHTML=`<label>${esc(i?t('Was soll anders werden?','What should change?'):t('Worum soll es im neuen Teil gehen?','What should the new part be about?'))}<input data-mkw maxlength="2000" placeholder="${esc(i?t('z. B. kürzer, freundlicher, mit Zahlen','e.g. shorter, friendlier, with numbers'):t('z. B. Kosten und Zeitplan','e.g. costs and schedule'))}"></label>

@@ -121,6 +121,9 @@ FEATURES = (
       parent="documents", me="docbox", guide="erstellen"),
     F("erstellenvorlagen", "Eigene Vorlagen", "Own templates", "data", ("doc_make_templates",), "doc_make_templates",
       parent="erstellen", me="docbox", guide="erstellenvorlagen"),
+    # pictures for slides from the own Kiwix (docmake.wiki_pictures; Präsentationen professionell, point 5)
+    F("erstellenbilder", "Bilder aus dem Kiwix", "Pictures from the Kiwix", "data", ("doc_make_wikipics",), "doc_make_wikipics",
+      parent="erstellen", me="docbox", guide="erstellenbilder"),
     F("docbrief", "Steckbrief und Tags", "Document card and tags", "data", ("doc_brief",), "doc_brief",
       parent="documents", me="docbox", guide="docbrief"),
     # everyday

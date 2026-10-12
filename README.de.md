@@ -33,6 +33,7 @@ Alle Optionen ohne Rückfragen (`--mode api --asr 1.7b --tts 0.6b --yes` …) st
 
 <!-- New version: add one line at the top here and in CHANGELOG.md, drop the oldest line here (keep 10). Details go to docs/de and docs/en, not into this README. -->
 
+- **V01.0.465** Präsentationen mit zehn Folientypen, Symbolen, Bildern aus dem Kiwix und geprüften Zahlen
 - **V01.0.464** Einstellungs-Assistent: Lücken geschlossen, Codewort-Sätze nie als Fall, Ideen außerhalb des Katalogs (aus)
 - **V01.0.463** Browser-Tests warten, bis eine Seite geladen ist (behebt wackelnden Test)
 - **V01.0.462** Eigener Speicher: alte Originale von Dokumenten können nur noch auf dem eigenen Speicher liegen und kommen beim Öffnen zurück
@@ -42,7 +43,6 @@ Alle Optionen ohne Rückfragen (`--mode api --asr 1.7b --tts 0.6b --yes` …) st
 - **V01.0.458** GitHub-Token nur zum Lesen für Updates (5000 statt 60 Abfragen pro Stunde)
 - **V01.0.457** Verlauf auf allen Geräten: kein Überschreiben mehr, Neues ohne Neuladen, Quellen bleiben unter Antworten, Pebble-Uhr wieder ganz; neu (aus, unter Ich einschaltbar): sofort abgleichen, ein Gespräch für alle Kanäle, offline lesen nur auf vertrauten Browsern.
 - **V01.0.456** Eigener Speicher: jetzt auch per SFTP und als SMB-Freigabe im Heimnetz, der Schlüssel des SFTP-Servers wird gemerkt
-- **V01.0.455** Antworten kommen nie mehr doppelt, auch wenn das Modell sie nach einem Werkzeug wiederholt
 
 Alle Versionen: [CHANGELOG.md](CHANGELOG.md)
 

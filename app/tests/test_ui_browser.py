@@ -833,7 +833,7 @@ class Browser(unittest.TestCase):
         real_part, real_push, real_bg = docmake.write_part, push.send, docmake.BACKGROUND
         docmake.BACKGROUND = True      # test_docmake runs its jobs itself; here the panel runs them
 
-        async def fake_part(plan, i, sources, done=None, wish="", old=None):
+        async def fake_part(plan, i, sources, done=None, wish="", old=None, *more, **kw):
             return docmake.check_section({"heading": plan["sections"][i]["heading"], "paras": ["Ein Absatz mit etwas Text."],
                                           "bullets": ["Erster Punkt", "Zweiter Punkt"],
                                           "table": {"head": ["Monat", "Tage"], "rows": [["Mai", "12"], ["Juni", "28"]]}},

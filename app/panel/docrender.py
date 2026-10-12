@@ -21,6 +21,8 @@ import math
 import os
 import re
 
+import symbole
+
 FORMATS = ("docx", "pptx", "xlsx", "pdf", "md", "txt", "csv")
 CTYPE = {"docx": "application/vnd.openxmlformats-officedocument.wordprocessingml.document",
          "pptx": "application/vnd.openxmlformats-officedocument.presentationml.presentation",
@@ -485,6 +487,56 @@ def _docx_designed(c, style, pictures=None):
                     run(p, x["label"], 9.5, False, rgb["fg"])
                     p.paragraph_format.space_after = Pt(0)
             doc.add_paragraph().paragraph_format.space_after = Pt(2)
+        if s.get("points"):             # symbol points: two per row, the symbol beside title and text
+            pts = s["points"]
+            t = doc.add_table(rows=0, cols=4)
+            no_borders(t)
+            t.autofit = False
+            for r0 in range(0, len(pts), 2):
+                cells = t.add_row().cells
+                for j, p_ in enumerate(pts[r0:r0 + 2]):
+                    ic, tc = cells[j * 2], cells[j * 2 + 1]
+                    ic.width, tc.width = Cm(1.6), int(width / 2 - Cm(1.6))
+                    png = symbole.color(p_.get("icon"), st["accent"] if (r0 + j) % 2 == 0 else st["accent2"])
+                    if png:
+                        ic.paragraphs[0].add_run().add_picture(io.BytesIO(png), width=Cm(1.0))
+                    margins(tc, 60, 80)
+                    q = tc.paragraphs[0]
+                    run(q, p_["title"], 11.5, True, rgb["fg"], font=st["head"])
+                    q.paragraph_format.space_after = Pt(1)
+                    if p_.get("text"):
+                        q = tc.add_paragraph()
+                        run(q, p_["text"], 10, False, rgb["muted"])
+                        q.paragraph_format.space_after = Pt(4)
+            doc.add_paragraph().paragraph_format.space_after = Pt(2)
+        if s.get("steps"):              # a timeline: label in the accent, then the step
+            t = doc.add_table(rows=0, cols=2)
+            no_borders(t)
+            t.autofit = False
+            for i, x in enumerate(s["steps"]):
+                cells = t.add_row().cells
+                cells[0].width, cells[1].width = Cm(3.2), int(width - Cm(3.2))
+                borders(cells[0], right=("single", 18, st["accent"] if i % 2 == 0 else st["accent2"]))
+                margins(cells[0], 80, 120)
+                margins(cells[1], 80, 200)
+                run(cells[0].paragraphs[0], x.get("label", ""), 11, True, rgb["accent"], font=st["head"])
+                run(cells[1].paragraphs[0], x.get("text", ""), 10.5, False, rgb["fg"])
+            doc.add_paragraph().paragraph_format.space_after = Pt(2)
+        if s.get("compare"):            # two sides in two boxes
+            t = box_table(2)
+            for i, side in enumerate(("left", "right")):
+                c_ = s["compare"].get(side) or {}
+                cell = t.rows[0].cells[i]
+                shade(cell, st["card"] if "card" in st else st["tint"])
+                borders(cell, top=("single", 24, st["accent"] if i == 0 else st["accent2"]))
+                margins(cell, 160, 200)
+                q = cell.paragraphs[0]
+                run(q, c_.get("title", ""), 12, True, rgb["accent"] if i == 0 else rgb["accent2"], font=st["head"])
+                for x in c_.get("points") or []:
+                    q = cell.add_paragraph()
+                    run(q, "• " + x, 10.5, False, rgb["fg"])
+                    q.paragraph_format.space_after = Pt(2)
+            doc.add_paragraph().paragraph_format.space_after = Pt(2)
         for x in s.get("bullets") or []:
             doc.add_paragraph(x, style="List Bullet")
         if s.get("quote"):
@@ -503,9 +555,18 @@ def _docx_designed(c, style, pictures=None):
         if s.get("chart"):
             doc.add_picture(io.BytesIO(chart_png(s["chart"], st)), width=min(width, Cm(16)))
             doc.paragraphs[-1].alignment = WD_ALIGN_PARAGRAPH.CENTER
-        for pic in (pictures(s) if pictures else []):
+            if s["chart"].get("source"):
+                q = doc.add_paragraph()
+                run(q, ("Quelle: " if not en else "Source: ") + s["chart"]["source"], 8.5, False, rgb["muted"])
+                q.alignment = WD_ALIGN_PARAGRAPH.CENTER
+        wiki = pictures.wiki(s) if pictures and hasattr(pictures, "wiki") else None
+        for pic in (pictures(s) if pictures else []) + ([wiki] if wiki else []):
             doc.add_picture(pic, width=Cm(12))
             doc.paragraphs[-1].alignment = WD_ALIGN_PARAGRAPH.CENTER
+        if wiki and (s.get("wikipic") or {}).get("credit"):
+            q = doc.add_paragraph()
+            run(q, s["wikipic"]["credit"], 8.5, False, rgb["muted"])
+            q.alignment = WD_ALIGN_PARAGRAPH.CENTER
         if s.get("notes"):
             p = doc.add_paragraph()
             run(p, s["notes"], 9.5, False, rgb["muted"], italic=True)
@@ -934,9 +995,27 @@ def _pptx_designed(c, style, pictures=None):
     # ---- title slide: the accent color, two big see-through circles, title, subtitle, who and when
     dark = style["dark"]
     sl = new_slide(col["bg"] if dark else col["accent"])
-    box(sl, W - Inches(5.2), -Inches(2.2), Inches(7.5), Inches(7.5), col["accent2"], MSO_SHAPE.OVAL, alpha=0.45 if dark else 0.55)
-    box(sl, W - Inches(2.6), H - Inches(3.0), Inches(4.4), Inches(4.4), col["accent"] if dark else white, MSO_SHAPE.OVAL,
-        alpha=0.35 if dark else 0.12)
+    cover = pictures.cover(c) if pictures and hasattr(pictures, "cover") else None
+    if cover:
+        cover_w = int(W * 0.42)
+        try:
+            from PIL import Image
+            with Image.open(cover) as im:
+                iw, ih = im.size
+            pic = sl.shapes.add_picture(cover, int(W - cover_w), 0, cover_w, int(H))
+            if iw / ih > cover_w / H:
+                pic.crop_left = pic.crop_right = (1 - (cover_w / H) / (iw / ih)) / 2
+            else:
+                pic.crop_top = pic.crop_bottom = (1 - (iw / ih) / (cover_w / H)) / 2
+            box(sl, W - cover_w, H - Inches(0.45), cover_w, Inches(0.45), RGBColor(0, 0, 0), alpha=0.45)
+            text(sl, W - cover_w + Inches(0.2), H - Inches(0.37), cover_w - Inches(0.4), Inches(0.3),
+                 (c.get("cover") or {}).get("credit", ""), 9, white)
+        except Exception:
+            cover = None
+    if not cover:
+        box(sl, W - Inches(5.2), -Inches(2.2), Inches(7.5), Inches(7.5), col["accent2"], MSO_SHAPE.OVAL, alpha=0.45 if dark else 0.55)
+        box(sl, W - Inches(2.6), H - Inches(3.0), Inches(4.4), Inches(4.4), col["accent"] if dark else white, MSO_SHAPE.OVAL,
+            alpha=0.35 if dark else 0.12)
     tw = col["fg"] if dark else white
     box(sl, Inches(0.9), Inches(2.05), Inches(1.1), Inches(0.08), col["accent"] if dark else tw)
     kind_name = {"praesentation": ("PRÄSENTATION", "PRESENTATION"), "bericht": ("BERICHT", "REPORT"),
@@ -944,14 +1023,17 @@ def _pptx_designed(c, style, pictures=None):
     if kind_name:
         text(sl, Inches(0.9), Inches(1.55), Inches(6), Inches(0.4), kind_name, 14, tw, bold=True)
     tsize = 54 if len(title_) <= 30 else 44 if len(title_) <= 60 else 34
-    text(sl, Inches(0.9), Inches(2.35), Inches(8.6), Inches(2.6), title_, tsize, tw, bold=True, head=True,
+    tw_ = Inches(8.6) if not cover else int(W * 0.58) - Inches(1.4)
+    if cover and tsize > 44:
+        tsize = 46
+    text(sl, Inches(0.9), Inches(2.35), tw_, Inches(2.6), title_, tsize, tw, bold=True, head=True,
          anchor=MSO_ANCHOR.TOP)
     sub = c.get("subtitle") or ""
     info = " · ".join(x for x in (c.get("author"), c.get("date")) if x)
     if sub:
-        text(sl, Inches(0.9), Inches(5.05), Inches(8.6), Inches(0.8), sub, 24, tw)
+        text(sl, Inches(0.9), Inches(5.05), tw_, Inches(0.8), sub, 24, tw)
     if info:
-        text(sl, Inches(0.9), H - Inches(1.0), Inches(8.6), Inches(0.4), info, 14, tw)
+        text(sl, Inches(0.9), H - Inches(1.0), tw_, Inches(0.4), info, 14, tw)
 
     n = 1
     # ---- overview: the parts as numbered cards
@@ -982,8 +1064,258 @@ def _pptx_designed(c, style, pictures=None):
             text(sl, x + Inches(0.3) + d, y, cw - d - Inches(0.5), rh, hd, 18 if len(hd) < 50 else 15, col["fg"],
                  anchor=MSO_ANCHOR.MIDDLE)
 
+    def icon(sl, key, x, y, size, hex_):
+        png = symbole.color(key, hex_)
+        if png:
+            sl.shapes.add_picture(io.BytesIO(png), int(x), int(y), int(size), int(size))
+
+    def photo(sl, path, x, y, w, h):
+        """A picture that fills the box (cut at the edges, never distorted)."""
+        try:
+            from PIL import Image
+            with Image.open(path) as im:
+                iw, ih = im.size
+        except Exception:
+            return False
+        pic = sl.shapes.add_picture(path, int(x), int(y), int(w), int(h))
+        box_r, img_r = w / h, iw / ih
+        if img_r > box_r:
+            cut = (1 - box_r / img_r) / 2
+            pic.crop_left = pic.crop_right = cut
+        else:
+            cut = (1 - img_r / box_r) / 2
+            pic.crop_top = pic.crop_bottom = cut
+        return True
+
+    def small(sl, x, y, w, value, color=None, align=None):
+        text(sl, x, y, w, Inches(0.3), value, 10, color or col["muted"], align=align)
+
+    def numbered(sl, x, y, d, k, fill):
+        num = box(sl, x, y, d, d, fill, MSO_SHAPE.OVAL)
+        tf = num.text_frame
+        tf.margin_left = tf.margin_right = tf.margin_top = tf.margin_bottom = 0
+        tf.vertical_anchor = MSO_ANCHOR.MIDDLE
+        p = tf.paragraphs[0]
+        p.alignment = PP_ALIGN.CENTER
+        r = p.add_run()
+        r.text = str(k)
+        r.font.size, r.font.bold, r.font.color.rgb, r.font.name = Pt(16), True, white, style["font"]
+
+    TOP, BOTTOM = Inches(2.1), H - Inches(0.75)
+    LEFT, RIGHT = Inches(0.7), W - Inches(0.7)
+
+    def typed(sec, k_sec, n):
+        """The slide types of folien.py; False when the section has none (then the older layouts below)."""
+        lay = sec.get("layout")
+        heading = sec.get("heading") or ""
+        width = RIGHT - LEFT
+        paras, bl = sec.get("paras") or [], sec.get("bullets") or []
+        if lay == "kapitel":
+            sl = new_slide(col["bg"] if dark else col["accent"])
+            tw = col["fg"] if dark else white
+            box(sl, W - Inches(4.2), -Inches(1.5), Inches(6), Inches(6), col["accent2"], MSO_SHAPE.OVAL, alpha=0.4)
+            text(sl, LEFT + Inches(0.2), Inches(1.4), Inches(4), Inches(1.6), f"{k_sec:02d}", 96, tw, bold=True, head=True)
+            box(sl, LEFT + Inches(0.25), Inches(3.25), Inches(1.1), Inches(0.08), tw)
+            size = 44 if len(heading) <= 40 else 34
+            text(sl, LEFT + Inches(0.2), Inches(3.55), W - Inches(3), Inches(1.9), heading, size, tw, bold=True, head=True)
+            if paras:
+                text(sl, LEFT + Inches(0.2), Inches(5.5), W - Inches(3), Inches(0.9), paras[0], 22, tw)
+            small(sl, W - Inches(1.6), H - Inches(0.5), Inches(0.9), f"{n} / {total}", tw, PP_ALIGN.RIGHT)
+            return sl
+        if lay == "kernaussage" and sec.get("quote"):
+            sl = new_slide(col["tint"])
+            box(sl, 0, 0, Inches(0.18), H, col["accent"])
+            text(sl, LEFT + Inches(0.4), Inches(0.9), width - Inches(0.8), Inches(0.9), heading, 20, col["accent2"], bold=True)
+            text(sl, LEFT + Inches(0.2), Inches(1.5), Inches(1.5), Inches(1.6), "“", 140, col["accent"], bold=True, head=True)
+            q = sec["quote"]
+            sz = fit([q], (width - Inches(1.6)) / IN, Inches(3.6) / IN, (44, 40, 36, 32, 28, 24))
+            text(sl, LEFT + Inches(1.4), Inches(2.4), width - Inches(1.8), Inches(3.6), q, sz, col["fg"], bold=True,
+                 head=True, anchor=MSO_ANCHOR.MIDDLE)
+            text(sl, LEFT + Inches(0.4), H - Inches(0.5), W - Inches(2.5), Inches(0.3), title_, 10, col["muted"])
+            small(sl, W - Inches(1.6), H - Inches(0.5), Inches(0.9), f"{n} / {total}", None, PP_ALIGN.RIGHT)
+            return sl
+        if lay == "bildtext":
+            path = (pictures.wiki(sec) if pictures and hasattr(pictures, "wiki") else None) or \
+                (next(iter(pictures(sec)), None) if pictures else None)
+            if not path:
+                return None
+            sl = new_slide()
+            pw = int(W * 0.46)
+            photo(sl, path, 0, 0, pw, H)
+            cred = (sec.get("wikipic") or {}).get("credit", "")
+            x0, w0 = pw + Inches(0.6), W - pw - Inches(1.2)
+            text(sl, x0, Inches(0.8), w0, Inches(0.35), f"{k_sec:02d}", 12, col["accent2"], bold=True)
+            size = 30 if len(heading) <= 50 else 24
+            text(sl, x0, Inches(1.15), w0, Inches(1.6), heading, size, col["fg"], bold=True, head=True)
+            box(sl, x0, Inches(2.75), Inches(0.9), Inches(0.06), col["accent"])
+            y0 = Inches(3.05)
+            if paras:
+                sz = fit(paras, w0 / IN, 1.6, (22, 20, 18, 16))
+                text(sl, x0, y0, w0, Inches(1.6), "\n".join(paras), sz, col["muted"], spacing=sz * 0.5)
+                y0 += Inches(1.7)
+            if bl:
+                sz = fit(bl, w0 / IN - 0.3, (BOTTOM - y0) / IN, (22, 20, 18, 16))
+                bullets(sl, x0, y0, w0, BOTTOM - y0, bl, sz)
+            if cred:
+                small(sl, x0, H - Inches(0.5), w0, cred)
+            else:
+                small(sl, x0, H - Inches(0.5), w0, f"{title_}  ·  {n} / {total}")
+            return sl
+        if lay == "fazit" and (bl or sec.get("points")):
+            items = bl or [p["title"] + (f": {p['text']}" if p.get("text") else "") for p in sec["points"]]
+            bgc = col["card"] if dark else col["fg"]
+            sl = new_slide(bgc)
+            tw = col["fg"] if dark else white
+            box(sl, 0, 0, Inches(0.18), H, col["accent"])
+            text(sl, LEFT, Inches(0.55), Inches(6), Inches(0.35), "FAZIT" if not en else "CONCLUSION", 12, col["accent2"], bold=True)
+            text(sl, LEFT, Inches(0.85), width, Inches(1.2), heading, 32 if len(heading) <= 50 else 26, tw, bold=True, head=True)
+            k = len(items[:4])
+            rowh = min(Inches(1.15), (BOTTOM - TOP) / max(1, k))
+            for i, t in enumerate(items[:4]):
+                y = TOP + rowh * i
+                icon(sl, "haken", LEFT, y + (rowh - Inches(0.6)) / 2, Inches(0.6), style["accent2"])
+                text(sl, LEFT + Inches(0.95), y, width - Inches(1.0), rowh, t, 24 if len(t) <= 70 else 20, tw,
+                     anchor=MSO_ANCHOR.MIDDLE)
+            small(sl, W - Inches(1.6), H - Inches(0.5), Inches(0.9), f"{n} / {total}", tw, PP_ALIGN.RIGHT)
+            return sl
+        # the types below share the frame (heading, number, footer)
+        if lay == "symbole" and sec.get("points"):
+            sl = new_slide()
+            chrome(sl, n, heading, f"{k_sec:02d}")
+            pts = sec["points"][:6]
+            k = len(pts)
+            per = k if k <= 3 else 2 if k == 4 else 3
+            rows = math.ceil(k / per)
+            gap = Inches(0.35)
+            cw = (width - gap * (per - 1)) / per
+            ch = (BOTTOM - TOP - gap * (rows - 1)) / rows
+            d = Inches(1.0) if rows == 1 else Inches(0.9)
+            for i, p in enumerate(pts):
+                cx, cy = LEFT + (cw + gap) * (i % per), TOP + (ch + gap) * (i // per)
+                box(sl, cx, cy, cw, ch, col["card"], MSO_SHAPE.ROUNDED_RECTANGLE, radius=0.06)
+                acc = style["accent"] if i % 2 == 0 else style["accent2"]
+                box(sl, cx + Inches(0.3), cy + Inches(0.3), d, d, col["tint"], MSO_SHAPE.OVAL)
+                icon(sl, p.get("icon"), cx + Inches(0.3) + d * 0.2, cy + Inches(0.3) + d * 0.2, d * 0.6, acc)
+                if rows == 1:
+                    ty, tx, tw_ = cy + Inches(0.5) + d, cx + Inches(0.3), cw - Inches(0.6)
+                else:
+                    ty, tx, tw_ = cy + Inches(0.3), cx + Inches(0.5) + d, cw - Inches(0.8) - d
+                text(sl, tx, ty, tw_, Inches(0.8), p["title"], 24 if per <= 2 else 22, col["fg"], bold=True, head=True)
+                if p.get("text"):
+                    text(sl, tx, ty + Inches(0.8 if rows == 1 else 0.65), tw_, ch - (ty - cy) - Inches(0.8), p["text"],
+                         20 if per <= 2 else 18, col["muted"])
+            return sl
+        if lay == "zahlen" and sec.get("stats"):
+            sl = new_slide()
+            chrome(sl, n, heading, f"{k_sec:02d}")
+            stats = sec["stats"][:3]
+            hh = Inches(2.7)
+            y = TOP + Inches(0.3)
+            k = len(stats)
+            gap = Inches(0.4)
+            cw = (width - gap * (k - 1)) / k
+            for i, st in enumerate(stats):
+                cx = LEFT + (cw + gap) * i
+                box(sl, cx, y, cw, hh, col["tint"], MSO_SHAPE.ROUNDED_RECTANGLE, radius=0.08)
+                box(sl, cx, y, cw, Inches(0.1), col["accent"] if i % 2 == 0 else col["accent2"])
+                v = st["value"]
+                vsz = max(28, min(66, int((cw - Inches(0.7)) / IN * 72 / (max(1, len(v)) * 0.72))))
+                text(sl, cx + Inches(0.35), y + Inches(0.4), cw - Inches(0.7), Inches(vsz * 1.3 / 72), v, vsz,
+                     col["accent"], bold=True, head=True)
+                text(sl, cx + Inches(0.35), y + Inches(0.55 + vsz * 1.3 / 72), cw - Inches(0.7), Inches(1.0),
+                     st.get("label", ""), 18, col["fg"])
+            if paras:
+                text(sl, LEFT, y + hh + Inches(0.45), width, Inches(1.0), " ".join(paras), 20, col["muted"])
+            return sl
+        if lay == "ablauf" and sec.get("steps"):
+            sl = new_slide()
+            chrome(sl, n, heading, f"{k_sec:02d}")
+            steps = sec["steps"][:6]
+            k = len(steps)
+            cw = width / k
+            ly = TOP + Inches(1.35)
+            box(sl, LEFT + cw / 2, ly - Inches(0.03), width - cw, Inches(0.06), col["line"])
+            for i, st in enumerate(steps):
+                cx = LEFT + cw * i
+                fill = col["accent"] if i % 2 == 0 else col["accent2"]
+                d = Inches(0.62)
+                numbered(sl, cx + (cw - d) / 2, ly - d / 2, d, i + 1, fill)
+                text(sl, cx + Inches(0.1), TOP + Inches(0.15), cw - Inches(0.2), Inches(0.7), st.get("label", ""),
+                     22 if k <= 4 else 18, fill, bold=True, head=True, align=PP_ALIGN.CENTER, anchor=MSO_ANCHOR.BOTTOM)
+                tsz = 20 if k <= 4 else 17
+                lines_ = max(_est_lines(x.get("text", ""), tsz, (cw - Inches(0.6)) / IN) for x in steps)
+                bh = min(BOTTOM - ly - Inches(0.6), Inches(0.5) + Pt(tsz) * 1.3 * lines_)
+                box(sl, cx + Inches(0.12), ly + Inches(0.6), cw - Inches(0.24), bh, col["card"],
+                    MSO_SHAPE.ROUNDED_RECTANGLE, radius=0.08)
+                text(sl, cx + Inches(0.3), ly + Inches(0.8), cw - Inches(0.6), bh - Inches(0.3),
+                     st.get("text", ""), tsz, col["fg"], align=PP_ALIGN.CENTER)
+            return sl
+        if lay == "vergleich" and sec.get("compare"):
+            sl = new_slide()
+            chrome(sl, n, heading, f"{k_sec:02d}")
+            gap = Inches(0.9)
+            cw = (width - gap) / 2
+            most = max(len((sec["compare"].get(x) or {}).get("points") or []) for x in ("left", "right"))
+            bottom_ = min(BOTTOM, TOP + Inches(1.5) + Inches(0.75) * most)
+            for i, side in enumerate(("left", "right")):
+                c_ = sec["compare"].get(side) or {}
+                cx = LEFT + (cw + gap) * i
+                fill = col["accent"] if i == 0 else col["accent2"]
+                box(sl, cx, TOP, cw, bottom_ - TOP, col["card"], MSO_SHAPE.ROUNDED_RECTANGLE, radius=0.05)
+                band = box(sl, cx, TOP, cw, Inches(0.85), fill, MSO_SHAPE.ROUNDED_RECTANGLE, radius=0.25)
+                text(sl, cx + Inches(0.35), TOP, cw - Inches(0.7), Inches(0.85), c_.get("title", ""), 22, white, bold=True,
+                     head=True, anchor=MSO_ANCHOR.MIDDLE)
+                del band
+                items = c_.get("points") or []
+                if items:
+                    sz = fit(items, (cw - Inches(0.9)) / IN, (bottom_ - TOP - Inches(1.3)) / IN, (22, 20, 18, 16))
+                    bullets(sl, cx + Inches(0.35), TOP + Inches(1.15), cw - Inches(0.7), bottom_ - TOP - Inches(1.3), items, sz)
+            d = Inches(0.8)
+            vs = box(sl, LEFT + cw + (gap - d) / 2, TOP + (bottom_ - TOP - d) / 2, d, d, col["fg"], MSO_SHAPE.OVAL)
+            tf = vs.text_frame
+            tf.vertical_anchor = MSO_ANCHOR.MIDDLE
+            tf.margin_left = tf.margin_right = 0
+            p = tf.paragraphs[0]
+            p.alignment = PP_ALIGN.CENTER
+            r = p.add_run()
+            r.text = "vs"
+            r.font.size, r.font.bold, r.font.color.rgb, r.font.name = Pt(18), True, col["bg"], style["font"]
+            return sl
+        if lay == "diagramm" and sec.get("chart"):
+            sl = new_slide()
+            chrome(sl, n, heading, f"{k_sec:02d}")
+            ch = sec["chart"]
+            side = bool(paras or bl)
+            cw = width * (0.66 if side else 1)
+            box(sl, LEFT, TOP, cw, BOTTOM - TOP - Inches(0.35), col["card"], MSO_SHAPE.ROUNDED_RECTANGLE, radius=0.04)
+            _pptx_chart(sl, ch, LEFT + Inches(0.3), TOP + Inches(0.2), cw - Inches(0.6), BOTTOM - TOP - Inches(0.75),
+                        style, col, CategoryChartData, XL_CHART_TYPE, XL_LEGEND_POSITION, XL_LABEL_POSITION, Pt)
+            if ch.get("source"):
+                small(sl, LEFT, BOTTOM - Inches(0.3), cw, ("Quelle: " if not en else "Source: ") + ch["source"])
+            if side:
+                x0, w0 = LEFT + cw + Inches(0.45), width - cw - Inches(0.45)
+                if ch.get("highlight"):
+                    box(sl, x0, TOP, Inches(0.09), Inches(1.2), col["accent"])
+                    text(sl, x0 + Inches(0.3), TOP, w0 - Inches(0.3), Inches(1.2), ch["highlight"], 26, col["accent"],
+                         bold=True, head=True, anchor=MSO_ANCHOR.MIDDLE)
+                y0 = TOP + Inches(1.5)
+                if paras:
+                    sz = fit(paras, w0 / IN, 2.2, (22, 20, 18, 16))
+                    text(sl, x0, y0, w0, Inches(2.2), "\n".join(paras), sz, col["fg"], spacing=sz * 0.5)
+                    y0 += Inches(2.3)
+                if bl:
+                    sz = fit(bl, w0 / IN - 0.3, (BOTTOM - y0) / IN, (20, 18, 16))
+                    bullets(sl, x0, y0, w0, BOTTOM - y0, bl, sz)
+            return sl
+        return None
+
     for k_sec, sec in enumerate(_sections(c), 1):
         n += 1
+        done_ = typed(sec, k_sec, n) if sec.get("layout") not in (None, "", "liste") else None
+        if done_ is not None:
+            if sec.get("notes"):
+                done_.notes_slide.notes_text_frame.text = sec["notes"]
+            continue
         sl = new_slide()
         heading = sec.get("heading") or ""
         chrome(sl, n, heading, f"{k_sec:02d}")
@@ -1188,6 +1520,13 @@ def _pptx_chart(sl, ch, x, y, w, h, style, col, CategoryChartData, XL_CHART_TYPE
                     sr.format.line.color.rgb = palette[i % len(palette)]
                     sr.format.line.width = Pt(3.5)
                     sr.smooth = False
+            hl = ch.get("highlight")
+            if kind == XL_CHART_TYPE.COLUMN_CLUSTERED and len(series) == 1 and hl in (ch.get("labels") or []):
+                # the key value in the accent, the others calmer (folien.check_chart sets it)
+                calm = RGBColor.from_string(mix(style["accent"], style["bg"], 0.55))
+                for i, pt in enumerate(plot.series[0].points):
+                    pt.format.fill.solid()
+                    pt.format.fill.fore_color.rgb = palette[0] if ch["labels"][i] == hl else calm
             if kind == XL_CHART_TYPE.COLUMN_CLUSTERED:
                 plot.gap_width = 60
                 if len(series) == 1 and len(ch.get("labels") or []) <= 12:
@@ -1640,6 +1979,62 @@ def _pdf_designed(c, style, pictures=None):
                 doc.set_text_color(*fg)
                 doc.multi_cell(cw - 8, 4, tx(x.get("label")), align="L")
             doc.set_y(y + hh + 5)
+        if s.get("points"):            # symbol points, two per row
+            cw = (W - 6) / 2
+            for r0 in range(0, len(s["points"]), 2):
+                row = s["points"][r0:r0 + 2]
+                hh = max(height_of(p_.get("text", ""), 9.5, cw - 18) for p_ in row) + 12
+                need(hh + 3)
+                y = doc.get_y()
+                for j, p_ in enumerate(row):
+                    cx = L + (cw + 6) * j
+                    doc.set_fill_color(*tint)
+                    doc.rect(cx, y, cw, hh, style="F", round_corners=True, corner_radius=2)
+                    png = symbole.color(p_.get("icon"), st["accent"] if (r0 + j) % 2 == 0 else st["accent2"])
+                    if png:
+                        doc.image(io.BytesIO(png), x=cx + 3, y=y + 3, w=9, h=9)
+                    doc.set_xy(cx + 15, y + 3)
+                    para(p_["title"], 10.5, True, fg, 0.5, w=cw - 18, x=cx + 15)
+                    if p_.get("text"):
+                        para(p_["text"], 9.5, False, mut, 0, w=cw - 18, x=cx + 15)
+                doc.set_y(y + hh + 3)
+            doc.ln(2)
+        if s.get("steps"):             # timeline: a line with dots, the label, the step
+            for i, x in enumerate(s["steps"]):
+                hh = max(height_of(x.get("text", ""), 10, W - 46) + 4, 9)
+                need(hh + 2)
+                y = doc.get_y()
+                doc.set_draw_color(*line)
+                doc.set_line_width(0.6)
+                if i < len(s["steps"]) - 1:
+                    doc.line(L + 31, y + 4, L + 31, y + hh + 2)
+                doc.set_fill_color(*(acc if i % 2 == 0 else acc2))
+                doc.ellipse(L + 29, y + 2, 4, 4, style="F")
+                doc.set_xy(L, y + 1)
+                doc.set_font(fam, "B", 10.5)
+                doc.set_text_color(*(acc if i % 2 == 0 else acc2))
+                doc.cell(26, 5, tx(x.get("label", "")), align="R")
+                doc.set_xy(L + 38, y + 1)
+                para(x.get("text", ""), 10, False, fg, 0, w=W - 40, x=L + 38)
+                doc.set_y(y + hh + 2)
+            doc.ln(2)
+        if s.get("compare"):           # two sides side by side
+            cw = (W - 6) / 2
+            sides = [s["compare"].get(x) or {} for x in ("left", "right")]
+            hh = max(sum(height_of("• " + t, 10, cw - 10) + 1.5 for t in c_.get("points") or []) for c_ in sides) + 16
+            need(hh + 3)
+            y = doc.get_y()
+            for j, c_ in enumerate(sides):
+                cx = L + (cw + 6) * j
+                doc.set_fill_color(*tint)
+                doc.rect(cx, y, cw, hh, style="F", round_corners=True, corner_radius=2)
+                doc.set_fill_color(*(acc if j == 0 else acc2))
+                doc.rect(cx, y, cw, 1.6, style="F")
+                doc.set_xy(cx + 5, y + 5)
+                para(c_.get("title", ""), 11.5, True, acc if j == 0 else acc2, 1, w=cw - 10, x=cx + 5)
+                for t in c_.get("points") or []:
+                    para("• " + t, 10, False, fg, 0.5, w=cw - 10, x=cx + 5)
+            doc.set_y(y + hh + 5)
         for t in s.get("bullets") or []:
             need(8)
             y = doc.get_y()
@@ -1681,13 +2076,18 @@ def _pdf_designed(c, style, pictures=None):
         if s.get("chart"):
             need(90)
             doc.image(io.BytesIO(chart_png(s["chart"], st)), w=min(W, 160), x=L + (W - min(W, 160)) / 2)
+            if s["chart"].get("source"):
+                para(("Quelle: " if not en else "Source: ") + s["chart"]["source"], 8, False, mut, 1, align="C")
             doc.ln(4)
-        for p in (pictures(s) if pictures else []):
+        wiki = pictures.wiki(s) if pictures and hasattr(pictures, "wiki") else None
+        for p in (pictures(s) if pictures else []) + ([wiki] if wiki else []):
             try:
                 doc.image(p, w=min(W, 120), x=L + (W - min(W, 120)) / 2)
                 doc.ln(3)
             except Exception:
                 continue
+        if wiki and (s.get("wikipic") or {}).get("credit"):
+            para(s["wikipic"]["credit"], 8, False, mut, 2, align="C")
         if s.get("notes"):
             para(s["notes"], 9, color=mut)
     return bytes(doc.output())
@@ -1784,6 +2184,28 @@ def csv_(c, style=None, pictures=None, base=None):
 BUILD = {"docx": docx, "pptx": pptx, "xlsx": xlsx, "pdf": pdf, "md": md, "txt": txt, "csv": csv_}
 
 
+def flat(c):
+    """The content with the slide types' fields as plain bullets (symbol points, steps, the two sides of a
+    comparison) for the formats and own templates that have no blocks for them: nothing of the text is lost."""
+    secs = []
+    for s in _sections(c):
+        if not (s.get("points") or s.get("steps") or s.get("compare")):
+            secs.append(s)
+            continue
+        s = dict(s)
+        bl = list(s.get("bullets") or [])
+        bl += [p["title"] + (f": {p['text']}" if p.get("text") else "") for p in s.pop("points", None) or []]
+        bl += [(f"{p['label']}: " if p.get("label") else "") + p.get("text", "") for p in s.pop("steps", None) or []]
+        for side in ("left", "right"):
+            x = (s.get("compare") or {}).get(side) or {}
+            if x.get("points"):
+                bl.append((x.get("title") + ": " if x.get("title") else "") + "; ".join(x["points"]))
+        s.pop("compare", None)
+        s["bullets"] = bl
+        secs.append(s)
+    return dict(c, sections=secs)
+
+
 def render(c, fmt, style_key="spark-hell", pictures=None, base=None):
     """The file in this format: bytes. pictures(section) -> [paths] (already checked), base: an own template."""
     if fmt not in BUILD:
@@ -1791,6 +2213,8 @@ def render(c, fmt, style_key="spark-hell", pictures=None, base=None):
     st = style_of(style_key)
     if fmt not in ("docx", "pptx"):
         base = None
+    if base or fmt not in ("docx", "pptx", "pdf"):
+        c = flat(c)
     return BUILD[fmt](c, st, pictures, base)
 
 

@@ -47,6 +47,7 @@ and the journal get only kinds, formats and numbers, never a title or text.
     GET    /api/make/templates  POST (upload)  DELETE /api/make/templates/{tid}
 """
 import asyncio
+import io
 import json
 import os
 import re
@@ -61,9 +62,11 @@ from fastapi.responses import Response
 
 import docrender
 import features
+import folien
 import guard
 import notaus
 import profiles
+import symbole
 from common import load_config
 from core import assistant, browser_profile, own_profile
 
@@ -92,12 +95,13 @@ DAY_JOBS = 10              # per profile and day
 JOB_SECONDS = 20 * 60
 PLAN_SECONDS = 30 * 60     # an outline waits this long for "Ja"
 RECENT_SECONDS = 2 * 3600  # after making something, "Folie 4 kürzer" is understood this long without the words
-SECTION_TOKENS = {"praesentation": 900, "tabelle": 2500, "notiz": 700}
+SECTION_TOKENS = {"praesentation": 1100, "tabelle": 2500, "notiz": 700}
 LLM_SECONDS = 240
 MAX_TEMPLATES, MAX_TEMPLATE = 10, 10 * 1024 * 1024
 TEMPLATE_UNPACKED, TEMPLATE_PARTS = 50 * 1024 * 1024, 2000
 MAX_BODY = 4 * 1024 * 1024
 ID = re.compile(r"[0-9a-f]{12}")
+WIKIPIC = re.compile(r"[0-9a-f]{12}_[0-9a-f]{10}")   # <document>_<picture>: a picture from the Kiwix (bilder/)
 CTRL = re.compile(r"[\x00-\x08\x0b\x0c\x0e-\x1f\x7f\ud800-\udfff￾￿]")
 
 # kind -> (German, English, default format, default look, formats it may have)
@@ -237,6 +241,42 @@ def check_section(s, kind="sonstiges", cells=None):
     notes = text(s.get("notes"), MAX_NOTES, "notes", lines=True)
     if notes:
         out["notes"] = notes
+    # slide types (folien.py): symbol points, steps of a timeline, two sides of a comparison
+    if out.get("chart"):
+        hl = text(ch.get("highlight"), 60, "highlight")
+        if hl in out["chart"]["labels"]:
+            out["chart"]["highlight"] = hl
+        src = text(ch.get("source"), 160, "source")
+        if src:
+            out["chart"]["source"] = src
+    pts = []
+    for p in _list(s.get("points"), folien.MAX_POINTS, "points"):
+        if isinstance(p, dict) and text(p.get("title"), MAX_BULLET):
+            pts.append({"icon": symbole.pick(text(p.get("icon"), 40), text(p.get("title"), MAX_BULLET)),
+                        "title": text(p.get("title"), MAX_BULLET), "text": text(p.get("text"), MAX_BULLET)})
+    if pts:
+        out["points"] = pts
+    steps = []
+    for p in _list(s.get("steps"), folien.MAX_POINTS, "steps"):
+        if isinstance(p, dict) and (text(p.get("label"), 60) or text(p.get("text"), MAX_BULLET)):
+            steps.append({"label": text(p.get("label"), 60), "text": text(p.get("text"), MAX_BULLET)})
+    if steps:
+        out["steps"] = steps
+    cmp_ = s.get("compare")
+    if isinstance(cmp_, dict):
+        sides = {}
+        for side in ("left", "right"):
+            c = cmp_.get(side) if isinstance(cmp_.get(side), dict) else {}
+            sides[side] = {"title": text(c.get("title"), 80),
+                           "points": [x for x in (text(v, MAX_BULLET) for v in _list(c.get("points"), folien.MAX_BULLETS + 1,
+                                                                                    "compare")) if x]}
+        if sides["left"]["points"] or sides["right"]["points"]:
+            out["compare"] = sides
+    wp = s.get("wikipic")
+    if isinstance(wp, dict) and isinstance(wp.get("id"), str) and WIKIPIC.fullmatch(wp["id"]):
+        out["wikipic"] = {"id": wp["id"], "credit": text(wp.get("credit"), 200)}
+    if s.get("layout") in folien.LAYOUTS:
+        out["layout"] = s["layout"]
     return out
 
 
@@ -263,6 +303,9 @@ def check_content(c):
     out["sections"] = [check_section(s, kind, cells) for s in _list(c.get("sections"), MAX_SECTIONS, "sections")]
     if kind == "brief" and c.get("letter") is not None:
         out["letter"] = check_letter(c["letter"])
+    cov = c.get("cover")
+    if isinstance(cov, dict) and isinstance(cov.get("id"), str) and WIKIPIC.fullmatch(cov["id"]):
+        out["cover"] = {"id": cov["id"], "credit": text(cov.get("credit"), 200)}
     n = sum(len(s.get("pictures", [])) for s in out["sections"])
     if n > MAX_PICS_ALL:
         raise ValueError(f"höchstens {MAX_PICS_ALL} Bilder pro Dokument")
@@ -291,6 +334,8 @@ def check_plan(args, wish="", lang="de"):
         if not h:
             continue
         sec = {"heading": h, "note": text(s.get("note"), MAX_NOTE, "note")}
+        if s.get("layout") in folien.LAYOUTS:
+            sec["layout"] = s["layout"]
         pics = [p for p in _list(s.get("pictures"), MAX_PICS, "pictures") if isinstance(p, str) and ID.fullmatch(p)]
         if pics:
             sec["pictures"] = pics
@@ -299,6 +344,7 @@ def check_plan(args, wish="", lang="de"):
         secs = secs[:1] or [{"heading": text(args.get("title"), MAX_TITLE) or "Brief", "note": ""}]
     if not secs:
         raise ValueError("sections: mindestens ein Abschnitt")
+    folien.plan_layouts(secs, "praesentation" if fmt == "pptx" else kind)
     docs = [text(x, 120) for x in _list(args.get("documents"), MAX_SOURCES, "documents") if text(x, 120)]
     tmpl = args.get("template") if isinstance(args.get("template"), str) and ID.fullmatch(args.get("template") or "") else ""
     return {"kind": kind, "format": fmt, "style": style, "template": tmpl,
@@ -366,8 +412,9 @@ def peek(c):
     L_ = c.get("letter")
     if L_:
         return {"heading": cut(L_.get("subject"), 80), "lines": [cut(p) for p in (L_.get("paras") or [])[:2]], "rows": []}
-    s = next(iter(c.get("sections") or []), None) or {}
-    lines = [cut(b) for b in (s.get("bullets") or [])[:4]] or [cut(p, 160) for p in (s.get("paras") or [])[:2]]
+    s = next(iter(docrender.flat({"sections": (c.get("sections") or [])[:1]})["sections"]), None) or {}
+    lines = [cut(b) for b in (s.get("bullets") or [])[:4]] or [cut(p, 160) for p in (s.get("paras") or [])[:2]] or \
+        ([cut(s["quote"], 160)] if s.get("quote") else []) or [cut(f"{x['value']} {x.get('label', '')}") for x in (s.get("stats") or [])[:3]]
     tb = s.get("table") or {}
     rows = [[cut(x, 18) for x in r[:4]] for r in ([tb["head"]] if tb.get("head") else []) + (tb.get("rows") or [])[:3]] if tb else []
     return {"heading": cut(s.get("heading") or c.get("title"), 80), "lines": lines, "rows": rows,
@@ -414,6 +461,9 @@ def picture_paths(uid):
             if got and got[0].lower().endswith((".jpg", ".jpeg", ".png", ".webp")):
                 out.append(got[0])
         return out
+    # pictures from the Kiwix (keep_picture): the slide's and the title slide's, by their id only
+    res.wiki = lambda s: _pic_path(uid, (s.get("wikipic") or {}).get("id"))
+    res.cover = lambda c: _pic_path(uid, (c.get("cover") or {}).get("id"))
     return res
 
 
@@ -471,7 +521,16 @@ SECTION_SCHEMA = {"type": "object", "properties": {
     "stats": {"type": "array", "items": {"type": "object", "properties": {
         "value": {"type": "string"}, "label": {"type": "string"}}, "required": ["value", "label"]}},
     "quote": {"type": "string"},
-    "notes": {"type": "string"}}, "required": ["heading"]}
+    "notes": {"type": "string"},
+    "layout": {"type": "string", "enum": list(folien.LAYOUTS)},
+    "points": {"type": "array", "items": {"type": "object", "properties": {
+        "icon": {"type": "string"}, "title": {"type": "string"}, "text": {"type": "string"}}, "required": ["title"]}},
+    "steps": {"type": "array", "items": {"type": "object", "properties": {
+        "label": {"type": "string"}, "text": {"type": "string"}}, "required": ["label", "text"]}},
+    "compare": {"type": "object", "properties": {side: {"type": "object", "properties": {
+        "title": {"type": "string"}, "points": {"type": "array", "items": {"type": "string"}}}} for side in ("left", "right")}}},
+    "required": ["heading"]}
+SECTION_SCHEMA["properties"]["chart"]["properties"]["highlight"] = {"type": "string"}
 LETTER_SCHEMA = {"type": "object", "properties": {
     "recipient": {"type": "array", "items": {"type": "string"}}, "subject": {"type": "string"},
     "greeting": {"type": "string"}, "paras": {"type": "array", "items": {"type": "string"}},
@@ -490,10 +549,26 @@ WRITER = ("Du schreibst einen Teil eines Dokuments für den Nutzer. Antworte nur
           "bedeutet), nur echte Zahlen aus AUFTRAG oder DATEN. quote: höchstens ein Kernsatz oder Fazit, der "
           "hervorgehoben wird; nicht in jedem Teil.\n"
           "{art}")
-ART = {"praesentation": "- Das ist eine Folie: 3 bis 6 kurze Stichpunkte (bullets, je höchstens 12 Wörter), höchstens "
-                        "ein kurzer Satz in paras; in notes 2 bis 4 Sätze, die der Vortragende sagen kann. Ein Diagramm "
-                        "(chart), eine Tabelle oder stats nur, wenn echte Zahlen da sind. Abwechslung zwischen den "
-                        "Folien: mal Stichpunkte, mal Kennzahlen, mal ein Kernsatz in quote.",
+ART = {"praesentation": "- Das ist eine Folie vom genannten FOLIENTYP. Fülle nur dessen Felder und setz layout:\n"
+                        "  kapitel: nur heading (kurz), höchstens ein Satz in paras als Untertitel.\n"
+                        "  kernaussage: quote = ein starker Satz mit höchstens 20 Wörtern.\n"
+                        "  symbole: points = 3 bis 6 Punkte, je icon (ein Stichwort aus SYMBOLE), title (höchstens 4 "
+                        "Wörter) und text (höchstens 12 Wörter).\n"
+                        "  zahlen: stats = 2 bis 3 Kennzahlen, nur echte Zahlen aus AUFTRAG oder DATEN.\n"
+                        "  ablauf: steps = 3 bis 6 Schritte, je label (Jahr, Zeit oder kurzer Name) und text (höchstens "
+                        "12 Wörter).\n"
+                        "  vergleich: compare.left und compare.right, je title und points (höchstens 4, je höchstens 8 "
+                        "Wörter).\n"
+                        "  bildtext: ein bis zwei kurze Sätze in paras oder höchstens 3 bullets (das Bild setzt der Spark).\n"
+                        "  diagramm: chart mit mindestens 3 echten Werten aus DATEN, highlight = Beschriftung des "
+                        "wichtigsten Werts, dazu ein Satz in paras, was es zeigt.\n"
+                        "  fazit: bullets = 2 bis 4 Kernpunkte.\n"
+                        "  liste: bullets = höchstens 4, je höchstens 8 Wörter.\n"
+                        "- heading ist eine Aussage als kurzer Satz („Im Sommer fällt der meiste Regen“), kein "
+                        "Stichwort wie „Klima“.\n"
+                        "- Wenig Text auf der Folie. Was der Vortragende sagt, kommt in notes (2 bis 4 Sätze).\n"
+                        "- Passen die Daten nicht zum Typ (keine echten Zahlen für diagramm oder zahlen), nimm "
+                        "symbole oder liste und setz layout so.",
        "tabelle": "- Das ist ein Tabellenblatt: table mit head (Spaltennamen) und rows (Zeilen, Zellen als Text, Zahlen "
                   "ohne Einheit in eigener Spalte). Eine Summenzeile mit =SUMME(...) nur, wenn sie hilft. chart nur bei "
                   "echten Zahlen.",
@@ -523,6 +598,9 @@ def section_messages(plan, i, sources, done=None, wish="", old=None):
             f"TITEL: {plan['title']}\nGLIEDERUNG:\n{outline}\n")
     if secs[i].get("note"):
         user += f"HINWEIS ZU DIESEM TEIL: {secs[i]['note']}\n"
+    if secs[i].get("layout"):
+        lay = secs[i]["layout"]
+        user += f"FOLIENTYP: {lay} ({folien.LAYOUTS[lay][0]})\nSYMBOLE: {symbole.keys()}\n"
     if done:
         user += "SCHON GESCHRIEBEN (nur zur Abstimmung, nicht wiederholen): " + "; ".join(done)[:1500] + "\n"
     if old is not None:
@@ -534,7 +612,8 @@ def section_messages(plan, i, sources, done=None, wish="", old=None):
     user += f"\nSchreib jetzt Teil {i + 1}: „{secs[i]['heading']}“."
     if kind == "brief":
         return [{"role": "system", "content": LETTER}, {"role": "user", "content": user}], LETTER_SCHEMA
-    return [{"role": "system", "content": WRITER.replace("{art}", ART.get(kind, ART["sonstiges"]))},
+    art = ART["praesentation"] if secs[i].get("layout") else ART.get(kind, ART["sonstiges"])
+    return [{"role": "system", "content": WRITER.replace("{art}", art)},
             {"role": "user", "content": user}], SECTION_SCHEMA
 
 
@@ -575,13 +654,17 @@ async def _model(msgs, schema, max_tokens):
     return str(((r.json().get("choices") or [{}])[0].get("message") or {}).get("content") or "")
 
 
-async def write_part(plan, i, sources, done=None, wish="", old=None):
-    """One section (or the letter) from the model, checked; one more try when the JSON is broken."""
+async def write_part(plan, i, sources, done=None, wish="", old=None, have=None, origins=(), tally=None):
+    """One section (or the letter) from the model, checked. One more try when the JSON is broken or the slide
+    breaks the rules (too much text, numbers without a source: folien.py); after that the rules cut it.
+    have: the digits of every number in the material (None: no fact check, e.g. a spreadsheet)."""
     import vorrang
     msgs, schema = section_messages(plan, i, sources, done, wish, old)
     tokens = 1400 if plan["kind"] == "brief" else SECTION_TOKENS.get(plan["kind"], 1100)
-    last = None
-    for _ in range(2):
+    want = plan["sections"][i].get("layout", "")
+    tally = tally if tally is not None else {}
+    last, best = None, None
+    for attempt in range(2):
         raw = await vorrang.run("Dokument erstellen", lambda: _model(msgs, schema, tokens))
         try:
             d = parse_json(raw)
@@ -590,10 +673,35 @@ async def write_part(plan, i, sources, done=None, wish="", old=None):
             d.setdefault("heading", plan["sections"][i]["heading"])
             if plan["sections"][i].get("pictures"):
                 d["pictures"] = plan["sections"][i]["pictures"]
-            return check_section(d, plan["kind"])
+            if plan["sections"][i].get("wikipic"):
+                d["wikipic"] = plan["sections"][i]["wikipic"]
+            sec = check_section(d, plan["kind"])
         except ValueError as e:
             last = e
-    raise ValueError(f"Antwort des Sprachmodells unbrauchbar ({last})")
+            continue
+        best = sec
+        wrong = folien.too_long(sec) if want else []
+        nums = folien.unbacked(sec, have) if have is not None else []
+        if nums:
+            wrong.append("diese Zahlen stehen nicht in AUFTRAG oder DATEN, lass sie weg: " + ", ".join(nums[:8]))
+        if not wrong or attempt:
+            break
+        tally["retries"] = tally.get("retries", 0) + 1
+        msgs = msgs + [{"role": "assistant", "content": json.dumps(d, ensure_ascii=False)[:6000]},
+                       {"role": "user", "content": "Bitte den Teil noch einmal, so geht er nicht: " + "; ".join(wrong)}]
+    if best is None:
+        raise ValueError(f"Antwort des Sprachmodells unbrauchbar ({last})")
+    sec = best
+    if want:
+        folien.tighten(sec)
+    if have is not None:
+        tally["dropped"] = tally.get("dropped", 0) + folien.drop_unbacked(sec, have, plan["sections"][i]["heading"])
+        got = folien.check_chart(sec, have, origins)
+        if got in ("zahlen", "weg"):
+            tally["charts"] = tally.get("charts", 0) + 1
+    if want:
+        folien.settle(sec, want)
+    return sec
 
 
 # ---------------------------------------------------------------- jobs
@@ -629,7 +737,8 @@ def _live(text_):
 def job_public(j):
     return {"id": j["id"], "state": j["state"], "step": j["step"], "steps": j["steps"], "what": j["what"],
             "doc": j.get("doc", ""), "error": j.get("error", ""), "t0": int(j["t0"]), "title": j.get("title", ""),
-            "kind": j.get("kind"), "format": j.get("format")}
+            "kind": j.get("kind"), "format": j.get("format"), "checked": check_line(j.get("checked")),
+            "checked_en": check_line(j.get("checked"), "en")}
 
 
 def jobs_of(uid):
@@ -714,8 +823,12 @@ async def _work(j, plan, todo=None, wish=""):
     tr = _trace(uid, j.get("client", "web"), plan)
     try:
         src, used = sources_text(uid, plan.get("documents"))
-        sources = "\n\n".join(x for x in (plan.get("facts"), src) if x)
         d = load(uid, j["doc"]) if j.get("doc") else None
+        did = d["id"] if d else j.setdefault("newid", secrets.token_hex(6))
+        sources, origins, have = await material(uid, plan, src, tr)
+        tally = {}
+        if d is None:
+            await wiki_pictures(uid, did, plan, tr, tally)
         old_c, _ = content_of(d) if d else (None, None)
         sections = list((old_c or {}).get("sections") or [None] * len(plan["sections"]))
         letter = (old_c or {}).get("letter")
@@ -732,7 +845,8 @@ async def _work(j, plan, todo=None, wish=""):
             done = [s["heading"] + ": " + "; ".join((s.get("bullets") or s.get("paras") or [])[:2])[:200]
                     for s in sections if s][:12]
             part = await write_part(plan, i, sources, done, wish if todo is not None else "",
-                                    sections[i] if todo is not None and i < len(sections) else None)
+                                    sections[i] if todo is not None and i < len(sections) else None,
+                                    have, origins, tally)
             if tr:
                 tr.step("tool", "document_write", t0, time.time(), ok=True, part=i + 1)
             if plan["kind"] == "brief":
@@ -745,13 +859,18 @@ async def _work(j, plan, todo=None, wish=""):
         content = {"kind": plan["kind"], "title": plan["title"], "subtitle": plan.get("subtitle", ""), "lang": plan["lang"],
                    "author": (profiles.by_id(uid) or {}).get("name", ""), "date": today_text(plan["lang"]),
                    "sections": [s for s in sections if s]}
+        if any(s.get("layout") for s in content["sections"]):
+            content["sections"] = folien.vary_written(content["sections"])
+        cover = plan.get("cover") or (old_c or {}).get("cover")
+        if cover:
+            content["cover"] = cover
         if plan["kind"] == "brief":
             content["letter"] = dict(letter or {}, sender=sender_lines(uid), signature=(profiles.by_id(uid) or {}).get("name", ""),
                                      place_date=(letter or {}).get("place_date") or today_text(plan["lang"]))
             content["sections"] = []
         content = check_content(content)
         if d is None:
-            d = {"id": secrets.token_hex(6), "created": int(time.time()), "kind": plan["kind"], "title": plan["title"],
+            d = {"id": did, "created": int(time.time()), "kind": plan["kind"], "title": plan["title"],
                  "format": plan["format"], "style": plan["style"], "template": plan.get("template", ""),
                  "lang": plan["lang"], "plan": {k: plan[k] for k in plan if k != "facts"},
                  "facts": plan.get("facts", "")[:MAX_FACTS], "sources": used}
@@ -764,7 +883,8 @@ async def _work(j, plan, todo=None, wish=""):
         if tr:
             tr.intent = "Dokument erstellen"
             tr.step("tool", "document_build", t0, time.time(), ok=True)
-        j.update(state="done", doc=d["id"], end=time.time(), version=n)
+        d["checked"] = dict(tally, numbers=have is not None, kiwix=any("Kiwix" in o[0] for o in origins))
+        j.update(state="done", doc=d["id"], end=time.time(), version=n, checked=d["checked"])
         _bump("done")
         secs = time.time() - j["t0"]
         _live(f"{KINDS[plan['kind']][0]} fertig ({FORMAT_NAMES[d['format']]}, {len(content['sections']) or 1} Teile, {secs:.0f} s)")
@@ -781,6 +901,145 @@ async def _work(j, plan, todo=None, wish=""):
                 await asyncio.to_thread(tracelog.finish, tr)
             except Exception:
                 pass
+
+
+# ---------------------------------------------------------------- facts and pictures (folien.py points 5 and 6)
+FACT_CHARS = 4500          # the Kiwix article handed to the writer
+OWN_HITS = 3               # pieces of the own documents
+OWN_CHARS = 1200
+MAX_WIKIPICS = 4           # pictures from the Kiwix per document (title + three "Bild und Text" slides)
+MAX_PIXELS = 40_000_000
+PICTURE_SIDE = 1600
+
+
+async def material(uid, plan, own, tr=None):
+    """(text for the writer, origins [(name, digits)], digits of all numbers) — everything a number may come from:
+    the person's words and outline, the facts of the turn, the own documents named in the plan or found for the
+    title, and the Kiwix article for the title (when the profile may use the Kiwix). Without a source the Spark
+    writes no number (folien.drop_unbacked). Spreadsheets: no check (the person's own figures), have = None."""
+    outline = " ".join(f"{s.get('heading', '')} {s.get('note', '')}" for s in plan["sections"])
+    origins = [("deine Angaben" if plan["lang"] != "en" else "your words",
+                folien.known(plan.get("wish"), plan.get("facts"), plan["title"], plan.get("subtitle"), outline,
+                             today_text(plan["lang"])))]
+    texts = [x for x in (plan.get("facts"), own) if x]
+    if own:
+        origins.append(("deine Dokumente" if plan["lang"] != "en" else "your documents", folien.known(own)))
+    query = plan["title"]
+    t0 = time.time()
+    try:
+        import wissen
+        hits = await asyncio.wait_for(wissen.search(uid, query, k=OWN_HITS, keep=False), 20)
+        hits = [h for h in hits if h.get("text")]
+        if hits:
+            found = "\n".join(f"Aus „{h.get('name', '')[:80]}“: {h['text'][:OWN_CHARS]}" for h in hits)
+            texts.append(found)
+            origins.append(("deine Dokumente" if plan["lang"] != "en" else "your documents", folien.known(found)))
+        if tr:
+            tr.step("tool", "document_sources", t0, time.time(), ok=True, hits=len(hits))
+    except Exception:
+        pass
+    try:
+        import kiwix
+        if kiwix.usable(uid):
+            t0 = time.time()
+            title, art = await asyncio.wait_for(kiwix.facts(query, FACT_CHARS), 30)
+            if art:
+                texts.append(f"Wikipedia (Kiwix), Artikel „{title}“:\n{art}")
+                origins.append((f"Wikipedia „{title}“ (Kiwix)", folien.known(art)))
+            if tr:
+                tr.step("tool", "document_facts", t0, time.time(), ok=bool(art))
+    except Exception:
+        pass
+    have = None if plan["kind"] == "tabelle" else set().union(*(o[1] for o in origins))
+    return "\n\n".join(texts), origins, have
+
+
+def pictures_on(uid):
+    return on(uid) and features.allowed("erstellenbilder", uid)
+
+
+def _pic_dir(uid):
+    return os.path.join(_dir(uid), "bilder")
+
+
+def _pic_path(uid, pid):
+    if not WIKIPIC.fullmatch(str(pid or "")):
+        return None
+    p = os.path.join(_pic_dir(uid), pid + ".jpg")
+    return p if os.path.isfile(p) and not os.path.islink(p) else None
+
+
+def keep_picture(uid, did, data):
+    """A picture from the Kiwix, checked and newly encoded (JPEG, at most PICTURE_SIDE px, nothing of the
+    original file kept but the pixels): its id, or "" when it is no usable picture."""
+    import hashlib
+    from PIL import Image
+    try:
+        with Image.open(io.BytesIO(data)) as im:
+            if im.size[0] * im.size[1] > MAX_PIXELS or min(im.size) < 120:
+                return ""
+            im.draft("RGB", (PICTURE_SIDE, PICTURE_SIDE))
+            rgb = im.convert("RGB")
+        rgb.thumbnail((PICTURE_SIDE, PICTURE_SIDE))
+    except Exception:
+        return ""
+    pid = f"{did}_{hashlib.sha256(data).hexdigest()[:10]}"
+    os.makedirs(_pic_dir(uid), exist_ok=True)
+    out = os.path.join(_pic_dir(uid), pid + ".jpg")
+    tmp = out + ".tmp"
+    rgb.save(tmp, "JPEG", quality=85, optimize=True)
+    os.replace(tmp, out)
+    return pid
+
+
+def drop_pictures(uid, did):
+    if not ID.fullmatch(str(did or "")):
+        return
+    try:
+        for n in os.listdir(_pic_dir(uid)):
+            if n.startswith(did + "_") and n.endswith(".jpg"):
+                os.remove(os.path.join(_pic_dir(uid), n))
+    except (OSError, ValueError):
+        pass
+
+
+def credit(title, lang):
+    return (f"Bild: Wikipedia „{title}“ (Kiwix), Lizenz laut Wikimedia Commons" if lang != "en" else
+            f"Picture: Wikipedia \"{title}\" (Kiwix), license as on Wikimedia Commons")
+
+
+async def wiki_pictures(uid, did, plan, tr=None, tally=None):
+    """5. Pictures from the Kiwix (switch "Bilder aus dem Kiwix", off): one for the title slide and one for each
+    "Bild und Text" slide (MAX_WIKIPICS together). Where none is found, that slide becomes another type."""
+    import kiwix
+    want = [i for i, s in enumerate(plan["sections"]) if s.get("layout") == "bildtext" and not s.get("pictures")]
+    if plan["kind"] == "praesentation" or plan.get("format") == "pptx":
+        if pictures_on(uid) and kiwix.usable(uid):
+            for q, i in [(plan["title"], None)] + [(plan["sections"][i]["heading"], i) for i in want][:MAX_WIKIPICS - 1]:
+                t0 = time.time()
+                try:
+                    data, title = await asyncio.wait_for(kiwix.picture_of(q), 30)
+                except Exception:
+                    data, title = None, ""
+                pid = await asyncio.to_thread(keep_picture, uid, did, data) if data else ""
+                if tr:
+                    tr.step("tool", "document_picture", t0, time.time(), ok=bool(pid))
+                if not pid:
+                    continue
+                pic = {"id": pid, "credit": credit(title, plan["lang"])}
+                if i is None:
+                    plan["cover"] = pic
+                else:
+                    plan["sections"][i]["wikipic"] = pic
+                if tally is not None:
+                    tally["pictures"] = tally.get("pictures", 0) + 1
+    lays = [s.get("layout", "") for s in plan["sections"]]
+    if any(lays):
+        fixed = [("symbole" if x == "bildtext" and not (s.get("pictures") or s.get("wikipic")) else x)
+                 for x, s in zip(lays, plan["sections"])]
+        for s, x in zip(plan["sections"], folien.vary(fixed)):
+            if x:
+                s["layout"] = x
 
 
 def _trace(uid, client, plan):
@@ -817,10 +1076,30 @@ async def _tell(uid, d, changed):
     try:
         import push
         k = KINDS[d["kind"]][0]
+        chk = check_line(d.get("checked"))
         await push.send(uid, f"{k} {'geändert' if changed else 'fertig'}",
-                        f"„{d['title'][:80]}“ liegt unter Ich → Dokumente ({FORMAT_NAMES[d['format']]}).{extra}", tag="doc", why="Dokument")
+                        f"„{d['title'][:80]}“ liegt unter Ich → Dokumente ({FORMAT_NAMES[d['format']]}).{extra}"
+                        + (f" {chk}" if chk else ""), tag="doc", why="Dokument")
     except Exception as e:
         print("docmake: Hinweis nicht gesendet:", type(e).__name__, flush=True)
+
+
+def check_line(ch, lang="de"):
+    """One sentence on the fact check of a finished job (folien.py), or ""."""
+    if not ch or not ch.get("numbers"):
+        return ""
+    en = lang == "en"
+    where = ("Kiwix and your documents" if en else "Kiwix und deinen Dokumenten") if ch.get("kiwix") else \
+        ("your words and documents" if en else "deinen Angaben und Dokumenten")
+    out = [f"Numbers checked against {where}." if en else f"Zahlen geprüft mit {where}."]
+    if ch.get("dropped"):
+        out.append(f"{ch['dropped']} without a source left out." if en else f"{ch['dropped']} ohne Beleg weggelassen.")
+    if ch.get("charts"):
+        out.append(f"{ch['charts']} chart(s) without real numbers not drawn." if en else
+                   f"{ch['charts']} Diagramm(e) ohne echte Zahlen nicht gezeichnet.")
+    if ch.get("pictures"):
+        out.append(f"{ch['pictures']} picture(s) from the Kiwix." if en else f"{ch['pictures']} Bild(er) aus dem Kiwix.")
+    return " ".join(out)
 
 
 def today_text(lang="de", now=None):
@@ -900,6 +1179,7 @@ def forget(uid, wid):
                 os.remove(_file(uid, d["id"]))
             except OSError:
                 pass
+            drop_pictures(uid, d["id"])
 
 
 def delete(uid, did):
@@ -913,6 +1193,7 @@ def delete(uid, did):
         os.remove(_file(uid, did))
     except OSError:
         pass
+    drop_pictures(uid, did)
     return True
 
 
@@ -978,7 +1259,12 @@ PLAN_TOOL = {"type": "function", "function": {
         "title": {"type": "string"},
         "subtitle": {"type": "string"},
         "sections": {"type": "array", "items": {"type": "object", "properties": {
-            "heading": {"type": "string"}, "note": {"type": "string", "description": "what goes into it, short"}},
+            "heading": {"type": "string"}, "note": {"type": "string", "description": "what goes into it, short"},
+            "layout": {"type": "string", "enum": list(folien.LAYOUTS),
+                       "description": "slides only: kapitel (divider), kernaussage (one big sentence), symbole (3-6 "
+                                      "points with icons), zahlen (big numbers), ablauf (timeline), vergleich (two "
+                                      "columns), bildtext (picture and text), diagramm (chart, only real numbers), "
+                                      "fazit (conclusion), liste (few bullets); vary them"}},
             "required": ["heading"]},
             "description": "the slides / sections / sheets in order (a letter: one)"},
         "style": {"type": "string", "enum": list(docrender.STYLES)},
@@ -1155,7 +1441,8 @@ def change_job(uid, d, action, secs, wish, client="web"):
     plan = dict(d.get("plan") or {}, kind=d["kind"], format=d["format"], style=d.get("style"), title=d["title"],
                 facts=d.get("facts", ""), wish=wish or "", lang=d.get("lang", "de"))
     plan.setdefault("length", "mittel")
-    plan["sections"] = [{"heading": s["heading"], "note": ""} for s in c["sections"]] or [{"heading": d["title"], "note": ""}]
+    plan["sections"] = [dict({"heading": s["heading"], "note": ""}, **{k: s[k] for k in ("layout", "wikipic") if s.get(k)})
+                        for s in c["sections"]] or [{"heading": d["title"], "note": ""}]
     if not wish:
         raise ValueError("was soll anders werden?")
     if action == "neu":

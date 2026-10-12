@@ -59,7 +59,7 @@ SAMPLE = {"kind": "praesentation", "title": "Pool-Saison 2026", "subtitle": "Fam
                   ["Summe", "=SUMME(B2:B3)", "@SUM(1)"]]}}]}
 
 
-def fake_part(plan, i, sources, done=None, wish="", old=None):
+def fake_part(plan, i, sources, done=None, wish="", old=None, *more):
     async def go():
         if plan["kind"] == "brief":
             return docmake.check_letter({"recipient": ["Hausverwaltung"], "subject": "Heizung", "greeting": "Hallo,",
@@ -726,7 +726,7 @@ class Live(Base):
             live._run.clear()
         seen = []
 
-        def peek(plan, i, sources, done=None, wish="", old=None):
+        def peek(plan, i, sources, done=None, wish="", old=None, *more):
             r = next(x for x in live.snapshot()["reqs"] if (x["intent"] or "").startswith("Dokument") and not x["done"])
             seen.append((r["stage"], r["to"], r["intent"]))
             return fake_part(plan, i, sources, done, wish, old)
@@ -736,7 +736,7 @@ class Live(Base):
         snap = live.snapshot()
         r = next(x for x in snap["reqs"] if (x["intent"] or "").startswith("Dokument"))
         self.assertEqual([(s["n"], s["to"]) for s in r["steps"] if s["k"] == "tool"],
-                         [("document_write", "make")] * 2 + [("document_build", "make")])
+                         [("document_sources", "mem")] + [("document_write", "make")] * 2 + [("document_build", "make")])
         self.assertTrue(r["done"])
         self.assertNotIn("Pool", json.dumps(snap, ensure_ascii=False))
         tracelog.clear()

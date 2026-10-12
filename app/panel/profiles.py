@@ -747,6 +747,7 @@ SETTINGS = {
     # Dokumente erstellen (docmake.py): the profile's own switch, own templates, the sender lines of a letter
     "doc_make": (False, lambda v: isinstance(v, bool)),
     "doc_make_templates": (False, lambda v: isinstance(v, bool)),
+    "doc_make_wikipics": (False, lambda v: isinstance(v, bool)),
     "doc_sender": ("", lambda v: isinstance(v, str) and len(v) <= 300 and v.count("\n") <= 5
                    and not re.search(r"[\x00-\x09\x0b-\x1f\x7f]", v)),
     # where a finished document also goes on its own (docmake.deliver_of; only a target that is set up counts)

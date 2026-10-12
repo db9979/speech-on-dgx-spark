@@ -81,6 +81,8 @@ TOOLS = {
     "document_plan": "make", "document_change": "make", "document_status": "make", "document_send": "make",
     # the job itself (docmake._work): every part written by the language model, then the file built
     "document_write": "make", "document_build": "make",
+    # before writing: the Kiwix article for the fact check and pictures (folien.py), the own documents
+    "document_facts": "kiwix", "document_picture": "kiwix", "document_sources": "mem",
     # a finished document delivered (docmake.send): to the real target
     "Dokument → Begleiter": "desk", "Dokument → reMarkable": "rm", "Dokument → Telegram": "tg", "Dokument → Mail": "mail",
 }

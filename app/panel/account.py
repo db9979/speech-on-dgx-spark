@@ -1215,7 +1215,7 @@ ALLOW = {"tool_think": "toolthink", "route": "routing", "direct_read": "direct",
          "wiki": "wiki", "kiwix": "kiwix", "local": "lokal", "follow": "follow", "echo": "selfecho", "images": "images",
          "prefetch": "vorab", "instant_ack": "ack", "spark_help": "hilfe", "tips_on": "tipps", "pro_tips": "tippspush", "systemone_on": "einordnung",
          "devup": "geraeteupdate", "devup_night": "geraetenacht", "report": "melden", "doc_make": "erstellen",
-         "doc_make_templates": "erstellenvorlagen", "svcwatch": "dienstwacht", "svchint": "dienstnutzer",
+         "doc_make_templates": "erstellenvorlagen", "doc_make_wikipics": "erstellenbilder", "svcwatch": "dienstwacht", "svchint": "dienstnutzer",
          "sync_live": "verlaufsync", "sync_one": "eingespraech", "sync_offline": "offlinelesen",
          "rate": "bewerten", "rateback": "bewertenzurueck", "beratnote": "beraterhinweis", "beratask": "beraterchat",
          "beratme": "beratermich"}

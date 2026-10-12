@@ -112,6 +112,7 @@
     "doc_brief": false,
     "doc_make": false,
     "doc_make_templates": false,
+    "doc_make_wikipics": false,
     "remarkable": false,
     "remarkable_send": false,
     "remarkable_fresh": false,
