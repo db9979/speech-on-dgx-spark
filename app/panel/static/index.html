@@ -122,7 +122,7 @@
       <div class="setrow" data-show="chat.documents" style="margin-left:18px"><div class="lbl"><b>Bedeutungssuche</b><span>Ein kleines Modell auf dem Prozessor findet auch Stellen mit anderen Worten („Auto“ findet „Kfz“); etwa 300 MB, nur bei Bedarf.</span></div><label class="tgl"><input type="checkbox" id="chat.doc_semantic"><i></i></label></div>
       <div class="setrow" data-show="chat.documents" style="margin-left:18px"><div class="lbl"><b>Originale aufbewahren</b><span>Die hochgeladene Datei bleibt auf dem Spark, lässt sich wieder öffnen und kommt in die Sicherung.</span></div><label class="tgl"><input type="checkbox" id="chat.doc_originals"><i></i></label></div>
       <div data-show="chat.documents" style="margin-left:18px"><label>Größte PDF-Datei (MB)</label><input class="num" id="chat.doc_max_mb" type="number" min="20" max="300"><div class="fh">20 bis 300, Standard 100. Andere Dateiarten bis 20 MB. Große Scans brauchen beim Hochladen kurz etwa das Dreifache an Arbeitsspeicher.</div></div>
-      <div data-show="chat.documents" style="margin-left:18px"><label>Speicher pro Profil (MB)</label><input class="num" id="chat.doc_quota_mb" type="number" min="50" max="5000"><div class="fh">50 bis 5000, für alle Uploads eines Profils zusammen. Einzelnen Profilen gibst du unter Personen und Geräte → Details → Platz für Uploads mehr oder weniger. Ist er voll, nimmt der Spark nichts Neues an; Originale nur, solange Platz ist.</div></div>
+      <div data-show="chat.documents" style="margin-left:18px"><label>Speicher pro Profil (MB)</label><input class="num" id="chat.doc_quota_mb" type="number" min="50" max="5000"><div class="fh">50 bis 5000, für alle Uploads eines Profils zusammen. Einzelnen Profilen gibst du unter Personen und Geräte beim Profil → Details → Platz für Uploads mehr oder weniger. Ist er voll, nimmt der Spark nichts Neues an; Originale nur, solange Platz ist.</div></div>
       <div class="setrow" data-show="chat.documents" style="margin-left:18px"><div class="lbl"><b>Gemeinsame Dokumente</b><span>Ein Profil gibt einzelne Dokumente „Für alle“ frei, die anderen Profile finden und öffnen sie. Gäste und unbekannte Stimmen nie.</span></div><label class="tgl"><input type="checkbox" id="chat.doc_shared"><i></i></label></div>
       <div class="setrow" data-show="chat.documents" style="margin-left:18px"><div class="lbl"><b>Steckbrief und Tags</b><span>Das Sprachmodell notiert in Pausen Titel, Art, Absender, Frist und Schlagwörter jedes Dokuments; der Assistent sucht damit gezielter.</span></div><label class="tgl"><input type="checkbox" id="chat.doc_brief"><i></i></label></div>
       <div class="setrow" data-show="chat.documents" style="margin-left:18px"><div class="lbl"><b>Dokumente erstellen</b><span>Der Spark schreibt auf Bitte Briefe, Präsentationen und Tabellen als Word, PDF, PowerPoint oder Excel; erst die Gliederung, nach deinem Ja.</span></div><label class="tgl"><input type="checkbox" id="chat.doc_make"><i></i></label></div>
@@ -343,7 +343,7 @@
       <div class="savebar"><button class="b p savebtn" data-p="tts">Speichern</button><span class="savemsg"></span></div>
     </div>
     <div class="card pane" id="pane-voices"><h2 class="pt">Stimmen</h2><div class="pintro">Eigene Stimmen für die Sprachausgabe: aufnehmen, anhören, sichern.<button class="mlink" type="button">Mehr</button></div>
-      <div class="fh more" hidden>Welche Stimme der Assistent nutzt, steht unter Sprachausgabe → Standardstimme; jedes Profil kann sich unter Ich → Gespräch eine andere wählen. Wer spricht, erkennt dagegen die Sprechererkennung.</div>
+      <div class="fh more" hidden>Welche Stimme der Assistent nutzt, steht unter Einstellungen → Sprachausgabe → Standardstimme; jedes Profil kann sich unter Ich → Gespräch eine andere wählen. Wer spricht, erkennt dagegen die Sprechererkennung.</div>
       <h3 class="sec">Vorhandene Stimmen</h3>
       <table><tbody id="vlist"></tbody></table><div id="vprobemsg" class="fh"></div>
       <details class="adv" id="vaddbox"><summary>Stimme hinzufügen <span class="mut">· aufnehmen oder Audiodatei hochladen</span></summary>
@@ -608,7 +608,7 @@
       <div class="row" id="ppager" style="gap:6px;align-items:center"></div>
       <details class="pnew" id="pnew"><summary class="b p">+ Neues Profil</summary>
       <div class="row"><input id="pname" placeholder="Name" maxlength="40" style="flex:1;min-width:120px"><input id="ppin" type="password" placeholder="PIN (mind. 4 Zeichen)" autocomplete="new-password" style="flex:1;min-width:120px"><button class="b p" id="padd">Anlegen</button></div>
-      <div class="fh">Welche Funktionen ein neues Profil gleich bekommt, legst du unter Wer darf was → „Neue Profile“ fest.</div></details>
+      <div class="fh">Welche Funktionen ein neues Profil gleich bekommt, legst du unter Funktionen → Wer darf was → „Neue Profile“ fest.</div></details>
       <div id="pmsg" style="margin-top:8px"></div>
       </div><aside class="pside" id="pside" aria-live="polite"></aside></div>
     </div>
@@ -933,6 +933,7 @@
 <script src="/static/js/changelog.js"></script>
 <script src="/static/js/melden.js"></script>
 <script src="/static/js/seite.js"></script>
+<script src="/static/js/way.js"></script>
 <script src="/static/js/start.js"></script>
 </body>
 </html>

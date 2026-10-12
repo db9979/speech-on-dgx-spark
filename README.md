@@ -33,6 +33,7 @@ All options for running without questions (`--mode api --asr 1.7b --tts 0.6b --y
 
 <!-- New version: add one line at the top here and in CHANGELOG.md, drop the oldest line here (keep 10). Details go to docs/de and docs/en, not into this README. -->
 
+- **V01.0.435** Hints with a way ("Settings → … “Live page”", "Me → Documents") are now links that jump right there; a self-test checks every way
 - **V01.0.434** Self-test: the Live check "only what is set up" uses its own profile (was red depending on other tests)
 - **V01.0.433** Companion sets up Office add-ins: "Spark" button in Outlook classic (also iCloud/IMAP), Word and Excel registered directly, new Outlook with file and add page
 - **V01.0.432** PowerPoint files open without "Repair", validity check for Office files
@@ -42,7 +43,6 @@ All options for running without questions (`--mode api --asr 1.7b --tts 0.6b --y
 - **V01.0.428** Instant acknowledgement with more variety: 126 ready-made sentences, picked at random, never one of the last six.
 - **V01.0.427** Second step made uniform: one code per person, three levels with locks, the dialog says whose code and what for, sign in straight as admin, panel password only via #admin
 - **V01.0.426** Mail mode buttons fit narrow phones too
-- **V01.0.425** Live picture: internet as an amber area, Wächter as a wall with blocked lines, quiet targets folded, colour key, no overlaps or cut texts
 
 All versions: [CHANGELOG.md](CHANGELOG.md)
 

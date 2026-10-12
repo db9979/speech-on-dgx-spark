@@ -827,7 +827,7 @@ async def answer(ctx, latest):
         return _say("Regel per Sprache (nicht möglich)", "Von selbst melden ist bei dir aus (Ich → Von selbst).")
     item = homeassistant.get(uid)
     if not item:
-        return _say("Regel per Sprache (nicht möglich)", "Home Assistant ist bei dir nicht verbunden (Ich → Home Assistant).")
+        return _say("Regel per Sprache (nicht möglich)", "Home Assistant ist bei dir nicht verbunden (Ich → Smart Home).")
     clause, guess = got
     try:
         eid, name = await find(item, clause, guess)

@@ -2,6 +2,7 @@
 
 Every version in one line, newest first (taken from the commit messages, so some lines are German, some English). Older entries have no version number.
 
+- **V01.0.435** · 2026-10-12 · Sprung-Links: jeder Hinweis mit einem Weg (Einstellungen, Funktionen, Zustand, Personen und Geräte, Ich → …) wird von selbst ein Link zur Stelle, auch in Panel-Meldungen und Antworten des Assistenten; nur was die Person öffnen darf; #weg= für Apps; test_sprunglinks prüft rund 800 Wege; veraltete Wege korrigiert (Profil → Telegram, Ich → Home Assistant, Zustand → System/Update u. a.)
 - **V01.0.434** · 2026-10-12 · Selbsttest: Live-Prüfung „nur eingerichtete Dienste“ nimmt ein eigenes Profil statt des ersten aus dem Lauf (war rot, wenn andere Tests Kalender hinterließen oder es kein Profil gab)
 - **V01.0.433** · 2026-10-12 · Begleiter: Office-Add-ins einrichten – Knopf „Spark“ in Outlook classic (auch iCloud/IMAP: verbessern, Antwort entwerfen, übersetzen), Word und Excel direkt eingetragen, neues Outlook mit Datei und Hinzufügen-Seite
 - **V01.0.432** · 2026-10-12 · Dokumente erstellen: PowerPoint fragte beim Öffnen nach „Reparieren“ (Positionen mit Kommastellen bei Text und Diagramm nebeneinander), jetzt immer ganze Zahlen; Selbsttest prüft jede erzeugte PowerPoint-, Word- und Excel-Datei auf Gültigkeit; Überschriften ohne doppelte Nummer („7. Aktuelle Themen“)

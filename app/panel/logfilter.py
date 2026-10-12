@@ -36,8 +36,8 @@ COMMIT = re.compile(r"^(?:(?:Installed|Available|Update finished): |\s+)[0-9a-f]
 ACCESS = re.compile(r'^INFO:\s+\S+ - "[A-Z]+ \S+ HTTP/[\d.]+" (\d{3})\b')
 # a fixed hint for the newest error: (area or None, regex on the message, German, English)
 HINTS = (
-    ("ha", r"\b401\b|Unauthorized", "Home-Assistant-Token abgelaufen oder falsch: Ich → Home Assistant.",
-     "Home Assistant token expired or wrong: Me → Home Assistant."),
+    ("ha", r"\b401\b|Unauthorized", "Home-Assistant-Token abgelaufen oder falsch: Ich → Smart Home.",
+     "Home Assistant token expired or wrong: Me → Smart home."),
     ("room", r"tv check", "Fernseher-Abfrage in Home Assistant klappt nicht: ist Home Assistant erreichbar?",
      "TV check in Home Assistant fails: can the Spark reach Home Assistant?"),
     (None, r"(?i)tts.*(timeout|broke)|(timeout|broke).*tts", "Sprachausgabe hängt oder ist ausgelastet: Zustand → Monitoring, TTS-Engine.",
@@ -51,9 +51,9 @@ HINTS = (
     ("telegram", r"(?i)conflict", "Ein anderes Programm nutzt denselben Bot-Token: Token nur an einer Stelle nutzen "
      "oder bei @BotFather einen neuen holen und unter Funktionen → Telegram eintragen.",
      "Another program uses the same bot token: use it in one place only or get a new one from @BotFather "
-     "and enter it under Integrate → Telegram."),
+     "and enter it under Features → Telegram."),
     ("telegram", r".", "Telegram klappt nicht: Bot unter Funktionen → Telegram prüfen.",
-     "Telegram fails: check the bot under Integrate → Telegram."),
+     "Telegram fails: check the bot under Features → Telegram."),
 )
 _HINTS = [(a, re.compile(rx), de, en) for a, rx, de, en in HINTS]
 _LINE = re.compile(r"^(\d{4}-\d\d-\d\dT\d\d:\d\d:\d\d(?:[+-]\d\d:?\d\d|Z))\s+\S+\s+([^:\s]+?)(?:\[\d+\])?:\s?(.*)$")

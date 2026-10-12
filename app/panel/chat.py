@@ -377,7 +377,7 @@ REMINDER_TOOLS = [
 WATCH_HINT = ("Die Frage kommt von einer Smartwatch mit kleinem Display und kleinem Lautsprecher. Antworte "
               "kurz, meist in ein bis drei Sätzen, ohne Listen, Tabellen oder Links.")
 TELEGRAM_HINT = ("Diese Unterhaltung läuft über Telegram: Antworte kurz in einfachem Text, ohne Markdown. "
-                 "Hast du keinen Zugriff auf etwas, sag, dass der Nutzer das im Panel unter Profil → Telegram "
+                 "Hast du keinen Zugriff auf etwas, sag, dass der Nutzer das im Panel unter Ich → Telegram "
                  "erlauben kann.")
 SPEAKER_HINT = ("Die Frage kommt über einen kleinen Lautsprecher im Raum, der deine Antwort vorliest. Antworte "
                 "kurz, meist in ein bis drei Sätzen, ohne Listen, Tabellen, Links oder Emojis.")

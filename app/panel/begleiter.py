@@ -1960,7 +1960,7 @@ def _ha(uid):
     import homeassistant
     ha = homeassistant.get(uid) if _ha_ok(uid) else None
     if not ha:
-        raise HTTPException(403, "Home Assistant ist für dich nicht verbunden (Ich → Home Assistant).")
+        raise HTTPException(403, "Home Assistant ist für dich nicht verbunden (Ich → Smart Home).")
     return ha
 
 

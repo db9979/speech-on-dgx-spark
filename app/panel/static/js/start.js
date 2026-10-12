@@ -48,6 +48,8 @@ $('pwset').onclick=async()=>{try{await api('/api/password',{method:'POST',header
     if(h[1]==='go'&&ADMIN&&h[2]!=='chat'&&$(h[2])&&$(h[2]).tagName==='SECTION')goSec(h[2]);
     else if(h[1]==='cfg'&&ADMIN&&$('pane-'+h[2]))goCfg(h[2]);
     else if(h[1]==='me'&&PROFILE&&/box$/.test(h[2])&&$(h[2]))openMe(h[2])}}catch{}
+  // #weg=<a way like „Ich → Sicherheit“> from the apps, mails and messages: opens it like a Sprung-Link (way.js)
+  try{if(typeof wayHash==='function')wayHash()}catch{}
   try{const fr=sessionStorage.getItem('flagsreload');if(fr){sessionStorage.removeItem('flagsreload');const e=$('updtoast');e.textContent=fr==='away'?t('Deine Funktionen wurden geändert, Seite neu geladen.','Your functions were changed, page reloaded.'):t('Gespeichert, Seite mit den neuen Funktionen geladen.','Saved, page loaded with the new functions.');e.style.display='block';setTimeout(()=>e.style.display='none',5000)}}catch{}   // back where the new version was loaded
   if(typeof goStart==='function')goStart(who);
   if(typeof mcpAuthStart==='function')mcpAuthStart();

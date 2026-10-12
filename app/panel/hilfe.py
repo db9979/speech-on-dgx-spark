@@ -230,7 +230,7 @@ FAQ = (
      "Los geht's die neue Person durch das Einrichten."),
      ("Inviting someone (new person)", "Under People and devices → New people the admin creates an invitation (suggested name, "
       "starter pack, valid 1, 7 or 30 days) and gets a link, a QR code and a card to print; the link needs the panel's https "
-      "address. Recommended: \"New people\" set to \"Only by invitation\". Then Me → Getting started guides the new person.")),
+      "address. Recommended: \"New people\" set to \"Only by invitation\". Then Me → Let's go guides the new person.")),
     ("sicherung", "admin", "cfg/bak", ("Sicherung (Backup)", "Einstellungen → Sicherung: „Jetzt sichern“ legt eine "
      "Sicherung an; „Sicherung nach außen“ schickt einmal am Tag eine verschlüsselte Sicherung per WebDAV auf ein NAS oder eine "
      "Nextcloud (nur Haupt-Admin, mit Sicherungs-Passwort). „Sicherheit auf einen Blick“ unter Einstellungen → Sicherheit warnt, "
@@ -251,10 +251,10 @@ FAQ = (
      ("My kill switch", "Under Me → Security → My kill switch each profile stops only itself: other browsers and the profile's "
       "devices (apps, watch, speakers, Telegram, MCP) are blocked, nothing happens in its name any more; reading in the own "
       "browser stays. Lift it in the browser with the PIN (and the code when the second step is on) or by an admin.")),
-    ("pin", "profile", "me/secbox", ("PIN ändern", "Die PIN setzt der Admin unter Personen und Geräte → Details → Zugang: "
+    ("pin", "profile", "me/secbox", ("PIN ändern", "Die PIN setzt der Admin unter Personen und Geräte beim Profil → Details → Zugang: "
      "„PIN ändern“ oder „PIN-Link“ (dann wählst du die neue PIN selbst über den Link, mindestens 6 Zeichen). Eine neue PIN "
      "meldet alle Browser des Profils ab. Falsche PINs sperren nach mehreren Versuchen eine Weile."),
-     ("Changing the PIN", "The admin sets the PIN under People and devices → Details → Access: \"Change PIN\" or \"PIN link\" "
+     ("Changing the PIN", "The admin sets the PIN under People and devices at the profile → Details → Access: \"Change PIN\" or \"PIN link\" "
       "(then you pick the new PIN yourself through the link, at least 6 characters). A new PIN signs out all the profile's "
       "browsers. Wrong PINs lock for a while after several tries.")),
     ("passkey", "profile", "me/secbox", ("Passkeys", "Wer den zweiten Anmeldeschritt an hat, legt unter Ich → Sicherheit "

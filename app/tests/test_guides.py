@@ -209,7 +209,7 @@ class MenuStructure(unittest.TestCase):
 
     def test_me_pages_follow_the_groups(self):
         me = read("js", "me.js")
-        pages = re.findall(r"\['(\w+box)',t\(", me[me.index("function meTabs"):me.index("// pages in the same groups")])
+        pages = re.findall(r"\['(\w+box)',t\(", me[me.index("function meAll"):me.index("// pages in the same groups")])
         self.assertEqual(pages[0], "overbox")
         groups, gs = guides()
         grp = {g["me"]: g["grp"] for g in gs if g.get("me") and g["id"] != "hands"}

@@ -38,7 +38,7 @@ STATE = os.environ.get("SPEECH_SPARK_STATE", "/var/lib/speech-spark/state")
 CODE_SECONDS = 600
 FOLLOW_UP = 30 * 60          # earlier messages of the day's Telegram conversation count this long
 MAX_VOICE = 5 * 1024 * 1024
-STRANGER = "Dieser Spark-Assistent ist privat. Wer ein Profil hat, verbindet Telegram im Panel unter Profil → Telegram."
+STRANGER = "Dieser Spark-Assistent ist privat. Wer ein Profil hat, verbindet Telegram im Panel unter Ich → Telegram."
 HELP = ("Schreib mir oder schick eine Sprachnachricht. /neu beginnt ein neues Gespräch, /stimme schaltet die "
         "Antwort als Sprachnachricht an oder aus, /merken als Antwort auf ein Foto legt es in deine Dokumente, "
         "/trennen löst die Verbindung, /meinnotaus legt dein Profil still (aufheben im Browser), /melden … legt einen Problem-Entwurf an.")
@@ -293,7 +293,7 @@ async def handle(c, upd):
             print("telegram: linked a profile", flush=True)
             return
         if not uid:
-            await call(c, "sendMessage", chat_id=cid, text="Der Code passt nicht oder ist abgelaufen. Hol dir im Panel unter Profil → Telegram einen neuen.")
+            await call(c, "sendMessage", chat_id=cid, text="Der Code passt nicht oder ist abgelaufen. Hol dir im Panel unter Ich → Telegram einen neuen.")
             return
     if not uid:
         if len(_strangers) > 1000:
@@ -348,7 +348,7 @@ async def handle(c, upd):
         return
     if text in ("/trennen", "/stop"):
         unlink(uid)
-        await call(c, "sendMessage", chat_id=cid, text="Getrennt. Neu verbinden geht im Panel unter Profil → Telegram.")
+        await call(c, "sendMessage", chat_id=cid, text="Getrennt. Neu verbinden geht im Panel unter Ich → Telegram.")
         return
     if any(k in m for k in ("forward_origin", "forward_from", "forward_from_chat", "forward_sender_name", "forward_date")):
         await call(c, "sendMessage", chat_id=cid, text=FORWARDED)   # someone else's words never act for the profile
