@@ -46,6 +46,7 @@ def reset():
         live._run.clear(), live._events.clear(), live._guard.clear(), live._door.clear(), live._rets.clear()
         live._count.clear(), live._codes.clear(), live._seen.clear(), live._past.clear(), live._hits.clear()
         live._saved[0] = 0.0
+        live._unset[0] = 0.0
     try:
         os.remove(live._file())
     except OSError:
@@ -506,3 +507,56 @@ class Live(unittest.TestCase):
 
 if __name__ == "__main__":
     unittest.main()
+
+
+class SetUp(unittest.TestCase):
+    """Dominik 2026-10-12: targets that are not set up are not on the picture at all (not even in "+ N ruhig")."""
+
+    def setUp(self):
+        reset()
+        set_logs(live=True)
+        with open(os.environ["SPEECH_SPARK_CONFIG"]) as f:
+            self.was = json.load(f)
+        self.addCleanup(helpers.write_config, self.was)
+        self.addCleanup(reset)
+
+    def chat(self, **kw):
+        c = json.loads(json.dumps(self.was))
+        c.setdefault("chat", {}).update(kw)
+        helpers.write_config(c)
+        live._unset[0] = 0.0
+
+    def ids(self):
+        return {x["id"] for x in live.snapshot("admin", now=1000.0)["targets"]}
+
+    def test_only_what_is_set_up(self):
+        import profiles
+        self.chat(search=False, calendar=True, mail=False, remarkable=False, homeassistant=False)
+        ids = self.ids()
+        self.assertIn("qwen", ids)
+        for t in ("web", "mail", "rm", "push", "ha"):
+            self.assertNotIn(t, ids, t)
+        self.assertNotIn("cal", ids)          # switched on, but no profile has a calendar
+        uid = profiles.user_ids()[0]
+        f = profiles._path(uid, "calendar.json")
+        os.makedirs(os.path.dirname(f), exist_ok=True)
+        with open(f, "w") as fh:
+            fh.write("{}")
+        self.addCleanup(os.remove, f)
+        self.chat(search=True, search_url="", calendar=True)
+        ids = self.ids()
+        self.assertIn("cal", ids)
+        self.assertNotIn("web", ids)          # switched on, but no SearXNG address
+        self.chat(search=True, search_url="http://127.0.0.1:9/", calendar=True)
+        self.assertIn("web", self.ids())
+
+    def test_used_shows_anyway_and_checks_are_cached(self):
+        self.chat(search=False)
+        self.assertNotIn("web", self.ids())
+        r = live.begin("speaker", "Küche", t=999.0)
+        r.now("tool", "web_search", 999.5)
+        self.assertIn("web", {x["id"] for x in live.snapshot("admin", now=1000.0)["targets"]})
+        live.end(r, True)
+        # within 30 s the answer is the one remembered (no file reads every second)
+        live._unset[:] = [5000.0, frozenset({"qwen"})]
+        self.assertEqual(live.unset(5010.0), frozenset({"qwen"}))

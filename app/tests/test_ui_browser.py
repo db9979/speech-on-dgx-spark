@@ -1462,6 +1462,34 @@ class Browser(unittest.TestCase):
             c.setdefault("logs", {}).update(kw)
             helpers.write_config(c)
         logs(live=True, live_monitor=True)
+        # set up: web search, calendar and mail (one profile connected); reMarkable stays off and must not show
+        import profiles
+        with open(os.environ["SPEECH_SPARK_CONFIG"]) as f:
+            cf = _json.load(f)
+        was = {k: cf.get("chat", {}).get(k) for k in ("search", "search_url", "calendar", "mail", "remarkable")}
+        cf.setdefault("chat", {}).update(search=True, search_url="http://127.0.0.1:9/", calendar=True, mail=True, remarkable=False)
+        helpers.write_config(cf)
+        uid = next(u["id"] for u in profiles.names() if u["name"] == "Uitest")
+        made = [profiles._path(uid, n) for n in ("calendar.json", "mail.json") if not os.path.exists(profiles._path(uid, n))]
+        for x in made:
+            os.makedirs(os.path.dirname(x), exist_ok=True)
+            with open(x, "w") as f:
+                f.write("{}")
+
+        def undo():
+            for x in made:
+                os.remove(x)
+            with open(os.environ["SPEECH_SPARK_CONFIG"]) as f:
+                cb = _json.load(f)
+            for k, v in was.items():
+                if v is None:
+                    cb.get("chat", {}).pop(k, None)
+                else:
+                    cb["chat"][k] = v
+            helpers.write_config(cb)
+            live._unset[0] = 0
+        self.addCleanup(undo)
+        live._unset[0] = 0
         c = TestClient(panel.app)
         c.post("/api/profile/login", json={"name": "Uitest", "pin": "4711"})
         self.assertEqual(c.post("/api/chat", json={"messages": [{"role": "user", "content":
@@ -1502,6 +1530,7 @@ class Browser(unittest.TestCase):
                         self.assertIn("ins Internet", await pg.text_content("#lvflow .legend"))
                         self.assertIn("ruhig", await pg.text_content("#lvflow [data-fold]"))
                         self.assertEqual(await pg.locator("#lvflow [data-node='mail']").count(), 0)
+                        self.assertNotIn("reMarkable", await pg.text_content("#lvflow"))   # not set up: not shown at all
                         await pg.click("#lvflow [data-fold]")
                         await pg.wait_for_selector("#lvflow [data-node='mail']", timeout=20000)
                         self.assertIn("zuklappen", await pg.text_content("#lvflow [data-fold]"))

@@ -701,6 +701,45 @@ def _num(v):
     return f"{v:g}".replace(".", ",") if isinstance(v, (int, float)) else "?"
 
 
+# Dominik 2026-10-12: a target that is not set up (its function off, no address, no profile connected) is not shown
+# at all, not even in "+ N ruhig"; once a request goes there it shows like any used target
+SETUP = {"web": "search", "cal": "calendar", "mail": "mail", "ha": "ha", "kiwix": "kiwix", "rm": "remarkable",
+         "push": "iphonepush", "wiki": "wiki", "weather": "weather", "transit": "transit", "parcels": "parcels", "tg": "telegram"}
+SETUP_FILE = {"cal": "calendar.json", "mail": "mail.json", "ha": "homeassistant.json", "rm": "remarkable.json"}
+_unset = [0.0, frozenset()]
+
+
+def unset(now=None):
+    """Target ids that are not set up, checked at most every 30 s (each check alone; one that fails counts as set up)."""
+    now = now or time.time()
+    if now - _unset[0] < 30:
+        return _unset[1]
+    out = set()
+    try:
+        import features
+        import profiles
+        c = features.chat_cfg()
+        ids = profiles.user_ids()
+    except Exception:
+        return _unset[1]
+    for t, key in SETUP.items():
+        try:
+            if not features.admin_on(key, c):
+                out.add(t)
+            elif t == "web" and not str(c.get("search_url") or "").strip():
+                out.add(t)
+            elif t == "push":
+                import apns
+                if not apns.ready():
+                    out.add(t)
+            elif t in SETUP_FILE and not any(os.path.exists(profiles._path(u, SETUP_FILE[t])) for u in ids):
+                out.add(t)
+        except Exception:
+            pass
+    _unset[:] = [now, frozenset(out)]
+    return _unset[1]
+
+
 def hints(now=None):
     """The warnings the admin pages show on top (health.alerts), at the part of the picture they are about
     (Dominik 2026-10-10: "Antworten sind langsamer geworden" belongs to its connection). Fixed words and
@@ -890,8 +929,9 @@ def snapshot(view="admin", now=None):
         make = {"on": False}
     if make.get("on"):
         used.add("make")
+    off = unset(now)
     targets = [{"id": k, "name": v[0], "sub": _devup_sub(devup) if k == "geraete" and devup else v[1], "zone": v[2]}
-               for k, v in TARGETS.items() if v[3] or k in used]
+               for k, v in TARGETS.items() if (v[3] and k not in off) or k in used]
     for x in targets:      # Probleme melden: open drafts and sent today, in numbers (no titles, no text)
         if x["id"] == "issues":
             x["sub"] = (f"{meld.get('drafts', 0)} Entwürfe · {meld.get('sent_today', 0)} heute gesendet"

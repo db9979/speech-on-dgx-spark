@@ -33,6 +33,7 @@ All options for running without questions (`--mode api --asr 1.7b --tts 0.6b --y
 
 <!-- New version: add one line at the top here and in CHANGELOG.md, drop the oldest line here (keep 10). Details go to docs/de and docs/en, not into this README. -->
 
+- **V01.0.431** Live picture shows only services and targets that are set up
 - **V01.0.430** Fewer speech gaps in long answers: more audio in stock while the Spark still writes (also at a faster speaking rate); iPhone app rebuffers after running dry
 - **V01.0.429** Creating documents: preview in the chat, download everywhere (Android, iPhone too), by mail as a draft or into the mailbox, much better looks
 - **V01.0.428** Instant acknowledgement with more variety: 126 ready-made sentences, picked at random, never one of the last six.
@@ -42,7 +43,6 @@ All options for running without questions (`--mode api --asr 1.7b --tts 0.6b --y
 - **V01.0.424** Me pages tidied: tabs with counts, mail questions in one tap, reMarkable folder tree, memory search and edit
 - **V01.0.423** Creating documents: the answer to Spark's question stays with the file wish; when off, Spark says where to switch it on
 - **V01.0.422** Failed tests get one second try (GitHub and the Spark's self-test); green only then is a visible warning
-- **V01.0.421** Invitation test waits up to 120 s on a busy runner and logs where it hangs
 
 All versions: [CHANGELOG.md](CHANGELOG.md)
 
