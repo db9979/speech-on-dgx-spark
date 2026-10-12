@@ -1305,6 +1305,12 @@ async def chat(request: Request):
             slot.release()
         vorrang.mark(end=True)
         return response
+    # Sofort-Abgleich (verlauf.py): the profile's other open pages see "Handy antwortet gerade …" (kind of device only)
+    import verlauf
+    body = getattr(request, "_json", None)
+    busy = verlauf.begin(me and me["id"], verlauf.kind_of(request, body),
+                         (body or {}).get("convo") if isinstance(body, dict) else "",
+                         (body or {}).get("tab") if isinstance(body, dict) else "") if me else None
 
     async def held():
         try:
@@ -1315,6 +1321,7 @@ async def chat(request: Request):
             if slot:
                 slot.release()
             vorrang.mark(end=True)
+            verlauf.end(me and me["id"], busy)
     response.body_iterator = held()
     return response
 
@@ -2246,8 +2253,10 @@ async def _watch_run(job, response, prof, text, tz):
         text = homeassistant.redact(ha, text)
     local = datetime.datetime.now(user_zone(tz or profiles.settings(prof["id"]).get("tz", "")))
     msgs = [{"role": "user", "content": text}, dict({"role": "assistant", "content": answer}, **({job.mark: True} if job.mark else {}))]
+    import verlauf
     try:
-        await asyncio.to_thread(profiles.append_convo, prof["id"], "watch-" + local.strftime("%Y%m%d"), "Uhr " + local.strftime("%d.%m."), msgs)
+        await asyncio.to_thread(verlauf.keep, prof["id"], "watch-" + local.strftime("%Y%m%d"), "Uhr " + local.strftime("%d.%m."), local,
+                                "watch", msgs)
     except Exception as e:
         print("watch convo:", type(e).__name__, e, flush=True)
 
@@ -2329,8 +2338,9 @@ async def text_ask(request, prof, body, who="siri"):
     # the day as the person sees it (the shortcut may send its time zone, else the profile's)
     local = datetime.datetime.now(user_zone(body.get("tz") or profiles.settings(prof["id"]).get("tz", "")))
     day = local.strftime("%Y%m%d")
+    import verlauf
     try:
-        await asyncio.to_thread(profiles.append_convo, prof["id"], conv + day, title + " " + local.strftime("%d.%m."), msgs[-2:])
+        await asyncio.to_thread(verlauf.keep, prof["id"], conv + day, title + " " + local.strftime("%d.%m."), local, client, msgs[-2:])
     except Exception as e:
         print("siri convo:", type(e).__name__, e, flush=True)
     # Siri reads the answer aloud: no passwords or codes in it (the app's history keeps them)

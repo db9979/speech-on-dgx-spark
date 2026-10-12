@@ -833,6 +833,10 @@ SETTINGS = {
     "svc_night": (False, lambda v: isinstance(v, bool)),   # ... at night only one summary at 7 o'clock
     "svc_device": ("", lambda v: v in ("", "app", "and", "desk", "tg", "web", "all")),   # ... on this way (push.send to=)
     "svc_hint": (False, lambda v: isinstance(v, bool)),    # a tool whose service is gone answers at once (dienstwacht.tool_down)
+    # Verlauf auf allen Geräten (verlauf.py): instant sync, one conversation for all channels, offline reading
+    "sync_live": (False, lambda v: isinstance(v, bool)),
+    "sync_one": (False, lambda v: isinstance(v, bool)),
+    "sync_offline": (False, lambda v: isinstance(v, bool)),
     "android_on": (False, lambda v: isinstance(v, bool)),  # Android app (android.py)
     "mcps_on": (False, lambda v: isinstance(v, bool)),     # the Spark as an MCP server for other programs (mcpserver.py)
     "mymcp_on": (False, lambda v: isinstance(v, bool)),    # own MCP services of this profile (meinmcp.py)
@@ -945,14 +949,53 @@ def save_convo(uid, c):
     return item
 
 
+# called with (uid, conversation id, gone) after a conversation was stored or deleted (verlauf.py: Sofort-Abgleich)
+CONVO_HOOKS = []
+VIA = ("telegram", "siri", "desk", "watch", "speaker")   # the channel a message came through (verlauf.target)
+MAX_ATT = 8
+
+
+def _att(a):
+    """What stood under an answer, kept with it so every device shows it again (verlauf-sync point 3): web sources
+    (title, http(s) address), the own documents it came from (name, id, page), a document made (title, kind)."""
+    out = []
+    for x in (a if isinstance(a, list) else [])[:MAX_ATT]:
+        if not isinstance(x, dict):
+            continue
+        k = x.get("k")
+        if k == "src" and isinstance(x.get("l"), list):
+            items = [{"t": str(i.get("t", ""))[:100], "u": str(i.get("u", ""))[:500]} for i in x["l"][:5]
+                     if isinstance(i, dict) and re.match(r"https?://", str(i.get("u", "")))]
+            if items:
+                out.append({"k": "src", "q": str(x.get("q", ""))[:200], "l": items})
+        elif k == "doc" and isinstance(x.get("l"), list):
+            items = [{"n": str(i.get("n", ""))[:120], "id": str(i.get("id", ""))[:40] if re.fullmatch(r"[\w\-]{0,40}", str(i.get("id", ""))) else "",
+                      "p": i.get("p") if isinstance(i.get("p"), int) and 0 < i.get("p") < 100000 else 0}
+                     for i in x["l"][:6] if isinstance(i, dict) and i.get("n")]
+            if items:
+                out.append({"k": "doc", "l": items})
+        elif k == "mk" and x.get("t"):
+            out.append({"k": "mk", "t": str(x["t"])[:120], "n": str(x.get("n", ""))[:40]})
+    return out
+
+
+def _clean_msg(m):
+    # "mail": an answer made from e-mails (kept out of what the background learner reads)
+    d = dict({"role": m["role"], "content": str(m["content"])[:MAX_MSG_LEN]}, **({"mail": True} if m.get("mail") else {}),
+             **({"outside": True} if m.get("outside") and not m.get("mail") else {}))
+    if m.get("via") in VIA:
+        d["via"] = m["via"]
+    att = _att(m.get("att")) if m["role"] == "assistant" else []
+    if att:
+        d["att"] = att
+    return d
+
+
 def _clean_convo(c):
     cid = str(c.get("id", ""))
     if not re.fullmatch(r"[\w\-]{1,40}", cid) or not isinstance(c.get("msgs"), list):
         return None
-    # "mail": an answer made from e-mails (kept out of what the background learner reads)
-    msgs = [dict({"role": m["role"], "content": str(m["content"])[:MAX_MSG_LEN]}, **({"mail": True} if m.get("mail") else {}),
-                 **({"outside": True} if m.get("outside") and not m.get("mail") else {}))
-            for m in c["msgs"][-MAX_MSGS:]
+    msgs = [_clean_msg(m) for m in c["msgs"][-MAX_MSGS:]
             if isinstance(m, dict) and m.get("role") in ("user", "assistant") and m.get("content")]
     item = {"id": cid, "title": str(c.get("title", ""))[:80], "msgs": msgs,
             "updated": int(c["updated"]) if isinstance(c.get("updated"), (int, float)) else int(time.time() * 1000)}
@@ -962,6 +1005,15 @@ def _clean_convo(c):
 def _store_convo(uid, item):
     rest = [x for x in convos(uid) if x["id"] != item["id"]]
     _write(_path(uid, "convos.json"), sorted([item] + rest, key=lambda x: -x["updated"])[:MAX_CONVOS])
+    _tell(uid, item["id"])
+
+
+def _tell(uid, cid, gone=False):
+    for f in CONVO_HOOKS:
+        try:
+            f(uid, cid, gone)
+        except Exception as e:
+            print("profiles: convo hook", type(e).__name__, flush=True)
 
 
 def append_convo(uid, cid, title, msgs):
@@ -979,6 +1031,7 @@ def append_convo(uid, cid, title, msgs):
 def delete_convo(uid, cid):
     with _lock:
         _write(_path(uid, "convos.json"), [x for x in convos(uid) if x["id"] != cid])
+    _tell(uid, cid, gone=True)
 
 
 # ---------------------------------------------------------------- reminders

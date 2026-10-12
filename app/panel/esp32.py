@@ -1397,7 +1397,8 @@ def remember(dev, history, text, answer, from_mail, from_outside=False, owner=Tr
     local = datetime.datetime.now(chat.user_zone(profiles.settings(uid).get("tz", "")))
     cid = f"esp-{dev['id']}-{local:%Y%m%d}"
     try:
-        profiles.append_convo(uid, cid, f"{dev['name']} {local:%d.%m.}", msgs[-2:])
+        import verlauf
+        verlauf.keep(uid, cid, f"{dev['name']} {local:%d.%m.}", local, "speaker", msgs[-2:], owner=owner)
     except Exception as e:
         print("esp32: convo", type(e).__name__, e, flush=True)
 

@@ -1203,8 +1203,11 @@ def profile_settings(request: Request):
     prof = profiles.current(request)
     base = profiles.defaults(load_config().get("chat", {}).get("defaults"))
     chat = load_config().get("chat", {})
+    import verlauf
     return {"settings": dict(base, **(profiles.settings(prof["id"]) if prof else {})), "defaults": base,
-            "profile": prof, "allow": _allow(prof, chat)}
+            "profile": prof, "allow": _allow(prof, chat),
+            # this browser may keep the conversations for reading offline (trusted, verlauf.offline_here); else it deletes them
+            "offline_here": verlauf.offline_here(prof, request)}
 
 
 # which conversation switches the admin allows (features.py), only for a signed-in profile
@@ -1212,7 +1215,8 @@ ALLOW = {"tool_think": "toolthink", "route": "routing", "direct_read": "direct",
          "wiki": "wiki", "kiwix": "kiwix", "local": "lokal", "follow": "follow", "echo": "selfecho", "images": "images",
          "prefetch": "vorab", "instant_ack": "ack", "spark_help": "hilfe", "tips_on": "tipps", "pro_tips": "tippspush", "systemone_on": "einordnung",
          "devup": "geraeteupdate", "devup_night": "geraetenacht", "report": "melden", "doc_make": "erstellen",
-         "doc_make_templates": "erstellenvorlagen", "svcwatch": "dienstwacht", "svchint": "dienstnutzer"}
+         "doc_make_templates": "erstellenvorlagen", "svcwatch": "dienstwacht", "svchint": "dienstnutzer",
+         "sync_live": "verlaufsync", "sync_one": "eingespraech", "sync_offline": "offlinelesen"}
 
 
 def _allow(prof, chat):

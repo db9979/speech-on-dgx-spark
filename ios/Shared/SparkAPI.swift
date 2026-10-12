@@ -471,6 +471,26 @@ struct SparkAPI {
         }
     }
 
+    /// What changed in the profile's conversations since a time (ms, the Spark's own clock), and which ones still
+    /// exist (a conversation deleted on another device is missing from ids).
+    func convos(since: Int) async throws -> (items: [SavedConvo], ids: Set<String>) {
+        var c = URLComponents(url: base.appendingPathComponent("api/profile/convos"), resolvingAgainstBaseURL: false)!
+        c.queryItems = [URLQueryItem(name: "since", value: String(max(0, since)))]
+        var r = request("api/profile/convos")
+        r.url = c.url
+        let (data, response) = try await URLSession.shared.data(for: r)
+        try Self.check(data, response)
+        let d = Self.object(data)
+        let ids = Set((d["ids"] as? [String] ?? []).prefix(200))
+        let list = d["items"] as? [[String: Any]] ?? []
+        let items: [SavedConvo] = list.compactMap { d in
+            guard let id = d["id"] as? String, let msgs = d["msgs"] as? [[String: Any]] else { return nil }
+            let ms = (d["updated"] as? NSNumber)?.doubleValue ?? 0
+            return SavedConvo(id: id, title: d["title"] as? String ?? "", updated: Date(timeIntervalSince1970: ms / 1000), msgs: msgs)
+        }
+        return (items, ids)
+    }
+
     /// Adds new messages to one conversation in the profile's list (made if new; what another device added stays).
     /// "add" instead of "msgs": an older Spark refuses it rather than replacing the conversation.
     func saveConvo(id: String, title: String, msgs: [[String: Any]]) async throws {

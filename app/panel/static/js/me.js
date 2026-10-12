@@ -3,7 +3,7 @@
 const ME_LOAD={p:null,next:null};   // Ich's boxes: the load running now and the one queued after it (openMe)
 function setProfile(p){const changed=(p&&p.id)!==(PROFILE&&PROFILE.id);PROFILE=p||null;
   $('profname').textContent=PROFILE?PROFILE.name:t('Gast','Guest');
-  if(changed){stopListening(true);stopAnswer();convos.cache=[];openConvo(null);convos.sync().then(()=>{if(!chat.msgs.length)openConvo(latestConvo())})}
+  if(changed){stopListening(true);stopAnswer();syncStop();if(!PROFILE)offlineWipe(true);convos.cache=[];openConvo(null);convos.sync().then(()=>{if(!chat.msgs.length)openConvo(latestConvo())})}
   loadSettings();rem.load();if(window.room)room.show();guestLock()}
 // Guests change no settings and cannot use room mode: they get the admin's defaults (the admin's own browser may).
 const isGuest=()=>!PROFILE&&!ADMIN;
@@ -509,7 +509,7 @@ $('proflogin').onclick=async()=>{try{const r=await (await api('/api/profile/logi
     if(GATE||r.admin){location.reload();return}
     const who=await (await fetch('/api/whoami')).json();SETUP=who.setup||null;setProfile(who.profile);if(typeof hilfeStart==='function')hilfeStart(who.hilfe);closeProf()}
   catch(e){$('profmsg').textContent=/too many/.test(errRaw(e))?t('Zu viele falsche Versuche. Bitte später noch einmal (','Too many wrong attempts. Please try again later (')+(errRaw(e).match(/in (.+)$/)||['',''])[1]+').':/wrong code/.test(errRaw(e))?t('Code falsch.','Wrong code.'):t('Name oder PIN falsch.','Wrong name or PIN.')}};
-$('proflogout').onclick=async()=>{await fetch('/api/profile/logout',{method:'POST'});if(!PUBLIC&&!ADMIN){location.reload();return}setProfile(null);if(typeof hilfeStart==='function')hilfeStart(null);closeProf()};
+$('proflogout').onclick=async()=>{await fetch('/api/profile/logout',{method:'POST'});offlineWipe(true);if(!PUBLIC&&!ADMIN){location.reload();return}setProfile(null);if(typeof hilfeStart==='function')hilfeStart(null);closeProf()};
 $('factclear').onclick=async()=>{if(!confirm(t('Alles vergessen, was sich der Assistent über dich gemerkt hat?','Forget everything the assistant remembered about you?')))return;
   await api('/api/profile/memory',{method:'DELETE'});showFacts()};
 // ---------------------------------------------------------------- conversation settings
@@ -552,6 +552,10 @@ const SETF=[
    o:[['',t('zuletzt benutztes Gerät','device used last')],['app',t('iPhone-App','iPhone app')],['and',t('Android-App','Android app')],['desk',t('Spark-Begleiter','Spark companion')],['tg','Telegram'],['web',t('Browser','browser')],['all',t('alle eingerichteten','all set up')]]},
   {k:'svc_night',type:'bool',prof:1,need:'svcwatch',only:'svcadmin',l:t('Nachts nur sammeln','Only collect at night'),h:t('Zwischen 22 und 7 Uhr kommt nichts; um 7 Uhr eine Zusammenfassung, was in der Nacht weg war und ob es noch fehlt.','Nothing between 10 pm and 7 am; at 7 one summary of what was gone in the night and whether it is still missing.')},
   {k:'svc_hint',type:'bool',prof:1,need:'svchint',l:t('Sofort sagen, wenn ein Dienst fehlt','Say at once when a service is missing'),h:t('Brauchst du einen Dienst, der gerade weg ist (z. B. Archiv, Internet oder Home Assistant), sagt der Assistent das sofort, statt lange zu warten. Er rät dann keine Antwort.','When you need a service that is gone right now (e.g. archive, internet or Home Assistant), the assistant says so at once instead of waiting long. It does not guess an answer then.')},
+  // Verlauf auf allen Geräten (verlauf.py): three functions, each off until the admin allows them
+  {g:t('Verlauf','History'),k:'sync_live',type:'bool',prof:1,need:'sync_live',l:t('Verlauf sofort abgleichen','Sync history at once'),h:t('Was du auf einem Gerät fragst, steht sofort auch im offenen Panel auf deinen anderen Geräten, ohne Neuladen. Antwortet gerade ein anderes Gerät, siehst du „Handy antwortet gerade …“, nie die Frage.','What you ask on one device shows up at once in the open panel on your other devices, without reloading. While another device is answering you see "Phone is answering …", never the question.')},
+  {k:'sync_one',type:'bool',prof:1,need:'sync_one',l:t('Ein Gespräch für alle Kanäle','One conversation for all channels'),h:t('Telegram, Siri, Begleiter, Uhr und deine Stimme am Lautsprecher schreiben ins heutige Hauptgespräch, mit einem Zeichen für den Kanal, statt in eigene Tagesgespräche. Mehr Zusammenhang, aber der Assistent sieht dann auch, was du über andere Kanäle gefragt hast. Eine Stimme, die nicht sicher deine ist, bleibt im Gespräch des Lautsprechers.','Telegram, Siri, the companion, the watch and your voice at a speaker write into today\'s main conversation, marked with the channel, instead of their own conversation per day. More context, but the assistant then also sees what you asked through other channels. A voice that is not surely yours stays in the speaker\'s conversation.')},
+  {k:'sync_offline',type:'bool',prof:1,need:'sync_offline',l:t('Verlauf offline lesen','Read history offline'),h:t('Nur in Browsern, denen du beim zweiten Anmeldeschritt vertraust: Sie behalten eine Kopie deiner letzten 30 Gespräche, damit du sie ohne Verbindung zum Spark lesen kannst; Fragen ohne Verbindung (höchstens 10) gehen raus, sobald der Spark wieder antwortet. Jeder andere Browser speichert nichts und löscht, was er hatte. Abmelden löscht die Kopie.','Only in browsers you trust at the second sign-in step: they keep a copy of your last 30 conversations so you can read them without a connection to the Spark; questions without a connection (at most 10) go out once the Spark answers again. Every other browser stores nothing and deletes what it had. Signing out deletes the copy.')},
   {g:t('Anzeige','Display'),k:'daily',type:'bool',l:t('Jeden Tag neues Gespräch','New conversation every day'),h:t('Am nächsten Tag beginnt automatisch ein neues Gespräch; die alten bleiben im Verlauf.','The next day a new conversation starts by itself; older ones stay in the history.')},
   {k:'timing',type:'bool',l:t('Zeiten anzeigen','Show timings'),h:t('Wie lange Erkennung, Modell und erster Ton gebraucht haben.','How long recognition, model and first audio took.')},
   {g:t('Datenschutz','Privacy'),k:'trace_name',type:'bool',prof:1,need:'trace',l:t('Mein Name im Anfragen-Log','My name in the request log'),h:t('Unter Zustand → Logs → Anfragen sieht der Admin, welchen Weg deine Anfragen nehmen (Werkzeuge, Zeiten), nie was du fragst oder was die Antwort war. Mit diesem Schalter stehen dort dein Name und dein Gerät, sonst nur „Profil“. Ändern nur in deiner eigenen Anmeldung im Browser.','Under Status → Logs → Requests the admin sees which way your requests take (tools, times), never what you ask or what the answer was. With this switch your name and device show there, otherwise only "Profile". Can only be changed in your own browser login.')}];
@@ -597,12 +601,12 @@ function meLayout(el){const panes=[...el.querySelectorAll(':scope>.setpane')];
     fold.before(d);d.append(s,fold);fold.querySelector(':scope>h3.sec').remove()}
   panes.forEach(p=>{const empty=!p.querySelector('.setrow');p.hidden=empty;const d=p.closest('details.mefold');if(d)d.hidden=empty});
   if(window.pageGroup)el.querySelectorAll('.setpane').forEach(window.pageGroup);if(window.pageSeg)window.pageSeg(el)}
-function applySet(){$('chathands').checked=!!S.hands;if(typeof voiceShow==='function')voiceShow();$('chattiming').style.display=S.timing?'':'none';if(typeof picsShow==='function')picsShow();if(typeof msgBar==='function')msgBar()}
+function applySet(){$('chathands').checked=!!S.hands;if(typeof voiceShow==='function')voiceShow();$('chattiming').style.display=S.timing?'':'none';if(typeof picsShow==='function')picsShow();if(typeof msgBar==='function')msgBar();syncSettings()}
 async function refreshAllow(){const d=await (await fetch('/api/profile/settings')).json();
   const a=d&&d.allow||{};if(JSON.stringify(a)===JSON.stringify(ALLOW))return;ALLOW=a;
   if($('profmodal').style.display==='grid')renderSet($('setform'),S,saveSet)}
 async function loadSettings(){let d=null;try{d=await (await fetch('/api/profile/settings')).json()}catch{}
-  SDEF={...SDEF,...(d&&d.defaults||{})};S={...SDEF,...(d&&d.settings||{})};ALLOW=(d&&d.allow)||{};
+  SDEF={...SDEF,...(d&&d.defaults||{})};S={...SDEF,...(d&&d.settings||{})};ALLOW=(d&&d.allow)||{};if(d)OFFLINE_HERE=!!d.offline_here;
   if(!PROFILE&&!isGuest()){try{S={...S,...JSON.parse(localStorage.getItem('chatset')||'{}')}}catch{}}
   applySet();if(!S.daily&&!chat.cid&&!chat.msgs.length)openConvo((convos.load()[0]||{}).id||null)}
 let setTimer=null;
