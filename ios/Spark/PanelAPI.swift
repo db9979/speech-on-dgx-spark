@@ -48,7 +48,8 @@ extension SparkAPI {
         let ns = text as NSString
         for m in rx.matches(in: text, range: NSRange(location: 0, length: min(ns.length, 6000))) {
             guard let r = Range(m.range, in: text) else { continue }
-            let before = text[text.index(r.lowerBound, offsetBy: -14, limitedBy: text.startIndex) ?? text.startIndex..<r.lowerBound]
+            let from = text.index(r.lowerBound, offsetBy: -14, limitedBy: text.startIndex) ?? text.startIndex
+            let before = text[from..<r.lowerBound]
             let way = String(text[r]).trimmingCharacters(in: CharacterSet(charactersIn: " ,–-"))
             if (way.hasPrefix("Einstellungen") || way.hasPrefix("Settings")) && !before.lowercased().contains("panel") { continue }
             let end = text.index(r.lowerBound, offsetBy: way.count)

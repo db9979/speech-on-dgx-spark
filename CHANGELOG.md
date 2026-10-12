@@ -2,6 +2,7 @@
 
 Every version in one line, newest first (taken from the commit messages, so some lines are German, some English). Older entries have no version number.
 
+- **V01.0.449** · 2026-10-12 · iPhone-App baut wieder: Swift-Fehler in SparkAPI.findWay aus V01.0.448 behoben
 - **V01.0.448** · 2026-10-12 · Sprung-Links überall: iPhone-App, Android-App, Begleiter (Mac, Windows), Web-Push und Telegram (Knopf „Im Panel öffnen“ mit der Panel-Adresse unter Funktionen → Telegram) öffnen genannte Stellen über …/#weg=; Wer darf was wartet länger auf die Zeile
 - **V01.0.447** · 2026-10-12 · Hinweise oben auf den Admin-Seiten haben einen Knopf „Ansehen“, der zur passenden Stelle springt; „Hinweise stehen oben“ ist klickbar
 - **V01.0.446** · 2026-10-12 · Voraussetzungen mit einschalten: Wer eine Funktion einschaltet, die auf anderen aufbaut, wird gefragt, ob die fehlenden gleich mit angehen (Funktionen und Wer darf was, auch ein Profil-Kästchen bei ausgeschaltetem Spark); beim Ausschalten sagt der Spark, was mit ausgeht; Meldungen im Chat nennen alle fehlenden Schalter mit Wegen

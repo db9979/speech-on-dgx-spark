@@ -33,6 +33,7 @@ Alle Optionen ohne Rückfragen (`--mode api --asr 1.7b --tts 0.6b --yes` …) st
 
 <!-- New version: add one line at the top here and in CHANGELOG.md, drop the oldest line here (keep 10). Details go to docs/de and docs/en, not into this README. -->
 
+- **V01.0.449** iPhone-App baut wieder (Fehler aus .448)
 - **V01.0.448** Sprung-Links auch in Apps, Begleiter, Push und Telegram
 - **V01.0.447** Hinweise oben im Zustand haben „Ansehen“ und springen zur passenden Stelle
 - **V01.0.446** Voraussetzungen beim Einschalten gleich mit einschalten, beim Ausschalten sagen, was mit ausgeht
@@ -42,7 +43,6 @@ Alle Optionen ohne Rückfragen (`--mode api --asr 1.7b --tts 0.6b --yes` …) st
 - **V01.0.442** App-Manifest und Home-Bildschirm-Symbol kommen wieder (seit .406 Fehler 500); „Zum Home-Bildschirm“ zeigt wieder das Spark-Symbol
 - **V01.0.441** Live-Übersicht: Blockt der Wächter wegen Notaus, steht dort jetzt „Notaus ist an“ statt „Adresse nie erlaubt“
 - **V01.0.440** Dienst-Wächter: Admins bekommen einen Hinweis, wenn Archiv, Internet, Websuche oder ein anderer Dienst weg ist, und eine Entwarnung, wenn er zurück ist.
-- **V01.0.439** Ausgesperrt? `sudo speech-spark notzugang` auf dem Spark gibt ein neues Panel-Passwort; /#admin öffnet die Anmeldung auch auf schon offener Seite
 
 Alle Versionen: [CHANGELOG.md](CHANGELOG.md)
 
