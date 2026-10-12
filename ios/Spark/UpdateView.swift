@@ -93,8 +93,7 @@ final class UpdateModel: ObservableObject {
 
 struct UpdateView: View {
     @StateObject private var m = UpdateModel()
-    @State private var asking = false
-    @State private var code = ""
+    @State private var ask: CodeRequest?
 
     var body: some View {
         Form {
@@ -136,7 +135,7 @@ struct UpdateView: View {
                 if m.state.start && m.state.newer && !m.state.running && !m.following {
                     Section {
                         Button("Jetzt aktualisieren") {
-                            Task { if await m.unlock() { code = ""; asking = true } }
+                            Task { if await m.unlock() { ask = CodeRequest { c in await m.start(code: c) } } }
                         }
                         .disabled(m.state.wait > 0)
                     } footer: {
@@ -153,20 +152,6 @@ struct UpdateView: View {
         .refreshable { await m.load() }
         .task { await m.load() }
         .onDisappear { m.stop() }
-        .alert("Code aus der Authenticator-App", isPresented: $asking) {
-            TextField("123456", text: $code)
-                .keyboardType(.numberPad)
-                .textContentType(.oneTimeCode)
-            if SparkAPI.passkeyPossible {
-                Button("Mit Passkey") { Task { await m.start(code: SparkAPI.passkey) } }
-            }
-            Button("Update starten") {
-                let c = code.filter(\.isNumber)
-                Task { await m.start(code: String(c.prefix(6))) }
-            }
-            Button("Abbrechen", role: .cancel) {}
-        } message: {
-            Text("Der Code gilt nur einmal.")
-        }
+        .codeAlert($ask)
     }
 }

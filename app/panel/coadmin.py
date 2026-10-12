@@ -108,6 +108,19 @@ def role(uid):
     return x["role"] if x and uid in profiles.user_ids() else ""
 
 
+def owner_uid():
+    """The profile with the role "owner" while the switch is on (its second step is also the panel password's,
+    mfa.OWNER), or None."""
+    d = _read()
+    if not d["on"]:
+        return None
+    ids = profiles.user_ids()
+    return next((u for u, x in d["users"].items() if x.get("role") == "owner" and u in ids), None)
+
+
+mfa.OWNER[0] = owner_uid
+
+
 def listing():
     d = _read()
     known = {u["id"]: u["name"] for u in profiles.names()}

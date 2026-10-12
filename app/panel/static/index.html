@@ -420,7 +420,7 @@
       <div class="full rowtail" id="nakeynew" hidden><div class="fh">Nur jetzt sichtbar. In Home Assistant in configuration.yaml einfügen, dann neu laden; „rest_command.spark_notaus“ löst Stufe 2 aus, der Sensor zeigt die Stufe.</div><pre class="nayaml" id="nakeyyaml"></pre></div>
       </div>
       <div class="pwonly" data-nodirty="1">
-      <h3 class="sec">Admin-Anmeldung <span>wirkt sofort, ohne Speichern</span></h3>
+      <h3 class="sec">Notzugang (Panel-Passwort) <span>wirkt sofort, ohne Speichern</span></h3>
       <div class="setrow"><div class="lbl"><b>Panel-Passwort</b><span>Mindestens 10 Zeichen.</span></div><button class="b" id="pwopen" type="button">Ändern …</button></div>
       <div class="full rowtail" id="pwbox" hidden><label for="pwold">Aktuelles Passwort</label><input type="password" id="pwold" autocomplete="current-password">
         <label for="pwnew">Neues Passwort</label><input type="password" id="pwnew" autocomplete="new-password">
@@ -718,7 +718,7 @@
 </main>
 <footer id="credit"><span id="ver"></span> · <button type="button" class="clink" id="clopen" data-on="clOpen">Was ist neu</button><span id="rpfoot" hidden> · <button type="button" class="clink" id="rpopen" data-on="rpOpen">Problem melden</button></span> · <span>Idee: Dominik Bornhäußer</span></footer>
 <div id="login" class="modal" style="display:none"><form class="card modalcard" id="loginform">
-  <h2>Anmelden</h2><div class="intro">Für Einstellungen, Monitoring und Stimmen braucht es das Panel-Passwort.</div>
+  <h2>Notzugang</h2><div class="intro">Das Panel-Passwort ist der Notzugang. Im Alltag meldest du dich mit deinem Profil an und öffnest „Spark verwalten“.</div>
   <label>Passwort</label><input type="password" id="loginpw" autocomplete="current-password">
   <div id="logincodebox" style="display:none"><label>Code aus der Authenticator-App</label><input id="logincode" inputmode="numeric" autocomplete="one-time-code" autocapitalize="off">
     <label class="chk"><input type="checkbox" id="logintrust"> <span class="trusttxt">Diesem Browser 60 Tage vertrauen</span></label><div class="fh">Handy nicht da? Ein Wiederherstellungscode geht auch.</div></div>
@@ -734,7 +734,7 @@
   <button class="mi" id="mifind" type="button">Suchen …</button>
   <div id="madmin"></div>
   <div class="mrow2"><button class="mi" id="milang" type="button"></button><button class="mi" id="mitheme" type="button">Hell / Dunkel</button></div>
-  <button class="mi" id="milogin" type="button">Admin-Anmeldung</button>
+  <button class="mi" id="milogin" type="button">Spark verwalten</button>
   <button class="mi" id="milogout" type="button">Abmelden</button>
 </div></div>
 <div id="wizmodal" class="modal" style="display:none"><div class="card modalcard wizcard">
@@ -779,6 +779,7 @@
     <label>Name</label><input id="profuser" autocomplete="username" autocapitalize="off">
     <label>PIN</label><input type="password" id="profpin" autocomplete="current-password">
     <div id="profcodebox" style="display:none"><label>Code aus der Authenticator-App</label><input id="profcode" inputmode="numeric" autocomplete="one-time-code" autocapitalize="off">
+      <label class="chk" id="proflogadminrow" hidden><input type="checkbox" id="proflogadmin" checked> Gleich als Admin (derselbe Code öffnet den Admin-Modus)</label>
       <label class="chk"><input type="checkbox" id="proftrust"> <span class="trusttxt">Diesem Browser 60 Tage vertrauen</span></label><div class="fh">Handy nicht da? Ein Wiederherstellungscode geht auch.</div></div>
     <div class="row" style="margin-top:14px"><button class="b p" id="proflogin">Anmelden</button><button class="b" type="button" id="profadmin" style="display:none" data-on="adminLogin">Admin</button><span id="profmsg" class="err"></span></div></div>
     <div id="factbox" class="ptab">
@@ -863,6 +864,7 @@
     <div id="secbox" class="ptab"><div class="intro">Wo dein Profil angemeldet ist. Ein Gerät, das du nicht mehr nutzt oder verloren hast, kannst du hier sperren.</div>
       <div id="coadmbox"></div>
       <h3>Anmeldung</h3><div class="ic-sub">Zweiter Anmeldeschritt</div><div id="profmfa"></div>
+      <details id="stufenbox"><summary>Wann fragt der Spark nach dem Code?</summary><div id="stufenlist" class="fh"></div></details>
       <h3>Geräte</h3><div class="fh">Geräte mit Schlüssel: Lautsprecher, Uhr, Handy-App.</div><ul class="facts" id="secdev"></ul>
       <h3>Browser</h3><ul class="facts" id="secsess"></ul>
       <div class="row" style="margin-top:8px"><button class="b" id="seclogoutall" type="button">Überall abmelden</button><span id="secmsg" class="fh"></span></div>

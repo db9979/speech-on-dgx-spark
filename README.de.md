@@ -33,6 +33,7 @@ Alle Optionen ohne Rückfragen (`--mode api --asr 1.7b --tts 0.6b --yes` …) st
 
 <!-- New version: add one line at the top here and in CHANGELOG.md, drop the oldest line here (keep 10). Details go to docs/de and docs/en, not into this README. -->
 
+- **V01.0.427** Zweiter Faktor einheitlich: ein Code pro Person, drei Stufen mit Schloss, Dialog sagt wessen Code und wofür, gleich als Admin anmelden, Panel-Passwort nur über #admin
 - **V01.0.426** E-Mail-Modusknöpfe passen auch am schmalen Handy
 - **V01.0.425** Live-Bild: Internet als Fläche, Wächter als Wand mit Geblocktem, ruhige Ziele zusammengefasst, Legende, keine Überlappungen mehr
 - **V01.0.424** Ich-Seiten aufgeräumt: Reiter mit Zahlen, E-Mail-Fragen mit einem Tipp, reMarkable-Ordnerbaum, Gedächtnis ändern und suchen
@@ -42,7 +43,6 @@ Alle Optionen ohne Rückfragen (`--mode api --asr 1.7b --tts 0.6b --yes` …) st
 - **V01.0.420** Stabile GitHub-Testläufe (Einstellungen in einem Schritt, Warten auf Seitenzustand); Sprung aus Wer darf was bleibt bei vielen Profilen an der Zeile
 - **V01.0.419** Begleiter: „Öffne heise.de auf meinem Mac“ vom Lautsprecher oder Handy kommt sicher am Rechner an (Rückfrage dort); sonst sagt der Spark warum
 - **V01.0.418** Testlauf grün: Sprung aus Wer darf was auf dem Handy, Höhen-Budget
-- **V01.0.417** Selbsttest für Wochenpläne hält über die Zeitumstellung (Update auf tars scheiterte)
 
 Alle Versionen: [CHANGELOG.md](CHANGELOG.md)
 

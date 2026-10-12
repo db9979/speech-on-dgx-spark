@@ -189,7 +189,7 @@ function lookRows(){return row('data-ax="lang"',esc(t('Sprache','Language')),esc
 function lookAct(a){if(a==='lang')$('langbtn').click();else if(a==='theme')$('themebtn').click();
   else if(a==='desk'||a==='app'){if(a==='desk'&&window.closeProf)closeProf();try{localStorage.setItem('appview',a==='desk'?'off':'on')}catch{}apply();
     if(a==='app'){if(window.closeProf)closeProf();tab('spark')}}
-  else if(a==='login'){if(window.closeProf)closeProf();showLogin()}
+  else if(a==='login'){if(window.closeProf)closeProf();adminEnter()}
   else if(a==='logout')$('logoutbtn').click();else if(a==='find')palOpen();else if(a==='notaus'&&window.naOpen)naOpen()}
 // ---------------------------------------------------------------- Verwalten
 let mSig='';

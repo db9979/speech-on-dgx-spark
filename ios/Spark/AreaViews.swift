@@ -1,38 +1,98 @@
 import AVFoundation
 import SwiftUI
 
-/// A step the Spark confirms with a fresh code from the authenticator app (each code only once).
+/// A step the Spark may confirm with a code. The step runs first without one (SparkAPI.probe); only when the Spark
+/// wants it, the window asks, and says whose code, what for and how long it counts (plan zweiter-faktor-einheitlich).
 struct CodeRequest: Identifiable {
     let id = UUID()
     let run: (String) async -> Void
 }
 
+/// The one code window of the app: SparkAPI.confirmed asks it after a "428" and waits for the answer.
+@MainActor
+final class CodePrompt: ObservableObject {
+    static let shared = CodePrompt()
+    @Published private(set) var info: ConfirmInfo?
+    private var waiting: CheckedContinuation<String?, Never>?
+
+    static func install() {
+        SparkAPI.codePrompt = { info in await CodePrompt.shared.ask(info) }
+    }
+
+    func ask(_ i: ConfirmInfo) async -> String? {
+        waiting?.resume(returning: nil)
+        return await withCheckedContinuation { c in
+            waiting = c
+            info = i
+        }
+    }
+
+    func answer(_ s: String?) {
+        info = nil
+        let w = waiting
+        waiting = nil
+        w?.resume(returning: s)
+    }
+}
+
 struct CodeAlert: ViewModifier {
     @Binding var request: CodeRequest?
+    @ObservedObject private var prompt = CodePrompt.shared
+    @State private var mine = false
     @State private var code = ""
 
+    private var title: String {
+        let what = prompt.info?.what ?? ""
+        let lock = prompt.info?.level == "protect" ? "🔒🔒 " : "🔒 "
+        return lock + (what.isEmpty ? String(localized: "Bestätigen") : String(localized: "Bestätigen: \(what)"))
+    }
+
+    private var message: String {
+        let who = prompt.info?.who ?? ""
+        var s = who.isEmpty || who == "Notzugang" ? String(localized: "Dein Code aus der Authenticator-App.")
+                                                  : String(localized: "Code von \(who) aus der Authenticator-App.")
+        if prompt.info?.level == "protect" {
+            s += " " + String(localized: "Wird jedes Mal gefragt, weil es den Schutz selbst ändert.")
+        } else if prompt.info?.level == "confirm" {
+            s += " " + String(localized: "Gilt danach 10 Minuten für weitere Änderungen.")
+        }
+        return s
+    }
+
     func body(content: Content) -> some View {
-        content.alert("Code aus der Authenticator-App", isPresented: Binding(get: { request != nil }, set: { if !$0 { request = nil } })) {
-            TextField("123456", text: $code)
-                .keyboardType(.numberPad)
-                .textContentType(.oneTimeCode)
-            if SparkAPI.passkeyPossible {   // Face ID with a passkey of the Spark's address (Passkey.swift)
-                Button("Mit Passkey") {
-                    let r = request
-                    code = ""
-                    Task { await r?.run(SparkAPI.passkey) }
+        content
+            .onChange(of: request?.id) { _, id in
+                guard id != nil, let r = request else { return }
+                mine = true
+                Task {
+                    await r.run(SparkAPI.probe)
+                    mine = false
+                    request = nil
                 }
             }
-            Button("Bestätigen") {
-                let r = request
-                let c = String(code.filter(\.isNumber).prefix(6))
-                code = ""
-                Task { await r?.run(c) }
+            .alert(title, isPresented: Binding(get: { mine && prompt.info != nil },
+                                               set: { if !$0 && prompt.info != nil { prompt.answer(nil) } })) {
+                TextField("123456", text: $code)
+                    .keyboardType(.numberPad)
+                    .textContentType(.oneTimeCode)
+                if SparkAPI.passkeyPossible && prompt.info?.passkey == true {   // Face ID with a passkey (Passkey.swift)
+                    Button("Mit Passkey") {
+                        code = ""
+                        prompt.answer(SparkAPI.passkey)
+                    }
+                }
+                Button("Bestätigen") {
+                    let c = String(code.filter(\.isNumber).prefix(6))
+                    code = ""
+                    prompt.answer(c.isEmpty ? nil : c)
+                }
+                Button("Abbrechen", role: .cancel) {
+                    code = ""
+                    prompt.answer(nil)
+                }
+            } message: {
+                Text(verbatim: message)
             }
-            Button("Abbrechen", role: .cancel) { code = "" }
-        } message: {
-            Text("Der Code gilt nur einmal.")
-        }
     }
 }
 

@@ -6560,6 +6560,66 @@
           }
         }
       }
+    },
+    "Bestätigen: %@": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Confirm: %@"
+          }
+        }
+      }
+    },
+    "Dein Code aus der Authenticator-App.": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Your code from the authenticator app."
+          }
+        }
+      }
+    },
+    "Code von %@ aus der Authenticator-App.": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "%@'s code from the authenticator app."
+          }
+        }
+      }
+    },
+    "Wird jedes Mal gefragt, weil es den Schutz selbst ändert.": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Asked every time, because it changes the protection itself."
+          }
+        }
+      }
+    },
+    "Gilt danach 10 Minuten für weitere Änderungen.": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Then counts for 10 minutes for further changes."
+          }
+        }
+      }
+    },
+    "Abgebrochen: ohne Code keine Änderung.": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Cancelled: no change without the code."
+          }
+        }
+      }
     }
   },
   "version": "1.0"

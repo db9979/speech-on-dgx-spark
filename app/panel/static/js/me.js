@@ -497,13 +497,14 @@ $('navme').onclick=()=>openMe(meLast);   // phones: the list of pages; else the 
 $('profuser').onkeydown=e=>{if(e.key==='Enter')$('profpin').focus()};
 $('profpin').onkeydown=e=>{if(e.key==='Enter')$('proflogin').click()};
 $('profcode').onkeydown=e=>{if(e.key==='Enter')$('proflogin').click()};
-$('proflogin').onclick=async()=>{try{const r=await (await api('/api/profile/login',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({name:$('profuser').value,pin:$('profpin').value,code:$('profcode').value,trust:$('proftrust').checked})})).json();
+$('proflogin').onclick=async()=>{try{const r=await (await api('/api/profile/login',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({name:$('profuser').value,pin:$('profpin').value,code:$('profcode').value,trust:$('proftrust').checked,admin:!$('proflogadminrow').hidden&&$('proflogadmin').checked})})).json();
     if(r.code){$('profcodebox').style.display='';$('profmsg').textContent='';$('profcode').focus();  // second step: code next (or a passkey)
+      $('proflogadminrow').hidden=!r.admin;   // a profile with an admin role: the same code opens the admin mode too
       if(window.pkLoginOffer)pkLoginOffer($('profcodebox'),r.passkey,async(pk)=>{if(!pk){$('profmsg').textContent=t('Passkey abgebrochen. Der Code geht auch.','Passkey cancelled. The code works too.');return}
-        try{await api('/api/profile/login',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({name:$('profuser').value,pin:$('profpin').value,passkey:pk,trust:$('proftrust').checked})});location.reload()}
+        try{await api('/api/profile/login',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({name:$('profuser').value,pin:$('profpin').value,passkey:pk,trust:$('proftrust').checked,admin:!$('proflogadminrow').hidden&&$('proflogadmin').checked})});location.reload()}
         catch(e){$('profmsg').textContent=t('Passkey nicht angenommen.','Passkey not accepted.')}});return}
     $('profcode').value='';$('profcodebox').style.display='none';
-    if(GATE){location.reload();return}
+    if(GATE||r.admin){location.reload();return}
     const who=await (await fetch('/api/whoami')).json();SETUP=who.setup||null;setProfile(who.profile);if(typeof hilfeStart==='function')hilfeStart(who.hilfe);closeProf()}
   catch(e){$('profmsg').textContent=/too many/.test(errRaw(e))?t('Zu viele falsche Versuche. Bitte später noch einmal (','Too many wrong attempts. Please try again later (')+(errRaw(e).match(/in (.+)$/)||['',''])[1]+').':/wrong code/.test(errRaw(e))?t('Code falsch.','Wrong code.'):t('Name oder PIN falsch.','Wrong name or PIN.')}};
 $('proflogout').onclick=async()=>{await fetch('/api/profile/logout',{method:'POST'});if(!PUBLIC&&!ADMIN){location.reload();return}setProfile(null);if(typeof hilfeStart==='function')hilfeStart(null);closeProf()};

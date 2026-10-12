@@ -86,21 +86,31 @@ async function pkCreate(o){const pk=o.publicKey;
   const r=c.response;
   return {id:c.id,rawId:b64e(c.rawId),type:c.type,clientExtensionResults:{},
     response:{clientDataJSON:b64e(r.clientDataJSON),attestationObject:b64e(r.attestationObject),transports:r.getTransports?r.getTransports():[]}}}
-// "428 code required" with a passkey challenge: a small window with "Mit Passkey" (a tap, which the browser needs),
-// "Code eingeben" (the authenticator app or a recovery code) and "Abbrechen". Resolves {pk} / {code} / null.
-function confirmAsk(wrong,opt){
-  const ask=()=>{const c=prompt((wrong?t('Code falsch. ','Wrong code. '):'')+t('Bitte den aktuellen Code aus deiner Authenticator-App eingeben (oder einen Wiederherstellungscode):','Please enter the current code from your authenticator app (or a recovery code):'));return c&&c.trim()?{code:c.trim()}:null};
-  if(!opt||!PK)return Promise.resolve(ask());
+// "428 code required": one window everywhere (plan plaene/zweiter-faktor-einheitlich.md, point 4). It says whose code
+// (X-Speech-Confirm "who"), what for ("what") and whether it counts for a while ("confirm": 10 minutes in this login)
+// or is asked every time ("protect"); the code goes in right here, "Mit Passkey" when the person has one for this
+// address. Resolves {pk} / {code} / null.
+function confirmAsk(wrong,opt,info){
+  info=info||{};const pk=!!(opt&&PK);
   return new Promise(done=>{const m=document.createElement('div');m.className='modal';m.id='pkmodal';const card=document.createElement('div');card.className='card modalcard';
-    const h=document.createElement('h3');h.textContent=t('Bestätigen','Confirm');const p=document.createElement('div');p.className='fh';
-    p.textContent=(wrong?t('Das hat nicht geklappt. ','That did not work. '):'')+t('Mit deinem Passkey (Face ID, Touch ID, Windows Hello) oder dem Code aus der Authenticator-App.','With your passkey (Face ID, Touch ID, Windows Hello) or the code from the authenticator app.');
+    const h=document.createElement('h3');const what=L==='en'?(info.what_en||info.what):info.what;
+    h.textContent=(info.level==='protect'?'🔒🔒 ':'🔒 ')+(what?t('Bestätigen: ','Confirm: ')+what:t('Bestätigen','Confirm'));
+    const p=document.createElement('div');p.className='fh';
+    const whose=info.who?(info.who==='Notzugang'?t('Code des Notzugangs','Code of the emergency access'):t('Code von ','Code of ')+info.who):t('Dein Code','Your code');
+    p.textContent=(wrong?t('Das hat nicht geklappt. ','That did not work. '):'')+whose+t(' aus der Authenticator-App (oder ein Wiederherstellungscode)',' from the authenticator app (or a recovery code)')+(pk?t(', oder dein Passkey.',', or your passkey.'):'.');
+    const how=document.createElement('div');how.className='fh';
+    how.textContent=info.level==='protect'?t('Wird jedes Mal gefragt: Das ändert den Schutz selbst oder bewegt alle Daten.','Asked every time: this changes the protection itself or moves all data.')
+      :info.level==='confirm'?t('Gilt danach 10 Minuten für weitere Änderungen in dieser Anmeldung.','Then counts for 10 minutes for further changes in this login.'):'';
+    const inp=document.createElement('input');inp.inputMode='numeric';inp.autocomplete='one-time-code';inp.autocapitalize='off';inp.placeholder='123456';inp.style.maxWidth='160px';inp.style.marginTop='8px';
     const row=document.createElement('div');row.className='row';row.style.marginTop='10px';row.style.flexWrap='wrap';const msg=document.createElement('div');msg.className='fh';
     const mk=(txt,cls,fn)=>{const b=document.createElement('button');b.type='button';b.className='b'+(cls?' '+cls:'');b.textContent=txt;b.onclick=fn;row.appendChild(b);return b};
     const close=v=>{m.remove();done(v)};
-    mk(t('Mit Passkey','With passkey'),'p',async()=>{try{const a=await pkGet(opt.options);close({pk:b64e(new TextEncoder().encode(JSON.stringify({sid:opt.sid,response:a})))})}
+    const send=()=>{const c=inp.value.trim();if(!c){inp.focus();return}close({code:c})};
+    inp.onkeydown=e=>{if(e.key==='Enter')send();if(e.key==='Escape')close(null)};
+    if(pk)mk(t('Mit Passkey','With passkey'),'p',async()=>{try{const a=await pkGet(opt.options);close({pk:b64e(new TextEncoder().encode(JSON.stringify({sid:opt.sid,response:a})))})}
       catch(e){msg.textContent=t('Passkey abgebrochen oder nicht gefunden. Code geht auch.','Passkey cancelled or not found. A code works too.')}});
-    mk(t('Code eingeben','Enter code'),'',()=>{m.remove();done(ask())});mk(t('Abbrechen','Cancel'),'',()=>close(null));
-    card.append(h,p,row,msg);m.appendChild(card);document.body.appendChild(m);row.firstChild.focus()})}
+    mk(t('Bestätigen','Confirm'),pk?'':'p',send).dataset.a='code';mk(t('Abbrechen','Cancel'),'',()=>close(null));
+    card.append(h,p,inp,how,row,msg);m.appendChild(card);document.body.appendChild(m);(pk?row.firstChild:inp).focus()})}
 // the login forms: after the right password or PIN the answer may carry a passkey challenge
 function pkLoginOffer(box,opt,send){let b=box.querySelector('.pklogin');if(!opt||!PK){if(b)b.remove();return}
   if(!b){b=document.createElement('button');b.type='button';b.className='b p pklogin';b.style.marginTop='8px';b.textContent=t('Mit Passkey anmelden','Sign in with passkey');box.appendChild(b)}
@@ -133,3 +143,21 @@ async function pkShow(box,base){let d;try{d=await (await api(base+'/passkeys')).
     row.append(name,add);wrap.appendChild(row)}
   box.appendChild(wrap)}
 window.pkLoginOffer=pkLoginOffer;window.confirmAsk=confirmAsk;
+// Buttons that ask for the code carry a lock beforehand (stufen.py): 🔒 Bestätigen (the code then counts 10 minutes),
+// 🔒🔒 Schutz ändern (asked every time). Buttons made later mark themselves with codeLock(button, level).
+const CODE_LOCKS={confirm:['tgsave','tgdel','apnssave','apnsdel','pushgo','voicego','calsave','mailsave','hasave','offnow','dadd','updprev'],
+  protect:['pwset','hacodesave','bakup','bakmove','offsave']};
+function codeLock(b,level){if(!b)return;b.classList.add(level==='protect'?'needcode2':'needcode');
+  b.title=level==='protect'?t('Fragt jedes Mal nach dem Code','Asks for the code every time'):t('Fragt nach dem Code (gilt dann 10 Minuten)','Asks for the code (then counts 10 minutes)')}
+for(const [lv,ids] of Object.entries(CODE_LOCKS))for(const id of ids)codeLock(document.getElementById(id),lv);
+// Ich → Sicherheit → „Wann fragt der Spark nach dem Code?": made from the same list as the server's checks
+const stufenBox=document.getElementById('stufenbox');
+if(stufenBox)stufenBox.addEventListener('toggle',async()=>{if(!stufenBox.open||stufenBox.dataset.done)return;let d;try{d=await (await api('/api/stufen')).json()}catch{return}
+  stufenBox.dataset.done='1';const out=$('stufenlist');out.textContent='';
+  const part=(title,text,areas)=>{const h=document.createElement('b');h.textContent=title;const p=document.createElement('div');p.textContent=text;out.append(h,p);
+    for(const [area,items] of Object.entries(areas)){const ul=document.createElement('ul');ul.className='facts small';
+      const li0=document.createElement('li');li0.className='mut';li0.textContent=L==='en'?({Schutz:'Protection',Daten:'Data',Konten:'Accounts','Geräte':'Devices',Personen:'People'}[area]||area):area;ul.appendChild(li0);
+      for(const x of items){const li=document.createElement('li');li.textContent=L==='en'?x.en:x.de;ul.appendChild(li)}out.appendChild(ul)}};
+  const p0=document.createElement('div');p0.textContent=t('Lesen und normale Einstellungen fragen nie. Gefragt wird immer dein eigener Code (oder dein Passkey).','Reading and ordinary settings never ask. It is always your own code (or your passkey).');out.appendChild(p0);
+  part(t('🔒 Bestätigen','🔒 Confirm'),t('Ein richtiger Code gilt danach ','A right code then counts ')+d.minutes+t(' Minuten in dieser Anmeldung.',' minutes in this login.'),d.levels.confirm);
+  part(t('🔒🔒 Schutz ändern','🔒🔒 Change protection'),t('Fragt jedes Mal.','Asks every time.'),d.levels.protect)});

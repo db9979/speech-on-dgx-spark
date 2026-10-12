@@ -4,7 +4,11 @@
 // ADMIN, PUBLIC and GATE are declared in base.js (V01.0.422)
 window.showLogin=()=>{if($('login').style.display==='none'){$('login').style.display='grid';$('loginmsg').textContent='';$('loginpw').value=$('logincode').value='';$('logincodebox').style.display='none';setTimeout(()=>$('loginpw').focus(),50)}};
 ON.adminLogin=()=>{$('profmodal').style.display='none';showLogin()};
-$('loginbtn').onclick=showLogin;$('logincancel').onclick=()=>{$('login').style.display='none';if(GATE)openMe('loginbox')};
+// "Spark verwalten" (plan plaene/zweiter-faktor-einheitlich.md): a profile with an admin role opens its admin mode with
+// its own code; the panel password is the emergency access, only over the address with #admin
+window.adminEnter=async()=>{if(!document.body.classList.contains('mayadm')){showLogin();return}
+  try{await api('/api/admin/elevate',{method:'POST'});location.reload()}catch(e){alert(e.message)}};
+$('loginbtn').onclick=()=>adminEnter();$('logincancel').onclick=()=>{$('login').style.display='none';if(GATE)openMe('loginbox')};
 $('loginform').onsubmit=async e=>{e.preventDefault();
   try{const r=await (await api('/api/login',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({password:$('loginpw').value,code:$('logincode').value,trust:$('logintrust').checked})})).json();
     // right password, the second step is on: the code field comes next
@@ -30,7 +34,7 @@ $('pwset').onclick=async()=>{try{await api('/api/password',{method:'POST',header
     PUBLIC=who.public!==false;
     const toAdmin=location.hash==='#admin';if(toAdmin){history.replaceState(null,'',location.pathname+location.search);showLogin()}   // the main admin's way in
     // without "Assistent ohne Passwort" guests are locked out, but profiles still sign in with name and PIN
-    if(!PUBLIC&&!who.profile){GATE=true;$('profgate').style.display='';$('profadmin').style.display='';if(!toAdmin)openMe('loginbox');return}
+    if(!PUBLIC&&!who.profile){GATE=true;$('profgate').style.display='';if(!toAdmin)openMe('loginbox');return}   // the password only with #admin
     // one shell for everybody (plan „Vereinheitlichen“ Phase 7): a signed-in profile gets the same menu as the admin,
     // with only what it may (Assistent, Ich); guests keep the plain page with the assistant
     if(who.profile){document.body.classList.remove('guest');document.body.classList.add('adm','prof')}

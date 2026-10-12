@@ -19,6 +19,7 @@ import guard  # noqa: E402
 import mfa  # noqa: E402
 import passkey  # noqa: E402
 import profiles  # noqa: E402
+import stufen  # noqa: E402
 from common import load_config  # noqa: E402
 
 
@@ -302,24 +303,36 @@ def confirmed_until(request: Request):
     return int(window_until(uid, _login_key(request, uid))) if uid and mfa.enabled(uid) else 0
 
 
+def code_name(who, name):
+    """Whose code the dialog asks for: the person's name; for the panel password the main admin's profile
+    (mfa.linked, one code per person) or „Notzugang"."""
+    if who == mfa.ADMIN:
+        uid = mfa.linked()
+        return next((u["name"] for u in profiles.names() if u["id"] == uid), "Notzugang") if uid else "Notzugang"
+    return str(name or "")
+
+
 async def confirm_code(request: Request, who, name, fresh=False):
     """A code from the authenticator app (or a recovery code) in X-Speech-Code, or a passkey's signature in
     X-Speech-Passkey (passkey.py); the 428 answer carries the passkey challenge when the person has one here."""
     if not mfa.enabled(who):
         return
+    # the list decides whether a code from the last minutes counts (stufen.py, "Bestätigen") or not ("Schutz ändern")
+    lvl = stufen.level(request, fresh)
     login = _login_key(request, who)
-    if not fresh and window_until(who, login):
+    if lvl != stufen.PROTECT and window_until(who, login):
         return
     answer = passkey.header_answer(request)
     code = request.headers.get(CODE_HEADER, "")
+    ask = lambda: {**passkey.options_header(who, request, login), **stufen.header(request, lvl, code_name(who, name))}   # noqa: E731
     if answer is None and not code:
-        raise HTTPException(428, "code required", headers=passkey.options_header(who, request, login))
+        raise HTTPException(428, "code required", headers=ask())
     guard.check(request, name)
     ok = passkey.finish_auth(who, answer, request, login) if answer is not None else mfa.verify(who, code)
     if not ok:
         guard.failed(request, name, what="code")
         await asyncio.sleep(1)
-        raise HTTPException(428, "wrong code", headers=passkey.options_header(who, request, login))
+        raise HTTPException(428, "wrong code", headers=ask())
     guard.succeeded(request, name)
     _open_window(who, login)
 

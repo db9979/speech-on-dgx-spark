@@ -58,7 +58,7 @@ import mcp
 import netguard
 import profiles
 import vault
-from core import admin_code, auth, browser_profile, secret_profile, secret_profile_fresh
+from core import admin_code, auth, browser_profile, secret_profile
 
 STATE = os.environ.get("SPEECH_SPARK_STATE", "/var/lib/speech-spark/state")
 PREFIX = "mcpu_"
@@ -740,7 +740,7 @@ async def add(request: Request, prof=Depends(_on)):
     url, tok = check_url(body.get("url"), uid), check_token(body.get("token"))
     if len(load(uid)) >= MAX_SERVICES:
         raise HTTPException(400, f"Höchstens {MAX_SERVICES} eigene Dienste.")
-    await secret_profile_fresh(request)    # a new way for the assistant to reach out: a fresh code
+    await secret_profile(request)    # a new way for the assistant to reach out: a code (stufen.py, "Bestätigen")
     sid = secrets.token_hex(3)
     login = False
     try:
@@ -788,7 +788,7 @@ async def change(sid: str, request: Request, prof=Depends(_on)):
     if new_url or new_key:
         url = check_url(body.get("url"), uid) if new_url else s["url"]
         tok = check_token(body.get("token"))
-        await secret_profile_fresh(request)
+        await secret_profile(request)
         try:
             fresh = await mcp.list_tools(url, tok, MAX_TOOLS, seen=_seen(uid, sid))
         except mcp.NeedsLogin:

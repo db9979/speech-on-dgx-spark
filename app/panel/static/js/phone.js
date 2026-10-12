@@ -42,7 +42,7 @@ $('mmenu').onclick=()=>{const inchat=document.body.classList.contains('inchat');
   $('msheet').style.display='grid'};
 $('minew').onclick=()=>{closeSheet();$('chatnew').click()};$('miset').onclick=()=>{closeSheet();openSet()};
 $('milang').onclick=()=>$('langbtn').click();$('mifind').onclick=()=>{closeSheet();palOpen()};$('mitheme').onclick=()=>$('themebtn').click();
-$('milogin').onclick=()=>{closeSheet();showLogin()};$('milogout').onclick=()=>$('logoutbtn').click();
+$('milogin').onclick=()=>{closeSheet();adminEnter()};$('milogout').onclick=()=>$('logoutbtn').click();
 $('convosel').addEventListener('change',()=>{if(MOBILE.matches)closeSheet()});
 layout();
 // ---------------------------------------------------------------- phone layout, all pages

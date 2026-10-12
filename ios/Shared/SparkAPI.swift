@@ -829,8 +829,34 @@ struct SparkAPI {
 /// (X-Speech-Passkey-Options, only over the host name the passkey belongs to), Face ID signs it, and the same
 /// request goes out again with the signature (X-Speech-Passkey). Only the app itself signs (Passkey.swift);
 /// the extensions have no signer and keep to the code.
+/// What the Spark said with "428": whose code, what for, and whether it counts for a while (stufen.py on the Spark).
+struct ConfirmInfo {
+    var level = ""          // "confirm": counts 10 minutes in this login; "protect": asked every time
+    var who = ""
+    var what = ""
+    var passkey = false     // the person has a passkey for this address
+}
+
 extension SparkAPI {
     static let passkey = "passkey"
+    /// "Try first" (plan plaene/zweiter-faktor-einheitlich.md, point 4): the request goes out without a code; only when
+    /// the Spark answers 428 the app asks (codePrompt), with what the Spark said about it.
+    static let probe = "probe"
+    /// the app's code window: six digits, SparkAPI.passkey, or nil (cancelled)
+    static var codePrompt: ((ConfirmInfo) async -> String?)?
+
+    static func confirmInfo(_ http: HTTPURLResponse) -> ConfirmInfo {
+        var i = ConfirmInfo()
+        i.passkey = http.value(forHTTPHeaderField: "X-Speech-Passkey-Options") != nil
+        if let raw = http.value(forHTTPHeaderField: "X-Speech-Confirm"), raw.count < 4096, let json = unbase64url(raw) {
+            let d = object(json)
+            let en = Locale.current.language.languageCode?.identifier != "de"
+            i.level = d["level"] as? String ?? ""
+            i.who = String((d["who"] as? String ?? "").prefix(60))
+            i.what = String(((en ? d["what_en"] : d["what"]) as? String ?? d["what"] as? String ?? "").prefix(120))
+        }
+        return i
+    }
     /// the app's signer: (challenge from the Spark {"sid", "options"}, host name) -> the answer {"sid", "response"}
     static var passkeySigner: (([String: Any], String) async throws -> [String: Any])?
 
@@ -853,6 +879,14 @@ extension SparkAPI {
 
     /// Sends a request that may need a code: six digits, `SparkAPI.passkey`, or nil.
     static func confirmed(_ request: URLRequest, code: String?, session: URLSession = .shared) async throws -> (Data, URLResponse) {
+        if code == probe {
+            let (data, response) = try await session.data(for: request)
+            guard let http = response as? HTTPURLResponse, http.statusCode == 428, let ask = codePrompt else { return (data, response) }
+            guard let answer = await ask(confirmInfo(http)) else {
+                throw SparkError(message: String(localized: "Abgebrochen: ohne Code keine Änderung."))
+            }
+            return try await confirmed(request, code: answer, session: session)
+        }
         var r = request
         if let code, code != passkey { r.setValue(code, forHTTPHeaderField: "X-Speech-Code") }
         let (data, response) = try await session.data(for: r)

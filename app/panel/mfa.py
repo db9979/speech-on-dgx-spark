@@ -48,7 +48,15 @@ _lock = threading.Lock()
 _pending = {}                            # who -> (secret, started)
 
 
-def _path(who):
+# One code per person (V01.0.427, plan plaene/zweiter-faktor-einheitlich.md, point 1): while a profile has the
+# role "owner" (Haupt-Admin, coadmin.py, switch on) and its own second step, the panel password (now only the
+# emergency access) uses that profile's second step: its code, passkeys, trusted browsers and recovery codes.
+# Nobody types someone else's code. The admin's own file stays as it is and counts again as soon as the role,
+# the switch or the profile's second step is gone, so the way in never ends up without a second step.
+OWNER = [lambda: None]                   # coadmin.py: the owner profile's id while "Benutzer als Admin" is on
+
+
+def _own_path(who):
     if who == ADMIN:
         return os.path.join(STATE, "mfa-admin.json")
     if not re.fullmatch(r"u_[0-9a-f]{12}", str(who)):
@@ -56,13 +64,34 @@ def _path(who):
     return os.path.join(profiles.USERS_DIR, who, "mfa.json")
 
 
-def _read(who):
+def _load(path):
     try:
-        with open(_path(who)) as f:
+        with open(path) as f:
             d = json.load(f)
         return d if isinstance(d, dict) and d.get("secret") else None
     except (OSError, ValueError):
         return None
+
+
+def linked():
+    """The profile whose second step the panel password uses (see OWNER), or None."""
+    try:
+        uid = OWNER[0]()
+    except Exception:
+        return None
+    if not uid or not re.fullmatch(r"u_[0-9a-f]{12}", str(uid)):
+        return None
+    return uid if _load(_own_path(uid)) else None
+
+
+def _path(who):
+    if who == ADMIN:
+        return _own_path(linked() or ADMIN)
+    return _own_path(who)
+
+
+def _read(who):
+    return _load(_path(who))
 
 
 def _write(who, d):

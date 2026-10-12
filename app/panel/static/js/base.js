@@ -96,8 +96,10 @@ const errRaw=e=>String(e&&(e.detail!==undefined?e.detail:e.message)||'');
 const api=async(p,o={},code)=>{const hd=!code?null:typeof code==='string'?{'X-Speech-Code':code}:{'X-Speech-Passkey':code.pk};
   const r=await fetch(p,hd?Object.assign({},o,{headers:Object.assign({},o.headers||{},hd)}):o);
   if(r.status===428){const wrong=/wrong/.test(await r.text());let opt=null;
-    try{const h=r.headers.get('X-Speech-Passkey-Options');if(h)opt=JSON.parse(atob(h.replace(/-/g,'+').replace(/_/g,'/')+'==='.slice((h.length+3)%4)))}catch{}
-    const a=window.confirmAsk?await confirmAsk(wrong,opt):null;
+    const b64j=h=>JSON.parse(new TextDecoder().decode(Uint8Array.from(atob(h.replace(/-/g,'+').replace(/_/g,'/')+'==='.slice((h.length+3)%4)),c=>c.charCodeAt(0))));
+    try{const h=r.headers.get('X-Speech-Passkey-Options');if(h)opt=b64j(h)}catch{}
+    let info=null;try{const h=r.headers.get('X-Speech-Confirm');if(h)info=b64j(h)}catch{}   // whose code, what for, how long (stufen.py)
+    const a=window.confirmAsk?await confirmAsk(wrong,opt,info):null;
     if(a){const r2=await api(p,o,a.code||{pk:a.pk});if(window.confirmRefresh)confirmRefresh();return r2}throw new Error(t('Abgebrochen: ohne Code keine Änderung.','Cancelled: no change without a code.'))}
   if(r.status===503&&window.notausLoad)notausLoad();   // the Notaus holds this off: band and page show it (notaus.js)
   if(r.status===401&&!/^\/api\/(login|password|profile)/.test(p)&&window.showLogin){if(typeof elevated==='function'&&elevated()){location.reload();return r}showLogin()}if(!r.ok){const raw=await r.text();let d=raw;try{d=JSON.parse(raw).detail??raw}catch{}

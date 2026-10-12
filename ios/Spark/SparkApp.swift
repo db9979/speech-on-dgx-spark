@@ -24,6 +24,7 @@ final class AppDelegate: NSObject, UIApplicationDelegate {
         Relay.registerCategories()
         Store.share()
         Passkey.install()
+        Task { @MainActor in CodePrompt.install() }
         return true
     }
 
