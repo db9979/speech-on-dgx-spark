@@ -31,11 +31,14 @@ internal static class Parts
     public const string Home = "home";
     public const string Daily = "daily";
 
+    // Knopf "Spark" in Outlook classic, Word, Excel und neues Outlook einrichten (2026-10-12) – aus, bis das Panel ihn einschaltet.
+    public const string Office = "office";
+
     /// <summary>Alle Teile in der Reihenfolge, in der sie angezeigt werden.</summary>
     public static readonly string[] All =
     {
         Write, Ask, Dictate, Notes, Status, Notaus, Files, Screen, Context, Mail, Folder, Actions, Act, Wake,
-        Speak, Inbox, Agenda, Quiet, Meeting, Home, Daily,
+        Speak, Inbox, Agenda, Quiet, Meeting, Home, Daily, Office,
     };
 
     /// <summary>Teile mit eigenem Tastenkürzel.</summary>
@@ -64,6 +67,7 @@ internal static class Parts
         Meeting => "Besprechung mitschreiben",
         Home => "Smart-Home-Knöpfe",
         Daily => "Tagesstart und Feierabend",
+        Office => "Office-Add-ins",
         _ => part,
     };
 }

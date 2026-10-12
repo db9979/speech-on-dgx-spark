@@ -324,6 +324,15 @@ Klick aufs Gesicht → **„Mein Notaus …“**, nach einer Rückfrage. Danach 
 auch der Begleiter bekommt keine Antworten mehr (Symbol rot). **Aufheben geht nur im Panel im Browser mit der PIN** –
 dafür gibt es „Panel öffnen“.
 
+## Office-Add-ins
+
+Teil „Office-Add-ins“ (im Panel pro Gerät, aus). Im Menü dann **Office-Add-ins einrichten**; der Begleiter fragt
+vorher. **Word und Excel** bekommen den Knopf „Spark Schreibhilfe“ (Datei im Ordner `wef` der Programme). Für
+**Outlook** zeigt er `spark-outlook.xml` im Finder und öffnet <https://aka.ms/olksideload>; dort *Aus Datei
+hinzufügen* (nur Microsoft 365, Exchange, Outlook.com). Voraussetzung: das Panel einmal über seine https-Adresse
+öffnen, unter Ich → Begleiter speichern und „In anderen Programmen“ der Schreibhilfe einschalten. Teil aus: die
+Dateien werden wieder entfernt.
+
 ## Tastenkürzel
 
 Standard: **⌥⌘S** Schreibhilfe, **⌥⌘A** Frag Spark, **⌥⌘D** Diktieren, **⌥⌘B** Bildschirm fragen, **⌥⌘M** Antwort

@@ -558,7 +558,9 @@ DESK_PATHS = ("/api/write", "/api/write/assist", "/api/desk/config", "/api/desk/
               # Version 4 (exact paths; the ids go in the query or the body)
               "/api/desk/speak", "/api/desk/inbox/file", "/api/desk/inbox/done", "/api/desk/agenda", "/api/desk/remind",
               "/api/desk/busy", "/api/desk/meeting/start", "/api/desk/meeting/chunk", "/api/desk/meeting/end",
-              "/api/desk/meeting/keep", "/api/desk/home", "/api/desk/daily", "/api/desk/apps")
+              "/api/desk/meeting/keep", "/api/desk/home", "/api/desk/daily", "/api/desk/apps",
+              # Office-Add-ins (2026-10-12): the three manifests
+              "/api/desk/office/word.xml", "/api/desk/office/excel.xml", "/api/desk/office/outlook.xml")
 DESK_GATE = [lambda uid: False]
 ROOM_PATHS = ("/api/room/active", "/api/room/end")
 ROOM_GATE = [lambda uid: False]

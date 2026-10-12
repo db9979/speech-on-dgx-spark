@@ -19,6 +19,11 @@ selbstsignierte Zertifikate ab).
 4. Einmal koppeln: im Panel *Ich → Schreibhilfe → Programm koppeln*, den Code `XXXX-XXXX` (oder die ganze
    Zeile) eingeben, Gerätename wählen. Der Schlüssel liegt im lokalen Speicher des Add-ins.
 
+**Einfacher mit dem Spark-Begleiter:** Teil „Office-Add-ins“ einschalten, dann im Begleiter *Office-Add-ins
+einrichten*. Word und Excel trägt er selbst ein, für Outlook zeigt er die Datei und öffnet die Seite zum Hinzufügen.
+Für **Outlook classic** bringt er einen eigenen Knopf mit, der auch mit iCloud- und IMAP-Konten geht.
+
+
 ## Benutzen
 
 - **Outlook verfassen:** Text markieren (ohne Markierung: ganzer Text) → *Markierten Text verbessern* →

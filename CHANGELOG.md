@@ -2,6 +2,7 @@
 
 Every version in one line, newest first (taken from the commit messages, so some lines are German, some English). Older entries have no version number.
 
+- **V01.0.433** · 2026-10-12 · Begleiter: Office-Add-ins einrichten – Knopf „Spark“ in Outlook classic (auch iCloud/IMAP: verbessern, Antwort entwerfen, übersetzen), Word und Excel direkt eingetragen, neues Outlook mit Datei und Hinzufügen-Seite
 - **V01.0.432** · 2026-10-12 · Dokumente erstellen: PowerPoint fragte beim Öffnen nach „Reparieren“ (Positionen mit Kommastellen bei Text und Diagramm nebeneinander), jetzt immer ganze Zahlen; Selbsttest prüft jede erzeugte PowerPoint-, Word- und Excel-Datei auf Gültigkeit; Überschriften ohne doppelte Nummer („7. Aktuelle Themen“)
 - **V01.0.431** · 2026-10-12 · Live-Bild zeigt nur eingerichtete Dienste und Ziele: was aus ist oder kein Profil verbunden hat (Websuche ohne SearXNG, Kalender, Mail, Home Assistant, reMarkable, Apple Push, Kiwix …), steht weder einzeln noch in „+ N ruhig“; geht doch eine Anfrage hin, erscheint es
 - **V01.0.430** · 2026-10-12 · Weniger Sprachaussetzer bei langen Antworten: solange der Spark noch schreibt, geht das nächste Stück schon bei 5 s Ton auf Vorrat an die Sprachausgabe (mal Sprechtempo, 6 s bei 1,2), danach wie vorher; iPhone-App sammelt nach einem Leerlaufen 0,4 s Ton und setzt nach Stille weich ein; Hinweis beim Sprechtempo

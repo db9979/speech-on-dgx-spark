@@ -18,7 +18,7 @@ struct LangInfo: Identifiable, Equatable {
 struct DeskConfig: Equatable {
     static let partNames = ["write", "ask", "dictate", "notes", "status", "notaus",
                             "files", "screen", "context", "mail", "folder", "actions", "act", "wake",
-                            "speak", "inbox", "agenda", "quiet", "meeting", "home", "daily"]
+                            "speak", "inbox", "agenda", "quiet", "meeting", "home", "daily", "office"]
     static let fallbackArts = [
         ArtInfo(id: "korrigieren", de: "Korrigieren", changes: true),
         ArtInfo(id: "glaetten", de: "Glätten", changes: true),
@@ -62,6 +62,8 @@ struct DeskConfig: Equatable {
     var face = FaceKind.saved
     /// Antworten vorlesen of the profile (panel: Gespräch einstellen): off = Frag Spark never reads answers aloud
     var aloud = true
+    /// config.office.web: Word, Excel and Outlook can be set up (the panel knows its https address)
+    var officeWeb = false
 
     init() {}
 
@@ -105,6 +107,7 @@ struct DeskConfig: Equatable {
         v4 = V4Config(d)
         face = FaceKind(d["face"])
         aloud = d["aloud"] as? Bool ?? true
+        officeWeb = (d["office"] as? [String: Any])?["web"] as? Bool ?? false
         FaceKind.saved = face
     }
 
@@ -514,6 +517,7 @@ final class AppModel: ObservableObject {
         Meeting.shared.apply(on: on && part("meeting"))
         HomeCenter.shared.apply(on: on && part("home"), configured: config?.v4.homeButtons ?? [])
         Daily.shared.apply(on: on && part("daily"))
+        OfficeSetup.apply(on: on && part("office"))
         Notifier.registerCategories()
     }
 

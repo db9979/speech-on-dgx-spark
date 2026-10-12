@@ -1,0 +1,32 @@
+<Project Sdk="Microsoft.NET.Sdk">
+
+  <!--
+    Knopf "Spark" für Outlook classic (Windows): ein COM-Add-in (.NET Framework 4.8, liegt jeder Windows-Version bei).
+    Es enthält keine Verbindung zum Spark und keinen Schlüssel: Jeder Knopf schickt nur ein festes Wort
+    ("verbessern", "antwort", "uebersetzen") über die Named Pipe an den laufenden Spark-Begleiter; der macht den Rest
+    wie bei seinen Tastenkürzeln. Der Begleiter legt die DLL ab und trägt sie nur für das eigene Konto ein (HKCU).
+    Gebaut von .github/workflows/begleiter-windows.yml vor dem Begleiter, der sie mitbringt.
+  -->
+  <PropertyGroup>
+    <TargetFramework>net48</TargetFramework>
+    <OutputType>Library</OutputType>
+    <AssemblyName>SparkOutlook</AssemblyName>
+    <RootNamespace>SparkOutlook</RootNamespace>
+    <LangVersion>latest</LangVersion>
+    <Nullable>enable</Nullable>
+    <Version>1.0.0</Version>
+    <Product>Spark-Begleiter</Product>
+    <Description>Knopf „Spark“ in Outlook classic</Description>
+    <!-- Outlook gibt es als 32 und 64 Bit und auf ARM: AnyCPU lädt in jedem. -->
+    <PlatformTarget>AnyCPU</PlatformTarget>
+    <GenerateDocumentationFile>false</GenerateDocumentationFile>
+  </PropertyGroup>
+
+  <ItemGroup>
+    <!-- Referenzen für net48 auch beim Bauen ohne installiertes .NET Framework (Linux, CI). -->
+    <PackageReference Include="Microsoft.NETFramework.ReferenceAssemblies" Version="1.0.3" PrivateAssets="all" />
+    <Reference Include="System.Drawing" />
+    <Reference Include="System.Windows.Forms" />
+  </ItemGroup>
+
+</Project>

@@ -233,6 +233,22 @@ Bilder, Dateien; seltene Sonderformate gehen dabei verloren); der kurzzeitige Te
 Zwischenablage-Verlauf (Win+V). In Programmen, die als Administrator laufen, kann der Begleiter
 nicht kopieren/einfügen.
 
+## Office-Add-ins
+
+Teil „Office-Add-ins“ (im Panel pro Gerät, aus). Im Menü dann **Office-Add-ins einrichten …**; der Begleiter fragt
+vorher und trägt alles nur für das eigene Windows-Konto ein (keine Administratorrechte).
+
+- **Outlook classic:** Knopf „Spark“ im Menüband: im Hauptfenster und beim Lesen *Antwort entwerfen* und
+  *Übersetzen*, beim Verfassen *Text verbessern* und *Übersetzen*. Geht auch mit iCloud- und IMAP-Konten. Das Add-in
+  (`tools/begleiter/outlook-classic`, liegt unter `%LOCALAPPDATA%\SparkBegleiter\Office`) schickt nur ein festes Wort
+  an den laufenden Begleiter; ohne laufenden Begleiter sagt es das. Wirkt nach dem nächsten Start von Outlook.
+- **Word und Excel:** Knopf „Spark Schreibhilfe“ (das Office-Add-in der Schreibhilfe). Dafür das Panel einmal über
+  seine https-Adresse öffnen, unter Ich → Begleiter speichern und „In anderen Programmen“ einschalten.
+- **Neues Outlook und Outlook im Web:** der Begleiter zeigt `spark-outlook.xml` im Explorer und öffnet
+  <https://aka.ms/olksideload>; dort *Aus Datei hinzufügen* (nur Microsoft 365, Exchange, Outlook.com).
+
+Teil aus oder *Entfernen*: alles wird wieder ausgetragen.
+
 ## Updates
 
 Neue Versionen holt der Spark selbst (von GitHub) und merkt sich ihre Prüfsumme. Der Begleiter fragt

@@ -3,6 +3,7 @@ import asyncio
 import hashlib
 import json
 import os
+import re
 import shutil
 import time
 import unittest
@@ -1153,3 +1154,96 @@ class WindowsSources(unittest.TestCase):
         self.assertLess(body.index("if (!IsSecureBase(creds.Base))"), body.index("SparkClient.DownloadUpdateAsync"))
         self.assertIn("uri.Scheme == Uri.UriSchemeHttps", src)
 
+
+
+class Office(unittest.TestCase):
+    """Dominik 2026-10-12: the companion sets up the Spark's buttons in Office. Off until set per device; Word, Excel
+    and Outlook only with the panel's https address and "In anderen Programmen"; Outlook classic gets a COM add-in
+    that only sends one fixed word to the running companion."""
+    ROOT = os.path.join(os.path.dirname(__file__), "..", "..", "tools", "begleiter")
+
+    def setUp(self):
+        Begleiter.setUp(self)
+        for k in [k for k in guard._rate if k[0] == "deskoffice"]:
+            guard._rate.pop(k, None)
+
+    def tearDown(self):
+        Begleiter.tearDown(self)
+
+    def test_manifest_only_with_the_part_https_and_other_programs(self):
+        c = Begleiter.on(self, "DoOffice")
+        _, prog = Begleiter.pair(self, c)
+        cfg = prog.get("/api/desk/config").json()
+        self.assertEqual((cfg["parts"]["office"], cfg["allowed"]["office"], cfg["office"]["web"]), (False, True, False))
+        self.assertEqual(prog.get("/api/desk/office/word.xml").status_code, 403)              # part off
+        did = c.get("/api/profile/desk").json()["devices"][0]["id"]
+
+        def save(base):
+            r = c.put(f"/api/profile/desk/devices/{did}",
+                      json={"cfg": {"parts": dict(cfg["parts"], office=True), "office": {"base": base}}})
+            self.assertEqual(r.status_code, 200, r.text)
+            return next(d for d in r.json()["devices"] if d["id"] == did)["cfg"]["office"]["base"]
+
+        # only an https address without a path is kept (the browser sends its own)
+        for bad in ("http://192.168.178.171:31080", "https://x.example/pfad", "javascript:alert(1)", "https://a b"):
+            self.assertEqual(save(bad), "", bad)
+        self.assertEqual(prog.get("/api/desk/office/word.xml").status_code, 409)              # no https address
+        self.assertEqual(save("https://speech.example.org/"), "https://speech.example.org")
+        self.assertEqual(prog.get("/api/desk/office/word.xml").status_code, 403)              # other programs off
+        self.assertFalse(prog.get("/api/desk/config").json()["office"]["web"])
+        helpers.set_config(write_apps=True)
+        self.assertEqual(c.put("/api/profile/settings", json={"write_apps": True}).status_code, 200)
+        self.assertTrue(prog.get("/api/desk/config").json()["office"]["web"])
+        for app in ("word", "excel", "outlook"):
+            r = prog.get(f"/api/desk/office/{app}.xml")
+            self.assertEqual(r.status_code, 200, r.text)
+            self.assertIn("https://speech.example.org/office/", r.text)
+            self.assertNotIn("{{BASE}}", r.text)
+        self.assertIn(prog.get("/api/desk/office/powerpoint.xml").status_code, (401, 404))
+        # never without the device key, and the browser cannot fetch it this way
+        self.assertEqual(TestClient(panel.app, client=HOME).get("/api/desk/office/word.xml").status_code, 401)
+        # the writing help off: the part goes with it
+        self.assertEqual(c.put("/api/profile/settings", json={"write_on": False}).status_code, 200)
+        cfg = prog.get("/api/desk/config").json()
+        self.assertEqual((cfg["parts"]["office"], cfg["office"]["web"]), (False, False))
+        self.assertEqual(prog.get("/api/desk/office/word.xml").status_code, 403)
+
+    def src(self, *path):
+        p = os.path.join(self.ROOT, *path)
+        if not os.path.exists(p):
+            self.skipTest("only app/ copied")
+        return open(p, encoding="utf-8").read()
+
+    def test_outlook_classic_addin_only_sends_a_fixed_word(self):
+        addin = self.src("outlook-classic", "Connect.cs")
+        setup = self.src("windows", "OfficeSetup.cs")
+        bridge = self.src("windows", "FileMenu.cs")
+        body = addin[addin.index("public static string? WordFor"):addin.index("public static string For(")]
+        words = re.findall(r'"spark\w+" => "(\w+)"', body)
+        self.assertEqual(sorted(words), ["antwort", "uebersetzen", "verbessern"])
+        self.assertIn('OfficeWords = { "verbessern", "antwort", "uebersetzen" }', bridge)
+        self.assertIn("OfficeWords.Contains(word)", bridge)
+        # no network, no key, no mail content in the add-in: only the pipe of the own session and user
+        for bad in ("HttpClient", "WebClient", "http://", "Registry", "Body", "Process.Start"):
+            self.assertNotIn(bad, addin.replace("http://schemas.microsoft.com", ""), bad)
+        self.assertIn("SparkBegleiter.{System.Diagnostics.Process.GetCurrentProcess().SessionId}.{Environment.UserName}",
+                      addin)
+        # the same CLSID on both sides, registered for the own account only
+        clsid = re.search(r'Clsid = "([0-9A-F-]{36})"', addin).group(1)
+        self.assertIn('Clsid = "{' + clsid + '}"', setup)
+        self.assertNotIn("LocalMachine", setup)
+        self.assertNotIn("HKEY_LOCAL_MACHINE", setup)
+        # the part off or "Entfernen": everything out again
+        tray = self.src("windows", "TrayContext.Office.cs")
+        self.assertIn("if (!IsOn(Parts.Office))", tray)
+        self.assertIn("OfficeSetup.Uninstall();", self.src("windows", "Program.cs"))
+        self.assertIn("MessageBox.Show(what", tray)                       # asks before setting up
+
+    def test_mac_sets_up_word_and_excel_only_on_request(self):
+        office = self.src("mac", "Sources", "Office.swift")
+        model = self.src("mac", "Sources", "Model.swift")
+        self.assertIn('"daily", "office"]', model)
+        self.assertIn('OfficeSetup.apply(on: on && part("office"))', model)
+        self.assertIn("a.runModal() == .alertFirstButtonReturn", office)
+        self.assertIn('api/desk/office/\\(w.app).xml', office)
+        self.assertIn("maxBytes: maxBytes", office)

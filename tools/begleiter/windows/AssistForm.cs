@@ -194,6 +194,15 @@ internal sealed class AssistForm : ThemedForm
         }
     }
 
+    /// <summary>Mit dieser Art beginnen (Knopf „Übersetzen“ in Outlook); mit Text läuft sie gleich los.</summary>
+    public void StartWith(string art)
+    {
+        if (_arts.Any(a => a.Id == art))
+        {
+            SelectArt(art, run: _source.Text.Trim().Length > 0);
+        }
+    }
+
     private void SelectLanguage(string id)
     {
         if (_busy)

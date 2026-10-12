@@ -193,12 +193,17 @@ internal sealed class FileBridge : IDisposable
     private const int MaxMessage = 8192;
 
     private readonly CancellationTokenSource _stop = new();
+    /// <summary>Die Wörter der Knöpfe im Add-in für Outlook classic (tools/begleiter/outlook-classic).</summary>
+    public static readonly string[] OfficeWords = { "verbessern", "antwort", "uebersetzen" };
+
     private readonly Action<FileRequest> _received;
+    private readonly Action<string> _office;
     private readonly SynchronizationContext _context;
 
-    private FileBridge(Action<FileRequest> received, SynchronizationContext context)
+    private FileBridge(Action<FileRequest> received, Action<string> office, SynchronizationContext context)
     {
         _received = received;
+        _office = office;
         _context = context;
         _ = Task.Run(() => ServeAsync(_stop.Token));
     }
@@ -206,9 +211,10 @@ internal sealed class FileBridge : IDisposable
     private static string PipeName =>
         $"SparkBegleiter.{System.Diagnostics.Process.GetCurrentProcess().SessionId}.{Environment.UserName}";
 
-    /// <summary>Startet den Empfang (Aufträge kommen im UI-Thread an).</summary>
-    public static FileBridge Start(Action<FileRequest> received) =>
-        new(received, SynchronizationContext.Current ?? new WindowsFormsSynchronizationContext());
+    /// <summary>Startet den Empfang (Aufträge kommen im UI-Thread an): Dateien aus dem Explorer-Menü und die Knöpfe
+    /// des Outlook-Add-ins (nur ein festes Wort, nie Text).</summary>
+    public static FileBridge Start(Action<FileRequest> received, Action<string> office) =>
+        new(received, office, SynchronizationContext.Current ?? new WindowsFormsSynchronizationContext());
 
     /// <summary>Gibt den Auftrag an die laufende Instanz weiter (wartet bis zu 10 s, falls sie gerade startet).</summary>
     public static bool SendToRunning(FileRequest request)
@@ -260,9 +266,14 @@ internal sealed class FileBridge : IDisposable
                     total += read;
                 }
 
-                if (Parse(buffer.AsSpan(0, total)) is { } request)
+                (FileRequest? request, string? word) = Parse(buffer.AsSpan(0, total));
+                if (request is not null)
                 {
                     _context.Post(_ => _received(request), null);
+                }
+                else if (word is not null)
+                {
+                    _context.Post(_ => _office(word), null);
                 }
             }
             catch (OperationCanceledException) when (ct.IsCancellationRequested)
@@ -277,13 +288,19 @@ internal sealed class FileBridge : IDisposable
         }
     }
 
-    private static FileRequest? Parse(ReadOnlySpan<byte> data)
+    private static (FileRequest?, string?) Parse(ReadOnlySpan<byte> data)
     {
         try
         {
             if (JsonNode.Parse(Encoding.UTF8.GetString(data).Trim()) is JsonObject o)
             {
-                return FileRequest.Create(Json.Str(o["what"]), Json.Str(o["path"]));
+                if (o.ContainsKey("office"))
+                {
+                    string? word = Json.Str(o["office"]);
+                    return (null, word is not null && OfficeWords.Contains(word) ? word : null);
+                }
+
+                return (FileRequest.Create(Json.Str(o["what"]), Json.Str(o["path"])), null);
             }
         }
         catch (JsonException)
@@ -291,7 +308,7 @@ internal sealed class FileBridge : IDisposable
             // kein gültiger Auftrag
         }
 
-        return null;
+        return (null, null);
     }
 
     public void Dispose() => _stop.Cancel(); // die Schleife endet von selbst; das Token bleibt gültig

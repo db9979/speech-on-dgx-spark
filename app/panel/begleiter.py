@@ -62,7 +62,7 @@ import time
 
 import httpx
 from fastapi import APIRouter, Depends, File, Form, HTTPException, Request, UploadFile
-from fastapi.responses import FileResponse
+from fastapi.responses import FileResponse, Response
 
 import features
 import guard
@@ -78,14 +78,16 @@ PARTS = ("write", "ask", "dictate", "notes", "status", "notaus",
          # deeper in the computer (Dominik 2026-10-11): all off until set per device
          "files", "screen", "context", "mail", "folder", "actions", "act", "wake",
          # Version 4 (Dominik 2026-10-11 06:23): all off until set per device
-         "speak", "inbox", "agenda", "quiet", "meeting", "home", "daily")
+         "speak", "inbox", "agenda", "quiet", "meeting", "home", "daily",
+         # Dominik 2026-10-12: buttons in Outlook classic, Word, Excel and the new Outlook set up by the program
+         "office")
 PART_NAMES = {"write": "Schreibhilfe", "ask": "Frag Spark", "dictate": "Diktieren", "notes": "Meldungen",
               "status": "Zustandspunkt", "notaus": "Mein Notaus", "files": "Rechtsklick auf Dateien",
               "screen": "Bildschirm fragen", "context": "App erkennen", "mail": "Antwort entwerfen",
               "folder": "Ordner Spark-Wissen", "actions": "Knöpfe in Meldungen", "act": "Am PC handeln",
               "wake": "Weckwort am PC", "speak": "Vorlesen", "inbox": "Vom Handy auf den PC",
               "agenda": "Termine im Begleiter", "quiet": "Nicht stören erkennen", "meeting": "Besprechung mitschreiben",
-              "home": "Smart-Home-Knöpfe", "daily": "Tagesstart und Feierabend"}
+              "home": "Smart-Home-Knöpfe", "daily": "Tagesstart und Feierabend", "office": "Office-Add-ins"}
 KINDS = {"windows": "Windows", "mac": "Mac"}
 MAX_DEVICES = 10
 MAX_BODY = 8 * 1024
@@ -102,8 +104,8 @@ RELEASES = {"windows": "https://github.com/db9979/speech-on-dgx-spark/releases/t
 DEFAULT = {"parts": {"write": True, "ask": True, "dictate": False, "notes": True, "status": True, "notaus": False,
                      "files": False, "screen": False, "context": False, "mail": False, "folder": False,
                      "actions": False, "act": False, "wake": False, "speak": False, "inbox": False, "agenda": False,
-                     "quiet": False, "meeting": False, "home": False, "daily": False},
-           "act": {"apps": []}, "home": {"buttons": []},
+                     "quiet": False, "meeting": False, "home": False, "daily": False, "office": False},
+           "act": {"apps": []}, "home": {"buttons": []}, "office": {"base": ""},
            "write": {"art": "korrigieren", "sprache": "en", "wunsch": "", "arts": list(schreib.ARTS), "preview": True},
            "dictate": {"sprache": "auto"}, "autostart": True}
 
@@ -164,7 +166,9 @@ def may(uid):
     w = schreib.allowed(uid)
     need = {"write": w, "context": w, "mail": w, "folder": _docs(uid), "act": features.allowed("begleitertun", uid),
             # writing along needs its own admin switch; the buttons the profile's own Home Assistant
-            "meeting": features.allowed("begleitermeeting", uid), "home": _ha_ok(uid)}
+            "meeting": features.allowed("begleitermeeting", uid), "home": _ha_ok(uid),
+            # the buttons in Office use the writing help (and its reply draft) of this program
+            "office": w}
     return {p: bool(need.get(p, True)) for p in PARTS}
 
 
@@ -235,7 +239,19 @@ def clean(cfg):
             "autostart": cfg["autostart"] if isinstance(cfg.get("autostart"), bool) else True,
             "act": {"apps": clean_apps((cfg.get("act") or {}).get("apps") if isinstance(cfg.get("act"), dict) else [])},
             "home": {"buttons": clean_buttons((cfg.get("home") or {}).get("buttons") if isinstance(cfg.get("home"), dict)
-                                              else [])}}
+                                              else [])},
+            "office": {"base": office_base((cfg.get("office") or {}).get("base") if isinstance(cfg.get("office"), dict)
+                                          else "")}}
+
+
+OFFICE_BASE = re.compile(r"https://[A-Za-z0-9.\-]{1,200}(?::\d{1,5})?")
+
+
+def office_base(v):
+    """The panel's https address the Office add-ins load from (Office needs https with a valid certificate); the
+    browser that switched the part on sends its own address. "" when there is none."""
+    v = str(v or "").strip().rstrip("/")
+    return v if OFFICE_BASE.fullmatch(v) else ""
 
 
 def device_cfg(did):
@@ -591,8 +607,31 @@ async def program_config(request: Request, version: str = "", arch: str = ""):
             "home": {"buttons": [{k: b[k] for k in ("id", "name", "kind")} for b in cfg["home"]["buttons"]]
                      if parts["home"] else []},
             "meeting": {"remarkable": bool(parts["meeting"] and _rm_ok(prof["id"]))},
+            # Word, Excel and the new Outlook: only with the panel's https address and "In anderen Programmen"
+            "office": {"web": bool(parts["office"] and cfg["office"]["base"] and schreib.apps_ok(prof["id"]))},
             "arts": [{"id": k, "de": v[0], "en": v[1], "changes": v[4]} for k, v in schreib.ARTS.items() if k != "antwort"],
             "langs": [{"id": k, "de": v[0], "en": v[1]} for k, v in schreib.LANGS.items() if k != "auto"]}
+
+
+@router.get("/api/desk/office/{app}.xml", dependencies=[Depends(assistant)])
+def program_office(app: str, request: Request):
+    """The Office add-in's manifest for this computer to set up (Word, Excel; Outlook to add by hand), with the
+    https address the profile's browser saved. The task pane in it pairs with its own key as before."""
+    prof, dev = _program(request)
+    _part(prof, dev, "office")
+    guard.limit(request, "deskoffice", prof["id"])
+    if app not in schreib.OFFICE_APPS:
+        raise HTTPException(404, "unknown app")
+    base = device_cfg(dev["id"])[0]["office"]["base"]
+    if not base:
+        raise HTTPException(409, "Das Panel einmal über seine https-Adresse öffnen und unter Ich → Begleiter speichern.")
+    if not schreib.apps_ok(prof["id"]):
+        raise HTTPException(403, "Erst „In anderen Programmen“ einschalten (Funktionen → Schreibhilfe, Ich → Schreibhilfe).")
+    with open(os.path.join(schreib.FILES, "office", f"manifest-{app}.xml"), encoding="utf-8") as f:
+        xml = f.read().replace("{{BASE}}", base)
+    _live("Office-Add-in eingerichtet")
+    print(f"begleiter: Office-Add-in geholt ({app})", flush=True)
+    return Response(xml, media_type="application/xml")
 
 
 @router.get("/api/desk/poll", dependencies=[Depends(assistant)])

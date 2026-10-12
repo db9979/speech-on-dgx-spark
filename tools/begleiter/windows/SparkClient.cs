@@ -222,6 +222,13 @@ internal static class SparkClient
         return await SendForBytesAsync(request, key, LongTimeout, MaxInboxBytes, ct).ConfigureAwait(true);
     }
 
+    /// <summary>GET /api/desk/office/&lt;app&gt;.xml – das Manifest des Office-Add-ins (word, excel, outlook; ≤ 64 KB).</summary>
+    public static async Task<byte[]> OfficeManifestAsync(string baseUrl, string key, string app, CancellationToken ct)
+    {
+        using var request = new HttpRequestMessage(HttpMethod.Get, baseUrl + "/api/desk/office/" + Uri.EscapeDataString(app) + ".xml");
+        return await SendForBytesAsync(request, key, ShortTimeout, 64 * 1024, ct).ConfigureAwait(true);
+    }
+
     /// <summary>POST /api/desk/inbox/done {"id"} – erledigt (auch bei abgelehnten Links).</summary>
     public static async Task InboxDoneAsync(string baseUrl, string key, string id, CancellationToken ct)
     {

@@ -121,6 +121,7 @@ internal sealed partial class TrayContext
         }
 
         SyncParts4();
+        SyncOffice();
         UpdateIcon();
     }
 
@@ -144,6 +145,7 @@ internal sealed partial class TrayContext
         if (removeFileMenu)
         {
             FileMenu.Unregister();
+            OfficeSetup.Uninstall();
         }
     }
 
@@ -190,6 +192,12 @@ internal sealed partial class TrayContext
             any = true;
         }
 
+        if (IsOn(Parts.Office))
+        {
+            _menu.Items.Add(new ToolStripMenuItem("Office-Add-ins einrichten …", null, async (_, _) => await SetupOfficeAsync()));
+            any = true;
+        }
+
         any |= AddPartMenuItems4();
         return any;
     }
@@ -214,6 +222,11 @@ internal sealed partial class TrayContext
         if (IsOn(Parts.Wake))
         {
             items.Add(new PanelItem(WakeItemText(), Glyph.Wave, null, ToggleWakePause, Enabled: _wake is not null));
+        }
+
+        if (IsOn(Parts.Office))
+        {
+            items.Add(new PanelItem("Office-Add-ins einrichten", Glyph.Mail, null, () => _ = SetupOfficeAsync()));
         }
 
         AddPanelItems4(items);

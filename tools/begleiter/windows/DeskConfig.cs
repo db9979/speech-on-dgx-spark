@@ -122,6 +122,9 @@ internal sealed class DeskConfig
     /// <summary>Besprechung: Knopf „Aufs reMarkable“ anbieten (config.meeting.remarkable).</summary>
     public bool MeetingRemarkable { get; set; }
 
+    /// <summary>Word, Excel und das neue Outlook lassen sich einrichten (das Panel kennt seine https-Adresse).</summary>
+    public bool OfficeWeb { get; set; }
+
     public bool IsOn(string part) => Parts.TryGetValue(part, out bool on) && on;
 
     public bool IsAllowed(string part) => Allowed.TryGetValue(part, out bool on) && on;
@@ -246,6 +249,11 @@ internal sealed class DeskConfig
         if (json["meeting"] is JsonObject meeting)
         {
             config.MeetingRemarkable = Json.Bool(meeting["remarkable"]) ?? false;
+        }
+
+        if (json["office"] is JsonObject office)
+        {
+            config.OfficeWeb = Json.Bool(office["web"]) ?? false;
         }
 
         if (json["arts"] is JsonArray artList)

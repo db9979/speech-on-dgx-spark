@@ -1156,6 +1156,14 @@
 "src": "assistent",
 "file": "Assistent und Oberfläche",
 "head": "Sprach-Chat",
+"title": "Office-Add-ins aus dem Begleiter (V01.0.433)",
+"text": "Office-Add-ins aus dem Begleiter (V01.0.433): Neuer Teil „Office-Add-ins“ (pro Gerät, aus; braucht die Schreibhilfe). Im Begleiter dann „Office-Add-ins einrichten …“; er fragt vorher. Outlook classic (Windows): Knopf „Spark“ im Menüband (Hauptfenster und Lesen: Antwort entwerfen, Übersetzen; Verfassen: Text verbessern, Übersetzen), auch mit iCloud- oder IMAP-Konten. Der Knopf schickt nur ein festes Wort an den laufenden Begleiter, der wie bei seinen Tastenkürzeln arbeitet; gesendet wird nie. Word und Excel (Windows und Mac): der Begleiter trägt das Office-Add-in selbst ein. Dafür das Panel einmal über seine https-Adresse öffnen, unter Ich → Begleiter speichern und „In anderen Programmen“ der Schreibhilfe einschalten. Neues Outlook, Outlook für Mac und im Web: der Begleiter zeigt die Datei und öffnet die Seite „Aus Datei hinzufügen“; das Hinzufügen macht man selbst (Microsoft erlaubt es nicht anders, nur für Microsoft 365, Exchange oder Outlook.com). Teil aus: alles wird wieder ausgetragen."
+},
+{
+"lang": "de",
+"src": "assistent",
+"file": "Assistent und Oberfläche",
+"head": "Sprach-Chat",
 "title": "Raum-Modus",
 "text": "Raum-Modus (Funktionen → „Raum-Modus“, standardmäßig aus; nur Profile): Der Schalter „Raum“ unter dem Gesicht lässt den Assistenten an diesem Gerät für eine gewählte Zeit (15 Minuten bis 4 Stunden, endet von selbst) dem Gespräch im Raum zuhören; ein oranger Punkt zeigt es an. In einer Pause hilft er, wenn ein fester Auslöser fiel: eine offene Frage („Wann wurde eigentlich …?“, mit Websuche, im Zweifel nichts), ein Termin („Freitag um 10 zum Zahnarzt“ → „Soll ich das eintragen?“), „kalt“, „zu warm“ oder „zu dunkel“ (die echte Temperatur des Raums aus Home Assistant und das Angebot, die Heizung um ein Grad zu ändern oder das Licht anzumachen) und Einkäufe („Wir brauchen noch Milch“ → Einkaufsliste in Home Assistant). Geändert wird nur nach einem „Ja“, bei Smart Home mit Codewort, wenn eines gesetzt ist. Im Fenster „Ich“ unter „Raum-Modus“ stellt jedes Gerät ein: Dauer, wie viel er sagen darf (nur Fragen, auch Hinweise, auch Kommentare), jede Art einzeln, den Raum des Geräts in Home Assistant und „Nur als Text“ (still im Verlauf statt gesprochen). Das Gehörte bleibt nur fünf Minuten im Arbeitsspeicher des Panels und wird nie gespeichert; Gedächtnis, Mails und frühere Gespräche nutzt d"
 },
@@ -4118,6 +4126,14 @@
 "head": "Voice chat",
 "title": "Acting on the PC from a speaker or the phone (V01.0.419)",
 "text": "Acting on the PC from a speaker or the phone (V01.0.419): a clear order naming the computer (\"Open heise.de on my Mac\") is now reliably sent to the computer from there too; the question still comes at the computer. When it cannot go (no computer paired, \"Act on the PC\" off at the device or for the profile), the Spark says exactly that instead of trying other tools. Speech recognition may write \"Mac\" as \"Mäc\"."
+},
+{
+"lang": "en",
+"src": "assistant",
+"file": "Assistant and panel",
+"head": "Voice chat",
+"title": "Office add-ins from the companion (V01.0.433)",
+"text": "Office add-ins from the companion (V01.0.433): new part \"Office add-ins\" (per device, off; needs the writing help). Then \"Office-Add-ins einrichten …\" in the companion; it asks first. Outlook classic (Windows): a \"Spark\" button in the ribbon (main window and reading: draft a reply, translate; composing: improve text, translate), also with iCloud or IMAP accounts. The button only sends one fixed word to the running companion, which works as with its hotkeys; nothing is ever sent. Word and Excel (Windows and Mac): the companion registers the Office add-in itself. For that open the panel once at its https address, save under Me → Companion and turn on \"In other programs\" of the writing help. New Outlook, Outlook for Mac and on the web: the companion shows the file and opens the page \"Add from file\"; adding it is done by the person (Microsoft allows nothing else, only for Microsoft 365, Exchange or Outlook.com). Part off: everything is removed again."
 },
 {
 "lang": "en",

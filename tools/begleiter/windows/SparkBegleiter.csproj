@@ -29,6 +29,12 @@
     <AnalysisLevel>latest</AnalysisLevel>
   </PropertyGroup>
 
+  <!-- Outlook classic: das COM-Add-in (tools/begleiter/outlook-classic) kommt mit, wenn es vorher gebaut wurde
+       (die Pipeline baut es immer zuerst); der Teil "office" legt es beim Einrichten ab. -->
+  <ItemGroup Condition="Exists('..\outlook-classic\bin\Release\net48\SparkOutlook.dll')">
+    <EmbeddedResource Include="..\outlook-classic\bin\Release\net48\SparkOutlook.dll" LogicalName="SparkBegleiter.SparkOutlook.dll" />
+  </ItemGroup>
+
   <!-- Einzelne .exe (selbstständig, ohne installiertes .NET): komprimiert, sonst wäre sie ~150 MB groß. -->
   <PropertyGroup Condition="'$(PublishSingleFile)' == 'true'">
     <EnableCompressionInSingleFile>true</EnableCompressionInSingleFile>

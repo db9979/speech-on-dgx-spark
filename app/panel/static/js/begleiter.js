@@ -24,14 +24,15 @@ const DESK_PARTS=[['write',['Schreibhilfe','Writing help'],['Markierten Text ver
   ['quiet',['Nicht stören erkennen','Recognise do not disturb'],['Bei Anruf (Mikrofon oder Kamera in Gebrauch) oder Präsentation warten Meldungen; danach kommt eine Zusammenfassung.','During a call (microphone or camera in use) or a presentation notes wait; a summary follows afterwards.']],
   ['meeting',['Besprechung mitschreiben','Write along in meetings'],['Nur auf Klick, mit sichtbarer Leiste: Zusammenfassung und Aufgaben danach. Alle Beteiligten müssen einverstanden sein.','Only on a click, with a visible bar: summary and tasks afterwards. Everybody taking part must agree.']],
   ['home',['Smart-Home-Knöpfe','Smart home buttons'],['Knöpfe für Licht, Schalter und Szenen deines Home Assistant im Begleiter; das Codewort gilt wie bei der Stimme.','Buttons for lights, switches and scenes of your Home Assistant in the companion; the code word applies as by voice.']],
-  ['daily',['Tagesstart und Feierabend','Start and end of the day'],['Morgens dein Tagesüberblick, abends die Termine von morgen und was offen ist.','In the morning your daily overview, in the evening tomorrow\'s appointments and what is open.']]];
+  ['daily',['Tagesstart und Feierabend','Start and end of the day'],['Morgens dein Tagesüberblick, abends die Termine von morgen und was offen ist.','In the morning your daily overview, in the evening tomorrow\'s appointments and what is open.']],
+  ['office',['Office-Add-ins','Office add-ins'],['Knopf „Spark“ in Outlook classic (auch mit iCloud): verbessern, Antwort entwerfen, übersetzen. Word, Excel und das neue Outlook richtet der Begleiter auf Wunsch ein; dafür hier einmal über die https-Adresse speichern.','A "Spark" button in Outlook classic (also with iCloud): improve, draft a reply, translate. Word, Excel and the new Outlook are set up by the companion on request; for that save here once over the https address.']]];
 // the parts of an open device in small sections (Dominik 2026-10-11: clear with several devices)
-const DESK_GROUPS=[['Schreiben und Fragen','Writing and asking',['write','ask','dictate','speak','context','mail']],
+const DESK_GROUPS=[['Schreiben und Fragen','Writing and asking',['write','ask','dictate','speak','context','mail','office']],
   ['Am Rechner','On the computer',['files','screen','folder','act','wake','inbox']],
   ['Meldungen und Tag','Notes and the day',['notes','actions','agenda','daily','quiet','meeting']],
   ['Zuhause','Home',['home']],['Zustand und Sicherheit','State and safety',['status','notaus']]];
 let deskOpen=null;try{deskOpen=localStorage.getItem('deskOpen')}catch{}
-const deskWhy=(k,d)=>k==='write'||k==='context'||k==='mail'?t('Erst die Schreibhilfe einschalten (Funktionen und Ich → Schreibhilfe).','Turn on the writing help first (Features and Me → Writing help).'):
+const deskWhy=(k,d)=>k==='write'||k==='context'||k==='mail'||k==='office'?t('Erst die Schreibhilfe einschalten (Funktionen und Ich → Schreibhilfe).','Turn on the writing help first (Features and Me → Writing help).'):
   k==='folder'?t('Erst eigene Dokumente einschalten.','Turn on own documents first.'):k==='act'?t('Erst unter Funktionen → Spark-Begleiter „Darf am PC handeln“ einschalten.','Turn on "May act on the PC" under Features → Spark companion first.'):
   k==='meeting'?t('Erst unter Funktionen → Spark-Begleiter „Besprechungen mitschreiben“ einschalten.','Turn on "Write along in meetings" under Features → Spark companion first.'):
   k==='home'?t('Erst Home Assistant verbinden (Funktionen und Ich → Home Assistant).','Connect Home Assistant first (Features and Me → Home Assistant).'):'';
@@ -127,7 +128,9 @@ async function showDesk(){const box=$('deskbox');if(!box)return;if(!PROFILE||!DE
     const apps=[...c.querySelectorAll('[data-dapp]')].map(r=>({name:r.querySelector('[data-an]').value.trim(),path:r.querySelector('[data-ap]').value.trim()})).filter(a=>a.name&&a.path);
     const buttons=[...c.querySelectorAll('[data-dbtn]')].map((r,i)=>{const sel=r.querySelector('[data-be]'),o=sel.selectedOptions[0];
       return {id:'b'+(i+1),name:r.querySelector('[data-bn]').value.trim(),entity:sel.value,kind:o?o.dataset.kind||'':''}}).filter(b=>b.name&&b.entity);
-    const cfg={parts,write:w,dictate:{sprache:c.querySelector('[data-dd]').value},autostart:c.querySelector('[data-da]').checked,act:{apps},home:{buttons}};
+    const cfg={parts,write:w,dictate:{sprache:c.querySelector('[data-dd]').value},autostart:c.querySelector('[data-da]').checked,act:{apps},home:{buttons},
+      // the add-ins load from the panel's https address: this browser's own, else the one saved before
+      office:{base:location.protocol==='https:'?location.origin:((d.devices.find(o=>o.id===id)||{}).cfg.office||{}).base||''}};
     try{await api('/api/profile/desk/devices/'+encodeURIComponent(id),xjson('PUT',{cfg}));
       const m=c.querySelector(`[data-dmsg="${CSS.escape(id)}"]`);if(m)m.textContent=t('Gespeichert. Das Gerät übernimmt es beim nächsten Abruf.','Saved. The device takes it with its next check.')}
     catch(e){xmsg('dkmsg',e.message,true)}});

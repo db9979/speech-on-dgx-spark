@@ -147,6 +147,10 @@ struct TrayPanel: View {
             partRow("mail", "Antwort entwerfen", symbol: "envelope", hotkey: .mail) {
                 MailDraft.start(front: nil)
             }
+            partRow("office", "Office-Add-ins einrichten", symbol: "square.grid.2x2", hotkey: nil,
+                    note: "Word, Excel und Outlook") {
+                OfficeSetup.start(model: model)
+            }
             partRow("folder", "Spark-Wissen-Ordner", symbol: "folder", hotkey: nil,
                     note: folder.lastText.isEmpty ? folder.path.lastPathComponent : folder.lastText) {
                 folder.reveal()

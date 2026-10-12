@@ -66,7 +66,7 @@ internal sealed partial class TrayContext : ApplicationContext, IBegleiterHost
     public TrayContext(string? startup = null, FileRequest? fileRequest = null)
     {
         _invoker.CreateControl();
-        _fileBridge = FileBridge.Start(request => EnqueueFile(request));
+        _fileBridge = FileBridge.Start(request => EnqueueFile(request), word => _ = OnOfficeButtonAsync(word));
         _desk = _config.IsPaired ? _config.Desk : null;
         Face.Comic = _desk?.Face == "comic";
         _connection = _config.IsPaired ? Connection.Unknown : Connection.Unpaired;

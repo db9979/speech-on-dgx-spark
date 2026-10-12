@@ -9,6 +9,7 @@ on:
     branches: [main]
     paths:
       - tools/begleiter/windows/**
+      - tools/begleiter/outlook-classic/**
       - .github/workflows/begleiter-windows.yml
 
 permissions:
@@ -43,6 +44,10 @@ jobs:
           DOTNET_CLI_TELEMETRY_OPTOUT: '1'
           DOTNET_NOLOGO: '1'
         run: |
+          # first the Outlook classic add-in (.NET Framework 4.8 COM DLL); the companion embeds it
+          dotnet build tools/begleiter/outlook-classic/SparkOutlook.csproj -c Release
+          if ($LASTEXITCODE -ne 0) { exit $LASTEXITCODE }
+          if (-not (Test-Path tools/begleiter/outlook-classic/bin/Release/net48/SparkOutlook.dll)) { Write-Error 'SparkOutlook.dll missing'; exit 1 }
           $project = 'tools/begleiter/windows/SparkBegleiter.csproj'
           # version from app/VERSION ("V01.0.342" -> "1.0.342"), the same number the Spark compares for updates
           $raw = (Get-Content app/VERSION -Raw).Trim().TrimStart('V')
