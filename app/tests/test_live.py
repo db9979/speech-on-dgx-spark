@@ -407,9 +407,12 @@ class Live(unittest.TestCase):
         x = ADMIN.get("/api/admin/live").json()["guard"]["items"][0]
         self.assertTrue(x["ok"])
         self.assertEqual(x["to"], "Webseite")                    # allowed pages from search results: no address
+        live.outgoing("b.example", 443, "user", "93.184.216.34", "Notaus: no connections to the internet")
+        x = ADMIN.get("/api/admin/live").json()["guard"]["items"][0]
+        self.assertEqual(x["why"], "Notaus ist an: keine Verbindung ins Internet")   # not "never allowed"
         set_logs(live=False)
         live.outgoing("a.example", 443, "public", "93.184.216.34", None)
-        self.assertEqual(len(live._guard), 2)                    # off: nothing is kept
+        self.assertEqual(len(live._guard), 3)                    # off: nothing is kept
 
     def test_short_ip(self):
         self.assertEqual(live.short_ip("89.204.135.7"), "89.204.x.x")

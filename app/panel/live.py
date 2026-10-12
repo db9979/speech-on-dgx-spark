@@ -349,7 +349,8 @@ def outgoing(host, port, level, ip, why):
         steps = [f"Name einmal aufgelöst → {'öffentliche Adresse' if public else 'Heimnetz- oder eigene Adresse'}",
                  f"Stufe {LEVEL.get(level, level)}"]
         if why:
-            reason = ("eigene Dienste des Spark sind so nicht erreichbar" if "own services" in why
+            reason = ("Notaus ist an: keine Verbindung ins Internet" if why.startswith("Notaus")
+                      else "eigene Dienste des Spark sind so nicht erreichbar" if "own services" in why
                       else "nur öffentliche Internet-Adressen" if "only public" in why
                       else "Heimnetz-Adressen sind für Nutzer-Dienste aus (Einstellungen → Sicherheit)" if "home network" in why
                       else "diese Adresse ist nie erlaubt (Link-lokal, Multicast, reserviert)")

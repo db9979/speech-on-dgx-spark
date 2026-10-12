@@ -2,6 +2,7 @@
 
 Every version in one line, newest first (taken from the commit messages, so some lines are German, some English). Older entries have no version number.
 
+- **V01.0.441** · 2026-10-12 · Live-Übersicht: Wächter-Block wegen Notaus zeigt den richtigen Grund „Notaus ist an: keine Verbindung ins Internet“ statt „diese Adresse ist nie erlaubt“
 - **V01.0.440** · 2026-10-12 · Dienst-Wächter (Admin-Schalter + Profil, aus): der Spark prüft Sprachmodell, Hören, Sprechen, Internet, Websuche, Kiwix, Home Assistant, Mail, Kalender und NAS selbst und meldet Admins Ausfall und Entwarnung (erst nach 3 Fehlversuchen über 3 min, höchstens 1 Hinweis pro Dienst in 30 min, Sammelmeldung „Internet weg“, Gerät wählbar, nachts sammeln); Banner „Gerade eingeschränkt“ auch in der iPhone-App, Zustand → Dienste mit 7 Tagen, Punkte in der Live-Übersicht; auf Wunsch sagt der Assistent einen fehlenden Dienst sofort
 - **V01.0.439** · 2026-10-12 · Notzugang vom Spark aus: sudo speech-spark notzugang (neues Panel-Passwort, zweiter Schritt des Notzugangs und „Benutzer als Admin“ aus, Rollen bleiben, Protokoll und Push); /#admin öffnet die Anmeldung auch auf schon offener Seite
 - **V01.0.438** · 2026-10-12 · Weiche sichtbar und einstellbar (Funktionen → Weiche): Weg eines Satzes in sechs Schritten, Gruppen als Liste mit Detail, eigene Wörter, „Nicht bei“, Zusatzwerkzeuge, Eingrenzen pro Gruppe, Testsätze prüfen jede Änderung, „Falsch zugeordnet …“ aus Ausprobieren, Logs → Anfragen und Chat, Rückgängig, Statistik ohne Inhalte, Live-Knoten Weiche
