@@ -501,7 +501,7 @@
 "file": "Assistent und Oberfläche",
 "head": "Sprach-Chat",
 "title": "Telegram (V01.0.96)",
-"text": "Telegram (V01.0.96): Ein eigener Bot von @BotFather (Anleitung im Panel). Der Admin schaltet ihn unter Funktionen ein und trägt den Token ein (verschlüsselt gespeichert); der Spark fragt Telegram selbst nach neuen Nachrichten, es braucht keinen offenen Port. Jedes Profil verbindet sein Telegram im Fenster „Ich“ mit einem Einmal-Code (10 Minuten) und schreibt oder schickt Sprachnachrichten (Spracherkennung auf dem Spark). Fremde bekommen einen festen Satz, Gruppen nichts. Pro Profil, alles zuerst aus: Antworten auch als Sprachnachricht, Mitteilungen über Telegram, Persönliches (Kalender, Mail, Kontakte, Pakete, Dokumente; auch Termine und Mails in Mitteilungen) und Smart Home schalten, das nur mit Codewort. Befehle: /neu, /stimme, /trennen."
+"text": "Telegram (V01.0.96): Ein eigener Bot von @BotFather (Anleitung im Panel). Der Admin schaltet ihn unter Funktionen ein und trägt den Token ein (verschlüsselt gespeichert); der Spark fragt Telegram selbst nach neuen Nachrichten, es braucht keinen offenen Port. Jedes Profil verbindet sein Telegram im Fenster „Ich“ mit einem Einmal-Code (10 Minuten) und schreibt oder schickt Sprachnachrichten (Spracherkennung auf dem Spark). Fremde bekommen einen festen Satz, Gruppen nichts. Pro Profil, alles zuerst aus: Antworten auch als Sprachnachricht, Mitteilungen über Telegram, Persönliches (Kalender, Mail, Kontakte, Pakete, Dokumente; auch Termine und Mails in Mitteilungen) und Smart Home schalten, das nur mit Codewort. Befehle: /neu, /stimme, /trennen. Nennt eine Nachricht eine Stelle im Panel („Ich → Telegram“), bekommt sie einen Knopf „Im Panel öffnen“, wenn der Admin unter Funktionen → Telegram die Panel-Adresse für Links (https) eingetragen hat (seit V01.0.448)."
 },
 {
 "lang": "de",
@@ -2989,7 +2989,7 @@
 "file": "Technik und Fehlersuche",
 "head": "Bausteine der Einstellungsseiten",
 "title": "Bausteine der Einstellungsseiten",
-"text": "wird Schritt für Schritt mit den Namen auf der Seite abgeglichen (Menü, #cfgnav, Zeilen, Reiter, Ich-Seiten aus meAll()); verlinkt wird nur, was die Person öffnen darf (Admin-Seiten nur für Admins, Ich nur mit Profil). Ein Weg beginnt immer mit Einstellungen, Funktionen, Zustand, Personen und Geräte oder Ich; was danach klein beginnt („→ einschalten“), ist eine Handlung. Ein Weg nach einem anderen „→“ („Uhr → Einstellungen → …“) gehört zu einem anderen Programm und bleibt Text. #weg=<Weg> in der Adresse öffnet einen Weg von außen (Apps, Mails). test_sprunglinks.py sammelt alle Wege aus Skripten, Seite und Python-Texten und prüft im Browser, dass jeder sein Ziel findet: neue Hinweise brauchen nichts Eigenes, ein umbenannter Ort macht den Test rot. - Hinweise oben auf den Admin-Seiten (health.alerts, seit V01.0.447): jeder Hinweis (Speicher, Wächter, Funktionsprüfung, Qualitätstest, langsame Antworten, Telegram, Dienst-Wächter) trägt mit go einen festen Weg zur Stelle, an der man nachsehen oder handeln kann; der Knopf „Ansehen“ springt dorthin, „Hinweise stehen oben“ im Zustand springt zu den Hinweisen. test_sprunglinks findet jeden neuen Hinweis (kind, level, text) ohne go und prüft"
+"text": "wird Schritt für Schritt mit den Namen auf der Seite abgeglichen (Menü, #cfgnav, Zeilen, Reiter, Ich-Seiten aus meAll()); verlinkt wird nur, was die Person öffnen darf (Admin-Seiten nur für Admins, Ich nur mit Profil). Ein Weg beginnt immer mit Einstellungen, Funktionen, Zustand, Personen und Geräte oder Ich; was danach klein beginnt („→ einschalten“), ist eine Handlung. Ein Weg nach einem anderen „→“ („Uhr → Einstellungen → …“) gehört zu einem anderen Programm und bleibt Text. #weg=<Weg> in der Adresse öffnet einen Weg von außen, auch in einer schon offenen Seite. Außerhalb des Panels (seit V01.0.448, Regel wie wege.py): die iPhone-App (SparkAPI.way) und der Mac-Begleiter (Wege.text) zeigen den Weg in ihren Texten und Fehlermeldungen als Link, der Windows-Begleiter macht Beschriftungen, Hinweisblasen, den Hinweis im Tray-Fenster und den Menüpunkt klickbar (Wege.cs), die Android-App öffnet beim Tippen auf eine Mitteilung die genannte Stelle und der Notaus-Kachel-Dialog hat „Im Panel öffnen“ (Wege.kt); eine Web-Push-Mitteilung trägt den Weg mit (push.py, sw.js). Telegram-Nachrichten mit einem Weg bekommen einen Knopf „Im Panel öffnen“, sobald der Admin unter Funktionen → Telegram di"
 },
 {
 "lang": "de",
@@ -2997,7 +2997,15 @@
 "file": "Technik und Fehlersuche",
 "head": "Bausteine der Einstellungsseiten",
 "title": "Bausteine der Einstellungsseiten",
-"text": " im Browser, dass jeder Weg ganz gefunden wird. - Rahmen: Was unter einer Zeile weitergeht (Passwort ändern, Zweiter Anmeldeschritt), bekommt class=\"rowtail\"; die Linie steht dann unter dem Inhalt, nicht zwischen Zeile und Inhalt. html{scrollbar-gutter:stable} hält den Platz der Scrollleiste frei, damit kurze Seiten nicht seitlich springen (V01.0.254). - Knöpfe ohne Inline-Code (seit V01.0.286, strenge CSP): nie onclick=\"…\" oder <script> in der Seite. Statische Knöpfe bekommen eine ID und $('x').onclick=…; Knöpfe in erzeugtem HTML ${onAttr('name', arg1, …)} und eine Zeile ON.name=(button, arg1, …)=>… im selben Skript (Argumente als JSON, mit esc)."
+"text": "e Panel-Adresse für Links (nur https) einträgt; ohne Adresse kein Knopf, lehnt Telegram den Knopf ab, geht die Nachricht ohne ihn. In einer App gilt „Einstellungen → …“ nur mit „Panel“ davor als Weg ins Panel, sonst sind es die Einstellungen des Geräts. Ein #weg=-Link öffnet nur eine Stelle, er schaltet und sendet nichts. test_sprunglinks.py sammelt alle Wege aus Skripten, Seite und Python-Texten und prüft im Browser, dass jeder sein Ziel findet: neue Hinweise brauchen nichts Eigenes, ein umbenannter Ort macht den Test rot. - Hinweise oben auf den Admin-Seiten (health.alerts, seit V01.0.447): jeder Hinweis (Speicher, Wächter, Funktionsprüfung, Qualitätstest, langsame Antworten, Telegram, Dienst-Wächter) trägt mit go einen festen Weg zur Stelle, an der man nachsehen oder handeln kann; der Knopf „Ansehen“ springt dorthin, „Hinweise stehen oben“ im Zustand springt zu den Hinweisen. test_sprunglinks findet jeden neuen Hinweis (kind, level, text) ohne go und prüft im Browser, dass jeder Weg ganz gefunden wird. - Rahmen: Was unter einer Zeile weitergeht (Passwort ändern, Zweiter Anmeldeschritt), bekommt class=\"rowtail\"; die Linie steht dann unter dem Inhalt, nicht zwischen Zeile und Inha"
+},
+{
+"lang": "de",
+"src": "technik",
+"file": "Technik und Fehlersuche",
+"head": "Bausteine der Einstellungsseiten",
+"title": "Bausteine der Einstellungsseiten",
+"text": "lt. html{scrollbar-gutter:stable} hält den Platz der Scrollleiste frei, damit kurze Seiten nicht seitlich springen (V01.0.254). - Knöpfe ohne Inline-Code (seit V01.0.286, strenge CSP): nie onclick=\"…\" oder <script> in der Seite. Statische Knöpfe bekommen eine ID und $('x').onclick=…; Knöpfe in erzeugtem HTML ${onAttr('name', arg1, …)} und eine Zeile ON.name=(button, arg1, …)=>… im selben Skript (Argumente als JSON, mit esc)."
 },
 {
 "lang": "de",
@@ -3605,7 +3613,7 @@
 "file": "Assistant and panel",
 "head": "Voice chat",
 "title": "Telegram (V01.0.96)",
-"text": "Telegram (V01.0.96): your own bot from @BotFather (guide in the panel). The admin switches it on under Features and enters the token (stored encrypted); the Spark asks Telegram for new messages itself, no open port needed. Each profile links its Telegram in the \"Me\" window with a one-time code (10 minutes) and writes or sends voice messages (speech recognition on the Spark). Strangers get one fixed sentence, groups nothing. Per profile, all off at first: answers also as voice messages, notifications over Telegram, personal data (calendar, mail, contacts, parcels, documents; also appointments and mail in notifications) and switching the smart home, only with the code word. Commands: /neu, /stimme, /trennen."
+"text": "Telegram (V01.0.96): your own bot from @BotFather (guide in the panel). The admin switches it on under Features and enters the token (stored encrypted); the Spark asks Telegram for new messages itself, no open port needed. Each profile links its Telegram in the \"Me\" window with a one-time code (10 minutes) and writes or sends voice messages (speech recognition on the Spark). Strangers get one fixed sentence, groups nothing. Per profile, all off at first: answers also as voice messages, notifications over Telegram, personal data (calendar, mail, contacts, parcels, documents; also appointments and mail in notifications) and switching the smart home, only with the code word. Commands: /neu, /stimme, /trennen. When a message names a place in the panel (\"Me → Telegram\"), it gets an \"Open in the panel\" button if the admin entered the panel address for links (https) under Features → Telegram (since V01.0.448)."
 },
 {
 "lang": "en",
@@ -5933,7 +5941,7 @@
 "file": "Technical details and troubleshooting",
 "head": "Settings page building blocks",
 "title": "Settings page building blocks",
-"text": "n is linked (admin pages for admins, Me with a profile). A way always starts with Settings, Features, Status, People and devices or Me; a step starting in lower case (\"→ switch on\") is an action. A way after another \"→\" (\"watch → Settings → …\") belongs to another program and stays text. #weg=<way> in the address opens a way from outside (apps, mails). test_sprunglinks.py collects every way from the scripts, the page and the Python texts and checks in the browser that each finds its place: new hints need nothing of their own, a renamed place turns the test red. - Notes on top of the admin pages (health.alerts, since V01.0.447): every note (memory, watchdog, live check, quality test, slow answers, Telegram, service watch) carries with go a fixed way to the place where you can look or act; the \"View\" button jumps there, \"Notes are shown above\" on Status jumps to the notes. test_sprunglinks finds every new note (kind, level, text) without go and checks in the browser that each way is found completely. - Frame: content that continues below a row (change password, second login step) gets class=\"rowtail\"; the line then sits below the content, not between row and content. html{scrollbar-gu"
+"text": "n is linked (admin pages for admins, Me with a profile). A way always starts with Settings, Features, Status, People and devices or Me; a step starting in lower case (\"→ switch on\") is an action. A way after another \"→\" (\"watch → Settings → …\") belongs to another program and stays text. #weg=<way> in the address opens a way from outside, also in a page that is already open. Outside the panel (since V01.0.448, same rule as wege.py): the iPhone app (SparkAPI.way) and the Mac companion (Wege.text) show the way in their texts and error messages as a link, the Windows companion makes labels, balloon notes, the hint in the tray window and the menu item clickable (Wege.cs), the Android app opens the named place when a notification is tapped and the emergency stop tile dialog has \"Open in the panel\" (Wege.kt); a web push notification carries the way along (push.py, sw.js). Telegram messages with a way get an \"Open in the panel\" button once the admin enters the panel address for links under Features → Telegram (https only); without an address no button, and if Telegram refuses the button the message goes without it. In an app \"Settings → …\" counts as a way into the panel only with \"panel\" r"
 },
 {
 "lang": "en",
@@ -5941,7 +5949,15 @@
 "file": "Technical details and troubleshooting",
 "head": "Settings page building blocks",
 "title": "Settings page building blocks",
-"text": "tter:stable} keeps the scrollbar's space, so short pages do not move sideways (V01.0.254). - Buttons without inline code (since V01.0.286, strict CSP): never onclick=\"…\" or <script> in the page. Static buttons get an id and $('x').onclick=…; buttons in generated HTML ${onAttr('name', arg1, …)} and a line ON.name=(button, arg1, …)=>… in the same script (arguments as JSON, through esc)."
+"text": "ight before it, otherwise it is the device's own settings. A #weg= link only opens a place, it switches and sends nothing. test_sprunglinks.py collects every way from the scripts, the page and the Python texts and checks in the browser that each finds its place: new hints need nothing of their own, a renamed place turns the test red. - Notes on top of the admin pages (health.alerts, since V01.0.447): every note (memory, watchdog, live check, quality test, slow answers, Telegram, service watch) carries with go a fixed way to the place where you can look or act; the \"View\" button jumps there, \"Notes are shown above\" on Status jumps to the notes. test_sprunglinks finds every new note (kind, level, text) without go and checks in the browser that each way is found completely. - Frame: content that continues below a row (change password, second login step) gets class=\"rowtail\"; the line then sits below the content, not between row and content. html{scrollbar-gutter:stable} keeps the scrollbar's space, so short pages do not move sideways (V01.0.254). - Buttons without inline code (since V01.0.286, strict CSP): never onclick=\"…\" or <script> in the page. Static buttons get an id and $('x')."
+},
+{
+"lang": "en",
+"src": "technical",
+"file": "Technical details and troubleshooting",
+"head": "Settings page building blocks",
+"title": "Settings page building blocks",
+"text": "onclick=…; buttons in generated HTML ${onAttr('name', arg1, …)} and a line ON.name=(button, arg1, …)=>… in the same script (arguments as JSON, through esc)."
 },
 {
 "lang": "en",

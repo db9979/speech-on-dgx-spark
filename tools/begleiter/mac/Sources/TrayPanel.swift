@@ -246,7 +246,7 @@ struct TrayPanel: View {
         VStack(alignment: .leading, spacing: 4) {
             sectionTitle("Zuhause")
             if home.buttons.isEmpty {
-                Text(verbatim: home.problem.isEmpty ? "Keine Knöpfe – im Panel unter Ich → Begleiter festlegen." : home.problem)
+                Text(Wege.text(home.problem.isEmpty ? "Keine Knöpfe – im Panel unter Ich → Begleiter festlegen." : home.problem))
                     .font(.system(size: 12))
                     .foregroundColor(Theme.muted)
                     .padding(.horizontal, 10)
@@ -328,7 +328,7 @@ struct TrayPanel: View {
                         Text(verbatim: title)
                             .font(.system(size: 13))
                         if !note.isEmpty {
-                            Text(verbatim: note)
+                            Text(Wege.text(note))
                                 .font(.system(size: 11))
                                 .foregroundColor(Theme.muted)
                                 .lineLimit(2)
@@ -347,7 +347,7 @@ struct TrayPanel: View {
                     Text(verbatim: title)
                         .font(.system(size: 13))
                         .foregroundColor(Theme.muted)
-                    Text(verbatim: "Im Panel unter Ich → Begleiter einschalten")
+                    Text(Wege.text("Im Panel unter Ich → Begleiter einschalten"))
                         .font(.system(size: 11))
                         .foregroundColor(Theme.muted)
                 }

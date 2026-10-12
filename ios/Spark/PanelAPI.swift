@@ -28,11 +28,53 @@ extension SparkAPI {
         try await call(method, path, query: query, body: body, code: code, timeout: timeout) as? [String: Any] ?? [:]
     }
 
-    /// A page of the panel in Safari ("Im Panel öffnen"): #go=<page>, #cfg=<settings page> or #me=<Ich area>.
+    /// A page of the panel in Safari ("Im Panel öffnen"): #go=<page>, #cfg=<settings page> or #me=<Ich area>
+    /// (a way in a text: wayLink below).
     static func panelLink(_ place: String) -> URL? {
         guard let base = Store.baseURL, place.range(of: #"^(go|cfg|me)=[a-z]{2,12}$"#, options: .regularExpression) != nil
         else { return nil }
         return URL(string: base.absoluteString.trimmingCharacters(in: CharacterSet(charactersIn: "/")) + "/#" + place)
+    }
+
+    /// Ways into the panel in a text ("Einschalten im Panel unter Ich → iPhone-App"): same rule as wege.py on the
+    /// Spark. "Einstellungen → …" without "Panel" right before it is the iPhone's own settings, not a way.
+    static let wayRoots = "Einstellungen|Funktionen|Zustand|Personen und Geräte|Ich|Settings|Features|Status|People and devices|Me"
+    private static let wayRx = try? NSRegularExpression(
+        pattern: "(?<![\\w-])(?<!Mein )(?<!My )(?<!→ )(?:\(wayRoots))\\s*→[^\\n.;:()!?]{1,160}")
+
+    /// The first way in a text and where it stands, or nil.
+    static func findWay(_ text: String) -> (way: String, range: Range<String.Index>)? {
+        guard let rx = wayRx else { return nil }
+        let ns = text as NSString
+        for m in rx.matches(in: text, range: NSRange(location: 0, length: min(ns.length, 6000))) {
+            guard let r = Range(m.range, in: text) else { continue }
+            let before = text[text.index(r.lowerBound, offsetBy: -14, limitedBy: text.startIndex) ?? text.startIndex..<r.lowerBound]
+            let way = String(text[r]).trimmingCharacters(in: CharacterSet(charactersIn: " ,–-"))
+            if (way.hasPrefix("Einstellungen") || way.hasPrefix("Settings")) && !before.lowercased().contains("panel") { continue }
+            let end = text.index(r.lowerBound, offsetBy: way.count)
+            return (String(way.prefix(200)), r.lowerBound..<end)
+        }
+        return nil
+    }
+
+    private static let wayPlain = CharacterSet(charactersIn: "ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789-_.~")
+
+    /// `<panel>/#weg=<way>`: the panel opens that place itself (way.js); only navigation.
+    static func wayLink(_ way: String) -> URL? {
+        guard let base = Store.baseURL, !way.isEmpty,
+              let q = String(way.prefix(200)).addingPercentEncoding(withAllowedCharacters: wayPlain) else { return nil }
+        return URL(string: base.absoluteString.trimmingCharacters(in: CharacterSet(charactersIn: "/")) + "/#weg=" + q)
+    }
+
+    /// A text with its way as a link into the panel (Sprung-Link); plain text when there is none or no Spark yet.
+    static func way(_ text: String) -> AttributedString {
+        var a = AttributedString(text)
+        guard let hit = findWay(text), let url = wayLink(hit.way),
+              let lo = AttributedString.Index(hit.range.lowerBound, within: a),
+              let hi = AttributedString.Index(hit.range.upperBound, within: a)
+        else { return a }
+        a[lo..<hi].link = url
+        return a
     }
 }
 

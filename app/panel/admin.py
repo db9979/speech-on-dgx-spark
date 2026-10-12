@@ -513,6 +513,8 @@ def validate(new):
             raise HTTPException(400, f"{k} must be true or false")
     if ch.get("esp32_url") and not re.fullmatch(r"https?://[A-Za-z0-9.\-]+(?::\d{1,5})?/?", ch["esp32_url"]):
         raise HTTPException(400, "esp32_url: http(s)://name or http(s)://name:port, without a path")
+    if ch.get("telegram_panel_url") and not re.fullmatch(r"https://[A-Za-z0-9.\-]+(?::\d{1,5})?/?", ch["telegram_panel_url"]):
+        raise HTTPException(400, "telegram_panel_url: https://name or https://name:port, without a path")
     if not re.fullmatch(r"[\w.\-]+/[\w.\-]+", ch.get("esp32_repo") or "x/x"):
         raise HTTPException(400, "esp32_repo: owner/name")
     npo = ch.get("new_profile_on", [])
@@ -705,7 +707,7 @@ def validate(new):
 
 
 SENSITIVE = [("api", "key"), ("chat", "llm_url"), ("chat", "llm_key"), ("chat", "telegram_api"),
-             ("chat", "search_url"), ("chat", "kiwix_url"), ("chat", "public"), ("chat", "esp32_url"), ("chat", "esp32_ota_http"), ("chat", "esp32_repo"),
+             ("chat", "search_url"), ("chat", "kiwix_url"), ("chat", "public"), ("chat", "esp32_url"), ("chat", "telegram_panel_url"), ("chat", "esp32_ota_http"), ("chat", "esp32_repo"),
              ("chat", "mfa"), ("chat", "mcp_server"), ("chat", "mcp_server_extern"), ("chat", "mcp_server_act"),
              ("chat", "mcp_own"), ("chat", "mcp_own_oauth"), ("chat", "report"), ("chat", "report_repo"),
              ("panel", "trusted_proxies"), ("panel", "allow_lan"), ("panel", "notaus_auto"), ("panel", "update_night"), ("panel", "session_days"), ("panel", "trust_days"), ("asr", "model"), ("asr", "aligner_model"),

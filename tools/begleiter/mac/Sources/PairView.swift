@@ -89,7 +89,7 @@ struct PairView: View {
                     Text(verbatim: "Mit dem eigenen Spark koppeln")
                         .font(.system(size: 15, weight: .semibold))
                 }
-                Text(verbatim: "Im Panel unter Ich → Begleiter → „Gerät koppeln“ eine Einrichtungszeile holen und hier einfügen. Sie gilt 10 Minuten und nur einmal.")
+                Text(Wege.text("Im Panel unter Ich → Begleiter → „Gerät koppeln“ eine Einrichtungszeile holen und hier einfügen. Sie gilt 10 Minuten und nur einmal."))
                     .fixedSize(horizontal: false, vertical: true)
                     .foregroundColor(Theme.muted)
 

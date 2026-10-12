@@ -24,7 +24,8 @@ import java.util.concurrent.TimeUnit
 /**
  * Notes while the app is closed: every 15 minutes the app asks its Spark (GET /api/android/notes) with the
  * login of its page (the WebView's cookie) and shows what came since the last time. No Google service, no key.
- * The answer is data only: titles and texts are shown as plain text, nothing in them is followed.
+ * The answer is data only: titles and texts are shown as plain text; a way in the text ("Ich → Gedächtnis") only
+ * decides which page of the own panel a tap opens (Wege.kt).
  */
 class NotePoll : JobService() {
     override fun onStartJob(params: JobParameters): Boolean {
@@ -96,7 +97,8 @@ class NotePoll : JobService() {
                     for (i in 0 until notes.length()) {
                         val n = notes.optJSONObject(i) ?: continue
                         val num = n.optLong("n")
-                        show(ctx, num.toInt(), n.optString("title").take(200), n.optString("body").take(1500), base)
+                        val body = n.optString("body").take(1500)
+                        show(ctx, num.toInt(), n.optString("title").take(200), body, Wege.link(base, body))
                         if (num > last) last = num
                     }
                 }

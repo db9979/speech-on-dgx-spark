@@ -99,8 +99,27 @@ def safe(e, n=160):
     return re.sub(r"bot\d+:[A-Za-z0-9_-]+", "bot***", text)[:n]
 
 
+def way_button(text):
+    """A message naming a place in the panel ("Ich → Telegram") gets a button that opens it there (#weg=, way.js),
+    when the admin entered the panel's address for links (chat.telegram_panel_url); else nothing."""
+    import wege
+    way = wege.find(text)
+    url = wege.link(load_config().get("chat", {}).get("telegram_panel_url"), way)
+    if not url:
+        return None
+    label = "Im Panel öffnen" if not way.startswith(("Settings", "Features", "Status", "People", "Me")) else "Open in the panel"
+    return {"inline_keyboard": [[{"text": label, "url": url}]]}
+
+
 async def call(c, method, **params):
     """One Bot API call; ValueError with Telegram's description when it refuses."""
+    if method == "sendMessage" and "reply_markup" not in params:
+        button = way_button(params.get("text"))
+        if button:
+            try:
+                return await call(c, method, **params, reply_markup=button)
+            except ValueError as e:      # Telegram refuses the address: the message still goes, without the button
+                print("telegram: way button refused", safe(e, 120), flush=True)
     r = await c.post(f"{base()}/{method}", json=params)
     try:
         d = r.json()

@@ -270,7 +270,7 @@ struct AskView: View {
                     if dictation.working {
                         ProgressView().controlSize(.small)
                     }
-                    Text(verbatim: c.status)
+                    Text(Wege.text(c.status))
                         .font(.system(size: 12))
                         .foregroundColor(Theme.muted)
                         .lineLimit(3)

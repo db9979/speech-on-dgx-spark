@@ -91,6 +91,7 @@ internal sealed partial class TrayContext : ApplicationContext, IBegleiterHost
                 OnLeftClick();
             }
         };
+        Wege.Open = OpenPanelAt;
         _tray.BalloonTipClicked += (_, _) =>
         {
             if (_balloonAction is { } act)
@@ -537,10 +538,8 @@ internal sealed partial class TrayContext : ApplicationContext, IBegleiterHost
 
             if (_desk is not null && Parts.All.Any(p => !_desk.IsOn(p)))
             {
-                _menu.Items.Add(new ToolStripMenuItem(any ? "Weitere Teile: im Panel unter Ich → Begleiter" : "Teile im Panel unter Ich → Begleiter einschalten")
-                {
-                    Enabled = false,
-                });
+                string label = any ? "Weitere Teile: im Panel unter Ich → Begleiter …" : "Teile im Panel unter Ich → Begleiter einschalten …";
+                _menu.Items.Add(new ToolStripMenuItem(label, null, (_, _) => Wege.OpenFrom(label)));
             }
 
             if (_connection == Connection.Notaus)
@@ -1313,7 +1312,8 @@ internal sealed partial class TrayContext : ApplicationContext, IBegleiterHost
 
     public void OpenPanel() => OpenPanelAt("");
 
-    /// <summary>Öffnet das Panel im Browser; <paramref name="hash"/> nur fest aus dem Code (z. B. „#melden“).</summary>
+    /// <summary>Öffnet das Panel im Browser; <paramref name="hash"/> nur fest aus dem Code (z. B. „#melden“) oder
+    /// „#weg=“ mit kodiertem Weg (Wege.Hash).</summary>
     public void OpenPanelAt(string hash)
     {
         if (string.IsNullOrEmpty(_config.Base) ||
@@ -1457,7 +1457,8 @@ internal sealed partial class TrayContext : ApplicationContext, IBegleiterHost
     private void Notify(string text, ToolTipIcon icon)
     {
         _balloonIsNote = false;
-        _balloonAction = null;
+        // ein Weg im Hinweis („im Panel unter Ich → Begleiter“): Klick auf den Hinweis öffnet ihn im Panel
+        _balloonAction = Wege.Hash(text) is { } hash ? () => OpenPanelAt(hash) : null;
         _tray.ShowBalloonTip(5000, Title, Clip(text, 255), icon);
     }
 

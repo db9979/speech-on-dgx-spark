@@ -11,11 +11,16 @@ self.addEventListener('push', e => {
   e.waitUntil(self.clients.matchAll({type: 'window', includeUncontrolled: true}).then(list => {
     if (d.tag !== 'hello' && list.some(c => c.visibilityState === 'visible')) return;
     return self.registration.showNotification(d.title || 'Spark', {body: d.body || '', tag: d.tag || undefined,
-      icon: '/static/icon-192.png', badge: '/static/icon-192.png', data: {url: '/'}});
+      icon: '/static/icon-192.png', badge: '/static/icon-192.png', data: {weg: typeof d.weg === 'string' ? d.weg.slice(0, 200) : ''}});
   }));
 });
+// a note naming a place in the panel ("Ich → Gedächtnis", push.py) opens it there (way.js); only navigation
 self.addEventListener('notificationclick', e => {
   e.notification.close();
-  e.waitUntil(self.clients.matchAll({type: 'window', includeUncontrolled: true}).then(list =>
-    list.length ? list[0].focus() : self.clients.openWindow('/')));
+  const weg = (e.notification.data && e.notification.data.weg) || '';
+  e.waitUntil(self.clients.matchAll({type: 'window', includeUncontrolled: true}).then(list => {
+    if (!list.length) return self.clients.openWindow(weg ? '/#weg=' + encodeURIComponent(weg) : '/');
+    if (weg) list[0].postMessage({weg});
+    return list[0].focus();
+  }));
 });

@@ -38,9 +38,11 @@ function whoRow(f){const el=$('chat.'+f.switch);if(!el)return null;let row=el.cl
   for(let i=0;i<5;i++){const dep=row.closest('[data-show]');if(!dep||dep.style.display!=='none')break;
     const sw=$(dep.dataset.show);if(!sw)break;row=sw.closest('.setrow')||sw.closest('.fitem')||sw}
   return row}
-async function whoOpen(f){goSec('feat');if(typeof loadCfg==='function')try{await loadCfg()}catch{}
-  // a settings load started elsewhere (Wer darf was loads them too) may still be drawing the rows: wait for them
-  let row=whoRow(f);for(let i=0;!row&&i<40;i++){await new Promise(r=>setTimeout(r,250));row=whoRow(f)}
+async function whoOpen(f){const me=whoOpen.n=(whoOpen.n||0)+1;goSec('feat');if(typeof loadCfg==='function')try{await loadCfg()}catch{}
+  // a settings load started elsewhere (Wer darf was loads them too) may still be drawing the rows: wait for them,
+  // on a busy machine up to 20 s; a newer jump wins
+  let row=whoRow(f);for(let i=0;!row&&i<80&&me===whoOpen.n;i++){await new Promise(r=>setTimeout(r,250));row=whoRow(f)}
+  if(me!==whoOpen.n)return;
   WHO_LAST=row;if(!row)return;whoJumped();const it=row.closest('#pane-feat .fitem');
   if(it&&typeof featShow==='function')featShow(it);
   for(let d=row.parentElement;d&&d!==document.body;d=d.parentElement)if(d.tagName==='DETAILS'&&!d.open)d.open=true;

@@ -53,7 +53,7 @@ struct DocumentsView: View {
             if m.loading {
                 ProgressView()
             } else if m.off {
-                Text("Dafür im Panel unter Ich → iPhone-App „Dokumente aus der App“ einschalten.")
+                Text(SparkAPI.way(String(localized: "Dafür im Panel unter Ich → iPhone-App „Dokumente aus der App“ einschalten.")))
             } else if m.docs.isEmpty {
                 Text("Noch keine Dokumente.").foregroundStyle(.secondary)
             }
@@ -80,7 +80,7 @@ struct DocumentsView: View {
                 }
                 .contextMenu { if manage { menu(d) } }
             }
-            if let e = m.error { Text(verbatim: e).foregroundStyle(.red) }
+            if let e = m.error { Text(SparkAPI.way(e)).foregroundStyle(.red) }
             if let n = m.note { Text(verbatim: n).foregroundStyle(.secondary) }
             if manage && !m.off {
                 Section {
@@ -182,7 +182,7 @@ struct DocSwitchesView: View {
             if allow.values.allSatisfy({ !$0 }) && !allow.isEmpty {
                 Text("Der Admin hat keine dieser Funktionen eingeschaltet.").foregroundStyle(.secondary)
             }
-            if let e = error { Text(verbatim: e).foregroundStyle(.red) }
+            if let e = error { Text(SparkAPI.way(e)).foregroundStyle(.red) }
         }
         .navigationTitle("Schalter für Dokumente")
         .task { await load() }
@@ -245,7 +245,7 @@ struct DocumentView: View {
     private var textView: some View {
         ScrollView {
             LazyVStack(alignment: .leading, spacing: 12) {
-                if let e = error { Text(verbatim: e).foregroundStyle(.red) }
+                if let e = error { Text(SparkAPI.way(e)).foregroundStyle(.red) }
                 if let t = text {
                     if t.parts.isEmpty {
                         Text(doc.todo > 0 ? "Der Spark liest das Dokument noch." : "Kein Text gespeichert.")
@@ -348,7 +348,7 @@ struct MadeDocsView: View {
             if m.loading {
                 ProgressView()
             } else if m.off {
-                Text("Dafür im Panel unter Ich → Dokumente „Dokumente erstellen“ einschalten.")
+                Text(SparkAPI.way(String(localized: "Dafür im Panel unter Ich → Dokumente „Dokumente erstellen“ einschalten.")))
             } else if m.docs.isEmpty {
                 Text("Noch nichts erstellt. Sag zum Beispiel „Mach eine Präsentation über unseren Urlaub“.")
                     .foregroundStyle(.secondary)
@@ -369,7 +369,7 @@ struct MadeDocsView: View {
                     }
                 }
             }
-            if let e = m.error { Text(verbatim: e).foregroundStyle(.red) }
+            if let e = m.error { Text(SparkAPI.way(e)).foregroundStyle(.red) }
         }
         .navigationTitle("Vom Spark erstellt")
         .refreshable { await m.load() }
@@ -432,7 +432,7 @@ struct MadeDocView: View {
             } else {
                 VStack(spacing: 12) {
                     PeekView(doc: doc, big: true).padding()
-                    if let e = error { Text(verbatim: e).foregroundStyle(.red) }
+                    if let e = error { Text(SparkAPI.way(e)).foregroundStyle(.red) }
                     Spacer()
                 }
             }

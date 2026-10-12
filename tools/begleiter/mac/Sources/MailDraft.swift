@@ -378,7 +378,7 @@ struct MailBoxView: View {
                     .disabled(box.busy)
                 HStack(spacing: 8) {
                     if box.busy { ProgressView().controlSize(.small) }
-                    Text(verbatim: box.status)
+                    Text(Wege.text(box.status))
                         .font(.system(size: 12))
                         .foregroundColor(box.isError ? Theme.bad : Theme.muted)
                         .lineLimit(3)

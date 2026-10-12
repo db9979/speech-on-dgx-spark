@@ -105,6 +105,10 @@ function wayScan(root){if(!root)return;if(root.nodeType===3){wayText(root);retur
 // #weg=Ich%20→%20Sicherheit: the apps, mails and messages link a way into the panel; only a known way opens
 function wayHash(){const m=/^#weg=(.{3,600})$/.exec(location.hash);if(!m)return;history.replaceState(null,'',location.pathname+location.search);
   let w='';try{w=decodeURIComponent(m[1]).slice(0,200)}catch{return}if(wayParse(w,0))wayGo(w)}
+// a way from outside while the page is open: the Android app loads #weg=… into it, a tapped notification sends it (sw.js)
+addEventListener('hashchange',()=>{if(typeof PROFILE!=='undefined'&&location.hash.startsWith('#weg='))wayHash()});
+if(navigator.serviceWorker)navigator.serviceWorker.addEventListener('message',e=>{const w=e.data&&e.data.weg;
+  if(typeof PROFILE!=='undefined'&&typeof w==='string'&&w.length>=3&&w.length<=200&&wayParse(w,0))wayGo(w)});
 document.addEventListener('click',e=>{const a=e.target.closest&&e.target.closest('a.wayl[data-way]');if(!a)return;e.preventDefault();wayGo(a.dataset.way)});
 {let q=0;const todo=new Set();const later=()=>{if(!q)q=requestAnimationFrame(()=>{q=0;const l=[...todo];todo.clear();l.forEach(n=>{if(n.isConnected)wayScan(n)})})};
  // the version under the page is written once the page knows who signs in: then the whole page again (admin, Ich pages)

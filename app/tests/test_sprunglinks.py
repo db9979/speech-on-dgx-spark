@@ -10,6 +10,7 @@ import json
 import os
 import re
 import unittest
+from unittest import mock
 
 from tests import helpers
 from tests.test_ui_browser import PAGE_READY, async_playwright, browser_ok, chromium
@@ -23,7 +24,7 @@ HINT = re.compile(r"(?<![\w-])(?<!Mein )(?<!My )(?<!→ )(" + "|".join(DE_ROOTS 
 # names it right before the way. Everything else that starts with one of the names above must be found.
 NAMES = (r"iPhone|iOS|iPad|Android|Windows|Mac|macOS|Outlook|Word|Excel|Open WebUI|WebUI|Pebble|Home Assistant|"
          r"Telegram|Kiwix|SearXNG|reMarkable-App|Chrome|Safari|Firefox|App Store|TestFlight|Xcode|Apple|Google|Gmail|"
-         r"GitHub|Systemeinstellungen|System Settings|Begleiter|Companion|Wear OS|Siri|Kurzbefehle|Shortcuts|E-Mail-Einstellungen")
+         r"GitHub|Action-Button|Systemeinstellungen|System Settings|Begleiter|Companion|Wear OS|Siri|Kurzbefehle|Shortcuts|E-Mail-Einstellungen")
 OTHER = re.compile(r"(" + NAMES + r")[\w\s()\-:,]{0,20}$")
 # Ways whose place is not on the panel page on purpose (said elsewhere or only once a person is chosen)
 KNOWN = {}
@@ -40,7 +41,27 @@ def _sources():
     out.append((os.path.join(PANEL, "static", "index.html"), open(os.path.join(PANEL, "static", "index.html"), encoding="utf-8").read()))
     for p in sorted(glob.glob(os.path.join(PANEL, "*.py"))):
         out.append((p, "\n".join(_py_strings(open(p, encoding="utf-8").read()))))
+    return out + _app_sources()
+
+
+# the apps, the Begleiter and the Pebble app link their ways too (…/#weg=, Dominik 12.10.2026 „überall“); not in a
+# copy with only app/
+ROOT = os.path.dirname(APP)
+APP_GLOBS = ("ios/**/*.swift", "android/**/*.kt", "tools/begleiter/mac/**/*.swift", "tools/begleiter/windows/**/*.cs",
+             "pebble/src/pkjs/*.js")
+
+
+def _app_sources():
+    out = []
+    for g in APP_GLOBS:
+        for p in sorted(glob.glob(os.path.join(ROOT, g), recursive=True)):
+            text = re.sub(r"/\*.*?\*/", lambda m: "\n" * m.group(0).count("\n"), open(p, encoding="utf-8").read(), flags=re.S)
+            out.append((p, re.sub(r"(?m)(^|\s)//.*$", r"\1", text)))
     return out
+
+
+# in an app "Einstellungen → …" is the device's own settings; the panel's only with "Panel" right before it
+DEVICE = re.compile(r"(?<!Panel unter )(?<!Panel: )(?<!panel under )(?<!panel: )(?<![\w-])(Einstellungen|Settings)\s*→")
 
 
 def _py_strings(src):
@@ -65,8 +86,10 @@ def hints():
         for m in HINT.finditer(text):
             if OTHER.search(text[max(0, m.start() - 60):m.start()]):
                 continue
+            if not path.startswith(PANEL) and DEVICE.match(text, m.start()):
+                continue
             s = text[m.start():m.start() + 220]
-            cut = r"\n|\{" if path.endswith(".py") else r"(?<!\\)['`\"]|\\n|\n|<|\$\{"
+            cut = r"\n|\{" if path.endswith(".py") else r"(?<!\\)['`\"]|\\n|\n|<|\$\{|\\\(|\{"
             s = re.split(cut, s)[0].replace("\\'", "'")
             line = text.count("\n", 0, m.start()) + 1
             found.setdefault(s, []).append(f"{os.path.relpath(path, APP)}:{line}")
@@ -129,6 +152,114 @@ class Static(unittest.TestCase):
         # a link only opens a place: no request, no saving, no HTML from the text
         for bad in ("api(", "fetch(", "innerHTML", "localStorage", "eval(", "PUT", "POST"):
             self.assertNotIn(bad, js, bad)
+
+
+class Outside(unittest.TestCase):
+    """Outside the panel a way opens <panel>/#weg=<way> (wege.py): Telegram, push notes, the apps."""
+
+    def test_find_takes_the_first_way_up_to_the_end_of_the_clause(self):
+        import wege
+        self.assertEqual(wege.find("Ansehen und bestätigen unter Ich → Gedächtnis."), "Ich → Gedächtnis")
+        self.assertEqual(wege.find("Erlauben: Ich → Telegram → Fotos über Telegram und mehr"), "Ich → Telegram → Fotos über Telegram und mehr")
+        self.assertEqual(wege.find("Probleme melden ist aus (Admin: Funktionen → „Probleme melden“)"), "Funktionen → „Probleme melden“")
+        for none in ("Mein Notaus ist an.", "In Open WebUI → Einstellungen → Verbindungen", "", None, "Ich bin da → gleich"):
+            self.assertEqual(wege.find(none), "", none)
+        self.assertLessEqual(len(wege.find("Ich → " + "x" * 500)), wege.MAX)
+
+    def test_link_only_with_a_plain_address(self):
+        import wege
+        self.assertEqual(wege.link("https://spark.example.de/", "Ich → Sicherheit"),
+                         "https://spark.example.de/#weg=Ich%20%E2%86%92%20Sicherheit")
+        for bad in ("javascript:alert(1)", "https://a@b.de", "https://b.de/x", "https://b.de/#x", "", None, "ftp://b.de"):
+            self.assertEqual(wege.link(bad, "Ich → Sicherheit"), "", bad)
+        self.assertEqual(wege.link("https://b.de", ""), "")
+
+    def test_telegram_button_only_with_the_panel_address(self):
+        import telegram
+        with mock.patch.object(telegram, "load_config", return_value={"chat": {}}):
+            self.assertIsNone(telegram.way_button("Neu verbinden unter Ich → Telegram."))
+        with mock.patch.object(telegram, "load_config", return_value={"chat": {"telegram_panel_url": "https://s.example.de"}}):
+            self.assertIsNone(telegram.way_button("Hallo, wie geht's?"))
+            b = telegram.way_button("Neu verbinden unter Ich → Telegram.")
+            self.assertEqual(b, {"inline_keyboard": [[{"text": "Im Panel öffnen",
+                                                       "url": "https://s.example.de/#weg=Ich%20%E2%86%92%20Telegram"}]]})
+            self.assertEqual(telegram.way_button("Reconnect under Me → Telegram.")["inline_keyboard"][0][0]["text"], "Open in the panel")
+
+    def test_telegram_sends_without_the_button_when_refused(self):
+        """A button Telegram refuses (an address it does not take) never costs the message itself."""
+        import telegram
+        sent = []
+
+        class R:
+            def __init__(self, ok):
+                self.ok, self.status_code = ok, 200 if ok else 400
+
+            def json(self):
+                return {"ok": True, "result": {}} if self.ok else {"ok": False, "description": "Bad Request: wrong HTTP URL"}
+
+        class C:
+            async def post(self, url, json):
+                sent.append(json)
+                return R("reply_markup" not in json)
+
+        with mock.patch.object(telegram, "load_config", return_value={"chat": {"telegram_panel_url": "https://s.example.de"}}), \
+                mock.patch.object(telegram, "token", return_value="1:x"):
+            asyncio.run(telegram.call(C(), "sendMessage", chat_id=1, text="Unter Ich → Telegram."))
+        self.assertEqual(len(sent), 2)
+        self.assertIn("reply_markup", sent[0])
+        self.assertNotIn("reply_markup", sent[1])
+
+    def test_push_note_carries_the_way_and_the_page_opens_it(self):
+        src = open(os.path.join(PANEL, "push.py"), encoding="utf-8").read()
+        self.assertIn('"weg": wege.find(body)', src)
+        sw = open(os.path.join(PANEL, "static", "sw.js"), encoding="utf-8").read()
+        self.assertIn("'/#weg=' + encodeURIComponent(weg)", sw)
+        self.assertIn("postMessage({weg})", sw)
+        way = open(os.path.join(PANEL, "static", "js", "way.js"), encoding="utf-8").read()
+        self.assertIn("addEventListener('hashchange'", way)
+        self.assertIn("navigator.serviceWorker.addEventListener('message'", way)
+
+    def test_apps_use_the_same_rule(self):
+        """The Android app finds ways with the same roots as wege.py (the iPhone app and the Begleiter: see below)."""
+        import wege
+        kt = os.path.join(ROOT, "android", "app", "src", "main", "java", "io", "github", "db9979", "spark", "Wege.kt")
+        if not os.path.exists(kt):
+            self.skipTest("only app/ here")
+        src = open(kt, encoding="utf-8").read()
+        roots = re.search(r'ROOTS = "([^"]+)"', src).group(1).split("|")
+        self.assertEqual(sorted(roots), sorted(wege.ROOTS))
+        self.assertIn("[^\\\\n.;:()!?]{1,160}", src)
+        poll = open(os.path.join(os.path.dirname(kt), "NotePoll.kt"), encoding="utf-8").read()
+        self.assertIn("Wege.link(base, body)", poll)
+        # the iPhone app, the Mac and the Windows Begleiter: the same roots and the same end of a way
+        for path, rx in (("ios/Spark/PanelAPI.swift", r'wayRoots = "([^"]+)"'), ("tools/begleiter/mac/Sources/Wege.swift", r'roots = "([^"]+)"'),
+                         ("tools/begleiter/windows/Wege.cs", r'Roots = "([^"]+)"')):
+            src = open(os.path.join(ROOT, path), encoding="utf-8").read()
+            self.assertEqual(sorted(re.search(rx, src).group(1).split("|")), sorted(wege.ROOTS), path)
+            self.assertIn("{1,160}", src, path)
+            self.assertIn("#weg=", src, path)
+
+    def test_app_texts_with_a_way_are_links(self):
+        """A text the iPhone app or the Mac Begleiter shows with a way goes through the link helper (SparkAPI.way,
+        Wege.text), never as plain Text; the widget only opens the app (no links in widgets)."""
+        if not os.path.isdir(os.path.join(ROOT, "ios")):
+            self.skipTest("only app/ here")
+        plain = re.compile(r'Text\((?:verbatim: )?"([^"]*)"\)')
+        bad = []
+        for g in ("ios/Spark/*.swift", "tools/begleiter/mac/Sources/*.swift"):
+            for p in sorted(glob.glob(os.path.join(ROOT, g))):
+                for n, line in enumerate(open(p, encoding="utf-8"), 1):
+                    for m in plain.finditer(line):
+                        t = m.group(1)
+                        if HINT.search(t) and not DEVICE.match(t, HINT.search(t).start()) and not OTHER.search(t[:HINT.search(t).start()][-60:]):
+                            bad.append(f"{os.path.relpath(p, ROOT)}:{n}")
+        self.assertEqual(bad, [])
+        ios = "".join(open(p, encoding="utf-8").read() for p in glob.glob(os.path.join(ROOT, "ios/Spark/*.swift")))
+        self.assertGreaterEqual(ios.count("SparkAPI.way("), 20)
+        win = open(os.path.join(ROOT, "tools/begleiter/windows/UiControls.cs"), encoding="utf-8").read()
+        self.assertIn("Wege.OpenFrom(Text)", win)
+        tray = open(os.path.join(ROOT, "tools/begleiter/windows/TrayContext.cs"), encoding="utf-8").read()
+        self.assertIn("_balloonAction = Wege.Hash(text)", tray)
 
 
 @unittest.skipUnless(browser_ok(), "no Playwright/Chromium here")

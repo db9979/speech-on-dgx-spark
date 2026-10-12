@@ -362,7 +362,7 @@ struct WriteView: View {
                     if c.busy {
                         ProgressView().controlSize(.small)
                     }
-                    Text(verbatim: c.status)
+                    Text(Wege.text(c.status))
                         .font(.system(size: 12))
                         .foregroundColor(c.isError ? Theme.bad : Theme.muted)
                         .lineLimit(3)

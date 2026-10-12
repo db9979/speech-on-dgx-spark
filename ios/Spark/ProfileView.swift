@@ -109,7 +109,7 @@ struct ProfileView: View {
                 ProgressView()
             } else {
                 if let e = m.error {
-                    Section { Text(verbatim: e).foregroundStyle(.red) }
+                    Section { Text(SparkAPI.way(e)).foregroundStyle(.red) }
                 }
                 voice
                 answers
@@ -213,7 +213,7 @@ struct ProfileView: View {
                 Link("Panel öffnen", destination: base)
             }
         } header: { Text("Was die App darf") } footer: {
-            Text("Ändern im Panel unter Ich → iPhone-App.")
+            Text(SparkAPI.way(String(localized: "Ändern im Panel unter Ich → iPhone-App.")))
         }
     }
 

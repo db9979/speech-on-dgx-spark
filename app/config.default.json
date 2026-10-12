@@ -178,6 +178,7 @@
     "wyoming_allow": "",
     "wyoming_voice": "",
     "telegram_api": "",
+    "telegram_panel_url": "",
     "esp32": false,
     "iphone": false,
     "iphone_panel": false,

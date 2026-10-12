@@ -104,7 +104,7 @@ struct MessagesView: View {
                     ProgressView()
                 } else if m.off {
                     if let r = m.ready { ReadyView(r: r, open: true) } else {
-                        Section { Text("Nachrichten sind für dein Profil aus. Einschalten im Panel unter Ich → Nachrichten (der Admin muss sie unter Funktionen erlauben).") }
+                        Section { Text(SparkAPI.way(String(localized: "Nachrichten sind für dein Profil aus. Einschalten im Panel unter Ich → Nachrichten (der Admin muss sie unter Funktionen erlauben)."))) }
                     }
                 } else {
                     compose
@@ -112,7 +112,7 @@ struct MessagesView: View {
                     if let r = m.ready { ReadyView(r: r, open: false) }
                 }
                 if let n = m.notice { Section { Text(verbatim: n) } }
-                if let e = m.error { Section { Text(verbatim: e).foregroundStyle(.red) } }
+                if let e = m.error { Section { Text(SparkAPI.way(e)).foregroundStyle(.red) } }
             }
             .navigationTitle("Nachrichten")
             .navigationBarTitleDisplayMode(.inline)
@@ -279,7 +279,7 @@ struct ReadyView: View {
                     offList
                 }
                 if !r.on || !r.enabled {
-                    Text("Einschalten im Panel unter Ich → Nachrichten. Den Schalter für alle setzt der Admin unter Funktionen.")
+                    Text(SparkAPI.way(String(localized: "Einschalten im Panel unter Ich → Nachrichten. Den Schalter für alle setzt der Admin unter Funktionen.")))
                         .font(.footnote).foregroundStyle(.secondary)
                 }
             } label: {

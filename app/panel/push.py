@@ -257,7 +257,9 @@ async def _send_one(uid, kind, targets, title, body, tag, private, why):
         import begleiter
         begleiter.keep(uid, title, body, tag)
         n += 1
-    payload = json.dumps({"title": title, "body": body, "tag": tag}).encode()[:3000]
+    # a note naming a place in the panel opens it there when tapped (sw.js, way.js)
+    import wege
+    payload = json.dumps({"title": title, "body": body, "tag": tag, "weg": wege.find(body)}).encode()[:3000]
     n += await telegram.notify(uid, f"{title}\n{body}", private) if kind == "tg" else 0
     async with httpx.AsyncClient(timeout=15) as c:
         for sub in targets:

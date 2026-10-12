@@ -194,7 +194,9 @@
       <div class="setrow"><div class="lbl"><b>Telegram</b><span>Profile schreiben dem Assistenten über einen eigenen Telegram-Bot, auch mit Sprachnachrichten.</span></div><label class="tgl"><input type="checkbox" id="chat.telegram"><i></i></label></div>
       <div data-show="chat.telegram" style="margin-left:18px" id="tgadmin"><div class="fh">Bot-Token von @BotFather (Anleitung über den Knopf „Anleitung“).</div>
         <div class="rowin"><input id="tgtoken" type="password" autocomplete="off" placeholder="123456789:AA…"><button class="b" type="button" id="tgsave">Prüfen und speichern</button></div>
-        <div class="fh" id="tgstate"></div><div class="row" style="margin-top:6px"><button class="b" type="button" id="tgdel">Token löschen</button></div></div>
+        <div class="fh" id="tgstate"></div><div class="row" style="margin-top:6px"><button class="b" type="button" id="tgdel">Token löschen</button></div>
+        <label>Panel-Adresse für Links in Telegram</label><div class="rowin"><input id="chat.telegram_panel_url" placeholder="https://speech.example.de" autocapitalize="off" autocomplete="off"><button class="b" type="button" id="tgurlhere">Diese Adresse nehmen</button></div>
+        <div class="fh">Nennt eine Nachricht eine Stelle im Panel, bekommt sie einen Knopf „Im Panel öffnen“. Leer: kein Knopf. Nur https.</div></div>
       <div class="setrow"><div class="lbl"><b>Eigene Lautsprecher (ESP32)</b><span>ESP32-S3-Boards mit Mikrofon und Lautsprecher als Sprachassistent im Raum.</span></div><label class="tgl"><input type="checkbox" id="chat.esp32"><i></i></label></div>
       <div data-show="chat.esp32" style="margin-left:18px" id="espadmin">
         <div class="fh" id="espstate"></div><div class="row" style="margin-top:6px"><button class="b" type="button" id="espfetch">Firmware jetzt holen</button></div>
