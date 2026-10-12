@@ -129,7 +129,7 @@ struct CodeWordView: View {
                         .lineLimit(1)
                     Spacer()
                 }
-                Text(verbatim: box.message)
+                Text(Wege.text(box.message))
                     .font(.system(size: 12))
                     .foregroundColor(Theme.muted)
                     .fixedSize(horizontal: false, vertical: true)

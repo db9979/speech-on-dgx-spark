@@ -485,6 +485,19 @@ internal sealed class TLabel : Label, IThemed
 
     public TextRole Role { get; set; }
 
+    // Ein Weg im Text („im Panel unter Ich → Begleiter“) ist ein Sprung-Link: Hand-Zeiger, Klick öffnet die Stelle (Wege.cs)
+    protected override void OnTextChanged(EventArgs e)
+    {
+        base.OnTextChanged(e);
+        Cursor = Wege.Find(Text) is null ? Cursors.Default : Cursors.Hand;
+    }
+
+    protected override void OnClick(EventArgs e)
+    {
+        base.OnClick(e);
+        Wege.OpenFrom(Text);
+    }
+
     /// <summary>Statt der Rolle eine eigene Farbe (z. B. Hinweis in Orange).</summary>
     public Color? CustomColor { get; set; }
 

@@ -22,7 +22,7 @@ module.exports = function (s) {
     '<h1>Spark</h1><p>Sprach-Assistent auf dem DGX Spark.</p>' +
     '<label for="setup">Einrichtungscode</label>' +
     '<input id="setup" type="text" autocapitalize="off" autocorrect="off" placeholder="http://…#pebble=…">' +
-    '<small>Im Panel unter Ich → Geräte → „Pebble koppeln“ holen und hier einfügen. Dann trägt die App ' +
+    '<small>Im Panel unter Ich → Pebble-Uhr „Pebble koppeln“ holen und hier einfügen. Dann trägt die App ' +
     'Adresse und Schlüssel selbst ein.</small>' +
     '<label for="server">Spark-Adresse</label>' +
     '<input id="server" type="url" autocapitalize="off" autocorrect="off" value="' + esc(s.server || 'http://tars:31080') + '">' +

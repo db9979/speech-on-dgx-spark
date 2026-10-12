@@ -1,7 +1,11 @@
 package io.github.db9979.spark
 
 import android.app.AlertDialog
+import android.app.PendingIntent
+import android.content.Intent
 import android.graphics.drawable.Icon
+import android.net.Uri
+import android.os.Build
 import android.os.Handler
 import android.os.Looper
 import android.service.quicksettings.Tile
@@ -68,12 +72,28 @@ class NotausTile : TileService() {
                 .also { if (!mine) it.setNeutralButton("Mein Notaus") { _, _ -> send("/api/notaus/mine", "{}") } }
             !mine -> b.setMessage("Dein Profil stilllegen? Anmeldungen und Geräte werden gesperrt, in deinem Namen passiert nichts. Aufheben im Browser mit deiner PIN.")
                 .setPositiveButton("Mein Notaus") { _, _ -> send("/api/notaus/mine", "{}") }
-            else -> b.setMessage(if (level > 0) "Der Notaus steht auf Stufe $level." else "Mein Notaus ist schon an. Aufheben im Browser unter Ich → Sicherheit.")
+            else -> {
+                val text = if (level > 0) "Der Notaus steht auf Stufe $level." else "Mein Notaus ist schon an. Aufheben im Browser unter Ich → Sicherheit."
+                b.setMessage(text)
+                // the way in the text as a button: opens that place of the own panel in the app (Wege.kt)
+                Store(this).base?.let { base -> Wege.find(text)?.let { b.setPositiveButton("Im Panel öffnen") { _, _ -> openPanel(Wege.link(base, text)) } } }
+            }
         }
         try {
             showDialog(b.create())
         } catch (_: Exception) {
             toast("Der Dialog geht hier nicht, bitte die App öffnen.")
+        }
+    }
+
+    private fun openPanel(url: String) {
+        val i = Intent(this, MainActivity::class.java).setAction(Intent.ACTION_VIEW).setData(Uri.parse(url))
+            .addFlags(Intent.FLAG_ACTIVITY_NEW_TASK or Intent.FLAG_ACTIVITY_CLEAR_TOP)
+        if (Build.VERSION.SDK_INT >= 34) {
+            startActivityAndCollapse(PendingIntent.getActivity(this, 1, i, PendingIntent.FLAG_IMMUTABLE or PendingIntent.FLAG_UPDATE_CURRENT))
+        } else {
+            @Suppress("DEPRECATION")
+            startActivityAndCollapse(i)
         }
     }
 

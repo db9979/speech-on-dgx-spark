@@ -120,6 +120,9 @@ async function showTg(){const box=$('tgbox');if(!PROFILE||!TG_ON){box.innerHTML=
 async function tgAdmin(){if(!$('tgadmin'))return;let d={};try{d=await (await api('/api/admin/telegram')).json()}catch{return}
   $('tgstate').dataset.need=d.has_token?'':'1';setTimeout(()=>typeof guidesCount==='function'&&guidesCount());$('tgstate').textContent=d.has_token?t('Bot: @','Bot: @')+(d.bot||'?')+' · '+d.linked+t(' Profile verbunden.',' profiles linked.')+(d.conflict?t(' Achtung: Ein anderes Programm nutzt denselben Token. Token nur an einer Stelle nutzen oder bei @BotFather einen neuen holen.',' Note: another program uses the same token. Use it in one place only or get a new one from @BotFather.'):''):t('Noch kein Token gespeichert.','No token stored yet.');
   $('tgdel').style.display=d.has_token?'':'none';
+  // the address of this page as the panel address for Telegram links (https only; saved with the settings)
+  $('tgurlhere').onclick=()=>{const i=$('chat.telegram_panel_url');if(location.protocol!=='https:'){$('tgstate').textContent=t('Diese Seite ist nicht über https offen.','This page is not open over https.');return}
+    i.value=location.origin;i.dispatchEvent(new Event('input',{bubbles:true}));i.dispatchEvent(new Event('change',{bubbles:true}))};
   $('tgsave').onclick=async()=>{$('tgstate').textContent=t('Frage Telegram …','Asking Telegram …');try{await api('/api/admin/telegram',xjson('PUT',{token:$('tgtoken').value.trim()}));$('tgtoken').value='';tgAdmin()}catch(e){$('tgstate').textContent=e.message}};
   $('tgdel').onclick=async()=>{if(!confirm(t('Token löschen? Der Bot antwortet dann nicht mehr.','Delete the token? The bot stops answering.')))return;try{await api('/api/admin/telegram',{method:'DELETE'});tgAdmin()}catch(e){$('tgstate').textContent=e.message}}}
 async function apnsAdmin(){if(!$('apnsadmin'))return;let d={};try{d=await (await api('/api/admin/apns')).json()}catch{return}

@@ -613,7 +613,7 @@ struct MeetingResultView: View {
                 .background(RoundedRectangle(cornerRadius: 10).fill(Theme.soft))
                 .overlay(RoundedRectangle(cornerRadius: 10).stroke(Theme.line, lineWidth: 1))
                 if !box.status.isEmpty {
-                    Text(verbatim: box.status)
+                    Text(Wege.text(box.status))
                         .font(.system(size: 12))
                         .foregroundColor(box.failed ? Theme.bad : Theme.ok)
                 }

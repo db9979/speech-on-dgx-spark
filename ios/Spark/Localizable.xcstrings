@@ -1001,12 +1001,12 @@
         }
       }
     },
-    "Das Update hat nicht geklappt. Der Spark läuft weiter mit der alten Version; Details im Panel unter Zustand → System/Update.": {
+    "Das Update hat nicht geklappt. Der Spark läuft weiter mit der alten Version; Details im Panel unter Einstellungen → Update.": {
       "localizations": {
         "en": {
           "stringUnit": {
             "state": "translated",
-            "value": "The update did not work. The Spark keeps running the old version; details in the panel under Status → System/Update."
+            "value": "The update did not work. The Spark keeps running the old version; details in the panel under Settings → Update."
           }
         }
       }

@@ -34,7 +34,8 @@ function wayKids(c,all){const key=JSON.stringify(c)+(all?'+':'');
   if(WAY_MEMO.has(key))return WAY_MEMO.get(key);
   const out=[],seen=new Set(),add=(label,go,ctx,el)=>{label=(label||'').replace(/\s+/g,' ').trim().replace(/[:：]$/,'');
     if(!label||label.length>90||seen.has(wayLow(label)))return;seen.add(wayLow(label));out.push({label,go,ctx:ctx||c,el})};
-  const inside=(root,go)=>{if(root)root.querySelectorAll(WAY_SEL).forEach(e=>{if(e.closest('details.guide'))return;add(visText(e),()=>go(e),c,e)})};
+  // not inside guides, not a tab that is off (Logs → Anfragen without the recording)
+  const inside=(root,go)=>{if(root)root.querySelectorAll(WAY_SEL).forEach(e=>{if(e.closest('details.guide')||e.hidden&&e.matches(WAY_TAB))return;add(visText(e),()=>go(e),c,e)})};
   if(c.k==='cfg'){
     document.querySelectorAll('#cfgnav button[data-p]').forEach(b=>add(visText(b),()=>goCfg(b.dataset.p),b.dataset.p==='feat'?{k:'feat'}:{k:'p',p:b.dataset.p}));
     document.querySelectorAll('#cfgnav .cgrp').forEach(e=>add(e.textContent,()=>goSec('cfg'),c))}   // Assistent, Sprache, Spark
@@ -104,7 +105,11 @@ function wayScan(root){if(!root)return;if(root.nodeType===3){wayText(root);retur
 // #weg=Ich%20→%20Sicherheit: the apps, mails and messages link a way into the panel; only a known way opens
 function wayHash(){const m=/^#weg=(.{3,600})$/.exec(location.hash);if(!m)return;history.replaceState(null,'',location.pathname+location.search);
   let w='';try{w=decodeURIComponent(m[1]).slice(0,200)}catch{return}if(wayParse(w,0))wayGo(w)}
-document.addEventListener('click',e=>{const a=e.target.closest&&e.target.closest('a.wayl');if(!a)return;e.preventDefault();wayGo(a.dataset.way)});
+// a way from outside while the page is open: the Android app loads #weg=… into it, a tapped notification sends it (sw.js)
+addEventListener('hashchange',()=>{if(typeof PROFILE!=='undefined'&&location.hash.startsWith('#weg='))wayHash()});
+if(navigator.serviceWorker)navigator.serviceWorker.addEventListener('message',e=>{const w=e.data&&e.data.weg;
+  if(typeof PROFILE!=='undefined'&&typeof w==='string'&&w.length>=3&&w.length<=200&&wayParse(w,0))wayGo(w)});
+document.addEventListener('click',e=>{const a=e.target.closest&&e.target.closest('a.wayl[data-way]');if(!a)return;e.preventDefault();wayGo(a.dataset.way)});
 {let q=0;const todo=new Set();const later=()=>{if(!q)q=requestAnimationFrame(()=>{q=0;const l=[...todo];todo.clear();l.forEach(n=>{if(n.isConnected)wayScan(n)})})};
  // the version under the page is written once the page knows who signs in: then the whole page again (admin, Ich pages)
  new MutationObserver(ms=>{for(const m of ms){if(m.target.id==='ver')todo.add(document.body);if(m.type==='characterData')todo.add(m.target);else m.addedNodes.forEach(n=>todo.add(n))}later()})

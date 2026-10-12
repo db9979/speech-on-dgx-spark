@@ -474,9 +474,14 @@ class Browser(unittest.TestCase):
                         try:
                             await pg.wait_for_function("!!WHO_LAST", timeout=8000)
                         except Exception:
-                            if await pg.is_visible("#whobox .wname"):
-                                print(f"\nWARNUNG Wer darf was: {sw} nach dem Tippen nicht geöffnet, tippe noch einmal", file=sys.stderr)
-                                await pg.locator("#whobox .wname", has_text=name).first.click()
+                            # V01.0.446: also seen with Funktionen already open and no row marked (full local runs):
+                            # back to Wer darf was and tap once more, say so
+                            seen = await pg.evaluate("JSON.stringify({n:whoOpen.n||0,feat:!!document.querySelector('#pane-feat .fitem')})")
+                            print(f"\nWARNUNG Wer darf was: {sw} nach dem Tippen nicht geöffnet ({seen}), tippe noch einmal", file=sys.stderr)
+                            if not await pg.is_visible("#whobox .wname"):
+                                await pg.evaluate("goSec('who')")
+                                await pg.wait_for_selector("#whobox .wname", state="visible", timeout=20000)
+                            await pg.locator("#whobox .wname", has_text=name).first.click()
                         # the smooth scroll to a far row takes longer on GitHub's runners: wait until it is in view
                         try:
                             await pg.wait_for_function("(()=>{const r=WHO_LAST&&WHO_LAST.getBoundingClientRect();"

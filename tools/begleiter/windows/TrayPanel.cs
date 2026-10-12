@@ -793,6 +793,24 @@ internal sealed class TrayPanel : ThemedForm
         PlaceAtTray();
     }
 
+    // der Hinweis unten mit einem Weg („im Panel unter Ich → Begleiter“) ist ein Sprung-Link (Wege.cs)
+    private bool OverWayHint(Point at) => !_hint.IsEmpty && _hint.Contains(at) && Wege.Find(_model.Hint) is not null;
+
+    protected override void OnMouseMove(MouseEventArgs e)
+    {
+        base.OnMouseMove(e);
+        Cursor = OverWayHint(e.Location) ? Cursors.Hand : Cursors.Default;
+    }
+
+    protected override void OnMouseUp(MouseEventArgs e)
+    {
+        base.OnMouseUp(e);
+        if (e.Button == MouseButtons.Left && OverWayHint(e.Location))
+        {
+            Wege.OpenFrom(_model.Hint);
+        }
+    }
+
     protected override bool ProcessCmdKey(ref Message msg, Keys keyData)
     {
         switch (keyData)

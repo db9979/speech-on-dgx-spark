@@ -84,7 +84,7 @@ struct SettingsView: View {
                     Text(verbatim: "Profil: \(p)")
                         .foregroundColor(Theme.muted)
                 }
-                Text(verbatim: model.statusLine)
+                Text(Wege.text(model.statusLine))
                     .foregroundColor(Theme.muted)
             } else {
                 Text(verbatim: "Nicht gekoppelt.")
@@ -168,7 +168,7 @@ struct SettingsView: View {
                 }
             }
             if !folder.lastText.isEmpty {
-                Text(verbatim: folder.lastText)
+                Text(Wege.text(folder.lastText))
                     .font(.caption)
                     .foregroundColor(Theme.muted)
             }
@@ -334,7 +334,7 @@ struct SettingsView: View {
                         .font(.caption)
                         .foregroundColor(Theme.bad)
                 }
-                Text(verbatim: "Ändern im Panel unter Ich → Begleiter; der Begleiter übernimmt es beim nächsten Abruf.")
+                Text(Wege.text("Ändern im Panel unter Ich → Begleiter; der Begleiter übernimmt es beim nächsten Abruf."))
                     .font(.caption)
                     .foregroundColor(Theme.muted)
             } else {

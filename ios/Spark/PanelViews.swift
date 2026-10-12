@@ -123,7 +123,7 @@ struct MineView: View {
     var body: some View {
         List {
             if let e = m.error {
-                Section { Text(verbatim: e).foregroundStyle(.secondary) }
+                Section { Text(SparkAPI.way(e)).foregroundStyle(.secondary) }
             }
             Section {
                 if m.loading { ProgressView() }

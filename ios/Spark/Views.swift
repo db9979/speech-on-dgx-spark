@@ -134,7 +134,7 @@ struct PairView: View {
         NavigationStack {
             Form {
                 Section {
-                    Text("Diese App spricht mit deinem Spark. Zum Koppeln im Panel unter Ich → iPhone-App auf „iPhone koppeln“ tippen.")
+                    Text(SparkAPI.way(String(localized: "Diese App spricht mit deinem Spark. Zum Koppeln im Panel unter Ich → iPhone-App auf „iPhone koppeln“ tippen.")))
                     Text("Am PC: den QR-Code mit der Kamera dieses iPhones scannen. Auf diesem iPhone: dort „in der App öffnen“ antippen.")
                         .foregroundStyle(.secondary)
                     Text("Noch kein Profil? Mit einer Einladung vom Admin legst du es hier gleich an: den Einladungs-Link öffnen und „Lieber gleich in der iPhone-App“ antippen.")
@@ -706,7 +706,7 @@ struct SettingsView: View {
                     if talk.allowed.listen {
                         Text("Das Weckwort erkennt das iPhone selbst, ohne Internet. Erst danach geht etwas an deinen Spark. Am Akku hört es nach der letzten Nutzung nur so lange zu wie eingestellt.")
                     } else {
-                        Text("Im Panel unter Ich → iPhone-App „Dauerhaft zuhören erlauben“ einschalten.")
+                        Text(SparkAPI.way(String(localized: "Im Panel unter Ich → iPhone-App „Dauerhaft zuhören erlauben“ einschalten.")))
                     }
                 }
                 Section {
@@ -722,7 +722,7 @@ struct SettingsView: View {
                     Text("„Hey Siri, Frag Spark“ fragt den Spark auch ohne die App zu öffnen, auch mit AirPods und im Auto.")
                     Text("Schnellstart: In den iPhone-Einstellungen unter Action-Button → Kurzbefehl „Spark zuhören“ wählen. Dasselbe gibt es im Kontrollzentrum und als Widget für den Sperrbildschirm.")
                         .foregroundStyle(.secondary)
-                    Text("Was die App darf, stellst du im Panel unter Ich → iPhone-App ein. Dort entfernst du das iPhone auch, wenn es verloren geht.")
+                    Text(SparkAPI.way(String(localized: "Was die App darf, stellst du im Panel unter Ich → iPhone-App ein. Dort entfernst du das iPhone auch, wenn es verloren geht.")))
                         .foregroundStyle(.secondary)
                 }
                 if talk.allowed.updateNotify || talk.allowed.updateStart {
@@ -749,7 +749,7 @@ struct SettingsView: View {
                     dismiss()
                 }
             } message: {
-                Text("Im Panel unter Ich → iPhone-App das iPhone auch entfernen, dann gilt der Schlüssel nirgends mehr.")
+                Text(SparkAPI.way(String(localized: "Im Panel unter Ich → iPhone-App das iPhone auch entfernen, dann gilt der Schlüssel nirgends mehr.")))
             }
         }
     }

@@ -76,7 +76,7 @@ final class UpdateModel: ObservableObject {
                 if self.sawRunning && !self.state.running && !self.restarting && self.state.done {
                     self.finished = self.state.ok == true
                         ? String(localized: "Fertig. Der Spark läuft wieder mit \(self.state.installed).")
-                        : String(localized: "Das Update hat nicht geklappt. Der Spark läuft weiter mit der alten Version; Details im Panel unter Zustand → System/Update.")
+                        : String(localized: "Das Update hat nicht geklappt. Der Spark läuft weiter mit der alten Version; Details im Panel unter Einstellungen → Update.")
                     self.following = false
                     break
                 }
@@ -101,14 +101,14 @@ struct UpdateView: View {
                 ProgressView()
             } else {
                 if let e = m.error {
-                    Section { Text(verbatim: e).foregroundStyle(.red) }
+                    Section { Text(SparkAPI.way(e)).foregroundStyle(.red) }
                 }
                 Section {
                     LabeledContent("Installiert") { Text(verbatim: m.state.installed) }
                     if let latest = m.state.latest, m.state.newer {
                         LabeledContent("Neu und geprüft") { Text(verbatim: latest).bold() }
                     } else if let e = m.state.error {
-                        Text(verbatim: e).font(.footnote).foregroundStyle(.secondary)
+                        Text(SparkAPI.way(e)).font(.footnote).foregroundStyle(.secondary)
                     } else if !m.state.running && !m.following {
                         Label("Der Spark ist aktuell.", systemImage: "checkmark.circle").foregroundStyle(.green)
                     }
@@ -123,7 +123,7 @@ struct UpdateView: View {
                     }
                 }
                 if let f = m.finished {
-                    Section { Text(verbatim: f) }
+                    Section { Text(SparkAPI.way(f)) }
                 }
                 if m.state.newer && !m.state.changes.isEmpty {
                     Section {

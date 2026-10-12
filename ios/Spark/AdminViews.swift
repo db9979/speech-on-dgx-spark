@@ -186,7 +186,7 @@ struct AdminView: View {
                     do { try await s.elevate(code: c); error = nil } catch { self.error = error.localizedDescription }
                 }
             }
-            if let e = error { Text(verbatim: e).foregroundStyle(.red) }
+            if let e = error { Text(SparkAPI.way(e)).foregroundStyle(.red) }
         } footer: {
             Text(profileRole == "manager" ? String(localized: "Als Verwalter: Monitoring, Logs, Funktionen, Personen und Geräte. Mit dem Code deines Profils.")
                  : profileRole == "owner" ? String(localized: "Als Haupt-Admin, mit dem Code deines Profils: alles wie mit dem Admin-Passwort. Nach 15 Minuten ohne Bedienung endet die Anmeldung.")
@@ -207,9 +207,9 @@ struct AdminView: View {
                 Task { await signIn() }
             } label: { if busy { ProgressView() } else { Text("Anmelden") } }
             .disabled(busy || password.isEmpty || (askCode && code.count != 6))
-            if let e = error { Text(verbatim: e).foregroundStyle(.red) }
+            if let e = error { Text(SparkAPI.way(e)).foregroundStyle(.red) }
         } header: { Text("Admin-Anmeldung") } footer: {
-            Text("Geht nur mit dem zweiten Anmeldeschritt des Admins und mit „Spark verwalten in der App“ unter Ich → iPhone-App.")
+            Text(SparkAPI.way(String(localized: "Geht nur mit dem zweiten Anmeldeschritt des Admins und mit „Spark verwalten in der App“ unter Ich → iPhone-App.")))
         }
     }
 
@@ -231,7 +231,7 @@ struct StatusView: View {
 
     var body: some View {
         List {
-            if let e = error { Text(verbatim: e).foregroundStyle(.red) }
+            if let e = error { Text(SparkAPI.way(e)).foregroundStyle(.red) }
             let alerts = d["alerts"] as? [[String: Any]] ?? []
             Section("Braucht dich") {
                 if alerts.isEmpty { Label("Alles in Ordnung", systemImage: "checkmark.circle").foregroundStyle(.green) }
@@ -336,7 +336,7 @@ struct LogsView: View {
                 } label: { Label(copied ? LocalizedStringKey("Kopiert") : LocalizedStringKey("Kopieren für Thread"), systemImage: "doc.on.doc") }
                 ShareLink(item: copyText()) { Label("Teilen", systemImage: "square.and.arrow.up") }
             }
-            if let e = error { Text(verbatim: e).foregroundStyle(.red) }
+            if let e = error { Text(SparkAPI.way(e)).foregroundStyle(.red) }
             if let l = last {
                 Section("Letzter Fehler") {
                     Text(verbatim: (l["t"] as? String ?? "") + " · " + (l["msg"] as? String ?? "")).font(.footnote)
@@ -402,7 +402,7 @@ struct ChecksView: View {
 
     var body: some View {
         List {
-            if let e = error { Text(verbatim: e).foregroundStyle(.red) }
+            if let e = error { Text(SparkAPI.way(e)).foregroundStyle(.red) }
             Section {
                 let steps = live["steps"] as? [[String: Any]] ?? []
                 ForEach(Array(steps.enumerated()), id: \.offset) { _, s in
@@ -430,7 +430,7 @@ struct ChecksView: View {
                     if let t = (r["verdict"] as? [String: Any])?["title"] as? [String: Any] {
                         Text(verbatim: (Locale.current.language.languageCode?.identifier == "de" ? t["de"] : t["en"]) as? String ?? "")
                     }
-                    if let e = r["error"] as? String { Text(verbatim: e).foregroundStyle(.red) }
+                    if let e = r["error"] as? String { Text(SparkAPI.way(e)).foregroundStyle(.red) }
                 }
                 Button("Vorrang prüfen") { Task { await run("api/vorrang") } }.disabled(vorrang["running"] as? Bool == true)
             } header: { Text("Vorrang für Sprache") } footer: { Text("Dauert etwa eine Minute.") }
@@ -482,7 +482,7 @@ struct FeaturesView: View {
 
     var body: some View {
         Form {
-            if let e = error { Text(verbatim: e).foregroundStyle(.red) }
+            if let e = error { Text(SparkAPI.way(e)).foregroundStyle(.red) }
             ForEach(groups) { g in
                 let keys = g.keys.filter { on[$0] != nil }
                 if !keys.isEmpty {
@@ -549,7 +549,7 @@ struct AdminProfilesView: View {
 
     var body: some View {
         Form {
-            if let e = error { Text(verbatim: e).foregroundStyle(.red) }
+            if let e = error { Text(SparkAPI.way(e)).foregroundStyle(.red) }
             if let n = note { Text(verbatim: n).foregroundStyle(.secondary) }
             Section {
                 ForEach(users) { u in
@@ -571,7 +571,7 @@ struct AdminProfilesView: View {
                 SecureField("PIN (mindestens 4 Zeichen)", text: $pin)
                 Button("Profil anlegen") { Task { await add() } }.disabled(name.trimmingCharacters(in: .whitespaces).isEmpty || pin.count < 4)
             } header: { Text("Neues Profil") } footer: {
-                Text("Ein neues iPhone koppelt das Profil danach selbst unter Ich → iPhone-App.")
+                Text(SparkAPI.way(String(localized: "Ein neues iPhone koppelt das Profil danach selbst unter Ich → iPhone-App.")))
             }
         }
         .navigationTitle("Personen und Geräte")
@@ -621,7 +621,7 @@ struct AdminProfileView: View {
 
     var body: some View {
         Form {
-            if let e = error { Text(verbatim: e).foregroundStyle(.red) }
+            if let e = error { Text(SparkAPI.way(e)).foregroundStyle(.red) }
             if let n = note { Text(verbatim: n).foregroundStyle(.secondary) }
             if !role.isEmpty {
                 LabeledContent("Admin-Rechte") { Text(role == "owner" ? String(localized: "Haupt-Admin") : role == "manager" ? String(localized: "Verwalter") : String(localized: "Mit-Admin")) }
@@ -746,7 +746,7 @@ struct BackupsView: View {
 
     var body: some View {
         Form {
-            if let e = error { Text(verbatim: e).foregroundStyle(.red) }
+            if let e = error { Text(SparkAPI.way(e)).foregroundStyle(.red) }
             Section {
                 Button { Task { await create() } } label: { if busy { ProgressView() } else { Text("Jetzt sichern") } }.disabled(busy)
             } footer: { Text("Zurückspielen und Herunterladen gehen im Browser.") }

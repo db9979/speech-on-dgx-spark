@@ -279,7 +279,7 @@ struct VoiceView: View {
                 }
             }
             if let n = m.note { Text(verbatim: n).foregroundStyle(.secondary) }
-            if let e = m.error { Text(verbatim: e).foregroundStyle(.red) }
+            if let e = m.error { Text(SparkAPI.way(e)).foregroundStyle(.red) }
         }
         .navigationTitle("Stimme einlernen")
         .task { await m.load() }
@@ -406,7 +406,7 @@ struct AutoView: View {
 
     var body: some View {
         Form {
-            if let e = m.error { Text(verbatim: e).foregroundStyle(.red) }
+            if let e = m.error { Text(SparkAPI.way(e)).foregroundStyle(.red) }
             if let s = m.sample { Section { Text(verbatim: s) } header: { Text("Antwort des Spark") } }
             Section {
                 SettingToggle(title: "Wetter", key: "wx_on", settings: $m.settings, error: $m.error)
@@ -504,7 +504,7 @@ struct JobView: View {
                 if !job.error.isEmpty { Text(verbatim: job.error).foregroundStyle(.red) }
                 // the job's report: what the language model wrote from outside sources, shown as plain text
                 Text(verbatim: report.isEmpty ? job.summary : report).textSelection(.enabled)
-                if let e = error { Text(verbatim: e).foregroundStyle(.red) }
+                if let e = error { Text(SparkAPI.way(e)).foregroundStyle(.red) }
             }
             .padding()
             .frame(maxWidth: .infinity, alignment: .leading)
@@ -599,7 +599,7 @@ struct SecurityView: View {
 
     var body: some View {
         Form {
-            if let e = m.error { Text(verbatim: e).foregroundStyle(.red) }
+            if let e = m.error { Text(SparkAPI.way(e)).foregroundStyle(.red) }
             if let n = m.note { Text(verbatim: n).foregroundStyle(.secondary) }
             Section {
                 LabeledContent("Zweiter Schritt", value: m.mfaOn ? String(localized: "an") : String(localized: "aus"))
@@ -736,7 +736,7 @@ struct AccountsView: View {
 
     var body: some View {
         Form {
-            if let e = m.error { Text(verbatim: e).foregroundStyle(.red) }
+            if let e = m.error { Text(SparkAPI.way(e)).foregroundStyle(.red) }
             if let n = m.note { Text(verbatim: n).foregroundStyle(.secondary) }
             list("E-Mail", m.mail, "mail", "api/profile/mail")
             list("Kalender", m.calendars, "calendar", "api/profile/calendar")
@@ -839,7 +839,7 @@ struct AccountForm: View {
             } footer: {
                 Text("Der Spark prüft die Verbindung, speichert das Passwort verschlüsselt und gibt es nie wieder heraus. Das iPhone behält es nicht. Bestätigt wird mit dem Code aus der Authenticator-App.")
             }
-            if let e = m.error { Text(verbatim: e).foregroundStyle(.red) }
+            if let e = m.error { Text(SparkAPI.way(e)).foregroundStyle(.red) }
         }
         .navigationTitle(Self.title(kind))
         .toolbar { ToolbarItem(placement: .cancellationAction) { Button("Abbrechen") { secret = ""; dismiss() } } }
@@ -937,10 +937,10 @@ struct NotausSection: View {
                 Label("Notaus", systemImage: "exclamationmark.octagon.fill").foregroundStyle(.red)
             }
             .disabled(busy)
-            if let note { Text(verbatim: note) }
+            if let note { Text(SparkAPI.way(note)) }
         } header: { Text("Notaus") } footer: {
-            Text(admin.signedIn ? String(localized: "Als Admin: der ganze Spark (Stufe 2 „Hände weg“) oder nur dein Profil. Aufheben geht nie in der App.")
-                 : String(localized: "Legt dein Profil still: Anmeldungen und Geräte gesperrt, in deinem Namen passiert nichts. Aufheben nur im Browser unter Ich → Sicherheit mit deiner PIN."))
+            Text(SparkAPI.way(admin.signedIn ? String(localized: "Als Admin: der ganze Spark (Stufe 2 „Hände weg“) oder nur dein Profil. Aufheben geht nie in der App.")
+                 : String(localized: "Legt dein Profil still: Anmeldungen und Geräte gesperrt, in deinem Namen passiert nichts. Aufheben nur im Browser unter Ich → Sicherheit mit deiner PIN.")))
         }
         .confirmationDialog("Notaus", isPresented: $ask, titleVisibility: .visible) {
             if whole { Button("Ganzer Spark (Stufe 2)", role: .destructive) { run(true) } }

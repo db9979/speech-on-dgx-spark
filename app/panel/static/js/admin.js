@@ -47,7 +47,10 @@ function zustand(s){if(s)ZLAST=s;s=ZLAST;if(!s)return;
   const al=s.alerts||[],lvl=bad.length||need.some(x=>x.lvl==='bad')||al.some(x=>x.level==='bad')?'bad':need.length||unk.length||low||al.length?'warn':'ok';
   $('ztitle').textContent=lvl==='ok'?t('Alles läuft.','Everything is running.'):lvl==='bad'?t('Etwas läuft nicht.','Something is not running.'):!run.length&&unk.length?t('Die Dienste melden sich nicht.','The services do not answer.'):t('Läuft, aber etwas braucht dich.','Running, but something needs you.');
   $('ztext').textContent=(bad.length?t('Fehler: ','Errors: ')+bad.join(', ')+'. ':'')+(run.length?run.join(t(' und ',' and '))+(run.length>1?t(' laufen. ',' are running. '):t(' läuft. ',' is running. ')):'')+(unk.length?t('Ohne Rückmeldung: ','No answer from: ')+unk.join(', ')+'. ':'')
-    +(sy.mem_avail_gib!=null?t(`${fmt(sy.mem_avail_gib,' GiB',1)} Speicher frei`,`${fmt(sy.mem_avail_gib,' GiB',1)} memory free`)+(low?t(' (wenig)',' (low)'):'')+'.':'')+(al.length?' '+t('Hinweise stehen oben.','Notes are shown above.'):'');
+    +(sy.mem_avail_gib!=null?t(`${fmt(sy.mem_avail_gib,' GiB',1)} Speicher frei`,`${fmt(sy.mem_avail_gib,' GiB',1)} memory free`)+(low?t(' (wenig)',' (low)'):'')+'.':'')+(al.length?' ':'');
+  // the notes above, one tap away (they hold the way to the place each is about)
+  if(al.length){const a=document.createElement('a');a.href='#';a.className='wayl';a.textContent=t('Hinweise stehen oben.','Notes are shown above.');
+    a.onclick=e=>{e.preventDefault();const n=$('alerts').firstElementChild;if(n)sFlash(n)};$('ztext').appendChild(a)}
   zCards(s);$('zhead').dataset.lvl=lvl;$('zicon').textContent=lvl==='ok'?'✓':'!';
   document.querySelectorAll('.hdot').forEach(d=>d.className='hdot '+lvl);
   $('zneed').hidden=!need.length;const L=$('zlist');L.textContent='';
@@ -794,8 +797,16 @@ $('bakmove').onclick=async()=>{const pw=$('bakpw').value;if(pw.length<12){$('bak
   $('bakmsg').textContent=t('sichere …','backing up …');
   try{const b=await (await api('/api/backups/move',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({password:pw})})).json();$('bakpw').value='';
     $('bakmsg').textContent=t('Umzugs-Sicherung angelegt: ','Move backup made: ')+mb(b.size)+t('. Mit „Laden“ herunterladen und das Passwort gut aufheben.','. Download it with "Download" and keep the password safe.');loadBak()}catch(e){$('bakmsg').innerHTML=`<span class="err">${esc(e.message)}</span>`}};
-// alerts on top of every admin page: memory, watchdog, failed live check
-function showAlerts(a){$('alerts').innerHTML=(a||[]).map(x=>`<div class="note ${x.level==='bad'?'bad':''}">${esc(x.text)}</div>`).join('')}
+// alerts on top of every admin page: memory, watchdog, failed live check, slow answers, a service gone. Each names
+// with go (health.alerts, a way like "Zustand → Logs → Anfragen") where to look or act: the button jumps there
+// (way.js, Dominik 12.10.2026). Drawn again only when something changed (refresh runs every 3 s).
+let ALERTS_LAST='';
+function showAlerts(a){a=a||[];const k=JSON.stringify(a);if(k===ALERTS_LAST)return;ALERTS_LAST=k;const box=$('alerts');box.textContent='';
+  for(const x of a){const n=document.createElement('div');n.className='note'+(x.level==='bad'?' bad':'')+(x.go?' gonote':'');
+    const s=document.createElement('span');s.textContent=x.text;n.appendChild(s);
+    if(x.go&&typeof wayGo==='function'){const b=document.createElement('button');b.type='button';b.className='b';b.textContent=t('Ansehen','View');
+      b.title=x.go;b.onclick=()=>wayGo(x.go);n.appendChild(b)}
+    box.appendChild(n)}}
 // ---------------------------------------------------------------- does the language model see pictures? (images.py)
 function visionShow(r){if(!r){$('visionmsg').textContent=t('Noch nicht geprüft.','Not checked yet.');return}
   const when=new Date(r.t*1000).toLocaleString([], {dateStyle:'short',timeStyle:'short'});

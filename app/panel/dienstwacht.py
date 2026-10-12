@@ -684,7 +684,7 @@ def alerts(now=None):
     out = []
     for sid, e in _read()["svc"].items():
         if e.get("st") == "down":
-            out.append({"kind": "service", "level": "bad",
+            out.append({"kind": "service", "level": "bad", "go": "Zustand → Dienste",
                         "text": f"Gerade eingeschränkt: {SVC[sid][0]} antwortet seit {_hm(e.get('since') or 0)} nicht. {SVC[sid][2]}"})
     return out
 

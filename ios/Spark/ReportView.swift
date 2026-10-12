@@ -83,7 +83,7 @@ struct ReportView: View {
                         .disabled(busy || text.trimmingCharacters(in: .whitespacesAndNewlines).count < 3)
                 }
             }
-            if let note { Section { Text(verbatim: note) } }
+            if let note { Section { Text(SparkAPI.way(note)) } }
         }
         .navigationTitle("Problem melden")
         .task { await load() }

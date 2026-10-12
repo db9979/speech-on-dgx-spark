@@ -65,7 +65,7 @@ struct TodayView: View {
             VStack(alignment: .leading, spacing: 2) {
                 if !title.isEmpty { Text(title).font(.caption).foregroundStyle(.secondary) }
                 Text(big).font(.headline)
-                if !small.isEmpty { Text(small).font(.subheadline).foregroundStyle(.secondary) }
+                if !small.isEmpty { Text(SparkAPI.way(small)).font(.subheadline).foregroundStyle(.secondary) }
             }
         }
         .accessibilityElement(children: .combine)
