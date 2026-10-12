@@ -230,7 +230,8 @@ async def ask(uid, text, pictures=None):
     local = datetime.datetime.now(chat.user_zone(s.get("tz", "")))
     day = local.strftime("%Y%m%d")
     try:
-        await asyncio.to_thread(profiles.append_convo, uid, "tg-" + day, "Telegram " + local.strftime("%d.%m."), msgs[-2:])
+        import verlauf
+        await asyncio.to_thread(verlauf.keep, uid, "tg-" + day, "Telegram " + local.strftime("%d.%m."), local, "telegram", msgs[-2:])
     except Exception as e:
         print("telegram: convo", type(e).__name__, flush=True)
     return answer

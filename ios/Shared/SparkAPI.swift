@@ -471,13 +471,33 @@ struct SparkAPI {
         }
     }
 
-    /// Adds or replaces one conversation in the profile's list.
+    /// What changed in the profile's conversations since a time (ms, the Spark's own clock), and which ones still
+    /// exist (a conversation deleted on another device is missing from ids).
+    func convos(since: Int) async throws -> (items: [SavedConvo], ids: Set<String>) {
+        var c = URLComponents(url: base.appendingPathComponent("api/profile/convos"), resolvingAgainstBaseURL: false)!
+        c.queryItems = [URLQueryItem(name: "since", value: String(max(0, since)))]
+        var r = request("api/profile/convos")
+        r.url = c.url
+        let (data, response) = try await URLSession.shared.data(for: r)
+        try Self.check(data, response)
+        let d = Self.object(data)
+        let ids = Set((d["ids"] as? [String] ?? []).prefix(200))
+        let list = d["items"] as? [[String: Any]] ?? []
+        let items: [SavedConvo] = list.compactMap { x in
+            guard let id = x["id"] as? String, let msgs = x["msgs"] as? [[String: Any]] else { return nil }
+            let ms = (x["updated"] as? NSNumber)?.doubleValue ?? 0
+            return SavedConvo(id: id, title: x["title"] as? String ?? "", updated: Date(timeIntervalSince1970: ms / 1000), msgs: msgs)
+        }
+        return (items, ids)
+    }
+
+    /// Adds new messages to one conversation in the profile's list (made if new; what another device added stays).
+    /// "add" instead of "msgs": an older Spark refuses it rather than replacing the conversation.
     func saveConvo(id: String, title: String, msgs: [[String: Any]]) async throws {
         var r = request("api/profile/convos", method: "PUT")
         r.setValue("application/json", forHTTPHeaderField: "Content-Type")
         r.httpBody = try JSONSerialization.data(withJSONObject: [
-            "id": id, "title": String(title.prefix(80)), "msgs": msgs,
-            "updated": Int(Date().timeIntervalSince1970 * 1000)])
+            "id": id, "title": String(title.prefix(80)), "add": msgs] as [String: Any])
         let (data, response) = try await URLSession.shared.data(for: r)
         try Self.check(data, response)
     }

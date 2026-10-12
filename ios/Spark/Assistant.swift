@@ -85,6 +85,11 @@ final class Conversation: ObservableObject {
     private let net = NetWatch()
     /// the id under which this conversation is kept in the profile's list (the panel's Protokoll)
     private(set) var convoId = Conversation.newId()
+    /// how many of the messages the Spark's copy already has: only the ones after them are sent (added there),
+    /// so what another device added to the same conversation meanwhile stays
+    private var saved = 0
+    /// newest change of the open conversation the app knows (ms, the Spark's clock): asks only for what came after
+    private var seenAt = 0
 
     init() {
         let w = wake
@@ -192,6 +197,7 @@ final class Conversation: ObservableObject {
         foreground = p == .active
         if foreground {
             lastActivity = Date()
+            Task { await catchUp() }
             // what the profile may has possibly changed meanwhile (Wer darf was in the panel): ask the Spark again
             if started { Task { await rightsCheck() } } else if unreachable { Task { await check() } }
             if allowed.ios && started { Task { await AppleReminders.syncLists() } }
@@ -236,6 +242,29 @@ final class Conversation: ObservableObject {
         if unreachable { Task { await check() } }
         if allowed.proactive && Prefs.speakNotes && (foreground || phase == .waiting || inCar) { Task { await pollNotes() } }
         if foreground { Task { await refreshRooms() } }
+        if foreground && !unreachable && ticks % 2 == 0 { Task { await catchUp() } }
+    }
+
+    /// The open conversation shows what another device (panel, Telegram, a speaker) added meanwhile, and closes when it
+    /// was deleted there: on coming to the front and about every 40 s in front, only while nothing runs here.
+    private func catchUp() async {
+        guard saved > 0, phase == .idle || phase == .waiting, let api = SparkAPI.current, Demo.scene == nil else { return }
+        let id = convoId
+        guard let got = try? await api.convos(since: seenAt), id == convoId,
+              phase == .idle || phase == .waiting else { return }
+        if !got.ids.contains(id) { fresh(); return }
+        guard let c = got.items.first(where: { $0.id == id }) else { return }
+        seenAt = max(seenAt, Int(c.updated.timeIntervalSince1970 * 1000))
+        let theirs = c.msgs.compactMap { d -> Message? in
+            guard let role = d["role"] as? String, role == "user" || role == "assistant",
+                  let text = d["content"] as? String else { return nil }
+            let mark = d["mail"] as? Bool == true ? "mail" : d["outside"] as? Bool == true ? "outside" : nil
+            return Message(role: role, text: text, mark: mark)
+        }
+        // only when the Spark has more than the app shows (the app keeps its own labels for what it asked itself)
+        guard theirs.count > messages.suffix(60).count else { return }
+        messages = theirs
+        saved = messages.count
     }
 
     // ---------------------------------------------------------------- resting state
@@ -301,6 +330,8 @@ final class Conversation: ObservableObject {
     private func fresh() {
         messages = []
         convoId = Self.newId()
+        saved = 0
+        seenAt = 0
         labelShown = false
     }
 
@@ -314,6 +345,8 @@ final class Conversation: ObservableObject {
             return Message(role: role, text: text, mark: mark)
         }
         convoId = c.id
+        saved = messages.count
+        seenAt = Int(c.updated.timeIntervalSince1970 * 1000)
         attachment = nil
         labelShown = false
         error = nil
@@ -523,13 +556,15 @@ final class Conversation: ObservableObject {
 
     /// The conversation into the profile's list (the photo's or document's text never goes there).
     private func save(_ api: SparkAPI) {
-        let msgs: [[String: Any]] = messages.suffix(60).compactMap { m in
+        let start = min(saved, messages.count)
+        let msgs: [[String: Any]] = messages[start...].suffix(60).compactMap { m in
             guard !m.text.isEmpty else { return nil }
             var d: [String: Any] = ["role": m.role, "content": m.label.map { $0 + "\n" + m.text } ?? m.text]
             if let mark = m.mark { d[mark] = true }
             return d
         }
-        guard let first = messages.first(where: { $0.role == "user" }) else { return }
+        guard !msgs.isEmpty, let first = messages.first(where: { $0.role == "user" }) else { return }
+        saved = messages.count
         let id = convoId
         Task { try? await api.saveConvo(id: id, title: String(first.text.prefix(60)), msgs: msgs) }
     }
@@ -680,6 +715,7 @@ final class Conversation: ObservableObject {
         if Date().timeIntervalSince(last) > Self.newAfter { fresh() }
         // like the panel: a note counts as outside text for the next turn
         messages.append(Message(role: "assistant", text: n.text, mark: n.mail ? "mail" : "outside"))
+        save(api)   // into the history at once, not only with the next question
         last = Date()
         wake.stop()
         phase = .speaking

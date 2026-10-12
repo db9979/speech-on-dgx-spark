@@ -508,6 +508,7 @@ def validate(new):
               "kiwix", "local_first", "mcp_server", "mcp_server_extern", "mcp_server_act", "prefetch", "instant_ack",
               "spark_help", "spark_suggest", "spark_drawer", "feature_tips", "feature_tips_push", "write_help", "write_apps", "desk", "desk_act", "desk_meeting",
               "dev_updates", "dev_updates_night", "dev_updates_upstream", "esp32_ota_http",
+              "svc_watch", "svc_watch_users", "history_live", "history_one", "history_offline",
               "svc_watch", "svc_watch_users", "berater", "berater_explain", "berater_chat", "berater_notify",
               "berater_issue", "berater_auto", "berater_env", "berater_me", "bewerten", "bewerten_back",
               "storage_own", "storage_lan", "storage_folder"):

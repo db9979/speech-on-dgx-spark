@@ -1881,6 +1881,46 @@
 },
 {
 "lang": "de",
+"src": "assistent",
+"file": "Assistent und Oberfläche",
+"head": "Die Oberfläche",
+"title": "Verlauf auf allen Geräten",
+"text": "Verlauf auf allen Geräten (seit V01.0.457): Die Gespräche eines Profils liegen auf dem Spark. Panel, Android-App und iPhone-App schicken nach jeder Antwort nur die neuen Nachrichten, der Spark hängt sie an. Fragen zwei Geräte im selben Gespräch (etwa im heutigen Gespräch am Rechner und am Handy), bleiben beide Fragen erhalten; vorher überschrieb das zweite Gerät das erste. Eine offene Seite holt Neues von anderen Geräten, sobald sie wieder vorne ist, und alle 30 Sekunden (nur Geänderte, höchstens 120 Abfragen pro Minute und Profil). Nur Löschen ersetzt die Kopie auf dem Spark. Fragen über die Pebble-Uhr stehen wie Siri, Telegram und Begleiter als eigenes Tagesgespräch („Uhr 12.10.“) im Verlauf. Gäste behalten ihren Verlauf nur im eigenen Browser. Plan für den Lesestand und mehr: plaene/verlauf-sync.md."
+},
+{
+"lang": "de",
+"src": "assistent",
+"file": "Assistent und Oberfläche",
+"head": "Die Oberfläche",
+"title": "Verlauf sofort abgleichen, ein Gespräch für alle Kanäle, offline lesen",
+"text": "Verlauf sofort abgleichen, ein Gespräch für alle Kanäle, offline lesen (seit V01.0.457, jede Funktion aus, bis Admin unter Funktionen und Profil unter Ich → Gespräch → Verlauf sie einschalten; Gäste nie):"
+},
+{
+"lang": "de",
+"src": "assistent",
+"file": "Assistent und Oberfläche",
+"head": "Die Oberfläche",
+"title": "Die Oberfläche",
+"text": "- *Verlauf sofort abgleichen*: Jede offene Seite hält eine Ereignis-Verbindung zum Spark (/api/profile/convos/stream, höchstens 8 pro Profil, nach 30 Minuten neu). Ändert sich ein Gespräch auf einem anderen Gerät, holt die Seite es sofort; ein gelöschtes Gespräch schließt sich. Antwortet gerade ein anderes Gerät im offenen Gespräch, steht blass „Handy antwortet gerade …“ (nur die Geräteart, nie die Frage). Die Live-Übersicht zeigt nur die Zahl dieser Verbindungen. - *Ein Gespräch für alle Kanäle*: Telegram, Siri, Begleiter, Uhr und die eigene Stimme am Lautsprecher schreiben ins heutige Hauptgespräch (das neueste von heute, das keinem Kanal allein gehört; sonst „Heute TT.MM.“), jede Nachricht mit Kanal-Zeichen. Mehr Zusammenhang, aber auch mehr fremder Kontext. Eine Stimme, die nicht sicher die des Besitzers ist, bleibt im Gespräch des Lautsprechers. - *Verlauf offline lesen*: Nur ein Browser, dem das Profil beim zweiten Anmeldeschritt vertraut, behält eine Kopie der letzten 30 Gespräche und die Seite selbst. Ohne Verbindung zum Spark öffnet das Panel sie zum Lesen; Fragen ohne Verbindung (höchstens 10) gehen raus, sobald der Spark wieder antwortet. Jeder andere Browser speichert n"
+},
+{
+"lang": "de",
+"src": "assistent",
+"file": "Assistent und Oberfläche",
+"head": "Die Oberfläche",
+"title": "Die Oberfläche",
+"text": "ichts und löscht beim nächsten Öffnen, was er hatte; Abmelden löscht immer."
+},
+{
+"lang": "de",
+"src": "assistent",
+"file": "Assistent und Oberfläche",
+"head": "Die Oberfläche",
+"title": "Die Oberfläche",
+"text": "Immer, ohne Schalter: Unter einer Antwort bleiben Quellen, Dokument-Fundstellen und erstellte Dokumente mit ihr gespeichert und erscheinen auf jedem Gerät wieder. Die iPhone-App holt Neues beim Öffnen und im laufenden Gespräch nach (neuer TestFlight-Build nötig)."
+},
+{
+"lang": "de",
 "src": "installation",
 "file": "Installation im Detail",
 "head": "Nur die Modelle bereitstellen (ohne Webportal)",
@@ -4974,6 +5014,46 @@
 "head": "The panel",
 "title": "The panel",
 "text": "The panel is available in English and German; the button at the top right switches (default: the browser's language)."
+},
+{
+"lang": "en",
+"src": "assistant",
+"file": "Assistant and panel",
+"head": "The panel",
+"title": "History on every device",
+"text": "History on every device (since V01.0.457): a profile's conversations live on the Spark. The panel, the Android app and the iPhone app send only the new messages after each answer, and the Spark appends them. When two devices ask in the same conversation (for example today's conversation on the computer and on the phone), both questions stay; before, the second device overwrote the first. An open page fetches what other devices added as soon as it is in front again and every 30 seconds (only changed ones, at most 120 requests per minute and profile). Only deleting replaces the Spark's copy. Questions from the Pebble watch are kept like Siri, Telegram and the companion as their own conversation per day (\"Uhr 12.10.\"). Guests keep their history in their own browser only."
+},
+{
+"lang": "en",
+"src": "assistant",
+"file": "Assistant and panel",
+"head": "The panel",
+"title": "Instant history sync, one conversation for all channels, offline reading",
+"text": "Instant history sync, one conversation for all channels, offline reading (since V01.0.457, each function off until the admin switches it on under Features and the profile under Me → Conversation → History; never guests):"
+},
+{
+"lang": "en",
+"src": "assistant",
+"file": "Assistant and panel",
+"head": "The panel",
+"title": "The panel",
+"text": "- *Instant history sync*: each open page keeps one event connection to the Spark (/api/profile/convos/stream, at most 8 per profile, renewed after 30 minutes). When a conversation changes on another device, the page fetches it at once; a deleted conversation closes. While another device answers in the open conversation, a pale \"Phone is answering …\" shows (only the kind of device, never the question). The live view shows only the number of these connections. - *One conversation for all channels*: Telegram, Siri, the companion, the watch and the own voice at a speaker write into today's main conversation (the newest of today that belongs to no channel alone; else \"Heute DD.MM.\"), each message marked with its channel. More context, but also more foreign context. A voice that is not surely the owner's stays in the speaker's conversation. - *Read history offline*: only a browser the profile trusts at the second sign-in step keeps a copy of the last 30 conversations and the page itself. Without a connection to the Spark the panel opens it for reading; questions without a connection (at most 10) go out once the Spark answers again. Every other browser stores nothing and deletes what it h"
+},
+{
+"lang": "en",
+"src": "assistant",
+"file": "Assistant and panel",
+"head": "The panel",
+"title": "The panel",
+"text": "ad the next time it opens; signing out always deletes."
+},
+{
+"lang": "en",
+"src": "assistant",
+"file": "Assistant and panel",
+"head": "The panel",
+"title": "The panel",
+"text": "Always, without a switch: what stood under an answer (sources, document passages, created documents) is kept with it and shows again on every device. The iPhone app fetches what is new when opened and during a conversation (needs a new TestFlight build)."
 },
 {
 "lang": "en",

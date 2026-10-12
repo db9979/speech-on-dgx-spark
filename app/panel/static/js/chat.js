@@ -235,7 +235,7 @@ const ub=chatLog('user',text);const um={role:'user',content:text};
   const show=(x,now)=>{drawn=x;if(now){if(frame)cancelAnimationFrame(frame);draw()}else if(!frame)frame=requestAnimationFrame(draw)};let full='',llmS=null,audioS=null,ackS=null,err='';const searches=[],sources=[],mems=[],docs=[],drefs=[],hcards=[],mkcards=[];let rateId='';
   const ctrl=new AbortController();chat.ctrl=ctrl;chat.firstPlay=null;chat.gaps=[];chat.blocks=[];chat.t0b=null;chat.stalls=0;chat.pieceStart=true;setTalk();chatSay(t('Antwort kommt …','Answer coming …'));
   try{const r=await api('/api/chat',{method:'POST',headers:{'Content-Type':'application/json'},signal:ctrl.signal,
-      body:JSON.stringify({speak:voiceOn()?undefined:false,messages:chat.msgs.slice(-20),tz:(()=>{try{return Intl.DateTimeFormat().resolvedOptions().timeZone}catch{return ''}})(),voice:PROFILE&&S.voice||undefined,speed:S.speed,length:S.length,reminders:PROFILE?undefined:rem.list,convo:chat.cid||undefined,speaker:spk&&spk.token||undefined,images:pids.length?pids:undefined,page:typeof hilfeNow==='function'?hilfeNow():undefined,focus:typeof hilfeFocusTake==='function'?hilfeFocusTake():undefined,view:document.body.classList.contains('appview')?'app':undefined})});
+      body:JSON.stringify({speak:voiceOn()?undefined:false,messages:chat.msgs.slice(-20).map(m=>({role:m.role,content:m.content,...(m.mail?{mail:true}:{}),...(m.outside?{outside:true}:{})})),tab:TAB,tz:(()=>{try{return Intl.DateTimeFormat().resolvedOptions().timeZone}catch{return ''}})(),voice:PROFILE&&S.voice||undefined,speed:S.speed,length:S.length,reminders:PROFILE?undefined:rem.list,convo:chat.cid||undefined,speaker:spk&&spk.token||undefined,images:pids.length?pids:undefined,page:typeof hilfeNow==='function'?hilfeNow():undefined,focus:typeof hilfeFocusTake==='function'?hilfeFocusTake():undefined,view:document.body.classList.contains('appview')?'app':undefined})});
     const rd=r.body.getReader(),dec=new TextDecoder();let buf='';
     for(;;){const{value,done}=await rd.read();if(done)break;buf+=dec.decode(value,{stream:true});let i;
       while((i=buf.indexOf('\n\n'))>=0){const line=buf.slice(0,i).split('\n').find(l=>l.startsWith('data:'));buf=buf.slice(i+2);if(!line)continue;
@@ -268,19 +268,14 @@ const ub=chatLog('user',text);const um={role:'user',content:text};
         else if(ev.type==='search_error'){chatSay(t('Websuche fehlgeschlagen: ','Web search failed: ')+ev.message)}
         else if(ev.type==='timing'){if(ev.llm_first_token!=null)llmS=ev.llm_first_token;if(ev.first_audio!=null)audioS=ev.first_audio;if(ev.first_ack!=null)ackS=ev.first_ack}
         else if(ev.type==='error'){if(!err)err=errText(ev.code,ev.message);if(/^tts/.test(ev.code||''))ttsErr=true}}}}
-  catch(e){if(e.name!=='AbortError')err=errText(e instanceof TypeError?'net':'',e.message);if(pids.length&&/picture is gone/.test(errRaw(e)))picsGone()}
+  catch(e){if(e.name!=='AbortError')err=e instanceof TypeError&&!pids.length&&offlineQueue(text)?t('Keine Verbindung zum Spark. Die Frage geht raus, sobald er wieder antwortet.','No connection to the Spark. The question goes out once it answers again.'):errText(e instanceof TypeError?'net':'',e.message);if(pids.length&&/picture is gone/.test(errRaw(e)))picsGone()}
   const aborted=ctrl.signal.aborted;if(chat.ctrl===ctrl)chat.ctrl=null;if(frame)show(drawn,true);
+  const att=attOf(searches,sources,docs,drefs,mkcards);   // what stands under the answer, kept with it
   // another person's voice: the exchange is theirs, so it stays out of this browser's history and context
   if(foreign){const i=chat.msgs.indexOf(um);if(i>=0)chat.msgs.splice(i,1)}
-  else if(full.trim()){chat.msgs.push(mailUsed?{role:'assistant',content:full.trim(),mail:true}:outsideUsed?{role:'assistant',content:full.trim(),outside:true}:{role:'assistant',content:full.trim()});deletable(el,chat.msgs.at(-1))}else chat.msgs.pop();saveConvo();
+  else if(full.trim()){chat.msgs.push({role:'assistant',content:full.trim(),...(mailUsed?{mail:true}:outsideUsed?{outside:true}:{}),...(att.length?{att}:{})});deletable(el,chat.msgs.at(-1))}else chat.msgs.pop();saveConvo();
   el.classList.remove('typing');if(!full.trim())el.textContent=aborted?t('(abgebrochen)','(cancelled)'):'–';
-  if(sources.length){const d=document.createElement('div');d.className='src';
-    d.innerHTML=`<span>${t('Gesucht','Searched')}: ${esc(searches.join(' · '))}</span>`+sources.slice(0,5).map((s,i)=>`<a href="${esc(s.url)}" target="_blank" rel="noopener noreferrer">${i+1}. ${esc(s.title.slice(0,70))}</a>`).join('');el.appendChild(d)}
-  // the sources: a kept original opens as a download, otherwise Ich → Dokumente
-  if(docs.length){const d=document.createElement('div');d.className='mem';const list=drefs.length?drefs.slice(0,6):docs.map(n=>({name:n}));
-    d.innerHTML=esc(t('Aus deinen Dokumenten: ','From your documents: '))+list.map(r=>{const l=esc(r.name+(r.page?' · '+t('S. ','p. ')+r.page:''));
-      return r.id?`<button type="button" class="mlink" data-docopen="${esc(r.id)}">${l}</button>`:`<button type="button" class="mlink" data-docopen="">${l}</button>`}).join(' · ');
-    d.addEventListener('click',async e=>{const b=e.target.closest('[data-docopen]');if(!b)return;await openMe('docbox');if(b.dataset.docopen)docView(b.dataset.docopen)});el.appendChild(d)}
+  attRender(el,att,true);
   if(mems.length){const d=document.createElement('div');d.className='mem';d.textContent=mems.join(' · ');el.appendChild(d)}
   if(why)el.appendChild(whyNote(why));
   if(typeof hilfeCard==='function')for(const c of hcards)el.appendChild(hilfeCard(c));
@@ -406,10 +401,11 @@ $('chatstop').onclick=()=>{stopListening(true);stopAnswer();setTalk();chatSay(t(
 $('searchtest').onclick=async()=>{$('searchmsg').textContent=t('Teste …','Testing …');
   try{const r=await (await api('/api/search-test?url='+encodeURIComponent($('chat.search_url').value.trim()))).json();$('searchmsg').textContent=`${r.results} ${t('Treffer in','results in')} ${r.seconds} s: ${r.first.map(x=>x.title).join(' · ').slice(0,120)}`}
   catch(e){$('searchmsg').innerHTML=`<span class="err">${esc(e.message)}</span>`}};
-$('chatnew').onclick=()=>{stopListening(true);stopAnswer();openConvo(null);setTalk();chatSay(t('Bereit.','Ready.'))};
+$('chatnew').onclick=()=>{stopListening(true);stopAnswer();openConvo(null);chat.fresh=true;setTalk();chatSay(t('Bereit.','Ready.'))};
 // Conversations are kept in this browser (localStorage), at most 30, newest first.
 // Conversations stay in this browser, kept apart per profile (guests: "convos").
 let PROFILE=null;
+const TAB=Math.random().toString(36).slice(2,12);   // this page among the profile's open pages (verlauf.js: not "answering elsewhere" for itself)
 // Logged in, conversations live in the profile on the Spark (same list on every device); this
 // page keeps a copy in convos.cache. Guests keep theirs in this browser only.
 const convos={cache:[],
@@ -418,6 +414,12 @@ const convos={cache:[],
   put(c){if(PROFILE){this.cache=[c,...this.cache.filter(x=>x.id!==c.id)];
       api('/api/profile/convos',{method:'PUT',headers:{'Content-Type':'application/json'},body:JSON.stringify(c)}).catch(()=>{})}
     else this.local([c,...this.load().filter(x=>x.id!==c.id)])},
+  // only the new messages: the Spark adds them to its copy, so what another device (phone, iPhone app) added
+  // to the same conversation meanwhile stays; the answer is the conversation as the Spark has it now
+  async add(c,news){this.cache=[c,...this.cache.filter(x=>x.id!==c.id)];
+    try{const d=await (await api('/api/profile/convos',{method:'PUT',headers:{'Content-Type':'application/json'},
+      body:JSON.stringify({id:c.id,title:c.title,add:news})})).json();
+      if(d&&d.item){this.cache=[d.item,...this.cache.filter(x=>x.id!==d.item.id)];return d.item}}catch{}return null},
   del(id){if(PROFILE){this.cache=this.cache.filter(x=>x.id!==id);api('/api/profile/convos/'+encodeURIComponent(id),{method:'DELETE'}).catch(()=>{})}
     else this.local(this.load().filter(x=>x.id!==id))},
   async sync(){if(!PROFILE){this.cache=[];return}
@@ -425,16 +427,65 @@ const convos={cache:[],
     let old=[];try{old=JSON.parse(localStorage.getItem('convos:'+PROFILE.id)||'[]')}catch{}
     for(const c of old)await api('/api/profile/convos',{method:'PUT',headers:{'Content-Type':'application/json'},body:JSON.stringify(c)}).catch(()=>{});
     try{localStorage.removeItem('convos:'+PROFILE.id)}catch{}
-    try{this.cache=await (await api('/api/profile/convos')).json()}catch{this.cache=[]}}};
-function saveConvo(){if(!chat.msgs.length)return;
+    try{this.cache=await (await api('/api/profile/convos')).json();this.at=Date.now()}
+    catch{const o=OFFLINE_HERE!==false?offlineCopy():null;this.cache=o?o.c:[];if(o)offlineShow(o)}},   // offline: a trusted browser's copy
+  // what changed on other devices since the last look (deleted ones disappear); false when nothing came back
+  async fresh(){if(!PROFILE)return false;const since=Math.max(0,...this.cache.map(x=>x.updated||0));
+    try{const d=await (await api('/api/profile/convos?since='+since)).json();if(!d||!Array.isArray(d.items))return false;
+      const ids=new Set(d.ids||[]),got=new Set(d.items.map(x=>x.id));
+      this.cache=[...d.items,...this.cache.filter(x=>ids.has(x.id)&&!got.has(x.id))].sort((a,b)=>b.updated-a.updated);this.at=Date.now();return true}
+    catch{return false}}};
+// "whole": the conversation as it is here replaces the Spark's copy (after deleting messages); otherwise only
+// the messages not yet saved (chat.saved counts them) are added there
+function saveConvo(whole){if(!chat.msgs.length)return;
   if(!chat.cid)chat.cid=Date.now().toString(36);const first=chat.msgs.find(m=>m.role==='user');
-  convos.put({id:chat.cid,title:(first?first.content:'').slice(0,60),updated:Date.now(),msgs:chat.msgs.slice(-60)});fillConvos()}
+  const c={id:chat.cid,title:(first?first.content:'').slice(0,60),updated:Date.now(),msgs:chat.msgs.slice(-60)};
+  const news=chat.msgs.slice(Math.min(chat.saved||0,chat.msgs.length));chat.saved=chat.msgs.length;
+  if(!PROFILE||whole===true){convos.put(c);fillConvos();return}
+  if(!news.length){fillConvos();return}
+  const cid=chat.cid;convos.add(c,news).then(item=>{fillConvos();if(item&&chat.cid===cid){chat.known=cid;convoAdopt(item)}})}
+// The Spark's copy of the open conversation has messages this page does not show (another device asked in
+// it): shown, unless an answer or a recording is running right now (then at the next look).
+function convoAdopt(c){if(chat.ctrl||chat.rec||!c||!Array.isArray(c.msgs))return;const loc=chat.msgs.slice(-60),a=c.msgs.at(-1),b=loc.at(-1);
+  if(c.msgs.length===loc.length&&(!a||!b||(a.role===b.role&&a.content===b.content)))return;
+  const top=$('chatlog').scrollTop;openConvo(c.id,chat.picked);if(c.msgs.length<loc.length)$('chatlog').scrollTop=top}
+// Coming back to this page (and every 30 s while it is in front): conversations from other devices appear
+// without reloading; the open conversation shows what was added elsewhere.
+async function convoLook(force){if(!PROFILE||document.hidden||(!force&&Date.now()-(convos.at||0)<25000))return;
+  if(!await convos.fresh())return;fillConvos();offlineFlush();if(chat.ctrl||chat.rec)return;
+  const c=chat.cid&&convos.load().find(x=>x.id===chat.cid);
+  if(c)convoAdopt(c);
+  else if(chat.cid&&chat.known===chat.cid){openConvo(null);chatSay(t('Dieses Gespräch wurde auf einem anderen Gerät gelöscht.','This conversation was deleted on another device.'))}   // gone everywhere, not back with the next question
+  else if(chat.cid&&!chat.msgs.length)openConvo(null);
+  else if(!chat.cid&&!chat.msgs.length&&!chat.fresh){const id=latestConvo();if(id)openConvo(id)}}
+document.addEventListener('visibilitychange',()=>{if(!document.hidden)convoLook(true)});
+setInterval(()=>convoLook(false),30000);
 function fillConvos(){const l=convos.load(),d=x=>new Date(x).toLocaleString(L==='en'?'en-GB':'de-DE',{day:'2-digit',month:'2-digit',hour:'2-digit',minute:'2-digit'});
   $('convosel').innerHTML=(chat.cid?'':`<option value="">${t('Neues Gespräch','New conversation')}</option>`)+
     l.map(c=>`<option value="${c.id}"${c.id===chat.cid?' selected':''}>${d(c.updated)} · ${esc(c.title||'…')}</option>`).join('');
-  $('convodel').disabled=!chat.cid}
-function openConvo(id,picked){const c=id&&convos.load().find(x=>x.id===id);chat.cid=c?c.id:null;chat.picked=!!(c&&picked);chat.msgs=c?c.msgs.slice():[];
-  $('chatlog').innerHTML='';$('chattiming').textContent='';chat.msgs.forEach(m=>deletable(chatLog(m.role,m.content),m));fillConvos()}
+  $('convodel').disabled=!chat.cid;if(typeof offlineKeep==='function')offlineKeep()}   // verlauf.js loads after this file
+function openConvo(id,picked){const c=id&&convos.load().find(x=>x.id===id);chat.cid=c?c.id:null;chat.picked=!!(c&&picked);chat.msgs=c?c.msgs.slice():[];chat.saved=chat.msgs.length;chat.known=PROFILE&&c?c.id:null;chat.fresh=false;
+  $('chatlog').innerHTML='';$('chattiming').textContent='';chat.msgs.forEach(m=>{const b=chatLog(m.role,m.content);deletable(b,m);if(m.att||m.via)attRender(b,m.att,false,m.via)});fillConvos()}
+// What stood under an answer (sources, own documents, a document made), kept with the message so every device and a
+// reload show it again (profiles._att checks it on the Spark). live: right after the answer, where the card itself shows.
+function attOf(searches,sources,docs,drefs,mkcards){const a=[];
+  if(sources.length)a.push({k:'src',q:searches.join(' · ').slice(0,200),l:sources.slice(0,5).map(x=>({t:String(x.title||'').slice(0,100),u:String(x.url||'').slice(0,500)}))});
+  if(docs.length)a.push({k:'doc',l:(drefs.length?drefs.slice(0,6):docs.slice(0,6).map(n=>({name:n}))).map(r=>({n:String(r.name||'').slice(0,120),id:r.id?String(r.id).slice(0,40):'',p:r.page||0}))});
+  for(const c of mkcards.slice(0,3))a.push({k:'mk',t:String(c.title||'').slice(0,120),n:String(c.kind_name||'').slice(0,40)});
+  return a}
+const VIA={telegram:'Telegram',siri:'Siri',desk:t('Begleiter','Companion'),watch:t('Uhr','Watch'),speaker:t('Lautsprecher','Speaker')};
+function attRender(el,att,live,via){
+  if(via&&VIA[via]){const v=document.createElement('span');v.className='via';v.textContent=VIA[via];el.prepend(v)}
+  for(const a of att||[]){
+    if(a.k==='src'&&a.l&&a.l.length){const d=document.createElement('div');d.className='src';
+      d.innerHTML=`<span>${t('Gesucht','Searched')}: ${esc(a.q||'')}</span>`+a.l.filter(x=>/^https?:\/\//.test(x.u||'')).map((x,i)=>`<a href="${esc(x.u)}" target="_blank" rel="noopener noreferrer">${i+1}. ${esc(String(x.t||'').slice(0,70))}</a>`).join('');el.appendChild(d)}
+    // the sources: a kept original opens as a download, otherwise Ich → Dokumente
+    else if(a.k==='doc'&&a.l&&a.l.length){const d=document.createElement('div');d.className='mem';
+      d.innerHTML=esc(t('Aus deinen Dokumenten: ','From your documents: '))+a.l.map(r=>`<button type="button" class="mlink" data-docopen="${esc(r.id||'')}">${esc(r.n+(r.p?' · '+t('S. ','p. ')+r.p:''))}</button>`).join(' · ');
+      d.addEventListener('click',async e=>{const b=e.target.closest('[data-docopen]');if(!b)return;await openMe('docbox');if(b.dataset.docopen)docView(b.dataset.docopen)});el.appendChild(d)}
+    else if(a.k==='mk'&&!live){const d=document.createElement('div');d.className='mem';
+      d.innerHTML=`📄 ${esc((a.n||t('Dokument','Document'))+' „'+a.t+'“')} <button type="button" class="mlink">${esc(t('Ansehen','View'))}</button>`;
+      d.querySelector('button').onclick=()=>openMe('docbox');el.appendChild(d)}}}
 // Speaks a text with this profile's voice (reminders, "read again"); Stop and barge-in end it.
 async function sayText(text){stopAnswer();const ctrl=new AbortController();chat.ctrl=ctrl;chat.firstPlay=null;chat.gaps=[];chat.blocks=null;chat.stalls=0;setTalk();chatSay(t('Spricht …','Speaking …'));
   try{const r=await api('/api/assistant/say',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({text}),signal:ctrl.signal});
@@ -462,7 +513,7 @@ function deleteMsg(d){if(chat.ctrl||chat.rec)return;   // not while an answer is
   if(i>=0&&chat.msgs[i].role==='user'&&chat.msgs[i+1]&&chat.msgs[i+1].role==='assistant')gone.add(chat.msgs[i+1]);
   chat.msgs=chat.msgs.filter(m=>!gone.has(m));
   for(const x of [...$('chatlog').children])if(x===d||gone.has(x._m))x.remove();
-  if(chat.msgs.length)saveConvo();else if(chat.cid){convos.del(chat.cid);openConvo(null)}}
+  if(chat.msgs.length)saveConvo(true);else if(chat.cid){convos.del(chat.cid);openConvo(null)}}
 $('convosel').onchange=()=>{stopListening(true);stopAnswer();openConvo($('convosel').value||null,true);setTalk();chatSay(t('Bereit.','Ready.'))};
 $('convodel').onclick=()=>{if(!chat.cid||!confirm(t('Dieses Gespräch löschen?','Delete this conversation?')))return;
   convos.del(chat.cid);stopListening(true);stopAnswer();openConvo(null)};

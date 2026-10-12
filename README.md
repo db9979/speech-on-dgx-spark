@@ -33,6 +33,7 @@ All options for running without questions (`--mode api --asr 1.7b --tts 0.6b --y
 
 <!-- New version: add one line at the top here and in CHANGELOG.md, drop the oldest line here (keep 10). Details go to docs/de and docs/en, not into this README. -->
 
+- **V01.0.457** History on every device: no more overwriting, new messages without reloading, sources stay under answers, the Pebble watch answers in full again; new (off, switched on under Me): instant sync, one conversation for all channels, offline reading on trusted browsers only.
 - **V01.0.456** Own storage: now also over SFTP and as an SMB share at home, the SFTP server's key is remembered
 - **V01.0.455** Answers never come twice, even when the model repeats them after a tool
 - **V01.0.454** Instant acknowledgement with a wink: 60 funnier sentences added (186 in all).
@@ -42,7 +43,6 @@ All options for running without questions (`--mode api --asr 1.7b --tts 0.6b --y
 - **V01.0.450** Settings assistant: from errors, 👎 and unclear questions the Spark makes checked proposals to improve it (Status → Improve), 👍/👎 under answers; everything off until you switch it on
 - **V01.0.449** iPhone app builds again (error from .448)
 - **V01.0.448** Jump links also in the apps, companion, push and Telegram
-- **V01.0.447** Notes on top of Status have “View” and jump to the right place
 
 All versions: [CHANGELOG.md](CHANGELOG.md)
 

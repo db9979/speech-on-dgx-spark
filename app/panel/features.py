@@ -225,6 +225,13 @@ FEATURES = (
       me="storebox", guide="speicherordner"),
     F("dienstnutzer", "Hinweis, wenn ein Dienst fehlt", "Note when a service is missing", "talk", ("svc_watch_users",),
       "svc_hint", parent="dienstwacht", me="setbox", guide="dienstnutzer"),
+    # verlauf.py (plan plaene/verlauf-sync.md): the history on every device of the profile
+    F("verlaufsync", "Verlauf sofort abgleichen", "Instant history sync", "talk", ("history_live",), "sync_live",
+      me="setbox", guide="verlaufsync"),
+    F("eingespraech", "Ein Gespräch für alle Kanäle", "One conversation for all channels", "talk", ("history_one",), "sync_one",
+      me="setbox", guide="eingespraech"),
+    F("offlinelesen", "Verlauf offline lesen", "Read history offline", "talk", ("history_offline",), "sync_offline",
+      me="setbox", guide="offlinelesen"),
     # Einstellungs-Assistent (faelle.py, berater.py): problems become cases, cases proposals from a fixed catalog
     F("berater", "Einstellungs-Assistent", "Settings assistant", "talk", ("berater",), guide="berater"),
     F("beratererklaeren", "Anfragen erklären", "Explain requests", "talk", ("berater_explain",), parent="berater",

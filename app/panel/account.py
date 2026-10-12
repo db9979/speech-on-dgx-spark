@@ -884,9 +884,17 @@ def profile_forget_all(prof=Depends(browser_profile)):
     return {"removed": profiles.forget(prof["id"])}
 
 
+CONVO_SLACK = 5 * 60 * 1000   # "since": a few minutes back, so a device whose clock is a little late is not missed
+
+
 @router.get("/api/profile/convos", dependencies=[Depends(assistant)])
-def profile_convos(prof=Depends(own_profile)):
-    return profiles.convos(prof["id"])
+def profile_convos(request: Request, since: int | None = None, prof=Depends(own_profile)):
+    if since is None:
+        return profiles.convos(prof["id"])
+    guard.limit(request, "convos", prof["id"])
+    items = profiles.convos(prof["id"])
+    # an open page asks again now and then: only what changed since then, and which ones still exist (deleted elsewhere)
+    return {"ids": [x["id"] for x in items], "items": [x for x in items if x.get("updated", 0) > since - CONVO_SLACK]}
 
 
 CONVO_BODY = 4 * 1024 * 1024   # 60 messages of 20 000 characters
@@ -900,6 +908,18 @@ async def profile_save_convo(request: Request, prof=Depends(own_profile)):
     if ha and homeassistant.needs_code(ha) and isinstance(body, dict) and isinstance(body.get("msgs"), list):
         body["msgs"] = [dict(m, content=homeassistant.redact(ha, m.get("content")))
                         if isinstance(m, dict) and m.get("role") == "user" else m for m in body["msgs"]]
+    if isinstance(body, dict) and "add" in body:
+        guard.limit(request, "convos", prof["id"])
+        # only the new messages ("add", not "msgs": an older Spark refuses it instead of replacing the conversation
+        # with them): added to the Spark's copy, so what another device added meanwhile stays (replacing the
+        # whole conversation lost it); the answer is the whole conversation as it is now
+        msgs = body.get("add")
+        item = profiles.append_convo(prof["id"], str(body.get("id", "")), str(body.get("title", "")), msgs) \
+            if isinstance(msgs, list) and any(isinstance(x, dict) and x.get("role") in ("user", "assistant") and x.get("content")
+                                              for x in msgs) else None
+        if not item:
+            raise HTTPException(400, "invalid conversation")
+        return {"ok": True, "item": item}
     item = profiles.save_convo(prof["id"], body)
     if not item:
         raise HTTPException(400, "invalid conversation")
@@ -1183,8 +1203,11 @@ def profile_settings(request: Request):
     prof = profiles.current(request)
     base = profiles.defaults(load_config().get("chat", {}).get("defaults"))
     chat = load_config().get("chat", {})
+    import verlauf
     return {"settings": dict(base, **(profiles.settings(prof["id"]) if prof else {})), "defaults": base,
-            "profile": prof, "allow": _allow(prof, chat)}
+            "profile": prof, "allow": _allow(prof, chat),
+            # this browser may keep the conversations for reading offline (trusted, verlauf.offline_here); else it deletes them
+            "offline_here": verlauf.offline_here(prof, request)}
 
 
 # which conversation switches the admin allows (features.py), only for a signed-in profile
@@ -1193,6 +1216,7 @@ ALLOW = {"tool_think": "toolthink", "route": "routing", "direct_read": "direct",
          "prefetch": "vorab", "instant_ack": "ack", "spark_help": "hilfe", "tips_on": "tipps", "pro_tips": "tippspush", "systemone_on": "einordnung",
          "devup": "geraeteupdate", "devup_night": "geraetenacht", "report": "melden", "doc_make": "erstellen",
          "doc_make_templates": "erstellenvorlagen", "svcwatch": "dienstwacht", "svchint": "dienstnutzer",
+         "sync_live": "verlaufsync", "sync_one": "eingespraech", "sync_offline": "offlinelesen",
          "rate": "bewerten", "rateback": "bewertenzurueck", "beratnote": "beraterhinweis", "beratask": "beraterchat",
          "beratme": "beratermich"}
 
