@@ -90,6 +90,13 @@ FEATURES = (
     F("vorrang", "Vorrang für Personen", "Priority for people", "talk", ("person_priority",), guide="vorrang"),
     # knowledge and memory
     F("memory", "Gedächtnis", "Memory", "data", ("memory",), me="factbox", guide="memory"),
+    # gedaechtnis.py (plan gedaechtnis-pruefen/plan.md): evidence per fact, fixed rules mark what may be out of date
+    F("gedpruefen", "Gedächtnis prüfen", "Memory check", "data", ("memory_check",), "mem_check", parent="memory",
+      me="factbox", guide="gedpruefen"),
+    F("gedfragen", "Nachfrage zum Gedächtnis", "Memory check-back", "data", ("memory_ask",), "mem_ask",
+      parent="gedpruefen", me="setbox", guide="gedfragen"),
+    F("gedthemen", "Themen im Gedächtnis", "Memory topics", "data", ("memory_topics",), "mem_topics",
+      parent="gedpruefen", me="factbox", guide="gedthemen"),
     F("history", "Frühere Gespräche", "Past conversations", "data", ("history",), me="setbox", guide="history"),
     F("documents", "Eigene Dokumente", "Own documents", "data", ("documents",), me="docbox", guide="documents"),
     F("docpics", "Bilder und Scans lesen", "Read pictures and scans", "data", ("doc_pictures",), "doc_pictures",

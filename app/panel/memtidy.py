@@ -136,9 +136,13 @@ def apply(uid):
             gone |= set(m["ids"])
         keep = [x for x in facts if x["id"] not in gone]
         for m in prop["merge"]:
-            item = {"id": os.urandom(4).hex(), "text": m["text"], "created": int(time.time())}
-            if all(x.get("auto") for x in facts if x["id"] in m["ids"]):
-                item["auto"] = True
+            parts = [x for x in facts if x["id"] in m["ids"]]
+            item = {"id": os.urandom(4).hex(), "text": m["text"], "created": int(time.time()), "src": "tidy"}
+            if all(x.get("auto") for x in parts):   # still learned: the oldest part's age counts (gedaechtnis.py R3)
+                item.update(auto=True, src="auto", created=min((int(x.get("created") or 0) for x in parts), default=item["created"])
+                            or item["created"])
+            else:
+                item["confirmed"] = item["created"]
             keep.append(item)
         profiles._write(profiles._path(uid, "memory.json"), keep[-profiles.MAX_FACTS:])
     drop(uid)

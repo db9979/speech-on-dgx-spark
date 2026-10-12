@@ -736,6 +736,9 @@ SETTINGS = {
     "systemone_on": (False, lambda v: isinstance(v, bool)), # Einordnung mit Wahrscheinlichkeit (systemone.py, chat.systemone)
     "trace_name": (False, lambda v: isinstance(v, bool)),   # Logs → Anfragen may show this profile's name (tracelog.py)
     "fix_learn": (False, lambda v: isinstance(v, bool)),    # learning from corrections (fixes.py, admin chat.learn_fixes)
+    "mem_check": (False, lambda v: isinstance(v, bool)),    # Gedächtnis prüfen (gedaechtnis.py, admin chat.memory_check)
+    "mem_ask": (False, lambda v: isinstance(v, bool)),      # Nachfrage zum Gedächtnis (gedaechtnis.py, chat.memory_ask)
+    "mem_topics": (False, lambda v: isinstance(v, bool)),   # Themen im Gedächtnis (gedaechtnis.py, chat.memory_topics)
     "images_on": (False, lambda v: isinstance(v, bool)),    # pictures for the model (images.py, admin chat.images)
     # documents (wissen.py): photos and scans read by the model, meaning search, keeping the originals
     "doc_pictures": (False, lambda v: isinstance(v, bool)),
@@ -1093,15 +1096,51 @@ def memory(uid):
         return []
 
 
-def remember(uid, text, auto=False):
+MAX_PREV = 5   # earlier wordings kept per fact (gedaechtnis.py, Fassungen)
+
+
+def _keep_prev(item, why, now):
+    """The fact's wording so far becomes its newest earlier version (why: fix, hand, nachfrage, zurueck)."""
+    old = {"text": item["text"], "until": now, "why": why,
+           "src": item.get("src") or ("auto" if item.get("auto") else "said")}
+    if item.get("confirmed"):
+        old["confirmed"] = item["confirmed"]
+    item["prev"] = ([old] + [p for p in item.get("prev") or [] if isinstance(p, dict)])[:MAX_PREV]
+
+
+def remember(uid, text, auto=False, src=None, convo=None, version=None):
+    """Keeps a fact with its evidence (gedaechtnis.py): src said (memory_save in a conversation), fix (a confirmed
+    correction), auto (learned from a quiet conversation), the conversation it came from and, when the person said
+    it, the time it counts as confirmed. version (fix, nachfrage): with „Gedächtnis prüfen“ on, a fact about the same
+    thing (the same fixed key, e.g. „wohnt in“) gets the new wording and keeps the old one as an earlier version,
+    instead of a second fact beside it."""
+    import gedaechtnis
     text = re.sub(r"\s+", " ", str(text)).strip()[:MAX_FACT_LEN]
     if not text:
         return None
+    src = src if src in gedaechtnis.SRC else "auto" if auto else "said"
+    kv = gedaechtnis.key_of(text) if version in ("fix", "nachfrage") and gedaechtnis.on(uid) else None
     with _lock:
         facts = [x for x in memory(uid) if x["text"].lower() != text.lower()]
-        item = {"id": secrets.token_hex(4), "text": text, "created": int(time.time())}
-        if auto:  # learned from a conversation, not asked for
+        now = int(time.time())
+        same = [x for x in facts if kv and (gedaechtnis.key_of(x["text"]) or ("",))[0] == kv[0]]
+        if same:
+            item = max(same, key=gedaechtnis.since)
+            _keep_prev(item, version, now)
+            item["text"], item["src"], item["changed"], item["confirmed"] = text, src, now, now
+            item.pop("auto", None)
+            if gedaechtnis.clean_convo(convo):
+                item["convo"] = convo
+            _write(_path(uid, "memory.json"), facts)
+            gedaechtnis.log_version(uid, version)
+            return text
+        item = {"id": secrets.token_hex(4), "text": text, "created": now, "src": src}
+        if src == "auto":  # learned from a conversation, not asked for
             item["auto"] = True
+        else:
+            item["confirmed"] = now
+        if gedaechtnis.clean_convo(convo):
+            item["convo"] = convo
         facts.append(item)
         _write(_path(uid, "memory.json"), facts[-MAX_FACTS:])
     return text
@@ -1118,13 +1157,36 @@ def change_fact(uid, fact_id, text):
         item = next((x for x in facts if x["id"] == fact_id), None)
         if not item:
             return None
+        now = int(time.time())
+        if item["text"] != text:
+            _keep_prev(item, "hand", now)
         item["text"] = text
         item.pop("auto", None)
-        item["changed"] = int(time.time())
+        item["changed"] = item["confirmed"] = now
+        item["src"] = "hand"
         # the same sentence twice would be noise: an older twin goes
         facts = [x for x in facts if x is item or x["text"].lower() != text.lower()]
         _write(_path(uid, "memory.json"), facts)
     return text
+
+
+def restore_fact(uid, fact_id, i):
+    """„Zurückholen“: earlier version i becomes the fact's wording again, the wording so far an earlier version.
+    Returns the fact, or None when the fact or the version is gone."""
+    with _lock:
+        facts = memory(uid)
+        item = next((x for x in facts if x["id"] == fact_id), None)
+        prev = [p for p in (item or {}).get("prev") or [] if isinstance(p, dict) and p.get("text")]
+        if not item or not 0 <= i < len(prev):
+            return None
+        back, now = prev.pop(i), int(time.time())
+        item["prev"] = prev
+        _keep_prev(item, "zurueck", now)
+        item["text"], item["src"], item["changed"] = back["text"][:MAX_FACT_LEN], "hand", now
+        item["confirmed"] = now
+        item.pop("auto", None)
+        _write(_path(uid, "memory.json"), facts)
+    return item
 
 
 def forget(uid, fact_id=None, text=None):

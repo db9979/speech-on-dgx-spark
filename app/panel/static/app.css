@@ -1235,6 +1235,16 @@ select.segsel{display:none!important}
 .ic-search input{border:0;background:none;padding:8px 0;margin:0;flex:1;min-width:0;outline:none;box-shadow:none}
 .ic-chip{border:1px solid var(--line);background:var(--card);color:var(--fg);font:inherit;font-size:12.5px;padding:6px 11px;border-radius:99px;cursor:pointer;white-space:nowrap}
 .ic-chip.on{background:color-mix(in srgb,var(--acc) 18%,transparent);border-color:color-mix(in srgb,var(--acc) 55%,transparent)}
+/* Gedächtnis prüfen (gedaechtnis.py): marks and the detail under a fact */
+.ic-badge.warn{color:var(--warn);border-color:color-mix(in srgb,var(--warn) 45%,transparent)}.ic-badge.bad{color:var(--bad);border-color:color-mix(in srgb,var(--bad) 45%,transparent)}
+.ic-chip.warn{color:var(--warn);border-color:color-mix(in srgb,var(--warn) 45%,var(--line))}
+.ic-row.factdet{background:color-mix(in srgb,var(--acc) 5%,transparent);align-items:flex-start}.factdet .ld-facts{margin:6px 0 10px}
+.factwhy{border:1px solid color-mix(in srgb,var(--warn) 45%,var(--line));background:color-mix(in srgb,var(--warn) 9%,transparent);border-radius:10px;padding:8px 10px;font-size:13px;margin:2px 0 6px;overflow-wrap:anywhere}
+.factprevh{font-size:12px;color:var(--mut);margin:8px 0 4px;text-transform:uppercase;letter-spacing:.05em}
+.factprev{display:flex;flex-wrap:wrap;gap:6px 10px;align-items:center;border-left:2px solid var(--line);padding:2px 0 2px 10px;margin:4px 0;font-size:13px;overflow-wrap:anywhere}
+.factprev small{color:var(--mut)}
+.facttopic{display:flex;flex-wrap:wrap;gap:6px 10px;align-items:center;margin:8px 0;font-size:13px;color:var(--mut)}
+.facttopic select{max-width:100%}
 .ic-chip.guess{border-style:dashed;border-color:var(--acc)}.ic-chip em{font-style:normal;color:var(--mut);margin-left:4px}
 .ic-chips{display:flex;gap:6px;flex-wrap:wrap}
 .ic-cb{width:20px;height:20px;flex:none;border-radius:6px;border:1.6px solid var(--mut);background:none;display:grid;place-items:center;padding:0;cursor:pointer;color:#fff}

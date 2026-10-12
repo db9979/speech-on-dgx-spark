@@ -14,31 +14,86 @@ ON.closeProf=()=>closeProf();
 // Ich → Gedächtnis (ich-aufraeumen/plan.md, Paket 4a): search and filters above, one row per fact with its date,
 // "Ändern" (own wording, no model) and "Löschen"; "Auswählen" removes several at once; "Alles vergessen" sits in the
 // danger zone below. The page scrolls, the list shows the first entries and "Weitere … zeigen".
-let FACTS=[],FQ='',FF='all',FSEL=null,FMORE=false,FEDIT=null;
+// Gedächtnis prüfen (gedaechtnis.py, plan gedaechtnis-pruefen): with the switches on every row shows its mark
+// (bestätigt, gelernt, veraltet?, Widerspruch) set by the panel's fixed rules; a click opens where the fact came from,
+// why it is marked and "Stimmt noch". Nothing is deleted by the rules.
+let FACTS=[],FQ='',FF='all',FSEL=null,FMORE=false,FEDIT=null,FCHECK=false,FMONTHS=6,FOPEN=null,FTOP=null;
 async function showFacts(){const r=await api('/api/profile/memory');const d=await r.json();
-  $('profhead').textContent=d.profile.name;showTidy(d.tidy);FACTS=d.facts||[];factDraw()}
+  $('profhead').textContent=d.profile.name;showTidy(d.tidy);FACTS=d.facts||[];FCHECK=!!d.check;FMONTHS=d.months||6;FTOP=d.topics||null;
+  if(!FCHECK&&['ok','learned','stale'].includes(FF))FF='all';factDraw()}
 const fdate=x=>x?new Date(x*1000).toLocaleDateString(L==='en'?'en-GB':'de-DE',{day:'2-digit',month:'2-digit',year:'2-digit'}):'';
+const FMARK={ok:['ok',t('bestätigt','confirmed')],learned:['',t('gelernt','learned')],stale:['warn',t('veraltet?','outdated?')],contra:['bad',t('Widerspruch','contradiction')]};
+const FSRC={said:t('von dir im Gespräch','from you in a conversation'),fix:t('aus deiner Korrektur','from your correction'),auto:t('automatisch gelernt','learned automatically'),
+  hand:t('von dir hier geändert','changed by you here'),tidy:t('aus dem Aufräumen','from tidying up')};
+const fstale=f=>f.mark==='stale'||f.mark==='contra';
+function factWhy(f){const by=f.by&&FACTS.find(x=>x.id===f.by);
+  return f.rule==='datum'?t('Das genannte Datum ist vorbei.','The date it names has passed.'):
+    f.rule==='zeitwort'?t('Es klingt nach „gerade“ oder „nächste Woche“ und ist schon älter.','It sounds like "right now" or "next week" and is older than that.'):
+    f.rule==='alt'?t(`Automatisch gelernt und seit mehr als ${FMONTHS} Monaten nicht bestätigt.`,`Learned automatically and not confirmed for more than ${FMONTHS} months.`):
+    f.rule==='widerspruch'?t('Ein neuerer Eintrag sagt etwas anderes','A newer entry says something else')+(by?': „'+by.text+'“':'.'):''}
+const FWHY={fix:t('Korrektur im Gespräch','correction in a conversation'),nachfrage:t('Nachfrage im Gespräch','question in a conversation'),hand:t('von dir geändert','changed by you'),zurueck:t('zurückgeholt','brought back')};
+function factDetail(f){const E=icEl,d=E('div','ic-row factdet');const m=E('div','ic-rmid');
+  if(fstale(f)){const w=E('div','factwhy');w.textContent='⚑ '+factWhy(f)+' '+t('Der Assistent nennt es nur vorsichtig, nie als Tatsache.','The assistant only mentions it carefully, never as a fact.');m.appendChild(w)}
+  const dl=E('dl','ld-facts');const add=(k,v)=>{dl.append(E('dt','',k));const dd=E('dd');if(typeof v==='string')dd.textContent=v;else dd.appendChild(v);dl.appendChild(dd)};
+  const known=f.convo&&typeof convos!=='undefined'&&convos.load().some(c=>c.id===f.convo);
+  let from=FSRC[f.src]||FSRC.said;
+  if(f.convo){if(known){const a=icLink(t('Gespräch öffnen','Open the conversation'),()=>{closeProf();openConvo(f.convo,true)});const sp=E('span','',from+' · ');sp.appendChild(a);add(t('Woher','Where from'),sp)}
+    else add(t('Woher','Where from'),from+' · '+t('Gespräch nicht mehr da','conversation gone'))}
+  else add(t('Woher','Where from'),from);
+  add(t('Gemerkt','Remembered'),fdate(f.created)||'–');add(t('Bestätigt','Confirmed'),f.confirmed?fdate(f.confirmed):t('nie','never'));
+  add(t('Beim Antworten','When answering'),fstale(f)?t('nur als „unsicher, nicht als Tatsache nennen“','only as "unsure, never say it as a fact"'):f.mark==='ok'?t('als sicher','as sure'):t('als „gelernt, nicht bestätigt“','as "learned, not confirmed"'));
+  m.appendChild(dl);
+  const prev=(f.prev||[]).filter(p=>p&&p.text);if(prev.length){m.appendChild(E('div','factprevh',t('Frühere Fassungen','Earlier versions')));
+    prev.forEach((p,i)=>{const v=E('div','factprev');const tx=E('span','',p.text);const why=E('small','',' · '+(FWHY[p.why]||'')+(p.until?' · '+t('bis ','until ')+fdate(p.until):''));
+      const b=E('button','b',t('Zurückholen','Bring back'));b.type='button';b.onclick=async()=>{b.disabled=true;
+        try{const x=await (await api('/api/profile/memory/'+encodeURIComponent(f.id)+'/restore',xjson('POST',{i}))).json();FACTS=x.facts;factDraw()}catch(e){b.disabled=false;$('factmsg').textContent=e.message}};
+      v.append(tx,why,b);m.appendChild(v)})}
+  if(FTOP){const sel=document.createElement('select');sel.className='factopic';sel.setAttribute('aria-label',t('Thema','Topic'));
+    if(!FTOP[f.topic]){const o=document.createElement('option');o.value='';o.textContent=t('Noch ohne Thema','No topic yet');sel.appendChild(o)}
+    Object.entries(FTOP).forEach(([k,v])=>{const o=document.createElement('option');o.value=k;o.textContent=t(v[0],v[1]);if(f.topic===k)o.selected=true;sel.appendChild(o)});
+    sel.onchange=async()=>{if(!sel.value)return;sel.disabled=true;try{const x=await (await api('/api/profile/memory/'+encodeURIComponent(f.id)+'/topic',xjson('POST',{topic:sel.value}))).json();FACTS=x.facts;factDraw()}catch(e){sel.disabled=false;$('factmsg').textContent=e.message}};
+    const lb=E('div','facttopic');lb.append(E('span','',t('Thema','Topic')+(f.topic_by==='hand'?'':' · '+t('vom Sprachmodell vorgeschlagen, änderbar','suggested by the language model, you can change it'))),sel);m.appendChild(lb)}
+  const row=E('div','row');
+  if(f.mark!=='ok'){const ok=E('button','b p',t('✓ Stimmt noch','✓ Still right'));ok.type='button';ok.onclick=async()=>{ok.disabled=true;
+    try{const x=await (await api('/api/profile/memory/'+encodeURIComponent(f.id)+'/confirm',xjson('POST',{}))).json();FACTS=x.facts;factDraw()}catch(e){ok.disabled=false;$('factmsg').textContent=e.message}};row.appendChild(ok)}
+  const ch=E('button','b',t('✎ Ändern','✎ Change'));ch.type='button';ch.onclick=()=>{FEDIT=f.id;factDraw()};
+  const del=E('button','b ic-red',t('Vergessen','Forget'));del.type='button';del.onclick=()=>forgetFact(f.id);row.append(ch,del);m.appendChild(row);d.appendChild(m);return d}
 function factDraw(){const E=icEl,tools=$('facttools'),box=$('factlist');if(!tools||!box)return;
   const nAuto=FACTS.filter(f=>f.auto).length;tools.textContent='';
   const s=icSearch(t(`In ${FACTS.length} Einträgen suchen …`,`Search ${FACTS.length} entries …`),FQ,v=>{FQ=v;FMORE=false;list()},'factfind');
-  tools.append(s,...[['all',t(`Alle ${FACTS.length}`,`All ${FACTS.length}`)],['own',t(`Von dir ${FACTS.length-nAuto}`,`From you ${FACTS.length-nAuto}`)],['auto',t(`Automatisch ${nAuto}`,`Automatic ${nAuto}`)]]
-    .map(([k,l])=>icChip(l,FF===k,()=>{FF=k;FMORE=false;factDraw()})));
+  const n=k=>FACTS.filter(f=>k==='stale'?fstale(f):f.mark===k).length;
+  const chips=FCHECK?[['all',t(`Alle ${FACTS.length}`,`All ${FACTS.length}`)],['ok',t(`Bestätigt ${n('ok')}`,`Confirmed ${n('ok')}`)],['learned',t(`Gelernt ${n('learned')}`,`Learned ${n('learned')}`)],['stale',t(`Veraltet ${n('stale')}`,`Outdated ${n('stale')}`)]]
+    :[['all',t(`Alle ${FACTS.length}`,`All ${FACTS.length}`)],['own',t(`Von dir ${FACTS.length-nAuto}`,`From you ${FACTS.length-nAuto}`)],['auto',t(`Automatisch ${nAuto}`,`Automatic ${nAuto}`)]];
+  tools.append(s,...chips.map(([k,l])=>icChip(l,FF===k,()=>{FF=k;FMORE=false;factDraw()},k==='stale'&&n('stale')?'warn':'')));
   if(FACTS.length){const pick=E('button','b',FSEL?t('Fertig','Done'):t('Auswählen','Select'));pick.type='button';pick.id='factpick';pick.onclick=()=>{FSEL=FSEL?null:new Set();factDraw()};tools.appendChild(pick)}
+  const note=$('factcheck');if(note){note.textContent='';const ns=FCHECK?n('stale'):0;note.hidden=!ns;
+    if(ns){const b=E('button','b p',t('Durchgehen','Go through'));b.type='button';b.onclick=()=>{FF='stale';FMORE=false;factDraw()};
+      note.appendChild(icNote(t(`${ns} ${ns===1?'Eintrag ist':'Einträge sind'} vielleicht veraltet`,`${ns} ${ns===1?'entry is':'entries are'} maybe out of date`),
+        t('Gefunden mit festen Regeln (Datum vorbei, „zurzeit“, lange nicht bestätigt, Widerspruch). Gelöscht wird nichts.','Found with fixed rules (date passed, "currently", not confirmed for long, contradiction). Nothing is deleted.'),b))}}
   list();
+  function keep(f){return FF==='all'||(FF==='auto'?!!f.auto:FF==='own'?!f.auto:FF==='stale'?fstale(f):f.mark===FF)}
   function list(){box.textContent='';const q=FQ.trim().toLowerCase();
-    const fs=FACTS.slice().reverse().filter(f=>(FF==='all'||(FF==='auto')===!!f.auto)&&(!q||f.text.toLowerCase().includes(q)));
+    const fs=FACTS.slice().reverse().filter(f=>keep(f)&&(!q||f.text.toLowerCase().includes(q)));
+    const tk=f=>FTOP&&FTOP[f.topic]?f.topic:'',tord=f=>{const k=Object.keys(FTOP||{}).indexOf(tk(f));return k<0?99:k};
+    if(FTOP&&!FSEL)fs.sort((a,b)=>tord(a)-tord(b));
     if(!fs.length){box.appendChild(icList([icEmpty(FACTS.length?t('Nichts gefunden.','Nothing found.'):t('Noch nichts gemerkt. Sag „Merk dir …“.','Nothing remembered yet. Say "Remember …".'))]));return}
-    const rows=fs.map(f=>{
+    const rows=[];fs.forEach(f=>{
       if(FEDIT===f.id){const r=E('div','ic-row');const ta=document.createElement('textarea');ta.value=f.text;ta.maxLength=300;ta.rows=2;ta.className='factedit';ta.setAttribute('aria-label',t('Eintrag ändern','Change entry'));
         const ok=E('button','b p',t('Speichern','Save')),no=E('button','b',t('Abbrechen','Cancel'));ok.type=no.type='button';
-        ok.onclick=async()=>{ok.disabled=true;try{const x=await (await api('/api/profile/memory/'+encodeURIComponent(f.id),xjson('PUT',{text:ta.value}))).json();FACTS=x.facts;FEDIT=null;factDraw()}catch(e){ok.disabled=false;$('factmsg').textContent=e.message}};
-        no.onclick=()=>{FEDIT=null;factDraw()};const m=E('div','ic-rmid');m.appendChild(ta);const a=E('div','row');a.append(ok,no);m.appendChild(a);r.appendChild(m);setTimeout(()=>ta.focus(),0);return r}
-      const meta=(f.auto?t('automatisch','automatic'):t('von dir','from you'))+(f.created||f.changed?' · '+fdate(f.changed||f.created):'');
+        ok.onclick=async()=>{ok.disabled=true;try{await api('/api/profile/memory/'+encodeURIComponent(f.id),xjson('PUT',{text:ta.value}));FEDIT=null;await showFacts()}catch(e){ok.disabled=false;$('factmsg').textContent=e.message}};
+        no.onclick=()=>{FEDIT=null;factDraw()};const m=E('div','ic-rmid');m.appendChild(ta);const a=E('div','row');a.append(ok,no);m.appendChild(a);r.appendChild(m);setTimeout(()=>ta.focus(),0);rows.push([r]);return}
+      const meta=FCHECK?(FSRC[f.src]||'')+(f.created||f.changed?' · '+fdate(f.changed||f.created):''):(f.auto?t('automatisch','automatic'):t('von dir','from you'))+(f.created||f.changed?' · '+fdate(f.changed||f.created):'');
       const lead=FSEL?icCheck(FSEL.has(f.id),f.text,()=>{FSEL.has(f.id)?FSEL.delete(f.id):FSEL.add(f.id);factDraw()}):null;
-      const acts=FSEL?[]:[icBtn('pen',t('Ändern','Change'),()=>{FEDIT=f.id;factDraw()}),icBtn('trash',t('Löschen','Delete'),()=>forgetFact(f.id))];
-      const r=icRow(f.text,meta,acts,lead);r.dataset.fact=f.id;if(FSEL&&FSEL.has(f.id))r.classList.add('on');return r});
-    const l=icList([]);const n=FMORE||q?rows.length:15;rows.slice(0,n).forEach(r=>l.appendChild(r));
-    if(rows.length>n){const b=E('button','ic-more2',t(`Weitere ${rows.length-n} Einträge zeigen`,`Show ${rows.length-n} more entries`));b.type='button';b.onclick=()=>{FMORE=true;list()};l.appendChild(b)}
+      const mk=FCHECK&&FMARK[f.mark];const badge=mk?E('span','ic-badge'+(mk[0]?' '+mk[0]:''),mk[1]):null;
+      const acts=FSEL?[]:[badge,icBtn('pen',t('Ändern','Change'),()=>{FEDIT=f.id;factDraw()}),icBtn('trash',t('Löschen','Delete'),()=>forgetFact(f.id))];
+      const r=icRow(f.text,meta,acts,lead);r.dataset.fact=f.id;if(FSEL&&FSEL.has(f.id))r.classList.add('on');
+      if(FCHECK&&!FSEL){r.classList.add('click');r.querySelector('.ic-rmid').onclick=()=>{FOPEN=FOPEN===f.id?null:f.id;list()};if(FOPEN===f.id)r.classList.add('on')}
+      const one=FCHECK&&!FSEL&&FOPEN===f.id?[r,factDetail(f)]:[r];one.topic=tk(f);rows.push(one)});
+    let l=icList([]);const nn=FMORE||q?rows.length:15;let cur=null;
+    rows.slice(0,nn).forEach(x=>{if(FTOP&&!FSEL&&x.topic!==cur){if(l.childNodes.length)box.appendChild(l);cur=x.topic;
+        box.appendChild(icGroup(cur?t(FTOP[cur][0],FTOP[cur][1]):t('Noch ohne Thema','No topic yet'),rows.filter(y=>y.topic===cur).length));l=icList([])}
+      x.forEach(r=>l.appendChild(r))});
+    if(rows.length>nn){const b=E('button','ic-more2',t(`Weitere ${rows.length-nn} Einträge zeigen`,`Show ${rows.length-nn} more entries`));b.type='button';b.onclick=()=>{FMORE=true;list()};l.appendChild(b)}
     box.appendChild(l);
     if(FSEL){const bar=E('div','ic-save');const m=E('div','ic-mid');m.appendChild(E('b','',t(`${FSEL.size} ausgewählt`,`${FSEL.size} selected`)));
       const all=E('button','b',t('Alle gezeigten','All shown'));all.type='button';all.onclick=()=>{fs.forEach(f=>FSEL.add(f.id));factDraw()};
@@ -538,6 +593,9 @@ const SETF=[
   {k:'speed',type:'range',l:t('Sprechtempo','Speaking rate'),h:t('Schneller oder langsamer, ohne die Stimmlage zu ändern. Über 1,0 hält der Spark bei langen Antworten mehr Ton auf Vorrat, damit nichts aussetzt.','Faster or slower without changing the pitch. Above 1.0 the Spark keeps more audio in stock during long answers, so nothing drops out.'),min:0.7,max:1.4,step:0.05},
   {k:'length',type:'sel',l:t('Antwortlänge','Answer length'),h:t('Wie ausführlich der Assistent antwortet.','How detailed the assistant answers.'),o:[['short',t('kurz','short')],['normal',t('normal','normal')],['long',t('ausführlich','detailed')]]},
   {k:'learn',type:'bool',prof:1,l:t('Aus Gesprächen lernen','Learn from conversations'),h:t('Nach einem Gespräch merkt sich der Assistent wenige dauerhafte Dinge über dich. Du siehst und löschst sie unter Ich.','After a conversation the assistant remembers a few lasting things about you. You can see and delete them under the Me.')},
+  {k:'mem_check',type:'bool',prof:1,need:'mem_check',l:t('Mein Gedächtnis prüfen lassen','Have my memory checked'),h:t('Der Spark merkt sich, woher jeder Eintrag kommt, und markiert mit festen Regeln, was veraltet sein könnte (Datum vorbei, „zurzeit“, lange nicht bestätigt, Widerspruch). Solche Einträge nennt der Assistent nie als Tatsache. Gelöscht wird nichts; du siehst alles unter Ich → Gedächtnis.','The Spark keeps where each entry came from and marks with fixed rules what may be out of date (date passed, "currently", not confirmed for long, contradiction). The assistant never states such entries as facts. Nothing is deleted; you see it all under Me → Memory.')},
+  {k:'mem_ask',type:'bool',prof:1,need:'mem_ask',l:t('Im Gespräch nachfragen','Check back in conversations'),h:t('Passt ein vielleicht veralteter Eintrag zu deiner Frage, fragt der Spark nach der Antwort einmal „Stimmt das noch?“. „Ja“ bestätigt ihn, „Vergiss das“ löscht ihn, eine Korrektur wird eine neue Fassung. Höchstens einmal pro Gespräch und dreimal am Tag.','When an entry that may be out of date fits your question, the Spark asks once after the answer "Is this still right?". "Yes" confirms it, "Forget it" deletes it, a correction becomes a new version. At most once per conversation and three times a day.')},
+  {k:'mem_topics',type:'bool',prof:1,need:'mem_topics',l:t('Themen im Gedächtnis','Memory topics'),h:t('Das Sprachmodell im Heimnetz ordnet Einträge ohne Thema einmal einem festen Thema zu (Person, Zuhause, Unterwegs, Arbeit, Gesundheit, Gerade dran, Sonstiges). Ich → Gedächtnis zeigt sie dann in Gruppen; du kannst das Thema im Detail ändern, das Modell ändert es danach nie. Das Thema entscheidet nichts.','The language model in the home network sorts entries without a topic once into a fixed topic (person, home, on the move, work, health, right now, other). Me → Memory then shows them in groups; you can change the topic in the detail, the model never changes it after that. The topic decides nothing.')},
   {g:t('Wissen und Stil','Knowledge and style'),k:'spark_help',type:'bool',prof:1,need:'spark_help',l:t('Fragen zum Spark','Questions about the Spark'),h:t('Fragst du etwas zum Spark selbst (Einstellungen, Schalter, Einrichten), antwortet der Assistent aus seinen Anleitungen und sagt, wo du es findest und ob es bei dir an ist. Er schaltet nie selbst.','When you ask about the Spark itself (settings, switches, setting up), the assistant answers from its guides and says where to find it and whether it is on for you. It never switches anything itself.')},
   {k:'tips_on',type:'bool',prof:1,need:'tips_on',l:t('Hinweise auf Funktionen','Hints on functions'),h:t('Fragst du nach etwas, das bei dir noch aus ist, oder ist etwas halb eingerichtet, zeigt der Assistent „Einrichten“ und hilft Schritt für Schritt. Höchstens ein Hinweis pro Gespräch und drei pro Woche. Er schaltet nie selbst.','When you ask for something that is still off for you, or something is half set up, the assistant shows "Set up" and helps step by step. At most one hint per conversation and three a week. It never switches anything itself.')},
   {k:'images_on',type:'bool',prof:1,need:'images',l:t('Bilder an den Assistenten','Pictures to the assistant'),h:t('Im Assistenten ein Foto anhängen (Knopf, Einfügen oder Hineinziehen) und dazu fragen. Das Sprachmodell auf dem Spark sieht es sich an; das Bild bleibt nur im Arbeitsspeicher, ohne Ort und Kameradaten. In dieser Antwort schaltet und speichert der Assistent nichts.','Attach a photo in the assistant (button, paste or drop) and ask about it. The language model on the Spark looks at it; the picture stays in memory only, without location or camera data. In this answer the assistant switches and stores nothing.')},

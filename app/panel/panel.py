@@ -451,6 +451,12 @@ async def learner():
                         print("memory tidy: checked a profile", flush=True)
             except Exception as e:
                 print("memory tidy:", type(e).__name__, e, flush=True)
+            try:
+                if not vorrang.speaking():   # Gedächtnis-Themen (gedaechtnis.py): only for showing Ich → Gedächtnis
+                    import gedaechtnis
+                    await gedaechtnis.topics_once()
+            except Exception as e:
+                print("gedaechtnis: themen", type(e).__name__, flush=True)
     spawn(loop())
 
 

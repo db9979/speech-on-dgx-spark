@@ -508,13 +508,13 @@ def validate(new):
               "kiwix", "local_first", "mcp_server", "mcp_server_extern", "mcp_server_act", "prefetch", "instant_ack",
               "spark_help", "spark_suggest", "spark_drawer", "feature_tips", "feature_tips_push", "write_help", "write_apps", "desk", "desk_act", "desk_meeting",
               "dev_updates", "dev_updates_night", "dev_updates_upstream", "esp32_ota_http",
-              "svc_watch", "svc_watch_users", "history_live", "history_one", "history_offline",
+              "svc_watch", "svc_watch_users", "history_live", "history_one", "history_offline", "memory_check", "memory_ask", "memory_topics",
               "svc_watch", "svc_watch_users", "berater", "berater_explain", "berater_chat", "berater_notify",
               "berater_issue", "berater_ideas", "berater_auto", "berater_env", "berater_me", "bewerten", "bewerten_back",
               "storage_own", "storage_lan", "storage_folder", "storage_offload"):
         if not isinstance(ch.get(k, False), bool):
             raise HTTPException(400, f"{k} must be true or false")
-    for k, lo, hi, d in (("berater_calls", 1, 100, 20), ("berater_check_h", 6, 72, 24)):
+    for k, lo, hi, d in (("berater_calls", 1, 100, 20), ("berater_check_h", 6, 72, 24), ("memory_stale_months", 1, 60, 6)):
         v = ch.get(k, d)
         if isinstance(v, bool) or not isinstance(v, int) or not lo <= v <= hi:
             raise HTTPException(400, f"{k}: {lo} bis {hi}")

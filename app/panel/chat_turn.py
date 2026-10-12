@@ -323,8 +323,10 @@ async def prepare(request):
     # a voice recognized at someone else's device gets no personal data at all (it could be a recording
     # of that person): no memory, history, documents, calendar, contacts, lists or reminders
     prof = who if ccfg.get("memory", True) and own_browser and not mcp else None
+    memcheck = None
     if prof:  # guests get no memory at all
         system = (system + "\n\n" + chat.memory_hint(prof)).strip()
+        memcheck = chat.gedaechtnis.for_turn(prof["id"]) if chat.gedaechtnis.on(prof["id"], ccfg) else None
     past = bool(prof and ccfg.get("history", True))
     if past:
         system = (system + "\n\n" + chat.HISTORY_HINT).strip()
@@ -568,7 +570,8 @@ async def prepare(request):
         if fp and fp.get("src", src) == src:
             fixes.drop_pending(who["id"])
             if fixes.confirms(messages[-1]["content"]):
-                saved = profiles.remember(who["id"], fp["text"])
+                saved = profiles.remember(who["id"], fp["text"], src="fix", convo=body.get("convo"),
+                                           version="fix")
                 cal_note.append({"name": "Korrektur gemerkt", "args": "", "result": saved or "nicht gespeichert"})
                 system = per_turn(system, "Gedächtnis: Gemerkt wurde „" + (saved or "") + "“. Sag dem Nutzer genau das "
                                   "in einem kurzen Satz.")
@@ -578,13 +581,42 @@ async def prepare(request):
         elif fixes.is_correction(messages[-1]["content"], said_before):
             fix_fix = True
             fix_prev = next((m["content"] for m in reversed(messages[:-2]) if m["role"] == "user"), "")[:200]
+    # Nachfrage zum Gedächtnis (gedaechtnis.py): the answer to the panel's "Stimmt das noch?", and whether this
+    # answer may ask one (same conditions as learning from corrections, its own switches)
+    import gedaechtnis
+    mem_ask_ok = bool(who and own_browser and private_ok and ccfg.get("memory", True) and gedaechtnis.ask_on(who["id"], ccfg)
+                      and messages[-1]["role"] == "user" and not mcp and not act_held and not held)
+    mem_ask_ok = mem_ask_ok and not (prop or mprop or xprop or pro or fixes.pending(who["id"]))
+    mq = gedaechtnis.pending(who["id"]) if who and own_browser and messages[-1]["role"] == "user" and not mcp else None
+    if mq and mq.get("src", src) == src and mq.get("convo", "") in ("", body.get("convo") or ""):
+        gedaechtnis.drop_pending(who["id"])
+        mem_ask_ok = False
+        mf = next((f for f in profiles.memory(who["id"]) if f["id"] == mq.get("fact")), None)
+        kind = gedaechtnis.reply_kind(messages[-1]["content"]) if mf else ""
+        if kind == "yes":
+            gedaechtnis.confirm(who["id"], mf["id"])
+            system = per_turn(system, "Gedächtnis: Der Eintrag „" + mf["text"] + "“ ist jetzt bestätigt. Sag das in einem "
+                              "kurzen Satz.")
+        elif kind == "forget" and not act_held:
+            profiles.forget(who["id"], fact_id=mf["id"])
+            system = per_turn(system, "Gedächtnis: Der Eintrag „" + mf["text"] + "“ wurde vergessen. Sag das in einem "
+                              "kurzen Satz.")
+        elif kind == "no":
+            system = per_turn(system, "Gedächtnis: Der Nutzer sagt, „" + mf["text"] + "“ stimmt nicht mehr. Frag kurz, "
+                              "was jetzt stimmt, oder ob du es vergessen sollst. Geändert wird nichts.")
+        elif kind == "fix" and fix_ok:
+            fix_fix, fix_prev = True, mf["text"]   # fixes.py words it, a yes keeps it as a new version of the fact
+        if kind:
+            cal_note.append({"name": "Nachfrage (Panel)", "args": "", "result": {"yes": "bestätigt", "forget": "vergessen",
+                             "no": "stimmt nicht mehr", "fix": "Korrektur"}[kind]})
+            print(f"gedaechtnis: nachfrage beantwortet {profiles.log_name(who)} | antwort={kind}", flush=True)
     if who and own_browser and messages[-1]["role"] == "user" and not mcp:
         # one answer settles every proposal waiting in this conversation: a later "ja" meant for
         # something else never carries out an old one
         import agent
         import messages as inbox   # (messages is the conversation here)
         import tasks
-        for mod in (calendars, tidy, tasks, fixes, agent, inbox, roomfar, hamelden, meinmcp):
+        for mod in (calendars, tidy, tasks, fixes, agent, inbox, roomfar, hamelden, meinmcp, gedaechtnis):
             p = mod.pending(who["id"])
             if p and p.get("src", src) == src:
                 mod.drop_pending(who["id"])

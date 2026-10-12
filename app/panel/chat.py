@@ -43,6 +43,7 @@ import stufe  # noqa: E402  (priority for people)
 import faelle  # noqa: E402  (Fälle: every problem a case, 👍/👎)
 import tracelog  # noqa: E402  (Logs → Anfragen: the way of each request)
 import features  # noqa: E402
+import gedaechtnis  # noqa: E402  (Gedächtnis prüfen: evidence and fixed rules for facts)
 import vorab  # noqa: E402  (fetching ahead when the answer asks back)
 import ack  # noqa: E402  (the instant ready-made sentence)
 from common import load_config, no_think  # noqa: E402
@@ -81,7 +82,7 @@ async def learn_once():
                 known = {x["text"].lower() for x in profiles.memory(uid)}
                 for fact in recall.parse_facts(r.json()["choices"][0]["message"].get("content") or ""):
                     if fact.lower() not in known:
-                        saved += bool(profiles.remember(uid, fact, auto=True))
+                        saved += bool(profiles.remember(uid, fact, auto=True, convo=convo.get("id")))
                 recall.mark(uid, convo)
     return saved
 
@@ -862,7 +863,10 @@ def memory_hint(prof):
     hint = (f"Du sprichst mit {prof['name']}. Mit memory_save merkst du dir dauerhaft, was {prof['name']} dir "
             "zum Merken sagt oder was für spätere Gespräche nützlich ist, mit memory_forget vergisst du es "
             "auf Wunsch. Sag kurz, dass du es dir gemerkt hast.")
-    if facts:
+    if facts and gedaechtnis.on(prof["id"]):
+        # Gedächtnis prüfen (gedaechtnis.py): the panel sorts the facts into sure, learned and maybe out of date
+        hint += "\n" + gedaechtnis.hint_lines(prof, facts)
+    elif facts:
         hint += f"\nWas du über {prof['name']} weißt:\n" + "\n".join("- " + x["text"] for x in facts)
     return hint
 
@@ -1385,6 +1389,10 @@ def start_trace(request, turn, t_req, t0):
         if not turn.own_browser else "eigenes Profil" if who else "Admin" if kind == "admin" else "Gast"
     tr.step("prep", "Panel-Vorbereitung", t_req, t0, rights=rights, allowed=getattr(turn, "all_tools", None),
             locked=turn.carry or None, history=len([m for m in turn.messages if m.get("role") in ("user", "assistant")]))
+    mem = getattr(turn, "memcheck", None)
+    if mem:   # Gedächtnis prüfen (gedaechtnis.py): how the panel sorted the facts, numbers only
+        tr.step("prep", "Gedächtnis (Panel)", t0, t0, facts=mem["facts"], confirmed=mem["ok"], learned=mem["learned"],
+                stale=mem["stale"] + mem["contra"] or None)
     tr.step("weiche", "Weiche: " + (tr.intent or "-"), t0, t0, offered=len(turn.tools or []),
             of=getattr(turn, "all_tools", None), narrow=bool(getattr(turn, "route_on", False)),
             must=(getattr(turn, "force", None) or ", ".join(sorted(turn.need or [])))[:60] or None,
@@ -1747,6 +1755,7 @@ async def _answer(request, turn):
                 trace["said"] += note
                 st["shown"] += len(note) + 1
                 await sentences.put(note)
+            fix_asked = False
             if fix_task:
                 lesson = await fix_task
                 busy = any((m.pending(who["id"]) or {}).get("src") == src for m in (calendars, tidy))
@@ -1756,6 +1765,21 @@ async def _answer(request, turn):
                     en = guess_language(messages[-1]["content"]) == "English"
                     ask_it = fixes.question(lesson, en)
                     fixes.propose(who["id"], lesson, src)
+                    await out.put({"type": "text", "delta": (" " if st["shown"] else "") + ask_it})
+                    trace["said"] += " " + ask_it
+                    await sentences.put(ask_it)
+                    fix_asked = True
+            if getattr(turn, "mem_ask_ok", False) and not fix_asked and not st["mail"] and not st["outside"] \
+                    and trace["said"].strip() and not any((m.pending(who["id"]) or {}).get("src") == src
+                                                          for m in (calendars, tidy, fixes)):
+                # "Stimmt das noch?" (gedaechtnis.py): the panel picks the fact by fixed rules, never the model
+                mf = gedaechtnis.pick(who["id"], messages[-1]["content"], body.get("convo") or "")
+                if mf:
+                    en = guess_language(messages[-1]["content"]) == "English"
+                    ask_it = gedaechtnis.ask(who["id"], mf, body.get("convo") or "", src, en)
+                    if tr:
+                        tr.step("prep", "Nachfrage (Panel)", time.time(), asked=1)
+                    trace["calls"].append({"name": "Nachfrage (Panel)", "args": "", "result": "gefragt"})
                     await out.put({"type": "text", "delta": (" " if st["shown"] else "") + ask_it})
                     trace["said"] += " " + ask_it
                     await sentences.put(ask_it)

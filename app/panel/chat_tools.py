@@ -286,7 +286,7 @@ async def run(t, name, args, st):
     if name == "daily_briefing" and t.briefing:
         return await briefing_text(t, st)
     if name == "memory_save" and t.prof:
-        fact = profiles.remember(t.prof["id"], args.get("fact", ""))
+        fact = profiles.remember(t.prof["id"], args.get("fact", ""), src="said", convo=t.body.get("convo"))
         if fact:
             await t.out.put({"type": "memory", "action": "saved", "text": fact})
         return "Saved." if fact else "Nothing to save."

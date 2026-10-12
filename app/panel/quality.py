@@ -46,6 +46,7 @@ def _days(now=None):
 
 def _cases(now=None):
     import chat
+    import gedaechtnis
     day = _days(now)
     no_cal = "Du hast in diesem Gespräch keinen Zugriff auf: Kalender, E-Mails (nicht eingerichtet oder nicht mit " \
              "einem Profil angemeldet). Fragt der Nutzer danach, sag genau das und nenne nie Termine oder E-Mails, " \
@@ -96,6 +97,15 @@ def _cases(now=None):
         {"id": "gedaechtnis-unbekannt", "q": "Wie heißt mein Bruder?", "tools": chat.MEMORY_TOOLS,
          "hints": ["Du sprichst mit Dominik. Was du über Dominik weißt:\n- Dominik trinkt gerne grünen Tee."],
          "results": {}, "tool": None, "must": r"weiß (ich )?(das )?nicht|nicht|kein", "never": r"\bheißt (er|dein bruder) [A-ZÄÖÜ]"},
+        # Gedächtnis prüfen (gedaechtnis.py): the blocks the model gets, a maybe outdated entry never as a fact
+        {"id": "gedaechtnis-veraltet", "q": "Welches Auto fahre ich?", "tools": chat.MEMORY_TOOLS,
+         "hints": [gedaechtnis.HEAD["ok"].format(name="Dominik") + "\n- Dominik trinkt gerne grünen Tee.\n"
+                   + gedaechtnis.HEAD["stale"].format(name="Dominik") + "\n- Fährt einen VW Golf."],
+         "results": {}, "tool": None, "must": r"falls|vielleicht|noch|unsicher|nicht sicher|stimmt|weiß (ich )?nicht",
+         "never": r"^\W*du fährst (einen )?(vw )?golf\W*$"},
+        {"id": "gedaechtnis-bestaetigt", "q": "Wie heißt mein Bruder?", "tools": chat.MEMORY_TOOLS,
+         "hints": [gedaechtnis.HEAD["ok"].format(name="Dominik") + "\n- Dominiks Bruder heißt Tim."],
+         "results": {}, "tool": None, "must": r"\btim\b", "never": r"falls|vielleicht|nicht sicher|weiß (ich )?nicht"},
         {"id": "suche-fehlgeschlagen", "q": "Wer hat gestern in der Bundesliga gewonnen?", "tools": [chat.SEARCH_TOOL],
          "hints": [chat.SEARCH_HINT], "results": {"web_search": "Search failed: timeout. Tell the user the search did not "
                                                                  "work; do not answer from guesses."},

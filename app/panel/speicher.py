@@ -134,7 +134,7 @@ LOCAL = {
     "mcp-dienste.json": "Login", "mcp-actions.json": "Zustand", "agent.json": "Einstellungen",
     "voice.json": "Stimmabdruck", "speaker-code.json": "Schlüssel", "contacts.json": "noch nicht angeboten",
     "ha-events.json": "Zustand", "briefing-sent": "Zustand", "messages": "Sprachnachrichten (verschlüsselt mit Spark-Schlüssel)",
-    "agent-pending.json": "Warteschlange", "calendar-pending.json": "Warteschlange", "fix-pending.json": "Warteschlange",
+    "agent-pending.json": "Warteschlange", "calendar-pending.json": "Warteschlange", "fix-pending.json": "Warteschlange", "memory-ask.json": "Warteschlange",
     "mail-pending.json": "Warteschlange", "mcp-dienste-pending.json": "Warteschlange",
     "messages-pending.json": "Warteschlange", "tasks-pending.json": "Warteschlange",
 }

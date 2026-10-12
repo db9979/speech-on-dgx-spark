@@ -126,6 +126,8 @@ TARGETS = {
     "make": ("Dokumente erstellen", "Aufträge · auf dem Spark", "spark", False),
     # Einstellungs-Assistent (berater.py): shown while it is on, the line with 👍/👎, cases and proposals in numbers
     "verb": ("Verbessern", "Fälle und Vorschläge · auf dem Spark", "spark", False),
+    # Gedächtnis prüfen (gedaechtnis.py): shown while it is on, the facts of all profiles by mark, numbers only
+    "ged": ("Gedächtnis", "Einträge geprüft · auf dem Spark", "spark", False),
 }
 RETURNS = {"cal": "Termine oder Aufgaben", "ha": "Zustände oder Schaltung", "web": "Suchergebnisse", "pages": "Seitentext", "kiwix": "Archiv-Treffer",
            "wiki": "Artikel", "mail": "Mails (nur Anzahl und Größe)", "contacts": "Kontakte", "rm": "Ablage", "push": "Zustellung",
@@ -1016,6 +1018,13 @@ def snapshot(view="admin", now=None):
         verb = {"on": False}
     if verb.get("on"):
         used.add("verb")
+    try:
+        import gedaechtnis
+        ged = gedaechtnis.for_live(now)
+    except Exception:
+        ged = {"on": False}
+    if ged.get("on"):
+        used.add("ged")
     used |= set(watch_svc)
     off = unset(now)
     targets = [{"id": k, "name": v[0], "sub": _devup_sub(devup) if k == "geraete" and devup else v[1], "zone": v[2]}
@@ -1027,6 +1036,11 @@ def snapshot(view="admin", now=None):
         if x["id"] == "verb":   # Einstellungs-Assistent: numbers only (never a question, a title or a word)
             x["sub"] = (f"heute {verb.get('gut', 0)} 👍 · {verb.get('schlecht', 0)} 👎 · {verb.get('faelle', 0)} Fälle · "
                         f"{verb.get('open', 0)} Vorschläge offen" + (f" · {verb['check']} in Nachkontrolle" if verb.get("check") else ""))
+        if x["id"] == "ged":    # Gedächtnis prüfen: how many facts per mark (never a fact)
+            x["sub"] = (f"{ged.get('facts', 0)} Einträge · {ged.get('ok', 0)} bestätigt · {ged.get('learned', 0)} gelernt · "
+                        f"{ged.get('stale', 0)} veraltet?" + (f" · {ged['contra']} Widerspruch" if ged.get("contra") else "")
+                        + (f" · {ged['ask']} Nachfrage offen" if ged.get("ask") else "")
+                        + (f" · {ged['untagged']} ohne Thema" if ged.get("untagged") else ""))
         if x["id"] == "make":   # Dokumente erstellen: jobs in numbers (no titles, no text)
             x["sub"] = (f"{make.get('run', 0)} läuft · {make.get('wait', 0)} wartet · {make.get('done', 0)} heute fertig"
                         + (f" · {make['failed']} Fehler" if make.get("failed") else ""))

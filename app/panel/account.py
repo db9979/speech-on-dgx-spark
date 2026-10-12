@@ -24,6 +24,7 @@ import coadmin  # noqa: E402
 import echo  # noqa: E402
 import mail  # noqa: E402
 import memtidy  # noqa: E402
+import gedaechtnis  # noqa: E402
 import mfa  # noqa: E402
 import notaus  # noqa: E402
 import passkey  # noqa: E402
@@ -811,7 +812,55 @@ async def profile_mfa_recovery(request: Request, prof=Depends(browser_profile)):
 
 @router.get("/api/profile/memory", dependencies=[Depends(assistant)])
 def profile_memory(prof=Depends(own_profile)):
-    return {"profile": prof, "facts": profiles.memory(prof["id"]), "tidy": memtidy.pending(prof["id"])}
+    # Gedächtnis prüfen (gedaechtnis.py): with the switches on every fact carries its source, confirmation and mark
+    check = gedaechtnis.on(prof["id"])
+    return {"profile": prof, "facts": gedaechtnis.view(prof["id"]), "tidy": memtidy.pending(prof["id"]),
+            "check": check, "months": gedaechtnis.months() if check else None,
+            "topics": {k: v for k, v in gedaechtnis.TOPICS.items()} if gedaechtnis.topics_on(prof["id"]) else None}
+
+
+@router.post("/api/profile/memory/{fact_id}/confirm", dependencies=[Depends(assistant)])
+async def profile_confirm_fact(fact_id: str, request: Request, prof=Depends(browser_profile)):
+    """Ich → Gedächtnis → „Stimmt noch“: the fact counts as right from now on (the panel's rules, no model)."""
+    guard.limit(request, "memory", uid=prof["id"])
+    await _capped_body(request, 256)
+    if not gedaechtnis.on(prof["id"]):
+        raise HTTPException(403, "Gedächtnis prüfen ist aus (Funktionen → Gedächtnis prüfen, Ich → Gespräch).")
+    if not gedaechtnis.confirm(prof["id"], str(fact_id)[:40]):
+        raise HTTPException(404, "Eintrag nicht gefunden")
+    return {"facts": gedaechtnis.view(prof["id"])}
+
+
+@router.post("/api/profile/memory/{fact_id}/restore", dependencies=[Depends(assistant)])
+async def profile_restore_fact(fact_id: str, request: Request, prof=Depends(browser_profile)):
+    """Ich → Gedächtnis → „Zurückholen“: {"i": n} makes the fact's earlier version n its wording again."""
+    guard.limit(request, "memory", uid=prof["id"])
+    body = await _capped_body(request, 256)
+    if not gedaechtnis.on(prof["id"]):
+        raise HTTPException(403, "Gedächtnis prüfen ist aus (Funktionen → Gedächtnis prüfen, Ich → Gespräch).")
+    i = body.get("i") if isinstance(body, dict) else None
+    if not isinstance(i, int) or isinstance(i, bool) or not 0 <= i < profiles.MAX_PREV:
+        raise HTTPException(400, "i fehlt")
+    if not profiles.restore_fact(prof["id"], str(fact_id)[:40], i):
+        raise HTTPException(404, "Eintrag oder Fassung nicht gefunden")
+    gedaechtnis.log_version(prof["id"], "zurueck")
+    return {"facts": gedaechtnis.view(prof["id"])}
+
+
+@router.post("/api/profile/memory/{fact_id}/topic", dependencies=[Depends(assistant)])
+async def profile_fact_topic(fact_id: str, request: Request, prof=Depends(browser_profile)):
+    """Ich → Gedächtnis → Thema: {"topic": one of gedaechtnis.TOPICS}; the model never changes it again."""
+    guard.limit(request, "memory", uid=prof["id"])
+    body = await _capped_body(request, 256)
+    if not gedaechtnis.topics_on(prof["id"]):
+        raise HTTPException(403, "Themen sind aus (Funktionen → Gedächtnis prüfen, Ich → Gespräch).")
+    topic = body.get("topic")
+    if topic not in gedaechtnis.TOPICS:
+        raise HTTPException(400, "unbekanntes Thema")
+    if not any(f["id"] == str(fact_id)[:40] for f in profiles.memory(prof["id"])):
+        raise HTTPException(404, "Eintrag nicht gefunden")
+    gedaechtnis.set_topics(prof["id"], {str(fact_id)[:40]: topic}, by="hand")
+    return {"facts": gedaechtnis.view(prof["id"])}
 
 
 @router.post("/api/profile/memory/tidy", dependencies=[Depends(assistant)])
@@ -1216,6 +1265,7 @@ ALLOW = {"tool_think": "toolthink", "route": "routing", "direct_read": "direct",
          "prefetch": "vorab", "instant_ack": "ack", "spark_help": "hilfe", "tips_on": "tipps", "pro_tips": "tippspush", "systemone_on": "einordnung",
          "devup": "geraeteupdate", "devup_night": "geraetenacht", "report": "melden", "doc_make": "erstellen",
          "doc_make_templates": "erstellenvorlagen", "doc_make_wikipics": "erstellenbilder", "svcwatch": "dienstwacht", "svchint": "dienstnutzer",
+         "mem_check": "gedpruefen", "mem_ask": "gedfragen", "mem_topics": "gedthemen",
          "sync_live": "verlaufsync", "sync_one": "eingespraech", "sync_offline": "offlinelesen",
          "rate": "bewerten", "rateback": "bewertenzurueck", "beratnote": "beraterhinweis", "beratask": "beraterchat",
          "beratme": "beratermich"}

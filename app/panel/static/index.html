@@ -113,6 +113,10 @@
     </div>
     <div class="card pane" id="pane-feat"><h2 class="pt">Funktionen</h2><div class="pintro">Was der Assistent können soll. Tippe auf eine Funktion für Erklärung und Einstellungen. <button type="button" class="wlink" id="featwho">Alles als Tabelle</button></div>
       <div class="setrow"><div class="lbl"><b>Gedächtnis</b><span>Merkt sich Dinge, die man ihm sagt, getrennt pro Profil.</span></div><label class="tgl"><input type="checkbox" id="chat.memory"><i></i></label></div>
+      <div class="setrow" data-show="chat.memory" style="margin-left:18px"><div class="lbl"><b>Gedächtnis prüfen</b><span>Jeder Eintrag behält, woher er kommt; feste Regeln markieren, was veraltet sein könnte. Das Modell nennt es nie als Tatsache.</span></div><label class="tgl"><input type="checkbox" id="chat.memory_check"><i></i></label></div>
+      <div data-show="chat.memory_check" style="margin-left:36px"><label>Gelernt gilt als alt nach (Monaten)</label><input class="num" id="chat.memory_stale_months" type="number" min="1" max="60"><div class="fh">1 bis 60, Standard 6. Nur automatisch gelernte Einträge, die nie bestätigt wurden.</div></div>
+      <div class="setrow" data-show="chat.memory_check" style="margin-left:36px"><div class="lbl"><b>Im Gespräch nachfragen</b><span>Passt ein vielleicht veralteter Eintrag zur Frage, fragt der Spark nach der Antwort: „Stimmt das noch?“ Einmal pro Gespräch, 3× am Tag.</span></div><label class="tgl"><input type="checkbox" id="chat.memory_ask"><i></i></label></div>
+      <div class="setrow" data-show="chat.memory_check" style="margin-left:36px"><div class="lbl"><b>Themen im Gedächtnis</b><span>Das Sprachmodell im Heimnetz ordnet neue Einträge Themen zu (Person, Zuhause, Arbeit …). Nur zur Anzeige, entscheidet nichts.</span></div><label class="tgl"><input type="checkbox" id="chat.memory_topics"><i></i></label></div>
       <div class="setrow"><div class="lbl"><b>Frühere Gespräche</b><span>Profile können nach früheren Gesprächen fragen; aus ruhigen Gesprächen merkt er sich wenige Fakten.</span></div><label class="tgl"><input type="checkbox" id="chat.history"><i></i></label></div>
       <div class="setrow"><div class="lbl"><b>Verlauf sofort abgleichen</b><span>Was ein Profil auf einem Gerät fragt, steht sofort im offenen Panel seiner anderen Geräte, ohne Neuladen.</span></div><label class="tgl"><input type="checkbox" id="chat.history_live"><i></i></label></div>
       <div class="setrow"><div class="lbl"><b>Ein Gespräch für alle Kanäle</b><span>Telegram, Siri, Begleiter, Uhr und Lautsprecher schreiben ins heutige Hauptgespräch des Profils, mit Kanal-Zeichen.</span></div><label class="tgl"><input type="checkbox" id="chat.history_one"><i></i></label></div>
@@ -840,6 +844,7 @@
     <div class="row" style="margin-top:14px"><button class="b p" id="proflogin">Anmelden</button><button class="b" type="button" id="profadmin" style="display:none" data-on="adminLogin">Admin</button><span id="profmsg" class="err"></span></div></div>
     <div id="factbox" class="ptab">
     <div id="tidybox" class="tidy" style="display:none"></div>
+    <div id="factcheck" hidden></div>
     <div id="facttools" class="ic-tools"></div>
     <div id="factlist" class="factlist"></div>
     <div class="row" style="margin-top:8px"><button class="b" id="facttidy">Aufräumen vorschlagen</button><span id="factmsg"></span></div>

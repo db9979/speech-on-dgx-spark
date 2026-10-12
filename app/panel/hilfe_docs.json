@@ -1468,6 +1468,46 @@
 "src": "assistent",
 "file": "Assistent und Oberfläche",
 "head": "Sprach-Chat",
+"title": "Gedächtnis prüfen (V01.0.467)",
+"text": "Gedächtnis prüfen (V01.0.467): Admin-Schalter Funktionen → Gedächtnis prüfen und Schalter pro Profil (Ich → Gespräch → „Mein Gedächtnis prüfen lassen“), beide aus, nie Gäste (gedaechtnis.py, Plan gedaechtnis-pruefen/plan.md). Jeder Eintrag behält seinen Beleg, auch bei ausgeschaltetem Schalter: woher er kommt (said im Gespräch gemerkt, fix aus einer bestätigten Korrektur, auto aus einem ruhigen Gespräch gelernt, hand unter Ich geändert, tidy aus einem angenommenen Aufräum-Vorschlag), aus welchem Gespräch (nur eigene, nie ans Modell) und wann er zuletzt bestätigt wurde. Einträge älterer Versionen gelten als auto, wenn sie gelernt waren, sonst als said. Feste Regeln des Panels, kein Modell, markieren: R1 ein genanntes Datum ist mehr als einen Tag vorbei (Geburtstage, „seit“, „ab“, „jeden“ nie; wer nach dem Datum „Stimmt noch“ sagt, behält ihn), R2 „morgen“, „nächste Woche“ … älter als 14 Tage oder „zurzeit“, „gerade“, „aktuell“ … älter als 90 Tage, R3 automatisch gelernt, nie bestätigt und älter als „Gelernt gilt als alt nach“ (Einstellung unter Funktionen, 1–60 Monate, Standard 6), R4 Widerspruch: zwei Einträge sagen dasselbe mit anderem Wert (feste Muster „X heißt“, „wohnt in“, „ar"
+},
+{
+"lang": "de",
+"src": "assistent",
+"file": "Assistent und Oberfläche",
+"head": "Sprach-Chat",
+"title": "Gedächtnis prüfen (V01.0.467)",
+"text": "beitet bei/als“, „fährt einen“, „ist verheiratet mit“, „Lieblings… ist“, getrennt danach, um wen es geht); der zuletzt gesagte oder bestätigte gewinnt. Gelöscht wird nichts. Das Modell bekommt die Einträge in drei Blöcken: sicher, gelernt (mit Monat), „vielleicht veraltet, nie als Tatsache nennen“. Unter Ich → Gedächtnis stehen Kennzeichen (bestätigt, gelernt, veraltet?, Widerspruch), der Filter „Veraltet“, eine Hinweiskarte und beim Antippen Woher (mit „Gespräch öffnen“), Gemerkt, Bestätigt, Grund und „Stimmt noch“ (POST /api/profile/memory/{id}/confirm, Rate-Limit „memory“). Live: Knoten „Gedächtnis“ mit Anzahlen je Kennzeichen; Logs: Bereich „Gedächtnis“ (gedaechtnis: pruefung …, nur wenn sich die Zahlen ändern); Logs → Anfragen: Schritt „Gedächtnis (Panel)“ mit Zahlen."
+},
+{
+"lang": "de",
+"src": "assistent",
+"file": "Assistent und Oberfläche",
+"head": "Sprach-Chat",
+"title": "Fassungen und Nachfrage (V01.0.467)",
+"text": "Fassungen und Nachfrage (V01.0.467): Mit Gedächtnis prüfen wird eine bestätigte Korrektur zum selben Thema („wohnt in …“, „fährt einen …“, „X heißt …“) eine neue Fassung desselben Eintrags statt eines zweiten Eintrags; auch ✎ Ändern hebt die alte Fassung auf. Bis zu 5 frühere Fassungen stehen im Detail unter Ich → Gedächtnis mit „Zurückholen“ (POST /api/profile/memory/{id}/restore, Anmeldung, Profilbindung, CSRF, 256 Bytes, Rate-Limit). Unterschalter Funktionen → Gedächtnis prüfen → „Im Gespräch nachfragen“ (chat.memory_ask) und Ich → Gespräch → „Im Gespräch nachfragen“ (mem_ask), beide aus: Passt ein vielleicht veralteter Eintrag zur Frage (gemeinsames Wort, feste Regel), hängt das Panel nach der Antwort „Kurz nachgefragt: Stimmt das noch: …?“ an. Höchstens einmal pro Gespräch, dreimal am Tag, derselbe Eintrag einmal in 30 Tagen; nie bei fremder Stimme, nach Mail oder Webseiten, im Notaus oder wenn eine andere Rückfrage offen ist. Die Antwort gilt 15 Minuten (users/<id>/memory-ask.json): „Ja“ bestätigt, „Vergiss das“ löscht, „Nein“ ändert nichts, eine Korrektur geht über „Aus Korrekturen lernen“ und wird mit Ja eine neue Fassung. Live zeigt offene Nachfragen als Zahl, Logs → Anfra"
+},
+{
+"lang": "de",
+"src": "assistent",
+"file": "Assistent und Oberfläche",
+"head": "Sprach-Chat",
+"title": "Fassungen und Nachfrage (V01.0.467)",
+"text": "gen den Schritt „Nachfrage zum Gedächtnis (Panel)“, das Journal gedaechtnis: nachfrage … und gedaechtnis: fassung … grund=…."
+},
+{
+"lang": "de",
+"src": "assistent",
+"file": "Assistent und Oberfläche",
+"head": "Sprach-Chat",
+"title": "Themen im Gedächtnis (V01.0.467)",
+"text": "Themen im Gedächtnis (V01.0.467): Unterschalter Funktionen → Gedächtnis prüfen → „Themen im Gedächtnis“ (chat.memory_topics) und Ich → Gespräch → „Themen im Gedächtnis“ (mem_topics), beide aus. Im Hintergrund (nie während jemand spricht) ordnet das Sprachmodell im Heimnetz Einträge ohne Thema einmal einem festen Thema zu: Person, Zuhause, Unterwegs, Arbeit, Gesundheit, Gerade dran, Sonstiges; jede andere Antwort wird „Sonstiges“, nach einem Fehler erst nach einer Stunde wieder. Ich → Gedächtnis zeigt die Einträge dann in Gruppen; im Detail wählt die Person ein anderes Thema (POST /api/profile/memory/{id}/topic), das das Modell nie mehr ändert. Das Thema dient nur der Anzeige, geht nicht ans Modell beim Antworten und ändert keine Rechte. Live zeigt „N ohne Thema“, das Journal gedaechtnis: themen … gesetzt=N. Der Qualitätstest hat dazu die Fälle „gedaechtnis-veraltet“ (ein veralteter Eintrag wird nie als Tatsache genannt) und „gedaechtnis-bestaetigt“ (ein bestätigter wird genutzt)."
+},
+{
+"lang": "de",
+"src": "assistent",
+"file": "Assistent und Oberfläche",
+"head": "Sprach-Chat",
 "title": "Einstellungen für das Sprachmodell (V01.0.121)",
 "text": "Einstellungen für das Sprachmodell (V01.0.121): Unter Einstellungen → Sprachmodell → Erweitert stellt der Admin ein: Verlaufslänge (4000–64000 Zeichen, Standard 24000), Websuchen pro Antwort (1–3, Standard 2), Zeitlimit einer Antwort (60–600 s), top_p und presence_penalty (0 = Standard des Servers) sowie eigene Stichwörter für die Werkzeugpflicht (eine Zeile pro Werkzeug, z. B. web_search: elfmeter, aufstellung; nur ganze Wörter, höchstens 20 pro Werkzeug, die eingebauten Wörter bleiben immer). „Standard wiederherstellen“ setzt die mitgelieferte Systemanweisung ein, „Ganzen Prompt ansehen“ zeigt alle Teile in ihrer Reihenfolge und markiert, welche fest sind. Mit dem Schalter Funktionen → „Eigener Gesprächsstil“ (aus) kann jedes Profil unter Ich → Gespräch → Antwort in höchstens 500 Zeichen sagen, wie der Assistent mit ihm reden soll; der Text steht unter der Systemanweisung und über den festen Regeln, gilt nie für Gäste oder eine fremde Stimme und lässt sich nicht über einen Geräteschlüssel ändern. Fest bleiben: Werkzeugregeln, der Umgang mit Text von außen, Codewort, Sperren und die Werte der Hintergrundaufgaben (Lernen, Briefing, Mail-Einordnen, Raum)."
 },
@@ -4654,6 +4694,46 @@
 "head": "Voice chat",
 "title": "Learning from corrections (V01.0.118)",
 "text": "Learning from corrections (V01.0.118): admin switch Features → \"Aus Korrekturen lernen\" and a switch per profile (Me → Conversation), both off, never guests or another voice. When a message right after an answer starts like a correction (\"Nein, …\", \"Das stimmt nicht\", \"Du sollst …\", at least three words), the model words a short sentence on the side (fixes.py) and the assistant ends with \"Soll ich mir merken: …?\". It is stored only after a plain yes from the same conversation within 15 minutes. Never proposed: sentences about code words, PINs, passwords, rules, security, confirmations, locks or alarms, world knowledge (scores, amounts) and links; after mail or outside text there is no proposal, and the earlier answer is then not sent along. The tool log shows a \"Korrektur\" entry; \"Send the question to the admin as a test case\" puts the corrected question into quality-cases.json (at most 30) and it runs with the quality test: all tools offered, each finds nothing, made-up figures count as a failure. The admin deletes them under Status → Checks → Quality test."
+},
+{
+"lang": "en",
+"src": "assistant",
+"file": "Assistant and panel",
+"head": "Voice chat",
+"title": "Memory check (V01.0.467)",
+"text": "Memory check (V01.0.467): admin switch Features → Memory check and a switch per profile (Me → Conversation → \"Have my memory checked\"), both off, never guests (gedaechtnis.py, plan gedaechtnis-pruefen/plan.md). Every entry keeps its evidence, also while the switch is off: where it came from (said remembered in a conversation, fix from a confirmed correction, auto learned from a quiet conversation, hand changed under Me, tidy from an accepted cleanup proposal), which conversation (own ones only, never to the model) and when it was last confirmed. Entries of older versions count as auto when they were learned, else as said. Fixed rules of the panel, no model, mark: R1 a date it names is more than a day past (never birthdays, \"seit\", \"ab\", \"jeden\"; \"Still right\" after the date keeps it), R2 \"tomorrow\", \"next week\" … older than 14 days or \"currently\", \"right now\" … older than 90 days, R3 learned automatically, never confirmed and older than \"Learned counts as old after\" (setting under Features, 1–60 months, default 6), R4 contradiction: two entries say the same thing with another value (fixed patterns \"X is called\", \"lives in\", \"works at/as\", \"drives a\", \"is married to\", \"favourite … i"
+},
+{
+"lang": "en",
+"src": "assistant",
+"file": "Assistant and panel",
+"head": "Voice chat",
+"title": "Memory check (V01.0.467)",
+"text": "s\", kept apart by whom it is about); the one said or confirmed last wins. Nothing is deleted. The model gets the entries in three blocks: sure, learned (with the month), \"maybe outdated, never say it as a fact\". Under Me → Memory there are marks (confirmed, learned, outdated?, contradiction), the filter \"Outdated\", a note card and, on a tap, where from (with \"Open the conversation\"), remembered, confirmed, the reason and \"Still right\" (POST /api/profile/memory/{id}/confirm, rate limit \"memory\"). Live: node \"Memory\" with counts per mark; Logs: area \"Memory\" (gedaechtnis: pruefung …, only when the numbers change); Logs → Requests: step \"Memory (panel)\" with numbers."
+},
+{
+"lang": "en",
+"src": "assistant",
+"file": "Assistant and panel",
+"head": "Voice chat",
+"title": "Versions and check-back (V01.0.467)",
+"text": "Versions and check-back (V01.0.467): with Memory check on, a confirmed correction about the same thing (\"lives in …\", \"drives a …\", \"X is called …\") becomes a new version of that entry instead of a second entry; ✎ Change keeps the old wording too. Up to 5 earlier versions show in the detail under Me → Memory with \"Bring back\" (POST /api/profile/memory/{id}/restore, login, profile binding, CSRF, 256 bytes, rate limit). Sub-switch Features → Memory check → \"Check back in conversations\" (chat.memory_ask) and Me → Conversation → \"Check back in conversations\" (mem_ask), both off: when an entry that may be out of date fits the question (a shared word, fixed rule), the panel adds \"Quick check: is this still right: …?\" after the answer. At most once per conversation, three times a day, the same entry once in 30 days; never with someone else's voice, after mail or web pages, during an emergency stop or while another question is open. The answer is open for 15 minutes (users/<id>/memory-ask.json): \"yes\" confirms, \"forget it\" deletes, \"no\" changes nothing, a correction goes through \"Learn from corrections\" and becomes a new version after a yes. Live shows open questions as a number, Logs → Re"
+},
+{
+"lang": "en",
+"src": "assistant",
+"file": "Assistant and panel",
+"head": "Voice chat",
+"title": "Versions and check-back (V01.0.467)",
+"text": "quests the step \"Memory check-back (panel)\", the journal gedaechtnis: nachfrage … and gedaechtnis: fassung … grund=…."
+},
+{
+"lang": "en",
+"src": "assistant",
+"file": "Assistant and panel",
+"head": "Voice chat",
+"title": "Memory topics (V01.0.467)",
+"text": "Memory topics (V01.0.467): sub-switch Features → Memory check → \"Memory topics\" (chat.memory_topics) and Me → Conversation → \"Memory topics\" (mem_topics), both off. In the background (never while someone is talking) the language model in the home network sorts entries without a topic once into a fixed topic: person, home, on the move, work, health, right now, other; any other answer becomes \"other\", after a failure it tries again only after an hour. Me → Memory then shows the entries in groups; in the detail the person picks another topic (POST /api/profile/memory/{id}/topic), which the model never changes again. The topic is only for display, does not go to the model when answering and changes no rights. Live shows \"N ohne Thema\", the journal gedaechtnis: themen … gesetzt=N. The quality test has the cases \"gedaechtnis-veraltet\" (an outdated entry is never stated as a fact) and \"gedaechtnis-bestaetigt\" (a confirmed one is used)."
 },
 {
 "lang": "en",

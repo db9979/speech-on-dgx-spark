@@ -33,6 +33,7 @@ Alle Optionen ohne Rückfragen (`--mode api --asr 1.7b --tts 0.6b --yes` …) st
 
 <!-- New version: add one line at the top here and in CHANGELOG.md, drop the oldest line here (keep 10). Details go to docs/de and docs/en, not into this README. -->
 
+- **V01.0.467** Gedächtnis prüfen (aus): jeder Eintrag behält, woher er kommt, feste Regeln markieren Veraltetes, frühere Fassungen, Nachfrage im Gespräch, Themen
 - **V01.0.466** Mail-Uhrzeiten richtig: der Spark las eine Mail von 20:30 als 18:30 vor (Absender-Versatz statt deiner Zeitzone)
 - **V01.0.465** Präsentationen mit zehn Folientypen, Symbolen, Bildern aus dem Kiwix und geprüften Zahlen
 - **V01.0.464** Einstellungs-Assistent: Lücken geschlossen, Codewort-Sätze nie als Fall, Ideen außerhalb des Katalogs (aus)
@@ -42,7 +43,6 @@ Alle Optionen ohne Rückfragen (`--mode api --asr 1.7b --tts 0.6b --yes` …) st
 - **V01.0.460** Begleiter: jedes Textfeld einsprechbar, Knöpfe ohne Umbruch im Wort
 - **V01.0.459** Seiten zeigen, dass sie laden (Balken, Platzhalter, Fehler mit „Noch einmal“); Ich lädt alle Kästen gleichzeitig
 - **V01.0.458** GitHub-Token nur zum Lesen für Updates (5000 statt 60 Abfragen pro Stunde)
-- **V01.0.457** Verlauf auf allen Geräten: kein Überschreiben mehr, Neues ohne Neuladen, Quellen bleiben unter Antworten, Pebble-Uhr wieder ganz; neu (aus, unter Ich einschaltbar): sofort abgleichen, ein Gespräch für alle Kanäle, offline lesen nur auf vertrauten Browsern.
 
 Alle Versionen: [CHANGELOG.md](CHANGELOG.md)
 
