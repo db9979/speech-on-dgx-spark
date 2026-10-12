@@ -33,6 +33,7 @@ Alle Optionen ohne Rückfragen (`--mode api --asr 1.7b --tts 0.6b --yes` …) st
 
 <!-- New version: add one line at the top here and in CHANGELOG.md, drop the oldest line here (keep 10). Details go to docs/de and docs/en, not into this README. -->
 
+- **V01.0.434** Selbsttest: Live-Prüfung „nur eingerichtete Dienste“ mit eigenem Profil (war je nach anderen Tests rot)
 - **V01.0.433** Begleiter richtet Office-Add-ins ein: Knopf „Spark“ in Outlook classic (auch iCloud/IMAP), Word und Excel direkt, neues Outlook mit Datei und Hinzufügen-Seite
 - **V01.0.432** PowerPoint-Dateien öffnen ohne „Reparieren“, Gültigkeitsprüfung für Office-Dateien
 - **V01.0.431** Live-Bild zeigt nur eingerichtete Dienste und Ziele
@@ -42,7 +43,6 @@ Alle Optionen ohne Rückfragen (`--mode api --asr 1.7b --tts 0.6b --yes` …) st
 - **V01.0.427** Zweiter Faktor einheitlich: ein Code pro Person, drei Stufen mit Schloss, Dialog sagt wessen Code und wofür, gleich als Admin anmelden, Panel-Passwort nur über #admin
 - **V01.0.426** E-Mail-Modusknöpfe passen auch am schmalen Handy
 - **V01.0.425** Live-Bild: Internet als Fläche, Wächter als Wand mit Geblocktem, ruhige Ziele zusammengefasst, Legende, keine Überlappungen mehr
-- **V01.0.424** Ich-Seiten aufgeräumt: Reiter mit Zahlen, E-Mail-Fragen mit einem Tipp, reMarkable-Ordnerbaum, Gedächtnis ändern und suchen
 
 Alle Versionen: [CHANGELOG.md](CHANGELOG.md)
 

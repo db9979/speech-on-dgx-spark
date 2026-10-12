@@ -531,13 +531,18 @@ class SetUp(unittest.TestCase):
 
     def test_only_what_is_set_up(self):
         import profiles
+        from unittest import mock
+        # one profile of its own: others in the run may have a calendar.json, and alone there may be none
+        uid = "u_livesetup01"
+        p = mock.patch.object(profiles, "user_ids", return_value=[uid])
+        p.start()
+        self.addCleanup(p.stop)
         self.chat(search=False, calendar=True, mail=False, remarkable=False, homeassistant=False)
         ids = self.ids()
         self.assertIn("qwen", ids)
         for t in ("web", "mail", "rm", "push", "ha"):
             self.assertNotIn(t, ids, t)
         self.assertNotIn("cal", ids)          # switched on, but no profile has a calendar
-        uid = profiles.user_ids()[0]
         f = profiles._path(uid, "calendar.json")
         os.makedirs(os.path.dirname(f), exist_ok=True)
         with open(f, "w") as fh:
