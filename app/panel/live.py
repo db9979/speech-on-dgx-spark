@@ -644,6 +644,13 @@ def _conns(now):
             out.append({"name": "Home Assistant live", "proto": "WebSocket · Heimnetz", "dir": "aus", "n": n})
     except Exception:
         pass
+    try:
+        import verlauf
+        n = verlauf.streams()
+        if n:
+            out.append({"name": "Verlauf-Abgleich", "proto": "HTTPS · Ereignisse", "dir": "ein", "n": n})
+    except Exception:
+        pass
     n = sum(1 for t, _ in _seen.values() if now - t < SEEN_S)
     if n:
         out.append({"name": "Live-Monitore", "proto": "HTTPS · nur lesen", "dir": "ein", "n": n})

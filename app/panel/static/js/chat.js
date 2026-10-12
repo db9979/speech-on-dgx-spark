@@ -264,7 +264,7 @@ const ub=chatLog('user',text);const um={role:'user',content:text};
         else if(ev.type==='search_error'){chatSay(t('Websuche fehlgeschlagen: ','Web search failed: ')+ev.message)}
         else if(ev.type==='timing'){if(ev.llm_first_token!=null)llmS=ev.llm_first_token;if(ev.first_audio!=null)audioS=ev.first_audio;if(ev.first_ack!=null)ackS=ev.first_ack}
         else if(ev.type==='error'){if(!err)err=errText(ev.code,ev.message);if(/^tts/.test(ev.code||''))ttsErr=true}}}}
-  catch(e){if(e.name!=='AbortError')err=errText(e instanceof TypeError?'net':'',e.message);if(pids.length&&/picture is gone/.test(errRaw(e)))picsGone()}
+  catch(e){if(e.name!=='AbortError')err=e instanceof TypeError&&!pids.length&&offlineQueue(text)?t('Keine Verbindung zum Spark. Die Frage geht raus, sobald er wieder antwortet.','No connection to the Spark. The question goes out once it answers again.'):errText(e instanceof TypeError?'net':'',e.message);if(pids.length&&/picture is gone/.test(errRaw(e)))picsGone()}
   const aborted=ctrl.signal.aborted;if(chat.ctrl===ctrl)chat.ctrl=null;
   const att=attOf(searches,sources,docs,drefs,mkcards);   // what stands under the answer, kept with it
   // another person's voice: the exchange is theirs, so it stays out of this browser's history and context
@@ -422,7 +422,8 @@ const convos={cache:[],
     let old=[];try{old=JSON.parse(localStorage.getItem('convos:'+PROFILE.id)||'[]')}catch{}
     for(const c of old)await api('/api/profile/convos',{method:'PUT',headers:{'Content-Type':'application/json'},body:JSON.stringify(c)}).catch(()=>{});
     try{localStorage.removeItem('convos:'+PROFILE.id)}catch{}
-    try{this.cache=await (await api('/api/profile/convos')).json();this.at=Date.now()}catch{this.cache=[]}},
+    try{this.cache=await (await api('/api/profile/convos')).json();this.at=Date.now()}
+    catch{const o=OFFLINE_HERE!==false?offlineCopy():null;this.cache=o?o.c:[];if(o)offlineShow(o)}},   // offline: a trusted browser's copy
   // what changed on other devices since the last look (deleted ones disappear); false when nothing came back
   async fresh(){if(!PROFILE)return false;const since=Math.max(0,...this.cache.map(x=>x.updated||0));
     try{const d=await (await api('/api/profile/convos?since='+since)).json();if(!d||!Array.isArray(d.items))return false;
@@ -446,7 +447,7 @@ function convoAdopt(c){if(chat.ctrl||chat.rec||!c||!Array.isArray(c.msgs))return
 // Coming back to this page (and every 30 s while it is in front): conversations from other devices appear
 // without reloading; the open conversation shows what was added elsewhere.
 async function convoLook(force){if(!PROFILE||document.hidden||(!force&&Date.now()-(convos.at||0)<25000))return;
-  if(!await convos.fresh())return;fillConvos();if(chat.ctrl||chat.rec)return;
+  if(!await convos.fresh())return;fillConvos();offlineFlush();if(chat.ctrl||chat.rec)return;
   const c=chat.cid&&convos.load().find(x=>x.id===chat.cid);
   if(c)convoAdopt(c);
   else if(chat.cid&&chat.known===chat.cid){openConvo(null);chatSay(t('Dieses Gespräch wurde auf einem anderen Gerät gelöscht.','This conversation was deleted on another device.'))}   // gone everywhere, not back with the next question
@@ -457,7 +458,7 @@ setInterval(()=>convoLook(false),30000);
 function fillConvos(){const l=convos.load(),d=x=>new Date(x).toLocaleString(L==='en'?'en-GB':'de-DE',{day:'2-digit',month:'2-digit',hour:'2-digit',minute:'2-digit'});
   $('convosel').innerHTML=(chat.cid?'':`<option value="">${t('Neues Gespräch','New conversation')}</option>`)+
     l.map(c=>`<option value="${c.id}"${c.id===chat.cid?' selected':''}>${d(c.updated)} · ${esc(c.title||'…')}</option>`).join('');
-  $('convodel').disabled=!chat.cid}
+  $('convodel').disabled=!chat.cid;if(typeof offlineKeep==='function')offlineKeep()}   // verlauf.js loads after this file
 function openConvo(id,picked){const c=id&&convos.load().find(x=>x.id===id);chat.cid=c?c.id:null;chat.picked=!!(c&&picked);chat.msgs=c?c.msgs.slice():[];chat.saved=chat.msgs.length;chat.known=PROFILE&&c?c.id:null;chat.fresh=false;
   $('chatlog').innerHTML='';$('chattiming').textContent='';chat.msgs.forEach(m=>{const b=chatLog(m.role,m.content);deletable(b,m);if(m.att||m.via)attRender(b,m.att,false,m.via)});fillConvos()}
 // What stood under an answer (sources, own documents, a document made), kept with the message so every device and a

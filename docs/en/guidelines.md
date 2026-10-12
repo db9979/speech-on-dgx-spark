@@ -65,7 +65,7 @@ This list belongs to every commit that adds or changes a feature, a tool, a serv
 | 20 | **Docs** | A line in CHANGELOG and README (de and en), details in `docs/de` and `docs/en`. New general rules go into this guideline. | 🧪 test_richtlinie (Versions, Guideline), test_changelog |
 | 21 | **Security according to the state of the art** | The change is checked against the part "State of the art" of the security checklist (cryptography, login, headers, supply chain, LLM risks). | 📝 |
 | 22 | **Prerequisites** | When a feature builds on another one, that is its `parent` in `features.py` (the chain follows from it, `features.chain`). No own "switch on X first" text: hints name missing switches through `features.missing_text`, the pages Features and Who may do what offer the chain when switching on (`needs.js`, `POST /api/admin/features/{key}/enable`) and say what goes off with a switch. A setup that can be missing goes into `features.READY`. | 🧪 test_voraussetzungen, test_voraussetzungen_mit_einschalten |
-| 23 | **History on every device** | A new channel that answers for a profile keeps question and answer via `profiles.append_convo` (its own conversation per day like Siri, Telegram, the watch), never via `save_convo` with an old copy. Devices send only new messages (`PUT /api/profile/convos` with `add`); only deleting replaces the copy. Open pages fetch changes via `?since=`. Guests get no history on the Spark. | 🧪 test_verlauf_sync |
+| 23 | **History on every device** | A new channel that answers for a profile keeps question and answer via `verlauf.keep` (its own conversation per day like Siri, Telegram, the watch; with "One conversation for all channels" today's main conversation, marked with the channel; a voice that is not surely the profile's never goes there), never via `save_convo` with an old copy. Devices send only new messages (`PUT /api/profile/convos` with `add`); only deleting replaces the copy. Open pages fetch changes via `?since=`. Every change is told by `profiles` to the event connections (`verlauf.changed`), carrying only the id and the kind of device, never contents. A copy in the browser only where `offline_here` allows it (trusted browser, function on); every other browser deletes it, signing out always. Guests get no history on the Spark. | 🧪 test_verlauf_sync |
 
 **Coming with work in progress** (applies as soon as the version is on main; the thread then extends this table and the test):
 
@@ -76,7 +76,7 @@ This list belongs to every commit that adds or changes a feature, a tool, a serv
 | **Static files** | Every static route and every public file answers; new short paths pass the request on. | in force since V01.0.442, 🧪 test_statische_routen |
 | **Background models** | The display says "working" only while something is really being computed, otherwise "Standby" (loaded or not); sharing a running model does not extend its run time and never starts it (`docembed.embed(..., keep=False)`); the stop check also runs during a Notaus and after errors. | applies since V01.0.444, 🧪 test_wissen.Worker |
 
-**Planned, not yet approved** (no rule): loading and error state per box with a time limit (plan `seiten-laden.md`), instant sync and read state for the history (plan `verlauf-sync.md`), asking before GitHub reports (plan `frage-vor-meldung.md`).
+**Planned, not yet approved** (no rule): loading and error state per box with a time limit (plan `seiten-laden.md`), read state for the history (plan `verlauf-sync.md`), asking before GitHub reports (plan `frage-vor-meldung.md`).
 
 ---
 
