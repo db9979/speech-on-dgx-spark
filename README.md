@@ -33,6 +33,8 @@ All options for running without questions (`--mode api --asr 1.7b --tts 0.6b --y
 
 <!-- New version: add one line at the top here and in CHANGELOG.md, drop the oldest line here (keep 10). Details go to docs/de and docs/en, not into this README. -->
 
+- **V01.0.453** Own storage: keep chats, memory, documents and created files encrypted on your own NAS (WebDAV) or a mounted folder, watched, with a note when it fails
+- **V01.0.452** Update check by itself only every 3 hours; internet check no longer via GitHub (limit of 60 questions per hour)
 - **V01.0.451** Chat answers formatted (lists, bold, code, links), read aloud without Markdown signs
 - **V01.0.450** Settings assistant: from errors, 👎 and unclear questions the Spark makes checked proposals to improve it (Status → Improve), 👍/👎 under answers; everything off until you switch it on
 - **V01.0.449** iPhone app builds again (error from .448)
@@ -41,8 +43,6 @@ All options for running without questions (`--mode api --asr 1.7b --tts 0.6b --y
 - **V01.0.446** Switching a function on offers to switch on what it builds on; switching off says what goes off with it
 - **V01.0.445** Calmer Live picture: each stretch drawn once, rounds as "↻ 3", times beside the boxes
 - **V01.0.444** Meaning search really goes to sleep after 10 minutes without work; Status shows "standby" instead of "running" when nothing computes.
-- **V01.0.443** Coding guideline in the repo: [docs/en/guidelines.md](docs/en/guidelines.md) with a checklist for new features, security checklist with a state-of-the-art part, journal without profile names
-- **V01.0.442** App manifest and home screen icon load again (error 500 since .406); “Add to Home Screen” shows the Spark icon again
 
 All versions: [CHANGELOG.md](CHANGELOG.md)
 

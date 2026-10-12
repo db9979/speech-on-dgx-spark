@@ -69,7 +69,8 @@ RETRY_GAP = 300           # a note that did not get out is tried again after thi
 QUEUE_KEEP = 12 * 3600    # and given up after this long
 NIGHT = (22, 7)           # "nachts sammeln": from 22 to 7 o'clock Spark time
 # two fixed public addresses: the internet is gone only when neither answers
-INET = ("https://api.github.com/", "https://cloudflare.com/cdn-cgi/trace")
+# never api.github.com: every question there counts against GitHub's 60 per hour, which the update check needs
+INET = ("https://www.google.com/generate_204", "https://www.microsoft.com/", "https://cloudflare.com/cdn-cgi/trace")
 DEVICES = ("", "app", "and", "desk", "tg", "web", "all")
 
 # id: (name, name in English, what does not work while it is gone, pace, the Live page's node)
@@ -84,6 +85,9 @@ SVC = {
     "mail": ("Mail", "Mail", "Mails lesen und suchen geht gerade nicht.", SLOW, "mail"),
     "cal": ("Kalender", "Calendar", "Termine lesen und eintragen geht gerade nicht.", SLOW, "cal"),
     "nas": ("NAS (Sicherung)", "NAS (backup)", "Die Sicherung auf das NAS geht gerade nicht.", SLOW, "nas"),
+    # Eigener Speicher (speicher.py): the WebDAV targets of the profiles, one part per address
+    "store": ("Eigener Speicher", "Own storage", "Kopien auf den eigenen Speicher warten; alles bleibt auf dem Spark.", SLOW,
+              "speicher"),
 }
 # what needs the internet besides the watched services (for the note "Internet weg"): function -> name
 NEEDS_NET = (("search", "Websuche"), ("weather", "Wetter"), ("transit", "Bus und Bahn"), ("parcels", "Pakete"),
@@ -252,6 +256,13 @@ def active(c=None, cfg=None):
         d = offsite._read()
         if d.get("on") is True and _origin(d.get("url")):
             out["nas"] = {"nas": {"url": str(d["url"]), "level": netguard.HOME, "verify": True}}
+    except Exception:
+        pass
+    try:
+        import speicher
+        p = dict(list(speicher.probes().items())[:MAX_PARTS])
+        if p:
+            out["store"] = p
     except Exception:
         pass
     skip = set(_read()["skip"])

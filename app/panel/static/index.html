@@ -74,6 +74,7 @@
   <div class="card zneed" id="zroom" hidden><h2>Hört gerade zu</h2><div id="zrooms"></div><div class="row" style="margin-top:8px"><button class="b" type="button" id="zroomall">Alle beenden</button><span class="mut">Nur wo und bis wann, nie was gehört wurde.</span></div></div>
   <div class="card zneed" id="zbg" hidden><h2>Mein Zustand aller Profile</h2><div id="zbglist"></div><div class="mut" style="margin-top:6px">Nur Anzahlen über alle Profile, die die Seite nutzen; nie Namen, Dienste oder Inhalte.</div></div>
   <div class="card zneed" id="zsvc" hidden><h2>Dienste</h2><div id="zsvclist"></div><div class="row" style="margin-top:8px"><button class="b" type="button" id="zsvccheck">Jetzt prüfen</button><span class="mut" id="zsvcmsg"></span></div><div class="mut" style="margin-top:6px">Nur ob ein Dienst antwortet, nie Inhalte, Adressen oder Fehlertexte. Ein Haken weg: der Dienst wird nicht geprüft und niemand bekommt Hinweise dazu.</div></div>
+  <div class="card zneed" id="zstore" hidden><h2>Eigener Speicher</h2><div id="zstorelist"></div><div class="mut" style="margin-top:6px">Pro Profil nur Art, Zustand, Größen und Anzahlen, nie Dateinamen oder Inhalte.</div></div>
   <div class="card zneed" id="zdev" hidden><h2>Geräte-Updates</h2><div id="zdevlist"></div><div class="row" style="margin-top:8px"><button class="b" type="button" id="zdevcheck">Jetzt suchen</button><button class="b" type="button" id="zdevgo" style="display:none">Weiter verteilen</button><span class="mut" id="zdevmsg"></span></div><div class="mut" style="margin-top:6px">Nur Versionsnummern und Gerätenamen. Die Dateien kommen nur von GitHub und werden per Prüfsumme geprüft.</div></div>
   <div class="card zneed" id="zdocs" hidden><h2>Eigene Dokumente</h2><div id="zdoclist"></div><div class="mut" style="margin-top:6px">Profilnamen, Speicher und Zahlen, nie Inhalte. Dokumentnamen nur, wenn jemand ein Dokument für alle freigegeben hat.</div></div>
   <div id="memnote"></div>
@@ -132,6 +133,10 @@
       <div class="setrow" data-show="chat.documents" style="margin-left:18px"><div class="lbl"><b>Steckbrief und Tags</b><span>Das Sprachmodell notiert in Pausen Titel, Art, Absender, Frist und Schlagwörter jedes Dokuments; der Assistent sucht damit gezielter.</span></div><label class="tgl"><input type="checkbox" id="chat.doc_brief"><i></i></label></div>
       <div class="setrow" data-show="chat.documents" style="margin-left:18px"><div class="lbl"><b>Dokumente erstellen</b><span>Der Spark schreibt auf Bitte Briefe, Präsentationen und Tabellen als Word, PDF, PowerPoint oder Excel; erst die Gliederung, nach deinem Ja.</span></div><label class="tgl"><input type="checkbox" id="chat.doc_make"><i></i></label></div>
       <div class="setrow" data-show="chat.doc_make" style="margin-left:36px"><div class="lbl"><b>Eigene Vorlagen</b><span>Profile laden eigene Word- oder PowerPoint-Vorlagen hoch (ohne Makros, höchstens 10 MB); der Spark füllt sie.</span></div><label class="tgl"><input type="checkbox" id="chat.doc_make_templates"><i></i></label></div>
+      <div class="setrow"><div class="lbl"><b>Eigener Speicher</b><span>Profile legen eine verschlüsselte Kopie ihrer Daten auf ihrem NAS, einem WebDAV-Dienst oder in einem Ordner ab; der Spark bleibt lokal.</span></div><label class="tgl"><input type="checkbox" id="chat.storage_own"><i></i></label></div>
+      <div class="setrow" data-show="chat.storage_own" style="margin-left:18px"><div class="lbl"><b>Speicher im Heimnetz erlauben</b><span>Ziele mit Adressen im Heimnetz (NAS, Fritzbox, Nextcloud zu Hause). Aus: nur Adressen im Internet.</span></div><label class="tgl"><input type="checkbox" id="chat.storage_lan"><i></i></label></div>
+      <div class="setrow" data-show="chat.storage_own" style="margin-left:18px"><div class="lbl"><b>Ordner auf dem Spark</b><span>Ein Ordner, den du selbst eingehängt hast (NFS, SMB, USB-Platte); Profile wählen darin einen Unterordner.</span></div><label class="tgl"><input type="checkbox" id="chat.storage_folder"><i></i></label></div>
+      <div data-show="chat.storage_folder" style="margin-left:36px"><label>Ordner für eigenen Speicher</label><input id="chat.storage_root" placeholder="/srv/spark-speicher" autocomplete="off"><div class="fh">Unter /mnt, /media oder /srv, schon vorhanden, kein Verweis; der Spark-Dienst braucht dort Schreibrecht.</div></div>
       <div class="setrow"><div class="lbl"><b>Websuche</b><span>Das Modell sucht selbst über deine SearXNG-Instanz, wenn eine Frage aktuelle Informationen braucht.</span></div><label class="tgl"><input type="checkbox" id="chat.search"><i></i></label></div>
       <div data-show="chat.search"><label>Adresse deiner SearXNG-Instanz</label><input id="chat.search_url" data-req placeholder="http://192.168.1.20:8080">
       <label>Treffer pro Suche</label><input id="chat.search_results" type="number" min="1" max="10"><div class="fh">1 bis 10.</div>
@@ -901,6 +906,7 @@
     <div id="mcpbox" class="ptab"></div>
     <div id="mymcpbox" class="ptab"></div>
     <div id="rpbox" class="ptab"></div>
+    <div id="storebox" class="ptab"></div>
     <div id="rmbox" class="ptab"></div>
     <div id="wxbox" class="ptab"></div>
     <div id="conbox" class="ptab"></div>
@@ -956,6 +962,7 @@
 <script src="/static/js/dienste.js"></script>
 <script src="/static/js/verbessern.js"></script>
 <script src="/static/js/bewerten.js"></script>
+<script src="/static/js/speicher.js"></script>
 <script src="/static/js/agent.js"></script>
 <script src="/static/js/messages.js"></script>
 <script src="/static/js/esp.js"></script>

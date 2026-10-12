@@ -22,6 +22,9 @@ router = APIRouter()
 
 # ---------------------------------------------------------------- updates
 _remote_cache = {"time": 0, "data": None}
+# by itself (page views, the app's notice) GitHub is asked at most this often; "Jetzt prüfen", the night
+# update and an update start from the app always ask (Dominik, 2026-10-12: the 60 per hour ran out)
+AUTO_EVERY = 3 * 3600
 
 
 def installed_version():
@@ -110,7 +113,7 @@ async def green_runs(repo, branch, passed=False):
 
 # a failed question to GitHub is not repeated at once: every page view and the app ask for the
 # state, and without this a refusal turned into a flood of questions and log lines
-_FAIL_PAUSE = 120
+_FAIL_PAUSE = 900
 _failed = {"until": 0.0, "data": None, "limited": False}
 
 
@@ -133,7 +136,7 @@ async def remote_state(force=False):
 
 async def _remote_state(force=False):
     now = time.time()
-    if not force and _remote_cache["data"] and now - _remote_cache["time"] < 600:
+    if not force and _remote_cache["data"] and now - _remote_cache["time"] < AUTO_EVERY:
         return _remote_cache["data"]
     # after a refusal: wait the pause out; GitHub's hourly limit holds even for "Jetzt prüfen"
     if _failed["data"] and now < _failed["until"] and (_failed["limited"] or not force):

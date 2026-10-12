@@ -845,6 +845,7 @@ SETTINGS = {
     "berater_ask": (False, lambda v: isinstance(v, bool)),
     "berater_me": (False, lambda v: isinstance(v, bool)),
     "berater_skip": ([], lambda v: isinstance(v, list) and len(v) <= 20 and all(isinstance(x, str) and re.fullmatch(r"p[a-z]{1,6}", x) for x in v)),
+    "storage_on": (False, lambda v: isinstance(v, bool)),  # own storage: a copy of the profile's data there (speicher.py)
     "android_on": (False, lambda v: isinstance(v, bool)),  # Android app (android.py)
     "mcps_on": (False, lambda v: isinstance(v, bool)),     # the Spark as an MCP server for other programs (mcpserver.py)
     "mymcp_on": (False, lambda v: isinstance(v, bool)),    # own MCP services of this profile (meinmcp.py)

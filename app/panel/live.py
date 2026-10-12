@@ -71,6 +71,7 @@ TOOLS = {
     "remarkable_page": "rm", "remarkable_attachment": "rm", "reMarkable": "rm",
     # what the Spark does by itself with services (live.job): update check, backup to the NAS
     "GitHub": "github", "NAS-Sicherung": "nas", "Geräte-Updates": "geraete",
+    "Speicher-Abgleich": "speicher", "Speicher holen": "speicher",
     "Web Push": "webpush", "Apple Push": "push", "Android-App": "android", "Spark-Begleiter": "desk", "Telegram": "tg", "Panel-Seite": "page",
     # steps the panel runs itself (tracelog "… (Panel)")
     "Erst lokal": "mem", "remarkable": "rm", "Ablauf": "mem",
@@ -109,6 +110,8 @@ TARGETS = {
     "page": ("Panel-Seite", "beim nächsten Abruf der offenen Seite", "spark", False),
     "github": ("GitHub (Updates)", "neuester Stand und Tests · Internet", "net", False),
     "nas": ("NAS (Sicherung)", "WebDAV · verschlüsselt", "lan", False),
+    # Eigener Speicher (speicher.py): copies of profiles' data on their NAS, WebDAV service or a folder; counts only
+    "speicher": ("Eigener Speicher", "NAS, WebDAV oder Ordner · verschlüsselt", "lan", False),
     # the Dienst-Wächter (dienstwacht.py) looks at two fixed public addresses: shown while it is on, with its dot
     "inet": ("Internet", "erreichbar? zwei feste Adressen", "net", False),
     # firmware and apps for the devices (geraeteupdate.py): shown while that function is on, its line with the counts
@@ -127,7 +130,7 @@ RETURNS = {"cal": "Termine oder Aufgaben", "ha": "Zustände oder Schaltung", "we
            "weather": "Wetterwerte", "parcels": "Sendungen", "transit": "Verbindungen", "mem": "eigene Daten",
            "hilfe": "Anleitungen oder Vorschlagskarte", "webpush": "Zustellung", "tg": "Zustellung",
            "android": "liegt bereit", "desk": "liegt bereit", "page": "liegt bereit",
-           "github": "Stand und Testergebnis", "nas": "Ablage bestätigt", "mcp": "Antwort des Dienstes",
+           "github": "Stand und Testergebnis", "nas": "Ablage bestätigt", "speicher": "Ablage bestätigt oder Datei geholt", "mcp": "Antwort des Dienstes",
            "issues": "Nummer der Meldung", "make": "Gliederung, Auftrag oder Zustellung",
            "geraete": "Versionsnummern und geprüfte Dateien"}
 CLIENT = {"web": "Browser", "speaker": "Lautsprecher", "watch": "Uhr", "siri": "Siri", "telegram": "Telegram",

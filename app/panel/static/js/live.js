@@ -296,7 +296,7 @@ function conns(){const C=LV.data.conns;el('lvncn').textContent=C.reduce((a,c)=>a
    :`<tr><td class="mut">${tt('Keine offene Verbindung.','No open connection.')}</td></tr>`}
 // 1 + 2: Ereignisse with a chip per area, search and pause; a click shows where it belongs in the picture
 const EVNODE={'Wächter':'guard','Dokumente':'make','Eingang':'door','Update':'github','Begleiter':'desk','Geräte-Updates':'geraete','Meldung':'issues',
-  'Telegram':'tg','Hinweis':'','Dienste':'','Lautsprecher':'','Sicherung':'nas'};
+  'Telegram':'tg','Hinweis':'','Dienste':'','Lautsprecher':'','Sicherung':'nas','Speicher':'speicher'};
 const evKey=x=>x.t+'|'+x.text;
 const evReq=x=>{const m=String(x.text).match(/\b([0-9a-f]{6})\b/);return m?m[1]:''};
 function evNode(x){const id=evReq(x);if(id&&LV.data.reqs.some(r=>r.id===id))return 'r'+id;const n=EVNODE[x.area];return n&&(n==='guard'||n==='door'||tgt(n))?n:''}

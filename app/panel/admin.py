@@ -510,7 +510,8 @@ def validate(new):
               "dev_updates", "dev_updates_night", "dev_updates_upstream", "esp32_ota_http",
               "svc_watch", "svc_watch_users", "history_live", "history_one", "history_offline",
               "svc_watch", "svc_watch_users", "berater", "berater_explain", "berater_chat", "berater_notify",
-              "berater_issue", "berater_auto", "berater_env", "berater_me", "bewerten", "bewerten_back"):
+              "berater_issue", "berater_auto", "berater_env", "berater_me", "bewerten", "bewerten_back",
+              "storage_own", "storage_lan", "storage_folder"):
         if not isinstance(ch.get(k, False), bool):
             raise HTTPException(400, f"{k} must be true or false")
     for k, lo, hi, d in (("berater_calls", 1, 100, 20), ("berater_check_h", 6, 72, 24)):
@@ -521,6 +522,12 @@ def validate(new):
     off = ch.get("berater_off", [])
     if not isinstance(off, list) or len(off) > len(berater.MELDER) or any(x not in berater.MELDER for x in off):
         raise HTTPException(400, "berater_off: Melder des Einstellungs-Assistenten")
+    # Eigener Speicher, "Ordner auf dem Spark" (speicher.py): below /mnt, /media or /srv, no "..", no "//"
+    sroot = ch.get("storage_root", "")
+    if not isinstance(sroot, str) or sroot and not (len(sroot) <= 200 and sroot.startswith(("/mnt/", "/media/", "/srv/"))
+                                                    and re.fullmatch(r"/[A-Za-z0-9._\-/]+", sroot)
+                                                    and not re.search(r"(^|/)\.\.?(/|$)|//", sroot)):
+        raise HTTPException(400, "storage_root: a folder below /mnt, /media or /srv")
     if ch.get("esp32_url") and not re.fullmatch(r"https?://[A-Za-z0-9.\-]+(?::\d{1,5})?/?", ch["esp32_url"]):
         raise HTTPException(400, "esp32_url: http(s)://name or http(s)://name:port, without a path")
     if ch.get("telegram_panel_url") and not re.fullmatch(r"https://[A-Za-z0-9.\-]+(?::\d{1,5})?/?", ch["telegram_panel_url"]):

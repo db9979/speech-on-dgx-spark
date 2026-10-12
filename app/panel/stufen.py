@@ -59,6 +59,8 @@ LIST = {
     ("PUT", "/api/profile/tidy"): (CONFIRM, "Konten", "Postfach aufräumen einstellen", "Set up mailbox tidying"),
     ("POST", "/api/profile/mymcp"): (CONFIRM, "Konten", "Eigenen Dienst verbinden", "Connect an own service"),
     ("PUT", "/api/profile/mymcp/{sid}"): (CONFIRM, "Konten", "Adresse oder Schlüssel eines eigenen Dienstes", "Address or key of an own service"),
+    ("POST", "/api/profile/speicher"): (CONFIRM, "Konten", "Eigenen Speicher einbinden", "Add own storage"),
+    ("PUT", "/api/profile/speicher/{tid}"): (CONFIRM, "Konten", "Adresse oder Passwort eines eigenen Speichers", "Address or password of own storage"),
     ("POST", "/api/profile/mymcp/{sid}/oauth/start"): (CONFIRM, "Konten", "Eigenen Dienst anmelden", "Sign in an own service"),
     ("PUT", "/api/profile/mcp/conns/{cid}"): (CONFIRM, "Konten", "Rechte eines Programms (MCP)", "Rights of a program (MCP)"),
     ("POST", "/api/profile/mcp/actions/{aid}"): (CONFIRM, "Konten", "Aktion eines Programms erlauben", "Allow a program's action"),

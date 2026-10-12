@@ -124,6 +124,23 @@ class Check(unittest.TestCase):
         self.assertIn("keine Version mit bestandenen Tests", seen[0])
         self.assertIn("nicht erreichbar", seen[1])
 
+    def test_by_itself_github_is_asked_every_three_hours(self):
+        self.answer([{"head_branch": "main", "conclusion": "success", "head_sha": "e" * 40}], [])
+        asyncio.run(update.remote_state())
+        self.clock[0] = NOW + 3 * 3600 - 1
+        asyncio.run(update.remote_state())
+        self.assertEqual(self.asked, 1)
+        asyncio.run(update.remote_state(force=True))   # "Jetzt prüfen" always asks
+        self.assertEqual(self.asked, 2)
+        self.clock[0] = NOW + 2 * 3 * 3600
+        asyncio.run(update.remote_state())
+        self.assertEqual(self.asked, 3)
+
+    def test_watchdog_never_asks_the_github_api(self):
+        # every question to api.github.com counts against the 60 per hour the update check needs
+        import dienstwacht
+        self.assertFalse([u for u in dienstwacht.INET if "api.github.com" in u])
+
     def test_update_sh_asks_for_passed_runs_too(self):
         root = os.path.dirname(os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
         try:
