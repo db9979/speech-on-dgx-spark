@@ -257,6 +257,7 @@ internal sealed class MailForm : ThemedForm
     private readonly OutlookMail? _outlook;
     private readonly Func<string, string, CancellationToken, Task<string>> _write;
     private readonly Action<SparkException> _report;
+    private readonly List<DictateMic> _mics = new();
 
     private readonly TLabel _from = new(TextRole.SmallMuted);
     private readonly TLabel _mailLabel = new(TextRole.Heading, "Mail-Text");
@@ -280,7 +281,8 @@ internal sealed class MailForm : ThemedForm
     /// <param name="outlook">Die gelesene Mail aus dem klassischen Outlook, oder <c>null</c> (Ausweichweg).</param>
     /// <param name="selection">Ausweichweg: markierter Text aus dem Programm im Vordergrund.</param>
     /// <param name="write">Ruft /api/write/assist {"art":"antwort","mail","text"} auf.</param>
-    public MailForm(OutlookMail? outlook, string? selection, Func<string, string, CancellationToken, Task<string>> write, Action<SparkException> report)
+    /// <param name="dictation">Einsprechen in die Felder (Teil „Diktieren“), oder <c>null</c>.</param>
+    public MailForm(OutlookMail? outlook, string? selection, Func<string, string, CancellationToken, Task<string>> write, Action<SparkException> report, Dictation? dictation = null)
     {
         _outlook = outlook;
         _write = write;
@@ -290,6 +292,14 @@ internal sealed class MailForm : ThemedForm
         _answerHost = new RoundedHost(_answer) { Visible = false };
         _answer.ReadOnly = true;
         _go = new SparkButton(ButtonKind.Primary, outlook is not null ? "Entwurf öffnen" : "Antwort schreiben");
+        if (dictation is not null)
+        {
+            _mics.Add(new DictateMic(_notesHost, dictation, SetStatus));
+            if (outlook is null)
+            {
+                _mics.Add(new DictateMic(_mailHost, dictation, SetStatus));
+            }
+        }
 
         Text = "Spark-Begleiter – Antwort entwerfen";
         TopMost = true;
@@ -420,6 +430,12 @@ internal sealed class MailForm : ThemedForm
             return;
         }
 
+        if (_mics.Exists(m => m.Busy))
+        {
+            SetStatus("Bitte zuerst die Aufnahme beenden (■).", error: true);
+            return;
+        }
+
         string mail = _outlook?.ForSpark ?? _mail.Text.Trim();
         if (mail.Length == 0)
         {
@@ -435,6 +451,8 @@ internal sealed class MailForm : ThemedForm
 
         _go.Enabled = false;
         _notes.ReadOnly = true;
+        _mail.ReadOnly = true;
+        RefreshMics();
         SetStatus("Der Spark schreibt die Antwort …", error: false);
         _cts = new CancellationTokenSource();
         try
@@ -474,6 +492,8 @@ internal sealed class MailForm : ThemedForm
                 SetStatus(ex.Message, error: true);
                 _go.Enabled = true;
                 _notes.ReadOnly = false;
+                _mail.ReadOnly = false;
+                RefreshMics();
             }
 
             _report(ex);
@@ -497,6 +517,16 @@ internal sealed class MailForm : ThemedForm
         bool copied = ClipboardHelper.TrySetText(_answer.Text, keepOutOfHistory: false);
         SetStatus(prefix + (copied ? "Die Antwort liegt in der Zwischenablage. In die Antwort einfügen (Strg+V)."
             : "Die Zwischenablage war gesperrt – „Kopieren“ klicken."), error: false);
+    }
+
+    private void RefreshMics() => _mics.ForEach(m => m.Refresh());
+
+    protected override void OnThemeApplied() => RefreshMics();
+
+    protected override void OnActivated(EventArgs e)
+    {
+        base.OnActivated(e);
+        RefreshMics();
     }
 
     private void SetStatus(string text, bool error)
@@ -531,6 +561,7 @@ internal sealed class MailForm : ThemedForm
     protected override void OnFormClosing(FormClosingEventArgs e)
     {
         _cts?.Cancel();
+        _mics.ForEach(m => m.Dispose());
         base.OnFormClosing(e);
     }
 

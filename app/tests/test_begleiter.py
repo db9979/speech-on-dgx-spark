@@ -1212,7 +1212,8 @@ class Office(unittest.TestCase):
         p = os.path.join(self.ROOT, *path)
         if not os.path.exists(p):
             self.skipTest("only app/ copied")
-        return open(p, encoding="utf-8").read()
+        with open(p, encoding="utf-8") as f:
+            return f.read()
 
     def test_outlook_classic_addin_only_sends_a_fixed_word(self):
         addin = self.src("outlook-classic", "Connect.cs")
@@ -1247,3 +1248,66 @@ class Office(unittest.TestCase):
         self.assertIn("a.runModal() == .alertFirstButtonReturn", office)
         self.assertIn('api/desk/office/\\(w.app).xml', office)
         self.assertIn("maxBytes: maxBytes", office)
+
+
+class FieldMics(unittest.TestCase):
+    """Dominik 2026-10-12: everything in the companion's windows can be spoken. Every free text field gets a mic
+    button; only with the part "dictate" and paired; the Spark's text is added at the cursor (never run), within the
+    field's length; never in a code word or password field."""
+    ROOT = Office.ROOT
+
+    def src(self, *path):
+        return Office.src(self, *path)
+
+    def test_windows_fields_have_a_mic_only_with_dictate(self):
+        mic = self.src("windows", "DictateMic.cs")
+        tray = self.src("windows", "TrayContext.cs")
+        self.assertIn("UseSystemPasswordChar: true", mic)                  # refuses code word fields
+        self.assertIn("PasswordChar: not '\\0'", mic)
+        self.assertIn("_box.MaxLength - (_box.TextLength - _box.SelectionLength)", mic)
+        self.assertIn("_box.SelectedText =", mic)                          # inserted as text, nothing else
+        self.assertIn("!_box.ReadOnly", mic)
+        self.assertIn("() => IsOn(Parts.Dictate) && Credentials() is not null", tray)
+        self.assertIn("SparkClient.DictateAsync(creds.Base, creds.Key, wav,", tray)
+        for form, hosts in (("OutlookMail.cs", ("_notesHost", "_mailHost")), ("ScreenCapture.cs", ("_questionHost",)),
+                            ("AssistForm.cs", ("_wishHost, _sourceHost, _resultHost",))):
+            text = self.src("windows", form)
+            for h in hosts:
+                self.assertIn(h, text[text.index("new DictateMic(") - 400:text.rindex("new DictateMic(") + 200], form)
+            self.assertIn("Dispose()", text)
+        self.assertIn("NewDictation()", self.src("windows", "TrayContext.Parts.cs"))
+        self.assertNotIn("DictateMic", self.src("windows", "Forms4.cs"))   # code word window: never
+
+    def test_mac_fields_have_a_mic_only_with_dictate(self):
+        d = self.src("mac", "Sources", "Dictation.swift")
+        self.assertIn('if model.part("dictate")', d[d.index("struct FieldMic"):])
+        self.assertIn("case .field(_, let insert):", d)
+        self.assertIn("String((head + sep + text).prefix(max))", d)
+        for f, ids in (("MailDraft.swift", ("mail.text", "mail.notes")), ("ScreenAsk.swift", ("screen.question",)),
+                       ("WriteView.swift", ("write.wunsch", "write.source", "write.result"))):
+            text = self.src("mac", "Sources", f)
+            for i in ids:
+                self.assertIn(f'"{i}"', text, f)
+
+
+class Labels(unittest.TestCase):
+    """Dominik 2026-10-12 (screenshot "Einstellung / en"): button labels never break inside a word."""
+    ROOT = Office.ROOT
+
+    def src(self, *path):
+        return Office.src(self, *path)
+
+    def test_mac_buttons_stay_on_one_line(self):
+        theme = self.src("mac", "Sources", "Theme.swift")
+        for style in ("struct SoftButtonStyle", "struct PrimaryButtonStyle"):
+            body = theme[theme.index(style):theme.index("\n}\n", theme.index(style))]
+            self.assertIn(".lineLimit(1)", body, style)
+            self.assertIn(".fixedSize(horizontal: true, vertical: false)", body, style)
+        tray = self.src("mac", "Sources", "TrayPanel.swift")
+        foot = tray[tray.index("private var footer"):tray.index("private func go(")]
+        self.assertIn("ViewThatFits(in: .horizontal)", foot)               # narrow: the coffee pill moves down
+
+    def test_windows_panel_grows_with_its_footer(self):
+        tray = self.src("windows", "TrayPanel.cs")
+        self.assertIn("width = Math.Max(width, foot + (2 * pad));", tray)
+        self.assertIn("_settings.Preferred().Width", tray)

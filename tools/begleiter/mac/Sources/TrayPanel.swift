@@ -361,16 +361,27 @@ struct TrayPanel: View {
     private var footer: some View {
         VStack(spacing: 10) {
             Rectangle().fill(Theme.line).frame(height: 1)
-            HStack(spacing: 6) {
-                Button("Einstellungen") { go { Windows.showSettings() } }
-                    .buttonStyle(SoftButtonStyle())
-                Button("Panel öffnen") { go { model.openPanel() } }
-                    .buttonStyle(SoftButtonStyle())
-                    .disabled(model.base == nil)
-                Spacer(minLength: 4)
-                CoffeePill(title: "Spark unterstützen", url: model.coffee)
+            // Labels never break inside a word: if the panel is too narrow, the coffee pill goes to its own line.
+            ViewThatFits(in: .horizontal) {
+                HStack(spacing: 6) {
+                    footerButtons
+                    Spacer(minLength: 4)
+                    CoffeePill(title: "Spark unterstützen", url: model.coffee)
+                }
+                VStack(alignment: .leading, spacing: 8) {
+                    HStack(spacing: 6) { footerButtons }
+                    CoffeePill(title: "Spark unterstützen", url: model.coffee)
+                }
             }
         }
+    }
+
+    @ViewBuilder private var footerButtons: some View {
+        Button("Einstellungen") { go { Windows.showSettings() } }
+            .buttonStyle(SoftButtonStyle())
+        Button("Panel öffnen") { go { model.openPanel() } }
+            .buttonStyle(SoftButtonStyle())
+            .disabled(model.base == nil)
     }
 
     /// closes the panel, then runs the action (an alert or another window must not fight with the panel)

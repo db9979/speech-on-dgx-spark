@@ -13,6 +13,8 @@ final class WriteController: ObservableObject {
 
     static let windowID = "write"
     static let translate = "uebersetzen"
+    /// longest text the window takes (like Windows); spoken text is cut there
+    static let maxText = 20000
 
     @Published var source: String
     @Published var art: String
@@ -317,13 +319,16 @@ struct WriteView: View {
                     TextField("Wunsch (optional)", text: $c.wunsch)
                         .textFieldStyle(.roundedBorder)
                         .onSubmit { c.run() }
+                    FieldMic(id: "write.wunsch", label: "Wunsch", disabled: c.busy) { t in
+                        c.wunsch = Dictation.append(t, to: c.wunsch, max: 300)
+                    }
                     Button("Neu") { c.run() }
                         .buttonStyle(SoftButtonStyle())
                         .disabled(c.busy)
                 }
 
                 caption("Dein Text")
-                editor($c.source, minHeight: 64)
+                editor($c.source, minHeight: 64, mic: ("write.source", "Text", WriteController.maxText))
 
                 caption("Änderungen")
                 ScrollView {
@@ -356,7 +361,7 @@ struct WriteView: View {
                 .overlay(RoundedRectangle(cornerRadius: 10).stroke(Theme.line, lineWidth: 1))
 
                 caption("Ergebnis (änderbar)")
-                editor($c.result, minHeight: 64)
+                editor($c.result, minHeight: 64, mic: ("write.result", "Ergebnis", WriteController.maxText))
 
                 HStack(spacing: 8) {
                     if c.busy {
@@ -392,13 +397,20 @@ struct WriteView: View {
             .foregroundColor(Theme.muted)
     }
 
-    private func editor(_ text: Binding<String>, minHeight: CGFloat) -> some View {
+    private func editor(_ text: Binding<String>, minHeight: CGFloat, mic: (id: String, label: String, max: Int)) -> some View {
         TextEditor(text: text)
             .font(.system(size: 13))
             .scrollContentBackground(.hidden)
             .padding(6)
+            .padding(.trailing, 30)
             .frame(minHeight: minHeight)
             .background(RoundedRectangle(cornerRadius: 10).fill(Theme.card))
             .overlay(RoundedRectangle(cornerRadius: 10).stroke(Theme.line, lineWidth: 1))
+            .overlay(alignment: .bottomTrailing) {
+                FieldMic(id: mic.id, label: mic.label, disabled: c.busy) { t in
+                    text.wrappedValue = Dictation.append(t, to: text.wrappedValue, max: mic.max)
+                }
+                .padding(5)
+            }
     }
 }

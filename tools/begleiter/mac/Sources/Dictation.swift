@@ -1,4 +1,5 @@
 import AppKit
+import SwiftUI
 
 /// Diktieren: the hotkey starts the recording, the same hotkey (or "Fertig") ends it; the Spark's text goes to the
 /// cursor of the program that was in front (or into the question field of "Frag Spark").
@@ -9,12 +10,16 @@ final class Dictation: ObservableObject {
     enum Target {
         case cursor(NSRunningApplication?)
         case ask
+        /// a text field in a Begleiter window (mic button next to it); the text is only added, never run
+        case field(String, (String) -> Void)
     }
 
     @Published private(set) var recording = false
     @Published private(set) var working = false
     @Published private(set) var elapsed = 0
     @Published private(set) var forAsk = false
+    /// which text field's mic is recording (nil: hotkey or "Frag Spark")
+    @Published private(set) var fieldID: String?
     /// 0…1, the microphone's loudness for the level bars
     @Published private(set) var level = 0.0
 
@@ -61,6 +66,7 @@ final class Dictation: ObservableObject {
         }
         target = t
         if case .ask = t { forAsk = true } else { forAsk = false }
+        if case .field(let id, _) = t { fieldID = id } else { fieldID = nil }
         recording = true
         elapsed = 0
         started = Date()
@@ -98,6 +104,7 @@ final class Dictation: ObservableObject {
         ticker = nil
         let pcm = recorder.stop()
         recording = false
+        fieldID = nil
         level = 0
         RecordingIndicator.hide()
         return pcm
@@ -143,6 +150,8 @@ final class Dictation: ObservableObject {
             switch t {
             case .ask:
                 onAskText?(text)
+            case .field(_, let insert):
+                insert(text)
             case .cursor(let app):
                 if await Clip.paste(text, into: app) {
                     // done
@@ -157,4 +166,56 @@ final class Dictation: ObservableObject {
             HUD.show(model.absorb(error), symbol: "exclamationmark.triangle")
         }
     }
+}
+
+extension Dictation {
+    /// Adds spoken text to what is already in a field: a space in between, never longer than `max`.
+    nonisolated static func append(_ text: String, to old: String, max: Int) -> String {
+        let head = old.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty ? "" : old
+        let sep = head.isEmpty || head.last?.isWhitespace == true ? "" : " "
+        return String((head + sep + text).prefix(max))
+    }
+}
+
+/// Mic button for a text field in the Begleiter windows: only with part "dictate"; the Spark writes down
+/// what was said and the field gets it added (data, never an order). Never for code words or passwords.
+@MainActor
+struct FieldMic: View {
+    let id: String
+    let label: String
+    let disabled: Bool
+    let insert: (String) -> Void
+    @ObservedObject private var dictation: Dictation
+    @ObservedObject private var model: AppModel
+
+    init(id: String, label: String, disabled: Bool = false, insert: @escaping (String) -> Void) {
+        self.id = id
+        self.label = label
+        self.disabled = disabled
+        self.insert = insert
+        _dictation = ObservedObject(wrappedValue: Dictation.shared)
+        _model = ObservedObject(wrappedValue: AppModel.shared)
+    }
+
+    var body: some View {
+        if model.part("dictate") {
+            Button {
+                Dictation.shared.toggle(.field(id, insert))
+            } label: {
+                Image(systemName: active ? "stop.fill" : "mic")
+                    .font(.system(size: 12, weight: .medium))
+                    .foregroundColor(active ? Theme.bad : Theme.accent)
+                    .frame(width: 26, height: 26)
+                    .background(Circle().fill(Theme.soft))
+                    .overlay(Circle().stroke(Theme.line, lineWidth: 1))
+                    .contentShape(Circle())
+            }
+            .buttonStyle(.plain)
+            .help(Text(verbatim: active ? "Aufnahme beenden" : label + " einsprechen"))
+            .accessibilityLabel(Text(verbatim: active ? "Aufnahme beenden" : label + " einsprechen"))
+            .disabled(disabled || dictation.working || (dictation.recording && !active))
+        }
+    }
+
+    private var active: Bool { dictation.recording && dictation.fieldID == id }
 }

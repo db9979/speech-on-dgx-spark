@@ -201,14 +201,19 @@ struct ScreenBoxView: View {
                         ChipButton(title: w.title, selected: box.what == w.id) { box.what = w.id }
                     }
                 }
-                TextField("Frage dazu (freiwillig) …", text: $box.question, axis: .vertical)
-                    .textFieldStyle(.plain)
-                    .font(.system(size: 13))
-                    .lineLimit(1...4)
-                    .padding(8)
-                    .background(RoundedRectangle(cornerRadius: 10).fill(Theme.card))
-                    .overlay(RoundedRectangle(cornerRadius: 10).stroke(Theme.line, lineWidth: 1))
-                    .onSubmit { box.send() }
+                HStack(alignment: .bottom, spacing: 6) {
+                    TextField("Frage dazu (freiwillig) …", text: $box.question, axis: .vertical)
+                        .textFieldStyle(.plain)
+                        .font(.system(size: 13))
+                        .lineLimit(1...4)
+                        .onSubmit { box.send() }
+                    FieldMic(id: "screen.question", label: "Frage") { t in
+                        box.question = Dictation.append(t, to: box.question, max: ScreenShot.maxQuestion)
+                    }
+                }
+                .padding(8)
+                .background(RoundedRectangle(cornerRadius: 10).fill(Theme.card))
+                .overlay(RoundedRectangle(cornerRadius: 10).stroke(Theme.line, lineWidth: 1))
                 HStack {
                     Text(verbatim: "Geht nur an deinen Spark.")
                         .font(.system(size: 11))

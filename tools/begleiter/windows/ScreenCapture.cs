@@ -351,6 +351,8 @@ internal sealed class ScreenAskForm : ThemedForm
     private readonly Bitmap _image;
     private readonly TextBox _question = new() { MaxLength = 500, PlaceholderText = "Frage (optional)", AccessibleName = "Frage zum Ausschnitt" };
     private readonly RoundedHost _questionHost;
+    private readonly TLabel _status = new(TextRole.SmallMuted);
+    private readonly DictateMic? _mic;
     private readonly SparkButton _explain = new(ButtonKind.Chip, "Erklären") { Checked = true };
     private readonly SparkButton _text = new(ButtonKind.Chip, "Text herauslesen");
     private readonly SparkButton _translate = new(ButtonKind.Chip, "Übersetzen");
@@ -360,11 +362,12 @@ internal sealed class ScreenAskForm : ThemedForm
     private Rectangle _title;
     private Rectangle _preview;
 
-    public ScreenAskForm(Bitmap image, Rectangle near)
+    public ScreenAskForm(Bitmap image, Rectangle near, Dictation? dictation = null)
     {
         _image = image;
         _near = near;
         _questionHost = new RoundedHost(_question);
+        _mic = dictation is null ? null : new DictateMic(_questionHost, dictation, SetStatus);
 
         Text = "Spark-Begleiter – Bildschirm fragen";
         FormBorderStyle = FormBorderStyle.FixedSingle;
@@ -375,7 +378,7 @@ internal sealed class ScreenAskForm : ThemedForm
         StartPosition = FormStartPosition.Manual;
         KeyPreview = true;
 
-        Controls.AddRange(new Control[] { _questionHost, _explain, _text, _translate });
+        Controls.AddRange(new Control[] { _questionHost, _status, _explain, _text, _translate });
         _questionHost.TabIndex = 0;
         _explain.TabIndex = 1;
         _text.TabIndex = 2;
@@ -430,6 +433,11 @@ internal sealed class ScreenAskForm : ThemedForm
 
         _questionHost.Bounds = new Rectangle(pad, y, inner, S(36));
         y += S(36) + S(10);
+        int statusH = _status.Fit(pad, y, inner);
+        if (statusH > 0)
+        {
+            y += statusH + S(8);
+        }
 
         int x = pad;
         foreach (SparkButton chip in new[] { _explain, _text, _translate })
@@ -459,8 +467,28 @@ internal sealed class ScreenAskForm : ThemedForm
         ActiveControl = _question;
     }
 
+    protected override void OnThemeApplied() => _mic?.Refresh();
+
+    private void SetStatus(string text, bool error)
+    {
+        _status.Text = text;
+        _status.Role = error ? TextRole.Error : TextRole.SmallMuted;
+        _status.ApplyTheme(DeviceDpi);
+        if (IsHandleCreated)
+        {
+            LayoutContent();
+            Invalidate(true);
+        }
+    }
+
     private void Choose(string what)
     {
+        if (_mic is { Busy: true })
+        {
+            SetStatus("Bitte zuerst die Aufnahme beenden (■).", true);
+            return;
+        }
+
         Choice = (what, _question.Text.Trim());
         Close();
     }
@@ -474,5 +502,11 @@ internal sealed class ScreenAskForm : ThemedForm
         }
 
         return base.ProcessCmdKey(ref msg, keyData);
+    }
+
+    protected override void OnFormClosing(FormClosingEventArgs e)
+    {
+        _mic?.Dispose();
+        base.OnFormClosing(e);
     }
 }

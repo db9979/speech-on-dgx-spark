@@ -431,7 +431,7 @@ internal sealed partial class TrayContext
 
             using Bitmap image = sel.Image;
             (string What, string Question)? choice;
-            using (var form = new ScreenAskForm(image, sel.Area))
+            using (var form = new ScreenAskForm(image, sel.Area, NewDictation()))
             {
                 var closed = new TaskCompletionSource(TaskCreationOptions.RunContinuationsAsynchronously);
                 form.FormClosed += (_, _) => closed.TrySetResult();
@@ -512,7 +512,7 @@ internal sealed partial class TrayContext
                 (string Base, string Key) creds = Credentials() ?? throw new SparkException(null, "Der Begleiter ist nicht gekoppelt.");
                 AssistResult result = await SparkClient.AssistAsync(creds.Base, creds.Key, notes, "antwort", null, null, ct, app, mail);
                 return result.Text;
-            }, ReportFromWindow);
+            }, ReportFromWindow, NewDictation());
             form.FormClosed += (_, _) =>
             {
                 if (ReferenceEquals(_mailForm, form))

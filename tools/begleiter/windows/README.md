@@ -112,6 +112,11 @@ Text wird dort eingefügt, wo beim Start der Cursor war. Höchstens 60 Sekunden.
 in dieser Zeit. Windows muss Desktop-Apps das Mikrofon erlauben (Einstellungen → Datenschutz →
 Mikrofon).
 
+**Einsprechen in den Fenstern:** Ist Diktieren an, hat jedes freie Textfeld der Begleiter-Fenster rechts einen
+kleinen **Mikrofon-Knopf**: „Antwort entwerfen“ (Stichpunkte, Mail-Text), „Text verbessern“ (Wunsch, Ausgangstext,
+Ergebnis) und „Bildschirm fragen“ (Frage). Klick startet, ■ beendet; der erkannte Text kommt an die Schreibmarke
+und wird nie ausgeführt. Nicht in Codewort-Feldern.
+
 **Meldungen** erscheinen als Windows-Hinweis. Beim Start werden ältere Meldungen nicht noch einmal
 gezeigt.
 

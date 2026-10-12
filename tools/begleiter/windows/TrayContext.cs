@@ -799,6 +799,16 @@ internal sealed partial class TrayContext : ApplicationContext, IBegleiterHost
         return key is null || string.IsNullOrEmpty(_config.Base) ? null : (_config.Base, key);
     }
 
+    /// <summary>Einsprechen in die Textfelder der Fenster: nur mit Teil „Diktieren“ und Kopplung; der Spark erkennt.</summary>
+    private Dictation NewDictation() => new(
+        () => IsOn(Parts.Dictate) && Credentials() is not null,
+        async (wav, ct) =>
+        {
+            (string Base, string Key) creds = Credentials() ?? throw new SparkException(null, "Der Begleiter ist nicht gekoppelt.");
+            return await SparkClient.DictateAsync(creds.Base, creds.Key, wav, _desk?.DictateSprache ?? "auto", ct);
+        },
+        ReportFromWindow);
+
     // ------------------------------------------------------------------ Tastenkürzel
 
     /// <summary>Registriert die Kürzel der eingeschalteten Teile und gibt die der ausgeschalteten frei.</summary>
@@ -1051,7 +1061,7 @@ internal sealed partial class TrayContext : ApplicationContext, IBegleiterHost
             existing.Close();
         }
 
-        var form = new AssistForm(_config, _desk, text ?? "", target, WindowInfo.AppName(target), ReportFromWindow, ContextFor(target));
+        var form = new AssistForm(_config, _desk, text ?? "", target, WindowInfo.AppName(target), ReportFromWindow, ContextFor(target), NewDictation());
         form.FormClosed += async (_, _) =>
         {
             if (ReferenceEquals(_assist, form))

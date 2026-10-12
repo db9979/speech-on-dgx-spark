@@ -123,6 +123,10 @@ nach 60 Sekunden ist von selbst Schluss. Der Spark schreibt den Text, der Beglei
 (mit Bedienungshilfen) bzw. legt ihn in die Zwischenablage. „Verwerfen“ wirft die Aufnahme weg. Aufgenommen wird
 nur zwischen den beiden Tastendrücken; die Aufnahme geht nur an den eigenen Spark.
 
+Ist Diktieren an, hat außerdem jedes freie Textfeld in den Begleiter-Fenstern einen kleinen **Mikrofon-Knopf**:
+„Antwort entwerfen“ (Stichpunkte, Mail-Text), „Text verbessern“ (Wunsch, Dein Text, Ergebnis) und „Bildschirm
+fragen“ (Frage). Klick startet, ■ beendet; der erkannte Text wird ans Feld angehängt und nie ausgeführt.
+
 ### Meldungen
 
 Meldungen des Spark erscheinen als Mitteilungen von macOS. Beim ersten Mal fragt macOS, ob der Begleiter Mitteilungen

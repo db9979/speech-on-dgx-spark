@@ -26,6 +26,7 @@ internal sealed class AssistForm : ThemedForm
     private readonly string? _sourceApp;
     private readonly string? _appCategory;
 
+    private readonly List<DictateMic> _mics = new();
     private readonly List<SparkButton> _artChips = new();
     private readonly List<SparkButton> _langChips = new();
     private readonly TLabel _langLabel = new(TextRole.SmallMuted, "Sprache:");
@@ -71,7 +72,8 @@ internal sealed class AssistForm : ThemedForm
     private string _trail = "";
 
     /// <param name="appCategory">Teil "context": Art des Quellprogramms (z. B. "outlook"), sonst <c>null</c>.</param>
-    public AssistForm(AppConfig config, DeskConfig desk, string text, IntPtr target, string? sourceApp, Action<SparkException> report, string? appCategory = null)
+    /// <param name="dictation">Einsprechen in Wunsch, Ausgangstext und Ergebnis (Teil „Diktieren“), oder <c>null</c>.</param>
+    public AssistForm(AppConfig config, DeskConfig desk, string text, IntPtr target, string? sourceApp, Action<SparkException> report, string? appCategory = null, Dictation? dictation = null)
     {
         _config = config;
         _appCategory = appCategory;
@@ -87,6 +89,13 @@ internal sealed class AssistForm : ThemedForm
         _sourceHost = new RoundedHost(_source);
         _resultHost = new RoundedHost(_result);
         _diffHost = new RoundedHost(_diff);
+        if (dictation is not null)
+        {
+            foreach (RoundedHost host in new[] { _wishHost, _sourceHost, _resultHost })
+            {
+                _mics.Add(new DictateMic(host, dictation, SetStatus));
+            }
+        }
 
         Text = "Spark-Begleiter – Text verbessern";
         TopMost = true;
@@ -258,6 +267,7 @@ internal sealed class AssistForm : ThemedForm
 
     protected override void OnThemeApplied()
     {
+        _mics.ForEach(m => m.Refresh());
         if (_last is not null)
         {
             RenderDiff(_last.Diff, _last.Text.Trim());
@@ -425,6 +435,12 @@ internal sealed class AssistForm : ThemedForm
     {
         if (_busy)
         {
+            return;
+        }
+
+        if (_mics.Exists(m => m.Busy))
+        {
+            SetStatus("Bitte zuerst die Aufnahme beenden (■).", error: true);
             return;
         }
 
@@ -639,6 +655,7 @@ internal sealed class AssistForm : ThemedForm
     protected override void OnFormClosing(FormClosingEventArgs e)
     {
         _cts?.Cancel();
+        _mics.ForEach(m => m.Dispose());
         base.OnFormClosing(e);
     }
 }

@@ -572,10 +572,39 @@ internal sealed class RoundedHost : Panel, IThemed
         Invalidate();
     }
 
+    /// <summary>Kleiner Knopf rechts im Feld (Mikrofon); das Feld wird dafür schmaler.</summary>
+    public Control? Accessory
+    {
+        get => _accessory;
+        set
+        {
+            _accessory = value;
+            if (value is not null)
+            {
+                Controls.Add(value);
+                value.BringToFront();
+                value.VisibleChanged += (_, _) => PerformLayout();
+            }
+
+            PerformLayout();
+        }
+    }
+
+    private Control? _accessory;
+
     protected override void OnLayout(LayoutEventArgs levent)
     {
         base.OnLayout(levent);
         Rectangle area = DisplayRectangle;
+        if (_accessory is { Visible: true } acc)
+        {
+            int size = Draw.Scale(28, _dpi);
+            int bottom = Height - Draw.Scale(5, _dpi);
+            int y = Inner is TextBox { Multiline: false } ? (Height - size) / 2 : bottom - size;
+            acc.Bounds = new Rectangle(Width - size - Draw.Scale(5, _dpi), y, size, size);
+            area.Width = Math.Max(Draw.Scale(20, _dpi), acc.Left - Draw.Scale(4, _dpi) - area.X);
+        }
+
         if (Inner is TextBox { Multiline: false } single)
         {
             int h = single.PreferredHeight;

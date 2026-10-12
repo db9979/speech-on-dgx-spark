@@ -347,8 +347,15 @@ struct MailBoxView: View {
                         .font(.system(size: 12))
                         .frame(minHeight: 110)
                         .padding(6)
+                        .padding(.trailing, 30)
                         .background(RoundedRectangle(cornerRadius: 10).fill(Theme.card))
                         .overlay(RoundedRectangle(cornerRadius: 10).stroke(Theme.line, lineWidth: 1))
+                        .overlay(alignment: .bottomTrailing) {
+                            FieldMic(id: "mail.text", label: "Mail-Text", disabled: box.busy) { t in
+                                box.mail = Dictation.append(t, to: box.mail, max: MailDraft.maxMail)
+                            }
+                            .padding(5)
+                        }
                 } else {
                     VStack(alignment: .leading, spacing: 4) {
                         Text(verbatim: "Von: " + box.from)
@@ -368,14 +375,19 @@ struct MailBoxView: View {
                     .overlay(RoundedRectangle(cornerRadius: 10).stroke(Theme.line, lineWidth: 1))
                 }
                 caption("Was soll drinstehen? (freiwillig, z. B. „zusagen, Termin Dienstag 10 Uhr“)")
-                TextField("Stichpunkte für die Antwort …", text: $box.notes, axis: .vertical)
-                    .textFieldStyle(.plain)
-                    .font(.system(size: 13))
-                    .lineLimit(2...5)
-                    .padding(8)
-                    .background(RoundedRectangle(cornerRadius: 10).fill(Theme.card))
-                    .overlay(RoundedRectangle(cornerRadius: 10).stroke(Theme.line, lineWidth: 1))
-                    .disabled(box.busy)
+                HStack(alignment: .bottom, spacing: 6) {
+                    TextField("Stichpunkte für die Antwort …", text: $box.notes, axis: .vertical)
+                        .textFieldStyle(.plain)
+                        .font(.system(size: 13))
+                        .lineLimit(2...5)
+                        .disabled(box.busy)
+                    FieldMic(id: "mail.notes", label: "Stichpunkte", disabled: box.busy) { t in
+                        box.notes = Dictation.append(t, to: box.notes, max: 2000)
+                    }
+                }
+                .padding(8)
+                .background(RoundedRectangle(cornerRadius: 10).fill(Theme.card))
+                .overlay(RoundedRectangle(cornerRadius: 10).stroke(Theme.line, lineWidth: 1))
                 HStack(spacing: 8) {
                     if box.busy { ProgressView().controlSize(.small) }
                     Text(Wege.text(box.status))

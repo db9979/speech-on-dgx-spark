@@ -196,6 +196,8 @@ struct PrimaryButtonStyle: ButtonStyle {
     func makeBody(configuration: Configuration) -> some View {
         configuration.label
             .font(.system(size: 13, weight: .semibold))
+            .lineLimit(1)
+            .fixedSize(horizontal: true, vertical: false)
             .foregroundColor(.white)
             .padding(.horizontal, 12)
             .padding(.vertical, 6)
@@ -213,6 +215,8 @@ struct SoftButtonStyle: ButtonStyle {
     func makeBody(configuration: Configuration) -> some View {
         configuration.label
             .font(.system(size: 13))
+            .lineLimit(1)
+            .fixedSize(horizontal: true, vertical: false)   // a label never breaks inside a word
             .foregroundColor(danger ? Theme.bad : Theme.fg)
             .padding(.horizontal, 12)
             .padding(.vertical, 6)
