@@ -74,7 +74,7 @@ This list belongs to every commit that adds or changes a feature, a tool, a serv
 | **Own storage** | New data is classified: always stays local (keys, logins, settings, voiceprint) or may be copied encrypted or offloaded. Local first, sync in the background via the watcher. | "Connect own storage" ("Eigenen Speicher einbinden") |
 | **Hints without a way** | Every hint at the top of the admin pages has a target and a "View" ("Ansehen") button. | "Direct links in hints" ("Direkte Links in Hinweisen") |
 | **Static files** | Every static route and every public file answers; new short paths pass the request on. | in force since V01.0.442, 🧪 test_statische_routen |
-| **Background models** | The display says "working" only while something is really being computed, otherwise "Standby"; sharing does not extend the run time. | "Semantic search stays on" ("Bedeutungssuche bleibt an") |
+| **Background models** | The display says "working" only while something is really being computed, otherwise "Standby" (loaded or not); sharing a running model does not extend its run time and never starts it (`docembed.embed(..., keep=False)`); the stop check also runs during a Notaus and after errors. | applies since V01.0.444, 🧪 test_wissen.Worker |
 
 **Planned, not yet approved** (no rule): loading and error state per box with a time limit (plan `seiten-laden.md`), sync rules for history on all devices, asking before GitHub reports (plan `frage-vor-meldung.md`).
 

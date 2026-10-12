@@ -60,6 +60,7 @@ import logfilter  # noqa: E402
 import agent  # noqa: E402
 import images  # noqa: E402
 import wissen  # noqa: E402
+import docembed  # noqa: E402
 import messages  # noqa: E402
 import intent  # noqa: E402
 import tracelog  # noqa: E402
@@ -353,13 +354,13 @@ async def doc_reader():
     async def loop():
         while True:
             await asyncio.sleep(20)
-            if notaus.blocks("gespraech"):
-                continue
             try:
-                while await wissen.due_once(idle=wissen.quiet()) in ("page", "vectors"):
-                    await asyncio.sleep(1)
+                if not notaus.blocks("gespraech"):
+                    while await wissen.due_once(idle=wissen.quiet()) in ("page", "vectors"):
+                        await asyncio.sleep(1)
             except Exception as e:
                 print("documents:", type(e).__name__, e, flush=True)
+            docembed.idle_stop()     # also during Notaus, after an error or a "Steckbrief": idle time ends it
     spawn(loop())
 
 

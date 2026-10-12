@@ -113,11 +113,15 @@ async function zDocs(){const box=$('zdocs');if(!box||document.hidden)return;let 
   const ago=s=>{if(!s)return t('noch nie','never');const m=Math.round((Date.now()/1e3-s)/60);return m<1?t('gerade eben','just now'):m<90?(L==='en'?m+' min ago':'vor '+m+' Min.'):(L==='en'?Math.round(m/60)+' h ago':'vor '+Math.round(m/60)+' Std.')};
   const row=(cls,pill,title,text)=>{const r=document.createElement('div');r.className='zrow';const sp=document.createElement('span');sp.className='pill '+cls;sp.textContent=pill;
     const tx=document.createElement('span');const b=document.createElement('b');b.textContent=title;tx.append(b,' '+text);r.append(sp,tx);L2.appendChild(r)};
-  if(d.semantic&&d.model){const m=d.model;const st={ready:['ok',t('läuft','running')],starting:['warn',t('startet','starting')],waiting:['warn',t('wartet','waiting')],error:['bad',t('Fehler','error')],off:['',t('aus','off')]}[m.state]||['',m.state];
-    let tx=m.state==='ready'?(m.mib?m.mib+' MiB '+t('Arbeitsspeicher','memory')+' · ':'')+t('stoppt nach ','stops after ')+m.stop_min+t(' Min. ohne Arbeit',' min idle')
+  if(d.semantic&&d.model){const m=d.model;// loaded and working = "arbeitet"; loaded but idle or not loaded = green "Standby" (Dominik 2026-10-12)
+    const st=m.state==='ready'&&m.busy?['ok',t('arbeitet','working')]:{ready:['ok',t('Standby','standby')],starting:['warn',t('startet','starting')],waiting:['warn',t('wartet','waiting')],error:['bad',t('Fehler','error')],off:['ok',t('Standby','standby')]}[m.state]||['',m.state];
+    const mins=s=>Math.max(1,Math.round((s||0)/60));
+    const use=m.used?(m.used==='passage'?t('neue Stücke','new pieces'):t('eine Frage','a question'))+', '+(L==='en'?mins(m.used_ago)+' min ago':'vor '+mins(m.used_ago)+' Min.')+' · ':'';
+    let tx=m.state==='ready'?t('geladen','loaded')+' · '+(m.mib?m.mib+' MiB '+t('Arbeitsspeicher','memory')+' · ':'')+(use?t('zuletzt gebraucht für ','last needed for ')+use:'')
+      +(typeof m.stop_in==='number'?(L==='en'?'stops in '+mins(m.stop_in)+' min without work':'stoppt in '+mins(m.stop_in)+' Min. ohne Arbeit'):t('stoppt nach ','stops after ')+m.stop_min+t(' Min. ohne Arbeit',' min idle'))
       :m.state==='waiting'?t('braucht ','needs ')+m.need_gib+t(' GiB freien Arbeitsspeicher',' GiB free memory')
       :m.state==='error'?(m.error||''):m.state==='starting'?t('lädt das Modell (beim ersten Mal von Hugging Face)','loading the model (from Hugging Face the first time)')
-      :t('startet, wenn etwas zu tun ist','starts when there is work');
+      :t('nicht geladen, startet, wenn etwas zu tun ist','not loaded, starts when there is work');
     const v=d.vectors;tx+=' · '+v[0]+'/'+v[1]+t(' Stücke mit Bedeutung',' pieces with meaning');
     row(st[0],st[1],t('Bedeutungssuche (CPU-Modell)','Meaning search (CPU model)'),tx)}
   if(d.pictures){row(d.waiting?'warn':'ok',d.waiting?d.waiting+t(' Seiten',' pages'):t('nichts offen','nothing open'),t('Bilder und Scans lesen','Read pictures and scans'),

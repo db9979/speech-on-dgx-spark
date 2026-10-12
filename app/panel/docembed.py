@@ -33,6 +33,7 @@ CALL_TIMEOUT = 120
 
 _proc = None
 _last = [0.0]
+_used = {"kind": "", "at": 0.0}  # what last needed the model and when (Zustand → Eigene Dokumente shows it)
 _locks = {}                    # event loop -> lock (the panel has one loop; tests start several)
 _status = {"state": "off", "error": ""}
 
@@ -49,8 +50,16 @@ def _busy():
     return any(x.locked() for x in _locks.values())
 
 
-def status():
-    return dict(_status, running=bool(_proc and _proc.returncode is None))
+def status(now=None):
+    """State for the admin view; while it runs also what last needed it ("query" a question, "passage"
+    new pieces) and when, and the seconds until it ends without work."""
+    running = bool(_proc and _proc.returncode is None)
+    out = dict(_status, running=running, busy=_busy())
+    if running:
+        now = now or time.time()
+        out.update(used=_used["kind"], used_ago=max(0, int(now - _used["at"])),
+                   stop_in=max(0, int(IDLE_STOP - (now - _last[0]))))
+    return out
 
 
 def memory_mib():
@@ -139,12 +148,17 @@ def idle_stop(now=None):
         print("docembed: embedding model stopped (idle)", flush=True)
 
 
-async def _call(texts, kind, timeout):
-    # a question waits only briefly for a batch of pieces in the background
+async def _call(texts, kind, timeout, keep=True):
+    # a question waits only briefly for a batch of pieces in the background; keep=False: a ride along
+    # on the running model (lokal.py) that does not count as work, so it does not hold the model awake
     lock = _lock()
     await asyncio.wait_for(lock.acquire(), None if kind == "passage" else 3)
     try:
-        _last[0] = time.time()
+        if keep:
+            _last[0] = time.time()
+            _used.update(kind=kind, at=_last[0])
+        elif not (_proc and _proc.returncode is None):
+            raise RuntimeError("not running")
         await _start(START_TIMEOUT if kind == "passage" else timeout)
         try:
             _proc.stdin.write((json.dumps({"kind": kind, "texts": texts}) + "\n").encode())
@@ -153,7 +167,8 @@ async def _call(texts, kind, timeout):
         except BaseException:
             _stop()    # an answer left in the pipe would belong to the next question
             raise
-        _last[0] = time.time()
+        if keep:
+            _last[0] = time.time()
         d = json.loads(line or b"{}")
         if "vecs" not in d:
             _stop()
@@ -166,17 +181,18 @@ async def _call(texts, kind, timeout):
         lock.release()
 
 
-async def embed(texts, kind):
-    """float16 bytes (DIM values, length 1) per text; kind "query" or "passage"."""
+async def embed(texts, kind, keep=True):
+    """float16 bytes (DIM values, length 1) per text; kind "query" or "passage". keep=False: only while
+    the model already runs, and without restarting its idle time."""
     return await _call([str(t)[:2000] for t in texts][:BATCH], kind,
-                       CALL_TIMEOUT if kind == "passage" else QUERY_TIMEOUT)
+                       CALL_TIMEOUT if kind == "passage" else QUERY_TIMEOUT, keep)
 
 
-async def query(text):
+async def query(text, keep=True):
     """The question's vector as a list of floats, or None (off, starting, too little memory, error)."""
     import numpy as np
     try:
-        v = (await embed([text], "query"))[0]
+        v = (await (embed([text], "query") if keep else embed([text], "query", keep=False)))[0]
         return np.frombuffer(v, dtype=np.float16).astype(float).tolist()
     except Exception as e:
         print("docembed: no vector for the question:", type(e).__name__, flush=True)

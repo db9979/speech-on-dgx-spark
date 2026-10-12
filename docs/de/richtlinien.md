@@ -74,7 +74,7 @@ Diese Liste gehört zu jedem Commit, der eine Funktion, ein Werkzeug, einen Dien
 | **Eigener Speicher** | Neue Daten werden eingeordnet: bleibt immer lokal (Schlüssel, Logins, Einstellungen, Stimmabdruck) oder darf verschlüsselt kopiert bzw. ausgelagert werden. Lokal zuerst, Abgleich im Hintergrund über den Wächter. | „Eigenen Speicher einbinden“ |
 | **Hinweise ohne Weg** | Jeder Hinweis oben auf den Admin-Seiten hat ein Ziel und einen Knopf „Ansehen“. | „Direkte Links in Hinweisen“ |
 | **Statische Dateien** | Jede statische Route und jede öffentliche Datei antwortet; neue Kurzwege geben den Request weiter. | gilt seit V01.0.442, 🧪 test_statische_routen |
-| **Hintergrundmodelle** | Die Anzeige sagt „arbeitet“ nur, solange wirklich gerechnet wird, sonst „Standby“; Mitnutzen verlängert keine Laufzeit. | „Bedeutungssuche bleibt an“ |
+| **Hintergrundmodelle** | Die Anzeige sagt „arbeitet“ nur, solange wirklich gerechnet wird, sonst „Standby“ (geladen oder nicht); Mitnutzen eines laufenden Modells verlängert keine Laufzeit und startet es nie (`docembed.embed(..., keep=False)`); die Stopp-Prüfung läuft auch bei Notaus und nach Fehlern. | gilt seit V01.0.444, 🧪 test_wissen.Worker |
 
 **Geplant, noch nicht freigegeben** (keine Regel): Lade- und Fehlerzustand pro Kasten mit Zeitlimit (Plan `seiten-laden.md`), Sync-Regeln für Verlauf auf allen Geräten, Rückfrage vor GitHub-Meldungen (Plan `frage-vor-meldung.md`).
 

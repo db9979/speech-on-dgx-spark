@@ -180,7 +180,7 @@ async def _docs(uid, q, words):
     import docembed
     import wissen
     semantic = bool(docembed.status().get("running")) and not docembed._busy()
-    hits = await wissen.search(uid, q, k=MAX_HITS, semantic=semantic)
+    hits = await wissen.search(uid, q, k=MAX_HITS, semantic=semantic, keep=False)   # rides along, no keep-awake
     return [{"src": "docs", "title": "Unterlagen: " + wissen.where(h), "text": _cut(h["text"])}
             for h in hits if cover(words, h["name"] + " " + h["text"]) >= COVER]
 

@@ -576,6 +576,19 @@ class Worker(Base):
             self.assertFalse(docembed.status()["running"])
             docembed.MIN_FREE_GIB = 10**6                       # too little memory: no start, no vector
             self.assertIsNone(await docembed.query("vier"))
+            docembed.MIN_FREE_GIB = 0
+            self.assertIsNone(await docembed.query("fünf", keep=False))   # a ride along never starts it
+            self.assertFalse(docembed.status()["running"])
+            await docembed.query("sechs")
+            st = docembed.status(docembed._last[0] + 60)
+            self.assertEqual((st["used"], st["used_ago"], st["stop_in"]), ("query", 60, docembed.IDLE_STOP - 60))
+            self.assertFalse(st["busy"])                                   # loaded but idle: "Standby" in Zustand
+            docembed._last[0] -= docembed.IDLE_STOP - 5                    # nearly idle long enough
+            before = docembed._last[0]
+            self.assertIsNotNone(await docembed.query("sieben", keep=False))
+            self.assertEqual(docembed._last[0], before)                    # "Erst lokal suchen" keeps no one awake
+            docembed.idle_stop(before + docembed.IDLE_STOP + 1)
+            self.assertFalse(docembed.status()["running"])
         try:
             run(go())
         finally:

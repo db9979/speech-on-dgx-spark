@@ -180,12 +180,13 @@ def fresh_on(uid):
     return bool(uid) and features.allowed("rmfresh", uid)
 
 
-async def search(uid, query, k=5, tags=None, art=None, semantic=True):
+async def search(uid, query, k=5, tags=None, art=None, semantic=True, keep=True):
     """The profile's own documents and the ones the others offer to everyone, best first; tags / art:
     only documents with these tags or of this kind (their "Steckbrief"). semantic=False: full text only
     (lokal.py's quick look before the answer does not wait for the meaning model). The one place both
-    document_search and "Erst lokal suchen" rank in, so "Neueste zuerst" (fresh_on) works for both."""
-    qvec = await docembed.query(query) if semantic and on(uid, "semantic") and query.strip() else None
+    document_search and "Erst lokal suchen" rank in, so "Neueste zuerst" (fresh_on) works for both.
+    keep=False: the meaning model is used only if it runs anyway and is not held awake by it."""
+    qvec = await docembed.query(query, keep) if semantic and on(uid, "semantic") and query.strip() else None
     narrow = bool(tags or art)
     fresh = fresh_on(uid)
     own = documents.match_docs(uid, tags, art) if narrow else None
