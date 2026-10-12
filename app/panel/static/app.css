@@ -731,6 +731,7 @@ table.who tr.sub td:first-child{padding-left:26px}
 .wbox{width:22px;height:22px;border-radius:6px;border:1.5px solid var(--mut);background:none;cursor:pointer;padding:0;vertical-align:middle}
 .wbox.on{background:var(--acc);border-color:var(--acc);box-shadow:inset 0 0 0 3px var(--card)}
 .wbox.no{border-style:dashed;opacity:.55;cursor:not-allowed}
+.wbox.woff{border-style:dashed;opacity:.7}
 .wdash{color:var(--mut)}
 .wcard{border-bottom:1px solid var(--line);padding:10px 0}.wcard.sub{padding-left:16px}
 .wtop{display:flex;justify-content:space-between;align-items:center;gap:10px}

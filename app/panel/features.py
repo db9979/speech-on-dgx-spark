@@ -384,6 +384,97 @@ def stamp(uid, c=None):
     return hashlib.sha256(raw.encode()).hexdigest()[:16]
 
 
+# ---------------------------------------------------------------- what a function needs (Voraussetzungen)
+# Dominik 2026-10-12: "wenn jemand Funktionen einschaltet, die andere voraussetzen, auch mit einschalten". The chain
+# of a function is the functions it builds on (parent, the parent's parent ...) and itself; the Spark switches
+# of that chain must all be on. The pages ask before switching on what is missing, and say what goes off with it.
+def chain(key):
+    """The functions key builds on, the first one first, key last."""
+    out, k = [], key
+    while k and k in BY_KEY and k not in out:
+        out.insert(0, k)
+        k = BY_KEY[k].parent
+    return out
+
+
+def chain_switches(key):
+    """Every Spark switch (chat.*) the function needs, in the order of its chain."""
+    out = []
+    for k in chain(key):
+        for sw in BY_KEY[k].admin:
+            if sw not in out:
+                out.append(sw)
+    return out
+
+
+def switch_name(sw):
+    """(de, en) of a Spark switch: the function it belongs to, else its own name."""
+    for f in FEATURES:
+        if f.admin[0] == sw:
+            return f.de, f.en
+    if sw in SPARK_NAMES:
+        return SPARK_NAMES[sw]
+    names, _ = switch_names({sw})
+    n = names.get(sw)
+    return (n[0], n[1]) if isinstance(n, (list, tuple)) and len(n) == 2 else (sw, sw)
+
+
+def missing(key, c=None):
+    """The Spark switches of key's chain that are off."""
+    c = chat_cfg() if c is None else c
+    return [sw for sw in chain_switches(key) if not _switch(c, sw)]
+
+
+def unready(key, c=None):
+    """Functions of the chain whose switches may be on but which still need setting up (an address ...)."""
+    c = chat_cfg() if c is None else c
+    return [k for k in chain(key) if READY.get(k) and not READY[k](c)]
+
+
+def affected(sw, c=None):
+    """The functions that are on now and go off with the Spark switch sw (not the one sw belongs to itself)."""
+    c = chat_cfg() if c is None else c
+    return [f.key for f in FEATURES if f.admin[0] != sw and sw in chain_switches(f.key) and admin_on(f.key, c)]
+
+
+def admin_way(key, lang="de"):
+    f = BY_KEY[key]
+    return ("Funktionen → " if lang == "de" else "Features → ") + (f.de if lang == "de" else f.en)
+
+
+def switch_way(sw, lang="de"):
+    for f in FEATURES:
+        if f.admin[0] == sw:
+            return admin_way(f.key, lang)
+    return ("Funktionen → " if lang == "de" else "Features → ") + switch_name(sw)[0 if lang == "de" else 1]
+
+
+def me_way(key, lang="de"):
+    """Where the profile switches it on: Ich → <page> „<name>“ (way.js marks the row)."""
+    f = BY_KEY[key]
+    import hilfe
+    head = hilfe.page_name("me/" + (f.me or "setbox"), lang) or hilfe.page_name("me/setbox", lang)
+    return f"{head} „{f.de if lang == 'de' else f.en}“"
+
+
+def missing_text(key, uid, lang="de", c=None):
+    """One plain sentence with everything that is missing for uid, each with its way; "" when it can be used."""
+    c = chat_cfg() if c is None else c
+    li = 0 if lang == "de" else 1
+    f = BY_KEY[key]
+    out = []
+    sws = missing(key, c)
+    if sws:
+        ways = ", ".join(switch_way(sw, lang) for sw in sws)
+        out.append(("Der Admin muss einschalten: " if li == 0 else "The admin has to switch on: ") + ways + ".")
+    setup = [k for k in unready(key, c) if not any(sw in missing(k, c) for sw in BY_KEY[k].admin)]
+    if setup:
+        out.append(("Noch einzurichten: " if li == 0 else "Still to set up: ") + ", ".join(admin_way(k, lang) for k in setup) + ".")
+    if uid and f.profile and profiles.settings(uid).get(f.profile) is not True:
+        out.append(("Du selbst: " if li == 0 else "You yourself: ") + me_way(key, lang) + (" einschalten." if li == 0 else " on."))
+    return " ".join(out)
+
+
 router = APIRouter()
 
 
@@ -440,10 +531,14 @@ def matrix():
         rows.append({"key": f.key, "name": [f.de, f.en], "group": f.group, "switch": f.admin[0], "spark": admin_on(f.key, c),
                      "own": _switch(c, f.admin[0]), "switchable": f.admin[0] in switchable, "parent": f.parent or None, "guests": f.guests, "seen": f.key in seen,
                      "profile": f.profile or None, "guide": f.guide, "new": f.key in new if f.profile else None,
-                     "cells": {u["id"]: s[u["id"]].get(f.profile) is True for u in users} if f.profile else None})
+                     "cells": {u["id"]: s[u["id"]].get(f.profile) is True for u in users} if f.profile else None,
+                     "chain": chain_switches(f.key), "setup": [admin_way(k) for k in unready(f.key, c)]})
+    every = sorted({sw for f in FEATURES for sw in f.admin})
     return {"groups": [{"key": k, "name": [de, en]} for k, de, en in GROUPS], "features": rows,
             "profiles": [{"id": u["id"], "name": u["name"], "role": coadmin.role(u["id"]) if coadmin.on() else ""} for u in users],
-            "public": _switch(c, "public"), "why": WHY}
+            "public": _switch(c, "public"), "why": WHY,
+            "states": {sw: _switch(c, sw) for sw in every}, "snames": {sw: list(switch_name(sw)) for sw in every},
+            "switchable": sorted(sw for sw in every if sw in switchable)}
 
 
 @router.get("/api/admin/features", dependencies=[Depends(auth)])
@@ -506,3 +601,48 @@ async def admin_feature_new(key: str, request: Request):
     elev = None if request.scope.get("speech_main_admin") else request.scope.get("speech_coadmin")
     guard.log("feature_profile", by="main" if not elev else elev["id"], detail=f"{f.de} für neue Profile {'an' if on else 'aus'}")
     return {"key": key, "on": on}
+
+
+@router.post("/api/admin/features/{key}/enable", dependencies=[Depends(auth)])
+async def admin_feature_enable(key: str, request: Request):
+    """Switch a function on together with everything it builds on (its chain's Spark switches), optionally also
+    for one profile ({"uid": ...}). Switches the app may not change and what still needs setting up come back
+    as ways, they are never switched here."""
+    guard.limit(request, "features", admin=True)
+    f = BY_KEY.get(key)
+    if not f:
+        raise HTTPException(404, "no such function")
+    raw = await request.body()
+    if len(raw) > 256:
+        raise HTTPException(413, "too large")
+    try:
+        body = json.loads(raw or b"{}")
+    except ValueError:
+        raise HTTPException(400, "invalid JSON")
+    uid = body.get("uid") if isinstance(body, dict) else None
+    if uid is not None and (not isinstance(uid, str) or not _UID.fullmatch(uid) or not profiles.by_id(uid) or not f.profile):
+        raise HTTPException(404, "no such profile or no own switch")
+    import admin
+    if uid:
+        admin._no_admin_profile(request, uid)
+    may = set(admin.app_switches())
+    todo = missing(key)
+    can, manual = [sw for sw in todo if sw in may], [sw for sw in todo if sw not in may]
+    if can:
+        with admin._save_lock:   # one config write at a time (admin._save)
+            new = admin.get_config()
+            for sw in can:
+                new["chat"][sw] = True
+            old = admin.validate(new)
+            write_json(admin.CONFIG_PATH, new, indent=2)
+        admin.undo.record(old, new, admin._by(request), admin.SENSITIVE)
+        guard.log("config_switch", detail=", ".join(f"chat.{sw}=on" for sw in can) + f" (für {f.de})")
+    if uid:
+        profiles.save_settings(uid, {f.profile: True})
+        elev = None if request.scope.get("speech_main_admin") else request.scope.get("speech_coadmin")
+        guard.log("feature_profile", uid=uid, by="main" if not elev else elev["id"],
+                  detail=f"{f.de} für {profiles.by_id(uid)['name']} an")
+    c = chat_cfg()
+    return {"key": key, "switched": can, "names": [list(switch_name(sw)) for sw in can],
+            "manual": [{"switch": sw, "name": list(switch_name(sw)), "way": [switch_way(sw), switch_way(sw, "en")]} for sw in manual],
+            "setup": [[admin_way(k), admin_way(k, "en")] for k in unready(key, c)], "spark": admin_on(key, c)}

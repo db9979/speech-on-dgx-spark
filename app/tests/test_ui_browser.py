@@ -729,6 +729,82 @@ class Browser(unittest.TestCase):
             helpers.set_config(write_help=False)
             profiles.save_settings(me, {"write_on": False})
 
+    def test_voraussetzungen_mit_einschalten(self):
+        """Dominik 2026-10-12: switching on a function that builds on others asks to switch those on too; switching
+        off says what goes off with it. Funktionen (the page's switches, saved with the page) and Wer darf was
+        (the Spark column and a profile's box while the Spark is off)."""
+        import json as _json
+        import os as _os
+        import profiles
+        helpers.set_config(documents=False, doc_make=False, doc_make_templates=False, doc_semantic=False)
+        me = next(u for u in profiles._load()["users"] if u["name"] == "Uitest")["id"]
+        profiles.save_settings(me, {"doc_make": False})
+
+        def cfg():
+            with open(_os.environ["SPEECH_SPARK_CONFIG"]) as f:
+                return _json.load(f)["chat"]
+
+        kept = {k: cfg().get(k) for k in ("documents", "doc_make", "doc_make_templates", "doc_semantic")}
+
+        async def go():
+            async with async_playwright() as p:
+                br, pg, errors = await self.page(p, 1280, 900)
+                said = []
+
+                async def answer(d):
+                    said.append(d.message)
+                    await (d.accept() if (answers.pop(0) if answers else True) else d.dismiss())
+                pg.on("dialog", lambda d: asyncio.ensure_future(answer(d)))
+                # Funktionen: "Dokumente erstellen" on while "Eigene Dokumente" is off
+                await pg.evaluate("goSec('feat')")
+                await self.until(pg, "!!document.getElementById('chat.doc_make')&&!!document.getElementById('chat.documents')")
+                answers = [True]
+                await pg.evaluate("(()=>{const e=document.getElementById('chat.doc_make');e.checked=true;"
+                                  "e.dispatchEvent(new Event('change',{bubbles:true}))})()")
+                await self.until(pg, "document.getElementById('chat.documents').checked")
+                self.assertIn("„Dokumente erstellen“ braucht auch „Eigene Dokumente“", said[-1])
+                # and off again: it says what goes with it; "Abbrechen" keeps the switch on
+                answers = [False]
+                await pg.evaluate("(()=>{const e=document.getElementById('chat.documents');e.checked=false;"
+                                  "e.dispatchEvent(new Event('change',{bubbles:true}))})()")
+                await self.until(pg, "document.getElementById('chat.documents').checked")
+                self.assertIn("Damit sind auch „Dokumente erstellen“ aus", said[-1])
+                self.assertFalse(cfg()["documents"])          # nothing saved without the page's save
+                # Wer darf was (leaving Funktionen with the unsaved page asks first: leave): the Spark box of
+                # "Eigene Vorlagen" switches the whole chain after the question
+                answers = [True]
+                await pg.evaluate("goSec('who')")
+                await self.until(pg, "typeof WHO!=='undefined'&&!!WHO&&!!document.querySelector('#whobox .wname')")
+                # (switching changes what Uitest may use, and the page may reload for that: started, not awaited,
+                # and checked on the Spark)
+                async def until_server(check):
+                    for _ in range(100):
+                        if check():
+                            return
+                        await asyncio.sleep(0.2)
+                    self.fail("not switched")
+                answers = [True]
+                await pg.evaluate("setTimeout(()=>whoSpark(WHO.features.find(f=>f.key==='erstellenvorlagen'),true),0)")
+                await until_server(lambda: cfg()["doc_make_templates"])
+                c = cfg()
+                self.assertTrue(c["documents"] and c["doc_make"] and c["doc_make_templates"], c)
+                self.assertIn("„Eigene Vorlagen“ braucht auch „Eigene Dokumente“ und „Dokumente erstellen“", said[-1])
+                # a profile's box while the Spark is off: the Spark side goes on too
+                helpers.set_config(documents=False, doc_make=False)
+                await pg.evaluate("goSec('who')")
+                await self.until(pg, "typeof WHO!=='undefined'&&!!WHO&&WHO.features.find(f=>f.key==='erstellen').spark===false")
+                answers = [True]
+                await pg.evaluate(f"setTimeout(()=>whoSet(WHO.features.find(f=>f.key==='erstellen'),'{me}',true),0)")
+                await until_server(lambda: cfg()["doc_make"] and profiles.settings(me).get("doc_make") is True)
+                self.assertIn("Im Spark ist „Eigene Dokumente“ und „Dokumente erstellen“ aus", said[-1])
+                self.assertEqual(errors, [])
+                await br.close()
+        try:
+            self.run_async(go())
+        finally:
+            helpers.set_config(**kept)
+            profiles.save_settings(me, {"doc_make": False})
+
     def test_dokumente_erstellen_card_and_list(self):
         """Dokumente erstellen (erstellen.js): the outline card under an answer starts the job, which ends with a
         download; Ich → Dokumente lists it, the preview opens and a part edited by hand becomes version 2.
@@ -1937,10 +2013,11 @@ class Browser(unittest.TestCase):
                     before = await pg.get_attribute(sel, "aria-pressed")
                     await pg.click(sel)
                     await pg.wait_for_function(f"document.querySelector(\"{sel}\").getAttribute('aria-pressed')!=='{before}'")
-                    # transit is off on the Spark: its profile boxes cannot be used
+                    # transit is off on the Spark: its profile boxes are dashed; switching one on asks to switch the
+                    # Spark side on too (V01.0.4xx, test_voraussetzungen_mit_einschalten)
                     off = "table.who button[aria-label^='Bus und Bahn – Uitest']" if name == "pc" else \
                         "#whobox button.chip[aria-label^='Bus und Bahn – Uitest']"
-                    self.assertTrue(await pg.evaluate(f"document.querySelector(\"{off}\").disabled"))
+                    self.assertTrue(await pg.evaluate(f"document.querySelector(\"{off}\").classList.contains('woff')"))
                     await pg.click("#whobox .wfilt button[data-f=on]")
                     self.assertFalse(await pg.evaluate(f"!!document.querySelector(\"{off}\")"))
                     await pg.click("#whobox .wfilt button[data-f=all]")

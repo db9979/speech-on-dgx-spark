@@ -64,12 +64,12 @@ This list belongs to every commit that adds or changes a feature, a tool, a serv
 | 19 | **Tests** | A self-test for every protection rule. A browser test for every new page (320, 390 and 1280 px). A check item at the bottom of `pruefung/praxistest-tars-2.md` in the project folder (A = admin, P = profile). | 📝 (field test), see part 9 |
 | 20 | **Docs** | A line in CHANGELOG and README (de and en), details in `docs/de` and `docs/en`. New general rules go into this guideline. | 🧪 test_richtlinie (Versions, Guideline), test_changelog |
 | 21 | **Security according to the state of the art** | The change is checked against the part "State of the art" of the security checklist (cryptography, login, headers, supply chain, LLM risks). | 📝 |
+| 22 | **Prerequisites** | When a feature builds on another one, that is its `parent` in `features.py` (the chain follows from it, `features.chain`). No own "switch on X first" text: hints name missing switches through `features.missing_text`, the pages Features and Who may do what offer the chain when switching on (`needs.js`, `POST /api/admin/features/{key}/enable`) and say what goes off with a switch. A setup that can be missing goes into `features.READY`. | 🧪 test_voraussetzungen, test_voraussetzungen_mit_einschalten |
 
 **Coming with work in progress** (applies as soon as the version is on main; the thread then extends this table and the test):
 
 | Area | What to do then | Thread |
 |---|---|---|
-| **Prerequisites** | What a feature needs is listed as a chain in `features.py`; switching on offers the chain along with it, switching off says what goes off with it. | "Create documents and presentations" ("Dokumente und Präsentationen erstellen") |
 | **Settings assistant** | Every new setting gets its classification in the catalogue (A–C, P; never D), so that the assistant can suggest it or safely leave it out. | "Optimise settings with the language model" ("Einstellungen mit dem Sprachmodell optimieren") |
 | **Own storage** | New data is classified: always stays local (keys, logins, settings, voiceprint) or may be copied encrypted or offloaded. Local first, sync in the background via the watcher. | "Connect own storage" ("Eigenen Speicher einbinden") |
 | **Hints without a way** | Every hint at the top of the admin pages has a target and a "View" ("Ansehen") button. | "Direct links in hints" ("Direkte Links in Hinweisen") |
