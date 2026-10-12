@@ -1317,3 +1317,19 @@ textarea.factedit{width:100%;margin:0 0 6px}
 .lzband[hidden]{display:none}.lzband span{flex:1;min-width:0}
 @media(max-width:760px){.lzband{font-size:13px;padding:6px 12px}}
 @media(prefers-reduced-motion:reduce){#lzbar i{animation:none;background:var(--acc);opacity:.7}.lz-sk i{animation:none}}
+
+/* Rückfrage statt Raten (klaeren.py): buttons or the list under the assistant's question */
+.choice{display:flex;flex-wrap:wrap;gap:8px;margin-top:10px}
+.choice .chb{border-radius:999px;border-color:var(--acc);color:var(--acc);font-weight:600}
+.choice .chb.chnone{border-color:var(--line);color:var(--mut);font-weight:400}
+.choice .chb.on{background:var(--acc);color:#fff}
+.choice .chb .mut{font-weight:400;font-size:12px}
+.choice.chlist{display:block;border:1px solid var(--line);border-radius:14px;padding:8px;max-width:100%}
+.choice.chlist input{width:100%;margin:0 0 6px}
+.choice .chrows{max-height:320px;overflow:auto}
+.choice .chgrp{font-size:11px;text-transform:uppercase;letter-spacing:.06em;color:var(--mut);padding:8px 6px 2px}
+.choice .chrow{display:block;width:100%;text-align:left;background:none;border:0;border-top:1px solid var(--line);padding:8px 6px;color:inherit;font:inherit;cursor:pointer;overflow-wrap:anywhere}
+.choice .chrow:hover,.choice .chrow.on{background:color-mix(in srgb,var(--acc) 10%,transparent)}
+.choice .chlist .chnone{margin-top:8px}
+.mapnew{display:grid;gap:8px;margin:10px 0;padding:12px;border:1px solid var(--line);border-radius:14px}
+.mapnew input{width:100%}

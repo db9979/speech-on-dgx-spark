@@ -25,7 +25,7 @@ AREAS = (("search", r"^chat: web search"), ("chat", r"^(chat|vorab):"), ("weiche
          ("room", r"^room:"), ("esp32", r"^esp32:"), ("watch", r"^watch:"), ("telegram", r"^telegram:"), ("mail", r"^(mail|tidy|imap)\b"),
          ("vorrang", r"^vorrang:"), ("wissen", r"^(kiwix|lokal):"), ("anfrage", r"^anfrage:"),
          ("speicher", r"^speicher:"), ("gedaechtnis", r"^gedaechtnis:"),
-         ("seite", r"^seite:"))
+         ("seite", r"^seite:"), ("klaeren", r"^klaeren:"))
 _AREAS = [(k, re.compile(rx)) for k, rx in AREAS]
 # filter keys the page may send: every area, "errors" (lines at level err) and "update" (the update unit)
 FILTERS = dict(AREAS, update=None, errors=None)

@@ -178,10 +178,34 @@ def push_on(uid, private=False):
 
 
 # ---------------------------------------------------------------- talking to the assistant
+_keys = {}   # uid -> the buttons for the panel's question in the answer just made (sent with it, then gone)
+MAX_KEYS = 24
+
+
+def keyboard(ev):
+    """Rückfrage statt Raten (klaeren.py) in Telegram: the choices as a one-time reply keyboard. A tap sends the
+    name like a typed answer, so the panel takes it by the same fixed rules; no callback, nothing new to trust."""
+    rows = []
+    for o in (ev.get("options") or [])[:MAX_KEYS]:
+        label = str(o.get("send") or o.get("label") or "")[:60]
+        if not label:
+            continue
+        room = str(o.get("room") or "")[:30] if not o.get("send") else ""
+        rows.append([{"text": f"{label} {room}".strip()}])
+    if ev.get("none"):
+        rows.append([{"text": str(ev["none"])[:30]}])
+    return {"keyboard": rows, "one_time_keyboard": True, "resize_keyboard": True} if rows else None
+
+
+def take_keys(uid):
+    return _keys.pop(uid, None)
+
+
 async def ask(uid, text, pictures=None):
     """Runs the assistant for the profile like a device would and returns its answer."""
     import chat
     from starlette.requests import Request
+    _keys.pop(uid, None)
     now = time.time()
     last = _history.get(uid)
     history = last[1][-8:] if last and now - last[0] < FOLLOW_UP else []
@@ -217,6 +241,8 @@ async def ask(uid, text, pictures=None):
                 from_outside = True
             elif ev.get("type") == "error" and not error:
                 error = "Der Spark konnte gerade nicht antworten."
+            elif ev.get("type") == "choice":   # the panel asks which one (klaeren.py): buttons under the answer
+                _keys[uid] = keyboard(ev)
     # Telegram shows no Markdown (no parse_mode): the text without its signs (textnorm.plain_markdown)
     answer = plain_markdown(answer.strip()) or error or "Dazu habe ich keine Antwort."
     import homeassistant
@@ -409,7 +435,8 @@ async def handle(c, upd):
         return
     await call(c, "sendChatAction", chat_id=cid, action="typing")
     answer = await ask(uid, text[:2000])
-    await call(c, "sendMessage", chat_id=cid, text=answer[:4000])
+    keys = take_keys(uid)
+    await call(c, "sendMessage", chat_id=cid, text=answer[:4000], **({"reply_markup": keys} if keys else {}))
     await forget_code(c, uid, cid, m, text)
     if s.get("tg_voice"):
         try:
@@ -507,7 +534,8 @@ async def photo_question(c, uid, cid, m, photo, text):
         answer = "Der Spark konnte gerade nicht antworten."
     finally:
         images.drop(pic["id"], uid, "tg")     # a follow-up answers the photo again (reply to it)
-    await call(c, "sendMessage", chat_id=cid, text=answer[:4000])
+    keys = take_keys(uid)
+    await call(c, "sendMessage", chat_id=cid, text=answer[:4000], **({"reply_markup": keys} if keys else {}))
     if profiles.settings(uid).get("tg_voice"):
         try:
             await send_voice(c, cid, await speak(uid, answer))

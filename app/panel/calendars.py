@@ -486,31 +486,45 @@ def ical(item, uid_text):
 
 
 async def add_event(uid, item):
-    """Writes the appointment to the first writable CalDAV calendar (the one named in item
-    "calendar" when it exists). Returns the calendar's name; ValueError when none can take it."""
+    """Writes the appointment to a writable CalDAV calendar: the one named in item "calendar" (its exact name
+    first, then a name containing the words, across all connected accounts), else the first one. A named
+    calendar that no account has is never swapped for another one: ValueError with the names there are
+    (before it silently went into the first calendar; plan Rückfrage, Stufe C). Returns the calendar's name."""
     notaus.stop("aktion", uid)   # the Notaus (or the profile's own) holds every action off (notaus.py)
     wanted = str(item.get("calendar") or "").strip().lower()
     last_error = "no CalDAV calendar connected (iCal links are read only)"
+    found = []   # (account, (href, name)) of every writable calendar, in the accounts' order
     for d in get(uid)["calendars"]:
         if re.match(r"webcals?://", d["url"], re.I) or re.search(r"\.ics(\?|$)", d["url"], re.I):
             continue
-        auth = (d["user"], d.get("password", "")) if d.get("user") else None
-        async with netguard.client(netguard.USER, origin=d["url"], timeout=httpx.Timeout(20, connect=8), auth=auth,
-                                   follow_redirects=True, headers={"User-Agent": "speech-on-dgx-spark"}) as c:
+        async with _cal_client(d) as c:
             try:
-                cals = await _calendars(c, d["url"])
+                found += [(d, x) for x in await _calendars(c, d["url"])]
             except Exception as e:
                 last_error = str(e)
-                continue
-            if not cals:
-                continue
-            pick = next((x for x in cals if wanted and wanted in (x[1] or "").lower()), None) or cals[0]
-            uid_text = f"{os.urandom(8).hex()}@speech-spark"
-            url = pick[0].rstrip("/") + f"/{uid_text.split('@')[0]}.ics"
-            r = await c.put(url, content=ical(item, uid_text),
-                            headers={"Content-Type": "text/calendar; charset=utf-8", "If-None-Match": "*"})
-            if r.status_code in (200, 201, 204):
-                _drop(uid)
-                return pick[1] or d.get("name", "Kalender")
-            last_error = f"the calendar server answered {r.status_code}"
-    raise ValueError(last_error)
+    if not found:
+        raise ValueError(last_error)
+    named = lambda x: (x[1][1] or x[0].get("name") or "").strip().lower()
+    if wanted:
+        hits = [x for x in found if named(x) == wanted] or [x for x in found if wanted in named(x)]
+        if not hits:
+            raise ValueError(f"there is no calendar called '{item.get('calendar')}'; the calendars are: "
+                             + ", ".join(dict.fromkeys(x[1][1] or x[0].get("name", "Kalender") for x in found)))
+    else:
+        hits = found
+    d, pick = hits[0]
+    async with _cal_client(d) as c:
+        uid_text = f"{os.urandom(8).hex()}@speech-spark"
+        url = pick[0].rstrip("/") + f"/{uid_text.split('@')[0]}.ics"
+        r = await c.put(url, content=ical(item, uid_text),
+                        headers={"Content-Type": "text/calendar; charset=utf-8", "If-None-Match": "*"})
+        if r.status_code in (200, 201, 204):
+            _drop(uid)
+            return pick[1] or d.get("name", "Kalender")
+    raise ValueError(f"the calendar server answered {r.status_code}")
+
+
+def _cal_client(d):
+    auth = (d["user"], d.get("password", "")) if d.get("user") else None
+    return netguard.client(netguard.USER, origin=d["url"], timeout=httpx.Timeout(20, connect=8), auth=auth,
+                           follow_redirects=True, headers={"User-Agent": "speech-on-dgx-spark"})

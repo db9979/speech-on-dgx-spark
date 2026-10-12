@@ -319,7 +319,9 @@ async def tool(name, args, ctx):
     try:
         place = _clean(args.get("place"))
         if place and place.lower() not in (w.get("place", "").lower(), w.get("name", "").lower().split(",")[0]):
-            w = await geocode(place)
+            w = await _place(ctx, place, args)
+            if isinstance(w, str):
+                return w
         first = None
         if args.get("date"):
             try:
@@ -335,6 +337,28 @@ async def tool(name, args, ctx):
         return f"Keine Vorhersage: {e}."
     except (httpx.HTTPError, KeyError) as e:
         return f"Der Wetterdienst ist gerade nicht erreichbar ({type(e).__name__}). Sag das so."
+
+
+async def _place(ctx, place, args):
+    """The place the words name: the person's choice or mapping (klaeren.py), else the best match. When several
+    places of exactly this name lie in different regions ("Neustadt") and the words give no postcode, the panel
+    asks instead of taking the first one (only with "Rückfrage statt Raten" on). Returns the place or the text
+    for the model while it asks."""
+    import klaeren
+    pin = klaeren.pinned(ctx, "ort", place)
+    if pin:
+        lat, _, lon = str(pin["id"]).partition(",")
+        return {"name": pin["name"], "lat": float(lat), "lon": float(lon)}
+    found = await candidates(place)
+    plain = place.strip().lower()
+    same = [f for f in found if f["name"].split(",")[0].strip().lower() == plain]
+    if len(same) > 1 and not re.search(r"\d", place):
+        q = klaeren.ask_tool(ctx, "ort", place, [{"id": f"{f['lat']:.4f},{f['lon']:.4f}", "name": f["name"]} for f in same],
+                             args)
+        if q:
+            return q
+    best = found[0]
+    return {"name": best["name"] or _clean(place), "lat": best["lat"], "lon": best["lon"]}
 
 
 async def briefing(uid, zone=None):
@@ -391,3 +415,11 @@ async def api_test(prof=Depends(own_profile)):
         return {"text": await report(w["lat"], w["lon"], w["name"], None, 2)}
     except httpx.HTTPError as e:
         raise HTTPException(400, f"Wetterdienst nicht erreichbar ({type(e).__name__})")
+
+
+def _register():
+    import klaeren
+    klaeren.tool_area("ort", "Orte (Wetter)", "Places (weather)", "weather", "place")
+
+
+_register()

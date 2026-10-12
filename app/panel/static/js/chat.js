@@ -229,10 +229,12 @@ async function ask(text,asrS,spk){const spoken=!!chat.nextSpoken;chat.nextSpoken
 const pids=typeof picIds==='function'?picIds():[],thumbs=pids.length?picThumbs():[];   // attached pictures (pics.js)
 const ub=chatLog('user',text);const um={role:'user',content:text};
   if(thumbs.length){const w=document.createElement('div');w.className='picrow';w.innerHTML=thumbs.map(u=>`<img alt="" src="${esc(u)}">`).join('');ub.appendChild(w)}chat.msgs.push(um);deletable(ub,um);let foreign=false,ttsErr=false,mailUsed=false,outsideUsed=false,why=null;
+  // the conversation is named from its first question on, so the panel's own question (klaeren.py) is answered in the same one
+  if(!chat.cid)chat.cid=Date.now().toString(36);
   const el=chatLog('assistant','');$('fabtext').textContent='';
   // shown formatted while it streams (md.js), at most once per frame; the small answer line gets the plain text
   let drawn=null,frame=0;const draw=()=>{frame=0;md.render(el,drawn);$('fabtext').textContent=md.plain(drawn);$('chatlog').scrollTop=1e9};
-  const show=(x,now)=>{drawn=x;if(now){if(frame)cancelAnimationFrame(frame);draw()}else if(!frame)frame=requestAnimationFrame(draw)};let full='',llmS=null,audioS=null,ackS=null,err='';const searches=[],sources=[],mems=[],docs=[],drefs=[],hcards=[],mkcards=[];let rateId='';
+  const show=(x,now)=>{drawn=x;if(now){if(frame)cancelAnimationFrame(frame);draw()}else if(!frame)frame=requestAnimationFrame(draw)};let full='',llmS=null,audioS=null,ackS=null,err='';const searches=[],sources=[],mems=[],docs=[],drefs=[],hcards=[],mkcards=[],chcards=[];let rateId='';
   const ctrl=new AbortController();chat.ctrl=ctrl;chat.firstPlay=null;chat.gaps=[];chat.blocks=[];chat.t0b=null;chat.stalls=0;chat.pieceStart=true;setTalk();chatSay(t('Antwort kommt …','Answer coming …'));
   try{const r=await api('/api/chat',{method:'POST',headers:{'Content-Type':'application/json'},signal:ctrl.signal,
       body:JSON.stringify({speak:voiceOn()?undefined:false,messages:chat.msgs.slice(-20).map(m=>({role:m.role,content:m.content,...(m.mail?{mail:true}:{}),...(m.outside?{outside:true}:{})})),tab:TAB,tz:(()=>{try{return Intl.DateTimeFormat().resolvedOptions().timeZone}catch{return ''}})(),voice:PROFILE&&S.voice||undefined,speed:S.speed,length:S.length,reminders:PROFILE?undefined:rem.list,convo:chat.cid||undefined,speaker:spk&&spk.token||undefined,images:pids.length?pids:undefined,page:typeof hilfeNow==='function'?hilfeNow():undefined,focus:typeof hilfeFocusTake==='function'?hilfeFocusTake():undefined,view:document.body.classList.contains('appview')?'app':undefined})});
@@ -262,6 +264,7 @@ const ub=chatLog('user',text);const um={role:'user',content:text};
         else if(ev.type==='why'){why=ev}
         else if(ev.type==='hilfe'){hcards.push(ev.card)}
         else if(ev.type==='docmake'){mkcards.push(ev.card)}
+        else if(ev.type==='choice'){chcards.push(ev)}   // the panel asks which one (klaeren.py)
         else if(ev.type==='rate'){rateId=ev.id}   // 👍/👎 for this answer (faelle.py, bewerten.js)
         else if(ev.type==='reminder'){rem.event(ev);mems.push(ev.action==='set'?t('Erinnerung: ','Reminder: ')+rem.when(ev.item.due)+' '+ev.item.text:t('Erinnerung gelöscht','Reminder cancelled'))}
         else if(ev.type==='memory'){mems.push((ev.action==='saved'?t('Gemerkt: ','Remembered: '):t('Vergessen: ','Forgotten: '))+ev.text)}
@@ -280,6 +283,7 @@ const ub=chatLog('user',text);const um={role:'user',content:text};
   if(why)el.appendChild(whyNote(why));
   if(typeof hilfeCard==='function')for(const c of hcards)el.appendChild(hilfeCard(c));
   if(typeof mkCard==='function')for(const c of mkcards)el.appendChild(mkCard(c));
+  if(!err)for(const c of chcards)el.appendChild(choiceCard(c));
   if(rateId&&full.trim()&&!err&&typeof rateBar==='function')el.appendChild(rateBar(rateId));
   if(typeof hilfeFabCards==='function')hilfeFabCards(hcards);
   if(pids.length&&full.trim()&&PROFILE&&!err){const b=document.createElement('button');b.type='button';b.className='b picsave';   // 7: only on a click
@@ -300,6 +304,26 @@ const ub=chatLog('user',text);const um={role:'user',content:text};
   while(playing()&&!chat.ctrl&&!chat.rec)await new Promise(res=>setTimeout(res,100));   // wait until it has finished speaking
   setTalk();if(chat.ctrl||chat.rec)return;
   chatSay(t('Bereit.','Ready.'));if(S.hands)startListening();else if(spoken&&followSecs())startListening({follow:followSecs()})}
+// Rückfrage statt Raten (klaeren.py): the panel's own question as buttons, or the whole list with a search field.
+// A tap sends the name like a typed answer; the panel takes it by fixed rules, the model never picks.
+function choiceCard(c){const d=document.createElement('div');d.className='choice';const opts=c.options||[];
+  const send=(x,btn)=>{if(chat.ctrl)return;d.querySelectorAll('button').forEach(b=>b.disabled=true);if(btn)btn.classList.add('on');ask(x)};
+  if(!c.list){for(const o of opts){const b=document.createElement('button');b.type='button';b.className='b chb';b.textContent=o.label;
+      if(o.room){const r=document.createElement('span');r.className='mut';r.textContent=' '+o.room;b.appendChild(r)}
+      b.onclick=()=>send(o.send||o.label,b);d.appendChild(b)}
+    if(c.none){const b=document.createElement('button');b.type='button';b.className='b chb chnone';b.textContent=c.none;b.onclick=()=>send(c.none,b);d.appendChild(b)}
+    return d}
+  d.classList.add('chlist');const f=document.createElement('input');f.type='search';f.maxLength=60;f.placeholder=t('Suchen …','Search …');
+  f.setAttribute('aria-label',t('In der Liste suchen','Search the list'));d.appendChild(f);const box=document.createElement('div');box.className='chrows';d.appendChild(box);
+  const draw=()=>{const q=f.value.trim().toLowerCase();box.textContent='';let room=null;
+    for(const o of opts){if(q&&!(o.label+' '+(o.room||'')).toLowerCase().includes(q))continue;
+      if(o.room!==room){room=o.room;const g=document.createElement('div');g.className='chgrp';g.textContent=room||t('Ohne Raum','No room');box.appendChild(g)}
+      const b=document.createElement('button');b.type='button';b.className='chrow';const n=document.createElement('b');n.textContent=o.label;b.appendChild(n);
+      if(o.info){const s=document.createElement('span');s.className='mut';s.textContent=' '+o.info;b.appendChild(s)}
+      b.onclick=()=>send(o.label,b);box.appendChild(b)}};
+  f.oninput=draw;draw();
+  if(c.none){const b=document.createElement('button');b.type='button';b.className='b chb chnone';b.textContent=c.none;b.onclick=()=>send(c.none,b);d.appendChild(b)}
+  return d}
 // "Erklären statt Schweigen" (plan „Bedienung gesamt“ B4, V01.0.286): asked for a function this answer could not
 // use, the reason under it comes from the panel's rules (intent.explain), never from the model; with a way to change it.
 function whyNote(w){const d=document.createElement('div');d.className='mem whynote';const n='„'+(w.name||[])[L==='en'?1:0]+'“';

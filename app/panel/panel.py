@@ -94,10 +94,11 @@ import meldung  # noqa: E402
 import ghtoken  # noqa: E402
 import docmake  # noqa: E402
 import verlauf  # noqa: E402
+import klaeren  # noqa: E402
 
 # no /docs, /redoc or /openapi.json: a map of every path for guests, and Swagger from a CDN
 app = FastAPI(title="Speech on DGX Spark", docs_url=None, redoc_url=None, openapi_url=None)
-for _module in (account, admin, chat, update, system, proactive, room, roomlive, tidy, weather, contacts, parcels, telegram, tasks, esp32, iphone, pebblewatch, android, appupdate, apns, transit, logfilter, agent, images, messages, intent, wissen, tracelog, lokal, features, remarkable, rmplus, join, onboard, hintergrund, stufe, today, offsite, mcpserver, meinmcp, live, hamelden, notaus, hilfe, tipps, schreib, begleiter, systemone, geraeteupdate, meldung, ghtoken, docmake, weiche, dienstwacht, faelle, berater, speicher, verlauf):
+for _module in (account, admin, chat, update, system, proactive, room, roomlive, tidy, weather, contacts, parcels, telegram, tasks, esp32, iphone, pebblewatch, android, appupdate, apns, transit, logfilter, agent, images, messages, intent, wissen, tracelog, lokal, features, remarkable, rmplus, join, onboard, hintergrund, stufe, today, offsite, mcpserver, meinmcp, live, hamelden, notaus, hilfe, tipps, schreib, begleiter, systemone, geraeteupdate, meldung, ghtoken, docmake, weiche, dienstwacht, faelle, berater, speicher, verlauf, klaeren):
     app.include_router(_module.router)
 app.middleware("http")(update_lock)
 

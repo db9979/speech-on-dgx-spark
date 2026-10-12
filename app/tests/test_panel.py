@@ -1023,6 +1023,27 @@ class Briefing(unittest.TestCase):
 
 
 class CalendarAdd(unittest.TestCase):
+    def test_named_calendar_that_is_not_there_is_never_swapped(self):
+        """Rückfrage-Plan Stufe C: "in den Kalender Familie" when there is only "Privat" writes nothing (before: silently into
+        the first calendar) and names the calendars there are; the exact name and part of it still work."""
+        a = profile("Ida Familie")
+        uid = a.get("/api/whoami").json()["profile"]["id"]
+        import calendars
+        calendars.add(uid, calendars.entry({"name": "Privat", "url": f"http://127.0.0.1:{helpers.CAL_PORT}/dav/",
+                                            "user": "ida", "password": "pw"}))
+        helpers.CAL_EVENTS.clear()
+        answer(ask(a, 'TOOL calendar_add {"title": "Elternabend", "start": "2030-05-05T19:00", "calendar": "Familie"}',
+                   tz="Europe/Berlin"))
+        answer(ask(a, "Ja", tz="Europe/Berlin"))
+        self.assertEqual(helpers.CAL_EVENTS, {})
+        said = helpers.LLM_CALLS[-1]["messages"][0]["content"]
+        self.assertIn("no calendar called 'Familie'", said)
+        self.assertIn("Privat", said)
+        answer(ask(a, 'TOOL calendar_add {"title": "Elternabend", "start": "2030-05-05T19:00", "calendar": "priv"}',
+                   tz="Europe/Berlin"))
+        answer(ask(a, "Ja", tz="Europe/Berlin"))
+        self.assertEqual(len(helpers.CAL_EVENTS), 1)
+
     def test_only_after_yes(self):
         a, b = profile("Ida"), profile("Tom")
         uid = a.get("/api/whoami").json()["profile"]["id"]

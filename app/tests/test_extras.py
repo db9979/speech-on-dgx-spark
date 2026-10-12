@@ -170,6 +170,32 @@ class Weather(unittest.TestCase):
         self.assertEqual((r["place"]["lat"], r["place"]["lon"]), (48.87, 8.5))
         self.assertEqual(a.put("/api/profile/weather", json={"place": "x", "pick": {"lat": 99, "lon": 0}}).status_code, 400)
 
+    def test_same_named_places_are_asked(self):
+        """Rückfrage statt Raten (klaeren.py, Stufe C): "Karlsbad" is a town in Germany and one in Czechia; with the
+        switch on the panel asks instead of taking the first, the choice gets that town's forecast. Off: as before."""
+        import klaeren
+        a = profile("Wetter Rueck")
+        a.put("/api/profile/weather", json={"place": "ulm"})
+        a.put("/api/profile/settings", json={"wx_on": True})
+        self.assertIn("Karlsbad, Baden-Württemberg", ask(a, 'TOOL weather {"place": "Karlsbad"}'))
+        helpers.set_config(klaeren=True, klaeren_merken=True)
+        try:
+            a.put("/api/profile/settings", json={"klaeren": True, "klaeren_merken": True})
+            r = a.post("/api/chat", json={"messages": [{"role": "user", "content": 'TOOL weather {"place": "Karlsbad"}'}]})
+            evs = helpers.events(r)
+            ch = [e for e in evs if e["type"] == "choice"]
+            self.assertEqual([o["label"] for o in ch[0]["options"]], ["Karlsbad, Baden-Württemberg", "Karlsbad, Karlovarský kraj"])
+            import weather
+            weather._cache.clear()
+            WX_CALLS.clear()
+            out = ask(a, "das zweite")
+            self.assertIn("Karlsbad, Karlovarský kraj", out)
+            self.assertIn(("forecast", 50.23, 12.87), WX_CALLS)
+            self.assertIn("Soll ich mir merken", out)
+        finally:
+            helpers.set_config(klaeren=False, klaeren_merken=False)
+            klaeren._waiting.clear()
+
     def test_notable_tomorrow_is_fixed_text(self):
         import asyncio
         import weather

@@ -33,6 +33,7 @@ All options for running without questions (`--mode api --asr 1.7b --tts 0.6b --y
 
 <!-- New version: add one line at the top here and in CHANGELOG.md, drop the oldest line here (keep 10). Details go to docs/de and docs/en, not into this README. -->
 
+- **V01.0.470** Ask instead of guessing (off): several devices, stops, places or lists fit, the Spark asks with buttons and can remember your choice
 - **V01.0.469** Red fix: service watch test counted "today" with the real clock, now with a fixed day
 - **V01.0.468** Red fix after V01.0.467: memory Live test checks the whole fact, memory topics and Live counts read the settings once and nothing while switched off
 - **V01.0.467** Memory check (off): every entry keeps where it came from, fixed rules mark what may be out of date, earlier versions, a check-back in the conversation, topics
@@ -42,7 +43,6 @@ All options for running without questions (`--mode api --asr 1.7b --tts 0.6b --y
 - **V01.0.463** Browser tests wait until a page has loaded (fixes a flaky test)
 - **V01.0.462** Own storage: old originals of documents can live only on the own storage and come back when opened
 - **V01.0.461** "Turn on the TV in the living room" hits the TV, not the box next to it
-- **V01.0.460** Companion: every text field can be spoken into, button labels no longer break mid-word
 
 All versions: [CHANGELOG.md](CHANGELOG.md)
 

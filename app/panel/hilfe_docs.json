@@ -1388,6 +1388,30 @@
 "src": "assistent",
 "file": "Assistent und Oberfläche",
 "head": "Sprach-Chat",
+"title": "Rückfrage statt Raten",
+"text": "Rückfrage statt Raten (Funktionen → „Rückfrage statt Raten“, standardmäßig aus; je Profil unter Ich → Einstellungen): Passen bei einem Schaltbefehl mehrere Geräte, schaltet der Spark nichts auf gut Glück, sondern fragt: „Da passen mehrere: Samsung, Samsung The Frame oder TV. Welches meinst du?“. Im Chat stehen die Geräte als Knöpfe darunter, dazu „Keins davon“. Findet er das Gerät nicht genau, fragt er „Das finde ich so nicht genau. Meinst du …?“; „Keins davon“ oder „zeig alle“ bringt die ganze Geräteliste mit Suchfeld, nach Räumen geordnet (Schlösser, Alarmanlagen und Fernbedienungen nie). Die Antwort darf getippt, gesprochen oder angetippt werden: Name, Raum oder Nummer („das zweite“). Sie gilt nur im selben Gespräch, auf demselben Gerät und zwei Minuten lang; das Codewort des Befehls gilt für die Auswahl mit, wird aber nie gespeichert oder gesagt. Hat der Spark unter mehreren Geräten selbst eins gewählt, korrigiert „Nein, das Apple TV“ es: Das falsch geschaltete Gerät geht in den alten Zustand zurück, das richtige wird geschaltet. Entschieden wird immer nach festen Regeln im Panel, nie vom Sprachmodell. (seit V01.0.470)"
+},
+{
+"lang": "de",
+"src": "assistent",
+"file": "Assistent und Oberfläche",
+"head": "Sprach-Chat",
+"title": "Auswahl merken",
+"text": "Auswahl merken (Unterschalter, standardmäßig aus): Nach einer Auswahl oder Korrektur fragt der Spark „Soll ich mir merken, dass „Fernseher im Wohnzimmer“ Samsung ist?“ (Knöpfe „Ja, merken“ und „Nein“). Gemerkt wird nur nach einem Ja. Danach schaltet derselbe Satz sofort dieses Gerät, das Codewort braucht es weiterhin. Alle Zuordnungen stehen unter Ich → Gedächtnis → „Zuordnungen“: Wörter ändern, anderes Ziel, löschen, oder mit „Eigene Namen vergeben“ selbst aus der Geräteliste zuordnen. Sie liegen in zuordnungen.json des Profils, gehen mit dem Gedächtnis in den eigenen Speicher und ins Backup. Die Live-Übersicht zeigt nur Zahlen (offene Fragen, heute gefragt, gewählt, korrigiert, gemerkt, genutzt), das Log nur feste Wörter („klaeren: frage ha 3 kandidaten“), nie Geräte oder Sätze. (seit V01.0.470)"
+},
+{
+"lang": "de",
+"src": "assistent",
+"file": "Assistent und Oberfläche",
+"head": "Sprach-Chat",
+"title": "Rückfrage auch bei Bus und Bahn, Wetter und Nachrichten",
+"text": "Rückfrage auch bei Bus und Bahn, Wetter und Nachrichten (gleicher Schalter): „nach Bahnhof“ passt auf mehrere Haltestellen und nennt keine genau, dann fragt der Spark mit Knöpfen statt die erste zu nehmen; gleiche Ortsnamen in verschiedenen Regionen („Karlsbad“ in Deutschland und Tschechien) ebenso beim Wetter und bei Listen in Home Assistant („Einkauf“ passt auf „Einkaufsliste“ und „Einkauf Baumarkt“; bei einer Änderung gilt das Codewort der Bitte für die Auswahl mit). Die Auswahl führt dieselbe Anfrage mit dem gewählten Ziel aus; nach einem Ja gilt das Wort künftig dafür (Ich → Zuordnungen, Bereiche „Bus und Bahn“, „Orte (Wetter)“ und „Listen“). Bei „Meinst du Quirin Meier oder Quirin Müller?“ stehen die Namen als Knöpfe darunter. In Telegram kommen die Auswahl-Knöpfe als Tastatur unter der Antwort; ein Tipp schickt den Namen wie eine getippte Antwort. In den Apps und am Lautsprecher reicht die gesprochene oder getippte Antwort (Name, Raum oder Nummer). Ein im Termin genannter Kalender, den es nicht gibt, wird nie mehr still durch den ersten ersetzt: Der Spark trägt nichts ein und nennt die vorhandenen Kalender. (seit V01.0.470)"
+},
+{
+"lang": "de",
+"src": "assistent",
+"file": "Assistent und Oberfläche",
+"head": "Sprach-Chat",
 "title": "Gespräche durchsuchen",
 "text": "Gespräche durchsuchen: Die Lupe neben der Gesprächsauswahl (am Handy im Menü) sucht in allen früheren Gesprächen, mit Profil in denen des Profils, als Gast in denen des Browsers. Ein Klick öffnet das Gespräch an der Stelle."
 },
@@ -4614,6 +4638,30 @@
 "head": "Voice chat",
 "title": "Home Assistant",
 "text": "no switching tool (since V01.0.461)."
+},
+{
+"lang": "en",
+"src": "assistant",
+"file": "Assistant and panel",
+"head": "Voice chat",
+"title": "Ask instead of guessing",
+"text": "Ask instead of guessing (Funktionen → \"Rückfrage statt Raten\", off by default; per profile under Me → Settings): when several devices fit a switching command, the Spark switches nothing at random but asks: \"Several fit: Samsung, Samsung The Frame or TV. Which one do you mean?\". In the chat the devices are buttons below it, plus \"None of these\". When it cannot find the device exactly it asks \"I can't find that exactly. Do you mean …?\"; \"None of these\" or \"show all\" brings the whole device list with a search field, grouped by room (never locks, alarm panels or remotes). The answer may be typed, spoken or tapped: name, room or number (\"the second\"). It only counts in the same conversation, on the same device and for two minutes; the code word of the command covers the choice but is never stored or spoken. When the Spark itself picked one of several devices, \"No, the Apple TV\" corrects it: the wrongly switched device goes back to its old state, the right one is switched. Fixed rules in the panel decide, never the language model. (since V01.0.470)"
+},
+{
+"lang": "en",
+"src": "assistant",
+"file": "Assistant and panel",
+"head": "Voice chat",
+"title": "Remember the choice",
+"text": "Remember the choice (sub-switch, off by default): after a choice or a correction the Spark asks \"Shall I remember that \"TV in the living room\" is Samsung?\" (buttons \"Yes, remember\" and \"No\"). Only a yes stores it. From then on the same sentence switches that device at once; the code word is still needed. All mappings are under Me → Memory → \"Mappings\": change words, other target, delete, or assign your own from the device list with \"Give own names\". They live in the profile's zuordnungen.json and go with the memory into your own storage and the backup. The live page shows numbers only (open questions, asked today, chosen, corrected, remembered, used), the log fixed words only (\"klaeren: frage ha 3 kandidaten\"), never devices or sentences. (since V01.0.470)"
+},
+{
+"lang": "en",
+"src": "assistant",
+"file": "Assistant and panel",
+"head": "Voice chat",
+"title": "Asking back for bus and train, weather and messages too",
+"text": "Asking back for bus and train, weather and messages too (same switch): \"to the station\" fits several stops and names none exactly, so the Spark asks with buttons instead of taking the first; the same for place names in different regions (\"Karlsbad\" in Germany and Czechia) in the weather and for lists in Home Assistant (\"Einkauf\" fits \"Einkaufsliste\" and \"Einkauf Baumarkt\"; for a change the code word of the request covers the choice). The choice runs the same request with the chosen target; after a yes the word stands for it from then on (Me → Mappings, areas \"Bus and train\", \"Places (weather)\" and \"Lists\"). With \"Do you mean Quirin Meier or Quirin Müller?\" the names are buttons below. In Telegram the choices come as a keyboard under the answer; a tap sends the name like a typed answer. In the apps and at a speaker the spoken or typed answer does it (name, room or number). A calendar named for an appointment that does not exist is never silently replaced by the first one any more: the Spark enters nothing and names the calendars there are. (since V01.0.470)"
 },
 {
 "lang": "en",

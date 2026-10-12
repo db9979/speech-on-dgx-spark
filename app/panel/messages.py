@@ -820,6 +820,18 @@ async def answer(ctx, latest):
     return _direct(uid, latest, src)
 
 
+def choice_event(uid, cands):
+    """The names as buttons in the chat (Rückfrage statt Raten, klaeren.py); a tap sends the name, which pick()
+    takes like a typed answer. None while that switch is off for the profile."""
+    import klaeren
+    import uuid
+    if not klaeren.on(uid):
+        return None
+    return {"type": "choice", "id": uuid.uuid4().hex[:12], "area": "nachricht", "list": False,
+            "options": [{"n": i + 1, "label": label(x), "send": x["name"], "room": "", "info": ""} for i, x in enumerate(cands)],
+            "none": "Keins davon"}
+
+
 def _ask_which(uid, cands, text, src, fresh=False):
     """Several profiles fit the spoken name: ask which one (at most MAX_CHOICE names); the next answer
     picks only among these (pick), and the message still waits for the "Ja" after that."""
@@ -828,6 +840,7 @@ def _ask_which(uid, cands, text, src, fresh=False):
     _propose(uid, q, src, fresh=fresh)
     ask = "Meinst du " + " oder ".join(q["names"]) + "?"
     return {"call": {"name": "message_send (Rückfrage)", "args": ", ".join(q["names"]), "result": "wartet auf Auswahl"},
+            "event": choice_event(uid, cands),
             "system": f"Nachrichten: Noch NICHT gesendet, mehrere Profile passen. Frag den Nutzer genau: „{ask}“ "
                       "Seine nächste Antwort wählt nur unter diesen Namen."}
 
@@ -1071,7 +1084,10 @@ async def tool(name, args, ctx):
         else:
             r, why, cands = find_all(uid, to)
             if cands:
-                return _ask_which(uid, cands, text, src)["system"].split(": ", 1)[1]
+                q = _ask_which(uid, cands, text, src)
+                if q.get("event") and ctx.get("out") is not None:   # the names as buttons (klaeren.py)
+                    ctx["out"].put_nowait(q["event"])
+                return q["system"].split(": ", 1)[1]
             if not r:
                 return "Nicht gesendet: " + why + " Frag nach, wem die Nachricht gehen soll."
             p = {"kind": "text", "to": [r["id"]], "names": [r["name"]], "text": text}

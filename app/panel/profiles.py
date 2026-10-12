@@ -739,6 +739,8 @@ SETTINGS = {
     "mem_check": (False, lambda v: isinstance(v, bool)),    # Gedächtnis prüfen (gedaechtnis.py, admin chat.memory_check)
     "mem_ask": (False, lambda v: isinstance(v, bool)),      # Nachfrage zum Gedächtnis (gedaechtnis.py, chat.memory_ask)
     "mem_topics": (False, lambda v: isinstance(v, bool)),   # Themen im Gedächtnis (gedaechtnis.py, chat.memory_topics)
+    "klaeren": (False, lambda v: isinstance(v, bool)),      # Rückfrage statt Raten (klaeren.py, admin chat.klaeren)
+    "klaeren_merken": (False, lambda v: isinstance(v, bool)),  # remember the choice after a yes (admin chat.klaeren_merken)
     "images_on": (False, lambda v: isinstance(v, bool)),    # pictures for the model (images.py, admin chat.images)
     # documents (wissen.py): photos and scans read by the model, meaning search, keeping the originals
     "doc_pictures": (False, lambda v: isinstance(v, bool)),

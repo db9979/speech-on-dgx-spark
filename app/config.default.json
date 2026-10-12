@@ -102,6 +102,8 @@
     "route_off": [],
     "route_tests": [],
     "learn_fixes": false,
+    "klaeren": false,
+    "klaeren_merken": false,
     "follow_up": false,
     "no_self_echo": false,
     "images": false,

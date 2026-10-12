@@ -369,7 +369,7 @@ def fake_ha():
         auth(request)
         b = await request.json()
         HA_CALLS.append(b)
-        if any(w in b["text"] for w in ("Fernseher", "TV", "Gerät", "Frame", "alle", "Kelerpumpe")):  # not exposed to Assist
+        if any(w in b["text"] for w in ("Fernseher", "TV", "Gerät", "Frame", "alle", "Kelerpumpe", "Glotze")):  # not exposed to Assist
             return {"response": {"response_type": "error", "speech": {"plain": {"speech": "Kein Gerät gefunden"}},
                                  "data": {"code": "no_valid_targets"}}}
         return {"response": {"response_type": "action_done", "speech": {"plain": {"speech": "Erledigt"}},

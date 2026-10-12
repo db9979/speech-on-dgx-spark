@@ -265,6 +265,8 @@
       <div class="setrow"><div class="lbl"><b>Bilder erkennen</b><span>Profile hängen im Assistenten, in der iPhone-App oder über Telegram ein Foto an; das Sprachmodell (qwen38) sieht es sich selbst an.</span></div><label class="tgl"><input type="checkbox" id="chat.images"><i></i></label></div>
       <div data-show="chat.images"><div class="fh">Prüft einmal, ob das laufende Sprachmodell Bilder annimmt: Es bekommt ein Testbild mit einer Zahl.</div><div class="row"><button class="b" type="button" id="visiongo">Bilderkennung prüfen</button><span id="visionmsg" class="mut"></span></div></div>
       <div class="setrow"><div class="lbl"><b>Aus Korrekturen lernen</b><span>Nach einer Korrektur schlägt der Assistent einen Satz zum Merken vor und speichert ihn erst nach „Ja“.</span></div><label class="tgl"><input type="checkbox" id="chat.learn_fixes"><i></i></label></div>
+      <div class="setrow"><div class="lbl"><b>Rückfrage statt Raten</b><span>Passt ein Befehl auf mehrere Geräte oder auf keins genau, fragt der Assistent nach und zeigt die Auswahl, statt zu raten.</span></div><label class="tgl"><input type="checkbox" id="chat.klaeren"><i></i></label></div>
+      <div class="setrow" data-show="chat.klaeren" style="margin-left:36px"><div class="lbl"><b>Auswahl merken</b><span>Nach der Auswahl fragt er, ob er sie sich merken soll; nach „Ja“ gilt derselbe Satz künftig sofort.</span></div><label class="tgl"><input type="checkbox" id="chat.klaeren_merken"><i></i></label></div>
       <div class="setrow"><div class="lbl"><b>Eigener Gesprächsstil</b><span>Profile sagen in eigenen Worten, wie der Assistent mit ihnen reden soll; das ändert nur den Ton, nie die Regeln.</span></div><label class="tgl"><input type="checkbox" id="chat.own_style"><i></i></label></div>
       <div class="setrow" data-show="chat.own_style" style="margin-left:18px"><div class="lbl"><b>Rollen per Sprache</b><span>Profile speichern eigene Rollen und wechseln mit „Sei jetzt …“; das Panel schaltet, die Rolle ändert nur den Ton.</span></div><label class="tgl"><input type="checkbox" id="chat.roles"><i></i></label></div>
       <div class="setrow"><div class="lbl"><b>Bei der Werkzeugwahl nachdenken</b><span>Profile können einschalten, dass das Modell vor der Werkzeugwahl nachdenkt: zuverlässiger, aber die Antwort beginnt später.</span></div><label class="tgl"><input type="checkbox" id="chat.tool_thinking"><i></i></label></div>
@@ -849,6 +851,8 @@
     <div id="factlist" class="factlist"></div>
     <div class="row" style="margin-top:8px"><button class="b" id="facttidy">Aufräumen vorschlagen</button><span id="factmsg"></span></div>
     <div class="fh">Einmal pro Woche schlägt der Assistent vor, doppelte oder überholte Einträge zusammenzufassen. Es ändert sich erst etwas, wenn du hier bestätigst.</div>
+    <div id="mapbox" hidden><h3 class="sec">Zuordnungen</h3><div class="intro">Deine eigenen Wörter für deine Geräte: „Fernseher im Wohnzimmer“ schaltet dann sofort das Gerät, das du gewählt hast. Das Codewort braucht es weiterhin.</div>
+      <div id="maptools" class="ic-tools"></div><div id="maplist"></div><div id="mapmsg" class="mut" aria-live="polite"></div></div>
     <div class="ic-danger"><div class="ic-mid"><b>Alles vergessen</b><span>Löscht alles, was sich der Assistent über dich gemerkt hat. Lässt sich nicht rückgängig machen.</span></div><button class="b ic-red" id="factclear" type="button">Alles vergessen …</button></div></div>
     <div id="docbox" class="ptab ld-box">
       <div class="ld-head"><span class="dcount"><span id="doccount"></span><span id="docspace" class="docspace" hidden><span id="docspacet"></span><span class="qbar docbar"><i></i></span></span></span><button class="b p" id="docadd" type="button">＋ Hinzufügen</button></div>
@@ -972,6 +976,7 @@
 <script src="/static/js/dienste.js"></script>
 <script src="/static/js/verbessern.js"></script>
 <script src="/static/js/bewerten.js"></script>
+<script src="/static/js/zuordnungen.js"></script>
 <script src="/static/js/speicher.js"></script>
 <script src="/static/js/agent.js"></script>
 <script src="/static/js/messages.js"></script>

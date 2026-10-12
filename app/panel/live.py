@@ -128,6 +128,8 @@ TARGETS = {
     "verb": ("Verbessern", "Fälle und Vorschläge · auf dem Spark", "spark", False),
     # Gedächtnis prüfen (gedaechtnis.py): shown while it is on, the facts of all profiles by mark, numbers only
     "ged": ("Gedächtnis", "Einträge geprüft · auf dem Spark", "spark", False),
+    # Rückfrage statt Raten (klaeren.py): shown while it is on, the line with questions and mappings in numbers
+    "klaeren": ("Rückfrage und Merken", "Auswahl und Zuordnungen · auf dem Spark", "spark", False),
 }
 RETURNS = {"cal": "Termine oder Aufgaben", "ha": "Zustände oder Schaltung", "web": "Suchergebnisse", "pages": "Seitentext", "kiwix": "Archiv-Treffer",
            "wiki": "Artikel", "mail": "Mails (nur Anzahl und Größe)", "contacts": "Kontakte", "rm": "Ablage", "push": "Zustellung",
@@ -1025,6 +1027,14 @@ def snapshot(view="admin", now=None):
         ged = {"on": False}
     if ged.get("on"):
         used.add("ged")
+    try:
+        import klaeren
+        import features
+        kl = klaeren.for_live() if features.admin_on("klaeren") else None
+    except Exception:
+        kl = None
+    if kl is not None:
+        used.add("klaeren")
     used |= set(watch_svc)
     off = unset(now)
     targets = [{"id": k, "name": v[0], "sub": _devup_sub(devup) if k == "geraete" and devup else v[1], "zone": v[2]}
@@ -1041,6 +1051,9 @@ def snapshot(view="admin", now=None):
                         f"{ged.get('stale', 0)} veraltet?" + (f" · {ged['contra']} Widerspruch" if ged.get("contra") else "")
                         + (f" · {ged['ask']} Nachfrage offen" if ged.get("ask") else "")
                         + (f" · {ged['untagged']} ohne Thema" if ged.get("untagged") else ""))
+        if x["id"] == "klaeren":   # Rückfrage statt Raten: numbers only (never a device, a name or a word)
+            x["sub"] = (f"{kl.get('offen', 0)} Fragen offen · heute {kl.get('fragen', 0)} gefragt · {kl.get('auswahl', 0)} gewählt"
+                        f" · {kl.get('korrektur', 0)} korrigiert · {kl.get('gemerkt', 0)} gemerkt · {kl.get('genutzt', 0)} genutzt")
         if x["id"] == "make":   # Dokumente erstellen: jobs in numbers (no titles, no text)
             x["sub"] = (f"{make.get('run', 0)} läuft · {make.get('wait', 0)} wartet · {make.get('done', 0)} heute fertig"
                         + (f" · {make['failed']} Fehler" if make.get("failed") else ""))

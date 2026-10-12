@@ -46,6 +46,7 @@ async def run(t, name, args, st):
     gone = dienstwacht.tool_down(name, t.who["id"] if t.who else "") if name != "web_search" else ""
     if gone:
         return gone
+    before = bool(st["mail"] or st["outside"])   # outside text read before this call (not this tool's own result)
     if name in chat.READS_OUTSIDE:
         st["outside"] = True
     if name == "document_search":
@@ -62,7 +63,9 @@ async def run(t, name, args, st):
                                                          "page": t.hilfe_page, "admin": t.hilfe_admin, "out": t.out,
                                                          "origin": t.hilfe_origin, "app": t.hilfe_app, "focus": t.hilfe_focus,
                                                          "text": t.ask_text, "request": t.request,
-                                                         "outside": bool(st["mail"] or st["outside"])})
+                                                         "outside": bool(st["mail"] or st["outside"]),
+                                                         # a target the person chose after the panel asked (klaeren.py)
+                                                         "pin": getattr(t, "kl_pin", None), "outside_before": before})
     if name.startswith("mail_tidy_") and t.tidy_on:
         return await tidy_tool(t, name, args, st)
     if name == "mail_draft" and t.drafts_on:
@@ -163,7 +166,13 @@ async def run(t, name, args, st):
             return chat.CODE_MISSING
         await t.out.put({"type": "home", "command": f"{args.get('list') or 'Liste'}: {act} {args.get('item') or ''}".strip()})
         try:
-            ok, result = await homeassistant.todo(t.ha, str(args.get("list") or ""), act, str(args.get("item") or ""))
+            ok, result = await homeassistant.todo(t.ha, str(args.get("list") or ""), act, str(args.get("item") or ""),
+                                                  ctx={"who": t.who, "own": t.own_browser, "src": t.src, "out": t.out,
+                                                       "pin": getattr(t, "kl_pin", None), "outside_before": before,
+                                                       "code_ok": bool(t.ha_code_ok), "args": dict(args)})
+            if ok is None:   # the panel asks which list (klaeren.py)
+                await t.out.put({"type": "home_done", "ok": False, "text": "Rückfrage"})
+                return result
         except (httpx.HTTPError, ValueError) as e:
             await t.out.put({"type": "home_done", "ok": False, "text": str(e)[:200] or type(e).__name__})
             return f"Home Assistant not reachable: {type(e).__name__}"

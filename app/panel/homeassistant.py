@@ -275,7 +275,7 @@ async def check(item):
     return {"ok": True}
 
 
-async def command(item, text, language="de", panel=False):
+async def command(item, text, language="de", panel=False, out=None):
     """Hands one spoken command to Home Assistant's Assist; when Assist does not know the device, finds
     it among all states and switches it directly (see fallback). Whatever Assist reports, the states of
     the devices it names are read back afterwards, and only that counts. Returns (ok, answer, targets).
@@ -284,7 +284,7 @@ async def command(item, text, language="de", panel=False):
     notaus.stop("aktion")   # the Notaus holds every action off (notaus.py)
     ok, speech, targets, unknown, ids = await _assist(item, text, language)
     if unknown:
-        done, more = await fallback(item, text, panel)
+        done, more = await fallback(item, text, panel, out)
         if more:
             return done, more, []
         if panel:
@@ -729,11 +729,21 @@ async def mentions_device(item, text):
     return any(_hit(w, h) for w in _correct(words, hays) for h in hays)
 
 
-async def fallback(item, text, panel=False):
+def _cand(s, names, areas):
+    """One device as a choice for the person (klaeren.py): name, room and state, no attributes."""
+    eid = s["entity_id"]
+    return {"id": eid, "name": names.get(eid) or _name(s), "room": areas.get(eid, ""), "info": str(s.get("state", ""))[:20]}
+
+
+async def fallback(item, text, panel=False, out=None):
     """When Assist does not know a device: finds it among all states and switches it when the words
-    name one device and a plain on/off/open/close; otherwise lists the candidates. (done, text)."""
+    name one device and a plain on/off/open/close; otherwise lists the candidates. (done, text).
+    out (a dict, panel only): what the panel needs to ask the person or correct the choice later:
+    service, cands (the devices that fit), chosen and its state before."""
+    out = {} if out is None else out
     words = [w for w in re.findall(r"\w+", _norm(clean_command(text))) if len(w) > 1]
     service = next((svc for svc, verbs in _VERBS if any(w in verbs.split() for w in words)), None)
+    out["service"] = service
     every = any(w in ("alle", "alles", "saemtliche", "all") for w in words)
     words = [w for w in words if w not in _FILLER and w not in _STOP and not any(w in v.split() for _, v in _VERBS)]
     if not words:
@@ -748,7 +758,12 @@ async def fallback(item, text, panel=False):
     chosen, full = _pick(all_states, areas, names, words)
     _log("fallback:", repr(text[:80]), "words", words, "service", service, "areas", len(set(areas.values())),
          "candidates", [x[2]["entity_id"] for x in (full or scored)[:8]], "chosen", chosen and chosen["entity_id"])
+    out["cands"] = [_cand(x[2], names, areas) for x in (full or scored)[:8]]
+    hays = [_hay(x, names, areas.get(x["entity_id"], "")) for x in all_states]
+    # every word fits these; otherwise only some words do ("Glotze im Dachboden": TVs, but no attic)
+    out["exact"] = bool(full) and all(any(_hit(w, h) for h in hays) for w in _correct(words, hays))
     if service and chosen:
+        out["chosen"], out["before"] = _cand(chosen, names, areas), chosen.get("state")
         dom = chosen["entity_id"].split(".")[0]
         svc = service if dom == "cover" or service not in ("open_cover", "close_cover") else None
         if dom == "cover" and service in ("turn_on", "turn_off"):
@@ -856,6 +871,53 @@ async def action(item, entity_id, service, data=None):
     return ok, text + f"\n(before: '{before}')"
 
 
+_INVERSE = {"turn_on": "turn_off", "turn_off": "turn_on", "open_cover": "close_cover", "close_cover": "open_cover"}
+
+
+def service_for(eid, service):
+    """The service a plain on/off/open/close command means for this entity (covers open and close)."""
+    dom = str(eid).split(".")[0]
+    if dom == "cover" and service in ("turn_on", "turn_off"):
+        return "open_cover" if service == "turn_on" else "close_cover"
+    if dom != "cover" and service in ("open_cover", "close_cover"):
+        return "turn_on" if service == "open_cover" else "turn_off"
+    return service
+
+
+async def switch(item, eid, service):
+    """A command the panel already resolved to one device (a choice or a remembered mapping)."""
+    svc = service_for(eid, service)
+    if not svc:
+        return False, "Nothing switched: the command says neither on nor off."
+    return await action(item, eid, svc)
+
+
+async def undo(item, eid, service, before):
+    """Takes back a plain on/off/open/close the panel did on the wrong device, to the state read before.
+    Returns (done, text); nothing for other services or when the state before was the same."""
+    svc = service_for(eid, service)
+    back = _INVERSE.get(svc)
+    off = _EXPECT["turn_off"]
+    was = {"turn_on": before in off, "turn_off": before not in off | {"unavailable", "unknown", None},
+           "open_cover": before in _EXPECT["close_cover"], "close_cover": before in _EXPECT["open_cover"]}.get(svc)
+    if not back or not was:
+        return False, ""
+    return await action(item, eid, back)
+
+
+async def targets_for(uid):
+    """Every device the profile's Home Assistant can switch from here, for the list to pick from
+    (klaeren.py): allowed domains only, one line per device, the main entity of a device first."""
+    item = get(uid)
+    if not item:
+        return []
+    all_states, areas, names = await _switchable(item)
+    rows = [s for s in all_states if s["entity_id"].split(".")[0] in ALLOWED and s["entity_id"].split(".")[0] != "remote"]
+    rows.sort(key=lambda s: (areas.get(s["entity_id"], "~"), _PRIMARY.get(s["entity_id"].split(".")[0], 1),
+                             names[s["entity_id"]].lower()))
+    return [_cand(s, names, areas) for s in rows]
+
+
 # ---- history: what a device did, read from Home Assistant's recorder ----
 
 async def history(item, text, hours=24, zone=None):
@@ -921,9 +983,10 @@ async def history(item, text, hours=24, zone=None):
 
 # ---- to-do lists (shopping list and others): read, add, tick off ----
 
-async def todo(item, list_name="", act="show", text=""):
+async def todo(item, list_name="", act="show", text="", ctx=None):
     """Returns (ok, text for the model). Changes are read back: an item counts as added or done only
-    when the list shows it so afterwards."""
+    when the list shows it so afterwards. ctx (the panel's chat): several lists fit the name and none is
+    named exactly, so the panel asks which one (klaeren.py; ok is None then) instead of taking the first."""
     act = str(act or "show").strip().lower()
     act = {"list": "show", "read": "show", "get": "show", "add_item": "add", "complete": "done",
            "check": "done", "remove_item": "remove", "delete": "remove"}.get(act, act)
@@ -940,9 +1003,19 @@ async def todo(item, list_name="", act="show", text=""):
         pick = [x for x in lists if want and (want in _norm(names[x["entity_id"]]) or want in x["entity_id"])] \
             or ([x for x in lists if "einkauf" in _norm(names[x["entity_id"]]) or "shopping" in x["entity_id"]]
                 if not want or "einkauf" in want or "shopping" in want else [])
+        import klaeren
+        pin = klaeren.pinned(ctx, "liste", list_name) if ctx and list_name else None
+        if pin and pin["id"] in names:
+            pick = [x for x in lists if x["entity_id"] == pin["id"]]
         if not pick:
             return False, "Lists in Home Assistant: " + ", ".join(f"{names[x['entity_id']]} ({x['entity_id']})" for x in lists)
-        eid = pick[0]["entity_id"]
+        exact = [x for x in pick if _norm(names[x["entity_id"]]) == want]
+        if len(pick) > 1 and not exact and not pin and ctx and list_name:
+            q = klaeren.ask_tool(ctx, "liste", list_name, [{"id": x["entity_id"], "name": names[x["entity_id"]]} for x in pick],
+                                 ctx.get("args"))
+            if q:
+                return None, q
+        eid = (exact or pick)[0]["entity_id"]
 
         async def items():
             r = await c.post(f"{item['url']}/api/services/todo/get_items?return_response",
@@ -1052,3 +1125,12 @@ async def lookup(item, text, limit=12):
     more = f"\n... and {len(cands) - limit} more" if len(cands) > limit else ""
     return ("Read from Home Assistant just now (answer only from these values; if the asked value is not "
             "among them, say that it is not there):\n" + "\n".join(lines) + more)
+
+
+def _register():
+    import klaeren   # klaeren.py knows nothing of Home Assistant: the list comes from here
+    klaeren.provide("ha", "Smart Home", "Smart home", targets_for)
+    klaeren.tool_area("liste", "Listen", "Lists", "home_assistant_todo", "list")
+
+
+_register()

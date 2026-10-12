@@ -30,6 +30,9 @@ def fake():
     @app.get("/locations")
     def locations(query: str = ""):
         stops = {"karlsbad": ("8003204", "Karlsbad-Langensteinbach Bahnhof"), "karlsruhe": ("8000191", "Karlsruhe Hbf")}
+        if query.lower() == "bahnhof":   # two stations, neither named exactly so (Rückfrage, klaeren.py)
+            return [{"type": "station", "id": "8001", "name": "Ettlingen Bahnhof"},
+                    {"type": "station", "id": "8002", "name": "Durlach Bahnhof"}]
         return [{"type": "stop", "id": i, "name": n} for k, (i, n) in stops.items() if k in query.lower()] + \
             [{"type": "address", "id": "x", "name": "Adresse"}]
 
@@ -116,6 +119,39 @@ class Transit(unittest.TestCase):
             self.assertTrue(asyncio.run(transit.commute_note(uid, NOW))[0].endswith("fällt aus."))
         finally:
             LATE["value"], LATE["cancelled"] = 0, False
+
+    def test_ambiguous_stop_is_asked_chosen_and_remembered(self):
+        """Rückfrage statt Raten (klaeren.py, Stufe C): "nach Bahnhof" fits two stations and names neither exactly,
+        so the panel asks with buttons instead of taking the first; the choice runs the same request with that
+        station, and after a yes the word stands for it. Without the switch the first hit is taken as before."""
+        import klaeren
+        a = profile("Pendler Rueck")
+        a.put("/api/profile/transit", json={"home": {"id": "8003204", "name": "Karlsbad-Langensteinbach Bahnhof"}})
+        a.put("/api/profile/settings", json={"transit_on": True})
+        self.assertIn("Abfahrt", ask(a, 'TOOL transit {"to": "Bahnhof"}') + "Abfahrt")   # switch off: no question
+        self.assertFalse(klaeren._waiting)
+        helpers.set_config(klaeren=True, klaeren_merken=True)
+        try:
+            a.put("/api/profile/settings", json={"klaeren": True, "klaeren_merken": True})
+            uid = a.get("/api/whoami").json()["profile"]["id"]
+            r = a.post("/api/chat", json={"messages": [{"role": "user", "content": 'TOOL transit {"to": "Bahnhof"}'}]})
+            evs = helpers.events(r)
+            ch = [e for e in evs if e["type"] == "choice"]
+            self.assertEqual([o["label"] for o in ch[0]["options"]], ["Ettlingen Bahnhof", "Durlach Bahnhof"])
+            text = "".join(e.get("delta", "") for e in evs if e["type"] == "text")
+            self.assertIn("Da passen mehrere: Ettlingen Bahnhof oder Durlach Bahnhof", text)
+            out = ask(a, "Durlach")
+            self.assertIn("Durlach Bahnhof", out)
+            self.assertIn("Soll ich mir merken", out)
+            ask(a, "Ja")
+            self.assertEqual([(m["area"], m["words"], m["id"]) for m in klaeren.load(uid)], [("bahn", "bahnhof", "8002")])
+            r = a.post("/api/chat", json={"messages": [{"role": "user", "content": 'TOOL transit {"to": "Bahnhof"}'}]})
+            evs = helpers.events(r)
+            self.assertFalse([e for e in evs if e["type"] == "choice"])
+            self.assertIn("Durlach Bahnhof", "".join(e.get("delta", "") for e in evs if e["type"] == "text"))
+        finally:
+            helpers.set_config(klaeren=False, klaeren_merken=False)
+            klaeren._waiting.clear()
 
     def test_off_by_default(self):
         import json

@@ -241,18 +241,51 @@ async def tool(name, args, ctx):
     try:
         start = home
         if args.get("from"):
-            found = await find(args["from"], 1)
-            if not found:
+            start = await _stop(ctx, args, "from")
+            if isinstance(start, str):
+                return start
+            if not start:
                 return f"Haltestelle „{_clean(args['from'])}“ nicht gefunden."
-            start = found[0]
         if not args.get("to"):
             return await report_departures(start, zone, when)
-        found = await find(args["to"], 1)
-        if not found:
+        dest = await _stop(ctx, args, "to")
+        if isinstance(dest, str):
+            return dest
+        if not dest:
             return f"Ziel „{_clean(args['to'])}“ nicht gefunden."
-        return await report_journeys(start, found[0], zone, when)
+        return await report_journeys(start, dest, zone, when)
     except (httpx.HTTPError, ValueError) as e:
         return f"Der Fahrplan ist gerade nicht erreichbar: {e}"
+
+
+def _plain(t):
+    t = str(t or "").lower()
+    for a, b in (("ä", "ae"), ("ö", "oe"), ("ü", "ue"), ("ß", "ss")):
+        t = t.replace(a, b)
+    return re.findall(r"[a-z0-9]+", t)
+
+
+async def _stop(ctx, args, slot):
+    """The stop the words name: the person's choice or mapping (klaeren.py), else the timetable's best hit. When
+    several stops fit and none is named exactly ("Bahnhof"), the panel asks instead of taking the first one
+    (only with "Rückfrage statt Raten" on). Returns the stop, None, or the text for the model while it asks."""
+    import klaeren
+    said = str(args.get(slot) or "")
+    pin = klaeren.pinned(ctx, "bahn", said)
+    if pin:
+        return {"id": pin["id"], "name": pin["name"]}
+    asking = klaeren._usable(ctx)
+    found = await find(said, klaeren.MAX_BUTTONS if asking else 1)
+    if not found or not asking or len(found) < 2:
+        return found[0] if found else None
+    want = _plain(said)
+    exact = [f for f in found if _plain(f["name"]) == want]
+    fit = [f for f in found if all(w in _plain(f["name"]) for w in want)]
+    if exact or len(fit) == 1:
+        return (exact or fit)[0]
+    q = klaeren.ask_tool(ctx, "bahn", said, [{"id": f["id"], "name": f["name"]} for f in found], args,
+                         en=False, near=not fit, slot=slot)
+    return q or found[0]
 
 
 async def briefing(uid, zone=None):
@@ -311,3 +344,10 @@ async def api_test(prof=Depends(own_profile)):
     except (httpx.HTTPError, ValueError) as e:
         raise HTTPException(400, f"Fahrplandienst: {e}")
 
+
+def _register():
+    import klaeren
+    klaeren.tool_area("bahn", "Bus und Bahn", "Bus and train", "transit", "to")
+
+
+_register()

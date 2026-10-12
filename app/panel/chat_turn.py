@@ -407,7 +407,41 @@ async def prepare(request):
     # the smart home: no switching, no code word and no smart home tools in this turn
     import roomfar
     room_far = messages[-1]["role"] == "user" and roomfar.asks(messages[-1]["content"])
-    if ha and messages[-1]["role"] == "user" and not room_far:
+    # Rückfrage und Merken (klaeren.py): the answer to the panel's own question of this conversation,
+    # read by fixed rules before anything else; it carries the code word of the command it answers
+    import klaeren
+    src = f"{body.get('client') or 'web'}:{body.get('convo') if isinstance(body.get('convo'), str) else ''}"
+    kl_on = bool(who and own_browser and private_ok and not mcp and klaeren.on(who["id"]))
+    kl = klaeren.answer(who["id"], src, messages[-1]["content"], own_browser) \
+        if kl_on and messages[-1]["role"] == "user" and not room_far else None
+    kl_took = bool(kl)
+    ha_choice = ha_list = None
+    kl_note, kl_events = [], []
+    if kl and kl["kind"] == "remember":
+        if kl["yes"]:
+            row = klaeren.remember(who["id"], kl["area"], kl["words"], kl["target"])
+            kl_note.append({"name": "Zuordnung (Panel)", "args": "", "result": "gemerkt"})
+            system = per_turn(system, "Zuordnung: Gemerkt ist jetzt, dass „" + klaeren._shown(kl["said"]) + "“ "
+                              + row["name"] + " ist. Sag dem Nutzer genau das in einem kurzen Satz, ohne Werkzeug.")
+        else:
+            system = per_turn(system, "Zuordnung: Nichts gemerkt, weil der Nutzer es nicht wollte. Bestätige das "
+                              "in drei Wörtern, ohne Werkzeug.")
+    elif kl and kl["kind"] == "none":
+        system = per_turn(system, "Rückfrage: Der Nutzer meinte keines der genannten Geräte. Nichts wurde geschaltet. "
+                          "Sag kurz, dass du nichts geschaltet hast, ohne Werkzeug.")
+    elif kl and kl["area"] == "ha" and ha and (kl["code_ok"] or not homeassistant.needs_code(ha)):
+        if kl["kind"] == "choice":
+            ha_choice, ha_direct = kl, kl["said"] or "(Auswahl)"
+        else:
+            ha_list, ha_direct = kl, kl["said"] or "(Liste)"
+    elif kl and kl["area"] in klaeren.TOOLS and kl["kind"] == "list":   # a tool's own candidates were all there is
+        system = per_turn(system, "Rückfrage: Der Nutzer meinte keines der genannten. Nichts wurde ausgeführt. Bitte ihn "
+                          "kurz, es genauer zu sagen, ohne Werkzeug.")
+    elif kl and kl["area"] in klaeren.TOOLS:   # the choice runs the tool it answers, below (direct)
+        ha_code_ok = ha_code_ok or bool(kl.get("code_ok"))   # it carries the code word of the request it answers
+    elif kl:   # an area this turn cannot act in (Home Assistant off meanwhile): nothing happens
+        system = per_turn(system, "Rückfrage: Die Auswahl kann gerade nicht ausgeführt werden. Sag das kurz, ohne Werkzeug.")
+    if ha and messages[-1]["role"] == "user" and not room_far and not kl_took:
         latest = messages[-1]["content"]
         pend = chat._HA_PENDING.pop(who["id"], None)
         if homeassistant.is_command(latest) and await homeassistant.mentions_device(ha, latest):
@@ -430,7 +464,7 @@ async def prepare(request):
     # A question that names a device or room is answered from states the panel reads itself, so the
     # value never comes from the model's memory of earlier turns or from a guess.
     ha_read = None
-    if ha and not ha_direct and not ha_wait and messages[-1]["role"] == "user" and not room_far \
+    if ha and not ha_direct and not ha_wait and messages[-1]["role"] == "user" and not room_far and not kl_took \
             and not homeassistant._intent(messages[-1]["content"]):
         try:
             ha_read = await homeassistant.lookup(ha, messages[-1]["content"])
@@ -468,7 +502,7 @@ async def prepare(request):
     if drafts_on:
         system = (system + "\n\n" + chat.DRAFT_HINT).strip()
     briefing = bool(ccfg.get("calendar", True))
-    cal_note = []
+    cal_note = list(kl_note)
     if role_cmd:   # shown in the tool log like a tool the panel ran itself
         cal_note.append({"name": {"notaus": "Notaus (Panel)", "meldung": "Meldung (Panel)", "bewertung": "Bewertung (Panel)",
                                  "berater": "Einstellungs-Assistent (Panel)"}.get(role_cmd[0], "Rolle (Panel)"), "args": role_cmd[1], "result": role_note})
@@ -498,7 +532,7 @@ async def prepare(request):
     prop = None
     if cal_write:
         system = (system + "\n\n" + chat.CALENDAR_ADD_HINT).strip()
-        prop = calendars.pending(who["id"])
+        prop = calendars.pending(who["id"]) if not kl_took else None
         if prop and prop.get("src", src) != src:
             prop = None  # proposed on another device or in another conversation: the yes is not for it
         if prop:
@@ -518,7 +552,7 @@ async def prepare(request):
     # an answer to something the assistant said by itself (yes to its offer, "nicht jetzt", ...):
     # the panel does what it means and the model only says the checked result (see proactive.py)
     mprop = None
-    if (tidy_on or drafts_on) and not prop and not mcp and not act_held:
+    if (tidy_on or drafts_on) and not prop and not mcp and not act_held and not kl_took:
         mprop = tidy.pending(who["id"])
         if mprop and mprop.get("src", src) != src:
             mprop = None
@@ -538,18 +572,20 @@ async def prepare(request):
                                   "Nutzer nicht zugestimmt hat.")
     # ticking off a list entry ... (extras.py): the module waiting for a yes in this conversation
     xprop = None
-    if who and messages[-1]["role"] == "user" and not prop and not mprop and not mcp and not act_held:
+    if who and messages[-1]["role"] == "user" and not prop and not mprop and not mcp and not act_held and not kl_took:
         xprop = await extras.answer({"who": who, "own": own_browser, "src": src, "client": body.get("client"), "private": private_ok,
                                      "app": app_key, "device": (profiles.device_name(request) or "")[:40],
                                      "ha": ha, "ha_code": ha_code, "ha_code_ok": ha_code_ok}, messages[-1]["content"])
         if xprop:
+            if xprop.get("event"):
+                kl_events.append(xprop["event"])
             if xprop.get("outside"):
                 carry = carry or "outside"
             cal_note.append(xprop["call"])
             system = per_turn(system, xprop["system"])
     pro = None
     if who and own_browser and messages[-1]["role"] == "user" and not prop and not mprop and not xprop and not mcp \
-            and not act_held:  # one yes confirms one thing
+            and not act_held and not kl_took:  # one yes confirms one thing
         pro = proactive.reply(who["id"], messages[-1]["content"], said_before)
         if pro:
             cal_note.append(pro["call"])
@@ -565,7 +601,7 @@ async def prepare(request):
     fix_ok = bool(who and own_browser and private_ok and ccfg.get("memory", True) and fixes.on(ccfg, pset)
                   and messages[-1]["role"] == "user" and not mcp and not act_held)
     fix_fix, fix_prev = False, ""
-    if fix_ok and not prop and not mprop and not xprop and not pro:
+    if fix_ok and not prop and not mprop and not xprop and not pro and not kl_took:
         fp = fixes.pending(who["id"])
         if fp and fp.get("src", src) == src:
             fixes.drop_pending(who["id"])
@@ -658,6 +694,7 @@ async def prepare(request):
     # the switch narrows what the model sees (never more than the rights above left); a question no
     # rule recognizes may go to the model once as a pick from a fixed list (chat.route_model)
     all_tools = len(tools)
+    all_names = {t["function"]["name"] for t in tools}   # before the Weiche narrows them (a choice runs its own tool)
     # "Schneller Antwortbeginn": the model always sees this list; what the rules below leave for this turn is
     # what the panel runs (st["offered"], chat_tools.run), and the model is told so with the question
     tools_stable = list(tools) if cache_on else None
@@ -800,6 +837,17 @@ async def prepare(request):
         direct = "spark_hilfe"
     direct_args = intent.direct_args(ask_text, chat.local_now(body.get("tz")).date()) \
         if direct in ("weather", "calendar_events") else {}
+    # Rückfrage (klaeren.py, Stufe C): the person chose among a tool's candidates; the panel runs that tool again with
+    # the same arguments and the chosen target fixed (ctx "pin", never an argument the model could write)
+    kl_pin = None
+    if kl and kl["kind"] == "choice" and kl["area"] in klaeren.TOOLS:
+        kl_tool = kl["act"].get("tool")
+        if kl_tool in ex["run"] or kl_tool in all_names:
+            direct, direct_args = kl_tool, dict(kl["act"].get("args") or {})
+            kl_pin = {"area": kl["area"], "said": kl["said"], "cand": kl["cand"]}
+            print("klaeren: auswahl", kl["area"], flush=True)
+        else:
+            system = per_turn(system, "Rückfrage: Die Auswahl kann gerade nicht ausgeführt werden. Sag das kurz, ohne Werkzeug.")
     if direct:
         print("weiche: direkt abgerufen", direct, direct_args.get("date", ""), flush=True)
     if messages[-1]["role"] == "user" and ask_text:

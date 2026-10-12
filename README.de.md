@@ -33,6 +33,7 @@ Alle Optionen ohne Rückfragen (`--mode api --asr 1.7b --tts 0.6b --yes` …) st
 
 <!-- New version: add one line at the top here and in CHANGELOG.md, drop the oldest line here (keep 10). Details go to docs/de and docs/en, not into this README. -->
 
+- **V01.0.470** Rückfrage statt Raten (aus): passen mehrere Geräte, Haltestellen, Orte oder Listen, fragt der Spark mit Knöpfen und merkt sich die Wahl
 - **V01.0.469** Rot-Fix: Dienst-Wächter-Test zählt „heute“ mit festem Tag statt mit der echten Uhr
 - **V01.0.468** Rot-Fix nach V01.0.467: Live-Test prüft den ganzen Gedächtnis-Satz, Themen und Live-Zählung lesen die Einstellungen nur einmal
 - **V01.0.467** Gedächtnis prüfen (aus): jeder Eintrag behält, woher er kommt, feste Regeln markieren Veraltetes, frühere Fassungen, Nachfrage im Gespräch, Themen
@@ -42,7 +43,6 @@ Alle Optionen ohne Rückfragen (`--mode api --asr 1.7b --tts 0.6b --yes` …) st
 - **V01.0.463** Browser-Tests warten, bis eine Seite geladen ist (behebt wackelnden Test)
 - **V01.0.462** Eigener Speicher: alte Originale von Dokumenten können nur noch auf dem eigenen Speicher liegen und kommen beim Öffnen zurück
 - **V01.0.461** „Schalte den Fernseher im Wohnzimmer ein“ trifft den Fernseher, nicht die Box daneben
-- **V01.0.460** Begleiter: jedes Textfeld einsprechbar, Knöpfe ohne Umbruch im Wort
 
 Alle Versionen: [CHANGELOG.md](CHANGELOG.md)
 

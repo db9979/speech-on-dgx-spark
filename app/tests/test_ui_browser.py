@@ -1177,7 +1177,7 @@ class Browser(unittest.TestCase):
                     self.assertFalse(await pg.is_visible("#chat\\.search_url"))
                     tall = await pg.evaluate("$('pane-feat').getBoundingClientRect().height")
                     # about 45 px per closed line on a computer (limit grows with new rows); open boxes would be several times that
-                    self.assertLess(tall, 4480 if w < 760 else 3480, f"{w}: {tall}px")   # V01.0.457: +3 lines "Verlauf sofort abgleichen", "Ein Gespräch für alle Kanäle", "Verlauf offline lesen", V01.0.452: +1 line "Eigener Speicher" (sub-switches only when on), V01.0.440: +1 line "Dienst-Wächter", +1 sub-switch, V01.0.415: +1 sub-switch "Dokumente erstellen" (GitHub 3138 px), V01.0.416: +1 group heading "Tempo und Genauigkeit" (no new line), V01.0.386: +1 line "Probleme melden", V01.0.381: +1 line "Geräte-Updates", V01.0.342: +1 line "Spark-Begleiter am PC und Mac", V01.0.340: +1 line "Einordnung mit Wahrscheinlichkeit", V01.0.339: +1 sub-switch "In anderen Programmen", V01.0.332: +1 line "Schreibhilfe", V01.0.326: +1 line "Hilfe zum Spark", V01.0.300: +1 line "Android-App", V01.0.303: +1 line "Spark als MCP-Server", V01.0.304: +1 line "Eindeutiges direkt abrufen", V01.0.307: +1 sub-switch "Vorab holen bei Rückfrage"
+                    self.assertLess(tall, 4600 if w < 760 else 3570, f"{w}: {tall}px")   # V01.0.470: +2 lines "Rückfrage statt Raten", "Auswahl merken" (sub-switch), V01.0.457: +3 lines "Verlauf sofort abgleichen", "Ein Gespräch für alle Kanäle", "Verlauf offline lesen", V01.0.452: +1 line "Eigener Speicher" (sub-switches only when on), V01.0.440: +1 line "Dienst-Wächter", +1 sub-switch, V01.0.415: +1 sub-switch "Dokumente erstellen" (GitHub 3138 px), V01.0.416: +1 group heading "Tempo und Genauigkeit" (no new line), V01.0.386: +1 line "Probleme melden", V01.0.381: +1 line "Geräte-Updates", V01.0.342: +1 line "Spark-Begleiter am PC und Mac", V01.0.340: +1 line "Einordnung mit Wahrscheinlichkeit", V01.0.339: +1 sub-switch "In anderen Programmen", V01.0.332: +1 line "Schreibhilfe", V01.0.326: +1 line "Hilfe zum Spark", V01.0.300: +1 line "Android-App", V01.0.303: +1 line "Spark als MCP-Server", V01.0.304: +1 line "Eindeutiges direkt abrufen", V01.0.307: +1 sub-switch "Vorab holen bei Rückfrage"
                     await pg.evaluate("$('chat.search').closest('.fitem').querySelector('.fexp').click()")
                     self.assertTrue(await pg.evaluate("$('chat.search').closest('.fitem').classList.contains('open')"))
                     await pg.evaluate("$('chat.search').closest('.fitem').querySelector('.fexp').click()")
@@ -1319,6 +1319,63 @@ class Browser(unittest.TestCase):
         finally:
             helpers.set_config(images=False)
             profiles.save_settings(uid, {"images_on": False})
+
+    def test_choice_card_list_and_mappings(self):
+        """Rückfrage statt Raten (klaeren.py): several devices fit, so the answer carries buttons; "Keins davon"
+        brings the whole list with a search field; a tap switches that device and the offer to remember it
+        comes as Ja/Nein; Ich → Zuordnungen lists it. With the strict CSP, no sideways scrolling at 320 and 390 px."""
+        import profiles
+        uid = next(u["id"] for u in profiles._load()["users"] if u["name"] == "Uitest")
+        helpers.set_config(klaeren=True, klaeren_merken=True)
+        profiles.save_settings(uid, {"klaeren": True, "klaeren_merken": True})
+        saved = {x["entity_id"]: x["state"] for x in helpers.HA_STATES}
+        base = f"http://127.0.0.1:{self.port}"
+
+        async def go():
+            async with async_playwright() as p:
+                for w, h in ((320, 640), (390, 844)):
+                    br, pg, errors = await self.page(p, w, h, csp=True)
+                    await pg.request.put(base + "/api/profile/homeassistant",
+                                         data={"url": f"http://127.0.0.1:{helpers.HA_PORT}", "token": helpers.HA_TOKEN})
+                    await pg.request.put(base + "/api/profile/homeassistant/code", data={"code": "Apollo dreizehn"})
+                    await pg.evaluate("goSec('chat')")
+                    await pg.evaluate("ask('Schalte den Fernseher aus Codewort Apollo dreizehn')")
+                    await pg.wait_for_selector(".choice .chb", timeout=20000)
+                    labels = await pg.evaluate("[...document.querySelectorAll('.choice .chb')].map(b=>b.textContent)")
+                    self.assertTrue(any(x.startswith("Samsung") for x in labels), labels)
+                    self.assertIn("Keins davon", labels)
+                    self.assertLessEqual(await pg.evaluate("document.documentElement.scrollWidth-window.innerWidth"), 0)
+                    while await pg.evaluate("!!chat.ctrl"):
+                        await pg.wait_for_timeout(100)
+                    await pg.click(".choice .chnone")
+                    await pg.wait_for_selector(".choice.chlist input[type=search]", timeout=20000)
+                    while await pg.evaluate("!!chat.ctrl"):
+                        await pg.wait_for_timeout(100)
+                    await pg.fill(".choice.chlist input[type=search]", "keller")
+                    rows = await pg.evaluate("[...document.querySelectorAll('.choice.chlist:last-of-type .chrow b')].map(b=>b.textContent)")
+                    self.assertEqual(rows, ["Kellerpumpe"])
+                    self.assertLessEqual(await pg.evaluate("document.documentElement.scrollWidth-window.innerWidth"), 0)
+                    await pg.click(".choice.chlist .chrow")
+                    await self.until(pg, "[...document.querySelectorAll('.choice .chb')].some(b=>b.textContent==='Ja, merken')")
+                    while await pg.evaluate("!!chat.ctrl"):
+                        await pg.wait_for_timeout(100)
+                    await pg.evaluate("[...document.querySelectorAll('.choice .chb')].filter(b=>b.textContent==='Ja, merken').pop().click()")
+                    await self.until(pg, "!chat.ctrl")
+                    await pg.evaluate("openMe('factbox')")
+                    await self.until(pg, "!$('mapbox').hidden&&$('maplist').textContent.includes('Kellerpumpe')")
+                    self.assertIn("„fernseher“", await pg.inner_text("#maplist"))
+                    self.assertLessEqual(await pg.evaluate("document.documentElement.scrollWidth-window.innerWidth"), 0)
+                    self.assertEqual(errors, [])
+                    await br.close()
+                    import klaeren
+                    klaeren._save(uid, [])   # the next width starts without the mapping
+        try:
+            self.run_async(go())
+        finally:
+            helpers.set_config(klaeren=False, klaeren_merken=False)
+            profiles.save_settings(uid, {"klaeren": False, "klaeren_merken": False})
+            for x in helpers.HA_STATES:
+                x["state"] = saved.get(x["entity_id"], x["state"])
 
     def test_hands_free_microphone_comes_back(self):
         """iOS ends the microphone track (lock screen, call, Siri): a dead stream is asked for again,

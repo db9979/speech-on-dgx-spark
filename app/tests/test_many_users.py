@@ -225,6 +225,65 @@ class SpokenNames(Base):
         self.assertIsNone(messages.pending(self.ua))
         self.assertEqual(len(messages.box(self.mu)) + len(messages.box(self.me)), 1)
 
+    def test_names_as_buttons_with_rueckfrage(self):
+        """Rückfrage statt Raten (klaeren.py, Stufe C): with the switch on, "Meinst du …?" carries the names as
+        buttons; a tap sends the full name, which picks like a typed answer. Off: no buttons."""
+        r = self.a.post("/api/chat", json={"messages": [{"role": "user", "content": "Schreib Quirin, dass ich gleich komme"}],
+                                           "convo": "q3"})
+        self.assertFalse([e for e in helpers.events(r) if e["type"] == "choice"])
+        messages.drop_pending(self.ua)
+        helpers.set_config(klaeren=True)
+        try:
+            self.a.put("/api/profile/settings", json={"klaeren": True})
+            r = self.a.post("/api/chat", json={"messages": [{"role": "user", "content": "Schreib Quirin, dass ich gleich komme"}],
+                                               "convo": "q4"})
+            ch = [e for e in helpers.events(r) if e["type"] == "choice"]
+            self.assertEqual(len(ch), 1)
+            self.assertEqual(len(ch[0]["options"]), 2)
+            tap = next(o["send"] for o in ch[0]["options"] if "Müller" in o["label"])
+            ask(self.a, tap, convo="q4")
+            p = messages.pending(self.ua)
+            self.assertEqual((p["kind"], p["to"]), ("text", [self.mu]))
+        finally:
+            helpers.set_config(klaeren=False)
+            self.a.put("/api/profile/settings", json={"klaeren": False})
+
+    def test_telegram_gets_the_names_as_keys(self):
+        """Stufe D: in Telegram "Meinst du …?" carries a one-time keyboard; a tap sends the name as a message, which
+        picks like a typed answer (no callback). Off: no keyboard."""
+        import asyncio
+        import telegram
+        sent = []
+
+        async def call(c, method, **kw):
+            sent.append((method, kw))
+        real = (telegram.call, telegram.owner)
+        telegram.call = call
+        telegram.owner = lambda cid: self.ua if cid == 78 else None
+        helpers.set_config(klaeren=True)
+        self.a.put("/api/profile/settings", json={"klaeren": True, "tg_private": True})
+        try:
+            def say(text):
+                asyncio.run(telegram.handle(None, {"message": {"chat": {"type": "private", "id": 78}, "text": text}}))
+                return [kw for m, kw in sent if m == "sendMessage"][-1]
+            msg = say("Schreib Quirin, dass ich gleich da bin")
+            self.assertIn("reply_markup", msg, (msg, said()))
+            keys = [r[0]["text"] for r in msg["reply_markup"]["keyboard"]]
+            self.assertEqual(sorted(keys[:2]), ["Quirin Meier", "Quirin Müller"])
+            self.assertEqual(keys[-1], "Keins davon")
+            say("Quirin Müller")
+            p = messages.pending(self.ua)
+            self.assertEqual((p["kind"], p["to"]), ("text", [self.mu]))
+            messages.drop_pending(self.ua)
+            helpers.set_config(klaeren=False)
+            msg = say("Schreib Quirin, dass ich gleich da bin")
+            self.assertNotIn("reply_markup", msg)
+        finally:
+            telegram.call, telegram.owner = real
+            helpers.set_config(klaeren=False)
+            self.a.put("/api/profile/settings", json={"klaeren": False, "tg_private": False})
+            messages.drop_pending(self.ua)
+
     def test_many_names_are_shortened(self):
         self.assertEqual(messages.short(["A", "B", "C"]), "A, B, C")
         self.assertEqual(messages.short([f"N{i}" for i in range(42)]), "N0, N1, N2, N3 und 38 weitere")

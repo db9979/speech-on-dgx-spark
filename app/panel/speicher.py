@@ -116,7 +116,7 @@ STATE = os.environ.get("SPEECH_SPARK_STATE", "/var/lib/speech-spark/state")
 # allowlist: keys, logins, passwords of other services, settings and voice prints are in none of them (point 7)
 AREAS = {
     "gespraeche": ("Gespräche", "Conversations", ("convos.json", "toollog.json", "room-history.json")),
-    "gedaechtnis": ("Gedächtnis", "Memory", ("memory.json", "learned.json")),
+    "gedaechtnis": ("Gedächtnis", "Memory", ("memory.json", "learned.json", "zuordnungen.json")),
     "alltag": ("Aufgaben, Erinnerungen, Nachrichten", "Tasks, reminders, messages",
                ("tasks.json", "reminders.json", "messages.json")),
     "dokumente": ("Dokumente (Text, Suche, Originale)", "Documents (text, search, originals)", ("wissen.db", "docs/files/")),

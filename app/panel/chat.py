@@ -1420,6 +1420,57 @@ def _herkunft(turn):
         return None
 
 
+ASKED = "Nothing switched yet: the panel asks the person which device is meant."
+
+
+async def _ha_panel(turn, ha, ha_direct, en, who, src):
+    """A smart home command the panel carries out itself (chat_turn decided it): a choice the person made,
+    a remembered mapping, or the command as said. Asks the person when it cannot tell which device is meant
+    (klaeren.py). Returns (ok, text for the model, targets, step name, question to say, chat event)."""
+    import klaeren
+    uid = who["id"]
+    kl_on = getattr(turn, "kl_on", False)
+    choice, pick_list = getattr(turn, "ha_choice", None), getattr(turn, "ha_list", None)
+    if pick_list:   # "Keins davon": every device to pick from
+        items = await homeassistant.targets_for(uid)
+        if not items:
+            return False, "No device of this Home Assistant can be switched from here.", [], "Rückfrage (Panel)", "", None
+        ev = klaeren.ask(uid, src, "ha", pick_list["said"], items, pick_list["act"], code_ok=True, full=True, en=en)
+        return False, ASKED, [], "Rückfrage (Panel)", klaeren.question([], en=en, full=True), ev
+    if choice:   # the person picked one (or corrected the last choice): carry it out, then offer to remember
+        c, svc = choice["cand"], choice["act"].get("service")
+        lines = []
+        if choice.get("undo"):
+            done, text = await homeassistant.undo(ha, choice["undo"]["cand"]["id"], svc, choice["undo"]["before"])
+            lines.append(text.split("\n(before")[0] if text else
+                         f"{choice['undo']['cand']['name']} was left as it is (it cannot be taken back from here).")
+        ok, answer = await homeassistant.switch(ha, c["id"], svc)
+        q = klaeren.offer(uid, src, "ha", choice["said"], c, en) if ok else ""
+        return ok, "\n".join(lines + [answer]), [c["name"]], "Auswahl (Panel)", q, \
+            (klaeren.remember_event("ha", en) if q else None)
+    svc = homeassistant._intent(ha_direct)
+    mapped = klaeren.lookup(uid, "ha", klaeren.words(ha_direct)) if kl_on and svc else None
+    if mapped:   # the person's own words for one device
+        ok, answer = await homeassistant.switch(ha, mapped["id"], svc)
+        if answer.startswith("There is no entity"):
+            klaeren.forget_target(uid, "ha", mapped["id"])
+        return ok, answer, [mapped["name"]], "Zuordnung (Panel)", "", None
+    info = {}
+    ok, answer, targets = await homeassistant.command(ha, ha_direct, "en" if en else "de", panel=True, out=info)
+    if kl_on and not ok and info.get("service") and not info.get("chosen"):
+        cands = info.get("cands") or []
+        items = cands or await homeassistant.targets_for(uid)
+        if items:
+            ev = klaeren.ask(uid, src, "ha", ha_direct, items, {"service": info["service"]}, code_ok=True,
+                             full=not cands, en=en)
+            return False, ASKED, [], "Rückfrage (Panel)", klaeren.question(cands, en=en, full=not cands,
+                                                                                        near=not info.get("exact")), ev
+    if kl_on and ok and info.get("chosen") and len(info.get("cands") or []) > 1:
+        klaeren.did(uid, src, "ha", ha_direct, info["chosen"], {"service": info["service"]}, info.get("before"),
+                    info["cands"], code_ok=True)
+    return ok, answer, targets, "home_assistant (Panel)", "", None
+
+
 def tool_info(name, result, st, ex):
     """Numbers about one tool call for Logs → Anfragen: never its arguments or its result."""
     text = result if isinstance(result, str) else ""
@@ -1468,6 +1519,8 @@ async def _answer(request, turn):
         out.put_nowait({"type": "speaker", "name": heard["name"], "foreign": not own_browser})
     if getattr(turn, "explain", None):
         out.put_nowait(dict(turn.explain, type="why"))
+    for ev in getattr(turn, "kl_events", None) or []:   # buttons for a question the panel asked (klaeren.py, messages.py)
+        out.put_nowait(ev)
     sentences = asyncio.Queue()
     t0 = time.time()
     # where the time goes, for Zustand → Logs → Diagnose "Gespräch" (only while that detail switch is on)
@@ -1477,7 +1530,8 @@ async def _answer(request, turn):
     # rules (Weiche group, "Erst lokal", a direct fetch) and played from a recording (no GPU); never small talk
     ack_lang, acked = None, False
     if who and own_browser and body.get("speak") is not False and body.get("client") not in ("watch", "siri") \
-            and messages and messages[-1]["role"] == "user" and not turn.pics and features.allowed("ack", who["id"], ccfg):
+            and messages and messages[-1]["role"] == "user" and not turn.pics and features.allowed("ack", who["id"], ccfg) \
+            and not getattr(turn, "kl_took", False):   # the answer to the panel's own question needs no bridge sentence
         ack_lang = tts_body.get("language") if tts_body.get("language") in ("German", "English") else \
             ack.lang_of(guess_language(messages[-1]["content"]) == "English")
         route = getattr(turn, "route", None)
@@ -1533,9 +1587,12 @@ async def _answer(request, turn):
             if ha_direct:
                 t_ha = time.time()
                 await out.put({"type": "home", "command": ha_direct})
+                ha_en = guess_language(ha_direct) == "English"
+                ha_step, ha_say, ha_ev = "home_assistant (Panel)", "", None
                 try:
-                    ok, answer, targets = await homeassistant.command(
-                        ha, ha_direct, "en" if guess_language(ha_direct) == "English" else "de", panel=True)
+                    ok, answer, targets, ha_step, ha_say, ha_ev = await _ha_panel(turn, ha, ha_direct, ha_en, who, src)
+                except homeassistant.notaus.NotausAktiv as e:   # the Notaus holds every action off: its own reason, nothing else
+                    ok, targets, answer = False, [], f"{e}. Nothing was switched."
                 except (httpx.HTTPError, ValueError) as e:  # also a proxy page instead of JSON
                     print(f"homeassistant: not reachable ({type(e).__name__})", flush=True)
                     ok, targets = False, []   # said out loud: a sentence, never the name of the error (B2)
@@ -1543,13 +1600,23 @@ async def _answer(request, turn):
                         else "Home Assistant ist gerade nicht erreichbar."
                 print("homeassistant: panel ran", repr(ha_direct[:80]), "->", "ok" if ok else "not ok", flush=True)
                 if tr:
-                    tr.step("tool", "home_assistant (Panel)", t_ha, time.time(), ok=bool(ok), panel=True)
+                    tr.step("tool", ha_step, t_ha, time.time(), ok=bool(ok), panel=True)
                 await out.put({"type": "home_done", "ok": ok, "text": answer[:300], "targets": targets})
+                if ha_ev:   # the panel's own question: buttons or the list (klaeren.py)
+                    await out.put(ha_ev)
+                if ha_say and not ok:   # nothing switched yet: the panel asks, the model says the fixed question
+                    told = (f"Nothing was switched yet. Say exactly this question and nothing else: «{ha_say}» "
+                            "Call no tool.")
+                elif ha_say:
+                    told = (f"Home Assistant: {answer} Say this result in one short sentence, then ask exactly: "
+                            f"«{ha_say}» Call no tool.")
+                else:
+                    told = (("Home Assistant: " if ok else "Home Assistant failed: ") + answer
+                            + " Say only this result, in one or two short sentences."
+                            + ("" if ok else " Call no tool for this: nothing more can be switched in this answer."))
                 msgs += [{"role": "assistant", "content": None, "tool_calls": [{"id": "ha0", "type": "function",
                           "function": {"name": "home_assistant", "arguments": json.dumps({"command": ha_direct})}}]},
-                         {"role": "tool", "tool_call_id": "ha0", "content": ("Home Assistant: " if ok else
-                          "Home Assistant failed: ") + answer + " Say only this result, in one or two short sentences."
-                          + ("" if ok else " Call no tool for this: nothing more can be switched in this answer.")}]
+                         {"role": "tool", "tool_call_id": "ha0", "content": told}]
             if ha_read:
                 await out.put({"type": "home", "command": "? " + messages[-1]["content"][:80]})
                 msgs += [{"role": "assistant", "content": None, "tool_calls": [{"id": "ha1", "type": "function",
@@ -1595,8 +1662,16 @@ async def _answer(request, turn):
                     await sentences.put(filler[1] if guess_language(messages[-1]["content"]) == "English" else filler[0])
                 dargs = getattr(turn, "direct_args", None) or {}   # only a date the panel worked out (intent.direct_args)
                 result = await run_tool(direct, dict(dargs), st)
+                pin = getattr(turn, "kl_pin", None)
+                if pin and isinstance(result, str):   # the person's choice (klaeren.py): offer to remember it
+                    import klaeren
+                    en_kl = guess_language(messages[-1]["content"]) == "English"
+                    q = klaeren.offer(who["id"], src, pin["area"], pin["said"], pin["cand"], en_kl) if pin.get("used") else ""
+                    if q:
+                        await out.put(klaeren.remember_event(pin["area"], en_kl))
+                        result += f"\nAfter saying this result, ask exactly: «{q}» Call no tool."
                 if tr:
-                    tr.step("tool", f"{direct} (Panel)", t_dr, time.time(), panel=True)
+                    tr.step("tool", f"{direct} (Panel)" if not pin else "Auswahl (Panel)", t_dr, time.time(), panel=True)
                 trace["calls"].append({"name": direct + " (Panel)", "args": json.dumps(dargs), "result": result})
                 msgs += [{"role": "assistant", "content": None, "tool_calls": [{"id": "dr0", "type": "function",
                           "function": {"name": direct, "arguments": json.dumps(dargs)}}]},
