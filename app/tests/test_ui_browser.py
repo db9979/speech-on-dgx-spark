@@ -34,7 +34,7 @@ STATE = ("JSON.stringify({hidden:document.hidden,rec:!!chat.rec,live:micLive(),r
          "ctrl:!!chat.ctrl,playing:playing(),asr:!!chat.asrBusy,pctx:chat.pctx&&[chat.pctx.state,chat.pctx.currentTime],"
          "ctx:chat.ctx&&[chat.ctx.state,chat.ctx.currentTime],say:$('chatstate').textContent})")
 
-SECTIONS = ("chat", "mon", "live", "sys", "test", "logs", "cfg", "prof", "who", "int", "apps")
+SECTIONS = ("chat", "mon", "live", "sys", "test", "logs", "cfg", "prof", "who", "route", "int", "apps")
 VIEWS = (("pc", 1280, 900), ("handy", 390, 844))
 
 

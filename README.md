@@ -33,6 +33,7 @@ All options for running without questions (`--mode api --asr 1.7b --tts 0.6b --y
 
 <!-- New version: add one line at the top here and in CHANGELOG.md, drop the oldest line here (keep 10). Details go to docs/de and docs/en, not into this README. -->
 
+- **V01.0.438** The switch shown: Features → Switch with the way of a sentence as a picture, groups with own words, “Not with”, extra tools, test sentences, “Wrongly sorted …”, undo and statistics
 - **V01.0.437** Live picture: devices over the proxy under internet, document jobs, jobs, mail tidying and more now visible
 - **V01.0.436** Invitation: the cursor no longer jumps into the name field while typing the PIN; test run green again
 - **V01.0.435** Hints with a way ("Settings → … “Live page”", "Me → Documents") are now links that jump right there; a self-test checks every way
@@ -42,7 +43,6 @@ All options for running without questions (`--mode api --asr 1.7b --tts 0.6b --y
 - **V01.0.431** Live picture shows only services and targets that are set up
 - **V01.0.430** Fewer speech gaps in long answers: more audio in stock while the Spark still writes (also at a faster speaking rate); iPhone app rebuffers after running dry
 - **V01.0.429** Creating documents: preview in the chat, download everywhere (Android, iPhone too), by mail as a draft or into the mailbox, much better looks
-- **V01.0.428** Instant acknowledgement with more variety: 126 ready-made sentences, picked at random, never one of the last six.
 
 All versions: [CHANGELOG.md](CHANGELOG.md)
 

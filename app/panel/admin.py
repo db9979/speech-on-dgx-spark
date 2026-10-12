@@ -666,6 +666,11 @@ def validate(new):
         intent.parse_route_words(ch.get("route_words", ""))
     except ValueError as e:
         raise HTTPException(400, f"Eigene Wörter der Werkzeugwahl: {e}")
+    import weiche   # Funktionen → Weiche: „Nicht bei“, zusätzliche Werkzeuge, Gruppen ohne Eingrenzen, Testsätze
+    try:
+        weiche.check(ch)
+    except ValueError as e:
+        raise HTTPException(400, f"Weiche: {e}")
     if ch.get("face", "robot") not in FACES:
         raise HTTPException(400, "face: " + " or ".join(FACES))
     if ch.get("self_echo_mode", "pause") not in ("text", "pause"):
@@ -717,6 +722,14 @@ SENSITIVE = [("api", "key"), ("chat", "llm_url"), ("chat", "llm_key"), ("chat", 
 async def put_config(request: Request):
     new = await request.json()
     old = validate(new)
+    # the Weiche's rules have their own page (Funktionen → Weiche, weiche.py): the settings form carries a copy
+    # from when it was loaded, which must not put back older rules
+    import weiche
+    for k in weiche.KEYS:
+        if k in old.get("chat", {}):
+            new["chat"][k] = old["chat"][k]
+        else:
+            new["chat"].pop(k, None)
     touched = [f"{sec}.{k}" for sec, k in SENSITIVE if new.get(sec, {}).get(k) != old.get(sec, {}).get(k)]
     if touched:
         # these send keys or conversations to another address, change who may log in, or which code

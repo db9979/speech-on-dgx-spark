@@ -56,9 +56,9 @@ MAX_CARDS_UID = 10     # per profile
 SECTIONS = {"chat": ("Assistent", "Assistant"), "mon": ("Zustand", "Status"), "live": ("Zustand → Live", "Status → Live"),
             "test": ("Zustand → Prüfen", "Status → Checks"), "logs": ("Zustand → Logs", "Status → Logs"),
             "feat": ("Funktionen", "Features"), "who": ("Funktionen → Wer darf was", "Features → Who may do what"),
-            "int": ("Funktionen → Anleitungen", "Features → Guides"), "prof": ("Personen und Geräte", "People and devices"),
+            "route": ("Funktionen → Weiche", "Features → Switch"), "int": ("Funktionen → Anleitungen", "Features → Guides"), "prof": ("Personen und Geräte", "People and devices"),
             "apps": ("Personen und Geräte → Apps und Schnittstellen", "People and devices → Apps and interfaces")}
-PAGE = re.compile(r"(?:chat|mon|live|test|logs|feat|who|int|prof|apps|cfg/[a-z]{2,8}|me/[a-z]{2,10}box)")
+PAGE = re.compile(r"(?:chat|mon|live|test|logs|feat|who|route|int|prof|apps|cfg/[a-z]{2,8}|me/[a-z]{2,10}box)")
 # what a page is for (plan plaene/hilfe-besser.md 2): fixed sentences; the switches on it are added from the page itself
 PAGE_TEXT = {
     "chat": ("Das Gespräch mit dem Assistenten: sprechen (Mikrofon oder Kopf antippen) oder tippen; darüber die Gespräche, "
@@ -81,6 +81,10 @@ PAGE_TEXT = {
              "profile can use; much of it each profile also switches on under Me."),
     "who": ("Funktionen → Wer darf was: welche Funktion welches Profil benutzen darf und wer sie gerade an hat.",
             "Features → Who may do what: which function each profile may use and who has it on."),
+    "route": ("Funktionen → Weiche: welche Werkzeuge eine Frage bekommt, als Bild. Einen Satz ausprobieren, Gruppen mit eigenen "
+              "Wörtern, „Nicht bei“ und zusätzlichen Werkzeugen ergänzen, Testsätze, „Falsch zugeordnet …“ und Rückgängig.",
+              "Features → Switch: which tools a question gets, as a picture. Try a sentence, add own words, “Not with” and extra "
+              "tools to groups, test sentences, “Wrongly sorted …” and undo."),
     "int": ("Funktionen → Anleitungen: alle Anleitungen zum Nachlesen, mit Einrichten und „Wenn es nicht klappt“.",
             "Features → Guides: all guides to read, with setting up and \"If it does not work\"."),
     "prof": ("Personen und Geräte: Profile anlegen und einladen, PIN, Rollen, Vorrang, Geräte und ihre Schlüssel.",

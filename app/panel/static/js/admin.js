@@ -798,18 +798,6 @@ function visionShow(r){if(!r){$('visionmsg').textContent=t('Noch nicht geprüft.
   $('visionmsg').innerHTML=r.ok?`<span class="ok">✓ ${t('Kann Bilder','Sees pictures')}</span> · ${esc(when)} · ${esc(String(r.seconds))} s`
     :`<span class="err">✗ ${esc(r.error||t('kann keine Bilder','sees no pictures'))}</span> · ${esc(when)}`}
 async function visionLoad(){if(!$('visiongo'))return;try{visionShow((await (await api('/api/admin/vision-test')).json()).last)}catch{}}
-// targeted tool choice (intent.py): the rules as a table and one sentence to try (saved words only)
-async function routeLoad(){if(!$('routetable'))return;try{const r=await (await api('/api/admin/routing')).json();
-  $('routetable').innerHTML='<table>'+r.groups.map(g=>`<tr><td style="width:150px"><b>${esc(g.label)}</b><br><code>${esc(g.name)}</code></td><td>${esc(g.words.join(', '))}${g.own.length?`<br><span class="ok">${esc(t('Eigene','Own'))}: ${esc(g.own.join(', '))}</span>`:''}<br><span class="mut">${esc(t('Werkzeuge','Tools'))}: ${esc(g.tools.join(', '))}</span></td></tr>`).join('')+'</table>'
-  +`<div class="mut">${esc(t('Immer dabei','Always kept'))}: ${esc(r.keep.join(', '))}</div>`}catch(e){$('routetable').textContent=e.message}}
-if($('routerules'))$('routerules').ontoggle=()=>{if($('routerules').open)routeLoad()};
-if($('routego'))$('routego').onclick=async()=>{const text=$('routetext').value.trim();if(!text)return;$('routego').disabled=true;
-  try{const r=await (await api('/api/admin/routing/test',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({text})})).json();
-    const why=Object.entries(r.why).map(([k,v])=>`${k}: „${v}“`).join(', ');
-    $('routeout').innerHTML=`<b>${esc(r.clear?r.intent:t('unklar: alle Werkzeuge wie bisher','unclear: all tools as before'))}</b>`
-      +(why?` · ${esc(t('Grund','Reason'))} ${esc(why)}`:'')+(r.tools.length?`<br>${esc(t('Werkzeuge','Tools'))}: ${esc(r.tools.join(', '))}`:'')
-      +(r.refers?`<br>${esc(t('Zeigt auf die Antwort davor (nach Fremdtext bleibt gesperrt).','Points at the answer before (stays locked after outside text).'))}`:'')}
-  catch(e){$('routeout').innerHTML=`<span class="err">${esc(e.message)}</span>`}$('routego').disabled=false};
 // Einordnung mit Wahrscheinlichkeit (systemone.py): one question of the switch through qwen38's /v1/systemone
 if($('s1go'))$('s1go').onclick=async()=>{$('s1go').disabled=true;$('s1msg').textContent=t('prüft …','checking …');
   try{const r=await (await api('/api/admin/systemone/test',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({text:($('routetext')&&$('routetext').value.trim())||''})})).json();

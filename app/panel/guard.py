@@ -413,7 +413,7 @@ LIVE_WORDS = {
     "admin_mfa_on": ("Sicherheit", "zweiter Schritt an (Admin)"), "admin_mfa_off": ("Sicherheit", "zweiter Schritt aus (Admin)"),
     "admin_password_changed": ("Sicherheit", "Admin-Passwort geändert"),
     "admin_logout_everywhere": ("Sicherheit", "Admin überall abgemeldet"), "admin_role": ("Sicherheit", "Rolle geändert"),
-    "config_switch": ("Einstellungen", "Schalter geändert"), "config_sensitive": ("Einstellungen", "Sicherheitseinstellung geändert"),
+    "config_switch": ("Einstellungen", "Schalter geändert"), "config_weiche": ("Einstellungen", "Weiche geändert"), "config_sensitive": ("Einstellungen", "Sicherheitseinstellung geändert"),
     "config_undo": ("Einstellungen", "Änderung zurückgenommen"), "feature_profile": ("Einstellungen", "Funktion für ein Profil geändert"),
     "backup": ("Sicherung", "Sicherung erstellt"), "backup_failed": ("Sicherung", "Sicherung fehlgeschlagen"),
     "backup_download": ("Sicherung", "Sicherung heruntergeladen"), "restore": ("Sicherung", "Sicherung eingespielt"),
@@ -488,7 +488,7 @@ def logged(path, method):
 # the assistant is open without login), so one page or script cannot take the Spark for itself.
 _rate, _busy = {}, {}
 _rate_lock = threading.Lock()
-RATE = {"chat": (30, 120), "asr": (60, 240), "logs": (1, 60), "pair": (10, 10), "doc": (0, 10), "image": (0, 10), "msg": (0, 30), "route": (0, 60), "room": (0, 60), "kiwix": (0, 10), "lokal": (0, 20), "features": (30, 120), "tipps": (0, 30),
+RATE = {"chat": (30, 120), "asr": (60, 240), "logs": (1, 60), "pair": (10, 10), "doc": (0, 10), "image": (0, 10), "msg": (0, 30), "route": (0, 60), "weichesave": (0, 20), "room": (0, 60), "kiwix": (0, 10), "lokal": (0, 20), "features": (30, 120), "tipps": (0, 30),
         "rmpair": (0, 3), "rm": (0, 30), "rmsync": (0, 2), "rmsend": (0, 6), "handoff": (60, 60), "bg": (0, 30), "vorrang": (0, 60), "undo": (0, 20), "llmmodels": (0, 30), "offsite": (0, 10), "trust": (10, 30), "android": (0, 20),
         "mcp": (0, 60), "mcpask": (0, 10), "mcpreg": (10, 10), "mcptoken": (20, 20),
         "live": (0, 150), "livemon": (90, 90), "hilfe": (0, 30), "write": (0, 20), "desk": (0, 20), "deskask": (0, 10), "deskupd": (0, 6), "deskfile": (0, 10), "deskhear": (0, 40), "deskact": (0, 20),

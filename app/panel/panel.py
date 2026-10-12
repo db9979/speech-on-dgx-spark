@@ -63,6 +63,7 @@ import wissen  # noqa: E402
 import messages  # noqa: E402
 import intent  # noqa: E402
 import tracelog  # noqa: E402
+import weiche  # noqa: E402
 import lokal  # noqa: E402
 import features  # noqa: E402
 import remarkable  # noqa: E402
@@ -89,7 +90,7 @@ import docmake  # noqa: E402
 
 # no /docs, /redoc or /openapi.json: a map of every path for guests, and Swagger from a CDN
 app = FastAPI(title="Speech on DGX Spark", docs_url=None, redoc_url=None, openapi_url=None)
-for _module in (account, admin, chat, update, system, proactive, room, roomlive, tidy, weather, contacts, parcels, telegram, tasks, esp32, iphone, pebblewatch, android, appupdate, apns, transit, logfilter, agent, images, messages, intent, wissen, tracelog, lokal, features, remarkable, rmplus, join, onboard, hintergrund, stufe, today, offsite, mcpserver, meinmcp, live, hamelden, notaus, hilfe, tipps, schreib, begleiter, systemone, geraeteupdate, meldung, docmake):
+for _module in (account, admin, chat, update, system, proactive, room, roomlive, tidy, weather, contacts, parcels, telegram, tasks, esp32, iphone, pebblewatch, android, appupdate, apns, transit, logfilter, agent, images, messages, intent, wissen, tracelog, lokal, features, remarkable, rmplus, join, onboard, hintergrund, stufe, today, offsite, mcpserver, meinmcp, live, hamelden, notaus, hilfe, tipps, schreib, begleiter, systemone, geraeteupdate, meldung, docmake, weiche):
     app.include_router(_module.router)
 app.middleware("http")(update_lock)
 
@@ -465,7 +466,7 @@ def _asset(request: Request, path, media):
 
 @app.get("/static/{name}")
 def static_file(name: str, request: Request):
-    if name in ("app.css", "appview.css", "live.css"):  # the page's style and scripts: revalidated, so an update shows at once
+    if name in ("app.css", "appview.css", "live.css", "weiche.css"):  # the page's style and scripts: revalidated, so an update shows at once
         return _asset(request, os.path.join(STATIC, name), "text/css")
     if name not in PUBLIC_FILES:
         raise HTTPException(404, "not found")

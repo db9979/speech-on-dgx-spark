@@ -139,7 +139,7 @@ async def prepare(request):
     # text leaves that answer out, and with it its lock ("Setz das auf die Liste" keeps it locked).
     import intent   # (needs chat fully loaded: its word lists)
     ask0 = messages[-1]["content"] if messages[-1]["role"] == "user" else ""
-    route = intent.classify(ask0, ccfg.get("tool_words", ""), ccfg.get("route_words", ""))
+    route = intent.classify_cfg(ask0, ccfg)
     me0 = profiles.current(request)
     route_on = bool(me0 and features.allowed("routing", me0["id"], ccfg))
     # "Frag Spark" (hilfe.py): asked from a page of the panel, the question is about the Spark itself (a fixed
@@ -620,7 +620,7 @@ async def prepare(request):
                 route = intent.Route([pick], {pick: "Modell"})
             pick_state = "gewählt" if pick else "zu spät" if pick_task.cancelled() else \
                 "unsicher" if pick_info.get("p") is not None else "keine"
-        tools = intent.narrow(route, tools)
+        tools = intent.narrow(route, tools, ccfg)
         if ccfg.get("route_model") == "lean" and not route.names and not chat.needed(
                 messages[-1]["content"] if messages[-1]["role"] == "user" else "",
                 {t["function"]["name"] for t in tools}, ccfg.get("tool_words", "")):
@@ -746,6 +746,9 @@ async def prepare(request):
         if direct in ("weather", "calendar_events") else {}
     if direct:
         print("weiche: direkt abgerufen", direct, direct_args.get("date", ""), flush=True)
+    if messages[-1]["role"] == "user" and ask_text:
+        import weiche   # Funktionen → Weiche, Statistik: only the group and numbers, never a word of the question
+        weiche.count(route, len(tools), all_tools, direct)
     check_on = bool(ccfg.get("answer_check", True))
     tool_temp = float(ccfg.get("tool_temperature", 0.1))
     # thinking only while choosing the tool: the admin allows it, the profile switches it on (never guests)

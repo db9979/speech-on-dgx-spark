@@ -14,6 +14,7 @@
 <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
 <script src="/static/js/theme.js"></script>
 <link rel="stylesheet" href="/static/app.css">
+<link rel="stylesheet" href="/static/weiche.css">
 <link rel="stylesheet" href="/static/live.css">
 <link rel="stylesheet" href="/static/appview.css">
 </head>
@@ -238,9 +239,7 @@
       <div class="setrow"><div class="lbl"><b>Eindeutiges direkt abrufen</b><span>Bei kurzen, eindeutigen Lesefragen holt das Panel die Daten selbst, ohne erste Runde des Sprachmodells. Jedes Profil schaltet es selbst ein.</span></div><label class="tgl"><input type="checkbox" id="chat.direct_read"><i></i></label></div>
       <div class="setrow"><div class="lbl"><b>Gezielte Werkzeugwahl</b><span>Feste Regeln erkennen, worum es geht; das Sprachmodell sieht nur die passenden Werkzeuge. Jedes Profil schaltet es selbst ein.</span></div><label class="tgl"><input type="checkbox" id="chat.routing"><i></i></label></div>
       <div data-show="chat.routing"><label>Fragen, die keine Regel erkennt</label><select id="chat.route_model"><option value="off">bekommen alle Werkzeuge wie bisher (empfohlen)</option><option value="on">ordnet das Sprachmodell kurz einer Gruppe zu (etwa eine halbe Sekunde)</option><option value="lean">bekommen nur Websuche und Gedächtnis (Antwort beginnt früher)</option><option value="systemone">ordnet die Einordnung mit Wahrscheinlichkeit zu, erst ab 80 % (qwen38, etwa 0,2 s)</option></select>
-        <label>Eigene Wörter pro Gruppe</label><textarea id="chat.route_words" rows="3" placeholder="smarthome: sauna, kamin"></textarea><div class="fh">Kommt eines dieser Wörter in der Frage vor, gehört sie zu dieser Gruppe. Eine Zeile pro Gruppe, die Namen stehen in der Tabelle unten. Nur ganze Wörter, höchstens 20 pro Gruppe. Die eingebauten Wörter bleiben immer.</div>
-        <div class="row"><input id="routetext" maxlength="500" placeholder="Satz ausprobieren, z. B. Mach die Sauna an"><button class="b" type="button" id="routego">Ausprobieren</button></div><div id="routeout" class="fh"></div>
-        <details id="routerules"><summary>Regeln ansehen</summary><div id="routetable" class="fh">…</div></details></div>
+        <div class="fh">Gruppen, eigene Wörter, Testsätze und den Weg einzelner Sätze siehst und änderst du unter Funktionen → Weiche.</div></div>
       <div class="setrow" data-show="chat.routing" style="margin-left:18px"><div class="lbl"><b>Vorab holen bei Rückfrage</b><span>Fragt der Assistent zurück, holt das Panel schon Kalender, Mails, Wetter oder Pakete. Nur lesen; jedes Profil schaltet es selbst ein.</span></div><label class="tgl"><input type="checkbox" id="chat.prefetch"><i></i></label></div>
       <div class="setrow" data-show="chat.routing" style="margin-left:18px"><div class="lbl"><b>Sofortige Rückmeldung</b><span>Gleich nach der Frage ein kurzer, fertig aufgenommener Satz, was der Spark tut. Jedes Profil schaltet es selbst ein.</span></div><label class="tgl"><input type="checkbox" id="chat.instant_ack"><i></i></label></div>
       <div class="setrow"><div class="lbl"><b>Einordnung mit Wahrscheinlichkeit</b><span>qwen38 (/v1/systemone) liefert Wahrscheinlichkeiten, das Panel entscheidet mit festen Schwellen. Jedes Profil schaltet es selbst ein.</span></div><label class="tgl"><input type="checkbox" id="chat.systemone"><i></i></label></div>
@@ -628,6 +627,26 @@
     <div id="whobox"></div>
   </div>
 </section>
+<section id="route">
+  <div id="whbox">
+    <div class="card"><h2 data-wht="h"></h2><div class="mut" data-wht="intro"></div>
+      <div class="wh-pills" id="whpills"></div>
+      <div class="wh-try"><input id="whtext" maxlength="500" autocomplete="off"><button class="b p" type="button" id="whgo"></button><button class="b" type="button" id="whwrong" hidden></button></div>
+      <div class="wh-flow" id="whflow"></div>
+    </div>
+    <div class="card wh-fix" id="whfix" hidden></div>
+    <div class="card ld-box"><h3 data-wht="groups"></h3>
+      <div class="ld-split" id="whsplit"><div class="ld-list" id="whlist"></div><div class="ld-detail wh-det" id="whdet"></div></div>
+    </div>
+    <div class="wh-bar2" id="whbar" hidden><span data-wht="dirty"></span><button class="b p" type="button" id="whsave"></button><button class="b" type="button" id="whdrop"></button></div>
+    <div id="whmsg" class="wh-msg"></div>
+    <div class="wh-cols">
+      <div class="card"><h3 data-wht="tests"></h3><div id="whtests"></div></div>
+      <div class="card"><h3 data-wht="stats"></h3><div id="whstats"></div></div>
+    </div>
+    <div class="card"><h3 data-wht="locks"></h3><div id="whlocks"></div></div>
+  </div>
+</section>
 <section id="int">
   <div class="card"><h2>Alle Anleitungen</h2>
     <div class="mut">Zu jedem Dienst, den man einschalten kann: was er kann, was du brauchst, wie du ihn einrichtest und benutzt, was das Haus verlässt und wie du ihn wieder ausschaltest. Dieselbe Anleitung steht auch neben dem Schalter unter Funktionen und im Ich.</div>
@@ -932,6 +951,7 @@
 <script src="/static/js/begleiter.js"></script>
 <script src="/static/js/changelog.js"></script>
 <script src="/static/js/melden.js"></script>
+<script src="/static/js/weiche.js"></script>
 <script src="/static/js/seite.js"></script>
 <script src="/static/js/way.js"></script>
 <script src="/static/js/start.js"></script>

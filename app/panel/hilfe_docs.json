@@ -1620,6 +1620,30 @@
 "src": "assistent",
 "file": "Assistent und Oberfläche",
 "head": "Sprach-Chat",
+"title": "Sprach-Chat",
+"text": "Weiche sichtbar und einstellbar (Funktionen → Weiche, Plan plaene/weiche-sichtbar.md): Eine eigene Seite neben „Wer darf was“ zeigt die Weiche als Bild. „Ausprobieren“ schickt einen Satz durch dieselben Regeln wie eine echte Frage und zeigt seinen Weg in sechs Kästen: Frage (Rückbezug ja/nein), Vorprüfung (Plaudern, Frage zum Spark, Nachricht an jemand), Gruppe (mit dem Wort, das gegriffen hat, und ob es eingebaut oder ein eigenes ist), Werkzeuge (aus der Gruppe, zusätzlich, immer dabei), Sperren (die Schutzregeln mit Schloss) und Ergebnis (direkt abrufen, Pflicht-Werkzeug, Sofort-Satz). Kein Modell, nichts wird gespeichert. Darunter stehen die Gruppen als Liste mit Detailbereich: eingebaute Wörter, eigene Wörter als Chips (chat.route_words), neu „Nicht bei“ (chat.route_not: ein Wort nimmt die Gruppe wieder heraus), zusätzliche Werkzeuge (chat.route_extra, höchstens 6, nur Werkzeuge der Weiche und nur, wenn die Frage sie ohnehin angeboten bekommt) und Eingrenzen pro Gruppe (chat.route_off: die Gruppe wird erkannt, bekommt aber alle erlaubten Werkzeuge). Alles davon nimmt nur weg oder bleibt innerhalb der Rechte; die Schutzregeln (nach Mail oder Fremdtext nichts schalten oder merken"
+},
+{
+"lang": "de",
+"src": "assistent",
+"file": "Assistent und Oberfläche",
+"head": "Sprach-Chat",
+"title": "Sprach-Chat",
+"text": ", Notaus, höchstens 2 Nachschlagen) sind keine Einstellung. Testsätze: die eingebauten Sätze (app/panel/intent_bench.py, auch für test_intent.py) und eigene (chat.route_tests, höchstens 200, Satz bis 200 Zeichen mit erwarteter Gruppe). „Prüfen und speichern“ schickt vorher alle Sätze durch die neuen Regeln; landet einer anders, zeigt die Seite welche und speichert erst nach „Trotzdem speichern“. „Rückgängig“ setzt die Version davor zurück (die letzten 20 in STATE/weiche-history.json). „Falsch zugeordnet …“ gibt es nach dem Ausprobieren, an jedem Schritt Weiche in Zustand → Logs → Anfragen (die Frage selbst wird nie aufgezeichnet, man tippt sie neu) und als „Weiche prüfen“ im Hinweis unter einer Antwort im eigenen Admin-Chat: richtige Gruppe wählen, die Weiche schlägt nach fester Regel Wörter des Satzes vor (mindestens 4 Buchstaben, kein Allerweltswort, noch keiner Gruppe zugeordnet) und zeigt zu jedem, wie viele Testsätze sich ändern; „Übernehmen“ ändert die Regeln auf der Seite, der Satz wird Testsatz. Statistik: pro Tag und Gruppe nur Anzahl, Werkzeuge und Direktabrufe (8 Tage, STATE/weiche-stats.json), nie ein Wort der Frage; die Live-Übersicht zeigt am Knoten Weiche die Zahlen "
+},
+{
+"lang": "de",
+"src": "assistent",
+"file": "Assistent und Oberfläche",
+"head": "Sprach-Chat",
+"title": "Sprach-Chat",
+"text": "von heute. Nur Admin (nicht der Verwalter), Rate-Limit, Body höchstens 40 KB, geprüft beim Speichern und Wiederherstellen. Das Einstellungsformular überschreibt die Regeln der Weiche nicht mehr mit einem alten Stand."
+},
+{
+"lang": "de",
+"src": "assistent",
+"file": "Assistent und Oberfläche",
+"head": "Sprach-Chat",
 "title": "Hilfe zum Spark (V01.0.326, standardmäßig aus)",
 "text": "Hilfe zum Spark (V01.0.326, standardmäßig aus): Fragen zum Spark selbst („Wie bekomme ich schnellere Antworten?“, „Was macht dieser Schalter?“, „Was sollte ich hier noch einstellen?“) beantwortet der Assistent mit dem Werkzeug spark_hilfe aus dem, was mit dem Panel kommt: den Anleitungen, den Schaltern mit ihren Sätzen, den eigenen Einstellungen unter Ich, festen Empfehlungen und den Absätzen dieser Doku (app/panel/hilfe_docs.json, python3 app/panel/hilfe.py --docs schreibt sie neu; ein Selbsttest hält sie gleich). Gesucht wird mit festen Regeln auf dem Spark, nichts verlässt das Haus. Zu jedem Treffer kommen der Weg im Panel und, wie es bei dir steht (an, aus und warum). Jede Anmeldung bekommt nur, was ihre Rechte erlauben: Spark-Einstellungen, der Stand der Spark-Schalter, „Sicherheit auf einen Blick“ und die Doku zum Betrieb nur für Admins (ein Verwalter nur die Funktionsschalter); normale Profile bekommen die Anleitungen ohne die Admin-Schritte und nur ihre eigenen Einstellungen; Gäste nichts. Die Treffer gehen als Daten ans Modell, nie als Anweisung; Schlüssel, PINs und Namen anderer Profile kommen nie vor. Mit „Einstellungen vorschlagen“ (spark_vorschlag) zeigt der Assistent "
 },
@@ -4582,6 +4606,22 @@
 "head": "Voice chat",
 "title": "Targeted tool choice (V01.0.202)",
 "text": "from V01.0.194. When something is locked the model always gets the real reason in one sentence (also with the switch off). Optionally, under the admin switch, the language model sorts questions no rule recognizes into a group (only the person's own message, answer only from the fixed list, default off). Below the admin switch (V01.0.203): \"Show the rules\" lists every group with its built-in words and tools, \"Try it\" sends one sentence through the switch (no model, nothing stored; admin only, rate limit, at most 500 characters), and \"Own words per group\" (chat.route_words, one line per group like smarthome: sauna, kamin; whole words only, at most 20 per group, checked on save and restore) adds to the built-in words, never replaces them. Test bench with more than 90 example sentences: app/tests/test_intent.py."
+},
+{
+"lang": "en",
+"src": "assistant",
+"file": "Assistant and panel",
+"head": "Voice chat",
+"title": "Voice chat",
+"text": "The switch shown and set up (Features → Switch, plan plaene/weiche-sichtbar.md): a page of its own beside \"Who may do what\" shows the switch as a picture. \"Try\" sends a sentence through the same rules as a real question and shows its way in six boxes: question (points back or not), checks first (small talk, about the Spark, message to someone), group (with the word that matched, built in or own), tools (from the group, extra, always kept), locks (the protection rules with a lock) and result (read directly, required tool, instant sentence). No model, nothing stored. Below, the groups as a list with details: built-in words, own words as chips (chat.route_words), new \"Not with\" (chat.route_not: a word takes the group out again), extra tools (chat.route_extra, at most 6, only the switch's own tools and only when the question is offered them anyway) and narrowing per group (chat.route_off: the group is recognized but gets every allowed tool). All of it only takes away or stays within the rights; the protection rules (nothing switched or remembered after mail or outside text, emergency stop, at most 2 lookups) are no setting. Test sentences: the built-in ones (app/panel/intent_bench.py, "
+},
+{
+"lang": "en",
+"src": "assistant",
+"file": "Assistant and panel",
+"head": "Voice chat",
+"title": "Voice chat",
+"text": "also used by test_intent.py) and own ones (chat.route_tests, at most 200, a sentence up to 200 characters with the expected group). \"Check and save\" runs every sentence through the new rules first; when one lands elsewhere the page lists it and saves only after \"Save anyway\". \"Undo\" puts the version before back (the last 20 in STATE/weiche-history.json). \"Wrongly sorted …\" comes after a try, at every switch step in Status → Logs → Requests (the question itself is never recorded, it is typed again) and as \"Check the switch\" in the hint under an answer in the admin's own chat: pick the right group, the switch suggests words of the sentence by a fixed rule (at least 4 letters, not a common word, not in any group yet) with the number of test sentences each would change; \"Apply\" changes the rules on the page and keeps the sentence as a test. Statistics: per day and group only counts, tools and direct reads (8 days, STATE/weiche-stats.json), never a word of the question; the live overview shows today's numbers at the switch node. Admin only (not the manager role), rate limit, body at most 40 KB, checked on save and restore. The settings form no longer puts older switch rules back."
 },
 {
 "lang": "en",

@@ -308,7 +308,7 @@ async def lokal_test(request: Request):
     import intent
     import wissen
     cfg = ccfg()
-    kind, why = classify(text, intent.classify(text, cfg.get("tool_words", ""), cfg.get("route_words", "")),
+    kind, why = classify(text, intent.classify_cfg(text, cfg),
                          cfg.get("tool_words", ""))
     who = profiles.current(request)
     srcs = []

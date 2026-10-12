@@ -311,6 +311,9 @@ function whyNote(w){const d=document.createElement('div');d.className='mem whyno
   else if(w.why==='profile'&&w.me&&typeof openMe==='function')go(t('Unter Ich einschalten','Switch on under Me'),()=>openMe(w.me));
   else if(w.why==='guest'&&typeof openMe==='function')go(t('Anmelden','Sign in'),()=>openMe('loginbox'));
   else if(w.why==='mfa'&&typeof openMe==='function')go(t('Einrichten','Set up'),()=>openMe('secbox'));
+  // the admin's own chat: the question to the Weiche page (Funktionen → Weiche, „Falsch zugeordnet“)
+  if(document.body.classList.contains('adm')&&!document.body.classList.contains('prof')&&!document.body.classList.contains('mgr')&&typeof whOpenFix==='function')
+    go(t('Weiche prüfen','Check the switch'),()=>{let m=d.closest('.msg'),p=m&&m.previousElementSibling;while(p&&!p.classList.contains('user'))p=p.previousElementSibling;whOpenFix(p?p.textContent.trim().slice(0,200):'','')});
   if(w.tip&&typeof tipNote==='function')tipNote(d,w.tip);
   return d}
 // Follow-up without the wake word (admin chat.follow_up, per profile "follow", off by default): after

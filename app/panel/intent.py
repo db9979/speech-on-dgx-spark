@@ -145,9 +145,10 @@ class Route:
         return "+".join(self.names) if self.names else "unklar"
 
 
-def classify(text, extra_words="", group_words=""):
+def classify(text, extra_words="", group_words="", not_words=""):
     """The person's own latest message -> Route (fixed rules only). extra_words: the admin's words
-    per tool (chat.tool_words), group_words: the admin's words per group (chat.route_words)."""
+    per tool (chat.tool_words), group_words: the admin's words per group (chat.route_words), not_words: the
+    admin's words that take a group out again (chat.route_not, Funktionen → Weiche „Nicht bei“)."""
     text = str(text or "")[:2000]
     if not text.strip():
         return Route([], {})
@@ -218,16 +219,32 @@ def classify(text, extra_words="", group_words=""):
     # "Wie warm wird es morgen?" is weather, not the thermostat
     if "wetter" in why and "smarthome" in why and not homeassistant.is_command(text):
         why.pop("smarthome")
+    # the admin's „Nicht bei“ words (only taking out: never a group, a tool or a right more)
+    for name, rx in own_route_words(not_words).items():
+        if name in why and rx.search(text):
+            why.pop(name)
     return Route(list(why), why)
 
 
-def narrow(route, tools):
+def classify_cfg(text, ccfg):
+    """classify() with the admin's saved words (chat.tool_words, route_words, route_not)."""
+    ccfg = ccfg or {}
+    return classify(text, ccfg.get("tool_words", ""), ccfg.get("route_words", ""), ccfg.get("route_not", ""))
+
+
+def narrow(route, tools, ccfg=None):
     """The tools for a clear route: its group (only those already offered) plus NARROW_KEEP, or
     all of them when nothing of the group is offered (never more than before, never an empty list
-    when there was something)."""
+    when there was something). ccfg: the admin's choices under Funktionen → Weiche: groups that do not
+    narrow (chat.route_off) and tools a group keeps as well (chat.route_extra, only those already offered)."""
     if not route.clear:
         return tools
-    want = route.tools() | NARROW_KEEP
+    ccfg = ccfg or {}
+    off = ccfg.get("route_off") if isinstance(ccfg.get("route_off"), list) else []
+    if any(n in off for n in route.names):
+        return tools
+    extra = own_route_extra(ccfg.get("route_extra", ""))
+    want = route.tools() | NARROW_KEEP | {t for n in route.names for t in extra.get(n, ())}
     kept = [t for t in tools if t["function"]["name"] in want]
     if not any(t["function"]["name"] in route.tools() for t in kept):
         return tools
@@ -472,6 +489,55 @@ def parse_route_words(text):
     return out
 
 
+# chat.route_extra (Funktionen → Weiche): tools a group keeps as well, "smarthome: weather". Only names of the
+# switch's own tools; narrow() takes them only from those the turn offers anyway (the rights stay as they are).
+MAX_EXTRA = 6
+
+
+def known_tools():
+    out = set(NARROW_KEEP) | LEAN
+    for tools, _ in GROUPS.values():
+        out |= tools
+    return out
+
+
+def parse_route_extra(text):
+    """{group: [tool]} from the admin's lines, or ValueError with a readable reason."""
+    if not isinstance(text, str) or len(text) > MAX_ROUTE_CHARS:
+        raise ValueError(f"höchstens {MAX_ROUTE_CHARS} Zeichen")
+    out, known = {}, known_tools()
+    for line in text.splitlines():
+        if not line.strip():
+            continue
+        name, sep, rest = line.partition(":")
+        name = name.strip().lower()
+        if not sep or name not in GROUPS:
+            raise ValueError(f"„{line.strip()[:40]}“: vorne steht eine Gruppe, dann ein Doppelpunkt")
+        tools = [w.strip() for w in rest.split(",") if w.strip()]
+        for w in tools:
+            if w not in known:
+                raise ValueError(f"„{w[:40]}“: kein Werkzeug der Weiche")
+        tools = list(dict.fromkeys(out.get(name, []) + tools))
+        if len(tools) > MAX_EXTRA:
+            raise ValueError(f"{name}: höchstens {MAX_EXTRA} zusätzliche Werkzeuge")
+        out[name] = tools
+    return out
+
+
+def own_route_extra(text):
+    try:
+        return parse_route_extra(text or "")
+    except ValueError:
+        return {}
+
+
+def parse_route_off(value):
+    """chat.route_off: the groups that are recognized but do not narrow, or ValueError."""
+    if not isinstance(value, list) or len(value) > len(GROUPS) or any(n not in GROUPS for n in value):
+        raise ValueError("eine Liste von Gruppen")
+    return list(dict.fromkeys(value))
+
+
 def own_route_words(text):
     """The admin's words as one pattern per group (whole words, escaped), {} when none or invalid."""
     if not text:
@@ -493,7 +559,8 @@ LABELS = {"smarthome": "Smart Home", "kalender": "Kalender und Briefing", "mail"
           "erinnerung": "Erinnerungen und Timer", "liste": "Listen", "wetter": "Wetter", "bahn": "Bus und Bahn",
           "paket": "Pakete", "kontakt": "Kontakte", "gedaechtnis": "Gedächtnis und frühere Gespräche",
           "dokument": "Dokumente", "nachricht": "Nachrichten an andere", "agent": "Agenten", "iphone": "iPhone",
-          "spark": "Fragen zum Spark"}
+          "spark": "Fragen zum Spark", "wikipedia": "Wikipedia", "erstellen": "Dokumente erstellen",
+          "archiv": "Eigenes Archiv"}
 MAX_TEST = 500
 # "Erklären statt Schweigen" (plan „Bedienung gesamt“ B4, V01.0.286): the function behind each group (features.py)
 FEATURE = {"smarthome": "ha", "kalender": "calendar", "mail": "mail", "websuche": "search", "erinnerung": "reminders",
@@ -602,7 +669,7 @@ async def routing_test(request: Request):
     if not isinstance(text, str) or not text.strip() or len(text) > MAX_TEST:
         raise HTTPException(400, f"text: 1 bis {MAX_TEST} Zeichen")
     ccfg = load_config().get("chat", {})
-    r = classify(text, ccfg.get("tool_words", ""), ccfg.get("route_words", ""))
+    r = classify_cfg(text, ccfg)
     return {"intent": r.label(), "names": r.names, "clear": r.clear, "why": r.why,
             "tools": sorted(r.tools() | NARROW_KEEP) if r.clear
             else sorted(LEAN) if not r.names and ccfg.get("route_model") == "lean" else [], "refers": refers_back(text)}

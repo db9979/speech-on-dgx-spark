@@ -133,7 +133,10 @@ function rsteps(x){const list=[...(x.steps||[])].map(s=>({...s}));const m=x.mark
   for(const s of list){const row=el('div','rst'+(s.k==='mark'?' mark':'')+(s.k==='tool'?' tw':''));row.append(el('span','rat',rsecs(s.a)));
     const ic=el('span','ric',s.k==='mark'?'':RK[s.k][1]);ic.style.background=s.k==='mark'?s.c:RK[s.k][0];row.append(ic);
     const tx=el('div','rtx');const b=el('b','',s.k==='mark'?s.n:rtitle(s));if(s.k==='mark')b.style.color=s.c;tx.append(b);
-    if(s.k!=='mark'){const d=rdesc(s);if(d)tx.append(el('div','rd',d))}if(s.k==='tool'&&(s.x||{}).ok===false)row.classList.add('bad');row.append(tx);
+    if(s.k!=='mark'){const d=rdesc(s);if(d)tx.append(el('div','rd',d))}
+    // „Falsch zugeordnet …“ (Funktionen → Weiche): the question is never recorded, the admin types it there again
+    if(s.k==='weiche'&&typeof whOpenFix==='function'&&!document.body.classList.contains('mgr')){const g=String(s.n||'').replace(/^Weiche: /,'').replace(/^-$/,'unklar');
+      const b=el('button','mlink',t('Falsch zugeordnet …','Wrongly sorted …'));b.type='button';b.onclick=e=>{e.stopPropagation();whOpenFix('',g.includes('+')?'mehrere':g)};tx.append(b)}if(s.k==='tool'&&(s.x||{}).ok===false)row.classList.add('bad');row.append(tx);
     row.append(s.k==='mark'?el('span'):el('span','rdu',s.d||['tool','llm','tts','prep'].includes(s.k)?rsec(s.d||0):'–'));tl.append(row)}
   return tl}
 async function rshowLines(x,box){box.replaceChildren(el('div','lempty',t('Lade …','Loading …')));

@@ -279,6 +279,15 @@ def key_call(request, who, why):
         pass
 
 
+def _weiche_today():
+    """The Weiche's numbers of today (weiche.py: groups and counts only, never a question)."""
+    try:
+        import weiche
+        return weiche.live_today()
+    except Exception:
+        return None
+
+
 def step(rec, s):
     """A step was added to a watched request: tool steps also go to "Was die Dienste zurückgeben"."""
     try:
@@ -978,7 +987,7 @@ def snapshot(view="admin", now=None):
             "guard": {"ok": cnt.get("guard_ok", 0), "bad": cnt.get("guard_bad", 0), "cut": cnt.get("guard_cut", 0), "items": guard_items},
             "door": {"in": cnt.get("door_in", 0), "out": cnt.get("door_out", 0), "items": door_items},
             "rets": rets, "events": [{"t": t, "area": a, "text": x} for t, a, x in events], "conns": _conns(now), "sys": _sys(), "notaus": held,
-            "svc": _svc_now(now), "bg": _bg_now(now), "hints": hs, "sys1": sys1, "upd": upd, "devup": devup,
+            "svc": _svc_now(now), "bg": _bg_now(now), "weiche": _weiche_today(), "hints": hs, "sys1": sys1, "upd": upd, "devup": devup,
             "meld": {k: meld.get(k) for k in ("on", "drafts", "sent_today", "last", "token")},
             "make": {k: make.get(k) for k in ("on", "run", "wait", "done", "failed", "sent", "planned")},
             "stats": node_stats(now)}
