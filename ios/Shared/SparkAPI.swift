@@ -483,10 +483,10 @@ struct SparkAPI {
         let d = Self.object(data)
         let ids = Set((d["ids"] as? [String] ?? []).prefix(200))
         let list = d["items"] as? [[String: Any]] ?? []
-        let items: [SavedConvo] = list.compactMap { d in
-            guard let id = d["id"] as? String, let msgs = d["msgs"] as? [[String: Any]] else { return nil }
-            let ms = (d["updated"] as? NSNumber)?.doubleValue ?? 0
-            return SavedConvo(id: id, title: d["title"] as? String ?? "", updated: Date(timeIntervalSince1970: ms / 1000), msgs: msgs)
+        let items: [SavedConvo] = list.compactMap { x in
+            guard let id = x["id"] as? String, let msgs = x["msgs"] as? [[String: Any]] else { return nil }
+            let ms = (x["updated"] as? NSNumber)?.doubleValue ?? 0
+            return SavedConvo(id: id, title: x["title"] as? String ?? "", updated: Date(timeIntervalSince1970: ms / 1000), msgs: msgs)
         }
         return (items, ids)
     }

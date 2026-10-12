@@ -250,10 +250,10 @@ final class Conversation: ObservableObject {
     private func catchUp() async {
         guard saved > 0, phase == .idle || phase == .waiting, let api = SparkAPI.current, Demo.scene == nil else { return }
         let id = convoId
-        guard let (items, ids) = try? await api.convos(since: seenAt), id == convoId,
+        guard let got = try? await api.convos(since: seenAt), id == convoId,
               phase == .idle || phase == .waiting else { return }
-        if !ids.contains(id) { fresh(); return }
-        guard let c = items.first(where: { $0.id == id }) else { return }
+        if !got.ids.contains(id) { fresh(); return }
+        guard let c = got.items.first(where: { $0.id == id }) else { return }
         seenAt = max(seenAt, Int(c.updated.timeIntervalSince1970 * 1000))
         let theirs = c.msgs.compactMap { d -> Message? in
             guard let role = d["role"] as? String, role == "user" || role == "assistant",
