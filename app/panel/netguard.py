@@ -18,6 +18,7 @@ goes to the site it was entered for (same host or same parent domain, e.g. the c
 icloud.com), never over plain http when the address was https.
 """
 import asyncio
+import contextvars
 import imaplib
 import ipaddress
 import re
@@ -61,6 +62,9 @@ def own_addresses():
     _own.update(t=time.time(), ips=ips)
     return ips
 MAX_BYTES = 20 * 1024 * 1024
+# set by the Dienst-Wächter (dienstwacht.py) while it looks at its services: those connections are no request, so
+# they do not count on the Live page's Wächter list and a refused one does not start the Selbst-Notaus
+QUIET = contextvars.ContextVar("netguard_quiet", default=False)
 
 
 class Blocked(ValueError):
@@ -88,7 +92,7 @@ def allowed(ip, port, level):
         return "the Spark's own services are not reachable this way"
     if ip.is_global:
         import notaus   # Notaus stage 1 and up: nothing to the internet (notaus.py)
-        if notaus.refuse("internet"):
+        if notaus.blocks("internet") if QUIET.get() else notaus.refuse("internet"):
             return "Notaus: no connections to the internet"
         return None
     if level == PUBLIC:
@@ -112,7 +116,7 @@ def resolve(host, port, level):
         why = allowed(info[4][0], port, level)
         if why:
             _live(host, port, level, info[4][0], why)
-            if not why.startswith("Notaus"):
+            if not why.startswith("Notaus") and not QUIET.get():
                 try:   # a series of refused targets may start the Selbst-Notaus (notaus.watch, switch off by default)
                     import notaus
                     notaus.watch("netguard")
@@ -125,6 +129,8 @@ def resolve(host, port, level):
 
 def _live(host, port, level, ip, why):
     """Zustand → Live (live.py): each decision with its reason; never raises."""
+    if QUIET.get():
+        return
     try:
         import live
         live.outgoing(host, port, level, ip, why)

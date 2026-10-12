@@ -469,6 +469,14 @@ class Browser(unittest.TestCase):
                             continue
                         await pg.evaluate("WHO_LAST=null")
                         await pg.locator("#whobox .wname", has_text=name).first.click()
+                        # seen in full local runs (V01.0.440): the list was drawn again under the click, nothing opened;
+                        # still on Wer darf was after 8 s: tap the name once more
+                        try:
+                            await pg.wait_for_function("!!WHO_LAST", timeout=8000)
+                        except Exception:
+                            if await pg.is_visible("#whobox .wname"):
+                                print(f"\nWARNUNG Wer darf was: {sw} nach dem Tippen nicht geöffnet, tippe noch einmal", file=sys.stderr)
+                                await pg.locator("#whobox .wname", has_text=name).first.click()
                         # the smooth scroll to a far row takes longer on GitHub's runners: wait until it is in view
                         try:
                             await pg.wait_for_function("(()=>{const r=WHO_LAST&&WHO_LAST.getBoundingClientRect();"
@@ -483,6 +491,9 @@ class Browser(unittest.TestCase):
                           return {row:true, feat:!!document.querySelector('.cfgwrap.featmode'), vis:!!row.offsetParent,
                                   inview:r.top>=0&&r.bottom<=innerHeight&&r.height>0,
                                   right:own}})(%r)""" % sw)
+                        if not st.get("row"):   # flaky at 390 px in full local runs (V01.0.440): say what the page had
+                            st["page"] = await pg.evaluate(f"""JSON.stringify({{el:!!$('chat.{sw}'),sec:(document.querySelector('.sec.on')||{{}}).id,
+                                feat:!!document.querySelector('#pane-feat .fitem'),y:scrollY}})""")
                         self.assertEqual(st, {"row": True, "feat": True, "vis": True, "inview": True, "right": True}, (width, sw, st))
                     self.assertEqual(errors, [])
                     await br.close()
@@ -1033,7 +1044,12 @@ class Browser(unittest.TestCase):
                     rows = await pg.evaluate("[...document.querySelectorAll('#espbox [data-ego]')].map(b=>b.dataset.ego)")
                     self.assertEqual(rows, [did, "usb", "code"], name)
                     await pg.evaluate(f"document.querySelector('#espbox [data-ego=\"{did}\"]').click()")
-                    await pg.wait_for_function("!!$('espdiag')&&!!$('espdiag').firstElementChild", timeout=20000)
+                    try:
+                        await pg.wait_for_function("!!$('espdiag')&&!!$('espdiag').firstElementChild", timeout=20000)
+                    except Exception:   # red twice in a full local run, green alone (V01.0.440): keep the trace
+                        box = await pg.evaluate("JSON.stringify({msg:typeof ESP_MSG!=='undefined'?ESP_MSG:'-',diag:!!$('espdiag')})")
+                        print(f"\nWARNUNG Lautsprecher-Prüfen leer ({name}): {box} {errors}", file=sys.stderr)
+                        raise
                     heads = await pg.evaluate("[...document.querySelectorAll('#espbox .espgrp')].map(e=>e.textContent)")
                     self.assertEqual(heads, ["Klang", "Raum-Modus", "Stimme", "Firmware", "Prüfen"], name)
                     self.assertTrue(await pg.evaluate("!!$('espup')&&!!$('esproom')&&!!$('espvoices')&&!!$('espdel')"))
@@ -1070,7 +1086,7 @@ class Browser(unittest.TestCase):
                     self.assertFalse(await pg.is_visible("#chat\\.search_url"))
                     tall = await pg.evaluate("$('pane-feat').getBoundingClientRect().height")
                     # about 45 px per closed line on a computer (limit grows with new rows); open boxes would be several times that
-                    self.assertLess(tall, 4140 if w < 760 else 3180, f"{w}: {tall}px")   # V01.0.415: +1 sub-switch "Dokumente erstellen" (GitHub 3138 px), V01.0.416: +1 group heading "Tempo und Genauigkeit" (no new line), V01.0.386: +1 line "Probleme melden", V01.0.381: +1 line "Geräte-Updates", V01.0.342: +1 line "Spark-Begleiter am PC und Mac", V01.0.340: +1 line "Einordnung mit Wahrscheinlichkeit", V01.0.339: +1 sub-switch "In anderen Programmen", V01.0.332: +1 line "Schreibhilfe", V01.0.326: +1 line "Hilfe zum Spark", V01.0.300: +1 line "Android-App", V01.0.303: +1 line "Spark als MCP-Server", V01.0.304: +1 line "Eindeutiges direkt abrufen", V01.0.307: +1 sub-switch "Vorab holen bei Rückfrage"
+                    self.assertLess(tall, 4210 if w < 760 else 3260, f"{w}: {tall}px")   # V01.0.440: +1 line "Dienst-Wächter", +1 sub-switch, V01.0.415: +1 sub-switch "Dokumente erstellen" (GitHub 3138 px), V01.0.416: +1 group heading "Tempo und Genauigkeit" (no new line), V01.0.386: +1 line "Probleme melden", V01.0.381: +1 line "Geräte-Updates", V01.0.342: +1 line "Spark-Begleiter am PC und Mac", V01.0.340: +1 line "Einordnung mit Wahrscheinlichkeit", V01.0.339: +1 sub-switch "In anderen Programmen", V01.0.332: +1 line "Schreibhilfe", V01.0.326: +1 line "Hilfe zum Spark", V01.0.300: +1 line "Android-App", V01.0.303: +1 line "Spark als MCP-Server", V01.0.304: +1 line "Eindeutiges direkt abrufen", V01.0.307: +1 sub-switch "Vorab holen bei Rückfrage"
                     await pg.evaluate("$('chat.search').closest('.fitem').querySelector('.fexp').click()")
                     self.assertTrue(await pg.evaluate("$('chat.search').closest('.fitem').classList.contains('open')"))
                     await pg.evaluate("$('chat.search').closest('.fitem').querySelector('.fexp').click()")
@@ -1467,8 +1483,10 @@ class Browser(unittest.TestCase):
         import profiles
         with open(os.environ["SPEECH_SPARK_CONFIG"]) as f:
             cf = _json.load(f)
-        was = {k: cf.get("chat", {}).get(k) for k in ("search", "search_url", "calendar", "mail", "remarkable")}
-        cf.setdefault("chat", {}).update(search=True, search_url="http://127.0.0.1:9/", calendar=True, mail=True, remarkable=False)
+        was = {k: cf.get("chat", {}).get(k) for k in ("search", "search_url", "calendar", "mail", "remarkable", "svc_watch")}
+        # svc_watch off: the Dienst-Wächter would look at the fake mail address, find it gone and unfold "mail" (V01.0.440)
+        cf.setdefault("chat", {}).update(search=True, search_url="http://127.0.0.1:9/", calendar=True, mail=True, remarkable=False,
+                                         svc_watch=False)
         helpers.write_config(cf)
         uid = next(u["id"] for u in profiles.names() if u["name"] == "Uitest")
         made = [profiles._path(uid, n) for n in ("calendar.json", "mail.json") if not os.path.exists(profiles._path(uid, n))]
@@ -2457,7 +2475,12 @@ class JoinBrowser(unittest.TestCase):
                                 break
                             await pg.click("#gonext")
                             await pg.wait_for_timeout(300)
-                        await pg.wait_for_selector("#gohandgo", timeout=30000)
+                        try:
+                            await pg.wait_for_selector("#gohandgo", timeout=30000)
+                        except Exception:
+                            box = await pg.evaluate("$('gobox').innerText.slice(0,600)")   # flaky once locally (V01.0.440), keep the trace
+                            print(f"\nWARNUNG Geräte-Schritt fehlt: {box} {bad[-8:]} {errors}", file=sys.stderr)
+                            raise
                         await pg.click("#gohandgo")
                         await pg.wait_for_selector("#gohand .jqr svg")
                         hid = await pg.evaluate("GO.hand")

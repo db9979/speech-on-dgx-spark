@@ -24,6 +24,7 @@ import recall  # noqa: E402
 import tidy  # noqa: E402
 import wiki  # noqa: E402
 import chat  # noqa: E402  (constants and helpers; imported fully before any call)
+import dienstwacht  # noqa: E402
 
 
 async def run(t, name, args, st):
@@ -40,6 +41,11 @@ async def run(t, name, args, st):
         return notaus.BLOCKED if held >= 2 or name in notaus.INTERNET_TOOLS and held else notaus.BLOCKED_MINE
     if name in t.locked(st) or (todo_change and (st["mail"] or st["outside"])):
         return chat.MAIL_BLOCKED if st["mail"] else chat.OUTSIDE_BLOCKED
+    # "Hinweis, wenn ein Dienst fehlt": the Dienst-Wächter sees this tool's service gone; a fixed sentence at once
+    # instead of waiting for it (the web search first tries the own archive, below)
+    gone = dienstwacht.tool_down(name, t.who["id"] if t.who else "") if name != "web_search" else ""
+    if gone:
+        return gone
     if name in chat.READS_OUTSIDE:
         st["outside"] = True
     if name == "document_search":
@@ -79,11 +85,16 @@ async def run(t, name, args, st):
             st["first"] = False
             en = guess_language(t.messages[-1]["content"]) == "English"
             await t.sentences.put("Let me look that up." if en else "Ich schaue kurz nach.")
+        gone = dienstwacht.tool_down(name, t.who["id"] if t.who else "")
         try:
+            if gone:          # SearXNG or the internet is gone: straight to the archive, else the fixed sentence
+                raise dienstwacht.Down(gone)
             result, sources = await chat.web_search(t.c, t.ccfg, query)
             await t.out.put({"type": "sources", "items": sources})
             return result
         except Exception as e:
+            if not isinstance(e, dienstwacht.Down):
+                dienstwacht.saw("web")
             # the internet or SearXNG is gone: the own Kiwix answers instead, saying so (kiwix.py)
             if t.who and t.own_browser and kiwix.web_fallback(t.who["id"]):
                 try:
@@ -93,6 +104,9 @@ async def run(t, name, args, st):
                     return result
                 except (httpx.HTTPError, ValueError) as e2:
                     print("kiwix: web search fallback failed", type(e2).__name__, flush=True)
+            if gone:
+                await t.out.put({"type": "search_error", "message": "Websuche gerade nicht erreichbar"})
+                return gone
             await t.out.put({"type": "search_error", "message": str(e)})
             return f"Search failed: {e}. Tell the user the search did not work; do not answer from guesses."
     if name == "home_assistant" and t.ha:

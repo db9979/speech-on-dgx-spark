@@ -2675,15 +2675,47 @@
 "lang": "de",
 "src": "sicherheit-und-betrieb",
 "file": "Sicherheit und Betrieb",
-"head": "Selbsttest",
-"title": "Selbsttest",
+"head": "Stabilität",
+"title": "Stabilität",
+"text": "- Dienst-Wächter (chat.svc_watch, darunter chat.svc_watch_users, Profil-Schalter svc_note und svc_hint, alle aus, nie Gäste, V01.0.440; dienstwacht.py, Plan plaene/dienst-ausfall-melden.md): Das Panel schaut selbst, ob seine Dienste antworten, nur was eingeschaltet ist: Sprachmodell (/models der eingestellten Adresse), Hören und Sprechen (/health), Internet (zwei feste öffentliche Adressen, api.github.com und cloudflare.com, weg erst, wenn keine antwortet), SearXNG (/healthz), Kiwix, Home Assistant, Mail-Server, Kalender-Server und das NAS der Sicherung nach außen. Jede Minute, Mail, Kalender und NAS alle 5 Minuten (nach einem Fehlversuch jede Minute). - Ohne Anmeldung: Eine HTTP-Antwort unter 500 (auch 401) zählt als „antwortet“, beim Mail-Server sein TLS-Gruß auf dem IMAP-Port. Tokens und Passwörter werden dafür nicht geöffnet. Adressen nur aus den Einstellungen, über netguard mit der Stufe des jeweiligen Moduls (Kiwix, Home Assistant, NAS: Heimnetz; Mail, Kalender: Nutzer-Regeln; Internet: öffentlich), 5 Sekunden, 64 KB. Diese Prüfungen stehen nicht in der Wächter-Liste der Live-Übersicht und starten nie den Selbst-Notaus (netguard.QUIET). Ab Notaus-Stufe 1 wird das Internet nic"
+},
+{
+"lang": "de",
+"src": "sicherheit-und-betrieb",
+"file": "Sicherheit und Betrieb",
+"head": "Stabilität",
+"title": "Stabilität",
+"text": "ht geprüft, ab Stufe 2 gar nichts; während eines Updates, 3 Minuten nach dem Start und 5 Minuten nach einem Neustart durch den Wächter zählt nichts. - Keine Meldungsflut: weg nach 3 Fehlversuchen in Folge über mindestens 3 Minuten, zurück nach 2 guten. Höchstens ein Ausfall-Hinweis pro Dienst in 30 Minuten; wer öfter kommt und geht, wird gezählt („Wackelt: 3 Ausfälle in der letzten halben Stunde“) und einmal gemeldet, wenn die halbe Stunde um ist und er noch weg ist. Ist das Internet weg, bekommen die Dienste dahinter (öffentliche Adresse) keinen eigenen Hinweis; „Internet weg“ nennt sie und die Funktionen, die das Internet brauchen. Alles aus einer Runde ist ein Hinweis pro Admin. - Wer es hört: die Admin-Profile (notaus.admin_uids: für Admin-Hinweise gewähltes Profil, Haupt-Admins, Mit-Admins) mit eigenem Schalter, über push.send (Kennung svc) auf dem Gerät, das sie unter *Ich → Gespräch → Dienste* wählen (svc_device: zuletzt benutzt, iPhone, Android, Begleiter, Telegram, Browser oder alle; nicht eingerichtet: wie sonst). „Nachts nur sammeln“ (svc_night): 22 bis 7 Uhr nichts, um 7 Uhr eine Zusammenfassung. Kommt ein Hinweis nicht an (ohne Internet erreicht der Push das iPhone nic"
+},
+{
+"lang": "de",
+"src": "sicherheit-und-betrieb",
+"file": "Sicherheit und Betrieb",
+"head": "Stabilität",
+"title": "Stabilität",
+"text": "ht), wartet er höchstens 12 Stunden und geht alle 5 Minuten oder mit dem nächsten Hinweis noch einmal raus, dann mit Uhrzeiten („war von 06:00 bis 06:43 weg“). Die Hinweise nennen nur Dienst, Uhrzeit und was nicht geht; nie eine Adresse, einen Host, einen Profilnamen oder einen Fehlertext. - Anzeige: oben auf jeder Admin-Seite und in der iPhone-App unter „Spark verwalten“ „Gerade eingeschränkt: …“ (health.alerts); *Zustand → Dienste* zeigt jeden Dienst mit Zustand, seit wann, Ausfällen heute und den Ausfällen der letzten 7 Tage; ein Haken weg nimmt einen Dienst von der Liste (PUT /api/admin/svcwatch/{id}), „Jetzt prüfen“ schaut sofort (POST /api/admin/svcwatch/check, Rate-Limit svcwatchnow 4 pro Minute). Die Live-Übersicht zeigt einen Punkt pro Dienst, das Ziel „Internet“ und Ausfall und Entwarnung unter „Ereignisse“. Zustand in dienstwacht.json (mit gesichert). - „Hinweis, wenn ein Dienst fehlt“ (svc_watch_users + svc_hint): Ruft das Modell ein Werkzeug, dessen Dienst als weg gilt (Archiv, Websuche, Home Assistant, Mail, Kalender, Wetter, Bahn, Pakete, Wikipedia, Webseiten), läuft es nicht; das Modell bekommt einen festen Satz („Home Assistant ist gerade nicht erreichbar (seit 05:"
+},
+{
+"lang": "de",
+"src": "sicherheit-und-betrieb",
+"file": "Sicherheit und Betrieb",
+"head": "Stabilität",
+"title": "Stabilität",
+"text": "12).“) und soll nichts raten. Bei Home Assistant, Mail und Kalender zählen nur die eigenen Adressen des Profils. Fehlt die Websuche, antwortet zuerst das eigene Kiwix-Archiv, wenn es an ist. ## Selbsttest"
+},
+{
+"lang": "de",
+"src": "sicherheit-und-betrieb",
+"file": "Sicherheit und Betrieb",
+"head": "Stabilität",
+"title": "Stabilität",
 "text": "Jede Installation und jedes Update führt den Selbsttest des Panels aus (app/tests), gegen nachgebaute LLM-, TTS- und Home-Assistant-Server in einem Wegwerf-Ordner: Anmeldung und Zugang, dass Profile nie Gedächtnis, Dokumente, Gespräche, Postfächer oder Home Assistant eines anderen sehen, die Werkzeuge im Gespräch, das Lernen aus Gesprächen, Kalender und Textbereinigung. Er läuft, bevor die neue Version live geht. Bei einem Update bricht ein Fehler das Update ab, und die alte Version läuft weiter; bei einer Erstinstallation wird er nur gemeldet. Das Ergebnis steht im Update-Protokoll. Dazu gehören die Sicherheitsprüfungen (test_hardening.py, ein Test pro Schutz) und ein Scanner (test_scanner.py), der neuen Code ablehnt, wenn er shell=True, eval oder ähnliches nutzt, eine Route ohne Anmeldung anlegt, einen Upload ohne Größengrenze liest, Werte in onclick nicht für JavaScript maskiert oder ein Werkzeug des Assistenten nicht als „liest fremden Text / ändert etwas / nur eigene Daten“ einordnet. Von Hand: cd /opt/speech-spark/app && sudo /opt/speech-spark/venv-panel/bin/python -m unittest discover -s tests -t ."
 },
 {
 "lang": "de",
 "src": "sicherheit-und-betrieb",
 "file": "Sicherheit und Betrieb",
-"head": "Selbsttest",
+"head": "Stabilität",
 "title": "Schonende Updates",
 "text": "Schonende Updates (ab V01.0.379): Installiert das Update genau die Version, deren Testlauf auf GitHub grün war, läuft auf dem Spark nur ein Rauchtest (tests/test_rauchtest.py, wenige Sekunden: jedes Modul lädt mit den Paketen dieses Spark, das Panel startet und antwortet). Der ganze Selbsttest läuft weiter bei der Erstinstallation, mit --newest, --to und beim Zurück zur vorigen Version. Beide laufen mit niedrigster CPU- und Platten-Priorität (nice 19, ionice Klasse 2/7), damit eine laufende Antwort ihr Tempo behält. Ein Update fragt apt nur, wenn ein Paket fehlt, pip nur, wenn sich die Paketliste oder die Lock-Datei geändert hat (.pkgs bzw. .locked in der Umgebung), und lädt Modelle nur, wenn andere gewählt sind (/opt/speech-spark/.models). Die ASR- und TTS-Dienste starten nur neu, wenn sich etwas geändert hat, woraus sie laufen: ihre Dateien laut app/restart-map, ihre systemd-Unit, die Einstellungen oder ihre Python-Pakete; ein Dienst, den die Liste nicht kennt, startet immer neu, und der Rauchtest prüft die Liste gegen die Imports. VoiceDesign startet wie die Engines nur bei geänderten Einstellungen neu. Das Panel startet bei jedem Update neu (etwa 8 s)."
 },
@@ -2691,7 +2723,7 @@
 "lang": "de",
 "src": "sicherheit-und-betrieb",
 "file": "Sicherheit und Betrieb",
-"head": "Selbsttest",
+"head": "Stabilität",
 "title": "Heute Nacht einspielen",
 "text": "Heute Nacht einspielen (Einstellungen → Update, aus): Eine neue geprüfte Version wird nachts zwischen 3 und 5 Uhr eingespielt, höchstens einmal pro Nacht, mit Sicherung vorher. Spricht gerade jemand mit dem Spark (in den letzten zwei Minuten), wartet es bis zur nächsten Pause; ist GitHub nicht erreichbar, fragt es nach 15 Minuten wieder. Beim Notaus startet nichts. Einschalten braucht den zweiten Anmeldeschritt, wenn er an ist. Der Knopf „Update installieren“ fragt eigens nach, wenn gerade ein Gespräch läuft. Die Live-Übersicht zeigt unter „Läuft gerade“ ein laufendes Update mit Schritt und Anteil, eine Stunde lang das Ergebnis und ob „nachts“ an ist."
 },
@@ -5571,15 +5603,47 @@
 "lang": "en",
 "src": "security-and-operation",
 "file": "Security and operation",
-"head": "Self-test",
-"title": "Self-test",
+"head": "Stability",
+"title": "Stability",
+"text": "- Service watch (chat.svc_watch, below it chat.svc_watch_users, profile switches svc_note and svc_hint, all off, never guests, V01.0.440; dienstwacht.py, plan plaene/dienst-ausfall-melden.md): the panel looks by itself whether its services answer, only what is switched on: language model (/models of the stored address), listening and speaking (/health), internet (two fixed public addresses, api.github.com and cloudflare.com, gone only when neither answers), SearXNG (/healthz), Kiwix, Home Assistant, mail servers, calendar servers and the NAS of the backup. Every minute, mail, calendar and NAS every 5 minutes (after a failed try every minute). - Without login: an HTTP answer below 500 (401 too) counts as \"answers\", for the mail server its TLS greeting on the IMAP port. Tokens and passwords are not opened for it. Addresses only from the settings, through netguard at each module's level (Kiwix, Home Assistant, NAS: home network; mail, calendar: user rules; internet: public), 5 seconds, 64 KB. These checks are not on the live view's Wächter list and never start the automatic kill switch (netguard.QUIET). From kill switch stage 1 the internet is not looked at, from stage 2 nothing; whil"
+},
+{
+"lang": "en",
+"src": "security-and-operation",
+"file": "Security and operation",
+"head": "Stability",
+"title": "Stability",
+"text": "e an update runs, 3 minutes after the start and 5 minutes after a restart by the watchdog nothing counts. - No flood of notes: gone after 3 failed tries in a row over at least 3 minutes, back after 2 good ones. At most one outage note per service in 30 minutes; one that comes and goes more often is counted (\"wobbles: 3 outages in the last half hour\") and told once when the half hour is over and it is still gone. While the internet is gone, the services behind it (public address) get no note of their own; \"internet gone\" names them and the functions that need the internet. Everything from one round is one note per admin. - Who hears it: the admin profiles (notaus.admin_uids: the profile chosen for admin notes, main admins, co-admins) with their own switch, through push.send (tag svc) on the device they pick under *Me → Conversation → Services* (svc_device: used last, iPhone, Android, companion, Telegram, browser or all; not set up: as usual). \"Only collect at night\" (svc_night): nothing from 10 pm to 7 am, one summary at 7. A note that does not get out (without internet the push does not reach the iPhone) waits at most 12 hours and is tried again every 5 minutes or with the next not"
+},
+{
+"lang": "en",
+"src": "security-and-operation",
+"file": "Security and operation",
+"head": "Stability",
+"title": "Stability",
+"text": "e, then with times (\"was gone from 06:00 to 06:43\"). Notes name only the service, the time and what does not work; never an address, a host, a profile name or an error text. - Shown: on top of every admin page and in the iPhone app under \"Manage Spark\" \"Restricted right now: …\" (health.alerts); *Status → Services* lists every service with its state, since when, outages today and the outages of the last 7 days; removing a tick takes a service off the list (PUT /api/admin/svcwatch/{id}), \"Check now\" looks at once (POST /api/admin/svcwatch/check, rate limit svcwatchnow 4 per minute). The live view shows a dot per service, the target \"Internet\" and outage and all-clear under \"Events\". State in dienstwacht.json (backed up). - \"Note when a service is missing\" (svc_watch_users + svc_hint): when the model calls a tool whose service counts as gone (archive, web search, Home Assistant, mail, calendar, weather, trains, parcels, Wikipedia, web pages), it does not run; the model gets a fixed sentence (\"Home Assistant is not reachable right now (since 05:12).\") and must not guess. For Home Assistant, mail and calendar only the profile's own addresses count. When the web search is missing, the ow"
+},
+{
+"lang": "en",
+"src": "security-and-operation",
+"file": "Security and operation",
+"head": "Stability",
+"title": "Stability",
+"text": "n Kiwix archive answers first when it is on. ## Self-test"
+},
+{
+"lang": "en",
+"src": "security-and-operation",
+"file": "Security and operation",
+"head": "Stability",
+"title": "Stability",
 "text": "Every install and update runs the panel's self-test (app/tests) against fake LLM, TTS and Home Assistant servers in a throw-away directory: login and access, that profiles never see each other's memory, documents, conversations, mailboxes or Home Assistant, the chat tools, learning from conversations, calendar and text cleaning. It runs before the new version goes live. In an update a failure stops the update and the old version keeps running; on a first install it is only reported. The result is in the update log. It includes the security checks (test_hardening.py, one test per guard) and a scanner (test_scanner.py) that refuses new code using shell=True, eval or the like, a route without a login, an upload read without a size limit, values in onclick not escaped for JavaScript, or an assistant tool not sorted as \"reads outside text / changes something / own data only\". By hand: cd /opt/speech-spark/app && sudo /opt/speech-spark/venv-panel/bin/python -m unittest discover -s tests -t ."
 },
 {
 "lang": "en",
 "src": "security-and-operation",
 "file": "Security and operation",
-"head": "Self-test",
+"head": "Stability",
 "title": "Gentle updates",
 "text": "Gentle updates (from V01.0.379): when the update installs exactly the version whose GitHub test run passed, the Spark only runs a smoke test (tests/test_rauchtest.py, a few seconds: every module loads with this Spark's packages, the panel starts and answers). The whole self-test still runs on a first install, with --newest, --to and when going back to the previous version. Both run with the lowest CPU and disk priority (nice 19, ionice class 2/7), so an answer being spoken keeps its speed. An update asks apt only when a package is missing, pip only when the package list or the lock file changed (.pkgs or .locked in the environment), and downloads models only when other ones are chosen (/opt/speech-spark/.models). The ASR and TTS services restart only when something they run from changed: their files per app/restart-map, their systemd unit, the settings or their Python packages; a service the list does not know always restarts, and the smoke test checks the list against the imports. VoiceDesign, like the engines, restarts only when its settings changed. The panel restarts on every update (about 8 s)."
 },
@@ -5587,7 +5651,7 @@
 "lang": "en",
 "src": "security-and-operation",
 "file": "Security and operation",
-"head": "Self-test",
+"head": "Stability",
 "title": "Install overnight",
 "text": "Install overnight (Settings → Update, off): a new tested version is installed at night between 3 and 5 am, at most once a night, with a backup first. If somebody is talking with the Spark (within the last two minutes) it waits for the next pause; if GitHub cannot be reached it asks again after 15 minutes. Nothing starts during the kill switch. Turning it on needs the second sign-in step when that is on. The \"Install update\" button asks once more when a conversation is going on. The live view shows a running update under \"Running now\" with its step and share, its outcome for an hour, and whether \"overnight\" is on."
 },

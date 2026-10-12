@@ -829,6 +829,10 @@ SETTINGS = {
     "pebble_on": (False, lambda v: isinstance(v, bool)),   # Pebble watch paired by code (pebblewatch.py)
     "devup_on": (False, lambda v: isinstance(v, bool)),    # notes on new firmware and app versions (geraeteupdate.py)
     "devup_night": (False, lambda v: isinstance(v, bool)), # own speakers updated at night (geraeteupdate.py)
+    "svc_note": (False, lambda v: isinstance(v, bool)),    # an admin profile hears when a service is gone (dienstwacht.py)
+    "svc_night": (False, lambda v: isinstance(v, bool)),   # ... at night only one summary at 7 o'clock
+    "svc_device": ("", lambda v: v in ("", "app", "and", "desk", "tg", "web", "all")),   # ... on this way (push.send to=)
+    "svc_hint": (False, lambda v: isinstance(v, bool)),    # a tool whose service is gone answers at once (dienstwacht.tool_down)
     "android_on": (False, lambda v: isinstance(v, bool)),  # Android app (android.py)
     "mcps_on": (False, lambda v: isinstance(v, bool)),     # the Spark as an MCP server for other programs (mcpserver.py)
     "mymcp_on": (False, lambda v: isinstance(v, bool)),    # own MCP services of this profile (meinmcp.py)

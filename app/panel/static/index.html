@@ -73,6 +73,7 @@
   <div class="card zneed" id="zneed" hidden><h2>Braucht dich</h2><div id="zlist"></div></div>
   <div class="card zneed" id="zroom" hidden><h2>Hört gerade zu</h2><div id="zrooms"></div><div class="row" style="margin-top:8px"><button class="b" type="button" id="zroomall">Alle beenden</button><span class="mut">Nur wo und bis wann, nie was gehört wurde.</span></div></div>
   <div class="card zneed" id="zbg" hidden><h2>Mein Zustand aller Profile</h2><div id="zbglist"></div><div class="mut" style="margin-top:6px">Nur Anzahlen über alle Profile, die die Seite nutzen; nie Namen, Dienste oder Inhalte.</div></div>
+  <div class="card zneed" id="zsvc" hidden><h2>Dienste</h2><div id="zsvclist"></div><div class="row" style="margin-top:8px"><button class="b" type="button" id="zsvccheck">Jetzt prüfen</button><span class="mut" id="zsvcmsg"></span></div><div class="mut" style="margin-top:6px">Nur ob ein Dienst antwortet, nie Inhalte, Adressen oder Fehlertexte. Ein Haken weg: der Dienst wird nicht geprüft und niemand bekommt Hinweise dazu.</div></div>
   <div class="card zneed" id="zdev" hidden><h2>Geräte-Updates</h2><div id="zdevlist"></div><div class="row" style="margin-top:8px"><button class="b" type="button" id="zdevcheck">Jetzt suchen</button><button class="b" type="button" id="zdevgo" style="display:none">Weiter verteilen</button><span class="mut" id="zdevmsg"></span></div><div class="mut" style="margin-top:6px">Nur Versionsnummern und Gerätenamen. Die Dateien kommen nur von GitHub und werden per Prüfsumme geprüft.</div></div>
   <div class="card zneed" id="zdocs" hidden><h2>Eigene Dokumente</h2><div id="zdoclist"></div><div class="mut" style="margin-top:6px">Profilnamen, Speicher und Zahlen, nie Inhalte. Dokumentnamen nur, wenn jemand ein Dokument für alle freigegeben hat.</div></div>
   <div id="memnote"></div>
@@ -139,6 +140,8 @@
       <div class="setrow" data-show="chat.report" style="margin-left:18px"><div class="lbl"><b>Admin per Assistent informieren</b><span>Neue Meldung eines Profils: der Assistent sagt es den Admin-Profilen, nur wer, Bereich und Weg, nie der Text.</span></div><label class="tgl"><input type="checkbox" id="chat.report_notify"><i></i></label></div>
       <div data-show="chat.report" style="margin-left:18px"><label>GitHub-Repo für Meldungen</label><input id="chat.report_repo" data-req placeholder="db9979/spark-meldungen" autocomplete="off"><div class="fh">besitzer/name, am besten privat. Meldungen gehen nur dorthin.</div>
         <div id="rpadmin" data-nodirty="1"></div></div>
+      <div class="setrow"><div class="lbl"><b>Dienst-Wächter</b><span>Der Spark prüft selbst, ob Archiv, Internet, Websuche und andere Dienste antworten, und meldet den Admins Ausfall und Entwarnung.</span></div><label class="tgl"><input type="checkbox" id="chat.svc_watch"><i></i></label></div>
+      <div class="setrow" data-show="chat.svc_watch" style="margin-left:18px"><div class="lbl"><b>Hinweis an Nutzer, wenn ein Dienst fehlt</b><span>Fragt jemand etwas, das einen gerade fehlenden Dienst braucht, sagt der Assistent das sofort, statt lange zu warten.</span></div><label class="tgl"><input type="checkbox" id="chat.svc_watch_users"><i></i></label></div>
       <div class="setrow"><div class="lbl"><b>Kalender und Tagesbriefing</b><span>Termine vorlesen, nach „Ja“ eintragen, und auf „Guten Morgen“ das Tagesbriefing.</span></div><label class="tgl"><input type="checkbox" id="chat.calendar"><i></i></label></div>
       <div class="setrow"><div class="lbl"><b>Aufgaben und Einkaufsliste</b><span>„Setz Milch auf die Einkaufsliste“: Liste auf dem Spark oder in einer CalDAV-Aufgabenliste.</span></div><label class="tgl"><input type="checkbox" id="chat.tasks"><i></i></label></div>
       <div class="setrow"><div class="lbl"><b>Agent-Funktionen</b><span>„Recherchiere …, sag mir Bescheid“: Aufträge im Hintergrund, geplante Aufträge und eigene Abläufe, nur für freigeschaltete Profile.</span></div><label class="tgl"><input type="checkbox" id="chat.agent"><i></i></label></div>
@@ -923,6 +926,7 @@
 <script src="/static/js/remarkable.js"></script>
 <script src="/static/js/hintergrund.js"></script>
 <script src="/static/js/geraete.js"></script>
+<script src="/static/js/dienste.js"></script>
 <script src="/static/js/agent.js"></script>
 <script src="/static/js/messages.js"></script>
 <script src="/static/js/esp.js"></script>

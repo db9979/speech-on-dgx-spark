@@ -177,19 +177,29 @@ def sub_id(endpoint):
 LAST_KEEP = 12 * 3600
 
 
-def pick(uid, private=True):
-    """One target for a note (V01.0.181: everything once): the device the profile used last, else the
-    iPhone app, else the Android app (android.py, it asks for notes itself), else the Spark-Begleiter on PC or
-    Mac (begleiter.py, same), else Telegram, else the newest browser. Returns ("app"|"and"|"desk"|"tg"|"web", [subscriptions])."""
+def _have(uid, private):
     import android
     import apns
     import telegram
     import begleiter
-    have = {"app": apns.reachable(uid), "and": android.reachable(uid), "desk": begleiter.reachable(uid),
+    return {"app": apns.reachable(uid), "and": android.reachable(uid), "desk": begleiter.reachable(uid),
             "tg": telegram.push_on(uid, private), "web": bool(subs(uid))}
+
+
+WAYS = ("app", "and", "desk", "tg", "web")
+
+
+def pick(uid, private=True, to=""):
+    """One target for a note (V01.0.181: everything once): the device the profile used last, else the
+    iPhone app, else the Android app (android.py, it asks for notes itself), else the Spark-Begleiter on PC or
+    Mac (begleiter.py, same), else Telegram, else the newest browser. Returns ("app"|"and"|"desk"|"tg"|"web", [subscriptions]).
+    to: the way the profile chose for this kind of note (e.g. svc_device of the Dienst-Wächter), when it is set up."""
+    have = _have(uid, private)
     kind, key, t = profiles.LAST_USED.get(uid, ("", "", 0))
-    if not (have.get(kind) and time.time() - t < LAST_KEEP):
-        kind = next((k for k in ("app", "and", "desk", "tg", "web") if have[k]), "")
+    if to in have and have[to]:
+        kind, key = to, (key if kind == to else "")
+    elif not (have.get(kind) and time.time() - t < LAST_KEEP):
+        kind = next((k for k in WAYS if have[k]), "")
     if kind != "web":
         return kind, []
     mine = [s for s in subs(uid) if key and sub_id(s["endpoint"]) == key]
@@ -198,21 +208,20 @@ def pick(uid, private=True):
 
 # what a note is for on Zustand → Live (live.note), by its tag; fixed words only
 WHY = {"agent": "Auftrag", "briefing": "Tagesüberblick", "msg-": "Nachricht", "notaus": "Notaus", "setup": "Einrichtung",
-       "pro-": "Von selbst", "mcp": "MCP-Bestätigung", "admin": "Hinweis", "hello": "Test", "devup": "Geräte-Update", "doc": "Dokument"}
+       "pro-": "Von selbst", "mcp": "MCP-Bestätigung", "admin": "Hinweis", "hello": "Test", "devup": "Geräte-Update", "doc": "Dokument",
+       "svc": "Dienst-Wächter"}
 
 
 def _why(tag):
     return next((v for k, v in WHY.items() if tag == k or (k.endswith("-") and tag.startswith(k))), "")
 
 
-async def send(uid, title, body, tag="", private=True, why=""):
+async def send(uid, title, body, tag="", private=True, why="", to=""):
     """Sends a note once: to one device of the profile (pick), the iPhone app, Telegram (private notes,
     i.e. appointments, mails, the briefing, only when it allowed personal data there) or a browser.
-    "hello" goes to the browsers only. Drops subscriptions the push service no longer knows.
-    Returns the number of devices reached."""
-    import apns
+    "hello" goes to the browsers only. to: the way the profile chose for this kind of note ("all": every way it
+    has set up). Drops subscriptions the push service no longer knows. Returns the number of devices reached."""
     import begleiter
-    import telegram
     # "Nicht stören" (Spark-Begleiter part quiet): while the profile is in a call or presenting, notes wait and one
     # summary follows; alarms, reminders and safety notes always go (begleiter.urgent)
     if tag != "quiet":
@@ -221,7 +230,22 @@ async def send(uid, title, body, tag="", private=True, why=""):
             await begleiter.release(uid, held)
         if begleiter.hold(uid, title, tag, why):
             return 1
-    kind, targets = ("web", subs(uid)) if tag == "hello" else pick(uid, private)
+    if tag == "hello":
+        ways = [("web", subs(uid))]
+    elif to == "all":
+        have = _have(uid, private)
+        ways = [(k, subs(uid)[-1:] if k == "web" else []) for k in WAYS if have[k]]
+    else:
+        ways = [pick(uid, private, to)]
+    n = 0
+    for kind, targets in ways:
+        n += await _send_one(uid, kind, targets, title, body, tag, private, why)
+    return n
+
+
+async def _send_one(uid, kind, targets, title, body, tag, private, why):
+    import apns
+    import telegram
     t0 = time.time()
     # the iPhone app: Apple only carries "new message", the text waits on the Spark (apns.py)
     n = await apns.send(uid, title, body, tag=tag) if kind == "app" else 0

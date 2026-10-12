@@ -1192,7 +1192,7 @@ ALLOW = {"tool_think": "toolthink", "route": "routing", "direct_read": "direct",
          "wiki": "wiki", "kiwix": "kiwix", "local": "lokal", "follow": "follow", "echo": "selfecho", "images": "images",
          "prefetch": "vorab", "instant_ack": "ack", "spark_help": "hilfe", "tips_on": "tipps", "pro_tips": "tippspush", "systemone_on": "einordnung",
          "devup": "geraeteupdate", "devup_night": "geraetenacht", "report": "melden", "doc_make": "erstellen",
-         "doc_make_templates": "erstellenvorlagen"}
+         "doc_make_templates": "erstellenvorlagen", "svcwatch": "dienstwacht", "svchint": "dienstnutzer"}
 
 
 def _allow(prof, chat):
@@ -1200,6 +1200,9 @@ def _allow(prof, chat):
     out["trace"] = bool(prof and load_config().get("logs", {}).get("trace", False) is True)
     # "Bild in Meine Dokumente" under an answer to a picture (wissen.py)
     out["docpics"] = bool(prof and out["images"] and wissen.on(prof["id"], "pictures"))
+    # the Dienst-Wächter's notes are for admin profiles only: the others do not see those rows at all
+    import notaus
+    out["svcadmin"] = bool(out["svcwatch"] and prof["id"] in notaus.admin_uids())
     return out
 
 

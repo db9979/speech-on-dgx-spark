@@ -215,6 +215,10 @@ FEATURES = (
     F("melden", "Probleme melden", "Reporting problems", "sec", ("report",), "report_on", me="rpbox", guide="melden"),
     F("meldenadmin", "Admin über Meldungen informieren", "Tell admins about reports", "sec", ("report_notify",),
       parent="melden", me="rpbox", guide="meldenadmin"),
+    # dienstwacht.py: the Spark looks at its services and tells the admins when one is gone and when it is back
+    F("dienstwacht", "Dienst-Wächter", "Service watch", "sec", ("svc_watch",), "svc_note", me="setbox", guide="dienstwacht"),
+    F("dienstnutzer", "Hinweis, wenn ein Dienst fehlt", "Note when a service is missing", "talk", ("svc_watch_users",),
+      "svc_hint", parent="dienstwacht", me="setbox", guide="dienstnutzer"),
 )
 BY_KEY = {f.key: f for f in FEATURES}
 profiles.NO_PRESET.update(f.profile for f in FEATURES if f.profile)

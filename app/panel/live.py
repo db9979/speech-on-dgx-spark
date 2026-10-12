@@ -109,6 +109,8 @@ TARGETS = {
     "page": ("Panel-Seite", "beim nächsten Abruf der offenen Seite", "spark", False),
     "github": ("GitHub (Updates)", "neuester Stand und Tests · Internet", "net", False),
     "nas": ("NAS (Sicherung)", "WebDAV · verschlüsselt", "lan", False),
+    # the Dienst-Wächter (dienstwacht.py) looks at two fixed public addresses: shown while it is on, with its dot
+    "inet": ("Internet", "erreichbar? zwei feste Adressen", "net", False),
     # firmware and apps for the devices (geraeteupdate.py): shown while that function is on, its line with the counts
     "geraete": ("Geräte-Updates", "Firmware und Apps · GitHub · Internet", "net", False),
     # tools of MCP services (mcp_… of the admin, mcpu_… a profile's own, meinmcp.py); the line under Ereignisse names the service
@@ -722,6 +724,12 @@ def llm_seen(ok, code="", now=None):
     _svc["qwen"] = (st, SVC_WORD[st] if ok or code in ("llm_down", "llm_slow") else "Fehler", now)
     if (old[0] if old else "ok") != st:
         event("Dienste", f"Sprachmodell: {_svc['qwen'][1]}", now)
+    if st == "down":
+        try:   # the Dienst-Wächter looks at it in its next round
+            import dienstwacht
+            dienstwacht.saw("qwen")
+        except Exception:
+            pass
 
 
 def restarted(name, reason, done):
@@ -913,7 +921,10 @@ EXPLAIN = (("Speicher knapp", "Weniger freier Speicher als die Reserve: Dienste 
            ("Qualitätstest", "Fragen, die früher richtig beantwortet wurden, gehen jetzt schief.", "test"),
            ("erster Ton", "Bis zum ersten Ton dauert es heute länger als sonst. Meist läuft qwen38 gerade viel oder "
             "der Speicher ist knapp.", "test"),
-           ("Bot-Token", "Ein zweites Programm benutzt denselben Telegram-Bot: Nachrichten gehen verloren.", "apps"))
+           ("Bot-Token", "Ein zweites Programm benutzt denselben Telegram-Bot: Nachrichten gehen verloren.", "apps"),
+           ("antwortet nicht seit", "Der Dienst-Wächter erreicht diesen Dienst seit dieser Zeit nicht. Die Admins haben einen "
+            "Hinweis bekommen; Zustand → Dienste zeigt den Verlauf.", "mon"),
+           ("wegen Internet", "Das Internet ist weg, dieser Dienst liegt dahinter. Er bekommt keinen eigenen Hinweis.", "mon"))
 
 
 def _explain(h):
@@ -949,7 +960,12 @@ def snapshot(view="admin", now=None):
         sys1 = systemone.for_live(now)
     except Exception:
         sys1 = {"n": 0}
-    hs = [_explain(h) for h in hints(now)]
+    try:   # the Dienst-Wächter: a dot per service it looks at, and what is gone at its node (fixed words)
+        import dienstwacht
+        watch_svc, watch_hints = dienstwacht.for_live(now)
+    except Exception:
+        watch_svc, watch_hints = {}, []
+    hs = [_explain(h) for h in hints(now) + watch_hints]
     upd = _upd(now)
     used = {h["at"] for h in hs} | {s["to"] for r in reqs for s in r["steps"] if s["to"]} | {r["to"] for r in reqs if r["to"]} | {x["to"] for x in rets if now - x["t"] < 60 and x["to"]}
     try:
@@ -973,6 +989,7 @@ def snapshot(view="admin", now=None):
         make = {"on": False}
     if make.get("on"):
         used.add("make")
+    used |= set(watch_svc)
     off = unset(now)
     targets = [{"id": k, "name": v[0], "sub": _devup_sub(devup) if k == "geraete" and devup else v[1], "zone": v[2]}
                for k, v in TARGETS.items() if (v[3] and k not in off) or k in used]
@@ -987,7 +1004,8 @@ def snapshot(view="admin", now=None):
             "guard": {"ok": cnt.get("guard_ok", 0), "bad": cnt.get("guard_bad", 0), "cut": cnt.get("guard_cut", 0), "items": guard_items},
             "door": {"in": cnt.get("door_in", 0), "out": cnt.get("door_out", 0), "items": door_items},
             "rets": rets, "events": [{"t": t, "area": a, "text": x} for t, a, x in events], "conns": _conns(now), "sys": _sys(), "notaus": held,
-            "svc": _svc_now(now), "bg": _bg_now(now), "weiche": _weiche_today(), "hints": hs, "sys1": sys1, "upd": upd, "devup": devup,
+            "svc": dict(watch_svc, **{k: v for k, v in _svc_now(now).items() if k not in watch_svc or watch_svc[k]["st"] == "ok"}),
+            "bg": _bg_now(now), "weiche": _weiche_today(), "hints": hs, "sys1": sys1, "upd": upd, "devup": devup,
             "meld": {k: meld.get(k) for k in ("on", "drafts", "sent_today", "last", "token")},
             "make": {k: make.get(k) for k in ("on", "run", "wait", "done", "failed", "sent", "planned")},
             "stats": node_stats(now)}

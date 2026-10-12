@@ -358,6 +358,8 @@ def alerts():
         out.append({"kind": "latency", "level": "warn", "text": slow})
     import telegram
     out += telegram.alert()
+    import dienstwacht
+    out += dienstwacht.alerts()      # a service the Dienst-Wächter sees gone: what does not work
     return out
 
 

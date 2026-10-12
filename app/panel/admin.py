@@ -507,7 +507,8 @@ def validate(new):
     for k in ("agent", "agent_mcp", "mcp_own", "mcp_own_jobs", "mcp_own_oauth", "report", "report_notify", "messages", "messages_all", "messages_announce", "messages_voice", "pebble",
               "kiwix", "local_first", "mcp_server", "mcp_server_extern", "mcp_server_act", "prefetch", "instant_ack",
               "spark_help", "spark_suggest", "spark_drawer", "feature_tips", "feature_tips_push", "write_help", "write_apps", "desk", "desk_act", "desk_meeting",
-              "dev_updates", "dev_updates_night", "dev_updates_upstream", "esp32_ota_http"):
+              "dev_updates", "dev_updates_night", "dev_updates_upstream", "esp32_ota_http",
+              "svc_watch", "svc_watch_users"):
         if not isinstance(ch.get(k, False), bool):
             raise HTTPException(400, f"{k} must be true or false")
     if ch.get("esp32_url") and not re.fullmatch(r"https?://[A-Za-z0-9.\-]+(?::\d{1,5})?/?", ch["esp32_url"]):
