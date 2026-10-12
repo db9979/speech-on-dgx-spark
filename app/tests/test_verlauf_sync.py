@@ -227,6 +227,25 @@ class Stream(unittest.TestCase):
         self.assertNotIn("Geheimnis", json.dumps(got))   # never contents
         self.assertEqual(verlauf.running(ua), [])
 
+    def test_an_answer_in_the_panel_says_busy_and_idle(self):
+        a = profile("Steffi")
+        switched(a, live=True)
+        ua = uid_of(a)
+        loop, q = asyncio.new_event_loop(), asyncio.Queue()
+        verlauf._subs[ua] = {"s": (loop, q)}
+        try:
+            r = a.post("/api/chat", json={"messages": [{"role": "user", "content": "Wie spät?"}], "view": "app",
+                                          "convo": "c7", "tab": "tab-7", "speak": False})
+            self.assertEqual(r.status_code, 200, r.text)
+            loop.run_until_complete(asyncio.sleep(0.05))
+            got = [q.get_nowait() for _ in range(q.qsize())]
+        finally:
+            loop.close()
+        self.assertEqual([(x["type"], x["kind"], x["convo"], x["tab"]) for x in got],
+                         [("busy", "phone", "c7", "tab-7"), ("idle", "phone", "c7", "tab-7")])
+        self.assertNotIn("spät", json.dumps(got))
+        self.assertEqual(verlauf._busy.get(ua), None)
+
     def test_a_running_answer_counts_only_for_a_while(self):
         verlauf._busy["u9"] = {"t": {"kind": "web", "convo": "", "tab": "", "since": time.time() - verlauf.BUSY_MAX - 1}}
         self.assertEqual(verlauf.running("u9"), [])
