@@ -33,6 +33,7 @@ Alle Optionen ohne Rückfragen (`--mode api --asr 1.7b --tts 0.6b --yes` …) st
 
 <!-- New version: add one line at the top here and in CHANGELOG.md, drop the oldest line here (keep 10). Details go to docs/de and docs/en, not into this README. -->
 
+- **V01.0.436** Einladung: der Cursor springt nicht mehr ins Namensfeld, während man die PIN tippt; Testlauf wieder grün
 - **V01.0.435** Hinweise mit Wegen („Einstellungen → … „Live-Seite““, „Ich → Dokumente“) sind jetzt Links, die direkt zur Stelle springen; Selbsttest prüft alle Wege
 - **V01.0.434** Selbsttest: Live-Prüfung „nur eingerichtete Dienste“ mit eigenem Profil (war je nach anderen Tests rot)
 - **V01.0.433** Begleiter richtet Office-Add-ins ein: Knopf „Spark“ in Outlook classic (auch iCloud/IMAP), Word und Excel direkt, neues Outlook mit Datei und Hinzufügen-Seite
@@ -42,7 +43,6 @@ Alle Optionen ohne Rückfragen (`--mode api --asr 1.7b --tts 0.6b --yes` …) st
 - **V01.0.429** Dokumente erstellen: Vorschau im Chat, Download überall (auch Android, iPhone), per Mail als Entwurf oder ins Postfach, viel schöneres Aussehen
 - **V01.0.428** Sofortige Rückmeldung abwechslungsreicher: 126 fertige Sätze, zufällig, nie einer der letzten sechs.
 - **V01.0.427** Zweiter Faktor einheitlich: ein Code pro Person, drei Stufen mit Schloss, Dialog sagt wessen Code und wofür, gleich als Admin anmelden, Panel-Passwort nur über #admin
-- **V01.0.426** E-Mail-Modusknöpfe passen auch am schmalen Handy
 
 Alle Versionen: [CHANGELOG.md](CHANGELOG.md)
 

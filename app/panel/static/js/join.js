@@ -44,7 +44,8 @@ async function joinWelcome(code){const box=joinModal();box.innerHTML=jhead()+`<d
       try{sessionStorage.setItem('golets',r.kind==='new'?'1':'')}catch{}location.reload()}
     catch(e){$('joinmsg').textContent=e.status===401?t('Code falsch.','Wrong code.'):jerr(e);$('joingo').disabled=false}};
   $('joingo').onclick=go;box.querySelectorAll('input').forEach(i=>i.onkeydown=e=>{if(e.key==='Enter')go()});
-  setTimeout(()=>($('joinname')||$('joinpin')).focus(),50)}
+  // only when no field has the cursor yet: a later focus moved typed PIN digits into the name (seen on GitHub)
+  setTimeout(()=>{const f=document.activeElement;if(f&&f.matches('input,textarea,select'))return;($('joinname')||$('joinpin')).focus()},50)}
 // ---------------------------------------------------------------- the phone side of "Am Handy weitermachen"
 async function handPhone(code){const box=joinModal();box.innerHTML=jhead()+`<div class="mut">${t('Verbinde …','Connecting …')}</div>`;
   let d;try{d=await jpub('/api/handoff/claim',{code})}catch(e){box.innerHTML=jhead()+`<h2>${t('Am Handy weitermachen','Continue on the phone')}</h2><div class="err">${esc(e.status===404?t('Das ist auf diesem Spark aus.','This is switched off on this Spark.'):jerr(e))}</div><div class="row joinfoot"><button class="b" type="button" id="joinhome">${t('Zur Startseite','To the start page')}</button></div>`;$('joinhome').onclick=()=>location.reload();return}

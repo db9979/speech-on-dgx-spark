@@ -1151,7 +1151,8 @@ class Browser(unittest.TestCase):
                 br, pg, errors = await self.page(p, 1280, 900)
                 await pg.evaluate("goSec('chat')")
                 await pg.evaluate("$('profbtn').click()")
-                await pg.wait_for_timeout(800)
+                # the overview draws after the Ich boxes loaded (slow on a busy runner): wait for its rows, not 800 ms
+                await self.until(pg, "document.querySelectorAll('#overbox .overrow b').length>0")
                 self.assertTrue(await pg.evaluate("$('overbox').classList.contains('on')"))
                 rows = await pg.evaluate("[...document.querySelectorAll('#overbox .overrow b')].map(b=>b.textContent)")
                 self.assertIn("Gedächtnis", rows)
