@@ -1835,7 +1835,7 @@ async def profile_setup(request: Request, prof=Depends(_on)):
         d["clients"][cid] = {"device": did, "uid": prof["id"], "variant": var, "fw": "", "auto": True,
                              "update": False, "created": int(time.time()), "how": "usb", "base": base}
     _update(put)
-    print("esp32: new speaker set up over USB for", prof["name"], flush=True)
+    print("esp32: new speaker set up over USB for", profiles.log_name(prof), flush=True)
     return {"device": did, "token": token, "uuid": cid, "ota_url": base + "/api/esp32/ota/", "ws_url": ws_url(base),
             "firmware": m["version"],
             "parts": [dict(p, url=f"/api/esp32/fw/{m['version']}/{p['file']}") for p in m["variants"][var]["parts"]]}
@@ -1868,7 +1868,7 @@ async def profile_pair(request: Request, prof=Depends(_on)):
                              "token_once": vault.seal(token), "pair_ip": p.get("ip", "")}
     _update(put)
     p["paired"] = True
-    print("esp32: speaker paired by code for", prof["name"], flush=True)
+    print("esp32: speaker paired by code for", profiles.log_name(prof), flush=True)
     return {"device": did, "devices": _list(prof["id"])}
 
 

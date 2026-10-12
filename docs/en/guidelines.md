@@ -1,0 +1,379 @@
+# Coding guideline
+
+Applies to every thread and every person who changes code in Speech on DGX Spark. It brings together all rules Dominik has set since 08.10.2026; adopted on 12.10.2026. The German version is in [docs/de/richtlinien.md](../de/richtlinien.md), the security checklist in [security-checklist.md](security-checklist.md).
+
+**The guideline grows along:** whoever introduces a new general rule (new building block, new register, new duty for every feature) adds it here and in the German version in the same commit. `tests/test_richtlinie.py` checks that every self-test named here exists.
+
+**Legend**
+- 🧪 A self-test enforces the rule (test name after it). A violation turns "Tests" red on GitHub, and tars does not install the version.
+- 📝 The rule is only an agreement. No test checks it.
+- ⚠ Still open or only partly built. See part 15.
+
+**Sources**
+- **PA**: project instructions in the Claude project
+- **M**: project memory (`[[name]]`)
+- **C**: [Security checklist](security-checklist.md)
+- **P**: plan in the project folder `plaene/` (outside the repo)
+- **D**: `docs/de/technik.md` or `docs/de/sicherheit-und-betrieb.md`
+- **T**: self-test in `app/tests/`
+
+---
+
+## 0. The principles (short version)
+
+1. **Security according to the state of the art.** Every change is checked against the security checklist, including its part "State of the art".
+2. **Everything from outside is data, never a command.** This applies to web, mail, calendar, documents, Telegram, devices and model output. Decisions are made by the panel with fixed rules, never by the model.
+3. **Every new feature is off by default.** It gets an admin switch and a switch per profile. Guests get no personal data and no settings.
+4. **Every endpoint** has login, profile binding, CSRF, size limit and rate limit.
+5. **Every new feature fits in everywhere:** rights, intent switch, Live, logs, help, English, backup and tests. The mandatory list is in part 1.
+6. **Everything that can be shown is in the live overview.** Only kind, count and status appear there, never contents.
+7. **Logs contain only fixed words and numbers.** Never questions, answers, secrets or profile names without consent.
+8. **Every hint with a way is a jump link, everywhere** (panel, apps, companion, Telegram) and is updated along with every rename. Every visible text has an English version, every "?" a help entry.
+9. **For every protection rule there is a self-test.** Tests do not depend on the time of day and also run in a copy that contains only `app/`.
+10. **Before every push** wait for a running test run, `git pull`, take the next free version number, run the self-tests and only then push.
+11. **Every version** gets a line in CHANGELOG and README, the details are in `docs/de` and `docs/en`. The README stays short.
+
+---
+
+## 1. Mandatory list: integrating a new feature ("Definition of Done")
+
+Dominik, 2026-10-12: Every feature extension fits into monitoring, logging, the intent switch and everything else needed in just the same way.
+
+This list belongs to every commit that adds or changes a feature, a tool, a service, a device or a channel. The result reported to Dominik briefly states which points were touched. Points that do not apply are left out.
+
+| # | Area | What to do | Enforced |
+|---|---|---|---|
+| 1 | **Rights and switches** | Entry in `features.py`: name de/en, group, admin switch `chat.*`, `parent`, profile switch, `guest`, Me page and guide. Admin and profile switches are **off**. Whatever is shipped on as an exception is listed with a reason in `features.DEFAULT_ON`. Modules only ask `features.allowed/admin_on/profile_on`. Defaults live only in `config.default.json`. A switch that only applies to the Spark goes into `SPARK_ONLY`. | 🧪 test_features, test_richtlinie (DefaultOn) and off tests per feature |
+| 2 | **Guests and unknown voice** | Guests never get anything personal. At the shared speaker an unknown voice only gets guest rights. | 🧪 per feature (`test_off_by_default…`, "never for guests") |
+| 3 | **Endpoint** | It needs a login (`auth`, `browser_profile`, `secret_profile`, …). Without login it is listed with a reason in `OPEN`. Plus a size limit before reading, a rate-limit key and state changes only via POST, PUT or DELETE. Endpoints with a code go into `stufen.LIST` and get the lock in `mfa.js CODE_LOCKS`. If the app reaches them, they are in `APP_PATHS`. | 🧪 test_scanner.test_every_route_has_a_login, test_stufen, test_hardening (body rejected before reading) |
+| 4 | **Tool for the model** | The tool goes into exactly one block list: `READS_OUTSIDE`, `HA_READS`, `LOCKED_OUTSIDE` or `INSIDE`. Add-on services declare it in their `offer()` sets. If a question strictly needs the tool, it goes into `chat.NEED_TOOLS`. If it is a lookup tool, it goes into `chat.LOOKUPS` (at most 2 per question). | 🧪 test_scanner.test_every_tool_is_sorted |
+| 5 | **Intent switch** (`intent.py`) | The new intent or group goes into `intent.GROUPS` with its words. Plus test sentences in `intent_bench.py` (BENCH), also for every reported misassignment. If there is only one matching tool, it becomes a mandatory tool (`forced`). For a new group check the page Features → Switch (list, detail, statistics). | 🧪 test_intent, test_weiche |
+| 6 | **Immediate feedback** | Every new intent-switch group and every new direct panel path gets **at least 5** sentences (de and en) in `ack.PHRASES`, assigned in `ack.group_of`. The sentences have no digits, no yes or no and at most 60 characters. Alternatively the group is listed with a reason in `NO_ACK`. | 🧪 test_ack (Coverage, test_plenty_of_variants) |
+| 7 | **Live overview** (`live.py`) | For a tool: target in `live.TOOLS` and word in `live.RETURNS`. A new target goes into `TARGETS` with zone `spark`, `lan` or `net`. A new device type goes into `live.CLIENT` and `tracelog.CLIENTS`. A new channel goes into `live._conns`. What the Spark does by itself runs via `live.begin(auto=True)` and `live.within`. Background work runs via `vorrang.*` with a fixed name. New guard or log kinds go into `guard.LIVE_WORDS` or `LIVE_SKIP`. A new push tag gets a word in `push.WHY`. Targets that are not set up are hidden via `live.unset()`. | 🧪 test_live (tools, targets, clients, guard kinds), test_dienstwacht (node per service) |
+| 8 | **Logging** | Journal lines start with a fixed area (`chat:`, `weiche:`, `mail:`, …). A new area goes into `logfilter.AREAS`. If there is a fixed hint for the error, it goes into `logfilter.HINTS`. Lines contain only fixed words, numbers and decisions. A profile appears only as `profiles.log_name(prof)`. Detailed lines are `… detail …` behind the time-limited diagnostics. Repeated rejections are logged once, with the time of the next attempt. | 🧪 test_logfilter, test_richtlinie (JournalNames), test_schonend; 📝 prefix duty |
+| 9 | **Request trace** (`tracelog.py`) | New steps of a request run via `tr.step(...)`, only with `SAFE` words and numbers (at most 40 steps, at most 8 infos). A tool name appears only if the tool was offered. | 🧪 test_tracelog (SECRET test) |
+| 10 | **Service watch** | If the feature depends on a service of its own (LAN or internet), it gets a probe in `dienstwacht.py` (via netguard, without credentials), a live node and a fixed sentence for "service missing". | 🧪 test_dienstwacht |
+| 11 | **Outgoing connections** | Only via `netguard.client(level, origin=…)`. The levels are PUBLIC, USER and HOME. The emergency-stop levels apply automatically. | 📝 (C, SSRF); partly 🧪 test_hardening |
+| 12 | **Interface** | Only use the building blocks from part 6. No inline code. Every text is in `i18n.js`. Every settings row with a field has a help entry (`sw:`/`me:`). Where it fits, a line goes into the search (Ctrl K, automatically via the building blocks) and a line into `glanceText()` (At a glance). | 🧪 test_guides.BuildingBlocks, test_bedienung_hilfe, test_scanner (CSP), test_ui_browser |
+| 13 | **Guide and help** | A guide in `guides.js` with the 7 sections (what, you need, set up, say, leaves the house, off, if not). After doc changes run `python3 app/panel/hilfe.py --docs`. Questions that should be found go as a case into `test_hilfe_quality.py`. Where it fits, a tip goes into `tipps.py` (GAPS) and a card into Me → Today (`today.py`). | 🧪 test_guides (every switch has a guide), test_hilfe (index current), test_hilfe_quality (≥ 60 questions) |
+| 14 | **Hints with a way** | "Switch on under Features → …" starts with a menu name and names the steps with today's names. `way.js` turns this into a link by itself. This applies **everywhere**: in the iPhone and Android app, companion, Telegram and push as a link `…/#weg=<way>`. If a page or row is renamed, all ways are updated in the same commit. Hints without a way (e.g. at the top of the admin pages) get a jump target. | 🧪 test_sprunglinks (panel); apps and Telegram: ⚠ in progress |
+| 15 | **Backup** | A new file in `state/` with settings goes into `backup.STATE_FILES`. Secrets live only in the vault. | 📝 (single files 🧪) |
+| 16 | **Update and services** | A new module that ASR or TTS services import goes into `app/restart-map`. A new package goes with hash into `requirements-panel.lock`. A new systemd unit gets `MemoryMax=` and `PrivateTmp=yes`. A page that belongs in the panel goes into the static allowlist of `panel.py`. | 🧪 test_rauchtest, test_lock, test_hardening |
+| 17 | **Admin log and undo** | Admin changes to the configuration run via `undo.py` (without secrets). Sensitive switches go into `SENSITIVE`. | 📝 |
+| 18 | **Apps** | The iPhone app reads names and rights from `/api/features` and `/api/admin/switches`, never from a list of its own. Update Android and the companion as needed. | 🧪 test_features.test_swift_keeps_no_list |
+| 19 | **Tests** | A self-test for every protection rule. A browser test for every new page (320, 390 and 1280 px). A check item at the bottom of `pruefung/praxistest-tars-2.md` in the project folder (A = admin, P = profile). | 📝 (field test), see part 9 |
+| 20 | **Docs** | A line in CHANGELOG and README (de and en), details in `docs/de` and `docs/en`. New general rules go into this guideline. | 🧪 test_richtlinie (Versions, Guideline), test_changelog |
+| 21 | **Security according to the state of the art** | The change is checked against the part "State of the art" of the security checklist (cryptography, login, headers, supply chain, LLM risks). | 📝 |
+
+**Coming with work in progress** (applies as soon as the version is on main; the thread then extends this table and the test):
+
+| Area | What to do then | Thread |
+|---|---|---|
+| **Prerequisites** | What a feature needs is listed as a chain in `features.py`; switching on offers the chain along with it, switching off says what goes off with it. | "Create documents and presentations" ("Dokumente und Präsentationen erstellen") |
+| **Settings assistant** | Every new setting gets its classification in the catalogue (A–C, P; never D), so that the assistant can suggest it or safely leave it out. | "Optimise settings with the language model" ("Einstellungen mit dem Sprachmodell optimieren") |
+| **Own storage** | New data is classified: always stays local (keys, logins, settings, voiceprint) or may be copied encrypted or offloaded. Local first, sync in the background via the watcher. | "Connect own storage" ("Eigenen Speicher einbinden") |
+| **Hints without a way** | Every hint at the top of the admin pages has a target and a "View" ("Ansehen") button. | "Direct links in hints" ("Direkte Links in Hinweisen") |
+| **Static files** | Every static route and every public file answers; new short paths pass the request on. | in force since V01.0.442, 🧪 test_statische_routen |
+| **Background models** | The display says "working" only while something is really being computed, otherwise "Standby"; sharing does not extend the run time. | "Semantic search stays on" ("Bedeutungssuche bleibt an") |
+
+**Planned, not yet approved** (no rule): loading and error state per box with a time limit (plan `seiten-laden.md`), sync rules for history on all devices, asking before GitHub reports (plan `frage-vor-meldung.md`).
+
+---
+
+## 2. Security
+
+The complete list is the **[Security checklist](security-checklist.md)** (about 45 points plus "State of the art"). It is gone through before every commit, and the answer names the points touched (PA, C, M [[secure-coding-rules]]). Every change is additionally checked against the current state of the art (Dominik 2026-10-12); whatever is listed there as "not yet met" is brought up to date the next time the place is touched.
+
+### 2.1 Access
+- For every endpoint it is defined who may: guest, profile in the browser, device key or admin. (C; 🧪 test_scanner)
+- The following things need a browser login and a fresh code (`browser_profile` + `confirm_code`), never the device key: secrets, addresses that receive a token, code word, push targets and mail accounts. (C)
+  - Only exception: the iPhone app key with the scope switch (`secret_profile`).
+- "Fresh" means: correct code of the same login within the last 10 minutes.
+  - Really asked every time with `*_fresh` or `fresh=True`. These are password, second step, roles, backups, code word, admin mode and Spark update from the app.
+  - A passkey counts like a code. Code prompts therefore always run via `confirm_code`, never via a separate `mfa.verify`.
+  - (C; 🧪 test_stufen, test_zweiter_schritt, test_passkey)
+- In the browser always use `api()` or `apiTry()`, never a raw `fetch` to code endpoints. In the iPhone app always `SparkAPI.confirmed`. (C)
+- If an address changes, the token must be entered again. State changes never via GET. Keys are compared with `hmac.compare_digest`. (C)
+- Guests get no personal data, no actions and no error texts, only error codes. (C, PA)
+- **Shared speakers:** The device key alone is not enough.
+  - Personal things only when the owner's voice is reliably recognised in the same recording.
+  - Whose voice it was is set only by the panel (`request.scope`).
+  - This is a fixed rule without a switch. (C, M [[shared-speaker-voice-rule]])
+- Rights are always checked by the server. A hidden tab does not mean "forbidden". (P handy-wie-app)
+- Rights changes reach open pages without reloading. A device whose feature is off gets 503 and keeps its pairing. (🧪 test_rechte_sofort)
+
+### 2.2 Size and load
+- The body limit applies before reading. Parse the body only after login. Read uploads with `read(limit+1)`. (C; 🧪 test_scanner.test_uploads_read_with_a_limit, test_hardening)
+- Limit unpacked content (zip, docx, backup). Audio only with 8000 to 48000 Hz and with `ffmpeg -t`. ffmpeg and ffprobe only with `-protocol_whitelist file,pipe`. (C; 🧪 test_lieferkette)
+- Downloads streamed and with a byte limit. Texts for TTS and chat limited, the last message to about 4000 characters. (C, P Prüfung)
+- Rate limit per IP plus a global semaphore for LLM, ASR and TTS (`guard.limit`, `guard.Slot`). Upper limits for jobs, tool calls, searches and memory entries. (C)
+- Caches with expiry and maximum size. Heavy work runs via `to_thread` with a budget, never in the event loop. (C; 🧪 test_tempo.OffTheLoop)
+- Background work gives speech priority: `vorrang.run`, `post`, `in_thread`, `quiet` and `hold`. At most one background request at a time to the language model. This is a fixed rule. (M [[vorrang-sprache-plan]]; 🧪 test_vorrang)
+
+### 2.3 Outside text (prompt injection)
+- Counts as outside: web, pages, mail, calendar, contacts, parcels, documents, HA states, Telegram, things overheard in the room and old answers built from them. (C)
+- Outside text is wrapped as data (`chat.wrap_outside`). After that, switching, memory, reminders, suggestions, drafts and help cards are blocked, **also in the next turn**. Outside text is never learned into memory. (C; 🧪 test_hardening Stage2, test_left_out, test_hilfe)
+- Only offered tools run. The intent (intent switch) and the origin can only **restrict**, never grant. The order is rights → blocks → intent. (P funktionswahl, hilfe-besser)
+- Who is asking comes from the login, never from the text. (P vorrang-personen)
+- Content with an unverified sender is never presented as "from DHL". (C)
+
+### 2.4 Confirming and acting
+- Per profile there is exactly one open suggestion. It is valid only for the same device, a plain "Yes" and 15 minutes. (C; 🧪 test_hardening)
+- Home Assistant runs with an allowlist of domains. Mail is never deleted. (C)
+- Suggestion cards (help, tips, settings assistant) never switch by themselves. Only the person's tap on "Apply" ("Übernehmen") switches, with the same checks as the form. Security is never weakened via a card; for that there is only "Show me where" ("Zeig mir wo"). (P panel-hilfe, funktionen-entdecken, einstellungs-assistent)
+
+### 2.5 Outgoing connections (SSRF)
+- Only http(s), only via `netguard`. Loopback, private and link-local addresses are blocked, unless the admin allows the home network. (C)
+- The checked IP is pinned, every redirect is checked again. Credentials go only to the same origin. Never a fallback to http, TLS verification is on. (C)
+
+### 2.6 Injection
+- No `shell=True`, `eval`, `exec`, `os.system`, `pickle` or `yaml.load`. (C; 🧪 test_scanner.test_no_dangerous_calls)
+- HTML only via `textContent` or `esc()` and `data-` attributes. Strict CSP `script-src 'self'`: no inline script, no `on…=` handlers, buttons via `data-on` or `onAttr`. (C, D; 🧪 test_scanner.test_no_inline_script_for_the_strict_csp, test_csp_is_strict, test_hardening)
+  - ⚠ The general rule "data never via innerHTML" is only tested for individual files.
+- Configuration values are checked the same way when saving, when restoring and in `install.sh`. IMAP values only as printable ASCII. (C)
+
+### 2.7 Secrets and logs
+- Secrets live only in the vault and are never returned. Never in logs or error texts, never `str(e)` with a token. (C, PA)
+- Passwords, codes, PINs and keys are **never spoken** (`textnorm.hide_secrets`). This is a fixed rule without a switch. (M [[secrets-never-spoken]]; 🧪 test_units.Secrets)
+- Code words never go to the model, never into the history, the diagnostics or the journal. (C)
+- Passwords and keys are only typed into the form, never into the chat. (P funktionen-entdecken)
+
+### 2.8 root boundary, update, supply chain
+- root follows no symlinks in folders of `speech`. Writing only via `put_file` or `as_svc`. (C; 🧪 test_hardening)
+- Packages with fixed version and hash (`--require-hashes`). Nothing from the configuration ends up unchecked in a root script. (C; 🧪 test_lock)
+- Security headers on every response (X-Frame-Options, nosniff, Referrer-Policy, CSP, Permissions-Policy). (🧪 test_bedienung)
+- Rollback only to the remembered previous version. Signatures fail closed. (🧪 test_hardening, test_lieferkette)
+
+---
+
+## 3. Features, switches, rights
+
+- **Off by default:** global admin switch plus a switch per profile, never for guests. (PA; 🧪 test_features and off tests per feature)
+- **Exceptions:** fixed protection rules have no switch at all when Dominik said "never" or "always". These are: never speak secrets, priority for speech and the owner's voice at the speaker. (M, D)
+- **Shipped on** are only pure protection and stability features and the basic features from the start. Each is listed with a reason in `features.DEFAULT_ON` (Dominik 2026-10-12). A new value `true` in `config.default.json` without an entry there is red. (🧪 test_richtlinie.DefaultOn)
+- **One register:** every feature is listed exactly once in `features.py`. Stored keys are never renamed, the register translates. Values are read only via `profiles.effective(uid)`. The order is admin default, then own values, then device; device values exist only for location-dependent things. (D, P vereinheitlichen; 🧪 test_features)
+- **Locked means visible:** locked rows are shown grey with a reason ("Switched off by the admin" / "Vom Admin ausgeschaltet"), not hidden. Under Me they are collected in a collapsed box. The reason comes from `features.reason()`, never from the model. (D, P einstellungen-neu)
+- **The Features page stays short.** New sub-features come as sub-switches (`data-show`) under their main switch. (M; 🧪 test_ui_browser height budget)
+- **Roles:** logs, requests and Live are seen by the main admin and co-admin, not by the manager. (P anfrage-verfolgen, live-uebersicht)
+- Build only after Dominik's OK. For larger features first a plan under `plaene/` with pictures, numbered points and a ★ recommendation. (PA, M)
+
+---
+
+## 4. Logging and diagnostics
+
+- All services write to the journal namespace `speech-spark` (500 MB, 14 days). Constant status queries and the fetches of the Logs page are not logged. (D)
+- **Format:** `area: what | reason | numbers`. The area is a fixed word before the colon. Areas that should be filterable in the panel are in `logfilter.AREAS`. (D, P logs-darstellung; 📝)
+- **Only fixed words, numbers and decisions.** Never question text, answer text, tool arguments, results, secrets or error texts of outside servers. (P anfrage-verfolgen, M; 🧪 test_tracelog, test_hintergrund, test_logfilter)
+- **Profile names** appear in the journal, requests and Live only with the profile's consent (`trace_name`, `live_names`). In the journal a profile appears only as `profiles.log_name(prof)`: the name with consent, otherwise "Profile" ("Profil") and the end of the identifier. The admin log (`guard.log`) still names who changed something. (Dominik 2026-10-12; 🧪 test_richtlinie.JournalNames)
+- **Levels:** red and yellow are determined via fixed word lists (`logfilter.ERR`, `WARN`), for web server lines only via the status code. Expected disruptions (service briefly gone, rate limit) are warnings with "retry in …", not errors. (D; 🧪 test_logfilter)
+- **Detailed diagnostics** are on per area only for a limited time (15 min, 1 h or 4 h, off after a restart) and write only `… detail …` lines with numbers. (D)
+- **No log flood:** a repeated rejection is logged once, with the time of the next attempt. (🧪 test_schonend.QuieterLogs)
+- **Request trace** (Logs → Requests): one `anfrage:` line per request, steps via `tracelog`, at most 48 h or 500 requests, not in the backup. (M [[anfrage-verfolgen-plan]])
+- **For Dominik:** logs come via Status → Logs → Diagnostics, "Copy for thread" ("Kopieren für Thread"), or via Logs → Requests, not via console commands. (M)
+- **Towards the outside** (GitHub reports) an allowlist applies instead of a block list. Replacements are `[PERSON-n]`, `[IP]` etc. On a leak nothing is sent. (P probleme-melden)
+- Error fingerprints consist of kind, feature and error type, never of words. (P frage-vor-meldung)
+
+---
+
+## 5. Live overview and monitoring
+
+- **Rule (PA, Dominik 2026-10-10):** everything that can be shown appears under Status → Live and on the monitor `/live`. This applies to new things and retroactively, **in the same commit as the feature** (Dominik 2026-10-12). Gaps are listed in `live-uebersicht/was-fehlt.md`. (M [[live-monitor-aktuell-halten]]; 🧪 test_live)
+- **Only kind, count and status, never contents.** External targets only as service or host name. Names only via `live._who` with consent. Never password or code values. (PA, D; 🧪 test_live.test_request_shows_without_any_text)
+- **Only what is set up** is shown (`live.unset`). Proxy detection only counts for the picture, never for decisions. (M)
+- `live.py` keeps everything in memory only. The admin page polls every second. The monitor is only in the home network, with a pairing code. (M)
+  - The old plan mentioned SSE; what is built is polling.
+- **Service state:** a service counts as gone after 3 failed probes and 3 minutes, as back after 2 good probes. At most one message per 30 minutes. If the internet fails, a collective message comes. Messages consist of fixed sentences. This is shown as the banner `health.alerts`, as a Status card and as a live node. (M [[dienst-ausfall-plan]])
+- **Background work** reports its state with fixed reasons (sprache, nacht, tageslimit, pause, …). (P hintergrund-status)
+
+---
+
+## 6. Interface: layout, building blocks, design
+
+- **Design "Clear"** ("Klar", 2026-10-08): sidebar on the computer, bar at the bottom on the phone. The app view starts below 760 px. (M [[panel-design-directions]])
+- **Menu** (as of 2026-10-11): Assistant · Me | Status · Features · People and devices · Settings, plus Ctrl/⌘ K. The settings groups are Assistant, Speech and Spark. (D; 🧪 test_guides.MenuStructure)
+- **Page skeleton** (`docs/de/technik.md` → building blocks), use only these parts:
+  - **Head:** `h2.pt` with `.pintro` (one sentence). Sections are `h3.sec`, which `seite.js` puts into boxes `.sgrp`.
+  - **Row:** `setrow` with name and one sentence on the left, exactly one control on the right. Switch `.tgl`, never `label.chk`. For 2 to 4 options segment buttons.
+  - **Help text:** at most one sentence and ≤ 140 characters visible, the rest behind "More". "Advanced" always sits in `details.adv`.
+  - **Saving:** one floating save bar per page. Immediate actions are in a section of their own "takes effect immediately".
+  - **Lists:** pattern "list with detail area" (`ld-`), on the phone the detail becomes a page of its own. Me pages use `ichteile.js` (sub-tabs with count, status card, ⋯ menu, 10 rows + "Show more", danger zone) and **no inner scroll boxes**.
+  - (D, P einstellungen-neu, ich-aufraeumen; 🧪 test_guides.BuildingBlocks, test_einstellungen_neu, test_ich_aufraeumen)
+- **Width:** no horizontal scrolling at 320, 390 and 1280 px. No element sticks out over the edge on the phone. (🧪 test_ui_browser, test_ich_aufraeumen)
+- **Height:** the Assistant fills the window (only the history scrolls). Height budgets apply to the Features page (< 2450 px at 1280) and People and devices (< 1500 px). (🧪 test_ui_browser, test_einstellungen_neu)
+- **Phone:** tap targets at least 44 px, input fields 16 px, respect the safe area. The face or "Ask Spark" ("Frag Spark") never lies over controls. (P handy-wie-app; partly 🧪)
+- **Status colours** green, yellow and red. "Needs you" always has a button leading there. Amber (`--c4`) exists in the live picture only for the internet. (P design-klar, M)
+- **Browser cache:** HTML is `no-store`, CSS and JS are loaded with `?v=VERSION`, `/api` is `no-store`. (🧪 test_panel.Page)
+- **All panel scripts share one global namespace.** Check new function names against all JS files. (M [[dienst-ausfall-plan]]; 📝)
+- **Terms:** "Me" (not "My profile"), "Status" (not Overview), "People and devices" (not Profiles), "Operation" (not System), "Spark", "Admin rights" (roles means the speaking roles). Old page names are forbidden. (P ordnung-und-darstellung, bedienung-gesamt; 🧪 test_bedienung_hilfe.Names, test_guides)
+
+---
+
+## 7. Texts, hints, help, English
+
+- **Jump links (PA, 2026-10-12):** every message that refers to a place has a direct link there, as far as the person may see the place.
+  - The way starts with a menu name (Settings, Features, Status, People and devices, Me). Steps in lower case are actions.
+  - This applies to fixed texts, server messages and the assistant's answers.
+  - (M [[sprung-links]]; 🧪 test_sprunglinks)
+  - **Everywhere** (Dominik 2026-10-12): the iPhone and Android app, companion, Telegram and push notifications also show ways as a link (`…/#weg=<way>` opens the place in the panel). If a page, a tab or a row is renamed, all ways are updated in the same commit, including in docs, help and apps. ⚠ The thread "Direct links in hints" ("Direkte Links in Hinweisen") is currently adding this to the apps and Telegram.
+  - Hints without a way (at the top of the admin pages, Status cards) get a jump target to where one can act or take a look.
+- **English:** every visible text in `index.html` is in `i18n.js`, including `title` and `aria-label`. New texts from JS via `t()` or `tt(de,en)`. Server sentences exist in German and English. The English docs use English menu names. (D; 🧪 test_bedienung_hilfe.English/Names, test_guides)
+- **Errors as sentences:** `errSay`/`errRaw` from `base.js`. No paths, no `f"… failed: {e}"`, no raw English exceptions. Guests never see internal addresses. (D; 🧪 test_bedienung_hilfe.PlainErrors)
+- **"?"** exists only where the help knows the row. Every settings row with a field has an `sw:` entry. (🧪 test_bedienung_hilfe.QuestionMarks)
+- **Guides:** every switch has a guide in `guides.js` with 7 sections. (🧪 test_guides)
+- **Help answers:** at most 3 hits and about 1200 characters. Ways only from the fixed list. The origin comes from the panel, never from the question. (P hilfe-besser; 🧪 test_hilfe_quality)
+- **Tips sparingly:** at most 1 per conversation and 3 per week. "Don't show again" applies forever. No tips after outside text, during emergency stop or for guests. (P funktionen-entdecken)
+- **Notifications** (push): only once per version, never at night, not during the profile's quiet time. System messages are fixed sentences without names. (P iphone-update, firmware-verteilen, home-assistant-meldungen)
+- **Spoken bridge sentences** (`ack.PHRASES`) are continually extended, with lots of variety: at least 5 per group, never one of the last 6. (M [[sofortige-rueckmeldung]], Dominik 2026-10-11/12; 🧪 test_ack)
+- Answers name the source briefly ("According to your archive …"). Links are never read aloud. (P erst-lokal)
+
+---
+
+## 8. Language model, intent switch, tools
+
+- **The intent switch** reads only the person's own last message. It only restricts and writes one line `weiche:` per turn. (M [[funktionswahl-plan]])
+- **Misassignments:** correct the rule in `intent.py` and add the sentence to `intent_bench.py`. (M; 🧪 test_intent)
+- **Fix model errors in the panel** (NEED_TOOLS, answer check), not only in the prompt. Always add a self-test. (M [[answer-check-and-fixes]])
+- **Dates** in quality cases relative to today, never fixed. (M)
+- **Thinking text:** every new LLM call that can run with thinking uses `common.no_think`, not its own `<think>` regex. (M [[think-tag-doppelt]])
+- **Local first, then external:** documents, Kiwix, history. Data stays in the LAN as far as possible. No second model just for a sub-feature (GPU memory). Creating documents works offline. (P erst-lokal, hilfe-besser, praesentationen-professionell)
+- **Never change:** dgx-spark-qwen38 on ports 30000–30099. Own ports are at 31001–31443. (M)
+
+---
+
+## 9. Tests
+
+- **A self-test for every protection rule.** A regression test for every finding of a review. (PA, C; 🧪 test_pruefung, test_hardening)
+- **Only simulated services:** no test talks to real models, Home Assistant, mail or calendar (`tests/helpers.py`). The real test on tars is done by Dominik. (D)
+- **No dependence on the time of day:** times are passed in. tars tests in the time zone Europe/Berlin, GitHub in UTC. (PA, M)
+  - ⚠ No test checks this in general.
+- **`app/`-only copy:** tests that read files outside `app/` (`install.sh`, `update.sh`, `.github`, `docs`, `ios`) call `skipTest` when the file is missing. So run new tests once like this: `cp -r app /tmp/x/ && cd /tmp/x/app && python selftest.py discover -s tests`. (M [[selftest-app-only]])
+- **Browser tests** wait for a state, never for a fixed time. Contexts with `bypass_csp=True`. Widths 320, 390 and 1280 px. (M)
+- **Tests write no unknown config keys**, write the configuration atomically (`helpers.write_config`) and in `tearDown` switch off loops they switched on. (M)
+- **A second attempt** (Dominik 2026-10-11): a red test gets exactly one second attempt (`app/selftest.py`).
+  - Red twice means red. With more than 5 failures there is no second attempt.
+  - Green only in the second attempt gives a visible WARNING, and the test must still be repaired.
+  - (🧪 test_selftest_runner)
+- **Never** skip, weaken or disable a test in order to turn green. (PA, M)
+- **Smoke test** (`test_rauchtest`) stays fast. It is the only test that tars runs for versions already checked. (M [[schonende-updates]])
+- **Quality test** (real model): a red case is first checked for whether the regex is too strict, and only then treated as a model error. (M)
+- **Field test:** every feature gets a check item at the bottom of `pruefung/praxistest-tars-2.md`. (M; 📝)
+
+---
+
+## 10. Repo, push procedure, CI, releases
+
+- **Directly on main.** Before every commit `git pull`, increase the patch number in `app/VERSION` (V01.0.NNN). (PA)
+- **Push order (PA, 2026-10-11):**
+  1. If a "Tests" run for main is running or waiting on GitHub, wait until it has finished.
+  2. Then `git pull`, take the **next free version number at push time** (never reserve in advance), run the self-tests.
+  3. Only then push. Never push into a running test run.
+  4. If the last run is red, first clarify: does my push repair it? Is another thread already working on it?
+- **PUSH STOP:** if the coordinator says "PUSH-STOPP", nothing is pushed until they explicitly lift the block. (M)
+- **Commit message:** `V01.0.NNN short description`. The CHANGELOG lines are made from it. Avoid a plain "merge main" as the message. (📝)
+- **Workflows** (repo-absichern, 2026-10-11):
+  - Every `uses:` is pinned to a 40-character SHA with `# vN`. `contents: write` only at job level. `persist-credentials: false`.
+  - Signing keys and releases only with `environment: release`. No `pull_request_target`.
+  - (🧪 test_workflows)
+- **`cancel-in-progress: false`** in `tests.yml` must never be set to true again. (M [[tests-lauf-nicht-abbrechen]])
+- **Update gate:** tars only installs the newest main commit with a green "Tests" run. (🧪 test_hardening)
+- **Releases:** always delete old GitHub releases, keep only the newest per series. A new release workflow goes into the `workflow_run` list of `releases-aufraeumen.yml`. (PA, M [[releases-aufraeumen]]; 🧪 test_releases_aufraeumen)
+- **Ubuntu 26:** GitHub `ubuntu-latest` switches from 2026-10-19. GitHub uses Python 3.11. (M)
+
+---
+
+## 11. Documentation and versions
+
+- **README.md and README.de.md stay short** (about 90 lines): installation, "Latest changes" with exactly 10 lines, diagram, links into `docs/`. (PA, M [[readme-layout]])
+- **Per version** one line at the top of `CHANGELOG.md` in the format `- **V01.0.NNN** · YYYY-MM-DD · Text` (otherwise it is missing from "What's new") and in both READMEs; the oldest line drops out. (PA; 🧪 test_changelog only checks the format)
+  - VERSION, the newest CHANGELOG line and the first line of both READMEs match, each README has exactly 10 lines. (🧪 test_richtlinie.Versions)
+- **Details** are only in `docs/de/*.md` and `docs/en/*.md`, both languages structured the same way. Then run `hilfe.py --docs`. (PA; 🧪 test_hilfe.test_docs_copy_is_current)
+- **Plans** live under `/mnt/project-files/plaene/` with "Status" ("Stand": date, version), ★ for the recommendation and "Questions for Dominik" ("Fragen an Dominik"). Pictures come from the real panel or from mockups. (P)
+
+---
+
+## 12. Operation, update, resources
+
+- About 10 GiB of free memory on tars. DGX OS kills processes below about 8 GiB. New services need `MemoryMax=`. (M, D; 🧪 test_hardening)
+- An update interrupts for about 8 seconds. Nightly work does not run during an update (`update.update_running()`). Device rounds run from 05:15. (M)
+- Self-test on tars with `nice 19` and `ionice`. Test priority code with `nice -n 19`. (M)
+- The panel venv is created from the lock only if venv-panel is new. A new library therefore needs an installation path for existing installations. (M)
+
+---
+
+## 13. Collaboration (threads and Dominik)
+
+- Answers in German, short numbered suggestions with a marked recommendation. For larger features first a plan, then build. (PA)
+- The result states which points of the security checklist and the mandatory list (part 1) were touched. For new features also what was added to Live. (PA)
+- A new general rule goes into this guideline (de and en) in the same commit and, if possible, into a self-test.
+- When there is a new version, first check in Dominik's trace which version tars already has. (M)
+- If two threads touch the same file, the coordinator tells both. (M)
+
+---
+
+## 14. What self-tests already enforce (overview)
+
+| Test | Enforces |
+|---|---|
+| test_scanner | no dangerous calls, login on every route (otherwise OPEN with a reason), upload limits, strict CSP, tools sorted |
+| test_hardening | body limited before reading, root write paths, unit limits, only green versions, outside-text blocks |
+| test_stufen | every code endpoint with a level in `stufen.LIST` |
+| test_features | one register, profile switches start off, no checks of their own, one default value |
+| test_live | every tool, target, client and guard kind in the live picture, no contents |
+| test_ack | every intent-switch group has ≥ 5 bridge sentences |
+| test_intent, test_weiche | intent-switch rules and BENCH sentences |
+| test_tracelog, test_logfilter | logs and requests only fixed words and numbers, filter safe |
+| test_sprunglinks | every way starts with a menu name and is found |
+| test_bedienung_hilfe | English, errors as sentences, "?" with help, old names forbidden |
+| test_guides | page building blocks, menu, guide per switch, ≤ 140 characters |
+| test_hilfe, test_hilfe_quality | help index current, ≥ 60 everyday questions right |
+| test_ui_browser, test_ich_aufraeumen, test_einstellungen_neu | no width beyond the edge (320/390/1280), height budgets, no inner scroll boxes |
+| test_workflows, test_lock, test_lieferkette | pinned actions, permissions, signing environment, package hashes, ffmpeg whitelist |
+| test_selftest_runner | one second attempt, > 5 no attempt, warning |
+| test_rauchtest | every module loads, `restart-map` complete |
+| test_changelog | CHANGELOG format |
+| test_releases_aufraeumen | only the newest release per series |
+| test_richtlinie | values shipped on with a reason, journal without profile names, VERSION/CHANGELOG/README in agreement, guideline de/en present and its test names valid |
+
+**Agreement only (no test):**
+- push order
+- independence of the time of day in general
+- log prefix
+- `STATE_FILES` for new files
+- `undo.py` / `SENSITIVE`
+- field test item
+- "data never via innerHTML" (general)
+- global JS names
+- commit message
+- check against the state of the art
+
+---
+
+## 15. Outdated and still open
+
+**Outdated (no longer applies):**
+- Feature pause of 2026-10-09: it has been lifted. What applies is "build after Dominik's explicit OK".
+- Menu states before 11.10. ("Overview", "Integrate" (German "Übersicht", "Einbinden"), the old profile page, phone bar "Assistant · Me · Status · Manage"): part 6 applies.
+- Features page as a "Who may do what" table or short rows: list plus detail applies.
+- Live overview with SSE or "blueprint": what is built is 1 s polling and "1 flow".
+- Help with 3–5 hits: at most 3 applies.
+
+**Planned but not built (no rule until built):**
+- central page list `js/pages.js`
+- trace ID before every log line (`[a7f3]`)
+- translation via keys instead of text comparison
+- shared `jsonstore` or `llm.complete()` (review package 7)
+
+**Open (live overview, `live-uebersicht/was-fehlt.md`):** GitHub reports as a node of their own, single steps in the morning overview, number of companions, a device of its own "Writing aid" ("Schreibhilfe"), reMarkable steps.
+
+**Open (security):** see "State of the art → not yet met" in the [Security checklist](security-checklist.md).
+
+---
+
+## 16. Decisions of 12.10.2026
+
+1. On by default only with a reason in `features.DEFAULT_ON`, checked by `test_richtlinie`.
+2. This guideline lives in `docs/de/richtlinien.md` and `docs/en/guidelines.md`; `CLAUDE.md` in the repo summarises it; README and project instructions refer to it.
+3. New self-test for VERSION, CHANGELOG and README.
+4. The security checklist lives in the repo (`docs/de/sicherheits-checkliste.md`, `docs/en/security-checklist.md`) and has a part "State of the art" against which every change is checked.
+5. Jump links apply everywhere and are updated along with every change.
+6. Journal lines name profiles only with their consent.

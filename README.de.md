@@ -33,6 +33,7 @@ Alle Optionen ohne Rückfragen (`--mode api --asr 1.7b --tts 0.6b --yes` …) st
 
 <!-- New version: add one line at the top here and in CHANGELOG.md, drop the oldest line here (keep 10). Details go to docs/de and docs/en, not into this README. -->
 
+- **V01.0.443** Coding-Richtlinie im Repo: [docs/de/richtlinien.md](docs/de/richtlinien.md) mit Pflichtliste für neue Funktionen, Sicherheits-Checkliste mit „Stand der Technik“, Journal ohne Profilnamen
 - **V01.0.442** App-Manifest und Home-Bildschirm-Symbol kommen wieder (seit .406 Fehler 500); „Zum Home-Bildschirm“ zeigt wieder das Spark-Symbol
 - **V01.0.441** Live-Übersicht: Blockt der Wächter wegen Notaus, steht dort jetzt „Notaus ist an“ statt „Adresse nie erlaubt“
 - **V01.0.440** Dienst-Wächter: Admins bekommen einen Hinweis, wenn Archiv, Internet, Websuche oder ein anderer Dienst weg ist, und eine Entwarnung, wenn er zurück ist.
@@ -42,7 +43,6 @@ Alle Optionen ohne Rückfragen (`--mode api --asr 1.7b --tts 0.6b --yes` …) st
 - **V01.0.436** Einladung: der Cursor springt nicht mehr ins Namensfeld, während man die PIN tippt; Testlauf wieder grün
 - **V01.0.435** Hinweise mit Wegen („Einstellungen → … „Live-Seite““, „Ich → Dokumente“) sind jetzt Links, die direkt zur Stelle springen; Selbsttest prüft alle Wege
 - **V01.0.434** Selbsttest: Live-Prüfung „nur eingerichtete Dienste“ mit eigenem Profil (war je nach anderen Tests rot)
-- **V01.0.433** Begleiter richtet Office-Add-ins ein: Knopf „Spark“ in Outlook classic (auch iCloud/IMAP), Word und Excel direkt, neues Outlook mit Datei und Hinzufügen-Seite
 
 Alle Versionen: [CHANGELOG.md](CHANGELOG.md)
 
@@ -110,6 +110,7 @@ Jede Funktion ist pro Profil einzeln schaltbar und ab Werk aus. Updates laufen e
 - [APIs und Einbinden](docs/de/apis-und-einbinden.md): Transkription, Sprachausgabe, Streaming, Open WebUI, Siri, Pebble
 - [Sicherheit und Betrieb](docs/de/sicherheit-und-betrieb.md): Anmeldung, Sperren, Sicherungen, Wächter, Selbsttest, Logs
 - [Technik und Fehlersuche](docs/de/technik.md): Dienste und Ports, Leistung messen, neben qwen38, Fehlersuche
+- [Coding-Richtlinie](docs/de/richtlinien.md) und [Sicherheits-Checkliste](docs/de/sicherheits-checkliste.md): Regeln für jede Änderung, Pflichtliste für neue Funktionen
 
 Im Portal steht zu jeder Funktion eine eigene Anleitung unter *Funktionen → Anleitungen*.
 

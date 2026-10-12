@@ -33,6 +33,7 @@ All options for running without questions (`--mode api --asr 1.7b --tts 0.6b --y
 
 <!-- New version: add one line at the top here and in CHANGELOG.md, drop the oldest line here (keep 10). Details go to docs/de and docs/en, not into this README. -->
 
+- **V01.0.443** Coding guideline in the repo: [docs/en/guidelines.md](docs/en/guidelines.md) with a checklist for new features, security checklist with a state-of-the-art part, journal without profile names
 - **V01.0.442** App manifest and home screen icon load again (error 500 since .406); “Add to Home Screen” shows the Spark icon again
 - **V01.0.441** Live overview: when the guard blocks because of the emergency stop, it now says so instead of “address never allowed”
 - **V01.0.440** Service watch: admins get a note when the archive, the internet, the web search or another service is gone, and an all-clear when it is back.
@@ -42,7 +43,6 @@ All options for running without questions (`--mode api --asr 1.7b --tts 0.6b --y
 - **V01.0.436** Invitation: the cursor no longer jumps into the name field while typing the PIN; test run green again
 - **V01.0.435** Hints with a way ("Settings → … “Live page”", "Me → Documents") are now links that jump right there; a self-test checks every way
 - **V01.0.434** Self-test: the Live check "only what is set up" uses its own profile (was red depending on other tests)
-- **V01.0.433** Companion sets up Office add-ins: "Spark" button in Outlook classic (also iCloud/IMAP), Word and Excel registered directly, new Outlook with file and add page
 
 All versions: [CHANGELOG.md](CHANGELOG.md)
 
@@ -110,6 +110,7 @@ Every feature can be switched on per profile and is off by default. Updates only
 - [APIs and integration](docs/en/apis-and-integration.md): transcription, speech, streaming, Open WebUI, Siri, Pebble
 - [Security and operation](docs/en/security-and-operation.md): login, lockouts, backups, watchdog, self-test, logs
 - [Technical details and troubleshooting](docs/en/technical.md): services and ports, benchmarks, next to qwen38, troubleshooting
+- [Coding guideline](docs/en/guidelines.md) and [security checklist](docs/en/security-checklist.md): rules for every change, checklist for new features
 
 The panel has its own guide for every feature under *Funktionen → Anleitungen* (Features → Guides).
 

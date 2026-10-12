@@ -2,6 +2,7 @@
 
 Every version in one line, newest first (taken from the commit messages, so some lines are German, some English). Older entries have no version number.
 
+- **V01.0.443** · 2026-10-12 · Coding-Richtlinie und Sicherheits-Checkliste im Repo (docs/de/richtlinien.md, CLAUDE.md) mit Pflichtliste für neue Funktionen und Teil „Stand der Technik“; an ausgelieferte Schalter nur mit Grund, Journal ohne Profilnamen, Selbsttest für VERSION/CHANGELOG/README
 - **V01.0.442** · 2026-10-12 · App-Manifest, Home-Bildschirm-Symbol und Favicon kamen seit V01.0.406 mit Fehler 500 (static_file ohne request); behoben, Selbsttest test_statische_routen ruft jede statische Route ab
 - **V01.0.441** · 2026-10-12 · Live-Übersicht: Wächter-Block wegen Notaus zeigt den richtigen Grund „Notaus ist an: keine Verbindung ins Internet“ statt „diese Adresse ist nie erlaubt“
 - **V01.0.440** · 2026-10-12 · Dienst-Wächter (Admin-Schalter + Profil, aus): der Spark prüft Sprachmodell, Hören, Sprechen, Internet, Websuche, Kiwix, Home Assistant, Mail, Kalender und NAS selbst und meldet Admins Ausfall und Entwarnung (erst nach 3 Fehlversuchen über 3 min, höchstens 1 Hinweis pro Dienst in 30 min, Sammelmeldung „Internet weg“, Gerät wählbar, nachts sammeln); Banner „Gerade eingeschränkt“ auch in der iPhone-App, Zustand → Dienste mit 7 Tagen, Punkte in der Live-Übersicht; auf Wunsch sagt der Assistent einen fehlenden Dienst sofort

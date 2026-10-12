@@ -31,6 +31,7 @@ from fastapi.responses import FileResponse
 import features
 import guard
 import notaus
+import profiles
 from common import load_config
 from core import assistant, auth, own_profile
 from account import browser_profile
@@ -305,7 +306,7 @@ async def profile_link(request: Request, prof=Depends(_on)):
         svg = mfa._qr_svg(url)
     except Exception:
         svg = ""
-    print("android: download link made for", prof["name"], flush=True)
+    print("android: download link made for", profiles.log_name(prof), flush=True)
     _live_mark("Eingang", "Android-App: Download-Link erstellt")
     return {"url": url, "qr": svg, "minutes": TOKEN_SECONDS // 60}
 

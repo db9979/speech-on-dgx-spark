@@ -431,7 +431,7 @@ async def api_ha_new(request: Request, prof=Depends(secret_profile)):
     for x in _ha_keys(prof["id"]):
         profiles.delete_device(x["id"])
     token = profiles.add_device("Home Assistant (Raum-Modus)", prof["id"], scope="room")
-    print("room: Home Assistant key made for", prof["name"], flush=True)
+    print("room: Home Assistant key made for", profiles.log_name(prof), flush=True)
     return {"token": token}
 
 

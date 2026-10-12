@@ -177,7 +177,7 @@ async def app_start(request: Request, prof=Depends(own_profile)):
     update._start()
     guard.log("update_from_app", ip=guard.client_ip(request), uid=uid,
               detail=f"{dev.get('name', '')[:40]} -> {version}")
-    print("update: started from the iPhone app by", prof["name"], flush=True)
+    print("update: started from the iPhone app by", profiles.log_name(prof), flush=True)
     await _tell_others(uid, prof["name"], version)
     return {"started": True, "version": version}
 

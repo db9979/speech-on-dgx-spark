@@ -234,6 +234,27 @@ DUTY = None
 
 # chat.* switches that are no function a profile uses (how the Spark itself works)
 SPARK_ONLY = {"public", "thinking", "prompt_cache", "answer_check", "datetime", "face_life", "esp32_ota_http"}
+# Everything starts off (Dominik 2026-10-08). The only values shipped on in config.default.json are protection and
+# stability rules and the basic functions the Spark had from the start, each with its reason here (Dominik 2026-10-12,
+# docs/de/richtlinien.md, part 3). tests/test_richtlinie.py fails for a value shipped on that is not listed.
+# chat.defaults are presets of a profile's own manners (hands-free, barge-in …), not functions: they never switch
+# a function on (test_features.test_presets_never_switch_a_function_on).
+DEFAULT_ON = {
+    "asr.enabled": "Hören ist die Grundaufgabe des Sparks",
+    "tts.enabled": "Sprechen ist die Grundaufgabe des Sparks",
+    "tts.clean_text": "Qualität: Emojis, Code und Markdown werden nicht vorgelesen",
+    "tts.calm": "Qualität: ruhig sprechen ohne Ausrufe",
+    "memory.guard": "Stabilität: Speicherwächter vor dem Speicherende von DGX OS",
+    "watch.watchdog": "Stabilität: hängende Dienste starten neu",
+    "chat.answer_check": "Schutz: erfundene Zahlen und Zeiten werden nicht gesagt",
+    "chat.datetime": "Grundfunktion: das Modell kennt Datum und Uhrzeit, keine persönlichen Daten",
+    "chat.memory": "Grundfunktion von Anfang an, nur eigene Daten, nie Gäste",
+    "chat.history": "Grundfunktion von Anfang an, nur eigene Daten, nie Gäste",
+    "chat.documents": "Grundfunktion von Anfang an, nur eigene Daten, nie Gäste",
+    "chat.reminders": "Grundfunktion von Anfang an, nur eigene Daten, nie Gäste",
+    "chat.calendar": "Grundfunktion von Anfang an, braucht trotzdem einen eigenen Kalender des Profils",
+    "chat.esp32_ota_http": "Dominik 2026-10-11: Lautsprecher-Updates über http bleiben erlaubt (sonst nur per USB)",
+}
 # names for the Spark-wide switches that are no function of their own (the app's Funktionen page shows them under "Spark")
 SPARK_NAMES = {"public": ("Gastzugang", "Guest access"), "thinking": ("Vorher nachdenken", "Think first"),
                "prompt_cache": ("Schneller Antwortbeginn", "Faster first words"),

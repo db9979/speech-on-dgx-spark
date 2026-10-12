@@ -906,6 +906,17 @@ def settings(uid):
         return {}
 
 
+def log_name(prof):
+    """A profile in a journal line: its name only with its consent ("trace_name", the same switch as for
+    Logs → Anfragen and the Live page), else "Profil" and the end of its id, so lines still tell profiles
+    apart (Dominik 2026-10-12, docs/de/richtlinien.md: journal lines without names)."""
+    if not prof:
+        return "guest"
+    if settings(prof["id"]).get("trace_name") is True:
+        return prof["name"]
+    return "Profil " + prof["id"][-4:]
+
+
 def save_settings(uid, d):
     with _lock:
         merged = dict(settings(uid), **clean_settings(d))

@@ -2740,6 +2740,14 @@
 "src": "sicherheit-und-betrieb",
 "file": "Sicherheit und Betrieb",
 "head": "Logs",
+"title": "Ohne Profilnamen",
+"text": "Ohne Profilnamen (ab V01.0.443): Journalzeilen nennen ein Profil nur, wenn es unter Ich → Gespräch → Datenschutz zugestimmt hat (derselbe Schalter wie für Logs → Anfragen); sonst steht dort „Profil“ und das Ende der Kennung, z. B. „iphone: paired for Profil 3f2a“. Das Admin-Protokoll nennt weiter, wer etwas geändert hat."
+},
+{
+"lang": "de",
+"src": "sicherheit-und-betrieb",
+"file": "Sicherheit und Betrieb",
+"head": "Logs",
 "title": "Diagnose-Filter im Panel",
 "text": "Diagnose-Filter im Panel (ab V01.0.141): *Zustand → Logs → Diagnose-Filter* ersetzt journalctl … | grep -E \"room:|esp32:\" | tail -30 auf der Konsole. Anhaken lassen sich chat:, Websuche (chat: web search), homeassistant:, room:, esp32:, Update und Selbsttest (Unit speech-spark-update) und Fehler (error, Fehler, Traceback, failed, warn); mehrere Haken gelten als „oder“, kein Haken zeigt alle Zeilen. Zeitraum 10 min bis 24 h, 30 bis 1000 Zeilen, die neuesten zuerst gekürzt; „Kopieren“ nimmt die Ausgabe samt Kopfzeile mit Filter und Trefferzahl mit. Nur für den Admin, höchstens 60 Abfragen pro Minute. Gefiltert wird in Python mit einer festen Liste; an journalctl gehen nur Zahlen aus festen Listen. Bot-Tokens, Bearer-Schlüssel, password=/token=/key=-Werte und Zugangsdaten in Adressen werden vor der Anzeige geschwärzt."
 },
@@ -5662,6 +5670,14 @@
 "head": "Logs",
 "title": "Logs",
 "text": "All speech services log into their own journal (journalctl --namespace=speech-spark -u 'speech-spark-*'), capped at 500 MB and 14 days; journald deletes older entries automatically. Adjustable under Settings → Operation, effective after the next update. The panel's constant status polls are not logged at all."
+},
+{
+"lang": "en",
+"src": "security-and-operation",
+"file": "Security and operation",
+"head": "Logs",
+"title": "Without profile names",
+"text": "Without profile names (since V01.0.443): journal lines name a profile only if it agreed under Me → Conversation → Privacy (the same switch as for Logs → Requests); otherwise they say \"Profil\" and the end of its id, e.g. \"iphone: paired for Profil 3f2a\". The admin log still names who changed something."
 },
 {
 "lang": "en",

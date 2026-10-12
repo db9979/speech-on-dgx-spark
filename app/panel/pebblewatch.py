@@ -186,7 +186,7 @@ async def profile_pair(request: Request, prof=Depends(_on)):
     base = _base(body)
     await confirm_code(request, prof["id"], prof["name"])   # a new way into the profile
     code = new_code(prof["id"])
-    print("pebble: setup code made for", prof["name"], flush=True)
+    print("pebble: setup code made for", profiles.log_name(prof), flush=True)
     return {"setup": f"{base}#pebble={code}", "minutes": CODE_SECONDS // 60}
 
 
@@ -195,7 +195,7 @@ def profile_remove(did: str, prof=Depends(browser_profile)):
     if not any(x["id"] == did for x in watches(prof["id"])):
         raise HTTPException(404, "no such watch")
     profiles.delete_device(did)
-    print("pebble: watch removed for", prof["name"], flush=True)
+    print("pebble: watch removed for", profiles.log_name(prof), flush=True)
     _live_mark("Eingang", "Pebble-Uhr entfernt")
     return profile_get(prof)
 
@@ -212,7 +212,7 @@ async def watch_pair(request: Request):
     if len(watches(uid)) >= MAX_WATCHES:
         raise HTTPException(409, "Zu viele Uhren für dieses Profil.")
     token = profiles.add_device("Pebble", uid, scope="watch")
-    print("pebble: watch paired for", prof["name"], flush=True)
+    print("pebble: watch paired for", profiles.log_name(prof), flush=True)
     _live_mark("Eingang", "Pebble-Uhr gekoppelt")
     face = load_config().get("chat", {}).get("face")
     return {"token": token, "profile": prof["name"], "face": face if face in FACES else "robot"}

@@ -644,7 +644,7 @@ async def api_key_new(request: Request, prof=Depends(secret_profile)):
     for x in _keys(prof["id"]):
         profiles.delete_device(x["id"])
     token = profiles.add_device("Home Assistant (Meldungen)", prof["id"], scope="haev")
-    print("hamelden: Home Assistant event key made for", prof["name"], flush=True)
+    print("hamelden: Home Assistant event key made for", profiles.log_name(prof), flush=True)
     return {"token": token}
 
 

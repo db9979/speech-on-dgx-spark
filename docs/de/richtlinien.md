@@ -1,0 +1,379 @@
+# Coding-Richtlinie
+
+Gilt für jeden Thread und jeden Menschen, der Code an Speech on DGX Spark ändert. Sie fasst alle Regeln zusammen, die Dominik seit dem 08.10.2026 festgelegt hat; beschlossen am 12.10.2026. Die englische Fassung steht in [docs/en/guidelines.md](../en/guidelines.md), die Sicherheits-Checkliste in [sicherheits-checkliste.md](sicherheits-checkliste.md).
+
+**Die Richtlinie wächst mit:** Wer eine neue allgemeine Regel einführt (neuer Baustein, neues Register, neue Pflicht für jede Funktion), ergänzt sie hier und in der englischen Fassung im selben Commit. `tests/test_richtlinie.py` prüft, dass jeder hier genannte Selbsttest existiert.
+
+**Legende**
+- 🧪 Ein Selbsttest erzwingt die Regel (Testname dahinter). Ein Verstoß macht „Tests“ auf GitHub rot, und tars spielt die Version nicht ein.
+- 📝 Die Regel ist nur eine Absprache. Kein Test prüft sie.
+- ⚠ Noch offen oder nur teilweise gebaut. Siehe Teil 15.
+
+**Quellen**
+- **PA**: Projektanweisungen im Claude-Projekt
+- **M**: Projekt-Gedächtnis (`[[name]]`)
+- **C**: [Sicherheits-Checkliste](sicherheits-checkliste.md)
+- **P**: Plan im Projektordner `plaene/` (außerhalb des Repos)
+- **D**: `docs/de/technik.md` bzw. `docs/de/sicherheit-und-betrieb.md`
+- **T**: Selbsttest in `app/tests/`
+
+---
+
+## 0. Die Grundsätze (Kurzfassung)
+
+1. **Sicherheit nach dem Stand der Technik.** Jede Änderung wird gegen die Sicherheits-Checkliste geprüft, auch gegen ihren Teil „Stand der Technik“.
+2. **Alles von außen ist Daten, nie ein Befehl.** Das gilt für Web, Mail, Kalender, Dokumente, Telegram, Geräte und Modellausgaben. Entscheidungen trifft das Panel mit festen Regeln, nie das Modell.
+3. **Jede neue Funktion ist standardmäßig aus.** Sie bekommt einen Admin-Schalter und einen Schalter pro Profil. Gäste bekommen keine persönlichen Daten und keine Einstellungen.
+4. **Jeder Endpunkt** hat Anmeldung, Profilbindung, CSRF, Größenlimit und Rate-Limit.
+5. **Jede neue Funktion fügt sich überall ein:** Rechte, Weiche, Live, Logs, Hilfe, Englisch, Sicherung und Tests. Die Pflichtliste steht in Teil 1.
+6. **Alles, was sich darstellen lässt, steht in der Live-Übersicht.** Dort stehen nur Art, Anzahl und Status, nie Inhalte.
+7. **Logs enthalten nur feste Wörter und Zahlen.** Nie Fragen, Antworten, Geheimnisse oder Profilnamen ohne Zustimmung.
+8. **Jeder Hinweis mit einem Weg ist ein Sprung-Link, überall** (Panel, Apps, Begleiter, Telegram) und wird bei jeder Umbenennung mitgezogen. Jeder sichtbare Text hat eine englische Fassung, jedes „?“ einen Hilfe-Eintrag.
+9. **Für jede Schutzregel gibt es einen Selbsttest.** Tests hängen nicht von der Uhrzeit ab und laufen auch in einer Kopie, die nur `app/` enthält.
+10. **Vor jedem Push** auf einen laufenden Testlauf warten, `git pull`, die nächste freie Versionsnummer nehmen, die Selbsttests laufen lassen und erst dann pushen.
+11. **Jede Version** bekommt eine Zeile in CHANGELOG und README, die Details stehen in `docs/de` und `docs/en`. Die README bleibt kurz.
+
+---
+
+## 1. Pflichtliste: Neue Funktion einbinden („Definition of Done“)
+
+Dominik, 2026-10-12: Jede Funktionserweiterung fügt sich genauso in Monitoring, Logging, Weiche und alles andere ein, was nötig ist.
+
+Diese Liste gehört zu jedem Commit, der eine Funktion, ein Werkzeug, einen Dienst, ein Gerät oder einen Kanal hinzufügt oder ändert. Im Ergebnis an Dominik steht kurz, welche Punkte berührt wurden. Nicht zutreffende Punkte bleiben weg.
+
+| # | Bereich | Was zu tun ist | Erzwungen |
+|---|---|---|---|
+| 1 | **Rechte und Schalter** | Eintrag in `features.py`: Name de/en, Gruppe, Admin-Schalter `chat.*`, `parent`, Profilschalter, `guest`, Ich-Seite und Anleitung. Admin- und Profilschalter stehen auf **aus**. Was ausnahmsweise an ausgeliefert wird, steht mit Grund in `features.DEFAULT_ON`. Module fragen nur `features.allowed/admin_on/profile_on`. Standardwerte stehen nur in `config.default.json`. Ein Schalter, der nur für den Spark gilt, kommt nach `SPARK_ONLY`. | 🧪 test_features, test_richtlinie (DefaultOn) und Aus-Tests pro Funktion |
+| 2 | **Gäste und fremde Stimme** | Persönliches gibt es für Gäste nie. Am geteilten Lautsprecher bekommt eine fremde Stimme nur Gastrechte. | 🧪 je Funktion (`test_off_by_default…`, „never for guests“) |
+| 3 | **Endpunkt** | Er braucht eine Anmeldung (`auth`, `browser_profile`, `secret_profile`, …). Ohne Anmeldung steht er mit Grund in `OPEN`. Dazu Größenlimit vor dem Lesen, Rate-Limit-Schlüssel und Zustandsänderungen nur per POST, PUT oder DELETE. Endpunkte mit Code kommen in `stufen.LIST` und bekommen das Schloss in `mfa.js CODE_LOCKS`. Erreicht die App sie, stehen sie in `APP_PATHS`. | 🧪 test_scanner.test_every_route_has_a_login, test_stufen, test_hardening (Body vor dem Lesen abgelehnt) |
+| 4 | **Werkzeug fürs Modell** | Das Werkzeug kommt in genau eine Sperrliste: `READS_OUTSIDE`, `HA_READS`, `LOCKED_OUTSIDE` oder `INSIDE`. Zusatzdienste deklarieren es in ihren `offer()`-Sets. Braucht eine Frage zwingend das Werkzeug, kommt sie in `chat.NEED_TOOLS`. Ist es ein Nachschlage-Werkzeug, kommt es in `chat.LOOKUPS` (höchstens 2 pro Frage). | 🧪 test_scanner.test_every_tool_is_sorted |
+| 5 | **Weiche** (`intent.py`) | Die neue Absicht oder Gruppe kommt in `intent.GROUPS` mit ihren Wörtern. Dazu Testsätze in `intent_bench.py` (BENCH), auch für jede gemeldete Fehlzuordnung. Gibt es nur ein passendes Werkzeug, wird es Pflicht-Werkzeug (`forced`). Bei einer neuen Gruppe die Seite Funktionen → Weiche prüfen (Liste, Detail, Statistik). | 🧪 test_intent, test_weiche |
+| 6 | **Sofortige Rückmeldung** | Jede neue Weiche-Gruppe und jeder neue direkte Panel-Weg bekommt **mindestens 5** Sätze (de und en) in `ack.PHRASES`, zugeordnet in `ack.group_of`. Die Sätze haben keine Ziffern, kein Ja oder Nein und höchstens 60 Zeichen. Alternativ steht die Gruppe mit Grund in `NO_ACK`. | 🧪 test_ack (Coverage, test_plenty_of_variants) |
+| 7 | **Live-Übersicht** (`live.py`) | Für ein Werkzeug: Ziel in `live.TOOLS` und Wort in `live.RETURNS`. Ein neues Ziel kommt mit Zone `spark`, `lan` oder `net` in `TARGETS`. Ein neuer Gerätetyp kommt in `live.CLIENT` und `tracelog.CLIENTS`. Ein neuer Kanal kommt in `live._conns`. Was der Spark von selbst tut, läuft über `live.begin(auto=True)` und `live.within`. Hintergrundarbeit läuft über `vorrang.*` mit festem Namen. Neue Wächter- oder Protokoll-Arten kommen in `guard.LIVE_WORDS` oder `LIVE_SKIP`. Ein neues Push-Tag bekommt ein Wort in `push.WHY`. Nicht eingerichtete Ziele werden über `live.unset()` ausgeblendet. | 🧪 test_live (Werkzeuge, Ziele, Clients, guard-Arten), test_dienstwacht (Knoten pro Dienst) |
+| 8 | **Logging** | Journal-Zeilen beginnen mit einem festen Bereich (`chat:`, `weiche:`, `mail:`, …). Ein neuer Bereich kommt in `logfilter.AREAS`. Steht ein fester Hinweis zum Fehler fest, kommt er in `logfilter.HINTS`. In die Zeilen kommen nur feste Wörter, Zahlen und Entscheidungen. Ein Profil steht nur als `profiles.log_name(prof)` darin. Ausführliche Zeilen sind `… detail …` hinter der zeitlich begrenzten Diagnose. Wiederholte Ablehnungen werden einmal geloggt, mit dem Zeitpunkt des nächsten Versuchs. | 🧪 test_logfilter, test_richtlinie (JournalNames), test_schonend; 📝 Präfix-Pflicht |
+| 9 | **Anfrage-Verlauf** (`tracelog.py`) | Neue Schritte einer Anfrage laufen über `tr.step(...)`, nur mit `SAFE`-Wörtern und Zahlen (höchstens 40 Schritte, höchstens 8 Infos). Ein Werkzeugname erscheint nur, wenn das Werkzeug angeboten war. | 🧪 test_tracelog (SECRET-Test) |
+| 10 | **Dienst-Wächter** | Hängt die Funktion an einem eigenen Dienst (LAN oder Internet), bekommt sie eine Probe in `dienstwacht.py` (über netguard, ohne Zugangsdaten), einen Live-Knoten und einen festen Satz für „Dienst fehlt“. | 🧪 test_dienstwacht |
+| 11 | **Verbindungen nach außen** | Nur über `netguard.client(level, origin=…)`. Die Stufen sind PUBLIC, USER und HOME. Die Notaus-Stufen gelten dabei automatisch. | 📝 (C, SSRF); teils 🧪 test_hardening |
+| 12 | **Oberfläche** | Nur die Bausteine aus Teil 6 verwenden. Kein Inline-Code. Jeder Text steht in `i18n.js`. Jede Einstellungszeile mit Feld hat einen Hilfe-Eintrag (`sw:`/`me:`). Wo es passt, kommt eine Zeile in die Suche (Strg K, automatisch über die Bausteine) und eine Zeile in `glanceText()` (Auf einen Blick). | 🧪 test_guides.BuildingBlocks, test_bedienung_hilfe, test_scanner (CSP), test_ui_browser |
+| 13 | **Anleitung und Hilfe** | Eine Anleitung in `guides.js` mit den 7 Abschnitten (was, brauchst, einrichten, sagen, verlässt das Haus, aus, wenn nicht). Nach Doku-Änderungen `python3 app/panel/hilfe.py --docs` ausführen. Fragen, die gefunden werden sollen, kommen als Fall in `test_hilfe_quality.py`. Passt es, kommt ein Tipp in `tipps.py` (GAPS) und eine Karte in Ich → Heute (`today.py`). | 🧪 test_guides (jeder Schalter hat eine Anleitung), test_hilfe (Index aktuell), test_hilfe_quality (≥ 60 Fragen) |
+| 14 | **Hinweise mit Weg** | „Einschalten unter Funktionen → …“ beginnt mit einem Menünamen und nennt die Schritte mit den heutigen Namen. `way.js` macht daraus von selbst einen Link. Das gilt **überall**: in iPhone- und Android-App, Begleiter, Telegram und Push als Link `…/#weg=<Weg>`. Wird eine Seite oder Zeile umbenannt, werden alle Wege im selben Commit mitgezogen. Hinweise ohne Weg (z. B. oben auf den Admin-Seiten) bekommen ein Sprungziel. | 🧪 test_sprunglinks (Panel); Apps und Telegram: ⚠ in Arbeit |
+| 15 | **Sicherung** | Eine neue Datei in `state/` mit Einstellungen kommt in `backup.STATE_FILES`. Geheimnisse liegen nur im vault. | 📝 (einzelne Dateien 🧪) |
+| 16 | **Update und Dienste** | Ein neues Modul, das ASR- oder TTS-Dienste importieren, kommt in `app/restart-map`. Ein neues Paket kommt mit Hash in `requirements-panel.lock`. Eine neue systemd-Unit bekommt `MemoryMax=` und `PrivateTmp=yes`. Eine Seite, die ins Panel gehört, kommt in die Static-Allowlist von `panel.py`. | 🧪 test_rauchtest, test_lock, test_hardening |
+| 17 | **Admin-Protokoll und Rückgängig** | Admin-Änderungen der Konfiguration laufen über `undo.py` (ohne Geheimnisse). Empfindliche Schalter kommen in `SENSITIVE`. | 📝 |
+| 18 | **Apps** | Die iPhone-App liest Namen und Rechte aus `/api/features` und `/api/admin/switches`, nie aus einer eigenen Liste. Android und Begleiter bei Bedarf nachziehen. | 🧪 test_features.test_swift_keeps_no_list |
+| 19 | **Tests** | Für jede Schutzregel ein Selbsttest. Ein Browser-Test für jede neue Seite (320, 390 und 1280 px). Ein Prüfpunkt unten in `pruefung/praxistest-tars-2.md` im Projektordner (A = Admin, P = Profil). | 📝 (Praxistest), siehe Teil 9 |
+| 20 | **Doku** | Eine Zeile in CHANGELOG und README (de und en), Details in `docs/de` und `docs/en`. Neue allgemeine Regeln kommen in diese Richtlinie. | 🧪 test_richtlinie (Versions, Guideline), test_changelog |
+| 21 | **Sicherheit nach Stand der Technik** | Die Änderung wird gegen den Teil „Stand der Technik“ der Sicherheits-Checkliste geprüft (Kryptografie, Anmeldung, Header, Lieferkette, LLM-Risiken). | 📝 |
+
+**Kommt mit laufenden Umsetzungen dazu** (gilt, sobald die Version auf main ist; der Thread ergänzt dann diese Tabelle und den Test):
+
+| Bereich | Was dann zu tun ist | Thread |
+|---|---|---|
+| **Voraussetzungen** | Was eine Funktion braucht, steht als Kette in `features.py`; Einschalten bietet die Kette mit an, Ausschalten sagt, was mit ausgeht. | „Dokumente und Präsentationen erstellen“ |
+| **Einstellungs-Assistent** | Jede neue Einstellung bekommt ihre Einordnung im Katalog (A–C, P; D nie), damit der Assistent sie vorschlagen oder sicher auslassen kann. | „Einstellungen mit dem Sprachmodell optimieren“ |
+| **Eigener Speicher** | Neue Daten werden eingeordnet: bleibt immer lokal (Schlüssel, Logins, Einstellungen, Stimmabdruck) oder darf verschlüsselt kopiert bzw. ausgelagert werden. Lokal zuerst, Abgleich im Hintergrund über den Wächter. | „Eigenen Speicher einbinden“ |
+| **Hinweise ohne Weg** | Jeder Hinweis oben auf den Admin-Seiten hat ein Ziel und einen Knopf „Ansehen“. | „Direkte Links in Hinweisen“ |
+| **Statische Dateien** | Jede statische Route und jede öffentliche Datei antwortet; neue Kurzwege geben den Request weiter. | gilt seit V01.0.442, 🧪 test_statische_routen |
+| **Hintergrundmodelle** | Die Anzeige sagt „arbeitet“ nur, solange wirklich gerechnet wird, sonst „Standby“; Mitnutzen verlängert keine Laufzeit. | „Bedeutungssuche bleibt an“ |
+
+**Geplant, noch nicht freigegeben** (keine Regel): Lade- und Fehlerzustand pro Kasten mit Zeitlimit (Plan `seiten-laden.md`), Sync-Regeln für Verlauf auf allen Geräten, Rückfrage vor GitHub-Meldungen (Plan `frage-vor-meldung.md`).
+
+---
+
+## 2. Sicherheit
+
+Die vollständige Liste ist die **[Sicherheits-Checkliste](sicherheits-checkliste.md)** (etwa 45 Punkte plus „Stand der Technik“). Sie wird vor jedem Commit durchgegangen, und die Antwort nennt die berührten Punkte (PA, C, M [[secure-coding-rules]]). Jede Änderung wird zusätzlich gegen den aktuellen Stand der Technik geprüft (Dominik 2026-10-12); was dort als „noch nicht erfüllt“ steht, wird beim nächsten Berühren der Stelle nachgezogen.
+
+### 2.1 Zugang
+- Für jeden Endpunkt ist festgelegt, wer darf: Gast, Profil im Browser, Geräteschlüssel oder Admin. (C; 🧪 test_scanner)
+- Für folgende Dinge braucht es eine Browser-Anmeldung und einen frischen Code (`browser_profile` + `confirm_code`), nie den Geräteschlüssel: Geheimnisse, Adressen, die ein Token bekommen, Codewort, Push-Ziele und Mail-Konten. (C)
+  - Einzige Ausnahme: der iPhone-App-Schlüssel mit dem Bereichsschalter (`secret_profile`).
+- „Frisch“ heißt: richtiger Code derselben Anmeldung in den letzten 10 Minuten.
+  - Wirklich jedes Mal gefragt wird bei `*_fresh` bzw. `fresh=True`. Das sind Passwort, zweiter Schritt, Rollen, Sicherungen, Codewort, Admin-Modus und Spark-Update aus der App.
+  - Ein Passkey zählt wie ein Code. Code-Abfragen laufen deshalb immer über `confirm_code`, nie über ein eigenes `mfa.verify`.
+  - (C; 🧪 test_stufen, test_zweiter_schritt, test_passkey)
+- Im Browser immer `api()` bzw. `apiTry()` verwenden, nie ein rohes `fetch` an Code-Endpunkte. In der iPhone-App immer `SparkAPI.confirmed`. (C)
+- Ändert sich eine Adresse, muss das Token neu eingegeben werden. Zustandsänderungen nie per GET. Schlüssel werden mit `hmac.compare_digest` verglichen. (C)
+- Gäste bekommen keine persönlichen Daten, keine Aktionen und keine Fehlertexte, nur Fehlercodes. (C, PA)
+- **Geteilte Lautsprecher:** Der Geräteschlüssel allein reicht nicht.
+  - Persönliches gibt es nur, wenn die Inhaberstimme in derselben Aufnahme sicher erkannt ist.
+  - Wessen Stimme es war, setzt nur das Panel (`request.scope`).
+  - Das ist eine feste Regel ohne Schalter. (C, M [[shared-speaker-voice-rule]])
+- Rechte prüft immer der Server. Ein ausgeblendeter Reiter heißt nicht „verboten“. (P handy-wie-app)
+- Rechteänderungen erreichen offene Seiten ohne Neuladen. Ein Gerät, dessen Funktion aus ist, bekommt 503 und behält seine Kopplung. (🧪 test_rechte_sofort)
+
+### 2.2 Größe und Last
+- Body-Limit gilt, bevor gelesen wird. Den Body erst nach der Anmeldung parsen. Uploads mit `read(limit+1)` lesen. (C; 🧪 test_scanner.test_uploads_read_with_a_limit, test_hardening)
+- Entpacktes (zip, docx, Sicherung) begrenzen. Audio nur mit 8000 bis 48000 Hz und mit `ffmpeg -t`. ffmpeg und ffprobe nur mit `-protocol_whitelist file,pipe`. (C; 🧪 test_lieferkette)
+- Downloads gestreamt und mit Byte-Grenze. Texte für TTS und Chat begrenzt, die letzte Nachricht auf etwa 4000 Zeichen. (C, P Prüfung)
+- Rate-Limit pro IP plus globale Semaphore für LLM, ASR und TTS (`guard.limit`, `guard.Slot`). Obergrenzen für Jobs, Werkzeugaufrufe, Suchen und Speicher-Einträge. (C)
+- Caches mit Ablauf und Maximalgröße. Schwere Arbeit läuft per `to_thread` mit Budget, nie im Event-Loop. (C; 🧪 test_tempo.OffTheLoop)
+- Hintergrundarbeit gibt der Sprache Vorrang: `vorrang.run`, `post`, `in_thread`, `quiet` und `hold`. Höchstens eine Hintergrund-Anfrage gleichzeitig ans Sprachmodell. Das ist eine feste Regel. (M [[vorrang-sprache-plan]]; 🧪 test_vorrang)
+
+### 2.3 Fremder Text (Prompt-Injection)
+- Als fremd gilt: Web, Seiten, Mail, Kalender, Kontakte, Pakete, Dokumente, HA-Zustände, Telegram, im Raum Mitgehörtes und alte Antworten, die daraus gebaut wurden. (C)
+- Fremder Text wird als Daten eingepackt (`chat.wrap_outside`). Danach sind Schalten, Gedächtnis, Erinnerungen, Vorschläge, Entwürfe und Hilfe-Karten gesperrt, **auch im nächsten Zug**. Fremder Text wird nie ins Gedächtnis gelernt. (C; 🧪 test_hardening Stage2, test_left_out, test_hilfe)
+- Es laufen nur angebotene Werkzeuge. Die Absicht (Weiche) und die Herkunft können nur **einschränken**, nie freigeben. Die Reihenfolge ist Rechte → Sperren → Absicht. (P funktionswahl, hilfe-besser)
+- Wer fragt, kommt aus der Anmeldung, nie aus dem Text. (P vorrang-personen)
+- Inhalte mit ungeprüftem Absender werden nie als „von DHL“ ausgegeben. (C)
+
+### 2.4 Bestätigen und Handeln
+- Pro Profil gibt es genau einen offenen Vorschlag. Er gilt nur für dasselbe Gerät, ein schlichtes „Ja“ und 15 Minuten. (C; 🧪 test_hardening)
+- Home Assistant läuft mit einer Allowlist von Domains. Mail wird nie gelöscht. (C)
+- Vorschlagskarten (Hilfe, Tipps, Einstellungs-Assistent) schalten nie selbst. Erst der Tipp der Person auf „Übernehmen“ schaltet, mit denselben Prüfungen wie das Formular. Sicherheit wird nie per Karte abgeschwächt, dafür gibt es nur „Zeig mir wo“. (P panel-hilfe, funktionen-entdecken, einstellungs-assistent)
+
+### 2.5 Verbindungen nach außen (SSRF)
+- Nur http(s), nur über `netguard`. Loopback, private und link-local Adressen sind gesperrt, außer der Admin erlaubt das Heimnetz. (C)
+- Die geprüfte IP wird festgehalten, jede Weiterleitung neu geprüft. Zugangsdaten gehen nur an denselben Origin. Nie ein Rückfall auf http, TLS-Prüfung ist an. (C)
+
+### 2.6 Injektion
+- Kein `shell=True`, `eval`, `exec`, `os.system`, `pickle` oder `yaml.load`. (C; 🧪 test_scanner.test_no_dangerous_calls)
+- HTML nur über `textContent` oder `esc()` und `data-`-Attribute. Strenge CSP `script-src 'self'`: kein Inline-Skript, keine `on…=`-Handler, Knöpfe über `data-on` bzw. `onAttr`. (C, D; 🧪 test_scanner.test_no_inline_script_for_the_strict_csp, test_csp_is_strict, test_hardening)
+  - ⚠ Die allgemeine Regel „Daten nie über innerHTML“ ist nur für einzelne Dateien getestet.
+- Konfigurationswerte werden beim Speichern, beim Wiederherstellen und in `install.sh` gleich geprüft. IMAP-Werte nur als druckbares ASCII. (C)
+
+### 2.7 Geheimnisse und Logs
+- Geheimnisse liegen nur im vault und werden nie zurückgegeben. Nie in Logs oder Fehlertexten, nie `str(e)` mit Token. (C, PA)
+- Passwörter, Codes, PINs und Schlüssel werden **nie gesprochen** (`textnorm.hide_secrets`). Das ist eine feste Regel ohne Schalter. (M [[secrets-never-spoken]]; 🧪 test_units.Secrets)
+- Codewörter gehen nie ans Modell, nie in den Verlauf, die Diagnose oder das Journal. (C)
+- Passwörter und Schlüssel werden nur ins Formular getippt, nie in den Chat. (P funktionen-entdecken)
+
+### 2.8 root-Grenze, Update, Lieferkette
+- root folgt keinen Symlinks in Ordnern von `speech`. Schreiben nur über `put_file` bzw. `as_svc`. (C; 🧪 test_hardening)
+- Pakete mit fester Version und Hash (`--require-hashes`). Nichts aus der Konfiguration landet ungeprüft in einem root-Skript. (C; 🧪 test_lock)
+- Sicherheitsheader auf jeder Antwort (X-Frame-Options, nosniff, Referrer-Policy, CSP, Permissions-Policy). (🧪 test_bedienung)
+- Rücksprung nur auf die gemerkte vorige Version. Unterschriften scheitern geschlossen. (🧪 test_hardening, test_lieferkette)
+
+---
+
+## 3. Funktionen, Schalter, Rechte
+
+- **Standardmäßig aus:** Admin-Schalter global plus Schalter pro Profil, nie für Gäste. (PA; 🧪 test_features und Aus-Tests pro Funktion)
+- **Ausnahmen:** Feste Schutzregeln haben gar keinen Schalter, wenn Dominik „nie“ oder „immer“ gesagt hat. Das sind Geheimnisse nie sprechen, Vorrang für Sprache und die Inhaberstimme am Lautsprecher. (M, D)
+- **An ausgeliefert** werden nur reine Schutz- und Stabilitätsfunktionen und die Grundfunktionen von Anfang an. Jede steht mit Grund in `features.DEFAULT_ON` (Dominik 2026-10-12). Ein neuer Wert `true` in `config.default.json` ohne Eintrag dort ist rot. (🧪 test_richtlinie.DefaultOn)
+- **Ein Register:** Jede Funktion steht genau einmal in `features.py`. Gespeicherte Schlüssel werden nie umbenannt, das Register übersetzt. Werte liest man nur über `profiles.effective(uid)`. Die Reihenfolge ist Admin-Vorgabe, dann eigene Werte, dann Gerät; Gerätewerte gibt es nur für Ortsabhängiges. (D, P vereinheitlichen; 🧪 test_features)
+- **Gesperrt heißt sichtbar:** Gesperrte Zeilen werden grau mit Grund gezeigt („Vom Admin ausgeschaltet“), nicht versteckt. Unter Ich stehen sie gesammelt in einem zugeklappten Kasten. Den Grund liefert `features.reason()`, nie das Modell. (D, P einstellungen-neu)
+- **Die Funktionen-Seite bleibt kurz.** Neue Unterfunktionen kommen als Unterschalter (`data-show`) unter ihren Hauptschalter. (M; 🧪 test_ui_browser Höhenbudget)
+- **Rollen:** Logs, Anfragen und Live sehen Haupt-Admin und Mit-Admin, der Verwalter nicht. (P anfrage-verfolgen, live-uebersicht)
+- Bauen nur nach Dominiks OK. Bei größeren Funktionen erst einen Plan unter `plaene/` mit Bildern, nummerierten Punkten und ★-Empfehlung. (PA, M)
+
+---
+
+## 4. Logging und Diagnose
+
+- Alle Dienste schreiben ins Journal-Namespace `speech-spark` (500 MB, 14 Tage). Ständige Statusabfragen und die Abrufe der Logs-Seite werden nicht geloggt. (D)
+- **Format:** `bereich: was | Grund | Zahlen`. Der Bereich ist ein festes Wort vor dem Doppelpunkt. Bereiche, die im Panel filterbar sein sollen, stehen in `logfilter.AREAS`. (D, P logs-darstellung; 📝)
+- **Nur feste Wörter, Zahlen und Entscheidungen.** Nie Fragetext, Antworttext, Werkzeug-Argumente, Ergebnisse, Geheimnisse oder Fehlertexte fremder Server. (P anfrage-verfolgen, M; 🧪 test_tracelog, test_hintergrund, test_logfilter)
+- **Profilnamen** erscheinen in Journal, Anfragen und Live nur mit Zustimmung des Profils (`trace_name`, `live_names`). Im Journal steht ein Profil nur als `profiles.log_name(prof)`: der Name mit Zustimmung, sonst „Profil“ und das Ende der Kennung. Das Admin-Protokoll (`guard.log`) nennt weiter, wer etwas geändert hat. (Dominik 2026-10-12; 🧪 test_richtlinie.JournalNames)
+- **Stufen:** Rot und gelb werden über feste Wortlisten bestimmt (`logfilter.ERR`, `WARN`), bei Webserver-Zeilen nur über den Statuscode. Erwartbare Störungen (Dienst kurz weg, Rate-Limit) sind Warnungen mit „retry in …“, keine Fehler. (D; 🧪 test_logfilter)
+- **Ausführliche Diagnose** ist pro Bereich nur zeitlich begrenzt an (15 min, 1 h oder 4 h, nach einem Neustart aus) und schreibt nur `… detail …`-Zeilen mit Zahlen. (D)
+- **Keine Logflut:** Eine wiederholte Ablehnung wird einmal geloggt, mit dem Zeitpunkt des nächsten Versuchs. (🧪 test_schonend.QuieterLogs)
+- **Anfrage-Verlauf** (Logs → Anfragen): eine `anfrage:`-Zeile pro Anfrage, Schritte über `tracelog`, höchstens 48 h bzw. 500 Anfragen, nicht in der Sicherung. (M [[anfrage-verfolgen-plan]])
+- **Für Dominik:** Logs kommen über Zustand → Logs → Diagnose, „Kopieren für Thread“, bzw. über Logs → Anfragen, nicht über Konsolenbefehle. (M)
+- **Nach außen** (GitHub-Meldungen) gilt eine Erlaubnisliste statt einer Sperrliste. Ersetzt wird durch `[PERSON-n]`, `[IP]` usw. Bei einem Leck wird nicht gesendet. (P probleme-melden)
+- Fehler-Fingerabdrücke bestehen aus Art, Funktion und Fehlerart, nie aus Wörtern. (P frage-vor-meldung)
+
+---
+
+## 5. Live-Übersicht und Monitoring
+
+- **Regel (PA, Dominik 2026-10-10):** Alles, was sich darstellen lässt, steht unter Zustand → Live und auf dem Monitor `/live`. Das gilt neu und rückwirkend, **im selben Commit wie die Funktion** (Dominik 2026-10-12). Lücken stehen in `live-uebersicht/was-fehlt.md`. (M [[live-monitor-aktuell-halten]]; 🧪 test_live)
+- **Nur Art, Anzahl und Status, nie Inhalte.** Externe Ziele nur als Dienst- oder Hostname. Namen nur über `live._who` mit Zustimmung. Nie Passwort- oder Code-Werte. (PA, D; 🧪 test_live.test_request_shows_without_any_text)
+- **Nur Eingerichtetes** wird gezeigt (`live.unset`). Proxy-Erkennung zählt nur fürs Bild, nie für Entscheidungen. (M)
+- `live.py` hält alles nur im Arbeitsspeicher. Die Admin-Seite fragt jede Sekunde ab. Der Monitor ist nur im Heimnetz, mit Kopplungscode. (M)
+  - Der alte Plan nannte SSE; gebaut ist die Abfrage.
+- **Dienst-Zustand:** Ein Dienst gilt als weg nach 3 Fehlproben und 3 Minuten, als zurück nach 2 guten Proben. Höchstens eine Meldung je 30 Minuten. Fällt das Internet aus, kommt eine Sammelmeldung. Meldungen bestehen aus festen Sätzen. Gezeigt wird das als Banner `health.alerts`, als Zustand-Karte und als Live-Knoten. (M [[dienst-ausfall-plan]])
+- **Hintergrundarbeit** meldet ihren Stand mit festen Gründen (sprache, nacht, tageslimit, pause, …). (P hintergrund-status)
+
+---
+
+## 6. Oberfläche: Layout, Bausteine, Design
+
+- **Design „Klar“** (2026-10-08): Seitenleiste am Rechner, Leiste unten am Handy. Die App-Ansicht beginnt unter 760 px. (M [[panel-design-directions]])
+- **Menü** (Stand 2026-10-11): Assistent · Ich | Zustand · Funktionen · Personen und Geräte · Einstellungen, dazu Strg/⌘ K. Die Einstellungsgruppen sind Assistent, Sprache und Spark. (D; 🧪 test_guides.MenuStructure)
+- **Seitengerüst** (`docs/de/technik.md` → Bausteine), nur diese Teile verwenden:
+  - **Kopf:** `h2.pt` mit `.pintro` (ein Satz). Abschnitte sind `h3.sec`, die `seite.js` in Kästen `.sgrp` legt.
+  - **Zeile:** `setrow` mit Name und einem Satz links, genau ein Bedienelement rechts. Schalter `.tgl`, nie `label.chk`. Für 2 bis 4 Möglichkeiten Segmentknöpfe.
+  - **Hilfetext:** höchstens ein Satz und ≤ 140 Zeichen sichtbar, der Rest hinter „Mehr“. „Erweitert“ steht immer in `details.adv`.
+  - **Speichern:** eine schwebende Speichern-Leiste pro Seite. Sofort-Aktionen stehen in einem eigenen Abschnitt „wirkt sofort“.
+  - **Listen:** Muster „Liste mit Detailbereich“ (`ld-`), am Handy wird das Detail eine eigene Seite. Ich-Seiten nutzen `ichteile.js` (Unterreiter mit Zahl, Statuskarte, ⋯-Menü, 10 Zeilen + „Weitere zeigen“, Gefahrenzone) und **keine inneren Scroll-Kästen**.
+  - (D, P einstellungen-neu, ich-aufraeumen; 🧪 test_guides.BuildingBlocks, test_einstellungen_neu, test_ich_aufraeumen)
+- **Breite:** Kein seitliches Scrollen bei 320, 390 und 1280 px. Kein Element ragt am Handy über den Rand. (🧪 test_ui_browser, test_ich_aufraeumen)
+- **Höhe:** Der Assistent füllt das Fenster (nur der Verlauf scrollt). Höhenbudgets gelten für die Funktionen-Seite (< 2450 px bei 1280) und Personen und Geräte (< 1500 px). (🧪 test_ui_browser, test_einstellungen_neu)
+- **Handy:** Tippziele mindestens 44 px, Eingabefelder 16 px, Safe-Area beachten. Das Gesicht bzw. „Frag Spark“ liegt nie über Bedienelementen. (P handy-wie-app; teils 🧪)
+- **Statusfarben** grün, gelb und rot. „Braucht dich“ hat immer einen Knopf dorthin. Bernstein (`--c4`) gibt es im Live-Bild nur für Internet. (P design-klar, M)
+- **Browser-Cache:** HTML ist `no-store`, CSS und JS werden mit `?v=VERSION` geladen, `/api` ist `no-store`. (🧪 test_panel.Page)
+- **Alle Panel-Skripte teilen einen globalen Namensraum.** Neue Funktionsnamen gegen alle JS-Dateien prüfen. (M [[dienst-ausfall-plan]]; 📝)
+- **Begriffe:** „Ich“ (nicht „Mein Profil“), „Zustand“ (nicht Übersicht), „Personen und Geräte“ (nicht Profile), „Betrieb“ (nicht System), „Spark“, „Admin-Rechte“ (Rollen meint die Sprech-Rollen). Alte Seitennamen sind verboten. (P ordnung-und-darstellung, bedienung-gesamt; 🧪 test_bedienung_hilfe.Names, test_guides)
+
+---
+
+## 7. Texte, Hinweise, Hilfe, Englisch
+
+- **Sprung-Links (PA, 2026-10-12):** Jede Meldung, die auf eine Stelle verweist, hat einen direkten Link dorthin, soweit die Person die Stelle sehen darf.
+  - Der Weg beginnt mit einem Menünamen (Einstellungen, Funktionen, Zustand, Personen und Geräte, Ich). Kleingeschriebene Schritte sind Aktionen.
+  - Das gilt für feste Texte, Server-Meldungen und Antworten des Assistenten.
+  - (M [[sprung-links]]; 🧪 test_sprunglinks)
+  - **Überall** (Dominik 2026-10-12): Auch iPhone- und Android-App, Begleiter, Telegram und Push-Mitteilungen zeigen Wege als Link (`…/#weg=<Weg>` öffnet die Stelle im Panel). Wird eine Seite, ein Reiter oder eine Zeile umbenannt, werden alle Wege im selben Commit mitgezogen, auch in Doku, Hilfe und Apps. ⚠ Die Apps und Telegram baut der Thread „Direkte Links in Hinweisen“ gerade nach.
+  - Hinweise ohne Weg (oben auf den Admin-Seiten, Zustand-Karten) bekommen ein Sprungziel dorthin, wo man handeln oder nachsehen kann.
+- **Englisch:** Jeder sichtbare Text in `index.html` steht in `i18n.js`, auch `title` und `aria-label`. Neue Texte aus JS über `t()` bzw. `tt(de,en)`. Server-Sätze gibt es auf Deutsch und Englisch. Die englische Doku nutzt englische Menünamen. (D; 🧪 test_bedienung_hilfe.English/Names, test_guides)
+- **Fehler als Sätze:** `errSay`/`errRaw` aus `base.js`. Keine Pfade, kein `f"… failed: {e}"`, keine rohen englischen Ausnahmen. Gäste sehen nie interne Adressen. (D; 🧪 test_bedienung_hilfe.PlainErrors)
+- **„?“** gibt es nur, wo die Hilfe die Zeile kennt. Jede Einstellungszeile mit Feld hat einen `sw:`-Eintrag. (🧪 test_bedienung_hilfe.QuestionMarks)
+- **Anleitungen:** Jeder Schalter hat eine Anleitung in `guides.js` mit 7 Abschnitten. (🧪 test_guides)
+- **Hilfe-Antworten:** höchstens 3 Treffer und etwa 1200 Zeichen. Wege nur aus der festen Liste. Die Herkunft kommt aus dem Panel, nie aus der Frage. (P hilfe-besser; 🧪 test_hilfe_quality)
+- **Tipps sparsam:** höchstens 1 pro Gespräch und 3 pro Woche. „Nicht mehr zeigen“ gilt für immer. Keine Tipps nach fremdem Text, im Notaus oder für Gäste. (P funktionen-entdecken)
+- **Mitteilungen** (Push): pro Version nur einmal, nie nachts, nicht in der Ruhezeit des Profils. Systemmeldungen sind feste Sätze ohne Namen. (P iphone-update, firmware-verteilen, home-assistant-meldungen)
+- **Gesprochene Brückensätze** (`ack.PHRASES`) werden laufend erweitert, mit viel Abwechslung: mindestens 5 pro Gruppe, nie einer der letzten 6. (M [[sofortige-rueckmeldung]], Dominik 2026-10-11/12; 🧪 test_ack)
+- Antworten nennen die Quelle kurz („Laut deinem Archiv …“). Links werden nie vorgelesen. (P erst-lokal)
+
+---
+
+## 8. Sprachmodell, Weiche, Werkzeuge
+
+- **Die Weiche** liest nur die eigene letzte Nachricht. Sie schränkt nur ein und schreibt pro Zug eine Zeile `weiche:`. (M [[funktionswahl-plan]])
+- **Fehlzuordnungen:** Regel in `intent.py` korrigieren und den Satz in `intent_bench.py` aufnehmen. (M; 🧪 test_intent)
+- **Modellfehler im Panel beheben** (NEED_TOOLS, Antwortprüfung), nicht nur im Prompt. Dazu immer einen Selbsttest. (M [[answer-check-and-fixes]])
+- **Datumsangaben** in Qualitätsfällen relativ zu heute, nie fest. (M)
+- **Denktext:** Jeder neue LLM-Aufruf, der mit Denken laufen kann, nimmt `common.no_think`, nicht die eigene `<think>`-Regex. (M [[think-tag-doppelt]])
+- **Erst lokal, dann extern:** Dokumente, Kiwix, Verlauf. Daten bleiben möglichst im LAN. Kein zweites Modell nur für eine Teilfunktion (GPU-Speicher). Dokumente erstellen geht offline. (P erst-lokal, hilfe-besser, praesentationen-professionell)
+- **Nie ändern:** dgx-spark-qwen38 auf den Ports 30000–30099. Eigene Ports liegen bei 31001–31443. (M)
+
+---
+
+## 9. Tests
+
+- **Für jede Schutzregel ein Selbsttest.** Für jeden Befund einer Prüfung ein Regressionstest. (PA, C; 🧪 test_pruefung, test_hardening)
+- **Nur nachgebaute Dienste:** Kein Test spricht echte Modelle, Home Assistant, Mail oder Kalender an (`tests/helpers.py`). Den echten Test auf tars macht Dominik. (D)
+- **Keine Uhrzeit-Abhängigkeit:** Zeiten werden übergeben. tars testet in der Zeitzone Europe/Berlin, GitHub in UTC. (PA, M)
+  - ⚠ Das prüft kein Test allgemein.
+- **Nur-`app/`-Kopie:** Tests, die Dateien außerhalb von `app/` lesen (`install.sh`, `update.sh`, `.github`, `docs`, `ios`), rufen `skipTest` auf, wenn die Datei fehlt. Neue Tests deshalb einmal so laufen lassen: `cp -r app /tmp/x/ && cd /tmp/x/app && python selftest.py discover -s tests`. (M [[selftest-app-only]])
+- **Browser-Tests** warten auf einen Zustand, nie auf eine feste Zeit. Kontexte mit `bypass_csp=True`. Breiten 320, 390 und 1280 px. (M)
+- **Tests schreiben keine unbekannten Konfig-Schlüssel**, schreiben die Konfiguration atomar (`helpers.write_config`) und schalten in `tearDown` Schleifen ab, die sie eingeschaltet haben. (M)
+- **Ein zweiter Versuch** (Dominik 2026-10-11): Ein roter Test bekommt genau einen zweiten Versuch (`app/selftest.py`).
+  - Zweimal rot heißt rot. Bei mehr als 5 Fehlern gibt es keinen zweiten Versuch.
+  - Grün erst im zweiten Versuch gibt eine sichtbare WARNUNG, und der Test muss trotzdem repariert werden.
+  - (🧪 test_selftest_runner)
+- **Nie** einen Test überspringen, abschwächen oder stilllegen, um grün zu werden. (PA, M)
+- **Rauchtest** (`test_rauchtest`) bleibt schnell. Er ist der einzige Test, den tars bei bereits geprüften Versionen ausführt. (M [[schonende-updates]])
+- **Qualitätstest** (echtes Modell): Ein roter Fall wird zuerst darauf geprüft, ob die Regex zu streng ist, und erst dann als Modellfehler behandelt. (M)
+- **Praxistest:** Jede Funktion bekommt einen Prüfpunkt unten in `pruefung/praxistest-tars-2.md`. (M; 📝)
+
+---
+
+## 10. Repo, Push-Ablauf, CI, Releases
+
+- **Direkt auf main.** Vor jedem Commit `git pull`, Patch-Nummer in `app/VERSION` erhöhen (V01.0.NNN). (PA)
+- **Push-Reihenfolge (PA, 2026-10-11):**
+  1. Läuft oder wartet auf GitHub ein Lauf „Tests“ für main, warten, bis er fertig ist.
+  2. Dann `git pull`, **nächste freie Versionsnummer zum Push-Zeitpunkt** nehmen (nie vorab reservieren), Selbsttests laufen lassen.
+  3. Erst dann pushen. Nie in einen laufenden Testlauf hineinpushen.
+  4. Ist der letzte Lauf rot, zuerst klären: Repariert mein Push ihn? Arbeitet schon ein anderer Thread daran?
+- **PUSH-STOPP:** Sagt der Koordinator „PUSH-STOPP“, wird nicht gepusht, bis er die Sperre ausdrücklich aufhebt. (M)
+- **Commit-Nachricht:** `V01.0.NNN Kurzbeschreibung`. Die CHANGELOG-Zeilen entstehen daraus. Ein einfaches „merge main“ als Nachricht vermeiden. (📝)
+- **Workflows** (repo-absichern, 2026-10-11):
+  - Jedes `uses:` ist auf einen 40-stelligen SHA mit `# vN` gepinnt. `contents: write` nur auf Job-Ebene. `persist-credentials: false`.
+  - Signierschlüssel und Releases nur mit `environment: release`. Kein `pull_request_target`.
+  - (🧪 test_workflows)
+- **`cancel-in-progress: false`** in `tests.yml` nie wieder auf true setzen. (M [[tests-lauf-nicht-abbrechen]])
+- **Update-Schranke:** tars spielt nur den neuesten main-Commit mit grünem „Tests“-Lauf ein. (🧪 test_hardening)
+- **Releases:** Alte GitHub-Releases immer löschen, nur das neueste pro Reihe behalten. Ein neuer Release-Workflow kommt in die `workflow_run`-Liste von `releases-aufraeumen.yml`. (PA, M [[releases-aufraeumen]]; 🧪 test_releases_aufraeumen)
+- **Ubuntu 26:** GitHub `ubuntu-latest` wechselt ab 2026-10-19. GitHub nutzt Python 3.11. (M)
+
+---
+
+## 11. Dokumentation und Versionen
+
+- **README.md und README.de.md bleiben kurz** (etwa 90 Zeilen): Installation, „Letzte Änderungen“ mit genau 10 Zeilen, Schaubild, Links in `docs/`. (PA, M [[readme-layout]])
+- **Pro Version** eine Zeile oben in `CHANGELOG.md` im Format `- **V01.0.NNN** · YYYY-MM-DD · Text` (sonst fehlt sie in „Was ist neu“) und in beiden READMEs, die älteste Zeile fällt raus. (PA; 🧪 test_changelog prüft nur das Format)
+  - VERSION, die neueste CHANGELOG-Zeile und die erste Zeile beider READMEs stimmen überein, jede README hat genau 10 Zeilen. (🧪 test_richtlinie.Versions)
+- **Details** stehen nur in `docs/de/*.md` und `docs/en/*.md`, beide Sprachen gleich gegliedert. Danach `hilfe.py --docs` ausführen. (PA; 🧪 test_hilfe.test_docs_copy_is_current)
+- **Pläne** liegen unter `/mnt/project-files/plaene/` mit „Stand“ (Datum, Version), ★ für die Empfehlung und „Fragen an Dominik“. Bilder kommen aus dem echten Panel bzw. aus Mockups. (P)
+
+---
+
+## 12. Betrieb, Update, Ressourcen
+
+- Etwa 10 GiB freier Speicher auf tars. DGX OS beendet unter etwa 8 GiB. Neue Dienste brauchen `MemoryMax=`. (M, D; 🧪 test_hardening)
+- Ein Update unterbricht etwa 8 Sekunden. Nächtliche Arbeit läuft nicht während eines Updates (`update.update_running()`). Geräte-Runden laufen ab 05:15. (M)
+- Selbsttest auf tars mit `nice 19` und `ionice`. Prioritäten-Code mit `nice -n 19` testen. (M)
+- Die Panel-venv entsteht aus dem Lock nur, wenn venv-panel neu ist. Eine neue Bibliothek braucht deshalb einen Installationsweg für bestehende Installationen. (M)
+
+---
+
+## 13. Zusammenarbeit (Threads und Dominik)
+
+- Antworten auf Deutsch, kurze nummerierte Vorschläge mit markierter Empfehlung. Bei größeren Funktionen erst Plan, dann bauen. (PA)
+- Im Ergebnis steht, welche Punkte der Sicherheits-Checkliste und der Pflichtliste (Teil 1) berührt wurden. Bei neuen Funktionen auch, was in Live ergänzt wurde. (PA)
+- Eine neue allgemeine Regel kommt im selben Commit in diese Richtlinie (de und en) und, wenn möglich, in einen Selbsttest.
+- Gibt es eine neue Version, zuerst in Dominiks Trace prüfen, welche Version tars schon hat. (M)
+- Berühren zwei Threads dieselbe Datei, sagt der Koordinator es beiden. (M)
+
+---
+
+## 14. Was Selbsttests schon erzwingen (Übersicht)
+
+| Test | Erzwingt |
+|---|---|
+| test_scanner | keine gefährlichen Aufrufe, Login an jeder Route (sonst OPEN mit Grund), Upload-Limits, strenge CSP, Werkzeuge sortiert |
+| test_hardening | Body vor dem Lesen begrenzt, root-Schreibwege, Unit-Limits, nur grüne Versionen, Fremdtext-Sperren |
+| test_stufen | jeder Code-Endpunkt mit Stufe in `stufen.LIST` |
+| test_features | ein Register, Profilschalter starten aus, keine eigene Prüfung, ein Standardwert |
+| test_live | jedes Werkzeug, Ziel, jeder Client und jede guard-Art im Live-Bild, keine Inhalte |
+| test_ack | jede Weiche-Gruppe hat ≥ 5 Brückensätze |
+| test_intent, test_weiche | Weiche-Regeln und BENCH-Sätze |
+| test_tracelog, test_logfilter | Logs und Anfragen nur feste Wörter und Zahlen, Filter sicher |
+| test_sprunglinks | jeder Weg beginnt mit einem Menünamen und wird gefunden |
+| test_bedienung_hilfe | Englisch, Fehler als Sätze, „?“ mit Hilfe, alte Namen verboten |
+| test_guides | Seitenbausteine, Menü, Anleitung pro Schalter, ≤ 140 Zeichen |
+| test_hilfe, test_hilfe_quality | Hilfe-Index aktuell, ≥ 60 Alltagsfragen richtig |
+| test_ui_browser, test_ich_aufraeumen, test_einstellungen_neu | keine Breite über den Rand (320/390/1280), Höhenbudgets, keine inneren Scroll-Kästen |
+| test_workflows, test_lock, test_lieferkette | gepinnte Actions, Rechte, Signierumgebung, Paket-Hashes, ffmpeg-Whitelist |
+| test_selftest_runner | ein zweiter Versuch, > 5 kein Versuch, Warnung |
+| test_rauchtest | jedes Modul lädt, `restart-map` vollständig |
+| test_changelog | CHANGELOG-Format |
+| test_releases_aufraeumen | nur neuestes Release pro Reihe |
+| test_richtlinie | an ausgelieferte Werte mit Grund, Journal ohne Profilnamen, VERSION/CHANGELOG/README im Einklang, Richtlinie de/en vorhanden und ihre Testnamen gültig |
+
+**Nur Absprache (kein Test):**
+- Push-Reihenfolge
+- Uhrzeit-Unabhängigkeit allgemein
+- Log-Präfix
+- `STATE_FILES` für neue Dateien
+- `undo.py` / `SENSITIVE`
+- Praxistest-Punkt
+- „Daten nie über innerHTML“ (allgemein)
+- globale JS-Namen
+- Commit-Nachricht
+- Prüfung gegen den Stand der Technik
+
+---
+
+## 15. Veraltet und noch offen
+
+**Veraltet (gilt nicht mehr):**
+- Feature-Pause vom 2026-10-09: Sie ist aufgehoben. Es gilt „bauen nach Dominiks ausdrücklichem OK“.
+- Menü-Stände vor dem 11.10. („Übersicht“, „Einbinden“, die alte Profilseite, Handy-Leiste „Assistent · Ich · Zustand · Verwalten“): Es gilt Teil 6.
+- Funktionen-Seite als „Wer darf was“-Tabelle bzw. Kurzzeilen: Es gilt Liste plus Detail.
+- Live-Übersicht mit SSE bzw. „Blaupause“: gebaut sind 1-s-Abfrage und „1 Fluss“.
+- Hilfe mit 3–5 Treffern: Es gelten höchstens 3.
+
+**Geplant, aber nicht gebaut (keine Regel, bis gebaut):**
+- zentrale Seitenliste `js/pages.js`
+- Trace-ID vor jeder Logzeile (`[a7f3]`)
+- Übersetzung über Schlüssel statt über Textvergleich
+- gemeinsames `jsonstore` bzw. `llm.complete()` (Prüfung Paket 7)
+
+**Offen (Live-Übersicht, `live-uebersicht/was-fehlt.md`):** GitHub-Meldungen als eigener Knoten, Einzelschritte im Morgenüberblick, Anzahl der Begleiter, eigenes Gerät „Schreibhilfe“, reMarkable-Schritte.
+
+**Offen (Sicherheit):** siehe „Stand der Technik → noch nicht erfüllt“ in der [Sicherheits-Checkliste](sicherheits-checkliste.md).
+
+---
+
+## 16. Beschlüsse vom 12.10.2026
+
+1. Standardmäßig an nur mit Grund in `features.DEFAULT_ON`, geprüft durch `test_richtlinie`.
+2. Diese Richtlinie liegt in `docs/de/richtlinien.md` und `docs/en/guidelines.md`; `CLAUDE.md` im Repo fasst sie zusammen; README und Projektanweisungen verweisen darauf.
+3. Neuer Selbsttest für VERSION, CHANGELOG und README.
+4. Die Sicherheits-Checkliste liegt im Repo (`docs/de/sicherheits-checkliste.md`, `docs/en/security-checklist.md`) und hat einen Teil „Stand der Technik“, gegen den jede Änderung geprüft wird.
+5. Sprung-Links gelten überall und werden bei jeder Änderung mitgezogen.
+6. Journalzeilen nennen Profile nur mit deren Zustimmung.

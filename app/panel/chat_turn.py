@@ -349,7 +349,7 @@ async def prepare(request):
     if tg:
         system = (system + "\n\n" + chat.TELEGRAM_HINT).strip()
     if ccfg.get("homeassistant", False):  # why the smart home tools are (not) offered, for the journal
-        print("homeassistant: turn for", who["name"] if who else "guest", "- tools",
+        print("homeassistant: turn for", profiles.log_name(who), "- tools",
               "offered" if ha else "NOT offered: " + (
                   "no profile signed in" if not who else "voice of another profile" if not own_browser
                   else "a picture is attached (no tools in this answer)" if pics

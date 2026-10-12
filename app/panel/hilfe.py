@@ -630,13 +630,17 @@ def js_rows():
     return out
 
 
+# rules for people who change the code (docs/de/richtlinien.md): no answer to a question about using the Spark
+DEV_DOCS = {"richtlinien.md", "guidelines.md", "sicherheits-checkliste.md", "security-checklist.md"}
+
+
 def build_docs(root=REPO_DOCS):
     """The paragraphs of docs/de and docs/en: [{lang, file, head, title, text}] (for hilfe_docs.json)."""
     out = []
     for lang in ("de", "en"):
         d = os.path.join(root, lang)
         for name in sorted(os.listdir(d)):
-            if not name.endswith(".md"):
+            if not name.endswith(".md") or name in DEV_DOCS:
                 continue
             text = _read(d, name)
             doc_title, head, code = name[:-3], "", False

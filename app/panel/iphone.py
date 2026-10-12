@@ -233,7 +233,7 @@ async def profile_pair(request: Request, prof=Depends(_on)):
     await confirm_code(request, prof["id"], prof["name"])   # a new way into the profile
     code = new_code(prof["id"])
     link = f"{SCHEME}://pair?" + urllib.parse.urlencode({"url": base, "code": code})
-    print("iphone: pairing link made for", prof["name"], flush=True)
+    print("iphone: pairing link made for", profiles.log_name(prof), flush=True)
     _live_mark("Eingang", "iPhone-App: Kopplungslink erstellt")
     return {"link": link, "qr": _qr(link), "minutes": CODE_SECONDS // 60}
 
@@ -243,7 +243,7 @@ def profile_remove(did: str, prof=Depends(browser_profile)):
     if not any(x["id"] == did for x in phones(prof["id"])):
         raise HTTPException(404, "no such iPhone")
     profiles.delete_device(did)
-    print("iphone: removed for", prof["name"], flush=True)
+    print("iphone: removed for", profiles.log_name(prof), flush=True)
     _live_mark("Eingang", "iPhone-App entfernt")
     return profile_get(prof)
 
@@ -282,7 +282,7 @@ async def app_pair(request: Request):
     if len(phones(uid)) >= MAX_PHONES:
         raise HTTPException(409, "Zu viele iPhones für dieses Profil.")
     token = profiles.add_device(_name(body.get("name")), uid, scope="app")
-    print("iphone: paired for", prof["name"], flush=True)
+    print("iphone: paired for", profiles.log_name(prof), flush=True)
     _live_mark("Eingang", "iPhone-App gekoppelt")
     return {"token": token, "profile": prof["name"], "version": app_version(), "language": _language()}
 
