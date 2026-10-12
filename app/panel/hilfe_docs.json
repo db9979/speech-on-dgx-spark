@@ -1413,7 +1413,7 @@
 "file": "Assistent und Oberfläche",
 "head": "Sprach-Chat",
 "title": "Werkzeugpflicht und Antwort-Prüfung (V01.0.117)",
-"text": "ennt (reasoning_content), sondern als Text bis zu einem einzelnen </think> (das öffnende <think> steht bei Qwen schon in der Anfrage), wird alles davor weder gezeigt noch gesprochen noch gespeichert; ein einzelnes </think> wird nie gezeigt (vorher kam die Antwort doppelt, mit </think> dazwischen)."
+"text": "ennt (reasoning_content), sondern als Text bis zu einem einzelnen </think> (das öffnende <think> steht bei Qwen schon in der Anfrage), wird alles davor weder gezeigt noch gesprochen noch gespeichert; ein einzelnes </think> wird nie gezeigt (vorher kam die Antwort doppelt, mit </think> dazwischen). Seit V01.0.455 kommt kein Satz einer Antwort zweimal: Schreibt das Modell die Antwort schon vor einem Werkzeug-Aufruf (auch einem, den es nur als Text schreibt) und nach dem Ergebnis noch einmal, zeigt die nächste Runde jeden Satz erst, wenn er fertig ist, und lässt schon gesagte Sätze weg, im Chat wie in der Stimme; unter Logs → Anfragen steht dann „Wiederholung weggelassen“ mit der Anzahl."
 },
 {
 "lang": "de",
@@ -4525,7 +4525,7 @@
 "file": "Assistant and panel",
 "head": "Voice chat",
 "title": "Required tools and answer check (V01.0.117)",
-"text": "<think> in the prompt), everything before it is never shown, spoken or kept; a lone </think> is never shown (before, the answer came twice with </think> between)."
+"text": "<think> in the prompt), everything before it is never shown, spoken or kept; a lone </think> is never shown (before, the answer came twice with </think> between). Since V01.0.455 no sentence of an answer comes twice: when the model writes the answer before a tool call (also one it only writes as text) and again after the result, the next round shows each sentence only once it is complete and leaves out sentences already said, in the chat and in the voice; Logs → Requests then show \"Repetition left out\" with the count."
 },
 {
 "lang": "en",

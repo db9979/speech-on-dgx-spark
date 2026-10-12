@@ -118,6 +118,29 @@ def fake_llm():
                 yield _sse({"choices": [{"delta": {}, "finish_reason": "stop"}]})
                 yield "data: [DONE]\n\n"
                 return
+            echo = next((str(m.get("content") or "") for m in b["messages"] if m["role"] == "user"
+                         and str(m.get("content") or "").startswith(("ECHO ", "ECHOTOOL "))), "")
+            if echo:
+                # Qwen answers before its tool call (ECHOTOOL: a real one, ECHO: one written as text) and, in the
+                # next round, writes the same answer again (Dominik 2026-10-12: answer twice in the iPhone app)
+                if last is b["messages"][-1] and last["role"] == "user" and c == echo:
+                    pieces = ["Draußen sind es ", "zwölf Grad. Es ", "bleibt trocken."]
+                    for piece in pieces:
+                        yield _sse({"choices": [{"delta": {"content": piece}, "finish_reason": None}]})
+                    if echo.startswith("ECHOTOOL ") and "reminder_list" in names:
+                        yield _sse({"choices": [{"delta": {"tool_calls": [{"index": 0, "id": "e1", "type": "function",
+                                    "function": {"name": "reminder_list", "arguments": "{}"}}]}, "finish_reason": None}]})
+                        yield _sse({"choices": [{"delta": {}, "finish_reason": "tool_calls"}]})
+                    else:
+                        yield _sse({"choices": [{"delta": {"content": "<tool_call>\n<function=x>"}, "finish_reason": None}]})
+                        yield _sse({"choices": [{"delta": {}, "finish_reason": "stop"}]})
+                    yield "data: [DONE]\n\n"
+                    return
+                for piece in ("Draußen sind es zwölf ", "Grad.\n\nEs bleibt", " trocken. Mehr weiß ", "ich nicht."):
+                    yield _sse({"choices": [{"delta": {"content": piece}, "finish_reason": None}]})
+                yield _sse({"choices": [{"delta": {}, "finish_reason": "stop"}]})
+                yield "data: [DONE]\n\n"
+                return
             if last["role"] == "user" and c.startswith("PAD "):  # Qwen: empty think block, blank lines around
                 for piece in ("<think>\n\n</think>", "\n\n", "\n", "Zeile eins.", "\n\n", "Zeile", " zwei.", "\n\n"):
                     yield _sse({"choices": [{"delta": {"content": piece}, "finish_reason": None}]})
@@ -205,6 +228,8 @@ def fake_tts():
         body = await req.json()
         TTS_SEEN.append({k: v for k, v in req.headers.items() if k.startswith("x-spark-")})   # priority for people
         del TTS_SEEN[:-20]
+        TTS_TEXT.append(str(body.get("input") or ""))
+        del TTS_TEXT[:-50]
         if TTS_FAIL:   # a speech service that is restarting (test_tempo.py)
             return Response(b'{"detail": "restarting"}', status_code=TTS_FAIL.pop(0), media_type="application/json")
         if not body.get("stream") and body.get("response_format") == "pcm":   # whole answer at once (Wyoming)
@@ -224,6 +249,7 @@ def fake_tts():
 
 TTS_VOICES = ["ryan", "serena"]
 TTS_SEEN = []   # the x-spark-* headers of the last speech requests
+TTS_TEXT = []   # the text of the last speech requests
 TTS_FAIL = []   # status codes the fake TTS answers next, one per request
 TODO = {"Brot": "needs_action"}
 HA_STATES = [

@@ -1201,6 +1201,30 @@ class AnswerCheck(unittest.TestCase):
         self.assertEqual(no_think("<think>x</think>\nAntwort."), "Antwort.")
         self.assertEqual(no_think(None), "")
 
+    def test_answer_never_twice(self):
+        # Dominik 2026-10-12: the iPhone app showed an answer twice in a row. Qwen writes the answer before a tool
+        # call (a real one, or one written as text) and the same answer again in the next round: each sentence is
+        # shown and spoken once, what is new comes after it, nothing is taken back
+        a = profile("Echo")
+        for q in ("ECHO Wie ist das Wetter?", "ECHOTOOL Wie ist das Wetter? Und meine Erinnerungen?"):
+            del helpers.TTS_TEXT[:]
+            evs = ask(a, q)
+            shown = answer(evs)
+            self.assertEqual(shown.count("zwölf Grad"), 1, shown)
+            self.assertEqual(shown.count("trocken"), 1, shown)
+            self.assertTrue(shown.endswith("Mehr weiß ich nicht."), shown)
+            self.assertNotIn("<", shown)
+            self.assertFalse(any(e["type"] in ("retract", "truncated") for e in evs), q)
+            spoken = " ".join(helpers.TTS_TEXT)
+            self.assertLessEqual(spoken.count("zwölf Grad"), 1, spoken)
+            self.assertLessEqual(spoken.count("trocken"), 1, spoken)
+            log = a.get("/api/profile/toollog").json()["items"][0]["calls"]
+            self.assertIn("Wiederholung weggelassen", [x["name"] for x in log], q)
+        # the words alone: no key for short pieces, a sentence counts without case and signs
+        from chat import said_key
+        self.assertEqual(said_key("Ja."), "")
+        self.assertEqual(said_key("Es bleibt  trocken!"), said_key("es bleibt trocken."))
+
     def test_chat_asks_again_and_holds_back(self):
         a = profile("Prüfer")
         helpers.set_config(answer_check=True, tool_temperature=0.1)
