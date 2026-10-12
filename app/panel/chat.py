@@ -2257,7 +2257,8 @@ async def _answer(request, turn):
                 except OSError as e:
                     print("anfrage:", type(e).__name__, flush=True)
                 # Fälle (faelle.py): fixed rules on the finished turn; the id for 👍/👎 when the profile may rate
-                rid = await asyncio.to_thread(faelle.turn_end, tr, who, turn.ask_text, trace["said"], outside)
+                rid = await asyncio.to_thread(faelle.turn_end, tr, who, turn.ask_text, trace["said"], outside,
+                                              None, bool(getattr(turn, "explain", None)))
                 if rid:
                     yield f"data: {json.dumps({'type': 'rate', 'id': rid})}\n\n"
             yield f"data: {json.dumps({'type': 'done', 'total': round(time.time() - t0, 3)})}\n\n"
@@ -2270,6 +2271,7 @@ async def _answer(request, turn):
                     tracelog.finish(tr)
                 except OSError as e:
                     print("anfrage:", type(e).__name__, flush=True)
+                faelle.aborted(tr, who, turn.ask_text)   # Einstellungs-Assistent: stopped after its first sound
             await c.aclose()
     return StreamingResponse(events(), media_type="text/event-stream",
                              headers={"Cache-Control": "no-cache", "X-Accel-Buffering": "no"})

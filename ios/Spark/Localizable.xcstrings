@@ -6670,6 +6670,156 @@
           }
         }
       }
+    },
+    "Danke!": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Thanks!"
+          }
+        }
+      }
+    },
+    "Danke, notiert.": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Thanks, noted."
+          }
+        }
+      }
+    },
+    "Gute Antwort": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Good answer"
+          }
+        }
+      }
+    },
+    "Schlechte Antwort": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Bad answer"
+          }
+        }
+      }
+    },
+    "Was war falsch?": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "What was wrong?"
+          }
+        }
+      }
+    },
+    "Grund": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Reason"
+          }
+        }
+      }
+    },
+    "ohne Grund": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "no reason"
+          }
+        }
+      }
+    },
+    "Kurz, freiwillig": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Short, optional"
+          }
+        }
+      }
+    },
+    "Frage mitschicken (hilft beim Vorschlag)": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Send the question along (helps the proposal)"
+          }
+        }
+      }
+    },
+    "Melden": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Report"
+          }
+        }
+      }
+    },
+    "falsches Werkzeug": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "wrong tool"
+          }
+        }
+      }
+    },
+    "falsche Antwort": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "wrong answer"
+          }
+        }
+      }
+    },
+    "zu langsam": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "too slow"
+          }
+        }
+      }
+    },
+    "nicht verstanden": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "not understood"
+          }
+        }
+      }
+    },
+    "falsch ausgesprochen": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "mispronounced"
+          }
+        }
+      }
     }
   },
   "version": "1.0"

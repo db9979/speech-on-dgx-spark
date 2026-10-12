@@ -497,6 +497,7 @@ APP_PATHS = ("/api/chat", "/api/test/asr", "/api/siri/ask", "/api/iphone/hello",
              "/api/profile/convos",   # the conversations, the same list as in the panel
              "/api/iphone/doc",       # a document's text into the profile's documents (app_docs)
              "/api/chat/image",       # a picture for the next question (app_images, images.py)
+             "/api/chat/rate",        # 👍/👎 on an answer of the own profile (faelle.py, Einstellungs-Assistent)
              "/api/iphone/settings",  # the profile's own voice, answers and "Von selbst" (iphone.APP_FIELDS only)
              "/api/assistant/voices",  # the voice names to choose from
              # Apple Reminders on the iPhone (app_ios): new list entries to the iPhone, adding from Shortcuts

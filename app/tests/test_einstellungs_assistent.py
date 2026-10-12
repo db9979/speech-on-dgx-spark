@@ -39,7 +39,7 @@ ADMIN.post("/api/login", json={"password": "secret-admin"})
 STATE = os.environ["SPEECH_SPARK_STATE"]
 T0 = 1_791_800_000.0          # a fixed moment (Oct 2026); every time below is relative to it
 OFF = dict(berater=False, berater_explain=False, berater_chat=False, berater_notify=False, berater_issue=False,
-           berater_auto=False, berater_env=False, berater_me=False, bewerten=False, bewerten_back=False,
+           berater_auto=False, berater_env=False, berater_ideas=False, berater_me=False, bewerten=False, bewerten_back=False,
            berater_off=[], berater_calls=20, berater_check_h=24)
 
 
@@ -219,6 +219,7 @@ class Rating(Base):
         self.assertEqual(c.post("/api/chat/rate", json={"id": "nope", "good": True}).status_code, 400)
         self.assertEqual(c.post("/api/chat/rate", json={"id": rid, "good": False, "text": "x" * 201}).status_code, 400)
         self.assertEqual(c.post("/api/chat/rate", content=b"{" + b" " * 3000 + b"}").status_code, 413)
+        self.assertIn("/api/chat/rate", profiles.APP_PATHS)   # the iPhone app rates with its own key
 
     def test_question_goes_along_only_when_ticked_and_ten_a_day(self):
         self.on(bewerten=True)
@@ -391,6 +392,9 @@ class Proposals(Base):
         first = mock.patch.object(berater, "pick", new=mock.AsyncMock(return_value=(0, "")))   # the rule's first
         first.start()
         self.addCleanup(first.stop)
+        day = mock.patch.object(berater, "_night", return_value=False)   # whatever the time zone of the runner
+        day.start()
+        self.addCleanup(day.stop)
         case = faelle.add("schlecht", {"group": "", "who": "a"}, grund="langsam", now=T0)
         self.assertEqual(len(case["who"]), 1)
         p = run(berater.propose(case, T0))
@@ -552,3 +556,237 @@ class LiveAndPage(Base):
 
 if __name__ == "__main__":
     unittest.main()
+
+
+class Gaps(Base):
+    """V01.0.4xx (Dominik: „sind alle punkte umgesetzt?“): the parts of the plan that were missing."""
+
+    def test_code_word_sentences_never_kept_nor_tested(self):
+        self.on()
+        _, uid = profile("FaeCode")
+        profiles.save_settings(uid, {"trace_name": True})       # consent: questions are kept otherwise
+        who = {"id": uid, "name": "C"}
+        ask = "Schalte den Fernseher ein. Codewort [Codewort]"
+        faelle.turn_end(trace("smarthome", tools=[("home_assistant_action", False)]), who, ask, "", now=T0)
+        faelle.turn_end(trace("smarthome", tools=[("home_assistant_action", False)]), who, ask, "", now=T0 + 5)
+        rows = faelle.cases(T0 + 6)
+        self.assertNotIn("doppelt", [x["kind"] for x in rows])
+        self.assertFalse(any(e.get("q") for x in rows for e in x["examples"]))
+        # a smart-home question never goes into the quality test, even with consent and without a code word
+        case = faelle.add("doppelt", {"group": "smarthome", "who": uid, "q": "Mach das Licht an"}, now=T0 + 7)
+        self.assertNotIn("qualitaet_fall", [c["key"] for c in berater.candidates(case)])
+        case = faelle.add("doppelt", {"group": "wetter", "who": uid, "q": "Wie warm wird es"}, now=T0 + 8)
+        self.assertIn("qualitaet_fall", [c["key"] for c in berater.candidates(case)])
+        with self.assertRaises(Exception):
+            berater._apply({"key": "qualitaet_fall", "change": {"q": "Licht an [Codewort]"}}, "main")
+
+    def test_stopped_answers_and_speech_gaps(self):
+        self.on()
+        with open(os.environ["SPEECH_SPARK_CONFIG"]) as f:
+            c = json.load(f)
+        self.addCleanup(helpers.write_config, json.loads(json.dumps(c)))
+        c["chat"].update(local_first_ms=600, instant_ack=False)   # other tests may leave these at their ends
+        c.setdefault("tts", {})["initial_chunk_frames"] = 8
+        helpers.write_config(c)
+        who = {"id": "u9", "name": "U"}
+        tr = trace("wetter", sound=4200)
+        for i in range(2):
+            faelle.aborted(tr, who, "Wie wird das Wetter", now=T0 + i)
+        case = next(x for x in faelle.cases(T0 + 3) if x["kind"] == "abbruch")
+        self.assertEqual(case["n"], 2)
+        with mock.patch("vorrang.last_speech", return_value=0.0), mock.patch.object(berater, "melders", return_value=[]):
+            self.assertEqual(run(berater.round_once(T0 + 100)), 0)   # under ABORT_MIN: not worked on yet
+        faelle.aborted(tr, who, "Wie wird das Wetter", now=T0 + 3)
+        keys = [c["key"] for c in berater.candidates(faelle.get(case["id"]))]
+        self.assertTrue({"lokal_ms", "sofort_satz"} & set(keys), keys)   # slow first sound: the „zu langsam“ steps
+        self.assertNotIn("issue", keys)
+        silent = trace("wetter")
+        silent.marks = {"end": 300}                                   # stopped before any sound: no case
+        self.assertIsNone(faelle.aborted(silent, who, "x", now=T0 + 4))
+        gaps = trace("wetter")
+        gaps.steps.append({"k": "tts", "n": "Sprachausgabe", "a": 0, "d": 9, "x": {"behind": 3}})
+        faelle.turn_end(gaps, who, "Erzähl was", "x", now=T0 + 5)
+        case = next(x for x in faelle.cases(T0 + 6) if x["kind"] == "aussetzer")
+        self.assertIn("erster_ton", [c["key"] for c in berater.candidates(case)])
+
+    def test_switched_off_function_is_a_hint_not_a_case(self):
+        self.on()
+        who = {"id": "u8", "name": "U"}
+        faelle.turn_end(trace("mail"), who, "Lies meine Mails", "Das kann ich leider nicht.", now=T0, off=True)
+        self.assertEqual(faelle.cases(T0 + 1), [])
+
+    def test_rejected_stays_away_30_days(self):
+        self.on()
+        first = mock.patch.object(berater, "pick", new=mock.AsyncMock(return_value=(0, "")))
+        first.start()
+        self.addCleanup(first.stop)
+        case = faelle.add("schlecht", {"group": "", "who": "a"}, grund="langsam", now=T0)
+        p = run(berater.propose(case, T0))
+        berater.reject(p["id"], "main", now=T0 + 1)
+        case = faelle.add("schlecht", {"group": "", "who": "b"}, grund="langsam", now=T0 + 2)
+        again = run(berater.propose(case, T0 + 3))
+        self.assertFalse(again and again["key"] == p["key"] and again["change"] == p["change"])
+        case = faelle.add("schlecht", {"group": "", "who": "c"}, grund="langsam", now=T0 + 31 * 86400)
+        later = run(berater.propose(case, T0 + 31 * 86400))
+        self.assertEqual((later["key"], later["change"]), (p["key"], p["change"]))
+
+    def test_autopilot_waits_at_night_and_in_notaus(self):
+        self.on(berater_auto=True)
+        first = mock.patch.object(berater, "pick", new=mock.AsyncMock(return_value=(0, "")))
+        first.start()
+        self.addCleanup(first.stop)
+        faelle.add("schlecht", {"group": "", "who": "a"}, grund="langsam", now=T0)
+        case = faelle.add("schlecht", {"group": "", "who": "b"}, grund="langsam", now=T0 + 1)
+        with mock.patch.object(berater, "_night", return_value=True):
+            p = run(berater.propose(case, T0 + 2))
+        self.assertEqual(berater.get(p["id"])["status"], "offen")
+        self.assertTrue(berater._night(T0 - (time_hour(T0) - 23) * 3600))
+        with mock.patch.object(berater, "_night", return_value=False), mock.patch("notaus.level", return_value=1):
+            self.assertIsNone(run(berater._autopilot(berater.get(p["id"]), faelle.get(case["id"]), T0 + 3, features.chat_cfg())))
+            with mock.patch("vorrang.last_speech", return_value=0.0):
+                self.assertEqual(run(berater.round_once(T0 + 100, force=True)), 0)   # no proposals in a Notaus
+        _, uid = profile("FaeAuto")
+        helpers.set_config(berater_notify=True)
+        profiles.save_settings(uid, {"berater_note": True})
+        with mock.patch.object(berater, "_night", return_value=False), mock.patch("notaus.admin_uids", return_value=[uid]), \
+                mock.patch("proactive.deliver", new=mock.AsyncMock(return_value={"ok": True})) as said:
+            run(berater._autopilot(berater.get(p["id"]), faelle.get(case["id"]), T0 + 4, features.chat_cfg()))
+        self.assertEqual(berater.get(p["id"])["status"], "uebernommen")
+        self.assertIn("Autopilot hat übernommen", said.call_args.args[2])
+
+    def test_issue_closed_tells_the_reporter(self):
+        self.on(bewerten=True, bewerten_back=True, berater_issue=True, report=True)
+        _, uid = profile("FaeIssue")
+        profiles.save_settings(uid, {"rate_on": True, "rate_back": True})
+        case = faelle.add("schlecht", {"group": "", "who": uid}, grund="antwort", now=T0)
+        p = run(berater.propose(case, T0))
+        with mock.patch("meldung.create", return_value={"id": "d1"}):
+            berater.to_issue(p["id"], "main", "Admin")
+        with mock.patch("meldung._read", return_value={"status": "gesendet", "issue": {"number": 7}}), \
+                mock.patch("meldung.issue_states", new=mock.AsyncMock(return_value={7: {"state": "offen"}})):
+            self.assertEqual(run(berater.issues_done(T0 + 10)), 0)
+        with mock.patch("meldung._read", return_value={"status": "gesendet", "issue": {"number": 7}}), \
+                mock.patch("meldung.issue_states", new=mock.AsyncMock(return_value={7: {"state": "erledigt"}})), \
+                mock.patch("proactive.deliver", new=mock.AsyncMock(return_value={"ok": True})) as said:
+            self.assertEqual(run(berater.issues_done(T0 + 20)), 1)
+            self.assertEqual(run(berater.issues_done(T0 + 30)), 0)       # once
+        self.assertIn("Meldung dazu ist jetzt erledigt", said.call_args.args[2])
+        self.assertEqual(faelle.get(case["id"])["status"], "erledigt")
+        helpers.set_config(report=False)
+
+    def test_explain_an_error_area_and_free_questions(self):
+        self.assertEqual(ADMIN.get("/api/admin/berater/bereich/search").status_code, 403)
+        self.on(berater_explain=True, berater_env=True, berater_chat=True)
+        d = ADMIN.get("/api/admin/berater/bereich/search").json()
+        self.assertIn("Websuche", d["lines"][0])
+        self.assertTrue(any(x.startswith("Schritt:") for x in d["lines"]))
+        self.assertEqual(ADMIN.get("/api/admin/berater/bereich/nope").status_code, 400)
+        self.assertEqual(ADMIN.post("/api/admin/berater/bereich/search/fall").status_code, 200)
+        self.assertEqual(faelle.cases()[-1]["code"], "search")
+        self.assertTrue(ADMIN.get("/api/logfilter?format=json&minutes=60&lines=100").json()["explain"])
+        _, uid = profile("FaeFrag")
+        profiles.save_settings(uid, {"berater_ask": True})
+        q = "Warum hast du eben im Web gesucht?"
+        self.assertFalse(berater.takes(q, uid))                       # not an admin: stays a normal question
+        self.assertFalse(berater.takes("Warum ist der Himmel blau?", uid))
+        with mock.patch("notaus.admin_uids", return_value=[uid]):
+            self.assertTrue(berater.takes(q, uid))
+            self.assertIn("nichts mehr", berater.by_phrase(uid, q))
+            faelle.turn_end(trace("unklar", tools=[("web_search", True)]), {"id": uid, "name": "F"}, "Frage", "x")
+            said = berater.by_phrase(uid, q)
+            self.assertIn("Keine Regel der Weiche", said)
+            self.assertIn("Websuche lief", said)
+            self.assertIn("schneller machen", berater.by_phrase(uid, "Wie werden die Antworten schneller?"))
+
+    def test_card_on_the_admin_pages_and_share_per_group(self):
+        self.on()
+        self.assertEqual(berater.alerts(), [])
+        first = mock.patch.object(berater, "pick", new=mock.AsyncMock(return_value=(0, "")))
+        first.start()
+        self.addCleanup(first.stop)
+        run(berater.propose(faelle.add("schlecht", {"group": "", "who": "a"}, grund="langsam", now=T0), T0))
+        a = berater.alerts()
+        self.assertEqual((a[0]["level"], a[0]["go"]), ("info", "Zustand → Verbessern"))
+        self.assertIn("1 Vorschlag", a[0]["text"])
+        import health
+        self.assertIn("berater", [x["kind"] for x in health.alerts()])
+        faelle._count({"group": "wetter", "tools": []}, True, 1, T0)
+        faelle._count({"group": "wetter", "tools": []}, False, 1, T0)
+        with mock.patch("time.time", return_value=T0 + 60):
+            q = berater.overview(T0 + 60)["quote"]
+        self.assertEqual((q[0]["g"], q[0]["pct"], q[0]["name"]), ("wetter", 50, "Wetter"))
+
+
+class Ideas(Base):
+    """Ideen außerhalb des Katalogs (Dominik 2026-10-12, „alles ok auch 4“): admins only, off by default, to read only.
+    The panel never applies an idea; the setting is a way (jump link), steps are copy-only and filtered."""
+
+    def _issue_prop(self, code="kiwix"):
+        first = mock.patch.object(berater, "pick", new=mock.AsyncMock(return_value=(0, "")))
+        first.start()
+        self.addCleanup(first.stop)
+        case = faelle.add("fehler", {}, code=code, now=T0)
+        return run(berater.propose(case, T0)), case
+
+    def test_off_by_default_and_admins_only(self):
+        self.on()
+        self.assertFalse(features.admin_on("beraterideen"))
+        self.assertFalse(features.BY_KEY["beraterideen"].profile)          # no profile switch: never for profiles
+        p, case = self._issue_prop()
+        self.assertNotIn("idea", p)
+        self.assertEqual(ADMIN.post(f"/api/admin/berater/{p['id']}/idee").status_code, 403)
+        self.assertIsNone(run(berater.idea(case)))
+
+    def test_secrets_and_access_are_never_offered(self):
+        keys = berater.idea_settings(admin.get_config())
+        self.assertTrue(keys)
+        for k in keys:
+            sec, key = k.split(".", 1)
+            self.assertNotIn((sec, key), K.NEVER_KEYS, k)
+        for bad in ("chat.llm_url", "chat.llm_key", "chat.notaus", "panel.port"):
+            self.assertNotIn(bad, keys)
+        got = berater._clean_idea({"idee": "x", "einstellung": "chat.llm_url", "schritte": ["a; rm -rf /", "ok"]},
+                                  set(keys), True)
+        self.assertEqual((got["setting"], got["steps"]), ("", ["ok"]))
+        self.assertEqual(berater._clean_idea({"idee": "x", "schritte": ["ok"]}, set(keys), False)["steps"], [])
+        self.assertIsNone(berater._clean_idea({"idee": "\x07"}, set(keys), True))
+
+    def test_idea_is_shown_but_never_applied(self):
+        self.on(berater_ideas=True, berater_env=True)
+        p, case = self._issue_prop()
+        self.assertEqual(p["stufe"], "I")
+        i = p["idea"]
+        self.assertEqual(i["text"], "Mehr Geduld beim Dienst.")
+        self.assertIn(i["setting"], berater.idea_settings(admin.get_config()))
+        self.assertEqual(i["steps"], ["speech-spark status", "sudo speech-spark logs tts -n 100"])   # the chain is gone
+        before = admin.get_config()
+        self.assertEqual(ADMIN.post(f"/api/admin/berater/{p['id']}/take").status_code, 400)
+        self.assertEqual(admin.get_config(), before)
+        r = ADMIN.post(f"/api/admin/berater/{p['id']}/idee")                 # fetch again on demand
+        self.assertEqual(r.status_code, 200, r.text)
+        self.assertIn("idea", r.json()["prop"])
+        self.assertTrue(r.json()["view"]["ideas"])
+
+    def test_good_twice_becomes_a_catalog_wish(self):
+        self.on(berater_ideas=True)
+        p1, _ = self._issue_prop("kiwix")
+        p2, _ = self._issue_prop("searxng")
+        self.assertEqual(ADMIN.post(f"/api/admin/berater/{p1['id']}/wunsch").status_code, 403)   # needs the report switch
+        self.assertEqual(ADMIN.post(f"/api/admin/berater/{p1['id']}/gut").json()["prop"]["idea"]["count"], 1)
+        again = ADMIN.post(f"/api/admin/berater/{p1['id']}/gut").json()["prop"]["idea"]["count"]
+        self.assertEqual(again, 1)                                           # once per proposal
+        self.assertEqual(ADMIN.post(f"/api/admin/berater/{p2['id']}/gut").json()["prop"]["idea"]["count"], 2)
+        with mock.patch.object(features, "admin_on", side_effect=lambda k, c=None: True), \
+                mock.patch("meldung.create", return_value={"id": "d1"}) as mk:
+            r = ADMIN.post(f"/api/admin/berater/{p2['id']}/wunsch")
+        self.assertEqual(r.status_code, 200, r.text)
+        self.assertIn("Wunsch für den Katalog", mk.call_args[0][3])
+        self.assertEqual(r.json()["prop"]["idea"]["wish"], "d1")
+        with mock.patch.object(features, "admin_on", side_effect=lambda k, c=None: True):
+            self.assertEqual(ADMIN.post(f"/api/admin/berater/{p1['id']}/wunsch").status_code, 409)   # p1 counted 1
+
+
+def time_hour(t):
+    import time as _t
+    return _t.localtime(t).tm_hour
+

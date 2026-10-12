@@ -265,6 +265,7 @@ struct ChatView: View {
                         }
                         ForEach(talk.messages) { m in
                             Bubble(message: m).id(m.id)
+                            if m.role != "user", m.rateId != nil { RateBar(message: m) }
                         }
                     }
                     .padding()
@@ -608,6 +609,69 @@ struct Bubble: View {
                 }
             if !mine { Spacer(minLength: 40) }
         }
+    }
+}
+
+/// 👍/👎 under an answer (Einstellungs-Assistent, only when the Spark sent an id for it): 👎 opens five reasons,
+/// a short text and „Frage mitschicken“ (off: the case keeps no words of the question).
+struct RateBar: View {
+    let message: Conversation.Message
+    @State private var sheet = false
+
+    var body: some View {
+        HStack(spacing: 14) {
+            Button { Task { await Conversation.shared.rate(message.id, good: true) } } label: {
+                Text(verbatim: "👍").opacity(message.rated == false ? 0.4 : 1)
+            }
+            .accessibilityLabel("Gute Antwort")
+            Button { sheet = true } label: {
+                Text(verbatim: "👎").opacity(message.rated == true ? 0.4 : 1)
+            }
+            .accessibilityLabel("Schlechte Antwort")
+            Spacer()
+        }
+        .buttonStyle(.borderless)
+        .font(.footnote)
+        .padding(.leading, 6)
+        .sheet(isPresented: $sheet) { RateSheet(message: message) }
+    }
+}
+
+struct RateSheet: View {
+    let message: Conversation.Message
+    @Environment(\.dismiss) private var dismiss
+    @State private var reason = ""
+    @State private var note = ""
+    @State private var question = false
+
+    var body: some View {
+        NavigationStack {
+            Form {
+                Section("Was war falsch?") {
+                    Picker("Grund", selection: $reason) {
+                        Text("ohne Grund").tag("")
+                        ForEach(Conversation.rateReasons) { r in Text(r.label).tag(r.id) }
+                    }
+                    .pickerStyle(.inline)
+                    .labelsHidden()
+                    TextField("Kurz, freiwillig", text: $note)
+                        .onChange(of: note) { if note.count > 200 { note = String(note.prefix(200)) } }
+                    Toggle("Frage mitschicken (hilft beim Vorschlag)", isOn: $question)
+                }
+            }
+            .navigationTitle("Schlechte Antwort")
+            .navigationBarTitleDisplayMode(.inline)
+            .toolbar {
+                ToolbarItem(placement: .cancellationAction) { Button("Abbrechen") { dismiss() } }
+                ToolbarItem(placement: .confirmationAction) {
+                    Button("Melden") {
+                        Task { await Conversation.shared.rate(message.id, good: false, reason: reason, note: note, question: question) }
+                        dismiss()
+                    }
+                }
+            }
+        }
+        .presentationDetents([.medium, .large])
     }
 }
 

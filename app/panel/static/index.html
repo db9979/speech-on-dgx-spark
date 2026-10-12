@@ -158,6 +158,7 @@
       <div class="setrow" data-show="chat.berater" style="margin-left:18px"><div class="lbl"><b>Hinweis an Admins bei neuem Vorschlag</b><span>Höchstens drei am Tag, nur der Titel. Jedes Admin-Profil schaltet es selbst ein.</span></div><label class="tgl"><input type="checkbox" id="chat.berater_notify"><i></i></label></div>
       <div class="setrow" data-show="chat.berater" style="margin-left:18px"><div class="lbl"><b>Im Chat nach Vorschlägen fragen</b><span>„Was schlägt der Einstellungs-Assistent vor?“ Ein „Ja“ übernimmt nie etwas.</span></div><label class="tgl"><input type="checkbox" id="chat.berater_chat"><i></i></label></div>
       <div class="setrow" data-show="chat.berater" style="margin-left:18px"><div class="lbl"><b>Fälle als Meldung vorbereiten</b><span>Hilft nichts aus dem Katalog, wird der Fall ein Entwurf unter Probleme melden, mit Vorschau vor dem Senden.</span></div><label class="tgl"><input type="checkbox" id="chat.berater_issue"><i></i></label></div>
+      <div class="setrow" data-show="chat.berater" style="margin-left:18px"><div class="lbl"><b>Ideen außerhalb des Katalogs</b><span>Hat der Katalog nichts, nennt das lokale Modell eine Idee, nur zum Lesen. Ändern kannst nur du selbst.</span></div><label class="tgl"><input type="checkbox" id="chat.berater_ideas"><i></i></label></div>
       <div class="setrow" data-show="chat.berater" style="margin-left:18px"><div class="lbl"><b>Schritte für die Umgebung</b><span>Liegt es an einem Dienst außerhalb des Spark, zeigt der Vorschlag Schritte zum Kopieren. Ausgeführt wird nichts.</span></div><label class="tgl"><input type="checkbox" id="chat.berater_env"><i></i></label></div>
       <div class="setrow" data-show="chat.berater" style="margin-left:18px"><div class="lbl"><b>Vorschläge für die eigenen Einstellungen</b><span>Aus den eigenen 👎 eines Profils, z. B. kürzere Antworten. Nur das Profil selbst übernimmt sie.</span></div><label class="tgl"><input type="checkbox" id="chat.berater_me"><i></i></label></div>
       <div class="setrow" data-show="chat.berater" style="margin-left:18px"><div class="lbl"><b>Autopilot für kleine Änderungen</b><span>Übernimmt Stufe A und B bei grünem Prüfstand und zwei Meldungen selbst: eine am Tag, höchstens drei Schritte, zurück bei Verschlechterung.</span></div><label class="tgl"><input type="checkbox" id="chat.berater_auto"><i></i></label></div>
@@ -748,7 +749,7 @@
   <div class="ld-head"><h2>Verbessern</h2><button class="b" type="button" id="vbrun">Jetzt nachsehen</button></div>
   <div class="pintro">Fehler, 👎 und unklare Fragen werden Fälle. Der Spark schlägt Änderungen aus einem festen Katalog vor, prüft sie auf dem Prüfstand und schaut nach 24 Stunden, ob sie geholfen haben. Nichts ändert sich, bevor du übernimmst.</div>
   <div class="note" id="vboff" hidden>Der Einstellungs-Assistent ist aus. Einschalten unter Funktionen → Einstellungs-Assistent.</div>
-  <div id="vbmain" hidden><div class="mut" id="vbsum"></div><div class="ld-chips" id="vbchips"></div>
+  <div id="vbmain" hidden><div class="mut" id="vbsum"></div><div class="mut vbquote" id="vbquote" hidden></div><div class="ld-chips" id="vbchips"></div>
     <div class="ld-split"><div class="ld-list" id="vblist"></div><div class="ld-detail" id="vbdetail" hidden></div></div></div>
   <div class="mut" id="vbmsg"></div>
 </div></section>

@@ -45,6 +45,12 @@ function ltile(key,label,color,count,spark,sub){
   if(spark){const s=el('div','lspark');const top=Math.max(1,...spark);spark.forEach(v=>{const i=el('i');i.style.height=(3+Math.round(v/top*22))+'px';s.append(i)});b.append(s)}
   if(sub)b.append(el('div','lsub',sub));
   b.onclick=()=>{LG.f=[key];lsave();loadLogs().catch(()=>{})};return b}
+let AEX=null;   // the open explanation survives the live refresh (every 10 s) while the newest error keeps its area
+function areaExplain(area){if(AEX&&AEX.area===area)return AEX.w;const w=el('div','rexpl');AEX={area,w};const eb=el('button','b',t('Erklären','Explain'));eb.type='button';w.append(eb);
+  eb.onclick=async()=>{eb.disabled=true;try{const d=await (await api('/api/admin/berater/bereich/'+encodeURIComponent(area))).json();w.replaceChildren();
+    for(const l of d.lines||[])w.append(el('div','rd',l));if((d.helps||[]).length)w.append(el('div','rsub',t('Was helfen könnte: ','What could help: ')+d.helps.map(h=>t(h[0],h[1])).join(' · ')));
+    const fb=el('button','b',t('Als Fall aufnehmen','Take as a case'));fb.type='button';fb.onclick=async()=>{try{await api('/api/admin/berater/bereich/'+encodeURIComponent(area)+'/fall',{method:'POST'});fb.textContent=t('Aufgenommen: Zustand → Verbessern','Taken: Status → Improve');fb.disabled=true}catch(e){fb.textContent=e.message}};w.append(fb)}
+    catch(e){w.replaceChildren(el('div','lempty',e.message))}};return w}
 function lrender(){
   if(LG.tab==='req'){rrender();return}
   lshow();const d=LDATA,sum=$('logsum'),chips=$('logchips'),q=$('logq').value.trim().toLowerCase();
@@ -54,7 +60,9 @@ function lrender(){
     Object.keys(LAREA).filter(a=>c[a]).sort((a,b)=>c[b]-c[a]).slice(0,3).forEach(a=>sum.append(ltile(a,LAREA[a][0],LAREA[a][1],c[a],(d.spark||{})[a])));
     const le=d.last_error,box=$('lasterr');box.hidden=!le;
     if(le){box.replaceChildren(el('b','',t('Letzter Fehler, ','Last error, ')+le.t.slice(0,5)),document.createTextNode(' · '+(LAREA[le.area]?LAREA[le.area][0]+': ':'')+le.msg.replace(/^[a-z0-9_]+:\s*/i,'')));
-      if(le.hint)box.append(el('div','lhint',L==='en'?le.hint.en:le.hint.de))}
+      if(le.hint)box.append(el('div','lhint',L==='en'?le.hint.en:le.hint.de));
+      // „Erklären“ (Einstellungs-Assistent): the error's area in fixed sentences, steps, what could help, „Als Fall aufnehmen“
+      if(d.explain&&!document.body.classList.contains('mgr'))box.append(areaExplain(le.area||'other'))}
     chips.replaceChildren();
     [...Object.keys(LAREA),'update','errors'].filter(k=>k!=='update').forEach(k=>{const on=LG.f.includes(k),b=el('button','lchip'+(on?' on':'')+(k==='errors'?' err':''));b.type='button';
       b.style.setProperty('--c',k==='errors'?'#ef4444':LAREA[k][1]);b.append(el('i'),document.createTextNode(k==='errors'?t('Nur Fehler','Errors only'):LAREA[k][0]));

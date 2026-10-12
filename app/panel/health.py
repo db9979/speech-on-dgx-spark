@@ -362,6 +362,8 @@ def alerts():
     out += telegram.alert()
     import dienstwacht
     out += dienstwacht.alerts()      # a service the Dienst-Wächter sees gone: what does not work
+    import berater
+    out += berater.alerts()          # proposals of the Einstellungs-Assistent waiting (level info: not a warning)
     return out
 
 

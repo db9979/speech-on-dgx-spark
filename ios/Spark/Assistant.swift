@@ -14,8 +14,40 @@ final class Conversation: ObservableObject {
         var mark: String?
         /// "📷 Brief.jpg": the question was asked about a photo or document (shown, never the read text)
         var label: String?
+        /// 👍/👎 (Einstellungs-Assistent): the id the Spark gave this answer, and the vote once given
+        var rateId: String?
+        var rated: Bool?
     }
 
+
+    /// 👍/👎 under an answer (POST /api/chat/rate). 👎 with one of five reasons, a short text and, only when the
+    /// person says so, the question. A vote can be changed.
+    struct RateReason: Identifiable {
+        let id: String
+        let label: LocalizedStringKey
+    }
+    static let rateReasons = [
+        RateReason(id: "werkzeug", label: "falsches Werkzeug"), RateReason(id: "antwort", label: "falsche Antwort"),
+        RateReason(id: "langsam", label: "zu langsam"), RateReason(id: "verstanden", label: "nicht verstanden"),
+        RateReason(id: "aussprache", label: "falsch ausgesprochen")]
+
+    func rate(_ id: UUID, good: Bool, reason: String = "", note: String = "", question: Bool = false) async {
+        guard let i = messages.firstIndex(where: { $0.id == id }), let rid = messages[i].rateId,
+              let api = SparkAPI.current else { return }
+        var body: [String: Any] = ["id": rid, "good": good]
+        if !good {
+            body["grund"] = reason
+            body["text"] = String(note.trimmingCharacters(in: .whitespacesAndNewlines).prefix(200))
+            body["frage"] = question
+        }
+        do {
+            _ = try await api.post("api/chat/rate", body)
+            if let j = messages.firstIndex(where: { $0.id == id }) { messages[j].rated = good }
+            notice = good ? String(localized: "Danke!") : String(localized: "Danke, notiert.")
+        } catch {
+            self.error = error.localizedDescription
+        }
+    }
     enum Phase: Equatable { case idle, waiting, listening, transcribing, thinking, speaking }
 
     static let newAfter: TimeInterval = 600     // a pause this long starts a new conversation
@@ -533,6 +565,7 @@ final class Conversation: ObservableObject {
                     Alarms.remove(ids)
                     AppleReminders.remove(ids)
                 case .action(let kind, let target): Task { await propose(kind, target) }
+                case .rate(let id): edit { $0.rateId = id }
                 }
             }
             streamDone = true

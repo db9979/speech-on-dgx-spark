@@ -46,7 +46,10 @@ MAX_CASES = 1000
 MAX_EXAMPLES = 3
 MAX_NOTES = 3
 MAX_GOOD = 200
+CODEWORD = "[Codewort]"   # homeassistant.redact puts this where the code word was
 RECENT_S = 24 * 3600
+BEHIND = 2          # the speech output fell behind this often in one answer: a case "aussetzer"
+ABORT_MIN = 3       # a stopped answer is only worked on once the same kind of question was stopped this often
 MAX_RECENT = 400
 REPEAT_S = 300
 PHRASE_S = 600
@@ -67,6 +70,8 @@ KINDS = {
     "absage": ("Wunsch ohne Funktion", "Wish without a function", "auto"),
     "doppelt": ("Gleiche Frage zweimal", "Same question twice", "auto"),
     "pruefung": ("Antwortprüfung griff", "Answer check held back", "auto"),
+    "abbruch": ("Antwort abgebrochen", "Answer stopped", "auto"),
+    "aussetzer": ("Aussetzer in der Sprachausgabe", "Gaps in the speech output", "auto"),
     "schlecht": ("👎 gemeldet", "👎 reported", "person"),
     "weiche": ("Falsch zugeordnet", "Wrongly sorted", "person"),
     "melder": ("Befund", "Finding", "melder"),
@@ -119,22 +124,26 @@ def _hash(q):
 
 
 # ---------------------------------------------------------------- one finished turn
-def summary(tr, who, ask, said, outside=False, now=None):
+def summary(tr, who, ask, said, outside=False, now=None, off=False):
     """What a finished turn leaves for cases and 👍/👎: fixed words and numbers from the trace record (tracelog.Rec),
     the question only in memory (and only kept with a case when allowed, see _consent)."""
     now = time.time() if now is None else now
+    if CODEWORD in str(ask or ""):   # a sentence with the smart-home code word: never kept, never „gleich zweimal“
+        ask = ""
     steps = list(getattr(tr, "steps", None) or [])
     tools = [(s["n"], (s.get("x") or {}).get("ok", True)) for s in steps
              if s.get("k") == "tool" and not (s.get("x") or {}).get("panel") and TOOL.fullmatch(str(s.get("n")))]
     held = sum(int((s.get("x") or {}).get("held") or 0) for s in steps if s.get("k") == "check")
     label = str(getattr(tr, "intent", "") or "unklar")
     marks = dict(getattr(tr, "marks", None) or {})
+    behind = sum(int((s.get("x") or {}).get("behind") or 0) for s in steps if s.get("k") == "tts")
     return {"t": now, "who": who and who.get("id"), "kind": getattr(tr, "kind", "guest"), "client": getattr(tr, "client", "other"),
             "group": label if GROUP.fullmatch(label) else "unklar", "tools": tools[:12],
             "errors": [e for e in (getattr(tr, "errors", None) or []) if CODE.fullmatch(e)][:5],
             "held": held, "sound": marks.get("sound"), "end": marks.get("end"),
             "trace": tr.id if getattr(tr, "persist", False) else "", "q": str(ask or "")[:MAX_Q],
-            "h": _hash(ask), "refusal": bool(REFUSAL.search(str(said or "")[:2000])), "outside": bool(outside), "vote": None}
+            "h": _hash(ask), "refusal": bool(REFUSAL.search(str(said or "")[:2000])), "outside": bool(outside), "vote": None,
+            "behind": behind, "off": bool(off)}
 
 
 def triggers(s, before=None):
@@ -148,10 +157,13 @@ def triggers(s, before=None):
     if s["group"] == "unklar" and any(n == "web_search" for n, _ in s["tools"]):
         out.append(("unklar", "web_search", ""))
     failed = any(k in ("tool", "fehler") for k, _, _ in out)
-    if s["refusal"] and not failed and s["group"] != "plaudern" and not s["outside"]:
+    # a function that is only switched off: the hint under the answer (and „Funktionen vorschlagen“) says so, no case
+    if s["refusal"] and not failed and s["group"] != "plaudern" and not s["outside"] and not s.get("off"):
         out.append(("absage", "", ""))
     if s["held"]:
         out.append(("pruefung", "", ""))
+    if s.get("behind", 0) >= BEHIND:   # the speech output fell behind the text more than once (Aussetzer)
+        out.append(("aussetzer", "", "tts_behind"))
     if before and before.get("bad") and s["h"] and before.get("h") == s["h"]:
         out.append(("doppelt", "", ""))
     return out
@@ -165,7 +177,7 @@ def _last_of(who, now, skip=None, within=REPEAT_S):
     return best
 
 
-def turn_end(tr, who, ask, said, outside=False, now=None):
+def turn_end(tr, who, ask, said, outside=False, now=None, off=False):
     """Called once when an answer is done (chat.py events). Returns the id for 👍/👎 when the person may rate, else
     None. Never raises."""
     try:
@@ -173,7 +185,7 @@ def turn_end(tr, who, ask, said, outside=False, now=None):
         if tr is None or not wanted(c):
             return None
         now = time.time() if now is None else now
-        s = summary(tr, who, ask, said, outside, now)
+        s = summary(tr, who, ask, said, outside, now, off)
         rid = secrets.token_hex(6)
         with _lock:
             prev = _last_of(s["who"], now) if s["who"] else None
@@ -184,6 +196,19 @@ def turn_end(tr, who, ask, said, outside=False, now=None):
         for kind, tool, code in found:
             add(kind, s, tool=tool, code=code, now=now)
         return rid if can_rate(s["who"], c) else None
+    except Exception as e:
+        print("faelle:", type(e).__name__, flush=True)
+        return None
+
+
+def aborted(tr, who, ask, now=None):
+    """The person stopped an answer after its first sound (barge-in, stop): a case "abbruch" (fixed rules, never a
+    model; proposals only from ABORT_MIN on). Called from chat.py when a turn ends early. Never raises."""
+    try:
+        if tr is None or not wanted() or (getattr(tr, "marks", None) or {}).get("sound") is None:
+            return None
+        s = summary(tr, who, ask, "", False, now)
+        return add("abbruch", s, now=now)
     except Exception as e:
         print("faelle:", type(e).__name__, flush=True)
         return None
@@ -222,6 +247,9 @@ def _write(rows):
 
 def _keep(rows, now):
     rows = [x for x in rows if now - float(x.get("last", x.get("t", 0))) <= KEEP_S]
+    for x in rows:   # kept before V01.0.4xx: a sentence with the code word loses its words
+        x["examples"] = [{k: v for k, v in e.items() if not (k == "q" and CODEWORD in str(v))}
+                         for e in x.get("examples", []) if isinstance(e, dict)]
     return rows[-MAX_CASES:]
 
 
@@ -243,7 +271,9 @@ def add(kind, s, tool="", code="", grund="", note="", asked=False, melder="", ti
     fp = fingerprint(kind, group, tool or melder or want, code or grund)
     who = s.get("who")
     ex = {"t": round(now, 1), "trace": s.get("trace") or "", "client": s.get("client") or ""}
-    if s.get("q") and (own or _consent(who, asked)) and not s.get("outside"):
+    if isinstance(s.get("sound"), (int, float)) and not isinstance(s.get("sound"), bool):
+        ex["sound"] = int(s["sound"])   # ms to the first sound (a number only; stopped answers, Punkt 11)
+    if s.get("q") and CODEWORD not in s["q"] and (own or _consent(who, asked)) and not s.get("outside"):
         ex["q"] = s["q"][:MAX_Q]
     with _lock:
         rows = _keep(_read(), now)
@@ -395,7 +425,7 @@ def _good_read():
 def good_sentences():
     """The questions people liked (with consent) and the group the switch gave them: [{"q", "want"}]."""
     with _lock:
-        return [{"q": x["q"], "want": x.get("want", "")} for x in _good_read()]
+        return [{"q": x["q"], "want": x.get("want", "")} for x in _good_read() if CODEWORD not in x["q"]]
 
 
 def _good_add(s, now):

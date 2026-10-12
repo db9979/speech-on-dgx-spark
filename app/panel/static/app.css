@@ -1276,6 +1276,7 @@ textarea.factedit{width:100%;margin:0 0 6px}
 @container (max-width:420px){.ic-seg{display:flex;flex:1 1 100%}.ic-seg button{flex:1 1 0;padding:5px 4px}}
 .needcode::after{content:" 🔒";font-size:.85em}.needcode2::after{content:" 🔒🔒";font-size:.85em}
 /* 👍/👎 under an answer (bewerten.js): never part of copied answer text */
+.vbquote{margin-top:4px;overflow-wrap:anywhere}.vbquote .vbqbad{color:var(--bad)}
 .ratebar{display:flex;flex-wrap:wrap;align-items:center;gap:6px;margin-top:8px;-webkit-user-select:none;user-select:none}
 .ratebar .rb{padding:3px 10px;font-size:14px;line-height:1.3}.ratebar .rb.on{border-color:var(--acc);background:color-mix(in srgb,var(--acc) 14%,transparent)}
 .ratebar .rmsg{font-size:12px}

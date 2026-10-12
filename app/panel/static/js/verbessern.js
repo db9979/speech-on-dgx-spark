@@ -17,8 +17,11 @@ function vbLists(d){const p=d.props||[];return {
   check:p.filter(x=>x.status==='uebernommen'&&!x.check),done:p.filter(x=>x.status!=='offen'&&!(x.status==='uebernommen'&&!x.check)),kat:d.katalog||[]}}
 function vbRender(){const d=VB.d;if(!d)return;const L=vbLists(d);
   $('vboff').hidden=d.on;$('vbmain').hidden=!d.on;
-  const lv=d.live||{};$('vbsum').textContent=d.on?t(`Heute ${lv.gut||0} 👍 · ${lv.schlecht||0} 👎 · ${lv.faelle||0} neue Fälle · ${L.props.length} Vorschläge offen`,
-    `Today ${lv.gut||0} 👍 · ${lv.schlecht||0} 👎 · ${lv.faelle||0} new cases · ${L.props.length} proposals open`)+(d.model?'':' · '+t('ohne Sprachmodell im Heimnetz: die Regel wählt','no language model at home: the rule picks')):'';
+  const lv=d.live||{};$('vbsum').textContent=d.on?t(`Heute ${lv.gut||0} 👍 · ${lv.schlecht||0} 👎 · ${lv.faelle||0} neue Fälle · ${L.props.length} ${L.props.length===1?'Vorschlag':'Vorschläge'} offen`,
+    `Today ${lv.gut||0} 👍 · ${lv.schlecht||0} 👎 · ${lv.faelle||0} new cases · ${L.props.length} ${L.props.length===1?'proposal':'proposals'} open`)+(d.model?'':' · '+t('ohne Sprachmodell im Heimnetz: die Regel wählt','no language model at home: the rule picks')):'';
+  // the 👍 share per group (7 days): red under 75 % (from 20 ratings on that is a finding of its own)
+  $('vbquote').innerHTML=(d.quote||[]).length?esc(t('👍-Quote, 7 Tage: ','👍 share, 7 days: '))+d.quote.map(q=>`<span class="${q.pct<75&&q.good+q.bad>=20?'vbqbad':''}">${esc(q.name)} ${q.pct} % (${q.good+q.bad})</span>`).join(' · '):'';
+  $('vbquote').hidden=!d.on||!(d.quote||[]).length;
   const tabs=[['cases',t('Eingang','Inbox'),L.cases.length],['props',t('Vorschläge','Proposals'),L.props.length],['check',t('Nachkontrolle','Re-check'),L.check.length],
     ['done',t('Erledigt','Done'),L.done.length],['kat',t('Katalog','Catalog'),L.kat.length]];
   $('vbchips').innerHTML=tabs.map(([k,l,n])=>`<button type="button" class="ld-chip${VB.tab===k?' on':''}" data-vbtab="${k}">${esc(l)} <b>${n}</b></button>`).join('');
@@ -66,10 +69,23 @@ function vbDetail(){const el=$('vbdetail'),f=vbFind(),box=$('vbbox');el.hidden=!
   const steps=x.stufe==='U'?(ch.steps||[]).map((s,i)=>`<div class="row" style="gap:6px;margin:4px 0"><code style="flex:1;min-width:0;overflow-wrap:anywhere">${esc(s)}</code><button type="button" class="b" data-vbcopy="${i}">${esc(t('Kopieren','Copy'))}</button></div>`).join(''):'';
   const laut=x.key==='aussprache'&&x.status==='offen'?`<label>${esc(t('So soll es klingen','How it should sound'))} („${esc(ch.word||'')}“)</label><input id="vblaut" maxlength="40" value="${esc(ch.laut||'')}" autocomplete="off">`:'';
   const alts=x.status==='offen'&&(x.alts||[]).length?`<details class="adv"><summary>${esc(t('Anders','Other'))} (${x.alts.length})</summary>`+x.alts.map((a,i)=>`<div class="ld-sw"><span>${esc(vbT(a.title))}${a.pruef&&!a.pruef.ok?' · <span class="danger">'+esc(t('rot','red'))+'</span>':''}</span><button type="button" class="b" data-vbalt="${i}">${esc(t('Diesen','This one'))}</button></div>`).join('')+'</details>':'';
+  const idea=vbIdea(x);
   el.innerHTML=back+`<h3>${esc(vbT(x.title))}</h3><dl class="ld-facts">${facts.filter(r=>r[1]!=null&&r[1]!=='').map(r=>`<dt>${esc(r[0])}</dt><dd>${esc(r[1])}</dd>`).join('')}</dl>`+
     (x.model?`<div class="ld-note"><span class="mut">${esc(t('Sprachmodell:','Language model:'))}</span> ${esc(x.model)}</div>`:'')+steps+laut+
     `<div class="ld-note"><b class="${pr.ok?'':'danger'}">${esc(pr.ok?t('Prüfstand grün','Test bench green'):t('Prüfstand rot','Test bench red'))}</b>${(pr.red||[]).map(r=>'<br><span class="danger">'+esc(r)+'</span>').join('')}${(pr.notes||[]).map(r=>'<br><span class="mut">'+esc(r)+'</span>').join('')}${(pr.flips||[]).slice(0,5).map(f=>'<br><span class="mut">„'+esc(f.q)+'“ → '+esc(f.got||t('unklar','unclear'))+'</span>').join('')}</div>`+
-    alts+`<div class="ld-acts">${acts}</div><div class="ld-note" id="vbdmsg"></div>`}
+    idea+alts+`<div class="ld-acts">${acts}</div><div class="ld-note" id="vbdmsg"></div>`}
+// Ideen außerhalb des Katalogs: only to read, a way to the named setting, steps to copy; the panel never applies them
+function vbIdea(x){const i=x.idea;if(!VB.d.ideas||(x.stufe!=='I'&&x.stufe!=='U'))return '';
+  if(!i)return x.status==='offen'?`<div class="ld-acts"><button type="button" class="b" data-vbact="idee">${esc(t('Idee holen','Get idea'))}</button></div>`:'';
+  const el=i.setting?document.getElementById(i.setting):null;
+  const steps=(i.steps||[]).map((s,n)=>`<div class="row" style="gap:6px;margin:4px 0"><code style="flex:1;min-width:0;overflow-wrap:anywhere">${esc(s)}</code><button type="button" class="b" data-vbicopy="${n}">${esc(t('Kopieren','Copy'))}</button></div>`).join('');
+  return `<div class="ld-note"><b>${esc(t('Idee, nicht geprüft','Idea, not checked'))}</b><br>${esc(i.text)}`+
+    (i.setting?`<br><span class="mut">${esc(t('Einstellung:','Setting:'))}</span> <code>${esc(i.setting)}</code> `+(el?`<button type="button" class="b" data-vbgo="1">${esc(t('Zur Einstellung','To the setting'))}</button>`:`<span class="mut">${esc(t('(auf keiner Seite)','(on no page)'))}</span>`):'')+
+    `</div>${steps}<div class="ld-acts">`+(i.good?`<span class="mut">${esc(t(`Gute Idee · ${i.count}×`,`Good idea · ${i.count}×`))}</span>`:`<button type="button" class="b" data-vbact="gut">${esc(t('Gute Idee','Good idea'))}</button>`)+
+    (i.good&&i.count>=2&&!i.wish&&VB.d.issue?`<button type="button" class="b p" data-vbact="wunsch">${esc(t('Als Katalog-Wunsch melden','Report as catalog wish'))}</button>`:'')+
+    (i.wish?`<span class="mut">${esc(t('Wunsch liegt unter Probleme melden.','The wish is under Reporting problems.'))}</span>`:'')+'</div>'}
+function vbGoSetting(id){const el=document.getElementById(id),pane=el&&el.closest('.pane');if(!pane)return;
+  const p=pane.id.slice(5);if(typeof goCfg==='function')goCfg(p);if(typeof cfgGo==='function')cfgGo({p,el:el.closest('.setrow')||el})}
 async function vbPost(path,body){const m=$('vbdmsg');if(m)m.textContent=t('Einen Moment …','One moment …');
   try{const r=await (await api(path,{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify(body||{})})).json();
     if(r.view)VB.d=r.view;else if(r.cases)VB.d=r;return r}catch(e){if($('vbdmsg'))$('vbdmsg').textContent=e.message;return null}}
@@ -79,6 +95,8 @@ if($('vbbox')){
     if(b.dataset.vbmore){VB.more+=10;vbRender();return}
     if(b.dataset.vbsel){VB.sel=b.dataset.vbsel;vbRender();return}
     if(b.dataset.vbback){VB.sel=null;vbRender();return}
+    if(b.dataset.vbicopy!=null&&f&&f.p&&f.p.idea){copyString((f.p.idea.steps||[])[+b.dataset.vbicopy]||'',b);return}
+    if(b.dataset.vbgo&&f&&f.p&&f.p.idea){vbGoSetting(f.p.idea.setting);return}
     if(b.dataset.vbcopy!=null&&f&&f.p){copyString((f.p.change.steps||[])[+b.dataset.vbcopy]||'',b);return}
     if(b.dataset.vbcase&&f&&f.c){const r=await vbPost(`/api/admin/berater/case/${encodeURIComponent(f.c.id)}/${b.dataset.vbcase}`);if(r){VB.sel=null;vbRender()}return}
     if(b.dataset.vbalt!=null&&f&&f.p){const r=await vbPost(`/api/admin/berater/${encodeURIComponent(f.p.id)}/other`,{i:+b.dataset.vbalt});if(r)vbRender();return}

@@ -306,8 +306,8 @@ async def prepare(request):
     # profile; a "ja" afterwards never takes one (that happens only on Zustand → Verbessern)
     if not role_cmd and who and not mcp and messages[-1]["role"] == "user":
         import berater
-        if berater.phrase(messages[-1]["content"]):
-            note = role_note = await asyncio.to_thread(berater.by_phrase, who["id"])
+        if berater.takes(messages[-1]["content"], who["id"]):
+            note = role_note = await asyncio.to_thread(berater.by_phrase, who["id"], messages[-1]["content"])
             role_cmd = ("berater", "")
             print("berater: fester Satz (fixed rule, no tools in this answer)", flush=True)
             system = per_turn(system, "Einstellungs-Assistent: " + note + " Sag genau das, kurz.")

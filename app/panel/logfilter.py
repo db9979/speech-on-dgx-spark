@@ -195,7 +195,9 @@ def logfilter(request: Request, f: str = "", minutes: int = 60, lines: int = 100
     names = ", ".join(keys) or "alles"
     head = f"# Filter: {names} · letzte {minutes} min · {len(shown)} von {len(hits)} Zeilen"
     if format == "json":
+        import features   # „Erklären“ under the newest error (Einstellungs-Assistent, berater.explain_area)
         return dict(summary(rows, minutes, time.time()), head=head, found=len(hits),
+                    explain=features.admin_on("beratererklaeren"),
                     rows=[{k: r[k] for k in ("t", "area", "level", "msg", "raw")} for r in shown])
     return Response("\n".join([head] + [r["raw"] for r in shown]) + "\n", media_type="text/plain")
 

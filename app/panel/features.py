@@ -246,6 +246,8 @@ FEATURES = (
       parent="berater", guide="beraterissue"),
     F("beraterauto", "Autopilot für kleine Änderungen", "Autopilot for small changes", "talk", ("berater_auto",),
       parent="berater", guide="beraterauto"),
+    F("beraterideen", "Ideen außerhalb des Katalogs", "Ideas outside the catalog", "talk", ("berater_ideas",),
+      parent="berater", guide="beraterideen"),
     F("berateru", "Schritte für die Umgebung", "Steps for the environment", "talk", ("berater_env",), parent="berater",
       guide="berateru"),
     F("beratermich", "Vorschläge für mein Profil", "Proposals for my profile", "talk", ("berater_me",), "berater_me",

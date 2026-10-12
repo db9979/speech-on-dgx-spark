@@ -17,6 +17,7 @@ enum ChatEvent {
     case reminderCancel([String])
     case action(kind: String, target: String)   // iphone_action: "navigate" or "call"
     case face(String)       // what the answer is doing, for the face: search, calendar, mail, home, memory, happy, error
+    case rate(String)       // 👍/👎 may go under this answer (only when the profile's switch is on): its id
 }
 
 struct Reminder {
@@ -892,6 +893,10 @@ struct SparkAPI {
                             }
                         case "iphone":
                             if let kind = ev["kind"] as? String, let target = ev["target"] as? String { cont.yield(.action(kind: kind, target: target)) }
+                        case "rate":
+                            // only a short id of letters and digits (faelle.py), never other text from the event
+                            if let id = ev["id"] as? String, (4...40).contains(id.count),
+                               id.allSatisfy({ $0.isASCII && ($0.isLetter || $0.isNumber) }) { cont.yield(.rate(id)) }
                         default: break
                         }
                     }

@@ -44,7 +44,7 @@ function zustand(s){if(s)ZLAST=s;s=ZLAST;if(!s)return;
   const ok=([,v])=>v.state==='active'||['ready','ok'].includes((v.health||{}).status),nm=([n])=>SVCNAME[n]||n.toUpperCase();
   const all=Object.entries(s.services||{}).filter(e=>!bad.includes(nm(e))),run=all.filter(ok).map(nm),unk=all.filter(e=>!ok(e)&&e[1].enabled!==false).map(nm);
   const low=sy.mem_avail_gib!=null&&sy.mem_avail_gib<12;
-  const al=s.alerts||[],lvl=bad.length||need.some(x=>x.lvl==='bad')||al.some(x=>x.level==='bad')?'bad':need.length||unk.length||low||al.length?'warn':'ok';
+  const al=(s.alerts||[]).filter(x=>x.level!=='info'),lvl=bad.length||need.some(x=>x.lvl==='bad')||al.some(x=>x.level==='bad')?'bad':need.length||unk.length||low||al.length?'warn':'ok';
   $('ztitle').textContent=lvl==='ok'?t('Alles läuft.','Everything is running.'):lvl==='bad'?t('Etwas läuft nicht.','Something is not running.'):!run.length&&unk.length?t('Die Dienste melden sich nicht.','The services do not answer.'):t('Läuft, aber etwas braucht dich.','Running, but something needs you.');
   $('ztext').textContent=(bad.length?t('Fehler: ','Errors: ')+bad.join(', ')+'. ':'')+(run.length?run.join(t(' und ',' and '))+(run.length>1?t(' laufen. ',' are running. '):t(' läuft. ',' is running. ')):'')+(unk.length?t('Ohne Rückmeldung: ','No answer from: ')+unk.join(', ')+'. ':'')
     +(sy.mem_avail_gib!=null?t(`${fmt(sy.mem_avail_gib,' GiB',1)} Speicher frei`,`${fmt(sy.mem_avail_gib,' GiB',1)} memory free`)+(low?t(' (wenig)',' (low)'):'')+'.':'')+(al.length?' ':'');

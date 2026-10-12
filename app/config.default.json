@@ -174,6 +174,7 @@
     "berater_chat": false,
     "berater_notify": false,
     "berater_issue": false,
+    "berater_ideas": false,
     "berater_auto": false,
     "berater_env": false,
     "berater_me": false,
