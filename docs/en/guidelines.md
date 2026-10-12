@@ -299,6 +299,7 @@ The complete list is the **[Security checklist](security-checklist.md)** (about 
 - An update interrupts for about 8 seconds. Nightly work does not run during an update (`update.update_running()`). Device rounds run from 05:15. (M)
 - Self-test on tars with `nice 19` and `ionice`. Test priority code with `nice -n 19`. (M)
 - The panel venv is created from the lock only if venv-panel is new. A new library therefore needs an installation path for existing installations. (M)
+- Questions to `api.github.com` only through `ghtoken.get` (read-only token, 401 → on without it), never for reachability probes: without a token all devices at home share 60 per hour. (D; 🧪 test_ghtoken, test_update_check)
 
 ---
 

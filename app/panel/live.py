@@ -458,6 +458,11 @@ def update_checked(data, t0):
                 "GitHub nicht erreichbar, nichts wird installiert" if err else
                 "aktuell" if behind == 0 else
                 f"neuere getestete Version {data.get('version') or ''}".strip() + (f" ({behind} Änderungen)" if isinstance(behind, int) and behind > 0 else ""))
+        try:
+            import ghtoken
+            word += " · " + ghtoken.used()
+        except Exception:
+            pass
         if not err and head in ("running", "red"):
             word += " · neuester Stand: " + ("Tests laufen" if head == "running" else "Tests rot oder abgebrochen")
         event("Update", "Prüfung: " + word)

@@ -426,7 +426,7 @@ LIVE_WORDS = {
     "admin_mfa_recovery": ("Sicherheit", "neue Wiederherstellungscodes"), "admin_mfa_forget": ("Sicherheit", "vertraute Browser vergessen"),
     "profile_mfa_reset": ("Sicherheit", "zweiter Schritt eines Profils zurückgesetzt"),
     "notaus_key_new": ("Sicherheit", "Notaus-Schlüssel angelegt"), "notaus_key_delete": ("Sicherheit", "Notaus-Schlüssel gelöscht"),
-    "report_token": ("Sicherheit", "Token für Meldungen geändert"), "ha_code_set": ("Sicherheit", "Home-Assistant-Codewort geändert"),
+    "report_token": ("Sicherheit", "Token für Meldungen geändert"), "github_token": ("Sicherheit", "GitHub-Token für Updates geändert"), "ha_code_set": ("Sicherheit", "Home-Assistant-Codewort geändert"),
     "invite_pin": ("Eingang", "Einladung mit PIN geöffnet"), "handoff_ok": ("Eingang", "Übergabe-Code bestätigt"),
     "handoff_wrong": ("Eingang", "Übergabe-Code falsch"), "live_monitor_code": ("Eingang", "Code für einen Live-Monitor"),
     "live_monitor_paired": ("Eingang", "Live-Monitor gekoppelt"), "live_monitor_deleted": ("Eingang", "Live-Monitor gelöscht"),
@@ -500,7 +500,7 @@ RATE = {"chat": (30, 120), "asr": (60, 240), "logs": (1, 60), "pair": (10, 10), 
         "make": (0, 60), "makejob": (0, 120), "makefile": (0, 30), "makesend": (0, 10), "maketmpl": (0, 10),
         "makedl": (20, 30), "svcwatch": (0, 30), "svcwatchnow": (0, 4),
         "rate": (0, 30), "berater": (0, 60), "beraterset": (0, 30), "beraterrun": (0, 4),
-        "storage": (0, 60), "storagenow": (0, 6)}  # per minute: (guest, profile or admin)
+        "storage": (0, 60), "storagenow": (0, 6), "ghtoken": (0, 20)}  # per minute: (guest, profile or admin)
 BUSY = {"chat": 4, "asr": 3}  # at once, guests together
 
 

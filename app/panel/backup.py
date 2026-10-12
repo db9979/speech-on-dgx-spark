@@ -57,6 +57,7 @@ STATE_FILES = {
     "apns.json": "json",            # iPhone push: Apple key (sealed), key id, team
     "apns-tokens.json": "json",     # iPhone push: the devices' tokens
     "telegram.json": "json",        # Telegram bot (token sealed)
+    "github-token.json": "json",    # read-only GitHub token for update checks and downloads (sealed, ghtoken.py)
     "vapid.pem": "pem",             # browser push key: the browsers' push subscriptions belong to it
     "esp32.json": "json",           # ESP32 speakers: board variant, firmware, automatic updates
     "agent.json": "json",           # agent levels and MCP services (tokens sealed)

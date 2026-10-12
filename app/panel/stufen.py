@@ -49,6 +49,7 @@ LIST = {
     ("POST", "/api/backups-upload"): (PROTECT, "Daten", "Sicherung hochladen", "Upload a backup"),
     ("PUT", "/api/admin/offsite"): (PROTECT, "Daten", "Ziel der Sicherung nach außen", "Offsite backup target"),
     ("PUT", "/api/admin/report/token"): (PROTECT, "Daten", "Token für Problem-Meldungen", "Token for problem reports"),
+    ("PUT", "/api/admin/ghtoken"): (PROTECT, "Daten", "GitHub-Token für Updates", "GitHub token for updates"),
     # ------------------------------------------------------------------ accounts, devices, keys (confirm)
     ("POST", "/api/profile/calendar"): (CONFIRM, "Konten", "Kalender verbinden", "Connect a calendar"),
     ("POST", "/api/profile/mail"): (CONFIRM, "Konten", "Mail-Konto verbinden", "Connect a mail account"),

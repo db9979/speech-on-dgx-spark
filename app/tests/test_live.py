@@ -368,7 +368,7 @@ class Live(unittest.TestCase):
             texts = [(e["area"], e["text"]) for e in d["events"]]
             self.assertIn(("Eingang", "Anmeldung eines Profils"), texts)
             self.assertIn(("Eingang", "Einladung benutzt"), texts)
-            self.assertIn(("Update", "Prüfung: neuere getestete Version V9.9.9 (3 Änderungen) · neuester Stand: Tests laufen"), texts)
+            self.assertIn(("Update", "Prüfung: neuere getestete Version V9.9.9 (3 Änderungen) · ohne Token · neuester Stand: Tests laufen"), texts)
             self.assertFalse(any("api/x" in t for _, t in texts))
             ways = sorted((r["intent"], r["steps"][-1]["to"]) for r in d["reqs"] if r["auto"])
             self.assertEqual(ways, [("Sicherung nach außen", "nas"), ("Update-Prüfung", "github")])

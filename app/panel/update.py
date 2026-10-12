@@ -15,6 +15,7 @@ sys.path.insert(0, os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
 from common import journal  # noqa: E402
 from core import PREFIX, admin_code, app_version, auth, browser_profile, is_admin, run, security  # noqa: E402
 import backup  # noqa: E402
+import ghtoken  # noqa: E402
 import guard  # noqa: E402
 
 router = APIRouter()
@@ -103,9 +104,9 @@ async def green_runs(repo, branch, passed=False):
     params = {"branch": branch, "event": "push", "per_page": 30}
     if passed:
         params.update(status="success", per_page=5)
+    url = f"https://api.github.com/repos/{repo}/actions/workflows/tests.yml/runs"
     async with httpx.AsyncClient(timeout=10) as c:
-        r = await c.get(f"https://api.github.com/repos/{repo}/actions/workflows/tests.yml/runs",
-                        params=params, headers={"Accept": "application/vnd.github+json"})
+        r = await ghtoken.get(c, url, params=params, headers={"Accept": "application/vnd.github+json"})
     if r.status_code != 200:
         raise GitHubRefused(r.status_code, rate_limit_until(r.status_code, r.headers, time.time()))
     return r.json().get("workflow_runs")
@@ -198,9 +199,9 @@ async def _remote_state(force=False):
     else:
         if repo and ver.get("commit"):
             try:
+                url = f"https://api.github.com/repos/{repo}/compare/{ver['commit']}...{data['latest']}"
                 async with httpx.AsyncClient(timeout=10) as c:
-                    r = await c.get(f"https://api.github.com/repos/{repo}/compare/{ver['commit']}...{data['latest']}",
-                                    headers={"Accept": "application/vnd.github+json"})
+                    r = await ghtoken.get(c, url, headers={"Accept": "application/vnd.github+json"})
                 if r.status_code == 200:
                     j = r.json()
                     data["behind"] = j.get("ahead_by")

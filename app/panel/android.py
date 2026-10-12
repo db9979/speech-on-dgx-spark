@@ -127,7 +127,8 @@ async def fetch_apk(c=None):
     c = c or httpx.AsyncClient(timeout=120, follow_redirects=True)
     try:
         api = os.environ.get("SPEECH_SPARK_GITHUB_API", "https://api.github.com")
-        r = await c.get(f"{api}/repos/{repo}/releases", params={"per_page": 30})
+        import ghtoken
+        r = await ghtoken.get(c, f"{api}/repos/{repo}/releases", params={"per_page": 30})
         r.raise_for_status()
         rel = next((x for x in r.json() if str(x.get("tag_name", "")).startswith("android-v")
                     and not x.get("draft") and not x.get("prerelease")), None)

@@ -2,6 +2,7 @@
 
 Every version in one line, newest first (taken from the commit messages, so some lines are German, some English). Older entries have no version number.
 
+- **V01.0.458** · 2026-10-12 · GitHub-Token nur zum Lesen unter Einstellungen → Update: 5000 statt 60 GitHub-Abfragen pro Stunde für Update-Prüfung, Geräte-Updates und Downloads; abgelehnter Token → ohne ihn weiter
 - **V01.0.457** · 2026-10-12 · Verlauf auf allen Geräten: Geräte schicken nur neue Nachrichten (vorher überschrieb das zweite Gerät im selben Gespräch das erste), offene Seiten holen Neues beim Zurückkommen und alle 30 s, ein anderswo gelöschtes Gespräch schließt sich, Quellen/Dokumente/erstellte Dokumente bleiben unter Antworten, iPhone-App holt nach, Pebble-Uhr antwortet wieder ganz (seit V01.0.403 kaputt) und steht im Verlauf; neue Funktionen (aus): Verlauf sofort abgleichen (Ereignis-Verbindung, „Handy antwortet gerade …“), Ein Gespräch für alle Kanäle (Kanal-Zeichen), Verlauf offline lesen (nur vertraute Browser, andere löschen)
 - **V01.0.456** · 2026-10-12 · Eigener Speicher: auch SFTP (Schlüssel des Servers wird gemerkt, ändert er sich, geht nichts hin) und SMB-Freigaben im Heimnetz (nur SMB 3 verschlüsselt); Adresse über den Wächter, eine Verbindung pro Lauf mit Zeitgrenzen, Dienst-Wächter prüft den Port; Pakete paramiko und smbprotocol mit Prüfsummen
 - **V01.0.455** · 2026-10-12 · Antworten nie doppelt: schreibt das Modell die Antwort vor einem Werkzeug-Aufruf und danach noch einmal, zeigt und spricht der Spark jeden Satz nur einmal (Logs → Anfragen: „Wiederholung weggelassen“)

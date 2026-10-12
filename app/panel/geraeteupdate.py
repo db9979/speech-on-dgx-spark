@@ -308,15 +308,16 @@ def base_version():
 
 async def check_upstream(c=None):
     """The newest XiaoZhi release (version number only). Returns the error or ""."""
+    import ghtoken
     import netguard
     api = os.environ.get("SPEECH_SPARK_GITHUB_API", "https://api.github.com")
     err, ver = "", ""
     try:
         if c is not None:
-            r = await c.get(f"{api}/repos/{UPSTREAM}/releases/latest")
+            r = await ghtoken.get(c, f"{api}/repos/{UPSTREAM}/releases/latest")
         else:
             async with netguard.client(netguard.PUBLIC, max_bytes=256 * 1024, timeout=20, follow_redirects=False) as cl:
-                r = await cl.get(f"{api}/repos/{UPSTREAM}/releases/latest", headers={"Accept": "application/vnd.github+json"})
+                r = await ghtoken.get(cl, f"{api}/repos/{UPSTREAM}/releases/latest", headers={"Accept": "application/vnd.github+json"})
         r.raise_for_status()
         m = TAG.fullmatch(str((r.json() or {}).get("tag_name", "")))
         if not m:

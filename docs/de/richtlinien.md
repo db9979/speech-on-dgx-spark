@@ -299,6 +299,7 @@ Die vollständige Liste ist die **[Sicherheits-Checkliste](sicherheits-checklist
 - Ein Update unterbricht etwa 8 Sekunden. Nächtliche Arbeit läuft nicht während eines Updates (`update.update_running()`). Geräte-Runden laufen ab 05:15. (M)
 - Selbsttest auf tars mit `nice 19` und `ionice`. Prioritäten-Code mit `nice -n 19` testen. (M)
 - Die Panel-venv entsteht aus dem Lock nur, wenn venv-panel neu ist. Eine neue Bibliothek braucht deshalb einen Installationsweg für bestehende Installationen. (M)
+- Fragen an `api.github.com` nur über `ghtoken.get` (Token nur lesen, 401 → ohne Token weiter), nie für Erreichbarkeits-Proben: ohne Token teilen sich alle Geräte im Heimnetz 60 pro Stunde. (D; 🧪 test_ghtoken, test_update_check)
 
 ---
 

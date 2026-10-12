@@ -2226,7 +2226,8 @@ async def fetch(platform, c=None):
     folder = os.path.join(UPD_DIR, platform)
     try:
         api = os.environ.get("SPEECH_SPARK_GITHUB_API", "https://api.github.com")
-        r = await c.get(f"{api}/repos/{repo}/releases/tags/{TAGS[platform]}")
+        import ghtoken
+        r = await ghtoken.get(c, f"{api}/repos/{repo}/releases/tags/{TAGS[platform]}")
         if r.status_code == 404:
             raise NotYet("Im Repo gibt es noch keine Version.")
         r.raise_for_status()
