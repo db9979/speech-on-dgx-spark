@@ -73,6 +73,27 @@ def hints():
     return found
 
 
+def alert_ways():
+    """{go: [file]} of every note for the top of the admin pages (dicts with kind, level and text, health.alerts):
+    each must say with "go" where to look or act; [file] of those without."""
+    ways, missing = {}, []
+    for p in sorted(glob.glob(os.path.join(PANEL, "*.py"))):
+        for n in ast.walk(ast.parse(open(p, encoding="utf-8").read())):
+            if not isinstance(n, ast.Dict):
+                continue
+            keys = {k.value: v for k, v in zip(n.keys, n.values) if isinstance(k, ast.Constant)}
+            if not {"kind", "level", "text"} <= set(keys):
+                continue
+            go = keys.get("go")
+            both = [go.body, go.orelse] if isinstance(go, ast.IfExp) else [go]   # one way or the other
+            if all(isinstance(g, ast.Constant) for g in both):
+                for g in both:
+                    ways.setdefault(g.value, []).append(f"{os.path.basename(p)}:{n.lineno}")
+            else:
+                missing.append(f"{os.path.basename(p)}:{n.lineno}")
+    return ways, missing
+
+
 class Static(unittest.TestCase):
     def test_finds_the_ways(self):
         h = hints()
@@ -90,6 +111,16 @@ class Static(unittest.TestCase):
                     continue
                 bad.append(f"{os.path.relpath(path, APP)}: {m.group(0)}")
         self.assertEqual(bad, [])
+
+    def test_every_alert_names_its_place(self):
+        """Dominik 12.10.2026 („Antworten sind langsamer geworden …“ without a way): every note on top of the admin
+        pages carries a fixed way to the place it is about; the button under it jumps there."""
+        ways, missing = alert_ways()
+        self.assertEqual(missing, [])
+        self.assertGreaterEqual(len(ways), 6)
+        self.assertIn("Zustand → Logs → Anfragen", ways)
+        js = open(os.path.join(PANEL, "static", "js", "admin.js"), encoding="utf-8").read()
+        self.assertIn("b.onclick=()=>wayGo(x.go)", js)
 
     def test_way_js_is_loaded_and_only_moves(self):
         html = open(os.path.join(PANEL, "static", "index.html"), encoding="utf-8").read()
@@ -176,8 +207,41 @@ class Browser(unittest.TestCase):
         bad = asyncio.run(go())
         self.assertEqual(bad, [], "Wege ohne Ziel:\n" + "\n".join(bad))
 
+    def test_alert_ways_lead_somewhere(self):
+        """Every way of a note on top finds each of its steps, and the note's button opens it (slow answers:
+        Zustand → Logs → Anfragen)."""
+        ways, _ = alert_ways()
+
+        async def go():
+            async with async_playwright() as p:
+                br, pg, errors = await self.page(p, profile=False)
+                for s in ("mon", "logs", "test"):
+                    await pg.evaluate(f"goSec('{s}')")
+                    await pg.wait_for_timeout(400)
+                # the recording of requests on: its tab exists (without it the way goes to the switch for it)
+                await pg.evaluate("TRACE_ON=true;$('logreqtab').hidden=false")
+                res = await pg.evaluate("ws=>ws.map(w=>{const r=wayParse(w,0);return r?[r.steps,r.want,r.end===w.length]:null})", list(ways))
+                bad = [f"{w} ({ways[w][0]}): {r}" for w, r in zip(ways, res) if not r or r[0] < r[1] or not r[2]]
+                self.assertEqual(bad, [])
+                await pg.evaluate("goSec('chat')")
+                await pg.evaluate("TRACE_ON=true;showAlerts([{kind:'latency',level:'warn',text:'Antworten sind langsamer geworden.',go:'Zustand → Logs → Anfragen'}])")
+                await pg.evaluate("goSec('mon')")
+                await pg.click("#alerts .gonote button")
+                await self.until(pg, "LG.tab==='req'&&getComputedStyle($('logs')).display!=='none'")
+                self.assertEqual(errors, [])
+                await br.close()
+        asyncio.run(go())
+
     def test_live_hint_links_to_its_switch(self):
         """Dominik's example: the Live page is off, its hint opens Einstellungen → Betrieb and marks „Live-Seite“."""
+        # the page is off for this test, whatever an earlier test in the run left on (test_live switches it on)
+        with open(os.environ["SPEECH_SPARK_CONFIG"]) as f:
+            c = json.load(f)
+        was = c.setdefault("logs", {}).get("live", False)
+        c["logs"]["live"] = False
+        helpers.write_config(c)
+        self.addCleanup(self._live_back, was)
+
         async def go():
             async with async_playwright() as p:
                 br, pg, errors = await self.page(p, profile=False)
@@ -193,6 +257,13 @@ class Browser(unittest.TestCase):
                 self.assertEqual(errors, [])
                 await br.close()
         asyncio.run(go())
+
+    @staticmethod
+    def _live_back(was):
+        with open(os.environ["SPEECH_SPARK_CONFIG"]) as f:
+            c = json.load(f)
+        c.setdefault("logs", {})["live"] = was
+        helpers.write_config(c)
 
     def test_ich_hint_links_for_a_profile_only(self):
         """A way into Ich is a link for a signed-in profile and opens that page; admin ways are not links for a

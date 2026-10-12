@@ -339,23 +339,25 @@ def after_update_due(progress):
 def alerts():
     out = []
     if memory_state.get("low"):
-        out.append({"kind": "memory", "level": "bad",
+        out.append({"kind": "memory", "level": "bad", "go": "Zustand → Speicher",
                     "text": f"Nur noch {memory_state['avail']:.1f} GiB Speicher frei (Warnung unter "
                             f"{memory_state['warn_gib']:g} GiB). Unter etwa 8 GiB beendet DGX OS Prozesse."})
     recent = [e for e in events if time.time() - e["t"] < 3600]
     for e in recent[-3:]:
-        out.append({"kind": "watchdog", "level": "warn" if e["done"] else "bad",
+        out.append({"kind": "watchdog", "level": "warn" if e["done"] else "bad", "go": "Zustand → Logs → Diagnose",
                     "text": f"Wächter: {e['unit']} {e['reason']}"
                             + (", neu gestartet." if e["done"] else f", nicht neu gestartet ({e['note']}).")})
     live = last_live()
     if live and not live.get("ok") and time.time() - live["t"] < 86400:
         bad = ", ".join(s["name"].upper() for s in live["steps"] if s["ok"] is False)
-        out.append({"kind": "livecheck", "level": "bad", "text": f"Funktionsprüfung fehlgeschlagen: {bad}."})
+        out.append({"kind": "livecheck", "level": "bad", "go": "Zustand → Prüfen → Funktionsprüfung", "text": f"Funktionsprüfung fehlgeschlagen: {bad}."})
     out += quality_alert()
     import latency
     slow = latency.summary()["warn"]
     if slow:
-        out.append({"kind": "latency", "level": "warn", "text": slow})
+        import tracelog   # where the time goes, per request; without the recording: the switch for it
+        out.append({"kind": "latency", "level": "warn", "text": slow,
+                    "go": "Zustand → Logs → Anfragen" if tracelog.on() else "Einstellungen → Spark → Betrieb → Anfragen verfolgen"})
     import telegram
     out += telegram.alert()
     import dienstwacht
@@ -373,6 +375,6 @@ def quality_alert():
     new = [x["q"] for x in res["cases"] if x.get("new")]
     if not new:
         return []
-    return [{"kind": "quality", "level": "warn",
+    return [{"kind": "quality", "level": "warn", "go": "Zustand → Prüfen → Qualitätstest",
              "text": f"Qualitätstest: {len(new)} Frage(n) neu kaputt, z. B. „{new[0][:80]}“ "
                      "(Zustand → Prüfen → Qualitätstest)."}]

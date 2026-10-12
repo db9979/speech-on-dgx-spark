@@ -562,7 +562,7 @@ def alert():
     """For Zustand (health.alerts): the hint while another program keeps taking the bot's messages."""
     if conflict["count"] < 2 or not admin_on():
         return []
-    return [{"kind": "telegram", "level": "warn",
+    return [{"kind": "telegram", "level": "warn", "go": "Funktionen → Telegram",
              "text": "Telegram: Ein anderes Programm fragt mit demselben Bot-Token nach Nachrichten, deshalb "
                      "kommen Nachrichten nicht sicher an. Den Token nur an einer Stelle nutzen oder bei @BotFather "
                      "einen neuen holen (/revoke) und unter Funktionen → Telegram eintragen."}]

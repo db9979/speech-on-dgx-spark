@@ -33,6 +33,7 @@ All options for running without questions (`--mode api --asr 1.7b --tts 0.6b --y
 
 <!-- New version: add one line at the top here and in CHANGELOG.md, drop the oldest line here (keep 10). Details go to docs/de and docs/en, not into this README. -->
 
+- **V01.0.447** Notes on top of Status have “View” and jump to the right place
 - **V01.0.446** Switching a function on offers to switch on what it builds on; switching off says what goes off with it
 - **V01.0.445** Calmer Live picture: each stretch drawn once, rounds as "↻ 3", times beside the boxes
 - **V01.0.444** Meaning search really goes to sleep after 10 minutes without work; Status shows "standby" instead of "running" when nothing computes.
@@ -42,7 +43,6 @@ All options for running without questions (`--mode api --asr 1.7b --tts 0.6b --y
 - **V01.0.440** Service watch: admins get a note when the archive, the internet, the web search or another service is gone, and an all-clear when it is back.
 - **V01.0.439** Locked out? `sudo speech-spark notzugang` on the Spark gives a new panel password; /#admin opens the sign-in on an open page too
 - **V01.0.438** The switch shown: Features → Switch with the way of a sentence as a picture, groups with own words, “Not with”, extra tools, test sentences, “Wrongly sorted …”, undo and statistics
-- **V01.0.437** Live picture: devices over the proxy under internet, document jobs, jobs, mail tidying and more now visible
 
 All versions: [CHANGELOG.md](CHANGELOG.md)
 
