@@ -127,6 +127,7 @@ class MainActivity : Activity() {
         }
         NotePoll.schedule(this)
         askNotes()
+        LiveConn.check(this)
     }
 
     private fun load(url: String) {
@@ -289,6 +290,7 @@ class MainActivity : Activity() {
         load("$base/")
         NotePoll.schedule(this)
         askNotes()
+        LiveConn.check(this)
     }
 
     companion object {

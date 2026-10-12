@@ -12,6 +12,10 @@ token (TOKEN_SECONDS, at most TOKEN_USES downloads, only its hash in memory), as
 camera. Notes: the app asks /api/android/notes every 15 minutes; push.send picks it like the iPhone app when
 the app asked lately. The notes wait in memory only (NOTE_SECONDS, NOTE_MAX per profile).
 
+"Mitteilungen sofort" (chat.android_live and the profile's android_live, both off; plan messenger.md): the app keeps
+one connection open (a foreground service with a quiet lasting notification) and asks /api/android/wait, which
+answers as soon as a note is there or after WAIT_SECONDS with nothing; then it asks again. No Google service.
+
 Admin switch chat.android and the profile's android_on, both off at first; never guests.
 """
 import asyncio
@@ -53,6 +57,8 @@ MAX_TOKENS = 50
 NOTE_SECONDS = 24 * 3600
 NOTE_MAX = 30
 POLLED_KEEP = 3 * 3600    # the app asks every 15 minutes; after 3 hours without, notes go elsewhere
+WAIT_SECONDS = 50         # /api/android/wait holds the question this long (below the usual 60 s of a proxy)
+MAX_WAITERS = 2           # open waits per profile (a second phone); the oldest gives way
 VERSION = re.compile(r"\d{1,3}\.\d{1,3}\.\d{1,3}")
 UA = re.compile(r"SparkAndroid/(\d{1,3}\.\d{1,3}\.\d{1,3})")
 
@@ -60,6 +66,7 @@ _tokens = {}              # sha256(token) -> {"uid", "t", "n"}
 _notes = {}               # uid -> [{"n", "t", "title", "body", "tag"}]
 _seq = {}                 # uid -> last note number
 _polled = {}              # uid -> time of the app's last question
+_waiters = {}             # uid -> [(loop, asyncio.Event)] of the open waits
 _state = {"checked": 0.0, "error": ""}
 
 
@@ -73,6 +80,17 @@ def profile_on(uid):
 
 def allowed(uid):
     return features.allowed("android", uid)
+
+
+def live_ok(uid):
+    """Notes at once over a lasting connection (admin switch and the profile's own)."""
+    return features.allowed("androidlive", uid)
+
+
+def live_count():
+    """Open waits (Zustand → Live): a number only."""
+    with _lock:
+        return sum(len(v) for v in _waiters.values())
 
 
 def from_app(request):
@@ -267,6 +285,12 @@ def keep(uid, title, body, tag="", now=None):
         box = [x for x in _notes.get(uid, []) if now - x["t"] < NOTE_SECONDS]
         box.append({"n": n, "t": now, "title": str(title)[:200], "body": str(body)[:1500], "tag": str(tag)[:20]})
         _notes[uid] = box[-NOTE_MAX:]
+        waits = list(_waiters.get(uid, []))
+    for loop, ev in waits:   # a waiting app hears it at once (keep may run in any thread)
+        try:
+            loop.call_soon_threadsafe(ev.set)
+        except RuntimeError:
+            pass
     return n
 
 
@@ -288,8 +312,12 @@ def _on(prof=Depends(browser_profile)):
 
 @router.get("/api/profile/android", dependencies=[Depends(assistant)])
 def profile_get(prof=Depends(own_profile)):
-    return {"enabled": admin_on(), "on": profile_on(prof["id"]), "app": meta() if admin_on() else None,
-            "minutes": TOKEN_SECONDS // 60, "notes": reachable(prof["id"])}
+    uid = prof["id"]
+    with _lock:
+        waiting = bool(_waiters.get(uid))
+    return {"enabled": admin_on(), "on": profile_on(uid), "app": meta() if admin_on() else None,
+            "minutes": TOKEN_SECONDS // 60, "notes": reachable(uid), "live_enabled": features.admin_on("androidlive"),
+            "live": live_ok(uid), "connected": waiting}
 
 
 @router.post("/api/profile/android/link", dependencies=[Depends(assistant)])
@@ -318,10 +346,49 @@ def app_notes(request: Request, after: int = 0, prof=Depends(browser_profile)):
     guard.limit(request, "android", prof["id"])
     if not allowed(prof["id"]):
         raise HTTPException(403, "the Android app is turned off")
-    items, last = notes(prof["id"], max(0, min(after, 10 ** 9)))
+    return _answer(prof["id"], after)
+
+
+def _answer(uid, after):
+    items, last = notes(uid, max(0, min(after, 10 ** 9)))
     m = meta()
     return {"notes": [{"n": x["n"], "title": x["title"], "body": x["body"], "tag": x["tag"]} for x in items],
-            "last": last, "app": {"version": m["version"], "code": m["code"]} if m else None}
+            "last": last, "app": {"version": m["version"], "code": m["code"]} if m else None, "live": live_ok(uid)}
+
+
+@router.get("/api/android/wait", dependencies=[Depends(assistant)])
+async def app_wait(request: Request, after: int = 0, prof=Depends(browser_profile)):
+    """The lasting connection: answers as soon as there is a note after `after`, else after WAIT_SECONDS empty.
+    403 when the app or "Mitteilungen sofort" is off (the app then ends its connection)."""
+    import asyncio
+    uid = prof["id"]
+    guard.limit(request, "androidwait", uid)
+    if not allowed(uid) or not live_ok(uid):
+        raise HTTPException(403, "notes at once are turned off")
+    after = max(0, min(after, 10 ** 9))
+    if _seq.get(uid, 0) > after or _seq.get(uid, 0) < after:   # something new, or the Spark started over
+        return _answer(uid, after)
+    loop, ev = asyncio.get_running_loop(), asyncio.Event()
+    me = (loop, ev)
+    with _lock:
+        _polled[uid] = time.time()
+        box = _waiters.setdefault(uid, [])
+        if len(box) >= MAX_WAITERS:
+            old = box.pop(0)
+            old[0].call_soon_threadsafe(old[1].set)
+        box.append(me)
+    try:
+        await asyncio.wait_for(ev.wait(), WAIT_SECONDS)
+    except asyncio.TimeoutError:
+        pass
+    finally:
+        with _lock:
+            box = _waiters.get(uid, [])
+            if me in box:
+                box.remove(me)
+            if not box:
+                _waiters.pop(uid, None)
+    return _answer(uid, after)
 
 
 @router.get("/api/admin/android", dependencies=[Depends(auth)])

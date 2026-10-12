@@ -172,6 +172,8 @@ struct ChatView: View {
     @State private var camera = false
     @State private var files = false
     @State private var photo: PhotosPickerItem?
+    @State private var chatsOpen = false
+    @StateObject private var chats = ChatsModel()
     @Environment(\.scenePhase) private var scene
 
     var body: some View {
@@ -190,6 +192,21 @@ struct ChatView: View {
                     Button { history = true } label: { Image(systemName: "clock.arrow.circlepath") }
                         .accessibilityLabel("Verlauf")
                 }
+                if chats.state.on {   // Chats (ChatsView.swift): only when the Spark and the profile have them on
+                    ToolbarItem(placement: .topBarTrailing) {
+                        Button { chatsOpen = true } label: {
+                            Image(systemName: chats.unread > 0 ? "bubble.left.and.bubble.right.fill" : "bubble.left.and.bubble.right")
+                                .overlay(alignment: .topTrailing) {
+                                    if chats.unread > 0 {
+                                        Text(verbatim: chats.unread > 9 ? "9+" : String(chats.unread))
+                                            .font(.system(size: 10, weight: .bold)).foregroundStyle(.white)
+                                            .padding(3).background(Circle().fill(.red)).offset(x: 8, y: -8)
+                                    }
+                                }
+                        }
+                        .accessibilityLabel(chats.unread > 0 ? Text("Chats, \(chats.unread) ungelesen") : Text("Chats"))
+                    }
+                }
                 ToolbarItem(placement: .topBarTrailing) {
                     Button { today = true } label: { Image(systemName: "sun.max") }
                         .accessibilityLabel("Heute")
@@ -203,6 +220,14 @@ struct ChatView: View {
             .sheet(isPresented: $settings, onDismiss: { talk.settingsChanged() }) { SettingsView() }
             .sheet(isPresented: $history) { HistoryView() }
             .sheet(isPresented: $talk.showMessages, onDismiss: { Task { await talk.refreshMessages() } }) { MessagesView() }
+            .sheet(isPresented: $chatsOpen, onDismiss: { Task { await chats.load() } }) { ChatsView() }
+            .task {
+                guard Demo.scene == nil else { return }
+                while !Task.isCancelled {   // the unread count beside the chats button, once a minute
+                    await chats.load()
+                    try? await Task.sleep(for: .seconds(60))
+                }
+            }
             .sheet(isPresented: $demoProfile) { NavigationStack { ProfileView() } }
             .fullScreenCover(isPresented: $camera) {
                 CameraPicker { image in

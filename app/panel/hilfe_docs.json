@@ -13,7 +13,15 @@
 "file": "Android-App „Spark“ (APK, ohne Store)",
 "head": "Android-App „Spark“ (APK, ohne Store)",
 "title": "Android-App „Spark“ (APK, ohne Store)",
-"text": "- Mitteilungen bei geschlossener App: Die App fragt alle 15 Minuten selbst beim Spark nach (/api/android/notes), ohne Google-Dienst. Erinnerungen, Morgenrunde und Hinweise kommen dorthin, wenn die App das zuletzt benutzte Gerät ist oder kein anderer Weg (iPhone-App) eingerichtet ist. - Assistenten-Taste: Unter Einstellungen → Apps → Standard-Apps → Digitaler Assistent „Spark“ wählen; langes Drücken öffnet die App und sie hört zu. - Teilen an Spark: Text in einer anderen App teilen → Spark. Der Text steht im Tippfeld, abschicken tust du selbst. - Notaus-Kachel (ab 1.1.0): Schnelleinstellungen bearbeiten → „Notaus“ hinzufügen. Admins wählen „Ganzer Spark“ (Stufe 2) oder „Mein Notaus“, alle anderen „Mein Notaus“, immer mit Rückfrage; aufheben nur im Browser (siehe Sicherheit und Betrieb). - Neue Version: Die App meldet sich mit einer Mitteilung, wenn der Spark eine neuere APK hat."
+"text": "- Mitteilungen bei geschlossener App: Die App fragt alle 15 Minuten selbst beim Spark nach (/api/android/notes), ohne Google-Dienst. Erinnerungen, Morgenrunde und Hinweise kommen dorthin, wenn die App das zuletzt benutzte Gerät ist oder kein anderer Weg (iPhone-App) eingerichtet ist. - Mitteilungen sofort (ab 1.2.0, V01.0.473): Admin: Funktionen → Android-App → „Android: Mitteilungen sofort“ (aus); Profil: Ich → Android-App → „Mitteilungen sofort“ (aus), dann die App einmal öffnen. Die App hält dann eine Verbindung zum Spark offen (/api/android/wait: der Spark antwortet sofort, wenn eine Mitteilung da ist, sonst nach 50 Sekunden leer, und die App fragt wieder). Chat-Nachrichten, Erinnerungen und Hinweise kommen so ohne Verzögerung, ohne Google-Dienst. Android zeigt dafür eine stille Daueranzeige „Mit dem Spark verbunden“ (Dienst im Vordergrund). Damit Android die Verbindung nicht schlafen legt: in den Android-Einstellungen bei Apps, Spark, Akku „Nicht eingeschränkt“. Nach einem Neustart des Handys startet die Verbindung beim ersten Öffnen der App; bis dahin fragt die App alle 15 Minuten. Schalter aus oder abgemeldet: Die App beendet die Verbindung von selbst. Live zeigt unter Verbi"
+},
+{
+"lang": "de",
+"src": "android-app",
+"file": "Android-App „Spark“ (APK, ohne Store)",
+"head": "Android-App „Spark“ (APK, ohne Store)",
+"title": "Android-App „Spark“ (APK, ohne Store)",
+"text": "ndungen „Android-App (sofort)“ nur mit der Anzahl. - Assistenten-Taste: Unter Einstellungen → Apps → Standard-Apps → Digitaler Assistent „Spark“ wählen; langes Drücken öffnet die App und sie hört zu. - Teilen an Spark: Text in einer anderen App teilen → Spark. Der Text steht im Tippfeld, abschicken tust du selbst. - Notaus-Kachel (ab 1.1.0): Schnelleinstellungen bearbeiten → „Notaus“ hinzufügen. Admins wählen „Ganzer Spark“ (Stufe 2) oder „Mein Notaus“, alle anderen „Mein Notaus“, immer mit Rückfrage; aufheben nur im Browser (siehe Sicherheit und Betrieb). - Neue Version: Die App meldet sich mit einer Mitteilung, wenn der Spark eine neuere APK hat."
 },
 {
 "lang": "de",
@@ -654,6 +662,46 @@
 "head": "Sprach-Chat",
 "title": "Nachrichten an andere (V01.0.192)",
 "text": ", „Sag Anna, das Essen ist fertig“ oder „Nachricht an Ben: …“, liest das Panel Empfänger und Text selbst (feste Regeln), liest die Nachricht vor und sendet nach „Ja“. Ist die Nachricht für dich noch aus, fragt der Assistent „Soll ich sie einschalten?“; dein „Ja“ schaltet nur dein eigenes Profil ein und geht dann zur Nachricht weiter. Geht Senden nicht, nennt er den Grund (Admin-Schalter aus, „sb hat Nachrichten nicht eingeschaltet“ …). Unter Ich → Nachrichten zeigt „Bereit“, was an ist und wer erreichbar ist; der Admin kann dort und unter Funktionen „Für alle Profile einschalten“ (jedes Profil kann es wieder ausschalten)."
+},
+{
+"lang": "de",
+"src": "assistent",
+"file": "Assistent und Oberfläche",
+"head": "Sprach-Chat",
+"title": "Chats (V01.0.473)",
+"text": "Chats (V01.0.473): Schreiben wie im Messenger, alles auf dem Spark. Admin: Funktionen → „Nachrichten an andere“, darunter „Chats“ und „Gruppen-Chats“ (beide aus). Profil: Ich → Gespräch → Chats → „Chats mit anderen“ (aus), dazu „Lesebestätigung“ (an) und „Text in der Mitteilung“ (aus). Dann steht im Menü „Chats“ (am Handy der Tab „Chats“ mit der Zahl ungelesener Nachrichten): links die Liste, rechts der Chat; am Handy zwei Seiten mit „‹“ zurück. Haken: ✓ gesendet, ✓✓ auf einem Gerät angekommen, blaue ✓✓ gelesen (nur zwischen Profilen, die beide die Lesebestätigung anhaben). Antippen einer Nachricht: Reaktion (👍 ❤️ 😂 😮 😢 🙏), Antworten, Kopieren, Ändern (15 Minuten), für alle zurücknehmen (1 Stunde). ⓘ: stumm (1 Stunde, 8 Stunden, immer), „Nachrichten verschwinden“ (24 Stunden, 7 oder 90 Tage; in Gruppen stellen das die Admins ein), Chat für mich leeren, in Gruppen Name, Mitglieder, Admins und Verlassen. Schreiben darf nur, wen die andere Person annimmt (dieselben Regeln wie Ich → Nachrichten: von wem, gesperrt); der Absender hört nur „nimmt gerade keine Nachrichten von dir an“, nie warum. „Sag Anna, das Essen ist fertig“ landet im Chat mit Anna (mit 🎙 als Zeichen), „Habe ich neue Na"
+},
+{
+"lang": "de",
+"src": "assistent",
+"file": "Assistent und Oberfläche",
+"head": "Sprach-Chat",
+"title": "Chats (V01.0.473)",
+"text": "chrichten?“ liest ungelesene Chat-Nachrichten als fremden Text vor, nie als Anweisung. Die Texte, Gruppennamen und Vorschauen liegen mit AES-256-GCM verschlüsselt unter users/_chats/ (Schlüssel aus dem Schlüssel des Sparks abgeleitet, jede Nachricht an Chat und Nummer gebunden) und sind in der Sicherung. Eine offene Chats-Seite bekommt Änderungen sofort über eine Verbindung, die nur Nummern trägt; ohne offene Seite geht eine Mitteilung an alle eingerichteten Geräte (iPhone, Android, Begleiter, Browser), nur „💬 Name“ und „Neue Nachricht“, nie über Telegram, nicht bei stumm oder in der Ruhezeit. Grenzen: 4000 Zeichen pro Nachricht, 240 Nachrichten pro Stunde, 50 Personen pro Gruppe. Wird ein Profil gelöscht, verschwinden seine Nachrichten aus allen Chats. Logs (Bereich „Nachrichten und Chats“) und Live (Kachel „Chats“: Anzahl Chats, Nachrichten heute, offene Verbindungen, Mitteilungen) zeigen nur Zahlen. Private Chats mit Ende-zu-Ende-Verschlüsselung und Anrufe folgen."
+},
+{
+"lang": "de",
+"src": "assistent",
+"file": "Assistent und Oberfläche",
+"head": "Sprach-Chat",
+"title": "Fotos, Dateien und Sprache in Chats (V01.0.473)",
+"text": "Fotos, Dateien und Sprache in Chats (V01.0.473): Admin: Funktionen → Chats → „Fotos, Dateien und Sprache in Chats“ (aus). Dann zeigt der Chat links 📎 (Foto oder Datei) und rechts 🎤 (Sprachnachricht: antippen, sprechen, ➤ sendet, „Verwerfen“ wirft weg; nach 5 Minuten sendet sie von selbst). Fotos: JPEG, PNG oder WebP bis 15 MB; der Spark liest sie und speichert sie neu (höchstens 2048 Pixel, Vorschau 480 Pixel), damit fallen Ort und Kameradaten weg. Dateien: PDF, Word, Excel, PowerPoint, OpenDocument und Text (txt, csv, md) bis 25 MB, erkannt am Inhalt, nie am Namen; der Name wird bereinigt und bekommt die Endung dessen, was die Datei wirklich ist. Dateien gibt es nur zum Herunterladen (nie im Panel geöffnet). Sprachnachrichten werden als AAC gespeichert (spielt überall, auch auf dem iPhone), die Spracherkennung schreibt darunter, was gesagt wurde. Alles liegt verschlüsselt (AES-256-GCM, an Chat, Nachricht und Teil gebunden) unter users/_chats/<Chat>/, höchstens 2 GB pro Person; zurückgenommene, verschwundene und gelöschte Nachrichten nehmen ihre Dateien mit. Der Dateiname reist im Kopf der Anfrage, Suchwörter im Inhalt (POST), damit nichts davon im Zugriffslog landet. „Habe ich neu"
+},
+{
+"lang": "de",
+"src": "assistent",
+"file": "Assistent und Oberfläche",
+"head": "Sprach-Chat",
+"title": "Fotos, Dateien und Sprache in Chats (V01.0.473)",
+"text": "e Nachrichten?“ nennt Fotos und Dateien nur als „📷 Foto“ bzw. „📄 Datei“. Live (Kachel „Chats“) zeigt Anzahl und Größe, nie Namen."
+},
+{
+"lang": "de",
+"src": "assistent",
+"file": "Assistent und Oberfläche",
+"head": "Sprach-Chat",
+"title": "In einen Chat einladen (V01.0.473)",
+"text": "In einen Chat einladen (V01.0.473): Admin: Funktionen → Chats → „In einen Chat einladen“ (aus) und Personen und Geräte → Neue Personen „nur mit Einladung“. Dann zeigt Chats → ＋ Neuer Chat „Jemanden einladen“: Name als Vorschlag, „Einladung erstellen“, QR-Code und Link (kopieren oder teilen). Die eingeladene Person wählt Name und PIN und landet sofort im Chat mit dir („… ist mit deiner Einladung dazugekommen“); für sie sind Chats schon an, beide nehmen Nachrichten voneinander an (außer jemand ist gesperrt). Jede Einladung gilt 7 Tage und einmal, höchstens 3 offene pro Person; der Admin sieht sie unter Neue Personen und kann sie zurückziehen. Ist der Schalter aus oder hat die einladende Person Chats aus, gilt der Link nicht mehr. Das neue Profil bekommt nur Chats und die Funktionen für neue Profile, nie eine Rolle; der zweite Anmeldeschritt gilt wie bei jeder Einladung."
 },
 {
 "lang": "de",
@@ -3365,7 +3413,15 @@
 "file": "Android app \"Spark\" (APK, no store)",
 "head": "Android app \"Spark\" (APK, no store)",
 "title": "Android app \"Spark\" (APK, no store)",
-"text": "- Notes while the app is closed: the app asks the Spark itself every 15 minutes (/api/android/notes), no Google service. Reminders, the morning briefing and notes go there when the app is the device used last or no other way (iPhone app) is set up. - Assistant button: Settings → Apps → Default apps → Digital assistant → \"Spark\"; holding the button opens the app and it listens. - Share to Spark: share text in another app → Spark. The text is put into the text field, you send it yourself. - Emergency stop tile (1.1.0 and later): edit quick settings → add \"Notaus\". Admins choose \"Ganzer Spark\" (stage 2) or \"Mein Notaus\", everyone else \"Mein Notaus\", always behind a question; lifting only in the browser (see Security and operation). - New version: the app shows a notification when the Spark has a newer APK."
+"text": "- Notes while the app is closed: the app asks the Spark itself every 15 minutes (/api/android/notes), no Google service. Reminders, the morning briefing and notes go there when the app is the device used last or no other way (iPhone app) is set up. - Notes at once (1.2.0 and later, V01.0.473): admin: Features → Android app → \"Android: notes at once\" (off); profile: Me → Android app → \"Notes at once\" (off), then open the app once. The app then keeps a connection to the Spark open (/api/android/wait: the Spark answers at once when a notification is there, otherwise empty after 50 seconds, and the app asks again). Chat messages, reminders and notes come without delay, without a Google service. Android shows a quiet lasting notice \"Mit dem Spark verbunden\" for it (a foreground service). So Android does not put the connection to sleep: in the Android settings under Apps, Spark, Battery pick \"Unrestricted\". After the phone restarts the connection starts when the app is opened first; until then the app asks every 15 minutes. Switch off or signed out: the app ends the connection by itself. Live shows \"Android-App (sofort)\" under connections, with the number only. - Assistant button: Settin"
+},
+{
+"lang": "en",
+"src": "android-app",
+"file": "Android app \"Spark\" (APK, no store)",
+"head": "Android app \"Spark\" (APK, no store)",
+"title": "Android app \"Spark\" (APK, no store)",
+"text": "gs → Apps → Default apps → Digital assistant → \"Spark\"; holding the button opens the app and it listens. - Share to Spark: share text in another app → Spark. The text is put into the text field, you send it yourself. - Emergency stop tile (1.1.0 and later): edit quick settings → add \"Notaus\". Admins choose \"Ganzer Spark\" (stage 2) or \"Mein Notaus\", everyone else \"Mein Notaus\", always behind a question; lifting only in the browser (see Security and operation). - New version: the app shows a notification when the Spark has a newer APK."
 },
 {
 "lang": "en",
@@ -3990,6 +4046,46 @@
 "head": "Voice chat",
 "title": "Messages to others (V01.0.192)",
 "text": "the panel reads recipient and text itself (fixed rules), reads the message back and sends after \"Ja\". When messages are still off for you, the assistant asks whether to switch them on; your \"Ja\" switches on only your own profile and then goes on to the message. When sending is not possible it names the reason (admin switch off, \"sb has messages off\" …). Under Me → Messages \"Ready\" shows what is on and who can be reached; there and under Features the admin can \"Switch on for every profile\" (each profile can switch it off again)."
+},
+{
+"lang": "en",
+"src": "assistant",
+"file": "Assistant and panel",
+"head": "Voice chat",
+"title": "Chats (V01.0.473)",
+"text": "Chats (V01.0.473): Writing like in a messenger, everything on the Spark. Admin: Features → \"Messages to others\", below it \"Chats\" and \"Group chats\" (both off). Profile: Me → Conversation → Chats → \"Chats with others\" (off), plus \"Read receipts\" (on) and \"Text in the notification\" (off). Then the menu has \"Chats\" (on a phone the \"Chats\" tab with the number of unread messages): the list on the left, the chat on the right; on a phone two pages with \"‹\" back. Ticks: ✓ sent, ✓✓ arrived on a device, blue ✓✓ read (only between profiles that both have read receipts on). Tap a message: reaction (👍 ❤️ 😂 😮 😢 🙏), reply, copy, change (15 minutes), take back for all (1 hour). ⓘ: mute (1 hour, 8 hours, always), \"messages disappear\" (24 hours, 7 or 90 days; in groups the admins set it), clear the chat for me, in groups name, members, admins and leave. Only who the other person takes may write (the same rules as Me → Messages: from whom, blocked); the sender only hears \"does not take messages from you right now\", never why. \"Tell Anna dinner is ready\" lands in the chat with Anna (marked 🎙), \"Do I have new messages?\" reads unread chat messages as foreign text, never as an instruction. Texts, group n"
+},
+{
+"lang": "en",
+"src": "assistant",
+"file": "Assistant and panel",
+"head": "Voice chat",
+"title": "Chats (V01.0.473)",
+"text": "ames and previews are stored encrypted with AES-256-GCM under users/_chats/ (key derived from the Spark's key, each message bound to its chat and number) and are part of the backup. An open Chats page gets changes at once over a connection that carries numbers only; without an open page a notification goes to every set-up device (iPhone, Android, companion, browser), only \"💬 name\" and \"New message\", never through Telegram, not when muted or in quiet hours. Limits: 4000 characters per message, 240 messages per hour, 50 people per group. When a profile is deleted, its messages disappear from every chat. Logs (area \"Messages and chats\") and Live (tile \"Chats\": number of chats, messages today, open connections, notifications) show numbers only. Private chats with end-to-end encryption and calls follow."
+},
+{
+"lang": "en",
+"src": "assistant",
+"file": "Assistant and panel",
+"head": "Voice chat",
+"title": "Photos, files and voice in chats (V01.0.473)",
+"text": "Photos, files and voice in chats (V01.0.473): Admin: Features → Chats → \"Photos, files and voice in chats\" (off). Then the chat shows 📎 on the left (photo or file) and 🎤 on the right (voice message: tap, speak, ➤ sends, \"Discard\" throws it away; after 5 minutes it sends by itself). Photos: JPEG, PNG or WebP up to 15 MB; the Spark reads them and saves them anew (at most 2048 pixels, preview 480 pixels), which drops place and camera data. Files: PDF, Word, Excel, PowerPoint, OpenDocument and text (txt, csv, md) up to 25 MB, recognised by content, never by name; the name is cleaned and gets the extension of what the file really is. Files are only for download (never opened in the panel). Voice messages are stored as AAC (plays everywhere, iPhone included), speech recognition writes what was said underneath. Everything is stored encrypted (AES-256-GCM, bound to chat, message and part) under users/_chats/<chat>/, at most 2 GB per person; taken back, disappeared and deleted messages take their files with them. The file name travels in the request header, search words in the body (POST), so none of it lands in the access log. \"Do I have new messages?\" names photos and files only as \"📷 Pho"
+},
+{
+"lang": "en",
+"src": "assistant",
+"file": "Assistant and panel",
+"head": "Voice chat",
+"title": "Photos, files and voice in chats (V01.0.473)",
+"text": "to\" or \"📄 File\". Live (tile \"Chats\") shows count and size, never names."
+},
+{
+"lang": "en",
+"src": "assistant",
+"file": "Assistant and panel",
+"head": "Voice chat",
+"title": "Invite into a chat (V01.0.473)",
+"text": "Invite into a chat (V01.0.473): Admin: Features → Chats → \"Invite into a chat\" (off) and People and devices → New people \"only by invitation\". Then Chats → ＋ New chat shows \"Invite someone\": a name as a suggestion, \"Make invitation\", QR code and link (copy or share). The invited person picks a name and PIN and lands in the chat with you at once (\"… joined with your invitation\"); chats are already on for them, both take messages from each other (unless someone is blocked). Each invitation works 7 days and once, at most 3 open per person; the admin sees them under New people and can withdraw them. When the switch is off or the inviting person has chats off, the link stops working. The new profile only gets chats and the functions for new profiles, never a role; the second sign-in step applies as for every invitation."
 },
 {
 "lang": "en",

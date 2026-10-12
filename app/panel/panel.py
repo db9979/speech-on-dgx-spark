@@ -95,10 +95,11 @@ import ghtoken  # noqa: E402
 import docmake  # noqa: E402
 import verlauf  # noqa: E402
 import klaeren  # noqa: E402
+import chats  # noqa: E402
 
 # no /docs, /redoc or /openapi.json: a map of every path for guests, and Swagger from a CDN
 app = FastAPI(title="Speech on DGX Spark", docs_url=None, redoc_url=None, openapi_url=None)
-for _module in (account, admin, chat, update, system, proactive, room, roomlive, tidy, weather, contacts, parcels, telegram, tasks, esp32, iphone, pebblewatch, android, appupdate, apns, transit, logfilter, agent, images, messages, intent, wissen, tracelog, lokal, features, remarkable, rmplus, join, onboard, hintergrund, stufe, today, offsite, mcpserver, meinmcp, live, hamelden, notaus, hilfe, tipps, schreib, begleiter, systemone, geraeteupdate, meldung, ghtoken, docmake, weiche, dienstwacht, faelle, berater, speicher, verlauf, klaeren):
+for _module in (account, admin, chat, chats, update, system, proactive, room, roomlive, tidy, weather, contacts, parcels, telegram, tasks, esp32, iphone, pebblewatch, android, appupdate, apns, transit, logfilter, agent, images, messages, intent, wissen, tracelog, lokal, features, remarkable, rmplus, join, onboard, hintergrund, stufe, today, offsite, mcpserver, meinmcp, live, hamelden, notaus, hilfe, tipps, schreib, begleiter, systemone, geraeteupdate, meldung, ghtoken, docmake, weiche, dienstwacht, faelle, berater, speicher, verlauf, klaeren):
     app.include_router(_module.router)
 app.middleware("http")(update_lock)
 
@@ -116,10 +117,10 @@ app.add_middleware(BodyLimit, default=2 * 1024**2, gate=_may_upload, limits=[
     ("/api/backups-upload", backup.MAX_UPLOAD + 1024**2), ("/api/clone-voices-import", 200 * 1024**2),
     ("/api/clone-voices", 60 * 1024**2), ("/api/test/asr", 51 * 1024**2), ("/api/desk/dictate", begleiter.MAX_AUDIO), ("/api/desk/hear", begleiter.MAX_HEAR), ("/api/desk/file", begleiter.MAX_UPLOAD + 64 * 1024), ("/api/desk/screen", begleiter.MAX_SHOT + 64 * 1024), ("/api/desk/meeting/chunk", begleiter.MEET_CHUNK), ("/api/profile/desk/send", begleiter.INBOX_FILE + 64 * 1024), ("/api/logverbose", 4096), ("/api/profile/voice", 11 * 1024**2),
     ("/api/profile/docs", lambda: wissen.pdf_bytes() + 1024**2), ("/api/chat/image", images.MAX_BYTES + 64 * 1024),
-    ("/api/chat", 4 * 1024**2), ("/api/login", 64 * 1024),
+    ("/api/chats/media", chats.MAX_FILE + 64 * 1024), ("/api/chats", 64 * 1024), ("/api/chat", 4 * 1024**2), ("/api/login", 64 * 1024),
     ("/api/profile/login", 64 * 1024), ("/mcp", mcpserver.MAX_BODY), ("/oauth/", mcpserver.MAX_JSON)],
     gated=("/api/backups-upload", "/api/clone-voices", "/api/test/asr", "/api/desk/dictate", "/api/desk/hear", "/api/desk/file", "/api/desk/screen", "/api/desk/meeting/chunk", "/api/profile/desk/send", "/api/profile/voice", "/api/profile/docs",
-           "/api/chat/image", "/mcp"))
+           "/api/chat/image", "/api/chats/media", "/mcp"))
 
 
 # Browser protection on every answer (V01.0.262): no other page may show the panel in a frame (clickjacking),
@@ -212,12 +213,13 @@ async def emergency(request: Request, call_next):
 # pattern and the time, never the query, ids or names; one line per route a minute at most (Zustand polls every 3 s).
 SLOW_READ = 1.5
 SLOW_EVERY = 60
+WAITS = ("/api/android/wait",)   # reads that wait on purpose (the Android app's lasting connection, android.py)
 _slow_said = {}
 
 
 def slow_read(method, route, took, now):
     """The Diagnose line for a slow read, or None (fast, not a read, or said in the last minute)."""
-    if method != "GET" or took < SLOW_READ or not route.startswith("/api/"):
+    if method != "GET" or took < SLOW_READ or not route.startswith("/api/") or route in WAITS:
         return None
     if now - _slow_said.get(route, -SLOW_EVERY) < SLOW_EVERY:
         return None

@@ -141,9 +141,9 @@ OHNE = {
     ),
     "chat": (
         "telegram_panel_url",
-        "agent", "agent_mcp", "android", "berater", "berater_auto", "berater_calls", "berater_chat",
+        "agent", "agent_mcp", "android", "android_live", "berater", "berater_auto", "berater_calls", "berater_chat",
         "berater_check_h", "berater_env", "berater_explain", "berater_ideas", "berater_issue", "berater_me", "berater_notify",
-        "berater_off", "bewerten", "bewerten_back", "calendar", "contacts", "datetime", "defaults", "desk",
+        "berater_off", "bewerten", "bewerten_back", "calendar", "chats", "chats_groups", "chats_media", "chats_invite", "contacts", "datetime", "defaults", "desk",
         "desk_act", "desk_meeting", "dev_updates_night", "dev_updates_night_at", "dev_updates_upstream",
         "direct_read", "doc_brief", "doc_make", "doc_make_templates", "doc_make_wikipics", "doc_max_mb", "doc_night", "doc_night_from",
         "doc_night_to", "doc_originals", "doc_pictures", "doc_quota_mb", "doc_semantic", "doc_shared", "documents",
@@ -185,10 +185,10 @@ OHNE = {
     ),
 }
 OHNE_PROFIL = (
-        "agent_doc", "agent_on", "android_on", "app_accounts", "app_act", "app_admin", "app_auto", "app_car_ha",
+        "agent_doc", "agent_on", "android_live", "android_on", "app_accounts", "app_act", "app_admin", "app_auto", "app_car_ha",
         "app_docs", "app_docs_edit", "app_ha", "app_images", "app_ios", "app_listen", "app_mine", "app_on",
         "app_push", "app_room", "app_security", "app_voice", "auto", "barge", "barge_level", "berater_ask",
-        "berater_me", "berater_note", "berater_skip", "briefing_at", "con_bday", "con_on", "daily", "desk_on",
+        "berater_me", "berater_note", "berater_skip", "briefing_at", "chat_push_text", "chat_receipts", "chats_on", "con_bday", "con_on", "daily", "desk_on",
         "devup_night", "devup_on", "direct_read", "doc_brief", "doc_deliver", "doc_due", "doc_make",
         "doc_make_templates", "doc_make_wikipics", "doc_originals", "doc_pictures", "doc_semantic", "doc_sender",
         "doc_shared", "echo",

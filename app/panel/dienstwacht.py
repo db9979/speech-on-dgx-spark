@@ -91,7 +91,8 @@ SVC = {
 }
 # what needs the internet besides the watched services (for the note "Internet weg"): function -> name
 NEEDS_NET = (("search", "Websuche"), ("weather", "Wetter"), ("transit", "Bus und Bahn"), ("parcels", "Pakete"),
-             ("wiki", "Wikipedia"), ("remarkable", "reMarkable"), ("iphonepush", "Push ans iPhone"))
+             ("wiki", "Wikipedia"), ("remarkable", "reMarkable"), ("iphonepush", "Push ans iPhone"),
+             ("chats", "Mitteilungen zu Chats"))
 # the tools whose service the assistant names when it is gone (svc_hint); the rest of chat_tools runs as before
 TOOL_SVC = {"archive_search": "kiwix", "web_search": "web",
             "home_assistant": "ha", "home_assistant_action": "ha", "home_assistant_history": "ha",

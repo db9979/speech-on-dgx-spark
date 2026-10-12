@@ -8,6 +8,9 @@
     <uses-permission android:name="android.permission.MODIFY_AUDIO_SETTINGS" />
     <uses-permission android:name="android.permission.POST_NOTIFICATIONS" />
     <uses-permission android:name="android.permission.RECEIVE_BOOT_COMPLETED" />
+    <!-- "Mitteilungen sofort": one lasting connection to the own Spark (LiveConn), only when switched on -->
+    <uses-permission android:name="android.permission.FOREGROUND_SERVICE" />
+    <uses-permission android:name="android.permission.FOREGROUND_SERVICE_SPECIAL_USE" />
 
     <application
         android:allowBackup="false"
@@ -46,6 +49,16 @@
             android:name=".NotePoll"
             android:exported="false"
             android:permission="android.permission.BIND_JOB_SERVICE" />
+
+        <!-- "Mitteilungen sofort": waits on the own Spark for notes, with a quiet lasting notice (no Google service) -->
+        <service
+            android:name=".LiveConn"
+            android:exported="false"
+            android:foregroundServiceType="specialUse">
+            <property
+                android:name="android.app.PROPERTY_SPECIAL_USE_FGS_SUBTYPE"
+                android:value="Notes from the own home server without a push service" />
+        </service>
 
         <!-- the Notaus as a quick settings tile (NotausTile): always behind a question, only switching on -->
         <service

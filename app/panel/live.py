@@ -130,6 +130,8 @@ TARGETS = {
     "ged": ("Gedächtnis", "Einträge geprüft · auf dem Spark", "spark", False),
     # Rückfrage statt Raten (klaeren.py): shown while it is on, the line with questions and mappings in numbers
     "klaeren": ("Rückfrage und Merken", "Auswahl und Zuordnungen · auf dem Spark", "spark", False),
+    # Chats (chats.py): shown while they are on, the line with chats, groups and today's messages in numbers
+    "chats": ("Chats", "Nachrichten zwischen Personen · auf dem Spark", "spark", False),
 }
 RETURNS = {"cal": "Termine oder Aufgaben", "ha": "Zustände oder Schaltung", "web": "Suchergebnisse", "pages": "Seitentext", "kiwix": "Archiv-Treffer",
            "wiki": "Artikel", "mail": "Mails (nur Anzahl und Größe)", "contacts": "Kontakte", "rm": "Ablage", "push": "Zustellung",
@@ -666,6 +668,20 @@ def _conns(now):
     except Exception:
         pass
     try:
+        import chats
+        n = chats.streams()
+        if n:
+            out.append({"name": "Chats (sofort)", "proto": "HTTPS · Ereignisse", "dir": "ein", "n": n})
+    except Exception:
+        pass
+    try:
+        import android
+        n = android.live_count()
+        if n:
+            out.append({"name": "Android-App (sofort)", "proto": "HTTPS · wartende Anfrage", "dir": "ein", "n": n})
+    except Exception:
+        pass
+    try:
         import verlauf
         n = verlauf.streams()
         if n:
@@ -1040,6 +1056,13 @@ def snapshot(view="admin", now=None):
         kl = None
     if kl is not None:
         used.add("klaeren")
+    try:
+        import chats
+        cht = chats.for_live(now)
+    except Exception:
+        cht = {"on": False}
+    if cht.get("on"):
+        used.add("chats")
     used |= set(watch_svc)
     off = unset(now)
     targets = [{"id": k, "name": v[0], "sub": _devup_sub(devup) if k == "geraete" and devup else v[1], "zone": v[2]}
@@ -1059,6 +1082,10 @@ def snapshot(view="admin", now=None):
         if x["id"] == "klaeren":   # Rückfrage statt Raten: numbers only (never a device, a name or a word)
             x["sub"] = (f"{kl.get('offen', 0)} Fragen offen · heute {kl.get('fragen', 0)} gefragt · {kl.get('auswahl', 0)} gewählt"
                         f" · {kl.get('korrektur', 0)} korrigiert · {kl.get('gemerkt', 0)} gemerkt · {kl.get('genutzt', 0)} genutzt")
+        if x["id"] == "chats":  # Chats: numbers only (never a text, a name or a group's name)
+            x["sub"] = (f"{cht.get('chats', 0)} Chats · {cht.get('groups', 0)} Gruppen · heute {cht.get('sent', 0)} Nachrichten · "
+                        f"{cht.get('pushed', 0)} Mitteilungen" + (f" · {cht['push_failed']} nicht zugestellt" if cht.get("push_failed") else "")
+                        + (f" · {cht.get('media', 0)} Fotos/Dateien/Sprache · {cht.get('media_mb', 0)} MB" if cht.get("media_on") else ""))
         if x["id"] == "make":   # Dokumente erstellen: jobs in numbers (no titles, no text)
             x["sub"] = (f"{make.get('run', 0)} läuft · {make.get('wait', 0)} wartet · {make.get('done', 0)} heute fertig"
                         + (f" · {make['failed']} Fehler" if make.get("failed") else ""))

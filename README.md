@@ -33,6 +33,7 @@ All options for running without questions (`--mode api --asr 1.7b --tts 0.6b --y
 
 <!-- New version: add one line at the top here and in CHANGELOG.md, drop the oldest line here (keep 10). Details go to docs/de and docs/en, not into this README. -->
 
+- **V01.0.473** Chats (off): write with the other people of your Spark like in a messenger, in groups too, with photos, files, voice messages and invitations by QR; encrypted on the Spark; Android app 1.2.0 with notes at once, iPhone app with chats
 - **V01.0.472** Own speakers: "Jarvis" while speaking makes them quiet at once, "Stopp" then ends without an answer; new switch "Stop while it speaks" for "Stopp" without the wake word
 - **V01.0.471** Speech output no longer goes silent after a piece with nothing to say (tts_http_400); errors in Logs → Requests as a plain sentence
 - **V01.0.470** Ask instead of guessing (off): several devices, stops, places or lists fit, the Spark asks with buttons and can remember your choice
@@ -42,7 +43,6 @@ All options for running without questions (`--mode api --asr 1.7b --tts 0.6b --y
 - **V01.0.466** Mail times right: a mail from 20:30 was read out as 18:30 (sender's offset instead of your time zone)
 - **V01.0.465** Presentations with ten slide types, icons, pictures from the Kiwix and checked numbers
 - **V01.0.464** Settings assistant: gaps closed, code word sentences never a case, ideas outside the catalog (off)
-- **V01.0.463** Browser tests wait until a page has loaded (fixes a flaky test)
 
 All versions: [CHANGELOG.md](CHANGELOG.md)
 

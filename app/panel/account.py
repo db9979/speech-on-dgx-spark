@@ -80,10 +80,11 @@ WHO = {"documents": "documents", "reminders": "reminders", "speaker_id": "speake
        "room_voices": "roomtv", "room_ha": "roomha", "room_remote": "roomfar", "weather": "weather", "contacts": "contacts",
        "parcels": "parcels", "telegram": "telegram", "tasks": "tasks", "transit": "transit", "messages": "messages",
        "esp32": "esp32", "iphone": "iphone", "iphone_panel": "iphonepanel", "pebble": "pebble",
-       "android": "android", "mcp_server": "mcpserver", "my_mcp": "mymcp", "write_help": "schreib", "write_apps": "schreibapps", "desk": "begleiter", "desk_act": "begleitertun", "desk_meeting": "begleitermeeting",
+       "android": "android", "android_live": "androidlive", "mcp_server": "mcpserver", "my_mcp": "mymcp", "write_help": "schreib", "write_apps": "schreibapps", "desk": "begleiter", "desk_act": "begleitertun", "desk_meeting": "begleitermeeting",
        "remarkable": "remarkable", "remarkable_send": "rmsend", "remarkable_fresh": "rmfresh", "remarkable_plus": "rmguide", "my_status": "mystatus", "person_priority": "vorrang",
        "ha_live": "halive", "ha_loud": "haloud", "ha_events": "haevent", "ha_voice_rules": "havoice", "ha_camera": "hacam",
-       "systemone_mail": "mailwichtig", "report": "melden", "doc_make": "erstellen", "storage": "speicher"}
+       "systemone_mail": "mailwichtig", "report": "melden", "doc_make": "erstellen", "storage": "speicher",
+       "chats": "chats", "chats_groups": "chatgroups", "chats_media": "chatmedia", "chats_invite": "chatinvite"}
 
 
 def _setup(prof, request):
@@ -114,6 +115,8 @@ def whoami(request: Request, creds: HTTPBasicCredentials | None = Depends(securi
             # which pages the panel shows: the Spark's switches from features.py (one place for "on")
             **{name: features.admin_on(key, chat) for name, key in WHO.items()},
             "agent": bool(features.admin_on("agent", chat) and prof and agent.granted(prof["id"])),
+            # Chats (chats.py): the menu entry only for a profile that may use them now (Spark and own switch)
+            "chats_use": bool(prof and features.allowed("chats", prof["id"], chat)),
             # what this profile may use now (features.stamp): a page or app that started with another one reloads its switches
             "rights": features.stamp(prof["id"] if prof else None, chat),
             # Spark-Hilfe (hilfe.py): the card in the answer and "Frag Spark" on every page, only for this profile
@@ -1267,6 +1270,7 @@ ALLOW = {"tool_think": "toolthink", "route": "routing", "direct_read": "direct",
          "doc_make_templates": "erstellenvorlagen", "doc_make_wikipics": "erstellenbilder", "svcwatch": "dienstwacht", "svchint": "dienstnutzer",
          "mem_check": "gedpruefen", "mem_ask": "gedfragen", "mem_topics": "gedthemen",
          "sync_live": "verlaufsync", "sync_one": "eingespraech", "sync_offline": "offlinelesen",
+         "chats": "chats",
          "rate": "bewerten", "rateback": "bewertenzurueck", "beratnote": "beraterhinweis", "beratask": "beraterchat",
          "beratme": "beratermich", "klaeren": "klaeren", "klaeren_merken": "klaerenmerken"}
 

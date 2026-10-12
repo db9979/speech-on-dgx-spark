@@ -186,5 +186,82 @@ class Android(unittest.TestCase):
         self.assertEqual(profiles.LAST_USED[uid][0], "web")
 
 
+class Live(unittest.TestCase):
+    """"Mitteilungen sofort": a lasting wait instead of a question every 15 minutes (android.py, LiveConn.kt)."""
+    def setUp(self):
+        Android.setUp(self)
+        android._waiters.clear()
+        for k in [k for k in guard._rate if k[0] == "androidwait"]:
+            guard._rate.pop(k, None)
+        self.wait = android.WAIT_SECONDS
+
+    def tearDown(self):
+        android.WAIT_SECONDS = self.wait
+        helpers.set_config(android_live=False)
+        Android.tearDown(self)
+
+    def test_off_by_default_and_needs_both_switches(self):
+        with open(helpers.APP + "/config.default.json") as f:
+            self.assertIs(json.load(f)["chat"]["android_live"], False)
+        self.assertIs(profiles.SETTINGS["android_live"][0], False)
+        a = profile("Lina")
+        a.put("/api/profile/settings", json={"android_on": True})
+        self.assertFalse(a.get("/api/android/notes").json()["live"])
+        self.assertEqual(a.get("/api/android/wait").status_code, 403)
+        a.put("/api/profile/settings", json={"android_live": True})
+        self.assertEqual(a.get("/api/android/wait").status_code, 403)          # the admin's switch is off
+        helpers.set_config(android_live=True)
+        self.assertTrue(a.get("/api/android/notes").json()["live"])
+        self.assertTrue(a.get("/api/profile/android").json()["live_enabled"])
+        self.assertEqual(TestClient(panel.app).get("/api/android/wait").status_code, 401)   # guests never
+
+    def test_a_note_wakes_the_waiting_app_at_once(self):
+        import threading
+        import time
+        helpers.set_config(android_live=True)
+        a = profile("Luka")
+        uid = uid_of("Luka")
+        a.put("/api/profile/settings", json={"android_on": True, "android_live": True})
+        last = a.get("/api/android/notes").json()["last"]
+        android.WAIT_SECONDS = 10
+        got = {}
+
+        def wait():
+            t0 = time.monotonic()
+            got["r"] = a.get("/api/android/wait", params={"after": last}).json()
+            got["took"] = time.monotonic() - t0
+        th = threading.Thread(target=wait)
+        th.start()
+        for _ in range(100):
+            if android.live_count():
+                break
+            time.sleep(0.05)
+        self.assertEqual(android.live_count(), 1)
+        self.assertEqual(asyncio.run(push.send(uid, "Chat", "Neue Nachricht", tag="chat")), 1)
+        th.join(10)
+        self.assertLess(got["took"], 5)
+        self.assertEqual([x["title"] for x in got["r"]["notes"]], ["Chat"])
+        self.assertEqual(android.live_count(), 0)
+        # something already there: answered without waiting; nothing: empty after the wait
+        self.assertEqual(len(a.get("/api/android/wait", params={"after": 0}).json()["notes"]), 1)
+        android.WAIT_SECONDS = 0.2
+        self.assertEqual(a.get("/api/android/wait", params={"after": got["r"]["last"]}).json()["notes"], [])
+
+    def test_waiting_is_not_a_slow_page_and_the_app_has_its_service(self):
+        self.assertIsNone(panel.slow_read("GET", "/api/android/wait", 50.0, 1000.0))
+        self.assertIsNotNone(panel.slow_read("GET", "/api/android/notes", 50.0, 1000.0))
+        root = os.path.join(helpers.APP, "..", "android", "app", "src", "main")
+        if not os.path.isdir(root):   # a copy with only app/
+            return
+        with open(os.path.join(root, "AndroidManifest.xml")) as f:
+            man = f.read()
+        self.assertIn('android:name=".LiveConn"', man)
+        self.assertIn('android:foregroundServiceType="specialUse"', man)
+        self.assertIn("FOREGROUND_SERVICE_SPECIAL_USE", man)
+        with open(os.path.join(root, "java", "io", "github", "db9979", "spark", "LiveConn.kt")) as f:
+            kt = f.read()
+        self.assertIn("/api/android/wait", kt)
+        self.assertIn("code == 401 || code == 403", kt)   # switched off or signed out: the connection ends
+
 if __name__ == "__main__":
     unittest.main()

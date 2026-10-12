@@ -209,7 +209,7 @@ def pick(uid, private=True, to=""):
 # what a note is for on Zustand → Live (live.note), by its tag; fixed words only
 WHY = {"agent": "Auftrag", "briefing": "Tagesüberblick", "msg-": "Nachricht", "notaus": "Notaus", "setup": "Einrichtung",
        "pro-": "Von selbst", "mcp": "MCP-Bestätigung", "admin": "Hinweis", "hello": "Test", "devup": "Geräte-Update", "doc": "Dokument",
-       "svc": "Dienst-Wächter"}
+       "svc": "Dienst-Wächter", "chat-": "Chat"}
 
 
 def _why(tag):
@@ -220,7 +220,7 @@ async def send(uid, title, body, tag="", private=True, why="", to=""):
     """Sends a note once: to one device of the profile (pick), the iPhone app, Telegram (private notes,
     i.e. appointments, mails, the briefing, only when it allowed personal data there) or a browser.
     "hello" goes to the browsers only. to: the way the profile chose for this kind of note ("all": every way it
-    has set up). Drops subscriptions the push service no longer knows. Returns the number of devices reached."""
+    has set up, "every": every device and browser of the profile but Telegram, for chats). Drops subscriptions the push service no longer knows. Returns the number of devices reached."""
     import begleiter
     # "Nicht stören" (Spark-Begleiter part quiet): while the profile is in a call or presenting, notes wait and one
     # summary follows; alarms, reminders and safety notes always go (begleiter.urgent)
@@ -235,6 +235,9 @@ async def send(uid, title, body, tag="", private=True, why="", to=""):
     elif to == "all":
         have = _have(uid, private)
         ways = [(k, subs(uid)[-1:] if k == "web" else []) for k in WAYS if have[k]]
+    elif to == "every":   # chats (chats.py): every device of the profile rings, like a messenger; never Telegram
+        have = _have(uid, private)
+        ways = [(k, subs(uid) if k == "web" else []) for k in ("app", "and", "desk", "web") if have[k]]
     else:
         ways = [pick(uid, private, to)]
     n = 0

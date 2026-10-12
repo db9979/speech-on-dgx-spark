@@ -113,17 +113,18 @@ const apiTry=async(p,o)=>{try{const r=await api(p,o);return {r,d:await r.json()}
 // (Strg K), Assistent and Ich for oneself, then "Spark verwalten" with Zustand, Funktionen, Personen und Geräte,
 // Einstellungen; on phones a bar at the bottom. Einbinden is gone: Anleitungen sit under Funktionen, Apps und
 // Schnittstellen under Personen und Geräte.
-const NI={chat:'<path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"/>',me:'<circle cx="12" cy="8" r="4"/><path d="M4 21c0-4 4-6 8-6s8 2 8 6"/>',
+const NI={chat:'<path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"/>',
+  chats:'<path d="M17 9h2a2 2 0 0 1 2 2v9l-3-3h-7a2 2 0 0 1-2-2v-1"/><path d="M15 4H5a2 2 0 0 0-2 2v9l3-3h9a2 2 0 0 0 2-2V6a2 2 0 0 0-2-2z"/>',me:'<circle cx="12" cy="8" r="4"/><path d="M4 21c0-4 4-6 8-6s8 2 8 6"/>',
   mon:'<path d="M3 12h4l3 7 4-14 3 7h4"/>',cfg:'<path d="M4 6h9M17 6h3M4 12h3M11 12h9M4 18h11M19 18h1"/><circle cx="15" cy="6" r="2"/><circle cx="9" cy="12" r="2"/><circle cx="17" cy="18" r="2"/>',
   prof:'<circle cx="9" cy="8" r="3.5"/><path d="M2 20c0-3.5 3-5.5 7-5.5s7 2 7 5.5M16 4.5a3.5 3.5 0 0 1 0 7M18 14.8c2.4.6 4 2.4 4 5.2"/>',int:'<path d="M9 2v5M15 2v5M6 7h12v4a6 6 0 0 1-12 0zM12 17v5"/>',
   feat:'<rect x="3" y="4" width="18" height="6" rx="3"/><circle cx="16" cy="7" r="1.6"/><rect x="3" y="14" width="18" height="6" rx="3"/><circle cx="8" cy="17" r="1.6"/>',
   more:'<circle cx="5" cy="12" r="1.6"/><circle cx="12" cy="12" r="1.6"/><circle cx="19" cy="12" r="1.6"/>'};
 document.querySelectorAll('i.ni').forEach(e=>e.innerHTML='<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round">'+(NI[e.dataset.ni]||'')+'</svg>');
 // the phone bar marks the page that is open (Ich while its window is open, else the section's menu entry)
-function mbarMark(g){document.querySelectorAll('#mbar button').forEach(x=>x.classList.toggle('on',x.dataset.m===({chat:'chat',mon:'mon',me:'me'}[g]||'more')))}
+function mbarMark(g){document.querySelectorAll('#mbar button').forEach(x=>x.classList.toggle('on',x.dataset.m===({chat:'chat',chats:'chats',mon:'mon',me:'me'}[g]||'more')))}
 // Main menu: Zustand, Funktionen and Personen und Geräte hold several pages behind a sub-tab bar. Funktionen is the
 // page "feat" of the settings form (saved with it), shown alone without the settings menu (class featmode).
-const GROUPS={chat:[['chat','']],mon:[['mon',t('Monitoring','Monitoring')],['live',t('Live','Live')],['test',t('Prüfen','Checks')],['logs',t('Logs','Logs')],['verb',t('Verbessern','Improve')]],
+const GROUPS={chat:[['chat','']],chats:[['chats','']],mon:[['mon',t('Monitoring','Monitoring')],['live',t('Live','Live')],['test',t('Prüfen','Checks')],['logs',t('Logs','Logs')],['verb',t('Verbessern','Improve')]],
   feat:[['feat',t('Funktionen','Features')],['who',t('Wer darf was','Who may do what')],['route',t('Weiche','Switch')],['int',t('Anleitungen','Guides')]],
   prof:[['prof',t('Personen und Geräte','People and devices')],['apps',t('Apps und Schnittstellen','Apps and interfaces')]],cfg:[['cfg','']]};
 const lastSec={};
@@ -132,11 +133,11 @@ const lastSec={};
 const lzb=(box,load,o)=>window.ladeBox?ladeBox(box,load,o):load();
 const LZ_CFG={skel:false,stale:false,top:true};
 function showSec(s){const sec=s==='feat'?'cfg':s;document.querySelectorAll('section').forEach(x=>x.classList.toggle('on',x.id===sec));
-  document.body.classList.toggle('inchat',s==='chat');
+  document.body.classList.toggle('inchat',s==='chat');document.body.classList.toggle('inchats',s==='chats');
   const cw=document.querySelector('.cfgwrap');cw.classList.toggle('featmode',s==='feat');
   if(s==='feat'){cw.classList.add('sub');lzb($('cfg'),loadCfg,LZ_CFG);if(typeof cfgPane==='function')cfgPane('feat')}
   if(s==='cfg'&&$('pane-feat').classList.contains('on')&&typeof cfgPane==='function')cfgPane('start');
-  if(s==='cfg'){cw.classList.remove('sub');lzb($('cfg'),loadCfg,LZ_CFG);mfaShow('admmfa','/api/mfa');if($('pane-voices').classList.contains('on'))loadClone();if($('pane-upd').classList.contains('on')||$('pane-bak').classList.contains('on'))loadSys()}if(s==='chat')chatTab();if(s==='test'){loadVoices();instrHint();loadLive();loadBench();loadVorrang()}if(s==='prof'){lzb($('proflist'),loadProf,{form:'tabelle'});if(typeof joinAdmin==='function')joinAdmin()}if(s==='logs')lzb($('logout'),loadLogs);if(s==='live'&&window.liveOpen){if(window.lzSkelIn)lzSkelIn($('lvroot'),'karten',4);liveOpen()}if(s==='apps'){lzb($('int-ep'),loadInt,{form:'tabelle'});if(window.appTiles)appTiles();if(typeof loadMcpAdmin==='function')loadMcpAdmin();if(typeof loadMyMcpAdmin==='function')loadMyMcpAdmin()}if(s==='who'&&window.loadWho)lzb($('whobox'),loadWho);if(s==='route'&&window.loadWeiche)lzb($('whbox'),loadWeiche,{at:$('whlist')});if(s==='verb'&&window.loadVerb)loadVerb();}
+  if(s==='cfg'){cw.classList.remove('sub');lzb($('cfg'),loadCfg,LZ_CFG);mfaShow('admmfa','/api/mfa');if($('pane-voices').classList.contains('on'))loadClone();if($('pane-upd').classList.contains('on')||$('pane-bak').classList.contains('on'))loadSys()}if(s==='chat')chatTab();if(s==='test'){loadVoices();instrHint();loadLive();loadBench();loadVorrang()}if(s==='prof'){lzb($('proflist'),loadProf,{form:'tabelle'});if(typeof joinAdmin==='function')joinAdmin()}if(s==='logs')lzb($('logout'),loadLogs);if(s==='live'&&window.liveOpen){if(window.lzSkelIn)lzSkelIn($('lvroot'),'karten',4);liveOpen()}if(s==='apps'){lzb($('int-ep'),loadInt,{form:'tabelle'});if(window.appTiles)appTiles();if(typeof loadMcpAdmin==='function')loadMcpAdmin();if(typeof loadMyMcpAdmin==='function')loadMyMcpAdmin()}if(s==='who'&&window.loadWho)lzb($('whobox'),loadWho);if(s==='route'&&window.loadWeiche)lzb($('whbox'),loadWeiche,{at:$('whlist')});if(s==='verb'&&window.loadVerb)loadVerb();if(window.cxShown)cxShown(s==='chats')}
 // Zustand, Funktionen and Personen und Geräte have several pages: computers show them as a second column like Einstellungen, phones as a
 // list with one line of state that opens the page, with "back" on top (V01.0.207, same pattern everywhere)
 const NARROW=()=>matchMedia('(max-width:760px)').matches;

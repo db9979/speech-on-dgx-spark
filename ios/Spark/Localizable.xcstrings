@@ -6820,6 +6820,266 @@
           }
         }
       }
+    },
+    "Anhalten": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Stop"
+          }
+        }
+      }
+    },
+    "Chats": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Chats"
+          }
+        }
+      }
+    },
+    "Chats sind auf dem Spark aus. Der Admin schaltet sie unter Funktionen → Chats ein.": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Chats are off on the Spark. The admin switches them on under Features → Chats."
+          }
+        }
+      }
+    },
+    "Chats sind für dich aus. Einschalten im Panel unter Ich → Gespräch → Chats.": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Chats are off for you. Switch them on in the panel under Me → Conversation → Chats."
+          }
+        }
+      }
+    },
+    "Chats, %lld ungelesen": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Chats, %lld unread"
+          }
+        }
+      }
+    },
+    "Diese Nachricht wurde zurückgenommen.": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "This message was taken back."
+          }
+        }
+      }
+    },
+    "Du": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "You"
+          }
+        }
+      }
+    },
+    "Du bist mit einer Einladung dazugekommen": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "You joined with an invitation"
+          }
+        }
+      }
+    },
+    "Du hast diese Nachricht zurückgenommen.": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "You took this message back."
+          }
+        }
+      }
+    },
+    "Du: ": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "You: "
+          }
+        }
+      }
+    },
+    "Foto groß zeigen": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Show photo large"
+          }
+        }
+      }
+    },
+    "Foto oder Datei schicken": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Send a photo or file"
+          }
+        }
+      }
+    },
+    "Herunterladen": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Download"
+          }
+        }
+      }
+    },
+    "Nachricht zurückgenommen": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Message taken back"
+          }
+        }
+      }
+    },
+    "Neuer Chat": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "New chat"
+          }
+        }
+      }
+    },
+    "Niemand nimmt gerade Nachrichten von dir an. Jede Person schaltet das unter Ich → Gespräch → Chats selbst ein.": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Nobody takes messages from you right now. Each person switches that on under Me → Conversation → Chats."
+          }
+        }
+      }
+    },
+    "Noch keine Chats. Mit ＋ schreibst du jemandem.": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "No chats yet. With ＋ you write to someone."
+          }
+        }
+      }
+    },
+    "Schließen": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Close"
+          }
+        }
+      }
+    },
+    "Schreib die erste Nachricht.": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Write the first message."
+          }
+        }
+      }
+    },
+    "Sprachnachricht": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Voice message"
+          }
+        }
+      }
+    },
+    "Sprachnachricht abspielen": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Play voice message"
+          }
+        }
+      }
+    },
+    "bearbeitet": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "edited"
+          }
+        }
+      }
+    },
+    "hat die Gruppe erstellt": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "created the group"
+          }
+        }
+      }
+    },
+    "hat die Gruppe verlassen": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "left the group"
+          }
+        }
+      }
+    },
+    "ist mit deiner Einladung dazugekommen": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "joined with your invitation"
+          }
+        }
+      }
+    },
+    "Änderung im Chat": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Change in the chat"
+          }
+        }
+      }
     }
   },
   "version": "1.0"

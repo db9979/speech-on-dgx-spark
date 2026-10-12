@@ -6,6 +6,15 @@ Die App ist eine schlanke Hülle um die Spark-Seite: Sie zeigt den Spark so, wie
 - **Mitteilungen bei geschlossener App:** Die App fragt alle 15 Minuten selbst beim Spark nach (`/api/android/notes`),
   ohne Google-Dienst. Erinnerungen, Morgenrunde und Hinweise kommen dorthin, wenn die App das zuletzt benutzte Gerät
   ist oder kein anderer Weg (iPhone-App) eingerichtet ist.
+- **Mitteilungen sofort** (ab 1.2.0, V01.0.473): Admin: Funktionen → Android-App → „Android: Mitteilungen sofort“ (aus);
+  Profil: Ich → Android-App → „Mitteilungen sofort“ (aus), dann die App einmal öffnen. Die App hält dann eine Verbindung
+  zum Spark offen (`/api/android/wait`: der Spark antwortet sofort, wenn eine Mitteilung da ist, sonst nach 50 Sekunden
+  leer, und die App fragt wieder). Chat-Nachrichten, Erinnerungen und Hinweise kommen so ohne Verzögerung, ohne
+  Google-Dienst. Android zeigt dafür eine stille Daueranzeige „Mit dem Spark verbunden“ (Dienst im Vordergrund). Damit
+  Android die Verbindung nicht schlafen legt: in den Android-Einstellungen bei Apps, Spark, Akku „Nicht eingeschränkt“.
+  Nach einem Neustart des Handys startet die Verbindung beim ersten Öffnen der App; bis dahin fragt die App alle
+  15 Minuten. Schalter aus oder abgemeldet: Die App beendet die Verbindung von selbst. Live zeigt unter Verbindungen
+  „Android-App (sofort)“ nur mit der Anzahl.
 - **Assistenten-Taste:** Unter Einstellungen → Apps → Standard-Apps → Digitaler Assistent „Spark“ wählen; langes
   Drücken öffnet die App und sie hört zu.
 - **Teilen an Spark:** Text in einer anderen App teilen → Spark. Der Text steht im Tippfeld, abschicken tust du selbst.

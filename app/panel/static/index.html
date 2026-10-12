@@ -56,7 +56,7 @@
 <button class="b" id="logoutbtn" type="button" style="order:4;display:none">Abmelden</button>
 </div>
 <button class="ib" id="mmenu" type="button" title="Menü" aria-label="Menü"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round"><path d="M4 7h16M4 12h16M4 17h16"/></svg></button>
-<nav><button type="button" class="navfind" id="findbtn" aria-label="Suchen"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><circle cx="11" cy="11" r="7"/><path d="M20 20l-3.5-3.5"/></svg><span>Suchen …</span><kbd>Strg K</kbd></button><button data-s="chat"><i class="ni" data-ni="chat"></i>Assistent</button><button type="button" class="navme" id="navme"><i class="ni" data-ni="me"></i>Ich <span class="medot" hidden></span></button><span class="navgrp">Spark verwalten</span><button data-s="mon" class="on"><i class="ni" data-ni="mon"></i>Zustand <span class="hdot" id="hdot"></span></button><button data-s="feat"><i class="ni" data-ni="feat"></i>Funktionen</button><button data-s="prof"><i class="ni" data-ni="prof"></i>Personen und Geräte</button><button data-s="cfg"><i class="ni" data-ni="cfg"></i>Einstellungen <span class="ncnt" id="dirtycnt" hidden></span><span id="updbadge" class="pill warn" style="display:none">Update</span></button></nav></header>
+<nav><button type="button" class="navfind" id="findbtn" aria-label="Suchen"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><circle cx="11" cy="11" r="7"/><path d="M20 20l-3.5-3.5"/></svg><span>Suchen …</span><kbd>Strg K</kbd></button><button data-s="chat"><i class="ni" data-ni="chat"></i>Assistent</button><button data-s="chats" hidden><i class="ni" data-ni="chats"></i>Chats <span class="ncnt" id="cxcnt" hidden></span></button><button type="button" class="navme" id="navme"><i class="ni" data-ni="me"></i>Ich <span class="medot" hidden></span></button><span class="navgrp">Spark verwalten</span><button data-s="mon" class="on"><i class="ni" data-ni="mon"></i>Zustand <span class="hdot" id="hdot"></span></button><button data-s="feat"><i class="ni" data-ni="feat"></i>Funktionen</button><button data-s="prof"><i class="ni" data-ni="prof"></i>Personen und Geräte</button><button data-s="cfg"><i class="ni" data-ni="cfg"></i>Einstellungen <span class="ncnt" id="dirtycnt" hidden></span><span id="updbadge" class="pill warn" style="display:none">Update</span></button></nav></header>
 <main>
 <div class="ptabs subnav" id="subnav" hidden></div>
 <button class="b cfgback" id="subback" type="button"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"><path d="M15 5l-7 7 7 7"/></svg><span>Zustand</span></button>
@@ -182,6 +182,10 @@
       <div class="setrow" data-show="chat.messages" style="margin-left:18px"><div class="lbl"><b>Nachricht an alle</b><span>„Sag allen, wir fahren um acht“ an jedes Profil, das solche Nachrichten annimmt.</span></div><label class="tgl"><input type="checkbox" id="chat.messages_all"><i></i></label></div>
       <div class="setrow" data-show="chat.messages" style="margin-left:18px"><div class="lbl"><b>Durchsagen auf Lautsprechern</b><span>„Durchsage im Wohnzimmer: Essen ist fertig“, nur auf Lautsprechern, deren Profil Durchsagen erlaubt.</span></div><label class="tgl"><input type="checkbox" id="chat.messages_announce"><i></i></label></div>
       <div class="setrow" data-show="chat.messages" style="margin-left:18px"><div class="lbl"><b>Sprachnachrichten</b><span>Bis 30 Sekunden im Browser aufnehmen; die Spracherkennung schreibt den Text dazu.</span></div><label class="tgl"><input type="checkbox" id="chat.messages_voice"><i></i></label></div>
+      <div class="setrow" data-show="chat.messages" style="margin-left:18px"><div class="lbl"><b>Chats</b><span>Schreiben wie im Messenger, mit Haken für gelesen, Antworten, Reaktionen; verschlüsselt auf dem Spark. Jedes Profil schaltet es selbst ein.</span></div><label class="tgl"><input type="checkbox" id="chat.chats"><i></i></label></div>
+      <div class="setrow" data-show="chat.chats" style="margin-left:36px"><div class="lbl"><b>Gruppen-Chats</b><span>Gruppen mit Namen und Admins, bis 50 Personen; nur wer Nachrichten vom Ersteller annimmt, kommt hinein.</span></div><label class="tgl"><input type="checkbox" id="chat.chats_groups"><i></i></label></div>
+      <div class="setrow" data-show="chat.chats" style="margin-left:36px"><div class="lbl"><b>Fotos, Dateien und Sprache in Chats</b><span>Fotos ohne Ort, PDF, Office und Text bis 25 MB, Sprachnachrichten bis 5 Minuten; verschlüsselt auf dem Spark, bis 2 GB pro Person.</span></div><label class="tgl"><input type="checkbox" id="chat.chats_media"><i></i></label></div>
+      <div class="setrow" data-show="chat.chats" style="margin-left:36px"><div class="lbl"><b>In einen Chat einladen</b><span>Per Link oder QR-Code direkt in den eigenen Chat einladen, 3 pro Person. Braucht Personen und Geräte → Neue Personen „nur mit Einladung“.</span></div><label class="tgl"><input type="checkbox" id="chat.chats_invite"><i></i></label></div>
       <div data-show="chat.messages" style="margin-left:18px"><div class="row"><button class="b" type="button" id="msgallon">Für alle Profile einschalten</button></div><div class="fh" id="msgallmsg">Schaltet „Nachrichten für mich nutzen“ bei jedem Profil ein; jedes kann es unter Ich → Nachrichten wieder ausschalten. Erst nach dem Speichern des Schalters oben.</div></div>
       <div class="setrow" data-show="chat.search" style="margin-left:18px"><div class="lbl"><b>Wikipedia direkt</b><span>Wissensfragen wie „Was ist ein Quasar?“ beantwortet der Assistent aus dem Wikipedia-Artikel, ohne Websuche.</span></div><label class="tgl"><input type="checkbox" id="chat.wiki"><i></i></label></div>
       <div data-show="chat.wiki" style="margin-left:36px"><label>Adresse der Wikipedia</label><input id="chat.wiki_url" placeholder="https://de.wikipedia.org" autocomplete="off"><div class="fh">Leer = de.wikipedia.org, ohne Treffer dort en.wikipedia.org. Nur die Suchwörter verlassen den Spark.</div></div>
@@ -233,6 +237,7 @@
         <div class="setrow"><div class="lbl"><b>Stopp beim Vorlesen</b><span>Während ein Lautsprecher spricht, bleibt sein Mikrofon an: „Stopp“ ohne Weckwort macht ihn sofort still. Nur Boards mit Echo-Filter.</span></div><label class="tgl"><input type="checkbox" id="chat.esp32_stop"><i></i></label></div></div>
       <div class="setrow"><div class="lbl"><b>iPhone-App</b><span>Profile koppeln die App „Spark“ auf ihrem iPhone: fragen und hören mit der Spark-Stimme, auch per Siri.</span></div><label class="tgl"><input type="checkbox" id="chat.iphone"><i></i></label></div>
       <div class="setrow"><div class="lbl"><b>Android-App</b><span>App „Spark“ als APK von dieser Seite: der Spark wie am Handy, dazu Mitteilungen und Teilen an Spark.</span></div><label class="tgl"><input type="checkbox" id="chat.android"><i></i></label></div>
+      <div class="setrow" data-show="chat.android" style="margin-left:36px"><div class="lbl"><b>Android: Mitteilungen sofort</b><span>Die App hält eine Verbindung offen und zeigt Hinweise und Chats sofort statt alle 15 Minuten; eine stille Daueranzeige, etwas mehr Akku.</span></div><label class="tgl"><input type="checkbox" id="chat.android_live"><i></i></label></div>
       <div data-show="chat.android" style="margin-left:18px" id="andadmin"><div class="fh" id="andstate"></div><div class="row" style="margin-top:6px"><button class="b" type="button" id="andfetch">App jetzt holen</button></div></div>
       <div class="setrow"><div class="lbl"><b>Spark-Begleiter am PC und Mac</b><span>Programm in Taskleiste und Menüleiste: Schreibhilfe, Frag Spark, Diktieren, Meldungen, Notaus; pro Gerät im Panel eingestellt.</span></div><label class="tgl"><input type="checkbox" id="chat.desk"><i></i></label></div>
       <div class="setrow" data-show="chat.desk" style="margin-left:18px"><div class="lbl"><b>Darf am PC handeln</b><span>Seite oder freigegebenes Programm öffnen, Musik, Lautstärke, Sperren; jedes Mal mit Rückfrage am PC.</span></div><label class="tgl"><input type="checkbox" id="chat.desk_act"><i></i></label></div>
@@ -572,6 +577,28 @@
     </div>
   </div>
 </section>
+
+<section id="chats"><div class="card cx" id="cxbox">
+  <div class="cx-off mut" id="cxoff" hidden></div>
+  <div class="cx-split" id="cxsplit">
+    <div class="cx-side">
+      <div class="cx-head"><h2>Chats</h2><button class="b p" id="cxnew" type="button">＋ Neuer Chat</button></div>
+      <input type="search" id="cxfind" maxlength="200" placeholder="In meinen Chats suchen" aria-label="In meinen Chats suchen" autocomplete="off">
+      <div class="cx-list" id="cxlist"></div>
+    </div>
+    <div class="cx-main" id="cxmain">
+      <div class="cx-empty mut" id="cxempty">Wähle einen Chat oder starte mit „＋ Neuer Chat“ einen neuen.</div>
+      <div class="cx-top" id="cxtop" hidden><button class="b cx-back" id="cxback" type="button" aria-label="Zurück zu den Chats">‹</button><button type="button" class="cx-title" id="cxtitle"><b></b><small></small></button><button class="ib" id="cxinfo" type="button" title="Chat-Info" aria-label="Chat-Info"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round"><circle cx="12" cy="12" r="9"/><path d="M12 11v6M12 7.5v.5"/></svg></button></div>
+      <div class="cx-log" id="cxlog" role="log" aria-live="polite" hidden></div>
+      <div class="cx-pane" id="cxpane" hidden></div>
+      <div class="cx-why" id="cxwhy" hidden></div>
+      <div class="cx-reply" id="cxreply" hidden><span></span><button type="button" class="ib" id="cxreplyx" aria-label="Antwort abbrechen">✕</button></div>
+      <form class="cx-comp" id="cxcomp" hidden><button type="button" class="ib cx-att" id="cxatt" hidden title="Foto oder Datei schicken" aria-label="Foto oder Datei schicken"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 11.5l-8.6 8.6a5 5 0 0 1-7.1-7.1l8.6-8.6a3.3 3.3 0 0 1 4.7 4.7l-8.6 8.6a1.7 1.7 0 0 1-2.4-2.4l7.9-7.9"/></svg></button><input type="file" id="cxfile" hidden accept="image/*,.pdf,.docx,.xlsx,.pptx,.odt,.ods,.odp,.txt,.csv,.md"><label for="cxtext" class="srl">Nachricht</label><textarea id="cxtext" rows="1" maxlength="4000" placeholder="Nachricht"></textarea><button type="button" class="ib cx-mic" id="cxmic" hidden title="Sprachnachricht aufnehmen" aria-label="Sprachnachricht aufnehmen"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round"><rect x="9" y="3" width="6" height="11" rx="3"/><path d="M5 11a7 7 0 0 0 14 0M12 18v3"/></svg></button><button class="send" id="cxsend" type="submit" title="Senden" aria-label="Senden"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"><path d="M12 19V5M5 12l7-7 7 7"/></svg></button></form>
+      <div class="cx-rec" id="cxrec" hidden><i class="cx-dot"></i><span id="cxrect">0:00</span><span class="mut cx-recmax">höchstens 5 Minuten</span><button type="button" class="b" id="cxrecx">Verwerfen</button><button class="send" id="cxrecgo" type="button" title="Sprachnachricht senden" aria-label="Sprachnachricht senden"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"><path d="M12 19V5M5 12l7-7 7 7"/></svg></button></div>
+    </div>
+  </div>
+  <div class="cx-big" id="cxbig" hidden><img id="cxbigimg" alt="Foto"><button type="button" class="ib" id="cxbigx" title="Schließen" aria-label="Schließen">✕</button></div>
+</div></section>
 
 <section id="test">
   <div class="two">
@@ -947,7 +974,7 @@
   </div>
   <div class="row mefoot"><button class="b" id="proflogout" type="button">Abmelden</button><button class="b p" id="profclose" type="button" data-on="closeProf">Schließen</button></div>
 </div></div>
-<div id="mbar" class="mbar"><button type="button" data-m="chat"><i class="ni" data-ni="chat"></i>Assistent</button><button type="button" data-m="me"><i class="ni" data-ni="me"></i>Ich<span class="medot" hidden></span></button><button type="button" data-m="mon"><i class="ni" data-ni="mon"></i>Zustand<span class="hdot"></span></button><button type="button" data-m="more"><i class="ni" data-ni="more"></i>Verwalten</button></div>
+<div id="mbar" class="mbar"><button type="button" data-m="chat"><i class="ni" data-ni="chat"></i>Assistent</button><button type="button" data-m="chats" hidden><i class="ni" data-ni="chats"></i>Chats<span class="ncnt" hidden></span></button><button type="button" data-m="me"><i class="ni" data-ni="me"></i>Ich<span class="medot" hidden></span></button><button type="button" data-m="mon"><i class="ni" data-ni="mon"></i>Zustand<span class="hdot"></span></button><button type="button" data-m="more"><i class="ni" data-ni="more"></i>Verwalten</button></div>
 <div id="fab" title="Gespräch"><div class="fabpop" id="fabpop"><div class="fabstate" id="fabstate"></div><div class="fabtext" id="fabtext"></div><div id="fabcards"></div>
   <form class="fabask" id="fabask" hidden><div class="mut" id="fabpage"></div><div class="fabin"><input id="fabq" maxlength="500" autocomplete="off" placeholder="Frag etwas zu dieser Seite …" aria-label="Frage"><button class="b p" type="submit">Fragen</button></div></form>
   <div class="fabrow"><button class="ib" id="fabopen">Gespräch öffnen</button><button class="ib" id="fabstop">Stopp</button></div></div>
@@ -981,6 +1008,7 @@
 <script src="/static/js/speicher.js"></script>
 <script src="/static/js/agent.js"></script>
 <script src="/static/js/messages.js"></script>
+<script src="/static/js/chats.js"></script>
 <script src="/static/js/esp.js"></script>
 <script src="/static/js/mcp.js"></script>
 <script src="/static/js/mymcp.js"></script>

@@ -95,7 +95,8 @@ def voice_on():
 
 
 def usable(uid):
-    return bool(features.allowed("messages", uid) and profiles.by_id(uid))
+    # chats (chats.py) build on messages: a profile that switched chats on takes and sends messages too
+    return bool((features.allowed("messages", uid) or features.allowed("chats", uid)) and profiles.by_id(uid))
 
 
 def clean(text, n=MAX_TEXT):
@@ -432,6 +433,17 @@ async def send(sender, to, text, kind="text", audio=None, secs=None, now=None):
     why = allowed_now(sender, to, kind, now)
     if why:
         return [], why
+    if kind == "text" and len(to) == 1:
+        # both use chats (chats.py): "Sag Anna …" goes into their chat instead of the mailbox, marked "via Spark"
+        import chats
+        if chats.usable(sender) and chats.takes(to[0], sender):
+            try:
+                await chats.send(sender, chats.open_one(sender, to[0], now), text, via="spark", now=now)
+            except (LookupError, PermissionError, ValueError, OverflowError) as e:
+                return [], str(e)
+            _count(sender, to, kind, now)
+            mutate(sender, lambda d: d.update(recent=([to[0]] + [u for u in d.get("recent", []) if u != to[0]])[:MAX_RECENT]), now)
+            return [name_of(to[0])], ""
     _count(sender, to, kind, now)
     if kind in ("text", "voice") and len(to) == 1:
         def remember(d):
@@ -652,14 +664,15 @@ def _open_bytes(data):
         return b""
 
 
-def _ffmpeg(data, args):
+def _ffmpeg(data, args, secs=None, timeout=60):
+    """ffmpeg on a recording; secs cuts it (MAX_VOICE_SECS here, 5 minutes for chats.py)."""
     with tempfile.TemporaryDirectory() as d:
         src, dst = os.path.join(d, "in"), os.path.join(d, "out")
         with open(src, "wb") as f:
             f.write(data)
         # -t: a small compressed file must not unpack to hours of sound
-        p = subprocess.run(["ffmpeg", "-nostdin", "-loglevel", "error", "-protocol_whitelist", "file,pipe", "-y", "-i", src, "-t", str(MAX_VOICE_SECS)]
-                           + args + [dst], capture_output=True, timeout=60)
+        p = subprocess.run(["ffmpeg", "-nostdin", "-loglevel", "error", "-protocol_whitelist", "file,pipe", "-y", "-i", src, "-t", str(secs or MAX_VOICE_SECS)]
+                           + args + [dst], capture_output=True, timeout=timeout)
         if p.returncode != 0:
             raise ValueError("this recording cannot be read")
         with open(dst, "rb") as f:
@@ -1015,7 +1028,7 @@ def why_not(ctx):
         return "An diesem Gerät ist ein anderes Profil angemeldet; Nachrichten gehen nur am eigenen Gerät."
     if not ctx.get("private", True):
         return "Über Telegram gehen Nachrichten nur, wenn dein Profil dort persönliche Daten erlaubt (Ich → Telegram)."
-    if not profiles.settings(who["id"]).get("msg_on"):
+    if not usable(who["id"]):
         return "Für dein Profil sind Nachrichten aus (Ich → Nachrichten → „Nachrichten für mich nutzen“)."
     return ""
 
@@ -1036,7 +1049,8 @@ def offer(ctx):
     named = any(re.search(r"(?i)\b" + re.escape(n) + r"s?\b", text) for n in names if n)
     speakers = speakers_for(uid)
     place = any(re.search(r"(?i)\b" + re.escape(_norm(x["name"])) + r"\b", text) for x in speakers if x["name"])
-    if not (WORDS.search(text) or named or place or unread(uid)):
+    import chats
+    if not (WORDS.search(text) or named or place or unread(uid) or (chats.usable(uid) and chats.unread_total(uid))):
         return None   # only when the person speaks of it (a small model gets fewer tools to mix up)
     tools = list(TOOLS) + ([ANNOUNCE_TOOL] if speakers else [])
     return {"tools": tools, "hint": HINT + (" " + ANNOUNCE_HINT if speakers else ""), "outside": {"message_read"},
@@ -1050,6 +1064,15 @@ async def tool(name, args, ctx):
         items = _load(uid)["items"]
         new = [x for x in items if not x.get("read")]
         show = new[-10:] if new else (items[-5:] if args.get("all") else [])
+        import chats
+        chat_lines = chats.for_model(uid)   # unread chat messages (chats.py), marked read
+        if chat_lines:
+            _last_read[uid] = (time.time(), chat_lines[-1][1], src)
+            mark_read(uid, {x["id"] for x in show})
+            return (f"{len(chat_lines)} neue Chat-Nachricht{'en' if len(chat_lines) != 1 else ''}:\n"
+                    + "\n".join("- " + x[2] for x in chat_lines)
+                    + ("\nIm Postfach außerdem: " + "; ".join(f"{x.get('name') or '?'}: {vault.open_(x.get('text', ''))}" for x in show)
+                       if show else "") + "\nAntworten geht mit „Antworte: …“.")
         if not show:
             return "Keine neuen Nachrichten." + (f" Im Postfach liegen {len(items)} gelesene." if items else "")
         mark_read(uid, {x["id"] for x in show})
@@ -1115,7 +1138,8 @@ async def tool(name, args, ctx):
 async def briefing(uid, zone=None):
     if not usable(uid):
         return ""
-    n = len(unread(uid))
+    import chats
+    n = len(unread(uid)) + (chats.unread_total(uid) if chats.usable(uid) else 0)
     return f"Unread messages from other people of this Spark: {n}" if n else ""
 
 

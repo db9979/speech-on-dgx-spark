@@ -16,9 +16,14 @@ Second step for new profiles ("mfa": "data", the default): a profile that came i
 e-mail, documents or agent functions until its second step is on (features.reason "mfa", mail.get,
 wissen.add, agent.granted), and cannot switch it off again itself.
 
+Chat invitations (chats.py, Funktionen → Chats → In einen Chat einladen): a profile with Chats invites a person
+straight into a chat with itself. The same kind of invitation, "chat" names the inviting profile; it needs
+"Neue Personen: nur mit Einladung", counts toward MAX_OPEN and the admin sees and can withdraw it like his own.
+
     STATE/join.json  {"mode": "off"|"invite", "mfa": "off"|"data", "handoff": bool, "app_link": "https://...",
-                      "invites": {id: {"h", "name", "pack", "kind": "new"|"pin", "uid", "t", "until", "used", "by", "made"}},
-                      "joined": {uid: {"t", "invite", "mfa": bool}}, "packs": [{"id", "name", "keys"}] | absent}
+                      "invites": {id: {"h", "name", "pack", "kind": "new"|"pin", "uid", "t", "until", "used", "by", "made",
+                                       "chat": uid of the inviting profile | absent}},
+                      "joined": {uid: {"t", "invite", "mfa": bool, "chat": cid | absent}}, "packs": [{"id", "name", "keys"}] | absent}
 """
 import asyncio
 import hashlib
@@ -48,6 +53,7 @@ MODES = ("off", "invite")
 MFA_MODES = ("off", "data")
 DAYS = (1, 7, 30)
 MAX_OPEN = 50
+CHAT_OPEN = 3             # open chat invitations per profile (chats.py)
 KEEP_DAYS = 30            # expired invitations stay visible this long
 KEEP_USED_DAYS = 7        # used ones this long after use; with the profile deleted they go at once (forget)
 MAX_PACKS, MAX_PACK_KEYS = 10, 40
@@ -201,7 +207,7 @@ def _public(i, v, now):
     who = profiles.by_id(v.get("uid")) if v.get("uid") else None
     return {"id": i, "name": v.get("name", ""), "pack": v.get("pack", ""), "kind": v.get("kind", "new"),
             "profile": (who or {}).get("name"), "made": v.get("t"), "until": v.get("until"), "used": v.get("used"),
-            "by": v.get("by", ""), "state": state}
+            "by": v.get("by", ""), "state": state, "chat": bool(v.get("chat"))}
 
 
 def listing(now=None):
@@ -215,7 +221,8 @@ def listing(now=None):
         for uid in [u for u in d["joined"] if u not in alive]:
             iid = d["joined"].pop(uid).get("invite")
             d["invites"].pop(iid, None)
-        for k in [k for k, v in d["invites"].items() if v.get("uid") and v["uid"] not in alive]:
+        for k in [k for k, v in d["invites"].items() if (v.get("uid") and v["uid"] not in alive)
+                  or (v.get("chat") and v["chat"] not in alive)]:
             d["invites"].pop(k)
         if json.dumps(d, sort_keys=True) != before:
             _write(d)
@@ -223,8 +230,9 @@ def listing(now=None):
     return sorted(out, key=lambda x: (x["state"] != "open", -(x["made"] or 0)))
 
 
-def make(name, pack, days, uid=None, by="", now=None):
-    """A new invitation. Returns (id, code); the code is shown only now."""
+def make(name, pack, days, uid=None, by="", now=None, chat=""):
+    """A new invitation. Returns (id, code); the code is shown only now. chat: the profile inviting into a chat with
+    itself (chats.py), at most CHAT_OPEN open ones per profile."""
     now = int(now if now is not None else time.time())
     code = secrets.token_urlsafe(16)
     with _lock:
@@ -232,18 +240,31 @@ def make(name, pack, days, uid=None, by="", now=None):
         _prune(d, now)
         if sum(1 for v in d["invites"].values() if not v.get("used") and v.get("until", 0) >= now) >= MAX_OPEN:
             raise HTTPException(409, f"Schon {MAX_OPEN} offene Einladungen. Erst welche zurückziehen.")
+        if chat and len(open_chats(chat, now, d)) >= CHAT_OPEN:
+            raise HTTPException(409, f"Du hast schon {CHAT_OPEN} offene Einladungen. Erst eine zurückziehen.")
         iid = "i_" + secrets.token_hex(6)
         d["invites"][iid] = {"h": _hash(code), "name": name, "pack": pack, "kind": "pin" if uid else "new",
                              "uid": uid or "", "t": now, "until": now + days * 86400, "used": None, "by": by}
+        if chat:
+            d["invites"][iid]["chat"] = chat
         _write(d)
     return iid, code
 
 
-def revoke(iid):
+def open_chats(uid, now=None, d=None):
+    """The open chat invitations of a profile: [(id, invitation)]."""
+    now = int(now if now is not None else time.time())
+    d = _read() if d is None else d
+    return [(i, v) for i, v in d["invites"].items()
+            if v.get("chat") == uid and not v.get("used") and v.get("until", 0) >= now]
+
+
+def revoke(iid, chat=""):
+    """Withdraws an open invitation; with chat only one this profile made."""
     with _lock:
         d = _read()
         v = d["invites"].get(iid)
-        if not v or v.get("used"):
+        if not v or v.get("used") or (chat and v.get("chat") != chat):
             return False
         v["until"] = min(v.get("until", 0), int(time.time()) - 1)
         _write(d)
@@ -263,6 +284,10 @@ def find(code, now=None):
                 return None, None
             if v.get("kind") == "pin" and not profiles.by_id(v.get("uid")):
                 return None, None
+            if v.get("chat"):   # a chat invitation works only while its switch is on and its profile has Chats
+                import chats
+                if not chats.invite_on() or not chats.usable(v["chat"]):
+                    return None, None
             return i, v
     return None, None
 
@@ -287,11 +312,18 @@ def _unuse(iid):
             _write(d)
 
 
-def _joined(uid, iid, now):
+def _joined(uid, iid, now, cid=""):
     with _lock:
         d = _read()
         d["joined"][uid] = {"t": now, "invite": iid, "mfa": d["mfa"] == "data"}
+        if cid:
+            d["joined"][uid]["chat"] = cid
         _write(d)
+
+
+def chat_of(uid):
+    """The chat a new profile was invited into (opened at its first sign-in), or ""."""
+    return (_read()["joined"].get(uid) or {}).get("chat", "")
 
 
 def create_profile(code, name, pin, now=None):
@@ -316,14 +348,21 @@ def create_profile(code, name, pin, now=None):
     except ValueError:   # taken a moment ago: the invitation stays usable
         _unuse(iid)
         raise HTTPException(409, "Diesen Namen gibt es schon. Bitte einen anderen wählen.")
-    _joined(uid, iid, now)
+    cid = ""
+    if v.get("chat"):   # invited into a chat (chats.py): Chats on for the new person, the chat with the inviter open
+        import chats
+        try:
+            cid = chats.joined_by_invite(uid, v["chat"], now)
+        except Exception as e:
+            print("join: chat invitation failed:", type(e).__name__, flush=True)
+    _joined(uid, iid, now, cid)
     # the functions the admin switches on for every new profile (Wer darf was → Neue Profile), then the invitation's pack
     first = [k for k in features.new_profile(uid) if features.admin_on(k)]
     on = apply_pack(uid, v.get("pack", ""))
     on = first + [k for k in on if k not in first]
     import onboard
-    onboard.save_state(uid, fresh=True)   # "Los geht's" opens at the first sign-in in a browser
-    guard.log("invite_used", uid=uid, name=name, invite=iid, pack=v.get("pack") or None)
+    onboard.save_state(uid, fresh=not cid)   # "Los geht's" opens at the first sign-in (a chat invitation opens the chat)
+    guard.log("invite_used", uid=uid, name=name, invite=iid, pack=v.get("pack") or None, chat=bool(cid) or None)
     return uid, name, on
 
 
@@ -544,7 +583,8 @@ async def join(request: Request):
         guard.succeeded(request, name, r)
         return r
     uid, name, on = create_profile(code, body.get("name"), body.get("pin"), now)
-    r = Response(json.dumps({"ok": True, "name": name, "kind": "new", "on": on}), media_type="application/json")
+    r = Response(json.dumps({"ok": True, "name": name, "kind": "new", "on": on, "chat": chat_of(uid)}),
+                 media_type="application/json")
     _cookie(r, uid, request)
     guard.succeeded(request, name, r)
     _tell_admin(name)
@@ -578,4 +618,5 @@ async def app_join(request: Request):
     token = profiles.add_device(iphone._name(body.get("device")), uid, scope="app")
     guard.log("invite_app", uid=uid, name=name)
     _tell_admin(name)
-    return {"token": token, "profile": name, "version": iphone.app_version(), "language": iphone._language(), "on": on}
+    return {"token": token, "profile": name, "version": iphone.app_version(), "language": iphone._language(), "on": on,
+            "chat": chat_of(uid)}

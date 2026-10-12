@@ -169,6 +169,13 @@ FEATURES = (
       me="msgbox", guide="messages_all"),
     F("messages_voice", "Sprachnachrichten", "Voice messages", "day", ("messages_voice",), parent="messages",
       me="msgbox", guide="messages_voice"),
+    # chats.py (plan plaene/messenger.md): chats between the people of this Spark, like a messenger
+    F("chats", "Chats", "Chats", "day", ("chats",), "chats_on", parent="messages", me="setbox", guide="chats"),
+    F("chatgroups", "Gruppen-Chats", "Group chats", "day", ("chats_groups",), parent="chats", me="setbox", guide="chatgroups"),
+    F("chatmedia", "Fotos, Dateien und Sprache in Chats", "Photos, files and voice in chats", "day", ("chats_media",),
+      parent="chats", me="setbox", guide="chatmedia"),
+    F("chatinvite", "In einen Chat einladen", "Invite into a chat", "day", ("chats_invite",), parent="chats", me="setbox",
+      guide="chatinvite"),
     F("calendar", "Kalender", "Calendar", "day", ("calendar",), me="calbox", guide="calendar"),
     F("weather", "Wetter", "Weather", "day", ("weather",), "wx_on", me="wxbox", guide="weather"),
     # mail and contacts
@@ -197,6 +204,8 @@ FEATURES = (
     F("transit", "Bus und Bahn", "Bus and train", "go", ("transit",), "transit_on", me="trbox", guide="transit"),
     F("telegram", "Telegram", "Telegram", "go", ("telegram",), me="tgbox", guide="telegram"),
     F("android", "Android-App", "Android app", "go", ("android",), "android_on", me="andbox", guide="android"),
+    F("androidlive", "Android: Mitteilungen sofort", "Android: notes at once", "go", ("android_live",), "android_live",
+      parent="android", me="andbox", guide="androidlive"),
     F("begleiter", "Spark-Begleiter am PC und Mac", "Spark companion on PC and Mac", "go", ("desk",), "desk_on",
       me="deskbox", guide="begleiter"),
     F("begleitertun", "Begleiter darf am PC handeln", "Companion may act on the PC", "go", ("desk_act",),

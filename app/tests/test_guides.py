@@ -156,11 +156,12 @@ class DesignKlar(unittest.TestCase):
         nav = html[html.index("<nav>"):html.index("</nav>")]
         # V01.0.265 plan „Bedienung gesamt“: Funktionen is its own entry, Einbinden is gone (guides under
         # Funktionen, apps under Personen und Geräte), the search comes first
-        self.assertEqual(re.findall(r'data-s="(\w+)"', nav), ["chat", "mon", "feat", "prof", "cfg"])
+        # Chats (plan messenger.md) right below the assistant, shown only to profiles that may use them
+        self.assertEqual(re.findall(r'data-s="(\w+)"', nav), ["chat", "chats", "mon", "feat", "prof", "cfg"])
         self.assertLess(nav.index('id="findbtn"'), nav.index('data-s="chat"'))
         self.assertLess(nav.index('id="navme"'), nav.index("Spark verwalten"))
         self.assertLess(nav.index("Spark verwalten"), nav.index('data-s="mon"'))
-        self.assertEqual(re.findall(r'data-m="(\w+)"', html), ["chat", "me", "mon", "more"])
+        self.assertEqual(re.findall(r'data-m="(\w+)"', html), ["chat", "chats", "me", "mon", "more"])
 
     def test_manage_button_only_for_admin_roles(self):
         """V01.0.285: the header button "Spark verwalten" (and the phone menu's admin login) shows only for a

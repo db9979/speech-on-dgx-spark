@@ -160,3 +160,10 @@ body.appview:not(.inchat) #fab .fabface,body.appview:has(#profmodal[style*="grid
 body.appview .mebody #setbox.ptab{background:none;padding:0}
 body.appview .mebody .ptab:has(.ic-tabwrap,.ic-list,.ic-card){background:none;padding:0}
 @media (max-width:760px){#setform .sgrp{padding:2px 12px;border-radius:12px}}
+/* Chats (chats.js): its own head instead of the top bar, the page fills the space above the tabs */
+#aptabs .apcnt{position:absolute;top:1px;left:calc(50% + 6px);font-style:normal;font-size:10px;font-weight:700;min-width:17px;height:17px;line-height:17px;padding:0 4px;border-radius:9px;background:var(--apred);color:#fff;text-align:center;border:1.5px solid var(--apbarbg)}
+#aptabs .apcnt[hidden]{display:none}
+body.appview.inchats #chats.on{position:fixed;left:0;right:0;top:0;bottom:calc(59px + env(safe-area-inset-bottom));z-index:3;padding-top:env(safe-area-inset-top);background:var(--apcard);animation:none}
+body.appview.inchats.kbd #chats.on{bottom:0}
+body.appview #chats .cx{border:0;border-radius:0;box-shadow:none;margin:0;height:100%}
+body.appview #chats .cx-split{height:100%;min-height:0}

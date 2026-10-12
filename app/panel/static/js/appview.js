@@ -11,6 +11,7 @@ const wanted=()=>{try{return localStorage.getItem('appview')!=='off'}catch{retur
 let ON=false,TAB='spark',hd=0,dirty=false;
 const SV=p=>`<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">${p}</svg>`;
 const IC={spark:'<path d="M21 12a8 8 0 0 1-11.6 7.1L4 20l1-4.6A8 8 0 1 1 21 12z"/>',
+  chats:'<path d="M17 9h2a2 2 0 0 1 2 2v9l-3-3h-7a2 2 0 0 1-2-2v-1"/><path d="M15 4H5a2 2 0 0 0-2 2v9l3-3h9a2 2 0 0 0 2-2V6a2 2 0 0 0-2-2z"/>',
   today:'<circle cx="12" cy="12" r="4"/><path d="M12 2v2M12 20v2M4.9 4.9l1.4 1.4M17.7 17.7l1.4 1.4M2 12h2M20 12h2M4.9 19.1l1.4-1.4M17.7 6.3l1.4-1.4"/>',
   docs:'<path d="M14 3H6a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V9z"/><path d="M14 3v6h6M8 13h8M8 17h5"/>',
   me:'<circle cx="12" cy="8" r="4"/><path d="M4 21a8 8 0 0 1 16 0"/>',
@@ -22,14 +23,14 @@ const IC={spark:'<path d="M21 12a8 8 0 0 1-11.6 7.1L4 20l1-4.6A8 8 0 1 1 21 12z"
   vol:'<path d="M11 5L6 9H3v6h3l5 4z"/><path d="M15.5 8.5a5 5 0 0 1 0 7M18.5 5.5a9 9 0 0 1 0 13"/>',
   mute:'<path d="M11 5L6 9H3v6h3l5 4z"/><path d="M16 9l5 6M21 9l-5 6"/>',
   back:'<path d="M15 5l-7 7 7 7"/>',find:'<circle cx="11" cy="11" r="7"/><path d="M20 20l-3.5-3.5"/>'};
-const TABS=[['spark',t('Spark','Spark')],['today',t('Heute','Today')],['docs',t('Dokumente','Documents')],['me',t('Ich','Me')],['manage',t('Verwalten','Manage')]];
+const TABS=[['spark',t('Spark','Spark')],['chats',t('Chats','Chats')],['today',t('Heute','Today')],['docs',t('Dokumente','Documents')],['me',t('Ich','Me')],['manage',t('Verwalten','Manage')]];
 const mk=(tag,id,cls,html)=>{const e=document.createElement(tag);if(id)e.id=id;if(cls)e.className=cls;if(html!=null)e.innerHTML=html;return e};
 const label=b=>b?[...b.childNodes].filter(n=>n.nodeType===3).map(n=>n.textContent).join('').trim():'';
 const navBtn=s=>document.querySelector(`nav button[data-s=${s}]`);
 const mainEl=()=>document.querySelector('main');
 // ---------------------------------------------------------------- the pieces (built once, hidden without .appview)
 const bar=mk('div','apbar','',`<button type="button" class="apnb" id="apback">${SV(IC.back)}<span></span></button><div class="aplead" id="aplead"></div><b id="aptitle"></b><div class="aptrail" id="aptrail"></div>`);
-const tabs=mk('div','aptabs','',TABS.map(([k,l])=>`<button type="button" data-tab="${k}">${SV(IC[k])}<span>${esc(l)}</span>${k==='manage'?'<em class="apdot" hidden></em>':''}</button>`).join(''));
+const tabs=mk('div','aptabs','',TABS.map(([k,l])=>`<button type="button" data-tab="${k}">${SV(IC[k])}<span>${esc(l)}</span>${k==='manage'?'<em class="apdot" hidden></em>':k==='chats'?'<em class="apcnt" hidden></em>':''}</button>`).join(''));
 tabs.setAttribute('role','tablist');
 const today=mk('div','aptoday','appg'),manage=mk('div','apmanage','appg');
 const sheet=mk('div','apsheet','',`<div class="apshade"></div><div class="apscard" role="dialog" aria-modal="true"><div class="sheetgrip"></div><div class="apshead"><span></span><b></b><button type="button" class="apnb" data-close="1">${esc(t('Fertig','Done'))}</button></div><div class="apsbody"></div></div>`);
@@ -55,8 +56,10 @@ function enter(){ON=true;B.classList.add('appview');
   moveIn(f,face,true);moveIn($('wakeind'),mic);moveIn($('roomothers'),mic);moveIn($('talk'),mic);moveIn($('chatstate'),mic);
   const ti=$('chattext');if(ti.dataset.ph==null)ti.dataset.ph=ti.placeholder;ti.placeholder=t('Oder schreiben …','Or type …');
   try{history.replaceState(Object.assign({},history.state||{},{ap:0}),'')}catch{}hd=0;pend=false;
-  const sec=document.querySelector('main>section.on');TAB=!sec||sec.id==='chat'?'spark':'manage';
+  const sec=document.querySelector('main>section.on');TAB=secTab(sec);
   apFace();render()}
+// which tab a section of the page belongs to (Assistent → Spark, Chats → Chats, the rest → Verwalten)
+function secTab(sec){return !sec||sec.id==='chat'?'spark':sec.id==='chats'?'chats':'manage'}
 function leave(stillPhone){const page=B.classList.contains('appage');ON=false;B.classList.remove('appview','appage','apmsgs','aptabs','apsub','aptab-docs');sheet.hidden=true;
   // on a wider screen phone.js has put its parts back already: only the face (never touched by phone.js here) moves
   const f=$('face'),fm=marks.get(f);if(fm){fm.parentNode.insertBefore(f,fm);fm.remove();marks.delete(f)}
@@ -67,13 +70,14 @@ function apply(){const want=NAR.matches&&wanted();if(want&&!ON)enter();else if(!
 NAR.addEventListener('change',apply);
 // ---------------------------------------------------------------- tabs
 function visible(){const prof=typeof PROFILE!=='undefined'&&!!PROFILE,adm=typeof ADMIN!=='undefined'&&!!ADMIN;
-  return {spark:true,today:prof,docs:prof&&typeof DOCS_ON!=='undefined'&&DOCS_ON,me:prof||adm,manage:adm}}
+  return {spark:true,chats:prof&&!!window.CHATS_ON,today:prof,docs:prof&&typeof DOCS_ON!=='undefined'&&DOCS_ON,me:prof||adm,manage:adm}}
 function showPage(pg){B.classList.add('appage');B.classList.remove('inchat');
   for(const p of [today,manage])p.classList.toggle('on',p===pg);window.scrollTo(0,0)}
 function tab(k){if(!ON)return;closeSheet();const pm=$('profmodal').style.display==='grid';
   const prev=TAB;TAB=k;
   if(k!=='me'&&k!=='docs'&&pm&&window.closeProf)closeProf();
   if(k==='spark'){B.classList.remove('appage');navBtn('chat').click()}
+  else if(k==='chats'){B.classList.remove('appage');for(const p of [today,manage])p.classList.remove('on');navBtn('chats').click()}
   else if(k==='today'){showPage(today);renderToday()}
   else if(k==='manage'){showPage(manage);renderManage()}
   else if(k==='docs'){openMe('docbox')}
@@ -83,7 +87,7 @@ tabs.addEventListener('click',e=>{const b=e.target.closest('button[data-tab]');i
 // other code opens a section (search, "Wer darf was", the start page): follow it
 const _showSec=showSec;
 showSec=function(s){_showSec(s);if(!ON)return;B.classList.remove('appage');for(const p of [today,manage])p.classList.remove('on');
-  TAB=s==='chat'?'spark':'manage';render()};
+  TAB=s==='chat'?'spark':s==='chats'?'chats':'manage';render()};
 // ---------------------------------------------------------------- the top bar
 function manageNav(){const m=mainEl(),cw=document.querySelector('.cfgwrap'),sec=document.querySelector('main>section.on');
   if(sec&&sec.id==='cfg'&&cw.classList.contains('sub')&&!cw.classList.contains('featmode'))
@@ -94,7 +98,7 @@ function manageNav(){const m=mainEl(),cw=document.querySelector('.cfgwrap'),sec=
 function render(){if(!ON)return;if(manage.classList.contains('on')&&manageSig()!==mSig)renderManage();   // rights or Zustand arrived later
   const v=visible(),pm=$('profmodal').style.display==='grid',page=B.classList.contains('appage');
   if(pm&&TAB!=='me'&&TAB!=='docs')TAB='me';
-  if(!pm&&(TAB==='me'||TAB==='docs')){const sec=document.querySelector('main>section.on');TAB=page?(manage.classList.contains('on')?'manage':'today'):!sec||sec.id==='chat'?'spark':'manage'}
+  if(!pm&&(TAB==='me'||TAB==='docs')){const sec=document.querySelector('main>section.on');TAB=page?(manage.classList.contains('on')?'manage':'today'):secTab(sec)}
   const shown=Object.keys(v).filter(k=>v[k]);B.classList.toggle('aptabs',shown.length>1);
   tabs.querySelectorAll('button').forEach(b=>{b.hidden=!v[b.dataset.tab];b.classList.toggle('on',b.dataset.tab===TAB);b.setAttribute('aria-selected',b.dataset.tab===TAB)});
   const hd2=$('hdot');tabs.querySelector('.apdot').hidden=!(hd2&&/\b(warn|bad)\b/.test(hd2.className));
@@ -119,11 +123,13 @@ bar.addEventListener('click',e=>{const b=e.target.closest('button');if(!b)return
 function depth(){if(!ON)return 0;let d=sheet.hidden&&$('msheet').style.display!=='grid'?0:1;const pm=$('profmodal');
   if(pm.style.display==='grid'&&TAB==='me'&&pm.classList.contains('sub')&&!pm.classList.contains('one'))d++;
   if(TAB==='manage'&&!B.classList.contains('appage')&&pm.style.display!=='grid')d+=manageNav().deep;
+  if(TAB==='chats'&&!B.classList.contains('appage')&&pm.style.display!=='grid'&&window.cxDepth)d+=cxDepth();
   return d}
 function back(){if(!sheet.hidden){closeSheet();return true}
   if($('msheet').style.display==='grid'){$('msheet').style.display='none';return true}
   const pm=$('profmodal');if(pm.style.display==='grid'){if(TAB==='me'&&pm.classList.contains('sub')&&!pm.classList.contains('one')){$('meback').click();return true}return false}
   if(TAB==='manage'&&!B.classList.contains('appage')){manageNav().act();return true}
+  if(TAB==='chats'&&!B.classList.contains('appage')&&window.cxBackStep)return cxBackStep();
   return false}
 // the browser history follows the depth, so Android's back gesture (and Safari's) goes one level up
 function slide(cls){const pm=$('profmodal').style.display==='grid',el=pm?document.querySelector('#profmodal .mebody'):document.querySelector('main>section.on');

@@ -41,7 +41,7 @@ async function joinWelcome(code){const box=joinModal();box.innerHTML=jhead()+`<d
     $('joingo').disabled=true;
     try{const r=await jpub('/api/join',{code,pin:p,name:pin?undefined:$('joinname').value.trim(),mfa_code:$('joincode').value.trim()||undefined});
       if(r.code){$('joincodebox').hidden=false;$('joincode').focus();$('joingo').disabled=false;return}
-      try{sessionStorage.setItem('golets',r.kind==='new'?'1':'')}catch{}location.reload()}
+      try{sessionStorage.setItem('golets',r.kind==='new'&&!r.chat?'1':'');if(r.chat)sessionStorage.setItem('gochat',r.chat)}catch{}location.reload()}   // invited into a chat: straight there (chats.js)
     catch(e){$('joinmsg').textContent=e.status===401?t('Code falsch.','Wrong code.'):jerr(e);$('joingo').disabled=false}};
   $('joingo').onclick=go;box.querySelectorAll('input').forEach(i=>i.onkeydown=e=>{if(e.key==='Enter')go()});
   // only when no field has the cursor yet: a later focus moved typed PIN digits into the name (seen on GitHub)

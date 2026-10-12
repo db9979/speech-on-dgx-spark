@@ -509,6 +509,11 @@ APP_PATHS = ("/api/chat", "/api/test/asr", "/api/siri/ask", "/api/iphone/hello",
              "/api/messages/announce", "/api/messages/played", "/api/messages/read", "/api/messages/delete",
              "/api/messages/audio", "/api/messages/ready",
              "/api/messages/fav",     # ★ in the recipient picker (the Rufname stays in the browser)
+             # chats (chats.py): the list, a chat's messages, writing, reacting, groups, the event stream
+             "/api/chats", "/api/chats/items", "/api/chats/open", "/api/chats/group", "/api/chats/send", "/api/chats/edit",
+             "/api/chats/back", "/api/chats/react", "/api/chats/read", "/api/chats/typing", "/api/chats/opts",
+             "/api/chats/members", "/api/chats/leave", "/api/chats/clear", "/api/chats/find", "/api/chats/stream",
+             "/api/chats/media",
              # where room mode listens and ending it (roomlive.py, only with app_room; never starting or extending)
              "/api/room/active", "/api/room/end",
              "/api/profile/docs",     # the list of the own documents (GET only for the app, with app_docs)
@@ -855,6 +860,7 @@ SETTINGS = {
     "berater_skip": ([], lambda v: isinstance(v, list) and len(v) <= 20 and all(isinstance(x, str) and re.fullmatch(r"p[a-z]{1,6}", x) for x in v)),
     "storage_on": (False, lambda v: isinstance(v, bool)),  # own storage: a copy of the profile's data there (speicher.py)
     "android_on": (False, lambda v: isinstance(v, bool)),  # Android app (android.py)
+    "android_live": (False, lambda v: isinstance(v, bool)),  # ... with a lasting connection: notes at once
     "mcps_on": (False, lambda v: isinstance(v, bool)),     # the Spark as an MCP server for other programs (mcpserver.py)
     "mymcp_on": (False, lambda v: isinstance(v, bool)),    # own MCP services of this profile (meinmcp.py)
     "report_on": (False, lambda v: isinstance(v, bool)),   # Probleme melden: reports as GitHub issues (meldung.py)
@@ -889,6 +895,10 @@ SETTINGS = {
     "msg_all": (True, lambda v: isinstance(v, bool)),        # also messages "an alle"
     "msg_speaker": ("off", lambda v: v in ("off", "hint", "text")),   # say new ones on my speakers
     "msg_announce": (False, lambda v: isinstance(v, bool)),  # announcements of others on my speakers
+    # chats (chats.py): off until the profile switches them on; "gelesen" shown both ways, the text in notifications
+    "chats_on": (False, lambda v: isinstance(v, bool)),
+    "chat_receipts": (True, lambda v: isinstance(v, bool)),
+    "chat_push_text": (False, lambda v: isinstance(v, bool)),
 }
 
 

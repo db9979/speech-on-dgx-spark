@@ -31,7 +31,11 @@ class NotePoll : JobService() {
     override fun onStartJob(params: JobParameters): Boolean {
         Thread {
             try {
-                poll(this)
+                if (!LiveConn.running) when (poll(this)) {   // "Mitteilungen sofort": the lasting connection (LiveConn) on or off
+                    true -> LiveConn.start(this)
+                    false -> LiveConn.stop(this)
+                    null -> {}
+                }
             } catch (_: Exception) {
             }
             jobFinished(params, false)
@@ -77,10 +81,11 @@ class NotePoll : JobService() {
             return c
         }
 
-        fun poll(ctx: Context) {
+        /** Asks once; returns whether the Spark wants the lasting connection (null: no answer). */
+        fun poll(ctx: Context): Boolean? {
             val store = Store(ctx)
-            val base = store.base ?: return
-            val c = cookie(base) ?: return
+            val base = store.base ?: return null
+            val c = cookie(base) ?: return null
             val conn = URL("$base/api/android/notes?after=${store.lastNote}").openConnection() as HttpURLConnection
             conn.connectTimeout = 15000
             conn.readTimeout = 15000
@@ -88,33 +93,39 @@ class NotePoll : JobService() {
             conn.setRequestProperty("Cookie", c)
             conn.setRequestProperty("User-Agent", "SparkAndroid/${BuildConfig.VERSION_NAME}")
             try {
-                if (conn.responseCode != 200) return   // signed out, switched off or the Spark is away: try again later
+                if (conn.responseCode != 200) return null   // signed out, switched off or the Spark is away: try again later
                 val text = conn.inputStream.use { s -> readSome(s) }
                 val d = JSONObject(text)
-                val notes = d.optJSONArray("notes")
-                var last = store.lastNote
-                if (notes != null) {
-                    for (i in 0 until notes.length()) {
-                        val n = notes.optJSONObject(i) ?: continue
-                        val num = n.optLong("n")
-                        val body = n.optString("body").take(1500)
-                        show(ctx, num.toInt(), n.optString("title").take(200), body, Wege.link(base, body))
-                        if (num > last) last = num
-                    }
-                }
-                // the Spark started over (restart): its numbers begin at 1 again
-                val serverLast = d.optLong("last")
-                store.lastNote = if (serverLast < store.lastNote) serverLast else last
-                val app = d.optJSONObject("app")
-                if (app != null) {
-                    val code = app.optInt("code")
-                    if (code > BuildConfig.VERSION_CODE && code > store.toldCode) {
-                        store.toldCode = code
-                        show(ctx, 0, "Neue Spark-App", "Version ${app.optString("version").take(20)} ist da. Antippen zum Laden.", "$base/#me=andbox")
-                    }
-                }
+                handle(ctx, store, base, d)
+                return d.optBoolean("live", false)
             } finally {
                 conn.disconnect()
+            }
+        }
+
+        /** Shows the notes of an answer (from poll or LiveConn) and keeps the number of the last one. */
+        internal fun handle(ctx: Context, store: Store, base: String, d: JSONObject) {
+            val notes = d.optJSONArray("notes")
+            var last = store.lastNote
+            if (notes != null) {
+                for (i in 0 until notes.length()) {
+                    val n = notes.optJSONObject(i) ?: continue
+                    val num = n.optLong("n")
+                    val body = n.optString("body").take(1500)
+                    show(ctx, num.toInt(), n.optString("title").take(200), body, Wege.link(base, body))
+                    if (num > last) last = num
+                }
+            }
+            // the Spark started over (restart): its numbers begin at 1 again
+            val serverLast = d.optLong("last")
+            store.lastNote = if (serverLast < store.lastNote) serverLast else last
+            val app = d.optJSONObject("app")
+            if (app != null) {
+                val code = app.optInt("code")
+                if (code > BuildConfig.VERSION_CODE && code > store.toldCode) {
+                    store.toldCode = code
+                    show(ctx, 0, "Neue Spark-App", "Version ${app.optString("version").take(20)} ist da. Antippen zum Laden.", "$base/#me=andbox")
+                }
             }
         }
 

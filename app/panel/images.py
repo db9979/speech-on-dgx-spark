@@ -109,8 +109,9 @@ def kind(data):
     return None
 
 
-def prepare(data):
-    """(JPEG bytes, width, height) of a picture, cleaned; ValueError if it is none or too big."""
+def prepare(data, side=SIDE, quality=QUALITY):
+    """(JPEG bytes, width, height) of a picture, cleaned, at most side px long; ValueError if it is none or too big.
+    Chats (chats.py) keep photos at 2048 px with a 480 px preview."""
     want = kind(data)
     if not want:
         raise ValueError("only JPEG, PNG or WebP pictures")
@@ -135,9 +136,9 @@ def prepare(data):
                 im = flat
             elif im.mode != "RGB":
                 im = im.convert("RGB")
-            im.thumbnail((SIDE, SIDE))
+            im.thumbnail((side, side))
             out = io.BytesIO()
-            im.save(out, "JPEG", quality=QUALITY)        # no exif=, so nothing of the original's metadata
+            im.save(out, "JPEG", quality=quality)        # no exif=, so nothing of the original's metadata
             return out.getvalue(), im.size[0], im.size[1]
     except (Image.DecompressionBombError, OSError, SyntaxError) as e:
         raise ValueError(f"the picture cannot be read ({type(e).__name__})")

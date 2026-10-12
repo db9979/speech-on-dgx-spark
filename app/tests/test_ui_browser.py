@@ -34,7 +34,7 @@ STATE = ("JSON.stringify({hidden:document.hidden,rec:!!chat.rec,live:micLive(),r
          "ctrl:!!chat.ctrl,playing:playing(),asr:!!chat.asrBusy,pctx:chat.pctx&&[chat.pctx.state,chat.pctx.currentTime],"
          "ctx:chat.ctx&&[chat.ctx.state,chat.ctx.currentTime],say:$('chatstate').textContent})")
 
-SECTIONS = ("chat", "mon", "live", "sys", "test", "logs", "cfg", "prof", "who", "route", "int", "apps")
+SECTIONS = ("chat", "chats", "mon", "live", "sys", "test", "logs", "cfg", "prof", "who", "route", "int", "apps")
 VIEWS = (("pc", 1280, 900), ("handy", 390, 844))
 
 
@@ -2556,6 +2556,139 @@ class Browser(unittest.TestCase):
                     await br.close()
         self.run_async(go())
 
+
+    def test_chats_page(self):
+        """Chats (chats.js): with the Spark's and the profile's switch the menu has "Chats" (computer: beside
+        Assistent, phone: a tab with the unread count); the list shows the chat, opening it shows the bubble, an
+        answer gets its tick, info, new chat and new group open as a pane; strict CSP, nothing sticks out."""
+        import chats
+        import profiles
+        helpers.set_config(chats=True, chats_groups=True, messages=True)
+        me = next(x for x in profiles.names() if x["name"] == "Uitest")
+        profiles.save_settings(me["id"], dict(profiles.settings(me["id"]), chats_on=True))
+
+        async def go():
+            async with async_playwright() as p:
+                for name, w, h in VIEWS + (("klein", 320, 640),):
+                    try:
+                        profiles.add_user("Chatpartner " + name, "1357")
+                    except Exception:
+                        pass
+                    other = next(x for x in profiles.names() if x["name"] == "Chatpartner " + name)
+                    profiles.save_settings(other["id"], dict(profiles.settings(other["id"]), chats_on=True))
+                    cid = chats.open_one(other["id"], me["id"])
+                    await chats.send(other["id"], cid, "Hallo, kommst du heute zum Essen? " + "lang " * 30)
+                    br, pg, errors = await self.page(p, w, h, csp=True)
+                    if name == "pc":
+                        await self.until(pg, "!document.querySelector('nav button[data-s=chats]').hidden")
+                        await self.until(pg, "!$('cxcnt').hidden&&+$('cxcnt').textContent>=1")
+                        await pg.click("nav button[data-s=chats]")
+                    else:
+                        await self.until(pg, "!document.querySelector('#aptabs [data-tab=chats]').hidden")
+                        await self.until(pg, "!document.querySelector('#aptabs [data-tab=chats] .apcnt').hidden")
+                        await pg.click("#aptabs [data-tab=chats]")
+                    await pg.wait_for_selector(f".cx-row[data-cx='{cid}']")
+                    self.assertIn("Chatpartner", await pg.inner_text(f".cx-row[data-cx='{cid}']"))
+                    await pg.click(f".cx-row[data-cx='{cid}']")
+                    await pg.wait_for_selector(".cx-msg:not(.mine) .cx-txt")
+                    self.assertIn("kommst du heute", await pg.inner_text("#cxlog"))
+                    await pg.fill("#cxtext", "Ja, gern!")
+                    await pg.click("#cxsend")
+                    await pg.wait_for_selector(".cx-msg.mine .cx-tk")
+                    self.assertEqual(await pg.evaluate("$('cxtext').value"), "")
+                    over = await pg.evaluate("document.documentElement.scrollWidth-window.innerWidth")
+                    self.assertLessEqual(over, 1, f"{name}/chat: {over}px zu breit")
+                    await pg.click(".cx-msg:not(.mine) .cx-bub")   # tap: reactions and actions
+                    await pg.wait_for_selector(".cx-acts .cx-emo button")
+                    await pg.click(".cx-acts .cx-emo button")
+                    await pg.wait_for_selector(".cx-rc.me")
+                    for pane in ("cxinfo", "cxnew"):
+                        if pane == "cxnew" and name != "pc":   # back: from the info to the chat, then to the list
+                            await pg.click("#cxback")
+                            await pg.wait_for_selector("#cxpane", state="hidden")
+                            await pg.click("#cxback")
+                        await pg.click("#" + pane)
+                        await pg.wait_for_selector("#cxpane:not([hidden])")
+                        over = await pg.evaluate("document.documentElement.scrollWidth-window.innerWidth")
+                        self.assertLessEqual(over, 1, f"{name}/{pane}: {over}px zu breit")
+                    await pg.click("[data-cxn=group]")
+                    await pg.wait_for_selector("#cxgname")
+                    over = await pg.evaluate("document.documentElement.scrollWidth-window.innerWidth")
+                    self.assertLessEqual(over, 1, f"{name}/group: {over}px zu breit")
+                    self.assertEqual(errors, [], name)
+                    await br.close()
+        try:
+            self.run_async(go())
+        finally:
+            helpers.set_config(chats=False, chats_groups=False, messages=False)
+
+    def test_chat_photo_voice_and_invite(self):
+        """Chats Schritt B (chats.js): with "Fotos, Dateien und Sprache" the composer shows 📎 and 🎤; a photo
+        goes up as the raw body and comes back as a preview, a tap opens it large and a tap closes it; with
+        "In einen Chat einladen" the new-chat pane offers "Jemanden einladen". Strict CSP, nothing sticks out."""
+        import io
+        import chats
+        import join
+        import profiles
+        from PIL import Image
+        helpers.set_config(chats=True, chats_media=True, chats_invite=True, messages=True)
+        jd = join._read()
+        old_mode = jd["mode"]
+        jd["mode"] = "invite"
+        join._write(jd)
+        me = next(x for x in profiles.names() if x["name"] == "Uitest")
+        profiles.save_settings(me["id"], dict(profiles.settings(me["id"]), chats_on=True))
+        buf = io.BytesIO()
+        Image.new("RGB", (900, 600), (30, 120, 200)).save(buf, "JPEG")
+        photo = buf.getvalue()
+
+        async def go():
+            async with async_playwright() as p:
+                for name, w, h in VIEWS + (("klein", 320, 640),):
+                    try:
+                        profiles.add_user("Fotopartner " + name, "1357")
+                    except Exception:
+                        pass
+                    other = next(x for x in profiles.names() if x["name"] == "Fotopartner " + name)
+                    profiles.save_settings(other["id"], dict(profiles.settings(other["id"]), chats_on=True))
+                    cid = chats.open_one(other["id"], me["id"])
+                    await chats.send(other["id"], cid, "Schick mal ein Foto")
+                    br, pg, errors = await self.page(p, w, h, csp=True)
+                    if name == "pc":
+                        await self.until(pg, "!document.querySelector('nav button[data-s=chats]').hidden")
+                        await pg.click("nav button[data-s=chats]")
+                    else:
+                        await self.until(pg, "!document.querySelector('#aptabs [data-tab=chats]').hidden")
+                        await pg.click("#aptabs [data-tab=chats]")
+                    await pg.click(f".cx-row[data-cx='{cid}']")
+                    await pg.wait_for_selector("#cxatt:not([hidden])")
+                    self.assertTrue(await pg.is_visible("#cxmic"))
+                    await pg.set_input_files("#cxfile", files=[{"name": "urlaub.jpg", "mimeType": "image/jpeg", "buffer": photo}])
+                    await pg.wait_for_selector(".cx-msg.mine .cx-ph img")
+                    await self.until(pg, "document.querySelector('.cx-msg.mine .cx-ph img').naturalWidth>0")
+                    over = await pg.evaluate("document.documentElement.scrollWidth-window.innerWidth")
+                    self.assertLessEqual(over, 1, f"{name}/foto: {over}px zu breit")
+                    await pg.click(".cx-msg.mine .cx-ph")
+                    await pg.wait_for_selector("#cxbig:not([hidden])")
+                    await self.until(pg, "$('cxbigimg').naturalWidth>0")
+                    await pg.click("#cxbig")
+                    await pg.wait_for_selector("#cxbig", state="hidden")
+                    if name != "pc":
+                        await pg.click("#cxback")
+                    await pg.click("#cxnew")
+                    await pg.click("[data-cxn=invite]")
+                    await pg.wait_for_selector("#cxinvname")
+                    over = await pg.evaluate("document.documentElement.scrollWidth-window.innerWidth")
+                    self.assertLessEqual(over, 1, f"{name}/einladen: {over}px zu breit")
+                    self.assertEqual(errors, [], name)
+                    await br.close()
+        try:
+            self.run_async(go())
+        finally:
+            helpers.set_config(chats=False, chats_media=False, chats_invite=False, messages=False)
+            jd = join._read()
+            jd["mode"] = old_mode
+            join._write(jd)
 
 @unittest.skipUnless(browser_ok(), "no Playwright/Chromium here")
 class JoinBrowser(unittest.TestCase):

@@ -6,6 +6,15 @@ since V01.0.296) and adds only what a page cannot do:
 - **Notes while the app is closed:** the app asks the Spark itself every 15 minutes (`/api/android/notes`), no
   Google service. Reminders, the morning briefing and notes go there when the app is the device used last or no
   other way (iPhone app) is set up.
+- **Notes at once** (1.2.0 and later, V01.0.473): admin: Features → Android app → "Android: notes at once" (off);
+  profile: Me → Android app → "Notes at once" (off), then open the app once. The app then keeps a connection to the
+  Spark open (`/api/android/wait`: the Spark answers at once when a notification is there, otherwise empty after
+  50 seconds, and the app asks again). Chat messages, reminders and notes come without delay, without a Google
+  service. Android shows a quiet lasting notice "Mit dem Spark verbunden" for it (a foreground service). So Android
+  does not put the connection to sleep: in the Android settings under Apps, Spark, Battery pick "Unrestricted".
+  After the phone restarts the connection starts when the app is opened first; until then the app asks every
+  15 minutes. Switch off or signed out: the app ends the connection by itself. Live shows "Android-App (sofort)"
+  under connections, with the number only.
 - **Assistant button:** Settings → Apps → Default apps → Digital assistant → "Spark"; holding the button opens the
   app and it listens.
 - **Share to Spark:** share text in another app → Spark. The text is put into the text field, you send it yourself.
