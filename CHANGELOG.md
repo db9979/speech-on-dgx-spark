@@ -2,6 +2,7 @@
 
 Every version in one line, newest first (taken from the commit messages, so some lines are German, some English). Older entries have no version number.
 
+- **V01.0.428** · 2026-10-12 · Sofortige Rückmeldung abwechslungsreicher: 126 statt 34 fertige Sätze (je Art 5–8, zehn Brückensätze), zufällig gewählt, nie einer der letzten sechs; ist eine Variante noch nicht aufgenommen, kommt eine andere.
 - **V01.0.427** · 2026-10-12 · Zweiter Faktor einheitlich (Plan plaene/zweiter-faktor-einheitlich.md): ein Code pro Person (Notzugang nutzt den Code des Haupt-Admin-Profils), Stufen Bestätigen/Schutz ändern aus einer Liste mit Selbsttest, Dialog und Schlösser im Browser und in der iPhone-App, Übersicht unter Ich → Sicherheit, gleich als Admin anmelden, Panel-Passwort nur über #admin
 - **V01.0.426** · 2026-10-11 · Ich → E-Mail: Modus-Knöpfe passen auch bei 320 px und breiter Schrift (GitHub-Lauf von V01.0.424 rot)
 - **V01.0.425** · 2026-10-11 · Live-Bild aufgeräumt und erweitert: Internet als bernsteinfarbene Fläche mit Abstand zu den Heimnetz-Zielen (keine Linie mehr durch einen Kasten), Wächter als Wand mittig zwischen Werkzeugen und Zielen, Geblocktes 10 s als rote Linie mit ✕, ruhige Internet-Ziele als „+ N ruhig“ zum Aufklappen, Legende der Farben, zu lange Texte mit „…“, Wege ins Internet bernsteinfarben und Anfragen nie gleichfarbig; am Handy zeigt „ist jetzt“ auch Wege über den Wächter

@@ -21,52 +21,152 @@ import base64
 import hashlib
 import json
 import os
+import random
 import re
 import threading
 import time
 
 STATE = os.environ.get("SPEECH_SPARK_STATE", "/var/lib/speech-spark/state")
 BRIDGE_S = 6.0          # seconds after the question without any sound of the answer: the second sentence
-MAX_CLIPS = 300         # recordings kept at most (oldest go first); one is ~1-2 s, 50-100 KB
+MAX_CLIPS = 1000        # recordings kept at most (oldest go first); one is ~1-2 s, 50-100 KB
 MAX_CLIP_BYTES = 8 * 48000   # 8 s of 16-bit mono PCM at 24 kHz
 CHUNK = 9600            # bytes per audio event (0.2 s)
 NO_ACK = ("smarthome", "plaudern", "lean")   # a direct command is quick, small talk needs none
 
-# Per Weiche group (intent.GROUPS) and a few panel ways: (German, English) variants, said in turn.
+# Per Weiche group (intent.GROUPS) and a few panel ways: (German, English) variants. ack.pick takes one at random
+# among the recorded ones, never one of the profile's last few (Dominik 2026-10-12: more variety, never monotonous).
 PHRASES = {
     "kalender": (("Ich schau in deinen Kalender.", "Let me check your calendar."),
-                 ("Moment, ich schau in den Kalender.", "One moment, checking your calendar.")),
+                 ("Moment, ich schau in den Kalender.", "One moment, checking your calendar."),
+                 ("Ich werf mal einen Blick in den Kalender.", "Let me have a look at your calendar."),
+                 ("Mal sehen, was im Kalender steht.", "Let's see what's in your calendar."),
+                 ("Einen Augenblick, ich prüf deine Termine.", "Just a second, checking your appointments."),
+                 ("Ich hol mir kurz deine Termine.", "Getting your appointments."),
+                 ("Okay, ich schau, was ansteht.", "Okay, let me see what's coming up."),
+                 ("Gleich, ich öffne deinen Kalender.", "Hang on, opening your calendar.")),
     "mail": (("Ich schau in deine Mails.", "Let me check your e-mail."),
-             ("Moment, ich schau ins Postfach.", "One moment, checking your inbox.")),
+             ("Moment, ich schau ins Postfach.", "One moment, checking your inbox."),
+             ("Ich werf einen Blick in dein Postfach.", "Let me have a look at your inbox."),
+             ("Mal sehen, was an Mails da ist.", "Let's see what mail there is."),
+             ("Einen Augenblick, ich hol deine Mails.", "Just a second, fetching your mail."),
+             ("Okay, ich seh nach, was Neues da ist.", "Okay, let me see what's new."),
+             ("Gleich, ich öffne dein Postfach.", "Hang on, opening your inbox.")),
     "websuche": (("Ich suche kurz im Netz.", "Let me search the web."),
-                 ("Moment, ich schau im Internet nach.", "One moment, looking it up online.")),
+                 ("Moment, ich schau im Internet nach.", "One moment, looking it up online."),
+                 ("Ich frag mal kurz das Internet.", "Let me ask the internet."),
+                 ("Einen Augenblick, ich recherchiere.", "Just a second, researching that."),
+                 ("Mal sehen, was das Netz dazu sagt.", "Let's see what the web says."),
+                 ("Okay, ich such dir das raus.", "Okay, I'll look that up for you."),
+                 ("Gleich, ich schau online nach.", "Hang on, checking online."),
+                 ("Gute Frage, ich such kurz.", "Good question, let me search.")),
     "erinnerung": (("Okay, einen Moment.", "Okay, one moment."),
-                   ("Moment.", "One moment.")),
-    "liste": (("Moment, ich schau auf die Liste.", "One moment, checking the list."),),
+                   ("Moment.", "One moment."),
+                   ("Alles klar, Augenblick.", "Alright, just a second."),
+                   ("Gut, ich kümmere mich drum.", "Right, I'll see to it."),
+                   ("Okay, ich schau mir das an.", "Okay, let me take care of that."),
+                   ("Einen Augenblick bitte.", "Just a moment, please."),
+                   ("Verstanden, kleinen Moment.", "Got it, one second.")),
+    "liste": (("Moment, ich schau auf die Liste.", "One moment, checking the list."),
+              ("Ich werf einen Blick auf die Liste.", "Let me look at the list."),
+              ("Einen Augenblick, ich hol die Liste.", "Just a second, getting the list."),
+              ("Okay, ich kümmere mich um die Liste.", "Okay, I'll see to the list."),
+              ("Gleich, ich öffne die Liste.", "Hang on, opening the list."),
+              ("Mal sehen, was auf der Liste steht.", "Let's see what's on the list.")),
     "wetter": (("Ich schau nach dem Wetter.", "Let me check the weather."),
-               ("Moment, ich hol das Wetter.", "One moment, getting the weather.")),
-    "bahn": (("Ich schau nach den Verbindungen.", "Let me check the connections."),),
-    "paket": (("Ich schau nach deinen Paketen.", "Let me check your parcels."),),
-    "kontakt": (("Moment, ich schau in die Kontakte.", "One moment, checking your contacts."),),
-    "gedaechtnis": (("Okay, einen Moment.", "Okay, one moment."),),
+               ("Moment, ich hol das Wetter.", "One moment, getting the weather."),
+               ("Mal sehen, was das Wetter macht.", "Let's see what the weather's doing."),
+               ("Einen Augenblick, ich prüf die Vorhersage.", "Just a second, checking the forecast."),
+               ("Ich werf einen Blick auf die Vorhersage.", "Let me look at the forecast."),
+               ("Okay, ich schau aus dem digitalen Fenster.", "Okay, peeking out the digital window."),
+               ("Gleich, ich hol die Wetterdaten.", "Hang on, fetching the weather.")),
+    "bahn": (("Ich schau nach den Verbindungen.", "Let me check the connections."),
+             ("Moment, ich prüf den Fahrplan.", "One moment, checking the timetable."),
+             ("Einen Augenblick, ich such eine Verbindung.", "Just a second, finding a connection."),
+             ("Mal sehen, was fährt.", "Let's see what's running."),
+             ("Okay, ich schau, wie du hinkommst.", "Okay, let me see how you get there."),
+             ("Gleich, ich frag die Bahn.", "Hang on, asking the railway.")),
+    "paket": (("Ich schau nach deinen Paketen.", "Let me check your parcels."),
+              ("Moment, ich verfolge die Sendung.", "One moment, tracking the shipment."),
+              ("Mal sehen, wo dein Paket steckt.", "Let's see where your parcel is."),
+              ("Einen Augenblick, ich prüf die Sendungen.", "Just a second, checking your deliveries."),
+              ("Okay, ich schau, was unterwegs ist.", "Okay, let me see what's on its way.")),
+    "kontakt": (("Moment, ich schau in die Kontakte.", "One moment, checking your contacts."),
+                ("Ich werf einen Blick ins Adressbuch.", "Let me look in your address book."),
+                ("Einen Augenblick, ich such den Kontakt.", "Just a second, finding the contact."),
+                ("Mal sehen, was im Adressbuch steht.", "Let's see what's in your address book."),
+                ("Gleich, ich öffne deine Kontakte.", "Hang on, opening your contacts.")),
+    "gedaechtnis": (("Okay, einen Moment.", "Okay, one moment."),
+                    ("Alles klar, Augenblick.", "Alright, just a second."),
+                    ("Moment, ich überleg kurz.", "One moment, let me think."),
+                    ("Verstanden, kleinen Moment.", "Got it, one second."),
+                    ("Gut, ich kümmere mich drum.", "Right, I'll see to it.")),
     "dokument": (("Ich schau in deinen Dokumenten nach.", "Let me check your documents."),
-                 ("Moment, ich schau in die Dokumente.", "One moment, looking at your documents.")),
+                 ("Moment, ich schau in die Dokumente.", "One moment, looking at your documents."),
+                 ("Ich blätter kurz durch deine Unterlagen.", "Let me leaf through your papers."),
+                 ("Einen Augenblick, ich such das Dokument.", "Just a second, finding the document."),
+                 ("Mal sehen, was in deinen Unterlagen steht.", "Let's see what your documents say."),
+                 ("Okay, ich durchsuche deine Dokumente.", "Okay, searching your documents."),
+                 ("Gleich, ich schau in deine Ablage.", "Hang on, checking your files.")),
     "erstellen": (("Moment, ich kümmere mich um das Dokument.", "One moment, I'll see to the document."),
-                  ("Okay, einen Moment, ich bereite das vor.", "Okay, one moment, I'll prepare it.")),
-    "nachricht": (("Moment.", "One moment."),),
-    "agent": (("Moment, ich frag kurz nach.", "One moment, I'll ask."),),
-    "iphone": (("Einen Moment.", "One moment."),),
-    "spark": (("Moment, ich schau in der Anleitung nach.", "One moment, checking the guide."),),
-    "wikipedia": (("Ich schau kurz in der Wikipedia nach.", "Let me check Wikipedia."),),
-    "archiv": (("Ich schau in deinem Archiv nach.", "Let me check your archive."),),
+                  ("Okay, einen Moment, ich bereite das vor.", "Okay, one moment, I'll prepare it."),
+                  ("Alles klar, ich setz das auf.", "Alright, I'll draft that."),
+                  ("Gut, ich mach mich an die Arbeit.", "Right, getting to work on it."),
+                  ("Einen Augenblick, ich schreib das zusammen.", "Just a second, putting it together."),
+                  ("Verstanden, ich fang gleich an.", "Got it, starting on it now.")),
+    "nachricht": (("Moment.", "One moment."),
+                  ("Einen Augenblick.", "Just a second."),
+                  ("Alles klar, kleinen Moment.", "Alright, one second."),
+                  ("Okay, ich kümmere mich drum.", "Okay, I'll see to it."),
+                  ("Verstanden, Augenblick.", "Got it, just a moment.")),
+    "agent": (("Moment, ich frag kurz nach.", "One moment, I'll ask."),
+              ("Einen Augenblick, ich kläre das.", "Just a second, sorting that out."),
+              ("Okay, ich kümmere mich drum.", "Okay, I'll see to it."),
+              ("Alles klar, ich frag mal herum.", "Alright, let me ask around."),
+              ("Gleich, ich hol mir die Auskunft.", "Hang on, getting the details.")),
+    "iphone": (("Einen Moment.", "One moment."),
+               ("Augenblick, ich schau aufs Handy.", "Just a second, checking the phone."),
+               ("Okay, kleinen Moment.", "Okay, one second."),
+               ("Alles klar, ich kümmere mich drum.", "Alright, I'll see to it."),
+               ("Gleich, ich frag dein Handy.", "Hang on, asking your phone.")),
+    "spark": (("Moment, ich schau in der Anleitung nach.", "One moment, checking the guide."),
+              ("Ich blätter kurz in meiner Anleitung.", "Let me flip through my guide."),
+              ("Einen Augenblick, ich schau, wie das geht.", "Just a second, let me see how that works."),
+              ("Mal sehen, was die Anleitung sagt.", "Let's see what the guide says."),
+              ("Gute Frage, ich schau kurz nach.", "Good question, let me check.")),
+    "wikipedia": (("Ich schau kurz in der Wikipedia nach.", "Let me check Wikipedia."),
+                  ("Moment, ich frag die Wikipedia.", "One moment, asking Wikipedia."),
+                  ("Mal sehen, was die Wikipedia weiß.", "Let's see what Wikipedia knows."),
+                  ("Einen Augenblick, ich schlag das nach.", "Just a second, looking that up."),
+                  ("Gute Frage, ich schlag kurz nach.", "Good question, let me look it up."),
+                  ("Okay, ich schau im Lexikon.", "Okay, checking the encyclopedia.")),
+    "archiv": (("Ich schau in deinem Archiv nach.", "Let me check your archive."),
+               ("Moment, ich schlag im Archiv nach.", "One moment, looking it up in the archive."),
+               ("Mal sehen, was das Archiv dazu hat.", "Let's see what the archive has."),
+               ("Einen Augenblick, ich durchsuche das Archiv.", "Just a second, searching the archive."),
+               ("Gute Frage, ich schau ins Archiv.", "Good question, checking the archive."),
+               ("Okay, ich blätter im Archiv.", "Okay, browsing the archive.")),
     # panel ways, not Weiche groups
     "lokal": (("Ich schau kurz nach.", "Let me look that up."),
-              ("Moment, ich schau nach.", "One moment, let me check.")),
+              ("Moment, ich schau nach.", "One moment, let me check."),
+              ("Einen Augenblick, ich such das raus.", "Just a second, digging that out."),
+              ("Mal sehen, was ich dazu finde.", "Let's see what I can find."),
+              ("Gute Frage, ich schau mal.", "Good question, let me see."),
+              ("Okay, ich schau in meine Unterlagen.", "Okay, checking my sources."),
+              ("Gleich, ich such kurz.", "Hang on, searching.")),
     "bridge": (("Dauert einen Moment länger.", "This takes a little longer."),
-               ("Gleich hab ich's.", "Almost there.")),
+               ("Gleich hab ich's.", "Almost there."),
+               ("Ich bin noch dran.", "Still on it."),
+               ("Einen kleinen Moment noch.", "Just a little longer."),
+               ("Fast fertig, gleich kommt's.", "Nearly ready, coming right up."),
+               ("Noch einen Augenblick, bitte.", "One more moment, please."),
+               ("Ich sortier das noch kurz.", "Just sorting it out."),
+               ("Das braucht etwas länger als gedacht.", "This is taking a bit longer than expected."),
+               ("Bleib dran, gleich geht's weiter.", "Stay with me, nearly there."),
+               ("Ich hab's fast zusammen.", "I've almost got it together.")),
 }
 
-_turns = {}             # uid -> counter (which variant comes next; RAM only)
+_recent = {}            # uid -> the last sentences said to this profile, newest last (RAM only)
+RECENT = 6              # never one of the last RECENT sentences while another is recorded
 _making = set()         # cache keys being recorded right now
 _lock = threading.Lock()
 stats = {}              # day -> {"with": n, "without": n, "groups": {group: n}} (RAM only, for Zustand)
@@ -157,22 +257,36 @@ def group_of(route_names, direct=None, local=False):
     return None
 
 
-def phrase(group, uid, english=False, bump=True):
-    """The next variant of the group's sentences for this profile (in turn, so it does not sound like a recording)."""
-    opts = PHRASES.get(group)
+def pick(group, uid, english=False, have=None, bump=True):
+    """A sentence of the group for this profile: at random among the recorded ones (have(text) -> bool), never one
+    of the profile's last RECENT sentences while another fits (so it does not sound like a recording), else the
+    one said longest ago. None when the group has none or none is recorded yet."""
+    opts = [v[1 if english else 0] for v in PHRASES.get(group) or ()]
+    if have is not None:
+        opts = [t for t in opts if have(t)]
     if not opts:
         return None
     with _lock:
-        n = _turns.get(uid or "", 0)
+        last = _recent.get(uid or "", [])
+        fresh = [t for t in opts if t not in last]
+        text = random.choice(fresh) if fresh else min(opts, key=last.index)
         if bump:
-            _turns[uid or ""] = n + 1
-            if len(_turns) > 500:
-                _turns.clear()
-    return opts[n % len(opts)][1 if english else 0]
+            _recent[uid or ""] = (last + [text])[-RECENT:]
+            if len(_recent) > 500:
+                _recent.clear()
+    return text
+
+
+def phrase(group, uid, english=False, bump=True):
+    """pick() without looking at the recordings."""
+    return pick(group, uid, english, None, bump)
 
 
 def all_texts(english=False):
-    return [v[1 if english else 0] for opts in PHRASES.values() for v in opts]
+    """Every sentence once, the first variant of each group first (recorded in this order, so every group soon
+    has one)."""
+    rows = [[v[1 if english else 0] for v in opts] for opts in PHRASES.values()]
+    return list(dict.fromkeys(t for i in range(max(map(len, rows))) for r in rows if i < len(r) for t in [r[i]]))
 
 
 def count(group, ok, now=None):
@@ -192,6 +306,11 @@ def today(now=None):
     s = stats.get(day) or {"with": 0, "without": 0, "groups": {}}
     top = sorted(s["groups"].items(), key=lambda x: -x[1])[:3]
     return {"with": s["with"], "without": s["without"], "top": [{"group": g, "n": n} for g, n in top]}
+
+
+def recorded(tts_body, lang):
+    """For pick(): is this sentence recorded in this voice and language?"""
+    return lambda t: os.path.exists(_path(key(tts_body, t, lang)))
 
 
 def missing_ok(tts_body, lang):

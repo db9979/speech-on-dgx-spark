@@ -74,13 +74,31 @@ class Rules(unittest.TestCase):
         self.assertEqual(ack.group_of([], direct="weather"), "wetter")
         self.assertEqual(ack.group_of(["spark"], direct="spark_hilfe"), "spark")
 
-    def test_variants_take_turns(self):
-        a = ack.phrase("kalender", "turns1")
-        b = ack.phrase("kalender", "turns1")
-        self.assertNotEqual(a, b)
-        self.assertEqual(ack.phrase("kalender", "turns1", english=True, bump=False),
-                         ack.PHRASES["kalender"][0][1])
+    def test_variants_never_repeat_soon(self):
+        """Dominik 2026-10-12: many variants, never monotonous: never one of the profile's last few sentences."""
+        said = [ack.phrase("kalender", "turns1") for _ in range(40)]
+        for i in range(1, len(said)):
+            self.assertNotIn(said[i], said[max(0, i - ack.RECENT):i])
+        self.assertGreater(len(set(said)), 5)
         self.assertIsNone(ack.phrase("gibtsnicht", "turns1"))
+
+    def test_only_recorded_ones(self):
+        rec = {ack.PHRASES["wetter"][2][0]}
+        for _ in range(5):
+            self.assertEqual(ack.pick("wetter", "turns2", have=rec.__contains__), ack.PHRASES["wetter"][2][0])
+        self.assertIsNone(ack.pick("wetter", "turns2", have=lambda t: False))
+        self.assertEqual(ack.pick("wetter", "turns3", english=True, have={"Let me check the weather."}.__contains__),
+                         "Let me check the weather.")
+
+    def test_plenty_of_variants(self):
+        for g, opts in ack.PHRASES.items():
+            self.assertGreaterEqual(len(opts), 5, g)
+            self.assertEqual(len({de for de, _ in opts}), len(opts), g)      # no doubles in a group
+        self.assertGreaterEqual(len(ack.PHRASES["bridge"]), 8)
+        texts = ack.all_texts()
+        for opts in ack.PHRASES.values():                                    # each group's first one is recorded early
+            self.assertIn(opts[0][0], texts[:len(ack.PHRASES)])
+        self.assertLessEqual(2 * len(texts), ack.MAX_CLIPS)                  # both languages of a voice fit
 
     def test_recording_per_voice(self):
         k1 = ack.key({"voice": "ryan"}, "Moment.", "German")

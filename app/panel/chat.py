@@ -1420,8 +1420,9 @@ async def _answer(request, turn):
         names = route.names if route else []
         grp = ack.group_of(names, getattr(turn, "direct", None), bool(getattr(turn, "local_task", None)))
         if grp:
-            text = ack.phrase(grp, who["id"], ack_lang == "English")
-            if ack.clip(ack.key(tts_body, text, ack_lang)):
+            text = ack.pick(grp, who["id"], ack_lang == "English",
+                            ack.recorded(tts_body, ack_lang))
+            if text and ack.clip(ack.key(tts_body, text, ack_lang)):
                 sentences.put_nowait(("clip", text, "ack"))
                 acked = True
         if names != ["plaudern"] and not (set(names) & {"smarthome"}):
@@ -1993,8 +1994,9 @@ async def _answer(request, turn):
         """One more short sentence when the answer has not made a sound after ack.BRIDGE_S seconds (once)."""
         await asyncio.sleep(max(0.0, ack.BRIDGE_S - (time.time() - t0)))
         if tm["audio"] is None:
-            text = ack.phrase("bridge", who["id"], ack_lang == "English")
-            if ack.clip(ack.key(tts_body, text, ack_lang)):
+            text = ack.pick("bridge", who["id"], ack_lang == "English",
+                            ack.recorded(tts_body, ack_lang))
+            if text and ack.clip(ack.key(tts_body, text, ack_lang)):
                 await sentences.put(("clip", text, "bridge"))
 
     async def tts():
