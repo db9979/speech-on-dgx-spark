@@ -7,6 +7,7 @@ output (16-bit PCM at 24 kHz) is low-passed, decimated to 8 kHz and packed as IM
 import asyncio
 import base64
 import json
+import re
 import secrets
 import time
 
@@ -15,6 +16,7 @@ import numpy as np
 JOB_TTL = 600          # seconds a finished answer stays fetchable
 MAX_RUNNING = 8        # answers being made at once (each one runs the LLM and TTS)
 MAX_AUDIO = 6000       # ADPCM bytes per poll (1.5 s of speech)
+MD_SIGNS = re.compile(r"\*\*|__|~~|`+|^#{1,6} +", re.M)   # Markdown the watch would show as signs
 
 STEPS = [7, 8, 9, 10, 11, 12, 13, 14, 16, 17, 19, 21, 23, 25, 28, 31, 34, 37, 41, 45, 50, 55, 60, 66,
          73, 80, 88, 97, 107, 118, 130, 143, 157, 173, 190, 209, 230, 253, 279, 307, 337, 371, 408,
@@ -230,7 +232,8 @@ async def poll(job: Job, t: int, a: int, wait: float = 4.0):
             break
     chunk = bytes(job.audio[a:a + MAX_AUDIO])
     job.t = max(job.t, time.time()) if job.done else job.t
-    return {"text": job.text[t:], "t": len(job.text), "audio": base64.b64encode(chunk).decode(),
+    # the small display shows no Markdown: its signs go (t still counts the original text)
+    return {"text": MD_SIGNS.sub("", job.text[t:]), "t": len(job.text), "audio": base64.b64encode(chunk).decode(),
             "a": a + len(chunk), "done": job.done and a + len(chunk) >= len(job.audio), "error": job.error}
 
 

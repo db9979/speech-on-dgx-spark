@@ -8,7 +8,7 @@ const chat={live:{busy:false,want:false,last:null},msgs:[],rec:null,stream:null,
 const chatSay=x=>{$('chatstate').textContent=x;$('fabstate').textContent=x};
 function chatLog(role,text){const d=document.createElement('div');d.className='msg '+(role==='user'?'user':'bot');
   d.innerHTML=role==='user'?'<div class="bubble"></div>':'<div class="av"><i></i></div><div class="bubble"></div>';
-  const b=d.lastChild;if(text)b.textContent=text;else b.classList.add('typing');$('chatlog').appendChild(d);$('chatlog').scrollTop=1e9;return b}
+  const b=d.lastChild;if(text){if(role==='user')b.textContent=text;else md.render(b,text)}else b.classList.add('typing');$('chatlog').appendChild(d);$('chatlog').scrollTop=1e9;return b}
 function audioCtx(){if(!chat.ctx)chat.ctx=new (window.AudioContext||window.webkitAudioContext)();
   if(chat.ctx.state!=='running')chat.ctx.resume().catch(()=>{});playCtx();return chat.ctx}
 // Speech plays in its own context running at the TTS rate (24 kHz). In a 44.1/48 kHz context every
@@ -229,7 +229,10 @@ async function ask(text,asrS,spk){const spoken=!!chat.nextSpoken;chat.nextSpoken
 const pids=typeof picIds==='function'?picIds():[],thumbs=pids.length?picThumbs():[];   // attached pictures (pics.js)
 const ub=chatLog('user',text);const um={role:'user',content:text};
   if(thumbs.length){const w=document.createElement('div');w.className='picrow';w.innerHTML=thumbs.map(u=>`<img alt="" src="${esc(u)}">`).join('');ub.appendChild(w)}chat.msgs.push(um);deletable(ub,um);let foreign=false,ttsErr=false,mailUsed=false,outsideUsed=false,why=null;
-  const el=chatLog('assistant','');$('fabtext').textContent='';let full='',llmS=null,audioS=null,ackS=null,err='';const searches=[],sources=[],mems=[],docs=[],drefs=[],hcards=[],mkcards=[];let rateId='';
+  const el=chatLog('assistant','');$('fabtext').textContent='';
+  // shown formatted while it streams (md.js), at most once per frame; the small answer line gets the plain text
+  let drawn=null,frame=0;const draw=()=>{frame=0;md.render(el,drawn);$('fabtext').textContent=md.plain(drawn);$('chatlog').scrollTop=1e9};
+  const show=(x,now)=>{drawn=x;if(now){if(frame)cancelAnimationFrame(frame);draw()}else if(!frame)frame=requestAnimationFrame(draw)};let full='',llmS=null,audioS=null,ackS=null,err='';const searches=[],sources=[],mems=[],docs=[],drefs=[],hcards=[],mkcards=[];let rateId='';
   const ctrl=new AbortController();chat.ctrl=ctrl;chat.firstPlay=null;chat.gaps=[];chat.blocks=[];chat.t0b=null;chat.stalls=0;chat.pieceStart=true;setTalk();chatSay(t('Antwort kommt …','Answer coming …'));
   try{const r=await api('/api/chat',{method:'POST',headers:{'Content-Type':'application/json'},signal:ctrl.signal,
       body:JSON.stringify({speak:voiceOn()?undefined:false,messages:chat.msgs.slice(-20).map(m=>({role:m.role,content:m.content,...(m.mail?{mail:true}:{}),...(m.outside?{outside:true}:{})})),tab:TAB,tz:(()=>{try{return Intl.DateTimeFormat().resolvedOptions().timeZone}catch{return ''}})(),voice:PROFILE&&S.voice||undefined,speed:S.speed,length:S.length,reminders:PROFILE?undefined:rem.list,convo:chat.cid||undefined,speaker:spk&&spk.token||undefined,images:pids.length?pids:undefined,page:typeof hilfeNow==='function'?hilfeNow():undefined,focus:typeof hilfeFocusTake==='function'?hilfeFocusTake():undefined,view:document.body.classList.contains('appview')?'app':undefined})});
@@ -237,11 +240,11 @@ const ub=chatLog('user',text);const um={role:'user',content:text};
     for(;;){const{value,done}=await rd.read();if(done)break;buf+=dec.decode(value,{stream:true});let i;
       while((i=buf.indexOf('\n\n'))>=0){const line=buf.slice(0,i).split('\n').find(l=>l.startsWith('data:'));buf=buf.slice(i+2);if(!line)continue;
         const ev=JSON.parse(line.slice(5));faceEvent(ev);
-        if(ev.type==='text'){full+=ev.delta;el.classList.remove('typing');el.textContent=full;$('fabtext').textContent=full;$('chatlog').scrollTop=1e9}
+        if(ev.type==='text'){full+=ev.delta;el.classList.remove('typing');show(full)}
         else if(ev.type==='tts_request'){chat.pieceStart=true;chat.blocks.push('| '+ev.chars+t(' Zeichen:',' chars:'))}
         else if(ev.type==='audio'){playPcm(ev.audio);if(chat.pctx.state==='running')chatSay(t('Spricht …','Speaking …'));startBarge()}
-        else if(ev.type==='retract'){full=full.slice(0,full.length-ev.drop);el.textContent=full}
-        else if(ev.type==='truncated'){full=full.slice(0,full.length-ev.drop).trimEnd();el.textContent=full+' … '+t('(Längenlimit erreicht: Konfiguration → Assistent → Max. Tokens)','(length limit reached: Configuration → Assistant → Max. tokens)')}
+        else if(ev.type==='retract'){full=full.slice(0,full.length-ev.drop);show(full)}
+        else if(ev.type==='truncated'){full=full.slice(0,full.length-ev.drop).trimEnd();show(full+' … '+t('(Längenlimit erreicht: Konfiguration → Assistent → Max. Tokens)','(length limit reached: Configuration → Assistant → Max. tokens)'),true)}
         else if(ev.type==='search'){chatSay(t('Suche im Netz: ','Searching the web: ')+ev.query);searches.push(ev.query)}
         else if(ev.type==='sources'){sources.push(...ev.items)}
         else if(ev.type==='proposal'){mems.push('📥 '+t('Vorschlag: ','Proposal: ')+ev.text)}
@@ -266,7 +269,7 @@ const ub=chatLog('user',text);const um={role:'user',content:text};
         else if(ev.type==='timing'){if(ev.llm_first_token!=null)llmS=ev.llm_first_token;if(ev.first_audio!=null)audioS=ev.first_audio;if(ev.first_ack!=null)ackS=ev.first_ack}
         else if(ev.type==='error'){if(!err)err=errText(ev.code,ev.message);if(/^tts/.test(ev.code||''))ttsErr=true}}}}
   catch(e){if(e.name!=='AbortError')err=e instanceof TypeError&&!pids.length&&offlineQueue(text)?t('Keine Verbindung zum Spark. Die Frage geht raus, sobald er wieder antwortet.','No connection to the Spark. The question goes out once it answers again.'):errText(e instanceof TypeError?'net':'',e.message);if(pids.length&&/picture is gone/.test(errRaw(e)))picsGone()}
-  const aborted=ctrl.signal.aborted;if(chat.ctrl===ctrl)chat.ctrl=null;
+  const aborted=ctrl.signal.aborted;if(chat.ctrl===ctrl)chat.ctrl=null;if(frame)show(drawn,true);
   const att=attOf(searches,sources,docs,drefs,mkcards);   // what stands under the answer, kept with it
   // another person's voice: the exchange is theirs, so it stays out of this browser's history and context
   if(foreign){const i=chat.msgs.indexOf(um);if(i>=0)chat.msgs.splice(i,1)}
@@ -533,7 +536,7 @@ function snippet(text,q){const words=fold(q).split(/[^\p{L}\p{N}]+/u).filter(w=>
 function findRun(){const q=$('findq').value.trim(),hits=findHits(q);
   $('findinfo').textContent=!q?(PROFILE?t('Sucht in allen Gesprächen deines Profils.','Searches all conversations of your profile.'):t('Sucht in den Gesprächen dieses Browsers.','Searches the conversations in this browser.')):hits.length?hits.length+(hits.length===40?'+':'')+t(' Treffer',' hits'):t('Nichts gefunden.','Nothing found.');
   const d=x=>new Date(x).toLocaleString(L==='en'?'en-GB':'de-DE',{day:'2-digit',month:'2-digit',year:'2-digit',hour:'2-digit',minute:'2-digit'});
-  $('findlist').innerHTML=hits.map((h,k)=>`<li data-k="${k}"><span><small class="mut">${d(h.c.updated)} · ${esc((h.c.title||'').slice(0,50))} · ${h.m.role==='user'?t('du','you'):t('Assistent','assistant')}</small><br>${snippet(h.m.content,q)}</span></li>`).join('');
+  $('findlist').innerHTML=hits.map((h,k)=>`<li data-k="${k}"><span><small class="mut">${d(h.c.updated)} · ${esc((h.c.title||'').slice(0,50))} · ${h.m.role==='user'?t('du','you'):t('Assistent','assistant')}</small><br>${snippet(h.m.role==='user'?h.m.content:md.plain(h.m.content),q)}</span></li>`).join('');
   $('findlist').querySelectorAll('li').forEach(li=>li.onclick=()=>{const h=hits[+li.dataset.k];$('findmodal').style.display='none';
     stopListening(true);stopAnswer();openConvo(h.c.id,true);if(typeof setView==='function'&&MOBILE.matches)setView('log');
     const el=[...$('chatlog').querySelectorAll('.msg')][h.i];if(el){el.scrollIntoView({block:'center'});el.classList.add('found');setTimeout(()=>el.classList.remove('found'),2500)}})}

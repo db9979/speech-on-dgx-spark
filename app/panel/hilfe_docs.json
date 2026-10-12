@@ -1755,6 +1755,22 @@
 "lang": "de",
 "src": "assistent",
 "file": "Assistent und Oberfläche",
+"head": "Sprach-Chat",
+"title": "Antworten formatiert (V01.0.451)",
+"text": "Antworten formatiert (V01.0.451): Der Chat im Panel (Browser, Handy-Ansicht, Android-App) zeigt Markdown in Antworten formatiert: Überschriften, fett, *kursiv*, nummerierte und einfache Listen, Zitate, Code, Codeblöcke, Tabellen und Links, auch schon während die Antwort hereinkommt. Sicher gebaut (md.js): Modelltext wird nie zu HTML, jedes Element entsteht mit createElement/textContent, nur eine feste Liste von Elementen, Bilder werden nicht geladen (nur verlinkt), Links nur für http(s) zu öffentlichen Adressen (kein localhost, kein Heimnetz, keine name:passwort@-Adressen, sonst bleibt die Adresse Text), sie öffnen in einem neuen Tab ohne Referrer und nennen den Hostnamen, wenn der Linktext etwas anderes sagt; sehr lange Antworten (über 60 000 Zeichen) bleiben schlichter Text. Vorgelesen werden die Zeichen nie: beide Sprachdienste nehmen vor jedem Satz die Markdown-Zeichen heraus (textnorm.speech_markdown, unabhängig vom Schalter „Emojis, Code und Markdown nicht vorlesen“), Code wird als Wort in Anführungszeichen gesprochen, Links nur mit ihrem Text, Codeblöcke gar nicht. Das läuft vor der Regel „Passwörter nie aussprechen“, damit auch „Passwort ist …“ nicht gesagt wird. Wo nichts "
+},
+{
+"lang": "de",
+"src": "assistent",
+"file": "Assistent und Oberfläche",
+"head": "Sprach-Chat",
+"title": "Antworten formatiert (V01.0.451)",
+"text": "formatiert werden kann, kommt sauberer Text ohne Sternchen an (textnorm.plain_markdown): Telegram, Siri, Begleiter, reMarkable, Uhr und das Display der Lautsprecher; der gespeicherte Verlauf behält das Original. Die iPhone-App zeigt fett, kursiv, Code und Links (nur http(s)) direkt in der Blase; Kopieren und Teilen geben den Text ohne Zeichen. Damit das Modell längere Antworten gliedert, bekommt es nur im Chat des Panels den festen Hinweis chat.WEB_HINT (bei vorgelesenen Antworten ohne Tabellen und Codeblöcke, bei „Antworten vorlesen“ aus mit beiden); kurze Antworten bleiben ganze Sätze. Bei geprüften Antworten (Antwort-Prüfung) bleiben Zeilenumbrüche jetzt erhalten. Kein Schalter: reine Darstellung, nichts geht nach außen. Test: test_markdown."
+},
+{
+"lang": "de",
+"src": "assistent",
+"file": "Assistent und Oberfläche",
 "head": "Einstellungs-Assistent (seit V01.0.450)",
 "title": "Einstellungs-Assistent (seit V01.0.450)",
 "text": "Plan plaene/einstellungs-assistent.md (Punkte 1–17). Alles aus: Admin-Schalter chat.berater mit Unterschaltern, Profil-Schalter, nie Gäste."
@@ -4870,6 +4886,22 @@
 "head": "Voice chat",
 "title": "First sentence sooner (V01.0.220)",
 "text": "First sentence sooner (V01.0.220): a long first sentence goes to speech output at its last comma from 50 characters on (before: 120), if that comma comes after at least 20 characters, so the first sound comes earlier."
+},
+{
+"lang": "en",
+"src": "assistant",
+"file": "Assistant and panel",
+"head": "Voice chat",
+"title": "Formatted answers (V01.0.451)",
+"text": "Formatted answers (V01.0.451): The panel's chat (browser, phone view, Android app) shows Markdown in answers formatted: headings, bold, *italic*, numbered and plain lists, quotes, code, code blocks, tables and links, already while the answer comes in. Built safely (md.js): model text never becomes HTML, every element is made with createElement/textContent, only a fixed list of elements, pictures are not loaded (only linked), links only for http(s) to public addresses (no localhost, no home network, no name:password@ addresses, otherwise the address stays text); they open in a new tab without referrer and name the host when the link text says something else; very long answers (over 60,000 characters) stay plain text. The signs are never spoken: both speech services take the Markdown signs out before every sentence (textnorm.speech_markdown, whatever the switch \"do not read out emojis, code and Markdown\" says), code is spoken as a word in quotes, links only by their text, code blocks not at all. This runs before the rule \"never say passwords\", so \"Password is …\" is not said either. Where nothing can be formatted, clean text without asterisks arrives (textnorm.plain_markdown): Telegra"
+},
+{
+"lang": "en",
+"src": "assistant",
+"file": "Assistant and panel",
+"head": "Voice chat",
+"title": "Formatted answers (V01.0.451)",
+"text": "m, Siri, companion, reMarkable, watch and the speakers' display; the stored history keeps the original. The iPhone app shows bold, italic, code and links (http(s) only) right in the bubble; copy and share give the text without signs. So that the model structures longer answers, only the panel's chat gets the fixed hint chat.WEB_HINT (for spoken answers without tables and code blocks, with \"read answers aloud\" off with both); short answers stay whole sentences. Checked answers (answer check) now keep their line breaks. No switch: display only, nothing leaves the house. Test: test_markdown."
 },
 {
 "lang": "en",

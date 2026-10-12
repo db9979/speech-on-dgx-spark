@@ -75,6 +75,7 @@ import spkcode
 import vault
 import features
 from common import load_config
+from textnorm import speech_markdown
 
 NOTAUS_WORD = "spark-notaus"   # the fixed wake word of the Notaus button (firmware/patch_notaus.py)
 
@@ -1349,8 +1350,8 @@ class Session:
                         while (m := SENTENCE_END.search(answer, said)):
                             piece = answer[said:m.end()].strip()
                             said = m.end()
-                            if piece:
-                                await self.send({"type": "tts", "state": "sentence_start", "text": piece})
+                            if piece:   # the board's display shows no Markdown (textnorm.speech_markdown)
+                                await self.send({"type": "tts", "state": "sentence_start", "text": speech_markdown(piece)})
                     elif k in ("truncated", "retract"):
                         answer = answer[:max(0, len(answer) - int(ev.get("drop") or 0))]
                         said = min(said, len(answer))
@@ -1362,7 +1363,7 @@ class Session:
                         import base64
                         await pace.push(await asyncio.to_thread(enc.feed, base64.b64decode(ev["audio"])))
             if answer[said:].strip():
-                await self.send({"type": "tts", "state": "sentence_start", "text": answer[said:].strip()})
+                await self.send({"type": "tts", "state": "sentence_start", "text": speech_markdown(answer[said:].strip())})
             await pace.push(enc.feed(b"", flush=True), final=True)
             await pace.finish()
         finally:

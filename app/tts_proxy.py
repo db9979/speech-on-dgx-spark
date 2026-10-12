@@ -22,7 +22,7 @@ from fastapi.responses import Response, StreamingResponse
 from common import (BodyLimit, GateFull, KeyedCORS, PrioGate, inside, outside_view, api_key_dependency, api_key_ok,
                     engine_crash_reason, load_config, quiet_access_log, SpeechMark, stage_of)
 from textnorm import (MAX_INPUT, apply_pronunciations, clean_text, guess_language, hide_secrets, parse_pronunciations,
-                      speak_numbers)
+                      speak_numbers, speech_markdown)
 
 STATE_DIR = os.environ.get("SPEECH_SPARK_STATE", "/var/lib/speech-spark/state")
 VOICES_DIR = os.environ.get("SPEECH_SPARK_VOICES", "/var/lib/speech-spark/voices")  # panel tab "Stimmen"
@@ -307,8 +307,8 @@ async def speech(request: Request):
     if status != "ready":
         raise HTTPException(503, f"TTS engine {status}: {error or ''}".strip())
 
-    # always, whatever clean_text says (textnorm.SECRET_HINT)
-    body["input"] = await asyncio.to_thread(hide_secrets, str(body["input"]), body.get("language"))
+    # always, whatever clean_text says: no Markdown signs, no secrets (textnorm.speech_markdown, SECRET_HINT)
+    body["input"] = await asyncio.to_thread(lambda x: hide_secrets(speech_markdown(x), body.get("language")), str(body["input"]))
     if cfg.get("clean_text", True):
         body["input"] = await asyncio.to_thread(clean_text, body["input"], calm=cfg.get("calm", True))
         if not body["input"]:

@@ -28,6 +28,7 @@ import time
 import httpx
 
 import profiles
+from textnorm import plain_markdown
 import notaus
 import vault
 import features
@@ -216,7 +217,8 @@ async def ask(uid, text, pictures=None):
                 from_outside = True
             elif ev.get("type") == "error" and not error:
                 error = "Der Spark konnte gerade nicht antworten."
-    answer = answer.strip() or error or "Dazu habe ich keine Antwort."
+    # Telegram shows no Markdown (no parse_mode): the text without its signs (textnorm.plain_markdown)
+    answer = plain_markdown(answer.strip()) or error or "Dazu habe ich keine Antwort."
     import homeassistant
     ha = homeassistant.get(uid)
     if ha and homeassistant.needs_code(ha):

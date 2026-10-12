@@ -130,6 +130,7 @@ The complete list is the **[Security checklist](security-checklist.md)** (about 
 - No `shell=True`, `eval`, `exec`, `os.system`, `pickle` or `yaml.load`. (C; 🧪 test_scanner.test_no_dangerous_calls)
 - HTML only via `textContent` or `esc()` and `data-` attributes. Strict CSP `script-src 'self'`: no inline script, no `on…=` handlers, buttons via `data-on` or `onAttr`. (C, D; 🧪 test_scanner.test_no_inline_script_for_the_strict_csp, test_csp_is_strict, test_hardening)
   - ⚠ The general rule "data never via innerHTML" is only tested for individual files.
+- **The model's answers** are shown in the panel only through `md.render` (md.js): nodes made with `createElement`/`textContent`, only allowed elements, no pictures, links only http(s) to public addresses (like netguard), with `noopener noreferrer`, and the host name when the link text differs. Devices without formatting (Telegram, Siri, companion, reMarkable, watch, speaker display) get `textnorm.plain_markdown`, the voice always `textnorm.speech_markdown` (in both speech services before `hide_secrets`, whatever `tts.clean_text` says); code blocks are never spoken (`chat.no_code`). A new channel that shows answers picks one of these. (Dominik 2026-10-12; 🧪 test_markdown)
 - Configuration values are checked the same way when saving, when restoring and in `install.sh`. IMAP values only as printable ASCII. (C)
 
 ### 2.7 Secrets and logs

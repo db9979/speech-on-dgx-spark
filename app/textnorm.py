@@ -72,6 +72,63 @@ def clean_text(text, calm=False):
     return re.sub(r"(?m)([\w%)\]\"“”»'])$", r"\1.", t)
 
 
+# Markdown in answers (the chat shows it formatted, md.js): devices without formatting get the text without
+# its signs (plain_markdown: Telegram, watch, reMarkable, Siri, speaker displays), and the voice never says
+# them (speech_markdown, in both speech services on every request before hide_secrets, whatever clean_text
+# says: "**Passwort** ist ..." would otherwise slip past the secret rule). Same rules as md.plain() in the browser.
+MD_INLINE = re.compile("|".join((
+    r"`([^`\n]{1,2000})`",                                              # 1 code
+    r"\*\*(?=\S)([^\n]{1,2000}?\S)\*\*",                               # 2 bold
+    r"(?<!\w)__(?=\S)([^\n]{1,2000}?\S)__(?!\w)",                        # 3 bold
+    r"~~(?=\S)([^\n]{1,2000}?\S)~~",                                     # 4 struck
+    r"(?<![\w*])\*(?=[^\s*])([^*\n]{0,2000}?[^\s*])\*(?![\w*])",         # 5 italic, not "3 * 4"
+    r"(?<![\w_])_(?=[^\s_])([^_\n]{0,2000}?[^\s_])_(?![\w_])",            # 6 italic, not snake_case
+    r"!?\[([^\]\n]{1,300})\]\(\s*<?([^\s)>]{1,2000})>?(?:\s+\"[^\"\n]{0,200}\")?\s*\)",   # 7, 8 link
+    r"<(https?://[^>\s]{1,2000})>")))                                   # 9 autolink
+MD_TABLE_SEP = re.compile(r"(?m)^\s*\|?\s*:?-{2,}:?\s*(?:\|\s*:?-{2,}:?\s*)*\|?\s*$\n?")
+MD_MAX = 60000
+
+
+def plain_markdown(text, speech=False):
+    """The text without Markdown signs: headings and quotes as plain lines, "- x" as "• x", numbered lists
+    stay, **bold**/*italic*/`code` as their words, [text](url) as "text (url)", table rows as "a · b".
+    speech: code blocks left out, `code` in quotes, links only as their text."""
+    t = str(text or "")
+    if len(t) > MD_MAX:
+        return t
+    t = re.sub(r"\r\n?", "\n", t)
+    if speech:
+        t = re.sub(r"(?ms)^\s{0,3}(```|~~~).*?(?:^\s{0,3}\1[^\n]*$|\Z)", " ", t)
+    t = re.sub(r"(?m)^\s{0,3}(?:```|~~~).*$\n?", "", t)
+    t = re.sub(r"(?m)^\s{0,3}#{1,6}\s+(.*?)\s*#*\s*$", r"\1", t)
+    t = re.sub(r"(?m)^\s{0,3}>\s?", "", t)
+    t = re.sub(r"(?m)^\s{0,3}([-*_])(?:\s*\1){2,}\s*$\n?", "", t)
+    t = re.sub(r"(?m)^(\s*)[-*+]\s+", r"\1• ", t)
+    t = MD_TABLE_SEP.sub("", t)
+    t = re.sub(r"(?m)^\s*\|(.*)\|\s*$", lambda m: " · ".join(c.strip() for c in m.group(1).split("|")), t)
+
+    def one(m):
+        g = m.groups()
+        if g[0] is not None:
+            return "„" + g[0] + "“" if speech else g[0]
+        if g[6] is not None:
+            label = MD_INLINE.sub(one, g[6])
+            return label if speech or g[6] == g[7] else label + " (" + g[7] + ")"
+        return next(x for x in g if x is not None)
+    t = MD_INLINE.sub(one, t)
+    return re.sub(r"\n{3,}", "\n\n", t).strip()
+
+
+def speech_markdown(text):
+    """What the voice gets: plain_markdown with code in quotes (so hide_secrets sees a quoted value), no
+    bullet signs and no signs left over from a sentence cut in the middle of **bold**."""
+    t = plain_markdown(text, speech=True)
+    if len(t) > MD_MAX:
+        return t
+    t = re.sub(r"(?m)^(\s*)•\s+", r"\1", t)
+    return re.sub(r"\*\*|__|~~|`+", "", t)
+
+
 # Passwords, code words, one-time codes and keys are never spoken (fixed rule, no switch): a
 # speaker in the room, the car or Siri would say them to everyone nearby. The written answer keeps
 # them; only the voice says "nur schriftlich sichtbar" instead. Runs in both speech services on

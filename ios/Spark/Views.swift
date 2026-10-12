@@ -525,7 +525,7 @@ struct StandView: View {
                     .frame(maxWidth: 320)
                     .onTapGesture { talk.tap() }
                 if let last = talk.messages.last(where: { $0.role == "assistant" }), !last.text.isEmpty {
-                    Text(last.text)
+                    Text(AnswerText.styled(last.text))
                         .font(.title3)
                         .multilineTextAlignment(.center)
                         .lineLimit(4)
@@ -542,8 +542,50 @@ struct StandView: View {
     }
 }
 
+// Answers as formatted text, like the panel's chat (md.js): the model's Markdown as SwiftUI shows it inline
+// (bold, italic, `code`, links), headings and list signs as plain lines. Links only for http(s) to a public
+// host (no localhost, no .local, no LAN address), every other link stays text. Copy and share get the text
+// without the signs. The voice never says them (the Spark cleans what it speaks).
+enum AnswerText {
+    static func lines(_ s: String) -> String {
+        s.components(separatedBy: "\n").compactMap { line -> String? in
+            if line.range(of: #"^\s{0,3}(```|~~~)"#, options: .regularExpression) != nil { return nil }
+            var l = line
+            if let r = l.range(of: #"^\s{0,3}#{1,6}\s+"#, options: .regularExpression) { l.removeSubrange(r) }
+            if let r = l.range(of: #"^\s*[-*+]\s+"#, options: .regularExpression) {
+                l.replaceSubrange(r, with: String(l[r].prefix(while: { $0 == " " })) + "• ")
+            }
+            return l
+        }.joined(separator: "\n")
+    }
+
+    static func linkOK(_ u: URL) -> Bool {
+        guard let scheme = u.scheme?.lowercased(), scheme == "http" || scheme == "https", u.user == nil,
+              let host = u.host?.lowercased(), host.contains("."), !host.hasSuffix(".local"), !host.hasSuffix(".lan"),
+              !host.hasSuffix(".internal"), !host.hasSuffix(".fritz.box"), !host.hasSuffix(".home.arpa"), !host.contains(":")
+        else { return false }
+        let lan = #"^(127\.|10\.|192\.168\.|169\.254\.|0\.|172\.(1[6-9]|2\d|3[01])\.)"#
+        return host.range(of: lan, options: .regularExpression) == nil
+    }
+
+    static func styled(_ s: String) -> AttributedString {
+        let src = lines(s)
+        guard src.count <= 60000, var a = try? AttributedString(markdown: src, options: AttributedString.MarkdownParsingOptions(
+            interpretedSyntax: .inlineOnlyPreservingWhitespace)) else { return AttributedString(src) }
+        let bad = a.runs.compactMap { run -> Range<AttributedString.Index>? in
+            guard let u = run.link else { return nil }
+            return linkOK(u) ? nil : run.range
+        }
+        for r in bad { a[r].link = nil }
+        return a
+    }
+
+    static func plain(_ s: String) -> String { String(styled(s).characters) }
+}
+
 struct Bubble: View {
     let message: Conversation.Message
+    private var copyText: String { message.role == "user" ? message.text : AnswerText.plain(message.text) }
 
     var body: some View {
         let mine = message.role == "user"
@@ -551,7 +593,7 @@ struct Bubble: View {
             if mine { Spacer(minLength: 40) }
             VStack(alignment: .leading, spacing: 4) {
                 if let label = message.label { Text(verbatim: label).font(.footnote).opacity(0.85) }
-                Text(verbatim: message.text.isEmpty ? "…" : message.text)
+                if mine || message.text.isEmpty { Text(verbatim: message.text.isEmpty ? "…" : message.text) } else { Text(AnswerText.styled(message.text)) }
             }
                 .padding(10)
                 .background(mine ? Color.accentColor.opacity(0.85) : Color(.secondarySystemBackground))
@@ -559,9 +601,9 @@ struct Bubble: View {
                 .clipShape(RoundedRectangle(cornerRadius: 14))
                 .contextMenu {
                     if !message.text.isEmpty {
-                        Button { UIPasteboard.general.string = message.text } label: { Label("Kopieren", systemImage: "doc.on.doc") }
+                        Button { UIPasteboard.general.string = copyText } label: { Label("Kopieren", systemImage: "doc.on.doc") }
                         // "Als Notiz teilen": Notes, Mail, Messages ... from the share sheet
-                        ShareLink(item: message.text) { Label("Teilen (z. B. als Notiz)", systemImage: "square.and.arrow.up") }
+                        ShareLink(item: copyText) { Label("Teilen (z. B. als Notiz)", systemImage: "square.and.arrow.up") }
                     }
                 }
             if !mine { Spacer(minLength: 40) }
