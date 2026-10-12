@@ -32,7 +32,7 @@ function vbRender(){const d=VB.d;if(!d)return;const L=vbLists(d);
   else html=rows.slice(0,VB.more).map(x=>VB.tab==='cases'?vbCaseRow(x,d):vbPropRow(x)).join('')+(rows.length>VB.more?`<div class="ld-more"><button type="button" class="b" data-vbmore="1">${esc(t('Weitere zeigen','Show more'))}</button></div>`:'');
   $('vblist').innerHTML=html;vbDetail()}
 function vbCaseRow(x,d){const k=(d.kinds||{})[x.kind]||[x.kind,x.kind];
-  const sub=[x.title||'',x.group||'',x.tool||'',x.code||'',x.grund?vbT((d.reasons||{})[x.grund]):''].filter(Boolean).join(' · ');
+  const sub=[x.title||'',x.group||'',x.tool?wzName(x.tool):'',x.code||'',x.grund?vbT((d.reasons||{})[x.grund]):''].filter(Boolean).join(' · ');
   return `<div class="ld-row${VB.sel==='c'+x.id?' on':''}" tabindex="0" data-vbsel="c${esc(x.id)}"><div class="ld-mid"><b>${esc(vbT(k))}</b><small>${esc(sub||'–')}</small></div>
     <div class="ld-right"><span class="ld-badge">${x.n}×</span><span class="ld-when">${esc(vbWhen(x.last||x.t))}</span></div></div>`}
 function vbPropRow(x){const st=x.status==='uebernommen'&&x.check?VBRES[x.check.result]||x.check.result:VBST[x.status]||x.status;
@@ -49,7 +49,7 @@ function vbDetail(){const el=$('vbdetail'),f=vbFind(),box=$('vbbox');el.hidden=!
   const back=`<button type="button" class="b ld-back" data-vbback="1">← ${esc(t('Zurück','Back'))}</button>`;
   if(f.c){const x=f.c,d=VB.d;const ex=(x.examples||[]).map(e=>`<li>${esc(vbWhen(e.t))}${e.q?' · „'+esc(e.q)+'“':''}${e.trace?' · '+esc(t('Anfrage','request'))+' '+esc(e.trace):''}</li>`).join('');
     el.innerHTML=back+`<h3>${esc(vbT((d.kinds||{})[x.kind]||x.kind))}</h3><dl class="ld-facts">`+
-      [[t('Zustand','State'),VBCS[x.status]||x.status],[t('Wie oft','How often'),x.n+'×'+(x.who?' · '+x.who+' '+t('Personen','people'):'')],[t('Gruppe','Group'),x.group],[t('Werkzeug','Tool'),x.tool],
+      [[t('Zustand','State'),VBCS[x.status]||x.status],[t('Wie oft','How often'),x.n+'×'+(x.who?' · '+x.who+' '+t('Personen','people'):'')],[t('Gruppe','Group'),x.group],[t('Werkzeug','Tool'),x.tool?wzFull(x.tool):x.tool],
        [t('Fehler','Error'),x.code],[t('Grund','Reason'),x.grund?vbT((d.reasons||{})[x.grund]):''],[t('Befund','Finding'),x.title],[t('Seit','Since'),vbWhen(x.t)]].filter(r=>r[1]).map(r=>`<dt>${esc(r[0])}</dt><dd>${esc(r[1])}</dd>`).join('')+'</dl>'+
       (ex?`<div class="mut">${esc(t('Beispiele (Fragen nur mit Zustimmung):','Examples (questions only with consent):'))}</div><ul class="bghist">${ex}</ul>`:'')+
       ((x.notes||[]).length?`<div class="ld-note">${(x.notes||[]).map(n=>'„'+esc(n)+'“').join('<br>')}</div>`:'')+

@@ -1194,6 +1194,7 @@ ERR_WORDS = {"llm": "Das Sprachmodell antwortete nicht.", "tts_error": "Die Spra
 def explain(x):
     """A request of Logs → Anfragen in fixed sentences, and what could help (titles of candidates)."""
     import intent
+    import werkzeuge
     lines = []
     label = x.get("intent") or "unklar"
     if label == "unklar":
@@ -1205,7 +1206,7 @@ def explain(x):
     tools = [s for s in x.get("steps", []) if s.get("k") == "tool"]
     bad = [s["n"] for s in tools if not (s.get("x") or {}).get("ok", True)]
     if tools:
-        lines.append(f"{len(tools)} Werkzeug(e) liefen" + (f", nicht geklappt: {', '.join(bad)}." if bad else ", alle ok."))
+        lines.append(f"{len(tools)} Werkzeug(e) liefen" + (f", nicht geklappt: {', '.join(werkzeuge.full(n) for n in bad)}." if bad else ", alle ok."))
     else:
         lines.append("Kein Werkzeug lief.")
     m = x.get("marks") or {}

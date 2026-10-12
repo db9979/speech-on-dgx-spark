@@ -2,6 +2,7 @@
 
 Every version in one line, newest first (taken from the commit messages, so some lines are German, some English). Older entries have no version number.
 
+- **V01.0.476** · 2026-10-13 · Werkzeuge heißen verständlich: Live „Weg der Anfrage“, Logs → Anfragen, Weiche, Verbessern und „Erklären“ zeigen z. B. „Postfach-Überblick“ statt mail_tidy_overview (de/en, interner Name klein daneben und in „Kopieren für Thread“); ein Verzeichnis werkzeuge.py, Selbsttest prüft jedes Werkzeug
 - **V01.0.475** · 2026-10-13 · Rot-Fix nach V01.0.473: Browser-Testklassen stoppen ihr Panel wieder (helpers.serve_panel); vorher liefen neun Panels mit ihren Hintergrund-Schleifen bis zum Ende des Laufs weiter, das Panel wurde immer langsamer und nahm späteren Tests die Arbeit weg (12 rote Tests); Regel und test_testserver
 - **V01.0.474** · 2026-10-13 · Rot-Fix nach V01.0.473: Chats-Test legt kein Gerät „Lautsprecher“ mehr an (störte Probleme melden), Rückfrage-Test trennt Home Assistant des Testprofils wieder
 - **V01.0.473** · 2026-10-13 · Chats (aus): Schreiben wie im Messenger zwischen den Profilen des Sparks, zu zweit und in Gruppen, mit Haken, Antworten, Reaktionen, Ändern, Zurücknehmen, stumm und verschwindenden Nachrichten; Fotos, Dateien und Sprachnachrichten (eigener Schalter), Einladung per QR direkt in den Chat (eigener Schalter); Texte und Dateien AES-256-GCM-verschlüsselt auf dem Spark, Mitteilung ohne Text; Android-App 1.2.0 mit „Mitteilungen sofort“ (eigener Schalter), iPhone-App mit Chats; Live und Logs nur mit Zahlen

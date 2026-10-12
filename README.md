@@ -33,6 +33,7 @@ All options for running without questions (`--mode api --asr 1.7b --tts 0.6b --y
 
 <!-- New version: add one line at the top here and in CHANGELOG.md, drop the oldest line here (keep 10). Details go to docs/de and docs/en, not into this README. -->
 
+- **V01.0.476** Tools have readable names, e.g. "Mailbox overview" instead of mail_tidy_overview
 - **V01.0.475** Red fix: self-tests no longer get slower and slower (test panels stop after their class)
 - **V01.0.474** Test fix after V01.0.473: two tests no longer leave a device or a Home Assistant connection behind
 - **V01.0.473** Chats (off): write with the other people of your Spark like in a messenger, in groups too, with photos, files, voice messages and invitations by QR; encrypted on the Spark; Android app 1.2.0 with notes at once, iPhone app with chats
@@ -42,7 +43,6 @@ All options for running without questions (`--mode api --asr 1.7b --tts 0.6b --y
 - **V01.0.469** Red fix: service watch test counted "today" with the real clock, now with a fixed day
 - **V01.0.468** Red fix after V01.0.467: memory Live test checks the whole fact, memory topics and Live counts read the settings once and nothing while switched off
 - **V01.0.467** Memory check (off): every entry keeps where it came from, fixed rules mark what may be out of date, earlier versions, a check-back in the conversation, topics
-- **V01.0.466** Mail times right: a mail from 20:30 was read out as 18:30 (sender's offset instead of your time zone)
 
 All versions: [CHANGELOG.md](CHANGELOG.md)
 

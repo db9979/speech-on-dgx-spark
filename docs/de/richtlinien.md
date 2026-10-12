@@ -69,6 +69,7 @@ Diese Liste gehört zu jedem Commit, der eine Funktion, ein Werkzeug, einen Dien
 | 24 | **Eigener Speicher** | Jede neue Datei unter `users/<id>/` wird in `speicher.py` eingeordnet: `AREAS` (darf verschlüsselt auf den eigenen Speicher) oder `LOCAL` mit Grund (bleibt immer auf dem Spark: Schlüssel, Logins, Einstellungen, Stimmabdruck, Warteschlangen). Lokal zuerst; der Abgleich läuft im Hintergrund über den Wächter. | 🧪 test_speicher |
 | 25 | **Verlauf auf allen Geräten** | Ein neuer Kanal, der für ein Profil antwortet, legt Frage und Antwort über `verlauf.keep` ab (eigenes Tagesgespräch wie Siri, Telegram, Uhr, mit „Ein Gespräch für alle Kanäle“ das heutige Hauptgespräch mit Kanal-Zeichen; eine Stimme, die nicht sicher die des Profils ist, nie dorthin), nie über `save_convo` mit einer alten Kopie. Geräte schicken nur neue Nachrichten (`PUT /api/profile/convos` mit `add`), nur Löschen ersetzt die Kopie. Offene Seiten holen Neues über `?since=`. Jede Änderung meldet `profiles` an die Ereignis-Verbindungen (`verlauf.changed`), darin nur Nummer und Geräteart, nie Inhalte. Eine Kopie im Browser nur, wo `offline_here` es erlaubt (vertrauter Browser, Funktion an); jeder andere Browser löscht sie, Abmelden immer. Gäste bekommen keinen Verlauf auf dem Spark. | 🧪 test_verlauf_sync |
 | 26 | **Erstellte Dokumente** | Zahlen in einem erstellten Dokument brauchen einen Beleg aus dem Kiwix, den eigenen Dokumenten, den Worten des Nutzers oder den Fakten des Gesprächs (`folien.drop_unbacked`, `folien.check_chart`), sonst fallen sie weg; Diagramme nur mit mindestens 3 belegten, verschiedenen Werten. Symbole nur aus `app/panel/symbole/` (das Modell nennt ein Wort, nie einen Pfad), nichts aus dem Netz. Bilder nur aus dem eigenen Kiwix über `kiwix.picture_of`, mit eigenem Schalter (aus), neu gespeichert über PIL mit Größen- und Pixelgrenze und mit Quelle auf der Folie. Folientypen und Textlänge regelt `folien.py`, nicht das Modell. | 🧪 test_folien |
+| 27 | **Werkzeugname** | Jedes neue Werkzeug (fürs Modell, als Panel-Schritt oder über MCP) bekommt im selben Commit einen verständlichen Namen de/en in `werkzeuge.NAMES`, danach `python3 app/panel/werkzeuge.py --js`. Seiten zeigen Werkzeuge nur über `wzName` (Kopien für Threads über `wzFull`, mit dem internen Namen in Klammern), das Panel über `werkzeuge.label`/`full`; nie den internen Namen allein. | 🧪 test_werkzeuge |
 
 **Kommt mit laufenden Umsetzungen dazu** (gilt, sobald die Version auf main ist; der Thread ergänzt dann diese Tabelle und den Test):
 
@@ -243,6 +244,7 @@ Die vollständige Liste ist die **[Sicherheits-Checkliste](sicherheits-checklist
 - **Denktext:** Jeder neue LLM-Aufruf, der mit Denken laufen kann, nimmt `common.no_think`, nicht die eigene `<think>`-Regex. (M [[think-tag-doppelt]])
 - **Erst lokal, dann extern:** Dokumente, Kiwix, Verlauf. Daten bleiben möglichst im LAN. Kein zweites Modell nur für eine Teilfunktion (GPU-Speicher). Dokumente erstellen geht offline. (P erst-lokal, hilfe-besser, praesentationen-professionell)
 - **Nie ändern:** dgx-spark-qwen38 auf den Ports 30000–30099. Eigene Ports liegen bei 31001–31443. (M)
+- **Werkzeuge heißen für Menschen verständlich:** sichtbar steht der Name aus `werkzeuge.NAMES` (de/en), der interne Name nur klein daneben oder in Kopien für Threads. (Dominik 2026-10-12; 🧪 test_werkzeuge)
 
 ---
 
@@ -328,6 +330,7 @@ Die vollständige Liste ist die **[Sicherheits-Checkliste](sicherheits-checklist
 | test_features | ein Register, Profilschalter starten aus, keine eigene Prüfung, ein Standardwert |
 | test_live | jedes Werkzeug, Ziel, jeder Client und jede guard-Art im Live-Bild, keine Inhalte |
 | test_testserver | Panel einer Browser-Testklasse stoppt mit ihr, keiner startet es anders |
+| test_werkzeuge | jedes Werkzeug hat einen Namen de/en, Seiten lesen dieselbe Tabelle |
 | test_ack | jede Weiche-Gruppe hat ≥ 5 Brückensätze |
 | test_intent, test_weiche | Weiche-Regeln und BENCH-Sätze |
 | test_tracelog, test_logfilter | Logs und Anfragen nur feste Wörter und Zahlen, Filter sicher |

@@ -1581,7 +1581,9 @@ class Browser(unittest.TestCase):
                     await pg.click("#logtabs button[data-lt=req]")
                     await pg.wait_for_selector("#logreq .rq")
                     self.assertGreaterEqual(await pg.evaluate("document.querySelectorAll('#logreq .rq').length"), 2)
-                    self.assertIn("memory_save", await pg.inner_text("#logreq .rlist"))
+                    # the tool by its readable name, the internal one as the chip's title (werkzeuge.py, V01.0.463)
+                    self.assertIn("Merken", await pg.inner_text("#logreq .rlist"))
+                    self.assertIn("memory_save", await pg.evaluate("[...document.querySelectorAll('#logreq .rtool')].map(x=>x.title).join(' ')"))
                     self.assertIn("Uitest", await pg.inner_text("#logreq .rlist"))
                     if name == "handy":
                         self.assertFalse(await pg.is_visible("#logreq .rdet"))

@@ -69,6 +69,7 @@ This list belongs to every commit that adds or changes a feature, a tool, a serv
 | 24 | **Own storage** | Every new file under `users/<id>/` is classified in `speicher.py`: `AREAS` (may go encrypted to the own storage) or `LOCAL` with a reason (always stays on the Spark: keys, logins, settings, voiceprint, queues). Local first; the sync runs in the background via the watcher. | 🧪 test_speicher |
 | 25 | **History on every device** | A new channel that answers for a profile keeps question and answer via `verlauf.keep` (its own conversation per day like Siri, Telegram, the watch; with "One conversation for all channels" today's main conversation, marked with the channel; a voice that is not surely the profile's never goes there), never via `save_convo` with an old copy. Devices send only new messages (`PUT /api/profile/convos` with `add`); only deleting replaces the copy. Open pages fetch changes via `?since=`. Every change is told by `profiles` to the event connections (`verlauf.changed`), carrying only the id and the kind of device, never contents. A copy in the browser only where `offline_here` allows it (trusted browser, function on); every other browser deletes it, signing out always. Guests get no history on the Spark. | 🧪 test_verlauf_sync |
 | 26 | **Created documents** | Numbers in a created document need a source from the Kiwix, the own documents, the user's words or the facts of the conversation (`folien.drop_unbacked`, `folien.check_chart`), otherwise they are left out; charts only with at least 3 different values that have a source. Icons only from `app/panel/symbole/` (the model names a word, never a path), nothing from the net. Pictures only from the own Kiwix via `kiwix.picture_of`, with a switch of their own (off), saved anew via PIL with size and pixel limits and with the source on the slide. Slide types and text length are decided by `folien.py`, not by the model. | 🧪 test_folien |
+| 27 | **Tool name** | Every new tool (for the model, as a panel step or over MCP) gets a readable name de/en in `werkzeuge.NAMES` in the same commit, then `python3 app/panel/werkzeuge.py --js`. Pages show tools only through `wzName` (copies for threads through `wzFull`, with the internal name in brackets), the panel through `werkzeuge.label`/`full`; never the internal name alone. | 🧪 test_werkzeuge |
 
 **Coming with work in progress** (applies as soon as the version is on main; the thread then extends this table and the test):
 
@@ -243,6 +244,7 @@ The complete list is the **[Security checklist](security-checklist.md)** (about 
 - **Thinking text:** every new LLM call that can run with thinking uses `common.no_think`, not its own `<think>` regex. (M [[think-tag-doppelt]])
 - **Local first, then external:** documents, Kiwix, history. Data stays in the LAN as far as possible. No second model just for a sub-feature (GPU memory). Creating documents works offline. (P erst-lokal, hilfe-besser, praesentationen-professionell)
 - **Never change:** dgx-spark-qwen38 on ports 30000–30099. Own ports are at 31001–31443. (M)
+- **Tools have names people understand:** what shows is the name from `werkzeuge.NAMES` (de/en), the internal name only small beside it or in copies for threads. (Dominik 2026-10-12; 🧪 test_werkzeuge)
 
 ---
 
@@ -328,6 +330,7 @@ The complete list is the **[Security checklist](security-checklist.md)** (about 
 | test_features | one register, profile switches start off, no checks of their own, one default value |
 | test_live | every tool, target, client and guard kind in the live picture, no contents |
 | test_testserver | a browser test class's panel stops with it, no one starts it otherwise |
+| test_werkzeuge | every tool has a name de/en, pages read the same table |
 | test_ack | every intent-switch group has ≥ 5 bridge sentences |
 | test_intent, test_weiche | intent-switch rules and BENCH sentences |
 | test_tracelog, test_logfilter | logs and requests only fixed words and numbers, filter safe |

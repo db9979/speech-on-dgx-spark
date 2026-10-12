@@ -741,7 +741,7 @@ function qRender(d){const r=d&&d.last;clearTimeout(qTimer);qProg(d&&d.running?(d
     +(x.held&&x.held.length?`<br>${t('Antwort-Prüfung hat zurückgehalten','Answer check held back')}: ${esc(x.held.join(', '))}${x.raw?' · „'+esc(x.raw)+'“':''}`:'')
     +(x.retried?`<br>${t('Ohne Werkzeug geantwortet, neu gefragt','Answered without a tool, asked again')}`:'')
     +(x.judge?`<br>${t('Einordnung (systemone)','Classification (systemone)')}: ${t('beantwortet','answers')} ${String(x.judge.passt).replace('.',',')} ${t('von 2','of 2')} · ${t('erfunden','made up')} ${Math.round(x.judge.erfunden*100)} %${doubt(x)?' · '+t('zweifelt','doubts'):''}`:'');
-  const head=x=>`<div class="qq"><span>${x.ok?'✅':'❌'} ${esc(x.q)}${mark(x)}</span><span class="qt">${esc(x.tools.join(', ')||t('kein Werkzeug','no tool'))}</span></div>`;
+  const head=x=>`<div class="qq"><span>${x.ok?'✅':'❌'} ${esc(x.q)}${mark(x)}</span><span class="qt">${esc(x.tools.map(wzName).join(', ')||t('kein Werkzeug','no tool'))}</span></div>`;
   // only questions that need a look stay open (one line each, answer clipped to two lines, tap opens it); the rest is folded
   const look=[...bad,...flaky,...held,...doubted];
   $('qlist').innerHTML=look.map(x=>`<div class="qrow">${head(x)}${x.ok?'':`<div class="qw">${esc(x.why.join('; '))}</div>`}<div class="qa" title="${t('Antippen zeigt alles','Tap to show all')}">${esc(x.answer||'–')}${extra(x)}</div></div>`).join('');

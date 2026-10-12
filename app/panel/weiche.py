@@ -29,6 +29,7 @@ from fastapi import APIRouter, Depends, HTTPException, Request
 import chat
 import guard
 import intent
+import werkzeuge
 from common import load_config, write_json
 from core import auth
 
@@ -51,33 +52,8 @@ meinen meiner mich mir mit morgen muss nach nicht noch nur oder ohne schon sehr 
 über und uns unser unter viel vom von war was weil welche welcher welches wenn wer werden wie wieder wird wir wo wohl
 zum zur zwischen schau sag sage zeig zeige gibt gib bin ich du er es ist ein einer""".split())
 
-# the tools of the switch, readable (de, en)
-TOOLS = {
-    "home_assistant": ("Smart Home", "Smart home"), "home_assistant_action": ("Geräte schalten", "Switch devices"),
-    "home_assistant_states": ("Zustände lesen", "Read states"), "home_assistant_history": ("Verlauf", "History"),
-    "home_assistant_todo": ("Home-Assistant-Listen", "Home Assistant lists"),
-    "calendar_events": ("Termine lesen", "Read appointments"), "calendar_add": ("Termin eintragen", "Add appointment"),
-    "daily_briefing": ("Tagesüberblick", "Daily briefing"), "mail_list": ("Mails auflisten", "List mails"),
-    "mail_search": ("Mails suchen", "Search mails"), "mail_read": ("Mail lesen", "Read mail"),
-    "mail_tidy_overview": ("Postfach-Überblick", "Mailbox overview"), "mail_tidy_propose": ("Postfach aufräumen", "Tidy mailbox"),
-    "mail_draft": ("Mail-Entwurf", "Mail draft"), "web_search": ("Websuche", "Web search"),
-    "reminder_set": ("Erinnerung stellen", "Set reminder"), "reminder_list": ("Erinnerungen zeigen", "List reminders"),
-    "reminder_cancel": ("Erinnerung löschen", "Cancel reminder"), "tasks_show": ("Liste zeigen", "Show list"),
-    "tasks_add": ("Auf die Liste", "Add to list"), "tasks_change": ("Liste ändern", "Change list"),
-    "weather": ("Wetter", "Weather"), "transit": ("Bus und Bahn", "Transit"), "parcels": ("Pakete", "Parcels"),
-    "contacts_search": ("Kontakte", "Contacts"), "memory_save": ("Merken", "Remember"),
-    "memory_forget": ("Vergessen", "Forget"), "history_search": ("Frühere Gespräche", "Earlier conversations"),
-    "document_search": ("Eigene Dokumente", "Own documents"), "message_send": ("Nachricht senden", "Send message"),
-    "message_read": ("Nachrichten lesen", "Read messages"), "message_announce": ("Durchsage", "Announcement"),
-    "agent_list": ("Agenten zeigen", "List agents"), "agent_task": ("Agent beauftragen", "Agent task"),
-    "agent_schedule": ("Agent planen", "Schedule agent"), "routine_save": ("Ablauf speichern", "Save routine"),
-    "iphone_action": ("iPhone-Aktion", "iPhone action"), "spark_hilfe": ("Spark-Hilfe", "Spark help"),
-    "spark_vorschlag": ("Spark-Vorschlag", "Spark suggestion"), "wikipedia": ("Wikipedia", "Wikipedia"),
-    "article_more": ("Artikel weiterlesen", "Read on"), "archive_search": ("Eigenes Archiv", "Own archive"),
-    "document_plan": ("Dokument planen", "Plan document"), "document_change": ("Dokument ändern", "Change document"),
-    "document_status": ("Dokument-Stand", "Document status"), "document_send": ("Dokument senden", "Send document"),
-    "pc_action": ("Rechner-Aktion", "Computer action"), "pc_send": ("An den Rechner", "Send to computer"),
-}
+# the tools of the switch, readable (de, en): one table for every page (werkzeuge.py)
+TOOLS = werkzeuge.NAMES
 # the fixed rules between groups (intent.classify), said per group
 VORRANG = {
     "smarthome": ("Wetter, Liste, Nachricht und „Dokument erstellen“ gehen vor, wenn kein Schaltbefehl dabei ist. "

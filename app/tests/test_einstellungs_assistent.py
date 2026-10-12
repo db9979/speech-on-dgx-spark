@@ -481,7 +481,7 @@ class Explain(Base):
         d = berater.explain(x)
         text = " ".join(d["lines"])
         self.assertIn("Keine Regel", text)
-        self.assertIn("nicht geklappt: web_search", text)
+        self.assertIn("nicht geklappt: Websuche (web_search)", text)   # readable name, internal one beside it
         self.assertIn("(langsam)", text)
         self.assertTrue(d["helps"])
         self.on()
