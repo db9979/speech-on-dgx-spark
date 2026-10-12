@@ -77,7 +77,7 @@ Speech recognition and speech output always come first (fixed rule without a swi
   - `vorrang.hold("Name")`: inside a worker thread, wait between two steps while speech runs (never call it on the event loop).
   - `vorrang.speaking()`: whether speech is running.
 - **Operating system**: the ASR and TTS services and their engines run with `Nice=-5`, `CPUWeight=1000`, `IOWeight=1000`. When memory runs out, the system ends the panel first (`OOMScoreAdjust=900`), then the speech services (500), not the LLM lane and not sshd.
-- **GPU**: the GB10 has no priorities between processes. The speech engines' memory is reserved from their start. The language model's own answer runs at the same time as the speech output and sometimes slows it down ("tts behind … inside the piece").
+- **GPU**: the GB10 has no priorities between processes. The speech engines' memory is reserved from their start. The language model's own answer runs at the same time as the speech output and sometimes slows it down ("tts behind … inside the piece"). Since V01.0.430 the panel therefore sends the next piece to the speech output at 5 s of audio in stock while the answer is still being written (times the speaking rate, so 6 s at 1.2; `chat.WRITE_LEAD`), afterwards at 2 to 3 s as before. The iPhone app collects 0.4 s of audio after it ran dry before it plays on, and starts with a 5 ms fade-in after silence.
 - **Checking**: Status → Checks → "Speech first" speaks a sentence alone, under load without priority and under load with priority, and shows first audio, real-time factor and recognition time, above it today's counters. Status → Logs shows the lines in the area "Priority" (`vorrang: … wartet`, `… abgebrochen`, `… wartete N s`).
 
 ## Priority for people

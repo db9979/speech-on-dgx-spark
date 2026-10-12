@@ -95,6 +95,23 @@ BOUNDARY = re.compile(r"[.!?…]+[\"“”»')\]]*\s+|\n+")
 
 
 FIRST_CUT = 50   # a first sentence longer than this goes to TTS at its last comma (from 20 characters on)
+# While the LLM still writes it shares the GPU with the speech engine, which then makes only ~1.2x real
+# time (engine.sh). The next piece goes to TTS while this much audio is still to play (seconds, times the
+# speaking rate: at 1.2 the listener uses up audio 1.2x faster), so a slower piece does not run dry.
+WRITE_LEAD = 5.0
+
+
+def piece_margin(ttfa, writing, speed=1.0):
+    """Seconds of audio still to play when the next piece goes to TTS: enough for its time to first audio
+    and its second block; while the answer is still being written at least WRITE_LEAD times the rate."""
+    margin = max(1.8, 2.5 * ttfa + 0.8)
+    if writing:
+        try:
+            rate = min(2.0, max(1.0, float(speed or 1.0)))
+        except (TypeError, ValueError):
+            rate = 1.0
+        margin = max(margin, WRITE_LEAD * rate)
+    return margin
 
 
 def split_sentences(buf, first):
@@ -1748,6 +1765,7 @@ async def _answer(request, turn):
                     profiles.tool_log_add(who["id"], messages[-1]["content"], trace["calls"], trace["said"])
                 except Exception as e:
                     print("tool log:", type(e).__name__, e, flush=True)
+            tm["written"] = True   # the GPU is the speech engine's alone from here on (tts(): less lead)
             await sentences.put(None)
 
     async def run_tool(name, args, st):
@@ -2022,7 +2040,7 @@ async def _answer(request, turn):
                 # Waiting for more text is fine while the listener still has buffered audio; the
                 # next request starts while enough is left to cover its time to first audio and
                 # its second audio block (slower while the LLM shares the GPU), so nothing stalls.
-                margin = max(1.8, 2.5 * ttfa + 0.8)
+                margin = piece_margin(ttfa, not tm.get("written"), tts_body.get("speed"))
                 while not first and len(text) < 300:
                     slack = played_until - time.time() - margin
                     try:

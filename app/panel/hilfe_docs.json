@@ -2805,7 +2805,7 @@
 "file": "Technik und Fehlersuche",
 "head": "Vorrang für Sprache",
 "title": "Vorrang für Sprache",
-"text": "t ab dem Start fest reserviert. Die eigene Antwort des Sprachmodells läuft gleichzeitig mit der Sprachausgabe; das bremst sie manchmal („tts behind … inside the piece“). - Prüfen: Zustand → Prüfen → „Vorrang für Sprache“ spricht einen Satz alleine, unter Last ohne Vorfahrt und unter Last mit Vorfahrt und zeigt erster Ton, Echtzeitfaktor und Erkennungszeit; darüber die Zähler von heute. In Zustand → Logs stehen die Zeilen im Bereich „Vorrang“ (vorrang: … wartet, … abgebrochen, … wartete N s)."
+"text": "t ab dem Start fest reserviert. Die eigene Antwort des Sprachmodells läuft gleichzeitig mit der Sprachausgabe; das bremst sie manchmal („tts behind … inside the piece“). Seit V01.0.430 schickt das Panel deshalb, solange die Antwort noch geschrieben wird, das nächste Stück schon bei 5 s Ton auf Vorrat an die Sprachausgabe (mal Sprechtempo, also 6 s bei 1,2; chat.WRITE_LEAD), danach wie vorher bei 2 bis 3 s. Die iPhone-App sammelt nach einem Leerlaufen 0,4 s Ton, bevor sie weiterspielt, und setzt nach Stille mit 5 ms Einblendung ein. - Prüfen: Zustand → Prüfen → „Vorrang für Sprache“ spricht einen Satz alleine, unter Last ohne Vorfahrt und unter Last mit Vorfahrt und zeigt erster Ton, Echtzeitfaktor und Erkennungszeit; darüber die Zähler von heute. In Zustand → Logs stehen die Zeilen im Bereich „Vorrang“ (vorrang: … wartet, … abgebrochen, … wartete N s)."
 },
 {
 "lang": "de",
@@ -5661,7 +5661,7 @@
 "file": "Technical details and troubleshooting",
 "head": "Speech first",
 "title": "Speech first",
-"text": "round work (app/panel/vorrang.py): - r = await vorrang.post(c, \"Name\", url, json=..., headers=...): one request to the language model (httpx client c): waits, runs alone, is cancelled on speech and repeated; gives up with vorrang.Busy after three cancellations. - await vorrang.run(\"Name\", lambda: coroutine()): the same for any other coroutine. - await vorrang.quiet(\"Name\"): only wait for a pause. - await vorrang.in_thread(\"Name\", fn, *args): CPU work (e.g. an embedding model) after a pause in its own thread with nice 15. - vorrang.hold(\"Name\"): inside a worker thread, wait between two steps while speech runs (never call it on the event loop). - vorrang.speaking(): whether speech is running. - Operating system: the ASR and TTS services and their engines run with Nice=-5, CPUWeight=1000, IOWeight=1000. When memory runs out, the system ends the panel first (OOMScoreAdjust=900), then the speech services (500), not the LLM lane and not sshd. - GPU: the GB10 has no priorities between processes. The speech engines' memory is reserved from their start. The language model's own answer runs at the same time as the speech output and sometimes slows it down (\"tts behind … inside the piece\"). -"
+"text": "round work (app/panel/vorrang.py): - r = await vorrang.post(c, \"Name\", url, json=..., headers=...): one request to the language model (httpx client c): waits, runs alone, is cancelled on speech and repeated; gives up with vorrang.Busy after three cancellations. - await vorrang.run(\"Name\", lambda: coroutine()): the same for any other coroutine. - await vorrang.quiet(\"Name\"): only wait for a pause. - await vorrang.in_thread(\"Name\", fn, *args): CPU work (e.g. an embedding model) after a pause in its own thread with nice 15. - vorrang.hold(\"Name\"): inside a worker thread, wait between two steps while speech runs (never call it on the event loop). - vorrang.speaking(): whether speech is running. - Operating system: the ASR and TTS services and their engines run with Nice=-5, CPUWeight=1000, IOWeight=1000. When memory runs out, the system ends the panel first (OOMScoreAdjust=900), then the speech services (500), not the LLM lane and not sshd. - GPU: the GB10 has no priorities between processes. The speech engines' memory is reserved from their start. The language model's own answer runs at the same time as the speech output and sometimes slows it down (\"tts behind … inside the piece\"). S"
 },
 {
 "lang": "en",
@@ -5669,7 +5669,7 @@
 "file": "Technical details and troubleshooting",
 "head": "Speech first",
 "title": "Speech first",
-"text": " Checking: Status → Checks → \"Speech first\" speaks a sentence alone, under load without priority and under load with priority, and shows first audio, real-time factor and recognition time, above it today's counters. Status → Logs shows the lines in the area \"Priority\" (vorrang: … wartet, … abgebrochen, … wartete N s)."
+"text": "ince V01.0.430 the panel therefore sends the next piece to the speech output at 5 s of audio in stock while the answer is still being written (times the speaking rate, so 6 s at 1.2; chat.WRITE_LEAD), afterwards at 2 to 3 s as before. The iPhone app collects 0.4 s of audio after it ran dry before it plays on, and starts with a 5 ms fade-in after silence. - Checking: Status → Checks → \"Speech first\" speaks a sentence alone, under load without priority and under load with priority, and shows first audio, real-time factor and recognition time, above it today's counters. Status → Logs shows the lines in the area \"Priority\" (vorrang: … wartet, … abgebrochen, … wartete N s)."
 },
 {
 "lang": "en",

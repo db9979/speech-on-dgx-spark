@@ -25,6 +25,13 @@ final class AudioEngine {
     private var startedAt = Date.distantPast
     private var holding = false
     private static let settle: TimeInterval = 0.6
+    /// Something of this answer has played: if the player then runs dry before the next piece arrives
+    /// (the Spark spoke slower than real time while it still wrote), the next pieces wait `rebuffer`
+    /// seconds and play together, so one gap is heard instead of a stutter.
+    private var heard = false
+    private static let rebuffer: TimeInterval = 0.4
+    /// After silence a piece starts with a 5 ms fade-in (24 kHz) instead of a step, which clicks.
+    private static let fadeIn = 120
 
     /// "Ton-Protokoll" (Einstellungen): the last steps of the audio engine, to copy into the thread.
     private(set) static var diary: [String] = []
@@ -192,17 +199,22 @@ final class AudioEngine {
                 out[i] = Float(Int16(littleEndian: raw.loadUnaligned(fromByteOffset: i * 2, as: Int16.self))) / 32768
             }
         }
+        if queued == 0 {   // the player is silent: begin softly
+            for i in 0..<min(frames, Self.fadeIn) { out[i] *= Float(i) / Float(Self.fadeIn) }
+        }
         do { try ensureRunning() } catch { return }
+        let dry = queued == 0 && heard && !holding
         queued += 1
         nextId += 1
         pending.append((nextId, buffer))
-        if pending.count == 1 { Self.note("Antwort: erstes Stück") }
-        let wait = Self.settle - Date().timeIntervalSince(startedAt)
+        if pending.count == 1 && !dry { Self.note("Antwort: erstes Stück") }
+        let wait = dry ? Self.rebuffer : Self.settle - Date().timeIntervalSince(startedAt)
         if wait > 0 || holding {
-            // just started: hold the pieces until a route switch would have happened, then play all of them
+            // just started: hold the pieces until a route switch would have happened, then play all of them;
+            // ran dry mid-answer: collect a little audio first, so the next stretch plays without a stall
             if !holding {
                 holding = true
-                Self.note("warte \(Int(wait * 1000)) ms")
+                Self.note(dry ? "leergelaufen, puffere \(Int(wait * 1000)) ms" : "warte \(Int(wait * 1000)) ms")
                 DispatchQueue.main.asyncAfter(deadline: .now() + max(wait, 0.05)) { [weak self] in
                     guard let self else { return }
                     self.holding = false
@@ -219,11 +231,13 @@ final class AudioEngine {
     /// Before an answer arrives: set the engine up now, so the configuration change that
     /// voice processing causes happens before the first piece of the answer plays.
     func warmUp() {
+        heard = false
         try? ensureRunning()
     }
 
     private func schedule(_ id: Int, _ buffer: AVAudioPCMBuffer) {
         let gen = generation
+        heard = true
         node.scheduleBuffer(buffer) { [weak self] in
             DispatchQueue.main.async {
                 guard let self, gen == self.generation else { return }
@@ -269,6 +283,7 @@ final class AudioEngine {
 
     func stopPlaying() {
         holding = false
+        heard = false
         generation += 1
         queued = 0
         pending = []
