@@ -1185,6 +1185,9 @@ def profile_props(uid, now=None):
 # ---------------------------------------------------------------- Erklären (Punkt 6)
 ERR_WORDS = {"llm": "Das Sprachmodell antwortete nicht.", "tts_error": "Die Sprachausgabe brach ab.",
              "tts_down": "Die Sprachausgabe war nicht erreichbar.", "docmake": "Ein Dokument wurde nicht fertig.",
+             "tts_http": "Die Sprachausgabe lehnte einen Teil der Antwort ab.",
+             "tts_voice": "Die Sprachausgabe kannte die eingestellte Stimme nicht.",
+             "tts_long": "Ein Teil der Antwort war zu lang für die Sprachausgabe.",
              "error": "Ein Fehler im Panel."}
 
 
@@ -1209,7 +1212,8 @@ def explain(x):
     if "sound" in m:
         lines.append(f"Erster Ton nach {m['sound'] / 1000:.1f} s" + (" (langsam)." if m["sound"] / 1000 > 5 else "."))
     for e in x.get("errors", [])[:3]:
-        lines.append(ERR_WORDS.get(e) or (ERR_WORDS["tts_error"] if e.startswith("tts") else ERR_WORDS["error"]))
+        lines.append(ERR_WORDS.get(e) or (ERR_WORDS["tts_http"] if e.startswith("tts_http") else ERR_WORDS["tts_error"]
+                                          if e.startswith("tts") else ERR_WORDS["error"]))
     held = sum(int((s.get("x") or {}).get("held") or 0) for s in x.get("steps", []) if s.get("k") == "check")
     if held:
         lines.append("Die Antwortprüfung hielt eine Zahl zurück.")

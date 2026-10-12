@@ -235,8 +235,10 @@ def fake_tts():
         del TTS_SEEN[:-20]
         TTS_TEXT.append(str(body.get("input") or ""))
         del TTS_TEXT[:-50]
-        if TTS_FAIL:   # a speech service that is restarting (test_tempo.py)
-            return Response(b'{"detail": "restarting"}', status_code=TTS_FAIL.pop(0), media_type="application/json")
+        if TTS_FAIL:   # a speech service that is restarting or refuses a piece (test_tempo.py): code or (code, detail)
+            f = TTS_FAIL.pop(0)
+            code, detail = f if isinstance(f, tuple) else (f, "restarting")
+            return Response(json.dumps({"detail": detail}).encode(), status_code=code, media_type="application/json")
         if not body.get("stream") and body.get("response_format") == "pcm":   # whole answer at once (Wyoming)
             return Response(b"\1\0" * 2400, media_type="audio/pcm")
 

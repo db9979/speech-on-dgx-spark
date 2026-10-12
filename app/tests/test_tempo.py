@@ -203,6 +203,56 @@ class SpeechRestart(unittest.TestCase):
         self.assertEqual([e["code"] for e in evs if e["type"] == "error"], ["tts_down"])
 
 
+class SpeechRefusal(unittest.TestCase):
+    """V01.0.462: a piece with nothing to say ("---", an emoji, a link alone) made the speech service answer HTTP 400
+    and the whole rest of the answer stayed text only (Logs → Anfragen: "Fehler: tts_http_400")."""
+
+    def test_nothing_to_say_is_not_sent(self):
+        import textnorm
+        for x in ("---", "***", "😊", "👍 ", "https://example.org/a.pdf", "Haha!", "| --- | --- |", "```", ""):
+            self.assertFalse(textnorm.speakable(x), x)
+        for x in ("Hallo.", "😊 Gern!", "**Quelle:** Archiv", "[Link](https://example.org)", "1.", "Oh!"):
+            self.assertTrue(textnorm.speakable(x), x)
+        helpers.TTS_TEXT[:] = []
+        evs = ask("SAY | | 😊")
+        self.assertEqual(helpers.TTS_TEXT, [])   # nothing sent, so nothing refused
+        self.assertFalse([e for e in evs if e["type"] == "error"])
+
+    def test_a_refused_piece_does_not_silence_the_rest(self):
+        helpers.TTS_FAIL[:] = [(400, "nothing left to speak after removing emojis and markup")]
+        try:
+            evs = ask("SAY | | Hallo. Schön, dass du da bist, das freut mich wirklich sehr.")
+        finally:
+            helpers.TTS_FAIL[:] = []
+        self.assertTrue(any(e["type"] == "audio" for e in evs))
+        self.assertFalse([e for e in evs if e["type"] == "error"])
+
+    def test_refusals_get_a_fixed_word(self):
+        self.assertEqual(chat.tts_refusal(400, '{"detail":"nothing left to speak after removing emojis and markup"}'), "empty")
+        self.assertEqual(chat.tts_refusal(400, "unknown voice 'x', available: []"), "voice")
+        self.assertEqual(chat.tts_refusal(400, "the Base model needs a cloned voice: record one"), "voice")
+        self.assertEqual(chat.tts_refusal(400, "input: at most 20000 characters per request"), "long")
+        self.assertEqual(chat.tts_refusal(400, "body must be JSON"), "other")
+        self.assertEqual(chat.tts_refusal(500, "nothing left to speak"), "other")
+        helpers.TTS_FAIL[:] = [(400, "unknown voice 'weg', available: ['ryan']")]
+        try:
+            evs = ask()
+        finally:
+            helpers.TTS_FAIL[:] = []
+        self.assertEqual([e["code"] for e in evs if e["type"] == "error"], ["tts_error"])
+        self.assertEqual("".join(e.get("delta", "") for e in evs if e["type"] == "text"), "Hallo.")
+
+    def test_error_codes_are_explained_in_the_page(self):
+        """Logs → Anfragen shows a sentence for each error code (de and en), the code stays small beside it."""
+        import os
+        with open(os.path.join(os.path.dirname(chat.__file__), "static", "js", "logs.js"), encoding="utf-8") as f:
+            js = f.read()
+        for code in ("tts_http", "tts_voice", "tts_long", "tts_error", "tts_down", "llm_down", "llm_slow", "llm_auth",
+                     "llm_model", "llm_error", "docmake", "error"):
+            self.assertRegex(js, code + r":\['[^']+','[^']+'\]", code)
+        self.assertIn("'lcode'", js)
+
+
 class SilentModel(unittest.TestCase):
     def test_llm_that_stays_silent_ends_the_turn(self):
         """An LLM that accepts the request but writes nothing: "llm_slow" after FIRST_WAIT, not 600 s of silence."""

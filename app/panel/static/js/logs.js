@@ -121,7 +121,7 @@ function rdesc(s){const x=s.x||{},p=[];
   else if(s.k==='llm'){if(x.tokens)p.push(t(`${x.tokens} Tokens gelesen`,`${x.tokens} tokens read`));if(x.cached!=null)p.push(t(`davon ${x.cached} aus dem Zwischenspeicher`,`${x.cached} of them from the cache`));if(x.system_chars!=null)p.push(t(`Zeichen: Anweisung ${x.system_chars}, Werkzeuge ${x.tool_chars||0}, Gespräch ${x.history_chars||0}`,`characters: instructions ${x.system_chars}, tools ${x.tool_chars||0}, conversation ${x.history_chars||0}`));if(x.tools)p.push(t(`${x.tools} Werkzeuge angeboten`,`${x.tools} tools offered`));p.push(x.calls?t('ruft: ','calls: ')+x.calls:t('antwortet','answers'));if(x.first!=null)p.push(t('erstes Zeichen nach ','first output after ')+rsec(x.first));if(x.think)p.push(t(`${x.think} Zeichen Denktext`,`${x.think} chars of thinking`));if(x.held_ms)p.push(t('wartete ','waited ')+rsec(x.held_ms)+t(' auf eine Antwort mit Vorrang',' for an answer with priority'))}
   else if(s.k==='tool'){p.push(x.ok===false?t('nicht ok','not ok'):'ok');if(x.chars)p.push(t(`${x.chars} Zeichen Ergebnis`,`${x.chars} chars result`));if(x.outside)p.push(t('Text von außen, nur als Daten','outside text, as data only'));if(x.panel)p.push(t('vom Panel ausgeführt','run by the panel'));if(x.hits!=null)p.push(t(`${x.hits} Treffer`,`${x.hits} hits`)+[['docs',t('Dokumente','documents')],['archive',t('Archiv','archive')],['history',t('Verlauf','history')]].filter(([k])=>x[k]!=null).map(([k,l])=>` · ${l} ${x[k]}`).join('')+(x.late?t(` · ${x.late} zu langsam`,` · ${x.late} too slow`):''));if(x.many)p.push(t('zu viele Aufrufe in einer Runde','too many calls in one round'));if(x.locked)p.push(t('war nicht angeboten','was not offered'))}
   else if(s.k==='check'){p.push(x.again?t('ohne Werkzeug geantwortet, neu gefragt','answered without a tool, asked again'):x.held?t(`${x.held} Angabe(n) ohne Quelle zurückgehalten`,`${x.held} claim(s) without a source held back`):t('alles belegt','everything backed'))}
-  else if(s.k==='tts'){p.push(t(`${x.pieces||0} Stück(e) · ${x.chars||0} Zeichen`,`${x.pieces||0} piece(s) · ${x.chars||0} chars`));if(x.behind)p.push(t(`${x.behind}× Ton gestockt`,`sound stalled ${x.behind}×`));if(x.waited_ms)p.push(t('wartete ','waited ')+rsec(x.waited_ms));if(x.overtook)p.push(t(`überholte ${x.overtook} wartende`,`overtook ${x.overtook} waiting`))}
+  else if(s.k==='tts'){p.push(t(`${x.pieces||0} Stück(e) · ${x.chars||0} Zeichen`,`${x.pieces||0} piece(s) · ${x.chars||0} chars`));if(x.behind)p.push(t(`${x.behind}× Ton gestockt`,`sound stalled ${x.behind}×`));if(x.waited_ms)p.push(t('wartete ','waited ')+rsec(x.waited_ms));if(x.overtook)p.push(t(`überholte ${x.overtook} wartende`,`overtook ${x.overtook} waiting`));if(x.empty)p.push(t(`${x.empty} ohne Sprechbares übersprungen`,`${x.empty} with nothing to say skipped`))}
   else if(s.k==='ack')p.push(x.bridge?t('zweiter fertiger Satz, die Antwort dauerte','second ready-made sentence, the answer took longer'):t('fertiger Satz aus der Aufnahme, ohne Grafikkarte','ready-made sentence from its recording, no GPU'));
   else if(s.k==='err')p.push(t('vorzeitig beendet, z. B. ins Wort gefallen oder Seite geschlossen','ended early, e.g. barge-in or page closed'));
   return p.join(' · ')}
@@ -156,13 +156,27 @@ function rlinesShow(box){box.replaceChildren();
       row.append(badge,el('span','lm',pre?r.msg.slice(pre.length+1).trim():r.msg));row.title=r.raw;out.append(row)}
     if(!RQ.lines.length)out.append(el('div','lempty',t('Keine Logzeilen aus dieser Zeit.','No log lines from this time.')));
     box.append(el('div','rsub',t('Logzeilen aus dieser Zeit (gleichzeitige Anfragen können dazwischen stehen)','Log lines from this time (requests at the same moment may show too)')),out)}
+// an error code of a request (tracelog fail: chat.py tts_refusal, llm_error_code, docmake) as a plain sentence; the code stays small beside it
+const RERR={tts_http:['Die Sprachausgabe hat einen Teil der Antwort abgelehnt, ab da kam die Antwort nur als Text.','The speech output refused part of the answer; from there the answer came as text only.'],
+  tts_voice:['Die Sprachausgabe kennt die eingestellte Stimme nicht, die Antwort kam nur als Text.','The speech output does not know the chosen voice; the answer came as text only.'],
+  tts_long:['Ein Teil der Antwort war zu lang für die Sprachausgabe, ab da kam sie nur als Text.','Part of the answer was too long for the speech output; from there it came as text only.'],
+  tts_error:['Die Sprachausgabe brach mitten in der Antwort ab.','The speech output stopped in the middle of the answer.'],
+  tts_down:['Die Sprachausgabe war nicht erreichbar, die Antwort kam nur als Text.','The speech output could not be reached; the answer came as text only.'],
+  llm_down:['Das Sprachmodell war nicht erreichbar.','The language model could not be reached.'],
+  llm_slow:['Das Sprachmodell hat nicht rechtzeitig geantwortet.','The language model did not answer in time.'],
+  llm_auth:['Das Sprachmodell hat die Anmeldung abgelehnt.','The language model refused the login.'],
+  llm_model:['Das eingestellte Sprachmodell gibt es dort nicht.','The chosen language model does not exist there.'],
+  llm_error:['Das Sprachmodell hat einen Fehler gemeldet.','The language model reported an error.'],
+  docmake:['Ein Dokument wurde nicht fertig.','A document was not finished.'],
+  error:['Im Panel ist ein Fehler aufgetreten.','An error happened in the panel.']};
+function rerr(c){const k=RERR[c]?c:c.startsWith('tts_http')?'tts_http':c.startsWith('tts')?'tts_error':c.startsWith('llm')?'llm_error':'error';return t(...RERR[k])}
 function rdetail(x){const box=el('div','rdet');
   if(PHONE.matches){const back=el('button','rback',t('‹ Anfragen','‹ Requests'));back.type='button';back.onclick=()=>{RQ.sel=null;RQ.lines=null;rrender()};box.append(back)}
   box.append(el('h3','',t(`Anfrage ${x.id} von ${x.name} · ${rtime(x)}`,`Request ${x.id} from ${x.name} · ${rtime(x)}`)));
   const rounds=(x.steps||[]).filter(s=>s.k==='llm').length,tools=(x.steps||[]).filter(s=>s.k==='tool').length,m=x.marks||{};
   const sub=el('div','rsub');sub.append(document.createTextNode((x.device?x.device+' · ':'')+(RCLIENT[x.client]||x.client)+' · '+t('Absicht ','intent ')));sub.append(rpill(x.intent||'–','int'));
   sub.append(document.createTextNode(' · '+t(`${rounds} Runde(n) · ${tools} Werkzeug(e)`,`${rounds} round(s) · ${tools} tool(s)`)+(m.sound!=null?' · '+t('erster Ton ','first sound ')+rsecs(m.sound):'')+' · '+t('fertig ','done ')+rsecs(m.end||0)));box.append(sub);
-  if((x.errors||[]).length)box.append(el('div','lasterr',t('Fehler: ','Errors: ')+x.errors.join(', ')));
+  if((x.errors||[]).length){const eb=el('div','lasterr');for(const c of x.errors){const r=el('div','',t('Fehler: ','Error: ')+rerr(c)+' ');r.append(el('code','lcode',c));eb.append(r)}box.append(eb)}
   const bar=el('div','lbar');const lb=el('button','b',t('Zugehörige Logzeilen','Related log lines'));lb.type='button';const cp=el('button','b',t('Kopieren für Thread','Copy for thread'));cp.type='button';
   cp.onclick=()=>copyString(rcopyText(),cp);bar.append(lb,cp);box.append(bar);
   // „Erklären“ (Einstellungs-Assistent, berater.py): the request in fixed sentences and what could help; „Als Fall aufnehmen“

@@ -72,6 +72,12 @@ def clean_text(text, calm=False):
     return re.sub(r"(?m)([\w%)\]\"“”»'])$", r"\1.", t)
 
 
+def speakable(text):
+    """Whether a text has anything to say once its signs are gone: a rule "---", an emoji, a link or "Haha!" alone
+    has not, and the speech services refuse it (HTTP 400 "nothing left to speak"), so it is not sent at all."""
+    return bool(clean_text(speech_markdown(str(text or ""))))
+
+
 # Markdown in answers (the chat shows it formatted, md.js): devices without formatting get the text without
 # its signs (plain_markdown: Telegram, watch, reMarkable, Siri, speaker displays), and the voice never says
 # them (speech_markdown, in both speech services on every request before hide_secrets, whatever clean_text

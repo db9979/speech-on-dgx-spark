@@ -2,6 +2,7 @@
 
 Every version in one line, newest first (taken from the commit messages, so some lines are German, some English). Older entries have no version number.
 
+- **V01.0.471** · 2026-10-13 · Sprachausgabe: Satzstücke ohne Sprechbares („---“, Emoji, Link, „Haha!“) gehen nicht mehr an die Sprachausgabe, eine Ablehnung als leer überspringt nur dieses Stück statt den Rest der Antwort stumm zu schalten (Fehler tts_http_400); Logs → Anfragen zeigt Fehler als verständlichen Satz, das Kürzel klein dahinter
 - **V01.0.470** · 2026-10-13 · Rückfrage statt Raten (alles aus, nie Gäste): passen mehrere Geräte, Haltestellen, Orte oder Listen, fragt der Spark mit Knöpfen statt zu raten (Chat, Telegram-Tastatur, Antwort per Name, Raum oder Nummer), „Nein, das andere“ korrigiert und stellt das falsche Gerät zurück; Auswahl merken nach Ja (Ich → Gedächtnis → Zuordnungen); ein fehlender Kalender wird nie still ersetzt; Live und Logs nur mit Zahlen
 - **V01.0.469** · 2026-10-13 · Rot-Fix: Dienst-Wächter-Test zählte „heute“ mit der echten Uhr und war seit Mitternacht rot; jetzt mit festem Tag
 - **V01.0.468** · 2026-10-13 · Rot-Fix nach V01.0.467: Live-Test prüft auf den ganzen Gedächtnis-Satz statt auf „Tim“ (stand auch in „Timer“ der Weiche); Gedächtnis-Themen und Live-Zählung lesen die Einstellungen nur einmal und nichts, solange der Schalter aus ist

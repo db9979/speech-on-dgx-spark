@@ -15,7 +15,7 @@ from fastapi import APIRouter, Depends, HTTPException, Request
 from fastapi.responses import StreamingResponse
 
 sys.path.insert(0, os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
-from textnorm import guess_language, hide_secrets, plain_markdown, speech_markdown  # noqa: E402
+from textnorm import guess_language, hide_secrets, plain_markdown, speakable, speech_markdown  # noqa: E402
 import documents  # noqa: E402
 import speakers  # noqa: E402
 import calendars  # noqa: E402
@@ -1071,6 +1071,21 @@ async def first_within(lines, seconds):
 
 
 TTS_WAITS = (0.5, 1, 2, 4)   # waits for a speech service that is restarting, per answer (see tts() in _answer)
+
+
+def tts_refusal(status, detail):
+    """Why the speech service refused a piece, in a fixed word (logs and Logs → Anfragen, see logs.js ERRTEXT):
+    empty (nothing left to speak), voice (unknown or missing voice), long (too long), other."""
+    d = str(detail or "").lower()
+    if status != 400:
+        return "other"
+    if "nothing left to speak" in d or "'input' is required" in d:
+        return "empty"
+    if "voice" in d:
+        return "voice"
+    if "at most" in d and "input" in d:
+        return "long"
+    return "other"
 
 
 class TtsAgain(Exception):
@@ -2193,7 +2208,7 @@ async def _answer(request, turn):
         first, played_until, ttfa = True, 0.0, 0.5
         mute = body.get("speak") is False  # text only (Siri) or speech output failed: no TTS
         done = False
-        said = {"start": None, "pieces": 0, "chars": 0, "behind": 0, "waited": 0, "overtook": 0}   # for Logs → Anfragen
+        said = {"start": None, "pieces": 0, "chars": 0, "behind": 0, "waited": 0, "overtook": 0, "empty": 0}   # for Logs → Anfragen
         waits = list(TTS_WAITS)   # this answer's patience with a speech service that restarts
         try:
             while not done:
@@ -2228,6 +2243,9 @@ async def _answer(request, turn):
                     # a new line only before list items (clean_text strips their markers); plain
                     # sentences stay one paragraph, so the voice does not reset at each line
                     text += ("\n" if re.match(r"\s*(?:[-*+•]|\d+\.)\s", nxt) else " ") + nxt
+                if not speakable(text):   # only "---", an emoji, a link or "Haha!": nothing to say, the TTS would refuse it
+                    said["empty"] += 1
+                    continue
                 if "language" not in tts_body:  # one language for the whole answer
                     lang = guess_language(" ".join([messages[-1]["content"], text]))
                     if lang:
@@ -2254,9 +2272,14 @@ async def _answer(request, turn):
                                 detail = (await r.aread()).decode(errors='replace')[:300]
                                 if r.status_code in (502, 503) and waits:
                                     raise TtsAgain(f"HTTP {r.status_code}")
-                                print(f"chat: tts HTTP {r.status_code}, this answer stays text only", flush=True)
+                                why = tts_refusal(r.status_code, detail)
+                                if why == "empty":   # nothing left to speak in this piece: the next one goes on
+                                    print("chat: tts HTTP 400, nothing to speak in this piece - skipped", flush=True)
+                                    said["empty"] += 1
+                                    break
+                                print(f"chat: tts HTTP {r.status_code} ({why}), this answer stays text only", flush=True)
                                 if tr:
-                                    tr.fail(f"tts_http_{r.status_code}")
+                                    tr.fail(f"tts_{why}" if why != "other" else f"tts_http_{r.status_code}")
                                 await out.put({"type": "error", "code": "tts_loading" if r.status_code == 503 and "loading" in detail
                                                else "tts_down" if r.status_code in (502, 503) else "tts_error",
                                                "message": f"TTS HTTP {r.status_code}: {detail}"})
@@ -2331,7 +2354,8 @@ async def _answer(request, turn):
         finally:
             if tr and said["start"]:
                 tr.step("tts", "Sprachausgabe", said["start"], time.time(), pieces=said["pieces"], chars=said["chars"],
-                        behind=said["behind"] or None, waited_ms=said["waited"] or None, overtook=said["overtook"] or None)
+                        behind=said["behind"] or None, waited_ms=said["waited"] or None, overtook=said["overtook"] or None,
+                        empty=said["empty"] or None)
             await out.put(None)
 
     tasks = [asyncio.create_task(llm()), asyncio.create_task(tts())] + ([asyncio.create_task(bridge())] if ack_lang else [])
