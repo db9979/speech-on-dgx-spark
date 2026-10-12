@@ -436,7 +436,7 @@ class Shown(Base):
         try:
             act = dienstwacht.active()
             self.assertIn("store", act)
-            self.assertTrue(all(p["url"] == f"http://127.0.0.1:{PORT}/" for p in act["store"].values()))
+            self.assertTrue(all(p["url"] == f"http://127.0.0.1:{PORT}/" for p in act["store"].values() if not p.get("tcp")))
             self.assertNotIn("password", json.dumps(act["store"]))
         finally:
             helpers.set_config(svc_watch=False)
@@ -466,3 +466,326 @@ class Classified(unittest.TestCase):
                          "new file under users/<id>/: put it into speicher.AREAS or speicher.LOCAL")
         self.assertEqual(sorted(copied & set(speicher.LOCAL)), [])
         self.assertTrue(all(isinstance(v, str) and v for v in speicher.LOCAL.values()))
+
+
+# ---------------------------------------------------------------- SFTP and SMB (V2)
+import socket  # noqa: E402
+import threading  # noqa: E402
+
+import paramiko  # noqa: E402
+
+SFTP = {"root": tempfile.mkdtemp(prefix="spark-sftp-"), "user": "spark", "pw": "ssh-pass-4711", "down": False,
+        "key": paramiko.ECDSAKey.generate()}
+
+
+class _Handle(paramiko.SFTPHandle):
+    def stat(self):
+        return paramiko.SFTPAttributes.from_stat(os.fstat(self.readfile.fileno() if hasattr(self, "readfile") else self.writefile.fileno()))
+
+
+class _Fs(paramiko.SFTPServerInterface):
+    """A tiny SFTP server on a temp folder (paths are jailed into it)."""
+
+    def _p(self, path):
+        p = os.path.normpath(os.path.join(SFTP["root"], path.lstrip("/")))
+        if not p.startswith(SFTP["root"]):
+            raise PermissionError(path)
+        return p
+
+    def _err(self, e):
+        return paramiko.SFTPServer.convert_errno(e.errno or 1)
+
+    def canonicalize(self, path):
+        return "/" + os.path.relpath(self._p(path), SFTP["root"]).replace(".", "") if path in (".", "") else path
+
+    def stat(self, path):
+        try:
+            return paramiko.SFTPAttributes.from_stat(os.stat(self._p(path)))
+        except OSError as e:
+            return self._err(e)
+    lstat = stat
+
+    def open(self, path, flags, attr):
+        try:
+            p = self._p(path)
+            mode = "wb" if flags & os.O_WRONLY else "rb"
+            f = open(p, mode)
+        except OSError as e:
+            return self._err(e)
+        h = _Handle(flags)
+        if mode == "wb":
+            h.writefile = f
+        else:
+            h.readfile = f
+        return h
+
+    def mkdir(self, path, attr):
+        try:
+            os.mkdir(self._p(path))
+            return paramiko.SFTP_OK
+        except OSError as e:
+            return self._err(e)
+
+    def remove(self, path):
+        try:
+            os.remove(self._p(path))
+            return paramiko.SFTP_OK
+        except OSError as e:
+            return self._err(e)
+
+    def rename(self, a, b):
+        try:
+            os.rename(self._p(a), self._p(b))
+            return paramiko.SFTP_OK
+        except OSError as e:
+            return self._err(e)
+
+    def posix_rename(self, a, b):
+        return self.rename(a, b)
+
+
+class _Auth(paramiko.ServerInterface):
+    def check_auth_password(self, user, pw):
+        return paramiko.AUTH_SUCCESSFUL if (user, pw) == (SFTP["user"], SFTP["pw"]) else paramiko.AUTH_FAILED
+
+    def get_allowed_auths(self, user):
+        return "password"
+
+    def check_channel_request(self, kind, chanid):
+        return paramiko.OPEN_SUCCEEDED if kind == "session" else paramiko.OPEN_FAILED_ADMINISTRATIVELY_PROHIBITED
+
+
+def _sftp_server(port):
+    ls = socket.socket()
+    ls.setsockopt(socket.SOL_SOCKET, socket.SO_REUSEADDR, 1)
+    ls.bind(("127.0.0.1", port))
+    ls.listen(20)
+
+    def one(sock):
+        if SFTP["down"]:
+            sock.close()
+            return
+        tr = paramiko.Transport(sock)
+        tr.add_server_key(SFTP["key"])
+        tr.set_subsystem_handler("sftp", paramiko.SFTPServer, _Fs)
+        try:
+            tr.start_server(server=_Auth())
+        except Exception:
+            tr.close()
+
+    def loop():
+        while True:
+            s, _ = ls.accept()
+            threading.Thread(target=one, args=(s,), daemon=True).start()
+    threading.Thread(target=loop, daemon=True).start()
+
+
+SPORT = helpers._port()
+_sftp_server(SPORT)
+SURL = f"sftp://127.0.0.1:{SPORT}/store"
+
+
+def sftp_objects():
+    out = {}
+    for d, _, fs in os.walk(SFTP["root"]):
+        for f in fs:
+            with open(os.path.join(d, f), "rb") as x:
+                out[os.path.relpath(os.path.join(d, f), SFTP["root"])] = x.read()
+    return out
+
+
+class SftpTarget(Base):
+    def setUp(self):
+        super().setUp()
+        shutil.rmtree(SFTP["root"], ignore_errors=True)
+        os.makedirs(os.path.join(SFTP["root"], "store"))
+        SFTP.update(down=False, pw="ssh-pass-4711")
+
+    def add_sftp(self, c, **kw):
+        body = dict(dict(name="SSH", kind="sftp", url=SURL, user="spark", password="ssh-pass-4711"), **kw)
+        r = c.post("/api/profile/speicher", json=body)
+        self.assertEqual(r.status_code, 200, r.text)
+        return r.json()["added"]
+
+    def test_copy_and_restore_encrypted_with_the_server_key_pinned(self):
+        c, uid = self.ready("SpSftp")
+        tid = self.add_sftp(c)
+        t = speicher.find(uid, tid)
+        self.assertEqual(t["hostkey"], speicher.hostkey_of(SFTP["key"]))
+        view = c.get("/api/profile/speicher").json()["targets"][0]
+        self.assertEqual(view["hostkey"], t["hostkey"])
+        self.assertNotIn("ssh-pass-4711", json.dumps(view))
+        self.write(uid, "memory.json", json.dumps({"x": SECRET_WORD}))
+        last = run(speicher.copy_once(uid, tid))
+        self.assertTrue(last["ok"], last)
+        files = sftp_objects()
+        self.assertTrue(any(k.endswith("manifest.enc") for k in files))
+        self.assertTrue(any("/o/" in k for k in files))
+        self.assertFalse(any(k.endswith(".part") or k.endswith("probe.enc") for k in files))
+        self.assertFalse(any(SECRET_WORD.encode() in v for v in files.values()))
+        os.remove(profiles._path(uid, "memory.json"))
+        r = run(speicher.restore_missing(uid, tid))
+        self.assertEqual(r["n"], 1)
+        with open(profiles._path(uid, "memory.json")) as f:
+            self.assertIn(SECRET_WORD, f.read())
+
+    def test_wrong_password_and_a_server_that_is_gone(self):
+        c, uid = self.ready("SpSftpFalsch")
+        r = c.post("/api/profile/speicher", json={"name": "SSH", "kind": "sftp", "url": SURL, "user": "spark", "password": "nein"})
+        self.assertEqual(r.status_code, 502)
+        self.assertIn("Anmeldung", r.json()["detail"])
+        tid = self.add_sftp(c)
+        SFTP["down"] = True
+        last = run(speicher.copy_once(uid, tid))
+        self.assertEqual((last["ok"], last["kind"]), (False, "offline"))
+        SFTP["down"] = False
+        SFTP["pw"] = "geaendert"
+        self.write(uid, "memory.json", "{}")
+        last = run(speicher.copy_once(uid, tid))
+        self.assertEqual((last["ok"], last["kind"]), (False, "auth"))
+
+    def test_another_server_key_stops_everything_until_accepted(self):
+        c, uid = self.ready("SpSftpKey")
+        tid = self.add_sftp(c)
+        old = SFTP["key"]
+        SFTP["key"] = paramiko.ECDSAKey.generate()
+        try:
+            self.write(uid, "memory.json", json.dumps({"x": SECRET_WORD}))
+            last = run(speicher.copy_once(uid, tid))
+            self.assertEqual((last["ok"], last["kind"]), (False, "hostkey"))
+            self.assertFalse(any("/o/" in k for k in sftp_objects()))      # nothing went to the other server
+            # accepting needs the password (and the code, stufen.py)
+            r = c.put(f"/api/profile/speicher/{tid}", json={"url": SURL, "user": "spark", "accept_key": True})
+            self.assertEqual(r.status_code, 400)
+            r = c.put(f"/api/profile/speicher/{tid}", json={"url": SURL, "user": "spark", "accept_key": True,
+                                                         "password": "ssh-pass-4711"})
+            self.assertEqual(r.status_code, 200, r.text)
+            self.assertEqual(speicher.find(uid, tid)["hostkey"], speicher.hostkey_of(SFTP["key"]))
+            self.assertTrue(run(speicher.copy_once(uid, tid))["ok"])
+        finally:
+            SFTP["key"] = old
+
+    def test_watched_by_the_dienst_waechter(self):
+        c, uid = self.ready("SpSftpWacht")
+        self.add_sftp(c)
+        p = next(p for p in speicher.probes().values() if uid in p["uids"])
+        self.assertEqual((p["tcp"], p["ssh"], p["port"]), (True, True, SPORT))
+        self.assertTrue(run(dienstwacht.probe("store", "x", p, {})).ok)
+        SFTP["down"] = True
+        try:
+            self.assertFalse(run(dienstwacht.probe("store", "x", dict(p, port=helpers._port()), {})).ok)
+        finally:
+            SFTP["down"] = False
+
+    def test_addresses(self):
+        self.assertEqual(speicher.check_url("sftp://nas.fritz.box/volume1/spark/", "sftp"), "sftp://nas.fritz.box/volume1/spark")
+        self.assertEqual(speicher.check_url("sftp://server.example.org:2222/home/a", "sftp"), "sftp://server.example.org:2222/home/a")
+        self.assertEqual(speicher.check_url("smb://192.168.178.20/daten/spark", "smb"), "smb://192.168.178.20/daten/spark")
+        for url, kind in (("smb://nas.example.com/daten", "smb"), ("smb://nas.fritz.box", "smb"), ("smb://nas.fritz.box/", "smb"),
+                          ("https://nas.fritz.box/x", "sftp"), ("sftp://u@nas/x", "sftp"), ("sftp://nas/a/../b", "sftp"),
+                          ("sftp://nas/a%2f..", "sftp"), ("smb://nas/da*ten", "smb"), ("sftp://nas/x", "webdav")):
+            with self.assertRaises(ValueError, msg=url):
+                speicher.check_url(url, kind)
+
+
+class SmbTarget(Base):
+    """SMB through smbclient, with the share faked on a temp folder: the connection goes to the checked address,
+    only encrypted, its own connection cache, closed after the run."""
+
+    def setUp(self):
+        super().setUp()
+        self.root = tempfile.mkdtemp(prefix="spark-smb-")
+        self.calls = []
+        import smbclient
+        from smbprotocol import exceptions as x
+        test = self
+
+        def local(p):
+            self.assertTrue(p.startswith("\\\\127.0.0.1\\daten\\"), p)
+            return os.path.join(self.root, *p.split("\\")[4:])
+
+        def register_session(server, **kw):
+            test.calls.append(("session", server, kw.get("encrypt"), kw.get("port"), kw.get("connection_cache") is not None))
+            if kw.get("password") != "smb-pass-4711":
+                raise x.SMBAuthenticationError("logon failure")
+
+        def stat_(p, **kw):
+            return os.stat(local(p))
+
+        def mkdir(p, **kw):
+            os.mkdir(local(p))
+
+        def open_file(p, mode="rb", **kw):
+            return open(local(p), mode)
+
+        def replace(a, b, **kw):
+            os.replace(local(a), local(b))
+
+        def remove(p, **kw):
+            os.remove(local(p))
+
+        def reset(connection_cache=None):
+            test.calls.append(("reset", connection_cache is not None))
+        self.patches = [mock.patch.object(smbclient, n, f) for n, f in (
+            ("register_session", register_session), ("stat", stat_), ("mkdir", mkdir), ("open_file", open_file),
+            ("replace", replace), ("remove", remove), ("reset_connection_cache", reset))]
+        for p in self.patches:
+            p.start()
+
+    def tearDown(self):
+        for p in self.patches:
+            p.stop()
+        shutil.rmtree(self.root, ignore_errors=True)
+        super().tearDown()
+
+    def test_copy_and_restore_only_encrypted_and_only_at_home(self):
+        c, uid = self.ready("SpSmb")
+        r = c.post("/api/profile/speicher", json={"name": "Win", "kind": "smb", "url": "smb://127.0.0.1/daten/spark",
+                                                  "user": "spark", "password": "falsch"})
+        self.assertEqual(r.status_code, 502)
+        self.assertIn("Anmeldung", r.json()["detail"])
+        r = c.post("/api/profile/speicher", json={"name": "Win", "kind": "smb", "url": "smb://127.0.0.1/daten/spark",
+                                                  "user": "spark", "password": "smb-pass-4711"})
+        self.assertEqual(r.status_code, 200, r.text)
+        tid = r.json()["added"]
+        self.assertIn(("session", "127.0.0.1", True, 445, True), self.calls)
+        self.assertIn(("reset", True), self.calls)
+        self.write(uid, "memory.json", json.dumps({"x": SECRET_WORD}))
+        self.assertTrue(run(speicher.copy_once(uid, tid))["ok"])
+        stored = []
+        for d, _, fs in os.walk(self.root):
+            for f in fs:
+                with open(os.path.join(d, f), "rb") as x:
+                    stored.append((f, x.read()))
+        self.assertTrue(any(f == "manifest.enc" for f, _ in stored))
+        self.assertFalse(any(SECRET_WORD.encode() in v for _, v in stored))
+        os.remove(profiles._path(uid, "memory.json"))
+        self.assertEqual(run(speicher.restore_missing(uid, tid))["n"], 1)
+        # never over the internet, and the home network only with its switch
+        r = c.post("/api/profile/speicher", json={"name": "Weg", "kind": "smb", "url": "smb://files.example.com/daten",
+                                                  "user": "spark", "password": "smb-pass-4711"})
+        self.assertEqual(r.status_code, 400)
+        p = next(p for p in speicher.probes().values() if uid in p["uids"])
+        self.assertEqual((p["tcp"], p["ssh"], p["port"]), (True, False, 445))
+
+
+class Packages(unittest.TestCase):
+    def test_extra_lock_matches_the_main_lock(self):
+        """requirements-speicher.lock (for an environment made before the lock file) holds exactly the SFTP and SMB
+        packages, with the same versions and hashes as requirements-panel.lock."""
+        import re
+
+        def blocks(name):
+            with open(os.path.join(helpers.APP, name)) as f:
+                text = f.read()
+            out = {}
+            for b in re.split(r"\n(?=[a-z0-9])", text):
+                m = re.match(r"([a-z0-9_.\-]+)==(\S+)", b)
+                if m:
+                    out[m.group(1)] = (m.group(2), sorted(re.findall(r"sha256:([0-9a-f]{64})", b)))
+            return out
+        extra, main = blocks("requirements-speicher.lock"), blocks("requirements-panel.lock")
+        self.assertEqual(set(extra), {"bcrypt", "invoke", "paramiko", "pynacl", "pyspnego", "smbprotocol"})
+        for k, v in extra.items():
+            self.assertEqual(v, main[k], k)
+            self.assertTrue(v[1], k)

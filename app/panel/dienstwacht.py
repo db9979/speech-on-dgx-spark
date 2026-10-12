@@ -345,6 +345,27 @@ async def _imap(p):
         return Probe(False)
 
 
+async def _tcp(p):
+    """A server reached by its own protocol (Eigener Speicher: SFTP, SMB): the port answers, an SSH server greets
+    with "SSH-". No login, no command."""
+    try:
+        ip = await asyncio.to_thread(netguard.resolve, p["host"], p["port"], p["level"])
+        r, w = await asyncio.wait_for(asyncio.open_connection(ip, p["port"]), TIMEOUT)
+        try:
+            ok = True
+            if p.get("ssh"):
+                ok = (await asyncio.wait_for(r.readline(), TIMEOUT)).startswith(b"SSH-")
+        finally:
+            w.close()
+            with contextlib.suppress(Exception):
+                await asyncio.wait_for(w.wait_closed(), 1)
+        return Probe(ok)
+    except netguard.Blocked as e:
+        return Probe(False, "notaus" if "Notaus" in str(e) else "blocked")
+    except (OSError, asyncio.TimeoutError, httpx.HTTPError, ValueError):
+        return Probe(False)
+
+
 async def probe(sid, key, p, cfg):
     token = netguard.QUIET.set(True)   # a probe is no request: not on the Wächter list, no Selbst-Notaus
     try:
@@ -354,13 +375,15 @@ async def probe(sid, key, p, cfg):
             return await _own(p, cfg)
         if sid == "mail":
             return await _imap(p)
+        if p.get("tcp"):
+            return await _tcp(p)
         return await _http(p)
     finally:
         netguard.QUIET.reset(token)
 
 
 def _host(sid, p):
-    if sid == "mail":
+    if sid == "mail" or p.get("tcp"):
         return p.get("host", "")
     return urlsplit(p.get("url", "")).hostname or ""
 

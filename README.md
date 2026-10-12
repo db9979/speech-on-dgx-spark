@@ -33,6 +33,7 @@ All options for running without questions (`--mode api --asr 1.7b --tts 0.6b --y
 
 <!-- New version: add one line at the top here and in CHANGELOG.md, drop the oldest line here (keep 10). Details go to docs/de and docs/en, not into this README. -->
 
+- **V01.0.456** Own storage: now also over SFTP and as an SMB share at home, the SFTP server's key is remembered
 - **V01.0.455** Answers never come twice, even when the model repeats them after a tool
 - **V01.0.454** Instant acknowledgement with a wink: 60 funnier sentences added (186 in all).
 - **V01.0.453** Own storage: keep chats, memory, documents and created files encrypted on your own NAS (WebDAV) or a mounted folder, watched, with a note when it fails
@@ -42,7 +43,6 @@ All options for running without questions (`--mode api --asr 1.7b --tts 0.6b --y
 - **V01.0.449** iPhone app builds again (error from .448)
 - **V01.0.448** Jump links also in the apps, companion, push and Telegram
 - **V01.0.447** Notes on top of Status have “View” and jump to the right place
-- **V01.0.446** Switching a function on offers to switch on what it builds on; switching off says what goes off with it
 
 All versions: [CHANGELOG.md](CHANGELOG.md)
 

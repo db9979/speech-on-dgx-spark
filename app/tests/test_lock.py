@@ -51,6 +51,11 @@ class Lock(unittest.TestCase):
         with open(os.path.join(APP, "requirements-docmake.lock")) as f:
             doc = dict(re.findall(r"^([a-z0-9_.\-]+)==([^\s\\]+)", f.read(), re.M))
         listed += [f"{n}=={v}" for n, v in doc.items() if f"{n}=={v}" in wanted()]
+        # Eigener Speicher: the packages of requirements-speicher.lock, installed with their hashes
+        self.assertIn('install -q --no-deps --require-hashes -r "$STORE_LOCK"', text)
+        with open(os.path.join(APP, "requirements-speicher.lock")) as f:
+            store = dict(re.findall(r"^([a-z0-9_.\-]+)==([^\s\\]+)", f.read(), re.M))
+        listed += [f"{n}=={v}" for n, v in store.items() if f"{n}=={v}" in wanted()]
         self.assertEqual(sorted(listed), sorted(wanted()))
         with open(os.path.join(ROOT, ".github", "workflows", "tests.yml")) as f:
             self.assertIn("--no-deps --require-hashes -r app/requirements-panel.lock", f.read())
