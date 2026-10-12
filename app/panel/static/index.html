@@ -142,6 +142,18 @@
         <div id="rpadmin" data-nodirty="1"></div></div>
       <div class="setrow"><div class="lbl"><b>Dienst-Wächter</b><span>Der Spark prüft selbst, ob Archiv, Internet, Websuche und andere Dienste antworten, und meldet den Admins Ausfall und Entwarnung.</span></div><label class="tgl"><input type="checkbox" id="chat.svc_watch"><i></i></label></div>
       <div class="setrow" data-show="chat.svc_watch" style="margin-left:18px"><div class="lbl"><b>Hinweis an Nutzer, wenn ein Dienst fehlt</b><span>Fragt jemand etwas, das einen gerade fehlenden Dienst braucht, sagt der Assistent das sofort, statt lange zu warten.</span></div><label class="tgl"><input type="checkbox" id="chat.svc_watch_users"><i></i></label></div>
+      <div class="setrow"><div class="lbl"><b>Einstellungs-Assistent</b><span>Fehler, 👎 und unklare Fragen werden Fälle mit Vorschlägen aus einem festen Katalog. Übernehmen nur du, unter Zustand → Verbessern.</span></div><label class="tgl"><input type="checkbox" id="chat.berater"><i></i></label></div>
+      <div class="setrow" data-show="chat.berater" style="margin-left:18px"><div class="lbl"><b>👍/👎 unter Antworten</b><span>Profile können eine Antwort bewerten (fünf Gründe, kurzer Text) oder „Das war falsch“ sagen. Jedes Profil schaltet es selbst ein.</span></div><label class="tgl"><input type="checkbox" id="chat.bewerten"><i></i></label></div>
+      <div class="setrow" data-show="chat.bewerten" style="margin-left:36px"><div class="lbl"><b>Rückmeldung, wenn es behoben ist</b><span>Wer 👎 gemeldet hat, hört nach der Nachkontrolle, dass eine Änderung geholfen hat.</span></div><label class="tgl"><input type="checkbox" id="chat.bewerten_back"><i></i></label></div>
+      <div class="setrow" data-show="chat.berater" style="margin-left:18px"><div class="lbl"><b>Anfragen erklären</b><span>Unter Zustand → Logs → Anfragen erklärt ein Knopf eine Anfrage in festen Sätzen und nimmt sie auf Wunsch als Fall auf.</span></div><label class="tgl"><input type="checkbox" id="chat.berater_explain"><i></i></label></div>
+      <div class="setrow" data-show="chat.berater" style="margin-left:18px"><div class="lbl"><b>Hinweis an Admins bei neuem Vorschlag</b><span>Höchstens drei am Tag, nur der Titel. Jedes Admin-Profil schaltet es selbst ein.</span></div><label class="tgl"><input type="checkbox" id="chat.berater_notify"><i></i></label></div>
+      <div class="setrow" data-show="chat.berater" style="margin-left:18px"><div class="lbl"><b>Im Chat nach Vorschlägen fragen</b><span>„Was schlägt der Einstellungs-Assistent vor?“ Ein „Ja“ übernimmt nie etwas.</span></div><label class="tgl"><input type="checkbox" id="chat.berater_chat"><i></i></label></div>
+      <div class="setrow" data-show="chat.berater" style="margin-left:18px"><div class="lbl"><b>Fälle als Meldung vorbereiten</b><span>Hilft nichts aus dem Katalog, wird der Fall ein Entwurf unter Probleme melden, mit Vorschau vor dem Senden.</span></div><label class="tgl"><input type="checkbox" id="chat.berater_issue"><i></i></label></div>
+      <div class="setrow" data-show="chat.berater" style="margin-left:18px"><div class="lbl"><b>Schritte für die Umgebung</b><span>Liegt es an einem Dienst außerhalb des Spark, zeigt der Vorschlag Schritte zum Kopieren. Ausgeführt wird nichts.</span></div><label class="tgl"><input type="checkbox" id="chat.berater_env"><i></i></label></div>
+      <div class="setrow" data-show="chat.berater" style="margin-left:18px"><div class="lbl"><b>Vorschläge für die eigenen Einstellungen</b><span>Aus den eigenen 👎 eines Profils, z. B. kürzere Antworten. Nur das Profil selbst übernimmt sie.</span></div><label class="tgl"><input type="checkbox" id="chat.berater_me"><i></i></label></div>
+      <div class="setrow" data-show="chat.berater" style="margin-left:18px"><div class="lbl"><b>Autopilot für kleine Änderungen</b><span>Übernimmt Stufe A und B bei grünem Prüfstand und zwei Meldungen selbst: eine am Tag, höchstens drei Schritte, zurück bei Verschlechterung.</span></div><label class="tgl"><input type="checkbox" id="chat.berater_auto"><i></i></label></div>
+      <div data-show="chat.berater" style="margin-left:18px"><label>Fragen ans Sprachmodell pro Tag</label><input id="chat.berater_calls" type="number" min="1" max="100"><div class="fh">1 bis 100. Nur ein Sprachmodell im Heimnetz wird gefragt; es wählt nur aus fertigen Vorschlägen.</div>
+        <label>Nachkontrolle nach Stunden</label><input id="chat.berater_check_h" type="number" min="6" max="72"><div class="fh">6 bis 72.</div></div>
       <div class="setrow"><div class="lbl"><b>Kalender und Tagesbriefing</b><span>Termine vorlesen, nach „Ja“ eintragen, und auf „Guten Morgen“ das Tagesbriefing.</span></div><label class="tgl"><input type="checkbox" id="chat.calendar"><i></i></label></div>
       <div class="setrow"><div class="lbl"><b>Aufgaben und Einkaufsliste</b><span>„Setz Milch auf die Einkaufsliste“: Liste auf dem Spark oder in einer CalDAV-Aufgabenliste.</span></div><label class="tgl"><input type="checkbox" id="chat.tasks"><i></i></label></div>
       <div class="setrow"><div class="lbl"><b>Agent-Funktionen</b><span>„Recherchiere …, sag mir Bescheid“: Aufträge im Hintergrund, geplante Aufträge und eigene Abläufe, nur für freigeschaltete Profile.</span></div><label class="tgl"><input type="checkbox" id="chat.agent"><i></i></label></div>
@@ -722,6 +734,14 @@
 </section>
 
 <section id="live"><div class="lv" id="lvroot"></div></section>
+<section id="verb"><div class="card ld-box" id="vbbox">
+  <div class="ld-head"><h2>Verbessern</h2><button class="b" type="button" id="vbrun">Jetzt nachsehen</button></div>
+  <div class="pintro">Fehler, 👎 und unklare Fragen werden Fälle. Der Spark schlägt Änderungen aus einem festen Katalog vor, prüft sie auf dem Prüfstand und schaut nach 24 Stunden, ob sie geholfen haben. Nichts ändert sich, bevor du übernimmst.</div>
+  <div class="note" id="vboff" hidden>Der Einstellungs-Assistent ist aus. Einschalten unter Funktionen → Einstellungs-Assistent.</div>
+  <div id="vbmain" hidden><div class="mut" id="vbsum"></div><div class="ld-chips" id="vbchips"></div>
+    <div class="ld-split"><div class="ld-list" id="vblist"></div><div class="ld-detail" id="vbdetail" hidden></div></div></div>
+  <div class="mut" id="vbmsg"></div>
+</div></section>
 <section id="logs">
   <div class="card lcard">
     <div class="lbar"><div class="ltabs" id="logtabs" role="tablist"><button type="button" data-lt="diag" class="on">Diagnose</button><button type="button" data-lt="req" id="logreqtab" hidden>Anfragen</button><button type="button" data-lt="svc">Dienste</button><button type="button" data-lt="update">Update-Verlauf</button><button type="button" data-lt="audit" class="mainonly">Änderungen</button><button type="button" data-lt="adm">Admin-Protokoll</button></div>
@@ -789,7 +809,7 @@
     <div class="menav" id="ptabs"></div>
     <div class="mebody">
     <div id="gobox" class="ptab"></div>
-    <div id="setbox" class="ptab on"><div id="msetwake"></div><div id="setform"></div>
+    <div id="setbox" class="ptab on"><div id="msetwake"></div><div class="note" id="mebvbox" hidden><b>Vorschläge für dich</b><div id="mebvlist"></div><div class="mut" id="mebvmsg"></div></div><div id="setform"></div>
       <div class="row" style="margin-top:10px"><button class="b" id="setreset" type="button">Auf Vorgaben zurücksetzen</button></div></div>
     <div id="overbox" class="ptab"></div>
     <div id="bgbox" class="ptab"></div>
@@ -929,6 +949,8 @@
 <script src="/static/js/hintergrund.js"></script>
 <script src="/static/js/geraete.js"></script>
 <script src="/static/js/dienste.js"></script>
+<script src="/static/js/verbessern.js"></script>
+<script src="/static/js/bewerten.js"></script>
 <script src="/static/js/agent.js"></script>
 <script src="/static/js/messages.js"></script>
 <script src="/static/js/esp.js"></script>

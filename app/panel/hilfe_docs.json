@@ -1755,6 +1755,54 @@
 "lang": "de",
 "src": "assistent",
 "file": "Assistent und Oberfläche",
+"head": "Einstellungs-Assistent (seit V01.0.450)",
+"title": "Einstellungs-Assistent (seit V01.0.450)",
+"text": "Plan plaene/einstellungs-assistent.md (Punkte 1–17). Alles aus: Admin-Schalter chat.berater mit Unterschaltern, Profil-Schalter, nie Gäste."
+},
+{
+"lang": "de",
+"src": "assistent",
+"file": "Assistent und Oberfläche",
+"head": "Einstellungs-Assistent (seit V01.0.450)",
+"title": "Einstellungs-Assistent (seit V01.0.450)",
+"text": "- Fälle (faelle.py): Am Ende jeder Antwort prüfen feste Regeln den Weg der Anfrage (wie Logs → Anfragen, auch wenn das Anfragen-Log aus ist; dann wird nichts geschrieben): Werkzeug gescheitert, Fehler (Sprachmodell, Sprachausgabe …), keine Regel erkannt und dann Websuche, fester Absage-Satz („kann ich nicht“, nicht bei Außentext oder nach einem gescheiterten Werkzeug), dieselbe Frage zweimal binnen 5 Minuten nach so einer Antwort, die Antwortprüfung hielt etwas zurück. Dazu 👎, „Das war falsch“ und „Falsch zugeordnet“ auf Funktionen → Weiche. Ein Fall hält einen Fingerabdruck (Art | Gruppe | Werkzeug oder Fehler, nie Wörter), Zähler, höchstens drei Beispiele mit Anfrage-Nummer; die Frage selbst nur mit Zustimmung (👎 „Frage mitschicken“ oder Profil-Schalter „Mein Name im Anfragen-Log“), nie von Gästen, nie aus Außentext. 30 Tage, 1000 Fälle (STATE/faelle.json). - 👍/👎 (chat.bewerten, Profil rate_on): Knöpfe unter der Antwort, bei 👎 fünf Gründe (falsches Werkzeug, falsche Antwort, zu langsam, nicht verstanden, falsch ausgesprochen) und 200 Zeichen Text; änderbar 24 Stunden, höchstens 10 👎 am Tag. Gesprochen: „Das war falsch“, „Gut so“ (fester Satz, keine Werkzeuge). 👍 wird nur gezählt "
+},
+{
+"lang": "de",
+"src": "assistent",
+"file": "Assistent und Oberfläche",
+"head": "Einstellungs-Assistent (seit V01.0.450)",
+"title": "Einstellungs-Assistent (seit V01.0.450)",
+"text": "(pro Tag, Gruppe und Werkzeug, STATE/bewertungen.json), mit Zustimmung wird die Frage ein bestätigter Satz (STATE/gut-saetze.json, 200), den kein Vorschlag anders sortieren darf. - Melder (alle 30 Minuten, einzeln abschaltbar unter Zustand → Verbessern → Katalog): viele unklare Fragen (über 30 % bei mindestens 30 in 7 Tagen), oft langsam (über 30 % bei mindestens 10 in 24 Stunden), Fehler häufen sich (5 in 24 Stunden), Qualitätstest neu rot, Dienst fiel aus (Dienst-Wächter), Speicher unter der Reserve, wenig 👍 in einer Gruppe (unter 75 % bei mindestens 20 in 7 Tagen). - Katalog (berater_katalog.py): Stufe A Weiche (eigenes Wort, „Nicht bei“, Testsatz), Pflicht-Wort, Aussprache, Wort für die Spracherkennung, Frage in den Qualitätstest; Stufe B Feinwerte in engen Grenzen, ein Schritt (Treffer und Seiten der Websuche, Nachschlagen, Wartezeit eigener Quellen, Verlauf, Temperaturen, erster Ton); Stufe C Schalter mit zweitem Schritt (Code auf der Seite, 2 Minuten); P eigene Einstellungen eines Profils. Stufe D nie: Passwörter und Schlüssel, Adresse des Sprachmodells, qwen38, Notaus und Wächter, zweiter Anmeldeschritt, Rollen, Ports, Gastzugang, Mail senden, MCP nach außen, Probleme melde"
+},
+{
+"lang": "de",
+"src": "assistent",
+"file": "Assistent und Oberfläche",
+"head": "Einstellungs-Assistent (seit V01.0.450)",
+"title": "Einstellungs-Assistent (seit V01.0.450)",
+"text": "n, Updates, Sicherungen. - Vorschlag: Feste Regeln bauen zu einem Fall die passenden Kandidaten aus dem Katalog. Nur wenn das Sprachmodell im Heimnetz läuft (Loopback oder private Adresse), wählt es einen davon (JSON-Schema, Auswahl nur aus den Nummern der Kandidaten, ein Satz Begründung, der als Daten angezeigt wird); höchstens chat.berater_calls (20) am Tag, über vorrang (Sprache zuerst) und erst nach einer Minute ohne Sprechen. Sonst nimmt die Regel den ersten. - Prüfstand: dieselbe Prüfung wie beim Speichern (admin.validate), alle Testsätze der Weiche (eingebaute und eigene), die bestätigten Sätze, die Fragen der letzten 7 Tage (wie viele anders landen), Grenzen und Schrittweite. Rot ist nicht übernehmbar; „Anders“ zeigt die übrigen Kandidaten. - Übernehmen schreibt über die Wege des Panels (Weiche mit ihrem Verlauf, sonst admin._save mit Rückgängig und Dienst-Neustart, Qualitätstest über seine Liste) und merkt sich den Wert davor; Zurücknehmen setzt genau ihn zurück. Nachkontrolle nach chat.berater_check_h (24) Stunden: kam der Fall nicht wieder „hilft“, einmal „unverändert“, zweimal oder ein Testsatz rot „schlechter“. - Wege eines Falls: lokal (Katalog, Prüfstand grün), Meldu"
+},
+{
+"lang": "de",
+"src": "assistent",
+"file": "Assistent und Oberfläche",
+"head": "Einstellungs-Assistent (seit V01.0.450)",
+"title": "Einstellungs-Assistent (seit V01.0.450)",
+"text": "ng (chat.berater_issue, braucht Probleme melden): ein Entwurf mit festen Wörtern (Art, Gruppe, Werkzeug, Zahlen, nie eine Frage), gesendet erst nach der Vorschau; Umgebung (chat.berater_env): bei Diensten außerhalb Schritte zum Kopieren (z. B. speech-spark status, sudo speech-spark logs tts -n 100), ausgeführt wird nichts; „Erledigt“ startet die Nachkontrolle. - Erklären (chat.berater_explain): Zustand → Logs → Anfragen → „Erklären“ beschreibt eine Anfrage in festen Sätzen und nennt, was helfen könnte; „Als Fall aufnehmen“. - Im Chat (chat.berater_chat, Profil berater_ask, nur Admin-Profile): „Was schlägt der Einstellungs-Assistent vor?“ nennt offene Vorschläge; ein „Ja“ übernimmt nie etwas. Hinweis (chat.berater_notify, Profil berater_note): neuer Vorschlag an Admin-Profile, höchstens 3 am Tag. - Rückmeldung „behoben“ (chat.bewerten_back, Profil rate_back): hilft eine Änderung nach einem 👎, bekommt die Person einmal einen Hinweis. - Vorschläge fürs Profil (chat.berater_me, Profil berater_me): aus den eigenen 👎 der letzten zwei Wochen (z. B. zweimal „zu langsam“: kürzere Antworten, sofortige Rückmeldung), oben auf Ich → Gespräch; nur das Profil übernimmt, „Nein danke“ blendet aus. "
+},
+{
+"lang": "de",
+"src": "assistent",
+"file": "Assistent und Oberfläche",
+"head": "Einstellungs-Assistent (seit V01.0.450)",
+"title": "Einstellungs-Assistent (seit V01.0.450)",
+"text": "- Autopilot (chat.berater_auto): Stufe A und B mit grünem Prüfstand und mindestens zwei Meldungen (zwei Personen bei 👎, zwei Funde bei Meldern), höchstens eine Änderung am Tag, nie mehr als drei Schritte vom Wert des Admins; die Nachkontrolle nimmt sie bei „schlechter“ selbst zurück. - Anzeige: Zustand → Verbessern (Eingang, Vorschläge, Nachkontrolle, Erledigt, Katalog mit Meldern), Live-Knoten „Verbessern“ mit Zahlen (👍, 👎, Fälle, offene Vorschläge), Ereignisse „Verbessern“. Journal: faelle: (Art, Gruppe, Werkzeug, Zahl) und berater:."
+},
+{
+"lang": "de",
+"src": "assistent",
+"file": "Assistent und Oberfläche",
 "head": "Die Oberfläche",
 "title": "Die Oberfläche",
 "text": "Beim ersten Admin-Login führt ein Einrichtungsassistent durch Passwort, Sprachmodell (mit Verbindungstest), Stimme (zum Anhören), Profile, Zugang und Funktionen und endet mit der Funktionsprüfung. Erneut starten: *Zustand → Prüfen → Einrichtung erneut starten*."
@@ -4782,6 +4830,54 @@
 "head": "Voice chat",
 "title": "First sentence sooner (V01.0.220)",
 "text": "First sentence sooner (V01.0.220): a long first sentence goes to speech output at its last comma from 50 characters on (before: 120), if that comma comes after at least 20 characters, so the first sound comes earlier."
+},
+{
+"lang": "en",
+"src": "assistant",
+"file": "Assistant and panel",
+"head": "Settings assistant (since V01.0.450)",
+"title": "Settings assistant (since V01.0.450)",
+"text": "Plan plaene/einstellungs-assistent.md (points 1–17). Everything off: admin switch chat.berater with sub switches, profile switches, never guests."
+},
+{
+"lang": "en",
+"src": "assistant",
+"file": "Assistant and panel",
+"head": "Settings assistant (since V01.0.450)",
+"title": "Settings assistant (since V01.0.450)",
+"text": "- Cases (faelle.py): at the end of every answer fixed rules look at the request's way (as in Logs → Requests, also when the request log is off; then nothing is written): a tool failed, an error (language model, speech output …), no rule recognized the question and the web search ran, a fixed refusal sentence (\"I cannot\", not with outside text or after a failed tool), the same question twice within 5 minutes after such an answer, the answer check held something back. Also 👎, \"That was wrong\" and \"Wrongly sorted\" on Features → Switch. A case keeps a fingerprint (kind | group | tool or error, never words), counts and at most three examples with the request number; the question itself only with consent (👎 \"Send the question along\" or the profile switch \"My name in the request log\"), never from guests, never from outside text. 30 days, 1000 cases (STATE/faelle.json). - 👍/👎 (chat.bewerten, profile rate_on): buttons under the answer, with 👎 five reasons (wrong tool, wrong answer, too slow, not understood, mispronounced) and 200 characters of text; changeable for 24 hours, at most 10 👎 a day. Spoken: \"That was wrong\", \"That was good\" (fixed sentence, no tools). 👍 is only counted (per day, "
+},
+{
+"lang": "en",
+"src": "assistant",
+"file": "Assistant and panel",
+"head": "Settings assistant (since V01.0.450)",
+"title": "Settings assistant (since V01.0.450)",
+"text": "group and tool, STATE/bewertungen.json); with consent the question becomes a confirmed sentence (STATE/gut-saetze.json, 200) no proposal may sort differently. - Detectors (every 30 minutes, each can be switched off under Status → Improve → Catalog): many unclear questions (over 30 % of at least 30 in 7 days), often slow (over 30 % of at least 10 in 24 hours), errors pile up (5 in 24 hours), quality test newly red, a service was gone (service watch), memory below the reserve, few 👍 in a group (under 75 % of at least 20 in 7 days). - Catalog (berater_katalog.py): stage A Weiche (own word, \"not with\", test sentence), must-word, pronunciation, word for the speech recognition, question into the quality test; stage B fine values in narrow ranges, one step (web search results and pages, lookups, wait for own sources, history, temperatures, first sound); stage C switches with a second step (a code on the page, 2 minutes); P a profile's own settings. Stage D never: passwords and keys, the language model's address, qwen38, Notaus and Wächter, second sign-in step, roles, ports, guest access, sending mail, MCP to the outside, reporting problems, updates, backups. - Proposal: fixed rules build "
+},
+{
+"lang": "en",
+"src": "assistant",
+"file": "Assistant and panel",
+"head": "Settings assistant (since V01.0.450)",
+"title": "Settings assistant (since V01.0.450)",
+"text": "the fitting candidates from the catalog. Only when the language model runs at home (loopback or private address) it picks one of them (JSON schema, a choice only among the candidates' numbers, one sentence of reason shown as data); at most chat.berater_calls (20) a day, through vorrang (speech first) and only after a minute without speech. Otherwise the rule takes the first. - Test bench: the same check as saving (admin.validate), every test sentence of the Weiche (built in and own), the confirmed sentences, the questions of the last 7 days (how many land differently), ranges and step. Red cannot be taken; \"Other\" shows the remaining candidates. - Take writes through the panel's own ways (the Weiche with its history, else admin._save with undo and service restart, the quality test through its list) and keeps the value before; Undo puts exactly that back. Re-check after chat.berater_check_h (24) hours: the case did not come back \"helps\", once \"unchanged\", twice or a test sentence red \"worse\". - Routes of a case: local (catalog, test bench green), report (chat.berater_issue, needs Reporting problems): a draft in fixed words (kind, group, tool, numbers, never a question), sent only af"
+},
+{
+"lang": "en",
+"src": "assistant",
+"file": "Assistant and panel",
+"head": "Settings assistant (since V01.0.450)",
+"title": "Settings assistant (since V01.0.450)",
+"text": "ter its preview; environment (chat.berater_env): for services outside steps to copy (e.g. speech-spark status, sudo speech-spark logs tts -n 100), nothing is run; \"Done\" starts the re-check. - Explain (chat.berater_explain): Status → Logs → Requests → \"Explain\" describes a request in fixed sentences and names what could help; \"Take as a case\". - In the chat (chat.berater_chat, profile berater_ask, admin profiles only): \"What does the settings assistant propose?\" names open proposals; a \"yes\" never takes anything. Note (chat.berater_notify, profile berater_note): a new proposal to admin profiles, at most 3 a day. - Feedback \"fixed\" (chat.bewerten_back, profile rate_back): when a change after a 👎 helps, the person gets one note. - Proposals for a profile (chat.berater_me, profile berater_me): from the own 👎 of the last two weeks (e.g. twice \"too slow\": shorter answers, instant reply), at the top of Me → Conversation; only the profile takes them, \"No thanks\" hides one. - Autopilot (chat.berater_auto): stages A and B with a green test bench and at least two reports (two people for 👎, two findings for detectors), at most one change a day, never more than three steps from the admin's val"
+},
+{
+"lang": "en",
+"src": "assistant",
+"file": "Assistant and panel",
+"head": "Settings assistant (since V01.0.450)",
+"title": "Settings assistant (since V01.0.450)",
+"text": "ue; the re-check undoes it itself on \"worse\". - Display: Status → Improve (inbox, proposals, re-check, done, catalog with detectors), Live node \"Improve\" with numbers (👍, 👎, cases, open proposals), events \"Verbessern\". Journal: faelle: (kind, group, tool, number) and berater:."
 },
 {
 "lang": "en",

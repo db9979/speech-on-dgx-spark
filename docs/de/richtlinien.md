@@ -65,12 +65,12 @@ Diese Liste gehört zu jedem Commit, der eine Funktion, ein Werkzeug, einen Dien
 | 20 | **Doku** | Eine Zeile in CHANGELOG und README (de und en), Details in `docs/de` und `docs/en`. Neue allgemeine Regeln kommen in diese Richtlinie. | 🧪 test_richtlinie (Versions, Guideline), test_changelog |
 | 21 | **Sicherheit nach Stand der Technik** | Die Änderung wird gegen den Teil „Stand der Technik“ der Sicherheits-Checkliste geprüft (Kryptografie, Anmeldung, Header, Lieferkette, LLM-Risiken). | 📝 |
 | 22 | **Voraussetzungen** | Baut eine Funktion auf einer anderen auf, steht das als `parent` in `features.py` (die Kette entsteht daraus, `features.chain`). Kein eigener Text „schalte erst X ein“: Hinweise nennen fehlende Schalter über `features.missing_text`, die Seiten Funktionen und Wer darf was bieten die Kette beim Einschalten mit an (`needs.js`, `POST /api/admin/features/{key}/enable`) und sagen beim Ausschalten, was mit ausgeht. Eine Einrichtung, die fehlen kann, kommt nach `features.READY`. | 🧪 test_voraussetzungen, test_voraussetzungen_mit_einschalten |
+| 23 | **Einstellungs-Assistent** | Jede neue Einstellung in `config.default.json` oder `profiles.SETTINGS` bekommt im selben Commit ihre Einordnung in `berater_katalog.py`: im Katalog (Stufe A–C, P), in `NEVER_KEYS` (D, nie) oder in `OHNE` / `OHNE_PROFIL` (bewusst nicht vorschlagbar). So kann der Assistent sie vorschlagen oder sicher auslassen. | 🧪 test_einstellungs_assistent.test_every_setting_is_classified |
 
 **Kommt mit laufenden Umsetzungen dazu** (gilt, sobald die Version auf main ist; der Thread ergänzt dann diese Tabelle und den Test):
 
 | Bereich | Was dann zu tun ist | Thread |
 |---|---|---|
-| **Einstellungs-Assistent** | Jede neue Einstellung bekommt ihre Einordnung im Katalog (A–C, P; D nie), damit der Assistent sie vorschlagen oder sicher auslassen kann. | „Einstellungen mit dem Sprachmodell optimieren“ |
 | **Eigener Speicher** | Neue Daten werden eingeordnet: bleibt immer lokal (Schlüssel, Logins, Einstellungen, Stimmabdruck) oder darf verschlüsselt kopiert bzw. ausgelagert werden. Lokal zuerst, Abgleich im Hintergrund über den Wächter. | „Eigenen Speicher einbinden“ |
 | **Statische Dateien** | Jede statische Route und jede öffentliche Datei antwortet; neue Kurzwege geben den Request weiter. | gilt seit V01.0.442, 🧪 test_statische_routen |
 | **Hintergrundmodelle** | Die Anzeige sagt „arbeitet“ nur, solange wirklich gerechnet wird, sonst „Standby“ (geladen oder nicht); Mitnutzen eines laufenden Modells verlängert keine Laufzeit und startet es nie (`docembed.embed(..., keep=False)`); die Stopp-Prüfung läuft auch bei Notaus und nach Fehlern. | gilt seit V01.0.444, 🧪 test_wissen.Worker |

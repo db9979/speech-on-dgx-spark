@@ -40,6 +40,7 @@ import latency  # noqa: E402
 import echo  # noqa: E402  (the Spark's own voice is no question)
 import vorrang  # noqa: E402  (speech first: background work waits)
 import stufe  # noqa: E402  (priority for people)
+import faelle  # noqa: E402  (Fälle: every problem a case, 👍/👎)
 import tracelog  # noqa: E402  (Logs → Anfragen: the way of each request)
 import features  # noqa: E402
 import vorab  # noqa: E402  (fetching ahead when the answer asks back)
@@ -2168,10 +2169,12 @@ async def _answer(request, turn):
     guest = not device_owner and not admin_cookie_ok(request)
 
     async def events():
+        outside = carry in ("outside", "mail")
         try:
             while (ev := await out.get()) is not None:
                 if guest and ev.get("type") == "error":
                     ev = {"type": "error", "code": ev.get("code") or "error"}
+                outside = outside or ev.get("type") in ("outside", "mail")
                 yield f"data: {json.dumps(ev)}\n\n"
             if tm["on"]:
                 for line in timing_lines(tm, t0, time.time()):
@@ -2181,6 +2184,10 @@ async def _answer(request, turn):
                     await asyncio.to_thread(tracelog.finish, tr)
                 except OSError as e:
                     print("anfrage:", type(e).__name__, flush=True)
+                # Fälle (faelle.py): fixed rules on the finished turn; the id for 👍/👎 when the profile may rate
+                rid = await asyncio.to_thread(faelle.turn_end, tr, who, turn.ask_text, trace["said"], outside)
+                if rid:
+                    yield f"data: {json.dumps({'type': 'rate', 'id': rid})}\n\n"
             yield f"data: {json.dumps({'type': 'done', 'total': round(time.time() - t0, 3)})}\n\n"
         finally:  # also runs when the browser aborts (barge-in): stop LLM and TTS
             for t in tasks:

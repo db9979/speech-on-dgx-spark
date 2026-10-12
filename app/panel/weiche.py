@@ -606,4 +606,11 @@ async def wrong_turn(request: Request):
         w = (now.why.get(other) or "").strip().lower()
         if w and chat.TOOL_WORD.fullmatch(w):
             nots.append({"group": other, "word": w})
+    try:   # Einstellungs-Assistent (faelle.py): the admin's „Falsch zugeordnet“ is a case too, with the sentence
+        import faelle
+        if faelle.wanted():
+            await asyncio.to_thread(faelle.add, "weiche", {"group": now.label(), "q": text.strip(), "client": "web"},
+                                    want=want, own=True)
+    except Exception as e:
+        print("weiche: Fall nicht notiert", type(e).__name__, flush=True)
     return {"now": now.label(), "names": now.names, "words": out, "not": nots[:3]}

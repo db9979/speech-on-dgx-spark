@@ -10,7 +10,7 @@ function coadmStart(who){ADMIN_BY=who.admin_by||'';ADMIN_UNTIL=who.admin_until||
   // the Haupt-Admin profile (role owner) sees what the main admin sees, only the password's own things stay hidden
   if(ADMIN_BY==='owner')document.body.classList.add('owner');else if(LG.tab==='audit')LG.tab='adm';
   if(ADMIN_BY==='manager'){document.body.classList.add('mgr');
-    document.querySelectorAll('nav button[data-s=cfg]').forEach(b=>b.hidden=true);GROUPS.mon=GROUPS.mon.filter(x=>x[0]!=='test');
+    document.querySelectorAll('nav button[data-s=cfg]').forEach(b=>b.hidden=true);GROUPS.mon=GROUPS.mon.filter(x=>x[0]!=='test'&&x[0]!=='verb');
     // Funktionen: only "Wer darf was" (the switches over /api/admin/switches, like in the app), not the settings form
     GROUPS.feat=GROUPS.feat.filter(x=>x[0]!=='feat'&&x[0]!=='route');lastSec.feat='who'}
   const b=$('logoutbtn');b.textContent=t('Admin-Modus beenden','End admin mode');b.onclick=coadmEnd;

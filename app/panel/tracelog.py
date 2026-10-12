@@ -113,11 +113,13 @@ class Rec:
 
 def start(t0, client, who=None, kind="guest", device=""):
     """A new record, or None while both admin switches are off (then nothing is kept at all). With only
-    Zustand → Live on (live.py) the record is watched in memory and never written."""
+    Zustand → Live on (live.py) the record is watched in memory and never written; with only the
+    Einstellungs-Assistent on (faelle.py) it is summed up at the end of the answer and never written."""
     try:
+        import faelle
         import live
         keep, watch = on(), live.on()
-        if not keep and not watch:
+        if not keep and not watch and not faelle.wanted():
             return None
         rec = Rec(t0, client, who, kind, device, persist=keep)
         if watch:
@@ -223,7 +225,9 @@ def traces(request: Request, minutes: int = 60):
         raise HTTPException(400, "bad time")
     now = time.time()
     rows = [shown(x) for x in all_traces(now) if x["t"] >= now - minutes * 60]
-    return {"on": on(), "keep_hours": KEEP_S // 3600, "slow_s": SLOW_S, "items": rows[::-1]}
+    import features
+    return {"on": on(), "keep_hours": KEEP_S // 3600, "slow_s": SLOW_S, "items": rows[::-1],
+            "explain": features.admin_on("beratererklaeren")}   # „Erklären“ of the Einstellungs-Assistent (berater.py)
 
 
 @router.get("/api/admin/traces/{tid}", dependencies=[Depends(auth)])

@@ -157,6 +157,13 @@ function rdetail(x){const box=el('div','rdet');
   if((x.errors||[]).length)box.append(el('div','lasterr',t('Fehler: ','Errors: ')+x.errors.join(', ')));
   const bar=el('div','lbar');const lb=el('button','b',t('Zugehörige Logzeilen','Related log lines'));lb.type='button';const cp=el('button','b',t('Kopieren für Thread','Copy for thread'));cp.type='button';
   cp.onclick=()=>copyString(rcopyText(),cp);bar.append(lb,cp);box.append(bar);
+  // „Erklären“ (Einstellungs-Assistent, berater.py): the request in fixed sentences and what could help; „Als Fall aufnehmen“
+  const ex=el('div','rexpl');if(RQ.data&&RQ.data.explain&&!document.body.classList.contains('mgr')){const eb=el('button','b',t('Erklären','Explain'));eb.type='button';bar.append(eb);
+    eb.onclick=async()=>{ex.replaceChildren(el('div','lempty',t('Lade …','Loading …')));try{const d=await (await api('/api/admin/berater/erklaeren/'+encodeURIComponent(x.id))).json();ex.replaceChildren();
+      for(const l of d.lines||[])ex.append(el('div','rd',l));if((d.helps||[]).length)ex.append(el('div','rsub',t('Was helfen könnte: ','What could help: ')+d.helps.map(h=>t(h[0],h[1])).join(' · ')));
+      const fb=el('button','b',t('Als Fall aufnehmen','Take as a case'));fb.type='button';fb.onclick=async()=>{try{await api('/api/admin/berater/erklaeren/'+encodeURIComponent(x.id)+'/fall',{method:'POST'});fb.textContent=t('Aufgenommen: Zustand → Verbessern','Taken: Status → Improve');fb.disabled=true}catch(e){fb.textContent=e.message}};ex.append(fb)}
+      catch(e){ex.replaceChildren(el('div','lempty',e.message))}}}
+  box.append(ex);
   box.append(el('div','rnote',t('🔒 Ohne Frage- und Antworttext: nur Wege, Werkzeugnamen, Zahlen und Zeiten.','🔒 Without question or answer text: only ways, tool names, numbers and times.')+(x.named?'':' '+t('Name nur, wenn das Profil es erlaubt.','Name only when the profile allows it.'))));
   box.append(rshares(x),rsteps(x));const lines=el('div','rlinesbox');box.append(lines);lb.onclick=()=>rshowLines(x,lines);if(RQ.lines&&RQ.linesFor===x.id)rlinesShow(lines);return box}
 function rfiltered(){const d=RQ.data;if(!d)return [];const q=$('logq').value.trim().toLowerCase();

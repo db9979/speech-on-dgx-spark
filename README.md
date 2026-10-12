@@ -33,6 +33,7 @@ All options for running without questions (`--mode api --asr 1.7b --tts 0.6b --y
 
 <!-- New version: add one line at the top here and in CHANGELOG.md, drop the oldest line here (keep 10). Details go to docs/de and docs/en, not into this README. -->
 
+- **V01.0.450** Settings assistant: from errors, 👎 and unclear questions the Spark makes checked proposals to improve it (Status → Improve), 👍/👎 under answers; everything off until you switch it on
 - **V01.0.449** iPhone app builds again (error from .448)
 - **V01.0.448** Jump links also in the apps, companion, push and Telegram
 - **V01.0.447** Notes on top of Status have “View” and jump to the right place
@@ -42,7 +43,6 @@ All options for running without questions (`--mode api --asr 1.7b --tts 0.6b --y
 - **V01.0.443** Coding guideline in the repo: [docs/en/guidelines.md](docs/en/guidelines.md) with a checklist for new features, security checklist with a state-of-the-art part, journal without profile names
 - **V01.0.442** App manifest and home screen icon load again (error 500 since .406); “Add to Home Screen” shows the Spark icon again
 - **V01.0.441** Live overview: when the guard blocks because of the emergency stop, it now says so instead of “address never allowed”
-- **V01.0.440** Service watch: admins get a note when the archive, the internet, the web search or another service is gone, and an all-clear when it is back.
 
 All versions: [CHANGELOG.md](CHANGELOG.md)
 
