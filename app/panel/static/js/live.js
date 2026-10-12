@@ -152,19 +152,36 @@ function hops(r){const H=[],at=['r'+r.id];const go=(n,t,st,what)=>{const a=at[at
   else if(r.stage==='weiche')go('weiche',now,'c',tt('wählt Werkzeuge','picks tools'));
   if(r.stage!=='tts'&&!direct(r)){go('llm','','p');if(!r.quiet)go('tts','','p')}
   if(!r.auto)go('r'+r.id,back,'p');return H}
+function badge(x,y,s,c,on){const w=s.length*6.2+14;
+  return `<g><rect x="${x-w/2}" y="${y-10}" width="${w}" height="20" rx="10" fill="${on?c:'var(--card)'}" stroke="${c}"/><text x="${x}" y="${y+4}" text-anchor="middle" style="font-size:11px;font-weight:700;fill:${on?'#fff':'var(--fg)'}">${lvE(s)}</text></g>`}
+// how long the request stood at each box, written beside the box (not on the lines)
+function times(r,pos,dir){const ms={},n={};r.steps.forEach(s=>{const k=s.k==='tool'?(s.to&&tgt(s.to)?s.to:'tool'):s.k==='ack'?'':s.k;if(!k||!pos[k])return;ms[k]=(ms[k]||0)+(s.d||0)});
+  const ack=r.steps.filter(s=>s.k==='ack').length;let o='';
+  Object.keys(pos).forEach(k=>{const p=pos[k];if(!p||!p.w||(ms[k]==null&&!(k==='tts'&&ack)))return;const calls=tgt(k)?(dir['tool>'+k]||0)+(dir['guard>'+k]||0):0,t=(calls>1?calls+'× · ':'')+(ms[k]!=null?secs(ms[k]):'')+(k==='tts'&&ack?(ms[k]!=null?' · ':'')+'⚡ '+ack:'');
+    if(tgt(k))o+=`<text class="tm" x="${p.x-6}" y="${p.y+14}" text-anchor="end">${lvE(t)}</text>`;
+    else o+=`<text class="tm" x="${p.x+p.w+6}" y="${p.y+14}">${lvE(t)}</text>`});return o}
 function route(r,pos,W,H,ph){const c0=col(r.id);let o='',lab='',call='',cl='';const ctr=p=>({x:p.x+p.w/2,y:p.y+p.h/2});
   // the phone picture has no Eingang and no Wächter: the way goes straight past them, so "ist jetzt" still shows
   const via=n=>n==='guard'&&!pos.guard?'tool':n==='door'&&!pos.door?'r'+r.id:n;
-  hops(r).map(([a,b,...x])=>[via(a),via(b),...x]).filter(h=>h[0]!==h[1]).forEach(([a,b,t,st,what],i)=>{const A=pos[a],B=pos[b];if(!A||!B)return;const ca=ctr(A),cb=ctr(B);let d,mx,my;
+  // Dominik 2026-10-12 (pick A): each stretch drawn once; rounds and repeats as one badge ("↻ 3 Runden", "×2"),
+  // the times stand at the boxes, only the step running now carries a label on its line
+  const HS=hops(r).map(([a,b,...x])=>[via(a),via(b),...x]).filter(h=>h[0]!==h[1]),seen={},dir={};
+  HS.forEach(([a,b])=>dir[a+'>'+b]=(dir[a+'>'+b]||0)+1);
+  HS.forEach(([a,b,t,st,what],i)=>{const A=pos[a],B=pos[b];if(!A||!B)return;const ca=ctr(A),cb=ctr(B);let d,mx,my;
+    const key=[a,b].sort().join('|');if(st==='d'&&seen[key])return;
     const c=[a,b].some(n=>n==='guard'||tgt(n)&&zoneOf(n)==='net')?NET:c0;   // the part of the way out of the house in amber
     if(Math.abs(ca.x-cb.x)<40){const down=cb.y>ca.y,x=down?A.x+A.w:A.x,k=down?70:-70;d=`M${x} ${ca.y} C${x+k} ${ca.y} ${x+k} ${cb.y} ${x} ${cb.y}`;mx=x+k*.75;my=(ca.y+cb.y)/2}
-    else{const fw=cb.x>ca.x,off=fw?0:9,x1=fw?A.x+A.w:A.x,x2=fw?B.x:B.x+B.w,y1=ca.y+off,y2=cb.y+off;d=`M${x1} ${y1} C${(x1+x2)/2} ${y1} ${(x1+x2)/2} ${y2} ${x2} ${y2}`;mx=(x1+x2)/2;my=(y1+y2)/2}
-    const ret=t.startsWith('↩');
-    o+=`<path id="lvr${i}" d="${d}" fill="none" stroke="${st==='p'?'var(--mut)':c}" stroke-width="${st==='c'?4:3}" ${st==='p'?'stroke-dasharray="5 5" opacity=".7"':''} stroke-linecap="round" data-tip="${lvE(r.id+' · '+(i+1)+': '+nm(a)+' → '+nm(b)+(t?' · '+t:'')+(what?' · '+what:''))}"/>`;
-    if(st==='c')o+=[0,1,2].map(k=>`<circle r="6" fill="${c}" stroke="var(--card)" stroke-width="2"><animateMotion dur="1.2s" begin="${-k*.4}s" repeatCount="indefinite"><mpath href="#lvr${i}"/></animateMotion></circle>`).join('');
-    if(t){if(ret){my+=26;mx+=(cb.x<ca.x?-30:30)}const s=st==='c'?'● '+t:t,w=s.length*6.2+14;
-      lab+=`<g><rect x="${mx-w/2}" y="${my-10}" width="${w}" height="20" rx="${ret?4:10}" fill="${st==='c'?c:'var(--card)'}" stroke="${st==='p'?'var(--mut)':c}" ${ret?'stroke-dasharray="3 2"':''}/><text x="${mx}" y="${my+4}" text-anchor="middle" style="font-size:11px;font-weight:700;fill:${st==='c'?'#fff':'var(--fg)'}">${lvE(s)}</text></g>`}
-    if(st==='c')call=`${r.id} ${tt('ist jetzt','is now')}: ${nm(a)} → ${nm(b)} · ${t}${what?' · '+what:''}`});
+    else{const fw=cb.x>ca.x,off=fw||st==='d'?0:9,x1=fw?A.x+A.w:A.x,x2=fw?B.x:B.x+B.w,y1=ca.y+off,y2=cb.y+off;d=`M${x1} ${y1} C${(x1+x2)/2} ${y1} ${(x1+x2)/2} ${y2} ${x2} ${y2}`;mx=(x1+x2)/2;my=(y1+y2)/2}
+    if(st==='d')seen[key]={mx,my,c,a,b};
+    const n=st==='d'?Math.max(dir[a+'>'+b]||0,dir[b+'>'+a]||0):1;
+    o+=`<path id="lvr${i}" d="${d}" fill="none" stroke="${st==='p'?'var(--mut)':c}" stroke-width="${st==='c'?4:3}" ${st==='p'?'stroke-dasharray="5 5" opacity=".7"':''} stroke-linecap="round" data-tip="${lvE(r.id+' · '+nm(a)+' ↔ '+nm(b)+(n>1?' · '+n+'×':'')+(t&&st!=='d'?' · '+t:'')+(what?' · '+what:''))}"/>`;
+    if(st==='c'){o+=[0,1,2].map(k=>`<circle r="6" fill="${c}" stroke="var(--card)" stroke-width="2"><animateMotion dur="1.2s" begin="${-k*.4}s" repeatCount="indefinite"><mpath href="#lvr${i}"/></animateMotion></circle>`).join('');
+      if(t){const L='● '+t;if(tgt(b)&&cb.x>ca.x){mx=B.x-L.length*3.1-14;my=B.y-11}lab+=badge(mx,my,L,c,true)}
+      call=`${r.id} ${tt('ist jetzt','is now')}: ${nm(a)} → ${nm(b)} · ${t}${what?' · '+what:''}`}});
+  Object.values(seen).forEach(({mx,my,c,a,b})=>{const rounds=(a==='llm'&&b==='tool'||a==='tool'&&b==='llm')?(dir['llm>tool']||0):0,
+    n=Math.max(dir[a+'>'+b]||0,dir[b+'>'+a]||0);
+    if(rounds>1)lab+=badge(mx,my,'↻ '+rounds+' '+tt('Runden','rounds'),c)});
+  lab+=times(r,pos,dir);
   if(r.done)call=r.last?`${tt('Letzte Aktion','Last action')} ${r.id} · ${secs(r.age*1000)}`:`${r.id} ${tt('ist fertig','is done')} · ${secs(r.age*1000)}`;
   if(call){const mw=ph?W-16:520,w=Math.min(call.length*6.6+26,mw),y=H-30,x=8;
     cl=`<g><rect x="${x}" y="${y}" width="${w}" height="26" rx="13" fill="color-mix(in srgb,${c0} 16%,var(--card))" stroke="${c0}"/><circle cx="${x+13}" cy="${y+13}" r="4" fill="${c0}"><animate attributeName="opacity" values="1;.2;1" dur="1s" repeatCount="indefinite"/></circle><text x="${x+24}" y="${y+17}" style="font-size:${ph?10.5:11.5}px;font-weight:600;fill:var(--fg)" ${call.length*6.6+26>mw?`textLength="${mw-34}" lengthAdjust="spacingAndGlyphs"`:''}>${lvE(call)}</text></g>`}

@@ -123,3 +123,5 @@ body.kiosk{height:100vh;overflow:hidden;background:var(--bg)}
 .lv .wayact{display:flex;gap:14px;align-items:center;justify-content:flex-end;margin-top:6px;flex-wrap:wrap}
 body.kiosk .krot.held{outline:2px dashed var(--warn);outline-offset:4px;border-radius:12px}
 body.kiosk .krot.held::after{content:"angehalten · tippen zum Weiterdrehen";display:block;text-align:right;font-size:11px;color:var(--warn);margin-top:4px}
+/* times of the chosen request beside its boxes, not on the lines (Dominik 2026-10-12) */
+#lvflow text.tm{font-size:11px;font-weight:700;fill:var(--fg);paint-order:stroke;stroke:var(--card);stroke-width:3px}

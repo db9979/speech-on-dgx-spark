@@ -2,6 +2,7 @@
 
 Every version in one line, newest first (taken from the commit messages, so some lines are German, some English). Older entries have no version number.
 
+- **V01.0.445** · 2026-10-12 · Live-Bild ruhiger: jede Strecke einer Anfrage nur einmal gezeichnet, Runden zwischen Sprachmodell und Werkzeugen als „↻ 3 Runden“, Zeiten und „2×“ neben den Kästen statt auf den Linien, nur der laufende Schritt hat ein Schild
 - **V01.0.444** · 2026-10-12 · Bedeutungssuche: „Erst lokal suchen“ nimmt das Modell nur mit und hält es nicht mehr wach, die 10-Minuten-Prüfung läuft auch bei Notaus und nach Fehlern; Zustand zeigt grün „Standby“ (geladen oder nicht) und „arbeitet“ nur beim Rechnen, dazu wofür es zuletzt gebraucht wurde und wann es stoppt; Richtlinie: Regel Hintergrundmodelle fest
 - **V01.0.443** · 2026-10-12 · Coding-Richtlinie und Sicherheits-Checkliste im Repo (docs/de/richtlinien.md, CLAUDE.md) mit Pflichtliste für neue Funktionen und Teil „Stand der Technik“; an ausgelieferte Schalter nur mit Grund, Journal ohne Profilnamen, Selbsttest für VERSION/CHANGELOG/README
 - **V01.0.442** · 2026-10-12 · App-Manifest, Home-Bildschirm-Symbol und Favicon kamen seit V01.0.406 mit Fehler 500 (static_file ohne request); behoben, Selbsttest test_statische_routen ruft jede statische Route ab

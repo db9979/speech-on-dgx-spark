@@ -1463,6 +1463,54 @@ class Browser(unittest.TestCase):
             trace(False)
             tracelog.clear()
 
+    def test_live_each_stretch_once(self):
+        """Dominik 2026-10-12 (pick A): rounds between language model and tools draw each stretch once, with
+        "↻ N Runden"; repeated calls of a target and the times stand beside the boxes, not on the lines."""
+        import json as _json
+        import time as _time
+        import live
+        with open(os.environ["SPEECH_SPARK_CONFIG"]) as f:
+            c = _json.load(f)
+        was = dict(c.get("logs", {}))
+        c.setdefault("logs", {}).update(live=True)
+        helpers.write_config(c)
+
+        def undo():
+            with open(os.environ["SPEECH_SPARK_CONFIG"]) as f:
+                cb = _json.load(f)
+            cb["logs"] = was
+            helpers.write_config(cb)
+            live._run.clear()
+        self.addCleanup(undo)
+        live._run.clear()
+        live._unset[0] = 0
+        t = _time.time() - 9
+        rec = live.begin("iphone", "iPhone", t=t)
+        rec.step("weiche", "weiche", t, t + .9)
+        x = t + .9
+        for name in ("home_assistant_states", "archive_search", "home_assistant_action"):
+            rec.step("llm", "qwen", x, x + 1.5)
+            rec.step("tool", name, x + 1.5, x + 1.8, ok=True)
+            x += 1.8
+        rec.step("llm", "qwen", x, x + 1.2)
+        rec.now("tool", "spark_hilfe")
+
+        async def go():
+            async with async_playwright() as p:
+                br, pg, errors = await self.page(p, 1400, 900, csp=True)
+                await pg.evaluate("goSec('live')")
+                await pg.wait_for_selector("#lvflow svg path[id^=lvr]", timeout=20000)
+                await pg.wait_for_timeout(400)
+                tips = await pg.evaluate("[...document.querySelectorAll('#lvflow path[id^=lvr]')].map(p=>p.dataset.tip.split(' · ')[1])")
+                self.assertEqual(len(tips), len(set(tips)), tips)     # each stretch once
+                text = await pg.text_content("#lvflow")
+                self.assertIn("↻ 4 Runden", text)
+                self.assertIn("2× · ", text)                          # Home Assistant twice, beside its box
+                self.assertNotIn("↩ ok", text)
+                self.assertEqual(errors, [])
+                await br.close()
+        self.run_async(go())
+
     def test_live_page_and_monitor(self):
         """Zustand → Live and the wall monitor /live (V01.0.312): the picture with the running request, its way and
         the Wächter, no text of the question, no sideways scrolling on a phone; the monitor pairs with its code
