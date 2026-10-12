@@ -69,14 +69,17 @@ function lzChip(text,cls){const c=document.createElement('span');c.className='lz
 // stays silent (boxes that were silent before); o.auth: a 401 is passed on (Ich: then the profile is signed out);
 // o.stale: false keeps the old content undimmed and o.skel: false shows no placeholders (settings forms, whose fields
 // stand there anyway); o.top: chips and the error go on top of o.at. A newer run on the same box replaces the older one.
-let LZ_SEQ=0;
+let LZ_SEQ=0,LZ_RUN=0;
+// true while no box is loading: what the browser tests wait for after opening a page (never a fixed pause; a switch
+// flipped before the settings are there would be set back by them)
+window.lzIdle=()=>LZ_RUN===0;
 async function ladeBox(box,load,o={}){if(!box)return load();
   const id=String(++LZ_SEQ),at=o.at||box,had=box.dataset.lzok==='1',made=[];box.dataset.lz=id;box.classList.add('lz-host');
   box._lzAgain=()=>ladeBox(box,load,o);
   lzErrOff(box);
   const mine=()=>box.dataset.lz===id;
   box.setAttribute('aria-busy','true');
-  let chip=null;
+  let chip=null;LZ_RUN++;
   const t1=setTimeout(()=>{if(!mine())return;
     if(had){if(o.stale!==false)box.classList.add('lz-stale');chip=lzChip(t('wird aktualisiert …','updating …'));made.push(lzPut(at,chip,true))}
     else if(o.skel!==false)made.push(lzPut(at,lzSkel(o.form,o.n),o.top))},LZ.show);
@@ -85,7 +88,7 @@ async function ladeBox(box,load,o={}){if(!box)return load();
   const t3=setTimeout(()=>{if(!mine())return;made.forEach(x=>x.remove());made.length=0;chip=null;box.classList.remove('lz-slow','lz-stale');lzErr(box,at,o,lzTimeout())},LZ.wait);
   try{const r=await load();if(mine()){box.dataset.lzok='1';lzErrOff(box)}return r}
   catch(e){if(o.auth&&e&&e.status===401)throw e;if(mine())lzErr(box,at,o,e)}
-  finally{clearTimeout(t1);clearTimeout(t2);clearTimeout(t3);made.forEach(x=>x.remove());
+  finally{LZ_RUN--;clearTimeout(t1);clearTimeout(t2);clearTimeout(t3);made.forEach(x=>x.remove());
     if(mine()){box.classList.remove('lz-stale','lz-slow');box.removeAttribute('aria-busy')}}}
 const lzErrOff=box=>box.querySelectorAll('.lz-err').forEach(e=>{if(e.closest('.lz-host')===box)(e.closest('.lz-skrow')||e).remove()});
 // the error in the box: the panel's sentence (errSay in api()), „Noch einmal“, and for the admin where to look further

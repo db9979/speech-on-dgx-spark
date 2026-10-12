@@ -62,6 +62,11 @@ class Browser(unittest.TestCase):
     def run_async(self, coro):
         return asyncio.run(coro)
 
+    async def loaded(self, pg):
+        """After opening a page: until every box it loads is there (laden.js lzIdle). A switch flipped earlier would be
+        set back by the settings arriving after it."""
+        await self.until(pg, "!!window.lzIdle&&lzIdle()")
+
     async def until(self, pg, expr, seconds=20):
         """wait_for_function evaluates a string, which the strict CSP forbids (pages with csp=True): poll instead.
         20 s by default: a GitHub runner with the whole test run's 600 profiles is much slower than a laptop."""
@@ -119,6 +124,7 @@ class Browser(unittest.TestCase):
                         over = await pg.evaluate("document.documentElement.scrollWidth-window.innerWidth")
                         self.assertLessEqual(over, 1, f"{name}/{s}: {over}px zu breit")
                     await pg.evaluate("goSec('cfg')")
+                    await self.loaded(pg)
                     for p_id in await pg.evaluate("[...document.querySelectorAll('#cfgnav button[data-p]')].map(b=>b.dataset.p)"):
                         await pg.evaluate(f"document.querySelector('#cfgnav button[data-p={p_id}]').click()")
                         await pg.wait_for_timeout(150)
@@ -639,6 +645,7 @@ class Browser(unittest.TestCase):
                 await self.until(pg, PAGE_READY)
                 await pg.evaluate("document.getElementById('wizmodal')&&(document.getElementById('wizmodal').style.display='none')")
                 await pg.evaluate("goSec('cfg')")
+                await self.loaded(pg)
                 lefts, tall, short = {}, [], []
                 for p_id in await pg.evaluate("[...document.querySelectorAll('#cfgnav button[data-p]')].map(b=>b.dataset.p)"):
                     await pg.evaluate(f"document.querySelector('#cfgnav button[data-p={p_id}]').click()")
@@ -762,6 +769,7 @@ class Browser(unittest.TestCase):
                 pg.on("dialog", lambda d: asyncio.ensure_future(answer(d)))
                 # Funktionen: "Dokumente erstellen" on while "Eigene Dokumente" is off
                 await pg.evaluate("goSec('feat')")
+                await self.loaded(pg)
                 await self.until(pg, "!!document.getElementById('chat.doc_make')&&!!document.getElementById('chat.documents')")
                 answers = [True]
                 await pg.evaluate("(()=>{const e=document.getElementById('chat.doc_make');e.checked=true;"
@@ -779,6 +787,7 @@ class Browser(unittest.TestCase):
                 # "Eigene Vorlagen" switches the whole chain after the question
                 answers = [True]
                 await pg.evaluate("goSec('who')")
+                await self.loaded(pg)
                 await self.until(pg, "typeof WHO!=='undefined'&&!!WHO&&!!document.querySelector('#whobox .wname')")
                 # (switching changes what Uitest may use, and the page may reload for that: started, not awaited,
                 # and checked on the Spark)
@@ -856,6 +865,7 @@ class Browser(unittest.TestCase):
                             await pg.click("#mkbox [data-mkdo=on]")
                             await pg.wait_for_selector("#mklist", state="visible", timeout=8000)
                             self.assertIs(profiles.settings(me).get("doc_make"), True)
+                            await self.loaded(pg)      # Ich has loaded all its boxes before the page changes
                         await pg.evaluate(f"goSec('chat');$('chatlog').appendChild(mkCard({card}))")
                         await pg.wait_for_selector(".mkcard [data-mkdo=go]", state="visible", timeout=20000)
                         await self.until(pg, "document.querySelectorAll('.mkcard [data-mk=style] option').length>2")
@@ -1159,7 +1169,7 @@ class Browser(unittest.TestCase):
                 for w, h in ((1280, 900), (390, 844)):
                     br, pg, errors = await self.page(p, w, h)
                     await pg.evaluate("goSec('cfg');document.querySelector('#cfgnav button[data-p=feat]').click()")
-                    await pg.wait_for_timeout(300)
+                    await self.loaded(pg)
                     n = await pg.evaluate("document.querySelectorAll('#pane-feat .fitem').length")
                     self.assertGreater(n, 15)
                     self.assertEqual(await pg.evaluate("document.querySelectorAll('#pane-feat .fitem.open').length"), 0)
@@ -1204,6 +1214,7 @@ class Browser(unittest.TestCase):
             async with async_playwright() as p:
                 br, pg, errors = await self.page(p, 1280, 900)
                 await pg.evaluate("goSec('cfg')")
+                await self.loaded(pg)
                 await pg.evaluate("document.querySelector('#cfgnav button[data-p=ai]').click()")
                 await pg.fill("#cfgnav .sbox input", "searxng")
                 hits = await pg.evaluate("[...document.querySelectorAll('#cfgnav .sres button b')].map(b=>b.textContent)")
@@ -1829,7 +1840,7 @@ class Browser(unittest.TestCase):
                 for name, w, h in VIEWS:
                     br, pg, errors = await self.page(p, w, h)
                     await pg.evaluate("goSec('cfg');document.querySelector('#cfgnav button[data-p=feat]').click()")
-                    await pg.wait_for_timeout(300)
+                    await self.loaded(pg)
                     await pg.evaluate("const f=$('chat.kiwix').closest('.fitem');if(!f.classList.contains('open'))f.querySelector('.fexp').click()")
                     await self.until(pg, "!!$('kxsel')&&$('kxsel').innerText.includes('deutsche und englische Wikipedia')")
                     self.assertTrue(await pg.is_hidden("#kxpick"), name)
@@ -1949,12 +1960,12 @@ class Browser(unittest.TestCase):
                 for name, w, h in VIEWS:
                     br, pg, errors = await self.page(p, w, h)
                     await pg.evaluate("goSec('feat')")
-                    await pg.wait_for_timeout(300)
+                    await self.loaded(pg)
                     self.assertTrue(await pg.evaluate("$('pane-feat').classList.contains('on')&&$('cfg').classList.contains('on')"), name)
                     self.assertFalse(await pg.evaluate("$('cfgnav').offsetParent!==null"), name)       # no settings menu here
                     self.assertTrue(await pg.evaluate("document.querySelector('nav button[data-s=feat]').classList.contains('on')"), name)
                     await pg.evaluate("goSec('cfg')")
-                    await pg.wait_for_timeout(200)
+                    await self.loaded(pg)
                     self.assertFalse(await pg.evaluate("$('pane-feat').classList.contains('on')"), name)
                     self.assertFalse(await pg.evaluate("document.querySelector('#cfgnav button[data-p=feat]').offsetParent!==null"), name)
                     await pg.evaluate("goSec('int')")
@@ -2297,6 +2308,7 @@ class Browser(unittest.TestCase):
                             await pg.evaluate(f"goSec('{s}')")
                             await check(s)
                         await pg.evaluate("goSec('cfg')")
+                        await self.loaded(pg)
                         for pid in await pg.evaluate("[...document.querySelectorAll('#cfgnav button[data-p]')].map(b=>b.dataset.p)"):
                             await pg.evaluate(f"document.querySelector('#cfgnav button[data-p={pid}]').click()")
                             await check("cfg " + pid)

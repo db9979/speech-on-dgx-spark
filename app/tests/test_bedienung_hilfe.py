@@ -360,6 +360,12 @@ class InTheBrowser(unittest.TestCase):
                     # B3: every "?" on the settings pages and in Ich belongs to a row the help knows
                     marks = set()
                     await pg.evaluate("goSec('cfg')")
+                    for _ in range(200):   # strict CSP: no wait_for_function with a string; until every box is loaded
+                        if await pg.evaluate("!!window.lzIdle&&lzIdle()"):
+                            break
+                        await pg.wait_for_timeout(100)
+                    else:
+                        self.fail("settings never loaded")
                     for p_id in await pg.evaluate("[...document.querySelectorAll('#cfgnav button[data-p]')].map(b=>b.dataset.p)"):
                         await pg.evaluate(f"document.querySelector('#cfgnav button[data-p={p_id}]').click()")
                         await pg.wait_for_timeout(250)

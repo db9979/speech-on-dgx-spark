@@ -123,11 +123,12 @@ class Frame(unittest.TestCase):
 
     async def panes(self, pg):
         await pg.evaluate("goSec('cfg')")
-        await pg.wait_for_timeout(300)
+        await pg.wait_for_function("!!window.lzIdle&&lzIdle()", timeout=20000)   # the settings are there (laden.js)
         return await pg.evaluate("[...document.querySelectorAll('#cfgnav button[data-p]')].map(b=>b.dataset.p).filter(p=>p!=='feat')")
 
     async def open_pane(self, pg, p_id):
         await pg.evaluate("goSec('cfg')")
+        await pg.wait_for_function("!!window.lzIdle&&lzIdle()", timeout=20000)
         await pg.evaluate(f"document.querySelector('#cfgnav button[data-p={p_id}]').click()")
         await pg.wait_for_timeout(250)
 
@@ -214,7 +215,7 @@ class Frame(unittest.TestCase):
                 try:
                     # the way people get there: Funktionen in the sidebar (no settings menu, the page takes the width)
                     await pg.evaluate("goSec('feat')")
-                    await pg.wait_for_timeout(400)
+                    await pg.wait_for_function("!!window.lzIdle&&lzIdle()", timeout=20000)
                     self.assertGreater(await pg.evaluate("$('pane-feat').getBoundingClientRect().width"), 700)
                     self.assertTrue(await pg.evaluate("$('pane-feat').classList.contains('fsplit')"))
                     self.assertTrue(await pg.is_visible("#fdet .fdempty"))

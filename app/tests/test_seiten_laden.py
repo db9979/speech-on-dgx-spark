@@ -79,6 +79,18 @@ class Static(unittest.TestCase):
         self.assertIn("function extrasJobs()", ex)
         self.assertNotIn("window[", ex[ex.index("function extrasJobs"):ex.index("async function showExtras")])
 
+    def test_browser_tests_wait_for_the_load_not_for_a_pause(self):
+        """After goSec('feat'|'cfg') a browser test waits for lzIdle() (every box loaded), never only for a fixed
+        pause: a switch flipped before the settings are there is set back by them (test_voraussetzungen_mit_einschalten
+        was red on main 2026-10-12)."""
+        here = os.path.dirname(os.path.abspath(__file__))
+        for name in ("test_ui_browser.py", "test_einstellungen_neu.py"):
+            lines = open(os.path.join(here, name), encoding="utf-8").read().splitlines()
+            for i, line in enumerate(lines):
+                if re.search(r"""evaluate\("goSec\('(feat|cfg)'\)"\)$""", line.strip()):
+                    nxt = lines[i + 1].strip()
+                    self.assertNotRegex(nxt, r"^await pg\.wait_for_timeout\(", f"{name}:{i + 2}")
+
     def test_pages_load_through_the_box(self):
         js = read("js", "base.js")
         body = js[js.index("function showSec(s)"):js.index("const NARROW=")]
@@ -183,8 +195,11 @@ class Browser(unittest.TestCase):
                     await pg.wait_for_selector("#calbox[aria-busy=true] .lz-sk")
                     # the other boxes do not wait for the calendar any more
                     await pg.wait_for_function("document.getElementById('factbox').dataset.lzok==='1'")
+                    # what the browser tests wait for after opening a page: not idle while one box still loads
+                    self.assertFalse(await pg.evaluate("lzIdle()"))
                     go.set()
                     await pg.wait_for_function("!document.querySelector('#calbox .lz-sk')&&!document.getElementById('calbox').hasAttribute('aria-busy')")
+                    await pg.wait_for_function("lzIdle()")
                     # opened again: the old data stays, dimmed, with „wird aktualisiert …“
                     go2 = await self.hold(pg, "**/api/profile/calendar")
                     await pg.evaluate("openMe('calbox');0")   # not awaited: the page goes on loading
