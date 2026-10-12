@@ -241,10 +241,11 @@ class HomeAssistant(unittest.TestCase):
         evs = ask(a, 'TOOL home_assistant {"command": "Schalte den Fernseher im Wohnzimmer aus"}')
         self.assertTrue(any(e["type"] == "home_done" and e["ok"] for e in evs), evs)
         self.assertEqual(helpers.HA_CALLS[-1], {"entity_id": "media_player.samsung", "service": "media_player.turn_off"})
-        # unclear which device: nothing switched, the candidates go back to the model
+        # unclear which device: nothing switched, the candidates go back to the model (the panel runs this
+        # sentence itself, so they come by name: see test_tv_in_living_room_with_code_word)
         n = len(helpers.HA_CALLS)
         res = answer(ask(a, 'TOOL home_assistant {"command": "Schalte den Fernseher aus"}'))
-        self.assertIn("media_player.sz_tv", res)
+        self.assertIn("TV (Schlafzimmer)", res)
         self.assertEqual(len(helpers.HA_CALLS), n + 1)  # only the Assist attempt
 
     def test_panel_runs_plain_commands(self):
@@ -282,6 +283,39 @@ class HomeAssistant(unittest.TestCase):
         ask(a, "Apollo 13")  # the waiting command ran once, not again
         self.assertEqual(len(helpers.HA_CALLS), n)
         a.put("/api/profile/homeassistant/code", json={"code": ""})
+
+    def test_tv_in_living_room_with_code_word(self):
+        # Dominik 2026-10-12 (V01.0.453): "Schalte den Fernseher im Wohnzimmer ein, Codewort ..." at the speaker.
+        # A box without device class in the same room fitted "Fernseher" by its kind only, the panel switched
+        # nothing and its text sent the model to home_assistant_action, a tool it was not offered.
+        a = profile("Dora")
+        a.put("/api/profile/homeassistant", json={"url": f"http://127.0.0.1:{helpers.HA_PORT}", "token": helpers.HA_TOKEN})
+        a.put("/api/profile/homeassistant/code", json={"code": "Apollo dreizehn"})
+        import homeassistant
+        homeassistant._VERIFY_WAIT = 0.05
+        box = {"entity_id": "media_player.wz_appletv", "state": "off", "attributes": {"friendly_name": "Apple TV Wohnzimmer"}}
+        helpers.HA_STATES.append(box)
+        tv = next(x for x in helpers.HA_STATES if x["entity_id"] == "media_player.samsung")
+        tv["state"] = "off"
+        try:
+            n = len(helpers.LLM_CALLS)
+            res = answer(ask(a, "Schalte den Fernseher im Wohnzimmer ein Codewort Apollo dreizehn"))
+            self.assertEqual(helpers.HA_CALLS[-1], {"entity_id": "media_player.samsung", "service": "media_player.turn_on"})
+            self.assertEqual(tv["state"], "on")
+            self.assertEqual(box["state"], "off")
+            self.assertIn("done", res)
+            self.assertNotIn("Apollo", json.dumps(helpers.LLM_CALLS[n:]))   # the code word never reaches the model
+            # still unclear (TVs in two rooms, no room said): nothing switched, the model is sent to no tool
+            calls = len(helpers.HA_CALLS)
+            res = answer(ask(a, "Schalte den Fernseher aus Codewort Apollo dreizehn"))
+            self.assertEqual(len(helpers.HA_CALLS), calls + 1)   # only the Assist attempt
+            self.assertNotIn("home_assistant_action", res)
+            self.assertNotIn("media_player.", res)   # names, not ids
+            self.assertIn("Call no tool", res)
+            self.assertIn("Samsung The Frame", res)
+        finally:
+            helpers.HA_STATES.remove(box)
+            a.put("/api/profile/homeassistant/code", json={"code": ""})
 
     def test_from_ha_mcp(self):
         a = profile("Moritz")

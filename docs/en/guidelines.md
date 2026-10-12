@@ -236,6 +236,7 @@ The complete list is the **[Security checklist](security-checklist.md)** (about 
 - **The intent switch** reads only the person's own last message. It only restricts and writes one line `weiche:` per turn. (M [[funktionswahl-plan]])
 - **Misassignments:** correct the rule in `intent.py` and add the sentence to `intent_bench.py`. (M; 🧪 test_intent)
 - **Fix model errors in the panel** (NEED_TOOLS, answer check), not only in the prompt. Always add a self-test. (M [[answer-check-and-fixes]])
+- **Texts for the model name only tools offered in this answer.** Otherwise it calls a tool it was not offered (Logs → Requests: "unbekannt"). (M [[ha-states-tool]]; 🧪 test_panel)
 - **Dates** in quality cases relative to today, never fixed. (M)
 - **Thinking text:** every new LLM call that can run with thinking uses `common.no_think`, not its own `<think>` regex. (M [[think-tag-doppelt]])
 - **Local first, then external:** documents, Kiwix, history. Data stays in the LAN as far as possible. No second model just for a sub-feature (GPU memory). Creating documents works offline. (P erst-lokal, hilfe-besser, praesentationen-professionell)

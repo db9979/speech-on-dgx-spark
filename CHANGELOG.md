@@ -2,6 +2,7 @@
 
 Every version in one line, newest first (taken from the commit messages, so some lines are German, some English). Older entries have no version number.
 
+- **V01.0.461** · 2026-10-12 · Fernseher per Codewort schalten: passt ein Schaltbefehl auf mehrere Geräte, gewinnt das Gerät, zu dem Name, Raum oder Geräteklasse passen; bleibt es unklar, nennt der Spark die Geräte mit Namen und das Modell ruft kein nicht angebotenes Werkzeug mehr
 - **V01.0.460** · 2026-10-12 · Begleiter (Windows, Mac): Mikrofon-Knopf in jedem freien Textfeld (Antwort entwerfen, Text verbessern, Bildschirm fragen) mit Teil Diktieren; Text wird nur eingefügt, nie in Codewort-Feldern; Knopf-Beschriftungen brechen nicht mehr mitten im Wort um
 - **V01.0.459** · 2026-10-12 · Seiten zeigen, dass sie laden: Balken oben, Platzhalter in Kästen, „dauert länger“, Fehler mit „Noch einmal“, nach 30 s Hinweis, Band „Spark antwortet nicht“; Ich lädt gleichzeitig und meldet bei einem Kasten-Fehler nicht mehr ab; langsame Seiten in Logs → Diagnose
 - **V01.0.458** · 2026-10-12 · GitHub-Token nur zum Lesen unter Einstellungen → Update: 5000 statt 60 GitHub-Abfragen pro Stunde für Update-Prüfung, Geräte-Updates und Downloads; abgelehnter Token → ohne ihn weiter

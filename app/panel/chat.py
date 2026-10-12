@@ -1527,7 +1527,7 @@ async def _answer(request, turn):
                 await out.put({"type": "home", "command": ha_direct})
                 try:
                     ok, answer, targets = await homeassistant.command(
-                        ha, ha_direct, "en" if guess_language(ha_direct) == "English" else "de")
+                        ha, ha_direct, "en" if guess_language(ha_direct) == "English" else "de", panel=True)
                 except (httpx.HTTPError, ValueError) as e:  # also a proxy page instead of JSON
                     print(f"homeassistant: not reachable ({type(e).__name__})", flush=True)
                     ok, targets = False, []   # said out loud: a sentence, never the name of the error (B2)
@@ -1540,7 +1540,8 @@ async def _answer(request, turn):
                 msgs += [{"role": "assistant", "content": None, "tool_calls": [{"id": "ha0", "type": "function",
                           "function": {"name": "home_assistant", "arguments": json.dumps({"command": ha_direct})}}]},
                          {"role": "tool", "tool_call_id": "ha0", "content": ("Home Assistant: " if ok else
-                          "Home Assistant failed: ") + answer + " Say only this result, in one or two short sentences."}]
+                          "Home Assistant failed: ") + answer + " Say only this result, in one or two short sentences."
+                          + ("" if ok else " Call no tool for this: nothing more can be switched in this answer.")}]
             if ha_read:
                 await out.put({"type": "home", "command": "? " + messages[-1]["content"][:80]})
                 msgs += [{"role": "assistant", "content": None, "tool_calls": [{"id": "ha1", "type": "function",

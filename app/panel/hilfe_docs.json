@@ -1357,7 +1357,15 @@
 "file": "Assistent und Oberfläche",
 "head": "Sprach-Chat",
 "title": "Home Assistant",
-"text": ", „Apollo 13“ = „Apollo dreizehn“). Abfragen brauchen kein Codewort. Außerdem (Ideen aus ha-mcp): Verlauf („Wie warm war es gestern im Bad?“, „Wann ging die Haustür zuletzt auf?“), mehrere Geräte auf einmal („Alle Lichter im Wohnzimmer aus“, jedes einzeln geprüft; ein unbekannter Raum schaltet nie das ganze Haus), fehlertolerante Gerätesuche („Samsong“) und Listen wie die Einkaufsliste (vorlesen, hinzufügen, abhaken; Ändern mit Codewort). Fragen nach Werten, Zuständen, Zonen und wo jemand ist liest der Assistent dagegen direkt (/api/states): Er sieht alle Geräte, Sensoren, Zonen und Personen, die der Benutzer des Tokens sehen darf, auch ohne Freigabe. Die Räume (Bereiche) kann Home Assistant nur einem Admin-Token verraten; ohne Admin findet der Assistent Geräte nur über ihren Namen. Nur dieses Profil kann sein Home Assistant nutzen: Gäste nie, und eine per Sprechererkennung erkannte Stimme an einem fremden Gerät auch nicht. Der Token wird vor dem Speichern geprüft, bleibt auf dem Spark (users/<id>/homeassistant.json, Rechte 0600) und geht nie zurück an den Browser."
+"text": ", „Apollo 13“ = „Apollo dreizehn“). Abfragen brauchen kein Codewort. Außerdem (Ideen aus ha-mcp): Verlauf („Wie warm war es gestern im Bad?“, „Wann ging die Haustür zuletzt auf?“), mehrere Geräte auf einmal („Alle Lichter im Wohnzimmer aus“, jedes einzeln geprüft; ein unbekannter Raum schaltet nie das ganze Haus), fehlertolerante Gerätesuche („Samsong“) und Listen wie die Einkaufsliste (vorlesen, hinzufügen, abhaken; Ändern mit Codewort). Fragen nach Werten, Zuständen, Zonen und wo jemand ist liest der Assistent dagegen direkt (/api/states): Er sieht alle Geräte, Sensoren, Zonen und Personen, die der Benutzer des Tokens sehen darf, auch ohne Freigabe. Die Räume (Bereiche) kann Home Assistant nur einem Admin-Token verraten; ohne Admin findet der Assistent Geräte nur über ihren Namen. Nur dieses Profil kann sein Home Assistant nutzen: Gäste nie, und eine per Sprechererkennung erkannte Stimme an einem fremden Gerät auch nicht. Der Token wird vor dem Speichern geprüft, bleibt auf dem Spark (users/<id>/homeassistant.json, Rechte 0600) und geht nie zurück an den Browser. Passen mehrere Geräte auf einen Schaltbefehl, gewinnt das Gerät, zu dem Name, Raum oder Geräteklasse passen, vor einem"
+},
+{
+"lang": "de",
+"src": "assistent",
+"file": "Assistent und Oberfläche",
+"head": "Sprach-Chat",
+"title": "Home Assistant",
+"text": ", das nur der Art nach passt („Fernseher im Wohnzimmer“ ist der Fernseher dort, nicht die Apple-TV-Box daneben). Bleibt es unklar, schaltet der Spark nichts und nennt die passenden Geräte mit Namen; das Modell bekommt dann kein Schaltwerkzeug (seit V01.0.461)."
 },
 {
 "lang": "de",
@@ -4525,7 +4533,15 @@
 "file": "Assistant and panel",
 "head": "Voice chat",
 "title": "Home Assistant",
-"text": "how warm was it in the bathroom yesterday?\"), several devices at once (\"all lights in the living room off\", each checked; an unknown room never switches the whole home), typo-tolerant device search and to-do lists such as the shopping list (read, add, tick off; changes need the code word). Questions about values, states, zones and where someone is are read directly (/api/states) instead: the assistant sees every device, sensor, zone and person the token's user may see, exposed or not. Home Assistant tells rooms (areas) only to an admin token; without admin rights devices are found by their names only. Only that profile can use its Home Assistant: guests never, and a voice recognized by speaker identification at someone else's device neither. The token is checked before saving, stays on the Spark (users/<id>/homeassistant.json, mode 0600) and is never sent back to the browser."
+"text": "how warm was it in the bathroom yesterday?\"), several devices at once (\"all lights in the living room off\", each checked; an unknown room never switches the whole home), typo-tolerant device search and to-do lists such as the shopping list (read, add, tick off; changes need the code word). Questions about values, states, zones and where someone is are read directly (/api/states) instead: the assistant sees every device, sensor, zone and person the token's user may see, exposed or not. Home Assistant tells rooms (areas) only to an admin token; without admin rights devices are found by their names only. Only that profile can use its Home Assistant: guests never, and a voice recognized by speaker identification at someone else's device neither. The token is checked before saving, stays on the Spark (users/<id>/homeassistant.json, mode 0600) and is never sent back to the browser. When several devices fit a switching command, the device whose name, room or device class fits wins over one that only fits by its kind (\"TV in the living room\" is the TV there, not the Apple TV box next to it). If it stays unclear, the Spark switches nothing and names the fitting devices; the model then gets "
+},
+{
+"lang": "en",
+"src": "assistant",
+"file": "Assistant and panel",
+"head": "Voice chat",
+"title": "Home Assistant",
+"text": "no switching tool (since V01.0.461)."
 },
 {
 "lang": "en",

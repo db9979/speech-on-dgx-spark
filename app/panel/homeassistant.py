@@ -275,16 +275,21 @@ async def check(item):
     return {"ok": True}
 
 
-async def command(item, text, language="de"):
+async def command(item, text, language="de", panel=False):
     """Hands one spoken command to Home Assistant's Assist; when Assist does not know the device, finds
     it among all states and switches it directly (see fallback). Whatever Assist reports, the states of
-    the devices it names are read back afterwards, and only that counts. Returns (ok, answer, targets)."""
+    the devices it names are read back afterwards, and only that counts. Returns (ok, answer, targets).
+    panel: the panel ran the command itself, so the model has no switching tool in this answer and the
+    text never sends it to one (it called a tool it was not offered, Dominik 2026-10-12)."""
     notaus.stop("aktion")   # the Notaus holds every action off (notaus.py)
     ok, speech, targets, unknown, ids = await _assist(item, text, language)
     if unknown:
-        done, more = await fallback(item, text)
+        done, more = await fallback(item, text, panel)
         if more:
             return done, more, []
+        if panel:
+            return False, speech + " (Home Assistant did not find this device. Nothing was switched. Ask the user " \
+                "for the device's name as Home Assistant shows it.)", []
         return False, speech + " (Assist did not find this device or did not understand the sentence; it only " \
             "knows devices exposed to Assist. Look the device up with home_assistant_states and switch it with " \
             "home_assistant_action.)", []
@@ -300,7 +305,8 @@ async def command(item, text, language="de"):
     if not ids:
         _log("assist: success without entity ids, cannot verify", repr(text[:80]))
         return False, ("Assist answered '" + speech + "' but named no device, so the result could not be checked. "
-                       "Look the device up with home_assistant_states and use home_assistant_action."), targets
+                       + ("Say that it could not be checked." if panel else
+                          "Look the device up with home_assistant_states and use home_assistant_action.")), targets
     async with _client(item) as c:
         checked = await _verify(c, item, ids, service, {})
     return _report(checked, service, "Assist")[0], _report(checked, service, "Assist")[1], targets
@@ -684,11 +690,24 @@ def _pick(all_states, areas, names, words):
     full = [x for x in _score(all_states, areas, names, useful) if x[0] == len(useful)]
     if not full:
         return None, []
-    best = max(x[1] for x in full)
-    top = [x for x in full if x[1] == best]
+    # a word that fits only because of the general kind ("Fernseher" for every media player without a
+    # device class) weighs less than one that fits the name, room, entity id or device class: "Fernseher im
+    # Wohnzimmer" is the TV there, not the Apple TV box next to it (Dominik 2026-10-12)
+    strong = {id(x): sum(1 for w in useful if _hit(w, _strong(x[2], names, areas))) for x in full}
+    best = max(strong.values())
+    full_top = [x for x in full if strong[id(x)] == best]
+    best = max(x[1] for x in full_top)
+    top = [x for x in full_top if x[1] == best]
     prio = min(_PRIMARY.get(x[2]["entity_id"].split(".")[0], 1) for x in top)
     top = [x for x in top if _PRIMARY.get(x[2]["entity_id"].split(".")[0], 1) == prio]
     return (top[0][2] if len(top) == 1 else None), full
+
+
+def _strong(s, names, areas):
+    """What names one device itself: name, entity id, room and device class, not the general kind."""
+    dc = (s.get("attributes") or {}).get("device_class") or ""
+    eid = s["entity_id"]
+    return _norm(" ".join([names[eid], _norm(eid), _norm(areas.get(eid, "")), _CLASS.get(dc, ""), dc]))
 
 
 def _name(s):
@@ -710,7 +729,7 @@ async def mentions_device(item, text):
     return any(_hit(w, h) for w in _correct(words, hays) for h in hays)
 
 
-async def fallback(item, text):
+async def fallback(item, text, panel=False):
     """When Assist does not know a device: finds it among all states and switches it when the words
     name one device and a plain on/off/open/close; otherwise lists the candidates. (done, text)."""
     words = [w for w in re.findall(r"\w+", _norm(clean_command(text))) if len(w) > 1]
@@ -739,6 +758,11 @@ async def fallback(item, text):
     cands = [_line(x[2], names, areas.get(x[2]["entity_id"], "")) for x in (full or scored)[:8]]
     if not cands:
         return False, ""
+    if panel:   # by name only: the user picks, saying the command again with the name
+        return False, ("Nothing switched: several devices fit. Ask the user which one they mean, by the names "
+                       "below (never the ids), and say they can repeat the command with that name:\n"
+                       + "\n".join(_name(x[2])[:60] + (f" ({areas[x[2]['entity_id']]})" if areas.get(x[2]["entity_id"]) else "")
+                                    for x in (full or scored)[:8]))
     return False, ("Nothing switched yet. Candidates (switch the right one with home_assistant_action and its "
                    "exact entity id, or ask the user which one; "
                    + ("rooms unknown: the token is no administrator" if not areas else "rooms known") + "):\n"

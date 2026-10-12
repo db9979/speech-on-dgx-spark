@@ -236,6 +236,7 @@ Die vollständige Liste ist die **[Sicherheits-Checkliste](sicherheits-checklist
 - **Die Weiche** liest nur die eigene letzte Nachricht. Sie schränkt nur ein und schreibt pro Zug eine Zeile `weiche:`. (M [[funktionswahl-plan]])
 - **Fehlzuordnungen:** Regel in `intent.py` korrigieren und den Satz in `intent_bench.py` aufnehmen. (M; 🧪 test_intent)
 - **Modellfehler im Panel beheben** (NEED_TOOLS, Antwortprüfung), nicht nur im Prompt. Dazu immer einen Selbsttest. (M [[answer-check-and-fixes]])
+- **Texte an das Modell nennen nur Werkzeuge, die in dieser Antwort angeboten sind.** Sonst ruft es ein nicht angebotenes Werkzeug (Logs → Anfragen: „unbekannt“). (M [[ha-states-tool]]; 🧪 test_panel)
 - **Datumsangaben** in Qualitätsfällen relativ zu heute, nie fest. (M)
 - **Denktext:** Jeder neue LLM-Aufruf, der mit Denken laufen kann, nimmt `common.no_think`, nicht die eigene `<think>`-Regex. (M [[think-tag-doppelt]])
 - **Erst lokal, dann extern:** Dokumente, Kiwix, Verlauf. Daten bleiben möglichst im LAN. Kein zweites Modell nur für eine Teilfunktion (GPU-Speicher). Dokumente erstellen geht offline. (P erst-lokal, hilfe-besser, praesentationen-professionell)
