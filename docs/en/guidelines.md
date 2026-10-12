@@ -64,6 +64,7 @@ This list belongs to every commit that adds or changes a feature, a tool, a serv
 | 19 | **Tests** | A self-test for every protection rule. A browser test for every new page (320, 390 and 1280 px). A check item at the bottom of `pruefung/praxistest-tars-2.md` in the project folder (A = admin, P = profile). | 📝 (field test), see part 9 |
 | 20 | **Docs** | A line in CHANGELOG and README (de and en), details in `docs/de` and `docs/en`. New general rules go into this guideline. | 🧪 test_richtlinie (Versions, Guideline), test_changelog |
 | 21 | **Security according to the state of the art** | The change is checked against the part "State of the art" of the security checklist (cryptography, login, headers, supply chain, LLM risks). | 📝 |
+| 22 | **History on every device** | A new channel that answers for a profile keeps question and answer via `profiles.append_convo` (its own conversation per day like Siri, Telegram, the watch), never via `save_convo` with an old copy. Devices send only new messages (`PUT /api/profile/convos` with `add`); only deleting replaces the copy. Open pages fetch changes via `?since=`. Guests get no history on the Spark. | 🧪 test_verlauf_sync |
 
 **Coming with work in progress** (applies as soon as the version is on main; the thread then extends this table and the test):
 
@@ -76,7 +77,7 @@ This list belongs to every commit that adds or changes a feature, a tool, a serv
 | **Static files** | Every static route and every public file answers; new short paths pass the request on. | in force since V01.0.442, 🧪 test_statische_routen |
 | **Background models** | The display says "working" only while something is really being computed, otherwise "Standby" (loaded or not); sharing a running model does not extend its run time and never starts it (`docembed.embed(..., keep=False)`); the stop check also runs during a Notaus and after errors. | applies since V01.0.444, 🧪 test_wissen.Worker |
 
-**Planned, not yet approved** (no rule): loading and error state per box with a time limit (plan `seiten-laden.md`), sync rules for history on all devices, asking before GitHub reports (plan `frage-vor-meldung.md`).
+**Planned, not yet approved** (no rule): loading and error state per box with a time limit (plan `seiten-laden.md`), instant sync and read state for the history (plan `verlauf-sync.md`), asking before GitHub reports (plan `frage-vor-meldung.md`).
 
 ---
 

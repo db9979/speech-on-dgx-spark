@@ -136,6 +136,11 @@ class Job:
         self.reported = False
         self.mark = None   # "mail" / "outside": the answer was made from outside text
 
+    def ping(self):
+        # sat under mark_of from V01.0.403 on: every watch answer stopped with an error at its first piece
+        self.changed.set()
+        self.changed = asyncio.Event()
+
 
 # Answers made from outside text, by a hash of their text: the watch app sends its history back without
 # marks, so the panel finds them here and the next turn starts locked (chat_turn.prepare)
@@ -159,10 +164,6 @@ def remember_mark(job):
 def mark_of(text):
     hit = MARKED.get(_key(text))
     return hit[1] if hit and hit[0] >= time.time() else None
-
-    def ping(self):
-        self.changed.set()
-        self.changed = asyncio.Event()
 
 
 JOBS: dict[str, Job] = {}

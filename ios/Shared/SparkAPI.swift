@@ -471,13 +471,13 @@ struct SparkAPI {
         }
     }
 
-    /// Adds or replaces one conversation in the profile's list.
+    /// Adds new messages to one conversation in the profile's list (made if new; what another device added stays).
+    /// "add" instead of "msgs": an older Spark refuses it rather than replacing the conversation.
     func saveConvo(id: String, title: String, msgs: [[String: Any]]) async throws {
         var r = request("api/profile/convos", method: "PUT")
         r.setValue("application/json", forHTTPHeaderField: "Content-Type")
         r.httpBody = try JSONSerialization.data(withJSONObject: [
-            "id": id, "title": String(title.prefix(80)), "msgs": msgs,
-            "updated": Int(Date().timeIntervalSince1970 * 1000)])
+            "id": id, "title": String(title.prefix(80)), "add": msgs] as [String: Any])
         let (data, response) = try await URLSession.shared.data(for: r)
         try Self.check(data, response)
     }

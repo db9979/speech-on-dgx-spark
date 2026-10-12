@@ -64,6 +64,7 @@ Diese Liste gehört zu jedem Commit, der eine Funktion, ein Werkzeug, einen Dien
 | 19 | **Tests** | Für jede Schutzregel ein Selbsttest. Ein Browser-Test für jede neue Seite (320, 390 und 1280 px). Ein Prüfpunkt unten in `pruefung/praxistest-tars-2.md` im Projektordner (A = Admin, P = Profil). | 📝 (Praxistest), siehe Teil 9 |
 | 20 | **Doku** | Eine Zeile in CHANGELOG und README (de und en), Details in `docs/de` und `docs/en`. Neue allgemeine Regeln kommen in diese Richtlinie. | 🧪 test_richtlinie (Versions, Guideline), test_changelog |
 | 21 | **Sicherheit nach Stand der Technik** | Die Änderung wird gegen den Teil „Stand der Technik“ der Sicherheits-Checkliste geprüft (Kryptografie, Anmeldung, Header, Lieferkette, LLM-Risiken). | 📝 |
+| 22 | **Verlauf auf allen Geräten** | Ein neuer Kanal, der für ein Profil antwortet, legt Frage und Antwort über `profiles.append_convo` ab (eigenes Tagesgespräch wie Siri, Telegram, Uhr), nie über `save_convo` mit einer alten Kopie. Geräte schicken nur neue Nachrichten (`PUT /api/profile/convos` mit `add`), nur Löschen ersetzt die Kopie. Offene Seiten holen Neues über `?since=`. Gäste bekommen keinen Verlauf auf dem Spark. | 🧪 test_verlauf_sync |
 
 **Kommt mit laufenden Umsetzungen dazu** (gilt, sobald die Version auf main ist; der Thread ergänzt dann diese Tabelle und den Test):
 
@@ -76,7 +77,7 @@ Diese Liste gehört zu jedem Commit, der eine Funktion, ein Werkzeug, einen Dien
 | **Statische Dateien** | Jede statische Route und jede öffentliche Datei antwortet; neue Kurzwege geben den Request weiter. | gilt seit V01.0.442, 🧪 test_statische_routen |
 | **Hintergrundmodelle** | Die Anzeige sagt „arbeitet“ nur, solange wirklich gerechnet wird, sonst „Standby“ (geladen oder nicht); Mitnutzen eines laufenden Modells verlängert keine Laufzeit und startet es nie (`docembed.embed(..., keep=False)`); die Stopp-Prüfung läuft auch bei Notaus und nach Fehlern. | gilt seit V01.0.444, 🧪 test_wissen.Worker |
 
-**Geplant, noch nicht freigegeben** (keine Regel): Lade- und Fehlerzustand pro Kasten mit Zeitlimit (Plan `seiten-laden.md`), Sync-Regeln für Verlauf auf allen Geräten, Rückfrage vor GitHub-Meldungen (Plan `frage-vor-meldung.md`).
+**Geplant, noch nicht freigegeben** (keine Regel): Lade- und Fehlerzustand pro Kasten mit Zeitlimit (Plan `seiten-laden.md`), Sofort-Abgleich und Lesestand für den Verlauf (Plan `verlauf-sync.md`), Rückfrage vor GitHub-Meldungen (Plan `frage-vor-meldung.md`).
 
 ---
 

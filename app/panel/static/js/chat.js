@@ -401,7 +401,7 @@ $('chatstop').onclick=()=>{stopListening(true);stopAnswer();setTalk();chatSay(t(
 $('searchtest').onclick=async()=>{$('searchmsg').textContent=t('Teste …','Testing …');
   try{const r=await (await api('/api/search-test?url='+encodeURIComponent($('chat.search_url').value.trim()))).json();$('searchmsg').textContent=`${r.results} ${t('Treffer in','results in')} ${r.seconds} s: ${r.first.map(x=>x.title).join(' · ').slice(0,120)}`}
   catch(e){$('searchmsg').innerHTML=`<span class="err">${esc(e.message)}</span>`}};
-$('chatnew').onclick=()=>{stopListening(true);stopAnswer();openConvo(null);setTalk();chatSay(t('Bereit.','Ready.'))};
+$('chatnew').onclick=()=>{stopListening(true);stopAnswer();openConvo(null);chat.fresh=true;setTalk();chatSay(t('Bereit.','Ready.'))};
 // Conversations are kept in this browser (localStorage), at most 30, newest first.
 // Conversations stay in this browser, kept apart per profile (guests: "convos").
 let PROFILE=null;
@@ -413,6 +413,12 @@ const convos={cache:[],
   put(c){if(PROFILE){this.cache=[c,...this.cache.filter(x=>x.id!==c.id)];
       api('/api/profile/convos',{method:'PUT',headers:{'Content-Type':'application/json'},body:JSON.stringify(c)}).catch(()=>{})}
     else this.local([c,...this.load().filter(x=>x.id!==c.id)])},
+  // only the new messages: the Spark adds them to its copy, so what another device (phone, iPhone app) added
+  // to the same conversation meanwhile stays; the answer is the conversation as the Spark has it now
+  async add(c,news){this.cache=[c,...this.cache.filter(x=>x.id!==c.id)];
+    try{const d=await (await api('/api/profile/convos',{method:'PUT',headers:{'Content-Type':'application/json'},
+      body:JSON.stringify({id:c.id,title:c.title,add:news})})).json();
+      if(d&&d.item){this.cache=[d.item,...this.cache.filter(x=>x.id!==d.item.id)];return d.item}}catch{}return null},
   del(id){if(PROFILE){this.cache=this.cache.filter(x=>x.id!==id);api('/api/profile/convos/'+encodeURIComponent(id),{method:'DELETE'}).catch(()=>{})}
     else this.local(this.load().filter(x=>x.id!==id))},
   async sync(){if(!PROFILE){this.cache=[];return}
@@ -420,15 +426,41 @@ const convos={cache:[],
     let old=[];try{old=JSON.parse(localStorage.getItem('convos:'+PROFILE.id)||'[]')}catch{}
     for(const c of old)await api('/api/profile/convos',{method:'PUT',headers:{'Content-Type':'application/json'},body:JSON.stringify(c)}).catch(()=>{});
     try{localStorage.removeItem('convos:'+PROFILE.id)}catch{}
-    try{this.cache=await (await api('/api/profile/convos')).json()}catch{this.cache=[]}}};
-function saveConvo(){if(!chat.msgs.length)return;
+    try{this.cache=await (await api('/api/profile/convos')).json();this.at=Date.now()}catch{this.cache=[]}},
+  // what changed on other devices since the last look (deleted ones disappear); false when nothing came back
+  async fresh(){if(!PROFILE)return false;const since=Math.max(0,...this.cache.map(x=>x.updated||0));
+    try{const d=await (await api('/api/profile/convos?since='+since)).json();if(!d||!Array.isArray(d.items))return false;
+      const ids=new Set(d.ids||[]),got=new Set(d.items.map(x=>x.id));
+      this.cache=[...d.items,...this.cache.filter(x=>ids.has(x.id)&&!got.has(x.id))].sort((a,b)=>b.updated-a.updated);this.at=Date.now();return true}
+    catch{return false}}};
+// "whole": the conversation as it is here replaces the Spark's copy (after deleting messages); otherwise only
+// the messages not yet saved (chat.saved counts them) are added there
+function saveConvo(whole){if(!chat.msgs.length)return;
   if(!chat.cid)chat.cid=Date.now().toString(36);const first=chat.msgs.find(m=>m.role==='user');
-  convos.put({id:chat.cid,title:(first?first.content:'').slice(0,60),updated:Date.now(),msgs:chat.msgs.slice(-60)});fillConvos()}
+  const c={id:chat.cid,title:(first?first.content:'').slice(0,60),updated:Date.now(),msgs:chat.msgs.slice(-60)};
+  const news=chat.msgs.slice(Math.min(chat.saved||0,chat.msgs.length));chat.saved=chat.msgs.length;
+  if(!PROFILE||whole===true){convos.put(c);fillConvos();return}
+  if(!news.length){fillConvos();return}
+  const cid=chat.cid;convos.add(c,news).then(item=>{fillConvos();if(item&&chat.cid===cid)convoAdopt(item)})}
+// The Spark's copy of the open conversation has messages this page does not show (another device asked in
+// it): shown, unless an answer or a recording is running right now (then at the next look).
+function convoAdopt(c){if(chat.ctrl||chat.rec||!c||!Array.isArray(c.msgs))return;const loc=chat.msgs.slice(-60),a=c.msgs.at(-1),b=loc.at(-1);
+  if(c.msgs.length===loc.length&&(!a||!b||(a.role===b.role&&a.content===b.content)))return;
+  const top=$('chatlog').scrollTop;openConvo(c.id,chat.picked);if(c.msgs.length<loc.length)$('chatlog').scrollTop=top}
+// Coming back to this page (and every 30 s while it is in front): conversations from other devices appear
+// without reloading; the open conversation shows what was added elsewhere.
+async function convoLook(force){if(!PROFILE||document.hidden||(!force&&Date.now()-(convos.at||0)<25000))return;
+  if(!await convos.fresh())return;fillConvos();if(chat.ctrl||chat.rec)return;
+  const c=chat.cid&&convos.load().find(x=>x.id===chat.cid);
+  if(c)convoAdopt(c);else if(chat.cid&&!chat.msgs.length)openConvo(null);
+  else if(!chat.cid&&!chat.msgs.length&&!chat.fresh){const id=latestConvo();if(id)openConvo(id)}}
+document.addEventListener('visibilitychange',()=>{if(!document.hidden)convoLook(true)});
+setInterval(()=>convoLook(false),30000);
 function fillConvos(){const l=convos.load(),d=x=>new Date(x).toLocaleString(L==='en'?'en-GB':'de-DE',{day:'2-digit',month:'2-digit',hour:'2-digit',minute:'2-digit'});
   $('convosel').innerHTML=(chat.cid?'':`<option value="">${t('Neues Gespräch','New conversation')}</option>`)+
     l.map(c=>`<option value="${c.id}"${c.id===chat.cid?' selected':''}>${d(c.updated)} · ${esc(c.title||'…')}</option>`).join('');
   $('convodel').disabled=!chat.cid}
-function openConvo(id,picked){const c=id&&convos.load().find(x=>x.id===id);chat.cid=c?c.id:null;chat.picked=!!(c&&picked);chat.msgs=c?c.msgs.slice():[];
+function openConvo(id,picked){const c=id&&convos.load().find(x=>x.id===id);chat.cid=c?c.id:null;chat.picked=!!(c&&picked);chat.msgs=c?c.msgs.slice():[];chat.saved=chat.msgs.length;chat.fresh=false;
   $('chatlog').innerHTML='';$('chattiming').textContent='';chat.msgs.forEach(m=>deletable(chatLog(m.role,m.content),m));fillConvos()}
 // Speaks a text with this profile's voice (reminders, "read again"); Stop and barge-in end it.
 async function sayText(text){stopAnswer();const ctrl=new AbortController();chat.ctrl=ctrl;chat.firstPlay=null;chat.gaps=[];chat.blocks=null;chat.stalls=0;setTalk();chatSay(t('Spricht …','Speaking …'));
@@ -457,7 +489,7 @@ function deleteMsg(d){if(chat.ctrl||chat.rec)return;   // not while an answer is
   if(i>=0&&chat.msgs[i].role==='user'&&chat.msgs[i+1]&&chat.msgs[i+1].role==='assistant')gone.add(chat.msgs[i+1]);
   chat.msgs=chat.msgs.filter(m=>!gone.has(m));
   for(const x of [...$('chatlog').children])if(x===d||gone.has(x._m))x.remove();
-  if(chat.msgs.length)saveConvo();else if(chat.cid){convos.del(chat.cid);openConvo(null)}}
+  if(chat.msgs.length)saveConvo(true);else if(chat.cid){convos.del(chat.cid);openConvo(null)}}
 $('convosel').onchange=()=>{stopListening(true);stopAnswer();openConvo($('convosel').value||null,true);setTalk();chatSay(t('Bereit.','Ready.'))};
 $('convodel').onclick=()=>{if(!chat.cid||!confirm(t('Dieses Gespräch löschen?','Delete this conversation?')))return;
   convos.del(chat.cid);stopListening(true);stopAnswer();openConvo(null)};

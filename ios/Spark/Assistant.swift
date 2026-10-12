@@ -85,6 +85,9 @@ final class Conversation: ObservableObject {
     private let net = NetWatch()
     /// the id under which this conversation is kept in the profile's list (the panel's Protokoll)
     private(set) var convoId = Conversation.newId()
+    /// how many of the messages the Spark's copy already has: only the ones after them are sent (added there),
+    /// so what another device added to the same conversation meanwhile stays
+    private var saved = 0
 
     init() {
         let w = wake
@@ -301,6 +304,7 @@ final class Conversation: ObservableObject {
     private func fresh() {
         messages = []
         convoId = Self.newId()
+        saved = 0
         labelShown = false
     }
 
@@ -314,6 +318,7 @@ final class Conversation: ObservableObject {
             return Message(role: role, text: text, mark: mark)
         }
         convoId = c.id
+        saved = messages.count
         attachment = nil
         labelShown = false
         error = nil
@@ -523,13 +528,15 @@ final class Conversation: ObservableObject {
 
     /// The conversation into the profile's list (the photo's or document's text never goes there).
     private func save(_ api: SparkAPI) {
-        let msgs: [[String: Any]] = messages.suffix(60).compactMap { m in
+        let start = min(saved, messages.count)
+        saved = messages.count
+        let msgs: [[String: Any]] = messages[start...].suffix(60).compactMap { m in
             guard !m.text.isEmpty else { return nil }
             var d: [String: Any] = ["role": m.role, "content": m.label.map { $0 + "\n" + m.text } ?? m.text]
             if let mark = m.mark { d[mark] = true }
             return d
         }
-        guard let first = messages.first(where: { $0.role == "user" }) else { return }
+        guard !msgs.isEmpty, let first = messages.first(where: { $0.role == "user" }) else { return }
         let id = convoId
         Task { try? await api.saveConvo(id: id, title: String(first.text.prefix(60)), msgs: msgs) }
     }
