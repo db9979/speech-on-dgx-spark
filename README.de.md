@@ -33,6 +33,9 @@ Alle Optionen ohne Rückfragen (`--mode api --asr 1.7b --tts 0.6b --yes` …) st
 
 <!-- New version: add one line at the top here and in CHANGELOG.md, drop the oldest line here (keep 10). Details go to docs/de and docs/en, not into this README. -->
 
+- **V01.0.456** Eigener Speicher: jetzt auch per SFTP und als SMB-Freigabe im Heimnetz, der Schlüssel des SFTP-Servers wird gemerkt
+- **V01.0.455** Antworten kommen nie mehr doppelt, auch wenn das Modell sie nach einem Werkzeug wiederholt
+- **V01.0.454** Sofortige Rückmeldung mit Augenzwinkern: 60 witzigere Sätze dazu (jetzt 186).
 - **V01.0.453** Eigener Speicher: Gespräche, Gedächtnis, Dokumente und Erstelltes verschlüsselt auf dem eigenen NAS (WebDAV) oder einem eingehängten Ordner sichern, mit Überwachung und Hinweis bei Ausfall
 - **V01.0.452** Update-Prüfung von selbst nur alle 3 Stunden; Internet-Prüfung nicht mehr über GitHub (Grenze von 60 Abfragen pro Stunde)
 - **V01.0.451** Antworten im Chat formatiert (Listen, fett, Code, Links), vorgelesen ohne Markdown-Zeichen
@@ -40,9 +43,6 @@ Alle Optionen ohne Rückfragen (`--mode api --asr 1.7b --tts 0.6b --yes` …) st
 - **V01.0.449** iPhone-App baut wieder (Fehler aus .448)
 - **V01.0.448** Sprung-Links auch in Apps, Begleiter, Push und Telegram
 - **V01.0.447** Hinweise oben im Zustand haben „Ansehen“ und springen zur passenden Stelle
-- **V01.0.446** Voraussetzungen beim Einschalten gleich mit einschalten, beim Ausschalten sagen, was mit ausgeht
-- **V01.0.445** Live-Bild ruhiger: jede Strecke einmal, Runden als „↻ 3“, Zeiten neben den Kästen
-- **V01.0.444** Bedeutungssuche geht nach 10 Minuten ohne Arbeit wirklich schlafen; Zustand zeigt „Standby“ statt „läuft“, wenn nichts rechnet.
 
 Alle Versionen: [CHANGELOG.md](CHANGELOG.md)
 

@@ -508,6 +508,18 @@ else
       rm -f -- "$PREFIX/venv-panel/.docmake"; printf '%s\n' "$doc_sum" >"$PREFIX/venv-panel/.docmake"
     fi
   fi
+  # Eigener Speicher (speicher.py): SFTP and SMB3 packages for an environment made before the lock file, exactly the
+  # versions and hashes of requirements-speicher.lock (the same as in requirements-panel.lock), once per version of it
+  STORE_LOCK="$INSTALL_FROM/app/requirements-speicher.lock"
+  if [ -f "$STORE_LOCK" ]; then
+    store_sum=$(sha256sum "$STORE_LOCK" | cut -c1-64)
+    if [ ! -L "$PREFIX/venv-panel/.speicher" ] && [ "$(cat "$PREFIX/venv-panel/.speicher" 2>/dev/null)" = "$store_sum" ]; then
+      echo "   venv-panel: storage packages unchanged, pip skipped"
+    else
+      "$PREFIX/venv-panel/bin/pip" install -q --no-deps --require-hashes -r "$STORE_LOCK"
+      rm -f -- "$PREFIX/venv-panel/.speicher"; printf '%s\n' "$store_sum" >"$PREFIX/venv-panel/.speicher"
+    fi
+  fi
 fi
 
 # ---------------------------------------------------------------- engines (vLLM + vllm-omni, native)

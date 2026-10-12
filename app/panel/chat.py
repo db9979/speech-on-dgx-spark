@@ -131,6 +131,13 @@ def no_code(piece, st):
     return " ".join(x.strip() for x in keep if x.strip())
 
 
+def said_key(piece):
+    """A sentence as words only (no case, signs or spacing), to see whether it was already said in this answer.
+    Short pieces ("Ja.", "1.") give no key: they may come twice."""
+    key = " ".join(re.findall(r"\w+", piece.lower()))
+    return key if len(key) >= 8 else ""
+
+
 def split_sentences(buf, first):
     """Cut finished sentences off the front of buf. Returns (sentences, rest). A long first
     sentence is also cut at a comma, so the first audio does not wait for the whole sentence."""
@@ -1498,7 +1505,8 @@ async def _answer(request, turn):
                 base["stream_options"] = {"include_usage": True}
             st = {"buf": "", "first": not acked, "think": False, "n": 0, "mail": carry == "mail", "outside": carry == "outside",
                   "offered": set(), "saves": 0, "shown": 0, "check": bool(need) and check_on, "hold": None, "dropped": [], "msgs": None,
-                  "cal": bool(set(need or []) & CAL_READS)}
+                  "cal": bool(set(need or []) & CAL_READS),
+                  "seen": set(), "echo": False, "echoed": 0}
             if carry:
                 await out.put({"type": carry})
             msgs, finish = list(messages), None
@@ -1661,20 +1669,7 @@ async def _answer(request, turn):
                     await speak(x, st, gap)
                 if not calls or finish == "length":
                     break
-                rest = st["buf"].strip()
-                if re.search(r"[.!?…][\"“”»')\]]*$", rest):
-                    # a finished sentence right before the tool call (often the last one of the
-                    # answer, before a memory note): it stays and is spoken
-                    st["first"] = False
-                    await speak(rest, st)
-                elif rest and st["check"]:
-                    pass  # held back, never shown
-                elif rest:
-                    # words written before the tool call without a sentence end ("Der Fernseher im"):
-                    # take them back, the next round says it properly (length in UTF-16 as in the browser)
-                    await out.put({"type": "retract", "drop": len(st["buf"].encode("utf-16-le")) // 2})
-                    st["shown"] -= len(st["buf"])
-                st["buf"] = ""
+                await settle(st)
                 msgs.append({"role": "assistant", "content": None, "tool_calls": [
                     {"id": x["id"], "type": "function", "function": {"name": x["name"], "arguments": x["arguments"]}}
                     for x in calls]})
@@ -1720,6 +1715,7 @@ async def _answer(request, turn):
                 st["check"] = check_on  # an answer from tool results: its figures are checked
             if (calls or st["xml"]) and finish != "length" and not last_noted:
                 # out of tool rounds while the model still wanted one: one last answer without tools
+                await settle(st)
                 msgs.append({"role": "user", "content": LAST_NOTE})
                 finish, _ = await llm_round(dict(base, messages=msgs), st)
             buf = st["buf"]
@@ -1728,7 +1724,7 @@ async def _answer(request, turn):
                 # tell the browser how much of the shown text to drop.
                 ends = [m.end() for m in BOUNDARY.finditer(buf + " ")]
                 keep = buf[:min(ends[-1], len(buf))] if ends else ""
-                if not st["check"]:
+                if not (st["check"] or st["echo"]):
                     await out.put({"type": "truncated", "drop": len(buf) - len(keep)})
                 buf = keep
             if buf.strip():
@@ -1736,6 +1732,9 @@ async def _answer(request, turn):
                 await speak(buf.strip(), st, "\n\n" if lead.count("\n") > 1 else "\n" if "\n" in lead else " ")
             if tr and st["check"] and used:
                 tr.step("check", "Antwort-Prüfung", time.time(), held=len(st["dropped"]))
+            if st["echoed"]:   # Logs → Anfragen: sentences the model wrote a second time, left out
+                trace["calls"].append({"name": "Wiederholung weggelassen", "args": "",
+                                       "result": f"{st['echoed']} schon gesagte Sätze nicht noch einmal gezeigt oder gesagt"})
             if st["dropped"]:
                 # figures that are in no result were not said: one honest sentence instead
                 en = guess_language(messages[-1]["content"]) == "English"
@@ -1833,7 +1832,13 @@ async def _answer(request, turn):
     async def speak(piece, st, gap=" "):
         """One finished sentence to the browser (if not shown yet) and to TTS. With the answer check
         on, a sentence naming figures that are in nothing the model was given is not said. gap: the white
-        space the model wrote before it (a line break keeps lists and paragraphs apart in the chat)."""
+        space the model wrote before it (a line break keeps lists and paragraphs apart in the chat). A round after
+        one that already said something (st["echo"]) never says a sentence of this answer a second time."""
+        said = said_key(piece)
+        if st["echo"] and said in st["seen"]:
+            print("chat: a sentence already said in this answer - not shown, not spoken again", flush=True)
+            st["echoed"] += 1
+            return
         if st["check"]:
             src = st["msgs"] or messages
             key = (id(src), len(src))   # the figures change only when a round or tool result is added
@@ -1853,6 +1858,9 @@ async def _answer(request, turn):
                 print("chat: answer check: held back a sentence with", [answercheck.label(f) for f in miss], flush=True)
                 st["dropped"] += [f for f in miss if f not in st["dropped"]]
                 return
+        if said:
+            st["seen"].add(said)
+        if st["check"] or st["echo"]:   # held until the sentence was complete: shown now
             piece_shown = (gap if st["shown"] else "") + piece
             await out.put({"type": "text", "delta": piece_shown})
             trace["said"] += piece_shown
@@ -1861,6 +1869,23 @@ async def _answer(request, turn):
         piece = no_code(piece, st)
         if piece:
             await sentences.put(piece)
+
+    async def settle(st):
+        """The end of a round that goes on with another one: what the model wrote before its tool call."""
+        rest = st["buf"].strip()
+        if re.search(r"[.!?…][\"“”»')\]]*$", rest):
+            # a finished sentence right before the tool call (often the last one of the
+            # answer, before a memory note): it stays and is spoken
+            st["first"] = False
+            await speak(rest, st)
+        elif rest and (st["check"] or st["echo"]):
+            pass  # held back, never shown
+        elif rest:
+            # words written before the tool call without a sentence end ("Der Fernseher im"):
+            # take them back, the next round says it properly (length in UTF-16 as in the browser)
+            await out.put({"type": "retract", "drop": len(st["buf"].encode("utf-16-le")) // 2})
+            st["shown"] -= len(st["buf"])
+        st["buf"] = ""
 
     async def take(text, st, rec):
         """One streamed piece of the answer (no thinking held back any more): shown, and spoken sentence by
@@ -1899,7 +1924,7 @@ async def _answer(request, turn):
             if tr:
                 tr.mark("first", time.time())
         st["n"] += 1
-        if not st["check"]:
+        if not (st["check"] or st["echo"]):
             await out.put({"type": "text", "delta": text})
             trace["said"] += text
             st["shown"] += len(text)
@@ -1945,6 +1970,9 @@ async def _answer(request, turn):
         Returns (finish_reason, tool calls)."""
         finish, calls = None, {}
         st["xml"], st["lead"], st["ws"], st["head"] = False, True, "", ""
+        # an earlier round of this answer already said something (text before a tool call): this round's sentences
+        # are shown only when complete, and one already said is left out (Dominik 2026-10-12: answer twice)
+        st["echo"] = bool(st["seen"])
         # thinking on in this round (chat_template_kwargs): its text waits for the end of the thinking (unpend)
         st["sep"] = False
         st["pend"] = None if (payload.get("chat_template_kwargs") or {}).get("enable_thinking") is False else ""
@@ -2007,7 +2035,7 @@ async def _answer(request, turn):
             await take(text, st, rec)
         if st["head"]:   # a short answer that only looked like the start of the note
             text, st["head"] = st["head"], None
-            if not st["check"]:
+            if not (st["check"] or st["echo"]):
                 await out.put({"type": "text", "delta": text})
                 trace["said"] += text
                 st["shown"] += len(text)

@@ -217,7 +217,7 @@ FEATURES = (
       parent="melden", me="rpbox", guide="meldenadmin"),
     # dienstwacht.py: the Spark looks at its services and tells the admins when one is gone and when it is back
     F("dienstwacht", "Dienst-Wächter", "Service watch", "sec", ("svc_watch",), "svc_note", me="setbox", guide="dienstwacht"),
-    # speicher.py: a copy of the profile's data on its own NAS, WebDAV service or a folder the admin mounted
+    # speicher.py: a copy of the profile's data on its own NAS (WebDAV, SFTP, SMB) or a folder the admin mounted
     F("speicher", "Eigener Speicher", "Own storage", "data", ("storage_own",), "storage_on", me="storebox", guide="speicher"),
     F("speicherlan", "Speicher im Heimnetz", "Storage in the home network", "data", ("storage_lan",), parent="speicher",
       me="storebox", guide="speicherlan"),

@@ -21,7 +21,10 @@ carries the vault key) brings it along; without it the copy cannot be read any m
 
 Connections (point 2): WebDAV over https through netguard (USER: public addresses; addresses in the home network
 only with the admin's "Speicher im Heimnetz", then HOME), the password only to that site, http only for an
-address in the home network. "Ordner auf dem Spark": only below the folder the admin named (chat.storage_root,
+address in the home network. SFTP (sftp://host/path, user and password; the server's SSH key is learned when
+the target is added and must not change) and SMB3 (smb://host/share/folder, only in the home network, only with
+SMB encryption): the address checked by netguard once and the connection made to exactly that address, one
+connection per run, every call in a thread with a time limit. "Ordner auf dem Spark": only below the folder the admin named (chat.storage_root,
 under /mnt, /media or /srv, no symlinks), every file call in its own thread with a time limit.
 
 Rules (fixed): at most MAX_TARGETS targets per profile; adding one or changing its address or password only in
@@ -37,7 +40,8 @@ for an hour (offline, full, sign-in refused) and one when it is back, Zustand �
 "Speicher" (lines "speicher: ..."), the admin log the changes (storage_add, storage_change, storage_remove).
 
     USERS_DIR/<uid>/speicher.json        {"key": sealed storage key, "targets": [{"id", "name", "kind" (webdav,
-                                         folder), "url", "user", "password" (sealed), "folder", "areas": [...],
+                                         sftp, smb, folder), "url", "user", "password" (sealed), "hostkey"
+                                         (sftp), "folder", "areas": [...],
                                          "added"}]}
     USERS_DIR/<uid>/speicher-stand.json  {tid: {"files": {rel: {"o", "size", "sha", "mt"}}, "trash": [{"o", "t"}],
                                          "last", "fail", "noted", "free", "hist"}}
@@ -45,12 +49,15 @@ for an hour (offline, full, sign-in refused) and one when it is back, Zustand �
 """
 import asyncio
 import base64
+import contextlib
 import hashlib
+import hmac
 import json
 import os
 import re
 import secrets
 import shutil
+import socket
 import sqlite3
 import ssl
 import stat
@@ -96,7 +103,9 @@ TID = re.compile(r"[0-9a-f]{6}")
 OBJ = re.compile(r"[0-9a-f]{24}")
 FILE_RE = re.compile(r"[A-Za-z0-9._\-]{1,80}")
 ROOTS = ("/mnt/", "/media/", "/srv/")
-KINDS = ("webdav", "folder")
+KINDS = ("webdav", "folder", "sftp", "smb")
+LOGIN_KINDS = ("webdav", "sftp", "smb")     # an address, a user and a password
+HOSTKEY = re.compile(r"[a-z0-9@.\-]{3,40} SHA256:[A-Za-z0-9+/]{43}")
 STARTED = time.time()
 STATE = os.environ.get("SPEECH_SPARK_STATE", "/var/lib/speech-spark/state")
 
@@ -130,7 +139,8 @@ LOCAL = {
 WHY = {"offline": ("nicht erreichbar", "not reachable"), "auth": ("Anmeldung abgelehnt", "sign-in refused"),
        "full": ("voll", "full"), "blocked": ("vom Wächter nicht erlaubt", "not allowed by the Wächter"),
        "key": ("Schlüssel fehlt (nach einem Umzug ohne Umzugs-Sicherung)", "key missing (after a move without a move backup)"),
-       "notaus": ("Notaus", "kill switch"), "other": ("Fehler beim Ablegen", "error while storing")}
+       "notaus": ("Notaus", "kill switch"), "hostkey": ("Schlüssel des Servers hat sich geändert", "the server's key changed"),
+       "other": ("Fehler beim Ablegen", "error while storing")}
 _lock = threading.RLock()
 _running = {}                  # (uid, tid) -> "copy" / "restore"
 _slots = None
@@ -208,13 +218,15 @@ def _clean(t):
         return None
     out = {"id": t["id"], "name": t["name"], "kind": t["kind"], "added": int(t.get("added") or 0),
            "areas": [a for a in t.get("areas") or [] if a in AREAS] if isinstance(t.get("areas"), list) else []}
-    if t["kind"] == "webdav":
+    if t["kind"] in LOGIN_KINDS:
         try:
-            out["url"] = check_url(str(t.get("url") or ""))
+            out["url"] = check_url(str(t.get("url") or ""), t["kind"])
         except ValueError:
             return None
         out["user"] = str(t.get("user") or "")[:128]
         out["password"] = str(t.get("password") or "")
+        if t["kind"] == "sftp":
+            out["hostkey"] = str(t.get("hostkey") or "") if HOSTKEY.fullmatch(str(t.get("hostkey") or "")) else ""
     else:
         if not SUB.fullmatch(str(t.get("folder") or "")) or str(t["folder"]).startswith("."):
             return None
@@ -303,23 +315,34 @@ def _home_name(host):
         return host.endswith((".local", ".lan", ".home", ".fritz.box", ".home.arpa", ".internal")) or "." not in host
 
 
-def check_url(url):
-    """https://host[:port]/path/ (http only for an address in the home network), no login, ? or # in it."""
+SCHEMES = {"webdav": ("https", "http"), "sftp": ("sftp",), "smb": ("smb",)}
+START = {"webdav": "https://", "sftp": "sftp://", "smb": "smb://"}
+
+
+def check_url(url, kind="webdav"):
+    """WebDAV: https://host[:port]/path/ (http only for an address in the home network). SFTP: sftp://host[:port]/path
+    (SSH is encrypted: any address the Wächter allows). SMB: smb://host[:port]/share[/folder] only in the home
+    network. Never a login, ? or # in it."""
     url = str(url or "").strip()
     u = urlsplit(url)
     host = (u.hostname or "").lower()
-    if u.scheme not in ("https", "http") or not host or u.username or u.password or u.query or u.fragment \
-            or len(url) > 300 or re.search(r"[\s\x00-\x1f\\]", url):
-        raise ValueError("Die Adresse beginnt mit https:// und enthält keine Anmeldung, kein ? und kein #.")
+    if u.scheme not in SCHEMES.get(kind, ()) or not host or u.username or u.password or u.query or u.fragment \
+            or len(url) > 300 or re.search(r"[\s\x00-\x1f\\]", url) \
+            or kind != "webdav" and re.search(r"[%\"<>|*:]", u.path or ""):
+        raise ValueError(f"Die Adresse beginnt mit {START.get(kind, 'https://')} und enthält keine Anmeldung, kein ? und kein #.")
     try:
         u.port
     except ValueError:
         raise ValueError("Die Adresse hat einen ungültigen Port.")
     if u.scheme == "http" and not _home_name(host):
         raise ValueError("http:// nur für Adressen im Heimnetz, sonst https://.")
+    if kind == "smb" and not _home_name(host):
+        raise ValueError("SMB nur im Heimnetz; über das Internet SFTP oder WebDAV mit https://.")
+    if kind == "smb" and not [x for x in (u.path or "").split("/") if x]:
+        raise ValueError("Nach der Adresse kommt die Freigabe: smb://nas/freigabe/ordner.")
     if "/../" in (u.path or "/") + "/" or "/./" in (u.path or "/") + "/":
         raise ValueError("Die Adresse enthält „..“.")
-    return url.rstrip("/") + "/"
+    return url.rstrip("/") + "/" if kind == "webdav" else url.rstrip("/")
 
 
 # ---------------------------------------------------------------- encryption
@@ -579,6 +602,9 @@ class WebDav:
         """For the Dienst-Wächter: the address it looks at (no login)."""
         return {"url": self.root, "level": self.level, "verify": True}
 
+    async def close(self):
+        pass
+
 
 class Folder:
     """A folder below the admin's chat.storage_root: every call in its own thread with a time limit."""
@@ -676,10 +702,320 @@ class Folder:
     def probe(self):
         return None
 
+    async def close(self):
+        pass
+
+
+class _Remote:
+    """A folder on a server the Spark reaches itself (SFTP, SMB3): the address checked by netguard once (the
+    connection goes to that address), one connection per run, every call in its own thread with a time limit
+    (a server that hangs never holds the panel). Written as <name>.part, then renamed."""
+    SEP = "/"
+
+    def __init__(self, t, key):
+        u = urlsplit(t["url"])
+        self.t = t
+        self.host = (u.hostname or "").lower()
+        self.port = u.port or self.PORT
+        self.user = t.get("user") or ""
+        self.pw = vault.open_(t["password"]) or "" if t.get("password") else ""
+        self.level = netguard.HOME if lan_ok() else netguard.USER
+        self.top = self._top(u.path)
+        self.base = self._join(self.top, folder_name(key))
+        self.conn = None
+
+    def _join(self, *parts):
+        return self.SEP.join(p.strip(self.SEP) if i else p.rstrip(self.SEP) for i, p in enumerate(parts) if p)
+
+    @staticmethod
+    def _parts(name):
+        parts = name.split("/")
+        if not all(FILE_RE.fullmatch(x) and not x.startswith(".") for x in parts) or len(parts) > 2:
+            raise StoreError("other", "bad name")
+        return parts
+
+    def _path(self, parts):
+        return self._join(self.base, *parts)      # only inside a call: SMB knows its address after connecting
+
+    def _address(self):
+        try:
+            return netguard.resolve(self.host, self.port, self.level)
+        except netguard.Blocked as e:
+            raise StoreError("notaus" if "Notaus" in str(e) else "blocked", str(e)[:200])
+        except httpx.ConnectError as e:
+            raise StoreError("offline", type(e).__name__)
+
+    def _with(self, fn, *args):
+        if self.conn is None:
+            self.conn = self._connect()
+        return fn(*args)
+
+    async def _run(self, fn, *args, timeout=TIMEOUT):
+        try:
+            return await asyncio.wait_for(asyncio.to_thread(self._with, fn, *args), timeout)
+        except asyncio.TimeoutError:
+            await self.close()
+            raise StoreError("offline", "the server does not answer")
+        except StoreError:
+            raise
+        except Exception as e:
+            kind = self._kind(e)
+            if kind == "offline":
+                await self.close()
+            raise StoreError("other", "missing") if kind == "missing" else StoreError(kind, type(e).__name__)
+
+    def _errno_kind(self, e):
+        import errno
+        n = getattr(e, "errno", None)
+        if n in (errno.ENOSPC, errno.EDQUOT):
+            return "full"
+        if n in (errno.EACCES, errno.EPERM, errno.EROFS):
+            return "auth"
+        if n == errno.ENOENT:
+            return "missing"
+        return None
+
+    def _mkdirs(self):
+        p = ""
+        for part in [x for x in self.base.split(self.SEP) if x] + ["o"]:
+            p = self._join(p, part) if p else (self.SEP + part if self.base.startswith(self.SEP) else part)
+            if not self._isdir(p):
+                self._mkdir(p)
+
+    async def prepare(self):
+        await self._run(self._mkdirs)
+
+    async def put(self, name, path):
+        parts = self._parts(name)
+
+        def copy():
+            dst = self._path(parts)
+            tmp = dst + ".part"
+            with open(path, "rb") as a, self._open(tmp, "wb") as b:
+                while chunk := a.read(CHUNK):
+                    b.write(chunk)
+            self._replace(tmp, dst)
+        await self._run(copy, timeout=_time(os.path.getsize(path)))
+
+    async def get(self, name, dst, most):
+        parts = self._parts(name)
+
+        def copy():
+            src = self._path(parts)
+            if self._size(src) > most + 64 * 1024:
+                raise StoreError("other", "too large")
+            got = 0
+            with self._open(src, "rb") as a, open(dst, "wb") as b:
+                while chunk := a.read(CHUNK):
+                    got += len(chunk)
+                    if got > most + 64 * 1024:
+                        raise StoreError("other", "too large")
+                    b.write(chunk)
+        await self._run(copy, timeout=_time(most))
+
+    async def delete(self, name):
+        parts = self._parts(name)
+
+        def rm():
+            try:
+                self._remove(self._path(parts))
+            except Exception as e:
+                if self._kind(e) != "missing":
+                    raise
+        await self._run(rm)
+
+    async def free(self):
+        return None
+
+    async def close(self):
+        conn, self.conn = self.conn, None
+        if conn is not None:
+            with contextlib.suppress(Exception):
+                await asyncio.wait_for(asyncio.to_thread(self._disconnect, conn), 5)
+
+    def probe(self):
+        return {"tcp": True, "host": self.host, "port": self.port, "level": self.level, "ssh": self.SSH}
+
+
+def hostkey_of(key):
+    """How a server's SSH key is shown and pinned: "<type> SHA256:<base64>" (like ssh-keygen -l)."""
+    return f"{key.get_name()} SHA256:" + base64.b64encode(hashlib.sha256(key.asbytes()).digest()).decode().rstrip("=")
+
+
+class Sftp(_Remote):
+    """SFTP (SSH) with user and password: the server's key is learned when the target is added and must stay the
+    same (else "hostkey": the profile accepts a new key itself with its password and a code)."""
+    PORT = 22
+    SSH = True
+
+    def __init__(self, t, key):
+        super().__init__(t, key)
+        self.pinned = t.get("hostkey") or ""
+        self.seen = ""
+
+    def _top(self, path):
+        return path.rstrip("/") or "."
+
+    def _connect(self):
+        import logging
+        import paramiko
+        logging.getLogger("paramiko").setLevel(logging.CRITICAL)   # its tracebacks carry server texts: our own fixed words only
+        sock = socket.create_connection((self._address(), self.port), 15)
+        tr = paramiko.Transport(sock, disabled_algorithms={"keys": ["ssh-dss"], "pubkeys": ["ssh-dss"]})
+        tr.banner_timeout = tr.handshake_timeout = tr.auth_timeout = 15
+        try:
+            tr.start_client(timeout=15)
+            self.seen = hostkey_of(tr.get_remote_server_key())
+            if self.pinned and not hmac.compare_digest(self.seen, self.pinned):
+                raise StoreError("hostkey", "the server's key changed")
+            tr.auth_password(self.user, self.pw)
+            sftp = paramiko.SFTPClient.from_transport(tr)
+            sftp.get_channel().settimeout(TIMEOUT)
+            return (tr, sftp)
+        except BaseException:
+            tr.close()
+            raise
+
+    def _disconnect(self, conn):
+        conn[1].close()
+        conn[0].close()
+
+    def _kind(self, e):
+        import paramiko
+        if isinstance(e, paramiko.AuthenticationException):
+            return "auth"
+        if isinstance(e, (paramiko.SSHException, EOFError, socket.timeout, ConnectionError)):
+            return "offline"
+        if isinstance(e, OSError):
+            k = self._errno_kind(e)
+            if k:
+                return k
+            return "offline" if not getattr(e, "errno", None) else "other"
+        return "other"
+
+    def _isdir(self, p):
+        try:
+            return stat.S_ISDIR(self.conn[1].stat(p).st_mode)
+        except FileNotFoundError:
+            return False
+
+    def _mkdir(self, p):
+        self.conn[1].mkdir(p, 0o700)
+
+    def _open(self, p, mode):
+        f = self.conn[1].open(p, mode)
+        if "w" in mode:
+            f.set_pipelined(True)
+        return f
+
+    def _size(self, p):
+        return self.conn[1].stat(p).st_size
+
+    def _replace(self, a, b):
+        try:
+            self.conn[1].posix_rename(a, b)
+        except OSError:
+            with contextlib.suppress(OSError):
+                self.conn[1].remove(b)
+            self.conn[1].rename(a, b)
+
+    def _remove(self, p):
+        self.conn[1].remove(p)
+
+
+class Smb(_Remote):
+    """SMB3 (Windows share, NAS share) with user and password, only in the home network and only encrypted
+    (encrypt=True: SMB 3 with encryption; an older server is refused). Own connection cache per run."""
+    PORT = 445
+    SSH = False
+    SEP = "\\"
+
+    def _top(self, path):
+        parts = [x for x in path.split("/") if x]
+        return "\\\\" + "{ip}" + "\\" + "\\".join(parts)
+
+    def _connect(self):
+        import smbclient
+        ip = self._address()
+        cache = {}
+        smbclient.register_session(ip, username=self.user, password=self.pw, port=self.port, encrypt=True,
+                                   connection_timeout=15, connection_cache=cache, auth_protocol="ntlm")
+        self.top = self.top.replace("{ip}", ip)
+        self.base = self.base.replace("{ip}", ip)
+        return (ip, cache)
+
+    def _join(self, *parts):
+        out = parts[0].rstrip("\\") if parts else ""
+        for p in parts[1:]:
+            if p:
+                out += "\\" + p.strip("\\/").replace("/", "\\")
+        return out
+
+    def _mkdirs(self):
+        parts = self.base[2:].split("\\")     # {ip}, share, sub ..., spark-...
+        p = "\\\\" + "\\".join(parts[:2])
+        for part in parts[2:] + ["o"]:
+            p += "\\" + part
+            if not self._isdir(p):
+                self._mkdir(p)
+
+    def _kw(self):
+        return {"port": self.port, "connection_cache": self.conn[1]}
+
+    def _disconnect(self, conn):
+        import smbclient
+        smbclient.reset_connection_cache(connection_cache=conn[1])
+
+    def _kind(self, e):
+        from smbprotocol import exceptions as x
+        if isinstance(e, (x.SMBAuthenticationError, x.LogonFailure, x.AccessDenied)):
+            return "auth"
+        if isinstance(e, OSError):
+            k = self._errno_kind(e)
+            if k:
+                return k
+            if isinstance(e, (ConnectionError, socket.timeout)) or not getattr(e, "errno", None):
+                return "offline"
+            return "other"
+        if isinstance(e, (x.SMBConnectionClosed, x.SMBException, ValueError)):
+            return "offline" if isinstance(e, x.SMBConnectionClosed) else "other"
+        return "other"
+
+    def _isdir(self, p):
+        import smbclient
+        try:
+            return stat.S_ISDIR(smbclient.stat(p, **self._kw()).st_mode)
+        except FileNotFoundError:
+            return False
+
+    def _mkdir(self, p):
+        import smbclient
+        smbclient.mkdir(p, **self._kw())
+
+    def _open(self, p, mode):
+        import smbclient
+        return smbclient.open_file(p, mode=mode, **self._kw())
+
+    def _size(self, p):
+        import smbclient
+        return smbclient.stat(p, **self._kw()).st_size
+
+    def _replace(self, a, b):
+        import smbclient
+        smbclient.replace(a, b, **self._kw())
+
+    def _remove(self, p):
+        import smbclient
+        smbclient.remove(p, **self._kw())
+
 
 def driver(t, key):
     if t["kind"] == "webdav":
         return WebDav(t, key)
+    if t["kind"] == "sftp":
+        return Sftp(t, key)
+    if t["kind"] == "smb":
+        return Smb(t, key)
     if not folder_ok():
         raise StoreError("blocked", "folders on the Spark are switched off")
     return Folder(t, key)
@@ -775,6 +1111,7 @@ async def copy_once(uid, tid, why="auto", now=None):
     t0 = time.time()
     st = _state(uid, tid)
     n = sent = 0
+    drv = None
     _live_bg("run")
     try:
         key = _key(uid)
@@ -855,6 +1192,8 @@ async def copy_once(uid, tid, why="auto", now=None):
             await _maybe_note(uid, t, st)
         return last
     finally:
+        if drv is not None:
+            await drv.close()
         _running.pop((uid, tid), None)
         _live_bg(None, t0)
 
@@ -870,6 +1209,7 @@ async def restore_missing(uid, tid, now=None):
     _running[(uid, tid)] = "restore"
     t0 = time.time()
     n = skipped = 0
+    drv = None
     try:
         key = _key(uid)
         if not key:
@@ -936,25 +1276,31 @@ async def restore_missing(uid, tid, now=None):
         _job(t0, False, uid, "Speicher holen")
         raise
     finally:
+        if drv is not None:
+            await drv.close()
         _running.pop((uid, tid), None)
 
 
 async def check(t, key):
-    """Can the Spark write there? Folder, a test object written and deleted, free space. Raises StoreError."""
+    """Can the Spark write there? Folder, a test object written and deleted, free space. Raises StoreError.
+    SFTP: a target without a pinned server key learns it here (t["hostkey"], the caller saves t)."""
     drv = driver(t, key)
-    await drv.prepare()
     tmp = _tmp(".enc")
-    with open(tmp, "wb") as f:
-        f.write(seal_bytes(b"spark", key, "probe"))
     try:
+        await drv.prepare()
+        if isinstance(drv, Sftp) and not t.get("hostkey"):
+            t["hostkey"] = drv.seen
+        with open(tmp, "wb") as f:
+            f.write(seal_bytes(b"spark", key, "probe"))
         await drv.put("probe.enc", tmp)
         await drv.delete("probe.enc")
+        try:
+            return await drv.free()
+        except StoreError:
+            return None
     finally:
         _rm(tmp)
-    try:
-        return await drv.free()
-    except StoreError:
-        return None
+        await drv.close()
 
 
 # ---------------------------------------------------------------- notes, Live, logs
@@ -1096,7 +1442,7 @@ async def loop():
 
 # ---------------------------------------------------------------- for other modules
 def probes():
-    """For the Dienst-Wächter: every WebDAV target of every profile that may use it: key -> probe (no login)."""
+    """For the Dienst-Wächter: every WebDAV, SFTP and SMB target of every profile that may use it: key -> probe (no login)."""
     out = {}
     if not admin_on():
         return out
@@ -1104,11 +1450,16 @@ def probes():
         if not allowed(uid):
             continue
         for t in targets(uid):
-            if t["kind"] == "webdav":
+            if t["kind"] in LOGIN_KINDS:
                 u = urlsplit(t["url"])
                 k = hashlib.sha256(f"{u.scheme}://{u.netloc}".encode()).hexdigest()[:8]
-                out.setdefault(k, {"url": f"{u.scheme}://{u.netloc}/", "level": netguard.HOME if lan_ok() else netguard.USER,
-                                   "verify": True, "uids": []})["uids"].append(uid)
+                level = netguard.HOME if lan_ok() else netguard.USER
+                if t["kind"] == "webdav":
+                    p = {"url": f"{u.scheme}://{u.netloc}/", "level": level, "verify": True}
+                else:   # SFTP: the server greets with "SSH-"; SMB: the port answers (no login, no command)
+                    p = {"tcp": True, "host": (u.hostname or "").lower(), "port": u.port or (22 if t["kind"] == "sftp" else 445),
+                         "level": level, "ssh": t["kind"] == "sftp"}
+                out.setdefault(k, dict(p, uids=[]))["uids"].append(uid)
     return out
 
 
@@ -1133,8 +1484,10 @@ def public(uid, t, st=None):
            "bytes": sum(int(x.get("size") or 0) for x in st["files"].values()), "trash": len(st["trash"]),
            "running": _running.get((uid, t["id"]), ""),
            "hist": [{k: x.get(k) for k in ("t", "ok", "kind", "n", "bytes", "what")} for x in st["hist"][-50:]]}
-    if t["kind"] == "webdav":
+    if t["kind"] in LOGIN_KINDS:
         out.update(url=t["url"], user=t["user"], has_password=bool(t["password"]))
+        if t["kind"] == "sftp":
+            out["hostkey"] = t.get("hostkey", "")
     else:
         out["folder"] = t["folder"]
     return out
@@ -1201,13 +1554,13 @@ def _target_from(body, old=None):
         raise HTTPException(400, "Name: bis 40 Buchstaben, Ziffern, Leerzeichen, . _ -")
     kind = old["kind"] if old else body.get("kind")
     if kind not in KINDS:
-        raise HTTPException(400, "kind: webdav or folder")
+        raise HTTPException(400, "kind: webdav, sftp, smb or folder")
     t = {"id": old["id"] if old else secrets.token_hex(3), "name": name, "kind": kind,
          "areas": _areas(body["areas"]) if "areas" in body else (old["areas"] if old else list(AREAS)),
          "added": old["added"] if old else int(time.time())}
-    if kind == "webdav":
+    if kind in LOGIN_KINDS:
         try:
-            t["url"] = check_url(body.get("url", old["url"] if old else ""))
+            t["url"] = check_url(body.get("url", old["url"] if old else ""), kind)
         except ValueError as e:
             raise HTTPException(400, str(e))
         host = (urlsplit(t["url"]).hostname or "").lower()
@@ -1217,6 +1570,8 @@ def _target_from(body, old=None):
         if len(user) > 128 or re.search(r"[\x00-\x1f]", user):
             raise HTTPException(400, "invalid user name")
         t["user"], t["password"] = user, old["password"] if old else ""
+        if kind == "sftp":    # a new address learns the server's key anew (check); else it stays unless accepted
+            t["hostkey"] = old.get("hostkey", "") if old and t["url"] == old["url"] and body.get("accept_key") is not True else ""
     else:
         if not folder_ok():
             raise HTTPException(400, "Ordner auf dem Spark hat der Admin nicht erlaubt (Funktionen → Eigener Speicher).")
@@ -1232,7 +1587,9 @@ def _say(e):
             "auth": "Der Speicher lehnt die Anmeldung oder das Schreiben ab (Benutzer, Passwort, Rechte).",
             "full": "Der Speicher ist voll.", "blocked": "Der Wächter erlaubt diese Adresse nicht.",
             "notaus": "Notaus ist an: keine Verbindung nach außen.", "key": "Der Schlüssel fehlt.",
-            "other": "Der Speicher antwortet nicht wie ein WebDAV-Ordner."}.get(e.kind, "Fehler")
+            "hostkey": "Der Schlüssel des Servers ist ein anderer als beim Einbinden. Nur wenn du weißt, warum "
+                       "(Server neu eingerichtet), unter „Adresse oder Passwort ändern“ den neuen Schlüssel annehmen.",
+            "other": "Der Speicher antwortet nicht wie erwartet (Ordner, Freigabe oder Rechte prüfen)."}.get(e.kind, "Fehler")
 
 
 @router.get("/api/profile/speicher")
@@ -1250,7 +1607,7 @@ async def add(request: Request, prof=Depends(_on)):
     body = await _body(request)
     t = _target_from(body)
     pw = body.get("password")
-    if t["kind"] == "webdav" and isinstance(pw, str) and pw:
+    if t["kind"] in LOGIN_KINDS and isinstance(pw, str) and pw:
         if len(pw) > 256:
             raise HTTPException(400, "password too long")
         t["password"] = vault.seal(pw)
@@ -1290,14 +1647,15 @@ async def change(tid: str, request: Request, prof=Depends(_on)):
         raise HTTPException(404, "no such target")
     body = await _body(request)
     t = _target_from(body, old)
-    login = old["kind"] == "webdav" and (t["url"] != old["url"] or t["user"] != old["user"] or bool(body.get("password")))
+    login = old["kind"] in LOGIN_KINDS and (t["url"] != old["url"] or t["user"] != old["user"] or bool(body.get("password"))
+                                            or t.get("hostkey") != old.get("hostkey"))
     if old["kind"] == "folder" and t["folder"] != old["folder"]:
         login = True
     if login:
-        if t["kind"] == "webdav":
+        if t["kind"] in LOGIN_KINDS:
             pw = body.get("password")
-            if t["url"] != old["url"] and not pw:
-                raise HTTPException(400, "Eine neue Adresse braucht das Passwort noch einmal.")
+            if (t["url"] != old["url"] or t.get("hostkey") != old.get("hostkey")) and not pw:
+                raise HTTPException(400, "Eine neue Adresse oder ein neuer Schlüssel des Servers braucht das Passwort noch einmal.")
             if isinstance(pw, str) and pw:
                 if len(pw) > 256:
                     raise HTTPException(400, "password too long")
