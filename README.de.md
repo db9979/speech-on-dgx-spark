@@ -33,6 +33,7 @@ Alle Optionen ohne Rückfragen (`--mode api --asr 1.7b --tts 0.6b --yes` …) st
 
 <!-- New version: add one line at the top here and in CHANGELOG.md, drop the oldest line here (keep 10). Details go to docs/de and docs/en, not into this README. -->
 
+- **V01.0.446** Voraussetzungen beim Einschalten gleich mit einschalten, beim Ausschalten sagen, was mit ausgeht
 - **V01.0.445** Live-Bild ruhiger: jede Strecke einmal, Runden als „↻ 3“, Zeiten neben den Kästen
 - **V01.0.444** Bedeutungssuche geht nach 10 Minuten ohne Arbeit wirklich schlafen; Zustand zeigt „Standby“ statt „läuft“, wenn nichts rechnet.
 - **V01.0.443** Coding-Richtlinie im Repo: [docs/de/richtlinien.md](docs/de/richtlinien.md) mit Pflichtliste für neue Funktionen, Sicherheits-Checkliste mit „Stand der Technik“, Journal ohne Profilnamen
@@ -42,7 +43,6 @@ Alle Optionen ohne Rückfragen (`--mode api --asr 1.7b --tts 0.6b --yes` …) st
 - **V01.0.439** Ausgesperrt? `sudo speech-spark notzugang` auf dem Spark gibt ein neues Panel-Passwort; /#admin öffnet die Anmeldung auch auf schon offener Seite
 - **V01.0.438** Weiche sichtbar: Funktionen → Weiche mit Weg eines Satzes als Bild, Gruppen mit eigenen Wörtern, „Nicht bei“, Zusatzwerkzeugen, Testsätzen, „Falsch zugeordnet …“, Rückgängig und Statistik
 - **V01.0.437** Live-Bild: Geräte über den Proxy unter Internet, Dokumenten-Aufträge, Aufträge, Postfach aufräumen und mehr sichtbar
-- **V01.0.436** Einladung: der Cursor springt nicht mehr ins Namensfeld, während man die PIN tippt; Testlauf wieder grün
 
 Alle Versionen: [CHANGELOG.md](CHANGELOG.md)
 

@@ -142,7 +142,7 @@ class Switches(Base):
         self.assertEqual(c.get("/api/make").status_code, 403)
         o = docmake.offer(ctx(uid, "Schreib einen Brief an die Hausverwaltung"))   # off: no tools, only where to switch
         self.assertEqual(o["tools"], [])
-        self.assertIn("Ich → Dokumente → Dokumente erstellen", o["hint"])
+        self.assertIn("Ich → Dokumente „Dokumente erstellen“", o["hint"])
         self.assertIsNone(docmake.offer(ctx(uid, "Wie wird das Wetter?")))
         profiles.save_settings(uid, {"doc_make": True})
         helpers.set_config(doc_make=False)
@@ -188,7 +188,7 @@ class Switches(Base):
         docmake.offer(ctx(uid, "Mach eine Präsentation über die der eine Folie."))
         o = docmake.offer(dict(ctx(uid, "den mauer fall, gerne kurz"), before=ask))
         self.assertEqual(o["tools"], [])
-        self.assertIn("Ich → Dokumente → Dokumente erstellen", o["hint"])
+        self.assertIn("Ich → Dokumente „Dokumente erstellen“", o["hint"])
 
     def test_answer_in_the_chat_offers_the_tools(self):
         """The same through /api/chat: the second turn's model call carries document_plan and the hint."""

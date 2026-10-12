@@ -1034,11 +1034,9 @@ def _send_ok(uid):
 
 def off_hint(uid):
     """The fixed sentence for a wish to make a file while the function is off: where to switch it on."""
-    where = ("Der Admin muss es zuerst unter Funktionen → Eigene Dokumente → Dokumente erstellen einschalten, danach du "
-             "unter Ich → Dokumente → Dokumente erstellen.") if not admin_on() else \
-        "Du kannst es unter Ich → Dokumente → Dokumente erstellen einschalten."
+    where = features.missing_text("erstellen", uid) or "Du kannst es unter Ich → Dokumente „Dokumente erstellen“ einschalten."
     return ("Der Nutzer möchte, dass der Spark eine Datei erstellt (Dokument, Brief, Präsentation oder Tabelle), aber "
-            "„Dokumente erstellen“ ist für ihn aus. Sag ihm das in einem Satz und genau wo: " + where + " Schreib den "
+            "„Dokumente erstellen“ ist für ihn aus. Sag ihm das kurz und nenne alles, was fehlt, mit genau diesen Wegen: " + where + " Schreib den "
             "Inhalt nicht stattdessen als Text ins Gespräch und such nichts dafür; nur wenn er danach ausdrücklich "
             "den Text im Chat will.")
 

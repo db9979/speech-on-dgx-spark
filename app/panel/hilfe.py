@@ -975,6 +975,13 @@ def state_line(key, uid, level, lang="de", c=None):
     if _lvl(level) != "profile":
         line += (" · Spark-Schalter: " if li == 0 else " · Spark switch: ") + (
             ("an", "on")[li] if features.admin_on(key, c) else ("aus", "off")[li])
+    if why in ("spark", "profile"):
+        need = features.missing_text(key, uid, lang, c)
+        if _lvl(level) == "profile" and why == "spark":
+            need = (("Fehlt im Spark: " if li == 0 else "Missing on the Spark: ")
+                    + ", ".join(features.switch_name(sw)[li] for sw in features.missing(key, c)) + ".")
+        if need:
+            line += " · " + need
     return line + f" · Kennung: {key}"
 
 

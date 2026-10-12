@@ -15,15 +15,21 @@ function whoKeep(f){return whoF==='on'?f.spark:whoF==='new'?!f.seen:whoF==='need
 async function loadWho(){const box=$('whobox');if(!box)return;
   if(typeof loadCfg==='function'&&!document.body.classList.contains('mgr'))try{await loadCfg()}catch{}
   try{WHO=await (await api('/api/admin/features')).json()}catch(e){box.textContent=e.message;return}
+  if(typeof needsSet==='function')needsSet(WHO)
   drawWho()}
 function whoGuest(f){return f.guests?(WHO.public?t('ja','yes'):t('mit Gastzugang','with guest access')):t('nie','never')}
 function whoBox(on,can,label,act){const b=document.createElement('button');b.type='button';b.className='wbox'+(on?' on':'')+(can?'':' no');
   b.setAttribute('aria-pressed',on?'true':'false');b.setAttribute('aria-label',label);b.title=label;b.disabled=!can;if(can&&act)b.onclick=act;return b}
-async function whoSpark(f,on){try{await api('/api/admin/switches',xjson('PUT',{key:f.switch,on}));await loadWho();
+// with what it builds on (needs.js): asks to switch the missing ones on too, and what goes off with it
+async function whoSpark(f,on){try{const isOn=sw=>!!(WHO.states&&WHO.states[sw]);
+    if(typeof needsSpark!=='function'||await needsSpark(f,on,isOn))await api('/api/admin/switches',xjson('PUT',{key:f.switch,on}));
+    await loadWho();
     if(typeof loadCfg==='function'&&!document.body.classList.contains('mgr'))loadCfg()}catch(e){alert(e.message)}}
 async function whoNew(f,on){try{await api(`/api/admin/features/${encodeURIComponent(f.key)}/new`,xjson('PUT',{on}));f.new=on;drawWho()}catch(e){alert(e.message)}}
 const whoNewBox=f=>f.profile?whoBox(!!f.new,true,`${whoName(f)} – ${t('neue Profile','new profiles')}: ${f.new?t('an','on'):t('aus','off')}`,()=>whoNew(f,!f.new)):(()=>{const s=document.createElement('span');s.className='wdash';s.textContent='–';return s})();
-async function whoSet(f,uid,on){try{await api(`/api/admin/features/${encodeURIComponent(f.key)}/profiles/${encodeURIComponent(uid)}`,xjson('PUT',{on}));
+async function whoSet(f,uid,on){try{
+    if(on&&typeof needsProfile==='function'&&await needsProfile(f,uid)){await loadWho();return}   // Spark switched on too
+    await api(`/api/admin/features/${encodeURIComponent(f.key)}/profiles/${encodeURIComponent(uid)}`,xjson('PUT',{on}));
     f.cells[uid]=on;drawWho()}catch(e){alert(e.message)}}
 // The name jumps to the function under Funktionen (V01.0.398): to its own switch row, also when it is a switch
 // inside another function's item; when its row is hidden because the switch it builds on is off, to that switch
@@ -52,7 +58,9 @@ function whoKeepJump(){return !!(WHO_JUMP&&Date.now()-WHO_JUMP<15000&&WHO_LAST&&
 function whoCell(f,p){const n=p.name;
   if(!f.profile){const s=document.createElement('span');s.className='wdash';s.textContent=f.spark?'✓':'–';
     s.title=f.spark?t('Kein eigener Schalter: gilt für alle Profile','No own switch: applies to every profile'):t('Spark aus','Spark off');return s}
-  const on=!!f.cells[p.id];return whoBox(on,f.spark,`${whoName(f)} – ${n}: ${on?t('an','on'):t('aus','off')}`,()=>whoSet(f,p.id,!on))}
+  // Spark off: still clickable to switch on, then it asks to switch the Spark side on too (needs.js)
+  const on=!!f.cells[p.id],b=whoBox(on,f.spark||(!!f.switchable&&!on),`${whoName(f)} – ${n}: ${on?t('an','on'):t('aus','off')}`+(f.spark?'':t(' (im Spark aus)',' (off on the Spark)')),()=>whoSet(f,p.id,!on));
+  if(!f.spark)b.classList.add('woff');return b}
 function drawWho(){const box=$('whobox');if(!box||!WHO)return;box.textContent='';
   const bar=document.createElement('div');bar.className='ffilt wfilt';
   for(const [k,l] of WHOF){const b=document.createElement('button');b.type='button';b.dataset.f=k;b.className=k===whoF?'on':'';
