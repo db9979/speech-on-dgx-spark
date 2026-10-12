@@ -15,7 +15,7 @@ from fastapi import APIRouter, Depends, HTTPException, Request
 from fastapi.responses import StreamingResponse
 
 sys.path.insert(0, os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
-from textnorm import guess_language, hide_secrets  # noqa: E402
+from textnorm import guess_language, hide_secrets, plain_markdown, speech_markdown  # noqa: E402
 import documents  # noqa: E402
 import speakers  # noqa: E402
 import calendars  # noqa: E402
@@ -113,6 +113,22 @@ def piece_margin(ttfa, writing, speed=1.0):
             rate = 1.0
         margin = max(margin, WRITE_LEAD * rate)
     return margin
+
+
+FENCE = re.compile(r"```|~~~")
+
+
+def no_code(piece, st):
+    """What of one sentence is spoken: nothing inside a Markdown code block (```...```), which may run over
+    several sentences; st["code"] says whether one is open. The chat shows the block."""
+    parts = FENCE.split(piece)
+    keep = []
+    for k, part in enumerate(parts):
+        if k:
+            st["code"] = not st.get("code")
+        if not st.get("code"):
+            keep.append(part)
+    return " ".join(x.strip() for x in keep if x.strip())
 
 
 def split_sentences(buf, first):
@@ -380,6 +396,13 @@ WATCH_HINT = ("Die Frage kommt von einer Smartwatch mit kleinem Display und klei
 TELEGRAM_HINT = ("Diese Unterhaltung läuft über Telegram: Antworte kurz in einfachem Text, ohne Markdown. "
                  "Hast du keinen Zugriff auf etwas, sag, dass der Nutzer das im Panel unter Ich → Telegram "
                  "erlauben kann.")
+# the panel's own chat shows Markdown formatted (md.js); the voice never says the signs (textnorm.speech_markdown)
+WEB_HINT = ("Abweichend davon gilt hier: Die Antwort erscheint im Chat auch als Text, der Markdown formatiert "
+            "anzeigt; vorgelesen werden die Zeichen nie. Gliedere längere Antworten mit mehreren Schritten oder "
+            "Punkten mit kurzen Absätzen und nummerierten Listen, Schlüsselbegriffe **fett**, Befehle, Dateinamen und "
+            "Einstellungen als `Code`. Kurze Antworten bleiben ganze Sätze ohne Markdown.")
+WEB_SPOKEN_HINT = "Keine Tabellen und keine Codeblöcke, die Antwort wird auch vorgelesen."
+WEB_TEXT_HINT = "Die Antwort wird nicht vorgelesen: Tabellen und Codeblöcke sind erlaubt, wo sie helfen."
 SPEAKER_HINT = ("Die Frage kommt über einen kleinen Lautsprecher im Raum, der deine Antwort vorliest. Antworte "
                 "kurz, meist in ein bis drei Sätzen, ohne Listen, Tabellen, Links oder Emojis.")
 # a shared speaker (chat_turn.shared_stranger): the voice was not clearly the profile's own
@@ -1220,8 +1243,9 @@ def prompt_parts(ccfg):
         import roles
         parts.append({"label": "Gewählte Rolle (je Profil unter Ich → Gespräch, per Sprache gewechselt)",
                       "text": roles.INTRO + "(Name und Text der aktiven Rolle)", "fixed": False})
-    parts.append({"label": "Nur je nach Gerät (Uhr, Siri, Lautsprecher, Telegram)",
-                  "text": "\n".join((WATCH_HINT, SIRI_HINT, SPEAKER_HINT, TELEGRAM_HINT)), "fixed": True})
+    parts.append({"label": "Nur je nach Gerät (Chat im Panel, Uhr, Siri, Lautsprecher, Telegram)",
+                  "text": "\n".join((WEB_HINT + " " + WEB_SPOKEN_HINT + " / " + WEB_TEXT_HINT, WATCH_HINT, SIRI_HINT,
+                                     SPEAKER_HINT, TELEGRAM_HINT)), "fixed": True})
     parts.append({"label": "Je nach Profil und eingeschalteten Funktionen",
                   "text": "(Gemerktes, frühere Gespräche, Smart Home, Erinnerungen, Kalender, Mails, Wetter … "
                           "mit ihren festen Werkzeughinweisen)", "fixed": True})
@@ -1619,15 +1643,15 @@ async def _answer(request, turn):
                     # answered a data question without looking anything up: never said, asked once more
                     print("chat: answer check: no tool for a data question, asked again", flush=True)
                     trace["calls"].append({"name": "Antwort-Prüfung", "args": "", "result":
-                                           "ohne Werkzeug geantwortet, verworfen: " + " ".join(held)[:300]})
+                                           "ohne Werkzeug geantwortet, verworfen: " + " ".join(x for x, _ in held)[:300]})
                     retried = True
                     if tr:
                         tr.step("check", "Antwort-Prüfung", time.time(), again=True)
-                    st["buf"], st["first"] = "", True
+                    st["buf"], st["first"], st["tail"], st["code"] = "", True, "", False
                     msgs.append({"role": "user", "content": answercheck.RETRY_NOTE})
                     continue
-                for x in held or []:
-                    await speak(x, st)
+                for x, gap in held or []:
+                    await speak(x, st, gap)
                 if not calls or finish == "length":
                     break
                 rest = st["buf"].strip()
@@ -1701,7 +1725,8 @@ async def _answer(request, turn):
                     await out.put({"type": "truncated", "drop": len(buf) - len(keep)})
                 buf = keep
             if buf.strip():
-                await speak(buf.strip(), st)
+                lead = st.get("tail", "") + buf[:len(buf) - len(buf.lstrip())]
+                await speak(buf.strip(), st, "\n\n" if lead.count("\n") > 1 else "\n" if "\n" in lead else " ")
             if tr and st["check"] and used:
                 tr.step("check", "Antwort-Prüfung", time.time(), held=len(st["dropped"]))
             if st["dropped"]:
@@ -1798,9 +1823,10 @@ async def _answer(request, turn):
             await out.put({"type": "outside"})
         return result
 
-    async def speak(piece, st):
+    async def speak(piece, st, gap=" "):
         """One finished sentence to the browser (if not shown yet) and to TTS. With the answer check
-        on, a sentence naming figures that are in nothing the model was given is not said."""
+        on, a sentence naming figures that are in nothing the model was given is not said. gap: the white
+        space the model wrote before it (a line break keeps lists and paragraphs apart in the chat)."""
         if st["check"]:
             src = st["msgs"] or messages
             key = (id(src), len(src))   # the figures change only when a round or tool result is added
@@ -1820,12 +1846,14 @@ async def _answer(request, turn):
                 print("chat: answer check: held back a sentence with", [answercheck.label(f) for f in miss], flush=True)
                 st["dropped"] += [f for f in miss if f not in st["dropped"]]
                 return
-            piece_shown = (" " if st["shown"] else "") + piece
+            piece_shown = (gap if st["shown"] else "") + piece
             await out.put({"type": "text", "delta": piece_shown})
             trace["said"] += piece_shown
             st["shown"] += len(piece_shown)
         stufe.first(vip)   # the first sentence of a Vorrang answer is there: the others go on
-        await sentences.put(piece)
+        piece = no_code(piece, st)
+        if piece:
+            await sentences.put(piece)
 
     async def take(text, st, rec):
         """One streamed piece of the answer (no thinking held back any more): shown, and spoken sentence by
@@ -1869,13 +1897,21 @@ async def _answer(request, turn):
             trace["said"] += text
             st["shown"] += len(text)
         st["buf"] += text
-        done, st["buf"] = split_sentences(st["buf"], st["first"])
+        raw = st["buf"]
+        done, st["buf"] = split_sentences(raw, st["first"])
+        pos, eaten = 0, len(raw) - len(st["buf"])
         for x in done:
             st["first"] = False
+            at = raw.find(x, pos)
+            gap = st.get("tail", "") + (raw[pos:at] if at >= 0 else " ")
+            st["tail"], pos = "", (at + len(x) if at >= 0 else pos)
+            gap = "\n\n" if gap.count("\n") > 1 else "\n" if "\n" in gap else " "
             if st["hold"] is not None:
-                st["hold"].append(x)
+                st["hold"].append((x, gap))
             else:
-                await speak(x, st)
+                await speak(x, st, gap)
+        if done:
+            st["tail"] = raw[pos:eaten]
 
     def unpend(text, st, rec):
         """With thinking on, Qwen gets "<think>" in the prompt: a server that does not hand the thinking over
@@ -2321,8 +2357,9 @@ async def text_ask(request, prof, body, who="siri"):
         await asyncio.to_thread(profiles.append_convo, prof["id"], conv + day, title + " " + local.strftime("%d.%m."), msgs[-2:])
     except Exception as e:
         print("siri convo:", type(e).__name__, e, flush=True)
-    # Siri reads the answer aloud: no passwords or codes in it (the app's history keeps them)
-    return {"answer": hide_secrets(answer)}
+    # Siri reads the answer aloud: no passwords or codes in it (the app's history keeps them), and neither
+    # shows Markdown: Siri gets the speakable text, the Begleiter the plain one (the history keeps the original)
+    return {"answer": hide_secrets(speech_markdown(answer) if who == "siri" else plain_markdown(answer))}
 
 
 def _watch_job(job_id):

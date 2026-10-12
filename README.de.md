@@ -33,6 +33,7 @@ Alle Optionen ohne Rückfragen (`--mode api --asr 1.7b --tts 0.6b --yes` …) st
 
 <!-- New version: add one line at the top here and in CHANGELOG.md, drop the oldest line here (keep 10). Details go to docs/de and docs/en, not into this README. -->
 
+- **V01.0.451** Antworten im Chat formatiert (Listen, fett, Code, Links), vorgelesen ohne Markdown-Zeichen
 - **V01.0.450** Einstellungs-Assistent: aus Fehlern, 👎 und unklaren Fragen macht der Spark geprüfte Vorschläge zum Verbessern (Zustand → Verbessern), 👍/👎 unter Antworten; alles aus, bis du es einschaltest
 - **V01.0.449** iPhone-App baut wieder (Fehler aus .448)
 - **V01.0.448** Sprung-Links auch in Apps, Begleiter, Push und Telegram
@@ -42,7 +43,6 @@ Alle Optionen ohne Rückfragen (`--mode api --asr 1.7b --tts 0.6b --yes` …) st
 - **V01.0.444** Bedeutungssuche geht nach 10 Minuten ohne Arbeit wirklich schlafen; Zustand zeigt „Standby“ statt „läuft“, wenn nichts rechnet.
 - **V01.0.443** Coding-Richtlinie im Repo: [docs/de/richtlinien.md](docs/de/richtlinien.md) mit Pflichtliste für neue Funktionen, Sicherheits-Checkliste mit „Stand der Technik“, Journal ohne Profilnamen
 - **V01.0.442** App-Manifest und Home-Bildschirm-Symbol kommen wieder (seit .406 Fehler 500); „Zum Home-Bildschirm“ zeigt wieder das Spark-Symbol
-- **V01.0.441** Live-Übersicht: Blockt der Wächter wegen Notaus, steht dort jetzt „Notaus ist an“ statt „Adresse nie erlaubt“
 
 Alle Versionen: [CHANGELOG.md](CHANGELOG.md)
 

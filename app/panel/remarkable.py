@@ -59,6 +59,7 @@ import profiles
 import vault
 import vorrang
 from core import assistant, browser_profile, secret_profile
+from textnorm import plain_markdown
 
 router = APIRouter()
 
@@ -851,6 +852,7 @@ async def send(uid, title, text):
     """A new EPUB with this text in the chosen folder (default "Spark", created when missing). Only adds a new
     document; nothing existing is changed. Returns {"title", "where", "lost"} (lost: the chosen folder is gone)."""
     text = re.sub(r"[\x00-\x08\x0b\x0c\x0e-\x1f\x7f]", "", str(text or ""))[:MAX_SEND].strip()
+    text = plain_markdown(text)   # an answer's Markdown signs stay off the paper
     if not text:
         raise ValueError("nothing to send")
     title = _clean(title, 80) or "Vom Spark"
